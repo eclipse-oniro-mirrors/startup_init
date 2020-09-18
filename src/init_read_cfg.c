@@ -184,7 +184,7 @@ static int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
     }
 
     if (capsCnt > MAX_CAPS_CNT_FOR_ONE_SERVICE) {
-        printf("[Init] GetServiceCaps, too many caps[cnt %d] for one service, should not exceed %d.\n",\
+        printf("[Init] GetServiceCaps, too many caps[cnt %d] for one service, should not exceed %d.\n",
             capsCnt, MAX_CAPS_CNT_FOR_ONE_SERVICE);
         return SERVICE_FAILURE;
     }
@@ -222,7 +222,7 @@ static void ParseAllServices(const cJSON* fileRoot)
     }
 
     if (servArrSize > MAX_SERVICES_CNT_IN_FILE) {
-        printf("[Init] InitReadCfg, too many services[cnt %d] detected, should not exceed %d.\n",\
+        printf("[Init] InitReadCfg, too many services[cnt %d] detected, should not exceed %d.\n",
             servArrSize, MAX_SERVICES_CNT_IN_FILE);
         return;
     }

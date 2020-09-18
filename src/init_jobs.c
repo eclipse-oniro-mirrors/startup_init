@@ -70,7 +70,7 @@ static void ParseJob(const cJSON* jobItem, Job* resJob)
     }
 
     if (cmdLinesCnt > MAX_CMD_CNT_IN_ONE_JOB) {
-        printf("[Init] ParseAllJobs, too many cmds[cnt %d] in one job, it should not exceed %d.\n",\
+        printf("[Init] ParseAllJobs, too many cmds[cnt %d] in one job, it should not exceed %d.\n",
             cmdLinesCnt, MAX_CMD_CNT_IN_ONE_JOB);
         return;
     }
@@ -107,7 +107,7 @@ void ParseAllJobs(const cJSON* fileRoot)
     }
 
     if (jobArrSize <= 0 || jobArrSize > MAX_JOBS_COUNT) {
-        printf("[Init] ParseAllJobs, jobs count %d is invalid, should be positive and not exceeding %d.\n",\
+        printf("[Init] ParseAllJobs, jobs count %d is invalid, should be positive and not exceeding %d.\n",
             jobArrSize, MAX_JOBS_COUNT);
         return;
     }
