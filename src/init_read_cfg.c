@@ -83,7 +83,7 @@ static cJSON* GetArrItem(const cJSON* fileRoot, int* arrSize, const char* arrNam
 static int IsForbidden(const char* fieldStr)
 {
     size_t fieldLen = strlen(fieldStr);
-    size_t forbidStrLen =  strlen(BIN_SH_NOT_ALLOWED);
+    size_t forbidStrLen = strlen(BIN_SH_NOT_ALLOWED);
     if (fieldLen == forbidStrLen) {
         if (strncmp(fieldStr, BIN_SH_NOT_ALLOWED, fieldLen) == 0) {
             return 1;

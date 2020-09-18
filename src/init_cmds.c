@@ -39,11 +39,11 @@ static const char* g_supportedCmds[] = {
 
 void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
 {
-    if (cmdStr == NULL || strlen(cmdStr) == 0 || resCmd == NULL) {
+    size_t cmdLineLen = 0;
+    if (cmdStr == NULL || resCmd == NULL || (cmdLineLen = strlen(cmdStr)) == 0) {
         return;
     }
 
-    size_t cmdLineLen = strlen(cmdStr);
     size_t supportCmdCnt = sizeof(g_supportedCmds) / sizeof(g_supportedCmds[0]);
     int foundAndSucceed = 0;
     for (size_t i = 0; i < supportCmdCnt; ++i) {
@@ -89,8 +89,7 @@ static void DoMkDir(const char* cmdContent)
 static void DoChmod(const char* cmdContent)
 {
     // format: 0xxx /xxx/xxx/xxx
-    size_t strLen = strlen(cmdContent);
-    if (strLen <= MODE_LEN + 1 || cmdContent[0] != '0' || cmdContent[MODE_LEN] != ' ') {
+    if (cmdContent[0] != '0' || cmdContent[MODE_LEN] != ' ' || strlen(cmdContent) <= MODE_LEN + 1) {
         printf("[Init] DoChmod, bad format for %s.\n", cmdContent);
         return;
     }
@@ -116,22 +115,24 @@ static void DoChmod(const char* cmdContent)
 
 static void DoChown(const char* cmdContent)
 {
+    if (*cmdContent == ' ') {
+        printf("[Init] DoChown, bad format for %s.\n", cmdContent);
+        return;
+    }
     // format: owner group /xxx/xxx/xxx
     size_t firstSpace = 0;
     size_t secondSpace = 0;
     size_t strLen = strlen(cmdContent);
     for (size_t i = 0; i < strLen; ++i) {
-        if (cmdContent[i] == ' ') {
-            if (i == 0) {
-                printf("[Init] DoChown, bad format for %s.\n", cmdContent);
-                return;
-            }
-            if (firstSpace == 0) {
-                firstSpace = i;
-            } else {
-                secondSpace = i;
-                break;
-            }
+        if (cmdContent[i] != ' ') {
+            continue;
+        }
+
+        if (firstSpace == 0) {
+            firstSpace = i;
+        } else {
+            secondSpace = i;
+            break;
         }
     }
 
@@ -219,14 +220,16 @@ static int CountSpaces(const char* cmdContent, size_t* spaceCnt, size_t* spacePo
     *spaceCnt = 0;
     size_t strLen = strlen(cmdContent);
     for (size_t i = 0; i < strLen; ++i) {
-        if (cmdContent[i] == ' ') {
-            ++(*spaceCnt);
-            if ((*spaceCnt) > spacePosArrLen) {
-                printf("[Init] DoMount, too many spaces, bad format for %s.\n", cmdContent);
-                return 0;
-            }
-            spacePosArr[(*spaceCnt) - 1] = i;
+        if (cmdContent[i] != ' ') {
+            continue;
         }
+
+        ++(*spaceCnt);
+        if ((*spaceCnt) > spacePosArrLen) {
+            printf("[Init] DoMount, too many spaces, bad format for %s.\n", cmdContent);
+            return 0;
+        }
+        spacePosArr[(*spaceCnt) - 1] = i;
     }
 
     if ((*spaceCnt) < SPACES_CNT_IN_CMD_MIN ||           // spaces count should not less than 2(at least 3 items)
