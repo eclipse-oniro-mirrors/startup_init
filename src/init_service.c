@@ -23,12 +23,6 @@
 #include "init_adapter.h"
 #include "init_perms.h"
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif /* __cpluscplus */
-#endif /* __cpluscplus */
-
 #define CAP_NUM 2
 
 // 240 seconds, 4 minutes
@@ -181,9 +175,3 @@ void ServiceReap(Service *service)
 
     service->attribute &= (~SERVICE_ATTR_NEED_RESTART);
 }
-
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif /* __cpluscplus */
-#endif /* __cpluscplus */

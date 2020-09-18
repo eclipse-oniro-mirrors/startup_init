@@ -18,12 +18,6 @@
 #include "init_cmds.h"
 #include "securec.h"
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif
-
 #define JOBS_ARR_NAME_IN_JSON "jobs"
 #define CMDS_ARR_NAME_IN_JSON "cmds"
 #define MAX_JOBS_COUNT        10
@@ -175,9 +169,3 @@ void ReleaseAllJobs()
     g_jobs = NULL;
     g_jobCnt = 0;
 }
-
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
-#endif

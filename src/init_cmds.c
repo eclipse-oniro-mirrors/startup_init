@@ -24,12 +24,6 @@
 #include "init_service_manager.h"
 #include "securec.h"
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif
-
 #define MODE_LEN 4   // for chmod mode, format 0xxx
 #define DEFAULT_DIR_MODE 0755  // mkdir, default mode
 #define SPACES_CNT_IN_CMD_MAX 10   // mount, max number of spaces in cmdline
@@ -329,9 +323,3 @@ void DoCmd(const CmdLine* curCmd)
         printf("[Init] DoCmd, unknown cmd name %s.\n", curCmd->name);
     }
 }
-
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
-#endif

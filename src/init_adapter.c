@@ -24,12 +24,6 @@
 #include <sys/syscall.h>
 #endif
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif /* __cpluscplus */
-#endif /* __cpluscplus */
-
 void RebootSystem()
 {
 #ifdef __LINUX__
@@ -52,9 +46,3 @@ int KeepCapability()
 #endif
     return 0;
 }
-
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif /* __cpluscplus */
-#endif /* __cpluscplus */

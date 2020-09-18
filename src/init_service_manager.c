@@ -19,12 +19,6 @@
 #include "init_adapter.h"
 #include "init_jobs.h"
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif /* __cpluscplus */
-#endif /* __cpluscplus */
-
 static const int SLEEP_DURATION = 1;
 
 // All serivce processes that init will fork+exec.
@@ -93,9 +87,3 @@ void ReapServiceByPID(int pid)
         }
     }
 }
-
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif /* __cpluscplus */
-#endif /* __cpluscplus */

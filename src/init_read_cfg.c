@@ -25,12 +25,6 @@
 #include "init_service_manager.h"
 #include "securec.h"
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif /* __cpluscplus */
-#endif /* __cpluscplus */
-
 static const long MAX_JSON_FILE_LEN = 102400;    // max init.cfg size 100KB
 #define MAX_SERVICES_CNT_IN_FILE 100
 #define MAX_CAPS_CNT_FOR_ONE_SERVICE 100
@@ -304,9 +298,3 @@ void InitReadCfg()
     DoJob("post-init");
     ReleaseAllJobs();
 }
-
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif /* __cpluscplus */
-#endif /* __cpluscplus */
