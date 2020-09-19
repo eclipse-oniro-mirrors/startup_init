@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "init_read_cfg.h"
+
 #include <errno.h>
 #include <linux/capability.h>
 #include <stdio.h>
@@ -20,6 +22,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 #include "init_jobs.h"
 #include "init_perms.h"
 #include "init_service_manager.h"

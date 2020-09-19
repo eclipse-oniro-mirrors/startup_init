@@ -15,7 +15,7 @@
 
 #ifndef BASE_STARTUP_INITLITE_ADAPTER_H
 #define BASE_STARTUP_INITLITE_ADAPTER_H
-#define _GNU_SOURCE    // syscall function need this macro definition
+
 #ifdef __LINUX__
 #include <linux/capability.h>
 #else

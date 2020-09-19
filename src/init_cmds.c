@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "init_cmds.h"
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -21,6 +23,7 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 #include "init_service_manager.h"
 #include "securec.h"
 

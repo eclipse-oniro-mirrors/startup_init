@@ -20,6 +20,10 @@ lite_component("init_lite") {
 
 # feature: init
 executable("init") {
+    defines = [
+        "_GNU_SOURCE",  #syscall function need this macro definition 
+    ]
+
     sources = [
         "src/main.c",
         "src/init_cmds.c",
