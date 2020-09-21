@@ -12,9 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 #include "init_read_cfg.h"
 #include "init_signal_handler.h"
 #include "parameter.h"

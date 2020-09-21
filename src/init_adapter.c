@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define _GNU_SOURCE    // syscall function need this macro definition
+
 #include "init_adapter.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>

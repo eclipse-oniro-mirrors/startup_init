@@ -12,10 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "init_service_manager.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
 #include "init_adapter.h"
 #include "init_jobs.h"
 

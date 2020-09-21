@@ -12,9 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "init_jobs.h"
+
 #include <stdio.h>
 #include <string.h>
+
 #include "init_cmds.h"
 #include "securec.h"
 
