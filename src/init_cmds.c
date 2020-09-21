@@ -17,6 +17,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -220,31 +221,36 @@ static int GetMountFlag(unsigned long* mountflags, const char* targetStr)
 
 static int CountSpaces(const char* cmdContent, size_t* spaceCnt, size_t* spacePosArr, size_t spacePosArrLen)
 {
-    *spaceCnt = 0;
-    size_t strLen = strlen(cmdContent);
+    size_t numSpaces = 0;
+    bool isSpaceTooMany = false;
+    const size_t strLen = strlen(cmdContent);
     for (size_t i = 0; i < strLen; ++i) {
         if (cmdContent[i] != ' ') {
             continue;
         }
 
-        ++(*spaceCnt);
-        if ((*spaceCnt) > spacePosArrLen) {
-            printf("[Init] DoMount, too many spaces, bad format for %s.\n", cmdContent);
-            return 0;
+        if (++numSpaces > spacePosArrLen) {
+            isSpaceTooMany = true;
+            break;
         }
-        spacePosArr[(*spaceCnt) - 1] = i;
+        spacePosArr[numSpaces - 1] = i;
+    }
+    *spaceCnt = numSpaces;
+    if (isSpaceTooMany) {
+        printf("[Init] DoMount, too many spaces, bad format for %s.\n", cmdContent);
+        return 0;
     }
 
-    if ((*spaceCnt) < SPACES_CNT_IN_CMD_MIN ||           // spaces count should not less than 2(at least 3 items)
-        spacePosArr[0] == 0 ||                           // should not start with space
-        spacePosArr[(*spaceCnt) - 1] == strLen - 1) {    // should not end with space
+    if (numSpaces < SPACES_CNT_IN_CMD_MIN ||           // spaces count should not less than 2(at least 3 items)
+        spacePosArr[0] == 0 ||                         // should not start with space
+        spacePosArr[numSpaces - 1] == strLen - 1) {    // should not end with space
         printf("[Init] DoMount, bad format for %s.\n", cmdContent);
         return 0;
     }
 
     // spaces should not be adjacent
-    for (size_t i = 1; i < (*spaceCnt); ++i) {
-        if (spacePosArr[i] == spacePosArr[i - 1] + 1) {
+    for (size_t i = 0; i < numSpaces - 1; ++i) {
+        if (spacePosArr[i] == spacePosArr[i] + 1) {
             printf("[Init] DoMount, bad format for %s.\n", cmdContent);
             return 0;
         }
@@ -254,15 +260,15 @@ static int CountSpaces(const char* cmdContent, size_t* spaceCnt, size_t* spacePo
 
 static void DoMount(const char* cmdContent)
 {
-    // format: fileSystemType source target mountFlag1 mountFlag2... data
-    unsigned long mountflags = 0;
     size_t spaceCnt = 0;
-    size_t strLen = strlen(cmdContent);
     size_t spacePosArr[SPACES_CNT_IN_CMD_MAX] = {0};
     if (!CountSpaces(cmdContent, &spaceCnt, spacePosArr, SPACES_CNT_IN_CMD_MAX)) {
         return;
     }
 
+    // format: fileSystemType source target mountFlag1 mountFlag2... data
+    unsigned long mountflags = 0;
+    size_t strLen = strlen(cmdContent);
     size_t indexOffset = 0;
     char* fileSysType = CopySubStr(cmdContent, 0, spacePosArr[indexOffset]);
     char* source = CopySubStr(cmdContent, spacePosArr[indexOffset] + 1, spacePosArr[indexOffset + 1]);
