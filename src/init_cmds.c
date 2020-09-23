@@ -198,24 +198,16 @@ static int GetMountFlag(unsigned long* mountflags, const char* targetStr)
 
     if (strncmp(targetStr, "nodev", strlen("nodev")) == 0) {
         (*mountflags) |= MS_NODEV;
-        return 1;
-    }
-
-    if (strncmp(targetStr, "noexec", strlen("noexec")) == 0) {
+    } else if (strncmp(targetStr, "noexec", strlen("noexec")) == 0) {
         (*mountflags) |= MS_NOEXEC;
-        return 1;
-    }
-
-    if (strncmp(targetStr, "nosuid", strlen("nosuid")) == 0) {
+    } else if (strncmp(targetStr, "nosuid", strlen("nosuid")) == 0) {
         (*mountflags) |= MS_NOSUID;
-        return 1;
-    }
-
-    if (strncmp(targetStr, "rdonly", strlen("rdonly")) == 0) {
+    } else if (strncmp(targetStr, "rdonly", strlen("rdonly")) == 0) {
         (*mountflags) |= MS_RDONLY;
-        return 1;
+    } else {
+        return 0;
     }
-    return 0;
+    return 1;
 }
 
 static int CountSpaces(const char* cmdContent, size_t* spaceCnt, size_t* spacePosArr, size_t spacePosArrLen)
