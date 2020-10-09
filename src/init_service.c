@@ -98,7 +98,7 @@ int ServiceStart(Service *service)
         }
 
         char* argv[] = {service->name, NULL};
-        char* env[] = {NULL};
+        char* env[] = {"LD_LIBRARY_PATH=/storage/app/libs", NULL};
         if (execve(service->path, argv, env) != 0) {
             printf("[Init] service %s execve failed! err %d.\n", service->name, errno);
         }
