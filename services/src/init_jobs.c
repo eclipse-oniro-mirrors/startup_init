@@ -21,6 +21,7 @@
 #include "init_cmds.h"
 #include "securec.h"
 
+
 #define JOBS_ARR_NAME_IN_JSON "jobs"
 #define CMDS_ARR_NAME_IN_JSON "cmds"
 #define MAX_JOBS_COUNT        10
@@ -104,11 +105,12 @@ void ParseAllJobs(const cJSON* fileRoot)
     }
 
     cJSON* jobArr = cJSON_GetObjectItemCaseSensitive(fileRoot, JOBS_ARR_NAME_IN_JSON);
-    int jobArrSize = 0;
-    if (cJSON_IsArray(jobArr)) {
-        jobArrSize = cJSON_GetArraySize(jobArr);
+    if (!cJSON_IsArray(jobArr)) {
+        printf("[Init] ParseAllJobs, job item is not array!\n");
+        return;
     }
 
+    int jobArrSize = cJSON_GetArraySize(jobArr);
     if (jobArrSize <= 0 || jobArrSize > MAX_JOBS_COUNT) {
         printf("[Init] ParseAllJobs, jobs count %d is invalid, should be positive and not exceeding %d.\n",
             jobArrSize, MAX_JOBS_COUNT);
@@ -172,3 +174,4 @@ void ReleaseAllJobs()
     g_jobs = NULL;
     g_jobCnt = 0;
 }
+

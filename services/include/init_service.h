@@ -36,7 +36,6 @@ extern "C" {
 #define SERVICE_ATTR_IMPORTANT    0x010  // will reboot if it crash
 
 #define MAX_SERVICE_NAME 32
-#define MAX_SERVICE_PATH 64
 
 #define CAP_NUM 2
 
@@ -51,7 +50,8 @@ typedef struct {
 
 typedef struct {
     char   name[MAX_SERVICE_NAME + 1];
-    char   path[MAX_SERVICE_PATH + 1];
+    char** pathArgs;
+    int    pathArgsCnt;
     int    pid;
     int    crashCnt;
     time_t firstCrashTime;

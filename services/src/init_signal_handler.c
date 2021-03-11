@@ -18,8 +18,35 @@
 #include <signal.h>
 #include <stdio.h>
 #include <sys/wait.h>
+#ifdef __LINUX__
+#include <errno.h>
+#include <sys/types.h>
+#endif /* __LINUX__ */
 
 #include "init_service_manager.h"
+
+
+#ifdef __LINUX__
+static pid_t  g_waitPid = -1;
+static sem_t* g_waitSem = NULL;
+
+void SignalRegWaitSem(pid_t waitPid, sem_t* waitSem)
+{
+    g_waitPid = waitPid;
+    g_waitSem = waitSem;
+}
+
+static void CheckWaitPid(pid_t sigPID)
+{
+    if (g_waitPid == sigPID && g_waitSem != NULL) {
+        if (sem_post(g_waitSem) != 0) {
+            printf("[Init] CheckWaitPid, sem_post failed, errno %d.\n", errno);
+        }
+        g_waitPid = -1;
+        g_waitSem = NULL;
+    }
+}
+#endif /* __LINUX__ */
 
 static void SigHandler(int sig)
 {
@@ -27,12 +54,15 @@ static void SigHandler(int sig)
         case SIGCHLD: {
             pid_t sigPID;
             int procStat = 0;
-            printf("[Init] SigHandler, SIGCHLD received.\n");
             while (1) {
                 sigPID = waitpid(-1, &procStat, WNOHANG);
                 if (sigPID <= 0) {
                     break;
                 }
+                printf("[Init] SigHandler, SIGCHLD received, sigPID = %d.\n", sigPID);
+#ifdef __LINUX__
+                CheckWaitPid(sigPID);
+#endif /* __LINUX__ */
                 ReapServiceByPID((int)sigPID);
             }
             break;
@@ -58,3 +88,4 @@ void SignalInitModule()
     sigaction(SIGCHLD, &act, NULL);
     sigaction(SIGTERM, &act, NULL);
 }
+

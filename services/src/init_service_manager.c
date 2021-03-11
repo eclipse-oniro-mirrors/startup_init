@@ -22,7 +22,6 @@
 #include "init_adapter.h"
 #include "init_jobs.h"
 
-static const int SLEEP_DURATION = 1;
 
 // All serivce processes that init will fork+exec.
 static Service* g_services = NULL;
@@ -62,7 +61,6 @@ void StartServiceByName(const char* servName)
         printf("[Init] StartServiceByName, service %s start failed!\n", g_services[servIdx].name);
     }
 
-    sleep(SLEEP_DURATION);
     return;
 }
 
@@ -90,3 +88,4 @@ void ReapServiceByPID(int pid)
         }
     }
 }
+

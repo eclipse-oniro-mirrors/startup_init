@@ -28,10 +28,18 @@
 #include "init_service_manager.h"
 #include "securec.h"
 
+
 #define MODE_LEN 4   // for chmod mode, format 0xxx
 #define DEFAULT_DIR_MODE 0755  // mkdir, default mode
 #define SPACES_CNT_IN_CMD_MAX 10   // mount, max number of spaces in cmdline
 #define SPACES_CNT_IN_CMD_MIN 2    // mount, min number of spaces in cmdline
+
+#define LOADCFG_BUF_SIZE  128  // loadcfg, max buffer for one cmdline
+#define LOADCFG_MAX_FILE_LEN 51200  // loadcfg, max file size is 50K
+#define LOADCFG_MAX_LOOP 20  // loadcfg, to prevent to be trapped in infite loop
+static const char *g_supportCfg[] = {
+    "/patch/fstab.cfg",
+};
 
 static const char* g_supportedCmds[] = {
     "start ",
@@ -39,6 +47,7 @@ static const char* g_supportedCmds[] = {
     "chmod ",
     "chown ",
     "mount ",
+    "loadcfg ",
 };
 
 void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
@@ -119,24 +128,22 @@ static void DoChmod(const char* cmdContent)
 
 static void DoChown(const char* cmdContent)
 {
-    if (*cmdContent == ' ') {
-        printf("[Init] DoChown, bad format for %s.\n", cmdContent);
-        return;
-    }
     // format: owner group /xxx/xxx/xxx
     size_t firstSpace = 0;
     size_t secondSpace = 0;
     size_t strLen = strlen(cmdContent);
     for (size_t i = 0; i < strLen; ++i) {
-        if (cmdContent[i] != ' ') {
-            continue;
-        }
-
-        if (firstSpace == 0) {
-            firstSpace = i;
-        } else {
-            secondSpace = i;
-            break;
+        if (cmdContent[i] == ' ') {
+            if (i == 0) {
+                printf("[Init] DoChown, bad format for %s.\n", cmdContent);
+                return;
+            }
+            if (firstSpace == 0) {
+                firstSpace = i;
+            } else {
+                secondSpace = i;
+                break;
+            }
         }
     }
 
@@ -213,36 +220,29 @@ static int GetMountFlag(unsigned long* mountflags, const char* targetStr)
 
 static int CountSpaces(const char* cmdContent, size_t* spaceCnt, size_t* spacePosArr, size_t spacePosArrLen)
 {
-    size_t numSpaces = 0;
-    bool isSpaceTooMany = false;
-    const size_t strLen = strlen(cmdContent);
+    *spaceCnt = 0;
+    size_t strLen = strlen(cmdContent);
     for (size_t i = 0; i < strLen; ++i) {
-        if (cmdContent[i] != ' ') {
-            continue;
+        if (cmdContent[i] == ' ') {
+            ++(*spaceCnt);
+            if ((*spaceCnt) > spacePosArrLen) {
+                printf("[Init] DoMount, too many spaces, bad format for %s.\n", cmdContent);
+                return 0;
+            }
+            spacePosArr[(*spaceCnt) - 1] = i;
         }
-
-        if (++numSpaces > spacePosArrLen) {
-            isSpaceTooMany = true;
-            break;
-        }
-        spacePosArr[numSpaces - 1] = i;
-    }
-    *spaceCnt = numSpaces;
-    if (isSpaceTooMany) {
-        printf("[Init] DoMount, too many spaces, bad format for %s.\n", cmdContent);
-        return 0;
     }
 
-    if (numSpaces < SPACES_CNT_IN_CMD_MIN ||           // spaces count should not less than 2(at least 3 items)
-        spacePosArr[0] == 0 ||                         // should not start with space
-        spacePosArr[numSpaces - 1] == strLen - 1) {    // should not end with space
+    if ((*spaceCnt) < SPACES_CNT_IN_CMD_MIN ||           // spaces count should not less than 2(at least 3 items)
+        spacePosArr[0] == 0 ||                           // should not start with space
+        spacePosArr[(*spaceCnt) - 1] == strLen - 1) {    // should not end with space
         printf("[Init] DoMount, bad format for %s.\n", cmdContent);
         return 0;
     }
 
     // spaces should not be adjacent
-    for (size_t i = 0; i < numSpaces - 1; ++i) {
-        if (spacePosArr[i] == spacePosArr[i] + 1) {
+    for (size_t i = 1; i < (*spaceCnt); ++i) {
+        if (spacePosArr[i] == spacePosArr[i - 1] + 1) {
             printf("[Init] DoMount, bad format for %s.\n", cmdContent);
             return 0;
         }
@@ -263,12 +263,25 @@ static void DoMount(const char* cmdContent)
     size_t strLen = strlen(cmdContent);
     size_t indexOffset = 0;
     char* fileSysType = CopySubStr(cmdContent, 0, spacePosArr[indexOffset]);
+    if (fileSysType == NULL) {
+        return;
+    }
+
     char* source = CopySubStr(cmdContent, spacePosArr[indexOffset] + 1, spacePosArr[indexOffset + 1]);
+    if (source == NULL) {
+        free(fileSysType);
+        return;
+    }
     ++indexOffset;
 
     // maybe only has "filesystype source target", 2 spaces
     size_t targetEndPos = (indexOffset == spaceCnt - 1) ? strLen : spacePosArr[indexOffset + 1];
     char* target = CopySubStr(cmdContent, spacePosArr[indexOffset] + 1, targetEndPos);
+    if (target == NULL) {
+        free(fileSysType);
+        free(source);
+        return;
+    }
     ++indexOffset;
 
     // get mountflags, if fail, the rest part of string will be data
@@ -286,25 +299,89 @@ static void DoMount(const char* cmdContent)
         ++indexOffset;
     }
 
-    if (fileSysType != NULL && source != NULL && target != NULL) {
-        int mountRet;
-        if (indexOffset >= spaceCnt) {    // no data
-            mountRet = mount(source, target, fileSysType, mountflags, NULL);
-        } else {
-            const char* dataStr = cmdContent + spacePosArr[indexOffset] + 1;
-            mountRet = mount(source, target, fileSysType, mountflags, dataStr);
-        }
-
-        if (mountRet != 0) {
-            printf("[Init] DoMount, failed for %s, err %d.\n", cmdContent, mountRet);
-        }
+    int mountRet;
+    if (indexOffset >= spaceCnt) {    // no data
+        mountRet = mount(source, target, fileSysType, mountflags, NULL);
     } else {
-        printf("[Init] DoMount, get field failed for %s.\n", cmdContent);
+        const char* dataStr = cmdContent + spacePosArr[indexOffset] + 1;
+        mountRet = mount(source, target, fileSysType, mountflags, dataStr);
+    }
+
+    if (mountRet != 0) {
+        printf("[Init] DoMount, failed for %s, err %d.\n", cmdContent, errno);
     }
 
     free(fileSysType);
     free(source);
     free(target);
+}
+
+static bool CheckValidCfg(const char *path)
+{
+    size_t cfgCnt = sizeof(g_supportCfg) / sizeof(g_supportCfg[0]);
+    struct stat fileStat = {0};
+
+    if (stat(path, &fileStat) != 0 || fileStat.st_size <= 0 || fileStat.st_size > LOADCFG_MAX_FILE_LEN) {
+        return false;
+    }
+
+    for (size_t i = 0; i < cfgCnt; ++i) {
+        if (strcmp(path, g_supportCfg[i]) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void DoLoadCfg(const char *path)
+{
+    char buf[LOADCFG_BUF_SIZE] = {0};
+    FILE *fp = NULL;
+    size_t maxLoop = 0;
+    CmdLine *cmdLine = NULL;
+    int len;
+
+    if (path == NULL) {
+        return;
+    }
+
+    printf("[Init] DoLoadCfg cfg file %s\n", path);
+    if (!CheckValidCfg(path)) {
+        printf("[Init] CheckCfg file %s Failed\n", path);
+        return;
+    }
+
+    fp = fopen(path, "r");
+    if (fp == NULL) {
+        printf("[Init] open cfg error = %d\n", errno);
+        return;
+    }
+
+    cmdLine = (CmdLine *)malloc(sizeof(CmdLine));
+    if (cmdLine == NULL) {
+        printf("[Init] malloc cmdline error");
+        fclose(fp);
+        return;
+    }
+
+    while (fgets(buf, LOADCFG_BUF_SIZE, fp) != NULL && maxLoop < LOADCFG_MAX_LOOP) {
+        maxLoop++;
+        len = strlen(buf);
+        if (len < 1) {
+            continue;
+        }
+        if (buf[len - 1] == '\n') {
+            buf[len - 1] = '\0'; // we replace '\n' with '\0'
+        }
+        (void)memset_s(cmdLine, sizeof(CmdLine), 0, sizeof(CmdLine));
+        ParseCmdLine(buf, cmdLine);
+        DoCmd(cmdLine);
+        (void)memset_s(buf, sizeof(char) * LOADCFG_BUF_SIZE, 0, sizeof(char) * LOADCFG_BUF_SIZE);
+    }
+
+    free(cmdLine);
+    fclose(fp);
 }
 
 void DoCmd(const CmdLine* curCmd)
@@ -323,7 +400,10 @@ void DoCmd(const CmdLine* curCmd)
         DoChown(curCmd->cmdContent);
     } else if (strncmp(curCmd->name, "mount ", strlen("mount ")) == 0) {
         DoMount(curCmd->cmdContent);
+    } else if (strncmp(curCmd->name, "loadcfg ", strlen("loadcfg ")) == 0) {
+        DoLoadCfg(curCmd->cmdContent);
     } else {
         printf("[Init] DoCmd, unknown cmd name %s.\n", curCmd->name);
     }
 }
+

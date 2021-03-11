@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
@@ -31,6 +32,16 @@
 static const int CRASH_TIME_LIMIT  = 240;
 // maximum number of crashes within time CRASH_TIME_LIMIT for one service
 static const int CRASH_COUNT_LIMIT = 4;
+
+static int SetAllAmbientCapability()
+{
+    for (int i = 0; i <= CAP_LAST_CAP; ++i) {
+        if (SetAmbientCapability(i) != 0) {
+            return SERVICE_FAILURE;
+        }
+    }
+    return SERVICE_SUCCESS;
+}
 
 static int SetPerms(const Service *service)
 {
@@ -71,11 +82,24 @@ static int SetPerms(const Service *service)
     if (capset(&capHeader, capData) != 0) {
         return SERVICE_FAILURE;
     }
+    for (unsigned int i = 0; i < service->servPerm.capsCnt; ++i) {
+        if (service->servPerm.caps[i] == FULL_CAP) {
+            return SetAllAmbientCapability();
+        }
+        if (SetAmbientCapability(service->servPerm.caps[i]) != 0) {
+            return SERVICE_FAILURE;
+        }
+    }
     return SERVICE_SUCCESS;
 }
 
 int ServiceStart(Service *service)
 {
+    if (service == NULL) {
+        printf("[Init] start service failed! null ptr.\n");
+        return SERVICE_FAILURE;
+    }
+
     if (service->attribute & SERVICE_ATTR_INVALID) {
         printf("[Init] start service %s invalid.\n", service->name);
         return SERVICE_FAILURE;
@@ -83,9 +107,10 @@ int ServiceStart(Service *service)
 
     struct stat pathStat = {0};
     service->attribute &= (~(SERVICE_ATTR_NEED_RESTART | SERVICE_ATTR_NEED_STOP));
-    if (stat(service->path, &pathStat) != 0) {
+    if (stat(service->pathArgs[0], &pathStat) != 0) {
         service->attribute |= SERVICE_ATTR_INVALID;
-        printf("[Init] start service %s invalid, please check %s.\n", service->name, service->path);
+        printf("[Init] start service %s invalid, please check %s.\n",\
+            service->name, service->pathArgs[0]);
         return SERVICE_FAILURE;
     }
 
@@ -97,9 +122,8 @@ int ServiceStart(Service *service)
             _exit(0x7f); // 0x7f: user specified
         }
 
-        char* argv[] = {service->name, NULL};
         char* env[] = {"LD_LIBRARY_PATH=/storage/app/libs", NULL};
-        if (execve(service->path, argv, env) != 0) {
+        if (execve(service->pathArgs[0], service->pathArgs, env) != 0) {
             printf("[Init] service %s execve failed! err %d.\n", service->name, errno);
         }
         _exit(0x7f); // 0x7f: user specified
@@ -115,6 +139,11 @@ int ServiceStart(Service *service)
 
 int ServiceStop(Service *service)
 {
+    if (service == NULL) {
+        printf("[Init] stop service failed! null ptr.\n");
+        return SERVICE_FAILURE;
+    }
+
     service->attribute &= ~SERVICE_ATTR_NEED_RESTART;
     service->attribute |= SERVICE_ATTR_NEED_STOP;
     if (service->pid <= 0) {
@@ -132,6 +161,11 @@ int ServiceStop(Service *service)
 
 void ServiceReap(Service *service)
 {
+    if (service == NULL) {
+        printf("[Init] reap service failed! null ptr.\n");
+        return;
+    }
+
     service->pid = -1;
 
     // stopped by system-init itself, no need to restart even if it is not one-shot service
@@ -177,3 +211,4 @@ void ServiceReap(Service *service)
 
     service->attribute &= (~SERVICE_ATTR_NEED_RESTART);
 }
+

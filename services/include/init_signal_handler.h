@@ -16,6 +16,11 @@
 #ifndef BASE_STARTUP_INITLITE_SIGNAL_HANDLE_H
 #define BASE_STARTUP_INITLITE_SIGNAL_HANDLE_H
 
+#ifdef __LINUX__
+#include <semaphore.h>
+#include <sys/types.h>
+#endif
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -23,7 +28,10 @@ extern "C" {
 #endif
 
 void SignalInitModule();
-int  SignalShouldKeepAlive();
+
+#ifdef __LINUX__
+void SignalRegWaitSem(pid_t waitPid, sem_t* waitSem);
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus

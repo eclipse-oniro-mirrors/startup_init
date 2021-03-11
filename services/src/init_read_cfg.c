@@ -28,7 +28,10 @@
 #include "init_service_manager.h"
 #include "securec.h"
 
+
 static const long MAX_JSON_FILE_LEN = 102400;    // max init.cfg size 100KB
+static const int  MAX_PATH_ARGS_CNT = 20;        // max path and args count
+static const int  MAX_ONE_ARG_LEN   = 64;        // max length of one param/path
 #define MAX_SERVICES_CNT_IN_FILE 100
 #define MAX_CAPS_CNT_FOR_ONE_SERVICE 100
 #define UID_STR_IN_CFG        "uid"
@@ -76,6 +79,11 @@ static char* ReadFileToBuf()
 static cJSON* GetArrItem(const cJSON* fileRoot, int* arrSize, const char* arrName)
 {
     cJSON* arrItem = cJSON_GetObjectItemCaseSensitive(fileRoot, arrName);
+    if (!cJSON_IsArray(arrItem)) {
+        printf("[Init] GetArrItem, item %s is not an array!\n", arrName);
+        return NULL;
+    }
+
     *arrSize = cJSON_GetArraySize(arrItem);
     if (*arrSize <= 0) {
         return NULL;
@@ -105,39 +113,93 @@ static int IsForbidden(const char* fieldStr)
     }
 }
 
-static int GetServiceString(const cJSON* curArrItem, Service* curServ, const char* targetField, size_t maxLen)
+static void ReleaseServiceMem(Service* curServ)
 {
-    char* fieldStr = cJSON_GetStringValue(cJSON_GetObjectItem(curArrItem, targetField));
+    if (curServ->pathArgs != NULL) {
+        for (int i = 0; i < curServ->pathArgsCnt; ++i) {
+            if (curServ->pathArgs[i] != NULL) {
+                free(curServ->pathArgs[i]);
+                curServ->pathArgs[i] = NULL;
+            }
+        }
+        free(curServ->pathArgs);
+        curServ->pathArgs = NULL;
+    }
+    curServ->pathArgsCnt = 0;
+
+    if (curServ->servPerm.caps != NULL) {
+        free(curServ->servPerm.caps);
+        curServ->servPerm.caps = NULL;
+    }
+    curServ->servPerm.capsCnt = 0;
+}
+
+static int GetServiceName(const cJSON* curArrItem, Service* curServ)
+{
+    char* fieldStr = cJSON_GetStringValue(cJSON_GetObjectItem(curArrItem, "name"));
     if (fieldStr == NULL) {
         return SERVICE_FAILURE;
     }
 
     size_t strLen = strlen(fieldStr);
-    if (strLen == 0 || strLen > maxLen) {
+    if (strLen == 0 || strLen > MAX_SERVICE_NAME) {
         return SERVICE_FAILURE;
     }
 
-    if (strncmp(targetField, "name", strlen("name")) == 0) {
-        if (memcpy_s(curServ->name, maxLen, fieldStr, strLen) != EOK) {
-            return SERVICE_FAILURE;
-        }
-        curServ->name[strLen] = '\0';
-        return SERVICE_SUCCESS;
+    if (memcpy_s(curServ->name, MAX_SERVICE_NAME, fieldStr, strLen) != EOK) {
+        return SERVICE_FAILURE;
+    }
+    curServ->name[strLen] = '\0';
+    return SERVICE_SUCCESS;
+}
+
+static int GetServicePathAndArgs(const cJSON* curArrItem, Service* curServ)
+{
+    cJSON* pathItem = cJSON_GetObjectItem(curArrItem, "path");
+    if (!cJSON_IsArray(pathItem)) {
+        return SERVICE_FAILURE;
     }
 
-    if (strncmp(targetField, "path", strlen("path")) == 0) {
-        if (IsForbidden(fieldStr)) {
-            printf("[Init] InitReadCfg, %s is not allowed.\n", fieldStr);
+    int arrSize = cJSON_GetArraySize(pathItem);
+    if (arrSize <= 0 || arrSize > MAX_PATH_ARGS_CNT) {  // array size invalid
+        return SERVICE_FAILURE;
+    }
+
+    curServ->pathArgs = (char**)malloc((arrSize + 1) * sizeof(char*));
+    if (curServ->pathArgs == NULL) {
+        return SERVICE_FAILURE;
+    }
+    for (int i = 0; i < arrSize + 1; ++i) {
+        curServ->pathArgs[i] = NULL;
+    }
+    curServ->pathArgsCnt = arrSize + 1;
+
+    for (int i = 0; i < arrSize; ++i) {
+        char* curParam = cJSON_GetStringValue(cJSON_GetArrayItem(pathItem, i));
+        if (curParam == NULL || strlen(curParam) > MAX_ONE_ARG_LEN) {
+            // resources will be released by function: ReleaseServiceMem
             return SERVICE_FAILURE;
         }
 
-        if (memcpy_s(curServ->path, maxLen, fieldStr, strLen) != EOK) {
+        if (i == 0 && IsForbidden(curParam)) {
+            // resources will be released by function: ReleaseServiceMem
             return SERVICE_FAILURE;
         }
-        curServ->path[strLen] = '\0';
-        return SERVICE_SUCCESS;
+
+        size_t paramLen = strlen(curParam);
+        curServ->pathArgs[i] = (char*)malloc(paramLen + 1);
+        if (curServ->pathArgs[i] == NULL) {
+            // resources will be released by function: ReleaseServiceMem
+            return SERVICE_FAILURE;
+        }
+
+        if (memcpy_s(curServ->pathArgs[i], paramLen + 1, curParam, paramLen) != EOK) {
+            // resources will be released by function: ReleaseServiceMem
+            return SERVICE_FAILURE;
+        }
+        curServ->pathArgs[i][paramLen] = '\0';
     }
-    return SERVICE_FAILURE;
+    return SERVICE_SUCCESS;
 }
 
 static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const char* targetField)
@@ -200,14 +262,12 @@ static int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
     for (int i = 0; i < capsCnt; ++i) {
         cJSON* capJ = cJSON_GetArrayItem(filedJ, i);
         if (!cJSON_IsNumber(capJ) || cJSON_GetNumberValue(capJ) < 0) {
-            free(curServ->servPerm.caps);
-            curServ->servPerm.caps = NULL;
+            // resources will be released by function: ReleaseServiceMem
             return SERVICE_FAILURE;
         }
         curServ->servPerm.caps[i] = (unsigned int)cJSON_GetNumberValue(capJ);
         if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {
-            free(curServ->servPerm.caps);
-            curServ->servPerm.caps = NULL;
+            // resources will be released by function: ReleaseServiceMem
             return SERVICE_FAILURE;
         }
     }
@@ -244,25 +304,18 @@ static void ParseAllServices(const cJSON* fileRoot)
 
     for (int i = 0; i < servArrSize; ++i) {
         cJSON* curItem = cJSON_GetArrayItem(serviceArr, i);
-        if (GetServiceString(curItem, &retServices[i], "name", MAX_SERVICE_NAME) != SERVICE_SUCCESS ||
-            GetServiceString(curItem, &retServices[i], "path", MAX_SERVICE_PATH) != SERVICE_SUCCESS) {
-            retServices[i].attribute |= SERVICE_ATTR_INVALID;
-            printf("[Init] InitReadCfg, bad string values for service %d.\n", i);
-            continue;
-        }
-
-        if (GetServiceNumber(curItem, &retServices[i], UID_STR_IN_CFG) != SERVICE_SUCCESS ||
+        if (GetServiceName(curItem, &retServices[i]) != SERVICE_SUCCESS ||
+            GetServicePathAndArgs(curItem, &retServices[i]) != SERVICE_SUCCESS ||
+            GetServiceNumber(curItem, &retServices[i], UID_STR_IN_CFG) != SERVICE_SUCCESS ||
             GetServiceNumber(curItem, &retServices[i], GID_STR_IN_CFG) != SERVICE_SUCCESS ||
             GetServiceNumber(curItem, &retServices[i], ONCE_STR_IN_CFG) != SERVICE_SUCCESS ||
-            GetServiceNumber(curItem, &retServices[i], IMPORTANT_STR_IN_CFG) != SERVICE_SUCCESS) {
+            GetServiceNumber(curItem, &retServices[i], IMPORTANT_STR_IN_CFG) != SERVICE_SUCCESS ||
+            GetServiceCaps(curItem, &retServices[i]) != SERVICE_SUCCESS) {
+            // release resources if it fails
+            ReleaseServiceMem(&retServices[i]);
             retServices[i].attribute |= SERVICE_ATTR_INVALID;
-            printf("[Init] InitReadCfg, bad number values for service %d.\n", i);
+            printf("[Init] InitReadCfg, parse information for service %d failed.\n", i);
             continue;
-        }
-
-        if (GetServiceCaps(curItem, &retServices[i]) != SERVICE_SUCCESS) {
-            retServices[i].attribute |= SERVICE_ATTR_INVALID;
-            printf("[Init] InitReadCfg, bad caps values for service %d.\n", i);
         }
     }
     RegisterServices(retServices, servArrSize);
@@ -301,3 +354,4 @@ void InitReadCfg()
     DoJob("post-init");
     ReleaseAllJobs();
 }
+
