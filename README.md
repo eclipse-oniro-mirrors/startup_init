@@ -240,13 +240,13 @@ A single job can hold a maximum of 30 commands \(only  **start**,  **mkdir**,  *
 
 ## Repositories Involved<a name="section641143415335"></a>
 
-Startup Subsystem
+[Startup subsystem](https://gitee.com/openharmony/docs/blob/master/en/readme/startup.md)
 
-hmf/startup/syspara\_lite
+[startup\_syspara\_lite](https://gitee.com/openharmony/startup_syspara_lite/blob/master/README.md)
 
-hmf/startup/appspawn\_lite
+[startup\_appspawn\_lite](https://gitee.com/openharmony/startup_appspawn_lite/blob/master/README.md)
 
-hmf/startup/bootstrap\_lite
+[startup\_bootstrap\_lite](https://gitee.com/openharmony/startup_bootstrap_lite/blob/master/README.md)
 
-**hmf/startup/init\_lite**
+**[startup\_init\_lite](https://gitee.com/openharmony/startup_init_lite/blob/master/README.md)**
 

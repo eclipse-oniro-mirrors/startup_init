@@ -240,17 +240,13 @@ init将系统启动分为三个阶段：
 
 ## 相关仓<a name="section641143415335"></a>
 
-启动恢复子系统
+[启动恢复子系统](https://gitee.com/openharmony/docs/blob/master/zh-cn/readme/%E5%90%AF%E5%8A%A8%E6%81%A2%E5%A4%8D%E5%AD%90%E7%B3%BB%E7%BB%9F.md)
 
-hmf/startup/syspara\_lite
+[startup\_syspara\_lite](https://gitee.com/openharmony/startup_syspara_lite/blob/master/README_zh.md)
 
-hmf/startup/appspawn\_lite
+[startup\_appspawn\_lite](https://gitee.com/openharmony/startup_appspawn_lite/blob/master/README_zh.md)
 
-hmf/startup/bootstrap\_lite
+[startup\_bootstrap\_lite](https://gitee.com/openharmony/startup_bootstrap_lite/blob/master/README_zh.md)
 
-**hmf/startup/init\_lite**
-
-hmf/startup/startup
-
-hmf/startup/systemrestore
+**[startup\_init\_lite](https://gitee.com/openharmony/startup_init_lite/blob/master/README_zh.md)**
 
