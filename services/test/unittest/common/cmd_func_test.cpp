@@ -135,7 +135,7 @@ public:
  ** @tc.type: FUNC
  ** @tc.require: AR000F733F
  **/
-HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_001, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_001, TestSize.Level1)
 {
     // do not crash
     ParseCmdLine(nullptr, nullptr);
@@ -147,7 +147,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_001, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F733F
  **/
-HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_002, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_002, TestSize.Level1)
 {
     CmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
@@ -175,7 +175,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_002, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F733F
  **/
-HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_003, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_003, TestSize.Level1)
 {
     CmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
@@ -193,7 +193,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_003, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F733F
  **/
-HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_004, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_004, TestSize.Level1)
 {
     CmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
@@ -234,7 +234,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_004, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F733E
  **/
-HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_005, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_005, TestSize.Level1)
 {
     CmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
@@ -266,7 +266,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_005, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F733E
  **/
-HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_001, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_001, TestSize.Level1)
 {
     // do not crash here
     DoCmd(nullptr);
@@ -278,7 +278,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_001, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F733E
  **/
-HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_002, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_002, TestSize.Level1)
 {
     CmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
@@ -297,7 +297,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_002, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F733E
  **/
-HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level1)
 {
     CmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
@@ -341,7 +341,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F732P
  **/
-HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_004, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_004, TestSize.Level1)
 {
     CmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
@@ -393,7 +393,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_004, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F732P
  **/
-HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_005, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_005, TestSize.Level1)
 {
     CmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
@@ -434,7 +434,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_005, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F732P
  **/
-HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_006, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_006, TestSize.Level1)
 {
     CmdLine curCmdLine;
 
@@ -499,7 +499,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_006, TestSize.Level0)
  ** @tc.type: FUNC
  ** @tc.require: AR000F733F
  **/
-HWTEST_F(StartupInitUTest, cfgCheckStat_001, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cfgCheckStat_001, TestSize.Level1)
 {
     struct stat fileStat = {0};
     EXPECT_EQ(0, stat(CFG_FILE.c_str(), &fileStat));
@@ -764,7 +764,7 @@ static void CheckJobs(const cJSON* fileRoot)
  ** @tc.type: FUNC
  ** @tc.require: AR000F733F
  **/
-HWTEST_F(StartupInitUTest, cfgCheckContent_001, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cfgCheckContent_001, TestSize.Level1)
 {
     char* fileBuf = ReadFileToBuf();
     if (fileBuf == nullptr) {
@@ -814,7 +814,7 @@ static void CreateIllegalCfg()
  * @tc.type: FUNC
  * @tc.require: AR000F861Q
  */
-HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_001, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_001, TestSize.Level1)
 {
     CmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
@@ -830,7 +830,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_001, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require: AR000F861Q
  */
-HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level1)
 {
     CmdLine curCmdLine;
     std::string cmdStr = "loadcfg ";
@@ -868,7 +868,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require: AR000F861Q
  */
-HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_003, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_003, TestSize.Level1)
 {
     CmdLine curCmdLine;
     std::string cmdStr = "loadcfg ";
@@ -916,7 +916,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_003, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require: AR000F733F
  */
-HWTEST_F(StartupInitUTest, cmdJobTest_001, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdJobTest_001, TestSize.Level1)
 {
     // functions do not crash
     ParseAllJobs(nullptr);
@@ -938,7 +938,7 @@ HWTEST_F(StartupInitUTest, cmdJobTest_001, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require: AR000F733F
  */
-HWTEST_F(StartupInitUTest, cmdJobTest_002, TestSize.Level0)
+HWTEST_F(StartupInitUTest, cmdJobTest_002, TestSize.Level1)
 {
     std::string cfgJson = "{\"jobs\":[{\"name\":\"pre-init\",\"cmds\":[\"mkdir " +
         PRE_INIT_DIR + "\"]},{\"name\":\"init\",\"cmds\":[\"mkdir " + INIT_DIR +
