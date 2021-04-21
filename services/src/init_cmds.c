@@ -24,10 +24,13 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
+#if !OHOS_LITE
+#include <sys/syscall.h>
+#include <fcntl.h>
+#include <linux/module.h>
+#endif
 #include "init_service_manager.h"
 #include "securec.h"
-
 
 #define MODE_LEN 4   // for chmod mode, format 0xxx
 #define DEFAULT_DIR_MODE 0755  // mkdir, default mode
@@ -48,6 +51,7 @@ static const char* g_supportedCmds[] = {
     "chown ",
     "mount ",
     "loadcfg ",
+    "insmod ",
 };
 
 void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
@@ -172,14 +176,14 @@ static void DoChown(const char* cmdContent)
 static char* CopySubStr(const char* srcStr, size_t startPos, size_t endPos)
 {
     if (endPos <= startPos) {
-        printf("[Init] DoMount, invalid params<%lu, %lu> for %s.\n", endPos, startPos, srcStr);
+        printf("[Init] DoMount, invalid params<%zu, %zu> for %s.\n", endPos, startPos, srcStr);
         return NULL;
     }
 
     size_t mallocLen = endPos - startPos + 1;
     char* retStr = (char*)malloc(mallocLen);
     if (retStr == NULL) {
-        printf("[Init] DoMount, malloc failed! malloc size %lu, for %s.\n", mallocLen, srcStr);
+        printf("[Init] DoMount, malloc failed! malloc size %zu, for %s.\n", mallocLen, srcStr);
         return NULL;
     }
 
@@ -316,6 +320,86 @@ static void DoMount(const char* cmdContent)
     free(target);
 }
 
+#if !OHOS_LITE
+// format insmod <ko name> [-f] [options]
+static void DoInsmod(const char *cmdContent)
+{
+#define OPTIONS_SIZE (128u)
+    char *p = NULL;
+    char *line = NULL;
+    char *restPtr = NULL;
+    char *fileName = NULL;
+    int flags = 0;
+    int fd = -1;
+    char options[OPTIONS_SIZE] = {0};
+
+    size_t count = strlen(cmdContent);
+    if (count > OPTIONS_SIZE) {
+        printf("[Init], options too long, maybe lost some of options\n");
+    }
+    line = (char *)malloc(count + 1);
+    if (line == NULL) {
+        printf("[Init] Allocate memory failed.\n");
+        return;
+    }
+    if (memcpy_s(line, count, cmdContent, count) != EOK) {
+        printf("[Init] memcpy failed\n");
+    }
+
+    line[count] = '\0';
+
+    do {
+        if ((p = strtok_r(line, " ", &restPtr)) == NULL) {
+            printf("[Init] debug, cannot get filename\n");
+            free(line);
+            return;
+        }
+        fileName = p;
+        printf("[Init] debug, fileName is [%s]\n", fileName);
+        if ((p = strtok_r(NULL, " ", &restPtr)) == NULL) {
+            break;
+        }
+        if (!strcmp(p, "-f")) {
+            flags = MODULE_INIT_IGNORE_VERMAGIC | MODULE_INIT_IGNORE_MODVERSIONS;
+        }
+    } while (0);
+
+    if (flags != 0) { //  '-f' option
+        p = restPtr; // grab all rest of contents.
+    } else { // no '-f' option, should combine p and resetPtr
+        if (p != NULL) {
+            if (restPtr != NULL) {
+                if (snprintf_s(options, sizeof(options), OPTIONS_SIZE -1, "%s %s", p, restPtr) == -1) {
+                    return;
+                }
+            } else {
+                if (strncpy_s(options, OPTIONS_SIZE - 1, p, strlen(p)) != 0) {
+                    return;
+                }
+            }
+        }
+    }
+    // Open ko files
+    fd = open(fileName, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (fd < 0) {
+        printf("[Init] failed to open %s: %d\n", fileName, errno);
+        goto out;
+    }
+
+    int rc = syscall(__NR_finit_module, fd, options, flags);
+    if (rc == -1) {
+        printf("[Init] finit_module for %s failed: %d\n", fileName, errno);
+    }
+out:
+    if (fd > 0) {
+        close(fd);
+    }
+    if (line != NULL) {
+        free(line);
+    }
+}
+#endif
+
 static bool CheckValidCfg(const char *path)
 {
     size_t cfgCnt = sizeof(g_supportCfg) / sizeof(g_supportCfg[0]);
@@ -402,7 +486,13 @@ void DoCmd(const CmdLine* curCmd)
         DoMount(curCmd->cmdContent);
     } else if (strncmp(curCmd->name, "loadcfg ", strlen("loadcfg ")) == 0) {
         DoLoadCfg(curCmd->cmdContent);
-    } else {
+    }
+#if !OHOS_LITE
+    else if (strncmp(curCmd->name, "insmod ", strlen("insmod ")) == 0) {
+        DoInsmod(curCmd->cmdContent);
+    }
+#endif
+    else {
         printf("[Init] DoCmd, unknown cmd name %s.\n", curCmd->name);
     }
 }

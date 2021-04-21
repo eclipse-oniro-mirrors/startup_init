@@ -10,60 +10,110 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//build/lite/config/component/lite_component.gni")
+if (defined(ohos_lite)) {
+  import("//build/lite/config/component/lite_component.gni")
 
-lite_component("init_lite") {
-  features = [ ":init" ]
-}
-
-# feature: init
-executable("init") {
-  defines = [
-    "_GNU_SOURCE",  #syscall function need this macro definition
-  ]
-  sources = [
-    "src/init_adapter.c",
-    "src/init_cmds.c",
-    "src/init_jobs.c",
-    "src/init_read_cfg.c",
-    "src/init_service.c",
-    "src/init_service_manager.c",
-    "src/init_signal_handler.c",
-    "src/main.c",
-  ]
-
-  include_dirs = [
-    "include",
-    "//third_party/cJSON",
-    "//third_party/bounds_checking_function/include",
-    "//base/startup/syspara_lite/interfaces/kits",
-  ]
-
-  cflags = [ "-Wall" ]
-
-  deps = [
-    "//base/startup/syspara_lite/frameworks/parameter:parameter",
-    "//build/lite/config/component/cJSON:cjson_shared",
-    "//third_party/bounds_checking_function:libsec_shared",
-  ]
-
-  ldflags = []
-
-  if (ohos_kernel_type == "liteos_a") {
-    include_dirs += [ "//kernel/liteos_a/syscall" ]
+  lite_component("init_lite") {
+    features = [ ":init" ]
   }
 
-  if (ohos_kernel_type == "linux") {
-    defines += [ "NEED_EXEC_RCS_LINUX" ]
-    ldflags += [
-      "-lm",
-      "-lpthread",
+  # feature: init
+  executable("init") {
+    defines = [
+      "_GNU_SOURCE",  #syscall function need this macro definition
+      "OHOS_LITE=1",
     ]
-  }
-}
+    sources = [
+      "src/init_adapter.c",
+      "src/init_cmds.c",
+      "src/init_jobs.c",
+      "src/init_read_cfg.c",
+      "src/init_service.c",
+      "src/init_service_manager.c",
+      "src/init_signal_handler.c",
+      "src/main.c",
+    ]
 
-if (ohos_build_type == "debug") {
-  group("unittest") {
-    deps = [ "//base/startup/init_lite/services/test/unittest/common:unittest" ]
+    include_dirs = [
+      "include",
+      "//third_party/cJSON",
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/syspara_lite/interfaces/kits",
+    ]
+
+    cflags = [ "-Wall" ]
+
+    deps = [
+      "//base/startup/syspara_lite/frameworks/parameter:parameter",
+      "//build/lite/config/component/cJSON:cjson_shared",
+      "//third_party/bounds_checking_function:libsec_shared",
+    ]
+    ldflags = []
+    if (ohos_kernel_type == "liteos_a") {
+      include_dirs += [ "//kernel/liteos_a/syscall" ]
+    }
+    if (ohos_kernel_type == "linux") {
+      defines += [ "NEED_EXEC_RCS_LINUX" ]
+      ldflags += [
+        "-lm",
+        "-lpthread",
+      ]
+    }
+  }
+
+  if (ohos_build_type == "debug") {
+    group("unittest") {
+      deps = [ "//base/startup/init_lite/services/test/unittest/common:unittest" ]
+    }
+  }
+} else {
+  import("//build/ohos.gni")
+
+  ohos_executable("updaterueventd") {
+      sources = [
+          "src/uevent.c",
+          "src/list.c",
+      ]
+      include_dirs = [
+          "include",
+          "//third_party/bounds_checking_function/include",
+      ]
+      deps = [
+          "//third_party/bounds_checking_function:libsec_static",
+      ]
+      install_enable = true
+      part_name = "updater"
+  }
+
+  ohos_executable("updaterinit") {
+      sources = [
+          "src/main.c",
+          "src/init_cmds.c",
+          "src/init_jobs.c",
+          "src/init_read_cfg.c",
+          "src/init_adapter.c",
+          "src/init_service.c",
+          "src/init_service_manager.c",
+          "src/init_signal_handler.c",
+          "src/device.c",
+      ]
+      defines = [ "OHOS_LITE=0" ]
+      include_dirs = [
+          "include",
+          "//third_party/cJSON",
+          "//third_party/bounds_checking_function/include",
+      ]
+      deps = [
+          "//third_party/bounds_checking_function:libsec_static",
+          "//third_party/cJSON:cjson_static",
+      ]
+      install_enable = true
+      part_name = "updater"
+  }
+
+  ohos_prebuilt_etc("init.cfg") {
+      source = "//device/hisilicon/hi3516dv300/updater/init.cfg"
+      relative_install_dir = "init"
+      subsystem_name = "updater"
   }
 }
