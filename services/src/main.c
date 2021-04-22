@@ -27,11 +27,11 @@
 #include "init_adapter.h"
 #include "init_read_cfg.h"
 #include "init_signal_handler.h"
-#if OHOS_LITE
+#ifdef OHOS_LITE
 #include "parameter.h"
 #endif
 
-#if !OHOS_LITE
+#ifndef OHOS_LITE
 #include "device.h"
 #endif
 
@@ -39,7 +39,7 @@ static const pid_t INIT_PROCESS_PID = 1;
 
 static void PrintSysInfo()
 {
-#if OHOS_LITE
+#ifdef OHOS_LITE
     char* sysInfo = GetVersionId();
     if (sysInfo != NULL) {
         printf("[Init] %s\n", sysInfo);
@@ -80,7 +80,7 @@ int main(int argc, char * const argv[])
     // 1. print system info
     PrintSysInfo();
 
-#if !OHOS_LITE
+#ifndef OHOS_LITE
     // 2. Mount basic filesystem and create common device node.
     MountBasicFs();
     CreateDeviceNode();

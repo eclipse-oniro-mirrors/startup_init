@@ -21,7 +21,7 @@ if (defined(ohos_lite)) {
   executable("init") {
     defines = [
       "_GNU_SOURCE",  #syscall function need this macro definition
-      "OHOS_LITE=1",
+      "OHOS_LITE",
     ]
     sources = [
       "src/init_adapter.c",
@@ -97,7 +97,6 @@ if (defined(ohos_lite)) {
           "src/init_signal_handler.c",
           "src/device.c",
       ]
-      defines = [ "OHOS_LITE=0" ]
       include_dirs = [
           "include",
           "//third_party/cJSON",

@@ -24,7 +24,7 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#if !OHOS_LITE
+#ifndef OHOS_LITE
 #include <sys/syscall.h>
 #include <fcntl.h>
 #include <linux/module.h>
@@ -320,7 +320,7 @@ static void DoMount(const char* cmdContent)
     free(target);
 }
 
-#if !OHOS_LITE
+#ifndef OHOS_LITE
 // format insmod <ko name> [-f] [options]
 static void DoInsmod(const char *cmdContent)
 {
@@ -370,10 +370,12 @@ static void DoInsmod(const char *cmdContent)
         if (p != NULL) {
             if (restPtr != NULL) {
                 if (snprintf_s(options, sizeof(options), OPTIONS_SIZE -1, "%s %s", p, restPtr) == -1) {
+                    goto out;
                     return;
                 }
             } else {
                 if (strncpy_s(options, OPTIONS_SIZE - 1, p, strlen(p)) != 0) {
+                    goto out;
                     return;
                 }
             }
@@ -487,7 +489,7 @@ void DoCmd(const CmdLine* curCmd)
     } else if (strncmp(curCmd->name, "loadcfg ", strlen("loadcfg ")) == 0) {
         DoLoadCfg(curCmd->cmdContent);
     }
-#if !OHOS_LITE
+#ifndef OHOS_LITE
     else if (strncmp(curCmd->name, "insmod ", strlen("insmod ")) == 0) {
         DoInsmod(curCmd->cmdContent);
     }
