@@ -20,6 +20,13 @@
 #include <string.h>
 #include <errno.h>
 
+#define DEFAULT_RW_MODE 0666
+#define DEFAULT_NO_AUTHORITY_MODE 0600
+#define DEVICE_ID_THIRD 3
+#define DEVICE_ID_EIGHTH 8
+#define DEVICE_ID_NINTH 9
+#define DEVICE_ID_ELEVNTH 11
+
 void MountBasicFs()
 {
     if (mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
@@ -35,17 +42,17 @@ void MountBasicFs()
 
 void CreateDeviceNode()
 {
-    if (mknod("/dev/kmsg", S_IFCHR | 0600, makedev(1, 11)) != 0) {
+    if (mknod("/dev/kmsg", S_IFCHR | DEFAULT_NO_AUTHORITY_MODE, makedev(1, DEVICE_ID_ELEVNTH)) != 0) {
         printf("Create /dev/kmsg device node failed. %s\n", strerror(errno));
     }
-    if (mknod("/dev/null", S_IFCHR | 0666, makedev(1, 3)) != 0) {
+    if (mknod("/dev/null", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_THIRD)) != 0) {
         printf("Create /dev/null device node failed. %s\n", strerror(errno));
     }
-    if (mknod("/dev/random", S_IFCHR | 0666, makedev(1, 8)) != 0) {
+    if (mknod("/dev/random", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_EIGHTH)) != 0) {
         printf("Create /dev/random device node failed. %s\n", strerror(errno));
     }
 
-    if (mknod("/dev/urandom", S_IFCHR | 0666, makedev(1, 9)) != 0) {
+    if (mknod("/dev/urandom", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_NINTH)) != 0) {
         printf("Create /dev/urandom device node failed. %s\n", strerror(errno));
     }
 }

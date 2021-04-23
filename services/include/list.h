@@ -22,8 +22,6 @@ extern "C" {
 #endif
 #endif
 
-#include <stddef.h>
-
 struct ListNode {
     struct ListNode *next;
     struct ListNode *prev;

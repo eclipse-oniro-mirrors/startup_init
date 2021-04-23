@@ -31,7 +31,56 @@
 #include "list.h"
 #include "securec.h"
 
+#define LINK_NUMBER 4
+#define DEFAULT_DIR_MODE 0755
+#define DEV_DRM 3
+#define DEV_ONCRPC 6
+#define DEV_ADSP 4
+#define DEV_INPUT 5
+#define DEV_MTD 3
+#define DEV_SOUND 5
+#define DEV_MISC 4
+#define DEV_DEFAULT 4
+#define DEV_PLAT_FORM 9
+#define DEV_USB 4
+#define DEV_GRAPHICS 8
+#define EVENT_ACTION 7
+#define EVENT_DEVPATH 8
+#define EVENT_SYSTEM 10
+#define EVENT_FIRMWARE 9
+#define EVENT_MAJOR 6
+#define EVENT_MINOR 6
+#define EVENT_PARTN 6
+#define EVENT_PART_NAME 9
+#define EVENT_DEV_NAME 8
+#define EVENT_BLOCK 5
+#define EVENT_PLAT_FORM 8
+#define TRIGGER_ADDR_SIZE 4
+#define BASE_BUFFER_SIZE 1024
+#define MAX_BUFFER 256
+#define EVENT_MAX_BUFFER 1026
+#define MAX_DEV_PATH 96
+#define MINORS_GROUPS 128
+#define SYS_LINK_NUMBER 2
+#define MAX_DEVICE_LEN 64
+#define DEFAULT_MODE 0000
+#define DEVICE_SKIP 5
+#define HANDLE_DEVICE_USB 3
+#define DEFAULT_NO_AUTHORITY_MODE 0600
+
 int g_ueventFD = -1;
+
+#define CHECK_RESULT_DONE(ret, do, another) \
+    if (ret) {                       \
+        do;                         \
+    } else {                        \
+        another;                    \
+    }
+
+#define CHECK_RETURN(ret, statement)                \
+    if (!(ret)) {                                   \
+        statement;                                  \
+    }
 
 struct Uevent {
     const char *action;
@@ -71,7 +120,7 @@ static void DoTrigger(DIR *dir)
     int dfd = dirfd(dir);
     int fd = openat(dfd, "uevent", O_WRONLY);
     if (fd >= 0) {
-        write(fd, "add\n", 4);
+        write(fd, "add\n", TRIGGER_ADDR_SIZE);
         close(fd);
         HandleUevent();
     }
@@ -114,7 +163,7 @@ static void RetriggerUevent()
     Trigger("/sys/class");
     Trigger("/sys/block");
     Trigger("/sys/devices");
-    int fd = open(TRIGGER, O_WRONLY | O_CREAT | O_CLOEXEC, 0000);
+    int fd = open(TRIGGER, O_WRONLY | O_CREAT | O_CLOEXEC, DEFAULT_MODE);
     if (fd > 0) {
         close(fd);
     }
@@ -124,7 +173,7 @@ static void RetriggerUevent()
 static void UeventSockInit()
 {
     struct sockaddr_nl addr;
-    int buffSize = 256 * 1024;
+    int buffSize = MAX_BUFFER * BASE_BUFFER_SIZE;
     int on = 1;
 
     if (memset_s(&addr, sizeof(addr), 0, sizeof(addr)) != 0) {
@@ -211,32 +260,32 @@ static void ParseUevent(const char *buf, struct Uevent *event)
 {
     InitUevent(event);
     while (*buf) {
-        if (strncmp(buf, "ACTION=", 7) == 0) {
-            buf += 7;
+        if (strncmp(buf, "ACTION=", EVENT_ACTION) == 0) {
+            buf += EVENT_ACTION;
             event->action = buf;
-        } else if (strncmp(buf, "DEVPATH=", 8) == 0) {
-            buf += 8;
+        } else if (strncmp(buf, "DEVPATH=", EVENT_DEVPATH) == 0) {
+            buf += EVENT_DEVPATH;
             event->path = buf;
-        } else if (strncmp(buf, "SUBSYSTEM=", 10) == 0) {
-            buf += 10;
+        } else if (strncmp(buf, "SUBSYSTEM=", EVENT_SYSTEM) == 0) {
+            buf += EVENT_SYSTEM;
             event->subsystem = buf;
-        } else if (strncmp(buf, "FIRMWARE=", 9) == 0) {
-            buf += 9;
+        } else if (strncmp(buf, "FIRMWARE=", EVENT_FIRMWARE) == 0) {
+            buf += EVENT_FIRMWARE;
             event->firmware = buf;
-        } else if (strncmp(buf, "MAJOR=", 6) == 0) {
-            buf += 6;
+        } else if (strncmp(buf, "MAJOR=", EVENT_MAJOR) == 0) {
+            buf += EVENT_MAJOR;
             event->major = atoi(buf);
-        } else if (strncmp(buf, "MINOR=", 6) == 0) {
-            buf += 6;
+        } else if (strncmp(buf, "MINOR=", EVENT_MINOR) == 0) {
+            buf += EVENT_MINOR;
             event->minor = atoi(buf);
-        } else if (strncmp(buf, "PARTN=", 6) == 0) {
-            buf += 6;
+        } else if (strncmp(buf, "PARTN=", EVENT_PARTN) == 0) {
+            buf += EVENT_PARTN;
             event->partitionNum = atoi(buf);
-        } else if (strncmp(buf, "PARTNAME=", 9) == 0) {
-            buf += 9;
+        } else if (strncmp(buf, "PARTNAME=", EVENT_PART_NAME) == 0) {
+            buf += EVENT_PART_NAME;
             event->partitionName = buf;
-        } else if (strncmp(buf, "DEVNAME=", 8) == 0) {
-            buf += 8;
+        } else if (strncmp(buf, "DEVNAME=", EVENT_DEV_NAME) == 0) {
+            buf += EVENT_DEV_NAME;
             event->deviceName = buf;
         }
         // Drop reset.
@@ -293,24 +342,17 @@ static char **ParsePlatformBlockDevice(const struct Uevent *uevent)
     const char *device;
     char *slash = NULL;
     const char *type;
-    char linkPath[256];
+    char linkPath[MAX_BUFFER];
     int linkNum = 0;
     char *p = NULL;
 
     struct PlatformNode *pDev = FindPlatformDevice(uevent->path);
-    if (pDev) {
-        device = pDev->name;
-        type = "platform";
-    } else {
-        printf("Non platform device.\n");
-        return NULL;
-    }
-
-    char **links = malloc(sizeof(char *) * 4);
+    CHECK_RESULT_DONE(pDev, device = pDev->name; type = "platform", printf("Non platform device.\n"); return NULL);
+    char **links = malloc(sizeof(char *) * LINK_NUMBER);
     if (!links) {
         return NULL;
     }
-    if (memset_s(links, sizeof(char *) * 4, 0, sizeof(char *) * 4) != 0) {
+    if (memset_s(links, sizeof(char *) * LINK_NUMBER, 0, sizeof(char *) * LINK_NUMBER) != 0) {
         return NULL;
     }
     printf("found %s device %s\n", type, device);
@@ -351,7 +393,7 @@ static void MakeDevice(const char *devpath, const char *path, int block, int maj
     /* Only for super user */
     gid_t gid = 0;
     dev_t dev;
-    mode_t mode = 0600;
+    mode_t mode = DEFAULT_NO_AUTHORITY_MODE;
     mode |= (block ? S_IFBLK : S_IFCHR);
     dev = makedev(major, minor);
     setegid(gid);
@@ -402,7 +444,7 @@ int MkdirRecursive(const char *pathName, mode_t mode)
 
 void RemoveLink(const char *oldpath, const char *newpath)
 {
-    char path[256];
+    char path[MAX_BUFFER];
     ssize_t ret = readlink(newpath, path, sizeof(path) - 1);
     if (ret <= 0) {
         return;
@@ -415,7 +457,7 @@ void RemoveLink(const char *oldpath, const char *newpath)
 
 static void MakeLink(const char *oldPath, const char *newPath)
 {
-    char buf[256];
+    char buf[MAX_BUFFER];
     char *slash = strrchr(newPath, '/');
     if (!slash) {
         return;
@@ -428,7 +470,7 @@ static void MakeLink(const char *oldPath, const char *newPath)
         return;
     }
     buf[width] = 0;
-    int ret = MkdirRecursive(buf, 0755);
+    int ret = MkdirRecursive(buf, DEFAULT_DIR_MODE);
     if (ret) {
         printf("Failed to create directory %s: %s (%d)\n", buf, strerror(errno), errno);
     }
@@ -438,12 +480,11 @@ static void MakeLink(const char *oldPath, const char *newPath)
     }
 }
 
-static void HandleDevice(const char *action, const char *devpath, const char *path, int block, int major,
-    int minor, char **links)
+static void HandleDevice(struct Uevent *event, const char *devpath, int block, char **links)
 {
     int i;
-    if (!strcmp(action, "add")) {
-        MakeDevice(devpath, path, block, major, minor);
+    if (!strcmp(event->action, "add")) {
+        MakeDevice(devpath, event->path, block, event->major, event->minor);
         if (links) {
             for (i = 0; links[i]; i++) {
                 MakeLink(devpath, links[i]);
@@ -451,7 +492,7 @@ static void HandleDevice(const char *action, const char *devpath, const char *pa
         }
     }
 
-    if (!strcmp(action, "remove")) {
+    if (!strcmp(event->action, "remove")) {
         if (links) {
             for (i = 0; links[i]; i++) {
                 RemoveLink(devpath, links[i]);
@@ -471,7 +512,7 @@ static void HandleDevice(const char *action, const char *devpath, const char *pa
 static void HandleBlockDevice(struct Uevent *event)
 {
     const char *base = "/dev/block";
-    char devpath[96];
+    char devpath[MAX_DEV_PATH];
     char **links = NULL;
 
     if (event->major < 0 || event->minor < 0) {
@@ -482,17 +523,17 @@ static void HandleBlockDevice(struct Uevent *event)
         return;
     }
     name++;
-    if (strlen(name) > 64) { // too long
+    if (strlen(name) > MAX_DEVICE_LEN) { // too long
         return;
     }
     if (snprintf_s(devpath, sizeof(devpath), sizeof(devpath), "%s/%s", base, name) == -1) {
         return;
     }
-    MakeDir(base, 0755);
-    if (!strncmp(event->path, "/devices/", 9)) {
+    MakeDir(base, DEFAULT_DIR_MODE);
+    if (!strncmp(event->path, "/devices/", DEV_PLAT_FORM)) {
         links = ParsePlatformBlockDevice(event);
     }
-    HandleDevice(event->action, devpath, event->path, 1, event->major, event->minor, links);
+    HandleDevice(event, devpath, 1, links);
 }
 
 static void AddPlatformDevice(const char *path)
@@ -500,10 +541,10 @@ static void AddPlatformDevice(const char *path)
     size_t pathLen = strlen(path);
     const char *name = path;
 
-    if (!strncmp(path, "/devices/", 9)) {
-        name += 9;
-        if (!strncmp(name, "platform/", 9)) {
-            name += 9;
+    if (!strncmp(path, "/devices/", DEV_PLAT_FORM)) {
+        name += DEV_PLAT_FORM;
+        if (!strncmp(name, "platform/", DEV_PLAT_FORM)) {
+            name += DEV_PLAT_FORM;
         }
     }
     printf("adding platform device %s (%s)\n", name, path);
@@ -567,15 +608,11 @@ static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
     int width;
 
     struct PlatformNode *pDev = FindPlatformDevice(uevent->path);
-    if (!pDev) {
-        return NULL;
-    }
+    CHECK_RETURN(pDev, return NULL);
 
-    char **links = malloc(sizeof(char *) * 2);
-    if (!links) {
-        return NULL;
-    }
-    if (memset_s(links, sizeof(char *) * 2, 0, sizeof(char *) * 2) != 0) {
+    char **links = malloc(sizeof(char *) * SYS_LINK_NUMBER);
+    CHECK_RETURN(links, return NULL);
+    if (memset_s(links, sizeof(char *) * SYS_LINK_NUMBER, 0, sizeof(char *) * SYS_LINK_NUMBER) != 0) {
         return NULL;
     }
 
@@ -585,11 +622,19 @@ static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
         goto err;
     }
 
-    if (!strncmp(parent, "/usb", 4)) {
+    if (!strncmp(parent, "/usb", DEV_USB)) {
        /* skip root hub name and device. use device interface */
-        while (*++parent && *parent != '/') {}
+        while (*++parent) {
+            if (*parent == '/') {
+                break;
+            }
+        }
         if (*parent) {
-            while (*++parent && *parent != '/') {}
+            while (*++parent) {
+                if (*parent == '/') {
+                    break;
+                }
+            }
         }
         if (!*parent) {
             goto err;
@@ -608,7 +653,7 @@ static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
         } else {
             links[linkNum] = NULL;
         }
-        mkdir("/dev/usb", 0755);
+        mkdir("/dev/usb", DEFAULT_DIR_MODE);
     } else {
         goto err;
     }
@@ -618,97 +663,106 @@ err:
     return NULL;
 }
 
+static int HandleUsbDevice(const struct Uevent *event, char *devpath, int len)
+{
+    if (event->deviceName) {
+        /*
+         * create device node provided by kernel if present
+         * see drivers/base/core.c
+         */
+        char *p = devpath;
+        if (snprintf_s(devpath, len, len, "/dev/%s", event->deviceName) == -1) {
+            return -1;
+        }
+        /* skip leading /dev/ */
+        p += DEVICE_SKIP;
+        /* build directories */
+        while (*p) {
+            if (*p == '/') {
+                *p = 0;
+                MakeDir(devpath, DEFAULT_DIR_MODE);
+                *p = '/';
+            }
+            p++;
+        }
+    } else {
+        /* This imitates the file system that would be created
+         * if we were using devfs instead.
+         * Minors are broken up into groups of 128, starting at "001"
+         */
+        int busId  = event->minor / MINORS_GROUPS + 1;
+        int deviceId = event->minor % MINORS_GROUPS + 1;
+        /* build directories */
+        MakeDir("/dev/bus", DEFAULT_DIR_MODE);
+        MakeDir("/dev/bus/usb", DEFAULT_DIR_MODE);
+        if (snprintf_s(devpath, len, len, "/dev/bus/usb/%03d", busId) == -1) {
+            return -1;
+        }
+        MakeDir(devpath, DEFAULT_DIR_MODE);
+        if (snprintf_s(devpath, len, len, "/dev/bus/usb/%03d/%03d", busId,
+            deviceId) == -1) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+static void HandleDeviceEvent(struct Uevent *event, char *devpath, int len, const char *base, const char *name)
+{
+    char **links = NULL;
+    links = GetCharacterDeviceSymlinks(event);
+    if (!devpath[0]) {
+        if (snprintf_s(devpath, len, len, "%s%s", base, name) == -1) {
+            printf("[Init] snprintf_s err \n");
+            return;
+        }
+    }
+    HandleDevice(event, devpath, 0, links);
+    return;
+}
 static void HandleGenericDevice(struct Uevent *event)
 {
     char *base = NULL;
-    char devpath[96] = {0};
-    char **links = NULL;
-
-    const char *name = ParseDeviceName(event, 64);
+    char devpath[MAX_DEV_PATH] = {0};
+    const char *name = ParseDeviceName(event, MAX_DEVICE_LEN);
     if (!name) {
         return;
     }
-    if (!strncmp(event->subsystem, "usb", 3)) {
+    if (!strncmp(event->subsystem, "usb", HANDLE_DEVICE_USB)) {
         if (!strcmp(event->subsystem, "usb")) {
-            if (event->deviceName) {
-                /*
-                 * create device node provided by kernel if present
-                 * see drivers/base/core.c
-                 */
-                char *p = devpath;
-                if (snprintf_s(devpath, sizeof(devpath), sizeof(devpath), "/dev/%s", event->deviceName) == -1) {
-                    return;
-                }
-                /* skip leading /dev/ */
-                p += 5;
-                /* build directories */
-                while (*p) {
-                    if (*p == '/') {
-                        *p = 0;
-                        MakeDir(devpath, 0755);
-                        *p = '/';
-                    }
-                    p++;
-                }
-            } else {
-                /* This imitates the file system that would be created
-                 * if we were using devfs instead.
-                 * Minors are broken up into groups of 128, starting at "001"
-                 */
-                int busId  = event->minor / 128 + 1;
-                int deviceId = event->minor % 128 + 1;
-                /* build directories */
-                MakeDir("/dev/bus", 0755);
-                MakeDir("/dev/bus/usb", 0755);
-                if (snprintf_s(devpath, sizeof(devpath), sizeof(devpath), "/dev/bus/usb/%03d", busId) == -1) {
-                    return;
-                }
-                MakeDir(devpath, 0755);
-                if (snprintf_s(devpath, sizeof(devpath), sizeof(devpath), "/dev/bus/usb/%03d/%03d", busId,
-                    deviceId) == -1) {
-                    return;
-                }
+            if (HandleUsbDevice(event, devpath, MAX_DEV_PATH) == -1) {
+                return;
             }
         } else {
             /* ignore other USB events */
             return;
         }
-    } else if (!strncmp(event->subsystem, "graphics", 8)) {
+    } else if (!strncmp(event->subsystem, "graphics", DEV_GRAPHICS)) {
         base = "/dev/graphics/";
-        MakeDir(base, 0755);
-    } else if (!strncmp(event->subsystem, "drm", 3)) {
+        MakeDir(base, DEFAULT_DIR_MODE);
+    } else if (!strncmp(event->subsystem, "drm", DEV_DRM)) {
         base = "/dev/dri/";
-        MakeDir(base, 0755);
-    } else if (!strncmp(event->subsystem, "oncrpc", 6)) {
+        MakeDir(base, DEFAULT_DIR_MODE);
+    } else if (!strncmp(event->subsystem, "oncrpc", DEV_ONCRPC)) {
         base = "/dev/oncrpc/";
-        MakeDir(base, 0755);
-    } else if (!strncmp(event->subsystem, "adsp", 4)) {
+        MakeDir(base, DEFAULT_DIR_MODE);
+    } else if (!strncmp(event->subsystem, "adsp", DEV_ADSP)) {
         base = "/dev/adsp/";
-        MakeDir(base, 0755);
-    } else if (!strncmp(event->subsystem, "input", 5)) {
+        MakeDir(base, DEFAULT_DIR_MODE);
+    } else if (!strncmp(event->subsystem, "input", DEV_INPUT)) {
         base = "/dev/input/";
-        MakeDir(base, 0755);
-    } else if (!strncmp(event->subsystem, "mtd", 3)) {
+        MakeDir(base, DEFAULT_DIR_MODE);
+    } else if (!strncmp(event->subsystem, "mtd", DEV_MTD)) {
         base = "/dev/mtd/";
-        MakeDir(base, 0755);
-    } else if (!strncmp(event->subsystem, "sound", 5)) {
+        MakeDir(base, DEFAULT_DIR_MODE);
+    } else if (!strncmp(event->subsystem, "sound", DEV_SOUND)) {
         base = "/dev/snd/";
-        MakeDir(base, 0755);
-    } else if (!strncmp(event->subsystem, "misc", 4) && !strncmp(name, "log_", 4)) {
-        base = "/dev/log/";
-        MakeDir(base, 0755);
-        name += 4;
+        MakeDir(base, DEFAULT_DIR_MODE);
     } else {
         base = "/dev/";
     }
-    links = GetCharacterDeviceSymlinks(event);
-    if (!devpath[0]) {
-        if (snprintf_s(devpath, sizeof(devpath), sizeof(devpath), "%s%s", base, name) == -1) {
-            return;
-        }
-    }
-    HandleDevice(event->action, devpath, event->path, 0,
-        event->major, event->minor, links);
+    HandleDeviceEvent(event, devpath, MAX_DEV_PATH, base, name);
+    return;
 }
 
 static void HandleDeviceUevent(struct Uevent *event)
@@ -716,9 +770,9 @@ static void HandleDeviceUevent(struct Uevent *event)
     if (strcmp(event->action, "add") == 0 || strcmp(event->action, "change") == 0) {
         /* Do nothing for now */
     }
-    if (strncmp(event->subsystem, "block", 5) == 0) {
+    if (strncmp(event->subsystem, "block", EVENT_BLOCK) == 0) {
         HandleBlockDevice(event);
-    } else if (strncmp(event->subsystem, "platform", 8) == 0) {
+    } else if (strncmp(event->subsystem, "platform", EVENT_PLAT_FORM) == 0) {
         HandlePlatformDevice(event);
     } else {
         HandleGenericDevice(event);
@@ -727,11 +781,11 @@ static void HandleDeviceUevent(struct Uevent *event)
 
 static void HandleUevent()
 {
-    char buf[1024 + 2];
+    char buf[EVENT_MAX_BUFFER];
     int ret;
     struct Uevent event;
-    while ((ret = ReadUevent(g_ueventFD, buf, 1024)) > 0) {
-        if (ret >= 1024) {
+    while ((ret = ReadUevent(g_ueventFD, buf, BASE_BUFFER_SIZE)) > 0) {
+        if (ret >= BASE_BUFFER_SIZE) {
             continue;
         }
         buf[ret] = '\0';
@@ -760,7 +814,7 @@ void UeventInit()
     return;
 }
 
-int main(int argc, char **argv)
+int main(const int argc, const char **argv)
 {
     printf("Uevent demo starting...\n");
     UeventInit();

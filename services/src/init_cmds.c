@@ -14,7 +14,6 @@
  */
 
 #include "init_cmds.h"
-
 #include <ctype.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -40,6 +39,7 @@
 #define LOADCFG_BUF_SIZE  128  // loadcfg, max buffer for one cmdline
 #define LOADCFG_MAX_FILE_LEN 51200  // loadcfg, max file size is 50K
 #define LOADCFG_MAX_LOOP 20  // loadcfg, to prevent to be trapped in infite loop
+#define OCTAL_TYPE 8  //8 means octal to decimal
 static const char *g_supportCfg[] = {
     "/patch/fstab.cfg",
 };
@@ -119,7 +119,7 @@ static void DoChmod(const char* cmdContent)
     }
 
     const char* pathBeginStr = cmdContent + MODE_LEN + 1;  // after space
-    mode_t mode = strtoul(cmdContent, NULL, 8);     // 8 means octal to decimal
+    mode_t mode = strtoul(cmdContent, NULL, OCTAL_TYPE);
     if (mode == 0) {
         printf("[Init] DoChmod, strtoul failed for %s, er %d.\n", cmdContent, errno);
         return;
@@ -321,17 +321,51 @@ static void DoMount(const char* cmdContent)
 }
 
 #ifndef OHOS_LITE
+#define OPTIONS_SIZE (128u)
+static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPtr, int flags)
+{
+    int fd = -1;
+    char options[OPTIONS_SIZE] = {0};
+
+    if (flags == 0) { //  '-f' option
+        if (restPtr != NULL && secondPtr != NULL) { // Reset arugments, combine then all.
+            if (snprintf_s(options, sizeof(options), OPTIONS_SIZE -1, "%s %s", secondPtr, restPtr) == -1) {
+                goto out;
+            }
+        } else {
+            if (strncpy_s(options, OPTIONS_SIZE - 1, secondPtr, strlen(secondPtr)) != 0) {
+                goto out;
+            }
+        }
+    } else { // Only restPtr is option
+        if (restPtr != NULL) {
+            strncpy_s(options, OPTIONS_SIZE - 1, restPtr, strlen(restPtr));
+        }
+    }
+    fd = open(fileName, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (fd < 0) {
+        printf("[Init] failed to open %s: %d\n", fileName, errno);
+        goto out;
+    }
+    int rc = syscall(__NR_finit_module, fd, options, flags);
+    if (rc == -1) {
+        printf("[Init] finit_module for %s failed: %d\n", fileName, errno);
+    }
+out:
+    if (fd > 0) {
+        close(fd);
+    }
+    return;
+}
+
 // format insmod <ko name> [-f] [options]
 static void DoInsmod(const char *cmdContent)
 {
-#define OPTIONS_SIZE (128u)
     char *p = NULL;
-    char *line = NULL;
     char *restPtr = NULL;
     char *fileName = NULL;
+    char *line = NULL;
     int flags = 0;
-    int fd = -1;
-    char options[OPTIONS_SIZE] = {0};
 
     size_t count = strlen(cmdContent);
     if (count > OPTIONS_SIZE) {
@@ -342,16 +376,15 @@ static void DoInsmod(const char *cmdContent)
         printf("[Init] Allocate memory failed.\n");
         return;
     }
+
     if (memcpy_s(line, count, cmdContent, count) != EOK) {
         printf("[Init] memcpy failed\n");
+        return;
     }
-
     line[count] = '\0';
-
     do {
         if ((p = strtok_r(line, " ", &restPtr)) == NULL) {
             printf("[Init] debug, cannot get filename\n");
-            free(line);
             return;
         }
         fileName = p;
@@ -363,44 +396,13 @@ static void DoInsmod(const char *cmdContent)
             flags = MODULE_INIT_IGNORE_VERMAGIC | MODULE_INIT_IGNORE_MODVERSIONS;
         }
     } while (0);
-
-    if (flags != 0) { //  '-f' option
-        p = restPtr; // grab all rest of contents.
-    } else { // no '-f' option, should combine p and resetPtr
-        if (p != NULL) {
-            if (restPtr != NULL) {
-                if (snprintf_s(options, sizeof(options), OPTIONS_SIZE -1, "%s %s", p, restPtr) == -1) {
-                    goto out;
-                    return;
-                }
-            } else {
-                if (strncpy_s(options, OPTIONS_SIZE - 1, p, strlen(p)) != 0) {
-                    goto out;
-                    return;
-                }
-            }
-        }
-    }
-    // Open ko files
-    fd = open(fileName, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
-    if (fd < 0) {
-        printf("[Init] failed to open %s: %d\n", fileName, errno);
-        goto out;
-    }
-
-    int rc = syscall(__NR_finit_module, fd, options, flags);
-    if (rc == -1) {
-        printf("[Init] finit_module for %s failed: %d\n", fileName, errno);
-    }
-out:
-    if (fd > 0) {
-        close(fd);
-    }
+    DoInsmodInternal(fileName, p, restPtr, flags);
     if (line != NULL) {
         free(line);
     }
+    return;
 }
-#endif
+#endif // OHOS_LITE
 
 static bool CheckValidCfg(const char *path)
 {
@@ -488,13 +490,11 @@ void DoCmd(const CmdLine* curCmd)
         DoMount(curCmd->cmdContent);
     } else if (strncmp(curCmd->name, "loadcfg ", strlen("loadcfg ")) == 0) {
         DoLoadCfg(curCmd->cmdContent);
-    }
 #ifndef OHOS_LITE
-    else if (strncmp(curCmd->name, "insmod ", strlen("insmod ")) == 0) {
+    } else if (strncmp(curCmd->name, "insmod ", strlen("insmod ")) == 0) {
         DoInsmod(curCmd->cmdContent);
-    }
 #endif
-    else {
+    } else {
         printf("[Init] DoCmd, unknown cmd name %s.\n", curCmd->name);
     }
 }
