@@ -39,7 +39,7 @@
 #define LOADCFG_BUF_SIZE  128  // loadcfg, max buffer for one cmdline
 #define LOADCFG_MAX_FILE_LEN 51200  // loadcfg, max file size is 50K
 #define LOADCFG_MAX_LOOP 20  // loadcfg, to prevent to be trapped in infite loop
-#define OCTAL_TYPE 8  //8 means octal to decimal
+#define OCTAL_TYPE 8  // 8 means octal to decimal
 static const char *g_supportCfg[] = {
     "/patch/fstab.cfg",
 };
@@ -321,7 +321,7 @@ static void DoMount(const char* cmdContent)
 }
 
 #ifndef OHOS_LITE
-#define OPTIONS_SIZE (128u)
+#define OPTIONS_SIZE 128u
 static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPtr, int flags)
 {
     int fd = -1;
@@ -332,7 +332,7 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
             if (snprintf_s(options, sizeof(options), OPTIONS_SIZE -1, "%s %s", secondPtr, restPtr) == -1) {
                 goto out;
             }
-        } else {
+        } else if (secondPtr != NULL) {
             if (strncpy_s(options, OPTIONS_SIZE - 1, secondPtr, strlen(secondPtr)) != 0) {
                 goto out;
             }

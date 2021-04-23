@@ -70,18 +70,6 @@
 
 int g_ueventFD = -1;
 
-#define CHECK_RESULT_DONE(ret, do, another) \
-    if (ret) {                       \
-        do;                         \
-    } else {                        \
-        another;                    \
-    }
-
-#define CHECK_RETURN(ret, statement)                \
-    if (!(ret)) {                                   \
-        statement;                                  \
-    }
-
 struct Uevent {
     const char *action;
     const char *path;
@@ -106,7 +94,7 @@ static struct ListNode g_platformNames = {
     .prev = &g_platformNames,
 };
 
-const char *TRIGGER = "/dev/.trigger_uevent";
+const char *g_trigger = "/dev/.trigger_uevent";
 static void HandleUevent();
 
 static int UeventFD()
@@ -156,14 +144,14 @@ void Trigger(const char *sysPath)
 
 static void RetriggerUevent()
 {
-    if (access(TRIGGER, F_OK) == 0) {
+    if (access(g_trigger, F_OK) == 0) {
         printf("Skip trigger uevent, alread done\n");
         return;
     }
     Trigger("/sys/class");
     Trigger("/sys/block");
     Trigger("/sys/devices");
-    int fd = open(TRIGGER, O_WRONLY | O_CREAT | O_CLOEXEC, DEFAULT_MODE);
+    int fd = open(g_trigger, O_WRONLY | O_CREAT | O_CLOEXEC, DEFAULT_MODE);
     if (fd > 0) {
         close(fd);
     }
@@ -347,15 +335,15 @@ static char **ParsePlatformBlockDevice(const struct Uevent *uevent)
     char *p = NULL;
 
     struct PlatformNode *pDev = FindPlatformDevice(uevent->path);
-    CHECK_RESULT_DONE(pDev, device = pDev->name; type = "platform", printf("Non platform device.\n"); return NULL);
-    char **links = malloc(sizeof(char *) * LINK_NUMBER);
+    if (!pDev) {
+        return NULL;
+    }
+    device = pDev->name;
+    type = "platform";
+    char **links = calloc(sizeof(char *), LINK_NUMBER);
     if (!links) {
         return NULL;
     }
-    if (memset_s(links, sizeof(char *) * LINK_NUMBER, 0, sizeof(char *) * LINK_NUMBER) != 0) {
-        return NULL;
-    }
-    printf("found %s device %s\n", type, device);
     if (snprintf_s(linkPath, sizeof(linkPath), sizeof(linkPath), "/dev/block/%s/%s", type, device) == -1) {
         return NULL;
     }
@@ -601,6 +589,16 @@ static const char *ParseDeviceName(const struct Uevent *uevent, unsigned int len
     return name;
 }
 
+static void FindCharEnd(const char *parent)
+{
+    while (*++parent) {
+        if (*parent == '/') {
+            return;
+        }
+    }
+    return;
+}
+
 static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
 {
     char *slash = NULL;
@@ -608,11 +606,11 @@ static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
     int width;
 
     struct PlatformNode *pDev = FindPlatformDevice(uevent->path);
-    CHECK_RETURN(pDev, return NULL);
-
-    char **links = malloc(sizeof(char *) * SYS_LINK_NUMBER);
-    CHECK_RETURN(links, return NULL);
-    if (memset_s(links, sizeof(char *) * SYS_LINK_NUMBER, 0, sizeof(char *) * SYS_LINK_NUMBER) != 0) {
+    if (!pDev) {
+        return NULL;
+    }
+    char **links = calloc(sizeof(char *), SYS_LINK_NUMBER);
+    if (!links) {
         return NULL;
     }
 
@@ -624,17 +622,9 @@ static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
 
     if (!strncmp(parent, "/usb", DEV_USB)) {
        /* skip root hub name and device. use device interface */
-        while (*++parent) {
-            if (*parent == '/') {
-                break;
-            }
-        }
+        FindCharEnd(parent);
         if (*parent) {
-            while (*++parent) {
-                if (*parent == '/') {
-                    break;
-                }
-            }
+            FindCharEnd(parent);
         }
         if (!*parent) {
             goto err;
