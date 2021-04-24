@@ -27,12 +27,19 @@
 #include "init_adapter.h"
 #include "init_read_cfg.h"
 #include "init_signal_handler.h"
+#ifdef OHOS_LITE
 #include "parameter.h"
+#endif
+
+#ifndef OHOS_LITE
+#include "device.h"
+#endif
 
 static const pid_t INIT_PROCESS_PID = 1;
 
 static void PrintSysInfo()
 {
+#ifdef OHOS_LITE
     char* sysInfo = GetVersionId();
     if (sysInfo != NULL) {
         printf("[Init] %s\n", sysInfo);
@@ -41,6 +48,7 @@ static void PrintSysInfo()
         return;
     }
     printf("[Init] main, GetVersionId failed!\n");
+#endif
 }
 
 #ifdef OHOS_DEBUG
@@ -72,7 +80,13 @@ int main(int argc, char * const argv[])
     // 1. print system info
     PrintSysInfo();
 
-    // 2. signal register
+#ifndef OHOS_LITE
+    // 2. Mount basic filesystem and create common device node.
+    MountBasicFs();
+    CreateDeviceNode();
+#endif
+
+    // 3. signal register
     SignalInitModule();
 
 #ifdef OHOS_DEBUG
@@ -82,7 +96,7 @@ int main(int argc, char * const argv[])
     }
 #endif // OHOS_DEBUG
 
-    // 3. execute rcs
+    // 4. execute rcs
     ExecuteRcs();
 
 #ifdef OHOS_DEBUG
@@ -92,7 +106,7 @@ int main(int argc, char * const argv[])
     }
 #endif // OHOS_DEBUG
 
-    // 4. read configuration file and do jobs
+    // 5. read configuration file and do jobs
     InitReadCfg();
 
 #ifdef OHOS_DEBUG
@@ -102,7 +116,7 @@ int main(int argc, char * const argv[])
     }
 #endif // OHOS_DEBUG
 
-    // 5. keep process alive
+    // 6. keep process alive
 #ifdef OHOS_DEBUG
     printf("[Init] main, time used: sigInfo %ld ms, rcs %ld ms, cfg %ld ms.\n", \
         TimeDiffMs(&tmEnter, &tmSysInfo), TimeDiffMs(&tmSysInfo, &tmRcs), TimeDiffMs(&tmRcs, &tmCfg));

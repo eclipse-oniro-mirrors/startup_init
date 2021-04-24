@@ -66,7 +66,7 @@ void StartServiceByName(const char* servName)
 
 void StopAllServices()
 {
-    for (size_t i = 0; i < g_servicesCnt; i++) {
+    for (int i = 0; i < g_servicesCnt; i++) {
         if (ServiceStop(&g_services[i]) != SERVICE_SUCCESS) {
             printf("[Init] StopAllServices, service %s stop failed!\n", g_services[i].name);
         }
@@ -75,7 +75,7 @@ void StopAllServices()
 
 void ReapServiceByPID(int pid)
 {
-    for (size_t i = 0; i < g_servicesCnt; i++) {
+    for (int i = 0; i < g_servicesCnt; i++) {
         if (g_services[i].pid == pid) {
             if (g_services[i].attribute & SERVICE_ATTR_IMPORTANT) {
                 // important process exit, need to reboot system

@@ -64,7 +64,7 @@ static int SetPerms(const Service *service)
     capHeader.version = _LINUX_CAPABILITY_VERSION_3;
     capHeader.pid = 0;
 
-    struct __user_cap_data_struct capData[CAP_NUM] = {0};
+    struct __user_cap_data_struct capData[CAP_NUM] = {};
     for (unsigned int i = 0; i < service->servPerm.capsCnt; ++i) {
         if (service->servPerm.caps[i] == FULL_CAP) {
             for (int i = 0; i < CAP_NUM; ++i) {

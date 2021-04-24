@@ -14,7 +14,6 @@
  */
 
 #include "init_cmds.h"
-
 #include <ctype.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -24,10 +23,13 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
+#ifndef OHOS_LITE
+#include <sys/syscall.h>
+#include <fcntl.h>
+#include <linux/module.h>
+#endif
 #include "init_service_manager.h"
 #include "securec.h"
-
 
 #define MODE_LEN 4   // for chmod mode, format 0xxx
 #define DEFAULT_DIR_MODE 0755  // mkdir, default mode
@@ -37,6 +39,7 @@
 #define LOADCFG_BUF_SIZE  128  // loadcfg, max buffer for one cmdline
 #define LOADCFG_MAX_FILE_LEN 51200  // loadcfg, max file size is 50K
 #define LOADCFG_MAX_LOOP 20  // loadcfg, to prevent to be trapped in infite loop
+#define OCTAL_TYPE 8  // 8 means octal to decimal
 static const char *g_supportCfg[] = {
     "/patch/fstab.cfg",
 };
@@ -48,6 +51,7 @@ static const char* g_supportedCmds[] = {
     "chown ",
     "mount ",
     "loadcfg ",
+    "insmod ",
 };
 
 void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
@@ -115,7 +119,7 @@ static void DoChmod(const char* cmdContent)
     }
 
     const char* pathBeginStr = cmdContent + MODE_LEN + 1;  // after space
-    mode_t mode = strtoul(cmdContent, NULL, 8);     // 8 means octal to decimal
+    mode_t mode = strtoul(cmdContent, NULL, OCTAL_TYPE);
     if (mode == 0) {
         printf("[Init] DoChmod, strtoul failed for %s, er %d.\n", cmdContent, errno);
         return;
@@ -172,14 +176,14 @@ static void DoChown(const char* cmdContent)
 static char* CopySubStr(const char* srcStr, size_t startPos, size_t endPos)
 {
     if (endPos <= startPos) {
-        printf("[Init] DoMount, invalid params<%lu, %lu> for %s.\n", endPos, startPos, srcStr);
+        printf("[Init] DoMount, invalid params<%zu, %zu> for %s.\n", endPos, startPos, srcStr);
         return NULL;
     }
 
     size_t mallocLen = endPos - startPos + 1;
     char* retStr = (char*)malloc(mallocLen);
     if (retStr == NULL) {
-        printf("[Init] DoMount, malloc failed! malloc size %lu, for %s.\n", mallocLen, srcStr);
+        printf("[Init] DoMount, malloc failed! malloc size %zu, for %s.\n", mallocLen, srcStr);
         return NULL;
     }
 
@@ -316,6 +320,90 @@ static void DoMount(const char* cmdContent)
     free(target);
 }
 
+#ifndef OHOS_LITE
+#define OPTIONS_SIZE 128u
+static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPtr, int flags)
+{
+    int fd = -1;
+    char options[OPTIONS_SIZE] = {0};
+
+    if (flags == 0) { //  '-f' option
+        if (restPtr != NULL && secondPtr != NULL) { // Reset arugments, combine then all.
+            if (snprintf_s(options, sizeof(options), OPTIONS_SIZE -1, "%s %s", secondPtr, restPtr) == -1) {
+                goto out;
+            }
+        } else if (secondPtr != NULL) {
+            if (strncpy_s(options, OPTIONS_SIZE - 1, secondPtr, strlen(secondPtr)) != 0) {
+                goto out;
+            }
+        }
+    } else { // Only restPtr is option
+        if (restPtr != NULL) {
+            strncpy_s(options, OPTIONS_SIZE - 1, restPtr, strlen(restPtr));
+        }
+    }
+    fd = open(fileName, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (fd < 0) {
+        printf("[Init] failed to open %s: %d\n", fileName, errno);
+        goto out;
+    }
+    int rc = syscall(__NR_finit_module, fd, options, flags);
+    if (rc == -1) {
+        printf("[Init] finit_module for %s failed: %d\n", fileName, errno);
+    }
+out:
+    if (fd > 0) {
+        close(fd);
+    }
+    return;
+}
+
+// format insmod <ko name> [-f] [options]
+static void DoInsmod(const char *cmdContent)
+{
+    char *p = NULL;
+    char *restPtr = NULL;
+    char *fileName = NULL;
+    char *line = NULL;
+    int flags = 0;
+
+    size_t count = strlen(cmdContent);
+    if (count > OPTIONS_SIZE) {
+        printf("[Init], options too long, maybe lost some of options\n");
+    }
+    line = (char *)malloc(count + 1);
+    if (line == NULL) {
+        printf("[Init] Allocate memory failed.\n");
+        return;
+    }
+
+    if (memcpy_s(line, count, cmdContent, count) != EOK) {
+        printf("[Init] memcpy failed\n");
+        return;
+    }
+    line[count] = '\0';
+    do {
+        if ((p = strtok_r(line, " ", &restPtr)) == NULL) {
+            printf("[Init] debug, cannot get filename\n");
+            return;
+        }
+        fileName = p;
+        printf("[Init] debug, fileName is [%s]\n", fileName);
+        if ((p = strtok_r(NULL, " ", &restPtr)) == NULL) {
+            break;
+        }
+        if (!strcmp(p, "-f")) {
+            flags = MODULE_INIT_IGNORE_VERMAGIC | MODULE_INIT_IGNORE_MODVERSIONS;
+        }
+    } while (0);
+    DoInsmodInternal(fileName, p, restPtr, flags);
+    if (line != NULL) {
+        free(line);
+    }
+    return;
+}
+#endif // OHOS_LITE
+
 static bool CheckValidCfg(const char *path)
 {
     size_t cfgCnt = sizeof(g_supportCfg) / sizeof(g_supportCfg[0]);
@@ -402,6 +490,10 @@ void DoCmd(const CmdLine* curCmd)
         DoMount(curCmd->cmdContent);
     } else if (strncmp(curCmd->name, "loadcfg ", strlen("loadcfg ")) == 0) {
         DoLoadCfg(curCmd->cmdContent);
+#ifndef OHOS_LITE
+    } else if (strncmp(curCmd->name, "insmod ", strlen("insmod ")) == 0) {
+        DoInsmod(curCmd->cmdContent);
+#endif
     } else {
         printf("[Init] DoCmd, unknown cmd name %s.\n", curCmd->name);
     }
