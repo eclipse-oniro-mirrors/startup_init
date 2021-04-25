@@ -10,41 +10,49 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//build/lite/config/component/lite_component.gni")
-import("//build/lite/config/test.gni")
+if (defined(ohos_lite)) {
+  import("//build/lite/config/component/lite_component.gni")
+  import("//build/lite/config/test.gni")
 
-unittest("init_test") {
-  output_extension = "bin"
-  output_dir = "$root_out_dir/test/unittest/startup"
-  ldflags = [
-    "-lstdc++",
-    "-lpthread",
-    "-lm",
-  ]
-  defines = ["OHOS_LITE"]
-  if (storage_type == "emmc") {
-    defines += [ "USE_EMMC_STORAGE" ]
+  unittest("init_test") {
+    output_extension = "bin"
+    output_dir = "$root_out_dir/test/unittest/startup"
+    ldflags = [
+      "-lstdc++",
+      "-lpthread",
+      "-lm",
+    ]
+    defines = ["OHOS_LITE"]
+    if (storage_type == "emmc") {
+      defines += [ "USE_EMMC_STORAGE" ]
+    }
+
+    include_dirs = [ "//base/startup/init_lite/services/include" ]
+
+    sources = [
+      "//base/startup/init_lite/services/src/init_adapter.c",
+      "//base/startup/init_lite/services/src/init_cmds.c",
+      "//base/startup/init_lite/services/src/init_jobs.c",
+      "//base/startup/init_lite/services/src/init_service.c",
+      "//base/startup/init_lite/services/src/init_service_manager.c",
+      "//base/startup/init_lite/services/src/init_signal_handler.c",
+      "cmd_func_test.cpp",
+    ]
+
+    deps = [
+      "//base/startup/syspara_lite/frameworks/parameter:parameter",
+      "//build/lite/config/component/cJSON:cjson_shared",
+      "//third_party/bounds_checking_function:libsec_shared",
+    ]
   }
 
-  include_dirs = [ "//base/startup/init_lite/services/include" ]
-
-  sources = [
-    "//base/startup/init_lite/services/src/init_adapter.c",
-    "//base/startup/init_lite/services/src/init_cmds.c",
-    "//base/startup/init_lite/services/src/init_jobs.c",
-    "//base/startup/init_lite/services/src/init_service.c",
-    "//base/startup/init_lite/services/src/init_service_manager.c",
-    "//base/startup/init_lite/services/src/init_signal_handler.c",
-    "cmd_func_test.cpp",
-  ]
-
-  deps = [
-    "//base/startup/syspara_lite/frameworks/parameter:parameter",
-    "//build/lite/config/component/cJSON:cjson_shared",
-    "//third_party/bounds_checking_function:libsec_shared",
-  ]
-}
-
-group("unittest") {
-  deps = [ ":init_test" ]
+  group("unittest") {
+    deps = [ ":init_test" ]
+  }
+} else {
+  import("//build/ohos.gni")
+  sources = []
+  group("unittest") {
+    deps = []
+  }
 }
