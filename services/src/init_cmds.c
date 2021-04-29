@@ -14,6 +14,7 @@
  */
 
 #include "init_cmds.h"
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -28,6 +29,7 @@
 #include <linux/module.h>
 #include <sys/syscall.h>
 #endif
+
 #include "init_service_manager.h"
 #include "securec.h"
 
@@ -326,7 +328,6 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
 {
     int fd = -1;
     char options[OPTIONS_SIZE] = {0};
-
     if (flags == 0) { //  '-f' option
         if (restPtr != NULL && secondPtr != NULL) { // Reset arugments, combine then all.
             if (snprintf_s(options, sizeof(options), OPTIONS_SIZE -1, "%s %s", secondPtr, restPtr) == -1) {
@@ -339,8 +340,13 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
         }
     } else { // Only restPtr is option
         if (restPtr != NULL) {
-            strncpy_s(options, OPTIONS_SIZE - 1, restPtr, strlen(restPtr));
+            if (strncpy_s(options, OPTIONS_SIZE - 1, restPtr, strlen(restPtr)) != 0) {
+                goto out;
+            }
         }
+    }
+    if (!fileName) {
+        goto out;
     }
     fd = open(fileName, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd < 0) {
@@ -352,7 +358,7 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
         printf("[Init] finit_module for %s failed: %d\n", fileName, errno);
     }
 out:
-    if (fd > 0) {
+    if (fd >= 0) {
         close(fd);
     }
     return;
@@ -379,12 +385,14 @@ static void DoInsmod(const char *cmdContent)
 
     if (memcpy_s(line, count, cmdContent, count) != EOK) {
         printf("[Init] memcpy failed\n");
+        free(line);
         return;
     }
     line[count] = '\0';
     do {
         if ((p = strtok_r(line, " ", &restPtr)) == NULL) {
             printf("[Init] debug, cannot get filename\n");
+            free(line);
             return;
         }
         fileName = p;

@@ -152,7 +152,7 @@ static void RetriggerUevent()
     Trigger("/sys/block");
     Trigger("/sys/devices");
     int fd = open(g_trigger, O_WRONLY | O_CREAT | O_CLOEXEC, DEFAULT_MODE);
-    if (fd > 0) {
+    if (fd >= 0) {
         close(fd);
     }
     printf("Re-trigger uevent done\n");
@@ -220,7 +220,7 @@ ssize_t ReadUevent(int fd, void *buf, size_t len)
     if (uid != 0) {
         goto out;
     }
- 
+
     if (addr.nl_groups == 0 || addr.nl_pid != 0) {
     /* ignoring non-kernel or unicast netlink message */
         goto out;
@@ -344,7 +344,8 @@ static char **ParsePlatformBlockDevice(const struct Uevent *uevent)
     if (!links) {
         return NULL;
     }
-    if (snprintf_s(linkPath, sizeof(linkPath), sizeof(linkPath), "/dev/block/%s/%s", type, device) == -1) {
+    if (snprintf_s(linkPath, sizeof(linkPath), sizeof(linkPath) - 1, "/dev/block/%s/%s", type, device) == -1) {
+        free(links);
         return NULL;
     }
     if (uevent->partitionName) {
@@ -514,7 +515,7 @@ static void HandleBlockDevice(struct Uevent *event)
     if (strlen(name) > MAX_DEVICE_LEN) { // too long
         return;
     }
-    if (snprintf_s(devpath, sizeof(devpath), sizeof(devpath), "%s/%s", base, name) == -1) {
+    if (snprintf_s(devpath, sizeof(devpath), sizeof(devpath) - 1, "%s/%s", base, name) == -1) {
         return;
     }
     MakeDir(base, DEFAULT_DIR_MODE);
@@ -537,10 +538,14 @@ static void AddPlatformDevice(const char *path)
     }
     printf("adding platform device %s (%s)\n", name, path);
     struct PlatformNode *bus = calloc(1, sizeof(struct PlatformNode));
+    if (!bus) {
+        return;
+    }
     bus->path = strdup(path);
     bus->pathLen = pathLen;
     bus->name = bus->path + (name - path);
     ListAddTail(&g_platformNames, &bus->list);
+    return;
 }
 
 static void RemovePlatformDevice(const char *path)
@@ -661,7 +666,7 @@ static int HandleUsbDevice(const struct Uevent *event, char *devpath, int len)
          * see drivers/base/core.c
          */
         char *p = devpath;
-        if (snprintf_s(devpath, len, len, "/dev/%s", event->deviceName) == -1) {
+        if (snprintf_s(devpath, len, len - 1, "/dev/%s", event->deviceName) == -1) {
             return -1;
         }
         /* skip leading /dev/ */
@@ -702,12 +707,20 @@ static void HandleDeviceEvent(struct Uevent *event, char *devpath, int len, cons
     char **links = NULL;
     links = GetCharacterDeviceSymlinks(event);
     if (!devpath[0]) {
-        if (snprintf_s(devpath, len, len, "%s%s", base, name) == -1) {
+        if (snprintf_s(devpath, len, len - 1, "%s%s", base, name) == -1) {
             printf("[Init] snprintf_s err \n");
-            return;
+            goto err;
         }
     }
     HandleDevice(event, devpath, 0, links);
+    return;
+err:
+    if (links) {
+        for (int i = 0; links[i]; i++) {
+            free(links[i]);
+        }
+        free(links);
+    }
     return;
 }
 static void HandleGenericDevice(struct Uevent *event)
