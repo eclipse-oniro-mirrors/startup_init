@@ -24,9 +24,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #ifndef OHOS_LITE
-#include <sys/syscall.h>
 #include <fcntl.h>
 #include <linux/module.h>
+#include <sys/syscall.h>
 #endif
 #include "init_service_manager.h"
 #include "securec.h"
