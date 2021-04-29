@@ -11,14 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 if (defined(ohos_lite)) {
-  import("//build/lite/config/component/lite_component.gni")
-
-  lite_component("init_lite") {
-    features = [ ":init" ]
-  }
-
   # feature: init
-  executable("init") {
+  executable("init_lite") {
+    output_name = "init"
     defines = [
       "_GNU_SOURCE",  #syscall function need this macro definition
       "OHOS_LITE",
@@ -58,61 +53,64 @@ if (defined(ohos_lite)) {
         "-lm",
         "-lpthread",
       ]
+      deps = [
+        "//third_party/mksh",
+        "//third_party/toybox",
+      ]
     }
   }
 
   if (ohos_build_type == "debug") {
     group("unittest") {
-      deps = [ "//base/startup/init_lite/services/test/unittest/common:unittest" ]
+      deps =
+          [ "//base/startup/init_lite/services/test/unittest/common:unittest" ]
     }
   }
 } else {
   import("//build/ohos.gni")
 
   ohos_executable("updaterueventd") {
-      sources = [
-          "src/uevent.c",
-          "src/list.c",
-      ]
-      include_dirs = [
-          "include",
-          "//third_party/bounds_checking_function/include",
-      ]
-      deps = [
-          "//third_party/bounds_checking_function:libsec_static",
-      ]
-      install_enable = true
-      part_name = "updater"
+    sources = [
+      "src/list.c",
+      "src/uevent.c",
+    ]
+    include_dirs = [
+      "include",
+      "//third_party/bounds_checking_function/include",
+    ]
+    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
+    install_enable = true
+    part_name = "updater"
   }
 
   ohos_executable("updaterinit") {
-      sources = [
-          "src/main.c",
-          "src/init_cmds.c",
-          "src/init_jobs.c",
-          "src/init_read_cfg.c",
-          "src/init_adapter.c",
-          "src/init_service.c",
-          "src/init_service_manager.c",
-          "src/init_signal_handler.c",
-          "src/device.c",
-      ]
-      include_dirs = [
-          "include",
-          "//third_party/cJSON",
-          "//third_party/bounds_checking_function/include",
-      ]
-      deps = [
-          "//third_party/bounds_checking_function:libsec_static",
-          "//third_party/cJSON:cjson_static",
-      ]
-      install_enable = true
-      part_name = "updater"
+    sources = [
+      "src/device.c",
+      "src/init_adapter.c",
+      "src/init_cmds.c",
+      "src/init_jobs.c",
+      "src/init_read_cfg.c",
+      "src/init_service.c",
+      "src/init_service_manager.c",
+      "src/init_signal_handler.c",
+      "src/main.c",
+    ]
+    include_dirs = [
+      "include",
+      "//third_party/cJSON",
+      "//third_party/bounds_checking_function/include",
+    ]
+    deps = [
+      "//third_party/bounds_checking_function:libsec_static",
+      "//third_party/cJSON:cjson_static",
+    ]
+    install_enable = true
+    part_name = "updater"
   }
 
   ohos_prebuilt_etc("init.cfg") {
-      source = "//device/hisilicon/hi3516dv300/updater/init.cfg"
-      relative_install_dir = "init"
-      subsystem_name = "updater"
+    source = "//device/hisilicon/hi3516dv300/updater/init.cfg"
+    relative_install_dir = "init"
+    subsystem_name = "updater"
   }
 }
