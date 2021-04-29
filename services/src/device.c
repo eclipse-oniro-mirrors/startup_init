@@ -14,11 +14,11 @@
  */
 
 #include <errno.h>
-#include <sys/sysmacros.h>
-#include <sys/stat.h>
-#include <sys/mount.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/mount.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
 
 #define DEFAULT_RW_MODE 0666
 #define DEFAULT_NO_AUTHORITY_MODE 0600

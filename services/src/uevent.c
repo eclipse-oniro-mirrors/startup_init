@@ -19,16 +19,15 @@
 #include <fcntl.h>
 #include <linux/netlink.h>
 #include <poll.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
-#include <sys/socket.h>
 #include <sys/un.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <signal.h>
 #include <unistd.h>
-
 #include "list.h"
 #include "securec.h"
 
