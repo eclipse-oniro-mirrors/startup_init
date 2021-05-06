@@ -40,11 +40,9 @@ static const pid_t INIT_PROCESS_PID = 1;
 static void PrintSysInfo()
 {
 #ifdef OHOS_LITE
-    char* sysInfo = GetVersionId();
+    const char* sysInfo = GetVersionId();
     if (sysInfo != NULL) {
         printf("[Init] %s\n", sysInfo);
-        free(sysInfo);
-        sysInfo = NULL;
         return;
     }
     printf("[Init] main, GetVersionId failed!\n");
