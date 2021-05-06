@@ -53,7 +53,7 @@ if (defined(ohos_lite)) {
         "-lm",
         "-lpthread",
       ]
-      deps = [
+      deps += [
         "//third_party/mksh",
         "//third_party/toybox",
       ]
