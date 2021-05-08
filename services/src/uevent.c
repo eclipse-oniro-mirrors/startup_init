@@ -102,32 +102,35 @@ static int UeventFD()
     return g_ueventFD;
 }
 
-static void DoTrigger(DIR *dir)
+static void DoTrigger(DIR *dir, const char *path, int32_t pathLen)
 {
-    struct dirent *de = NULL;
-    int dfd = dirfd(dir);
-    int fd = openat(dfd, "uevent", O_WRONLY);
+    if (pathLen < 0) {
+        return;
+    }
+    struct dirent *dirent = NULL;
+    char ueventPath[MAX_BUFFER];
+    if (snprintf_s(ueventPath, sizeof(ueventPath), sizeof(ueventPath) - 1, "%s/uevent", path) == -1) {
+        return;
+    }
+    int fd = open(ueventPath, O_WRONLY);
     if (fd >= 0) {
         write(fd, "add\n", TRIGGER_ADDR_SIZE);
         close(fd);
         HandleUevent();
     }
 
-    while ((de = readdir(dir)) != NULL) {
-        DIR *dir2 = NULL;
-        if (de->d_type != DT_DIR || de->d_name[0] == '.') {
+    while ((dirent = readdir(dir)) != NULL) {
+        if (dirent->d_name[0] == '.' || dirent->d_type != DT_DIR) {
             continue;
         }
-        fd = openat(dfd, de->d_name, O_RDONLY | O_DIRECTORY);
-        if (fd < 0) {
+        char tmpPath[MAX_BUFFER];
+        if (snprintf_s(tmpPath, sizeof(tmpPath), sizeof(tmpPath) - 1, "%s/%s", path, dirent->d_name) == -1) {
             continue;
         }
 
-        dir2 = fdopendir(fd);
-        if (dir2 == NULL) {
-            close(fd);
-        } else {
-            DoTrigger(dir2);
+        DIR *dir2 = opendir(tmpPath);
+        if (dir2) {
+            DoTrigger(dir2, tmpPath, strlen(tmpPath));
             closedir(dir2);
         }
     }
@@ -137,7 +140,7 @@ void Trigger(const char *sysPath)
 {
     DIR *dir = opendir(sysPath);
     if (dir) {
-        DoTrigger(dir);
+        DoTrigger(dir, sysPath, strlen(sysPath));
         closedir(dir);
     }
 }
@@ -197,7 +200,6 @@ ssize_t ReadUevent(int fd, void *buf, size_t len)
     struct iovec iov = { buf, len };
     struct sockaddr_nl addr;
     char control[CMSG_SPACE(sizeof(struct ucred))];
-    uid_t uid = -1;
     struct msghdr hdr = {
         &addr,
         sizeof(addr),
@@ -213,23 +215,24 @@ ssize_t ReadUevent(int fd, void *buf, size_t len)
     }
     struct cmsghdr *cMsg = CMSG_FIRSTHDR(&hdr);
     if (cMsg == NULL || cMsg->cmsg_type != SCM_CREDENTIALS) {
-        goto out;
+        bzero(buf, len);
+        errno = -EIO;
+        return n;
     }
     struct ucred *cRed = (struct ucred *)CMSG_DATA(cMsg);
-    uid = cRed->uid;
-    if (uid != 0) {
-        goto out;
+    if (cRed->uid != 0) {
+        bzero(buf, len);
+        errno = -EIO;
+        return n;
     }
 
     if (addr.nl_groups == 0 || addr.nl_pid != 0) {
     /* ignoring non-kernel or unicast netlink message */
-        goto out;
+        bzero(buf, len);
+        errno = -EIO;
+        return n;
     }
 
-    return n;
-out:
-    bzero(buf, len);
-    errno = -EIO;
     return n;
 }
 
@@ -305,22 +308,19 @@ static struct PlatformNode *FindPlatformDevice(const char *path)
     return NULL;
 }
 
-static void Sanitize(char *s)
+static void CheckValidPartitionName(char *partitionName)
 {
-    const char* accept =
-        "abcdefghijklmnopqrstuvwxyz"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "0123456789"
-        "_-.";
-
-    if (!s) {
+    const char* supportPartition = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-";
+    if (!partitionName) {
         return;
     }
 
-    for (; *s; s++) {
-        s += strspn(s, accept);
-        if (*s) {
-            *s = '_';
+    for (size_t i = 0; i < strlen(partitionName); i++) {
+        int len = strspn(partitionName, supportPartition);
+        partitionName += len;
+        i = len;
+        if (*partitionName) {
+            *partitionName = '_';
         }
     }
 }
@@ -350,7 +350,7 @@ static char **ParsePlatformBlockDevice(const struct Uevent *uevent)
     }
     if (uevent->partitionName) {
         p = strdup(uevent->partitionName);
-        Sanitize(p);
+        CheckValidPartitionName(p);
         if (strcmp(uevent->partitionName, p)) {
             printf("Linking partition '%s' as '%s'\n", uevent->partitionName, p);
         }
@@ -594,16 +594,6 @@ static const char *ParseDeviceName(const struct Uevent *uevent, unsigned int len
     return name;
 }
 
-static void FindCharEnd(const char *parent)
-{
-    while (*++parent) {
-        if (*parent == '/') {
-            return;
-        }
-    }
-    return;
-}
-
 static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
 {
     char *slash = NULL;
@@ -625,33 +615,28 @@ static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
         goto err;
     }
 
-    if (!strncmp(parent, "/usb", DEV_USB)) {
-       /* skip root hub name and device. use device interface */
-        FindCharEnd(parent);
-        if (*parent) {
-            FindCharEnd(parent);
-        }
-        if (!*parent) {
-            goto err;
-        }
-        slash = strchr(++parent, '/');
-        if (!slash) {
-            goto err;
-        }
-        width = slash - parent;
-        if (width <= 0) {
-            goto err;
-        }
-
-        if (asprintf(&links[linkNum], "/dev/usb/%s%.*s", uevent->subsystem, width, parent) > 0) {
-            linkNum++;
-        } else {
-            links[linkNum] = NULL;
-        }
-        mkdir("/dev/usb", DEFAULT_DIR_MODE);
-    } else {
+    if (strncmp(parent, "/usb", DEV_USB)) {
+       goto err;
+    }
+    /* skip root hub name and device. use device interface */
+    if (!*parent) {
         goto err;
     }
+    slash = strchr(++parent, '/');
+    if (!slash) {
+        goto err;
+    }
+    width = slash - parent;
+    if (width <= 0) {
+        goto err;
+    }
+
+    if (asprintf(&links[linkNum], "/dev/usb/%s%.*s", uevent->subsystem, width, parent) > 0) {
+        linkNum++;
+    } else {
+        links[linkNum] = NULL;
+    }
+    mkdir("/dev/usb", DEFAULT_DIR_MODE);
     return links;
 err:
     free(links);
@@ -690,11 +675,11 @@ static int HandleUsbDevice(const struct Uevent *event, char *devpath, int len)
         /* build directories */
         MakeDir("/dev/bus", DEFAULT_DIR_MODE);
         MakeDir("/dev/bus/usb", DEFAULT_DIR_MODE);
-        if (snprintf_s(devpath, len, len, "/dev/bus/usb/%03d", busId) == -1) {
+        if (snprintf_s(devpath, len, len - 1, "/dev/bus/usb/%03d", busId) == -1) {
             return -1;
         }
         MakeDir(devpath, DEFAULT_DIR_MODE);
-        if (snprintf_s(devpath, len, len, "/dev/bus/usb/%03d/%03d", busId,
+        if (snprintf_s(devpath, len, len - 1, "/dev/bus/usb/%03d/%03d", busId,
             deviceId) == -1) {
             return -1;
         }
