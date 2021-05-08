@@ -616,7 +616,7 @@ static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
     }
 
     if (strncmp(parent, "/usb", DEV_USB)) {
-       goto err;
+        goto err;
     }
     /* skip root hub name and device. use device interface */
     if (!*parent) {

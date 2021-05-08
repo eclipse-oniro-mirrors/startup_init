@@ -42,6 +42,7 @@
 #define LOADCFG_MAX_FILE_LEN 51200  // loadcfg, max file size is 50K
 #define LOADCFG_MAX_LOOP 20  // loadcfg, to prevent to be trapped in infite loop
 #define OCTAL_TYPE 8  // 8 means octal to decimal
+#define MAX_BUFFER 256
 static const char *g_supportCfg[] = {
     "/patch/fstab.cfg",
 };
@@ -347,14 +348,15 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
     if (!fileName) {
         return;
     }
-    char *realPath = NULL;
-    realPath = realpath(fileName, realPath);
+    char *realPath = (char *)calloc(MAX_BUFFER, sizeof(char));
     if (realPath == NULL) {
         return;
     }
+    realPath = realpath(fileName, realPath);
     int fd = open(realPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd < 0) {
         printf("[Init] failed to open %s: %d\n", realPath, errno);
+        free(realPath);
         return;
     }
     int rc = syscall(__NR_finit_module, fd, options, flags);
@@ -364,6 +366,7 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
     if (fd >= 0) {
         close(fd);
     }
+    free(realPath);
     return;
 }
 
