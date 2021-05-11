@@ -42,6 +42,7 @@
 #define LOADCFG_MAX_FILE_LEN 51200  // loadcfg, max file size is 50K
 #define LOADCFG_MAX_LOOP 20  // loadcfg, to prevent to be trapped in infite loop
 #define OCTAL_TYPE 8  // 8 means octal to decimal
+#define MAX_BUFFER 256
 static const char *g_supportCfg[] = {
     "/patch/fstab.cfg",
 };
@@ -326,41 +327,46 @@ static void DoMount(const char* cmdContent)
 #define OPTIONS_SIZE 128u
 static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPtr, int flags)
 {
-    int fd = -1;
     char options[OPTIONS_SIZE] = {0};
     if (flags == 0) { //  '-f' option
         if (restPtr != NULL && secondPtr != NULL) { // Reset arugments, combine then all.
             if (snprintf_s(options, sizeof(options), OPTIONS_SIZE -1, "%s %s", secondPtr, restPtr) == -1) {
-                goto out;
+                return;
             }
         } else if (secondPtr != NULL) {
             if (strncpy_s(options, OPTIONS_SIZE - 1, secondPtr, strlen(secondPtr)) != 0) {
-                goto out;
+                return;
             }
         }
     } else { // Only restPtr is option
         if (restPtr != NULL) {
             if (strncpy_s(options, OPTIONS_SIZE - 1, restPtr, strlen(restPtr)) != 0) {
-                goto out;
+                return;
             }
         }
     }
     if (!fileName) {
-        goto out;
+        return;
     }
-    fd = open(fileName, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    char *realPath = (char *)calloc(MAX_BUFFER, sizeof(char));
+    if (realPath == NULL) {
+        return;
+    }
+    realPath = realpath(fileName, realPath);
+    int fd = open(realPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd < 0) {
-        printf("[Init] failed to open %s: %d\n", fileName, errno);
-        goto out;
+        printf("[Init] failed to open %s: %d\n", realPath, errno);
+        free(realPath);
+        return;
     }
     int rc = syscall(__NR_finit_module, fd, options, flags);
     if (rc == -1) {
-        printf("[Init] finit_module for %s failed: %d\n", fileName, errno);
+        printf("[Init] finit_module for %s failed: %d\n", realPath, errno);
     }
-out:
     if (fd >= 0) {
         close(fd);
     }
+    free(realPath);
     return;
 }
 
