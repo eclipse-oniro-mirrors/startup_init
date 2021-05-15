@@ -13,24 +13,26 @@
 
 import("//build/lite/config/component/lite_component.gni")
 
-lite_component("initstage") {
-  features = [ "//base/startup/init_lite/initstage:libinitstage_shared" ]
+lite_component("initsync") {
+  features = [ "//base/startup/init_lite/initsync:libinitsync_shared" ]
 }
 
-shared_library("libinitstage_shared") {
-  sources = [ "src/init_stage.c" ]
+shared_library("libinitsync_shared") {
+  sources = [ "src/init_sync.c" ]
   cflags = [ "-Wall" ]
   include_dirs = [
-    "//base/startup/init_lite/initstage/include",
+    "//base/startup/init_lite/initsync/include",
+    "//base/startup/init_lite/interfaces/kits",
   ]
   public_deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
 }
 
-static_library("libinitstage_static") {
-  sources = [ "src/init_stage.c" ]
+static_library("libinitsync_static") {
+  sources = [ "src/init_sync.c" ]
   cflags = [ "-Wall" ]
   include_dirs = [
-    "//base/startup/init_lite/initstage/include",
+    "//base/startup/init_lite/initsync/include",
+    "//base/startup/init_lite/interfaces/kits",
   ]
   public_deps = [ "//third_party/bounds_checking_function:libsec_static" ]
 }

@@ -40,12 +40,18 @@ if (defined(ohos_lite)) {
 
     deps = [
       "//base/startup/syspara_lite/frameworks/parameter:parameter",
+      "//base/startup/init_lite/initsync:initsync",
       "//build/lite/config/component/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
     ldflags = []
     if (ohos_kernel_type == "liteos_a") {
-      include_dirs += [ "//kernel/liteos_a/syscall" ]
+      include_dirs += [
+        "//kernel/liteos_a/syscall",
+        "//base/startup/init_lite/interfaces/kits",
+        "//base/startup/init_lite/initsync/include",
+      ]
+      deps += [ "//base/startup/init_lite/initsync:initsync" ]
     }
     if (ohos_kernel_type == "linux") {
       defines += [ "NEED_EXEC_RCS_LINUX" ]

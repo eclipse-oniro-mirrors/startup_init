@@ -30,24 +30,24 @@ static int SendCmd(int cmd, unsigned long arg)
     if (fd != -1) {
         int ret = ioctl(fd, cmd, arg);
         if (ret == -1) {
-            printf("[%s][%d]Err: %s!\n", __FUNCTION__, __LINE__, strerror(errno));
+            printf("[ERR][%s,%d] %s!\n", __FUNCTION__, __LINE__, strerror(errno));
         }
         close(fd);
         return ret;
     }
-    printf("[%s][%d]Err: %s!\n", __FUNCTION__, __LINE__, strerror(errno));
+    printf("[ERR][%s,%d] %s!\n", __FUNCTION__, __LINE__, strerror(errno));
     return fd;
 }
 
-int InitListen(pid_t pid, unsigned short eventMask)
+int InitListen(unsigned long eventMask, unsigned int wait)
 {
-    QuickstartMask listenMask;
-    listenMask.pid = pid;
-    listenMask.events = eventMask;
-    return SendCmd(QUICKSTART_LISTEN, (unsigned long)&listenMask);
+    QuickstartListenArgs args;
+    args.wait = wait;
+    args.events = eventMask;
+    return SendCmd(QUICKSTART_LISTEN, (unsigned long)&args);
 }
 
-int NotifyInit(unsigned short event)
+int NotifyInit(unsigned long event)
 {
     return SendCmd(QUICKSTART_NOTIFY, event);
 }
@@ -55,13 +55,21 @@ int NotifyInit(unsigned short event)
 int SystemInitStage(QuickstartStage stage)
 {
     if (stage >= QS_STAGE_LIMIT || stage < QS_STAGE1) {
-        printf("[%s][%d]Err: the stage(%d) is Not expected!!\n", __FUNCTION__, __LINE__, stage);
+        printf("[ERR][%s,%d] the stage(%d) is not expected!\n", __FUNCTION__, __LINE__, stage);
         return -1;
     }
     return SendCmd(QUICKSTART_STAGE(stage), 0);
 }
 
+void TriggerStage(unsigned int event, unsigned int wait, QuickstartStage stagelevel)
+{
+    int ret = InitListen(event, wait);
+    if (ret != 0 && ret != -1) {
+        SystemInitStage(stagelevel);
+    }
+}
+
 int InitStageFinished(void)
 {
-    return SendCmd(QUICKSTART_UNREGISTER, 0);
+    return unlink(QUICKSTART_NODE);
 }
