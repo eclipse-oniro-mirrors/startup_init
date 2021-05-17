@@ -64,7 +64,7 @@ int SystemInitStage(QuickstartStage stage)
 void TriggerStage(unsigned int event, unsigned int wait, QuickstartStage stagelevel)
 {
     int ret = InitListen(event, wait);
-    if (ret != 0 && ret != -1) {
+    if (ret != 0) {
         SystemInitStage(stagelevel);
     }
 }
