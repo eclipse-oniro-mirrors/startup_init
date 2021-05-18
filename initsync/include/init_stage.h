@@ -16,6 +16,7 @@
 #ifndef BASE_STARTUP_INITLITE_STAGE_H
 #define BASE_STARTUP_INITLITE_STAGE_H
 
+#include "init_sync.h"
 #include <sys/ioctl.h>
 #include <unistd.h>
 
@@ -33,21 +34,19 @@ typedef enum {
 } QuickstartStage;
 
 typedef enum {
-    QS_UNREGISTER = QS_STAGE_LIMIT,  /* quickstart dev unregister */
-    QS_NOTIFY,          /* quickstart notify */
-    QS_LISTEN,          /* quickstart listen */
+    QS_NOTIFY = QS_STAGE_LIMIT,    /* quickstart notify */
+    QS_LISTEN,                     /* quickstart listen */
     QS_CTL_LIMIT
 } QuickstartConctrl;
 
 typedef struct {
-    unsigned int pid;
     unsigned int events;
-} QuickstartMask;
+    unsigned int wait;
+} QuickstartListenArgs;
 
 #define QUICKSTART_IOC_MAGIC    'T'
-#define QUICKSTART_UNREGISTER   _IO(QUICKSTART_IOC_MAGIC, QS_UNREGISTER)
 #define QUICKSTART_NOTIFY       _IO(QUICKSTART_IOC_MAGIC, QS_NOTIFY)
-#define QUICKSTART_LISTEN       _IOR(QUICKSTART_IOC_MAGIC, QS_LISTEN, QuickstartMask)
+#define QUICKSTART_LISTEN       _IOR(QUICKSTART_IOC_MAGIC, QS_LISTEN, QuickstartListenArgs)
 #define QUICKSTART_STAGE(x)     _IO(QUICKSTART_IOC_MAGIC, (x))
 
 #define QUICKSTART_NODE         "/dev/quickstart"
@@ -67,9 +66,8 @@ typedef struct {
  * Listen the events of a specific pid process by Init process.
  * Only be called by Init process.
  * eventMask: There needs to be a consensus between the listener and the notifier.
-
  */
-extern int InitListen(pid_t pid, unsigned short eventMask);
+extern int InitListen(unsigned long eventMask, unsigned int wait);
 
 /*
  * Trigger the SystemInit stage.
@@ -83,6 +81,11 @@ extern int SystemInitStage(QuickstartStage stage);
  */
 extern int InitStageFinished(void);
 
+/*
+ * Listen event and trigger the SystemInit stage.
+ * Only be called by Init process.
+ */
+extern void TriggerStage(unsigned int event, unsigned int wait, QuickstartStage stagelevel);
 #ifdef __cplusplus
 #if __cplusplus
 }
