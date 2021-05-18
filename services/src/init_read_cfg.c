@@ -28,7 +28,9 @@
 #include "init_service_manager.h"
 #include "securec.h"
 #ifndef __LINUX__
+#ifdef OHOS_LITE
 #include "init_stage.h"
+#endif
 #endif
 
 static const long MAX_JSON_FILE_LEN = 102400;    // max init.cfg size 100KB
@@ -353,19 +355,25 @@ void InitReadCfg()
     // do jobs
     DoJob("pre-init");
 #ifndef __LINUX__
+#ifdef OHOS_LITE
     TriggerStage(EVENT1, EVENT1_WAITTIME, QS_STAGE1);
+#endif
 #endif
 
     DoJob("init");
 #ifndef __LINUX__
+#ifdef OHOS_LITE
     TriggerStage(EVENT2, EVENT2_WAITTIME, QS_STAGE2);
+#endif
 #endif
 
     DoJob("post-init");
 #ifndef __LINUX__
+#ifdef OHOS_LITE
     TriggerStage(EVENT3, EVENT3_WAITTIME, QS_STAGE3);
 
     InitStageFinished();
+#endif
 #endif
     ReleaseAllJobs();
 }
