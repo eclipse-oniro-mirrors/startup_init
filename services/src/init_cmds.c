@@ -44,6 +44,7 @@
 #define OCTAL_TYPE 8  // 8 means octal to decimal
 #define MAX_BUFFER 256
 static const char *g_supportCfg[] = {
+    "/etc/patch.cfg",
     "/patch/fstab.cfg",
 };
 
