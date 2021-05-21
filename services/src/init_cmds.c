@@ -38,6 +38,7 @@
 #define LOADCFG_MAX_FILE_LEN 51200  // loadcfg, max file size is 50K
 #define LOADCFG_MAX_LOOP 20  // loadcfg, to prevent to be trapped in infite loop
 static const char *g_supportCfg[] = {
+    "/etc/patch.cfg",
     "/patch/fstab.cfg",
 };
 
