@@ -135,7 +135,12 @@ static void ReleaseServiceMem(Service* curServ)
         free(curServ->servPerm.caps);
         curServ->servPerm.caps = NULL;
     }
+    if (curServ->servPerm.gIDs != NULL) {
+        free(curServ->servPerm.gIDs);
+        curServ->servPerm.gIDs = NULL;
+    }
     curServ->servPerm.capsCnt = 0;
+    curServ->servPerm.gidsCnt = 0;
 }
 
 static int GetServiceName(const cJSON* curArrItem, Service* curServ)
@@ -220,8 +225,6 @@ static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const cha
 
     if (strncmp(targetField, UID_STR_IN_CFG, strlen(UID_STR_IN_CFG)) == 0) {
         curServ->servPerm.uID = value;
-    } else if (strncmp(targetField, GID_STR_IN_CFG, strlen(GID_STR_IN_CFG)) == 0) {
-        curServ->servPerm.gID = value;
     } else if (strncmp(targetField, ONCE_STR_IN_CFG, strlen(ONCE_STR_IN_CFG)) == 0) {
         if (value != 0) {
             curServ->attribute |= SERVICE_ATTR_ONCE;
@@ -279,6 +282,46 @@ static int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
     return SERVICE_SUCCESS;
 }
 
+static int GetServiceGids(const cJSON* curArrItem, Service* curServ)
+{
+    curServ->servPerm.gidsCnt = 0;
+    curServ->servPerm.gIDs = NULL;
+    int gidsCnt;
+    cJSON* filedJ = cJSON_GetObjectItem(curArrItem, "gid");
+    if (cJSON_IsArray(filedJ)) {
+        gidsCnt = cJSON_GetArraySize(filedJ);
+        if (gidsCnt <= 0) {
+            // gids array does not exist, means do not need any group
+            return SERVICE_SUCCESS;
+        }
+        curServ->servPerm.gIDs = (unsigned int*)malloc(sizeof(unsigned int) * gidsCnt);
+        if (curServ->servPerm.gIDs == NULL) {
+            return SERVICE_FAILURE;
+        }
+        for (int i = 0; i < gidsCnt; ++i) {
+        cJSON* gidJ = cJSON_GetArrayItem(filedJ, i);
+        if (!cJSON_IsNumber(gidJ) || cJSON_GetNumberValue(gidJ) < 0) {
+            // resources will be released by function: ReleaseServiceMem
+            return SERVICE_FAILURE;
+        }
+        curServ->servPerm.gIDs[i] = (unsigned int)cJSON_GetNumberValue(gidJ);
+        }
+    } else {
+        int value = (int)cJSON_GetNumberValue(filedJ);
+        if (value < 0) {
+            return SERVICE_FAILURE;
+        }
+        gidsCnt = 1;
+        curServ->servPerm.gIDs = (unsigned int*)malloc(sizeof(unsigned int));
+        if (curServ->servPerm.gIDs == NULL) {
+            return SERVICE_FAILURE;
+        }
+        curServ->servPerm.gIDs[0] = (unsigned int)value;
+    }
+    curServ->servPerm.gidsCnt = gidsCnt;
+    return SERVICE_SUCCESS;
+}
+
 static void ParseAllServices(const cJSON* fileRoot)
 {
     int servArrSize = 0;
@@ -311,7 +354,7 @@ static void ParseAllServices(const cJSON* fileRoot)
         if (GetServiceName(curItem, &retServices[i]) != SERVICE_SUCCESS ||
             GetServicePathAndArgs(curItem, &retServices[i]) != SERVICE_SUCCESS ||
             GetServiceNumber(curItem, &retServices[i], UID_STR_IN_CFG) != SERVICE_SUCCESS ||
-            GetServiceNumber(curItem, &retServices[i], GID_STR_IN_CFG) != SERVICE_SUCCESS ||
+            GetServiceGids(curItem, &retServices[i]) != SERVICE_SUCCESS ||
             GetServiceNumber(curItem, &retServices[i], ONCE_STR_IN_CFG) != SERVICE_SUCCESS ||
             GetServiceNumber(curItem, &retServices[i], IMPORTANT_STR_IN_CFG) != SERVICE_SUCCESS ||
             GetServiceCaps(curItem, &retServices[i]) != SERVICE_SUCCESS) {
