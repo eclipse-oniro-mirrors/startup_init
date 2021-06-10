@@ -43,7 +43,8 @@ extern "C" {
 
 typedef struct {
     uid_t uID;
-    gid_t gID;
+    gid_t *gIDs;
+    unsigned int gidsCnt;
     unsigned int *caps;
     unsigned int capsCnt;
 } Perms;

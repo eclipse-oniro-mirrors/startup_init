@@ -48,8 +48,7 @@ static int SetPerms(const Service *service)
     if (KeepCapability() != 0) {
         return SERVICE_FAILURE;
     }
-
-    if (setgid(service->servPerm.gID) != 0) {
+    if (setgroups(service->servPerm.gidsCnt, service->servPerm.gIDs) != 0) {
         return SERVICE_FAILURE;
     }
 
