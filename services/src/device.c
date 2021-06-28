@@ -38,6 +38,11 @@ void MountBasicFs()
     if (mount("sysfs", "/sys", "sysfs", 0, NULL) != 0) {
         printf("Mount sysfs failed. %s\n", strerror(errno));
     }
+#ifndef __LITEOS__
+    if (mount("selinuxfs", "/sys/fs/selinux", "selinuxfs", 0, NULL) != 0) {
+        printf("Mount selinuxfs failed. %s\n", strerror(errno));
+    }
+#endif
 }
 
 void CreateDeviceNode()
@@ -56,3 +61,19 @@ void CreateDeviceNode()
         printf("Create /dev/urandom device node failed. %s\n", strerror(errno));
     }
 }
+
+int MakeSocketDir(const char *path, mode_t mode)
+{
+    int rc = mkdir("/dev/unix/", mode);
+    if (rc < 0 && errno != EEXIST) {
+        printf("Create %s failed. %d\n", path, errno);
+        return -1;
+    }
+    rc = mkdir("/dev/unix/socket/", mode);
+    if (rc < 0 && errno != EEXIST) {
+        printf("Create %s failed. %d\n", path, errno);
+        return -1;
+    }
+    return rc;
+}
+

@@ -33,6 +33,8 @@
 
 #ifndef OHOS_LITE
 #include "device.h"
+#include "property.h"
+#include "property_service.h"
 #endif
 
 static const pid_t INIT_PROCESS_PID = 1;
@@ -82,6 +84,9 @@ int main(int argc, char * const argv[])
     // 2. Mount basic filesystem and create common device node.
     MountBasicFs();
     CreateDeviceNode();
+    MakeSocketDir("/dev/unix/socket/", 0755);
+
+    InitPropertyService();
 #endif
 
     // 3. signal register
@@ -107,6 +112,12 @@ int main(int argc, char * const argv[])
     // 5. read configuration file and do jobs
     InitReadCfg();
 
+    LoadDefaultProperty("/system/build.prop");
+    LoadDefaultProperty("/system/buildz.prop");
+    LoadDefaultProperty("/vendor/build.prop");
+    LoadDefaultProperty("/vendor/default.prop");
+    LoadDefaultProperty("/vendor/odm/etc/build.prop");
+    LoadDefaultProperty("/system/etc/prop.default");
 #ifdef OHOS_DEBUG
     struct timespec tmCfg;
     if (clock_gettime(CLOCK_REALTIME, &tmCfg) != 0) {
@@ -121,6 +132,9 @@ int main(int argc, char * const argv[])
 #endif
 
     printf("[Init] main, entering wait.\n");
+#ifndef OHOS_LITE
+    StartPropertyService();
+#endif
     while (1) {
         // pause only returns when a signal was caught and the signal-catching function returned.
         // pause only returns -1, no need to process the return value.

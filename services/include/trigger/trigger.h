@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef BASE_STARTUP_INITLITE_READ_CFG_H
-#define BASE_STARTUP_INITLITE_READ_CFG_H
+#ifndef BASE_STARTUP_TRIGER_H
+#define BASE_STARTUP_TRIGER_H
+#include <stdio.h>
+#include "cJSON.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -22,17 +24,24 @@ extern "C" {
 #endif
 #endif
 
-#define INIT_CONFIGURATION_FILE "/init.cfg"
-#define  MAX_PATH_ARGS_CNT 20
-#define  MAX_ONE_ARG_LEN 200 // max length of one param/path
+typedef enum {
+    EVENT_PROPERTY, // 属性修改事件
+    EVENT_BOOT
+} EventType;
 
-void InitReadCfg();
-void ParseInitCfg(const char *configFile);
+void PostTrigger(EventType type, void *content, u_int32_t contentLen);
+
+void PostPropertyTrigger(const char *name, const char *value);
+
+void StartTriggerService();
+
+int ParseTriggerConfig(cJSON *fileRoot);
+
+void DoTriggerExec(const char *content);
 
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif
-
-#endif // BASE_STARTUP_INITLITE_READ_CFG_H
+#endif

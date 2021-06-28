@@ -25,12 +25,17 @@ if (defined(ohos_lite)) {
       "src/init_read_cfg.c",
       "src/init_service.c",
       "src/init_service_manager.c",
+      "src/init_import.c",
       "src/init_signal_handler.c",
+      "src/init_utils.c",
+      "src/init_service_socket.c",
       "src/main.c",
+      "src/init_capability.c",
     ]
 
     include_dirs = [
-      "include",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/property/include",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/startup/syspara_lite/interfaces/kits",
@@ -74,7 +79,6 @@ if (defined(ohos_lite)) {
   }
 } else {
   import("//build/ohos.gni")
-
   ohos_executable("updaterueventd") {
     sources = [
       "src/list.c",
@@ -86,37 +90,66 @@ if (defined(ohos_lite)) {
     ]
     deps = [ "//third_party/bounds_checking_function:libsec_static" ]
     install_enable = true
-    part_name = "updater"
+    part_name = "init"
   }
 
-  ohos_executable("updaterinit") {
+  ohos_executable("init") {
     sources = [
       "src/device.c",
       "src/init_adapter.c",
       "src/init_cmds.c",
       "src/init_jobs.c",
+      "src/init_log.c",
       "src/init_read_cfg.c",
       "src/init_service.c",
       "src/init_service_manager.c",
+      "src/init_import.c",
       "src/init_signal_handler.c",
+      "src/init_utils.c",
+      "src/init_service_socket.c",
       "src/main.c",
+      "src/init_capability.c",
     ]
     include_dirs = [
-      "include",
+      "//base/startup/init_lite/services/include/property",
+      "//base/startup/init_lite/services/include/trigger",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/property/include",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
     ]
     deps = [
+      "//base/startup/init_lite/services/property:propertyserver",
+      "//base/startup/init_lite/services/property:propertyclient",
+      "//base/startup/init_lite/services/trigger:triggerservice",
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]
+    if (use_musl) {
+      deps += [
+        "//third_party/mksh:sh",
+        "//third_party/toybox:toybox"
+      ]
+    }
     install_enable = true
-    part_name = "updater"
+    part_name = "init"
   }
 
   ohos_prebuilt_etc("init.cfg") {
     source = "//device/hisilicon/hi3516dv300/updater/init.cfg"
-    relative_install_dir = "init"
-    subsystem_name = "updater"
+    part_name = "init"
+  }
+
+  group("startup_init") {
+    deps = [
+      ":init.cfg",
+      ":init",
+      ":updaterueventd",
+      "//base/startup/init_lite/services/trigger:triggerservice",
+      "//base/startup/init_lite/services/property:propertyserver",
+      "//base/startup/init_lite/services/property:propertyclient",
+      "//base/startup/init_lite/services/property:setparam",
+      "//base/startup/init_lite/services/property:getparam"
+    ]
   }
 }

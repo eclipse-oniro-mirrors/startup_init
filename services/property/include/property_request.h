@@ -13,35 +13,55 @@
  * limitations under the License.
  */
 
-#ifndef BASE_STARTUP_INITLITE_JOBS_H
-#define BASE_STARTUP_INITLITE_JOBS_H
+#ifndef BASE_STARTUP_PROPERTY_REQUEST_H
+#define BASE_STARTUP_PROPERTY_REQUEST_H
 
-#include "init_cmds.h"
-#include "cJSON.h"
+#include <stdio.h>
+#include "property.h"
+#include "property_manager.h"
 
+#include "uv.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
 
-#define MAX_JOB_NAME_LEN 64
+typedef enum RequestType {
+    SET_PROPERTY,
+    GET_PROPERTY,
+} RequestType;
 
-// one job, could have many cmd lines
 typedef struct {
-    char name[MAX_JOB_NAME_LEN + 1];
-    int cmdLinesCnt;
-    CmdLine* cmdLines;
-} Job;
+    PropertySecurityLabel securitylabel;
+    RequestType type;
+    int contentSize;
+    char content[0];
+} RequestMsg;
 
-void ParseAllJobs(const cJSON* fileRoot);
-void DoJob(const char* jobName);
-void ReleaseAllJobs();
-void DumpAllJobs();
+typedef struct {
+    RequestType type;
+    int result;
+    int contentSize;
+    char content[0];
+} ResponseMsg;
+
+typedef struct {
+    uv_loop_t *loop;
+    uv_connect_t connect;
+    uv_pipe_t handle;
+    int result;
+    RequestMsg msg;
+} RequestNode;
+
+typedef struct {
+    uv_write_t writer;
+    ResponseMsg msg;
+} ResponseNode;
+
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif
-
-#endif // BASE_STARTUP_INITLITE_JOBS_H
+#endif

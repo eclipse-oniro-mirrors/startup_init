@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef BASE_STARTUP_INITLITE_READ_CFG_H
-#define BASE_STARTUP_INITLITE_READ_CFG_H
+#ifndef INIT_UTILS_H
+#define INIT_UTILS_H
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -22,17 +22,20 @@ extern "C" {
 #endif
 #endif
 
-#define INIT_CONFIGURATION_FILE "/init.cfg"
-#define  MAX_PATH_ARGS_CNT 20
-#define  MAX_ONE_ARG_LEN 200 // max length of one param/path
+struct CmdArgs {
+    int argc;
+    char **argv;
+};
 
-void InitReadCfg();
-void ParseInitCfg(const char *configFile);
+struct CmdArgs* GetCmd(const char *cmdContent, const char *delim);
+void FreeCmd(struct CmdArgs **cmd);
+int DecodeUid(const char *name);
+void CheckAndCreateDir(const char *fileName);
+char* ReadFileToBuf(const char *configFile);
 
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif
-
-#endif // BASE_STARTUP_INITLITE_READ_CFG_H
+#endif // INIT_UTILS_H

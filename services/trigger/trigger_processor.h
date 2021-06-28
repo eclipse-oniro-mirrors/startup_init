@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2020 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,8 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef BASE_STARTUP_INITLITE_READ_CFG_H
-#define BASE_STARTUP_INITLITE_READ_CFG_H
+#ifndef BASE_STARTUP_EVENT_MANAGER_H
+#define BASE_STARTUP_EVENT_MANAGER_H
+
+#include <stdio.h>
+
+#include "property.h"
+#include "trigger.h"
+#include "trigger_manager.h"
+#include "uv.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -22,17 +29,26 @@ extern "C" {
 #endif
 #endif
 
-#define INIT_CONFIGURATION_FILE "/init.cfg"
-#define  MAX_PATH_ARGS_CNT 20
-#define  MAX_ONE_ARG_LEN 200 // max length of one param/path
+typedef struct TriggerEvent {
+    uv_work_t request;
+    EventType type;
+} TriggerEvent;
 
-void InitReadCfg();
-void ParseInitCfg(const char *configFile);
+typedef struct {
+    uv_work_t request;
+    EventType type;
+    u_int32_t contentSize;
+    char content[0];
+} TriggerDataEvent;
+
+typedef struct TriggerExecute {
+    TriggerEvent event;
+    TriggerNode *trigger;
+} TriggerExecute;
 
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif
-
-#endif // BASE_STARTUP_INITLITE_READ_CFG_H
+#endif

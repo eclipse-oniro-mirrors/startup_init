@@ -1,0 +1,10 @@
+{
+  "subsystem": "startup",
+  "parts": {
+    "init": {
+      "module_list": [
+        "//base/startup/init_lite/services:startup_init"
+      ]
+    }
+  }
+}

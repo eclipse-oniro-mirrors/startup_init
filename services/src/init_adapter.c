@@ -20,8 +20,10 @@
 #include <unistd.h>
 #include <sys/prctl.h>
 #include <sys/reboot.h>
-#ifdef __LINUX__
+#if ((defined __LINUX__) || (!defined OHOS_LITE))
 #include <linux/securebits.h>
+#endif
+#ifdef __LINUX__
 #include "init_signal_handler.h"
 #endif
 
@@ -35,9 +37,9 @@ void RebootSystem()
 
 int KeepCapability()
 {
-#ifdef __LINUX__
+#if ((defined __LINUX__) || (!defined OHOS_LITE))
     if (prctl(PR_SET_SECUREBITS, SECBIT_NO_SETUID_FIXUP | SECBIT_NO_SETUID_FIXUP_LOCKED)) {
-        printf("[Init] prctl failed\n");
+        printf("[Init] prctl PR_SET_SECUREBITS failed: %d\n", errno);
         return -1;
     }
 #endif
@@ -46,9 +48,9 @@ int KeepCapability()
 
 int SetAmbientCapability(int cap)
 {
-#ifdef __LINUX__
+#if ((defined __LINUX__) || (!defined OHOS_LITE))
     if (prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_RAISE, cap, 0, 0)) {
-        printf("[Init] prctl PR_CAP_AMBIENT failed\n");
+        printf("[Init] prctl PR_CAP_AMBIENT failed: %d\n", errno);
         return -1;
     }
 #endif

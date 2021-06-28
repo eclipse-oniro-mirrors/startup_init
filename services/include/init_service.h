@@ -17,6 +17,8 @@
 #define BASE_STARTUP_INITLITE_SERVICE_H
 
 #include <sys/types.h>
+#include "init_cmds.h"
+#include "init_service_socket.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -34,8 +36,11 @@ extern "C" {
 #define SERVICE_ATTR_NEED_RESTART 0x004  // will restart in the near future
 #define SERVICE_ATTR_NEED_STOP    0x008  // will stop in reap
 #define SERVICE_ATTR_IMPORTANT    0x010  // will reboot if it crash
+#define SERVICE_ATTR_CRITICAL     0x020  // critical, will reboot if it crash 4 times in 4 minutes
+#define SERVICE_ATTR_DISABLED     0x040  // disabled
 
 #define MAX_SERVICE_NAME 32
+#define MAX_WRITEPID_FILES 100
 
 #define CAP_NUM 2
 
@@ -43,11 +48,16 @@ extern "C" {
 
 typedef struct {
     uid_t uID;
-    gid_t *gIDs;
-    unsigned int gidsCnt;
+    gid_t *gIDArray;
+    int gIDCnt;
     unsigned int *caps;
     unsigned int capsCnt;
 } Perms;
+
+struct OnRestartCmd {
+    CmdLine *cmdLine;
+    int cmdNum;
+};
 
 typedef struct {
     char   name[MAX_SERVICE_NAME + 1];
@@ -56,8 +66,13 @@ typedef struct {
     int    pid;
     int    crashCnt;
     time_t firstCrashTime;
+    int    criticalCrashCnt;            // count for critical
+    time_t firstCriticalCrashTime;      // record for critical
+    char   *writepidFiles[MAX_WRITEPID_FILES];
     unsigned int attribute;
     Perms  servPerm;
+    struct OnRestartCmd *onRestart;
+    struct ServiceSocket *socketCfg;
 } Service;
 
 int ServiceStart(Service *service);

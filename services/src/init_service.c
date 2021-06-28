@@ -19,12 +19,16 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
 #include "init_adapter.h"
+#include "init_cmds.h"
+#include "init_log.h"
 #include "init_perms.h"
+#include "init_service_socket.h"
 
 #define CAP_NUM 2
 
@@ -32,6 +36,13 @@
 static const int CRASH_TIME_LIMIT  = 240;
 // maximum number of crashes within time CRASH_TIME_LIMIT for one service
 static const int CRASH_COUNT_LIMIT = 4;
+
+// 240 seconds, 4 minutes
+static const int CRITICAL_CRASH_TIME_LIMIT  = 240;
+// maximum number of crashes within time CRITICAL_CRASH_TIME_LIMIT for one service
+static const int CRITICAL_CRASH_COUNT_LIMIT = 4;
+static const int MAX_PID_STRING_LENGTH = 50;
+
 
 static int SetAllAmbientCapability()
 {
@@ -48,12 +59,17 @@ static int SetPerms(const Service *service)
     if (KeepCapability() != 0) {
         return SERVICE_FAILURE;
     }
-    if (setgroups(service->servPerm.gidsCnt, service->servPerm.gIDs) != 0) {
+
+    if (setgroups(service->servPerm.gIDCnt, service->servPerm.gIDArray) != 0) {
+        INIT_LOGE("[Init] SetPerms, setgroups failed. errno = %d, gIDCnt=%d\n", errno, service->servPerm.gIDCnt);
         return SERVICE_FAILURE;
     }
 
-    if (setuid(service->servPerm.uID) != 0) {
-        return SERVICE_FAILURE;
+    if (service->servPerm.uID != 0) {
+        if (setuid(service->servPerm.uID) != 0) {
+            printf("[Init] setuid of service: %s failed, uid = %d\n", service->name, service->servPerm.uID);
+            return SERVICE_FAILURE;
+        }
     }
 
     // umask call always succeeds and return the previous mask value which is not needed here
@@ -79,6 +95,7 @@ static int SetPerms(const Service *service)
     }
 
     if (capset(&capHeader, capData) != 0) {
+        printf("[Init][Debug], capset faild for service: %s, error: %d\n", service->name, errno);
         return SERVICE_FAILURE;
     }
     for (unsigned int i = 0; i < service->servPerm.capsCnt; ++i) {
@@ -86,6 +103,7 @@ static int SetPerms(const Service *service)
             return SetAllAmbientCapability();
         }
         if (SetAmbientCapability(service->servPerm.caps[i]) != 0) {
+            printf("[Init][Debug], SetAmbientCapability faild for service: %s\n", service->name);
             return SERVICE_FAILURE;
         }
     }
@@ -112,19 +130,56 @@ int ServiceStart(Service *service)
             service->name, service->pathArgs[0]);
         return SERVICE_FAILURE;
     }
-
+    int ret = 0;
     int pid = fork();
     if (pid == 0) {
+        if (service->socketCfg != NULL) {    // start socket service
+            printf("[init] Create socket \n");
+            ret = DoCreateSocket(service->socketCfg);
+            if (ret < 0) {
+                return SERVICE_FAILURE;
+            }
+        }
         // permissions
         if (SetPerms(service) != SERVICE_SUCCESS) {
-            printf("[Init] service %s exit! set perms failed! err %d.\n", service->name, errno);
+            INIT_LOGE("[Init] service %s exit! set perms failed! err %d.\n", service->name, errno);
             _exit(0x7f); // 0x7f: user specified
         }
+        char pidString[MAX_PID_STRING_LENGTH];          // writepid
+        pid_t childPid = getpid();
+        if (snprintf(pidString, MAX_PID_STRING_LENGTH, "%d", childPid) <= 0) {
+            INIT_LOGE("[Init] start service writepid sprintf failed.\n");
+            return SERVICE_FAILURE;
+        }
+        for (int i = 0; i < MAX_WRITEPID_FILES; i++) {
+            if (service->writepidFiles[i] == NULL) {
+                continue;
+            }
+            FILE *fd = fopen(service->writepidFiles[i], "wb");
+            if (fd == NULL) {
+                INIT_LOGE("[Init] start service writepidFiles %s invalid.\n", service->writepidFiles[i]);
+                continue;
+            }
+            if (fwrite(pidString, 1, strlen(pidString), fd) != strlen(pidString)) {
+                 INIT_LOGE("[Init] start service writepid error.file:%s pid:%s\n", service->writepidFiles[i], pidString);
+            }
+            fclose(fd);
+            printf("[Init] ServiceStart writepid filename=%s, childPid=%s, ok\n", service->writepidFiles[i], pidString);
+        }
 
+        printf("[init] service->name is %s \n", service->name);
+#ifndef OHOS_LITE
+         // L2 Can not be reset env
+         if (execv(service->pathArgs[0], service->pathArgs) != 0) {
+            printf("[Init] service %s execve failed! err %d.\n", service->name, errno);
+         }
+#else
         char* env[] = {"LD_LIBRARY_PATH=/storage/app/libs", NULL};
         if (execve(service->pathArgs[0], service->pathArgs, env) != 0) {
             printf("[Init] service %s execve failed! err %d.\n", service->name, errno);
         }
+#endif
+
         _exit(0x7f); // 0x7f: user specified
     } else if (pid < 0) {
         printf("[Init] start service %s fork failed!\n", service->name);
@@ -158,6 +213,45 @@ int ServiceStop(Service *service)
     return SERVICE_SUCCESS;
 }
 
+// the service need to be restarted, if it crashed more than 4 times in 4 minutes
+void CheckCritical(Service *service)
+{
+    if (service->attribute & SERVICE_ATTR_CRITICAL) {            // critical
+        // crash time and count check
+        time_t curTime = time(NULL);
+        if (service->criticalCrashCnt == 0) {
+            service->firstCriticalCrashTime = curTime;
+            ++service->criticalCrashCnt;
+        } else if (difftime(curTime, service->firstCriticalCrashTime) > CRITICAL_CRASH_TIME_LIMIT) {
+            service->firstCriticalCrashTime = curTime;
+            service->criticalCrashCnt = 1;
+        } else {
+            ++service->criticalCrashCnt;
+            if (service->criticalCrashCnt > CRITICAL_CRASH_COUNT_LIMIT) {
+                INIT_LOGE("[Init] reap critical service %s, crash too many times! Need reboot!\n", service->name);
+                RebootSystem();
+            }
+        }
+    }
+}
+
+static int ExecRestartCmd(const Service *service)
+{
+    printf("[init] ExecRestartCmd \n");
+    if ((service == NULL) || (service->onRestart == NULL) || (service->onRestart->cmdLine == NULL)) {
+        return SERVICE_FAILURE;
+    }
+
+    for (int i = 0; i < service->onRestart->cmdNum; i++) {
+        printf("[init] SetOnRestart cmdLine->name %s  cmdLine->cmdContent %s \n", service->onRestart->cmdLine[i].name,
+            service->onRestart->cmdLine[i].cmdContent);
+        DoCmd(&service->onRestart->cmdLine[i]);
+    }
+    free(service->onRestart->cmdLine);
+    free(service->onRestart);
+    return SERVICE_SUCCESS;
+}
+
 void ServiceReap(Service *service)
 {
     if (service == NULL) {
@@ -166,7 +260,6 @@ void ServiceReap(Service *service)
     }
 
     service->pid = -1;
-
     // stopped by system-init itself, no need to restart even if it is not one-shot service
     if (service->attribute & SERVICE_ATTR_NEED_STOP) {
         service->attribute &= (~SERVICE_ATTR_NEED_STOP);
@@ -203,9 +296,17 @@ void ServiceReap(Service *service)
         }
     }
 
-    int ret = ServiceStart(service);
+    CheckCritical(service);
+    int ret = 0;
+    if (service->onRestart != NULL) {
+        ret = ExecRestartCmd(service);
+        if (ret != SERVICE_SUCCESS) {
+            printf("[Init] SetOnRestart fail \n");
+        }
+    }
+    ret = ServiceStart(service);
     if (ret != SERVICE_SUCCESS) {
-        printf("[Init] reap service %s start failed!\n", service->name);
+        INIT_LOGE("[Init] reap service %s start failed!\n", service->name);
     }
 
     service->attribute &= (~SERVICE_ATTR_NEED_RESTART);

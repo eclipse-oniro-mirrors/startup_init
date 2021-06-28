@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2020 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,23 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef BASE_STARTUP_INITLITE_DEVICE_H
-#define BASE_STARTUP_INITLITE_DEVICE_H
+#ifndef INIT_SOCKET_API_H
+#define INIT_SOCKET_API_H
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif
-#include <sys/types.h>
+#define OHOS_SOCKET_DIR    "/dev/unix/socket"
+#define OHOS_SOCKET_ENV_PREFIX    "OHOS_SOCKET_"
+// parameter is service name
+int GetControlSocket(const char *name);
 
-void MountBasicFs();
-void CreateDeviceNode();
-int MakeSocketDir(const char *path, mode_t mode);
-
-#ifdef __cplusplus
-#if __cplusplus
-}
 #endif
-#endif
-#endif // BASE_STARTUP_INITLITE_DEVICE_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,24 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef BASE_STARTUP_INITLITE_DEVICE_H
-#define BASE_STARTUP_INITLITE_DEVICE_H
-
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif
-#include <sys/types.h>
-
-void MountBasicFs();
-void CreateDeviceNode();
-int MakeSocketDir(const char *path, mode_t mode);
-
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
-#endif
-#endif // BASE_STARTUP_INITLITE_DEVICE_H
+ #ifndef BASE_STARTUP_INITLITE_IMPORT_H
+ #define BASE_STARTUP_INITLITE_IMPORT_H
+ #include "cJSON.h"
+ void ParseAllImports(cJSON *root);
+ #endif

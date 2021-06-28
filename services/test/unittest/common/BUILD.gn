@@ -34,6 +34,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/src/init_cmds.c",
       "//base/startup/init_lite/services/src/init_jobs.c",
       "//base/startup/init_lite/services/src/init_service.c",
+      "//base/startup/init_lite/services/src/init_utils.c",
       "//base/startup/init_lite/services/src/init_service_manager.c",
       "//base/startup/init_lite/services/src/init_signal_handler.c",
       "cmd_func_test.cpp",
