@@ -111,13 +111,14 @@ int main(int argc, char * const argv[])
 
     // 5. read configuration file and do jobs
     InitReadCfg();
-
+#ifdef OHOS_LITE
     LoadDefaultProperty("/system/build.prop");
     LoadDefaultProperty("/system/buildz.prop");
     LoadDefaultProperty("/vendor/build.prop");
     LoadDefaultProperty("/vendor/default.prop");
     LoadDefaultProperty("/vendor/odm/etc/build.prop");
     LoadDefaultProperty("/system/etc/prop.default");
+#endif // OHOS_LITE
 #ifdef OHOS_DEBUG
     struct timespec tmCfg;
     if (clock_gettime(CLOCK_REALTIME, &tmCfg) != 0) {
