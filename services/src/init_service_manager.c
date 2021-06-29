@@ -361,9 +361,12 @@ static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const cha
     }
 
     int value = (int)cJSON_GetNumberValue(filedJ);
-    if (value < 0) {
-        INIT_LOGE("[Init] GetServiceNumber, value = %d, error.\n", value);
-        return SERVICE_FAILURE;
+    // important value allow < 0
+    if (strncmp(targetField, IMPORTANT_STR_IN_CFG, strlen(IMPORTANT_STR_IN_CFG)) != 0) {
+        if (value < 0) {
+            INIT_LOGE("[Init] GetServiceNumber, value = %d, error.\n", value);
+            return SERVICE_FAILURE;
+        }
     }
 
     if (strncmp(targetField, ONCE_STR_IN_CFG, strlen(ONCE_STR_IN_CFG)) == 0) {

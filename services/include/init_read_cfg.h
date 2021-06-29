@@ -21,7 +21,6 @@
 extern "C" {
 #endif
 #endif
-
 #ifndef OHOS_LITE
 #define INIT_CONFIGURATION_FILE "/init.cfg"
 #else

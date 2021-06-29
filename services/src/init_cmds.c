@@ -78,6 +78,7 @@ static const char* g_supportedCmds[] = {
     "trigger ",
     "reset ",
     "copy ",
+    "setparam ",
     "load_persist_props "
 };
 
@@ -532,6 +533,21 @@ static void DoInsmod(const char *cmdContent)
     }
     return;
 }
+
+static void DoSetParam(const char* cmdContent)
+{
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ");
+    if (ctx == NULL || ctx->argv == NULL || ctx->argc != 2) {
+        INIT_LOGE("[Init] DoSetParam failed.\n");
+        goto out;
+    }
+    INIT_LOGE("[Init] param name: %s, value %s \n", ctx->argv[0], ctx->argv[1]);
+    INIT_ERROR_CHECK(SystemWriteParameter(ctx->argv[0], ctx->argv[1]) == 0, goto out, "setparam fail \n");
+out:
+    FreeCmd(&ctx);
+    return;
+}
+
 #endif // OHOS_LITE
 
 static bool CheckValidCfg(const char *path)
@@ -870,6 +886,8 @@ void DoCmdByName(const char *name, const char *cmdContent)
         DoTriggerExec(cmdContent);
     } else if (strncmp(name, "load_persist_props ", strlen("load_persist_props ")) == 0) {
         LoadPersistProperties();
+    } else if (strncmp(name, "setparam ", strlen("setparam ")) == 0) {
+        DoSetParam(cmdContent);
 #endif
     } else {
         printf("[Init] DoCmd, unknown cmd name %s.\n", name);
