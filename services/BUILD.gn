@@ -20,22 +20,24 @@ if (defined(ohos_lite)) {
     ]
     sources = [
       "src/init_adapter.c",
+      "src/init_capability.c",
       "src/init_cmds.c",
+      "src/init_import.c",
       "src/init_jobs.c",
       "src/init_read_cfg.c",
       "src/init_service.c",
       "src/init_service_manager.c",
-      "src/init_import.c",
+      "src/init_service_socket.c",
       "src/init_signal_handler.c",
       "src/init_utils.c",
-      "src/init_service_socket.c",
       "src/main.c",
-      "src/init_capability.c",
+      "src/init_reboot.c",
     ]
 
     include_dirs = [
       "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/property/include",
+      "//base/startup/init_lite/services/param/include",
+      "//base/startup/init_lite/services/log",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/startup/syspara_lite/interfaces/kits",
@@ -44,8 +46,9 @@ if (defined(ohos_lite)) {
     cflags = [ "-Wall" ]
 
     deps = [
-      "//base/startup/syspara_lite/frameworks/parameter:parameter",
       "//base/startup/init_lite/initsync:initsync",
+      "//base/startup/init_lite/services/log:init_log",
+      "//base/startup/syspara_lite/frameworks/parameter:parameter",
       "//build/lite/config/component/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
@@ -73,8 +76,9 @@ if (defined(ohos_lite)) {
 
   if (ohos_build_type == "debug") {
     group("unittest") {
-      deps =
-          [ "//base/startup/init_lite/services/test/unittest/common:unittest" ]
+      deps = [
+        "//base/startup/init_lite/services/test/unittest/common:unittest",
+      ]
     }
   }
 } else {
@@ -87,8 +91,12 @@ if (defined(ohos_lite)) {
     include_dirs = [
       "include",
       "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/services/log",
     ]
-    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
+    deps = [
+      "//third_party/bounds_checking_function:libsec_static",
+      "//base/startup/init_lite/services/log:init_log",
+    ]
     install_enable = true
     part_name = "init"
   }
@@ -97,38 +105,37 @@ if (defined(ohos_lite)) {
     sources = [
       "src/device.c",
       "src/init_adapter.c",
+      "src/init_capability.c",
       "src/init_cmds.c",
+      "src/init_import.c",
       "src/init_jobs.c",
-      "src/init_log.c",
       "src/init_read_cfg.c",
       "src/init_service.c",
       "src/init_service_manager.c",
-      "src/init_import.c",
+      "src/init_service_socket.c",
       "src/init_signal_handler.c",
       "src/init_utils.c",
-      "src/init_service_socket.c",
       "src/main.c",
-      "src/init_capability.c",
+      "src/init_reboot.c",
     ]
     include_dirs = [
-      "//base/startup/init_lite/services/include/property",
-      "//base/startup/init_lite/services/include/trigger",
+      "//base/startup/init_lite/services/include/param",
       "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/property/include",
+      "//base/startup/init_lite/services/log",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
+      "//third_party/libuv/include",
     ]
     deps = [
-      "//base/startup/init_lite/services/property:propertyserver",
-      "//base/startup/init_lite/services/property:propertyclient",
-      "//base/startup/init_lite/services/trigger:triggerservice",
+      "//base/startup/init_lite/services/param:paramservice",
+      "//base/startup/init_lite/services/log:init_log",
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]
     if (use_musl) {
       deps += [
         "//third_party/mksh:sh",
-        "//third_party/toybox:toybox"
+        "//third_party/toybox:toybox",
       ]
     }
     install_enable = true
@@ -142,14 +149,14 @@ if (defined(ohos_lite)) {
 
   group("startup_init") {
     deps = [
-      ":init.cfg",
       ":init",
+      ":init.cfg",
       ":updaterueventd",
-      "//base/startup/init_lite/services/trigger:triggerservice",
-      "//base/startup/init_lite/services/property:propertyserver",
-      "//base/startup/init_lite/services/property:propertyclient",
-      "//base/startup/init_lite/services/property:setparam",
-      "//base/startup/init_lite/services/property:getparam"
+      "//base/startup/init_lite/services/param:paramservice",
+      "//base/startup/init_lite/services/param:setparam",
+      "//base/startup/init_lite/services/param:getparam",
+      "//base/startup/init_lite/services/param:paramclient",
+      "//base/startup/init_lite/services/reboot:reboot",
     ]
   }
 }

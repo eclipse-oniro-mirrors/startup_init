@@ -69,7 +69,7 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim)
             FreeCmd(&ctx);
             return NULL);
         if (ctx->argc > MAX_CMD_NAME_LEN - 1) {
-            INIT_LOGE("[Init] GetCmd failed, max cmd number is 10.\n");
+            INIT_LOGE("GetCmd failed, max cmd number is 10.\n");
             FreeCmd(&ctx);
             return NULL;
         }
@@ -92,7 +92,7 @@ void FreeCmd(struct CmdArgs **cmd)
     return;
 }
 
-void Logger(StatupLogLevel level, const char *format, ...)
+void Logger(InitLogLevel level, const char *format, ...)
 {
     FILE* pFile = fopen(LOG_FILE_NAME, "a");
     static char *logLeveInfo[] = { "VERBOSE", "INFO", "WARN", "ERROR", "FATAL" };

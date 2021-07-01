@@ -19,6 +19,8 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
+#include <unistd.h>
+#include "init_log.h"
 
 #define DEFAULT_RW_MODE 0666
 #define DEFAULT_NO_AUTHORITY_MODE 0600
@@ -30,17 +32,17 @@
 void MountBasicFs()
 {
     if (mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
-        printf("Mount tmpfs failed. %s\n", strerror(errno));
+        INIT_LOGE("Mount tmpfs failed. %s\n", strerror(errno));
     }
     if (mount("proc", "/proc", "proc", 0, "hidepid=2") != 0) {
-        printf("Mount procfs failed. %s\n", strerror(errno));
+        INIT_LOGE("Mount procfs failed. %s\n", strerror(errno));
     }
     if (mount("sysfs", "/sys", "sysfs", 0, NULL) != 0) {
-        printf("Mount sysfs failed. %s\n", strerror(errno));
+        INIT_LOGE("Mount sysfs failed. %s\n", strerror(errno));
     }
 #ifndef __LITEOS__
     if (mount("selinuxfs", "/sys/fs/selinux", "selinuxfs", 0, NULL) != 0) {
-        printf("Mount selinuxfs failed. %s\n", strerror(errno));
+        INIT_LOGE("Mount selinuxfs failed. %s\n", strerror(errno));
     }
 #endif
 }
@@ -48,17 +50,17 @@ void MountBasicFs()
 void CreateDeviceNode()
 {
     if (mknod("/dev/kmsg", S_IFCHR | DEFAULT_NO_AUTHORITY_MODE, makedev(1, DEVICE_ID_ELEVNTH)) != 0) {
-        printf("Create /dev/kmsg device node failed. %s\n", strerror(errno));
+        INIT_LOGE("Create /dev/kmsg device node failed. %s\n", strerror(errno));
     }
     if (mknod("/dev/null", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_THIRD)) != 0) {
-        printf("Create /dev/null device node failed. %s\n", strerror(errno));
+        INIT_LOGE("Create /dev/null device node failed. %s\n", strerror(errno));
     }
     if (mknod("/dev/random", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_EIGHTH)) != 0) {
-        printf("Create /dev/random device node failed. %s\n", strerror(errno));
+        INIT_LOGE("Create /dev/random device node failed. %s\n", strerror(errno));
     }
 
     if (mknod("/dev/urandom", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_NINTH)) != 0) {
-        printf("Create /dev/urandom device node failed. %s\n", strerror(errno));
+        INIT_LOGE("Create /dev/urandom device node failed. %s\n", strerror(errno));
     }
 }
 
@@ -66,12 +68,12 @@ int MakeSocketDir(const char *path, mode_t mode)
 {
     int rc = mkdir("/dev/unix/", mode);
     if (rc < 0 && errno != EEXIST) {
-        printf("Create %s failed. %d\n", path, errno);
+        INIT_LOGE("Create %s failed. %d\n", path, errno);
         return -1;
     }
     rc = mkdir("/dev/unix/socket/", mode);
     if (rc < 0 && errno != EEXIST) {
-        printf("Create %s failed. %d\n", path, errno);
+        INIT_LOGE("Create %s failed. %d\n", path, errno);
         return -1;
     }
     return rc;

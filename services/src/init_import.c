@@ -15,7 +15,9 @@
 
 #include "init_import.h"
 #include <stdio.h>
+#include <unistd.h>
 #include "cJSON.h"
+#include "init_log.h"
 #include "init_read_cfg.h"
 
 #define IMPORT_ARR_NAME_IN_JSON "import"
@@ -25,7 +27,7 @@ void ParseAllImports(cJSON *root)
     cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, IMPORT_ARR_NAME_IN_JSON);
 
     if (!cJSON_IsArray(importAttr)) {
-        printf("[Init] ParseAllImports, import item is not array!\n");
+        INIT_LOGE("ParseAllImports, import item is not array!\n");
         return;
     }
     int importAttrSize = cJSON_GetArraySize(importAttr);
@@ -33,17 +35,17 @@ void ParseAllImports(cJSON *root)
     for (int i = 0; i < importAttrSize; i++) {
         cJSON *importItem = cJSON_GetArrayItem(importAttr, i);
         if (!cJSON_IsString(importItem)) {
-            printf("[Init] Invalid type of import item. should be string\n");
+            INIT_LOGE("Invalid type of import item. should be string\n");
             return;
         }
         char *importFile = cJSON_GetStringValue(importItem);
         if (importFile == NULL) {
-            printf("[Init] cannot get import config file\n");
+            INIT_LOGE("cannot get import config file\n");
             return;
         }
-        printf("[Init] [Debug], ready to import %s...\n", importFile);
+        INIT_LOGD("ready to import %s...\n", importFile);
         ParseInitCfg(importFile);
     }
-     printf("[Init] [Debug], parse import file done\n");
+     INIT_LOGD("parse import file done\n");
     return;
 }

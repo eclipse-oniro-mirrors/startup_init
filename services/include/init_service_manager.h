@@ -39,6 +39,7 @@ void RegisterServices(Service* services, int servicesCnt);
 void StartServiceByName(const char* serviceName);
 void StopServiceByName(const char* serviceName);
 void StopAllServices();
+void StopAllServicesBeforeReboot();
 void ReapServiceByPID(int pid);
 void ParseAllServices(const cJSON* fileRoot);
 void DumpAllServices();

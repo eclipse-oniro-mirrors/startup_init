@@ -38,7 +38,7 @@ struct CapStrCapNum {
     int CapNum;
 };
 
-static struct CapStrCapNum g_capStrCapNum[] = {
+static const struct CapStrCapNum g_capStrCapNum[] = {
     {"CHOWN", CAP_CHOWN},
     {"DAC_OVERRIDE", CAP_DAC_OVERRIDE},
     {"DAC_READ_SEARCH", CAP_DAC_READ_SEARCH},
@@ -85,7 +85,7 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
     for (; i < curServ->servPerm.capsCnt; ++i) {
         if (cJSON_GetArrayItem(filedJ, i) == NULL || !cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i))
             || strlen(cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i))) <= 0) {      // check all errors
-            INIT_LOGE("[Init] GetServiceStringCaps, parse item[%d] as string, error.\n", i);
+            INIT_LOGE("GetServiceStringCaps, parse item[%d] as string, error.\n", i);
             break;
         }
         char* fieldStr = cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i));
@@ -99,12 +99,12 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
         if (j < mapSize) {
             curServ->servPerm.caps[i] = g_capStrCapNum[j].CapNum;
         } else {
-            INIT_LOGE("[Init] GetServiceStringCaps, fieldStr = %s, error.\n", fieldStr);
+            INIT_LOGE("GetServiceStringCaps, fieldStr = %s, error.\n", fieldStr);
             break;
         }
         if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {
             // resources will be released by function: ReleaseServiceMem
-            INIT_LOGE("[Init] GetServiceStringCaps, cap = %d, error.\n", curServ->servPerm.caps[i]);
+            INIT_LOGE("GetServiceStringCaps, cap = %d, error.\n", curServ->servPerm.caps[i]);
             return SERVICE_FAILURE;
         }
     }
@@ -118,11 +118,11 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
     curServ->servPerm.caps = NULL;
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, "caps");
     if (filedJ == NULL) {
-        INIT_LOGE("[Init] GetServiceCaps, caps is not found. but maybe ok.\n");
+        INIT_LOGE("GetServiceCaps, caps is not found. but maybe ok.\n");
         return SERVICE_SUCCESS;
     }
     if (!cJSON_IsArray(filedJ)) {
-        INIT_LOGE("[Init] GetServiceCaps, caps is not a list, error.\n");
+        INIT_LOGE("GetServiceCaps, caps is not a list, error.\n");
         return SERVICE_FAILURE;
     }
     // caps array does not exist, means do not need any capability
@@ -131,13 +131,13 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
         return SERVICE_SUCCESS;
     }
     if (capsCnt > MAX_CAPS_CNT_FOR_ONE_SERVICE) {
-        INIT_LOGE("[Init] GetServiceCaps, too many caps[cnt %d] for one service, should not exceed %d.\n",
+        INIT_LOGE("GetServiceCaps, too many caps[cnt %d] for one service, should not exceed %d.\n",
             capsCnt, MAX_CAPS_CNT_FOR_ONE_SERVICE);
         return SERVICE_FAILURE;
     }
     curServ->servPerm.caps = (unsigned int*)malloc(sizeof(unsigned int) * capsCnt);
     if (curServ->servPerm.caps == NULL) {
-        INIT_LOGE("[Init] GetServiceCaps, malloc error.\n");
+        INIT_LOGE("GetServiceCaps, malloc error.\n");
         return SERVICE_FAILURE;
     }
     curServ->servPerm.capsCnt = capsCnt;
@@ -146,13 +146,13 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
         cJSON* capJ = cJSON_GetArrayItem(filedJ, i);
         if (!cJSON_IsNumber(capJ) || cJSON_GetNumberValue(capJ) < 0) {
             // resources will be released by function: ReleaseServiceMem
-            INIT_LOGE("[Init] GetServiceCaps, capJ is not a number or capJ < 0, error.\n");
+            INIT_LOGE("GetServiceCaps, capJ is not a number or capJ < 0, error.\n");
             break;
         }
         curServ->servPerm.caps[i] = (unsigned int)cJSON_GetNumberValue(capJ);
         if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {        // CAP_LAST_CAP = 37
             // resources will be released by function: ReleaseServiceMem
-            INIT_LOGE("[Init] GetServiceCaps, caps = %d, error.\n", curServ->servPerm.caps[i]);
+            INIT_LOGE("GetServiceCaps, caps = %d, error.\n", curServ->servPerm.caps[i]);
             return SERVICE_FAILURE;
         }
     }

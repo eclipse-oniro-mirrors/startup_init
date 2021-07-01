@@ -37,10 +37,10 @@ static int GetControlFromEnv(char *path)
     if (path == NULL) {
         return -1;
     }
-    printf("GetControlFromEnv path is %s \n", path);
+    INIT_LOGI("GetControlFromEnv path is %s \n", path);
     const char *val = getenv(path);
     if (val == NULL) {
-        printf("test GetControlFromEnv val is null %d\n", errno);
+        INIT_LOGE("GetControlFromEnv val is null %d\n", errno);
         return -1;
     }
     errno = 0;
@@ -48,9 +48,9 @@ static int GetControlFromEnv(char *path)
     if (errno) {
         return -1;
     }
-    printf("test GetControlFromEnv fd is %d \n", fd);
+    INIT_LOGI("GetControlFromEnv fd is %d \n", fd);
     if (fcntl(fd, F_GETFD) < 0) {
-        printf("test GetControlFromEnv errno %d \n", errno);
+        INIT_LOGE("GetControlFromEnv errno %d \n", errno);
         return -1;
     }
     return fd;
@@ -63,23 +63,23 @@ int GetControlSocket(const char *name)
     }
     char path[MAX_SOCKET_ENV_PREFIX_LEN] = {0};
     snprintf(path, sizeof(path), OHOS_SOCKET_ENV_PREFIX"%s", name);
-    printf("test GetControlSocket path is %s \n", path);
+    INIT_LOGI("GetControlSocket path is %s \n", path);
     int fd = GetControlFromEnv(path);
     if (fd < 0) {
-        printf("GetControlFromEnv fail \n");
+        INIT_LOGE("GetControlFromEnv fail \n");
         return -1;
     }
     struct sockaddr_un addr;
     socklen_t addrlen = sizeof(addr);
     int ret = getsockname(fd, (struct sockaddr*)&addr, &addrlen);
     if (ret < 0) {
-        printf("test GetControlSocket errno %d \n", errno);
+        INIT_LOGE("GetControlSocket errno %d \n", errno);
         return -1;
     }
     char sockDir[MAX_SOCKET_DIR_LEN] = {0};
     snprintf(sockDir, sizeof(sockDir), OHOS_SOCKET_DIR"/%s", name);
-    printf("test sockDir %s \n", sockDir);
-    printf("addr.sun_path %s \n", addr.sun_path);
+    INIT_LOGI("sockDir %s \n", sockDir);
+    INIT_LOGI("addr.sun_path %s \n", addr.sun_path);
     if (strncmp(sockDir, addr.sun_path, strlen(sockDir)) == 0) {
         return fd;
     }

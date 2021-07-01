@@ -32,7 +32,7 @@
 #include "init_utils.h"
 
 #ifndef OHOS_LITE
-#include "trigger.h"
+#include "init_param.h"
 #endif
 #include "securec.h"
 #ifndef __LINUX__
@@ -61,21 +61,17 @@ static void ParseInitCfgContents(cJSON *root)
 void ParseInitCfg(const char *configFile)
 {
     if (configFile == NULL || *configFile == '\0') {
-        printf("[Init] Invalid config file\n");
+        INIT_LOGE("Invalid config file\n");
         return;
     }
 
     char *fileBuf = ReadFileToBuf(configFile);
-    //printf("[Init] start dump config file: \n");
-    //printf("%s", fileBuf);
-    //printf("[Init] end dump config file: \n");
-
     cJSON* fileRoot = cJSON_Parse(fileBuf);
     free(fileBuf);
     fileBuf = NULL;
 
     if (fileRoot == NULL) {
-        printf("[Init] InitReadCfg, parse failed! please check file %s format.\n", configFile);
+        INIT_LOGE("InitReadCfg, parse failed! please check file %s format.\n", configFile);
         return;
     }
     ParseInitCfgContents(fileRoot);
@@ -88,14 +84,14 @@ static void ReadCfgs(const char *dirPath)
 {
     DIR *pDir = opendir(dirPath);
     if (pDir == NULL) {
-        INIT_LOGE("[Init], ParseCfgs open cfg dir :%s failed.%d\n", dirPath, errno);
+        INIT_LOGE("ParseCfgs open cfg dir :%s failed.%d\n", dirPath, errno);
         return;
     }
     struct dirent *dp;
     while ((dp = readdir(pDir)) != NULL) {
         char fileName[FILE_NAME_MAX_SIZE];
         if (snprintf_s(fileName, FILE_NAME_MAX_SIZE, FILE_NAME_MAX_SIZE - 1, "%s/%s", dirPath, dp->d_name) == -1) {
-            INIT_LOGE("[Init], ParseCfgs snprintf_s failed.\n");
+            INIT_LOGE("ParseCfgs snprintf_s failed.\n");
             closedir(pDir);
             return;
         }
@@ -104,7 +100,7 @@ static void ReadCfgs(const char *dirPath)
             if (strstr(dp->d_name, ".cfg") == NULL) {
                 continue;
             }
-            INIT_LOGE("[Init], fileName :%s.\n", fileName);
+            INIT_LOGE("fileName :%s.\n", fileName);
             ParseInitCfg(fileName);
         }
     }
@@ -120,9 +116,15 @@ static void ParseOtherCfgs()
 
 void InitReadCfg()
 {
+#ifndef OHOS_LITE
+    InitParamService();
+    LoadDefaultParams("/system/etc/prop.default");
+    LoadDefaultParams("/system/build.prop");
+    LoadDefaultParams("/system/buildz.prop");
+#endif
     ParseInitCfg(INIT_CONFIGURATION_FILE);
     ParseOtherCfgs();
-    printf("[init], Parse init config file done.\n");
+    INIT_LOGI("Parse init config file done.\n");
 
     DumpAllServices();
     // DumpAllJobs();
