@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef OHOS_LITE
+#if defined OHOS_LITE && !defined __LINUX__
 #include <sys/capability.h>
 #else
 #include <linux/capability.h>

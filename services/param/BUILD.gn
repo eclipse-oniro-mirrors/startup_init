@@ -61,18 +61,16 @@ ohos_static_library("paramclient") {
   ]
 
   deps = [
+    "//base/startup/init_lite/services/log:init_log",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/libuv:uv_static",
-    "//base/startup/init_lite/services/log:init_log"
   ]
   part_name = "init"
   subsystem_name = "startup"
 }
 
 ohos_executable("getparam") {
-  sources = [
-    "cmd/param_get.c",
-  ]
+  sources = [ "cmd/param_get.c" ]
   include_dirs = [
     "include",
     "//base/startup/init_lite/services/include/param",
@@ -89,9 +87,7 @@ ohos_executable("getparam") {
 }
 
 ohos_executable("setparam") {
-  sources = [
-    "cmd/param_set.c",
-  ]
+  sources = [ "cmd/param_set.c" ]
   include_dirs = [
     "include",
     "//base/startup/init_lite/services/include/param",

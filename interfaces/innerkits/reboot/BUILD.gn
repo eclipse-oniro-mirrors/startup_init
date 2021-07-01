@@ -25,9 +25,8 @@ ohos_static_library("libreboot") {
   ]
 
   deps = [
-    "//third_party/bounds_checking_function:libsec_static",
-    "//base/startup/init_lite/services/param:paramclient",
     "//base/startup/init_lite/services/log:init_log",
+    "//base/startup/init_lite/services/param:paramclient",
+    "//third_party/bounds_checking_function:libsec_static",
   ]
 }
-

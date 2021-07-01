@@ -25,13 +25,13 @@ if (defined(ohos_lite)) {
       "src/init_import.c",
       "src/init_jobs.c",
       "src/init_read_cfg.c",
+      "src/init_reboot.c",
       "src/init_service.c",
       "src/init_service_manager.c",
       "src/init_service_socket.c",
       "src/init_signal_handler.c",
       "src/init_utils.c",
       "src/main.c",
-      "src/init_reboot.c",
     ]
 
     include_dirs = [
@@ -76,9 +76,8 @@ if (defined(ohos_lite)) {
 
   if (ohos_build_type == "debug") {
     group("unittest") {
-      deps = [
-        "//base/startup/init_lite/services/test/unittest/common:unittest",
-      ]
+      deps =
+          [ "//base/startup/init_lite/services/test/unittest/common:unittest" ]
     }
   }
 } else {
@@ -94,8 +93,8 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/log",
     ]
     deps = [
-      "//third_party/bounds_checking_function:libsec_static",
       "//base/startup/init_lite/services/log:init_log",
+      "//third_party/bounds_checking_function:libsec_static",
     ]
     install_enable = true
     part_name = "init"
@@ -110,13 +109,13 @@ if (defined(ohos_lite)) {
       "src/init_import.c",
       "src/init_jobs.c",
       "src/init_read_cfg.c",
+      "src/init_reboot.c",
       "src/init_service.c",
       "src/init_service_manager.c",
       "src/init_service_socket.c",
       "src/init_signal_handler.c",
       "src/init_utils.c",
       "src/main.c",
-      "src/init_reboot.c",
     ]
     include_dirs = [
       "//base/startup/init_lite/services/include/param",
@@ -127,8 +126,8 @@ if (defined(ohos_lite)) {
       "//third_party/libuv/include",
     ]
     deps = [
-      "//base/startup/init_lite/services/param:paramservice",
       "//base/startup/init_lite/services/log:init_log",
+      "//base/startup/init_lite/services/param:paramservice",
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]
@@ -152,10 +151,10 @@ if (defined(ohos_lite)) {
       ":init",
       ":init.cfg",
       ":updaterueventd",
-      "//base/startup/init_lite/services/param:paramservice",
-      "//base/startup/init_lite/services/param:setparam",
       "//base/startup/init_lite/services/param:getparam",
       "//base/startup/init_lite/services/param:paramclient",
+      "//base/startup/init_lite/services/param:paramservice",
+      "//base/startup/init_lite/services/param:setparam",
       "//base/startup/init_lite/services/reboot:reboot",
     ]
   }

@@ -17,11 +17,7 @@ ohos_static_library("libsocket") {
     "//base/startup/init_lite/interfaces/innerkits/socket/init_socket_api.c",
   ]
 
-  include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
-  ]
+  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
 
-  deps = [
-  ]
+  deps = []
 }
-

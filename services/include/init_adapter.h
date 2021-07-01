@@ -16,7 +16,7 @@
 #ifndef BASE_STARTUP_INITLITE_ADAPTER_H
 #define BASE_STARTUP_INITLITE_ADAPTER_H
 
-#ifdef OHOS_LITE
+#if defined OHOS_LITE && !defined __LINUX__
 #include <sys/capability.h>
 #else
 #include <linux/capability.h>

@@ -738,8 +738,10 @@ void StopServiceByName(const char* servName)
 void StopAllServices()
 {
     for (int i = 0; i < g_servicesCnt; i++) {
-        if (ServiceStop(&g_services[i]) != SERVICE_SUCCESS) {
-            INIT_LOGE("StopAllServices, service %s stop failed!\n", g_services[i].name);
+        if (strcmp(g_services[i].name, "console") != 0 && strcmp(g_services[i].name, "ueventd") != 0) {
+            if (ServiceStop(&g_services[i]) != SERVICE_SUCCESS) {
+                INIT_LOGE("[Init] StopAllServices, service %s stop failed!\n", g_services[i].name);
+            }
         }
     }
 }
@@ -762,7 +764,7 @@ void ReapServiceByPID(int pid)
                 // important process exit, need to reboot system
                 g_services[i].pid = -1;
                 StopAllServices();
-                RebootSystem();
+//                RebootSystem();
             }
             ServiceReap(&g_services[i]);
             break;
