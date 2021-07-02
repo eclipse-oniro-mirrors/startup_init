@@ -221,13 +221,10 @@ int CompareTrieNode(TrieNode *node, const char *key, u_int32_t keyLen)
     return strncmp(node->key, key, keyLen);
 }
 
-static void GetNextKey(const char **remainingKey, int *hasDot, char **subKey, u_int32_t *subKeyLen)
+static void GetNextKey(const char **remainingKey, char **subKey, u_int32_t *subKeyLen)
 {
     *subKey = strchr(*remainingKey, '.');
     if (*subKey != NULL) {
-        if ((*subKey)[0] == '.') {
-            *hasDot = 1;
-        }
         *subKeyLen = *subKey - *remainingKey;
     } else {
         *subKeyLen = strlen(*remainingKey);
@@ -243,10 +240,9 @@ TrieDataNode *AddTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t k
     TrieDataNode *current = (TrieDataNode *)workSpace->rootNode;
     PARAM_CHECK(current != NULL, return NULL, "Invalid current param %s", key);
     while (1) {
-        int hasDot = 0;
         u_int32_t subKeyLen = 0;
         char *subKey = NULL;
-        GetNextKey(&remainingKey, &hasDot, &subKey, &subKeyLen);
+        GetNextKey(&remainingKey, &subKey, &subKeyLen);
         if (!subKeyLen) {
             return NULL;
         }
@@ -259,11 +255,6 @@ TrieDataNode *AddTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t k
             } else { // 不匹配，需要建立子树
                 current = (TrieDataNode*)AddToSubTrie(workSpace, current, key, offset);
             }
-        } else if (hasDot) {
-            u_int32_t offset = workSpace->allocTrieNode(workSpace, remainingKey, subKeyLen);
-            PARAM_CHECK(offset != 0, return NULL, "Failed to allocate key %s", key);
-            SaveIndex(&current->child, offset);
-            current = (TrieDataNode*)GetTrieNode(workSpace, &current->child);
         } else {
             current = (TrieDataNode*)AddToSubTrie(workSpace, current, key, offset);
         }
@@ -347,10 +338,9 @@ TrieDataNode *FindTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t 
     TrieDataNode *current = (TrieDataNode *)workSpace->rootNode;
     PARAM_CHECK(current != NULL, return NULL, "Invalid current param %s", key);
     while (1) {
-        int hasDot = 0;
         u_int32_t subKeyLen = 0;
         char *subKey = NULL;
-        GetNextKey(&remainingKey, &hasDot, &subKey, &subKeyLen);
+        GetNextKey(&remainingKey, &subKey, &subKeyLen);
         if (!subKeyLen) {
             return matchPrefix ? matchNode : NULL;
         }

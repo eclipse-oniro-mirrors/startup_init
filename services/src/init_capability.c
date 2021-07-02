@@ -118,7 +118,6 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
     curServ->servPerm.caps = NULL;
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, "caps");
     if (filedJ == NULL) {
-        INIT_LOGE("GetServiceCaps, caps is not found. but maybe ok.\n");
         return SERVICE_SUCCESS;
     }
     if (!cJSON_IsArray(filedJ)) {

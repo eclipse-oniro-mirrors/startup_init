@@ -95,6 +95,7 @@ static u_int32_t AddCommand(TriggerWorkSpace *workSpace, TriggerNode *trigger, c
     PARAM_CHECK(workSpace != NULL && trigger != NULL, return 0, "list is null");
     u_int32_t size = sizeof(CommandNode) + strlen(cmdName) + 1;
     size += (content == NULL) ? 1 : strlen(content) + 1;
+    size = (size + 0x03) & (~0x03);
     PARAM_CHECK((workSpace->area->currOffset + size) < workSpace->area->dataSize,
         return 0, "Not enough memory for cmd %u %u", size, workSpace->area->currOffset);
 
@@ -148,6 +149,7 @@ static u_int32_t AddTrigger(TriggerWorkSpace *workSpace, int type, const char *n
         tmpCond = name;
     }
     u_int32_t conditionSize = (tmpCond == NULL) ? 1 : strlen(tmpCond) + 1 + CONDITION_EXTEND_LEN;
+    conditionSize = (conditionSize + 0x03) & (~0x03);
     PARAM_CHECK((workSpace->area->currOffset + sizeof(TriggerNode) + conditionSize) < workSpace->area->dataSize,
         return -1, "Not enough memory for cmd");
 

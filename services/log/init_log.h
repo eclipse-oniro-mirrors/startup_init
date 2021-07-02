@@ -36,17 +36,21 @@ typedef enum InitLogLevel {
 
 #define __FILE_NAME__   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
 
+#ifndef INIT_LOG_TAG
+#define INIT_LOG_TAG "[Init]"
+#endif
+
 #ifdef OHOS_LITE
 #define INIT_LOGE(format, ...) printf("%s %d:  "format, __FILE_NAME__, __LINE__, ##__VA_ARGS__)
 #define INIT_LOGW(format, ...) printf("%s %d:  "format, __FILE_NAME__, __LINE__, ##__VA_ARGS__)
 #define INIT_LOGI(format, ...) printf("%s %d:  "format, __FILE_NAME__, __LINE__, ##__VA_ARGS__)
 #define INIT_LOGD(format, ...) printf("%s %d:  "format, __FILE_NAME__, __LINE__, ##__VA_ARGS__)
 #else
-#define INIT_LOGD(format, ...) InitLog("[Init]", INIT_DEBUG, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
-#define INIT_LOGI(format, ...) InitLog("[Init]", INIT_INFO, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
-#define INIT_LOGW(format, ...) InitLog("[Init]", INIT_WARN, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
-#define INIT_LOGE(format, ...) InitLog("[Init]", INIT_ERROR, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
-#define INIT_LOGF(format, ...) InitLog("[Init]", INIT_FATAL, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
+#define INIT_LOGD(format, ...) InitLog(INIT_LOG_TAG, INIT_DEBUG, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
+#define INIT_LOGI(format, ...) InitLog(INIT_LOG_TAG, INIT_INFO, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
+#define INIT_LOGW(format, ...) InitLog(INIT_LOG_TAG, INIT_WARN, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
+#define INIT_LOGE(format, ...) InitLog(INIT_LOG_TAG, INIT_ERROR, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
+#define INIT_LOGF(format, ...) InitLog(INIT_LOG_TAG, INIT_FATAL, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
 
 void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int line, const char *fmt, ...);
 void SetLogLevel(InitLogLevel logLevel);
