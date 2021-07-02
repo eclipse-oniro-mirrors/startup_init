@@ -23,8 +23,13 @@
 #include <sys/types.h>
 #endif /* __LINUX__ */
 
+#include "init_log.h"
 #include "init_service_manager.h"
 
+#ifndef OHOS_LITE
+#include "init_param.h"
+#include "uv.h"
+#endif
 
 #ifdef __LINUX__
 static pid_t  g_waitPid = -1;
@@ -40,7 +45,7 @@ static void CheckWaitPid(pid_t sigPID)
 {
     if (g_waitPid == sigPID && g_waitSem != NULL) {
         if (sem_post(g_waitSem) != 0) {
-            printf("[Init] CheckWaitPid, sem_post failed, errno %d.\n", errno);
+            INIT_LOGE("CheckWaitPid, sem_post failed, errno %d.\n", errno);
         }
         g_waitPid = -1;
         g_waitSem = NULL;
@@ -59,7 +64,7 @@ static void SigHandler(int sig)
                 if (sigPID <= 0) {
                     break;
                 }
-                printf("[Init] SigHandler, SIGCHLD received, sigPID = %d.\n", sigPID);
+                INIT_LOGI("SigHandler, SIGCHLD received, sigPID = %d.\n", sigPID);
 #ifdef __LINUX__
                 CheckWaitPid(sigPID);
 #endif /* __LINUX__ */
@@ -68,16 +73,23 @@ static void SigHandler(int sig)
             break;
         }
         case SIGTERM: {
-            printf("[Init] SigHandler, SIGTERM received.\n");
+            INIT_LOGI("SigHandler, SIGTERM received.\n");
             StopAllServices();
             break;
         }
+        case SIGINT:
+#ifndef OHOS_LITE
+            StopParamService();
+#endif
+            exit(0);
+            break;
         default:
-            printf("[Init] SigHandler, unsupported signal %d.\n", sig);
+            INIT_LOGI("SigHandler, unsupported signal %d.\n", sig);
             break;
     }
 }
 
+#ifdef OHOS_LITE
 void SignalInitModule()
 {
     struct sigaction act;
@@ -88,4 +100,34 @@ void SignalInitModule()
     sigaction(SIGCHLD, &act, NULL);
     sigaction(SIGTERM, &act, NULL);
 }
+#else // L2 or above, use signal event in libuv
+uv_signal_t g_sigchldHandler;
+uv_signal_t g_sigtermHandler;
+uv_signal_t g_sigintHandler;
 
+static void UVSignalHandler(uv_signal_t* handle, int signum)
+{
+    SigHandler(signum);
+}
+
+void SignalInitModule()
+{
+    int ret = uv_signal_init(uv_default_loop(), &g_sigchldHandler);
+    ret |= uv_signal_init(uv_default_loop(), &g_sigtermHandler);
+    ret |= uv_signal_init(uv_default_loop(), &g_sigintHandler);
+    if (ret != 0) {
+        INIT_LOGW("initialize signal handler failed\n");
+        return;
+    }
+
+    if (uv_signal_start(&g_sigchldHandler, UVSignalHandler, SIGCHLD) != 0) {
+        INIT_LOGW("start SIGCHLD handler failed\n");
+    }
+    if (uv_signal_start(&g_sigtermHandler, UVSignalHandler, SIGTERM) != 0) {
+        INIT_LOGW("start SIGTERM handler failed\n");
+    }
+    if (uv_signal_start(&g_sigintHandler, UVSignalHandler, SIGINT) != 0) {
+        INIT_LOGW("start SIGTERM handler failed\n");
+    }
+}
+#endif

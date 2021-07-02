@@ -22,12 +22,15 @@ if (defined(ohos_lite)) {
       "-lpthread",
       "-lm",
     ]
-    defines = ["OHOS_LITE"]
+    defines = [ "OHOS_LITE" ]
     if (storage_type == "emmc") {
       defines += [ "USE_EMMC_STORAGE" ]
     }
 
-    include_dirs = [ "//base/startup/init_lite/services/include" ]
+    include_dirs = [
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/log",
+    ]
 
     sources = [
       "//base/startup/init_lite/services/src/init_adapter.c",
@@ -36,6 +39,8 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/src/init_service.c",
       "//base/startup/init_lite/services/src/init_service_manager.c",
       "//base/startup/init_lite/services/src/init_signal_handler.c",
+      "//base/startup/init_lite/services/src/init_utils.c",
+      "//base/startup/init_lite/services/src/init_reboot.c",
       "cmd_func_test.cpp",
     ]
 

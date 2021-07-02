@@ -25,7 +25,7 @@ extern "C" {
 #endif
 #endif
 
-#define MAX_JOB_NAME_LEN 32
+#define MAX_JOB_NAME_LEN 64
 
 // one job, could have many cmd lines
 typedef struct {
@@ -37,7 +37,7 @@ typedef struct {
 void ParseAllJobs(const cJSON* fileRoot);
 void DoJob(const char* jobName);
 void ReleaseAllJobs();
-
+void DumpAllJobs();
 #ifdef __cplusplus
 #if __cplusplus
 }

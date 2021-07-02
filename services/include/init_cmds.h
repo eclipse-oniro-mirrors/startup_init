@@ -22,10 +22,11 @@ extern "C" {
 #endif
 #endif
 
-#define MAX_CMD_NAME_LEN 10
-#define MAX_CMD_CONTENT_LEN 128
-#define MAX_CMD_CNT_IN_ONE_JOB 30
-
+#define MAX_CMD_NAME_LEN 32
+#define MAX_CMD_CONTENT_LEN 256
+#define MAX_CMD_CNT_IN_ONE_JOB 200
+#define MAX_COPY_BUF_SIZE 256
+#define DEFAULT_COPY_ARGS_CNT 2
 // one cmd line
 typedef struct {
     char name[MAX_CMD_NAME_LEN + 1];
@@ -35,6 +36,8 @@ typedef struct {
 void ParseCmdLine(const char* cmdStr, CmdLine* resCmd);
 void DoCmd(const CmdLine* curCmd);
 
+void DoCmdByName(const char *name, const char *cmdContent);
+const char *GetMatchCmd(const char *cmdStr);
 #ifdef __cplusplus
 #if __cplusplus
 }

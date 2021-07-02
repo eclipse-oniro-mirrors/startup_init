@@ -21,9 +21,11 @@
 extern "C" {
 #endif
 #endif
+#include <sys/types.h>
 
 void MountBasicFs();
 void CreateDeviceNode();
+int MakeSocketDir(const char *path, mode_t mode);
 
 #ifdef __cplusplus
 #if __cplusplus

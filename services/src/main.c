@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #include "init_adapter.h"
+#include "init_log.h"
 #include "init_read_cfg.h"
 #include "init_signal_handler.h"
 #ifdef OHOS_LITE
@@ -33,6 +34,7 @@
 
 #ifndef OHOS_LITE
 #include "device.h"
+#include "init_param.h"
 #endif
 
 static const pid_t INIT_PROCESS_PID = 1;
@@ -42,10 +44,10 @@ static void PrintSysInfo()
 #ifdef OHOS_LITE
     const char* sysInfo = GetVersionId();
     if (sysInfo != NULL) {
-        printf("[Init] %s\n", sysInfo);
+        INIT_LOGE("%s\n", sysInfo);
         return;
     }
-    printf("[Init] main, GetVersionId failed!\n");
+    INIT_LOGE("main, GetVersionId failed!\n");
 #endif
 }
 
@@ -66,12 +68,12 @@ int main(int argc, char * const argv[])
 #ifdef OHOS_DEBUG
     struct timespec tmEnter;
     if (clock_gettime(CLOCK_REALTIME, &tmEnter) != 0) {
-        printf("[Init] main, enter, get time failed! err %d.\n", errno);
+        INIT_LOGE("main, enter, get time failed! err %d.\n", errno);
     }
 #endif // OHOS_DEBUG
 
     if (getpid() != INIT_PROCESS_PID) {
-        printf("[Init] main, current process id is %d not %d, failed!\n", getpid(), INIT_PROCESS_PID);
+        INIT_LOGE("main, current process id is %d not %d, failed!\n", getpid(), INIT_PROCESS_PID);
         return 0;
     }
 
@@ -82,6 +84,7 @@ int main(int argc, char * const argv[])
     // 2. Mount basic filesystem and create common device node.
     MountBasicFs();
     CreateDeviceNode();
+    MakeSocketDir("/dev/unix/socket/", 0755);
 #endif
 
     // 3. signal register
@@ -90,7 +93,7 @@ int main(int argc, char * const argv[])
 #ifdef OHOS_DEBUG
     struct timespec tmSysInfo;
     if (clock_gettime(CLOCK_REALTIME, &tmSysInfo) != 0) {
-        printf("[Init] main, after sysinfo, get time failed! err %d.\n", errno);
+        INIT_LOGE("main, after sysinfo, get time failed! err %d.\n", errno);
     }
 #endif // OHOS_DEBUG
 
@@ -100,27 +103,28 @@ int main(int argc, char * const argv[])
 #ifdef OHOS_DEBUG
     struct timespec tmRcs;
     if (clock_gettime(CLOCK_REALTIME, &tmRcs) != 0) {
-        printf("[Init] main, after rcs, get time failed! err %d.\n", errno);
+        INIT_LOGE("main, after rcs, get time failed! err %d.\n", errno);
     }
 #endif // OHOS_DEBUG
-
     // 5. read configuration file and do jobs
     InitReadCfg();
-
 #ifdef OHOS_DEBUG
     struct timespec tmCfg;
     if (clock_gettime(CLOCK_REALTIME, &tmCfg) != 0) {
-        printf("[Init] main, after cfg, get time failed! err %d.\n", errno);
+        INIT_LOGE("main, after cfg, get time failed! err %d.\n", errno);
     }
 #endif // OHOS_DEBUG
 
     // 6. keep process alive
 #ifdef OHOS_DEBUG
-    printf("[Init] main, time used: sigInfo %ld ms, rcs %ld ms, cfg %ld ms.\n", \
+    INIT_LOGI("main, time used: sigInfo %ld ms, rcs %ld ms, cfg %ld ms.\n", \
         TimeDiffMs(&tmEnter, &tmSysInfo), TimeDiffMs(&tmSysInfo, &tmRcs), TimeDiffMs(&tmRcs, &tmCfg));
 #endif
 
-    printf("[Init] main, entering wait.\n");
+    INIT_LOGI("main, entering wait.\n");
+#ifndef OHOS_LITE
+    StartParamService();
+#endif
     while (1) {
         // pause only returns when a signal was caught and the signal-catching function returned.
         // pause only returns -1, no need to process the return value.

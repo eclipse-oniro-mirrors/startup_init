@@ -17,6 +17,7 @@
 #define BASE_STARTUP_INITLITE_SERVICEMANAGER_H
 
 #include "init_service.h"
+#include "cJSON.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -24,10 +25,24 @@ extern "C" {
 #endif
 #endif
 
+#define UID_STR_IN_CFG        "uid"
+#define GID_STR_IN_CFG        "gid"
+#define ONCE_STR_IN_CFG       "once"
+#define IMPORTANT_STR_IN_CFG  "importance"
+#define BIN_SH_NOT_ALLOWED    "/bin/sh"
+#define CRITICAL_STR_IN_CFG   "critical"
+#define DISABLED_STR_IN_CFG   "disabled"
+
+#define MAX_SERVICES_CNT_IN_FILE 100
+
 void RegisterServices(Service* services, int servicesCnt);
 void StartServiceByName(const char* serviceName);
+void StopServiceByName(const char* serviceName);
 void StopAllServices();
+void StopAllServicesBeforeReboot();
 void ReapServiceByPID(int pid);
+void ParseAllServices(const cJSON* fileRoot);
+void DumpAllServices();
 
 #ifdef __cplusplus
 #if __cplusplus

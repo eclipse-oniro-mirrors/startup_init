@@ -24,19 +24,19 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-
+#include "init_log.h"
 static int SendCmd(int cmd, unsigned long arg)
 {
     int fd = open(QUICKSTART_NODE, O_RDONLY);
     if (fd != -1) {
         int ret = ioctl(fd, cmd, arg);
         if (ret == -1) {
-            printf("[ERR][%s,%d] %s!\n", __FUNCTION__, __LINE__, strerror(errno));
+            INIT_LOGE("[Init] [ERR] %s!\n", strerror(errno));
         }
         close(fd);
         return ret;
     }
-    printf("[ERR][%s,%d] %s!\n", __FUNCTION__, __LINE__, strerror(errno));
+    INIT_LOGE("[Init] [ERR] %s!\n", strerror(errno));
     return fd;
 }
 
@@ -56,7 +56,7 @@ int NotifyInit(unsigned long event)
 int SystemInitStage(QuickstartStage stage)
 {
     if (stage >= QS_STAGE_LIMIT || stage < QS_STAGE1) {
-        printf("[ERR][%s,%d] the stage(%d) is not expected!\n", __FUNCTION__, __LINE__, stage);
+        INIT_LOGE("[Init] the stage(%d) is not expected!\n", stage);
         return -1;
     }
     return SendCmd(QUICKSTART_STAGE(stage), 0);

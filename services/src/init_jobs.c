@@ -17,23 +17,39 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "init_cmds.h"
+#include "init_log.h"
 #include "securec.h"
 
 
 #define JOBS_ARR_NAME_IN_JSON "jobs"
 #define CMDS_ARR_NAME_IN_JSON "cmds"
-#define MAX_JOBS_COUNT        10
+#define MAX_JOBS_COUNT        100
 
-static const char* g_supportedJobs[] = {
-    "pre-init",
-    "init",
-    "post-init",
-};
+// static const char* g_supportedJobs[] = {
+//     "pre-init",
+//     "init",
+//     "post-init",
+// };
 
 static Job* g_jobs = NULL;
 static int g_jobCnt = 0;
+
+void DumpAllJobs()
+{
+    INIT_LOGD("Ready to dump all jobs:\n");
+    for (int i = 0; i < g_jobCnt; i++) {
+        INIT_LOGD("\tjob name: %s\n", g_jobs[i].name);
+        INIT_LOGD("\tlist all commands:\n");
+        for (int j = 0; j < g_jobs[i].cmdLinesCnt; j++) {
+            INIT_LOGD("\t\tcommand name : %s, command options: %s\n",
+                g_jobs[i].cmdLines[j].name, g_jobs[i].cmdLines[j].cmdContent);
+        }
+    }
+    INIT_LOGD("To dump all jobs finished\n");
+}
 
 static int GetJobName(const cJSON* jobItem, Job* resJob)
 {
@@ -42,45 +58,44 @@ static int GetJobName(const cJSON* jobItem, Job* resJob)
         return 0;
     }
 
-    size_t supportJobCnt = sizeof(g_supportedJobs) / sizeof(g_supportedJobs[0]);
-    for (size_t i = 0; i < supportJobCnt; ++i) {
-        if (strlen(g_supportedJobs[i]) == strlen(jobNameStr) &&
-            strncmp(g_supportedJobs[i], jobNameStr, strlen(g_supportedJobs[i])) == 0) {
-            if (memcpy_s(resJob->name, MAX_JOB_NAME_LEN, jobNameStr, strlen(jobNameStr)) != EOK) {
-                return 0;
-            }
-            resJob->name[strlen(jobNameStr)] = '\0';
-            return 1;
-        }
+    if (memcpy_s(resJob->name, MAX_JOB_NAME_LEN, jobNameStr, strlen(jobNameStr)) != EOK) {
+        INIT_LOGE("Get job name \"%s\" failed\n", jobNameStr);
+        return 0;
     }
-    return 0;
+    resJob->name[strlen(jobNameStr)] = '\0';
+    return 1;
 }
 
 static void ParseJob(const cJSON* jobItem, Job* resJob)
 {
     if (!GetJobName(jobItem, resJob)) {
+        INIT_LOGE("get JobName failed\n");
         (void)memset_s(resJob, sizeof(*resJob), 0, sizeof(*resJob));
         return;
     }
 
     cJSON* cmdsItem = cJSON_GetObjectItem(jobItem, CMDS_ARR_NAME_IN_JSON);
     if (!cJSON_IsArray(cmdsItem)) {
+        INIT_LOGE("job %s is not an arrary\n", resJob->name);
         return;
     }
 
     int cmdLinesCnt = cJSON_GetArraySize(cmdsItem);
     if (cmdLinesCnt <= 0) {  // empty job, no cmd
+        INIT_LOGE("empty job \"%s\"\n", resJob->name);
         return;
     }
 
+    INIT_LOGD("job = %s, cmdLineCnt = %d\n", resJob->name, cmdLinesCnt);
     if (cmdLinesCnt > MAX_CMD_CNT_IN_ONE_JOB) {
-        printf("[Init] ParseAllJobs, too many cmds[cnt %d] in one job, it should not exceed %d.\n",
+        INIT_LOGE("ParseAllJobs, too many cmds[cnt %d] in one job, it should not exceed %d.\n",
             cmdLinesCnt, MAX_CMD_CNT_IN_ONE_JOB);
         return;
     }
 
     resJob->cmdLines = (CmdLine*)malloc(cmdLinesCnt * sizeof(CmdLine));
     if (resJob->cmdLines == NULL) {
+        INIT_LOGE("allocate memory for command line failed\n");
         return;
     }
 
@@ -100,31 +115,32 @@ static void ParseJob(const cJSON* jobItem, Job* resJob)
 void ParseAllJobs(const cJSON* fileRoot)
 {
     if (fileRoot == NULL) {
-        printf("[Init] ParseAllJobs, input fileRoot is NULL!\n");
+        INIT_LOGE("ParseAllJobs, input fileRoot is NULL!\n");
         return;
     }
 
     cJSON* jobArr = cJSON_GetObjectItemCaseSensitive(fileRoot, JOBS_ARR_NAME_IN_JSON);
     if (!cJSON_IsArray(jobArr)) {
-        printf("[Init] ParseAllJobs, job item is not array!\n");
+        INIT_LOGE("ParseAllJobs, job item is not array!\n");
         return;
     }
 
     int jobArrSize = cJSON_GetArraySize(jobArr);
     if (jobArrSize <= 0 || jobArrSize > MAX_JOBS_COUNT) {
-        printf("[Init] ParseAllJobs, jobs count %d is invalid, should be positive and not exceeding %d.\n",
+        INIT_LOGE("ParseAllJobs, jobs count %d is invalid, should be positive and not exceeding %d.\n",
             jobArrSize, MAX_JOBS_COUNT);
         return;
     }
 
-    Job* retJobs = (Job*)malloc(sizeof(Job) * jobArrSize);
+    Job* retJobs = (Job*)realloc(g_jobs, sizeof(Job) * (g_jobCnt + jobArrSize));
     if (retJobs == NULL) {
-        printf("[Init] ParseAllJobs, malloc failed! job arrSize %d.\n", jobArrSize);
+        INIT_LOGE("ParseAllJobs, malloc failed! job arrSize %d.\n", jobArrSize);
         return;
     }
 
-    if (memset_s(retJobs, sizeof(Job) * jobArrSize, 0, sizeof(Job) * jobArrSize) != EOK) {
-        printf("[Init] ParseAllJobs, memset_s failed.\n");
+    Job* tmp = retJobs + g_jobCnt;
+    if (memset_s(tmp, sizeof(Job) * jobArrSize, 0, sizeof(Job) * jobArrSize) != EOK) {
+        INIT_LOGE("ParseAllJobs, memset_s failed.\n");
         free(retJobs);
         retJobs = NULL;
         return;
@@ -132,26 +148,28 @@ void ParseAllJobs(const cJSON* fileRoot)
 
     for (int i = 0; i < jobArrSize; ++i) {
         cJSON* jobItem = cJSON_GetArrayItem(jobArr, i);
-        ParseJob(jobItem, &(retJobs[i]));
+        ParseJob(jobItem, &(tmp[i]));
     }
     g_jobs = retJobs;
-    g_jobCnt = jobArrSize;
+    g_jobCnt += jobArrSize;
 }
 
 void DoJob(const char* jobName)
 {
     if (jobName == NULL) {
-        printf("[Init] DoJob, input jobName NULL!\n");
+        INIT_LOGE("DoJob, input jobName NULL!\n");
         return;
     }
 
+    INIT_LOGD("Call job with name %s\n", jobName);
     for (int i = 0; i < g_jobCnt; ++i) {
         if (strncmp(jobName, g_jobs[i].name, strlen(g_jobs[i].name)) == 0) {
             CmdLine* cmdLines = g_jobs[i].cmdLines;
             for (int j = 0; j < g_jobs[i].cmdLinesCnt; ++j) {
                 DoCmd(&(cmdLines[j]));
             }
-            break;
+            // Walk through all jobs
+            // break;
         }
     }
 }

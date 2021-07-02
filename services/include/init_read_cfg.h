@@ -21,10 +21,16 @@
 extern "C" {
 #endif
 #endif
-
+#ifndef OHOS_LITE
+#define INIT_CONFIGURATION_FILE "/init.cfg"
+#else
 #define INIT_CONFIGURATION_FILE "/etc/init.cfg"
+#endif
+#define  MAX_PATH_ARGS_CNT 20
+#define  MAX_ONE_ARG_LEN 200 // max length of one param/path
 
 void InitReadCfg();
+void ParseInitCfg(const char *configFile);
 
 #ifdef __cplusplus
 #if __cplusplus

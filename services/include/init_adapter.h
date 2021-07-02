@@ -16,10 +16,10 @@
 #ifndef BASE_STARTUP_INITLITE_ADAPTER_H
 #define BASE_STARTUP_INITLITE_ADAPTER_H
 
-#ifdef __LINUX__
-#include <linux/capability.h>
-#else
+#if defined OHOS_LITE && !defined __LINUX__
 #include <sys/capability.h>
+#else
+#include <linux/capability.h>
 #endif
 
 #ifdef __cplusplus
@@ -28,7 +28,7 @@ extern "C" {
 #endif
 #endif
 
-#ifdef __LINUX__
+#ifndef OHOS_LITE
 /* Control the ambient capability set */
 #ifndef PR_CAP_AMBIENT
 #define PR_CAP_AMBIENT          47
