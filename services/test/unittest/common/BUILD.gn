@@ -29,15 +29,23 @@ if (defined(ohos_lite)) {
 
     include_dirs = [
       "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/param/include",
       "//base/startup/init_lite/services/log",
+      "//third_party/cJSON",
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/syspara_lite/interfaces/kits",
     ]
 
     sources = [
       "//base/startup/init_lite/services/src/init_adapter.c",
+      "//base/startup/init_lite/services/src/init_capability.c",
       "//base/startup/init_lite/services/src/init_cmds.c",
+      "//base/startup/init_lite/services/src/init_import.c",
       "//base/startup/init_lite/services/src/init_jobs.c",
+      "//base/startup/init_lite/services/src/init_read_cfg.c",
       "//base/startup/init_lite/services/src/init_service.c",
       "//base/startup/init_lite/services/src/init_service_manager.c",
+      "//base/startup/init_lite/services/src/init_service_socket.c",
       "//base/startup/init_lite/services/src/init_signal_handler.c",
       "//base/startup/init_lite/services/src/init_utils.c",
       "//base/startup/init_lite/services/src/init_reboot.c",
@@ -45,10 +53,19 @@ if (defined(ohos_lite)) {
     ]
 
     deps = [
+      "//base/startup/init_lite/initsync:initsync",
+      "//base/startup/init_lite/services/log:init_log",
       "//base/startup/syspara_lite/frameworks/parameter:parameter",
       "//build/lite/config/component/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
+    if (ohos_kernel_type == "liteos_a") {
+      include_dirs += [
+        "//kernel/liteos_a/syscall",
+        "//base/startup/init_lite/interfaces/kits",
+        "//base/startup/init_lite/initsync/include",
+      ]
+    }
   }
 
   group("unittest") {
