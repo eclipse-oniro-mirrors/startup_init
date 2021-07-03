@@ -34,6 +34,7 @@ if (defined(ohos_lite)) {
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/startup/syspara_lite/interfaces/kits",
+      "//base/startup/init_lite/initsync/include",
     ]
 
     sources = [
