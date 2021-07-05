@@ -142,7 +142,6 @@ static cJSON* GetArrItem(const cJSON* fileRoot, int* arrSize, const char* arrNam
 {
     cJSON* arrItem = cJSON_GetObjectItemCaseSensitive(fileRoot, arrName);
     if (!cJSON_IsArray(arrItem)) {
-        INIT_LOGE("GetArrItem, item %s is not an array!\n", arrName);
         return NULL;
     }
 
@@ -195,7 +194,6 @@ static int GetGidOneItem(const cJSON *curArrItem, Service *curServ)        // gi
 {
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, GID_STR_IN_CFG);
     if (filedJ == NULL) {
-        INIT_LOGE("GetGidOneItem, gid is not found too, but ok.\n");
         return SERVICE_SUCCESS;             // not found
     }
     curServ->servPerm.gIDCnt = 1;
@@ -235,7 +233,6 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
     int gIDCnt = 0;
     cJSON* filedJ = GetArrItem(curArrItem, &gIDCnt, GID_STR_IN_CFG);        // "gid" must have 1 item.
     if (gIDCnt <= 0) {              // not a array, but maybe a item?
-        INIT_LOGE("GetGidArray, gid is not a list.\n");
         return GetGidOneItem(curArrItem, curServ);
     }
 
@@ -398,7 +395,6 @@ static int GetUidStringNumber(const cJSON *curArrItem, Service *curServ)
 {
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, UID_STR_IN_CFG);
     if (filedJ == NULL) {
-        INIT_LOGE("GetUidStringNumber, %s not found, but ok.\n", UID_STR_IN_CFG);
         return SERVICE_SUCCESS;             // uID not found, but ok.
     }
 
@@ -738,10 +734,8 @@ void StopServiceByName(const char* servName)
 void StopAllServices()
 {
     for (int i = 0; i < g_servicesCnt; i++) {
-        if (strcmp(g_services[i].name, "console") != 0 && strcmp(g_services[i].name, "ueventd") != 0) {
-            if (ServiceStop(&g_services[i]) != SERVICE_SUCCESS) {
-                INIT_LOGE("[Init] StopAllServices, service %s stop failed!\n", g_services[i].name);
-            }
+        if (ServiceStop(&g_services[i]) != SERVICE_SUCCESS) {
+            INIT_LOGE("StopAllServices, service %s stop failed!\n", g_services[i].name);
         }
     }
 }
@@ -764,7 +758,7 @@ void ReapServiceByPID(int pid)
                 // important process exit, need to reboot system
                 g_services[i].pid = -1;
                 StopAllServices();
-//                RebootSystem();
+                RebootSystem();
             }
             ServiceReap(&g_services[i]);
             break;

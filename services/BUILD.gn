@@ -146,10 +146,16 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
+  ohos_prebuilt_etc("passwd") {
+    source = "//base/startup/init_lite/services/etc/passwd"
+    part_name = "init"
+  }
+
   group("startup_init") {
     deps = [
       ":init",
       ":init.cfg",
+      ":passwd",
       ":updaterueventd",
       "//base/startup/init_lite/services/param:getparam",
       "//base/startup/init_lite/services/param:paramclient",

@@ -123,6 +123,7 @@ int main(int argc, char * const argv[])
 
     INIT_LOGI("main, entering wait.\n");
 #ifndef OHOS_LITE
+    StartTriggerService();
     StartParamService();
 #endif
     while (1) {
