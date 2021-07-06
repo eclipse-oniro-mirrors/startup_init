@@ -223,6 +223,8 @@ int StartParamService()
     PARAM_CHECK(ret == 0, return ret, "Failed to uv_pipe_init %d", ret);
     ret = uv_pipe_bind(&pipeServer, PIPE_NAME);
     PARAM_CHECK(ret == 0, return ret, "Failed to uv_pipe_bind %d %s", ret, uv_err_name(ret));
+    ret = chmod(PIPE_NAME, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    PARAM_CHECK(ret == 0, return ret, "Failed to chmod %s, err %d. \n", PIPE_NAME, errno);
     ret = uv_listen((uv_stream_t*)&pipeServer, SOMAXCONN, OnConnection);
     PARAM_CHECK(ret == 0, return ret, "Failed to uv_listen %d %s", ret, uv_err_name(ret));
 
@@ -236,16 +238,13 @@ int SystemWriteParam(const char *name, const char *value)
     PARAM_CHECK(name != NULL && value != NULL, return -1, "The name is null");
     PARAM_LOGI("SystemWriteParam name %s value: %s", name, value);
     int ret = WriteParamWithCheck(&g_paramWorkSpace, &g_paramWorkSpace.label, name, value);
-    //PARAM_LOGI("SystemWriteParam name %s value: %s", name, value);
-    if (ret == 0) {
-        ret = WritePersistParam(name, value);
-        PARAM_CHECK(ret == 0, return ret, "Failed to set param");
-    } else {
-        PARAM_LOGE("Failed to set param %d name %s %s", ret, name, value);
-    }
+    PARAM_CHECK(ret == 0, return ret, "Failed to set param %s", name);
+    ret = WritePersistParam(name, value);
+    PARAM_CHECK(ret == 0, return ret, "Failed to set persist param %s", name);
+
     // notify event to process trigger
     PostParamTrigger(name, value);
-    return 0;
+    return ret;
 }
 
 int SystemReadParam(const char *name, char *value, unsigned int *len)

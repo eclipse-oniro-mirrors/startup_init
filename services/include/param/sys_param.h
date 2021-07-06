@@ -26,6 +26,7 @@ extern "C" {
 #endif
 
 #define PARAM_VALUE_LEN_MAX  96
+#define PARAM_NAME_LEN_MAX  96
 typedef u_int32_t ParamHandle;
 
 typedef struct {

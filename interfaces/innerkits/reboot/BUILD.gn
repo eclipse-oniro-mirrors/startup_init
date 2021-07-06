@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 ohos_static_library("libreboot") {
   sources = [
-    "//base/startup/init_lite/interfaces/innerkits/reboot/init_reboot_api.c",
+    "//base/startup/init_lite/interfaces/innerkits/reboot/init_reboot.c",
   ]
 
   include_dirs = [

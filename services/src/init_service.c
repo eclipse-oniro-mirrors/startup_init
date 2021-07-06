@@ -189,7 +189,6 @@ int ServiceStart(Service *service)
     }
 
     service->pid = pid;
-    INIT_LOGI("start service %s succeed, pid %d.\n", service->name, service->pid);
     return SERVICE_SUCCESS;
 }
 

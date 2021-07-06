@@ -23,24 +23,18 @@
 #include "uv.h"
 
 #define LABEL "Trigger"
-#define SYS_POWER_CTRL "sys.powerctrl."
-static int g_triggerServiceStart = 0;
+#define MAX_TRIGGER_COUNT_RUN_ONCE 10
+#define SYS_POWER_CTRL "sys.powerctrl="
 static TriggerWorkSpace g_triggerWorkSpace = {};
 
 static int DoCmdExecute(TriggerNode *trigger, const char *cmdName, const char *command)
 {
     PARAM_CHECK(trigger != NULL && cmdName != NULL && command != NULL, return -1, "Invalid param");
+    PARAM_LOGI("DoCmdExecute trigger %s cmd %s %s", trigger->name, cmdName, command);
     if (strncmp(cmdName, TRIGGER_CMD, strlen(TRIGGER_CMD)) == 0) {
-        u_int32_t triggerIndex = 0;
-        TriggerNode *node = GetTriggerByName(&g_triggerWorkSpace, command, &triggerIndex);
-        if (node != NULL && !TRIGGER_NODE_IN_QUEUE(node)) { // 不在队列中
-            PARAM_LOGI("DoCmdExecute trigger %s", node->name);
-            TRIGGER_NODE_SET_QUEUE_FLAG(node);
-            ExecuteQueuePush(&g_triggerWorkSpace, node, triggerIndex);
-        }
+        DoTriggerExec(command);
         return 0;
     }
-    PARAM_LOGI("DoCmdExecute trigger %s cmd %s %s", trigger->name, cmdName, command);
     DoCmdByName(cmdName, command);
     return 0;
 }
@@ -60,7 +54,6 @@ static int DoTiggerCheckResult(TriggerNode *trigger, u_int32_t triggerIndex)
 
 void ExecuteQueueWork(u_int32_t maxCount)
 {
-    PARAM_LOGI("ExecuteQueueWork %d %d", getpid(), gettid());
     u_int32_t executeCount = 0;
     TriggerNode *trigger = ExecuteQueuePop(&g_triggerWorkSpace);
     while (trigger != NULL) {
@@ -95,7 +88,7 @@ static void CheckTriggers(int type, void *content, u_int32_t contentLen)
 static void ProcessAfterEvent(uv_work_t *req, int status)
 {
     free(req);
-    ExecuteQueueWork(UINT32_MAX);
+    ExecuteQueueWork(MAX_TRIGGER_COUNT_RUN_ONCE);
 }
 
 static void ProcessEvent(uv_work_t *req)
@@ -106,15 +99,16 @@ static void ProcessEvent(uv_work_t *req)
 
 static const char *GetCmdInfo(const char *content, u_int32_t contentSize, char **cmdParam)
 {
-    char cmd[MAX_CMD_NAME_LEN + 1] = { 0 };
-    int ret = GetValueFromContent(content, contentSize, 0, cmd, sizeof(cmd));
-    PARAM_CHECK(ret == 0, return NULL, "Failed parse cmd");
-    u_int32_t cmdLen = strlen(cmd);
-    PARAM_CHECK(cmdLen < MAX_CMD_NAME_LEN, return NULL, "Failed parse cmd");
-    cmd[cmdLen] = ' ';
-    cmd[cmdLen + 1] = '\0';
-    *cmdParam = (char *)content + cmdLen + 1;
-    return GetMatchCmd(cmd);
+    static const char *ctrlCmds[][2] = {
+        {"reboot", "reboot "}
+    };
+    for (size_t i = 0; i < sizeof(ctrlCmds) / sizeof(ctrlCmds[0]); i++) {
+        if (strncmp(content, ctrlCmds[i][0], strlen(ctrlCmds[i][0])) == 0) {
+            *cmdParam = (char *)content;
+            return GetMatchCmd(ctrlCmds[i][1]);
+        }
+    }
+    return NULL;
 }
 
 static void SendTriggerEvent(TriggerDataEvent *event)
@@ -128,10 +122,6 @@ static void SendTriggerEvent(TriggerDataEvent *event)
         } else {
             PARAM_LOGE("SendTriggerEvent cmd %s not found", event->content);
         }
-    }
-    else if (event->type == EVENT_BOOT || g_triggerServiceStart == 0) {
-        CheckTriggers(event->type, event->content, event->contentSize);
-        ExecuteQueueWork(UINT32_MAX); // 需要立刻执行
     } else {
         uv_queue_work(uv_default_loop(), &event->request, ProcessEvent, ProcessAfterEvent);
         event = NULL;
@@ -156,9 +146,9 @@ void PostParamTrigger(const char *name, const char *value)
     PARAM_LOGI("PostParamTrigger %s success", name);
 }
 
-void PostTrigger(EventType type, void *content, u_int32_t contentLen)
+void PostTrigger(EventType type, const char *content, u_int32_t contentLen)
 {
-    PARAM_LOGI("PostTrigger %d", type);
+    PARAM_LOGI("PostTrigger %d %s", type, content);
     PARAM_CHECK(content != NULL && contentLen > 0, return, "Invalid param");
     TriggerDataEvent *event = (TriggerDataEvent *)malloc(sizeof(TriggerDataEvent) + contentLen + 1);
     PARAM_CHECK(event != NULL, return, "Failed to alloc memory");
@@ -169,12 +159,6 @@ void PostTrigger(EventType type, void *content, u_int32_t contentLen)
     event->content[contentLen] = '\0';
     SendTriggerEvent(event);
     PARAM_LOGI("PostTrigger %d success", type);
-}
-
-void StartTriggerService()
-{
-    PARAM_LOGI("StartTriggerService ");
-    g_triggerServiceStart = 1;
 }
 
 int ParseTriggerConfig(cJSON *fileRoot)
@@ -206,7 +190,6 @@ void DoTriggerExec(const char *content)
         TRIGGER_NODE_SET_QUEUE_FLAG(trigger);
         ExecuteQueuePush(&g_triggerWorkSpace, trigger, triggerIndex);
     }
-    ExecuteQueueWork(UINT32_MAX); // 需要立刻执行
 }
 
 TriggerWorkSpace *GetTriggerWorkSpace()

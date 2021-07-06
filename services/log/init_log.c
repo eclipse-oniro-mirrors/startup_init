@@ -42,23 +42,19 @@ void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int l
     if (logLevel < g_logLevel) {
         return;
     }
-    va_list vargs;
-    va_start(vargs, fmt);
-
-    char tmpFmt[MAX_FORMAT_SIZE];
-    if (vsnprintf_s(tmpFmt, MAX_FORMAT_SIZE, MAX_FORMAT_SIZE, fmt, vargs) == -1) {
-        return;
-    }
+    // 可以替换stdout这个为对应的文件句柄
     time_t logTime;
     time(&logTime);
     struct tm *t = gmtime(&logTime);
-    char logInfo[MAX_LOG_SIZE];
-    if (snprintf_s(logInfo, MAX_LOG_SIZE, MAX_LOG_SIZE, "%s %d-%d-%d %d:%d %s:%d [%s] [pid=%d] %s", tag,
-        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, fileName, line,
-        LOG_LEVEL_STR[logLevel], getpid(), tmpFmt) == -1) {
-        return;
-    }
-    printf("%s", logInfo );
+    fprintf(stdout, "[%d-%d-%d %d:%d][pid=%d][%s:%d][%s][%s] ",
+        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min,
+        getpid(), fileName, line, tag, LOG_LEVEL_STR[logLevel]);
+
+    va_list list;
+    va_start(list, fmt);
+    vfprintf(stdout, fmt, list);
+    va_end(list);
+    fflush(stdout);
 #if 0
     int fd = open("/dev/kmsg", O_WRONLY | O_CLOEXEC | O_APPEND );
     if (fd < 1) {
@@ -72,6 +68,5 @@ void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int l
     }
     close(fd);
 #endif
-    va_end(vargs);
 }
 

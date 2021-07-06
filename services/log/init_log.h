@@ -54,8 +54,6 @@ typedef enum InitLogLevel {
 
 void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int line, const char *fmt, ...);
 void SetLogLevel(InitLogLevel logLevel);
-
-void Logger(InitLogLevel level, const char *format, ...);
 #endif
 
 #define INIT_ERROR_CHECK(ret, statement, format, ...)  \
@@ -84,7 +82,7 @@ int JudgeLevel(const InitLogLevel level) { return return; }
         __FILE_NAME__, __LINE__, ##__VA_ARGS__)
 #else
 #define STARTUP_LOG(LEVEL, LABEL, Level, fmt, ...) \
-    printf("[%s:%d][%s:%d]  " fmt "\n", LABEL, getpid(), __FILE_NAME__, __LINE__, ##__VA_ARGS__);
+    InitLog(LABEL, LEVEL, (__FILE_NAME__),  (__LINE__), fmt "\n", ##__VA_ARGS__)
 #endif
 
 #define STARTUP_LOGI(LABEL, fmt, ...) STARTUP_LOG(INIT_INFO, LABEL, Info, fmt, ##__VA_ARGS__)

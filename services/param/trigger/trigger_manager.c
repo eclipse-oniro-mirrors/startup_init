@@ -245,7 +245,7 @@ int ParseTrigger(TriggerWorkSpace *workSpace, cJSON *triggerItem)
             PARAM_LOGE("Warning parseTrigger %s %s", name, condition);
         }
     }
-    PARAM_LOGE("ParseTrigger %s %u", name, offset);
+    PARAM_LOGI("ParseTrigger %s %u", name, offset);
 
     // 添加命令行
     cJSON* cmdItems = cJSON_GetObjectItem(triggerItem, CMDS_ARR_NAME_IN_JSON);
@@ -278,7 +278,7 @@ int ParseTrigger(TriggerWorkSpace *workSpace, cJSON *triggerItem)
 int ExecuteTrigger(TriggerWorkSpace *workSpace, TriggerNode *trigger, CMD_EXECUTE cmdExecuter)
 {
     PARAM_CHECK(workSpace != NULL && trigger != NULL && cmdExecuter != NULL, return -1, "Invalid param");
-    PARAM_LOGI("ExecuteCmds trigger %s", trigger->name);
+    PARAM_LOGI("ExecuteTrigger trigger %s", trigger->name);
     CommandNode *cmd = GetCmdByIndex(workSpace, trigger, trigger->firstCmd);
     while (cmd != NULL) {
         cmdExecuter(trigger, cmd->name, cmd->content);

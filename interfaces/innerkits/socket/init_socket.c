@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "init_socket_api.h"
+#include "init_socket.h"
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <sys/un.h>
+#include "init_log.h"
 
 #define N_DEC 10
 #define MAX_SOCKET_ENV_PREFIX_LEN 64

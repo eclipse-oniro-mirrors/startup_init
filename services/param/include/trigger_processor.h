@@ -41,11 +41,6 @@ typedef struct {
     char content[0];
 } TriggerDataEvent;
 
-typedef struct TriggerExecute {
-    TriggerEvent event;
-    TriggerNode *trigger;
-} TriggerExecute;
-
 #ifdef __cplusplus
 #if __cplusplus
 }

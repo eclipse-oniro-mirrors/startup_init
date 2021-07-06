@@ -46,11 +46,10 @@ static void ParseInitCfgContents(cJSON *root)
 {
      // parse services
     ParseAllServices(root);
-
+#ifdef OHOS_LITE
     // parse jobs
     ParseAllJobs(root);
-
-#ifndef OHOS_LITE
+#else
 	ParseTriggerConfig(root);
 #endif
 
@@ -66,6 +65,10 @@ void ParseInitCfg(const char *configFile)
     }
 
     char *fileBuf = ReadFileToBuf(configFile);
+    if (fileBuf == NULL) {
+        INIT_LOGE("Read %s failed\n", configFile);
+        return;
+    }
     cJSON* fileRoot = cJSON_Parse(fileBuf);
     free(fileBuf);
     fileBuf = NULL;
@@ -100,7 +103,7 @@ static void ReadCfgs(const char *dirPath)
             if (strstr(dp->d_name, ".cfg") == NULL) {
                 continue;
             }
-            INIT_LOGE("fileName :%s.\n", fileName);
+            INIT_LOGI("ReadCfgs :%s from %s success.\n", fileName, dirPath);
             ParseInitCfg(fileName);
         }
     }
@@ -128,29 +131,31 @@ void InitReadCfg()
 
     DumpAllServices();
     // DumpAllJobs();
+#ifdef OHOS_LITE
     // do jobs
     DoJob("pre-init");
 #ifndef __LINUX__
-#ifdef OHOS_LITE
     TriggerStage(EVENT1, EVENT1_WAITTIME, QS_STAGE1);
-#endif
 #endif
 
     DoJob("init");
 #ifndef __LINUX__
-#ifdef OHOS_LITE
     TriggerStage(EVENT2, EVENT2_WAITTIME, QS_STAGE2);
-#endif
 #endif
 
     DoJob("post-init");
 #ifndef __LINUX__
-#ifdef OHOS_LITE
     TriggerStage(EVENT3, EVENT3_WAITTIME, QS_STAGE3);
 
     InitStageFinished();
 #endif
-#endif
     ReleaseAllJobs();
+#else
+    PostTrigger(EVENT_BOOT, "pre-init", strlen("pre-init"));
+
+    PostTrigger(EVENT_BOOT, "init", strlen("init"));
+
+    PostTrigger(EVENT_BOOT, "post-init", strlen("post-init"));
+#endif
 }
 

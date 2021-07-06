@@ -333,7 +333,7 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
 int CheckParamName(const char *name, int info)
 {
     size_t nameLen = strlen(name);
-    if (nameLen >= PARAM_VALUE_LEN_MAX) {
+    if (nameLen >= PARAM_NAME_LEN_MAX) {
         return PARAM_CODE_INVALID_NAME;
     }
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "init_reboot_api.h"
+#include "init_reboot.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -20,13 +20,13 @@
 #include "securec.h"
 #include "init_log.h"
 
-#define SYS_POWER_CTRL "sys.powerctrl."
+#define SYS_POWER_CTRL "sys.powerctrl="
 #define MAX_REBOOT_NAME_SIZE  100
 #define MAX_REBOOT_VAUE_SIZE  500
 
-int DoRebootApi(const char *cmdContent)
+int DoReboot(const char *cmdContent)
 {
-    char name[MAX_REBOOT_VAUE_SIZE];
+    char value[MAX_REBOOT_VAUE_SIZE];
     if (cmdContent == NULL) {
         INIT_LOGE("DoReboot api error, cmdContent is NULL.\n");
         return -1;
@@ -36,12 +36,12 @@ int DoRebootApi(const char *cmdContent)
         INIT_LOGE("DoReboot api error, cmdContent = %s, length = %d.\n", cmdContent, length);
         return -1;
     }
-    if (snprintf_s(name, MAX_REBOOT_NAME_SIZE, MAX_REBOOT_NAME_SIZE - 1, "%s%s", SYS_POWER_CTRL, "reboot") < 0) {
+    if (snprintf_s(value, MAX_REBOOT_NAME_SIZE, MAX_REBOOT_NAME_SIZE - 1, "%s%s", "reboot,", cmdContent) < 0) {
         INIT_LOGE("DoReboot api error, MAX_REBOOT_NAME_SIZE is not enough\n");
         return -1;
     }
-    if (SystemSetParameter(name, cmdContent) != 0) {
-        INIT_LOGE("DoRebootApi SystemSetParameter error\n");
+    if (SystemSetParameter("sys.powerctrl", value) != 0) {
+        INIT_LOGE("DoReboot Api SystemSetParameter error\n");
         return -1;
     }
     return 0;
