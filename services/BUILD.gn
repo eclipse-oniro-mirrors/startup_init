@@ -142,7 +142,7 @@ if (defined(ohos_lite)) {
   }
 
   ohos_prebuilt_etc("init.cfg") {
-    source = "//device/hisilicon/hi3516dv300/updater/init.cfg"
+    source = "//base/startup/init_lite/services/etc/init.cfg"
     part_name = "init"
   }
 
@@ -151,17 +151,24 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
+  ohos_prebuilt_etc("init.Hi3516DV300.cfg") {
+    source = "//device/hisilicon/hi3516dv300/build/rootfs/init.Hi3516DV300.cfg"
+    part_name = "init"
+  }
+
   group("startup_init") {
     deps = [
       ":init",
       ":init.cfg",
       ":passwd",
+      ":init.Hi3516DV300.cfg",
       ":updaterueventd",
       "//base/startup/init_lite/services/param:getparam",
       "//base/startup/init_lite/services/param:paramclient",
       "//base/startup/init_lite/services/param:paramservice",
       "//base/startup/init_lite/services/param:setparam",
       "//base/startup/init_lite/services/reboot:reboot",
+      "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
     ]
   }
 }

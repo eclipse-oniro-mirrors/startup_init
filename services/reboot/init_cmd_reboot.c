@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include "init_reboot_api.h"
+#include "init_reboot.h"
 
 int main(int argc, char* argv[])
 {
@@ -32,14 +32,14 @@ int main(int argc, char* argv[])
     }
     int ret = 0;
     if (argc == 2) {
-        ret = DoRebootApi(argv[1]);
+        ret = DoReboot(argv[1]);
     } else {
-        ret = DoRebootApi("NoArgument");
+        ret = DoReboot("NoArgument");
     }
     if (ret != 0) {
-        printf("[reboot command] DoRebootApi return error\n");
+        printf("[reboot command] DoReboot Api return error\n");
     } else {
-        printf("[reboot command] DoRebootApi return ok\n");
+        printf("[reboot command] DoReboot Api return ok\n");
     }
     while (1) {
         pause();

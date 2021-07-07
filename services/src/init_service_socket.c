@@ -33,9 +33,12 @@ static int CreateSocket(struct ServiceSocket *sockopt)
     if (!sockopt || !sockopt->name) {
         return -1;
     }
-
-    int sockFd = socket(PF_UNIX, sockopt->type, 0);
-    if (sockFd < 0) {
+    if (sockopt->sockFd >= 0) {
+        close(sockopt->sockFd);
+        sockopt->sockFd = -1;
+    }
+    sockopt->sockFd = socket(PF_UNIX, sockopt->type, 0);
+    if (sockopt->sockFd < 0) {
         INIT_LOGE("socket fail %d \n", errno);
         return -1;
     }
@@ -47,39 +50,41 @@ static int CreateSocket(struct ServiceSocket *sockopt)
              sockopt->name);
     if (access(addr.sun_path, F_OK)) {
         INIT_LOGE("%s already exist, remove it\n", addr.sun_path);
-        unlink(addr.sun_path);
+        if (unlink(addr.sun_path) != 0) {
+            INIT_LOGE("ulink fail err %d \n", errno);
+        }
     }
     if (sockopt->passcred) {
         int on = 1;
-        if (setsockopt(sockFd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on))) {
+        if (setsockopt(sockopt->sockFd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on))) {
             unlink(addr.sun_path);
-            close(sockFd);
+            close(sockopt->sockFd);
             return -1;
         }
     }
 
-    if (bind(sockFd, (struct sockaddr *)&addr, sizeof(addr))) {
+    if (bind(sockopt->sockFd, (struct sockaddr *)&addr, sizeof(addr))) {
         INIT_LOGE("Create socket for service %s failed: %d\n", sockopt->name, errno);
         unlink(addr.sun_path);
-        close(sockFd);
+        close(sockopt->sockFd);
         return -1;
     }
 
     if (lchown(addr.sun_path, sockopt->uid, sockopt->gid)) {
         unlink(addr.sun_path);
-        close(sockFd);
+        close(sockopt->sockFd);
         INIT_LOGE("lchown fail %d \n", errno);
         return -1;
     }
 
     if (fchmodat(AT_FDCWD, addr.sun_path, sockopt->perm, AT_SYMLINK_NOFOLLOW)) {
         unlink(addr.sun_path);
-        close(sockFd);
+        close(sockopt->sockFd);
         INIT_LOGE("fchmodat fail %d \n", errno);
         return -1;
     }
     INIT_LOGI("CreateSocket success \n");
-    return sockFd;
+    return sockopt->sockFd;
 }
 
 static int SetSocketEnv(int fd, char *name)
@@ -115,53 +120,5 @@ int DoCreateSocket(struct ServiceSocket *sockopt)
         tmpSock = tmpSock->next;
     }
     return 0;
-}
-
-int GetControlFromEnv(char *path)
-{
-    if (path == NULL) {
-        return -1;
-    }
-     char *cp = path;
-    while (*cp) {
-        if (!isalnum(*cp)) *cp = '_';
-        ++cp;
-    }
-    const char *val = getenv(path);
-    if (val == NULL) {
-        return -1;
-    }
-    errno = 0;
-    int fd = strtol(val, NULL, 10);
-    if (errno) {
-        return -1;
-    }
-    if (fcntl(fd, F_GETFD) < 0) {
-        return -1;
-    }
-    return fd;
-}
-
-int GetControlSocket(const char *name)
-{
-    if (name == NULL) {
-        return -1;
-    }
-    char path[128] = {0};
-    snprintf(path, sizeof(path), HOS_SOCKET_ENV_PREFIX"%s", name);
-    int fd = GetControlFromEnv(path);
-
-    struct sockaddr_un addr;
-    socklen_t addrlen = sizeof(addr);
-    int ret = getsockname(fd, (struct sockaddr*)&addr, &addrlen);
-    if (ret < 0) {
-        return -1;
-    }
-    char sockDir[128] = {0};
-    snprintf(sockDir, sizeof(sockDir), HOS_SOCKET_DIR"/%s", name);
-    if (strncmp(sockDir, addr.sun_path, strlen(sockDir)) == 0) {
-        return fd;
-    }
-    return -1;
 }
 

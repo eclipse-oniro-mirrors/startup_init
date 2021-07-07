@@ -109,8 +109,16 @@ void DoReboot(const char *value)
     INIT_LOGI("[init] DoReboot value = %s\n", value);
 
     if (strlen(value) > MAX_VALUE_LENGTH) {
-        INIT_LOGE("DoReboot reboot value error, value = %s.\n", value);
+        INIT_LOGE("[init] DoReboot reboot value error, value = %s.\n", value);
         return;
+    }
+
+    const char *valueData = NULL;
+    if (strncmp(value, "reboot,", strlen("reboot,")) != 0) {
+        INIT_LOGE("[init] DoReboot reboot value = %s, must started with reboot ,error.\n", value);
+        return;
+    } else {
+        valueData = value + strlen("reboot,");
     }
 
     if (GetMountStatusForMountPoint("/vendor")) {
@@ -125,7 +133,7 @@ void DoReboot(const char *value)
     }
     StopAllServicesBeforeReboot();
     // "shutdown"
-    if (strncmp(value, "shutdown", sizeof("shutdown")) == 0) {
+    if (strncmp(valueData, "shutdown", strlen("shutdown")) == 0) {
         int ret = reboot(RB_POWER_OFF);
         if (ret != 0) {
             INIT_LOGE("DoReboot reboot(RB_POWER_OFF) failed! syscall ret %d, err %d.\n", ret, errno);
@@ -144,8 +152,8 @@ void DoReboot(const char *value)
     snprintf(msg.command, MAX_COMMAND_SIZE, "%s", "boot_updater");
     msg.command[commandSize] = 0;
 
-    if (strlen(value) > strlen("updater:") && strncmp(value, "updater:", strlen("updater:")) == 0) {
-        const char *p = value + strlen("updater:");
+    if (strlen(valueData) > strlen("updater:") && strncmp(valueData, "updater:", strlen("updater:")) == 0) {
+        const char *p = valueData + strlen("updater:");
         if (snprintf(msg.update, MAX_UPDATE_SIZE, "%s", p) > MAX_UPDATE_SIZE) {
             INIT_LOGE("[init] DoReboot updater: RBMiscWriteUpdaterMessage error\n");
             return;
@@ -162,7 +170,7 @@ void DoReboot(const char *value)
         }
         return;
     }
-    if (strlen(value) == strlen("updater") && strncmp(value, "updater", strlen("updater")) == 0) {
+    if (strlen(valueData) == strlen("updater") && strncmp(valueData, "updater", strlen("updater")) == 0) {
         ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
         if(true != ret) {
             INIT_LOGE("[init] DoReboot updater RBMiscWriteUpdaterMessage error\n");
@@ -174,7 +182,7 @@ void DoReboot(const char *value)
         }
         return;
     }
-    if (strlen(value) == strlen("NoArgument") && strncmp(value, "NoArgument", strlen("NoArgument")) == 0) {
+    if (strlen(valueData) == strlen("NoArgument") && strncmp(valueData, "NoArgument", strlen("NoArgument")) == 0) {
         ret = reboot(RB_AUTOBOOT);
         if (ret != 0) {
             INIT_LOGE("DoReboot updater: reboot(RB_AUTOBOOT) failed! syscall ret %d, err %d.\n", ret, errno);

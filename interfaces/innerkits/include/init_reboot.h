@@ -16,7 +16,7 @@
 #ifndef INIT_REBOOT_API_H
 #define INIT_REBOOT_API_H
 
-int DoRebootApi(const char *cmdContent);
+int DoReboot(const char *cmdContent);
 
 #endif
 

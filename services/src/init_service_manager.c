@@ -423,57 +423,12 @@ static int GetUidStringNumber(const cJSON *curArrItem, Service *curServ)
     return SERVICE_FAILURE;
 }
 
-static int SplitString(char *srcPtr, char **dstPtr)
-{
-    if (!srcPtr) {
-        return -1;
-    }
-    char *buf = NULL;
-    dstPtr[0] = strtok_r(srcPtr, " ", &buf);
-    int i = 0;
-    while (dstPtr[i])
-    {
-        i++;
-        dstPtr[i] = strtok_r(NULL, " ", &buf);
-    }
-    dstPtr[i] = "\0";
-    int num = i;
-    for (int j = 0; j < num; j++) {
-        INIT_LOGI("dstPtr[%d] is %s \n", j, dstPtr[j]);
-    }
-    return num;
-}
-
-#define MAX_SOCK_NAME_LEN  16
-#define SOCK_OPT_NUMS  6
-enum SockOptionTab
-{
-    SERVICE_SOCK_NAME = 0,
-    SERVICE_SOCK_TYPE,
-    SERVICE_SOCK_PERM,
-    SERVICE_SOCK_UID,
-    SERVICE_SOCK_GID,
-    SERVICE_SOCK_SETOPT
-};
-
 static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket *sockopt)
 {
     INIT_LOGI("ParseServiceSocket\n");
     if (optNum != SOCK_OPT_NUMS) {
         return -1;
     }
-    sockopt->name = (char *)calloc(MAX_SOCK_NAME_LEN, sizeof(char));
-    if (sockopt->name == NULL) {
-        return -1;
-    }
-    if (opt[SERVICE_SOCK_NAME] == NULL) {
-        return -1;
-    }
-    int ret = memcpy_s(sockopt->name, MAX_SOCK_NAME_LEN, opt[SERVICE_SOCK_NAME], MAX_SOCK_NAME_LEN - 1);
-    if (ret != 0) {
-        return -1;
-    }
-
     if (opt[SERVICE_SOCK_TYPE] == NULL) {
         return -1;
     }
@@ -484,8 +439,7 @@ static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket
     if (opt[SERVICE_SOCK_PERM] == NULL) {
         return -1;
     }
-    sockopt->perm = strtoul(opt[SERVICE_SOCK_PERM], 0, 8);  //¡Áa?¡¥?a8????
-
+    sockopt->perm = strtoul(opt[SERVICE_SOCK_PERM], 0, OCTAL_BASE);
     if (opt[SERVICE_SOCK_UID] == NULL) {
         return -1;
     }
@@ -494,7 +448,6 @@ static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket
         return -1;
     }
     sockopt->uid = uuid;
-
     if (opt[SERVICE_SOCK_GID] == NULL) {
         return -1;
     }
@@ -503,15 +456,44 @@ static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket
         return -1;
     }
     sockopt->gid = ggid;
-
     if (opt[SERVICE_SOCK_SETOPT] == NULL) {
         return -1;
     }
     sockopt->passcred = strncmp(opt[SERVICE_SOCK_SETOPT], "passcred", strlen(opt[SERVICE_SOCK_SETOPT])) == 0 ? true : false;
+    if (opt[SERVICE_SOCK_NAME] == NULL) {
+        return -1;
+    }
+    sockopt->name = (char *)calloc(MAX_SOCK_NAME_LEN, sizeof(char));
+    if (sockopt->name == NULL) {
+        return -1;
+    }
+    int ret = memcpy_s(sockopt->name, MAX_SOCK_NAME_LEN, opt[SERVICE_SOCK_NAME], MAX_SOCK_NAME_LEN - 1);
+    if (ret != 0) {
+        free(sockopt->name);
+        return -1;
+    }
     sockopt->next = NULL;
+    sockopt->sockFd = -1;
     return 0;
 }
 
+static void FreeServiceSocket(struct ServiceSocket *sockopt)
+{
+    if (!sockopt) {
+        return;
+    }
+    struct ServiceSocket *tmpSock = NULL;
+    while (sockopt) {
+        tmpSock = sockopt;
+        if (sockopt->name != NULL) {
+            free(sockopt->name);
+            sockopt->name = NULL;
+        }
+        sockopt = tmpSock->next;
+        free(tmpSock);
+    }
+    return;
+}
 static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
 {
     INIT_LOGI("GetServiceSocket \n");
@@ -532,7 +514,7 @@ static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
         }
         char *sockStr = cJSON_GetStringValue(sockJ);
         char *tmpStr[SOCK_OPT_NUMS] = {NULL,};
-        int num = SplitString(sockStr, tmpStr);
+        int num = SplitString(sockStr, tmpStr, SOCK_OPT_NUMS);
         if (num != SOCK_OPT_NUMS) {
             return SERVICE_FAILURE;
         }
@@ -571,12 +553,16 @@ static int GetServiceOnRestart(const cJSON* curArrItem, Service* curServ)
     }
     curServ->onRestart->cmdLine = (CmdLine *)calloc(cmdCnt, sizeof(CmdLine));
     if (curServ->onRestart->cmdLine == NULL) {
+        free(curServ->onRestart);
         return SERVICE_FAILURE;
     }
     curServ->onRestart->cmdNum = cmdCnt;
     for (int i = 0; i < cmdCnt; ++i) {
         cJSON* cmdJ = cJSON_GetArrayItem(filedJ, i);
         if (!cJSON_IsString(cmdJ) || !cJSON_GetStringValue(cmdJ)) {
+            free(curServ->onRestart->cmdLine);
+            free(curServ->onRestart);
+            curServ->onRestart = NULL;
             return SERVICE_FAILURE;
         }
         char *cmdStr = cJSON_GetStringValue(cmdJ);
@@ -674,10 +660,14 @@ void ParseAllServices(const cJSON* fileRoot)
                  tmp[i].attribute & SERVICE_ATTR_DISABLED ? 1 : 0);
         }
         if (GetServiceSocket(curItem, &tmp[i]) != SERVICE_SUCCESS) {
-            // free list
+            INIT_LOGE("GetServiceSocket fail \n");
+            if (tmp[i].socketCfg != NULL) {
+                FreeServiceSocket(tmp[i].socketCfg);
+                tmp[i].socketCfg = NULL;
+            }
         }
         if (GetServiceOnRestart(curItem, &tmp[i]) != SERVICE_SUCCESS) {
-            // free
+            INIT_LOGE("GetServiceOnRestart fail \n");
         }
     }
     // Increase service counter.
@@ -754,12 +744,14 @@ void ReapServiceByPID(int pid)
 {
     for (int i = 0; i < g_servicesCnt; i++) {
         if (g_services[i].pid == pid) {
+#ifdef OHOS_LITE
             if (g_services[i].attribute & SERVICE_ATTR_IMPORTANT) {
                 // important process exit, need to reboot system
                 g_services[i].pid = -1;
                 StopAllServices();
                 RebootSystem();
             }
+#endif
             ServiceReap(&g_services[i]);
             break;
         }

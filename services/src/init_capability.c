@@ -85,7 +85,7 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
     for (; i < curServ->servPerm.capsCnt; ++i) {
         if (cJSON_GetArrayItem(filedJ, i) == NULL || !cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i))
             || strlen(cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i))) <= 0) {      // check all errors
-            INIT_LOGE("GetServiceStringCaps, parse item[%d] as string, error.\n", i);
+            INIT_LOGE("[init] service=%s, parse item[%d] as string, error.\n", curServ->name, i);
             break;
         }
         char* fieldStr = cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i));
@@ -99,12 +99,12 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
         if (j < mapSize) {
             curServ->servPerm.caps[i] = g_capStrCapNum[j].CapNum;
         } else {
-            INIT_LOGE("GetServiceStringCaps, fieldStr = %s, error.\n", fieldStr);
+            INIT_LOGE("[init] service=%s, CapbilityName=%s, error.\n", curServ->name, fieldStr);
             break;
         }
         if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {
             // resources will be released by function: ReleaseServiceMem
-            INIT_LOGE("GetServiceStringCaps, cap = %d, error.\n", curServ->servPerm.caps[i]);
+            INIT_LOGE("[init] service=%s, cap = %d, error.\n", curServ->name, curServ->servPerm.caps[i]);
             return SERVICE_FAILURE;
         }
     }
@@ -121,7 +121,7 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
         return SERVICE_SUCCESS;
     }
     if (!cJSON_IsArray(filedJ)) {
-        INIT_LOGE("GetServiceCaps, caps is not a list, error.\n");
+        INIT_LOGE("[init] service=%s, caps is not a list, error.\n", curServ->name);
         return SERVICE_FAILURE;
     }
     // caps array does not exist, means do not need any capability
@@ -130,13 +130,13 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
         return SERVICE_SUCCESS;
     }
     if (capsCnt > MAX_CAPS_CNT_FOR_ONE_SERVICE) {
-        INIT_LOGE("GetServiceCaps, too many caps[cnt %d] for one service, should not exceed %d.\n",
-            capsCnt, MAX_CAPS_CNT_FOR_ONE_SERVICE);
+        INIT_LOGE("[init], service=%s, too many caps[cnt %d] for one service, max is %d.\n",
+            curServ->name, capsCnt, MAX_CAPS_CNT_FOR_ONE_SERVICE);
         return SERVICE_FAILURE;
     }
     curServ->servPerm.caps = (unsigned int*)malloc(sizeof(unsigned int) * capsCnt);
     if (curServ->servPerm.caps == NULL) {
-        INIT_LOGE("GetServiceCaps, malloc error.\n");
+        INIT_LOGE("[init] GetServiceCaps, service=%s, malloc error.\n", curServ->name);
         return SERVICE_FAILURE;
     }
     curServ->servPerm.capsCnt = capsCnt;
@@ -145,13 +145,13 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
         cJSON* capJ = cJSON_GetArrayItem(filedJ, i);
         if (!cJSON_IsNumber(capJ) || cJSON_GetNumberValue(capJ) < 0) {
             // resources will be released by function: ReleaseServiceMem
-            INIT_LOGE("GetServiceCaps, capJ is not a number or capJ < 0, error.\n");
+            INIT_LOGI("[init], service=%s, Capbility is not a number or < 0, error.\n", curServ->name);
             break;
         }
         curServ->servPerm.caps[i] = (unsigned int)cJSON_GetNumberValue(capJ);
         if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {        // CAP_LAST_CAP = 37
             // resources will be released by function: ReleaseServiceMem
-            INIT_LOGE("GetServiceCaps, caps = %d, error.\n", curServ->servPerm.caps[i]);
+            INIT_LOGE("[init] service=%s, caps = %d, error.\n", curServ->name, curServ->servPerm.caps[i]);
             return SERVICE_FAILURE;
         }
     }

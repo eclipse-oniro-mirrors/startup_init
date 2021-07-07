@@ -14,10 +14,15 @@
 import("//build/ohos.gni")
 ohos_static_library("libsocket") {
   sources = [
-    "//base/startup/init_lite/interfaces/innerkits/socket/init_socket_api.c",
+    "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c",
   ]
 
-  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+  include_dirs = [
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/services/log",
+  ]
 
-  deps = []
+  deps = [
+    "//base/startup/init_lite/services/log:init_log",
+  ]
 }

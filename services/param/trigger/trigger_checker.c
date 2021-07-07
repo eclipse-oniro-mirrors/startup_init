@@ -178,10 +178,6 @@ int GetValueFromContent(const char *content, u_int32_t contentSize, u_int32_t st
     u_int32_t contentIndex = start;
     u_int32_t currIndex = 0;
     while (contentIndex < contentSize && currIndex < valueSize) {
-        if (isspace(content[contentIndex])) {
-            contentIndex++;
-            continue;
-        }
         if (content[contentIndex] == '=') {
             value[currIndex++] = '\0';
             return 0;

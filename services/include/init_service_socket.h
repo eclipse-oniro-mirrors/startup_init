@@ -21,6 +21,18 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#define MAX_SOCK_NAME_LEN  16
+#define SOCK_OPT_NUMS  6
+enum SockOptionTab
+{
+    SERVICE_SOCK_NAME = 0,
+    SERVICE_SOCK_TYPE,
+    SERVICE_SOCK_PERM,
+    SERVICE_SOCK_UID,
+    SERVICE_SOCK_GID,
+    SERVICE_SOCK_SETOPT
+};
+
 struct ServiceSocket;
 struct ServiceSocket
 {
@@ -30,6 +42,7 @@ struct ServiceSocket
     gid_t gid;        // gid
     bool passcred;    // setsocketopt
     mode_t perm;      // Setting permissions
+    int sockFd;
     struct ServiceSocket *next;
 };
 

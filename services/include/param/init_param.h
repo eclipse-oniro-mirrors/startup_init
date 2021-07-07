@@ -38,13 +38,6 @@ typedef enum {
 void InitParamService();
 
 /**
- * 对Init接口
- * 启动trigger服务。
- *
- */
-void StartTriggerService();
-
-/**
  * Init 接口
  * 启动参数服务，在main启动的最后调用，阻赛当前线程
  *
@@ -98,7 +91,7 @@ int SystemReadParam(const char *name, char *value, unsigned int *len);
  * 触发一个trigger操作。
  *
  */
-void PostTrigger(EventType type, void *content, u_int32_t contentLen);
+void PostTrigger(EventType type, const char *content, u_int32_t contentLen);
 
 /**
  * 对Init接口

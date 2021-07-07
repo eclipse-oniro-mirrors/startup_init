@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 
 #ifdef OHOS_DEBUG
@@ -84,7 +85,7 @@ int main(int argc, char * const argv[])
     // 2. Mount basic filesystem and create common device node.
     MountBasicFs();
     CreateDeviceNode();
-    MakeSocketDir("/dev/unix/socket/", 0755);
+    MakeSocketDir("/dev/unix/socket/", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 #endif
 
     // 3. signal register
@@ -111,7 +112,7 @@ int main(int argc, char * const argv[])
 #ifdef OHOS_DEBUG
     struct timespec tmCfg;
     if (clock_gettime(CLOCK_REALTIME, &tmCfg) != 0) {
-        INIT_LOGE("main, after cfg, get time failed! err %d.\n", errno);
+        INIT_LOGE("main, get time failed! err %d.\n", errno);
     }
 #endif // OHOS_DEBUG
 
@@ -123,7 +124,6 @@ int main(int argc, char * const argv[])
 
     INIT_LOGI("main, entering wait.\n");
 #ifndef OHOS_LITE
-    StartTriggerService();
     StartParamService();
 #endif
     while (1) {

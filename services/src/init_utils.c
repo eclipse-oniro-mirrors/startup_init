@@ -92,30 +92,6 @@ void FreeCmd(struct CmdArgs **cmd)
     return;
 }
 
-void Logger(InitLogLevel level, const char *format, ...)
-{
-    FILE* pFile = fopen(LOG_FILE_NAME, "a");
-    static char *logLeveInfo[] = { "VERBOSE", "INFO", "WARN", "ERROR", "FATAL" };
-    if (level >= sizeof(logLeveInfo) / sizeof(char*) || pFile == NULL) {
-        return;
-    }
-    time_t t;
-    struct tm *localTimer;
-    time(&t);
-    localTimer = localtime (&t);
-    fprintf(pFile, "[%d/%d/%d %d:%d:%d][%s]", localTimer->tm_year + 1900, localTimer->tm_mon, localTimer->tm_mday,
-        localTimer->tm_hour, localTimer->tm_min, localTimer->tm_sec, logLeveInfo[level]);
-
-    va_list list;
-    va_start(list, format);
-    vfprintf(pFile, format, list);
-    va_end(list);
-
-    fprintf(pFile, "%s", " \n");
-	fflush(pFile);
-    fclose(pFile);
-}
-
 int DecodeUid(const char *name)
 {
     if (isalpha(name[0])) {
@@ -153,14 +129,17 @@ char* ReadFileToBuf(const char *configFile)
     do {
         if (stat(configFile, &fileStat) != 0 ||
             fileStat.st_size <= 0 || fileStat.st_size > MAX_JSON_FILE_LEN) {
+            INIT_LOGE("Unexpected config file \" %s \", check if it exist. if exist, check file size\n", configFile);
             break;
         }
         fd = fopen(configFile, "r");
         if (fd == NULL) {
+            INIT_LOGE("Open %s failed. err = %d\n", configFile, errno);
             break;
         }
         buffer = (char*)malloc(fileStat.st_size + 1);
         if (buffer == NULL) {
+            INIT_LOGE("Failed to allocate memory for config file, err = %d\n", errno);
             break;
         }
 
@@ -177,4 +156,24 @@ char* ReadFileToBuf(const char *configFile)
         fd = NULL;
     }
     return buffer;
+}
+
+int SplitString(char *srcPtr, char **dstPtr, int maxNum)
+{
+    if ((!srcPtr) || (!dstPtr)){
+        return -1;
+    }
+    char *buf = NULL;
+    dstPtr[0] = strtok_r(srcPtr, " ", &buf);
+    int i = 0;
+    while (dstPtr[i] != NULL && (i < maxNum)) {
+        i++;
+        dstPtr[i] = strtok_r(NULL, " ", &buf);
+    }
+    dstPtr[i] = "\0";
+    int num = i;
+    for (int j = 0; j < num; j++) {
+        INIT_LOGI("dstPtr[%d] is %s \n", j, dstPtr[j]);
+    }
+    return num;
 }
