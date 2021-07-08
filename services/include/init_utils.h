@@ -37,7 +37,7 @@ int DecodeUid(const char *name);
 void CheckAndCreateDir(const char *fileName);
 char* ReadFileToBuf(const char *configFile);
 int SplitString(char *srcPtr, char **dstPtr, int maxNum);
-void WaitForFile(const char *source, int maxCount);
+void WaitForFile(const char *source, unsigned int maxCount);
 
 #ifdef __cplusplus
 #if __cplusplus

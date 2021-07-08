@@ -34,6 +34,7 @@
 #include "init_utils.h"
 #include "securec.h"
 
+#define WAIT_MAX_COUNT 10
 #define MAX_BUF_SIZE  1024
 #ifdef STARTUP_UT
 #define LOG_FILE_NAME "/media/sf_ubuntu/test/log.txt"
@@ -179,11 +180,15 @@ int SplitString(char *srcPtr, char **dstPtr, int maxNum)
     return num;
 }
 
-void WaitForFile(const char *source, int maxCount)
+void WaitForFile(const char *source, unsigned int maxCount)
 {
+    if (maxCount > WAIT_MAX_COUNT ) {
+        INIT_LOGE("WaitForFile max time is 50ms");
+        return;
+    }
     struct stat sourceInfo;
     unsigned int waitTime = 500000;
-    int count = 0;
+    unsigned int count = 0;
     do {
         usleep(waitTime);
         count++;
