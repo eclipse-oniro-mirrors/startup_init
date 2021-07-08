@@ -182,9 +182,9 @@ int SplitString(char *srcPtr, char **dstPtr, int maxNum)
 
 void WaitForFile(const char *source, unsigned int maxCount)
 {
-    if (maxCount > WAIT_MAX_COUNT ) {
-        INIT_LOGE("WaitForFile max time is 50ms");
-        return;
+    if (maxCount > WAIT_MAX_COUNT) {
+        INIT_LOGE("WaitForFile max time is 5s");
+        maxCount = WAIT_MAX_COUNT;
     }
     struct stat sourceInfo;
     unsigned int waitTime = 500000;
