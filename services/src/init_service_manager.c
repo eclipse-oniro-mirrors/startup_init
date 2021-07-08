@@ -348,8 +348,9 @@ static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const cha
     if (filedJ == NULL && (strncmp(targetField, CRITICAL_STR_IN_CFG, strlen(CRITICAL_STR_IN_CFG)) == 0
         || strncmp(targetField, DISABLED_STR_IN_CFG, strlen(DISABLED_STR_IN_CFG)) == 0
         || strncmp(targetField, ONCE_STR_IN_CFG, strlen(ONCE_STR_IN_CFG)) == 0
-        || strncmp(targetField, IMPORTANT_STR_IN_CFG, strlen(IMPORTANT_STR_IN_CFG)) == 0)) {
-        return SERVICE_SUCCESS;             // not found "critical","disabled","once","importance" item is ok
+        || strncmp(targetField, IMPORTANT_STR_IN_CFG, strlen(IMPORTANT_STR_IN_CFG)) == 0
+        || strncmp(targetField, CONSOLE_STR_IN_CFG, strlen(CONSOLE_STR_IN_CFG)) == 0)) {
+        return SERVICE_SUCCESS;             // not found "critical","disabled","once","importance","console" item is ok
     }
 
     if (!cJSON_IsNumber(filedJ)) {
@@ -383,6 +384,11 @@ static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const cha
         curServ->attribute &= ~SERVICE_ATTR_DISABLED;
         if (value == 1) {
             curServ->attribute |= SERVICE_ATTR_DISABLED;
+        }
+    } else if (strncmp(targetField, CONSOLE_STR_IN_CFG, strlen(CONSOLE_STR_IN_CFG)) == 0) {       // set console
+        curServ->attribute &= ~SERVICE_ATTR_CONSOLE;
+        if (value == 1) {
+            curServ->attribute |= SERVICE_ATTR_CONSOLE;
         }
     } else {
         INIT_LOGE("GetServiceNumber, item = %s, not expected, error.\n", targetField);
@@ -574,7 +580,7 @@ static int GetServiceOnRestart(const cJSON* curArrItem, Service* curServ)
 static int CheckServiceKeyName(const cJSON* curService)
 {
     char *cfgServiceKeyList[] = {"name", "path", "uid", "gid", "once",
-        "importance", "caps", "disabled", "writepid", "critical", "socket",
+        "importance", "caps", "disabled", "writepid", "critical", "socket", "console"
     };
     if (curService == NULL) {
         return SERVICE_FAILURE;
@@ -645,9 +651,10 @@ void ParseAllServices(const cJSON* fileRoot)
         int ret6 = GetServiceNumber(curItem, &tmp[i], IMPORTANT_STR_IN_CFG);
         int ret7 = GetServiceNumber(curItem, &tmp[i], CRITICAL_STR_IN_CFG);     // critical
         int ret8 = GetServiceNumber(curItem, &tmp[i], DISABLED_STR_IN_CFG);     // disabled
-        int ret9 = GetWritepidStrings(curItem, &tmp[i]);                        // writepid
-        int reta = GetServiceCaps(curItem, &tmp[i]);
-        int retAll = ret1 | ret2 | ret3 | ret4 | ret5 | ret6 | ret7 | ret8 | ret9 | reta;
+        int ret9 = GetServiceNumber(curItem, &tmp[i], CONSOLE_STR_IN_CFG);      // console
+        int reta = GetWritepidStrings(curItem, &tmp[i]);                        // writepid
+        int retb = GetServiceCaps(curItem, &tmp[i]);
+        int retAll = ret1 | ret2 | ret3 | ret4 | ret5 | ret6 | ret7 | ret8 | ret9 | reta | retb;
         if (retAll != SERVICE_SUCCESS) {
             // release resources if it fails
             ReleaseServiceMem(&tmp[i]);

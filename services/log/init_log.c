@@ -42,7 +42,7 @@ void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int l
     if (logLevel < g_logLevel) {
         return;
     }
-    // 可以替换stdout这个为对应的文件句柄
+    // ????stdout??????????
     time_t logTime;
     time(&logTime);
     struct tm *t = gmtime(&logTime);

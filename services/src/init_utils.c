@@ -43,6 +43,7 @@
 #define MAX_BUFFER 256
 #define MAX_EACH_CMD_LENGTH 30
 #define MAX_JSON_FILE_LEN 102400    // max init.cfg size 100KB
+#define CONVERT_MICROSEC_TO_SEC(x) ((x) / 1000 / 1000)
 
 struct CmdArgs* GetCmd(const char *cmdContent, const char *delim)
 {
@@ -177,3 +178,19 @@ int SplitString(char *srcPtr, char **dstPtr, int maxNum)
     }
     return num;
 }
+
+void WaitForFile(const char *source, int maxCount)
+{
+    struct stat sourceInfo;
+    unsigned int waitTime = 500000;
+    int count = 0;
+    do {
+        usleep(waitTime);
+        count++;
+    } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount));
+    if (count == maxCount) {
+        INIT_LOGE("wait for file:%s failed after %d.\n", source, maxCount * CONVERT_MICROSEC_TO_SEC(waitTime));
+    }
+    return;
+}
+

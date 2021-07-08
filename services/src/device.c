@@ -34,6 +34,14 @@ void MountBasicFs()
     if (mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
         INIT_LOGE("Mount tmpfs failed. %s\n", strerror(errno));
     }
+#ifndef __LITEOS__
+    if (mkdir("/dev/pts", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
+        INIT_LOGE("mkdir /dev/pts failed. %s\n", strerror(errno));
+    }
+    if (mount("devpts", "/dev/pts", "devpts", 0, NULL) != 0) {
+        INIT_LOGE("Mount devpts failed. %s\n", strerror(errno));
+    }
+#endif
     if (mount("proc", "/proc", "proc", 0, "hidepid=2") != 0) {
         INIT_LOGE("Mount procfs failed. %s\n", strerror(errno));
     }

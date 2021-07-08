@@ -15,10 +15,16 @@
 
 #include "init_service.h"
 
+#include <bits/ioctl.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#ifdef __MUSL__
+#include <stropts.h>
+#endif
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -29,9 +35,14 @@
 #include "init_log.h"
 #include "init_perms.h"
 #include "init_service_socket.h"
+#include "init_utils.h"
 
 #define CAP_NUM 2
+#define WAIT_MAX_COUNT 10
 
+#ifndef TIOCSCTTY
+#define TIOCSCTTY 0x540E
+#endif
 // 240 seconds, 4 minutes
 static const int CRASH_TIME_LIMIT  = 240;
 // maximum number of crashes within time CRASH_TIME_LIMIT for one service
@@ -110,6 +121,23 @@ static int SetPerms(const Service *service)
     return SERVICE_SUCCESS;
 }
 
+static void OpenConsole()
+{
+    setsid();
+    WaitForFile("/dev/console", WAIT_MAX_COUNT);
+    int fd = open("/dev/console", O_RDWR);
+    if (fd >= 0) {
+        ioctl(fd, TIOCSCTTY, 0);
+        dup2(fd, 0);
+        dup2(fd, 1);
+        dup2(fd, 2);
+        close(fd);
+    } else {
+        INIT_LOGE("Open /dev/console failed. err = %d\n", errno);
+    }
+    return;
+}
+
 int ServiceStart(Service *service)
 {
     if (service == NULL) {
@@ -140,6 +168,9 @@ int ServiceStart(Service *service)
                 INIT_LOGE("DoCreateSocket failed. \n");
                 _exit(0x7f); // 0x7f: user specified
             }
+        }
+        if (service->attribute & SERVICE_ATTR_CONSOLE) {
+            OpenConsole();
         }
         // permissions
         if (SetPerms(service) != SERVICE_SUCCESS) {
