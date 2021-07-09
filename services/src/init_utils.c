@@ -34,6 +34,7 @@
 #include "init_utils.h"
 #include "securec.h"
 
+#define WAIT_MAX_COUNT 10
 #define MAX_BUF_SIZE  1024
 #ifdef STARTUP_UT
 #define LOG_FILE_NAME "/media/sf_ubuntu/test/log.txt"
@@ -43,6 +44,7 @@
 #define MAX_BUFFER 256
 #define MAX_EACH_CMD_LENGTH 30
 #define MAX_JSON_FILE_LEN 102400    // max init.cfg size 100KB
+#define CONVERT_MICROSEC_TO_SEC(x) ((x) / 1000 / 1000.0)
 
 struct CmdArgs* GetCmd(const char *cmdContent, const char *delim)
 {
@@ -177,3 +179,23 @@ int SplitString(char *srcPtr, char **dstPtr, int maxNum)
     }
     return num;
 }
+
+void WaitForFile(const char *source, unsigned int maxCount)
+{
+    if (maxCount > WAIT_MAX_COUNT) {
+        INIT_LOGE("WaitForFile max time is 5s");
+        maxCount = WAIT_MAX_COUNT;
+    }
+    struct stat sourceInfo;
+    unsigned int waitTime = 500000;
+    unsigned int count = 0;
+    do {
+        usleep(waitTime);
+        count++;
+    } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount));
+    if (count == maxCount) {
+        INIT_LOGE("wait for file:%s failed after %f.\n", source, maxCount * CONVERT_MICROSEC_TO_SEC(waitTime));
+    }
+    return;
+}
+

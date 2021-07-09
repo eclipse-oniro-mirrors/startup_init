@@ -80,7 +80,7 @@ static int GetMountStatusForMountPoint(const char *mountPoint)
     const char *mountFile = "/proc/mounts";
     FILE *fp = fopen(mountFile, "r");
     if (fp == NULL) {
-        INIT_LOGE("[init] DoReboot %s can't open.\n", mountPoint);
+        INIT_LOGE("DoReboot %s can't open.\n", mountPoint);
         return 1;
     }
 
@@ -103,24 +103,32 @@ static int GetMountStatusForMountPoint(const char *mountPoint)
 void DoReboot(const char *value)
 {
     if (value == NULL) {
-        INIT_LOGE("[init] DoReboot value = NULL\n");
+        INIT_LOGE("DoReboot value = NULL\n");
         return;
     }
-    INIT_LOGI("[init] DoReboot value = %s\n", value);
+    INIT_LOGI("DoReboot value = %s\n", value);
 
     if (strlen(value) > MAX_VALUE_LENGTH) {
-        INIT_LOGE("[init] DoReboot reboot value error, value = %s.\n", value);
+        INIT_LOGE("DoReboot reboot value error, value = %s.\n", value);
         return;
     }
 
     const char *valueData = NULL;
     if (strncmp(value, "reboot,", strlen("reboot,")) != 0) {
-        INIT_LOGE("[init] DoReboot reboot value = %s, must started with reboot ,error.\n", value);
+        INIT_LOGE("DoReboot reboot value = %s, must started with reboot ,error.\n", value);
         return;
     } else {
         valueData = value + strlen("reboot,");
     }
+    if (strncmp(valueData, "shutdown", strlen("shutdown")) != 0
+        && strncmp(valueData, "updater:", strlen("updater:")) != 0
+        && strncmp(valueData, "updater", strlen("updater")) != 0
+        && strncmp(valueData, "NoArgument", strlen("NoArgument")) != 0) {
+        INIT_LOGE("DoReboot value = %s, parameters error.\n", value);
+        return;
+    }
 
+    StopAllServicesBeforeReboot();
     if (GetMountStatusForMountPoint("/vendor")) {
         if (umount("/vendor") != 0) {
             INIT_LOGE("DoReboot umount vendor failed! errno = %d.\n", errno);
@@ -131,7 +139,6 @@ void DoReboot(const char *value)
             INIT_LOGE("DoReboot umount data failed! errno = %d.\n", errno);
         }
     }
-    StopAllServicesBeforeReboot();
     // "shutdown"
     if (strncmp(valueData, "shutdown", strlen("shutdown")) == 0) {
         int ret = reboot(RB_POWER_OFF);
@@ -145,7 +152,7 @@ void DoReboot(const char *value)
     struct RBMiscUpdateMessage msg;
     bool ret = RBMiscReadUpdaterMessage(miscFile, &msg);
     if(!ret) {
-        INIT_LOGE("[init] DoReboot RBMiscReadUpdaterMessage error.\n");
+        INIT_LOGE("DoReboot RBMiscReadUpdaterMessage error.\n");
         return;
     }
     const int commandSize = 12;
@@ -155,13 +162,13 @@ void DoReboot(const char *value)
     if (strlen(valueData) > strlen("updater:") && strncmp(valueData, "updater:", strlen("updater:")) == 0) {
         const char *p = valueData + strlen("updater:");
         if (snprintf(msg.update, MAX_UPDATE_SIZE, "%s", p) > MAX_UPDATE_SIZE) {
-            INIT_LOGE("[init] DoReboot updater: RBMiscWriteUpdaterMessage error\n");
+            INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error\n");
             return;
         }
         msg.update[MAX_UPDATE_SIZE - 1] = 0;
         ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
         if(true != ret) {
-            INIT_LOGE("[init] DoReboot updater: RBMiscWriteUpdaterMessage error\n");
+            INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error\n");
             return;
         }
         ret = reboot(RB_AUTOBOOT);
@@ -173,7 +180,7 @@ void DoReboot(const char *value)
     if (strlen(valueData) == strlen("updater") && strncmp(valueData, "updater", strlen("updater")) == 0) {
         ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
         if(true != ret) {
-            INIT_LOGE("[init] DoReboot updater RBMiscWriteUpdaterMessage error\n");
+            INIT_LOGE("DoReboot updater RBMiscWriteUpdaterMessage error\n");
             return;
         }
         ret = reboot(RB_AUTOBOOT);

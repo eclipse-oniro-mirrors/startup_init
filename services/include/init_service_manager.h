@@ -32,6 +32,7 @@ extern "C" {
 #define BIN_SH_NOT_ALLOWED    "/bin/sh"
 #define CRITICAL_STR_IN_CFG   "critical"
 #define DISABLED_STR_IN_CFG   "disabled"
+#define CONSOLE_STR_IN_CFG   "console"
 
 #define MAX_SERVICES_CNT_IN_FILE 100
 

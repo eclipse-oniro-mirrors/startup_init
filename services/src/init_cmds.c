@@ -51,7 +51,7 @@
 #define OCTAL_TYPE 8  // 8 means octal to decimal
 #define MAX_BUFFER 256
 #define AUTHORITY_MAX_SIZE 128
-#define CONVERT_MICROSEC_TO_SEC(x) ((x) / 1000 / 1000)
+#define WAIT_MAX_COUNT 10
 
 static const char *g_supportCfg[] = {
     "/etc/patch.cfg",
@@ -305,22 +305,6 @@ static char* CopySubStr(const char* srcStr, size_t startPos, size_t endPos)
     return retStr;
 }
 
-static void WaitForFile(const char *source)
-{
-    struct stat sourceInfo;
-    unsigned int waitTime = 500000;
-    int maxCount = 10; // 10 means that sleep 10 times, 500ms at a time
-    int count = 0;
-    do {
-        usleep(waitTime);
-        count++;
-    } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount));
-    if (count == maxCount) {
-        INIT_LOGE("wait for file:%s failed after %d.\n", source, maxCount * CONVERT_MICROSEC_TO_SEC(waitTime));
-    }
-    return;
-}
-
 static int GetMountFlag(unsigned long* mountflags, const char* targetStr, const char *source)
 {
     if (targetStr == NULL) {
@@ -338,7 +322,7 @@ static int GetMountFlag(unsigned long* mountflags, const char* targetStr, const 
     } else if (strncmp(targetStr, "noatime", strlen("noatime")) == 0) {
         (*mountflags) |= MS_NOATIME;
     } else if (strncmp(targetStr, "wait", strlen("wait")) == 0) {
-        WaitForFile(source);
+        WaitForFile(source, WAIT_MAX_COUNT);
     } else {
         return 0;
     }
