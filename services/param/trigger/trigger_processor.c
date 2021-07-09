@@ -23,7 +23,7 @@
 #include "uv.h"
 
 #define LABEL "Trigger"
-#define MAX_TRIGGER_COUNT_RUN_ONCE 10
+#define MAX_TRIGGER_COUNT_RUN_ONCE 20
 #define SYS_POWER_CTRL "sys.powerctrl="
 static TriggerWorkSpace g_triggerWorkSpace = {};
 

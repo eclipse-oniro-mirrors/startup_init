@@ -33,9 +33,16 @@
 #include "init_adapter.h"
 #include "init_cmds.h"
 #include "init_log.h"
+#ifndef OHOS_LITE
+#include "init_param.h"
+#endif
 #include "init_perms.h"
 #include "init_service_socket.h"
 #include "init_utils.h"
+#include "securec.h"
+#ifndef OHOS_LITE
+#include "sys_param.h"
+#endif
 
 #define CAP_NUM 2
 #define WAIT_MAX_COUNT 10
@@ -144,7 +151,10 @@ int ServiceStart(Service *service)
         INIT_LOGE("start service failed! null ptr.\n");
         return SERVICE_FAILURE;
     }
-
+    if (service->pid > 0) {
+        INIT_LOGI("service : %s had started already.\n", service->name);
+        return SERVICE_SUCCESS;
+    }
     if (service->attribute & SERVICE_ATTR_INVALID) {
         INIT_LOGE("start service %s invalid.\n", service->name);
         return SERVICE_FAILURE;
@@ -220,6 +230,13 @@ int ServiceStart(Service *service)
     }
 
     service->pid = pid;
+#ifndef OHOS_LITE
+    char paramName[PARAM_NAME_LEN_MAX] = {0};
+    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", service->name) < 0) {
+        INIT_LOGE("snprintf_s paramName error %d \n", errno);
+    }
+    SystemWriteParam(paramName, "running");
+#endif
     return SERVICE_SUCCESS;
 }
 
@@ -240,7 +257,13 @@ int ServiceStop(Service *service)
         INIT_LOGE("stop service %s pid %d failed! err %d.\n", service->name, service->pid, errno);
         return SERVICE_FAILURE;
     }
-
+#ifndef OHOS_LITE
+    char paramName[PARAM_NAME_LEN_MAX] = {0};
+    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", service->name) < 0) {
+        INIT_LOGE("snprintf_s paramName error %d \n", errno);
+    }
+    SystemWriteParam(paramName, "stopping");
+#endif
     INIT_LOGI("stop service %s, pid %d.\n", service->name, service->pid);
     return SERVICE_SUCCESS;
 }
@@ -291,12 +314,19 @@ void ServiceReap(Service *service)
         return;
     }
 
+    service->pid = -1;
+#ifndef OHOS_LITE
+    char paramName[PARAM_NAME_LEN_MAX] = {0};
+    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", service->name) < 0) {
+        INIT_LOGE("snprintf_s paramName error %d \n", errno);
+    }
+    SystemWriteParam(paramName, "stopped");
+#endif
     if (service->attribute & SERVICE_ATTR_INVALID) {
         INIT_LOGE("ServiceReap service %s invalid.\n", service->name);
         return;
     }
 
-    service->pid = -1;
     // stopped by system-init itself, no need to restart even if it is not one-shot service
     if (service->attribute & SERVICE_ATTR_NEED_STOP) {
         service->attribute &= (~SERVICE_ATTR_NEED_STOP);
