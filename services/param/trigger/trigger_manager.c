@@ -31,7 +31,7 @@
 #include "trigger_checker.h"
 
 #define LABEL "Trigger"
-#define TRIGGER_AREA_SPACE 1024*64
+#define TRIGGER_AREA_SPACE 1024*128
 #define TRIGGER_EXECUTE_QUEUE 64
 #define BUFFER_SIZE 256
 #define CHECK_INDEX_VALID(workSpace, index) \
@@ -196,22 +196,11 @@ static u_int32_t AddTrigger(TriggerWorkSpace *workSpace, int type, const char *n
 
 static int GetTriggerIndex(const char *type)
 {
-    if (strncmp("param", type, strlen("param")) == 0) {
+    if (strncmp("param:", type, strlen("param:")) == 0) {
         return TRIGGER_PROPERTY;
+    } else {
+        return TRIGGER_BOOT;
     }
-    static const char *triggerType[] = {
-        "pre-init", "boot", "early-init", "init", "early-init", "late-init", "post-init",
-        "early-fs", "post-fs", "late-fs", "post-fs-data",
-        "nonencrypted",
-        "firmware_mounts_complete",
-        "load_persist_params_action"
-    };
-    for (size_t i = 0; i < sizeof(triggerType) / sizeof(char*); i++) {
-        if (strncmp(triggerType[i], type, strlen(triggerType[i])) == 0) {
-            return TRIGGER_BOOT;
-        }
-    }
-    return TRIGGER_BOOT;
 }
 
 static int CheckBootTriggerMatch(TriggerNode *trigger, void *content, u_int32_t contentSize)
