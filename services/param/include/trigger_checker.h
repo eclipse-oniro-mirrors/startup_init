@@ -26,6 +26,10 @@ extern "C" {
 #endif
 #endif
 
+#define MAX_TRIGGER_CMD_NAME_LEN 32
+#define MAX_TRIGGER_NAME_LEN 128
+#define MAX_TRIGGER_TYPE_LEN 16
+
 #define SUPPORT_DATA_BUFFER_MAX 128
 #define CONDITION_EXTEND_LEN 32
 
@@ -42,7 +46,11 @@ typedef struct {
     u_int32_t endIndex;
 } LogicData;
 
+struct tagTriggerNode;
+
 typedef struct {
+    char triggerContent[MAX_TRIGGER_NAME_LEN];
+    int (*triggerExecuter)(struct tagTriggerNode *trigger, u_int32_t index);
     int dataNumber;
     int endIndex;
     int dataUnit;
@@ -59,6 +67,7 @@ void CalculatorFree(LogicCalculator *calculator);
 int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLen);
 int ComputeCondition(LogicCalculator *calculator, const char *condition);
 int GetValueFromContent(const char *content, u_int32_t contentSize, u_int32_t start, char *value, u_int32_t valueSize);
+char *GetMatchedSubCondition(const char *condition, const char *input, int length);
 
 #ifdef __cplusplus
 #if __cplusplus

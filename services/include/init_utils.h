@@ -26,13 +26,6 @@ extern "C" {
 #define OCTAL_BASE 8
 #define DECIMAL_BASE 10
 
-struct CmdArgs {
-    int argc;
-    char **argv;
-};
-
-struct CmdArgs* GetCmd(const char *cmdContent, const char *delim);
-void FreeCmd(struct CmdArgs **cmd);
 int DecodeUid(const char *name);
 void CheckAndCreateDir(const char *fileName);
 char* ReadFileToBuf(const char *configFile);

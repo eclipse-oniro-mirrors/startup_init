@@ -52,6 +52,11 @@ static int DoTiggerCheckResult(TriggerNode *trigger, u_int32_t triggerIndex)
     return 0;
 }
 
+static int ExecuteTiggerImmediately(TriggerNode *trigger, u_int32_t triggerIndex)
+{
+    return ExecuteTrigger(&g_triggerWorkSpace, trigger, DoCmdExecute);
+}
+
 void ExecuteQueueWork(u_int32_t maxCount)
 {
     u_int32_t executeCount = 0;
@@ -59,6 +64,8 @@ void ExecuteQueueWork(u_int32_t maxCount)
     while (trigger != NULL) {
         ExecuteTrigger(&g_triggerWorkSpace, trigger, DoCmdExecute);
         TRIGGER_NODE_CLEAR_QUEUE_FLAG(trigger);
+        CheckAndExecuteTrigger(&g_triggerWorkSpace, trigger->name, ExecuteTiggerImmediately);
+
         executeCount++;
         if (executeCount > maxCount) {
             break;

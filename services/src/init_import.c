@@ -17,92 +17,26 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "cJSON.h"
+#include "init_cmds.h"
 #include "init_log.h"
-#ifndef OHOS_LITE
-#include "init_param.h"
-#endif
 #include "init_read_cfg.h"
 #include "securec.h"
 
 #define IMPORT_ARR_NAME_IN_JSON "import"
 
-// Only OHOS l2 support parameter.
 #ifndef OHOS_LITE
-// Limit max length of parameter value to 96 
-#define IMPORT_PARAM_VALUE_LEN 96 
-// Limit max length of parameter name to 96
-#define IMPORT_PARAM_NAME_LEN 96
-
-static int ExtractCfgFile(char **cfgFile, const char *content)
+static int ExtractCfgFile(char **cfgFile, char *content)
 {
-    char *p = NULL;
-    size_t contentLen = strlen(content);
-    if (cfgFile == NULL || content == NULL) {
+    if ((!cfgFile) || (!content)) {
         return -1;
     }
-    // without "$", which means filename without parameter.
-    if ((p = strchr(content, '$')) == NULL) {
-        *cfgFile = malloc(contentLen + 1);
-        if (*cfgFile == NULL) {
-            INIT_LOGW("Failed to allocate memory to import cfg file. err = %d\n", errno);
-            return -1;
-        }
-        if (strncpy_s(*cfgFile, contentLen + 1, content, contentLen) != EOK) {
-            INIT_LOGW("Failed to copy cfg file name.\n");
-            return -1;
-        }
-        return 0;
-    }
-    size_t cfgFileLen = strlen(content) + IMPORT_PARAM_VALUE_LEN + 1;
+    size_t cfgFileLen = strlen(content) + MAX_PARAM_VALUE_LEN + 1;
     if ((*cfgFile = malloc(cfgFileLen)) == NULL) {
         INIT_LOGW("Failed to allocate memory to import cfg file. err = %d\n", errno);
         return -1;
     }
-
-    // Copy head of import item.
-    if (strncpy_s(*cfgFile, cfgFileLen, content, p - content) != EOK) {
-        INIT_LOGE("Failed to copy head of cfg file name\n");
-        return -1;
-    }
-    // Skip '$'
-    p++;
-    if (*p == '{') {
-        p++;
-        char *right = strchr(p, '}');
-        if (right == NULL) {
-            INIT_LOGE("Invalid cfg file name, miss '}'.\n");
-            return -1;
-        }
-        if (right - p > IMPORT_PARAM_NAME_LEN) {
-            INIT_LOGE("Parameter name longer than %d\n", IMPORT_PARAM_NAME_LEN);
-            return -1;
-        }
-        char paramName[IMPORT_PARAM_NAME_LEN] = {};
-        char paramValue[IMPORT_PARAM_VALUE_LEN] = {};
-        unsigned int valueLen = IMPORT_PARAM_VALUE_LEN;
-        if (strncpy_s(paramName, IMPORT_PARAM_NAME_LEN - 1, p, right - p) != EOK) {
-            INIT_LOGE("Failed to copy parameter name\n");
-            return -1;
-        }
-        if (SystemReadParam(paramName, paramValue, &valueLen) < 0) {
-            INIT_LOGE("Failed to read parameter \" %s \"\n", paramName);
-            return -1;
-        }
-        if (strncat_s(*cfgFile, cfgFileLen, paramValue, IMPORT_PARAM_VALUE_LEN) != EOK) {
-            INIT_LOGE("Failed to concatenate parameter\n");
-            return -1;
-        }
-        // OK, parameter was handled, now concatenate rest of import content.
-        // Skip '}'
-        right++;
-        if (strncat_s(*cfgFile, cfgFileLen, right, contentLen - (right - content)) != EOK) {
-            INIT_LOGE("Failed to concatenate rest of import content\n");
-            return -1;
-        }
-        return 0;
-    }
-    INIT_LOGE("Cannot extract import config file from \" %s \"\n", content);
-    return -1;
+    int ret = GetParamValue(content, *cfgFile, cfgFileLen);
+    return ret;
 }
 #endif
 
