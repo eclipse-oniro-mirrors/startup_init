@@ -485,28 +485,28 @@ static void DoInsmod(const char *cmdContent)
 
     size_t count = strlen(cmdContent);
     if (count > OPTIONS_SIZE) {
-        INIT_LOGE("options too long, maybe lost some of options\n");
+        INIT_LOGE("DoInsmod options too long, maybe lost some of options\n");
     }
     line = (char *)malloc(count + 1);
     if (line == NULL) {
-        INIT_LOGE("Allocate memory failed.\n");
+        INIT_LOGE("DoInsmod allocate memory failed.\n");
         return;
     }
 
     if (memcpy_s(line, count, cmdContent, count) != EOK) {
-        INIT_LOGE("memcpy failed\n");
+        INIT_LOGE("DoInsmod memcpy failed\n");
         free(line);
         return;
     }
     line[count] = '\0';
     do {
         if ((p = strtok_r(line, " ", &restPtr)) == NULL) {
-            INIT_LOGE("debug, cannot get filename\n");
+            INIT_LOGE("DoInsmod cannot get filename.\n");
             free(line);
             return;
         }
         fileName = p;
-        INIT_LOGE("debug, fileName is [%s]\n", fileName);
+        INIT_LOGI("DoInsmod fileName is [%s].\n", fileName);
         if ((p = strtok_r(NULL, " ", &restPtr)) == NULL) {
             break;
         }
