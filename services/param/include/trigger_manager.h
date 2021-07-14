@@ -23,6 +23,7 @@
 #include "cJSON.h"
 #include "init_log.h"
 #include "param_manager.h"
+#include "trigger_checker.h"
 #include "securec.h"
 
 #ifdef __cplusplus
@@ -35,10 +36,6 @@ extern "C" {
 #define TRIGGER_ARR_NAME_IN_JSON "jobs"
 #define CMDS_ARR_NAME_IN_JSON "cmds"
 
-#define MAX_TRIGGER_CMD_NAME_LEN 32
-#define MAX_TRIGGER_NAME_LEN 64
-#define MAX_TRIGGER_TYPE_LEN 16
-
 #define TRIGGER_NODE_IN_QUEUE(trigger) \
     (atomic_load_explicit(&(trigger)->serial, memory_order_relaxed) & 0x01)
 #define TRIGGER_NODE_SET_QUEUE_FLAG(trigger) \
@@ -48,7 +45,7 @@ extern "C" {
 
 typedef enum {
     TRIGGER_BOOT = 0,
-    TRIGGER_PROPERTY,
+    TRIGGER_PARAM,
     TRIGGER_UNKNOW,
     TRIGGER_MAX
 }TriggerType;
@@ -60,7 +57,7 @@ typedef struct CommandNode {
     char content[0];
 } CommandNode;
 
-typedef struct {
+typedef struct tagTriggerNode {
     atomic_uint_least32_t serial;
     atomic_uint_least32_t next;
     atomic_uint_least32_t firstCmd;
@@ -100,8 +97,8 @@ typedef struct TriggerWorkSpace {
 int InitTriggerWorkSpace(TriggerWorkSpace *workSpace);
 int ParseTrigger(TriggerWorkSpace *workSpace, cJSON *triggerItem);
 
-typedef int (*TRIGGER_MATCH)(TriggerNode *trigger, void *content, u_int32_t contentSize);
-typedef int (*PARAM_CHECK_DONE) (TriggerNode *trigger, u_int32_t index);
+typedef int (*TRIGGER_MATCH)(LogicCalculator *calculator, TriggerNode *trigger, const char *content, u_int32_t contentSize);
+typedef int (*PARAM_CHECK_DONE)(TriggerNode *trigger, u_int32_t index);
 typedef int (*CMD_EXECUTE) (TriggerNode *trigger, const char *cmdName, const char *command);
 
 TriggerNode *GetTriggerByName(TriggerWorkSpace *workSpace, const char *triggerName, u_int32_t *triggerIndex);
@@ -110,10 +107,14 @@ int CheckTrigger(TriggerWorkSpace *workSpace,
     int type, void *content, u_int32_t contentSize, PARAM_CHECK_DONE triggerExecuter);
 int CheckParamTrigger(TriggerWorkSpace *workSpace,
     const char *content, u_int32_t contentSize, PARAM_CHECK_DONE triggerExecuter);
+int CheckAndExecuteTrigger(TriggerWorkSpace *workSpace, const char *content, PARAM_CHECK_DONE triggerExecuter);
 
 TriggerNode *ExecuteQueuePop(TriggerWorkSpace *workSpace);
 int ExecuteQueuePush(TriggerWorkSpace *workSpace, TriggerNode *trigger, u_int32_t index);
 int ExecuteQueueSize(TriggerWorkSpace *workSpace);
+
+u_int32_t AddTrigger(TriggerWorkSpace *workSpace, int type, const char *name, const char *condition);
+u_int32_t AddCommand(TriggerWorkSpace *workSpace, TriggerNode *trigger, const char *cmdName, const char *content);
 
 TriggerWorkSpace *GetTriggerWorkSpace();
 

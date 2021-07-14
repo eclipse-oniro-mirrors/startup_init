@@ -27,11 +27,30 @@ extern "C" {
 #define MAX_CMD_CNT_IN_ONE_JOB 200
 #define MAX_COPY_BUF_SIZE 256
 #define DEFAULT_COPY_ARGS_CNT 2
+
+#ifndef OHOS_LITE
+// Limit max length of parameter value to 96
+#define MAX_PARAM_VALUE_LEN 96
+// Limit max length of parameter name to 96
+#define MAX_PARAM_NAME_LEN 96
+#endif
+
 // one cmd line
 typedef struct {
     char name[MAX_CMD_NAME_LEN + 1];
     char cmdContent[MAX_CMD_CONTENT_LEN + 1];
 } CmdLine;
+
+struct CmdArgs {
+    int argc;
+    char **argv;
+};
+
+#ifndef OHOS_LITE
+int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen);
+#endif
+struct CmdArgs* GetCmd(const char *cmdContent, const char *delim);
+void FreeCmd(struct CmdArgs **cmd);
 
 void ParseCmdLine(const char* cmdStr, CmdLine* resCmd);
 void DoCmd(const CmdLine* curCmd);

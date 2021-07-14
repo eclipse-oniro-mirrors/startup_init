@@ -90,7 +90,7 @@ static CommandNode *GetCmdByIndex(TriggerWorkSpace *workSpace, TriggerNode *trig
     return (CommandNode *)(workSpace->area->data + index);
 }
 
-static u_int32_t AddCommand(TriggerWorkSpace *workSpace, TriggerNode *trigger, const char *cmdName, const char *content)
+u_int32_t AddCommand(TriggerWorkSpace *workSpace, TriggerNode *trigger, const char *cmdName, const char *content)
 {
     PARAM_CHECK(workSpace != NULL && trigger != NULL, return 0, "list is null");
     u_int32_t size = sizeof(CommandNode) + strlen(cmdName) + 1;
@@ -141,7 +141,7 @@ static TriggerNode *GetTriggerByIndex(TriggerWorkSpace *workSpace, u_int32_t ind
     return (TriggerNode *)(workSpace->area->data + index);
 }
 
-static u_int32_t AddTrigger(TriggerWorkSpace *workSpace, int type, const char *name, const char *condition)
+u_int32_t AddTrigger(TriggerWorkSpace *workSpace, int type, const char *name, const char *condition)
 {
     PARAM_CHECK(workSpace != NULL && name != NULL, return 0, "list is null");
     const char *tmpCond = condition;
@@ -161,14 +161,8 @@ static u_int32_t AddTrigger(TriggerWorkSpace *workSpace, int type, const char *n
     node->name[strlen(name)] = '\0';
 
     if (tmpCond != NULL) {
-        if (type == TRIGGER_PROPERTY) {
-            ret = ConvertInfixToPrefix(tmpCond, node->condition, conditionSize);
-            PARAM_CHECK(ret == 0, return 0, "Failed to memcpy_s for trigger");
-        } else {
-            ret = memcpy_s(node->condition, strlen(tmpCond) + 1, tmpCond, strlen(tmpCond));
-            PARAM_CHECK(ret == 0, return 0, "Failed to memcpy_s for trigger");
-            node->condition[strlen(tmpCond)] = '\0';
-        }
+        ret = ConvertInfixToPrefix(tmpCond, node->condition, conditionSize);
+        PARAM_CHECK(ret == 0, return 0, "Failed to memcpy_s for trigger");
     } else {
         node->condition[0] = '\0';
     }
@@ -197,18 +191,18 @@ static u_int32_t AddTrigger(TriggerWorkSpace *workSpace, int type, const char *n
 static int GetTriggerIndex(const char *type)
 {
     if (strncmp("param:", type, strlen("param:")) == 0) {
-        return TRIGGER_PROPERTY;
-    } else {
-        return TRIGGER_BOOT;
+        return TRIGGER_PARAM;
     }
-}
-
-static int CheckBootTriggerMatch(TriggerNode *trigger, void *content, u_int32_t contentSize)
-{
-    if (strncmp(trigger->name, (char *)content, contentSize) == 0) {
-        return 1;
+    static const char *triggerType[] = {
+        "pre-init", "boot", "early-init", "init", "early-init", "late-init", "post-init",
+        "early-fs", "post-fs", "late-fs", "post-fs-data"
+    };
+    for (size_t i = 0; i < sizeof(triggerType) / sizeof(char*); i++) {
+        if (strcmp(triggerType[i], type) == 0) {
+            return TRIGGER_BOOT;
+        }
     }
-    return 0;
+    return TRIGGER_UNKNOW;
 }
 
 int ParseTrigger(TriggerWorkSpace *workSpace, cJSON *triggerItem)
@@ -306,28 +300,66 @@ int ExecuteQueueSize(TriggerWorkSpace *workSpace)
     return workSpace->executeQueue.endIndex - workSpace->executeQueue.startIndex;
 }
 
-int CheckTrigger(TriggerWorkSpace *workSpace,
-    int type, void *content, u_int32_t contentSize, PARAM_CHECK_DONE triggerExecuter)
+static int CheckBootTriggerMatch(LogicCalculator *calculator,
+    TriggerNode *trigger, const char *content, u_int32_t contentSize)
+{
+    if (strncmp(trigger->name, (char *)content, contentSize) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
+static int CheckParamTriggerMatch(LogicCalculator *calculator,
+    TriggerNode *trigger, const char *content, u_int32_t contentSize)
+{
+    if (calculator->inputName != NULL) { // 存在input数据时，先过滤非input的
+        if (GetMatchedSubCondition(trigger->condition, content, strlen(calculator->inputName) + 1) == NULL) {
+            return 0;
+        }
+    }
+    return ComputeCondition(calculator, trigger->condition);
+}
+
+static int CheckOtherTriggerMatch(LogicCalculator *calculator,
+    TriggerNode *trigger, const char *content, u_int32_t contentSize)
+{
+    return ComputeCondition(calculator, trigger->condition);
+}
+
+static int CheckTrigger_(TriggerWorkSpace *workSpace,
+    LogicCalculator *calculator, int type, const char *content, u_int32_t contentSize)
 {
     static TRIGGER_MATCH triggerCheckMatch[TRIGGER_MAX] = {
-        CheckBootTriggerMatch, NULL, NULL
+        CheckBootTriggerMatch, CheckParamTriggerMatch, CheckOtherTriggerMatch
     };
-    PARAM_LOGI("ExecuteTrigger check content %s", (char*)content);
-    PARAM_CHECK(workSpace != NULL, return -1, "Trigger not init");
+    PARAM_LOGI("CheckTrigger_ content %s ", content);
+    PARAM_CHECK(calculator != NULL, return -1, "Failed to check calculator");
     PARAM_CHECK(CHECK_INDEX_VALID(workSpace, type), return -1, "Invalid type %d", type);
     PARAM_CHECK((u_int32_t)type < sizeof(triggerCheckMatch) / sizeof(triggerCheckMatch[0]),
         return -1, "Failed to get check function");
-    PARAM_CHECK(triggerCheckMatch[type] != NULL, return 0, "Failed to get check function");
+    PARAM_CHECK(triggerCheckMatch[type] != NULL, return -1, "Failed to get check function");
+
     u_int32_t index = workSpace->header[type].firstTrigger;
     TriggerNode *trigger = GetTriggerByIndex(workSpace, workSpace->header[type].firstTrigger);
     while (trigger != NULL) {
-        if (triggerCheckMatch[type](trigger, content, contentSize) == 1) { // 等于1 则认为匹配
-            triggerExecuter(trigger, index);
+        if (triggerCheckMatch[type](calculator, trigger, content, contentSize) == 1) { // 等于1 则认为匹配
+            calculator->triggerExecuter(trigger, index);
         }
         index = trigger->next;
         trigger = GetTriggerByIndex(workSpace, trigger->next);
     }
     return 0;
+}
+
+int CheckTrigger(TriggerWorkSpace *workSpace,
+    int type, void *content, u_int32_t contentSize, PARAM_CHECK_DONE triggerExecuter)
+{
+    PARAM_CHECK(workSpace != NULL && content != NULL && triggerExecuter != NULL,
+        return -1, "Failed arg for trigger");
+
+    LogicCalculator calculator;
+    calculator.triggerExecuter = triggerExecuter;
+    return CheckTrigger_(workSpace, &calculator, type, (char *)content, contentSize);
 }
 
 int CheckParamTrigger(TriggerWorkSpace *workSpace,
@@ -344,18 +376,28 @@ int CheckParamTrigger(TriggerWorkSpace *workSpace,
     ret = GetValueFromContent(content, contentSize,
         strlen(calculator.inputName) + 1, calculator.inputContent, SUPPORT_DATA_BUFFER_MAX);
     PARAM_CHECK(ret == 0, CalculatorFree(&calculator); return -1, "Failed parse content value");
-    PARAM_LOGI("CheckParamTrigger content %s ", content);
 
-    u_int32_t index = workSpace->header[TRIGGER_PROPERTY].firstTrigger;
-    TriggerNode *trigger = GetTriggerByIndex(workSpace, workSpace->header[TRIGGER_PROPERTY].firstTrigger);
-    while (trigger != NULL) {
-        ret = ComputeCondition(&calculator, trigger->condition);
-        if (ret == 1) {
-            triggerExecuter(trigger, index);
-        }
-        index = trigger->next;
-        trigger = GetTriggerByIndex(workSpace, trigger->next);
-    }
+    calculator.triggerExecuter = triggerExecuter;
+    CheckTrigger_(workSpace, &calculator, TRIGGER_PARAM, content, contentSize);
+    CalculatorFree(&calculator);
+    return 0;
+}
+
+int CheckAndExecuteTrigger(TriggerWorkSpace *workSpace, const char *content, PARAM_CHECK_DONE triggerExecuter)
+{
+    PARAM_CHECK(workSpace != NULL && content != NULL && triggerExecuter != NULL,
+        return -1, "Failed arg for param trigger");
+    LogicCalculator calculator;
+    CalculatorInit(&calculator, 100, sizeof(LogicData), 1);
+
+    int ret = memcpy_s(calculator.triggerContent, sizeof(calculator.triggerContent), content, strlen(content));
+    PARAM_CHECK(ret == 0, CalculatorFree(&calculator); return -1, "Failed to memcpy");
+
+    calculator.triggerExecuter = triggerExecuter;
+    calculator.inputName = NULL;
+    calculator.inputContent = NULL;
+    // 执行完成后，对第三类trigger检查，执行必须是在本阶段执行的trigger
+    CheckTrigger_(workSpace, &calculator, TRIGGER_UNKNOW, content, 0);
     CalculatorFree(&calculator);
     return 0;
 }

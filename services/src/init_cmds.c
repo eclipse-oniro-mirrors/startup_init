@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mount.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <sys/wait.h>
@@ -33,13 +34,13 @@
 #include <sys/syscall.h>
 #include "init_jobs.h"
 #include "init_log.h"
+#ifndef OHOS_LITE
+#include "init_param.h"
+#endif
 #include "init_reboot.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
 #include "securec.h"
-#ifndef OHOS_LITE
-#include "init_param.h"
-#endif
 
 #define DEFAULT_DIR_MODE 0755  // mkdir, default mode
 #define SPACES_CNT_IN_CMD_MAX 10   // mount, max number of spaces in cmdline
@@ -52,6 +53,7 @@
 #define MAX_BUFFER 256
 #define AUTHORITY_MAX_SIZE 128
 #define WAIT_MAX_COUNT 10
+#define MAX_EACH_CMD_LENGTH 30
 
 static const char *g_supportCfg[] = {
     "/etc/patch.cfg",
@@ -82,7 +84,119 @@ static const char* g_supportedCmds[] = {
     "load_persist_params ",
     "load_param ",
     "reboot ",
+    "setrlimit ",
 };
+
+#ifndef OHOS_LITE
+int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
+{
+    if ((symValue == NULL) || (paramValue == NULL) || (paramLen == 0)) {
+        return -1;
+    }
+    char tmpName[MAX_PARAM_NAME_LEN] = {0};
+    char tmpValue[MAX_PARAM_VALUE_LEN] = {0};
+    unsigned int tmpLen = 0;
+    char *p = NULL;
+    char *tmpptr = NULL;
+    p = strchr(symValue, '$');
+    if (p == NULL) { // not has '$' copy the original string
+        INIT_CHECK_ONLY_RETURN(strncpy_s(paramValue, paramLen, symValue,
+        paramLen - 1) == EOK, return -1);
+        return 0;
+    }
+    tmpLen = p - symValue;
+    if (tmpLen > 0) { // copy '$' front string
+        INIT_CHECK_ONLY_RETURN(strncpy_s(paramValue, paramLen, symValue, tmpLen) == EOK, return -1);
+    }
+    p++;
+    if (*p == '{') {
+        p++;
+        char *right = strchr(p, '}');
+        if (right == NULL) {
+            INIT_LOGE("Invalid cfg file name, miss '}'.\n");
+            return -1;
+        }
+        tmpLen = right - p;
+        if (tmpLen > MAX_PARAM_NAME_LEN) {
+            INIT_LOGE("Parameter name longer than %d\n", MAX_PARAM_NAME_LEN);
+            return -1;
+        }
+        INIT_CHECK_ONLY_RETURN(strncpy_s(tmpName, MAX_PARAM_NAME_LEN, p, tmpLen) == EOK, return -1);
+        int ret = SystemReadParam(tmpName, tmpValue, &tmpLen); // get param
+        if (ret != 0) {
+            INIT_LOGE("Failed to read parameter \" %s \"\n", tmpName);
+            return -1;
+        }
+        // change param to new string
+        INIT_CHECK_ONLY_RETURN(strncat_s(paramValue, paramLen, tmpValue, MAX_PARAM_VALUE_LEN) == EOK, return -1);
+        tmpptr = right + 1;
+        tmpLen = paramLen - (tmpptr - symValue);
+        if (*tmpptr != '\0') { // copy last string
+            INIT_CHECK_ONLY_RETURN(strncat_s(paramValue, paramLen, tmpptr, tmpLen) == EOK, return -1);
+        }
+        INIT_LOGI("paramValue is %s \n", paramValue);
+        return 0;
+    } else {
+        INIT_LOGE("Invalid cfg file name, miss '{'.\n");
+        return -1;
+    }
+}
+#endif
+
+struct CmdArgs* GetCmd(const char *cmdContent, const char *delim)
+{
+    struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
+    INIT_CHECK_ONLY_RETURN(ctx != NULL, return NULL);
+
+    ctx->argv = (char**)malloc(sizeof(char*) * MAX_CMD_NAME_LEN);
+    INIT_CHECK_ONLY_RETURN(ctx->argv != NULL, FreeCmd(&ctx); return NULL);
+
+    char tmpCmd[MAX_BUFFER];
+    INIT_CHECK_ONLY_RETURN(strncpy_s(tmpCmd, strlen(cmdContent) + 1, cmdContent, strlen(cmdContent)) == EOK,
+        FreeCmd(&ctx);
+        return NULL);
+    tmpCmd[strlen(cmdContent)] = '\0';
+
+    char *buffer = NULL;
+    char *token = strtok_r(tmpCmd, delim, &buffer);
+    ctx->argc = 0;
+    while (token != NULL) {
+#ifndef OHOS_LITE
+        ctx->argv[ctx->argc] = calloc(sizeof(char *), MAX_EACH_CMD_LENGTH + MAX_PARAM_VALUE_LEN);
+        INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
+        INIT_CHECK_ONLY_RETURN(GetParamValue(token, ctx->argv[ctx->argc], MAX_EACH_CMD_LENGTH + MAX_PARAM_VALUE_LEN) == 0,
+            FreeCmd(&ctx);
+            return NULL);
+#else
+        ctx->argv[ctx->argc] = calloc(sizeof(char *), MAX_EACH_CMD_LENGTH);
+        INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
+        INIT_CHECK_ONLY_RETURN(strncpy_s(ctx->argv[ctx->argc], strlen(cmdContent) + 1, token, strlen(token)) == EOK,
+            FreeCmd(&ctx);
+            return NULL);
+#endif
+        if (ctx->argc > MAX_CMD_NAME_LEN - 1) {
+            INIT_LOGE("GetCmd failed, max cmd number is 10.\n");
+            FreeCmd(&ctx);
+            return NULL;
+        }
+        token = strtok_r(NULL, delim, &buffer);
+        ctx->argc += 1;
+    }
+    ctx->argv[ctx->argc] = NULL;
+    return ctx;
+}
+
+void FreeCmd(struct CmdArgs **cmd)
+{
+    struct CmdArgs *tmpCmd = *cmd;
+    INIT_CHECK_ONLY_RETURN(tmpCmd != NULL, return);
+    for (int i = 0; i < tmpCmd->argc; ++i) {
+        INIT_CHECK_ONLY_RETURN(tmpCmd->argv[i] == NULL, free(tmpCmd->argv[i]));
+    }
+    INIT_CHECK_ONLY_RETURN(tmpCmd->argv == NULL, free(tmpCmd->argv));
+    free(tmpCmd);
+    return;
+}
 
 void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
 {
@@ -217,20 +331,9 @@ static void DoMkDir(const char* cmdContent)
     }
 
     mode_t mode = DEFAULT_DIR_MODE;
-    for (size_t i = 0; i < strlen(ctx->argv[0]); ++i) {
-        if (ctx->argv[0][i] == '/') {
-            ctx->argv[0][i] = '\0';
-            if (access(ctx->argv[0], 0) != 0 ) {
-                mkdir(ctx->argv[0], mode);
-            }
-            ctx->argv[0][i]='/';
-        }
-    }
-    if (access(ctx->argv[0], 0) != 0) {
-        if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
-            INIT_LOGE("DoMkDir %s failed, err %d.\n", ctx->argv[0], errno);
-            goto out;
-        }
+    if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
+        INIT_LOGE("DoMkDir, failed for %s, err %d.\n", cmdContent, errno);
+        goto out;
     }
 
     if (ctx->argc > 1) {
@@ -653,6 +756,45 @@ out:
     return;
 }
 
+static void DoSetrlimit(const char *cmdContent)
+{
+    char *resource[] = {
+        "RLIMIT_CPU", "RLIMIT_FSIZE", "RLIMIT_DATA", "RLIMIT_STACK", "RLIMIT_CORE", "RLIMIT_RSS",
+        "RLIMIT_NPROC", "RLIMIT_NOFILE", "RLIMIT_MEMLOCK", "RLIMIT_AS", "RLIMIT_LOCKS", "RLIMIT_SIGPENDING",
+        "RLIMIT_MSGQUEUE", "RLIMIT_NICE", "RLIMIT_RTPRIO", "RLIMIT_RTTIME", "RLIM_NLIMITS"
+    };
+    // format: setrlimit resource curValue maxValue
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ");
+    int setrlimitCmdNumber = 3;
+    int rlimMaxPos = 2;
+    if (ctx == NULL || ctx->argv == NULL || ctx->argc != setrlimitCmdNumber) {
+        INIT_LOGE("DoSetrlimit: invalid arguments\n");
+        goto out;
+    }
+
+    struct rlimit limit;
+    limit.rlim_cur = atoi(ctx->argv[1]);
+    limit.rlim_max = atoi(ctx->argv[rlimMaxPos]);
+    int rcs = -1;
+    for (unsigned int i = 0 ; i < sizeof(resource) / sizeof(char*); ++i) {
+        if (strcmp(ctx->argv[0], resource[i]) == 0) {
+            rcs = (int)i;
+        }
+    }
+    if (rcs == -1) {
+        INIT_LOGE("DoSetrlimit failed, resouces :%s not support.\n", ctx->argv[0]);
+        goto out;
+    }
+    int ret = setrlimit(rcs, &limit);
+    if (ret) {
+        INIT_LOGE("DoSetrlimit failed : %d\n", errno);
+        goto out;
+    }
+out:
+    FreeCmd(&ctx);
+    return;
+}
+
 static void DoRm(const char *cmdContent)
 {
     // format: rm /xxx/xxx/xxx
@@ -675,7 +817,8 @@ static void DoExport(const char *cmdContent)
 {
     // format: export xxx /xxx/xxx/xxx
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
-    if (ctx == NULL || ctx->argv == NULL || ctx->argc != 2) {
+    int exportCmdNumber = 2;
+    if (ctx == NULL || ctx->argv == NULL || ctx->argc != exportCmdNumber) {
         INIT_LOGE("DoExport: invalid arguments\n");
         goto out;
     }
@@ -852,6 +995,8 @@ void DoCmdByName(const char *name, const char *cmdContent)
         DoRm(cmdContent);
     } else if (strncmp(name, "export ", strlen("export ")) == 0) {
         DoExport(cmdContent);
+    } else if (strncmp(name, "setrlimit ", strlen("setrlimit ")) == 0) {
+        DoSetrlimit(cmdContent);
     } else if (strncmp(name, "exec ", strlen("exec ")) == 0) {
         DoExec(cmdContent);
 #ifndef __LITEOS__

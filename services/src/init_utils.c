@@ -21,6 +21,7 @@
 #include <time.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -29,7 +30,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "init_cmds.h"
 #include "init_log.h"
 #include "init_utils.h"
 #include "securec.h"
@@ -41,72 +41,32 @@
 #else
 #define LOG_FILE_NAME "/data/startup_log.txt"
 #endif
-#define MAX_BUFFER 256
-#define MAX_EACH_CMD_LENGTH 30
+
 #define MAX_JSON_FILE_LEN 102400    // max init.cfg size 100KB
 #define CONVERT_MICROSEC_TO_SEC(x) ((x) / 1000 / 1000.0)
 
-struct CmdArgs* GetCmd(const char *cmdContent, const char *delim)
-{
-    struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
-    INIT_CHECK_ONLY_RETURN(ctx != NULL, return NULL);
-
-    ctx->argv = (char**)malloc(sizeof(char*) * MAX_CMD_NAME_LEN);
-    INIT_CHECK_ONLY_RETURN(ctx->argv != NULL, FreeCmd(&ctx); return NULL);
-
-    char tmpCmd[MAX_BUFFER];
-    INIT_CHECK_ONLY_RETURN(strncpy_s(tmpCmd, strlen(cmdContent) + 1, cmdContent, strlen(cmdContent)) == EOK,
-        FreeCmd(&ctx);
-        return NULL);
-    tmpCmd[strlen(cmdContent)] = '\0';
-
-    char *buffer = NULL;
-    char *token = strtok_r(tmpCmd, delim, &buffer);
-    ctx->argc = 0;
-    while (token != NULL) {
-        ctx->argv[ctx->argc] = calloc(sizeof(char *), MAX_EACH_CMD_LENGTH);
-        INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
-
-        INIT_CHECK_ONLY_RETURN(strncpy_s(ctx->argv[ctx->argc], strlen(cmdContent) + 1, token, strlen(token)) == EOK,
-            FreeCmd(&ctx);
-            return NULL);
-        if (ctx->argc > MAX_CMD_NAME_LEN - 1) {
-            INIT_LOGE("GetCmd failed, max cmd number is 10.\n");
-            FreeCmd(&ctx);
-            return NULL;
-        }
-        token = strtok_r(NULL, delim, &buffer);
-        ctx->argc += 1;
-    }
-    ctx->argv[ctx->argc] = NULL;
-    return ctx;
-}
-
-void FreeCmd(struct CmdArgs **cmd)
-{
-    struct CmdArgs *tmpCmd = *cmd;
-    INIT_CHECK_ONLY_RETURN(tmpCmd != NULL, return);
-    for (int i = 0; i < tmpCmd->argc; ++i) {
-        INIT_CHECK_ONLY_RETURN(tmpCmd->argv[i] == NULL, free(tmpCmd->argv[i]));
-    }
-    INIT_CHECK_ONLY_RETURN(tmpCmd->argv == NULL, free(tmpCmd->argv));
-    free(tmpCmd);
-    return;
-}
-
 int DecodeUid(const char *name)
 {
-    if (isalpha(name[0])) {
+    bool digitFlag = true;
+    for (unsigned int i = 0; i < strlen(name); ++i) {
+        if (isalpha(name[i])) {
+            digitFlag = false;
+            break;
+        }
+    }
+    if (digitFlag) {
+        errno = 0;
+        uid_t result = strtoul(name, 0, 10);
+        if (errno != 0) {
+            return -1;
+        }
+        return result;
+    } else {
         struct passwd *pwd = getpwnam(name);
         if (!pwd) {
             return -1;
         }
         return pwd->pw_uid;
-    } else if (isdigit(name[0])) {
-        uid_t result = strtoul(name, 0, 10);
-        return result;
-    } else {
-        return -1;
     }
 }
 

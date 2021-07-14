@@ -16,7 +16,7 @@
 #include "trigger_checker.h"
 #include <ctype.h>
 #include "trigger_manager.h"
-#include "param_service.h"
+#include "init_param.h"
 
 #define LABEL "Trigger"
 // 申请整块能存作为计算的节点
@@ -43,7 +43,8 @@ int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, in
     calculator->inputContent = calculator->data + dataSize;
     dataSize += SUPPORT_DATA_BUFFER_MAX;
     calculator->readContent = calculator->data + dataSize;
-    return 0;
+    return memset_s(calculator->triggerContent,
+        sizeof(calculator->triggerContent), 0, sizeof(calculator->triggerContent));
 }
 
 void CalculatorFree(LogicCalculator *calculator)
@@ -149,27 +150,35 @@ static int ComputeSubCondition(LogicCalculator *calculator, LogicData *data, con
         return LOGIC_DATA_TEST_FLAG(data, LOGIC_DATA_FLAGS_TRUE);
     }
     // 解析条件
-    int ret = GetValueFromContent(condition + data->startIndex,
-        data->endIndex - data->startIndex, 0, calculator->conditionName, SUPPORT_DATA_BUFFER_MAX);
-    PARAM_CHECK(ret == 0, return -1, "Failed parse content name");
-    ret = GetValueFromContent(condition + data->startIndex, data->endIndex - data->startIndex,
-        strlen(calculator->conditionName) + 1, calculator->conditionContent, SUPPORT_DATA_BUFFER_MAX);
-    PARAM_CHECK(ret == 0, return -1, "Failed parse content value");
-    // check name
-    if (strcmp(calculator->conditionName, calculator->inputName) == 0) {
-        if (strcmp(calculator->conditionContent, "*") == 0) {
+    char *subStr = strstr(condition + data->startIndex, "=");
+    if (subStr != NULL && ((u_int32_t)(subStr - condition) > data->endIndex)) {
+        if (strncmp(condition + data->startIndex, calculator->triggerContent, strlen(calculator->triggerContent)) == 0) {
             return 1;
         }
-        if (strcmp(calculator->conditionContent, calculator->inputContent) == 0) {
-            return 1;
+    } else {
+        int ret = GetValueFromContent(condition + data->startIndex,
+            data->endIndex - data->startIndex, 0, calculator->conditionName, SUPPORT_DATA_BUFFER_MAX);
+        PARAM_CHECK(ret == 0, return -1, "Failed parse content name");
+        ret = GetValueFromContent(condition + data->startIndex, data->endIndex - data->startIndex,
+            strlen(calculator->conditionName) + 1, calculator->conditionContent, SUPPORT_DATA_BUFFER_MAX);
+        PARAM_CHECK(ret == 0, return -1, "Failed parse content value");
+        // check name
+        if (calculator->inputName && strcmp(calculator->conditionName, calculator->inputName) == 0) {
+            if (strcmp(calculator->conditionContent, "*") == 0) {
+                return 1;
+            }
+            if (strcmp(calculator->conditionContent, calculator->inputContent) == 0) {
+                return 1;
+            }
+        } else {
+            u_int32_t len = SUPPORT_DATA_BUFFER_MAX;
+            ret = SystemReadParam(calculator->conditionName, calculator->readContent, &len);
+            if (ret == 0 && (strcmp(calculator->conditionContent, "*") == 0 ||
+                    strcmp(calculator->conditionContent, calculator->readContent) == 0)) {
+                return 1;
+            }
         }
-    }/* else {
-        u_int32_t len = SUPPORT_DATA_BUFFER_MAX;
-        ret = SystemReadParam(calculator->conditionName, calculator->readContent, &len);
-        if (ret == 0 && strcmp(calculator->conditionContent, calculator->readContent) == 0) {
-            return 1;
-        }
-    }*/
+    }
     return 0;
 }
 
@@ -289,4 +298,15 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLe
     prefix[prefixIndex] = '\0';
     CalculatorFree(&calculator);
     return 0;
+}
+
+char *GetMatchedSubCondition(const char *condition, const char *input, int length)
+{
+    const char *p = condition;
+    for(;(p = strchr(p, *input)) != 0; p++) {
+        if(strncmp(p, input, length) == 0) {
+            return (char*)p;
+        }
+    }
+    return NULL;
 }
