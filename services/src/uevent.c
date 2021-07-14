@@ -378,7 +378,35 @@ static char **ParsePlatformBlockDevice(const struct Uevent *uevent)
     return links;
 }
 
-static void MakeDevice(const char *devpath, const char *path, int block, int major, int minor)
+struct DevPermissionMapper {
+    char *devName;
+    mode_t devMode;
+    uid_t uid;
+    gid_t gid;
+};
+
+struct DevPermissionMapper g_devMapper[] = {
+    {"/dev/binder", 0666, 0, 0}
+};
+
+static void AdjustDevicePermission(const char *devPath)
+{
+    for (unsigned int i = 0; i < sizeof(g_devMapper) / sizeof(struct DevPermissionMapper); ++i) {
+        if (strcmp(devPath, g_devMapper[i].devName) == 0) {
+            if (chmod(g_devMapper[i].devName, g_devMapper[i].devMode) != 0) {
+                INIT_LOGE("AdjustDevicePermission, failed for %s, err %d.\n", g_devMapper[i].devName, errno);
+                return;
+            }
+            if (chown(g_devMapper[i].devName, g_devMapper[i].uid, g_devMapper[i].gid) != 0) {
+                INIT_LOGE("AdjustDevicePermission, failed for %s, err %d.\n", g_devMapper[i].devName, errno);
+                return;
+            }
+            INIT_LOGI("AdjustDevicePermission :%s success\n", g_devMapper[i].devName);
+        }
+    }
+}
+
+static void MakeDevice(const char *devPath, const char *path, int block, int major, int minor)
 {
     /* Only for super user */
     gid_t gid = 0;
@@ -387,11 +415,12 @@ static void MakeDevice(const char *devpath, const char *path, int block, int maj
     mode |= (block ? S_IFBLK : S_IFCHR);
     dev = makedev(major, minor);
     setegid(gid);
-    if (mknod(devpath, mode, dev) != 0) {
+    if (mknod(devPath, mode, dev) != 0) {
         if (errno != EEXIST) {
             INIT_LOGE("Make device node[%d, %d] failed. %d\n", major, minor, errno);
         }
     }
+    AdjustDevicePermission(devPath);
 }
 
 int MkdirRecursive(const char *pathName, mode_t mode)
