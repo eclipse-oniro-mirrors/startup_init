@@ -46,7 +46,7 @@ static bool RBMiscWriteUpdaterMessage(const char *path, struct RBMiscUpdateMessa
 
     size_t ret = fwrite(boot, sizeof(struct RBMiscUpdateMessage), 1, fp);
     if (ret < 0) {
-        INIT_LOGE("write to misc failed\n");
+        INIT_LOGE("write to misc failed");
         fclose(fp);
         return false;
     }
@@ -80,7 +80,7 @@ static int GetMountStatusForMountPoint(const char *mountPoint)
     const char *mountFile = "/proc/mounts";
     FILE *fp = fopen(mountFile, "r");
     if (fp == NULL) {
-        INIT_LOGE("DoReboot %s can't open.\n", mountPoint);
+        INIT_LOGE("DoReboot %s can't open.", mountPoint);
         return 1;
     }
 
@@ -103,19 +103,19 @@ static int GetMountStatusForMountPoint(const char *mountPoint)
 void DoReboot(const char *value)
 {
     if (value == NULL) {
-        INIT_LOGE("DoReboot value = NULL\n");
+        INIT_LOGE("DoReboot value = NULL");
         return;
     }
-    INIT_LOGI("DoReboot value = %s\n", value);
+    INIT_LOGI("DoReboot value = %s", value);
 
     if (strlen(value) > MAX_VALUE_LENGTH) {
-        INIT_LOGE("DoReboot reboot value error, value = %s.\n", value);
+        INIT_LOGE("DoReboot reboot value error, value = %s.", value);
         return;
     }
 
     const char *valueData = NULL;
     if (strncmp(value, "reboot,", strlen("reboot,")) != 0) {
-        INIT_LOGE("DoReboot reboot value = %s, must started with reboot ,error.\n", value);
+        INIT_LOGE("DoReboot reboot value = %s, must started with reboot ,error.", value);
         return;
     } else {
         valueData = value + strlen("reboot,");
@@ -124,26 +124,26 @@ void DoReboot(const char *value)
         && strncmp(valueData, "updater:", strlen("updater:")) != 0
         && strncmp(valueData, "updater", strlen("updater")) != 0
         && strncmp(valueData, "NoArgument", strlen("NoArgument")) != 0) {
-        INIT_LOGE("DoReboot value = %s, parameters error.\n", value);
+        INIT_LOGE("DoReboot value = %s, parameters error.", value);
         return;
     }
 
     StopAllServicesBeforeReboot();
     if (GetMountStatusForMountPoint("/vendor")) {
         if (umount("/vendor") != 0) {
-            INIT_LOGE("DoReboot umount vendor failed! errno = %d.\n", errno);
+            INIT_LOGE("DoReboot umount vendor failed! errno = %d.", errno);
         }
     }
     if (GetMountStatusForMountPoint("/data")) {
         if (umount("/data") != 0) {
-            INIT_LOGE("DoReboot umount data failed! errno = %d.\n", errno);
+            INIT_LOGE("DoReboot umount data failed! errno = %d.", errno);
         }
     }
     // "shutdown"
     if (strncmp(valueData, "shutdown", strlen("shutdown")) == 0) {
         int ret = reboot(RB_POWER_OFF);
         if (ret != 0) {
-            INIT_LOGE("DoReboot reboot(RB_POWER_OFF) failed! syscall ret %d, err %d.\n", ret, errno);
+            INIT_LOGE("DoReboot reboot(RB_POWER_OFF) failed! syscall ret %d, err %d.", ret, errno);
         }
         return;
     }
@@ -152,7 +152,7 @@ void DoReboot(const char *value)
     struct RBMiscUpdateMessage msg;
     bool ret = RBMiscReadUpdaterMessage(miscFile, &msg);
     if(!ret) {
-        INIT_LOGE("DoReboot RBMiscReadUpdaterMessage error.\n");
+        INIT_LOGE("DoReboot RBMiscReadUpdaterMessage error.");
         return;
     }
     const int commandSize = 12;
@@ -162,41 +162,41 @@ void DoReboot(const char *value)
     if (strlen(valueData) > strlen("updater:") && strncmp(valueData, "updater:", strlen("updater:")) == 0) {
         const char *p = valueData + strlen("updater:");
         if (snprintf(msg.update, MAX_UPDATE_SIZE, "%s", p) > MAX_UPDATE_SIZE) {
-            INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error\n");
+            INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error");
             return;
         }
         msg.update[MAX_UPDATE_SIZE - 1] = 0;
         ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
         if(true != ret) {
-            INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error\n");
+            INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error");
             return;
         }
         ret = reboot(RB_AUTOBOOT);
         if (ret != 0) {
-            INIT_LOGE("DoReboot updater: reboot(RB_AUTOBOOT) failed! syscall ret %d, err %d.\n", ret, errno);
+            INIT_LOGE("DoReboot updater: reboot(RB_AUTOBOOT) failed! syscall ret %d, err %d.", ret, errno);
         }
         return;
     }
     if (strlen(valueData) == strlen("updater") && strncmp(valueData, "updater", strlen("updater")) == 0) {
         ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
         if(true != ret) {
-            INIT_LOGE("DoReboot updater RBMiscWriteUpdaterMessage error\n");
+            INIT_LOGE("DoReboot updater RBMiscWriteUpdaterMessage error");
             return;
         }
         ret = reboot(RB_AUTOBOOT);
         if (ret != 0) {
-            INIT_LOGE("DoReboot updater reboot(RB_AUTOBOOT) failed! syscall ret %d, err %d.\n", ret, errno);
+            INIT_LOGE("DoReboot updater reboot(RB_AUTOBOOT) failed! syscall ret %d, err %d.", ret, errno);
         }
         return;
     }
     if (strlen(valueData) == strlen("NoArgument") && strncmp(valueData, "NoArgument", strlen("NoArgument")) == 0) {
         ret = reboot(RB_AUTOBOOT);
         if (ret != 0) {
-            INIT_LOGE("DoReboot updater: reboot(RB_AUTOBOOT) failed! syscall ret %d, err %d.\n", ret, errno);
+            INIT_LOGE("DoReboot updater: reboot(RB_AUTOBOOT) failed! syscall ret %d, err %d.", ret, errno);
         }
         return;
     }
-    INIT_LOGE("DoReboot value = %s, error.\n", value);
+    INIT_LOGE("DoReboot value = %s, error.", value);
     return;
 
 }

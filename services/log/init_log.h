@@ -34,23 +34,38 @@ typedef enum InitLogLevel {
     INIT_FATAL
 } InitLogLevel;
 
-#define __FILE_NAME__   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
-
 #ifndef INIT_LOG_TAG
-#define INIT_LOG_TAG "[Init]"
+#define INIT_LOG_TAG "Init"
 #endif
 
 #ifdef OHOS_LITE
-#define INIT_LOGE(format, ...) printf("%s %d:  "format, __FILE_NAME__, __LINE__, ##__VA_ARGS__)
-#define INIT_LOGW(format, ...) printf("%s %d:  "format, __FILE_NAME__, __LINE__, ##__VA_ARGS__)
-#define INIT_LOGI(format, ...) printf("%s %d:  "format, __FILE_NAME__, __LINE__, ##__VA_ARGS__)
-#define INIT_LOGD(format, ...) printf("%s %d:  "format, __FILE_NAME__, __LINE__, ##__VA_ARGS__)
+#include "hilog/log.h"
+
+#undef LOG_DOMAIN
+#define  LOG_DOMAIN    0xD000719
+
+#define INIT_LOGD(fmt, ...) InitToHiLog(INIT_LOG_TAG, LOG_DEBUG, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define INIT_LOGI(fmt, ...) InitToHiLog(INIT_LOG_TAG, LOG_INFO, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define INIT_LOGW(fmt, ...) InitToHiLog(INIT_LOG_TAG, LOG_WARN, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define INIT_LOGE(fmt, ...) InitToHiLog(INIT_LOG_TAG, LOG_ERROR, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define INIT_LOGF(fmt, ...) InitToHiLog(INIT_LOG_TAG, LOG_FATAL, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+
+#define STARTUP_LOGI(LABEL, fmt, ...) InitToHiLog(LABEL, LOG_INFO, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define STARTUP_LOGE(LABEL, fmt, ...) InitToHiLog(LABEL, LOG_ERROR, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+
+void InitToHiLog(const char *tag, LogLevel logLevel, const char *fmt, ...);
+void SetHiLogLevel(LogLevel logLevel);
+
 #else
-#define INIT_LOGD(format, ...) InitLog(INIT_LOG_TAG, INIT_DEBUG, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
-#define INIT_LOGI(format, ...) InitLog(INIT_LOG_TAG, INIT_INFO, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
-#define INIT_LOGW(format, ...) InitLog(INIT_LOG_TAG, INIT_WARN, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
-#define INIT_LOGE(format, ...) InitLog(INIT_LOG_TAG, INIT_ERROR, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
-#define INIT_LOGF(format, ...) InitLog(INIT_LOG_TAG, INIT_FATAL, (__FILE_NAME__), (__LINE__), format, ##__VA_ARGS__)
+#define __FILE_NAME__   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
+#define INIT_LOGD(fmt, ...) InitLog(INIT_LOG_TAG, INIT_DEBUG, (__FILE_NAME__), (__LINE__), fmt"\n", ##__VA_ARGS__)
+#define INIT_LOGI(fmt, ...) InitLog(INIT_LOG_TAG, INIT_INFO, (__FILE_NAME__), (__LINE__), fmt"\n", ##__VA_ARGS__)
+#define INIT_LOGW(fmt, ...) InitLog(INIT_LOG_TAG, INIT_WARN, (__FILE_NAME__), (__LINE__), fmt"\n", ##__VA_ARGS__)
+#define INIT_LOGE(fmt, ...) InitLog(INIT_LOG_TAG, INIT_ERROR, (__FILE_NAME__), (__LINE__), fmt"\n", ##__VA_ARGS__)
+#define INIT_LOGF(fmt, ...) InitLog(INIT_LOG_TAG, INIT_FATAL, (__FILE_NAME__), (__LINE__), fmt"\n", ##__VA_ARGS__)
+
+#define STARTUP_LOGI(LABEL, fmt, ...) InitLog(LABEL, INIT_INFO, (__FILE_NAME__),  (__LINE__), fmt "\n", ##__VA_ARGS__)
+#define STARTUP_LOGE(LABEL, fmt, ...) InitLog(LABEL, INIT_ERROR, (__FILE_NAME__),  (__LINE__), fmt "\n", ##__VA_ARGS__)
 
 void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int line, const char *fmt, ...);
 void SetLogLevel(InitLogLevel logLevel);
@@ -66,27 +81,6 @@ void SetLogLevel(InitLogLevel logLevel);
     if (!(ret)) {                                       \
         statement;                                      \
     }
-
-#ifdef SUPPORT_HILOG
-#include "hilog/log.h"
-
-static constexpr OHOS::HiviewDFX::HiLogLabel STARTUP_LABEL = {LOG_CORE, 0, "STARTUP"};
-
-InitLogLevel level_;
-int JudgeLevel(const InitLogLevel level) { return return; }
-
-#define STARTUP_LOG(LEVEL, LABEL, Level, fmt, ...) \
-    InitLog("[Init]", LEVEL, __FILE_NAME__,  (__LINE__), fmt, ##__VA_ARGS__); \
-    if (JudgeLevel(InitLogLevel::LEVEL)) \
-        OHOS::HiviewDFX::HiLog::Level(STARTUP_LABEL, "[%{public}s(%{public}d)] " fmt, \
-        __FILE_NAME__, __LINE__, ##__VA_ARGS__)
-#else
-#define STARTUP_LOG(LEVEL, LABEL, Level, fmt, ...) \
-    InitLog(LABEL, LEVEL, (__FILE_NAME__),  (__LINE__), fmt "\n", ##__VA_ARGS__)
-#endif
-
-#define STARTUP_LOGI(LABEL, fmt, ...) STARTUP_LOG(INIT_INFO, LABEL, Info, fmt, ##__VA_ARGS__)
-#define STARTUP_LOGE(LABEL, fmt, ...) STARTUP_LOG(INIT_ERROR, LABEL, Error, fmt, ##__VA_ARGS__)
 
 #ifdef __cplusplus
 #if __cplusplus

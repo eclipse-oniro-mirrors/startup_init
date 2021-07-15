@@ -12,14 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
 #ifdef OHOS_DEBUG
-#include <errno.h>
 #include <time.h>
 #endif // OHOS_DEBUG
 
@@ -45,10 +44,10 @@ static void PrintSysInfo()
 #ifdef OHOS_LITE
     const char* sysInfo = GetVersionId();
     if (sysInfo != NULL) {
-        INIT_LOGE("%s\n", sysInfo);
+        INIT_LOGE("%s", sysInfo);
         return;
     }
-    INIT_LOGE("main, GetVersionId failed!\n");
+    INIT_LOGE("main, GetVersionId failed!");
 #endif
 }
 
@@ -66,6 +65,12 @@ static long TimeDiffMs(struct timespec* tmBefore, struct timespec* tmAfter)
 
 int main(int argc, char * const argv[])
 {
+#ifndef OHOS_LITE
+    if(setenv("UV_THREADPOOL_SIZE", "1", 1) != 0) {
+        INIT_LOGE("set UV_THREADPOOL_SIZE error : %d.", errno);
+    }
+
+#endif
 #ifdef OHOS_DEBUG
     struct timespec tmEnter;
     if (clock_gettime(CLOCK_REALTIME, &tmEnter) != 0) {
@@ -74,7 +79,7 @@ int main(int argc, char * const argv[])
 #endif // OHOS_DEBUG
 
     if (getpid() != INIT_PROCESS_PID) {
-        INIT_LOGE("main, current process id is %d not %d, failed!\n", getpid(), INIT_PROCESS_PID);
+        INIT_LOGE("main, current process id is %d not %d, failed!", getpid(), INIT_PROCESS_PID);
         return 0;
     }
 
@@ -94,7 +99,7 @@ int main(int argc, char * const argv[])
 #ifdef OHOS_DEBUG
     struct timespec tmSysInfo;
     if (clock_gettime(CLOCK_REALTIME, &tmSysInfo) != 0) {
-        INIT_LOGE("main, after sysinfo, get time failed! err %d.\n", errno);
+        INIT_LOGE("main, after sysinfo, get time failed! err %d.", errno);
     }
 #endif // OHOS_DEBUG
 
@@ -104,7 +109,7 @@ int main(int argc, char * const argv[])
 #ifdef OHOS_DEBUG
     struct timespec tmRcs;
     if (clock_gettime(CLOCK_REALTIME, &tmRcs) != 0) {
-        INIT_LOGE("main, after rcs, get time failed! err %d.\n", errno);
+        INIT_LOGE("main, after rcs, get time failed! err %d.", errno);
     }
 #endif // OHOS_DEBUG
     // 5. read configuration file and do jobs
@@ -112,17 +117,17 @@ int main(int argc, char * const argv[])
 #ifdef OHOS_DEBUG
     struct timespec tmCfg;
     if (clock_gettime(CLOCK_REALTIME, &tmCfg) != 0) {
-        INIT_LOGE("main, get time failed! err %d.\n", errno);
+        INIT_LOGE("main, get time failed! err %d.", errno);
     }
 #endif // OHOS_DEBUG
 
     // 6. keep process alive
 #ifdef OHOS_DEBUG
-    INIT_LOGI("main, time used: sigInfo %ld ms, rcs %ld ms, cfg %ld ms.\n", \
+    INIT_LOGI("main, time used: sigInfo %ld ms, rcs %ld ms, cfg %ld ms.", \
         TimeDiffMs(&tmEnter, &tmSysInfo), TimeDiffMs(&tmSysInfo, &tmRcs), TimeDiffMs(&tmRcs, &tmCfg));
 #endif
 
-    INIT_LOGI("main, entering wait.\n");
+    INIT_LOGI("main, entering wait.");
 #ifndef OHOS_LITE
     StartParamService();
 #endif

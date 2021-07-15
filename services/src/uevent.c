@@ -149,7 +149,7 @@ void Trigger(const char *sysPath)
 static void RetriggerUevent()
 {
     if (access(g_trigger, F_OK) == 0) {
-        INIT_LOGI("Skip trigger uevent, alread done\n");
+        INIT_LOGI("Skip trigger uevent, alread done");
         return;
     }
     Trigger("/sys/class");
@@ -159,7 +159,7 @@ static void RetriggerUevent()
     if (fd >= 0) {
         close(fd);
     }
-    INIT_LOGI("Re-trigger uevent done\n");
+    INIT_LOGI("Re-trigger uevent done");
 }
 
 static void UeventSockInit()
@@ -177,7 +177,7 @@ static void UeventSockInit()
 
     int sockfd = socket(PF_NETLINK, SOCK_DGRAM | SOCK_CLOEXEC, NETLINK_KOBJECT_UEVENT);
     if (sockfd < 0) {
-        INIT_LOGE("Create socket failed. %d\n", errno);
+        INIT_LOGE("Create socket failed. %d", errno);
         return;
     }
 
@@ -185,7 +185,7 @@ static void UeventSockInit()
     setsockopt(sockfd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
 
     if (bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-        INIT_LOGE("Bind socket failed. %d\n", errno);
+        INIT_LOGE("Bind socket failed. %d", errno);
         close(sockfd);
         return;
     }
@@ -289,7 +289,7 @@ static int MakeDir(const char *path, mode_t mode)
 {
     int rc = mkdir(path, mode);
     if (rc < 0 && errno != EEXIST) {
-        INIT_LOGE("Create %s failed. %d\n", path, errno);
+        INIT_LOGE("Create %s failed. %d", path, errno);
     }
     return rc;
 }
@@ -353,7 +353,7 @@ static char **ParsePlatformBlockDevice(const struct Uevent *uevent)
         p = strdup(uevent->partitionName);
         CheckValidPartitionName(p);
         if (strcmp(uevent->partitionName, p)) {
-            INIT_LOGI("Linking partition '%s' as '%s'\n", uevent->partitionName, p);
+            INIT_LOGI("Linking partition '%s' as '%s'", uevent->partitionName, p);
         }
         if (asprintf(&links[linkNum], "%s/by-name/%s", linkPath, p) > 0) {
             linkNum++;
@@ -385,23 +385,23 @@ struct DevPermissionMapper {
     gid_t gid;
 };
 
-struct DevPermissionMapper g_devMapper[] = {
+struct DevPermissionMapper DEV_MAPPER[] = {
     {"/dev/binder", 0666, 0, 0}
 };
 
 static void AdjustDevicePermission(const char *devPath)
 {
-    for (unsigned int i = 0; i < sizeof(g_devMapper) / sizeof(struct DevPermissionMapper); ++i) {
-        if (strcmp(devPath, g_devMapper[i].devName) == 0) {
-            if (chmod(g_devMapper[i].devName, g_devMapper[i].devMode) != 0) {
-                INIT_LOGE("AdjustDevicePermission, failed for %s, err %d.\n", g_devMapper[i].devName, errno);
+    for (unsigned int i = 0; i < sizeof(DEV_MAPPER) / sizeof(struct DevPermissionMapper); ++i) {
+        if (strcmp(devPath, DEV_MAPPER[i].devName) == 0) {
+            if (chmod(devPath, DEV_MAPPER[i].devMode) != 0) {
+                INIT_LOGE("AdjustDevicePermission, failed for %s, err %d.", devPath, errno);
                 return;
             }
-            if (chown(g_devMapper[i].devName, g_devMapper[i].uid, g_devMapper[i].gid) != 0) {
-                INIT_LOGE("AdjustDevicePermission, failed for %s, err %d.\n", g_devMapper[i].devName, errno);
+            if (chown(devPath, DEV_MAPPER[i].uid, DEV_MAPPER[i].gid) != 0) {
+                INIT_LOGE("AdjustDevicePermission, failed for %s, err %d.", devPath, errno);
                 return;
             }
-            INIT_LOGI("AdjustDevicePermission :%s success\n", g_devMapper[i].devName);
+            INIT_LOGI("AdjustDevicePermission :%s success", devPath);
         }
     }
 }
@@ -417,7 +417,7 @@ static void MakeDevice(const char *devPath, const char *path, int block, int maj
     setegid(gid);
     if (mknod(devPath, mode, dev) != 0) {
         if (errno != EEXIST) {
-            INIT_LOGE("Make device node[%d, %d] failed. %d\n", major, minor, errno);
+            INIT_LOGE("Make device node[%d, %d] failed. %d", major, minor, errno);
         }
     }
     AdjustDevicePermission(devPath);
@@ -440,7 +440,7 @@ int MkdirRecursive(const char *pathName, mode_t mode)
             continue;
         }
         if ((unsigned int)width > sizeof(buf) - 1) {
-            INIT_LOGE("path too long for MkdirRecursive\n");
+            INIT_LOGE("path too long for MkdirRecursive");
             return -1;
         }
         if (memcpy_s(buf, width, pathName, width) != 0) {
@@ -491,11 +491,11 @@ static void MakeLink(const char *oldPath, const char *newPath)
     buf[width] = 0;
     int ret = MkdirRecursive(buf, DEFAULT_DIR_MODE);
     if (ret) {
-        INIT_LOGE("Failed to create directory %s: %s (%d)\n", buf, strerror(errno), errno);
+        INIT_LOGE("Failed to create directory %s: %s (%d)", buf, strerror(errno), errno);
     }
     ret = symlink(oldPath, newPath);
     if (ret && errno != EEXIST) {
-        INIT_LOGE("Failed to symlink %s to %s: %s (%d)\n", oldPath, newPath, strerror(errno), errno);
+        INIT_LOGE("Failed to symlink %s to %s: %s (%d)", oldPath, newPath, strerror(errno), errno);
     }
 }
 
@@ -566,7 +566,7 @@ static void AddPlatformDevice(const char *path)
             name += DEV_PLAT_FORM;
         }
     }
-    INIT_LOGI("adding platform device %s (%s)\n", name, path);
+    INIT_LOGI("adding platform device %s (%s)", name, path);
     struct PlatformNode *bus = calloc(1, sizeof(struct PlatformNode));
     if (!bus) {
         return;
@@ -586,7 +586,7 @@ static void RemovePlatformDevice(const char *path)
     for (node = (&g_platformNames)->prev; node != &g_platformNames; node = node->prev) {
         bus = (struct PlatformNode *)(((char*)(node)) - offsetof(struct PlatformNode, list));
         if (!strcmp(path, bus->path)) {
-            INIT_LOGI("removing platform device %s\n", bus->name);
+            INIT_LOGI("removing platform device %s", bus->name);
             free(bus->path);
             ListRemove(node);
             free(bus);
@@ -723,7 +723,7 @@ static void HandleDeviceEvent(struct Uevent *event, char *devpath, int len, cons
     links = GetCharacterDeviceSymlinks(event);
     if (!devpath[0]) {
         if (snprintf_s(devpath, len, len - 1, "%s%s", base, name) == -1) {
-            INIT_LOGE("snprintf_s err \n");
+            INIT_LOGE("snprintf_s err ");
             goto err;
         }
     }
@@ -834,7 +834,7 @@ void UeventInit()
 
 int main(const int argc, const char **argv)
 {
-    INIT_LOGI("Uevent demo starting...\n");
+    INIT_LOGI("Uevent demo starting...");
     UeventInit();
     return 0;
 }

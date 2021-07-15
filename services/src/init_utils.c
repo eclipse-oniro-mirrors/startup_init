@@ -91,17 +91,17 @@ char* ReadFileToBuf(const char *configFile)
     do {
         if (stat(configFile, &fileStat) != 0 ||
             fileStat.st_size <= 0 || fileStat.st_size > MAX_JSON_FILE_LEN) {
-            INIT_LOGE("Unexpected config file \" %s \", check if it exist. if exist, check file size\n", configFile);
+            INIT_LOGE("Unexpected config file \" %s \", check if it exist. if exist, check file size", configFile);
             break;
         }
         fd = fopen(configFile, "r");
         if (fd == NULL) {
-            INIT_LOGE("Open %s failed. err = %d\n", configFile, errno);
+            INIT_LOGE("Open %s failed. err = %d", configFile, errno);
             break;
         }
         buffer = (char*)malloc(fileStat.st_size + 1);
         if (buffer == NULL) {
-            INIT_LOGE("Failed to allocate memory for config file, err = %d\n", errno);
+            INIT_LOGE("Failed to allocate memory for config file, err = %d", errno);
             break;
         }
 
@@ -135,7 +135,7 @@ int SplitString(char *srcPtr, char **dstPtr, int maxNum)
     dstPtr[i] = "\0";
     int num = i;
     for (int j = 0; j < num; j++) {
-        INIT_LOGI("dstPtr[%d] is %s \n", j, dstPtr[j]);
+        INIT_LOGI("dstPtr[%d] is %s ", j, dstPtr[j]);
     }
     return num;
 }
@@ -154,7 +154,7 @@ void WaitForFile(const char *source, unsigned int maxCount)
         count++;
     } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount));
     if (count == maxCount) {
-        INIT_LOGE("wait for file:%s failed after %f.\n", source, maxCount * CONVERT_MICROSEC_TO_SEC(waitTime));
+        INIT_LOGE("wait for file:%s failed after %f.", source, maxCount * CONVERT_MICROSEC_TO_SEC(waitTime));
     }
     return;
 }

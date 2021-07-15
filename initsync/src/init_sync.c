@@ -31,12 +31,12 @@ static int SendCmd(int cmd, unsigned long arg)
     if (fd != -1) {
         int ret = ioctl(fd, cmd, arg);
         if (ret == -1) {
-            INIT_LOGE("[Init] [ERR] %s!\n", strerror(errno));
+            INIT_LOGE("[Init] [ERR] %s!", strerror(errno));
         }
         close(fd);
         return ret;
     }
-    INIT_LOGE("[Init] [ERR] %s!\n", strerror(errno));
+    INIT_LOGE("[Init] [ERR] %s!", strerror(errno));
     return fd;
 }
 
@@ -56,7 +56,7 @@ int NotifyInit(unsigned long event)
 int SystemInitStage(QuickstartStage stage)
 {
     if (stage >= QS_STAGE_LIMIT || stage < QS_STAGE1) {
-        INIT_LOGE("[Init] the stage(%d) is not expected!\n", stage);
+        INIT_LOGE("[Init] the stage(%d) is not expected!", stage);
         return -1;
     }
     return SendCmd(QUICKSTART_STAGE(stage), 0);

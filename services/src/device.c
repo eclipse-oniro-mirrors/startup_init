@@ -32,25 +32,25 @@
 void MountBasicFs()
 {
     if (mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
-        INIT_LOGE("Mount tmpfs failed. %s\n", strerror(errno));
+        INIT_LOGE("Mount tmpfs failed. %s", strerror(errno));
     }
 #ifndef __LITEOS__
     if (mkdir("/dev/pts", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
-        INIT_LOGE("mkdir /dev/pts failed. %s\n", strerror(errno));
+        INIT_LOGE("mkdir /dev/pts failed. %s", strerror(errno));
     }
     if (mount("devpts", "/dev/pts", "devpts", 0, NULL) != 0) {
-        INIT_LOGE("Mount devpts failed. %s\n", strerror(errno));
+        INIT_LOGE("Mount devpts failed. %s", strerror(errno));
     }
 #endif
     if (mount("proc", "/proc", "proc", 0, "hidepid=2") != 0) {
-        INIT_LOGE("Mount procfs failed. %s\n", strerror(errno));
+        INIT_LOGE("Mount procfs failed. %s", strerror(errno));
     }
     if (mount("sysfs", "/sys", "sysfs", 0, NULL) != 0) {
-        INIT_LOGE("Mount sysfs failed. %s\n", strerror(errno));
+        INIT_LOGE("Mount sysfs failed. %s", strerror(errno));
     }
 #ifndef __LITEOS__
     if (mount("selinuxfs", "/sys/fs/selinux", "selinuxfs", 0, NULL) != 0) {
-        INIT_LOGE("Mount selinuxfs failed. %s\n", strerror(errno));
+        INIT_LOGE("Mount selinuxfs failed. %s", strerror(errno));
     }
 #endif
 }
@@ -58,17 +58,17 @@ void MountBasicFs()
 void CreateDeviceNode()
 {
     if (mknod("/dev/kmsg", S_IFCHR | DEFAULT_NO_AUTHORITY_MODE, makedev(1, DEVICE_ID_ELEVNTH)) != 0) {
-        INIT_LOGE("Create /dev/kmsg device node failed. %s\n", strerror(errno));
+        INIT_LOGE("Create /dev/kmsg device node failed. %s", strerror(errno));
     }
     if (mknod("/dev/null", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_THIRD)) != 0) {
-        INIT_LOGE("Create /dev/null device node failed. %s\n", strerror(errno));
+        INIT_LOGE("Create /dev/null device node failed. %s", strerror(errno));
     }
     if (mknod("/dev/random", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_EIGHTH)) != 0) {
-        INIT_LOGE("Create /dev/random device node failed. %s\n", strerror(errno));
+        INIT_LOGE("Create /dev/random device node failed. %s", strerror(errno));
     }
 
     if (mknod("/dev/urandom", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_NINTH)) != 0) {
-        INIT_LOGE("Create /dev/urandom device node failed. %s\n", strerror(errno));
+        INIT_LOGE("Create /dev/urandom device node failed. %s", strerror(errno));
     }
 }
 
@@ -76,12 +76,12 @@ int MakeSocketDir(const char *path, mode_t mode)
 {
     int rc = mkdir("/dev/unix/", mode);
     if (rc < 0 && errno != EEXIST) {
-        INIT_LOGE("Create %s failed. %d\n", path, errno);
+        INIT_LOGE("Create %s failed. %d", path, errno);
         return -1;
     }
     rc = mkdir("/dev/unix/socket/", mode);
     if (rc < 0 && errno != EEXIST) {
-        INIT_LOGE("Create %s failed. %d\n", path, errno);
+        INIT_LOGE("Create %s failed. %d", path, errno);
         return -1;
     }
     return rc;

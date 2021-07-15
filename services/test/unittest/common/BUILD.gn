@@ -34,6 +34,7 @@ if (defined(ohos_lite)) {
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/startup/syspara_lite/interfaces/kits",
+      "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
     ]
 
     sources = [
@@ -49,15 +50,16 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/src/init_signal_handler.c",
       "//base/startup/init_lite/services/src/init_utils.c",
       "//base/startup/init_lite/services/src/init_reboot.c",
+      "//base/startup/init_lite/services/log/init_log.c",
       "cmd_func_test.cpp",
     ]
 
     deps = [
       "//base/startup/init_lite/initsync:initsync",
-      "//base/startup/init_lite/services/log:init_log",
       "//base/startup/syspara_lite/frameworks/parameter:parameter",
       "//build/lite/config/component/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
+      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
     ]
     if (ohos_kernel_type == "liteos_a") {
       include_dirs += [
