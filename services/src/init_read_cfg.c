@@ -60,13 +60,13 @@ static void ParseInitCfgContents(cJSON *root)
 void ParseInitCfg(const char *configFile)
 {
     if (configFile == NULL || *configFile == '\0') {
-        INIT_LOGE("Invalid config file\n");
+        INIT_LOGE("Invalid config file");
         return;
     }
 
     char *fileBuf = ReadFileToBuf(configFile);
     if (fileBuf == NULL) {
-        INIT_LOGE("Read %s failed\n", configFile);
+        INIT_LOGE("Read %s failed", configFile);
         return;
     }
     cJSON* fileRoot = cJSON_Parse(fileBuf);
@@ -74,7 +74,7 @@ void ParseInitCfg(const char *configFile)
     fileBuf = NULL;
 
     if (fileRoot == NULL) {
-        INIT_LOGE("InitReadCfg, parse failed! please check file %s format.\n", configFile);
+        INIT_LOGE("InitReadCfg, parse failed! please check file %s format.", configFile);
         return;
     }
     ParseInitCfgContents(fileRoot);
@@ -87,14 +87,14 @@ static void ReadCfgs(const char *dirPath)
 {
     DIR *pDir = opendir(dirPath);
     if (pDir == NULL) {
-        INIT_LOGE("ParseCfgs open cfg dir :%s failed.%d\n", dirPath, errno);
+        INIT_LOGE("ParseCfgs open cfg dir :%s failed.%d", dirPath, errno);
         return;
     }
     struct dirent *dp;
     while ((dp = readdir(pDir)) != NULL) {
         char fileName[FILE_NAME_MAX_SIZE];
         if (snprintf_s(fileName, FILE_NAME_MAX_SIZE, FILE_NAME_MAX_SIZE - 1, "%s/%s", dirPath, dp->d_name) == -1) {
-            INIT_LOGE("ParseCfgs snprintf_s failed.\n");
+            INIT_LOGE("ParseCfgs snprintf_s failed.");
             closedir(pDir);
             return;
         }
@@ -103,7 +103,7 @@ static void ReadCfgs(const char *dirPath)
             if (strstr(dp->d_name, ".cfg") == NULL) {
                 continue;
             }
-            INIT_LOGI("ReadCfgs :%s from %s success.\n", fileName, dirPath);
+            INIT_LOGI("ReadCfgs :%s from %s success.", fileName, dirPath);
             ParseInitCfg(fileName);
         }
     }
@@ -127,7 +127,7 @@ void InitReadCfg()
 #endif
     ParseInitCfg(INIT_CONFIGURATION_FILE);
     ParseOtherCfgs();
-    INIT_LOGI("Parse init config file done.\n");
+    INIT_LOGI("Parse init config file done.");
 
     DumpAllServices();
     // DumpAllJobs();

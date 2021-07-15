@@ -32,11 +32,10 @@ static int ExtractCfgFile(char **cfgFile, char *content)
     }
     size_t cfgFileLen = strlen(content) + MAX_PARAM_VALUE_LEN + 1;
     if ((*cfgFile = malloc(cfgFileLen)) == NULL) {
-        INIT_LOGW("Failed to allocate memory to import cfg file. err = %d\n", errno);
+        INIT_LOGW("Failed to allocate memory to import cfg file. err = %d", errno);
         return -1;
     }
-    int ret = GetParamValue(content, *cfgFile, cfgFileLen);
-    return ret;
+    return GetParamValue(content, *cfgFile, cfgFileLen);
 }
 #endif
 
@@ -52,18 +51,18 @@ void ParseAllImports(cJSON *root)
     for (int i = 0; i < importAttrSize; i++) {
         cJSON *importItem = cJSON_GetArrayItem(importAttr, i);
         if (!cJSON_IsString(importItem)) {
-            INIT_LOGE("Invalid type of import item. should be string\n");
+            INIT_LOGE("Invalid type of import item. should be string");
             return;
         }
         char *importContent = cJSON_GetStringValue(importItem);
         if (importContent == NULL) {
-            INIT_LOGE("cannot get import config file\n");
+            INIT_LOGE("cannot get import config file");
             return;
         }
 // Only OHOS L2 support parameter.
 #ifndef OHOS_LITE
         if (ExtractCfgFile(&cfgFile, importContent) < 0) {
-            INIT_LOGW("Failed to import from %s\n", importContent);
+            INIT_LOGW("Failed to import from %s", importContent);
             if (cfgFile != NULL) {
                 free(cfgFile);
                 cfgFile = NULL;
@@ -73,12 +72,12 @@ void ParseAllImports(cJSON *root)
 #else
         cfgFile = importContent;
 #endif
-        INIT_LOGI("Import %s...\n", cfgFile);
+        INIT_LOGI("Import %s...", cfgFile);
         ParseInitCfg(cfgFile);
         // Do not forget to free memory.
         free(cfgFile);
         cfgFile = NULL;
     }
-     INIT_LOGD("parse import file done\n");
+     INIT_LOGD("parse import file done");
     return;
 }

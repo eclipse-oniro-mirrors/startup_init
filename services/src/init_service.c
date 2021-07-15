@@ -79,13 +79,13 @@ static int SetPerms(const Service *service)
     }
 
     if (setgroups(service->servPerm.gIDCnt, service->servPerm.gIDArray) != 0) {
-        INIT_LOGE("SetPerms, setgroups failed. errno = %d, gIDCnt=%d\n", errno, service->servPerm.gIDCnt);
+        INIT_LOGE("SetPerms, setgroups failed. errno = %d, gIDCnt=%d", errno, service->servPerm.gIDCnt);
         return SERVICE_FAILURE;
     }
 
     if (service->servPerm.uID != 0) {
         if (setuid(service->servPerm.uID) != 0) {
-            INIT_LOGE("setuid of service: %s failed, uid = %d\n", service->name, service->servPerm.uID);
+            INIT_LOGE("setuid of service: %s failed, uid = %d", service->name, service->servPerm.uID);
             return SERVICE_FAILURE;
         }
     }
@@ -113,7 +113,7 @@ static int SetPerms(const Service *service)
     }
 
     if (capset(&capHeader, capData) != 0) {
-        INIT_LOGE("capset faild for service: %s, error: %d\n", service->name, errno);
+        INIT_LOGE("capset faild for service: %s, error: %d", service->name, errno);
         return SERVICE_FAILURE;
     }
     for (unsigned int i = 0; i < service->servPerm.capsCnt; ++i) {
@@ -121,7 +121,7 @@ static int SetPerms(const Service *service)
             return SetAllAmbientCapability();
         }
         if (SetAmbientCapability(service->servPerm.caps[i]) != 0) {
-            INIT_LOGE("SetAmbientCapability faild for service: %s\n", service->name);
+            INIT_LOGE("SetAmbientCapability faild for service: %s", service->name);
             return SERVICE_FAILURE;
         }
     }
@@ -140,7 +140,7 @@ static void OpenConsole()
         dup2(fd, 2);
         close(fd);
     } else {
-        INIT_LOGE("Open /dev/console failed. err = %d\n", errno);
+        INIT_LOGE("Open /dev/console failed. err = %d", errno);
     }
     return;
 }
@@ -148,15 +148,15 @@ static void OpenConsole()
 int ServiceStart(Service *service)
 {
     if (service == NULL) {
-        INIT_LOGE("start service failed! null ptr.\n");
+        INIT_LOGE("start service failed! null ptr.");
         return SERVICE_FAILURE;
     }
     if (service->pid > 0) {
-        INIT_LOGI("service : %s had started already.\n", service->name);
+        INIT_LOGI("service : %s had started already.", service->name);
         return SERVICE_SUCCESS;
     }
     if (service->attribute & SERVICE_ATTR_INVALID) {
-        INIT_LOGE("start service %s invalid.\n", service->name);
+        INIT_LOGE("start service %s invalid.", service->name);
         return SERVICE_FAILURE;
     }
 
@@ -164,7 +164,7 @@ int ServiceStart(Service *service)
     service->attribute &= (~(SERVICE_ATTR_NEED_RESTART | SERVICE_ATTR_NEED_STOP));
     if (stat(service->pathArgs[0], &pathStat) != 0) {
         service->attribute |= SERVICE_ATTR_INVALID;
-        INIT_LOGE("start service %s invalid, please check %s.\n",\
+        INIT_LOGE("start service %s invalid, please check %s.",\
             service->name, service->pathArgs[0]);
         return SERVICE_FAILURE;
     }
@@ -172,10 +172,10 @@ int ServiceStart(Service *service)
     int pid = fork();
     if (pid == 0) {
         if (service->socketCfg != NULL) {    // start socket service
-            INIT_LOGI("Create socket \n");
+            INIT_LOGI("Create socket ");
             ret = DoCreateSocket(service->socketCfg);
             if (ret < 0) {
-                INIT_LOGE("DoCreateSocket failed. \n");
+                INIT_LOGE("DoCreateSocket failed. ");
                 _exit(0x7f); // 0x7f: user specified
             }
         }
@@ -184,13 +184,13 @@ int ServiceStart(Service *service)
         }
         // permissions
         if (SetPerms(service) != SERVICE_SUCCESS) {
-            INIT_LOGE("service %s exit! set perms failed! err %d.\n", service->name, errno);
+            INIT_LOGE("service %s exit! set perms failed! err %d.", service->name, errno);
             _exit(0x7f); // 0x7f: user specified
         }
         char pidString[MAX_PID_STRING_LENGTH];          // writepid
         pid_t childPid = getpid();
         if (snprintf(pidString, MAX_PID_STRING_LENGTH, "%d", childPid) <= 0) {
-            INIT_LOGE("start service writepid sprintf failed.\n");
+            INIT_LOGE("start service writepid sprintf failed.");
             _exit(0x7f); // 0x7f: user specified
         }
         for (int i = 0; i < MAX_WRITEPID_FILES; i++) {
@@ -199,33 +199,33 @@ int ServiceStart(Service *service)
             }
             FILE *fd = fopen(service->writepidFiles[i], "wb");
             if (fd == NULL) {
-                INIT_LOGE("start service writepidFiles %s invalid.\n", service->writepidFiles[i]);
+                INIT_LOGE("start service writepidFiles %s invalid.", service->writepidFiles[i]);
                 continue;
             }
             if (fwrite(pidString, 1, strlen(pidString), fd) != strlen(pidString)) {
-                 INIT_LOGE("start service writepid error.file:%s pid:%s\n", service->writepidFiles[i], pidString);
+                 INIT_LOGE("start service writepid error.file:%s pid:%s", service->writepidFiles[i], pidString);
             }
             fclose(fd);
-            INIT_LOGE("ServiceStart writepid filename=%s, childPid=%s, ok\n", service->writepidFiles[i],
+            INIT_LOGE("ServiceStart writepid filename=%s, childPid=%s, ok", service->writepidFiles[i],
                 pidString);
         }
 
-        INIT_LOGI("service->name is %s \n", service->name);
+        INIT_LOGI("service->name is %s ", service->name);
 #ifndef OHOS_LITE
          // L2 Can not be reset env
          if (execv(service->pathArgs[0], service->pathArgs) != 0) {
-            INIT_LOGE("service %s execve failed! err %d.\n", service->name, errno);
+            INIT_LOGE("service %s execve failed! err %d.", service->name, errno);
          }
 #else
         char* env[] = {"LD_LIBRARY_PATH=/storage/app/libs", NULL};
         if (execve(service->pathArgs[0], service->pathArgs, env) != 0) {
-            INIT_LOGE("service %s execve failed! err %d.\n", service->name, errno);
+            INIT_LOGE("service %s execve failed! err %d.", service->name, errno);
         }
 #endif
 
         _exit(0x7f); // 0x7f: user specified
     } else if (pid < 0) {
-        INIT_LOGE("start service %s fork failed!\n", service->name);
+        INIT_LOGE("start service %s fork failed!", service->name);
         return SERVICE_FAILURE;
     }
 
@@ -233,7 +233,7 @@ int ServiceStart(Service *service)
 #ifndef OHOS_LITE
     char paramName[PARAM_NAME_LEN_MAX] = {0};
     if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", service->name) < 0) {
-        INIT_LOGE("snprintf_s paramName error %d \n", errno);
+        INIT_LOGE("snprintf_s paramName error %d ", errno);
     }
     SystemWriteParam(paramName, "running");
 #endif
@@ -243,7 +243,7 @@ int ServiceStart(Service *service)
 int ServiceStop(Service *service)
 {
     if (service == NULL) {
-        INIT_LOGE("stop service failed! null ptr.\n");
+        INIT_LOGE("stop service failed! null ptr.");
         return SERVICE_FAILURE;
     }
 
@@ -254,17 +254,17 @@ int ServiceStop(Service *service)
     }
 
     if (kill(service->pid, SIGKILL) != 0) {
-        INIT_LOGE("stop service %s pid %d failed! err %d.\n", service->name, service->pid, errno);
+        INIT_LOGE("stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
         return SERVICE_FAILURE;
     }
 #ifndef OHOS_LITE
     char paramName[PARAM_NAME_LEN_MAX] = {0};
     if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", service->name) < 0) {
-        INIT_LOGE("snprintf_s paramName error %d \n", errno);
+        INIT_LOGE("snprintf_s paramName error %d ", errno);
     }
     SystemWriteParam(paramName, "stopping");
 #endif
-    INIT_LOGI("stop service %s, pid %d.\n", service->name, service->pid);
+    INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
     return SERVICE_SUCCESS;
 }
 
@@ -283,7 +283,7 @@ void CheckCritical(Service *service)
         } else {
             ++service->criticalCrashCnt;
             if (service->criticalCrashCnt > CRITICAL_CRASH_COUNT_LIMIT) {
-                INIT_LOGE("reap critical service %s, crash too many times! Need reboot!\n", service->name);
+                INIT_LOGE("reap critical service %s, crash too many times! Need reboot!", service->name);
                 RebootSystem();
             }
         }
@@ -292,13 +292,13 @@ void CheckCritical(Service *service)
 
 static int ExecRestartCmd(const Service *service)
 {
-    INIT_LOGI("ExecRestartCmd \n");
+    INIT_LOGI("ExecRestartCmd ");
     if ((service == NULL) || (service->onRestart == NULL) || (service->onRestart->cmdLine == NULL)) {
         return SERVICE_FAILURE;
     }
 
     for (int i = 0; i < service->onRestart->cmdNum; i++) {
-        INIT_LOGI("SetOnRestart cmdLine->name %s  cmdLine->cmdContent %s \n", service->onRestart->cmdLine[i].name,
+        INIT_LOGI("SetOnRestart cmdLine->name %s  cmdLine->cmdContent %s ", service->onRestart->cmdLine[i].name,
             service->onRestart->cmdLine[i].cmdContent);
         DoCmd(&service->onRestart->cmdLine[i]);
     }
@@ -310,7 +310,7 @@ static int ExecRestartCmd(const Service *service)
 void ServiceReap(Service *service)
 {
     if (service == NULL) {
-        INIT_LOGE("reap service failed! null ptr.\n");
+        INIT_LOGE("reap service failed! null ptr.");
         return;
     }
 
@@ -318,12 +318,12 @@ void ServiceReap(Service *service)
 #ifndef OHOS_LITE
     char paramName[PARAM_NAME_LEN_MAX] = {0};
     if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", service->name) < 0) {
-        INIT_LOGE("snprintf_s paramName error %d \n", errno);
+        INIT_LOGE("snprintf_s paramName error %d ", errno);
     }
     SystemWriteParam(paramName, "stopped");
 #endif
     if (service->attribute & SERVICE_ATTR_INVALID) {
-        INIT_LOGE("ServiceReap service %s invalid.\n", service->name);
+        INIT_LOGE("ServiceReap service %s invalid.", service->name);
         return;
     }
 
@@ -357,7 +357,7 @@ void ServiceReap(Service *service)
         } else {
             ++service->crashCnt;
             if (service->crashCnt > CRASH_COUNT_LIMIT) {
-                INIT_LOGE("reap service %s, crash too many times!\n", service->name);
+                INIT_LOGE("reap service %s, crash too many times!", service->name);
                 return;
             }
         }
@@ -368,12 +368,12 @@ void ServiceReap(Service *service)
     if (service->onRestart != NULL) {
         ret = ExecRestartCmd(service);
         if (ret != SERVICE_SUCCESS) {
-            INIT_LOGE("SetOnRestart fail \n");
+            INIT_LOGE("SetOnRestart fail ");
         }
     }
     ret = ServiceStart(service);
     if (ret != SERVICE_SUCCESS) {
-        INIT_LOGE("reap service %s start failed!\n", service->name);
+        INIT_LOGE("reap service %s start failed!", service->name);
     }
 
     service->attribute &= (~SERVICE_ATTR_NEED_RESTART);

@@ -224,7 +224,7 @@ int StartParamService()
     ret = uv_pipe_bind(&pipeServer, PIPE_NAME);
     PARAM_CHECK(ret == 0, return ret, "Failed to uv_pipe_bind %d %s", ret, uv_err_name(ret));
     ret = chmod(PIPE_NAME, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-    PARAM_CHECK(ret == 0, return ret, "Failed to chmod %s, err %d. \n", PIPE_NAME, errno);
+    PARAM_CHECK(ret == 0, return ret, "Failed to chmod %s, err %d. ", PIPE_NAME, errno);
     ret = uv_listen((uv_stream_t*)&pipeServer, SOMAXCONN, OnConnection);
     PARAM_CHECK(ret == 0, return ret, "Failed to uv_listen %d %s", ret, uv_err_name(ret));
 

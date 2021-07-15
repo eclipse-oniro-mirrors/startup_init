@@ -39,7 +39,7 @@ static int CreateSocket(struct ServiceSocket *sockopt)
     }
     sockopt->sockFd = socket(PF_UNIX, sockopt->type, 0);
     if (sockopt->sockFd < 0) {
-        INIT_LOGE("socket fail %d \n", errno);
+        INIT_LOGE("socket fail %d ", errno);
         return -1;
     }
 
@@ -49,9 +49,9 @@ static int CreateSocket(struct ServiceSocket *sockopt)
     snprintf(addr.sun_path, sizeof(addr.sun_path), HOS_SOCKET_DIR"/%s",
              sockopt->name);
     if (access(addr.sun_path, F_OK)) {
-        INIT_LOGE("%s already exist, remove it\n", addr.sun_path);
+        INIT_LOGE("%s already exist, remove it", addr.sun_path);
         if (unlink(addr.sun_path) != 0) {
-            INIT_LOGE("ulink fail err %d \n", errno);
+            INIT_LOGE("ulink fail err %d ", errno);
         }
     }
     if (sockopt->passcred) {
@@ -64,7 +64,7 @@ static int CreateSocket(struct ServiceSocket *sockopt)
     }
 
     if (bind(sockopt->sockFd, (struct sockaddr *)&addr, sizeof(addr))) {
-        INIT_LOGE("Create socket for service %s failed: %d\n", sockopt->name, errno);
+        INIT_LOGE("Create socket for service %s failed: %d", sockopt->name, errno);
         unlink(addr.sun_path);
         close(sockopt->sockFd);
         return -1;
@@ -73,17 +73,17 @@ static int CreateSocket(struct ServiceSocket *sockopt)
     if (lchown(addr.sun_path, sockopt->uid, sockopt->gid)) {
         unlink(addr.sun_path);
         close(sockopt->sockFd);
-        INIT_LOGE("lchown fail %d \n", errno);
+        INIT_LOGE("lchown fail %d ", errno);
         return -1;
     }
 
     if (fchmodat(AT_FDCWD, addr.sun_path, sockopt->perm, AT_SYMLINK_NOFOLLOW)) {
         unlink(addr.sun_path);
         close(sockopt->sockFd);
-        INIT_LOGE("fchmodat fail %d \n", errno);
+        INIT_LOGE("fchmodat fail %d ", errno);
         return -1;
     }
-    INIT_LOGI("CreateSocket success \n");
+    INIT_LOGI("CreateSocket success ");
     return sockopt->sockFd;
 }
 
@@ -95,7 +95,7 @@ static int SetSocketEnv(int fd, char *name)
     snprintf(val, sizeof(val), "%d", fd);
     int ret = setenv(pubName, val, 1);
     if (ret < 0) {
-        INIT_LOGE("setenv fail %d \n", errno);
+        INIT_LOGE("setenv fail %d ", errno);
         return -1;
     }
     fcntl(fd, F_SETFD, 0);

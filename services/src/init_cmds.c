@@ -113,18 +113,18 @@ int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
         p++;
         char *right = strchr(p, '}');
         if (right == NULL) {
-            INIT_LOGE("Invalid cfg file name, miss '}'.\n");
+            INIT_LOGE("Invalid cfg file name, miss '}'.");
             return -1;
         }
         tmpLen = right - p;
         if (tmpLen > MAX_PARAM_NAME_LEN) {
-            INIT_LOGE("Parameter name longer than %d\n", MAX_PARAM_NAME_LEN);
+            INIT_LOGE("Parameter name longer than %d", MAX_PARAM_NAME_LEN);
             return -1;
         }
         INIT_CHECK_ONLY_RETURN(strncpy_s(tmpName, MAX_PARAM_NAME_LEN, p, tmpLen) == EOK, return -1);
         int ret = SystemReadParam(tmpName, tmpValue, &tmpLen); // get param
         if (ret != 0) {
-            INIT_LOGE("Failed to read parameter \" %s \"\n", tmpName);
+            INIT_LOGE("Failed to read parameter \" %s \"", tmpName);
             return -1;
         }
         // change param to new string
@@ -134,10 +134,10 @@ int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
         if (*tmpptr != '\0') { // copy last string
             INIT_CHECK_ONLY_RETURN(strncat_s(paramValue, paramLen, tmpptr, tmpLen) == EOK, return -1);
         }
-        INIT_LOGI("paramValue is %s \n", paramValue);
+        INIT_LOGI("paramValue is %s ", paramValue);
         return 0;
     } else {
-        INIT_LOGE("Invalid cfg file name, miss '{'.\n");
+        INIT_LOGE("Invalid cfg file name, miss '{'.");
         return -1;
     }
 }
@@ -175,7 +175,7 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim)
             return NULL);
 #endif
         if (ctx->argc > MAX_CMD_NAME_LEN - 1) {
-            INIT_LOGE("GetCmd failed, max cmd number is 10.\n");
+            INIT_LOGE("GetCmd failed, max cmd number is 10.");
             FreeCmd(&ctx);
             return NULL;
         }
@@ -228,26 +228,26 @@ void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
     }
 
     if (!foundAndSucceed) {
-        INIT_LOGE("Cannot parse command: %s\n", cmdStr);
+        INIT_LOGE("Cannot parse command: %s", cmdStr);
         (void)memset_s(resCmd, sizeof(*resCmd), 0, sizeof(*resCmd));
     }
 }
 
 static void DoStart(const char* cmdContent)
 {
-    INIT_LOGD("DoStart %s \n", cmdContent);
+    INIT_LOGD("DoStart %s ", cmdContent);
     StartServiceByName(cmdContent);
 }
 
 static void DoStop(const char* cmdContent)
 {
-    INIT_LOGD("DoStop %s \n", cmdContent);
+    INIT_LOGD("DoStop %s ", cmdContent);
     StopServiceByName(cmdContent);
 }
 
 static void DoReset(const char* cmdContent)
 {
-    INIT_LOGD("DoReset %s \n", cmdContent);
+    INIT_LOGD("DoReset %s ", cmdContent);
     DoStop(cmdContent);
     DoStart(cmdContent);
 }
@@ -263,18 +263,18 @@ static void DoCopy(const char* cmdContent)
     struct stat fileStat = {0};
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != DEFAULT_COPY_ARGS_CNT) {
-        INIT_LOGE("DoCopy failed.\n");
+        INIT_LOGE("DoCopy failed.");
         goto out;
     }
     srcFd = open(ctx->argv[0], O_RDONLY);
-    INIT_ERROR_CHECK(srcFd >= 0, goto out, "copy open %s fail %d! \n", ctx->argv[0], errno);
-    INIT_ERROR_CHECK(stat(ctx->argv[0], &fileStat) == 0, goto out, "stat fail \n");
+    INIT_ERROR_CHECK(srcFd >= 0, goto out, "copy open %s fail %d! ", ctx->argv[0], errno);
+    INIT_ERROR_CHECK(stat(ctx->argv[0], &fileStat) == 0, goto out, "stat fail ");
     mode = fileStat.st_mode;
     dstFd = open(ctx->argv[1], O_WRONLY | O_TRUNC | O_CREAT, mode);
-    INIT_ERROR_CHECK(dstFd >= 0, goto out, "copy open %s fail %d! \n", ctx->argv[1], errno);
+    INIT_ERROR_CHECK(dstFd >= 0, goto out, "copy open %s fail %d! ", ctx->argv[1], errno);
     while ((rdLen = read(srcFd, buf, sizeof(buf) - 1)) > 0) {
         rtLen = write(dstFd, buf, rdLen);
-        INIT_ERROR_CHECK(rtLen == rdLen, goto out, "write %s file fail %d! \n", ctx->argv[1], errno);
+        INIT_ERROR_CHECK(rtLen == rdLen, goto out, "write %s file fail %d! ", ctx->argv[1], errno);
     }
     fsync(dstFd);
 out:
@@ -292,7 +292,7 @@ static void DoChown(const char* cmdContent)
     // format: chown owner group /xxx/xxx/xxx
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != 3) {
-        INIT_LOGE("DoChown failed.\n");
+        INIT_LOGE("DoChown failed.");
         goto out;
     }
 
@@ -300,21 +300,21 @@ static void DoChown(const char* cmdContent)
     gid_t group = (gid_t)-1;
     if (isalpha(ctx->argv[0][0])) {
         owner = DecodeUid(ctx->argv[0]);
-        INIT_ERROR_CHECK(owner != (uid_t)-1, goto out, "DoChown decode owner failed.\n");
+        INIT_ERROR_CHECK(owner != (uid_t)-1, goto out, "DoChown decode owner failed.");
     } else {
         owner = strtoul(ctx->argv[0], NULL, 0);
     }
 
     if (isalpha(ctx->argv[1][0])) {
         group = DecodeUid(ctx->argv[1]);
-        INIT_ERROR_CHECK(group != (gid_t)-1, goto out, "DoChown decode group failed.\n");
+        INIT_ERROR_CHECK(group != (gid_t)-1, goto out, "DoChown decode group failed.");
     } else {
         group = strtoul(ctx->argv[1], NULL, 0);
     }
 
     int pathPos = 2;
     if (chown(ctx->argv[pathPos], owner, group) != 0) {
-        INIT_LOGE("DoChown, failed for %s, err %d.\n", cmdContent, errno);
+        INIT_LOGE("DoChown, failed for %s, err %d.", cmdContent, errno);
     }
 out:
     FreeCmd(&ctx);
@@ -326,27 +326,27 @@ static void DoMkDir(const char* cmdContent)
     // format: mkdir /xxx/xxx/xxx or mkdir /xxx/xxx/xxx mode owner group
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
     if (ctx == NULL || ctx->argv == NULL || ctx->argc < 1) {
-        INIT_LOGE("DoMkDir failed.\n");
+        INIT_LOGE("DoMkDir failed.");
         goto out;
     }
 
     mode_t mode = DEFAULT_DIR_MODE;
     if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
-        INIT_LOGE("DoMkDir, failed for %s, err %d.\n", cmdContent, errno);
+        INIT_LOGE("DoMkDir, failed for %s, err %d.", cmdContent, errno);
         goto out;
     }
 
     if (ctx->argc > 1) {
         mode = strtoul(ctx->argv[1], NULL, OCTAL_TYPE);
         if (chmod(ctx->argv[0], mode) != 0) {
-            INIT_LOGE("DoMkDir failed for %s, err %d.\n", cmdContent, errno);
+            INIT_LOGE("DoMkDir failed for %s, err %d.", cmdContent, errno);
         }
         int ownerPos = 2;
         int groupPos = 3;
         char chownCmdContent[AUTHORITY_MAX_SIZE] = { 0 };
         if (snprintf_s(chownCmdContent, AUTHORITY_MAX_SIZE, AUTHORITY_MAX_SIZE - 1, "%s %s %s",
             ctx->argv[ownerPos], ctx->argv[groupPos], ctx->argv[0]) == -1) {
-            INIT_LOGE("DoMkDir snprintf failed.\n");
+            INIT_LOGE("DoMkDir snprintf failed.");
             goto out;
         }
         DoChown(chownCmdContent);
@@ -361,18 +361,18 @@ static void DoChmod(const char* cmdContent)
     // format: chmod xxxx /xxx/xxx/xxx
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != 2) {
-        INIT_LOGE("DoChmod failed.\n");
+        INIT_LOGE("DoChmod failed.");
         goto out;
     }
 
     mode_t mode = strtoul(ctx->argv[0], NULL, OCTAL_TYPE);
     if (mode == 0) {
-        INIT_LOGE("DoChmod, strtoul failed for %s, er %d.\n", cmdContent, errno);
+        INIT_LOGE("DoChmod, strtoul failed for %s, er %d.", cmdContent, errno);
         goto out;
     }
 
     if (chmod(ctx->argv[1], mode) != 0) {
-        INIT_LOGE("DoChmod, failed for %s, err %d.\n", cmdContent, errno);
+        INIT_LOGE("DoChmod, failed for %s, err %d.", cmdContent, errno);
     }
 out:
     FreeCmd(&ctx);
@@ -382,20 +382,20 @@ out:
 static char* CopySubStr(const char* srcStr, size_t startPos, size_t endPos)
 {
     if (endPos <= startPos) {
-        INIT_LOGE("DoMount, invalid params<%zu, %zu> for %s.\n", endPos, startPos, srcStr);
+        INIT_LOGE("DoMount, invalid params<%zu, %zu> for %s.", endPos, startPos, srcStr);
         return NULL;
     }
 
     size_t mallocLen = endPos - startPos + 1;
     char* retStr = (char*)malloc(mallocLen);
     if (retStr == NULL) {
-        INIT_LOGE("DoMount, malloc failed! malloc size %zu, for %s.\n", mallocLen, srcStr);
+        INIT_LOGE("DoMount, malloc failed! malloc size %zu, for %s.", mallocLen, srcStr);
         return NULL;
     }
 
     const char* copyStart = srcStr + startPos;
     if (memcpy_s(retStr, mallocLen, copyStart, endPos - startPos) != EOK) {
-        INIT_LOGE("DoMount, memcpy_s failed for %s.\n", srcStr);
+        INIT_LOGE("DoMount, memcpy_s failed for %s.", srcStr);
         free(retStr);
         return NULL;
     }
@@ -440,7 +440,7 @@ static int CountSpaces(const char* cmdContent, size_t* spaceCnt, size_t* spacePo
         if (cmdContent[i] == ' ') {
             ++(*spaceCnt);
             if ((*spaceCnt) > spacePosArrLen) {
-                INIT_LOGE("DoMount, too many spaces, bad format for %s.\n", cmdContent);
+                INIT_LOGE("DoMount, too many spaces, bad format for %s.", cmdContent);
                 return 0;
             }
             spacePosArr[(*spaceCnt) - 1] = i;
@@ -450,14 +450,14 @@ static int CountSpaces(const char* cmdContent, size_t* spaceCnt, size_t* spacePo
     if ((*spaceCnt) < SPACES_CNT_IN_CMD_MIN ||           // spaces count should not less than 2(at least 3 items)
         spacePosArr[0] == 0 ||                           // should not start with space
         spacePosArr[(*spaceCnt) - 1] == strLen - 1) {    // should not end with space
-        INIT_LOGE("DoMount, bad format for %s.\n", cmdContent);
+        INIT_LOGE("DoMount, bad format for %s.", cmdContent);
         return 0;
     }
 
     // spaces should not be adjacent
     for (size_t i = 1; i < (*spaceCnt); ++i) {
         if (spacePosArr[i] == spacePosArr[i - 1] + 1) {
-            INIT_LOGE("DoMount, bad format for %s.\n", cmdContent);
+            INIT_LOGE("DoMount, bad format for %s.", cmdContent);
             return 0;
         }
     }
@@ -522,7 +522,7 @@ static void DoMount(const char* cmdContent)
     }
 
     if (mountRet != 0) {
-        INIT_LOGE("DoMount, failed for %s, err %d.\n", cmdContent, errno);
+        INIT_LOGE("DoMount, failed for %s, err %d.", cmdContent, errno);
     }
 
     free(fileSysType);
@@ -562,13 +562,13 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
     realPath = realpath(fileName, realPath);
     int fd = open(realPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd < 0) {
-        INIT_LOGE("failed to open %s: %d\n", realPath, errno);
+        INIT_LOGE("failed to open %s: %d", realPath, errno);
         free(realPath);
         return;
     }
     int rc = syscall(__NR_finit_module, fd, options, flags);
     if (rc == -1) {
-        INIT_LOGE("finit_module for %s failed: %d\n", realPath, errno);
+        INIT_LOGE("finit_module for %s failed: %d", realPath, errno);
     }
     if (fd >= 0) {
         close(fd);
@@ -588,28 +588,28 @@ static void DoInsmod(const char *cmdContent)
 
     size_t count = strlen(cmdContent);
     if (count > OPTIONS_SIZE) {
-        INIT_LOGE("DoInsmod options too long, maybe lost some of options\n");
+        INIT_LOGE("DoInsmod options too long, maybe lost some of options");
     }
     line = (char *)malloc(count + 1);
     if (line == NULL) {
-        INIT_LOGE("DoInsmod allocate memory failed.\n");
+        INIT_LOGE("DoInsmod allocate memory failed.");
         return;
     }
 
     if (memcpy_s(line, count, cmdContent, count) != EOK) {
-        INIT_LOGE("DoInsmod memcpy failed\n");
+        INIT_LOGE("DoInsmod memcpy failed");
         free(line);
         return;
     }
     line[count] = '\0';
     do {
         if ((p = strtok_r(line, " ", &restPtr)) == NULL) {
-            INIT_LOGE("DoInsmod cannot get filename.\n");
+            INIT_LOGE("DoInsmod cannot get filename.");
             free(line);
             return;
         }
         fileName = p;
-        INIT_LOGI("DoInsmod fileName is [%s].\n", fileName);
+        INIT_LOGI("DoInsmod fileName is [%s].", fileName);
         if ((p = strtok_r(NULL, " ", &restPtr)) == NULL) {
             break;
         }
@@ -628,10 +628,10 @@ static void DoSetParam(const char* cmdContent)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != 2) {
-        INIT_LOGE("DoSetParam failed.\n");
+        INIT_LOGE("DoSetParam failed.");
         goto out;
     }
-    INIT_LOGE("param name: %s, value %s \n", ctx->argv[0], ctx->argv[1]);
+    INIT_LOGE("param name: %s, value %s ", ctx->argv[0], ctx->argv[1]);
     SystemWriteParam(ctx->argv[0], ctx->argv[1]);
 out:
     FreeCmd(&ctx);
@@ -670,15 +670,15 @@ static void DoLoadCfg(const char *path)
         return;
     }
 
-    INIT_LOGI("DoLoadCfg cfg file %s\n", path);
+    INIT_LOGI("DoLoadCfg cfg file %s", path);
     if (!CheckValidCfg(path)) {
-        INIT_LOGE("CheckCfg file %s Failed\n", path);
+        INIT_LOGE("CheckCfg file %s Failed", path);
         return;
     }
 
     fp = fopen(path, "r");
     if (fp == NULL) {
-        INIT_LOGE("open cfg error = %d\n", errno);
+        INIT_LOGE("open cfg error = %d", errno);
         return;
     }
 
@@ -714,20 +714,20 @@ static void DoWrite(const char *cmdContent)
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
     int writeCmdNumber = 2;
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != writeCmdNumber) {
-        INIT_LOGE("DoWrite: invalid arguments\n");
+        INIT_LOGE("DoWrite: invalid arguments");
         goto out;
     }
 
     int fd = open(ctx->argv[0], O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, S_IRWXU |
  S_IRGRP | S_IROTH);
     if (fd == -1) {
-        INIT_LOGE("DoWrite: open %s failed: %d\n", ctx->argv[0], errno);
+        INIT_LOGE("DoWrite: open %s failed: %d", ctx->argv[0], errno);
         goto out;
     }
 
     size_t ret = write(fd, ctx->argv[1], strlen(ctx->argv[1]));
     if (ret < 0) {
-        INIT_LOGE("DoWrite: write to file %s failed: %d\n", ctx->argv[0], errno);
+        INIT_LOGE("DoWrite: write to file %s failed: %d", ctx->argv[0], errno);
         close(fd);
         goto out;
     }
@@ -742,13 +742,13 @@ static void DoRmdir(const char *cmdContent)
     // format: rmdir path
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != 1) {
-        INIT_LOGE("DoRmdir: invalid arguments\n");
+        INIT_LOGE("DoRmdir: invalid arguments");
         goto out;
     }
 
     int ret = rmdir(ctx->argv[0]);
     if (ret == -1) {
-        INIT_LOGE("DoRmdir: remove %s failed: %d.\n", ctx->argv[0], errno);
+        INIT_LOGE("DoRmdir: remove %s failed: %d.", ctx->argv[0], errno);
         goto out;
     }
 out:
@@ -768,7 +768,7 @@ static void DoSetrlimit(const char *cmdContent)
     int setrlimitCmdNumber = 3;
     int rlimMaxPos = 2;
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != setrlimitCmdNumber) {
-        INIT_LOGE("DoSetrlimit: invalid arguments\n");
+        INIT_LOGE("DoSetrlimit: invalid arguments");
         goto out;
     }
 
@@ -782,12 +782,12 @@ static void DoSetrlimit(const char *cmdContent)
         }
     }
     if (rcs == -1) {
-        INIT_LOGE("DoSetrlimit failed, resouces :%s not support.\n", ctx->argv[0]);
+        INIT_LOGE("DoSetrlimit failed, resouces :%s not support.", ctx->argv[0]);
         goto out;
     }
     int ret = setrlimit(rcs, &limit);
     if (ret) {
-        INIT_LOGE("DoSetrlimit failed : %d\n", errno);
+        INIT_LOGE("DoSetrlimit failed : %d", errno);
         goto out;
     }
 out:
@@ -800,12 +800,12 @@ static void DoRm(const char *cmdContent)
     // format: rm /xxx/xxx/xxx
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != 1) {
-        INIT_LOGE("DoRm: invalid arguments\n");
+        INIT_LOGE("DoRm: invalid arguments");
         goto out;
     }
     int ret = unlink(ctx->argv[0]);
     if (ret == -1) {
-        INIT_LOGE("DoRm: unlink %s failed: %d.\n", ctx->argv[0], errno);
+        INIT_LOGE("DoRm: unlink %s failed: %d.", ctx->argv[0], errno);
         goto out;
     }
 out:
@@ -819,12 +819,12 @@ static void DoExport(const char *cmdContent)
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
     int exportCmdNumber = 2;
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != exportCmdNumber) {
-        INIT_LOGE("DoExport: invalid arguments\n");
+        INIT_LOGE("DoExport: invalid arguments");
         goto out;
     }
     int ret = setenv(ctx->argv[0], ctx->argv[1], 1);
     if (ret != 0) {
-        INIT_LOGE("DoExport: set %s with %s failed: %d\n", ctx->argv[0], ctx->argv[1], errno);
+        INIT_LOGE("DoExport: set %s with %s failed: %d", ctx->argv[0], ctx->argv[1], errno);
         goto out;
     }
 out:
@@ -837,13 +837,13 @@ static void DoExec(const char *cmdContent)
     // format: exec /xxx/xxx/xxx xxx
     pid_t pid = fork();
     if (pid < 0) {
-        INIT_LOGE("DoExec: failed to fork child process to exec \"%s\"\n", cmdContent);
+        INIT_LOGE("DoExec: failed to fork child process to exec \"%s\"", cmdContent);
         return;
     }
     if (pid == 0) {
         struct CmdArgs *ctx = GetCmd(cmdContent, " ");
         if (ctx == NULL || ctx->argv == NULL) {
-            INIT_LOGE("DoExec: invalid arguments\n");
+            INIT_LOGE("DoExec: invalid arguments");
             _exit(0x7f);
         }
 #ifdef OHOS_LITE
@@ -852,7 +852,7 @@ static void DoExec(const char *cmdContent)
         int ret = execv(ctx->argv[0], ctx->argv);
 #endif
         if (ret == -1) {
-            INIT_LOGE("DoExec: execute \"%s\" failed: %d.\n", cmdContent, errno);
+            INIT_LOGE("DoExec: execute \"%s\" failed: %d.", cmdContent, errno);
         }
         FreeCmd(&ctx);
         _exit(0x7f);
@@ -867,13 +867,13 @@ static void DoSymlink(const char *cmdContent)
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
     int symlinkCmdNumber = 2;
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != symlinkCmdNumber) {
-        INIT_LOGE("DoSymlink: invalid arguments.\n");
+        INIT_LOGE("DoSymlink: invalid arguments.");
         goto out;
     }
 
     int ret = symlink(ctx->argv[0], ctx->argv[1]);
     if (ret != 0) {
-        INIT_LOGE("DoSymlink: link %s to %s failed: %d\n", ctx->argv[0], ctx->argv[1], errno);
+        INIT_LOGE("DoSymlink: link %s to %s failed: %d", ctx->argv[0], ctx->argv[1], errno);
         goto out;
     }
 out:
@@ -910,12 +910,12 @@ static void DoMakeNode(const char *cmdContent)
     int decimal = 10;
     int octal = 8;
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != mkNodeCmdNumber) {
-        INIT_LOGE("DoMakeNode: invalid arguments\n");
+        INIT_LOGE("DoMakeNode: invalid arguments");
         goto out;
     }
 
     if (!access(ctx->argv[1], F_OK)) {
-        INIT_LOGE("DoMakeNode failed, path has not sexisted\n");
+        INIT_LOGE("DoMakeNode failed, path has not sexisted");
         goto out;
     }
     mode_t deviceMode = GetDeviceMode(ctx->argv[deviceTypePos]);
@@ -925,7 +925,7 @@ static void DoMakeNode(const char *cmdContent)
 
     int ret = mknod(ctx->argv[0], deviceMode | authority, makedev(major, minor));
     if (ret != 0) {
-        INIT_LOGE("DoMakeNode: path: %s failed: %d\n", ctx->argv[0], errno);
+        INIT_LOGE("DoMakeNode: path: %s failed: %d", ctx->argv[0], errno);
         goto out;
     }
 out:
@@ -940,14 +940,14 @@ static void DoMakeDevice(const char *cmdContent)
     int makeDevCmdNumber = 2;
     int decimal = 10;
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != makeDevCmdNumber) {
-        INIT_LOGE("DoMakedevice: invalid arugments\n");
+        INIT_LOGE("DoMakedevice: invalid arugments");
         goto out;
     }
     unsigned int major = strtoul(ctx->argv[0], NULL, decimal);
     unsigned int minor = strtoul(ctx->argv[1], NULL, decimal);
     dev_t deviceId = makedev(major, minor);
     if (deviceId < 0) {
-        INIT_LOGE("DoMakedevice \" %s \" failed :%d \n", cmdContent, errno);
+        INIT_LOGE("DoMakedevice \" %s \" failed :%d ", cmdContent, errno);
         goto out;
     }
 out:
@@ -962,7 +962,6 @@ void DoCmd(const CmdLine* curCmd)
     if (curCmd == NULL || curCmd->name[0] == '\0') {
         return;
     }
-    // INIT_LOGE("curCmd->name:%s, curCmd->cmdContent:%s\n", curCmd->name, curCmd->cmdContent);
     DoCmdByName(curCmd->name, curCmd->cmdContent);
 }
 
@@ -1013,7 +1012,7 @@ void DoCmdByName(const char *name, const char *cmdContent)
     } else if (strncmp(name, "insmod ", strlen("insmod ")) == 0) {
         DoInsmod(cmdContent);
     } else if (strncmp(name, "trigger ", strlen("trigger ")) == 0) {
-        INIT_LOGD("ready to trigger job: %s\n", name);
+        INIT_LOGD("ready to trigger job: %s", name);
         DoTriggerExec(cmdContent);
     } else if (strncmp(name, "load_persist_params ", strlen("load_persist_params ")) == 0) {
         LoadPersistParams();
@@ -1025,7 +1024,7 @@ void DoCmdByName(const char *name, const char *cmdContent)
     } else if (strncmp(name, "reboot ", strlen("reboot ")) == 0) {
         DoReboot(cmdContent);
     }  else {
-        INIT_LOGE("DoCmd, unknown cmd name %s.\n", name);
+        INIT_LOGE("DoCmd, unknown cmd name %s.", name);
     }
 }
 

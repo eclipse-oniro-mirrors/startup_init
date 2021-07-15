@@ -16,6 +16,9 @@
 #include "init_log.h"
 #include <errno.h>
 #include <fcntl.h>
+#ifdef OHOS_LITE
+#include "hilog/log.h"
+#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -24,18 +27,43 @@
 #include "securec.h"
 
 #define UNUSED(x) (void)(x)
-#define MAX_FORMAT_SIZE 1024
+#define MAX_FORMAT_SIZE 2048
 #define MAX_LOG_SIZE 2048
 #define BASE_YEAR 1900
 
 static InitLogLevel g_logLevel = INIT_INFO;
-
 static const char *LOG_LEVEL_STR[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
 
 void SetLogLevel(InitLogLevel logLevel)
 {
     g_logLevel = logLevel;
 }
+
+#ifdef OHOS_LITE
+static LogLevel g_hiLogLevel = LOG_INFO;
+
+void SetHiLogLevel(LogLevel logLevel)
+{
+    g_hiLogLevel = logLevel;
+}
+
+void InitToHiLog(const char *tag, LogLevel logLevel, const char *fmt, ...)
+{
+    if (logLevel < g_hiLogLevel) {
+        return;
+    }
+    va_list list;
+    va_start(list, fmt);
+    char tmpFmt[MAX_FORMAT_SIZE];
+    if (vsnprintf_s(tmpFmt, MAX_FORMAT_SIZE, MAX_FORMAT_SIZE - 1, fmt, list) == -1) {
+        va_end(list);
+        return;
+    }
+    (void)HiLogPrint(LOG_CORE, logLevel, LOG_DOMAIN, tag, "%{public}s", tmpFmt);
+    va_end(list);
+    return;
+}
+#endif
 
 void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int line, const char *fmt, ...)
 {
@@ -46,8 +74,8 @@ void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int l
     time_t logTime;
     time(&logTime);
     struct tm *t = gmtime(&logTime);
-    fprintf(stdout, "[%d-%d-%d %d:%d][pid=%d][%s:%d][%s][%s] ",
-        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min,
+    fprintf(stdout, "[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ",
+        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec,
         getpid(), fileName, line, tag, LOG_LEVEL_STR[logLevel]);
 
     va_list list;
@@ -55,6 +83,7 @@ void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int l
     vfprintf(stdout, fmt, list);
     va_end(list);
     fflush(stdout);
+
 #if 0
     int fd = open("/dev/kmsg", O_WRONLY | O_CLOEXEC | O_APPEND );
     if (fd < 1) {

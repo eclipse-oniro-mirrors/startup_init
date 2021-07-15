@@ -45,7 +45,7 @@ static void CheckWaitPid(pid_t sigPID)
 {
     if (g_waitPid == sigPID && g_waitSem != NULL) {
         if (sem_post(g_waitSem) != 0) {
-            INIT_LOGE("CheckWaitPid, sem_post failed, errno %d.\n", errno);
+            INIT_LOGE("CheckWaitPid, sem_post failed, errno %d.", errno);
         }
         g_waitPid = -1;
         g_waitSem = NULL;
@@ -64,7 +64,7 @@ static void SigHandler(int sig)
                 if (sigPID <= 0) {
                     break;
                 }
-                INIT_LOGI("SigHandler, SIGCHLD received, sigPID = %d.\n", sigPID);
+                INIT_LOGI("SigHandler, SIGCHLD received, sigPID = %d.", sigPID);
 #ifdef __LINUX__
                 CheckWaitPid(sigPID);
 #endif /* __LINUX__ */
@@ -73,7 +73,7 @@ static void SigHandler(int sig)
             break;
         }
         case SIGTERM: {
-            INIT_LOGI("SigHandler, SIGTERM received.\n");
+            INIT_LOGI("SigHandler, SIGTERM received.");
             StopAllServices();
             break;
         }
@@ -84,7 +84,7 @@ static void SigHandler(int sig)
             exit(0);
             break;
         default:
-            INIT_LOGI("SigHandler, unsupported signal %d.\n", sig);
+            INIT_LOGI("SigHandler, unsupported signal %d.", sig);
             break;
     }
 }
@@ -116,18 +116,18 @@ void SignalInitModule()
     ret |= uv_signal_init(uv_default_loop(), &g_sigtermHandler);
     ret |= uv_signal_init(uv_default_loop(), &g_sigintHandler);
     if (ret != 0) {
-        INIT_LOGW("initialize signal handler failed\n");
+        INIT_LOGW("initialize signal handler failed");
         return;
     }
 
     if (uv_signal_start(&g_sigchldHandler, UVSignalHandler, SIGCHLD) != 0) {
-        INIT_LOGW("start SIGCHLD handler failed\n");
+        INIT_LOGW("start SIGCHLD handler failed");
     }
     if (uv_signal_start(&g_sigtermHandler, UVSignalHandler, SIGTERM) != 0) {
-        INIT_LOGW("start SIGTERM handler failed\n");
+        INIT_LOGW("start SIGTERM handler failed");
     }
     if (uv_signal_start(&g_sigintHandler, UVSignalHandler, SIGINT) != 0) {
-        INIT_LOGW("start SIGTERM handler failed\n");
+        INIT_LOGW("start SIGTERM handler failed");
     }
 }
 #endif

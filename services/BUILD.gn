@@ -31,6 +31,7 @@ if (defined(ohos_lite)) {
       "src/init_service_socket.c",
       "src/init_signal_handler.c",
       "src/init_utils.c",
+      "log/init_log.c",
       "src/main.c",
     ]
 
@@ -41,16 +42,17 @@ if (defined(ohos_lite)) {
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/startup/syspara_lite/interfaces/kits",
+      "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
     ]
 
     cflags = [ "-Wall" ]
 
     deps = [
       "//base/startup/init_lite/initsync:initsync",
-      "//base/startup/init_lite/services/log:init_log",
       "//base/startup/syspara_lite/frameworks/parameter:parameter",
       "//build/lite/config/component/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
+      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
     ]
     ldflags = []
     if (ohos_kernel_type == "liteos_a") {

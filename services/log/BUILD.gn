@@ -14,6 +14,8 @@ if (defined(ohos_lite)) {
   static_library("init_log") {
     sources = [ "init_log.c" ]
     public_deps = [ "//third_party/bounds_checking_function:libsec_static" ]
+    include_dirs = [ "//base/hiviewdfx/hilog_lite/interfaces/native/kits" ]
+    deps = [ "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared" ]
   }
 } else {
   import("//build/ohos.gni")
