@@ -50,8 +50,10 @@ typedef enum InitLogLevel {
 #define INIT_LOGE(fmt, ...) InitToHiLog(INIT_LOG_TAG, LOG_ERROR, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
 #define INIT_LOGF(fmt, ...) InitToHiLog(INIT_LOG_TAG, LOG_FATAL, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
 
+#define STARTUP_LOGD(LABEL, fmt, ...) InitToHiLog(LABEL, LOG_DEBUG, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
 #define STARTUP_LOGI(LABEL, fmt, ...) InitToHiLog(LABEL, LOG_INFO, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
 #define STARTUP_LOGE(LABEL, fmt, ...) InitToHiLog(LABEL, LOG_ERROR, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+
 
 void InitToHiLog(const char *tag, LogLevel logLevel, const char *fmt, ...);
 void SetHiLogLevel(LogLevel logLevel);
@@ -64,6 +66,7 @@ void SetHiLogLevel(LogLevel logLevel);
 #define INIT_LOGE(fmt, ...) InitLog(INIT_LOG_TAG, INIT_ERROR, (__FILE_NAME__), (__LINE__), fmt"\n", ##__VA_ARGS__)
 #define INIT_LOGF(fmt, ...) InitLog(INIT_LOG_TAG, INIT_FATAL, (__FILE_NAME__), (__LINE__), fmt"\n", ##__VA_ARGS__)
 
+#define STARTUP_LOGD(LABEL, fmt, ...) InitLog(LABEL, INIT_DEBUG, (__FILE_NAME__),  (__LINE__), fmt "\n", ##__VA_ARGS__)
 #define STARTUP_LOGI(LABEL, fmt, ...) InitLog(LABEL, INIT_INFO, (__FILE_NAME__),  (__LINE__), fmt "\n", ##__VA_ARGS__)
 #define STARTUP_LOGE(LABEL, fmt, ...) InitLog(LABEL, INIT_ERROR, (__FILE_NAME__),  (__LINE__), fmt "\n", ##__VA_ARGS__)
 

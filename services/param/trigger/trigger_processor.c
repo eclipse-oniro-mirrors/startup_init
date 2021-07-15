@@ -30,7 +30,7 @@ static TriggerWorkSpace g_triggerWorkSpace = {};
 static int DoCmdExecute(TriggerNode *trigger, const char *cmdName, const char *command)
 {
     PARAM_CHECK(trigger != NULL && cmdName != NULL && command != NULL, return -1, "Invalid param");
-    PARAM_LOGI("DoCmdExecute trigger %s cmd %s %s", trigger->name, cmdName, command);
+    PARAM_LOGD("DoCmdExecute trigger %s cmd %s %s", trigger->name, cmdName, command);
     if (strncmp(cmdName, TRIGGER_CMD, strlen(TRIGGER_CMD)) == 0) {
         DoTriggerExec(command);
         return 0;
@@ -155,7 +155,7 @@ void PostParamTrigger(const char *name, const char *value)
 
 void PostTrigger(EventType type, const char *content, u_int32_t contentLen)
 {
-    PARAM_LOGI("PostTrigger %d %s", type, content);
+    PARAM_LOGD("PostTrigger %d %s", type, content);
     PARAM_CHECK(content != NULL && contentLen > 0, return, "Invalid param");
     TriggerDataEvent *event = (TriggerDataEvent *)malloc(sizeof(TriggerDataEvent) + contentLen + 1);
     PARAM_CHECK(event != NULL, return, "Failed to alloc memory");
@@ -165,7 +165,7 @@ void PostTrigger(EventType type, const char *content, u_int32_t contentLen)
     memcpy_s(event->content, contentLen, content, contentLen);
     event->content[contentLen] = '\0';
     SendTriggerEvent(event);
-    PARAM_LOGI("PostTrigger %d success", type);
+    PARAM_LOGD("PostTrigger %d success", type);
 }
 
 int ParseTriggerConfig(cJSON *fileRoot)

@@ -82,7 +82,7 @@ int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, u_int32_t spaceSize
         return PARAM_CODE_INVALID_PARAM, "Invalid param %s", workSpace->fileName);
     PARAM_CHECK(workSpace->compareTrieNode != NULL,
         return PARAM_CODE_INVALID_PARAM, "Invalid param %s", workSpace->fileName);
-    PARAM_LOGI("InitWorkSpace %s ", workSpace->fileName);
+    PARAM_LOGD("InitWorkSpace %s ", workSpace->fileName);
     CheckAndCreateDir(workSpace->fileName);
 
     int fd = open(workSpace->fileName, mode, 00777); //0444);
@@ -111,7 +111,7 @@ int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, u_int32_t spaceSize
         workSpace->area = (WorkArea*)areaAddr;
         workSpace->rootNode = GetTrieNode(workSpace, &workSpace->area->firstNode);
     }
-    PARAM_LOGI("InitWorkSpace success, readOnly %d currOffset %u firstNode %u dataSize %u",
+    PARAM_LOGD("InitWorkSpace success, readOnly %d currOffset %u firstNode %u dataSize %u",
         readOnly, workSpace->area->currOffset, workSpace->area->firstNode, workSpace->area->dataSize);
     return 0;
 }

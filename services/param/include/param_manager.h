@@ -66,6 +66,7 @@ typedef enum {
 
 #define PARAM_LOGI(fmt, ...) STARTUP_LOGI(LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGE(fmt, ...) STARTUP_LOGE(LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_LOGD(fmt, ...) STARTUP_LOGD(LABEL, fmt, ##__VA_ARGS__)
 
 #define PARAM_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                     \
