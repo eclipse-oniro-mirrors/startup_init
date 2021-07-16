@@ -228,7 +228,7 @@ int ParseTrigger(TriggerWorkSpace *workSpace, cJSON *triggerItem)
             PARAM_LOGE("Warning parseTrigger %s %s", name, condition);
         }
     }
-    PARAM_LOGI("ParseTrigger %s %u", name, offset);
+    PARAM_LOGD("ParseTrigger %s %u", name, offset);
 
     // 添加命令行
     cJSON* cmdItems = cJSON_GetObjectItem(triggerItem, CMDS_ARR_NAME_IN_JSON);
@@ -332,7 +332,7 @@ static int CheckTrigger_(TriggerWorkSpace *workSpace,
     static TRIGGER_MATCH triggerCheckMatch[TRIGGER_MAX] = {
         CheckBootTriggerMatch, CheckParamTriggerMatch, CheckOtherTriggerMatch
     };
-    PARAM_LOGI("CheckTrigger_ content %s ", content);
+    PARAM_LOGD("CheckTrigger_ content %s ", content);
     PARAM_CHECK(calculator != NULL, return -1, "Failed to check calculator");
     PARAM_CHECK(CHECK_INDEX_VALID(workSpace, type), return -1, "Invalid type %d", type);
     PARAM_CHECK((u_int32_t)type < sizeof(triggerCheckMatch) / sizeof(triggerCheckMatch[0]),

@@ -124,6 +124,7 @@ void InitReadCfg()
     LoadDefaultParams("/system/etc/prop.default");
     LoadDefaultParams("/system/build.prop");
     LoadDefaultParams("/system/buildz.prop");
+    LoadDefaultParams("/product/build.prop");
 #endif
     ParseInitCfg(INIT_CONFIGURATION_FILE);
     ParseOtherCfgs();

@@ -110,7 +110,7 @@ static int ProcessParamSet(RequestMsg *msg)
     int ret = GetSubStringInfo(msg->content, msg->contentSize, '=',  info, sizeof(info)/sizeof(info[0]));
     PARAM_CHECK(ret >= 2, return ret, "Failed to get name from content %s", msg->content);
 
-    PARAM_LOGI("ProcessParamSet name %s value: %s", info[0].value, info[1].value);
+    PARAM_LOGD("ProcessParamSet name %s value: %s", info[0].value, info[1].value);
     ret = WriteParamWithCheck(&g_paramWorkSpace, &msg->securitylabel, info[0].value, info[1].value);
     PARAM_CHECK(ret == 0, return ret, "Failed to set param %d name %s %s", ret, info[0].value, info[1].value);
     ret = WritePersistParam(info[0].value, info[1].value);
@@ -135,7 +135,7 @@ static void OnReceiveAlloc(uv_handle_t *handle, size_t suggestedSize, uv_buf_t* 
 static void OnWriteResponse(uv_write_t *req, int status)
 {
     // 发送成功，释放请求内存
-    PARAM_LOGI("OnWriteResponse status %d", status);
+    PARAM_LOGD("OnWriteResponse status %d", status);
     ResponseNode *node = (ResponseNode*)req;
     free(node);
 }

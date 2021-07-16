@@ -30,7 +30,7 @@ static ParamWorkSpace g_paramWorkSpaceReadOnly = {ATOMIC_VAR_INIT(0), {}, {}, {}
 
 static void OnWrite(uv_write_t *req, int status)
 {
-    PARAM_LOGI("OnWrite status %d", status);
+    PARAM_LOGD("OnWrite status %d", status);
 }
 
 static void OnReceiveAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
@@ -38,13 +38,13 @@ static void OnReceiveAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
     // 这里需要按实际回复大小申请内存，不需要大内存
     buf->base = (char *)malloc(sizeof(ResponseMsg));
     buf->len = sizeof(ResponseMsg);
-    PARAM_LOGI("OnReceiveAlloc handle %p %zu", handle, suggestedSize);
+    PARAM_LOGD("OnReceiveAlloc handle %p %zu", handle, suggestedSize);
 }
 
 static void OnReceiveResponse(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf)
 {
     RequestNode *req = ParamEntry(handle, RequestNode, handle);
-    PARAM_LOGI("OnReceiveResponse %p", handle);
+    PARAM_LOGD("OnReceiveResponse %p", handle);
     if (nread <= 0 || buf == NULL || handle == NULL || buf->base == NULL) {
         if (buf != NULL && buf->base != NULL) {
             free(buf->base);
@@ -57,7 +57,7 @@ static void OnReceiveResponse(uv_stream_t *handle, ssize_t nread, const uv_buf_t
     }
     ResponseMsg *response = (ResponseMsg *)(buf->base);
     PARAM_CHECK(response != NULL, return, "The response is null");
-    PARAM_LOGI("OnReceiveResponse %p cmd %d result: %d", handle, response->type, response->result);
+    PARAM_LOGD("OnReceiveResponse %p cmd %d result: %d", handle, response->type, response->result);
     switch (response->type) {
         case SET_PARAM:
             req->result = response->result;
@@ -66,7 +66,7 @@ static void OnReceiveResponse(uv_stream_t *handle, ssize_t nread, const uv_buf_t
             PARAM_LOGE("not supported the command: %d", response->type);
             break;
     }
-    PARAM_LOGE("Close handle %p", handle);
+    PARAM_LOGD("Close handle %p", handle);
     free(buf->base);
     uv_close((uv_handle_t*)handle, NULL);
     uv_stop(req->loop);
@@ -76,7 +76,7 @@ static void OnConnection(uv_connect_t *connect, int status)
 {
     PARAM_CHECK(status >= 0, return, "Failed to conntect status %s", uv_strerror(status));
     RequestNode *request = ParamEntry(connect, RequestNode, connect);
-    PARAM_LOGI("Connect to server handle %p", &(request->handle));
+    PARAM_LOGD("Connect to server handle %p", &(request->handle));
     uv_buf_t buf = uv_buf_init((char*)&request->msg, request->msg.contentSize + sizeof(request->msg));
     int ret = uv_write2(&request->wr, (uv_stream_t*)&(request->handle), &buf, 1, (uv_stream_t*)&(request->handle), OnWrite);
     PARAM_CHECK(ret >= 0, return, "Failed to uv_write2 porperty");
@@ -107,7 +107,7 @@ int SystemSetParameter(const char *name, const char *value)
     int ret = CheckParamName(name, 0);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name");
 
-    PARAM_LOGI("StartRequest %s", name);
+    PARAM_LOGD("StartRequest %s", name);
     u_int32_t msgSize = sizeof(RequestMsg) + strlen(name) + strlen(value) + 2;
     RequestNode *request = (RequestNode *)malloc(sizeof(RequestNode) + msgSize);
     PARAM_CHECK(request != NULL, return -1, "Failed to malloc for connect");
