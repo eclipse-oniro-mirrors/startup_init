@@ -159,7 +159,10 @@ int ServiceStart(Service *service)
         INIT_LOGE("start service %s invalid.", service->name);
         return SERVICE_FAILURE;
     }
-
+    if (service->pathArgs == NULL) {
+        INIT_LOGE("start service pathArgs is NULL.");
+        return SERVICE_FAILURE;
+    }
     struct stat pathStat = {0};
     service->attribute &= (~(SERVICE_ATTR_NEED_RESTART | SERVICE_ATTR_NEED_STOP));
     if (stat(service->pathArgs[0], &pathStat) != 0) {
@@ -189,7 +192,7 @@ int ServiceStart(Service *service)
         }
         char pidString[MAX_PID_STRING_LENGTH];          // writepid
         pid_t childPid = getpid();
-        if (snprintf(pidString, MAX_PID_STRING_LENGTH, "%d", childPid) <= 0) {
+        if (snprintf_s(pidString, MAX_PID_STRING_LENGTH, MAX_PID_STRING_LENGTH - 1, "%d", childPid) < 0) {
             INIT_LOGE("start service writepid sprintf failed.");
             _exit(0x7f); // 0x7f: user specified
         }
@@ -271,6 +274,9 @@ int ServiceStop(Service *service)
 // the service need to be restarted, if it crashed more than 4 times in 4 minutes
 void CheckCritical(Service *service)
 {
+    if (service == NULL) {
+        return;
+    }
     if (service->attribute & SERVICE_ATTR_CRITICAL) {            // critical
         // crash time and count check
         time_t curTime = time(NULL);
@@ -303,6 +309,7 @@ static int ExecRestartCmd(const Service *service)
         DoCmd(&service->onRestart->cmdLine[i]);
     }
     free(service->onRestart->cmdLine);
+    service->onRestart->cmdLine = NULL;
     free(service->onRestart);
     return SERVICE_SUCCESS;
 }

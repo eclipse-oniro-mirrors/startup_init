@@ -70,10 +70,14 @@ void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int l
     if (logLevel < g_logLevel) {
         return;
     }
-    // 可以替换stdout这个为对应的文件句柄
+
     time_t logTime;
     time(&logTime);
     struct tm *t = gmtime(&logTime);
+    if (t == NULL) {
+        printf("time is NULL.\n");
+        return;
+    }
     fprintf(stdout, "[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ",
         (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec,
         getpid(), fileName, line, tag, LOG_LEVEL_STR[logLevel]);

@@ -489,7 +489,7 @@ int UpdateDataValue(DataEntry *entry, const char *value)
     u_int32_t valueLen = strlen(value);
     u_int32_t oldLen = DATA_ENTRY_DATA_LEN(entry);
     if (oldLen < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
-        PARAM_LOGE("Old value %s new value %s", entry->data + keyLen + 1, value);
+        PARAM_LOGD("Old value %s new value %s", entry->data + keyLen + 1, value);
         ret = memcpy_s(entry->data + keyLen + 1, PARAM_VALUE_LEN_MAX, value, valueLen + 1);
         PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
         u_int32_t dataLength = keyLen << TRIE_SERIAL_KEY_LEN_OFFSET | valueLen << TRIE_SERIAL_DATA_LEN_OFFSET;

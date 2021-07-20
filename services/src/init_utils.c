@@ -47,6 +47,9 @@
 
 int DecodeUid(const char *name)
 {
+    if (name == NULL) {
+        return -1;
+    }
     bool digitFlag = true;
     for (unsigned int i = 0; i < strlen(name); ++i) {
         if (isalpha(name[i])) {
@@ -63,7 +66,7 @@ int DecodeUid(const char *name)
         return result;
     } else {
         struct passwd *pwd = getpwnam(name);
-        if (!pwd) {
+        if (pwd == NULL) {
             return -1;
         }
         return pwd->pw_uid;
@@ -72,6 +75,9 @@ int DecodeUid(const char *name)
 
 void CheckAndCreateDir(const char *fileName)
 {
+    if (fileName == NULL || *fileName == '\0') {
+        return;
+    }
     char *path = strndup(fileName, strrchr(fileName, '/') - fileName);
     if (path != NULL && access(path, F_OK) != 0) {
         mkdir(path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
@@ -99,7 +105,7 @@ char* ReadFileToBuf(const char *configFile)
             INIT_LOGE("Open %s failed. err = %d", configFile, errno);
             break;
         }
-        buffer = (char*)malloc(fileStat.st_size + 1);
+        buffer = (char*)malloc((size_t)(fileStat.st_size + 1));
         if (buffer == NULL) {
             INIT_LOGE("Failed to allocate memory for config file, err = %d", errno);
             break;
@@ -127,17 +133,13 @@ int SplitString(char *srcPtr, char **dstPtr, int maxNum)
     }
     char *buf = NULL;
     dstPtr[0] = strtok_r(srcPtr, " ", &buf);
-    int i = 0;
-    while (dstPtr[i] != NULL && (i < maxNum)) {
-        i++;
-        dstPtr[i] = strtok_r(NULL, " ", &buf);
+    int counter = 0;
+    while (dstPtr[counter] != NULL && (counter < maxNum)) {
+        counter++;
+        dstPtr[counter] = strtok_r(NULL, " ", &buf);
     }
-    dstPtr[i] = "\0";
-    int num = i;
-    for (int j = 0; j < num; j++) {
-        INIT_LOGI("dstPtr[%d] is %s ", j, dstPtr[j]);
-    }
-    return num;
+    dstPtr[counter] = NULL;
+    return counter;
 }
 
 void WaitForFile(const char *source, unsigned int maxCount)

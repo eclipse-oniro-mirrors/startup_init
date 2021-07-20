@@ -25,6 +25,9 @@
 #define LABEL "Trigger"
 #define MAX_TRIGGER_COUNT_RUN_ONCE 20
 #define SYS_POWER_CTRL "sys.powerctrl="
+#define OHOS_CTL_START "ohos.ctl.start="
+#define OHOS_CTL_STOP "ohos.ctl.stop="
+
 static TriggerWorkSpace g_triggerWorkSpace = {};
 
 static int DoCmdExecute(TriggerNode *trigger, const char *cmdName, const char *command)
@@ -129,6 +132,10 @@ static void SendTriggerEvent(TriggerDataEvent *event)
         } else {
             PARAM_LOGE("SendTriggerEvent cmd %s not found", event->content);
         }
+    } else if (strncmp(event->content, OHOS_CTL_START, strlen(OHOS_CTL_START)) == 0) {
+        DoCmdByName("start ", event->content + strlen(OHOS_CTL_START));
+    } else if (strncmp(event->content, OHOS_CTL_STOP, strlen(OHOS_CTL_STOP)) == 0) {
+        DoCmdByName("stop ", event->content + strlen(OHOS_CTL_STOP));
     } else {
         uv_queue_work(uv_default_loop(), &event->request, ProcessEvent, ProcessAfterEvent);
         event = NULL;
@@ -141,7 +148,7 @@ static void SendTriggerEvent(TriggerDataEvent *event)
 void PostParamTrigger(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return, "Invalid param");
-    PARAM_LOGI("PostParamTrigger %s ", name);
+    PARAM_LOGD("PostParamTrigger %s ", name);
     int contentLen = strlen(name) + strlen(value) + 2;
     TriggerDataEvent *event = (TriggerDataEvent *)malloc(sizeof(TriggerDataEvent) + contentLen);
     PARAM_CHECK(event != NULL, return, "Failed to alloc memory");

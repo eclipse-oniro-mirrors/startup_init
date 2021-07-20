@@ -44,13 +44,17 @@
 #define FILE_NAME_MAX_SIZE 100
 static void ParseInitCfgContents(cJSON *root)
 {
+    if (root == NULL) {
+        INIT_LOGE("ParseInitCfgContents root is NULL");
+        return;
+    }
      // parse services
     ParseAllServices(root);
 #ifdef OHOS_LITE
     // parse jobs
     ParseAllJobs(root);
 #else
-	ParseTriggerConfig(root);
+    ParseTriggerConfig(root);
 #endif
 
     // parse imports
@@ -129,9 +133,10 @@ void InitReadCfg()
     ParseInitCfg(INIT_CONFIGURATION_FILE);
     ParseOtherCfgs();
     INIT_LOGI("Parse init config file done.");
-
+#ifdef OHOS_SERVICE_DUMP
     DumpAllServices();
-    // DumpAllJobs();
+#endif
+
 #ifdef OHOS_LITE
     // do jobs
     DoJob("pre-init");

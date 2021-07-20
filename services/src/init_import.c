@@ -22,8 +22,6 @@
 #include "init_read_cfg.h"
 #include "securec.h"
 
-#define IMPORT_ARR_NAME_IN_JSON "import"
-
 #ifndef OHOS_LITE
 static int ExtractCfgFile(char **cfgFile, char *content)
 {
@@ -41,7 +39,7 @@ static int ExtractCfgFile(char **cfgFile, char *content)
 
 void ParseAllImports(cJSON *root)
 {
-    cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, IMPORT_ARR_NAME_IN_JSON);
+    cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "import");
     char *cfgFile = NULL;
     if (!cJSON_IsArray(importAttr)) {
         return;

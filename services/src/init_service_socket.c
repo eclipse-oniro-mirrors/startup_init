@@ -24,9 +24,12 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include "init_log.h"
+#include "securec.h"
 
 #define HOS_SOCKET_DIR    "/dev/unix/socket"
 #define HOS_SOCKET_ENV_PREFIX    "OHOS_SOCKET_"
+#define MAX_SOCKET_ENV_PREFIX_LEN 64
+#define MAX_SOCKET_FD_LEN 16
 
 static int CreateSocket(struct ServiceSocket *sockopt)
 {
@@ -46,8 +49,10 @@ static int CreateSocket(struct ServiceSocket *sockopt)
     struct sockaddr_un addr;
     bzero(&addr,sizeof(addr));
     addr.sun_family = AF_UNIX;
-    snprintf(addr.sun_path, sizeof(addr.sun_path), HOS_SOCKET_DIR"/%s",
-             sockopt->name);
+    if (snprintf_s(addr.sun_path, sizeof(addr.sun_path), sizeof(addr.sun_path) - 1, HOS_SOCKET_DIR"/%s",
+             sockopt->name) < 0) {
+        return -1;
+    }
     if (access(addr.sun_path, F_OK)) {
         INIT_LOGE("%s already exist, remove it", addr.sun_path);
         if (unlink(addr.sun_path) != 0) {
@@ -89,10 +94,18 @@ static int CreateSocket(struct ServiceSocket *sockopt)
 
 static int SetSocketEnv(int fd, char *name)
 {
-    char pubName[64] = {0};
-    char val[16] = {0};
-    snprintf(pubName, sizeof(pubName), HOS_SOCKET_ENV_PREFIX"%s", name);
-    snprintf(val, sizeof(val), "%d", fd);
+    if (name == NULL) {
+        return -1;
+    }
+    char pubName[MAX_SOCKET_ENV_PREFIX_LEN] = {0};
+    char val[MAX_SOCKET_FD_LEN] = {0};
+    if (snprintf_s(pubName, MAX_SOCKET_ENV_PREFIX_LEN, MAX_SOCKET_ENV_PREFIX_LEN - 1,
+            HOS_SOCKET_ENV_PREFIX"%s", name) < 0) {
+        return -1;
+    }
+    if (snprintf_s(val, MAX_SOCKET_FD_LEN, MAX_SOCKET_FD_LEN - 1, "%d", fd) < 0) {
+        return -1;
+    }
     int ret = setenv(pubName, val, 1);
     if (ret < 0) {
         INIT_LOGE("setenv fail %d ", errno);
@@ -111,6 +124,9 @@ int DoCreateSocket(struct ServiceSocket *sockopt)
     while (tmpSock) {
         int fd = CreateSocket(tmpSock);
         if (fd < 0) {
+            return -1;
+        }
+        if (tmpSock->name == NULL) {
             return -1;
         }
         int ret = SetSocketEnv(fd, tmpSock->name);
