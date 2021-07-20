@@ -63,7 +63,6 @@ if (defined(ohos_lite)) {
     ]
     if (ohos_kernel_type == "liteos_a") {
       include_dirs += [
-        "//kernel/liteos_a/syscall",
         "//base/startup/init_lite/interfaces/kits",
         "//base/startup/init_lite/initsync/include",
       ]
