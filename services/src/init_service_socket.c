@@ -50,7 +50,7 @@ static int CreateSocket(struct ServiceSocket *sockopt)
     bzero(&addr,sizeof(addr));
     addr.sun_family = AF_UNIX;
     if (snprintf_s(addr.sun_path, sizeof(addr.sun_path), sizeof(addr.sun_path) - 1, HOS_SOCKET_DIR"/%s",
-             sockopt->name) < 0) {
+        sockopt->name) < 0) {
         return -1;
     }
     if (access(addr.sun_path, F_OK)) {
@@ -100,7 +100,7 @@ static int SetSocketEnv(int fd, char *name)
     char pubName[MAX_SOCKET_ENV_PREFIX_LEN] = {0};
     char val[MAX_SOCKET_FD_LEN] = {0};
     if (snprintf_s(pubName, MAX_SOCKET_ENV_PREFIX_LEN, MAX_SOCKET_ENV_PREFIX_LEN - 1,
-            HOS_SOCKET_ENV_PREFIX"%s", name) < 0) {
+        HOS_SOCKET_ENV_PREFIX"%s", name) < 0) {
         return -1;
     }
     if (snprintf_s(val, MAX_SOCKET_FD_LEN, MAX_SOCKET_FD_LEN - 1, "%d", fd) < 0) {

@@ -693,7 +693,7 @@ void ParseAllServices(const cJSON* fileRoot)
                 tmp[i].socketCfg = NULL;
             }
         }
-        GetServiceOnRestart(curItem, &tmp[i]);
+        (void)GetServiceOnRestart(curItem, &tmp[i]);
     }
     // Increase service counter.
     RegisterServices(retServices, servArrSize);

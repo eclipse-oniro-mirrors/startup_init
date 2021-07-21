@@ -15,8 +15,8 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "sys_param.h"
 #include "securec.h"
+#include "sys_param.h"
 
 #define SERVICE_START_NUMBER 2
 #define SERVICE_CONTROL_NUMBER 3
@@ -71,13 +71,13 @@ int main(int argc, char** argv)
     char serviceCtl[SERVICE_CONTROL_MAX_SIZE];
     if (strcmp(argv[0], "start_service") == 0) {
         if (strncpy_s(serviceCtl, sizeof(serviceCtl), "ohos.ctl.start", sizeof(serviceCtl) - 1) != EOK) {
-           printf("strncpy_s failed.\n");
-           return -1;
+            printf("strncpy_s failed.\n");
+            return -1;
         }
     } else if (strcmp(argv[0], "stop_service") == 0) {
         if (strncpy_s(serviceCtl, sizeof(serviceCtl), "ohos.ctl.stop", sizeof(serviceCtl) - 1) != EOK) {
-           printf("strncpy_s failed.\n");
-           return -1;
+            printf("strncpy_s failed.\n");
+            return -1;
         }
     } else {
         ServiceControl(argc, argv);

@@ -145,7 +145,7 @@ int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
 // For ite ohos, do not support parameter operation. just do string copy
 inline int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
 {
-    return strncpy_s(paramValue, paramLen, symValue, strlen(symValue)) == EOK ? 0 : -1;
+    return (strncpy_s(paramValue, paramLen, symValue, strlen(symValue)) == EOK) ? 0 : -1;
 }
 #endif
 
@@ -164,7 +164,6 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
 
     char tmpCmd[MAX_BUFFER];
     size_t cmdLength = strlen(cmdContent);
-
     if (cmdLength > MAX_BUFFER - 1) {
         INIT_LOGE("command line is too larget, should not bigger than %d. ignore...\n", MAX_BUFFER);
         FreeCmd(&ctx);
@@ -201,7 +200,7 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
     int index = ctx->argc;
     while (token != NULL) {
         // Too more arguments, treat rest of data as one argument
-        if (index == (argsCount -1)) {
+        if (index == (argsCount - 1)) {
             break;
         }
         *token = '\0'; // replace it with '\0';
@@ -834,7 +833,7 @@ static void DoSetrlimit(const char *cmdContent)
 
     struct rlimit limit;
     limit.rlim_cur = (rlim_t)atoi(ctx->argv[1]);
-    limit.rlim_max = (rlim_t )atoi(ctx->argv[rlimMaxPos]);
+    limit.rlim_max = (rlim_t)atoi(ctx->argv[rlimMaxPos]);
     int rcs = -1;
     for (unsigned int i = 0 ; i < sizeof(resource) / sizeof(char*); ++i) {
         if (strcmp(ctx->argv[0], resource[i]) == 0) {

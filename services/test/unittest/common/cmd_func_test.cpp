@@ -522,7 +522,7 @@ static char* ReadFileToBuf()
             break;
         }
 
-        buffer = (char *)malloc((size_t)fileStat.st_size + 1);
+        buffer = static_cast<char*>malloc((size_t)fileStat.st_size + 1);
         if (buffer == nullptr) {
             break;
         }
