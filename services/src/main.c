@@ -52,11 +52,11 @@ static void PrintSysInfo()
 }
 
 #ifdef OHOS_DEBUG
-static long TimeDiffMs(struct timespec* tmBefore, struct timespec* tmAfter)
+static long TimeDiffMs(const struct timespec* tmBefore, const struct timespec* tmAfter)
 {
     if (tmBefore != NULL && tmAfter != NULL) {
         long timeUsed = (tmAfter->tv_sec - tmBefore->tv_sec) * 1000 +     // 1 s = 1000 ms
-            (tmAfter->tv_nsec - tmBefore->tv_nsec) / 1000000;    // 1 ms = 1000000 ns
+            (tmAfter->tv_nsec - tmBefore->tv_nsec) / 1000000L;    // 1 ms = 1000000 ns
         return timeUsed;
     }
     return -1;

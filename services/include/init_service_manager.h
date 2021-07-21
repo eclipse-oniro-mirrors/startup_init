@@ -43,8 +43,9 @@ void StopAllServices();
 void StopAllServicesBeforeReboot();
 void ReapServiceByPID(int pid);
 void ParseAllServices(const cJSON* fileRoot);
+#ifdef OHOS_SERVICE_DUMP
 void DumpAllServices();
-
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 }

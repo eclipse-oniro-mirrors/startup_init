@@ -23,6 +23,7 @@
 #include <sys/mount.h>
 #include <sys/prctl.h>
 #include <sys/reboot.h>
+#include "securec.h"
 #include "init_service.h"
 #include "init_service_manager.h"
 #include "init_log.h"
@@ -38,6 +39,10 @@ struct RBMiscUpdateMessage {
 
 static bool RBMiscWriteUpdaterMessage(const char *path, struct RBMiscUpdateMessage *boot)
 {
+    if (path == NULL || boot == NULL) {
+        INIT_LOGE("path or boot is NULL.");
+        return false;
+    }
     FILE* fp = fopen(path, "rb+");
     if (fp == NULL) {
         INIT_LOGE("open %s failed", path);
@@ -57,6 +62,10 @@ static bool RBMiscWriteUpdaterMessage(const char *path, struct RBMiscUpdateMessa
 
 static bool RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage *boot)
 {
+    if (path == NULL || boot == NULL) {
+        INIT_LOGE("path or boot is NULL.");
+        return false;
+    }
     FILE* fp = fopen(path, "rb");
     if (fp == NULL) {
         INIT_LOGE("open %s failed", path);
@@ -75,7 +84,8 @@ static bool RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessag
 
 static int GetMountStatusForMountPoint(const char *mountPoint)
 {
-    char buffer[512];
+    const int bufferMaxSize = 512;
+    char buffer[bufferMaxSize];
     size_t n;
     const char *mountFile = "/proc/mounts";
     FILE *fp = fopen(mountFile, "r");
@@ -129,12 +139,12 @@ void DoReboot(const char *value)
     }
 
     StopAllServicesBeforeReboot();
-    if (GetMountStatusForMountPoint("/vendor")) {
+    if (GetMountStatusForMountPoint("/vendor") != 0) {
         if (umount("/vendor") != 0) {
             INIT_LOGE("DoReboot umount vendor failed! errno = %d.", errno);
         }
     }
-    if (GetMountStatusForMountPoint("/data")) {
+    if (GetMountStatusForMountPoint("/data") != 0) {
         if (umount("/data") != 0) {
             INIT_LOGE("DoReboot umount data failed! errno = %d.", errno);
         }
@@ -161,7 +171,7 @@ void DoReboot(const char *value)
 
     if (strlen(valueData) > strlen("updater:") && strncmp(valueData, "updater:", strlen("updater:")) == 0) {
         const char *p = valueData + strlen("updater:");
-        if (snprintf(msg.update, MAX_UPDATE_SIZE, "%s", p) > MAX_UPDATE_SIZE) {
+        if (snprintf_s(msg.update, MAX_UPDATE_SIZE, MAX_UPDATE_SIZE - 1, "%s", p) == -1) {
             INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error");
             return;
         }

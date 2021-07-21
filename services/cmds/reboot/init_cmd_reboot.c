@@ -18,20 +18,22 @@
 #include <unistd.h>
 #include "init_reboot.h"
 
+#define REBOOT_CMD_NUMBER 2
+
 int main(int argc, char* argv[])
 {
-    if (argc > 2) {
+    if (argc > REBOOT_CMD_NUMBER) {
         printf("usage: reboot shutdown\n       reboot updater\n       reboot updater[:options]\n       reboot\n");
         return 0;
     }
-    if (argc == 2 && strcmp(argv[1], "shutdown") != 0 &&
+    if (argc == REBOOT_CMD_NUMBER && strcmp(argv[1], "shutdown") != 0 &&
         strcmp(argv[1], "updater") != 0 &&
-        strncmp(argv[1], "updater:", strlen("updater:")) != 0 ) {
+        strncmp(argv[1], "updater:", strlen("updater:")) != 0) {
         printf("usage: reboot shutdown\n       reboot updater\n       reboot updater[:options]\n       reboot\n");
         return 0;
     }
     int ret = 0;
-    if (argc == 2) {
+    if (argc == REBOOT_CMD_NUMBER) {
         ret = DoReboot(argv[1]);
     } else {
         ret = DoReboot("NoArgument");

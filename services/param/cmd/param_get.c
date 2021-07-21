@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     u_int32_t size = BUFFER_SIZE;
     int ret = SystemGetParameter(argv[1], value, &size);
     if (ret == 0) {
-        printf("getparam %s %s \n", argv[1], value);
+        printf("%s \n", value);
     } else {
         printf("getparam %s %s fail\n", argv[1], value);
     }

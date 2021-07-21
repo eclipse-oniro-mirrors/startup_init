@@ -77,12 +77,6 @@ static void SigHandler(int sig)
             StopAllServices();
             break;
         }
-        case SIGINT:
-#ifndef OHOS_LITE
-            StopParamService();
-#endif
-            exit(0);
-            break;
         default:
             INIT_LOGI("SigHandler, unsupported signal %d.", sig);
             break;
@@ -103,7 +97,6 @@ void SignalInitModule()
 #else // L2 or above, use signal event in libuv
 uv_signal_t g_sigchldHandler;
 uv_signal_t g_sigtermHandler;
-uv_signal_t g_sigintHandler;
 
 static void UVSignalHandler(uv_signal_t* handle, int signum)
 {
@@ -114,7 +107,6 @@ void SignalInitModule()
 {
     int ret = uv_signal_init(uv_default_loop(), &g_sigchldHandler);
     ret |= uv_signal_init(uv_default_loop(), &g_sigtermHandler);
-    ret |= uv_signal_init(uv_default_loop(), &g_sigintHandler);
     if (ret != 0) {
         INIT_LOGW("initialize signal handler failed");
         return;
@@ -124,9 +116,6 @@ void SignalInitModule()
         INIT_LOGW("start SIGCHLD handler failed");
     }
     if (uv_signal_start(&g_sigtermHandler, UVSignalHandler, SIGTERM) != 0) {
-        INIT_LOGW("start SIGTERM handler failed");
-    }
-    if (uv_signal_start(&g_sigintHandler, UVSignalHandler, SIGINT) != 0) {
         INIT_LOGW("start SIGTERM handler failed");
     }
 }

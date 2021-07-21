@@ -33,6 +33,10 @@ extern "C" {
 #define MAX_PARAM_VALUE_LEN 96
 // Limit max length of parameter name to 96
 #define MAX_PARAM_NAME_LEN 96
+#else
+// For lite ohos, do not support parameter operation
+#define MAX_PARAM_VALUE_LEN 0
+#define MAX_PARAM_NAME_LEN 0
 #endif
 
 // one cmd line
@@ -46,10 +50,8 @@ struct CmdArgs {
     char **argv;
 };
 
-#ifndef OHOS_LITE
 int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen);
-#endif
-struct CmdArgs* GetCmd(const char *cmdContent, const char *delim);
+struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount);
 void FreeCmd(struct CmdArgs **cmd);
 
 void ParseCmdLine(const char* cmdStr, CmdLine* resCmd);

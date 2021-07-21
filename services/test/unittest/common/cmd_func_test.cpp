@@ -522,7 +522,7 @@ static char* ReadFileToBuf()
             break;
         }
 
-        buffer = (char*)malloc(fileStat.st_size + 1);
+        buffer = static_cast<char*>(malloc((size_t)fileStat.st_size + 1));
         if (buffer == nullptr) {
             break;
         }
@@ -895,11 +895,12 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_003, TestSize.Level1)
         }
 
         do {
-            size = fread(buf, 1, CAT_BUF_SIZE, fd);
+            size = fread(buf, 1, CAT_BUF_SIZE - 1, fd);
             if (size < 0) {
                 EXPECT_TRUE(size >= 0);
                 break;
             }
+            buf[CAT_BUF_SIZE - 1] = 0;
             if (strstr(buf, "zpfs") != nullptr) {
                 hasZpfs = true;
                 break;

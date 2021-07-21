@@ -89,6 +89,10 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
             break;
         }
         char* fieldStr = cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i));
+        if (fieldStr == NULL) {
+            INIT_LOGE("fieldStr is NULL");
+            break;
+        }
         int mapSize = sizeof(g_capStrCapNum) / sizeof(struct CapStrCapNum);     // search
         int j = 0;
         for (; j < mapSize; j++) {
@@ -114,6 +118,10 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
 
 int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
 {
+    if (curServ == NULL || curArrItem == NULL) {
+        INIT_LOGE("GetServiceCaps failed, curServ or curArrItem is NULL.");
+        return SERVICE_FAILURE;
+    }
     curServ->servPerm.capsCnt = 0;
     curServ->servPerm.caps = NULL;
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, "caps");
@@ -145,7 +153,6 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
         cJSON* capJ = cJSON_GetArrayItem(filedJ, i);
         if (!cJSON_IsNumber(capJ) || cJSON_GetNumberValue(capJ) < 0) {
             // resources will be released by function: ReleaseServiceMem
-            INIT_LOGI("service=%s, Capbility is not a number or < 0, error.", curServ->name);
             break;
         }
         curServ->servPerm.caps[i] = (unsigned int)cJSON_GetNumberValue(capJ);

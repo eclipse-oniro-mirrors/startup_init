@@ -57,6 +57,7 @@ if (defined(ohos_lite)) {
     ldflags = []
     if (ohos_kernel_type == "liteos_a") {
       include_dirs += [
+        "//kernel/liteos_a/syscall",
         "//base/startup/init_lite/interfaces/kits",
         "//base/startup/init_lite/initsync/include",
       ]
@@ -152,7 +153,8 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/param:paramclient",
       "//base/startup/init_lite/services/param:paramservice",
       "//base/startup/init_lite/services/param:setparam",
-      "//base/startup/init_lite/services/reboot:reboot",
+      "//base/startup/init_lite/services/cmds/reboot:reboot",
+      "//base/startup/init_lite/services/cmds/service_control:service_control",
     ]
   }
 

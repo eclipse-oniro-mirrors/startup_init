@@ -249,7 +249,7 @@ int ReadParamValue(ParamWorkSpace *workSpace, ParamHandle handle, char *value, u
     }
 
     if (value == NULL) {
-        *len = DATA_ENTRY_DATA_LEN(entry);;
+        *len = DATA_ENTRY_DATA_LEN(entry) + 1;
         return 0;
     }
 
