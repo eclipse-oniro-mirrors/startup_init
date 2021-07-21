@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -31,12 +32,12 @@ static int SendCmd(int cmd, unsigned long arg)
     if (fd != -1) {
         int ret = ioctl(fd, cmd, arg);
         if (ret == -1) {
-            INIT_LOGE("[Init] [ERR] %s!", strerror(errno));
+            INIT_LOGE("[Init] [ERR] %d!", errno);
         }
         close(fd);
         return ret;
     }
-    INIT_LOGE("[Init] [ERR] %s!", strerror(errno));
+    INIT_LOGE("[Init] [ERR] %d!", errno);
     return fd;
 }
 
@@ -45,7 +46,7 @@ int InitListen(unsigned long eventMask, unsigned int wait)
     QuickstartListenArgs args;
     args.wait = wait;
     args.events = eventMask;
-    return SendCmd(QUICKSTART_LISTEN, (unsigned long)&args);
+    return SendCmd(QUICKSTART_LISTEN, (uintptr_t)&args);
 }
 
 int NotifyInit(unsigned long event)

@@ -329,10 +329,14 @@ static void DoCopy(const char* cmdContent)
 out:
     FreeCmd(&ctx);
     ctx = NULL;
-    close(srcFd);
-    srcFd = -1;
-    close(dstFd);
-    dstFd = -1;
+    if (srcFd >= 0) {
+        close(srcFd);
+        srcFd = -1;
+    }
+    if (dstFd >= 0) {
+        close(dstFd);
+        dstFd = -1;
+    }
     return;
 }
 
