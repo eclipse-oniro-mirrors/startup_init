@@ -31,12 +31,12 @@ static int SendCmd(int cmd, unsigned long arg)
     if (fd != -1) {
         int ret = ioctl(fd, cmd, arg);
         if (ret == -1) {
-            INIT_LOGE("[Init] [ERR] %s!", strerror(errno));
+            INIT_LOGE("[Init] [ERR] %d!", errno);
         }
         close(fd);
         return ret;
     }
-    INIT_LOGE("[Init] [ERR] %s!", strerror(errno));
+    INIT_LOGE("[Init] [ERR] %d!", errno);
     return fd;
 }
 
