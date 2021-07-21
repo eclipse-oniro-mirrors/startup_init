@@ -71,9 +71,8 @@ void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int l
         return;
     }
 
-    time_t logTime;
-    time(&logTime);
-    struct tm *t = gmtime(&logTime);
+    time_t second = time(0);
+    struct tm *t = localtime(&second);
     if (t == NULL) {
         printf("time is NULL.\n");
         return;
