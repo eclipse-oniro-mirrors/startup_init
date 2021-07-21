@@ -45,7 +45,7 @@ int InitListen(unsigned long eventMask, unsigned int wait)
     QuickstartListenArgs args;
     args.wait = wait;
     args.events = eventMask;
-    return SendCmd(QUICKSTART_LISTEN, (unsigned long)&args);
+    return SendCmd(QUICKSTART_LISTEN, (uintptr_t)&args);
 }
 
 int NotifyInit(unsigned long event)
