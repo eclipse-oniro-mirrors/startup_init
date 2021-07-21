@@ -149,7 +149,7 @@ void WaitForFile(const char *source, unsigned int maxCount)
         maxCount = WAIT_MAX_COUNT;
     }
     struct stat sourceInfo;
-    unsigned int waitTime = 500000;
+    const unsigned int waitTime = 500000;
     unsigned int count = 0;
     do {
         usleep(waitTime);

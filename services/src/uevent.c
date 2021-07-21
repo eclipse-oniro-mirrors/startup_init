@@ -386,7 +386,11 @@ struct DevPermissionMapper {
 };
 
 struct DevPermissionMapper DEV_MAPPER[] = {
-    {"/dev/binder", 0666, 0, 0}
+    {"/dev/binder", 0666, 0, 0},
+    {"/dev/dri/card0", 0666, 0, 1003},
+    {"/dev/dri/card0-DSI-1", 0666, 0, 1003},
+    {"/dev/dri/card0-HDMI-A-1", 0666, 0, 1003},
+    {"/dev/dri/renderD128", 0666, 0, 1003}
 };
 
 static void AdjustDevicePermission(const char *devPath)

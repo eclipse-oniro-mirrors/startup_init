@@ -405,12 +405,6 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_005, TestSize.Level1)
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
 
-    cmdContentStr = "888    888 " + TEST_FILE;    // too many spaces, wrong format here
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
-    EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
-    EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
-    DoCmd(&curCmdLine);
-
     cmdContentStr = "888 8b9 " + TEST_FILE;    // non-digital character, wrong format here
     ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
