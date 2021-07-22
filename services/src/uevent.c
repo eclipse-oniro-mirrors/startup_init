@@ -33,7 +33,7 @@
 #include "securec.h"
 
 #define LINK_NUMBER 4
-#define DEFAULT_DIR_MODE 0755
+#define DEFAULT_DIR_MODE (S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
 #define DEV_DRM 3
 #define DEV_ONCRPC 6
 #define DEV_ADSP 4
@@ -67,7 +67,7 @@
 #define DEFAULT_MODE 0000
 #define DEVICE_SKIP 5
 #define HANDLE_DEVICE_USB 3
-#define DEFAULT_NO_AUTHORITY_MODE 0600
+#define DEVICE_DEFAULT_MODE (S_IRUSR | S_IWUSR | S_IRGRP)
 
 int g_ueventFD = -1;
 
@@ -387,6 +387,58 @@ struct DevPermissionMapper {
 
 struct DevPermissionMapper DEV_MAPPER[] = {
     {"/dev/binder", 0666, 0, 0},
+    {"/dev/input/event0", 0660, 0, 1004},
+    {"/dev/input/event1", 0660, 0, 1004},
+    {"/dev/input/mice", 0660, 0, 1004},
+    {"/dev/input/mouse0", 0660, 0, 1004},
+    {"/dev/snd/timer", 0660, 1000, 1005},
+    {"/dev/zero", 0666, 0, 0},
+    {"/dev/full", 0666, 0, 0},
+    {"/dev/ptmx", 0666, 0, 0},
+    {"/dev/tty", 0666, 0, 0},
+    {"/dev/random", 0666, 0, 0},
+    {"/dev/urandom", 0666, 0, 0},
+    {"/dev/ashmem", 0666, 0, 0},
+    {"/dev/pmsg0", 0222, 0, 0},
+    {"/dev/jpeg", 0666, 1000, 1003},
+    {"/dev/vinput", 0660, 1000, 1004},
+    {"/dev/mmz_userdev", 0644, 1000, 1005},
+    {"/dev/graphics/fb0", 0660, 1000, 1003},
+    {"/dev/mem", 0660, 1000, 1005},
+    {"/dev/ion", 0666, 1000, 1000},
+    {"/dev/btusb0", 0660, 1002, 1002},
+    {"/dev/uhid", 0660, 1002, 1002},
+    {"/dev/tc_ns_client", 0660, 1000, 1005},
+    {"/dev/rtk_btusb", 0660, 1002, 0},
+    {"/dev/sil9293", 0660, 1000, 1005},
+    {"/dev/stpbt", 0660, 1002, 1001},
+    {"/dev/avs", 0660, 1000, 1005},
+    {"/dev/gdc", 0660, 1000, 1005},
+    {"/dev/hdmi", 0660, 1000, 1005},
+    {"/dev/hi_mipi", 0660, 1000, 1005},
+    {"/dev/hi_mipi_tx", 0660, 1000, 1005},
+    {"/dev/hi_tde", 0644, 1000, 1003},
+    {"/dev/isp_dev", 0660, 1000, 1006},
+    {"/dev/match", 0660, 1000, 1005},
+    {"/dev/photo", 0660, 1000, 1005},
+    {"/dev/rect", 0660, 1000, 1005},
+    {"/dev/rgn", 0660, 1000, 1005},
+    {"/dev/sys", 0660, 1000, 1005},
+    {"/dev/vb", 0666, 1000, 1005},
+    {"/dev/vdec", 0666, 1000, 1005},
+    {"/dev/venc", 0666, 1000, 1005},
+    {"/dev/vi", 0660, 1000, 1005},
+    {"/dev/vo", 0660, 1000, 1005},
+    {"/dev/vpss", 0660, 1000, 1005},
+    {"/dev/i2c-0", 0660, 1000, 1006},
+    {"/dev/i2c-1", 0660, 1000, 1006},
+    {"/dev/i2c-2", 0660, 1000, 1006},
+    {"/dev/i2c-3", 0660, 1000, 1006},
+    {"/dev/i2c-4", 0660, 1000, 1006},
+    {"/dev/i2c-5", 0660, 1000, 1006},
+    {"/dev/i2c-6", 0660, 1000, 1006},
+    {"/dev/i2c-7", 0660, 1000, 1006},
+    {"/dev/vgs", 0666, 1000, 1005},
     {"/dev/dri/card0", 0666, 0, 1003},
     {"/dev/dri/card0-DSI-1", 0666, 0, 1003},
     {"/dev/dri/card0-HDMI-A-1", 0666, 0, 1003},
@@ -415,7 +467,7 @@ static void MakeDevice(const char *devPath, const char *path, int block, int maj
     /* Only for super user */
     gid_t gid = 0;
     dev_t dev;
-    mode_t mode = DEFAULT_NO_AUTHORITY_MODE;
+    mode_t mode = DEVICE_DEFAULT_MODE;
     mode |= (block ? S_IFBLK : S_IFCHR);
     dev = makedev(major, minor);
     setegid(gid);

@@ -187,7 +187,7 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
     token = strstr(p, delim);
     if (token == NULL) { // No whitespaces
         // Make surce there is enough memory to store parameter value
-        allocSize = (size_t)(cmdLength + MAX_PARAM_VALUE_LEN);
+        allocSize = (size_t)(cmdLength + MAX_PARAM_VALUE_LEN + 1);
         ctx->argv[ctx->argc] = calloc(sizeof(char), allocSize);
         INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
         INIT_CHECK_ONLY_RETURN(GetParamValue(p, ctx->argv[ctx->argc], allocSize) == 0,
@@ -204,7 +204,7 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
             break;
         }
         *token = '\0'; // replace it with '\0';
-        allocSize = (size_t)((p - token) + MAX_PARAM_VALUE_LEN);
+        allocSize = (size_t)((token - p) + MAX_PARAM_VALUE_LEN + 1);
         ctx->argv[index] = calloc(sizeof(char), allocSize);
         INIT_CHECK_ONLY_RETURN(ctx->argv[index] != NULL, FreeCmd(&ctx); return NULL);
         INIT_CHECK_ONLY_RETURN(GetParamValue(p, ctx->argv[index], allocSize) == 0,
@@ -222,7 +222,7 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
     if (p < tmpCmd + cmdLength) {
         // no more white space or encounter max argument count
         size_t restSize = tmpCmd + cmdLength - p;
-        allocSize = restSize + MAX_PARAM_VALUE_LEN;
+        allocSize = restSize + MAX_PARAM_VALUE_LEN + 1;
         ctx->argv[index] = calloc(sizeof(char),  allocSize);
         INIT_CHECK_ONLY_RETURN(ctx->argv[index] != NULL, FreeCmd(&ctx); return NULL);
         INIT_CHECK_ONLY_RETURN(GetParamValue(p, ctx->argv[index], allocSize) == 0,
@@ -308,18 +308,29 @@ static void DoCopy(const char* cmdContent)
     int rtLen = 0;
     int argsCount = 2;
     char buf[MAX_COPY_BUF_SIZE] = {0};
+    char *realPath1 = NULL;
+    char *realPath2 = NULL;
     mode_t mode = 0;
     struct stat fileStat = {0};
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
-    if (ctx == NULL || ctx->argv == NULL || ctx->argv[0] == NULL || ctx->argc != DEFAULT_COPY_ARGS_CNT) {
+    if (ctx == NULL || ctx->argv == NULL || ctx->argv[0] == NULL || ctx->argv[1] == NULL ||
+        ctx->argc != DEFAULT_COPY_ARGS_CNT) {
         INIT_LOGE("DoCopy failed.");
         goto out;
     }
-    srcFd = open(ctx->argv[0], O_RDONLY);
+    realPath1 = realpath(ctx->argv[0], NULL);
+    if (realPath1 == NULL) {
+        goto out;
+    }
+    realPath2 = realpath(ctx->argv[1], NULL);
+    if (realPath2 == NULL) {
+        goto out;
+    }
+    srcFd = open(realPath1, O_RDONLY);
     INIT_ERROR_CHECK(srcFd >= 0, goto out, "copy open %s fail %d! ", ctx->argv[0], errno);
     INIT_ERROR_CHECK(stat(ctx->argv[0], &fileStat) == 0, goto out, "stat fail ");
     mode = fileStat.st_mode;
-    dstFd = open(ctx->argv[1], O_WRONLY | O_TRUNC | O_CREAT, mode);
+    dstFd = open(realPath2, O_WRONLY | O_TRUNC | O_CREAT, mode);
     INIT_ERROR_CHECK(dstFd >= 0, goto out, "copy open %s fail %d! ", ctx->argv[1], errno);
     while ((rdLen = read(srcFd, buf, sizeof(buf) - 1)) > 0) {
         rtLen = write(dstFd, buf, rdLen);
@@ -336,6 +347,14 @@ out:
     if (dstFd >= 0) {
         close(dstFd);
         dstFd = -1;
+    }
+    if (realPath1) {
+        free(realPath1);
+        realPath1 = NULL;
+    }
+    if (realPath2) {
+        free(realPath2);
+        realPath2 = NULL;
     }
     return;
 }
@@ -611,19 +630,15 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
     if (fileName == NULL) {
         return;
     }
-    char *realPath = (char *)calloc(MAX_BUFFER, sizeof(char));
+    char *realPath = realpath(fileName, NULL);
     if (realPath == NULL) {
-        return;
-    }
-    realPath = realpath(fileName, realPath);
-    if (realPath == NULL) {
-        free(realPath);      
         return;
     }
     int fd = open(realPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd < 0) {
         INIT_LOGE("failed to open %s: %d", realPath, errno);
         free(realPath);
+        realPath = NULL;
         return;
     }
     int rc = syscall(__NR_finit_module, fd, options, flags);
@@ -634,6 +649,7 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
         close(fd);
     }
     free(realPath);
+    realPath = NULL;
     return;
 }
 
@@ -740,9 +756,15 @@ static void DoLoadCfg(const char *path)
         INIT_LOGE("CheckCfg path is NULL.");
         return;
     }
-    fp = fopen(path, "r");
+    char *realPath = realpath(path, NULL);
+    if (realPath == NULL) {
+        return;
+    }
+    fp = fopen(realPath, "r");
     if (fp == NULL) {
         INIT_LOGE("open cfg error = %d", errno);
+        free(realPath);
+        realPath = NULL;
         return;
     }
 
@@ -750,6 +772,8 @@ static void DoLoadCfg(const char *path)
     if (cmdLine == NULL) {
         INIT_LOGE("malloc cmdline error");
         fclose(fp);
+        free(realPath);
+        realPath = NULL;
         return;
     }
 
@@ -767,7 +791,8 @@ static void DoLoadCfg(const char *path)
         DoCmd(cmdLine);
         (void)memset_s(buf, sizeof(char) * LOADCFG_BUF_SIZE, 0, sizeof(char) * LOADCFG_BUF_SIZE);
     }
-
+    free(realPath);
+    realPath = NULL;
     free(cmdLine);
     fclose(fp);
 }
@@ -781,19 +806,28 @@ static void DoWrite(const char *cmdContent)
         INIT_LOGE("DoWrite: invalid arguments");
         goto out;
     }
-
-    int fd = open(ctx->argv[0], O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, S_IRWXU | S_IRGRP | S_IROTH);
+    char *realPath = realpath(ctx->argv[0], NULL);
+    if (realPath == NULL) {
+        goto out;
+    }
+    int fd = open(realPath, O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, S_IRWXU | S_IRGRP | S_IROTH);
     if (fd == -1) {
         INIT_LOGE("DoWrite: open %s failed: %d", ctx->argv[0], errno);
+        free(realPath);
+        realPath = NULL;
         goto out;
     }
 
     size_t ret = write(fd, ctx->argv[1], strlen(ctx->argv[1]));
     if (ret < 0) {
         INIT_LOGE("DoWrite: write to file %s failed: %d", ctx->argv[0], errno);
+        free(realPath);
+        realPath = NULL;
         close(fd);
         goto out;
     }
+    free(realPath);
+    realPath = NULL;
     close(fd);
 out:
     FreeCmd(&ctx);

@@ -185,6 +185,9 @@ static int GetWritepidStrings(const cJSON *curArrItem, Service *curServ)        
         }
 
         char *fieldStr = cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i));
+        if (fieldStr == NULL) {
+            return SERVICE_FAILURE;
+        }
         size_t strLen = strlen(fieldStr);
         curServ->writepidFiles[i] = (char *)malloc(sizeof(char) * strLen + 1);
         if (curServ->writepidFiles[i] == NULL) {
@@ -246,7 +249,7 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
 {
     int gIDCnt = 0;
     cJSON *filedJ = GetArrItem(curArrItem, &gIDCnt, GID_STR_IN_CFG);        // "gid" must have 1 item.
-    if ((gIDCnt <= 0) && (filedJ == NULL)) {              // not a array, but maybe a item?
+    if ((gIDCnt <= 0) || (filedJ == NULL)) {              // not a array, but maybe a item?
         return GetGidOneItem(curArrItem, curServ);
     }
 
@@ -578,6 +581,7 @@ static int GetServiceOnRestart(const cJSON* curArrItem, Service* curServ)
     curServ->onRestart->cmdLine = (CmdLine *)calloc(cmdCnt, sizeof(CmdLine));
     if (curServ->onRestart->cmdLine == NULL) {
         free(curServ->onRestart);
+        curServ->onRestart = NULL;
         return SERVICE_FAILURE;
     }
     curServ->onRestart->cmdNum = cmdCnt;

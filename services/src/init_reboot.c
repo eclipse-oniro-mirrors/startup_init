@@ -43,19 +43,28 @@ static bool RBMiscWriteUpdaterMessage(const char *path, struct RBMiscUpdateMessa
         INIT_LOGE("path or boot is NULL.");
         return false;
     }
-    FILE* fp = fopen(path, "rb+");
+    char *realPath = realpath(path, NULL);
+    if (realPath == NULL) {
+        return false;
+    }
+    FILE* fp = fopen(realPath, "rb+");
     if (fp == NULL) {
         INIT_LOGE("open %s failed", path);
+        free(realPath);
+        realPath = NULL;
         return false;
     }
 
     size_t ret = fwrite(boot, sizeof(struct RBMiscUpdateMessage), 1, fp);
     if (ret < 0) {
         INIT_LOGE("write to misc failed");
+        free(realPath);
+        realPath = NULL;
         fclose(fp);
         return false;
     }
-
+    free(realPath);
+    realPath = NULL;
     fclose(fp);
     return true;
 }
@@ -66,18 +75,28 @@ static bool RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessag
         INIT_LOGE("path or boot is NULL.");
         return false;
     }
-    FILE* fp = fopen(path, "rb");
+    char *realPath = realpath(path, NULL);
+    if (realPath == NULL) {
+        return false;
+    }
+    FILE* fp = fopen(realPath, "rb");
     if (fp == NULL) {
         INIT_LOGE("open %s failed", path);
+        free(realPath);
+        realPath = NULL;
         return false;
     }
 
     size_t ret = fread(boot, 1, sizeof(struct RBMiscUpdateMessage), fp);
     if (ret <= 0) {
         INIT_LOGE("read to misc failed");
+        free(realPath);
+        realPath = NULL;
         fclose(fp);
         return false;
     }
+    free(realPath);
+    realPath = NULL;
     fclose(fp);
     return true;
 }
@@ -166,7 +185,10 @@ void DoReboot(const char *value)
         return;
     }
     const int commandSize = 12;
-    snprintf(msg.command, MAX_COMMAND_SIZE, "%s", "boot_updater");
+    if (snprintf_s(msg.command, MAX_COMMAND_SIZE, MAX_COMMAND_SIZE - 1, "%s", "boot_updater") == -1) {
+        INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error");
+        return;
+    }
     msg.command[commandSize] = 0;
 
     if (strlen(valueData) > strlen("updater:") && strncmp(valueData, "updater:", strlen("updater:")) == 0) {

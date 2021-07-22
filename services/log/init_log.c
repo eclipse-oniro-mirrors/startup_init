@@ -52,6 +52,9 @@ void InitToHiLog(const char *tag, LogLevel logLevel, const char *fmt, ...)
     if (logLevel < g_hiLogLevel) {
         return;
     }
+    if (tag == NULL) {
+        return;
+    }
     va_list list;
     va_start(list, fmt);
     char tmpFmt[MAX_FORMAT_SIZE];
@@ -70,7 +73,9 @@ void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int l
     if (logLevel < g_logLevel) {
         return;
     }
-
+    if (tag == NULL) {
+        return;
+    }
     time_t second = time(0);
     struct tm *t = localtime(&second);
     if (t == NULL) {
