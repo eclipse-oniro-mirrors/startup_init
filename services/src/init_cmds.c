@@ -85,6 +85,7 @@ static const char* g_supportedCmds[] = {
     "load_param ",
     "reboot ",
     "setrlimit ",
+    "sleep ",
 };
 
 #ifndef OHOS_LITE
@@ -279,6 +280,33 @@ void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
         INIT_LOGE("Cannot parse command: %s", cmdStr);
         (void)memset_s(resCmd, sizeof(*resCmd), 0, sizeof(*resCmd));
     }
+}
+
+static void DoSleep(const char *cmdContent)
+{
+    const int argsCount = 1;
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
+    if (ctx == NULL || ctx->argv == NULL || ctx->argc != argsCount) {
+        INIT_LOGE("Command \" sleep\" with invalid arguments");
+        goto out;
+    }
+
+    errno = 0;
+    unsigned long sleepTime = strtoul(ctx->argv[0], NULL, 10);
+    if (errno != 0) {
+        INIT_LOGE("cannot covert sleep time in command \" sleep \"");
+        goto out;
+    }
+
+    // Limit sleep time in 5 seconds
+    if (sleepTime > 5) {
+        sleepTime = 5;
+    }
+    INIT_LOGI("Sleeping %d second(s)", sleepTime);
+    sleep((unsigned int)sleepTime);
+out:
+    FreeCmd(&ctx);
+    return;
 }
 
 static void DoStart(const char* cmdContent)
@@ -1121,6 +1149,8 @@ void DoCmdByName(const char *name, const char *cmdContent)
 #endif
     } else if (strncmp(name, "reboot ", strlen("reboot ")) == 0) {
         DoReboot(cmdContent);
+    } else if (strncmp(name, "sleep ", strlen("sleep ")) == 0) {
+        DoSleep(cmdContent);
     }  else {
         INIT_LOGE("DoCmd, unknown cmd name %s.", name);
     }
