@@ -65,11 +65,11 @@ int DecodeUid(const char *name)
         }
         return result;
     } else {
-        struct passwd *pwd = getpwnam(name);
-        if (pwd == NULL) {
+        struct passwd *userInf = getpwnam(name);
+        if (userInf == NULL) {
             return -1;
         }
-        return pwd->pw_uid;
+        return userInf->pw_uid;
     }
 }
 

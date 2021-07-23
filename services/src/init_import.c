@@ -29,6 +29,9 @@ static int ExtractCfgFile(char **cfgFile, char *content)
         return -1;
     }
     size_t cfgFileLen = strlen(content) + MAX_PARAM_VALUE_LEN + 1;
+    if (cfgFileLen <= 0) {
+        return -1;
+    }
     if ((*cfgFile = malloc(cfgFileLen)) == NULL) {
         INIT_LOGW("Failed to allocate memory to import cfg file. err = %d", errno);
         return -1;

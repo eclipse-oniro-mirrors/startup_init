@@ -22,8 +22,8 @@
 #include <unistd.h>
 #include "init_log.h"
 
-#define DEFAULT_RW_MODE 0666
-#define DEFAULT_NO_AUTHORITY_MODE 0600
+#define DEFAULT_RW_MODE S_IRUSR | S_IWUSR | S_IRGRP | S_IRGRP | S_IROTH | S_IWOTH
+#define DEFAULT_NO_AUTHORITY_MODE S_IWUSR | S_IRUSR
 #define DEVICE_ID_THIRD 3
 #define DEVICE_ID_EIGHTH 8
 #define DEVICE_ID_NINTH 9

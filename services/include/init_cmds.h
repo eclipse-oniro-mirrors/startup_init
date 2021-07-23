@@ -50,7 +50,7 @@ struct CmdArgs {
     char **argv;
 };
 
-int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen);
+int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen);
 struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount);
 void FreeCmd(struct CmdArgs **cmd);
 
