@@ -200,14 +200,22 @@ int ServiceStart(Service *service)
             if (service->writepidFiles[i] == NULL) {
                 continue;
             }
-            FILE *fd = fopen(service->writepidFiles[i], "wb");
+            char *realPath = realpath(service->writepidFiles[i], NULL);
+            if (realPath == NULL) {
+                continue;
+            }
+            FILE *fd = fopen(realPath, "wb");
             if (fd == NULL) {
                 INIT_LOGE("start service writepidFiles %s invalid.", service->writepidFiles[i]);
+                free(realPath);
+                realPath = NULL;
                 continue;
             }
             if (fwrite(pidString, 1, strlen(pidString), fd) != strlen(pidString)) {
                  INIT_LOGE("start service writepid error.file:%s pid:%s", service->writepidFiles[i], pidString);
             }
+            free(realPath);
+            realPath = NULL;
             fclose(fd);
             INIT_LOGE("ServiceStart writepid filename=%s, childPid=%s, ok", service->writepidFiles[i],
                 pidString);

@@ -178,14 +178,12 @@ static int GetWritepidStrings(const cJSON *curArrItem, Service *curServ)        
     }
 
     for (int i = 0; i < writepidCnt; ++i) {
-        if (!cJSON_GetArrayItem(filedJ, i) || !cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i))
-            || strlen(cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i))) <= 0) {      // check all errors
-            INIT_LOGE("GetWritepidStrings, parse item[%d] error.", i);
+        cJSON *item = cJSON_GetArrayItem(filedJ, i);
+        if (item == NULL) {
             return SERVICE_FAILURE;
         }
-
-        char *fieldStr = cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i));
-        if (fieldStr == NULL) {
+        char *fieldStr = cJSON_GetStringValue(item);
+        if ((fieldStr == NULL) || (fieldStr[0] == '\0')) {
             return SERVICE_FAILURE;
         }
         size_t strLen = strlen(fieldStr);
@@ -267,12 +265,14 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
     curServ->servPerm.gIDCnt = gIDCnt;
     int i = 0;
     for (; i < gIDCnt; ++i) {
-        if (cJSON_GetArrayItem(filedJ, i) == NULL || !cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i))
-            || strlen(cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i))) <= 0) {      // check all errors
-            INIT_LOGE("GetGidArray, parse item[%d] as string, error.", i);
+        cJSON *item = cJSON_GetArrayItem(filedJ, i);
+        if (item == NULL) {
             break;
         }
-        char *fieldStr = cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i));
+        char *fieldStr = cJSON_GetStringValue(item);
+        if ((fieldStr == NULL) || (fieldStr[0] == '\0')) {
+            break;
+        }
         gid_t gID = DecodeUid(fieldStr);
         if ((gID) == (gid_t)(-1)) {
             INIT_LOGE("GetGidArray, DecodeUid item[%d] error.", i);
@@ -284,11 +284,14 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
         return SERVICE_SUCCESS;
     }
     for (i = 0; i < gIDCnt; ++i) {
-        if (cJSON_GetArrayItem(filedJ, i) == NULL || !cJSON_IsNumber(cJSON_GetArrayItem(filedJ, i))) {
-            INIT_LOGE("GetGidArray, parse item[%d] as number, error.", i);
+        cJSON *item = cJSON_GetArrayItem(filedJ, i);
+        if (item == NULL) {
             break;
         }
-        gid_t gID = (int)cJSON_GetNumberValue(cJSON_GetArrayItem(filedJ, i));
+        if (!cJSON_IsNumber(item)) {
+            break;
+        }
+        gid_t gID = (int)cJSON_GetNumberValue(item);
         if (gID < 0) {
             INIT_LOGE("GetGidArray gID = %d, error", gID);
             break;
@@ -533,7 +536,7 @@ static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
     }
     curServ->socketCfg = NULL;
     for (int i = 0; i < sockCnt; ++i) {
-        cJSON* sockJ = cJSON_GetArrayItem(filedJ, i);
+        cJSON *sockJ = cJSON_GetArrayItem(filedJ, i);
         if (!cJSON_IsString(sockJ) || !cJSON_GetStringValue(sockJ)) {
             return SERVICE_FAILURE;
         }
@@ -549,6 +552,8 @@ static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
         }
         int ret = ParseServiceSocket(tmpStr, SOCK_OPT_NUMS, socktmp);
         if (ret < 0) {
+            free(socktmp);
+            socktmp = NULL;
             return SERVICE_FAILURE;
         }
         if (curServ->socketCfg == NULL) {

@@ -42,7 +42,7 @@
 #include "init_utils.h"
 #include "securec.h"
 
-#define DEFAULT_DIR_MODE 0755  // mkdir, default mode
+#define DEFAULT_DIR_MODE S_IRWXU | S_IRGRP | S_IXGRP | S_IXOTH | S_IROTH  // mkdir, default mode
 #define SPACES_CNT_IN_CMD_MAX 10   // mount, max number of spaces in cmdline
 #define SPACES_CNT_IN_CMD_MIN 2    // mount, min number of spaces in cmdline
 
@@ -88,7 +88,7 @@ static const char* g_supportedCmds[] = {
 };
 
 #ifndef OHOS_LITE
-int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
+int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
 {
     if ((symValue == NULL) || (paramValue == NULL) || (paramLen == 0)) {
         return -1;
@@ -143,7 +143,7 @@ int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
 }
 #else
 // For ite ohos, do not support parameter operation. just do string copy
-inline int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
+inline int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
 {
     return (strncpy_s(paramValue, paramLen, symValue, strlen(symValue)) == EOK) ? 0 : -1;
 }
@@ -777,7 +777,7 @@ static void DoLoadCfg(const char *path)
         return;
     }
 
-    while (fgets(buf, LOADCFG_BUF_SIZE, fp) != NULL && maxLoop < LOADCFG_MAX_LOOP) {
+    while (fgets(buf, LOADCFG_BUF_SIZE - 1, fp) != NULL && maxLoop < LOADCFG_MAX_LOOP) {
         maxLoop++;
         len = strlen(buf);
         if (len < 1) {

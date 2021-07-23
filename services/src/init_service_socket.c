@@ -92,7 +92,7 @@ static int CreateSocket(struct ServiceSocket *sockopt)
     return sockopt->sockFd;
 }
 
-static int SetSocketEnv(int fd, char *name)
+static int SetSocketEnv(int fd, const char *name)
 {
     if (name == NULL) {
         return -1;

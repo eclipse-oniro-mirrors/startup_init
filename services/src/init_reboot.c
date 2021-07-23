@@ -113,7 +113,7 @@ static int GetMountStatusForMountPoint(const char *mountPoint)
         return 1;
     }
 
-    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+    while (fgets(buffer, sizeof(buffer) - 1, fp) != NULL) {
         n = strlen(buffer);
         if (buffer[n - 1] == '\n') {
             buffer[n - 1] = '\0';

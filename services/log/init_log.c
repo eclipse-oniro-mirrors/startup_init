@@ -53,7 +53,7 @@ void InitToHiLog(const char *tag, LogLevel logLevel, const char *fmt, ...)
         return;
     }
     if (tag == NULL) {
-        return;
+        tag = "Init";
     }
     va_list list;
     va_start(list, fmt);
