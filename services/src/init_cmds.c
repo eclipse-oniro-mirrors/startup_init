@@ -292,7 +292,7 @@ static void DoSleep(const char *cmdContent)
     }
 
     errno = 0;
-    unsigned long sleepTime = stroul(ctx->argv[0], NULL, 10);
+    unsigned long sleepTime = strtoul(ctx->argv[0], NULL, 10);
     if (errno != 0) {
         INIT_LOGE("cannot covert sleep time in command \" sleep \"");
         goto out;
