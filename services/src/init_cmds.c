@@ -423,14 +423,14 @@ static void DoMkDir(const char* cmdContent)
         goto out;
     }
 
-    mode_t mode = DEFAULT_DIR_MODE;
-    if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
-        INIT_LOGE("DoMkDir, failed for %s, err %d.", cmdContent, errno);
+    if (ctx->argc != 1 && ctx->argc != argsCount) {
+        INIT_LOGE("DoMkDir invalid arguments: %s", cmdContent);
         goto out;
     }
 
-    if (ctx->argc != 1 && ctx->argc != argsCount) {
-        INIT_LOGE("DoMkDir invalid arguments: %s", cmdContent);
+    mode_t mode = DEFAULT_DIR_MODE;
+    if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
+        INIT_LOGE("DoMkDir, failed for %s, err %d.", cmdContent, errno);
         goto out;
     }
 
