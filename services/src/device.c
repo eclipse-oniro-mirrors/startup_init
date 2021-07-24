@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
+#include "device.h"
 #include <errno.h>
+#include <linux/major.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mount.h>
@@ -24,10 +26,6 @@
 
 #define DEFAULT_RW_MODE S_IRUSR | S_IWUSR | S_IRGRP | S_IRGRP | S_IROTH | S_IWOTH
 #define DEFAULT_NO_AUTHORITY_MODE S_IWUSR | S_IRUSR
-#define DEVICE_ID_THIRD 3
-#define DEVICE_ID_EIGHTH 8
-#define DEVICE_ID_NINTH 9
-#define DEVICE_ID_ELEVNTH 11
 
 void MountBasicFs()
 {
@@ -57,17 +55,17 @@ void MountBasicFs()
 
 void CreateDeviceNode()
 {
-    if (mknod("/dev/kmsg", S_IFCHR | DEFAULT_NO_AUTHORITY_MODE, makedev(1, DEVICE_ID_ELEVNTH)) != 0) {
+    if (mknod("/dev/kmsg", S_IFCHR | DEFAULT_NO_AUTHORITY_MODE, makedev(MEM_MAJOR, DEV_KMSG_MINOR)) != 0) {
         INIT_LOGE("Create /dev/kmsg device node failed. %s", strerror(errno));
     }
-    if (mknod("/dev/null", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_THIRD)) != 0) {
+    if (mknod("/dev/null", S_IFCHR | DEFAULT_RW_MODE, makedev(MEM_MAJOR, DEV_NULL_MINOR)) != 0) {
         INIT_LOGE("Create /dev/null device node failed. %s", strerror(errno));
     }
-    if (mknod("/dev/random", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_EIGHTH)) != 0) {
+    if (mknod("/dev/random", S_IFCHR | DEFAULT_RW_MODE, makedev(MEM_MAJOR, DEV_RANDOM_MINOR)) != 0) {
         INIT_LOGE("Create /dev/random device node failed. %s", strerror(errno));
     }
 
-    if (mknod("/dev/urandom", S_IFCHR | DEFAULT_RW_MODE, makedev(1, DEVICE_ID_NINTH)) != 0) {
+    if (mknod("/dev/urandom", S_IFCHR | DEFAULT_RW_MODE, makedev(MEM_MAJOR, DEV_URANDOM_MINOR)) != 0) {
         INIT_LOGE("Create /dev/urandom device node failed. %s", strerror(errno));
     }
 }

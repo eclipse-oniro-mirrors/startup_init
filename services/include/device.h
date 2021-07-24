@@ -23,6 +23,11 @@ extern "C" {
 #endif
 #include <sys/types.h>
 
+#define DEV_KMSG_MINOR 11
+#define DEV_NULL_MINOR 3
+#define DEV_RANDOM_MINOR 8
+#define DEV_URANDOM_MINOR 9
+
 void MountBasicFs();
 void CreateDeviceNode();
 int MakeSocketDir(const char *path, mode_t mode);

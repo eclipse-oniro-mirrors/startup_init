@@ -318,8 +318,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level1)
         dirTmp = nullptr;
     }
 
-    // too many spaces, bad format
-    cmdContentStr = "   /storage/data/cmdFuncDoCmdTest003    ";
+    // error argument count, bad format
+    cmdContentStr = "  /storage/data/cmdFuncDoCmdTest003 0755 system";
     ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
