@@ -718,9 +718,7 @@ static int HandleUsbDevice(const struct Uevent *event, char *devpath, int len)
             return -1;
         }
         /* skip leading /dev/ */
-        p += strlen(
-
-"/dev/");
+        p += strlen("/dev/");
         /* build directories */
         while (*p) {
             if (*p == '/') {
