@@ -287,20 +287,21 @@ static void DoSleep(const char *cmdContent)
     const int argsCount = 1;
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != argsCount) {
-        INIT_LOGE("Command \" sleep\" with invalid arguments");
+        INIT_LOGE("Command \" sleep\" with invalid arguments :%s", cmdContent);
         goto out;
     }
 
     errno = 0;
-    unsigned long sleepTime = strtoul(ctx->argv[0], NULL, 10);
+    unsigned long sleepTime = strtoul(ctx->argv[0], NULL, DECIMAL_BASE);
     if (errno != 0) {
         INIT_LOGE("cannot covert sleep time in command \" sleep \"");
         goto out;
     }
 
     // Limit sleep time in 5 seconds
-    if (sleepTime > 5) {
-        sleepTime = 5;
+    const unsigned long sleepTimeLimit = 5;
+    if (sleepTime > sleepTimeLimit) {
+        sleepTime = sleepTimeLimit;
     }
     INIT_LOGI("Sleeping %d second(s)", sleepTime);
     sleep((unsigned int)sleepTime);
@@ -343,7 +344,7 @@ static void DoCopy(const char* cmdContent)
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
     if (ctx == NULL || ctx->argv == NULL || ctx->argv[0] == NULL || ctx->argv[1] == NULL ||
         ctx->argc != DEFAULT_COPY_ARGS_CNT) {
-        INIT_LOGE("DoCopy failed.");
+        INIT_LOGE("DoCopy invalid arguments :%s", cmdContent);
         goto out;
     }
     realPath1 = realpath(ctx->argv[0], NULL);
@@ -393,25 +394,15 @@ static void DoChown(const char* cmdContent)
     const int argsCount = 3;
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != argsCount) {
-        INIT_LOGE("DoChown failed.");
+        INIT_LOGE("DoChown invalid arguments :%s", cmdContent);
         goto out;
     }
 
-    uid_t owner = (uid_t)-1;
-    gid_t group = (gid_t)-1;
-    if (isalpha(ctx->argv[0][0])) {
-        owner = DecodeUid(ctx->argv[0]);
-        INIT_ERROR_CHECK(owner != (uid_t)-1, goto out, "DoChown decode owner failed.");
-    } else {
-        owner = strtoul(ctx->argv[0], NULL, 0);
-    }
+    uid_t owner = DecodeUid(ctx->argv[0]);
+    INIT_ERROR_CHECK(owner != (uid_t)-1, goto out, "DoChown invalid uid :%s.", ctx->argv[0]);
 
-    if (isalpha(ctx->argv[1][0])) {
-        group = DecodeUid(ctx->argv[1]);
-        INIT_ERROR_CHECK(group != (gid_t)-1, goto out, "DoChown decode group failed.");
-    } else {
-        group = strtoul(ctx->argv[1], NULL, 0);
-    }
+    gid_t group = DecodeUid(ctx->argv[1]);
+    INIT_ERROR_CHECK(group != (gid_t)-1, goto out, "DoChown invalid gid :%s.", ctx->argv[1]);
 
     int pathPos = 2;
     if (chown(ctx->argv[pathPos], owner, group) != 0) {
@@ -428,7 +419,12 @@ static void DoMkDir(const char* cmdContent)
     const int argsCount = 4;
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc < 1) {
-        INIT_LOGE("DoMkDir failed.");
+        INIT_LOGE("DoMkDir invalid arguments :%s", cmdContent);
+        goto out;
+    }
+
+    if (ctx->argc != 1 && ctx->argc != argsCount) {
+        INIT_LOGE("DoMkDir invalid arguments: %s", cmdContent);
         goto out;
     }
 
@@ -464,7 +460,7 @@ static void DoChmod(const char* cmdContent)
     int argsCount = 2;
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != argsCount) {
-        INIT_LOGE("DoChmod failed.");
+        INIT_LOGE("DoChmod invalid arguments :%s", cmdContent);
         goto out;
     }
 
@@ -831,7 +827,7 @@ static void DoWrite(const char *cmdContent)
     const int argsCount = 2;
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
     if (ctx == NULL || ctx->argv == NULL || ctx->argv[0] == NULL || ctx->argc != argsCount) {
-        INIT_LOGE("DoWrite: invalid arguments");
+        INIT_LOGE("DoWrite: invalid arguments :%s", cmdContent);
         goto out;
     }
     char *realPath = realpath(ctx->argv[0], NULL);
@@ -867,7 +863,7 @@ static void DoRmdir(const char *cmdContent)
     // format: rmdir path
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", 1);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != 1) {
-        INIT_LOGE("DoRmdir: invalid arguments");
+        INIT_LOGE("DoRmdir: invalid arguments :%s", cmdContent);
         goto out;
     }
 
@@ -893,7 +889,7 @@ static void DoSetrlimit(const char *cmdContent)
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
     const int rlimMaxPos = 2;
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != argsCount) {
-        INIT_LOGE("DoSetrlimit: invalid arguments");
+        INIT_LOGE("DoSetrlimit: invalid arguments :%s", cmdContent);
         goto out;
     }
 
@@ -925,7 +921,7 @@ static void DoRm(const char *cmdContent)
     // format: rm /xxx/xxx/xxx
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", 1);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != 1) {
-        INIT_LOGE("DoRm: invalid arguments");
+        INIT_LOGE("DoRm: invalid arguments :%s", cmdContent);
         goto out;
     }
     int ret = unlink(ctx->argv[0]);
@@ -944,7 +940,7 @@ static void DoExport(const char *cmdContent)
     const int argsCount = 2;
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != argsCount) {
-        INIT_LOGE("DoExport: invalid arguments");
+        INIT_LOGE("DoExport: invalid arguments :%s", cmdContent);
         goto out;
     }
     int ret = setenv(ctx->argv[0], ctx->argv[1], 1);
@@ -969,7 +965,7 @@ static void DoExec(const char *cmdContent)
         int argsCount = 10;
         struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
         if (ctx == NULL || ctx->argv == NULL || ctx->argv[0] == NULL) {
-            INIT_LOGE("DoExec: invalid arguments");
+            INIT_LOGE("DoExec: invalid arguments :%s", cmdContent);
             _exit(0x7f);
         }
 #ifdef OHOS_LITE
@@ -993,7 +989,7 @@ static void DoSymlink(const char *cmdContent)
     const int argsCount = 2;
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != argsCount) {
-        INIT_LOGE("DoSymlink: invalid arguments.");
+        INIT_LOGE("DoSymlink: invalid arguments :%s", cmdContent);
         goto out;
     }
 
@@ -1036,7 +1032,7 @@ static void DoMakeNode(const char *cmdContent)
     const int decimal = 10;
     const int octal = 8;
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != argsCount) {
-        INIT_LOGE("DoMakeNode: invalid arguments");
+        INIT_LOGE("DoMakeNode: invalid arguments :%s", cmdContent);
         goto out;
     }
 
@@ -1066,7 +1062,7 @@ static void DoMakeDevice(const char *cmdContent)
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", argsCount);
     const int decimal = 10;
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != argsCount) {
-        INIT_LOGE("DoMakedevice: invalid arugments");
+        INIT_LOGE("DoMakedevice: invalid arguments :%s", cmdContent);
         goto out;
     }
     unsigned int major = strtoul(ctx->argv[0], NULL, decimal);

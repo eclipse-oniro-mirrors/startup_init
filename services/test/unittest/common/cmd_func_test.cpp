@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 #include <dirent.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -318,8 +318,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level1)
         dirTmp = nullptr;
     }
 
-    // too many spaces, bad format
-    cmdContentStr = "   /storage/data/cmdFuncDoCmdTest003    ";
+    // error argument count, bad format
+    cmdContentStr = "  /storage/data/cmdFuncDoCmdTest003 0755 system";
     ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
@@ -516,7 +516,7 @@ static char* ReadFileToBuf()
             break;
         }
 
-        buffer = static_cast<char*>(malloc((size_t)fileStat.st_size + 1));
+        buffer = static_cast<char*>(malloc(static_cast<size_t>(fileStat.st_size) + 1));
         if (buffer == nullptr) {
             break;
         }

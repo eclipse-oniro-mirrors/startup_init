@@ -34,28 +34,6 @@
 
 #define LINK_NUMBER 4
 #define DEFAULT_DIR_MODE (S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
-#define DEV_DRM 3
-#define DEV_ONCRPC 6
-#define DEV_ADSP 4
-#define DEV_INPUT 5
-#define DEV_MTD 3
-#define DEV_SOUND 5
-#define DEV_MISC 4
-#define DEV_DEFAULT 4
-#define DEV_PLAT_FORM 9
-#define DEV_USB 4
-#define DEV_GRAPHICS 8
-#define EVENT_ACTION 7
-#define EVENT_DEVPATH 8
-#define EVENT_SYSTEM 10
-#define EVENT_FIRMWARE 9
-#define EVENT_MAJOR 6
-#define EVENT_MINOR 6
-#define EVENT_PARTN 6
-#define EVENT_PART_NAME 9
-#define EVENT_DEV_NAME 8
-#define EVENT_BLOCK 5
-#define EVENT_PLAT_FORM 8
 #define TRIGGER_ADDR_SIZE 4
 #define BASE_BUFFER_SIZE 1024
 #define MAX_BUFFER 256
@@ -65,8 +43,6 @@
 #define SYS_LINK_NUMBER 2
 #define MAX_DEVICE_LEN 64
 #define DEFAULT_MODE 0000
-#define DEVICE_SKIP 5
-#define HANDLE_DEVICE_USB 3
 #define DEVICE_DEFAULT_MODE (S_IRUSR | S_IWUSR | S_IRGRP)
 
 int g_ueventFD = -1;
@@ -252,32 +228,32 @@ static void ParseUevent(const char *buf, struct Uevent *event)
 {
     InitUevent(event);
     while (*buf) {
-        if (strncmp(buf, "ACTION=", EVENT_ACTION) == 0) {
-            buf += EVENT_ACTION;
+        if (strncmp(buf, "ACTION=", strlen("ACTION=")) == 0) {
+            buf += strlen("ACTION=");
             event->action = buf;
-        } else if (strncmp(buf, "DEVPATH=", EVENT_DEVPATH) == 0) {
-            buf += EVENT_DEVPATH;
+        } else if (strncmp(buf, "DEVPATH=", strlen("DEVPATH=")) == 0) {
+            buf += strlen("DEVPATH=");
             event->path = buf;
-        } else if (strncmp(buf, "SUBSYSTEM=", EVENT_SYSTEM) == 0) {
-            buf += EVENT_SYSTEM;
+        } else if (strncmp(buf, "SUBSYSTEM=", strlen("SUBSYSTEM=")) == 0) {
+            buf += strlen("SUBSYSTEM=");
             event->subsystem = buf;
-        } else if (strncmp(buf, "FIRMWARE=", EVENT_FIRMWARE) == 0) {
-            buf += EVENT_FIRMWARE;
+        } else if (strncmp(buf, "FIRMWARE=", strlen("FIRMWARE=")) == 0) {
+            buf += strlen("FIRMWARE=");
             event->firmware = buf;
-        } else if (strncmp(buf, "MAJOR=", EVENT_MAJOR) == 0) {
-            buf += EVENT_MAJOR;
+        } else if (strncmp(buf, "MAJOR=", strlen("MAJOR=")) == 0) {
+            buf += strlen("MAJOR=");
             event->major = atoi(buf);
-        } else if (strncmp(buf, "MINOR=", EVENT_MINOR) == 0) {
-            buf += EVENT_MINOR;
+        } else if (strncmp(buf, "MINOR=", strlen("MINOR=")) == 0) {
+            buf += strlen("MINOR=");
             event->minor = atoi(buf);
-        } else if (strncmp(buf, "PARTN=", EVENT_PARTN) == 0) {
-            buf += EVENT_PARTN;
+        } else if (strncmp(buf, "PARTN=", strlen("PARTN=")) == 0) {
+            buf += strlen("PARTN=");
             event->partitionNum = atoi(buf);
-        } else if (strncmp(buf, "PARTNAME=", EVENT_PART_NAME) == 0) {
-            buf += EVENT_PART_NAME;
+        } else if (strncmp(buf, "PARTNAME=", strlen("PARTNAME=")) == 0) {
+            buf += strlen("PARTNAME=");
             event->partitionName = buf;
-        } else if (strncmp(buf, "DEVNAME=", EVENT_DEV_NAME) == 0) {
-            buf += EVENT_DEV_NAME;
+        } else if (strncmp(buf, "DEVNAME=", strlen("DEVNAME=")) == 0) {
+            buf += strlen("DEVNAME=");
             event->deviceName = buf;
         }
         // Drop reset.
@@ -605,7 +581,7 @@ static void HandleBlockDevice(struct Uevent *event)
         return;
     }
     MakeDir(base, DEFAULT_DIR_MODE);
-    if (!strncmp(event->path, "/devices/", DEV_PLAT_FORM)) {
+    if (!strncmp(event->path, "/devices/", strlen("/devices/"))) {
         links = ParsePlatformBlockDevice(event);
     }
     HandleDevice(event, devpath, 1, links);
@@ -615,11 +591,12 @@ static void AddPlatformDevice(const char *path)
 {
     size_t pathLen = strlen(path);
     const char *name = path;
-
-    if (!strncmp(path, "/devices/", DEV_PLAT_FORM)) {
-        name += DEV_PLAT_FORM;
-        if (!strncmp(name, "platform/", DEV_PLAT_FORM)) {
-            name += DEV_PLAT_FORM;
+    size_t deviceLength = strlen("/devices/");
+    size_t platformLength = strlen("platform/");
+    if (!strncmp(path, "/devices/", deviceLength)) {
+        name += deviceLength;
+        if (!strncmp(name, "platform/", platformLength)) {
+            name += platformLength;
         }
     }
     INIT_LOGI("adding platform device %s (%s)", name, path);
@@ -701,7 +678,7 @@ static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
         goto err;
     }
 
-    if (strncmp(parent, "/usb", DEV_USB)) {
+    if (strncmp(parent, "/usb", strlen("/usb"))) {
         goto err;
     }
     /* skip root hub name and device. use device interface */
@@ -741,7 +718,7 @@ static int HandleUsbDevice(const struct Uevent *event, char *devpath, int len)
             return -1;
         }
         /* skip leading /dev/ */
-        p += DEVICE_SKIP;
+        p += strlen("/dev/");
         /* build directories */
         while (*p) {
             if (*p == '/') {
@@ -802,7 +779,7 @@ static void HandleGenericDevice(struct Uevent *event)
     if (!name) {
         return;
     }
-    if (!strncmp(event->subsystem, "usb", HANDLE_DEVICE_USB)) {
+    if (!strncmp(event->subsystem, "usb", strlen("usb"))) {
         if (!strcmp(event->subsystem, "usb")) {
             if (HandleUsbDevice(event, devpath, MAX_DEV_PATH) == -1) {
                 return;
@@ -811,25 +788,25 @@ static void HandleGenericDevice(struct Uevent *event)
             /* ignore other USB events */
             return;
         }
-    } else if (!strncmp(event->subsystem, "graphics", DEV_GRAPHICS)) {
+    } else if (!strncmp(event->subsystem, "graphics", strlen("graphics"))) {
         base = "/dev/graphics/";
         MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "drm", DEV_DRM)) {
+    } else if (!strncmp(event->subsystem, "drm", strlen("drm"))) {
         base = "/dev/dri/";
         MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "oncrpc", DEV_ONCRPC)) {
+    } else if (!strncmp(event->subsystem, "oncrpc", strlen("oncrpc"))) {
         base = "/dev/oncrpc/";
         MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "adsp", DEV_ADSP)) {
+    } else if (!strncmp(event->subsystem, "adsp", strlen("adsp"))) {
         base = "/dev/adsp/";
         MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "input", DEV_INPUT)) {
+    } else if (!strncmp(event->subsystem, "input", strlen("input"))) {
         base = "/dev/input/";
         MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "mtd", DEV_MTD)) {
+    } else if (!strncmp(event->subsystem, "mtd", strlen("mtd"))) {
         base = "/dev/mtd/";
         MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "sound", DEV_SOUND)) {
+    } else if (!strncmp(event->subsystem, "sound", strlen("sound"))) {
         base = "/dev/snd/";
         MakeDir(base, DEFAULT_DIR_MODE);
     } else {
@@ -844,9 +821,9 @@ static void HandleDeviceUevent(struct Uevent *event)
     if (strcmp(event->action, "add") == 0 || strcmp(event->action, "change") == 0) {
         /* Do nothing for now */
     }
-    if (strncmp(event->subsystem, "block", EVENT_BLOCK) == 0) {
+    if (strncmp(event->subsystem, "block", strlen("block")) == 0) {
         HandleBlockDevice(event);
-    } else if (strncmp(event->subsystem, "platform", EVENT_PLAT_FORM) == 0) {
+    } else if (strncmp(event->subsystem, "platform", strlen("platform")) == 0) {
         HandlePlatformDevice(event);
     } else {
         HandleGenericDevice(event);
