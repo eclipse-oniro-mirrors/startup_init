@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 #include <dirent.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -516,7 +516,7 @@ static char* ReadFileToBuf()
             break;
         }
 
-        buffer = static_cast<char*>(malloc((size_t)fileStat.st_size + 1));
+        buffer = static_cast<char*>(malloc(static_cast<size_t>(fileStat.st_size) + 1));
         if (buffer == nullptr) {
             break;
         }
