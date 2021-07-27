@@ -26,6 +26,9 @@
 #include <stropts.h>
 #endif
 #include <sys/param.h>
+#ifndef OHOS_LITE
+#include <sys/resource.h>
+#endif
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
@@ -223,10 +226,16 @@ int ServiceStart(Service *service)
 
         INIT_LOGI("service->name is %s ", service->name);
 #ifndef OHOS_LITE
-         // L2 Can not be reset env
-         if (execv(service->pathArgs[0], service->pathArgs) != 0) {
+        if (service->important != 0) {
+            if (setpriority(PRIO_PROCESS, 0, service->important) != 0) {
+                INIT_LOGE("setpriority failed for %s, important = %d", service->name, service->important);
+                _exit(0x7f); // 0x7f: user specified
+            }
+        }
+        // L2 Can not be reset env
+        if (execv(service->pathArgs[0], service->pathArgs) != 0) {
             INIT_LOGE("service %s execve failed! err %d.", service->name, errno);
-         }
+        }
 #else
         char* env[] = {"LD_LIBRARY_PATH=/storage/app/libs", NULL};
         if (execve(service->pathArgs[0], service->pathArgs, env) != 0) {

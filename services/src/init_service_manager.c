@@ -34,6 +34,9 @@
 #include "init_utils.h"
 #include "securec.h"
 
+#define MIN_IMPORTANT_LEVEL (-20)
+#define MAX_IMPORTANT_LEVEL 19
+
 // All serivce processes that init will fork+exec.
 static Service* g_services = NULL;
 static int g_servicesCnt = 0;
@@ -374,7 +377,7 @@ static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const cha
     }
 
     if (!cJSON_IsNumber(filedJ)) {
-        INIT_LOGE("GetServiceNumber, %s is null or is not a number, error.", targetField);
+        INIT_LOGE("%s is null or is not a number, error.service name is %s", targetField, curServ->name);
         return SERVICE_FAILURE;
     }
 
@@ -382,7 +385,7 @@ static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const cha
     // important value allow < 0
     if (strncmp(targetField, IMPORTANT_STR_IN_CFG, strlen(IMPORTANT_STR_IN_CFG)) != 0) {
         if (value < 0) {
-            INIT_LOGE("GetServiceNumber, value = %d, error.", value);
+            INIT_LOGE("value = %d, error.service name is %s", value, curServ->name);
             return SERVICE_FAILURE;
         }
     }
@@ -392,9 +395,18 @@ static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const cha
             curServ->attribute |= SERVICE_ATTR_ONCE;
         }
     } else if (strncmp(targetField, IMPORTANT_STR_IN_CFG, strlen(IMPORTANT_STR_IN_CFG)) == 0) {
-        if (value != 0) {
-            curServ->attribute |= SERVICE_ATTR_IMPORTANT;
-        }
+        #ifdef OHOS_LITE
+            if (value != 0) {
+                curServ->attribute |= SERVICE_ATTR_IMPORTANT;
+            }
+        #else
+            if (value >= MIN_IMPORTANT_LEVEL && value <= MAX_IMPORTANT_LEVEL) {    // -20~19
+                curServ->important = value;
+            } else {
+                INIT_LOGE("important level = %d, is not between -20 and 19, error", value);
+                return SERVICE_FAILURE;
+            }
+        #endif
     } else if (strncmp(targetField, CRITICAL_STR_IN_CFG, strlen(CRITICAL_STR_IN_CFG)) == 0) {       // set critical
         curServ->attribute &= ~SERVICE_ATTR_CRITICAL;
         if (value == 1) {
@@ -411,7 +423,7 @@ static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const cha
             curServ->attribute |= SERVICE_ATTR_CONSOLE;
         }
     } else {
-        INIT_LOGE("GetServiceNumber, item = %s, not expected, error.", targetField);
+        INIT_LOGE("item = %s, not expected, error.service name is %s", targetField, curServ->name);
         return SERVICE_FAILURE;
     }
     return SERVICE_SUCCESS;
@@ -644,7 +656,6 @@ void ParseAllServices(const cJSON* fileRoot)
         return;
     }
 
-    INIT_LOGI("servArrSize is %d ", servArrSize);
     if (servArrSize > MAX_SERVICES_CNT_IN_FILE) {
         INIT_LOGE("ParseAllServices, too many services[cnt %d] detected, should not exceed %d.",
             servArrSize, MAX_SERVICES_CNT_IN_FILE);

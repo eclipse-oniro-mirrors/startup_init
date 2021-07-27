@@ -24,8 +24,8 @@
 #include <unistd.h>
 #include "init_log.h"
 
-#define DEFAULT_RW_MODE S_IRUSR | S_IWUSR | S_IRGRP | S_IRGRP | S_IROTH | S_IWOTH
-#define DEFAULT_NO_AUTHORITY_MODE S_IWUSR | S_IRUSR
+#define DEFAULT_RW_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
+#define DEFAULT_NO_AUTHORITY_MODE (S_IWUSR | S_IRUSR)
 
 void MountBasicFs()
 {
