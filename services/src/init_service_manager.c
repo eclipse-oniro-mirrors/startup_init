@@ -365,6 +365,23 @@ static int GetServicePathAndArgs(const cJSON* curArrItem, Service* curServ)
     return SERVICE_SUCCESS;
 }
 
+static int GetImportantValue(int value, Service *curServ)
+{
+#ifdef OHOS_LITE
+    if (value != 0) {
+        curServ->attribute |= SERVICE_ATTR_IMPORTANT;
+    }
+#else
+    if (value >= MIN_IMPORTANT_LEVEL && value <= MAX_IMPORTANT_LEVEL) {    // -20~19
+        curServ->important = value;
+    } else {
+        INIT_LOGE("important level = %d, is not between -20 and 19, error", value);
+        return SERVICE_FAILURE;
+    }
+#endif
+    return SERVICE_SUCCESS;
+}
+
 static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const char* targetField)
 {
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, targetField);
@@ -395,18 +412,7 @@ static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const cha
             curServ->attribute |= SERVICE_ATTR_ONCE;
         }
     } else if (strncmp(targetField, IMPORTANT_STR_IN_CFG, strlen(IMPORTANT_STR_IN_CFG)) == 0) {
-        #ifdef OHOS_LITE
-            if (value != 0) {
-                curServ->attribute |= SERVICE_ATTR_IMPORTANT;
-            }
-        #else
-            if (value >= MIN_IMPORTANT_LEVEL && value <= MAX_IMPORTANT_LEVEL) {    // -20~19
-                curServ->important = value;
-            } else {
-                INIT_LOGE("important level = %d, is not between -20 and 19, error", value);
-                return SERVICE_FAILURE;
-            }
-        #endif
+        INIT_CHECK_RETURN_VALUE(GetImportantValue(value, curServ) == SERVICE_SUCCESS, SERVICE_FAILURE);
     } else if (strncmp(targetField, CRITICAL_STR_IN_CFG, strlen(CRITICAL_STR_IN_CFG)) == 0) {       // set critical
         curServ->attribute &= ~SERVICE_ATTR_CRITICAL;
         if (value == 1) {

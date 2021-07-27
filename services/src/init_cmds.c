@@ -72,13 +72,12 @@ int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
     char *tmpptr = NULL;
     p = strchr(symValue, '$');
     if (p == NULL) { // not has '$' copy the original string
-        INIT_CHECK_ONLY_RETURN(strncpy_s(paramValue, paramLen, symValue,
-        paramLen - 1) == EOK, return -1);
+        INIT_CHECK_RETURN_VALUE(strncpy_s(paramValue, paramLen, symValue, paramLen - 1) == EOK, -1);
         return 0;
     }
     tmpLen = p - symValue;
     if (tmpLen > 0) { // copy '$' front string
-        INIT_CHECK_ONLY_RETURN(strncpy_s(paramValue, paramLen, symValue, tmpLen) == EOK, return -1);
+        INIT_CHECK_RETURN_VALUE(strncpy_s(paramValue, paramLen, symValue, tmpLen) == EOK, -1);
     }
     p++;
     if (*p == '{') {
@@ -93,18 +92,18 @@ int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
             INIT_LOGE("Parameter name longer than %d", MAX_PARAM_NAME_LEN);
             return -1;
         }
-        INIT_CHECK_ONLY_RETURN(strncpy_s(tmpName, MAX_PARAM_NAME_LEN, p, tmpLen) == EOK, return -1);
+        INIT_CHECK_RETURN_VALUE(strncpy_s(tmpName, MAX_PARAM_NAME_LEN, p, tmpLen) == EOK, -1);
         int ret = SystemReadParam(tmpName, tmpValue, &tmpLen); // get param
         if (ret != 0) {
             INIT_LOGE("Failed to read parameter \" %s \"", tmpName);
             return -1;
         }
         // change param to new string
-        INIT_CHECK_ONLY_RETURN(strncat_s(paramValue, paramLen, tmpValue, MAX_PARAM_VALUE_LEN) == EOK, return -1);
+        INIT_CHECK_RETURN_VALUE(strncat_s(paramValue, paramLen, tmpValue, MAX_PARAM_VALUE_LEN) == EOK, -1);
         tmpptr = right + 1;
         tmpLen = paramLen - (tmpptr - symValue);
         if (*tmpptr != '\0') { // copy last string
-            INIT_CHECK_ONLY_RETURN(strncat_s(paramValue, paramLen, tmpptr, tmpLen) == EOK, return -1);
+            INIT_CHECK_RETURN_VALUE(strncat_s(paramValue, paramLen, tmpptr, tmpLen) == EOK, -1);
         }
         INIT_LOGI("paramValue is %s ", paramValue);
         return 0;
@@ -123,16 +122,16 @@ inline int GetParamValue(const char *symValue, char *paramValue, unsigned int pa
 
 struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
 {
-    INIT_CHECK_ONLY_RETURN(cmdContent != NULL, return NULL);
+    INIT_CHECK_RETURN_VALUE(cmdContent != NULL, NULL);
     struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
-    INIT_CHECK_ONLY_RETURN(ctx != NULL, return NULL);
+    INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
 
     if (argsCount > SPACES_CNT_IN_CMD_MAX) {
         INIT_LOGW("Too much arguments for command, max number is %d", SPACES_CNT_IN_CMD_MAX);
         argsCount = SPACES_CNT_IN_CMD_MAX;
     }
     ctx->argv = (char**)malloc(sizeof(char*) * (size_t)argsCount + 1);
-    INIT_CHECK_ONLY_RETURN(ctx->argv != NULL, FreeCmd(&ctx); return NULL);
+    INIT_CHECK(ctx->argv != NULL, FreeCmd(&ctx); return NULL);
 
     char tmpCmd[MAX_BUFFER];
     size_t cmdLength = strlen(cmdContent);
@@ -142,7 +141,7 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
         return NULL;
     }
 
-    INIT_CHECK_ONLY_RETURN(strncpy_s(tmpCmd, MAX_BUFFER - 1, cmdContent, cmdLength) == EOK,
+    INIT_CHECK(strncpy_s(tmpCmd, MAX_BUFFER - 1, cmdContent, cmdLength) == EOK,
         FreeCmd(&ctx);
         return NULL);
     tmpCmd[strlen(cmdContent)] = '\0';
@@ -161,8 +160,8 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
         // Make surce there is enough memory to store parameter value
         allocSize = (size_t)(cmdLength + MAX_PARAM_VALUE_LEN + 1);
         ctx->argv[ctx->argc] = calloc(sizeof(char), allocSize);
-        INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
-        INIT_CHECK_ONLY_RETURN(GetParamValue(p, ctx->argv[ctx->argc], allocSize) == 0,
+        INIT_CHECK(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
+        INIT_CHECK(GetParamValue(p, ctx->argv[ctx->argc], allocSize) == 0,
             FreeCmd(&ctx); return NULL);
         ctx->argc += 1;
         ctx->argv[ctx->argc] = NULL;
@@ -178,8 +177,8 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
         *token = '\0'; // replace it with '\0';
         allocSize = (size_t)((token - p) + MAX_PARAM_VALUE_LEN + 1);
         ctx->argv[index] = calloc(sizeof(char), allocSize);
-        INIT_CHECK_ONLY_RETURN(ctx->argv[index] != NULL, FreeCmd(&ctx); return NULL);
-        INIT_CHECK_ONLY_RETURN(GetParamValue(p, ctx->argv[index], allocSize) == 0,
+        INIT_CHECK(ctx->argv[index] != NULL, FreeCmd(&ctx); return NULL);
+        INIT_CHECK(GetParamValue(p, ctx->argv[index], allocSize) == 0,
             FreeCmd(&ctx); return NULL);
         p = token + 1; // skip '\0'
         // Skip lead whitespaces
@@ -196,8 +195,8 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
         size_t restSize = tmpCmd + cmdLength - p;
         allocSize = restSize + MAX_PARAM_VALUE_LEN + 1;
         ctx->argv[index] = calloc(sizeof(char),  allocSize);
-        INIT_CHECK_ONLY_RETURN(ctx->argv[index] != NULL, FreeCmd(&ctx); return NULL);
-        INIT_CHECK_ONLY_RETURN(GetParamValue(p, ctx->argv[index], allocSize) == 0,
+        INIT_CHECK(ctx->argv[index] != NULL, FreeCmd(&ctx); return NULL);
+        INIT_CHECK(GetParamValue(p, ctx->argv[index], allocSize) == 0,
             FreeCmd(&ctx); return NULL);
         ctx->argc = index + 1;
     }
@@ -209,11 +208,11 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
 void FreeCmd(struct CmdArgs **cmd)
 {
     struct CmdArgs *tmpCmd = *cmd;
-    INIT_CHECK_ONLY_RETURN(tmpCmd != NULL, return);
+    INIT_CHECK_ONLY_RETURN(tmpCmd != NULL);
     for (int i = 0; i < tmpCmd->argc; ++i) {
-        INIT_CHECK_ONLY_RETURN(tmpCmd->argv[i] == NULL, free(tmpCmd->argv[i]));
+        INIT_CHECK(tmpCmd->argv[i] == NULL, free(tmpCmd->argv[i]));
     }
-    INIT_CHECK_ONLY_RETURN(tmpCmd->argv == NULL, free(tmpCmd->argv));
+    INIT_CHECK(tmpCmd->argv == NULL, free(tmpCmd->argv));
     free(tmpCmd);
     return;
 }
@@ -327,10 +326,10 @@ static void DoCopy(const char* cmdContent, int maxArg)
 out:
     FreeCmd(&ctx);
     ctx = NULL;
-    INIT_CHECK_ONLY_RETURN(srcFd < 0, close(srcFd); srcFd = -1);
-    INIT_CHECK_ONLY_RETURN(dstFd < 0, close(dstFd); dstFd = -1);
-    INIT_CHECK_ONLY_RETURN(realPath1 == NULL, free(realPath1); realPath1 = NULL);
-    INIT_CHECK_ONLY_RETURN(realPath2 == NULL, free(realPath2); realPath2 = NULL);
+    INIT_CHECK(srcFd < 0, close(srcFd); srcFd = -1);
+    INIT_CHECK(dstFd < 0, close(dstFd); dstFd = -1);
+    INIT_CHECK(realPath1 == NULL, free(realPath1); realPath1 = NULL);
+    INIT_CHECK(realPath2 == NULL, free(realPath2); realPath2 = NULL);
     return;
 }
 
@@ -710,7 +709,7 @@ static void DoLoadCfg(const char *path, int maxArg)
     size_t maxLoop = 0;
     CmdLine *cmdLine = NULL;
     int len;
-    INIT_CHECK_ONLY_RETURN(path != NULL, return);
+    INIT_CHECK_ONLY_RETURN(path != NULL);
     INIT_LOGI("DoLoadCfg cfg file %s", path);
     if (!CheckValidCfg(path)) {
         INIT_LOGE("CheckCfg file %s Failed", path);
@@ -718,7 +717,7 @@ static void DoLoadCfg(const char *path, int maxArg)
     }
     INIT_ERROR_CHECK(path != NULL, return, "CheckCfg path is NULL.");
     char *realPath = realpath(path, NULL);
-    INIT_CHECK_ONLY_RETURN(realPath != NULL, return);
+    INIT_CHECK_ONLY_RETURN(realPath != NULL);
     fp = fopen(realPath, "r");
     if (fp == NULL) {
         INIT_LOGE("open cfg error = %d", errno);

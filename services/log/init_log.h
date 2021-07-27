@@ -80,9 +80,19 @@ void SetLogLevel(InitLogLevel logLevel);
         statement;                                \
     }
 
-#define INIT_CHECK_ONLY_RETURN(ret, statement)         \
+#define INIT_CHECK(ret, statement)         \
     if (!(ret)) {                                       \
         statement;                                      \
+    }
+
+#define INIT_CHECK_RETURN_VALUE(ret, result)         \
+    if (!(ret)) {                                       \
+        return result;                                  \
+    }
+
+#define INIT_CHECK_ONLY_RETURN(ret)         \
+    if (!(ret)) {                                       \
+        return;                                  \
     }
 
 #ifdef __cplusplus
