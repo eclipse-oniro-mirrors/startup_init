@@ -363,10 +363,10 @@ struct DevPermissionMapper {
 
 struct DevPermissionMapper DEV_MAPPER[] = {
     {"/dev/binder", 0666, 0, 0},
-    {"/dev/input/event0", 0660, 0, 1004},
+    {"/dev/input/event0", 0660, 0, 0},
     {"/dev/input/event1", 0660, 0, 1004},
     {"/dev/input/mice", 0660, 0, 1004},
-    {"/dev/input/mouse0", 0660, 0, 1004},
+    {"/dev/input/mouse0", 0660, 0, 0},
     {"/dev/snd/timer", 0660, 1000, 1005},
     {"/dev/zero", 0666, 0, 0},
     {"/dev/full", 0666, 0, 0},
@@ -375,7 +375,7 @@ struct DevPermissionMapper DEV_MAPPER[] = {
     {"/dev/random", 0666, 0, 0},
     {"/dev/urandom", 0666, 0, 0},
     {"/dev/ashmem", 0666, 0, 0},
-    {"/dev/pmsg0", 0222, 0, 0},
+    {"/dev/pmsg0", 0222, 0, 1007},
     {"/dev/jpeg", 0666, 1000, 1003},
     {"/dev/vinput", 0660, 1000, 1004},
     {"/dev/mmz_userdev", 0644, 1000, 1005},
@@ -383,7 +383,7 @@ struct DevPermissionMapper DEV_MAPPER[] = {
     {"/dev/mem", 0660, 1000, 1005},
     {"/dev/ion", 0666, 1000, 1000},
     {"/dev/btusb0", 0660, 1002, 1002},
-    {"/dev/uhid", 0660, 1002, 1002},
+    {"/dev/uhid", 0660, 3011, 3011},
     {"/dev/tc_ns_client", 0660, 1000, 1005},
     {"/dev/rtk_btusb", 0660, 1002, 0},
     {"/dev/sil9293", 0660, 1000, 1005},
@@ -418,7 +418,10 @@ struct DevPermissionMapper DEV_MAPPER[] = {
     {"/dev/dri/card0", 0666, 0, 1003},
     {"/dev/dri/card0-DSI-1", 0666, 0, 1003},
     {"/dev/dri/card0-HDMI-A-1", 0666, 0, 1003},
-    {"/dev/dri/renderD128", 0666, 0, 1003}
+    {"/dev/dri/renderD128", 0666, 0, 1003},
+    {"/dev/rtc0", 0640, 1000, 1000},
+    {"/dev/tty0", 0660, 0, 1000},
+    {"/dev/uinput", 0660, 3011, 3011}
 };
 
 static void AdjustDevicePermission(const char *devPath)
