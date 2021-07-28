@@ -373,9 +373,9 @@ static int GetImportantValue(int value, Service *curServ)
     }
 #else
     if (value >= MIN_IMPORTANT_LEVEL && value <= MAX_IMPORTANT_LEVEL) {    // -20~19
-        curServ->important = value;
+        curServ->importance = value;
     } else {
-        INIT_LOGE("important level = %d, is not between -20 and 19, error", value);
+        INIT_LOGE("importance level = %d, is not between -20 and 19, error", value);
         return SERVICE_FAILURE;
     }
 #endif
@@ -399,7 +399,7 @@ static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const cha
     }
 
     int value = (int)cJSON_GetNumberValue(filedJ);
-    // important value allow < 0
+    // importance value allow < 0
     if (strncmp(targetField, IMPORTANT_STR_IN_CFG, strlen(IMPORTANT_STR_IN_CFG)) != 0) {
         if (value < 0) {
             INIT_LOGE("value = %d, error.service name is %s", value, curServ->name);

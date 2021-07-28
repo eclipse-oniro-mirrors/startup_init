@@ -363,11 +363,10 @@ struct DevPermissionMapper {
 
 struct DevPermissionMapper DEV_MAPPER[] = {
     {"/dev/binder", 0666, 0, 0},
-    {"/dev/input/event0", 0660, 0, 1004},
+    {"/dev/input/event0", 0660, 0, 0},
     {"/dev/input/event1", 0660, 0, 1004},
     {"/dev/input/mice", 0660, 0, 1004},
     {"/dev/input/mouse0", 0660, 0, 0},
-    {"/dev/input/event0", 0660, 0, 0},
     {"/dev/snd/timer", 0660, 1000, 1005},
     {"/dev/zero", 0666, 0, 0},
     {"/dev/full", 0666, 0, 0},

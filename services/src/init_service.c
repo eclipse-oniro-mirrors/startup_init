@@ -226,9 +226,9 @@ int ServiceStart(Service *service)
 
         INIT_LOGI("service->name is %s ", service->name);
 #ifndef OHOS_LITE
-        if (service->important != 0) {
-            if (setpriority(PRIO_PROCESS, 0, service->important) != 0) {
-                INIT_LOGE("setpriority failed for %s, important = %d", service->name, service->important);
+        if (service->importance != 0) {
+            if (setpriority(PRIO_PROCESS, 0, service->importance) != 0) {
+                INIT_LOGE("setpriority failed for %s, importance = %d", service->name, service->importance);
                 _exit(0x7f); // 0x7f: user specified
             }
         }

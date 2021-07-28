@@ -71,7 +71,7 @@ typedef struct {
     time_t firstCriticalCrashTime;      // record for critical
     char   *writepidFiles[MAX_WRITEPID_FILES];
     unsigned int attribute;
-    int    important;
+    int    importance;
     Perms  servPerm;
     struct OnRestartCmd *onRestart;
     struct ServiceSocket *socketCfg;
