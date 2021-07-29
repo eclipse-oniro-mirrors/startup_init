@@ -359,14 +359,18 @@ out:
 
 static void DoMkDir(const char* cmdContent, int maxArg)
 {
-    // format: mkdir /xxx/xxx/xxx or mkdir /xxx/xxx/xxx mode owner group
+    // mkdir support format:
+    //    1.mkdir path
+    //    2.mkdir path mode
+    //    3.mkdir path mode owner group
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc < 1) {
         INIT_LOGE("DoMkDir invalid arguments :%s", cmdContent);
         goto out;
     }
 
-    if (ctx->argc != 1 && ctx->argc != maxArg) {
+    const int withModeArg = 2;
+    if (ctx->argc != 1 && ctx->argc != maxArg && ctx->argc != withModeArg) {
         INIT_LOGE("DoMkDir invalid arguments: %s", cmdContent);
         goto out;
     }
@@ -381,6 +385,9 @@ static void DoMkDir(const char* cmdContent, int maxArg)
         mode = strtoul(ctx->argv[1], NULL, OCTAL_TYPE);
         if (chmod(ctx->argv[0], mode) != 0) {
             INIT_LOGE("DoMkDir failed for %s, err %d.", cmdContent, errno);
+        }
+        if (ctx->argc == withModeArg) {
+            goto out;
         }
         const int ownerPos = 2;
         const int groupPos = 3;
