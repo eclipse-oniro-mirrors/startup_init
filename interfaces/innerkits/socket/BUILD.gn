@@ -25,6 +25,6 @@ ohos_static_library("libsocket") {
 
   deps = [
     "//base/startup/init_lite/services/log:init_log",
-    "//third_party/bounds_checking_function:libsec_static",  
+    "//third_party/bounds_checking_function:libsec_static",
   ]
 }
