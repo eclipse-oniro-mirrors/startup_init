@@ -20,9 +20,11 @@ ohos_static_library("libsocket") {
   include_dirs = [
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/services/log",
+    "//third_party/bounds_checking_function/include",
   ]
 
   deps = [
     "//base/startup/init_lite/services/log:init_log",
+    "//third_party/bounds_checking_function:libsec_static",
   ]
 }
