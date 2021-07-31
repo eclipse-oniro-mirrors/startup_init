@@ -125,10 +125,7 @@ void InitReadCfg()
 {
 #ifndef OHOS_LITE
     InitParamService();
-    LoadDefaultParams("/system/etc/prop.default");
-    LoadDefaultParams("/system/build.prop");
-    LoadDefaultParams("/system/buildz.prop");
-    LoadDefaultParams("/product/build.prop");
+    LoadDefaultParams("/system/etc/ohos.para");
 #endif
     ParseInitCfg(INIT_CONFIGURATION_FILE);
     ParseOtherCfgs();
