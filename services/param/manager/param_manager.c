@@ -36,8 +36,10 @@ static int SelinuxAuditCallback(void *data,
     PARAM_CHECK(auditData != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     PARAM_CHECK(auditData->name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     PARAM_CHECK(auditData->cr != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
-    snprintf(msgBuf, msgSize, "param=%s pid=%d uid=%d gid=%d",
-        auditData->name, auditData->cr->pid, auditData->cr->uid, auditData->cr->gid);
+    if (snprintf_s(msgBuf, msgSize, msgSize - 1, "param=%s pid=%d uid=%d gid=%d",
+        auditData->name, auditData->cr->pid, auditData->cr->uid, auditData->cr->gid) == -1) {
+        return PARAM_CODE_INVALID_PARAM;
+    }
     return 0;
 }
 #endif

@@ -28,6 +28,7 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include "init_log.h"
+#include "securec.h"
 
 #define N_DEC 10
 #define MAX_SOCKET_ENV_PREFIX_LEN 64
@@ -63,7 +64,9 @@ int GetControlSocket(const char *name)
         return -1;
     }
     char path[MAX_SOCKET_ENV_PREFIX_LEN] = {0};
-    snprintf(path, sizeof(path), OHOS_SOCKET_ENV_PREFIX"%s", name);
+    if (snprintf_s(path, sizeof(path), sizeof(path) - 1, OHOS_SOCKET_ENV_PREFIX"%s", name) == -1) {
+        return -1;
+    }
     INIT_LOGI("GetControlSocket path is %s ", path);
     int fd = GetControlFromEnv(path);
     if (fd < 0) {
@@ -78,7 +81,9 @@ int GetControlSocket(const char *name)
         return -1;
     }
     char sockDir[MAX_SOCKET_DIR_LEN] = {0};
-    snprintf(sockDir, sizeof(sockDir), OHOS_SOCKET_DIR"/%s", name);
+    if (snprintf_s(sockDir, sizeof(sockDir), sizeof(sockDir) - 1, OHOS_SOCKET_DIR"/%s", name) == -1) {
+        return -1;
+    }
     INIT_LOGI("sockDir %s ", sockDir);
     INIT_LOGI("addr.sun_path %s ", addr.sun_path);
     if (strncmp(sockDir, addr.sun_path, strlen(sockDir)) == 0) {
