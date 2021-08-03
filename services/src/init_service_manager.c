@@ -129,6 +129,7 @@ static int GetServiceName(const cJSON* curArrItem, Service* curServ)
     return SERVICE_SUCCESS;
 }
 
+#ifdef OHOS_LITE
 static int IsForbidden(const char* fieldStr)
 {
     size_t fieldLen = strlen(fieldStr);
@@ -150,6 +151,12 @@ static int IsForbidden(const char* fieldStr)
         return 0;
     }
 }
+#else
+static int IsForbidden(const char* fieldStr)
+{
+    return 0;
+}
+#endif
 
 // TODO: move this function to common files
 static cJSON* GetArrItem(const cJSON* fileRoot, int* arrSize, const char* arrName)

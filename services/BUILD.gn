@@ -144,7 +144,6 @@ if (defined(ohos_lite)) {
         "//third_party/toybox:toybox",
       ]
     }
-    module_install_dir = "bin"
     install_images = [
       "system",
       "updater",
