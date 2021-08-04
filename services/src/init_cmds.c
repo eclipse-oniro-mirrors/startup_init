@@ -17,6 +17,11 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
+#ifndef OHOS_LITE
+#include <linux/module.h>
+#endif
+#include <net/if.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,15 +30,10 @@
 #include <sys/mount.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
 #include <sys/sysmacros.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <net/if.h>
-#ifndef OHOS_LITE
-#include <linux/module.h>
-#endif
-#include <sys/syscall.h>
 #include "init_jobs.h"
 #include "init_log.h"
 #ifndef OHOS_LITE
@@ -221,7 +221,7 @@ void FreeCmd(struct CmdArgs **cmd)
 
 #define EXTRACT_ARGS(cmdname, cmdContent, args) \
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", args); \
-    if (ctx == NULL || ctx->argv == NULL || ctx->argc != args) { \
+    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != args)) { \
         INIT_LOGE("Command \"%s\" with invalid arguments: %s", #cmdname, cmdContent); \
         goto out; \
     } \
