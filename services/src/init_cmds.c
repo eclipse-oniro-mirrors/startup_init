@@ -17,21 +17,23 @@
 
 #include <ctype.h>
 #include <errno.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mount.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/sysmacros.h>
-#include <sys/wait.h>
-#include <unistd.h>
 #include <fcntl.h>
 #ifndef OHOS_LITE
 #include <linux/module.h>
 #endif
+#include <net/if.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/mount.h>
+#include <sys/resource.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
+#include <sys/sysmacros.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include "init_jobs.h"
 #include "init_log.h"
 #ifndef OHOS_LITE
@@ -216,6 +218,102 @@ void FreeCmd(struct CmdArgs **cmd)
     free(tmpCmd);
     return;
 }
+
+#define EXTRACT_ARGS(cmdname, cmdContent, args) \
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", args); \
+    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != args)) { \
+        INIT_LOGE("Command \"%s\" with invalid arguments: %s", #cmdname, cmdContent); \
+        goto out; \
+    } \
+
+static void DoSetDomainname(const char *cmdContent, int maxArg)
+{
+    EXTRACT_ARGS(domainname, cmdContent, maxArg)
+    int fd = open("/proc/sys/kernel/domainname", O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC,
+        S_IRUSR | S_IWUSR);
+    if (fd < 0) {
+        INIT_LOGE("DoSetDomainame failed to open \"/proc/sys/kernel/domainname\". err = %d", errno);
+        goto out;
+    }
+
+    size_t size = strlen(ctx->argv[0]);
+    ssize_t n = write(fd, ctx->argv[0], size);
+    if (n != (ssize_t)size) {
+        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/domainname\". err = %d", errno);
+    }
+
+    if (fd > 0) {
+        close(fd);
+        fd = -1;
+    }
+out:
+    FreeCmd(&ctx);
+    return;
+}
+
+static void DoSetHostname(const char *cmdContent, int maxArg)
+{
+    EXTRACT_ARGS(hostname, cmdContent, maxArg)
+    int fd = open("/proc/sys/kernel/hostname", O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC,
+        S_IRUSR | S_IWUSR);
+    if (fd < 0) {
+        INIT_LOGE("DoSetHostname failed to open \"/proc/sys/kernel/hostname\". err = %d", errno);
+        goto out;
+    }
+
+    size_t size = strlen(ctx->argv[0]);
+    ssize_t n = write(fd, ctx->argv[0], size);
+    if (n != (ssize_t)size) {
+        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/hostname\". err = %d", errno);
+    }
+
+    if (fd > 0) {
+        close(fd);
+        fd = -1;
+    }
+out:
+    FreeCmd(&ctx);
+    return;
+}
+
+#ifndef OHOS_LITE
+static void DoIfup(const char *cmdContent, int maxArg)
+{
+    EXTRACT_ARGS(ifup, cmdContent, maxArg)
+    struct ifreq interface;
+    if (strncpy_s(interface.ifr_name, IFNAMSIZ - 1, ctx->argv[0], strlen(ctx->argv[0])) != EOK) {
+        INIT_LOGE("DoIfup failed to copy interface name");
+        goto out;
+    }
+
+    INIT_LOGD("interface name: %s", interface.ifr_name);
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0) {
+        INIT_LOGE("DoIfup failed to create socket, err = %d", errno);
+        goto out;
+    }
+
+    if (ioctl(fd, SIOCGIFFLAGS, &interface) < 0) {
+        INIT_LOGE("DoIfup failed to do ioctl with command \"SIOCGIFFLAGS\", err = %d", errno);
+        close(fd);
+        fd = -1;
+        goto out;
+    }
+    interface.ifr_flags |= IFF_UP;
+
+    if (ioctl(fd, SIOCSIFFLAGS, &interface) < 0) {
+        INIT_LOGE("DoIfup failed to do ioctl with command \"SIOCSIFFLAGS\", err = %d", errno);
+    }
+
+    if (fd > 0) {
+        close(fd);
+        fd = -1;
+    }
+out:
+    FreeCmd(&ctx);
+    return;
+}
+#endif
 
 static void DoSleep(const char *cmdContent, int maxArg)
 {
@@ -1103,13 +1201,16 @@ static const struct CmdTable CMD_TABLE[] = {
     { "setparam ", 2, DoSetParam },
     { "load_persist_params ", 1, DoLoadPersistParams },
     { "load_param ", 1, DoLoadDefaultParams },
+    { "ifup ", 1, DoIfup },
 #endif
     { "stop ", 1, DoStop },
     { "reset ", 1, DoReset },
     { "copy ", 2, DoCopy },
     { "reboot ", 1, DoRebootCmd },
     { "setrlimit ", 3, DoSetrlimit },
-    { "sleep ", 1, DoSleep }
+    { "sleep ", 1, DoSleep },
+    { "hostname ", 1, DoSetHostname },
+    { "domainname ", 1, DoSetDomainname }
 };
 
 void DoCmdByName(const char *name, const char *cmdContent)

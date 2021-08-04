@@ -19,6 +19,7 @@ if (defined(ohos_lite)) {
       "OHOS_LITE",
     ]
     sources = [
+      "log/init_log.c",
       "src/init_adapter.c",
       "src/init_capability.c",
       "src/init_cmds.c",
@@ -31,7 +32,6 @@ if (defined(ohos_lite)) {
       "src/init_service_socket.c",
       "src/init_signal_handler.c",
       "src/init_utils.c",
-      "log/init_log.c",
       "src/main.c",
     ]
 
@@ -48,11 +48,11 @@ if (defined(ohos_lite)) {
     cflags = [ "-Wall" ]
 
     deps = [
+      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
       "//base/startup/init_lite/initsync:initsync",
       "//base/startup/syspara_lite/frameworks/parameter:parameter",
       "//build/lite/config/component/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
     ]
     ldflags = []
     if (ohos_kernel_type == "liteos_a") {
@@ -98,6 +98,11 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/log:init_log",
       "//third_party/bounds_checking_function:libsec_static",
     ]
+    module_install_dir = "bin"
+    install_images = [
+      "system",
+      "updater",
+    ]
     install_enable = true
     part_name = "init"
   }
@@ -139,6 +144,10 @@ if (defined(ohos_lite)) {
         "//third_party/toybox:toybox",
       ]
     }
+    install_images = [
+      "system",
+      "updater",
+    ]
     install_enable = true
     part_name = "init"
   }
@@ -149,12 +158,12 @@ if (defined(ohos_lite)) {
       ":init_etc",
       ":updaterueventd",
       "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
+      "//base/startup/init_lite/services/cmds/reboot:reboot",
+      "//base/startup/init_lite/services/cmds/service_control:service_control",
       "//base/startup/init_lite/services/param:getparam",
       "//base/startup/init_lite/services/param:paramclient",
       "//base/startup/init_lite/services/param:paramservice",
       "//base/startup/init_lite/services/param:setparam",
-      "//base/startup/init_lite/services/cmds/reboot:reboot",
-      "//base/startup/init_lite/services/cmds/service_control:service_control",
     ]
   }
 
@@ -202,13 +211,13 @@ if (defined(ohos_lite)) {
 
   group("init_etc") {
     deps = [
+      ":group",
       ":init.Hi3516DV300.cfg",
       ":init.Hi3516DV300.usb.cfg",
       ":init.cfg",
       ":init.usb.cfg",
       ":init.usb.configfs.cfg",
       ":passwd",
-      ":group",
       ":ohos.para",
     ]
   }
