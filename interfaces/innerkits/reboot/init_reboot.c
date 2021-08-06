@@ -27,12 +27,19 @@
 int DoReboot(const char *cmdContent)
 {
     char value[MAX_REBOOT_VAUE_SIZE];
-    if (cmdContent == NULL) {
-        INIT_LOGE("DoReboot api error, cmdContent is NULL.");
-        return -1;
+    if (cmdContent == NULL || strlen(cmdContent) == 0) {
+        if (snprintf_s(value, MAX_REBOOT_NAME_SIZE, MAX_REBOOT_NAME_SIZE - 1, "%s", "reboot") < 0) {
+            INIT_LOGE("DoReboot api error, MAX_REBOOT_NAME_SIZE is not enough");
+            return -1;
+        }
+        if (SystemSetParameter("sys.powerctrl", value) != 0) {
+            INIT_LOGE("DoReboot Api SystemSetParameter error");
+            return -1;
+        }
+        return 0;
     }
     int length = strlen(cmdContent);
-    if (length == 0 || length > MAX_REBOOT_VAUE_SIZE) {
+    if (length > MAX_REBOOT_VAUE_SIZE) {
         INIT_LOGE("DoReboot api error, cmdContent = %s, length = %d.", cmdContent, length);
         return -1;
     }

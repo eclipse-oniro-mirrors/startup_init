@@ -129,6 +129,61 @@ static int GetMountStatusForMountPoint(const char *mountPoint)
     return 0;
 }
 
+static int UpdateUpdaterStatus(const char *valueData)
+{
+    const char *miscFile = "/dev/block/platform/soc/10100000.himci.eMMC/by-name/misc";
+    struct RBMiscUpdateMessage msg;
+    bool ret = RBMiscReadUpdaterMessage(miscFile, &msg);
+    if (!ret) {
+        INIT_LOGE("RBMiscReadUpdaterMessage error.");
+        return -1;
+    }
+    if (snprintf_s(msg.command, MAX_COMMAND_SIZE, MAX_COMMAND_SIZE - 1, "%s", "boot_updater") == -1) {
+        INIT_LOGE("RBMiscWriteUpdaterMessage error");
+        return -1;
+    }
+    if (strlen(valueData) > strlen("updater:") && strncmp(valueData, "updater:", strlen("updater:")) == 0) {
+        if (snprintf_s(msg.update, MAX_UPDATE_SIZE, MAX_UPDATE_SIZE - 1, "%s", valueData + strlen("updater:")) == -1) {
+            INIT_LOGE("RBMiscWriteUpdaterMessage error");
+            return -1;
+        }
+        ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
+        if (true != ret) {
+            INIT_LOGE("RBMiscWriteUpdaterMessage error");
+            return -1;
+        }
+    } else if (strlen(valueData) == strlen("updater") && strncmp(valueData, "updater", strlen("updater")) == 0) {
+        ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
+        if (true != ret) {
+            INIT_LOGE("RBMiscWriteUpdaterMessage error");
+            return -1;
+        }
+    } else {
+        return -1;
+    }
+    return 0;
+}
+
+static int DoRebootCore(const char *valueData)
+{
+    if (valueData == NULL) {
+        reboot(RB_AUTOBOOT);
+        return 0;
+    } else if (strncmp(valueData, "shutdown", strlen("shutdown")) == 0) {
+        reboot(RB_POWER_OFF);
+        return 0;
+    } else if (strncmp(valueData, "updater", strlen("updater")) == 0) {
+        int ret = UpdateUpdaterStatus(valueData);
+        if (ret == 0) {
+            reboot(RB_AUTOBOOT);
+            return 0;
+        }
+    } else {
+        return -1;
+    }
+    return 0;
+}
+
 void DoReboot(const char *value)
 {
     if (value == NULL) {
@@ -137,26 +192,26 @@ void DoReboot(const char *value)
     }
     INIT_LOGI("DoReboot value = %s", value);
 
-    if (strlen(value) > MAX_VALUE_LENGTH) {
+    if (strlen(value) > MAX_VALUE_LENGTH || strlen(value) < strlen("reboot") || strlen(value) == strlen("reboot,")) {
         INIT_LOGE("DoReboot reboot value error, value = %s.", value);
         return;
     }
-
     const char *valueData = NULL;
-    if (strncmp(value, "reboot,", strlen("reboot,")) != 0) {
+    if (strncmp(value, "reboot,", strlen("reboot,")) == 0) {
+        valueData = value + strlen("reboot,");
+    } else if (strlen(value) < strlen("reboot,") && strncmp(value, "reboot", strlen("reboot")) == 0) {
+        valueData = NULL;
+    } else {
         INIT_LOGE("DoReboot reboot value = %s, must started with reboot ,error.", value);
         return;
-    } else {
-        valueData = value + strlen("reboot,");
     }
-    if (strncmp(valueData, "shutdown", strlen("shutdown")) != 0
+    if (valueData != NULL
+        && strncmp(valueData, "shutdown", strlen("shutdown")) != 0
         && strncmp(valueData, "updater:", strlen("updater:")) != 0
-        && strncmp(valueData, "updater", strlen("updater")) != 0
-        && strncmp(valueData, "NoArgument", strlen("NoArgument")) != 0) {
+        && strncmp(valueData, "updater", strlen("updater")) != 0) {
         INIT_LOGE("DoReboot value = %s, parameters error.", value);
         return;
     }
-
     StopAllServicesBeforeReboot();
     if (GetMountStatusForMountPoint("/vendor") != 0) {
         if (umount("/vendor") != 0) {
@@ -168,67 +223,10 @@ void DoReboot(const char *value)
             INIT_LOGE("DoReboot umount data failed! errno = %d.", errno);
         }
     }
-    // "shutdown"
-    if (strncmp(valueData, "shutdown", strlen("shutdown")) == 0) {
-        int ret = reboot(RB_POWER_OFF);
-        if (ret != 0) {
-            INIT_LOGE("DoReboot reboot(RB_POWER_OFF) failed! syscall ret %d, err %d.", ret, errno);
-        }
-        return;
+    int ret = DoRebootCore(valueData);
+    if (ret != 0) {
+        INIT_LOGE("DoReboot value = %s, error.", value);
     }
-    // "updater" or "updater:"
-    const char *miscFile = "/dev/block/platform/soc/10100000.himci.eMMC/by-name/misc";
-    struct RBMiscUpdateMessage msg;
-    bool ret = RBMiscReadUpdaterMessage(miscFile, &msg);
-    if(!ret) {
-        INIT_LOGE("DoReboot RBMiscReadUpdaterMessage error.");
-        return;
-    }
-    const int commandSize = 12;
-    if (snprintf_s(msg.command, MAX_COMMAND_SIZE, MAX_COMMAND_SIZE - 1, "%s", "boot_updater") == -1) {
-        INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error");
-        return;
-    }
-    msg.command[commandSize] = 0;
-
-    if (strlen(valueData) > strlen("updater:") && strncmp(valueData, "updater:", strlen("updater:")) == 0) {
-        const char *p = valueData + strlen("updater:");
-        if (snprintf_s(msg.update, MAX_UPDATE_SIZE, MAX_UPDATE_SIZE - 1, "%s", p) == -1) {
-            INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error");
-            return;
-        }
-        msg.update[MAX_UPDATE_SIZE - 1] = 0;
-        ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
-        if(true != ret) {
-            INIT_LOGE("DoReboot updater: RBMiscWriteUpdaterMessage error");
-            return;
-        }
-        ret = reboot(RB_AUTOBOOT);
-        if (ret != 0) {
-            INIT_LOGE("DoReboot updater: reboot(RB_AUTOBOOT) failed! syscall ret %d, err %d.", ret, errno);
-        }
-        return;
-    }
-    if (strlen(valueData) == strlen("updater") && strncmp(valueData, "updater", strlen("updater")) == 0) {
-        ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
-        if(true != ret) {
-            INIT_LOGE("DoReboot updater RBMiscWriteUpdaterMessage error");
-            return;
-        }
-        ret = reboot(RB_AUTOBOOT);
-        if (ret != 0) {
-            INIT_LOGE("DoReboot updater reboot(RB_AUTOBOOT) failed! syscall ret %d, err %d.", ret, errno);
-        }
-        return;
-    }
-    if (strlen(valueData) == strlen("NoArgument") && strncmp(valueData, "NoArgument", strlen("NoArgument")) == 0) {
-        ret = reboot(RB_AUTOBOOT);
-        if (ret != 0) {
-            INIT_LOGE("DoReboot updater: reboot(RB_AUTOBOOT) failed! syscall ret %d, err %d.", ret, errno);
-        }
-        return;
-    }
-    INIT_LOGE("DoReboot value = %s, error.", value);
     return;
 
 }

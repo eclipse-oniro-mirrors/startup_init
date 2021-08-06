@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     if (argc == REBOOT_CMD_NUMBER) {
         ret = DoReboot(argv[1]);
     } else {
-        ret = DoReboot("NoArgument");
+        ret = DoReboot(NULL);
     }
     if (ret != 0) {
         printf("[reboot command] DoReboot Api return error\n");
