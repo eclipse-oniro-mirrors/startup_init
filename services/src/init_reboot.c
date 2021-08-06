@@ -148,13 +148,13 @@ static int UpdateUpdaterStatus(const char *valueData)
             return -1;
         }
         ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
-        if (true != ret) {
+        if (ret != true) {
             INIT_LOGE("RBMiscWriteUpdaterMessage error");
             return -1;
         }
     } else if (strlen(valueData) == strlen("updater") && strncmp(valueData, "updater", strlen("updater")) == 0) {
         ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
-        if (true != ret) {
+        if (ret != true) {
             INIT_LOGE("RBMiscWriteUpdaterMessage error");
             return -1;
         }
@@ -205,10 +205,10 @@ void DoReboot(const char *value)
         INIT_LOGE("DoReboot reboot value = %s, must started with reboot ,error.", value);
         return;
     }
-    if (valueData != NULL
-        && strncmp(valueData, "shutdown", strlen("shutdown")) != 0
-        && strncmp(valueData, "updater:", strlen("updater:")) != 0
-        && strncmp(valueData, "updater", strlen("updater")) != 0) {
+    if (valueData != NULL &&
+         strncmp(valueData, "shutdown", strlen("shutdown")) != 0 &&
+         strncmp(valueData, "updater:", strlen("updater:")) != 0 &&
+         strncmp(valueData, "updater", strlen("updater")) != 0) {
         INIT_LOGE("DoReboot value = %s, parameters error.", value);
         return;
     }
