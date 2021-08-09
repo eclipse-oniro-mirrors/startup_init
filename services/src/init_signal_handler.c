@@ -64,6 +64,18 @@ static void SigHandler(int sig)
                 if (sigPID <= 0) {
                     break;
                 }
+
+#ifndef OHOS_LITE
+                // check child process exit status
+                if (WIFSIGNALED(procStat)) {
+                    INIT_LOGE("Child process %d exit with signal: %d", sigPID, WTERMSIG(procStat));
+                }
+
+                if (WIFEXITED(procStat)) {
+                    INIT_LOGE("Child process %d exit with code : %d", sigPID, WEXITSTATUS(procStat));
+                }
+#endif
+
                 INIT_LOGI("SigHandler, SIGCHLD received, sigPID = %d.", sigPID);
 #ifdef __LINUX__
                 CheckWaitPid(sigPID);
