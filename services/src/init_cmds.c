@@ -243,7 +243,6 @@ static void DoSetDomainname(const char *cmdContent, int maxArg)
     }
 
     close(fd);
-    fd = -1;
 out:
     FreeCmd(&ctx);
     fd = -1;
@@ -267,7 +266,6 @@ static void DoSetHostname(const char *cmdContent, int maxArg)
     }
 
     close(fd);
-    fd = -1;
 out:
     FreeCmd(&ctx);
     fd = -1;
@@ -304,7 +302,6 @@ static void DoIfup(const char *cmdContent, int maxArg)
     }
 
     close(fd);
-    fd = -1;
 out:
     FreeCmd(&ctx);
     fd = -1;
