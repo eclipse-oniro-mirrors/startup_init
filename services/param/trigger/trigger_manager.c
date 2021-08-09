@@ -194,7 +194,7 @@ static int GetTriggerIndex(const char *type)
         return TRIGGER_PARAM;
     }
     static const char *triggerType[] = {
-        "pre-init", "boot", "early-init", "init", "early-init", "late-init", "post-init",
+        "pre-init", "boot", "early-init", "init", "late-init", "post-init",
         "early-fs", "post-fs", "late-fs", "post-fs-data"
     };
     for (size_t i = 0; i < sizeof(triggerType) / sizeof(char*); i++) {
