@@ -303,12 +303,11 @@ static void DoIfup(const char *cmdContent, int maxArg)
         INIT_LOGE("DoIfup failed to do ioctl with command \"SIOCSIFFLAGS\", err = %d", errno);
     }
 
-    if (fd > 0) {
-        close(fd);
-        fd = -1;
-    }
+    close(fd);
+    fd = -1;
 out:
     FreeCmd(&ctx);
+    fd = -1;
     return;
 }
 #endif
