@@ -183,11 +183,6 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
-  ohos_prebuilt_etc("init.Hi3516DV300.cfg") {
-    source = "//device/hisilicon/hi3516dv300/build/rootfs/init.Hi3516DV300.cfg"
-    part_name = "init"
-  }
-
   ohos_prebuilt_etc("init.usb.cfg") {
     source = "//base/startup/init_lite/services/etc/init.usb.cfg"
     part_name = "init"
@@ -195,12 +190,6 @@ if (defined(ohos_lite)) {
 
   ohos_prebuilt_etc("init.usb.configfs.cfg") {
     source = "//base/startup/init_lite/services/etc/init.usb.configfs.cfg"
-    part_name = "init"
-  }
-
-  ohos_prebuilt_etc("init.Hi3516DV300.usb.cfg") {
-    source =
-        "//device/hisilicon/hi3516dv300/build/rootfs/init.Hi3516DV300.usb.cfg"
     part_name = "init"
   }
 
@@ -212,13 +201,11 @@ if (defined(ohos_lite)) {
   group("init_etc") {
     deps = [
       ":group",
-      ":init.Hi3516DV300.cfg",
-      ":init.Hi3516DV300.usb.cfg",
       ":init.cfg",
       ":init.usb.cfg",
       ":init.usb.configfs.cfg",
-      ":passwd",
       ":ohos.para",
+      ":passwd",
     ]
   }
 }

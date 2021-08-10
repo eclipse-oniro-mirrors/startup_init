@@ -665,7 +665,7 @@ void ParseAllServices(const cJSON* fileRoot)
     int servArrSize = 0;
     cJSON* serviceArr = GetArrItem(fileRoot, &servArrSize, SERVICES_ARR_NAME_IN_JSON);
     if (serviceArr == NULL) {
-        INIT_LOGE("ParseAllServices, get array %s failed.", SERVICES_ARR_NAME_IN_JSON);
+        INIT_LOGI("ParseAllServices, this config does not contain service array.");
         return;
     }
 
