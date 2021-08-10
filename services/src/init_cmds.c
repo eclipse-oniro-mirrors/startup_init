@@ -242,12 +242,10 @@ static void DoSetDomainname(const char *cmdContent, int maxArg)
         INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/domainname\". err = %d", errno);
     }
 
-    if (fd > 0) {
-        close(fd);
-        fd = -1;
-    }
+    close(fd);
 out:
     FreeCmd(&ctx);
+    fd = -1;
     return;
 }
 
@@ -267,12 +265,10 @@ static void DoSetHostname(const char *cmdContent, int maxArg)
         INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/hostname\". err = %d", errno);
     }
 
-    if (fd > 0) {
-        close(fd);
-        fd = -1;
-    }
+    close(fd);
 out:
     FreeCmd(&ctx);
+    fd = -1;
     return;
 }
 
@@ -305,12 +301,10 @@ static void DoIfup(const char *cmdContent, int maxArg)
         INIT_LOGE("DoIfup failed to do ioctl with command \"SIOCSIFFLAGS\", err = %d", errno);
     }
 
-    if (fd > 0) {
-        close(fd);
-        fd = -1;
-    }
+    close(fd);
 out:
     FreeCmd(&ctx);
+    fd = -1;
     return;
 }
 #endif
