@@ -77,13 +77,13 @@ static int SetAllAmbientCapability()
 
 static int SetPerms(const Service *service)
 {
-    if (KeepCapability() != 0) {
-        return SERVICE_FAILURE;
-    }
-
-    if (setgroups(service->servPerm.gIDCnt, service->servPerm.gIDArray) != 0) {
-        INIT_LOGE("SetPerms, setgroups failed. errno = %d, gIDCnt=%d", errno, service->servPerm.gIDCnt);
-        return SERVICE_FAILURE;
+    INIT_CHECK_RETURN_VALUE(KeepCapability() == 0, SERVICE_FAILURE);
+    if (service->servPerm.gIDCnt == 1) {
+        INIT_ERROR_CHECK(setgid(service->servPerm.gIDArray[0]) == 0, return SERVICE_FAILURE,
+            "SetPerms, setgid for %s failed. %d", service->name, errno);
+    } else if (service->servPerm.gIDCnt > 1){
+        INIT_ERROR_CHECK(setgroups(service->servPerm.gIDCnt, service->servPerm.gIDArray) == 0, return SERVICE_FAILURE,
+            "SetPerms, setgroups failed. errno = %d, gIDCnt=%d", errno, service->servPerm.gIDCnt);
     }
 
     if (service->servPerm.uID != 0) {
