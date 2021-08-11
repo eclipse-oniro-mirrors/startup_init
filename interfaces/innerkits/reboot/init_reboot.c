@@ -16,9 +16,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "sys_param.h"
-#include "securec.h"
+#include <sys/types.h>
+#include <unistd.h>
 #include "init_log.h"
+#include "securec.h"
+#include "sys_param.h"
 
 #define SYS_POWER_CTRL "sys.powerctrl="
 #define MAX_REBOOT_NAME_SIZE  100
@@ -26,6 +28,12 @@
 
 int DoReboot(const char *cmdContent)
 {
+    uid_t uid1 = getuid();
+    uid_t uid2 = geteuid();
+    if (uid1 != 0 || uid2 != 0) {
+        INIT_LOGE("uid1=%d, uid2=%d, user MUST be root, error!", uid1, uid2);
+        return -1;
+    }
     char value[MAX_REBOOT_VAUE_SIZE];
     if (cmdContent == NULL || strlen(cmdContent) == 0) {
         if (snprintf_s(value, MAX_REBOOT_NAME_SIZE, MAX_REBOOT_NAME_SIZE - 1, "%s", "reboot") < 0) {
