@@ -22,6 +22,11 @@ ohos_executable("service_control") {
     "//base/startup/init_lite/services/param:paramclient",
     "//third_party/bounds_checking_function:libsec_static",
   ]
+  symlink_target_name = [
+    "start_service",
+    "stop_service",
+  ]
+  install_images = [ "system" ]
   install_enable = true
   part_name = "init"
 }
