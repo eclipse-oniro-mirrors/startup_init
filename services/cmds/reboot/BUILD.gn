@@ -14,17 +14,13 @@
 import("//build/ohos.gni")
 
 ohos_executable("reboot") {
-    sources = [
-      "init_cmd_reboot.c",
-    ]
-    include_dirs = [
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/services/include/param/",
-      "//third_party/bounds_checking_function/include",
-    ]
-    deps = [
-      "//base/startup/init_lite/interfaces/innerkits/reboot:libreboot",
-    ]
-    install_enable = true
-    part_name = "init"
+  sources = [ "init_cmd_reboot.c" ]
+  include_dirs = [
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/services/include/param/",
+    "//third_party/bounds_checking_function/include",
+  ]
+  deps = [ "//base/startup/init_lite/interfaces/innerkits/reboot:libreboot" ]
+  install_enable = true
+  part_name = "init"
 }

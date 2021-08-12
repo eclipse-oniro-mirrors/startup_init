@@ -38,28 +38,28 @@ if (defined(ohos_lite)) {
     ]
 
     sources = [
+      "//base/startup/init_lite/services/log/init_log.c",
       "//base/startup/init_lite/services/src/init_adapter.c",
       "//base/startup/init_lite/services/src/init_capability.c",
       "//base/startup/init_lite/services/src/init_cmds.c",
       "//base/startup/init_lite/services/src/init_import.c",
       "//base/startup/init_lite/services/src/init_jobs.c",
       "//base/startup/init_lite/services/src/init_read_cfg.c",
+      "//base/startup/init_lite/services/src/init_reboot.c",
       "//base/startup/init_lite/services/src/init_service.c",
       "//base/startup/init_lite/services/src/init_service_manager.c",
       "//base/startup/init_lite/services/src/init_service_socket.c",
       "//base/startup/init_lite/services/src/init_signal_handler.c",
       "//base/startup/init_lite/services/src/init_utils.c",
-      "//base/startup/init_lite/services/src/init_reboot.c",
-      "//base/startup/init_lite/services/log/init_log.c",
       "cmd_func_test.cpp",
     ]
 
     deps = [
+      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
       "//base/startup/init_lite/initsync:initsync",
       "//base/startup/syspara_lite/frameworks/parameter:parameter",
       "//build/lite/config/component/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
     ]
     if (ohos_kernel_type == "liteos_a") {
       include_dirs += [
