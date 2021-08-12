@@ -78,11 +78,15 @@ static int SetPerms(const Service *service)
         return SERVICE_FAILURE;
     }
 
-    if (setgroups(service->servPerm.gIDCnt, service->servPerm.gIDArray) != 0) {
-        INIT_LOGE("SetPerms, setgroups failed. errno = %d, gIDCnt=%d", errno, service->servPerm.gIDCnt);
-        return SERVICE_FAILURE;
+    if (service->servPerm.gIDCnt > 0) {
+        INIT_ERROR_CHECK(setgid(service->servPerm.gIDArray[0]) == 0, return SERVICE_FAILURE,
+            "SetPerms, setgid for %s failed. %d", service->name, errno);
     }
-
+    if (service->servPerm.gIDCnt > 1) {
+        INIT_ERROR_CHECK(setgroups(service->servPerm.gIDCnt - 1, &service->servPerm.gIDArray[1]) == 0,
+            return SERVICE_FAILURE,
+            "SetPerms, setgroups failed. errno = %d, gIDCnt=%d", errno, service->servPerm.gIDCnt);
+    }
     if (service->servPerm.uID != 0) {
         if (setuid(service->servPerm.uID) != 0) {
             INIT_LOGE("setuid of service: %s failed, uid = %d", service->name, service->servPerm.uID);
