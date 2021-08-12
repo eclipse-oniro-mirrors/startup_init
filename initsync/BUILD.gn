@@ -18,9 +18,7 @@ lite_component("initsync") {
 }
 
 shared_library("libinitsync_shared") {
-  sources = [
-    "src/init_sync.c",
-  ]
+  sources = [ "src/init_sync.c" ]
   cflags = [ "-Wall" ]
   include_dirs = [
     "//base/startup/init_lite/initsync/include",
@@ -34,16 +32,12 @@ shared_library("libinitsync_shared") {
 }
 
 static_library("libinitsync_static") {
-  sources = [
-    "src/init_sync.c",
-  ]
+  sources = [ "src/init_sync.c" ]
   cflags = [ "-Wall" ]
   include_dirs = [
     "//base/startup/init_lite/initsync/include",
     "//base/startup/init_lite/interfaces/kits",
     "//base/startup/init_lite/services/log",
   ]
-  public_deps = [
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
+  public_deps = [ "//third_party/bounds_checking_function:libsec_static" ]
 }
