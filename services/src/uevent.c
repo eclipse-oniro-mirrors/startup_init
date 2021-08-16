@@ -177,15 +177,14 @@ ssize_t ReadUevent(int fd, void *buf, size_t len)
     struct iovec iov = { buf, len };
     struct sockaddr_nl addr;
     char control[CMSG_SPACE(sizeof(struct ucred))];
-    struct msghdr hdr = {
-        &addr,
-        sizeof(addr),
-        &iov,
-        1,
-        control,
-        sizeof(control),
-        0,
-    };
+    struct msghdr hdr;
+    hdr.msg_name = &addr;
+    hdr.msg_namelen = sizeof(addr);
+    hdr.msg_iov = &iov;
+    hdr.msg_iovlen  = 1;
+    hdr.msg_control = control;
+    hdr.msg_controllen = sizeof(control);
+    hdr.msg_flags = 0;
     ssize_t n = recvmsg(fd, &hdr, 0);
     if (n <= 0) {
         return n;
