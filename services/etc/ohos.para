@@ -33,4 +33,7 @@ ro.secure=1
 security.perf_harden=1
 ro.allow.mock.location=0
 ro.debuggable=1
+ro.build.characteristics="Default"
+ro.product.model="ohos"
+ro.product.name="OpenHarmony 2.0 Canary"
 persist.sys.usb.config=hdc
