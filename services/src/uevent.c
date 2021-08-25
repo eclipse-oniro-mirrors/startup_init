@@ -646,6 +646,9 @@ static const char *ParseDeviceName(const struct Uevent *uevent, unsigned int len
     if ((uevent->major < 0) || (uevent->minor < 0)) {
         return NULL;
     }
+    if (uevent->deviceName == NULL || uevent->deviceName[0] == '\0') {
+        return NULL;
+    }
     /* do we have a name? */
     const char *name = strrchr(uevent->path, '/');
     if (!name) {
