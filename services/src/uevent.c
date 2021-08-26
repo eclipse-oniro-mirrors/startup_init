@@ -714,7 +714,7 @@ struct CommonDev {
     char *path;
 };
 
-struct CommonDev COMMON_DEV_MAPPER[] = {
+static const struct CommonDev COMMON_DEV_MAPPER[] = {
     {"graphics", 8, "/dev/graphics/"},
     {"drm", 3, "/dev/dri/"},
     {"oncrpc", 6, "/dev/oncrpc/"},
