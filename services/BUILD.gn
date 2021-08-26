@@ -175,11 +175,19 @@ if (defined(ohos_lite)) {
 
   ohos_prebuilt_etc("passwd") {
     source = "//base/startup/init_lite/services/etc/passwd"
+    install_images = [
+      "system",
+      "updater",
+    ]
     part_name = "init"
   }
 
   ohos_prebuilt_etc("group") {
     source = "//base/startup/init_lite/services/etc/group"
+    install_images = [
+      "system",
+      "updater",
+    ]
     part_name = "init"
   }
 
