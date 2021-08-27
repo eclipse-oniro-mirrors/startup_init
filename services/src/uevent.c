@@ -219,6 +219,8 @@ static void InitUevent(struct Uevent *event)
     event->partitionName = "";
     event->deviceName = "";
     event->partitionNum = -1;
+    event->major = -1;
+    event->minor = -1;
 }
 
 static inline const char *ParseUeventMessage(const char **buf, const char *name)
@@ -607,7 +609,6 @@ static void HandlePlatformDevice(const struct Uevent *event)
 static const char *ParseDeviceName(const struct Uevent *uevent, unsigned int len)
 {
     INIT_CHECK_RETURN_VALUE(uevent->major >= 0 && uevent->minor >= 0, NULL);
-    INIT_CHECK_RETURN_VALUE(uevent->deviceName != NULL && uevent->deviceName[0] != '\0', NULL);
 
     const char *name = strrchr(uevent->path, '/');
     INIT_CHECK_RETURN_VALUE(name != NULL, NULL);
