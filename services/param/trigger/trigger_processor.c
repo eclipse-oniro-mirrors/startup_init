@@ -123,6 +123,9 @@ static const char *GetCmdInfo(const char *content, u_int32_t contentSize, char *
 
 static void SendTriggerEvent(TriggerDataEvent *event)
 {
+    if (event == NULL) {
+        return;
+    }
     int ctrlSize = strlen(SYS_POWER_CTRL);
     if (strncmp(event->content, SYS_POWER_CTRL, ctrlSize) == 0) {
         char *cmdParam = NULL;
@@ -169,7 +172,7 @@ void PostTrigger(EventType type, const char *content, u_int32_t contentLen)
     event->type = type;
     event->request.data = (char*)event + sizeof(uv_work_t);
     event->contentSize = contentLen;
-    memcpy_s(event->content, contentLen, content, contentLen);
+    PARAM_CHECK(memcpy_s(event->content, contentLen, content, contentLen) == 0, return, "Failed to copy content");
     event->content[contentLen] = '\0';
     SendTriggerEvent(event);
     PARAM_LOGD("PostTrigger %d success", type);

@@ -80,7 +80,7 @@ static int CalculatorPopChar(LogicCalculator *calculator, char *data)
     return 0;
 }
 
-static int CalculatorPush(LogicCalculator *calculator, void *data)
+static int CalculatorPush(LogicCalculator *calculator, const void *data)
 {
     PARAM_CHECK(calculator != NULL, return -1, "Invalid param");
     PARAM_CHECK(calculator->endIndex < calculator->dataNumber, return -1, "More data for calculator support");
@@ -93,7 +93,7 @@ static int CalculatorPush(LogicCalculator *calculator, void *data)
 
 static int CalculatorPop(LogicCalculator *calculator, void *data)
 {
-    PARAM_CHECK(calculator != NULL || data == NULL, return -1, "Invalid param");
+    PARAM_CHECK(calculator != NULL && data != NULL, return -1, "Invalid param");
     PARAM_CHECK(calculator->endIndex < calculator->dataNumber, return -1, "More data for calculator support");
     if (calculator->endIndex == 0) {
         return -1;
@@ -212,8 +212,8 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
         if (condition[currIndex] == '|' || condition[currIndex] == '&') {
             noneOper = 0;
             int ret = CalculatorPop(calculator, (void*)&data2);
-            ret |= CalculatorPop(calculator, (void*)&data1);
-            PARAM_CHECK(ret == 0, return -1, "Failed to pop data");
+            int ret1 = CalculatorPop(calculator, (void*)&data1);
+            PARAM_CHECK((ret == 0 && ret1 == 0), return -1, "Failed to pop data");
 
             ret = ComputeSubCondition(calculator, &data1, condition);
             data1.flags = 0;
@@ -254,7 +254,7 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
 
 int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLen)
 {
-    char e;
+    char e = 0;
     int ret = 0;
     u_int32_t curr = 0;
     u_int32_t prefixIndex = 0;

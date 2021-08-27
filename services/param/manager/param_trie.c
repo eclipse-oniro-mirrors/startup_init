@@ -471,7 +471,8 @@ u_int32_t AddData(WorkSpace *workSpace, const char *key, u_int32_t keyLen, const
     atomic_init(&node->serial, ATOMIC_VAR_INIT(0));
     atomic_init(&node->dataLength, ATOMIC_VAR_INIT(dataLength));
     int ret = memcpy_s(node->data, keyLen, key, keyLen);
-    ret |= memcpy_s(node->data + keyLen + 1, valueLen, value, valueLen);
+    PARAM_CHECK(ret == 0, return 0, "Failed to copy key");
+    ret = memcpy_s(node->data + keyLen + 1, valueLen, value, valueLen);
     PARAM_CHECK(ret == 0, return 0, "Failed to copy key");
     node->data[keyLen] = '=';
     node->data[keyLen + 1 + valueLen] = '\0';

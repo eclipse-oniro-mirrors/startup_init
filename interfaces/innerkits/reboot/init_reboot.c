@@ -36,7 +36,7 @@ int DoReboot(const char *cmdContent)
     }
     char value[MAX_REBOOT_VAUE_SIZE];
     if (cmdContent == NULL || strlen(cmdContent) == 0) {
-        if (snprintf_s(value, MAX_REBOOT_NAME_SIZE, MAX_REBOOT_NAME_SIZE - 1, "%s", "reboot") < 0) {
+        if (snprintf_s(value, MAX_REBOOT_NAME_SIZE, strlen("reboot") + 1, "%s", "reboot") < 0) {
             INIT_LOGE("DoReboot api error, MAX_REBOOT_NAME_SIZE is not enough");
             return -1;
         }

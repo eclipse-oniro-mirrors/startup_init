@@ -53,10 +53,11 @@ static int ProcessParamTraversal(WorkSpace *workSpace, TrieNode *node, void *coo
     }
     PersistContext *persistContext = (PersistContext *)cookie;
     int ret = GetDataName(entry, persistContext->buffer, MAX_BUFF);
+    PARAM_CHECK(ret == 0, return ret, "GetDataName failed");
     if (strncmp(persistContext->buffer, "persist.", strlen("persist.")) != 0) {
         return 0;
     }
-    ret |= GetDataValue(entry, persistContext->buffer + MAX_BUFF, MAX_BUFF);
+    ret = GetDataValue(entry, persistContext->buffer + MAX_BUFF, MAX_BUFF);
     if (ret == 0) { // 只支持新建
         //PARAM_LOGI("Insert new persist param from normal param %s %s",
         //    persistContext->buffer, persistContext->buffer + MAX_BUFF);
@@ -78,7 +79,8 @@ static int ProcessPersistPropertTraversal(WorkSpace *workSpace, TrieNode *node, 
     }
     PersistContext *persistContext = (PersistContext *)cookie;
     int ret = GetDataName(entry, persistContext->buffer, MAX_BUFF);
-    ret |= GetDataValue(entry, persistContext->buffer + MAX_BUFF, MAX_BUFF);
+    PARAM_CHECK(ret == 0, return ret, "GetDataName failed");
+    ret = GetDataValue(entry, persistContext->buffer + MAX_BUFF, MAX_BUFF);
     if (ret == 0) {
         //PARAM_LOGI("update normal param %s %s from persist param %u",
         //    persistContext->buffer, persistContext->buffer + MAX_BUFF, current->dataIndex);
