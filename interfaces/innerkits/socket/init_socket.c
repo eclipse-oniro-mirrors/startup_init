@@ -34,9 +34,9 @@
 #define MAX_SOCKET_ENV_PREFIX_LEN 64
 #define MAX_SOCKET_DIR_LEN 128
 
-static int GetControlFromEnv(char *path)
+static int GetControlFromEnv(char *path, int length)
 {
-    if (path == NULL) {
+    if (path == NULL || length <= 0) {
         return -1;
     }
     INIT_LOGI("GetControlFromEnv path is %s ", path);
@@ -68,7 +68,7 @@ int GetControlSocket(const char *name)
         return -1;
     }
     INIT_LOGI("GetControlSocket path is %s ", path);
-    int fd = GetControlFromEnv(path);
+    int fd = GetControlFromEnv(path, MAX_SOCKET_ENV_PREFIX_LEN);
     if (fd < 0) {
         INIT_LOGE("GetControlFromEnv fail ");
         return -1;

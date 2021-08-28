@@ -23,7 +23,7 @@
 #include "securec.h"
 
 #ifndef OHOS_LITE
-static int ExtractCfgFile(char **cfgFile, char *content)
+static int ExtractCfgFile(char **cfgFile, const char *content)
 {
     if ((!cfgFile) || (!content)) {
         return -1;

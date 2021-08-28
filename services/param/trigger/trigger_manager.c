@@ -238,7 +238,7 @@ int ParseTrigger(TriggerWorkSpace *workSpace, cJSON *triggerItem)
 
     for (int i = 0; i < cmdLinesCnt; ++i) {
         char *cmdLineStr = cJSON_GetStringValue(cJSON_GetArrayItem(cmdItems, i));
-        PARAM_CHECK(cmdLinesCnt > 0, continue, "Command is null");
+        PARAM_CHECK(cmdLineStr != NULL, continue, "Command is null");
 
         size_t cmdLineLen = strlen(cmdLineStr);
         const char *matchCmd = GetMatchCmd(cmdLineStr);
@@ -351,13 +351,13 @@ static int CheckTrigger_(TriggerWorkSpace *workSpace,
     return 0;
 }
 
-int CheckTrigger(TriggerWorkSpace *workSpace,
+int CheckTrigger(const TriggerWorkSpace *workSpace,
     int type, void *content, u_int32_t contentSize, PARAM_CHECK_DONE triggerExecuter)
 {
     PARAM_CHECK(workSpace != NULL && content != NULL && triggerExecuter != NULL,
         return -1, "Failed arg for trigger");
 
-    LogicCalculator calculator;
+    LogicCalculator calculator = {};
     calculator.triggerExecuter = triggerExecuter;
     return CheckTrigger_(workSpace, &calculator, type, (char *)content, contentSize);
 }
@@ -367,7 +367,7 @@ int CheckParamTrigger(TriggerWorkSpace *workSpace,
 {
     PARAM_CHECK(workSpace != NULL && content != NULL && triggerExecuter != NULL,
         return -1, "Failed arg for param trigger");
-    LogicCalculator calculator;
+    LogicCalculator calculator = {};
     CalculatorInit(&calculator, 100, sizeof(LogicData), 1);
 
     // 先解析content
@@ -387,7 +387,7 @@ int CheckAndExecuteTrigger(TriggerWorkSpace *workSpace, const char *content, PAR
 {
     PARAM_CHECK(workSpace != NULL && content != NULL && triggerExecuter != NULL,
         return -1, "Failed arg for param trigger");
-    LogicCalculator calculator;
+    LogicCalculator calculator = {};
     CalculatorInit(&calculator, 100, sizeof(LogicData), 1);
 
     int ret = memcpy_s(calculator.triggerContent, sizeof(calculator.triggerContent), content, strlen(content));

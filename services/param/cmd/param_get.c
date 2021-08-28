@@ -22,6 +22,10 @@
 
 static void ProcessParam(ParamHandle handle, void* cookie)
 {
+    if (cookie == NULL) {
+        printf("ProcessParam cookie is NULL\n");
+        return;
+    }
     SystemGetParameterName(handle, (char*)cookie, BUFFER_SIZE);
     u_int32_t size = BUFFER_SIZE;
     SystemGetParameterValue(handle, ((char*)cookie) + BUFFER_SIZE, &size);

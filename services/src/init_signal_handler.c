@@ -118,8 +118,8 @@ static void UVSignalHandler(uv_signal_t* handle, int signum)
 void SignalInitModule()
 {
     int ret = uv_signal_init(uv_default_loop(), &g_sigchldHandler);
-    ret |= uv_signal_init(uv_default_loop(), &g_sigtermHandler);
-    if (ret != 0) {
+    int ret1 = uv_signal_init(uv_default_loop(), &g_sigtermHandler);
+    if (ret != 0 && ret1 != 0) {
         INIT_LOGW("initialize signal handler failed");
         return;
     }

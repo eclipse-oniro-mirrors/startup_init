@@ -45,11 +45,12 @@ int LoadDefaultParams(const char *fileName)
     if ((flags & WORKSPACE_FLAGS_INIT) != WORKSPACE_FLAGS_INIT) {
         return PARAM_CODE_NOT_INIT;
     }
-
     FILE *fp = fopen(fileName, "r");
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
     char buff[BUFFER_SIZE];
     SubStringInfo *info = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_LABEL + 1));
+    PARAM_CHECK(info != NULL, return -1, "malloc failed");
+
     while(fgets(buff, BUFFER_SIZE, fp) != NULL) {
         int subStrNumber = GetSubStringInfo(buff, strlen(buff), '=',  info, SUBSTR_INFO_LABEL + 1);
         if (subStrNumber <= SUBSTR_INFO_LABEL) {
@@ -85,6 +86,7 @@ int LoadParamInfos(const char *fileName)
     FILE *fp = fopen(fileName, "r");
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
     SubStringInfo *info = malloc(sizeof(SubStringInfo) * SUBSTR_INFO_MAX);
+    PARAM_CHECK(info != NULL, return -1, "Load parameter malloc failed.");
     char buff[BUFFER_SIZE];
     int infoCount = 0;
     while(fgets(buff, BUFFER_SIZE, fp) != NULL) {
@@ -140,7 +142,7 @@ static void OnWriteResponse(uv_write_t *req, int status)
     free(node);
 }
 
-static void SendResponse(uv_stream_t *handle, RequestType type, int result, void *content, int size)
+static void SendResponse(uv_stream_t *handle, RequestType type, int result, const void *content, int size)
 {
     int ret = 0;
     // 申请整块内存，用于回复数据和写请求
@@ -158,11 +160,13 @@ static void SendResponse(uv_stream_t *handle, RequestType type, int result, void
     PARAM_CHECK(ret >= 0, return, "Failed to uv_write2 ret %s", uv_strerror(ret));
 }
 
-static void OnReceiveRequest(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf)
+static void OnReceiveRequest(uv_stream_t *handle, ssize_t nread, uv_buf_t *buf)
 {
     if (nread <= 0 || buf == NULL || buf->base == NULL) {
         uv_close((uv_handle_t*)handle, OnClose);
-        free(buf->base);
+        if (buf != NULL && buf->base != NULL) {
+            free(buf->base);
+        }
         return;
     }
     int freeHandle = 1;
@@ -179,6 +183,7 @@ static void OnReceiveRequest(uv_stream_t *handle, ssize_t nread, const uv_buf_t 
             break;
     }
     free(buf->base);
+    buf->base = NULL;
     uv_close((uv_handle_t*)handle, OnClose);
 }
 
@@ -227,7 +232,6 @@ int StartParamService()
     PARAM_CHECK(ret == 0, return ret, "Failed to chmod %s, err %d. ", PIPE_NAME, errno);
     ret = uv_listen((uv_stream_t*)&pipeServer, SOMAXCONN, OnConnection);
     PARAM_CHECK(ret == 0, return ret, "Failed to uv_listen %d %s", ret, uv_err_name(ret));
-
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     PARAM_LOGI("Start service exit.");
     return 0;

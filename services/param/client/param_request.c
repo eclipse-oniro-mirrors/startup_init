@@ -37,6 +37,7 @@ static void OnReceiveAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 {
     // 这里需要按实际回复大小申请内存，不需要大内存
     buf->base = (char *)malloc(sizeof(ResponseMsg));
+    PARAM_CHECK(buf->base != NULL, return, "OnReceiveAlloc malloc failed");
     buf->len = sizeof(ResponseMsg);
     PARAM_LOGD("OnReceiveAlloc handle %p %zu", handle, suggestedSize);
 }
@@ -92,6 +93,7 @@ static int StartRequest(int cmd, RequestNode *request)
     request->result = -1;
     request->msg.type = cmd;
     request->loop = uv_loop_new();
+    PARAM_CHECK(request->loop != NULL, return -1, "StartRequest uv_loop_new failed");
     uv_pipe_init(request->loop, &request->handle, 1);
     uv_pipe_connect(&request->connect, &request->handle, PIPE_NAME, OnConnection);
     uv_run(request->loop, UV_RUN_DEFAULT);

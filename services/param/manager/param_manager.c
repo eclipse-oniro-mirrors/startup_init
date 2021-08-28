@@ -66,10 +66,13 @@ int InitParamWorkSpace(ParamWorkSpace *workSpace, int onlyRead, const char *cont
     workSpace->paramSpace.compareTrieNode = CompareTrieDataNode;
     workSpace->paramSpace.allocTrieNode = AllocateTrieDataNode;
     int ret = InitWorkSpace(PARAM_STORAGE_PATH, &workSpace->paramSpace, onlyRead);
+    PARAM_CHECK(ret == 0, return ret, "InitWorkSpace failed.");
 
     workSpace->paramLabelSpace.compareTrieNode = CompareTrieNode; // 必须先设置
     workSpace->paramLabelSpace.allocTrieNode = AllocateTrieNode;
-    ret |= InitWorkSpace(PARAM_INFO_PATH, &workSpace->paramLabelSpace, onlyRead);
+    ret = InitWorkSpace(PARAM_INFO_PATH, &workSpace->paramLabelSpace, onlyRead);
+    PARAM_CHECK(ret == 0, return ret, "InitWorkSpace failed.");
+
     atomic_store_explicit(&workSpace->flags, WORKSPACE_FLAGS_INIT, memory_order_release);
     return ret;
 }
@@ -310,7 +313,7 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
             // their value is the name of the service to apply that action to.  Permissions for these
             // actions are based on the service, so we must create a fake name of ctl.<service> to
             // check permissions.
-            int n = snprintf_s(legacyName, size, size, "ctl.%s", value);
+            int n = snprintf_s(legacyName, size, strlen("ctl.") + strlen(value) + 1, "ctl.%s", value);
             PARAM_CHECK(n > 0, free(legacyName); return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
             legacyName[n] = '\0';
 
@@ -494,10 +497,12 @@ int BuildParamContent(char *content, u_int32_t contentSize, const char *name, co
 
     int offset = 0;
     int ret = memcpy_s(content + offset, contentSize - offset, name, nameLen);
+    PARAM_CHECK(ret == 0, return -1, "Failed to copy porperty");
     offset += nameLen;
-    ret |= memcpy_s(content + offset, contentSize - offset, "=", 1);
+    ret = memcpy_s(content + offset, contentSize - offset, "=", 1);
+    PARAM_CHECK(ret == 0, return -1, "Failed to copy porperty");
     offset += 1;
-    ret |= memcpy_s(content + offset, contentSize - offset, value, valueLen);
+    ret = memcpy_s(content + offset, contentSize - offset, value, valueLen);
     offset += valueLen;
     content[offset] = '\0';
     PARAM_CHECK(ret == 0, return -1, "Failed to copy porperty");

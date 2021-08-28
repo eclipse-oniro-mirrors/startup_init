@@ -103,7 +103,7 @@ typedef int (*CMD_EXECUTE) (TriggerNode *trigger, const char *cmdName, const cha
 
 TriggerNode *GetTriggerByName(TriggerWorkSpace *workSpace, const char *triggerName, u_int32_t *triggerIndex);
 int ExecuteTrigger(TriggerWorkSpace *workSpace, TriggerNode *trigger, CMD_EXECUTE cmdExecuter);
-int CheckTrigger(TriggerWorkSpace *workSpace,
+int CheckTrigger(const TriggerWorkSpace *workSpace,
     int type, void *content, u_int32_t contentSize, PARAM_CHECK_DONE triggerExecuter);
 int CheckParamTrigger(TriggerWorkSpace *workSpace,
     const char *content, u_int32_t contentSize, PARAM_CHECK_DONE triggerExecuter);
