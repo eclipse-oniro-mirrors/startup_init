@@ -59,7 +59,7 @@ struct Uevent {
     int minor;
 };
 
-struct PlatformNode {
+struct PlatformSubsystem {
     char *name;
     char *path;
     size_t pathLen;
@@ -172,7 +172,7 @@ static void UeventSockInit()
     return;
 }
 
-ssize_t ReadUevent(int fd, void *buf, size_t len)
+ssize_t ReadUeventMessage(int fd, void *buf, size_t len)
 {
     struct iovec iov = { buf, len };
     struct sockaddr_nl addr;
@@ -186,9 +186,7 @@ ssize_t ReadUevent(int fd, void *buf, size_t len)
     hdr.msg_controllen = sizeof(control);
     hdr.msg_flags = 0;
     ssize_t n = recvmsg(fd, &hdr, 0);
-    if (n <= 0) {
-        return n;
-    }
+    INIT_CHECK_RETURN_VALUE(n > 0, n);
     struct cmsghdr *cMsg = CMSG_FIRSTHDR(&hdr);
     if (cMsg == NULL || cMsg->cmsg_type != SCM_CREDENTIALS) {
         bzero(buf, len);
@@ -221,38 +219,41 @@ static void InitUevent(struct Uevent *event)
     event->partitionName = "";
     event->deviceName = "";
     event->partitionNum = -1;
+    event->major = -1;
+    event->minor = -1;
+}
+
+static inline const char *ParseUeventMessage(const char **buf, const char *name)
+{
+    if (strncmp(*buf, name, strlen(name)) == 0) {
+        *buf += strlen(name);
+        return *buf;
+    } else {
+        return NULL;
+    }
 }
 
 static void ParseUevent(const char *buf, struct Uevent *event)
 {
     InitUevent(event);
     while (*buf) {
-        if (strncmp(buf, "ACTION=", strlen("ACTION=")) == 0) {
-            buf += strlen("ACTION=");
+        if (ParseUeventMessage(&buf, "ACTION=")) {
             event->action = buf;
-        } else if (strncmp(buf, "DEVPATH=", strlen("DEVPATH=")) == 0) {
-            buf += strlen("DEVPATH=");
+        } else if (ParseUeventMessage(&buf, "DEVPATH=")) {
             event->path = buf;
-        } else if (strncmp(buf, "SUBSYSTEM=", strlen("SUBSYSTEM=")) == 0) {
-            buf += strlen("SUBSYSTEM=");
+        } else if (ParseUeventMessage(&buf, "SUBSYSTEM=")) {
             event->subsystem = buf;
-        } else if (strncmp(buf, "FIRMWARE=", strlen("FIRMWARE=")) == 0) {
-            buf += strlen("FIRMWARE=");
+        } else if (ParseUeventMessage(&buf, "FIRMWARE=")) {
             event->firmware = buf;
-        } else if (strncmp(buf, "MAJOR=", strlen("MAJOR=")) == 0) {
-            buf += strlen("MAJOR=");
+        } else if (ParseUeventMessage(&buf, "MAJOR=")) {
             event->major = atoi(buf);
-        } else if (strncmp(buf, "MINOR=", strlen("MINOR=")) == 0) {
-            buf += strlen("MINOR=");
+        } else if (ParseUeventMessage(&buf, "MINOR=")) {
             event->minor = atoi(buf);
-        } else if (strncmp(buf, "PARTN=", strlen("PARTN=")) == 0) {
-            buf += strlen("PARTN=");
+        } else if (ParseUeventMessage(&buf, "PARTN=")) {
             event->partitionNum = atoi(buf);
-        } else if (strncmp(buf, "PARTNAME=", strlen("PARTNAME=")) == 0) {
-            buf += strlen("PARTNAME=");
+        } else if (ParseUeventMessage(&buf, "PARTNAME=")) {
             event->partitionName = buf;
-        } else if (strncmp(buf, "DEVNAME=", strlen("DEVNAME=")) == 0) {
-            buf += strlen("DEVNAME=");
+        } else if (ParseUeventMessage(&buf, "DEVNAME=")) {
             event->deviceName = buf;
         }
         // Drop reset.
@@ -269,14 +270,14 @@ static int MakeDir(const char *path, mode_t mode)
     return rc;
 }
 
-static struct PlatformNode *FindPlatformDevice(const char *path)
+static struct PlatformSubsystem *FindPlatformDevice(const char *path)
 {
     size_t pathLen = strlen(path);
     struct ListNode *node = NULL;
-    struct PlatformNode *bus = NULL;
+    struct PlatformSubsystem *bus = NULL;
 
     for (node = (&g_platformNames)->prev; node != &g_platformNames; node = node->prev) {
-        bus = (struct PlatformNode *)(((char*)(node)) - offsetof(struct PlatformNode, list));
+        bus = (struct PlatformSubsystem *)(((char*)(node)) - offsetof(struct PlatformSubsystem, list));
         if ((bus->pathLen < pathLen) && (path[bus->pathLen] == '/') && !strncmp(path, bus->path, bus->pathLen)) {
             return bus;
         }
@@ -286,11 +287,8 @@ static struct PlatformNode *FindPlatformDevice(const char *path)
 
 static void CheckValidPartitionName(char *partitionName)
 {
+    INIT_CHECK_ONLY_RETURN(partitionName != NULL);
     const char* supportPartition = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-";
-    if (!partitionName) {
-        return;
-    }
-
     for (size_t i = 0; i < strlen(partitionName); i++) {
         int len = strspn(partitionName, supportPartition);
         partitionName += len;
@@ -303,24 +301,17 @@ static void CheckValidPartitionName(char *partitionName)
 
 static char **ParsePlatformBlockDevice(const struct Uevent *uevent)
 {
-    const char *device;
-    char *slash = NULL;
-    const char *type;
     char linkPath[MAX_BUFFER];
     int linkNum = 0;
     char *p = NULL;
 
-    struct PlatformNode *pDev = FindPlatformDevice(uevent->path);
-    if (!pDev) {
-        return NULL;
-    }
-    device = pDev->name;
-    type = "platform";
+    struct PlatformSubsystem *node = FindPlatformDevice(uevent->path);
+    INIT_CHECK_RETURN_VALUE(node != NULL, NULL);
+
     char **links = calloc(sizeof(char *), LINK_NUMBER);
-    if (!links) {
-        return NULL;
-    }
-    if (snprintf_s(linkPath, sizeof(linkPath), sizeof(linkPath) - 1, "/dev/block/%s/%s", type, device) == -1) {
+    INIT_CHECK_RETURN_VALUE(links != NULL, NULL);
+    if (snprintf_s(linkPath, sizeof(linkPath), sizeof(linkPath) - 1, "/dev/block/%s/%s", "platform",
+        node->name) == -1) {
         free(links);
         return NULL;
     }
@@ -344,8 +335,8 @@ static char **ParsePlatformBlockDevice(const struct Uevent *uevent)
             links[linkNum] = NULL;
         }
     }
-    slash = strrchr(uevent->path, '/');
-    if (asprintf(&links[linkNum], "%s/%s", linkPath, slash + 1) > 0) {
+    char *linkPos = strrchr(uevent->path, '/');
+    if (asprintf(&links[linkNum], "%s/%s", linkPath, linkPos + 1) > 0) {
         linkNum++;
     } else {
         links[linkNum] = NULL;
@@ -444,10 +435,9 @@ static void MakeDevice(const char *devPath, const char *path, int block, int maj
 {
     /* Only for super user */
     gid_t gid = 0;
-    dev_t dev;
     mode_t mode = DEVICE_DEFAULT_MODE;
     mode |= (block ? S_IFBLK : S_IFCHR);
-    dev = makedev(major, minor);
+    dev_t dev = makedev(major, minor);
     setegid(gid);
     if (mknod(devPath, mode, dev) != 0) {
         if (errno != EEXIST) {
@@ -459,39 +449,27 @@ static void MakeDevice(const char *devPath, const char *path, int block, int maj
 
 int MkdirRecursive(const char *pathName, mode_t mode)
 {
-    char buf[128];
-    const char *slash;
+    char buf[MAX_BUFFER];
+    const char *pos;
     const char *p = pathName;
     struct stat info;
 
-    while ((slash = strchr(p, '/')) != NULL) {
-        int width = slash - pathName;
-        p = slash + 1;
-        if (width < 0) {
-            break;
-        }
-        if (width == 0) {
-            continue;
-        }
-        if ((unsigned int)width > sizeof(buf) - 1) {
-            INIT_LOGE("path too long for MkdirRecursive");
-            return -1;
-        }
-        if (memcpy_s(buf, width, pathName, width) != 0) {
-            return -1;
-        }
-        buf[width] = 0;
+    while ((pos = strchr(p, '/')) != NULL) {
+        int pathLength = pos - pathName;
+        p = pos + 1;
+        INIT_CHECK(pathLength >= 0, break);
+        INIT_CHECK(pathLength != 0, continue);
+        INIT_ERROR_CHECK((unsigned int)pathLength <= sizeof(buf) - 1, return -1,
+            "path too long for MkdirRecursive");
+        INIT_CHECK_RETURN_VALUE(memcpy_s(buf, pathLength, pathName, pathLength) == 0, -1);
+        buf[pathLength] = 0;
         if (stat(buf, &info) != 0) {
             int ret = MakeDir(buf, mode);
-            if (ret && errno != EEXIST) {
-                return ret;
-            }
+            INIT_CHECK_RETURN_VALUE(!(ret && errno != EEXIST), ret);
         }
     }
     int ret = MakeDir(pathName, mode);
-    if (ret && errno != EEXIST) {
-        return ret;
-    }
+    INIT_CHECK_RETURN_VALUE(!(ret && errno != EEXIST), ret);
     return 0;
 }
 
@@ -499,30 +477,22 @@ void RemoveLink(const char *oldpath, const char *newpath)
 {
     char path[MAX_BUFFER];
     ssize_t ret = readlink(newpath, path, sizeof(path) - 1);
-    if (ret <= 0) {
-        return;
-    }
+    INIT_CHECK_ONLY_RETURN(ret > 0);
     path[ret] = 0;
-    if (!strcmp(path, oldpath)) {
-        unlink(newpath);
-    }
+    INIT_CHECK(strcmp(path, oldpath) != 0, unlink(newpath));
+    return;
 }
 
 static void MakeLink(const char *oldPath, const char *newPath)
 {
     char buf[MAX_BUFFER];
-    char *slash = strrchr(newPath, '/');
-    if (!slash) {
-        return;
-    }
-    int width = slash - newPath;
-    if (width <= 0 || width > (int)sizeof(buf) - 1) {
-        return;
-    }
-    if (memcpy_s(buf, sizeof(buf), newPath, width) != 0) {
-        return;
-    }
-    buf[width] = 0;
+    char *linkPos = strrchr(newPath, '/');
+    INIT_CHECK_ONLY_RETURN(linkPos != NULL);
+
+    int length = linkPos - newPath;
+    INIT_CHECK_ONLY_RETURN(length > 0 && length <= (int)sizeof(buf) - 1);
+    INIT_CHECK_ONLY_RETURN(memcpy_s(buf, sizeof(buf), newPath, length) == 0);
+    buf[length] = 0;
     int ret = MkdirRecursive(buf, DEFAULT_DIR_MODE);
     if (ret) {
         INIT_LOGE("Failed to create directory %s: %s (%d)", buf, strerror(errno), errno);
@@ -533,7 +503,7 @@ static void MakeLink(const char *oldPath, const char *newPath)
     }
 }
 
-static void HandleDevice(struct Uevent *event, const char *devpath, int block, char **links)
+static void HandleDevice(const struct Uevent *event, const char *devpath, int block, char **links)
 {
     int i;
     if (!strcmp(event->action, "add")) {
@@ -562,28 +532,24 @@ static void HandleDevice(struct Uevent *event, const char *devpath, int block, c
     }
 }
 
-static void HandleBlockDevice(struct Uevent *event)
+static void HandleBlockDevice(const struct Uevent *event)
 {
+    INIT_CHECK_ONLY_RETURN(event->major >= 0 && event->minor >= 0);
+
     const char *base = "/dev/block";
     char devpath[MAX_DEV_PATH];
     char **links = NULL;
 
-    if (event->major < 0 || event->minor < 0) {
-        return;
-    }
     const char *name = strrchr(event->path, '/');
-    if (name == NULL) {
-        return;
-    }
+    INIT_CHECK_ONLY_RETURN(name != NULL);
     name++;
-    if (strlen(name) > MAX_DEVICE_LEN) { // too long
-        return;
-    }
+    INIT_CHECK_ONLY_RETURN(strlen(name) <= MAX_DEVICE_LEN); // too long
+
     if (snprintf_s(devpath, sizeof(devpath), sizeof(devpath) - 1, "%s/%s", base, name) == -1) {
         return;
     }
     MakeDir(base, DEFAULT_DIR_MODE);
-    if (!strncmp(event->path, "/devices/", strlen("/devices/"))) {
+    if (strncmp(event->path, "/devices/", strlen("/devices/")) == 0) {
         links = ParsePlatformBlockDevice(event);
     }
     HandleDevice(event, devpath, 1, links);
@@ -595,14 +561,14 @@ static void AddPlatformDevice(const char *path)
     const char *name = path;
     size_t deviceLength = strlen("/devices/");
     size_t platformLength = strlen("platform/");
-    if (!strncmp(path, "/devices/", deviceLength)) {
+    if (strncmp(path, "/devices/", deviceLength) == 0) {
         name += deviceLength;
-        if (!strncmp(name, "platform/", platformLength)) {
+        if (strncmp(name, "platform/", platformLength) == 0) {
             name += platformLength;
         }
     }
     INIT_LOGI("adding platform device %s (%s)", name, path);
-    struct PlatformNode *bus = calloc(1, sizeof(struct PlatformNode));
+    struct PlatformSubsystem *bus = calloc(1, sizeof(struct PlatformSubsystem));
     if (!bus) {
         return;
     }
@@ -616,10 +582,10 @@ static void AddPlatformDevice(const char *path)
 static void RemovePlatformDevice(const char *path)
 {
     struct ListNode *node = NULL;
-    struct PlatformNode *bus = NULL;
+    struct PlatformSubsystem *bus = NULL;
 
     for (node = (&g_platformNames)->prev; node != &g_platformNames; node = node->prev) {
-        bus = (struct PlatformNode *)(((char*)(node)) - offsetof(struct PlatformNode, list));
+        bus = (struct PlatformSubsystem *)(((char*)(node)) - offsetof(struct PlatformSubsystem, list));
         if (!strcmp(path, bus->path)) {
             INIT_LOGI("removing platform device %s", bus->name);
             free(bus->path);
@@ -642,64 +608,41 @@ static void HandlePlatformDevice(const struct Uevent *event)
 
 static const char *ParseDeviceName(const struct Uevent *uevent, unsigned int len)
 {
-    /* if it's not a /dev device, nothing else to do */
-    if ((uevent->major < 0) || (uevent->minor < 0)) {
-        return NULL;
-    }
-    if (uevent->deviceName == NULL || uevent->deviceName[0] == '\0') {
-        return NULL;
-    }
-    /* do we have a name? */
+    INIT_CHECK_RETURN_VALUE(uevent->major >= 0 && uevent->minor >= 0, NULL);
+
     const char *name = strrchr(uevent->path, '/');
-    if (!name) {
-        return NULL;
-    }
+    INIT_CHECK_RETURN_VALUE(name != NULL, NULL);
     name++;
-    /* too-long names would overrun our buffer */
-    if (strlen(name) > len) {
-        return NULL;
-    }
+
+    INIT_CHECK_RETURN_VALUE(strlen(name) <= len, NULL);
     return name;
 }
 
-static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
+static char **GetCharDeviceSymlinks(const struct Uevent *uevent)
 {
-    char *slash = NULL;
+    char *linkPos = NULL;
     int linkNum = 0;
-    int width;
+    int length;
 
-    struct PlatformNode *pDev = FindPlatformDevice(uevent->path);
-    if (!pDev) {
-        return NULL;
-    }
+    struct PlatformSubsystem *node = FindPlatformDevice(uevent->path);
+    INIT_CHECK_RETURN_VALUE(node != NULL, NULL);
+
     char **links = calloc(sizeof(char *), SYS_LINK_NUMBER);
-    if (!links) {
-        return NULL;
-    }
+    INIT_CHECK_RETURN_VALUE(links != NULL, NULL);
 
-    /* skip "/devices/platform/<driver>" */
-    const char *parent = strchr(uevent->path + pDev->pathLen, '/');
-    if (!*parent) {
-        goto err;
-    }
+    const char *parent = strchr(uevent->path + node->pathLen, '/');
+    INIT_CHECK(parent != NULL, goto err);
 
-    if (strncmp(parent, "/usb", strlen("/usb"))) {
-        goto err;
-    }
-    /* skip root hub name and device. use device interface */
-    if (!*parent) {
-        goto err;
-    }
-    slash = strchr(++parent, '/');
-    if (!slash) {
-        goto err;
-    }
-    width = slash - parent;
-    if (width <= 0) {
-        goto err;
-    }
+    INIT_CHECK(strncmp(parent, "/usb", strlen("/usb")) == 0, goto err);
+    INIT_CHECK(parent != NULL, goto err);
 
-    if (asprintf(&links[linkNum], "/dev/usb/%s%.*s", uevent->subsystem, width, parent) > 0) {
+    linkPos = strchr(++parent, '/');
+    INIT_CHECK(linkPos != NULL, goto err);
+
+    length = linkPos - parent;
+    INIT_CHECK(length > 0, goto err);
+
+    if (asprintf(&links[linkNum], "/dev/usb/%s%.*s", uevent->subsystem, length, parent) > 0) {
         linkNum++;
     } else {
         links[linkNum] = NULL;
@@ -714,17 +657,11 @@ err:
 static int HandleUsbDevice(const struct Uevent *event, char *devpath, int len)
 {
     if (event->deviceName) {
-        /*
-         * create device node provided by kernel if present
-         * see drivers/base/core.c
-         */
         char *p = devpath;
         if (snprintf_s(devpath, len, len - 1, "/dev/%s", event->deviceName) == -1) {
             return -1;
         }
-        /* skip leading /dev/ */
         p += strlen("/dev/");
-        /* build directories */
         while (*p) {
             if (*p == '/') {
                 *p = 0;
@@ -734,13 +671,8 @@ static int HandleUsbDevice(const struct Uevent *event, char *devpath, int len)
             p++;
         }
     } else {
-        /* This imitates the file system that would be created
-         * if we were using devfs instead.
-         * Minors are broken up into groups of 128, starting at "001"
-         */
         int busId  = event->minor / MINORS_GROUPS + 1;
         int deviceId = event->minor % MINORS_GROUPS + 1;
-        /* build directories */
         MakeDir("/dev/bus", DEFAULT_DIR_MODE);
         MakeDir("/dev/bus/usb", DEFAULT_DIR_MODE);
         if (snprintf_s(devpath, len, len - 1, "/dev/bus/usb/%03d", busId) == -1) {
@@ -758,7 +690,7 @@ static int HandleUsbDevice(const struct Uevent *event, char *devpath, int len)
 static void HandleDeviceEvent(struct Uevent *event, char *devpath, int len, const char *base, const char *name)
 {
     char **links = NULL;
-    links = GetCharacterDeviceSymlinks(event);
+    links = GetCharDeviceSymlinks(event);
     if (!devpath[0]) {
         if (snprintf_s(devpath, len, len - 1, "%s%s", base, name) == -1) {
             INIT_LOGE("snprintf_s err ");
@@ -776,63 +708,80 @@ err:
     }
     return;
 }
-static void HandleGenericDevice(struct Uevent *event)
+
+struct CommonDev {
+    char *subsystem;
+    unsigned int length;
+    char *path;
+};
+
+static const struct CommonDev COMMON_DEV_MAPPER[] = {
+    {"graphics", 8, "/dev/graphics/"},
+    {"drm", 3, "/dev/dri/"},
+    {"oncrpc", 6, "/dev/oncrpc/"},
+    {"adsp", 4, "/dev/adsp/"},
+    {"input", 5, "/dev/input/"},
+    {"mtd", 3, "/dev/mtd/"},
+    {"sound", 5, "/dev/snd/"}
+};
+
+static void HandleCommonDevice(struct Uevent *event)
 {
     char *base = NULL;
     char devpath[MAX_DEV_PATH] = {0};
     const char *name = ParseDeviceName(event, MAX_DEVICE_LEN);
-    if (!name) {
-        return;
+    INIT_CHECK_ONLY_RETURN(name != NULL);
+
+    size_t count = sizeof(COMMON_DEV_MAPPER) / sizeof(COMMON_DEV_MAPPER[0]);
+    unsigned int i = 0;
+    for (; i < count; ++i) {
+        if (strncmp(event->subsystem, COMMON_DEV_MAPPER[i].subsystem, COMMON_DEV_MAPPER[i].length) == 0) {
+            base = COMMON_DEV_MAPPER[i].path;
+            MakeDir(base, DEFAULT_DIR_MODE);
+            break;
+        }
     }
-    if (!strncmp(event->subsystem, "usb", strlen("usb"))) {
-        if (!strcmp(event->subsystem, "usb")) {
-            if (HandleUsbDevice(event, devpath, MAX_DEV_PATH) == -1) {
-                return;
+
+    if (i == count) {
+        if (strncmp(event->subsystem, "usb", strlen("usb")) == 0) {
+            if (strcmp(event->subsystem, "usb") == 0) {
+                INIT_CHECK_ONLY_RETURN(HandleUsbDevice(event, devpath, MAX_DEV_PATH) != -1);
+            } else {
+                return; // only support usb event
             }
         } else {
-            /* ignore other USB events */
-            return;
+            base = "/dev/";
         }
-    } else if (!strncmp(event->subsystem, "graphics", strlen("graphics"))) {
-        base = "/dev/graphics/";
-        MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "drm", strlen("drm"))) {
-        base = "/dev/dri/";
-        MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "oncrpc", strlen("oncrpc"))) {
-        base = "/dev/oncrpc/";
-        MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "adsp", strlen("adsp"))) {
-        base = "/dev/adsp/";
-        MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "input", strlen("input"))) {
-        base = "/dev/input/";
-        MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "mtd", strlen("mtd"))) {
-        base = "/dev/mtd/";
-        MakeDir(base, DEFAULT_DIR_MODE);
-    } else if (!strncmp(event->subsystem, "sound", strlen("sound"))) {
-        base = "/dev/snd/";
-        MakeDir(base, DEFAULT_DIR_MODE);
-    } else {
-        base = "/dev/";
     }
     HandleDeviceEvent(event, devpath, MAX_DEV_PATH, base, name);
     return;
 }
 
+struct UeventHandleTable {
+    char *name;
+    unsigned int length;
+    void (*HandleDeviceFunction)(const struct Uevent *event);
+};
+
+static const struct UeventHandleTable UEVNET_HANDLE_TABLE[] = {
+    {"block", 5, HandleBlockDevice},
+    {"platform", 8, HandlePlatformDevice}
+};
+
 static void HandleDeviceUevent(struct Uevent *event)
 {
-    if (strcmp(event->action, "add") == 0 || strcmp(event->action, "change") == 0) {
-        /* Do nothing for now */
+    size_t count = sizeof(UEVNET_HANDLE_TABLE) / sizeof(UEVNET_HANDLE_TABLE[0]);
+    unsigned int i = 0;
+    for (; i < count; ++i) {
+        if (strncmp(event->subsystem, UEVNET_HANDLE_TABLE[i].name, UEVNET_HANDLE_TABLE[i].length) == 0) {
+            UEVNET_HANDLE_TABLE[i].HandleDeviceFunction(event);
+            break;
+        }
     }
-    if (strncmp(event->subsystem, "block", strlen("block")) == 0) {
-        HandleBlockDevice(event);
-    } else if (strncmp(event->subsystem, "platform", strlen("platform")) == 0) {
-        HandlePlatformDevice(event);
-    } else {
-        HandleGenericDevice(event);
+    if (i == count) {
+        HandleCommonDevice(event);
     }
+    return;
 }
 
 static void HandleUevent()
@@ -840,7 +789,7 @@ static void HandleUevent()
     char buf[EVENT_MAX_BUFFER];
     int ret;
     struct Uevent event;
-    while ((ret = ReadUevent(g_ueventFD, buf, BASE_BUFFER_SIZE)) > 0) {
+    while ((ret = ReadUeventMessage(g_ueventFD, buf, BASE_BUFFER_SIZE)) > 0) {
         if (ret >= BASE_BUFFER_SIZE) {
             continue;
         }
@@ -849,6 +798,7 @@ static void HandleUevent()
         ParseUevent(buf, &event);
         HandleDeviceUevent(&event);
     }
+    return;
 }
 
 void UeventInit()
