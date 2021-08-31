@@ -12,44 +12,44 @@
 # limitations under the License.
 
 if (!defined(ohos_lite)) {
-import("//build/ohos.gni")
+  import("//build/ohos.gni")
 
-ohos_executable("ueventd") {
-  sources = [
-    "list.c",
-    "ueventd.c",
-    "ueventd_device_handler.c",
-    "ueventd_firmware_handler.c",
-    "ueventd_read_cfg.c",
-    "ueventd_socket.c",
-    "ueventd_utils.c",
-  ]
+  ohos_executable("ueventd") {
+    sources = [
+      "list.c",
+      "ueventd.c",
+      "ueventd_device_handler.c",
+      "ueventd_firmware_handler.c",
+      "ueventd_read_cfg.c",
+      "ueventd_socket.c",
+      "ueventd_utils.c",
+    ]
 
-  include_dirs = [
-    "include",
-    "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/log",
-  ]
+    include_dirs = [
+      "include",
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/services/log",
+    ]
 
-  deps = [
-    "//base/startup/init_lite/services/log:init_log",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
+    deps = [
+      "//base/startup/init_lite/services/log:init_log",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
 
-  install_images = [
-    "system",
-    "updater",
-  ]
-  install_enable = true
-  part_name = "init"
-}
+    install_images = [
+      "system",
+      "updater",
+    ]
+    install_enable = true
+    part_name = "init"
+  }
 
-ohos_prebuilt_etc("ueventd.config") {
-  source = "//base/startup/init_lite/ueventd/etc/ueventd.config"
-  part_name = "init"
-  install_images = [
-    "system",
-    "updater",
-  ]
-}
+  ohos_prebuilt_etc("ueventd.config") {
+    source = "//base/startup/init_lite/ueventd/etc/ueventd.config"
+    part_name = "init"
+    install_images = [
+      "system",
+      "updater",
+    ]
+  }
 }
