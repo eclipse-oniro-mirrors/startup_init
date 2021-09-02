@@ -84,28 +84,6 @@ if (defined(ohos_lite)) {
   }
 } else {
   import("//build/ohos.gni")
-  ohos_executable("updaterueventd") {
-    sources = [
-      "src/list.c",
-      "src/uevent.c",
-    ]
-    include_dirs = [
-      "include",
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init_lite/services/log",
-    ]
-    deps = [
-      "//base/startup/init_lite/services/log:init_log",
-      "//third_party/bounds_checking_function:libsec_static",
-    ]
-    module_install_dir = "bin"
-    install_images = [
-      "system",
-      "updater",
-    ]
-    install_enable = true
-    part_name = "init"
-  }
 
   ohos_executable("init") {
     sources = [
@@ -156,7 +134,6 @@ if (defined(ohos_lite)) {
     deps = [
       ":init",
       ":init_etc",
-      ":updaterueventd",
       "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
       "//base/startup/init_lite/services/cmds/reboot:reboot",
       "//base/startup/init_lite/services/cmds/service_control:service_control",
