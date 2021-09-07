@@ -15,45 +15,52 @@
 
 #include "device.h"
 #include <errno.h>
+#include <fcntl.h>
 #include <linux/major.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
-#include <unistd.h>
 #include "init_log.h"
 
 #define DEFAULT_RW_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 #define DEFAULT_NO_AUTHORITY_MODE (S_IWUSR | S_IRUSR)
+#define STDERR_HANDLE 2
 
-void MountBasicFs()
+void CloseStdio(void)
+{
+    int fd = open("/dev/null", O_RDWR | O_CLOEXEC);
+    if (fd < 0) {
+        return;
+    }
+    dup2(fd, 0);
+    dup2(fd, 1);
+    dup2(fd, STDERR_HANDLE);
+    close(fd);
+}
+
+void MountBasicFs(void)
 {
     if (mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
         INIT_LOGE("Mount tmpfs failed. %s", strerror(errno));
     }
-#ifndef __LITEOS__
     if (mkdir("/dev/pts", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
         INIT_LOGE("mkdir /dev/pts failed. %s", strerror(errno));
     }
     if (mount("devpts", "/dev/pts", "devpts", 0, NULL) != 0) {
         INIT_LOGE("Mount devpts failed. %s", strerror(errno));
     }
-#endif
     if (mount("proc", "/proc", "proc", 0, "hidepid=2") != 0) {
         INIT_LOGE("Mount procfs failed. %s", strerror(errno));
     }
     if (mount("sysfs", "/sys", "sysfs", 0, NULL) != 0) {
         INIT_LOGE("Mount sysfs failed. %s", strerror(errno));
     }
-#ifndef __LITEOS__
     if (mount("selinuxfs", "/sys/fs/selinux", "selinuxfs", 0, NULL) != 0) {
         INIT_LOGE("Mount selinuxfs failed. %s", strerror(errno));
     }
-#endif
 }
 
-void CreateDeviceNode()
+void CreateDeviceNode(void)
 {
     if (mknod("/dev/kmsg", S_IFCHR | DEFAULT_NO_AUTHORITY_MODE, makedev(MEM_MAJOR, DEV_KMSG_MINOR)) != 0) {
         INIT_LOGE("Create /dev/kmsg device node failed. %s", strerror(errno));

@@ -63,12 +63,15 @@ static long TimeDiffMs(const struct timespec* tmBefore, const struct timespec* t
 }
 #endif // OHOS_DEBUG
 
-int main(int argc, char * const argv[])
+int main(int argc, char **argv)
 {
 #ifndef OHOS_LITE
     if(setenv("UV_THREADPOOL_SIZE", "1", 1) != 0) {
         INIT_LOGE("set UV_THREADPOOL_SIZE error : %d.", errno);
     }
+
+    CloseStdio();
+    OpenLogDevice();
 
 #endif
 #ifdef OHOS_DEBUG
@@ -90,6 +93,7 @@ int main(int argc, char * const argv[])
     // 2. Mount basic filesystem and create common device node.
     MountBasicFs();
     CreateDeviceNode();
+    EnableDevKmsg();
     MakeSocketDir("/dev/unix/socket/", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 #endif
 

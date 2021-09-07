@@ -28,9 +28,10 @@ extern "C" {
 #define DEV_RANDOM_MINOR 8
 #define DEV_URANDOM_MINOR 9
 
-void MountBasicFs();
-void CreateDeviceNode();
+void MountBasicFs(void);
+void CreateDeviceNode(void);
 int MakeSocketDir(const char *path, mode_t mode);
+void CloseStdio(void);
 
 #ifdef __cplusplus
 #if __cplusplus
