@@ -284,7 +284,7 @@ static const char *GetDeviceName(char *sysPath, const char *deviceName)
             }
         }
     } else {
-        // kernel does not report DEVNAME, which is possible. use base name is syspath instead.
+        // kernel does not report DEVNAME, which is possible. use base name of syspath instead.
         devName = basename(sysPath);
     }
     return devName;
