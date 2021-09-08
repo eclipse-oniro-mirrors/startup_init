@@ -285,7 +285,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_002, TestSize.Level1)
 
     std::string cmdStr = "start ";
     std::string cmdContentStr = "NameNotExist";
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    std::string command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
@@ -304,7 +305,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level1)
 
     std::string cmdStr = "mkdir ";
     std::string cmdContentStr = "/DirNotExist/DirNotExist/DirNotExist";
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    std::string command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
@@ -320,7 +322,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level1)
 
     // error argument count, bad format
     cmdContentStr = "  /storage/data/cmdFuncDoCmdTest003 0755 system";
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
@@ -348,31 +351,36 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_004, TestSize.Level1)
 
     std::string cmdStr = "chmod ";
     std::string cmdContentStr = "755 " + TEST_FILE;    // should be 0755, wrong format here
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    std::string command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
 
     cmdContentStr = "0855 " + TEST_FILE;    // should not exceed 0777, wrong format here
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    command = cmdStr + cmdContentStr;
+    ParseCmdLine(command .c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
 
     cmdContentStr = "07b5 " + TEST_FILE;    // non-digital character, wrong format here
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
 
     cmdContentStr = "075 " + TEST_FILE;    // should be 0xxx, wrong format here
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
 
     cmdContentStr = "0755       " + TEST_FILE;    // too many spaces, wrong format here
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
@@ -400,13 +408,15 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_005, TestSize.Level1)
 
     std::string cmdStr = "chown ";
     std::string cmdContentStr = "888 " + TEST_FILE;    // uid or gid missing, wrong format here
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    std::string command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
 
     cmdContentStr = "888 8b9 " + TEST_FILE;    // non-digital character, wrong format here
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     DoCmd(&curCmdLine);
@@ -435,7 +445,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_006, TestSize.Level1)
     // mkdir success
     std::string cmdStr = "mkdir ";
     std::string cmdContentStr = TEST_DRI + "/cmdFuncDoCmdTest006";
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    std::string command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
 
@@ -456,7 +467,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_006, TestSize.Level1)
     // chmod success
     cmdStr = "chmod ";
     cmdContentStr = "0440 " + TEST_FILE;
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
 
@@ -473,7 +485,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_006, TestSize.Level1)
     // chown success
     cmdStr = "chown ";
     cmdContentStr = "888 888 " + TEST_FILE;
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
 
@@ -832,7 +845,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level1)
     struct stat testCfgStat = {0};
 
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    std::string command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     stat(cmdContentStr.c_str(), &testCfgStat);
@@ -842,7 +856,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level1)
     cmdContentStr = TEST_CFG_ILLEGAL;
     CreateIllegalCfg();
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
     EXPECT_EQ(0, stat(cmdContentStr.c_str(), &testCfgStat));
@@ -872,8 +887,8 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_003, TestSize.Level1)
     FILE* fd = nullptr;
     size_t size;
     bool hasZpfs = false;
-
-    ParseCmdLine((cmdStr + cmdContentStr).c_str(), &curCmdLine);
+    std::string command = cmdStr + cmdContentStr;
+    ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
     EXPECT_EQ(0, strcmp(cmdContentStr.c_str(), curCmdLine.cmdContent));
 
