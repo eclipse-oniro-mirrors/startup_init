@@ -309,6 +309,8 @@ static const char *GetDeviceBasePath(const char *subsystem)
         devPath = "/dev/graphics";
     } else if (STRINGEQUAL(subsystem, "sound")) {
         devPath = "/dev/snd";
+    } else if (STRINGEQUAL(subsystem, "functionfs")) {
+        devPath = "/dev/functionfs";
     } else {
         devPath = "/dev";
     }
