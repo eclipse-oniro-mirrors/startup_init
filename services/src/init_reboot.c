@@ -212,6 +212,7 @@ void DoReboot(const char *value)
         return;
     }
     StopAllServicesBeforeReboot();
+    sync();
     if (GetMountStatusForMountPoint("/vendor") != 0) {
         if (umount("/vendor") != 0) {
             INIT_LOGE("DoReboot umount vendor failed! errno = %d.", errno);
@@ -227,6 +228,4 @@ void DoReboot(const char *value)
         INIT_LOGE("DoReboot value = %s, error.", value);
     }
     return;
-
 }
-
