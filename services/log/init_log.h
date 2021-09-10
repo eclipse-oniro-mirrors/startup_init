@@ -73,17 +73,27 @@ void SetHiLogLevel(LogLevel logLevel);
 void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int line, const char *fmt, ...);
 void SetLogLevel(InitLogLevel logLevel);
 #endif
+#define INIT_CHECK(ret, statement)     \
+    do {                                \
+        if (!(ret)) {                  \
+            statement;                 \
+        }                              \
+    } while (0)
 
 #define INIT_ERROR_CHECK(ret, statement, format, ...)  \
-    if (!(ret)) {                                 \
-        INIT_LOGE(format, ##__VA_ARGS__);                        \
-        statement;                                \
-    }
+    do {                                              \
+        if (!(ret)) {                                 \
+            INIT_LOGE(format, ##__VA_ARGS__);         \
+            statement;                                \
+        }                                            \
+    } while (0)
 
 #define INIT_CHECK_ONLY_RETURN(ret, statement)         \
-    if (!(ret)) {                                       \
-        statement;                                      \
-    }
+    do {                                              \
+        if (!(ret)) {                                 \
+            statement;                               \
+       }                                            \
+    } while (0)
 
 #ifdef __cplusplus
 #if __cplusplus

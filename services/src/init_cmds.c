@@ -148,7 +148,7 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim)
     struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
     INIT_CHECK_ONLY_RETURN(ctx != NULL, return NULL);
 
-    ctx->argv = (char**)malloc(sizeof(char*) * MAX_CMD_NAME_LEN);
+    ctx->argv = (char**)malloc(sizeof(char *) * MAX_CMD_NAME_LEN);
     INIT_CHECK_ONLY_RETURN(ctx->argv != NULL, FreeCmd(&ctx); return NULL);
 
     char tmpCmd[MAX_BUFFER];
@@ -162,13 +162,13 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim)
     ctx->argc = 0;
     while (token != NULL) {
 #ifndef OHOS_LITE
-        ctx->argv[ctx->argc] = calloc(sizeof(char *), MAX_EACH_CMD_LENGTH + MAX_PARAM_VALUE_LEN);
+        ctx->argv[ctx->argc] = calloc(sizeof(char), MAX_EACH_CMD_LENGTH + MAX_PARAM_VALUE_LEN);
         INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
         INIT_CHECK_ONLY_RETURN(GetParamValue(token, ctx->argv[ctx->argc], MAX_EACH_CMD_LENGTH + MAX_PARAM_VALUE_LEN) == 0,
             FreeCmd(&ctx);
             return NULL);
 #else
-        ctx->argv[ctx->argc] = calloc(sizeof(char *), MAX_EACH_CMD_LENGTH);
+        ctx->argv[ctx->argc] = calloc(sizeof(char), MAX_EACH_CMD_LENGTH);
         INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
         INIT_CHECK_ONLY_RETURN(strncpy_s(ctx->argv[ctx->argc], strlen(cmdContent) + 1, token, strlen(token)) == EOK,
             FreeCmd(&ctx);
@@ -205,7 +205,7 @@ void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
         return;
     }
 
-    size_t supportCmdCnt = sizeof(g_supportedCmds) / sizeof(g_supportedCmds[0]);
+    size_t supportCmdCnt = ARRAY_LENGTH(g_supportedCmds);
     int foundAndSucceed = 0;
     for (size_t i = 0; i < supportCmdCnt; ++i) {
         size_t curCmdNameLen = strlen(g_supportedCmds[i]);
@@ -259,18 +259,29 @@ static void DoCopy(const char* cmdContent)
     int rdLen = 0;
     int rtLen = 0;
     char buf[MAX_COPY_BUF_SIZE] = {0};
+    char *realPath1 = NULL;
+    char *realPath2 = NULL;
     mode_t mode = 0;
     struct stat fileStat = {0};
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
-    if (ctx == NULL || ctx->argv == NULL || ctx->argc != DEFAULT_COPY_ARGS_CNT) {
+    if (ctx == NULL || ctx->argv == NULL || ctx->argv[0] == NULL || ctx->argv[1] == NULL ||
+        ctx->argc != DEFAULT_COPY_ARGS_CNT) {
         INIT_LOGE("DoCopy failed.");
         goto out;
     }
-    srcFd = open(ctx->argv[0], O_RDONLY);
+    realPath1 = realpath(ctx->argv[0], NULL);
+    if (realPath1 == NULL) {
+        goto out;
+    }
+    realPath2 = realpath(ctx->argv[1], NULL);
+    if (realPath2 == NULL) {
+        goto out;
+    }
+    srcFd = open(realPath1, O_RDONLY);
     INIT_ERROR_CHECK(srcFd >= 0, goto out, "copy open %s fail %d! ", ctx->argv[0], errno);
     INIT_ERROR_CHECK(stat(ctx->argv[0], &fileStat) == 0, goto out, "stat fail ");
     mode = fileStat.st_mode;
-    dstFd = open(ctx->argv[1], O_WRONLY | O_TRUNC | O_CREAT, mode);
+    dstFd = open(realPath2, O_WRONLY | O_TRUNC | O_CREAT, mode);
     INIT_ERROR_CHECK(dstFd >= 0, goto out, "copy open %s fail %d! ", ctx->argv[1], errno);
     while ((rdLen = read(srcFd, buf, sizeof(buf) - 1)) > 0) {
         rtLen = write(dstFd, buf, rdLen);
@@ -280,10 +291,10 @@ static void DoCopy(const char* cmdContent)
 out:
     FreeCmd(&ctx);
     ctx = NULL;
-    close(srcFd);
-    srcFd = -1;
-    close(dstFd);
-    dstFd = -1;
+    INIT_CHECK(srcFd < 0, close(srcFd); srcFd = -1);
+    INIT_CHECK(dstFd < 0, close(dstFd); dstFd = -1);
+    INIT_CHECK(realPath1 == NULL, free(realPath1); realPath1 = NULL);
+    INIT_CHECK(realPath2 == NULL, free(realPath2); realPath2 = NULL);
     return;
 }
 
@@ -555,15 +566,15 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
     if (!fileName) {
         return;
     }
-    char *realPath = (char *)calloc(MAX_BUFFER, sizeof(char));
+    char *realPath = realpath(fileName, NULL);
     if (realPath == NULL) {
         return;
     }
-    realPath = realpath(fileName, realPath);
     int fd = open(realPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd < 0) {
         INIT_LOGE("failed to open %s: %d", realPath, errno);
         free(realPath);
+        realPath = NULL;
         return;
     }
     int rc = syscall(__NR_finit_module, fd, options, flags);
@@ -574,6 +585,7 @@ static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPt
         close(fd);
     }
     free(realPath);
+    realPath = NULL;
     return;
 }
 
@@ -642,7 +654,7 @@ out:
 
 static bool CheckValidCfg(const char *path)
 {
-    size_t cfgCnt = sizeof(g_supportCfg) / sizeof(g_supportCfg[0]);
+    size_t cfgCnt = ARRAY_LENGTH(g_supportCfg);
     struct stat fileStat = {0};
 
     if (stat(path, &fileStat) != 0 || fileStat.st_size <= 0 || fileStat.st_size > LOADCFG_MAX_FILE_LEN) {
@@ -718,8 +730,8 @@ static void DoWrite(const char *cmdContent)
         goto out;
     }
 
-    int fd = open(ctx->argv[0], O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, S_IRWXU |
- S_IRGRP | S_IROTH);
+    int fd = open(ctx->argv[0], O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, S_IRUSR |
+    S_IWUSR);
     if (fd == -1) {
         INIT_LOGE("DoWrite: open %s failed: %d", ctx->argv[0], errno);
         goto out;
@@ -776,7 +788,7 @@ static void DoSetrlimit(const char *cmdContent)
     limit.rlim_cur = atoi(ctx->argv[1]);
     limit.rlim_max = atoi(ctx->argv[rlimMaxPos]);
     int rcs = -1;
-    for (unsigned int i = 0 ; i < sizeof(resource) / sizeof(char*); ++i) {
+    for (unsigned int i = 0 ; i < ARRAY_LENGTH(resource); ++i) {
         if (strcmp(ctx->argv[0], resource[i]) == 0) {
             rcs = (int)i;
         }
@@ -965,66 +977,58 @@ void DoCmd(const CmdLine* curCmd)
     DoCmdByName(curCmd->name, curCmd->cmdContent);
 }
 
+struct CmdTable {
+    char name[MAX_CMD_NAME_LEN];
+    void (*DoFuncion)(const char *cmdContent);
+};
+
+static const struct CmdTable CMD_TABLE[] = {
+    { "start ", DoStart },
+    { "mkdir ", DoMkDir },
+    { "stop ", DoStop },
+    { "reset ", DoReset },
+    { "copy ", DoCopy },
+    { "chmod ", DoChmod },
+    { "chown ", DoChown },
+    { "mount ", DoMount },
+    { "write ", DoWrite },
+    { "rmdir ", DoRmdir },
+    { "rm ", DoRm },
+#ifndef OHOS_LITE
+    { "symlink ", DoSymlink },
+    { "makedev ", DoMakeDevice },
+    { "mknode ", DoMakeNode },
+    { "insmod ", DoInsmod },
+    { "trigger ", DoTriggerExec },
+    { "setparam ", DoSetParam },
+    { "load_param ", LoadDefaultParams },
+#endif
+    { "export ", DoExport },
+    { "setrlimit ", DoSetrlimit },
+    { "exec ", DoExec },
+    { "loadcfg ", DoLoadCfg },
+    { "reboot ", DoReboot }
+};
+
 void DoCmdByName(const char *name, const char *cmdContent)
 {
     if (name == NULL || cmdContent == NULL) {
         return;
     }
-    if (strncmp(name, "start ", strlen("start ")) == 0) {
-        DoStart(cmdContent);
-    } else if (strncmp(name, "mkdir ", strlen("mkdir ")) == 0) {
-        DoMkDir(cmdContent);
-    } else if (strncmp(name, "stop ", strlen("stop ")) == 0) {
-        DoStop(cmdContent);
-    } else if (strncmp(name, "reset ", strlen("reset ")) == 0) {
-        DoReset(cmdContent);
-    } else if (strncmp(name, "copy ", strlen("copy ")) == 0) {
-        DoCopy(cmdContent);
-    } else if (strncmp(name, "chmod ", strlen("chmod ")) == 0) {
-        DoChmod(cmdContent);
-    } else if (strncmp(name, "chown ", strlen("chown ")) == 0) {
-        DoChown(cmdContent);
-    } else if (strncmp(name, "mount ", strlen("mount ")) == 0) {
-        DoMount(cmdContent);
-    } else if (strncmp(name, "write ", strlen("write ")) == 0) {
-        DoWrite(cmdContent);
-    } else if (strncmp(name, "rmdir ", strlen("rmdir ")) == 0) {
-        DoRmdir(cmdContent);
-    } else if (strncmp(name, "rm ", strlen("rm ")) == 0) {
-        DoRm(cmdContent);
-    } else if (strncmp(name, "export ", strlen("export ")) == 0) {
-        DoExport(cmdContent);
-    } else if (strncmp(name, "setrlimit ", strlen("setrlimit ")) == 0) {
-        DoSetrlimit(cmdContent);
-    } else if (strncmp(name, "exec ", strlen("exec ")) == 0) {
-        DoExec(cmdContent);
-#ifndef __LITEOS__
-    } else if (strncmp(name, "symlink ", strlen("symlink ")) == 0) {
-        DoSymlink(cmdContent);
-    } else if (strncmp(name, "makedev ", strlen("makedev ")) == 0) {
-        DoMakeDevice(cmdContent);
-    } else if (strncmp(name, "mknode ", strlen("mknode ")) == 0) {
-        DoMakeNode(cmdContent);
-#endif
-    } else if (strncmp(name, "loadcfg ", strlen("loadcfg ")) == 0) {
-        DoLoadCfg(cmdContent);
-#ifndef OHOS_LITE
-    } else if (strncmp(name, "insmod ", strlen("insmod ")) == 0) {
-        DoInsmod(cmdContent);
-    } else if (strncmp(name, "trigger ", strlen("trigger ")) == 0) {
-        INIT_LOGD("ready to trigger job: %s", name);
-        DoTriggerExec(cmdContent);
-    } else if (strncmp(name, "load_persist_params ", strlen("load_persist_params ")) == 0) {
+    if (strncmp(name, "load_persist_params ", strlen("load_persist_params ")) == 0) {
         LoadPersistParams();
-    } else if (strncmp(name, "setparam ", strlen("setparam ")) == 0) {
-        DoSetParam(cmdContent);
-    } else if (strncmp(name, "load_param ", strlen("load_param ")) == 0) {
-        LoadDefaultParams(cmdContent);
-#endif
-    } else if (strncmp(name, "reboot ", strlen("reboot ")) == 0) {
-        DoReboot(cmdContent);
-    }  else {
-        INIT_LOGE("DoCmd, unknown cmd name %s.", name);
+    } else {
+        size_t cmdCnt = ARRAY_LENGTH(CMD_TABLE);
+        unsigned int i = 0;
+        for (; i < cmdCnt; ++i) {
+            if (strncmp(name, CMD_TABLE[i].name, strlen(CMD_TABLE[i].name)) == 0) {
+                CMD_TABLE[i].DoFuncion(cmdContent);
+                break;
+            }
+        }
+        if (i == cmdCnt) {
+            INIT_LOGE("DoCmd, unknown cmd name %s.", name);
+        }
     }
 }
 
@@ -1033,7 +1037,7 @@ const char *GetMatchCmd(const char *cmdStr)
     if (cmdStr == NULL) {
         return NULL;
     }
-    size_t supportCmdCnt = sizeof(g_supportedCmds) / sizeof(g_supportedCmds[0]);
+    size_t supportCmdCnt = ARRAY_LENGTH(g_supportedCmds);
     for (size_t i = 0; i < supportCmdCnt; ++i) {
         size_t curCmdNameLen = strlen(g_supportedCmds[i]);
         if (strncmp(g_supportedCmds[i], cmdStr, curCmdNameLen) == 0) {

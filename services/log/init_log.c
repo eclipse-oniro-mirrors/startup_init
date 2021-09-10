@@ -74,6 +74,9 @@ void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int l
     time_t logTime;
     time(&logTime);
     struct tm *t = gmtime(&logTime);
+    if (t == NULL) {
+        return;
+    }
     fprintf(stdout, "[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ",
         (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec,
         getpid(), fileName, line, tag, LOG_LEVEL_STR[logLevel]);
@@ -83,19 +86,4 @@ void InitLog(const char *tag, InitLogLevel logLevel, const char *fileName, int l
     vfprintf(stdout, fmt, list);
     va_end(list);
     fflush(stdout);
-
-#if 0
-    int fd = open("/dev/kmsg", O_WRONLY | O_CLOEXEC | O_APPEND );
-    if (fd < 1) {
-        printf("xxxxxxxxxxxxxxx open failed. %d\n", errno);
-        return;
-    }
-    if (write(fd, logInfo, strlen(logInfo)) < -1) {
-        printf("xxxxxxxxxxxxxxx write failed.%d\n", errno);
-        close(fd);
-        return;
-    }
-    close(fd);
-#endif
 }
-

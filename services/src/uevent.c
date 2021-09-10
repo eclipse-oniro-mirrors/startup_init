@@ -29,6 +29,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include "init_log.h"
+#include "init_utils.h"
 #include "list.h"
 #include "securec.h"
 
@@ -391,7 +392,7 @@ struct DevPermissionMapper DEV_MAPPER[] = {
 
 static void AdjustDevicePermission(const char *devPath)
 {
-    for (unsigned int i = 0; i < sizeof(DEV_MAPPER) / sizeof(struct DevPermissionMapper); ++i) {
+    for (size_t i = 0; i < ARRAY_LENGTH(DEV_MAPPER); ++i) {
         if (strcmp(devPath, DEV_MAPPER[i].devName) == 0) {
             if (chmod(devPath, DEV_MAPPER[i].devMode) != 0) {
                 INIT_LOGE("AdjustDevicePermission, failed for %s, err %d.", devPath, errno);
