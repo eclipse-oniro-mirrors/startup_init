@@ -619,11 +619,11 @@ void ParseAllServices(const cJSON* fileRoot)
 {
     int servArrSize = 0;
     cJSON* serviceArr = GetArrItem(fileRoot, &servArrSize, SERVICES_ARR_NAME_IN_JSON);
-    INIT_ERROR_CHECK(serviceArr != NULL, return, "ParseAllServices, get array %s failed.",SERVICES_ARR_NAME_IN_JSON);
-    INIT_ERROR_CHECK(servArrSize <= MAX_SERVICES_CNT_IN_FILE, return, "ParseAllServices,
-    too many services[cnt %d] detected, should not exceed %d.", servArrSize, MAX_SERVICES_CNT_IN_FILE);
+    INIT_ERROR_CHECK(serviceArr != NULL, return, "Get array of %s failed.", SERVICES_ARR_NAME_IN_JSON);
+    INIT_ERROR_CHECK(servArrSize <= MAX_SERVICES_CNT_IN_FILE, return,
+    "Too many services[cnt %d] detected, should not exceed %d.", servArrSize, MAX_SERVICES_CNT_IN_FILE);
     Service* retServices = (Service*)realloc(g_services, sizeof(Service) * (g_servicesCnt + servArrSize));
-    INIT_ERROR_CHECK(retServices != NUL, return, "ParseAllServices, realloc for %s arr failed! %d.",
+    INIT_ERROR_CHECK(retServices != NULL, return, "ParseAllServices, realloc for %s arr failed! %d.",
     SERVICES_ARR_NAME_IN_JSON, servArrSize);
     Service* tmp = retServices + g_servicesCnt;
     INIT_ERROR_CHECK(memset_s(tmp, sizeof(Service) * servArrSize, 0, sizeof(Service) * servArrSize) == EOK,
