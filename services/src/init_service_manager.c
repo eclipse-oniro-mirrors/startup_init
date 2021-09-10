@@ -627,7 +627,7 @@ void ParseAllServices(const cJSON* fileRoot)
     SERVICES_ARR_NAME_IN_JSON, servArrSize);
     Service* tmp = retServices + g_servicesCnt;
     INIT_ERROR_CHECK_AND_RETURN(memset_s(tmp, sizeof(Service) * servArrSize, 0, sizeof(Service) * servArrSize) == EOK,
-    free(retServices), "memset_s failed errno: %d", errno);
+        free(retServices), "memset_s failed errno: %d", errno);
     for (int i = 0; i < servArrSize; ++i) {
         cJSON* curItem = cJSON_GetArrayItem(serviceArr, i);
         if (CheckServiceKeyName(curItem) != SERVICE_SUCCESS) {

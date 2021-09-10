@@ -101,7 +101,7 @@ void SetLogLevel(InitLogLevel logLevel);
     do {                                              \
         if (!(ret)) {                                 \
             statement;                               \
-       }                                            \
+        }                                            \
     } while (0)
 
 #ifdef __cplusplus

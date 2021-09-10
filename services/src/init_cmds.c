@@ -60,39 +60,6 @@ static const char *g_supportCfg[] = {
     "/patch/fstab.cfg",
 };
 
-struct CmdTable {
-    char name[MAX_CMD_NAME_LEN];
-    void (*DoFuncion)(const char *cmdContent);
-};
-
-static const struct CmdTable CMD_TABLE[] = {
-    { "start ", DoStart },
-    { "mkdir ", DoMkDir },
-    { "stop ", DoStop },
-    { "reset ", DoReset },
-    { "copy ", DoCopy },
-    { "chmod ", DoChmod },
-    { "chown ", DoChown },
-    { "mount ", DoMount },
-    { "write ", DoWrite },
-    { "rmdir ", DoRmdir },
-    { "rm ", DoRm },
-#ifndef OHOS_LITE
-    { "symlink ", DoSymlink },
-    { "makedev ", DoMakeDevice },
-    { "mknode ", DoMakeNode },
-    { "insmod ", DoInsmod },
-    { "trigger ", DoTriggerExec },
-    { "setparam ", DoSetParam },
-    { "load_param ", LoadDefaultParams },
-#endif
-    { "export ", DoExport },
-    { "setrlimit ", DoSetrlimit },
-    { "exec ", DoExec },
-    { "loadcfg ", DoLoadCfg },
-    { "reboot ", DoReboot }
-};
-
 #ifndef OHOS_LITE
 int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
 {
@@ -104,6 +71,7 @@ int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
     unsigned int tmpLen = 0;
     char *p = NULL;
     char *tmpptr = NULL;
+
     p = strchr(symValue, '$');
     if (p == NULL) { // not has '$' copy the original string
         INIT_CHECK_ONLY_RETURN(strncpy_s(paramValue, paramLen, symValue,
@@ -140,7 +108,6 @@ int GetParamValue(char *symValue, char *paramValue, unsigned int paramLen)
         if (*tmpptr != '\0') { // copy last string
             INIT_CHECK_ONLY_RETURN(strncat_s(paramValue, paramLen, tmpptr, tmpLen) == EOK, return -1);
         }
-        INIT_LOGI("paramValue is %s ", paramValue);
         return 0;
     } else {
         INIT_LOGE("Invalid cfg file name, miss '{'.");
@@ -155,7 +122,8 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim)
     INIT_CHECK_ONLY_RETURN(ctx != NULL, return NULL);
 
     ctx->argv = (char**)malloc(sizeof(char *) * MAX_CMD_NAME_LEN);
-    INIT_CHECK_ONLY_RETURN(ctx->argv != NULL, FreeCmd(&ctx); return NULL);
+    INIT_CHECK_ONLY_RETURN(ctx->argv != NULL, FreeCmd(&ctx);
+        return NULL);
 
     char tmpCmd[MAX_BUFFER];
     INIT_CHECK_ONLY_RETURN(strncpy_s(tmpCmd, strlen(cmdContent) + 1, cmdContent, strlen(cmdContent)) == EOK,
@@ -169,13 +137,15 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim)
     while (token != NULL) {
 #ifndef OHOS_LITE
         ctx->argv[ctx->argc] = calloc(sizeof(char), MAX_EACH_CMD_LENGTH + MAX_PARAM_VALUE_LEN);
-        INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
-        INIT_CHECK_ONLY_RETURN(GetParamValue(token, ctx->argv[ctx->argc], MAX_EACH_CMD_LENGTH + MAX_PARAM_VALUE_LEN) == 0,
-            FreeCmd(&ctx);
+        INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx);
+            return NULL);
+        INIT_CHECK_ONLY_RETURN(GetParamValue(token, ctx->argv[ctx->argc],
+            MAX_EACH_CMD_LENGTH + MAX_PARAM_VALUE_LEN) == 0, FreeCmd(&ctx);
             return NULL);
 #else
         ctx->argv[ctx->argc] = calloc(sizeof(char), MAX_EACH_CMD_LENGTH);
-        INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
+        INIT_CHECK_ONLY_RETURN(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx);
+            return NULL);
         INIT_CHECK_ONLY_RETURN(strncpy_s(ctx->argv[ctx->argc], strlen(cmdContent) + 1, token, strlen(token)) == EOK,
             FreeCmd(&ctx);
             return NULL);
@@ -202,41 +172,6 @@ void FreeCmd(struct CmdArgs **cmd)
     INIT_CHECK_ONLY_RETURN(tmpCmd->argv == NULL, free(tmpCmd->argv));
     free(tmpCmd);
     return;
-}
-
-void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
-{
-    size_t cmdLineLen = 0;
-    if (cmdStr == NULL || resCmd == NULL || (cmdLineLen = strlen(cmdStr)) == 0) {
-        return;
-    }
-
-    size_t supportCmdCnt = ARRAY_LENGTH(CMD_TABLE);
-    int foundAndSucceed = 0;
-    for (size_t i = 0; i < supportCmdCnt; ++i) {
-        size_t curCmdNameLen = strlen(CMD_TABLE[i].name);
-        if (cmdLineLen > curCmdNameLen && cmdLineLen <= (curCmdNameLen + MAX_CMD_CONTENT_LEN) &&
-            strncmp(CMD_TABLE[i].name, cmdStr, curCmdNameLen) == 0) {
-            if (memcpy_s(resCmd->name, MAX_CMD_NAME_LEN, cmdStr, curCmdNameLen) != EOK) {
-                break;
-            }
-            resCmd->name[curCmdNameLen] = '\0';
-
-            const char* cmdContent = cmdStr + curCmdNameLen;
-            size_t cmdContentLen = cmdLineLen - curCmdNameLen;
-            if (memcpy_s(resCmd->cmdContent, MAX_CMD_CONTENT_LEN, cmdContent, cmdContentLen) != EOK) {
-                break;
-            }
-            resCmd->cmdContent[cmdContentLen] = '\0';
-            foundAndSucceed = 1;
-            break;
-        }
-    }
-
-    if (!foundAndSucceed) {
-        INIT_LOGE("Cannot parse command: %s", cmdStr);
-        (void)memset_s(resCmd, sizeof(*resCmd), 0, sizeof(*resCmd));
-    }
 }
 
 static void DoStart(const char* cmdContent)
@@ -1004,6 +939,74 @@ static void DoMakeDevice(const char *cmdContent)
 }
 #endif // __LITEOS__
 
+struct CmdTable {
+    char name[MAX_CMD_NAME_LEN];
+    void (*DoFuncion)(const char *cmdContent);
+};
+
+static const struct CmdTable CMD_TABLE[] = {
+    { "start ", DoStart },
+    { "mkdir ", DoMkDir },
+    { "stop ", DoStop },
+    { "reset ", DoReset },
+    { "copy ", DoCopy },
+    { "chmod ", DoChmod },
+    { "chown ", DoChown },
+    { "mount ", DoMount },
+    { "write ", DoWrite },
+    { "rmdir ", DoRmdir },
+    { "rm ", DoRm },
+#ifndef OHOS_LITE
+    { "symlink ", DoSymlink },
+    { "makedev ", DoMakeDevice },
+    { "mknode ", DoMakeNode },
+    { "insmod ", DoInsmod },
+    { "trigger ", DoTriggerExec },
+    { "setparam ", DoSetParam },
+    { "load_param ", LoadDefaultParams },
+#endif
+    { "export ", DoExport },
+    { "setrlimit ", DoSetrlimit },
+    { "exec ", DoExec },
+    { "loadcfg ", DoLoadCfg },
+    { "reboot ", DoReboot }
+};
+
+void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
+{
+    size_t cmdLineLen = 0;
+    if (cmdStr == NULL || resCmd == NULL || (cmdLineLen = strlen(cmdStr)) == 0) {
+        return;
+    }
+
+    size_t supportCmdCnt = ARRAY_LENGTH(CMD_TABLE);
+    int foundAndSucceed = 0;
+    for (size_t i = 0; i < supportCmdCnt; ++i) {
+        size_t curCmdNameLen = strlen(CMD_TABLE[i].name);
+        if (cmdLineLen > curCmdNameLen && cmdLineLen <= (curCmdNameLen + MAX_CMD_CONTENT_LEN) &&
+            strncmp(CMD_TABLE[i].name, cmdStr, curCmdNameLen) == 0) {
+            if (memcpy_s(resCmd->name, MAX_CMD_NAME_LEN, cmdStr, curCmdNameLen) != EOK) {
+                break;
+            }
+            resCmd->name[curCmdNameLen] = '\0';
+
+            const char* cmdContent = cmdStr + curCmdNameLen;
+            size_t cmdContentLen = cmdLineLen - curCmdNameLen;
+            if (memcpy_s(resCmd->cmdContent, MAX_CMD_CONTENT_LEN, cmdContent, cmdContentLen) != EOK) {
+                break;
+            }
+            resCmd->cmdContent[cmdContentLen] = '\0';
+            foundAndSucceed = 1;
+            break;
+        }
+    }
+
+    if (!foundAndSucceed) {
+        INIT_LOGE("Cannot parse command: %s", cmdStr);
+        (void)memset_s(resCmd, sizeof(*resCmd), 0, sizeof(*resCmd));
+    }
+}
+
 void DoCmd(const CmdLine* curCmd)
 {
     // null curCmd or empty command, just quit.
@@ -1021,7 +1024,7 @@ void DoCmdByName(const char *name, const char *cmdContent)
     if (strncmp(name, "load_persist_params ", strlen("load_persist_params ")) == 0) {
         LoadPersistParams();
     } else {
-        size_t cmdCnt = ARRAY_LENGTH(CMD_TABLE);
+        size_t cmdCnt = sizeof(CMD_TABLE) / sizeof(CMD_TABLE[0]);
         unsigned int i = 0;
         for (; i < cmdCnt; ++i) {
             if (strncmp(name, CMD_TABLE[i].name, strlen(CMD_TABLE[i].name)) == 0) {
@@ -1040,7 +1043,7 @@ const char *GetMatchCmd(const char *cmdStr)
     if (cmdStr == NULL) {
         return NULL;
     }
-    size_t supportCmdCnt = ARRAY_LENGTH(CMD_TABLE);
+    size_t supportCmdCnt = sizeof(CMD_TABLE) / sizeof(CMD_TABLE[0]);
     for (size_t i = 0; i < supportCmdCnt; ++i) {
         size_t curCmdNameLen = strlen(CMD_TABLE[i].name);
         if (strncmp(CMD_TABLE[i].name, cmdStr, curCmdNameLen) == 0) {
