@@ -74,7 +74,7 @@ void CheckAndCreateDir(const char *fileName)
 {
     char *path = strndup(fileName, strrchr(fileName, '/') - fileName);
     if (path != NULL && access(path, F_OK) != 0) {
-        mkdir(path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+        mkdir(path, S_IRWXU | S_IRGRP | S_IXGRP);
     }
     free(path);
 }

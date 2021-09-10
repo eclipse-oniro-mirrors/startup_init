@@ -38,7 +38,7 @@
 static Service* g_services = NULL;
 static int g_servicesCnt = 0;
 
-void DumpAllServices()
+void DumpAllServices(void)
 {
     INIT_LOGD("Ready to dump all services:");
     INIT_LOGD("total service number: %d", g_servicesCnt);
@@ -155,7 +155,7 @@ static int GetWritepidStrings(const cJSON *curArrItem, Service *curServ)        
 {
     int writepidCnt = 0;
     cJSON* filedJ = GetArrItem(curArrItem, &writepidCnt, "writepid");
-    if (writepidCnt <= 0) {             // not item is ok.
+    if ((writepidCnt <= 0) || (filedJ == NULL)) {             // not item is ok.
         return SERVICE_SUCCESS;
     }
 
@@ -173,6 +173,9 @@ static int GetWritepidStrings(const cJSON *curArrItem, Service *curServ)        
         }
 
         char *fieldStr = cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i));
+        if (fieldStr == NULL) {
+            return SERVICE_FAILURE;
+        }
         size_t strLen = strlen(fieldStr);
         curServ->writepidFiles[i] = (char *)malloc(sizeof(char) * strLen + 1);
         if (curServ->writepidFiles[i] == NULL) {
@@ -204,6 +207,9 @@ static int GetGidOneItem(const cJSON *curArrItem, Service *curServ)        // gi
 
     if (cJSON_IsString(filedJ)) {
         char* fieldStr = cJSON_GetStringValue(filedJ);
+        if (fieldStr == NULL) {
+            return SERVICE_FAILURE;
+        }
         gid_t gID = DecodeUid(fieldStr);
         if (gID == (gid_t)(-1)) {
             INIT_LOGE("GetGidOneItem, DecodeUid %s error.", fieldStr);
@@ -405,6 +411,9 @@ static int GetUidStringNumber(const cJSON *curArrItem, Service *curServ)
 
     if (cJSON_IsString(filedJ)) {
         char* fieldStr = cJSON_GetStringValue(filedJ);
+        if (fieldStr == NULL) {
+            return SERVICE_FAILURE;
+        }
         int uID = DecodeUid(fieldStr);
         if (uID < 0) {
             INIT_LOGE("GetUidStringNumber, DecodeUid %s error.", fieldStr);
@@ -439,7 +448,6 @@ static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket
     sockopt->type =
         strncmp(opt[SERVICE_SOCK_TYPE], "stream", strlen(opt[SERVICE_SOCK_TYPE])) == 0 ? SOCK_STREAM :
         (strncmp(opt[SERVICE_SOCK_TYPE], "dgram", strlen(opt[SERVICE_SOCK_TYPE])) == 0 ? SOCK_DGRAM : SOCK_SEQPACKET);
-
     if (opt[SERVICE_SOCK_PERM] == NULL) {
         return -1;
     }
@@ -463,7 +471,8 @@ static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket
     if (opt[SERVICE_SOCK_SETOPT] == NULL) {
         return -1;
     }
-    sockopt->passcred = strncmp(opt[SERVICE_SOCK_SETOPT], "passcred", strlen(opt[SERVICE_SOCK_SETOPT])) == 0 ? true : false;
+    sockopt->passcred = strncmp(opt[SERVICE_SOCK_SETOPT], "passcred",
+        strlen(opt[SERVICE_SOCK_SETOPT])) == 0 ? true : false;
     if (opt[SERVICE_SOCK_NAME] == NULL) {
         return -1;
     }
@@ -474,6 +483,7 @@ static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket
     int ret = memcpy_s(sockopt->name, MAX_SOCK_NAME_LEN, opt[SERVICE_SOCK_NAME], MAX_SOCK_NAME_LEN - 1);
     if (ret != 0) {
         free(sockopt->name);
+        sockopt->name = NULL;
         return -1;
     }
     sockopt->next = NULL;
@@ -516,7 +526,7 @@ static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
             return SERVICE_FAILURE;
         }
         char *sockStr = cJSON_GetStringValue(sockJ);
-        char *tmpStr[SOCK_OPT_NUMS] = {NULL,};
+        char *tmpStr[SOCK_OPT_NUMS] = {NULL};
         int num = SplitString(sockStr, tmpStr, SOCK_OPT_NUMS);
         if (num != SOCK_OPT_NUMS) {
             return SERVICE_FAILURE;
@@ -556,6 +566,7 @@ static int GetServiceOnRestart(const cJSON* curArrItem, Service* curServ)
     curServ->onRestart->cmdLine = (CmdLine *)calloc(cmdCnt, sizeof(CmdLine));
     if (curServ->onRestart->cmdLine == NULL) {
         free(curServ->onRestart);
+        curServ->onRestart = NULL;
         return SERVICE_FAILURE;
     }
     curServ->onRestart->cmdNum = cmdCnt;
@@ -563,6 +574,7 @@ static int GetServiceOnRestart(const cJSON* curArrItem, Service* curServ)
         cJSON* cmdJ = cJSON_GetArrayItem(filedJ, i);
         if (!cJSON_IsString(cmdJ) || !cJSON_GetStringValue(cmdJ)) {
             free(curServ->onRestart->cmdLine);
+            curServ->onRestart->cmdLine = NULL;
             free(curServ->onRestart);
             curServ->onRestart = NULL;
             return SERVICE_FAILURE;
@@ -586,14 +598,14 @@ static int CheckServiceKeyName(const cJSON* curService)
         return SERVICE_FAILURE;
     }
     while (child) {
-        int i = 0;
-        int keyListSize = sizeof(cfgServiceKeyList) / sizeof(char *);
+        size_t i = 0;
+        size_t keyListSize = ARRAY_LENGTH(cfgServiceKeyList);
         for (; i < keyListSize; i++) {
             if (!strcmp(child->string, cfgServiceKeyList[i])) {
                 break;
             }
         }
-        if(i < keyListSize) {
+        if (i < keyListSize) {
             child = child->next;
         } else {
             INIT_LOGE("CheckServiceKeyName, key name %s is not found. error.", child->string);
@@ -607,31 +619,15 @@ void ParseAllServices(const cJSON* fileRoot)
 {
     int servArrSize = 0;
     cJSON* serviceArr = GetArrItem(fileRoot, &servArrSize, SERVICES_ARR_NAME_IN_JSON);
-    if (serviceArr == NULL) {
-        INIT_LOGE("ParseAllServices, get array %s failed.", SERVICES_ARR_NAME_IN_JSON);
-        return;
-    }
-
-    INIT_LOGI("servArrSize is %d ", servArrSize);
-    if (servArrSize > MAX_SERVICES_CNT_IN_FILE) {
-        INIT_LOGE("ParseAllServices, too many services[cnt %d] detected, should not exceed %d.",
-            servArrSize, MAX_SERVICES_CNT_IN_FILE);
-        return;
-    }
-
+    INIT_ERROR_CHECK(serviceArr != NULL, return, "Get array of %s failed.", SERVICES_ARR_NAME_IN_JSON);
+    INIT_ERROR_CHECK(servArrSize <= MAX_SERVICES_CNT_IN_FILE, return,
+    "Too many services[cnt %d] detected, should not exceed %d.", servArrSize, MAX_SERVICES_CNT_IN_FILE);
     Service* retServices = (Service*)realloc(g_services, sizeof(Service) * (g_servicesCnt + servArrSize));
-    if (retServices == NULL) {
-        INIT_LOGE("ParseAllServices, realloc for %s arr failed! %d.", SERVICES_ARR_NAME_IN_JSON, servArrSize);
-        return;
-    }
-    // Skip already saved services,
+    INIT_ERROR_CHECK(retServices != NULL, return, "ParseAllServices, realloc for %s arr failed! %d.",
+    SERVICES_ARR_NAME_IN_JSON, servArrSize);
     Service* tmp = retServices + g_servicesCnt;
-    if (memset_s(tmp, sizeof(Service) * servArrSize, 0, sizeof(Service) * servArrSize) != EOK) {
-        free(retServices);
-        retServices = NULL;
-        return;
-    }
-
+    INIT_ERROR_CHECK_AND_RETURN(memset_s(tmp, sizeof(Service) * servArrSize, 0, sizeof(Service) * servArrSize) == EOK,
+        free(retServices), "memset_s failed errno: %d", errno);
     for (int i = 0; i < servArrSize; ++i) {
         cJSON* curItem = cJSON_GetArrayItem(serviceArr, i);
         if (CheckServiceKeyName(curItem) != SERVICE_SUCCESS) {
@@ -652,15 +648,10 @@ void ParseAllServices(const cJSON* fileRoot)
         int retb = GetServiceCaps(curItem, &tmp[i]);
         int retAll = ret1 | ret2 | ret3 | ret4 | ret5 | ret6 | ret7 | ret8 | ret9 | reta | retb;
         if (retAll != SERVICE_SUCCESS) {
-            // release resources if it fails
             ReleaseServiceMem(&tmp[i]);
             tmp[i].attribute |= SERVICE_ATTR_INVALID;
             INIT_LOGE("ParseAllServices, parse information for service %s failed. ", tmp[i].name);
             continue;
-        } else {
-            INIT_LOGD("ParseAllServices ParseAllServices Service[%d] name=%s, uid=%d, critical=%d, disabled=%d",
-                 i, tmp[i].name, tmp[i].servPerm.uID, tmp[i].attribute & SERVICE_ATTR_CRITICAL ? 1 : 0,
-                 tmp[i].attribute & SERVICE_ATTR_DISABLED ? 1 : 0);
         }
         if (GetServiceSocket(curItem, &tmp[i]) != SERVICE_SUCCESS) {
             INIT_LOGE("GetServiceSocket fail ");
@@ -673,7 +664,6 @@ void ParseAllServices(const cJSON* fileRoot)
             INIT_LOGE("GetServiceOnRestart fail ");
         }
     }
-    // Increase service counter.
     RegisterServices(retServices, servArrSize);
 }
 
@@ -724,7 +714,7 @@ void StopServiceByName(const char* servName)
     return;
 }
 
-void StopAllServices()
+void StopAllServices(void)
 {
     for (int i = 0; i < g_servicesCnt; i++) {
         if (ServiceStop(&g_services[i]) != SERVICE_SUCCESS) {
@@ -733,7 +723,7 @@ void StopAllServices()
     }
 }
 
-void StopAllServicesBeforeReboot()
+void StopAllServicesBeforeReboot(void)
 {
     for (int i = 0; i < g_servicesCnt; i++) {
         g_services[i].attribute |= SERVICE_ATTR_INVALID;
@@ -760,5 +750,4 @@ void ReapServiceByPID(int pid)
         }
     }
 }
-
 

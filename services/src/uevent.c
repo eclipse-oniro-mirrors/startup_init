@@ -29,6 +29,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include "init_log.h"
+#include "init_utils.h"
 #include "list.h"
 #include "securec.h"
 
@@ -96,9 +97,9 @@ static struct ListNode g_platformNames = {
 };
 
 const char *g_trigger = "/dev/.trigger_uevent";
-static void HandleUevent();
+static void HandleUevent(void);
 
-static int UeventFD()
+static int UeventFD(void)
 {
     return g_ueventFD;
 }
@@ -146,7 +147,7 @@ void Trigger(const char *sysPath)
     }
 }
 
-static void RetriggerUevent()
+static void RetriggerUevent(void)
 {
     if (access(g_trigger, F_OK) == 0) {
         INIT_LOGI("Skip trigger uevent, alread done");
@@ -162,7 +163,7 @@ static void RetriggerUevent()
     INIT_LOGI("Re-trigger uevent done");
 }
 
-static void UeventSockInit()
+static void UeventSockInit(void)
 {
     struct sockaddr_nl addr;
     int buffSize = MAX_BUFFER * BASE_BUFFER_SIZE;
@@ -184,7 +185,7 @@ static void UeventSockInit()
     setsockopt(sockfd, SOL_SOCKET, SO_RCVBUFFORCE, &buffSize, sizeof(buffSize));
     setsockopt(sockfd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
 
-    if (bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+    if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         INIT_LOGE("Bind socket failed. %d", errno);
         close(sockfd);
         return;
@@ -196,7 +197,7 @@ static void UeventSockInit()
     return;
 }
 
-ssize_t ReadUevent(int fd, void *buf, size_t len)
+ssize_t ReadUevent(int fd, char *buf, size_t len)
 {
     struct iovec iov = { buf, len };
     struct sockaddr_nl addr;
@@ -391,7 +392,7 @@ struct DevPermissionMapper DEV_MAPPER[] = {
 
 static void AdjustDevicePermission(const char *devPath)
 {
-    for (unsigned int i = 0; i < sizeof(DEV_MAPPER) / sizeof(struct DevPermissionMapper); ++i) {
+    for (size_t i = 0; i < ARRAY_LENGTH(DEV_MAPPER); ++i) {
         if (strcmp(devPath, DEV_MAPPER[i].devName) == 0) {
             if (chmod(devPath, DEV_MAPPER[i].devMode) != 0) {
                 INIT_LOGE("AdjustDevicePermission, failed for %s, err %d.", devPath, errno);
@@ -639,38 +640,41 @@ static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
         return NULL;
     }
 
-    /* skip "/devices/platform/<driver>" */
-    const char *parent = strchr(uevent->path + pDev->pathLen, '/');
-    if (!*parent) {
-        goto err;
-    }
+    do {
+        /* skip "/devices/platform/<driver>" */
+        const char *parent = strchr(uevent->path + pDev->pathLen, '/');
+        if (!*parent) {
+            break;
+        }
 
-    if (strncmp(parent, "/usb", DEV_USB)) {
-        goto err;
-    }
-    /* skip root hub name and device. use device interface */
-    if (!*parent) {
-        goto err;
-    }
-    slash = strchr(++parent, '/');
-    if (!slash) {
-        goto err;
-    }
-    width = slash - parent;
-    if (width <= 0) {
-        goto err;
-    }
+        if (strncmp(parent, "/usb", DEV_USB)) {
+            break;
+        }
+        /* skip root hub name and device. use device interface */
+        if (!*parent) {
+            break;
+        }
+        slash = strchr(++parent, '/');
+        if (!slash) {
+            break;
+        }
+        width = slash - parent;
+        if (width <= 0) {
+            break;
+        }
 
-    if (asprintf(&links[linkNum], "/dev/usb/%s%.*s", uevent->subsystem, width, parent) > 0) {
-        linkNum++;
-    } else {
-        links[linkNum] = NULL;
-    }
-    mkdir("/dev/usb", DEFAULT_DIR_MODE);
-    return links;
-err:
+        if (asprintf(&links[linkNum], "/dev/usb/%s%.*s", uevent->subsystem, width, parent) > 0) {
+            linkNum++;
+        } else {
+            links[linkNum] = NULL;
+        }
+        mkdir("/dev/usb", DEFAULT_DIR_MODE);
+        return links;
+    } while (0);
+
     free(links);
-    return NULL;
+    links = NULL;
+    return links;
 }
 
 static int HandleUsbDevice(const struct Uevent *event, char *devpath, int len)
@@ -722,22 +726,21 @@ static void HandleDeviceEvent(struct Uevent *event, char *devpath, int len, cons
     char **links = NULL;
     links = GetCharacterDeviceSymlinks(event);
     if (!devpath[0]) {
-        if (snprintf_s(devpath, len, len - 1, "%s%s", base, name) == -1) {
-            INIT_LOGE("snprintf_s err ");
-            goto err;
+        if (snprintf_s(devpath, len, len - 1, "%s%s", base, name) > 0) {
+            HandleDevice(event, devpath, 0, links);
+            return;
         }
     }
-    HandleDevice(event, devpath, 0, links);
-    return;
-err:
+
     if (links) {
         for (int i = 0; links[i]; i++) {
             free(links[i]);
         }
         free(links);
+        links = NULL;
     }
-    return;
 }
+
 static void HandleGenericDevice(struct Uevent *event)
 {
     char *base = NULL;
@@ -797,7 +800,7 @@ static void HandleDeviceUevent(struct Uevent *event)
     }
 }
 
-static void HandleUevent()
+static void HandleUevent(void)
 {
     char buf[EVENT_MAX_BUFFER];
     int ret;
@@ -813,7 +816,7 @@ static void HandleUevent()
     }
 }
 
-void UeventInit()
+void UeventInit(void)
 {
     struct pollfd ufd;
     UeventSockInit();

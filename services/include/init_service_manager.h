@@ -39,11 +39,11 @@ extern "C" {
 void RegisterServices(Service* services, int servicesCnt);
 void StartServiceByName(const char* serviceName);
 void StopServiceByName(const char* serviceName);
-void StopAllServices();
-void StopAllServicesBeforeReboot();
+void StopAllServices(void);
+void StopAllServicesBeforeReboot(void);
 void ReapServiceByPID(int pid);
 void ParseAllServices(const cJSON* fileRoot);
-void DumpAllServices();
+void DumpAllServices(void);
 
 #ifdef __cplusplus
 #if __cplusplus

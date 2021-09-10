@@ -30,6 +30,7 @@
 
 #include "init_log.h"
 #include "init_perms.h"
+#include "init_utils.h"
 
 #define MAX_CAPS_CNT_FOR_ONE_SERVICE 100
 
@@ -89,7 +90,7 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
             break;
         }
         char* fieldStr = cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i));
-        int mapSize = sizeof(g_capStrCapNum) / sizeof(struct CapStrCapNum);     // search
+        int mapSize = ARRAY_LENGTH(g_capStrCapNum);
         int j = 0;
         for (; j < mapSize; j++) {
             if (!strcmp(fieldStr, g_capStrCapNum[j].capStr)) {
@@ -149,7 +150,7 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
             break;
         }
         curServ->servPerm.caps[i] = (unsigned int)cJSON_GetNumberValue(capJ);
-        if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {        // CAP_LAST_CAP = 37
+        if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {
             // resources will be released by function: ReleaseServiceMem
             INIT_LOGE("service=%s, caps = %d, error.", curServ->name, curServ->servPerm.caps[i]);
             return SERVICE_FAILURE;
