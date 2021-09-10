@@ -60,31 +60,37 @@ static const char *g_supportCfg[] = {
     "/patch/fstab.cfg",
 };
 
-static const char* g_supportedCmds[] = {
-    "start ",
-    "mkdir ",
-    "chmod ",
-    "chown ",
-    "mount ",
-    "export ",
-    "loadcfg ",
-    "insmod ",
-    "rm ",
-    "rmdir ",
-    "write ",
-    "exec ",
-    "mknode ",
-    "makedev ",
-    "symlink ",
-    "stop ",
-    "trigger ",
-    "reset ",
-    "copy ",
-    "setparam ",
-    "load_persist_params ",
-    "load_param ",
-    "reboot ",
-    "setrlimit ",
+struct CmdTable {
+    char name[MAX_CMD_NAME_LEN];
+    void (*DoFuncion)(const char *cmdContent);
+};
+
+static const struct CmdTable CMD_TABLE[] = {
+    { "start ", DoStart },
+    { "mkdir ", DoMkDir },
+    { "stop ", DoStop },
+    { "reset ", DoReset },
+    { "copy ", DoCopy },
+    { "chmod ", DoChmod },
+    { "chown ", DoChown },
+    { "mount ", DoMount },
+    { "write ", DoWrite },
+    { "rmdir ", DoRmdir },
+    { "rm ", DoRm },
+#ifndef OHOS_LITE
+    { "symlink ", DoSymlink },
+    { "makedev ", DoMakeDevice },
+    { "mknode ", DoMakeNode },
+    { "insmod ", DoInsmod },
+    { "trigger ", DoTriggerExec },
+    { "setparam ", DoSetParam },
+    { "load_param ", LoadDefaultParams },
+#endif
+    { "export ", DoExport },
+    { "setrlimit ", DoSetrlimit },
+    { "exec ", DoExec },
+    { "loadcfg ", DoLoadCfg },
+    { "reboot ", DoReboot }
 };
 
 #ifndef OHOS_LITE
@@ -205,12 +211,12 @@ void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
         return;
     }
 
-    size_t supportCmdCnt = ARRAY_LENGTH(g_supportedCmds);
+    size_t supportCmdCnt = ARRAY_LENGTH(CMD_TABLE);
     int foundAndSucceed = 0;
     for (size_t i = 0; i < supportCmdCnt; ++i) {
-        size_t curCmdNameLen = strlen(g_supportedCmds[i]);
+        size_t curCmdNameLen = strlen(CMD_TABLE[i].name);
         if (cmdLineLen > curCmdNameLen && cmdLineLen <= (curCmdNameLen + MAX_CMD_CONTENT_LEN) &&
-            strncmp(g_supportedCmds[i], cmdStr, curCmdNameLen) == 0) {
+            strncmp(CMD_TABLE[i].name, cmdStr, curCmdNameLen) == 0) {
             if (memcpy_s(resCmd->name, MAX_CMD_NAME_LEN, cmdStr, curCmdNameLen) != EOK) {
                 break;
             }
@@ -252,7 +258,7 @@ static void DoReset(const char* cmdContent)
     DoStart(cmdContent);
 }
 
-static bool IsArgsExpected(struct CmdArgs *ctx, int expectedArgCount)
+static bool IsArgsExpected(const struct CmdArgs *ctx, int expectedArgCount)
 {
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != expectedArgCount) {
         return false;
@@ -261,7 +267,7 @@ static bool IsArgsExpected(struct CmdArgs *ctx, int expectedArgCount)
     }
 }
 
-static void DoCopyInernal( const char *source, const char *target)
+static void DoCopyInernal(const char *source, const char *target)
 {
     bool isSuccess = true;
     if (source == NULL || target == NULL) {
@@ -271,7 +277,6 @@ static void DoCopyInernal( const char *source, const char *target)
 
     struct stat st = {0};
     int srcFd = open(source, O_RDONLY);
-
     if (srcFd < 0) {
         INIT_LOGE("Open \" %s \" failed, err = %d", source, errno);
         close(srcFd);
@@ -285,13 +290,13 @@ static void DoCopyInernal( const char *source, const char *target)
         srcFd = -1;
         return;
     }
-    int dstFd = open(target, O_WRONLY | O_TRUNC | O_CREAT, fileStat.st_mode);
+    int dstFd = open(target, O_WRONLY | O_TRUNC | O_CREAT, st.st_mode);
     if (dstFd >= 0) {
         char buf[MAX_COPY_BUF_SIZE] = {0};
         ssize_t readn = -1;
         ssize_t writen = -1;
         while ((readn = read(srcFd, buf, MAX_COPY_BUF_SIZE - 1)) > 0) {
-            writen = write(dstFd , buf, (size_t)readn);
+            writen = write(dstFd, buf, (size_t)readn);
             if (writen != readn)  {
                 isSuccess = false;
                 break;
@@ -350,14 +355,14 @@ static void DoChown(const char* cmdContent)
     gid_t group = (gid_t)-1;
     if (isalpha(ctx->argv[0][0])) {
         owner = DecodeUid(ctx->argv[0]);
-        INIT_ERROR_CHECK(owner != (uid_t)-1, FreeCmd(&ctx); return, "DoChown decode owner failed.");
+        INIT_ERROR_CHECK_AND_RETURN(owner != (uid_t)-1, FreeCmd(&ctx), "DoChown decode owner failed.");
     } else {
         owner = strtoul(ctx->argv[0], NULL, 0);
     }
 
     if (isalpha(ctx->argv[1][0])) {
         group = DecodeUid(ctx->argv[1]);
-        INIT_ERROR_CHECK(group != (gid_t)-1, FreeCmd(&ctx); return, "DoChown decode group failed.");
+        INIT_ERROR_CHECK_AND_RETURN(group != (gid_t)-1, FreeCmd(&ctx), "DoChown decode group failed.");
     } else {
         group = strtoul(ctx->argv[1], NULL, 0);
     }
@@ -401,7 +406,7 @@ static void DoMkDir(const char* cmdContent)
             ctx->argv[ownerPos], ctx->argv[groupPos], ctx->argv[0]) > 0) {
             DoChown(chownCmdContent);
         }
-     }
+    }
     FreeCmd(&ctx);
     return;
 }
@@ -678,7 +683,8 @@ static void DoInsmod(const char *cmdContent)
 static void DoSetParam(const char* cmdContent)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ");
-    if (ctx == NULL || ctx->argv == NULL || ctx->argc != 2) {
+    const int maxArgCount = 2;
+    if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArgCount) {
         INIT_LOGE("DoSetParam failed.");
         FreeCmd(&ctx);
         return;
@@ -1007,39 +1013,6 @@ void DoCmd(const CmdLine* curCmd)
     DoCmdByName(curCmd->name, curCmd->cmdContent);
 }
 
-struct CmdTable {
-    char name[MAX_CMD_NAME_LEN];
-    void (*DoFuncion)(const char *cmdContent);
-};
-
-static const struct CmdTable CMD_TABLE[] = {
-    { "start ", DoStart },
-    { "mkdir ", DoMkDir },
-    { "stop ", DoStop },
-    { "reset ", DoReset },
-    { "copy ", DoCopy },
-    { "chmod ", DoChmod },
-    { "chown ", DoChown },
-    { "mount ", DoMount },
-    { "write ", DoWrite },
-    { "rmdir ", DoRmdir },
-    { "rm ", DoRm },
-#ifndef OHOS_LITE
-    { "symlink ", DoSymlink },
-    { "makedev ", DoMakeDevice },
-    { "mknode ", DoMakeNode },
-    { "insmod ", DoInsmod },
-    { "trigger ", DoTriggerExec },
-    { "setparam ", DoSetParam },
-    { "load_param ", LoadDefaultParams },
-#endif
-    { "export ", DoExport },
-    { "setrlimit ", DoSetrlimit },
-    { "exec ", DoExec },
-    { "loadcfg ", DoLoadCfg },
-    { "reboot ", DoReboot }
-};
-
 void DoCmdByName(const char *name, const char *cmdContent)
 {
     if (name == NULL || cmdContent == NULL) {
@@ -1067,11 +1040,11 @@ const char *GetMatchCmd(const char *cmdStr)
     if (cmdStr == NULL) {
         return NULL;
     }
-    size_t supportCmdCnt = ARRAY_LENGTH(g_supportedCmds);
+    size_t supportCmdCnt = ARRAY_LENGTH(CMD_TABLE);
     for (size_t i = 0; i < supportCmdCnt; ++i) {
-        size_t curCmdNameLen = strlen(g_supportedCmds[i]);
-        if (strncmp(g_supportedCmds[i], cmdStr, curCmdNameLen) == 0) {
-            return g_supportedCmds[i];
+        size_t curCmdNameLen = strlen(CMD_TABLE[i].name);
+        if (strncmp(CMD_TABLE[i].name, cmdStr, curCmdNameLen) == 0) {
+            return cmdStr;
         }
     }
     return NULL;

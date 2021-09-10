@@ -80,6 +80,15 @@ void SetLogLevel(InitLogLevel logLevel);
         }                              \
     } while (0)
 
+#define INIT_ERROR_CHECK_AND_RETURN(ret, statement, format, ...)  \
+    do {                                              \
+        if (!(ret)) {                                 \
+            INIT_LOGE(format, ##__VA_ARGS__);         \
+            statement;                                \
+            return;                                   \
+        }                                            \
+    } while (0)
+
 #define INIT_ERROR_CHECK(ret, statement, format, ...)  \
     do {                                              \
         if (!(ret)) {                                 \

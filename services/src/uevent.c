@@ -97,9 +97,9 @@ static struct ListNode g_platformNames = {
 };
 
 const char *g_trigger = "/dev/.trigger_uevent";
-static void HandleUevent();
+static void HandleUevent(void);
 
-static int UeventFD()
+static int UeventFD(void)
 {
     return g_ueventFD;
 }
@@ -147,7 +147,7 @@ void Trigger(const char *sysPath)
     }
 }
 
-static void RetriggerUevent()
+static void RetriggerUevent(void)
 {
     if (access(g_trigger, F_OK) == 0) {
         INIT_LOGI("Skip trigger uevent, alread done");
@@ -163,7 +163,7 @@ static void RetriggerUevent()
     INIT_LOGI("Re-trigger uevent done");
 }
 
-static void UeventSockInit()
+static void UeventSockInit(void)
 {
     struct sockaddr_nl addr;
     int buffSize = MAX_BUFFER * BASE_BUFFER_SIZE;
@@ -185,7 +185,7 @@ static void UeventSockInit()
     setsockopt(sockfd, SOL_SOCKET, SO_RCVBUFFORCE, &buffSize, sizeof(buffSize));
     setsockopt(sockfd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
 
-    if (bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+    if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         INIT_LOGE("Bind socket failed. %d", errno);
         close(sockfd);
         return;
@@ -197,7 +197,7 @@ static void UeventSockInit()
     return;
 }
 
-ssize_t ReadUevent(int fd, void *buf, size_t len)
+ssize_t ReadUevent(int fd, char *buf, size_t len)
 {
     struct iovec iov = { buf, len };
     struct sockaddr_nl addr;
@@ -800,7 +800,7 @@ static void HandleDeviceUevent(struct Uevent *event)
     }
 }
 
-static void HandleUevent()
+static void HandleUevent(void)
 {
     char buf[EVENT_MAX_BUFFER];
     int ret;
@@ -816,7 +816,7 @@ static void HandleUevent()
     }
 }
 
-void UeventInit()
+void UeventInit(void)
 {
     struct pollfd ufd;
     UeventSockInit();

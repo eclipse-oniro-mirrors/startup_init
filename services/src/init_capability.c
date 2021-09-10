@@ -150,7 +150,7 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
             break;
         }
         curServ->servPerm.caps[i] = (unsigned int)cJSON_GetNumberValue(capJ);
-        if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {        // CAP_LAST_CAP = 37
+        if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {
             // resources will be released by function: ReleaseServiceMem
             INIT_LOGE("service=%s, caps = %d, error.", curServ->name, curServ->servPerm.caps[i]);
             return SERVICE_FAILURE;
