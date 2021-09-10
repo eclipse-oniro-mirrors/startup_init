@@ -652,9 +652,6 @@ void ParseAllServices(const cJSON* fileRoot)
             tmp[i].attribute |= SERVICE_ATTR_INVALID;
             INIT_LOGE("ParseAllServices, parse information for service %s failed. ", tmp[i].name);
             continue;
-        } else {
-            INIT_LOGD("Service[%d] name=%s, uid=%d, critical=%d, disabled=%d", i, tmp[i].name, tmp[i].servPerm.uID,
-            tmp[i].attribute & SERVICE_ATTR_CRITICAL ? 1 : 0, tmp[i].attribute & SERVICE_ATTR_DISABLED ? 1 : 0);
         }
         if (GetServiceSocket(curItem, &tmp[i]) != SERVICE_SUCCESS) {
             INIT_LOGE("GetServiceSocket fail ");

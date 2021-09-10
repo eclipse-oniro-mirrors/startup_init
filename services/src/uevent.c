@@ -640,38 +640,41 @@ static char **GetCharacterDeviceSymlinks(const struct Uevent *uevent)
         return NULL;
     }
 
-    /* skip "/devices/platform/<driver>" */
-    const char *parent = strchr(uevent->path + pDev->pathLen, '/');
-    if (!*parent) {
-        goto err;
-    }
+    do {
+        /* skip "/devices/platform/<driver>" */
+        const char *parent = strchr(uevent->path + pDev->pathLen, '/');
+        if (!*parent) {
+            break;
+        }
 
-    if (strncmp(parent, "/usb", DEV_USB)) {
-        goto err;
-    }
-    /* skip root hub name and device. use device interface */
-    if (!*parent) {
-        goto err;
-    }
-    slash = strchr(++parent, '/');
-    if (!slash) {
-        goto err;
-    }
-    width = slash - parent;
-    if (width <= 0) {
-        goto err;
-    }
+        if (strncmp(parent, "/usb", DEV_USB)) {
+            break;
+        }
+        /* skip root hub name and device. use device interface */
+        if (!*parent) {
+            break;
+        }
+        slash = strchr(++parent, '/');
+        if (!slash) {
+            break;
+        }
+        width = slash - parent;
+        if (width <= 0) {
+            break;
+        }
 
-    if (asprintf(&links[linkNum], "/dev/usb/%s%.*s", uevent->subsystem, width, parent) > 0) {
-        linkNum++;
-    } else {
-        links[linkNum] = NULL;
-    }
-    mkdir("/dev/usb", DEFAULT_DIR_MODE);
-    return links;
-err:
+        if (asprintf(&links[linkNum], "/dev/usb/%s%.*s", uevent->subsystem, width, parent) > 0) {
+            linkNum++;
+        } else {
+            links[linkNum] = NULL;
+        }
+        mkdir("/dev/usb", DEFAULT_DIR_MODE);
+        return links;
+    } while (0);
+
     free(links);
-    return NULL;
+    links = NULL;
+    return links;
 }
 
 static int HandleUsbDevice(const struct Uevent *event, char *devpath, int len)
@@ -723,22 +726,21 @@ static void HandleDeviceEvent(struct Uevent *event, char *devpath, int len, cons
     char **links = NULL;
     links = GetCharacterDeviceSymlinks(event);
     if (!devpath[0]) {
-        if (snprintf_s(devpath, len, len - 1, "%s%s", base, name) == -1) {
-            INIT_LOGE("snprintf_s err ");
-            goto err;
+        if (snprintf_s(devpath, len, len - 1, "%s%s", base, name) > 0) {
+            HandleDevice(event, devpath, 0, links);
+            return;
         }
     }
-    HandleDevice(event, devpath, 0, links);
-    return;
-err:
+
     if (links) {
         for (int i = 0; links[i]; i++) {
             free(links[i]);
         }
         free(links);
+        links = NULL;
     }
-    return;
 }
+
 static void HandleGenericDevice(struct Uevent *event)
 {
     char *base = NULL;
