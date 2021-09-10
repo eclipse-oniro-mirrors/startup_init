@@ -1021,20 +1021,17 @@ void DoCmdByName(const char *name, const char *cmdContent)
     if (name == NULL || cmdContent == NULL) {
         return;
     }
-    if (strncmp(name, "load_persist_params ", strlen("load_persist_params ")) == 0) {
-        LoadPersistParams();
-    } else {
-        size_t cmdCnt = sizeof(CMD_TABLE) / sizeof(CMD_TABLE[0]);
-        unsigned int i = 0;
-        for (; i < cmdCnt; ++i) {
-            if (strncmp(name, CMD_TABLE[i].name, strlen(CMD_TABLE[i].name)) == 0) {
-                CMD_TABLE[i].DoFuncion(cmdContent);
-                break;
-            }
+    size_t cmdCnt = sizeof(CMD_TABLE) / sizeof(CMD_TABLE[0]);
+    unsigned int i = 0;
+
+    for (; i < cmdCnt; ++i) {
+        if (strncmp(name, CMD_TABLE[i].name, strlen(CMD_TABLE[i].name)) == 0) {
+            CMD_TABLE[i].DoFuncion(cmdContent);
+            break;
         }
-        if (i == cmdCnt) {
-            INIT_LOGE("DoCmd, unknown cmd name %s.", name);
-        }
+    }
+    if (i == cmdCnt) {
+        INIT_LOGE("DoCmd, unknown cmd name %s.", name);
     }
 }
 
