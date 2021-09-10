@@ -56,7 +56,7 @@ void StopParamService();
  * 加载默认的参数值
  *
  */
-int LoadDefaultParams(const char *fileName);
+void LoadDefaultParams(const char *fileName);
 
 /**
  * Init 接口

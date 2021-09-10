@@ -39,15 +39,15 @@ void InitParamService()
     PARAM_CHECK(ret == 0, return, "Init parameter workspace fail");
 }
 
-int LoadDefaultParams(const char *fileName)
+void LoadDefaultParams(const char *fileName)
 {
     u_int32_t flags = atomic_load_explicit(&g_paramWorkSpace.flags, memory_order_relaxed);
     if ((flags & WORKSPACE_FLAGS_INIT) != WORKSPACE_FLAGS_INIT) {
-        return PARAM_CODE_NOT_INIT;
+        return;
     }
 
     FILE *fp = fopen(fileName, "r");
-    PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
+    PARAM_CHECK(fp != NULL, return, "Open file %s fail", fileName);
     char buff[BUFFER_SIZE];
     SubStringInfo *info = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_LABEL + 1));
     while(fgets(buff, BUFFER_SIZE, fp) != NULL) {
@@ -73,7 +73,7 @@ int LoadDefaultParams(const char *fileName)
     fclose(fp);
     free(info);
     PARAM_LOGI("LoadDefaultParams proterty success %s", fileName);
-    return 0;
+    return;
 }
 
 int LoadParamInfos(const char *fileName)
