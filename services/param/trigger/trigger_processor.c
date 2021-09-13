@@ -174,7 +174,7 @@ static const char *GetCmdInfo(const char *content, uint32_t contentSize, char **
 
 static void SendTriggerEvent(int type, const char *content, uint32_t contentLen)
 {
-	PARAM_CHECK(content != NULL, return, "Invalid param");
+    PARAM_CHECK(content != NULL, return, "Invalid param");
     PARAM_LOGD("SendTriggerEvent type %d content %s", type, content);
     if (type == EVENT_TRIGGER_PARAM) {
         int ctrlSize = strlen(SYS_POWER_CTRL);
