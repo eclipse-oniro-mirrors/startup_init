@@ -122,7 +122,7 @@ inline int GetParamValue(const char *symValue, char *paramValue, unsigned int pa
 }
 #endif
 
-static struct CmdArgs *CopyCmd(struct CmdArgs *args, const char *cmd, size_t allocSize)
+static struct CmdArgs *CopyCmd(struct CmdArgs *ctx, const char *cmd, size_t allocSize)
 {
     if (cmd == NULL) {
         return NULL;
@@ -186,12 +186,12 @@ struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
         }
         *token = '\0'; // replace it with '\0';
         allocSize = (size_t)((token - p) + MAX_PARAM_VALUE_LEN + 1);
-	ctx = CopyCmd(ctx, p, allocSize);
-        INIT_CHECK_RETURN_VALUE(ctx != NULL, return NULL);
+        ctx = CopyCmd(ctx, p, allocSize);
+        INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
         p = token + 1; // skip '\0'
         // Skip lead whitespaces
-	SKIP_SPACES(p)
-	ctx->argc++;
+        SKIP_SPACES(p);
+        ctx->argc++;
         token = strstr(p, delim);
     }
 
@@ -199,8 +199,8 @@ struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
         // no more white space or encounter max argument count
         size_t restSize = tmpCmd + cmdLength - p;
         allocSize = restSize + MAX_PARAM_VALUE_LEN + 1;
-	ctx = CopyCmd(ctx, p, allocSize);
-	INIT_CHECK_RETURN_VALUE(ctx != NULL, return NULL);
+        ctx = CopyCmd(ctx, p, allocSize);
+        INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
     }
 
     ctx->argv[++ctx->argc] = NULL;

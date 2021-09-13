@@ -156,19 +156,19 @@ static void WriteServicePid(Service *service, pid_t pid)
 
     for (int i = 0; i < MAX_WRITEPID_FILES; i++) {
         if (service->writepidFiles[i] == NULL) {
-                break;
+            break;
         }
         char *realPath = realpath(service->writepidFiles[i], NULL);
         if (realPath == NULL) {
-                continue;
+            continue;
         }
+        FILE *fd = fopen(realPath, "wb");
         free(realPath);
         realPath = NULL;
-        FILE *fd = fopen(realPath, "wb");
         INIT_ERROR_CHECK(fd != NULL, continue, "Open file %s failed, err = %d", service->writepidFiles[i], errno);
         INIT_CHECK_ONLY_ELOG(fwrite(pidString, 1, strlen(pidString), fd) == strlen(pidString),
             "write pid %s to file %s failed, err = %d", pidString, service->writepidFiles[i], errno);
-         fclose(fd);
+        fclose(fd);
     }
 }
 
@@ -195,7 +195,7 @@ int ServiceStart(Service *service)
         }
         INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, _exit(0x7f),
             "service %s exit! set perms failed! err %d.", service->name, errno);
-	WriteServicePid(service, getpid());
+        WriteServicePid(service, getpid());
         INIT_LOGI("service->name is %s ", service->name);
 #ifndef OHOS_LITE
         if (service->importance != 0) {
