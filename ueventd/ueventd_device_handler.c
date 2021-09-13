@@ -148,6 +148,41 @@ static int RemoveDeviceNode(const char *deviceNode, char **symLinks)
     return unlink(deviceNode);
 }
 
+static char *FindPlatformDeviceName(char *path)
+{
+    if (INVALIDSTRING(path)) {
+        return NULL;
+    }
+
+    if (STARTSWITH(path, "/sys/devices/platform/")) {
+        path += strlen("/sys/devices/platform/");
+        return path;
+    }
+    return NULL;
+}
+
+static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent, const char *partitionName)
+{
+    if (linkNum > BLOCKDEVICE_LINKS - 1) {
+        INIT_LOGW("Too many links, ignore");
+        return;
+    }
+
+    // If a block device without partition name.
+    // For now, we will not create symbol link for it.
+    if (!INVALIDSTRING(partitionName)) {
+        links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
+        if (links[linkNum] == NULL) {
+            INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
+            return;
+        }
+        if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
+            "/dev/block/platform/%s/by-name/%s", parent, partitionName) == -1) {
+            INIT_LOGE("Failed to build link");
+        }
+    }
+}
+
 static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
 {
     if (uevent == NULL || uevent->subsystem == NULL || STRINGEQUAL(uevent->subsystem, "block") == 0) {
@@ -172,6 +207,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
     int linkNum = 0;
     if (links == NULL) {
         INIT_LOGE("Failed to allocate memory for links, err = %d", errno);
+        return NULL;
     }
 
     // Reverse walk through sysPath, and check subystem file under each directory.
@@ -184,39 +220,19 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
         }
 
         char *bus = realpath(subsystem, NULL);
-        if (bus == NULL) {
-            goto loop;
-        }
-
-        if (STRINGEQUAL(bus, "/sys/bus/platform")) {
-            INIT_LOGD("Find a platform device: %s", parent);
-            if (STARTSWITH(parent, "/sys/devices/platform/")) {
-                parent += strlen("/sys/devices/platform/");
-                if (linkNum > BLOCKDEVICE_LINKS - 1) {
-                    INIT_LOGW("Too much links, ignore");
-                    break;
-                }
-                links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
-                if (links[linkNum] == NULL) {
-                    INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
-                    break;
-                }
-                // If a block device without partition name.
-                // For now, we will not create symbol link for it.
-                if (!INVALIDSTRING(uevent->partitionName)) {
-                    if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
-                        "/dev/block/platform/%s/by-name/%s", parent, uevent->partitionName) == -1) {
-                        INIT_LOGE("Failed to build link");
-                        break;
-                    }
+        if (bus != NULL) {
+            if (STRINGEQUAL(bus, "/sys/bus/platform")) {
+                INIT_LOGD("Find a platform device: %s", parent);
+                parent = FindPlatformDeviceName(parent);
+                if (parent != NULL) {
+                    BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName);
                 }
                 linkNum++;
             }
         }
-loop:
         parent = dirname(parent);
-        continue;
     }
+
     links[linkNum] = NULL;
     return links;
 }

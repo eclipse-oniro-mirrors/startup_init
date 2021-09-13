@@ -29,8 +29,7 @@ typedef struct ListNode {
 
 #define ListEmpty(node)   ((node).next == &(node) && (node).prev == &(node))
 #define ListEntry(ptr, type, member)   ((type *)((char *)(ptr) - offsetof(type, member)))
-#define ForEachListEntry(list, node) \
-    (for (node = (list)->next; node != (list); node = node->next))
+#define ForEachListEntry(list, node)   for (node = (list)->next; node != (list); node = node->next)
 
 void ListInit(struct ListNode *list);
 void ListAddTail(struct ListNode *list, struct ListNode *item);

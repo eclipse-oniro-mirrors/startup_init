@@ -356,7 +356,7 @@ static void DoStart(const char *cmdContent, int maxArg)
     return;
 }
 
-static void DoStop(const char* cmdContent, int maxArg)
+static void DoStop(const char *cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
@@ -371,7 +371,7 @@ static void DoStop(const char* cmdContent, int maxArg)
     return;
 }
 
-static void DoReset(const char* cmdContent, int maxArg)
+static void DoReset(const char *cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
@@ -435,7 +435,7 @@ static void DoCopyInernal(const char *source, const char *target)
     dstFd = -1;
 }
 
-static void DoCopy(const char* cmdContent, int maxArg)
+static void DoCopy(const char *cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != DEFAULT_COPY_ARGS_CNT) {
@@ -462,7 +462,7 @@ static void DoCopy(const char* cmdContent, int maxArg)
     return;
 }
 
-static void DoChown(const char* cmdContent, int maxArg)
+static void DoChown(const char *cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
@@ -484,7 +484,7 @@ static void DoChown(const char* cmdContent, int maxArg)
     return;
 }
 
-static void DoMkDir(const char* cmdContent, int maxArg)
+static void DoMkDir(const char *cmdContent, int maxArg)
 {
     // mkdir support format:
     // 1.mkdir path
@@ -543,7 +543,7 @@ static void DoMkDir(const char* cmdContent, int maxArg)
     FreeCmd(ctx);
 }
 
-static void DoChmod(const char* cmdContent, int maxArg)
+static void DoChmod(const char *cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
@@ -562,7 +562,7 @@ static void DoChmod(const char* cmdContent, int maxArg)
     return;
 }
 
-static char* CopySubStr(const char* srcStr, size_t startPos, size_t endPos)
+static char* CopySubStr(const char *srcStr, size_t startPos, size_t endPos)
 {
     if (endPos <= startPos) {
         INIT_LOGE("DoMount, invalid params<%zu, %zu> for %s.", endPos, startPos, srcStr);
@@ -591,7 +591,7 @@ static char* CopySubStr(const char* srcStr, size_t startPos, size_t endPos)
     return retStr;
 }
 
-static int GetMountFlag(unsigned long* mountflags, const char* targetStr, const char *source)
+static int GetMountFlag(unsigned long *mountflags, const char *targetStr, const char *source)
 {
     if (targetStr == NULL) {
         return 0;
@@ -615,7 +615,7 @@ static int GetMountFlag(unsigned long* mountflags, const char* targetStr, const 
     return 1;
 }
 
-static int CountSpaces(const char* cmdContent, size_t* spaceCnt, size_t* spacePosArr, size_t spacePosArrLen)
+static int CountSpaces(const char *cmdContent, size_t *spaceCnt, size_t *spacePosArr, size_t spacePosArrLen)
 {
     *spaceCnt = 0;
     size_t strLen = strlen(cmdContent);
@@ -647,7 +647,7 @@ static int CountSpaces(const char* cmdContent, size_t* spaceCnt, size_t* spacePo
     return 1;
 }
 
-static void DoMount(const char* cmdContent, int maxArg)
+static void DoMount(const char *cmdContent, int maxArg)
 {
     size_t spaceCnt = 0;
     size_t spacePosArr[SPACES_CNT_IN_CMD_MAX] = {0};
@@ -808,7 +808,7 @@ static void DoInsmod(const char *cmdContent, int maxArg)
     return;
 }
 
-static void DoSetParam(const char* cmdContent, int maxArg)
+static void DoSetParam(const char *cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
@@ -1181,7 +1181,7 @@ static void DoMakeDevice(const char *cmdContent, int maxArg)
 }
 #endif // __LITEOS__
 
-void DoCmd(const CmdLine* curCmd)
+void DoCmd(const CmdLine *curCmd)
 {
     // null curCmd or empty command, just quit.
     if (curCmd == NULL || curCmd->name[0] == '\0') {
@@ -1248,7 +1248,7 @@ void DoCmdByName(const char *name, const char *cmdContent)
     }
 }
 
-void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
+void ParseCmdLine(const char *cmdStr, CmdLine *resCmd)
 {
     size_t cmdLineLen = 0;
     if (cmdStr == NULL || resCmd == NULL || (cmdLineLen = strlen(cmdStr)) == 0) {
