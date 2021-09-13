@@ -484,6 +484,27 @@ static void DoChown(const char *cmdContent, int maxArg)
     return;
 }
 
+static int DoPathChown(const char *path, const char *uid, const char *gid)
+{
+    if (path == NULL || uid == NULL || gid == NULL) {
+        return -1;
+    }
+    uid_t user = DecodeUid(uid);
+    gid_t group = DecodeUid(gid);
+    if (user == (uid_t) -1 || group == (uid_t)-1) {
+        INIT_LOGE("Change path owner with invalid user/group");
+        return -1;
+    }
+
+    int rc = chown(path, user, group);
+    if (rc < 0) {
+        INIT_LOGE("Change path \" %s \" ower to user: %s group: %s failed",
+            path, uid, gid);
+        return -1;
+    }
+    return 0;
+}
+
 static void DoMkDir(const char *cmdContent, int maxArg)
 {
     // mkdir support format:
@@ -513,26 +534,11 @@ static void DoMkDir(const char *cmdContent, int maxArg)
                 INIT_LOGE("Change path \" %s \" mode to %04o failed", ctx->argv[0], mode);
                 break;
             }
-            if (ctx->argv[++index] != NULL) {  // mkdir with user and group
-                if (ctx->argv[index + 1] != NULL) {
-                    uid_t user = DecodeUid(ctx->argv[index]);
-                    gid_t group = DecodeUid(ctx->argv[index + 1]);
-                    if (user == (uid_t) -1 || group == (uid_t)-1) {
-                        INIT_LOGE("Change path owner with invalid user/group");
-                        rc = -1;
-                        break;
-                    }
-
-                    rc = chown(ctx->argv[0], user, group);
-                    if (rc < 0) {
-                        INIT_LOGE("Change path \" %s \" ower to user: %s group: %s failed",
-                            ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
-                        break;
-                    }
-                } else {
-                    rc = -1; // Miss group
-                    break;
-                }
+            index = index + 1;
+            if ((ctx->argv[index] != NULL) && (ctx->argv[index + 1] != NULL)) {
+                rc = DoPathChown(ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
+            } else {
+                rc = -1;
             }
         }
         if (rc < 0) {

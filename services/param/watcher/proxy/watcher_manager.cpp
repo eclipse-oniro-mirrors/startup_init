@@ -221,9 +221,9 @@ void WatcherManager::RunLoop()
                 continue;
             }
             fd = GetServerFd(true);
-            PARAM_LOGE("Failed to recv msg from server %d errno %d", recvLen, errno);
+            PARAM_LOGE("Failed to recv msg from server errno %d", errno);
         }
-        PARAM_LOGD("Recv msg from server %d", recvLen);
+        PARAM_LOGD("Recv msg from server");
         if (recvLen >= (ssize_t)sizeof(ParamMessage)) {
             ProcessWatcherMessage(buffer, recvLen);
         }

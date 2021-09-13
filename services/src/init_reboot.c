@@ -185,7 +185,6 @@ void DoReboot(const char *value)
             return;
         }
     }
-
     StopAllServicesBeforeReboot();
     sync();
     if (GetMountStatusForMountPoint("/vendor") != 0 && umount("/vendor") != 0) {
@@ -194,9 +193,6 @@ void DoReboot(const char *value)
     if (GetMountStatusForMountPoint("/data") != 0 && umount("/data") != 0) {
         INIT_LOGE("DoReboot umount data failed! errno = %d.", errno);
     }
-
-    INIT_LOGI("DoReboot value = %s valueData %s", value, valueData);
-    // "shutdown"
     int ret = 0;
     if (valueData == NULL) {
         ret = reboot(RB_AUTOBOOT);
@@ -209,6 +205,6 @@ void DoReboot(const char *value)
     } else if (strncmp(valueData, "flashing", strlen("flashing")) == 0) {
         ret = CheckAndRebootToUpdater(valueData, "flashing", "flashing:", "boot_flashing");
     }
-    INIT_LOGE("DoReboot value = %s %s.", value, (ret == 0) ? "success" : "fail");
+    INIT_LOGI("DoReboot value = %s %s.", value, (ret == 0) ? "success" : "fail");
     return;
 }
