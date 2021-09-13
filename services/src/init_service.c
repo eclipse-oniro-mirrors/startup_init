@@ -148,6 +148,30 @@ static void OpenConsole(void)
     return;
 }
 
+static void WriteServicePid(Service *service, pid_t pid)
+{
+    char pidString[MAX_PID_STRING_LENGTH];
+    INIT_ERROR_CHECK(snprintf_s(pidString, MAX_PID_STRING_LENGTH, MAX_PID_STRING_LENGTH - 1, "%d", pid) >= 0,
+        _exit(0x7f), "Build pid string failed");
+
+    for (int i = 0; i < MAX_WRITEPID_FILES; i++) {
+        if (service->writepidFiles[i] == NULL) {
+                break;
+        }
+        char *realPath = realpath(service->writepidFiles[i], NULL);
+        if (realPath == NULL) {
+                continue;
+        }
+        free(realPath);
+        realPath = NULL;
+        FILE *fd = fopen(realPath, "wb");
+        INIT_ERROR_CHECK(fd != NULL, continue, "Open file %s failed, err = %d", service->writepidFiles[i], errno);
+        INIT_CHECK_ONLY_ELOG(fwrite(pidString, 1, strlen(pidString), fd) == strlen(pidString),
+            "write pid %s to file %s failed, err = %d", pidString, service->writepidFiles[i], errno);
+         fclose(fd);
+    }
+}
+
 int ServiceStart(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
@@ -161,38 +185,17 @@ int ServiceStart(Service *service)
     service->attribute &= (~(SERVICE_ATTR_NEED_RESTART | SERVICE_ATTR_NEED_STOP));
     INIT_ERROR_CHECK(stat(service->pathArgs[0], &pathStat) == 0, service->attribute |= SERVICE_ATTR_INVALID;
         return SERVICE_FAILURE, "start service %s invalid, please check %s.", service->name, service->pathArgs[0]);
-    int pid = fork();
+    pid_t pid = fork();
     if (pid == 0) {
         if (service->socketCfg != NULL) {    // start socket service
-            INIT_LOGI("Create socket ");
-            INIT_ERROR_CHECK(DoCreateSocket(service->socketCfg) >= 0, _exit(0x7f), "DoCreateSocket failed. ");
+            INIT_ERROR_CHECK(DoCreateSocket(service->socketCfg) >= 0, _exit(0x7f), "Create Socket failed. ");
         }
         if (service->attribute & SERVICE_ATTR_CONSOLE) {
             OpenConsole();
         }
         INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, _exit(0x7f),
             "service %s exit! set perms failed! err %d.", service->name, errno);
-        char pidString[MAX_PID_STRING_LENGTH];
-        pid_t childPid = getpid();
-        INIT_ERROR_CHECK(snprintf_s(pidString, MAX_PID_STRING_LENGTH, MAX_PID_STRING_LENGTH - 1, "%d", childPid) >= 0,
-            _exit(0x7f), "start service writepid sprintf failed.");
-        for (int i = 0; i < MAX_WRITEPID_FILES; i++) {
-            if (service->writepidFiles[i] == NULL) {
-                continue;
-            }
-            char *realPath = realpath(service->writepidFiles[i], NULL);
-            if (realPath == NULL) {
-                continue;
-            }
-            FILE *fd = fopen(realPath, "wb");
-            free(realPath);
-            realPath = NULL;
-            INIT_ERROR_CHECK(fd != NULL, continue, "writepidFiles %s invalid.", service->writepidFiles[i]);
-            INIT_CHECK_ONLY_ELOG(fwrite(pidString, 1, strlen(pidString), fd) == strlen(pidString),
-                "writepid error.file:%s pid:%s", service->writepidFiles[i], pidString);
-            fclose(fd);
-            INIT_LOGI("writepid filename=%s, childPid=%s, ok", service->writepidFiles[i], pidString);
-        }
+	WriteServicePid(service, getpid());
         INIT_LOGI("service->name is %s ", service->name);
 #ifndef OHOS_LITE
         if (service->importance != 0) {

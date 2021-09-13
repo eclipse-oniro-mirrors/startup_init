@@ -122,92 +122,88 @@ inline int GetParamValue(const char *symValue, char *paramValue, unsigned int pa
 }
 #endif
 
-struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
+static struct CmdArgs *CopyCmd(struct CmdArgs *args, const char *cmd, size_t allocSize)
+{
+    if (cmd == NULL) {
+        return NULL;
+    }
+
+    ctx->argv[ctx->argc] = calloc(sizeof(char), allocSize);
+    INIT_CHECK(ctx->argv[ctx->argc] != NULL, FreeCmd(ctx);
+        return NULL);
+    INIT_CHECK(GetParamValue(cmd, ctx->argv[ctx->argc], allocSize) == 0, FreeCmd(ctx);
+        return NULL);
+    ctx->argc += 1;
+    ctx->argv[ctx->argc] = NULL;
+    return ctx;
+}
+
+#define SKIP_SPACES(p)          \
+    do {                        \
+        while (isspace(*(p))) { \
+            (p)++;              \
+        }                       \
+    } while (0)
+
+struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
 {
     INIT_CHECK_RETURN_VALUE(cmdContent != NULL, NULL);
     struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
     INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
 
-    if (argsCount > SPACES_CNT_IN_CMD_MAX) {
-        INIT_LOGW("Too much arguments for command, max number is %d", SPACES_CNT_IN_CMD_MAX);
-        argsCount = SPACES_CNT_IN_CMD_MAX;
-    }
     ctx->argv = (char**)malloc(sizeof(char*) * (size_t)argsCount + 1);
     INIT_CHECK(ctx->argv != NULL, FreeCmd(ctx);
         return NULL);
 
-    char tmpCmd[MAX_BUFFER];
+    char tmpCmd[MAX_BUFFER] = {0};
     size_t cmdLength = strlen(cmdContent);
     if (cmdLength > MAX_BUFFER - 1) {
-        INIT_LOGE("command line is too larget, should not bigger than %d. ignore...\n", MAX_BUFFER);
         FreeCmd(ctx);
         return NULL;
     }
 
     INIT_CHECK(strncpy_s(tmpCmd, MAX_BUFFER - 1, cmdContent, cmdLength) == EOK, FreeCmd(ctx);
         return NULL);
-    tmpCmd[strlen(cmdContent)] = '\0';
 
     char *p = tmpCmd;
-    INIT_CHECK_RETURN_VALUE(p != NULL, NULL);
     char *token = NULL;
     size_t allocSize = 0;
 
     // Skip lead whitespaces
-    while (isspace(*p)) {
-        p++;
-    }
+    SKIP_SPACES(p);
     ctx->argc = 0;
     token = strstr(p, delim);
     if (token == NULL) { // No whitespaces
         // Make surce there is enough memory to store parameter value
         allocSize = (size_t)(cmdLength + MAX_PARAM_VALUE_LEN + 1);
-        ctx->argv[ctx->argc] = calloc(sizeof(char), allocSize);
-        INIT_CHECK(ctx->argv[ctx->argc] != NULL, FreeCmd(ctx);
-            return NULL);
-        INIT_CHECK(GetParamValue(p, ctx->argv[ctx->argc], allocSize) == 0, FreeCmd(ctx);
-            return NULL);
-        ctx->argc += 1;
-        ctx->argv[ctx->argc] = NULL;
-        return ctx;
+        return CopyCmd(ctx, p, allocSize);
     }
 
-    int index = ctx->argc;
     while (token != NULL) {
         // Too more arguments, treat rest of data as one argument
-        if (index == (argsCount - 1)) {
+        if (ctx->argc == (argsCount - 1)) {
             break;
         }
         *token = '\0'; // replace it with '\0';
         allocSize = (size_t)((token - p) + MAX_PARAM_VALUE_LEN + 1);
-        ctx->argv[index] = calloc(sizeof(char), allocSize);
-        INIT_CHECK(ctx->argv[index] != NULL, FreeCmd(ctx);
-            return NULL);
-        INIT_CHECK(GetParamValue(p, ctx->argv[index], allocSize) == 0,
-            FreeCmd(ctx);
-            return NULL);
+	ctx = CopyCmd(ctx, p, allocSize);
+        INIT_CHECK_RETURN_VALUE(ctx != NULL, return NULL);
         p = token + 1; // skip '\0'
         // Skip lead whitespaces
-        while (isspace(*p)) {
-            p++;
-        }
-        index++;
+	SKIP_SPACES(p)
+	ctx->argc++;
         token = strstr(p, delim);
     }
 
-    ctx->argc = index;
     if (p < tmpCmd + cmdLength) {
         // no more white space or encounter max argument count
         size_t restSize = tmpCmd + cmdLength - p;
         allocSize = restSize + MAX_PARAM_VALUE_LEN + 1;
-        ctx->argv[index] = calloc(sizeof(char),  allocSize);
-        INIT_CHECK(ctx->argv[index] != NULL, FreeCmd(ctx); return NULL);
-        INIT_CHECK(GetParamValue(p, ctx->argv[index], allocSize) == 0,
-            FreeCmd(ctx); return NULL);
-        ctx->argc = index + 1;
+	ctx = CopyCmd(ctx, p, allocSize);
+	INIT_CHECK_RETURN_VALUE(ctx != NULL, return NULL);
     }
 
-    ctx->argv[ctx->argc] = NULL;
+    ctx->argv[++ctx->argc] = NULL;
     return ctx;
 }
 
@@ -473,6 +469,10 @@ static void DoChown(const char *cmdContent, int maxArg)
 
     uid_t owner = DecodeUid(ctx->argv[0]);
     gid_t group = DecodeUid(ctx->argv[1]);
+    if (owner == (uid_t) -1 || group == (uid_t)-1) {
+        INIT_LOGE("Change path owner with invalid user/group");
+        return;
+    }
 
     const int pathPos = 2;
     if (chown(ctx->argv[pathPos], owner, group) != 0) {
@@ -542,7 +542,10 @@ static void DoMkDir(const char *cmdContent, int maxArg)
             }
         }
         if (rc < 0) {
-            INIT_LOGE("Run command mkdir failed");
+            INIT_LOGE("Run command mkdir failed, unlink path");
+            if (unlink(ctx->argv[0]) < 0) {
+                INIT_LOGE("Failed unlink %s errno %d ", ctx->argv[0], errno);
+            }
         }
     } while (0);
 
