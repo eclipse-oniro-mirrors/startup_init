@@ -29,7 +29,6 @@ namespace init_param {
 REGISTER_SYSTEM_ABILITY_BY_ID(WatcherManager, PARAM_WATCHER_DISTRIBUTED_SERVICE_ID, true)
 
 const static int32_t INVALID_SOCKET = -1;
-const static int32_t RECV_BUFFER_MAX = 5 * 1024;
 const static int32_t SLEEP_TIME = 2000;
 uint32_t WatcherManager::AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher)
 {
@@ -211,6 +210,7 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, ParamWatcherP
 
 void WatcherManager::RunLoop()
 {
+    const int32_t RECV_BUFFER_MAX = 5 * 1024;
     char *buffer = (char *)malloc(RECV_BUFFER_MAX);
     PARAM_CHECK(buffer != NULL, return, "Failed to create buffer for recv");
     while (!stop) {

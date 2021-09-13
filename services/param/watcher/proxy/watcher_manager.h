@@ -73,7 +73,8 @@ public:
         {
             return keyPrefix_;
         }
-        bool Emptry() {
+        bool Emptry()
+        {
             return watchers_.size() == 0;
         }
         uint32_t GetGroupId()
