@@ -14,20 +14,15 @@
  */
 #include "init_utils.h"
 #include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "init_log.h"
@@ -43,23 +38,29 @@
 #endif
 
 #define MAX_JSON_FILE_LEN 102400    // max init.cfg size 100KB
-#define CONVERT_MICROSEC_TO_SEC(x) ((x) / 1000 / 1000.0)
+#define THOUSAND_UNIT_INT 1000
+#define THOUSAND_UNIT_FLOAT 1000.0
 
-int DecodeUid(const char *name)
+float ConvertMicrosecondToSecond(int x)
+{
+    return ((x / THOUSAND_UNIT_INT) / THOUSAND_UNIT_FLOAT);
+}
+
+uid_t DecodeUid(const char *name)
 {
     if (name == NULL) {
         return -1;
     }
-    bool digitFlag = true;
+    int digitFlag = 1;
     for (unsigned int i = 0; i < strlen(name); ++i) {
         if (isalpha(name[i])) {
-            digitFlag = false;
+            digitFlag = 0;
             break;
         }
     }
     if (digitFlag) {
         errno = 0;
-        uid_t result = strtoul(name, 0, 10);
+        uid_t result = strtoul(name, 0, DECIMAL_BASE);
         if (errno != 0) {
             return -1;
         }
@@ -71,18 +72,6 @@ int DecodeUid(const char *name)
         }
         return userInf->pw_uid;
     }
-}
-
-void CheckAndCreateDir(const char *fileName)
-{
-    if (fileName == NULL || *fileName == '\0') {
-        return;
-    }
-    char *path = strndup(fileName, strrchr(fileName, '/') - fileName);
-    if (path != NULL && access(path, F_OK) != 0) {
-        mkdir(path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    }
-    free(path);
 }
 
 char* ReadFileToBuf(const char *configFile)
@@ -128,7 +117,7 @@ char* ReadFileToBuf(const char *configFile)
 
 int SplitString(char *srcPtr, char **dstPtr, int maxNum)
 {
-    if ((!srcPtr) || (!dstPtr)){
+    if (srcPtr == NULL || dstPtr == NULL) {
         return -1;
     }
     char *buf = NULL;
@@ -155,9 +144,33 @@ void WaitForFile(const char *source, unsigned int maxCount)
         usleep(waitTime);
         count++;
     } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount));
+    float secTime = ConvertMicrosecondToSecond(waitTime);
     if (count == maxCount) {
-        INIT_LOGE("wait for file:%s failed after %f.", source, maxCount * CONVERT_MICROSEC_TO_SEC(waitTime));
+        INIT_LOGE("wait for file:%s failed after %f.", source, maxCount * secTime);
     }
     return;
 }
 
+size_t WriteAll(int fd, char *buffer, size_t size)
+{
+    if (fd < 0 || buffer == NULL || *buffer == '\0') {
+        return 0;
+    }
+
+    char *p = buffer;
+    size_t left = size;
+    ssize_t written = -1;
+
+    while (left > 0) {
+        do {
+            written = write(fd, p, left);
+        } while (written < 0 && errno == EINTR);
+        if (written < 0) {
+            INIT_LOGE("Failed to write %lu bytes, err = %d", left, errno);
+            break;
+        }
+        p += written;
+        left -= written;
+    }
+    return size - left;
+}

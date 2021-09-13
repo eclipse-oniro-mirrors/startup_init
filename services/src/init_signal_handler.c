@@ -72,7 +72,7 @@ static void SigHandler(int sig)
                 }
 
                 if (WIFEXITED(procStat)) {
-                    INIT_LOGE("Child process %d exit with code : %d", sigPID, WEXITSTATUS(procStat));
+                    INIT_LOGE("Child process %d exit with code : %d", sigPID, WEXITSTATUS((unsigned int)procStat));
                 }
 #endif
 

@@ -42,13 +42,13 @@
 #endif
 
 #define FILE_NAME_MAX_SIZE 100
-static void ParseInitCfgContents(cJSON *root)
+static void ParseInitCfgContents(const cJSON *root)
 {
     if (root == NULL) {
         INIT_LOGE("ParseInitCfgContents root is NULL");
         return;
     }
-     // parse services
+    // parse services
     ParseAllServices(root);
 #ifdef OHOS_LITE
     // parse jobs
@@ -125,7 +125,9 @@ void InitReadCfg()
 {
 #ifndef OHOS_LITE
     InitParamService();
-    LoadDefaultParams("/system/etc/ohos.para");
+    LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
+    LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
+    LoadDefaultParams("/system/etc/param", LOAD_PARAM_ONLY_ADD);
 #endif
     ParseInitCfg(INIT_CONFIGURATION_FILE);
     ParseOtherCfgs();
@@ -154,11 +156,11 @@ void InitReadCfg()
 #endif
     ReleaseAllJobs();
 #else
-    PostTrigger(EVENT_BOOT, "pre-init", strlen("pre-init"));
+    PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
 
-    PostTrigger(EVENT_BOOT, "init", strlen("init"));
+    PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
 
-    PostTrigger(EVENT_BOOT, "post-init", strlen("post-init"));
+    PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
 #endif
 }
 

@@ -15,9 +15,11 @@
 
 #include "trigger_checker.h"
 #include <ctype.h>
-#include "trigger_manager.h"
-#include "init_param.h"
 
+#include "init_param.h"
+#include "trigger_manager.h"
+
+#define MAX_CALC_PARAM 100
 #define LABEL "Trigger"
 // 申请整块能存作为计算的节点
 int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, int needCondition)
@@ -25,7 +27,7 @@ int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, in
     PARAM_CHECK(calculator != NULL, return -1, "Invalid param");
     int dataSize = dataUnit * dataNumber;
     if (needCondition) {
-        dataSize += 5 * SUPPORT_DATA_BUFFER_MAX;
+        dataSize += MAX_DATA_BUFFER_MAX;
     }
     calculator->data = (char *)malloc(dataSize);
     PARAM_CHECK(calculator->data != NULL, return -1, "Failed to malloc for calculator");
@@ -86,7 +88,7 @@ static int CalculatorPush(LogicCalculator *calculator, const void *data)
     PARAM_CHECK(calculator->endIndex < calculator->dataNumber, return -1, "More data for calculator support");
     char *tmpData = (calculator->data + calculator->dataUnit * calculator->endIndex);
     int ret = memcpy_s(tmpData, calculator->dataUnit, data, calculator->dataUnit);
-    PARAM_CHECK(ret == 0, return -1, "Failed to copy logic data");
+    PARAM_CHECK(ret == EOK, return -1, "Failed to copy logic data");
     calculator->endIndex++;
     return 0;
 }
@@ -100,7 +102,7 @@ static int CalculatorPop(LogicCalculator *calculator, void *data)
     }
     char *tmpData = calculator->data + calculator->dataUnit * (calculator->endIndex - 1);
     int ret = memcpy_s(data, calculator->dataUnit, tmpData, calculator->dataUnit);
-    PARAM_CHECK(ret == 0, return -1, "Failed to copy logic data");
+    PARAM_CHECK(ret == EOK, return -1, "Failed to copy logic data");
     calculator->endIndex--;
     return 0;
 }
@@ -111,9 +113,9 @@ static int CalculatorLength(const LogicCalculator *calculator)
     return calculator->endIndex;
 }
 
-static int PrefixAdd(char *prefix, u_int32_t *prefixIndex, u_int32_t prefixLen, char op)
+static int PrefixAdd(char *prefix, uint32_t *prefixIndex, uint32_t prefixLen, char op)
 {
-    if ((*prefixIndex + 3) >= prefixLen) {
+    if ((*prefixIndex + 1 + 1 + 1) >= prefixLen) {
         return -1;
     }
     prefix[(*prefixIndex)++] = ' ';
@@ -122,12 +124,12 @@ static int PrefixAdd(char *prefix, u_int32_t *prefixIndex, u_int32_t prefixLen, 
     return 0;
 }
 
-static int HandleOperationOr(LogicCalculator *calculator, char *prefix, u_int32_t *prefixIndex, u_int32_t prefixLen)
+static int HandleOperationOr(LogicCalculator *calculator, char *prefix, uint32_t *prefixIndex, uint32_t prefixLen)
 {
     int ret = 0;
     char e;
     prefix[(*prefixIndex)++] = ' ';
-    if(CalculatorLength(calculator) == 0) {
+    if (CalculatorLength(calculator) == 0) {
         CalculatorPushChar(calculator, '|');
     } else {
         do {
@@ -144,48 +146,59 @@ static int HandleOperationOr(LogicCalculator *calculator, char *prefix, u_int32_
     return 0;
 }
 
+static int CompareValue(const char *condition, const char *value)
+{
+    if (strcmp(condition, "*") == 0) {
+        return 1;
+    }
+    if (strcmp(condition, value) == 0) {
+        return 1;
+    }
+    char *tmp = strstr(condition, "*");
+    if (tmp != NULL && (strncmp(value, condition, tmp - condition) == 0)) {
+        return 1;
+    }
+    return 0;
+}
+
 static int ComputeSubCondition(LogicCalculator *calculator, LogicData *data, const char *condition)
 {
     if (!LOGIC_DATA_TEST_FLAG(data, LOGIC_DATA_FLAGS_ORIGINAL)) {
         return LOGIC_DATA_TEST_FLAG(data, LOGIC_DATA_FLAGS_TRUE);
     }
-    // 解析条件
+    uint32_t triggerContentSize = strlen(calculator->triggerContent);
+    // 解析条件, aaaa && bbb=1 && ccc=1的场景
     char *subStr = strstr(condition + data->startIndex, "=");
-    if (subStr != NULL && ((u_int32_t)(subStr - condition) > data->endIndex)) {
-        if (strncmp(condition + data->startIndex, calculator->triggerContent, strlen(calculator->triggerContent)) == 0) {
+    if (subStr != NULL && ((uint32_t)(subStr - condition) > data->endIndex)) {
+        if (strncmp(condition + data->startIndex, calculator->triggerContent, triggerContentSize) == 0) {
             return 1;
         }
-    } else {
-        int ret = GetValueFromContent(condition + data->startIndex,
-            data->endIndex - data->startIndex, 0, calculator->conditionName, SUPPORT_DATA_BUFFER_MAX);
-        PARAM_CHECK(ret == 0, return -1, "Failed parse content name");
-        ret = GetValueFromContent(condition + data->startIndex, data->endIndex - data->startIndex,
-            strlen(calculator->conditionName) + 1, calculator->conditionContent, SUPPORT_DATA_BUFFER_MAX);
-        PARAM_CHECK(ret == 0, return -1, "Failed parse content value");
-        // check name
-        if (calculator->inputName && strcmp(calculator->conditionName, calculator->inputName) == 0) {
-            if (strcmp(calculator->conditionContent, "*") == 0) {
-                return 1;
-            }
-            if (strcmp(calculator->conditionContent, calculator->inputContent) == 0) {
-                return 1;
-            }
-        } else {
-            u_int32_t len = SUPPORT_DATA_BUFFER_MAX;
-            ret = SystemReadParam(calculator->conditionName, calculator->readContent, &len);
-            if (ret == 0 && (strcmp(calculator->conditionContent, "*") == 0 ||
-                    strcmp(calculator->conditionContent, calculator->readContent) == 0)) {
-                return 1;
-            }
+        return 0;
+    }
+    int ret = GetValueFromContent(condition + data->startIndex,
+        data->endIndex - data->startIndex, 0, calculator->conditionName, SUPPORT_DATA_BUFFER_MAX);
+    PARAM_CHECK(ret == 0, return -1, "Failed parse content name");
+    ret = GetValueFromContent(condition + data->startIndex, data->endIndex - data->startIndex,
+        strlen(calculator->conditionName) + 1, calculator->conditionContent, SUPPORT_DATA_BUFFER_MAX);
+    PARAM_CHECK(ret == 0, return -1, "Failed parse content value");
+    // check name
+    if ((calculator->inputName != NULL) && (strcmp(calculator->conditionName, calculator->inputName) == 0)) {
+        return CompareValue(calculator->conditionContent, calculator->inputContent);
+    } else if (calculator->conditionName != NULL && strlen(calculator->conditionName) > 0) {
+        uint32_t len = SUPPORT_DATA_BUFFER_MAX;
+        ret = SystemReadParam(calculator->conditionName, calculator->readContent, &len);
+        if (ret != 0) {
+            return 0;
         }
+        return CompareValue(calculator->conditionContent, calculator->readContent);
     }
     return 0;
 }
 
-int GetValueFromContent(const char *content, u_int32_t contentSize, u_int32_t start, char *value, u_int32_t valueSize)
+int GetValueFromContent(const char *content, uint32_t contentSize, uint32_t start, char *value, uint32_t valueSize)
 {
-    u_int32_t contentIndex = start;
-    u_int32_t currIndex = 0;
+    uint32_t contentIndex = start;
+    uint32_t currIndex = 0;
     while (contentIndex < contentSize && currIndex < valueSize) {
         if (content[contentIndex] == '=') {
             value[currIndex++] = '\0';
@@ -202,8 +215,8 @@ int GetValueFromContent(const char *content, u_int32_t contentSize, u_int32_t st
 
 int ComputeCondition(LogicCalculator *calculator, const char *condition)
 {
-    u_int32_t currIndex = 0;
-    u_int32_t start = 0;
+    uint32_t currIndex = 0;
+    uint32_t start = 0;
     int noneOper = 1;
     CalculatorClear(calculator);
     LogicData data1 = {};
@@ -219,12 +232,11 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
             data1.flags = 0;
             if (condition[currIndex] == '|' && ret == 1) {
                 LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE);
-            } else if (condition[currIndex] == '|' || ret == 1) {
-                if (ComputeSubCondition(calculator, &data2, condition) == 1) {
-                    LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE);
-                }
+            } else if ((condition[currIndex] == '&' || ret == 1) &&
+                (ComputeSubCondition(calculator, &data2, condition) == 1)) {
+                LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE);
             }
-            ret = CalculatorPush(calculator, (void*)&data1);
+            ret = CalculatorPush(calculator, (void *)&data1);
             PARAM_CHECK(ret == 0, return -1, "Failed to push data");
             start = currIndex + 1; // 跳过符号
         } else if (isspace(condition[currIndex])) {
@@ -235,7 +247,7 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
             data1.flags = LOGIC_DATA_FLAGS_ORIGINAL;
             data1.startIndex = start;
             data1.endIndex = currIndex;
-            int ret = CalculatorPush(calculator, (void*)&data1);
+            int ret = CalculatorPush(calculator, (void *)&data1);
             PARAM_CHECK(ret == 0, return -1, "Failed to push data");
             start = currIndex + 1;
         }
@@ -252,31 +264,34 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
     return ComputeSubCondition(calculator, &data1, condition);
 }
 
-int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLen)
+int ConvertInfixToPrefix(const char *condition, char *prefix, uint32_t prefixLen)
 {
     char e = 0;
     int ret = 0;
-    u_int32_t curr = 0;
-    u_int32_t prefixIndex = 0;
+    uint32_t curr = 0;
+    uint32_t prefixIndex = 0;
     LogicCalculator calculator;
-    CalculatorInit(&calculator, 100, 1, 0);
+    CalculatorInit(&calculator, MAX_CALC_PARAM, 1, 0);
 
     while (curr < strlen(condition)) {
         if (condition[curr] == ')') {
             CalculatorPopChar(&calculator, &e);
             while (e != '(') {
                 ret = PrefixAdd(prefix, &prefixIndex, prefixLen, e);
-                PARAM_CHECK(ret == 0, CalculatorFree(&calculator); return -1, "Invalid prefix");
-                ret = CalculatorPopChar(&calculator, &e);
-                PARAM_CHECK(ret == 0, CalculatorFree(&calculator); return -1, "Invalid calculator");
+                PARAM_CHECK(ret == 0,
+                    CalculatorFree(&calculator); return -1, "Invalid prefix");
+                CalculatorPopChar(&calculator, &e);
             }
         } else if (condition[curr] == '|') {
-            PARAM_CHECK(condition[curr + 1] == '|', CalculatorFree(&calculator); return -1, "Invalid condition");
+            PARAM_CHECK(condition[curr + 1] == '|',
+                CalculatorFree(&calculator); return -1, "Invalid condition");
             ret = HandleOperationOr(&calculator, prefix, &prefixIndex, prefixLen);
-            PARAM_CHECK(ret == 0, CalculatorFree(&calculator); return -1, "Invalid prefix");
+            PARAM_CHECK(ret == 0,
+                CalculatorFree(&calculator); return -1, "Invalid prefix");
             curr++;
         } else if (condition[curr] == '&') {
-            PARAM_CHECK(condition[curr + 1] == '&', CalculatorFree(&calculator); return -1, "Invalid condition");
+            PARAM_CHECK(condition[curr + 1] == '&',
+                CalculatorFree(&calculator); return -1, "Invalid condition");
             prefix[prefixIndex++] = ' ';
             CalculatorPushChar(&calculator, condition[curr]);
             curr++;
@@ -286,13 +301,15 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLe
             prefix[prefixIndex++] = condition[curr];
         }
         curr++;
-        PARAM_CHECK(prefixIndex < prefixLen, CalculatorFree(&calculator); return -1, "Invalid prefixIndex");
+        PARAM_CHECK(prefixIndex < prefixLen,
+            CalculatorFree(&calculator); return -1, "Invalid prefixIndex");
     }
 
     while (CalculatorLength(&calculator) > 0) {
         CalculatorPopChar(&calculator, &e);
         ret = PrefixAdd(prefix, &prefixIndex, prefixLen, e);
-        PARAM_CHECK(ret == 0, CalculatorFree(&calculator);
+        PARAM_CHECK(ret == 0,
+            CalculatorFree(&calculator);
             return -1, "Invalid prefix %u %u", prefixIndex, prefixLen);
     }
     prefix[prefixIndex] = '\0';
@@ -300,13 +317,11 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLe
     return 0;
 }
 
-char *GetMatchedSubCondition(const char *condition, const char *input, int length)
+int CheckMatchSubCondition(const char *condition, const char *input, int length)
 {
-    const char *p = condition;
-    for(;(p = strchr(p, *input)) != 0; p++) {
-        if(strncmp(p, input, length) == 0) {
-            return (char*)p;
-        }
+    char *tmp = strstr(condition, input);
+    if ((tmp != NULL) && (strlen(tmp) > length) && (tmp[length] == '=')) {
+        return 1;
     }
-    return NULL;
+    return 0;
 }

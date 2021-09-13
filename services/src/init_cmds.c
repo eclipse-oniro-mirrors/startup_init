@@ -21,6 +21,7 @@
 #ifndef OHOS_LITE
 #include <linux/module.h>
 #endif
+#include <limits.h>
 #include <net/if.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -69,7 +70,6 @@ int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
     }
     char tmpName[MAX_PARAM_NAME_LEN] = {0};
     char tmpValue[MAX_PARAM_VALUE_LEN] = {0};
-    unsigned int tmpLen = 0;
     char *p = NULL;
     char *tmpptr = NULL;
     p = strchr(symValue, '$');
@@ -77,7 +77,7 @@ int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
         INIT_CHECK_RETURN_VALUE(strncpy_s(paramValue, paramLen, symValue, paramLen - 1) == EOK, -1);
         return 0;
     }
-    tmpLen = p - symValue;
+    unsigned int tmpLen = p - symValue;
     if (tmpLen > 0) { // copy '$' front string
         INIT_CHECK_RETURN_VALUE(strncpy_s(paramValue, paramLen, symValue, tmpLen) == EOK, -1);
     }
@@ -94,7 +94,7 @@ int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
             INIT_LOGE("Parameter name longer than %d", MAX_PARAM_NAME_LEN);
             return -1;
         }
-        INIT_CHECK_RETURN_VALUE(strncpy_s(tmpName, MAX_PARAM_NAME_LEN, p, tmpLen) == EOK, -1);
+        INIT_CHECK_RETURN_VALUE(strncpy_s(tmpName, MAX_PARAM_NAME_LEN, p, tmpLen - 1) == EOK, -1);
         int ret = SystemReadParam(tmpName, tmpValue, &tmpLen); // get param
         if (ret != 0) {
             INIT_LOGE("Failed to read parameter \" %s \"", tmpName);
@@ -133,22 +133,23 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
         argsCount = SPACES_CNT_IN_CMD_MAX;
     }
     ctx->argv = (char**)malloc(sizeof(char*) * (size_t)argsCount + 1);
-    INIT_CHECK(ctx->argv != NULL, FreeCmd(&ctx); return NULL);
+    INIT_CHECK(ctx->argv != NULL, FreeCmd(ctx);
+        return NULL);
 
     char tmpCmd[MAX_BUFFER];
     size_t cmdLength = strlen(cmdContent);
     if (cmdLength > MAX_BUFFER - 1) {
         INIT_LOGE("command line is too larget, should not bigger than %d. ignore...\n", MAX_BUFFER);
-        FreeCmd(&ctx);
+        FreeCmd(ctx);
         return NULL;
     }
 
-    INIT_CHECK(strncpy_s(tmpCmd, MAX_BUFFER - 1, cmdContent, cmdLength) == EOK,
-        FreeCmd(&ctx);
+    INIT_CHECK(strncpy_s(tmpCmd, MAX_BUFFER - 1, cmdContent, cmdLength) == EOK, FreeCmd(ctx);
         return NULL);
     tmpCmd[strlen(cmdContent)] = '\0';
 
     char *p = tmpCmd;
+    INIT_CHECK_RETURN_VALUE(p != NULL, NULL);
     char *token = NULL;
     size_t allocSize = 0;
 
@@ -162,9 +163,10 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
         // Make surce there is enough memory to store parameter value
         allocSize = (size_t)(cmdLength + MAX_PARAM_VALUE_LEN + 1);
         ctx->argv[ctx->argc] = calloc(sizeof(char), allocSize);
-        INIT_CHECK(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
-        INIT_CHECK(GetParamValue(p, ctx->argv[ctx->argc], allocSize) == 0,
-            FreeCmd(&ctx); return NULL);
+        INIT_CHECK(ctx->argv[ctx->argc] != NULL, FreeCmd(ctx);
+            return NULL);
+        INIT_CHECK(GetParamValue(p, ctx->argv[ctx->argc], allocSize) == 0, FreeCmd(ctx);
+            return NULL);
         ctx->argc += 1;
         ctx->argv[ctx->argc] = NULL;
         return ctx;
@@ -179,9 +181,11 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
         *token = '\0'; // replace it with '\0';
         allocSize = (size_t)((token - p) + MAX_PARAM_VALUE_LEN + 1);
         ctx->argv[index] = calloc(sizeof(char), allocSize);
-        INIT_CHECK(ctx->argv[index] != NULL, FreeCmd(&ctx); return NULL);
+        INIT_CHECK(ctx->argv[index] != NULL, FreeCmd(ctx);
+            return NULL);
         INIT_CHECK(GetParamValue(p, ctx->argv[index], allocSize) == 0,
-            FreeCmd(&ctx); return NULL);
+            FreeCmd(ctx);
+            return NULL);
         p = token + 1; // skip '\0'
         // Skip lead whitespaces
         while (isspace(*p)) {
@@ -197,9 +201,9 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
         size_t restSize = tmpCmd + cmdLength - p;
         allocSize = restSize + MAX_PARAM_VALUE_LEN + 1;
         ctx->argv[index] = calloc(sizeof(char),  allocSize);
-        INIT_CHECK(ctx->argv[index] != NULL, FreeCmd(&ctx); return NULL);
+        INIT_CHECK(ctx->argv[index] != NULL, FreeCmd(ctx); return NULL);
         INIT_CHECK(GetParamValue(p, ctx->argv[index], allocSize) == 0,
-            FreeCmd(&ctx); return NULL);
+            FreeCmd(ctx); return NULL);
         ctx->argc = index + 1;
     }
 
@@ -207,104 +211,109 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
     return ctx;
 }
 
-void FreeCmd(struct CmdArgs **cmd)
+void FreeCmd(struct CmdArgs *cmd)
 {
-    struct CmdArgs *tmpCmd = *cmd;
-    INIT_CHECK_ONLY_RETURN(tmpCmd != NULL);
-    for (int i = 0; i < tmpCmd->argc; ++i) {
-        INIT_CHECK(tmpCmd->argv[i] == NULL, free(tmpCmd->argv[i]));
+    INIT_CHECK_ONLY_RETURN(cmd != NULL);
+    for (int i = 0; i < cmd->argc; ++i) {
+        INIT_CHECK(cmd->argv[i] == NULL, free(cmd->argv[i]));
     }
-    INIT_CHECK(tmpCmd->argv == NULL, free(tmpCmd->argv));
-    free(tmpCmd);
+    INIT_CHECK(cmd->argv == NULL, free(cmd->argv));
+    free(cmd);
     return;
 }
 
-#define EXTRACT_ARGS(cmdname, cmdContent, args) \
-    struct CmdArgs *ctx = GetCmd(cmdContent, " ", args); \
-    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != args)) { \
-        INIT_LOGE("Command \"%s\" with invalid arguments: %s", #cmdname, cmdContent); \
-        goto out; \
-    } \
+static void WriteCommon(const char *file, char *buffer, int flags, mode_t mode)
+{
+    if (file == NULL || *file == '\0' || buffer == NULL || *buffer == '\0') {
+        INIT_LOGE("Invalid arugment");
+        return;
+    }
+    char realPath[PATH_MAX] = {0};
+    char *rp = realpath(file, realPath);
+
+    if (rp == NULL) {
+        INIT_LOGE("Failed resolve real path name of %s", rp);
+        return;
+    }
+
+    int fd = open(rp, flags, mode);
+    if (fd >= 0) {
+        size_t totalSize = strlen(buffer);
+        size_t written = WriteAll(fd, buffer, totalSize);
+        if (written != totalSize) {
+            INIT_LOGE("Write %lu bytes to file failed", totalSize, file);
+        }
+        close(fd);
+    }
+    fd = -1;
+}
 
 static void DoSetDomainname(const char *cmdContent, int maxArg)
 {
-    EXTRACT_ARGS(domainname, cmdContent, maxArg)
-    int fd = open("/proc/sys/kernel/domainname", O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC,
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
+
+    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != maxArg)) {
+        INIT_LOGE("Command setdomainname  with invalid arugment");
+        FreeCmd(ctx);
+        return;
+    }
+
+    WriteCommon("/proc/sys/kernel/domainname", ctx->argv[0], O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC,
         S_IRUSR | S_IWUSR);
-    if (fd < 0) {
-        INIT_LOGE("DoSetDomainame failed to open \"/proc/sys/kernel/domainname\". err = %d", errno);
-        goto out;
-    }
-
-    size_t size = strlen(ctx->argv[0]);
-    ssize_t n = write(fd, ctx->argv[0], size);
-    if (n != (ssize_t)size) {
-        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/domainname\". err = %d", errno);
-    }
-
-    close(fd);
-out:
-    FreeCmd(&ctx);
-    fd = -1;
+    FreeCmd(ctx);
     return;
 }
 
 static void DoSetHostname(const char *cmdContent, int maxArg)
 {
-    EXTRACT_ARGS(hostname, cmdContent, maxArg)
-    int fd = open("/proc/sys/kernel/hostname", O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC,
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
+
+    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != maxArg)) {
+        INIT_LOGE("Command sethostname with invalid arugment");
+        FreeCmd(ctx);
+        return;
+    }
+    WriteCommon("/proc/sys/kernel/hostname", ctx->argv[0], O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC,
         S_IRUSR | S_IWUSR);
-    if (fd < 0) {
-        INIT_LOGE("DoSetHostname failed to open \"/proc/sys/kernel/hostname\". err = %d", errno);
-        goto out;
-    }
-
-    size_t size = strlen(ctx->argv[0]);
-    ssize_t n = write(fd, ctx->argv[0], size);
-    if (n != (ssize_t)size) {
-        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/hostname\". err = %d", errno);
-    }
-
-    close(fd);
-out:
-    FreeCmd(&ctx);
-    fd = -1;
+    FreeCmd(ctx);
     return;
 }
 
 #ifndef OHOS_LITE
 static void DoIfup(const char *cmdContent, int maxArg)
 {
-    EXTRACT_ARGS(ifup, cmdContent, maxArg)
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
+    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != maxArg)) {
+        INIT_LOGE("Command ifup with invalid arguments");
+        FreeCmd(ctx);
+        return;
+    }
+
     struct ifreq interface;
     if (strncpy_s(interface.ifr_name, IFNAMSIZ - 1, ctx->argv[0], strlen(ctx->argv[0])) != EOK) {
-        INIT_LOGE("DoIfup failed to copy interface name");
-        goto out;
+        INIT_LOGE("Failed to copy interface name");
+        FreeCmd(ctx);
+        return;
     }
 
-    INIT_LOGD("interface name: %s", interface.ifr_name);
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-        INIT_LOGE("DoIfup failed to create socket, err = %d", errno);
-        goto out;
-    }
-
-    if (ioctl(fd, SIOCGIFFLAGS, &interface) < 0) {
-        INIT_LOGE("DoIfup failed to do ioctl with command \"SIOCGIFFLAGS\", err = %d", errno);
+    if (fd >= 0) {
+        do {
+            if (ioctl(fd, SIOCGIFFLAGS, &interface) < 0) {
+                INIT_LOGE("Failed to do ioctl with command \"SIOCGIFFLAGS\", err = %d", errno);
+                break;
+            }
+            interface.ifr_flags |= IFF_UP;
+            if (ioctl(fd, SIOCSIFFLAGS, &interface) < 0) {
+                INIT_LOGE("Failed to do ioctl with command \"SIOCSIFFLAGS\", err = %d", errno);
+                break;
+            }
+        } while (0);
         close(fd);
         fd = -1;
-        goto out;
-    }
-    interface.ifr_flags |= IFF_UP;
-
-    if (ioctl(fd, SIOCSIFFLAGS, &interface) < 0) {
-        INIT_LOGE("DoIfup failed to do ioctl with command \"SIOCSIFFLAGS\", err = %d", errno);
     }
 
-    close(fd);
-out:
-    FreeCmd(&ctx);
-    fd = -1;
+    FreeCmd(ctx);
     return;
 }
 #endif
@@ -312,18 +321,14 @@ out:
 static void DoSleep(const char *cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
-    if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoSleep invalid arguments :%s", cmdContent);
-        goto out;
+
+    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != maxArg)) {
+        INIT_LOGE("Command sleep with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
 
-    errno = 0;
     unsigned long sleepTime = strtoul(ctx->argv[0], NULL, DECIMAL_BASE);
-    if (errno != 0) {
-        INIT_LOGE("cannot covert sleep time in command \" sleep \"");
-        goto out;
-    }
-
     // Limit sleep time in 5 seconds
     const unsigned long sleepTimeLimit = 5;
     if (sleepTime > sleepTimeLimit) {
@@ -331,22 +336,23 @@ static void DoSleep(const char *cmdContent, int maxArg)
     }
     INIT_LOGI("Sleeping %d second(s)", sleepTime);
     sleep((unsigned int)sleepTime);
-out:
-    FreeCmd(&ctx);
+
+    FreeCmd(ctx);
     return;
 }
 
-static void DoStart(const char* cmdContent, int maxArg)
+static void DoStart(const char *cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoStart invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command start with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
-    INIT_LOGD("DoStart %s", cmdContent);
-    StartServiceByName(cmdContent);
-out:
-    FreeCmd(&ctx);
+    INIT_LOGD("Starting service \" %s \"", ctx->argv[0]);
+    StartServiceByName(ctx->argv[0], true);
+
+    FreeCmd(ctx);
     return;
 }
 
@@ -354,13 +360,14 @@ static void DoStop(const char* cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoStop invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command stop with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
-    INIT_LOGD("DoStop %s", cmdContent);
-    StopServiceByName(cmdContent);
-out:
-    FreeCmd(&ctx);
+    INIT_LOGD("Stopping service \" %s \"", ctx->argv[0]);
+    StopServiceByName(ctx->argv[0]);
+
+    FreeCmd(ctx);
     return;
 }
 
@@ -368,157 +375,190 @@ static void DoReset(const char* cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoReset invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command reset with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
-    INIT_LOGD("DoReset %s", cmdContent);
-    DoStop(cmdContent, maxArg);
-    DoStart(cmdContent, maxArg);
-out:
-    FreeCmd(&ctx);
+    INIT_LOGD("Reseting service %s", ctx->argv[0]);
+    DoStop(ctx->argv[0], maxArg);
+    DoStart(ctx->argv[0], maxArg);
+
+    FreeCmd(ctx);
     return;
+}
+
+static void DoCopyInernal(const char *source, const char *target)
+{
+    bool isSuccess = true;
+    if (source == NULL || target == NULL) {
+        INIT_LOGE("Copy file with invalid arguments");
+        return;
+    }
+
+    struct stat st = {0};
+    int srcFd = open(source, O_RDONLY | O_CLOEXEC, S_IRUSR | S_IWUSR);
+    if (srcFd < 0) {
+        INIT_LOGE("Open \" %s \" failed, err = %d", source, errno);
+        close(srcFd);
+        srcFd = -1;
+        return;
+    }
+
+    if (fstat(srcFd, &st) < 0) {
+        INIT_LOGE("Failed to get file \" %s \" stat", source);
+        close(srcFd);
+        srcFd = -1;
+        return;
+    }
+    int dstFd = open(target, O_WRONLY | O_TRUNC | O_CREAT | O_CLOEXEC, st.st_mode);
+    if (dstFd >= 0) {
+        char buf[MAX_COPY_BUF_SIZE] = {0};
+        ssize_t readn = -1;
+        ssize_t writen = -1;
+        while ((readn = read(srcFd, buf, MAX_COPY_BUF_SIZE - 1)) > 0) {
+            writen = WriteAll(dstFd, buf, (size_t)readn);
+            if (writen != readn)  {
+                isSuccess = false;
+                break;
+            }
+        }
+    }
+
+    if (!isSuccess) {
+        INIT_LOGE("Copy from \" %s \" to \" %s \" failed", source, target);
+    } else {
+        fsync(dstFd);
+    }
+    close(srcFd);
+    close(dstFd);
+    srcFd = -1;
+    dstFd = -1;
 }
 
 static void DoCopy(const char* cmdContent, int maxArg)
 {
-    int srcFd = -1;
-    int dstFd = -1;
-    int rdLen = 0;
-    int rtLen = 0;
-    char buf[MAX_COPY_BUF_SIZE] = {0};
-    char *realPath1 = NULL;
-    char *realPath2 = NULL;
-    mode_t mode = 0;
-    struct stat fileStat = {0};
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
-    if (ctx == NULL || ctx->argv == NULL || ctx->argv[0] == NULL || ctx->argv[1] == NULL ||
-        ctx->argc != DEFAULT_COPY_ARGS_CNT) {
-        INIT_LOGE("DoCopy invalid arguments :%s", cmdContent);
-        goto out;
+    if (ctx == NULL || ctx->argv == NULL || ctx->argc != DEFAULT_COPY_ARGS_CNT) {
+        INIT_LOGE("Command copy with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
-    realPath1 = realpath(ctx->argv[0], NULL);
-    if (realPath1 == NULL) {
-        goto out;
+    char *sourceFile = realpath(ctx->argv[0], NULL);
+    char *targetFile = realpath(ctx->argv[1], NULL);
+
+    if (sourceFile == NULL || targetFile == NULL) {
+        INIT_LOGE("Failed resolve real path name in copy command");
+        FreeCmd(ctx);
+        return;
     }
-    realPath2 = realpath(ctx->argv[1], NULL);
-    if (realPath2 == NULL) {
-        goto out;
-    }
-    srcFd = open(realPath1, O_RDONLY);
-    INIT_ERROR_CHECK(srcFd >= 0, goto out, "copy open %s fail %d! ", ctx->argv[0], errno);
-    INIT_ERROR_CHECK(stat(ctx->argv[0], &fileStat) == 0, goto out, "stat fail ");
-    mode = fileStat.st_mode;
-    dstFd = open(realPath2, O_WRONLY | O_TRUNC | O_CREAT, mode);
-    INIT_ERROR_CHECK(dstFd >= 0, goto out, "copy open %s fail %d! ", ctx->argv[1], errno);
-    while ((rdLen = read(srcFd, buf, sizeof(buf) - 1)) > 0) {
-        rtLen = write(dstFd, buf, rdLen);
-        INIT_ERROR_CHECK(rtLen == rdLen, goto out, "write %s file fail %d! ", ctx->argv[1], errno);
-    }
-    fsync(dstFd);
-out:
-    FreeCmd(&ctx);
+
+    DoCopyInernal(sourceFile, targetFile);
+    FreeCmd(ctx);
+    free(sourceFile);
+    free(targetFile);
     ctx = NULL;
-    INIT_CHECK(srcFd < 0, close(srcFd); srcFd = -1);
-    INIT_CHECK(dstFd < 0, close(dstFd); dstFd = -1);
-    INIT_CHECK(realPath1 == NULL, free(realPath1); realPath1 = NULL);
-    INIT_CHECK(realPath2 == NULL, free(realPath2); realPath2 = NULL);
+    sourceFile = NULL;
+    targetFile = NULL;
     return;
 }
 
 static void DoChown(const char* cmdContent, int maxArg)
 {
-    // format: chown owner group /xxx/xxx/xxx
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoChown invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command chown with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
 
     uid_t owner = DecodeUid(ctx->argv[0]);
-    INIT_ERROR_CHECK(owner != (uid_t)-1, goto out, "DoChown invalid uid :%s.", ctx->argv[0]);
-
     gid_t group = DecodeUid(ctx->argv[1]);
-    INIT_ERROR_CHECK(group != (gid_t)-1, goto out, "DoChown invalid gid :%s.", ctx->argv[1]);
 
-    int pathPos = 2;
+    const int pathPos = 2;
     if (chown(ctx->argv[pathPos], owner, group) != 0) {
-        INIT_LOGE("DoChown, failed for %s, err %d.", cmdContent, errno);
+        INIT_LOGE("Change owner of \" %s \" to [%u : %u] failed, err = %d",
+            ctx->argv[pathPos], owner, group, errno);
     }
-out:
-    FreeCmd(&ctx);
+
+    FreeCmd(ctx);
     return;
 }
 
 static void DoMkDir(const char* cmdContent, int maxArg)
 {
     // mkdir support format:
-    //    1.mkdir path
-    //    2.mkdir path mode
-    //    3.mkdir path mode owner group
+    // 1.mkdir path
+    // 2.mkdir path mode
+    // 3.mkdir path mode owner group
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc < 1) {
-        INIT_LOGE("DoMkDir invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command mkdir with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
-
-    const int withModeArg = 2;
-    if (ctx->argc != 1 && ctx->argc != maxArg && ctx->argc != withModeArg) {
-        INIT_LOGE("DoMkDir invalid arguments: %s", cmdContent);
-        goto out;
-    }
-
-    mode_t mode = DEFAULT_DIR_MODE;
-    if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
-        INIT_LOGE("DoMkDir, failed for %s, err %d.", cmdContent, errno);
-        goto out;
-    }
-
-    if (ctx->argc > 1) {
-        mode = strtoul(ctx->argv[1], NULL, OCTAL_TYPE);
-        if (chmod(ctx->argv[0], mode) != 0) {
-            INIT_LOGE("DoMkDir failed for %s, err %d.", cmdContent, errno);
+    do {
+        int index = 0;
+        int rc = mkdir(ctx->argv[index], DEFAULT_DIR_MODE);
+        if (rc < 0) {
+            if (errno == EEXIST) {
+                INIT_LOGE("Path \" %s \" already exist", ctx->argv[0]);
+            }
+            break;
         }
-        if (ctx->argc == withModeArg) {
-            goto out;
+
+        if (ctx->argv[++index] != NULL) { // mkdir with specific mode
+            mode_t mode = strtoul(ctx->argv[1], NULL, OCTAL_BASE);
+            rc = chmod(ctx->argv[0], mode);
+            if (rc < 0) {
+                INIT_LOGE("Change path \" %s \" mode to %04o failed", ctx->argv[0], mode);
+                break;
+            }
+            if (ctx->argv[++index] != NULL) {  // mkdir with user and group
+                if (ctx->argv[index + 1] != NULL) {
+                    uid_t user = DecodeUid(ctx->argv[index]);
+                    gid_t group = DecodeUid(ctx->argv[index + 1]);
+                    if (user == (uid_t) -1 || group == (uid_t)-1) {
+                        INIT_LOGE("Change path owner with invalid user/group");
+                        rc = -1;
+                        break;
+                    }
+
+                    rc = chown(ctx->argv[0], user, group);
+                    if (rc < 0) {
+                        INIT_LOGE("Change path \" %s \" ower to user: %s group: %s failed",
+                            ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
+                        break;
+                    }
+                } else {
+                    rc = -1; // Miss group
+                    break;
+                }
+            }
         }
-        const int ownerPos = 2;
-        const int groupPos = 3;
-
-        uid_t owner = DecodeUid(ctx->argv[ownerPos]);
-        INIT_ERROR_CHECK(owner != (uid_t)-1, goto out, "DoMkDir invalid uid :%s.", ctx->argv[ownerPos]);
-
-        gid_t group = DecodeUid(ctx->argv[groupPos]);
-        INIT_ERROR_CHECK(group != (gid_t)-1, goto out, "DoMkDir invalid gid :%s.", ctx->argv[groupPos]);
-
-        if (chown(ctx->argv[0], owner, group) != 0) {
-            INIT_LOGE("DoMkDir, chown failed for %s, err %d.", cmdContent, errno);
+        if (rc < 0) {
+            INIT_LOGE("Run command mkdir failed");
         }
-    }
-out:
-    FreeCmd(&ctx);
-    return;
+    } while (0);
+
+    FreeCmd(ctx);
 }
 
 static void DoChmod(const char* cmdContent, int maxArg)
 {
-    // format: chmod xxxx /xxx/xxx/xxx
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoChmod invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command chmod with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
 
-    mode_t mode = strtoul(ctx->argv[0], NULL, OCTAL_TYPE);
-    if (mode == 0) {
-        INIT_LOGE("DoChmod, strtoul failed for %s, er %d.", cmdContent, errno);
-        goto out;
+    mode_t mode = strtoul(ctx->argv[0], NULL, OCTAL_BASE);
+    if (mode != 0) {
+        if (chmod(ctx->argv[1], mode) != 0) {
+            INIT_LOGE("Failed to change file \" %s \" mode to %04o, err = %d", ctx->argv[0], mode, errno);
+        }
     }
-
-    if (chmod(ctx->argv[1], mode) != 0) {
-        INIT_LOGE("DoChmod, failed for %s, err %d.", cmdContent, errno);
-    }
-out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -675,7 +715,7 @@ static void DoMount(const char* cmdContent, int maxArg)
 
 #ifndef OHOS_LITE
 #define OPTIONS_SIZE 128u
-static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPtr, int flags)
+static void DoInsmodInternal(const char *fileName, const char *secondPtr, const char *restPtr, int flags)
 {
     char options[OPTIONS_SIZE] = {0};
     if (flags == 0) { //  '-f' option
@@ -772,13 +812,60 @@ static void DoSetParam(const char* cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoSetParam invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command setparam with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
-    INIT_LOGE("param name: %s, value %s ", ctx->argv[0], ctx->argv[1]);
+    INIT_LOGD("param name: %s, value %s ", ctx->argv[0], ctx->argv[1]);
     SystemWriteParam(ctx->argv[0], ctx->argv[1]);
-out:
-    FreeCmd(&ctx);
+
+    FreeCmd(ctx);
+    return;
+}
+
+
+static void DoLoadPersistParams(const char *cmdContent, int maxArg)
+{
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
+    if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
+        INIT_LOGE("Command load_persist_params with invalid arguments");
+        FreeCmd(ctx);
+        return;
+    }
+    INIT_LOGD("load persist params : %s", cmdContent);
+    LoadPersistParams();
+    FreeCmd(ctx);
+    return;
+}
+
+static void DoTriggerCmd(const char *cmdContent, int maxArg)
+{
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
+    if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
+        INIT_LOGE("Command trigger with invalid arguments");
+        FreeCmd(ctx);
+        return;
+    }
+    INIT_LOGD("Trigger job :%s", ctx->argv[0]);
+    DoTriggerExec(ctx->argv[0]);
+    FreeCmd(ctx);
+    return;
+}
+
+static void DoLoadDefaultParams(const char *cmdContent, int maxArg)
+{
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
+    if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
+        INIT_LOGE("Command load_param with invalid arguments");
+        FreeCmd(ctx);
+        return;
+    }
+    int mode = 0;
+    if (strcmp(ctx->argv[1], "onlyadd") == 0) {
+        mode = LOAD_PARAM_ONLY_ADD;
+    }
+    LoadDefaultParams(ctx->argv[0], mode);
+    FreeCmd(ctx);
     return;
 }
 
@@ -786,7 +873,7 @@ out:
 
 static bool CheckValidCfg(const char *path)
 {
-    size_t cfgCnt = sizeof(g_supportCfg) / sizeof(g_supportCfg[0]);
+    size_t cfgCnt = ARRAY_LENGTH(g_supportCfg);
     struct stat fileStat = {0};
 
     if (stat(path, &fileStat) != 0 || fileStat.st_size <= 0 || fileStat.st_size > LOADCFG_MAX_FILE_LEN) {
@@ -807,7 +894,7 @@ static void DoLoadCfg(const char *path, int maxArg)
     FILE *fp = NULL;
     size_t maxLoop = 0;
     CmdLine *cmdLine = NULL;
-    int len;
+    size_t len;
     INIT_CHECK_ONLY_RETURN(path != NULL);
     INIT_LOGI("DoLoadCfg cfg file %s", path);
     if (!CheckValidCfg(path)) {
@@ -859,53 +946,32 @@ static void DoWrite(const char *cmdContent, int maxArg)
     // format: write path content
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argv[0] == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoWrite: invalid arguments :%s", cmdContent);
-        goto out;
-    }
-    char *realPath = realpath(ctx->argv[0], NULL);
-    if (realPath == NULL) {
-        goto out;
-    }
-    int fd = open(realPath, O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, S_IRUSR | S_IWUSR);
-    if (fd == -1) {
-        INIT_LOGE("DoWrite: open %s failed: %d", ctx->argv[0], errno);
-        free(realPath);
-        realPath = NULL;
-        goto out;
+        INIT_LOGE("Command write with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
 
-    size_t ret = write(fd, ctx->argv[1], strlen(ctx->argv[1]));
-    if (ret < 0) {
-        INIT_LOGE("DoWrite: write to file %s failed: %d", ctx->argv[0], errno);
-        free(realPath);
-        realPath = NULL;
-        close(fd);
-        goto out;
-    }
-    free(realPath);
-    realPath = NULL;
-    close(fd);
-out:
-    FreeCmd(&ctx);
+    WriteCommon(ctx->argv[0], ctx->argv[1], O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC,
+        S_IRUSR | S_IWUSR);
+
+    FreeCmd(ctx);
     return;
 }
 
 static void DoRmdir(const char *cmdContent, int maxArg)
 {
-    // format: rmdir path
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoRmdir: invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command rmdir with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
 
     int ret = rmdir(ctx->argv[0]);
     if (ret == -1) {
-        INIT_LOGE("DoRmdir: remove %s failed: %d.", ctx->argv[0], errno);
-        goto out;
+        INIT_LOGE("Remove directory \" %s \" failed, err = %d", ctx->argv[0], errno);
     }
-out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -913,60 +979,18 @@ static void DoRebootCmd(const char *cmdContent, int maxArg)
 {
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoReboot invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command reboot with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
     DoReboot(cmdContent);
-out:
-    FreeCmd(&ctx);
-    return;
-}
-
-static void DoLoadPersistParams(const char *cmdContent, int maxArg)
-{
-    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
-    if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoLoadPersistParams invalid arguments :%s", cmdContent);
-        goto out;
-    }
-    INIT_LOGD("load persist params : %s", cmdContent);
-    LoadPersistParams();
-out:
-    FreeCmd(&ctx);
-    return;
-}
-
-static void DoTriggerCmd(const char *cmdContent, int maxArg)
-{
-    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
-    if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoTrigger invalid arguments :%s", cmdContent);
-        goto out;
-    }
-    INIT_LOGD("DoTrigger :%s", cmdContent);
-    DoTriggerExec(cmdContent);
-out:
-    FreeCmd(&ctx);
-    return;
-}
-
-static void DoLoadDefaultParams(const char *cmdContent, int maxArg)
-{
-    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
-    if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoLoadDefaultParams invalid arguments :%s", cmdContent);
-        goto out;
-    }
-    INIT_LOGD("load persist params : %s", cmdContent);
-    LoadDefaultParams(cmdContent);
-out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
 static void DoSetrlimit(const char *cmdContent, int maxArg)
 {
-    char *resource[] = {
+    static const char *resource[] = {
         "RLIMIT_CPU", "RLIMIT_FSIZE", "RLIMIT_DATA", "RLIMIT_STACK", "RLIMIT_CORE", "RLIMIT_RSS",
         "RLIMIT_NPROC", "RLIMIT_NOFILE", "RLIMIT_MEMLOCK", "RLIMIT_AS", "RLIMIT_LOCKS", "RLIMIT_SIGPENDING",
         "RLIMIT_MSGQUEUE", "RLIMIT_NICE", "RLIMIT_RTPRIO", "RLIMIT_RTTIME", "RLIM_NLIMITS"
@@ -975,72 +999,69 @@ static void DoSetrlimit(const char *cmdContent, int maxArg)
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     const int rlimMaxPos = 2;
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoSetrlimit: invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command setrlimit with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
 
     struct rlimit limit;
     limit.rlim_cur = (rlim_t)atoi(ctx->argv[1]);
     limit.rlim_max = (rlim_t)atoi(ctx->argv[rlimMaxPos]);
     int rcs = -1;
-    for (unsigned int i = 0 ; i < sizeof(resource) / sizeof(char*); ++i) {
+    for (unsigned int i = 0; i < ARRAY_LENGTH(resource); ++i) {
         if (strcmp(ctx->argv[0], resource[i]) == 0) {
             rcs = (int)i;
         }
     }
     if (rcs == -1) {
-        INIT_LOGE("DoSetrlimit failed, resouces :%s not support.", ctx->argv[0]);
-        goto out;
+        INIT_LOGE("Set limit with unsupported resource \" %s \"", ctx->argv[0]);
+    } else {
+        int ret = setrlimit(rcs, &limit);
+        if (ret) {
+            INIT_LOGE("Set limit with resource %s, value : %lu, max value: %lu failed, err = %d",
+                ctx->argv[0], limit.rlim_cur, limit.rlim_max, errno);
+        }
     }
-    int ret = setrlimit(rcs, &limit);
-    if (ret) {
-        INIT_LOGE("DoSetrlimit failed : %d", errno);
-        goto out;
-    }
-out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
 static void DoRm(const char *cmdContent, int maxArg)
 {
-    // format: rm /xxx/xxx/xxx
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoRm: invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command rm with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
     int ret = unlink(ctx->argv[0]);
     if (ret == -1) {
-        INIT_LOGE("DoRm: unlink %s failed: %d.", ctx->argv[0], errno);
-        goto out;
+        INIT_LOGE("Unlink %s failed, err = %d", ctx->argv[0], errno);
     }
-out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
 static void DoExport(const char *cmdContent, int maxArg)
 {
-    // format: export xxx /xxx/xxx/xxx
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoExport: invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command export with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
     int ret = setenv(ctx->argv[0], ctx->argv[1], 1);
     if (ret != 0) {
-        INIT_LOGE("DoExport: set %s with %s failed: %d", ctx->argv[0], ctx->argv[1], errno);
-        goto out;
+        INIT_LOGE("export env name \" %s \", value \" %s \" failed, err = %d ",
+            ctx->argv[0], ctx->argv[1], errno);
     }
-out:
-    FreeCmd(&ctx);
+
+    FreeCmd(ctx);
     return;
 }
 
 static void DoExec(const char *cmdContent, int maxArg)
 {
-    // format: exec /xxx/xxx/xxx xxx
     pid_t pid = fork();
     if (pid < 0) {
         INIT_LOGE("DoExec: failed to fork child process to exec \"%s\"", cmdContent);
@@ -1049,7 +1070,7 @@ static void DoExec(const char *cmdContent, int maxArg)
     if (pid == 0) {
         struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
         if (ctx == NULL || ctx->argv == NULL || ctx->argv[0] == NULL) {
-            INIT_LOGE("DoExec: invalid arguments :%s", cmdContent);
+            INIT_LOGE("Command exec with invalid arguments");
             _exit(0x7f);
         }
 #ifdef OHOS_LITE
@@ -1060,7 +1081,7 @@ static void DoExec(const char *cmdContent, int maxArg)
         if (ret == -1) {
             INIT_LOGE("DoExec: execute \"%s\" failed: %d.", cmdContent, errno);
         }
-        FreeCmd(&ctx);
+        FreeCmd(ctx);
         _exit(0x7f);
     }
     return;
@@ -1072,17 +1093,17 @@ static void DoSymlink(const char *cmdContent, int maxArg)
     // format: symlink /xxx/xxx/xxx /xxx/xxx/xxx
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoSymlink: invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command symlink with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
 
     int ret = symlink(ctx->argv[0], ctx->argv[1]);
     if (ret != 0) {
-        INIT_LOGE("DoSymlink: link %s to %s failed: %d", ctx->argv[0], ctx->argv[1], errno);
-        goto out;
+        INIT_LOGE("Link \" %s \" to target \" %s \" failed, err = %d", ctx->argv[0], ctx->argv[1], errno);
     }
-out:
-    FreeCmd(&ctx);
+
+    FreeCmd(ctx);
     return;
 }
 
@@ -1111,50 +1132,51 @@ static void DoMakeNode(const char *cmdContent, int maxArg)
     const int authorityPos = 2;
     const int majorDevicePos = 3;
     const int minorDevicePos = 4;
-    const int decimal = 10;
-    const int octal = 8;
+
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoMakeNode: invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command mknode with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
 
     if (!access(ctx->argv[1], F_OK)) {
-        INIT_LOGE("DoMakeNode failed, path has not sexisted");
-        goto out;
-    }
-    mode_t deviceMode = GetDeviceMode(ctx->argv[deviceTypePos]);
-    unsigned int major = strtoul(ctx->argv[majorDevicePos], NULL, decimal);
-    unsigned int minor = strtoul(ctx->argv[minorDevicePos], NULL, decimal);
-    mode_t authority = strtoul(ctx->argv[authorityPos], NULL, octal);
+        INIT_LOGE("Cannot access \" %s \", err = %d", ctx->argv[1], errno);
+    } else {
+        mode_t deviceMode = GetDeviceMode(ctx->argv[deviceTypePos]);
+        unsigned int major = strtoul(ctx->argv[majorDevicePos], NULL, DECIMAL_BASE);
+        unsigned int minor = strtoul(ctx->argv[minorDevicePos], NULL, DECIMAL_BASE);
+        mode_t mode = strtoul(ctx->argv[authorityPos], NULL, OCTAL_BASE);
 
-    int ret = mknod(ctx->argv[0], deviceMode | authority, makedev(major, minor));
-    if (ret != 0) {
-        INIT_LOGE("DoMakeNode: path: %s failed: %d", ctx->argv[0], errno);
-        goto out;
+        int ret = mknod(ctx->argv[0], deviceMode | mode, makedev(major, minor));
+        if (ret != 0) {
+            INIT_LOGE("Create device node \" %s \" failed, err = %d", ctx->argv[0], errno);
+        }
     }
-out:
-    FreeCmd(&ctx);
+
+    FreeCmd(ctx);
     return;
 }
 
 static void DoMakeDevice(const char *cmdContent, int maxArg)
 {
-    // format: makedev major minor
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
-    const int decimal = 10;
+
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("DoMakedevice: invalid arguments :%s", cmdContent);
-        goto out;
+        INIT_LOGE("Command makedev with invalid arguments");
+        FreeCmd(ctx);
+        return;
     }
-    unsigned int major = strtoul(ctx->argv[0], NULL, decimal);
-    unsigned int minor = strtoul(ctx->argv[1], NULL, decimal);
+    unsigned int major = strtoul(ctx->argv[0], NULL, DECIMAL_BASE);
+    unsigned int minor = strtoul(ctx->argv[1], NULL, DECIMAL_BASE);
+    if (major == 0 || minor == 0) {
+        return;
+    }
     dev_t deviceId = makedev(major, minor);
     if (deviceId < 0) {
-        INIT_LOGE("DoMakedevice \" %s \" failed :%d ", cmdContent, errno);
-        goto out;
+        INIT_LOGE("Make device with major %u, minor %u failed :%d ", major, minor, errno);
     }
-out:
-    FreeCmd(&ctx);
+
+    FreeCmd(ctx);
     return;
 }
 #endif // __LITEOS__
@@ -1194,7 +1216,7 @@ static const struct CmdTable CMD_TABLE[] = {
     { "insmod ", 10, DoInsmod },
     { "setparam ", 2, DoSetParam },
     { "load_persist_params ", 1, DoLoadPersistParams },
-    { "load_param ", 1, DoLoadDefaultParams },
+    { "load_param ", 2, DoLoadDefaultParams },
     { "ifup ", 1, DoIfup },
 #endif
     { "stop ", 1, DoStop },
@@ -1213,7 +1235,7 @@ void DoCmdByName(const char *name, const char *cmdContent)
         return;
     }
 
-    size_t cmdCnt = sizeof(CMD_TABLE) / sizeof(CMD_TABLE[0]);
+    size_t cmdCnt = ARRAY_LENGTH(CMD_TABLE);
     unsigned int i = 0;
     for (; i < cmdCnt; ++i) {
         if (strncmp(name, CMD_TABLE[i].name, strlen(CMD_TABLE[i].name)) == 0) {
@@ -1226,21 +1248,6 @@ void DoCmdByName(const char *name, const char *cmdContent)
     }
 }
 
-const char *GetMatchCmd(const char *cmdStr)
-{
-    if (cmdStr == NULL) {
-        return NULL;
-    }
-    size_t supportCmdCnt = sizeof(CMD_TABLE) / sizeof(CMD_TABLE[0]);
-    for (size_t i = 0; i < supportCmdCnt; ++i) {
-        size_t curCmdNameLen = strlen(CMD_TABLE[i].name);
-        if (strncmp(CMD_TABLE[i].name, cmdStr, curCmdNameLen) == 0) {
-            return CMD_TABLE[i].name;
-        }
-    }
-    return NULL;
-}
-
 void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
 {
     size_t cmdLineLen = 0;
@@ -1248,7 +1255,7 @@ void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
         return;
     }
 
-    size_t supportCmdCnt = sizeof(CMD_TABLE) / sizeof(CMD_TABLE[0]);
+    size_t supportCmdCnt = ARRAY_LENGTH(CMD_TABLE);
     int foundAndSucceed = 0;
     for (size_t i = 0; i < supportCmdCnt; ++i) {
         size_t curCmdNameLen = strlen(CMD_TABLE[i].name);
@@ -1276,3 +1283,27 @@ void ParseCmdLine(const char* cmdStr, CmdLine* resCmd)
     }
 }
 
+const char *GetMatchCmd(const char *cmdStr, unsigned int *index)
+{
+    if (cmdStr == NULL || index == NULL) {
+        return NULL;
+    }
+    size_t supportCmdCnt = ARRAY_LENGTH(CMD_TABLE);
+    for (size_t i = 0; i < supportCmdCnt; ++i) {
+        size_t curCmdNameLen = strlen(CMD_TABLE[i].name);
+        if (strncmp(CMD_TABLE[i].name, cmdStr, curCmdNameLen) == 0) {
+            *index = (unsigned int)i;
+            return CMD_TABLE[i].name;
+        }
+    }
+    return NULL;
+}
+
+const char *GetCmdKey(unsigned int index)
+{
+    size_t supportCmdCnt = ARRAY_LENGTH(CMD_TABLE);
+    if (index >= supportCmdCnt) {
+        return NULL;
+    }
+    return CMD_TABLE[index].name;
+}

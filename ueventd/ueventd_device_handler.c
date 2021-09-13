@@ -104,7 +104,7 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
         INIT_LOGE("Create path \" %s \" failed", devicePath);
         return rc;
     }
- 
+
     GetDeviceNodePermissions(deviceNode, &uid, &gid, &mode);
     mode |= isBlock ? S_IFBLK : S_IFCHR;
     dev_t dev = makedev(major, minor);
@@ -112,15 +112,15 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
     rc = mknod(deviceNode, mode, dev);
     if (rc < 0) {
         if (errno != EEXIST) {
-            INIT_LOGE("Create device node[%s %d, %d] failed", deviceNode, major, minor, errno);
+            INIT_LOGE("Create device node[%s %d, %d] failed. %d", deviceNode, major, minor, errno);
             return rc;
         }
     }
     AdjustDeviceNodePermissions(deviceNode, uid, gid, mode);
-    if (symLinks) {
+    if (symLinks != NULL) {
         CreateSymbolLinks(deviceNode, symLinks);
     }
-    // No matter what result the symbol links returns, 
+    // No matter what result the symbol links returns,
     // as long as create device node done, just returns success.
     rc = 0;
     return rc;
@@ -128,10 +128,9 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
 
 static int RemoveDeviceNode(const char *deviceNode, char **symLinks)
 {
-    int rc = -1;
     if (INVALIDSTRING(deviceNode)) {
         INIT_LOGE("Invalid device node");
-        return rc;
+        return -1;
     }
     if (symLinks != NULL) {
         for (int i = 0; symLinks[i] != NULL; i++) {
@@ -151,7 +150,7 @@ static int RemoveDeviceNode(const char *deviceNode, char **symLinks)
 
 static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
 {
-    if (uevent == NULL || !STRINGEQUAL(uevent->subsystem, "block")) {
+    if (uevent == NULL || uevent->subsystem == NULL || STRINGEQUAL(uevent->subsystem, "block") == 0) {
         INIT_LOGW("Invalid arguments, Skip to get device symbol links.");
         return NULL;
     }
@@ -163,7 +162,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
     // For block device under one platform device.
     // check subsystem file under directory, see if it links to bus/platform.
     // For now, only support platform device.
-    char sysPath[SYSPATH_SIZE] = {}; 
+    char sysPath[SYSPATH_SIZE] = {};
     if (snprintf_s(sysPath, SYSPATH_SIZE, SYSPATH_SIZE - 1, "/sys%s", uevent->syspath) == -1) {
         INIT_LOGE("Failed to build sys path for device %s", uevent->syspath);
         return NULL;
@@ -207,7 +206,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
                 if (!INVALIDSTRING(uevent->partitionName)) {
                     if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
                         "/dev/block/platform/%s/by-name/%s", parent, uevent->partitionName) == -1) {
-                         INIT_LOGE("Failed to build link");
+                        INIT_LOGE("Failed to build link");
                         break;
                     }
                 }
@@ -340,6 +339,9 @@ void HandleBlockDeviceEvent(const struct Uevent *uevent)
     char deviceNode[DEVICE_FILE_SIZE] = {};
     char sysPath[SYSPATH_SIZE] = {};
 
+    if (uevent->syspath == NULL) {
+        return;
+    }
     if (strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath) != EOK)) {
         INIT_LOGE("Failed to copy sys path");
         return;
@@ -359,7 +361,7 @@ void HandleBlockDeviceEvent(const struct Uevent *uevent)
 
 void HandleOtherDeviceEvent(const struct Uevent *uevent)
 {
-    if (uevent == NULL || uevent->subsystem == NULL) {
+    if (uevent == NULL || uevent->subsystem == NULL || uevent->syspath == NULL) {
         INIT_LOGE("Invalid uevent received");
         return;
     }
@@ -383,10 +385,10 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
     }
     INIT_LOGD("HandleOtherDeviceEvent, devPath = %s, devName = %s", devPath, devName);
 
-     // For usb devices, should take care of it specially.
-     // if usb devices report DEVNAME, just create device node.
-     // otherwise, create deviceNode with bus number and device number.
-     if (STRINGEQUAL(uevent->subsystem, "usb")) {
+    // For usb devices, should take care of it specially.
+    // if usb devices report DEVNAME, just create device node.
+    // otherwise, create deviceNode with bus number and device number.
+    if (STRINGEQUAL(uevent->subsystem, "usb")) {
         if (uevent->deviceName != NULL) {
             if (snprintf_s(deviceNode, DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1, "/dev/%s", uevent->deviceName) == -1) {
                 INIT_LOGE("Make device file for device [%d : %d]", uevent->major, uevent->minor);
@@ -398,19 +400,19 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
                 INIT_LOGE("usb device with invalid bus number or device number");
                 return;
             }
-            if (snprintf_s(deviceNode, DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1, 
+            if (snprintf_s(deviceNode, DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
                 "/dev/bus/usb/%03d/%03d", uevent->busNum, uevent->devNum) == -1) {
-                 INIT_LOGE("Make usb device node for device [%d : %d]", uevent->busNum, uevent->devNum);
+                INIT_LOGE("Make usb device node for device [%d : %d]", uevent->busNum, uevent->devNum);
             }
         }
-     } else if (STARTSWITH(uevent->subsystem, "usb")) {
-         // Other usb devies, do not handle it.
-         return;
-     } else {
+    } else if (STARTSWITH(uevent->subsystem, "usb")) {
+        // Other usb devies, do not handle it.
+        return;
+    } else {
         if (snprintf_s(deviceNode, DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1, "%s/%s", devPath, devName) == -1) {
             INIT_LOGE("Make device file for device [%d : %d]", uevent->major, uevent->minor);
             return;
         }
-     }
-     HandleDeviceNode(uevent, deviceNode, false);
+    }
+    HandleDeviceNode(uevent, deviceNode, false);
 }

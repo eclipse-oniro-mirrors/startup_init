@@ -16,6 +16,6 @@
 #ifndef BASE_STARTUP_INITLITE_UEVENTD_SOCKET_H
 #define BASE_STARTUP_INITLITE_UEVENTD_SOCKET_H
 #include <sys/types.h>
-int UeventdSocketInit();
+int UeventdSocketInit(void);
 ssize_t ReadUeventMessage(int sockFd, char *buffer, size_t length);
 #endif // BASE_STARTUP_INITLITE_LIST_H

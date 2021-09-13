@@ -36,15 +36,15 @@ extern "C" {
 
 #define MAX_SERVICES_CNT_IN_FILE 100
 
-void RegisterServices(Service* services, int servicesCnt);
-void StartServiceByName(const char* serviceName);
-void StopServiceByName(const char* serviceName);
-void StopAllServices();
-void StopAllServicesBeforeReboot();
+void RegisterServices(Service *services, int servicesCnt);
+void StartServiceByName(const char *serviceName, bool checkDynamic);
+void StopServiceByName(const char *serviceName);
+void StopAllServices(void);
+void StopAllServicesBeforeReboot(void);
 void ReapServiceByPID(int pid);
-void ParseAllServices(const cJSON* fileRoot);
+void ParseAllServices(const cJSON *fileRoot);
 #ifdef OHOS_SERVICE_DUMP
-void DumpAllServices();
+void DumpAllServices(void);
 #endif
 #ifdef __cplusplus
 #if __cplusplus

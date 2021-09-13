@@ -39,6 +39,7 @@ extern "C" {
 #define SERVICE_ATTR_CRITICAL     0x020  // critical, will reboot if it crash 4 times in 4 minutes
 #define SERVICE_ATTR_DISABLED     0x040  // disabled
 #define SERVICE_ATTR_CONSOLE      0x080  // console
+#define SERVICE_ATTR_DYNAMIC      0x100  // dynamic service
 
 #define MAX_SERVICE_NAME 32
 #define MAX_WRITEPID_FILES 100

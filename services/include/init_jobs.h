@@ -36,8 +36,8 @@ typedef struct {
 
 void ParseAllJobs(const cJSON* fileRoot);
 void DoJob(const char* jobName);
-void ReleaseAllJobs();
-void DumpAllJobs();
+void ReleaseAllJobs(void);
+void DumpAllJobs(void);
 #ifdef __cplusplus
 #if __cplusplus
 }

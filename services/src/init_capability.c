@@ -17,19 +17,16 @@
 
 #include <ctype.h>
 #include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #if defined OHOS_LITE && !defined __LINUX__
 #include <sys/capability.h>
 #else
 #include <linux/capability.h>
 #endif
 #include <sys/types.h>
-#include <unistd.h>
 
 #include "init_log.h"
 #include "init_perms.h"
+#include "init_utils.h"
 
 #define MAX_CAPS_CNT_FOR_ONE_SERVICE 100
 
@@ -93,7 +90,7 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
             INIT_LOGE("fieldStr is NULL");
             break;
         }
-        int mapSize = sizeof(g_capStrCapNum) / sizeof(struct CapStrCapNum);     // search
+        int mapSize = ARRAY_LENGTH(g_capStrCapNum);     // search
         int j = 0;
         for (; j < mapSize; j++) {
             if (!strcmp(fieldStr, g_capStrCapNum[j].capStr)) {
@@ -112,7 +109,7 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
             return SERVICE_FAILURE;
         }
     }
-    int ret = i == curServ->servPerm.capsCnt ? SERVICE_SUCCESS : SERVICE_FAILURE;
+    int ret = (i == curServ->servPerm.capsCnt ? SERVICE_SUCCESS : SERVICE_FAILURE);
     return ret;
 }
 
@@ -156,7 +153,7 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
             break;
         }
         curServ->servPerm.caps[i] = (unsigned int)cJSON_GetNumberValue(capJ);
-        if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {        // CAP_LAST_CAP = 37
+        if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {
             // resources will be released by function: ReleaseServiceMem
             INIT_LOGE("service=%s, caps = %d, error.", curServ->name, curServ->servPerm.caps[i]);
             return SERVICE_FAILURE;

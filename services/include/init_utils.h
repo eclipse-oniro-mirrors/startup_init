@@ -16,6 +16,8 @@
 #ifndef INIT_UTILS_H
 #define INIT_UTILS_H
 
+#include <unistd.h>
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -26,12 +28,12 @@ extern "C" {
 #define OCTAL_BASE 8
 #define DECIMAL_BASE 10
 
-int DecodeUid(const char *name);
-void CheckAndCreateDir(const char *fileName);
+#define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
+uid_t DecodeUid(const char *name);
 char* ReadFileToBuf(const char *configFile);
 int SplitString(char *srcPtr, char **dstPtr, int maxNum);
 void WaitForFile(const char *source, unsigned int maxCount);
-
+size_t WriteAll(int fd, char *buffer, size_t size);
 #ifdef __cplusplus
 #if __cplusplus
 }

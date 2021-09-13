@@ -25,4 +25,13 @@ if (defined(ohos_lite)) {
     part_name = "startup"
     subsystem_name = "startup"
   }
+
+  ohos_static_library("agent_log") {
+    sources = [ "init_log.c" ]
+    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
+    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+    defines = [ "INIT_AGENT" ]
+    part_name = "startup"
+    subsystem_name = "startup"
+  }
 }

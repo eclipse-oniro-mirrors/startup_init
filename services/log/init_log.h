@@ -69,10 +69,36 @@ void SetHiLogLevel(LogLevel logLevel);
 #define INIT_LOGE(fmt, ...) InitLog(INIT_ERROR, (FILE_NAME), (__LINE__), "<3>", fmt"\n", ##__VA_ARGS__)
 #define INIT_LOGF(fmt, ...) InitLog(INIT_FATAL, (FILE_NAME), (__LINE__), "<3>", fmt"\n", ##__VA_ARGS__)
 
+#ifndef INIT_AGENT
 #define STARTUP_LOGD(LABEL, fmt, ...) InitLog(INIT_DEBUG, (FILE_NAME), (__LINE__), "<7>", fmt "\n", ##__VA_ARGS__)
 #define STARTUP_LOGI(LABEL, fmt, ...) InitLog(INIT_INFO, (FILE_NAME), (__LINE__), "<6>", fmt "\n", ##__VA_ARGS__)
 #define STARTUP_LOGE(LABEL, fmt, ...) InitLog(INIT_ERROR, (FILE_NAME), (__LINE__), "<3>", fmt "\n", ##__VA_ARGS__)
+#else
+#include "hilog/log.h"
+#define PARAM_AGENT_LOG_PATH "/data/init_agent/init_agent.log"
 
+#define STARTUP_LOGD(LABEL, fmt, ...) \
+    do {    \
+        InitLog(INIT_DEBUG, (FILE_NAME), (__LINE__), "", fmt "\n", ##__VA_ARGS__); \
+            (void)HiLogPrint(LOG_APP, LOG_DEBUG, LOG_DOMAIN, LABEL, "[%{public}s(%{public}d)] " fmt, \
+            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
+    } while (0)
+
+#define STARTUP_LOGI(LABEL, fmt, ...) \
+    do {    \
+        InitLog(INIT_INFO, (FILE_NAME), (__LINE__), "", fmt "\n", ##__VA_ARGS__); \
+            (void)HiLogPrint(LOG_APP, LOG_INFO, LOG_DOMAIN, LABEL, "[%{public}s(%{public}d)] " fmt, \
+            FILE_NAME, __LINE__, ##__VA_ARGS__); \
+    } while (0)
+
+#define STARTUP_LOGE(LABEL, fmt, ...) \
+    do {    \
+        InitLog(INIT_ERROR, (FILE_NAME), (__LINE__), "", fmt "\n", ##__VA_ARGS__); \
+            (void)HiLogPrint(LOG_APP, LOG_ERROR, LOG_DOMAIN, LABEL, "[%{public}s(%{public}d)] " fmt, \
+            FILE_NAME, __LINE__, ##__VA_ARGS__); \
+    } while (0)
+
+#endif
 
 void InitLog(InitLogLevel logLevel, const char *fileName, int line, const char *kLevel, const char *fmt, ...);
 void SetLogLevel(InitLogLevel logLevel);
@@ -114,6 +140,13 @@ void EnableDevKmsg(void);
     do {                                \
         if (!(ret)) {                   \
             return;                     \
+        } \
+    } while (0)
+
+#define INIT_CHECK_ONLY_ELOG(ret, format, ...) \
+    do {                                       \
+        if (!(ret)) {                          \
+            INIT_LOGE(format, ##__VA_ARGS__);  \
         } \
     } while (0)
 

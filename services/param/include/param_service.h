@@ -15,20 +15,38 @@
 
 #ifndef BASE_STARTUP_PARAM_SERVICE_H
 #define BASE_STARTUP_PARAM_SERVICE_H
+#include <limits.h>
 #include <stdio.h>
-#include "sys_param.h"
+
 #include "param_manager.h"
+#include "sys_param.h"
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
 
-int InitPersistParamWorkSpace(const char *context);
-int RefreshPersistParams(ParamWorkSpace *workSpace, const char *context);
-void ClosePersistParamWorkSpace();
-int WritePersistParam(const char *name, const char *value);
+#define PARAM_WATCH_FLAGS_WAIT 0x01
+struct CmdLineEntry {
+    char *key;
+    int set;
+};
 
+int WriteParam(WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd);
+
+int InitPersistParamWorkSpace(ParamWorkSpace *workSpace);
+void ClosePersistParamWorkSpace(void);
+int LoadPersistParam(ParamWorkSpace *workSpace);
+int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *value);
+
+#ifdef STARTUP_INIT_TEST
+int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *msg);
+int AddSecurityLabel(const ParamAuditData *auditData, void *context);
+#endif
+
+int ProcessParamWaitAdd(ParamWorkSpace *worksapce, const ParamTaskPtr worker, const ParamMessage *msg);
+int ProcessParamWatchAdd(ParamWorkSpace *worksapce, const ParamTaskPtr worker, const ParamMessage *msg);
 #ifdef __cplusplus
 #if __cplusplus
 }
