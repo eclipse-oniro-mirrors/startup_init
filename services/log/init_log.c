@@ -149,19 +149,19 @@ void InitLog(InitLogLevel logLevel, const char *fileName, int line, const char *
         g_outfile = fopen(PARAM_AGENT_LOG_PATH, "w+");
     }
     if (g_outfile == NULL) {
-        fprintf(stdout, "%s[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ", kLevel, (t->tm_year + BASE_YEAR),
+        (void)fprintf(stdout, "%s[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ", kLevel, (t->tm_year + BASE_YEAR),
             (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, gettid(), fileName,
             line, INIT_LOG_TAG, LOG_LEVEL_STR[logLevel]);
         printf("output %s error: %s \n", fmt, strerror(errno));
         return;
     }
-    fprintf(g_outfile, "%s[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ", kLevel,  (t->tm_year + BASE_YEAR),
+    (void)fprintf(g_outfile, "%s[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ", kLevel,  (t->tm_year + BASE_YEAR),
         (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, getpid(), fileName,
         line, INIT_LOG_TAG, LOG_LEVEL_STR[logLevel]);
     va_list list;
     va_start(list, fmt);
-    vfprintf(g_outfile, fmt, list);
+    (void)vfprintf(g_outfile, fmt, list);
     va_end(list);
-    fflush(g_outfile);
+    (void)fflush(g_outfile);
 }
 #endif

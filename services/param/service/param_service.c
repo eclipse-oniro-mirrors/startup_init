@@ -26,7 +26,6 @@
 #include <unistd.h>
 
 #include "init_param.h"
-#include "init_utils.h"
 #include "param_message.h"
 #include "param_manager.h"
 #include "param_request.h"
