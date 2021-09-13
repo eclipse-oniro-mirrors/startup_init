@@ -275,6 +275,7 @@ static int CheckParamWaitMatch(TriggerWorkSpace *workSpace, int type,
 static int CheckParamWatcherMatch(TriggerWorkSpace *workSpace, int type,
     LogicCalculator *calculator, const char *content, uint32_t contentSize)
 {
+    UNUSED(type);
     TriggerNode *trigger = GetNextTrigger(&workSpace->watcher.triggerHead, NULL);
     while (trigger != NULL) {
         TriggerNode *next = GetNextTrigger(&workSpace->watcher.triggerHead, trigger);
