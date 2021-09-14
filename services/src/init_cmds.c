@@ -515,9 +515,10 @@ static void DoMkDir(const char *cmdContent, int maxArg)
         FreeCmd(ctx);
         return;
     }
+    int rc = -1;
     do {
         int index = 0;
-        int rc = mkdir(ctx->argv[index], DEFAULT_DIR_MODE);
+        rc = mkdir(ctx->argv[index], DEFAULT_DIR_MODE);
         if (rc < 0) {
             if (errno == EEXIST) {
                 INIT_LOGE("Path \" %s \" already exist", ctx->argv[0]);
@@ -539,14 +540,14 @@ static void DoMkDir(const char *cmdContent, int maxArg)
                 rc = -1;
             }
         }
-        if (rc < 0) {
-            INIT_LOGE("Run command mkdir failed, unlink path");
-            if (unlink(ctx->argv[0]) < 0) {
-                INIT_LOGE("Failed unlink %s errno %d ", ctx->argv[0], errno);
-            }
-        }
     } while (0);
 
+    if (rc < 0) {
+        INIT_LOGE("Run command mkdir failed, rmdir path");
+        if (rmdir(ctx->argv[0]) < 0) {
+            INIT_LOGE("Failed rmdir %s errno %d ", ctx->argv[0], errno);
+        }
+    }
     FreeCmd(ctx);
 }
 
