@@ -94,7 +94,7 @@ int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
             INIT_LOGE("Parameter name longer than %d", MAX_PARAM_NAME_LEN);
             return -1;
         }
-        INIT_CHECK_RETURN_VALUE(strncpy_s(tmpName, MAX_PARAM_NAME_LEN, p, tmpLen - 1) == EOK, -1);
+        INIT_CHECK_RETURN_VALUE(strncpy_s(tmpName, MAX_PARAM_NAME_LEN, p, tmpLen) == EOK, -1);
         int ret = SystemReadParam(tmpName, tmpValue, &tmpLen); // get param
         if (ret != 0) {
             INIT_LOGE("Failed to read parameter \" %s \"", tmpName);
@@ -125,6 +125,7 @@ inline int GetParamValue(const char *symValue, char *paramValue, unsigned int pa
 static struct CmdArgs *CopyCmd(struct CmdArgs *ctx, const char *cmd, size_t allocSize)
 {
     if (cmd == NULL) {
+        FreeCmd(ctx);
         return NULL;
     }
 
@@ -151,7 +152,7 @@ struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
     struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
     INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
 
-    ctx->argv = (char**)malloc(sizeof(char*) * (size_t)argsCount + 1);
+    ctx->argv = (char**)malloc(sizeof(char*) * (size_t)(argsCount + 1));
     INIT_CHECK(ctx->argv != NULL, FreeCmd(ctx);
         return NULL);
 
@@ -191,7 +192,6 @@ struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
         p = token + 1; // skip '\0'
         // Skip lead whitespaces
         SKIP_SPACES(p);
-        ctx->argc++;
         token = strstr(p, delim);
     }
 
@@ -202,8 +202,6 @@ struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
         ctx = CopyCmd(ctx, p, allocSize);
         INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
     }
-
-    ctx->argv[++ctx->argc] = NULL;
     return ctx;
 }
 
@@ -564,7 +562,7 @@ static void DoChmod(const char *cmdContent, int maxArg)
     mode_t mode = strtoul(ctx->argv[0], NULL, OCTAL_BASE);
     if (mode != 0) {
         if (chmod(ctx->argv[1], mode) != 0) {
-            INIT_LOGE("Failed to change file \" %s \" mode to %04o, err = %d", ctx->argv[0], mode, errno);
+            INIT_LOGE("Failed to change file \" %s \" mode to %04o, err = %d", ctx->argv[1], mode, errno);
         }
     }
     FreeCmd(ctx);
