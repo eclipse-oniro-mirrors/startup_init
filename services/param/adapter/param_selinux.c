@@ -69,7 +69,7 @@ static int LoadParamLabels(const char *fileName, SecurityLabelFunc label, void *
     int ret = 0;
     FILE *fp = fopen(fileName, "r");
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
-    SubStringInfo *info = malloc(sizeof(SubStringInfo) * SUBSTR_INFO_DAC + 1);
+    SubStringInfo *info = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_DAC + 1));
     char buff[PARAM_BUFFER_SIZE];
     int infoCount = 0;
     ParamAuditData auditData = {};

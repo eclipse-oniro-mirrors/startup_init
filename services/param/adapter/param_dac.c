@@ -111,7 +111,7 @@ static int LoadParamLabels(const char *fileName, SecurityLabelFunc label, void *
     FILE *fpForGroup = fopen(GROUP_FILE_PATH, "r");
     FILE *fpForUser = fopen(USER_FILE_PATH, "r");
     FILE *fp = fopen(fileName, "r");
-    SubStringInfo *info = malloc(sizeof(SubStringInfo) * SUBSTR_INFO_DAC + 1);
+    SubStringInfo *info = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_DAC + 1));
     PARAM_CHECK(fpForGroup != NULL && fpForUser != NULL && fp != NULL && info != NULL,
         goto exit, "Can not open file for load param labels");
 
