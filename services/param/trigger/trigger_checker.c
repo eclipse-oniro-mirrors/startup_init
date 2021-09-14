@@ -232,7 +232,7 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
             data1.flags = 0;
             if (condition[currIndex] == '|' && ret == 1) {
                 LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE);
-            } else if ((condition[currIndex] == '&' || ret == 1) &&
+            } else if ((condition[currIndex] == '|' || ret == 1) &&
                 (ComputeSubCondition(calculator, &data2, condition) == 1)) {
                 LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE);
             }
