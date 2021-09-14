@@ -522,6 +522,7 @@ static void DoMkDir(const char *cmdContent, int maxArg)
         if (rc < 0) {
             if (errno == EEXIST) {
                 INIT_LOGE("Path \" %s \" already exist", ctx->argv[0]);
+                rc = 0;
             }
             break;
         }
@@ -543,7 +544,6 @@ static void DoMkDir(const char *cmdContent, int maxArg)
     } while (0);
 
     if (rc < 0) {
-        INIT_LOGE("Run command mkdir failed, rmdir path");
         if (rmdir(ctx->argv[0]) < 0) {
             INIT_LOGE("Failed rmdir %s errno %d ", ctx->argv[0], errno);
         }
