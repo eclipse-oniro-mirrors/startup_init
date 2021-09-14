@@ -71,6 +71,7 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
             processFile(fileName, context);
         }
     }
+    free(fileName);
     closedir(pDir);
     return 0;
 }

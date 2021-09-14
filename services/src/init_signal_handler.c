@@ -27,7 +27,6 @@
 #include "init_service_manager.h"
 
 #ifndef OHOS_LITE
-#include "init_param.h"
 #include "uv.h"
 #endif
 
