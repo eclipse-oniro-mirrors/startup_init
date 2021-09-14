@@ -456,33 +456,7 @@ static void DoCopy(const char *cmdContent, int maxArg)
     return;
 }
 
-static void DoChown(const char *cmdContent, int maxArg)
-{
-    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
-    if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
-        INIT_LOGE("Command chown with invalid arguments");
-        FreeCmd(ctx);
-        return;
-    }
-
-    uid_t owner = DecodeUid(ctx->argv[0]);
-    gid_t group = DecodeUid(ctx->argv[1]);
-    if (owner == (uid_t) -1 || group == (uid_t)-1) {
-        INIT_LOGE("Change path owner with invalid user/group");
-        return;
-    }
-
-    const int pathPos = 2;
-    if (chown(ctx->argv[pathPos], owner, group) != 0) {
-        INIT_LOGE("Change owner of \" %s \" to [%u : %u] failed, err = %d",
-            ctx->argv[pathPos], owner, group, errno);
-    }
-
-    FreeCmd(ctx);
-    return;
-}
-
-static int DoPathChown(const char *path, const char *uid, const char *gid)
+static int Chown(const char *path, const char *uid, const char *gid)
 {
     if (path == NULL || uid == NULL || gid == NULL) {
         return -1;
@@ -501,6 +475,25 @@ static int DoPathChown(const char *path, const char *uid, const char *gid)
         return -1;
     }
     return 0;
+}
+
+static void DoChown(const char *cmdContent, int maxArg)
+{
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
+    if (ctx == NULL || ctx->argv == NULL || ctx->argc != maxArg) {
+        INIT_LOGE("Command chown with invalid arguments");
+        FreeCmd(ctx);
+        return;
+    }
+    const int uidPos = 0;
+    const int gidPos = 1;
+    const int pathPos = 2;
+    int ret = Chown(ctx->argv[pathPos], ctx->argv[uidPos], ctx->argv[gidPos]);
+    if (ret < 0) {
+        INIT_LOGE("Run command chown failed");
+    }
+    FreeCmd(ctx);
+    return;
 }
 
 static void DoMkDir(const char *cmdContent, int maxArg)
@@ -536,7 +529,7 @@ static void DoMkDir(const char *cmdContent, int maxArg)
             }
             index = index + 1;
             if ((ctx->argv[index] != NULL) && (ctx->argv[index + 1] != NULL)) {
-                rc = DoPathChown(ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
+                rc = Chown(ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
             } else {
                 rc = -1;
             }
@@ -544,9 +537,8 @@ static void DoMkDir(const char *cmdContent, int maxArg)
     } while (0);
 
     if (rc < 0) {
-        if (rmdir(ctx->argv[0]) < 0) {
-            INIT_LOGE("Failed rmdir %s errno %d ", ctx->argv[0], errno);
-        }
+        INIT_LOGE("Run command mkdir failed err = %d", errno);
+        (void)rmdir(ctx->argv[0]);
     }
     FreeCmd(ctx);
 }
