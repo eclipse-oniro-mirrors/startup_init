@@ -19,17 +19,26 @@
 #include "init_reboot.h"
 
 #define REBOOT_CMD_NUMBER 2
+#define USAGE_INFO "usage: reboot shutdown\n"\
+    "       reboot updater\n"\
+    "       reboot updater[:options]\n" \
+    "       reboot flash\n" \
+    "       reboot flash[:options]\n" \
+    "       reboot\n"
 
 int main(int argc, char* argv[])
 {
     if (argc > REBOOT_CMD_NUMBER) {
-        printf("usage: reboot shutdown\n       reboot updater\n       reboot updater[:options]\n       reboot\n");
+        printf("%s", USAGE_INFO);
         return 0;
     }
+
     if (argc == REBOOT_CMD_NUMBER && strcmp(argv[1], "shutdown") != 0 &&
         strcmp(argv[1], "updater") != 0 &&
-        strncmp(argv[1], "updater:", strlen("updater:")) != 0) {
-        printf("usage: reboot shutdown\n       reboot updater\n       reboot updater[:options]\n       reboot\n");
+        strcmp(argv[1], "flash") != 0 &&
+        strncmp(argv[1], "updater:", strlen("updater:")) != 0 &&
+        strncmp(argv[1], "flash:", strlen("flash:")) != 0) {
+        printf("%s", USAGE_INFO);
         return 0;
     }
     int ret = 0;

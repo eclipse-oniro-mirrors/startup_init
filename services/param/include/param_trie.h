@@ -15,15 +15,37 @@
 
 #ifndef BASE_STARTUP_PARAM_TRIE_H
 #define BASE_STARTUP_PARAM_TRIE_H
-#include <linux/futex.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/syscall.h>
 
 #include "init_log.h"
-#include "sys_param.h"
+#include "param_security.h"
 #include "securec.h"
+#include "sys_param.h"
+
+#ifndef __NR_futex
+#define PARAM_NR_FUTEX 202 /* syscall number */
+#else
+#define PARAM_NR_FUTEX __NR_futex
+#endif
+
+#if defined FUTEX_WAIT || defined FUTEX_WAKE
+#include <linux/futex.h>
+#else
+#define FUTEX_WAIT 0
+#define FUTEX_WAKE 1
+
+#define PARAM_FUTEX(ftx, op, value, timeout, bitset)                         \
+    do {                                                                   \
+        struct timespec d_timeout = { 0, 1000 * 1000 * (timeout) };        \
+        syscall(PARAM_NR_FUTEX, ftx, op, value, &d_timeout, NULL, bitset); \
+    } while (0)
+
+#define futex_wake(ftx, count) PARAM_FUTEX(ftx, FUTEX_WAKE, count, 0, 0)
+#define futex_wait(ftx, value) PARAM_FUTEX(ftx, FUTEX_WAIT, value, 100, 0)
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -31,105 +53,71 @@ extern "C" {
 #endif
 #endif
 
-#define PARAM_WORKSPACE_MAX  64*1024
-#define TRIE_SERIAL_DIRTY_OFFSET         1
-#define TRIE_SERIAL_KEY_LEN_OFFSET      24
-#define TRIE_SERIAL_DATA_LEN_OFFSET     16
-
-#define FILENAME_LEN_MAX  255
-#define TRIE_DATA_LEN_MAX  128
-
-#define NODE_INDEX unsigned int
-
-#define TRIE_NODE_HEADER \
-    atomic_uint_least32_t serial; \
-    NODE_INDEX left; \
-    NODE_INDEX right;
-
-#define DATA_ENTRY_KEY_LEN(entry)   (entry)->dataLength >> TRIE_SERIAL_KEY_LEN_OFFSET
-#define DATA_ENTRY_DATA_LEN(entry)  (((entry)->dataLength >> TRIE_SERIAL_DATA_LEN_OFFSET) & 0x00FF)
-#define DATA_ENTRY_DIRTY(serial) ((serial) & 1)
-
-#define FUTEX_WAIT 0
-#define FUTEX_WAKE 1
-#define __futex(ftx, op, value, timeout, bitset) \
-    syscall(__NR_futex, ftx, op, value, timeout, NULL, bitset)
-#define futex_wake(ftx, count) __futex(ftx, FUTEX_WAKE, count, NULL, 0)
-#define futex_wait(ftx, value, timeout) __futex(ftx, FUTEX_WAIT, value, timeout, 0)
-
+#define PARAM_WORKSPACE_MAX (80 * 1024)
+#define FILENAME_LEN_MAX 255
 typedef struct {
-    TRIE_NODE_HEADER;
+    uint32_t left;
+    uint32_t right;
+    uint32_t child;
+    uint32_t labelIndex;
+    uint32_t dataIndex;
+    uint16_t length;
     char key[0];
-} TrieNode;
+} ParamTrieNode;
+
+#define PARAM_FLAGS_MODIFY 0x80000000
+#define PARAM_FLAGS_TRIGGED 0x40000000
+#define PARAM_FLAGS_WAITED 0x20000000
+#define PARAM_FLAGS_COMMITID 0x0000ffff
 
 typedef struct {
-    TRIE_NODE_HEADER;
-    NODE_INDEX child;
-    NODE_INDEX labelIndex;
-    NODE_INDEX dataIndex;
-    char key[0];
-} TrieDataNode;
-
-typedef struct {
-    atomic_uint_least32_t serial;
-    atomic_uint_least32_t dataLength;
+    atomic_uint commitId;
+    uint16_t keyLength;
+    uint16_t valueLength;
     char data[0];
-} DataEntry;
+} ParamNode;
 
 typedef struct {
-    atomic_uint_least32_t serial;
-    u_int32_t currOffset;
-    u_int32_t firstNode;
-    u_int32_t dataSize;
-    u_int32_t reserved_[28];
+    uid_t uid;
+    gid_t gid;
+    uint16_t mode;
+    uint16_t length;
     char data[0];
-} WorkArea;
+} ParamSecruityNode;
+
+typedef struct {
+    uint32_t trieNodeCount;
+    uint32_t paramNodeCount;
+    uint32_t securityNodeCount;
+    uint32_t currOffset;
+    uint32_t firstNode;
+    uint32_t dataSize;
+    uint32_t reserved_[28];
+    char data[0];
+} ParamTrieHeader;
 
 struct WorkSpace_;
-typedef u_int32_t (*AllocTrieNodePtr)(struct WorkSpace_ *workSpace, const char *key, u_int32_t keyLen);
-typedef int (*CompareTrieNodePtr)(TrieNode *node, const char *key2, u_int32_t key2Len);
-
 typedef struct WorkSpace_ {
     char fileName[FILENAME_LEN_MAX + 1];
-    WorkArea *area;
-    TrieNode *rootNode;
-    AllocTrieNodePtr allocTrieNode;
-    CompareTrieNodePtr compareTrieNode;
+    uint32_t (*allocTrieNode)(struct WorkSpace_ *workSpace, const char *key, uint32_t keyLen);
+    int (*compareTrieNode)(ParamTrieNode *node, const char *key2, uint32_t key2Len);
+    ParamTrieHeader *area;
 } WorkSpace;
 
-u_int32_t GetWorkSpaceSerial(WorkSpace *workSpace);
-int CompareTrieNode(TrieNode *node, const char *key, u_int32_t keyLen);
-u_int32_t AllocateTrieNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen);
-int CompareTrieDataNode(TrieNode *node, const char *key, u_int32_t keyLen);
-u_int32_t AllocateTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen);
-
-u_int32_t GetTrieNodeOffset(WorkSpace *workSpace, const TrieNode *current);
-TrieNode *GetTrieNode(WorkSpace *workSpace, NODE_INDEX *index);
-u_int32_t GetTrieKeyLen(TrieNode *current);
-void SaveIndex(NODE_INDEX *index, u_int32_t offset);
-TrieDataNode *AddTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen);
-TrieDataNode *AddToSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const char *key, u_int32_t keyLen);
-TrieDataNode *FindSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const char *key, u_int32_t keyLen);
-TrieDataNode *FindTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen, int matchPrefix);
-
-TrieNode *AddTrieNode(WorkSpace *workSpace, TrieNode *root, const char *key, u_int32_t keyLen);
-TrieNode *FindTrieNode(WorkSpace *workSpace, TrieNode *tree, const char *key, u_int32_t keyLen);
-
-int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, u_int32_t spaceSize, int readOnly);
-int InitPersistWorkSpace(const char *fileName, WorkSpace *workSpace);
 int InitWorkSpace(const char *fileName, WorkSpace *workSpace, int onlyRead);
 void CloseWorkSpace(WorkSpace *workSpace);
 
-typedef int (*TraversalTrieNodePtr)(WorkSpace *workSpace, TrieNode *node, void *cookie);
-int TraversalTrieNode(WorkSpace *workSpace, TrieNode *root, TraversalTrieNodePtr walkFunc, void *cookie);
-int TraversalTrieDataNode(WorkSpace *workSpace, TrieDataNode *current, TraversalTrieNodePtr walkFunc, void *cookie);
+ParamTrieNode *GetTrieNode(WorkSpace *workSpace, uint32_t offset);
+void SaveIndex(uint32_t *index, uint32_t offset);
 
-u_int32_t AddData(WorkSpace *workSpace, const char *key, u_int32_t keyLen, const char *value, u_int32_t valueLen);
-int UpdateDataValue(DataEntry *entry, const char *value);
-int GetDataName(const DataEntry *entry, char *name, u_int32_t len);
-int GetDataValue(const DataEntry *entry, char *value, u_int32_t len);
-u_int32_t GetDataSerial(const DataEntry *entry);
+ParamTrieNode *AddTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen);
+ParamTrieNode *FindTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel);
 
+typedef int (*TraversalTrieNodePtr)(WorkSpace *workSpace, ParamTrieNode *node, void *cookie);
+int TraversalTrieNode(WorkSpace *workSpace, ParamTrieNode *subTrie, TraversalTrieNodePtr walkFunc, void *cookie);
+
+uint32_t AddParamSecruityNode(WorkSpace *workSpace, const ParamAuditData *auditData);
+uint32_t AddParamNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, const char *value, uint32_t valueLen);
 #ifdef __cplusplus
 #if __cplusplus
 }

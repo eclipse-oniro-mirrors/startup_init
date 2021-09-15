@@ -33,7 +33,7 @@
 
 static int CreateSocket(struct ServiceSocket *sockopt)
 {
-    if (!sockopt || !sockopt->name) {
+    if (sockopt == NULL || sockopt->name == NULL) {
         return -1;
     }
     if (sockopt->sockFd >= 0) {
@@ -41,13 +41,10 @@ static int CreateSocket(struct ServiceSocket *sockopt)
         sockopt->sockFd = -1;
     }
     sockopt->sockFd = socket(PF_UNIX, sockopt->type, 0);
-    if (sockopt->sockFd < 0) {
-        INIT_LOGE("socket fail %d ", errno);
-        return -1;
-    }
+    INIT_ERROR_CHECK(sockopt->sockFd >= 0, return -1, "socket fail %d ", errno);
 
     struct sockaddr_un addr;
-    bzero(&addr,sizeof(addr));
+    bzero(&addr, sizeof(addr));
     addr.sun_family = AF_UNIX;
     if (snprintf_s(addr.sun_path, sizeof(addr.sun_path), sizeof(addr.sun_path) - 1, HOS_SOCKET_DIR"/%s",
         sockopt->name) < 0) {
@@ -117,11 +114,11 @@ static int SetSocketEnv(int fd, const char *name)
 
 int DoCreateSocket(struct ServiceSocket *sockopt)
 {
-    if (!sockopt) {
+    if (sockopt == NULL) {
         return -1;
     }
     struct ServiceSocket *tmpSock = sockopt;
-    while (tmpSock) {
+    while (tmpSock != NULL) {
         int fd = CreateSocket(tmpSock);
         if (fd < 0) {
             return -1;

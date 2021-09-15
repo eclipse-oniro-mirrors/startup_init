@@ -12,145 +12,167 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "sys_param.h"
 
-#include <ctype.h>
+#include "param_persist.h"
 #include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "param_manager.h"
+#include "param_service.h"
 #include "param_trie.h"
+#include "sys_param.h"
 
 #define LABEL "Manager"
-#define MAX_BUFF 256
 
-typedef struct {
-    WorkSpace *workSpace;
-    WorkSpace *persistWorkSpace;
-    char *buffer;
-} PersistContext;
+static ParamPersistWorkSpace g_persistWorkSpace = { 0, NULL, 0, { NULL, NULL, NULL, NULL, NULL } };
 
-static ParamPersistWorkSpace g_persistWorkSpace = {ATOMIC_VAR_INIT(0), };
-
-static int ProcessParamTraversal(WorkSpace *workSpace, TrieNode *node, void *cookie)
+static int AddPersistParam(const char *name, const char *value, void *context)
 {
-    PARAM_CHECK(workSpace != 0 && node != NULL && cookie != NULL, return -1, "Invalid param");
-    TrieDataNode *current = (TrieDataNode *)node;
+    PARAM_CHECK(value != NULL && name != NULL && context != NULL,
+        return PARAM_CODE_INVALID_PARAM, "Invalid name or context");
+    WorkSpace *workSpace = (WorkSpace *)context;
+    uint32_t dataIndex = 0;
+    int ret = WriteParam(workSpace, name, value, &dataIndex, 0);
+    PARAM_CHECK(ret == 0, return ret, "Failed to write param %d name:%s %s", ret, name, value);
+    return 0;
+}
+
+static int SavePersistParam(WorkSpace *workSpace, ParamTrieNode *node, void *cookie)
+{
+    ParamTrieNode *current = (ParamTrieNode *)node;
     if (current == NULL || current->dataIndex == 0) {
         return 0;
     }
-    DataEntry *entry = (DataEntry *)GetTrieNode(workSpace, &current->dataIndex);
+    ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, current->dataIndex);
     if (entry == NULL) {
-        return -1;
-    }
-    PersistContext *persistContext = (PersistContext *)cookie;
-    int ret = GetDataName(entry, persistContext->buffer, MAX_BUFF);
-    PARAM_CHECK(ret == 0, return ret, "GetDataName failed");
-    if (strncmp(persistContext->buffer, "persist.", strlen("persist.")) != 0) {
         return 0;
     }
-    ret = GetDataValue(entry, persistContext->buffer + MAX_BUFF, MAX_BUFF);
-    if (ret == 0) { // 只支持新建
-        //PARAM_LOGI("Insert new persist param from normal param %s %s",
-        //    persistContext->buffer, persistContext->buffer + MAX_BUFF);
-        ret = AddParam(persistContext->persistWorkSpace, persistContext->buffer, persistContext->buffer + MAX_BUFF);
+    PARAM_LOGD("SavePersistParam %s", entry->data);
+    if (strncmp(entry->data, PARAM_CONST_PREFIX, strlen(PARAM_CONST_PREFIX)) != 0) {
+        return 0;
     }
-    PARAM_CHECK(ret == 0, return ret, "Failed to add persist param");
+    static char name[PARAM_NAME_LEN_MAX] = { 0 };
+    int ret = memcpy_s(name, PARAM_NAME_LEN_MAX - 1, entry->data, entry->keyLength);
+    PARAM_CHECK(ret == EOK, return -1, "Failed to read param name %s", entry->data);
+    name[entry->keyLength] = '\0';
+    ret = g_persistWorkSpace.persistParamOps.batchSave(cookie, name, entry->data + entry->keyLength + 1);
+    PARAM_CHECK(ret == 0, return -1, "Failed to write param %s", current->key);
     return ret;
 }
 
-static int ProcessPersistPropertTraversal(WorkSpace *workSpace, TrieNode *node, void *cookie)
+static int BatchSavePersistParam(WorkSpace *workSpace)
 {
-    TrieDataNode *current = (TrieDataNode *)node;
-    if (current == NULL || current->dataIndex == 0) {
+    PARAM_LOGI("BatchSavePersistParam");
+    if (g_persistWorkSpace.persistParamOps.batchSaveBegin == NULL ||
+        g_persistWorkSpace.persistParamOps.batchSave == NULL ||
+        g_persistWorkSpace.persistParamOps.batchSaveEnd == NULL) {
         return 0;
     }
-    DataEntry *entry = (DataEntry *)GetTrieNode(workSpace, &current->dataIndex);
-    if (entry == NULL) {
-        return -1;
+
+    PERSIST_SAVE_HANDLE handle;
+    int ret = g_persistWorkSpace.persistParamOps.batchSaveBegin(&handle);
+    PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Failed to save persist");
+    ParamTrieNode *root = FindTrieNode(workSpace, PARAM_CONST_PREFIX, strlen(PARAM_CONST_PREFIX), NULL);
+    ret = TraversalTrieNode(workSpace, root, SavePersistParam, handle);
+    g_persistWorkSpace.persistParamOps.batchSaveEnd(handle);
+    PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Save persist param fail");
+
+    PARAM_CLEAR_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_UPDATE);
+    (void)time(&g_persistWorkSpace.lastSaveTimer);
+    return ret;
+}
+
+int InitPersistParamWorkSpace(ParamWorkSpace *workSpace)
+{
+    if (PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
+        return 0;
     }
-    PersistContext *persistContext = (PersistContext *)cookie;
-    int ret = GetDataName(entry, persistContext->buffer, MAX_BUFF);
-    PARAM_CHECK(ret == 0, return ret, "GetDataName failed");
-    ret = GetDataValue(entry, persistContext->buffer + MAX_BUFF, MAX_BUFF);
+    (void)time(&g_persistWorkSpace.lastSaveTimer);
+#ifdef PARAM_SUPPORT_SAVE_PERSIST
+    RegisterPersistParamOps(&g_persistWorkSpace.persistParamOps);
+#endif
+    PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_INIT);
+    return 0;
+}
+
+void ClosePersistParamWorkSpace(void)
+{
+    if (g_persistWorkSpace.saveTimer != NULL) {
+        ParamTaskClose(g_persistWorkSpace.saveTimer);
+    }
+    g_persistWorkSpace.flags = 0;
+}
+
+int LoadPersistParam(ParamWorkSpace *workSpace)
+{
+    int ret = InitPersistParamWorkSpace(workSpace);
+    PARAM_CHECK(ret == 0, return ret, "Failed to init persist param");
+    if (PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
+        PARAM_LOGE("Persist param has been loaded");
+        return 0;
+    }
+    ret = -1;
+    if (g_persistWorkSpace.persistParamOps.load != NULL) {
+        ret = g_persistWorkSpace.persistParamOps.load(AddPersistParam, &workSpace->paramSpace);
+    }
     if (ret == 0) {
-        //PARAM_LOGI("update normal param %s %s from persist param %u",
-        //    persistContext->buffer, persistContext->buffer + MAX_BUFF, current->dataIndex);
-        ret = WriteParam(persistContext->workSpace, persistContext->buffer, persistContext->buffer + MAX_BUFF);
+        PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED);
+    } else {
+        PARAM_LOGE("Failed to load persist param ");
     }
-    PARAM_CHECK(ret == 0, return ret, "Failed to add persist param");
-    return ret;
+    // 刷新新增的常量到persist
+    BatchSavePersistParam(&workSpace->paramSpace);
+    return 0;
 }
 
-int InitPersistParamWorkSpace(const char *context)
+static void TimerCallbackForSave(ParamTaskPtr timer, void *context)
 {
-    u_int32_t flags = atomic_load_explicit(&g_persistWorkSpace.flags, memory_order_relaxed);
-    if ((flags & WORKSPACE_FLAGS_INIT) == WORKSPACE_FLAGS_INIT) {
-        return 0;
+    UNUSED(context);
+    ParamTaskClose(timer);
+    g_persistWorkSpace.saveTimer = NULL;
+    if (!PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_UPDATE)) {
+        return;
     }
-    g_persistWorkSpace.persistWorkSpace.compareTrieNode = CompareTrieDataNode;
-    g_persistWorkSpace.persistWorkSpace.allocTrieNode = AllocateTrieDataNode;
-    int ret = InitPersistWorkSpace(PARAM_PERSIST_PATH, &g_persistWorkSpace.persistWorkSpace);
-    PARAM_CHECK(ret == 0, return ret, "Failed to init persist param");
-    atomic_store_explicit(&g_persistWorkSpace.flags, WORKSPACE_FLAGS_INIT, memory_order_release);
-    return ret;
+    BatchSavePersistParam((WorkSpace *)context);
 }
 
-int RefreshPersistParams(ParamWorkSpace *workSpace, const char *context)
-{
-    int ret = InitPersistParamWorkSpace(context);
-    PARAM_CHECK(ret == 0, return ret, "Failed to init persist param");
-    u_int32_t flags = atomic_load_explicit(&g_persistWorkSpace.flags, memory_order_relaxed);
-    if ((flags & WORKSPACE_FLAGS_LOADED) == WORKSPACE_FLAGS_LOADED) {
-        PARAM_LOGE("RefreshPersistParams has been loaded");
-        return 0;
-    }
-
-    // 申请临时的缓存，用于数据读取
-    char *buffer = (char *)malloc(MAX_BUFF + MAX_BUFF);
-    PARAM_CHECK(buffer != NULL, return -1, "Failed to malloc memory for param");
-    PersistContext persistContext = {
-        &workSpace->paramSpace, &g_persistWorkSpace.persistWorkSpace, buffer
-    };
-
-    // 遍历当前的参数，并把persist的写入
-    ret = TraversalTrieDataNode(&workSpace->paramSpace,
-        (TrieDataNode *)workSpace->paramSpace.rootNode, ProcessParamTraversal, &persistContext);
-
-    // 修改默认参数值
-    ret = TraversalTrieDataNode(&g_persistWorkSpace.persistWorkSpace,
-        (TrieDataNode *)g_persistWorkSpace.persistWorkSpace.rootNode, ProcessPersistPropertTraversal, &persistContext);
-
-    atomic_store_explicit(&g_persistWorkSpace.flags, flags | WORKSPACE_FLAGS_LOADED, memory_order_release);
-    free(buffer);
-    return ret;
-}
-
-void ClosePersistParamWorkSpace()
-{
-    CloseWorkSpace(&g_persistWorkSpace.persistWorkSpace);
-    atomic_store_explicit(&g_persistWorkSpace.flags, 0, memory_order_release);
-}
-
-int WritePersistParam(const char *name, const char *value)
+int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *value)
 {
     PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
-    if (strncmp(name, "persist.", strlen("persist.")) != 0) {
+    if (strncmp(name, PARAM_CONST_PREFIX, strlen(PARAM_CONST_PREFIX)) != 0) {
         return 0;
     }
-    int ret = InitPersistParamWorkSpace("");
-    PARAM_CHECK(ret == 0, return ret, "Failed to init persist param");
-    u_int32_t flags = atomic_load_explicit(&g_persistWorkSpace.flags, memory_order_relaxed);
-    if ((flags & WORKSPACE_FLAGS_LOADED) != WORKSPACE_FLAGS_LOADED) {
+    if (!PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
+        PARAM_LOGE("Can not save persist param before load %s ", name);
         return 0;
     }
-    return WriteParam(&g_persistWorkSpace.persistWorkSpace, name, value);
+    PARAM_LOGD("WritePersistParam name %s ", name);
+    if (g_persistWorkSpace.persistParamOps.save != NULL) {
+        g_persistWorkSpace.persistParamOps.save(name, value);
+    }
+
+    // 不需要批量保存
+    if (g_persistWorkSpace.persistParamOps.batchSave == NULL) {
+        return 0;
+    }
+
+    // check timer for save all
+    time_t currTimer;
+    (void)time(&currTimer);
+    uint32_t diff = (uint32_t)difftime(currTimer, g_persistWorkSpace.lastSaveTimer);
+    if (diff > PARAM_MUST_SAVE_PARAM_DIFF) {
+        if (g_persistWorkSpace.saveTimer != NULL) {
+            ParamTaskClose(g_persistWorkSpace.saveTimer);
+            g_persistWorkSpace.saveTimer = NULL;
+        }
+        return BatchSavePersistParam(&workSpace->paramSpace);
+    }
+    PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_UPDATE);
+    if (g_persistWorkSpace.saveTimer == NULL) {
+        ParamTimerCreate(&g_persistWorkSpace.saveTimer, TimerCallbackForSave, &workSpace->paramSpace);
+        ParamTimerStart(g_persistWorkSpace.saveTimer, PARAM_MUST_SAVE_PARAM_DIFF * MS_UNIT, MS_UNIT);
+    }
+    return 0;
 }

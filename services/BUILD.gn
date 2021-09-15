@@ -112,7 +112,7 @@ if (defined(ohos_lite)) {
     ]
     deps = [
       "//base/startup/init_lite/services/log:init_log",
-      "//base/startup/init_lite/services/param:paramservice",
+      "//base/startup/init_lite/services/param:param_service",
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]
@@ -134,13 +134,17 @@ if (defined(ohos_lite)) {
     deps = [
       ":init",
       ":init_etc",
+      "//base/startup/init_lite/interfaces/innerkits/dynamic_service:dynamic_service",
       "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
       "//base/startup/init_lite/services/cmds/reboot:reboot",
       "//base/startup/init_lite/services/cmds/service_control:service_control",
-      "//base/startup/init_lite/services/param:getparam",
-      "//base/startup/init_lite/services/param:paramclient",
-      "//base/startup/init_lite/services/param:paramservice",
-      "//base/startup/init_lite/services/param:setparam",
+      "//base/startup/init_lite/services/param:param",
+      "//base/startup/init_lite/services/param:param_client",
+      "//base/startup/init_lite/services/param:param_service",
+      "//base/startup/init_lite/services/param:param_watcher",
+      "//base/startup/init_lite/services/param:param_watcher.rc",
+      "//base/startup/init_lite/services/param:param_watcheragent",
+      "//base/startup/init_lite/services/param/watcher/sa_profile:param_watcher_profile",
     ]
   }
 
@@ -179,8 +183,15 @@ if (defined(ohos_lite)) {
   }
 
   ohos_prebuilt_etc("ohos.para") {
-    source = "//base/startup/init_lite/services/etc/ohos.para"
+    source = "//base/startup/init_lite/services/etc/param/ohos.para"
     part_name = "init"
+    module_install_dir = "etc/param"
+  }
+
+  ohos_prebuilt_etc("ohos.para.dac") {
+    source = "//base/startup/init_lite/services/etc/param/ohos.para.dac"
+    part_name = "init"
+    module_install_dir = "etc/param"
   }
 
   group("init_etc") {
@@ -190,6 +201,7 @@ if (defined(ohos_lite)) {
       ":init.usb.cfg",
       ":init.usb.configfs.cfg",
       ":ohos.para",
+      ":ohos.para.dac",
       ":passwd",
     ]
   }

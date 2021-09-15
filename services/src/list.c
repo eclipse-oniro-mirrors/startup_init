@@ -15,14 +15,22 @@
 
 #include "list.h"
 
+#include <stddef.h>
+
 void ListInit(struct ListNode *node)
 {
+    if (node == NULL) {
+        return;
+    }
     node->next = node;
     node->prev = node;
 }
 
 void ListAddTail(struct ListNode *head, struct ListNode *item)
 {
+    if (head == NULL || item == NULL) {
+        return;
+    }
     item->next = head;
     item->prev = head->prev;
     head->prev->next = item;
@@ -31,6 +39,9 @@ void ListAddTail(struct ListNode *head, struct ListNode *item)
 
 void ListRemove(struct ListNode *item)
 {
+    if (item == NULL) {
+        return;
+    }
     item->next->prev = item->prev;
     item->prev->next = item->next;
 }

@@ -15,62 +15,50 @@
 
 #ifndef BASE_STARTUP_INIT_PARAM_H
 #define BASE_STARTUP_INIT_PARAM_H
+#include <stdint.h>
 #include <stdio.h>
-#include "cJSON.h"
-#include "sys_param.h"
 
+#include "cJSON.h"
+#include "param.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
-
-typedef enum {
-    EVENT_PROPERTY, // 参数修改事件
-    EVENT_BOOT
-} EventType;
-
 /**
  * Init 接口
  * 初始化参数服务
  *
  */
-void InitParamService();
+void InitParamService(void);
 
 /**
  * Init 接口
  * 启动参数服务，在main启动的最后调用，阻赛当前线程
  *
  */
-int StartParamService();
+int StartParamService(void);
 
 /**
  * Init 接口
  * 停止参数服务
  *
  */
-void StopParamService();
+void StopParamService(void);
 
 /**
  * Init 接口
  * 加载默认的参数值
  *
  */
-int LoadDefaultParams(const char *fileName);
-
-/**
- * Init 接口
- * 安全使用，加载参数的信息，包括selinux label 等
- *
- */
-int LoadParamInfos(const char *fileName);
+int LoadDefaultParams(const char *fileName, int mode);
 
 /**
  * Init 接口
  * 加载默认参数。
  *
  */
-int LoadPersistParams();
+int LoadPersistParams(void);
 
 /**
  * Init 接口
@@ -91,28 +79,21 @@ int SystemReadParam(const char *name, char *value, unsigned int *len);
  * 触发一个trigger操作。
  *
  */
-void PostTrigger(EventType type, const char *content, u_int32_t contentLen);
-
-/**
- * 对Init接口
- * 触发一个参数trigger操作。
- *
- */
-void PostParamTrigger(const char *name, const char *value);
+void PostTrigger(EventType type, const char *content, uint32_t contentLen);
 
 /**
  * 对Init接口
  * 解析trigger文件。
  *
  */
-int ParseTriggerConfig(cJSON *fileRoot);
+int ParseTriggerConfig(const cJSON *fileRoot);
 
 /**
  * 对Init接口
  * 按名字执行对应的trigger。
  *
  */
-void DoTriggerExec(const char *content);
+void DoTriggerExec(const char *triggerName);
 
 /**
  * 对Init接口

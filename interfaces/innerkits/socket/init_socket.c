@@ -18,11 +18,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
@@ -34,7 +30,7 @@
 #define MAX_SOCKET_ENV_PREFIX_LEN 64
 #define MAX_SOCKET_DIR_LEN 128
 
-static int GetControlFromEnv(char *path, int length)
+static int GetControlFromEnv(const char *path, int length)
 {
     if (path == NULL || length <= 0) {
         return -1;

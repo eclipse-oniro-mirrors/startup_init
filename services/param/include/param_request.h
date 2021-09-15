@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2020 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,51 +16,24 @@
 
 #ifndef BASE_STARTUP_PARAM_REQUEST_H
 #define BASE_STARTUP_PARAM_REQUEST_H
-
+#include <pthread.h>
+#include <stdatomic.h>
 #include <stdio.h>
-#include "sys_param.h"
 #include "param_manager.h"
-
-#include "uv.h"
+#include "sys_param.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
 
-typedef enum RequestType {
-    SET_PARAM,
-    GET_PARAM,
-} RequestType;
-
 typedef struct {
-    ParamSecurityLabel securitylabel;
-    RequestType type;
-    int contentSize;
-    char content[0];
-} RequestMsg;
+    ParamWorkSpace paramSpace;
+    int clientFd;
+    pthread_mutex_t mutex;
+} ClientWorkSpace;
 
-typedef struct {
-    RequestType type;
-    int result;
-    int contentSize;
-    char content[0];
-} ResponseMsg;
-
-typedef struct {
-    uv_loop_t *loop;
-    uv_connect_t connect;
-    uv_pipe_t handle;
-    uv_write_t wr;
-    int result;
-    RequestMsg msg;
-} RequestNode;
-
-typedef struct {
-    uv_write_t writer;
-    ResponseMsg msg;
-} ResponseNode;
-
+int WatchParamCheck(const char *keyprefix);
 #ifdef __cplusplus
 #if __cplusplus
 }

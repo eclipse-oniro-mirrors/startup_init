@@ -16,19 +16,20 @@ if (!defined(ohos_lite)) {
 
   ohos_executable("ueventd") {
     sources = [
-      "list.c",
-      "ueventd.c",
-      "ueventd_device_handler.c",
-      "ueventd_firmware_handler.c",
-      "ueventd_read_cfg.c",
-      "ueventd_socket.c",
-      "ueventd_utils.c",
+      "//base/startup/init_lite/services/src/list.c",
+      "//base/startup/init_lite/ueventd/ueventd.c",
+      "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
+      "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
+      "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
+      "//base/startup/init_lite/ueventd/ueventd_socket.c",
+      "//base/startup/init_lite/ueventd/ueventd_utils.c",
     ]
 
     include_dirs = [
       "include",
       "//third_party/bounds_checking_function/include",
       "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/services/include",
     ]
 
     deps = [

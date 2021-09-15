@@ -19,14 +19,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/mount.h>
 #include <sys/prctl.h>
 #include <sys/reboot.h>
-#include "securec.h"
+#include <unistd.h>
+#include "init_log.h"
 #include "init_service.h"
 #include "init_service_manager.h"
-#include "init_log.h"
+#include "init_utils.h"
+#include "securec.h"
 
 #define MAX_VALUE_LENGTH 500
 #define MAX_COMMAND_SIZE 20
@@ -37,7 +38,7 @@ struct RBMiscUpdateMessage {
     char update[MAX_UPDATE_SIZE];
 };
 
-static bool RBMiscWriteUpdaterMessage(const char *path, struct RBMiscUpdateMessage *boot)
+static bool RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdateMessage *boot)
 {
     if (path == NULL || boot == NULL) {
         INIT_LOGE("path or boot is NULL.");
@@ -129,103 +130,81 @@ static int GetMountStatusForMountPoint(const char *mountPoint)
     return 0;
 }
 
-static int UpdateUpdaterStatus(const char *valueData)
+static int CheckAndRebootToUpdater(const char *valueData, const char *cmd, const char *cmdExt, const char *boot)
 {
+    // "updater" or "updater:"
     const char *miscFile = "/dev/block/platform/soc/10100000.himci.eMMC/by-name/misc";
     struct RBMiscUpdateMessage msg;
-    bool ret = RBMiscReadUpdaterMessage(miscFile, &msg);
-    if (!ret) {
-        INIT_LOGE("RBMiscReadUpdaterMessage error.");
-        return -1;
-    }
-    if (snprintf_s(msg.command, MAX_COMMAND_SIZE, MAX_COMMAND_SIZE - 1, "%s", "boot_updater") == -1) {
-        INIT_LOGE("RBMiscWriteUpdaterMessage error");
-        return -1;
-    }
-    if (strlen(valueData) > strlen("updater:") && strncmp(valueData, "updater:", strlen("updater:")) == 0) {
-        if (snprintf_s(msg.update, MAX_UPDATE_SIZE, MAX_UPDATE_SIZE - 1, "%s", valueData + strlen("updater:")) == -1) {
-            INIT_LOGE("RBMiscWriteUpdaterMessage error");
-            return -1;
-        }
-        ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
-        if (ret != true) {
-            INIT_LOGE("RBMiscWriteUpdaterMessage error");
-            return -1;
-        }
-    } else if (strlen(valueData) == strlen("updater") && strncmp(valueData, "updater", strlen("updater")) == 0) {
-        ret = RBMiscWriteUpdaterMessage(miscFile, &msg);
-        if (ret != true) {
-            INIT_LOGE("RBMiscWriteUpdaterMessage error");
-            return -1;
-        }
-    } else {
-        return -1;
-    }
-    return 0;
-}
+    bool bRet = RBMiscReadUpdaterMessage(miscFile, &msg);
+    INIT_ERROR_CHECK(bRet, return -1, "Failed to get misc info for %s.", cmd);
 
-static int DoRebootCore(const char *valueData)
-{
-    if (valueData == NULL) {
-        reboot(RB_AUTOBOOT);
-        return 0;
-    } else if (strncmp(valueData, "shutdown", strlen("shutdown")) == 0) {
-        reboot(RB_POWER_OFF);
-        return 0;
-    } else if (strncmp(valueData, "updater", strlen("updater")) == 0) {
-        int ret = UpdateUpdaterStatus(valueData);
-        if (ret == 0) {
-            reboot(RB_AUTOBOOT);
-            return 0;
-        }
-    } else {
-        return -1;
+    int ret = snprintf_s(msg.command, MAX_COMMAND_SIZE, MAX_COMMAND_SIZE - 1, "%s", boot);
+    INIT_ERROR_CHECK(ret > 0, return -1, "Failed to format cmd for %s.", cmd);
+    msg.command[MAX_COMMAND_SIZE - 1] = 0;
+
+    if (strncmp(valueData, cmdExt, strlen(cmdExt)) == 0) {
+        const char *p = valueData + strlen(cmdExt);
+        ret = snprintf_s(msg.update, MAX_UPDATE_SIZE, MAX_UPDATE_SIZE - 1, "%s", p);
+        INIT_ERROR_CHECK(ret > 0, return -1, "Failed to format param for %s.", cmd);
+        msg.update[MAX_UPDATE_SIZE - 1] = 0;
     }
-    return 0;
+
+    if (RBMiscWriteUpdaterMessage(miscFile, &msg)) {
+        return reboot(RB_AUTOBOOT);
+    }
+    return -1;
 }
 
 void DoReboot(const char *value)
 {
-    if (value == NULL) {
+    static const char *g_cmdParams[] = {
+        "shutdown", "updater", "updater:", "flashing", "flashing:", "NoArgument", "bootloader"
+    };
+    if (value == NULL || strlen(value) > MAX_VALUE_LENGTH) {
         INIT_LOGE("DoReboot value = NULL");
         return;
     }
-    INIT_LOGI("DoReboot value = %s", value);
-
-    if (strlen(value) > MAX_VALUE_LENGTH || strlen(value) < strlen("reboot") || strlen(value) == strlen("reboot,")) {
-        INIT_LOGE("DoReboot reboot value error, value = %s.", value);
-        return;
-    }
     const char *valueData = NULL;
-    if (strncmp(value, "reboot,", strlen("reboot,")) == 0) {
-        valueData = value + strlen("reboot,");
-    } else if (strlen(value) < strlen("reboot,") && strncmp(value, "reboot", strlen("reboot")) == 0) {
+    if (strcmp(value, "reboot") == 0) {
         valueData = NULL;
-    } else {
+    } else if (strncmp(value, "reboot,", strlen("reboot,")) != 0) {
         INIT_LOGE("DoReboot reboot value = %s, must started with reboot ,error.", value);
         return;
+    } else {
+        valueData = value + strlen("reboot,");
     }
-    if (valueData != NULL && strncmp(valueData, "shutdown", strlen("shutdown")) != 0 &&
-        strncmp(valueData, "updater:", strlen("updater:")) != 0 &&
-        strncmp(valueData, "updater", strlen("updater")) != 0) {
-        INIT_LOGE("DoReboot value = %s, parameters error.", value);
-        return;
+    if (valueData != NULL) {
+        size_t i = 0;
+        for (; i < ARRAY_LENGTH(g_cmdParams); i++) {
+            if (strncmp(valueData, g_cmdParams[i], strlen(g_cmdParams[i])) == 0) {
+                break;
+            }
+        }
+        if (i >= ARRAY_LENGTH(g_cmdParams)) {
+            INIT_LOGE("DoReboot value = %s, parameters error.", value);
+            return;
+        }
     }
     StopAllServicesBeforeReboot();
     sync();
-    if (GetMountStatusForMountPoint("/vendor") != 0) {
-        if (umount("/vendor") != 0) {
-            INIT_LOGE("DoReboot umount vendor failed! errno = %d.", errno);
-        }
+    if (GetMountStatusForMountPoint("/vendor") != 0 && umount("/vendor") != 0) {
+        INIT_LOGE("DoReboot umount vendor failed! errno = %d.", errno);
     }
-    if (GetMountStatusForMountPoint("/data") != 0) {
-        if (umount("/data") != 0) {
-            INIT_LOGE("DoReboot umount data failed! errno = %d.", errno);
-        }
+    if (GetMountStatusForMountPoint("/data") != 0 && umount("/data") != 0) {
+        INIT_LOGE("DoReboot umount data failed! errno = %d.", errno);
     }
-    int ret = DoRebootCore(valueData);
-    if (ret != 0) {
-        INIT_LOGE("DoReboot value = %s, error.", value);
+    int ret = 0;
+    if (valueData == NULL) {
+        ret = reboot(RB_AUTOBOOT);
+    } else if (strcmp(valueData, "shutdown") == 0) {
+        ret = reboot(RB_POWER_OFF);
+    } else if (strcmp(valueData, "bootloader") == 0) {
+        ret = reboot(RB_POWER_OFF);
+    } else if (strncmp(valueData, "updater", strlen("updater")) == 0) {
+        ret = CheckAndRebootToUpdater(valueData, "updater", "updater:", "boot_updater");
+    } else if (strncmp(valueData, "flashing", strlen("flashing")) == 0) {
+        ret = CheckAndRebootToUpdater(valueData, "flashing", "flashing:", "boot_flashing");
     }
+    INIT_LOGI("DoReboot value = %s %s.", value, (ret == 0) ? "success" : "fail");
     return;
 }

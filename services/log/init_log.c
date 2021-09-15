@@ -65,6 +65,7 @@ void InitToHiLog(LogLevel logLevel, const char *fmt, ...)
 }
 #endif
 
+#ifndef INIT_AGENT // for init
 static int g_fd = -1;
 void OpenLogDevice(void)
 {
@@ -126,3 +127,41 @@ void InitLog(InitLogLevel logLevel, const char *fileName, int line, const char *
     }
     return;
 }
+#else // for other process
+static FILE *g_outfile = NULL;
+void InitLog(InitLogLevel logLevel, const char *fileName, int line, const char *kLevel,
+    const char *fmt, ...)
+{
+    if (logLevel < g_logLevel) {
+        return;
+    }
+    time_t second = time(0);
+    if (second < 0) {
+        return;
+    }
+    struct tm *t = localtime(&second);
+    if (t == NULL) {
+        return;
+    }
+
+    if (g_outfile == NULL) {
+        chmod(PARAM_AGENT_LOG_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
+        g_outfile = fopen(PARAM_AGENT_LOG_PATH, "w+");
+    }
+    if (g_outfile == NULL) {
+        (void)fprintf(stdout, "%s[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ", kLevel, (t->tm_year + BASE_YEAR),
+            (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, gettid(), fileName,
+            line, INIT_LOG_TAG, LOG_LEVEL_STR[logLevel]);
+        printf("output %s error: %s \n", fmt, strerror(errno));
+        return;
+    }
+    (void)fprintf(g_outfile, "%s[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ", kLevel,  (t->tm_year + BASE_YEAR),
+        (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, getpid(), fileName,
+        line, INIT_LOG_TAG, LOG_LEVEL_STR[logLevel]);
+    va_list list;
+    va_start(list, fmt);
+    (void)vfprintf(g_outfile, fmt, list);
+    va_end(list);
+    (void)fflush(g_outfile);
+}
+#endif

@@ -14,149 +14,298 @@
  */
 
 #include "param_request.h"
-
+#include <errno.h>
+#include <fcntl.h>
+#include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <unistd.h>
-#include <time.h>
 
 #include "param_manager.h"
-#include "uv.h"
+#include "param_message.h"
 
+#define INVALID_SOCKET (-1)
 #define LABEL "Client"
-#define BUFFER_SIZE  200
-#define ParamEntry(ptr, type, member)   (type *)((char *)(ptr) - offsetof(type, member))
+static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
 
-static ParamWorkSpace g_paramWorkSpaceReadOnly = {ATOMIC_VAR_INIT(0), {}, {}, {}};
+static atomic_uint g_requestId = ATOMIC_VAR_INIT(1);
+static ClientWorkSpace g_clientSpace = { {}, -1, {} };
 
-static void OnWrite(uv_write_t *req, int status)
+__attribute__((constructor)) static void ClientInit(void);
+__attribute__((destructor)) static void ClientDeinit(void);
+
+static int InitParamClient(void)
 {
-    PARAM_LOGD("OnWrite status %d", status);
-}
-
-static void OnReceiveAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
-{
-    // 这里需要按实际回复大小申请内存，不需要大内存
-    buf->base = (char *)malloc(sizeof(ResponseMsg));
-    PARAM_CHECK(buf->base != NULL, return, "OnReceiveAlloc malloc failed");
-    buf->len = sizeof(ResponseMsg);
-    PARAM_LOGD("OnReceiveAlloc handle %p %zu", handle, suggestedSize);
-}
-
-static void OnReceiveResponse(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf)
-{
-    RequestNode *req = ParamEntry(handle, RequestNode, handle);
-    PARAM_LOGD("OnReceiveResponse %p", handle);
-    if (nread <= 0 || buf == NULL || handle == NULL || buf->base == NULL) {
-        if (buf != NULL && buf->base != NULL) {
-            free(buf->base);
-        }
-        if (handle != NULL) {
-            uv_close((uv_handle_t*)handle, NULL);
-            uv_stop(req->loop);
-        }
-        return;
+    if (PARAM_TEST_FLAG(g_clientSpace.paramSpace.flags, WORKSPACE_FLAGS_INIT)) {
+        return 0;
     }
-    ResponseMsg *response = (ResponseMsg *)(buf->base);
-    PARAM_CHECK(response != NULL, return, "The response is null");
-    PARAM_LOGD("OnReceiveResponse %p cmd %d result: %d", handle, response->type, response->result);
-    switch (response->type) {
-        case SET_PARAM:
-            req->result = response->result;
+    PARAM_LOGI("InitParamClient");
+    pthread_mutex_init(&g_clientSpace.mutex, NULL);
+    g_clientSpace.clientFd = INVALID_SOCKET;
+    return InitParamWorkSpace(&g_clientSpace.paramSpace, 1);
+}
+
+void ClientInit(void)
+{
+    PARAM_LOGI("ClientInit");
+    (void)InitParamClient();
+}
+
+void ClientDeinit(void)
+{
+    CloseParamWorkSpace(&g_clientSpace.paramSpace);
+}
+
+static ParamSecurityOps *GetClientParamSecurityOps(void)
+{
+    return &g_clientSpace.paramSpace.paramSecurityOps;
+}
+
+static int FillLabelContent(ParamMessage *request, uint32_t *start, uint32_t length)
+{
+    uint32_t bufferSize = request->msgSize - sizeof(ParamMessage);
+    uint32_t offset = *start;
+    PARAM_CHECK((offset + sizeof(ParamMsgContent) + length) <= bufferSize,
+        return -1, "Invalid msgSize %u offset %u", request->msgSize, offset);
+    ParamMsgContent *content = (ParamMsgContent *)(request->data + offset);
+    content->type = PARAM_LABEL;
+    content->contentSize = 0;
+    ParamSecurityOps *ops = GetClientParamSecurityOps();
+    if (length != 0 && ops != NULL && ops->securityEncodeLabel != NULL) {
+        int ret = ops->securityEncodeLabel(g_clientSpace.paramSpace.securityLabel, content->content, &length);
+        PARAM_CHECK(ret == 0, return -1, "Failed to get label length");
+        content->contentSize = length;
+    }
+    offset += sizeof(ParamMsgContent) + PARAM_ALIGN(content->contentSize);
+    *start = offset;
+    return 0;
+}
+
+static int ProcessRecvMsg(const ParamMessage *recvMsg)
+{
+    PARAM_LOGD("ProcessRecvMsg type: %u msgId: %u name %s", recvMsg->type, recvMsg->id.msgId, recvMsg->key);
+    int result = PARAM_CODE_INVALID_PARAM;
+    switch (recvMsg->type) {
+        case MSG_SET_PARAM:
+            result = ((ParamResponseMessage *)recvMsg)->result;
+            break;
+        case MSG_NOTIFY_PARAM:
+            result = 0;
             break;
         default:
-            PARAM_LOGE("not supported the command: %d", response->type);
             break;
     }
-    PARAM_LOGD("Close handle %p", handle);
-    free(buf->base);
-    uv_close((uv_handle_t*)handle, NULL);
-    uv_stop(req->loop);
-}
-
-static void OnConnection(uv_connect_t *connect, int status)
-{
-    PARAM_CHECK(status >= 0, return, "Failed to conntect status %s", uv_strerror(status));
-    RequestNode *request = ParamEntry(connect, RequestNode, connect);
-    PARAM_LOGD("Connect to server handle %p", &(request->handle));
-    uv_buf_t buf = uv_buf_init((char*)&request->msg, request->msg.contentSize + sizeof(request->msg));
-    int ret = uv_write2(&request->wr, (uv_stream_t*)&(request->handle), &buf, 1, (uv_stream_t*)&(request->handle), OnWrite);
-    PARAM_CHECK(ret >= 0, return, "Failed to uv_write2 porperty");
-
-    // read result
-    ret = uv_read_start((uv_stream_t*)&(request->handle), OnReceiveAlloc, OnReceiveResponse);
-    PARAM_CHECK(ret >= 0, return, "Failed to uv_read_start response");
-}
-
-static int StartRequest(int cmd, RequestNode *request)
-{
-    PARAM_CHECK(request != NULL, return -1, "Invalid request");
-    request->result = -1;
-    request->msg.type = cmd;
-    request->loop = uv_loop_new();
-    PARAM_CHECK(request->loop != NULL, return -1, "StartRequest uv_loop_new failed");
-    uv_pipe_init(request->loop, &request->handle, 1);
-    uv_pipe_connect(&request->connect, &request->handle, PIPE_NAME, OnConnection);
-    uv_run(request->loop, UV_RUN_DEFAULT);
-    uv_loop_delete(request->loop);
-    int result = request->result;
-    free(request);
     return result;
+}
+
+static int StartRequest(int *fd, ParamMessage *request, int timeout)
+{
+    int ret = 0;
+    struct timeval time;
+    time.tv_sec = timeout;
+    time.tv_usec = 0;
+    do {
+        int clientFd = *fd;
+        if (clientFd == INVALID_SOCKET) {
+            clientFd = socket(AF_UNIX, SOCK_STREAM, 0);
+            PARAM_CHECK(clientFd >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to create socket");
+            ret = ConntectServer(clientFd, PIPE_NAME);
+            PARAM_CHECK(ret == 0, close(clientFd);
+                return PARAM_CODE_FAIL_CONNECT, "Failed to connect server");
+            setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, (char *)&time, sizeof(struct timeval));
+            setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO, (char *)&time, sizeof(struct timeval));
+            *fd = clientFd;
+        }
+        ssize_t recvLen = 0;
+        ssize_t sendLen = send(clientFd, (char *)request, request->msgSize, 0);
+        if (sendLen > 0) {
+            recvLen = recv(clientFd, (char *)request, RECV_BUFFER_MAX, 0);
+            if (recvLen > 0) {
+                break;
+            }
+        }
+        ret = errno;
+        close(clientFd);
+        *fd = INVALID_SOCKET;
+        if (errno == EAGAIN || recvLen == 0) {
+            ret = PARAM_CODE_TIMEOUT;
+            break;
+        }
+        PARAM_LOGE("Send or recv msg fail errno %d %zd %zd", errno, sendLen, recvLen);
+    } while (1);
+
+    if (ret == 0) { // check result
+        ret = ProcessRecvMsg(request);
+    }
+    return ret;
 }
 
 int SystemSetParameter(const char *name, const char *value)
 {
-    PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid param");
+    InitParamClient();
+    PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value");
     int ret = CheckParamName(name, 0);
-    PARAM_CHECK(ret == 0, return ret, "Illegal param name");
+    PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
+    uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + PARAM_ALIGN(strlen(value) + 1);
+    uint32_t labelLen = 0;
+    ParamSecurityOps *ops = GetClientParamSecurityOps();
+    if (LABEL_IS_CLIENT_CHECK_PERMITTED(g_clientSpace.paramSpace.securityLabel)) {
+        ret = CheckParamPermission(&g_clientSpace.paramSpace, g_clientSpace.paramSpace.securityLabel, name, DAC_WRITE);
+        PARAM_CHECK(ret == 0, return ret, "Forbit to set parameter %s", name);
+    } else if (!LABEL_IS_ALL_PERMITTED(g_clientSpace.paramSpace.securityLabel)) { // check local can check permissions
+        PARAM_CHECK(ops != NULL && ops->securityEncodeLabel != NULL, return -1, "Invalid securityEncodeLabel");
+        ret = ops->securityEncodeLabel(g_clientSpace.paramSpace.securityLabel, NULL, &labelLen);
+        PARAM_CHECK(ret == 0, return -1, "Failed to get label length");
+    }
+    msgSize += sizeof(ParamMsgContent) + labelLen;
+    msgSize = msgSize < RECV_BUFFER_MAX ? RECV_BUFFER_MAX : msgSize;
 
-    PARAM_LOGD("StartRequest %s", name);
-    u_int32_t msgSize = sizeof(RequestMsg) + strlen(name) + strlen(value) + 2;
-    RequestNode *request = (RequestNode *)malloc(sizeof(RequestNode) + msgSize);
+    ParamMessage *request = (ParamMessage *)CreateParamMessage(MSG_SET_PARAM, name, msgSize);
     PARAM_CHECK(request != NULL, return -1, "Failed to malloc for connect");
+    uint32_t offset = 0;
+    ret = FillParamMsgContent(request, &offset, PARAM_VALUE, value, strlen(value));
+    PARAM_CHECK(ret == 0, free(request);
+        return -1, "Failed to fill value");
+    ret = FillLabelContent(request, &offset, labelLen);
+    PARAM_CHECK(ret == 0, free(request);
+        return -1, "Failed to fill label");
+    request->msgSize = offset + sizeof(ParamMessage);
+    request->id.msgId = atomic_fetch_add(&g_requestId, 1);
 
-    memset_s(request, sizeof(RequestNode), 0, sizeof(RequestNode));
-    // 带字符串结束符
-    int contentSize = BuildParamContent(request->msg.content, msgSize - sizeof(RequestMsg), name, value);
-    PARAM_CHECK(contentSize > 0, free(request); return -1, "Failed to copy porperty");
-    request->msg.contentSize = contentSize;
-    return StartRequest(SET_PARAM, request);
+    pthread_mutex_lock(&g_clientSpace.mutex);
+    ret = StartRequest(&g_clientSpace.clientFd, request, DEFAULT_PARAM_SET_TIMEOUT);
+    pthread_mutex_unlock(&g_clientSpace.mutex);
+    free(request);
+    return ret;
+}
+
+int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
+{
+    InitParamClient();
+    PARAM_CHECK(name != NULL, return -1, "Invalid name");
+    int ret = CheckParamName(name, 0);
+    PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
+    ParamHandle handle = 0;
+    ret = ReadParamWithCheck(&g_clientSpace.paramSpace, name, DAC_READ, &handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+        PARAM_CHECK(ret == 0, return ret, "Forbid to wait parameter %s", name);
+    }
+    if (timeout == 0) {
+        timeout = DEFAULT_PARAM_WAIT_TIMEOUT;
+    }
+    uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + sizeof(ParamMsgContent) + sizeof(uint32_t);
+    msgSize = msgSize < RECV_BUFFER_MAX ? RECV_BUFFER_MAX : msgSize;
+    uint32_t offset = 0;
+    ParamMessage *request = NULL;
+    if (value != NULL) {
+        msgSize += PARAM_ALIGN(strlen(value) + 1);
+        request = (ParamMessage *)CreateParamMessage(MSG_WAIT_PARAM, name, msgSize);
+        PARAM_CHECK(request != NULL, return -1, "Failed to malloc for wait");
+        ret = FillParamMsgContent(request, &offset, PARAM_VALUE, value, strlen(value));
+    } else {
+        msgSize += PARAM_ALIGN(1);
+        request = (ParamMessage *)CreateParamMessage(MSG_WAIT_PARAM, name, msgSize);
+        PARAM_CHECK(request != NULL, return -1, "Failed to malloc for wait");
+        ret = FillParamMsgContent(request, &offset, PARAM_VALUE, "*", 1);
+    }
+    PARAM_CHECK(ret == 0, free(request);
+        return -1, "Failed to fill value");
+    ParamMsgContent *content = (ParamMsgContent *)(request->data + offset);
+    content->type = PARAM_WAIT_TIMEOUT;
+    content->contentSize = sizeof(uint32_t);
+    *((uint32_t *)(content->content)) = timeout;
+    offset += sizeof(ParamMsgContent) + sizeof(uint32_t);
+
+    request->msgSize = offset + sizeof(ParamMessage);
+    request->id.waitId = atomic_fetch_add(&g_requestId, 1);
+    int fd = INVALID_SOCKET;
+    ret = StartRequest(&fd, request, timeout);
+    if (fd != INVALID_SOCKET) {
+        close(fd);
+    }
+    free(request);
+    PARAM_LOGI("SystemWaitParameter %s value %s result %d ", name, value, ret);
+    return ret;
 }
 
 int SystemGetParameter(const char *name, char *value, unsigned int *len)
 {
+    InitParamClient();
     PARAM_CHECK(name != NULL && len != NULL, return -1, "The name or value is null");
-    InitParamWorkSpace(&g_paramWorkSpaceReadOnly, 1, NULL);
-
     ParamHandle handle = 0;
-    int ret = ReadParamWithCheck(&g_paramWorkSpaceReadOnly, name, &handle);
-    PARAM_CHECK(ret == 0, return ret, "Can not get param for %s", name);
-    return ReadParamValue(&g_paramWorkSpaceReadOnly, handle, value, len);
+    int ret = ReadParamWithCheck(&g_clientSpace.paramSpace, name, DAC_READ, &handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+        PARAM_CHECK(ret == 0, return ret, "Forbid to get parameter %s", name);
+    }
+    return ReadParamValue(&g_clientSpace.paramSpace, handle, value, len);
+}
+
+int SystemFindParameter(const char *name, ParamHandle *handle)
+{
+    InitParamClient();
+    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
+    int ret = ReadParamWithCheck(&g_clientSpace.paramSpace, name, DAC_READ, handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
+    }
+    return 0;
+}
+
+int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId)
+{
+    PARAM_CHECK(handle != 0 || commitId != NULL, return -1, "The handle is null");
+    return ReadParamCommitId(&g_clientSpace.paramSpace, handle, commitId);
 }
 
 int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len)
 {
     PARAM_CHECK(name != NULL && handle != 0, return -1, "The name is null");
-    InitParamWorkSpace(&g_paramWorkSpaceReadOnly, 1, NULL);
-    return ReadParamName(&g_paramWorkSpaceReadOnly, handle, name, len);
+    return ReadParamName(&g_clientSpace.paramSpace, handle, name, len);
 }
 
 int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
 {
     PARAM_CHECK(len != NULL && handle != 0, return -1, "The value is null");
-    InitParamWorkSpace(&g_paramWorkSpaceReadOnly, 1, NULL);
-    return ReadParamValue(&g_paramWorkSpaceReadOnly, handle, value, len);
+    return ReadParamValue(&g_clientSpace.paramSpace, handle, value, len);
 }
 
-int SystemTraversalParameter(void (*traversalParameter)(ParamHandle handle, void* cookie), void* cookie)
+int SystemTraversalParameter(void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie)
 {
+    InitParamClient();
     PARAM_CHECK(traversalParameter != NULL, return -1, "The param is null");
-    InitParamWorkSpace(&g_paramWorkSpaceReadOnly, 1, NULL);
-    return TraversalParam(&g_paramWorkSpaceReadOnly, traversalParameter, cookie);
+    ParamHandle handle = 0;
+    // check default dac
+    int ret = ReadParamWithCheck(&g_clientSpace.paramSpace, "#", DAC_READ, &handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+        PARAM_CHECK(ret == 0, return ret, "Forbid to traversal parameters");
+    }
+    return TraversalParam(&g_clientSpace.paramSpace, traversalParameter, cookie);
 }
 
-const char *SystemDetectParamChange(ParamCache *cache,
-    ParamEvaluatePtr evaluate, u_int32_t count, const char *parameters[][2])
+void SystemDumpParameters(int verbose)
 {
-    PARAM_CHECK(cache != NULL && evaluate != NULL && parameters != NULL, return NULL, "The param is null");
-    return DetectParamChange(&g_paramWorkSpaceReadOnly, cache, evaluate, count, parameters);
+    InitParamClient();
+    DumpParameters(&g_clientSpace.paramSpace, verbose);
 }
+
+int WatchParamCheck(const char *keyprefix)
+{
+    InitParamClient();
+    PARAM_CHECK(keyprefix != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid keyprefix");
+    int ret = CheckParamName(keyprefix, 0);
+    PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", keyprefix);
+    ParamHandle handle = 0;
+    ret = ReadParamWithCheck(&g_clientSpace.paramSpace, keyprefix, DAC_WATCH, &handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+        PARAM_CHECK(ret == 0, return ret, "Forbid to watch parameter %s", keyprefix);
+    }
+    return 0;
+}
+
+#ifdef STARTUP_INIT_TEST
+ParamWorkSpace *GetClientParamWorkSpace(void)
+{
+    return &g_clientSpace.paramSpace;
+}
+#endif

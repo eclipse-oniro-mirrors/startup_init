@@ -15,8 +15,7 @@
 
 #ifndef STARTUP_TRIGER_CHECKER_H
 #define STARTUP_TRIGER_CHECKER_H
-
-#include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -31,6 +30,7 @@ extern "C" {
 #define MAX_TRIGGER_TYPE_LEN 16
 
 #define SUPPORT_DATA_BUFFER_MAX 128
+#define MAX_DATA_BUFFER_MAX (SUPPORT_DATA_BUFFER_MAX * 5)
 #define CONDITION_EXTEND_LEN 32
 
 #define LOGIC_DATA_FLAGS_ORIGINAL 0x1
@@ -41,16 +41,16 @@ extern "C" {
 #define LOGIC_DATA_CLEAR_FLAG(data, flag) (data)->flags &= ~(flag)
 
 typedef struct {
-    u_int32_t flags;
-    u_int32_t startIndex;
-    u_int32_t endIndex;
+    uint32_t flags;
+    uint32_t startIndex;
+    uint32_t endIndex;
 } LogicData;
 
-struct tagTriggerNode;
-
+struct tagTriggerNode_;
+typedef int (*PARAM_CHECK_DONE)(struct tagTriggerNode_ *trigger, const char *content, uint32_t size);
 typedef struct {
     char triggerContent[MAX_TRIGGER_NAME_LEN];
-    int (*triggerExecuter)(struct tagTriggerNode *trigger, u_int32_t index);
+    PARAM_CHECK_DONE triggerExecuter;
     int dataNumber;
     int endIndex;
     int dataUnit;
@@ -64,10 +64,10 @@ typedef struct {
 
 int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, int needCondition);
 void CalculatorFree(LogicCalculator *calculator);
-int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLen);
+int ConvertInfixToPrefix(const char *condition, char *prefix, uint32_t prefixLen);
 int ComputeCondition(LogicCalculator *calculator, const char *condition);
-int GetValueFromContent(const char *content, u_int32_t contentSize, u_int32_t start, char *value, u_int32_t valueSize);
-char *GetMatchedSubCondition(const char *condition, const char *input, int length);
+int GetValueFromContent(const char *content, uint32_t contentSize, uint32_t start, char *value, uint32_t valueSize);
+int CheckMatchSubCondition(const char *condition, const char *input, int length);
 
 #ifdef __cplusplus
 #if __cplusplus

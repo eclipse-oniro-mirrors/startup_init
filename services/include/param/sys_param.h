@@ -16,34 +16,18 @@
 #ifndef BASE_STARTUP_SYS_PARAM_H
 #define BASE_STARTUP_SYS_PARAM_H
 #include <pthread.h>
-#include <stdio.h>
+#include <stdint.h>
 #include <sys/types.h>
 
+#include "param.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
 
-#define PARAM_VALUE_LEN_MAX  96
-#define PARAM_NAME_LEN_MAX  96
-typedef u_int32_t ParamHandle;
-
-typedef struct {
-    u_int32_t serial;
-    ParamHandle handle;
-    char value[PARAM_VALUE_LEN_MAX];
-} ParamCacheNode;
-
-typedef const char *(*ParamEvaluatePtr)(u_int32_t cacheCount, ParamCacheNode *node);
-
-typedef struct {
-    pthread_mutex_t lock;
-    u_int32_t serial;
-    u_int32_t cacheCount;
-    ParamEvaluatePtr evaluate;
-    ParamCacheNode *cacheNode;
-} ParamCache;
+#define DEFAULT_PARAM_WAIT_TIMEOUT 30 // 30s
+#define DEFAULT_PARAM_SET_TIMEOUT 10 // 10s
 
 /**
  * 对外接口
@@ -60,6 +44,21 @@ int SystemSetParameter(const char *name, const char *value);
  *
  */
 int SystemGetParameter(const char *name, char *value, unsigned int *len);
+
+/**
+ * 对外接口
+ * 查询参数，主要用于其他进程使用，找到对应属性的handle。
+ *
+ */
+int SystemFindParameter(const char *name, ParamHandle *handle);
+
+/**
+ * 对外接口
+ * 根据handle获取对应数据的修改标识。
+ * commitId 获取计数变化
+ *
+ */
+int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId);
 
 /**
  * 外部接口
@@ -83,6 +82,19 @@ int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len);
  *
  */
 int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len);
+
+/**
+ * 外部接口
+ * 等待某个参数值被修改，阻塞直到参数值被修改或超时
+ *
+ */
+int SystemWaitParameter(const char *name, const char *value, int32_t timeout);
+
+typedef void (*ParameterChangePtr)(const char *key, const char *value, void *context);
+int SystemWatchParameter(const char *keyprefix, ParameterChangePtr change, void *context);
+
+void SystemDumpParameters(int verbose);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

@@ -13,15 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef BASE_STARTUP_EVENT_MANAGER_H
-#define BASE_STARTUP_EVENT_MANAGER_H
+#ifndef DYNAMIC_SERVICE_API_H
+#define DYNAMIC_SERVICE_API_H
 
-#include <stdio.h>
-
-#include "sys_param.h"
-#include "init_param.h"
-#include "trigger_manager.h"
-#include "uv.h"
+#include <inttypes.h>
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -29,21 +24,13 @@ extern "C" {
 #endif
 #endif
 
-typedef struct TriggerEvent {
-    uv_work_t request;
-    EventType type;
-} TriggerEvent;
-
-typedef struct {
-    uv_work_t request;
-    EventType type;
-    u_int32_t contentSize;
-    char content[0];
-} TriggerDataEvent;
+int32_t StartDynamicProcess(const char *name);
+int32_t StopDynamicProcess(const char *name);
 
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif
-#endif
+
+#endif // DYNAMIC_SERVICE_API_H

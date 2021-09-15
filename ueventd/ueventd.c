@@ -140,9 +140,9 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
     } else if (STARTSWITH(event, "MINOR=")) {
         uevent->minor = StringToInt(event + strlen("MINOR="), -1);
     } else if (STARTSWITH(event, "DEVUID")) {
-        uevent->ug.uid = StringToInt(event + strlen("DEVUID="), 0);
+        uevent->ug.uid = (uid_t)StringToInt(event + strlen("DEVUID="), 0);
     } else if (STARTSWITH(event, "DEVGID")) {
-        uevent->ug.gid = StringToInt(event + strlen("DEVGID="), 0);
+        uevent->ug.gid = (gid_t)StringToInt(event + strlen("DEVGID="), 0);
     } else if (STARTSWITH(event, "FIRMWARE=")) {
         uevent->firmware = event + strlen("FIRMWARE=");
     } else if (STARTSWITH(event, "BUSNUM=")) {
@@ -153,7 +153,7 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
     // Ignore other events
 }
 
-static void ParseUeventMessage(char *buffer, ssize_t length, struct Uevent *uevent)
+static void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent)
 {
     if (buffer == NULL || uevent == NULL || length == 0) {
         // Ignore invalid buffer
@@ -168,7 +168,7 @@ static void ParseUeventMessage(char *buffer, ssize_t length, struct Uevent *ueve
     uevent->devNum = -1;
     ssize_t pos = 0;
     while (pos < length) {
-        char *event = buffer + pos;
+        const char *event = buffer + pos;
         size_t len = strlen(event);
         if (len == 0) {
             break;
