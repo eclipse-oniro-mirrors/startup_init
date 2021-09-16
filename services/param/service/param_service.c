@@ -503,34 +503,6 @@ static void TimerCallback(ParamTaskPtr timer, void *context)
     }
 }
 
-static int CopyBootParam(char *buffer, const char *key, size_t keyLen)
-{
-    size_t bootLen = strlen(OHOS_BOOT);
-    int ret = strncpy_s(buffer, PARAM_NAME_LEN_MAX - 1, OHOS_BOOT, bootLen);
-    PARAM_CHECK(ret == EOK, return -1, "Failed to cpy boot");
-    size_t i = 0;
-    for (; (i < PARAM_NAME_LEN_MAX - 1 - bootLen) && (i <= keyLen); i++) {
-        buffer[i + bootLen] = key[i];
-    }
-    if (i > (PARAM_NAME_LEN_MAX - 1 - bootLen)) {
-        return -1;
-    }
-    buffer[i + bootLen] = '\0';
-    return 0;
-}
-
-static int FindKey(const char *key, struct CmdLineEntry *cmdLineEntry, int length)
-{
-    PARAM_CHECK(key != NULL && cmdLineEntry != NULL && length > 0, return -1, "Input param error.");
-    for (int i = 0; i < length; i++) {
-        if (strstr(key, cmdLineEntry[i].key) != NULL) {
-            cmdLineEntry[i].set = 1;
-            return 1;
-        }
-    }
-    return 0;
-}
-
 int SystemWriteParam(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return -1, "The name is null");
