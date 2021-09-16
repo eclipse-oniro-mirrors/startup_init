@@ -237,16 +237,19 @@ static void DoCopyInernal(const char *source, const char *target)
                 break;
             }
         }
-    }
-    if (!isSuccess) {
-        INIT_LOGE("Copy from \" %s \" to \" %s \" failed", source, target);
-    } else {
+	if (!isSuccess) {
+            INIT_LOGE("Copy from \" %s \" to \" %s \" failed", source, target);
+        }
         fsync(dstFd);
     }
-    close(srcFd);
-    close(dstFd);
-    srcFd = -1;
-    dstFd = -1;
+    if (srcFd >= 0) {
+        close(srcFd);
+        srcFd = -1;
+    }
+    if (dstFd >= 0) {
+        close(dstFd);
+        dstFd = -1;
+    }
 }
 
 static void DoCopy(const char* cmdContent)
@@ -257,21 +260,21 @@ static void DoCopy(const char* cmdContent)
         FreeCmd(&ctx);
         return;
     }
-
-    char *sourceFile = realpath(ctx->argv[0], NULL);
-    char *targetFile = realpath(ctx->argv[1], NULL);
-    if (sourceFile == NULL || targetFile == NULL) {
-        FreeCmd(&ctx);
-        ctx = NULL;
-        return;
+    char sourceFile[PATH_MAX] = {0};
+    char targetFile[PATH_MAX] = {0};
+    if (realpath(ctx->argv[0], sourceFile) == NULL) {
+        if (errno != ENOENT) {
+            return;
+        }
+    }
+    if (realpath(ctx->argv[1], targetFile) == NULL) {
+        if (errno != ENOENT) {
+            return;
+        }
     }
     DoCopyInernal(sourceFile, targetFile);
     FreeCmd(&ctx);
-    free(sourceFile);
-    free(targetFile);
     ctx = NULL;
-    sourceFile = NULL;
-    targetFile = NULL;
     return;
 }
 
