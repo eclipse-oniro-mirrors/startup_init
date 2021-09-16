@@ -531,61 +531,6 @@ static int FindKey(const char *key, struct CmdLineEntry *cmdLineEntry, int lengt
     return 0;
 }
 
-static int LoadParamFromCmdLine(struct CmdLineEntry *cmdLineEntry, int length)
-{
-    PARAM_CHECK(cmdLineEntry != NULL && length > 0, return -1, "Input params error.");
-    char *buffer = ReadFileData(PARAM_CMD_LINE);
-    PARAM_CHECK(buffer != NULL, return -1, "Failed to read file %s", PARAM_CMD_LINE);
-    char *data = malloc(PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX);
-    PARAM_CHECK(data != NULL, free(buffer);
-        return -1, "Failed to read file %s", PARAM_CMD_LINE);
-
-    char *endBuffer = buffer + strlen(buffer);
-    char *key = data;
-    char *value = data + PARAM_NAME_LEN_MAX;
-    char *tmp = strchr(buffer, '=');
-    char *next = buffer;
-    while (tmp != 0) {
-        int ret = CopyBootParam(key, next, tmp - next - 1);
-        int ret1 = 0;
-        next = strchr(tmp + 1, '=');
-        if (next != NULL) {
-            while (!isspace(*next) && (next > buffer)) { // 直到属性值结束位置
-                next--;
-            }
-            while (isspace(*next) && (next > buffer)) { // 去掉空格
-                next--;
-            }
-            ret1 = strncpy_s(value, PARAM_CONST_VALUE_LEN_MAX - 1, tmp + 1, next - tmp);
-            next++;
-            while (isspace(*next) && (next < endBuffer)) { // 跳过空格
-                next++;
-            }
-        } else {
-            ret1 = strncpy_s(value, PARAM_CONST_VALUE_LEN_MAX - 1, tmp + 1, endBuffer - tmp);
-        }
-        if ((ret == 0) && (ret1 == 0) && (CheckParamName(key, 0) == 0)) {
-            uint32_t dataIndex = 0;
-            if (FindKey(key, cmdLineEntry, length) == 1) {
-                PARAM_LOGD("LoadParamFromCmdLine %s %s", key, value);
-                (void)WriteParam(&g_paramWorkSpace.paramSpace, key, value, &dataIndex, 0);
-            }
-        }
-        if (next == NULL) {
-            break;
-        }
-        tmp = strchr(next, '=');
-    }
-    for (int i = 0; i < length; i++) {
-        if (cmdLineEntry[i].set == 0) {
-            PARAM_LOGI("Warning, LoadParamFromCmdLine key %s is not found.", cmdLineEntry[i].key);
-        }
-    }
-    free(data);
-    free(buffer);
-    return 0;
-}
-
 int SystemWriteParam(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return -1, "The name is null");
@@ -680,10 +625,6 @@ void InitParamService(void)
     auditData.dacData.mode = DAC_ALL_PERMISSION;
     ret = AddSecurityLabel(&auditData, (void *)&g_paramWorkSpace);
     PARAM_CHECK(ret == 0, return, "Failed to add default dac label");
-
-    // 读取cmdline的参数
-    struct CmdLineEntry cmdLineEntry[] = {{"hardware", 0}};
-    LoadParamFromCmdLine(cmdLineEntry, sizeof(cmdLineEntry) / sizeof(cmdLineEntry[0]));
 }
 
 static void OnPidDelete(pid_t pid)
