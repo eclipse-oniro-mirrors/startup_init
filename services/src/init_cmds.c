@@ -238,7 +238,7 @@ static void DoCopyInernal(const char *source, const char *target)
                 break;
             }
         }
-	if (!isSuccess) {
+        if (!isSuccess) {
             INIT_LOGE("Copy from \" %s \" to \" %s \" failed", source, target);
         }
         fsync(dstFd);
