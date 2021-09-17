@@ -528,16 +528,18 @@ static void DoMkDir(const char *cmdContent, int maxArg)
                 break;
             }
             index = index + 1;
-            if ((ctx->argv[index] != NULL) && (ctx->argv[index + 1] != NULL)) {
-                rc = Chown(ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
-            } else {
-                rc = -1;
+            if (ctx->argv[index] != NULL) {
+                if (ctx->argv[index + 1] != NULL) {
+                    rc = Chown(ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
+                } else {
+                    rc = -1;
+                }
             }
         }
     } while (0);
 
     if (rc < 0) {
-        INIT_LOGE("Run command mkdir failed err = %d", errno);
+        INIT_LOGE("Run command mkdir %s failed err = %d", ctx->argv[0], errno);
         (void)rmdir(ctx->argv[0]);
     }
     FreeCmd(ctx);
