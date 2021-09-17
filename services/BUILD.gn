@@ -31,14 +31,15 @@ if (defined(ohos_lite)) {
       "src/init_service_manager.c",
       "src/init_service_socket.c",
       "src/init_signal_handler.c",
-      "src/init_utils.c",
       "src/main.c",
+      "utils/init_utils.c",
     ]
 
     include_dirs = [
       "//base/startup/init_lite/services/include",
       "//base/startup/init_lite/services/param/include",
       "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/services/utils",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/startup/syspara_lite/interfaces/kits",
@@ -99,13 +100,13 @@ if (defined(ohos_lite)) {
       "src/init_service_manager.c",
       "src/init_service_socket.c",
       "src/init_signal_handler.c",
-      "src/init_utils.c",
       "src/main.c",
     ]
     include_dirs = [
       "//base/startup/init_lite/services/include/param",
       "//base/startup/init_lite/services/include",
       "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/services/utils",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//third_party/libuv/include",
@@ -113,6 +114,7 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/startup/init_lite/services/log:init_log",
       "//base/startup/init_lite/services/param:param_service",
+      "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]

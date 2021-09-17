@@ -36,6 +36,7 @@
 #include "device.h"
 #include "init_param.h"
 #endif
+#include "init_utils.h"
 
 static const pid_t INIT_PROCESS_PID = 1;
 
@@ -90,7 +91,7 @@ int main(int argc, char **argv)
     MountBasicFs();
     CreateDeviceNode();
     EnableDevKmsg();
-    MakeSocketDir("/dev/unix/socket/", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    MakeDirRecursive("/dev/unix/socket", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 #endif
 
     SignalInitModule();

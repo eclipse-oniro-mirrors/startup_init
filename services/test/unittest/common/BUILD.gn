@@ -31,6 +31,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/include",
       "//base/startup/init_lite/services/param/include",
       "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/services/utils",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/startup/syspara_lite/interfaces/kits",
@@ -50,7 +51,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/src/init_service_manager.c",
       "//base/startup/init_lite/services/src/init_service_socket.c",
       "//base/startup/init_lite/services/src/init_signal_handler.c",
-      "//base/startup/init_lite/services/src/init_utils.c",
+      "//base/startup/init_lite/services/utils/init_utils.c",
       "cmd_func_test.cpp",
     ]
 

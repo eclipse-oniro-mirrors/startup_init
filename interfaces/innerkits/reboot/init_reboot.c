@@ -14,49 +14,48 @@
  */
 #include "init_reboot.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "init_log.h"
+#include "param.h"
 #include "securec.h"
 #include "sys_param.h"
 
-#define SYS_POWER_CTRL "sys.powerctrl="
-#define MAX_REBOOT_NAME_SIZE  100
-#define MAX_REBOOT_VAUE_SIZE  500
+// Refer to parameter limit, value size should not bigger than 96
+#define MAX_REBOOT_OPTION_SIZE PARAM_VALUE_LEN_MAX
 
-int DoReboot(const char *cmdContent)
+int DoReboot(const char *option)
 {
-    uid_t uid1 = getuid();
-    uid_t uid2 = geteuid();
-    if (uid1 != 0 || uid2 != 0) {
-        INIT_LOGE("uid1=%d, uid2=%d, user MUST be root, error!", uid1, uid2);
+    uid_t uid = getuid();
+    uid_t euid = geteuid();
+    if (uid != 0 || euid != 0) {
+        INIT_LOGE("User or effective user MUST be root, abort!");
         return -1;
     }
-    char value[MAX_REBOOT_VAUE_SIZE];
-    if (cmdContent == NULL || strlen(cmdContent) == 0) {
-        if (snprintf_s(value, MAX_REBOOT_NAME_SIZE, strlen("reboot") + 1, "%s", "reboot") < 0) {
-            INIT_LOGE("DoReboot api error, MAX_REBOOT_NAME_SIZE is not enough");
+    char value[MAX_REBOOT_OPTION_SIZE];
+    if (option == NULL || strlen(option) == 0) {
+        if (snprintf_s(value, MAX_REBOOT_OPTION_SIZE, strlen("reboot") + 1, "%s", "reboot") < 0) {
+            INIT_LOGE("reboot options too large, overflow");
             return -1;
         }
         if (SystemSetParameter("sys.powerctrl", value) != 0) {
-            INIT_LOGE("DoReboot Api SystemSetParameter error");
+            INIT_LOGE("Set parameter to trigger reboot command \" %s \" failed", value);
             return -1;
         }
         return 0;
     }
-    size_t length = strlen(cmdContent);
-    if (length > MAX_REBOOT_VAUE_SIZE) {
-        INIT_LOGE("DoReboot api error, cmdContent = %s, length = %d.", cmdContent, length);
+    int length = strlen(option);
+    if (length > MAX_REBOOT_OPTION_SIZE) {
+        INIT_LOGE("Reboot option \" %s \" is too large, overflow", option);
         return -1;
     }
-    if (snprintf_s(value, MAX_REBOOT_NAME_SIZE, MAX_REBOOT_NAME_SIZE - 1, "%s%s", "reboot,", cmdContent) < 0) {
-        INIT_LOGE("DoReboot api error, MAX_REBOOT_NAME_SIZE is not enough");
+    if (snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "%s%s", "reboot,", option) < 0) {
+        INIT_LOGE("Failed to copy boot option \" %s \"", option);
         return -1;
     }
     if (SystemSetParameter("sys.powerctrl", value) != 0) {
-        INIT_LOGE("DoReboot Api SystemSetParameter error");
+        INIT_LOGE("Set parameter to trigger reboot command \" %s \" failed", value);
         return -1;
     }
     return 0;

@@ -18,9 +18,8 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
+#include "init_utils.h"
 
-#define DECIMALISM 10
-#define OCTONARY 8
 #define DEVICE_FILE_SIZE 128U
 #define SYSPATH_SIZE 512U
 #define BLOCKDEVICE_LINKS 3
@@ -33,7 +32,4 @@
 // Default device mode is 0660
 #define DEVMODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)
 
-int MakeDirRecursive(const char *dir, mode_t mode);
-int MakeDir(const char *dir, mode_t mode);
-int StringToInt(const char *str, int defaultValue);
 #endif // BASE_STARTUP_INITLITE_UEVENTD_UTILS_H

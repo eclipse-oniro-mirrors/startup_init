@@ -27,7 +27,6 @@
 #include <unistd.h>
 
 #include "init_cmds.h"
-#include "init_utils.h"
 #include "param_manager.h"
 #include "trigger_checker.h"
 

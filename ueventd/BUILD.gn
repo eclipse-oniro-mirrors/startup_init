@@ -22,18 +22,19 @@ if (!defined(ohos_lite)) {
       "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
       "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
       "//base/startup/init_lite/ueventd/ueventd_socket.c",
-      "//base/startup/init_lite/ueventd/ueventd_utils.c",
     ]
 
     include_dirs = [
-      "include",
+      ".",
       "//third_party/bounds_checking_function/include",
       "//base/startup/init_lite/services/log",
       "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/utils",
     ]
 
     deps = [
       "//base/startup/init_lite/services/log:init_log",
+      "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_static",
     ]
 

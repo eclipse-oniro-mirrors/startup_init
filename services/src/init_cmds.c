@@ -175,13 +175,13 @@ struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
     ctx->argc = 0;
     token = strstr(p, delim);
     if (token == NULL) { // No whitespaces
-        // Make surce there is enough memory to store parameter value
+        // Make sure there is enough memory to store parameter value
         allocSize = (size_t)(cmdLength + MAX_PARAM_VALUE_LEN + 1);
         return CopyCmd(ctx, p, allocSize);
     }
 
     while (token != NULL) {
-        // Too more arguments, treat rest of data as one argument
+        // Too many arguments, treat rest of data as one argument
         if (ctx->argc == (argsCount - 1)) {
             break;
         }
@@ -223,23 +223,18 @@ static void WriteCommon(const char *file, char *buffer, int flags, mode_t mode)
         return;
     }
     char realPath[PATH_MAX] = {0};
-    char *rp = realpath(file, realPath);
-
-    if (rp == NULL) {
-        INIT_LOGE("Failed resolve real path name of %s", rp);
-        return;
-    }
-
-    int fd = open(rp, flags, mode);
-    if (fd >= 0) {
-        size_t totalSize = strlen(buffer);
-        size_t written = WriteAll(fd, buffer, totalSize);
-        if (written != totalSize) {
-            INIT_LOGE("Write %lu bytes to file failed", totalSize, file);
+    if (Realpath(file, realPath, sizeof(realPath)) != NULL) {
+        int fd = open(realPath, flags, mode);
+        if (fd >= 0) {
+            size_t totalSize = strlen(buffer);
+            size_t written = WriteAll(fd, buffer, totalSize);
+            if (written != totalSize) {
+                INIT_LOGE("Write %lu bytes to file failed", totalSize, file);
+            }
+            close(fd);
         }
-        close(fd);
+        fd = -1;
     }
-    fd = -1;
 }
 
 static void DoSetDomainname(const char *cmdContent, int maxArg)
@@ -437,22 +432,18 @@ static void DoCopy(const char *cmdContent, int maxArg)
         FreeCmd(ctx);
         return;
     }
-    char *sourceFile = realpath(ctx->argv[0], NULL);
-    char *targetFile = realpath(ctx->argv[1], NULL);
-
-    if (sourceFile == NULL || targetFile == NULL) {
-        INIT_LOGE("Failed resolve real path name in copy command");
+    char srcPath[PATH_MAX] = {0};
+    char dstPath[PATH_MAX] = {0};
+    if ((Realpath(ctx->argv[0], srcPath, sizeof(srcPath)) == NULL) ||
+        (Realpath(ctx->argv[1], dstPath, sizeof(dstPath)) == NULL)) {
         FreeCmd(ctx);
+        ctx = NULL;
         return;
     }
 
-    DoCopyInernal(sourceFile, targetFile);
+    DoCopyInernal(srcPath, dstPath);
     FreeCmd(ctx);
-    free(sourceFile);
-    free(targetFile);
     ctx = NULL;
-    sourceFile = NULL;
-    targetFile = NULL;
     return;
 }
 
@@ -539,7 +530,7 @@ static void DoMkDir(const char *cmdContent, int maxArg)
     } while (0);
 
     if (rc < 0) {
-        INIT_LOGE("Run command mkdir %s failed err = %d", ctx->argv[0], errno);
+        INIT_LOGE("Run command mkdir %s failed err = %d ", ctx->argv[0], errno);
         (void)rmdir(ctx->argv[0]);
     }
     FreeCmd(ctx);
@@ -740,15 +731,13 @@ static void DoInsmodInternal(const char *fileName, const char *secondPtr, const 
     if (fileName == NULL) {
         return;
     }
-    char *realPath = realpath(fileName, NULL);
-    if (realPath == NULL) {
+    char realPath[PATH_MAX] = {0};
+    if (Realpath(fileName, realPath, sizeof(realPath)) == NULL) {
         return;
     }
     int fd = open(realPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd < 0) {
         INIT_LOGE("failed to open %s: %d", realPath, errno);
-        free(realPath);
-        realPath = NULL;
         return;
     }
     int rc = syscall(__NR_finit_module, fd, options, flags);
@@ -758,8 +747,6 @@ static void DoInsmodInternal(const char *fileName, const char *secondPtr, const 
     if (fd >= 0) {
         close(fd);
     }
-    free(realPath);
-    realPath = NULL;
     return;
 }
 
@@ -904,13 +891,13 @@ static void DoLoadCfg(const char *path, int maxArg)
         return;
     }
     INIT_ERROR_CHECK(path != NULL, return, "CheckCfg path is NULL.");
-    char *realPath = realpath(path, NULL);
-    INIT_CHECK_ONLY_RETURN(realPath != NULL);
+    char realPath[PATH_MAX] = {0};
+    if (Realpath(path, realPath, sizeof(realPath)) == NULL) {
+        return;
+    }
     fp = fopen(realPath, "r");
     if (fp == NULL) {
         INIT_LOGE("open cfg error = %d", errno);
-        free(realPath);
-        realPath = NULL;
         return;
     }
 
@@ -918,8 +905,6 @@ static void DoLoadCfg(const char *path, int maxArg)
     if (cmdLine == NULL) {
         INIT_LOGE("malloc cmdline error");
         fclose(fp);
-        free(realPath);
-        realPath = NULL;
         return;
     }
 
@@ -937,8 +922,6 @@ static void DoLoadCfg(const char *path, int maxArg)
         DoCmd(cmdLine);
         (void)memset_s(buf, sizeof(char) * LOADCFG_BUF_SIZE, 0, sizeof(char) * LOADCFG_BUF_SIZE);
     }
-    free(realPath);
-    realPath = NULL;
     free(cmdLine);
     fclose(fp);
 }

@@ -30,7 +30,6 @@ extern "C" {
 
 void MountBasicFs(void);
 void CreateDeviceNode(void);
-int MakeSocketDir(const char *path, mode_t mode);
 void CloseStdio(void);
 
 #ifdef __cplusplus

@@ -77,18 +77,3 @@ void CreateDeviceNode(void)
     }
 }
 
-int MakeSocketDir(const char *path, mode_t mode)
-{
-    int rc = mkdir("/dev/unix/", mode);
-    if (rc < 0 && errno != EEXIST) {
-        INIT_LOGE("Create %s failed. %d", path, errno);
-        return -1;
-    }
-    rc = mkdir("/dev/unix/socket/", mode);
-    if (rc < 0 && errno != EEXIST) {
-        INIT_LOGE("Create %s failed. %d", path, errno);
-        return -1;
-    }
-    return rc;
-}
-

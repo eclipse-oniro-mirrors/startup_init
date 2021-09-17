@@ -13,20 +13,19 @@
  * limitations under the License.
  */
 #include "init_utils.h"
+
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <pwd.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-
 #include "init_log.h"
-#include "init_utils.h"
 #include "securec.h"
 
 #define WAIT_MAX_COUNT 10
@@ -74,10 +73,10 @@ uid_t DecodeUid(const char *name)
     }
 }
 
-char* ReadFileToBuf(const char *configFile)
+char *ReadFileToBuf(const char *configFile)
 {
-    char* buffer = NULL;
-    FILE* fd = NULL;
+    char *buffer = NULL;
+    FILE *fd = NULL;
     struct stat fileStat = {0};
     if (configFile == NULL || *configFile == '\0') {
         return NULL;
@@ -133,9 +132,10 @@ int SplitString(char *srcPtr, char **dstPtr, int maxNum)
 
 void WaitForFile(const char *source, unsigned int maxCount)
 {
-    if (maxCount > WAIT_MAX_COUNT) {
+    unsigned int maxCountTmp = maxCount;
+    if (maxCountTmp > WAIT_MAX_COUNT) {
         INIT_LOGE("WaitForFile max time is 5s");
-        maxCount = WAIT_MAX_COUNT;
+        maxCountTmp = WAIT_MAX_COUNT;
     }
     struct stat sourceInfo;
     const unsigned int waitTime = 500000;
@@ -143,10 +143,10 @@ void WaitForFile(const char *source, unsigned int maxCount)
     do {
         usleep(waitTime);
         count++;
-    } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount));
+    } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCountTmp));
     float secTime = ConvertMicrosecondToSecond(waitTime);
-    if (count == maxCount) {
-        INIT_LOGE("wait for file:%s failed after %f.", source, maxCount * secTime);
+    if (count == maxCountTmp) {
+        INIT_LOGE("wait for file:%s failed after %f.", source, maxCountTmp * secTime);
     }
     return;
 }
@@ -174,3 +174,77 @@ size_t WriteAll(int fd, char *buffer, size_t size)
     }
     return size - left;
 }
+
+char *Realpath(const char *source, char *resolvedPath, size_t resolvedPathSize)
+{
+    if ((source == NULL) || (resolvedPath == NULL) || (resolvedPathSize != PATH_MAX)) {
+        return NULL;
+    }
+    if (realpath(source, resolvedPath) == NULL) {
+        if (errno != ENOENT) {
+            INIT_LOGE("Fail resolve %s real path err=%d", source, errno);
+            return NULL;
+        }
+    }
+    return resolvedPath;
+}
+
+int MakeDir(const char *dir, mode_t mode)
+{
+    int rc = -1;
+    if (dir == NULL || *dir == '\0') {
+        errno = EINVAL;
+        return rc;
+    }
+    rc = mkdir(dir, mode);
+    if (rc < 0 && errno != EEXIST) {
+        INIT_LOGE("Create directory \" %s \" failed, err = %d", dir, errno);
+        return rc;
+    }
+    // create dir success or it already exist.
+    return 0;
+}
+
+int MakeDirRecursive(const char *dir, mode_t mode)
+{
+    int rc = -1;
+    char buffer[PATH_MAX] = {};
+    const char *p = NULL;
+    if (dir == NULL || *dir == '\0') {
+        errno = EINVAL;
+        return rc;
+    }
+    p = dir;
+    char *slash = strchr(dir, '/');
+    while (slash != NULL) {
+        int gap = slash - p;
+        p = slash + 1;
+        if (gap == 0) {
+            slash = strchr(p, '/');
+            continue;
+        }
+        if (gap < 0) { // end with '/'
+            break;
+        }
+        if (memcpy_s(buffer, PATH_MAX, dir, p - dir - 1) != 0) {
+            return -1;
+        }
+        rc = MakeDir(buffer, mode);
+        if (rc < 0) {
+            return rc;
+        }
+        slash = strchr(p, '/');
+    }
+    return MakeDir(dir, mode);
+}
+
+int StringToInt(const char *str, int defaultValue)
+{
+    if (str == NULL || *str == '\0') {
+        return defaultValue;
+    }
+    errno = 0;
+    int value = (int)strtoul(str, NULL, DECIMAL_BASE);
+    return errno != 0 ? defaultValue : value;
+}
+

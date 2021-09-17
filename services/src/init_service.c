@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +40,7 @@
 #include "init_param.h"
 #endif
 #include "init_perms.h"
+#include "init_reboot.h"
 #include "init_service_socket.h"
 #include "init_utils.h"
 #include "securec.h"
@@ -253,29 +255,24 @@ int ServiceStop(Service *service)
     return SERVICE_SUCCESS;
 }
 
-// the service need to be restarted, if it crashed more than 4 times in 4 minutes
-void CheckCritical(Service *service)
+static bool CalculateCrashTime(Service *service, int crashTimeLimit, int crashCountLimit)
 {
-    if (service == NULL) {
-        return;
-    }
-    if (service->attribute & SERVICE_ATTR_CRITICAL) {            // critical
-        // crash time and count check
-        time_t curTime = time(NULL);
-        if (service->criticalCrashCnt == 0) {
-            service->firstCriticalCrashTime = curTime;
-            ++service->criticalCrashCnt;
-        } else if (difftime(curTime, service->firstCriticalCrashTime) > CRITICAL_CRASH_TIME_LIMIT) {
-            service->firstCriticalCrashTime = curTime;
-            service->criticalCrashCnt = 1;
-        } else {
-            ++service->criticalCrashCnt;
-            if (service->criticalCrashCnt > CRITICAL_CRASH_COUNT_LIMIT) {
-                INIT_LOGE("reap critical service %s, crash too many times! Need reboot!", service->name);
-                RebootSystem();
-            }
+    INIT_ERROR_CHECK(service != NULL && crashTimeLimit > 0 && crashCountLimit > 0, return 0,
+        "Service name=%s, input params error.", service->name);
+    time_t curTime = time(NULL);
+    if (service->crashCnt == 0) {
+        service->firstCrashTime = curTime;
+        ++service->crashCnt;
+    } else if (difftime(curTime, service->firstCrashTime) > crashTimeLimit) {
+        service->firstCrashTime = curTime;
+        service->crashCnt = 1;
+    } else {
+        ++service->crashCnt;
+        if (service->crashCnt > crashCountLimit) {
+            return false;
         }
     }
+    return true;
 }
 
 static int ExecRestartCmd(const Service *service)
@@ -328,25 +325,18 @@ void ServiceReap(Service *service)
             return;
         }
     }
-    // the service that does not need to be restarted restarts, indicating that it has crashed
-    if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
-        // crash time and count check
-        time_t curTime = time(NULL);
-        if (service->crashCnt == 0) {
-            service->firstCrashTime = curTime;
-            ++service->crashCnt;
-        } else if (difftime(curTime, service->firstCrashTime) > CRASH_TIME_LIMIT) {
-            service->firstCrashTime = curTime;
-            service->crashCnt = 1;
-        } else {
-            ++service->crashCnt;
-            if (service->crashCnt > CRASH_COUNT_LIMIT) {
-                INIT_LOGE("reap service %s, crash too many times!", service->name);
-                return;
-            }
+    if (service->attribute & SERVICE_ATTR_CRITICAL) {            // critical
+        if (CalculateCrashTime(service, CRITICAL_CRASH_TIME_LIMIT, CRITICAL_CRASH_COUNT_LIMIT) == false) {
+            INIT_LOGE("Critical service \" %s \" crashed %d times, rebooting system",
+                service->name, CRITICAL_CRASH_COUNT_LIMIT);
+            DoReboot("reboot");
+        }
+    } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
+        if (CalculateCrashTime(service, CRASH_TIME_LIMIT, CRASH_COUNT_LIMIT) == false) {
+            INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, CRASH_COUNT_LIMIT);
+            return;
         }
     }
-    CheckCritical(service);
     if (service->onRestart != NULL) {
         INIT_CHECK_ONLY_ELOG(ExecRestartCmd(service) == SERVICE_SUCCESS, "SetOnRestart fail ");
     }
