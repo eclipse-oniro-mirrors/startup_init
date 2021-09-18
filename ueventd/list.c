@@ -15,6 +15,8 @@
 
 #include "list.h"
 
+#include <stddef.h>
+
 void ListInit(struct ListNode *node)
 {
     if (node == NULL) {

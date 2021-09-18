@@ -119,7 +119,7 @@ static void HandleUevent(const struct Uevent *uevent)
 
 static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
 {
-    if (uevent == NULL || uevent == NULL || len == 0) {
+    if (uevent == NULL || event == NULL || len == 0) {
         return;
     }
 
@@ -168,7 +168,7 @@ static void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent
     uevent->devNum = -1;
     ssize_t pos = 0;
     while (pos < length) {
-        char *event = buffer + pos;
+        const event = buffer + pos;
         size_t len = strlen(event);
         if (len == 0) {
             break;
