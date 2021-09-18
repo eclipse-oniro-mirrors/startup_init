@@ -49,7 +49,6 @@ static void OnReceiveResponse(uv_stream_t *handle, ssize_t nread, const uv_buf_t
     if (nread <= 0 || buf == NULL || handle == NULL || buf->base == NULL) {
         if (buf != NULL && buf->base != NULL) {
             free(buf->base);
-            buf->base = NULL;
         }
         if (handle != NULL) {
             uv_close((uv_handle_t*)handle, NULL);
@@ -70,7 +69,6 @@ static void OnReceiveResponse(uv_stream_t *handle, ssize_t nread, const uv_buf_t
     }
     PARAM_LOGD("Close handle %p", handle);
     free(buf->base);
-    buf->base = NULL;
     uv_close((uv_handle_t*)handle, NULL);
     uv_stop(req->loop);
 }

@@ -276,7 +276,7 @@ TrieDataNode *AddTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t k
 TrieDataNode *AddToSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const char *key, u_int32_t keyLen)
 {
     PARAM_CHECK(workSpace != NULL && dataNode != NULL, return NULL,
-        "Invalid param work space");
+        "Invalid param");
     TrieDataNode *root = NULL;
     int ret = workSpace->compareTrieNode((TrieNode *)dataNode, key, keyLen);
     if (ret <= 0) {

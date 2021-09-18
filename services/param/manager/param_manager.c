@@ -46,9 +46,7 @@ static int SelinuxAuditCallback(void *data,
 
 int InitParamWorkSpace(ParamWorkSpace *workSpace, int onlyRead, const char *context)
 {
-    if (workSpace != NULL) {
-        return PARAM_CODE_NOT_INIT;
-    }
+    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_NAME, "Invalid param");
     u_int32_t flags = atomic_load_explicit(&workSpace->flags, memory_order_relaxed);
     if ((flags & WORKSPACE_FLAGS_INIT) == WORKSPACE_FLAGS_INIT) {
         return 0;
@@ -127,7 +125,7 @@ int WriteParamInfo(ParamWorkSpace *workSpace, SubStringInfo *info, int subStrNum
 
 int AddParam(WorkSpace *workSpace, const char *name, const char *value)
 {
-    PARAM_CHECK(workSpace != NULL workSpace->area != NULL && name != NULL && value != NULL,
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL && name != NULL && value != NULL,
         return PARAM_CODE_INVALID_PARAM, "Failed to check param");
 
     TrieDataNode *node = AddTrieDataNode(workSpace, name, strlen(name));

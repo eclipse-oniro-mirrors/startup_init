@@ -18,6 +18,6 @@
 
 #include "cJSON.h"
 
-void ParseAllImports(cJSON *root);
+void ParseAllImports(const cJSON *root);
 
 #endif
