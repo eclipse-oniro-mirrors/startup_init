@@ -169,7 +169,7 @@ static void WriteServicePid(Service *service, pid_t pid)
         INIT_ERROR_CHECK(fd != NULL, continue, "Open file %s failed, err = %d", service->writepidFiles[i], errno);
         INIT_CHECK_ONLY_ELOG(fwrite(pidString, 1, strlen(pidString), fd) == strlen(pidString),
             "write pid %s to file %s failed, err = %d", pidString, service->writepidFiles[i], errno);
-        fclose(fd);
+        (void)fclose(fd);
     }
 }
 

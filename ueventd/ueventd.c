@@ -168,7 +168,7 @@ static void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent
     uevent->devNum = -1;
     ssize_t pos = 0;
     while (pos < length) {
-        const event = buffer + pos;
+        const char *event = buffer + pos;
         size_t len = strlen(event);
         if (len == 0) {
             break;

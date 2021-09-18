@@ -89,23 +89,24 @@ static char **SplitUeventConfig(char *buffer, const char *del, int *returnCount,
     char *rest = NULL;
     int count = 0;
     int average = 2;
+    int maxItemCountTmp = maxItemCount;
     char *p = strtok_r(buffer, del, &rest);
-    if (maxItemCount < 0) {
+    if (maxItemCountTmp < 0) {
         return NULL;
     }
-    if (maxItemCount > DEFAULTITEMCOUNT) {
-        maxItemCount = DEFAULTITEMCOUNT;
+    if (maxItemCountTmp > DEFAULTITEMCOUNT) {
+        maxItemCountTmp = DEFAULTITEMCOUNT;
     }
-    char **items = (char **)malloc(sizeof(char*) * maxItemCount);
+    char **items = (char **)malloc(sizeof(char*) * maxItemCountTmp);
     if (items == NULL) {
         INIT_LOGE("No enough memory to store uevent config");
         return NULL;
     }
     while (p != NULL) {
-        if (count > maxItemCount - 1) {
-            maxItemCount += (maxItemCount / average) + 1;
+        if (count > maxItemCountTmp - 1) {
+            maxItemCountTmp += (maxItemCountTmp / average) + 1;
             INIT_LOGD("Too many items,expand size");
-            char **expand = (char **)(realloc(items, sizeof(char *) * maxItemCount));
+            char **expand = (char **)(realloc(items, sizeof(char *) * maxItemCountTmp));
             if (expand == NULL) {
                 INIT_LOGE("Failed to expand memory for uevent config parser");
                 FreeConfigItems(items, count);

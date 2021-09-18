@@ -155,10 +155,10 @@ static char *FindPlatformDeviceName(char *path)
     if (INVALIDSTRING(path)) {
         return NULL;
     }
-
-    if (STARTSWITH(path, "/sys/devices/platform/")) {
-        path += strlen("/sys/devices/platform/");
-        return path;
+    char *pathTmp = path;
+    if (STARTSWITH(pathTmp, "/sys/devices/platform/")) {
+        pathTmp += strlen("/sys/devices/platform/");
+        return pathTmp;
     }
     return NULL;
 }

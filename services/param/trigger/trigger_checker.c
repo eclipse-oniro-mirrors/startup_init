@@ -155,7 +155,7 @@ static int ComputeSubCondition(LogicCalculator *calculator, LogicData *data, con
     char *subStr = strstr(condition + data->startIndex, "=");
     if (subStr != NULL && ((u_int32_t)(subStr - condition) > data->endIndex)) {
         if (strncmp(condition + data->startIndex, calculator->triggerContent,
-                strlen(calculator->triggerContent)) == 0) {
+            strlen(calculator->triggerContent)) == 0) {
             return 1;
         }
     } else {

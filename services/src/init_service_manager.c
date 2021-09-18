@@ -473,12 +473,8 @@ static int GetUidStringNumber(const cJSON *curArrItem, Service *curServ)
 
 static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket *sockopt)
 {
-    if (optNum != SOCK_OPT_NUMS) {
-        return -1;
-    }
-    if (opt[SERVICE_SOCK_TYPE] == NULL) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(optNum == SOCK_OPT_NUMS, -1);
+    INIT_CHECK_RETURN_VALUE(opt[SERVICE_SOCK_TYPE] != NULL, -1);
     sockopt->type =
         ((strncmp(opt[SERVICE_SOCK_TYPE], "stream", strlen(opt[SERVICE_SOCK_TYPE])) == 0) ? SOCK_STREAM :
         ((strncmp(opt[SERVICE_SOCK_TYPE], "dgram", strlen(opt[SERVICE_SOCK_TYPE])) == 0) ? SOCK_DGRAM :
