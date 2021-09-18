@@ -33,7 +33,7 @@
 
 static int CreateSocket(struct ServiceSocket *sockopt)
 {
-    if (!sockopt || !sockopt->name) {
+    if (sockopt == NULL || sockopt->name == NULL) {
         return -1;
     }
     if (sockopt->sockFd >= 0) {
@@ -53,7 +53,7 @@ static int CreateSocket(struct ServiceSocket *sockopt)
         sockopt->name) < 0) {
         return -1;
     }
-    if (access(addr.sun_path, F_OK)) {
+    if (access(addr.sun_path, F_OK) == 0) {
         INIT_LOGE("%s already exist, remove it", addr.sun_path);
         if (unlink(addr.sun_path) != 0) {
             INIT_LOGE("ulink fail err %d ", errno);
@@ -117,11 +117,11 @@ static int SetSocketEnv(int fd, const char *name)
 
 int DoCreateSocket(struct ServiceSocket *sockopt)
 {
-    if (!sockopt) {
+    if (sockopt == NULL) {
         return -1;
     }
     struct ServiceSocket *tmpSock = sockopt;
-    while (tmpSock) {
+    while (tmpSock != NULL) {
         int fd = CreateSocket(tmpSock);
         if (fd < 0) {
             return -1;

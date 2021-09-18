@@ -14,16 +14,18 @@
  */
 
 #include "ueventd_read_cfg.h"
+
 #include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "list.h"
-#include "ueventd_utils.h"
 #include "securec.h"
+#include "ueventd_utils.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 
@@ -124,7 +126,7 @@ static int ParseDeviceConfig(char *p)
     char **items = NULL;
     int count = -1;
     // format: <device node> <mode> <uid> <gid>
-    int expectedCount = 4;
+    const int expectedCount = 4;
 
     if (INVALIDSTRING(p)) {
         INIT_LOGE("Invalid argument");
@@ -149,8 +151,8 @@ static int ParseDeviceConfig(char *p)
         INIT_LOGE("Invalid mode in config file for device node %s. use default mode", config->name);
         config->mode = DEVMODE;
     }
-    config->uid = StringToInt(items[2], 0);
-    config->gid = StringToInt(items[3], 0);
+    config->uid = (uid_t)StringToInt(items[2], 0);
+    config->gid = (gid_t)StringToInt(items[3], 0);
     ListAddTail(&g_devices, &config->list);
     FreeConfigItems(items, count);
     return 0;
@@ -187,9 +189,10 @@ static int ParseSysfsConfig(char *p)
         INIT_LOGE("Invalid mode in config file for sys path %s. use default mode", config->sysPath);
         config->mode = DEVMODE;
     }
-    config->uid = StringToInt(items[3], 0);
-    config->gid = StringToInt(items[4], 0);
+    config->uid = (uid_t)StringToInt(items[3], 0);
+    config->gid = (gid_t)StringToInt(items[4], 0);
     ListAddTail(&g_sysDevices, &config->list);
+    FreeConfigItems(items, count);
     return 0;
 }
 
@@ -199,12 +202,6 @@ static int ParseFirmwareConfig(char *p)
     if (INVALIDSTRING(p)) {
         INIT_LOGE("Invalid argument");
     }
-    struct FirmwareUdevConf *config = calloc(1, sizeof(struct FirmwareUdevConf));
-    if (config == NULL) {
-        errno = ENOMEM;
-        return -1;
-    }
-
     // Sanity checks
     struct stat st = {};
     if (stat(p, &st) != 0) {
@@ -217,12 +214,18 @@ static int ParseFirmwareConfig(char *p)
         return -1;
     }
 
+    struct FirmwareUdevConf *config = calloc(1, sizeof(struct FirmwareUdevConf));
+    if (config == NULL) {
+        errno = ENOMEM;
+        return -1;
+    }
+
     config->fmPath = strdup(p);
     ListAddTail(&g_firmwares, &config->list);
     return 0;
 }
 
-static SECTION GetSection(char *section)
+static SECTION GetSection(const char *section)
 {
     if (INVALIDSTRING(section)) {
         return SECTION_INVALID;
@@ -276,11 +279,14 @@ int ParseUeventConfig(char *buffer)
     return (callback != NULL) ? callback(p) : -1;
 }
 
-static void DoUeventConfigParse(char *buffer)
+static void DoUeventConfigParse(char *buffer, size_t length)
 {
+    if (length < 0) {
+        return;
+    }
     char **items = NULL;
     int count = -1;
-    int maxItemCount = DEFAULTITEMCOUNT;
+    const int maxItemCount = DEFAULTITEMCOUNT;
 
     items = SplitUeventConfig(buffer, "\n", &count, maxItemCount);
     INIT_LOGD("Dump items count = %d", count);
@@ -309,10 +315,15 @@ void ParseUeventdConfigFile(const char *file)
     if (INVALIDSTRING(file)) {
         return;
     }
-
-    int fd = open(file, O_RDONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    char realPath[PATH_MAX] = {0};
+    if (realpath(file, realPath) == NULL) {
+        if (errno != ENOENT) {
+            return;
+        }
+    }
+    int fd = open(realPath, O_RDONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd < 0) {
-        INIT_LOGE("Read from %s failed", file);
+        INIT_LOGE("Read from %s failed", realPath);
         return;
     }
 
@@ -333,7 +344,7 @@ void ParseUeventdConfigFile(const char *file)
     }
 
     if (read(fd, buffer, size) != (ssize_t)size) {
-        INIT_LOGE("Read from file %s failed. err = %d", file, errno);
+        INIT_LOGE("Read from file %s failed. err = %d", realPath, errno);
         free(buffer);
         buffer = NULL;
         close(fd);
@@ -341,7 +352,7 @@ void ParseUeventdConfigFile(const char *file)
     }
 
     buffer[size] = '\0';
-    DoUeventConfigParse(buffer);
+    DoUeventConfigParse(buffer, size);
     free(buffer);
     buffer = NULL;
     close(fd);

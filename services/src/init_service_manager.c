@@ -533,7 +533,7 @@ static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket
 
 static void FreeServiceSocket(struct ServiceSocket *sockopt)
 {
-    if (!sockopt) {
+    if (sockopt == NULL) {
         return;
     }
     struct ServiceSocket *tmpSock = NULL;
@@ -572,7 +572,7 @@ static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
             return SERVICE_FAILURE;
         }
         struct ServiceSocket *socktmp = (struct ServiceSocket *)calloc(1, sizeof(struct ServiceSocket));
-        if (!socktmp) {
+        if (socktmp == NULL) {
             return SERVICE_FAILURE;
         }
         int ret = ParseServiceSocket(tmpStr, SOCK_OPT_NUMS, socktmp);
@@ -632,7 +632,8 @@ static int GetServiceOnRestart(const cJSON* curArrItem, Service* curServ)
 
 static int CheckServiceKeyName(const cJSON* curService)
 {
-    char *cfgServiceKeyList[] = {"name", "path", "uid", "gid", "once",
+    char *cfgServiceKeyList[] = {
+        "name", "path", "uid", "gid", "once",
         "importance", "caps", "disabled", "writepid", "critical", "socket", "console"
     };
     if (curService == NULL) {
@@ -642,11 +643,11 @@ static int CheckServiceKeyName(const cJSON* curService)
     if (child == NULL) {
         return SERVICE_FAILURE;
     }
-    while (child) {
+    while (child != NULL) {
         int i = 0;
-        int keyListSize = sizeof(cfgServiceKeyList) / sizeof(char *);
+        int keyListSize = ARRAY_LENGTH(cfgServiceKeyList);
         for (; i < keyListSize; i++) {
-            if (!strcmp(child->string, cfgServiceKeyList[i])) {
+            if (strcmp(child->string, cfgServiceKeyList[i]) == 0) {
                 break;
             }
         }

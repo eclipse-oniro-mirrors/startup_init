@@ -140,9 +140,9 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
     } else if (STARTSWITH(event, "MINOR=")) {
         uevent->minor = StringToInt(event + strlen("MINOR="), -1);
     } else if (STARTSWITH(event, "DEVUID")) {
-        uevent->ug.uid = StringToInt(event + strlen("DEVUID="), 0);
+        uevent->ug.uid = (uid_t)StringToInt(event + strlen("DEVUID="), 0);
     } else if (STARTSWITH(event, "DEVGID")) {
-        uevent->ug.gid = StringToInt(event + strlen("DEVGID="), 0);
+        uevent->ug.gid = (gid_t)StringToInt(event + strlen("DEVGID="), 0);
     } else if (STARTSWITH(event, "FIRMWARE=")) {
         uevent->firmware = event + strlen("FIRMWARE=");
     } else if (STARTSWITH(event, "BUSNUM=")) {
@@ -153,7 +153,7 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
     // Ignore other events
 }
 
-static void ParseUeventMessage(char *buffer, ssize_t length, struct Uevent *uevent)
+static void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent)
 {
     if (buffer == NULL || uevent == NULL || length == 0) {
         // Ignore invalid buffer
@@ -200,14 +200,20 @@ static void DoTrigger(const char *ueventPath, int sockFd)
     if (ueventPath == NULL || ueventPath[0] == '\0') {
         return;
     }
-
-    int fd = open(ueventPath, O_WRONLY | O_CLOEXEC);
+    char realPath[PATH_MAX] = {0};
+    if (realpath(ueventPath, realPath) == NULL) {
+        if (errno != ENOENT) {
+            INIT_LOGE("Fail resolve %s real path err=%d", ueventPath, errno);
+            return;
+        }
+    }
+    int fd = open(realPath, O_WRONLY | O_CLOEXEC);
     if (fd < 0) {
-        INIT_LOGE("Open \" %s \" failed, err = %d", ueventPath, errno);
+        INIT_LOGE("Open \" %s \" failed, err = %d", realPath, errno);
     } else {
         ssize_t n = write(fd, "add\n", 4);
         if (n < 0) {
-            INIT_LOGE("Write \" %s \" failed, err = %d", ueventPath, errno);
+            INIT_LOGE("Write \" %s \" failed, err = %d", realPath, errno);
             close(fd);
         } else {
             close(fd);

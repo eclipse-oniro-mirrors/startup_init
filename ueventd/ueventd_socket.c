@@ -30,11 +30,13 @@
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 
+#define UEVENT_SOCKET_BUFF_SIZE (256 * 1024)
+
 int UeventdSocketInit()
 {
     struct sockaddr_nl addr;
     int sockfd;
-    int buffSize = 256 * 1024;
+    int buffSize = UEVENT_SOCKET_BUFF_SIZE;
     int on = 1;
 
     if (memset_s(&addr, sizeof(addr), 0, sizeof(addr) != EOK)) {
@@ -69,7 +71,6 @@ ssize_t ReadUeventMessage(int sockFd, char *buffer, size_t length)
     struct iovec iov;
     struct sockaddr_nl addr;
     char credMsg[CMSG_SPACE(sizeof(struct ucred))];
-    struct cmsghdr *cmsghdr;
 
     // sanity check
     if (sockFd < 0 || buffer == NULL) {
@@ -89,7 +90,7 @@ ssize_t ReadUeventMessage(int sockFd, char *buffer, size_t length)
     if (n <= 0) {
         return n;
     }
-    cmsghdr = CMSG_FIRSTHDR(&msghdr);
+    struct cmsghdr *cmsghdr = CMSG_FIRSTHDR(&msghdr);
     if (cmsghdr == NULL || cmsghdr->cmsg_type != SCM_CREDENTIALS) {
         INIT_LOGE("Unexpected control message, ignored");
         // Drop this message
