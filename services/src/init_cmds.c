@@ -215,7 +215,6 @@ static void DoCopyInernal(const char *source, const char *target)
     int srcFd = open(source, O_RDONLY);
     if (srcFd < 0) {
         INIT_LOGE("Open \" %s \" failed, err = %d", source, errno);
-        close(srcFd);
         srcFd = -1;
         return;
     }
@@ -265,11 +264,15 @@ static void DoCopy(const char* cmdContent)
     char targetFile[PATH_MAX] = {0};
     if (realpath(ctx->argv[0], sourceFile) == NULL) {
         if (errno != ENOENT) {
+            FreeCmd(&ctx);
+            ctx = NULL;
             return;
         }
     }
     if (realpath(ctx->argv[1], targetFile) == NULL) {
         if (errno != ENOENT) {
+            FreeCmd(&ctx);
+            ctx = NULL;
             return;
         }
     }
