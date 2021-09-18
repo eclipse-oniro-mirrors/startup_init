@@ -19,15 +19,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "init_cmds.h"
-#include "init_utils.h"
 #include "trigger_checker.h"
 
 #define LABEL "Trigger"
@@ -94,7 +93,7 @@ u_int32_t AddCommand(TriggerWorkSpace *workSpace, TriggerNode *trigger, const ch
 {
     PARAM_CHECK(workSpace != NULL && trigger != NULL, return 0, "list is null");
     u_int32_t size = sizeof(CommandNode) + strlen(cmdName) + 1;
-    size += (content == NULL) ? 1 : strlen(content) + 1;
+    size += ((content == NULL) ? 1 : (strlen(content) + 1));
     size = (size + 0x03) & (~0x03);
     PARAM_CHECK((workSpace->area->currOffset + size) < workSpace->area->dataSize,
         return 0, "Not enough memory for cmd %u %u", size, workSpace->area->currOffset);
@@ -148,7 +147,7 @@ u_int32_t AddTrigger(TriggerWorkSpace *workSpace, int type, const char *name, co
     if (type == TRIGGER_BOOT && condition == NULL) {
         tmpCond = name;
     }
-    u_int32_t conditionSize = (tmpCond == NULL) ? 1 : strlen(tmpCond) + 1 + CONDITION_EXTEND_LEN;
+    u_int32_t conditionSize = ((tmpCond == NULL) ? 1 : (strlen(tmpCond) + 1 + CONDITION_EXTEND_LEN));
     conditionSize = (conditionSize + 0x03) & (~0x03);
     PARAM_CHECK((workSpace->area->currOffset + sizeof(TriggerNode) + conditionSize) < workSpace->area->dataSize,
         return -1, "Not enough memory for cmd");
@@ -252,7 +251,6 @@ int ParseTrigger(TriggerWorkSpace *workSpace, cJSON *triggerItem)
         } else {
             offset = AddCommand(workSpace, trigger, matchCmd, cmdLineStr + matchLen);
         }
-        //PARAM_LOGE("AddCommand %u %s %u", offset, cmdLineStr, workSpace->area->currOffset);
         PARAM_CHECK(offset > 0, continue, "Failed to add command %s", cmdLineStr);
     }
     return 0;

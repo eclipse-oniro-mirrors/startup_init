@@ -44,7 +44,6 @@ static int DoCmdExecute(TriggerNode *trigger, const char *cmdName, const char *c
 
 static int DoTiggerCheckResult(TriggerNode *trigger, u_int32_t triggerIndex)
 {
-    // 已经在队列中了，则不执行 TODO
     if (TRIGGER_NODE_IN_QUEUE(trigger)) {
         PARAM_LOGI("DoTiggerExecute trigger %s has been waiting execute", trigger->name);
         return 0;

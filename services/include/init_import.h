@@ -12,8 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- #ifndef BASE_STARTUP_INITLITE_IMPORT_H
- #define BASE_STARTUP_INITLITE_IMPORT_H
- #include "cJSON.h"
- void ParseAllImports(cJSON *root);
- #endif
+
+#ifndef BASE_STARTUP_INITLITE_IMPORT_H
+#define BASE_STARTUP_INITLITE_IMPORT_H
+
+#include "cJSON.h"
+
+void ParseAllImports(cJSON *root);
+
+#endif

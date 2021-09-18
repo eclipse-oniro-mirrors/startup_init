@@ -79,6 +79,6 @@ void ParseAllImports(cJSON *root)
         free(cfgFile);
         cfgFile = NULL;
     }
-     INIT_LOGD("parse import file done");
+    INIT_LOGD("parse import file done");
     return;
 }

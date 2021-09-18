@@ -24,6 +24,5 @@
 
 void HandleFimwareDeviceEvent(const struct Uevent *uevent)
 {
-    // TODO, implement it later.
     INIT_LOGI("Firmware handler not implemented yet.");
 }

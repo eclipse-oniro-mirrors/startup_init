@@ -28,12 +28,6 @@
 #define CMDS_ARR_NAME_IN_JSON "cmds"
 #define MAX_JOBS_COUNT        100
 
-// static const char* g_supportedJobs[] = {
-//     "pre-init",
-//     "init",
-//     "post-init",
-// };
-
 static Job* g_jobs = NULL;
 static int g_jobCnt = 0;
 
@@ -168,8 +162,6 @@ void DoJob(const char* jobName)
             for (int j = 0; j < g_jobs[i].cmdLinesCnt; ++j) {
                 DoCmd(&(cmdLines[j]));
             }
-            // Walk through all jobs
-            // break;
         }
     }
 }

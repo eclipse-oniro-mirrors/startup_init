@@ -19,15 +19,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "init_utils.h"
 #include "sys_param.h"
 #include "param_manager.h"
 
@@ -85,7 +84,7 @@ int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, u_int32_t spaceSize
     PARAM_LOGD("InitWorkSpace %s ", workSpace->fileName);
     CheckAndCreateDir(workSpace->fileName);
 
-    int fd = open(workSpace->fileName, mode, 00777); //0444);
+    int fd = open(workSpace->fileName, mode, 00777);
     PARAM_CHECK(fd >= 0, return PARAM_CODE_INVALID_NAME,
         "Open file %s fail error %s", workSpace->fileName, strerror(errno));
 
@@ -175,7 +174,7 @@ TrieNode *GetTrieNode(WorkSpace *workSpace, NODE_INDEX *index)
     if (index == NULL) {
         return NULL;
     }
-    u_int32_t offset = *index; // atomic_load_explicit(&current->children, memory_order_relaxed);
+    u_int32_t offset = *index;
     if (offset == 0 || offset > workSpace->area->dataSize) {
         return NULL;
     }
@@ -194,7 +193,6 @@ u_int32_t GetTrieNodeOffset(WorkSpace *workSpace, const TrieNode *current)
 
 void SaveIndex(NODE_INDEX *index, u_int32_t offset)
 {
-    // atomic_store_explicit(&current->children, new_offset, memory_order_release);
     *index = offset;
 }
 
@@ -246,7 +244,7 @@ TrieDataNode *AddTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t k
         if (!subKeyLen) {
             return NULL;
         }
-        u_int32_t offset = subKey == NULL ? strlen(key) : subKey - key;
+        u_int32_t offset = ((subKey == NULL) ? strlen(key) : (subKey - key));
 
         if (current->child != 0) { // 如果child存在，则检查是否匹配
             TrieDataNode *next = (TrieDataNode*)GetTrieNode(workSpace, &current->child);
@@ -344,7 +342,7 @@ TrieDataNode *FindTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t 
         if (!subKeyLen) {
             return matchPrefix ? matchNode : NULL;
         }
-        u_int32_t offset = subKey == NULL ? strlen(key) : subKey - key;
+        u_int32_t offset = ((subKey == NULL) ? strlen(key) : (subKey - key));
 
         if (current->child != 0) { // 如果child存在，则检查是否匹配
             TrieDataNode *next = (TrieDataNode*)GetTrieNode(workSpace, &current->child);
@@ -462,7 +460,6 @@ u_int32_t AddData(WorkSpace *workSpace, const char *key, u_int32_t keyLen, const
         realLen += keyLen + PARAM_VALUE_LEN_MAX;
     }
     realLen = (realLen + 0x03) & (~0x03);
-    //PARAM_LOGI("AddData realLen %u %u %u", realLen, keyLen, valueLen);
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize, return 0,
         "Failed to allocate currOffset %d, dataSize %d", workSpace->area->currOffset, workSpace->area->dataSize);
 
@@ -478,7 +475,6 @@ u_int32_t AddData(WorkSpace *workSpace, const char *key, u_int32_t keyLen, const
     node->data[keyLen + 1 + valueLen] = '\0';
     u_int32_t offset = workSpace->area->currOffset;
     workSpace->area->currOffset += realLen;
-    //PARAM_LOGI("AddData node %p %u %d", node, offset, gettid());
     return offset;
 }
 

@@ -158,7 +158,6 @@ static int IsForbidden(const char* fieldStr)
 }
 #endif
 
-// TODO: move this function to common files
 static cJSON* GetArrItem(const cJSON* fileRoot, int* arrSize, const char* arrName)
 {
     cJSON* arrItem = cJSON_GetObjectItemCaseSensitive(fileRoot, arrName);
@@ -308,7 +307,7 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
         }
         curServ->servPerm.gIDArray[i] = gID;
     }
-    int ret = i == gIDCnt ? SERVICE_SUCCESS : SERVICE_FAILURE;
+    int ret = ((i == gIDCnt) ? SERVICE_SUCCESS : SERVICE_FAILURE);
     return ret;
 }
 
@@ -486,9 +485,9 @@ static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket
         return -1;
     }
     sockopt->type =
-        strncmp(opt[SERVICE_SOCK_TYPE], "stream", strlen(opt[SERVICE_SOCK_TYPE])) == 0 ? SOCK_STREAM :
-        (strncmp(opt[SERVICE_SOCK_TYPE], "dgram", strlen(opt[SERVICE_SOCK_TYPE])) == 0 ? SOCK_DGRAM : SOCK_SEQPACKET);
-
+        ((strncmp(opt[SERVICE_SOCK_TYPE], "stream", strlen(opt[SERVICE_SOCK_TYPE])) == 0) ? SOCK_STREAM :
+        ((strncmp(opt[SERVICE_SOCK_TYPE], "dgram", strlen(opt[SERVICE_SOCK_TYPE])) == 0) ? SOCK_DGRAM :
+            SOCK_SEQPACKET));
     if (opt[SERVICE_SOCK_PERM] == NULL) {
         return -1;
     }
@@ -512,7 +511,8 @@ static int ParseServiceSocket(char **opt, const int optNum, struct ServiceSocket
     if (opt[SERVICE_SOCK_SETOPT] == NULL) {
         return -1;
     }
-    sockopt->passcred = strncmp(opt[SERVICE_SOCK_SETOPT], "passcred", strlen(opt[SERVICE_SOCK_SETOPT])) == 0 ? true : false;
+    sockopt->passcred = (strncmp(opt[SERVICE_SOCK_SETOPT], "passcred",
+        strlen(opt[SERVICE_SOCK_SETOPT])) == 0) ? true : false;
     if (opt[SERVICE_SOCK_NAME] == NULL) {
         return -1;
     }
@@ -717,8 +717,8 @@ void ParseAllServices(const cJSON* fileRoot)
             continue;
         } else {
             INIT_LOGD("ParseAllServices ParseAllServices Service[%d] name=%s, uid=%d, critical=%d, disabled=%d",
-                 i, tmp[i].name, tmp[i].servPerm.uID, tmp[i].attribute & SERVICE_ATTR_CRITICAL ? 1 : 0,
-                 tmp[i].attribute & SERVICE_ATTR_DISABLED ? 1 : 0);
+                 i, tmp[i].name, tmp[i].servPerm.uID, (tmp[i].attribute & SERVICE_ATTR_CRITICAL) ? 1 : 0,
+                 (tmp[i].attribute & SERVICE_ATTR_DISABLED) ? 1 : 0);
         }
         if (GetServiceSocket(curItem, &tmp[i]) != SERVICE_SUCCESS) {
             if (tmp[i].socketCfg != NULL) {
@@ -827,5 +827,4 @@ void ReapServiceByPID(int pid)
         }
     }
 }
-
 

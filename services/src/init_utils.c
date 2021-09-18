@@ -128,7 +128,7 @@ char* ReadFileToBuf(const char *configFile)
 
 int SplitString(char *srcPtr, char **dstPtr, int maxNum)
 {
-    if ((!srcPtr) || (!dstPtr)){
+    if ((!srcPtr) || (!dstPtr)) {
         return -1;
     }
     char *buf = NULL;

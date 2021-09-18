@@ -48,7 +48,7 @@ static void ParseInitCfgContents(cJSON *root)
         INIT_LOGE("ParseInitCfgContents root is NULL");
         return;
     }
-     // parse services
+    // parse services
     ParseAllServices(root);
 #ifdef OHOS_LITE
     // parse jobs

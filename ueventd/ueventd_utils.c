@@ -78,5 +78,5 @@ int StringToInt(const char *str, int defaultValue)
     }
     errno = 0;
     int value = strtoul(str, NULL, DECIMALISM);
-    return errno != 0 ? defaultValue : value;
+    return (errno != 0) ? defaultValue : value;
 }

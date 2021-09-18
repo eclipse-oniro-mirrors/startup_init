@@ -59,8 +59,6 @@ static int ProcessParamTraversal(WorkSpace *workSpace, TrieNode *node, void *coo
     }
     ret = GetDataValue(entry, persistContext->buffer + MAX_BUFF, MAX_BUFF);
     if (ret == 0) { // 只支持新建
-        //PARAM_LOGI("Insert new persist param from normal param %s %s",
-        //    persistContext->buffer, persistContext->buffer + MAX_BUFF);
         ret = AddParam(persistContext->persistWorkSpace, persistContext->buffer, persistContext->buffer + MAX_BUFF);
     }
     PARAM_CHECK(ret == 0, return ret, "Failed to add persist param");
@@ -82,8 +80,6 @@ static int ProcessPersistPropertTraversal(WorkSpace *workSpace, TrieNode *node, 
     PARAM_CHECK(ret == 0, return ret, "GetDataName failed");
     ret = GetDataValue(entry, persistContext->buffer + MAX_BUFF, MAX_BUFF);
     if (ret == 0) {
-        //PARAM_LOGI("update normal param %s %s from persist param %u",
-        //    persistContext->buffer, persistContext->buffer + MAX_BUFF, current->dataIndex);
         ret = WriteParam(persistContext->workSpace, persistContext->buffer, persistContext->buffer + MAX_BUFF);
     }
     PARAM_CHECK(ret == 0, return ret, "Failed to add persist param");

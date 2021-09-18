@@ -216,7 +216,7 @@ int ServiceStart(Service *service)
                 continue;
             }
             if (fwrite(pidString, 1, strlen(pidString), fd) != strlen(pidString)) {
-                 INIT_LOGE("start service writepid error.file:%s pid:%s", service->writepidFiles[i], pidString);
+                INIT_LOGE("start service writepid error.file:%s pid:%s", service->writepidFiles[i], pidString);
             }
             free(realPath);
             realPath = NULL;

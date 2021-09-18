@@ -46,7 +46,6 @@ int UeventdSocketInit()
     addr.nl_groups = 0xffffffff;
 
     sockfd = socket(PF_NETLINK, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, NETLINK_KOBJECT_UEVENT);
-
     if (sockfd < 0) {
         INIT_LOGE("Create socket failed, err = %d", errno);
         return -1;

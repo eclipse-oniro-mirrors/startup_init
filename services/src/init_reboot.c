@@ -227,6 +227,5 @@ void DoReboot(const char *value)
         INIT_LOGE("DoReboot value = %s, error.", value);
     }
     return;
-
 }
 

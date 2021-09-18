@@ -174,7 +174,7 @@ static int ComputeSubCondition(LogicCalculator *calculator, LogicData *data, con
             u_int32_t len = SUPPORT_DATA_BUFFER_MAX;
             ret = SystemReadParam(calculator->conditionName, calculator->readContent, &len);
             if (ret == 0 && (strcmp(calculator->conditionContent, "*") == 0 ||
-                    strcmp(calculator->conditionContent, calculator->readContent) == 0)) {
+                strcmp(calculator->conditionContent, calculator->readContent) == 0)) {
                 return 1;
             }
         }

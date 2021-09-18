@@ -273,7 +273,7 @@ int ParseUeventConfig(char *buffer)
         callback = funcMapper[type].func;
         return 0;
     }
-    return callback != NULL ? callback(p) : -1;
+    return (callback != NULL) ? callback(p) : -1;
 }
 
 static void DoUeventConfigParse(char *buffer)
@@ -361,11 +361,11 @@ void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_
                 *uid = config->uid;
                 *gid = config->gid;
                 *mode = config->mode;
-               break;
+                break;
             }
         }
     }
-   return;
+    return;
 }
 
 void ChangeSysAttributePermissions(const char *sysPath)
@@ -380,7 +380,7 @@ void ChangeSysAttributePermissions(const char *sysPath)
         ForEachListEntry(&g_sysDevices, node) {
             config = ListEntry(node, struct SysUdevConf, list);
             if (STRINGEQUAL(config->sysPath, sysPath)) {
-               break;
+                break;
             }
         }
     }

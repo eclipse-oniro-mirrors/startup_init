@@ -109,7 +109,7 @@ static int ProcessParamSet(RequestMsg *msg)
     PARAM_CHECK(msg != NULL, return PARAM_CODE_INVALID_PARAM, "Failed to check param");
 
     SubStringInfo info[3];
-    int ret = GetSubStringInfo(msg->content, msg->contentSize, '=',  info, sizeof(info)/sizeof(info[0]));
+    int ret = GetSubStringInfo(msg->content, msg->contentSize, '=', info, sizeof(info)/sizeof(info[0]));
     PARAM_CHECK(ret >= 2, return ret, "Failed to get name from content %s", msg->content);
 
     PARAM_LOGD("ProcessParamSet name %s value: %s", info[0].value, info[1].value);
