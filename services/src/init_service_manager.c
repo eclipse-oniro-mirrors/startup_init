@@ -259,13 +259,11 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
     if ((gIDCnt <= 0) || (filedJ == NULL)) {              // not a array, but maybe a item?
         return GetGidOneItem(curArrItem, curServ);
     }
-
     if (gIDCnt > NGROUPS_MAX + 1) {
         INIT_LOGE("GetGidArray, too many gids[cnt %d] for one service, should not exceed %d.",
             gIDCnt, NGROUPS_MAX + 1);
         return SERVICE_FAILURE;
     }
-
     curServ->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t) * gIDCnt);
     if (curServ->servPerm.gIDArray == NULL) {
         INIT_LOGE("GetGidArray malloc error");
@@ -289,9 +287,7 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
         }
         curServ->servPerm.gIDArray[i] = gID;
     }
-    if (i == gIDCnt) {
-        return SERVICE_SUCCESS;
-    }
+    INIT_CHECK_RETURN_VALUE(i != gIDCnt, SERVICE_SUCCESS);
     for (i = 0; i < gIDCnt; ++i) {
         cJSON *item = cJSON_GetArrayItem(filedJ, i);
         if (item == NULL) {
@@ -307,8 +303,7 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
         }
         curServ->servPerm.gIDArray[i] = gID;
     }
-    int ret = ((i == gIDCnt) ? SERVICE_SUCCESS : SERVICE_FAILURE);
-    return ret;
+    return (((i == gIDCnt) ? SERVICE_SUCCESS : SERVICE_FAILURE));
 }
 
 static int GetServicePathAndArgs(const cJSON* curArrItem, Service* curServ)
@@ -661,28 +656,41 @@ static int CheckServiceKeyName(const cJSON* curService)
     return SERVICE_SUCCESS;
 }
 
+static int ParseOneService(const cJSON *curItem, Service *service)
+{
+    if (curItem == NULL || service == NULL) {
+        return SERVICE_FAILURE;
+    }
+    int ret = GetServiceName(curItem, service);
+    ret |= GetServicePathAndArgs(curItem, service);
+    ret |= GetUidStringNumber(curItem, service);
+    ret |= GetGidArray(curItem, service);
+    ret |= GetServiceNumber(curItem, service, ONCE_STR_IN_CFG);
+    ret |= GetServiceNumber(curItem, service, IMPORTANT_STR_IN_CFG);
+    ret |= GetServiceNumber(curItem, service, CRITICAL_STR_IN_CFG);
+    ret |= GetServiceNumber(curItem, service, DISABLED_STR_IN_CFG);
+    ret |= GetServiceNumber(curItem, service, CONSOLE_STR_IN_CFG);
+    ret |= GetWritepidStrings(curItem, service);
+    ret |= GetServiceCaps(curItem, service);
+    ret |= GetDynamicService(curItem, service);
+    return ret;
+}
+
 void ParseAllServices(const cJSON* fileRoot)
 {
     int servArrSize = 0;
     cJSON* serviceArr = GetArrItem(fileRoot, &servArrSize, SERVICES_ARR_NAME_IN_JSON);
-    if (serviceArr == NULL) {
-        INIT_LOGI("ParseAllServices, this config does not contain service array.");
-        return;
-    }
+    INIT_INFO_CHECK(serviceArr != NULL, return, "This config does not contain service array.");
 
-    if (servArrSize > MAX_SERVICES_CNT_IN_FILE) {
-        INIT_LOGE("ParseAllServices, too many services[cnt %d] detected, should not exceed %d.",
-            servArrSize, MAX_SERVICES_CNT_IN_FILE);
-        return;
-    }
-    if ((g_servicesCnt + servArrSize) <= 0) {
-        return;
-    }
+    INIT_ERROR_CHECK(servArrSize <= MAX_SERVICES_CNT_IN_FILE, return,
+        "Too many services[cnt %d] detected, should not exceed %d.",
+        servArrSize, MAX_SERVICES_CNT_IN_FILE);
+    INIT_CHECK_ONLY_RETURN((g_servicesCnt + servArrSize) > 0);
+
     Service* retServices = (Service*)realloc(g_services, sizeof(Service) * (g_servicesCnt + servArrSize));
-    if (retServices == NULL) {
-        INIT_LOGE("ParseAllServices, realloc for %s arr failed! %d.", SERVICES_ARR_NAME_IN_JSON, servArrSize);
-        return;
-    }
+    INIT_ERROR_CHECK(retServices != NULL, return,
+        "Realloc for %s arr failed! %d.", SERVICES_ARR_NAME_IN_JSON, servArrSize);
+
     // Skip already saved services,
     Service* tmp = retServices + g_servicesCnt;
     if (memset_s(tmp, sizeof(Service) * servArrSize, 0, sizeof(Service) * servArrSize) != EOK) {
@@ -698,28 +706,17 @@ void ParseAllServices(const cJSON* fileRoot)
             tmp[i].attribute |= SERVICE_ATTR_INVALID;
             continue;
         }
-        int ret1 = GetServiceName(curItem, &tmp[i]);
-        int ret2 = GetServicePathAndArgs(curItem, &tmp[i]);
-        int ret3 = GetUidStringNumber(curItem, &tmp[i]);                        // uid in string or number form
-        int ret4 = GetGidArray(curItem, &tmp[i]);                               // gid array
-        int ret5 = GetServiceNumber(curItem, &tmp[i], ONCE_STR_IN_CFG);
-        int ret6 = GetServiceNumber(curItem, &tmp[i], IMPORTANT_STR_IN_CFG);
-        int ret7 = GetServiceNumber(curItem, &tmp[i], CRITICAL_STR_IN_CFG);     // critical
-        int ret8 = GetServiceNumber(curItem, &tmp[i], DISABLED_STR_IN_CFG);     // disabled
-        int ret9 = GetServiceNumber(curItem, &tmp[i], CONSOLE_STR_IN_CFG);      // console
-        int reta = GetWritepidStrings(curItem, &tmp[i]);                        // writepid
-        int retb = GetServiceCaps(curItem, &tmp[i]);
-        int retAll = ret1 | ret2 | ret3 | ret4 | ret5 | ret6 | ret7 | ret8 | ret9 | reta | retb;
-        if (retAll != SERVICE_SUCCESS) {
+        int ret = ParseOneService(curItem, &tmp[i]);
+        if (ret != SERVICE_SUCCESS) {
             // release resources if it fails
             ReleaseServiceMem(&tmp[i]);
             tmp[i].attribute |= SERVICE_ATTR_INVALID;
-            INIT_LOGE("ParseAllServices, parse information for service %s failed. ", tmp[i].name);
+            INIT_LOGE("Parse information for service %s failed. ", tmp[i].name);
             continue;
         } else {
-            INIT_LOGD("ParseAllServices ParseAllServices Service[%d] name=%s, uid=%d, critical=%d, disabled=%d",
-                 i, tmp[i].name, tmp[i].servPerm.uID, (tmp[i].attribute & SERVICE_ATTR_CRITICAL) ? 1 : 0,
-                 (tmp[i].attribute & SERVICE_ATTR_DISABLED) ? 1 : 0);
+            INIT_LOGD("service[%d] name=%s, uid=%d, critical=%d, disabled=%d",
+                i, tmp[i].name, tmp[i].servPerm.uID, (tmp[i].attribute & SERVICE_ATTR_CRITICAL) ? 1 : 0,
+                (tmp[i].attribute & SERVICE_ATTR_DISABLED) ? 1 : 0);
         }
         if (GetServiceSocket(curItem, &tmp[i]) != SERVICE_SUCCESS) {
             if (tmp[i].socketCfg != NULL) {

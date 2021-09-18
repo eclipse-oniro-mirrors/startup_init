@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include "init_cmds.h"
+#include "init_utils.h"
 #include "trigger_checker.h"
 
 #define LABEL "Trigger"
