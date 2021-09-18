@@ -205,7 +205,6 @@ static bool IsArgsExpected(const struct CmdArgs *ctx, int expectedArgCount)
 
 static void DoCopyInernal(const char *source, const char *target)
 {
-    bool isSuccess = true;
     if (source == NULL || target == NULL) {
         INIT_LOGE("Copy file with invalid arguments");
         return;
@@ -215,7 +214,6 @@ static void DoCopyInernal(const char *source, const char *target)
     int srcFd = open(source, O_RDONLY);
     if (srcFd < 0) {
         INIT_LOGE("Open \" %s \" failed, err = %d", source, errno);
-        srcFd = -1;
         return;
     }
 
@@ -228,6 +226,7 @@ static void DoCopyInernal(const char *source, const char *target)
     int dstFd = open(target, O_WRONLY | O_TRUNC | O_CREAT, st.st_mode);
     if (dstFd >= 0) {
         char buf[MAX_COPY_BUF_SIZE] = {0};
+        bool isSuccess = true;
         ssize_t readn = -1;
         ssize_t writen = -1;
         while ((readn = read(srcFd, buf, MAX_COPY_BUF_SIZE - 1)) > 0) {
@@ -237,19 +236,16 @@ static void DoCopyInernal(const char *source, const char *target)
                 break;
             }
         }
-        if (!isSuccess) {
+        if (isSuccess == false) {
             INIT_LOGE("Copy from \" %s \" to \" %s \" failed", source, target);
+        } else {
+            fsync(dstFd);
         }
-        fsync(dstFd);
-    }
-    if (srcFd >= 0) {
-        close(srcFd);
-        srcFd = -1;
-    }
-    if (dstFd >= 0) {
         close(dstFd);
         dstFd = -1;
     }
+    close(srcFd);
+    srcFd = -1;
 }
 
 static void DoCopy(const char* cmdContent)
