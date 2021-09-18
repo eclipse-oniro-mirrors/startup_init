@@ -54,7 +54,7 @@ int LoadDefaultParams(const char *fileName)
         fp = NULL;
         return -1, "malloc failed");
 
-    while(fgets(buff, BUFFER_SIZE, fp) != NULL) {
+    while (fgets(buff, BUFFER_SIZE, fp) != NULL) {
         int subStrNumber = GetSubStringInfo(buff, strlen(buff), '=',  info, SUBSTR_INFO_LABEL + 1);
         if (subStrNumber <= SUBSTR_INFO_LABEL) {
             continue;
@@ -95,7 +95,7 @@ int LoadParamInfos(const char *fileName)
         return -1, "Load parameter malloc failed.");
     char buff[BUFFER_SIZE];
     int infoCount = 0;
-    while(fgets(buff, BUFFER_SIZE, fp) != NULL) {
+    while (fgets(buff, BUFFER_SIZE, fp) != NULL) {
         int subStrNumber = GetSubStringInfo(buff, strlen(buff), ' ',  info, SUBSTR_INFO_MAX);
         if (subStrNumber <= 0) {
             continue;
@@ -115,7 +115,8 @@ static int ProcessParamSet(const RequestMsg *msg)
     PARAM_CHECK(msg != NULL, return PARAM_CODE_INVALID_PARAM, "Failed to check param");
 
     SubStringInfo info[3];
-    int ret = GetSubStringInfo(msg->content, msg->contentSize, '=', info, sizeof(info)/sizeof(info[0]));
+    int ret = GetSubStringInfo(msg->content, msg->contentSize, '=', info,
+            sizeof(info) / sizeof(info[0]));
     PARAM_CHECK(ret >= 2, return ret, "Failed to get name from content %s", msg->content);
 
     PARAM_LOGD("ProcessParamSet name %s value: %s", info[0].value, info[1].value);
@@ -136,7 +137,8 @@ static void OnClose(uv_handle_t *handle)
 static void OnReceiveAlloc(uv_handle_t *handle, size_t suggestedSize, uv_buf_t* buf)
 {
     // 这里需要按实际消息的大小申请内存，取最大消息的长度
-    buf->len = sizeof(RequestMsg) + BUFFER_SIZE * 2;
+    unsigned int tmp = 2;
+    buf->len = sizeof(RequestMsg) + BUFFER_SIZE * tmp;
     buf->base = (char *)malloc(buf->len);
 }
 

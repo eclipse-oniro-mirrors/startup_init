@@ -84,7 +84,7 @@ int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, u_int32_t spaceSize
     PARAM_LOGD("InitWorkSpace %s ", workSpace->fileName);
     CheckAndCreateDir(workSpace->fileName);
 
-    int fd = open(workSpace->fileName, mode, 00777);
+    int fd = open(workSpace->fileName, mode, S_IRWXU | S_IRWXG | S_IRWXO);
     PARAM_CHECK(fd >= 0, return PARAM_CODE_INVALID_NAME,
         "Open file %s fail error %s", workSpace->fileName, strerror(errno));
 
@@ -175,7 +175,7 @@ u_int32_t AllocateTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t 
     return offset;
 }
 
-TrieNode *GetTrieNode(WorkSpace *workSpace, const NODE_INDEX *index)
+TrieNode *GetTrieNode(WorkSpace *workSpace, const unsigned int *index)
 {
     if (index == NULL || workSpace == NULL || workSpace->area == NULL) {
         return NULL;
@@ -197,7 +197,7 @@ u_int32_t GetTrieNodeOffset(WorkSpace *workSpace, const TrieNode *current)
     return (((char *)current) - workSpace->area->data);
 }
 
-void SaveIndex(NODE_INDEX *index, u_int32_t offset)
+void SaveIndex(unsigned int *index, u_int32_t offset)
 {
     *index = offset;
 }

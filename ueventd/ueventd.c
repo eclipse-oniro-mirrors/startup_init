@@ -211,7 +211,7 @@ static void DoTrigger(const char *ueventPath, int sockFd)
     if (fd < 0) {
         INIT_LOGE("Open \" %s \" failed, err = %d", realPath, errno);
     } else {
-        ssize_t n = write(fd, "add\n", 4);
+        ssize_t n = write(fd, "add\n", strlen("add\n"));
         if (n < 0) {
             INIT_LOGE("Write \" %s \" failed, err = %d", realPath, errno);
             close(fd);

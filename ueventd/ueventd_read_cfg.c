@@ -31,6 +31,18 @@
 
 // default item count in config files
 #define DEFAULTITEMCOUNT (100)
+
+#define DEVICE_CONFIG_NAME_NUM 0
+#define DEVICE_CONFIG_MODE_NUM 1
+#define DEVICE_CONFIG_UID_NUM 2
+#define DEVICE_CONFIG_GID_NUM 3
+
+#define SYS_CONFIG_PATH_NUM 0
+#define SYS_CONFIG_ATTR_NUM 1
+#define SYS_CONFIG_MODE_NUM 2
+#define SYS_CONFIG_UID_NUM 3
+#define SYS_CONFIG_GID_NUM 4
+
 typedef enum SECTION {
     SECTION_INVALID = -1,
     SECTION_DEVICE = 0,
@@ -76,6 +88,7 @@ static char **SplitUeventConfig(char *buffer, const char *del, int *returnCount,
 {
     char *rest = NULL;
     int count = 0;
+    int average = 2;
     char *p = strtok_r(buffer, del, &rest);
     if (maxItemCount < 0) {
         return NULL;
@@ -90,7 +103,7 @@ static char **SplitUeventConfig(char *buffer, const char *del, int *returnCount,
     }
     while (p != NULL) {
         if (count > maxItemCount - 1) {
-            maxItemCount += (maxItemCount / 2) + 1;
+            maxItemCount += (maxItemCount / average) + 1;
             INIT_LOGD("Too many items,expand size");
             char **expand = (char **)(realloc(items, sizeof(char *) * maxItemCount));
             if (expand == NULL) {
@@ -144,15 +157,15 @@ static int ParseDeviceConfig(char *p)
         FreeConfigItems(items, count);
         return -1;
     }
-    config->name = strdup(items[0]); // device node
+    config->name = strdup(items[DEVICE_CONFIG_NAME_NUM]); // device node
     errno = 0;
-    config->mode = strtoul(items[1], NULL, OCTONARY);
+    config->mode = strtoul(items[DEVICE_CONFIG_MODE_NUM], NULL, OCTONARY);
     if (errno != 0) {
         INIT_LOGE("Invalid mode in config file for device node %s. use default mode", config->name);
         config->mode = DEVMODE;
     }
-    config->uid = (uid_t)StringToInt(items[2], 0);
-    config->gid = (gid_t)StringToInt(items[3], 0);
+    config->uid = (uid_t)StringToInt(items[DEVICE_CONFIG_UID_NUM], 0);
+    config->gid = (gid_t)StringToInt(items[DEVICE_CONFIG_GID_NUM], 0);
     ListAddTail(&g_devices, &config->list);
     FreeConfigItems(items, count);
     return 0;
@@ -181,16 +194,16 @@ static int ParseSysfsConfig(char *p)
         FreeConfigItems(items, count);
         return -1;
     }
-    config->sysPath = strdup(items[0]); // sys path
-    config->attr = strdup(items[1]);  // attribute
+    config->sysPath = strdup(items[SYS_CONFIG_PATH_NUM]); // sys path
+    config->attr = strdup(items[SYS_CONFIG_ATTR_NUM]);  // attribute
     errno = 0;
-    config->mode = strtoul(items[2], NULL, OCTONARY);
+    config->mode = strtoul(items[SYS_CONFIG_MODE_NUM], NULL, OCTONARY);
     if (errno != 0) {
         INIT_LOGE("Invalid mode in config file for sys path %s. use default mode", config->sysPath);
         config->mode = DEVMODE;
     }
-    config->uid = (uid_t)StringToInt(items[3], 0);
-    config->gid = (gid_t)StringToInt(items[4], 0);
+    config->uid = (uid_t)StringToInt(items[SYS_CONFIG_UID_NUM], 0);
+    config->gid = (gid_t)StringToInt(items[SYS_CONFIG_GID_NUM], 0);
     ListAddTail(&g_sysDevices, &config->list);
     FreeConfigItems(items, count);
     return 0;

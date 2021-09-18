@@ -59,7 +59,7 @@ int DecodeUid(const char *name)
     }
     if (digitFlag) {
         errno = 0;
-        uid_t result = strtoul(name, 0, 10);
+        uid_t result = strtoul(name, 0, DECIMAL_BASE);
         if (errno != 0) {
             return -1;
         }

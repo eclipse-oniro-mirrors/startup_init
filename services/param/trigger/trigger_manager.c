@@ -49,7 +49,7 @@ int InitTriggerWorkSpace(TriggerWorkSpace *workSpace)
         return 0;
     }
     CheckAndCreateDir(TRIGGER_PATH);
-    int fd = open(TRIGGER_PATH, O_CREAT | O_RDWR | O_TRUNC | O_CLOEXEC, 0444);
+    int fd = open(TRIGGER_PATH, O_CREAT | O_RDWR | O_TRUNC | O_CLOEXEC, S_IRUSR | S_IRGRP | S_IROTH);
     PARAM_CHECK(fd >= 0, return -1, "Open file fail error %s", strerror(errno));
     lseek(fd, TRIGGER_AREA_SPACE, SEEK_SET);
     write(fd, "", 1);
@@ -83,7 +83,8 @@ static CommandNode *GetCmdByIndex(const TriggerWorkSpace *workSpace, const Trigg
     if (index == 0 || index == (u_int32_t)-1) {
         return NULL;
     }
-    u_int32_t size = sizeof(CommandNode) + 2;
+    u_int32_t offset = 2;
+    u_int32_t size = sizeof(CommandNode) + offset;
     PARAM_CHECK((index + size) < workSpace->area->dataSize,
         return NULL, "Invalid index for cmd %u", index);
     return (CommandNode *)(workSpace->area->data + index);
@@ -369,7 +370,8 @@ int CheckParamTrigger(TriggerWorkSpace *workSpace,
     PARAM_CHECK(workSpace != NULL && content != NULL && triggerExecuter != NULL,
         return -1, "Failed arg for param trigger");
     LogicCalculator calculator = {};
-    CalculatorInit(&calculator, 100, sizeof(LogicData), 1);
+    int dataNumber = 100;
+    CalculatorInit(&calculator, dataNumber, sizeof(LogicData), 1);
 
     // 先解析content
     int ret = GetValueFromContent(content, contentSize, 0, calculator.inputName, SUPPORT_DATA_BUFFER_MAX);
@@ -389,7 +391,8 @@ int CheckAndExecuteTrigger(TriggerWorkSpace *workSpace, const char *content, PAR
     PARAM_CHECK(workSpace != NULL && content != NULL && triggerExecuter != NULL,
         return -1, "Failed arg for param trigger");
     LogicCalculator calculator = {};
-    CalculatorInit(&calculator, 100, sizeof(LogicData), 1);
+    int dataNumber = 100;
+    CalculatorInit(&calculator, dataNumber, sizeof(LogicData), 1);
 
     int ret = memcpy_s(calculator.triggerContent, sizeof(calculator.triggerContent), content, strlen(content));
     PARAM_CHECK(ret == 0, CalculatorFree(&calculator); return -1, "Failed to memcpy");

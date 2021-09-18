@@ -566,7 +566,7 @@ static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
             return SERVICE_FAILURE;
         }
         char *sockStr = cJSON_GetStringValue(sockJ);
-        char *tmpStr[SOCK_OPT_NUMS] = {NULL,};
+        char *tmpStr[SOCK_OPT_NUMS] = {NULL};
         int num = SplitString(sockStr, tmpStr, SOCK_OPT_NUMS);
         if (num != SOCK_OPT_NUMS) {
             return SERVICE_FAILURE;
@@ -651,7 +651,7 @@ static int CheckServiceKeyName(const cJSON* curService)
                 break;
             }
         }
-        if(i < keyListSize) {
+        if (i < keyListSize) {
             child = child->next;
         } else {
             INIT_LOGE("CheckServiceKeyName, key name %s is not found. error.", child->string);

@@ -56,7 +56,7 @@ int UeventdSocketInit()
     setsockopt(sockfd, SOL_SOCKET, SO_RCVBUFFORCE, &buffSize, sizeof(buffSize));
     setsockopt(sockfd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
 
-    if(bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+    if (bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
         INIT_LOGE("Bind socket failed, err = %d", errno);
         close(sockfd);
         return -1;

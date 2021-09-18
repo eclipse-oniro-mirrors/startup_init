@@ -79,7 +79,8 @@ static void OnConnection(uv_connect_t *connect, int status)
     RequestNode *request = ParamEntry(connect, RequestNode, connect);
     PARAM_LOGD("Connect to server handle %p", &(request->handle));
     uv_buf_t buf = uv_buf_init((char*)&request->msg, request->msg.contentSize + sizeof(request->msg));
-    int ret = uv_write2(&request->wr, (uv_stream_t*)&(request->handle), &buf, 1, (uv_stream_t*)&(request->handle), OnWrite);
+    int ret = uv_write2(&request->wr, (uv_stream_t*)&(request->handle), &buf, 1,
+        (uv_stream_t*)&(request->handle), OnWrite);
     PARAM_CHECK(ret >= 0, return, "Failed to uv_write2 porperty");
 
     // read result
@@ -108,9 +109,9 @@ int SystemSetParameter(const char *name, const char *value)
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid param");
     int ret = CheckParamName(name, 0);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name");
-
+    u_int32_t len = 2;
     PARAM_LOGD("StartRequest %s", name);
-    u_int32_t msgSize = sizeof(RequestMsg) + strlen(name) + strlen(value) + 2;
+    u_int32_t msgSize = sizeof(RequestMsg) + strlen(name) + strlen(value) + len;
     RequestNode *request = (RequestNode *)malloc(sizeof(RequestNode) + msgSize);
     PARAM_CHECK(request != NULL, return -1, "Failed to malloc for connect");
 

@@ -59,7 +59,7 @@ int MakeDirRecursive(const char *dir, mode_t mode)
         if (gap < 0) { // end with '/'
             break;
         }
-        if (memcpy_s(buffer, PATH_MAX, dir, p - dir -1) != 0) {
+        if (memcpy_s(buffer, PATH_MAX, dir, p - dir - 1) != 0) {
             return -1;
         }
         rc = MakeDir(buffer, mode);

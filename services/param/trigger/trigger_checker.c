@@ -19,13 +19,14 @@
 #include "init_param.h"
 
 #define LABEL "Trigger"
-// 申请整块能存作为计算的节点
+// 申请整块内存作为计算的节点
 int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, int needCondition)
 {
     PARAM_CHECK(calculator != NULL, return -1, "Invalid param");
     int dataSize = dataUnit * dataNumber;
+    int multiple = 5;
     if (needCondition) {
-        dataSize += 5 * SUPPORT_DATA_BUFFER_MAX;
+        dataSize += multiple * SUPPORT_DATA_BUFFER_MAX;
     }
     calculator->data = (char *)malloc(dataSize);
     PARAM_CHECK(calculator->data != NULL, return -1, "Failed to malloc for calculator");
@@ -113,7 +114,8 @@ static int CalculatorLength(const LogicCalculator *calculator)
 
 static int PrefixAdd(char *prefix, u_int32_t *prefixIndex, u_int32_t prefixLen, char op)
 {
-    if ((*prefixIndex + 3) >= prefixLen) {
+    u_int32_t offset = 3;
+    if ((*prefixIndex + offset) >= prefixLen) {
         return -1;
     }
     prefix[(*prefixIndex)++] = ' ';
@@ -127,7 +129,7 @@ static int HandleOperationOr(LogicCalculator *calculator, char *prefix, u_int32_
     int ret = 0;
     char e;
     prefix[(*prefixIndex)++] = ' ';
-    if(CalculatorLength(calculator) == 0) {
+    if (CalculatorLength(calculator) == 0) {
         CalculatorPushChar(calculator, '|');
     } else {
         do {
@@ -152,7 +154,8 @@ static int ComputeSubCondition(LogicCalculator *calculator, LogicData *data, con
     // 解析条件
     char *subStr = strstr(condition + data->startIndex, "=");
     if (subStr != NULL && ((u_int32_t)(subStr - condition) > data->endIndex)) {
-        if (strncmp(condition + data->startIndex, calculator->triggerContent, strlen(calculator->triggerContent)) == 0) {
+        if (strncmp(condition + data->startIndex, calculator->triggerContent,
+                strlen(calculator->triggerContent)) == 0) {
             return 1;
         }
     } else {
@@ -260,10 +263,11 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLe
     int ret = 0;
     u_int32_t curr = 0;
     u_int32_t prefixIndex = 0;
+    int dataNumber = 100;
 
     PARAM_CHECK(condition != NULL, return -1, "Invalid condition");
     LogicCalculator calculator;
-    CalculatorInit(&calculator, 100, 1, 0);
+    CalculatorInit(&calculator, dataNumber, 1, 0);
 
     while (curr < strlen(condition)) {
         if (condition[curr] == ')') {
@@ -308,8 +312,8 @@ char *GetMatchedSubCondition(const char *condition, const char *input, int lengt
 {
     PARAM_CHECK(condition != NULL && input != NULL, return NULL, "Invalid arguments");
     const char *p = condition;
-    for(;(p = strchr(p, *input)) != 0; p++) {
-        if(strncmp(p, input, length) == 0) {
+    for (; (p = strchr(p, *input)) != 0; p++) {
+        if (strncmp(p, input, length) == 0) {
             return (char*)p;
         }
     }

@@ -151,7 +151,8 @@ void PostParamTrigger(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return, "Invalid param");
     PARAM_LOGD("PostParamTrigger %s ", name);
-    int contentLen = strlen(name) + strlen(value) + 2;
+    int offset = 2;
+    int contentLen = strlen(name) + strlen(value) + offset;
     TriggerDataEvent *event = (TriggerDataEvent *)malloc(sizeof(TriggerDataEvent) + contentLen);
     PARAM_CHECK(event != NULL, return, "Failed to alloc memory");
     event->type = EVENT_PROPERTY;

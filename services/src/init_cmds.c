@@ -984,7 +984,7 @@ static void DoSetrlimit(const char *cmdContent, int maxArg)
     limit.rlim_cur = (rlim_t)atoi(ctx->argv[1]);
     limit.rlim_max = (rlim_t)atoi(ctx->argv[rlimMaxPos]);
     int rcs = -1;
-    for (unsigned int i = 0 ; i < sizeof(resource) / sizeof(char*); ++i) {
+    for (unsigned int i = 0 ; i < ARRAY_LENGTH(resource); ++i) {
         if (strcmp(ctx->argv[0], resource[i]) == 0) {
             rcs = (int)i;
         }

@@ -97,7 +97,8 @@ typedef struct TriggerWorkSpace {
 int InitTriggerWorkSpace(TriggerWorkSpace *workSpace);
 int ParseTrigger(TriggerWorkSpace *workSpace, const cJSON *triggerItem);
 
-typedef int (*TRIGGER_MATCH)(LogicCalculator *calculator, TriggerNode *trigger, const char *content, u_int32_t contentSize);
+typedef int (*TRIGGER_MATCH)(LogicCalculator *calculator, TriggerNode *trigger, const char *content,
+        u_int32_t contentSize);
 typedef int (*PARAM_CHECK_DONE)(TriggerNode *trigger, u_int32_t index);
 typedef int (*CMD_EXECUTE) (const TriggerNode *trigger, const char *cmdName, const char *command);
 
