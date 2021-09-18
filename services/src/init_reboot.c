@@ -16,6 +16,7 @@
 #include "init_reboot.h"
 
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,29 +45,24 @@ static bool RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdat
         INIT_LOGE("path or boot is NULL.");
         return false;
     }
-    char *realPath = realpath(path, NULL);
-    if (realPath == NULL) {
+
+    char realPath[PATH_MAX] = {0};
+    if (Realpath(path, realPath, sizeof(realPath)) == NULL) {
         return false;
     }
-    FILE* fp = fopen(realPath, "rb+");
+    FILE *fp = fopen(realPath, "rb+");
     if (fp == NULL) {
         INIT_LOGE("open %s failed", path);
-        free(realPath);
-        realPath = NULL;
         return false;
     }
 
     size_t ret = fwrite(boot, sizeof(struct RBMiscUpdateMessage), 1, fp);
     if (ret < 0) {
         INIT_LOGE("write to misc failed");
-        free(realPath);
-        realPath = NULL;
-        fclose(fp);
+        (void)fclose(fp);
         return false;
     }
-    free(realPath);
-    realPath = NULL;
-    fclose(fp);
+    (void)fclose(fp);
     return true;
 }
 
@@ -76,29 +72,23 @@ static bool RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessag
         INIT_LOGE("path or boot is NULL.");
         return false;
     }
-    char *realPath = realpath(path, NULL);
-    if (realPath == NULL) {
+    char realPath[PATH_MAX] = {0};
+    if (Realpath(path, realPath, sizeof(realPath)) == NULL) {
         return false;
     }
-    FILE* fp = fopen(realPath, "rb");
+    FILE *fp = fopen(realPath, "rb");
     if (fp == NULL) {
         INIT_LOGE("open %s failed", path);
-        free(realPath);
-        realPath = NULL;
         return false;
     }
 
     size_t ret = fread(boot, 1, sizeof(struct RBMiscUpdateMessage), fp);
     if (ret <= 0) {
         INIT_LOGE("read to misc failed");
-        free(realPath);
-        realPath = NULL;
-        fclose(fp);
+        (void)fclose(fp);
         return false;
     }
-    free(realPath);
-    realPath = NULL;
-    fclose(fp);
+    (void)fclose(fp);
     return true;
 }
 
@@ -120,13 +110,13 @@ static int GetMountStatusForMountPoint(const char *mountPoint)
             buffer[n - 1] = '\0';
         }
         if (strstr(buffer, mountPoint) != NULL) {
-            fclose(fp);
+            (void)fclose(fp);
             return 1;
         }
     }
 
     // Cannot find it from system.
-    fclose(fp);
+    (void)fclose(fp);
     return 0;
 }
 
@@ -155,8 +145,24 @@ static int CheckAndRebootToUpdater(const char *valueData, const char *cmd, const
     return -1;
 }
 
+static int CheckRebootValue(const char **cmdParams, const char *valueData)
+{
+    size_t i = 0;
+    for (; i < ARRAY_LENGTH(cmdParams); i++) {
+        if (strncmp(valueData, cmdParams[i], strlen(cmdParams[i])) == 0) {
+            break;
+        }
+    }
+    if (i >= ARRAY_LENGTH(cmdParams)) {
+        INIT_LOGE("DoReboot valueData = %s, parameters error.", valueData);
+        return -1;
+    }
+    return 0;
+}
+
 void DoReboot(const char *value)
 {
+#ifndef OHOS_LITE
     static const char *g_cmdParams[] = {
         "shutdown", "updater", "updater:", "flashing", "flashing:", "NoArgument", "bootloader"
     };
@@ -174,14 +180,7 @@ void DoReboot(const char *value)
         valueData = value + strlen("reboot,");
     }
     if (valueData != NULL) {
-        size_t i = 0;
-        for (; i < ARRAY_LENGTH(g_cmdParams); i++) {
-            if (strncmp(valueData, g_cmdParams[i], strlen(g_cmdParams[i])) == 0) {
-                break;
-            }
-        }
-        if (i >= ARRAY_LENGTH(g_cmdParams)) {
-            INIT_LOGE("DoReboot value = %s, parameters error.", value);
+        if (CheckRebootValue(g_cmdParams, valueData) < 0) {
             return;
         }
     }
@@ -206,5 +205,11 @@ void DoReboot(const char *value)
         ret = CheckAndRebootToUpdater(valueData, "flashing", "flashing:", "boot_flashing");
     }
     INIT_LOGI("DoReboot value = %s %s.", value, (ret == 0) ? "success" : "fail");
+#else
+    int ret = reboot(RB_AUTOBOOT);
+    if (ret != 0) {
+        INIT_LOGE("reboot failed! syscall ret %d, err %d.", ret, errno);
+    }
+#endif
     return;
 }

@@ -68,8 +68,6 @@ typedef struct {
     int    pid;
     int    crashCnt;
     time_t firstCrashTime;
-    int    criticalCrashCnt;            // count for critical
-    time_t firstCriticalCrashTime;      // record for critical
     char   *writepidFiles[MAX_WRITEPID_FILES];
     unsigned int attribute;
     int    importance;

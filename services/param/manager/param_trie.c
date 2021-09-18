@@ -27,7 +27,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "init_utils.h"
 #include "param_utils.h"
 #include "sys_param.h"
 

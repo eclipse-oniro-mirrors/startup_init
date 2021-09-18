@@ -14,6 +14,7 @@
  */
 
 #include "ueventd_read_cfg.h"
+
 #include <ctype.h>
 #include <limits.h>
 #include <string.h>
@@ -22,6 +23,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include "init_utils.h"
 #include "list.h"
 #include "ueventd_utils.h"
 #include "securec.h"
@@ -159,7 +161,7 @@ static int ParseDeviceConfig(char *p)
     }
     config->name = strdup(items[DEVICE_CONFIG_NAME_NUM]); // device node
     errno = 0;
-    config->mode = strtoul(items[DEVICE_CONFIG_MODE_NUM], NULL, OCTONARY);
+    config->mode = strtoul(items[DEVICE_CONFIG_MODE_NUM], NULL, OCTAL_BASE);
     if (errno != 0) {
         INIT_LOGE("Invalid mode in config file for device node %s. use default mode", config->name);
         config->mode = DEVMODE;
@@ -197,7 +199,7 @@ static int ParseSysfsConfig(char *p)
     config->sysPath = strdup(items[SYS_CONFIG_PATH_NUM]); // sys path
     config->attr = strdup(items[SYS_CONFIG_ATTR_NUM]);  // attribute
     errno = 0;
-    config->mode = strtoul(items[SYS_CONFIG_MODE_NUM], NULL, OCTONARY);
+    config->mode = strtoul(items[SYS_CONFIG_MODE_NUM], NULL, OCTAL_BASE);
     if (errno != 0) {
         INIT_LOGE("Invalid mode in config file for sys path %s. use default mode", config->sysPath);
         config->mode = DEVMODE;
@@ -327,12 +329,11 @@ void ParseUeventdConfigFile(const char *file)
     if (INVALIDSTRING(file)) {
         return;
     }
-    char *config = realpath(file, NULL);
-    if (config == NULL) {
+    char config[PATH_MAX] = {0};
+    if (Realpath(file, config, sizeof(config)) == NULL) {
         return;
     }
     int fd = open(config, O_RDONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    free(config);
     if (fd < 0) {
         INIT_LOGE("Read from %s failed", file);
         return;

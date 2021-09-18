@@ -15,7 +15,8 @@
 
 #ifndef INIT_UTILS_H
 #define INIT_UTILS_H
-
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #ifdef __cplusplus
@@ -30,10 +31,15 @@ extern "C" {
 
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 uid_t DecodeUid(const char *name);
-char* ReadFileToBuf(const char *configFile);
+char *ReadFileToBuf(const char *configFile);
 int SplitString(char *srcPtr, char **dstPtr, int maxNum);
 void WaitForFile(const char *source, unsigned int maxCount);
 size_t WriteAll(int fd, char *buffer, size_t size);
+char *Realpath(const char *source, char *resolvedPath, size_t resolvedPathSize);
+int StringToInt(const char *str, int defaultValue);
+int MakeDirRecursive(const char *dir, mode_t mode);
+int MakeDir(const char *dir, mode_t mode);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

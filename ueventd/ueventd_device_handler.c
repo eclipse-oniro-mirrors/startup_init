@@ -14,13 +14,16 @@
  */
 
 #include "ueventd_device_handler.h"
+
 #include <errno.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
+#include "init_utils.h"
 #include "list.h"
 #include "ueventd.h"
 #include "ueventd_read_cfg.h"
@@ -219,8 +222,8 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
             return NULL;
         }
 
-        char *bus = realpath(subsystem, NULL);
-        if (bus != NULL) {
+        char bus[PATH_MAX] = {0};
+        if (Realpath(subsystem, bus, sizeof(bus)) != NULL) {
             if (STRINGEQUAL(bus, "/sys/bus/platform")) {
                 INIT_LOGD("Find a platform device: %s", parent);
                 parent = FindPlatformDeviceName(parent);
