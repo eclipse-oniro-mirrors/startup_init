@@ -34,7 +34,7 @@
 #define MAX_SOCKET_ENV_PREFIX_LEN 64
 #define MAX_SOCKET_DIR_LEN 128
 
-static int GetControlFromEnv(char *path, int length)
+static int GetControlFromEnv(const char *path, int length)
 {
     if (path == NULL || length <= 0) {
         return -1;

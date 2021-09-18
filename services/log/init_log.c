@@ -82,7 +82,7 @@ void EnableDevKmsg(void)
     if (fd < 0) {
         return;
     }
-    char *kmsgStatus = "on";
+    const char *kmsgStatus = "on";
     write(fd, kmsgStatus, strlen(kmsgStatus) + 1);
     close(fd);
     fd = -1;

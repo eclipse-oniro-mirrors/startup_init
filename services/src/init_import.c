@@ -40,7 +40,7 @@ static int ExtractCfgFile(char **cfgFile, const char *content)
 }
 #endif
 
-void ParseAllImports(cJSON *root)
+void ParseAllImports(const cJSON *root)
 {
     cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "import");
     char *cfgFile = NULL;

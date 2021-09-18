@@ -209,6 +209,7 @@ struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
 
 void FreeCmd(struct CmdArgs **cmd)
 {
+    INIT_CHECK_ONLY_RETURN(cmd != NULL);
     struct CmdArgs *tmpCmd = *cmd;
     INIT_CHECK_ONLY_RETURN(tmpCmd != NULL);
     for (int i = 0; i < tmpCmd->argc; ++i) {
@@ -239,7 +240,7 @@ static void DoSetDomainname(const char *cmdContent, int maxArg)
     size_t size = strlen(ctx->argv[0]);
     ssize_t n = write(fd, ctx->argv[0], size);
     if (n != (ssize_t)size) {
-        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/domainname\". err = %d", errno);
+        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/domainname\". err = %d", ctx->argv[0], errno);
     }
 
     close(fd);
@@ -262,7 +263,7 @@ static void DoSetHostname(const char *cmdContent, int maxArg)
     size_t size = strlen(ctx->argv[0]);
     ssize_t n = write(fd, ctx->argv[0], size);
     if (n != (ssize_t)size) {
-        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/hostname\". err = %d", errno);
+        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/hostname\". err = %d", ctx->argv[0], errno);
     }
 
     close(fd);
@@ -440,7 +441,7 @@ static void DoChown(const char* cmdContent, int maxArg)
     gid_t group = DecodeUid(ctx->argv[1]);
     INIT_ERROR_CHECK(group != (gid_t)-1, goto out, "DoChown invalid gid :%s.", ctx->argv[1]);
 
-    int pathPos = 2;
+    const int pathPos = 2;
     if (chown(ctx->argv[pathPos], owner, group) != 0) {
         INIT_LOGE("DoChown, failed for %s, err %d.", cmdContent, errno);
     }
@@ -675,7 +676,7 @@ static void DoMount(const char* cmdContent, int maxArg)
 
 #ifndef OHOS_LITE
 #define OPTIONS_SIZE 128u
-static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPtr, int flags)
+static void DoInsmodInternal(const char *fileName, const char *secondPtr, const char *restPtr, int flags)
 {
     char options[OPTIONS_SIZE] = {0};
     if (flags == 0) { //  '-f' option
