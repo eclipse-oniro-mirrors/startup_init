@@ -291,7 +291,8 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
 {
     PARAM_CHECK(srcLabel != NULL && name != NULL && value != NULL,
         return PARAM_CODE_INVALID_PARAM, "Invalid param");
-
+    int ret = 0;
+    int n = 0;
     const char *ctrlName[] = {
         "ctl.start",  "ctl.stop", "ctl.restart"
     };
@@ -309,12 +310,12 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
             // their value is the name of the service to apply that action to.  Permissions for these
             // actions are based on the service, so we must create a fake name of ctl.<service> to
             // check permissions.
-            int n = snprintf_s(legacyName, size, strlen("ctl.") + strlen(value) + 1, "ctl.%s", value);
+            n = snprintf_s(legacyName, size, strlen("ctl.") + strlen(value) + 1, "ctl.%s", value);
             PARAM_CHECK(n > 0, free(legacyName); return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
             legacyName[n] = '\0';
 
             TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, legacyName, strlen(legacyName), 1);
-            int ret = CheckMacPerms(workSpace, srcLabel, legacyName, (node == NULL) ? 0 : node->labelIndex);
+            ret = CheckMacPerms(workSpace, srcLabel, legacyName, (node == NULL) ? 0 : node->labelIndex);
             if (ret == 0) {
                 free(legacyName);
                 return 0;
@@ -322,11 +323,11 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
             break;
         }
     }
-    int n = snprintf_s(legacyName, size, size - 1, "%s$%s", name, value);
+    n = snprintf_s(legacyName, size, size - 1, "%s$%s", name, value);
     PARAM_CHECK(n > 0, free(legacyName); return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
 
     TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, name, strlen(name), 1);
-    int ret = CheckMacPerms(workSpace, srcLabel, name, (node == NULL) ? 0 : node->labelIndex);
+    ret = CheckMacPerms(workSpace, srcLabel, name, (node == NULL) ? 0 : node->labelIndex);
     free(legacyName);
     return ret;
 }
@@ -368,7 +369,7 @@ int CheckParamName(const char *name, int info)
 
 int CheckParamValue(WorkSpace *workSpace, const TrieDataNode *node, const char *name, const char *value)
 {
-    if (node == NULL || name == NULL || value == NULL) {
+    if (name == NULL || value == NULL) {
         return PARAM_CODE_INVALID_VALUE;
     }
     if (strncmp((name), "ro.", strlen("ro.")) == 0) {
