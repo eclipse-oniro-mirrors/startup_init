@@ -205,18 +205,17 @@ struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
     return ctx;
 }
 
-void FreeCmd(struct CmdArgs **cmd)
+void FreeCmd(struct CmdArgs *cmd)
 {
     INIT_CHECK_ONLY_RETURN(cmd != NULL);
-    struct CmdArgs *tmpCmd = *cmd;
-    INIT_CHECK_ONLY_RETURN(tmpCmd != NULL);
-    for (int i = 0; i < tmpCmd->argc; ++i) {
-        INIT_CHECK(tmpCmd->argv[i] == NULL, free(tmpCmd->argv[i]));
+    for (int i = 0; i < cmd->argc; ++i) {
+        INIT_CHECK(cmd->argv[i] == NULL, free(cmd->argv[i]));
     }
-    INIT_CHECK(tmpCmd->argv == NULL, free(tmpCmd->argv));
-    free(tmpCmd);
+    INIT_CHECK(cmd->argv == NULL, free(cmd->argv));
+    free(cmd);
     return;
 }
+
 
 #define EXTRACT_ARGS(cmdname, cmdContent, args) \
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", args); \
@@ -243,7 +242,7 @@ static void DoSetDomainname(const char *cmdContent, int maxArg)
 
     close(fd);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     fd = -1;
     return;
 }
@@ -266,7 +265,7 @@ static void DoSetHostname(const char *cmdContent, int maxArg)
 
     close(fd);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     fd = -1;
     return;
 }
@@ -302,7 +301,7 @@ static void DoIfup(const char *cmdContent, int maxArg)
 
     close(fd);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     fd = -1;
     return;
 }
@@ -331,7 +330,7 @@ static void DoSleep(const char *cmdContent, int maxArg)
     INIT_LOGI("Sleeping %d second(s)", sleepTime);
     sleep((unsigned int)sleepTime);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -345,7 +344,7 @@ static void DoStart(const char* cmdContent, int maxArg)
     INIT_LOGD("DoStart %s", cmdContent);
     StartServiceByName(cmdContent);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -359,7 +358,7 @@ static void DoStop(const char* cmdContent, int maxArg)
     INIT_LOGD("DoStop %s", cmdContent);
     StopServiceByName(cmdContent);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -374,7 +373,7 @@ static void DoReset(const char* cmdContent, int maxArg)
     DoStop(cmdContent, maxArg);
     DoStart(cmdContent, maxArg);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -415,7 +414,7 @@ static void DoCopy(const char* cmdContent, int maxArg)
     }
     fsync(dstFd);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     ctx = NULL;
     INIT_CHECK(srcFd < 0, close(srcFd); srcFd = -1);
     INIT_CHECK(dstFd < 0, close(dstFd); dstFd = -1);
@@ -444,7 +443,7 @@ static void DoChown(const char* cmdContent, int maxArg)
         INIT_LOGE("DoChown, failed for %s, err %d.", cmdContent, errno);
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -494,7 +493,7 @@ static void DoMkDir(const char* cmdContent, int maxArg)
         }
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -517,7 +516,7 @@ static void DoChmod(const char* cmdContent, int maxArg)
         INIT_LOGE("DoChmod, failed for %s, err %d.", cmdContent, errno);
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -777,7 +776,7 @@ static void DoSetParam(const char* cmdContent, int maxArg)
     INIT_LOGE("param name: %s, value %s ", ctx->argv[0], ctx->argv[1]);
     SystemWriteParam(ctx->argv[0], ctx->argv[1]);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -885,7 +884,7 @@ static void DoWrite(const char *cmdContent, int maxArg)
     realPath = NULL;
     close(fd);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -904,7 +903,7 @@ static void DoRmdir(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -917,7 +916,7 @@ static void DoRebootCmd(const char *cmdContent, int maxArg)
     }
     DoReboot(cmdContent);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -931,7 +930,7 @@ static void DoLoadPersistParams(const char *cmdContent, int maxArg)
     INIT_LOGD("load persist params : %s", cmdContent);
     LoadPersistParams();
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -945,7 +944,7 @@ static void DoTriggerCmd(const char *cmdContent, int maxArg)
     INIT_LOGD("DoTrigger :%s", cmdContent);
     DoTriggerExec(cmdContent);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -959,7 +958,7 @@ static void DoLoadDefaultParams(const char *cmdContent, int maxArg)
     INIT_LOGD("load persist params : %s", cmdContent);
     LoadDefaultParams(cmdContent);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -997,7 +996,7 @@ static void DoSetrlimit(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -1015,7 +1014,7 @@ static void DoRm(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -1033,7 +1032,7 @@ static void DoExport(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -1059,7 +1058,7 @@ static void DoExec(const char *cmdContent, int maxArg)
         if (ret == -1) {
             INIT_LOGE("DoExec: execute \"%s\" failed: %d.", cmdContent, errno);
         }
-        FreeCmd(&ctx);
+        FreeCmd(ctx);
         _exit(0x7f);
     }
     return;
@@ -1081,7 +1080,7 @@ static void DoSymlink(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -1132,7 +1131,7 @@ static void DoMakeNode(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -1153,7 +1152,7 @@ static void DoMakeDevice(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 #endif // __LITEOS__
