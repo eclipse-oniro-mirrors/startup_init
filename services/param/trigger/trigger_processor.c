@@ -30,7 +30,7 @@
 
 static TriggerWorkSpace g_triggerWorkSpace = {};
 
-static int DoCmdExecute(TriggerNode *trigger, const char *cmdName, const char *command)
+static int DoCmdExecute(const TriggerNode *trigger, const char *cmdName, const char *command)
 {
     PARAM_CHECK(trigger != NULL && cmdName != NULL && command != NULL, return -1, "Invalid param");
     PARAM_LOGD("DoCmdExecute trigger %s cmd %s %s", trigger->name, cmdName, command);
@@ -171,13 +171,13 @@ void PostTrigger(EventType type, const char *content, u_int32_t contentLen)
     event->type = type;
     event->request.data = (char*)event + sizeof(uv_work_t);
     event->contentSize = contentLen;
-    PARAM_CHECK(memcpy_s(event->content, contentLen, content, contentLen) == 0, return, "Failed to copy content");
+    PARAM_CHECK(memcpy_s(event->content, contentLen + 1, content, contentLen) == 0, return, "Failed to copy content");
     event->content[contentLen] = '\0';
     SendTriggerEvent(event);
     PARAM_LOGD("PostTrigger %d success", type);
 }
 
-int ParseTriggerConfig(cJSON *fileRoot)
+int ParseTriggerConfig(const cJSON *fileRoot)
 {
     PARAM_CHECK(fileRoot != NULL, return -1, "Invalid file");
     int ret = InitTriggerWorkSpace(&g_triggerWorkSpace);

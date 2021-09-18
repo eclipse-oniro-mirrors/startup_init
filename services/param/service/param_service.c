@@ -49,7 +49,10 @@ int LoadDefaultParams(const char *fileName)
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
     char buff[BUFFER_SIZE];
     SubStringInfo *info = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_LABEL + 1));
-    PARAM_CHECK(info != NULL, return -1, "malloc failed");
+    PARAM_CHECK(info != NULL,
+        fclose(fp);
+        fp = NULL;
+        return -1, "malloc failed");
 
     while(fgets(buff, BUFFER_SIZE, fp) != NULL) {
         int subStrNumber = GetSubStringInfo(buff, strlen(buff), '=',  info, SUBSTR_INFO_LABEL + 1);
@@ -86,7 +89,10 @@ int LoadParamInfos(const char *fileName)
     FILE *fp = fopen(fileName, "r");
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
     SubStringInfo *info = malloc(sizeof(SubStringInfo) * SUBSTR_INFO_MAX);
-    PARAM_CHECK(info != NULL, return -1, "Load parameter malloc failed.");
+    PARAM_CHECK(info != NULL,
+        fclose(fp);
+        fp = NULL;
+        return -1, "Load parameter malloc failed.");
     char buff[BUFFER_SIZE];
     int infoCount = 0;
     while(fgets(buff, BUFFER_SIZE, fp) != NULL) {
@@ -104,7 +110,7 @@ int LoadParamInfos(const char *fileName)
     return 0;
 }
 
-static int ProcessParamSet(RequestMsg *msg)
+static int ProcessParamSet(const RequestMsg *msg)
 {
     PARAM_CHECK(msg != NULL, return PARAM_CODE_INVALID_PARAM, "Failed to check param");
 
@@ -146,6 +152,7 @@ static void SendResponse(uv_stream_t *handle, RequestType type, int result, cons
 {
     int ret = 0;
     // 申请整块内存，用于回复数据和写请求
+    PARAM_CHECK(size >= 0, return, "Invalid content size %d", size);
     ResponseNode *response = (ResponseNode *)malloc(sizeof(ResponseNode) + size);
     PARAM_CHECK(response != NULL, return, "Failed to alloc memory for response");
     response->msg.type = type;
@@ -153,11 +160,17 @@ static void SendResponse(uv_stream_t *handle, RequestType type, int result, cons
     response->msg.result = result;
     if (content != NULL && size != 0) {
         ret = memcpy_s(response->msg.content, size, content, size);
-        PARAM_CHECK(ret == 0, return, "Failed to copy content");
+        PARAM_CHECK(ret == 0,
+            free(response);
+            response = NULL;
+            return, "Failed to copy content");
     }
     uv_buf_t buf = uv_buf_init((char *)&response->msg, sizeof(response->msg) + size);
     ret = uv_write2(&response->writer, handle, &buf, 1, handle, OnWriteResponse);
-    PARAM_CHECK(ret >= 0, return, "Failed to uv_write2 ret %s", uv_strerror(ret));
+    PARAM_CHECK(ret >= 0,
+        free(response);
+        response = NULL;
+        return, "Failed to uv_write2 ret %s", uv_strerror(ret));
 }
 
 static void OnReceiveRequest(uv_stream_t *handle, ssize_t nread, uv_buf_t *buf)
@@ -166,6 +179,7 @@ static void OnReceiveRequest(uv_stream_t *handle, ssize_t nread, uv_buf_t *buf)
         uv_close((uv_handle_t*)handle, OnClose);
         if (buf != NULL && buf->base != NULL) {
             free(buf->base);
+            buf->base = NULL;
         }
         return;
     }

@@ -130,6 +130,9 @@ u_int32_t GetWorkSpaceSerial(WorkSpace *workSpace)
 
 u_int32_t AllocateTrieNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen)
 {
+    if (workSpace == NULL || workSpace->area == NULL || key == NULL) {
+        return 0;
+    }
     u_int32_t len = keyLen + sizeof(TrieNode) + 1;
     len = (len + 0x03) & (~0x03);
     PARAM_CHECK((workSpace->area->currOffset + len) < workSpace->area->dataSize, return 0,
@@ -137,7 +140,7 @@ u_int32_t AllocateTrieNode(WorkSpace *workSpace, const char *key, u_int32_t keyL
     TrieNode *node = (TrieNode*)(workSpace->area->data + workSpace->area->currOffset + len);
 
     atomic_init(&node->serial, ATOMIC_VAR_INIT(keyLen << TRIE_SERIAL_KEY_LEN_OFFSET));
-    int ret = memcpy_s(node->key, keyLen, key, keyLen);
+    int ret = memcpy_s(node->key, keyLen + 1, key, keyLen);
     PARAM_CHECK(ret == 0, return 0, "Failed to copy key");
     node->key[keyLen] = '\0';
     node->left = 0;
@@ -149,6 +152,9 @@ u_int32_t AllocateTrieNode(WorkSpace *workSpace, const char *key, u_int32_t keyL
 
 u_int32_t AllocateTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen)
 {
+    if (workSpace == NULL || workSpace->area == NULL || key == NULL) {
+        return 0;
+    }
     u_int32_t len = keyLen + sizeof(TrieDataNode) + 1;
     len = (len + 0x03) & (~0x03);
     PARAM_CHECK((workSpace->area->currOffset + len) < workSpace->area->dataSize, return 0,
@@ -156,7 +162,7 @@ u_int32_t AllocateTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t 
     TrieDataNode *node = (TrieDataNode*)(workSpace->area->data + workSpace->area->currOffset);
 
     atomic_init(&node->serial, ATOMIC_VAR_INIT(keyLen << TRIE_SERIAL_KEY_LEN_OFFSET));
-    int ret = memcpy_s(node->key, keyLen, key, keyLen);
+    int ret = memcpy_s(node->key, keyLen + 1, key, keyLen);
     PARAM_CHECK(ret == 0, return 0, "Failed to copy key");
     node->key[keyLen] = '\0';
     node->left = 0;
@@ -169,9 +175,9 @@ u_int32_t AllocateTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t 
     return offset;
 }
 
-TrieNode *GetTrieNode(WorkSpace *workSpace, NODE_INDEX *index)
+TrieNode *GetTrieNode(WorkSpace *workSpace, const NODE_INDEX *index)
 {
-    if (index == NULL) {
+    if (index == NULL || workSpace == NULL || workSpace->area == NULL) {
         return NULL;
     }
     u_int32_t offset = *index;
@@ -269,6 +275,8 @@ TrieDataNode *AddTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t k
 
 TrieDataNode *AddToSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const char *key, u_int32_t keyLen)
 {
+    PARAM_CHECK(workSpace != NULL && dataNode != NULL, return NULL,
+        "Invalid param work space");
     TrieDataNode *root = NULL;
     int ret = workSpace->compareTrieNode((TrieNode *)dataNode, key, keyLen);
     if (ret <= 0) {
@@ -293,6 +301,7 @@ TrieDataNode *AddToSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const c
 
 TrieNode *AddTrieNode(WorkSpace *workSpace, TrieNode *root, const char *key, u_int32_t keyLen)
 {
+    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid work space");
     PARAM_CHECK(root != NULL, return NULL, "Invalid param %s", key);
     TrieNode *current = root;
     TrieNode *next = NULL;
@@ -328,6 +337,7 @@ TrieNode *AddTrieNode(WorkSpace *workSpace, TrieNode *root, const char *key, u_i
 
 TrieDataNode *FindTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen, int matchPrefix)
 {
+    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid param %s", key);
     PARAM_CHECK(workSpace->allocTrieNode != NULL, return NULL, "Invalid param %s", key);
     PARAM_CHECK(workSpace->compareTrieNode != NULL, return NULL, "Invalid param %s", key);
 
@@ -368,6 +378,8 @@ TrieDataNode *FindTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t 
 
 TrieDataNode *FindSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const char *key, u_int32_t keyLen)
 {
+    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid param %s", key);
+    PARAM_CHECK(dataNode != NULL, return NULL, "Invalid param %s", key);
     TrieDataNode *root = NULL;
     int ret = workSpace->compareTrieNode((TrieNode*)dataNode, key, keyLen);
     if (ret <= 0) {
@@ -386,6 +398,7 @@ TrieDataNode *FindSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const ch
 
 TrieNode *FindTrieNode(WorkSpace *workSpace, TrieNode *root, const char *key, u_int32_t keyLen)
 {
+    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid param %s", key);
     PARAM_CHECK(root != NULL, return NULL, "Invalid param %s", key);
     TrieNode *current = root;
     TrieNode *next = NULL;
@@ -451,7 +464,7 @@ int TraversalTrieNode(WorkSpace *workSpace, TrieNode *root, TraversalTrieNodePtr
 
 u_int32_t AddData(WorkSpace *workSpace, const char *key, u_int32_t keyLen, const char *value, u_int32_t valueLen)
 {
-    PARAM_CHECK(workSpace != NULL, return 0, "Invalid param");
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return 0, "Invalid param");
     PARAM_CHECK(key != NULL && value != NULL, return 0, "Invalid param");
     u_int32_t realLen = sizeof(DataEntry) + 1 + 1;
     if (valueLen > PARAM_VALUE_LEN_MAX) {
@@ -467,9 +480,9 @@ u_int32_t AddData(WorkSpace *workSpace, const char *key, u_int32_t keyLen, const
     u_int32_t dataLength = keyLen << TRIE_SERIAL_KEY_LEN_OFFSET | valueLen << TRIE_SERIAL_DATA_LEN_OFFSET;
     atomic_init(&node->serial, ATOMIC_VAR_INIT(0));
     atomic_init(&node->dataLength, ATOMIC_VAR_INIT(dataLength));
-    int ret = memcpy_s(node->data, keyLen, key, keyLen);
+    int ret = memcpy_s(node->data, keyLen + 1, key, keyLen);
     PARAM_CHECK(ret == 0, return 0, "Failed to copy key");
-    ret = memcpy_s(node->data + keyLen + 1, valueLen, value, valueLen);
+    ret = memcpy_s(node->data + keyLen + 1, valueLen + 1, value, valueLen);
     PARAM_CHECK(ret == 0, return 0, "Failed to copy key");
     node->data[keyLen] = '=';
     node->data[keyLen + 1 + valueLen] = '\0';

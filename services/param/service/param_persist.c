@@ -102,6 +102,7 @@ int InitPersistParamWorkSpace(const char *context)
 
 int RefreshPersistParams(ParamWorkSpace *workSpace, const char *context)
 {
+    PARAM_CHECK(workSpace != NULL, return -1, "Invalid param workspace");
     int ret = InitPersistParamWorkSpace(context);
     PARAM_CHECK(ret == 0, return ret, "Failed to init persist param");
     u_int32_t flags = atomic_load_explicit(&g_persistWorkSpace.flags, memory_order_relaxed);

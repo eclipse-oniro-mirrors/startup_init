@@ -104,7 +104,7 @@ int CompareTrieDataNode(TrieNode *node, const char *key, u_int32_t keyLen);
 u_int32_t AllocateTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen);
 
 u_int32_t GetTrieNodeOffset(WorkSpace *workSpace, const TrieNode *current);
-TrieNode *GetTrieNode(WorkSpace *workSpace, NODE_INDEX *index);
+TrieNode *GetTrieNode(WorkSpace *workSpace, const NODE_INDEX *index);
 u_int32_t GetTrieKeyLen(TrieNode *current);
 void SaveIndex(NODE_INDEX *index, u_int32_t offset);
 TrieDataNode *AddTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen);

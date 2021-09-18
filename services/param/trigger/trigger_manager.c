@@ -78,7 +78,7 @@ int InitTriggerWorkSpace(TriggerWorkSpace *workSpace)
     return 0;
 }
 
-static CommandNode *GetCmdByIndex(TriggerWorkSpace *workSpace, TriggerNode *trigger, u_int32_t index)
+static CommandNode *GetCmdByIndex(const TriggerWorkSpace *workSpace, const TriggerNode *trigger, u_int32_t index)
 {
     if (index == 0 || index == (u_int32_t)-1) {
         return NULL;
@@ -92,6 +92,7 @@ static CommandNode *GetCmdByIndex(TriggerWorkSpace *workSpace, TriggerNode *trig
 u_int32_t AddCommand(TriggerWorkSpace *workSpace, TriggerNode *trigger, const char *cmdName, const char *content)
 {
     PARAM_CHECK(workSpace != NULL && trigger != NULL, return 0, "list is null");
+    PARAM_CHECK(workSpace->area != NULL, return 0, "Invalid trigger workspace");
     u_int32_t size = sizeof(CommandNode) + strlen(cmdName) + 1;
     size += ((content == NULL) ? 1 : (strlen(content) + 1));
     size = (size + 0x03) & (~0x03);
@@ -143,6 +144,7 @@ static TriggerNode *GetTriggerByIndex(TriggerWorkSpace *workSpace, u_int32_t ind
 u_int32_t AddTrigger(TriggerWorkSpace *workSpace, int type, const char *name, const char *condition)
 {
     PARAM_CHECK(workSpace != NULL && name != NULL, return 0, "list is null");
+    PARAM_CHECK(workSpace->area != NULL, return 0, "Invalid trigger workspace");
     const char *tmpCond = condition;
     if (type == TRIGGER_BOOT && condition == NULL) {
         tmpCond = name;
@@ -204,7 +206,7 @@ static int GetTriggerIndex(const char *type)
     return TRIGGER_UNKNOW;
 }
 
-int ParseTrigger(TriggerWorkSpace *workSpace, cJSON *triggerItem)
+int ParseTrigger(TriggerWorkSpace *workSpace, const cJSON *triggerItem)
 {
     PARAM_CHECK(triggerItem != NULL, return -1, "Invalid file");
     PARAM_CHECK(workSpace != NULL, return -1, "Failed to create trigger list");
@@ -280,6 +282,7 @@ int ExecuteQueuePush(TriggerWorkSpace *workSpace, TriggerNode *trigger, u_int32_
 
 TriggerNode *ExecuteQueuePop(TriggerWorkSpace *workSpace)
 {
+    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid param");
     if (workSpace->executeQueue.endIndex <= workSpace->executeQueue.startIndex) {
         return NULL;
     }
@@ -292,14 +295,14 @@ TriggerNode *ExecuteQueuePop(TriggerWorkSpace *workSpace)
     return GetTriggerByIndex(workSpace, triggerIndex);
 }
 
-int ExecuteQueueSize(TriggerWorkSpace *workSpace)
+int ExecuteQueueSize(const TriggerWorkSpace *workSpace)
 {
     PARAM_CHECK(workSpace != NULL, return 0, "Invalid param");
     return workSpace->executeQueue.endIndex - workSpace->executeQueue.startIndex;
 }
 
-static int CheckBootTriggerMatch(LogicCalculator *calculator,
-    TriggerNode *trigger, const char *content, u_int32_t contentSize)
+static int CheckBootTriggerMatch(const LogicCalculator *calculator,
+    const TriggerNode *trigger, const char *content, u_int32_t contentSize)
 {
     if (strncmp(trigger->name, (char *)content, contentSize) == 0) {
         return 1;
@@ -308,7 +311,7 @@ static int CheckBootTriggerMatch(LogicCalculator *calculator,
 }
 
 static int CheckParamTriggerMatch(LogicCalculator *calculator,
-    TriggerNode *trigger, const char *content, u_int32_t contentSize)
+    const TriggerNode *trigger, const char *content, u_int32_t contentSize)
 {
     if (calculator->inputName != NULL) { // 存在input数据时，先过滤非input的
         if (GetMatchedSubCondition(trigger->condition, content, strlen(calculator->inputName) + 1) == NULL) {
@@ -319,7 +322,7 @@ static int CheckParamTriggerMatch(LogicCalculator *calculator,
 }
 
 static int CheckOtherTriggerMatch(LogicCalculator *calculator,
-    TriggerNode *trigger, const char *content, u_int32_t contentSize)
+    const TriggerNode *trigger, const char *content, u_int32_t contentSize)
 {
     return ComputeCondition(calculator, trigger->condition);
 }

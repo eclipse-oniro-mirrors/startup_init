@@ -186,6 +186,7 @@ int GetValueFromContent(const char *content, u_int32_t contentSize, u_int32_t st
 {
     u_int32_t contentIndex = start;
     u_int32_t currIndex = 0;
+    PARAM_CHECK(content != NULL && value != NULL, return -1, "Invalid arguments");
     while (contentIndex < contentSize && currIndex < valueSize) {
         if (content[contentIndex] == '=') {
             value[currIndex++] = '\0';
@@ -206,6 +207,7 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
     u_int32_t start = 0;
     int noneOper = 1;
     CalculatorClear(calculator);
+    PARAM_CHECK(condition != NULL, return -1, "Invalid condition");
     LogicData data1 = {};
     LogicData data2 = {};
     while (currIndex < strlen(condition)) {
@@ -258,6 +260,8 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLe
     int ret = 0;
     u_int32_t curr = 0;
     u_int32_t prefixIndex = 0;
+
+    PARAM_CHECK(condition != NULL, return -1, "Invalid condition");
     LogicCalculator calculator;
     CalculatorInit(&calculator, 100, 1, 0);
 
@@ -302,6 +306,7 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLe
 
 char *GetMatchedSubCondition(const char *condition, const char *input, int length)
 {
+    PARAM_CHECK(condition != NULL && input != NULL, return NULL, "Invalid arguments");
     const char *p = condition;
     for(;(p = strchr(p, *input)) != 0; p++) {
         if(strncmp(p, input, length) == 0) {

@@ -46,6 +46,9 @@ static int SelinuxAuditCallback(void *data,
 
 int InitParamWorkSpace(ParamWorkSpace *workSpace, int onlyRead, const char *context)
 {
+    if (workSpace != NULL) {
+        return PARAM_CODE_NOT_INIT;
+    }
     u_int32_t flags = atomic_load_explicit(&workSpace->flags, memory_order_relaxed);
     if ((flags & WORKSPACE_FLAGS_INIT) == WORKSPACE_FLAGS_INIT) {
         return 0;
@@ -79,6 +82,7 @@ int InitParamWorkSpace(ParamWorkSpace *workSpace, int onlyRead, const char *cont
 
 void CloseParamWorkSpace(ParamWorkSpace *workSpace)
 {
+    PARAM_CHECK(workSpace != NULL, return, "Invalid work space");
     CloseWorkSpace(&workSpace->paramSpace);
     CloseWorkSpace(&workSpace->paramLabelSpace);
     atomic_store_explicit(&workSpace->flags, 0, memory_order_release);
@@ -123,7 +127,7 @@ int WriteParamInfo(ParamWorkSpace *workSpace, SubStringInfo *info, int subStrNum
 
 int AddParam(WorkSpace *workSpace, const char *name, const char *value)
 {
-    PARAM_CHECK(workSpace != NULL && name != NULL && value != NULL,
+    PARAM_CHECK(workSpace != NULL workSpace->area != NULL && name != NULL && value != NULL,
         return PARAM_CODE_INVALID_PARAM, "Failed to check param");
 
     TrieDataNode *node = AddTrieDataNode(workSpace, name, strlen(name));
@@ -290,7 +294,7 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
     PARAM_CHECK(srcLabel != NULL && name != NULL && value != NULL,
         return PARAM_CODE_INVALID_PARAM, "Invalid param");
 
-    char *ctrlName[] = {
+    const char *ctrlName[] = {
         "ctl.start",  "ctl.stop", "ctl.restart"
     };
     size_t size1 = strlen("ctl.") +  strlen(value);
@@ -320,7 +324,7 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
             break;
         }
     }
-    int n = snprintf_s(legacyName, size, size, "%s$%s", name, value);
+    int n = snprintf_s(legacyName, size, size - 1, "%s$%s", name, value);
     PARAM_CHECK(n > 0, free(legacyName); return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
 
     TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, name, strlen(name), 1);
@@ -331,6 +335,9 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
 
 int CheckParamName(const char *name, int info)
 {
+    if (name == NULL) {
+        return PARAM_CODE_INVALID_NAME;
+    }
     size_t nameLen = strlen(name);
     if (nameLen >= PARAM_NAME_LEN_MAX) {
         return PARAM_CODE_INVALID_NAME;
@@ -444,6 +451,9 @@ int CanReadParam(ParamWorkSpace *workSpace, u_int32_t labelIndex, const char *na
 
 int GetSubStringInfo(const char *buff, u_int32_t buffLen, char delimiter, SubStringInfo *info, int subStrNumber)
 {
+    if (buff == NULL || info == NULL) {
+        return -1;
+    }
     size_t i = 0;
     // 去掉开始的空格
     for (; i < strlen(buff); i++) {
@@ -514,6 +524,10 @@ int BuildParamContent(char *content, u_int32_t contentSize, const char *name, co
 int ProcessParamTraversal(WorkSpace *workSpace, TrieNode *node, void *cookie)
 {
     ParamTraversalContext *context = (ParamTraversalContext *)cookie;
+    if (context == NULL) {
+        return 0;
+    }
+
     TrieDataNode *current = (TrieDataNode *)node;
     if (current == NULL) {
         return 0;
