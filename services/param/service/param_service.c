@@ -20,11 +20,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "sys_param.h"
+#include "init_param.h"
+#include "init_utils.h"
 #include "param_manager.h"
 #include "param_request.h"
-#include "init_param.h"
-
+#include "sys_param.h"
 #include "uv.h"
 
 #define BUFFER_SIZE 256
@@ -116,7 +116,7 @@ static int ProcessParamSet(const RequestMsg *msg)
 
     SubStringInfo info[3];
     int ret = GetSubStringInfo(msg->content, msg->contentSize, '=', info,
-        sizeof(info) / sizeof(info[0]));
+        ARRAY_LENGTH(info));
     PARAM_CHECK(ret >= 2, return ret, "Failed to get name from content %s", msg->content);
 
     PARAM_LOGD("ProcessParamSet name %s value: %s", info[0].value, info[1].value);
