@@ -430,6 +430,7 @@ static void DoCopy(const char *cmdContent, int maxArg)
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != DEFAULT_COPY_ARGS_CNT) {
         INIT_LOGE("Command copy with invalid arguments");
+        FreeCmd(ctx);
         return;
     }
     char srcPath[PATH_MAX] = {0};
