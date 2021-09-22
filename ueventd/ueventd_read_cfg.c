@@ -207,6 +207,7 @@ static int ParseSysfsConfig(char *p)
     config->uid = (uid_t)StringToInt(items[SYS_CONFIG_UID_NUM], 0);
     config->gid = (gid_t)StringToInt(items[SYS_CONFIG_GID_NUM], 0);
     ListAddTail(&g_sysDevices, &config->list);
+    FreeConfigItems(items, count);
     return 0;
 }
 
@@ -215,11 +216,6 @@ static int ParseFirmwareConfig(char *p)
     INIT_LOGD("Parse firmware config info: %s", p);
     if (INVALIDSTRING(p)) {
         INIT_LOGE("Invalid argument");
-    }
-    struct FirmwareUdevConf *config = calloc(1, sizeof(struct FirmwareUdevConf));
-    if (config == NULL) {
-        errno = ENOMEM;
-        return -1;
     }
 
     // Sanity checks
@@ -231,6 +227,12 @@ static int ParseFirmwareConfig(char *p)
 
     if (!S_ISDIR(st.st_mode)) {
         INIT_LOGE("Expect directory in firmware config");
+        return -1;
+    }
+
+    struct FirmwareUdevConf *config = calloc(1, sizeof(struct FirmwareUdevConf));
+    if (config == NULL) {
+        errno = ENOMEM;
         return -1;
     }
 

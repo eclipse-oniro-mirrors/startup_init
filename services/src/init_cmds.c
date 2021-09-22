@@ -95,6 +95,7 @@ int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
             return -1;
         }
         INIT_CHECK_RETURN_VALUE(strncpy_s(tmpName, MAX_PARAM_NAME_LEN, p, tmpLen) == EOK, -1);
+        tmpLen = MAX_PARAM_VALUE_LEN;
         int ret = SystemReadParam(tmpName, tmpValue, &tmpLen); // get param
         if (ret != 0) {
             INIT_LOGE("Failed to read parameter \" %s \"", tmpName);
@@ -429,7 +430,6 @@ static void DoCopy(const char *cmdContent, int maxArg)
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argc != DEFAULT_COPY_ARGS_CNT) {
         INIT_LOGE("Command copy with invalid arguments");
-        FreeCmd(ctx);
         return;
     }
     char srcPath[PATH_MAX] = {0};

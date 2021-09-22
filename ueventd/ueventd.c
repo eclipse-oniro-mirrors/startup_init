@@ -119,7 +119,7 @@ static void HandleUevent(const struct Uevent *uevent)
 
 static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
 {
-    if (uevent == NULL || uevent == NULL || len == 0) {
+    if (uevent == NULL || event == NULL || len == 0) {
         return;
     }
 
