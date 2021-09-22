@@ -46,6 +46,7 @@ static int SelinuxAuditCallback(void *data,
 
 int InitParamWorkSpace(ParamWorkSpace *workSpace, int onlyRead, const char *context)
 {
+    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_NAME, "Invalid param");
     u_int32_t flags = atomic_load_explicit(&workSpace->flags, memory_order_relaxed);
     if ((flags & WORKSPACE_FLAGS_INIT) == WORKSPACE_FLAGS_INIT) {
         return 0;
@@ -79,6 +80,7 @@ int InitParamWorkSpace(ParamWorkSpace *workSpace, int onlyRead, const char *cont
 
 void CloseParamWorkSpace(ParamWorkSpace *workSpace)
 {
+    PARAM_CHECK(workSpace != NULL, return, "Invalid work space");
     CloseWorkSpace(&workSpace->paramSpace);
     CloseWorkSpace(&workSpace->paramLabelSpace);
     atomic_store_explicit(&workSpace->flags, 0, memory_order_release);
@@ -123,18 +125,16 @@ int WriteParamInfo(ParamWorkSpace *workSpace, SubStringInfo *info, int subStrNum
 
 int AddParam(WorkSpace *workSpace, const char *name, const char *value)
 {
-    PARAM_CHECK(workSpace != NULL && name != NULL && value != NULL,
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL && name != NULL && value != NULL,
         return PARAM_CODE_INVALID_PARAM, "Failed to check param");
 
     TrieDataNode *node = AddTrieDataNode(workSpace, name, strlen(name));
     PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "Failed to add node");
     DataEntry *entry = (DataEntry *)GetTrieNode(workSpace, &node->dataIndex);
-    //PARAM_LOGI("AddParam entry %p", entry);
     if (entry == NULL) {
         u_int32_t offset = AddData(workSpace, name, strlen(name), value, strlen(value));
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
         SaveIndex(&node->dataIndex, offset);
-        //PARAM_LOGI("AddParam entry %p %u", entry, offset);
     }
     atomic_store_explicit(&workSpace->area->serial,
         atomic_load_explicit(&workSpace->area->serial, memory_order_relaxed) + 1, memory_order_release);
@@ -161,7 +161,6 @@ int UpdateParam(WorkSpace *workSpace, u_int32_t *dataIndex, const char *name, co
     if (ret != 0) {
         PARAM_LOGE("Failed to update param value %s %s", name, value);
     }
-    //PARAM_LOGI("UpdateParam entry %p", entry);
     atomic_store_explicit(&entry->serial, serial + 1, memory_order_release);
     futex_wake(&entry->serial, INT_MAX);
     atomic_store_explicit(&workSpace->area->serial,
@@ -196,7 +195,6 @@ int WriteParamWithCheck(ParamWorkSpace *workSpace,
     PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
     TrieDataNode *info = FindTrieDataNode(&workSpace->paramSpace, name, strlen(name), 1);
     ret = CanWriteParam(workSpace, srcLabel, info, name, value);
-    //PARAM_LOGI("WriteParamWithCheck info %p", info);
     PARAM_CHECK(ret == 0, return ret, "Permission to write param %s", name);
     return WriteParam(&workSpace->paramSpace, name, value);
 }
@@ -209,7 +207,6 @@ int WriteParam(WorkSpace *workSpace, const char *name, const char *value)
     TrieDataNode *node = FindTrieDataNode(workSpace, name, strlen(name), 0);
     int ret = CheckParamValue(workSpace, node, name, value);
     PARAM_CHECK(ret == 0, return ret, "Invalid value %s %s", name, value);
-    //PARAM_LOGI("WriteParamWithCheck node %p", node);
     if (node != NULL && node->dataIndex != 0) {
         return UpdateParam(workSpace, &node->dataIndex, name, value);
     }
@@ -228,13 +225,12 @@ int ReadParamWithCheck(ParamWorkSpace *workSpace, const char *name, ParamHandle 
     *handle = 0;
     // 取最长匹配
     TrieDataNode *paramInfo = FindTrieDataNode(&workSpace->paramSpace, name, strlen(name), 1);
-    int ret = CanReadParam(workSpace, paramInfo == NULL ? 0 : paramInfo->labelIndex, name);
+    int ret = CanReadParam(workSpace, (paramInfo == NULL) ? 0 : paramInfo->labelIndex, name);
     PARAM_CHECK(ret == 0, return ret, "Permission to read param %s", name);
 
     // 查找结点
     TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, name, strlen(name), 0);
     if (node != NULL && node->dataIndex != 0) {
-        //PARAM_LOGI("ReadParamWithCheck trie %p dataIndex %u name %s", node, node->dataIndex, name);
         *handle = node->dataIndex;
         return 0;
     }
@@ -295,8 +291,9 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
 {
     PARAM_CHECK(srcLabel != NULL && name != NULL && value != NULL,
         return PARAM_CODE_INVALID_PARAM, "Invalid param");
-
-    char * ctrlName[] = {
+    int ret = 0;
+    int n = 0;
+    const char *ctrlName[] = {
         "ctl.start",  "ctl.stop", "ctl.restart"
     };
     size_t size1 = strlen("ctl.") +  strlen(value);
@@ -313,12 +310,12 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
             // their value is the name of the service to apply that action to.  Permissions for these
             // actions are based on the service, so we must create a fake name of ctl.<service> to
             // check permissions.
-            int n = snprintf_s(legacyName, size, strlen("ctl.") + strlen(value) + 1, "ctl.%s", value);
+            n = snprintf_s(legacyName, size, strlen("ctl.") + strlen(value) + 1, "ctl.%s", value);
             PARAM_CHECK(n > 0, free(legacyName); return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
             legacyName[n] = '\0';
 
             TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, legacyName, strlen(legacyName), 1);
-            int ret = CheckMacPerms(workSpace, srcLabel, legacyName, node == NULL ? 0 : node->labelIndex);
+            ret = CheckMacPerms(workSpace, srcLabel, legacyName, (node == NULL) ? 0 : node->labelIndex);
             if (ret == 0) {
                 free(legacyName);
                 return 0;
@@ -326,17 +323,20 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
             break;
         }
     }
-    int n = snprintf_s(legacyName, size, size, "%s$%s", name, value);
+    n = snprintf_s(legacyName, size, size - 1, "%s$%s", name, value);
     PARAM_CHECK(n > 0, free(legacyName); return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
 
     TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, name, strlen(name), 1);
-    int ret = CheckMacPerms(workSpace, srcLabel, name, node == NULL ? 0 : node->labelIndex);
+    ret = CheckMacPerms(workSpace, srcLabel, name, (node == NULL) ? 0 : node->labelIndex);
     free(legacyName);
     return ret;
 }
 
 int CheckParamName(const char *name, int info)
 {
+    if (name == NULL) {
+        return PARAM_CODE_INVALID_NAME;
+    }
     size_t nameLen = strlen(name);
     if (nameLen >= PARAM_NAME_LEN_MAX) {
         return PARAM_CODE_INVALID_NAME;
@@ -369,7 +369,10 @@ int CheckParamName(const char *name, int info)
 
 int CheckParamValue(WorkSpace *workSpace, const TrieDataNode *node, const char *name, const char *value)
 {
-    if (IS_READY_ONLY(name)) {
+    if (name == NULL || value == NULL) {
+        return PARAM_CODE_INVALID_VALUE;
+    }
+    if (strncmp((name), "ro.", strlen("ro.")) == 0) {
         if (node != NULL && node->dataIndex != 0) {
             PARAM_LOGE("Read-only param was already set %s", name);
             return PARAM_CODE_READ_ONLY_PROPERTY;
@@ -397,7 +400,7 @@ int CheckMacPerms(ParamWorkSpace *workSpace,
     } else {
         ret = selinux_check_access(srcLabel, "u:object_r:default_prop:s0", "param_service", "set", &auditData);
     }
-    return ret == 0 ? 0 : PARAM_CODE_PERMISSION_DENIED;
+    return ((ret == 0) ? 0 : PARAM_CODE_PERMISSION_DENIED);
 #else
     return 0;
 #endif
@@ -409,11 +412,11 @@ int CanWriteParam(ParamWorkSpace *workSpace,
     PARAM_CHECK(workSpace != NULL && name != NULL && value != NULL && srcLabel != NULL,
         return PARAM_CODE_INVALID_PARAM, "Invalid param");
 
-    if (strncmp(name, "ctl.", strlen("ctl.")) == 0) { // 处理ctrl TODO
+    if (strncmp(name, "ctl.", strlen("ctl.")) == 0) {
         return CheckControlParamPerms(workSpace, srcLabel, name, value);
     }
 
-    int ret = CheckMacPerms(workSpace, srcLabel, name, node == NULL ? 0 : node->labelIndex);
+    int ret = CheckMacPerms(workSpace, srcLabel, name, (node == NULL) ? 0 : node->labelIndex);
     PARAM_CHECK(ret == 0, return ret, "SELinux permission check failed");
     return 0;
 }
@@ -425,7 +428,11 @@ int CanReadParam(ParamWorkSpace *workSpace, u_int32_t labelIndex, const char *na
 #ifdef PARAM_SUPPORT_SELINUX
     ParamAuditData auditData;
     auditData.name = name;
-    UserCred cr = {.pid = 0, .uid = 0, .gid = 0};
+    UserCred cr = {
+        .pid = 0,
+        .uid = 0,
+        .gid = 0
+    };
     auditData.cr = &cr;
 
     int ret = 0;
@@ -433,9 +440,9 @@ int CanReadParam(ParamWorkSpace *workSpace, u_int32_t labelIndex, const char *na
     if (node != 0) { // 已经存在label
         ret = selinux_check_access(&workSpace->context, node->key, "param_service", "read", &auditData);
     } else {
-         ret = selinux_check_access(&workSpace->context, "selinux_check_access", "file", "read", &auditData);
+        ret = selinux_check_access(&workSpace->context, "selinux_check_access", "file", "read", &auditData);
     }
-    return ret == 0 ? 0 : PARAM_CODE_PERMISSION_DENIED;
+    return (ret == 0) ? 0 : PARAM_CODE_PERMISSION_DENIED;
 #else
     return 0;
 #endif
@@ -443,6 +450,9 @@ int CanReadParam(ParamWorkSpace *workSpace, u_int32_t labelIndex, const char *na
 
 int GetSubStringInfo(const char *buff, u_int32_t buffLen, char delimiter, SubStringInfo *info, int subStrNumber)
 {
+    if (buff == NULL || info == NULL) {
+        return -1;
+    }
     size_t i = 0;
     // 去掉开始的空格
     for (; i < strlen(buff); i++) {
@@ -513,6 +523,10 @@ int BuildParamContent(char *content, u_int32_t contentSize, const char *name, co
 int ProcessParamTraversal(WorkSpace *workSpace, TrieNode *node, void *cookie)
 {
     ParamTraversalContext *context = (ParamTraversalContext *)cookie;
+    if (context == NULL) {
+        return 0;
+    }
+
     TrieDataNode *current = (TrieDataNode *)node;
     if (current == NULL) {
         return 0;

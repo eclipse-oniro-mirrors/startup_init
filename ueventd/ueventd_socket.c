@@ -30,11 +30,13 @@
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 
+#define UEVENT_SOCKET_BUFF_SIZE (256 * 1024)
+
 int UeventdSocketInit()
 {
     struct sockaddr_nl addr;
     int sockfd;
-    int buffSize = 256 * 1024;
+    int buffSize = UEVENT_SOCKET_BUFF_SIZE;
     int on = 1;
 
     if (memset_s(&addr, sizeof(addr), 0, sizeof(addr) != EOK)) {
@@ -46,7 +48,6 @@ int UeventdSocketInit()
     addr.nl_groups = 0xffffffff;
 
     sockfd = socket(PF_NETLINK, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, NETLINK_KOBJECT_UEVENT);
-
     if (sockfd < 0) {
         INIT_LOGE("Create socket failed, err = %d", errno);
         return -1;
@@ -55,7 +56,7 @@ int UeventdSocketInit()
     setsockopt(sockfd, SOL_SOCKET, SO_RCVBUFFORCE, &buffSize, sizeof(buffSize));
     setsockopt(sockfd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
 
-    if(bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+    if (bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
         INIT_LOGE("Bind socket failed, err = %d", errno);
         close(sockfd);
         return -1;
@@ -70,7 +71,6 @@ ssize_t ReadUeventMessage(int sockFd, char *buffer, size_t length)
     struct iovec iov;
     struct sockaddr_nl addr;
     char credMsg[CMSG_SPACE(sizeof(struct ucred))];
-    struct cmsghdr *cmsghdr;
 
     // sanity check
     if (sockFd < 0 || buffer == NULL) {
@@ -90,7 +90,7 @@ ssize_t ReadUeventMessage(int sockFd, char *buffer, size_t length)
     if (n <= 0) {
         return n;
     }
-    cmsghdr = CMSG_FIRSTHDR(&msghdr);
+    struct cmsghdr *cmsghdr = CMSG_FIRSTHDR(&msghdr);
     if (cmsghdr == NULL || cmsghdr->cmsg_type != SCM_CREDENTIALS) {
         INIT_LOGE("Unexpected control message, ignored");
         // Drop this message

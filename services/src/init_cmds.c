@@ -122,102 +122,100 @@ inline int GetParamValue(const char *symValue, char *paramValue, unsigned int pa
 }
 #endif
 
-struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount)
+static struct CmdArgs *CopyCmd(struct CmdArgs *ctx, const char *cmd, size_t allocSize)
+{
+    if (cmd == NULL) {
+        FreeCmd(ctx);
+        return NULL;
+    }
+
+    ctx->argv[ctx->argc] = calloc(sizeof(char), allocSize);
+    INIT_CHECK(ctx->argv[ctx->argc] != NULL, FreeCmd(ctx);
+        return NULL);
+    INIT_CHECK(GetParamValue(cmd, ctx->argv[ctx->argc], allocSize) == 0, FreeCmd(ctx);
+        return NULL);
+    ctx->argc += 1;
+    ctx->argv[ctx->argc] = NULL;
+    return ctx;
+}
+
+#define SKIP_SPACES(p)          \
+    do {                        \
+        while (isspace(*(p))) { \
+            (p)++;              \
+        }                       \
+    } while (0)
+
+struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
 {
     INIT_CHECK_RETURN_VALUE(cmdContent != NULL, NULL);
     struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
     INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
 
-    if (argsCount > SPACES_CNT_IN_CMD_MAX) {
-        INIT_LOGW("Too much arguments for command, max number is %d", SPACES_CNT_IN_CMD_MAX);
-        argsCount = SPACES_CNT_IN_CMD_MAX;
-    }
-    ctx->argv = (char**)malloc(sizeof(char*) * (size_t)argsCount + 1);
-    INIT_CHECK(ctx->argv != NULL, FreeCmd(&ctx); return NULL);
+    ctx->argv = (char**)malloc(sizeof(char*) * (size_t)(argsCount + 1));
+    INIT_CHECK(ctx->argv != NULL, FreeCmd(ctx);
+        return NULL);
 
-    char tmpCmd[MAX_BUFFER];
+    char tmpCmd[MAX_BUFFER] = {0};
     size_t cmdLength = strlen(cmdContent);
     if (cmdLength > MAX_BUFFER - 1) {
-        INIT_LOGE("command line is too larget, should not bigger than %d. ignore...\n", MAX_BUFFER);
-        FreeCmd(&ctx);
+        FreeCmd(ctx);
         return NULL;
     }
 
-    INIT_CHECK(strncpy_s(tmpCmd, MAX_BUFFER - 1, cmdContent, cmdLength) == EOK,
-        FreeCmd(&ctx);
+    INIT_CHECK(strncpy_s(tmpCmd, MAX_BUFFER - 1, cmdContent, cmdLength) == EOK, FreeCmd(ctx);
         return NULL);
-    tmpCmd[strlen(cmdContent)] = '\0';
 
     char *p = tmpCmd;
     char *token = NULL;
     size_t allocSize = 0;
 
     // Skip lead whitespaces
-    while (isspace(*p)) {
-        p++;
-    }
+    SKIP_SPACES(p);
     ctx->argc = 0;
     token = strstr(p, delim);
     if (token == NULL) { // No whitespaces
         // Make surce there is enough memory to store parameter value
         allocSize = (size_t)(cmdLength + MAX_PARAM_VALUE_LEN + 1);
-        ctx->argv[ctx->argc] = calloc(sizeof(char), allocSize);
-        INIT_CHECK(ctx->argv[ctx->argc] != NULL, FreeCmd(&ctx); return NULL);
-        INIT_CHECK(GetParamValue(p, ctx->argv[ctx->argc], allocSize) == 0,
-            FreeCmd(&ctx); return NULL);
-        ctx->argc += 1;
-        ctx->argv[ctx->argc] = NULL;
-        return ctx;
+        return CopyCmd(ctx, p, allocSize);
     }
 
-    int index = ctx->argc;
     while (token != NULL) {
         // Too more arguments, treat rest of data as one argument
-        if (index == (argsCount - 1)) {
+        if (ctx->argc == (argsCount - 1)) {
             break;
         }
         *token = '\0'; // replace it with '\0';
         allocSize = (size_t)((token - p) + MAX_PARAM_VALUE_LEN + 1);
-        ctx->argv[index] = calloc(sizeof(char), allocSize);
-        INIT_CHECK(ctx->argv[index] != NULL, FreeCmd(&ctx); return NULL);
-        INIT_CHECK(GetParamValue(p, ctx->argv[index], allocSize) == 0,
-            FreeCmd(&ctx); return NULL);
+        ctx = CopyCmd(ctx, p, allocSize);
+        INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
         p = token + 1; // skip '\0'
         // Skip lead whitespaces
-        while (isspace(*p)) {
-            p++;
-        }
-        index++;
+        SKIP_SPACES(p);
         token = strstr(p, delim);
     }
 
-    ctx->argc = index;
     if (p < tmpCmd + cmdLength) {
         // no more white space or encounter max argument count
         size_t restSize = tmpCmd + cmdLength - p;
         allocSize = restSize + MAX_PARAM_VALUE_LEN + 1;
-        ctx->argv[index] = calloc(sizeof(char),  allocSize);
-        INIT_CHECK(ctx->argv[index] != NULL, FreeCmd(&ctx); return NULL);
-        INIT_CHECK(GetParamValue(p, ctx->argv[index], allocSize) == 0,
-            FreeCmd(&ctx); return NULL);
-        ctx->argc = index + 1;
+        ctx = CopyCmd(ctx, p, allocSize);
+        INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
     }
-
-    ctx->argv[ctx->argc] = NULL;
     return ctx;
 }
 
-void FreeCmd(struct CmdArgs **cmd)
+void FreeCmd(struct CmdArgs *cmd)
 {
-    struct CmdArgs *tmpCmd = *cmd;
-    INIT_CHECK_ONLY_RETURN(tmpCmd != NULL);
-    for (int i = 0; i < tmpCmd->argc; ++i) {
-        INIT_CHECK(tmpCmd->argv[i] == NULL, free(tmpCmd->argv[i]));
+    INIT_CHECK_ONLY_RETURN(cmd != NULL);
+    for (int i = 0; i < cmd->argc; ++i) {
+        INIT_CHECK(cmd->argv[i] == NULL, free(cmd->argv[i]));
     }
-    INIT_CHECK(tmpCmd->argv == NULL, free(tmpCmd->argv));
-    free(tmpCmd);
+    INIT_CHECK(cmd->argv == NULL, free(cmd->argv));
+    free(cmd);
     return;
 }
+
 
 #define EXTRACT_ARGS(cmdname, cmdContent, args) \
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", args); \
@@ -239,12 +237,12 @@ static void DoSetDomainname(const char *cmdContent, int maxArg)
     size_t size = strlen(ctx->argv[0]);
     ssize_t n = write(fd, ctx->argv[0], size);
     if (n != (ssize_t)size) {
-        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/domainname\". err = %d", errno);
+        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/domainname\". err = %d", ctx->argv[0], errno);
     }
 
     close(fd);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     fd = -1;
     return;
 }
@@ -262,12 +260,12 @@ static void DoSetHostname(const char *cmdContent, int maxArg)
     size_t size = strlen(ctx->argv[0]);
     ssize_t n = write(fd, ctx->argv[0], size);
     if (n != (ssize_t)size) {
-        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/hostname\". err = %d", errno);
+        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/hostname\". err = %d", ctx->argv[0], errno);
     }
 
     close(fd);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     fd = -1;
     return;
 }
@@ -303,7 +301,7 @@ static void DoIfup(const char *cmdContent, int maxArg)
 
     close(fd);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     fd = -1;
     return;
 }
@@ -332,7 +330,7 @@ static void DoSleep(const char *cmdContent, int maxArg)
     INIT_LOGI("Sleeping %d second(s)", sleepTime);
     sleep((unsigned int)sleepTime);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -346,7 +344,7 @@ static void DoStart(const char* cmdContent, int maxArg)
     INIT_LOGD("DoStart %s", cmdContent);
     StartServiceByName(cmdContent);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -360,7 +358,7 @@ static void DoStop(const char* cmdContent, int maxArg)
     INIT_LOGD("DoStop %s", cmdContent);
     StopServiceByName(cmdContent);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -375,7 +373,7 @@ static void DoReset(const char* cmdContent, int maxArg)
     DoStop(cmdContent, maxArg);
     DoStart(cmdContent, maxArg);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -416,7 +414,7 @@ static void DoCopy(const char* cmdContent, int maxArg)
     }
     fsync(dstFd);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     ctx = NULL;
     INIT_CHECK(srcFd < 0, close(srcFd); srcFd = -1);
     INIT_CHECK(dstFd < 0, close(dstFd); dstFd = -1);
@@ -440,12 +438,12 @@ static void DoChown(const char* cmdContent, int maxArg)
     gid_t group = DecodeUid(ctx->argv[1]);
     INIT_ERROR_CHECK(group != (gid_t)-1, goto out, "DoChown invalid gid :%s.", ctx->argv[1]);
 
-    int pathPos = 2;
+    const int pathPos = 2;
     if (chown(ctx->argv[pathPos], owner, group) != 0) {
         INIT_LOGE("DoChown, failed for %s, err %d.", cmdContent, errno);
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -495,7 +493,7 @@ static void DoMkDir(const char* cmdContent, int maxArg)
         }
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -518,7 +516,7 @@ static void DoChmod(const char* cmdContent, int maxArg)
         INIT_LOGE("DoChmod, failed for %s, err %d.", cmdContent, errno);
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -675,7 +673,7 @@ static void DoMount(const char* cmdContent, int maxArg)
 
 #ifndef OHOS_LITE
 #define OPTIONS_SIZE 128u
-static void DoInsmodInternal(const char *fileName, char *secondPtr, char *restPtr, int flags)
+static void DoInsmodInternal(const char *fileName, const char *secondPtr, const char *restPtr, int flags)
 {
     char options[OPTIONS_SIZE] = {0};
     if (flags == 0) { //  '-f' option
@@ -778,7 +776,7 @@ static void DoSetParam(const char* cmdContent, int maxArg)
     INIT_LOGE("param name: %s, value %s ", ctx->argv[0], ctx->argv[1]);
     SystemWriteParam(ctx->argv[0], ctx->argv[1]);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -886,7 +884,7 @@ static void DoWrite(const char *cmdContent, int maxArg)
     realPath = NULL;
     close(fd);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -905,7 +903,7 @@ static void DoRmdir(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -918,7 +916,7 @@ static void DoRebootCmd(const char *cmdContent, int maxArg)
     }
     DoReboot(cmdContent);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -932,7 +930,7 @@ static void DoLoadPersistParams(const char *cmdContent, int maxArg)
     INIT_LOGD("load persist params : %s", cmdContent);
     LoadPersistParams();
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -946,7 +944,7 @@ static void DoTriggerCmd(const char *cmdContent, int maxArg)
     INIT_LOGD("DoTrigger :%s", cmdContent);
     DoTriggerExec(cmdContent);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -960,7 +958,7 @@ static void DoLoadDefaultParams(const char *cmdContent, int maxArg)
     INIT_LOGD("load persist params : %s", cmdContent);
     LoadDefaultParams(cmdContent);
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -983,7 +981,7 @@ static void DoSetrlimit(const char *cmdContent, int maxArg)
     limit.rlim_cur = (rlim_t)atoi(ctx->argv[1]);
     limit.rlim_max = (rlim_t)atoi(ctx->argv[rlimMaxPos]);
     int rcs = -1;
-    for (unsigned int i = 0 ; i < sizeof(resource) / sizeof(char*); ++i) {
+    for (unsigned int i = 0; i < ARRAY_LENGTH(resource); ++i) {
         if (strcmp(ctx->argv[0], resource[i]) == 0) {
             rcs = (int)i;
         }
@@ -998,7 +996,7 @@ static void DoSetrlimit(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -1016,7 +1014,7 @@ static void DoRm(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -1034,7 +1032,7 @@ static void DoExport(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -1060,7 +1058,7 @@ static void DoExec(const char *cmdContent, int maxArg)
         if (ret == -1) {
             INIT_LOGE("DoExec: execute \"%s\" failed: %d.", cmdContent, errno);
         }
-        FreeCmd(&ctx);
+        FreeCmd(ctx);
         _exit(0x7f);
     }
     return;
@@ -1082,7 +1080,7 @@ static void DoSymlink(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -1133,7 +1131,7 @@ static void DoMakeNode(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 
@@ -1154,7 +1152,7 @@ static void DoMakeDevice(const char *cmdContent, int maxArg)
         goto out;
     }
 out:
-    FreeCmd(&ctx);
+    FreeCmd(ctx);
     return;
 }
 #endif // __LITEOS__

@@ -55,6 +55,7 @@ static int InitNormalMemory(WorkSpace *workSpace, u_int32_t spaceSize)
 static ParamCacheNode *AllocParamCacheNode(WorkSpace *workSpace, u_int32_t size)
 {
     PARAM_CHECK(workSpace != NULL, return 0, "Invalid param");
+    PARAM_CHECK(workSpace->area != NULL, return 0, "Invalid param area");
     PARAM_CHECK((workSpace->area->currOffset + size) < workSpace->area->dataSize, return 0,
         "Failed to allocate currOffset %d, dataSize %d", workSpace->area->currOffset, workSpace->area->dataSize);
     ParamCacheNode *cache = (ParamCacheNode *)(workSpace->area->data + workSpace->area->currOffset);
@@ -134,6 +135,9 @@ const char *DetectParamChange(ParamWorkSpace *workSpace, ParamCache *cache,
     ParamEvaluatePtr evaluate, u_int32_t count, const char *parameters[][2])
 {
     pthread_mutex_lock(&cacheLock);
+    if (cache == NULL) {
+        return NULL;
+    }
     while (cache->cacheCount == 0) {
         int ret = CreateParamCache(cache, workSpace, evaluate);
         PARAM_CHECK(ret == 0, break, "Failed to create cache");

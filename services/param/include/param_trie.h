@@ -39,12 +39,10 @@ extern "C" {
 #define FILENAME_LEN_MAX  255
 #define TRIE_DATA_LEN_MAX  128
 
-#define NODE_INDEX unsigned int
-
 #define TRIE_NODE_HEADER \
     atomic_uint_least32_t serial; \
-    NODE_INDEX left; \
-    NODE_INDEX right;
+    unsigned int left; \
+    unsigned int right;
 
 #define DATA_ENTRY_KEY_LEN(entry)   (entry)->dataLength >> TRIE_SERIAL_KEY_LEN_OFFSET
 #define DATA_ENTRY_DATA_LEN(entry)  (((entry)->dataLength >> TRIE_SERIAL_DATA_LEN_OFFSET) & 0x00FF)
@@ -64,9 +62,9 @@ typedef struct {
 
 typedef struct {
     TRIE_NODE_HEADER;
-    NODE_INDEX child;
-    NODE_INDEX labelIndex;
-    NODE_INDEX dataIndex;
+    unsigned int child;
+    unsigned int labelIndex;
+    unsigned int dataIndex;
     char key[0];
 } TrieDataNode;
 
@@ -104,9 +102,9 @@ int CompareTrieDataNode(TrieNode *node, const char *key, u_int32_t keyLen);
 u_int32_t AllocateTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen);
 
 u_int32_t GetTrieNodeOffset(WorkSpace *workSpace, const TrieNode *current);
-TrieNode *GetTrieNode(WorkSpace *workSpace, NODE_INDEX *index);
+TrieNode *GetTrieNode(WorkSpace *workSpace, const unsigned int *index);
 u_int32_t GetTrieKeyLen(TrieNode *current);
-void SaveIndex(NODE_INDEX *index, u_int32_t offset);
+void SaveIndex(unsigned int *index, u_int32_t offset);
 TrieDataNode *AddTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen);
 TrieDataNode *AddToSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const char *key, u_int32_t keyLen);
 TrieDataNode *FindSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const char *key, u_int32_t keyLen);

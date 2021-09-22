@@ -37,7 +37,7 @@ struct RBMiscUpdateMessage {
     char update[MAX_UPDATE_SIZE];
 };
 
-static bool RBMiscWriteUpdaterMessage(const char *path, struct RBMiscUpdateMessage *boot)
+static bool RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdateMessage *boot)
 {
     if (path == NULL || boot == NULL) {
         INIT_LOGE("path or boot is NULL.");
@@ -227,6 +227,5 @@ void DoReboot(const char *value)
         INIT_LOGE("DoReboot value = %s, error.", value);
     }
     return;
-
 }
 

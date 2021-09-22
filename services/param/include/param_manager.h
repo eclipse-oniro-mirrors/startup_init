@@ -41,7 +41,6 @@ typedef enum {
     PARAM_CODE_NOT_INIT
 } PARAM_CODE;
 
-#define IS_READY_ONLY(name) strncmp((name), "ro.", strlen("ro.")) == 0
 #define LABEL_STRING_LEN 128
 
 #ifdef STARTUP_LOCAL
@@ -75,16 +74,16 @@ typedef enum {
     }
 
 #define futex(addr1, op, val, rel, addr2, val3) \
-				syscall(SYS_futex, addr1, op, val, rel, addr2, val3)
+    syscall(SYS_futex, addr1, op, val, rel, addr2, val3)
 #define futex_wait_always(addr1) \
-				syscall(SYS_futex, addr1, FUTEX_WAIT, *(int*)(addr1), 0, 0, 0)
+    syscall(SYS_futex, addr1, FUTEX_WAIT, *(int*)(addr1), 0, 0, 0)
 #define futex_wake_single(addr1) \
-				syscall(SYS_futex, addr1, FUTEX_WAKE, 1, 0, 0, 0)
+    syscall(SYS_futex, addr1, FUTEX_WAKE, 1, 0, 0, 0)
 
 typedef struct UserCred {
-  pid_t pid;
-  uid_t uid;
-  gid_t gid;
+    pid_t pid;
+    uid_t uid;
+    gid_t gid;
 } UserCred;
 
 typedef struct {

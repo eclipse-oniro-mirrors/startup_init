@@ -95,11 +95,12 @@ typedef struct TriggerWorkSpace {
 } TriggerWorkSpace;
 
 int InitTriggerWorkSpace(TriggerWorkSpace *workSpace);
-int ParseTrigger(TriggerWorkSpace *workSpace, cJSON *triggerItem);
+int ParseTrigger(TriggerWorkSpace *workSpace, const cJSON *triggerItem);
 
-typedef int (*TRIGGER_MATCH)(LogicCalculator *calculator, TriggerNode *trigger, const char *content, u_int32_t contentSize);
+typedef int (*TRIGGER_MATCH)(LogicCalculator *calculator, TriggerNode *trigger, const char *content,
+    u_int32_t contentSize);
 typedef int (*PARAM_CHECK_DONE)(TriggerNode *trigger, u_int32_t index);
-typedef int (*CMD_EXECUTE) (TriggerNode *trigger, const char *cmdName, const char *command);
+typedef int (*CMD_EXECUTE) (const TriggerNode *trigger, const char *cmdName, const char *command);
 
 TriggerNode *GetTriggerByName(TriggerWorkSpace *workSpace, const char *triggerName, u_int32_t *triggerIndex);
 int ExecuteTrigger(TriggerWorkSpace *workSpace, TriggerNode *trigger, CMD_EXECUTE cmdExecuter);
@@ -111,7 +112,7 @@ int CheckAndExecuteTrigger(TriggerWorkSpace *workSpace, const char *content, PAR
 
 TriggerNode *ExecuteQueuePop(TriggerWorkSpace *workSpace);
 int ExecuteQueuePush(TriggerWorkSpace *workSpace, TriggerNode *trigger, u_int32_t index);
-int ExecuteQueueSize(TriggerWorkSpace *workSpace);
+int ExecuteQueueSize(const TriggerWorkSpace *workSpace);
 
 u_int32_t AddTrigger(TriggerWorkSpace *workSpace, int type, const char *name, const char *condition);
 u_int32_t AddCommand(TriggerWorkSpace *workSpace, TriggerNode *trigger, const char *cmdName, const char *content);

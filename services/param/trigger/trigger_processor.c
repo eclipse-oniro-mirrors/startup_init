@@ -30,7 +30,7 @@
 
 static TriggerWorkSpace g_triggerWorkSpace = {};
 
-static int DoCmdExecute(TriggerNode *trigger, const char *cmdName, const char *command)
+static int DoCmdExecute(const TriggerNode *trigger, const char *cmdName, const char *command)
 {
     PARAM_CHECK(trigger != NULL && cmdName != NULL && command != NULL, return -1, "Invalid param");
     PARAM_LOGD("DoCmdExecute trigger %s cmd %s %s", trigger->name, cmdName, command);
@@ -44,7 +44,6 @@ static int DoCmdExecute(TriggerNode *trigger, const char *cmdName, const char *c
 
 static int DoTiggerCheckResult(TriggerNode *trigger, u_int32_t triggerIndex)
 {
-    // 已经在队列中了，则不执行 TODO
     if (TRIGGER_NODE_IN_QUEUE(trigger)) {
         PARAM_LOGI("DoTiggerExecute trigger %s has been waiting execute", trigger->name);
         return 0;
@@ -152,7 +151,8 @@ void PostParamTrigger(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return, "Invalid param");
     PARAM_LOGD("PostParamTrigger %s ", name);
-    int contentLen = strlen(name) + strlen(value) + 2;
+    int offset = 2;
+    int contentLen = strlen(name) + strlen(value) + offset;
     TriggerDataEvent *event = (TriggerDataEvent *)malloc(sizeof(TriggerDataEvent) + contentLen);
     PARAM_CHECK(event != NULL, return, "Failed to alloc memory");
     event->type = EVENT_PROPERTY;
@@ -172,13 +172,13 @@ void PostTrigger(EventType type, const char *content, u_int32_t contentLen)
     event->type = type;
     event->request.data = (char*)event + sizeof(uv_work_t);
     event->contentSize = contentLen;
-    PARAM_CHECK(memcpy_s(event->content, contentLen, content, contentLen) == 0, return, "Failed to copy content");
+    PARAM_CHECK(memcpy_s(event->content, contentLen + 1, content, contentLen) == 0, return, "Failed to copy content");
     event->content[contentLen] = '\0';
     SendTriggerEvent(event);
     PARAM_LOGD("PostTrigger %d success", type);
 }
 
-int ParseTriggerConfig(cJSON *fileRoot)
+int ParseTriggerConfig(const cJSON *fileRoot)
 {
     PARAM_CHECK(fileRoot != NULL, return -1, "Invalid file");
     int ret = InitTriggerWorkSpace(&g_triggerWorkSpace);

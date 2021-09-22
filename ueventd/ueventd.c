@@ -119,7 +119,7 @@ static void HandleUevent(const struct Uevent *uevent)
 
 static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
 {
-    if (uevent == NULL || uevent == NULL || len == 0) {
+    if (uevent == NULL || event == NULL || len == 0) {
         return;
     }
 
@@ -140,9 +140,9 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
     } else if (STARTSWITH(event, "MINOR=")) {
         uevent->minor = StringToInt(event + strlen("MINOR="), -1);
     } else if (STARTSWITH(event, "DEVUID")) {
-        uevent->ug.uid = StringToInt(event + strlen("DEVUID="), 0);
+        uevent->ug.uid = (uid_t)StringToInt(event + strlen("DEVUID="), 0);
     } else if (STARTSWITH(event, "DEVGID")) {
-        uevent->ug.gid = StringToInt(event + strlen("DEVGID="), 0);
+        uevent->ug.gid = (gid_t)StringToInt(event + strlen("DEVGID="), 0);
     } else if (STARTSWITH(event, "FIRMWARE=")) {
         uevent->firmware = event + strlen("FIRMWARE=");
     } else if (STARTSWITH(event, "BUSNUM=")) {
@@ -153,7 +153,7 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
     // Ignore other events
 }
 
-static void ParseUeventMessage(char *buffer, ssize_t length, struct Uevent *uevent)
+static void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent)
 {
     if (buffer == NULL || uevent == NULL || length == 0) {
         // Ignore invalid buffer
@@ -168,7 +168,7 @@ static void ParseUeventMessage(char *buffer, ssize_t length, struct Uevent *ueve
     uevent->devNum = -1;
     ssize_t pos = 0;
     while (pos < length) {
-        char *event = buffer + pos;
+        const char *event = buffer + pos;
         size_t len = strlen(event);
         if (len == 0) {
             break;
@@ -200,14 +200,20 @@ static void DoTrigger(const char *ueventPath, int sockFd)
     if (ueventPath == NULL || ueventPath[0] == '\0') {
         return;
     }
-
-    int fd = open(ueventPath, O_WRONLY | O_CLOEXEC);
+    char realPath[PATH_MAX] = {0};
+    if (realpath(ueventPath, realPath) == NULL) {
+        if (errno != ENOENT) {
+            INIT_LOGE("Fail resolve %s real path err=%d", ueventPath, errno);
+            return;
+        }
+    }
+    int fd = open(realPath, O_WRONLY | O_CLOEXEC);
     if (fd < 0) {
-        INIT_LOGE("Open \" %s \" failed, err = %d", ueventPath, errno);
+        INIT_LOGE("Open \" %s \" failed, err = %d", realPath, errno);
     } else {
-        ssize_t n = write(fd, "add\n", 4);
+        ssize_t n = write(fd, "add\n", strlen("add\n"));
         if (n < 0) {
-            INIT_LOGE("Write \" %s \" failed, err = %d", ueventPath, errno);
+            INIT_LOGE("Write \" %s \" failed, err = %d", realPath, errno);
             close(fd);
         } else {
             close(fd);
@@ -224,27 +230,27 @@ static void Trigger(const char *path, int sockFd)
     DIR *dir = opendir(path);
     if (dir != NULL) {
         struct dirent *dirent = NULL;
-         while ((dirent = readdir(dir)) != NULL) {
-             if (dirent->d_name[0] == '.') {
-                 continue;
-             }
-             if (dirent->d_type == DT_DIR) {
-                 char pathBuffer[PATH_MAX];
-                 if (snprintf_s(pathBuffer, PATH_MAX, PATH_MAX - 1, "%s/%s", path, dirent->d_name) == -1) {
-                     continue;
-                 }
-                 Trigger(pathBuffer, sockFd);
-             } else {
-                 if (!strcmp(dirent->d_name, "uevent")) {
+        while ((dirent = readdir(dir)) != NULL) {
+            if (dirent->d_name[0] == '.') {
+                continue;
+            }
+            if (dirent->d_type == DT_DIR) {
+                char pathBuffer[PATH_MAX];
+                if (snprintf_s(pathBuffer, PATH_MAX, PATH_MAX - 1, "%s/%s", path, dirent->d_name) == -1) {
+                    continue;
+                }
+                Trigger(pathBuffer, sockFd);
+            } else {
+                if (!strcmp(dirent->d_name, "uevent")) {
                     char ueventBuffer[PATH_MAX];
                     if (snprintf_s(ueventBuffer, PATH_MAX, PATH_MAX - 1, "%s/%s", path, "uevent") == -1) {
                         INIT_LOGW("Cannnot build uevent path under %s", path);
                         continue;
                     }
                     DoTrigger(ueventBuffer, sockFd);
-                 }
-             }
-         }
+                }
+            }
+        }
         closedir(dir);
     }
 }

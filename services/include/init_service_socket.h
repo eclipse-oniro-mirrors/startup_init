@@ -23,8 +23,7 @@
 
 #define MAX_SOCK_NAME_LEN  16
 #define SOCK_OPT_NUMS  6
-enum SockOptionTab
-{
+enum SockOptionTab {
     SERVICE_SOCK_NAME = 0,
     SERVICE_SOCK_TYPE,
     SERVICE_SOCK_PERM,
@@ -34,8 +33,7 @@ enum SockOptionTab
 };
 
 struct ServiceSocket;
-struct ServiceSocket
-{
+struct ServiceSocket {
     char *name;         // service name
     int type;           // socket type
     uid_t uid;        // uid

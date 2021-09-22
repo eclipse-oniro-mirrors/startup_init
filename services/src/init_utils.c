@@ -59,7 +59,7 @@ int DecodeUid(const char *name)
     }
     if (digitFlag) {
         errno = 0;
-        uid_t result = strtoul(name, 0, 10);
+        uid_t result = strtoul(name, 0, DECIMAL_BASE);
         if (errno != 0) {
             return -1;
         }
@@ -128,7 +128,7 @@ char* ReadFileToBuf(const char *configFile)
 
 int SplitString(char *srcPtr, char **dstPtr, int maxNum)
 {
-    if ((!srcPtr) || (!dstPtr)){
+    if ((!srcPtr) || (!dstPtr)) {
         return -1;
     }
     char *buf = NULL;

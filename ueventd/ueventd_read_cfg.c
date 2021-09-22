@@ -14,21 +14,35 @@
  */
 
 #include "ueventd_read_cfg.h"
+
 #include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "list.h"
-#include "ueventd_utils.h"
 #include "securec.h"
+#include "ueventd_utils.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 
 // default item count in config files
 #define DEFAULTITEMCOUNT (100)
+
+#define DEVICE_CONFIG_NAME_NUM 0
+#define DEVICE_CONFIG_MODE_NUM 1
+#define DEVICE_CONFIG_UID_NUM 2
+#define DEVICE_CONFIG_GID_NUM 3
+
+#define SYS_CONFIG_PATH_NUM 0
+#define SYS_CONFIG_ATTR_NUM 1
+#define SYS_CONFIG_MODE_NUM 2
+#define SYS_CONFIG_UID_NUM 3
+#define SYS_CONFIG_GID_NUM 4
+
 typedef enum SECTION {
     SECTION_INVALID = -1,
     SECTION_DEVICE = 0,
@@ -74,23 +88,25 @@ static char **SplitUeventConfig(char *buffer, const char *del, int *returnCount,
 {
     char *rest = NULL;
     int count = 0;
+    int average = 2;
+    int maxItemCountTmp = maxItemCount;
     char *p = strtok_r(buffer, del, &rest);
-    if (maxItemCount < 0) {
+    if (maxItemCountTmp < 0) {
         return NULL;
     }
-    if (maxItemCount > DEFAULTITEMCOUNT) {
-        maxItemCount = DEFAULTITEMCOUNT;
+    if (maxItemCountTmp > DEFAULTITEMCOUNT) {
+        maxItemCountTmp = DEFAULTITEMCOUNT;
     }
-    char **items = (char **)malloc(sizeof(char*) * maxItemCount);
+    char **items = (char **)malloc(sizeof(char*) * maxItemCountTmp);
     if (items == NULL) {
         INIT_LOGE("No enough memory to store uevent config");
         return NULL;
     }
     while (p != NULL) {
-        if (count > maxItemCount - 1) {
-            maxItemCount += (maxItemCount / 2) + 1;
+        if (count > maxItemCountTmp - 1) {
+            maxItemCountTmp += (maxItemCountTmp / average) + 1;
             INIT_LOGD("Too many items,expand size");
-            char **expand = (char **)(realloc(items, sizeof(char *) * maxItemCount));
+            char **expand = (char **)(realloc(items, sizeof(char *) * maxItemCountTmp));
             if (expand == NULL) {
                 INIT_LOGE("Failed to expand memory for uevent config parser");
                 FreeConfigItems(items, count);
@@ -124,7 +140,7 @@ static int ParseDeviceConfig(char *p)
     char **items = NULL;
     int count = -1;
     // format: <device node> <mode> <uid> <gid>
-    int expectedCount = 4;
+    const int expectedCount = 4;
 
     if (INVALIDSTRING(p)) {
         INIT_LOGE("Invalid argument");
@@ -142,15 +158,15 @@ static int ParseDeviceConfig(char *p)
         FreeConfigItems(items, count);
         return -1;
     }
-    config->name = strdup(items[0]); // device node
+    config->name = strdup(items[DEVICE_CONFIG_NAME_NUM]); // device node
     errno = 0;
-    config->mode = strtoul(items[1], NULL, OCTONARY);
+    config->mode = strtoul(items[DEVICE_CONFIG_MODE_NUM], NULL, OCTONARY);
     if (errno != 0) {
         INIT_LOGE("Invalid mode in config file for device node %s. use default mode", config->name);
         config->mode = DEVMODE;
     }
-    config->uid = StringToInt(items[2], 0);
-    config->gid = StringToInt(items[3], 0);
+    config->uid = (uid_t)StringToInt(items[DEVICE_CONFIG_UID_NUM], 0);
+    config->gid = (gid_t)StringToInt(items[DEVICE_CONFIG_GID_NUM], 0);
     ListAddTail(&g_devices, &config->list);
     FreeConfigItems(items, count);
     return 0;
@@ -179,17 +195,18 @@ static int ParseSysfsConfig(char *p)
         FreeConfigItems(items, count);
         return -1;
     }
-    config->sysPath = strdup(items[0]); // sys path
-    config->attr = strdup(items[1]);  // attribute
+    config->sysPath = strdup(items[SYS_CONFIG_PATH_NUM]); // sys path
+    config->attr = strdup(items[SYS_CONFIG_ATTR_NUM]);  // attribute
     errno = 0;
-    config->mode = strtoul(items[2], NULL, OCTONARY);
+    config->mode = strtoul(items[SYS_CONFIG_MODE_NUM], NULL, OCTONARY);
     if (errno != 0) {
         INIT_LOGE("Invalid mode in config file for sys path %s. use default mode", config->sysPath);
         config->mode = DEVMODE;
     }
-    config->uid = StringToInt(items[3], 0);
-    config->gid = StringToInt(items[4], 0);
+    config->uid = (uid_t)StringToInt(items[SYS_CONFIG_UID_NUM], 0);
+    config->gid = (gid_t)StringToInt(items[SYS_CONFIG_GID_NUM], 0);
     ListAddTail(&g_sysDevices, &config->list);
+    FreeConfigItems(items, count);
     return 0;
 }
 
@@ -199,12 +216,6 @@ static int ParseFirmwareConfig(char *p)
     if (INVALIDSTRING(p)) {
         INIT_LOGE("Invalid argument");
     }
-    struct FirmwareUdevConf *config = calloc(1, sizeof(struct FirmwareUdevConf));
-    if (config == NULL) {
-        errno = ENOMEM;
-        return -1;
-    }
-
     // Sanity checks
     struct stat st = {};
     if (stat(p, &st) != 0) {
@@ -217,12 +228,18 @@ static int ParseFirmwareConfig(char *p)
         return -1;
     }
 
+    struct FirmwareUdevConf *config = calloc(1, sizeof(struct FirmwareUdevConf));
+    if (config == NULL) {
+        errno = ENOMEM;
+        return -1;
+    }
+
     config->fmPath = strdup(p);
     ListAddTail(&g_firmwares, &config->list);
     return 0;
 }
 
-static SECTION GetSection(char *section)
+static SECTION GetSection(const char *section)
 {
     if (INVALIDSTRING(section)) {
         return SECTION_INVALID;
@@ -273,14 +290,17 @@ int ParseUeventConfig(char *buffer)
         callback = funcMapper[type].func;
         return 0;
     }
-    return callback != NULL ? callback(p) : -1;
+    return (callback != NULL) ? callback(p) : -1;
 }
 
-static void DoUeventConfigParse(char *buffer)
+static void DoUeventConfigParse(char *buffer, size_t length)
 {
+    if (length < 0) {
+        return;
+    }
     char **items = NULL;
     int count = -1;
-    int maxItemCount = DEFAULTITEMCOUNT;
+    const int maxItemCount = DEFAULTITEMCOUNT;
 
     items = SplitUeventConfig(buffer, "\n", &count, maxItemCount);
     INIT_LOGD("Dump items count = %d", count);
@@ -309,10 +329,15 @@ void ParseUeventdConfigFile(const char *file)
     if (INVALIDSTRING(file)) {
         return;
     }
-
-    int fd = open(file, O_RDONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    char realPath[PATH_MAX] = {0};
+    if (realpath(file, realPath) == NULL) {
+        if (errno != ENOENT) {
+            return;
+        }
+    }
+    int fd = open(realPath, O_RDONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd < 0) {
-        INIT_LOGE("Read from %s failed", file);
+        INIT_LOGE("Read from %s failed", realPath);
         return;
     }
 
@@ -333,7 +358,7 @@ void ParseUeventdConfigFile(const char *file)
     }
 
     if (read(fd, buffer, size) != (ssize_t)size) {
-        INIT_LOGE("Read from file %s failed. err = %d", file, errno);
+        INIT_LOGE("Read from file %s failed. err = %d", realPath, errno);
         free(buffer);
         buffer = NULL;
         close(fd);
@@ -341,7 +366,7 @@ void ParseUeventdConfigFile(const char *file)
     }
 
     buffer[size] = '\0';
-    DoUeventConfigParse(buffer);
+    DoUeventConfigParse(buffer, size);
     free(buffer);
     buffer = NULL;
     close(fd);
@@ -361,11 +386,11 @@ void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_
                 *uid = config->uid;
                 *gid = config->gid;
                 *mode = config->mode;
-               break;
+                break;
             }
         }
     }
-   return;
+    return;
 }
 
 void ChangeSysAttributePermissions(const char *sysPath)
@@ -380,7 +405,7 @@ void ChangeSysAttributePermissions(const char *sysPath)
         ForEachListEntry(&g_sysDevices, node) {
             config = ListEntry(node, struct SysUdevConf, list);
             if (STRINGEQUAL(config->sysPath, sysPath)) {
-               break;
+                break;
             }
         }
     }

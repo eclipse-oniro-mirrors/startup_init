@@ -105,7 +105,7 @@ void PostParamTrigger(const char *name, const char *value);
  * 解析trigger文件。
  *
  */
-int ParseTriggerConfig(cJSON *fileRoot);
+int ParseTriggerConfig(const cJSON *fileRoot);
 
 /**
  * 对Init接口

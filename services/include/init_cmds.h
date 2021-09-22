@@ -52,7 +52,7 @@ struct CmdArgs {
 
 int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen);
 struct CmdArgs* GetCmd(const char *cmdContent, const char *delim, int argsCount);
-void FreeCmd(struct CmdArgs **cmd);
+void FreeCmd(struct CmdArgs *cmd);
 
 void ParseCmdLine(const char* cmdStr, CmdLine* resCmd);
 void DoCmd(const CmdLine* curCmd);

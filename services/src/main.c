@@ -66,7 +66,7 @@ static long TimeDiffMs(const struct timespec* tmBefore, const struct timespec* t
 int main(int argc, char **argv)
 {
 #ifndef OHOS_LITE
-    if(setenv("UV_THREADPOOL_SIZE", "1", 1) != 0) {
+    if (setenv("UV_THREADPOOL_SIZE", "1", 1) != 0) {
         INIT_LOGE("set UV_THREADPOOL_SIZE error : %d.", errno);
     }
 

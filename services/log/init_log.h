@@ -117,6 +117,13 @@ void EnableDevKmsg(void);
         } \
     } while (0)
 
+#define INIT_CHECK_ONLY_ELOG(ret, format, ...) \
+    do {                                       \
+        if (!(ret)) {                          \
+            INIT_LOGE(format, ##__VA_ARGS__);  \
+        } \
+    } while (0)
+
 #ifdef __cplusplus
 #if __cplusplus
 }
