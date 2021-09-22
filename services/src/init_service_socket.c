@@ -50,7 +50,7 @@ static int CreateSocket(struct ServiceSocket *sockopt)
         sockopt->name) < 0) {
         return -1;
     }
-    if (access(addr.sun_path, F_OK)) {
+    if (access(addr.sun_path, F_OK) == 0) {
         INIT_LOGE("%s already exist, remove it", addr.sun_path);
         if (unlink(addr.sun_path) != 0) {
             INIT_LOGE("ulink fail err %d ", errno);

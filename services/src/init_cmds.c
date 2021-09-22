@@ -95,6 +95,7 @@ int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
             return -1;
         }
         INIT_CHECK_RETURN_VALUE(strncpy_s(tmpName, MAX_PARAM_NAME_LEN, p, tmpLen) == EOK, -1);
+        tmpLen = MAX_PARAM_VALUE_LEN;
         int ret = SystemReadParam(tmpName, tmpValue, &tmpLen); // get param
         if (ret != 0) {
             INIT_LOGE("Failed to read parameter \" %s \"", tmpName);
