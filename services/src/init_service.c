@@ -149,7 +149,7 @@ static void OpenConsole()
     return;
 }
 
-static void WriteServicePid(Service *service, pid_t pid)
+static void WriteServicePid(const Service *service, pid_t pid)
 {
     char pidString[MAX_PID_STRING_LENGTH];
     INIT_ERROR_CHECK(snprintf_s(pidString, MAX_PID_STRING_LENGTH, MAX_PID_STRING_LENGTH - 1, "%d", pid) >= 0,

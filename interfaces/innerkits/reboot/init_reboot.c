@@ -15,6 +15,7 @@
 #include "init_reboot.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -46,9 +47,9 @@ int DoReboot(const char *cmdContent)
         }
         return 0;
     }
-    int length = strlen(cmdContent);
+    size_t length = strlen(cmdContent);
     if (length > MAX_REBOOT_VAUE_SIZE) {
-        INIT_LOGE("DoReboot api error, cmdContent = %s, length = %d.", cmdContent, length);
+        INIT_LOGE("DoReboot api error, cmdContent = %s, length = %u.", cmdContent, length);
         return -1;
     }
     if (snprintf_s(value, MAX_REBOOT_NAME_SIZE, MAX_REBOOT_NAME_SIZE - 1, "%s%s", "reboot,", cmdContent) < 0) {
