@@ -88,7 +88,7 @@ static char **SplitUeventConfig(char *buffer, const char *del, int *returnCount,
 {
     char *rest = NULL;
     int count = 0;
-    int average = 2;
+    const int average = 2;
     int maxItemCountTmp = maxItemCount;
     char *p = strtok_r(buffer, del, &rest);
     if (maxItemCountTmp < 0) {
@@ -178,7 +178,7 @@ static int ParseSysfsConfig(char *p)
     char **items = NULL;
     int count = -1;
     // format: <syspath> <attribute> <mode> <uid> <gid>
-    int expectedCount = 5;
+    const int expectedCount = 5;
 
     if (INVALIDSTRING(p)) {
         INIT_LOGE("Invalid argument");
