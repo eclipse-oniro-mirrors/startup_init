@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
         printf("setparam: Need 2 arguments (see \"setparam --help\")\n");
         return 0;
     }
-    if (argc == 2 && strncmp(argv[1], HELP_PARAM, strlen(HELP_PARAM)) == 0) {
+    if (argc == 2 && argv[1] != NULL && strncmp(argv[1], HELP_PARAM, strlen(HELP_PARAM)) == 0) {
         printf("usage: setparam NAME VALUE\n");
         return 0;
     }

@@ -35,6 +35,7 @@ extern "C" {
 #define TRIGGER_CMD "trigger "
 #define TRIGGER_ARR_NAME_IN_JSON "jobs"
 #define CMDS_ARR_NAME_IN_JSON "cmds"
+#define MAX_CMD_IN_JOBS 1024
 
 #define TRIGGER_NODE_IN_QUEUE(trigger) \
     (atomic_load_explicit(&(trigger)->serial, memory_order_relaxed) & 0x01)
@@ -102,13 +103,13 @@ typedef int (*TRIGGER_MATCH)(LogicCalculator *calculator, TriggerNode *trigger, 
 typedef int (*PARAM_CHECK_DONE)(TriggerNode *trigger, u_int32_t index);
 typedef int (*CMD_EXECUTE) (const TriggerNode *trigger, const char *cmdName, const char *command);
 
-TriggerNode *GetTriggerByName(TriggerWorkSpace *workSpace, const char *triggerName, u_int32_t *triggerIndex);
+TriggerNode *GetTriggerByName(const TriggerWorkSpace *workSpace, const char *triggerName, u_int32_t *triggerIndex);
 int ExecuteTrigger(TriggerWorkSpace *workSpace, TriggerNode *trigger, CMD_EXECUTE cmdExecuter);
 int CheckTrigger(const TriggerWorkSpace *workSpace,
     int type, void *content, u_int32_t contentSize, PARAM_CHECK_DONE triggerExecuter);
 int CheckParamTrigger(TriggerWorkSpace *workSpace,
     const char *content, u_int32_t contentSize, PARAM_CHECK_DONE triggerExecuter);
-int CheckAndExecuteTrigger(TriggerWorkSpace *workSpace, const char *content, PARAM_CHECK_DONE triggerExecuter);
+int CheckAndExecuteTrigger(const TriggerWorkSpace *workSpace, const char *content, PARAM_CHECK_DONE triggerExecuter);
 
 TriggerNode *ExecuteQueuePop(TriggerWorkSpace *workSpace);
 int ExecuteQueuePush(TriggerWorkSpace *workSpace, TriggerNode *trigger, u_int32_t index);

@@ -109,9 +109,12 @@ int SystemSetParameter(const char *name, const char *value)
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid param");
     int ret = CheckParamName(name, 0);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name");
-    u_int32_t len = 2;
+    const u_int32_t len = 2;
     PARAM_LOGD("StartRequest %s", name);
     u_int32_t msgSize = sizeof(RequestMsg) + strlen(name) + strlen(value) + len;
+    if (strlen(value) >= PARAM_VALUE_LEN_MAX) {
+        return -1;
+    }
     RequestNode *request = (RequestNode *)malloc(sizeof(RequestNode) + msgSize);
     PARAM_CHECK(request != NULL, return -1, "Failed to malloc for connect");
 

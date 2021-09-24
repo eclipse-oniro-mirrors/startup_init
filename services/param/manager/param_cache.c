@@ -136,6 +136,7 @@ const char *DetectParamChange(ParamWorkSpace *workSpace, ParamCache *cache,
 {
     pthread_mutex_lock(&cacheLock);
     if (cache == NULL) {
+        pthread_mutex_unlock(&cacheLock);
         return NULL;
     }
     while (cache->cacheCount == 0) {

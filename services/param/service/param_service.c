@@ -45,9 +45,12 @@ int LoadDefaultParams(const char *fileName)
     if ((flags & WORKSPACE_FLAGS_INIT) != WORKSPACE_FLAGS_INIT) {
         return PARAM_CODE_NOT_INIT;
     }
-    FILE *fp = fopen(fileName, "r");
+    char *realpath = realpath(fileName, NULL);
+    PARAM_CHECK(realpath != NULL, return -1, "Can not get real path %s", fileName);
+    FILE *fp = fopen(realpath, "r");
+    free(realpath);
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
-    char buff[BUFFER_SIZE];
+    char buff[BUFFER_SIZE] = {0};
     SubStringInfo *info = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_LABEL + 1));
     PARAM_CHECK(info != NULL,
         fclose(fp);
@@ -86,14 +89,17 @@ int LoadParamInfos(const char *fileName)
     if ((flags & WORKSPACE_FLAGS_INIT) != WORKSPACE_FLAGS_INIT) {
         return PARAM_CODE_NOT_INIT;
     }
-    FILE *fp = fopen(fileName, "r");
+    char *realpath = realpath(fileName, NULL);
+    PARAM_CHECK(realpath != NULL, return -1, "Can not get real path %s", fileName);
+    FILE *fp = fopen(realpath, "r");
+    free(realpath);
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
     SubStringInfo *info = malloc(sizeof(SubStringInfo) * SUBSTR_INFO_MAX);
     PARAM_CHECK(info != NULL,
         fclose(fp);
         fp = NULL;
         return -1, "Load parameter malloc failed.");
-    char buff[BUFFER_SIZE];
+    char buff[BUFFER_SIZE] = {0};
     int infoCount = 0;
     while (fgets(buff, BUFFER_SIZE, fp) != NULL) {
         int subStrNumber = GetSubStringInfo(buff, strlen(buff), ' ',  info, SUBSTR_INFO_MAX);
@@ -137,7 +143,7 @@ static void OnClose(uv_handle_t *handle)
 static void OnReceiveAlloc(uv_handle_t *handle, size_t suggestedSize, uv_buf_t* buf)
 {
     // 这里需要按实际消息的大小申请内存，取最大消息的长度
-    unsigned int tmp = 2;
+    const unsigned int tmp = 2;
     buf->len = sizeof(RequestMsg) + BUFFER_SIZE * tmp;
     buf->base = (char *)malloc(buf->len);
 }
@@ -150,7 +156,7 @@ static void OnWriteResponse(uv_write_t *req, int status)
     free(node);
 }
 
-static void SendResponse(uv_stream_t *handle, RequestType type, int result, const void *content, int size)
+static void SendResponse(const uv_stream_t *handle, RequestType type, int result, const void *content, int size)
 {
     int ret = 0;
     // 申请整块内存，用于回复数据和写请求

@@ -84,7 +84,7 @@ static CommandNode *GetCmdByIndex(const TriggerWorkSpace *workSpace, const Trigg
     if (index == 0 || index == (u_int32_t)-1) {
         return NULL;
     }
-    u_int32_t offset = 2;
+    const u_int32_t offset = 2;
     u_int32_t size = sizeof(CommandNode) + offset;
     PARAM_CHECK((index + size) < workSpace->area->dataSize,
         return NULL, "Invalid index for cmd %u", index);
@@ -93,7 +93,7 @@ static CommandNode *GetCmdByIndex(const TriggerWorkSpace *workSpace, const Trigg
 
 u_int32_t AddCommand(TriggerWorkSpace *workSpace, TriggerNode *trigger, const char *cmdName, const char *content)
 {
-    PARAM_CHECK(workSpace != NULL && trigger != NULL, return 0, "list is null");
+    PARAM_CHECK(workSpace != NULL && trigger != NULL && cmdName != NULL, return 0, "list is null");
     PARAM_CHECK(workSpace->area != NULL, return 0, "Invalid trigger workspace");
     u_int32_t size = sizeof(CommandNode) + strlen(cmdName) + 1;
     size += ((content == NULL) ? 1 : (strlen(content) + 1));
@@ -132,7 +132,7 @@ u_int32_t AddCommand(TriggerWorkSpace *workSpace, TriggerNode *trigger, const ch
     return offset;
 }
 
-static TriggerNode *GetTriggerByIndex(TriggerWorkSpace *workSpace, u_int32_t index)
+static TriggerNode *GetTriggerByIndex(const TriggerWorkSpace *workSpace, u_int32_t index)
 {
     if (index == 0 || index == (u_int32_t)-1) {
         return NULL;
@@ -237,7 +237,8 @@ int ParseTrigger(TriggerWorkSpace *workSpace, const cJSON *triggerItem)
     cJSON* cmdItems = cJSON_GetObjectItem(triggerItem, CMDS_ARR_NAME_IN_JSON);
     PARAM_CHECK(cJSON_IsArray(cmdItems), return -1, "Command item must be array");
     int cmdLinesCnt = cJSON_GetArraySize(cmdItems);
-    PARAM_CHECK(cmdLinesCnt > 0, return -1, "Command array size must positive %s", name);
+    PARAM_CHECK(cmdLinesCnt > 0 && cmdLinesCnt <= MAX_CMD_IN_JOBS,
+        return -1, "Command array size must positive %s", name);
 
     for (int i = 0; i < cmdLinesCnt; ++i) {
         char *cmdLineStr = cJSON_GetStringValue(cJSON_GetArrayItem(cmdItems, i));
@@ -371,8 +372,7 @@ int CheckParamTrigger(TriggerWorkSpace *workSpace,
     PARAM_CHECK(workSpace != NULL && content != NULL && triggerExecuter != NULL,
         return -1, "Failed arg for param trigger");
     LogicCalculator calculator = {};
-    int dataNumber = 100;
-    CalculatorInit(&calculator, dataNumber, sizeof(LogicData), 1);
+    CalculatorInit(&calculator, MAX_DATA_NUMBER, sizeof(LogicData), 1);
 
     // 先解析content
     int ret = GetValueFromContent(content, contentSize, 0, calculator.inputName, SUPPORT_DATA_BUFFER_MAX);
@@ -387,13 +387,12 @@ int CheckParamTrigger(TriggerWorkSpace *workSpace,
     return 0;
 }
 
-int CheckAndExecuteTrigger(TriggerWorkSpace *workSpace, const char *content, PARAM_CHECK_DONE triggerExecuter)
+int CheckAndExecuteTrigger(const TriggerWorkSpace *workSpace, const char *content, PARAM_CHECK_DONE triggerExecuter)
 {
     PARAM_CHECK(workSpace != NULL && content != NULL && triggerExecuter != NULL,
         return -1, "Failed arg for param trigger");
     LogicCalculator calculator = {};
-    int dataNumber = 100;
-    CalculatorInit(&calculator, dataNumber, sizeof(LogicData), 1);
+    CalculatorInit(&calculator, MAX_DATA_NUMBER, sizeof(LogicData), 1);
 
     int ret = memcpy_s(calculator.triggerContent, sizeof(calculator.triggerContent), content, strlen(content));
     PARAM_CHECK(ret == 0, CalculatorFree(&calculator); return -1, "Failed to memcpy");
@@ -407,9 +406,9 @@ int CheckAndExecuteTrigger(TriggerWorkSpace *workSpace, const char *content, PAR
     return 0;
 }
 
-TriggerNode *GetTriggerByName(TriggerWorkSpace *workSpace, const char *triggerName, u_int32_t *triggerIndex)
+TriggerNode *GetTriggerByName(const riggerWorkSpace *workSpace, const char *triggerName, u_int32_t *triggerIndex)
 {
-    PARAM_CHECK(workSpace != NULL && triggerName != NULL, return NULL, "Invalid param");
+    PARAM_CHECK(workSpace != NULL && triggerName != NULL && triggerIndex != NULL, return NULL, "Invalid param");
     for (size_t i = 0; i < sizeof(workSpace->header) / sizeof(workSpace->header[0]); i++) {
         u_int32_t index = workSpace->header[i].firstTrigger;
         TriggerNode *trigger = GetTriggerByIndex(workSpace, workSpace->header[i].firstTrigger);
