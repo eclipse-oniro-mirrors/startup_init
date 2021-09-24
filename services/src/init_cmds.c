@@ -148,11 +148,11 @@ static struct CmdArgs *CopyCmd(struct CmdArgs *ctx, const char *cmd, size_t allo
 
 struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
 {
-    INIT_CHECK_RETURN_VALUE(cmdContent != NULL, NULL);
+    INIT_CHECK_RETURN_VALUE(cmdContent != NULL && delim != NULL, NULL);
     struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
     INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
 
-    ctx->argv = (char**)malloc(sizeof(char*) * (size_t)(argsCount + 1));
+    ctx->argv = (char**)calloc(sizeof(char*), (size_t)(argsCount + 1));
     INIT_CHECK(ctx->argv != NULL, FreeCmd(ctx);
         return NULL);
 
@@ -805,7 +805,7 @@ static void DoLoadCfg(const char *path, int maxArg)
     FILE *fp = NULL;
     size_t maxLoop = 0;
     CmdLine *cmdLine = NULL;
-    int len;
+    size_t len;
     INIT_CHECK_ONLY_RETURN(path != NULL);
     INIT_LOGI("DoLoadCfg cfg file %s", path);
     if (!CheckValidCfg(path)) {
@@ -872,7 +872,7 @@ static void DoWrite(const char *cmdContent, int maxArg)
         goto out;
     }
 
-    size_t ret = write(fd, ctx->argv[1], strlen(ctx->argv[1]));
+    ssize_t ret = write(fd, ctx->argv[1], strlen(ctx->argv[1]));
     if (ret < 0) {
         INIT_LOGE("DoWrite: write to file %s failed: %d", ctx->argv[0], errno);
         free(realPath);

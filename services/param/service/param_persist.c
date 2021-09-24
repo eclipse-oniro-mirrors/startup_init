@@ -40,7 +40,7 @@ typedef struct {
 
 static ParamPersistWorkSpace g_persistWorkSpace = {ATOMIC_VAR_INIT(0), };
 
-static int ProcessParamTraversal(WorkSpace *workSpace, TrieNode *node, void *cookie)
+static int ProcessParamTraversal(WorkSpace *workSpace, const TrieNode *node, void *cookie)
 {
     PARAM_CHECK(workSpace != 0 && node != NULL && cookie != NULL, return -1, "Invalid param");
     TrieDataNode *current = (TrieDataNode *)node;
@@ -65,7 +65,7 @@ static int ProcessParamTraversal(WorkSpace *workSpace, TrieNode *node, void *coo
     return ret;
 }
 
-static int ProcessPersistPropertTraversal(WorkSpace *workSpace, TrieNode *node, void *cookie)
+static int ProcessPersistPropertTraversal(WorkSpace *workSpace, const TrieNode *node, void *cookie)
 {
     TrieDataNode *current = (TrieDataNode *)node;
     if (current == NULL || current->dataIndex == 0) {

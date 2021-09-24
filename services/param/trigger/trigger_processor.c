@@ -54,7 +54,7 @@ static int DoTiggerCheckResult(TriggerNode *trigger, u_int32_t triggerIndex)
     return 0;
 }
 
-static int ExecuteTiggerImmediately(TriggerNode *trigger, u_int32_t triggerIndex)
+static int ExecuteTiggerImmediately(const TriggerNode *trigger, u_int32_t triggerIndex)
 {
     return ExecuteTrigger(&g_triggerWorkSpace, trigger, DoCmdExecute);
 }
@@ -77,7 +77,7 @@ void ExecuteQueueWork(u_int32_t maxCount)
     }
 }
 
-static void CheckTriggers(int type, void *content, u_int32_t contentLen)
+static void CheckTriggers(int type, const void *content, u_int32_t contentLen)
 {
     switch (type) {
         case EVENT_PROPERTY: {
@@ -151,12 +151,14 @@ void PostParamTrigger(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return, "Invalid param");
     PARAM_LOGD("PostParamTrigger %s ", name);
-    int offset = 2;
+    PARAM_CHECK(strlen(name) <= PARAM_VALUE_LEN_MAX, return, "Invalid param");
+    PARAM_CHECK(strlen(value) <= PARAM_NAME_LEN_MAX, return, "Invalid param");
+    const int offset = 2;
     int contentLen = strlen(name) + strlen(value) + offset;
     TriggerDataEvent *event = (TriggerDataEvent *)malloc(sizeof(TriggerDataEvent) + contentLen);
     PARAM_CHECK(event != NULL, return, "Failed to alloc memory");
     event->type = EVENT_PROPERTY;
-    event->request.data = (char*)event + sizeof(uv_work_t);
+    event->request.data = (void *)((char*)event + sizeof(uv_work_t));
     event->contentSize = BuildParamContent(event->content, contentLen, name, value);
     PARAM_CHECK(event->contentSize > 0, return, "Failed to copy porperty");
     SendTriggerEvent(event);
@@ -170,7 +172,7 @@ void PostTrigger(EventType type, const char *content, u_int32_t contentLen)
     TriggerDataEvent *event = (TriggerDataEvent *)malloc(sizeof(TriggerDataEvent) + contentLen + 1);
     PARAM_CHECK(event != NULL, return, "Failed to alloc memory");
     event->type = type;
-    event->request.data = (char*)event + sizeof(uv_work_t);
+    event->request.data = (void *)((char*)event + sizeof(uv_work_t));
     event->contentSize = contentLen;
     PARAM_CHECK(memcpy_s(event->content, contentLen + 1, content, contentLen) == 0, return, "Failed to copy content");
     event->content[contentLen] = '\0';

@@ -129,10 +129,9 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
 
 static int RemoveDeviceNode(const char *deviceNode, char **symLinks)
 {
-    int rc = -1;
     if (INVALIDSTRING(deviceNode)) {
         INIT_LOGE("Invalid device node");
-        return rc;
+        return -1;
     }
     if (symLinks != NULL) {
         for (int i = 0; symLinks[i] != NULL; i++) {
@@ -231,6 +230,8 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
                 }
                 linkNum++;
             }
+            free(bus);
+            bus = NULL;
         }
         parent = dirname(parent);
     }

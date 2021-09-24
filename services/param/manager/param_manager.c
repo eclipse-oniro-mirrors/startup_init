@@ -144,7 +144,7 @@ int AddParam(WorkSpace *workSpace, const char *name, const char *value)
 
 int UpdateParam(WorkSpace *workSpace, u_int32_t *dataIndex, const char *name, const char *value)
 {
-    PARAM_CHECK(workSpace != NULL && name != NULL && value != NULL,
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL && name != NULL && value != NULL,
         return PARAM_CODE_INVALID_PARAM, "Failed to check param");
 
     DataEntry *entry = (DataEntry *)GetTrieNode(workSpace, dataIndex);
@@ -239,7 +239,7 @@ int ReadParamWithCheck(ParamWorkSpace *workSpace, const char *name, ParamHandle 
 
 int ReadParamValue(ParamWorkSpace *workSpace, ParamHandle handle, char *value, u_int32_t *len)
 {
-    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
+    PARAM_CHECK(workSpace != NULL && len != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     u_int32_t flags = atomic_load_explicit(&workSpace->flags, memory_order_relaxed);
     if ((flags & WORKSPACE_FLAGS_INIT) != WORKSPACE_FLAGS_INIT) {
         return PARAM_CODE_NOT_INIT;
@@ -289,7 +289,7 @@ u_int32_t ReadParamSerial(ParamWorkSpace *workSpace, ParamHandle handle)
 int CheckControlParamPerms(ParamWorkSpace *workSpace,
     const ParamSecurityLabel *srcLabel, const char *name, const char *value)
 {
-    PARAM_CHECK(srcLabel != NULL && name != NULL && value != NULL,
+    PARAM_CHECK(workSpace != NULL && srcLabel != NULL && name != NULL && value != NULL,
         return PARAM_CODE_INVALID_PARAM, "Invalid param");
     int ret = 0;
     int n = 0;
@@ -299,6 +299,9 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
     size_t size1 = strlen("ctl.") +  strlen(value);
     size_t size2 = strlen(name) +  strlen(value) + 1;
     size_t size = ((size1 > size2) ? size1 : size2) + 1;
+    if (size > PARAM_VALUE_LEN_MAX) {
+        return -1;
+    }
     char *legacyName = (char*)malloc(size);
     PARAM_CHECK(legacyName != NULL, return PARAM_CODE_INVALID_PARAM, "Failed to alloc memory");
 
@@ -523,7 +526,7 @@ int BuildParamContent(char *content, u_int32_t contentSize, const char *name, co
 int ProcessParamTraversal(WorkSpace *workSpace, TrieNode *node, void *cookie)
 {
     ParamTraversalContext *context = (ParamTraversalContext *)cookie;
-    if (context == NULL) {
+    if (context == NULL || context->traversalParamPtr == NULL) {
         return 0;
     }
 
@@ -540,6 +543,7 @@ int ProcessParamTraversal(WorkSpace *workSpace, TrieNode *node, void *cookie)
 
 int TraversalParam(ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, void *cookie)
 {
+    PARAM_CHECK(workSpace != NULL, return -1, "Invalid param");
     ParamTraversalContext context = {
         walkFunc, cookie
     };

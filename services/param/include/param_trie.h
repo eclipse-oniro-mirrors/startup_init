@@ -85,7 +85,7 @@ typedef struct {
 
 struct WorkSpace_;
 typedef u_int32_t (*AllocTrieNodePtr)(struct WorkSpace_ *workSpace, const char *key, u_int32_t keyLen);
-typedef int (*CompareTrieNodePtr)(TrieNode *node, const char *key2, u_int32_t key2Len);
+typedef int (*CompareTrieNodePtr)(const TrieNode *node, const char *key2, u_int32_t key2Len);
 
 typedef struct WorkSpace_ {
     char fileName[FILENAME_LEN_MAX + 1];
@@ -95,32 +95,32 @@ typedef struct WorkSpace_ {
     CompareTrieNodePtr compareTrieNode;
 } WorkSpace;
 
-u_int32_t GetWorkSpaceSerial(WorkSpace *workSpace);
-int CompareTrieNode(TrieNode *node, const char *key, u_int32_t keyLen);
+u_int32_t GetWorkSpaceSerial(const WorkSpace *workSpace);
+int CompareTrieNode(const TrieNode *node, const char *key, u_int32_t keyLen);
 u_int32_t AllocateTrieNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen);
-int CompareTrieDataNode(TrieNode *node, const char *key, u_int32_t keyLen);
+int CompareTrieDataNode(const TrieNode *node, const char *key, u_int32_t keyLen);
 u_int32_t AllocateTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen);
 
-u_int32_t GetTrieNodeOffset(WorkSpace *workSpace, const TrieNode *current);
-TrieNode *GetTrieNode(WorkSpace *workSpace, const unsigned int *index);
-u_int32_t GetTrieKeyLen(TrieNode *current);
+u_int32_t GetTrieNodeOffset(const WorkSpace *workSpace, const TrieNode *current);
+TrieNode *GetTrieNode(const WorkSpace *workSpace, const unsigned int *index);
 void SaveIndex(unsigned int *index, u_int32_t offset);
 TrieDataNode *AddTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen);
 TrieDataNode *AddToSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const char *key, u_int32_t keyLen);
-TrieDataNode *FindSubTrie(WorkSpace *workSpace, TrieDataNode *dataNode, const char *key, u_int32_t keyLen);
+TrieDataNode *FindSubTrie(WorkSpace *workSpace, const TrieDataNode *dataNode, const char *key, u_int32_t keyLen);
 TrieDataNode *FindTrieDataNode(WorkSpace *workSpace, const char *key, u_int32_t keyLen, int matchPrefix);
 
 TrieNode *AddTrieNode(WorkSpace *workSpace, TrieNode *root, const char *key, u_int32_t keyLen);
-TrieNode *FindTrieNode(WorkSpace *workSpace, TrieNode *tree, const char *key, u_int32_t keyLen);
+TrieNode *FindTrieNode(WorkSpace *workSpace, const TrieNode *tree, const char *key, u_int32_t keyLen);
 
 int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, u_int32_t spaceSize, int readOnly);
 int InitPersistWorkSpace(const char *fileName, WorkSpace *workSpace);
 int InitWorkSpace(const char *fileName, WorkSpace *workSpace, int onlyRead);
 void CloseWorkSpace(WorkSpace *workSpace);
 
-typedef int (*TraversalTrieNodePtr)(WorkSpace *workSpace, TrieNode *node, void *cookie);
-int TraversalTrieNode(WorkSpace *workSpace, TrieNode *root, TraversalTrieNodePtr walkFunc, void *cookie);
-int TraversalTrieDataNode(WorkSpace *workSpace, TrieDataNode *current, TraversalTrieNodePtr walkFunc, void *cookie);
+typedef int (*TraversalTrieNodePtr)(WorkSpace *workSpace, const TrieNode *node, void *cookie);
+int TraversalTrieNode(WorkSpace *workSpace, const TrieNode *root, TraversalTrieNodePtr walkFunc, void *cookie);
+int TraversalTrieDataNode(WorkSpace *workSpace,
+    const TrieDataNode *current, TraversalTrieNodePtr walkFunc, void *cookie);
 
 u_int32_t AddData(WorkSpace *workSpace, const char *key, u_int32_t keyLen, const char *value, u_int32_t valueLen);
 int UpdateDataValue(DataEntry *entry, const char *value);

@@ -296,11 +296,9 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
         if (!cJSON_IsNumber(item)) {
             break;
         }
-        gid_t gID = (int)cJSON_GetNumberValue(item);
-        if (gID < 0) {
-            INIT_LOGE("GetGidArray gID = %d, error", gID);
-            break;
-        }
+        int value = (int)cJSON_GetNumberValue(item);
+        INIT_INFO_CHECK(value >= 0, break, "GetGidArray value = %d, error", value);
+        gid_t gID = (gid_t)value;
         curServ->servPerm.gIDArray[i] = gID;
     }
     return (((i == gIDCnt) ? SERVICE_SUCCESS : SERVICE_FAILURE));
@@ -528,7 +526,7 @@ static void FreeServiceSocket(struct ServiceSocket *sockopt)
         return;
     }
     struct ServiceSocket *tmpSock = NULL;
-    while (sockopt) {
+    while (sockopt != NULL) {
         tmpSock = sockopt;
         if (sockopt->name != NULL) {
             free(sockopt->name);
@@ -658,17 +656,21 @@ static int ParseOneService(const cJSON *curItem, Service *service)
         return SERVICE_FAILURE;
     }
     int ret = GetServiceName(curItem, service);
-    ret |= GetServicePathAndArgs(curItem, service);
-    ret |= GetUidStringNumber(curItem, service);
-    ret |= GetGidArray(curItem, service);
-    ret |= GetServiceNumber(curItem, service, ONCE_STR_IN_CFG);
-    ret |= GetServiceNumber(curItem, service, IMPORTANT_STR_IN_CFG);
-    ret |= GetServiceNumber(curItem, service, CRITICAL_STR_IN_CFG);
-    ret |= GetServiceNumber(curItem, service, DISABLED_STR_IN_CFG);
-    ret |= GetServiceNumber(curItem, service, CONSOLE_STR_IN_CFG);
-    ret |= GetWritepidStrings(curItem, service);
-    ret |= GetServiceCaps(curItem, service);
-    return ret;
+    ret += GetServicePathAndArgs(curItem, service);
+    ret += GetUidStringNumber(curItem, service);
+    ret += GetGidArray(curItem, service);
+    ret += GetServiceNumber(curItem, service, ONCE_STR_IN_CFG);
+    ret += GetServiceNumber(curItem, service, IMPORTANT_STR_IN_CFG);
+    ret += GetServiceNumber(curItem, service, CRITICAL_STR_IN_CFG);
+    ret += GetServiceNumber(curItem, service, DISABLED_STR_IN_CFG);
+    ret += GetServiceNumber(curItem, service, CONSOLE_STR_IN_CFG);
+    ret += GetWritepidStrings(curItem, service);
+    ret += GetServiceCaps(curItem, service);
+    if (ret < 0) {
+        return SERVICE_FAILURE;
+    } else {
+        return SERVICE_SUCCESS;
+    }
 }
 
 void ParseAllServices(const cJSON* fileRoot)

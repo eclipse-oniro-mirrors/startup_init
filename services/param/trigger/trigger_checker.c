@@ -23,8 +23,10 @@
 int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, int needCondition)
 {
     PARAM_CHECK(calculator != NULL, return -1, "Invalid param");
+    PARAM_CHECK(dataUnit <= sizeof(LogicData), return -1, "Invalid dataUnit");
+    PARAM_CHECK(dataNumber <= MAX_DATA_NUMBER, return -1, "Invalid dataNumber");
     int dataSize = dataUnit * dataNumber;
-    int multiple = 5;
+    const int multiple = 5;
     if (needCondition) {
         dataSize += multiple * SUPPORT_DATA_BUFFER_MAX;
     }
@@ -114,7 +116,7 @@ static int CalculatorLength(const LogicCalculator *calculator)
 
 static int PrefixAdd(char *prefix, u_int32_t *prefixIndex, u_int32_t prefixLen, char op)
 {
-    u_int32_t offset = 3;
+    const u_int32_t offset = 3;
     if ((*prefixIndex + offset) >= prefixLen) {
         return -1;
     }
@@ -263,13 +265,13 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLe
     int ret = 0;
     u_int32_t curr = 0;
     u_int32_t prefixIndex = 0;
-    int dataNumber = 100;
 
     PARAM_CHECK(condition != NULL, return -1, "Invalid condition");
     LogicCalculator calculator;
-    CalculatorInit(&calculator, dataNumber, 1, 0);
+    CalculatorInit(&calculator, MAX_DATA_NUMBER, 1, 0);
 
     while (curr < strlen(condition)) {
+        PARAM_CHECK(prefixIndex < prefixLen, CalculatorFree(&calculator); return -1, "Invalid prefixIndex");
         if (condition[curr] == ')') {
             CalculatorPopChar(&calculator, &e);
             while (e != '(') {
@@ -294,7 +296,6 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, u_int32_t prefixLe
             prefix[prefixIndex++] = condition[curr];
         }
         curr++;
-        PARAM_CHECK(prefixIndex < prefixLen, CalculatorFree(&calculator); return -1, "Invalid prefixIndex");
     }
 
     while (CalculatorLength(&calculator) > 0) {

@@ -35,7 +35,7 @@
 int UeventdSocketInit()
 {
     struct sockaddr_nl addr;
-    int sockfd;
+    int sockfd = -1;
     int buffSize = UEVENT_SOCKET_BUFF_SIZE;
     int on = 1;
 
@@ -67,7 +67,7 @@ int UeventdSocketInit()
 ssize_t ReadUeventMessage(int sockFd, char *buffer, size_t length)
 {
     ssize_t n = -1;
-    struct msghdr msghdr;
+    struct msghdr msghdr = {0};
     struct iovec iov;
     struct sockaddr_nl addr;
     char credMsg[CMSG_SPACE(sizeof(struct ucred))];
