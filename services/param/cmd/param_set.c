@@ -19,21 +19,22 @@
 #include "sys_param.h"
 
 #define HELP_PARAM "--help"
+#define HELP_PARAM_VALUE 2
 
 int main(int argc, char* argv[])
 {
-    if (argc == 2 && argv[1] != NULL && strncmp(argv[1], HELP_PARAM, strlen(HELP_PARAM)) == 0) {
+    if (argc == HELP_PARAM_VALUE && argv[1] != NULL && strncmp(argv[1], HELP_PARAM, strlen(HELP_PARAM)) == 0) {
         printf("usage: setparam NAME VALUE\n");
         return 0;
     }
-    if (argc != 3) {
+    if (argc != (HELP_PARAM_VALUE + 1))) {
         printf("setparam: Need 2 arguments (see \"setparam --help\")\n");
         return 0;
     }
-    int ret = SystemSetParameter(argv[1], argv[2]);
+    int ret = SystemSetParameter(argv[1], argv[HELP_PARAM_VALUE]);
     if (ret == 0) {
-        printf("setparam %s %s success\n", argv[1], argv[2]);
+        printf("setparam %s %s success\n", argv[1], argv[HELP_PARAM_VALUE]);
     } else {
-        printf("setparam %s %s fail\n", argv[1], argv[2]);
+        printf("setparam %s %s fail\n", argv[1], argv[HELP_PARAM_VALUE]);
     }
 }

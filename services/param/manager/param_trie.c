@@ -440,7 +440,7 @@ TrieNode *FindTrieNode(WorkSpace *workSpace, const TrieNode *root, const char *k
 }
 
 int TraversalTrieDataNode(WorkSpace *workSpace,
-    const TrieDataNode *current, TraversalTrieNodePtr walkFunc, void* cookie)
+    const TrieDataNode *current, TraversalTrieNodePtr walkFunc, void *cookie)
 {
     PARAM_CHECK(walkFunc != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
@@ -466,7 +466,7 @@ int TraversalTrieDataNode(WorkSpace *workSpace,
     return 0;
 }
 
-int TraversalTrieNode(WorkSpace *workSpace, const TrieNode *root, TraversalTrieNodePtr walkFunc, void* cookie)
+int TraversalTrieNode(WorkSpace *workSpace, const TrieNode *root, TraversalTrieNodePtr walkFunc, void *cookie)
 {
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     PARAM_CHECK(walkFunc != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
