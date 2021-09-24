@@ -45,10 +45,10 @@ int LoadDefaultParams(const char *fileName)
     if ((flags & WORKSPACE_FLAGS_INIT) != WORKSPACE_FLAGS_INIT) {
         return PARAM_CODE_NOT_INIT;
     }
-    char *realpath = realpath(fileName, NULL);
-    PARAM_CHECK(realpath != NULL, return -1, "Can not get real path %s", fileName);
-    FILE *fp = fopen(realpath, "r");
-    free(realpath);
+    char *real = realpath(fileName, NULL);
+    PARAM_CHECK(real != NULL, return -1, "Can not get real path %s", fileName);
+    FILE *fp = fopen(real, "r");
+    free(real);
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
     char buff[BUFFER_SIZE] = {0};
     SubStringInfo *info = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_LABEL + 1));
@@ -89,10 +89,10 @@ int LoadParamInfos(const char *fileName)
     if ((flags & WORKSPACE_FLAGS_INIT) != WORKSPACE_FLAGS_INIT) {
         return PARAM_CODE_NOT_INIT;
     }
-    char *realpath = realpath(fileName, NULL);
-    PARAM_CHECK(realpath != NULL, return -1, "Can not get real path %s", fileName);
-    FILE *fp = fopen(realpath, "r");
-    free(realpath);
+    char *real = realpath(fileName, NULL);
+    PARAM_CHECK(real != NULL, return -1, "Can not get real path %s", fileName);
+    FILE *fp = fopen(real, "r");
+    free(real);
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
     SubStringInfo *info = malloc(sizeof(SubStringInfo) * SUBSTR_INFO_MAX);
     PARAM_CHECK(info != NULL,

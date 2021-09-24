@@ -119,7 +119,8 @@ void CloseWorkSpace(WorkSpace *workSpace);
 
 typedef int (*TraversalTrieNodePtr)(WorkSpace *workSpace, const TrieNode *node, void *cookie);
 int TraversalTrieNode(WorkSpace *workSpace, const TrieNode *root, TraversalTrieNodePtr walkFunc, void *cookie);
-int TraversalTrieDataNode(WorkSpace *workSpace, const TrieDataNode *current, TraversalTrieNodePtr walkFunc, void *cookie);
+int TraversalTrieDataNode(WorkSpace *workSpace,
+    const TrieDataNode *current, TraversalTrieNodePtr walkFunc, void *cookie);
 
 u_int32_t AddData(WorkSpace *workSpace, const char *key, u_int32_t keyLen, const char *value, u_int32_t valueLen);
 int UpdateDataValue(DataEntry *entry, const char *value);

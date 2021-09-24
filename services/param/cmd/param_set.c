@@ -22,12 +22,12 @@
 
 int main(int argc, char* argv[])
 {
-    if (argc == 1 || argc > 3) {
-        printf("setparam: Need 2 arguments (see \"setparam --help\")\n");
-        return 0;
-    }
     if (argc == 2 && argv[1] != NULL && strncmp(argv[1], HELP_PARAM, strlen(HELP_PARAM)) == 0) {
         printf("usage: setparam NAME VALUE\n");
+        return 0;
+    }
+    if (argc != 3) {
+        printf("setparam: Need 2 arguments (see \"setparam --help\")\n");
         return 0;
     }
     int ret = SystemSetParameter(argv[1], argv[2]);

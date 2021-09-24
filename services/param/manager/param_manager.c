@@ -296,7 +296,6 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
     const char *ctrlName[] = {
         "ctl.start",  "ctl.stop", "ctl.restart"
     };
-
     size_t size1 = strlen("ctl.") +  strlen(value);
     size_t size2 = strlen(name) +  strlen(value) + 1;
     size_t size = ((size1 > size2) ? size1 : size2) + 1;

@@ -406,7 +406,7 @@ int CheckAndExecuteTrigger(const TriggerWorkSpace *workSpace, const char *conten
     return 0;
 }
 
-TriggerNode *GetTriggerByName(const riggerWorkSpace *workSpace, const char *triggerName, u_int32_t *triggerIndex)
+TriggerNode *GetTriggerByName(const TriggerWorkSpace *workSpace, const char *triggerName, u_int32_t *triggerIndex)
 {
     PARAM_CHECK(workSpace != NULL && triggerName != NULL && triggerIndex != NULL, return NULL, "Invalid param");
     for (size_t i = 0; i < sizeof(workSpace->header) / sizeof(workSpace->header[0]); i++) {
