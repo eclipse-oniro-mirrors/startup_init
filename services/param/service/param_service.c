@@ -156,7 +156,7 @@ static void OnWriteResponse(uv_write_t *req, int status)
     free(node);
 }
 
-static void SendResponse(const uv_stream_t *handle, RequestType type, int result, const void *content, int size)
+static void SendResponse(const uv_stream_t *handle, RequestType type, int result, const char *content, int size)
 {
     int ret = 0;
     // 申请整块内存，用于回复数据和写请求
