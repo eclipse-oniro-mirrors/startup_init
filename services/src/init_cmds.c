@@ -70,7 +70,6 @@ int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
     }
     char tmpName[MAX_PARAM_NAME_LEN] = {0};
     char tmpValue[MAX_PARAM_VALUE_LEN] = {0};
-    unsigned int tmpLen = 0;
     char *p = NULL;
     char *tmpptr = NULL;
     p = strchr(symValue, '$');
@@ -78,7 +77,7 @@ int GetParamValue(const char *symValue, char *paramValue, unsigned int paramLen)
         INIT_CHECK_RETURN_VALUE(strncpy_s(paramValue, paramLen, symValue, paramLen - 1) == EOK, -1);
         return 0;
     }
-    tmpLen = p - symValue;
+    unsigned int tmpLen = p - symValue;
     if (tmpLen > 0) { // copy '$' front string
         INIT_CHECK_RETURN_VALUE(strncpy_s(paramValue, paramLen, symValue, tmpLen) == EOK, -1);
     }
@@ -150,7 +149,7 @@ static struct CmdArgs *CopyCmd(struct CmdArgs *ctx, const char *cmd, size_t allo
 struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
 {
     INIT_CHECK_RETURN_VALUE(cmdContent != NULL && delim != NULL, NULL);
-    struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
+    struct CmdArgs *ctx = (struct CmdArgs *)calloc(sizeof(struct CmdArgs), 1);
     INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
 
     ctx->argv = (char**)calloc(sizeof(char*), (size_t)(argsCount + 1));
@@ -169,7 +168,7 @@ struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
 
     char *p = tmpCmd;
     char *token = NULL;
-    size_t allocSize = 0;
+    size_t allocSize;
 
     // Skip lead whitespaces
     SKIP_SPACES(p);
@@ -383,11 +382,9 @@ static void DoCopy(const char* cmdContent, int maxArg)
     int srcFd = -1;
     int dstFd = -1;
     int rdLen = 0;
-    int rtLen = 0;
     char buf[MAX_COPY_BUF_SIZE] = {0};
     char *realPath1 = NULL;
     char *realPath2 = NULL;
-    mode_t mode = 0;
     struct stat fileStat = {0};
     struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
     if (ctx == NULL || ctx->argv == NULL || ctx->argv[0] == NULL || ctx->argv[1] == NULL ||
@@ -406,11 +403,11 @@ static void DoCopy(const char* cmdContent, int maxArg)
     srcFd = open(realPath1, O_RDONLY);
     INIT_ERROR_CHECK(srcFd >= 0, goto out, "copy open %s fail %d! ", ctx->argv[0], errno);
     INIT_ERROR_CHECK(stat(ctx->argv[0], &fileStat) == 0, goto out, "stat fail ");
-    mode = fileStat.st_mode;
+    mode_t mode = fileStat.st_mode;
     dstFd = open(realPath2, O_WRONLY | O_TRUNC | O_CREAT, mode);
     INIT_ERROR_CHECK(dstFd >= 0, goto out, "copy open %s fail %d! ", ctx->argv[1], errno);
     while ((rdLen = read(srcFd, buf, sizeof(buf) - 1)) > 0) {
-        rtLen = write(dstFd, buf, rdLen);
+        int rtLen = write(dstFd, buf, rdLen);
         INIT_ERROR_CHECK(rtLen == rdLen, goto out, "write %s file fail %d! ", ctx->argv[1], errno);
     }
     fsync(dstFd);

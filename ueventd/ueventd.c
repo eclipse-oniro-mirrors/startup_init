@@ -269,7 +269,6 @@ int main(int argc, char **argv)
 {
     char *ueventdConfigs[] = {"/etc/ueventd.config", NULL};
     int i = 0;
-    int ret = -1;
     while (ueventdConfigs[i] != NULL) {
         ParseUeventdConfigFile(ueventdConfigs[i++]);
     }
@@ -286,7 +285,7 @@ int main(int argc, char **argv)
 
     while (1) {
         pfd.revents = 0;
-        ret = poll(&pfd, 1, -1);
+        int ret = poll(&pfd, 1, -1);
         if (ret <= 0) {
             continue;
         }

@@ -22,7 +22,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
-#include "list.h"
 #include "ueventd.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_utils.h"

@@ -18,6 +18,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -84,10 +85,15 @@ int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, u_int32_t spaceSize
         return PARAM_CODE_INVALID_PARAM, "Invalid param %s", workSpace->fileName);
     PARAM_LOGD("InitWorkSpace %s ", workSpace->fileName);
     CheckAndCreateDir(workSpace->fileName);
-
-    int fd = open(workSpace->fileName, mode, S_IRWXU | S_IRWXG | S_IRWXO);
+    char realPath[PATH_MAX] = {0};
+    if (realpath(workSpace->fileName, realPath) == NULL) {
+        if (errno != ENOENT) {
+            return PARAM_CODE_INVALID_PARAM;
+        }
+    }
+    int fd = open(realPath, mode, S_IRWXU | S_IRWXG | S_IRWXO);
     PARAM_CHECK(fd >= 0, return PARAM_CODE_INVALID_NAME,
-        "Open file %s fail error %d", workSpace->fileName, errno);
+        "Open file %s fail error %d", realPath, errno);
 
     if (!readOnly) {
         lseek(fd, spaceSize - 1, SEEK_SET);
