@@ -225,9 +225,9 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
             data1.flags = 0;
             if (condition[currIndex] == '|' && ret == 1) {
                 LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE);
-            } else if ((condition[currIndex] == '|' || ret == 1) &&
-                (ComputeSubCondition(calculator, &data2, condition) == 1)) {
-                LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE);
+            } else if (condition[currIndex] == '|' || ret == 1) {
+                PARAM_CHECK(ComputeSubCondition(calculator, &data2, condition) != 1,
+                    LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE));
             }
             ret = CalculatorPush(calculator, (void*)&data1);
             PARAM_CHECK(ret == 0, return -1, "Failed to push data");
