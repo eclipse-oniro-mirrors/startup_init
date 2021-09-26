@@ -19,6 +19,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef OHOS_LITE
+#include "hilog/log.h"
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -43,7 +46,6 @@ typedef enum InitLogLevel {
 #endif
 
 #ifdef OHOS_LITE
-#include "hilog/log.h"
 
 #undef LOG_DOMAIN
 #define LOG_DOMAIN 0xD000719

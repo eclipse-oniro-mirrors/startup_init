@@ -21,6 +21,7 @@
 #ifndef OHOS_LITE
 #include <linux/module.h>
 #endif
+#include <limits.h>
 #include <net/if.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -216,93 +217,93 @@ void FreeCmd(struct CmdArgs *cmd)
     return;
 }
 
-
-#define EXTRACT_ARGS(cmdname, cmdContent, args) \
-    struct CmdArgs *ctx = GetCmd(cmdContent, " ", args); \
-    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != args)) { \
-        INIT_LOGE("Command \"%s\" with invalid arguments: %s", #cmdname, cmdContent); \
-        goto out; \
-    } \
+static void WriteCommon(const char *file, char *buffer, int flags, mode_t mode)
+{
+    if (file == NULL || *file == '\0' || buffer == NULL || *buffer == '\0') {
+        INIT_LOGE("Invalid arugment");
+        return;
+    }
+    char realPath[PATH_MAX] = {0};
+    if (realpath(file, realPath) != NULL) {
+        int fd = open(realPath, flags, mode);
+        if (fd >= 0) {
+            size_t totalSize = strlen(buffer);
+            size_t written = WriteAll(fd, buffer, totalSize);
+            if (written != totalSize) {
+                INIT_LOGE("Write %lu bytes to file failed", totalSize, file);
+            }
+            close(fd);
+        }
+        fd = -1;
+    }
+}
 
 static void DoSetDomainname(const char *cmdContent, int maxArg)
 {
-    EXTRACT_ARGS(domainname, cmdContent, maxArg)
-    int fd = open("/proc/sys/kernel/domainname", O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC,
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
+
+    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != maxArg)) {
+        INIT_LOGE("Command setdomainname  with invalid arugment");
+        FreeCmd(ctx);
+        return;
+    }
+
+    WriteCommon("/proc/sys/kernel/domainname", ctx->argv[0], O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC,
         S_IRUSR | S_IWUSR);
-    if (fd < 0) {
-        INIT_LOGE("DoSetDomainame failed to open \"/proc/sys/kernel/domainname\". err = %d", errno);
-        goto out;
-    }
-
-    size_t size = strlen(ctx->argv[0]);
-    ssize_t n = write(fd, ctx->argv[0], size);
-    if (n != (ssize_t)size) {
-        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/domainname\". err = %d", ctx->argv[0], errno);
-    }
-
-    close(fd);
-out:
     FreeCmd(ctx);
-    fd = -1;
     return;
 }
 
 static void DoSetHostname(const char *cmdContent, int maxArg)
 {
-    EXTRACT_ARGS(hostname, cmdContent, maxArg)
-    int fd = open("/proc/sys/kernel/hostname", O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC,
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
+
+    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != maxArg)) {
+        INIT_LOGE("Command sethostname with invalid arugment");
+        FreeCmd(ctx);
+        return;
+    }
+    WriteCommon("/proc/sys/kernel/hostname", ctx->argv[0], O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC,
         S_IRUSR | S_IWUSR);
-    if (fd < 0) {
-        INIT_LOGE("DoSetHostname failed to open \"/proc/sys/kernel/hostname\". err = %d", errno);
-        goto out;
-    }
-
-    size_t size = strlen(ctx->argv[0]);
-    ssize_t n = write(fd, ctx->argv[0], size);
-    if (n != (ssize_t)size) {
-        INIT_LOGE("DoSetHostname failed to write %s to \"/proc/sys/kernel/hostname\". err = %d", ctx->argv[0], errno);
-    }
-
-    close(fd);
-out:
     FreeCmd(ctx);
-    fd = -1;
     return;
 }
 
 #ifndef OHOS_LITE
 static void DoIfup(const char *cmdContent, int maxArg)
 {
-    EXTRACT_ARGS(ifup, cmdContent, maxArg)
+    struct CmdArgs *ctx = GetCmd(cmdContent, " ", maxArg);
+    if ((ctx == NULL) || (ctx->argv == NULL) || (ctx->argc != maxArg)) {
+        INIT_LOGE("Command ifup with invalid arguments");
+        FreeCmd(ctx);
+        return;
+    }
+
     struct ifreq interface;
     if (strncpy_s(interface.ifr_name, IFNAMSIZ - 1, ctx->argv[0], strlen(ctx->argv[0])) != EOK) {
-        INIT_LOGE("DoIfup failed to copy interface name");
-        goto out;
+        INIT_LOGE("Failed to copy interface name");
+        FreeCmd(ctx);
+        return;
     }
 
-    INIT_LOGD("interface name: %s", interface.ifr_name);
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-        INIT_LOGE("DoIfup failed to create socket, err = %d", errno);
-        goto out;
-    }
-
-    if (ioctl(fd, SIOCGIFFLAGS, &interface) < 0) {
-        INIT_LOGE("DoIfup failed to do ioctl with command \"SIOCGIFFLAGS\", err = %d", errno);
+    if (fd >= 0) {
+        do {
+            if (ioctl(fd, SIOCGIFFLAGS, &interface) < 0) {
+                INIT_LOGE("Failed to do ioctl with command \"SIOCGIFFLAGS\", err = %d", errno);
+                break;
+            }
+            interface.ifr_flags |= IFF_UP;
+            if (ioctl(fd, SIOCSIFFLAGS, &interface) < 0) {
+                INIT_LOGE("Failed to do ioctl with command \"SIOCSIFFLAGS\", err = %d", errno);
+                break;
+            }
+        } while (0);
         close(fd);
         fd = -1;
-        goto out;
-    }
-    interface.ifr_flags |= IFF_UP;
-
-    if (ioctl(fd, SIOCSIFFLAGS, &interface) < 0) {
-        INIT_LOGE("DoIfup failed to do ioctl with command \"SIOCSIFFLAGS\", err = %d", errno);
     }
 
-    close(fd);
-out:
     FreeCmd(ctx);
-    fd = -1;
     return;
 }
 #endif
