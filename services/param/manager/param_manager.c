@@ -325,12 +325,12 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
             break;
         }
     }
-    int n = snprintf_s(legacyName, size, size - 1, "%s$%s", name, value);
-    PARAM_CHECK(n > 0, free(legacyName);
+    int ret = snprintf_s(legacyName, size, size - 1, "%s$%s", name, value);
+    PARAM_CHECK(ret > 0, free(legacyName);
         return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
 
     TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, name, strlen(name), 1);
-    int ret = CheckMacPerms(workSpace, srcLabel, name, (node == NULL) ? 0 : node->labelIndex);
+    ret = CheckMacPerms(workSpace, srcLabel, name, (node == NULL) ? 0 : node->labelIndex);
     free(legacyName);
     return ret;
 }

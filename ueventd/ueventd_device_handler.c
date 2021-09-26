@@ -76,8 +76,11 @@ static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid
 static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode, char **symLinks, bool isBlock)
 {
     int rc = -1;
-    int major = uevent->major;
-    int minor = uevent->minor;
+    if (uevent->major < 0 || uevent->minor < 0) {
+        return rc;
+    }
+    unsigned int major = uevent->major;
+    unsigned int minor = uevent->minor;
     uid_t uid = uevent->ug.uid;
     gid_t gid = uevent->ug.gid;
     mode_t mode = DEVMODE;
