@@ -191,11 +191,9 @@ static void OnReceiveRequest(uv_stream_t *handle, ssize_t nread, uv_buf_t *buf)
         }
         return;
     }
-    int freeHandle = 1;
     RequestMsg *msg = (RequestMsg *)buf->base;
     switch (msg->type) {
         case SET_PARAM: {
-            freeHandle = 0;
             int ret = ProcessParamSet(msg);
             SendResponse(handle, SET_PARAM, ret, NULL, 0);
             break;

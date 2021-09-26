@@ -19,6 +19,7 @@
 
 #define HELP_PARAM "--help"
 #define BUFFER_SIZE 256
+#define PARAM_GET_ARG_NUM 2
 
 static void ProcessParam(ParamHandle handle, void* cookie)
 {
@@ -39,11 +40,11 @@ int main(int argc, char* argv[])
         SystemTraversalParameter(ProcessParam, (void*)value);
         return 0;
     }
-    if (argc == 2 && argv[1] != NULL && strncmp(argv[1], HELP_PARAM, strlen(HELP_PARAM)) == 0) { // 显示帮助
+    if (argc == PARAM_GET_ARG_NUM && argv[1] != NULL && strncmp(argv[1], HELP_PARAM, strlen(HELP_PARAM)) == 0) { // 显示帮助
         printf("usage: getparam NAME VALUE\n");
         return 0;
     }
-    if (argc != 2) {
+    if (argc != PARAM_GET_ARG_NUM) {
         printf("usage: getparam NAME VALUE\n");
         return 0;
     }
@@ -55,5 +56,4 @@ int main(int argc, char* argv[])
     } else {
         printf("getparam %s %s fail\n", argv[1], value);
     }
-
 }
