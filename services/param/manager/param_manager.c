@@ -313,7 +313,8 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
             // actions are based on the service, so we must create a fake name of ctl.<service> to
             // check permissions.
             int len = snprintf_s(legacyName, size, strlen("ctl.") + strlen(value) + 1, "ctl.%s", value);
-            PARAM_CHECK(len > 0, free(legacyName); return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
+            PARAM_CHECK(len > 0, free(legacyName);
+                return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
             legacyName[n] = '\0';
 
             TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, legacyName, strlen(legacyName), 1);
@@ -325,7 +326,8 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
         }
     }
     int n = snprintf_s(legacyName, size, size - 1, "%s$%s", name, value);
-    PARAM_CHECK(n > 0, free(legacyName); return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
+    PARAM_CHECK(n > 0, free(legacyName);
+        return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
 
     TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, name, strlen(name), 1);
     int ret = CheckMacPerms(workSpace, srcLabel, name, (node == NULL) ? 0 : node->labelIndex);
