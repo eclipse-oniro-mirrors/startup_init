@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
         SystemTraversalParameter(ProcessParam, (void*)value);
         return 0;
     }
-    if (argc == PARAM_GET_ARG_NUM && argv[1] != NULL && strncmp(argv[1], HELP_PARAM, strlen(HELP_PARAM)) == 0) { // 显示帮助
+    if (argc == PARAM_GET_ARG_NUM && argv[1] != NULL && strncmp(argv[1], HELP_PARAM, strlen(HELP_PARAM)) == 0) {
         printf("usage: getparam NAME VALUE\n");
         return 0;
     }
