@@ -21,7 +21,6 @@
 #include <stdlib.h>
 
 #include "cJSON.h"
-#include "init_log.h"
 #include "param_manager.h"
 #include "trigger_checker.h"
 #include "securec.h"

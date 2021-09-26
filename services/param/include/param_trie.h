@@ -21,7 +21,6 @@
 #include <string.h>
 #include <sys/syscall.h>
 
-#include "init_log.h"
 #include "sys_param.h"
 #include "securec.h"
 
