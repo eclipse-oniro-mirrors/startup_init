@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "init_utils.h"
+
 #include <ctype.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -31,7 +32,6 @@
 #include <unistd.h>
 
 #include "init_log.h"
-#include "init_utils.h"
 #include "securec.h"
 
 #define WAIT_MAX_COUNT 10

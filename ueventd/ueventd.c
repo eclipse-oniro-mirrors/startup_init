@@ -228,31 +228,33 @@ static void DoTrigger(const char *ueventPath, int sockFd)
 static void Trigger(const char *path, int sockFd)
 {
     DIR *dir = opendir(path);
-    if (dir != NULL) {
-        struct dirent *dirent = NULL;
-        while ((dirent = readdir(dir)) != NULL) {
-            if (dirent->d_name[0] == '.') {
+    if (dir == NULL) {
+        return;
+    }
+    struct dirent *dirent = NULL;
+    while ((dirent = readdir(dir)) != NULL) {
+        if (dirent->d_name[0] == '.') {
+            continue;
+        }
+        if (dirent->d_type == DT_DIR) {
+            char pathBuffer[PATH_MAX];
+            if (snprintf_s(pathBuffer, PATH_MAX, PATH_MAX - 1, "%s/%s", path, dirent->d_name) == -1) {
                 continue;
             }
-            if (dirent->d_type == DT_DIR) {
-                char pathBuffer[PATH_MAX];
-                if (snprintf_s(pathBuffer, PATH_MAX, PATH_MAX - 1, "%s/%s", path, dirent->d_name) == -1) {
-                    continue;
-                }
-                Trigger(pathBuffer, sockFd);
-            } else {
-                if (!strcmp(dirent->d_name, "uevent")) {
-                    char ueventBuffer[PATH_MAX];
-                    if (snprintf_s(ueventBuffer, PATH_MAX, PATH_MAX - 1, "%s/%s", path, "uevent") == -1) {
-                        INIT_LOGW("Cannnot build uevent path under %s", path);
-                        continue;
-                    }
-                    DoTrigger(ueventBuffer, sockFd);
-                }
+            Trigger(pathBuffer, sockFd);
+        } else {
+            if (strcmp(dirent->d_name, "uevent") != 0) {
+                continue;
             }
+            char ueventBuffer[PATH_MAX];
+            if (snprintf_s(ueventBuffer, PATH_MAX, PATH_MAX - 1, "%s/%s", path, "uevent") == -1) {
+                INIT_LOGW("Cannnot build uevent path under %s", path);
+                continue;
+            }
+            DoTrigger(ueventBuffer, sockFd);
         }
-        closedir(dir);
     }
+    closedir(dir);
 }
 
 static void RetriggerUevent(int sockFd)

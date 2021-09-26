@@ -15,6 +15,9 @@
 
 #ifndef INIT_UTILS_H
 #define INIT_UTILS_H
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -220,18 +220,20 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
         }
 
         char *bus = realpath(subsystem, NULL);
-        if (bus != NULL) {
-            if (STRINGEQUAL(bus, "/sys/bus/platform")) {
-                INIT_LOGD("Find a platform device: %s", parent);
-                parent = FindPlatformDeviceName(parent);
-                if (parent != NULL) {
-                    BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName);
-                }
-                linkNum++;
-            }
-            free(bus);
-            bus = NULL;
+        if (bus == NULL) {
+            parent = dirname(parent);
+            continue;
         }
+        if (STRINGEQUAL(bus, "/sys/bus/platform")) {
+            INIT_LOGD("Find a platform device: %s", parent);
+            parent = FindPlatformDeviceName(parent);
+            if (parent != NULL) {
+                BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName);
+            }
+            linkNum++;
+        }
+        free(bus);
+        bus = NULL;
         parent = dirname(parent);
     }
 
