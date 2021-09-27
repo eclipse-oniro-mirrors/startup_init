@@ -22,7 +22,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
-#include "list.h"
 #include "ueventd.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_utils.h"
@@ -77,8 +76,11 @@ static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid
 static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode, char **symLinks, bool isBlock)
 {
     int rc = -1;
-    int major = uevent->major;
-    int minor = uevent->minor;
+    if (uevent->major < 0 || uevent->minor < 0) {
+        return rc;
+    }
+    unsigned int major = uevent->major;
+    unsigned int minor = uevent->minor;
     uid_t uid = uevent->ug.uid;
     gid_t gid = uevent->ug.gid;
     mode_t mode = DEVMODE;
@@ -135,7 +137,7 @@ static int RemoveDeviceNode(const char *deviceNode, char **symLinks)
     }
     if (symLinks != NULL) {
         for (int i = 0; symLinks[i] != NULL; i++) {
-            char realPath[DEVICE_FILE_SIZE] = {};
+            char realPath[DEVICE_FILE_SIZE] = {0};
             const char *linkName = symLinks[i];
             ssize_t ret = readlink(linkName, realPath, DEVICE_FILE_SIZE - 1);
             if (ret < 0) {
@@ -221,18 +223,20 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
         }
 
         char *bus = realpath(subsystem, NULL);
-        if (bus != NULL) {
-            if (STRINGEQUAL(bus, "/sys/bus/platform")) {
-                INIT_LOGD("Find a platform device: %s", parent);
-                parent = FindPlatformDeviceName(parent);
-                if (parent != NULL) {
-                    BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName);
-                }
-                linkNum++;
-            }
-            free(bus);
-            bus = NULL;
+        if (bus == NULL) {
+            parent = dirname(parent);
+            continue;
         }
+        if (STRINGEQUAL(bus, "/sys/bus/platform")) {
+            INIT_LOGD("Find a platform device: %s", parent);
+            parent = FindPlatformDeviceName(parent);
+            if (parent != NULL) {
+                BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName);
+            }
+            linkNum++;
+        }
+        free(bus);
+        bus = NULL;
         parent = dirname(parent);
     }
 

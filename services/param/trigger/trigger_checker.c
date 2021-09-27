@@ -128,7 +128,6 @@ static int PrefixAdd(char *prefix, u_int32_t *prefixIndex, u_int32_t prefixLen, 
 
 static int HandleOperationOr(LogicCalculator *calculator, char *prefix, u_int32_t *prefixIndex, u_int32_t prefixLen)
 {
-    int ret = 0;
     char e;
     prefix[(*prefixIndex)++] = ' ';
     if (CalculatorLength(calculator) == 0) {
@@ -139,7 +138,7 @@ static int HandleOperationOr(LogicCalculator *calculator, char *prefix, u_int32_
             if (e == '(') {
                 CalculatorPushChar(calculator, e);
             } else {
-                ret = PrefixAdd(prefix, prefixIndex, prefixLen, e);
+                int ret = PrefixAdd(prefix, prefixIndex, prefixLen, e);
                 PARAM_CHECK(ret == 0, return -1, "Invalid prefix");
             }
         } while (CalculatorLength(calculator) > 0 && e != '(');
@@ -227,9 +226,8 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
             if (condition[currIndex] == '|' && ret == 1) {
                 LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE);
             } else if (condition[currIndex] == '|' || ret == 1) {
-                if (ComputeSubCondition(calculator, &data2, condition) == 1) {
-                    LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE);
-                }
+                PARAM_CHECK(ComputeSubCondition(calculator, &data2, condition) != 1,
+                    LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE));
             }
             ret = CalculatorPush(calculator, (void*)&data1);
             PARAM_CHECK(ret == 0, return -1, "Failed to push data");

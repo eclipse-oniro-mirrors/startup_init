@@ -84,7 +84,6 @@ int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, u_int32_t spaceSize
         return PARAM_CODE_INVALID_PARAM, "Invalid param %s", workSpace->fileName);
     PARAM_LOGD("InitWorkSpace %s ", workSpace->fileName);
     CheckAndCreateDir(workSpace->fileName);
-
     int fd = open(workSpace->fileName, mode, S_IRWXU | S_IRWXG | S_IRWXO);
     PARAM_CHECK(fd >= 0, return PARAM_CODE_INVALID_NAME,
         "Open file %s fail error %d", workSpace->fileName, errno);

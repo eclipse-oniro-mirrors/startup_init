@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "init_utils.h"
+
 #include <ctype.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -31,7 +32,6 @@
 #include <unistd.h>
 
 #include "init_log.h"
-#include "init_utils.h"
 #include "securec.h"
 
 #define WAIT_MAX_COUNT 10
@@ -159,5 +159,29 @@ void WaitForFile(const char *source, unsigned int maxCount)
         INIT_LOGE("wait for file:%s failed after %f.", source, maxCount * CONVERT_MICROSEC_TO_SEC(waitTime));
     }
     return;
+}
+
+size_t WriteAll(int fd, char *buffer, size_t size)
+{
+    if (fd < 0 || buffer == NULL || *buffer == '\0') {
+        return 0;
+    }
+
+    char *p = buffer;
+    size_t left = size;
+    ssize_t written = -1;
+
+    while (left > 0) {
+        do {
+            written = write(fd, p, left);
+        } while (written < 0 && errno == EINTR);
+        if (written < 0) {
+            INIT_LOGE("Failed to write %lu bytes, err = %d", left, errno);
+            break;
+        }
+        p += written;
+        left -= written;
+    }
+    return size - left;
 }
 

@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
         printf("usage: reboot shutdown\n       reboot updater\n       reboot updater[:options]\n       reboot\n");
         return 0;
     }
-    int ret = 0;
+    int ret;
     if (argc == REBOOT_CMD_NUMBER) {
         ret = DoReboot(argv[1]);
     } else {

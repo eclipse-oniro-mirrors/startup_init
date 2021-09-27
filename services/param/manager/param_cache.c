@@ -41,7 +41,8 @@ static int InitNormalMemory(WorkSpace *workSpace, u_int32_t spaceSize)
         return 0;
     }
 
-    void *areaAddr = (void *)mmap(NULL, spaceSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_POPULATE | MAP_ANON, -1, 0);
+    void *areaAddr = (void *)mmap(NULL,
+        spaceSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_POPULATE | MAP_ANON, -1, 0);
     PARAM_CHECK(areaAddr != MAP_FAILED, return -1, "Failed to map memory error %s", strerror(errno));
     workSpace->area = (WorkArea*)areaAddr;
     atomic_init(&workSpace->area->serial, 0);
@@ -98,7 +99,7 @@ static int AddParamNode(ParamCache *cache, ParamWorkSpace *workSpace, const char
 
 static int CheckCacheNode(ParamWorkSpace *workSpace, ParamCacheNode *cacheNode)
 {
-  return cacheNode && ReadParamSerial(workSpace, cacheNode->handle) != cacheNode->serial;
+    return cacheNode && ReadParamSerial(workSpace, cacheNode->handle) != cacheNode->serial;
 }
 
 static void RefreshCacheNode(ParamWorkSpace *workSpace, ParamCacheNode *cacheNode)

@@ -141,7 +141,7 @@ static void OpenConsole()
         ioctl(fd, TIOCSCTTY, 0);
         dup2(fd, 0);
         dup2(fd, 1);
-        dup2(fd, 2);
+        dup2(fd, 2); // Redirect fd to 0:stdin, 1:stdout, 2:stderr
         close(fd);
     } else {
         INIT_LOGE("Open /dev/console failed. err = %d", errno);
@@ -219,8 +219,8 @@ int ServiceStart(Service *service)
     service->pid = pid;
 #ifndef OHOS_LITE
     char paramName[PARAM_NAME_LEN_MAX] = {0};
-    INIT_CHECK_ONLY_ELOG(snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s",
-        service->name) >= 0, "snprintf_s paramName error %d ", errno);
+    int ret = snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", service->name);
+    INIT_CHECK_ONLY_ELOG(ret >= 0, "snprintf_s paramName error %d ", errno);
     SystemWriteParam(paramName, "running");
 #endif
     return SERVICE_SUCCESS;

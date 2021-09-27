@@ -66,78 +66,52 @@ static long TimeDiffMs(const struct timespec* tmBefore, const struct timespec* t
 int main(int argc, char **argv)
 {
 #ifndef OHOS_LITE
-    if (setenv("UV_THREADPOOL_SIZE", "1", 1) != 0) {
-        INIT_LOGE("set UV_THREADPOOL_SIZE error : %d.", errno);
-    }
-
+    INIT_CHECK_ONLY_ELOG(setenv("UV_THREADPOOL_SIZE", "1", 1) == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
     CloseStdio();
     OpenLogDevice();
-
 #endif
 #ifdef OHOS_DEBUG
     struct timespec tmEnter;
-    if (clock_gettime(CLOCK_REALTIME, &tmEnter) != 0) {
-        INIT_LOGE("main, enter, get time failed! err %d.\n", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(clock_gettime(CLOCK_REALTIME, &tmEnter) == 0,
+        "main, enter, get time failed! err %d.\n", errno);
 #endif // OHOS_DEBUG
-
     if (getpid() != INIT_PROCESS_PID) {
         INIT_LOGE("main, current process id is %d not %d, failed!", getpid(), INIT_PROCESS_PID);
         return 0;
     }
-
-    // 1. print system info
     PrintSysInfo();
-
 #ifndef OHOS_LITE
-    // 2. Mount basic filesystem and create common device node.
     MountBasicFs();
     CreateDeviceNode();
     EnableDevKmsg();
     MakeSocketDir("/dev/unix/socket/", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 #endif
-
-    // 3. signal register
     SignalInitModule();
-
 #ifdef OHOS_DEBUG
     struct timespec tmSysInfo;
-    if (clock_gettime(CLOCK_REALTIME, &tmSysInfo) != 0) {
-        INIT_LOGE("main, after sysinfo, get time failed! err %d.", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(clock_gettime(CLOCK_REALTIME, &tmSysInfo) == 0,
+        "main, after sysinfo, get time failed! err %d.", errno);
 #endif // OHOS_DEBUG
-
-    // 4. execute rcs
     ExecuteRcs();
-
 #ifdef OHOS_DEBUG
     struct timespec tmRcs;
-    if (clock_gettime(CLOCK_REALTIME, &tmRcs) != 0) {
-        INIT_LOGE("main, after rcs, get time failed! err %d.", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(clock_gettime(CLOCK_REALTIME, &tmRcs) == 0,
+        "main, after rcs, get time failed! err %d.", errno);
 #endif // OHOS_DEBUG
-    // 5. read configuration file and do jobs
     InitReadCfg();
 #ifdef OHOS_DEBUG
     struct timespec tmCfg;
-    if (clock_gettime(CLOCK_REALTIME, &tmCfg) != 0) {
-        INIT_LOGE("main, get time failed! err %d.", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(clock_gettime(CLOCK_REALTIME, &tmCfg) == 0, "main, get time failed! err %d.", errno);
 #endif // OHOS_DEBUG
-
-    // 6. keep process alive
 #ifdef OHOS_DEBUG
     INIT_LOGI("main, time used: sigInfo %ld ms, rcs %ld ms, cfg %ld ms.", \
         TimeDiffMs(&tmEnter, &tmSysInfo), TimeDiffMs(&tmSysInfo, &tmRcs), TimeDiffMs(&tmRcs, &tmCfg));
 #endif
-
     INIT_LOGI("main, entering wait.");
 #ifndef OHOS_LITE
     StartParamService();
 #endif
     while (1) {
-        // pause only returns when a signal was caught and the signal-catching function returned.
-        // pause only returns -1, no need to process the return value.
         (void)pause();
     }
     return 0;

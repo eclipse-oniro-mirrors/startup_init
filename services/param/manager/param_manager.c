@@ -291,7 +291,6 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
 {
     PARAM_CHECK(workSpace != NULL && srcLabel != NULL && name != NULL && value != NULL,
         return PARAM_CODE_INVALID_PARAM, "Invalid param");
-    int ret = 0;
     int n = 0;
     const char *ctrlName[] = {
         "ctl.start",  "ctl.stop", "ctl.restart"
@@ -313,21 +312,22 @@ int CheckControlParamPerms(ParamWorkSpace *workSpace,
             // their value is the name of the service to apply that action to.  Permissions for these
             // actions are based on the service, so we must create a fake name of ctl.<service> to
             // check permissions.
-            n = snprintf_s(legacyName, size, strlen("ctl.") + strlen(value) + 1, "ctl.%s", value);
-            PARAM_CHECK(n > 0, free(legacyName); return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
+            int len = snprintf_s(legacyName, size, strlen("ctl.") + strlen(value) + 1, "ctl.%s", value);
+            PARAM_CHECK(len > 0, free(legacyName);
+                return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
             legacyName[n] = '\0';
 
             TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, legacyName, strlen(legacyName), 1);
-            ret = CheckMacPerms(workSpace, srcLabel, legacyName, (node == NULL) ? 0 : node->labelIndex);
-            if (ret == 0) {
+            if (CheckMacPerms(workSpace, srcLabel, legacyName, (node == NULL) ? 0 : node->labelIndex) == 0) {
                 free(legacyName);
                 return 0;
             }
             break;
         }
     }
-    n = snprintf_s(legacyName, size, size - 1, "%s$%s", name, value);
-    PARAM_CHECK(n > 0, free(legacyName); return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
+    int ret = snprintf_s(legacyName, size, size - 1, "%s$%s", name, value);
+    PARAM_CHECK(ret > 0, free(legacyName);
+        return PARAM_CODE_INVALID_PARAM, "Failed to snprintf value");
 
     TrieDataNode *node = FindTrieDataNode(&workSpace->paramSpace, name, strlen(name), 1);
     ret = CheckMacPerms(workSpace, srcLabel, name, (node == NULL) ? 0 : node->labelIndex);
@@ -396,7 +396,7 @@ int CheckMacPerms(ParamWorkSpace *workSpace,
     auditData.name = name;
     auditData.cr = &srcLabel->cred;
 
-    int ret = 0;
+    int ret;
     TrieNode *node = (TrieNode *)GetTrieNode(&workSpace->paramLabelSpace, &labelIndex);
     if (node != 0) { // 已经存在label
         ret = selinux_check_access(srcLabel, node->key, "param_service", "set", &auditData);
@@ -438,7 +438,7 @@ int CanReadParam(ParamWorkSpace *workSpace, u_int32_t labelIndex, const char *na
     };
     auditData.cr = &cr;
 
-    int ret = 0;
+    int ret;
     TrieNode *node = (TrieNode *)GetTrieNode(&workSpace->paramLabelSpace, &labelIndex);
     if (node != 0) { // 已经存在label
         ret = selinux_check_access(&workSpace->context, node->key, "param_service", "read", &auditData);

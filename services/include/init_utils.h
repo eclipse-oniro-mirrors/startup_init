@@ -15,6 +15,9 @@
 
 #ifndef INIT_UTILS_H
 #define INIT_UTILS_H
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -32,6 +35,7 @@ void CheckAndCreateDir(const char *fileName);
 char* ReadFileToBuf(const char *configFile);
 int SplitString(char *srcPtr, char **dstPtr, int maxNum);
 void WaitForFile(const char *source, unsigned int maxCount);
+size_t WriteAll(int fd, char *buffer, size_t size);
 
 #ifdef __cplusplus
 #if __cplusplus
