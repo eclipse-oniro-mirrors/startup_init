@@ -45,7 +45,7 @@ int DoReboot(const char *option)
         }
         return 0;
     }
-    int length = strlen(option);
+    size_t length = strlen(option);
     if (length > MAX_REBOOT_OPTION_SIZE) {
         INIT_LOGE("Reboot option \" %s \" is too large, overflow", option);
         return -1;

@@ -230,7 +230,7 @@ static void WriteCommon(const char *file, char *buffer, int flags, mode_t mode)
             size_t totalSize = strlen(buffer);
             size_t written = WriteAll(fd, buffer, totalSize);
             if (written != totalSize) {
-                INIT_LOGE("Write %lu bytes to file failed", totalSize, file);
+                INIT_LOGE("Write %lu bytes to file %s failed", totalSize, file);
             }
             close(fd);
         }
@@ -389,8 +389,6 @@ static void DoCopyInernal(const char *source, const char *target)
     int srcFd = open(source, O_RDONLY | O_CLOEXEC, S_IRUSR | S_IWUSR);
     if (srcFd < 0) {
         INIT_LOGE("Open \" %s \" failed, err = %d", source, errno);
-        close(srcFd);
-        srcFd = -1;
         return;
     }
 
@@ -1155,6 +1153,7 @@ static void DoMakeDevice(const char *cmdContent, int maxArg)
     unsigned int major = strtoul(ctx->argv[0], NULL, DECIMAL_BASE);
     unsigned int minor = strtoul(ctx->argv[1], NULL, DECIMAL_BASE);
     if (major == 0 || minor == 0) {
+        FreeCmd(ctx);
         return;
     }
     dev_t deviceId = makedev(major, minor);

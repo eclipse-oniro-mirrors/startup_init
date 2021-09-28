@@ -67,7 +67,9 @@ int main(int argc, char** argv)
         ServiceControlUsage();
         return -1;
     }
-
+    if (argv[0] == NULL) {
+        return -1;
+    }
     char serviceCtl[SERVICE_CONTROL_MAX_SIZE];
     if (strcmp(argv[0], "start_service") == 0) {
         if (strncpy_s(serviceCtl, sizeof(serviceCtl), "ohos.ctl.start", sizeof(serviceCtl) - 1) != EOK) {
