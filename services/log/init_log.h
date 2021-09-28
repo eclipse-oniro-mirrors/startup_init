@@ -19,6 +19,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef OHOS_LITE
+#include "hilog/log.h"
+#else
+#ifdef INIT_AGENT
+#include "hilog/log.h"
+#endif
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -43,7 +50,6 @@ typedef enum InitLogLevel {
 #endif
 
 #ifdef OHOS_LITE
-#include "hilog/log.h"
 
 #undef LOG_DOMAIN
 #define LOG_DOMAIN 0xD000719
@@ -74,7 +80,7 @@ void SetHiLogLevel(LogLevel logLevel);
 #define STARTUP_LOGI(LABEL, fmt, ...) InitLog(INIT_INFO, (FILE_NAME), (__LINE__), "<6>", fmt "\n", ##__VA_ARGS__)
 #define STARTUP_LOGE(LABEL, fmt, ...) InitLog(INIT_ERROR, (FILE_NAME), (__LINE__), "<3>", fmt "\n", ##__VA_ARGS__)
 #else
-#include "hilog/log.h"
+
 #define PARAM_AGENT_LOG_PATH "/data/init_agent/init_agent.log"
 
 #define STARTUP_LOGD(LABEL, fmt, ...) \

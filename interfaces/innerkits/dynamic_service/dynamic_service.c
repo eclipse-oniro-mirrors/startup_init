@@ -15,7 +15,6 @@
 
 #include "dynamic_service.h"
 
-#include <stdio.h>
 #include "hilog/log.h"
 #include "parameter.h"
 

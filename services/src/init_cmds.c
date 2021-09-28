@@ -403,9 +403,8 @@ static void DoCopyInernal(const char *source, const char *target)
     if (dstFd >= 0) {
         char buf[MAX_COPY_BUF_SIZE] = {0};
         ssize_t readn = -1;
-        ssize_t writen = -1;
         while ((readn = read(srcFd, buf, MAX_COPY_BUF_SIZE - 1)) > 0) {
-            writen = WriteAll(dstFd, buf, (size_t)readn);
+            ssize_t writen = WriteAll(dstFd, buf, (size_t)readn);
             if (writen != readn)  {
                 isSuccess = false;
                 break;
@@ -499,7 +498,7 @@ static void DoMkDir(const char *cmdContent, int maxArg)
         FreeCmd(ctx);
         return;
     }
-    int rc = -1;
+    int rc;
     do {
         int index = 0;
         rc = mkdir(ctx->argv[index], DEFAULT_DIR_MODE);
@@ -519,12 +518,13 @@ static void DoMkDir(const char *cmdContent, int maxArg)
                 break;
             }
             index = index + 1;
-            if (ctx->argv[index] != NULL) {
-                if (ctx->argv[index + 1] != NULL) {
-                    rc = Chown(ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
-                } else {
-                    rc = -1;
-                }
+            if (ctx->argv[index] == NULL) {
+                break;
+            }
+            if (ctx->argv[index + 1] != NULL) {
+                rc = Chown(ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
+            } else {
+                rc = -1;
             }
         }
     } while (0);

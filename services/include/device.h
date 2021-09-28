@@ -16,12 +16,13 @@
 #ifndef BASE_STARTUP_INITLITE_DEVICE_H
 #define BASE_STARTUP_INITLITE_DEVICE_H
 
+#include <sys/types.h>
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
-#include <sys/types.h>
 
 #define DEV_KMSG_MINOR 11
 #define DEV_NULL_MINOR 3

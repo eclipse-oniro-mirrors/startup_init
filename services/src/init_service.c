@@ -220,8 +220,8 @@ int ServiceStart(Service *service)
     service->pid = pid;
 #ifndef OHOS_LITE
     char paramName[PARAM_NAME_LEN_MAX] = {0};
-    INIT_CHECK_ONLY_ELOG(snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s",
-        service->name) >= 0, "snprintf_s paramName error %d ", errno);
+    int ret = snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", service->name);
+    INIT_CHECK_ONLY_ELOG(ret >= 0, "snprintf_s paramName error %d ", errno);
     SystemWriteParam(paramName, "running");
 #endif
     return SERVICE_SUCCESS;

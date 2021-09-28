@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
         printf("%s", USAGE_INFO);
         return 0;
     }
-    int ret = 0;
+    int ret;
     if (argc == REBOOT_CMD_NUMBER) {
         ret = DoReboot(argv[1]);
     } else {

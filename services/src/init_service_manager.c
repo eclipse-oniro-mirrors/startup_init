@@ -768,7 +768,9 @@ void ParseAllServices(const cJSON* fileRoot)
                 tmp[i].socketCfg = NULL;
             }
         }
-        (void)GetServiceOnRestart(curItem, &tmp[i]);
+        if (GetServiceOnRestart(curItem, &tmp[i]) == SERVICE_FAILURE) {
+            INIT_LOGE("Failed Get Service OnRestart service");
+        }
     }
     // Increase service counter.
     RegisterServices(retServices, servArrSize);
