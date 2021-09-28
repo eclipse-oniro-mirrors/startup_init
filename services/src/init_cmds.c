@@ -149,11 +149,11 @@ static struct CmdArgs *CopyCmd(struct CmdArgs *ctx, const char *cmd, size_t allo
 
 struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
 {
-    INIT_CHECK_RETURN_VALUE(cmdContent != NULL, NULL);
-    struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
+    INIT_CHECK_RETURN_VALUE(cmdContent != NULL && delim != NULL, NULL);
+    struct CmdArgs *ctx = (struct CmdArgs *)calloc(sizeof(struct CmdArgs), 1);
     INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
 
-    ctx->argv = (char**)malloc(sizeof(char*) * (size_t)(argsCount + 1));
+    ctx->argv = (char**)calloc(sizeof(char*), (size_t)(argsCount + 1));
     INIT_CHECK(ctx->argv != NULL, FreeCmd(ctx);
         return NULL);
 
@@ -214,6 +214,7 @@ void FreeCmd(struct CmdArgs *cmd)
     }
     INIT_CHECK(cmd->argv == NULL, free(cmd->argv));
     free(cmd);
+    cmd = NULL;
     return;
 }
 

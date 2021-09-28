@@ -151,13 +151,13 @@ void WaitForFile(const char *source, unsigned int maxCount)
     return;
 }
 
-size_t WriteAll(int fd, char *buffer, size_t size)
+size_t WriteAll(int fd, const char *buffer, size_t size)
 {
     if (fd < 0 || buffer == NULL || *buffer == '\0') {
         return 0;
     }
 
-    char *p = buffer;
+    const char *p = buffer;
     size_t left = size;
     ssize_t written = -1;
 

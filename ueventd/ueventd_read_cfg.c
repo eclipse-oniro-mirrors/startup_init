@@ -89,7 +89,7 @@ static char **SplitUeventConfig(char *buffer, const char *del, int *returnCount,
 {
     char *rest = NULL;
     int count = 0;
-    int average = 2;
+    const int average = 2;
     char *p = strtok_r(buffer, del, &rest);
     int maxItemCountTmp = maxItemCount;
     if (maxItemCountTmp < 0) {
@@ -211,7 +211,7 @@ static int ParseSysfsConfig(char *p)
     return 0;
 }
 
-static int ParseFirmwareConfig(char *p)
+static int ParseFirmwareConfig(const char *p)
 {
     INIT_LOGD("Parse firmware config info: %s", p);
     if (INVALIDSTRING(p)) {
@@ -385,11 +385,13 @@ void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_
     if (!ListEmpty(g_devices)) {
         ForEachListEntry(&g_devices, node) {
             struct DeviceUdevConf *config = ListEntry(node, struct DeviceUdevConf, list);
-            if (STRINGEQUAL(config->name, devNode)) {
-                *uid = config->uid;
-                *gid = config->gid;
-                *mode = config->mode;
-                break;
+            if (config != NULL) {
+                if (STRINGEQUAL(config->name, devNode)) {
+                    *uid = config->uid;
+                    *gid = config->gid;
+                    *mode = config->mode;
+                    break;
+                }
             }
         }
     }
@@ -417,9 +419,11 @@ void ChangeSysAttributePermissions(const char *sysPath)
         return;
     }
     char sysAttr[SYSPATH_SIZE] = {};
-    if (snprintf_s(sysAttr, SYSPATH_SIZE, SYSPATH_SIZE - 1, "/sys%s/%s", config->sysPath, config->attr) == -1) {
-        INIT_LOGE("Failed to build sys attribute for sys path %s, attr: %s", config->sysPath, config->attr);
-        return;
+    if (config->sysPath != NULL && config->attr != NULL) {
+        if (snprintf_s(sysAttr, SYSPATH_SIZE, SYSPATH_SIZE - 1, "/sys%s/%s", config->sysPath, config->attr) == -1) {
+            INIT_LOGE("Failed to build sys attribute for sys path %s, attr: %s", config->sysPath, config->attr);
+            return;
+        }
     }
     if (chown(sysAttr, config->uid, config->gid) < 0) {
         INIT_LOGE("chown for file %s failed, err = %d", sysAttr, errno);
