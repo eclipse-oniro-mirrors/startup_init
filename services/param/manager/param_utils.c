@@ -43,7 +43,7 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
     int (*processFile)(const char *fileName, void *context), void *context)
 {
     if (dirPath == NULL || processFile == NULL) {
-        return NULL;
+        return -1;
     }
     DIR *pDir = opendir(dirPath);
     PARAM_CHECK(pDir != NULL, return -1, "Read dir :%s failed.%d", dirPath, errno);

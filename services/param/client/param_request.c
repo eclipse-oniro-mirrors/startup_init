@@ -275,7 +275,7 @@ int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
 }
 
 int SystemTraversalParameter(
-    void (*traversalParameter)(ParamHandle handle, ParamContextPtr cookie), ParamContextPtr cookie)
+    void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie)
 {
     InitParamClient();
     PARAM_CHECK(traversalParameter != NULL, return -1, "The param is null");
