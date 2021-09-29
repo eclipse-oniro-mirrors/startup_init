@@ -187,13 +187,13 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
     // For now, we will not create symbol link for it.
     if (!INVALIDSTRING(partitionName)) {
         if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
-                "/dev/block/platform/%s/by-name/%s", parent, partitionName) == -1) {
+            "/dev/block/platform/%s/by-name/%s", parent, partitionName) == -1) {
             INIT_LOGE("Failed to build link");
         }
     } else if (!INVALIDSTRING(deviceName)) {
         // If a device does not have a partition name, create a symbol link for it separately.
         if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
-                "/dev/block/platform/%s/%s", parent, deviceName) == -1) {
+            "/dev/block/platform/%s/%s", parent, deviceName) == -1) {
             INIT_LOGE("Failed to build link");
         }
     }
@@ -202,7 +202,7 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
 static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
 {
     if (uevent == NULL || uevent->syspath == NULL || uevent->subsystem == NULL ||
-            STRINGEQUAL(uevent->subsystem, "block") == 0) {
+        STRINGEQUAL(uevent->subsystem, "block") == 0) {
         INIT_LOGW("Invalid arguments, Skip to get device symbol links.");
         return NULL;
     }
