@@ -164,23 +164,33 @@ static char *FindPlatformDeviceName(char *path)
     return NULL;
 }
 
-static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent, const char *partitionName)
+static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
+    const char *partitionName, const char *deviceName)
 {
-    if (linkNum > BLOCKDEVICE_LINKS - 1) {
-        INIT_LOGW("Too many links, ignore");
+    if ((linkNum > BLOCKDEVICE_LINKS - 1) || (linkNum < 0)) {
+        INIT_LOGW("Failed set linkNum, links ignore");
+        return;
+    }
+    if (parent == NULL) {
+        return;
+    }
+    links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
+    if (links[linkNum] == NULL) {
+        INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
         return;
     }
 
     // If a block device without partition name.
     // For now, we will not create symbol link for it.
     if (!INVALIDSTRING(partitionName)) {
-        links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
-        if (links[linkNum] == NULL) {
-            INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
-            return;
-        }
         if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
             "/dev/block/platform/%s/by-name/%s", parent, partitionName) == -1) {
+            INIT_LOGE("Failed to build link");
+        }
+    } else if (!INVALIDSTRING(deviceName)) {
+        // If a device does not have a partition name, create a symbol link for it separately.
+        if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
+            "/dev/block/platform/%s/%s", parent, deviceName) == -1) {
             INIT_LOGE("Failed to build link");
         }
     }
@@ -231,7 +241,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
             INIT_LOGD("Find a platform device: %s", parent);
             parent = FindPlatformDeviceName(parent);
             if (parent != NULL) {
-                BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName);
+                BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
             }
             linkNum++;
         }
