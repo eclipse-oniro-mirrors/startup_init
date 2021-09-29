@@ -15,11 +15,8 @@
 
 #include "trigger_manager.h"
 
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -35,10 +32,10 @@ int AddCommand(TriggerNode *trigger, uint32_t cmdKeyIndex, const char *content)
 {
     PARAM_CHECK(trigger != NULL, return -1, "trigger is null");
     uint32_t size = sizeof(CommandNode);
-    size += (content == NULL || strlen(content) == 0) ? 1 : strlen(content) + 1;
+    size += (content == NULL) ? 1 : strlen(content) + 1;
     size = PARAM_ALIGN(size);
 
-    CommandNode *node = (CommandNode *)malloc(size);
+    CommandNode *node = (CommandNode *)calloc(1, size);
     PARAM_CHECK(node != NULL, return -1, "Failed to alloc memory for command");
     node->cmdKeyIndex = cmdKeyIndex;
     node->next = NULL;
@@ -46,13 +43,15 @@ int AddCommand(TriggerNode *trigger, uint32_t cmdKeyIndex, const char *content)
     if (content != NULL && strlen(content) != 0) {
         int ret = memcpy_s(node->content, size, content, strlen(content));
         node->content[strlen(content)] = '\0';
-        PARAM_CHECK(ret == EOK, return 0, "Failed to copy command");
+        PARAM_CHECK(ret == EOK, free(node);
+            return 0, "Failed to copy command");
     }
     // 插入队列
     if (trigger->firstCmd == NULL) {
         trigger->firstCmd = node;
         trigger->lastCmd = node;
     } else {
+        PARAM_CHECK(trigger->lastCmd != NULL, return 0, "Invalid last cmd");
         trigger->lastCmd->next = node;
         trigger->lastCmd = node;
     }
@@ -60,8 +59,9 @@ int AddCommand(TriggerNode *trigger, uint32_t cmdKeyIndex, const char *content)
     return 0;
 }
 
-CommandNode *GetNextCmdNode(TriggerNode *trigger, CommandNode *curr)
+CommandNode *GetNextCmdNode(const TriggerNode *trigger, const CommandNode *curr)
 {
+    PARAM_CHECK(trigger != NULL, return NULL, "trigger is null");
     if (curr == NULL) {
         return trigger->firstCmd;
     }
@@ -79,7 +79,7 @@ TriggerNode *AddTrigger(TriggerHeader *triggerHead, const char *name, const char
         conditionLen = PARAM_ALIGN(strlen(condition) + 1) + CONDITION_EXTEND_LEN;
     }
 
-    TriggerNode *node = (TriggerNode *)malloc(triggerNodeLen + conditionLen + extDataSize);
+    TriggerNode *node = (TriggerNode *)calloc(1, triggerNodeLen + conditionLen + extDataSize);
     PARAM_CHECK(node != NULL, return NULL, "Failed to alloc memory for trigger");
     int ret = memcpy_s(node->name, triggerNodeLen - sizeof(TriggerNode), name, nameLen);
     PARAM_CHECK(ret == EOK, free(node);
@@ -107,6 +107,7 @@ TriggerNode *AddTrigger(TriggerHeader *triggerHead, const char *name, const char
 
 void ClearTrigger(TriggerHeader *head)
 {
+    PARAM_CHECK(head != NULL, return, "head is null");
     ListNode *node = head->triggerList.next;
     while (node != &head->triggerList) {
         ListRemove(node);
@@ -120,7 +121,7 @@ void ClearTrigger(TriggerHeader *head)
 
 void FreeTrigger(TriggerNode *trigger)
 {
-    PARAM_CHECK(trigger != NULL, return, "trigger is null");
+    PARAM_CHECK(trigger != NULL && trigger->triggerHead != NULL, return, "trigger is null");
     PARAM_LOGD("FreeTrigger %s", trigger->name);
     TriggerHeader *triggerHead = trigger->triggerHead;
     CommandNode *cmd = trigger->firstCmd;
@@ -150,8 +151,9 @@ void FreeTrigger(TriggerNode *trigger)
     free(trigger);
 }
 
-static TriggerNode *GetNextTrigger(TriggerHeader *triggerHead, TriggerNode *curr)
+static TriggerNode *GetNextTrigger(const TriggerHeader *triggerHead, const TriggerNode *curr)
 {
+    PARAM_CHECK(triggerHead != NULL, return NULL, "Invalid triggerHead");
     ListNode *node = NULL;
     if (curr != NULL) {
         node = curr->node.next;
@@ -164,12 +166,13 @@ static TriggerNode *GetNextTrigger(TriggerHeader *triggerHead, TriggerNode *curr
     return NULL;
 }
 
-static const char *GetTriggerCondition(TriggerWorkSpace *workSpace, TriggerNode *trigger)
+static const char *GetTriggerCondition(const TriggerWorkSpace *workSpace, const TriggerNode *trigger)
 {
-    return trigger->condition == NULL ? "" : trigger->condition;
+    UNUSED(workSpace);
+    return (trigger == NULL || trigger->condition == NULL) ? "" : trigger->condition;
 }
 
-TriggerNode *GetTriggerByName(TriggerWorkSpace *workSpace, const char *triggerName)
+TriggerNode *GetTriggerByName(const TriggerWorkSpace *workSpace, const char *triggerName)
 {
     PARAM_CHECK(workSpace != NULL && triggerName != NULL, return NULL, "Invalid param");
     for (size_t i = 0; i < sizeof(workSpace->triggerHead) / sizeof(workSpace->triggerHead[0]); i++) {
@@ -184,16 +187,17 @@ TriggerNode *GetTriggerByName(TriggerWorkSpace *workSpace, const char *triggerNa
     return NULL;
 }
 
-int ExecuteQueuePush(TriggerWorkSpace *workSpace, TriggerNode *trigger)
+int ExecuteQueuePush(TriggerWorkSpace *workSpace, const TriggerNode *trigger)
 {
-    PARAM_CHECK(workSpace != NULL, return -1, "Invalid area");
+    PARAM_CHECK(workSpace != NULL, return -1, "Invalid workSpace");
     uint32_t index = workSpace->executeQueue.endIndex++ % workSpace->executeQueue.queueCount;
-    workSpace->executeQueue.executeQueue[index] = trigger;
+    workSpace->executeQueue.executeQueue[index] = (TriggerNode *)trigger;
     return 0;
 }
 
 TriggerNode *ExecuteQueuePop(TriggerWorkSpace *workSpace)
 {
+    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid workSpace");
     TriggerNode *trigger = NULL;
     do {
         if (workSpace->executeQueue.endIndex <= workSpace->executeQueue.startIndex) {
@@ -207,16 +211,15 @@ TriggerNode *ExecuteQueuePop(TriggerWorkSpace *workSpace)
     return trigger;
 }
 
-int ExecuteQueueSize(TriggerWorkSpace *workSpace)
-{
-    PARAM_CHECK(workSpace != NULL, return 0, "Invalid param");
-    return workSpace->executeQueue.endIndex - workSpace->executeQueue.startIndex;
-}
-
 static int CheckBootTriggerMatch(TriggerWorkSpace *workSpace, LogicCalculator *calculator,
     TriggerNode *trigger, const char *content, uint32_t contentSize)
 {
-    if (strncmp(trigger->name, (char *)content, contentSize) == 0) {
+    UNUSED(workSpace);
+    UNUSED(calculator);
+    UNUSED(content);
+    UNUSED(contentSize);
+    PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
+    if (strncmp(trigger->name, content, contentSize) == 0) {
         return 1;
     }
     return 0;
@@ -225,7 +228,12 @@ static int CheckBootTriggerMatch(TriggerWorkSpace *workSpace, LogicCalculator *c
 static int CheckWatcherTriggerMatch(TriggerWorkSpace *workSpace, LogicCalculator *calculator,
     TriggerNode *trigger, const char *content, uint32_t contentSize)
 {
-    if (strncmp(trigger->name, (char *)content, strlen(trigger->name)) == 0) {
+    UNUSED(workSpace);
+    UNUSED(calculator);
+    UNUSED(content);
+    UNUSED(contentSize);
+    PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
+    if (strncmp(trigger->name, content, strlen(trigger->name)) == 0) {
         return 1;
     }
     return 0;
@@ -314,7 +322,7 @@ int CheckTrigger(TriggerWorkSpace *workSpace, int type,
     PARAM_CHECK(workSpace != NULL && content != NULL && triggerExecuter != NULL,
         return -1, "Failed arg for trigger");
     PARAM_LOGD("CheckTrigger type: %d content: %s ", type, content);
-    int ret = 0;
+    int ret;
     LogicCalculator calculator;
     CalculatorInit(&calculator, MAX_CONDITION_NUMBER, sizeof(LogicData), 1);
     calculator.triggerExecuter = triggerExecuter;
@@ -345,11 +353,15 @@ int CheckTrigger(TriggerWorkSpace *workSpace, int type,
     return 0;
 }
 
-int MarkTriggerToParam(TriggerWorkSpace *workSpace, TriggerHeader *triggerHead, const char *name)
+int MarkTriggerToParam(const TriggerWorkSpace *workSpace, const TriggerHeader *triggerHead, const char *name)
 {
     int ret = 0;
     TriggerNode *trigger = GetNextTrigger(triggerHead, NULL);
     while (trigger != NULL) {
+        if (GetTriggerCondition(workSpace, trigger) == NULL) {
+            trigger = GetNextTrigger(triggerHead, trigger);
+            continue;
+        }
         const char *tmp = strstr(GetTriggerCondition(workSpace, trigger), name);
         if (tmp != NULL && strncmp(tmp + strlen(name), "=", 1) == 0) {
             TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_RELATED);
@@ -361,8 +373,9 @@ int MarkTriggerToParam(TriggerWorkSpace *workSpace, TriggerHeader *triggerHead, 
 }
 
 
-ParamWatcher *GetNextParamWatcher(TriggerWorkSpace *workSpace, ParamWatcher *curr)
+ParamWatcher *GetNextParamWatcher(const TriggerWorkSpace *workSpace, const ParamWatcher *curr)
 {
+    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid workSpace");
     ListNode *node = NULL;
     if (curr != NULL) {
         node = curr->node.next;
@@ -400,7 +413,7 @@ TriggerNode *AddWatcherTrigger(ParamWatcher *watcher,
     return trigger;
 }
 
-void DelWatcherTrigger(ParamWatcher *watcher, uint32_t watcherId)
+void DelWatcherTrigger(const ParamWatcher *watcher, uint32_t watcherId)
 {
     PARAM_CHECK(watcher != NULL, return, "Failed to add watcher ");
     TriggerNode *trigger = GetNextTrigger(&watcher->triggerHead, NULL);
@@ -416,7 +429,7 @@ void DelWatcherTrigger(ParamWatcher *watcher, uint32_t watcherId)
     }
 }
 
-void ClearWatcherTrigger(ParamWatcher *watcher)
+void ClearWatcherTrigger(const ParamWatcher *watcher)
 {
     PARAM_CHECK(watcher != NULL, return, "Invalid watcher ");
     TriggerNode *trigger = GetNextTrigger(&watcher->triggerHead, NULL);
@@ -428,42 +441,45 @@ void ClearWatcherTrigger(ParamWatcher *watcher)
     }
 }
 
-#define DUMP_DEBUG PARAM_LOGD
-static void DumpTriggerQueue(TriggerWorkSpace *workSpace, int index)
+static void DumpTriggerQueue(const TriggerWorkSpace *workSpace, int index)
 {
+    PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace ");
     TriggerNode *trigger = GetNextTrigger(&workSpace->triggerHead[index], NULL);
     while (trigger != NULL) {
-        DUMP_DEBUG("trigger 0x%08x", trigger->flags);
-        DUMP_DEBUG("trigger name %s ", trigger->name);
-        DUMP_DEBUG("trigger condition %s ", trigger->condition);
+        printf("trigger 0x%08x \n", trigger->flags);
+        printf("trigger name %s \n", trigger->name);
+        if (trigger->condition != NULL) {
+            printf("trigger condition %s \n",  trigger->condition);
+        }
 
         CommandNode *cmd = GetNextCmdNode(trigger, NULL);
         while (cmd != NULL) {
-            DUMP_DEBUG("\t command name %s", GetCmdKey(cmd->cmdKeyIndex));
-            DUMP_DEBUG("\t command args %s", cmd->content);
+            printf("\t command name %s \n", GetCmdKey(cmd->cmdKeyIndex));
+            printf("\t command args %s \n", cmd->content);
             cmd = GetNextCmdNode(trigger, cmd);
         }
         trigger = GetNextTrigger(&workSpace->triggerHead[index], trigger);
     }
 }
 
-void DumpTrigger(TriggerWorkSpace *workSpace)
+void DumpTrigger(const TriggerWorkSpace *workSpace)
 {
-    DUMP_DEBUG("Ready to dump all trigger memory");
-    DUMP_DEBUG("workspace queue BOOT info:");
+    PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace ");
+    printf("Ready to dump all trigger memory \n");
+    printf("workspace queue BOOT info:\n");
     DumpTriggerQueue(workSpace, TRIGGER_BOOT);
-    DUMP_DEBUG("workspace queue parameter info:");
+    printf("workspace queue parameter info:\n");
     DumpTriggerQueue(workSpace, TRIGGER_PARAM);
-    DUMP_DEBUG("workspace queue other info:");
+    printf("workspace queue other info:\n");
     DumpTriggerQueue(workSpace, TRIGGER_UNKNOW);
 
-    DUMP_DEBUG("workspace queue execute info:");
-    DUMP_DEBUG("queue info count: %u start: %u end: %u",
+    printf("workspace queue execute info:\n");
+    printf("queue info count: %u start: %u end: %u\n",
         workSpace->executeQueue.queueCount, workSpace->executeQueue.startIndex, workSpace->executeQueue.endIndex);
     for (uint32_t index = workSpace->executeQueue.startIndex; index < workSpace->executeQueue.endIndex; index++) {
         TriggerNode *trigger = workSpace->executeQueue.executeQueue[index % workSpace->executeQueue.queueCount];
         if (trigger != 0) {
-            DUMP_DEBUG("queue node trigger name: %s ", trigger->name);
+            printf("queue node trigger name: %s \n", trigger->name);
         }
     }
 }

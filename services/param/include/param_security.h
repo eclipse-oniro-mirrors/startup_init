@@ -77,9 +77,9 @@ typedef struct {
     int (*securityInitLabel)(ParamSecurityLabel **label, int isInit);
     int (*securityGetLabel)(SecurityLabelFunc label, const char *path, void *context);
     int (*securityCheckFilePermission)(const ParamSecurityLabel *label, const char *fileName, int flags);
-    int (*securityCheckParamPermission)(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, int mode);
+    int (*securityCheckParamPermission)(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, uint32_t mode);
     int (*securityEncodeLabel)(const ParamSecurityLabel *srcLabel, char *buffer, uint32_t *bufferSize);
-    int (*securityDecodeLabel)(ParamSecurityLabel **srcLabel, char *buffer, uint32_t bufferSize);
+    int (*securityDecodeLabel)(ParamSecurityLabel **srcLabel, const char *buffer, uint32_t bufferSize);
     int (*securityFreeLabel)(ParamSecurityLabel *srcLabel);
 } ParamSecurityOps;
 

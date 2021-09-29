@@ -15,7 +15,6 @@
 
 #include "param_manager.h"
 #include <ctype.h>
-#include <dlfcn.h>
 
 #define LABEL "Manager"
 #if !defined PARAM_SUPPORT_SELINUX && !defined PARAM_SUPPORT_DAC
@@ -25,9 +24,8 @@ static ParamSecurityLabel g_defaultSecurityLabel;
 static int GetParamSecurityOps(ParamWorkSpace *workSpace, int isInit)
 {
     UNUSED(isInit);
-    int ret = 0;
 #if (defined PARAM_SUPPORT_SELINUX || defined PARAM_SUPPORT_DAC)
-    ret = RegisterSecurityOps(&workSpace->paramSecurityOps, isInit);
+    int ret = RegisterSecurityOps(&workSpace->paramSecurityOps, isInit);
     PARAM_CHECK(workSpace->paramSecurityOps.securityInitLabel != NULL, return -1, "Invalid securityInitLabel");
     ret = workSpace->paramSecurityOps.securityInitLabel(&workSpace->securityLabel, isInit);
     PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Failed to init security");
@@ -35,7 +33,7 @@ static int GetParamSecurityOps(ParamWorkSpace *workSpace, int isInit)
     workSpace->securityLabel = &g_defaultSecurityLabel;
     workSpace->securityLabel->flags |= LABEL_ALL_PERMISSION;
 #endif
-    return ret;
+    return 0;
 }
 
 int InitParamWorkSpace(ParamWorkSpace *workSpace, int onlyRead)
@@ -91,7 +89,7 @@ static uint32_t ReadCommitId(ParamNode *entry)
     return commitId & PARAM_FLAGS_COMMITID;
 }
 
-int ReadParamCommitId(ParamWorkSpace *workSpace, ParamHandle handle, uint32_t *commitId)
+int ReadParamCommitId(const ParamWorkSpace *workSpace, ParamHandle handle, uint32_t *commitId)
 {
     PARAM_CHECK(workSpace != NULL && commitId != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     ParamNode *entry = (ParamNode *)GetTrieNode(&workSpace->paramSpace, handle);
@@ -102,11 +100,11 @@ int ReadParamCommitId(ParamWorkSpace *workSpace, ParamHandle handle, uint32_t *c
     return 0;
 }
 
-int ReadParamWithCheck(ParamWorkSpace *workSpace, const char *name, int op, ParamHandle *handle)
+int ReadParamWithCheck(const ParamWorkSpace *workSpace, const char *name, uint32_t op, ParamHandle *handle)
 {
     PARAM_CHECK(handle != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param handle");
     PARAM_CHECK(workSpace != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param name");
-    *handle = 0;
+    *handle = -1;
     int ret = CheckParamPermission(workSpace, workSpace->securityLabel, name, op);
     PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
 
@@ -118,7 +116,7 @@ int ReadParamWithCheck(ParamWorkSpace *workSpace, const char *name, int op, Para
     return PARAM_CODE_NOT_FOUND;
 }
 
-int ReadParamValue(ParamWorkSpace *workSpace, ParamHandle handle, char *value, uint32_t *length)
+int ReadParamValue(const ParamWorkSpace *workSpace, ParamHandle handle, char *value, uint32_t *length)
 {
     PARAM_CHECK(workSpace != NULL && length != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     ParamNode *entry = (ParamNode *)GetTrieNode(&workSpace->paramSpace, handle);
@@ -141,7 +139,7 @@ int ReadParamValue(ParamWorkSpace *workSpace, ParamHandle handle, char *value, u
     return 0;
 }
 
-int ReadParamName(ParamWorkSpace *workSpace, ParamHandle handle, char *name, uint32_t length)
+int ReadParamName(const ParamWorkSpace *workSpace, ParamHandle handle, char *name, uint32_t length)
 {
     PARAM_CHECK(workSpace != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     ParamNode *entry = (ParamNode *)GetTrieNode(&workSpace->paramSpace, handle);
@@ -157,6 +155,7 @@ int ReadParamName(ParamWorkSpace *workSpace, ParamHandle handle, char *name, uin
 
 int CheckParamName(const char *name, int info)
 {
+    PARAM_CHECK(name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     size_t nameLen = strlen(name);
     if (nameLen >= PARAM_NAME_LEN_MAX) {
         return PARAM_CODE_INVALID_NAME;
@@ -190,7 +189,7 @@ int CheckParamName(const char *name, int info)
     return 0;
 }
 
-static int ProcessParamTraversal(WorkSpace *workSpace, ParamTrieNode *node, void *cookie)
+static int ProcessParamTraversal(const WorkSpace *workSpace, const ParamTrieNode *node, void *cookie)
 {
     UNUSED(workSpace);
     ParamTraversalContext *context = (ParamTraversalContext *)cookie;
@@ -205,17 +204,20 @@ static int ProcessParamTraversal(WorkSpace *workSpace, ParamTrieNode *node, void
     return 0;
 }
 
-int TraversalParam(ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, void *cookie)
+int TraversalParam(const ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, void *cookie)
 {
+    PARAM_CHECK(workSpace != NULL && walkFunc != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     ParamTraversalContext context = {
         walkFunc, cookie
     };
     return TraversalTrieNode(&workSpace->paramSpace, NULL, ProcessParamTraversal, &context);
 }
 
-int CheckParamPermission(ParamWorkSpace *workSpace,
-    const ParamSecurityLabel *srcLabel, const char *name, int mode)
+int CheckParamPermission(const ParamWorkSpace *workSpace,
+    const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
+    PARAM_CHECK(workSpace != NULL && workSpace->securityLabel != NULL,
+        return PARAM_CODE_INVALID_PARAM, "Invalid param");
     if (LABEL_IS_ALL_PERMITTED(workSpace->securityLabel)) {
         return 0;
     }
@@ -237,7 +239,7 @@ int CheckParamPermission(ParamWorkSpace *workSpace,
     return workSpace->paramSecurityOps.securityCheckParamPermission(srcLabel, &auditData, mode);
 }
 
-static int DumpTrieDataNodeTraversal(WorkSpace *workSpace, ParamTrieNode *node, void *cookie)
+static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrieNode *node, void *cookie)
 {
     int verbose = *(int *)cookie;
     ParamTrieNode *current = (ParamTrieNode *)node;
@@ -245,28 +247,28 @@ static int DumpTrieDataNodeTraversal(WorkSpace *workSpace, ParamTrieNode *node, 
         return 0;
     }
     if (verbose) {
-        printf("    Trie node info [%5u,%5u,%5u] data [%5u,%5u] length:%-5d %s \n",
+        printf("\tTrie node info [%u,%u,%u] data: %u label: %u key length:%d \n\t  key: %s \n",
             current->left, current->right, current->child,
             current->dataIndex, current->labelIndex, current->length, current->key);
     }
     if (current->dataIndex != 0) {
         ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, current->dataIndex);
         if (entry != NULL) {
-            printf("\tparameter length [%5d,%5d] %s \n",
+            printf("\tparameter length info [%d, %d] \n\t  param: %s \n",
                 entry->keyLength, entry->valueLength, (entry != NULL) ? entry->data : "null");
         }
     }
-    if (current->labelIndex != 0) {
+    if (current->labelIndex != 0 && verbose) {
         ParamSecruityNode *label = (ParamSecruityNode *)GetTrieNode(workSpace, current->labelIndex);
         if (label != NULL) {
-            printf("\tparameter label dac %d %d %o %s \n",
+            printf("\tparameter label dac %d %d %o \n\t  label: %s \n",
                 label->uid, label->gid, label->mode, (label->length > 0) ? label->data : "null");
         }
     }
     return 0;
 }
 
-static void DumpWorkSpace(ParamWorkSpace *workSpace, int verbose)
+static void DumpWorkSpace(const ParamWorkSpace *workSpace, int verbose)
 {
     printf("workSpace information \n");
     printf("    map file: %s \n", workSpace->paramSpace.fileName);
@@ -280,8 +282,9 @@ static void DumpWorkSpace(ParamWorkSpace *workSpace, int verbose)
     TraversalTrieNode(&workSpace->paramSpace, NULL, DumpTrieDataNodeTraversal, (void *)&verbose);
 }
 
-void DumpParameters(ParamWorkSpace *workSpace, int verbose)
+void DumpParameters(const ParamWorkSpace *workSpace, int verbose)
 {
+    PARAM_CHECK(workSpace != NULL && workSpace->securityLabel != NULL, return, "Invalid param");
     printf("Dump all paramters begin ...\n");
     DumpWorkSpace(workSpace, verbose);
     if (verbose) {

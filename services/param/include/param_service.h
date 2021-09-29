@@ -33,9 +33,9 @@ struct CmdLineEntry {
     int set;
 };
 
-int WriteParam(WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd);
+int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd);
 
-int InitPersistParamWorkSpace(ParamWorkSpace *workSpace);
+int InitPersistParamWorkSpace(const ParamWorkSpace *workSpace);
 void ClosePersistParamWorkSpace(void);
 int LoadPersistParam(ParamWorkSpace *workSpace);
 int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *value);

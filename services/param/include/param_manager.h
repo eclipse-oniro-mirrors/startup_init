@@ -54,24 +54,25 @@ typedef struct {
 int InitParamWorkSpace(ParamWorkSpace *workSpace, int onlyRead);
 void CloseParamWorkSpace(ParamWorkSpace *workSpace);
 
-int ReadParamWithCheck(ParamWorkSpace *workSpace, const char *name, int op, ParamHandle *handle);
-int ReadParamValue(ParamWorkSpace *workSpace, ParamHandle handle, char *value, uint32_t *len);
-int ReadParamName(ParamWorkSpace *workSpace, ParamHandle handle, char *name, uint32_t len);
-int ReadParamCommitId(ParamWorkSpace *workSpace, ParamHandle handle, uint32_t *commitId);
+int ReadParamWithCheck(const ParamWorkSpace *workSpace, const char *name, uint32_t op, ParamHandle *handle);
+int ReadParamValue(const ParamWorkSpace *workSpace, ParamHandle handle, char *value, uint32_t *len);
+int ReadParamName(const ParamWorkSpace *workSpace, ParamHandle handle, char *name, uint32_t len);
+int ReadParamCommitId(const ParamWorkSpace *workSpace, ParamHandle handle, uint32_t *commitId);
 
 int CheckParamName(const char *name, int paramInfo);
-int CheckParamPermission(ParamWorkSpace *workSpace, const ParamSecurityLabel *srcLabel, const char *name, int mode);
+int CheckParamPermission(const ParamWorkSpace *workSpace,
+    const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
 
 typedef void (*TraversalParamPtr)(ParamHandle handle, void *context);
 typedef struct {
     TraversalParamPtr traversalParamPtr;
     void *context;
 } ParamTraversalContext;
-int TraversalParam(ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, void *cookie);
+int TraversalParam(const ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, void *cookie);
 
 ParamWorkSpace *GetParamWorkSpace(void);
 ParamWorkSpace *GetClientParamWorkSpace(void);
-void DumpParameters(ParamWorkSpace *workSpace, int verbose);
+void DumpParameters(const ParamWorkSpace *workSpace, int verbose);
 #ifdef __cplusplus
 #if __cplusplus
 }

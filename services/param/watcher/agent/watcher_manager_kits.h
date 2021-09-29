@@ -55,9 +55,9 @@ private:
         }
 
     private:
-        uint32_t watcherId_{ 0 };
-        std::string keyPrefix_{};
-        ParameterChangePtr callback_{ nullptr };
+        uint32_t watcherId_ { 0 };
+        std::string keyPrefix_ {};
+        ParameterChangePtr callback_ { nullptr };
         void *context_ { nullptr };
     };
 
@@ -77,8 +77,8 @@ private:
     void ResetService(const wptr<IRemoteObject> &remote);
     sptr<IWatcherManager> GetService();
     std::mutex lock_;
-    sptr<IWatcherManager> watcherManager_{};
-    sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
+    sptr<IWatcherManager> watcherManager_ {};
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
 
     std::mutex mutex_;
     std::map<std::string, ParamWatcherKitPtr> watchers_;

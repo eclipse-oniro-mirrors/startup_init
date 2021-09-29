@@ -31,7 +31,8 @@ static void GetUserIdByName(FILE *fp, uid_t *uid, const char *name, uint32_t nam
     (void)fseek(fp, 0, SEEK_SET);
     struct passwd *data = NULL;
     while ((data = fgetpwent(fp)) != NULL) {
-        if (strlen(data->pw_name) == nameLen && strncmp(data->pw_name, name, nameLen) == 0) {
+        if ((data->pw_name != NULL) && (strlen(data->pw_name) == nameLen) &&
+            (strncmp(data->pw_name, name, nameLen) == 0)) {
             *uid = data->pw_uid;
             return;
         }
@@ -44,7 +45,8 @@ static void GetGroupIdByName(FILE *fp, gid_t *gid, const char *name, uint32_t na
     (void)fseek(fp, 0, SEEK_SET);
     struct group *data = NULL;
     while ((data = fgetgrent(fp)) != NULL) {
-        if (strlen(data->gr_name) == nameLen && strncmp(data->gr_name, name, nameLen) == 0) {
+        if ((data->gr_name != NULL) && (strlen(data->gr_name) == nameLen) &&
+            (strncmp(data->gr_name, name, nameLen) == 0)) {
             *gid = data->gr_gid;
             break;
         }
@@ -54,6 +56,9 @@ static void GetGroupIdByName(FILE *fp, gid_t *gid, const char *name, uint32_t na
 // user:group:r|w
 static int GetParamDacData(FILE *fpForGroup, FILE *fpForUser, ParamDacData *dacData, const char *value)
 {
+    if (dacData == NULL) {
+        return -1;
+    }
     char *groupName = strstr(value, ":");
     if (groupName == NULL) {
         return -1;
@@ -98,7 +103,7 @@ static int EncodeSecurityLabel(const ParamSecurityLabel *srcLabel, char *buffer,
     return memcpy_s(buffer, *bufferSize, srcLabel, sizeof(ParamSecurityLabel));
 }
 
-static int DecodeSecurityLabel(ParamSecurityLabel **srcLabel, char *buffer, uint32_t bufferSize)
+static int DecodeSecurityLabel(ParamSecurityLabel **srcLabel, const char *buffer, uint32_t bufferSize)
 {
     PARAM_CHECK(bufferSize >= sizeof(ParamSecurityLabel), return -1, "Invalid buffersize %u", bufferSize);
     PARAM_CHECK(srcLabel != NULL && buffer != NULL, return -1, "Invalid param");
@@ -108,17 +113,16 @@ static int DecodeSecurityLabel(ParamSecurityLabel **srcLabel, char *buffer, uint
 
 static int LoadParamLabels(const char *fileName, SecurityLabelFunc label, void *context)
 {
+    uint32_t infoCount = 0;
+    ParamAuditData auditData = {0};
     FILE *fpForGroup = fopen(GROUP_FILE_PATH, "r");
     FILE *fpForUser = fopen(USER_FILE_PATH, "r");
     FILE *fp = fopen(fileName, "r");
-    SubStringInfo *info = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_DAC + 1));
-    PARAM_CHECK(fpForGroup != NULL && fpForUser != NULL && fp != NULL && info != NULL,
-        goto exit, "Can not open file for load param labels");
-
-    uint32_t infoCount = 0;
-    char buff[PARAM_BUFFER_SIZE];
-    ParamAuditData auditData = {};
-    while (fgets(buff, PARAM_BUFFER_SIZE, fp) != NULL) {
+    char *buff = (char *)calloc(1, PARAM_BUFFER_SIZE);
+    SubStringInfo *info = calloc(1, sizeof(SubStringInfo) * (SUBSTR_INFO_DAC + 1));
+    while (fp != NULL && fpForGroup != NULL && fpForUser != NULL &&
+        info != NULL && buff != NULL && fgets(buff, PARAM_BUFFER_SIZE, fp) != NULL) {
+        buff[PARAM_BUFFER_SIZE - 1] = '\0';
         int subStrNumber = GetSubStringInfo(buff, strlen(buff), ' ', info, SUBSTR_INFO_DAC + 1);
         if (subStrNumber <= SUBSTR_INFO_DAC) {
             continue;
@@ -134,18 +138,20 @@ static int LoadParamLabels(const char *fileName, SecurityLabelFunc label, void *
         infoCount++;
     }
     PARAM_LOGI("Load parameter label total %u success %s", infoCount, fileName);
-exit:
-    if (fp) {
+    if (fp != NULL) {
         (void)fclose(fp);
     }
-    if (info) {
+    if (info != NULL) {
         free(info);
     }
-    if (fpForGroup) {
+    if (fpForGroup != NULL) {
         (void)fclose(fpForGroup);
     }
-    if (fpForUser) {
+    if (fpForUser != NULL) {
         (void)fclose(fpForUser);
+    }
+    if (buff != NULL) {
+        free(buff);
     }
     return 0;
 }
@@ -174,7 +180,7 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
     return 0;
 }
 
-static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, int mode)
+static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, uint32_t mode)
 {
     int ret = DAC_RESULT_FORBIDED;
     PARAM_CHECK(srcLabel != NULL && auditData != NULL && auditData->name != NULL, return ret, "Invalid param");
@@ -184,7 +190,7 @@ static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamA
      * DAC group 实现的label的定义
      * user:group:read|write|watch
      */
-    uint32_t localMode = 0;
+    uint32_t localMode;
     if (srcLabel->cred.uid == auditData->dacData.uid) {
         localMode = mode & (DAC_READ | DAC_WRITE | DAC_WATCH);
     } else if (srcLabel->cred.gid == auditData->dacData.gid) {
@@ -196,8 +202,8 @@ static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamA
         ret = DAC_RESULT_PERMISSION;
     }
     PARAM_LOGD("Src label %d %d ", srcLabel->cred.gid, srcLabel->cred.uid);
-    PARAM_LOGD("auditData label %d %d mode %o lable %s",
-        auditData->dacData.gid, auditData->dacData.uid, auditData->dacData.mode, auditData->label);
+    PARAM_LOGD("auditData label %d %d mode %o",
+        auditData->dacData.gid, auditData->dacData.uid, auditData->dacData.mode);
     PARAM_LOGD("%s check %o localMode %o ret %d", auditData->name, mode, localMode, ret);
     return ret;
 }

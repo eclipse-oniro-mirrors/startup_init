@@ -14,8 +14,8 @@
  */
 
 #include "trigger_checker.h"
-#include <ctype.h>
 
+#include <ctype.h>
 #include "init_param.h"
 #include "trigger_manager.h"
 
@@ -25,6 +25,8 @@
 int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, int needCondition)
 {
     PARAM_CHECK(calculator != NULL, return -1, "Invalid param");
+    PARAM_CHECK(dataUnit <= (int)sizeof(LogicData), return -1, "Invalid param");
+    PARAM_CHECK(dataNumber <= MAX_CALC_PARAM, return -1, "Invalid param");
     int dataSize = dataUnit * dataNumber;
     if (needCondition) {
         dataSize += MAX_DATA_BUFFER_MAX;
@@ -86,7 +88,7 @@ static int CalculatorPush(LogicCalculator *calculator, const void *data)
 {
     PARAM_CHECK(calculator != NULL, return -1, "Invalid param");
     PARAM_CHECK(calculator->endIndex < calculator->dataNumber, return -1, "More data for calculator support");
-    char *tmpData = (calculator->data + calculator->dataUnit * calculator->endIndex);
+    char *tmpData = (char *)calculator->data + calculator->dataUnit * calculator->endIndex;
     int ret = memcpy_s(tmpData, calculator->dataUnit, data, calculator->dataUnit);
     PARAM_CHECK(ret == EOK, return -1, "Failed to copy logic data");
     calculator->endIndex++;
@@ -100,7 +102,7 @@ static int CalculatorPop(LogicCalculator *calculator, void *data)
     if (calculator->endIndex == 0) {
         return -1;
     }
-    char *tmpData = calculator->data + calculator->dataUnit * (calculator->endIndex - 1);
+    char *tmpData = (char *)calculator->data + calculator->dataUnit * (calculator->endIndex - 1);
     int ret = memcpy_s(data, calculator->dataUnit, tmpData, calculator->dataUnit);
     PARAM_CHECK(ret == EOK, return -1, "Failed to copy logic data");
     calculator->endIndex--;
@@ -126,7 +128,6 @@ static int PrefixAdd(char *prefix, uint32_t *prefixIndex, uint32_t prefixLen, ch
 
 static int HandleOperationOr(LogicCalculator *calculator, char *prefix, uint32_t *prefixIndex, uint32_t prefixLen)
 {
-    int ret = 0;
     char e;
     prefix[(*prefixIndex)++] = ' ';
     if (CalculatorLength(calculator) == 0) {
@@ -137,7 +138,7 @@ static int HandleOperationOr(LogicCalculator *calculator, char *prefix, uint32_t
             if (e == '(') {
                 CalculatorPushChar(calculator, e);
             } else {
-                ret = PrefixAdd(prefix, prefixIndex, prefixLen, e);
+                int ret = PrefixAdd(prefix, prefixIndex, prefixLen, e);
                 PARAM_CHECK(ret == 0, return -1, "Invalid prefix");
             }
         } while (CalculatorLength(calculator) > 0 && e != '(');
@@ -161,7 +162,7 @@ static int CompareValue(const char *condition, const char *value)
     return 0;
 }
 
-static int ComputeSubCondition(LogicCalculator *calculator, LogicData *data, const char *condition)
+static int ComputeSubCondition(const LogicCalculator *calculator, LogicData *data, const char *condition)
 {
     if (!LOGIC_DATA_TEST_FLAG(data, LOGIC_DATA_FLAGS_ORIGINAL)) {
         return LOGIC_DATA_TEST_FLAG(data, LOGIC_DATA_FLAGS_TRUE);
@@ -215,6 +216,7 @@ int GetValueFromContent(const char *content, uint32_t contentSize, uint32_t star
 
 int ComputeCondition(LogicCalculator *calculator, const char *condition)
 {
+    PARAM_CHECK(calculator != NULL && condition != NULL, return -1, "Invalid calculator");
     uint32_t currIndex = 0;
     uint32_t start = 0;
     int noneOper = 1;
@@ -266,8 +268,9 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
 
 int ConvertInfixToPrefix(const char *condition, char *prefix, uint32_t prefixLen)
 {
+    PARAM_CHECK(condition != NULL, return -1, "Invalid condition");
     char e = 0;
-    int ret = 0;
+    int ret;
     uint32_t curr = 0;
     uint32_t prefixIndex = 0;
     LogicCalculator calculator;
@@ -319,8 +322,10 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, uint32_t prefixLen
 
 int CheckMatchSubCondition(const char *condition, const char *input, int length)
 {
+    PARAM_CHECK(condition != NULL, return 0, "Invalid condition");
+    PARAM_CHECK(input != NULL, return 0, "Invalid input");
     char *tmp = strstr(condition, input);
-    if ((tmp != NULL) && (strlen(tmp) > length) && (tmp[length] == '=')) {
+    if ((tmp != NULL) && ((int)strlen(tmp) > length) && (tmp[length] == '=')) {
         return 1;
     }
     return 0;

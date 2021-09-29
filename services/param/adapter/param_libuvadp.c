@@ -23,7 +23,7 @@ static LibuvBaseTask *CreateLibuvTask(uint32_t size, uint32_t flags, uint16_t us
 {
     PARAM_CHECK(size <= RECV_BUFFER_MAX, return NULL, "Invaid size %u", size);
     PARAM_CHECK(userDataSize <= RECV_BUFFER_MAX, return NULL, "Invaid user size %u", userDataSize);
-    LibuvBaseTask *worker = (LibuvBaseTask *)malloc(size + userDataSize);
+    LibuvBaseTask *worker = (LibuvBaseTask *)calloc(1, size + userDataSize);
     PARAM_CHECK(worker != NULL, return NULL, "Failed to create param woker");
     worker->worker.flags = flags;
     worker->userDataSize = userDataSize;
@@ -141,7 +141,7 @@ static int InitPipeSocket(uv_pipe_t *pipeServer)
     ret = uv_listen((uv_stream_t *)pipeServer, SOMAXCONN, OnConnection);
     PARAM_CHECK(ret == 0, return ret, "Failed to uv_listen %d %s", ret, uv_err_name(ret));
     PARAM_CHECK(chmod(PIPE_NAME, S_IRWXU | S_IRWXG | S_IRWXO) == 0,
-        return -1, "Open file %s error %s", PIPE_NAME, strerror(errno));
+        return -1, "Open file %s error %d", PIPE_NAME, errno);
     return 0;
 }
 
@@ -247,11 +247,12 @@ int ParamEventTaskCreate(ParamTaskPtr *stream, EventProcess eventProcess, EventP
 int ParamEventSend(ParamTaskPtr stream, uint64_t eventId, const char *content, uint32_t size)
 {
     PARAM_CHECK(stream != NULL, return -1, "Invalid stream");
+    PARAM_CHECK(size <= RECV_BUFFER_MAX, return -1, "Invalid stream");
     PARAM_CHECK((stream->flags & WORKER_TYPE_EVENT) == WORKER_TYPE_EVENT, return -1, "Invalid stream type");
     int ret = PARAM_CODE_INVALID_PARAM;
     if (stream->flags & WORKER_TYPE_ASYNC) {
         LibuvEventTask *worker = (LibuvEventTask *)stream;
-        LibuvAsyncEvent *event = (LibuvAsyncEvent *)malloc(sizeof(LibuvAsyncEvent) + size + 1);
+        LibuvAsyncEvent *event = (LibuvAsyncEvent *)calloc(1, sizeof(LibuvAsyncEvent) + size + 1);
         PARAM_CHECK(event != NULL, return -1, "Failed to alloc event");
         event->eventId = eventId;
         event->contentSize = size + 1;
@@ -285,9 +286,6 @@ int ParamTaskClose(ParamTaskPtr stream)
     } else if (stream->flags & WORKER_TYPE_MSG) {
         LibuvStreamTask *worker = (LibuvStreamTask *)stream;
         uv_close((uv_handle_t *)(&worker->stream.pipe), OnClientClose);
-    } else if (stream->flags & WORKER_TYPE_EVENT) {
-        LibuvAsyncEvent *event = (LibuvAsyncEvent *)stream;
-        uv_close((uv_handle_t *)&event->async, OnAsyncCloseCallback);
     } else {
         free(stream);
     }
@@ -339,6 +337,9 @@ static void SignalHandler(uv_signal_t *handle, int signum)
 
 int ParamServiceStart(ProcessPidDelete pidDelete)
 {
+    if (uv_default_loop() == NULL) {
+        return -1;
+    }
     libuv.pidDeleteProcess = pidDelete;
     uv_signal_t sigchldHandler;
     int ret = uv_signal_init(uv_default_loop(), &sigchldHandler);

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <pthread.h>
+
 #include <unistd.h>
 
 #include "init_cmds.h"
@@ -37,7 +37,7 @@ void DoTriggerExec(const char *triggerName)
     }
 }
 
-static void DoCmdExec(TriggerNode *trigger, CommandNode *cmd, const char *content, uint32_t size)
+static void DoCmdExec(const TriggerNode *trigger, const CommandNode *cmd, const char *content, uint32_t size)
 {
     if (cmd->cmdKeyIndex == CMD_INDEX_FOR_PARA_WAIT || cmd->cmdKeyIndex == CMD_INDEX_FOR_PARA_WATCH) {
         TriggerExtData *extData = TRIGGER_GET_EXT_DATA(trigger, TriggerExtData);
@@ -59,7 +59,7 @@ static void DoCmdExec(TriggerNode *trigger, CommandNode *cmd, const char *conten
 #endif
 }
 
-static int ExecuteTrigger(TriggerWorkSpace *workSpace, TriggerNode *trigger)
+static int ExecuteTrigger(const TriggerWorkSpace *workSpace, const TriggerNode *trigger)
 {
     PARAM_CHECK(workSpace != NULL && trigger != NULL, return -1, "Invalid trigger");
     PARAM_CHECK(workSpace->cmdExec != NULL, return -1, "Invalid cmdExec");
@@ -152,7 +152,7 @@ static void ProcessBeforeEvent(uint64_t eventId, const char *content, uint32_t s
             break;
         }
         default:
-            PARAM_LOGI("CheckTriggers: %lu", eventId);
+            PARAM_LOGI("CheckTriggers: %llu", eventId);
             break;
     }
 }
@@ -205,6 +205,8 @@ void PostParamTrigger(int type, const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return, "Invalid param");
     uint32_t bufferSize = strlen(name) + strlen(value) + 1 + 1 + 1;
+    PARAM_CHECK(bufferSize < (PARAM_CONST_VALUE_LEN_MAX + PARAM_NAME_LEN_MAX + 1 + 1 + 1),
+        return, "bufferSize is longest %d", bufferSize);
     char *buffer = (char *)malloc(bufferSize);
     PARAM_CHECK(buffer != NULL, return, "Failed to alloc memory for  param %s", name);
     int ret = sprintf_s(buffer, bufferSize - 1, "%s=%s", name, value);
@@ -237,7 +239,7 @@ static int GetTriggerType(const char *type)
     return TRIGGER_UNKNOW;
 }
 
-static int ParseTrigger_(TriggerWorkSpace *workSpace, cJSON *triggerItem)
+static int ParseTrigger_(const TriggerWorkSpace *workSpace, const cJSON *triggerItem)
 {
     PARAM_CHECK(triggerItem != NULL, return -1, "Invalid file");
     PARAM_CHECK(workSpace != NULL, return -1, "Failed to create trigger list");
@@ -246,17 +248,17 @@ static int ParseTrigger_(TriggerWorkSpace *workSpace, cJSON *triggerItem)
     char *condition = cJSON_GetStringValue(cJSON_GetObjectItem(triggerItem, "condition"));
     int type = GetTriggerType(name);
     PARAM_CHECK(type < TRIGGER_MAX, return -1, "Failed to get trigger index");
-
+    TriggerHeader *header = (TriggerHeader *)&workSpace->triggerHead[type];
     TriggerNode *trigger = GetTriggerByName(workSpace, name);
     if (trigger == NULL) {
-        trigger = AddTrigger(&workSpace->triggerHead[type], name, condition, 0);
+        trigger = AddTrigger(header, name, condition, 0);
         PARAM_CHECK(trigger != NULL, return -1, "Failed to create trigger %s", name);
     }
     if (type == TRIGGER_BOOT) { // 设置trigger立刻删除，如果是boot
         TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_ONCE);
         TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_SUBTRIGGER);
     }
-    PARAM_LOGD("ParseTrigger %s type %d count %d", name, type, workSpace->triggerHead[type].triggerCount);
+    PARAM_LOGD("ParseTrigger %s type %d count %d", name, type, header->triggerCount);
 
     // 添加命令行
     cJSON *cmdItems = cJSON_GetObjectItem(triggerItem, CMDS_ARR_NAME_IN_JSON);
@@ -264,11 +266,11 @@ static int ParseTrigger_(TriggerWorkSpace *workSpace, cJSON *triggerItem)
     int cmdLinesCnt = cJSON_GetArraySize(cmdItems);
     PARAM_CHECK(cmdLinesCnt > 0, return -1, "Command array size must positive %s", name);
 
-    int ret = 0;
+    int ret;
     uint32_t cmdKeyIndex = 0;
-    for (int i = 0; i < cmdLinesCnt; ++i) {
+    for (int i = 0; (i < cmdLinesCnt) && (i < TRIGGER_MAX_CMD); ++i) {
         char *cmdLineStr = cJSON_GetStringValue(cJSON_GetArrayItem(cmdItems, i));
-        PARAM_CHECK(cmdLinesCnt > 0, continue, "Command is null");
+        PARAM_CHECK(cmdLineStr != NULL, continue, "Command is null");
 
         size_t cmdLineLen = strlen(cmdLineStr);
         const char *matchCmd = GetMatchCmd(cmdLineStr, &cmdKeyIndex);
@@ -293,7 +295,7 @@ int ParseTriggerConfig(const cJSON *fileRoot)
     int size = cJSON_GetArraySize(triggers);
     PARAM_CHECK(size > 0, return -1, "Trigger array size must positive");
 
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < size && i < TRIGGER_MAX_CMD; ++i) {
         cJSON *item = cJSON_GetArrayItem(triggers, i);
         ParseTrigger_(&g_triggerWorkSpace, item);
     }
@@ -337,7 +339,9 @@ void CloseTriggerWorkSpace(void)
         ClearTrigger(&g_triggerWorkSpace.triggerHead[i]);
     }
     free(g_triggerWorkSpace.executeQueue.executeQueue);
+    g_triggerWorkSpace.executeQueue.executeQueue = NULL;
     ParamTaskClose(g_triggerWorkSpace.eventHandle);
+    g_triggerWorkSpace.eventHandle = NULL;
 }
 
 int CheckAndMarkTrigger(int type, const char *name)

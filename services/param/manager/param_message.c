@@ -35,11 +35,11 @@ int ConntectServer(int fd, const char *servername)
     PARAM_CHECK(ret > EOK, return -1, "Failed to sprintf_s server address");
     int len = offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path);
     ret = connect(fd, (struct sockaddr *)&addr, len);
-    PARAM_CHECK(ret != -1, return -1, "Failed to connect server %s %s", servername, strerror(errno));
+    PARAM_CHECK(ret != -1, return -1, "Failed to connect server %s %d", servername, errno);
     return 0;
 }
 
-int FillParamMsgContent(ParamMessage *request, uint32_t *start, int type, const char *value, uint32_t length)
+int FillParamMsgContent(const ParamMessage *request, uint32_t *start, int type, const char *value, uint32_t length)
 {
     PARAM_CHECK(request != NULL && start != NULL, return -1, "Invalid param");
     PARAM_CHECK(value != NULL && length > 0, return -1, "Invalid value");
@@ -60,10 +60,11 @@ int FillParamMsgContent(ParamMessage *request, uint32_t *start, int type, const 
 
 ParamMessage *CreateParamMessage(int type, const char *name, uint32_t msgSize)
 {
+    PARAM_CHECK(name != NULL, return NULL, "Invalid name");
     if (msgSize < sizeof(ParamMessage)) {
         msgSize = sizeof(ParamMessage);
     }
-    ParamMessage *msg = (ParamMessage *)malloc(msgSize);
+    ParamMessage *msg = (ParamMessage *)calloc(1, msgSize);
     PARAM_CHECK(msg != NULL, return NULL, "Failed to malloc message");
     msg->type = type;
     msg->id.msgId = 0;
@@ -76,6 +77,8 @@ ParamMessage *CreateParamMessage(int type, const char *name, uint32_t msgSize)
 
 ParamMsgContent *GetNextContent(const ParamMessage *reqest, uint32_t *offset)
 {
+    PARAM_CHECK(reqest != NULL, return NULL, "Invalid reqest");
+    PARAM_CHECK(offset != NULL, return NULL, "Invalid offset");
     ParamMessage *msg = (ParamMessage *)reqest;
     if ((msg == NULL) || ((*offset + sizeof(ParamMessage) + sizeof(ParamMsgContent)) >= msg->msgSize)) {
         return NULL;

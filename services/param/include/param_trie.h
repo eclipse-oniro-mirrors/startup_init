@@ -20,7 +20,6 @@
 #include <string.h>
 #include <sys/syscall.h>
 
-#include "init_log.h"
 #include "param_security.h"
 #include "securec.h"
 #include "sys_param.h"
@@ -100,21 +99,21 @@ struct WorkSpace_;
 typedef struct WorkSpace_ {
     char fileName[FILENAME_LEN_MAX + 1];
     uint32_t (*allocTrieNode)(struct WorkSpace_ *workSpace, const char *key, uint32_t keyLen);
-    int (*compareTrieNode)(ParamTrieNode *node, const char *key2, uint32_t key2Len);
+    int (*compareTrieNode)(const ParamTrieNode *node, const char *key2, uint32_t key2Len);
     ParamTrieHeader *area;
 } WorkSpace;
 
 int InitWorkSpace(const char *fileName, WorkSpace *workSpace, int onlyRead);
 void CloseWorkSpace(WorkSpace *workSpace);
 
-ParamTrieNode *GetTrieNode(WorkSpace *workSpace, uint32_t offset);
+ParamTrieNode *GetTrieNode(const WorkSpace *workSpace, uint32_t offset);
 void SaveIndex(uint32_t *index, uint32_t offset);
 
 ParamTrieNode *AddTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen);
-ParamTrieNode *FindTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel);
+ParamTrieNode *FindTrieNode(const WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel);
 
-typedef int (*TraversalTrieNodePtr)(WorkSpace *workSpace, ParamTrieNode *node, void *cookie);
-int TraversalTrieNode(WorkSpace *workSpace, ParamTrieNode *subTrie, TraversalTrieNodePtr walkFunc, void *cookie);
+typedef int (*TraversalTrieNodePtr)(const WorkSpace *workSpace, const ParamTrieNode *node, void *cookie);
+int TraversalTrieNode(const WorkSpace *workSpace, const ParamTrieNode *subTrie, TraversalTrieNodePtr walkFunc, void *cookie);
 
 uint32_t AddParamSecruityNode(WorkSpace *workSpace, const ParamAuditData *auditData);
 uint32_t AddParamNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, const char *value, uint32_t valueLen);

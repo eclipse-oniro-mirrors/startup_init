@@ -51,12 +51,11 @@ static void ShowParam(ParamHandle handle, void *cookie)
 static void ExeuteCmdParamGet(int argc, char *argv[], int start)
 {
     uint32_t size = PARAM_CONST_VALUE_LEN_MAX + PARAM_NAME_LEN_MAX + 1 + 1;
-    char *buffer = (char *)malloc(size);
+    char *buffer = (char *)calloc(1, size);
     if (buffer == NULL) {
         printf("Get parameterfail\n");
         return;
     }
-    memset_s(buffer, size, 0, size);
     if (argc == start) {
         SystemTraversalParameter(ShowParam, (void *)buffer);
     } else {
@@ -117,11 +116,18 @@ static void ExeuteCmdParamRead(int argc, char *argv[], int start)
 
 static void HandleParamChange(const char *key, const char *value, void *context)
 {
+    if (key == NULL || value == NULL) {
+        return;
+    }
+    UNUSED(context);
     printf("Receive parameter change %s %s \n", key, value);
 }
 
 static void ExeuteCmdParamWatch(int argc, char *argv[], int start)
 {
+    if (argc <= start) {
+        return;
+    }
     int ret = SystemWatchParameter(argv[start], HandleParamChange, NULL);
     if (ret != 0) {
         return;
