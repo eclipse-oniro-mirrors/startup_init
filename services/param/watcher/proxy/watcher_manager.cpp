@@ -239,7 +239,7 @@ void WatcherManager::StartLoop()
 
 int WatcherManager::GetServerFd(bool retry)
 {
-    const int32_t SLEEP_TIME = 2000;
+    const int32_t sleepTime = 2000;
     std::lock_guard<std::mutex> lock(mutex_);
     if (retry && serverFd_ != INVALID_SOCKET) {
         close(serverFd_);
@@ -257,7 +257,7 @@ int WatcherManager::GetServerFd(bool retry)
         if (ret != 0) {
             close(serverFd_);
             serverFd_ = INVALID_SOCKET;
-            usleep(SLEEP_TIME);
+            usleep(sleepTime);
         } else {
             (void)setsockopt(serverFd_, SOL_SOCKET, SO_RCVTIMEO, &time, sizeof(struct timeval));
             break;

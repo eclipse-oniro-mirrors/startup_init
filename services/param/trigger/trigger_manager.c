@@ -32,7 +32,7 @@ int AddCommand(TriggerNode *trigger, uint32_t cmdKeyIndex, const char *content)
 {
     PARAM_CHECK(trigger != NULL, return -1, "trigger is null");
     uint32_t size = sizeof(CommandNode);
-    size += (content == NULL) ? 1 : strlen(content) + 1;
+    size += (content == NULL) ? 1 : (strlen(content) + 1);
     size = PARAM_ALIGN(size);
 
     CommandNode *node = (CommandNode *)calloc(1, size);
