@@ -16,17 +16,16 @@
 #include "ueventd_read_cfg.h"
 
 #include <ctype.h>
-#include <limits.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "init_utils.h"
 #include "list.h"
-#include "ueventd_utils.h"
 #include "securec.h"
+#include "ueventd_utils.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 
@@ -292,7 +291,7 @@ int ParseUeventConfig(char *buffer)
         callback = funcMapper[type].func;
         return 0;
     }
-    return callback != NULL ? callback(p) : -1;
+    return ((callback != NULL) ? callback(p) : -1);
 }
 
 static void DoUeventConfigParse(char *buffer, size_t length)
@@ -418,7 +417,7 @@ void ChangeSysAttributePermissions(const char *sysPath)
     if (config == NULL) {
         return;
     }
-    char sysAttr[SYSPATH_SIZE] = {};
+    char sysAttr[SYSPATH_SIZE] = {0};
     if (config->sysPath != NULL && config->attr != NULL) {
         if (snprintf_s(sysAttr, SYSPATH_SIZE, SYSPATH_SIZE - 1, "/sys%s/%s", config->sysPath, config->attr) == -1) {
             INIT_LOGE("Failed to build sys attribute for sys path %s, attr: %s", config->sysPath, config->attr);

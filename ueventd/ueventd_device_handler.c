@@ -174,7 +174,7 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
         INIT_LOGW("Failed set linkNum, links ignore");
         return;
     }
-    if (parent == NULL || partitionName == NULL || deviceName == NULL) {
+    if (parent == NULL) {
         return;
     }
     links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
@@ -230,22 +230,24 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
     // Reverse walk through sysPath, and check subystem file under each directory.
     char *parent = dirname(sysPath);
     while (parent != NULL && !STRINGEQUAL(parent, "/") && !STRINGEQUAL(parent, ".")) {
-        char subsystem[SYSPATH_SIZE];
+        char subsystem[SYSPATH_SIZE] = {0};
         if (snprintf_s(subsystem, SYSPATH_SIZE, SYSPATH_SIZE - 1, "%s/subsystem", parent) == -1) {
             INIT_LOGE("Failed to build subsystem path for device \" %s \"", uevent->syspath);
             return NULL;
         }
 
         char bus[PATH_MAX] = {0};
-        if (Realpath(subsystem, bus, sizeof(bus)) != NULL) {
-            if (STRINGEQUAL(bus, "/sys/bus/platform")) {
-                INIT_LOGD("Find a platform device: %s", parent);
-                parent = FindPlatformDeviceName(parent);
-                if (parent != NULL) {
-                    BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
-                }
-                linkNum++;
+        if (Realpath(subsystem, bus, sizeof(bus)) == NULL) {
+            parent = dirname(parent);
+            continue;
+        }
+        if (STRINGEQUAL(bus, "/sys/bus/platform")) {
+            INIT_LOGD("Find a platform device: %s", parent);
+            parent = FindPlatformDeviceName(parent);
+            if (parent != NULL) {
+                BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
             }
+            linkNum++;
         }
         parent = dirname(parent);
     }
@@ -302,7 +304,7 @@ static const char *GetDeviceName(char *sysPath, const char *deviceName)
     }
     if (deviceName != NULL && deviceName[0] != '\0') {
         // if device name reported by kernel includes '/', skip it.
-        // TODO: use entire device name reported by kernel
+        // use entire device name reported by kernel
         devName = basename((char *)deviceName);
         char *p = strrchr(deviceName, '/');
         if (p != NULL) { // device name includes slash

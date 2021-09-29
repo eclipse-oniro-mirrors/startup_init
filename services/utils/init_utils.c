@@ -159,7 +159,7 @@ size_t WriteAll(int fd, const char *buffer, size_t size)
 
     const char *p = buffer;
     size_t left = size;
-    ssize_t written = -1;
+    ssize_t written;
 
     while (left > 0) {
         do {
@@ -245,6 +245,6 @@ int StringToInt(const char *str, int defaultValue)
     }
     errno = 0;
     int value = (int)strtoul(str, NULL, DECIMAL_BASE);
-    return errno != 0 ? defaultValue : value;
+    return ((errno != 0) ? defaultValue : value);
 }
 
