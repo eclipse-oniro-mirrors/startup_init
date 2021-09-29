@@ -115,7 +115,7 @@ int LoadPersistParam(ParamWorkSpace *workSpace)
         return 0;
     }
     if (g_persistWorkSpace.persistParamOps.load != NULL) {
-        int ret = g_persistWorkSpace.persistParamOps.load(AddPersistParam, &workSpace->paramSpace);
+        ret = g_persistWorkSpace.persistParamOps.load(AddPersistParam, &workSpace->paramSpace);
         PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED);
         PARAM_CHECK(ret == 0, return ret, "Failed to load persist param");
     }

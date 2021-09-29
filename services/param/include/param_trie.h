@@ -113,7 +113,8 @@ ParamTrieNode *AddTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLe
 ParamTrieNode *FindTrieNode(const WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel);
 
 typedef int (*TraversalTrieNodePtr)(const WorkSpace *workSpace, const ParamTrieNode *node, void *cookie);
-int TraversalTrieNode(const WorkSpace *workSpace, const ParamTrieNode *subTrie, TraversalTrieNodePtr walkFunc, void *cookie);
+int TraversalTrieNode(const WorkSpace *workSpace,
+    const ParamTrieNode *subTrie, TraversalTrieNodePtr walkFunc, void *cookie);
 
 uint32_t AddParamSecruityNode(WorkSpace *workSpace, const ParamAuditData *auditData);
 uint32_t AddParamNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, const char *value, uint32_t valueLen);

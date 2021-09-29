@@ -298,7 +298,8 @@ static int TraversalSubTrieNode(const WorkSpace *workSpace,
     return 0;
 }
 
-int TraversalTrieNode(const WorkSpace *workSpace, const ParamTrieNode *root, TraversalTrieNodePtr walkFunc, void *cookie)
+int TraversalTrieNode(const WorkSpace *workSpace,
+    const ParamTrieNode *root, TraversalTrieNodePtr walkFunc, void *cookie)
 {
     PARAM_CHECK(walkFunc != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return 0, "Invalid workSpace");
