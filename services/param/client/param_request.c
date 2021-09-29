@@ -17,7 +17,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -26,6 +25,7 @@
 #include "param_message.h"
 
 #define INVALID_SOCKET (-1)
+#define INIT_PROCESS_PID 1
 #define LABEL "Client"
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
 
@@ -37,6 +37,10 @@ __attribute__((destructor)) static void ClientDeinit(void);
 
 static int InitParamClient(void)
 {
+    if (getpid() == INIT_PROCESS_PID) {
+        PARAM_LOGI("Init process, do not init client");
+        return 0;
+    }
     if (PARAM_TEST_FLAG(g_clientSpace.paramSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
@@ -62,7 +66,7 @@ static ParamSecurityOps *GetClientParamSecurityOps(void)
     return &g_clientSpace.paramSpace.paramSecurityOps;
 }
 
-static int FillLabelContent(ParamMessage *request, uint32_t *start, uint32_t length)
+static int FillLabelContent(const ParamMessage *request, uint32_t *start, uint32_t length)
 {
     uint32_t bufferSize = request->msgSize - sizeof(ParamMessage);
     uint32_t offset = *start;
@@ -159,7 +163,7 @@ int SystemSetParameter(const char *name, const char *value)
         PARAM_CHECK(ret == 0, return -1, "Failed to get label length");
     }
     msgSize += sizeof(ParamMsgContent) + labelLen;
-    msgSize = msgSize < RECV_BUFFER_MAX ? RECV_BUFFER_MAX : msgSize;
+    msgSize = (msgSize < RECV_BUFFER_MAX) ? RECV_BUFFER_MAX : msgSize;
 
     ParamMessage *request = (ParamMessage *)CreateParamMessage(MSG_SET_PARAM, name, msgSize);
     PARAM_CHECK(request != NULL, return -1, "Failed to malloc for connect");
@@ -195,7 +199,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
         timeout = DEFAULT_PARAM_WAIT_TIMEOUT;
     }
     uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + sizeof(ParamMsgContent) + sizeof(uint32_t);
-    msgSize = msgSize < RECV_BUFFER_MAX ? RECV_BUFFER_MAX : msgSize;
+    msgSize = (msgSize < RECV_BUFFER_MAX) ? RECV_BUFFER_MAX : msgSize;
     uint32_t offset = 0;
     ParamMessage *request = NULL;
     if (value != NULL) {
@@ -270,7 +274,8 @@ int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
     return ReadParamValue(&g_clientSpace.paramSpace, handle, value, len);
 }
 
-int SystemTraversalParameter(void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie)
+int SystemTraversalParameter(
+    void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie)
 {
     InitParamClient();
     PARAM_CHECK(traversalParameter != NULL, return -1, "The param is null");

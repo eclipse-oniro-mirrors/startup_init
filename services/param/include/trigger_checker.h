@@ -16,7 +16,6 @@
 #ifndef STARTUP_TRIGER_CHECKER_H
 #define STARTUP_TRIGER_CHECKER_H
 #include <stdint.h>
-#include <stdlib.h>
 #include <sys/types.h>
 
 #ifdef __cplusplus

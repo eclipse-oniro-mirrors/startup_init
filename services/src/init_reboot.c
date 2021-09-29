@@ -145,15 +145,21 @@ static int CheckAndRebootToUpdater(const char *valueData, const char *cmd, const
     return -1;
 }
 
-static int CheckRebootValue(const char **cmdParams, const char *valueData)
+static int CheckRebootValue(const char *valueData)
 {
+    if (valueData == NULL) {
+        return 0;
+    }
+    static const char *g_cmdParams[] = {
+        "shutdown", "updater", "updater:", "flashing", "flashing:", "NoArgument", "bootloader"
+    };
     size_t i = 0;
-    for (; i < ARRAY_LENGTH(cmdParams); i++) {
-        if (strncmp(valueData, cmdParams[i], strlen(cmdParams[i])) == 0) {
+    for (; i < ARRAY_LENGTH(g_cmdParams); i++) {
+        if (strncmp(valueData, g_cmdParams[i], strlen(g_cmdParams[i])) == 0) {
             break;
         }
     }
-    if (i >= ARRAY_LENGTH(cmdParams)) {
+    if (i >= ARRAY_LENGTH(g_cmdParams)) {
         INIT_LOGE("DoReboot valueData = %s, parameters error.", valueData);
         return -1;
     }
@@ -163,24 +169,19 @@ static int CheckRebootValue(const char **cmdParams, const char *valueData)
 void DoReboot(const char *value)
 {
 #ifndef OHOS_LITE
-    static const char *g_cmdParams[] = {
-        "shutdown", "updater", "updater:", "flashing", "flashing:", "NoArgument", "bootloader"
-    };
     if (value == NULL || strlen(value) > MAX_VALUE_LENGTH) {
         INIT_LOGE("DoReboot value = NULL");
         return;
     }
     const char *valueData = NULL;
-    if (strcmp(value, "reboot") == 0) {
-        valueData = NULL;
-    } else if (strncmp(value, "reboot,", strlen("reboot,")) != 0) {
-        INIT_LOGE("DoReboot reboot value = %s, must started with reboot ,error.", value);
-        return;
-    } else {
+    if (strncmp(value, "reboot,", strlen("reboot,")) == 0) {
         valueData = value + strlen("reboot,");
+    } else if (strcmp(value, "reboot") != 0) {
+        INIT_LOGE("Reboot value = %s, must started with reboot", value);
+        return;
     }
     if (valueData != NULL) {
-        if (CheckRebootValue(g_cmdParams, valueData) < 0) {
+        if (CheckRebootValue(valueData) < 0) {
             return;
         }
     }

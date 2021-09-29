@@ -14,13 +14,12 @@
  */
 
 #include "param_utils.h"
+
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -43,6 +42,9 @@ void CheckAndCreateDir(const char *fileName)
 int ReadFileInDir(const char *dirPath, const char *includeExt,
     int (*processFile)(const char *fileName, void *context), void *context)
 {
+    if (dirPath == NULL || processFile == NULL) {
+        return -1;
+    }
     DIR *pDir = opendir(dirPath);
     PARAM_CHECK(pDir != NULL, return -1, "Read dir :%s failed.%d", dirPath, errno);
     char *fileName = malloc(PARAM_BUFFER_SIZE);
@@ -84,7 +86,7 @@ char *ReadFileData(const char *fileName)
     char *buffer = NULL;
     int fd = -1;
     do {
-        fd = open(fileName, O_RDONLY);
+        fd = open(fileName, O_RDONLY); // 阶段早，不能使用realpath
         PARAM_CHECK(fd >= 0, break, "Failed to read file %s", fileName);
 
         buffer = (char *)malloc(MAX_DATA_BUFFER);
@@ -112,6 +114,7 @@ static void TrimString(char *string, uint32_t currLen)
 
 int GetSubStringInfo(const char *buff, uint32_t buffLen, char delimiter, SubStringInfo *info, int subStrNumber)
 {
+    PARAM_CHECK(buff != NULL && info != NULL, return 0, "Invalid buff");
     size_t i = 0;
     // 去掉开始的空格
     for (; i < strlen(buff); i++) {

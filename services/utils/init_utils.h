@@ -34,7 +34,7 @@ uid_t DecodeUid(const char *name);
 char *ReadFileToBuf(const char *configFile);
 int SplitString(char *srcPtr, char **dstPtr, int maxNum);
 void WaitForFile(const char *source, unsigned int maxCount);
-size_t WriteAll(int fd, char *buffer, size_t size);
+size_t WriteAll(int fd, const char *buffer, size_t size);
 char *Realpath(const char *source, char *resolvedPath, size_t resolvedPathSize);
 int StringToInt(const char *str, int defaultValue);
 int MakeDirRecursive(const char *dir, mode_t mode);

@@ -16,17 +16,16 @@
 #include "ueventd_read_cfg.h"
 
 #include <ctype.h>
-#include <limits.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "init_utils.h"
 #include "list.h"
-#include "ueventd_utils.h"
 #include "securec.h"
+#include "ueventd_utils.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 
@@ -89,7 +88,7 @@ static char **SplitUeventConfig(char *buffer, const char *del, int *returnCount,
 {
     char *rest = NULL;
     int count = 0;
-    int average = 2;
+    const int average = 2;
     char *p = strtok_r(buffer, del, &rest);
     int maxItemCountTmp = maxItemCount;
     if (maxItemCountTmp < 0) {
@@ -292,7 +291,7 @@ int ParseUeventConfig(char *buffer)
         callback = funcMapper[type].func;
         return 0;
     }
-    return callback != NULL ? callback(p) : -1;
+    return ((callback != NULL) ? callback(p) : -1);
 }
 
 static void DoUeventConfigParse(char *buffer, size_t length)
@@ -385,11 +384,13 @@ void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_
     if (!ListEmpty(g_devices)) {
         ForEachListEntry(&g_devices, node) {
             struct DeviceUdevConf *config = ListEntry(node, struct DeviceUdevConf, list);
-            if (STRINGEQUAL(config->name, devNode)) {
-                *uid = config->uid;
-                *gid = config->gid;
-                *mode = config->mode;
-                break;
+            if (config != NULL) {
+                if (STRINGEQUAL(config->name, devNode)) {
+                    *uid = config->uid;
+                    *gid = config->gid;
+                    *mode = config->mode;
+                    break;
+                }
             }
         }
     }
@@ -416,10 +417,12 @@ void ChangeSysAttributePermissions(const char *sysPath)
     if (config == NULL) {
         return;
     }
-    char sysAttr[SYSPATH_SIZE] = {};
-    if (snprintf_s(sysAttr, SYSPATH_SIZE, SYSPATH_SIZE - 1, "/sys%s/%s", config->sysPath, config->attr) == -1) {
-        INIT_LOGE("Failed to build sys attribute for sys path %s, attr: %s", config->sysPath, config->attr);
-        return;
+    char sysAttr[SYSPATH_SIZE] = {0};
+    if (config->sysPath != NULL && config->attr != NULL) {
+        if (snprintf_s(sysAttr, SYSPATH_SIZE, SYSPATH_SIZE - 1, "/sys%s/%s", config->sysPath, config->attr) == -1) {
+            INIT_LOGE("Failed to build sys attribute for sys path %s, attr: %s", config->sysPath, config->attr);
+            return;
+        }
     }
     if (chown(sysAttr, config->uid, config->gid) < 0) {
         INIT_LOGE("chown for file %s failed, err = %d", sysAttr, errno);

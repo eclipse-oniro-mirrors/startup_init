@@ -149,11 +149,11 @@ static struct CmdArgs *CopyCmd(struct CmdArgs *ctx, const char *cmd, size_t allo
 
 struct CmdArgs *GetCmd(const char *cmdContent, const char *delim, int argsCount)
 {
-    INIT_CHECK_RETURN_VALUE(cmdContent != NULL, NULL);
-    struct CmdArgs *ctx = (struct CmdArgs *)malloc(sizeof(struct CmdArgs));
+    INIT_CHECK_RETURN_VALUE(cmdContent != NULL && delim != NULL, NULL);
+    struct CmdArgs *ctx = (struct CmdArgs *)calloc(sizeof(struct CmdArgs), 1);
     INIT_CHECK_RETURN_VALUE(ctx != NULL, NULL);
 
-    ctx->argv = (char**)malloc(sizeof(char*) * (size_t)(argsCount + 1));
+    ctx->argv = (char**)calloc(sizeof(char*), (size_t)(argsCount + 1));
     INIT_CHECK(ctx->argv != NULL, FreeCmd(ctx);
         return NULL);
 
@@ -214,6 +214,7 @@ void FreeCmd(struct CmdArgs *cmd)
     }
     INIT_CHECK(cmd->argv == NULL, free(cmd->argv));
     free(cmd);
+    cmd = NULL;
     return;
 }
 
@@ -230,7 +231,7 @@ static void WriteCommon(const char *file, char *buffer, int flags, mode_t mode)
             size_t totalSize = strlen(buffer);
             size_t written = WriteAll(fd, buffer, totalSize);
             if (written != totalSize) {
-                INIT_LOGE("Write %lu bytes to file failed", totalSize, file);
+                INIT_LOGE("Write %lu bytes to file %s failed", totalSize, file);
             }
             close(fd);
         }
@@ -389,8 +390,6 @@ static void DoCopyInernal(const char *source, const char *target)
     int srcFd = open(source, O_RDONLY | O_CLOEXEC, S_IRUSR | S_IWUSR);
     if (srcFd < 0) {
         INIT_LOGE("Open \" %s \" failed, err = %d", source, errno);
-        close(srcFd);
-        srcFd = -1;
         return;
     }
 
@@ -404,9 +403,8 @@ static void DoCopyInernal(const char *source, const char *target)
     if (dstFd >= 0) {
         char buf[MAX_COPY_BUF_SIZE] = {0};
         ssize_t readn = -1;
-        ssize_t writen = -1;
         while ((readn = read(srcFd, buf, MAX_COPY_BUF_SIZE - 1)) > 0) {
-            writen = WriteAll(dstFd, buf, (size_t)readn);
+            ssize_t writen = WriteAll(dstFd, buf, (size_t)readn);
             if (writen != readn)  {
                 isSuccess = false;
                 break;
@@ -500,7 +498,7 @@ static void DoMkDir(const char *cmdContent, int maxArg)
         FreeCmd(ctx);
         return;
     }
-    int rc = -1;
+    int rc;
     do {
         int index = 0;
         rc = mkdir(ctx->argv[index], DEFAULT_DIR_MODE);
@@ -520,12 +518,13 @@ static void DoMkDir(const char *cmdContent, int maxArg)
                 break;
             }
             index = index + 1;
-            if (ctx->argv[index] != NULL) {
-                if (ctx->argv[index + 1] != NULL) {
-                    rc = Chown(ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
-                } else {
-                    rc = -1;
-                }
+            if (ctx->argv[index] == NULL) {
+                break;
+            }
+            if (ctx->argv[index + 1] != NULL) {
+                rc = Chown(ctx->argv[0], ctx->argv[index], ctx->argv[index + 1]);
+            } else {
+                rc = -1;
             }
         }
     } while (0);
@@ -1155,6 +1154,7 @@ static void DoMakeDevice(const char *cmdContent, int maxArg)
     unsigned int major = strtoul(ctx->argv[0], NULL, DECIMAL_BASE);
     unsigned int minor = strtoul(ctx->argv[1], NULL, DECIMAL_BASE);
     if (major == 0 || minor == 0) {
+        FreeCmd(ctx);
         return;
     }
     dev_t deviceId = makedev(major, minor);

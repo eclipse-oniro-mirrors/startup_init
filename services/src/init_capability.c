@@ -109,7 +109,7 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
             return SERVICE_FAILURE;
         }
     }
-    int ret = (i == curServ->servPerm.capsCnt ? SERVICE_SUCCESS : SERVICE_FAILURE);
+    int ret = ((i == curServ->servPerm.capsCnt) ? SERVICE_SUCCESS : SERVICE_FAILURE);
     return ret;
 }
 

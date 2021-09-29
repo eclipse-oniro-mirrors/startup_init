@@ -101,7 +101,7 @@ private:
     void RunLoop();
     void StartLoop();
     void SendLocalChange(const std::string &keyPrefix, ParamWatcherPtr watcher);
-    void ProcessWatcherMessage(const char *buffer, uint32_t dataSize);
+    void ProcessWatcherMessage(const std::vector<char> &buffer, uint32_t dataSize);
     int SendMessage(WatcherGroupPtr group, int type);
     int GetServerFd(bool retry);
 private:

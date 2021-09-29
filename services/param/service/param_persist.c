@@ -39,7 +39,7 @@ static int AddPersistParam(const char *name, const char *value, void *context)
     return 0;
 }
 
-static int SavePersistParam(WorkSpace *workSpace, ParamTrieNode *node, void *cookie)
+static int SavePersistParam(const WorkSpace *workSpace, const ParamTrieNode *node, void *cookie)
 {
     ParamTrieNode *current = (ParamTrieNode *)node;
     if (current == NULL || current->dataIndex == 0) {
@@ -49,7 +49,6 @@ static int SavePersistParam(WorkSpace *workSpace, ParamTrieNode *node, void *coo
     if (entry == NULL) {
         return 0;
     }
-    PARAM_LOGD("SavePersistParam %s", entry->data);
     if (strncmp(entry->data, PARAM_CONST_PREFIX, strlen(PARAM_CONST_PREFIX)) != 0) {
         return 0;
     }
@@ -62,7 +61,7 @@ static int SavePersistParam(WorkSpace *workSpace, ParamTrieNode *node, void *coo
     return ret;
 }
 
-static int BatchSavePersistParam(WorkSpace *workSpace)
+static int BatchSavePersistParam(const WorkSpace *workSpace)
 {
     PARAM_LOGI("BatchSavePersistParam");
     if (g_persistWorkSpace.persistParamOps.batchSaveBegin == NULL ||
@@ -84,8 +83,9 @@ static int BatchSavePersistParam(WorkSpace *workSpace)
     return ret;
 }
 
-int InitPersistParamWorkSpace(ParamWorkSpace *workSpace)
+int InitPersistParamWorkSpace(const ParamWorkSpace *workSpace)
 {
+    UNUSED(workSpace);
     if (PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
@@ -107,20 +107,17 @@ void ClosePersistParamWorkSpace(void)
 
 int LoadPersistParam(ParamWorkSpace *workSpace)
 {
+    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     int ret = InitPersistParamWorkSpace(workSpace);
     PARAM_CHECK(ret == 0, return ret, "Failed to init persist param");
     if (PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
         PARAM_LOGE("Persist param has been loaded");
         return 0;
     }
-    ret = -1;
     if (g_persistWorkSpace.persistParamOps.load != NULL) {
         ret = g_persistWorkSpace.persistParamOps.load(AddPersistParam, &workSpace->paramSpace);
-    }
-    if (ret == 0) {
         PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED);
-    } else {
-        PARAM_LOGE("Failed to load persist param ");
+        PARAM_CHECK(ret == 0, return ret, "Failed to load persist param");
     }
     // 刷新新增的常量到persist
     BatchSavePersistParam(&workSpace->paramSpace);
@@ -140,6 +137,7 @@ static void TimerCallbackForSave(ParamTaskPtr timer, void *context)
 
 int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *value)
 {
+    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     if (strncmp(name, PARAM_CONST_PREFIX, strlen(PARAM_CONST_PREFIX)) != 0) {
         return 0;

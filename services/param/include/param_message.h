@@ -16,7 +16,6 @@
 #ifndef BASE_STARTUP_PARAM_MESSAGE_H
 #define BASE_STARTUP_PARAM_MESSAGE_H
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -88,7 +87,7 @@ typedef struct {
 
 struct ParamTask_;
 typedef struct ParamTask_ *ParamTaskPtr;
-typedef int (*IncomingConnect)(const ParamTaskPtr stream, int flags);
+typedef int (*IncomingConnect)(const ParamTaskPtr stream, uint32_t flags);
 typedef int (*RecvMessage)(const ParamTaskPtr stream, const ParamMessage *msg);
 typedef void (*TimerProcess)(const ParamTaskPtr stream, void *context);
 typedef void (*EventProcess)(uint64_t eventId, const char *context, uint32_t size);
@@ -96,11 +95,11 @@ typedef void (*TaskClose)(const ParamTaskPtr stream);
 typedef void (*ProcessPidDelete)(pid_t pid);
 
 typedef struct ParamTask_ {
-    int32_t flags;
+    uint32_t flags;
 } ParamTask;
 
 typedef struct {
-    int flags;
+    uint32_t flags;
     char *server;
     IncomingConnect incomingConnect;
     RecvMessage recvMessage;
@@ -123,7 +122,7 @@ int ParamTimerStart(ParamTaskPtr timer, uint64_t timeout, uint64_t repeat);
 
 void *ParamGetTaskUserData(ParamTaskPtr stream);
 
-int FillParamMsgContent(ParamMessage *request, uint32_t *start, int type, const char *value, uint32_t length);
+int FillParamMsgContent(const ParamMessage *request, uint32_t *start, int type, const char *value, uint32_t length);
 ParamMsgContent *GetNextContent(const ParamMessage *reqest, uint32_t *offset);
 ParamMessage *CreateParamMessage(int type, const char *name, uint32_t msgSize);
 

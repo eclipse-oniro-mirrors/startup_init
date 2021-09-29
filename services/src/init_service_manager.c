@@ -62,7 +62,7 @@ void DumpAllServices(void)
 }
 #endif
 
-void RegisterServices(Service* services, int servicesCnt)
+void RegisterServices(Service *services, int servicesCnt)
 {
     if (services == NULL) {
         return;
@@ -71,7 +71,7 @@ void RegisterServices(Service* services, int servicesCnt)
     g_servicesCnt += servicesCnt;
 }
 
-static void ReleaseServiceMem(Service* curServ)
+static void ReleaseServiceMem(Service *curServ)
 {
     if (curServ == NULL) {
         return;
@@ -107,7 +107,7 @@ static void ReleaseServiceMem(Service* curServ)
     curServ->servPerm.gIDCnt = 0;
 }
 
-static int GetServiceName(const cJSON* curArrItem, Service* curServ)
+static int GetServiceName(const cJSON *curArrItem, Service *curServ)
 {
     char* fieldStr = cJSON_GetStringValue(cJSON_GetObjectItem(curArrItem, "name"));
     if (fieldStr == NULL) {
@@ -130,7 +130,7 @@ static int GetServiceName(const cJSON* curArrItem, Service* curServ)
 }
 
 #ifdef OHOS_LITE
-static int IsForbidden(const char* fieldStr)
+static int IsForbidden(const char *fieldStr)
 {
     size_t fieldLen = strlen(fieldStr);
     size_t forbidStrLen = strlen(BIN_SH_NOT_ALLOWED);
@@ -152,13 +152,13 @@ static int IsForbidden(const char* fieldStr)
     }
 }
 #else
-static int IsForbidden(const char* fieldStr)
+static int IsForbidden(const char *fieldStr)
 {
     return 0;
 }
 #endif
 
-static cJSON* GetArrItem(const cJSON* fileRoot, int* arrSize, const char* arrName)
+static cJSON* GetArrItem(const cJSON *fileRoot, int *arrSize, const char *arrName)
 {
     cJSON* arrItem = cJSON_GetObjectItemCaseSensitive(fileRoot, arrName);
     if (!cJSON_IsArray(arrItem)) {
@@ -239,11 +239,11 @@ static int GetGidOneItem(const cJSON *curArrItem, Service *curServ)        // gi
     }
 
     if (cJSON_IsNumber(filedJ)) {
-        gid_t gID = (int)cJSON_GetNumberValue(filedJ);
-        if (gID < 0) {
-            INIT_LOGE("GetGidOneItem, gID = %d error.", gID);
+        int value = (int)cJSON_GetNumberValue(filedJ);
+        if (value < 0) {
             return SERVICE_FAILURE;
         }
+        gid_t gID = value;
         curServ->servPerm.gIDArray[0] = gID;
         return SERVICE_SUCCESS;
     }
@@ -264,7 +264,7 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
             gIDCnt, NGROUPS_MAX + 1);
         return SERVICE_FAILURE;
     }
-    curServ->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t) * gIDCnt);
+    curServ->servPerm.gIDArray = (gid_t *)calloc(sizeof(gid_t), gIDCnt);
     if (curServ->servPerm.gIDArray == NULL) {
         INIT_LOGE("GetGidArray malloc error");
         return SERVICE_FAILURE;
@@ -296,11 +296,11 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
         if (!cJSON_IsNumber(item)) {
             break;
         }
-        gid_t gID = (int)cJSON_GetNumberValue(item);
-        if (gID < 0) {
-            INIT_LOGE("GetGidArray gID = %d, error", gID);
+        int value = (int)cJSON_GetNumberValue(item);
+        if (value < 0) {
             break;
         }
+        gid_t gID = value;
         curServ->servPerm.gIDArray[i] = gID;
     }
     return (((i == gIDCnt) ? SERVICE_SUCCESS : SERVICE_FAILURE));
@@ -383,7 +383,7 @@ static int GetImportantValue(int value, Service *curServ)
     return SERVICE_SUCCESS;
 }
 
-static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const char* targetField)
+static int GetServiceNumber(const cJSON *curArrItem, Service *curServ, const char *targetField)
 {
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, targetField);
     if (filedJ == NULL && (strncmp(targetField, CRITICAL_STR_IN_CFG, strlen(CRITICAL_STR_IN_CFG)) == 0
@@ -532,7 +532,7 @@ static void FreeServiceSocket(struct ServiceSocket *sockopt)
         return;
     }
     struct ServiceSocket *tmpSock = NULL;
-    while (sockopt) {
+    while (sockopt != NULL) {
         tmpSock = sockopt;
         if (sockopt->name != NULL) {
             free(sockopt->name);
@@ -544,7 +544,7 @@ static void FreeServiceSocket(struct ServiceSocket *sockopt)
     return;
 }
 
-static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
+static int GetServiceSocket(const cJSON *curArrItem, Service *curServ)
 {
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, "socket");
     if (!cJSON_IsArray(filedJ)) {
@@ -587,7 +587,7 @@ static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
     return SERVICE_SUCCESS;
 }
 
-static int GetServiceOnRestart(const cJSON* curArrItem, Service* curServ)
+static int GetServiceOnRestart(const cJSON *curArrItem, Service *curServ)
 {
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, "onrestart");
     if (filedJ == NULL) {
@@ -626,7 +626,7 @@ static int GetServiceOnRestart(const cJSON* curArrItem, Service* curServ)
     return SERVICE_SUCCESS;
 }
 
-static bool IsServiceInMainStrap(Service *curServ)
+static bool IsServiceInMainStrap(const Service *curServ)
 {
     char *mainServiceList[] = {
         "appspawn", "udevd", "samgr", "multimodalinput", "weston", "installs", "hiview", "hilogd", "hdf_devmgr",
@@ -666,7 +666,7 @@ static int GetDynamicService(const cJSON *curArrItem, Service *curServ)
     return SERVICE_SUCCESS;
 }
 
-static int CheckServiceKeyName(const cJSON* curService)
+static int CheckServiceKeyName(const cJSON *curService)
 {
     char *cfgServiceKeyList[] = {
         "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
@@ -703,21 +703,25 @@ static int ParseOneService(const cJSON *curItem, Service *service)
         return SERVICE_FAILURE;
     }
     int ret = GetServiceName(curItem, service);
-    ret |= GetServicePathAndArgs(curItem, service);
-    ret |= GetUidStringNumber(curItem, service);
-    ret |= GetGidArray(curItem, service);
-    ret |= GetServiceNumber(curItem, service, ONCE_STR_IN_CFG);
-    ret |= GetServiceNumber(curItem, service, IMPORTANT_STR_IN_CFG);
-    ret |= GetServiceNumber(curItem, service, CRITICAL_STR_IN_CFG);
-    ret |= GetServiceNumber(curItem, service, DISABLED_STR_IN_CFG);
-    ret |= GetServiceNumber(curItem, service, CONSOLE_STR_IN_CFG);
-    ret |= GetWritepidStrings(curItem, service);
-    ret |= GetServiceCaps(curItem, service);
-    ret |= GetDynamicService(curItem, service);
-    return ret;
+    ret += GetServicePathAndArgs(curItem, service);
+    ret += GetUidStringNumber(curItem, service);
+    ret += GetGidArray(curItem, service);
+    ret += GetServiceNumber(curItem, service, ONCE_STR_IN_CFG);
+    ret += GetServiceNumber(curItem, service, IMPORTANT_STR_IN_CFG);
+    ret += GetServiceNumber(curItem, service, CRITICAL_STR_IN_CFG);
+    ret += GetServiceNumber(curItem, service, DISABLED_STR_IN_CFG);
+    ret += GetServiceNumber(curItem, service, CONSOLE_STR_IN_CFG);
+    ret += GetWritepidStrings(curItem, service);
+    ret += GetServiceCaps(curItem, service);
+    ret += GetDynamicService(curItem, service);
+    if (ret < 0) {
+        return SERVICE_FAILURE;
+    } else {
+        return SERVICE_SUCCESS;
+    }
 }
 
-void ParseAllServices(const cJSON* fileRoot)
+void ParseAllServices(const cJSON *fileRoot)
 {
     int servArrSize = 0;
     cJSON* serviceArr = GetArrItem(fileRoot, &servArrSize, SERVICES_ARR_NAME_IN_JSON);
@@ -765,13 +769,15 @@ void ParseAllServices(const cJSON* fileRoot)
                 tmp[i].socketCfg = NULL;
             }
         }
-        (void)GetServiceOnRestart(curItem, &tmp[i]);
+        if (GetServiceOnRestart(curItem, &tmp[i]) == SERVICE_FAILURE) {
+            INIT_LOGE("Failed Get Service OnRestart service");
+        }
     }
     // Increase service counter.
     RegisterServices(retServices, servArrSize);
 }
 
-static int FindServiceByName(const char* servName)
+static int FindServiceByName(const char *servName)
 {
     if ((servName == NULL) || (g_services == NULL)) {
         return -1;
@@ -804,7 +810,7 @@ void StartServiceByName(const char *servName, bool checkDynamic)
     return;
 }
 
-void StopServiceByName(const char* servName)
+void StopServiceByName(const char *servName)
 {
     // find service by name
     int servIdx = FindServiceByName(servName);

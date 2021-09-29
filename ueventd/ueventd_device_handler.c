@@ -79,8 +79,11 @@ static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid
 static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode, char **symLinks, bool isBlock)
 {
     int rc = -1;
-    int major = uevent->major;
-    int minor = uevent->minor;
+    if (uevent->major < 0 || uevent->minor < 0) {
+        return rc;
+    }
+    size_t major = uevent->major;
+    size_t minor = uevent->minor;
     uid_t uid = uevent->ug.uid;
     gid_t gid = uevent->ug.gid;
     mode_t mode = DEVMODE;
@@ -164,23 +167,33 @@ static char *FindPlatformDeviceName(char *path)
     return NULL;
 }
 
-static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent, const char *partitionName)
+static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
+    const char *partitionName, const char *deviceName)
 {
-    if (linkNum > BLOCKDEVICE_LINKS - 1) {
-        INIT_LOGW("Too many links, ignore");
+    if ((linkNum > BLOCKDEVICE_LINKS - 1) || (linkNum < 0)) {
+        INIT_LOGW("Failed set linkNum, links ignore");
+        return;
+    }
+    if (parent == NULL) {
+        return;
+    }
+    links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
+    if (links[linkNum] == NULL) {
+        INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
         return;
     }
 
     // If a block device without partition name.
     // For now, we will not create symbol link for it.
     if (!INVALIDSTRING(partitionName)) {
-        links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
-        if (links[linkNum] == NULL) {
-            INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
-            return;
-        }
         if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
             "/dev/block/platform/%s/by-name/%s", parent, partitionName) == -1) {
+            INIT_LOGE("Failed to build link");
+        }
+    } else if (!INVALIDSTRING(deviceName)) {
+        // If a device does not have a partition name, create a symbol link for it separately.
+        if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
+            "/dev/block/platform/%s/%s", parent, deviceName) == -1) {
             INIT_LOGE("Failed to build link");
         }
     }
@@ -188,7 +201,8 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
 
 static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
 {
-    if (uevent == NULL || uevent->subsystem == NULL || STRINGEQUAL(uevent->subsystem, "block") == 0) {
+    if (uevent == NULL || uevent->syspath == NULL || uevent->subsystem == NULL ||
+        STRINGEQUAL(uevent->subsystem, "block") == 0) {
         INIT_LOGW("Invalid arguments, Skip to get device symbol links.");
         return NULL;
     }
@@ -216,22 +230,24 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
     // Reverse walk through sysPath, and check subystem file under each directory.
     char *parent = dirname(sysPath);
     while (parent != NULL && !STRINGEQUAL(parent, "/") && !STRINGEQUAL(parent, ".")) {
-        char subsystem[SYSPATH_SIZE];
+        char subsystem[SYSPATH_SIZE] = {0};
         if (snprintf_s(subsystem, SYSPATH_SIZE, SYSPATH_SIZE - 1, "%s/subsystem", parent) == -1) {
             INIT_LOGE("Failed to build subsystem path for device \" %s \"", uevent->syspath);
             return NULL;
         }
 
         char bus[PATH_MAX] = {0};
-        if (Realpath(subsystem, bus, sizeof(bus)) != NULL) {
-            if (STRINGEQUAL(bus, "/sys/bus/platform")) {
-                INIT_LOGD("Find a platform device: %s", parent);
-                parent = FindPlatformDeviceName(parent);
-                if (parent != NULL) {
-                    BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName);
-                }
-                linkNum++;
+        if (Realpath(subsystem, bus, sizeof(bus)) == NULL) {
+            parent = dirname(parent);
+            continue;
+        }
+        if (STRINGEQUAL(bus, "/sys/bus/platform")) {
+            INIT_LOGD("Find a platform device: %s", parent);
+            parent = FindPlatformDeviceName(parent);
+            if (parent != NULL) {
+                BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
             }
+            linkNum++;
         }
         parent = dirname(parent);
     }
@@ -288,7 +304,7 @@ static const char *GetDeviceName(char *sysPath, const char *deviceName)
     }
     if (deviceName != NULL && deviceName[0] != '\0') {
         // if device name reported by kernel includes '/', skip it.
-        // TODO: use entire device name reported by kernel
+        // use entire device name reported by kernel
         devName = basename((char *)deviceName);
         char *p = strrchr(deviceName, '/');
         if (p != NULL) { // device name includes slash

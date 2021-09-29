@@ -20,7 +20,6 @@
 
 #define LABEL "PARAM_SELINUX"
 #define SELINUX_LABEL_LEN 128
-
 typedef struct SELinuxSecurityLabel {
     ParamSecurityLabel securityLabel;
     char label[SELINUX_LABEL_LEN];
@@ -56,7 +55,7 @@ static int EncodeSecurityLabel(const ParamSecurityLabel *srcLabel, char *buffer,
     return memcpy_s(buffer, *bufferSize, srcLabel, sizeof(SELinuxSecurityLabel));
 }
 
-static int DecodeSecurityLabel(ParamSecurityLabel **srcLabel, char *buffer, uint32_t bufferSize)
+static int DecodeSecurityLabel(ParamSecurityLabel **srcLabel, const char *buffer, uint32_t bufferSize)
 {
     PARAM_CHECK(bufferSize >= sizeof(SELinuxSecurityLabel), return -1, "Invalid buffersize %u", bufferSize);
     PARAM_CHECK(srcLabel != NULL && buffer != NULL, return -1, "Invalid param");
@@ -66,28 +65,32 @@ static int DecodeSecurityLabel(ParamSecurityLabel **srcLabel, char *buffer, uint
 
 static int LoadParamLabels(const char *fileName, SecurityLabelFunc label, void *context)
 {
-    int ret = 0;
     FILE *fp = fopen(fileName, "r");
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
-    SubStringInfo *info = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_DAC + 1));
-    PARAM_CHECK(info != NULL, (void)fclose(fp);
-        return -1, "Failed to malloc for %s", fileName);
-    char buff[PARAM_BUFFER_SIZE];
+
+    SubStringInfo *info = calloc(1, sizeof(SubStringInfo) * (SUBSTR_INFO_DAC + 1));
+    char *buff = (char *)calloc(1, PARAM_BUFFER_SIZE);
     int infoCount = 0;
-    ParamAuditData auditData = {};
-    while (fgets(buff, PARAM_BUFFER_SIZE, fp) != NULL) {
+    ParamAuditData auditData = {0};
+    while (info != NULL && buff != NULL && fgets(buff, PARAM_BUFFER_SIZE, fp) != NULL) {
+        buff[PARAM_BUFFER_SIZE - 1] = '\0';
         int subStrNumber = GetSubStringInfo(buff, strlen(buff), ' ', info, SUBSTR_INFO_DAC + 1);
         if (subStrNumber <= SUBSTR_INFO_DAC) {
             continue;
         }
         auditData.name = info[SUBSTR_INFO_NAME].value;
         auditData.label = info[SUBSTR_INFO_LABEL].value;
-        ret = label(&auditData, context);
+        int ret = label(&auditData, context);
         PARAM_CHECK(ret == 0, continue, "Failed to write param info %d %s", ret, buff);
         infoCount++;
     }
+    if (buff) {
+        free(buff);
+    }
+    if (info) {
+        free(info);
+    }
     (void)fclose(fp);
-    free(info);
     PARAM_LOGI("Load parameter info %d success %s", infoCount, fileName);
     return 0;
 }
@@ -101,7 +104,7 @@ static int ProcessParamFile(const char *fileName, void *context)
 static int GetParamSecurityLabel(SecurityLabelFunc label, const char *path, void *context)
 {
     PARAM_CHECK(label != NULL, return -1, "Invalid param");
-    int ret = 0;
+    int ret;
     struct stat st;
     LabelFuncContext cxt = { label, context };
     if ((stat(path, &st) == 0) && !S_ISDIR(st.st_mode)) {
@@ -119,7 +122,7 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
     return 0;
 }
 
-static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, int mode)
+static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, uint32_t mode)
 {
     PARAM_LOGI("CheckParamPermission ");
     PARAM_CHECK(srcLabel != NULL && auditData != NULL && auditData->name != NULL, return -1, "Invalid param");

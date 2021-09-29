@@ -14,11 +14,10 @@
  */
 
 #include "param_service.h"
-#include <ctype.h>
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -58,7 +57,7 @@ static int AddParam(WorkSpace *workSpace, const char *name, const char *value, u
     return 0;
 }
 
-static int UpdateParam(WorkSpace *workSpace, uint32_t *dataIndex, const char *name, const char *value)
+static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const char *name, const char *value)
 {
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, *dataIndex);
     PARAM_CHECK(entry != NULL, return PARAM_CODE_REACHED_MAX, "Failed to update param value %s %u", name, *dataIndex);
@@ -79,7 +78,7 @@ static int UpdateParam(WorkSpace *workSpace, uint32_t *dataIndex, const char *na
     return 0;
 }
 
-static int CheckParamValue(WorkSpace *workSpace, const ParamTrieNode *node, const char *name, const char *value)
+static int CheckParamValue(const WorkSpace *workSpace, const ParamTrieNode *node, const char *name, const char *value)
 {
     if (IS_READY_ONLY(name)) {
         PARAM_CHECK(strlen(value) < PARAM_CONST_VALUE_LEN_MAX,
@@ -96,7 +95,7 @@ static int CheckParamValue(WorkSpace *workSpace, const ParamTrieNode *node, cons
     return 0;
 }
 
-int WriteParam(WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd)
+int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd)
 {
     PARAM_CHECK(workSpace != NULL && dataIndex != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
@@ -110,7 +109,7 @@ int WriteParam(WorkSpace *workSpace, const char *name, const char *value, uint32
         }
         return UpdateParam(workSpace, &node->dataIndex, name, value);
     }
-    return AddParam(workSpace, name, value, dataIndex);
+    return AddParam((WorkSpace *)workSpace, name, value, dataIndex);
 }
 
 PARAM_STATIC int AddSecurityLabel(const ParamAuditData *auditData, void *context)
@@ -162,7 +161,8 @@ static char *GetServiceCtrlName(const char *name, const char *value)
                 key = (char *)malloc(keySize + 1);
                 PARAM_CHECK(key != NULL, return NULL, "Failed to alloc memory for %s", name);
                 int ret = sprintf_s(key, keySize, "%s%s", OHOS_SERVICE_CTRL_PREFIX, powerCtrlArg[i][1]);
-                PARAM_CHECK(ret > EOK, return NULL, "Failed to format key for %s", name);
+                PARAM_CHECK(ret > EOK, free(key);
+                    return NULL, "Failed to format key for %s", name);
                 return key;
             }
         }
@@ -173,7 +173,8 @@ static char *GetServiceCtrlName(const char *name, const char *value)
                 key = (char *)malloc(keySize + 1);
                 PARAM_CHECK(key != NULL, return NULL, "Failed to alloc memory for %s", name);
                 int ret = sprintf_s(key, keySize, "%s%s", OHOS_SERVICE_CTRL_PREFIX, value);
-                PARAM_CHECK(ret > EOK, return NULL, "Failed to format key for %s", name);
+                PARAM_CHECK(ret > EOK, free(key);
+                    return NULL, "Failed to format key for %s", name);
                 return key;
             }
         }
@@ -187,7 +188,7 @@ static void CheckAndSendTrigger(ParamWorkSpace *workSpace, uint32_t dataIndex, c
     PARAM_CHECK(entry != NULL, return, "Failed to get data %s ", name);
     uint32_t trigger = 1;
     if ((atomic_load_explicit(&entry->commitId, memory_order_relaxed) & PARAM_FLAGS_TRIGGED) != PARAM_FLAGS_TRIGGED) {
-        trigger = CheckAndMarkTrigger(TRIGGER_PARAM, name) != 0 ? 1 : 0;
+        trigger = (CheckAndMarkTrigger(TRIGGER_PARAM, name) != 0) ? 1 : 0;
     }
     if (trigger) {
         atomic_store_explicit(&entry->commitId,
@@ -198,7 +199,7 @@ static void CheckAndSendTrigger(ParamWorkSpace *workSpace, uint32_t dataIndex, c
 
     int wait = 1;
     if ((atomic_load_explicit(&entry->commitId, memory_order_relaxed) & PARAM_FLAGS_WAITED) != PARAM_FLAGS_WAITED) {
-        wait = CheckAndMarkTrigger(TRIGGER_PARAM_WAIT, name) != 0 ? 1 : 0;
+        wait = (CheckAndMarkTrigger(TRIGGER_PARAM_WAIT, name) != 0) ? 1 : 0;
     }
     if (wait) {
         atomic_store_explicit(&entry->commitId,
@@ -218,12 +219,12 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
     char *key = GetServiceCtrlName(name, value);
     if (srcLabel != NULL) {
         ret = CheckParamPermission(&g_paramWorkSpace, srcLabel, (key == NULL) ? name : key, DAC_WRITE);
-        PARAM_CHECK(ret == 0, return ret, "Forbit to set parameter %s", name);
     }
     if (key != NULL) {
         serviceCtrl = 1;
         free(key);
     }
+    PARAM_CHECK(ret == 0, return ret, "Forbit to set parameter %s", name);
     uint32_t dataIndex = 0;
     ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, &dataIndex, 0);
     PARAM_CHECK(ret == 0, return ret, "Failed to set param %d name %s %s", ret, name, value);
@@ -249,7 +250,7 @@ static int SendResponseMsg(ParamTaskPtr worker, const ParamMessage *msg, int res
     return 0;
 }
 
-static int SendWatcherNotifyMessage(TriggerExtData *extData, int cmd, const char *content)
+static int SendWatcherNotifyMessage(const TriggerExtData *extData, int cmd, const char *content)
 {
     UNUSED(cmd);
     PARAM_CHECK(content != NULL, return -1, "Invalid content");
@@ -259,7 +260,7 @@ static int SendWatcherNotifyMessage(TriggerExtData *extData, int cmd, const char
     PARAM_CHECK(msg != NULL, return -1, "Failed to create msg ");
 
     uint32_t offset = 0;
-    int ret = 0;
+    int ret;
     char *tmp = strstr(content, "=");
     if (tmp != NULL) {
         ret = strncpy_s(msg->key, sizeof(msg->key) - 1, content, tmp - content);
@@ -287,7 +288,7 @@ static int HandleParamSet(const ParamTaskPtr worker, const ParamMessage *msg)
     uint32_t offset = 0;
     ParamMsgContent *valueContent = GetNextContent(msg, &offset);
     PARAM_CHECK(valueContent != NULL, return -1, "Invalid msg for %s", msg->key);
-    int ret = 0;
+    int ret;
     ParamMsgContent *lableContent =  GetNextContent(msg, &offset);
     ParamSecurityLabel *srcLabel = NULL;
     if (lableContent != NULL && lableContent->contentSize != 0) {
@@ -306,7 +307,7 @@ static int HandleParamSet(const ParamTaskPtr worker, const ParamMessage *msg)
     return SendResponseMsg(worker, msg, ret);
 }
 
-static ParamNode *CheckMatchParamWait(ParamWorkSpace *worksapce, const char *name, const char *value)
+static ParamNode *CheckMatchParamWait(const ParamWorkSpace *worksapce, const char *name, const char *value)
 {
     uint32_t nameLength = strlen(name);
     ParamTrieNode *node = FindTrieNode(&worksapce->paramSpace, name, nameLength, NULL);
@@ -332,13 +333,14 @@ static ParamNode *CheckMatchParamWait(ParamWorkSpace *worksapce, const char *nam
     return NULL;
 }
 
-static int HandleParamWaitAdd(ParamWorkSpace *worksapce, const ParamTaskPtr worker, const ParamMessage *msg)
+static int HandleParamWaitAdd(const ParamWorkSpace *worksapce, const ParamTaskPtr worker, const ParamMessage *msg)
 {
     PARAM_CHECK(msg != NULL, return -1, "Invalid message");
     uint32_t offset = 0;
     uint32_t timeout = DEFAULT_PARAM_WAIT_TIMEOUT;
     ParamMsgContent *valueContent = GetNextContent(msg, &offset);
     PARAM_CHECK(valueContent != NULL, return -1, "Invalid msg");
+    PARAM_CHECK(valueContent->contentSize <= PARAM_CONST_VALUE_LEN_MAX, return -1, "Invalid msg");
     ParamMsgContent *timeoutContent = GetNextContent(msg, &offset);
     if (timeoutContent != NULL) {
         timeout = *((uint32_t *)(timeoutContent->content));
@@ -361,7 +363,7 @@ static int HandleParamWaitAdd(ParamWorkSpace *worksapce, const ParamTaskPtr work
     }
 
     uint32_t buffSize = strlen(msg->key) + valueContent->contentSize + 1 + 1;
-    char *condition = malloc(buffSize);
+    char *condition = calloc(1, buffSize);
     PARAM_CHECK(condition != NULL, return -1, "Failed to create condition for %s", msg->key);
     int ret = sprintf_s(condition, buffSize - 1, "%s=%s", msg->key, valueContent->content);
     PARAM_CHECK(ret > EOK, free(condition);
@@ -407,7 +409,7 @@ PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *m
 {
     PARAM_CHECK(msg != NULL, return -1, "Invalid msg");
     PARAM_CHECK(worker != NULL, return -1, "Invalid worker");
-    int ret = 0;
+    int ret = PARAM_CODE_INVALID_PARAM;
     switch (msg->type) {
         case MSG_SET_PARAM:
             ret = HandleParamSet(worker, msg);
@@ -428,17 +430,18 @@ PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *m
     return 0;
 }
 
-static int LoadDefaultParam_(const char *fileName, int mode, const char *exclude[], uint32_t count)
+static int LoadDefaultParam_(const char *fileName, uint32_t mode, const char *exclude[], uint32_t count)
 {
     uint32_t paramNum = 0;
     FILE *fp = fopen(fileName, "r");
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
-    char *buff = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_VALUE + 1) + PARAM_BUFFER_SIZE);
+    char *buff = calloc(1, sizeof(SubStringInfo) * (SUBSTR_INFO_VALUE + 1) + PARAM_BUFFER_SIZE);
     PARAM_CHECK(buff != NULL, (void)fclose(fp);
         return -1, "Failed to alloc memory for load %s", fileName);
 
     SubStringInfo *info = (SubStringInfo *)(buff + PARAM_BUFFER_SIZE);
     while (fgets(buff, PARAM_BUFFER_SIZE, fp) != NULL) {
+        buff[PARAM_BUFFER_SIZE - 1] = '\0';
         int subStrNumber = GetSubStringInfo(buff, strlen(buff), '=', info, SUBSTR_INFO_VALUE + 1);
         if (subStrNumber <= SUBSTR_INFO_VALUE) {
             continue;
@@ -465,7 +468,7 @@ static int LoadDefaultParam_(const char *fileName, int mode, const char *exclude
     return 0;
 }
 
-static int OnIncomingConnect(const ParamTaskPtr server, int flags)
+static int OnIncomingConnect(const ParamTaskPtr server, uint32_t flags)
 {
     PARAM_LOGD("OnIncomingConnect %p", server);
     ParamStreamInfo info = {};
@@ -479,6 +482,7 @@ static int OnIncomingConnect(const ParamTaskPtr server, int flags)
     PARAM_CHECK(ret == 0, return -1, "Failed to create client");
 
     ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
+    PARAM_CHECK(watcher != NULL, return -1, "Failed to get watcher");
     ListInit(&watcher->node);
     PARAM_TRIGGER_HEAD_INIT(watcher->triggerHead);
     ListAddTail(&GetTriggerWorkSpace()->waitList, &watcher->node);
@@ -490,6 +494,7 @@ static int OnIncomingConnect(const ParamTaskPtr server, int flags)
 static void TimerCallback(ParamTaskPtr timer, void *context)
 {
     UNUSED(context);
+    PARAM_CHECK(GetTriggerWorkSpace() != NULL, return, "Invalid wrokspace");
     ParamWatcher *watcher = GetNextParamWatcher(GetTriggerWorkSpace(), NULL);
     while (watcher != NULL) {
         ParamWatcher *next = GetNextParamWatcher(GetTriggerWorkSpace(), watcher);
@@ -534,11 +539,11 @@ int LoadPersistParams(void)
 static int ProcessParamFile(const char *fileName, void *context)
 {
     static const char *exclude[] = {"ctl.", "selinux.restorecon_recursive"};
-    int mode = *(int *)context;
+    uint32_t mode = *(int *)context;
     return LoadDefaultParam_(fileName, mode, exclude, sizeof(exclude) / sizeof(exclude[0]));
 }
 
-int LoadDefaultParams(const char *fileName, int mode)
+int LoadDefaultParams(const char *fileName, uint32_t mode)
 {
     PARAM_CHECK(fileName != NULL, return -1, "Invalid fielname for load");
     if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
@@ -614,6 +619,7 @@ void StopParamService(void)
     PARAM_LOGI("StopParamService.");
     CloseParamWorkSpace(&g_paramWorkSpace);
     CloseTriggerWorkSpace();
+    ParamTaskClose(g_paramWorkSpace.serverTask);
     g_paramWorkSpace.serverTask = NULL;
     ParamServiceStop();
 }

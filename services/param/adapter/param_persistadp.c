@@ -38,9 +38,10 @@ static int LoadPersistParam(PersistParamGetPtr persistParamGet, void *context)
     }
     PARAM_CHECK(fp != NULL, return -1, "No valid persist parameter file %s", PARAM_PERSIST_SAVE_PATH);
 
-    char *buff = (char *)malloc(PARAM_BUFFER_SIZE);
-    SubStringInfo *info = malloc(sizeof(SubStringInfo) * (SUBSTR_INFO_VALUE + 1));
+    char *buff = (char *)calloc(1, PARAM_BUFFER_SIZE);
+    SubStringInfo *info = calloc(1, sizeof(SubStringInfo) * (SUBSTR_INFO_VALUE + 1));
     while (info != NULL && buff != NULL && fgets(buff, PARAM_BUFFER_SIZE, fp) != NULL) {
+        buff[PARAM_BUFFER_SIZE - 1] = '\0';
         int subStrNumber = GetSubStringInfo(buff, strlen(buff), '=', info, SUBSTR_INFO_VALUE + 1);
         if (subStrNumber <= SUBSTR_INFO_VALUE) {
             continue;
@@ -48,8 +49,12 @@ static int LoadPersistParam(PersistParamGetPtr persistParamGet, void *context)
         int ret = persistParamGet(info[0].value, info[1].value, context);
         PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buff);
     }
-    free(info);
-    free(buff);
+    if (info) {
+        free(info);
+    }
+    if (buff) {
+        free(buff);
+    }
     (void)fclose(fp);
     return 0;
 }
@@ -57,7 +62,7 @@ static int LoadPersistParam(PersistParamGetPtr persistParamGet, void *context)
 static int BatchSavePersistParamBegin(PERSIST_SAVE_HANDLE *handle)
 {
     FILE *fp = fopen(PARAM_PERSIST_SAVE_TMP_PATH, "w");
-    PARAM_CHECK(fp != NULL, return -1, "Open file %s fail error %s", PARAM_PERSIST_SAVE_TMP_PATH, strerror(errno));
+    PARAM_CHECK(fp != NULL, return -1, "Open file %s fail error %d", PARAM_PERSIST_SAVE_TMP_PATH, errno);
     *handle = (PERSIST_SAVE_HANDLE)fp;
     return 0;
 }
@@ -77,12 +82,12 @@ static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle)
     (void)fclose(fp);
     unlink(PARAM_PERSIST_SAVE_PATH);
     int ret = rename(PARAM_PERSIST_SAVE_TMP_PATH, PARAM_PERSIST_SAVE_PATH);
-    PARAM_CHECK(ret == 0, return, "BatchSavePersistParamEnd %s fail error %s",
-        PARAM_PERSIST_SAVE_TMP_PATH, strerror(errno));
+    PARAM_CHECK(ret == 0, return, "BatchSavePersistParamEnd %s fail error %d", PARAM_PERSIST_SAVE_TMP_PATH, errno);
 }
 
 int RegisterPersistParamOps(PersistParamOps *ops)
 {
+    PARAM_CHECK(ops != NULL, return -1, "Invalid ops");
     ops->save = NULL;
     ops->load = LoadPersistParam;
     ops->batchSaveBegin = BatchSavePersistParamBegin;

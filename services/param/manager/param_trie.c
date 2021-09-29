@@ -15,11 +15,8 @@
 
 #include "param_trie.h"
 
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -35,6 +32,7 @@
 static int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, uint32_t spaceSize, int readOnly)
 {
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
+    PARAM_CHECK(spaceSize <= PARAM_WORKSPACE_MAX, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     PARAM_CHECK(workSpace->allocTrieNode != NULL,
         return PARAM_CODE_INVALID_PARAM, "Invalid allocTrieNode %s", workSpace->fileName);
     PARAM_CHECK(workSpace->compareTrieNode != NULL,
@@ -44,14 +42,14 @@ static int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, uint32_t spa
 
     int fd = open(workSpace->fileName, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
     PARAM_CHECK(fd >= 0, return PARAM_CODE_INVALID_NAME,
-        "Open file %s mode %x fail error %s", workSpace->fileName, mode, strerror(errno));
+        "Open file %s mode %x fail error %d", workSpace->fileName, mode, errno);
 
     if (!readOnly) {
         ftruncate(fd, spaceSize);
     }
     void *areaAddr = (void *)mmap(NULL, spaceSize, prot, MAP_SHARED, fd, 0);
-    PARAM_CHECK(areaAddr != MAP_FAILED, close(fd); return PARAM_CODE_ERROR_MAP_FILE,
-        "Failed to map memory error %s", strerror(errno));
+    PARAM_CHECK(areaAddr != MAP_FAILED && areaAddr != NULL, close(fd);
+        return PARAM_CODE_ERROR_MAP_FILE, "Failed to map memory error %d", errno);
     close(fd);
 
     if (!readOnly) {
@@ -93,7 +91,7 @@ static uint32_t AllocateParamTrieNode(WorkSpace *workSpace, const char *key, uin
     return offset;
 }
 
-static int CompareParamTrieNode(ParamTrieNode *node, const char *key, uint32_t keyLen)
+static int CompareParamTrieNode(const ParamTrieNode *node, const char *key, uint32_t keyLen)
 {
     if (node->length > keyLen) {
         return -1;
@@ -112,9 +110,9 @@ int InitWorkSpace(const char *fileName, WorkSpace *workSpace, int onlyRead)
     }
     workSpace->compareTrieNode = CompareParamTrieNode;
     workSpace->allocTrieNode = AllocateParamTrieNode;
-    int ret = memcpy_s(workSpace->fileName, FILENAME_LEN_MAX, fileName, strlen(fileName));
-    PARAM_CHECK(ret == EOK, return PARAM_CODE_INVALID_NAME, "Copy file %s fail ", fileName);
-    int openMode = 0;
+    int ret = strcpy_s(workSpace->fileName, sizeof(workSpace->fileName), fileName);
+    PARAM_CHECK(ret == 0, return ret, "Failed to copy file name %s", fileName);
+    int openMode;
     int prot = PROT_READ;
     if (onlyRead) {
         openMode = O_RDONLY;
@@ -134,8 +132,9 @@ void CloseWorkSpace(WorkSpace *workSpace)
     workSpace->area = NULL;
 }
 
-static ParamTrieNode *GetTrieRoot(WorkSpace *workSpace)
+static ParamTrieNode *GetTrieRoot(const WorkSpace *workSpace)
 {
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return NULL, "The workspace is null");
     return (ParamTrieNode *)(workSpace->area->data + workSpace->area->firstNode);
 }
 
@@ -151,7 +150,7 @@ static void GetNextKey(const char **remainingKey, char **subKey, uint32_t *subKe
 
 static ParamTrieNode *AddToSubTrie(WorkSpace *workSpace, ParamTrieNode *current, const char *key, uint32_t keyLen)
 {
-    if (current == NULL) {
+    if (current == NULL || workSpace == NULL || key == NULL) {
         return NULL;
     }
     ParamTrieNode *subTrie = NULL;
@@ -182,7 +181,7 @@ static ParamTrieNode *AddToSubTrie(WorkSpace *workSpace, ParamTrieNode *current,
 ParamTrieNode *AddTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen)
 {
     PARAM_CHECK(key != NULL && keyLen > 0, return NULL, "Invalid param ");
-    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid param %s", key);
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return 0, "Invalid workSpace %s", key);
     PARAM_CHECK(workSpace->allocTrieNode != NULL, return NULL, "Invalid param %s", key);
     PARAM_CHECK(workSpace->compareTrieNode != NULL, return NULL, "Invalid param %s", key);
     const char *remainingKey = key;
@@ -215,7 +214,7 @@ ParamTrieNode *AddTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLe
     return current;
 }
 
-static ParamTrieNode *FindSubTrie(WorkSpace *workSpace,
+static ParamTrieNode *FindSubTrie(const WorkSpace *workSpace,
     ParamTrieNode *current, const char *key, uint32_t keyLen, uint32_t *matchLabel)
 {
     if (current == NULL) {
@@ -244,10 +243,10 @@ static ParamTrieNode *FindSubTrie(WorkSpace *workSpace,
     return FindSubTrie(workSpace, subTrie, key, keyLen, matchLabel);
 }
 
-ParamTrieNode *FindTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel)
+ParamTrieNode *FindTrieNode(const WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel)
 {
     PARAM_CHECK(key != NULL && keyLen > 0, return NULL, "Invalid key ");
-    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid workSpace %s", key);
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return 0, "Invalid workSpace %s", key);
     PARAM_CHECK(workSpace->allocTrieNode != NULL, return NULL, "Invalid alloc function %s", key);
     PARAM_CHECK(workSpace->compareTrieNode != NULL, return NULL, "Invalid compare function %s", key);
     const char *remainingKey = key;
@@ -286,8 +285,8 @@ ParamTrieNode *FindTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyL
     return current;
 }
 
-static int TraversalSubTrieNode(WorkSpace *workSpace,
-    ParamTrieNode *current, TraversalTrieNodePtr walkFunc, void *cookie)
+static int TraversalSubTrieNode(const WorkSpace *workSpace,
+    const ParamTrieNode *current, TraversalTrieNodePtr walkFunc, void *cookie)
 {
     if (current == NULL) {
         return 0;
@@ -299,11 +298,12 @@ static int TraversalSubTrieNode(WorkSpace *workSpace,
     return 0;
 }
 
-int TraversalTrieNode(WorkSpace *workSpace, ParamTrieNode *root, TraversalTrieNodePtr walkFunc, void *cookie)
+int TraversalTrieNode(const WorkSpace *workSpace,
+    const ParamTrieNode *root, TraversalTrieNodePtr walkFunc, void *cookie)
 {
     PARAM_CHECK(walkFunc != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
-    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
-    ParamTrieNode *current = root;
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return 0, "Invalid workSpace");
+    ParamTrieNode *current = (ParamTrieNode *)root;
     if (root == NULL) {
         current = GetTrieRoot(workSpace);
     }
@@ -321,9 +321,9 @@ int TraversalTrieNode(WorkSpace *workSpace, ParamTrieNode *root, TraversalTrieNo
 
 uint32_t AddParamSecruityNode(WorkSpace *workSpace, const ParamAuditData *auditData)
 {
-    PARAM_CHECK(workSpace != NULL, return 0, "Invalid param");
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return 0, "Invalid param");
     PARAM_CHECK(auditData != NULL && auditData->name != NULL, return 0, "Invalid auditData");
-    uint32_t labelLen = ((auditData->label == NULL) || (strlen(auditData->label) == 0)) ? 0 : strlen(auditData->label);
+    const uint32_t labelLen = (auditData->label == NULL) ? 0 : strlen(auditData->label);
     uint32_t realLen = sizeof(ParamSecruityNode) + PARAM_ALIGN(labelLen + 1);
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize, return 0,
         "Failed to allocate currOffset %u, dataSize %u datalen %u",
@@ -348,7 +348,7 @@ uint32_t AddParamSecruityNode(WorkSpace *workSpace, const ParamAuditData *auditD
 
 uint32_t AddParamNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, const char *value, uint32_t valueLen)
 {
-    PARAM_CHECK(workSpace != NULL, return 0, "Invalid param");
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return 0, "Invalid param");
     PARAM_CHECK(key != NULL && value != NULL, return 0, "Invalid param");
 
     uint32_t realLen = sizeof(ParamNode) + 1 + 1;
@@ -375,8 +375,9 @@ uint32_t AddParamNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, co
     return offset;
 }
 
-ParamTrieNode *GetTrieNode(WorkSpace *workSpace, uint32_t offset)
+ParamTrieNode *GetTrieNode(const WorkSpace *workSpace, uint32_t offset)
 {
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return NULL, "Invalid param");
     if (offset == 0 || offset > workSpace->area->dataSize) {
         return NULL;
     }
@@ -385,5 +386,6 @@ ParamTrieNode *GetTrieNode(WorkSpace *workSpace, uint32_t offset)
 
 void SaveIndex(uint32_t *index, uint32_t offset)
 {
+    PARAM_CHECK(index != NULL, return, "Invalid index");
     *index = offset;
 }

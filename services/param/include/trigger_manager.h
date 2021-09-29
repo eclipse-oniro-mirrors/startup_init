@@ -16,10 +16,8 @@
 #ifndef STARTUP_TRIGER_MANAGER_H
 #define STARTUP_TRIGER_MANAGER_H
 #include <stdint.h>
-#include <stdlib.h>
 
 #include "cJSON.h"
-#include "init_log.h"
 #include "list.h"
 #include "param_message.h"
 #include "param_utils.h"
@@ -35,6 +33,7 @@ extern "C" {
 #define TRIGGER_CMD "trigger "
 #define TRIGGER_ARR_NAME_IN_JSON "jobs"
 #define CMDS_ARR_NAME_IN_JSON "cmds"
+#define TRIGGER_MAX_CMD 4096
 
 #define TRIGGER_EXECUTE_QUEUE 64
 #define MAX_CONDITION_NUMBER 64
@@ -114,13 +113,14 @@ typedef struct {
 } ParamWatcher;
 
 typedef struct TriggerExtData_ {
-    int (*excuteCmd)(struct TriggerExtData_ *trigger, int cmd, const char *content);
+    int (*excuteCmd)(const struct TriggerExtData_ *trigger, int cmd, const char *content);
     uint32_t watcherId;
     ParamWatcher *watcher;
 } TriggerExtData;
 
 typedef struct TriggerWorkSpace {
-    void (*cmdExec)(TriggerNode *trigger, CommandNode *cmd, const char *content, uint32_t size);
+    void (*cmdExec)(const TriggerNode *trigger,
+        const CommandNode *cmd, const char *content, uint32_t size);
     ParamTaskPtr eventHandle;
     char buffer[PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX];
     TriggerExecuteQueue executeQueue;
@@ -136,30 +136,29 @@ typedef int (*TRIGGER_MATCH)(TriggerWorkSpace *workSpace, LogicCalculator *calcu
     TriggerNode *trigger, const char *content, uint32_t contentSize);
 int CheckTrigger(TriggerWorkSpace *workSpace, int type,
     const char *content, uint32_t contentSize, PARAM_CHECK_DONE triggerExecuter);
-int MarkTriggerToParam(TriggerWorkSpace *workSpace, TriggerHeader *triggerHead, const char *name);
+int MarkTriggerToParam(const TriggerWorkSpace *workSpace, const TriggerHeader *triggerHead, const char *name);
 int CheckAndMarkTrigger(int type, const char *name);
 
 TriggerNode *ExecuteQueuePop(TriggerWorkSpace *workSpace);
-int ExecuteQueuePush(TriggerWorkSpace *workSpace, TriggerNode *trigger);
-int ExecuteQueueSize(TriggerWorkSpace *workSpace);
+int ExecuteQueuePush(TriggerWorkSpace *workSpace, const TriggerNode *trigger);
 
 TriggerNode *AddTrigger(TriggerHeader *triggerHead, const char *name, const char *condition, uint16_t extDataSize);
-TriggerNode *GetTriggerByName(TriggerWorkSpace *workSpace, const char *triggerName);
+TriggerNode *GetTriggerByName(const TriggerWorkSpace *workSpace, const char *triggerName);
 void FreeTrigger(TriggerNode *trigger);
 void ClearTrigger(TriggerHeader *head);
 
 int AddCommand(TriggerNode *trigger, uint32_t cmdIndex, const char *content);
-CommandNode *GetNextCmdNode(TriggerNode *trigger, CommandNode *curr);
+CommandNode *GetNextCmdNode(const TriggerNode *trigger, const CommandNode *curr);
 
-void DumpTrigger(TriggerWorkSpace *workSpace);
+void DumpTrigger(const TriggerWorkSpace *workSpace);
 void PostParamTrigger(int type, const char *name, const char *value);
 
 ParamWatcher *GetParamWatcher(const ParamTaskPtr worker);
-ParamWatcher *GetNextParamWatcher(TriggerWorkSpace *workSpace, ParamWatcher *curr);
+ParamWatcher *GetNextParamWatcher(const TriggerWorkSpace *workSpace, const ParamWatcher *curr);
 TriggerNode *AddWatcherTrigger(ParamWatcher *watcher,
     int triggerType, const char *name, const char *condition, const TriggerExtData *extData);
-void DelWatcherTrigger(ParamWatcher *watcher, uint32_t watcherId);
-void ClearWatcherTrigger(ParamWatcher *watcher);
+void DelWatcherTrigger(const ParamWatcher *watcher, uint32_t watcherId);
+void ClearWatcherTrigger(const ParamWatcher *watcher);
 
 TriggerWorkSpace *GetTriggerWorkSpace(void);
 #ifdef __cplusplus

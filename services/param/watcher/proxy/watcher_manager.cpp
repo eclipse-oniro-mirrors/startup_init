@@ -29,7 +29,6 @@ namespace init_param {
 REGISTER_SYSTEM_ABILITY_BY_ID(WatcherManager, PARAM_WATCHER_DISTRIBUTED_SERVICE_ID, true)
 
 const static int32_t INVALID_SOCKET = -1;
-const static int32_t SLEEP_TIME = 2000;
 uint32_t WatcherManager::AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher)
 {
     WATCHER_CHECK(watcher != nullptr, return 0, "Invalid remove watcher for %s", keyPrefix.c_str());
@@ -94,9 +93,10 @@ int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
     return 0;
 }
 
-void WatcherManager::ProcessWatcherMessage(const char *buffer, uint32_t dataSize)
+void WatcherManager::ProcessWatcherMessage(const std::vector<char> &buffer, uint32_t dataSize)
 {
-    ParamMessage *msg = (ParamMessage *)buffer;
+    ParamMessage *msg = (ParamMessage *)buffer.data();
+    PARAM_CHECK(msg != NULL, return, "Invalid msg");
     uint32_t offset = 0;
     if (msg->type != MSG_NOTIFY_PARAM) {
         return;
@@ -194,8 +194,7 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, ParamWatcherP
     std::vector<char> buffer(PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX);
     struct Context context = {buffer.data(), watcher, keyPrefix};
     // walk watcher
-    SystemTraversalParameter(
-        [](ParamHandle handle, void *cookie) {
+    SystemTraversalParameter([](ParamHandle handle, void *cookie) {
             struct Context *context = (struct Context *)(cookie);
             SystemGetParameterName(handle, context->buffer, PARAM_NAME_LEN_MAX);
             if (!FilterParam(context->buffer, context->keyPrefix)) {
@@ -211,11 +210,10 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, ParamWatcherP
 void WatcherManager::RunLoop()
 {
     const int32_t RECV_BUFFER_MAX = 5 * 1024;
-    char *buffer = (char *)malloc(RECV_BUFFER_MAX);
-    PARAM_CHECK(buffer != NULL, return, "Failed to create buffer for recv");
+    std::vector<char> buffer(RECV_BUFFER_MAX, 0);
     while (!stop) {
         int fd = GetServerFd(false);
-        ssize_t recvLen = recv(fd, buffer, RECV_BUFFER_MAX, 0);
+        ssize_t recvLen = recv(fd, buffer.data(), RECV_BUFFER_MAX, 0);
         if (recvLen <= 0) {
             if (errno == EAGAIN) { // 超时，继续等待
                 continue;
@@ -241,6 +239,7 @@ void WatcherManager::StartLoop()
 
 int WatcherManager::GetServerFd(bool retry)
 {
+    const int32_t sleepTime = 2000;
     std::lock_guard<std::mutex> lock(mutex_);
     if (retry && serverFd_ != INVALID_SOCKET) {
         close(serverFd_);
@@ -249,7 +248,7 @@ int WatcherManager::GetServerFd(bool retry)
     if (serverFd_ != INVALID_SOCKET) {
         return serverFd_;
     }
-    struct timeval time;
+    struct timeval time {};
     time.tv_sec = 1;
     time.tv_usec = 0;
     do {
@@ -258,7 +257,7 @@ int WatcherManager::GetServerFd(bool retry)
         if (ret != 0) {
             close(serverFd_);
             serverFd_ = INVALID_SOCKET;
-            usleep(SLEEP_TIME);
+            usleep(sleepTime);
         } else {
             (void)setsockopt(serverFd_, SOL_SOCKET, SO_RCVTIMEO, &time, sizeof(struct timeval));
             break;

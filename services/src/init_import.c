@@ -14,7 +14,7 @@
  */
 
 #include "init_import.h"
-#include <stdio.h>
+
 #include <unistd.h>
 #include "cJSON.h"
 #include "init_cmds.h"

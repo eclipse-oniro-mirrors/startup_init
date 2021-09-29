@@ -67,18 +67,15 @@ static long TimeDiffMs(const struct timespec* tmBefore, const struct timespec* t
 int main(int argc, char **argv)
 {
 #ifndef OHOS_LITE
-    if (setenv("UV_THREADPOOL_SIZE", "1", 1) != 0) {
-        INIT_LOGE("set UV_THREADPOOL_SIZE error : %d.", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(setenv("UV_THREADPOOL_SIZE", "1", 1) == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
     CloseStdio();
     OpenLogDevice();
 #endif
 
 #ifdef OHOS_DEBUG
     struct timespec tmEnter;
-    if (clock_gettime(CLOCK_REALTIME, &tmEnter) != 0) {
-        INIT_LOGE("main, enter, get time failed! err %d.\n", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(clock_gettime(CLOCK_REALTIME, &tmEnter) == 0,
+        "main, enter, get time failed! err %d.\n", errno);
 #endif // OHOS_DEBUG
 
     if (getpid() != INIT_PROCESS_PID) {
@@ -98,25 +95,21 @@ int main(int argc, char **argv)
 
 #ifdef OHOS_DEBUG
     struct timespec tmSysInfo;
-    if (clock_gettime(CLOCK_REALTIME, &tmSysInfo) != 0) {
-        INIT_LOGE("main, after sysinfo, get time failed! err %d.", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(clock_gettime(CLOCK_REALTIME, &tmSysInfo) == 0,
+        "main, after sysinfo, get time failed! err %d.", errno);
 #endif // OHOS_DEBUG
 
     ExecuteRcs();
 
 #ifdef OHOS_DEBUG
     struct timespec tmRcs;
-    if (clock_gettime(CLOCK_REALTIME, &tmRcs) != 0) {
-        INIT_LOGE("main, after rcs, get time failed! err %d.", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(clock_gettime(CLOCK_REALTIME, &tmRcs) == 0,
+        "main, after rcs, get time failed! err %d.", errno);
 #endif // OHOS_DEBUG
     InitReadCfg();
 #ifdef OHOS_DEBUG
     struct timespec tmCfg;
-    if (clock_gettime(CLOCK_REALTIME, &tmCfg) != 0) {
-        INIT_LOGE("main, get time failed! err %d.", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(clock_gettime(CLOCK_REALTIME, &tmCfg) == 0, "main, get time failed! err %d.", errno);
 #endif // OHOS_DEBUG
 
 #ifdef OHOS_DEBUG
