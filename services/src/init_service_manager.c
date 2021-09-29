@@ -713,6 +713,7 @@ static int ParseOneService(const cJSON *curItem, Service *service)
     ret += GetServiceNumber(curItem, service, CONSOLE_STR_IN_CFG);
     ret += GetWritepidStrings(curItem, service);
     ret += GetServiceCaps(curItem, service);
+    ret += GetDynamicService(curItem, service);
     if (ret < 0) {
         return SERVICE_FAILURE;
     } else {
