@@ -210,7 +210,7 @@ static int ParseSysfsConfig(char *p)
     return 0;
 }
 
-static int ParseFirmwareConfig(const char *p)
+static int ParseFirmwareConfig(char *p)
 {
     INIT_LOGD("Parse firmware config info: %s", p);
     if (INVALIDSTRING(p)) {
