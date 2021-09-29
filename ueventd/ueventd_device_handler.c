@@ -171,7 +171,7 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
         INIT_LOGW("Failed set linkNum, links ignore");
         return;
     }
-    if (parent == NULL || partitionName == NULL || deviceName == NULL) {
+    if (parent == NULL) {
         return;
     }
     links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
