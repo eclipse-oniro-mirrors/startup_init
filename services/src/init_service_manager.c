@@ -62,7 +62,7 @@ void DumpAllServices(void)
 }
 #endif
 
-void RegisterServices(Service* services, int servicesCnt)
+void RegisterServices(Service *services, int servicesCnt)
 {
     if (services == NULL) {
         return;
@@ -71,7 +71,7 @@ void RegisterServices(Service* services, int servicesCnt)
     g_servicesCnt += servicesCnt;
 }
 
-static void ReleaseServiceMem(Service* curServ)
+static void ReleaseServiceMem(Service *curServ)
 {
     if (curServ == NULL) {
         return;
@@ -107,7 +107,7 @@ static void ReleaseServiceMem(Service* curServ)
     curServ->servPerm.gIDCnt = 0;
 }
 
-static int GetServiceName(const cJSON* curArrItem, Service* curServ)
+static int GetServiceName(const cJSON *curArrItem, Service *curServ)
 {
     char* fieldStr = cJSON_GetStringValue(cJSON_GetObjectItem(curArrItem, "name"));
     if (fieldStr == NULL) {
@@ -130,7 +130,7 @@ static int GetServiceName(const cJSON* curArrItem, Service* curServ)
 }
 
 #ifdef OHOS_LITE
-static int IsForbidden(const char* fieldStr)
+static int IsForbidden(const char *fieldStr)
 {
     size_t fieldLen = strlen(fieldStr);
     size_t forbidStrLen = strlen(BIN_SH_NOT_ALLOWED);
@@ -152,13 +152,13 @@ static int IsForbidden(const char* fieldStr)
     }
 }
 #else
-static int IsForbidden(const char* fieldStr)
+static int IsForbidden(const char *fieldStr)
 {
     return 0;
 }
 #endif
 
-static cJSON* GetArrItem(const cJSON* fileRoot, int* arrSize, const char* arrName)
+static cJSON* GetArrItem(const cJSON *fileRoot, int *arrSize, const char *arrName)
 {
     cJSON* arrItem = cJSON_GetObjectItemCaseSensitive(fileRoot, arrName);
     if (!cJSON_IsArray(arrItem)) {
@@ -264,7 +264,7 @@ static int GetGidArray(const cJSON *curArrItem, Service *curServ)        // gid 
             gIDCnt, NGROUPS_MAX + 1);
         return SERVICE_FAILURE;
     }
-    curServ->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t) * gIDCnt);
+    curServ->servPerm.gIDArray = (gid_t *)calloc(sizeof(gid_t), gIDCnt);
     if (curServ->servPerm.gIDArray == NULL) {
         INIT_LOGE("GetGidArray malloc error");
         return SERVICE_FAILURE;
@@ -383,7 +383,7 @@ static int GetImportantValue(int value, Service *curServ)
     return SERVICE_SUCCESS;
 }
 
-static int GetServiceNumber(const cJSON* curArrItem, Service* curServ, const char* targetField)
+static int GetServiceNumber(const cJSON *curArrItem, Service *curServ, const char *targetField)
 {
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, targetField);
     if (filedJ == NULL && (strncmp(targetField, CRITICAL_STR_IN_CFG, strlen(CRITICAL_STR_IN_CFG)) == 0
@@ -544,7 +544,7 @@ static void FreeServiceSocket(struct ServiceSocket *sockopt)
     return;
 }
 
-static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
+static int GetServiceSocket(const cJSON *curArrItem, Service *curServ)
 {
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, "socket");
     if (!cJSON_IsArray(filedJ)) {
@@ -587,7 +587,7 @@ static int GetServiceSocket(const cJSON* curArrItem, Service* curServ)
     return SERVICE_SUCCESS;
 }
 
-static int GetServiceOnRestart(const cJSON* curArrItem, Service* curServ)
+static int GetServiceOnRestart(const cJSON *curArrItem, Service *curServ)
 {
     cJSON* filedJ = cJSON_GetObjectItem(curArrItem, "onrestart");
     if (filedJ == NULL) {
@@ -666,7 +666,7 @@ static int GetDynamicService(const cJSON *curArrItem, Service *curServ)
     return SERVICE_SUCCESS;
 }
 
-static int CheckServiceKeyName(const cJSON* curService)
+static int CheckServiceKeyName(const cJSON *curService)
 {
     char *cfgServiceKeyList[] = {
         "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
@@ -720,7 +720,7 @@ static int ParseOneService(const cJSON *curItem, Service *service)
     }
 }
 
-void ParseAllServices(const cJSON* fileRoot)
+void ParseAllServices(const cJSON *fileRoot)
 {
     int servArrSize = 0;
     cJSON* serviceArr = GetArrItem(fileRoot, &servArrSize, SERVICES_ARR_NAME_IN_JSON);
@@ -776,7 +776,7 @@ void ParseAllServices(const cJSON* fileRoot)
     RegisterServices(retServices, servArrSize);
 }
 
-static int FindServiceByName(const char* servName)
+static int FindServiceByName(const char *servName)
 {
     if ((servName == NULL) || (g_services == NULL)) {
         return -1;
@@ -809,7 +809,7 @@ void StartServiceByName(const char *servName, bool checkDynamic)
     return;
 }
 
-void StopServiceByName(const char* servName)
+void StopServiceByName(const char *servName)
 {
     // find service by name
     int servIdx = FindServiceByName(servName);
