@@ -65,7 +65,8 @@ int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId);
  * 遍历参数。
  *
  */
-int SystemTraversalParameter(void (*traversalParameter)(ParamHandle handle, void* cookie), void* cookie);
+int SystemTraversalParameter(
+    void (*traversalParameter)(ParamHandle handle, ParamContextPtr cookie), ParamContextPtr cookie);
 
 /**
  * 外部接口

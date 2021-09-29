@@ -28,6 +28,7 @@ extern "C" {
 #define PARAM_VALUE_LEN_MAX  96
 #define PARAM_NAME_LEN_MAX  96
 typedef uint32_t ParamHandle;
+typedef void * ParamContextPtr;
 
 typedef enum {
     PARAM_CODE_ERROR = -1,

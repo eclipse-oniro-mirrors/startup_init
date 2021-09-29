@@ -204,7 +204,7 @@ static int ProcessParamTraversal(const WorkSpace *workSpace, const ParamTrieNode
     return 0;
 }
 
-int TraversalParam(const ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, void *cookie)
+int TraversalParam(const ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, ParamContextPtr cookie)
 {
     PARAM_CHECK(workSpace != NULL && walkFunc != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     ParamTraversalContext context = {

@@ -114,7 +114,7 @@ static void TrimString(char *string, uint32_t currLen)
 
 int GetSubStringInfo(const char *buff, uint32_t buffLen, char delimiter, SubStringInfo *info, int subStrNumber)
 {
-    PARAM_CHECK(buff == NULL && info == NULL, return 0, "Invalid buff");
+    PARAM_CHECK(buff != NULL && info != NULL, return 0, "Invalid buff");
     size_t i = 0;
     // 去掉开始的空格
     for (; i < strlen(buff); i++) {

@@ -63,12 +63,12 @@ int CheckParamName(const char *name, int paramInfo);
 int CheckParamPermission(const ParamWorkSpace *workSpace,
     const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
 
-typedef void (*TraversalParamPtr)(ParamHandle handle, void *context);
+typedef void (*TraversalParamPtr)(ParamHandle handle, ParamContextPtr context);
 typedef struct {
     TraversalParamPtr traversalParamPtr;
-    void *context;
+    ParamContextPtr context;
 } ParamTraversalContext;
-int TraversalParam(const ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, void *cookie);
+int TraversalParam(const ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, ParamContextPtr cookie);
 
 ParamWorkSpace *GetParamWorkSpace(void);
 ParamWorkSpace *GetClientParamWorkSpace(void);

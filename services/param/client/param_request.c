@@ -274,7 +274,8 @@ int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
     return ReadParamValue(&g_clientSpace.paramSpace, handle, value, len);
 }
 
-int SystemTraversalParameter(void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie)
+int SystemTraversalParameter(
+    void (*traversalParameter)(ParamHandle handle, ParamContextPtr cookie), ParamContextPtr cookie)
 {
     InitParamClient();
     PARAM_CHECK(traversalParameter != NULL, return -1, "The param is null");
