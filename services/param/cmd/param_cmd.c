@@ -103,41 +103,6 @@ static void ExeuteCmdParamWait(int argc, char *argv[], int start)
     SystemWaitParameter(argv[start], value, timeout);
 }
 
-#ifdef PARAM_TEST
-static void ExeuteCmdParamRead(int argc, char *argv[], int start)
-{
-    srand((unsigned)time(NULL)); // srand()函数产生一个以当前时间开始的随机种子
-    while (1) {
-        ExeuteCmdParamGet(argc, argv, start);
-        int wait = rand() / READ_DURATION + READ_DURATION; // 100ms
-        usleep(wait);
-    }
-}
-
-static void HandleParamChange(const char *key, const char *value, void *context)
-{
-    if (key == NULL || value == NULL) {
-        return;
-    }
-    UNUSED(context);
-    printf("Receive parameter change %s %s \n", key, value);
-}
-
-static void ExeuteCmdParamWatch(int argc, char *argv[], int start)
-{
-    if (argc <= start) {
-        return;
-    }
-    int ret = SystemWatchParameter(argv[start], HandleParamChange, NULL);
-    if (ret != 0) {
-        return;
-    }
-    while (1) {
-        (void)pause();
-    }
-}
-#endif
-
 int RunParamCommand(int argc, char *argv[])
 {
     static struct CmdArgs paramCmds[] = {
@@ -145,11 +110,7 @@ int RunParamCommand(int argc, char *argv[])
         { "get", 2, ExeuteCmdParamGet, USAGE_INFO_PARAM_GET },
         { "wait", 3, ExeuteCmdParamWait, USAGE_INFO_PARAM_WAIT },
         { "dump", 2, ExeuteCmdParamDump, USAGE_INFO_PARAM_DUMP },
-#ifdef PARAM_TEST
-        { "read", 2, ExeuteCmdParamRead, USAGE_INFO_PARAM_READ },
-        { "watch", 2, ExeuteCmdParamWatch, USAGE_INFO_PARAM_WATCH },
-#endif
-	};
+    };
     if (argc < MIN_ARGC) {
         printf("usage: \n");
         for (size_t i = 0; i < sizeof(paramCmds) / sizeof(paramCmds[0]); i++) {
