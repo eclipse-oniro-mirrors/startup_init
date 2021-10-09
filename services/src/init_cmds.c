@@ -380,7 +380,6 @@ static void DoReset(const char *cmdContent, int maxArg)
 
 static void DoCopyInernal(const char *source, const char *target)
 {
-    bool isSuccess = true;
     if (source == NULL || target == NULL) {
         INIT_LOGE("Copy file with invalid arguments");
         return;
@@ -403,6 +402,7 @@ static void DoCopyInernal(const char *source, const char *target)
     if (dstFd >= 0) {
         char buf[MAX_COPY_BUF_SIZE] = {0};
         ssize_t readn = -1;
+        bool isSuccess = true;
         while ((readn = read(srcFd, buf, MAX_COPY_BUF_SIZE - 1)) > 0) {
             ssize_t writen = WriteAll(dstFd, buf, (size_t)readn);
             if (writen != readn)  {
@@ -410,17 +410,16 @@ static void DoCopyInernal(const char *source, const char *target)
                 break;
             }
         }
-    }
-
-    if (!isSuccess) {
-        INIT_LOGE("Copy from \" %s \" to \" %s \" failed", source, target);
-    } else {
-        fsync(dstFd);
+        if (!isSuccess) {
+            INIT_LOGE("Copy from \" %s \" to \" %s \" failed", source, target);
+        } else {
+            fsync(dstFd);
+        }
+        close(dstFd);
+        dstFd = -1;
     }
     close(srcFd);
-    close(dstFd);
     srcFd = -1;
-    dstFd = -1;
 }
 
 static void DoCopy(const char *cmdContent, int maxArg)
