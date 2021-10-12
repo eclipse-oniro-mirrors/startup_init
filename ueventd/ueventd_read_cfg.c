@@ -405,16 +405,19 @@ void ChangeSysAttributePermissions(const char *sysPath)
 
     struct ListNode *node = NULL;
     struct SysUdevConf *config = NULL;
+    int matched = 0;
     if (!ListEmpty(g_sysDevices)) {
         ForEachListEntry(&g_sysDevices, node) {
             config = ListEntry(node, struct SysUdevConf, list);
             if (STRINGEQUAL(config->sysPath, sysPath)) {
+                matched = 1;
                 break;
             }
         }
     }
 
-    if (config == NULL) {
+    if (matched == 0) {
+        INIT_LOGE("Failed match syspath %s.", sysPath);
         return;
     }
     char sysAttr[SYSPATH_SIZE] = {0};
