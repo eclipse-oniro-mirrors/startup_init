@@ -417,7 +417,6 @@ void ChangeSysAttributePermissions(const char *sysPath)
     }
 
     if (matched == 0) {
-        INIT_LOGE("Failed match syspath %s.", sysPath);
         return;
     }
     char sysAttr[SYSPATH_SIZE] = {0};
