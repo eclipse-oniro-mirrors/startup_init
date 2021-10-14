@@ -214,11 +214,10 @@ void FreeCmd(struct CmdArgs *cmd)
     }
     INIT_CHECK(cmd->argv == NULL, free(cmd->argv));
     free(cmd);
-    cmd = NULL;
     return;
 }
 
-static void WriteCommon(const char *file, char *buffer, int flags, mode_t mode)
+static void WriteCommon(const char *file, const char *buffer, int flags, mode_t mode)
 {
     if (file == NULL || *file == '\0' || buffer == NULL || *buffer == '\0') {
         INIT_LOGE("Invalid arugment");
