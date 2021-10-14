@@ -14,6 +14,7 @@
  */
 
 #include "param_message.h"
+
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -21,7 +22,6 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#define LABEL "PARAM_MSG"
 int ConntectServer(int fd, const char *servername)
 {
     PARAM_CHECK(fd >= 0, return -1, "Invalid fd %d", fd);

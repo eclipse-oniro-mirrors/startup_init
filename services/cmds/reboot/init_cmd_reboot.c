@@ -32,9 +32,7 @@ int main(int argc, char* argv[])
         printf("%s", USAGE_INFO);
         return 0;
     }
-    if (argv[1] == NULL) {
-        return -1;
-    }
+
     if (argc == REBOOT_CMD_NUMBER && strcmp(argv[1], "shutdown") != 0 &&
         strcmp(argv[1], "updater") != 0 &&
         strcmp(argv[1], "flash") != 0 &&
@@ -43,7 +41,7 @@ int main(int argc, char* argv[])
         printf("%s", USAGE_INFO);
         return 0;
     }
-    int ret;
+    int ret = 0;
     if (argc == REBOOT_CMD_NUMBER) {
         ret = DoReboot(argv[1]);
     } else {

@@ -14,9 +14,9 @@
  */
 
 #include "param_manager.h"
+
 #include <ctype.h>
 
-#define LABEL "Manager"
 #if !defined PARAM_SUPPORT_SELINUX && !defined PARAM_SUPPORT_DAC
 static ParamSecurityLabel g_defaultSecurityLabel;
 #endif
@@ -64,7 +64,11 @@ int InitParamWorkSpace(ParamWorkSpace *workSpace, int onlyRead)
         ret = paramSecurityOps->securityCheckFilePermission(workSpace->securityLabel, PARAM_STORAGE_PATH, op);
         PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "No permission to read file %s", PARAM_STORAGE_PATH);
     }
-    ret = InitWorkSpace(PARAM_STORAGE_PATH, &workSpace->paramSpace, onlyRead);
+    if (onlyRead) {
+        ret = InitWorkSpace(CLIENT_PARAM_STORAGE_PATH, &workSpace->paramSpace, onlyRead);
+    } else {
+        ret = InitWorkSpace(PARAM_STORAGE_PATH, &workSpace->paramSpace, onlyRead);
+    }
     PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Failed to init workspace");
     PARAM_SET_FLAG(workSpace->flags, WORKSPACE_FLAGS_INIT);
     return ret;
@@ -272,12 +276,14 @@ static void DumpWorkSpace(const ParamWorkSpace *workSpace, int verbose)
 {
     printf("workSpace information \n");
     printf("    map file: %s \n", workSpace->paramSpace.fileName);
-    printf("    total size: %d \n", workSpace->paramSpace.area->dataSize);
-    printf("    first offset: %d \n", workSpace->paramSpace.area->firstNode);
-    printf("    current offset: %d \n", workSpace->paramSpace.area->currOffset);
-    printf("    total node: %d \n", workSpace->paramSpace.area->trieNodeCount);
-    printf("    total param node: %d \n", workSpace->paramSpace.area->paramNodeCount);
-    printf("    total security node: %d\n", workSpace->paramSpace.area->securityNodeCount);
+    if (workSpace->paramSpace.area != NULL) {
+        printf("    total size: %d \n", workSpace->paramSpace.area->dataSize);
+        printf("    first offset: %d \n", workSpace->paramSpace.area->firstNode);
+        printf("    current offset: %d \n", workSpace->paramSpace.area->currOffset);
+        printf("    total node: %d \n", workSpace->paramSpace.area->trieNodeCount);
+        printf("    total param node: %d \n", workSpace->paramSpace.area->paramNodeCount);
+        printf("    total security node: %d\n", workSpace->paramSpace.area->securityNodeCount);
+    }
     printf("    node info: \n");
     TraversalTrieNode(&workSpace->paramSpace, NULL, DumpTrieDataNodeTraversal, (void *)&verbose);
 }

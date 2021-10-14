@@ -27,8 +27,6 @@
 #include "param_utils.h"
 #include "sys_param.h"
 
-#define LABEL "Manager"
-
 static int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, uint32_t spaceSize, int readOnly)
 {
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");

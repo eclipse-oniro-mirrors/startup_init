@@ -1,0 +1,145 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+
+config("utest_config") {
+  visibility = [ ":*" ]
+
+  cflags = [
+    "-fprofile-arcs",
+    "-ftest-coverage",
+    "-Wno-implicit-fallthrough",
+    "-Wno-unused-function",
+  ]
+  cflags_cc = [
+    "-Wno-implicit-fallthrough",
+    "-fexceptions",
+  ]
+
+  ldflags = [ "--coverage" ]
+}
+
+ohos_unittest("init_ut") {
+  module_out_path = "startup/init"
+  sources = [
+    "//base/startup/init_lite/services/init/adapter/init_adapter.c",
+    "//base/startup/init_lite/services/init/init_capability.c",
+    "//base/startup/init_lite/services/init/init_common_cmds.c",
+    "//base/startup/init_lite/services/init/init_config.c",
+    "//base/startup/init_lite/services/init/init_common_service.c",
+    "//base/startup/init_lite/services/init/init_service_manager.c",
+    "//base/startup/init_lite/services/init/init_service_socket.c",
+    "//base/startup/init_lite/services/init/standard/device.c",
+    "//base/startup/init_lite/services/init/standard/init.c",
+    "//base/startup/init_lite/services/init/standard/init_cmds.c",
+    "//base/startup/init_lite/services/init/standard/init_jobs.c",
+    "//base/startup/init_lite/services/init/standard/init_reboot.c",
+    "//base/startup/init_lite/services/init/standard/init_service.c",
+    "//base/startup/init_lite/services/init/standard/init_signal_handler.c",
+    "//base/startup/init_lite/services/log/init_log.c",
+    "//base/startup/init_lite/services/param/adapter/param_dac.c",
+    "//base/startup/init_lite/services/param/adapter/param_libuvadp.c",
+    "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
+    "//base/startup/init_lite/services/param/adapter/param_selinux.c",
+    "//base/startup/init_lite/services/param/client/param_request.c",
+    "//base/startup/init_lite/services/param/cmd/param_cmd.c",
+    "//base/startup/init_lite/services/param/manager/param_manager.c",
+    "//base/startup/init_lite/services/param/manager/param_message.c",
+    "//base/startup/init_lite/services/param/manager/param_trie.c",
+    "//base/startup/init_lite/services/param/manager/param_utils.c",
+    "//base/startup/init_lite/services/param/service/param_persist.c",
+    "//base/startup/init_lite/services/param/service/param_service.c",
+    "//base/startup/init_lite/services/param/trigger/trigger_checker.c",
+    "//base/startup/init_lite/services/param/trigger/trigger_manager.c",
+    "//base/startup/init_lite/services/param/trigger/trigger_processor.c",
+    "//base/startup/init_lite/services/param/watcher/agent/watcher.cpp",
+    "//base/startup/init_lite/services/param/watcher/agent/watcher_manager_kits.cpp",
+    "//base/startup/init_lite/services/param/watcher/agent/watcher_manager_proxy.cpp",
+    "//base/startup/init_lite/services/param/watcher/agent/watcher_stub.cpp",
+    "//base/startup/init_lite/services/param/watcher/proxy/watcher_manager.cpp",
+    "//base/startup/init_lite/services/param/watcher/proxy/watcher_manager_stub.cpp",
+    "//base/startup/init_lite/services/param/watcher/proxy/watcher_proxy.cpp",
+    "//base/startup/init_lite/services/utils/init_utils.c",
+    "//base/startup/init_lite/services/utils/list.c",
+  ]
+
+  sources += [
+    "init/cmds_unittest.cpp",
+    "init/service_unittest.cpp",
+    "param/client_unittest.cpp",
+    "param/dac_unittest.cpp",
+    "param/param_unittest.cpp",
+    "param/selinux_unittest.cpp",
+    "param/trigger_unittest.cpp",
+    "param/watcher_agent_unittest.cpp",
+    "param/watcher_proxy_unittest.cpp",
+  ]
+
+  configs = [ "//base/startup/init_lite/services/test/unittest:utest_config" ]
+
+  include_dirs = [
+    "//base/startup/init_lite/services/include",
+    "//base/startup/init_lite/services/init/include",
+    "//base/startup/init_lite/services/include/param",
+    "//base/startup/init_lite/services/log",
+    "//base/startup/init_lite/services/param/adapter",
+    "//base/startup/init_lite/services/param/include",
+    "//base/startup/init_lite/services/param/watcher/agent",
+    "//base/startup/init_lite/services/param/watcher/include",
+    "//base/startup/init_lite/services/param/watcher/proxy",
+    "//base/startup/init_lite/services/test/unittest",
+    "//base/startup/init_lite/services/test/unittest/param",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
+    "//foundation/distributedschedule/safwk/services/safwk/include",
+    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk",
+    "//foundation/distributedschedule/samgr/adapter/interfaces/innerkits/include",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
+    "//utils/native/base/include",
+    "//utils/system/safwk/native/include",
+    "//third_party/bounds_checking_function/include",
+    "//third_party/libuv/include",
+    "//third_party/cJSON",
+  ]
+
+  deps = [
+    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/cJSON:cjson_static",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest",
+    "//third_party/libuv:uv_static",
+    "//utils/native/base:utils",
+  ]
+
+  defines = [
+    "INIT_AGENT",
+    "STARTUP_INIT_TEST",
+    "PARAM_SUPPORT_SAVE_PERSIST",
+    "PARAM_SUPPORT_DAC",
+  ]
+
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr_L2:samgr_proxy",
+  ]
+
+  cflags_cc = [ "-fexceptions" ]
+}
+
+group("init_test") {
+  testonly = true
+  deps = [
+    ":init_ut"
+  ]
+}

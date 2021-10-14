@@ -15,7 +15,6 @@
 #include "param_libuvadp.h"
 #include <sys/wait.h>
 
-#define LABEL "Libuvadp"
 static LibuvWorkSpace libuv = { NULL };
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
 

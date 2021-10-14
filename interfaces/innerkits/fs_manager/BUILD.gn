@@ -1,0 +1,50 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+fs_manager_sources = [
+  "fstab.c",
+  "fstab_mount.c",
+]
+
+fs_manager_include_dirs = [
+  "//base/startup/init_lite/interfaces/innerkits/include",
+  "//third_party/bounds_checking_function/include",
+  "//base/startup/init_lite/services/log",
+  "//base/startup/init_lite/services/include",
+]
+
+fs_manager_deps = [
+  "//base/startup/init_lite/services/log:init_log",
+  "//base/startup/init_lite/services/utils:libinit_utils",
+  "//third_party/bounds_checking_function:libsec_static",
+]
+
+ohos_shared_library("libfsmanager_shared") {
+  sources = fs_manager_sources
+  deps = fs_manager_deps
+  include_dirs = fs_manager_include_dirs
+  part_name = "init"
+  install_images = [
+    "system",
+  ]
+}
+
+ohos_static_library("libfsmanager_static") {
+  sources = fs_manager_sources
+  deps = fs_manager_deps
+  include_dirs = fs_manager_include_dirs
+  part_name = "init"
+}
+

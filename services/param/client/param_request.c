@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "param_request.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
@@ -26,7 +26,7 @@
 
 #define INVALID_SOCKET (-1)
 #define INIT_PROCESS_PID 1
-#define LABEL "Client"
+
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
 
 static atomic_uint g_requestId = ATOMIC_VAR_INIT(1);
@@ -114,7 +114,7 @@ static int StartRequest(int *fd, ParamMessage *request, int timeout)
         if (clientFd == INVALID_SOCKET) {
             clientFd = socket(AF_UNIX, SOCK_STREAM, 0);
             PARAM_CHECK(clientFd >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to create socket");
-            ret = ConntectServer(clientFd, PIPE_NAME);
+            ret = ConntectServer(clientFd, CLIENT_PIPE_NAME);
             PARAM_CHECK(ret == 0, close(clientFd);
                 return PARAM_CODE_FAIL_CONNECT, "Failed to connect server");
             setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, (char *)&time, sizeof(struct timeval));
@@ -291,6 +291,12 @@ int SystemTraversalParameter(
 void SystemDumpParameters(int verbose)
 {
     InitParamClient();
+    // check default dac
+    ParamHandle handle = 0;
+    int ret = ReadParamWithCheck(&g_clientSpace.paramSpace, "#", DAC_READ, &handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+        PARAM_CHECK(ret == 0, return, "Forbid to dump parameters");
+    }
     DumpParameters(&g_clientSpace.paramSpace, verbose);
 }
 
@@ -308,7 +314,7 @@ int WatchParamCheck(const char *keyprefix)
     return 0;
 }
 
-#ifdef STARTUP_INIT_TEST
+#if (defined STARTUP_INIT_TEST || defined PARAM_TEST)
 ParamWorkSpace *GetClientParamWorkSpace(void)
 {
     return &g_clientSpace.paramSpace;

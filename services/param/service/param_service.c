@@ -25,12 +25,12 @@
 #include <unistd.h>
 
 #include "init_param.h"
+#include "init_utils.h"
 #include "param_message.h"
 #include "param_manager.h"
 #include "param_request.h"
 #include "trigger_manager.h"
 
-#define LABEL "ParamServer"
 static ParamWorkSpace g_paramWorkSpace = { 0, {}, NULL, {}, NULL, NULL };
 
 static void OnClose(ParamTaskPtr client)
@@ -133,6 +133,8 @@ PARAM_STATIC int AddSecurityLabel(const ParamAuditData *auditData, void *context
 #ifdef STARTUP_INIT_TEST
         ParamSecruityNode *label = (ParamSecruityNode *)GetTrieNode(&workSpace->paramSpace, node->labelIndex);
         label->mode = auditData->dacData.mode;
+        label->uid = auditData->dacData.uid;
+        label->gid = auditData->dacData.gid;
 #endif
         PARAM_LOGE("Error, repeate to add label for name %s", auditData->name);
     }
@@ -155,7 +157,7 @@ static char *GetServiceCtrlName(const char *name, const char *value)
     };
     char *key = NULL;
     if (strcmp("sys.powerctrl", name) == 0) {
-        for (size_t i = 0; i < sizeof(powerCtrlArg) / sizeof(powerCtrlArg[0]); i++) {
+        for (size_t i = 0; i < ARRAY_LENGTH(powerCtrlArg); i++) {
             if (strncmp(value, powerCtrlArg[i][0], strlen(powerCtrlArg[i][0])) == 0) {
                 uint32_t keySize = strlen(powerCtrlArg[i][1]) + strlen(OHOS_SERVICE_CTRL_PREFIX) + 1;
                 key = (char *)malloc(keySize + 1);
@@ -167,7 +169,7 @@ static char *GetServiceCtrlName(const char *name, const char *value)
             }
         }
     } else {
-        for (size_t i = 0; i < sizeof(ctrlParam) / sizeof(ctrlParam[0]); i++) {
+        for (size_t i = 0; i < ARRAY_LENGTH(ctrlParam); i++) {
             if (strcmp(name, ctrlParam[i]) == 0) {
                 uint32_t keySize = strlen(value) + strlen(OHOS_SERVICE_CTRL_PREFIX) + 1;
                 key = (char *)malloc(keySize + 1);
@@ -225,14 +227,15 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
         free(key);
     }
     PARAM_CHECK(ret == 0, return ret, "Forbit to set parameter %s", name);
-    uint32_t dataIndex = 0;
-    ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, &dataIndex, 0);
-    PARAM_CHECK(ret == 0, return ret, "Failed to set param %d name %s %s", ret, name, value);
-    ret = WritePersistParam(&g_paramWorkSpace, name, value);
-    PARAM_CHECK(ret == 0, return ret, "Failed to set persist param name %s", name);
+
     if (serviceCtrl) {
         PostParamTrigger(EVENT_TRIGGER_PARAM, name, value);
     } else {
+        uint32_t dataIndex = 0;
+        ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, &dataIndex, 0);
+        PARAM_CHECK(ret == 0, return ret, "Failed to set param %d name %s %s", ret, name, value);
+        ret = WritePersistParam(&g_paramWorkSpace, name, value);
+        PARAM_CHECK(ret == 0, return ret, "Failed to set persist param name %s", name);
         CheckAndSendTrigger(&g_paramWorkSpace, dataIndex, name, value);
     }
     return ret;
@@ -508,6 +511,97 @@ static void TimerCallback(ParamTaskPtr timer, void *context)
     }
 }
 
+static int GetParamValueFromBuffer(const char *name, const char *buffer, char *value, int length)
+{
+    char *endData = (char *)buffer + strlen(buffer);
+    size_t bootLen = strlen(OHOS_BOOT);
+    char *tmp = strstr(buffer, name + bootLen);
+    do {
+        if (tmp == NULL) {
+            return -1;
+        }
+        tmp = tmp + strlen(name) - bootLen;
+        while (tmp < endData && *tmp == ' ') {
+            tmp++;
+        }
+        if (*tmp == '=') {
+            break;
+        }
+        tmp = strstr(tmp + 1, name + bootLen);
+    } while (tmp < endData);
+    tmp++;
+    size_t i = 0;
+    size_t endIndex = 0;
+    while (tmp < endData && *tmp == ' ') {
+        tmp++;
+    }
+    for (; i < (size_t)length; tmp++) {
+        if (tmp >= endData) {
+            endIndex = i;
+            break;
+        }
+        if (*tmp == ' ') {
+            endIndex = i;
+        }
+        if (*tmp == '=') {
+            if (endIndex != 0) { // for root=uuid=xxxx
+                break;
+            }
+            i = 0;
+            endIndex = 0;
+            continue;
+        }
+        value[i++] = *tmp;
+    }
+    if (i >= (size_t)length) {
+        return -1;
+    }
+    value[endIndex] = '\0';
+    return 0;
+}
+
+static int LoadParamFromCmdLine(void)
+{
+    static const char *cmdLines[] = {
+        OHOS_BOOT"hardware",
+#ifdef STARTUP_INIT_TEST
+        OHOS_BOOT"mem",
+        OHOS_BOOT"console",
+        OHOS_BOOT"mmz",
+        OHOS_BOOT"androidboot.selinux",
+        OHOS_BOOT"init",
+        OHOS_BOOT"root",
+        OHOS_BOOT"uuid",
+        OHOS_BOOT"aaaaa",
+        OHOS_BOOT"rootfstype",
+        OHOS_BOOT"blkdevparts",
+#endif
+    };
+    char *data = ReadFileData(PARAM_CMD_LINE);
+    PARAM_CHECK(data != NULL, return -1, "Failed to read file %s", PARAM_CMD_LINE);
+    char *value = malloc(PARAM_CONST_VALUE_LEN_MAX);
+    PARAM_CHECK(value != NULL, free(data);
+        return -1, "Failed to read file %s", PARAM_CMD_LINE);
+
+    for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
+        int ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
+        if (ret == 0) {
+            PARAM_LOGD("Add param from cmdline %s %s", cmdLines[i], value);
+            ret = CheckParamName(cmdLines[i], 0);
+            PARAM_CHECK(ret == 0, return -1, "Invalid name %s", cmdLines[i]);
+            uint32_t dataIndex = 0;
+            ret = WriteParam(&g_paramWorkSpace.paramSpace, cmdLines[i], value, &dataIndex, 0);
+            PARAM_CHECK(ret == 0, return -1, "Failed to write param %s %s", cmdLines[i], value);
+        } else {
+            PARAM_LOGE("Can not find arrt %s", cmdLines[i]);
+        }
+    }
+    PARAM_LOGD("Parse cmdline finish %s", PARAM_CMD_LINE);
+    free(data);
+    free(value);
+    return 0;
+}
+
 int SystemWriteParam(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return -1, "The name is null");
@@ -525,12 +619,6 @@ int SystemReadParam(const char *name, char *value, unsigned int *len)
     return ret;
 }
 
-int SystemTraversalParam(void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie)
-{
-    PARAM_CHECK(traversalParameter != NULL, return -1, "The param is null");
-    return TraversalParam(&g_paramWorkSpace, traversalParameter, cookie);
-}
-
 int LoadPersistParams(void)
 {
     return LoadPersistParam(&g_paramWorkSpace);
@@ -540,7 +628,7 @@ static int ProcessParamFile(const char *fileName, void *context)
 {
     static const char *exclude[] = {"ctl.", "selinux.restorecon_recursive"};
     uint32_t mode = *(int *)context;
-    return LoadDefaultParam_(fileName, mode, exclude, sizeof(exclude) / sizeof(exclude[0]));
+    return LoadDefaultParam_(fileName, mode, exclude, ARRAY_LENGTH(exclude));
 }
 
 int LoadDefaultParams(const char *fileName, uint32_t mode)
@@ -602,6 +690,9 @@ void InitParamService(void)
     auditData.dacData.mode = DAC_ALL_PERMISSION;
     ret = AddSecurityLabel(&auditData, (void *)&g_paramWorkSpace);
     PARAM_CHECK(ret == 0, return, "Failed to add default dac label");
+
+    // 读取cmdline的参数
+    LoadParamFromCmdLine();
 }
 
 static void OnPidDelete(pid_t pid)
@@ -627,4 +718,12 @@ void StopParamService(void)
 ParamWorkSpace *GetParamWorkSpace(void)
 {
     return &g_paramWorkSpace;
+}
+
+void DumpParametersAndTriggers(void)
+{
+    DumpParameters(&g_paramWorkSpace, 1);
+    if (GetTriggerWorkSpace() != NULL) {
+        DumpTrigger(GetTriggerWorkSpace());
+    }
 }

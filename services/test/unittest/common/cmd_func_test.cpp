@@ -12,19 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <dirent.h>
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
+#include <dirent.h>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+
 #include "cJSON.h"
-#include "gtest/gtest.h"
-#include "securec.h"
+#include "init_cmds.h"
 #include "init_jobs.h"
 #include "init_service_manager.h"
+#include "securec.h"
+#include "gtest/gtest.h"
 
+using namespace std;
 using namespace testing::ext;
 
 namespace OHOS {
@@ -37,7 +40,6 @@ const std::string TEST_PROC_MOUNTS = "/proc/mounts";
 const uid_t TEST_FILE_UID = 999;
 const gid_t TEST_FILE_GID = 999;
 const mode_t TEST_FILE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-const mode_t DEFAULT_DIR_MODE = 0755;
 
 // init.cfg releated
 const std::string CFG_FILE = "/etc/init.cfg";
@@ -47,20 +49,25 @@ const std::string CMDS_ARR_NAME_IN_JSON = "cmds";
 const uid_t CFG_FILE_UID = 0;
 const gid_t CFG_FILE_GID = 0;
 const mode_t CFG_FILE_MODE = S_IRUSR;
-const int JOBS_IN_FILE_COUNT = 3;  // pre-init, init, post-init
+const int JOBS_IN_FILE_COUNT = 3; // pre-init, init, post-init
 const int MAX_SERVICES_COUNT_IN_FILE = 100;
 const int MAX_CAPS_CNT_FOR_ONE_SERVICE = 100;
-const unsigned int MAX_CAPABILITY_VALUE = 4294967295;  // 0xFFFFFFFF
-const unsigned int MAX_JSON_FILE_LEN = 102400;  // max init.cfg size 100KB
-const int  MAX_PATH_ARGS_CNT = 20;  // max path and args count
-const int  MAX_ONE_ARG_LEN   = 64;  // max length of one param/path
-const int  CAT_BUF_SIZE = 512; // standard Cat buffer size from vfs_shell_cmd
+const unsigned int MAX_CAPABILITY_VALUE = 4294967295; // 0xFFFFFFFF
+const unsigned int MAX_JSON_FILE_LEN = 102400;        // max init.cfg size 100KB
+const int TEST_MAX_PATH_ARGS_CNT = 20;                // max path and args count
+const int TEST_MAX_ONE_ARG_LEN = 64;                  // max length of one param/path
+const int CAT_BUF_SIZE = 512;                         // standard Cat buffer size from vfs_shell_cmd
 
 // job test releated
 const pid_t INVALID_PID = -1;
 const std::string PRE_INIT_DIR = ROOT_DIR + "preInitDir/";
 const std::string INIT_DIR = PRE_INIT_DIR + "initDir";
 const std::string POST_INIT_DIR = INIT_DIR + "postInitDir";
+
+using  TestCmdLine = struct {
+    char name[MAX_CMD_NAME_LEN + 1];
+    char cmdContent[MAX_CMD_CONTENT_LEN + 1];
+};
 
 class StartupInitUTest : public testing::Test {
 public:
@@ -72,8 +79,7 @@ public:
         g_supportedCmds.push_back(std::string("chown "));
         g_supportedCmds.push_back(std::string("mount "));
         g_supportedCmds.push_back(std::string("loadcfg "));
-
-        mode_t mode = DEFAULT_DIR_MODE;
+        const mode_t mode = 0755;
         if (mkdir(TEST_DRI.c_str(), mode) != 0) {
             if (errno != EEXIST) {
                 printf("[----------] StartupInitUTest, mkdir for %s failed, error %d.\n",\
@@ -82,7 +88,7 @@ public:
             }
         }
 
-        FILE* testFile = fopen(TEST_FILE.c_str(), "w+");
+        FILE *testFile = fopen(TEST_FILE.c_str(), "w+");
         if (testFile == nullptr) {
             printf("[----------] StartupInitUTest, open file %s failed, error %d.\n",\
                 TEST_FILE.c_str(), errno);
@@ -129,6 +135,41 @@ public:
     void TearDown() {}
 };
 
+void ParseCmdLine(const char *content, TestCmdLine *resCmd)
+{
+    if (content == nullptr || resCmd == nullptr) {
+        return;
+    }
+
+    const struct CmdTable *cmd = GetCmdByName(content);
+    if (cmd == nullptr) {
+        printf("Cannot support command: %s \n", content);
+        (void)memset_s(resCmd, sizeof(TestCmdLine), 0, sizeof(TestCmdLine));
+        return;
+    }
+    if (strlen(content) <= (strlen(cmd->name) + 1)) {
+        printf("Error content for command: %s \n", content);
+        (void)memset_s(resCmd, sizeof(TestCmdLine), 0, sizeof(TestCmdLine));
+        return;
+    }
+    int ret1 = strcpy_s(resCmd->name, MAX_CMD_NAME_LEN, cmd->name);
+    int ret2 = strcpy_s(resCmd->cmdContent, MAX_CMD_CONTENT_LEN, content + strlen(cmd->name));
+    if (ret1 || ret2) {
+        printf("Error copy command: %s \n", content);
+        (void)memset_s(resCmd, sizeof(TestCmdLine), 0, sizeof(TestCmdLine));
+        return;
+    }
+}
+
+void DoCmd(const TestCmdLine *resCmd)
+{
+    if (resCmd == nullptr) {
+        return;
+    }
+
+    DoCmdByName(resCmd->name, resCmd->cmdContent);
+}
+
 /*
  ** @tc.name: cmdFuncParseCmdTest_001
  ** @tc.desc: parse function, nullptr test
@@ -149,7 +190,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_001, TestSize.Level0)
  **/
 HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_002, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     ParseCmdLine(nullptr, &curCmdLine);
@@ -177,7 +218,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_002, TestSize.Level0)
  **/
 HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_003, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     for (size_t i = 0; i < g_supportedCmds.size(); ++i) {
@@ -195,7 +236,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_003, TestSize.Level0)
  **/
 HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_004, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     char toLongContent[MAX_CMD_CONTENT_LEN + 10];
@@ -203,7 +244,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_004, TestSize.Level0)
     toLongContent[MAX_CMD_CONTENT_LEN + 9] = '\0';
     for (size_t i = 0; i < g_supportedCmds.size(); ++i) {
         size_t curCmdLen = g_supportedCmds[i].length();
-        char* curCmd = (char*)malloc(curCmdLen + MAX_CMD_CONTENT_LEN + 10);
+        char *curCmd = (char *)malloc(curCmdLen + MAX_CMD_CONTENT_LEN + 10);
         if (curCmd == nullptr) {
             printf("[----------] StartupInitUTest, cmdFuncParseCmdTest004, malloc failed.\n");
             break;
@@ -236,7 +277,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_004, TestSize.Level0)
  **/
 HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_005, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     ParseCmdLine("start InitTestService", &curCmdLine);
@@ -280,7 +321,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_001, TestSize.Level0)
  **/
 HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_002, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     std::string cmdStr = "start ";
@@ -300,7 +341,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_002, TestSize.Level0)
  **/
 HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     std::string cmdStr = "mkdir ";
@@ -312,7 +353,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level0)
     DoCmd(&curCmdLine);
 
     // make sure that the directory does not exist
-    DIR* dirTmp = opendir(cmdContentStr.c_str());
+    DIR *dirTmp = opendir(cmdContentStr.c_str());
     EXPECT_TRUE(dirTmp == nullptr);
     EXPECT_TRUE(errno == ENOENT);
     if (dirTmp != nullptr) {    // just in case
@@ -346,7 +387,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level0)
  **/
 HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_004, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     std::string cmdStr = "chmod ";
@@ -403,7 +444,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_004, TestSize.Level0)
  **/
 HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_005, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     std::string cmdStr = "chown ";
@@ -440,7 +481,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_005, TestSize.Level0)
  **/
 HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_006, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
 
     // mkdir success
     std::string cmdStr = "mkdir ";
@@ -519,8 +560,8 @@ HWTEST_F(StartupInitUTest, cfgCheckStat_001, TestSize.Level0)
 
 static char* ReadFileToBuf()
 {
-    char* buffer = nullptr;
-    FILE* fd = nullptr;
+    char *buffer = nullptr;
+    FILE *fd = nullptr;
     struct stat fileStat = {0};
     (void)stat(CFG_FILE.c_str(), &fileStat);
     do {
@@ -549,9 +590,9 @@ static char* ReadFileToBuf()
     return buffer;
 }
 
-static cJSON* GetArrItem(const cJSON* fileRoot, int& arrSize, const std::string& arrName)
+static cJSON *GetArrItem(const cJSON *fileRoot, int &arrSize, const std::string &arrName)
 {
-    cJSON* arrItem = cJSON_GetObjectItemCaseSensitive(fileRoot, arrName.c_str());
+    cJSON *arrItem = cJSON_GetObjectItemCaseSensitive(fileRoot, arrName.c_str());
     arrSize = cJSON_GetArraySize(arrItem);
     if (arrSize <= 0) {
         return nullptr;
@@ -559,7 +600,7 @@ static cJSON* GetArrItem(const cJSON* fileRoot, int& arrSize, const std::string&
     return arrItem;
 }
 
-static int IsForbidden(const char* fieldStr)
+static int IsForbidden(const char *fieldStr)
 {
     size_t fieldLen = strlen(fieldStr);
     size_t forbidStrLen =  strlen("/bin/sh");
@@ -587,31 +628,31 @@ static void CheckService(const cJSON* curItem)
         return;
     }
 
-    char* nameStr = cJSON_GetStringValue(cJSON_GetObjectItem(curItem, "name"));
+    char *nameStr = cJSON_GetStringValue(cJSON_GetObjectItem(curItem, "name"));
     if (nameStr == nullptr) {
         EXPECT_TRUE(nameStr != nullptr);
     } else {
         EXPECT_TRUE(strlen(nameStr) > 0);
     }
 
-    cJSON* pathArgsItem = cJSON_GetObjectItem(curItem, "path");
+    cJSON *pathArgsItem = cJSON_GetObjectItem(curItem, "path");
     EXPECT_TRUE(cJSON_IsArray(pathArgsItem));
 
     int pathArgsCnt = cJSON_GetArraySize(pathArgsItem);
     EXPECT_TRUE(pathArgsCnt > 0);
-    EXPECT_TRUE(pathArgsCnt <= MAX_PATH_ARGS_CNT);
+    EXPECT_TRUE(pathArgsCnt <= TEST_MAX_PATH_ARGS_CNT);
 
     for (int i = 0; i < pathArgsCnt; ++i) {
-        char* curParam = cJSON_GetStringValue(cJSON_GetArrayItem(pathArgsItem, i));
-        EXPECT_TRUE(curParam != NULL);
+        char *curParam = cJSON_GetStringValue(cJSON_GetArrayItem(pathArgsItem, i));
+        EXPECT_TRUE(curParam != nullptr);
         EXPECT_TRUE(strlen(curParam) > 0);
-        EXPECT_TRUE(strlen(curParam) <= MAX_ONE_ARG_LEN);
+        EXPECT_TRUE(strlen(curParam) <= TEST_MAX_ONE_ARG_LEN);
         if (i == 0) {
             EXPECT_TRUE(IsForbidden(curParam) == 0);
         }
     }
 
-    cJSON* filedJ = cJSON_GetObjectItem(curItem, "uid");
+    cJSON *filedJ = cJSON_GetObjectItem(curItem, "uid");
     EXPECT_TRUE(cJSON_IsNumber(filedJ));
     EXPECT_TRUE(cJSON_GetNumberValue(filedJ) >= 0.0);
 
@@ -630,7 +671,7 @@ static void CheckService(const cJSON* curItem)
     int capsCnt = cJSON_GetArraySize(filedJ);
     EXPECT_TRUE(capsCnt <= MAX_CAPS_CNT_FOR_ONE_SERVICE);
     for (int i = 0; i < capsCnt; ++i) {
-        cJSON* capJ = cJSON_GetArrayItem(filedJ, i);
+        cJSON *capJ = cJSON_GetArrayItem(filedJ, i);
         EXPECT_TRUE(cJSON_IsNumber(capJ));
         EXPECT_TRUE(cJSON_GetNumberValue(capJ) >= 0.0);
 
@@ -644,21 +685,21 @@ static void CheckService(const cJSON* curItem)
     }
 }
 
-static void CheckServices(const cJSON* fileRoot)
+static void CheckServices(const cJSON *fileRoot)
 {
     int servArrSize = 0;
-    cJSON* serviceArr = GetArrItem(fileRoot, servArrSize, SERVICE_ARR_NAME_IN_JSON);
+    cJSON *serviceArr = GetArrItem(fileRoot, servArrSize, SERVICE_ARR_NAME_IN_JSON);
     EXPECT_TRUE(serviceArr != nullptr);
     EXPECT_TRUE(servArrSize <= MAX_SERVICES_COUNT_IN_FILE);
 
     for (int i = 0; i < servArrSize; ++i) {
-        cJSON* curItem = cJSON_GetArrayItem(serviceArr, i);
+        cJSON *curItem = cJSON_GetArrayItem(serviceArr, i);
         EXPECT_TRUE(curItem != nullptr);
         CheckService(curItem);
     }
 }
 
-static void CheckCmd(const CmdLine* resCmd)
+static void CheckCmd(const TestCmdLine *resCmd)
 {
     EXPECT_TRUE(strlen(resCmd->name) > 0);
     EXPECT_TRUE(strlen(resCmd->cmdContent) > 0);
@@ -708,13 +749,13 @@ static void CheckCmd(const CmdLine* resCmd)
     }
 }
 
-static void CheckJob(const cJSON* jobItem)
+static void CheckJob(const cJSON *jobItem)
 {
     if (jobItem == nullptr) {
         return;
     }
 
-    cJSON* cmdsItem = cJSON_GetObjectItem(jobItem, CMDS_ARR_NAME_IN_JSON.c_str());
+    cJSON *cmdsItem = cJSON_GetObjectItem(jobItem, CMDS_ARR_NAME_IN_JSON.c_str());
     EXPECT_TRUE(cmdsItem != nullptr);
     EXPECT_TRUE(cJSON_IsArray(cmdsItem));
 
@@ -722,11 +763,11 @@ static void CheckJob(const cJSON* jobItem)
     EXPECT_TRUE(cmdLinesCnt <= MAX_CMD_CNT_IN_ONE_JOB);
 
     for (int i = 0; i < cmdLinesCnt; ++i) {
-        char* cmdLineStr = cJSON_GetStringValue(cJSON_GetArrayItem(cmdsItem, i));
+        char *cmdLineStr = cJSON_GetStringValue(cJSON_GetArrayItem(cmdsItem, i));
         EXPECT_TRUE(cmdLineStr != nullptr);
         EXPECT_TRUE(strlen(cmdLineStr) > 0);
 
-        CmdLine resCmd;
+        TestCmdLine resCmd;
         (void)memset_s(&resCmd, sizeof(resCmd), 0, sizeof(resCmd));
         ParseCmdLine(cmdLineStr, &resCmd);
         CheckCmd(&resCmd);
@@ -736,7 +777,7 @@ static void CheckJob(const cJSON* jobItem)
 static void CheckJobs(const cJSON* fileRoot)
 {
     int jobArrSize = 0;
-    cJSON* jobArr = GetArrItem(fileRoot, jobArrSize, JOBS_ARR_NAME_IN_JSON);
+    cJSON *jobArr = GetArrItem(fileRoot, jobArrSize, JOBS_ARR_NAME_IN_JSON);
     EXPECT_TRUE(jobArr != nullptr);
     EXPECT_TRUE(jobArrSize == JOBS_IN_FILE_COUNT);
 
@@ -744,9 +785,9 @@ static void CheckJobs(const cJSON* fileRoot)
     bool findInit = false;
     bool findPostInit = false;
     for (int i = 0; i < jobArrSize; ++i) {
-        cJSON* jobItem = cJSON_GetArrayItem(jobArr, i);
+        cJSON *jobItem = cJSON_GetArrayItem(jobArr, i);
         EXPECT_TRUE(jobItem != nullptr);
-        char* jobNameStr = cJSON_GetStringValue(cJSON_GetObjectItem(jobItem, "name"));
+        char *jobNameStr = cJSON_GetStringValue(cJSON_GetObjectItem(jobItem, "name"));
         EXPECT_TRUE(jobNameStr != nullptr);
         if (strcmp(jobNameStr, "pre-init") == 0) {
             findPreInit = true;
@@ -773,13 +814,13 @@ static void CheckJobs(const cJSON* fileRoot)
  **/
 HWTEST_F(StartupInitUTest, cfgCheckContent_001, TestSize.Level0)
 {
-    char* fileBuf = ReadFileToBuf();
+    char *fileBuf = ReadFileToBuf();
     if (fileBuf == nullptr) {
         EXPECT_TRUE(fileBuf != nullptr);
         return;
     }
 
-    cJSON* fileRoot = cJSON_Parse(fileBuf);
+    cJSON *fileRoot = cJSON_Parse(fileBuf);
     free(fileBuf);
     fileBuf = nullptr;
 
@@ -799,7 +840,7 @@ HWTEST_F(StartupInitUTest, cfgCheckContent_001, TestSize.Level0)
  */
 static void CreateIllegalCfg()
 {
-    FILE* testCfgFile = fopen(TEST_CFG_ILLEGAL.c_str(), "w+");
+    FILE *testCfgFile = fopen(TEST_CFG_ILLEGAL.c_str(), "w+");
     if (testCfgFile == nullptr) {
         printf("[----------] StartupInitUTest, open file %s failed, error %d.\n", TEST_CFG_ILLEGAL.c_str(), errno);
         return;
@@ -823,7 +864,7 @@ static void CreateIllegalCfg()
  */
 HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_001, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     ParseCmdLine("loadcfg /patch/fstab.cfg", &curCmdLine);
@@ -839,7 +880,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_001, TestSize.Level0)
  */
 HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     std::string cmdStr = "loadcfg ";
     std::string cmdContentStr = "/patch/file_not_exist.cfg";
     struct stat testCfgStat = {0};
@@ -879,12 +920,12 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level0)
  */
 HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_003, TestSize.Level0)
 {
-    CmdLine curCmdLine;
+    TestCmdLine curCmdLine;
     std::string cmdStr = "loadcfg ";
     std::string cmdContentStr = "/patch/fstab.cfg";
     char buf[CAT_BUF_SIZE] = {0};
     struct stat testCfgStat = {0};
-    FILE* fd = nullptr;
+    FILE *fd = nullptr;
     size_t size;
     bool hasZpfs = false;
     std::string command = cmdStr + cmdContentStr;
@@ -933,10 +974,8 @@ HWTEST_F(StartupInitUTest, cmdJobTest_001, TestSize.Level0)
     DoJob(nullptr);
     DoJob("job name does not exist");
     ReleaseAllJobs();
-    RegisterServices(nullptr, 0);
     StartServiceByName("service name does not exist", false);
-    StopAllServices();
-    ReapServiceByPID(INVALID_PID);
+    StopAllServices(0);
     ServiceReap(nullptr);
     EXPECT_NE(0, ServiceStart(nullptr));
     EXPECT_NE(0, ServiceStop(nullptr));

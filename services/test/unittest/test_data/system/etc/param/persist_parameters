@@ -1,0 +1,8 @@
+persist.sys.usb.config=hdc
+persist.111.ffff.bbbb.cccc.dddd.eeee=1106
+persist.111.ffff.bbbb.cccc.dddd.eeee.55555=22202
+persist.111.aaaa.bbbb.cccc.dddd.eeee=1102
+persist.111.bbbb.cccc.dddd.eeee=1103
+persist.111.cccc.bbbb.cccc.dddd.eeee=1104
+persist.111.eeee.bbbb.cccc.dddd.eeee=1105
+persist.aaaa.aaa=3377

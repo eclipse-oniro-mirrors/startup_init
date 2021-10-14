@@ -97,10 +97,10 @@ void DoTriggerExec(const char *triggerName);
 
 /**
  * 对Init接口
- * 按名字执行对应的trigger。
+ * dump 参数和trigger信息
  *
  */
-int SystemTraversalParam(void (*traversalParameter)(ParamHandle handle, void* cookie), void* cookie);
+void DumpParametersAndTriggers(void);
 
 #ifdef __cplusplus
 #if __cplusplus

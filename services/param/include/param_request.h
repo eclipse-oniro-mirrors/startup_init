@@ -16,6 +16,7 @@
 
 #ifndef BASE_STARTUP_PARAM_REQUEST_H
 #define BASE_STARTUP_PARAM_REQUEST_H
+#include <stdatomic.h>
 #include "param_manager.h"
 #include "sys_param.h"
 #ifdef __cplusplus

@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "param_persist.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
@@ -23,8 +23,6 @@
 #include "param_service.h"
 #include "param_trie.h"
 #include "sys_param.h"
-
-#define LABEL "Manager"
 
 static ParamPersistWorkSpace g_persistWorkSpace = { 0, NULL, 0, { NULL, NULL, NULL, NULL, NULL } };
 
@@ -110,10 +108,12 @@ int LoadPersistParam(ParamWorkSpace *workSpace)
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     int ret = InitPersistParamWorkSpace(workSpace);
     PARAM_CHECK(ret == 0, return ret, "Failed to init persist param");
+#ifndef STARTUP_INIT_TEST
     if (PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
         PARAM_LOGE("Persist param has been loaded");
         return 0;
     }
+#endif
     if (g_persistWorkSpace.persistParamOps.load != NULL) {
         ret = g_persistWorkSpace.persistParamOps.load(AddPersistParam, &workSpace->paramSpace);
         PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED);
@@ -124,10 +124,11 @@ int LoadPersistParam(ParamWorkSpace *workSpace)
     return 0;
 }
 
-static void TimerCallbackForSave(ParamTaskPtr timer, void *context)
+PARAM_STATIC void TimerCallbackForSave(ParamTaskPtr timer, void *context)
 {
     UNUSED(context);
-    ParamTaskClose(timer);
+    UNUSED(timer);
+    ParamTaskClose(g_persistWorkSpace.saveTimer);
     g_persistWorkSpace.saveTimer = NULL;
     if (!PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_UPDATE)) {
         return;

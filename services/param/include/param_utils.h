@@ -48,16 +48,17 @@ typedef enum {
 #define OHOS_SERVICE_CTRL_PREFIX "ohos.servicectrl."
 #define OHOS_BOOT "ohos.boot."
 
+#define CLIENT_PIPE_NAME "/dev/unix/socket/paramservice"
+#define CLIENT_PARAM_STORAGE_PATH "/dev/__parameters__/param_storage"
+
 #ifdef STARTUP_INIT_TEST
 #define PARAM_STATIC
-#define PARAM_DEFAULT_PATH ""
-#define PIPE_NAME "/data/paramservice"
-#define PARAM_STORAGE_PATH PARAM_DEFAULT_PATH"/__parameters__/param_storage"
-#define PARAM_PERSIST_SAVE_PATH PARAM_DEFAULT_PATH"/param/persist_parameters"
-#define PARAM_PERSIST_SAVE_TMP_PATH PARAM_DEFAULT_PATH"/param/tmp_persist_parameters"
+#define PARAM_DEFAULT_PATH "/data/init_ut"
+#define PIPE_NAME PARAM_DEFAULT_PATH"/param/paramservice"
+#define PARAM_STORAGE_PATH PARAM_DEFAULT_PATH "/__parameters__/param_storage"
+#define PARAM_PERSIST_SAVE_PATH PARAM_DEFAULT_PATH "/param/persist_parameters"
+#define PARAM_PERSIST_SAVE_TMP_PATH PARAM_DEFAULT_PATH "/param/tmp_persist_parameters"
 #define PARAM_CMD_LINE PARAM_DEFAULT_PATH"/proc/cmdline"
-#define GROUP_FILE_PATH PARAM_DEFAULT_PATH"/etc/group"
-#define USER_FILE_PATH PARAM_DEFAULT_PATH"/etc/passwd"
 #else
 #define PARAM_DEFAULT_PATH ""
 #define PARAM_STATIC static
@@ -66,9 +67,10 @@ typedef enum {
 #define PARAM_PERSIST_SAVE_PATH "/data/parameters/persist_parameters"
 #define PARAM_PERSIST_SAVE_TMP_PATH "/data/parameters/tmp_persist_parameters"
 #define PARAM_CMD_LINE "/proc/cmdline"
+#endif
+
 #define GROUP_FILE_PATH "/etc/group"
 #define USER_FILE_PATH "/etc/passwd"
-#endif
 
 #define WORKSPACE_FLAGS_INIT 0x01
 #define WORKSPACE_FLAGS_LOADED 0x02
@@ -78,6 +80,10 @@ typedef enum {
 #define PARAM_SET_FLAG(node, flag) ((node) |= (flag))
 #define PARAM_CLEAR_FLAG(node, flag) ((node) &= ~(flag))
 #define PARAM_TEST_FLAG(node, flag) (((node) & (flag)) == (flag))
+
+#ifndef LABEL
+#define LABEL "Parameter"
+#endif
 
 #define PARAM_LOGI(fmt, ...) STARTUP_LOGI(LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGE(fmt, ...) STARTUP_LOGE(LABEL, fmt, ##__VA_ARGS__)
@@ -110,8 +116,6 @@ typedef struct {
 #define MAX_DATA_BUFFER 2048
 char *ReadFileData(const char *fileName);
 void CheckAndCreateDir(const char *fileName);
-int ReadFileInDir(const char *dirPath, const char *includeExt,
-    int (*processFile)(const char *fileName, void *context), void *context);
 int GetSubStringInfo(const char *buff, uint32_t buffLen, char delimiter, SubStringInfo *info, int subStrNumber);
 #ifdef __cplusplus
 #if __cplusplus

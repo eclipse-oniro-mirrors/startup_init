@@ -32,9 +32,9 @@ const static int32_t INVALID_SOCKET = -1;
 uint32_t WatcherManager::AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher)
 {
     WATCHER_CHECK(watcher != nullptr, return 0, "Invalid remove watcher for %s", keyPrefix.c_str());
-    if (watcherId_ == 0) {
-        watcherId_++;
-    }
+    watcherId_++;
+    WATCHER_LOGD("AddWatcher begin %s", keyPrefix.c_str());
+
     ParamWatcherPtr paramWather = std::make_shared<ParamWatcher>(watcherId_, watcher);
     WATCHER_CHECK(paramWather != nullptr, return 0, "Failed to create watcher for %s", keyPrefix.c_str());
     WatcherGroupPtr group = GetWatcherGroup(keyPrefix);
@@ -44,6 +44,7 @@ uint32_t WatcherManager::AddWatcher(const std::string &keyPrefix, const sptr<IWa
     WATCHER_CHECK(group != nullptr, return 0, "Failed to create group for %s", keyPrefix.c_str());
     AddWatcherGroup(keyPrefix, group);
 
+    WATCHER_LOGD("AddWatcher 222 begin %s", keyPrefix.c_str());
     if (group->Emptry()) {
         StartLoop();
         SendMessage(group, MSG_ADD_WATCHER);
@@ -76,19 +77,19 @@ int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
     PARAM_CHECK(request != NULL, return PARAM_CODE_ERROR, "Failed to malloc for watch");
     request->id.watcherId = group->GetGroupId();
     request->msgSize = sizeof(ParamMessage);
-    do {
-        int fd = GetServerFd(false);
-        if (fd != INVALID_SOCKET) {
-            ssize_t sendLen = send(serverFd_, (char *)request, request->msgSize, 0);
-            if (sendLen > 0) {
-                PARAM_LOGD("SendMessage key: %s %d success", group->GetKeyPrefix().c_str(), type);
-                break;
-            }
+
+    WATCHER_LOGD("SendMessage %s", group->GetKeyPrefix().c_str());
+    int fd = GetServerFd(false);
+    if (fd != INVALID_SOCKET) {
+        ssize_t sendLen = send(serverFd_, (char *)request, request->msgSize, 0);
+        if (sendLen > 0) {
+            PARAM_LOGD("SendMessage key: %s %d success", group->GetKeyPrefix().c_str(), type);
+        } else {
+            PARAM_LOGD("SendMessage key: %s %d fail", group->GetKeyPrefix().c_str(), type);
         }
-        // fail, try again
-        PARAM_LOGE("Failed to connect server %s, try again", PIPE_NAME);
-        fd = GetServerFd(true);
-    } while (1);
+    } else {
+        PARAM_LOGD("SendMessage key: %s %d fail", group->GetKeyPrefix().c_str(), type);
+    }
     free(request);
     return 0;
 }
@@ -97,6 +98,7 @@ void WatcherManager::ProcessWatcherMessage(const std::vector<char> &buffer, uint
 {
     ParamMessage *msg = (ParamMessage *)buffer.data();
     PARAM_CHECK(msg != NULL, return, "Invalid msg");
+    PARAM_LOGD("ProcessWatcherMessage %d", msg->type);
     uint32_t offset = 0;
     if (msg->type != MSG_NOTIFY_PARAM) {
         return;
@@ -123,18 +125,22 @@ WatcherManager::WatcherGroupPtr WatcherManager::GetWatcherGroup(uint32_t groupId
 
 WatcherManager::WatcherGroupPtr WatcherManager::GetWatcherGroup(const std::string &keyPrefix)
 {
+    std::lock_guard<std::mutex> lock(watcherMutex_);
     if (groupMap_.find(keyPrefix) == groupMap_.end()) {
         return nullptr;
     }
-    return GetWatcherGroup(groupMap_[keyPrefix]);
+    uint32_t groupId = groupMap_[keyPrefix];
+    if (watcherGroups_.find(groupId) != watcherGroups_.end()) {
+        return watcherGroups_[groupId];
+    }
+    return nullptr;
 }
 
 void WatcherManager::AddWatcherGroup(const std::string &keyPrefix, WatcherGroupPtr group)
 {
     uint32_t groupId = group->GetGroupId();
-    groupMap_[keyPrefix] = groupId;
-
     std::lock_guard<std::mutex> lock(watcherMutex_);
+    groupMap_[keyPrefix] = groupId;
     if (watcherGroups_.find(groupId) != watcherGroups_.end()) {
         return;
     }
@@ -143,9 +149,9 @@ void WatcherManager::AddWatcherGroup(const std::string &keyPrefix, WatcherGroupP
 
 void WatcherManager::DelWatcherGroup(WatcherGroupPtr group)
 {
-    groupMap_[group->GetKeyPrefix()] = 0;
     std::lock_guard<std::mutex> lock(watcherMutex_);
-    watcherGroups_[group->GetGroupId()] = nullptr;
+    groupMap_.erase(group->GetKeyPrefix());
+    watcherGroups_.erase(group->GetGroupId());
 }
 
 void WatcherManager::WatcherGroup::AddWatcher(const ParamWatcherPtr &watcher)
@@ -156,7 +162,7 @@ void WatcherManager::WatcherGroup::AddWatcher(const ParamWatcherPtr &watcher)
 void WatcherManager::WatcherGroup::DelWatcher(uint32_t watcherId)
 {
     if (watchers_.find(watcherId) != watchers_.end()) {
-        watchers_[watcherId] = nullptr;
+        watchers_.erase(watcherId);
     }
 }
 
@@ -191,6 +197,7 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, ParamWatcherP
         ParamWatcherPtr watcher;
         std::string keyPrefix;
     };
+    PARAM_LOGD("SendLocalChange key %s  ", keyPrefix.c_str());
     std::vector<char> buffer(PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX);
     struct Context context = {buffer.data(), watcher, keyPrefix};
     // walk watcher
@@ -211,7 +218,7 @@ void WatcherManager::RunLoop()
 {
     const int32_t RECV_BUFFER_MAX = 5 * 1024;
     std::vector<char> buffer(RECV_BUFFER_MAX, 0);
-    while (!stop) {
+    while (!stop_) {
         int fd = GetServerFd(false);
         ssize_t recvLen = recv(fd, buffer.data(), RECV_BUFFER_MAX, 0);
         if (recvLen <= 0) {
@@ -222,6 +229,9 @@ void WatcherManager::RunLoop()
             PARAM_LOGE("Failed to recv msg from server errno %d", errno);
         }
         PARAM_LOGD("Recv msg from server");
+        if (stop_) {
+            break;
+        }
         if (recvLen >= (ssize_t)sizeof(ParamMessage)) {
             ProcessWatcherMessage(buffer, recvLen);
         }
@@ -240,6 +250,7 @@ void WatcherManager::StartLoop()
 int WatcherManager::GetServerFd(bool retry)
 {
     const int32_t sleepTime = 2000;
+    const int32_t maxRetry = 10;
     std::lock_guard<std::mutex> lock(mutex_);
     if (retry && serverFd_ != INVALID_SOCKET) {
         close(serverFd_);
@@ -251,9 +262,10 @@ int WatcherManager::GetServerFd(bool retry)
     struct timeval time {};
     time.tv_sec = 1;
     time.tv_usec = 0;
+    int32_t retryCount = 0;
     do {
         serverFd_ = socket(AF_UNIX, SOCK_STREAM, 0);
-        int ret = ConntectServer(serverFd_, PIPE_NAME);
+        int ret = ConntectServer(serverFd_, CLIENT_PIPE_NAME);
         if (ret != 0) {
             close(serverFd_);
             serverFd_ = INVALID_SOCKET;
@@ -262,7 +274,9 @@ int WatcherManager::GetServerFd(bool retry)
             (void)setsockopt(serverFd_, SOL_SOCKET, SO_RCVTIMEO, &time, sizeof(struct timeval));
             break;
         }
-    } while (1);
+        retryCount++;
+    } while (retryCount < maxRetry);
+    PARAM_LOGD("SendMessage retryCount %d", retryCount);
     return serverFd_;
 }
 
@@ -276,10 +290,10 @@ void WatcherManager::OnStart()
     return;
 }
 
-void WatcherManager::OnStop()
+void WatcherManager::StopLoop()
 {
-    PARAM_LOGI("WatcherManager OnStop");
-    stop = true;
+    PARAM_LOGI("WatcherManager StopLoop");
+    stop_ = true;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         close(serverFd_);
@@ -290,6 +304,11 @@ void WatcherManager::OnStop()
         delete pRecvThread_;
         pRecvThread_ = nullptr;
     }
+}
+
+void WatcherManager::OnStop()
+{
+    StopLoop();
 }
 } // namespace init_param
 } // namespace OHOS

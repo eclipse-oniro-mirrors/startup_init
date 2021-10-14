@@ -19,7 +19,7 @@ ohos_static_library("libinit_utils") {
   include_dirs = [
     "//third_party/bounds_checking_function/include",
     "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/services/utils",
+    "//base/startup/init_lite/services/include",
   ]
 
   deps = [

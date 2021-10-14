@@ -13,12 +13,17 @@
  * limitations under the License.
  */
 
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "ueventd_firmware_handler.h"
 #include "ueventd.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 
 void HandleFimwareDeviceEvent(const struct Uevent *uevent)
 {
-    // Implement it later.
+    // TODO, implement it later.
     INIT_LOGI("Firmware handler not implemented yet.");
 }

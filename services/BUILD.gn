@@ -10,6 +10,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+init_common_sources = [
+  "init/init_capability.c",
+  "init/init_common_cmds.c",
+  "init/init_config.c",
+  "init/init_common_service.c",
+  "init/init_service_manager.c",
+  "init/init_service_socket.c",
+  "init/main.c",
+  "log/init_log.c",
+  "utils/init_utils.c",
+  "utils/list.c",
+]
+
 if (defined(ohos_lite)) {
   # feature: init
   executable("init_lite") {
@@ -19,27 +33,21 @@ if (defined(ohos_lite)) {
       "OHOS_LITE",
     ]
     sources = [
-      "log/init_log.c",
-      "src/init_adapter.c",
-      "src/init_capability.c",
-      "src/init_cmds.c",
-      "src/init_import.c",
-      "src/init_jobs.c",
-      "src/init_read_cfg.c",
-      "src/init_reboot.c",
-      "src/init_service.c",
-      "src/init_service_manager.c",
-      "src/init_service_socket.c",
-      "src/init_signal_handler.c",
-      "src/main.c",
-      "utils/init_utils.c",
+      "init/adapter/init_adapter.c",
+      "init/lite/init.c",
+      "init/lite/init_cmds.c",
+      "init/lite/init_jobs.c",
+      "init/lite/init_reboot.c",
+      "init/lite/init_service.c",
+      "init/lite/init_signal_handler.c",
     ]
+
+    sources += init_common_sources
 
     include_dirs = [
       "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/param/include",
+      "//base/startup/init_lite/services/init/include",
       "//base/startup/init_lite/services/log",
-      "//base/startup/init_lite/services/utils",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/startup/syspara_lite/interfaces/kits",
@@ -88,33 +96,34 @@ if (defined(ohos_lite)) {
 
   ohos_executable("init") {
     sources = [
-      "src/device.c",
-      "src/init_adapter.c",
-      "src/init_capability.c",
-      "src/init_cmds.c",
-      "src/init_import.c",
-      "src/init_jobs.c",
-      "src/init_read_cfg.c",
-      "src/init_reboot.c",
-      "src/init_service.c",
-      "src/init_service_manager.c",
-      "src/init_service_socket.c",
-      "src/init_signal_handler.c",
-      "src/main.c",
+      "init/adapter/init_adapter.c",
+      "init/standard/device.c",
+      "init/standard/init.c",
+      "init/standard/init_cmds.c",
+      "init/standard/init_jobs.c",
+      "init/standard/init_reboot.c",
+      "init/standard/init_service.c",
+      "init/standard/init_signal_handler.c",
+      "init/standard/switch_root.c",
+      "init/standard/init_mount.c",
     ]
+
+    sources += init_common_sources
+
     include_dirs = [
       "//base/startup/init_lite/services/include/param",
       "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/init/include",
       "//base/startup/init_lite/services/log",
-      "//base/startup/init_lite/services/utils",
+      "//base/startup/init_lite/interfaces/innerkits/include",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//third_party/libuv/include",
     ]
     deps = [
+      "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_static",
       "//base/startup/init_lite/services/log:init_log",
       "//base/startup/init_lite/services/param:param_service",
-      "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]
@@ -138,6 +147,7 @@ if (defined(ohos_lite)) {
       ":init_etc",
       "//base/startup/init_lite/interfaces/innerkits/dynamic_service:dynamic_service",
       "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
+      "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_shared",
       "//base/startup/init_lite/services/cmds/reboot:reboot",
       "//base/startup/init_lite/services/cmds/service_control:service_control",
       "//base/startup/init_lite/services/param:param",

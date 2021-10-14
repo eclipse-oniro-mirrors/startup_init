@@ -26,7 +26,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#define LABEL "PARAM_UTILS"
 void CheckAndCreateDir(const char *fileName)
 {
     if (fileName == NULL || *fileName == '\0') {
@@ -39,45 +38,6 @@ void CheckAndCreateDir(const char *fileName)
     free(path);
 }
 
-int ReadFileInDir(const char *dirPath, const char *includeExt,
-    int (*processFile)(const char *fileName, void *context), void *context)
-{
-    if (dirPath == NULL || processFile == NULL) {
-        return -1;
-    }
-    DIR *pDir = opendir(dirPath);
-    PARAM_CHECK(pDir != NULL, return -1, "Read dir :%s failed.%d", dirPath, errno);
-    char *fileName = malloc(PARAM_BUFFER_SIZE);
-    PARAM_CHECK(fileName != NULL, closedir(pDir);
-        return -1, "Failed to malloc for %s", dirPath);
-
-    struct dirent *dp;
-    while ((dp = readdir(pDir)) != NULL) {
-        if (dp->d_type == DT_DIR) {
-            continue;
-        }
-        PARAM_LOGD("ReadFileInDir %s", dp->d_name);
-        if (includeExt != NULL) {
-            char *tmp = strstr(dp->d_name, includeExt);
-            if (tmp == NULL) {
-                continue;
-            }
-            if (strcmp(tmp, includeExt) != 0) {
-                continue;
-            }
-        }
-        int ret = snprintf_s(fileName, PARAM_BUFFER_SIZE, PARAM_BUFFER_SIZE - 1, "%s/%s", dirPath, dp->d_name);
-        PARAM_CHECK(ret > EOK, continue, "Failed to get file name for %s", dp->d_name);
-        struct stat st;
-        if (stat(fileName, &st) == 0) {
-            processFile(fileName, context);
-        }
-    }
-    free(fileName);
-    closedir(pDir);
-    return 0;
-}
-
 char *ReadFileData(const char *fileName)
 {
     if (fileName == NULL) {
@@ -86,7 +46,7 @@ char *ReadFileData(const char *fileName)
     char *buffer = NULL;
     int fd = -1;
     do {
-        fd = open(fileName, O_RDONLY);
+        fd = open(fileName, O_RDONLY); // 阶段早，不能使用realpath
         PARAM_CHECK(fd >= 0, break, "Failed to read file %s", fileName);
 
         buffer = (char *)malloc(MAX_DATA_BUFFER);

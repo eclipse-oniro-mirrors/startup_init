@@ -90,6 +90,7 @@ public:
 
     uint32_t AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher) override;
     int32_t DelWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
+    void StopLoop();
 protected:
     void OnStart() override;
     void OnStop() override;
@@ -111,7 +112,7 @@ private:
     std::mutex watcherMutex_;
     int serverFd_ { -1 };
     std::thread *pRecvThread_ { nullptr };
-    std::atomic<bool> stop { false };
+    std::atomic<bool> stop_ { false };
     std::map<std::string, uint32_t> groupMap_ {};
     std::map<uint32_t, WatcherGroupPtr> watcherGroups_ {};
 };

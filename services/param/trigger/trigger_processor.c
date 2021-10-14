@@ -12,19 +12,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <unistd.h>
-
+#include <time.h>
 #include "init_cmds.h"
+#include "init_param.h"
 #include "init_service_manager.h"
+#include "init_utils.h"
 #include "param_manager.h"
 #include "param_utils.h"
 #include "trigger_checker.h"
 #include "trigger_manager.h"
 
-#define LABEL "Trigger"
 #define MAX_TRIGGER_COUNT_RUN_ONCE 20
 static TriggerWorkSpace g_triggerWorkSpace = {};
+
+#ifdef PARAM_TEST
+#define MAX_COUNT 1000
+#define READ_DURATION 100000
+#define TEST_PARAM_NAME "test.random.read.001"
+static void AddTestTrigger(const TriggerWorkSpace *workSpace)
+{
+    TriggerHeader *header = (TriggerHeader *)&workSpace->triggerHead[TRIGGER_PARAM];
+    TriggerNode *trigger = AddTrigger(header, "param:test.randrom.test.start=1", "test.randrom.test.start=1", 0);
+    PARAM_CHECK(trigger != NULL, return, "Failed to create test trigger");
+    int cmdKeyIndex = 0;
+    GetMatchCmd("setparam ", &cmdKeyIndex);
+    int ret = AddCommand(trigger, (uint32_t)CMD_INDEX_FOR_PARA_TEST, NULL);
+    PARAM_CHECK(ret == 0, return, "Failed to add command");
+}
+
+static void TestTimerCallback(ParamTaskPtr timer, void *context)
+{
+    srand((unsigned)time(NULL));
+    char buffer[32] = { 0 };
+    static int index = 0;
+    index++;
+    if (index >= MAX_COUNT) {
+        ParamTaskClose(timer);
+    }
+    static uint32_t value = 0;
+    int count = 0;
+    while (count < MAX_COUNT) {
+        int wait = rand() / READ_DURATION + READ_DURATION; // 100ms
+        sprintf_s(buffer, sizeof(buffer), "%u", value);
+        PARAM_LOGI("set param name: %s, value %s", TEST_PARAM_NAME, buffer);
+        SystemWriteParam(TEST_PARAM_NAME, buffer);
+        usleep(wait);
+        count++;
+        value++;
+    }
+}
+#endif
 
 void DoTriggerExec(const char *triggerName)
 {
@@ -45,17 +83,16 @@ static void DoCmdExec(const TriggerNode *trigger, const CommandNode *cmd, const 
             extData->excuteCmd(extData, cmd->cmdKeyIndex, content);
         }
         return;
-    }
-    const char *cmdName = GetCmdKey(cmd->cmdKeyIndex);
-    if (cmdName == NULL) {
+#ifdef PARAM_TEST
+    } else if (cmd->cmdKeyIndex == CMD_INDEX_FOR_PARA_TEST) {
+        ParamTaskPtr timer = NULL;
+        ParamTimerCreate(&timer, TestTimerCallback, NULL);
+        ParamTimerStart(timer, READ_DURATION, MAX_COUNT);
         return;
-    }
-    if (strncmp(cmdName, TRIGGER_CMD, strlen(TRIGGER_CMD)) == 0) {
-        DoTriggerExec(cmd->content);
-        return;
+#endif
     }
 #ifndef STARTUP_INIT_TEST
-    DoCmdByName(cmdName, cmd->content);
+    DoCmdByIndex(cmd->cmdKeyIndex, cmd->content);
 #endif
 }
 
@@ -162,7 +199,7 @@ static const char *GetCmdInfo(const char *content, uint32_t contentSize, char **
     static const char *ctrlCmds[][2] = {
         {"reboot", "reboot "}
     };
-    uint32_t index = 0;
+    int index = 0;
     for (size_t i = 0; i < sizeof(ctrlCmds) / sizeof(ctrlCmds[0]); i++) {
         if (strncmp(content, ctrlCmds[i][0], strlen(ctrlCmds[i][0])) == 0) {
             *cmdParam = (char *)content;
@@ -231,7 +268,7 @@ static int GetTriggerType(const char *type)
         "pre-init", "boot", "early-init", "init", "early-init", "late-init", "post-init",
         "early-fs", "post-fs", "late-fs", "post-fs-data"
     };
-    for (size_t i = 0; i < sizeof(triggerTypeStr) / sizeof(char *); i++) {
+    for (size_t i = 0; i < ARRAY_LENGTH(triggerTypeStr); i++) {
         if (strcmp(triggerTypeStr[i], type) == 0) {
             return TRIGGER_BOOT;
         }
@@ -267,7 +304,7 @@ static int ParseTrigger_(const TriggerWorkSpace *workSpace, const cJSON *trigger
     PARAM_CHECK(cmdLinesCnt > 0, return -1, "Command array size must positive %s", name);
 
     int ret;
-    uint32_t cmdKeyIndex = 0;
+    int cmdKeyIndex = 0;
     for (int i = 0; (i < cmdLinesCnt) && (i < TRIGGER_MAX_CMD); ++i) {
         char *cmdLineStr = cJSON_GetStringValue(cJSON_GetArrayItem(cmdItems, i));
         PARAM_CHECK(cmdLineStr != NULL, continue, "Command is null");
@@ -277,9 +314,9 @@ static int ParseTrigger_(const TriggerWorkSpace *workSpace, const cJSON *trigger
         PARAM_CHECK(matchCmd != NULL, continue, "Command not support %s", cmdLineStr);
         size_t matchLen = strlen(matchCmd);
         if (matchLen == cmdLineLen) {
-            ret = AddCommand(trigger, cmdKeyIndex, NULL);
+            ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, NULL);
         } else {
-            ret = AddCommand(trigger, cmdKeyIndex, cmdLineStr + matchLen);
+            ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, cmdLineStr + matchLen);
         }
         PARAM_CHECK(ret == 0, continue, "Failed to add command %s", cmdLineStr);
     }
@@ -299,6 +336,10 @@ int ParseTriggerConfig(const cJSON *fileRoot)
         cJSON *item = cJSON_GetArrayItem(triggers, i);
         ParseTrigger_(&g_triggerWorkSpace, item);
     }
+#ifdef PARAM_TEST
+    // for test
+    AddTestTrigger(&g_triggerWorkSpace);
+#endif
     return 0;
 }
 
@@ -312,15 +353,12 @@ int InitTriggerWorkSpace(void)
     PARAM_CHECK(g_triggerWorkSpace.eventHandle != NULL, return -1, "Failed to event handle");
 
     // executeQueue
-    g_triggerWorkSpace.executeQueue.executeQueue = malloc(TRIGGER_EXECUTE_QUEUE * sizeof(TriggerNode *));
+    g_triggerWorkSpace.executeQueue.executeQueue = calloc(1, TRIGGER_EXECUTE_QUEUE * sizeof(TriggerNode *));
+    PARAM_CHECK(g_triggerWorkSpace.executeQueue.executeQueue != NULL,
+        return -1, "Failed to alloc memory for executeQueue");
     g_triggerWorkSpace.executeQueue.queueCount = TRIGGER_EXECUTE_QUEUE;
     g_triggerWorkSpace.executeQueue.startIndex = 0;
     g_triggerWorkSpace.executeQueue.endIndex = 0;
-    PARAM_CHECK(g_triggerWorkSpace.executeQueue.executeQueue != NULL,
-        return -1, "Failed to alloc memory for executeQueue");
-    int ret = memset_s(g_triggerWorkSpace.executeQueue.executeQueue,
-        TRIGGER_EXECUTE_QUEUE * sizeof(TriggerNode *), 0, TRIGGER_EXECUTE_QUEUE * sizeof(TriggerNode *));
-    PARAM_CHECK(ret == EOK, return -1, "Failed to memset for executeQueue");
 
     // normal trigger
     for (size_t i = 0; i < sizeof(g_triggerWorkSpace.triggerHead) / sizeof(g_triggerWorkSpace.triggerHead[0]); i++) {

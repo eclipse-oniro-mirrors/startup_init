@@ -88,7 +88,7 @@ WatcherManagerKits::ParamWatcherKitPtr WatcherManagerKits::GetParamWatcher(const
 void WatcherManagerKits::SetParamWatcher(const std::string &keyPrefix, ParamWatcherKitPtr watcher)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (watchers_.find(keyPrefix) != watchers_.end()) {
+    if (watchers_.find(keyPrefix) == watchers_.end()) {
         watchers_[keyPrefix] = watcher;
     }
 }

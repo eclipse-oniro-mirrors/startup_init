@@ -27,13 +27,13 @@ hw_sc.build.os.version=2.2.0
 # ohos release type
 hw_sc.build.os.releasetype=Canary1
 
-ro.actionable_compatible_property.enabled=false
-ro.postinstall.fstab.prefix=/system
-ro.secure=1
+const.actionable_compatible_property.enabled=false
+const.postinstall.fstab.prefix=/system
+const.secure=1
 security.perf_harden=1
-ro.allow.mock.location=0
-ro.debuggable=1
-ro.build.characteristics="default"
-ro.product.model="ohos"
-ro.product.name="OpenHarmony 2.0 Canary"
+const.allow.mock.location=0
+const.debuggable=1
+const.build.characteristics="default"
+const.product.model="ohos"
+const.product.name="OpenHarmony 2.0 Canary"
 persist.sys.usb.config=hdc

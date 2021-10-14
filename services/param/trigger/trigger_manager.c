@@ -27,7 +27,6 @@
 #include "param_manager.h"
 #include "trigger_checker.h"
 
-#define LABEL "Trigger"
 int AddCommand(TriggerNode *trigger, uint32_t cmdKeyIndex, const char *content)
 {
     PARAM_CHECK(trigger != NULL, return -1, "trigger is null");
@@ -44,15 +43,14 @@ int AddCommand(TriggerNode *trigger, uint32_t cmdKeyIndex, const char *content)
         int ret = memcpy_s(node->content, size, content, strlen(content));
         node->content[strlen(content)] = '\0';
         PARAM_CHECK(ret == EOK, free(node);
-            return -1, "Failed to copy command");
+            return 0, "Failed to copy command");
     }
     // 插入队列
     if (trigger->firstCmd == NULL) {
         trigger->firstCmd = node;
         trigger->lastCmd = node;
     } else {
-        PARAM_CHECK(trigger->lastCmd != NULL, free(node);
-            return -1, "Invalid last cmd");
+        PARAM_CHECK(trigger->lastCmd != NULL, return 0, "Invalid last cmd");
         trigger->lastCmd->next = node;
         trigger->lastCmd = node;
     }
@@ -257,6 +255,8 @@ static int CheckParamTriggerMatch(TriggerWorkSpace *workSpace, LogicCalculator *
 static int CheckOtherTriggerMatch(TriggerWorkSpace *workSpace, LogicCalculator *calculator,
     TriggerNode *trigger, const char *content, uint32_t contentSize)
 {
+    UNUSED(content);
+    UNUSED(contentSize);
     const char *condition = GetTriggerCondition(workSpace, trigger);
     return ComputeCondition(calculator, condition);
 }
