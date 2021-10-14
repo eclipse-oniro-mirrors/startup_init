@@ -86,7 +86,7 @@ char *ReadFileData(const char *fileName)
     char *buffer = NULL;
     int fd = -1;
     do {
-        fd = open(fileName, O_RDONLY); // 阶段早，不能使用realpath
+        fd = open(fileName, O_RDONLY);
         PARAM_CHECK(fd >= 0, break, "Failed to read file %s", fileName);
 
         buffer = (char *)malloc(MAX_DATA_BUFFER);
