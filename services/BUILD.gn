@@ -14,8 +14,8 @@
 init_common_sources = [
   "init/init_capability.c",
   "init/init_common_cmds.c",
-  "init/init_config.c",
   "init/init_common_service.c",
+  "init/init_config.c",
   "init/init_service_manager.c",
   "init/init_service_socket.c",
   "init/main.c",
@@ -101,11 +101,11 @@ if (defined(ohos_lite)) {
       "init/standard/init.c",
       "init/standard/init_cmds.c",
       "init/standard/init_jobs.c",
+      "init/standard/init_mount.c",
       "init/standard/init_reboot.c",
       "init/standard/init_service.c",
       "init/standard/init_signal_handler.c",
       "init/standard/switch_root.c",
-      "init/standard/init_mount.c",
     ]
 
     sources += init_common_sources
@@ -146,8 +146,8 @@ if (defined(ohos_lite)) {
       ":init",
       ":init_etc",
       "//base/startup/init_lite/interfaces/innerkits/dynamic_service:dynamic_service",
-      "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
       "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_shared",
+      "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
       "//base/startup/init_lite/services/cmds/reboot:reboot",
       "//base/startup/init_lite/services/cmds/service_control:service_control",
       "//base/startup/init_lite/services/param:param",

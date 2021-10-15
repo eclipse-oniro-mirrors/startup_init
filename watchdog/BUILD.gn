@@ -12,16 +12,11 @@
 # limitations under the License.
 
 group("watchdog") {
-    if (defined(ohos_lite)) {
-        if (ohos_kernel_type == "linux") {
-            deps = [
-                "//base/startup/init_lite/watchdog/linux:linux_watchdog",
-            ]
-        }
-    } else {
-            deps = [
-                "//base/startup/init_lite/watchdog/linux:linux_watchdog",
-             ]
+  if (defined(ohos_lite)) {
+    if (ohos_kernel_type == "linux") {
+      deps = [ "//base/startup/init_lite/watchdog/linux:linux_watchdog" ]
     }
+  } else {
+    deps = [ "//base/startup/init_lite/watchdog/linux:linux_watchdog" ]
+  }
 }
-

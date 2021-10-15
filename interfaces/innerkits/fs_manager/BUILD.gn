@@ -36,9 +36,7 @@ ohos_shared_library("libfsmanager_shared") {
   deps = fs_manager_deps
   include_dirs = fs_manager_include_dirs
   part_name = "init"
-  install_images = [
-    "system",
-  ]
+  install_images = [ "system" ]
 }
 
 ohos_static_library("libfsmanager_static") {
@@ -47,4 +45,3 @@ ohos_static_library("libfsmanager_static") {
   include_dirs = fs_manager_include_dirs
   part_name = "init"
 }
-

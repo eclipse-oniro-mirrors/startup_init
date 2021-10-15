@@ -116,9 +116,9 @@ ohos_shared_library("param_client") {
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   install_images = [
-      "system",
-      "updater",
-    ]
+    "system",
+    "updater",
+  ]
   part_name = "init"
 }
 
