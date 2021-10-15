@@ -304,7 +304,7 @@ static const char *GetDeviceName(char *sysPath, const char *deviceName)
     }
     if (deviceName != NULL && deviceName[0] != '\0') {
         // if device name reported by kernel includes '/', skip it.
-        // TODO: use entire device name reported by kernel
+        // use entire device name reported by kernel
         devName = basename((char *)deviceName);
         char *p = strrchr(deviceName, '/');
         if (p != NULL) { // device name includes slash

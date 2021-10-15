@@ -37,7 +37,7 @@ void SystemInit(void)
 
 void LogInit(void)
 {
-
+    return;
 }
 
 void SystemPrepare(void)

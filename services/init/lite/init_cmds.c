@@ -12,11 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include "init_cmds.h"
+
 #include <stdlib.h>
 #include <string.h>
 
 #include "init.h"
-#include "init_cmds.h"
 #include "init_log.h"
 #include "init_utils.h"
 #include "securec.h"

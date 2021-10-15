@@ -104,7 +104,7 @@ typedef struct {
 } ParamStreamInfo;
 
 int ParamServiceStop(void);
-int ParamServiceStart();
+int ParamServiceStart(void);
 
 int ParamTaskClose(ParamTaskPtr stream);
 int ParamServerCreate(ParamTaskPtr *server, const ParamStreamInfo *info);

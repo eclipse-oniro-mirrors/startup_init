@@ -73,7 +73,10 @@ private:
         DISALLOW_COPY_AND_MOVE(DeathRecipient);
         void OnRemoteDied(const wptr<IRemoteObject> &remote) final;
     };
-    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient() { return deathRecipient_; }
+    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient()
+    {
+        return deathRecipient_;
+    }
 
 private:
     void SetParamWatcher(const std::string &keyPrefix, ParamWatcherKitPtr watcher);

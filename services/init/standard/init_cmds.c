@@ -32,13 +32,13 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "fs_manager/fs_manager.h"
 #include "init.h"
 #include "init_jobs.h"
 #include "init_log.h"
 #include "init_param.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
-#include "fs_manager/fs_manager.h"
 #include "securec.h"
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)

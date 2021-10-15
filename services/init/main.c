@@ -20,6 +20,7 @@ static const pid_t INIT_PROCESS_PID = 1;
 int main(int argc, char* const argv[])
 {
     int isSecondStage = 0;
+    // Number of command line parameters is 2
     if (argc == 2 && (strcmp(argv[1], "--second-stage") == 0)) {
         isSecondStage = 1;
     }

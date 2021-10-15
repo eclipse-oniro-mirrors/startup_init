@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
- #ifndef INIT_SWITCH_ROOT_H
- #define INIT_SWITCH_ROOT_H
- int SwitchRoot(const char *newRoot);
- #endif // INIT_SWITCH_ROOT_H
+#ifndef INIT_SWITCH_ROOT_H
+#define INIT_SWITCH_ROOT_H
+
+int SwitchRoot(const char *newRoot);
+
+#endif // INIT_SWITCH_ROOT_H

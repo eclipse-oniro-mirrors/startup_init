@@ -54,14 +54,15 @@ static void FreeOldRoot(DIR *dir, dev_t dev)
             if (S_ISDIR(st.st_mode)) {
                 int fd = openat(dfd, de->d_name, O_RDONLY | O_DIRECTORY);
                 isDir = true;
-                if (fd >= 0) {
-                    DIR *subDir = fdopendir(fd);
-                    if (subDir != NULL) {
-                        FreeOldRoot(subDir, dev);
-                        closedir(subDir);
-                    } else {
-                        close(fd);
-                    }
+                if (fd < 0) {
+                    continue;
+                }
+                DIR *subDir = fdopendir(fd);
+                if (subDir != NULL) {
+                    FreeOldRoot(subDir, dev);
+                    closedir(subDir);
+                } else {
+                    close(fd);
                 }
             }
         }

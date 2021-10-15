@@ -13,16 +13,11 @@
  * limitations under the License.
  */
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif
 #include <ctype.h>
-#include <stdio.h>
 #include <fcntl.h>
-#include <limits.h>
 #include <libgen.h>
+#include <limits.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <sys/mount.h>
@@ -32,6 +27,12 @@ extern "C" {
 #include "fs_manager/fs_manager.h"
 #include "init_utils.h"
 #include "securec.h"
+
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
 
 struct FsManagerFlags {
     char *name;
@@ -89,7 +90,7 @@ static void AddToFstab(Fstab *fstab, FstabItem *item)
 
 void ReleaseFstabItem(FstabItem *item)
 {
-   if (item != NULL) {
+    if (item != NULL) {
         if (item->deviceName != NULL) {
             free(item->deviceName);
             item->deviceName = NULL;
@@ -111,7 +112,7 @@ void ReleaseFstabItem(FstabItem *item)
         }
         free(item);
         item = NULL;
-   }
+    }
 }
 
 void ReleaseFstab(Fstab *fstab)
@@ -238,14 +239,14 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
             }
             // If one line in fstab file parsed with a failure. just give a warning
             // and skip it.
-            printf("[fs_manager][warning] Cannot parse file \" %s \" at line %u. skip it\n", file, ln);
+            printf("[fs_manager][warning] Cannot parse file \" %s \" at line %zu. skip it\n", file, ln);
             continue;
         }
     }
     if (line != NULL) {
         free(line);
     }
-    fclose(fp);
+    (void)fclose(fp);
     fp = NULL;
     return fstab;
 }
@@ -312,7 +313,8 @@ static const struct MountFlags mountFlags[] = {
     { "defaults", 0 },
 };
 
-static bool IsDefaultMountFlags(const char *str) {
+static bool IsDefaultMountFlags(const char *str)
+{
     bool isDefault = false;
 
     if (str != NULL) {
@@ -330,7 +332,7 @@ static unsigned long ParseDefaultMountFlag(const char *str)
     unsigned long flags = 0;
 
     if (str != NULL) {
-         for (size_t i = 0; i < ARRAY_LENGTH(mountFlags); i++) {
+        for (size_t i = 0; i < ARRAY_LENGTH(mountFlags); i++) {
             if (strcmp(str, mountFlags[i].name) == 0) {
                 flags = mountFlags[i].flags;
                 break;
@@ -340,11 +342,11 @@ static unsigned long ParseDefaultMountFlag(const char *str)
     return flags;
 }
 
-unsigned long GetMountFlags(char *mountFlags, char *fsSpecificData, size_t fsSpecificDataSize)
+unsigned long GetMountFlags(char *flags, char *fsSpecificData, size_t fsSpecificDataSize)
 {
     unsigned long flags = 0;
 
-    if (mountFlags == NULL || fsSpecificData == NULL) {
+    if (flags == NULL || fsSpecificData == NULL) {
         return 0;
     }
 
@@ -356,7 +358,7 @@ unsigned long GetMountFlags(char *mountFlags, char *fsSpecificData, size_t fsSpe
     // If the item configured in fstab contains flag over than 15,
     // @SplitStringExt can handle it and parse them all. but the parse function will drop it.
     const int maxCount = 15;
-    char **flagsVector = SplitStringExt(mountFlags, ",", &flagCount, maxCount);
+    char **flagsVector = SplitStringExt(flags, ",", &flagCount, maxCount);
 
     if (flagsVector == NULL || flagCount == 0) {
         // No flags or something wrong in SplitStringExt，just return.

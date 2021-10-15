@@ -20,6 +20,14 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef OHOS_LITE
+#include "hilog/log.h"
+#else
+#ifdef INIT_AGENT
+#include "hilog/log.h"
+#endif
+#endif
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -45,7 +53,6 @@ void SetInitLogLevel(InitLogLevel logLevel);
 #endif
 
 #ifdef OHOS_LITE
-#include "hilog/log.h"
 
 #undef LOG_DOMAIN
 #define LOG_DOMAIN 0xD000719
@@ -79,7 +86,6 @@ void InitToHiLog(InitLogLevel logLevel, const char *fmt, ...);
 #define LABEL "ParamAgent"
 #endif
 
-#include "hilog/log.h"
 #define PARAM_AGENT_LOG_PATH "/data/init_agent/init_agent.log"
 
 #define STARTUP_LOGD(LABEL, fmt, ...) \

@@ -314,7 +314,7 @@ int ParamTimerStart(ParamTaskPtr timer, uint64_t timeout, uint64_t repeat)
     return -1;
 }
 
-int ParamServiceStart()
+int ParamServiceStart(void)
 {
     if (uv_default_loop() == NULL) {
         return -1;

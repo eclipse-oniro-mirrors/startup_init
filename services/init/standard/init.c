@@ -91,7 +91,7 @@ static void StartInitSecondStage(void)
     char *const args[] = {
         "/bin/init",
         "--second-stage",
-         NULL,
+        NULL,
     };
     if (execv("/bin/init", args) != 0) {
         INIT_LOGE("Failed to exec \"/bin/init\", err = %d", errno);

@@ -112,7 +112,7 @@ static void ExeuteCmdParamRead(int argc, char *argv[], int start)
     SystemSetParameter("test.randrom.test.start", "1");
     char buffer[PARAM_NAME_LEN_MAX] = {0};
     printf("SystemGetParameter start \n");
-    srand((unsigned)time(NULL));
+    (void)srand((unsigned)time(NULL));
     while (1) {
         int wait = rand() / READ_DURATION + READ_DURATION; // 100ms
         uint32_t size = PARAM_NAME_LEN_MAX;
@@ -170,17 +170,6 @@ int RunParamCommand(int argc, char *argv[])
         space->securityLabel->cred.gid = testUid;
     }
 #endif
-    if ((strcmp(argv[0], "./paramset") == 0) || (strcmp(argv[0], "paramset") == 0)) {
-        if (argc == (MIN_ARGC + 1)) {
-            ExeuteCmdParamSet(argc, argv, 1);
-        } else {
-            printf("param set key value \n");
-        }
-        return 0;
-    } else if ((strcmp(argv[0], "./paramget") == 0) || (strcmp(argv[0], "paramget") == 0)) {
-        ExeuteCmdParamSet(argc, argv, 1);
-        return 0;
-    }
     if (argc < MIN_ARGC) {
         printf("usage: \n");
         for (size_t i = 0; i < sizeof(paramCmds) / sizeof(paramCmds[0]); i++) {

@@ -43,7 +43,7 @@ static void AddTestTrigger(const TriggerWorkSpace *workSpace)
 
 static void TestTimerCallback(ParamTaskPtr timer, void *context)
 {
-    srand((unsigned)time(NULL));
+    (void)srand((unsigned)time(NULL));
     char buffer[32] = { 0 };
     static int index = 0;
     index++;
@@ -54,7 +54,7 @@ static void TestTimerCallback(ParamTaskPtr timer, void *context)
     int count = 0;
     while (count < MAX_COUNT) {
         int wait = rand() / READ_DURATION + READ_DURATION; // 100ms
-        sprintf_s(buffer, sizeof(buffer), "%u", value);
+        (void)sprintf_s(buffer, sizeof(buffer), "%u", value);
         PARAM_LOGI("set param name: %s, value %s", TEST_PARAM_NAME, buffer);
         SystemWriteParam(TEST_PARAM_NAME, buffer);
         usleep(wait);

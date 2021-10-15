@@ -16,12 +16,13 @@
 #ifndef STARTUP_FS_MANAGER_H
 #define STARTUP_FS_MANAGER_H
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
-#include <stdbool.h>
 
 /* Fs manager flags definition */
 #define FS_MANAGER_CHECK  0x00000001
@@ -45,7 +46,7 @@ typedef struct FstabItem {
     char *deviceName;  // Block device name
     char *mountPoint;  // Mount point
     char *fsType;      // File system type
-    char * mountOptions;  // File system mount options. readonly, rw, remount etc.
+    char *mountOptions;  // File system mount options. readonly, rw, remount etc.
     unsigned int fsManagerFlags;  // flags defined by fs manager.
     struct FstabItem *next;
 } FstabItem;
@@ -65,7 +66,7 @@ int MountOneItem(FstabItem *item);
 MountStatus GetMountStatusForMountPoint(const char *mp);
 int MountAllWithFstabFile(const char *file, bool required);
 int UmountAllWithFstabFile(const char *file);
-unsigned long GetMountFlags(char *mountFlags, char *fsSpecificFlags, size_t fsSpecificFlagSize);
+unsigned long GetMountFlags(char *flags, char *fsSpecificFlags, size_t fsSpecificFlagSize);
 #ifdef __cplusplus
 #if __cplusplus
 }

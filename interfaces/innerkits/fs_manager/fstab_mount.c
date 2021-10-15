@@ -13,11 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +28,15 @@ extern "C" {
 #include "init_utils.h"
 #include "securec.h"
 
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+
 #define FS_MANAGER_BUFFER_SIZE 512
+#define BLOCK_SIZE_BUFFER (64)
+
 bool IsSupportedFilesystem(const char *fsType)
 {
     static const char *supportedFilesystem[] = {"ext4", "f2fs", NULL};
@@ -84,7 +87,6 @@ int DoFormat(const char *devPath, const char *fsType)
         return -1;
     }
     int ret = 0;
-    #define BLOCK_SIZE_BUFFER (64)
     char blockSizeBuffer[BLOCK_SIZE_BUFFER] = {0};
     if (strcmp(fsType, "ext4") == 0) {
         const unsigned int blockSize = 4096;
@@ -106,7 +108,6 @@ int DoFormat(const char *devPath, const char *fsType)
         char **argv = (char **)formatCmds;
         ret = ExecCommand(argc, argv);
     }
-    #undef BLOCK_SIZE_BUFFER
     return ret;
 }
 
@@ -148,7 +149,7 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
     } else if (feof(fp) > 0) {
         status = MOUNT_UMOUNTED;
     }
-    fclose(fp);
+    (void)fclose(fp);
     fp = NULL;
     return status;
 }
@@ -260,7 +261,7 @@ int UmountAllWithFstabFile(const char *fstabFile)
     Fstab *fstab = NULL;
     if ((fstab = ReadFstabFromFile(fstabFile, false)) == NULL) {
         printf("[fs_manager][error] Read fstab file \" %s \" failed\n", fstabFile);
-        return -1;;
+        return -1;
     }
 
     FstabItem *item = NULL;
