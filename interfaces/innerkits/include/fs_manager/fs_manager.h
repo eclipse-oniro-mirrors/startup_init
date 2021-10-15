@@ -66,7 +66,7 @@ int MountOneItem(FstabItem *item);
 MountStatus GetMountStatusForMountPoint(const char *mp);
 int MountAllWithFstabFile(const char *file, bool required);
 int UmountAllWithFstabFile(const char *file);
-unsigned long GetMountFlags(char *flags, char *fsSpecificFlags, size_t fsSpecificFlagSize);
+unsigned long GetMountFlags(char *mountFlag, char *fsSpecificFlags, size_t fsSpecificFlagSize);
 #ifdef __cplusplus
 #if __cplusplus
 }
