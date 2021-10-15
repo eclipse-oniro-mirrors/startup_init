@@ -36,9 +36,6 @@ static ParamWorkSpace g_paramWorkSpace = { 0, {}, NULL, {}, NULL, NULL };
 static void OnClose(ParamTaskPtr client)
 {
     ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
-    if (watcher == GetParamWatcher(NULL)) {
-        return;
-    }
     ClearWatcherTrigger(watcher);
     ListRemove(&watcher->node);
 }
@@ -237,6 +234,12 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
         ret = WritePersistParam(&g_paramWorkSpace, name, value);
         PARAM_CHECK(ret == 0, return ret, "Failed to set persist param name %s", name);
         CheckAndSendTrigger(&g_paramWorkSpace, dataIndex, name, value);
+    }
+
+    // watcher stoped
+    if (strcmp(name, "init.svc.param_watcher") == 0 && strcmp(value, "stopped") == 0) {
+        ParamWatcher *watcher = GetParamWatcher(NULL);
+        ClearWatcherTrigger(watcher);
     }
     return ret;
 }
@@ -695,19 +698,15 @@ void InitParamService(void)
     LoadParamFromCmdLine();
 }
 
-static void OnPidDelete(pid_t pid)
-{
-    UNUSED(pid);
-}
-
 int StartParamService(void)
 {
-    return ParamServiceStart(OnPidDelete);
+    return ParamServiceStart();
 }
 
 void StopParamService(void)
 {
     PARAM_LOGI("StopParamService.");
+    ClosePersistParamWorkSpace();
     CloseParamWorkSpace(&g_paramWorkSpace);
     CloseTriggerWorkSpace();
     ParamTaskClose(g_paramWorkSpace.serverTask);

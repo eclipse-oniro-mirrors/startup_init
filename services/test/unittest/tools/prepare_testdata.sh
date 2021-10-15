@@ -85,7 +85,7 @@ hdc_shell_cmd "cp /data/init_ut/init_ut /bin/init_ut"
 hdc_shell_cmd "chmod 777 /data/init_ut/* -R"
 hdc_shell_cmd "chmod 777 /bin/init_ut"
 
-hdc_shell_cmd "export GCOV_PREFIX=${ut_target_path}/coverage&&export GCOV_PREFIX_STRIP=14&&init_ut"
+hdc_shell_cmd "export GCOV_PREFIX=${ut_target_path}/coverage&&export GCOV_PREFIX_STRIP=20&&init_ut"
 
 if [ $? -ne 0 ]; then
     echo "Execute init_ut in device failed. please check the log"

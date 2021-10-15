@@ -71,6 +71,31 @@ static void FreeOldRoot(DIR *dir, dev_t dev)
     }
 }
 
+// For sub mountpoint under /dev, /sys, /proc
+// There is no need to move them individually
+// We will find a better solution to take care of
+// all sub mount tree in the future.
+static bool UnderBasicMountPoint(const char *path)
+{
+    if (path == NULL || *path == '\0') {
+        return false;
+    }
+
+    size_t pathSize = strlen(path);
+    if (strncmp(path, "/dev", strlen("/dev")) == 0 && pathSize > strlen("/dev")) {
+        return true;
+    }
+
+    if (strncmp(path, "/sys", strlen("/sys")) == 0 && pathSize > strlen("/sys")) {
+        return true;
+    }
+
+    if (strncmp(path, "/proc", strlen("/proc")) == 0 && pathSize > strlen("/proc")) {
+        return true;
+    }
+    return false;
+}
+
 static int MountToNewTarget(const char *target)
 {
     if (target == NULL || *target == '\0') {
@@ -94,12 +119,15 @@ static int MountToNewTarget(const char *target)
             // Just ignore this one or return error?
             continue;
         }
-        INIT_LOGI("new mount point is: %s", newMountPoint);
-        if (mount(mountPoint, newMountPoint, NULL, MS_MOVE, NULL) < 0) {
-            INIT_LOGE("Failed to mount moving %s to %s, err = %d", mountPoint, newMountPoint, errno);
-            // If one mount entry cannot move to new mountpoint, umount it.
-            umount2(mountPoint, MNT_FORCE);
-            continue;
+        INIT_LOGD("new mount point is: %s", newMountPoint);
+        if (!UnderBasicMountPoint(mountPoint)) {
+            INIT_LOGD("Move mount %s to %s", mountPoint, newMountPoint);
+            if (mount(mountPoint, newMountPoint, NULL, MS_MOVE, NULL) < 0) {
+                INIT_LOGE("Failed to mount moving %s to %s, err = %d", mountPoint, newMountPoint, errno);
+                // If one mount entry cannot move to new mountpoint, umount it.
+                umount2(mountPoint, MNT_FORCE);
+                continue;
+            }
         }
     }
     ReleaseFstab(fstab);

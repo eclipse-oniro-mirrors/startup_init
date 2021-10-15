@@ -40,14 +40,14 @@ typedef struct {
 
 #ifdef PARAM_SUPPORT_SAVE_PERSIST
 int RegisterPersistParamOps(PersistParamOps *ops);
-#ifdef STARTUP_INIT_TEST
+#endif
+
+#ifndef STARTUP_INIT_TEST
 #define PARAM_MUST_SAVE_PARAM_DIFF 10 // 10s
 #else
 #define PARAM_MUST_SAVE_PARAM_DIFF 1
 #endif
-#else
-#define PARAM_MUST_SAVE_PARAM_DIFF UINT32_MAX
-#endif
+
 #ifdef __cplusplus
 #if __cplusplus
 }

@@ -58,10 +58,8 @@ uint32_t WatcherManager::AddWatcher(const std::string &keyPrefix, const sptr<IWa
 int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t watcherId)
 {
     auto group = GetWatcherGroup(keyPrefix);
-    if (group == nullptr) {
-        WATCHER_LOGE("DelWatcher can not find group %s", keyPrefix.c_str());
-        return 0;
-    }
+    WATCHER_CHECK(group != nullptr, return 0, "DelWatcher can not find group %s", keyPrefix.c_str());
+
     group->DelWatcher(watcherId);
     if (group->Emptry()) {
         SendMessage(group, MSG_DEL_WATCHER);
@@ -79,18 +77,14 @@ int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
     request->msgSize = sizeof(ParamMessage);
 
     WATCHER_LOGD("SendMessage %s", group->GetKeyPrefix().c_str());
+    int ret = PARAM_CODE_ERROR;
     int fd = GetServerFd(false);
     if (fd != INVALID_SOCKET) {
         ssize_t sendLen = send(serverFd_, (char *)request, request->msgSize, 0);
-        if (sendLen > 0) {
-            PARAM_LOGD("SendMessage key: %s %d success", group->GetKeyPrefix().c_str(), type);
-        } else {
-            PARAM_LOGD("SendMessage key: %s %d fail", group->GetKeyPrefix().c_str(), type);
-        }
-    } else {
-        PARAM_LOGD("SendMessage key: %s %d fail", group->GetKeyPrefix().c_str(), type);
+        ret = (sendLen > 0) ? 0 : PARAM_CODE_ERROR;
     }
     free(request);
+    PARAM_CHECK(ret == 0, return ret, "SendMessage key: %s %d fail", group->GetKeyPrefix().c_str(), type);
     return 0;
 }
 
@@ -164,14 +158,6 @@ void WatcherManager::WatcherGroup::DelWatcher(uint32_t watcherId)
     if (watchers_.find(watcherId) != watchers_.end()) {
         watchers_.erase(watcherId);
     }
-}
-
-WatcherManager::ParamWatcherPtr WatcherManager::WatcherGroup::GetWatcher(uint32_t watcherId)
-{
-    if (watchers_.find(watcherId) != watchers_.end()) {
-        return watchers_[watcherId];
-    }
-    return nullptr;
 }
 
 void WatcherManager::WatcherGroup::ProcessParameterChange(const std::string &name, const std::string &value)

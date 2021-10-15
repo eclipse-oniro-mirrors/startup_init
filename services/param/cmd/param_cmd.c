@@ -52,10 +52,8 @@ static void ExeuteCmdParamGet(int argc, char *argv[], int start)
 {
     uint32_t size = PARAM_CONST_VALUE_LEN_MAX + PARAM_NAME_LEN_MAX + 1 + 1;
     char *buffer = (char *)calloc(1, size);
-    if (buffer == NULL) {
-        printf("Get parameterfail\n");
-        return;
-    }
+    PARAM_CHECK(buffer != NULL, return, "Failed to get parameter");
+
     if (argc == start) {
         SystemTraversalParameter(ShowParam, (void *)buffer);
     } else {

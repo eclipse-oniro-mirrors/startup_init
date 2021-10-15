@@ -50,7 +50,8 @@ int AddCommand(TriggerNode *trigger, uint32_t cmdKeyIndex, const char *content)
         trigger->firstCmd = node;
         trigger->lastCmd = node;
     } else {
-        PARAM_CHECK(trigger->lastCmd != NULL, return 0, "Invalid last cmd");
+        PARAM_CHECK(trigger->lastCmd != NULL, free(node);
+            return 0, "Invalid last cmd");
         trigger->lastCmd->next = node;
         trigger->lastCmd = node;
     }

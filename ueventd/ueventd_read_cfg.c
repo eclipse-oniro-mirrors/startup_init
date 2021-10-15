@@ -103,8 +103,8 @@ static int ParseDeviceConfig(char *p)
         INIT_LOGE("Invalid mode in config file for device node %s. use default mode", config->name);
         config->mode = DEVMODE;
     }
-    config->uid = (uid_t)StringToInt(items[DEVICE_CONFIG_UID_NUM], 0);
-    config->gid = (gid_t)StringToInt(items[DEVICE_CONFIG_GID_NUM], 0);
+    config->uid = (uid_t)DecodeUid(items[DEVICE_CONFIG_UID_NUM]);
+    config->gid = (gid_t)DecodeUid(items[DEVICE_CONFIG_GID_NUM]);
     ListAddTail(&g_devices, &config->list);
     FreeStringVector(items, count);
     return 0;
@@ -141,8 +141,8 @@ static int ParseSysfsConfig(char *p)
         INIT_LOGE("Invalid mode in config file for sys path %s. use default mode", config->sysPath);
         config->mode = DEVMODE;
     }
-    config->uid = (uid_t)StringToInt(items[SYS_CONFIG_UID_NUM], 0);
-    config->gid = (gid_t)StringToInt(items[SYS_CONFIG_GID_NUM], 0);
+    config->uid = (uid_t)DecodeUid(items[SYS_CONFIG_UID_NUM]);
+    config->gid = (gid_t)DecodeUid(items[SYS_CONFIG_GID_NUM]);
     ListAddTail(&g_sysDevices, &config->list);
     FreeStringVector(items, count);
     return 0;

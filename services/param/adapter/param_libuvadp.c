@@ -15,7 +15,6 @@
 #include "param_libuvadp.h"
 #include <sys/wait.h>
 
-static LibuvWorkSpace libuv = { NULL };
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
 
 static LibuvBaseTask *CreateLibuvTask(uint32_t size, uint32_t flags, uint16_t userDataSize, TaskClose close)
@@ -183,16 +182,16 @@ int ParamStreamCreate(ParamTaskPtr *stream, ParamTaskPtr server, const ParamStre
             return -1, "Failed to uv_pipe_init %d", ret);
         pipe->data = &pipeServer->server;
         PARAM_LOGD("OnConnection pipeServer: %p pipe %p", pipeServer, &pipeServer->server);
-        if ((info->flags & WORKER_TYPE_TEST) != WORKER_TYPE_TEST) {
-            ret = uv_accept((uv_stream_t *)&pipeServer->server.pipe, (uv_stream_t *)pipe);
-            PARAM_CHECK(ret == 0, uv_close((uv_handle_t *)pipe, NULL);
-                free(client);
-                return -1, "Failed to uv_accept %d", ret);
-            ret = uv_read_start((uv_stream_t *)pipe, OnReceiveAlloc, OnReceiveRequest);
-            PARAM_CHECK(ret == 0, uv_close((uv_handle_t *)pipe, NULL);
-                free(client);
-                return -1, "Failed to uv_read_start %d", ret);
-        }
+#ifndef STARTUP_INIT_TEST
+        ret = uv_accept((uv_stream_t *)&pipeServer->server.pipe, (uv_stream_t *)pipe);
+        PARAM_CHECK(ret == 0, uv_close((uv_handle_t *)pipe, NULL);
+            free(client);
+            return -1, "Failed to uv_accept %d", ret);
+        ret = uv_read_start((uv_stream_t *)pipe, OnReceiveAlloc, OnReceiveRequest);
+        PARAM_CHECK(ret == 0, uv_close((uv_handle_t *)pipe, NULL);
+            free(client);
+            return -1, "Failed to uv_read_start %d", ret);
+#endif
     }
     client->recvMessage = info->recvMessage;
     *stream = &client->base.worker;
@@ -216,17 +215,17 @@ int ParamTaskSendMsg(const ParamTaskPtr stream, const ParamMessage *msg)
 {
     PARAM_CHECK(stream != NULL && msg != NULL, LibuvFreeMsg(stream, msg);
         return -1, "Invalid stream");
-    LibuvStreamTask *worker = (LibuvStreamTask *)stream;
     if ((stream->flags & WORKER_TYPE_MSG) != WORKER_TYPE_MSG) {
         LibuvFreeMsg(stream, msg);
         return -1;
     }
-    if ((stream->flags & WORKER_TYPE_TEST) != WORKER_TYPE_TEST) {
-        uv_buf_t buf = uv_buf_init((char *)msg, msg->msgSize);
-        int ret = uv_write(&worker->writer, (uv_stream_t *)&worker->stream.pipe, &buf, 1, OnWriteResponse);
-        PARAM_CHECK(ret >= 0, LibuvFreeMsg(stream, msg);
-            return -1, "Failed to uv_write2 ret %s", uv_strerror(ret));
-    }
+#ifndef STARTUP_INIT_TEST
+    LibuvStreamTask *worker = (LibuvStreamTask *)stream;
+    uv_buf_t buf = uv_buf_init((char *)msg, msg->msgSize);
+    int ret = uv_write(&worker->writer, (uv_stream_t *)&worker->stream.pipe, &buf, 1, OnWriteResponse);
+    PARAM_CHECK(ret >= 0, LibuvFreeMsg(stream, msg);
+        return -1, "Failed to uv_write2 ret %s", uv_strerror(ret));
+#endif
     LibuvFreeMsg(stream, msg);
     return 0;
 }
@@ -315,35 +314,11 @@ int ParamTimerStart(ParamTaskPtr timer, uint64_t timeout, uint64_t repeat)
     return -1;
 }
 
-static void SignalHandler(uv_signal_t *handle, int signum)
-{
-    UNUSED(handle);
-    if (signum != SIGCHLD) {
-        return;
-    }
-    pid_t pid = 0;
-    int procStat = 0;
-    while (1) {
-        pid = waitpid(-1, &procStat, WNOHANG);
-        if (pid <= 0) {
-            break;
-        }
-    }
-    if (libuv.pidDeleteProcess != NULL) {
-        libuv.pidDeleteProcess(pid);
-    }
-}
-
-int ParamServiceStart(ProcessPidDelete pidDelete)
+int ParamServiceStart()
 {
     if (uv_default_loop() == NULL) {
         return -1;
     }
-    libuv.pidDeleteProcess = pidDelete;
-    uv_signal_t sigchldHandler;
-    int ret = uv_signal_init(uv_default_loop(), &sigchldHandler);
-    int ret1 = uv_signal_start(&sigchldHandler, SignalHandler, SIGCHLD);
-    PARAM_CHECK(ret == 0 && ret1 == 0, return -1, "Failed to process signal ");
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     return 0;
 }

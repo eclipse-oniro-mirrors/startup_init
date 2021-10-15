@@ -71,6 +71,9 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/services/param/watcher/proxy/watcher_proxy.cpp",
     "//base/startup/init_lite/services/utils/init_utils.c",
     "//base/startup/init_lite/services/utils/list.c",
+    "//base/startup/init_lite/services/init/standard/init_mount.c",
+    "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab.c",
+    "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab_mount.c",
   ]
 
   sources += [
@@ -88,6 +91,7 @@ ohos_unittest("init_ut") {
   configs = [ "//base/startup/init_lite/services/test/unittest:utest_config" ]
 
   include_dirs = [
+    "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/init/include",
     "//base/startup/init_lite/services/include/param",

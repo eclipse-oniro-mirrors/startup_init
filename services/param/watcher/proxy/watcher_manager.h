@@ -24,6 +24,7 @@
 #include "iremote_stub.h"
 #include "iwatcher.h"
 #include "message_parcel.h"
+#include "param_utils.h"
 #include "parcel.h"
 #include "system_ability.h"
 #include "watcher_manager_stub.h"
@@ -52,7 +53,9 @@ public:
         }
         void ProcessParameterChange(const std::string &name, const std::string &value)
         {
+#ifndef STARTUP_INIT_TEST
             watcher_->OnParamerterChange(name, value);
+#endif
         }
     private:
         uint32_t watcherId_ = { 0 };
@@ -67,7 +70,6 @@ public:
         void AddWatcher(const ParamWatcherPtr &watcher);
         void DelWatcher(uint32_t watcherId);
         void ProcessParameterChange(const std::string &name, const std::string &value);
-        ParamWatcherPtr GetWatcher(uint32_t watcherId);
 
         const std::string GetKeyPrefix()
         {
@@ -90,19 +92,23 @@ public:
 
     uint32_t AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher) override;
     int32_t DelWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
-    void StopLoop();
+#ifndef STARTUP_INIT_TEST
 protected:
+#endif
     void OnStart() override;
     void OnStop() override;
+#ifndef STARTUP_INIT_TEST
 private:
+#endif
+    void ProcessWatcherMessage(const std::vector<char> &buffer, uint32_t dataSize);
     WatcherGroupPtr GetWatcherGroup(uint32_t groupId);
     WatcherGroupPtr GetWatcherGroup(const std::string &keyPrefix);
     void AddWatcherGroup(const std::string &keyPrefix, WatcherGroupPtr group);
     void DelWatcherGroup(WatcherGroupPtr group);
     void RunLoop();
     void StartLoop();
+    void StopLoop();
     void SendLocalChange(const std::string &keyPrefix, ParamWatcherPtr watcher);
-    void ProcessWatcherMessage(const std::vector<char> &buffer, uint32_t dataSize);
     int SendMessage(WatcherGroupPtr group, int type);
     int GetServerFd(bool retry);
 private:

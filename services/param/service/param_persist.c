@@ -161,6 +161,7 @@ int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *v
     time_t currTimer;
     (void)time(&currTimer);
     uint32_t diff = (uint32_t)difftime(currTimer, g_persistWorkSpace.lastSaveTimer);
+    PARAM_LOGD("WritePersistParam name %s  %d ", name, diff);
     if (diff > PARAM_MUST_SAVE_PARAM_DIFF) {
         if (g_persistWorkSpace.saveTimer != NULL) {
             ParamTaskClose(g_persistWorkSpace.saveTimer);

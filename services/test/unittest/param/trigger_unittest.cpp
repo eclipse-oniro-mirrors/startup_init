@@ -80,7 +80,7 @@ public:
         TestClient(0);
         ParamTaskPtr timer = nullptr;
         ParamTimerCreate(&timer, TimerCallback, nullptr);
-        ParamTimerStart(timer, 1000, g_maxCount);
+        ParamTimerStart(timer, 500, g_maxCount); // 500ms
         StartParamService();
         return 0;
     }

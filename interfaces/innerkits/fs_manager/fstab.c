@@ -55,7 +55,6 @@ unsigned int ConvertFlags(char *flagBuffer)
         // No valid flags.
         return 0;
     }
-    printf("[fs_manager][debug], fstab flags string: %s\n", flagBuffer);
     int flagCount = 0;
     unsigned int flags = 0;
     const int maxCount = 3;
@@ -66,7 +65,6 @@ unsigned int ConvertFlags(char *flagBuffer)
 
     for (size_t i = 0; i < ARRAY_LENGTH(fsFlags); i++) {
         for (int j = 0; j < flagCount; j++) {
-            printf("[fs_manager][debug], flag: %s\n", vector[j]);
             if (strcmp(fsFlags[i].name, vector[j]) == 0) {
                 flags |= fsFlags[i].flags;
             }
@@ -211,6 +209,8 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
 
     if ((fstab = (Fstab *)calloc(1, sizeof(Fstab))) == NULL) {
         printf("[fs_manager] Allocate memory for FS table failed, err = %d\n", errno);
+        fclose(fp);
+        fp = NULL;
         return NULL;
     }
 
@@ -238,13 +238,15 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
             }
             // If one line in fstab file parsed with a failure. just give a warning
             // and skip it.
-             printf("[fs_manager][warning] Cannot parse file \" %s \" at line %u. skip it\n", file, ln);
+            printf("[fs_manager][warning] Cannot parse file \" %s \" at line %u. skip it\n", file, ln);
             continue;
         }
     }
     if (line != NULL) {
         free(line);
     }
+    fclose(fp);
+    fp = NULL;
     return fstab;
 }
 

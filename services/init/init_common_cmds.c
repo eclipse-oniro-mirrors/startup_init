@@ -653,8 +653,8 @@ const char *GetCmdKey(int index)
     }
     int number = 0;
     const struct CmdTable *cmds = GetCmdTable(&number);
-    if (index < number) {
-        return cmds[index].name;
+    if (index < (cmdCnt + number)) {
+        return cmds[index - cmdCnt].name;
     }
     return NULL;
 }

@@ -129,6 +129,7 @@ int32_t WatcherManagerKits::DelWatcher(const std::string &keyPrefix)
 
 void WatcherManagerKits::ParamWatcher::OnParamerterChange(const std::string &name, const std::string &value)
 {
+    Watcher::OnParamerterChange(name, value);
     WATCHER_LOGD("OnParamerterChange name %s value %s", name.c_str(), value.c_str());
     if (callback_ != nullptr) {
         callback_(name.c_str(), value.c_str(), context_);

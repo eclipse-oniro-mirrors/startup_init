@@ -147,9 +147,17 @@ static void TestCmd()
     const char *argForSet[] = { "param", "set", "aaaa", "2222" };
     RunParamCommand(ARRAY_LENGTH(argForSet), const_cast<char **>(argForSet));
 
+    // set fail
+    const char *argForSet1[] = { "param", "set", "aaaa&&&&&&&&&####", "2222" };
+    RunParamCommand(ARRAY_LENGTH(argForSet1), const_cast<char **>(argForSet1));
+
     // get
     const char *argForGet[] = { "param", "get", "aaaa" };
     RunParamCommand(ARRAY_LENGTH(argForGet), const_cast<char **>(argForGet));
+
+    // get not exit
+    const char *argForGet1[] = { "param", "get", "aaaaaaaa" };
+    RunParamCommand(ARRAY_LENGTH(argForGet1), const_cast<char **>(argForGet1));
 
     // get all
     const char *argForGet2[] = { "param", "get" };
@@ -174,10 +182,10 @@ static void TestCmd()
     const char *argForSet7[] = { "paramget", "aaaa" };
     RunParamCommand(ARRAY_LENGTH(argForSet7), const_cast<char **>(argForSet7));
 
-    const char *argForSet8[] = { "param dump", "verbose" };
+    const char *argForSet8[] = { "param", "dump", "verbose" };
     RunParamCommand(ARRAY_LENGTH(argForSet8), const_cast<char **>(argForSet8));
 
-    const char *argForSet9[] = { "param wait", "test.wait.001", "1" };
+    const char *argForSet9[] = { "param", "wait", "test.wait.001", "*", "1" };
     RunParamCommand(ARRAY_LENGTH(argForSet9), const_cast<char **>(argForSet9));
 }
 

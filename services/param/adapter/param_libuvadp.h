@@ -22,10 +22,6 @@
 #include "uv.h"
 
 typedef struct {
-    ProcessPidDelete pidDeleteProcess;
-} LibuvWorkSpace;
-
-typedef struct {
     ParamTask worker;
     TaskClose close;
     uint16_t userDataSize;

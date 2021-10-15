@@ -280,9 +280,10 @@ public:
         sleep(1);
         SystemWriteParam("persist.111.bbbb.cccc.dddd.1110", "1108");
         SystemWriteParam("persist.111.bbbb.cccc.dddd.1111", "1108");
-        TimerCallbackForSave(NULL, NULL);
-        // 加载
-        LoadPersistParam(GetParamWorkSpace());
+        if (GetParamWorkSpace() != nullptr) {
+            TimerCallbackForSave(nullptr, &(GetParamWorkSpace()->paramSpace));
+        }
+        LoadPersistParams();
         return 0;
     }
 
@@ -318,7 +319,7 @@ public:
         }
 
         // 创建stream task
-        server->incomingConnect((ParamTaskPtr)server, WORKER_TYPE_TEST);
+        server->incomingConnect((ParamTaskPtr)server, 0);
         ParamWatcher *watcher = GetNextParamWatcher(GetTriggerWorkSpace(), nullptr);
         return watcher != nullptr ? watcher->stream : nullptr;
     }
@@ -444,6 +445,7 @@ public:
         ClearWatcherTrigger(watcher);
         ParamTaskClose(g_worker);
         g_worker = nullptr;
+        SystemWriteParam("init.svc.param_watcher", "stopped");
         return 0;
     }
 
