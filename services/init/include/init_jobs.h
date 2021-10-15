@@ -36,7 +36,11 @@ void DoJob(const char *jobName);
 void ReleaseAllJobs(void);
 void DumpAllJobs(void);
 
+#ifndef DISABLE_INIT_TWO_STAGES
 #define INIT_CONFIGURATION_FILE "/etc/init.cfg"
+#else
+#define INIT_CONFIGURATION_FILE "/etc/init.without_two_stages.cfg"
+#endif
 #define OTHER_CFG_PATH "/system/etc/init"
 #define MAX_PATH_ARGS_CNT 20
 

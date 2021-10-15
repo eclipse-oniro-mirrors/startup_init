@@ -46,6 +46,7 @@ void LogInit(void)
     }
 }
 
+#ifndef DISABLE_INIT_TWO_STAGES
 static pid_t StartUeventd(void)
 {
     char *const argv[] = {
@@ -98,6 +99,7 @@ static void StartInitSecondStage(void)
         exit(-1);
     }
 }
+#endif
 
 void SystemPrepare(void)
 {
@@ -105,12 +107,17 @@ void SystemPrepare(void)
     // Make sure init log always output to /dev/kmsg.
     EnableDevKmsg();
     CreateDeviceNode();
+#ifndef DISABLE_INIT_TWO_STAGES
     // Only ohos normal system support
     // two stages of init.
     // If we are in updater mode, only one stage of init,
+    INIT_LOGI("DISABLE_INIT_TWO_STAGES not defined");
     if (InUpdaterMode() == 0) {
         StartInitSecondStage();
     }
+#else
+    INIT_LOGI("DISABLE_INIT_TWO_STAGES defined");
+#endif
 }
 
 void SystemConfig(void)
