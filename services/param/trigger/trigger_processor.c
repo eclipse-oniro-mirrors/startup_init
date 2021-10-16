@@ -189,7 +189,6 @@ static void ProcessBeforeEvent(uint64_t eventId, const char *content, uint32_t s
             break;
         }
         default:
-            PARAM_LOGI("CheckTriggers: %llu", eventId);
             break;
     }
 }
