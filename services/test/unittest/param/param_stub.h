@@ -32,12 +32,6 @@ extern int RunParamCommand(int argc, char *argv[]);
 #endif
 #endif
 
-static const int TEST_UID = 1000;
-static const int TEST_GID = 9999;
-static const int TEST_DAC_GID = 2002;
-static const int TEST_DAC_GID2 = 2003;
-static const int TEST_READ_AND_WRITE = 0666;
-
 void TestClient(int index);
 int TestEncodeSecurityLabel(const ParamSecurityLabel *srcLabel, char *buffer, uint32_t *bufferSize);
 int TestDecodeSecurityLabel(ParamSecurityLabel **srcLabel, const char *buffer, uint32_t bufferSize);

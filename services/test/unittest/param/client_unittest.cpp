@@ -21,9 +21,7 @@
 
 using namespace std;
 
-int g_testPermissionResult = DAC_RESULT_PERMISSION;
-static const int THREAD_NUM_TEST = 2;
-
+static int g_testPermissionResult = DAC_RESULT_PERMISSION;
 static void ClientCheckParamValue(const char *name, const char *expectValue)
 {
     char tmp[PARAM_BUFFER_SIZE] = { 0 };
@@ -61,8 +59,9 @@ static void *TestSendParamWaitMsg(void *args)
 
 static void TestForMultiThread()
 {
+    static const int threadMaxNumer = 2;
     printf("TestForMultiThread \n");
-    pthread_t tids[THREAD_NUM_TEST + THREAD_NUM_TEST];
+    pthread_t tids[threadMaxNumer + threadMaxNumer];
     const char *names[] = {
         "thread.1111.2222.3333.4444.5555",
         "thread.2222.1111.2222.3333.4444",
@@ -70,13 +69,13 @@ static void TestForMultiThread()
         "thread.4444.5555.1111.2222.3333",
         "thread.5555.1111.2222.3333.4444"
     };
-    for (size_t i = 0; i < THREAD_NUM_TEST; i++) {
+    for (size_t i = 0; i < threadMaxNumer; i++) {
         pthread_create(&tids[i], nullptr, TestSendParamSetMsg, (void *)names[i % ARRAY_LENGTH(names)]);
     }
-    for (size_t i = THREAD_NUM_TEST; i < THREAD_NUM_TEST + THREAD_NUM_TEST; i++) {
+    for (size_t i = threadMaxNumer; i < threadMaxNumer + threadMaxNumer; i++) {
         pthread_create(&tids[i], nullptr, TestSendParamWaitMsg, (void *)names[i % ARRAY_LENGTH(names)]);
     }
-    for (size_t i = 0; i < THREAD_NUM_TEST + THREAD_NUM_TEST; i++) {
+    for (size_t i = 0; i < threadMaxNumer + threadMaxNumer; i++) {
         pthread_join(tids[i], nullptr);
     }
 }
@@ -199,11 +198,11 @@ void TestClient(int index)
         case 0: {
             ParamWorkSpace *space = GetClientParamWorkSpace();
             if (space != nullptr && space->securityLabel != nullptr) {
-                space->securityLabel->cred.uid = TEST_UID;
-                space->securityLabel->cred.gid = TEST_UID;
+                space->securityLabel->cred.uid = 1000; // 1000 test uid
+                space->securityLabel->cred.gid = 1000; // 1000 test gid
             }
         }
-        case 1: { // set
+        case 1: { // 1 set test
             SystemSetParameter(name.c_str(), value.c_str());
             ClientCheckParamValue(name.c_str(), value.c_str());
             SystemWaitParameter(name.c_str(), value.c_str(), 1);
@@ -213,7 +212,7 @@ void TestClient(int index)
             SystemWaitParameter(name.c_str(), nullptr, 0);
             break;
         }
-        case 2: { // find
+        case 2: { // 3 api test
             ParamHandle handle;
             uint32_t size = PARAM_BUFFER_SIZE;
             int ret = SystemFindParameter(name.c_str(), &handle);
@@ -231,11 +230,11 @@ void TestClient(int index)
             EXPECT_EQ(strcmp(testBuffer, value.c_str()), 0);
             break;
         }
-        case 3: // Traversal
+        case 3: // 3 Traversal test
             TestParamTraversal();
             SystemDumpParameters(1);
             break;
-        case 4: { // watcher
+        case 4: { // 4 watcher test
             int ret = WatchParamCheck(name.c_str());
             EXPECT_EQ(ret, 0);
             ret = WatchParamCheck("&&&&&.test.tttt");
@@ -246,7 +245,7 @@ void TestClient(int index)
             TestCmd();
             break;
         }
-        case 5: // multi
+        case 5: // 5 multi thread test
             TestForMultiThread();
             break;
         default:

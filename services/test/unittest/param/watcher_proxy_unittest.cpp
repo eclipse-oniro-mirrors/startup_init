@@ -53,10 +53,10 @@ public:
 using WatcherManagerPtr = WatcherManager *;
 WatcherManagerPtr g_watcherManager{ nullptr };
 
-class WatcherProxyTest : public ::testing::Test {
+class WatcherProxyUnitTest : public ::testing::Test {
 public:
-    WatcherProxyTest() {}
-    virtual ~WatcherProxyTest() {}
+    WatcherProxyUnitTest() {}
+    virtual ~WatcherProxyUnitTest() {}
 
     void SetUp() {}
     void TearDown() {}
@@ -150,57 +150,57 @@ public:
     }
 };
 
-HWTEST_F(WatcherProxyTest, TestAddWatcher, TestSize.Level1)
+HWTEST_F(WatcherProxyUnitTest, TestAddWatcher, TestSize.Level0)
 {
-    WatcherProxyTest test;
+    WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
     test.TestAddWatcher("test.permission.watcher.test1", watcherId);
     test.TestProcessWatcherMessage("test.permission.watcher.test1", watcherId);
 }
 
-HWTEST_F(WatcherProxyTest, TestAddWatcher2, TestSize.Level1)
+HWTEST_F(WatcherProxyUnitTest, TestAddWatcher2, TestSize.Level0)
 {
-    WatcherProxyTest test;
+    WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
     test.TestAddWatcher("test.permission.watcher.test2", watcherId);
     test.TestAddWatcher("test.permission.watcher.test2", watcherId);
     test.TestAddWatcher("test.permission.watcher.test2", watcherId);
 }
 
-HWTEST_F(WatcherProxyTest, TestAddWatcher3, TestSize.Level1)
+HWTEST_F(WatcherProxyUnitTest, TestAddWatcher3, TestSize.Level0)
 {
-    WatcherProxyTest test;
+    WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
     test.TestAddWatcher("test.permission.watcher.test3", watcherId);
 }
 
-HWTEST_F(WatcherProxyTest, TestAddWatcher4, TestSize.Level1)
+HWTEST_F(WatcherProxyUnitTest, TestAddWatcher4, TestSize.Level0)
 {
-    WatcherProxyTest test;
+    WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
     SystemSetParameter("test.watcher.test4", "1101");
     SystemSetParameter("test.watcher.test4.test", "1102");
     test.TestAddWatcher("test.watcher.test4*", watcherId);
 }
 
-HWTEST_F(WatcherProxyTest, TestAddWatcher5, TestSize.Level1)
+HWTEST_F(WatcherProxyUnitTest, TestAddWatcher5, TestSize.Level0)
 {
-    WatcherProxyTest test;
+    WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
     test.TestAddWatcher("test.permission.watcher.test5", watcherId);
     SystemSetParameter("test.permission.watcher.test5", "1101");
 }
 
-HWTEST_F(WatcherProxyTest, TestDelWatcher, TestSize.Level1)
+HWTEST_F(WatcherProxyUnitTest, TestDelWatcher, TestSize.Level0)
 {
-    WatcherProxyTest test;
+    WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
     test.TestAddWatcher("test.permission.watcher.testDel", watcherId);
     test.TestDelWatcher("test.permission.watcher.testDel", watcherId);
 }
 
-HWTEST_F(WatcherProxyTest, TestWatchProxy, TestSize.Level1)
+HWTEST_F(WatcherProxyUnitTest, TestWatchProxy, TestSize.Level0)
 {
-    WatcherProxyTest test;
+    WatcherProxyUnitTest test;
     test.TestWatchProxy("test.permission.watcher.test1", "watcherId");
 }

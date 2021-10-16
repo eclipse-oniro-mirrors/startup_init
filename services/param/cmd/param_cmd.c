@@ -100,9 +100,9 @@ static void ExeuteCmdParamWait(int argc, char *argv[], int start)
     }
     int ret = SystemWaitParameter(argv[start], value, timeout);
     if (ret == 0) {
-        printf("Param wait success ");
+        printf("Param wait success \n");
     } else {
-        printf("Param wait fail");
+        printf("Param wait fail \n");
     }
 }
 

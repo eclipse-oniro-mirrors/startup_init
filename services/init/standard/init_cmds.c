@@ -300,7 +300,7 @@ static void DoUmountFstabFile(const struct CmdArgs *ctx, const char *cmdContent)
     }
 }
 
-static const struct CmdTable CMD_TABLE[] = {
+static const struct CmdTable g_cmdTable[] = {
     { "exec ", 1, 10, DoExec },
     { "mknode ", 1, 5, DoMakeNode },
     { "makedev ", 2, 2, DoMakeDevice },
@@ -317,6 +317,6 @@ static const struct CmdTable CMD_TABLE[] = {
 
 const struct CmdTable *GetCmdTable(int *number)
 {
-    *number = (int)ARRAY_LENGTH(CMD_TABLE);
-    return CMD_TABLE;
+    *number = (int)ARRAY_LENGTH(g_cmdTable);
+    return g_cmdTable;
 }

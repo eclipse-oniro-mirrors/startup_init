@@ -182,19 +182,19 @@ private:
     ParamSecurityOps clientParamSercurityOps;
 };
 
-HWTEST_F(ParamDacTest, TestDacGetLabel, TestSize.Level1)
+HWTEST_F(ParamDacTest, TestDacGetLabel, TestSize.Level0)
 {
     ParamDacTest test;
     test.TestDacGetLabel();
 }
 
-HWTEST_F(ParamDacTest, TestDacInitLocalLabel, TestSize.Level1)
+HWTEST_F(ParamDacTest, TestDacInitLocalLabel, TestSize.Level0)
 {
     ParamDacTest test;
     test.TestDacInitLocalLabel();
 }
 
-HWTEST_F(ParamDacTest, TestDacLabelEncode, TestSize.Level1)
+HWTEST_F(ParamDacTest, TestDacLabelEncode, TestSize.Level0)
 {
     ParamDacTest test;
     std::vector<char> buffer;
@@ -203,13 +203,13 @@ HWTEST_F(ParamDacTest, TestDacLabelEncode, TestSize.Level1)
     test.TestDecode(&label, buffer);
 }
 
-HWTEST_F(ParamDacTest, TestDacCheckFilePermission, TestSize.Level1)
+HWTEST_F(ParamDacTest, TestDacCheckFilePermission, TestSize.Level0)
 {
     ParamDacTest test;
     test.TestDacCheckFilePermission(PARAM_DEFAULT_PATH"/trigger_test.cfg");
 }
 
-HWTEST_F(ParamDacTest, TestDacCheckUserParaPermission, TestSize.Level1)
+HWTEST_F(ParamDacTest, TestDacCheckUserParaPermission, TestSize.Level0)
 {
     // 相同用户
     ParamDacTest test;
@@ -250,7 +250,7 @@ HWTEST_F(ParamDacTest, TestDacCheckUserParaPermission, TestSize.Level1)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(ParamDacTest, TestDacCheckGroupParaPermission, TestSize.Level1)
+HWTEST_F(ParamDacTest, TestDacCheckGroupParaPermission, TestSize.Level0)
 {
     // 相同组
     ParamDacTest test;
@@ -291,7 +291,7 @@ HWTEST_F(ParamDacTest, TestDacCheckGroupParaPermission, TestSize.Level1)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(ParamDacTest, TestDacCheckOtherParaPermission, TestSize.Level1)
+HWTEST_F(ParamDacTest, TestDacCheckOtherParaPermission, TestSize.Level0)
 {
     // 其他用户
     ParamDacTest test;
@@ -332,7 +332,7 @@ HWTEST_F(ParamDacTest, TestDacCheckOtherParaPermission, TestSize.Level1)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(ParamDacTest, TestClientDacCheckFilePermission, TestSize.Level1)
+HWTEST_F(ParamDacTest, TestClientDacCheckFilePermission, TestSize.Level0)
 {
     ParamDacTest test;
     test.TestClientDacCheckFilePermission(PARAM_DEFAULT_PATH"/trigger_test.cfg");

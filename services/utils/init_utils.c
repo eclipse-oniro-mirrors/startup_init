@@ -173,7 +173,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
     int count = 0;
     while (p != NULL) {
         if (count > itemCounts - 1) {
-            itemCounts += (itemCounts / 2) + 1; // Request to increase the original memory by half.
+            itemCounts += (itemCounts / 2) + 1; // 2 Request to increase the original memory by half.
             INIT_LOGD("Too many items,expand size");
             char **expand = (char **)(realloc(items, sizeof(char *) * itemCounts));
             if (expand == NULL) {

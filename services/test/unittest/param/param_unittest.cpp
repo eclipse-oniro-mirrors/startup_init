@@ -40,10 +40,10 @@ extern void TimerCallbackForSave(ParamTaskPtr timer, void *context);
 }
 
 static ParamTask *g_worker = nullptr;
-class ParamServiceTest : public ::testing::Test {
+class ParamUnitTest : public ::testing::Test {
 public:
-    ParamServiceTest() {}
-    virtual ~ParamServiceTest() {}
+    ParamUnitTest() {}
+    virtual ~ParamUnitTest() {}
 
     void SetUp() {}
     void TearDown() {}
@@ -81,7 +81,7 @@ public:
 
     int TestAddSecurityLabel1()
     {
-        GetParamWorkSpace()->securityLabel->cred.gid = TEST_GID;
+        GetParamWorkSpace()->securityLabel->cred.gid = 9999; // 9999 test gid
         const char *name = "label1.test.aaa.bbb.ccc.dddd.eee";
         const char *value = "2001";
         uint32_t labelIndex = 0;
@@ -100,15 +100,15 @@ public:
     // 添加一个label，最长匹配到这个节点
     int TestAddSecurityLabel2()
     {
-        GetParamWorkSpace()->securityLabel->cred.gid = TEST_GID;
+        GetParamWorkSpace()->securityLabel->cred.gid =  9999; // 9999 test gid
         const char *name = "label2.test.aaa.bbb.ccc.dddd.eee";
         const char *value = "2001";
         ParamAuditData auditData = {};
         auditData.name = "label2.test.aaa";
         auditData.label = "label2.test.aaa";
-        auditData.dacData.gid = TEST_DAC_GID;
+        auditData.dacData.gid = 202; // 202 test dac gid
         auditData.dacData.uid = geteuid();
-        auditData.dacData.mode = TEST_READ_AND_WRITE;
+        auditData.dacData.mode = 0666; // 0666 test mode
         SystemWriteParam(name, value);
         uint32_t labelIndex = 0;
         AddSecurityLabel(&auditData, GetParamWorkSpace());
@@ -124,23 +124,23 @@ public:
     // 添加一个label，最长匹配到最后一个相同节点
     int TestAddSecurityLabel3()
     {
-        GetParamWorkSpace()->securityLabel->cred.gid = TEST_GID;
+        GetParamWorkSpace()->securityLabel->cred.gid =  9999; // 9999 test gid
         const char *name = "label3.test.aaa.bbb.ccc.dddd.eee";
         const char *value = "2001";
         ParamAuditData auditData = {};
         auditData.name = "label3.test.aaa";
         auditData.label = "label3.test.aaa";
-        auditData.dacData.gid = TEST_DAC_GID2;
+        auditData.dacData.gid = 203; // 203 test gid
         auditData.dacData.uid = geteuid();
-        auditData.dacData.mode = TEST_READ_AND_WRITE;
+        auditData.dacData.mode = 0666; // 0666 test mode
         SystemWriteParam(name, value);
         AddSecurityLabel(&auditData, GetParamWorkSpace());
 
         auditData.name = "label3.test.aaa.bbb.ccc.dddd.eee.dddd";
         auditData.label = "label3.test.aaa.bbb.ccc.dddd.eee.dddd";
-        auditData.dacData.gid = TEST_DAC_GID;
+        auditData.dacData.gid = 202; // 202 test dac gid
         auditData.dacData.uid = geteuid();
-        auditData.dacData.mode = TEST_READ_AND_WRITE;
+        auditData.dacData.mode = 0666; // 0666 test mode
         SystemWriteParam(name, value);
         AddSecurityLabel(&auditData, GetParamWorkSpace());
 
@@ -150,22 +150,22 @@ public:
         if (paramNode == nullptr || node == nullptr) {
             EXPECT_EQ(1, 0);
         }
-        EXPECT_EQ((int)node->gid, TEST_DAC_GID2);
+        EXPECT_EQ((int)node->gid, 203); // 203 test gid
         return 0;
     }
 
     // 添加一个label，完全匹配
     int TestAddSecurityLabel4()
     {
-        GetParamWorkSpace()->securityLabel->cred.gid = TEST_GID;
+        GetParamWorkSpace()->securityLabel->cred.gid =  9999; // 9999 test gid
         const char *name = "label4.test.aaa.bbb.ccc.dddd.eee";
         const char *value = "2001";
         ParamAuditData auditData = {};
         auditData.name = "label4.test.aaa.bbb.ccc.dddd.eee";
         auditData.label = "label4.test.aaa.bbb.ccc.dddd.eee";
-        auditData.dacData.gid = TEST_DAC_GID2;
+        auditData.dacData.gid = 203; // 203 test gid
         auditData.dacData.uid = geteuid();
-        auditData.dacData.mode = TEST_READ_AND_WRITE;
+        auditData.dacData.mode = 0666; // 0666 test mode
         SystemWriteParam(name, value);
         uint32_t labelIndex = 0;
         AddSecurityLabel(&auditData, GetParamWorkSpace());
@@ -461,8 +461,8 @@ public:
         ParamAuditData auditData = {};
         auditData.name = "ohos.servicectrl.";
         auditData.label = "";
-        auditData.dacData.gid = TEST_DAC_GID;
-        auditData.dacData.uid = TEST_DAC_GID;
+        auditData.dacData.gid = 202; // 202 test dac gid
+        auditData.dacData.uid = 202; // 202 test dac uid
         auditData.dacData.mode = mode;
         AddSecurityLabel(&auditData, GetParamWorkSpace());
         return SystemWriteParam("ohos.ctl.start", serviceName);
@@ -474,29 +474,29 @@ public:
         ParamAuditData auditData = {};
         auditData.name = "ohos.servicectrl.";
         auditData.label = "";
-        auditData.dacData.gid = TEST_DAC_GID;
-        auditData.dacData.uid = TEST_DAC_GID;
+        auditData.dacData.gid = 202; // 202 test dac gid
+        auditData.dacData.uid = 202; // 202 test dac uid
         auditData.dacData.mode = mode;
         AddSecurityLabel(&auditData, GetParamWorkSpace());
         return SystemWriteParam("sys.powerctrl", reboot);
     }
 };
 
-HWTEST_F(ParamServiceTest, TestParamServiceInit, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestParamServiceInit, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestParamServiceInit();
 }
 
-HWTEST_F(ParamServiceTest, TestPersistParam, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestPersistParam, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestPersistParam();
 }
 
-HWTEST_F(ParamServiceTest, TestSetParam_1, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestSetParam_1, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     const char *params[][2] = { { "111.2222", "1" },
                                 { "111.2222.3333", "2" },
                                 { "111.2222.3333.4444", "3" },
@@ -505,9 +505,9 @@ HWTEST_F(ParamServiceTest, TestSetParam_1, TestSize.Level1)
     test.TestSetParams(params, 5);
 }
 
-HWTEST_F(ParamServiceTest, TestSetParam_2, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestSetParam_2, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     const char *params[][2] = { { "111.2222.xxxx.xxx.xxx", "1_1" },
                                 { "111.2222.3333.xxx", "1_2" },
                                 { "111.2222.xxxx.3333.4444", "1_3" },
@@ -530,39 +530,39 @@ HWTEST_F(ParamServiceTest, TestSetParam_2, TestSize.Level1)
     test.TestSetParams(sysParams, 5);
 }
 
-HWTEST_F(ParamServiceTest, TestNameIsValid, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestNameIsValid, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestNameIsValid();
 }
 
-HWTEST_F(ParamServiceTest, TestAddSecurityLabel1, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestAddSecurityLabel1, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestAddSecurityLabel1();
 }
 
-HWTEST_F(ParamServiceTest, TestAddSecurityLabel2, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestAddSecurityLabel2, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestAddSecurityLabel2();
 }
 
-HWTEST_F(ParamServiceTest, TestAddSecurityLabel3, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestAddSecurityLabel3, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestAddSecurityLabel3();
 }
 
-HWTEST_F(ParamServiceTest, TestAddSecurityLabel4, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestAddSecurityLabel4, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestAddSecurityLabel4();
 }
 
-HWTEST_F(ParamServiceTest, TestUpdateParam, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestUpdateParam, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "100");
     test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "101");
     test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "102");
@@ -570,79 +570,79 @@ HWTEST_F(ParamServiceTest, TestUpdateParam, TestSize.Level1)
     test.TestUpdateParam("net.tcp.default_init_rwnd", "60");
 }
 
-HWTEST_F(ParamServiceTest, TestServiceProcessMessage, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestServiceProcessMessage, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestServiceProcessMessage("wertt.qqqq.wwww.rrrr", "wwww.eeeee", 1);
     test.TestServiceProcessMessage("wertt.2222.wwww.3333", "wwww.eeeee", 0);
 }
 
-HWTEST_F(ParamServiceTest, TestAddParamWait1, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestAddParamWait1, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestAddParamWait1();
 }
 
-HWTEST_F(ParamServiceTest, TestAddParamWait2, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestAddParamWait2, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestAddParamWait2();
 }
 
-HWTEST_F(ParamServiceTest, TestAddParamWait3, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestAddParamWait3, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestAddParamWait3();
 }
 
-HWTEST_F(ParamServiceTest, TestAddParamWatch1, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestAddParamWatch1, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestAddParamWatch1();
 }
 
-HWTEST_F(ParamServiceTest, TestAddParamWatch2, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestAddParamWatch2, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestAddParamWatch2();
 }
 
-HWTEST_F(ParamServiceTest, TestAddParamWatch3, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestAddParamWatch3, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestAddParamWatch3();
 }
 
-HWTEST_F(ParamServiceTest, TestCloseTriggerWatch, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestCloseTriggerWatch, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestCloseTriggerWatch();
 }
 
-HWTEST_F(ParamServiceTest, TestParamTraversal, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestParamTraversal, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestParamTraversal();
 }
 
-HWTEST_F(ParamServiceTest, TestDumpParamMemory, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestDumpParamMemory, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     test.TestDumpParamMemory();
 }
 
-HWTEST_F(ParamServiceTest, TestServiceCtrl, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestServiceCtrl, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     int ret = test.TestServiceCtrl("server1", 0770);
     EXPECT_NE(ret, 0);
     ret = test.TestServiceCtrl("server2", 0772);
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(ParamServiceTest, TestPowerCtrl, TestSize.Level1)
+HWTEST_F(ParamUnitTest, TestPowerCtrl, TestSize.Level0)
 {
-    ParamServiceTest test;
+    ParamUnitTest test;
     int ret = test.TestPowerCtrl("reboot,shutdown", 0770);
     EXPECT_NE(ret, 0);
     ret = test.TestPowerCtrl("reboot,shutdown", 0772);

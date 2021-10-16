@@ -35,10 +35,10 @@ static int SecurityLabelGet(const ParamAuditData *auditData, void *context)
     return 0;
 }
 
-class ParamSelinuxTest : public ::testing::Test {
+class SelinuxUnitTest : public ::testing::Test {
 public:
-    ParamSelinuxTest() {}
-    virtual ~ParamSelinuxTest() {}
+    SelinuxUnitTest() {}
+    virtual ~SelinuxUnitTest() {}
 
     void SetUp() {}
     void TearDown() {}
@@ -237,46 +237,46 @@ private:
     ParamSecurityOps clientParamSercurityOps;
 };
 
-HWTEST_F(ParamSelinuxTest, TestSelinuxGetLabel, TestSize.Level1)
+HWTEST_F(SelinuxUnitTest, TestSelinuxGetLabel, TestSize.Level0)
 {
-    ParamSelinuxTest test;
+    SelinuxUnitTest test;
     test.TestSelinuxGetLabel();
 }
 
-HWTEST_F(ParamSelinuxTest, TestSelinuxInitLocalLabel, TestSize.Level1)
+HWTEST_F(SelinuxUnitTest, TestSelinuxInitLocalLabel, TestSize.Level0)
 {
-    ParamSelinuxTest test;
+    SelinuxUnitTest test;
     test.TestSelinuxInitLocalLabel();
 }
 
-HWTEST_F(ParamSelinuxTest, TestSelinuxCheckFilePermission, TestSize.Level1)
+HWTEST_F(SelinuxUnitTest, TestSelinuxCheckFilePermission, TestSize.Level0)
 {
-    ParamSelinuxTest test;
+    SelinuxUnitTest test;
     test.TestSelinuxCheckFilePermission(PARAM_DEFAULT_PATH"/trigger_test.cfg");
 }
 
-HWTEST_F(ParamSelinuxTest, TestSelinuxCheckParaPermission, TestSize.Level1)
+HWTEST_F(SelinuxUnitTest, TestSelinuxCheckParaPermission, TestSize.Level0)
 {
-    ParamSelinuxTest test;
+    SelinuxUnitTest test;
     test.TestSelinuxCheckParaPermission("aaa.bbb.bbb.ccc", "user:group1:r");
 }
 
-HWTEST_F(ParamSelinuxTest, TestClientDacCheckFilePermission, TestSize.Level1)
+HWTEST_F(SelinuxUnitTest, TestClientDacCheckFilePermission, TestSize.Level0)
 {
-    ParamSelinuxTest test;
+    SelinuxUnitTest test;
     test.TestClientSelinuxCheckFilePermission(PARAM_DEFAULT_PATH"/trigger_test.cfg");
 }
 
-HWTEST_F(ParamSelinuxTest, TestClientDacCheckParaPermission, TestSize.Level1)
+HWTEST_F(SelinuxUnitTest, TestClientDacCheckParaPermission, TestSize.Level0)
 {
-    ParamSelinuxTest test;
+    SelinuxUnitTest test;
     test.TestClientSelinuxCheckParaPermissionWrite("aaa.bbb.bbb.ccc", "user:group1:r");
     test.TestClientSelinuxCheckParaPermissionRead("aaa.bbb.bbb.ccc", "user:group1:r");
 }
 
-HWTEST_F(ParamSelinuxTest, TestSeliniuxLabelEncode, TestSize.Level1)
+HWTEST_F(SelinuxUnitTest, TestSeliniuxLabelEncode, TestSize.Level0)
 {
-    ParamSelinuxTest test;
+    SelinuxUnitTest test;
     std::vector<char> buffer;
     ParamSecurityLabel *label;
     test.TestEncode(label, buffer);

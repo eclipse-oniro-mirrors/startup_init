@@ -40,7 +40,7 @@ typedef enum {
 
 #define IS_READY_ONLY(name) \
     ((strncmp((name), "const.", strlen("const.")) == 0) || (strncmp((name), "ro.", strlen("ro.")) == 0))
-#define PARAM_CONST_PREFIX "persist."
+#define PARAM_PERSIST_PREFIX "persist."
 
 #define SYS_POWER_CTRL "sys.powerctrl="
 #define OHOS_CTRL_START "ohos.ctl.start="

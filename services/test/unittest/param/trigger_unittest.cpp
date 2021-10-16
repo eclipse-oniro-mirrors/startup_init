@@ -66,10 +66,10 @@ static int TestTriggerExecute(TriggerNode *trigger, const char *content, uint32_
     return 0;
 }
 
-class TriggerTest : public ::testing::Test {
+class TriggerUnitTest : public ::testing::Test {
 public:
-    TriggerTest() {}
-    virtual ~TriggerTest() {}
+    TriggerUnitTest() {}
+    virtual ~TriggerUnitTest() {}
 
     void SetUp() {}
     void TearDown() {}
@@ -485,111 +485,111 @@ public:
     }
 };
 
-HWTEST_F(TriggerTest, TestLoadTrigger, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestLoadTrigger, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestLoadTrigger();
 }
 
-HWTEST_F(TriggerTest, TestBootEvent, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestBootEvent, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestBootEvent("pre-init");
     test.TestBootEvent("init");
     test.TestBootEvent("post-init");
     test.TestBootEvent("early-init");
 }
 
-HWTEST_F(TriggerTest, TestAddTriggerForBoot, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestAddTriggerForBoot, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestAddTriggerForBoot();
 }
 
-HWTEST_F(TriggerTest, TestAddTriggerForParm, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestAddTriggerForParm, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestAddTriggerForParm();
 }
 
-HWTEST_F(TriggerTest, TestCheckParamTrigger1, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestCheckParamTrigger1, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestCheckParamTrigger1();
 }
 
-HWTEST_F(TriggerTest, TestCheckParamTrigger2, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestCheckParamTrigger2, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestCheckParamTrigger2();
 }
 
-HWTEST_F(TriggerTest, TestCheckParamTrigger3, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestCheckParamTrigger3, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestCheckParamTrigger3();
 }
 
-HWTEST_F(TriggerTest, TestCheckParamTrigger4, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestCheckParamTrigger4, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestCheckParamTrigger4();
 }
 
-HWTEST_F(TriggerTest, TestCheckParamTrigger5, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestCheckParamTrigger5, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestCheckParamTrigger5();
 }
 
-HWTEST_F(TriggerTest, TestParamEvent, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestParamEvent, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestParamEvent();
 }
 
-HWTEST_F(TriggerTest, ComputerCondition, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, ComputerCondition, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestComputeCondition("aaa=111||aaa=222||aaa=333");
     test.TestComputeCondition("aaa=111||aaa=222&&aaa=333");
     test.TestComputeCondition("(aaa=111||aaa=222)&&aaa=333");
     test.TestComputeCondition("aaa=111||(aaa=222&&aaa=333)");
 }
 
-HWTEST_F(TriggerTest, TestExecuteParamTrigger1, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger1, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestExecuteParamTrigger1();
 }
 
-HWTEST_F(TriggerTest, TestExecuteParamTrigger2, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger2, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestExecuteParamTrigger2();
 }
 
-HWTEST_F(TriggerTest, TestExecuteParamTrigger3, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger3, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestExecuteParamTrigger3();
 }
 
-HWTEST_F(TriggerTest, TestExecuteParamTrigger4, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger4, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestExecuteParamTrigger4();
 }
 
-HWTEST_F(TriggerTest, TestExecuteParamTrigger5, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger5, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     test.TestExecuteParamTrigger5();
 }
 
-HWTEST_F(TriggerTest, TestRunClient, TestSize.Level1)
+HWTEST_F(TriggerUnitTest, TestRunClient, TestSize.Level0)
 {
-    TriggerTest test;
+    TriggerUnitTest test;
     int ret = test.TestRunClient();
     EXPECT_EQ(ret, 0);
 }

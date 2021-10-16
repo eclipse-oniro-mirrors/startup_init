@@ -38,10 +38,10 @@ void TestParameterChange(const char *key, const char *value, void *context)
     printf("TestParameterChange key:%s %s", key, value);
 }
 
-class WatcherAgentTest : public ::testing::Test {
+class WatcherAgentUnitTest : public ::testing::Test {
 public:
-    WatcherAgentTest() {}
-    virtual ~WatcherAgentTest() {}
+    WatcherAgentUnitTest() {}
+    virtual ~WatcherAgentUnitTest() {}
 
     void SetUp() {}
     void TearDown() {}
@@ -113,26 +113,26 @@ public:
     }
 };
 
-HWTEST_F(WatcherAgentTest, TestAddWatcher, TestSize.Level1)
+HWTEST_F(WatcherAgentUnitTest, TestAddWatcher, TestSize.Level0)
 {
-    WatcherAgentTest test;
+    WatcherAgentUnitTest test;
     test.TestAddWatcher();
 }
 
-HWTEST_F(WatcherAgentTest, TestRecvMessage, TestSize.Level1)
+HWTEST_F(WatcherAgentUnitTest, TestRecvMessage, TestSize.Level0)
 {
-    WatcherAgentTest test;
+    WatcherAgentUnitTest test;
     test.TestRecvMessage("test.permission.watcher.agent.test1");
 }
 
-HWTEST_F(WatcherAgentTest, TestDelWatcher, TestSize.Level1)
+HWTEST_F(WatcherAgentUnitTest, TestDelWatcher, TestSize.Level0)
 {
-    WatcherAgentTest test;
+    WatcherAgentUnitTest test;
     test.TestDelWatcher();
 }
 
-HWTEST_F(WatcherAgentTest, TestResetService, TestSize.Level1)
+HWTEST_F(WatcherAgentUnitTest, TestResetService, TestSize.Level0)
 {
-    WatcherAgentTest test;
+    WatcherAgentUnitTest test;
     test.TestResetService();
 }
