@@ -127,8 +127,6 @@ void SystemConfig(void)
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
     LoadDefaultParams("/system/etc/param", LOAD_PARAM_ONLY_ADD);
-    // load persist params
-    LoadPersistParams();
     // read config
     ReadConfig();
     INIT_LOGI("Parse init config file done.");
