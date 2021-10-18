@@ -208,9 +208,21 @@ static void DoStop(const struct CmdArgs *ctx, const char *cmdContent)
 static void DoReset(const struct CmdArgs *ctx, const char *cmdContent)
 {
     UNUSED(ctx);
-    INIT_LOGD("DoReset %s", cmdContent);
-    DoStop(ctx, cmdContent);
-    DoStart(ctx, cmdContent);
+    INIT_LOGE("DoReset %s", cmdContent);
+    Service *service = GetServiceByName(cmdContent);
+    if (service == NULL) {
+        INIT_LOGE("Reset cmd cannot find service %s.", cmdContent);
+        return;
+    }
+    if (service->pid > 0) {
+        if (kill(service->pid, SIGKILL) != 0) {
+            INIT_LOGE("stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
+            return;
+        }
+    } else {
+        StartServiceByName(cmdContent, false);
+    }
+    return;
 }
 
 static void DoCopy(const struct CmdArgs *ctx, const char *cmdContent)
