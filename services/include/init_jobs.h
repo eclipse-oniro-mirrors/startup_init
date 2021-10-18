@@ -43,12 +43,6 @@ typedef struct {
     CmdLine* cmdLines;
 } Job;
 
-// one job, could have many cmd lines
-typedef struct {
-    char name[MAX_JOB_NAME_LEN + 1];
-    CmdLines *cmdLines;
-} Job;
-
 #ifdef __cplusplus
 #if __cplusplus
 }
