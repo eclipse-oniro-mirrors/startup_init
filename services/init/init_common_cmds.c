@@ -208,7 +208,7 @@ static void DoStop(const struct CmdArgs *ctx, const char *cmdContent)
 static void DoReset(const struct CmdArgs *ctx, const char *cmdContent)
 {
     UNUSED(ctx);
-    INIT_LOGE("DoReset %s", cmdContent);
+    INIT_LOGD("DoReset %s", cmdContent);
     Service *service = GetServiceByName(cmdContent);
     if (service == NULL) {
         INIT_LOGE("Reset cmd cannot find service %s.", cmdContent);
