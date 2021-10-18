@@ -34,7 +34,7 @@
 #include <linux/module.h>
 #include "fs_manager/fs_manager.h"
 #include "init.h"
-#include "init_jobs.h"
+#include "init_jobs_internal.h"
 #include "init_log.h"
 #include "init_param.h"
 #include "init_service_manager.h"

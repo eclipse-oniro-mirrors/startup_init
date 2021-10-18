@@ -22,7 +22,7 @@
 
 #include "cJSON.h"
 #include "init_cmds.h"
-#include "init_jobs.h"
+#include "init_jobs_internal.h"
 #include "init_service_manager.h"
 #include "securec.h"
 #include "gtest/gtest.h"

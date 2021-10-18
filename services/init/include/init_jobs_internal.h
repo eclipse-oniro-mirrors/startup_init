@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BASE_STARTUP_INITLITE_JOBS_H
-#define BASE_STARTUP_INITLITE_JOBS_H
+#ifndef BASE_STARTUP_INITLITE_JOBS_INTERNAL_H
+#define BASE_STARTUP_INITLITE_JOBS_INTERNAL_H
 #include "cJSON.h"
 #include "init_cmds.h"
 
@@ -52,4 +52,4 @@ void ReadConfig(void);
 #endif
 #endif
 
-#endif // BASE_STARTUP_INITLITE_JOBS_H
+#endif // BASE_STARTUP_INITLITE_JOBS_INTERNAL_H

@@ -12,11 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef BASE_STARTUP_INITLITE_JOBS_H
+#define BASE_STARTUP_INITLITE_JOBS_H
 
-#include "init_jobs_internal.h"
-#include "init_param.h"
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
 
-void ParseAllJobs(const cJSON *fileRoot)
-{
-    ParseTriggerConfig(fileRoot);
+#define MAX_JOB_NAME_LEN 64
+
+// one job, could have many cmd lines
+typedef struct {
+    char name[MAX_JOB_NAME_LEN + 1];
+    CmdLines *cmdLines;
+} Job;
+
+#ifdef __cplusplus
+#if __cplusplus
 }
+#endif
+#endif
+
+#endif // BASE_STARTUP_INITLITE_JOBS_H

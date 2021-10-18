@@ -14,7 +14,7 @@
  */
 #include "init.h"
 #include "init_log.h"
-#include "init_jobs.h"
+#include "init_jobs_internal.h"
 #ifndef __LINUX__
 #include "init_stage.h"
 #endif

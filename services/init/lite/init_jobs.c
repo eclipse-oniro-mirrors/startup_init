@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "init_jobs.h"
+#include "init_jobs_internal.h"
 
 #include <stdio.h>
 #include <string.h>

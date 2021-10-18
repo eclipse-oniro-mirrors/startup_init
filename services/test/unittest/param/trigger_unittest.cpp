@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "init_jobs.h"
+#include "init_jobs_internal.h"
 #include "init_param.h"
 #include "init_unittest.h"
 #include "init_utils.h"
