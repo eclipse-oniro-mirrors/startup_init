@@ -137,7 +137,7 @@ ohos_shared_library("param_watcheragent") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "samgr_L2:samgr_proxy",
+    "samgr_standard:samgr_proxy",
   ]
 
   part_name = "init"
@@ -181,7 +181,7 @@ ohos_shared_library("param_watcher") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "samgr_L2:samgr_proxy",
+    "samgr_standard:samgr_proxy",
   ]
   install_images = [ "system" ]
   part_name = "init"
