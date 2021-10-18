@@ -21,7 +21,27 @@ extern "C" {
 #endif
 #endif
 
+#define MAX_CMD_NAME_LEN 32
+#define MAX_CMD_CNT_IN_ONE_JOB 200
+#define MAX_CMD_CONTENT_LEN 256
 #define MAX_JOB_NAME_LEN 64
+// one cmd line
+typedef struct {
+    char name[MAX_CMD_NAME_LEN + 1]; // cmd name
+    char cmdContent[MAX_CMD_CONTENT_LEN + 1]; // 256 cmd content
+} CmdLine;
+
+typedef struct {
+    int cmdNum;
+    CmdLine cmds[0];
+} CmdLines;
+
+// one job, could have many cmd lines
+typedef struct {
+    char name[MAX_JOB_NAME_LEN + 1];
+    int cmdLinesCnt;
+    CmdLine* cmdLines;
+} Job;
 
 // one job, could have many cmd lines
 typedef struct {
