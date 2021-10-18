@@ -1,1 +1,0 @@
-mem=640M console=ttyAMA0,115200 mmz=anonymous,0,0xA8000000,384M clk_ignore_unused androidboot.selinux=permissive skip_initramfs rootdelay=10 init = /init root=uuid=aaaaa=/dev/mmcblk0p5 hardware=Hi3516DV300 rootfstype=ext4 ro dddddd=blkdevparts=mmcblk0:1M(boot),15M(kernel),20M(updater),1M(misc),3307M(system),256M(vendor),-(userdata)

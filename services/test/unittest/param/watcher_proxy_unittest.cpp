@@ -51,7 +51,7 @@ public:
 };
 
 using WatcherManagerPtr = WatcherManager *;
-WatcherManagerPtr g_watcherManager{ nullptr };
+WatcherManagerPtr g_watcherManager = nullptr;
 
 class WatcherProxyUnitTest : public ::testing::Test {
 public:
@@ -72,7 +72,6 @@ public:
 
         data.WriteString(keyPrefix);
         sptr<IWatcher> watcher = new TestWatcher();
-        // std::shared_ptr<TestWatcher> watcher = std::make_shared<TestWatcher>();
         bool ret = data.WriteRemoteObject(watcher->AsObject());
         WATCHER_CHECK(ret, return 0, "Can not get remote");
         watcherManager->OnRemoteRequest(IWatcherManager::ADD_WATCHER, data, reply, option);
@@ -80,7 +79,7 @@ public:
         EXPECT_NE(watcherId, 0);
         printf("TestAddWatcher %s watcherId %d %p \n", keyPrefix.c_str(), watcherId, watcherManager);
 
-        EXPECT_EQ(watcherManager->GetWatcherGroup(1000) != NULL, 0); // test group id
+        EXPECT_EQ(watcherManager->GetWatcherGroup(1000) != NULL, 0); // 1000 test group id
         EXPECT_EQ(watcherManager->GetWatcherGroup("TestAddWatcher") != NULL, 0); // test key not exist
         return 0;
     }

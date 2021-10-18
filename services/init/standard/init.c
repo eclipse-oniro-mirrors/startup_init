@@ -20,8 +20,8 @@
 #include <sys/sysmacros.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <linux/major.h>
 
+#include <linux/major.h>
 #include "device.h"
 #include "init_log.h"
 #include "init_mount.h"

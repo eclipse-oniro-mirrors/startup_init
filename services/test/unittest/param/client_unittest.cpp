@@ -212,7 +212,7 @@ void TestClient(int index)
             SystemWaitParameter(name.c_str(), nullptr, 0);
             break;
         }
-        case 2: { // 3 api test
+        case 2: { // 2 api test
             ParamHandle handle;
             uint32_t size = PARAM_BUFFER_SIZE;
             int ret = SystemFindParameter(name.c_str(), &handle);

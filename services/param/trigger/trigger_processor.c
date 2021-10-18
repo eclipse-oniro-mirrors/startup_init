@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include <unistd.h>
-#include <time.h>
 #include "init_cmds.h"
 #include "init_param.h"
 #include "init_service_manager.h"
@@ -43,8 +42,7 @@ static void AddTestTrigger(const TriggerWorkSpace *workSpace)
 
 static void TestTimerCallback(ParamTaskPtr timer, void *context)
 {
-    (void)srand((unsigned)time(NULL));
-    char buffer[32] = { 0 };
+    char buffer[32] = { 0 }; // 32 buffer size
     static int index = 0;
     index++;
     if (index >= MAX_COUNT) {
@@ -53,8 +51,8 @@ static void TestTimerCallback(ParamTaskPtr timer, void *context)
     static uint32_t value = 0;
     int count = 0;
     while (count < MAX_COUNT) {
-        int wait = rand() / READ_DURATION + READ_DURATION; // 100ms
-        (void)sprintf_s(buffer, sizeof(buffer), "%u", value);
+        int wait = READ_DURATION + READ_DURATION; // 100ms
+        sprintf_s(buffer, sizeof(buffer), "%u", value);
         PARAM_LOGI("set param name: %s, value %s", TEST_PARAM_NAME, buffer);
         SystemWriteParam(TEST_PARAM_NAME, buffer);
         usleep(wait);

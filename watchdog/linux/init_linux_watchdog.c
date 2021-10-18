@@ -15,7 +15,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <linux/watchdog.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -23,6 +22,8 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+
+#include <linux/watchdog.h>
 #include "init_log.h"
 
 #define WAIT_MAX_COUNT 10

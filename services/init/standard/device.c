@@ -16,11 +16,11 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <linux/major.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 
+#include <linux/major.h>
 #include "init_log.h"
 
 #define DEFAULT_RW_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)

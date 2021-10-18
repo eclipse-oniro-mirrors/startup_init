@@ -146,7 +146,6 @@ void FreeStringVector(char **vector, int count)
             }
         }
         free(vector);
-        vector = NULL;
     }
 }
 

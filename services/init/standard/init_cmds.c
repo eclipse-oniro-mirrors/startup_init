@@ -17,7 +17,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <linux/module.h>
 #include <net/if.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -32,6 +31,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <linux/module.h>
 #include "fs_manager/fs_manager.h"
 #include "init.h"
 #include "init_jobs.h"

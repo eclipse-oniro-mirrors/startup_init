@@ -30,5 +30,4 @@ public:
 HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
 {
 }
-
 } // namespace init_ut

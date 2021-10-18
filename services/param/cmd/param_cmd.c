@@ -15,7 +15,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
 #include "param_manager.h"
 #include "param_utils.h"
@@ -112,9 +111,8 @@ static void ExeuteCmdParamRead(int argc, char *argv[], int start)
     SystemSetParameter("test.randrom.test.start", "1");
     char buffer[PARAM_NAME_LEN_MAX] = {0};
     printf("SystemGetParameter start \n");
-    (void)srand((unsigned)time(NULL));
     while (1) {
-        int wait = rand() / READ_DURATION + READ_DURATION; // 100ms
+        int wait = READ_DURATION + READ_DURATION; // 100ms
         uint32_t size = PARAM_NAME_LEN_MAX;
         int ret = SystemGetParameter(argv[start], buffer, &size);
         if (ret == 0) {

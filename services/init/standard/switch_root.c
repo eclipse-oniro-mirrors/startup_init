@@ -50,20 +50,20 @@ static void FreeOldRoot(DIR *dir, dev_t dev)
             if (st.st_dev != dev) {
                 continue; // Not the same device, ignore.
             }
-
-            if (S_ISDIR(st.st_mode)) {
-                int fd = openat(dfd, de->d_name, O_RDONLY | O_DIRECTORY);
-                isDir = true;
-                if (fd < 0) {
-                    continue;
-                }
-                DIR *subDir = fdopendir(fd);
-                if (subDir != NULL) {
-                    FreeOldRoot(subDir, dev);
-                    closedir(subDir);
-                } else {
-                    close(fd);
-                }
+            if (!S_ISDIR(st.st_mode)) {
+                continue;
+            }
+            int fd = openat(dfd, de->d_name, O_RDONLY | O_DIRECTORY);
+            isDir = true;
+            if (fd < 0) {
+                continue;
+            }
+            DIR *subDir = fdopendir(fd);
+            if (subDir != NULL) {
+                FreeOldRoot(subDir, dev);
+                closedir(subDir);
+            } else {
+                close(fd);
             }
         }
         if (unlinkat(dfd, de->d_name, isDir ? AT_REMOVEDIR : 0) < 0) {
