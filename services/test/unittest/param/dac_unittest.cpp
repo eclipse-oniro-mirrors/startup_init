@@ -34,10 +34,10 @@ static int SecurityLabelGet(const ParamAuditData *auditData, void *context)
     return 0;
 }
 
-class ParamDacTest : public ::testing::Test {
+class DacUnitTest : public ::testing::Test {
 public:
-    ParamDacTest() {}
-    virtual ~ParamDacTest() {}
+    DacUnitTest() {}
+    virtual ~DacUnitTest() {}
 
     void SetUp() {}
     void TearDown() {}
@@ -182,37 +182,37 @@ private:
     ParamSecurityOps clientParamSercurityOps;
 };
 
-HWTEST_F(ParamDacTest, TestDacGetLabel, TestSize.Level0)
+HWTEST_F(DacUnitTest, TestDacGetLabel, TestSize.Level0)
 {
-    ParamDacTest test;
+    DacUnitTest test;
     test.TestDacGetLabel();
 }
 
-HWTEST_F(ParamDacTest, TestDacInitLocalLabel, TestSize.Level0)
+HWTEST_F(DacUnitTest, TestDacInitLocalLabel, TestSize.Level0)
 {
-    ParamDacTest test;
+    DacUnitTest test;
     test.TestDacInitLocalLabel();
 }
 
-HWTEST_F(ParamDacTest, TestDacLabelEncode, TestSize.Level0)
+HWTEST_F(DacUnitTest, TestDacLabelEncode, TestSize.Level0)
 {
-    ParamDacTest test;
+    DacUnitTest test;
     std::vector<char> buffer;
     ParamSecurityLabel label = {0, { 4444, 5555}};
     test.TestEncode(&label, buffer);
     test.TestDecode(&label, buffer);
 }
 
-HWTEST_F(ParamDacTest, TestDacCheckFilePermission, TestSize.Level0)
+HWTEST_F(DacUnitTest, TestDacCheckFilePermission, TestSize.Level0)
 {
-    ParamDacTest test;
+    DacUnitTest test;
     test.TestDacCheckFilePermission(PARAM_DEFAULT_PATH"/trigger_test.cfg");
 }
 
-HWTEST_F(ParamDacTest, TestDacCheckUserParaPermission, TestSize.Level0)
+HWTEST_F(DacUnitTest, TestDacCheckUserParaPermission, TestSize.Level0)
 {
     // 相同用户
-    ParamDacTest test;
+    DacUnitTest test;
     ParamDacData dacData;
     dacData.gid = getegid();
     dacData.uid = geteuid();
@@ -250,10 +250,10 @@ HWTEST_F(ParamDacTest, TestDacCheckUserParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(ParamDacTest, TestDacCheckGroupParaPermission, TestSize.Level0)
+HWTEST_F(DacUnitTest, TestDacCheckGroupParaPermission, TestSize.Level0)
 {
     // 相同组
-    ParamDacTest test;
+    DacUnitTest test;
     ParamDacData dacData;
     dacData.gid = getegid();
     dacData.uid = 13333;
@@ -291,10 +291,10 @@ HWTEST_F(ParamDacTest, TestDacCheckGroupParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(ParamDacTest, TestDacCheckOtherParaPermission, TestSize.Level0)
+HWTEST_F(DacUnitTest, TestDacCheckOtherParaPermission, TestSize.Level0)
 {
     // 其他用户
-    ParamDacTest test;
+    DacUnitTest test;
     ParamDacData dacData;
     dacData.gid = 13333;
     dacData.uid = 13333;
@@ -332,8 +332,8 @@ HWTEST_F(ParamDacTest, TestDacCheckOtherParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(ParamDacTest, TestClientDacCheckFilePermission, TestSize.Level0)
+HWTEST_F(DacUnitTest, TestClientDacCheckFilePermission, TestSize.Level0)
 {
-    ParamDacTest test;
+    DacUnitTest test;
     test.TestClientDacCheckFilePermission(PARAM_DEFAULT_PATH"/trigger_test.cfg");
 }

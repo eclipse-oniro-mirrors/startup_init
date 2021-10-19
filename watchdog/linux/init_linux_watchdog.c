@@ -62,7 +62,7 @@ int main(int argc, const char *argv[])
 
     int gap = 0;
     if (argc >= 3) { // Argument nums greater than or equal to 3.
-        gap = atoi(argv[2]); // Second parameter.
+        gap = atoi(argv[2]); // 2 second parameter.
     }
     gap = gap > 0 ? gap : DEFAULT_GAP;
 

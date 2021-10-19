@@ -188,6 +188,24 @@ static void TestCmd()
     RunParamCommand(ARRAY_LENGTH(argForSet9), const_cast<char **>(argForSet9));
 }
 
+void TestClientApi(char testBuffer[], uint32_t size, const char *name, const char *value)
+{
+    ParamHandle handle;
+    int ret = SystemFindParameter(name, &handle);
+    SystemSetParameter(name, value);
+    ret = SystemFindParameter(name, &handle);
+    EXPECT_EQ(ret, 0);
+    uint32_t commitId = 0;
+    ret = SystemGetParameterCommitId(handle, &commitId);
+    EXPECT_EQ(ret, 0);
+    ret = SystemGetParameterName(handle, testBuffer, size);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(strcmp(testBuffer, name), 0);
+    ret = SystemGetParameterValue(handle, testBuffer, &size);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(strcmp(testBuffer, value), 0);
+}
+
 void TestClient(int index)
 {
     char testBuffer[PARAM_BUFFER_SIZE] = { 0 };
@@ -213,21 +231,7 @@ void TestClient(int index)
             break;
         }
         case 2: { // 2 api test
-            ParamHandle handle;
-            uint32_t size = PARAM_BUFFER_SIZE;
-            int ret = SystemFindParameter(name.c_str(), &handle);
-            SystemSetParameter(name.c_str(), value.c_str());
-            ret = SystemFindParameter(name.c_str(), &handle);
-            EXPECT_EQ(ret, 0);
-            uint32_t commitId = 0;
-            ret = SystemGetParameterCommitId(handle, &commitId);
-            EXPECT_EQ(ret, 0);
-            ret = SystemGetParameterName(handle, testBuffer, size);
-            EXPECT_EQ(ret, 0);
-            EXPECT_EQ(strcmp(testBuffer, name.c_str()), 0);
-            ret = SystemGetParameterValue(handle, testBuffer, &size);
-            EXPECT_EQ(ret, 0);
-            EXPECT_EQ(strcmp(testBuffer, value.c_str()), 0);
+            TestClientApi(testBuffer, PARAM_BUFFER_SIZE, name.c_str(), value.c_str());
             break;
         }
         case 3: // 3 Traversal test
