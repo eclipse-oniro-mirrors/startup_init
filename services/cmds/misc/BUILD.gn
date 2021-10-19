@@ -14,17 +14,17 @@
 import("//build/ohos.gni")
 
 ohos_executable("misc_daemon") {
-    sources = [ "misc_daemon.cpp" ]
-    include_dirs = [
-        "//base/update/updater/interfaces/kits/include/misc_info",
-        "//base/startup/init_lite/interfaces/innerkits/include",
-        "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
-    ]
-    deps = [
-        "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_shared",
-        "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
-    ]
-    install_images = [ "system" ]
-    install_enable = true
-    part_name = "init"
+  sources = [ "misc_daemon.cpp" ]
+  include_dirs = [
+    "//base/update/updater/interfaces/kits/include/misc_info",
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
+  ]
+  deps = [
+    "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_shared",
+    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
+  ]
+  install_images = [ "system" ]
+  install_enable = true
+  part_name = "init"
 }
