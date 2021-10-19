@@ -75,6 +75,7 @@ init将系统启动分为三个阶段：
             "path" : "/bin/process1",
             "uid" : 1,
             "gid" : 1,
+            "secon" : "u:r:untrusted_app:s0",
             "once" : 0,
             "importance" : 1,
             "caps" : [0, 1, 2, 5]
@@ -83,6 +84,7 @@ init将系统启动分为三个阶段：
             "path" : "/bin/process2",
             "uid" : 2,
             "gid" : 2,
+            "secon" : "u:r:untrusted_app:s0",
             "once" : 1,
             "importance" : 0,
             "caps" : []
@@ -213,6 +215,11 @@ init将系统启动分为三个阶段：
 <tr id="row127381591673"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p47388919715"><a name="p47388919715"></a><a name="p47388919715"></a>gid</p>
 </td>
 <td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p12738691479"><a name="p12738691479"></a><a name="p12738691479"></a>当前服务进程的gid值。</p>
+</td>
+</tr>
+<tr id="row127381591693"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p47388919793"><a name="p47388919793"></a><a name="p47388919715"></a>secon</p>
+</td>
+<td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p12738691493"><a name="p12738691493"></a><a name="p12738691493"></a>当前服务进程的安全上下文（当前不需要设置该字段）。</p>
 </td>
 </tr>
 <tr id="row188301014171116"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p183112146115"><a name="p183112146115"></a><a name="p183112146115"></a>once</p>
