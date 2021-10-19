@@ -14,6 +14,7 @@ import("//build/ohos.gni")
 
 declare_args() {
   param_security = "dac"
+  param_test = "false"
 }
 
 ohos_prebuilt_etc("param_watcher.rc") {
@@ -28,7 +29,8 @@ ohos_prebuilt_etc("param_watcher.rc") {
 
 ohos_static_library("param_service") {
   sources = [
-    "//base/startup/init_lite/services/src/list.c",
+    "//base/startup/init_lite/services/utils/init_utils.c",
+    "//base/startup/init_lite/services/utils/list.c",
     "adapter/param_libuvadp.c",
     "adapter/param_persistadp.c",
     "manager/param_manager.c",
@@ -47,12 +49,17 @@ ohos_static_library("param_service") {
     "adapter",
     "//base/startup/init_lite/services/include/param",
     "//base/startup/init_lite/services/include",
+    "//base/startup/init_lite/services/init/include",
     "//base/startup/init_lite/services/log",
     "//third_party/libuv/include",
     "//third_party/cJSON",
   ]
 
   defines = [ "PARAM_SUPPORT_SAVE_PERSIST" ]
+
+  if (param_test == "true") {
+    defines += [ "PARAM_TEST" ]
+  }
 
   if (param_security == "selinux") {
     sources += [ "adapter/param_selinux.c" ]
@@ -72,6 +79,7 @@ ohos_static_library("param_service") {
 
 ohos_shared_library("param_client") {
   sources = [
+    "//base/startup/init_lite/services/utils/init_utils.c",
     "client/param_request.c",
     "manager/param_manager.c",
     "manager/param_message.c",
@@ -98,11 +106,19 @@ ohos_shared_library("param_client") {
     defines += [ "PARAM_SUPPORT_DAC" ]
   }
 
+  if (param_test == "true") {
+    defines += [ "PARAM_TEST" ]
+  }
+
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  install_images = [
+    "system",
+    "updater",
+  ]
   part_name = "init"
 }
 
@@ -197,19 +213,25 @@ ohos_executable("param") {
     "//base/update/updateservice/interfaces/innerkits/include",
   ]
 
-  defines = [
-    "PARAM_TEST",
-    "INIT_AGENT",
-  ]
+  defines = [ "INIT_AGENT" ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param:param_client",
-    "//base/startup/init_lite/services/param:param_watcheragent",
-    "//base/update/updateservice/interfaces/innerkits/engine:updateservicekits",
     "//third_party/bounds_checking_function:libsec_static",
   ]
+
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  if (param_test == "true") {
+    defines += [ "PARAM_TEST" ]
+    deps += [ "//base/startup/init_lite/services/param:param_watcheragent" ]
+  } else {
+    install_images = [
+      "system",
+      "updater",
+    ]
+  }
   install_enable = true
   part_name = "init"
 }

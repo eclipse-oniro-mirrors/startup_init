@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #ifdef OHOS_LITE
 #include "hilog/log.h"
 #else
@@ -41,6 +42,8 @@ typedef enum InitLogLevel {
     INIT_FATAL
 } InitLogLevel;
 
+void SetInitLogLevel(InitLogLevel logLevel);
+
 #ifdef LABEL
 #define INIT_LOG_TAG LABEL
 #endif
@@ -54,18 +57,17 @@ typedef enum InitLogLevel {
 #undef LOG_DOMAIN
 #define LOG_DOMAIN 0xD000719
 
-#define INIT_LOGD(fmt, ...) InitToHiLog(LOG_DEBUG, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
-#define INIT_LOGI(fmt, ...) InitToHiLog(LOG_INFO, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
-#define INIT_LOGW(fmt, ...) InitToHiLog(LOG_WARN, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
-#define INIT_LOGE(fmt, ...) InitToHiLog(LOG_ERROR, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
-#define INIT_LOGF(fmt, ...) InitToHiLog(LOG_FATAL, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define INIT_LOGD(fmt, ...) InitToHiLog(INIT_DEBUG, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define INIT_LOGI(fmt, ...) InitToHiLog(INIT_INFO, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define INIT_LOGW(fmt, ...) InitToHiLog(INIT_WARN, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define INIT_LOGE(fmt, ...) InitToHiLog(INIT_ERROR, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define INIT_LOGF(fmt, ...) InitToHiLog(INIT_FATAL, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
 
-#define STARTUP_LOGD(LABEL, fmt, ...) InitToHiLog(LABEL, LOG_DEBUG, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
-#define STARTUP_LOGI(LABEL, fmt, ...) InitToHiLog(LABEL, LOG_INFO, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
-#define STARTUP_LOGE(LABEL, fmt, ...) InitToHiLog(LABEL, LOG_ERROR, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define STARTUP_LOGD(LABEL, fmt, ...) InitToHiLog(LABEL, INIT_DEBUG, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define STARTUP_LOGI(LABEL, fmt, ...) InitToHiLog(INIT_INFO, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
+#define STARTUP_LOGE(LABEL, fmt, ...) InitToHiLog(INIT_ERROR, "%s : "fmt, (__FUNCTION__), ##__VA_ARGS__)
 
-void InitToHiLog(LogLevel logLevel, const char *fmt, ...);
-void SetHiLogLevel(LogLevel logLevel);
+void InitToHiLog(InitLogLevel logLevel, const char *fmt, ...);
 
 #else
 #define FILE_NAME   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
@@ -80,6 +82,9 @@ void SetHiLogLevel(LogLevel logLevel);
 #define STARTUP_LOGI(LABEL, fmt, ...) InitLog(INIT_INFO, (FILE_NAME), (__LINE__), "<6>", fmt "\n", ##__VA_ARGS__)
 #define STARTUP_LOGE(LABEL, fmt, ...) InitLog(INIT_ERROR, (FILE_NAME), (__LINE__), "<3>", fmt "\n", ##__VA_ARGS__)
 #else
+#ifndef LABEL
+#define LABEL "ParamAgent"
+#endif
 
 #define PARAM_AGENT_LOG_PATH "/data/init_agent/init_agent.log"
 
@@ -107,7 +112,6 @@ void SetHiLogLevel(LogLevel logLevel);
 #endif
 
 void InitLog(InitLogLevel logLevel, const char *fileName, int line, const char *kLevel, const char *fmt, ...);
-void SetLogLevel(InitLogLevel logLevel);
 void OpenLogDevice(void);
 void EnableDevKmsg(void);
 #endif

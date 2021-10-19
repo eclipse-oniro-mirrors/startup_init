@@ -16,7 +16,7 @@ if (!defined(ohos_lite)) {
 
   ohos_executable("ueventd") {
     sources = [
-      "//base/startup/init_lite/services/src/list.c",
+      "//base/startup/init_lite/services/utils/list.c",
       "//base/startup/init_lite/ueventd/ueventd.c",
       "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
       "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",

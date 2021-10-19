@@ -29,9 +29,8 @@ if (defined(ohos_lite)) {
 
     include_dirs = [
       "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/param/include",
+      "//base/startup/init_lite/services/init/include",
       "//base/startup/init_lite/services/log",
-      "//base/startup/init_lite/services/utils",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/startup/syspara_lite/interfaces/kits",
@@ -39,19 +38,22 @@ if (defined(ohos_lite)) {
     ]
 
     sources = [
+      "//base/startup/init_lite/services/init/adapter/init_adapter.c",
+      "//base/startup/init_lite/services/init/init_capability.c",
+      "//base/startup/init_lite/services/init/init_common_cmds.c",
+      "//base/startup/init_lite/services/init/init_common_service.c",
+      "//base/startup/init_lite/services/init/init_config.c",
+      "//base/startup/init_lite/services/init/init_service_manager.c",
+      "//base/startup/init_lite/services/init/init_service_socket.c",
+      "//base/startup/init_lite/services/init/lite/init.c",
+      "//base/startup/init_lite/services/init/lite/init_cmds.c",
+      "//base/startup/init_lite/services/init/lite/init_jobs.c",
+      "//base/startup/init_lite/services/init/lite/init_reboot.c",
+      "//base/startup/init_lite/services/init/lite/init_service.c",
+      "//base/startup/init_lite/services/init/lite/init_signal_handler.c",
       "//base/startup/init_lite/services/log/init_log.c",
-      "//base/startup/init_lite/services/src/init_adapter.c",
-      "//base/startup/init_lite/services/src/init_capability.c",
-      "//base/startup/init_lite/services/src/init_cmds.c",
-      "//base/startup/init_lite/services/src/init_import.c",
-      "//base/startup/init_lite/services/src/init_jobs.c",
-      "//base/startup/init_lite/services/src/init_read_cfg.c",
-      "//base/startup/init_lite/services/src/init_reboot.c",
-      "//base/startup/init_lite/services/src/init_service.c",
-      "//base/startup/init_lite/services/src/init_service_manager.c",
-      "//base/startup/init_lite/services/src/init_service_socket.c",
-      "//base/startup/init_lite/services/src/init_signal_handler.c",
       "//base/startup/init_lite/services/utils/init_utils.c",
+      "//base/startup/init_lite/services/utils/list.c",
       "cmd_func_test.cpp",
     ]
 

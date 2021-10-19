@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "param_persist.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
@@ -23,8 +23,6 @@
 #include "param_service.h"
 #include "param_trie.h"
 #include "sys_param.h"
-
-#define LABEL "Manager"
 
 static ParamPersistWorkSpace g_persistWorkSpace = { 0, NULL, 0, { NULL, NULL, NULL, NULL, NULL } };
 
@@ -49,7 +47,7 @@ static int SavePersistParam(const WorkSpace *workSpace, const ParamTrieNode *nod
     if (entry == NULL) {
         return 0;
     }
-    if (strncmp(entry->data, PARAM_CONST_PREFIX, strlen(PARAM_CONST_PREFIX)) != 0) {
+    if (strncmp(entry->data, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) != 0) {
         return 0;
     }
     static char name[PARAM_NAME_LEN_MAX] = { 0 };
@@ -73,7 +71,7 @@ static int BatchSavePersistParam(const WorkSpace *workSpace)
     PERSIST_SAVE_HANDLE handle;
     int ret = g_persistWorkSpace.persistParamOps.batchSaveBegin(&handle);
     PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Failed to save persist");
-    ParamTrieNode *root = FindTrieNode(workSpace, PARAM_CONST_PREFIX, strlen(PARAM_CONST_PREFIX), NULL);
+    ParamTrieNode *root = FindTrieNode(workSpace, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX), NULL);
     ret = TraversalTrieNode(workSpace, root, SavePersistParam, handle);
     g_persistWorkSpace.persistParamOps.batchSaveEnd(handle);
     PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Save persist param fail");
@@ -110,36 +108,39 @@ int LoadPersistParam(ParamWorkSpace *workSpace)
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     int ret = InitPersistParamWorkSpace(workSpace);
     PARAM_CHECK(ret == 0, return ret, "Failed to init persist param");
+#ifndef STARTUP_INIT_TEST
     if (PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
         PARAM_LOGE("Persist param has been loaded");
         return 0;
     }
+#endif
     if (g_persistWorkSpace.persistParamOps.load != NULL) {
         ret = g_persistWorkSpace.persistParamOps.load(AddPersistParam, &workSpace->paramSpace);
         PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED);
-        PARAM_CHECK(ret == 0, return ret, "Failed to load persist param");
     }
-    // 刷新新增的常量到persist
-    BatchSavePersistParam(&workSpace->paramSpace);
+    // save new persist param
+    ret = BatchSavePersistParam(&workSpace->paramSpace);
+    PARAM_CHECK(ret == 0, return ret, "Failed to load persist param");
     return 0;
 }
 
-static void TimerCallbackForSave(ParamTaskPtr timer, void *context)
+PARAM_STATIC void TimerCallbackForSave(ParamTaskPtr timer, void *context)
 {
     UNUSED(context);
-    ParamTaskClose(timer);
+    UNUSED(timer);
+    ParamTaskClose(g_persistWorkSpace.saveTimer);
     g_persistWorkSpace.saveTimer = NULL;
     if (!PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_UPDATE)) {
         return;
     }
-    BatchSavePersistParam((WorkSpace *)context);
+    (void)BatchSavePersistParam((WorkSpace *)context);
 }
 
 int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *value)
 {
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
-    if (strncmp(name, PARAM_CONST_PREFIX, strlen(PARAM_CONST_PREFIX)) != 0) {
+    if (strncmp(name, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) != 0) {
         return 0;
     }
     if (!PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
@@ -160,6 +161,7 @@ int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *v
     time_t currTimer;
     (void)time(&currTimer);
     uint32_t diff = (uint32_t)difftime(currTimer, g_persistWorkSpace.lastSaveTimer);
+    PARAM_LOGD("WritePersistParam name %s  %d ", name, diff);
     if (diff > PARAM_MUST_SAVE_PARAM_DIFF) {
         if (g_persistWorkSpace.saveTimer != NULL) {
             ParamTaskClose(g_persistWorkSpace.saveTimer);

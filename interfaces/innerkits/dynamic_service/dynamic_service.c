@@ -31,7 +31,7 @@ int32_t StartDynamicProcess(const char *name)
         return -1;
     }
     if (SetParameter("ohos.ctl.start", name) != 0) {
-        HILOG_ERROR(LOG_CORE, "Set param for {public}%s failed.\n", name);
+        HILOG_ERROR(LOG_CORE, "Set param for %{public}s failed.\n", name);
         return -1;
     }
     return 0;
@@ -44,7 +44,7 @@ int32_t StopDynamicProcess(const char *name)
         return -1;
     }
     if (SetParameter("ohos.ctl.stop", name) != 0) {
-        HILOG_ERROR(LOG_CORE, "Set param for {public}%s failed.\n", name);
+        HILOG_ERROR(LOG_CORE, "Set param for %{public}s failed.\n", name);
         return -1;
     }
     return 0;

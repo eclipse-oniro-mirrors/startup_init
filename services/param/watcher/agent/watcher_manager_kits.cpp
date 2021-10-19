@@ -88,7 +88,7 @@ WatcherManagerKits::ParamWatcherKitPtr WatcherManagerKits::GetParamWatcher(const
 void WatcherManagerKits::SetParamWatcher(const std::string &keyPrefix, ParamWatcherKitPtr watcher)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (watchers_.find(keyPrefix) != watchers_.end()) {
+    if (watchers_.find(keyPrefix) == watchers_.end()) {
         watchers_[keyPrefix] = watcher;
     }
 }
@@ -129,6 +129,7 @@ int32_t WatcherManagerKits::DelWatcher(const std::string &keyPrefix)
 
 void WatcherManagerKits::ParamWatcher::OnParamerterChange(const std::string &name, const std::string &value)
 {
+    Watcher::OnParamerterChange(name, value);
     WATCHER_LOGD("OnParamerterChange name %s value %s", name.c_str(), value.c_str());
     if (callback_ != nullptr) {
         callback_(name.c_str(), value.c_str(), context_);

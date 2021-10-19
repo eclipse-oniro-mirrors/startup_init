@@ -18,11 +18,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "init_utils.h"
 #include "param_security.h"
 #include "param_utils.h"
 
 #define OCT_BASE 8
-#define LABEL "PARAM_DAC"
 static ParamSecurityLabel g_localSecurityLabel = {};
 
 static void GetUserIdByName(FILE *fp, uid_t *uid, const char *name, uint32_t nameLen)
@@ -170,6 +170,7 @@ static int GetParamSecurityLabel(SecurityLabelFunc label, const char *path, void
     if ((stat(path, &st) == 0) && !S_ISDIR(st.st_mode)) {
         return ProcessParamFile(path, &cxt);
     }
+    PARAM_LOGD("GetParamSecurityLabel %s ", path);
     return ReadFileInDir(path, ".para.dac", ProcessParamFile, &cxt);
 }
 

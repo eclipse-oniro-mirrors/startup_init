@@ -15,7 +15,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
 #include "param_manager.h"
 #include "param_utils.h"
@@ -32,10 +31,10 @@
 #define WAIT_TIMEOUT_INDEX 2
 
 struct CmdArgs {
-    char name[8];
+    char name[8]; // cmd name length
     int minArg;
     void (*DoFuncion)(int argc, char *argv[], int start);
-    char help[128];
+    char help[128]; // cmd help length
 };
 
 static void ShowParam(ParamHandle handle, void *cookie)
@@ -52,10 +51,8 @@ static void ExeuteCmdParamGet(int argc, char *argv[], int start)
 {
     uint32_t size = PARAM_CONST_VALUE_LEN_MAX + PARAM_NAME_LEN_MAX + 1 + 1;
     char *buffer = (char *)calloc(1, size);
-    if (buffer == NULL) {
-        printf("Get parameterfail\n");
-        return;
-    }
+    PARAM_CHECK(buffer != NULL, return, "Failed to get parameter");
+
     if (argc == start) {
         SystemTraversalParameter(ShowParam, (void *)buffer);
     } else {
@@ -100,17 +97,77 @@ static void ExeuteCmdParamWait(int argc, char *argv[], int start)
     if (argc > (start + WAIT_TIMEOUT_INDEX)) {
         timeout = atol(argv[start + WAIT_TIMEOUT_INDEX]);
     }
-    SystemWaitParameter(argv[start], value, timeout);
+    int ret = SystemWaitParameter(argv[start], value, timeout);
+    if (ret == 0) {
+        printf("Param wait success \n");
+    } else {
+        printf("Param wait fail \n");
+    }
 }
+
+#ifdef PARAM_TEST
+static void ExeuteCmdParamRead(int argc, char *argv[], int start)
+{
+    SystemSetParameter("test.randrom.test.start", "1");
+    char buffer[PARAM_NAME_LEN_MAX] = {0};
+    printf("SystemGetParameter start \n");
+    while (1) {
+        int wait = READ_DURATION + READ_DURATION; // 100ms
+        uint32_t size = PARAM_NAME_LEN_MAX;
+        int ret = SystemGetParameter(argv[start], buffer, &size);
+        if (ret == 0) {
+            printf("SystemGetParameter value %s %d \n", buffer, wait);
+        } else {
+            printf("SystemGetParameter fail %d \n", wait);
+        }
+        usleep(wait);
+    }
+}
+
+static void HandleParamChange(const char *key, const char *value, void *context)
+{
+    if (key == NULL || value == NULL) {
+        return;
+    }
+    UNUSED(context);
+    printf("Receive parameter change %s %s \n", key, value);
+}
+
+static void ExeuteCmdParamWatch(int argc, char *argv[], int start)
+{
+    if (argc <= start) {
+        return;
+    }
+    int ret = SystemWatchParameter(argv[start], HandleParamChange, NULL);
+    if (ret != 0) {
+        return;
+    }
+    while (1) {
+        (void)pause();
+    }
+}
+#endif
 
 int RunParamCommand(int argc, char *argv[])
 {
     static struct CmdArgs paramCmds[] = {
-        { "set", 4, ExeuteCmdParamSet, USAGE_INFO_PARAM_SET },
-        { "get", 2, ExeuteCmdParamGet, USAGE_INFO_PARAM_GET },
-        { "wait", 3, ExeuteCmdParamWait, USAGE_INFO_PARAM_WAIT },
-        { "dump", 2, ExeuteCmdParamDump, USAGE_INFO_PARAM_DUMP },
-    };
+        { "set", 4, ExeuteCmdParamSet, USAGE_INFO_PARAM_SET }, // set param count
+        { "get", 2, ExeuteCmdParamGet, USAGE_INFO_PARAM_GET }, // get param count
+        { "wait", 3, ExeuteCmdParamWait, USAGE_INFO_PARAM_WAIT }, // wait param count
+        { "dump", 2, ExeuteCmdParamDump, USAGE_INFO_PARAM_DUMP }, // dump param count
+#ifdef PARAM_TEST
+        { "read", 2, ExeuteCmdParamRead, USAGE_INFO_PARAM_READ }, // read param count
+        { "watch", 2, ExeuteCmdParamWatch, USAGE_INFO_PARAM_WATCH }, // watch param count
+#endif
+	};
+#ifdef PARAM_TEST
+    ParamWorkSpace *space = GetClientParamWorkSpace();
+    if (space != NULL && space->securityLabel != NULL) {
+        const int testUid = 1000;
+        space->securityLabel->cred.uid = testUid;
+        space->securityLabel->cred.gid = testUid;
+    }
+#endif
     if (argc < MIN_ARGC) {
         printf("usage: \n");
         for (size_t i = 0; i < sizeof(paramCmds) / sizeof(paramCmds[0]); i++) {

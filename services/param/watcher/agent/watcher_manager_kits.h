@@ -36,7 +36,9 @@ public:
     static WatcherManagerKits &GetInstance();
     int32_t AddWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context);
     int32_t DelWatcher(const std::string &keyPrefix);
+#ifndef STARTUP_INIT_TEST
 private:
+#endif
     class ParamWatcher final : public Watcher {
     public:
         ParamWatcher(const std::string &key, ParameterChangePtr callback, void *context)
@@ -60,6 +62,8 @@ private:
         ParameterChangePtr callback_ { nullptr };
         void *context_ { nullptr };
     };
+    using ParamWatcherKitPtr = sptr<WatcherManagerKits::ParamWatcher>;
+    ParamWatcherKitPtr GetParamWatcher(const std::string &keyPrefix);
 
     // For death event procession
     class DeathRecipient final : public IRemoteObject::DeathRecipient {
@@ -69,10 +73,12 @@ private:
         DISALLOW_COPY_AND_MOVE(DeathRecipient);
         void OnRemoteDied(const wptr<IRemoteObject> &remote) final;
     };
+    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient()
+    {
+        return deathRecipient_;
+    }
 
 private:
-    using ParamWatcherKitPtr = sptr<WatcherManagerKits::ParamWatcher>;
-    ParamWatcherKitPtr GetParamWatcher(const std::string &keyPrefix);
     void SetParamWatcher(const std::string &keyPrefix, ParamWatcherKitPtr watcher);
     void ResetService(const wptr<IRemoteObject> &remote);
     sptr<IWatcherManager> GetService();

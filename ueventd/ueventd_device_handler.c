@@ -79,11 +79,8 @@ static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid
 static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode, char **symLinks, bool isBlock)
 {
     int rc = -1;
-    if (uevent->major < 0 || uevent->minor < 0) {
-        return rc;
-    }
-    size_t major = uevent->major;
-    size_t minor = uevent->minor;
+    int major = uevent->major;
+    int minor = uevent->minor;
     uid_t uid = uevent->ug.uid;
     gid_t gid = uevent->ug.gid;
     mode_t mode = DEVMODE;
@@ -164,19 +161,23 @@ static char *FindPlatformDeviceName(char *path)
         path += strlen("/sys/devices/platform/");
         return path;
     }
+
+    // Some platform devices may not be registered under platform device.
+    if (STARTSWITH(path, "/sys/devices/")) {
+        path += strlen("/sys/devices/");
+        return path;
+    }
     return NULL;
 }
 
 static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
     const char *partitionName, const char *deviceName)
 {
-    if ((linkNum > BLOCKDEVICE_LINKS - 1) || (linkNum < 0)) {
-        INIT_LOGW("Failed set linkNum, links ignore");
+    if (linkNum > BLOCKDEVICE_LINKS - 1) {
+        INIT_LOGW("Too many links, ignore");
         return;
     }
-    if (parent == NULL) {
-        return;
-    }
+
     links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
     if (links[linkNum] == NULL) {
         INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
@@ -191,9 +192,8 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
             INIT_LOGE("Failed to build link");
         }
     } else if (!INVALIDSTRING(deviceName)) {
-        // If a device does not have a partition name, create a symbol link for it separately.
         if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
-            "/dev/block/platform/%s/%s", parent, deviceName) == -1) {
+            "/dev/block/platform/%s/by-name/%s", parent, deviceName) == -1) {
             INIT_LOGE("Failed to build link");
         }
     }
@@ -201,8 +201,7 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
 
 static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
 {
-    if (uevent == NULL || uevent->syspath == NULL || uevent->subsystem == NULL ||
-        STRINGEQUAL(uevent->subsystem, "block") == 0) {
+    if (uevent == NULL || uevent->subsystem == NULL || STRINGEQUAL(uevent->subsystem, "block") == 0) {
         INIT_LOGW("Invalid arguments, Skip to get device symbol links.");
         return NULL;
     }
@@ -230,14 +229,14 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
     // Reverse walk through sysPath, and check subystem file under each directory.
     char *parent = dirname(sysPath);
     while (parent != NULL && !STRINGEQUAL(parent, "/") && !STRINGEQUAL(parent, ".")) {
-        char subsystem[SYSPATH_SIZE] = {0};
+        char subsystem[SYSPATH_SIZE];
         if (snprintf_s(subsystem, SYSPATH_SIZE, SYSPATH_SIZE - 1, "%s/subsystem", parent) == -1) {
             INIT_LOGE("Failed to build subsystem path for device \" %s \"", uevent->syspath);
             return NULL;
         }
 
-        char bus[PATH_MAX] = {0};
-        if (Realpath(subsystem, bus, sizeof(bus)) == NULL) {
+        char *bus = GetRealPath(subsystem);
+        if (bus == NULL) {
             parent = dirname(parent);
             continue;
         }
@@ -249,6 +248,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
             }
             linkNum++;
         }
+        free(bus);
         parent = dirname(parent);
     }
 

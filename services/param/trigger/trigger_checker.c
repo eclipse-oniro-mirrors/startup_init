@@ -20,7 +20,6 @@
 #include "trigger_manager.h"
 
 #define MAX_CALC_PARAM 100
-#define LABEL "Trigger"
 // 申请整块能存作为计算的节点
 int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, int needCondition)
 {

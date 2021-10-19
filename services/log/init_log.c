@@ -14,7 +14,6 @@
  */
 
 #include "init_log.h"
-
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -34,22 +33,15 @@
 static InitLogLevel g_logLevel = INIT_INFO;
 static const char *LOG_LEVEL_STR[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
 
-void SetLogLevel(InitLogLevel logLevel)
+void SetInitLogLevel(InitLogLevel logLevel)
 {
     g_logLevel = logLevel;
 }
 
 #ifdef OHOS_LITE
-static LogLevel g_hiLogLevel = LOG_INFO;
-
-void SetHiLogLevel(LogLevel logLevel)
+void InitToHiLog(InitLogLevel logLevel, const char *fmt, ...)
 {
-    g_hiLogLevel = logLevel;
-}
-
-void InitToHiLog(LogLevel logLevel, const char *fmt, ...)
-{
-    if (logLevel < g_hiLogLevel) {
+    if (logLevel < g_logLevel) {
         return;
     }
 
@@ -84,7 +76,7 @@ void EnableDevKmsg(void)
     if (fd < 0) {
         return;
     }
-    const char *kmsgStatus = "on";
+    char *kmsgStatus = "on";
     write(fd, kmsgStatus, strlen(kmsgStatus) + 1);
     close(fd);
     fd = -1;

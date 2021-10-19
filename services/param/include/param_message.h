@@ -43,8 +43,6 @@ extern "C" {
 #define WORKER_TYPE_SERVER 0x20
 #define WORKER_TYPE_CLIENT 0x40
 
-#define WORKER_TYPE_TEST 0x01000000
-
 typedef enum {
     MSG_SET_PARAM,
     MSG_WAIT_PARAM,
@@ -92,7 +90,6 @@ typedef int (*RecvMessage)(const ParamTaskPtr stream, const ParamMessage *msg);
 typedef void (*TimerProcess)(const ParamTaskPtr stream, void *context);
 typedef void (*EventProcess)(uint64_t eventId, const char *context, uint32_t size);
 typedef void (*TaskClose)(const ParamTaskPtr stream);
-typedef void (*ProcessPidDelete)(pid_t pid);
 
 typedef struct ParamTask_ {
     uint32_t flags;
@@ -107,7 +104,7 @@ typedef struct {
 } ParamStreamInfo;
 
 int ParamServiceStop(void);
-int ParamServiceStart(ProcessPidDelete pidDelete);
+int ParamServiceStart(void);
 
 int ParamTaskClose(ParamTaskPtr stream);
 int ParamServerCreate(ParamTaskPtr *server, const ParamStreamInfo *info);

@@ -28,7 +28,7 @@ namespace init_param {
 #define UNUSED(x) (void)(x)
 
 #ifndef LABEL
-#define LABEL "Watcher"
+#define LABEL "ParameterWatcher"
 #endif
 
 #define WATCHER_LOGI(fmt, ...) STARTUP_LOGI(LABEL, fmt, ##__VA_ARGS__)

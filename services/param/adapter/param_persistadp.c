@@ -21,8 +21,6 @@
 #include "param_persist.h"
 #include "param_utils.h"
 
-#define LABEL "PERSIST_ADP"
-
 typedef struct {
     void *context;
     PersistParamGetPtr persistParamGet;
@@ -59,6 +57,12 @@ static int LoadPersistParam(PersistParamGetPtr persistParamGet, void *context)
     return 0;
 }
 
+static int SavePersistParam(const char *name, const char *value)
+{
+    PARAM_LOGD("SavePersistParam %s=%s", name, value);
+    return 0;
+}
+
 static int BatchSavePersistParamBegin(PERSIST_SAVE_HANDLE *handle)
 {
     FILE *fp = fopen(PARAM_PERSIST_SAVE_TMP_PATH, "w");
@@ -88,7 +92,7 @@ static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle)
 int RegisterPersistParamOps(PersistParamOps *ops)
 {
     PARAM_CHECK(ops != NULL, return -1, "Invalid ops");
-    ops->save = NULL;
+    ops->save = SavePersistParam;
     ops->load = LoadPersistParam;
     ops->batchSaveBegin = BatchSavePersistParamBegin;
     ops->batchSave = BatchSavePersistParam;

@@ -15,10 +15,10 @@
 
 #include <sys/stat.h>
 
+#include "init_utils.h"
 #include "param_security.h"
 #include "param_utils.h"
 
-#define LABEL "PARAM_SELINUX"
 #define SELINUX_LABEL_LEN 128
 typedef struct SELinuxSecurityLabel {
     ParamSecurityLabel securityLabel;

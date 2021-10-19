@@ -45,6 +45,7 @@ extern "C" {
 
 #define CMD_INDEX_FOR_PARA_WAIT 0xfffE
 #define CMD_INDEX_FOR_PARA_WATCH 0xffff
+#define CMD_INDEX_FOR_PARA_TEST 0x10000
 
 #define TRIGGER_IN_QUEUE(trigger) (((trigger)->flags & TRIGGER_FLAGS_QUEUE) == TRIGGER_FLAGS_QUEUE)
 #define TRIGGER_SET_FLAG(trigger, flag) ((trigger)->flags |= (flag))

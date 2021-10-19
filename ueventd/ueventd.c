@@ -14,7 +14,6 @@
  */
 
 #include "ueventd.h"
-
 #include <dirent.h>
 #include <limits.h>
 #include <fcntl.h>
@@ -206,7 +205,7 @@ static void DoTrigger(const char *ueventPath, int sockFd)
     if (fd < 0) {
         INIT_LOGE("Open \" %s \" failed, err = %d", ueventPath, errno);
     } else {
-        ssize_t n = write(fd, "add\n", strlen("add\n"));
+        ssize_t n = write(fd, "add\n", 4);
         if (n < 0) {
             INIT_LOGE("Write \" %s \" failed, err = %d", ueventPath, errno);
             close(fd);
@@ -222,6 +221,9 @@ static void DoTrigger(const char *ueventPath, int sockFd)
 
 static void Trigger(const char *path, int sockFd)
 {
+    if (path == NULL) {
+        return;
+    }
     DIR *dir = opendir(path);
     if (dir == NULL) {
         return;
@@ -266,6 +268,7 @@ int main(int argc, char **argv)
 {
     char *ueventdConfigs[] = {"/etc/ueventd.config", NULL};
     int i = 0;
+    int ret = -1;
     while (ueventdConfigs[i] != NULL) {
         ParseUeventdConfigFile(ueventdConfigs[i++]);
     }
@@ -282,7 +285,7 @@ int main(int argc, char **argv)
 
     while (1) {
         pfd.revents = 0;
-        int ret = poll(&pfd, 1, -1);
+        ret = poll(&pfd, 1, -1);
         if (ret <= 0) {
             continue;
         }

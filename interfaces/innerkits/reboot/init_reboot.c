@@ -17,6 +17,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include "init_log.h"
 #include "param.h"
 #include "securec.h"
@@ -45,7 +46,7 @@ int DoReboot(const char *option)
         }
         return 0;
     }
-    size_t length = strlen(option);
+    int length = strlen(option);
     if (length > MAX_REBOOT_OPTION_SIZE) {
         INIT_LOGE("Reboot option \" %s \" is too large, overflow", option);
         return -1;
