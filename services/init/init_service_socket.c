@@ -59,7 +59,7 @@ static int CreateSocket(ServiceSocket *sockopt)
 
     do {
         ret = -1;
-        if (access(addr.sun_path, F_OK)) {
+        if (access(addr.sun_path, F_OK) == 0) {
             INIT_LOGI("%s already exist, remove it", addr.sun_path);
             unlink(addr.sun_path);
         }
