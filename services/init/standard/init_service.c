@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2020-2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -67,6 +67,9 @@ int ServiceExec(const Service *service)
             INIT_LOGE("setpriority failed for %s, importance = %d", service->name, service->importance);
             _exit(0x7f); // 0x7f: user specified
         }
+    }
+    if (unsetenv("UV_THREADPOOL_SIZE") != 0) {
+        INIT_LOGE("set UV_THREADPOOL_SIZE error : %d.", errno);
     }
     // L2 Can not be reset env
     if (execv(service->pathArgs.argv[0], service->pathArgs.argv) != 0) {
