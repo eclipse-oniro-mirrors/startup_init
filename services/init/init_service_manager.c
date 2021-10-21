@@ -305,6 +305,7 @@ static int AddServiceSocket(cJSON *json, Service *service)
 
     ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket) + strlen(opt[SERVICE_SOCK_NAME]) + 1);
     INIT_INFO_CHECK(sockopt != NULL, return SERVICE_FAILURE, "Failed to malloc for socket %s", opt[SERVICE_SOCK_NAME]);
+    sockopt->sockFd = -1;
     int ret = strcpy_s(sockopt->name, strlen(opt[SERVICE_SOCK_NAME]) + 1, opt[SERVICE_SOCK_NAME]);
     INIT_INFO_CHECK(ret == 0, free(sockopt);
         return SERVICE_FAILURE, "Failed to copy socket name %s", opt[SERVICE_SOCK_NAME]);
