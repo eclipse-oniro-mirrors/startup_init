@@ -22,6 +22,7 @@
         <licensefile></licensefile>
         <policylist>
             <policy name="projectPolicy" desc="">
+                <policyitem type="copyright" name="北京万里红科技有限公司" path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc=""/>
                 <!--policyitem type="compatibility" name="GPL-2.0+" path="abc/.*" desc="Process that runs independently, invoked by the X process."/-->
                 <!--policyitem type="license" name="LGPL" path="abc/.*" desc="Dynamically linked by module X"/-->
                 <!--policyitem type="copyright" name="xxx" path="abc/.*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by X Company"/-->

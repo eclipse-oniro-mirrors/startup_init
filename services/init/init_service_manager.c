@@ -30,6 +30,9 @@
 #include "init_service_socket.h"
 #include "init_utils.h"
 #include "securec.h"
+#ifdef WITH_SELINUX
+#   include "init_selinux_param.h"
+#endif // WITH_SELINUX
 
 // All serivce processes that init will fork+exec.
 static ServiceSpace g_serviceSpace = { { &g_serviceSpace.services, &g_serviceSpace.services }, 0 };
@@ -398,7 +401,10 @@ static int CheckServiceKeyName(const cJSON *curService)
 {
     char *cfgServiceKeyList[] = {
         "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
-        "writepid", "critical", "socket", "console", "dynamic"
+        "writepid", "critical", "socket", "console", "dynamic",
+#ifdef WITH_SELINUX
+        SECON_STR_IN_CFG,
+#endif // WITH_SELINUX
     };
     if (curService == NULL) {
         return SERVICE_FAILURE;
@@ -432,6 +438,10 @@ static int ParseOneService(const cJSON *curItem, Service *service)
     }
     int ret = GetStringItem(curItem, "name", service->name, MAX_SERVICE_NAME);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get service name");
+#ifdef WITH_SELINUX
+    ret = GetStringItem(curItem, SECON_STR_IN_CFG, service->secon, MAX_SECON_LEN);
+    INIT_CHECK_ONLY_ELOG(ret == 0, "GetServiceSecon %s section not found, skip", SECON_STR_IN_CFG);
+#endif // WITH_SELINUX
     ret = GetServiceArgs(curItem, "path", MAX_PATH_ARGS_CNT, &service->pathArgs);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get path for service %s", service->name);
     if ((service->pathArgs.count > 0) && IsForbidden(service->pathArgs.argv[0])) {

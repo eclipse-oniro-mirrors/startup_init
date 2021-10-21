@@ -29,6 +29,9 @@
 #include "init_utils.h"
 #include "securec.h"
 #include "switch_root.h"
+#ifdef WITH_SELINUX
+#   include <policycoreutils.h>
+#endif // WITH_SELINUX
 
 void SystemInit(void)
 {
@@ -120,6 +123,23 @@ void SystemPrepare(void)
 #endif
 }
 
+void SystemLoadSelinux(void)
+{
+#ifdef WITH_SELINUX
+    // load selinux policy and context
+    if (load_policy() < 0) {
+        INIT_LOGE("main, load_policy failed.");
+    } else {
+        INIT_LOGI("main, load_policy success.");
+    }
+    if (restorecon() < 0) {
+        INIT_LOGE("main, restorecon failed.");
+    } else {
+        INIT_LOGI("main, restorecon success.");
+    }
+#endif // WITH_SELINUX
+}
+
 void SystemConfig(void)
 {
     InitParamService();
@@ -141,6 +161,9 @@ void SystemConfig(void)
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
+
+    // load SELinux context and policy
+    SystemLoadSelinux();
 }
 
 void SystemRun(void)

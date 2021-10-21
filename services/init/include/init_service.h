@@ -19,6 +19,9 @@
 #include "cJSON.h"
 #include "init_cmds.h"
 #include "init_service_socket.h"
+#ifdef WITH_SELINUX
+#   include "init_selinux_param.h"
+#endif // WITH_SELINUX
 #include "list.h"
 #ifdef __cplusplus
 #if __cplusplus
@@ -68,6 +71,9 @@ typedef struct {
 typedef struct {
     ListNode node;
     char name[MAX_SERVICE_NAME + 1];
+#ifdef WITH_SELINUX
+    char secon[MAX_SECON_LEN];
+#endif // WITH_SELINUX
     int pid;
     int crashCnt;
     time_t firstCrashTime;

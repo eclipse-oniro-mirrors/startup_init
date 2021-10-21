@@ -37,6 +37,11 @@
 #include "init_utils.h"
 #include "securec.h"
 
+#ifdef WITH_SELINUX
+#   include "init_selinux_param.h"
+#   include <selinux/selinux.h>
+#endif // WITH_SELINUX
+
 #ifndef TIOCSCTTY
 #define TIOCSCTTY 0x540E
 #endif
@@ -171,6 +176,19 @@ static int WritePid(const Service *service)
     return SERVICE_SUCCESS;
 }
 
+void SetSecon(Service * service)
+{
+#ifdef WITH_SELINUX
+    if (*(service->secon)) {
+        if (setexeccon(service->secon) < 0) {
+            INIT_LOGE("failed to set service %s's secon (%s).", service->name, service->secon);
+        } else {
+            INIT_LOGI("service %s secon set to %s.", service->name, service->secon);
+        }
+    }
+#endif // WITH_SELINUX
+}
+
 int ServiceStart(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
@@ -208,6 +226,7 @@ int ServiceStart(Service *service)
             INIT_LOGE("service %s exit! write pid failed!", service->name);
             _exit(PROCESS_EXIT_CODE);
         }
+        SetSecon(service);
         ServiceExec(service);
         _exit(PROCESS_EXIT_CODE);
     } else if (pid < 0) {

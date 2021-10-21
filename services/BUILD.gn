@@ -127,11 +127,26 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]
+    cflags = []
+
     if (use_musl) {
       deps += [
         "//third_party/mksh:sh",
         "//third_party/toybox:toybox",
       ]
+    }
+
+    if (build_selinux) {
+      include_dirs += [
+        "//third_party/selinux/libselinux/include/",
+        "//base/security/selinux/interfaces/policycoreutils/include/",
+      ]
+      deps += [
+        "//base/security/selinux:libload_policy",
+        "//base/security/selinux:librestorecon",
+        "//third_party/selinux:libselinux",
+      ]
+      cflags += [ "-DWITH_SELINUX" ]
     }
 
     if (disable_init_two_stages) {
