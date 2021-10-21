@@ -280,12 +280,7 @@ static void DoMountFstabFile(const struct CmdArgs *ctx, const char *cmdContent)
 {
     UNUSED(cmdContent);
     INIT_LOGI("Mount partitions from fstab file \" %s \"", ctx->argv[0]);
-    int rc = MountAllWithFstabFile(ctx->argv[0], 0);
-    if (rc < 0) {
-        INIT_LOGE("Run command mount_fstab failed");
-    } else {
-        INIT_LOGI("Mount partitions from fstab done");
-    }
+    (void)MountAllWithFstabFile(ctx->argv[0], 0);
 }
 
 static void DoUmountFstabFile(const struct CmdArgs *ctx, const char *cmdContent)

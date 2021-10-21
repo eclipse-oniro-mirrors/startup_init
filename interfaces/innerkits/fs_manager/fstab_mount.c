@@ -178,7 +178,7 @@ static int Mount(const char *source, const char *target, const char *fsType,
         }
     }
     errno = 0;
-    while ((rc = mount(source, target, fsType, flags, data) != 0)) {
+    while ((rc = mount(source, target, fsType, flags, data)) != 0) {
         if (errno == EAGAIN) {
             printf("[fs_manager][warning] Mount %s to %s failed. try again", source, target);
             continue;
@@ -216,9 +216,9 @@ int MountOneItem(FstabItem *item)
 
 int CheckRequiredAndMount(FstabItem *item, bool required)
 {
-    int rc = -1;
+    int rc = 0;
     if (item == NULL) {
-        return rc;
+        return -1;
     }
     if (required) { // Mount partition during first startup.
         if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
@@ -247,6 +247,9 @@ int MountAllWithFstabFile(const char *fstabFile, bool required)
     int rc = -1;
     for (item = fstab->head; item != NULL; item = item->next) {
         rc = CheckRequiredAndMount(item, required);
+        if (required && (rc < 0)) { // Init fail to mount in the first stage and exit directly.
+            break;
+        }
     }
     ReleaseFstab(fstab);
     fstab = NULL;
