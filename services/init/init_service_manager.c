@@ -27,6 +27,7 @@
 #include "init.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
+#include "init_service_file.h"
 #include "init_service_socket.h"
 #include "init_utils.h"
 #include "securec.h"
@@ -131,6 +132,20 @@ static Service *AddService(void)
     return service;
 }
 
+static void FreeServiceFile(ServiceFile *fileOpt)
+{
+    while (fileOpt != NULL) {
+        ServiceFile *tmp = fileOpt;
+        if (tmp->fd >= 0) {
+            close(tmp->fd);
+            tmp->fd = -1;
+        }
+        fileOpt = fileOpt->next;
+        free(tmp);
+    }
+    return;
+}
+
 static void ReleaseService(Service *service)
 {
     if (service == NULL) {
@@ -150,6 +165,7 @@ static void ReleaseService(Service *service)
     }
     service->servPerm.gIDCnt = 0;
     FreeServiceSocket(service->socketCfg);
+    FreeServiceFile(service->fileCfg);
 
     if (!ListEmpty(service->node)) {
         ListRemove(&service->node);
@@ -331,6 +347,7 @@ static int AddServiceSocket(cJSON *json, Service *service)
     if (strncmp(opt[SERVICE_SOCK_SETOPT], "passcred", strlen(opt[SERVICE_SOCK_SETOPT])) == 0) {
         sockopt->passcred = true;
     }
+    sockopt->sockFd = -1;
     sockopt->next = NULL;
     if (service->socketCfg == NULL) {
         service->socketCfg = sockopt;
@@ -351,6 +368,75 @@ static int ParseServiceSocket(const cJSON *curArrItem, Service *curServ)
     for (int i = 0; i < sockCnt; ++i) {
         cJSON *sockJ = cJSON_GetArrayItem(filedJ, i);
         ret = AddServiceSocket(sockJ, curServ);
+        if (ret != 0) {
+            break;
+        }
+    }
+    return ret;
+}
+
+static int AddServiceFile(cJSON *json, Service *service)
+{
+    if (!cJSON_IsString(json) || !cJSON_GetStringValue(json)) {
+        return SERVICE_FAILURE;
+    }
+    char *fileStr = cJSON_GetStringValue(json);
+    char *opt[FILE_OPT_NUMS] = {
+        NULL,
+    };
+    int num = SplitString(fileStr, " ", opt, FILE_OPT_NUMS);
+    if (num != FILE_OPT_NUMS) {
+        return SERVICE_FAILURE;
+    }
+    if (opt[SERVICE_FILE_NAME] == NULL || opt[SERVICE_FILE_FLAGS] == NULL || opt[SERVICE_FILE_PERM] == NULL ||
+            opt[SERVICE_FILE_UID] == NULL || opt[SERVICE_FILE_GID] == NULL) {
+        INIT_LOGE("Invalid file opt");
+        return SERVICE_FAILURE;
+    }
+    ServiceFile *fileOpt = (ServiceFile *)calloc(1, sizeof(ServiceFile) + strlen(opt[SERVICE_FILE_NAME]) + 1);
+    INIT_INFO_CHECK(fileOpt != NULL, return SERVICE_FAILURE, "Failed to calloc for file %s", opt[SERVICE_FILE_NAME]);
+    int ret = strcpy_s(fileOpt->fileName, strlen(opt[SERVICE_FILE_NAME]) + 1, opt[SERVICE_FILE_NAME]);
+    INIT_INFO_CHECK(ret == 0, free(fileOpt);
+        return SERVICE_FAILURE, "Failed to copy file name %s", opt[SERVICE_FILE_NAME]);
+    if (strcmp(opt[SERVICE_FILE_FLAGS], "rd") == 0) {
+        fileOpt->flags = O_RDONLY;
+    } else if (strcmp(opt[SERVICE_FILE_FLAGS], "wd") == 0) {
+        fileOpt->flags = O_WRONLY;
+    } else if (strcmp(opt[SERVICE_FILE_FLAGS], "rw") == 0) {
+        fileOpt->flags = O_RDWR;
+    } else {
+        INIT_LOGE("Failed file flags %s", opt[SERVICE_FILE_FLAGS]);
+        return SERVICE_FAILURE;
+    }
+    fileOpt->perm = strtoul(opt[SERVICE_FILE_PERM], 0, OCTAL_BASE);
+    fileOpt->uid = DecodeUid(opt[SERVICE_FILE_UID]);
+    fileOpt->gid = DecodeUid(opt[SERVICE_FILE_GID]);
+    if (fileOpt->uid == (uid_t)-1 || fileOpt->gid == (gid_t)-1) {
+        free(fileOpt);
+        INIT_LOGE("Invalid uid %d or gid %d", fileOpt->uid, fileOpt->gid);
+        return SERVICE_FAILURE;
+    }
+    fileOpt->fd = -1;
+    fileOpt->next = NULL;
+    if (service->fileCfg == NULL) {
+        service->fileCfg = fileOpt;
+    } else {
+        fileOpt->next = service->fileCfg->next;
+        service->fileCfg->next = fileOpt;
+    }
+    return SERVICE_SUCCESS;
+}
+
+static int ParseServiceFile(const cJSON *curArrItem, Service *curServ)
+{
+    int fileCnt = 0;
+    cJSON *filedJ = GetArrayItem(curArrItem, &fileCnt, "file");
+    INIT_CHECK(filedJ != NULL && fileCnt > 0, return SERVICE_FAILURE);
+    int ret = 0;
+    curServ->fileCfg = NULL;
+    for (int i = 0; i < fileCnt; ++i) {
+        cJSON *fileJ = cJSON_GetArrayItem(filedJ, i);
+        ret = AddServiceFile(fileJ, curServ);
         if (ret != 0) {
             break;
         }
@@ -402,7 +488,7 @@ static int CheckServiceKeyName(const cJSON *curService)
 {
     char *cfgServiceKeyList[] = {
         "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
-        "writepid", "critical", "socket", "console", "dynamic",
+        "writepid", "critical", "socket", "console", "dynamic", "file",
 #ifdef WITH_SELINUX
         SECON_STR_IN_CFG,
 #endif // WITH_SELINUX
@@ -512,10 +598,13 @@ void ParseAllServices(const cJSON *fileRoot)
             ReleaseService(service);
             continue;
         }
-        ret = ParseServiceSocket(curItem, service);
-        if (ret != SERVICE_SUCCESS) {
+        if (ParseServiceSocket(curItem, service) != SERVICE_SUCCESS) {
             FreeServiceSocket(service->socketCfg);
             service->socketCfg = NULL;
+        }
+        if (ParseServiceFile(curItem, service) != SERVICE_SUCCESS) {
+            FreeServiceFile(service->fileCfg);
+            service->fileCfg = NULL;
         }
         ret = GetCmdLinesFromJson(cJSON_GetObjectItem(curItem, "onrestart"), &service->restartArg);
         if (ret != SERVICE_SUCCESS) {

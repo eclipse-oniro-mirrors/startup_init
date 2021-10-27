@@ -18,6 +18,7 @@
 
 #include "cJSON.h"
 #include "init_cmds.h"
+#include "init_service_file.h"
 #include "init_service_socket.h"
 #ifdef WITH_SELINUX
 #   include "init_selinux_param.h"
@@ -84,6 +85,7 @@ typedef struct {
     ServiceArgs writePidArgs;
     CmdLines *restartArg;
     ServiceSocket *socketCfg;
+    ServiceFile *fileCfg;
 } Service;
 
 int ServiceStart(Service *service);

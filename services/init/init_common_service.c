@@ -213,6 +213,7 @@ int ServiceStart(Service *service)
             INIT_LOGE("service %s exit! create socket failed!", service->name);
             _exit(PROCESS_EXIT_CODE);
         }
+        CreateServiceFile(service->fileCfg);
         if (service->attribute & SERVICE_ATTR_CONSOLE) {
             OpenConsole();
         }
@@ -248,6 +249,7 @@ int ServiceStop(Service *service)
         return SERVICE_SUCCESS;
     }
     CloseServiceSocket(service->socketCfg);
+    CloseServiceFile(service->fileCfg);
     if (kill(service->pid, SIGKILL) != 0) {
         INIT_LOGE("stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
         return SERVICE_FAILURE;
@@ -303,6 +305,7 @@ void ServiceReap(Service *service)
     }
 
     CloseServiceSocket(service->socketCfg);
+    CloseServiceFile(service->fileCfg);
     // stopped by system-init itself, no need to restart even if it is not one-shot service
     if (service->attribute & SERVICE_ATTR_NEED_STOP) {
         service->attribute &= (~SERVICE_ATTR_NEED_STOP);
