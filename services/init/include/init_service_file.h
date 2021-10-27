@@ -14,7 +14,6 @@
  */
 #ifndef INIT_SERVICE_FILE_
 #define INIT_SERVICE_FILE_
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>

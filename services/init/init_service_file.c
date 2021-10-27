@@ -35,7 +35,7 @@ static int CreateFile(ServiceFile *file)
 {
     INIT_CHECK(file != NULL && file->fileName != NULL, return -1);
     char path[PATH_MAX] = {0};
-    if (realpath(file->fileName, path) == NULL ) {
+    if (realpath(file->fileName, path) == NULL) {
         INIT_LOGE("Failed realpath err=%d", errno);
     }
     INIT_LOGI("File path =%s . file flags =%d, file perm =%u ", path, file->flags, file->perm);
