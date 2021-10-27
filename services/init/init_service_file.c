@@ -35,20 +35,8 @@ static int CreateFile(ServiceFile *file)
 {
     INIT_CHECK(file != NULL && file->fileName != NULL, return -1);
     char path[PATH_MAX] = {0};
-    char *realPath = GetRealPath(file->fileName);
-    if (realPath == NULL && errno == ENOENT) {
-        if (strncpy_s(path, strlen(file->fileName) + 1, file->fileName, strlen(file->fileName)) != 0) {
-            return -1;
-        }
-    } else if (realPath != NULL) {
-        if (strncpy_s(path, strlen(realPath) + 1, realPath, strlen(realPath)) != 0) {
-            free(realPath);
-            return -1;
-        }
-        free(realPath);
-    } else {
-        INIT_LOGE("GetRealPath failed err=%d", errno);
-        return -1;
+    if (realpath(file->fileName, path) == NULL ) {
+        INIT_LOGE("Failed realpath err=%d", errno);
     }
     INIT_LOGI("File path =%s . file flags =%d, file perm =%u ", path, file->flags, file->perm);
     if (file->fd >= 0) {

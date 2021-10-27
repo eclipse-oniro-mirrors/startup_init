@@ -33,23 +33,13 @@ int GetControlFile(const char *pathName)
     if (pathName == NULL) {
         return -1;
     }
-    char *name = (char *)calloc(1, strlen(pathName) + 1);
-    INIT_CHECK(name != NULL, return -1);
-    if (strncpy_s(name, strlen(pathName) + 1, pathName, strlen(pathName)) < 0) {
-        INIT_LOGE("Failed strncpy_s err=%d", errno);
-        free(name);
-        return -1;
-    }
-    if (StringReplaceChr(name, '/', '_') < 0) {
-        free(name);
-        return -1;
-    }
     char path[PATH_MAX] = { 0 };
-    if (snprintf_s(path, sizeof(path), sizeof(path) - 1, OHOS_FILE_ENV_PREFIX"%s", name) == -1) {
-        free(name);
+    if (snprintf_s(path, sizeof(path), sizeof(path) - 1, OHOS_FILE_ENV_PREFIX "%s", pathName) == -1) {
         return -1;
     }
-    free(name);
+    if (StringReplaceChr(path, '/', '_') < 0) {
+        return -1;
+    }
     INIT_LOGI("Environment path is %s ", path);
     const char *val = getenv(path);
     if (val == NULL) {
