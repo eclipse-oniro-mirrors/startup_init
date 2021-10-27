@@ -63,24 +63,13 @@ static int CreateFile(ServiceFile *file)
 static int SetFileEnv(int fd, const char *pathName)
 {
     INIT_ERROR_CHECK(pathName != NULL, return -1, "Invalid fileName");
-    char *name = (char *)calloc(1, strlen(pathName) + 1);
-    INIT_CHECK(name != NULL, return -1);
-    if (strncpy_s(name, strlen(pathName) + 1, pathName, strlen(pathName)) < 0) {
-        INIT_LOGE("Failed strncpy_s err=%d", errno);
-        free(name);
-        return -1;
-    }
-    if (StringReplaceChr(name, '/', '_') < 0) {
-        free(name);
-        return -1;
-    }
-
     char pubName[PATH_MAX] = { 0 };
-    if (snprintf_s(pubName, sizeof(pubName), sizeof(pubName) - 1, HOS_FILE_ENV_PREFIX "%s", name) < 0) {
-        free(name);
+    if (snprintf_s(pubName, sizeof(pubName), sizeof(pubName) - 1, HOS_FILE_ENV_PREFIX "%s", pathName) < 0) {
         return -1;
     }
-    free(name);
+    if (StringReplaceChr(pubName, '/', '_') < 0) {
+        return -1;
+    }
     char val[MAX_FILE_FD_LEN] = { 0 };
     if (snprintf_s(val, sizeof(val), sizeof(val) - 1, "%d", fd) < 0) {
         return -1;
