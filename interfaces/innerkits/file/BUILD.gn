@@ -13,8 +13,7 @@
 
 import("//build/ohos.gni")
 ohos_static_library("libfile") {
-  sources =
-      [ "//base/startup/init_lite/interfaces/innerkits/file/init_file.c" ]
+  sources = [ "//base/startup/init_lite/interfaces/innerkits/file/init_file.c" ]
 
   include_dirs = [
     "//base/startup/init_lite/interfaces/innerkits/include",

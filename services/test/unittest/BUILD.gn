@@ -32,17 +32,17 @@ config("utest_config") {
 ohos_unittest("init_ut") {
   module_out_path = "startup/init"
   sources = [
+    "//base/startup/init_lite/interfaces/innerkits/file/init_file.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab_mount.c",
-    "//base/startup/init_lite/interfaces/innerkits/file/init_file.c",
     "//base/startup/init_lite/services/init/adapter/init_adapter.c",
     "//base/startup/init_lite/services/init/init_capability.c",
     "//base/startup/init_lite/services/init/init_common_cmds.c",
     "//base/startup/init_lite/services/init/init_common_service.c",
     "//base/startup/init_lite/services/init/init_config.c",
+    "//base/startup/init_lite/services/init/init_service_file.c",
     "//base/startup/init_lite/services/init/init_service_manager.c",
     "//base/startup/init_lite/services/init/init_service_socket.c",
-    "//base/startup/init_lite/services/init/init_service_file.c",
     "//base/startup/init_lite/services/init/standard/device.c",
     "//base/startup/init_lite/services/init/standard/init.c",
     "//base/startup/init_lite/services/init/standard/init_cmds.c",
