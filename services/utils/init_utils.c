@@ -372,3 +372,17 @@ int InUpdaterMode(void)
         return 0;
     }
 }
+
+int StringReplaceChr(char *strl, char oldChr, char newChr)
+{
+    INIT_ERROR_CHECK(strl != NULL, return -1, "Invalid parament");
+    char *p = strl;
+    while (*p != '\0') {
+        if (*p == oldChr) {
+            *p = newChr;
+        }
+        p++;
+    }
+    INIT_LOGD("strl is %s", strl);
+    return 0;
+}

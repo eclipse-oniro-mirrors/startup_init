@@ -43,6 +43,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/init/init_common_cmds.c",
       "//base/startup/init_lite/services/init/init_common_service.c",
       "//base/startup/init_lite/services/init/init_config.c",
+      "//base/startup/init_lite/services/init/init_service_file.c",
       "//base/startup/init_lite/services/init/init_service_manager.c",
       "//base/startup/init_lite/services/init/init_service_socket.c",
       "//base/startup/init_lite/services/init/lite/init.c",
