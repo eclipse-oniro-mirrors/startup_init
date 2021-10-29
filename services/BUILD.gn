@@ -150,13 +150,14 @@ if (defined(ohos_lite)) {
       cflags += [ "-DWITH_SELINUX" ]
     }
 
-    if (disable_init_two_stages) {
+    if (!enable_ramdisk) {
       defines = [ "DISABLE_INIT_TWO_STAGES" ]
     }
 
     install_images = [
       "system",
       "updater",
+      "ramdisk",
     ]
     install_enable = true
     part_name = "init"
@@ -184,7 +185,7 @@ if (defined(ohos_lite)) {
 
   # init etc files group
   ohos_prebuilt_etc("init.cfg") {
-    if (disable_init_two_stages) {
+    if (!enable_ramdisk) {
       source =
           "//base/startup/init_lite/services/etc/init.without_two_stages.cfg"
     } else {
