@@ -10,8 +10,51 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+if (defined(ohos_lite)) {
+  if (ohos_kernel_type == "linux") {
+    executable("ueventd_linux") {
+      sources = [
+        "//base/startup/init_lite/services/utils/init_utils.c",
+        "//base/startup/init_lite/services/utils/list.c",
+        "//base/startup/init_lite/ueventd/ueventd.c",
+        "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
+        "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
+        "//base/startup/init_lite/ueventd/ueventd_main.c",
+        "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
+        "//base/startup/init_lite/ueventd/ueventd_socket.c",
+      ]
 
-if (!defined(ohos_lite)) {
+      defines = [ "__MUSL__" ]
+      defines += [ "_GNU_SOURCE" ]
+
+      include_dirs = [
+        ".",
+        "//third_party/bounds_checking_function/include",
+        "//base/startup/init_lite/services/log",
+        "//base/startup/init_lite/services/include",
+        "//base/startup/init_lite/services/utils",
+        "//kernel/linux-4.19/include/uapi",
+      ]
+
+      deps = [
+        "//base/startup/init_lite/services/log:init_log",
+        "//third_party/bounds_checking_function:libsec_static",
+      ]
+    }
+    copy("ueventd.config") {
+      sources = [ "etc/ueventd_l1.config" ]
+      outputs = [ "$root_out_dir/etc/ueventd.config" ]
+    }
+  }
+
+  group("ueventd") {
+    if (ohos_kernel_type == "linux") {
+      deps = [ ":ueventd_linux" ]
+    } else {
+      deps = []
+    }
+  }
+} else {
   import("//build/ohos.gni")
 
   ohos_executable("ueventd") {
