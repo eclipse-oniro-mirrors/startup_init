@@ -39,6 +39,25 @@ void SetInitLogLevel(InitLogLevel logLevel)
 }
 
 #ifdef OHOS_LITE
+static LogLevel ConvertToHiLog(InitLogLevel level)
+{
+     switch (level) {
+        case INIT_DEBUG:
+            return INIT_DEBUG;
+        case INIT_INFO:
+            return INIT_INFO;
+        case INIT_WARN:
+            return INIT_WARN;
+        case INIT_ERROR:
+            return INIT_ERROR;
+        case INIT_FATAL:
+            return INIT_FATAL;
+        // Unexpected log level, set level as lowest
+        default:
+            return INIT_DEBUG;
+    }
+}
+
 void InitToHiLog(InitLogLevel logLevel, const char *fmt, ...)
 {
     if (logLevel < g_logLevel) {
@@ -52,7 +71,7 @@ void InitToHiLog(InitLogLevel logLevel, const char *fmt, ...)
         va_end(list);
         return;
     }
-    (void)HiLogPrint(LOG_CORE, logLevel, LOG_DOMAIN, INIT_LOG_TAG, "%{public}s", tmpFmt);
+    (void)HiLogPrint(LOG_CORE, ConvertToHiLog(logLevel), LOG_DOMAIN, INIT_LOG_TAG, "%{public}s", tmpFmt);
     va_end(list);
     return;
 }
