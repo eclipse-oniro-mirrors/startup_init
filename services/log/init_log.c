@@ -43,18 +43,18 @@ static LogLevel ConvertToHiLog(InitLogLevel level)
 {
      switch (level) {
         case INIT_DEBUG:
-            return INIT_DEBUG;
+            return LOG_DEBUG;
         case INIT_INFO:
-            return INIT_INFO;
+            return LOG_INFO;
         case INIT_WARN:
-            return INIT_WARN;
+            return LOG_WARN;
         case INIT_ERROR:
-            return INIT_ERROR;
+            return LOG_ERROR;
         case INIT_FATAL:
-            return INIT_FATAL;
+            return LOG_FATAL;
         // Unexpected log level, set level as lowest
         default:
-            return INIT_DEBUG;
+            return LOG_DEBUG;
     }
 }
 
