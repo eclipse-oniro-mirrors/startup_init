@@ -61,4 +61,7 @@ typedef enum SUBYSTEM {
 } SUBSYSTEMTYPE;
 
 const char *ActionString(ACTION action);
+void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent);
+void RetriggerUevent(int sockFd);
+void ProcessUevent(int sockFd);
 #endif // BASE_STARTUP_INITLITE_UEVENTD_H

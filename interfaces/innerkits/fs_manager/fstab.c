@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "fs_manager/fs_manager.h"
+#include "init_log.h"
 #include "init_utils.h"
 #include "securec.h"
 
@@ -52,18 +53,12 @@ unsigned int ConvertFlags(char *flagBuffer)
         {"required", FS_MANAGER_REQUIRED},
     };
 
-    if (flagBuffer == NULL || *flagBuffer == '\0') {
-        // No valid flags.
-        return 0;
-    }
+    INIT_CHECK_RETURN_VALUE(flagBuffer != NULL && *flagBuffer != '\0', 0); // No valid flags.
     int flagCount = 0;
     unsigned int flags = 0;
     const int maxCount = 3;
     char **vector = SplitStringExt(flagBuffer, ",", &flagCount, maxCount);
-    if (vector == NULL || flagCount == 0) {
-        return 0;
-    }
-
+    INIT_CHECK_RETURN_VALUE(vector != NULL && flagCount != 0, 0);
     for (size_t i = 0; i < ARRAY_LENGTH(fsFlags); i++) {
         for (int j = 0; j < flagCount; j++) {
             if (strcmp(fsFlags[i].name, vector[j]) == 0) {
@@ -131,9 +126,7 @@ void ReleaseFstab(Fstab *fstab)
 
 static int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts)
 {
-    if (str == NULL || fstab == NULL) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(str != NULL && fstab != NULL, -1);
     const char *separator = " \t";
     char *rest = NULL;
     FstabItem *item = NULL;
@@ -268,7 +261,7 @@ FstabItem *FindFstabItemForPath(Fstab fstab, const char *path)
 {
     FstabItem *item = NULL;
 
-    if (path == NULL) {
+    if (path == NULL || *path == '\0') {
         return NULL;
     }
 
@@ -345,11 +338,7 @@ static unsigned long ParseDefaultMountFlag(const char *str)
 unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpecificDataSize)
 {
     unsigned long flags = 0;
-
-    if (mountFlag == NULL || fsSpecificData == NULL) {
-        return 0;
-    }
-
+    INIT_CHECK_RETURN_VALUE(mountFlag != NULL && fsSpecificData != NULL, 0);
     int flagCount = 0;
     // Why max count of mount flags is 15?
     // There are lots for mount flags defined in sys/mount.h

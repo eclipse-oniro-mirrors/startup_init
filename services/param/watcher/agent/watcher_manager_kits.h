@@ -36,6 +36,7 @@ public:
     static WatcherManagerKits &GetInstance();
     int32_t AddWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context);
     int32_t DelWatcher(const std::string &keyPrefix);
+    void ReAddWatcher();
 #ifndef STARTUP_INIT_TEST
 private:
 #endif

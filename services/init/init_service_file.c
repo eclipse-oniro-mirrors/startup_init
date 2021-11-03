@@ -37,6 +37,8 @@ static int CreateFile(ServiceFile *file)
     char path[PATH_MAX] = {0};
     if (realpath(file->fileName, path) == NULL) {
         INIT_LOGE("Failed realpath err=%d", errno);
+        INIT_ERROR_CHECK(strncpy_s(path, strlen(file->fileName) + 1, file->fileName, strlen(file->fileName)) >= 0,
+            return -1, "Failed strncpy_s err=%d", errno);
     }
     INIT_LOGI("File path =%s . file flags =%d, file perm =%u ", path, file->flags, file->perm);
     if (file->fd >= 0) {
@@ -44,18 +46,11 @@ static int CreateFile(ServiceFile *file)
         file->fd = -1;
     }
     int fd = open(path, file->flags | O_CREAT, file->perm);
-    if (fd < 0) {
-        INIT_LOGE("Failed open %s, err=%d ", path, errno);
-        return -1;
-    }
+    INIT_ERROR_CHECK(fd >= 0, return -1, "Failed open %s, err=%d ", path, errno);
     close(fd);
     fd = -1;
-    if (chmod(path, file->perm) < 0) {
-        INIT_LOGE("Failed chmod err=%d", errno);
-    }
-    if (chown(path, file->uid, file->gid) < 0) {
-        INIT_LOGE("Failed chown err=%d", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(chmod(path, file->perm) >= 0, "Failed chmod err=%d", errno);
+    INIT_CHECK_ONLY_ELOG(chown(path, file->uid, file->gid) >= 0, "Failed chown err=%d", errno);
     file->fd = open(path, file->flags);
     return file->fd;
 }
@@ -64,22 +59,15 @@ static int SetFileEnv(int fd, const char *pathName)
 {
     INIT_ERROR_CHECK(pathName != NULL, return -1, "Invalid fileName");
     char pubName[PATH_MAX] = { 0 };
-    if (snprintf_s(pubName, sizeof(pubName), sizeof(pubName) - 1, HOS_FILE_ENV_PREFIX "%s", pathName) < 0) {
-        return -1;
-    }
-    if (StringReplaceChr(pubName, '/', '_') < 0) {
-        return -1;
-    }
+    INIT_ERROR_CHECK(snprintf_s(pubName, sizeof(pubName), sizeof(pubName) - 1,
+        HOS_FILE_ENV_PREFIX "%s", pathName) >= 0, return -1, "Failed snprintf_s err=%d", errno);
+    INIT_ERROR_CHECK(StringReplaceChr(pubName, '/', '_') >= 0, return -1, "Failed StringReplaceChr");
     char val[MAX_FILE_FD_LEN] = { 0 };
-    if (snprintf_s(val, sizeof(val), sizeof(val) - 1, "%d", fd) < 0) {
-        return -1;
-    }
+    INIT_ERROR_CHECK(snprintf_s(val, sizeof(val), sizeof(val) - 1, "%d", fd) >= 0, return -1,
+        "Failed snprintf_s err=%d", errno);
     INIT_LOGE("Set file env pubName =%s, val =%s.", pubName, val);
     int ret = setenv(pubName, val, 1);
-    if (ret < 0) {
-        INIT_LOGE("Failed setenv err=%d ", errno);
-        return -1;
-    }
+    INIT_ERROR_CHECK(ret >= 0, return -1, "Failed setenv err=%d ", errno);
     fcntl(fd, F_SETFD, 0);
     return 0;
 }
@@ -96,9 +84,7 @@ void CreateServiceFile(ServiceFile *fileOpt)
             continue;
         }
         int ret = SetFileEnv(fd, tmpFile->fileName);
-        if (ret < 0) {
-            INIT_LOGE("Failed Set File Env");
-        }
+        INIT_CHECK_ONLY_ELOG(ret >= 0, "Failed Set File Env");
         tmpFile = tmpFile->next;
     }
     return;

@@ -65,7 +65,7 @@ struct CmdTable {
     char name[MAX_CMD_NAME_LEN];
     unsigned char minArg;
     unsigned char maxArg;
-    void (*DoFuncion)(const struct CmdArgs *ctx, const char *cmdContent);
+    void (*DoFuncion)(const struct CmdArgs *ctx);
 };
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen);
@@ -80,6 +80,7 @@ int GetCmdLinesFromJson(const cJSON *root, CmdLines **cmdLines);
 const struct CmdTable *GetCmdByName(const char *name);
 void ExecReboot(const char *value);
 char *BuildStringFromCmdArg(const struct CmdArgs *ctx, int startIndex);
+void ExecCmd(const struct CmdTable *cmd, const char *cmdContent);
 #ifdef __cplusplus
 #if __cplusplus
 }

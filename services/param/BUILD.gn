@@ -161,6 +161,7 @@ ohos_shared_library("param_watcheragent") {
 
 ohos_shared_library("param_watcher") {
   sources = [
+    "//base/startup/init_lite/services/utils/list.c",
     "watcher/proxy/watcher_manager.cpp",
     "watcher/proxy/watcher_manager_stub.cpp",
     "watcher/proxy/watcher_proxy.cpp",
@@ -184,7 +185,10 @@ ohos_shared_library("param_watcher") {
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
   ]
 
-  defines = [ "INIT_AGENT" ]
+  defines = [
+    "INIT_AGENT",
+    "ENABLE_HILOG",
+  ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",

@@ -23,6 +23,7 @@
 
 #include "iremote_stub.h"
 #include "iwatcher.h"
+#include "list.h"
 #include "message_parcel.h"
 #include "param_utils.h"
 #include "parcel.h"
@@ -36,20 +37,55 @@ public:
     DECLARE_SYSTEM_ABILITY(WatcherManager);
     DISALLOW_COPY_AND_MOVE(WatcherManager);
     explicit WatcherManager(int32_t systemAbilityId, bool runOnCreate = true)
-        : SystemAbility(systemAbilityId, runOnCreate) {}
-    ~WatcherManager() override
+        : SystemAbility(systemAbilityId, runOnCreate)
     {
-        watcherGroups_.clear();
-        groupMap_.clear();
+    }
+    ~WatcherManager() override;
+
+    class ParamWatcher;
+    class WatcherGroup;
+    using ParamWatcherPtr = std::shared_ptr<WatcherManager::ParamWatcher>;
+    using WatcherGroupPtr = std::shared_ptr<WatcherManager::WatcherGroup>;
+
+    // For death event procession
+    class DeathRecipient final : public IRemoteObject::DeathRecipient {
+    public:
+        explicit DeathRecipient(WatcherManager *manager) : manager_(manager) {}
+        ~DeathRecipient() final = default;
+        DISALLOW_COPY_AND_MOVE(DeathRecipient);
+        void OnRemoteDied(const wptr<IRemoteObject> &remote) final;
+    private:
+        WatcherManager *manager_;
     };
+    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient()
+    {
+        return deathRecipient_;
+    }
 
     class ParamWatcher {
     public:
-        ParamWatcher(uint32_t watcherId, const sptr<IWatcher> &watcher) : watcherId_(watcherId), watcher_(watcher) {}
+        ParamWatcher(uint32_t watcherId, const sptr<IWatcher> &watcher, const WatcherGroupPtr &group)
+            : watcherId_(watcherId), watcher_(watcher), group_(group)
+        {
+            ListInit(&groupNode_);
+        }
         ~ParamWatcher() = default;
+
         uint32_t GetWatcherId()
         {
             return watcherId_;
+        }
+        WatcherGroupPtr GetWatcherGroup()
+        {
+            return group_;
+        }
+        ListNode *GetGroupNode()
+        {
+            return &groupNode_;
+        }
+        sptr<IWatcher> GetRemoteWatcher()
+        {
+            return watcher_;
         }
         void ProcessParameterChange(const std::string &name, const std::string &value)
         {
@@ -57,18 +93,21 @@ public:
             watcher_->OnParamerterChange(name, value);
 #endif
         }
+        ListNode groupNode_ { };
     private:
         uint32_t watcherId_ = { 0 };
         sptr<IWatcher> watcher_;
+        WatcherGroupPtr group_ { nullptr };
     };
-    using ParamWatcherPtr = std::shared_ptr<WatcherManager::ParamWatcher>;
 
     class WatcherGroup {
     public:
-        WatcherGroup(uint32_t groupId, const std::string &key) : groupId_(groupId), keyPrefix_(key) {}
+        WatcherGroup(uint32_t groupId, const std::string &key) : groupId_(groupId), keyPrefix_(key)
+        {
+            ListInit(&watchers_);
+        }
         ~WatcherGroup() = default;
         void AddWatcher(const ParamWatcherPtr &watcher);
-        void DelWatcher(uint32_t watcherId);
         void ProcessParameterChange(const std::string &name, const std::string &value);
 
         const std::string GetKeyPrefix()
@@ -77,21 +116,28 @@ public:
         }
         bool Emptry()
         {
-            return watchers_.size() == 0;
+            return ListEmpty(watchers_);
         }
         uint32_t GetGroupId()
         {
             return groupId_;
         }
+        ListNode *GetWatchers()
+        {
+            return &watchers_;
+        }
     private:
         uint32_t groupId_;
         std::string keyPrefix_ { };
-        std::map<uint32_t, ParamWatcherPtr> watchers_;
+        ListNode watchers_;
     };
-    using WatcherGroupPtr = std::shared_ptr<WatcherManager::WatcherGroup>;
 
     uint32_t AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher) override;
     int32_t DelWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
+    int32_t DelWatcher(WatcherGroupPtr group, ParamWatcherPtr watcher);
+    ParamWatcherPtr GetWatcher(uint32_t watcherId);
+    ParamWatcherPtr GetWatcher(const wptr<IRemoteObject> &remote);
+
 #ifndef STARTUP_INIT_TEST
 protected:
 #endif
@@ -103,14 +149,17 @@ private:
     void ProcessWatcherMessage(const std::vector<char> &buffer, uint32_t dataSize);
     WatcherGroupPtr GetWatcherGroup(uint32_t groupId);
     WatcherGroupPtr GetWatcherGroup(const std::string &keyPrefix);
-    void AddWatcherGroup(const std::string &keyPrefix, WatcherGroupPtr group);
     void DelWatcherGroup(WatcherGroupPtr group);
+    void AddParamWatcher(const std::string &keyPrefix, WatcherGroupPtr group, ParamWatcherPtr watcher);
+    void DelParamWatcher(ParamWatcherPtr watcher);
     void RunLoop();
     void StartLoop();
     void StopLoop();
     void SendLocalChange(const std::string &keyPrefix, ParamWatcherPtr watcher);
     int SendMessage(WatcherGroupPtr group, int type);
     int GetServerFd(bool retry);
+    int GetWatcherId(uint32_t &watcherId);
+    int GetGroupId(uint32_t &groupId);
 private:
     std::atomic<uint32_t> watcherId_ { 0 };
     std::atomic<uint32_t> groupId_ { 0 };
@@ -121,6 +170,8 @@ private:
     std::atomic<bool> stop_ { false };
     std::map<std::string, uint32_t> groupMap_ {};
     std::map<uint32_t, WatcherGroupPtr> watcherGroups_ {};
+    std::map<uint32_t, ParamWatcherPtr> watchers_ {};
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
 };
 } // namespace init_param
 } // namespace OHOS

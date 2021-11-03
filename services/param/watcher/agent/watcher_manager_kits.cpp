@@ -36,13 +36,20 @@ WatcherManagerKits::~WatcherManagerKits() {}
 void WatcherManagerKits::ResetService(const wptr<IRemoteObject> &remote)
 {
     WATCHER_LOGI("Remote is dead, reset service instance");
-    std::lock_guard<std::mutex> lock(lock_);
-    if (watcherManager_ != nullptr) {
-        sptr<IRemoteObject> object = watcherManager_->AsObject();
-        if ((object != nullptr) && (remote == object)) {
-            object->RemoveDeathRecipient(deathRecipient_);
-            watcherManager_ = nullptr;
+    bool resetService = false;
+    {
+        std::lock_guard<std::mutex> lock(lock_);
+        if (watcherManager_ != nullptr) {
+            sptr<IRemoteObject> object = watcherManager_->AsObject();
+            if ((object != nullptr) && (remote == object)) {
+                object->RemoveDeathRecipient(deathRecipient_);
+                watcherManager_ = nullptr;
+                resetService = true;
+            }
         }
+    }
+    if (resetService) {
+        ReAddWatcher();
     }
 }
 
@@ -93,14 +100,37 @@ void WatcherManagerKits::SetParamWatcher(const std::string &keyPrefix, ParamWatc
     }
 }
 
+void WatcherManagerKits::ReAddWatcher()
+{
+    WATCHER_LOGD("ReAddWatcher ");
+    int count = 0;
+    const int maxRetryCount = 100;
+    const int sleepTime = 100;
+    auto watcherManager = GetService();
+    while (watcherManager == nullptr && count < maxRetryCount) {
+        watcherManager = GetService();
+        usleep(sleepTime);
+        count++;
+    }
+    WATCHER_CHECK(watcherManager != nullptr, return, "Failed to get watcher manager");
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto iter = watchers_.begin(); iter != watchers_.end(); iter++) {
+        if (iter->second == nullptr) {
+            continue;
+        }
+        WATCHER_LOGD("ReAddWatcher keyPrefix %s ", iter->first.c_str());
+        uint32_t watcherId = watcherManager->AddWatcher(iter->first, iter->second);
+        WATCHER_CHECK(watcherId != 0, continue, "Failed to add watcher for %s", iter->first.c_str());
+        iter->second->SetWatcherId(watcherId);
+    }
+}
+
 int32_t WatcherManagerKits::AddWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context)
 {
     WATCHER_LOGI("AddWatcher keyPrefix %s", keyPrefix.c_str());
     ParamWatcherKitPtr watcher = GetParamWatcher(keyPrefix);
-    if (watcher != nullptr) {
-        WATCHER_LOGE("Has been watched by keyPrefix %s", keyPrefix.c_str());
-        return 0;
-    }
+    WATCHER_CHECK(watcher == nullptr, return 0, "Has been watched by keyPrefix %s", keyPrefix.c_str());
+
     watcher = new ParamWatcher(keyPrefix, callback, context);
     WATCHER_CHECK(watcher != nullptr, return -1, "Failed to create watcher for %s", keyPrefix.c_str());
     auto watcherManager = GetService();
@@ -115,10 +145,7 @@ int32_t WatcherManagerKits::AddWatcher(const std::string &keyPrefix, ParameterCh
 int32_t WatcherManagerKits::DelWatcher(const std::string &keyPrefix)
 {
     ParamWatcherKitPtr watcher = GetParamWatcher(keyPrefix);
-    if (watcher == nullptr) {
-        WATCHER_LOGE("Has been watched by keyPrefix %s", keyPrefix.c_str());
-        return 0;
-    }
+    WATCHER_CHECK(watcher != nullptr, return 0, "Can not find watcher for keyPrefix %s", keyPrefix.c_str());
     auto watcherManager = GetService();
     WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to get watcher manager");
     int ret = watcherManager->DelWatcher(keyPrefix, watcher->GetWatcherId());
@@ -140,9 +167,7 @@ void WatcherManagerKits::ParamWatcher::OnParamerterChange(const std::string &nam
 
 int SystemWatchParameter(const char *keyPrefix, ParameterChangePtr callback, void *context)
 {
-    if (keyPrefix == nullptr) {
-        return PARAM_CODE_INVALID_PARAM;
-    }
+    WATCHER_CHECK(keyPrefix != nullptr, return PARAM_CODE_INVALID_PARAM, "Invalid prefix");
     int ret = 0;
     std::string key(keyPrefix);
     if (key.rfind("*") == key.length() - 1) {

@@ -10,22 +10,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import("//build/ohos.gni")
-ohos_static_library("libreboot") {
-  sources =
-      [ "//base/startup/init_lite/interfaces/innerkits/reboot/init_reboot.c" ]
 
-  include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/include/param",
-    "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/log",
-  ]
+service_reboot_sources = [ "//base/startup/init_lite/interfaces/innerkits/reboot/init_reboot_innerkits.c" ]
+service_reboot_include = [
+  "//base/startup/init_lite/interfaces/innerkits/include",
+  "//base/startup/init_lite/services/include/param",
+  "//third_party/bounds_checking_function/include",
+  "//base/startup/init_lite/services/log",
+]
+service_reboot_deps = [
+  "//base/startup/init_lite/services/log:init_log",
+  "//base/startup/init_lite/services/param:param_client",
+  "//third_party/bounds_checking_function:libsec_static",
+]
 
-  deps = [
-    "//base/startup/init_lite/services/log:init_log",
-    "//base/startup/init_lite/services/param:param_client",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
+ohos_static_library("libreboot_static") {
+  sources = service_reboot_sources
+  include_dirs = service_reboot_include
+  deps = service_reboot_deps
+}
+
+ohos_shared_library("libreboot_shared") {
+  sources = service_reboot_sources
+  include_dirs = service_reboot_include
+  deps = service_reboot_deps
+  part_name = "init"
+  install_images = [ "system" ]
 }

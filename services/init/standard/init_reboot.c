@@ -36,17 +36,12 @@ struct RBMiscUpdateMessage {
 static int RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdateMessage *boot)
 {
     char *realPath = GetRealPath(path);
-    if (realPath == NULL) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(realPath != NULL, -1);
     int ret = 0;
     FILE *fp = fopen(realPath, "rb+");
     if (fp != NULL) {
         size_t writeLen = fwrite(boot, sizeof(struct RBMiscUpdateMessage), 1, fp);
-        if (writeLen != 1) {
-            INIT_LOGE("Failed to write misc for reboot");
-            ret = -1;
-        }
+        INIT_ERROR_CHECK(writeLen == 1, ret = -1, "Failed to write misc for reboot");
     } else {
         ret = -1;
         INIT_LOGE("Failed to open %s", path);
@@ -60,22 +55,17 @@ static int RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdate
 static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage *boot)
 {
     char *realPath = GetRealPath(path);
-    if (realPath == NULL) {
-        return -1;
-    }
-
+    INIT_CHECK_RETURN_VALUE(realPath != NULL, -1);
     int ret = 0;
     FILE *fp = fopen(realPath, "rb");
     if (fp != NULL) {
         size_t readLen = fread(boot, 1, sizeof(struct RBMiscUpdateMessage), fp);
-        if (readLen <= 0) {
-            ret = -1;
-            INIT_LOGE("Failed to read misc for reboot");
-        }
+        INIT_ERROR_CHECK(readLen > 0, ret = -1, "Failed to read misc for reboot");
     } else {
         ret = -1;
         INIT_LOGE("Failed to open %s", path);
     }
+
     free(realPath);
     realPath = NULL;
     (void)fclose(fp);
@@ -89,9 +79,7 @@ static int GetMountStatusForMountPoint(const char *mountPoint)
     size_t n;
     const char *mountFile = "/proc/mounts";
     FILE *fp = fopen(mountFile, "r");
-    if (fp == NULL) {
-        return 1;
-    }
+    INIT_CHECK_RETURN_VALUE(fp != NULL, 1);
 
     while (fgets(buffer, sizeof(buffer) - 1, fp) != NULL) {
         n = strlen(buffer);
@@ -131,10 +119,14 @@ static int CheckAndRebootToUpdater(const char *valueData, const char *cmd, const
         msg.update[MAX_UPDATE_SIZE - 1] = 0;
     }
 
+    ret = -1;
     if (RBMiscWriteUpdaterMessage(miscFile, &msg) == 0) {
-        return reboot(RB_AUTOBOOT);
+        ret = 0;
+#ifndef STARTUP_INIT_TEST
+        ret = reboot(RB_AUTOBOOT);
+#endif
     }
-    return -1;
+    return ret;
 }
 
 static int CheckRebootParam(const char *valueData)
@@ -151,9 +143,7 @@ static int CheckRebootParam(const char *valueData)
             break;
         }
     }
-    if (i >= ARRAY_LENGTH(cmdParams)) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(i < ARRAY_LENGTH(cmdParams), -1);
     return 0;
 }
 
@@ -167,16 +157,12 @@ void ExecReboot(const char *value)
         INIT_LOGE("Reboot value = %s, must started with reboot", value);
         return;
     }
-    if (CheckRebootParam(valueData) != 0) {
-        INIT_LOGE("Invalid arg %s for reboot.", value);
-        return;
-    }
+    INIT_ERROR_CHECK(CheckRebootParam(valueData) == 0, return, "Invalid arg %s for reboot.", value);
 
     StopAllServices(SERVICE_ATTR_INVALID);
     sync();
-    if (GetMountStatusForMountPoint("/vendor") != 0 && umount("/vendor") != 0) {
-        INIT_LOGE("Failed to umount vendor. errno = %d.", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(GetMountStatusForMountPoint("/vendor") == 0 || umount("/vendor") == 0,
+        "Failed to umount vendor. errno = %d.", errno);
     if (GetMountStatusForMountPoint("/data") != 0) {
         if (umount("/data") != 0 && umount2("/data", MNT_FORCE) != 0) {
             INIT_LOGE("Failed umount data. errno = %d.", errno);
@@ -189,9 +175,13 @@ void ExecReboot(const char *value)
     if (valueData == NULL) {
         ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
     } else if (strcmp(valueData, "shutdown") == 0) {
+#ifndef STARTUP_INIT_TEST
         ret = reboot(RB_POWER_OFF);
+#endif
     } else if (strcmp(valueData, "bootloader") == 0) {
-        ret = reboot(RB_POWER_OFF);
+#ifndef STARTUP_INIT_TEST
+            ret = reboot(RB_POWER_OFF);
+#endif
     } else if (strncmp(valueData, "updater", strlen("updater")) == 0) {
         ret = CheckAndRebootToUpdater(valueData, "updater", "updater:", "boot_updater");
     } else if (strncmp(valueData, "flash", strlen("flash")) == 0) {

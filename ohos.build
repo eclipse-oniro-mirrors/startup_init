@@ -10,7 +10,7 @@
         "//base/startup/init_lite/services/cmds/misc:misc_daemon"
       ],
       "test_list": [
-        "//base/startup/init_lite/services/test/unittest:init_test"
+        "//base/startup/init_lite/test/unittest:init_test"
       ]
     }
   }

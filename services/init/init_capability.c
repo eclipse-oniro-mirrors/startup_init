@@ -94,15 +94,11 @@ int GetServiceCaps(const cJSON *curArrItem, Service *service)
     if (filedJ == NULL) {
         return SERVICE_SUCCESS;
     }
-    if (capsCnt > MAX_CAPS_CNT_FOR_ONE_SERVICE) {
-        INIT_LOGE("service=%s, too many caps[cnt %d] for one service", service->name, capsCnt);
-        return SERVICE_FAILURE;
-    }
+    INIT_ERROR_CHECK(capsCnt <= MAX_CAPS_CNT_FOR_ONE_SERVICE, return SERVICE_FAILURE,
+        "service=%s, too many caps[cnt %d] for one service", service->name, capsCnt);
     service->servPerm.caps = (unsigned int *)calloc(1, sizeof(unsigned int) * capsCnt);
-    if (service->servPerm.caps == NULL) {
-        INIT_LOGE("Failed to malloc for service %s", service->name);
-        return SERVICE_FAILURE;
-    }
+    INIT_ERROR_CHECK(service->servPerm.caps != NULL, return SERVICE_FAILURE,
+        "Failed to malloc for service %s", service->name);
     service->servPerm.capsCnt = capsCnt;
     unsigned int caps = FULL_CAP;
     for (int i = 0; i < capsCnt; ++i) { // number form
@@ -117,9 +113,7 @@ int GetServiceCaps(const cJSON *curArrItem, Service *service)
             }
             caps = GetCapByString(capStr);
         }
-        if (caps < 0) {
-            return SERVICE_FAILURE;
-        }
+        INIT_CHECK_RETURN_VALUE(caps >= 0, SERVICE_FAILURE);
         if ((caps > CAP_LAST_CAP) && (caps != (unsigned int)FULL_CAP)) {
             INIT_LOGE("service=%s, caps = %d, error.", service->name, caps);
             return SERVICE_FAILURE;

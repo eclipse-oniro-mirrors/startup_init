@@ -42,7 +42,7 @@ typedef enum {
     ((strncmp((name), "const.", strlen("const.")) == 0) || (strncmp((name), "ro.", strlen("ro.")) == 0))
 #define PARAM_PERSIST_PREFIX "persist."
 
-#define SYS_POWER_CTRL "sys.powerctrl="
+#define SYS_POWER_CTRL "ohos.startup.powerctrl="
 #define OHOS_CTRL_START "ohos.ctl.start="
 #define OHOS_CTRL_STOP "ohos.ctl.stop="
 #define OHOS_SERVICE_CTRL_PREFIX "ohos.servicectrl."
@@ -58,7 +58,6 @@ typedef enum {
 #define PARAM_STORAGE_PATH PARAM_DEFAULT_PATH "/__parameters__/param_storage"
 #define PARAM_PERSIST_SAVE_PATH PARAM_DEFAULT_PATH "/param/persist_parameters"
 #define PARAM_PERSIST_SAVE_TMP_PATH PARAM_DEFAULT_PATH "/param/tmp_persist_parameters"
-#define PARAM_CMD_LINE PARAM_DEFAULT_PATH"/proc/cmdline"
 #else
 #define PARAM_DEFAULT_PATH ""
 #define PARAM_STATIC static
@@ -66,9 +65,9 @@ typedef enum {
 #define PARAM_STORAGE_PATH "/dev/__parameters__/param_storage"
 #define PARAM_PERSIST_SAVE_PATH "/data/parameters/persist_parameters"
 #define PARAM_PERSIST_SAVE_TMP_PATH "/data/parameters/tmp_persist_parameters"
-#define PARAM_CMD_LINE "/proc/cmdline"
 #endif
 
+#define PARAM_CMD_LINE "/proc/cmdline"
 #define GROUP_FILE_PATH "/etc/group"
 #define USER_FILE_PATH "/etc/passwd"
 
@@ -81,13 +80,11 @@ typedef enum {
 #define PARAM_CLEAR_FLAG(node, flag) ((node) &= ~(flag))
 #define PARAM_TEST_FLAG(node, flag) (((node) & (flag)) == (flag))
 
-#ifndef LABEL
-#define LABEL "Parameter"
-#endif
-
-#define PARAM_LOGI(fmt, ...) STARTUP_LOGI(LABEL, fmt, ##__VA_ARGS__)
-#define PARAM_LOGE(fmt, ...) STARTUP_LOGE(LABEL, fmt, ##__VA_ARGS__)
-#define PARAM_LOGD(fmt, ...) STARTUP_LOGD(LABEL, fmt, ##__VA_ARGS__)
+#define PARAN_LOG_FILE "param.log"
+#define PARAN_LABEL "PARAM"
+#define PARAM_LOGI(fmt, ...) STARTUP_LOGI(PARAN_LOG_FILE, PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_LOGE(fmt, ...) STARTUP_LOGE(PARAN_LOG_FILE, PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_LOGD(fmt, ...) STARTUP_LOGD(PARAN_LOG_FILE, PARAN_LABEL, fmt, ##__VA_ARGS__)
 
 #define PARAM_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                \

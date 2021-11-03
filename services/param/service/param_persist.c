@@ -61,7 +61,7 @@ static int SavePersistParam(const WorkSpace *workSpace, const ParamTrieNode *nod
 
 static int BatchSavePersistParam(const WorkSpace *workSpace)
 {
-    PARAM_LOGI("BatchSavePersistParam");
+    PARAM_LOGD("BatchSavePersistParam");
     if (g_persistWorkSpace.persistParamOps.batchSaveBegin == NULL ||
         g_persistWorkSpace.persistParamOps.batchSave == NULL ||
         g_persistWorkSpace.persistParamOps.batchSaveEnd == NULL) {

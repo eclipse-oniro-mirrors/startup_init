@@ -145,10 +145,7 @@ static int WritePid(const Service *service)
     char pidString[maxPidStrLen];
     pid_t childPid = getpid();
     int len = snprintf_s(pidString, maxPidStrLen, maxPidStrLen - 1, "%d", childPid);
-    if (len <= 0) {
-        INIT_LOGE("Failed to format pid for service %s", service->name);
-        return SERVICE_FAILURE;
-    }
+    INIT_ERROR_CHECK(len > 0, return SERVICE_FAILURE, "Failed to format pid for service %s", service->name);
     for (int i = 0; i < service->writePidArgs.count; i++) {
         if (service->writePidArgs.argv[i] == NULL) {
             continue;
@@ -161,9 +158,8 @@ static int WritePid(const Service *service)
             fd = fopen(service->writePidArgs.argv[i], "wb");
         }
         if (fd != NULL) {
-            if ((int)fwrite(pidString, 1, len, fd) != len) {
-                INIT_LOGE("Failed to write %s pid:%s", service->writePidArgs.argv[i], pidString);
-            }
+            INIT_CHECK_ONLY_ELOG((int)fwrite(pidString, 1, len, fd) == len,
+                "Failed to write %s pid:%s", service->writePidArgs.argv[i], pidString);
             (void)fclose(fd);
         } else {
             INIT_LOGE("Failed to open %s.", service->writePidArgs.argv[i]);
@@ -209,24 +205,17 @@ int ServiceStart(Service *service)
     int pid = fork();
     if (pid == 0) {
         int ret = CreateServiceSocket(service->socketCfg);
-        if (ret < 0) {
-            INIT_LOGE("service %s exit! create socket failed!", service->name);
-            _exit(PROCESS_EXIT_CODE);
-        }
+        INIT_ERROR_CHECK(ret >= 0, _exit(PROCESS_EXIT_CODE), "service %s exit! create socket failed!", service->name);
         CreateServiceFile(service->fileCfg);
         if (service->attribute & SERVICE_ATTR_CONSOLE) {
             OpenConsole();
         }
         // permissions
-        if (SetPerms(service) != SERVICE_SUCCESS) {
-            INIT_LOGE("service %s exit! set perms failed! err %d.", service->name, errno);
-            _exit(PROCESS_EXIT_CODE);
-        }
+        INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
+            "service %s exit! set perms failed! err %d.", service->name, errno);
         // write pid
-        if (WritePid(service) != SERVICE_SUCCESS) {
-            INIT_LOGE("service %s exit! write pid failed!", service->name);
-            _exit(PROCESS_EXIT_CODE);
-        }
+        INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
+            "service %s exit! write pid failed!", service->name);
         SetSecon(service);
         ServiceExec(service);
         _exit(PROCESS_EXIT_CODE);
@@ -250,10 +239,8 @@ int ServiceStop(Service *service)
     }
     CloseServiceSocket(service->socketCfg);
     CloseServiceFile(service->fileCfg);
-    if (kill(service->pid, SIGKILL) != 0) {
-        INIT_LOGE("stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
-        return SERVICE_FAILURE;
-    }
+    INIT_ERROR_CHECK(kill(service->pid, SIGKILL) == 0, return SERVICE_FAILURE,
+        "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
     NotifyServiceChange(service->name, "stopping");
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
     return SERVICE_SUCCESS;
@@ -339,9 +326,7 @@ void ServiceReap(Service *service)
     int ret = 0;
     if (service->restartArg != NULL) {
         ret = ExecRestartCmd(service);
-        if (ret != SERVICE_SUCCESS) {
-            INIT_LOGE("Failed to exec restartArg for %s", service->name);
-        }
+        INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "Failed to exec restartArg for %s", service->name);
     }
     ret = ServiceStart(service);
     if (ret != SERVICE_SUCCESS) {

@@ -94,7 +94,7 @@ void DumpAllServices()
 
 static void FreeServiceArg(ServiceArgs *arg)
 {
-    if (arg != NULL) {
+    if (arg == NULL) {
         return;
     }
     for (int i = 0; i < arg->count; ++i) {
@@ -146,7 +146,7 @@ static void FreeServiceFile(ServiceFile *fileOpt)
     return;
 }
 
-static void ReleaseService(Service *service)
+void ReleaseService(Service *service)
 {
     if (service == NULL) {
         return;
@@ -167,10 +167,12 @@ static void ReleaseService(Service *service)
     FreeServiceSocket(service->socketCfg);
     FreeServiceFile(service->fileCfg);
 
+#ifndef STARTUP_INIT_TEST
     if (!ListEmpty(service->node)) {
         ListRemove(&service->node);
         g_serviceSpace.serviceCount--;
     }
+#endif
     free(service);
 }
 
@@ -180,10 +182,8 @@ static int GetStringItem(const cJSON *json, const char *name, char *buffer, int 
     char *fieldStr = cJSON_GetStringValue(cJSON_GetObjectItem(json, name));
     INIT_ERROR_CHECK(fieldStr != NULL, return SERVICE_FAILURE, "Failed to get string for %s", name);
     size_t strLen = strlen(fieldStr);
-    if ((strLen == 0) || (strLen > (size_t)buffLen)) {
-        INIT_LOGE("Invalid str filed %s for %s", fieldStr, name);
-        return SERVICE_FAILURE;
-    }
+    INIT_ERROR_CHECK((strLen != 0) && (strLen <= (size_t)buffLen), return SERVICE_FAILURE,
+        "Invalid str filed %s for %s", fieldStr, name);
     return strcpy_s(buffer, buffLen, fieldStr);
 }
 
@@ -194,9 +194,7 @@ cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrName)
         return NULL;
     }
     *arrSize = cJSON_GetArraySize(arrItem);
-    if (*arrSize <= 0) {
-        return NULL;
-    }
+    INIT_CHECK_RETURN_VALUE(*arrSize > 0, NULL);
     return arrItem;
 }
 
@@ -237,9 +235,7 @@ static int GetUid(cJSON *json, uid_t *uid)
     } else if (cJSON_IsNumber(json)) {
         *uid = (uid_t)cJSON_GetNumberValue(json);
     }
-    if (*uid == (uid_t)(-1)) {
-        return SERVICE_FAILURE;
-    }
+    INIT_CHECK_RETURN_VALUE(*uid != (uid_t)(-1), SERVICE_FAILURE);
     return SERVICE_SUCCESS;
 }
 
@@ -252,10 +248,8 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
     } else {
         gidCount = cJSON_GetArraySize(arrItem);
     }
-    if ((gidCount == 0) || (gidCount > NGROUPS_MAX + 1)) {
-        INIT_LOGE("Invalid gid count %d", gidCount);
-        return SERVICE_FAILURE;
-    }
+    INIT_ERROR_CHECK((gidCount != 0) && (gidCount <= NGROUPS_MAX + 1), return SERVICE_FAILURE,
+        "Invalid gid count %d", gidCount);
     curServ->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t) * gidCount);
     INIT_ERROR_CHECK(curServ->servPerm.gIDArray != NULL, return SERVICE_FAILURE, "Failed to malloc");
     curServ->servPerm.gIDCnt = gidCount;
@@ -287,10 +281,8 @@ static int GetServiceAttr(const cJSON *curArrItem, Service *curServ, const char 
     if (filedJ == NULL) {
         return SERVICE_SUCCESS;
     }
-    if (!cJSON_IsNumber(filedJ)) {
-        INIT_LOGE("%s is null or is not a number, service name is %s", attrName, curServ->name);
-        return SERVICE_FAILURE;
-    }
+    INIT_ERROR_CHECK(cJSON_IsNumber(filedJ), return SERVICE_FAILURE,
+        "%s is null or is not a number, service name is %s", attrName, curServ->name);
 
     int value = (int)cJSON_GetNumberValue(filedJ);
     if (processAttr == NULL) {
@@ -308,14 +300,11 @@ static int AddServiceSocket(cJSON *json, Service *service)
     char *opt[SOCK_OPT_NUMS] = {
         NULL,
     };
-    if (!cJSON_IsString(json) || !cJSON_GetStringValue(json)) {
-        return SERVICE_FAILURE;
-    }
+    INIT_CHECK_RETURN_VALUE(cJSON_IsString(json) && cJSON_GetStringValue(json), SERVICE_FAILURE);
     char *sockStr = cJSON_GetStringValue(json);
     int num = SplitString(sockStr, " ", opt, SOCK_OPT_NUMS);
-    if (num != SOCK_OPT_NUMS) {
-        return SERVICE_FAILURE;
-    }
+    INIT_CHECK_RETURN_VALUE(num == SOCK_OPT_NUMS, SERVICE_FAILURE);
+
     if (opt[SERVICE_SOCK_NAME] == NULL || opt[SERVICE_SOCK_TYPE] == NULL || opt[SERVICE_SOCK_PERM] == NULL ||
         opt[SERVICE_SOCK_UID] == NULL || opt[SERVICE_SOCK_GID] == NULL || opt[SERVICE_SOCK_SETOPT] == NULL) {
         INIT_LOGE("Invalid socket opt");
@@ -452,10 +441,8 @@ static bool IsServiceInMainStrap(Service *curServ)
     };
     unsigned int length = ARRAY_LENGTH(mainServiceList);
     for (unsigned int i = 0; i < length; ++i) {
-        if (strncmp(curServ->name, mainServiceList[i], strlen(mainServiceList[i])) == 0) {
-            INIT_LOGI("%s must be main service", curServ->name);
-            return true;
-        }
+        INIT_INFO_CHECK(strncmp(curServ->name, mainServiceList[i], strlen(mainServiceList[i])) != 0, return true,
+            "%s must be main service", curServ->name);
     }
     return false;
 }
@@ -470,15 +457,11 @@ static int GetDynamicService(const cJSON *curArrItem, Service *curServ)
     INIT_ERROR_CHECK(cJSON_IsBool(item), return SERVICE_FAILURE,
         "Service : %s dynamic value only support bool.", curServ->name);
     bool isDynamic = (bool)cJSON_GetNumberValue(item);
-    if (!isDynamic) {
-        INIT_LOGI("Service : %s dynamic value is false, it will be started with init.", curServ->name);
-        return SERVICE_SUCCESS;
-    }
-
-    if (IsServiceInMainStrap(curServ)) {
-        return SERVICE_SUCCESS;
-    }
+    INIT_INFO_CHECK(isDynamic, return SERVICE_SUCCESS,
+        "Service : %s dynamic value is false, it will be started with init.", curServ->name);
+    INIT_CHECK_RETURN_VALUE(!IsServiceInMainStrap(curServ), SERVICE_SUCCESS);
     INIT_LOGI("%s is dynamic service", curServ->name);
+
     curServ->attribute |= SERVICE_ATTR_DYNAMIC;
     curServ->attribute |= SERVICE_ATTR_ONCE;
     return SERVICE_SUCCESS;
@@ -493,13 +476,9 @@ static int CheckServiceKeyName(const cJSON *curService)
         SECON_STR_IN_CFG,
 #endif // WITH_SELINUX
     };
-    if (curService == NULL) {
-        return SERVICE_FAILURE;
-    }
+    INIT_CHECK_RETURN_VALUE(curService != NULL, SERVICE_FAILURE);
     cJSON *child = curService->child;
-    if (child == NULL) {
-        return SERVICE_FAILURE;
-    }
+    INIT_CHECK_RETURN_VALUE(child != NULL, SERVICE_FAILURE);
     while (child != NULL) {
         int i = 0;
         int keyListSize = ARRAY_LENGTH(cfgServiceKeyList);
@@ -518,11 +497,9 @@ static int CheckServiceKeyName(const cJSON *curService)
     return SERVICE_SUCCESS;
 }
 
-static int ParseOneService(const cJSON *curItem, Service *service)
+int ParseOneService(const cJSON *curItem, Service *service)
 {
-    if (curItem == NULL || service == NULL) {
-        return SERVICE_FAILURE;
-    }
+    INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
     int ret = GetStringItem(curItem, "name", service->name, MAX_SERVICE_NAME);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get service name");
 #ifdef WITH_SELINUX
@@ -596,6 +573,7 @@ void ParseAllServices(const cJSON *fileRoot)
         ret = ParseOneService(curItem, service);
         if (ret != SERVICE_SUCCESS) {
             ReleaseService(service);
+            service = NULL;
             continue;
         }
         if (ParseServiceSocket(curItem, service) != SERVICE_SUCCESS) {
@@ -607,13 +585,7 @@ void ParseAllServices(const cJSON *fileRoot)
             service->fileCfg = NULL;
         }
         ret = GetCmdLinesFromJson(cJSON_GetObjectItem(curItem, "onrestart"), &service->restartArg);
-        if (ret != SERVICE_SUCCESS) {
-            service->restartArg = NULL;
-        }
-        INIT_LOGD("service[%d] name=%s, uid=%d, critical=%d, disabled=%d",
-            i, service->name, service->servPerm.uID,
-            (service->attribute & SERVICE_ATTR_CRITICAL) ? 1 : 0,
-            (service->attribute & SERVICE_ATTR_DISABLED) ? 1 : 0);
+        INIT_CHECK(ret == SERVICE_SUCCESS, service->restartArg = NULL);
     }
 }
 
@@ -675,9 +647,7 @@ Service *GetServiceByName(const char *servName)
     ListNode *node = g_serviceSpace.services.next;
     while (node != &g_serviceSpace.services) {
         Service *service = ListEntry(node, Service, node);
-        if (strcmp(service->name, servName) == 0) {
-            return service;
-        }
+        INIT_CHECK_RETURN_VALUE(strcmp(service->name, servName) != 0, service);
         node = node->next;
     }
     return NULL;

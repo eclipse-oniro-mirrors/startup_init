@@ -51,8 +51,6 @@ public:
 };
 
 using WatcherManagerPtr = WatcherManager *;
-WatcherManagerPtr g_watcherManager = nullptr;
-
 class WatcherProxyUnitTest : public ::testing::Test {
 public:
     WatcherProxyUnitTest() {}
@@ -77,8 +75,6 @@ public:
         watcherManager->OnRemoteRequest(IWatcherManager::ADD_WATCHER, data, reply, option);
         watcherId = reply.ReadUint32();
         EXPECT_NE(watcherId, 0);
-        printf("TestAddWatcher %s watcherId %d %p \n", keyPrefix.c_str(), watcherId, watcherManager);
-
         EXPECT_EQ(watcherManager->GetWatcherGroup(1000) != NULL, 0); // 1000 test group id
         EXPECT_EQ(watcherManager->GetWatcherGroup("TestAddWatcher") != NULL, 0); // test key not exist
         return 0;
@@ -95,7 +91,6 @@ public:
         data.WriteUint32(watcherId);
         watcherManager->OnRemoteRequest(IWatcherManager::DEL_WATCHER, data, reply, option);
         EXPECT_EQ(reply.ReadInt32(), 0);
-        watcherManager->OnStop();
         printf("TestDelWatcher %s watcherId %d %p \n", keyPrefix.c_str(), watcherId, watcherManager);
         return 0;
     }
@@ -136,16 +131,66 @@ public:
         return 0;
     }
 
+    int TestWatchAgentDel(const std::string &keyPrefix)
+    {
+        WatcherManagerPtr watcherManager = GetWatcherManager();
+        WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to create manager");
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        data.WriteString(keyPrefix);
+        sptr<IWatcher> watcher = new TestWatcher();
+        bool ret = data.WriteRemoteObject(watcher->AsObject());
+        WATCHER_CHECK(ret, return 0, "Can not get remote");
+        watcherManager->OnRemoteRequest(IWatcherManager::ADD_WATCHER, data, reply, option);
+        uint32_t watcherId = reply.ReadUint32();
+        EXPECT_NE(watcherId, 0);
+        if (watcherManager->GetDeathRecipient() != nullptr) {
+            watcherManager->GetDeathRecipient()->OnRemoteDied(watcher->AsObject());
+        }
+        printf("TestWatchAgentDel %s success \n", keyPrefix.c_str());
+        EXPECT_EQ(watcherManager->GetWatcher(watcherId) == nullptr, 1);
+        return 0;
+    }
+
+    int TestInvalid(const std::string &keyPrefix)
+    {
+        WatcherManagerPtr watcherManager = GetWatcherManager();
+        WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to create manager");
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        data.WriteString(keyPrefix);
+        sptr<IWatcher> watcher = new TestWatcher();
+        bool ret = data.WriteRemoteObject(watcher->AsObject());
+        WATCHER_CHECK(ret, return 0, "Can not get remote");
+        watcherManager->OnRemoteRequest(IWatcherManager::ADD_WATCHER + 1, data, reply, option);
+
+        if (watcherManager->GetDeathRecipient() != nullptr) {
+            watcherManager->GetDeathRecipient()->OnRemoteDied(watcher->AsObject());
+        }
+        return 0;
+    }
+
+    int TestStop()
+    {
+        WatcherManagerPtr watcherManager = GetWatcherManager();
+        WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to create manager");
+        watcherManager->OnStop();
+        return 0;
+    }
+
     WatcherManagerPtr GetWatcherManager()
     {
-        if (g_watcherManager == nullptr) {
-            g_watcherManager = new WatcherManager(0, true);
-            if (g_watcherManager == nullptr) {
+        static WatcherManagerPtr watcherManager = nullptr;
+        if (watcherManager == nullptr) {
+            watcherManager = new WatcherManager(0, true);
+            if (watcherManager == nullptr) {
                 return nullptr;
             }
-            g_watcherManager->OnStart();
+            watcherManager->OnStart();
         }
-        return g_watcherManager;
+        return watcherManager;
     }
 };
 
@@ -202,4 +247,22 @@ HWTEST_F(WatcherProxyUnitTest, TestWatchProxy, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     test.TestWatchProxy("test.permission.watcher.test1", "watcherId");
+}
+
+HWTEST_F(WatcherProxyUnitTest, TestWatchAgentDel, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    test.TestWatchAgentDel("test.permission.watcher.test1");
+}
+
+HWTEST_F(WatcherProxyUnitTest, TestInvalid, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    test.TestInvalid("test.permission.watcher.test1");
+}
+
+HWTEST_F(WatcherProxyUnitTest, TestStop, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    test.TestStop();
 }

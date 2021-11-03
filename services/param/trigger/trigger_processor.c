@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <ctype.h>
 #include <unistd.h>
 #include "init_cmds.h"
 #include "init_param.h"
@@ -273,6 +274,21 @@ static int GetTriggerType(const char *type)
     return TRIGGER_UNKNOW;
 }
 
+static int GetCommandInfo(const char *cmdLine, int *cmdKeyIndex, char **content)
+{
+    const char *matchCmd = GetMatchCmd(cmdLine, cmdKeyIndex);
+    PARAM_CHECK(matchCmd != NULL, return -1, "Command not support %s", cmdLine);
+    char *str = strstr(cmdLine, matchCmd);
+    if (str != NULL) {
+        str += strlen(matchCmd);
+    }
+    while (str != NULL && isspace(*str)) {
+        str++;
+    }
+    *content = str;
+    return 0;
+}
+
 static int ParseTrigger_(const TriggerWorkSpace *workSpace, const cJSON *triggerItem)
 {
     PARAM_CHECK(triggerItem != NULL, return -1, "Invalid file");
@@ -306,15 +322,10 @@ static int ParseTrigger_(const TriggerWorkSpace *workSpace, const cJSON *trigger
         char *cmdLineStr = cJSON_GetStringValue(cJSON_GetArrayItem(cmdItems, i));
         PARAM_CHECK(cmdLineStr != NULL, continue, "Command is null");
 
-        size_t cmdLineLen = strlen(cmdLineStr);
-        const char *matchCmd = GetMatchCmd(cmdLineStr, &cmdKeyIndex);
-        PARAM_CHECK(matchCmd != NULL, continue, "Command not support %s", cmdLineStr);
-        size_t matchLen = strlen(matchCmd);
-        if (matchLen == cmdLineLen) {
-            ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, NULL);
-        } else {
-            ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, cmdLineStr + matchLen);
-        }
+        char *content = NULL;
+        ret = GetCommandInfo(cmdLineStr, &cmdKeyIndex, &content);
+        PARAM_CHECK(ret == 0, continue, "Command not support %s", cmdLineStr);
+        ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, content);
         PARAM_CHECK(ret == 0, continue, "Failed to add command %s", cmdLineStr);
     }
     return 0;

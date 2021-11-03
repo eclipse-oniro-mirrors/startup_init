@@ -16,7 +16,18 @@
 #ifndef INIT_REBOOT_API_H
 #define INIT_REBOOT_API_H
 
-int DoReboot(const char *cmdContent);
-
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
 #endif
 
+int DoReboot(const char *cmdContent);
+
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
+
+#endif

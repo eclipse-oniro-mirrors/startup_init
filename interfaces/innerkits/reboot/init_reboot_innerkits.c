@@ -26,39 +26,29 @@
 // Refer to parameter limit, value size should not bigger than 96
 #define MAX_REBOOT_OPTION_SIZE PARAM_VALUE_LEN_MAX
 
+#ifndef STARTUP_INIT_TEST
+#define DOREBOOT_PARAM "ohos.startup.powerctrl"
+#else
+#define DOREBOOT_PARAM "reboot.ut"
+#endif
+
 int DoReboot(const char *option)
 {
-    uid_t uid = getuid();
-    uid_t euid = geteuid();
-    if (uid != 0 || euid != 0) {
-        INIT_LOGE("User or effective user MUST be root, abort!");
-        return -1;
-    }
     char value[MAX_REBOOT_OPTION_SIZE];
     if (option == NULL || strlen(option) == 0) {
-        if (snprintf_s(value, MAX_REBOOT_OPTION_SIZE, strlen("reboot") + 1, "%s", "reboot") < 0) {
-            INIT_LOGE("reboot options too large, overflow");
-            return -1;
-        }
-        if (SystemSetParameter("sys.powerctrl", value) != 0) {
-            INIT_LOGE("Set parameter to trigger reboot command \" %s \" failed", value);
-            return -1;
-        }
+        INIT_ERROR_CHECK(snprintf_s(value, MAX_REBOOT_OPTION_SIZE, strlen("reboot") + 1, "%s", "reboot") >= 0,
+            return -1, "reboot options too large, overflow");
+        INIT_ERROR_CHECK(SystemSetParameter(DOREBOOT_PARAM, value) == 0, return -1,
+            "Set parameter to trigger reboot command \" %s \" failed", value);
         return 0;
     }
     int length = strlen(option);
-    if (length > MAX_REBOOT_OPTION_SIZE) {
-        INIT_LOGE("Reboot option \" %s \" is too large, overflow", option);
-        return -1;
-    }
-    if (snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "%s%s", "reboot,", option) < 0) {
-        INIT_LOGE("Failed to copy boot option \" %s \"", option);
-        return -1;
-    }
-    if (SystemSetParameter("sys.powerctrl", value) != 0) {
-        INIT_LOGE("Set parameter to trigger reboot command \" %s \" failed", value);
-        return -1;
-    }
+    INIT_ERROR_CHECK(length <= MAX_REBOOT_OPTION_SIZE, return -1,
+        "Reboot option \" %s \" is too large, overflow", option);
+    INIT_ERROR_CHECK(snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "%s%s", "reboot,",
+        option) >= 0, return -1, "Failed to copy boot option \" %s \"", option);
+    INIT_ERROR_CHECK(SystemSetParameter(DOREBOOT_PARAM, value) == 0, return -1,
+        "Set parameter to trigger reboot command \" %s \" failed", value);
     return 0;
 }
 

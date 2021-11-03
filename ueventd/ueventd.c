@@ -18,7 +18,6 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <poll.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -153,7 +152,7 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
     // Ignore other events
 }
 
-static void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent)
+void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent)
 {
     if (buffer == NULL || uevent == NULL || length == 0) {
         // Ignore invalid buffer
@@ -178,7 +177,7 @@ static void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent
     }
 }
 
-static void ProcessUevent(int sockFd)
+void ProcessUevent(int sockFd)
 {
     // One more bytes for '\0'
     char ueventBuffer[UEVENT_BUFFER_SIZE] = {};
@@ -254,7 +253,7 @@ static void Trigger(const char *path, int sockFd)
     closedir(dir);
 }
 
-static void RetriggerUevent(int sockFd)
+void RetriggerUevent(int sockFd)
 {
     if (!g_triggerDone) {
         Trigger("/sys/block", sockFd);
@@ -262,36 +261,4 @@ static void RetriggerUevent(int sockFd)
         Trigger("/sys/devices", sockFd);
         g_triggerDone = 1;
     }
-}
-
-int main(int argc, char **argv)
-{
-    char *ueventdConfigs[] = {"/etc/ueventd.config", NULL};
-    int i = 0;
-    int ret = -1;
-    while (ueventdConfigs[i] != NULL) {
-        ParseUeventdConfigFile(ueventdConfigs[i++]);
-    }
-    int ueventSockFd = UeventdSocketInit();
-    if (ueventSockFd < 0) {
-        INIT_LOGE("Failed to create uevent socket");
-        return -1;
-    }
-
-    RetriggerUevent(ueventSockFd);
-    struct pollfd pfd = {};
-    pfd.events = POLLIN;
-    pfd.fd = ueventSockFd;
-
-    while (1) {
-        pfd.revents = 0;
-        ret = poll(&pfd, 1, -1);
-        if (ret <= 0) {
-            continue;
-        }
-        if (pfd.revents & POLLIN) {
-            ProcessUevent(ueventSockFd);
-        }
-    }
-    return 0;
 }

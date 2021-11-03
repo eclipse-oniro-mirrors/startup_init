@@ -12,18 +12,28 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-ohos_static_library("libsocket") {
-  sources =
-      [ "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c" ]
+service_socket_sources =
+    [ "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c" ]
+service_socket_include = [
+  "//base/startup/init_lite/interfaces/innerkits/include",
+  "//base/startup/init_lite/services/log",
+  "//third_party/bounds_checking_function/include",
+]
+service_socket_deps = [
+  "//base/startup/init_lite/services/log:init_log",
+  "//third_party/bounds_checking_function:libsec_static",
+]
 
-  include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/log",
-    "//third_party/bounds_checking_function/include",
-  ]
+ohos_static_library("libsocket_static") {
+  sources = service_socket_sources
+  include_dirs = service_socket_include
+  deps = service_socket_deps
+}
 
-  deps = [
-    "//base/startup/init_lite/services/log:init_log",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
+ohos_shared_library("libsocket_shared") {
+  sources = service_socket_sources
+  include_dirs = service_socket_include
+  deps = service_socket_deps
+  part_name = "init"
+  install_images = [ "system" ]
 }

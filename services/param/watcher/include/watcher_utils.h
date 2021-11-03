@@ -26,14 +26,11 @@
 namespace OHOS {
 namespace init_param {
 #define UNUSED(x) (void)(x)
-
-#ifndef LABEL
-#define LABEL "ParameterWatcher"
-#endif
-
-#define WATCHER_LOGI(fmt, ...) STARTUP_LOGI(LABEL, fmt, ##__VA_ARGS__)
-#define WATCHER_LOGE(fmt, ...) STARTUP_LOGE(LABEL, fmt, ##__VA_ARGS__)
-#define WATCHER_LOGD(fmt, ...) STARTUP_LOGD(LABEL, fmt, ##__VA_ARGS__)
+#define WATCHER_LOG_FILE "param_watcher.log"
+#define WATCHER_LABEL "PARAM_WATCHER"
+#define WATCHER_LOGI(fmt, ...) STARTUP_LOGI(WATCHER_LOG_FILE, WATCHER_LABEL, fmt, ##__VA_ARGS__)
+#define WATCHER_LOGE(fmt, ...) STARTUP_LOGE(WATCHER_LOG_FILE, WATCHER_LABEL, fmt, ##__VA_ARGS__)
+#define WATCHER_LOGD(fmt, ...) STARTUP_LOGD(WATCHER_LOG_FILE, WATCHER_LABEL, fmt, ##__VA_ARGS__)
 
 #define WATCHER_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                    \

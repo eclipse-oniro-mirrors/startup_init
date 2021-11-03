@@ -97,17 +97,11 @@ static int SetSocketEnv(int fd, const char *name)
     INIT_ERROR_CHECK(name != NULL, return SERVICE_FAILURE, "Invalid name");
     char pubName[MAX_SOCKET_ENV_PREFIX_LEN] = { 0 };
     char val[MAX_SOCKET_FD_LEN] = { 0 };
-    if (snprintf_s(pubName, sizeof(pubName), sizeof(pubName) - 1, HOS_SOCKET_ENV_PREFIX "%s", name) < 0) {
-        return -1;
-    }
-    if (snprintf_s(val, sizeof(val), sizeof(val) - 1, "%d", fd) < 0) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(snprintf_s(pubName, sizeof(pubName), sizeof(pubName) - 1, HOS_SOCKET_ENV_PREFIX "%s",
+        name) >= 0, -1);
+    INIT_CHECK_RETURN_VALUE(snprintf_s(val, sizeof(val), sizeof(val) - 1, "%d", fd) >= 0, -1);
     int ret = setenv(pubName, val, 1);
-    if (ret < 0) {
-        INIT_LOGE("setenv fail %d ", errno);
-        return -1;
-    }
+    INIT_ERROR_CHECK(ret >= 0, return -1, "setenv fail %d ", errno);
     fcntl(fd, F_SETFD, 0);
     return 0;
 }
@@ -118,13 +112,9 @@ int CreateServiceSocket(ServiceSocket *sockopt)
     ServiceSocket *tmpSock = sockopt;
     while (tmpSock != NULL) {
         int fd = CreateSocket(tmpSock);
-        if (fd < 0) {
-            return -1;
-        }
+        INIT_CHECK_RETURN_VALUE(fd >= 0, -1);
         int ret = SetSocketEnv(fd, tmpSock->name);
-        if (ret < 0) {
-            return -1;
-        }
+        INIT_CHECK_RETURN_VALUE(ret >= 0, -1);
         tmpSock = tmpSock->next;
     }
     return 0;

@@ -82,10 +82,8 @@ char *BuildStringFromCmdArg(const struct CmdArgs *ctx, int startIndex)
 const struct CmdArgs *GetCmdArg(const char *cmdContent, const char *delim, int argsCount)
 {
     INIT_CHECK_RETURN_VALUE(cmdContent != NULL, NULL);
-    if (argsCount > SPACES_CNT_IN_CMD_MAX) {
-        INIT_LOGW("Too much arguments for command, max number is %d", SPACES_CNT_IN_CMD_MAX);
-        argsCount = SPACES_CNT_IN_CMD_MAX;
-    }
+    INIT_WARNING_CHECK(argsCount <= SPACES_CNT_IN_CMD_MAX, argsCount = SPACES_CNT_IN_CMD_MAX,
+        "Too much arguments for command, max number is %d", SPACES_CNT_IN_CMD_MAX);
     struct CmdArgs *ctx = (struct CmdArgs *)calloc(1, sizeof(struct CmdArgs) + sizeof(char *) * (argsCount + 1));
     INIT_ERROR_CHECK(ctx != NULL, return NULL, "Failed to malloc memory for arg");
     ctx->argc = 0;
@@ -129,18 +127,14 @@ void FreeCmdArg(struct CmdArgs *cmd)
     return;
 }
 
-static void ExecCmd(const struct CmdTable *cmd, const char *cmdContent)
+void ExecCmd(const struct CmdTable *cmd, const char *cmdContent)
 {
-    if (cmd == NULL) {
-        INIT_LOGE("Invalid cmd for %s", cmdContent);
-        return;
-    }
-
+    INIT_ERROR_CHECK(cmd != NULL, return, "Invalid cmd for %s", cmdContent);
     const struct CmdArgs *ctx = GetCmdArg(cmdContent, " ", cmd->maxArg);
     if (ctx == NULL) {
         INIT_LOGE("Invalid arguments cmd: %s content: %s", cmd->name, cmdContent);
     } else if ((ctx->argc <= cmd->maxArg) && (ctx->argc >= cmd->minArg)) {
-        cmd->DoFuncion(ctx, cmdContent);
+        cmd->DoFuncion(ctx);
     } else {
         INIT_LOGE("Invalid arguments cmd: %s content: %s argc: %d %d", cmd->name, cmdContent, ctx->argc, cmd->maxArg);
     }
@@ -159,59 +153,48 @@ static void SetProcName(const struct CmdArgs *ctx, const char *procFile)
     close(fd);
 }
 
-static void DoSetDomainname(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoSetDomainname(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     SetProcName(ctx, "/proc/sys/kernel/domainname");
 }
 
-static void DoSetHostname(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoSetHostname(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     SetProcName(ctx, "/proc/sys/kernel/hostname");
 }
 
-static void DoSleep(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoSleep(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     errno = 0;
     unsigned long sleepTime = strtoul(ctx->argv[0], NULL, DECIMAL_BASE);
-    if (errno != 0) {
-        INIT_LOGE("cannot covert sleep time in command \" sleep \"");
-        return;
-    }
+    INIT_ERROR_CHECK(errno == 0, return, "cannot covert sleep time in command \" sleep \"");
 
     // Limit sleep time in 5 seconds
     const unsigned long sleepTimeLimit = 5;
-    if (sleepTime > sleepTimeLimit) {
-        sleepTime = sleepTimeLimit;
-    }
+    INIT_CHECK(sleepTime <= sleepTimeLimit, sleepTime = sleepTimeLimit);
     INIT_LOGI("Sleeping %d second(s)", sleepTime);
     sleep((unsigned int)sleepTime);
 }
 
-static void DoStart(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoStart(const struct CmdArgs *ctx)
 {
-    UNUSED(ctx);
-    INIT_LOGD("DoStart %s", cmdContent);
-    StartServiceByName(cmdContent, true);
+    INIT_LOGD("DoStart %s", ctx->argv[0]);
+    StartServiceByName(ctx->argv[0], true);
 }
 
-static void DoStop(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoStop(const struct CmdArgs *ctx)
 {
-    UNUSED(ctx);
-    INIT_LOGD("DoStop %s", cmdContent);
-    StopServiceByName(cmdContent);
+    INIT_LOGD("DoStop %s", ctx->argv[0]);
+    StopServiceByName(ctx->argv[0]);
     return;
 }
 
-static void DoReset(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoReset(const struct CmdArgs *ctx)
 {
-    UNUSED(ctx);
-    INIT_LOGD("DoReset %s", cmdContent);
-    Service *service = GetServiceByName(cmdContent);
+    INIT_LOGD("DoReset %s", ctx->argv[0]);
+    Service *service = GetServiceByName(ctx->argv[0]);
     if (service == NULL) {
-        INIT_LOGE("Reset cmd cannot find service %s.", cmdContent);
+        INIT_LOGE("Reset cmd cannot find service %s.", ctx->argv[0]);
         return;
     }
     if (service->pid > 0) {
@@ -220,33 +203,31 @@ static void DoReset(const struct CmdArgs *ctx, const char *cmdContent)
             return;
         }
     } else {
-        StartServiceByName(cmdContent, false);
+        StartServiceByName(ctx->argv[0], false);
     }
     return;
 }
 
-static void DoCopy(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoCopy(const struct CmdArgs *ctx)
 {
     int srcFd = -1;
     int dstFd = -1;
     char buf[MAX_COPY_BUF_SIZE] = { 0 };
     char *realPath1 = NULL;
     char *realPath2 = NULL;
-    if (ctx == NULL || ctx->argc != DEFAULT_COPY_ARGS_CNT) {
-        INIT_LOGE("DoCopy invalid arguments :%s", cmdContent);
-        return;
-    }
     do {
         realPath1 = GetRealPath(ctx->argv[0]);
         if (realPath1 == NULL) {
             INIT_LOGE("Failed to get real path %s", ctx->argv[0]);
             break;
         }
+
         srcFd = open(realPath1, O_RDONLY);
         if (srcFd < 0) {
             INIT_LOGE("Failed to open source path %s  %d", ctx->argv[0], errno);
             break;
         }
+
         struct stat fileStat = { 0 };
         if (stat(ctx->argv[0], &fileStat) != 0) {
             INIT_LOGE("Failed to state source path %s  %d", ctx->argv[0], errno);
@@ -259,7 +240,7 @@ static void DoCopy(const struct CmdArgs *ctx, const char *cmdContent)
         } else {
             dstFd = open(ctx->argv[1], O_WRONLY | O_TRUNC | O_CREAT, mode);
         }
-        if (srcFd < 0) {
+        if (dstFd < 0) {
             INIT_LOGE("Failed to open dest path %s  %d", ctx->argv[1], errno);
             break;
         }
@@ -292,29 +273,27 @@ static int SetOwner(const char *file, const char *ownerStr, const char *groupStr
     return (chown(file, owner, group) != 0) ? -1 : 0;
 }
 
-static void DoChown(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoChown(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     // format: chown owner group /xxx/xxx/xxx
     const int pathPos = 2;
     int ret = SetOwner(ctx->argv[pathPos], ctx->argv[0], ctx->argv[1]);
     if (ret != 0) {
-        INIT_LOGE("Failed to change owner %s, err %d.", cmdContent, errno);
+        INIT_LOGE("Failed to change owner for %s, err %d.", ctx->argv[pathPos], errno);
     }
     return;
 }
 
-static void DoMkDir(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoMkDir(const struct CmdArgs *ctx)
 {
     // mkdir support format:
     // 1.mkdir path
     // 2.mkdir path mode
     // 3.mkdir path mode owner group
-    UNUSED(cmdContent);
     const int ownerPos = 2;
     const int groupPos = 3;
     if (ctx->argc != 1 && ctx->argc != (groupPos + 1) && ctx->argc != ownerPos) {
-        INIT_LOGE("DoMkDir invalid arguments: %s", cmdContent);
+        INIT_LOGE("DoMkDir invalid arguments.");
         return;
     }
     mode_t mode = DEFAULT_DIR_MODE;
@@ -327,26 +306,24 @@ static void DoMkDir(const struct CmdArgs *ctx, const char *cmdContent)
     }
 
     mode = strtoul(ctx->argv[1], NULL, OCTAL_TYPE);
-    if (chmod(ctx->argv[0], mode) != 0) {
-        INIT_LOGE("DoMkDir failed for '%s', err %d.", ctx->argv[0], errno);
-    }
+    INIT_CHECK_ONLY_ELOG(chmod(ctx->argv[0], mode) == 0, "DoMkDir failed for '%s', err %d.", ctx->argv[0], errno);
+
     if (ctx->argc <= ownerPos) {
         return;
     }
     int ret = SetOwner(ctx->argv[0], ctx->argv[ownerPos], ctx->argv[groupPos]);
     if (ret != 0) {
-        INIT_LOGE("Failed to change owner %s, err %d.", cmdContent, errno);
+        INIT_LOGE("Failed to change owner %s, err %d.", ctx->argv[0], errno);
     }
     return;
 }
 
-static void DoChmod(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoChmod(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     // format: chmod xxxx /xxx/xxx/xxx
     mode_t mode = strtoul(ctx->argv[0], NULL, OCTAL_TYPE);
     if (mode == 0) {
-        INIT_LOGE("DoChmod, strtoul failed for %s, er %d.", cmdContent, errno);
+        INIT_LOGE("DoChmod, strtoul failed for %s, er %d.", ctx->argv[1], errno);
         return;
     }
 
@@ -357,9 +334,7 @@ static void DoChmod(const struct CmdArgs *ctx, const char *cmdContent)
 
 static int GetMountFlag(unsigned long *mountflag, const char *targetStr, const char *source)
 {
-    if (targetStr == NULL || mountflag == NULL) {
-        return 0;
-    }
+    INIT_CHECK_RETURN_VALUE(targetStr != NULL && mountflag != NULL, 0);
     struct {
         char *flagName;
         int value;
@@ -395,23 +370,22 @@ static int GetMountFlag(unsigned long *mountflag, const char *targetStr, const c
     return 0;
 }
 
-static void DoMount(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoMount(const struct CmdArgs *ctx)
 {
-    UNUSED(ctx);
     INIT_ERROR_CHECK(ctx->argc <= SPACES_CNT_IN_CMD_MAX, return, "Invalid arg number");
     // format: fileSystemType source target mountFlag1 mountFlag2... data
     int index = 0;
     char *fileSysType = (ctx->argc > index) ? ctx->argv[index] : NULL;
-    INIT_ERROR_CHECK(fileSysType != NULL, return, "Failed to get fileSysType %s", cmdContent);
+    INIT_ERROR_CHECK(fileSysType != NULL, return, "Failed to get fileSysType.");
     index++;
 
     char *source =  (ctx->argc > index) ? ctx->argv[index] : NULL;
-    INIT_ERROR_CHECK(source != NULL, return, "Failed to get source %s", cmdContent);
+    INIT_ERROR_CHECK(source != NULL, return, "Failed to get source.");
     index++;
 
     // maybe only has "filesystype source target", 2 spaces
     char *target = (ctx->argc > index) ? ctx->argv[index] : NULL;
-    INIT_ERROR_CHECK(target != NULL, return, "Failed to get target %s", cmdContent);
+    INIT_ERROR_CHECK(target != NULL, return, "Failed to get target.");
     ++index;
 
     int ret = 0;
@@ -427,77 +401,17 @@ static void DoMount(const struct CmdArgs *ctx, const char *cmdContent)
         ret = mount(source, target, fileSysType, mountflags, NULL);
     } else {
         char *data = BuildStringFromCmdArg(ctx, index);
-        INIT_ERROR_CHECK(data != NULL, return, "Failed to get data %s", cmdContent);
+        INIT_ERROR_CHECK(data != NULL, return, "Failed to get data.");
         ret = mount(source, target, fileSysType, mountflags, data);
         free(data);
     }
     if (ret != 0) {
-        INIT_LOGE("Failed to mount %s, err %d.", cmdContent, errno);
+        INIT_LOGE("Failed to mount for %s, err %d.", target, errno);
     }
 }
 
-static bool CheckValidCfg(const char *path)
+static void DoWrite(const struct CmdArgs *ctx)
 {
-    static const char *supportCfg[] = {
-        "/etc/patch.cfg",
-        "/patch/fstab.cfg",
-    };
-    INIT_ERROR_CHECK(path != NULL, return false, "Invalid path for cfg");
-    struct stat fileStat = { 0 };
-    if (stat(path, &fileStat) != 0 || fileStat.st_size <= 0 || fileStat.st_size > LOADCFG_MAX_FILE_LEN) {
-        return false;
-    }
-    size_t cfgCnt = ARRAY_LENGTH(supportCfg);
-    for (size_t i = 0; i < cfgCnt; ++i) {
-        if (strcmp(path, supportCfg[i]) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static void DoLoadCfg(const struct CmdArgs *ctx, const char *path)
-{
-    UNUSED(ctx);
-    char buf[LOADCFG_BUF_SIZE] = { 0 };
-    size_t maxLoop = 0;
-    int len;
-    if (!CheckValidCfg(path)) {
-        INIT_LOGE("CheckCfg file %s Failed", path);
-        return;
-    }
-    char *realPath = GetRealPath(path);
-    INIT_ERROR_CHECK(realPath != NULL, return, "Failed to get realpath %s", path);
-    FILE *fp = fopen(realPath, "r");
-    if (fp == NULL) {
-        INIT_LOGE("Failed to open cfg %s error:%d", path, errno);
-        free(realPath);
-        return;
-    }
-
-    while (fgets(buf, LOADCFG_BUF_SIZE - 1, fp) != NULL && maxLoop < LOADCFG_MAX_LOOP) {
-        maxLoop++;
-        len = strlen(buf);
-        if (len < 1) {
-            continue;
-        }
-        if (buf[len - 1] == '\n') {
-            buf[len - 1] = '\0'; // we replace '\n' with '\0'
-        }
-        const struct CmdTable *cmd = GetCmdByName(buf);
-        if (cmd == NULL) {
-            INIT_LOGE("Cannot support command: %s", buf);
-            continue;
-        }
-        ExecCmd(cmd, &buf[strlen(cmd->name) + 1]);
-    }
-    free(realPath);
-    (void)fclose(fp);
-}
-
-static void DoWrite(const struct CmdArgs *ctx, const char *cmdContent)
-{
-    UNUSED(cmdContent);
     // format: write path content
     char *realPath = GetRealPath(ctx->argv[0]);
     int fd = -1;
@@ -508,9 +422,7 @@ static void DoWrite(const struct CmdArgs *ctx, const char *cmdContent)
     }
     if (fd >= 0) {
         size_t ret = write(fd, ctx->argv[1], strlen(ctx->argv[1]));
-        if (ret < 0) {
-            INIT_LOGE("DoWrite: write to file %s failed: %d", ctx->argv[0], errno);
-        }
+        INIT_CHECK_ONLY_ELOG(ret >= 0, "DoWrite: write to file %s failed: %d", ctx->argv[0], errno);
     }
     if (realPath != NULL) {
         free(realPath);
@@ -519,9 +431,8 @@ static void DoWrite(const struct CmdArgs *ctx, const char *cmdContent)
     close(fd);
 }
 
-static void DoRmdir(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoRmdir(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     // format: rmdir path
     int ret = rmdir(ctx->argv[0]);
     if (ret == -1) {
@@ -530,16 +441,14 @@ static void DoRmdir(const struct CmdArgs *ctx, const char *cmdContent)
     return;
 }
 
-static void DoRebootCmd(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoRebootCmd(const struct CmdArgs *ctx)
 {
-    UNUSED(ctx);
-    ExecReboot(cmdContent);
+    ExecReboot(ctx->argv[0]);
     return;
 }
 
-static void DoSetrlimit(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoSetrlimit(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     static const char *resource[] = {
         "RLIMIT_CPU", "RLIMIT_FSIZE", "RLIMIT_DATA", "RLIMIT_STACK", "RLIMIT_CORE", "RLIMIT_RSS",
         "RLIMIT_NPROC", "RLIMIT_NOFILE", "RLIMIT_MEMLOCK", "RLIMIT_AS", "RLIMIT_LOCKS", "RLIMIT_SIGPENDING",
@@ -560,30 +469,23 @@ static void DoSetrlimit(const struct CmdArgs *ctx, const char *cmdContent)
         INIT_LOGE("DoSetrlimit failed, resouces :%s not support.", ctx->argv[0]);
         return;
     }
-    int ret = setrlimit(rcs, &limit);
-    if (ret) {
-        INIT_LOGE("DoSetrlimit failed : %d", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(setrlimit(rcs, &limit) == 0, "DoSetrlimit failed : %d", errno);
+    return;
 }
 
-static void DoRm(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoRm(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     // format: rm /xxx/xxx/xxx
-    int ret = unlink(ctx->argv[0]);
-    if (ret == -1) {
-        INIT_LOGE("DoRm: unlink %s failed: %d.", ctx->argv[0], errno);
-    }
+    INIT_CHECK_ONLY_ELOG(unlink(ctx->argv[0]) != -1, "DoRm: unlink %s failed: %d.", ctx->argv[0], errno);
+    return;
 }
 
-static void DoExport(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoExport(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     // format: export xxx /xxx/xxx/xxx
-    int ret = setenv(ctx->argv[0], ctx->argv[1], 1);
-    if (ret != 0) {
-        INIT_LOGE("DoExport: set %s with %s failed: %d", ctx->argv[0], ctx->argv[1], errno);
-    }
+    INIT_CHECK_ONLY_ELOG(setenv(ctx->argv[0], ctx->argv[1], 1) == 0, "DoExport: set %s with %s failed: %d",
+        ctx->argv[0], ctx->argv[1], errno);
+    return;
 }
 
 static const struct CmdTable g_cmdTable[] = {
@@ -593,7 +495,6 @@ static const struct CmdTable g_cmdTable[] = {
     { "chown ", 3, 3, DoChown },
     { "mount ", 1, 10, DoMount },
     { "export ", 2, 2, DoExport },
-    { "loadcfg ", 1, 1, DoLoadCfg },
     { "rm ", 1, 1, DoRm },
     { "rmdir ", 1, 1, DoRmdir },
     { "write ", 2, 2, DoWrite },
@@ -613,19 +514,38 @@ static const struct CmdTable *GetCommCmdTable(int *number)
     return g_cmdTable;
 }
 
+static char *GetCmdStart(const char *cmdContent)
+{
+    // Skip lead whitespaces
+    char *p = (char *)cmdContent;
+    while (p != NULL && isspace(*p)) {
+        p++;
+    }
+    if (p == NULL) {
+        return NULL;
+    }
+    if (*p == '#') { // start with #
+        return NULL;
+    }
+    return p;
+}
+
 const struct CmdTable *GetCmdByName(const char *name)
 {
+    INIT_CHECK_RETURN_VALUE(name != NULL, NULL);
+    char *startCmd = GetCmdStart(name);
+    INIT_CHECK_RETURN_VALUE(startCmd != NULL, NULL);
     int cmdCnt = 0;
     const struct CmdTable *commCmds = GetCommCmdTable(&cmdCnt);
     for (int i = 0; i < cmdCnt; ++i) {
-        if (strncmp(name, commCmds[i].name, strlen(commCmds[i].name)) == 0) {
+        if (strncmp(startCmd, commCmds[i].name, strlen(commCmds[i].name)) == 0) {
             return &commCmds[i];
         }
     }
     int number = 0;
     const struct CmdTable *cmds = GetCmdTable(&number);
     for (int i = 0; i < number; ++i) {
-        if (strncmp(name, cmds[i].name, strlen(cmds[i].name)) == 0) {
+        if (strncmp(startCmd, cmds[i].name, strlen(cmds[i].name)) == 0) {
             return &cmds[i];
         }
     }
@@ -634,13 +554,14 @@ const struct CmdTable *GetCmdByName(const char *name)
 
 const char *GetMatchCmd(const char *cmdStr, int *index)
 {
-    if (cmdStr == NULL || index == NULL) {
-        return NULL;
-    }
+    INIT_CHECK_RETURN_VALUE(cmdStr != NULL && index != NULL, NULL);
+    char *startCmd = GetCmdStart(cmdStr);
+    INIT_CHECK_RETURN_VALUE(startCmd != NULL, NULL);
+
     int cmdCnt = 0;
     const struct CmdTable *commCmds = GetCommCmdTable(&cmdCnt);
     for (int i = 0; i < cmdCnt; ++i) {
-        if (strncmp(cmdStr, commCmds[i].name, strlen(commCmds[i].name)) == 0) {
+        if (strncmp(startCmd, commCmds[i].name, strlen(commCmds[i].name)) == 0) {
             *index = i;
             return commCmds[i].name;
         }
@@ -648,7 +569,7 @@ const char *GetMatchCmd(const char *cmdStr, int *index)
     int number = 0;
     const struct CmdTable *cmds = GetCmdTable(&number);
     for (int i = 0; i < number; ++i) {
-        if (strncmp(cmdStr, cmds[i].name, strlen(cmds[i].name)) == 0) {
+        if (strncmp(startCmd, cmds[i].name, strlen(cmds[i].name)) == 0) {
             *index = cmdCnt + i;
             return cmds[i].name;
         }
@@ -680,34 +601,35 @@ int GetCmdLinesFromJson(const cJSON *root, CmdLines **cmdLines)
         return -1;
     }
     int cmdCnt = cJSON_GetArraySize(root);
-    if (cmdCnt <= 0) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(cmdCnt > 0, -1);
+
     *cmdLines = (CmdLines *)calloc(1, sizeof(CmdLines) + sizeof(CmdLine) * cmdCnt);
-    if (*cmdLines == NULL) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(*cmdLines != NULL, -1);
     (*cmdLines)->cmdNum = 0;
     for (int i = 0; i < cmdCnt; ++i) {
         cJSON *line = cJSON_GetArrayItem(root, i);
         if (!cJSON_IsString(line)) {
             continue;
         }
+
         char *tmp = cJSON_GetStringValue(line);
         if (tmp == NULL) {
             continue;
         }
+
         int index = 0;
         const char *cmd = GetMatchCmd(tmp, &index);
         if (cmd == NULL) {
             INIT_LOGE("Cannot support command: %s", tmp);
             continue;
         }
+
         int ret = strcpy_s((*cmdLines)->cmds[(*cmdLines)->cmdNum].cmdContent, MAX_CMD_CONTENT_LEN, tmp + strlen(cmd));
         if (ret != EOK) {
             INIT_LOGE("Invalid cmd arg: %s", tmp);
             continue;
         }
+
         (*cmdLines)->cmds[(*cmdLines)->cmdNum].cmdIndex = index;
         (*cmdLines)->cmdNum++;
     }

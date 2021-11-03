@@ -82,8 +82,7 @@ static void TestForMultiThread()
 
 static void TestParamTraversal()
 {
-    SystemTraversalParameter(
-        [](ParamHandle handle, void *cookie) {
+    SystemTraversalParameter([](ParamHandle handle, void *cookie) {
             char value[PARAM_BUFFER_SIZE + PARAM_BUFFER_SIZE] = { 0 };
             uint32_t commitId = 0;
             int ret = SystemGetParameterCommitId(handle, &commitId);

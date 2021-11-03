@@ -43,9 +43,7 @@
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
-    if ((symValue == NULL) || (paramValue == NULL) || (paramLen == 0)) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE((symValue != NULL) && (paramValue != NULL) && (paramLen != 0), -1);
     char tmpName[PARAM_NAME_LEN_MAX] = { 0 };
     int ret = 0;
     uint32_t curr = 0;
@@ -67,9 +65,8 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
         }
         begin++;
         char *left = strchr(begin, '}');
-        if (left == NULL) {
-            return -1;
-        }
+        INIT_CHECK_RETURN_VALUE(left != NULL, -1);
+
         // copy param name
         ret = strncpy_s(tmpName, PARAM_NAME_LEN_MAX, begin, left - begin);
         INIT_ERROR_CHECK(ret == EOK, return -1, "Invalid param name %s", symValue);
@@ -86,35 +83,28 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
     return 0;
 }
 
-static void DoIfup(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoIfup(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     struct ifreq interface;
-    if (strncpy_s(interface.ifr_name, IFNAMSIZ - 1, ctx->argv[0], strlen(ctx->argv[0])) != EOK) {
-        INIT_LOGE("DoIfup failed to copy interface name");
-        return;
-    }
-
+    INIT_ERROR_CHECK(strncpy_s(interface.ifr_name, IFNAMSIZ - 1, ctx->argv[0], strlen(ctx->argv[0])) == EOK,
+        return, "DoIfup failed to copy interface name");
     INIT_LOGD("interface name: %s", interface.ifr_name);
+
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-        INIT_LOGE("DoIfup failed to create socket, err = %d", errno);
-        return;
-    }
+    INIT_ERROR_CHECK(fd >= 0, return, "DoIfup failed to create socket, err = %d", errno);
 
     if (ioctl(fd, SIOCGIFFLAGS, &interface) >= 0) {
         interface.ifr_flags |= IFF_UP;
-        if (ioctl(fd, SIOCSIFFLAGS, &interface) < 0) {
-            INIT_LOGE("DoIfup failed to do ioctl with command \"SIOCSIFFLAGS\", err = %d", errno);
-        }
+        INIT_CHECK_ONLY_ELOG(ioctl(fd, SIOCSIFFLAGS, &interface) >= 0,
+            "DoIfup failed to do ioctl with command \"SIOCSIFFLAGS\", err = %d", errno);
     }
     close(fd);
+    fd = -1;
 }
 
 // format insmod <ko name> [-f] [options]
-static void DoInsmod(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoInsmod(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     int index = 0;
     int flags = 0;
     char *fileName = NULL;
@@ -122,14 +112,14 @@ static void DoInsmod(const struct CmdArgs *ctx, const char *cmdContent)
         fileName = ctx->argv[index];
         index++;
     }
-    INIT_ERROR_CHECK(fileName != NULL, return, "Can not find file name from param %s", cmdContent);
+    INIT_ERROR_CHECK(fileName != NULL, return, "Can not find file name from param %s", ctx->argv[0]);
     INIT_LOGD("Install mode %s ", fileName);
     char *realPath = GetRealPath(fileName);
-    INIT_ERROR_CHECK(realPath != NULL, return, "Can not get real file name from param %s", cmdContent);
-    if (ctx->argc > 1 && ctx->argv[1] != NULL && strcmp(ctx->argv[1], "-f") == 0) { // [-f]
+    INIT_ERROR_CHECK(realPath != NULL, return, "Can not get real file name from param %s", ctx->argv[0]);
+    INIT_CHECK((ctx->argc > 1 && ctx->argv[1] != NULL && strcmp(ctx->argv[1], "-f")) != 0, // [-f]
         flags = MODULE_INIT_IGNORE_VERMAGIC | MODULE_INIT_IGNORE_MODVERSIONS;
-        index++;
-    }
+        index++);
+
     char *options = BuildStringFromCmdArg(ctx, index); // [options]
     int fd = open(realPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd >= 0) {
@@ -148,66 +138,54 @@ static void DoInsmod(const struct CmdArgs *ctx, const char *cmdContent)
     return;
 }
 
-static void DoSetParam(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoSetParam(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     INIT_LOGD("set param name: %s, value %s ", ctx->argv[0], ctx->argv[1]);
     SystemWriteParam(ctx->argv[0], ctx->argv[1]);
 }
 
-static void DoLoadPersistParams(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoLoadPersistParams(const struct CmdArgs *ctx)
 {
-    UNUSED(ctx);
-    INIT_LOGD("load persist params : %s", cmdContent);
+    INIT_LOGD("load persist params : %s", ctx->argv[0]);
     LoadPersistParams();
 }
 
-static void DoTriggerCmd(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoTriggerCmd(const struct CmdArgs *ctx)
 {
-    UNUSED(ctx);
-    INIT_LOGD("DoTrigger :%s", cmdContent);
-    DoTriggerExec(cmdContent);
+    INIT_LOGD("DoTrigger :%s", ctx->argv[0]);
+    DoTriggerExec(ctx->argv[0]);
 }
 
-static void DoLoadDefaultParams(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoLoadDefaultParams(const struct CmdArgs *ctx)
 {
     int mode = 0;
     if (ctx->argc > 1 && strcmp(ctx->argv[1], "onlyadd") == 0) {
         mode = LOAD_PARAM_ONLY_ADD;
     }
-    INIT_LOGD("DoLoadDefaultParams args : %s %d", cmdContent, mode);
+    INIT_LOGD("DoLoadDefaultParams args : %s %d", ctx->argv[0], mode);
     LoadDefaultParams(ctx->argv[0], mode);
 }
 
-static void DoExec(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoExec(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
-    UNUSED(ctx);
     // format: exec /xxx/xxx/xxx xxx
     pid_t pid = fork();
-    if (pid < 0) {
-        INIT_LOGE("DoExec: failed to fork child process to exec \"%s\"", cmdContent);
-        return;
-    }
+    INIT_ERROR_CHECK(pid >= 0, return, "DoExec: failed to fork child process to exec \"%s\"", ctx->argv[0]);
+
     if (pid == 0) {
-        const struct CmdArgs *subCtx = GetCmdArg(cmdContent, " ", SUPPORT_MAX_ARG_FOR_EXEC);
-        if (subCtx == NULL || subCtx->argv[0] == NULL) {
-            INIT_LOGE("DoExec: invalid arguments :%s", cmdContent);
-            _exit(0x7f);
-        }
-        int ret = execv(subCtx->argv[0], subCtx->argv);
+        INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, _exit(0x7f),
+            "DoExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
+        int ret = execv(ctx->argv[0], ctx->argv);
         if (ret == -1) {
-            INIT_LOGE("DoExec: execute \"%s\" failed: %d.", cmdContent, errno);
+            INIT_LOGE("DoExec: execute \"%s\" failed: %d.", ctx->argv[0], errno);
         }
-        FreeCmdArg((struct CmdArgs *)subCtx);
         _exit(0x7f);
     }
     return;
 }
 
-static void DoSymlink(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoSymlink(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     // format: symlink /xxx/xxx/xxx /xxx/xxx/xxx
     int ret = symlink(ctx->argv[0], ctx->argv[1]);
     if (ret != 0 && errno != EEXIST) {
@@ -232,9 +210,8 @@ static mode_t GetDeviceMode(const char *deviceStr)
     }
 }
 
-static void DoMakeNode(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoMakeNode(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     // format: mknod path b 0644 1 9
     const int deviceTypePos = 1;
     const int authorityPos = 2;
@@ -242,10 +219,7 @@ static void DoMakeNode(const struct CmdArgs *ctx, const char *cmdContent)
     const int minorDevicePos = 4;
     const int decimal = 10;
     const int octal = 8;
-    if (!access(ctx->argv[1], F_OK)) {
-        INIT_LOGE("DoMakeNode failed, path has not sexisted");
-        return;
-    }
+    INIT_ERROR_CHECK(access(ctx->argv[1], F_OK), return, "DoMakeNode failed, path has sexisted");
     mode_t deviceMode = GetDeviceMode(ctx->argv[deviceTypePos]);
     errno = 0;
     unsigned int major = strtoul(ctx->argv[majorDevicePos], NULL, decimal);
@@ -260,9 +234,8 @@ static void DoMakeNode(const struct CmdArgs *ctx, const char *cmdContent)
     }
 }
 
-static void DoMakeDevice(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoMakeDevice(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     // format: makedev major minor
     const int decimal = 10;
     errno = 0;
@@ -271,21 +244,19 @@ static void DoMakeDevice(const struct CmdArgs *ctx, const char *cmdContent)
     unsigned int minor = strtoul(ctx->argv[1], NULL, decimal);
     INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[1]);
     dev_t deviceId = makedev(major, minor);
-    if (deviceId < 0) {
-        INIT_LOGE("DoMakedevice \" %s \" failed :%d ", cmdContent, errno);
-    }
+    INIT_CHECK_ONLY_ELOG(deviceId >= 0, "DoMakedevice \" major:%s, minor:%s \" failed :%d ", ctx->argv[0],
+        ctx->argv[1], errno);
+    return;
 }
 
-static void DoMountFstabFile(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoMountFstabFile(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     INIT_LOGI("Mount partitions from fstab file \" %s \"", ctx->argv[0]);
     (void)MountAllWithFstabFile(ctx->argv[0], 0);
 }
 
-static void DoUmountFstabFile(const struct CmdArgs *ctx, const char *cmdContent)
+static void DoUmountFstabFile(const struct CmdArgs *ctx)
 {
-    UNUSED(cmdContent);
     INIT_LOGI("Umount partitions from fstab file \" %s \"", ctx->argv[0]);
     int rc = UmountAllWithFstabFile(ctx->argv[0]);
     if (rc < 0) {

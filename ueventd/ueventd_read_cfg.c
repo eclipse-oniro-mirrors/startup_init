@@ -18,6 +18,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -80,9 +81,7 @@ static int ParseDeviceConfig(char *p)
     // format: <device node> <mode> <uid> <gid>
     const int expectedCount = 4;
 
-    if (INVALIDSTRING(p)) {
-        INIT_LOGE("Invalid argument");
-    }
+    INIT_CHECK_ONLY_ELOG(!INVALIDSTRING(p), "Invalid argument");
     items = SplitStringExt(p, " ", &count, expectedCount);
     if (count != expectedCount) {
         INIT_LOGE("Ignore invalid item: %s", p);
@@ -99,10 +98,8 @@ static int ParseDeviceConfig(char *p)
     config->name = strdup(items[DEVICE_CONFIG_NAME_NUM]); // device node
     errno = 0;
     config->mode = strtoul(items[DEVICE_CONFIG_MODE_NUM], NULL, OCTAL_BASE);
-    if (errno != 0) {
-        INIT_LOGE("Invalid mode in config file for device node %s. use default mode", config->name);
-        config->mode = DEVMODE;
-    }
+    INIT_ERROR_CHECK(errno == 0, config->mode = DEVMODE,
+        "Invalid mode in config file for device node %s. use default mode", config->name);
     config->uid = (uid_t)DecodeUid(items[DEVICE_CONFIG_UID_NUM]);
     config->gid = (gid_t)DecodeUid(items[DEVICE_CONFIG_GID_NUM]);
     ListAddTail(&g_devices, &config->list);
@@ -118,9 +115,7 @@ static int ParseSysfsConfig(char *p)
     // format: <syspath> <attribute> <mode> <uid> <gid>
     const int expectedCount = 5;
 
-    if (INVALIDSTRING(p)) {
-        INIT_LOGE("Invalid argument");
-    }
+    INIT_CHECK_ONLY_ELOG(!INVALIDSTRING(p), "Invalid argument");
     items = SplitStringExt(p, " ", &count, expectedCount);
     if (count != expectedCount) {
         INIT_LOGE("Ignore invalid item: %s", p);
@@ -137,10 +132,8 @@ static int ParseSysfsConfig(char *p)
     config->attr = strdup(items[SYS_CONFIG_ATTR_NUM]);  // attribute
     errno = 0;
     config->mode = strtoul(items[SYS_CONFIG_MODE_NUM], NULL, OCTAL_BASE);
-    if (errno != 0) {
-        INIT_LOGE("Invalid mode in config file for sys path %s. use default mode", config->sysPath);
-        config->mode = DEVMODE;
-    }
+    INIT_ERROR_CHECK(errno == 0, config->mode = DEVMODE,
+        "Invalid mode in config file for sys path %s. use default mode", config->sysPath);
     config->uid = (uid_t)DecodeUid(items[SYS_CONFIG_UID_NUM]);
     config->gid = (gid_t)DecodeUid(items[SYS_CONFIG_GID_NUM]);
     ListAddTail(&g_sysDevices, &config->list);
@@ -151,28 +144,15 @@ static int ParseSysfsConfig(char *p)
 static int ParseFirmwareConfig(char *p)
 {
     INIT_LOGD("Parse firmware config info: %s", p);
-    if (INVALIDSTRING(p)) {
-        INIT_LOGE("Invalid argument");
-    }
+    INIT_CHECK_ONLY_ELOG(!INVALIDSTRING(p), "Invalid argument");
 
     // Sanity checks
     struct stat st = {};
-    if (stat(p, &st) != 0) {
-        INIT_LOGE("Invalid firware file: %s, err = %d", p, errno);
-        return -1;
-    }
-
-    if (!S_ISDIR(st.st_mode)) {
-        INIT_LOGE("Expect directory in firmware config");
-        return -1;
-    }
-
+    INIT_ERROR_CHECK(stat(p, &st) == 0, return -1, "Invalid firware file: %s, err = %d", p, errno);
+    INIT_ERROR_CHECK(S_ISDIR(st.st_mode), return -1, "Expect directory in firmware config");
     struct FirmwareUdevConf *config = calloc(1, sizeof(struct FirmwareUdevConf));
-    if (config == NULL) {
-        errno = ENOMEM;
-        return -1;
-    }
-
+    INIT_CHECK(config != NULL, errno = ENOMEM;
+        return -1);
     config->fmPath = strdup(p);
     ListAddTail(&g_firmwares, &config->list);
     return 0;
@@ -180,10 +160,7 @@ static int ParseFirmwareConfig(char *p)
 
 static SECTION GetSection(const char *section)
 {
-    if (INVALIDSTRING(section)) {
-        return SECTION_INVALID;
-    }
-
+    INIT_CHECK_RETURN_VALUE(!INVALIDSTRING(section), SECTION_INVALID);
     if (STRINGEQUAL(section, "device")) {
         return SECTION_DEVICE;
     } else if (STRINGEQUAL(section, "sysfs")) {
@@ -209,9 +186,7 @@ int ParseUeventConfig(char *buffer)
     char *p = buffer;
     SECTION type;
 
-    if (INVALIDSTRING(buffer)) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(!INVALIDSTRING(buffer), -1);
     if (*p == '[') {
         p++;
         if ((right = strchr(p, ']')) == NULL) {
@@ -265,19 +240,12 @@ static void DoUeventConfigParse(char *buffer, size_t length)
 
 void ParseUeventdConfigFile(const char *file)
 {
-    if (INVALIDSTRING(file)) {
-        return;
-    }
+    INIT_CHECK_ONLY_RETURN(!INVALIDSTRING(file));
     char *config = GetRealPath(file);
-    if (config == NULL) {
-        return;
-    }
+    INIT_CHECK_ONLY_RETURN(config != NULL);
     int fd = open(config, O_RDONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     free(config);
-    if (fd < 0) {
-        INIT_LOGE("Read from %s failed", file);
-        return;
-    }
+    INIT_ERROR_CHECK(fd >= 0, return, "Read from %s failed", file);
 
     struct stat st;
     if (fstat(fd, &st) < 0) {
@@ -293,6 +261,7 @@ void ParseUeventdConfigFile(const char *file)
     if (buffer == NULL) {
         INIT_LOGE("Failed to malloc memory. err = %d", errno);
         close(fd);
+        fd = -1;
         return;
     }
 
@@ -313,6 +282,59 @@ void ParseUeventdConfigFile(const char *file)
     fd = -1;
 }
 
+// support '*' to match all characters
+// '?' match one character.
+bool IsMatch(const char *target, const char *pattern)
+{
+    INIT_CHECK_RETURN_VALUE(target != NULL, false);
+    INIT_CHECK_RETURN_VALUE(pattern != NULL, true);
+
+    const char *t = target;
+    const char *p = pattern;
+    const char *plast = NULL;
+    bool reMatch = false;
+    while (*t != '\0') {
+        if (*t == *p) {
+            t++;
+            p++;
+            continue;
+        }
+
+        // Match one character.
+        if (*p == '?') {
+            p++;
+            t++;
+            continue;
+        }
+
+        if (*p == '\0') {
+            return !reMatch ? false : true;
+        }
+
+        if (*p == '*') {
+            reMatch = true;
+            // Met '*', record where we will start over.
+            // plast point to next character that we will compare it again.
+            plast = ++p;
+            t++;
+            continue;
+        }
+
+        if (reMatch) {
+            // Start over.
+            p = plast;
+            t++;
+        } else {
+            return false;
+        }
+    }
+
+    while (*p == '*') {
+        p++;
+    }
+    return *p == '\0' ? true : false;
+}
+
 void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_t *mode)
 {
     if (INVALIDSTRING(devNode)) {
@@ -323,7 +345,7 @@ void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_
     if (!ListEmpty(g_devices)) {
         ForEachListEntry(&g_devices, node) {
             struct DeviceUdevConf *config = ListEntry(node, struct DeviceUdevConf, list);
-            if (STRINGEQUAL(config->name, devNode)) {
+            if (IsMatch(devNode, config->name)) {
                 *uid = config->uid;
                 *gid = config->gid;
                 *mode = config->mode;
