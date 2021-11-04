@@ -25,16 +25,8 @@ service_reboot_deps = [
   "//third_party/bounds_checking_function:libsec_static",
 ]
 
-ohos_static_library("libreboot_static") {
+ohos_static_library("libreboot") {
   sources = service_reboot_sources
   include_dirs = service_reboot_include
   deps = service_reboot_deps
-}
-
-ohos_shared_library("libreboot_shared") {
-  sources = service_reboot_sources
-  include_dirs = service_reboot_include
-  deps = service_reboot_deps
-  part_name = "init"
-  install_images = [ "system" ]
 }
