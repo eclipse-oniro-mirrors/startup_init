@@ -39,6 +39,25 @@ void SetInitLogLevel(InitLogLevel logLevel)
 }
 
 #ifdef OHOS_LITE
+static LogLevel ConvertToHiLog(InitLogLevel level)
+{
+     switch (level) {
+        case INIT_DEBUG:
+            return LOG_DEBUG;
+        case INIT_INFO:
+            return LOG_INFO;
+        case INIT_WARN:
+            return LOG_WARN;
+        case INIT_ERROR:
+            return LOG_ERROR;
+        case INIT_FATAL:
+            return LOG_FATAL;
+        // Unexpected log level, set level as lowest
+        default:
+            return LOG_DEBUG;
+    }
+}
+
 void InitToHiLog(InitLogLevel logLevel, const char *fmt, ...)
 {
     if (logLevel < g_logLevel) {
@@ -52,7 +71,7 @@ void InitToHiLog(InitLogLevel logLevel, const char *fmt, ...)
         va_end(list);
         return;
     }
-    (void)HiLogPrint(LOG_CORE, logLevel, LOG_DOMAIN, INIT_LOG_TAG, "%{public}s", tmpFmt);
+    (void)HiLogPrint(LOG_CORE, ConvertToHiLog(logLevel), LOG_DOMAIN, INIT_LOG_TAG, "%{public}s", tmpFmt);
     va_end(list);
     return;
 }
@@ -83,8 +102,7 @@ void EnableDevKmsg(void)
     return;
 }
 
-void InitLog(InitLogLevel logLevel, const char *fileName, int line, const char *kLevel,
-    const char *fmt, ...)
+void InitLog(const char *outFileName, InitLogLevel logLevel, const char *kLevel, const char *fmt, ...)
 {
     if (logLevel < g_logLevel) {
         return;
@@ -106,8 +124,8 @@ void InitLog(InitLogLevel logLevel, const char *fileName, int line, const char *
     }
 
     char logInfo[MAX_LOG_SIZE];
-    if (snprintf_s(logInfo, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, "%s[pid=%d][%s:%d][%s][%s] %s",
-        kLevel, getpid(), fileName, line, INIT_LOG_TAG, LOG_LEVEL_STR[logLevel], tmpFmt) == -1) {
+    if (snprintf_s(logInfo, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, "%s[pid=%d][%s][%s] %s",
+        kLevel, getpid(), "INIT", LOG_LEVEL_STR[logLevel], tmpFmt) == -1) {
         close(g_fd);
         g_fd = -1;
         return;
@@ -121,40 +139,27 @@ void InitLog(InitLogLevel logLevel, const char *fileName, int line, const char *
     return;
 }
 #else // for other process
-static FILE *g_outfile = NULL;
-void InitLog(InitLogLevel logLevel, const char *fileName, int line, const char *kLevel,
-    const char *fmt, ...)
+void InitLog(const char *outFileName, InitLogLevel logLevel, const char *kLevel, const char *fmt, ...)
 {
     if (logLevel < g_logLevel) {
         return;
     }
     time_t second = time(0);
-    if (second < 0) {
-        return;
-    }
+    INIT_CHECK_ONLY_RETURN(second >= 0 && outFileName != NULL);
     struct tm *t = localtime(&second);
-    if (t == NULL) {
-        return;
-    }
-
-    if (g_outfile == NULL) {
-        chmod(PARAM_AGENT_LOG_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
-        g_outfile = fopen(PARAM_AGENT_LOG_PATH, "w+");
-    }
-    if (g_outfile == NULL) {
-        (void)fprintf(stdout, "%s[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ", kLevel, (t->tm_year + BASE_YEAR),
-            (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, gettid(), fileName,
-            line, INIT_LOG_TAG, LOG_LEVEL_STR[logLevel]);
-        printf("output %s error: %s \n", fmt, strerror(errno));
-        return;
-    }
-    (void)fprintf(g_outfile, "%s[%d-%d-%d %d:%d:%d][pid=%d][%s:%d][%s][%s] ", kLevel,  (t->tm_year + BASE_YEAR),
-        (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, getpid(), fileName,
-        line, INIT_LOG_TAG, LOG_LEVEL_STR[logLevel]);
+    INIT_CHECK_ONLY_RETURN(t != NULL);
+    FILE *outfile = NULL;
+    outfile = fopen(outFileName, "a+");
+    INIT_CHECK_ONLY_RETURN(outfile != NULL);
+    (void)fprintf(outfile, "[%d-%d-%d %d:%d:%d][pid=%d][%s][%s] ",
+        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec,
+        getpid(), kLevel, LOG_LEVEL_STR[logLevel]);
     va_list list;
     va_start(list, fmt);
-    (void)vfprintf(g_outfile, fmt, list);
+    (void)vfprintf(outfile, fmt, list);
     va_end(list);
-    (void)fflush(g_outfile);
+    (void)fflush(outfile);
+    fclose(outfile);
+    return;
 }
 #endif

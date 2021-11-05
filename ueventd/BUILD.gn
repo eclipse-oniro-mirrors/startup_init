@@ -19,6 +19,7 @@ if (defined(ohos_lite)) {
         "//base/startup/init_lite/ueventd/ueventd.c",
         "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
         "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
+        "//base/startup/init_lite/ueventd/ueventd_main.c",
         "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
         "//base/startup/init_lite/ueventd/ueventd_socket.c",
       ]
@@ -62,6 +63,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/ueventd/ueventd.c",
       "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
       "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
+      "//base/startup/init_lite/ueventd/ueventd_main.c",
       "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
       "//base/startup/init_lite/ueventd/ueventd_socket.c",
     ]

@@ -160,9 +160,9 @@ public:
     int TestParamEvent()
     {
         PostParamTrigger(EVENT_TRIGGER_PARAM, "net.tcp.default_init_rwnd", "60");
-        const char *sysctrl = "sys.powerctrl=reboot, shutdown";
+        const char *sysctrl = "ohos.startup.powerctrl=reboot, shutdown";
         PostTrigger(EVENT_TRIGGER_PARAM, sysctrl, strlen(sysctrl));
-        PostParamTrigger(EVENT_TRIGGER_PARAM, "sys.powerctrl", "reboot, shutdown");
+        PostParamTrigger(EVENT_TRIGGER_PARAM, "ohos.startup.powerctrl", "reboot, shutdown");
 
         const char *startCmd = "ohos.ctl.start=hdc -t";
         PostTrigger(EVENT_TRIGGER_PARAM, startCmd, strlen(startCmd));
@@ -320,6 +320,10 @@ public:
     {
         u_int32_t size = strlen(condition) + CONDITION_EXTEND_LEN;
         char *prefix = (char *)malloc(size);
+        if (prefix == nullptr) {
+            printf("prefix is null.\n");
+            return -1;
+        }
         ConvertInfixToPrefix(condition, prefix, size);
         printf("prefix %s \n", prefix);
         free(prefix);

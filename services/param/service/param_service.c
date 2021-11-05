@@ -135,7 +135,7 @@ PARAM_STATIC int AddSecurityLabel(const ParamAuditData *auditData, void *context
 #endif
         PARAM_LOGE("Error, repeate to add label for name %s", auditData->name);
     }
-    PARAM_LOGD("AddSecurityLabel label uid %d gid %d mode %o name: %s", auditData->dacData.gid, auditData->dacData.gid,
+    PARAM_LOGD("AddSecurityLabel label gid %d uid %d mode %o name: %s", auditData->dacData.gid, auditData->dacData.uid,
                auditData->dacData.mode, auditData->name);
     return 0;
 }
@@ -149,11 +149,11 @@ static char *GetServiceCtrlName(const char *name, const char *value)
     static char *powerCtrlArg[][2] = {
         {"reboot,shutdown", "reboot.shutdown"},
         {"reboot,updater", "reboot.updater"},
-        {"reboot,flash", "reboot.flash"},
+        {"reboot,flashd", "reboot.flashd"},
         {"reboot", "reboot"},
     };
     char *key = NULL;
-    if (strcmp("sys.powerctrl", name) == 0) {
+    if (strcmp("ohos.startup.powerctrl", name) == 0) {
         for (size_t i = 0; i < ARRAY_LENGTH(powerCtrlArg); i++) {
             if (strncmp(value, powerCtrlArg[i][0], strlen(powerCtrlArg[i][0])) == 0) {
                 uint32_t keySize = strlen(powerCtrlArg[i][1]) + strlen(OHOS_SERVICE_CTRL_PREFIX) + 1;
@@ -226,6 +226,8 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
     PARAM_CHECK(ret == 0, return ret, "Forbit to set parameter %s", name);
 
     if (serviceCtrl) {
+        ret = CheckParamValue(&g_paramWorkSpace.paramSpace, NULL, name, value);
+        PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         PostParamTrigger(EVENT_TRIGGER_PARAM, name, value);
     } else {
         uint32_t dataIndex = 0;

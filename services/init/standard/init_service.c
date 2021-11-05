@@ -31,9 +31,8 @@
 void NotifyServiceChange(const char *serviceName, const char *change)
 {
     char paramName[PARAM_NAME_LEN_MAX] = { 0 };
-    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", serviceName) < 0) {
-        INIT_LOGE("snprintf_s paramName error %d ", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s",
+        serviceName) >= 0, "snprintf_s paramName error %d ", errno);
     SystemWriteParam(paramName, change);
 }
 
@@ -68,12 +67,9 @@ int ServiceExec(const Service *service)
             _exit(0x7f); // 0x7f: user specified
         }
     }
-    if (unsetenv("UV_THREADPOOL_SIZE") != 0) {
-        INIT_LOGE("set UV_THREADPOOL_SIZE error : %d.", errno);
-    }
+    INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
     // L2 Can not be reset env
-    if (execv(service->pathArgs.argv[0], service->pathArgs.argv) != 0) {
-        INIT_LOGE("service %s execve failed! err %d.", service->name, errno);
-    }
+    INIT_CHECK_ONLY_ELOG(execv(service->pathArgs.argv[0], service->pathArgs.argv) == 0,
+        "service %s execve failed! err %d.", service->name, errno);
     return SERVICE_SUCCESS;
 }

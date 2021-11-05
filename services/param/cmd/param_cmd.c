@@ -147,7 +147,6 @@ static void ExeuteCmdParamWatch(int argc, char *argv[], int start)
     }
 }
 #endif
-
 int RunParamCommand(int argc, char *argv[])
 {
     static struct CmdArgs paramCmds[] = {
@@ -160,14 +159,6 @@ int RunParamCommand(int argc, char *argv[])
         { "watch", 2, ExeuteCmdParamWatch, USAGE_INFO_PARAM_WATCH }, // watch param count
 #endif
 	};
-#ifdef PARAM_TEST
-    ParamWorkSpace *space = GetClientParamWorkSpace();
-    if (space != NULL && space->securityLabel != NULL) {
-        const int testUid = 1000;
-        space->securityLabel->cred.uid = testUid;
-        space->securityLabel->cred.gid = testUid;
-    }
-#endif
     if (argc < MIN_ARGC) {
         printf("usage: \n");
         for (size_t i = 0; i < sizeof(paramCmds) / sizeof(paramCmds[0]); i++) {
@@ -177,7 +168,7 @@ int RunParamCommand(int argc, char *argv[])
     }
 
     for (size_t i = 0; i < sizeof(paramCmds) / sizeof(paramCmds[0]); i++) {
-        if (strncmp(argv[1], paramCmds[i].name, strlen(paramCmds[i].name)) == 0) {
+        if (strcmp(argv[1], paramCmds[i].name) == 0) {
             if (argc < paramCmds[i].minArg) {
                 printf("usage: %s\n", paramCmds[i].help);
                 return 0;

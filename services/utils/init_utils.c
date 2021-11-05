@@ -20,7 +20,6 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <pwd.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -54,9 +53,7 @@ float ConvertMicrosecondToSecond(int x)
 
 uid_t DecodeUid(const char *name)
 {
-    if (name == NULL) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(name != NULL, -1);
     int digitFlag = 1;
     for (unsigned int i = 0; i < strlen(name); ++i) {
         if (isalpha(name[i])) {
@@ -67,9 +64,7 @@ uid_t DecodeUid(const char *name)
     if (digitFlag) {
         errno = 0;
         uid_t result = strtoul(name, 0, DECIMAL_BASE);
-        if (errno != 0) {
-            return -1;
-        }
+        INIT_CHECK_RETURN_VALUE(errno == 0, -1);
         return result;
     } else {
         struct passwd *userInf = getpwnam(name);
@@ -85,10 +80,7 @@ char *ReadFileToBuf(const char *configFile)
     char *buffer = NULL;
     FILE *fd = NULL;
     struct stat fileStat = {0};
-    if (configFile == NULL || *configFile == '\0') {
-        return NULL;
-    }
-
+    INIT_CHECK_RETURN_VALUE(configFile != NULL && *configFile != '\0', NULL);
     do {
         if (stat(configFile, &fileStat) != 0 ||
             fileStat.st_size <= 0 || fileStat.st_size > MAX_JSON_FILE_LEN) {
@@ -123,9 +115,7 @@ char *ReadFileToBuf(const char *configFile)
 
 int SplitString(char *srcPtr, const char *del, char **dstPtr, int maxNum)
 {
-    if (srcPtr == NULL || dstPtr == NULL || del == NULL) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(srcPtr != NULL && dstPtr != NULL && del != NULL, -1);
     char *buf = NULL;
     dstPtr[0] = strtok_r(srcPtr, del, &buf);
     int counter = 0;
@@ -163,10 +153,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
         itemCounts = defaultItemCounts;
     }
     char **items = (char **)malloc(sizeof(char*) * itemCounts);
-    if (items == NULL) {
-        INIT_LOGE("No enough memory to store items");
-        return NULL;
-    }
+    INIT_ERROR_CHECK(items != NULL, return NULL, "No enough memory to store items");
     char *rest = NULL;
     char *p = strtok_r(buffer, del, &rest);
     int count = 0;
@@ -175,19 +162,14 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
             itemCounts += (itemCounts / 2) + 1; // 2 Request to increase the original memory by half.
             INIT_LOGD("Too many items,expand size");
             char **expand = (char **)(realloc(items, sizeof(char *) * itemCounts));
-            if (expand == NULL) {
-                INIT_LOGE("Failed to expand memory for uevent config parser");
-                FreeStringVector(items, count);
-                return NULL;
-            }
+            INIT_ERROR_CHECK(expand != NULL, FreeStringVector(items, count);
+                return NULL, "Failed to expand memory for uevent config parser");
             items = expand;
         }
         size_t len = strlen(p);
         items[count] = (char *)malloc(len + 1);
-        if (items[count] == NULL) {
-            FreeStringVector(items, count);
-            return NULL;
-        }
+        INIT_CHECK(items[count] != NULL, FreeStringVector(items, count);
+            return NULL);
         if (strncpy_s(items[count], len + 1, p, len) != EOK) {
             INIT_LOGE("Copy string failed");
             FreeStringVector(items, count);
@@ -204,10 +186,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
 void WaitForFile(const char *source, unsigned int maxCount)
 {
     unsigned int maxCountTmp = maxCount;
-    if (maxCountTmp > WAIT_MAX_COUNT) {
-        INIT_LOGE("WaitForFile max time is 5s");
-        maxCountTmp = WAIT_MAX_COUNT;
-    }
+    INIT_ERROR_CHECK(maxCountTmp <= WAIT_MAX_COUNT, maxCountTmp = WAIT_MAX_COUNT, "WaitForFile max time is 5s");
     struct stat sourceInfo = {};
     const unsigned int waitTime = 500000;
     unsigned int count = 0;
@@ -216,22 +195,16 @@ void WaitForFile(const char *source, unsigned int maxCount)
         count++;
     } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCountTmp));
     float secTime = ConvertMicrosecondToSecond(waitTime);
-    if (count == maxCountTmp) {
-        INIT_LOGE("wait for file:%s failed after %f.", source, maxCountTmp * secTime);
-    }
+    INIT_CHECK_ONLY_ELOG(count != maxCountTmp, "wait for file:%s failed after %f.", source, maxCountTmp * secTime);
     return;
 }
 
 size_t WriteAll(int fd, const char *buffer, size_t size)
 {
-    if (fd < 0 || buffer == NULL || *buffer == '\0') {
-        return 0;
-    }
-
+    INIT_CHECK_RETURN_VALUE(buffer != NULL && fd >= 0 && *buffer != '\0', 0);
     const char *p = buffer;
     size_t left = size;
-    ssize_t written = -1;
-
+    ssize_t written;
     while (left > 0) {
         do {
             written = write(fd, p, left);
@@ -248,15 +221,10 @@ size_t WriteAll(int fd, const char *buffer, size_t size)
 
 char *GetRealPath(const char *source)
 {
-    if (source == NULL) {
-        return NULL;
-    }
+    INIT_CHECK_RETURN_VALUE(source != NULL, NULL);
     char *path = realpath(source, NULL);
     if (path == NULL) {
-        if (errno != ENOENT) {
-            INIT_LOGE("Failed to resolve %s real path err=%d", source, errno);
-            return NULL;
-        }
+        INIT_ERROR_CHECK(errno == ENOENT, return NULL, "Failed to resolve %s real path err=%d", source, errno);
     }
     return path;
 }
@@ -269,10 +237,8 @@ int MakeDir(const char *dir, mode_t mode)
         return rc;
     }
     rc = mkdir(dir, mode);
-    if (rc < 0 && errno != EEXIST) {
-        INIT_LOGE("Create directory \" %s \" failed, err = %d", dir, errno);
-        return rc;
-    }
+    INIT_ERROR_CHECK(!(rc < 0 && errno != EEXIST), return rc,
+        "Create directory \" %s \" failed, err = %d", dir, errno);
     // create dir success or it already exist.
     return 0;
 }
@@ -298,13 +264,9 @@ int MakeDirRecursive(const char *dir, mode_t mode)
         if (gap < 0) { // end with '/'
             break;
         }
-        if (memcpy_s(buffer, PATH_MAX, dir, p - dir - 1) != 0) {
-            return -1;
-        }
+        INIT_CHECK_RETURN_VALUE(memcpy_s(buffer, PATH_MAX, dir, p - dir - 1) == 0, -1);
         rc = MakeDir(buffer, mode);
-        if (rc < 0) {
-            return rc;
-        }
+        INIT_CHECK_RETURN_VALUE(rc >= 0, rc);
         slash = strchr(p, '/');
     }
     return MakeDir(dir, mode);
@@ -317,15 +279,13 @@ int StringToInt(const char *str, int defaultValue)
     }
     errno = 0;
     int value = (int)strtoul(str, NULL, DECIMAL_BASE);
-    return errno != 0 ? defaultValue : value;
+    return (errno != 0) ? defaultValue : value;
 }
 
 int ReadFileInDir(const char *dirPath, const char *includeExt,
     int (*processFile)(const char *fileName, void *context), void *context)
 {
-    if (dirPath == NULL || processFile == NULL) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(dirPath != NULL && processFile != NULL, -1);
     DIR *pDir = opendir(dirPath);
     INIT_ERROR_CHECK(pDir != NULL, return -1, "Read dir :%s failed.%d", dirPath, errno);
     char *fileName = malloc(MAX_BUF_SIZE);

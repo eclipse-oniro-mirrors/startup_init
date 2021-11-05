@@ -32,54 +32,34 @@
 
 static int GetControlFromEnv(const char *path, int length)
 {
-    if (path == NULL || length <= 0) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(path != NULL && length > 0, -1);
     INIT_LOGI("GetControlFromEnv path is %s ", path);
     const char *val = getenv(path);
-    if (val == NULL) {
-        INIT_LOGE("GetControlFromEnv val is null %d", errno);
-        return -1;
-    }
+    INIT_ERROR_CHECK(val != NULL, return -1, "GetControlFromEnv val is null %d", errno);
     errno = 0;
     int fd = strtol(val, NULL, N_DEC);
-    if (errno) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(errno == 0, -1);
     INIT_LOGI("GetControlFromEnv fd is %d ", fd);
-    if (fcntl(fd, F_GETFD) < 0) {
-        INIT_LOGE("GetControlFromEnv errno %d ", errno);
-        return -1;
-    }
+    INIT_ERROR_CHECK(fcntl(fd, F_GETFD) >= 0, return -1, "GetControlFromEnv errno %d ", errno);
     return fd;
 }
 
 int GetControlSocket(const char *name)
 {
-    if (name == NULL) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(name != NULL, -1);
     char path[MAX_SOCKET_ENV_PREFIX_LEN] = {0};
-    if (snprintf_s(path, sizeof(path), sizeof(path) - 1, OHOS_SOCKET_ENV_PREFIX"%s", name) == -1) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(snprintf_s(path, sizeof(path), sizeof(path) - 1, OHOS_SOCKET_ENV_PREFIX"%s",
+        name) != -1, -1);
     INIT_LOGI("GetControlSocket path is %s ", path);
     int fd = GetControlFromEnv(path, MAX_SOCKET_ENV_PREFIX_LEN);
-    if (fd < 0) {
-        INIT_LOGE("GetControlFromEnv fail ");
-        return -1;
-    }
+    INIT_ERROR_CHECK(fd >= 0, return -1, "GetControlFromEnv fail ");
     struct sockaddr_un addr;
     socklen_t addrlen = sizeof(addr);
     int ret = getsockname(fd, (struct sockaddr*)&addr, &addrlen);
-    if (ret < 0) {
-        INIT_LOGE("GetControlSocket errno %d ", errno);
-        return -1;
-    }
+    INIT_ERROR_CHECK(ret >= 0, return -1, "GetControlSocket errno %d ", errno);
     char sockDir[MAX_SOCKET_DIR_LEN] = {0};
-    if (snprintf_s(sockDir, sizeof(sockDir), sizeof(sockDir) - 1, OHOS_SOCKET_DIR"/%s", name) == -1) {
-        return -1;
-    }
+    INIT_CHECK_RETURN_VALUE(snprintf_s(sockDir, sizeof(sockDir), sizeof(sockDir) - 1, OHOS_SOCKET_DIR"/%s",
+        name) != -1, -1);
     INIT_LOGI("sockDir %s ", sockDir);
     INIT_LOGI("addr.sun_path %s ", addr.sun_path);
     if (strncmp(sockDir, addr.sun_path, strlen(sockDir)) == 0) {

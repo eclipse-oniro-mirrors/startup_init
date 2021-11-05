@@ -193,7 +193,7 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
         }
     } else if (!INVALIDSTRING(deviceName)) {
         if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
-            "/dev/block/platform/%s/by-name/%s", parent, deviceName) == -1) {
+            "/dev/block/platform/%s/%s", parent, deviceName) == -1) {
             INIT_LOGE("Failed to build link");
         }
     }

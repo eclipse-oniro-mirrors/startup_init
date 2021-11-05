@@ -16,8 +16,19 @@
 #ifndef INIT_FILE_API_H
 #define INIT_FILE_API_H
 
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+
 #define OHOS_FILE_ENV_PREFIX    "OHOS_FILE_"
 
 int GetControlFile(const char *name);
 
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
 #endif

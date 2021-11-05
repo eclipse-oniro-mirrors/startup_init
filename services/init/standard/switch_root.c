@@ -23,7 +23,6 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include "init_log.h"
-#include "init_utils.h"
 #include "fs_manager/fs_manager.h"
 #include "securec.h"
 

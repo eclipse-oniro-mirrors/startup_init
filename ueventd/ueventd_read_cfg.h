@@ -45,7 +45,15 @@ struct FirmwareUdevConf {
     const char *fmPath;
     struct ListNode list;
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 void ParseUeventdConfigFile(const char *file);
 void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_t *mode);
 void ChangeSysAttributePermissions(const char *sysPath);
+int ParseUeventConfig(char *buffer);
+#ifdef __cplusplus
+}
+#endif
 #endif /* __UEVENTD_READ_CFG_H */

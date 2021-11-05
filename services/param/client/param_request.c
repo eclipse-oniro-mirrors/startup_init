@@ -21,6 +21,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "init_utils.h"
 #include "param_manager.h"
 #include "param_message.h"
 
@@ -44,7 +45,7 @@ static int InitParamClient(void)
     if (PARAM_TEST_FLAG(g_clientSpace.paramSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
-    PARAM_LOGI("InitParamClient");
+    PARAM_LOGD("InitParamClient");
     pthread_mutex_init(&g_clientSpace.mutex, NULL);
     g_clientSpace.clientFd = INVALID_SOCKET;
     return InitParamWorkSpace(&g_clientSpace.paramSpace, 1);
@@ -52,8 +53,16 @@ static int InitParamClient(void)
 
 void ClientInit(void)
 {
-    PARAM_LOGI("ClientInit");
+    PARAM_LOGD("ClientInit");
     (void)InitParamClient();
+    // set log switch
+    const uint32_t switchLength = 10; // 10 swtch length
+    char logSwitch[switchLength] = {0};
+    uint32_t len = switchLength;
+    (void)SystemGetParameter("param.debugging", logSwitch, &len);
+    if (strcmp(logSwitch, "1") == 0) {
+        SetInitLogLevel(INIT_DEBUG);
+    }
 }
 
 void ClientDeinit(void)
@@ -145,6 +154,27 @@ static int StartRequest(int *fd, ParamMessage *request, int timeout)
     return ret;
 }
 
+static int NeedCheckParamPermission(const char *name)
+{
+    static char *ctrlParam[] = {
+        "ohos.ctl.start",
+        "ohos.ctl.stop",
+        "ohos.startup.powerctrl"
+    };
+    for (size_t i = 0; i < ARRAY_LENGTH(ctrlParam); i++) {
+        if (strcmp(name, ctrlParam[i]) == 0) {
+            return 0;
+        }
+    }
+    ParamSecurityLabel *securityLabel = g_clientSpace.paramSpace.securityLabel;
+    if (securityLabel != NULL &&
+        ((securityLabel->flags & LABEL_CHECK_FOR_ALL_PROCESS) == LABEL_CHECK_FOR_ALL_PROCESS) &&
+        ((securityLabel->flags & LABEL_ALL_PERMISSION) != LABEL_ALL_PERMISSION)) {
+        return 1;
+    }
+    return 0;
+}
+
 int SystemSetParameter(const char *name, const char *value)
 {
     InitParamClient();
@@ -154,7 +184,7 @@ int SystemSetParameter(const char *name, const char *value)
     uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + PARAM_ALIGN(strlen(value) + 1);
     uint32_t labelLen = 0;
     ParamSecurityOps *ops = GetClientParamSecurityOps();
-    if (LABEL_IS_CLIENT_CHECK_PERMITTED(g_clientSpace.paramSpace.securityLabel)) {
+    if (NeedCheckParamPermission(name)) {
         ret = CheckParamPermission(&g_clientSpace.paramSpace, g_clientSpace.paramSpace.securityLabel, name, DAC_WRITE);
         PARAM_CHECK(ret == 0, return ret, "Forbit to set parameter %s", name);
     } else if (!LABEL_IS_ALL_PERMITTED(g_clientSpace.paramSpace.securityLabel)) { // check local can check permissions

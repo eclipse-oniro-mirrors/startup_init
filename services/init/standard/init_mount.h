@@ -15,5 +15,17 @@
 
 #ifndef BASE_STARTUP_INITLITE_MOUNT_H
 #define BASE_STARTUP_INITLITE_MOUNT_H
+
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
 int MountRequriedPartitions(void);
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
+
 #endif

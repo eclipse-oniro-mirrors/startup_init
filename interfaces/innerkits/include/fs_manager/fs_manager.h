@@ -17,6 +17,7 @@
 #define STARTUP_FS_MANAGER_H
 
 #include <stdbool.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -318,10 +318,10 @@ public:
             return nullptr;
         }
 
-        // 创建stream task
+        // create stream task
         server->incomingConnect((ParamTaskPtr)server, 0);
         ParamWatcher *watcher = GetNextParamWatcher(GetTriggerWorkSpace(), nullptr);
-        return watcher != nullptr ? watcher->stream : nullptr;
+        return (watcher != nullptr) ? watcher->stream : nullptr;
     }
 
     int TestServiceProcessMessage(const char *name, const char *value, int userLabel)
@@ -478,7 +478,7 @@ public:
         auditData.dacData.uid = 202; // 202 test dac uid
         auditData.dacData.mode = mode;
         AddSecurityLabel(&auditData, GetParamWorkSpace());
-        return SystemWriteParam("sys.powerctrl", reboot);
+        return SystemWriteParam("ohos.startup.powerctrl", reboot);
     }
 };
 
@@ -522,11 +522,11 @@ HWTEST_F(ParamUnitTest, TestSetParam_2, TestSize.Level0)
                                     { "ctl.start.111.2222.3333.4444.666.xxxxx.777", "2_5" } };
     test.TestSetParams(ctrlParams, 5);
 
-    const char *sysParams[][2] = { { "sys.powerctrl.111.2222.xxxx.xxx.xxx", "3_1" },
-                                   { "sys.powerctrl.111.2222.3333.xxx", "3_2" },
-                                   { "sys.powerctrl.111.2222.xxxx.3333.4444", "3_3" },
-                                   { "sys.powerctrl.111.2222.3333.xxxx.4444.666", "3_4" },
-                                   { "sys.powerctrl.111.2222.3333.4444.666.xxxxx.777", "3_5" } };
+    const char *sysParams[][2] = { { "ohos.startup.powerctrl.111.2222.xxxx.xxx.xxx", "3_1" },
+                                   { "ohos.startup.powerctrl.111.2222.3333.xxx", "3_2" },
+                                   { "ohos.startup.powerctrl.111.2222.xxxx.3333.4444", "3_3" },
+                                   { "ohos.startup.powerctrl.111.2222.3333.xxxx.4444.666", "3_4" },
+                                   { "ohos.startup.powerctrl.111.2222.3333.4444.666.xxxxx.777", "3_5" } };
     test.TestSetParams(sysParams, 5);
 }
 

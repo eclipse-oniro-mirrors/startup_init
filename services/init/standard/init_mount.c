@@ -20,41 +20,17 @@
 #include "init_log.h"
 #include "securec.h"
 
-// This function will malloc memory.
-// Do not forget to free it after used.
-static char *GetExpandFileName(const char *fileName)
-{
-    if (fileName == NULL) {
-        return NULL;
-    }
-    size_t expandSize = strlen(fileName) + PARAM_VALUE_LEN_MAX + 1;
-    char *expandName = (char *)calloc(sizeof(char), expandSize);
-    if (expandName == NULL) {
-        INIT_LOGE("Failed to allocate memory for file name \" %s \"", fileName);
-        return NULL;
-    }
-    int ret = GetParamValue(fileName, strlen(fileName), expandName, expandSize);
-    INIT_ERROR_CHECK(ret == 0, free(expandName);
-        return NULL, "Failed to get value for %s", fileName);
-    return expandName;
-}
-
 int MountRequriedPartitions(void)
 {
     const char *fstabFiles[] = {"/etc/fstab.required", NULL};
     int i = 0;
     int rc = -1;
     while (fstabFiles[i] != NULL) {
-        char *fstabFile = GetExpandFileName(fstabFiles[i]);
-        if (fstabFile != NULL) {
-            if (access(fstabFile, F_OK) == 0) {
-                INIT_LOGI("Mount required partition from %s", fstabFile);
-                rc = MountAllWithFstabFile(fstabFile, 1);
-            } else {
-                INIT_LOGE("Cannot access fstab file \" %s \"", fstabFile);
-            }
-            free(fstabFile);
-            fstabFile = NULL;
+        if (access(fstabFiles[i], F_OK) == 0) {
+            INIT_LOGI("Mount required partition from %s", fstabFiles[i]);
+            rc = MountAllWithFstabFile(fstabFiles[i], 1);
+        } else {
+            INIT_LOGE("Cannot access fstab file \" %s \"", fstabFiles[i]);
         }
         if (rc == 0) {
             break;
