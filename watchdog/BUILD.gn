@@ -21,7 +21,7 @@ if (defined(ohos_lite)) {
     include_dirs = [ "//base/startup/init_lite/services/log" ]
     deps = [ "//base/startup/init_lite/services/log:init_log" ]
     if (ohos_kernel_type == "linux") {
-       defines = ["LINUX_WATCHDOG"]
+      defines = [ "LINUX_WATCHDOG" ]
     }
   }
 } else {
@@ -30,7 +30,7 @@ if (defined(ohos_lite)) {
     sources = [ "init_watchdog.c" ]
     include_dirs = [ "//base/startup/init_lite/services/log" ]
     deps = [ "//base/startup/init_lite/services/log:init_log" ]
-    defines = ["LINUX_WATCHDOG"]
+    defines = [ "LINUX_WATCHDOG" ]
     install_enable = true
     part_name = "init"
   }
