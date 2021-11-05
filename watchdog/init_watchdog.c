@@ -23,7 +23,15 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef LINUX_WATCHDOG
 #include <linux/watchdog.h>
+#else
+#include <linux/types.h>
+#define WDIOC_KEEPALIVE      _IO('W', 5)
+#define WDIOC_SETTIMEOUT     _IOWR('W', 6, int)
+#define WDIOC_GETTIMEOUT     _IOR('W', 7, int)
+#endif
+
 #include "init_log.h"
 
 #define WAIT_MAX_COUNT 10

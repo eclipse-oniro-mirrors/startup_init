@@ -12,11 +12,26 @@
 # limitations under the License.
 
 group("watchdog") {
-  if (defined(ohos_lite)) {
+  deps = [ ":watchdog_service" ]
+}
+
+if (defined(ohos_lite)) {
+  executable("watchdog_service") {
+    sources = [ "init_watchdog.c" ]
+    include_dirs = [ "//base/startup/init_lite/services/log" ]
+    deps = [ "//base/startup/init_lite/services/log:init_log" ]
     if (ohos_kernel_type == "linux") {
-      deps = [ "//base/startup/init_lite/watchdog/linux:linux_watchdog" ]
+       defines = ["LINUX_WATCHDOG"]
     }
-  } else {
-    deps = [ "//base/startup/init_lite/watchdog/linux:linux_watchdog" ]
+  }
+} else {
+  import("//build/ohos.gni")
+  ohos_executable("watchdog_service") {
+    sources = [ "init_watchdog.c" ]
+    include_dirs = [ "//base/startup/init_lite/services/log" ]
+    deps = [ "//base/startup/init_lite/services/log:init_log" ]
+    defines = ["LINUX_WATCHDOG"]
+    install_enable = true
+    part_name = "init"
   }
 }
