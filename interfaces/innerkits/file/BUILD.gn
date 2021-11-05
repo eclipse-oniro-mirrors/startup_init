@@ -31,7 +31,7 @@ ohos_static_library("libfile_static") {
   deps = service_file_deps
 }
 
-ohos_shared_library("libfile_shared") {
+ohos_shared_library("libfile") {
   sources = service_file_sources
   include_dirs = service_file_include
   deps = service_file_deps

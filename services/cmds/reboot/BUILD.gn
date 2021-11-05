@@ -20,7 +20,9 @@ ohos_executable("reboot") {
     "//base/startup/init_lite/services/include/param/",
     "//third_party/bounds_checking_function/include",
   ]
-  deps = [ "//base/startup/init_lite/interfaces/innerkits/reboot:libreboot" ]
+  deps = [
+    "//base/startup/init_lite/interfaces/innerkits/reboot:libreboot_static",
+  ]
   install_enable = true
   part_name = "init"
 }

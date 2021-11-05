@@ -167,7 +167,7 @@ if (defined(ohos_lite)) {
       ":init",
       ":init_etc",
       "//base/startup/init_lite/interfaces/innerkits/dynamic_service:dynamic_service",
-      "//base/startup/init_lite/interfaces/innerkits/file:libfile_shared",
+      "//base/startup/init_lite/interfaces/innerkits/file:libfile",
       "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_shared",
       "//base/startup/init_lite/interfaces/innerkits/reboot:libreboot",
       "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
