@@ -30,7 +30,7 @@ ohos_static_library("libsocket_static") {
   deps = service_socket_deps
 }
 
-ohos_shared_library("libsocket_shared") {
+ohos_shared_library("libsocket") {
   sources = service_socket_sources
   include_dirs = service_socket_include
   deps = service_socket_deps

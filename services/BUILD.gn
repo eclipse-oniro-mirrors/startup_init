@@ -170,7 +170,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/file:libfile_shared",
       "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_shared",
       "//base/startup/init_lite/interfaces/innerkits/reboot:libreboot",
-      "//base/startup/init_lite/interfaces/innerkits/socket:libsocket_shared",
+      "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
       "//base/startup/init_lite/services/cmds/reboot:reboot",
       "//base/startup/init_lite/services/cmds/service_control:service_control",
       "//base/startup/init_lite/services/param:param",
