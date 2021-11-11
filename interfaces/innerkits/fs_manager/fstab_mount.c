@@ -24,6 +24,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "fs_manager/fs_manager.h"
+#include "fs_manager/fs_manager_log.h"
 #include "init_log.h"
 #include "init_utils.h"
 #include "securec.h"
@@ -71,7 +72,7 @@ static int ExecCommand(int argc, char **argv)
     int status;
     waitpid(pid, &status, 0);
     if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-        printf("Command %s failed with status %d", argv[0], WEXITSTATUS(status));
+        FSMGR_LOGE("Command %s failed with status %d", argv[0], WEXITSTATUS(status));
     }
     return WEXITSTATUS(status);
 }
@@ -83,7 +84,7 @@ int DoFormat(const char *devPath, const char *fsType)
     }
 
     if (!IsSupportedFilesystem(fsType)) {
-        printf("[fs_manager][error] Do not support filesystem \" %s \"\n", fsType);
+        FSMGR_LOGE("Do not support filesystem \" %s \"", fsType);
         return -1;
     }
     int ret = 0;
@@ -91,7 +92,7 @@ int DoFormat(const char *devPath, const char *fsType)
     if (strcmp(fsType, "ext4") == 0) {
         const unsigned int blockSize = 4096;
         if (snprintf_s(blockSizeBuffer, BLOCK_SIZE_BUFFER, BLOCK_SIZE_BUFFER - 1, "%u", blockSize) == -1) {
-            printf("[fs_manager][error] Failed to build block size buffer\n");
+            FSMGR_LOGE("Failed to build block size buffer");
             return -1;
         }
         char *formatCmds[] = {
@@ -161,11 +162,11 @@ static int Mount(const char *source, const char *target, const char *fsType,
     int rc = -1;
 
     if (source == NULL || target == NULL || fsType == NULL) {
-        printf("[fs_manager][error] Invalid argment for mount\n");
+        FSMGR_LOGE("Invalid argment for mount.");
         return -1;
     }
     if (stat(target, &st) != 0 && errno != ENOENT) {
-        printf("[fs_manager][error] Cannot get stat of \" %s \", err = %d\n", target, errno);
+        FSMGR_LOGE("Cannot get stat of \" %s \", err = %d", target, errno);
         return -1;
     }
     if ((st.st_mode & S_IFMT) == S_IFLNK) { // link, delete it.
@@ -173,14 +174,14 @@ static int Mount(const char *source, const char *target, const char *fsType,
     }
     if (mkdir(target, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
         if (errno != EEXIST) {
-            printf("[fs_manager][error] Failed to create dir \" %s \", err = %d\n", target, errno);
+            FSMGR_LOGE("Failed to create dir \" %s \", err = %d", target, errno);
             return -1;
         }
     }
     errno = 0;
     while ((rc = mount(source, target, fsType, flags, data)) != 0) {
         if (errno == EAGAIN) {
-            printf("[fs_manager][warning] Mount %s to %s failed. try again", source, target);
+            FSMGR_LOGE("Mount %s to %s failed. try again", source, target);
             continue;
         } else {
             break;
@@ -199,7 +200,7 @@ int MountOneItem(FstabItem *item)
 
     mountFlags = GetMountFlags(item->mountOptions, fsSpecificData, sizeof(fsSpecificData));
     if (!IsSupportedFilesystem(item->fsType)) {
-        printf("[fs_manager][error]Unsupported file system \" %s \"", item->fsType);
+        FSMGR_LOGE("Unsupported file system \" %s \"", item->fsType);
         return -1;
     }
     if (FM_MANAGER_WAIT_ENABLED(item->fsManagerFlags)) {
@@ -207,9 +208,9 @@ int MountOneItem(FstabItem *item)
     }
     int rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
     if (rc != 0) {
-        INIT_LOGE("Mount %s to %s failed %d", item->deviceName, item->mountPoint, errno);
+        FSMGR_LOGE("Mount %s to %s failed %d", item->deviceName, item->mountPoint, errno);
     } else {
-        INIT_LOGI("Mount %s to %s successful", item->deviceName, item->mountPoint);
+        FSMGR_LOGI("Mount %s to %s successful", item->deviceName, item->mountPoint);
     }
     return rc;
 }
@@ -232,14 +233,9 @@ int CheckRequiredAndMount(FstabItem *item, bool required)
     return rc;
 }
 
-int MountAllWithFstabFile(const char *fstabFile, bool required)
+int MountAllWithFstab(const Fstab *fstab, bool required)
 {
-    if (fstabFile == NULL || *fstabFile == '\0') {
-        return -1;
-    }
-    Fstab *fstab = NULL;
-    if ((fstab = ReadFstabFromFile(fstabFile, false)) == NULL) {
-        printf("[fs_manager][error] Read fstab file \" %s \" failed\n", fstabFile);
+    if (fstab == NULL) {
         return -1;
     }
 
@@ -251,6 +247,21 @@ int MountAllWithFstabFile(const char *fstabFile, bool required)
             break;
         }
     }
+    return rc;
+}
+
+int MountAllWithFstabFile(const char *fstabFile, bool required)
+{
+    if (fstabFile == NULL || *fstabFile == '\0') {
+        return -1;
+    }
+    Fstab *fstab = NULL;
+    if ((fstab = ReadFstabFromFile(fstabFile, false)) == NULL) {
+        FSMGR_LOGE("[fs_manager][error] Read fstab file \" %s \" failed\n", fstabFile);
+        return -1;
+    }
+
+    int rc = MountAllWithFstab(fstab, required);
     ReleaseFstab(fstab);
     fstab = NULL;
     return rc;
@@ -263,30 +274,29 @@ int UmountAllWithFstabFile(const char *fstabFile)
     }
     Fstab *fstab = NULL;
     if ((fstab = ReadFstabFromFile(fstabFile, false)) == NULL) {
-        printf("[fs_manager][error] Read fstab file \" %s \" failed\n", fstabFile);
+        FSMGR_LOGE("Read fstab file \" %s \" failed.", fstabFile);
         return -1;
     }
 
     FstabItem *item = NULL;
     int rc = -1;
     for (item = fstab->head; item != NULL; item = item->next) {
-        printf("[fs_manager][info]Umount %s\n", item->mountPoint);
+        FSMGR_LOGI("Umount %s.", item->mountPoint);
         MountStatus status = GetMountStatusForMountPoint(item->mountPoint);
         if (status == MOUNT_ERROR) {
-            printf("[fs_manager][warning] Cannot get mount status of mount point \" %s \"\n", item->mountPoint);
+            FSMGR_LOGW("Cannot get mount status of mount point \" %s \"", item->mountPoint);
             continue; // Cannot get mount status, just ignore it and try next one.
         } else if (status == MOUNT_UMOUNTED) {
-            printf("[fs_manager][info] Mount point \" %s \" already unmounted. device path: %s, fs type: %s\n",
+            FSMGR_LOGI("Mount point \" %s \" already unmounted. device path: %s, fs type: %s.",
                 item->mountPoint, item->deviceName, item->fsType);
             continue;
         } else {
             rc = umount(item->mountPoint);
             if (rc == -1) {
-                printf("[fs_manager][error] Umount %s failed, device path: %s, fs type: %s, err = %d",
+                FSMGR_LOGE("Umount %s failed, device path: %s, fs type: %s, err = %d.",
                     item->mountPoint, item->deviceName, item->fsType, errno);
             } else {
-                printf("[fs_manager][info] Umount %s successfully\n",
-                    item->mountPoint);
+                FSMGR_LOGE("Umount %s successfully.", item->mountPoint);
             }
         }
     }

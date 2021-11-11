@@ -17,6 +17,8 @@
 #include <sys/mount.h>
 #include "dynamic_service.h"
 #include "fs_manager/fs_manager.h"
+#include "fs_manager/fs_manager_log.h"
+#include "init_log.h"
 #include "init_unittest.h"
 #include "securec.h"
 
@@ -147,4 +149,20 @@ HWTEST_F(InnerkitsUnitTest, GetMountFlags_unitest, TestSize.Level1)
     ReleaseFstab(fstab);
     fstab = nullptr;
 }
+
+HWTEST_F(InnerkitsUnitTest, TestFsManagerLog, TestSize.Level1)
+{
+    FsManagerLogInit(LOG_TO_KERNEL, FILE_NAME);
+    FSMGR_LOGE("Fsmanager log to kernel.");
+    FsManagerLogInit(LOG_TO_STDIO, "");
+    FSMGR_LOGE("Fsmanager log to stdio.");
+    string logPath = "/data/init_ut/fs_log.txt";
+    auto fp = std::unique_ptr<FILE, decltype(&fclose)>(fopen(logPath.c_str(), "at+"), fclose);
+    EXPECT_TRUE(fp != nullptr);
+    sync();
+    FsManagerLogInit(LOG_TO_FILE, logPath.c_str());
+    FSMGR_LOGE("Fsmanager log to file.");
+    FsManagerLogDeInit();
+}
+
 } // namespace init_ut

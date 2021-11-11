@@ -20,22 +20,11 @@
 #include "init_log.h"
 #include "securec.h"
 
-int MountRequriedPartitions(void)
+int MountRequriedPartitions(Fstab *fstab)
 {
-    const char *fstabFiles[] = {"/etc/fstab.required", NULL};
-    int i = 0;
+    INIT_ERROR_CHECK(fstab != NULL, return -1, "Failed fstab is NULL");
     int rc = -1;
-    while (fstabFiles[i] != NULL) {
-        if (access(fstabFiles[i], F_OK) == 0) {
-            INIT_LOGI("Mount required partition from %s", fstabFiles[i]);
-            rc = MountAllWithFstabFile(fstabFiles[i], 1);
-        } else {
-            INIT_LOGE("Cannot access fstab file \" %s \"", fstabFiles[i]);
-        }
-        if (rc == 0) {
-            break;
-        }
-        i++;
-    }
+    INIT_LOGI("Mount required partitions");
+    rc = MountAllWithFstab(fstab, 1);
     return rc;
 }

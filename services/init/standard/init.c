@@ -15,6 +15,7 @@
 #include "init.h"
 
 #include <errno.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <sys/sysmacros.h>
@@ -23,12 +24,15 @@
 
 #include <linux/major.h>
 #include "device.h"
+#include "fs_manager/fs_manager.h"
 #include "init_log.h"
 #include "init_mount.h"
 #include "init_param.h"
 #include "init_utils.h"
 #include "securec.h"
 #include "switch_root.h"
+#include "ueventd.h"
+#include "ueventd_socket.h"
 #ifdef WITH_SELINUX
 #   include <policycoreutils.h>
 #endif // WITH_SELINUX
@@ -50,46 +54,74 @@ void LogInit(void)
 }
 
 #ifndef DISABLE_INIT_TWO_STAGES
-static pid_t StartUeventd(void)
+
+static char **GetRequiredDevices(Fstab fstab, int *requiredNum)
 {
-    char *const argv[] = {
-        "/bin/ueventd",
-        NULL,
-    };
-    pid_t pid = fork();
-    if (pid < 0) {
-        INIT_LOGE("Failed to fork child process");
-    }
-    if (pid == 0) {
-        if (execv(argv[0], argv) != 0) {
-            INIT_LOGE("service %s execve failed! err %d.", argv[0], errno);
+    int num = 0;
+    FstabItem *item = fstab.head;
+    while (item != NULL) {
+        if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
+            num++;
         }
-        _exit(0x7f); // 0x7f: user specified
+        item = item->next;
     }
-    return pid;
+    char **devices = (char **)calloc(num, sizeof(char *));
+    INIT_ERROR_CHECK(devices != NULL, return NULL, "Failed calloc err=%d", errno);
+
+    int i = 0;
+    item = fstab.head;
+    while (item != NULL) {
+        if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
+            devices[i] = strdup(item->deviceName);
+            INIT_ERROR_CHECK(devices[i] != NULL, FreeStringVector(devices, num); return NULL,
+                "Failed strdup err=%d", errno);
+            i++;
+        }
+        item = item->next;
+    }
+    *requiredNum = num;
+    return devices;
+}
+
+static int StartUeventd(char **requiredDevices, int num)
+{
+    INIT_ERROR_CHECK(requiredDevices != NULL && num > 0, return -1, "Failed parameters");
+    int ueventSockFd = UeventdSocketInit();
+    if (ueventSockFd < 0) {
+        INIT_LOGE("Failed to create uevent socket");
+        return -1;
+    }
+    RetriggerUevent(ueventSockFd, requiredDevices, num);
+    return 0;
 }
 
 static void StartInitSecondStage(void)
 {
-    pid_t ueventPid = StartUeventd();
-    if (ueventPid < 0) {
-        INIT_LOGE("Failed to start ueventd");
-        abort();
+    const char *fstabFile = "/etc/fstab.required";
+    Fstab *fstab = NULL;
+    INIT_ERROR_CHECK(access(fstabFile, F_OK) == 0, abort(), "Failed get fstab.required");
+    fstab = ReadFstabFromFile(fstabFile, false);
+    INIT_ERROR_CHECK(fstab != NULL, abort(), "Read fstab file \" %s \" failed\n", fstabFile);
+
+    int requiredNum = 0;
+    char **devices = GetRequiredDevices(*fstab, &requiredNum);
+    if (devices != NULL && requiredNum > 0) {
+        int ret = StartUeventd(devices, requiredNum);
+        if (ret == 0) {
+            ret = MountRequriedPartitions(fstab);
+        }
+        FreeStringVector(devices, requiredNum);
+        devices = NULL;
+        ReleaseFstab(fstab);
+        fstab = NULL;
+        if (ret < 0) {
+            // If mount required partitions failure.
+            // There is no necessary to continue.
+            // Just abort
+            INIT_LOGE("Mount requried partitions failed");
+            abort();
+        }
     }
-    if (MountRequriedPartitions() < 0) {
-        // If mount required partitions failure.
-        // There is no necessary to continue.
-        // Just abort
-        INIT_LOGE("Mount requried partitions failed");
-        abort();
-    }
-    // Kill ueventd, because init second stage will start it again.
-    (void)kill(ueventPid, SIGKILL);
-    // The init process in ramdisk has done its job.
-    // It's ready to switch to system partition.
-    // The system partition mounted in first stage to /usr
-    // Because the directory /system is in use. we cannot use it.
-    // After switch root. /usr will become new root.
     SwitchRoot("/usr");
     // Execute init second stage
     char *const args[] = {

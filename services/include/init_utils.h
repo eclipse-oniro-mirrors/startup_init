@@ -33,6 +33,8 @@ extern "C" {
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 uid_t DecodeUid(const char *name);
 char *ReadFileToBuf(const char *configFile);
+int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int length);
+char *ReadFileData(const char *fileName);
 int SplitString(char *srcPtr, const char *del, char **dstPtr, int maxNum);
 void WaitForFile(const char *source, unsigned int maxCount);
 size_t WriteAll(int fd, const char *buffer, size_t size);

@@ -34,6 +34,7 @@ ohos_unittest("init_ut") {
   sources = [
     "//base/startup/init_lite/interfaces/innerkits/dynamic_service/dynamic_service.c",
     "//base/startup/init_lite/interfaces/innerkits/file/init_file.c",
+    "//base/startup/init_lite/interfaces/innerkits/fs_manager/fs_manager_log.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab_mount.c",
     "//base/startup/init_lite/interfaces/innerkits/reboot/init_reboot_innerkits.c",
@@ -127,7 +128,7 @@ ohos_unittest("init_ut") {
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk",
     "//foundation/distributedschedule/samgr/adapter/interfaces/innerkits/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
-    "//base/startup/init_lite/ueventd",
+    "//base/startup/init_lite/ueventd/include",
     "//utils/native/base/include",
     "//utils/system/safwk/native/include",
     "//third_party/bounds_checking_function/include",
@@ -156,7 +157,7 @@ ohos_unittest("init_ut") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr_L2:samgr_proxy",
   ]
 
   cflags_cc = [ "-fexceptions" ]

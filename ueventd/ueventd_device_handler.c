@@ -48,7 +48,7 @@ static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
         }
         const char *linkDir = dirname(linkBuf);
         if (MakeDirRecursive(linkDir, DIRMODE) < 0) {
-                INIT_LOGE("[uevent] Failed to create dir \" %s \", err = %d", linkDir, errno);
+            INIT_LOGE("[uevent] Failed to create dir \" %s \", err = %d", linkDir, errno);
         }
         errno = 0;
         int rc = symlink(deviceNode, linkName);
@@ -170,6 +170,26 @@ static char *FindPlatformDeviceName(char *path)
     return NULL;
 }
 
+static void BuildBootDeviceSymbolLink(char **links, int linkNum, const char *partitionName)
+{
+    if (linkNum > BLOCKDEVICE_LINKS - 1) {
+        INIT_LOGW("Too many links, ignore");
+        return;
+    }
+    links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
+    if (links[linkNum] == NULL) {
+        INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
+        return;
+    }
+
+    if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
+        "/dev/block/by-name/%s", partitionName) == -1) {
+        INIT_LOGE("Failed to build link");
+    }
+}
+
+
+
 static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
     const char *partitionName, const char *deviceName)
 {
@@ -177,7 +197,6 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
         INIT_LOGW("Too many links, ignore");
         return;
     }
-
     links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
     if (links[linkNum] == NULL) {
         INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
@@ -218,7 +237,6 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
         INIT_LOGE("Failed to build sys path for device %s", uevent->syspath);
         return NULL;
     }
-
     char **links = calloc(sizeof(char *), BLOCKDEVICE_LINKS);
     int linkNum = 0;
     if (links == NULL) {
@@ -234,7 +252,6 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
             INIT_LOGE("Failed to build subsystem path for device \" %s \"", uevent->syspath);
             return NULL;
         }
-
         char *bus = GetRealPath(subsystem);
         if (bus == NULL) {
             parent = dirname(parent);
@@ -247,6 +264,10 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
                 BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
             }
             linkNum++;
+            if (STRINGEQUAL(parent, bootDevice)) {
+                BuildBootDeviceSymbolLink(links, linkNum, uevent->partitionName);
+                linkNum++;
+            }
         }
         free(bus);
         parent = dirname(parent);

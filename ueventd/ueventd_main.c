@@ -35,7 +35,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    RetriggerUevent(ueventSockFd);
+    RetriggerUevent(ueventSockFd, NULL, 0); // Not require boot devices
     struct pollfd pfd = {};
     pfd.events = POLLIN;
     pfd.fd = ueventSockFd;
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
             continue;
         }
         if (pfd.revents & POLLIN) {
-            ProcessUevent(ueventSockFd);
+            ProcessUevent(ueventSockFd, NULL, 0); // Not require boot devices
         }
     }
     return 0;

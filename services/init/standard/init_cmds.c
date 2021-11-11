@@ -33,6 +33,7 @@
 
 #include <linux/module.h>
 #include "fs_manager/fs_manager.h"
+#include "fs_manager/fs_manager_log.h"
 #include "init.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
@@ -252,12 +253,14 @@ static void DoMakeDevice(const struct CmdArgs *ctx)
 static void DoMountFstabFile(const struct CmdArgs *ctx)
 {
     INIT_LOGI("Mount partitions from fstab file \" %s \"", ctx->argv[0]);
+    FsManagerLogInit(LOG_TO_KERNEL, "");
     (void)MountAllWithFstabFile(ctx->argv[0], 0);
 }
 
 static void DoUmountFstabFile(const struct CmdArgs *ctx)
 {
     INIT_LOGI("Umount partitions from fstab file \" %s \"", ctx->argv[0]);
+    FsManagerLogInit(LOG_TO_KERNEL, "");
     int rc = UmountAllWithFstabFile(ctx->argv[0]);
     if (rc < 0) {
         INIT_LOGE("Run command umount_fstab failed");

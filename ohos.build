@@ -4,8 +4,7 @@
     "init": {
       "module_list": [
         "//base/startup/init_lite/services:startup_init",
-        "//base/startup/init_lite/ueventd:ueventd",
-        "//base/startup/init_lite/ueventd:ueventd.config",
+        "//base/startup/init_lite/ueventd:startup_ueventd",
         "//base/startup/init_lite/watchdog:watchdog",
         "//base/startup/init_lite/services/cmds/misc:misc_daemon"
       ],

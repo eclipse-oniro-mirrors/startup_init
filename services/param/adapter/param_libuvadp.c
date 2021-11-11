@@ -73,8 +73,12 @@ static void OnReceiveAlloc(uv_handle_t *handle, size_t suggestedSize, uv_buf_t *
 static void OnWriteResponse(uv_write_t *req, int status)
 {
     UNUSED(status);
-    PARAM_CHECK(req != NULL, return, "Invalid req");
     PARAM_LOGD("OnWriteResponse handle: %p", req);
+    write_req_t *writer = (write_req_t *)req;
+    if (writer != NULL) {
+        free(writer->buf.base);
+        free(writer);
+    }
 }
 
 static void OnReceiveRequest(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf)
@@ -86,9 +90,20 @@ static void OnReceiveRequest(uv_stream_t *handle, ssize_t nread, const uv_buf_t 
         }
         return;
     }
+    PARAM_LOGD("OnReceiveRequest %d nread %d", buf->len, nread);
     LibuvStreamTask *client = PARAM_ENTRY(handle, LibuvStreamTask, stream);
-    if (client->recvMessage != NULL) {
-        client->recvMessage(&client->base.worker, (const ParamMessage *)buf->base);
+    if (client->recvMessage == NULL) {
+         free(buf->base);
+         return;
+    }
+    ssize_t curr = 0;
+    while (curr < nread) {
+        const ParamMessage *msg = (const ParamMessage *)(buf->base + curr);
+        if ((ssize_t)(msg->msgSize + curr) > nread) {
+            break;
+        }
+        client->recvMessage(&client->base.worker, msg);
+        curr += msg->msgSize;
     }
     free(buf->base);
 }
@@ -220,13 +235,15 @@ int ParamTaskSendMsg(const ParamTaskPtr stream, const ParamMessage *msg)
         return -1;
     }
 #ifndef STARTUP_INIT_TEST
+    write_req_t *req = malloc(sizeof(write_req_t));
+    PARAM_CHECK(req != NULL, LibuvFreeMsg(stream, msg);
+        return -1, "Failed to create request");
     LibuvStreamTask *worker = (LibuvStreamTask *)stream;
-    uv_buf_t buf = uv_buf_init((char *)msg, msg->msgSize);
-    int ret = uv_write(&worker->writer, (uv_stream_t *)&worker->stream.pipe, &buf, 1, OnWriteResponse);
+    req->buf = uv_buf_init((char *)msg, msg->msgSize);
+    int ret = uv_write(&req->writer, (uv_stream_t *)&worker->stream.pipe, &req->buf, 1, OnWriteResponse);
     PARAM_CHECK(ret >= 0, LibuvFreeMsg(stream, msg);
         return -1, "Failed to uv_write2 ret %s", uv_strerror(ret));
 #endif
-    LibuvFreeMsg(stream, msg);
     return 0;
 }
 

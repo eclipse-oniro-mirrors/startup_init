@@ -29,9 +29,11 @@
 #include "securec.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
+#include "init_utils.h"
 
 // buffer size refer to kernel kobject uevent
 #define UEVENT_BUFFER_SIZE (2048 + 1)
+char bootDevice[CMDLINE_VALUE_LEN_MAX] = { 0 };
 
 static const char *actions[] = {
     [ACTION_ADD] = "add",
@@ -116,6 +118,28 @@ static void HandleUevent(const struct Uevent *uevent)
     }
 }
 
+static void HandleUeventRequired(const struct Uevent *uevent, char **devices, int num)
+{
+    INIT_ERROR_CHECK(devices != NULL && num > 0, return, "Fault paramters");
+    if (uevent->action == ACTION_ADD) {
+        ChangeSysAttributePermissions(uevent->syspath);
+    }
+
+    SUBSYSTEMTYPE type = GetSubsystemType(uevent->subsystem);
+    if (type == SUBSYSTEM_BLOCK) {
+        for (int i = 0; i < num; i++) {
+            if (uevent->partitionName == NULL) {
+                break;
+            }
+            if (strstr(devices[i], uevent->partitionName) != NULL) {
+                INIT_LOGI("Handle block device partitionName %s", uevent->partitionName);
+                HandleBlockDeviceEvent(uevent);
+                break;
+            }
+        }
+    }
+}
+
 static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
 {
     if (uevent == NULL || event == NULL || len == 0) {
@@ -177,7 +201,7 @@ void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *ueven
     }
 }
 
-void ProcessUevent(int sockFd)
+void ProcessUevent(int sockFd, char **devices, int num)
 {
     // One more bytes for '\0'
     char ueventBuffer[UEVENT_BUFFER_SIZE] = {};
@@ -189,12 +213,16 @@ void ProcessUevent(int sockFd)
             INIT_LOGD("Ignore unexpected uevent");
             return;
         }
-        HandleUevent(&uevent);
+        if (devices != NULL && num > 0) {
+            HandleUeventRequired(&uevent, devices, num);
+        } else {
+            HandleUevent(&uevent);
+        }
     }
 }
 
 static int g_triggerDone = 0;
-static void DoTrigger(const char *ueventPath, int sockFd)
+static void DoTrigger(const char *ueventPath, int sockFd, char **devices, int num)
 {
     if (ueventPath == NULL || ueventPath[0] == '\0') {
         return;
@@ -212,13 +240,13 @@ static void DoTrigger(const char *ueventPath, int sockFd)
             close(fd);
             // uevent triggered, now handle it.
             if (sockFd >= 0) {
-                ProcessUevent(sockFd);
+                ProcessUevent(sockFd, devices, num);
             }
         }
     }
 }
 
-static void Trigger(const char *path, int sockFd)
+static void Trigger(const char *path, int sockFd, char **devices, int num)
 {
     if (path == NULL) {
         return;
@@ -237,7 +265,7 @@ static void Trigger(const char *path, int sockFd)
             if (snprintf_s(pathBuffer, PATH_MAX, PATH_MAX - 1, "%s/%s", path, dirent->d_name) == -1) {
                 continue;
             }
-            Trigger(pathBuffer, sockFd);
+            Trigger(pathBuffer, sockFd, devices, num);
         } else {
             if (strcmp(dirent->d_name, "uevent") != 0) {
                 continue;
@@ -247,18 +275,25 @@ static void Trigger(const char *path, int sockFd)
                 INIT_LOGW("Cannnot build uevent path under %s", path);
                 continue;
             }
-            DoTrigger(ueventBuffer, sockFd);
+            DoTrigger(ueventBuffer, sockFd, devices, num);
         }
     }
     closedir(dir);
 }
 
-void RetriggerUevent(int sockFd)
+void RetriggerUevent(int sockFd, char **devices, int num)
 {
+    char *buffer = ReadFileData("/proc/cmdline");
+    int ret = GetProcCmdlineValue("default_boot_device", buffer, bootDevice, CMDLINE_VALUE_LEN_MAX);
+    INIT_CHECK_ONLY_ELOG(ret == 0, "Failed get default_boot_device value from cmdline");
+
     if (!g_triggerDone) {
-        Trigger("/sys/block", sockFd);
-        Trigger("/sys/class", sockFd);
-        Trigger("/sys/devices", sockFd);
+        Trigger("/sys/block", sockFd, devices, num);
+        Trigger("/sys/class", sockFd, devices, num);
+        Trigger("/sys/devices", sockFd, devices, num);
         g_triggerDone = 1;
+    }
+    if (buffer != NULL) {
+        free(buffer);
     }
 }
