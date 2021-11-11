@@ -69,7 +69,7 @@ static void ClearLogo(int fd)
         return;
     }
     char buffer[8] = {0}; // logo magic number + logo size is 8
-    int addrOffset = (PARTITION_INFO_POS + PARTITION_INFO_MAX_LENGTH + BLOCK_SZIE_1 -1) / BLOCK_SZIE_1;
+    int addrOffset = (PARTITION_INFO_POS + PARTITION_INFO_MAX_LENGTH + BLOCK_SZIE_1 - 1) / BLOCK_SZIE_1;
     if (lseek(fd, addrOffset * BLOCK_SZIE_1, SEEK_SET) < 0) {
         std::cout << "Failed to clean file\n";
         return;
@@ -180,7 +180,7 @@ static void WriteLogoToMisc(const std::string &logoPath)
         return;
     }
 
-    int fd = open(miscDev.c_str(), O_RDWR | O_CLOEXEC, 0644);
+    int fd = open(miscDev.c_str(), O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd < 0) {
         std::cout << "Failed to open " << miscDev << ", err = " << errno << std::endl;
         return;
@@ -191,7 +191,7 @@ static void WriteLogoToMisc(const std::string &logoPath)
     }
     close(fd);
     int addrOffset = (PARTITION_INFO_POS + PARTITION_INFO_MAX_LENGTH + BLOCK_SZIE_1 - 1) / BLOCK_SZIE_1;
-    int fd1 = open(miscDev.c_str(), O_RDWR | O_CLOEXEC, 0644);
+    int fd1 = open(miscDev.c_str(), O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (lseek(fd1, addrOffset * BLOCK_SZIE_1, SEEK_SET) < 0) {
         std::cout << "Failed to seek file\n";
         return;

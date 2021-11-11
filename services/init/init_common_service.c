@@ -17,7 +17,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef __MUSL__
@@ -38,8 +37,8 @@
 #include "securec.h"
 
 #ifdef WITH_SELINUX
-#   include "init_selinux_param.h"
-#   include <selinux/selinux.h>
+#include "init_selinux_param.h"
+#include <selinux/selinux.h>
 #endif // WITH_SELINUX
 
 #ifndef TIOCSCTTY
@@ -172,7 +171,7 @@ static int WritePid(const Service *service)
     return SERVICE_SUCCESS;
 }
 
-void SetSecon(Service * service)
+void SetSecon(Service *service)
 {
 #ifdef WITH_SELINUX
     if (*(service->secon)) {

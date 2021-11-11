@@ -34,6 +34,7 @@
 // buffer size refer to kernel kobject uevent
 #define UEVENT_BUFFER_SIZE (2048 + 1)
 char bootDevice[CMDLINE_VALUE_LEN_MAX] = { 0 };
+#define WRITE_SIZE 4
 
 static const char *actions[] = {
     [ACTION_ADD] = "add",
@@ -232,7 +233,7 @@ static void DoTrigger(const char *ueventPath, int sockFd, char **devices, int nu
     if (fd < 0) {
         INIT_LOGE("Open \" %s \" failed, err = %d", ueventPath, errno);
     } else {
-        ssize_t n = write(fd, "add\n", 4);
+        ssize_t n = write(fd, "add\n", WRITE_SIZE);
         if (n < 0) {
             INIT_LOGE("Write \" %s \" failed, err = %d", ueventPath, errno);
             close(fd);

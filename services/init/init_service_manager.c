@@ -14,10 +14,7 @@
  */
 #include "init_service_manager.h"
 
-#include <ctype.h>
 #include <limits.h>
-#include <pwd.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -378,7 +375,7 @@ static int AddServiceFile(cJSON *json, Service *service)
         return SERVICE_FAILURE;
     }
     if (opt[SERVICE_FILE_NAME] == NULL || opt[SERVICE_FILE_FLAGS] == NULL || opt[SERVICE_FILE_PERM] == NULL ||
-            opt[SERVICE_FILE_UID] == NULL || opt[SERVICE_FILE_GID] == NULL) {
+        opt[SERVICE_FILE_UID] == NULL || opt[SERVICE_FILE_GID] == NULL) {
         INIT_LOGE("Invalid file opt");
         return SERVICE_FAILURE;
     }

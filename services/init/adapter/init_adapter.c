@@ -16,7 +16,6 @@
 
 #include <errno.h>
 #include <semaphore.h>
-#include <stdio.h>
 #include <sys/prctl.h>
 #include <sys/reboot.h>
 #include <unistd.h>

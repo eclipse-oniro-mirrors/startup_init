@@ -34,7 +34,7 @@
 #include "ueventd.h"
 #include "ueventd_socket.h"
 #ifdef WITH_SELINUX
-#   include <policycoreutils.h>
+#include <policycoreutils.h>
 #endif // WITH_SELINUX
 
 void SystemInit(void)
@@ -124,7 +124,7 @@ static void StartInitSecondStage(void)
     }
     SwitchRoot("/usr");
     // Execute init second stage
-    char *const args[] = {
+    char * const args[] = {
         "/bin/init",
         "--second-stage",
         NULL,

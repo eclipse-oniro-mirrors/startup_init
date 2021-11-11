@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-#include "device.h"
 #include "fs_manager/fs_manager.h"
-#include "init.h"
 #include "init_cmds.h"
 #include "init_log.h"
 #include "securec.h"

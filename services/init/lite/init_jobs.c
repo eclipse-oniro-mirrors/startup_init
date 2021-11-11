@@ -14,7 +14,6 @@
  */
 #include "init_jobs_internal.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 

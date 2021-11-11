@@ -268,7 +268,7 @@ FstabItem *FindFstabItemForPath(Fstab fstab, const char *path)
 
     char tmp[PATH_MAX] = {0};
     char *dir = NULL;
-    if (strncpy_s(tmp, PATH_MAX -1,  path, strlen(path)) != EOK) {
+    if (strncpy_s(tmp, PATH_MAX - 1,  path, strlen(path)) != EOK) {
         FSMGR_LOGE("Failed to copy path.");
         return NULL;
     }

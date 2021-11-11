@@ -13,11 +13,9 @@
  * limitations under the License.
  */
 #include <signal.h>
-#include <stdio.h>
 #include <sys/wait.h>
 
 #include "init_adapter.h"
-#include "init_log.h"
 #include "init_service_manager.h"
 
 void ReapService(Service *service)

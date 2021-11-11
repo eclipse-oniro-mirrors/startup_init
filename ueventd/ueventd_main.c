@@ -15,7 +15,6 @@
 
 #include <poll.h>
 #include "ueventd.h"
-#include "ueventd_device_handler.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_socket.h"
 #define INIT_LOG_TAG "ueventd"

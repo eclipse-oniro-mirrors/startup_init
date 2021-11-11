@@ -14,12 +14,10 @@
  */
 #include "init_cmds.h"
 
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <net/if.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -34,7 +32,6 @@
 #include <linux/module.h>
 #include "fs_manager/fs_manager.h"
 #include "fs_manager/fs_manager_log.h"
-#include "init.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
 #include "init_param.h"

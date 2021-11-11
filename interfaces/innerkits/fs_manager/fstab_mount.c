@@ -14,7 +14,6 @@
  */
 
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -118,7 +117,6 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
         return MOUNT_ERROR;
     }
     char buffer[FS_MANAGER_BUFFER_SIZE] = {0};
-    size_t n = 0;
     const int expectedItems = 6;
     int count = 0;
     char **mountItems = NULL;
@@ -130,7 +128,7 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
         return status;
     }
     while (fgets(buffer, sizeof(buffer) - 1, fp) != NULL) {
-        n = strlen(buffer);
+        size_t n = strlen(buffer);
         if (buffer[n - 1] == '\n') {
             buffer[n - 1] = '\0';
         }

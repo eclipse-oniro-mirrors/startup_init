@@ -16,7 +16,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -66,13 +65,13 @@ int main(int argc, const char *argv[])
     if (argc >= 2) { // Argument nums greater than or equal to 2.
         interval = atoi(argv[1]);
     }
-    interval = interval > 0 ? interval : DEFAULT_INTERVAL;
+    interval = (interval > 0) ? interval : DEFAULT_INTERVAL;
 
     int gap = 0;
     if (argc >= 3) { // Argument nums greater than or equal to 3.
         gap = atoi(argv[2]); // 2 second parameter.
     }
-    gap = gap > 0 ? gap : DEFAULT_GAP;
+    gap = (gap > 0) ? gap : DEFAULT_GAP;
 
     INIT_LOGI("watchdoge started (interval %d, margin %d), fd = %d\n", interval, gap, fd);
 
@@ -86,7 +85,7 @@ int main(int argc, const char *argv[])
     if (ret) {
         INIT_LOGE("Failed to get timeout\n");
     } else {
-        interval = timeoutGet > gap ? timeoutGet - gap : 1;
+        interval = (timeoutGet > gap) ? timeoutGet - gap : 1;
     }
     while (1) {
         ioctl(fd, WDIOC_KEEPALIVE);

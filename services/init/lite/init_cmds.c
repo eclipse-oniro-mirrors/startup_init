@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "init.h"
 #include "init_log.h"
 #include "init_utils.h"
 #include "securec.h"

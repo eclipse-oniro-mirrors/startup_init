@@ -12,12 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <stdio.h>
 #include "init.h"
 #include "init_log.h"
 
 static const pid_t INIT_PROCESS_PID = 1;
-int main(int argc, char* const argv[])
+int main(int argc, char * const argv[])
 {
     int isSecondStage = 0;
     // Number of command line parameters is 2

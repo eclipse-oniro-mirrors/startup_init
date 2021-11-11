@@ -14,7 +14,6 @@
  */
 #include "init_service_socket.h"
 
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>

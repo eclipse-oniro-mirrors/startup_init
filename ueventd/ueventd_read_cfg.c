@@ -204,7 +204,7 @@ int ParseUeventConfig(char *buffer)
         callback = funcMapper[type].func;
         return 0;
     }
-    return callback != NULL ? callback(p) : -1;
+    return (callback != NULL) ? callback(p) : -1;
 }
 
 static void DoUeventConfigParse(char *buffer, size_t length)
@@ -332,7 +332,7 @@ bool IsMatch(const char *target, const char *pattern)
     while (*p == '*') {
         p++;
     }
-    return *p == '\0' ? true : false;
+    return (*p == '\0') ? true : false;
 }
 
 void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_t *mode)
