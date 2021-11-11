@@ -66,7 +66,6 @@ extern char bootDevice[CMDLINE_VALUE_LEN_MAX];
 
 const char *ActionString(ACTION action);
 void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent);
-//void RetriggerUevent(int sockFd);
 void RetriggerUevent(int sockFd, char **devices, int num);
 void ProcessUevent(int sockFd, char **devices, int num);
 

@@ -45,7 +45,7 @@ static InitLogLevel ConvertToInitLog(FsMgrLogLevel level)
 
 static const char *ConvertToKernelLog(FsMgrLogLevel level)
 {
-     switch (level) {
+    switch (level) {
         case FSMGR_VERBOSE: // fall through
         case FSMGR_DEBUG:
             return "<7>";
@@ -94,7 +94,7 @@ static void WriteLogToFile(FILE *fp, const char *fileName, int line, const char 
         fileName == NULL ? "" : fileName, line, "fs_manager", fmt) == -1) {
         return;
     }
-    fprintf(fp, "%s", fullLogMsg);
+    (void)fprintf(fp, "%s", fullLogMsg);
     return;
 }
 

@@ -188,8 +188,6 @@ static void BuildBootDeviceSymbolLink(char **links, int linkNum, const char *par
     }
 }
 
-
-
 static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
     const char *partitionName, const char *deviceName)
 {

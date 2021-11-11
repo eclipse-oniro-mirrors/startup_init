@@ -164,5 +164,4 @@ HWTEST_F(InnerkitsUnitTest, TestFsManagerLog, TestSize.Level1)
     FSMGR_LOGE("Fsmanager log to file.");
     FsManagerLogDeInit();
 }
-
 } // namespace init_ut

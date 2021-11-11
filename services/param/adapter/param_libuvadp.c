@@ -93,8 +93,8 @@ static void OnReceiveRequest(uv_stream_t *handle, ssize_t nread, const uv_buf_t 
     PARAM_LOGD("OnReceiveRequest %d nread %d", buf->len, nread);
     LibuvStreamTask *client = PARAM_ENTRY(handle, LibuvStreamTask, stream);
     if (client->recvMessage == NULL) {
-         free(buf->base);
-         return;
+        free(buf->base);
+        return;
     }
     ssize_t curr = 0;
     while (curr < nread) {
