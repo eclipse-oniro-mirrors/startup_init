@@ -31,6 +31,8 @@
 #include "securec.h"
 
 #define MAX_BUF_SIZE  1024
+#define MAX_DATA_BUFFER 2048
+
 #ifdef STARTUP_UT
 #define LOG_FILE_NAME "/media/sf_ubuntu/test/log.txt"
 #else
@@ -111,6 +113,79 @@ char *ReadFileToBuf(const char *configFile)
         fd = NULL;
     }
     return buffer;
+}
+
+char *ReadFileData(const char *fileName)
+{
+    if (fileName == NULL) {
+        return NULL;
+    }
+    char *buffer = NULL;
+    int fd = -1;
+    do {
+        fd = open(fileName, O_RDONLY);
+        INIT_ERROR_CHECK(fd >= 0, break, "Failed to read file %s", fileName);
+
+        buffer = (char *)malloc(MAX_DATA_BUFFER); // fsmanager not create, can not get fileStat st_size
+        INIT_ERROR_CHECK(buffer != NULL, break, "Failed to allocate memory for %s", fileName);
+        ssize_t readLen = read(fd, buffer, MAX_DATA_BUFFER - 1);
+        INIT_ERROR_CHECK(readLen > 0, break, "Failed to read data for %s", fileName);
+        buffer[readLen] = '\0';
+    } while (0);
+    if (fd != -1) {
+        close(fd);
+    }
+    return buffer;
+}
+
+
+int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int length)
+{
+    INIT_ERROR_CHECK(name != NULL && buffer != NULL && value != NULL, return -1, "Failed get parameters");
+    char *endData = (char *)buffer + strlen(buffer);
+    char *tmp = strstr(buffer, name);
+    do {
+        if (tmp == NULL) {
+            return -1;
+        }
+        tmp = tmp + strlen(name);
+        while (tmp < endData && *tmp == ' ') {
+            tmp++;
+        }
+        if (*tmp == '=') {
+            break;
+        }
+        tmp = strstr(tmp + 1, name);
+    } while (tmp < endData);
+    tmp++;
+    size_t i = 0;
+    size_t endIndex = 0;
+    while (tmp < endData && *tmp == ' ') {
+        tmp++;
+    }
+    for (; i < (size_t)length; tmp++) {
+        if (tmp >= endData) {
+            endIndex = i;
+            break;
+        }
+        if (*tmp == ' ') {
+            endIndex = i;
+        }
+        if (*tmp == '=') {
+            if (endIndex != 0) { // for root=uuid=xxxx
+                break;
+            }
+            i = 0;
+            endIndex = 0;
+            continue;
+        }
+        value[i++] = *tmp;
+    }
+    if (i >= (size_t)length) {
+        return -1;
+    }
+    value[endIndex] = '\0';
+    return 0;
 }
 
 int SplitString(char *srcPtr, const char *del, char **dstPtr, int maxNum)

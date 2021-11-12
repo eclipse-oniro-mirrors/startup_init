@@ -41,7 +41,7 @@ void SetInitLogLevel(InitLogLevel logLevel)
 #ifdef OHOS_LITE
 static LogLevel ConvertToHiLog(InitLogLevel level)
 {
-     switch (level) {
+    switch (level) {
         case INIT_DEBUG:
             return LOG_DEBUG;
         case INIT_INFO:

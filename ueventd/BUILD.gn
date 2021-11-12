@@ -10,6 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "linux") {
     executable("ueventd_linux") {
@@ -28,12 +29,11 @@ if (defined(ohos_lite)) {
       defines += [ "_GNU_SOURCE" ]
 
       include_dirs = [
-        ".",
         "//third_party/bounds_checking_function/include",
         "//base/startup/init_lite/services/log",
         "//base/startup/init_lite/services/include",
         "//base/startup/init_lite/services/utils",
-        "//kernel/linux-4.19/include/uapi",
+        "//base/startup/init_lite/ueventd/include",
       ]
 
       deps = [
@@ -56,32 +56,49 @@ if (defined(ohos_lite)) {
   }
 } else {
   import("//build/ohos.gni")
+  service_ueventd_sources = [
+    "//base/startup/init_lite/services/utils/list.c",
+    "//base/startup/init_lite/ueventd/ueventd.c",
+    "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
+    "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
+    "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
+    "//base/startup/init_lite/ueventd/ueventd_socket.c",
+  ]
+  service_ueventd_include = [
+    "//third_party/bounds_checking_function/include",
+    "//base/startup/init_lite/services/log",
+    "//base/startup/init_lite/services/include",
+    "//base/startup/init_lite/services/utils",
+    "//base/startup/init_lite/ueventd/include",
+  ]
+  service_ueventd_deps = [
+    "//base/startup/init_lite/services/log:init_log",
+    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+
+  group("startup_ueventd") {
+    deps = [
+      "//base/startup/init_lite/ueventd:libueventd_static",
+      "//base/startup/init_lite/ueventd:ueventd",
+      "//base/startup/init_lite/ueventd:ueventd.config",
+    ]
+  }
+  ohos_static_library("libueventd_static") {
+    sources = service_ueventd_sources
+    include_dirs = service_ueventd_include
+    deps = service_ueventd_deps
+  }
 
   ohos_executable("ueventd") {
-    sources = [
-      "//base/startup/init_lite/services/utils/list.c",
-      "//base/startup/init_lite/ueventd/ueventd.c",
-      "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
-      "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
-      "//base/startup/init_lite/ueventd/ueventd_main.c",
-      "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
-      "//base/startup/init_lite/ueventd/ueventd_socket.c",
-    ]
-
+    sources = [ "//base/startup/init_lite/ueventd/ueventd_main.c" ]
     include_dirs = [
-      ".",
-      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/ueventd/include",
       "//base/startup/init_lite/services/log",
       "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/utils",
     ]
 
-    deps = [
-      "//base/startup/init_lite/services/log:init_log",
-      "//base/startup/init_lite/services/utils:libinit_utils",
-      "//third_party/bounds_checking_function:libsec_static",
-    ]
-
+    deps = [ "//base/startup/init_lite/ueventd:libueventd_static" ]
     install_images = [
       "system",
       "updater",

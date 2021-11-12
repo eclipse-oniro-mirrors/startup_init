@@ -225,14 +225,14 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
         PARAM_CHECK(ret == 0, return ret, "Forbid to wait parameter %s", name);
     }
-    if (timeout == 0) {
+    if (timeout <= 0) {
         timeout = DEFAULT_PARAM_WAIT_TIMEOUT;
     }
     uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + sizeof(ParamMsgContent) + sizeof(uint32_t);
     msgSize = (msgSize < RECV_BUFFER_MAX) ? RECV_BUFFER_MAX : msgSize;
     uint32_t offset = 0;
     ParamMessage *request = NULL;
-    if (value != NULL) {
+    if (value != NULL && strlen(value) > 0) {
         msgSize += PARAM_ALIGN(strlen(value) + 1);
         request = (ParamMessage *)CreateParamMessage(MSG_WAIT_PARAM, name, msgSize);
         PARAM_CHECK(request != NULL, return -1, "Failed to malloc for wait");

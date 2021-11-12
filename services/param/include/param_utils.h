@@ -110,8 +110,6 @@ typedef struct {
     char value[PARAM_BUFFER_SIZE];
 } SubStringInfo;
 
-#define MAX_DATA_BUFFER 2048
-char *ReadFileData(const char *fileName);
 void CheckAndCreateDir(const char *fileName);
 int GetSubStringInfo(const char *buff, uint32_t buffLen, char delimiter, SubStringInfo *info, int subStrNumber);
 #ifdef __cplusplus

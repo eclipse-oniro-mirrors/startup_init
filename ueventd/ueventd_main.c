@@ -15,7 +15,6 @@
 
 #include <poll.h>
 #include "ueventd.h"
-#include "ueventd_device_handler.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_socket.h"
 #define INIT_LOG_TAG "ueventd"
@@ -35,7 +34,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    RetriggerUevent(ueventSockFd);
+    RetriggerUevent(ueventSockFd, NULL, 0); // Not require boot devices
     struct pollfd pfd = {};
     pfd.events = POLLIN;
     pfd.fd = ueventSockFd;
@@ -47,7 +46,7 @@ int main(int argc, char **argv)
             continue;
         }
         if (pfd.revents & POLLIN) {
-            ProcessUevent(ueventSockFd);
+            ProcessUevent(ueventSockFd, NULL, 0); // Not require boot devices
         }
     }
     return 0;

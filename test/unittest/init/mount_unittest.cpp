@@ -14,6 +14,7 @@
  */
 #include <cerrno>
 #include <unistd.h>
+#include "fs_manager/fs_manager.h"
 #include "init_unittest.h"
 #include "init_mount.h"
 #include "securec.h"
@@ -31,7 +32,12 @@ public:
 
 HWTEST_F(MountUnitTest, TestMountRequriedPartitions, TestSize.Level0)
 {
-    int ret = MountRequriedPartitions();
-    EXPECT_EQ(ret, -1);
+    const char *fstabFiles = "/etc/fstab.required";
+    Fstab *fstab = NULL;
+    fstab = ReadFstabFromFile(fstabFiles, false);
+    if (fstab != NULL) {
+        int ret = MountRequriedPartitions(fstab);
+        EXPECT_EQ(ret, -1);
+    }
 }
 } // namespace init_ut

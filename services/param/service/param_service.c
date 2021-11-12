@@ -35,6 +35,7 @@ static ParamWorkSpace g_paramWorkSpace = { 0, {}, NULL, {}, NULL, NULL };
 
 static void OnClose(ParamTaskPtr client)
 {
+    PARAM_LOGD("OnClose %p", client);
     ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
     ClearWatcherTrigger(watcher);
     ListRemove(&watcher->node);
@@ -241,6 +242,7 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
     // watcher stoped
     if (strcmp(name, "init.svc.param_watcher") == 0 && strcmp(value, "stopped") == 0) {
         ParamWatcher *watcher = GetParamWatcher(NULL);
+        PARAM_LOGD("ClearWatcherTrigger");
         ClearWatcherTrigger(watcher);
     }
     return ret;
@@ -286,7 +288,9 @@ static int SendWatcherNotifyMessage(const TriggerExtData *extData, int cmd, cons
 
     msg->id.msgId = extData->watcherId;
     msg->msgSize = sizeof(ParamMessage) + offset;
-    PARAM_LOGD("SendWatcherNotifyMessage watcherId %d msgSize %d para: %s", extData->watcherId, msg->msgSize, content);
+    PARAM_LOGD("SendWatcherNotifyMessage cmd %s, watcherId %d msgSize %d para: %s",
+        (cmd == CMD_INDEX_FOR_PARA_WAIT) ? "wait" : "watcher",
+        extData->watcherId, msg->msgSize, content);
     ParamTaskSendMsg(extData->watcher->stream, msg);
     return 0;
 }
@@ -426,10 +430,10 @@ PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *m
             ret = HandleParamWaitAdd(&g_paramWorkSpace, worker, msg);
             break;
         case MSG_ADD_WATCHER:
-            ret = HandleParamWatcherAdd(&g_paramWorkSpace, worker, (const ParamMessage *)msg);
+            ret = HandleParamWatcherAdd(&g_paramWorkSpace, worker, msg);
             break;
         case MSG_DEL_WATCHER:
-            ret = HandleParamWatcherDel(&g_paramWorkSpace, worker, (const ParamMessage *)msg);
+            ret = HandleParamWatcherDel(&g_paramWorkSpace, worker, msg);
             break;
         default:
             break;
@@ -518,51 +522,10 @@ static void TimerCallback(ParamTaskPtr timer, void *context)
 
 static int GetParamValueFromBuffer(const char *name, const char *buffer, char *value, int length)
 {
-    char *endData = (char *)buffer + strlen(buffer);
     size_t bootLen = strlen(OHOS_BOOT);
-    char *tmp = strstr(buffer, name + bootLen);
-    do {
-        if (tmp == NULL) {
-            return -1;
-        }
-        tmp = tmp + strlen(name) - bootLen;
-        while (tmp < endData && *tmp == ' ') {
-            tmp++;
-        }
-        if (*tmp == '=') {
-            break;
-        }
-        tmp = strstr(tmp + 1, name + bootLen);
-    } while (tmp < endData);
-    tmp++;
-    size_t i = 0;
-    size_t endIndex = 0;
-    while (tmp < endData && *tmp == ' ') {
-        tmp++;
-    }
-    for (; i < (size_t)length; tmp++) {
-        if (tmp >= endData) {
-            endIndex = i;
-            break;
-        }
-        if (*tmp == ' ') {
-            endIndex = i;
-        }
-        if (*tmp == '=') {
-            if (endIndex != 0) { // for root=uuid=xxxx
-                break;
-            }
-            i = 0;
-            endIndex = 0;
-            continue;
-        }
-        value[i++] = *tmp;
-    }
-    if (i >= (size_t)length) {
-        return -1;
-    }
-    value[endIndex] = '\0';
-    return 0;
+    const char *tmpName = name + bootLen;
+    int ret = GetProcCmdlineValue(tmpName, buffer, value, length);
+    return ret;
 }
 
 static int LoadParamFromCmdLine(void)
@@ -579,7 +542,7 @@ static int LoadParamFromCmdLine(void)
         OHOS_BOOT"uuid",
         OHOS_BOOT"aaaaa",
         OHOS_BOOT"rootfstype",
-        OHOS_BOOT"blkdevparts",
+        OHOS_BOOT"blkdevparts"
 #endif
     };
     char *data = ReadFileData(PARAM_CMD_LINE);
@@ -595,6 +558,7 @@ static int LoadParamFromCmdLine(void)
             ret = CheckParamName(cmdLines[i], 0);
             PARAM_CHECK(ret == 0, return -1, "Invalid name %s", cmdLines[i]);
             uint32_t dataIndex = 0;
+            PARAM_LOGE("**** cmdLines[%d] %s, value %s", i, cmdLines[i], value);
             ret = WriteParam(&g_paramWorkSpace.paramSpace, cmdLines[i], value, &dataIndex, 0);
             PARAM_CHECK(ret == 0, return -1, "Failed to write param %s %s", cmdLines[i], value);
         } else {

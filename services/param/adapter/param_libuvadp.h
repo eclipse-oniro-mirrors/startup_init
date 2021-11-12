@@ -29,12 +29,16 @@ typedef struct {
 } LibuvBaseTask;
 
 typedef struct {
+    uv_write_t writer;
+    uv_buf_t buf;
+} write_req_t;
+
+typedef struct {
     LibuvBaseTask base;
     RecvMessage recvMessage;
     union {
         uv_pipe_t pipe;
     } stream;
-    uv_write_t writer;
 } LibuvStreamTask;
 
 typedef struct {

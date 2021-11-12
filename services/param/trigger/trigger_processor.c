@@ -126,7 +126,7 @@ static int ExecuteTiggerImmediately(TriggerNode *trigger, const char *content, u
 {
     PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
     PARAM_CHECK(g_triggerWorkSpace.cmdExec != NULL, return -1, "Invalid cmdExec");
-    PARAM_LOGI("ExecuteTiggerImmediately trigger %s", trigger->name);
+    PARAM_LOGD("ExecuteTiggerImmediately trigger %s", trigger->name);
     CommandNode *cmd = GetNextCmdNode(trigger, NULL);
     while (cmd != NULL) {
         g_triggerWorkSpace.cmdExec(trigger, cmd, content, size);

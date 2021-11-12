@@ -17,7 +17,6 @@
 
 #include <errno.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "ueventd.h"
 #define INIT_LOG_TAG "ueventd"

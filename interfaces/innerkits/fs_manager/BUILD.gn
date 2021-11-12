@@ -14,6 +14,7 @@
 import("//build/ohos.gni")
 
 fs_manager_sources = [
+  "fs_manager_log.c",
   "fstab.c",
   "fstab_mount.c",
 ]

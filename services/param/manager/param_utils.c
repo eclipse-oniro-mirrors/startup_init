@@ -38,29 +38,6 @@ void CheckAndCreateDir(const char *fileName)
     free(path);
 }
 
-char *ReadFileData(const char *fileName)
-{
-    if (fileName == NULL) {
-        return NULL;
-    }
-    char *buffer = NULL;
-    int fd = -1;
-    do {
-        fd = open(fileName, O_RDONLY); // 阶段早，不能使用realpath
-        PARAM_CHECK(fd >= 0, break, "Failed to read file %s", fileName);
-
-        buffer = (char *)malloc(MAX_DATA_BUFFER);
-        PARAM_CHECK(buffer != NULL, break, "Failed to allocate memory for %s", fileName);
-        ssize_t readLen = read(fd, buffer, MAX_DATA_BUFFER - 1);
-        PARAM_CHECK(readLen > 0, break, "Failed to read data for %s", fileName);
-        buffer[readLen] = '\0';
-    } while (0);
-    if (fd != -1) {
-        close(fd);
-    }
-    return buffer;
-}
-
 static void TrimString(char *string, uint32_t currLen)
 {
     for (int i = currLen - 1; i >= 0; i--) {

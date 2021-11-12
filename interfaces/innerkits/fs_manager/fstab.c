@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "fs_manager/fs_manager.h"
+#include "fs_manager/fs_manager_log.h"
 #include "init_log.h"
 #include "init_utils.h"
 #include "securec.h"
@@ -134,37 +135,37 @@ static int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts)
 
     if ((item = (FstabItem *)calloc(1, sizeof(FstabItem))) == NULL) {
         errno = ENOMEM;
-        printf("[fs_manager] Allocate memory for FS table item failed, err = %d\n", errno);
+        FSMGR_LOGE("Allocate memory for FS table item failed, err = %d", errno);
         return -1;
     }
 
     do {
         if ((p = strtok_r(str, separator, &rest)) == NULL) {
-            fprintf(stderr, "Failed to parse block device.\n");
+            FSMGR_LOGE("Failed to parse block device.");
             break;
         }
         item->deviceName = strdup(p);
 
         if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            fprintf(stderr, "Failed to parse mount point.\n");
+            FSMGR_LOGE("Failed to parse mount point.");
             break;
         }
         item->mountPoint = strdup(p);
 
         if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            fprintf(stderr, "Failed to parse fs type.\n");
+            FSMGR_LOGE("Failed to parse fs type.");
             break;
         }
         item->fsType = strdup(p);
 
         if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            fprintf(stderr, "Failed to parse mount options.\n");
+            FSMGR_LOGE("Failed to parse mount options.");
             break;
         }
         item->mountOptions = strdup(p);
 
         if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            fprintf(stderr, "Failed to parse fs manager flags.\n");
+            FSMGR_LOGE("Failed to parse fs manager flags.");
             break;
         }
         // @fsManagerFlags only for fstab
@@ -191,18 +192,18 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
     Fstab *fstab = NULL;
 
     if (file == NULL) {
-        printf("[fs_manager], invalid file\n");
+        FSMGR_LOGE("Invalid file");
         return NULL;
     }
 
     FILE *fp = fopen(file, "r");
     if (fp == NULL) {
-        printf("[fs_manager] Open %s failed, err = %d", file, errno);
+        FSMGR_LOGE("Open %s failed, err = %d", file, errno);
         return NULL;
     }
 
     if ((fstab = (Fstab *)calloc(1, sizeof(Fstab))) == NULL) {
-        printf("[fs_manager] Allocate memory for FS table failed, err = %d\n", errno);
+        FSMGR_LOGE("Allocate memory for FS table failed, err = %d", errno);
         fclose(fp);
         fp = NULL;
         return NULL;
@@ -232,7 +233,7 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
             }
             // If one line in fstab file parsed with a failure. just give a warning
             // and skip it.
-            printf("[fs_manager][warning] Cannot parse file \" %s \" at line %zu. skip it\n", file, ln);
+            FSMGR_LOGW("Cannot parse file \" %s \" at line %zu. skip it", file, ln);
             continue;
         }
     }
@@ -267,8 +268,8 @@ FstabItem *FindFstabItemForPath(Fstab fstab, const char *path)
 
     char tmp[PATH_MAX] = {0};
     char *dir = NULL;
-    if (strncpy_s(tmp, PATH_MAX -1,  path, strlen(path)) != EOK) {
-        printf("[fs_manager][error], Failed to copy path\n");
+    if (strncpy_s(tmp, PATH_MAX - 1,  path, strlen(path)) != EOK) {
+        FSMGR_LOGE("Failed to copy path.");
         return NULL;
     }
 
@@ -360,7 +361,7 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
             flags |= ParseDefaultMountFlag(p);
         } else {
             if (strncat_s(fsSpecificData, fsSpecificDataSize - 1, p, strlen(p)) != EOK) {
-                printf("[fs_manager][warning], Failed to append mount flag \" %s \", ignore it\n", p);
+                FSMGR_LOGW("Failed to append mount flag \" %s \", ignore it.", p);
                 continue;
             }
             if (i == flagCount - 1) { // last flags, do not need to append ','
@@ -368,7 +369,7 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
             }
             // Combined each mount flag with ','
             if (strncat_s(fsSpecificData, fsSpecificDataSize - 1, ",", 1) != EOK) {
-                printf("[fs_manager][warning], Failed to append comma\n");
+                FSMGR_LOGW("Failed to append comma.");
                 break; // If cannot add ',' to the end of flags, there is not reason to continue.
             }
         }

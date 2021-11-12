@@ -16,12 +16,14 @@
 #ifndef BASE_STARTUP_INITLITE_MOUNT_H
 #define BASE_STARTUP_INITLITE_MOUNT_H
 
+#include "fs_manager/fs_manager.h"
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
-int MountRequriedPartitions(void);
+int MountRequriedPartitions(Fstab *fstab);
 #ifdef __cplusplus
 #if __cplusplus
 }
