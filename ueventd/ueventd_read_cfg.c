@@ -129,7 +129,6 @@ static char **SplitUeventConfig(char *buffer, const char *del, int *returnCount,
         count++;
         p = strtok_r(NULL, del, &rest);
     }
-    items[count] = NULL;
     *returnCount = count;
     return items;
 }
