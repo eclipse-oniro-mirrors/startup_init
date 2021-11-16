@@ -18,6 +18,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "init_utils.h"
 #include "param_persist.h"
 #include "param_utils.h"
 
@@ -29,9 +30,11 @@ typedef struct {
 static int LoadPersistParam(PersistParamGetPtr persistParamGet, void *context)
 {
     CheckAndCreateDir(PARAM_PERSIST_SAVE_PATH);
-    FILE *fp = fopen(PARAM_PERSIST_SAVE_TMP_PATH, "r");
+    int updaterMode = InUpdaterMode();
+    char *tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_TMP_PATH : "/param/tmp_persist_parameters";
+    FILE *fp = fopen(tmpPath, "r");
     if (fp == NULL) {
-        fp = fopen(PARAM_PERSIST_SAVE_PATH, "r");
+        fp = fopen((updaterMode == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters", "r");
         PARAM_LOGI("LoadPersistParam open file %s", PARAM_PERSIST_SAVE_PATH);
     }
     PARAM_CHECK(fp != NULL, return -1, "No valid persist parameter file %s", PARAM_PERSIST_SAVE_PATH);
@@ -65,7 +68,7 @@ static int SavePersistParam(const char *name, const char *value)
 
 static int BatchSavePersistParamBegin(PERSIST_SAVE_HANDLE *handle)
 {
-    FILE *fp = fopen(PARAM_PERSIST_SAVE_TMP_PATH, "w");
+    FILE *fp = fopen((InUpdaterMode() == 0) ? PARAM_PERSIST_SAVE_TMP_PATH : "/param/tmp_persist_parameters", "w");
     PARAM_CHECK(fp != NULL, return -1, "Open file %s fail error %d", PARAM_PERSIST_SAVE_TMP_PATH, errno);
     *handle = (PERSIST_SAVE_HANDLE)fp;
     return 0;
@@ -82,10 +85,16 @@ static int BatchSavePersistParam(PERSIST_SAVE_HANDLE handle, const char *name, c
 
 static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle)
 {
+    int ret;
     FILE *fp = (FILE *)handle;
     (void)fclose(fp);
-    unlink(PARAM_PERSIST_SAVE_PATH);
-    int ret = rename(PARAM_PERSIST_SAVE_TMP_PATH, PARAM_PERSIST_SAVE_PATH);
+    if (InUpdaterMode() == 0) {
+        unlink(PARAM_PERSIST_SAVE_PATH);
+        ret = rename(PARAM_PERSIST_SAVE_TMP_PATH, PARAM_PERSIST_SAVE_PATH);
+    } else {
+        unlink("/param/persist_parameters");
+        ret = rename("/param/tmp_persist_parameters", "/param/persist_parameters");
+    }
     PARAM_CHECK(ret == 0, return, "BatchSavePersistParamEnd %s fail error %d", PARAM_PERSIST_SAVE_TMP_PATH, errno);
 }
 

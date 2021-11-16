@@ -35,5 +35,8 @@ ohos_shared_library("libsocket") {
   include_dirs = service_socket_include
   deps = service_socket_deps
   part_name = "init"
-  install_images = [ "system" ]
+  install_images = [
+    "system",
+    "updater",
+  ]
 }
