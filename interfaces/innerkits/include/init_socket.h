@@ -16,9 +16,20 @@
 #ifndef INIT_SOCKET_API_H
 #define INIT_SOCKET_API_H
 
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+
 #define OHOS_SOCKET_DIR    "/dev/unix/socket"
 #define OHOS_SOCKET_ENV_PREFIX    "OHOS_SOCKET_"
 // parameter is service name
 int GetControlSocket(const char *name);
 
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
 #endif
