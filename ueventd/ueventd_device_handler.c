@@ -356,8 +356,6 @@ static const char *GetDeviceBasePath(const char *subsystem)
         devPath = "/dev/input";
     } else if (STRINGEQUAL(subsystem, "drm")) {
         devPath = "/dev/dri";
-    } else if (STRINGEQUAL(subsystem, "input")) {
-        devPath = "/dev/input";
     } else if (STRINGEQUAL(subsystem, "graphics")) {
         devPath = "/dev/graphics";
     } else if (STRINGEQUAL(subsystem, "sound")) {
