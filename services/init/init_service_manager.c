@@ -326,6 +326,7 @@ static int AddServiceSocket(cJSON *json, Service *service)
     sockopt->gid = DecodeUid(opt[SERVICE_SOCK_GID]);
     if (sockopt->uid == (uid_t)-1 || sockopt->gid == (uid_t)-1) {
         free(sockopt);
+        sockopt = NULL;
         INIT_LOGE("Invalid uid %d or gid %d", sockopt->uid, sockopt->gid);
         return SERVICE_FAILURE;
     }
@@ -399,6 +400,7 @@ static int AddServiceFile(cJSON *json, Service *service)
     fileOpt->gid = DecodeUid(opt[SERVICE_FILE_GID]);
     if (fileOpt->uid == (uid_t)-1 || fileOpt->gid == (gid_t)-1) {
         free(fileOpt);
+        fileOpt = NULL;
         INIT_LOGE("Invalid uid %d or gid %d", fileOpt->uid, fileOpt->gid);
         return SERVICE_FAILURE;
     }
@@ -641,10 +643,13 @@ Service *GetServiceByPid(pid_t pid)
 
 Service *GetServiceByName(const char *servName)
 {
+    INIT_ERROR_CHECK(servName != NULL, return NULL, "Failed get servName");
     ListNode *node = g_serviceSpace.services.next;
     while (node != &g_serviceSpace.services) {
         Service *service = ListEntry(node, Service, node);
-        INIT_CHECK_RETURN_VALUE(strcmp(service->name, servName) != 0, service);
+        if ((service != NULL) && (service->name != NULL)) {
+            INIT_CHECK_RETURN_VALUE(strcmp(service->name, servName) != 0, service);
+        }
         node = node->next;
     }
     return NULL;

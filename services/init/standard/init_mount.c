@@ -18,7 +18,7 @@
 #include "init_log.h"
 #include "securec.h"
 
-int MountRequriedPartitions(Fstab *fstab)
+int MountRequriedPartitions(const Fstab *fstab)
 {
     INIT_ERROR_CHECK(fstab != NULL, return -1, "Failed fstab is NULL");
     int rc = -1;

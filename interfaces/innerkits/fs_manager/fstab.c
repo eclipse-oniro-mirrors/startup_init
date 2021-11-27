@@ -191,12 +191,13 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
     ssize_t readn = 0;
     Fstab *fstab = NULL;
 
-    if (file == NULL) {
+    char *realPath = GetRealPath(file);
+    if (realPath == NULL) {
         FSMGR_LOGE("Invalid file");
         return NULL;
     }
-
-    FILE *fp = fopen(file, "r");
+    FILE *fp = fopen(realPath, "r");
+    free(realPath);
     if (fp == NULL) {
         FSMGR_LOGE("Open %s failed, err = %d", file, errno);
         return NULL;
@@ -250,7 +251,7 @@ FstabItem *FindFstabItemForMountPoint(Fstab fstab, const char *mp)
     FstabItem *item = NULL;
     if (mp != NULL) {
         for (item = fstab.head; item != NULL; item = item->next) {
-            if (strcmp(item->mountPoint, mp) == 0) {
+            if ((item->mountPoint != NULL) && (strcmp(item->mountPoint, mp) == 0)) {
                 break;
             }
         }

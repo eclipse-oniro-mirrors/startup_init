@@ -38,16 +38,16 @@ static int RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdate
     INIT_CHECK_RETURN_VALUE(realPath != NULL, -1);
     int ret = 0;
     FILE *fp = fopen(realPath, "rb+");
+    free(realPath);
+    realPath = NULL;
     if (fp != NULL) {
         size_t writeLen = fwrite(boot, sizeof(struct RBMiscUpdateMessage), 1, fp);
         INIT_ERROR_CHECK(writeLen == 1, ret = -1, "Failed to write misc for reboot");
+        (void)fclose(fp);
     } else {
         ret = -1;
         INIT_LOGE("Failed to open %s", path);
     }
-    free(realPath);
-    realPath = NULL;
-    (void)fclose(fp);
     return ret;
 }
 
@@ -57,17 +57,16 @@ static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage
     INIT_CHECK_RETURN_VALUE(realPath != NULL, -1);
     int ret = 0;
     FILE *fp = fopen(realPath, "rb");
+    free(realPath);
+    realPath = NULL;
     if (fp != NULL) {
         size_t readLen = fread(boot, 1, sizeof(struct RBMiscUpdateMessage), fp);
         INIT_ERROR_CHECK(readLen > 0, ret = -1, "Failed to read misc for reboot");
+        (void)fclose(fp);
     } else {
         ret = -1;
         INIT_LOGE("Failed to open %s", path);
     }
-
-    free(realPath);
-    realPath = NULL;
-    (void)fclose(fp);
     return ret;
 }
 
