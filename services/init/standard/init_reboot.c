@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <sys/mount.h>
 #include <sys/reboot.h>
+#include <sys/syscall.h>
 
 #include "init_log.h"
 #include "init_service.h"
@@ -26,6 +27,10 @@
 #define MAX_VALUE_LENGTH 500
 #define MAX_COMMAND_SIZE 20
 #define MAX_UPDATE_SIZE 100
+
+#define REBOOT_MAGIC1       0xfee1dead
+#define REBOOT_MAGIC2       672274793
+#define REBOOT_CMD_RESTART2 0xA1B2C3D4
 
 struct RBMiscUpdateMessage {
     char command[MAX_COMMAND_SIZE];
@@ -137,7 +142,7 @@ static int CheckRebootParam(const char *valueData)
         return 0;
     }
     static const char *cmdParams[] = {
-        "shutdown", "updater", "updater:", "flash", "flash:", "NoArgument", "bootloader"
+        "shutdown", "updater", "updater:", "flash", "flash:", "NoArgument", "loader","bootloader"
     };
     size_t i = 0;
     for (; i < ARRAY_LENGTH(cmdParams); i++) {
@@ -188,6 +193,8 @@ void ExecReboot(const char *value)
         ret = CheckAndRebootToUpdater(valueData, "updater", "updater:", "boot_updater");
     } else if (strncmp(valueData, "flash", strlen("flash")) == 0) {
         ret = CheckAndRebootToUpdater(valueData, "flash", "flash:", "boot_flash");
+    } else if (strncmp(valueData, "loader", strlen("loader")) == 0) {
+        syscall(__NR_reboot, REBOOT_MAGIC1, REBOOT_MAGIC2, REBOOT_CMD_RESTART2, "loader");
     }
     INIT_LOGI("Reboot %s %s.", value, (ret == 0) ? "success" : "fail");
     return;
