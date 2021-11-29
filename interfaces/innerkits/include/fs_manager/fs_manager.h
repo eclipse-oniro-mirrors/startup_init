@@ -61,6 +61,7 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts);
 FstabItem *FindFstabItemForPath(Fstab fstab, const char *path);
 FstabItem* FindFstabItemForMountPoint(Fstab fstab, const char *mp);
 
+int GetPartitionFilePath(const char *filePath, const char *partitionName, char *partitionPath, size_t pathSize);
 bool IsSupportedFilesystem(const char *fsType);
 int DoFormat(const char *devPath, const char *fsType);
 int MountOneItem(FstabItem *item);

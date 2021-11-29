@@ -13,14 +13,17 @@
  * limitations under the License.
  */
 #include <errno.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <sys/mount.h>
 #include <sys/reboot.h>
 
+#include "fs_manager/fs_manager.h"
 #include "init_log.h"
 #include "init_service.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
+#include "init_param.h"
 #include "securec.h"
 
 #define MAX_VALUE_LENGTH 500
@@ -71,33 +74,10 @@ static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage
     return ret;
 }
 
-static int GetMountStatusForMountPoint(const char *mountPoint)
-{
-    const int bufferMaxSize = 512;
-    char buffer[bufferMaxSize];
-    size_t n;
-    const char *mountFile = "/proc/mounts";
-    FILE *fp = fopen(mountFile, "r");
-    INIT_CHECK_RETURN_VALUE(fp != NULL, 1);
-
-    while (fgets(buffer, sizeof(buffer) - 1, fp) != NULL) {
-        n = strlen(buffer);
-        if (buffer[n - 1] == '\n') {
-            buffer[n - 1] = '\0';
-        }
-        if (strstr(buffer, mountPoint) != NULL) {
-            (void)fclose(fp);
-            return 1;
-        }
-    }
-    (void)fclose(fp);
-    return 0;
-}
-
-static int CheckAndRebootToUpdater(const char *valueData, const char *cmd, const char *cmdExt, const char *boot)
+static int CheckAndRebootToUpdater(const char *valueData, const char *cmd,
+    const char *cmdExt, const char *boot, const char *miscFile)
 {
     // "updater" or "updater:"
-    const char *miscFile = "/dev/block/platform/soc/10100000.himci.eMMC/by-name/misc";
     struct RBMiscUpdateMessage msg;
     int ret = RBMiscReadUpdaterMessage(miscFile, &msg);
     INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get misc info for %s.", cmd);
@@ -149,6 +129,20 @@ static int CheckRebootParam(const char *valueData)
     return 0;
 }
 
+static int GetMiscFilePath(char *miscFilePath, size_t pathSize)
+{
+    char value[PARAM_VALUE_LEN_MAX] = {0};
+    unsigned int valueLen = PARAM_VALUE_LEN_MAX;
+    int ret = SystemReadParam("ohos.boot.hardware", value, &valueLen);
+    INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get hardware param");
+    char fileName[PATH_MAX] = {0};
+    ret = sprintf_s(fileName, sizeof(fileName), "/vendor/etc/fstab.%s", value);
+    INIT_ERROR_CHECK(ret > EOK, return -1, "Failed to format fileName");
+    ret = GetPartitionFilePath(fileName, "/misc", miscFilePath, pathSize);
+    INIT_ERROR_CHECK(ret == 0, return -1, "Failed get partition file path");
+    return 0;
+}
+
 void ExecReboot(const char *value)
 {
     INIT_ERROR_CHECK(value != NULL && strlen(value) <= MAX_VALUE_LENGTH, return, "Invalid arg");
@@ -161,6 +155,9 @@ void ExecReboot(const char *value)
     }
     INIT_ERROR_CHECK(CheckRebootParam(valueData) == 0, return, "Invalid arg %s for reboot.", value);
 
+    char miscFilePath[PATH_MAX] = {0};
+    int ret = GetMiscFilePath(miscFilePath, PATH_MAX);
+    INIT_ERROR_CHECK(ret == 0, return, "Failed to get misc file path.");
     StopAllServices(SERVICE_ATTR_INVALID);
     sync();
     INIT_CHECK_ONLY_ELOG(GetMountStatusForMountPoint("/vendor") == 0 || umount("/vendor") == 0,
@@ -173,9 +170,9 @@ void ExecReboot(const char *value)
         INIT_LOGE("Failed to get mount point \"/data\"");
     }
 
-    int ret = 0;
+    ret = 0;
     if (valueData == NULL) {
-        ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
+        ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL, miscFilePath);
     } else if (strcmp(valueData, "shutdown") == 0) {
 #ifndef STARTUP_INIT_TEST
         ret = reboot(RB_POWER_OFF);
@@ -185,9 +182,9 @@ void ExecReboot(const char *value)
             ret = reboot(RB_POWER_OFF);
 #endif
     } else if (strncmp(valueData, "updater", strlen("updater")) == 0) {
-        ret = CheckAndRebootToUpdater(valueData, "updater", "updater:", "boot_updater");
+        ret = CheckAndRebootToUpdater(valueData, "updater", "updater:", "boot_updater", miscFilePath);
     } else if (strncmp(valueData, "flash", strlen("flash")) == 0) {
-        ret = CheckAndRebootToUpdater(valueData, "flash", "flash:", "boot_flash");
+        ret = CheckAndRebootToUpdater(valueData, "flash", "flash:", "boot_flash", miscFilePath);
     }
     INIT_LOGI("Reboot %s %s.", value, (ret == 0) ? "success" : "fail");
     return;
