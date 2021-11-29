@@ -647,7 +647,7 @@ Service *GetServiceByName(const char *servName)
     ListNode *node = g_serviceSpace.services.next;
     while (node != &g_serviceSpace.services) {
         Service *service = ListEntry(node, Service, node);
-        if ((service != NULL) && (service->name != NULL)) {
+        if (service != NULL) {
             INIT_CHECK_RETURN_VALUE(strcmp(service->name, servName) != 0, service);
         }
         node = node->next;
