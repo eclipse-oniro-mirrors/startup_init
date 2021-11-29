@@ -123,7 +123,7 @@ static void DoInsmod(const struct CmdArgs *ctx)
     if (fd >= 0) {
         int rc = syscall(__NR_finit_module, fd, options, flags);
         if (rc == -1) {
-            INIT_LOGE("Failed to install mode for %s failed options %s err: %d", realPath, options, errno);
+            INIT_LOGE("Failed to install kernel module for %s failed options %s err: %d", realPath, options, errno);
         }
     }
     if (options != NULL) {
