@@ -16,6 +16,7 @@
 #include "fs_manager/fs_manager_log.h"
 
 #include "init_log.h"
+#include "init_utils.h"
 #include "securec.h"
 
 #define LOG_BUFFER_MAX (1024)
