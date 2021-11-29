@@ -140,7 +140,6 @@ static void FreeRootDir(DIR *oldRoot, dev_t dev)
     if (oldRoot != NULL) {
         FreeOldRoot(oldRoot, dev);
         closedir(oldRoot);
-        oldRoot = NULL;
     }
 }
 

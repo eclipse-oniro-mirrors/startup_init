@@ -76,7 +76,7 @@ int InitParamWorkSpace(ParamWorkSpace *workSpace, int onlyRead)
 
 void CloseParamWorkSpace(ParamWorkSpace *workSpace)
 {
-     PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace");
+    PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace");
     CloseWorkSpace(&workSpace->paramSpace);
     if (workSpace->paramSecurityOps.securityFreeLabel != NULL) {
         workSpace->paramSecurityOps.securityFreeLabel(workSpace->securityLabel);

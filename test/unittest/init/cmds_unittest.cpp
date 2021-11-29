@@ -178,7 +178,7 @@ HWTEST_F(CmdsUnitTest, TestCommonWrite, TestSize.Level1)
     const int bufLen = 50;
     char buffer[bufLen];
     int length = read(fd, buffer, bufLen - 1);
-    EXPECT_EQ(length, strlen("aaa"));   
+    EXPECT_EQ(length, strlen("aaa"));
     close(fd);
     fd = -1;
     // abnormal
