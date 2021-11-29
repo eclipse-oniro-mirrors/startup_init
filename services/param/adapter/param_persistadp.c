@@ -50,10 +50,10 @@ static int LoadPersistParam(PersistParamGetPtr persistParamGet, void *context)
         int ret = persistParamGet(info[0].value, info[1].value, context);
         PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buff);
     }
-    if (info) {
+    if (info != NULL) {
         free(info);
     }
-    if (buff) {
+    if (buff != NULL) {
         free(buff);
     }
     (void)fclose(fp);

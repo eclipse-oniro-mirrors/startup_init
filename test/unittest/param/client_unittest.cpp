@@ -41,6 +41,9 @@ static void ClientCheckParamValue(const char *name, const char *expectValue)
 // 多线程测试
 static void *TestSendParamSetMsg(void *args)
 {
+    if (args == nullptr) {
+        return nullptr;
+    }
     std::string name = (char *)args;
     printf("TestSendParamSetMsg name :\'%s\' \n", name.c_str());
     SystemSetParameter(name.c_str(), name.c_str());
@@ -50,6 +53,9 @@ static void *TestSendParamSetMsg(void *args)
 
 static void *TestSendParamWaitMsg(void *args)
 {
+    if (args == nullptr) {
+        return nullptr;
+    }
     std::string name = "Wati.";
     name = name + (char *)args;
     printf("TestSendParamWaitMsg name :\'%s\' \n", name.c_str());

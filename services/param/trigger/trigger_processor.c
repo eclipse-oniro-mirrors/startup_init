@@ -52,7 +52,7 @@ static void TestTimerCallback(ParamTaskPtr timer, void *context)
     static uint32_t value = 0;
     int count = 0;
     while (count < MAX_COUNT) {
-        int wait = READ_DURATION + READ_DURATION; // 100ms
+        const int wait = READ_DURATION + READ_DURATION; // 100ms
         sprintf_s(buffer, sizeof(buffer), "%u", value);
         PARAM_LOGI("set param name: %s, value %s", TEST_PARAM_NAME, buffer);
         SystemWriteParam(TEST_PARAM_NAME, buffer);

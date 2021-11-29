@@ -222,6 +222,9 @@ public:
         }
         ParamSecurityLabel *tmp = nullptr;
         ret = clientParamSercurityOps.securityDecodeLabel(&tmp, buffer.data(), buffer.size());
+        if (tmp == nullptr || label == nullptr) {
+            return -1;
+        }
         EXPECT_EQ(ret, 0);
         EXPECT_EQ(label->cred.gid, tmp->cred.gid);
         EXPECT_EQ(label->cred.uid, tmp->cred.uid);
@@ -233,8 +236,8 @@ public:
     }
 
 private:
-    ParamSecurityOps initParamSercurityOps;
-    ParamSecurityOps clientParamSercurityOps;
+    ParamSecurityOps initParamSercurityOps {};
+    ParamSecurityOps clientParamSercurityOps {};
 };
 
 HWTEST_F(SelinuxUnitTest, TestSelinuxGetLabel, TestSize.Level0)
@@ -278,7 +281,7 @@ HWTEST_F(SelinuxUnitTest, TestSeliniuxLabelEncode, TestSize.Level0)
 {
     SelinuxUnitTest test;
     std::vector<char> buffer;
-    ParamSecurityLabel *label;
+    ParamSecurityLabel * = nullptr;
     test.TestEncode(label, buffer);
     test.TestDecode(label, buffer);
 }

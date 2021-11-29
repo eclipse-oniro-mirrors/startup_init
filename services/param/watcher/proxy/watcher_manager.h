@@ -93,8 +93,8 @@ public:
             watcher_->OnParamerterChange(name, value);
 #endif
         }
-        ListNode groupNode_ { };
     private:
+        ListNode groupNode_;
         uint32_t watcherId_ = { 0 };
         sptr<IWatcher> watcher_;
         WatcherGroupPtr group_ { nullptr };
@@ -110,15 +110,15 @@ public:
         void AddWatcher(const ParamWatcherPtr &watcher);
         void ProcessParameterChange(const std::string &name, const std::string &value);
 
-        const std::string GetKeyPrefix()
+        const std::string GetKeyPrefix() const
         {
             return keyPrefix_;
         }
-        bool Emptry()
+        bool Emptry() const
         {
             return ListEmpty(watchers_);
         }
-        uint32_t GetGroupId()
+        uint32_t GetGroupId() const
         {
             return groupId_;
         }

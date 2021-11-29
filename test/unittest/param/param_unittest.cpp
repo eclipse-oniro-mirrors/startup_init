@@ -116,6 +116,7 @@ public:
         ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(&GetParamWorkSpace()->paramSpace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {
             EXPECT_EQ(1, 0);
+            return 0;
         }
         EXPECT_EQ(node->gid, auditData.dacData.gid);
         return 0;
@@ -149,6 +150,7 @@ public:
         ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(&GetParamWorkSpace()->paramSpace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {
             EXPECT_EQ(1, 0);
+            return 0;
         }
         EXPECT_EQ((int)node->gid, 203); // 203 test gid
         return 0;
@@ -173,6 +175,7 @@ public:
         ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(&GetParamWorkSpace()->paramSpace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {
             EXPECT_EQ(1, 0);
+            return 0;
         }
         EXPECT_EQ(node->gid, auditData.dacData.gid);
         return 0;
@@ -371,7 +374,7 @@ public:
         do {
             uint32_t offset = 0;
             int ret = FillParamMsgContent(request, &offset, PARAM_VALUE, value, strlen(value));
-            PARAM_CHECK(ret == 0, return -1, "Failed to fill value");
+            PARAM_CHECK(ret == 0, break, "Failed to fill value");
             ProcessMessage((const ParamTaskPtr)g_worker, (const ParamMessage *)request);
         } while (0);
         free(request);
