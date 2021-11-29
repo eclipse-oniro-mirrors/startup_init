@@ -281,7 +281,7 @@ HWTEST_F(SelinuxUnitTest, TestSeliniuxLabelEncode, TestSize.Level0)
 {
     SelinuxUnitTest test;
     std::vector<char> buffer;
-    ParamSecurityLabel * = nullptr;
+    ParamSecurityLabel *label = nullptr;
     test.TestEncode(label, buffer);
     test.TestDecode(label, buffer);
 }
