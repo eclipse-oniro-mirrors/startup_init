@@ -32,11 +32,12 @@ public:
 HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
 {
     ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket));
+    ASSERT_NE(sockopt, nullptr);
     sockopt->type = SOCK_SEQPACKET;
     sockopt->sockFd = -1;
     sockopt->uid = 1000;
     sockopt->gid = 1000;
-    sockopt->perm = 660;
+    sockopt->perm = 0660;
     sockopt->passcred = true;
     const char *testSocName = "test_socket";
     errno_t ret = strncpy_s(sockopt->name, strlen(testSocName) + 1, testSocName, strlen(testSocName));

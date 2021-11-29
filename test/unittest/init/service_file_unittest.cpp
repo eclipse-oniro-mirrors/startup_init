@@ -39,6 +39,7 @@ HWTEST_F(ServiceFileUnitTest, TestServiceFile, TestSize.Level1)
 {
     const char *fileName = "/data/filetest";
     ServiceFile *fileOpt = (ServiceFile *)calloc(1, sizeof(ServiceFile) + strlen(fileName) + 1);
+    ASSERT_NE(fileOpt, nullptr);
     fileOpt->next = NULL;
     fileOpt->flags = O_RDWR;
     fileOpt->uid = 1000;
@@ -47,6 +48,7 @@ HWTEST_F(ServiceFileUnitTest, TestServiceFile, TestSize.Level1)
     fileOpt->perm = 0770;
     if (strncpy_s(fileOpt->fileName, strlen(fileName) + 1, fileName, strlen(fileName)) != 0) {
         free(fileOpt);
+        fileOpt = nullptr;
         ASSERT_TRUE(1);
     }
     CreateServiceFile(fileOpt);
@@ -54,5 +56,6 @@ HWTEST_F(ServiceFileUnitTest, TestServiceFile, TestSize.Level1)
     EXPECT_NE(ret, -1);
     CloseServiceFile(fileOpt);
     free(fileOpt);
+    fileOpt = nullptr;
 }
 }

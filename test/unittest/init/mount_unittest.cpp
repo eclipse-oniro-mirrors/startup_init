@@ -38,6 +38,7 @@ HWTEST_F(MountUnitTest, TestMountRequriedPartitions, TestSize.Level0)
     if (fstab != NULL) {
         int ret = MountRequriedPartitions(fstab);
         EXPECT_EQ(ret, -1);
+        ReleaseFstab(fstab)；
     }
 }
 } // namespace init_ut
