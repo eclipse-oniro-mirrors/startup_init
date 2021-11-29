@@ -288,6 +288,23 @@ FstabItem *FindFstabItemForPath(Fstab fstab, const char *path)
     return item;
 }
 
+int GetPartitionFilePath(const char *filePath, const char *partitionName, char *partitionPath, size_t pathSize)
+{
+    Fstab *fstab = NULL;
+    FstabItem *miscItem = NULL;
+    if ((fstab = ReadFstabFromFile(filePath, false)) != NULL) {
+        miscItem = FindFstabItemForMountPoint(*fstab, partitionName);
+        INIT_ERROR_CHECK(miscItem != NULL, ReleaseFstab(fstab); return -1, "Failed to find misc partition");
+    } else {
+        FSMGR_LOGE("Failed to ReadFstabFromFile");
+        return -1;
+    }
+    int ret = strcpy_s(partitionPath, pathSize, miscItem->deviceName);
+    INIT_ERROR_CHECK(ret == EOK, ReleaseFstab(fstab); return -1, "Failed to copy misc device name");
+    ReleaseFstab(fstab);
+    return 0;
+}
+
 static const struct MountFlags mountFlags[] = {
     { "noatime", MS_NOATIME },
     { "noexec", MS_NOEXEC },
