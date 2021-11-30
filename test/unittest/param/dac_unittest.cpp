@@ -171,6 +171,9 @@ public:
         }
         ParamSecurityLabel *tmp = nullptr;
         ret = clientParamSercurityOps.securityDecodeLabel(&tmp, buffer.data(), buffer.size());
+        if (label == nullptr || tmp == nullptr) {
+            return -1;
+        }
         EXPECT_EQ(ret, 0);
         EXPECT_EQ(label->cred.gid, tmp->cred.gid);
         EXPECT_EQ(label->cred.uid, tmp->cred.uid);
@@ -178,8 +181,8 @@ public:
     }
 
 private:
-    ParamSecurityOps initParamSercurityOps;
-    ParamSecurityOps clientParamSercurityOps;
+    ParamSecurityOps initParamSercurityOps {};
+    ParamSecurityOps clientParamSercurityOps {};
 };
 
 HWTEST_F(DacUnitTest, TestDacGetLabel, TestSize.Level0)

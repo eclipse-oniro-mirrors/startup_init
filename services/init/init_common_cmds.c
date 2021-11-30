@@ -56,6 +56,7 @@ static char *AddOneArg(const char *param, size_t paramLen)
 
 char *BuildStringFromCmdArg(const struct CmdArgs *ctx, int startIndex)
 {
+    INIT_ERROR_CHECK(ctx != NULL, return NULL, "Failed to get cmd args ");
     char *options = (char *)calloc(1, OPTIONS_SIZE + 1);
     INIT_ERROR_CHECK(options != NULL, return NULL, "Failed to get memory ");
     options[0] = '\0';
@@ -336,7 +337,7 @@ static int GetMountFlag(unsigned long *mountflag, const char *targetStr, const c
     INIT_CHECK_RETURN_VALUE(targetStr != NULL && mountflag != NULL, 0);
     struct {
         char *flagName;
-        int value;
+        unsigned long value;
     } mountFlagMap[] = {
         { "noatime", MS_NOATIME },
         { "noexec", MS_NOEXEC },
@@ -416,18 +417,16 @@ static void DoWrite(const struct CmdArgs *ctx)
     int fd = -1;
     if (realPath != NULL) {
         fd = open(realPath, O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, S_IRUSR | S_IWUSR);
+        free(realPath);
+        realPath = NULL;
     } else {
         fd = open(ctx->argv[0], O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, S_IRUSR | S_IWUSR);
     }
     if (fd >= 0) {
         size_t ret = write(fd, ctx->argv[1], strlen(ctx->argv[1]));
         INIT_CHECK_ONLY_ELOG(ret >= 0, "DoWrite: write to file %s failed: %d", ctx->argv[0], errno);
+        close(fd);
     }
-    if (realPath != NULL) {
-        free(realPath);
-    }
-    realPath = NULL;
-    close(fd);
 }
 
 static void DoRmdir(const struct CmdArgs *ctx)

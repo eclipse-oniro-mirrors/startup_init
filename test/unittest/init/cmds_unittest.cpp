@@ -144,8 +144,8 @@ HWTEST_F(CmdsUnitTest, TestCommonChmod, TestSize.Level1)
     EXPECT_EQ(testMode, testMode & info.st_mode);
     DoCmdByName("chmod ", "777 /data/init_ut/test_dir0/test_file001");
 
-    fd = -1;
     close(fd);
+    fd = -1;
 }
 
 HWTEST_F(CmdsUnitTest, TestCommonCopy, TestSize.Level1)
@@ -160,9 +160,8 @@ HWTEST_F(CmdsUnitTest, TestCommonCopy, TestSize.Level1)
     DoCmdByName("copy ", "/data/init_ut/test_dir0/test_file_copy1 /data/init_ut/test_dir0/test_file_copy2");
     int ret = access(testFile2, F_OK);
     EXPECT_EQ(ret, 0);
-    fd = -1;
     close(fd);
-
+    fd = -1;
     // abnormal
     DoCmdByName("copy ", "/data/init_ut/test_dir0/test_file_copy1 /data/init_ut/test_dir0/test_file_copy1");
     DoCmdByName("copy ", "/data/init_ut/test_dir0/test_file_copy11 /data/init_ut/test_dir0/test_file_copy1");
@@ -178,11 +177,10 @@ HWTEST_F(CmdsUnitTest, TestCommonWrite, TestSize.Level1)
     DoCmdByName("write ", "/data/init_ut/test_dir0/test_file_write1 aaa");
     const int bufLen = 50;
     char buffer[bufLen];
-    int length = read(fd, buffer, bufLen);
+    int length = read(fd, buffer, bufLen - 1);
     EXPECT_EQ(length, strlen("aaa"));
-    fd = -1;
     close(fd);
-
+    fd = -1;
     // abnormal
     DoCmdByName("write ", "/data/init_ut/test_dir0/test_file_write2 aaa");
 }
@@ -252,6 +250,7 @@ HWTEST_F(CmdsUnitTest, TestGetCmdLinesFromJson, TestSize.Level1)
     cJSON *cmdsItem1 = cJSON_GetArrayItem(cmdsItem, 0);
     ASSERT_NE(nullptr, cmdsItem1);
     CmdLines **cmdLines = (CmdLines **)calloc(1, 1);
+    ASSERT_NE(nullptr, cmdLines);
     int ret = GetCmdLinesFromJson(cmdsItem1, cmdLines);
     EXPECT_EQ(ret, -1);
     cJSON *cmdsItem2 = cJSON_GetObjectItem(cmdsItem1, "cmds");

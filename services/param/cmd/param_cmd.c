@@ -168,7 +168,7 @@ int RunParamCommand(int argc, char *argv[])
     }
 
     for (size_t i = 0; i < sizeof(paramCmds) / sizeof(paramCmds[0]); i++) {
-        if (strcmp(argv[1], paramCmds[i].name) == 0) {
+        if (argv[1] != NULL && strcmp(argv[1], paramCmds[i].name) == 0) {
             if (argc < paramCmds[i].minArg) {
                 printf("usage: %s\n", paramCmds[i].help);
                 return 0;

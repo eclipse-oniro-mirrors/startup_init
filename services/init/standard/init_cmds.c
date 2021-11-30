@@ -114,16 +114,16 @@ static void DoInsmod(const struct CmdArgs *ctx)
     INIT_LOGD("Install mode %s ", fileName);
     char *realPath = GetRealPath(fileName);
     INIT_ERROR_CHECK(realPath != NULL, return, "Can not get real file name from param %s", ctx->argv[0]);
-    INIT_CHECK((ctx->argc > 1 && ctx->argv[1] != NULL && strcmp(ctx->argv[1], "-f")) != 0, // [-f]
+    if (ctx->argc > 1 && ctx->argv[1] != NULL && strcmp(ctx->argv[1], "-f") == 0) { // [-f]
         flags = MODULE_INIT_IGNORE_VERMAGIC | MODULE_INIT_IGNORE_MODVERSIONS;
-        index++);
-
+        index++;
+    }
     char *options = BuildStringFromCmdArg(ctx, index); // [options]
     int fd = open(realPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd >= 0) {
         int rc = syscall(__NR_finit_module, fd, options, flags);
         if (rc == -1) {
-            INIT_LOGE("Failed to install mode for %s failed options %s err: %d", realPath, options, errno);
+            INIT_LOGE("Failed to install kernel module for %s failed options %s err: %d", realPath, options, errno);
         }
     }
     if (options != NULL) {

@@ -55,6 +55,7 @@ static std::string GetMiscDevicePath()
     FstabItem *misc = FindFstabItemForMountPoint(*fstab, "/misc");
     if (misc == nullptr) {
         std::cout << "Cannot find misc partition from fstab\n";
+        ReleaseFstab(fstab);
         return miscDev;
     }
     miscDev = misc->deviceName;
@@ -86,22 +87,27 @@ static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
         std::cout << "path is null or size illegal\n";
         return;
     }
-    FILE* rgbFile = fopen(logoPath.c_str(), "rb");
+    FILE *rgbFile = fopen(logoPath.c_str(), "rb");
     if (rgbFile == nullptr) {
         std::cout << "cannot find pic file\n";
         return;
     }
 
-    char* buffer = (char*)malloc(size);
+    char *buffer = (char*)malloc(size);
     if (buffer == nullptr) {
+        (void)fclose(rgbFile);
         return;
     }
     uint32_t ret = fread(buffer, 1, size, rgbFile);
     if (ret < 0) {
+        (void)fclose(rgbFile);
+        free(buffer);
         return;
     }
     ret = write(fd, buffer, size);
     if (ret != size) {
+        (void)fclose(rgbFile);
+        free(buffer);
         return;
     }
 
@@ -194,6 +200,7 @@ static void WriteLogoToMisc(const std::string &logoPath)
     int fd1 = open(miscDev.c_str(), O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (lseek(fd1, addrOffset * BLOCK_SZIE_1, SEEK_SET) < 0) {
         std::cout << "Failed to seek file\n";
+        close(fd1);
         return;
     }
 

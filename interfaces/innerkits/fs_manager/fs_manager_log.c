@@ -16,6 +16,7 @@
 #include "fs_manager/fs_manager_log.h"
 
 #include "init_log.h"
+#include "init_utils.h"
 #include "securec.h"
 
 #define LOG_BUFFER_MAX (1024)
@@ -152,8 +153,12 @@ void FsManagerLogInit(LogTarget target, const char *fileName)
             break;
         case LOG_TO_FILE:
             if (fileName != NULL && *fileName != '\0') {
-                g_logFile = fopen(fileName, "a+");
-                setbuf(g_logFile, NULL);
+                char *realPath = GetRealPath(fileName);
+                if (realPath != NULL) {
+                    g_logFile = fopen(realPath, "a+");
+                    setbuf(g_logFile, NULL);
+                    free(realPath);
+                }
                 // Do not check return values. The log writte function will do this.
             }
             g_logFunc = FsManagerLogToFile;

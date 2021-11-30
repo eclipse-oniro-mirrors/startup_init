@@ -128,6 +128,9 @@ public:
         TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_BOOT), "init-later", "", 0);
         TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), "init-later");
         EXPECT_EQ(node, trigger);
+        if (trigger == nullptr) {
+            return -1;
+        }
         EXPECT_EQ(strcmp(trigger->name, "init-later"), 0);
 
         // add command
@@ -146,13 +149,17 @@ public:
         TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, "test_param.000=1", 0);
         TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
+        if (trigger == nullptr) {
+            return -1;
+        }
         EXPECT_EQ(strcmp(trigger->name, triggerName), 0);
 
         // add command
         int cmdIndex = 0;
         GetMatchCmd("reboot ", &cmdIndex);
         int ret = AddCommand(trigger, cmdIndex, nullptr);
-        ret |= AddCommand(trigger, cmdIndex, "update: aaaaaaa");
+        EXPECT_EQ(ret, 0);
+        ret = AddCommand(trigger, cmdIndex, "update: aaaaaaa");
         EXPECT_EQ(ret, 0);
         return 0;
     }
@@ -392,6 +399,9 @@ public:
         TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, buffer, 0);
         TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
+        if (trigger == nullptr) {
+            return -1;
+        }
         const uint32_t cmdIndex = 103;
         ret = AddCommand(trigger, cmdIndex, value);
         EXPECT_EQ(ret, 0);
@@ -423,6 +433,9 @@ public:
         TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, buffer, 0);
         TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
+        if (trigger == nullptr) {
+            return -1;
+        }
         const uint32_t cmdIndex = 105;
         ret = AddCommand(trigger, cmdIndex, value);
         EXPECT_EQ(ret, 0);
@@ -457,6 +470,9 @@ public:
         const int testCmdIndex = 1105;
         int ret = AddCommand(trigger, testCmdIndex, value);
         EXPECT_EQ(ret, 0);
+        if (trigger == nullptr) {
+            return -1;
+        }
         TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_SUBTRIGGER);
 
         char buffer[triggerBuffer];

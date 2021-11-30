@@ -184,7 +184,7 @@ int SystemSetParameter(const char *name, const char *value)
     uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + PARAM_ALIGN(strlen(value) + 1);
     uint32_t labelLen = 0;
     ParamSecurityOps *ops = GetClientParamSecurityOps();
-    if (NeedCheckParamPermission(name)) {
+    if (NeedCheckParamPermission(name) == 1) {
         ret = CheckParamPermission(&g_clientSpace.paramSpace, g_clientSpace.paramSpace.securityLabel, name, DAC_WRITE);
         PARAM_CHECK(ret == 0, return ret, "Forbit to set parameter %s", name);
     } else if (!LABEL_IS_ALL_PERMITTED(g_clientSpace.paramSpace.securityLabel)) { // check local can check permissions

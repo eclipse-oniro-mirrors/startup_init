@@ -50,7 +50,7 @@ static int ParseInitCfg(const char *configFile, void *context)
 
 static void ParseAllImports(const cJSON *root)
 {
-    char *tmpParamValue = malloc(PARAM_VALUE_LEN_MAX + 1);
+    char *tmpParamValue = calloc(sizeof(char), PARAM_VALUE_LEN_MAX + 1);
     INIT_ERROR_CHECK(tmpParamValue != 0, return, "Failed to alloc memory for param");
 
     cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "import");

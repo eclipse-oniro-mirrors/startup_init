@@ -494,7 +494,8 @@ static int OnIncomingConnect(const ParamTaskPtr server, uint32_t flags)
     PARAM_CHECK(ret == 0, return -1, "Failed to create client");
 
     ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
-    PARAM_CHECK(watcher != NULL, return -1, "Failed to get watcher");
+    PARAM_CHECK(watcher != NULL, ParamTaskClose(client);
+        return -1, "Failed to get watcher");
     ListInit(&watcher->node);
     PARAM_TRIGGER_HEAD_INIT(watcher->triggerHead);
     ListAddTail(&GetTriggerWorkSpace()->waitList, &watcher->node);
@@ -547,7 +548,7 @@ static int LoadParamFromCmdLine(void)
     };
     char *data = ReadFileData(PARAM_CMD_LINE);
     PARAM_CHECK(data != NULL, return -1, "Failed to read file %s", PARAM_CMD_LINE);
-    char *value = malloc(PARAM_CONST_VALUE_LEN_MAX);
+    char *value = calloc(1, PARAM_CONST_VALUE_LEN_MAX + 1);
     PARAM_CHECK(value != NULL, free(data);
         return -1, "Failed to read file %s", PARAM_CMD_LINE);
 
@@ -556,11 +557,11 @@ static int LoadParamFromCmdLine(void)
         if (ret == 0) {
             PARAM_LOGD("Add param from cmdline %s %s", cmdLines[i], value);
             ret = CheckParamName(cmdLines[i], 0);
-            PARAM_CHECK(ret == 0, return -1, "Invalid name %s", cmdLines[i]);
+            PARAM_CHECK(ret == 0, break, "Invalid name %s", cmdLines[i]);
             uint32_t dataIndex = 0;
             PARAM_LOGE("**** cmdLines[%d] %s, value %s", i, cmdLines[i], value);
             ret = WriteParam(&g_paramWorkSpace.paramSpace, cmdLines[i], value, &dataIndex, 0);
-            PARAM_CHECK(ret == 0, return -1, "Failed to write param %s %s", cmdLines[i], value);
+            PARAM_CHECK(ret == 0, break, "Failed to write param %s %s", cmdLines[i], value);
         } else {
             PARAM_LOGE("Can not find arrt %s", cmdLines[i]);
         }

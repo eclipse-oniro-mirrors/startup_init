@@ -29,7 +29,7 @@
 
 int AddCommand(TriggerNode *trigger, uint32_t cmdKeyIndex, const char *content)
 {
-    PARAM_CHECK(trigger != NULL, return -1, "trigger is null");
+    PARAM_CHECK(trigger != NULL && trigger->triggerHead != NULL, return -1, "trigger is null");
     uint32_t size = sizeof(CommandNode);
     size += (content == NULL) ? 1 : (strlen(content) + 1);
     size = PARAM_ALIGN(size);
@@ -109,7 +109,7 @@ void ClearTrigger(TriggerHeader *head)
 {
     PARAM_CHECK(head != NULL, return, "head is null");
     ListNode *node = head->triggerList.next;
-    while (node != &head->triggerList) {
+    while (node != &head->triggerList && node != NULL) {
         ListRemove(node);
         ListInit(node);
         TriggerNode *trigger = ListEntry(node, TriggerNode, node);
@@ -121,20 +121,24 @@ void ClearTrigger(TriggerHeader *head)
 
 void FreeTrigger(TriggerNode *trigger)
 {
-    PARAM_CHECK(trigger != NULL && trigger->triggerHead != NULL, return, "trigger is null");
+    PARAM_CHECK(trigger != NULL, return, "trigger is null");
     PARAM_LOGD("FreeTrigger %s", trigger->name);
     TriggerHeader *triggerHead = trigger->triggerHead;
     CommandNode *cmd = trigger->firstCmd;
     while (cmd != NULL) {
         CommandNode *next = cmd->next;
         free(cmd);
-        triggerHead->cmdNodeCount--;
+        if (triggerHead != NULL) {
+            triggerHead->cmdNodeCount--;
+        }
         cmd = next;
     }
     trigger->lastCmd = NULL;
     trigger->firstCmd = NULL;
     ListRemove(&trigger->node);
-    triggerHead->triggerCount--;
+    if (triggerHead != NULL) {
+        triggerHead->triggerCount--;
+    }
 
     // 如果在执行队列，从队列中移走
     if (!TRIGGER_IN_QUEUE(trigger)) {
@@ -357,6 +361,7 @@ int CheckTrigger(TriggerWorkSpace *workSpace, int type,
 
 int MarkTriggerToParam(const TriggerWorkSpace *workSpace, const TriggerHeader *triggerHead, const char *name)
 {
+    PARAM_CHECK(name != NULL, return 0, "name is null");
     int ret = 0;
     TriggerNode *trigger = GetNextTrigger(triggerHead, NULL);
     while (trigger != NULL) {
@@ -445,6 +450,7 @@ void ClearWatcherTrigger(const ParamWatcher *watcher)
 
 static void DumpTriggerQueue(const TriggerWorkSpace *workSpace, int index)
 {
+    const int maxCmd = 1024 * 64;
     PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace ");
     TriggerNode *trigger = GetNextTrigger(&workSpace->triggerHead[index], NULL);
     while (trigger != NULL) {
@@ -454,11 +460,13 @@ static void DumpTriggerQueue(const TriggerWorkSpace *workSpace, int index)
             printf("trigger condition %s \n",  trigger->condition);
         }
 
+        int count = 0;
         CommandNode *cmd = GetNextCmdNode(trigger, NULL);
-        while (cmd != NULL) {
+        while (cmd != NULL && count < maxCmd) {
             printf("\t command name %s \n", GetCmdKey(cmd->cmdKeyIndex));
             printf("\t command args %s \n", cmd->content);
             cmd = GetNextCmdNode(trigger, cmd);
+            count++;
         }
         trigger = GetNextTrigger(&workSpace->triggerHead[index], trigger);
     }

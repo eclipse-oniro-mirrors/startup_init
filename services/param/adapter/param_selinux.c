@@ -84,10 +84,10 @@ static int LoadParamLabels(const char *fileName, SecurityLabelFunc label, void *
         PARAM_CHECK(ret == 0, continue, "Failed to write param info %d %s", ret, buff);
         infoCount++;
     }
-    if (buff) {
+    if (buff != NULL) {
         free(buff);
     }
-    if (info) {
+    if (info != NULL) {
         free(info);
     }
     (void)fclose(fp);

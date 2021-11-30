@@ -79,6 +79,7 @@ HWTEST_F(ServiceUnitTest, TestServiceStartAbnormal, TestSize.Level1)
     cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
     ASSERT_NE(nullptr, serviceItem);
     Service *service = (Service *)calloc(1, sizeof(Service));
+    ASSERT_NE(nullptr, service);
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
 
@@ -105,10 +106,12 @@ HWTEST_F(ServiceUnitTest, TestServiceStartAbnormal, TestSize.Level1)
 HWTEST_F(ServiceUnitTest, TestServiceReap, TestSize.Level1)
 {
     Service *service = (Service *)calloc(1, sizeof(Service));
+    ASSERT_NE(nullptr, service);
     ServiceReap(service);
     EXPECT_EQ(service->attribute, 0);
 
     service->restartArg = (CmdLines *)calloc(1, sizeof(CmdLines));
+    ASSERT_NE(nullptr, service->restartArg);
     ServiceReap(service);
     EXPECT_EQ(service->attribute, 0);
 
@@ -142,6 +145,7 @@ HWTEST_F(ServiceUnitTest, TestServiceReapOther, TestSize.Level1)
     ASSERT_NE(nullptr, serviceItem);
 
     Service *service = (Service *)calloc(1, sizeof(Service));
+    ASSERT_NE(nullptr, service);
     int ret = GetCmdLinesFromJson(cJSON_GetObjectItem(serviceItem, "onrestart"), &service->restartArg);
     EXPECT_EQ(ret, 0);
     ret = ParseOneService(serviceItem, service);
@@ -207,7 +211,9 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerGetService, TestSize.Level1)
 HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
 {
     Service *service = (Service *)malloc(sizeof(Service));
+    ASSERT_NE(service, nullptr);
     service->pathArgs.argv = (char **)malloc(sizeof(char *));
+    ASSERT_NE(service->pathArgs.argv, nullptr);
     service->pathArgs.count = 1;
     const char *path = "/data/init_ut/test_service_release";
     service->pathArgs.argv[0] = strdup(path);
