@@ -24,6 +24,7 @@
     "       reboot updater[:options]\n" \
     "       reboot flashd\n" \
     "       reboot flashd[:options]\n" \
+    "       reboot loader\n" \
     "       reboot\n"
 
 int main(int argc, char* argv[])
@@ -36,6 +37,7 @@ int main(int argc, char* argv[])
     if (argc == REBOOT_CMD_NUMBER && strcmp(argv[1], "shutdown") != 0 &&
         strcmp(argv[1], "updater") != 0 &&
         strcmp(argv[1], "flashd") != 0 &&
+        strcmp(argv[1], "loader") !=0 &&
         strncmp(argv[1], "updater:", strlen("updater:")) != 0 &&
         strncmp(argv[1], "flashd:", strlen("flashd:")) != 0) {
         printf("%s", USAGE_INFO);
