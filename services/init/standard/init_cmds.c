@@ -114,10 +114,10 @@ static void DoInsmod(const struct CmdArgs *ctx)
     INIT_LOGD("Install mode %s ", fileName);
     char *realPath = GetRealPath(fileName);
     INIT_ERROR_CHECK(realPath != NULL, return, "Can not get real file name from param %s", ctx->argv[0]);
-    INIT_CHECK((ctx->argc > 1 && ctx->argv[1] != NULL && strcmp(ctx->argv[1], "-f")) != 0, // [-f]
+    if (ctx->argc > 1 && ctx->argv[1] != NULL && strcmp(ctx->argv[1], "-f") == 0) { // [-f]
         flags = MODULE_INIT_IGNORE_VERMAGIC | MODULE_INIT_IGNORE_MODVERSIONS;
-        index++);
-
+        index++;
+    }
     char *options = BuildStringFromCmdArg(ctx, index); // [options]
     int fd = open(realPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd >= 0) {
