@@ -31,10 +31,10 @@ namespace OHOS {
         }
         if (reinterpret_cast<int>(fwrite(data, 1, size, pFile)) != size) {
             std::cout << "[fuzz] write data to fstab.test failed";
-            fclose(pFile);
+            (void)fclose(pFile);
             return false;
         }
-        fclose(pFile);
+        (void)fclose(pFile);
         CloseStdout();
         if (!UmountAllWithFstabFile("fstab.test")) {
             result = true;

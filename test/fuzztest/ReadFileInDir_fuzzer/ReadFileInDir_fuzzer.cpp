@@ -49,10 +49,10 @@ namespace OHOS {
         }
         if (reinterpret_cast<int>(fwrite(data, 1, size, pFile)) != size) {
             std::cout << "[fuzz] write data to ReadFileInDir.test failed";
-            fclose(pFile);
+            (void)fclose(pFile);
             return false;
         }
-        fclose(pFile);
+        (void)fclose(pFile);
         if (!ReadFileInDir("/data", ".test", FakeParser, NULL)) {
             result = true;
         }
