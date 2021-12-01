@@ -44,21 +44,6 @@ public:
     void TearDown() {}
     void TestBody() {}
 
-    int TestSelinuxGetLabel()
-    {
-        int ret = RegisterSecuritySelinuxOps(&initParamSercurityOps, LABEL_INIT_FOR_INIT);
-        EXPECT_EQ(ret, 0);
-
-        if (initParamSercurityOps.securityGetLabel == nullptr) {
-            EXPECT_EQ(1, 0);
-            return -1;
-        }
-        ret = initParamSercurityOps.securityGetLabel(SecurityLabelGet,
-            PARAM_DEFAULT_PATH "/system/etc/param", nullptr);
-        EXPECT_EQ(ret, 0);
-        return 0;
-    }
-
     int TestSelinuxInitLocalLabel()
     {
         int ret = RegisterSecuritySelinuxOps(&initParamSercurityOps, LABEL_INIT_FOR_INIT);
@@ -239,12 +224,6 @@ private:
     ParamSecurityOps initParamSercurityOps {};
     ParamSecurityOps clientParamSercurityOps {};
 };
-
-HWTEST_F(SelinuxUnitTest, TestSelinuxGetLabel, TestSize.Level0)
-{
-    SelinuxUnitTest test;
-    test.TestSelinuxGetLabel();
-}
 
 HWTEST_F(SelinuxUnitTest, TestSelinuxInitLocalLabel, TestSize.Level0)
 {

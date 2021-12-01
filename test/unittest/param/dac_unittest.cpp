@@ -43,21 +43,6 @@ public:
     void TearDown() {}
     void TestBody() {}
 
-    int TestDacGetLabel()
-    {
-        int ret = RegisterSecurityDacOps(&initParamSercurityOps, LABEL_INIT_FOR_INIT);
-        EXPECT_EQ(ret, 0);
-
-        if (initParamSercurityOps.securityGetLabel == nullptr) {
-            EXPECT_EQ(1, 0);
-            return -1;
-        }
-        ret = initParamSercurityOps.securityGetLabel(SecurityLabelGet,
-            PARAM_DEFAULT_PATH "/system/etc/param", nullptr);
-        EXPECT_EQ(ret, 0);
-        return 0;
-    }
-
     int TestDacInitLocalLabel()
     {
         int ret = RegisterSecurityDacOps(&initParamSercurityOps, LABEL_INIT_FOR_INIT);
@@ -184,12 +169,6 @@ private:
     ParamSecurityOps initParamSercurityOps {};
     ParamSecurityOps clientParamSercurityOps {};
 };
-
-HWTEST_F(DacUnitTest, TestDacGetLabel, TestSize.Level0)
-{
-    DacUnitTest test;
-    test.TestDacGetLabel();
-}
 
 HWTEST_F(DacUnitTest, TestDacInitLocalLabel, TestSize.Level0)
 {
