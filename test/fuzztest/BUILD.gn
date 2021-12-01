@@ -15,13 +15,10 @@ module_output_path = "startup/fuzztest"
 
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
-import("//build/test.gni")
 import("//build/ohos.gni")
-
+import("//build/test.gni")
 ohos_static_library("libfuzz_utils") {
-  sources = [
-    "utils/fuzz_utils.cpp",
-  ]
+  sources = [ "utils/fuzz_utils.cpp" ]
 
   include_dirs = [ "//base/startup/init_lite/test/fuzztest/utils/include" ]
 
@@ -48,9 +45,7 @@ ohos_fuzztest("DoRebootFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "DoReboot_fuzzer/DoReboot_fuzzer.cpp",
-  ]
+  sources = [ "DoReboot_fuzzer/DoReboot_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -73,9 +68,7 @@ ohos_fuzztest("GetControlFileFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "GetControlFile_fuzzer/GetControlFile_fuzzer.cpp",
-  ]
+  sources = [ "GetControlFile_fuzzer/GetControlFile_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -97,9 +90,7 @@ ohos_fuzztest("GetControlSocketFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "GetControlSocket_fuzzer/GetControlSocket_fuzzer.cpp",
-  ]
+  sources = [ "GetControlSocket_fuzzer/GetControlSocket_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -126,9 +117,7 @@ ohos_fuzztest("MountAllFstabFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "MountAllFstab_fuzzer/MountAllFstab_fuzzer.cpp",
-  ]
+  sources = [ "MountAllFstab_fuzzer/MountAllFstab_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -153,9 +142,7 @@ ohos_fuzztest("ReadFileInDirFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "ReadFileInDir_fuzzer/ReadFileInDir_fuzzer.cpp",
-  ]
+  sources = [ "ReadFileInDir_fuzzer/ReadFileInDir_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -176,9 +163,7 @@ ohos_fuzztest("StartDynamicProcessFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "StartDynamicProcess_fuzzer/StartDynamicProcess_fuzzer.cpp",
-  ]
+  sources = [ "StartDynamicProcess_fuzzer/StartDynamicProcess_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -199,9 +184,7 @@ ohos_fuzztest("StopDynamicProcessFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "StopDynamicProcess_fuzzer/StopDynamicProcess_fuzzer.cpp",
-  ]
+  sources = [ "StopDynamicProcess_fuzzer/StopDynamicProcess_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -228,9 +211,7 @@ ohos_fuzztest("SystemDumpParametersFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "SystemDumpParameters_fuzzer/SystemDumpParameters_fuzzer.cpp",
-  ]
+  sources = [ "SystemDumpParameters_fuzzer/SystemDumpParameters_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -253,9 +234,7 @@ ohos_fuzztest("SystemFindParameterFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "SystemFindParameter_fuzzer/SystemFindParameter_fuzzer.cpp",
-  ]
+  sources = [ "SystemFindParameter_fuzzer/SystemFindParameter_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -278,9 +257,7 @@ ohos_fuzztest("SystemGetParameterFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "SystemGetParameter_fuzzer/SystemGetParameter_fuzzer.cpp",
-  ]
+  sources = [ "SystemGetParameter_fuzzer/SystemGetParameter_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -328,9 +305,8 @@ ohos_fuzztest("SystemGetParameterNameFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "SystemGetParameterName_fuzzer/SystemGetParameterName_fuzzer.cpp",
-  ]
+  sources =
+      [ "SystemGetParameterName_fuzzer/SystemGetParameterName_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -353,9 +329,8 @@ ohos_fuzztest("SystemGetParameterValueFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "SystemGetParameterValue_fuzzer/SystemGetParameterValue_fuzzer.cpp",
-  ]
+  sources =
+      [ "SystemGetParameterValue_fuzzer/SystemGetParameterValue_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -378,9 +353,7 @@ ohos_fuzztest("SystemSetParameterFuzztest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "SystemSetParameter_fuzzer/SystemSetParameter_fuzzer.cpp",
-  ]
+  sources = [ "SystemSetParameter_fuzzer/SystemSetParameter_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -409,9 +382,8 @@ ohos_fuzztest("SystemTraversalParameterFuzztest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "SystemTraversalParameter_fuzzer/SystemTraversalParameter_fuzzer.cpp",
-  ]
+  sources =
+      [ "SystemTraversalParameter_fuzzer/SystemTraversalParameter_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -434,9 +406,7 @@ ohos_fuzztest("SystemWaitParameterFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "SystemWaitParameter_fuzzer/SystemWaitParameter_fuzzer.cpp",
-  ]
+  sources = [ "SystemWaitParameter_fuzzer/SystemWaitParameter_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -470,9 +440,7 @@ ohos_fuzztest("SystemWatchParameterFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "SystemWatchParameter_fuzzer/SystemWatchParameter_fuzzer.cpp",
-  ]
+  sources = [ "SystemWatchParameter_fuzzer/SystemWatchParameter_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -499,9 +467,7 @@ ohos_fuzztest("UmountAllFstabFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "UmountAllFstab_fuzzer/UmountAllFstab_fuzzer.cpp",
-  ]
+  sources = [ "UmountAllFstab_fuzzer/UmountAllFstab_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
