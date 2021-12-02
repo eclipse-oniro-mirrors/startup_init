@@ -95,7 +95,6 @@ ohos_unittest("init_ut") {
     "init/service_socket_unittest.cpp",
     "init/service_unittest.cpp",
     "init/utils_unittest.cpp",
-    "innerkits/innerkits_unittest.cpp",
     "param/client_unittest.cpp",
     "param/dac_unittest.cpp",
     "param/param_unittest.cpp",

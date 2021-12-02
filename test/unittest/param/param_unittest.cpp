@@ -48,20 +48,6 @@ public:
     void TearDown() {}
     void TestBody() {}
 
-    int TestParamServiceInit()
-    {
-        InitParamService();
-        // parse parameters
-        LoadDefaultParams(PARAM_DEFAULT_PATH"/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
-        LoadDefaultParams(PARAM_DEFAULT_PATH"/vendor/etc/param", LOAD_PARAM_NORMAL);
-        LoadDefaultParams(PARAM_DEFAULT_PATH"/system/etc/param", LOAD_PARAM_ONLY_ADD);
-        CheckServerParamValue("const.actionable_compatible_property.enabled", "false");
-        CheckServerParamValue("build_version", "2.0");
-        CheckServerParamValue("ohos.boot.hardware", "Hi3516DV300");
-        LoadPersistParams();
-        return 0;
-    }
-
     int TestSetParams(const char *params[][1 + 1], int num)
     {
         for (int i = 0; i < num; i++) {
@@ -484,12 +470,6 @@ public:
         return SystemWriteParam("ohos.startup.powerctrl", reboot);
     }
 };
-
-HWTEST_F(ParamUnitTest, TestParamServiceInit, TestSize.Level0)
-{
-    ParamUnitTest test;
-    test.TestParamServiceInit();
-}
 
 HWTEST_F(ParamUnitTest, TestPersistParam, TestSize.Level0)
 {
