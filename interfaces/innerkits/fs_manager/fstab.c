@@ -316,7 +316,7 @@ char *GetFstabFile(void)
         }
     }
     FSMGR_LOGI("file is %s", file);
-    return strdup(file); //After the return value is used up, it must be released.
+    return strdup(file); // After the return value is used up, it must be free.
 }
 
 int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char *deviceName, int nameLen)
