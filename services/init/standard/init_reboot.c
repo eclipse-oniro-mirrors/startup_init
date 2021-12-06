@@ -116,7 +116,7 @@ static int CheckRebootParam(const char *valueData)
         return 0;
     }
     static const char *cmdParams[] = {
-        "shutdown", "updater", "updater:", "flash", "flash:", "NoArgument", "bootloader"
+        "shutdown", "updater", "updater:", "flash", "flash:", "NoArgument", "loader", "bootloader"
     };
     size_t i = 0;
     for (; i < ARRAY_LENGTH(cmdParams); i++) {
