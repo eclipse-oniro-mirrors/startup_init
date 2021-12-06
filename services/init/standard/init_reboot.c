@@ -141,10 +141,13 @@ void ExecReboot(const char *value)
     INIT_ERROR_CHECK(CheckRebootParam(valueData) == 0, return, "Invalid arg %s for reboot.", value);
     char *fstabFile = GetFstabFile();
     INIT_ERROR_CHECK(fstabFile != NULL, return, "Failed get fstab file");
-    char miscDevice[PATH_MAX] = {0};
-    int ret = GetBlockDeviceByMountPoint("/misc", fstabFile, miscDevice, PATH_MAX);
+    Fstab *fstab = NULL;
+    INIT_ERROR_CHECK((fstab = ReadFstabFromFile(fstabFile, false)) != NULL, free(fstabFile); return,
+        "Failed get fstab from %s", fstabFile);
     free(fstabFile);
-    INIT_LOGI("miscDevice is %s", miscDevice);
+    char miscDevice[PATH_MAX] = {0};
+    int ret = GetBlockDeviceByMountPoint("/misc", fstab, miscDevice, PATH_MAX);
+    ReleaseFstab(fstab);
     INIT_ERROR_CHECK(ret == 0, return, "Failed to get misc device name.");
     StopAllServices(SERVICE_ATTR_INVALID);
     sync();

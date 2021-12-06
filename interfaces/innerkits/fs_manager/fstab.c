@@ -319,28 +319,20 @@ char *GetFstabFile(void)
     return strdup(file); //After the return value is used up, it must be released.
 }
 
-int GetBlockDeviceByMountPoint(const char *mountPoint, const char *fstabFile, char *deviceName, int nameLen)
+int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char *deviceName, int nameLen)
 {
-    if (fstabFile == NULL || *fstabFile == '\0' || mountPoint == NULL || *mountPoint == '\0' || deviceName == NULL) {
-        return -1;
-    }
-    Fstab *fstab = NULL;
-    if ((fstab = ReadFstabFromFile(fstabFile, false)) == NULL) {
-        FSMGR_LOGE("Failed read fstab file \" %s \"", fstabFile);
+    if (fstab == NULL || mountPoint == NULL || *mountPoint == '\0' || deviceName == NULL) {
         return -1;
     }
     FstabItem *item = FindFstabItemForMountPoint(*fstab, mountPoint);
     if (item == NULL) {
-        ReleaseFstab(fstab);
         FSMGR_LOGE("Failed get fstab item from point \" %s \"", mountPoint);
         return -1;
     }
     if (strncpy_s(deviceName, nameLen, item->deviceName, strlen(item->deviceName)) != 0) {
-        ReleaseFstab(fstab);
         FSMGR_LOGE("Failed strncpy_s err=%d", errno);
         return -1;
     }
-    ReleaseFstab(fstab);
     return 0;
 }
 
