@@ -289,6 +289,53 @@ FstabItem *FindFstabItemForPath(Fstab fstab, const char *path)
     return item;
 }
 
+char *GetFstabFile(void)
+{
+    char file[PATH_MAX] = {0};
+    if (InUpdaterMode() == 1) {
+        if (strncpy_s(file, PATH_MAX, "/etc/fstab.updater", strlen("/etc/fstab.updater")) != 0) {
+            FSMGR_LOGE("Failed strncpy_s err=%d", errno);
+            return NULL;
+        }
+    } else {
+        char hardware[MAX_BUFFER_LEN] = {0};
+        char *buffer = ReadFileData("/proc/cmdline");
+        if (buffer == NULL) {
+            FSMGR_LOGE("Failed read \"/proc/cmdline\"");
+            return NULL;
+        }
+        int ret = GetProcCmdlineValue("hardware", buffer, hardware, MAX_BUFFER_LEN);
+        free(buffer);
+        if (ret != 0) {
+            FSMGR_LOGE("Failed get hardware from cmdline");
+            return NULL;
+        }
+        if (snprintf_s(file, PATH_MAX, PATH_MAX - 1, "/vendor/etc/fstab.%s", hardware) == -1) {
+            FSMGR_LOGE("Fail snprintf_s err=%d", errno);
+            return NULL;
+        }
+    }
+    FSMGR_LOGI("file is %s", file);
+    return strdup(file); // After the return value is used up, it must be free.
+}
+
+int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char *deviceName, int nameLen)
+{
+    if (fstab == NULL || mountPoint == NULL || *mountPoint == '\0' || deviceName == NULL) {
+        return -1;
+    }
+    FstabItem *item = FindFstabItemForMountPoint(*fstab, mountPoint);
+    if (item == NULL) {
+        FSMGR_LOGE("Failed get fstab item from point \" %s \"", mountPoint);
+        return -1;
+    }
+    if (strncpy_s(deviceName, nameLen, item->deviceName, strlen(item->deviceName)) != 0) {
+        FSMGR_LOGE("Failed strncpy_s err=%d", errno);
+        return -1;
+    }
+    return 0;
+}
+
 static const struct MountFlags mountFlags[] = {
     { "noatime", MS_NOATIME },
     { "noexec", MS_NOEXEC },
