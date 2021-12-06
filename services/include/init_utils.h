@@ -29,7 +29,7 @@ extern "C" {
 #define OCTAL_BASE 8
 #define DECIMAL_BASE 10
 #define WAIT_MAX_COUNT 10
-#define MAX_CMDLINE_VALUE_LEN 96
+#define MAX_BUFFER_LEN 256
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 uid_t DecodeUid(const char *name);
 char *ReadFileToBuf(const char *configFile);

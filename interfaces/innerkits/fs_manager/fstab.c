@@ -298,13 +298,13 @@ char *GetFstabFile(void)
             return NULL;
         }
     } else {
-        char hardware[MAX_CMDLINE_VALUE_LEN] = {0};
+        char hardware[MAX_BUFFER_LEN] = {0};
         char *buffer = ReadFileData("/proc/cmdline");
         if (buffer == NULL) {
             FSMGR_LOGE("Failed read \"/proc/cmdline\"");
             return NULL;
         }
-        int ret = GetProcCmdlineValue("hardware", buffer, hardware, MAX_CMDLINE_VALUE_LEN);
+        int ret = GetProcCmdlineValue("hardware", buffer, hardware, MAX_BUFFER_LEN);
         free(buffer);
         if (ret != 0) {
             FSMGR_LOGE("Failed get hardware from cmdline");
