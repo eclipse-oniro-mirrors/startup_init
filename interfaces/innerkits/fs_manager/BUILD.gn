@@ -24,7 +24,6 @@ fs_manager_include_dirs = [
   "//third_party/bounds_checking_function/include",
   "//base/startup/init_lite/services/log",
   "//base/startup/init_lite/services/include",
-  "//base/startup/init_lite/services/log",
 ]
 
 fs_manager_deps = [
