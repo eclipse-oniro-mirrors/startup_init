@@ -206,36 +206,3 @@ ohos_shared_library("param_watcher") {
   install_images = [ "system" ]
   part_name = "init"
 }
-
-ohos_executable("param") {
-  sources = [ "cmd/param_cmd.c" ]
-  include_dirs = [
-    "include",
-    "//base/startup/init_lite/services/include/param",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/log",
-    "//base/update/updateservice/interfaces/innerkits/include",
-  ]
-
-  defines = [ "INIT_AGENT" ]
-
-  deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
-
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-
-  if (param_test == "true") {
-    defines += [ "PARAM_TEST" ]
-    deps += [ "//base/startup/init_lite/services/param:param_watcheragent" ]
-  } else {
-    install_images = [
-      "system",
-      "updater",
-    ]
-  }
-  install_enable = true
-  part_name = "init"
-}
