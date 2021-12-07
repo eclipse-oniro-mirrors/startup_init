@@ -61,7 +61,8 @@ static int main_cmd(int argc, char* argv[])
     return 0;
 }
 
-MODULE_CONSTRUCTOR() {
+MODULE_CONSTRUCTOR()
+{
     (void)BegetCtlCmdAdd("reboot", main_cmd);
     (void)BegetCtlCmdAdd("devctl", main_cmd);
 }

@@ -244,6 +244,7 @@ static int main_cmd(int argc, char **argv)
     return 0;
 }
 
-MODULE_CONSTRUCTOR() {
+MODULE_CONSTRUCTOR()
+{
     (void)BegetCtlCmdAdd("misc_deamon", main_cmd);
 }

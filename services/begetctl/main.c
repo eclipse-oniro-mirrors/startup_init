@@ -26,7 +26,8 @@ struct CMD_LIST_ST {
 
 static struct CMD_LIST_ST *m_cmdList = NULL;
 
-int BegetCtlCmdAdd(const char *name, BegetCtlCmdPtr cmd) {
+int BegetCtlCmdAdd(const char *name, BegetCtlCmdPtr cmd)
+{
     struct CMD_LIST_ST *item;
 
     if (name == NULL) {
@@ -51,7 +52,8 @@ int BegetCtlCmdAdd(const char *name, BegetCtlCmdPtr cmd) {
     return 0;
 }
 
-static const struct CMD_LIST_ST *BegetCtlCmdFind(const char *name) {
+static const struct CMD_LIST_ST *BegetCtlCmdFind(const char *name)
+{
     const struct CMD_LIST_ST *item = m_cmdList;
 
     while (item != NULL) {
@@ -63,7 +65,8 @@ static const struct CMD_LIST_ST *BegetCtlCmdFind(const char *name) {
     return NULL;
 }
 
-static void BegetCtlUsage(const char *command) {
+static void BegetCtlUsage(const char *command)
+{
     const struct CMD_LIST_ST *item = m_cmdList;
     int notFirst = 0;
 
@@ -78,7 +81,8 @@ static void BegetCtlUsage(const char *command) {
     printf("\n");
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     const struct CMD_LIST_ST *cmd;
     const char *last = strrchr(argv[0], '/');
 

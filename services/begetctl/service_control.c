@@ -92,7 +92,8 @@ static int main_cmd(int argc, char** argv)
     return 0;
 }
 
-MODULE_CONSTRUCTOR() {
+MODULE_CONSTRUCTOR()
+{
     (void)BegetCtlCmdAdd("service", main_cmd);
     (void)BegetCtlCmdAdd("service_control", main_cmd);
     (void)BegetCtlCmdAdd("start_service", main_cmd);

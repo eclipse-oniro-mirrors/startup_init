@@ -191,7 +191,8 @@ static int main_cmd(int argc, char *argv[])
     return RunParamCommand(argc, argv);
 }
 
-MODULE_CONSTRUCTOR() {
+MODULE_CONSTRUCTOR()
+{
     (void)BegetCtlCmdAdd("param", main_cmd);
 }
 #endif
