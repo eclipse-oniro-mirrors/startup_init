@@ -6,7 +6,7 @@
         "//base/startup/init_lite/services:startup_init",
         "//base/startup/init_lite/ueventd:startup_ueventd",
         "//base/startup/init_lite/watchdog:watchdog",
-        "//base/startup/init_lite/services/cmds/misc:misc_daemon"
+        "//base/startup/init_lite/services/begetctl:begetctl"
       ],
       "test_list": [
         "//base/startup/init_lite/test/unittest:init_test"

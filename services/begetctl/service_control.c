@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include "securec.h"
 #include "sys_param.h"
+#include "begetctl.h"
 
 #define SERVICE_START_NUMBER 2
 #define SERVICE_CONTROL_NUMBER 3
@@ -61,7 +62,7 @@ static void ServiceControl(int argc, char** argv)
     return;
 }
 
-int main(int argc, char** argv)
+static int main_cmd(int argc, char** argv)
 {
     if (argc != SERVICE_START_NUMBER && argc != SERVICE_CONTROL_NUMBER) {
         ServiceControlUsage();
@@ -89,4 +90,12 @@ int main(int argc, char** argv)
         return -1;
     }
     return 0;
+}
+
+MODULE_CONSTRUCTOR()
+{
+    (void)BegetCtlCmdAdd("service", main_cmd);
+    (void)BegetCtlCmdAdd("service_control", main_cmd);
+    (void)BegetCtlCmdAdd("start_service", main_cmd);
+    (void)BegetCtlCmdAdd("stop_service", main_cmd);
 }
