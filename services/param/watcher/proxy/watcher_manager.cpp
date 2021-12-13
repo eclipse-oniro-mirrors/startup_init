@@ -245,7 +245,9 @@ void WatcherManager::RunLoop()
     bool retry = false;
     while (!stop_) {
         int fd = GetServerFd(retry);
-        ssize_t recvLen = recv(fd, buffer.data(), RECV_BUFFER_MAX, 0);
+        if (fd >= 0) {
+            ssize_t recvLen = recv(fd, buffer.data(), RECV_BUFFER_MAX, 0);
+        }
         if (stop_) {
             break;
         }
