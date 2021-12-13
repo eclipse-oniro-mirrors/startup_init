@@ -118,6 +118,7 @@ static void TestPermission()
 {
     const char *testName = "persist.111.ffff.bbbb.cccc.dddd.eeee.55555";
     char tmp[PARAM_BUFFER_SIZE] = { 0 };
+    int ret;
     // 允许本地校验
     ParamSecurityOps *paramSecurityOps = &GetClientParamWorkSpace()->paramSecurityOps;
     paramSecurityOps->securityCheckParamPermission = TestCheckParamPermission;

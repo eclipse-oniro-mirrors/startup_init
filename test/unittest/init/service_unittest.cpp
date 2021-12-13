@@ -21,6 +21,7 @@
 #include "init_service_manager.h"
 #include "init_service_socket.h"
 #include "init_unittest.h"
+#include "init_utils.h"
 #include "securec.h"
 
 using namespace testing::ext;
