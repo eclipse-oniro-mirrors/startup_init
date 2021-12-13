@@ -238,7 +238,7 @@ static int GetUid(cJSON *json, uid_t *uid)
 
 static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
 {
-    int gidCount = 0;
+    int gidCount;
     cJSON *arrItem = cJSON_GetObjectItemCaseSensitive(curArrItem, GID_STR_IN_CFG);
     if (!cJSON_IsArray(arrItem)) {
         gidCount = 1;
@@ -327,7 +327,7 @@ static int AddServiceSocket(cJSON *json, Service *service)
     if (sockopt->uid == (uid_t)-1 || sockopt->gid == (uid_t)-1) {
         free(sockopt);
         sockopt = NULL;
-        INIT_LOGE("Invalid uid %d or gid %d", sockopt->uid, sockopt->gid);
+        INIT_LOGE("Invalid uid or gid");
         return SERVICE_FAILURE;
     }
     sockopt->passcred = false;
@@ -401,7 +401,7 @@ static int AddServiceFile(cJSON *json, Service *service)
     if (fileOpt->uid == (uid_t)-1 || fileOpt->gid == (gid_t)-1) {
         free(fileOpt);
         fileOpt = NULL;
-        INIT_LOGE("Invalid uid %d or gid %d", fileOpt->uid, fileOpt->gid);
+        INIT_LOGE("Invalid uid or gid");
         return SERVICE_FAILURE;
     }
     fileOpt->fd = -1;

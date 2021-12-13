@@ -85,7 +85,7 @@ int main(int argc, const char *argv[])
     if (ret) {
         INIT_LOGE("Failed to get timeout\n");
     } else {
-        interval = (timeoutGet > gap) ? timeoutGet - gap : 1;
+        interval = (timeoutGet > gap) ? (timeoutGet - gap) : 1;
     }
     while (1) {
         ioctl(fd, WDIOC_KEEPALIVE);

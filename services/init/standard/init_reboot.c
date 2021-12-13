@@ -59,17 +59,17 @@ static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage
     INIT_CHECK_RETURN_VALUE(realPath != NULL, -1);
     int ret = 0;
     FILE *fp = fopen(realPath, "rb");
+    free(realPath);
+    realPath = NULL;
     if (fp != NULL) {
         size_t readLen = fread(boot, 1, sizeof(struct RBMiscUpdateMessage), fp);
+        (void)fclose(fp);
         INIT_ERROR_CHECK(readLen > 0, ret = -1, "Failed to read misc for reboot");
     } else {
         ret = -1;
         INIT_LOGE("Failed to open %s", path);
     }
 
-    free(realPath);
-    realPath = NULL;
-    (void)fclose(fp);
     return ret;
 }
 

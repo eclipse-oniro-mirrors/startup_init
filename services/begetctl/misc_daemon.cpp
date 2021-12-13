@@ -199,6 +199,9 @@ static void WriteLogoToMisc(const std::string &logoPath)
     close(fd);
     int addrOffset = (PARTITION_INFO_POS + PARTITION_INFO_MAX_LENGTH + BLOCK_SZIE_1 - 1) / BLOCK_SZIE_1;
     int fd1 = open(miscDev.c_str(), O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if (fd1 < 0) {
+        return;
+    }
     if (lseek(fd1, addrOffset * BLOCK_SZIE_1, SEEK_SET) < 0) {
         std::cout << "Failed to seek file\n";
         close(fd1);
@@ -209,10 +212,12 @@ static void WriteLogoToMisc(const std::string &logoPath)
     uint32_t size = 0;
     if (read(fd1, &magic, sizeof(uint32_t)) != sizeof(uint32_t)) {
         std::cout << "Failed to read magic number\n";
+        close(fd1);
         return;
     }
     if (read(fd1, &size, sizeof(uint32_t)) != sizeof(uint32_t)) {
         std::cout << "Failed to read magic number\n";
+        close(fd1);
         return;
     }
 

@@ -226,6 +226,7 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
     ret = SetImportantValue(service, "", invalidImportantValue, 1);
     EXPECT_EQ(ret, -1);
     if (service != nullptr) {
+        FreeStringVector(service->pathArgs.argv, service->pathArgs.count);
         free(service);
         service = nullptr;
     }

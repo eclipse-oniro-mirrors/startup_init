@@ -262,7 +262,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
                 BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
             }
             linkNum++;
-            if (STRINGEQUAL(parent, bootDevice)) {
+            if ((parent != NULL) && STRINGEQUAL(parent, bootDevice)) {
                 BuildBootDeviceSymbolLink(links, linkNum, uevent->partitionName);
                 linkNum++;
             }

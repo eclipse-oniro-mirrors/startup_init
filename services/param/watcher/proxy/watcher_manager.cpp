@@ -291,7 +291,7 @@ int WatcherManager::GetServerFd(bool retry)
     do {
         serverFd_ = socket(PF_UNIX, SOCK_STREAM, 0);
         int flags = fcntl(serverFd_, F_GETFL, 0);
-        (void)fcntl(serverFd_, F_SETFL, flags & ~ O_NONBLOCK);
+        (void)fcntl(serverFd_, F_SETFL, flags & ~O_NONBLOCK);
         ret = ConntectServer(serverFd_, CLIENT_PIPE_NAME);
         if (ret == 0) {
             break;
