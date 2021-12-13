@@ -125,7 +125,7 @@ static void TestPermission()
     g_testPermissionResult = DAC_RESULT_FORBIDED;
     if ((GetClientParamWorkSpace() != nullptr) && (GetClientParamWorkSpace()->securityLabel != nullptr)) {
         GetClientParamWorkSpace()->securityLabel->flags = LABEL_CHECK_FOR_ALL_PROCESS;
-        int ret = SystemSetParameter(testName, "22202");
+        ret = SystemSetParameter(testName, "22202");
         EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
     }
     paramSecurityOps->securityEncodeLabel = TestEncodeSecurityLabel;
