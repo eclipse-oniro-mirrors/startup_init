@@ -241,7 +241,7 @@ int ParamTaskSendMsg(const ParamTaskPtr stream, const ParamMessage *msg)
     LibuvStreamTask *worker = (LibuvStreamTask *)stream;
     req->buf = uv_buf_init((char *)msg, msg->msgSize);
     int ret = uv_write(&req->writer, (uv_stream_t *)&worker->stream.pipe, &req->buf, 1, OnWriteResponse);
-    PARAM_CHECK(ret >= 0, LibuvFreeMsg(stream, msg);
+    PARAM_CHECK(ret >= 0, LibuvFreeMsg(stream, msg); free(req);
         return -1, "Failed to uv_write2 ret %s", uv_strerror(ret));
 #endif
     return 0;

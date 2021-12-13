@@ -38,7 +38,7 @@ static void DoExec(const struct CmdArgs *ctx)
     }
     if (pid == 0) {
         if (ctx == NULL || ctx->argv[0] == NULL) {
-            INIT_LOGE("DoExec: invalid arguments for :%s", ctx->argv[0]);
+            INIT_LOGE("DoExec: invalid arguments");
             _exit(0x7f);
         }
         int ret = execve(ctx->argv[0], ctx->argv, NULL);

@@ -106,8 +106,8 @@ void ReleaseFstabItem(FstabItem *item)
             free(item->mountOptions);
             item->mountOptions = NULL;
         }
+
         free(item);
-        item = NULL;
     }
 }
 
@@ -179,7 +179,7 @@ static int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts)
         return 0;
     } while (0);
 
-    free(item);
+    ReleaseFstabItem(item);
     item = NULL;
     return -1;
 }

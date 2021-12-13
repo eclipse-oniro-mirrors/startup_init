@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "init_service.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -32,6 +31,7 @@
 #include "init_adapter.h"
 #include "init_cmds.h"
 #include "init_log.h"
+#include "init_service.h"
 #include "init_service_socket.h"
 #include "init_utils.h"
 #include "securec.h"
@@ -322,7 +322,7 @@ void ServiceReap(Service *service)
         }
     }
 
-    int ret = 0;
+    int ret;
     if (service->restartArg != NULL) {
         ret = ExecRestartCmd(service);
         INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "Failed to exec restartArg for %s", service->name);

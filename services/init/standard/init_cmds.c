@@ -43,7 +43,7 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
 {
     INIT_CHECK_RETURN_VALUE((symValue != NULL) && (paramValue != NULL) && (paramLen != 0), -1);
     char tmpName[PARAM_NAME_LEN_MAX] = { 0 };
-    int ret = 0;
+    int ret;
     uint32_t curr = 0;
     char *start = (char *)symValue;
     char *end = (char *)symValue + symLen;

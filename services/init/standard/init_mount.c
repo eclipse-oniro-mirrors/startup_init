@@ -21,7 +21,7 @@
 int MountRequriedPartitions(const Fstab *fstab)
 {
     INIT_ERROR_CHECK(fstab != NULL, return -1, "Failed fstab is NULL");
-    int rc = -1;
+    int rc;
     INIT_LOGI("Mount required partitions");
     rc = MountAllWithFstab(fstab, 1);
     return rc;

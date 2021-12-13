@@ -92,7 +92,7 @@ static void WriteLogToFile(FILE *fp, const char *fileName, int line, const char 
 
     char fullLogMsg[LOG_BUFFER_MAX];
     if (snprintf_s(fullLogMsg, LOG_BUFFER_MAX, LOG_BUFFER_MAX - 1, "[%s:%d][%s] %s",
-        fileName == NULL ? "" : fileName, line, "fs_manager", fmt) == -1) {
+        (fileName == NULL) ? "" : fileName, line, "fs_manager", fmt) == -1) {
         return;
     }
     (void)fprintf(fp, "%s", fullLogMsg);

@@ -97,7 +97,8 @@ static void TestParamTraversal()
             u_int32_t len = PARAM_BUFFER_SIZE;
             SystemGetParameterValue(handle, ((char *)value) + PARAM_BUFFER_SIZE, &len);
             printf("$$$$$$$$Param %s=%s \n", (char *)value, ((char *)value) + PARAM_BUFFER_SIZE);
-        }, nullptr);
+        },
+        nullptr);
 }
 
 static void TestPersistParam()
@@ -117,14 +118,16 @@ static void TestPermission()
 {
     const char *testName = "persist.111.ffff.bbbb.cccc.dddd.eeee.55555";
     char tmp[PARAM_BUFFER_SIZE] = { 0 };
+    int ret;
     // 允许本地校验
     ParamSecurityOps *paramSecurityOps = &GetClientParamWorkSpace()->paramSecurityOps;
     paramSecurityOps->securityCheckParamPermission = TestCheckParamPermission;
     g_testPermissionResult = DAC_RESULT_FORBIDED;
-    GetClientParamWorkSpace()->securityLabel->flags = LABEL_CHECK_FOR_ALL_PROCESS;
-    int ret = SystemSetParameter(testName, "22202");
-    EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
-
+    if ((GetClientParamWorkSpace() != nullptr) && (GetClientParamWorkSpace()->securityLabel != nullptr)) {
+        GetClientParamWorkSpace()->securityLabel->flags = LABEL_CHECK_FOR_ALL_PROCESS;
+        ret = SystemSetParameter(testName, "22202");
+        EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
+    }
     paramSecurityOps->securityEncodeLabel = TestEncodeSecurityLabel;
     paramSecurityOps->securityDecodeLabel = TestDecodeSecurityLabel;
     paramSecurityOps->securityFreeLabel = TestFreeLocalSecurityLabel;

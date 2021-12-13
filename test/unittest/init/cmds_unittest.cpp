@@ -143,7 +143,7 @@ HWTEST_F(CmdsUnitTest, TestCommonCopy, TestSize.Level1)
 HWTEST_F(CmdsUnitTest, TestCommonWrite, TestSize.Level1)
 {
     const char *testFile1 = "/data/init_ut/test_dir0/test_file_write1";
-    int fd = open(testFile1, O_RDWR | O_CREAT);
+    int fd = open(testFile1, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     ASSERT_GE(fd, 0);
 
     DoCmdByName("write ", "/data/init_ut/test_dir0/test_file_write1 aaa");
@@ -221,7 +221,7 @@ HWTEST_F(CmdsUnitTest, TestGetCmdLinesFromJson, TestSize.Level1)
 
     cJSON *cmdsItem1 = cJSON_GetArrayItem(cmdsItem, 0);
     ASSERT_NE(nullptr, cmdsItem1);
-    CmdLines **cmdLines = (CmdLines **)calloc(1, 1);
+    CmdLines **cmdLines = (CmdLines **)calloc(1, sizeof(CmdLines *));
     ASSERT_NE(nullptr, cmdLines);
     int ret = GetCmdLinesFromJson(cmdsItem1, cmdLines);
     EXPECT_EQ(ret, -1);

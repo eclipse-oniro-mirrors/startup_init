@@ -49,7 +49,7 @@ HWTEST_F(ServiceFileUnitTest, TestServiceFile, TestSize.Level1)
     if (strncpy_s(fileOpt->fileName, strlen(fileName) + 1, fileName, strlen(fileName)) != 0) {
         free(fileOpt);
         fileOpt = nullptr;
-        ASSERT_TRUE(1);
+        FAIL();
     }
     CreateServiceFile(fileOpt);
     int ret = GetControlFile("/data/filetest");
