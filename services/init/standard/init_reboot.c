@@ -147,16 +147,18 @@ void ExecReboot(const char *value)
         return;
     }
     INIT_ERROR_CHECK(CheckRebootParam(valueData) == 0, return, "Invalid arg %s for reboot.", value);
-    char *fstabFile = GetFstabFile();
-    INIT_ERROR_CHECK(fstabFile != NULL, return, "Failed get fstab file");
-    Fstab *fstab = NULL;
-    INIT_ERROR_CHECK((fstab = ReadFstabFromFile(fstabFile, false)) != NULL, free(fstabFile); return,
-        "Failed get fstab from %s", fstabFile);
-    free(fstabFile);
     char miscDevice[PATH_MAX] = {0};
-    int ret = GetBlockDeviceByMountPoint("/misc", fstab, miscDevice, PATH_MAX);
-    ReleaseFstab(fstab);
-    INIT_ERROR_CHECK(ret == 0, return, "Failed to get misc device name.");
+    int ret;
+    char *fstabFile = GetFstabFile();
+    if (fstabFile != NULL) {
+        Fstab *fstab = ReadFstabFromFile(fstabFile, false);
+        free(fstabFile);
+        if (fstab != NULL) {
+            ret = GetBlockDeviceByMountPoint("/misc", fstab, miscDevice, PATH_MAX);
+            ReleaseFstab(fstab);
+            INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to get misc device name.");
+        }
+    }
     StopAllServices(SERVICE_ATTR_INVALID);
     sync();
     INIT_CHECK_ONLY_ELOG(GetMountStatusForMountPoint("/vendor") == 0 || umount("/vendor") == 0,
@@ -171,7 +173,11 @@ void ExecReboot(const char *value)
 
     ret = 0;
     if (valueData == NULL) {
+#ifndef PRODUCT_RK
         ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL, miscDevice);
+#else
+        reboot(RB_AUTOBOOT);
+#endif
     } else if (strcmp(valueData, "shutdown") == 0) {
 #ifndef STARTUP_INIT_TEST
         ret = reboot(RB_POWER_OFF);
