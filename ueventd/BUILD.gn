@@ -49,7 +49,10 @@ if (defined(ohos_lite)) {
 
   group("ueventd") {
     if (ohos_kernel_type == "linux") {
-      deps = [ ":ueventd_linux" ]
+      deps = [
+        ":ueventd.config",
+        ":ueventd_linux",
+      ]
     } else {
       deps = []
     }
