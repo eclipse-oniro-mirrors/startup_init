@@ -25,6 +25,14 @@
 #include "init_utils.h"
 #include "securec.h"
 
+#ifdef PRODUCT_RK
+#include <sys/syscall.h>
+
+#define REBOOT_MAGIC1       0xfee1dead
+#define REBOOT_MAGIC2       672274793
+#define REBOOT_CMD_RESTART2 0xA1B2C3D4
+#endif
+
 #define MAX_VALUE_LENGTH 500
 #define MAX_COMMAND_SIZE 20
 #define MAX_UPDATE_SIZE 100
@@ -176,6 +184,10 @@ void ExecReboot(const char *value)
         ret = CheckAndRebootToUpdater(valueData, "updater", "updater:", "boot_updater", miscDevice);
     } else if (strncmp(valueData, "flash", strlen("flash")) == 0) {
         ret = CheckAndRebootToUpdater(valueData, "flash", "flash:", "boot_flash", miscDevice);
+#ifdef PRODUCT_RK
+    } else if (strncmp(valueData, "loader", strlen("loader")) == 0) {
+        syscall(__NR_reboot, REBOOT_MAGIC1, REBOOT_MAGIC2, REBOOT_CMD_RESTART2, "loader");
+#endif
     }
     INIT_LOGI("Reboot %s %s.", value, (ret == 0) ? "success" : "fail");
     return;
