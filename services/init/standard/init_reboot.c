@@ -148,30 +148,23 @@ void ExecReboot(const char *value)
     }
     INIT_ERROR_CHECK(CheckRebootParam(valueData) == 0, return, "Invalid arg %s for reboot.", value);
     char miscDevice[PATH_MAX] = {0};
-    int ret;
     char *fstabFile = GetFstabFile();
     if (fstabFile != NULL) {
         Fstab *fstab = ReadFstabFromFile(fstabFile, false);
         free(fstabFile);
         if (fstab != NULL) {
-            ret = GetBlockDeviceByMountPoint("/misc", fstab, miscDevice, PATH_MAX);
+            INIT_CHECK_ONLY_ELOG(GetBlockDeviceByMountPoint("/misc", fstab, miscDevice, PATH_MAX) == 0,
+                "Failed to get misc device name.");
             ReleaseFstab(fstab);
-            INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to get misc device name.");
         }
     }
     StopAllServices(SERVICE_ATTR_INVALID);
     sync();
     INIT_CHECK_ONLY_ELOG(GetMountStatusForMountPoint("/vendor") == 0 || umount("/vendor") == 0,
         "Failed to umount vendor. errno = %d.", errno);
-    if (GetMountStatusForMountPoint("/data") != 0) {
-        if (umount("/data") != 0 && umount2("/data", MNT_FORCE) != 0) {
-            INIT_LOGE("Failed umount data. errno = %d.", errno);
-        }
-    } else {
-        INIT_LOGE("Failed to get mount point \"/data\"");
-    }
-
-    ret = 0;
+    INIT_CHECK_ONLY_ELOG(GetMountStatusForMountPoint("/data") == 0 || umount("/data") == 0 ||
+        umount2("/data", MNT_FORCE) == 0, "Failed umount data. errno = %d.", errno);
+    int ret = 0;
     if (valueData == NULL) {
 #ifndef PRODUCT_RK
         ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL, miscDevice);
@@ -181,9 +174,7 @@ void ExecReboot(const char *value)
     } else if (strcmp(valueData, "shutdown") == 0) {
 #ifndef STARTUP_INIT_TEST
         ret = reboot(RB_POWER_OFF);
-#endif
     } else if (strcmp(valueData, "bootloader") == 0) {
-#ifndef STARTUP_INIT_TEST
         ret = reboot(RB_POWER_OFF);
 #endif
     } else if (strncmp(valueData, "updater", strlen("updater")) == 0) {
