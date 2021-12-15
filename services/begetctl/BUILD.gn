@@ -15,14 +15,18 @@ import("//build/ohos.gni")
 
 ohos_executable("begetctl") {
   sources = [
+    "init_cmd_reboot.c",
     "main.c",
     "misc_daemon.cpp",
-    "init_cmd_reboot.c",
+    "param_cmd.c",
     "service_control.c",
-    "param_cmd.c"
   ]
 
   defines = [ "INIT_AGENT" ]
+
+  if (defined(product_name) && product_name == "rk3568") {
+    defines += [ "PRODUCT_RK" ]
+  }
 
   include_dirs = [
     "//base/startup/init_lite/services/include",
@@ -37,25 +41,25 @@ ohos_executable("begetctl") {
   ]
   deps = [
     "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_shared",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
     "//base/startup/init_lite/interfaces/innerkits/reboot:libreboot_static",
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
     "//third_party/bounds_checking_function:libsec_static",
   ]
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
   symlink_target_name = [
-      "misc_daemon",
-      "reboot",
-      "devctl",
-      "service",
-      "service_control",
-      "start_service",
-      "stop_service",
-      "service",
-      "param"
+    "misc_daemon",
+    "reboot",
+    "devctl",
+    "service",
+    "service_control",
+    "start_service",
+    "stop_service",
+    "service",
+    "param",
   ]
 
   install_images = [ "system" ]

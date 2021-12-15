@@ -20,6 +20,7 @@
 #include "begetctl.h"
 
 #define REBOOT_CMD_NUMBER 2
+#ifdef PRODUCT_RK
 #define USAGE_INFO "usage: reboot shutdown\n"\
     "       reboot updater\n"\
     "       reboot updater[:options]\n" \
@@ -27,6 +28,14 @@
     "       reboot flashd[:options]\n" \
     "       reboot loader\n" \
     "       reboot\n"
+#else
+#define USAGE_INFO "usage: reboot shutdown\n"\
+    "       reboot updater\n"\
+    "       reboot updater[:options]\n" \
+    "       reboot flashd\n" \
+    "       reboot flashd[:options]\n" \
+    "       reboot\n"
+#endif
 
 static int main_cmd(int argc, char* argv[])
 {
@@ -38,7 +47,9 @@ static int main_cmd(int argc, char* argv[])
     if (argc == REBOOT_CMD_NUMBER && strcmp(argv[1], "shutdown") != 0 &&
         strcmp(argv[1], "updater") != 0 &&
         strcmp(argv[1], "flashd") != 0 &&
-        strcmp(argv[1], "loader") !=0 &&
+#ifdef PRODUCT_RK
+        strcmp(argv[1], "loader") != 0 &&
+#endif
         strncmp(argv[1], "updater:", strlen("updater:")) != 0 &&
         strncmp(argv[1], "flashd:", strlen("flashd:")) != 0) {
         printf("%s", USAGE_INFO);

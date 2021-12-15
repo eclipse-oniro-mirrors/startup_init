@@ -25,6 +25,14 @@
 #include "init_utils.h"
 #include "securec.h"
 
+#ifdef PRODUCT_RK
+#include <sys/syscall.h>
+
+#define REBOOT_MAGIC1       0xfee1dead
+#define REBOOT_MAGIC2       672274793
+#define REBOOT_CMD_RESTART2 0xA1B2C3D4
+#endif
+
 #define MAX_VALUE_LENGTH 500
 #define MAX_COMMAND_SIZE 20
 #define MAX_UPDATE_SIZE 100
@@ -139,43 +147,44 @@ void ExecReboot(const char *value)
         return;
     }
     INIT_ERROR_CHECK(CheckRebootParam(valueData) == 0, return, "Invalid arg %s for reboot.", value);
-    char *fstabFile = GetFstabFile();
-    INIT_ERROR_CHECK(fstabFile != NULL, return, "Failed get fstab file");
-    Fstab *fstab = NULL;
-    INIT_ERROR_CHECK((fstab = ReadFstabFromFile(fstabFile, false)) != NULL, free(fstabFile); return,
-        "Failed get fstab from %s", fstabFile);
-    free(fstabFile);
     char miscDevice[PATH_MAX] = {0};
-    int ret = GetBlockDeviceByMountPoint("/misc", fstab, miscDevice, PATH_MAX);
-    ReleaseFstab(fstab);
-    INIT_ERROR_CHECK(ret == 0, return, "Failed to get misc device name.");
+    char *fstabFile = GetFstabFile();
+    if (fstabFile != NULL) {
+        Fstab *fstab = ReadFstabFromFile(fstabFile, false);
+        free(fstabFile);
+        if (fstab != NULL) {
+            INIT_CHECK_ONLY_ELOG(GetBlockDeviceByMountPoint("/misc", fstab, miscDevice, PATH_MAX) == 0,
+                "Failed to get misc device name.");
+            ReleaseFstab(fstab);
+        }
+    }
     StopAllServices(SERVICE_ATTR_INVALID);
     sync();
     INIT_CHECK_ONLY_ELOG(GetMountStatusForMountPoint("/vendor") == 0 || umount("/vendor") == 0,
         "Failed to umount vendor. errno = %d.", errno);
-    if (GetMountStatusForMountPoint("/data") != 0) {
-        if (umount("/data") != 0 && umount2("/data", MNT_FORCE) != 0) {
-            INIT_LOGE("Failed umount data. errno = %d.", errno);
-        }
-    } else {
-        INIT_LOGE("Failed to get mount point \"/data\"");
-    }
-
-    ret = 0;
+    INIT_CHECK_ONLY_ELOG(GetMountStatusForMountPoint("/data") == 0 || umount("/data") == 0 ||
+        umount2("/data", MNT_FORCE) == 0, "Failed umount data. errno = %d.", errno);
+    int ret = 0;
     if (valueData == NULL) {
+#ifndef PRODUCT_RK
         ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL, miscDevice);
+#else
+        reboot(RB_AUTOBOOT);
+#endif
     } else if (strcmp(valueData, "shutdown") == 0) {
 #ifndef STARTUP_INIT_TEST
         ret = reboot(RB_POWER_OFF);
-#endif
     } else if (strcmp(valueData, "bootloader") == 0) {
-#ifndef STARTUP_INIT_TEST
         ret = reboot(RB_POWER_OFF);
 #endif
     } else if (strncmp(valueData, "updater", strlen("updater")) == 0) {
         ret = CheckAndRebootToUpdater(valueData, "updater", "updater:", "boot_updater", miscDevice);
     } else if (strncmp(valueData, "flash", strlen("flash")) == 0) {
         ret = CheckAndRebootToUpdater(valueData, "flash", "flash:", "boot_flash", miscDevice);
+#ifdef PRODUCT_RK
+    } else if (strncmp(valueData, "loader", strlen("loader")) == 0) {
+        syscall(__NR_reboot, REBOOT_MAGIC1, REBOOT_MAGIC2, REBOOT_CMD_RESTART2, "loader");
+#endif
     }
     INIT_LOGI("Reboot %s %s.", value, (ret == 0) ? "success" : "fail");
     return;
