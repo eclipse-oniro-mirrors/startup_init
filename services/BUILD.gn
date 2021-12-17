@@ -92,6 +92,7 @@ if (defined(ohos_lite)) {
     }
   }
 } else {
+  import("//base/startup/init_lite/begetd.gni")
   import("//build/ohos.gni")
 
   ohos_executable("init") {
@@ -179,11 +180,15 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
       "//base/startup/init_lite/services/param:param_client",
       "//base/startup/init_lite/services/param:param_service",
-      "//base/startup/init_lite/services/param:param_watcher",
-      "//base/startup/init_lite/services/param:param_watcher.rc",
-      "//base/startup/init_lite/services/param:param_watcheragent",
-      "//base/startup/init_lite/services/param/watcher/sa_profile:param_watcher_profile",
     ]
+    if (param_feature_watcher) {
+      deps += [
+        "//base/startup/init_lite/services/param/watcher:param_watcher",
+        "//base/startup/init_lite/services/param/watcher:param_watcher.rc",
+        "//base/startup/init_lite/services/param/watcher:param_watcheragent",
+        "//base/startup/init_lite/services/param/watcher/sa_profile:param_watcher_profile",
+      ]
+    }
   }
 
   # init etc files group

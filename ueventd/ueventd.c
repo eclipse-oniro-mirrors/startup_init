@@ -121,6 +121,7 @@ static void HandleUevent(const struct Uevent *uevent)
 
 static void HandleUeventRequired(const struct Uevent *uevent, char **devices, int num)
 {
+    const char *deviceName;
     INIT_ERROR_CHECK(devices != NULL && num > 0, return, "Fault paramters");
     if (uevent->action == ACTION_ADD) {
         ChangeSysAttributePermissions(uevent->syspath);
@@ -130,9 +131,16 @@ static void HandleUeventRequired(const struct Uevent *uevent, char **devices, in
     if (type == SUBSYSTEM_BLOCK) {
         for (int i = 0; i < num; i++) {
             if (uevent->partitionName == NULL) {
-                break;
-            }
-            if (strstr(devices[i], uevent->partitionName) != NULL) {
+                INIT_LOGI("Match with %s for %s", devices[i], uevent->syspath);
+                deviceName = strstr(devices[i], "/dev/block");
+                if (deviceName != NULL) {
+                    deviceName += sizeof("/dev/block") - 1;
+                    if (strstr(uevent->syspath, deviceName) != NULL) {
+                        HandleBlockDeviceEvent(uevent);
+                        break;
+                    }
+                }
+            } else if (strstr(devices[i], uevent->partitionName) != NULL) {
                 INIT_LOGI("Handle block device partitionName %s", uevent->partitionName);
                 HandleBlockDeviceEvent(uevent);
                 break;
