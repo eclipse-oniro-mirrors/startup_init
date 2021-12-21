@@ -10,6 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//base/startup/init_lite/begetd.gni")
 import("//build/test.gni")
 
 config("utest_config") {
@@ -71,13 +72,6 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/services/param/trigger/trigger_checker.c",
     "//base/startup/init_lite/services/param/trigger/trigger_manager.c",
     "//base/startup/init_lite/services/param/trigger/trigger_processor.c",
-    "//base/startup/init_lite/services/param/watcher/agent/watcher.cpp",
-    "//base/startup/init_lite/services/param/watcher/agent/watcher_manager_kits.cpp",
-    "//base/startup/init_lite/services/param/watcher/agent/watcher_manager_proxy.cpp",
-    "//base/startup/init_lite/services/param/watcher/agent/watcher_stub.cpp",
-    "//base/startup/init_lite/services/param/watcher/proxy/watcher_manager.cpp",
-    "//base/startup/init_lite/services/param/watcher/proxy/watcher_manager_stub.cpp",
-    "//base/startup/init_lite/services/param/watcher/proxy/watcher_proxy.cpp",
     "//base/startup/init_lite/services/utils/init_utils.c",
     "//base/startup/init_lite/services/utils/list.c",
     "//base/startup/init_lite/ueventd/ueventd.c",
@@ -86,6 +80,20 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
     "//base/startup/init_lite/ueventd/ueventd_socket.c",
   ]
+
+  if (param_feature_watcher) {
+    sources += [
+      "//base/startup/init_lite/services/param/watcher/agent/watcher.cpp",
+      "//base/startup/init_lite/services/param/watcher/agent/watcher_manager_kits.cpp",
+      "//base/startup/init_lite/services/param/watcher/agent/watcher_manager_proxy.cpp",
+      "//base/startup/init_lite/services/param/watcher/agent/watcher_stub.cpp",
+      "//base/startup/init_lite/services/param/watcher/proxy/watcher_manager.cpp",
+      "//base/startup/init_lite/services/param/watcher/proxy/watcher_manager_stub.cpp",
+      "//base/startup/init_lite/services/param/watcher/proxy/watcher_proxy.cpp",
+      "param/watcher_agent_unittest.cpp",
+      "param/watcher_proxy_unittest.cpp",
+    ]
+  }
 
   sources += [
     "init/cmds_unittest.cpp",
@@ -100,8 +108,6 @@ ohos_unittest("init_ut") {
     "param/param_unittest.cpp",
     "param/selinux_unittest.cpp",
     "param/trigger_unittest.cpp",
-    "param/watcher_agent_unittest.cpp",
-    "param/watcher_proxy_unittest.cpp",
     "ueventd/ueventd_config_unittest.cpp",
   ]
 
@@ -152,12 +158,15 @@ ohos_unittest("init_ut") {
     "PARAM_SUPPORT_DAC",
   ]
 
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
-  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  if (param_feature_watcher) {
+    external_deps += [
+      "ipc:ipc_core",
+      "safwk:system_ability_fwk",
+      "samgr_standard:samgr_proxy",
+    ]
+  }
 
   cflags_cc = [ "-fexceptions" ]
 }
