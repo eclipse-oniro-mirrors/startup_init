@@ -46,10 +46,6 @@ typedef struct {
     int serviceCount;
 } ServiceSpace;
 
-inline bool IsOnDemandService(Service *service)
-{
-    return !!(service->attribute & SERVICE_ATTR_ONDEMAND);
-}
 Service *GetServiceByPid(pid_t pid);
 Service *GetServiceByName(const char *servName);
 cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrName);
@@ -61,6 +57,12 @@ void StopServiceByName(const char *serviceName);
 void StopAllServices(int flags);
 void ParseAllServices(const cJSON *fileRoot);
 void ReleaseService(Service *service);
+
+static inline bool IsOnDemandService(Service *service)
+{
+    return !!(service->attribute & SERVICE_ATTR_ONDEMAND);
+}
+
 #ifdef OHOS_SERVICE_DUMP
 void DumpAllServices();
 #endif
