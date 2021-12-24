@@ -44,6 +44,7 @@ extern "C" {
 #define SERVICE_ATTR_DISABLED 0x040     // disabled
 #define SERVICE_ATTR_CONSOLE 0x080      // console
 #define SERVICE_ATTR_DYNAMIC 0x100      // dynamic service
+#define SERVICE_ATTR_ONDEMAND 0x200     // ondemand, manage socket by init
 
 #define MAX_SERVICE_NAME 32
 #define MAX_WRITEPID_FILES 100

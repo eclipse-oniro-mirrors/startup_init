@@ -24,6 +24,7 @@
 #include "init.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
+#include "init_param.h"
 #include "init_service_file.h"
 #include "init_service_socket.h"
 #include "init_utils.h"
@@ -359,6 +360,9 @@ static int ParseServiceSocket(const cJSON *curArrItem, Service *curServ)
             break;
         }
     }
+    if (IsOnDemandService(curServ)) {
+        ret = CreateAndPollSocket(curServ);
+    }
     return ret;
 }
 
@@ -466,11 +470,28 @@ static int GetDynamicService(const cJSON *curArrItem, Service *curServ)
     return SERVICE_SUCCESS;
 }
 
+static int GetServiceOnDemand(const cJSON *curArrItem, Service *curServ)
+{
+    cJSON *item = cJSON_GetObjectItem(curArrItem, "ondemand");
+    if (item == NULL) {
+        return SERVICE_SUCCESS;
+    }
+
+    INIT_ERROR_CHECK(cJSON_IsBool(item), return SERVICE_FAILURE,
+        "Service : %s ondemand value only support bool.", curServ->name);
+    bool isOnDemand = (bool)cJSON_GetNumberValue(item);
+    INIT_INFO_CHECK(isOnDemand, return SERVICE_SUCCESS,
+        "Service : %s ondemand value is false, it will be manage socket by itself", curServ->name);
+
+    curServ->attribute |= SERVICE_ATTR_ONDEMAND;
+    return SERVICE_SUCCESS;
+}
+
 static int CheckServiceKeyName(const cJSON *curService)
 {
     char *cfgServiceKeyList[] = {
         "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
-        "writepid", "critical", "socket", "console", "dynamic", "file",
+        "writepid", "critical", "socket", "console", "dynamic", "file", "ondemand",
 #ifdef WITH_SELINUX
         SECON_STR_IN_CFG,
 #endif // WITH_SELINUX
@@ -533,6 +554,8 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
     ret = GetDynamicService(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get dynamic flag for service %s", service->name);
+    ret = GetServiceOnDemand(curItem, service);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get ondemand flag for service %s", service->name);
     return ret;
 }
 
