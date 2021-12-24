@@ -63,7 +63,7 @@ void SocketPollInit(int sockFd, const char* serviceName)
         INIT_LOGE("Socket poll handler is not enough!");
         return;
     }
-    int ret = uv_poll_init_user_defined(uv_default_loop(), &g_socketPollHandler[handlerCounter], sockFd);
+    int ret = uv_poll_init_with_block_socket(uv_default_loop(), &g_socketPollHandler[handlerCounter], sockFd);
     if (ret != 0) {
         INIT_LOGE("Failed to init socket poll!");
         return;
