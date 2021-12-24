@@ -123,7 +123,7 @@ if (defined(ohos_lite)) {
       "//third_party/libuv/include",
     ]
     deps = [
-      "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_static",
+      "//base/startup/init_lite/interfaces/innerkits:libfsmanager_static",
       "//base/startup/init_lite/services/log:init_log",
       "//base/startup/init_lite/services/param:param_service",
       "//base/startup/init_lite/ueventd:libueventd_static",
@@ -173,11 +173,6 @@ if (defined(ohos_lite)) {
     deps = [
       ":init",
       ":init_etc",
-      "//base/startup/init_lite/interfaces/innerkits/dynamic_service:dynamic_service",
-      "//base/startup/init_lite/interfaces/innerkits/file:libfile",
-      "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_shared",
-      "//base/startup/init_lite/interfaces/innerkits/reboot:libreboot",
-      "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
       "//base/startup/init_lite/services/param:param_client",
       "//base/startup/init_lite/services/param:param_service",
     ]

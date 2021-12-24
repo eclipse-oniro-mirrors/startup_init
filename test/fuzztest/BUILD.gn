@@ -33,7 +33,7 @@ ohos_fuzztest("DoRebootFuzzTest") {
   include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/reboot:libreboot_static",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/services/log:init_log",
     "//base/startup/init_lite/services/param:param_client",
     "//third_party/bounds_checking_function:libsec_static",
@@ -56,7 +56,7 @@ ohos_fuzztest("GetControlFileFuzzTest") {
   include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/file:libfile",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/services/log:init_log",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
@@ -79,7 +79,7 @@ ohos_fuzztest("GetControlSocketFuzzTest") {
   include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/services/log:init_log",
     "//third_party/bounds_checking_function:libsec_static",
   ]
@@ -104,7 +104,7 @@ ohos_fuzztest("MountAllFstabFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/services/log:init_log",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//base/startup/init_lite/test/fuzztest:libfuzz_utils",
@@ -152,7 +152,7 @@ ohos_fuzztest("StartDynamicProcessFuzzTest") {
 
   include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/dynamic_service:dynamic_service",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -173,7 +173,7 @@ ohos_fuzztest("StopDynamicProcessFuzzTest") {
 
   include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/dynamic_service:dynamic_service",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]

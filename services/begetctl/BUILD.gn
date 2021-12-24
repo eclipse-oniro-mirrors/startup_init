@@ -40,8 +40,7 @@ ohos_executable("begetctl") {
     "//base/update/updateservice/interfaces/innerkits/include",
   ]
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_shared",
-    "//base/startup/init_lite/interfaces/innerkits/reboot:libreboot_static",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param:param_client",
     "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
