@@ -24,7 +24,6 @@
 #include "init.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
-#include "init_param.h"
 #include "init_service_file.h"
 #include "init_service_socket.h"
 #include "init_utils.h"
