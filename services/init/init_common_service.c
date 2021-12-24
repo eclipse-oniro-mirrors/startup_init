@@ -282,7 +282,7 @@ static int ExecRestartCmd(const Service *service)
     return SERVICE_SUCCESS;
 }
 
-static void PollSocketAfresh(service)
+static void PollSocketAfresh(Service *service)
 {
     if (service->socketCfg == NULL) {
         INIT_LOGE("service %s socket config is NULL!", service->name);
