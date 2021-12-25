@@ -7,7 +7,9 @@
         "//base/startup/init_lite/ueventd:startup_ueventd",
         "//base/startup/init_lite/watchdog:watchdog",
         "//base/startup/init_lite/services/begetctl:begetctl",
-        "//base/startup/init_lite/interfaces/innerkits:libbegetutil"
+        "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+        "//base/startup/init_lite/interfaces/innerkits/file:libfile",
+        "//base/startup/init_lite/interfaces/innerkits/socket:libsocket"
       ],
       "inner_kits": [{
         "header": {
