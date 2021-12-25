@@ -28,13 +28,11 @@ static struct CMD_LIST_ST *m_cmdList = NULL;
 
 int BegetCtlCmdAdd(const char *name, BegetCtlCmdPtr cmd)
 {
-    struct CMD_LIST_ST *item;
-
     if (name == NULL) {
         return -1;
     }
 
-    item = (struct CMD_LIST_ST *)malloc(sizeof(struct CMD_LIST_ST));
+    struct CMD_LIST_ST *item = (struct CMD_LIST_ST *)malloc(sizeof(struct CMD_LIST_ST));
     if (item == NULL) {
         return -1;
     }
@@ -83,7 +81,6 @@ static void BegetCtlUsage(const char *command)
 
 int main(int argc, char **argv)
 {
-    const struct CMD_LIST_ST *cmd;
     const char *last = strrchr(argv[0], '/');
 
     // Get the first ending command name
@@ -101,7 +98,7 @@ int main(int argc, char **argv)
     }
 
     // Match the command
-    cmd = BegetCtlCmdFind(last);
+    const struct CMD_LIST_ST *cmd = BegetCtlCmdFind(last);
     if (cmd == NULL) {
         BegetCtlUsage(last);
         return 0;

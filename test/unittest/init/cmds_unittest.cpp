@@ -103,7 +103,7 @@ HWTEST_F(CmdsUnitTest, TestCommonChmod, TestSize.Level1)
 {
     const char *testFile = "/data/init_ut/test_dir0/test_file0";
     const mode_t testMode = S_IRWXU | S_IRWXG | S_IRWXO;
-    int fd = open(testFile, O_CREAT | O_WRONLY);
+    int fd = open(testFile, O_CREAT | O_WRONLY, testMode);
     ASSERT_GE(fd, 0);
     DoCmdByName("chmod ", "777 /data/init_ut/test_dir0/test_file0");
     struct stat info;
