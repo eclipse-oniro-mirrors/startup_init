@@ -37,9 +37,11 @@ const std::string TEST_DRI = ROOT_DIR + "StartInitTestDir";
 const std::string TEST_FILE = TEST_DRI + "/test.txt";
 const std::string TEST_CFG_ILLEGAL = TEST_DRI + "/illegal.cfg";
 const std::string TEST_PROC_MOUNTS = "/proc/mounts";
+#ifndef USE_EMMC_STORAGE
 const uid_t TEST_FILE_UID = 999;
 const gid_t TEST_FILE_GID = 999;
 const mode_t TEST_FILE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+#endif
 
 // init.cfg releated
 const std::string CFG_FILE = "/etc/init.cfg";

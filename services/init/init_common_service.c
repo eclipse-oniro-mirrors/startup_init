@@ -22,6 +22,7 @@
 #include <stropts.h>
 #endif
 #include <sys/capability.h>
+#include <sys/ioctl.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -72,8 +73,8 @@ static int SetPerms(const Service *service)
             "SetPerms, setgid for %s failed. %d", service->name, errno);
     }
     if (service->servPerm.gIDCnt > 1) {
-        INIT_ERROR_CHECK(setgroups(service->servPerm.gIDCnt - 1, &service->servPerm.gIDArray[1]) == 0,
-             return SERVICE_FAILURE,
+        INIT_ERROR_CHECK(setgroups(service->servPerm.gIDCnt - 1, (const gid_t *)&service->servPerm.gIDArray[1]) == 0,
+            return SERVICE_FAILURE,
             "SetPerms, setgroups failed. errno = %d, gIDCnt=%d", errno, service->servPerm.gIDCnt);
     }
     if (service->servPerm.uID != 0) {
