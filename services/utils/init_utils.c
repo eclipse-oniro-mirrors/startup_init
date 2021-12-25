@@ -265,7 +265,7 @@ void WaitForFile(const char *source, unsigned int maxCount)
     unsigned int maxCountTmp = maxCount;
     INIT_ERROR_CHECK(maxCountTmp <= WAIT_MAX_COUNT, maxCountTmp = WAIT_MAX_COUNT, "WaitForFile max time is 5s");
     struct stat sourceInfo = {};
-    const unsigned int waitTime = 500000;
+    unsigned int waitTime = 500000;
     unsigned int count = 0;
     do {
         usleep(waitTime);

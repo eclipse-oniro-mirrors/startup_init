@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
@@ -34,7 +35,7 @@
 
 static int GetSocketAddr(struct sockaddr_un *addr, const char *name)
 {
-    bzero(addr, sizeof(struct sockaddr_un));
+    (void)memset_s(addr, sizeof(struct sockaddr_un), 0x0, sizeof(struct sockaddr_un));
     addr->sun_family = AF_UNIX;
     size_t addrLen = sizeof(addr->sun_path);
     int ret = snprintf_s(addr->sun_path, addrLen, addrLen - 1, HOS_SOCKET_DIR "/%s", name);

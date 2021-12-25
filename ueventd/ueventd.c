@@ -133,13 +133,13 @@ static void HandleUeventRequired(const struct Uevent *uevent, char **devices, in
             if (uevent->partitionName == NULL) {
                 INIT_LOGI("Match with %s for %s", devices[i], uevent->syspath);
                 deviceName = strstr(devices[i], "/dev/block");
-                if (deviceName != NULL) {
-                    deviceName += sizeof("/dev/block") - 1;
-                    if (strstr(uevent->syspath, deviceName) != NULL) {
-                        HandleBlockDeviceEvent(uevent);
-                        break;
-                    }
-                }
+                INIT_INFO_CHECK(deviceName != NULL, continue,
+                    "device %s not match \"/dev/block\".", devices[i]);
+                deviceName += sizeof("/dev/block") - 1;
+                INIT_INFO_CHECK(strstr(uevent->syspath, deviceName) != NULL, continue,
+                    "uevent->syspath %s not match deviceName %s", uevent->syspath, deviceName);
+                HandleBlockDeviceEvent(uevent);
+                break;
             } else if (strstr(devices[i], uevent->partitionName) != NULL) {
                 INIT_LOGI("Handle block device partitionName %s", uevent->partitionName);
                 HandleBlockDeviceEvent(uevent);
