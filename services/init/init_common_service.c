@@ -33,6 +33,7 @@
 #include "init_cmds.h"
 #include "init_log.h"
 #include "init_service.h"
+#include "init_service_manager.h"
 #include "init_service_socket.h"
 #include "init_utils.h"
 #include "securec.h"
@@ -204,8 +205,11 @@ int ServiceStart(Service *service)
     }
     int pid = fork();
     if (pid == 0) {
-        int ret = CreateServiceSocket(service->socketCfg);
-        INIT_ERROR_CHECK(ret >= 0, _exit(PROCESS_EXIT_CODE), "service %s exit! create socket failed!", service->name);
+        if (!IsOnDemandService(service)) {
+            int ret = CreateServiceSocket(service->socketCfg);
+            INIT_ERROR_CHECK(ret >= 0, _exit(PROCESS_EXIT_CODE),
+                "service %s exit! create socket failed!", service->name);
+        }
         CreateServiceFile(service->fileCfg);
         if (service->attribute & SERVICE_ATTR_CONSOLE) {
             OpenConsole();
@@ -279,6 +283,20 @@ static int ExecRestartCmd(const Service *service)
     return SERVICE_SUCCESS;
 }
 
+static void PollSocketAfresh(Service *service)
+{
+    if (service->socketCfg == NULL) {
+        INIT_LOGE("service %s socket config is NULL!", service->name);
+        return;
+    }
+    ServiceSocket *tmpSock = service->socketCfg;
+    while (tmpSock != NULL) {
+        SocketPollInit(tmpSock->sockFd, service->name);
+        tmpSock = tmpSock->next;
+    }
+    return;
+}
+
 void ServiceReap(Service *service)
 {
     INIT_CHECK(service != NULL, return);
@@ -291,7 +309,9 @@ void ServiceReap(Service *service)
         return;
     }
 
-    CloseServiceSocket(service->socketCfg);
+    if (!IsOnDemandService(service)) {
+        CloseServiceSocket(service->socketCfg);
+    }
     CloseServiceFile(service->fileCfg);
     // stopped by system-init itself, no need to restart even if it is not one-shot service
     if (service->attribute & SERVICE_ATTR_NEED_STOP) {
@@ -321,6 +341,11 @@ void ServiceReap(Service *service)
             INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, CRASH_COUNT_LIMIT);
             return;
         }
+    }
+    // service no need to restart which socket managed by init until socket message detected
+    if (IsOnDemandService(service)) {
+        PollSocketAfresh(service);
+        return;
     }
 
     int ret;

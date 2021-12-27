@@ -41,6 +41,7 @@ if (defined(ohos_lite)) {
       "init/lite/init_reboot.c",
       "init/lite/init_service.c",
       "init/lite/init_signal_handler.c",
+      "init/lite/init_socket_manager.c",
     ]
 
     sources += init_common_sources
@@ -106,6 +107,7 @@ if (defined(ohos_lite)) {
       "init/standard/init_reboot.c",
       "init/standard/init_service.c",
       "init/standard/init_signal_handler.c",
+      "init/standard/init_socket_manager.c",
       "init/standard/switch_root.c",
     ]
 
