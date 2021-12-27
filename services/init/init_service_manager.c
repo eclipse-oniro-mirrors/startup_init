@@ -34,6 +34,10 @@
 
 // All serivce processes that init will fork+exec.
 static ServiceSpace g_serviceSpace = { { &g_serviceSpace.services, &g_serviceSpace.services }, 0 };
+static const int CRITICAL_DEFAULT_CRASH_TIME = 20;
+// maximum number of crashes within time CRITICAL_DEFAULT_CRASH_TIME for one service
+static const int CRITICAL_DEFAULT_CRASH_COUNT =  4;
+static const int CRITICAL_CONFIG_ARRAY_LEN = 3;
 
 #ifdef OHOS_SERVICE_DUMP
 static void DumpServiceArgs(const char *info, const ServiceArgs *args)
@@ -516,6 +520,59 @@ static int CheckServiceKeyName(const cJSON *curService)
     return SERVICE_SUCCESS;
 }
 
+int  GetCritical(const cJSON *curArrItem, Service *curServ, const char *attrName, int flag)
+{
+    int criticalSize = 0;
+    curServ->crashCount = CRITICAL_DEFAULT_CRASH_COUNT;
+    curServ->crashTime = CRITICAL_DEFAULT_CRASH_TIME;
+    cJSON *arrItem = cJSON_GetObjectItem(curArrItem, attrName);
+    if (arrItem == NULL) {
+        return SERVICE_SUCCESS;
+     }
+
+    if (cJSON_IsNumber(arrItem)) {
+        return GetServiceAttr(curArrItem, curServ, attrName, flag, NULL);
+    } else if (cJSON_IsArray(arrItem)) {
+        criticalSize = cJSON_GetArraySize(arrItem);
+        cJSON *attrItem = cJSON_GetArrayItem(arrItem, 0); // 0 : critical attribute index
+        if (attrItem == NULL || !cJSON_IsNumber(attrItem)) {
+            INIT_LOGE("%s critical invalid", curServ->name);
+            return SERVICE_FAILURE;
+        }
+        int attrValue = (int)cJSON_GetNumberValue(attrItem);
+        curServ->attribute &= ~flag;
+        if (criticalSize == 1) {
+            if (attrValue == 1) {
+                curServ->attribute |= flag;
+            }
+        } else if (criticalSize == CRITICAL_CONFIG_ARRAY_LEN) {
+            cJSON *crashCountItem = cJSON_GetArrayItem(arrItem, 1); // 1 : critical crash count index
+            INIT_ERROR_CHECK(crashCountItem != NULL, return SERVICE_FAILURE, "%s critical invalid", curServ->name);
+            int value = (int)cJSON_GetNumberValue(crashCountItem);
+            INIT_ERROR_CHECK(value > 0, return SERVICE_FAILURE, "%s critical crashc ount invalid", curServ->name);
+            curServ->crashCount = value;
+
+            cJSON *crashTimeItem = cJSON_GetArrayItem(arrItem, 2); // 2 : critical crash time index
+            INIT_ERROR_CHECK(crashTimeItem != NULL, return SERVICE_FAILURE, "%s critical invalid", curServ->name);
+            value = (int)cJSON_GetNumberValue(crashTimeItem);
+            INIT_ERROR_CHECK(value > 0, return SERVICE_FAILURE, "%s critical crash time invalid", curServ->name);
+            curServ->crashTime = value;
+
+            if (attrValue == 1) {
+                curServ->attribute |= flag;
+            }
+        } else {
+            curServ->attribute &= ~flag;
+            INIT_LOGE("%s critical param invalid", curServ->name);
+            return SERVICE_FAILURE;
+        }
+    } else {
+        INIT_LOGE("%s critical type error", curServ->name);
+        return SERVICE_FAILURE;
+    }
+    return SERVICE_SUCCESS;
+}
+
 int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
@@ -540,7 +597,7 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get once flag for service %s", service->name);
     ret = GetServiceAttr(curItem, service, IMPORTANT_STR_IN_CFG, SERVICE_ATTR_IMPORTANT, SetImportantValue);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get import flag for service %s", service->name);
-    ret = GetServiceAttr(curItem, service, CRITICAL_STR_IN_CFG, SERVICE_ATTR_CRITICAL, NULL);
+    ret = GetCritical(curItem, service, CRITICAL_STR_IN_CFG, SERVICE_ATTR_CRITICAL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get critical flag for service %s", service->name);
     ret = GetServiceAttr(curItem, service, DISABLED_STR_IN_CFG, SERVICE_ATTR_DISABLED, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get disabled flag for service %s", service->name);

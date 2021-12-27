@@ -47,14 +47,9 @@
 #define TIOCSCTTY 0x540E
 #endif
 // 240 seconds, 4 minutes
-static const int CRASH_TIME_LIMIT = 240;
-// maximum number of crashes within time CRASH_TIME_LIMIT for one service
-static const int CRASH_COUNT_LIMIT = 4;
-
-// 240 seconds, 4 minutes
-static const int CRITICAL_CRASH_TIME_LIMIT = 240;
-// maximum number of crashes within time CRITICAL_CRASH_TIME_LIMIT for one service
-static const int CRITICAL_CRASH_COUNT_LIMIT = 4;
+static const int DEFAULT_CRASH_TIME = 240;
+// maximum number of crashes within time DEFAULT_CRASH_TIME for one service
+static const int DEFAULT_CRASH_COUNT = 4;
 
 static int SetAllAmbientCapability(void)
 {
@@ -331,14 +326,14 @@ void ServiceReap(Service *service)
     }
 
     if (service->attribute & SERVICE_ATTR_CRITICAL) { // critical
-        if (CalculateCrashTime(service, CRITICAL_CRASH_TIME_LIMIT, CRITICAL_CRASH_COUNT_LIMIT) == false) {
+        if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
             INIT_LOGE("Critical service \" %s \" crashed %d times, rebooting system",
-                service->name, CRITICAL_CRASH_COUNT_LIMIT);
+                service->name, service->crashCount);
             ExecReboot("reboot");
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
-        if (CalculateCrashTime(service, CRASH_TIME_LIMIT, CRASH_COUNT_LIMIT) == false) {
-            INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, CRASH_COUNT_LIMIT);
+        if (CalculateCrashTime(service, DEFAULT_CRASH_TIME, DEFAULT_CRASH_COUNT) == false) {
+            INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, DEFAULT_CRASH_COUNT);
             return;
         }
     }
