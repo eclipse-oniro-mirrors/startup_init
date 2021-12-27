@@ -528,7 +528,7 @@ int  GetCritical(const cJSON *curArrItem, Service *curServ, const char *attrName
     cJSON *arrItem = cJSON_GetObjectItem(curArrItem, attrName);
     if (arrItem == NULL) {
         return SERVICE_SUCCESS;
-     }
+    }
 
     if (cJSON_IsNumber(arrItem)) {
         return GetServiceAttr(curArrItem, curServ, attrName, flag, NULL);
