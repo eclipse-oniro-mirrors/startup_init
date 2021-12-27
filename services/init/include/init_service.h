@@ -79,6 +79,8 @@ typedef struct {
     int pid;
     int crashCnt;
     time_t firstCrashTime;
+    int crashCount;
+    int crashTime;
     unsigned int attribute;
     int importance;
     Perms servPerm;
