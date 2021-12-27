@@ -27,10 +27,10 @@ fs_manager_sources = [
 
 ohos_shared_library("libbegetutil") {
   sources = [
+    "begetctl_utils/begetctl_utils.c",
     "file/init_file.c",
     "reboot/init_reboot_innerkits.c",
     "socket/init_socket.c",
-    "begetctl_utils/begetctl_utils.c",
   ]
   sources += fs_manager_sources
 

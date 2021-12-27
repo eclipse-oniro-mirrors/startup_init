@@ -15,7 +15,6 @@
 
 #include <cinttypes>
 #include <sys/mount.h>
-#include "dynamic_service.h"
 #include "fs_manager/fs_manager.h"
 #include "fs_manager/fs_manager_log.h"
 #include "init_log.h"
@@ -33,25 +32,6 @@ public:
     void SetUp() {};
     void TearDown() {};
 };
-
-HWTEST_F(InnerkitsUnitTest, TestDynamicService, TestSize.Level1)
-{
-    const char *name = "updater_sa";
-    int32_t ret = StopDynamicProcess(name);
-    EXPECT_EQ(ret, 0);
-    ret = StartDynamicProcess(name);
-    EXPECT_EQ(ret, 0);
-    name = "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
-    ret = StopDynamicProcess(name);
-    EXPECT_EQ(ret, -1);
-    ret = StartDynamicProcess(name);
-    EXPECT_EQ(ret, -1);
-    name = nullptr;
-    ret = StopDynamicProcess(name);
-    EXPECT_EQ(ret, -1);
-    ret = StartDynamicProcess(name);
-    EXPECT_EQ(ret, -1);
-}
 
 HWTEST_F(InnerkitsUnitTest, ReadFstabFromFile_unitest, TestSize.Level1)
 {
