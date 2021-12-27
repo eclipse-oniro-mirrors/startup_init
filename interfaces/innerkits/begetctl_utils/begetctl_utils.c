@@ -61,7 +61,6 @@ static int StartDynamicProcess(const char *name, const char *extArgv[], int extA
                 return -1;
             }
         }
-        HILOG_INFO(LOG_CORE,"nameValue is %{public}s", nameValue);
         if (SystemSetParameter("ohos.ctl.start", nameValue) != 0) {
             HILOG_ERROR(LOG_CORE, "Set param for %{public}s failed.\n", nameValue);
             free(nameValue);
