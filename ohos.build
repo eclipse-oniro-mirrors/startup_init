@@ -8,22 +8,29 @@
         "//base/startup/init_lite/watchdog:watchdog",
         "//base/startup/init_lite/services/begetctl:begetctl",
         "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-        "//base/startup/init_lite/interfaces/innerkits/file:libfile",
-        "//base/startup/init_lite/interfaces/innerkits/socket:libsocket"
+        "//base/startup/init_lite/interfaces/innerkits:libbegetctl_watcher"
       ],
       "inner_kits": [{
         "header": {
             "header_files": [
               "init_socket.h",
-              "dynamic_service.h",
               "init_file.h",
               "fs_manager/fs_manager_log.h",
               "fs_manager/fs_manager.h",
-              "init_reboot.h"
+              "init_reboot.h",
+              "begetctl_utils.h"
             ],
             "header_base": "//base/startup/init_lite/interfaces/innerkits/include/"
           },
           "name": "//base/startup/init_lite/interfaces/innerkits:libbegetutil"
+        }, {
+        "header": {
+            "header_files": [
+              "begetctl_watcher.h"
+            ],
+            "header_base": "//base/startup/init_lite/interfaces/innerkits/include/"
+          },
+          "name": "//base/startup/init_lite/interfaces/innerkits:libbegetctl_watcher"
         }
       ],
       "test_list": [

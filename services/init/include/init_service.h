@@ -83,6 +83,7 @@ typedef struct {
     int importance;
     Perms servPerm;
     ServiceArgs pathArgs;
+    ServiceArgs extraArgs;
     ServiceArgs writePidArgs;
     CmdLines *restartArg;
     ServiceSocket *socketCfg;
@@ -98,7 +99,7 @@ void NotifyServiceChange(const char *serviceName, const char *change);
 int IsForbidden(const char *fieldStr);
 int SetImportantValue(Service *curServ, const char *attrName, int value, int flag);
 int GetServiceCaps(const cJSON *curArrItem, Service *curServ);
-int ServiceExec(const Service *service);
+int ServiceExec(Service *service);
 
 #ifdef __cplusplus
 #if __cplusplus
