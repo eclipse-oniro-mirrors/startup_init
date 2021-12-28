@@ -20,7 +20,7 @@
               "fs_manager/fs_manager_log.h",
               "fs_manager/fs_manager.h",
               "init_reboot.h",
-              "begetctl_utils.h"
+              "service_control.h"
             ],
             "header_base": "//base/startup/init_lite/interfaces/innerkits/include/"
           },
@@ -28,11 +28,11 @@
         }, {
         "header": {
             "header_files": [
-              "begetctl_watcher.h"
+              "service_watcher.h"
             ],
             "header_base": "//base/startup/init_lite/interfaces/innerkits/include/"
           },
-          "name": "//base/startup/init_lite/interfaces/innerkits:libbegetctl_watcher"
+          "name": "//base/startup/init_lite/interfaces/innerkits:libservice_watcher"
         }
       ],
       "test_list": [

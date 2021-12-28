@@ -13,7 +13,7 @@
 * limitations under the License.
 */
 
-#include "begetctl_utils.h"
+#include "service_control.h"
 
 #include <errno.h>
 #include <stdio.h>

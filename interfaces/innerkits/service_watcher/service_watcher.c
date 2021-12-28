@@ -12,7 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include "begetctl_watcher.h"
+#include "service_watcher.h"
 
 #include <errno.h>
 #include <stdio.h>
