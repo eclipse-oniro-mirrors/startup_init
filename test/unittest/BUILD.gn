@@ -33,7 +33,6 @@ config("utest_config") {
 ohos_unittest("init_ut") {
   module_out_path = "startup/init"
   sources = [
-    "//base/startup/init_lite/interfaces/innerkits/dynamic_service/dynamic_service.c",
     "//base/startup/init_lite/interfaces/innerkits/file/init_file.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fs_manager_log.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab.c",

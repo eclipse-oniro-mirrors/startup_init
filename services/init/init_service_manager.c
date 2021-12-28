@@ -674,6 +674,7 @@ void StartServiceByName(const char *servName, bool checkDynamic)
 
     if (checkDynamic && (service->attribute & SERVICE_ATTR_DYNAMIC)) {
         INIT_LOGI("%s is dynamic service.", servName);
+        NotifyServiceChange(servName, "stopped");
         return;
     }
     if (ServiceStart(service) != SERVICE_SUCCESS) {
@@ -720,6 +721,25 @@ Service *GetServiceByPid(pid_t pid)
     return NULL;
 }
 
+static int SetServiceExtraArgs(Service *service, const char *fullServName)
+{
+    INIT_ERROR_CHECK(service != NULL && fullServName != NULL, return -1, "Failed get parameters");
+    int returnCount = 0;
+    char *tmpServName = strdup(fullServName);
+    char **extArgv = SplitStringExt(tmpServName, "|", &returnCount, MAX_PATH_ARGS_CNT);
+    free(tmpServName);
+    INIT_ERROR_CHECK(extArgv != NULL && returnCount > 0, return -1, "Split servName: %s failed", fullServName);
+    service->extraArgs.count = returnCount - 1;
+    service->extraArgs.argv = (char **)calloc(service->extraArgs.count, sizeof(char *));
+    INIT_ERROR_CHECK(service->extraArgs.argv != NULL, FreeStringVector(extArgv, returnCount); return -1,
+        "Failed calloc err=%d", errno);
+    for (int i = 0; i < service->extraArgs.count; i++) {
+        service->extraArgs.argv[i] = strdup(extArgv[i + 1]);
+    }
+    FreeStringVector(extArgv, returnCount);
+    return 0;
+}
+
 Service *GetServiceByName(const char *servName)
 {
     INIT_ERROR_CHECK(servName != NULL, return NULL, "Failed get servName");
@@ -727,7 +747,12 @@ Service *GetServiceByName(const char *servName)
     while (node != &g_serviceSpace.services) {
         Service *service = ListEntry(node, Service, node);
         if (service != NULL) {
-            INIT_CHECK_RETURN_VALUE(strcmp(service->name, servName) != 0, service);
+            if (strcmp(service->name, servName) == 0) {
+                return service;
+            } else if (strncmp(service->name, servName, strlen(service->name)) == 0) {
+                SetServiceExtraArgs(service, servName);
+                return service;
+            }
         }
         node = node->next;
     }

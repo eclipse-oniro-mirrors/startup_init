@@ -29,6 +29,7 @@ ohos_shared_library("libbegetutil") {
   sources = [
     "file/init_file.c",
     "reboot/init_reboot_innerkits.c",
+    "service_control/service_control.c",
     "socket/init_socket.c",
   ]
   sources += fs_manager_sources
@@ -39,7 +40,6 @@ ohos_shared_library("libbegetutil") {
     "//third_party/bounds_checking_function/include",
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/include/param",
-    "//base/startup/syspara_lite/hals/parameter/include",
   ]
   deps = [
     "//base/startup/init_lite/services/log:init_log",
@@ -49,8 +49,32 @@ ohos_shared_library("libbegetutil") {
     "//third_party/openssl:libcrypto_static",
     "//utils/native/base:utils",
   ]
-
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   public_configs = [ ":exported_header_files" ]
+  part_name = "init"
+  install_images = [
+    "system",
+    "updater",
+  ]
+}
+
+# watcher lib must separate compilation avoid interdependence.
+ohos_shared_library("libservice_watcher") {
+  sources = [ "service_watcher/service_watcher.c" ]
+
+  include_dirs = [
+    "//base/startup/init_lite/services/include",
+    "//base/startup/init_lite/services/include/param",
+    "//third_party/bounds_checking_function/include",
+  ]
+
+  deps = [
+    "//base/startup/init_lite/services/param/watcher:param_watcheragent",
+    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//third_party/bounds_checking_function:libsec_shared",
+  ]
+  public_configs = [ ":exported_header_files" ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   part_name = "init"
   install_images = [
     "system",

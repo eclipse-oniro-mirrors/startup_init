@@ -13,24 +13,30 @@
  * limitations under the License.
  */
 
-#include "StartDynamicProcess_fuzzer.h"
-#include "dynamic_service.h"
+#ifndef BEGET_UTILS_API_H
+#define BEGET_UTILS_API_H
 
-namespace OHOS {
-    bool FuzzStartDynamicProcess(const uint8_t* data, size_t size)
-    {
-        bool result = false;
-        if (!StartDynamicProcess(reinterpret_cast<const char*>(data))) {
-            result = true;
-        }
-        return result;
-    }
-}
+#include <inttypes.h>
 
-/* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
-{
-    /* Run your code on data */
-    OHOS::FuzzStartDynamicProcess(data, size);
-    return 0;
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+
+enum ServiceAction {
+    START = 0,
+    STOP = 1,
+    RESTART = 2,
+};
+
+int ServiceControlWithExtra(const char *serviceName, int action, const char *extArgv[], int extArgc);
+int ServiceControl(const char *serviceName, int action);
+int ServiceWaitForStatus(const char *serviceName, const char *status, int waitTimeout);
+
+#ifdef __cplusplus
+#if __cplusplus
 }
+#endif
+#endif
+#endif

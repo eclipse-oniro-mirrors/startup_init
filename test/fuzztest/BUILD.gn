@@ -147,48 +147,6 @@ ohos_fuzztest("ReadFileInDirFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("StartDynamicProcessFuzzTest") {
-  module_out_path = module_output_path
-
-  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
-  deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
-  ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-
-  cflags = [
-    "-g",
-    "-O0",
-    "-Wno-unused-variable",
-    "-fno-omit-frame-pointer",
-  ]
-  sources = [ "StartDynamicProcess_fuzzer/StartDynamicProcess_fuzzer.cpp" ]
-
-  defines = [ "STARTUP_INIT_TEST" ]
-}
-
-ohos_fuzztest("StopDynamicProcessFuzzTest") {
-  module_out_path = module_output_path
-
-  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
-  deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
-  ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-
-  cflags = [
-    "-g",
-    "-O0",
-    "-Wno-unused-variable",
-    "-fno-omit-frame-pointer",
-  ]
-  sources = [ "StopDynamicProcess_fuzzer/StopDynamicProcess_fuzzer.cpp" ]
-
-  defines = [ "STARTUP_INIT_TEST" ]
-}
-
 ohos_fuzztest("SystemDumpParametersFuzzTest") {
   module_out_path = module_output_path
 

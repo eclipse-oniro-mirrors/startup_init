@@ -13,7 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_STOPDYNAMICPROCESS_FUZZER_H
-#define TEST_FUZZTEST_STOPDYNAMICPROCESS_FUZZER_H
-#define FUZZ_PROJECT_NAME "StopDynamicProcess_fuzzer"
+#ifndef SERVICE_WATCH_API_H
+#define SERVICE_WATCH_API_H
+
+#include "sys_param.h"
+
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+typedef ParameterChangePtr ServiceStatusChangePtr;
+int ServiceWatchForStatus(const char *serviceName, void *context, ServiceStatusChangePtr changeCallback);
+
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
 #endif
