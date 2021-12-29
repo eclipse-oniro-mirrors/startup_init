@@ -147,6 +147,48 @@ ohos_fuzztest("ReadFileInDirFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("ServiceControlStartFuzzTest") {
+  module_out_path = module_output_path
+
+  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+  deps = [
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+    "//base/startup/init_lite/services/param:param_client",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ServiceControlStart_fuzzer/ServiceControlStart_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ServiceControlStopFuzzTest") {
+  module_out_path = module_output_path
+
+  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+  deps = [
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+    "//base/startup/init_lite/services/param:param_client",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ServiceControlStop_fuzzer/ServiceControlStop_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ohos_fuzztest("SystemDumpParametersFuzzTest") {
   module_out_path = module_output_path
 

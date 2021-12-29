@@ -57,7 +57,7 @@ int SetImportantValue(Service *service, const char *attrName, int value, int fla
     return SERVICE_SUCCESS;
 }
 
-int ServiceExec(Service *service)
+int ServiceExec(const Service *service)
 {
     INIT_ERROR_CHECK(service != NULL && service->pathArgs.count > 0,
         return SERVICE_FAILURE, "Exec service failed! null ptr.");
@@ -70,25 +70,8 @@ int ServiceExec(Service *service)
     INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
     // L2 Can not be reset env
     if (service->extraArgs.argv != NULL && service->extraArgs.count > 0) {
-        char **argv = (char **)calloc(service->pathArgs.count + service->extraArgs.count, sizeof(char *));
-        INIT_ERROR_CHECK(argv != NULL, FreeStringVector(service->extraArgs.argv, service->extraArgs.count);
-            return SERVICE_FAILURE, "Failed calloc argv");
-        int tArgc = service->pathArgs.count + service->extraArgs.count;
-        int argc = 0;
-        for (argc = 0; argc < service->pathArgs.count - 1; argc++) {
-            argv[argc] = strdup(service->pathArgs.argv[argc]);
-        }
-        int eArgc = 0;
-        for (eArgc = 0; eArgc < service->extraArgs.count; eArgc++) {
-            argv[argc + eArgc] = strdup(service->extraArgs.argv[eArgc]);
-        }
-        argv[tArgc] = NULL;
-        INIT_CHECK_ONLY_ELOG(execv(argv[0], argv) == 0,
+        INIT_CHECK_ONLY_ELOG(execv(service->extraArgs.argv[0], service->extraArgs.argv) == 0,
             "service %s execve failed! err %d.", service->name, errno);
-        FreeStringVector(argv, tArgc);
-        FreeStringVector(service->extraArgs.argv, service->extraArgs.count);
-        service->extraArgs.argv = NULL;
-        service->extraArgs.count = 0;
     } else {
         INIT_CHECK_ONLY_ELOG(execv(service->pathArgs.argv[0], service->pathArgs.argv) == 0,
             "service %s execve failed! err %d.", service->name, errno);
