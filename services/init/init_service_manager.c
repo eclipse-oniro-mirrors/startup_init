@@ -680,6 +680,9 @@ void StartServiceByName(const char *servName, bool checkDynamic)
     if (ServiceStart(service) != SERVICE_SUCCESS) {
         INIT_LOGE("Service %s start failed!", servName);
     }
+    FreeStringVector(service->extraArgs.argv, service->extraArgs.count);
+    service->extraArgs.argv = NULL;
+    service->extraArgs.count = 0;
     return;
 }
 
@@ -729,13 +732,19 @@ static int SetServiceExtraArgs(Service *service, const char *fullServName)
     char **extArgv = SplitStringExt(tmpServName, "|", &returnCount, MAX_PATH_ARGS_CNT);
     free(tmpServName);
     INIT_ERROR_CHECK(extArgv != NULL && returnCount > 0, return -1, "Split servName: %s failed", fullServName);
-    service->extraArgs.count = returnCount - 1;
+    service->extraArgs.count = service->pathArgs.count + returnCount - 1;
     service->extraArgs.argv = (char **)calloc(service->extraArgs.count, sizeof(char *));
     INIT_ERROR_CHECK(service->extraArgs.argv != NULL, FreeStringVector(extArgv, returnCount); return -1,
         "Failed calloc err=%d", errno);
-    for (int i = 0; i < service->extraArgs.count; i++) {
-        service->extraArgs.argv[i] = strdup(extArgv[i + 1]);
+    int argc;
+    for (argc = 0; argc < (service->pathArgs.count - 1); argc++) {
+        service->extraArgs.argv[argc] = strdup(service->pathArgs.argv[argc]);
     }
+    int extArgc;
+    for (extArgc = 0; extArgc < (returnCount - 1); extArgc++) {
+        service->extraArgs.argv[extArgc + argc] = strdup(extArgv[extArgc + 1]);
+    }
+    service->extraArgs.argv[service->extraArgs.count] = NULL;
     FreeStringVector(extArgv, returnCount);
     return 0;
 }
