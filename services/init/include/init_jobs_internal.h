@@ -42,6 +42,7 @@ void DumpAllJobs(void);
 #define INIT_CONFIGURATION_FILE "/etc/init.without_two_stages.cfg"
 #endif
 #define OTHER_CFG_PATH "/system/etc/init"
+#define OTHER_CHARGE_PATH "/system/etc/charge"
 #define MAX_PATH_ARGS_CNT 20
 
 void ReadConfig(void);
