@@ -680,6 +680,7 @@ void StartServiceByName(const char *servName, bool checkDynamic)
     if (ServiceStart(service) != SERVICE_SUCCESS) {
         INIT_LOGE("Service %s start failed!", servName);
     }
+    // After starting, clear the extra parameters.
     FreeStringVector(service->extraArgs.argv, service->extraArgs.count);
     service->extraArgs.argv = NULL;
     service->extraArgs.count = 0;
