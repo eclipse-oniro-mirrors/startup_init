@@ -35,6 +35,28 @@ service_ueventd_deps = [
 
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "linux") {
+    service_ueventd_sources = [
+      "//base/startup/init_lite/ueventd/ueventd.c",
+      "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
+      "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
+      "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
+      "//base/startup/init_lite/ueventd/ueventd_socket.c",
+    ]
+
+    service_ueventd_include = [
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/utils",
+      "//base/startup/init_lite/ueventd/include",
+    ]
+
+    service_ueventd_deps = [
+      "//base/startup/init_lite/services/log:init_log",
+      "//base/startup/init_lite/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
+
     executable("ueventd_linux") {
       sources = service_ueventd_sources
       sources += [
@@ -67,7 +89,27 @@ if (defined(ohos_lite)) {
   }
 } else {
   import("//build/ohos.gni")
+  service_ueventd_sources = [
+    "//base/startup/init_lite/ueventd/ueventd.c",
+    "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
+    "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
+    "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
+    "//base/startup/init_lite/ueventd/ueventd_socket.c",
+  ]
 
+  service_ueventd_include = [
+    "//third_party/bounds_checking_function/include",
+    "//base/startup/init_lite/services/log",
+    "//base/startup/init_lite/services/include",
+    "//base/startup/init_lite/services/utils",
+    "//base/startup/init_lite/ueventd/include",
+  ]
+
+  service_ueventd_deps = [
+    "//base/startup/init_lite/services/log:init_log",
+    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
   group("startup_ueventd") {
     deps = [
       "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
