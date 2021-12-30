@@ -46,7 +46,6 @@ ohos_shared_library("libbegetutil") {
     "//base/startup/init_lite/services/param:param_client",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/openssl:libcrypto_static",
     "//utils/native/base:utils",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
