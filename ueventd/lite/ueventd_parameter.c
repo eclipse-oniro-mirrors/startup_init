@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-// lite release not support set parameter and ramdisk image not need to set device node parameter.
+// lite release not support set parameter.
 int SetUeventDeviceParameter(const char *devNode, const char *paramValue)
 {
     (void)(devNode);
