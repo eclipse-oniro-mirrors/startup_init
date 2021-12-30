@@ -38,7 +38,7 @@ int UeventdSocketInit(void)
     int buffSize = UEVENT_SOCKET_BUFF_SIZE;
     int on = 1;
 
-    if (memset_s(&addr, sizeof(addr), 0, sizeof(addr) != EOK)) {
+    if (memset_s(&addr, sizeof(addr), 0, sizeof(addr)) != EOK) {
         INIT_LOGE("Faild to clear socket address");
         return -1;
     }
