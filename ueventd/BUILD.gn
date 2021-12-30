@@ -12,7 +12,6 @@
 # limitations under the License.
 
 service_ueventd_sources = [
-  "//base/startup/init_lite/services/utils/list.c",
   "//base/startup/init_lite/ueventd/ueventd.c",
   "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
   "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
