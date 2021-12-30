@@ -26,7 +26,9 @@
 #include "init_utils.h"
 #include "list.h"
 #include "ueventd.h"
+#ifndef __RAMDISK__
 #include "ueventd_parameter.h"
+#endif
 #include "ueventd_read_cfg.h"
 #include "ueventd_utils.h"
 #include "securec.h"
@@ -304,17 +306,21 @@ static void HandleDeviceNode(const struct Uevent *uevent, const char *deviceNode
         if (CreateDeviceNode(uevent, deviceNode, symLinks, isBlock) < 0) {
             INIT_LOGE("Create device \" %s \" failed", deviceNode);
         } else {
+#ifndef __RAMDISK__
             if (SetUeventDeviceParameter(deviceNode, "added") != 0) {
                 INIT_LOGE("Set device parameter added failed");
             }
+#endif
         }
     } else if (action == ACTION_REMOVE) {
         if (RemoveDeviceNode(deviceNode, symLinks) < 0) {
             INIT_LOGE("Remove device \" %s \" failed", deviceNode);
         } else {
+#ifndef __RAMDISK__
             if (SetUeventDeviceParameter(deviceNode, "removed") != 0) {
                 INIT_LOGE("Set device parameter removed failed");
             }
+#endif
         }
     } else if (action == ACTION_CHANGE) {
         INIT_LOGI("Device %s changed", uevent->syspath);

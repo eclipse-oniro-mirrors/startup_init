@@ -25,7 +25,7 @@ service_ueventd_include = [
   "//base/startup/init_lite/services/log",
   "//base/startup/init_lite/services/include",
   "//base/startup/init_lite/services/utils",
-  "//base/startup/init_lite/ueventd/include",   
+  "//base/startup/init_lite/ueventd/include",
 ]
 
 service_ueventd_deps = [
@@ -39,8 +39,8 @@ if (defined(ohos_lite)) {
     executable("ueventd_linux") {
       sources = service_ueventd_sources
       sources += [
-        "//base/startup/init_lite/ueventd/ueventd_main.c",
         "//base/startup/init_lite/ueventd/lite/ueventd_parameter.c",
+        "//base/startup/init_lite/ueventd/ueventd_main.c",
       ]
 
       defines = [ "__MUSL__" ]
@@ -68,7 +68,7 @@ if (defined(ohos_lite)) {
   }
 } else {
   import("//build/ohos.gni")
-  
+
   group("startup_ueventd") {
     deps = [
       "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
@@ -79,16 +79,16 @@ if (defined(ohos_lite)) {
 
   ohos_static_library("libueventd_ramdisk_static") {
     sources = service_ueventd_sources
-    sources += [ "//base/startup/init_lite/ueventd/lite/ueventd_parameter.c" ]
     include_dirs = service_ueventd_include
     deps = service_ueventd_deps
+    defines = [ "__RAMDISK__" ]
   }
 
   ohos_executable("ueventd") {
     sources = service_ueventd_sources
     sources += [
-      "//base/startup/init_lite/ueventd/ueventd_main.c",
       "//base/startup/init_lite/ueventd/standard/ueventd_parameter.c",
+      "//base/startup/init_lite/ueventd/ueventd_main.c",
     ]
     include_dirs = service_ueventd_include
     include_dirs += [ "//base/startup/init_lite/services/include/param" ]
