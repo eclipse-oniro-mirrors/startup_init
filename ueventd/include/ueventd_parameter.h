@@ -13,4 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef BASE_STARTUP_INITLITE_UEVENTD_PARAMETER_H
+#define BASE_STARTUP_INITLITE_UEVENTD_PARAMETER_H
+
 int SetUeventDeviceParameter(const char *devNode, const char *paramValue);
+
+#endif
