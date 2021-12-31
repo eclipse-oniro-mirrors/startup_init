@@ -104,7 +104,6 @@ ohos_shared_library("param_client") {
     "//base/startup/init_lite/services/log:agent_log",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   install_images = [
     "system",
     "updater",
