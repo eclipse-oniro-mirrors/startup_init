@@ -44,6 +44,9 @@ void MountBasicFs(void)
     if (mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
         INIT_LOGE("Mount tmpfs failed. %s", strerror(errno));
     }
+    if (mount("tmpfs", "/mnt", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
+        INIT_LOGE("Mount tmpfs failed. %s", strerror(errno));
+    }
     if (mkdir("/dev/pts", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
         INIT_LOGE("mkdir /dev/pts failed. %s", strerror(errno));
     }
