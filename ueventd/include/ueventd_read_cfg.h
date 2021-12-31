@@ -29,6 +29,7 @@ struct DeviceUdevConf {
     mode_t mode;
     uid_t uid;
     gid_t gid;
+    const char *parameter;
     struct ListNode list;
 };
 
@@ -53,6 +54,7 @@ void ParseUeventdConfigFile(const char *file);
 void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_t *mode);
 void ChangeSysAttributePermissions(const char *sysPath);
 int ParseUeventConfig(char *buffer);
+struct DeviceUdevConf *GetDeviceUdevConfByDevNode(const char *devNode);
 #ifdef __cplusplus
 }
 #endif

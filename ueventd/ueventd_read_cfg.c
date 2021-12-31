@@ -44,6 +44,7 @@
 #define DEVICE_CONFIG_MODE_NUM 1
 #define DEVICE_CONFIG_UID_NUM 2
 #define DEVICE_CONFIG_GID_NUM 3
+#define DEVICE_CONFIG_PARAM_NUM 4
 
 typedef enum SECTION {
     SECTION_INVALID = -1,
@@ -78,12 +79,12 @@ static int ParseDeviceConfig(char *p)
     INIT_LOGD("Parse device config info: %s", p);
     char **items = NULL;
     int count = -1;
-    // format: <device node> <mode> <uid> <gid>
-    const int expectedCount = 4;
+    // format: <device node> <mode> <uid> <gid> <parameter>
+    const int expectedCount = 5;
 
     INIT_CHECK_ONLY_ELOG(!INVALIDSTRING(p), "Invalid argument");
     items = SplitStringExt(p, " ", &count, expectedCount);
-    if (count != expectedCount) {
+    if ((count != expectedCount) && (count != expectedCount - 1)) {
         INIT_LOGE("Ignore invalid item: %s", p);
         FreeStringVector(items, count);
         return 0;
@@ -102,6 +103,11 @@ static int ParseDeviceConfig(char *p)
         "Invalid mode in config file for device node %s. use default mode", config->name);
     config->uid = (uid_t)DecodeUid(items[DEVICE_CONFIG_UID_NUM]);
     config->gid = (gid_t)DecodeUid(items[DEVICE_CONFIG_GID_NUM]);
+    if (count == expectedCount) {
+        config->parameter = strdup(items[DEVICE_CONFIG_PARAM_NUM]); // device parameter
+    } else {
+        config->parameter = NULL;
+    }
     ListAddTail(&g_devices, &config->list);
     FreeStringVector(items, count);
     return 0;
@@ -333,6 +339,24 @@ bool IsMatch(const char *target, const char *pattern)
         p++;
     }
     return (*p == '\0') ? true : false;
+}
+
+struct DeviceUdevConf *GetDeviceUdevConfByDevNode(const char *devNode)
+{
+    if (INVALIDSTRING(devNode)) {
+        return NULL;
+    }
+
+    struct ListNode *node = NULL;
+    if (!ListEmpty(g_devices)) {
+        ForEachListEntry(&g_devices, node) {
+            struct DeviceUdevConf *config = ListEntry(node, struct DeviceUdevConf, list);
+            if (IsMatch(devNode, config->name)) {
+                return config;
+            }
+        }
+    }
+    return NULL;
 }
 
 void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_t *mode)
