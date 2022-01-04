@@ -253,12 +253,15 @@ static bool CalculateCrashTime(Service *service, int crashTimeLimit, int crashCo
     if (service->crashCnt == 0) {
         service->firstCrashTime = curTime;
         ++service->crashCnt;
+        if (service->crashCnt == crashCountLimit) {
+            return false;
+        }
     } else if (difftime(curTime, service->firstCrashTime) > crashTimeLimit) {
         service->firstCrashTime = curTime;
         service->crashCnt = 1;
     } else {
         ++service->crashCnt;
-        if (service->crashCnt > crashCountLimit) {
+        if (service->crashCnt >= crashCountLimit) {
             return false;
         }
     }
