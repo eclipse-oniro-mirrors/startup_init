@@ -166,7 +166,7 @@ int ServiceControlWithExtra(const char *serviceName, int action, const char *ext
 
 int ServiceControl(const char *serviceName, int action)
 {
-    if (serviceName == 0) {
+    if (serviceName == NULL) {
         HILOG_ERROR(LOG_CORE, "Service getctl failed, service is null.\n");
         return -1;
     }

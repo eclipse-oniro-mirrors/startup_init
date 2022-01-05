@@ -175,8 +175,16 @@ static char *FindPlatformDeviceName(char *path)
 
 static void BuildBootDeviceSymbolLink(char **links, int linkNum, const char *partitionName)
 {
+    if (links == NULL) {
+        INIT_LOGE("Function parameter error.");
+        return;
+    }
     if (linkNum > BLOCKDEVICE_LINKS - 1) {
-        INIT_LOGW("Too many links, ignore");
+        INIT_LOGW("Too many links, ignore.");
+        return;
+    }
+    if (partitionName == NULL) {
+        INIT_LOGW("Partition name is null, skip creating links");
         return;
     }
     links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
