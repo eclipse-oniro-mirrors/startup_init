@@ -35,6 +35,7 @@
 #include "ueventd_socket.h"
 #ifdef WITH_SELINUX
 #include <policycoreutils.h>
+#include <selinux/selinux.h>
 #endif // WITH_SELINUX
 
 void SystemInit(void)
@@ -164,16 +165,16 @@ void SystemLoadSelinux(void)
     } else {
         INIT_LOGI("main, load_policy success.");
     }
-    if (restorecon() < 0) {
-        INIT_LOGE("main, restorecon failed.");
-    } else {
-        INIT_LOGI("main, restorecon success.");
-    }
+
+    setcon("u:r:init:s0");
 #endif // WITH_SELINUX
 }
 
 void SystemConfig(void)
 {
+    // load SELinux context and policy
+    SystemLoadSelinux();
+
     InitParamService();
     // parse parameters
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
@@ -193,9 +194,6 @@ void SystemConfig(void)
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
-
-    // load SELinux context and policy
-    SystemLoadSelinux();
 }
 
 void SystemRun(void)

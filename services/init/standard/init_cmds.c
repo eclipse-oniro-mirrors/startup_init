@@ -38,6 +38,9 @@
 #include "init_service_manager.h"
 #include "init_utils.h"
 #include "securec.h"
+#ifdef WITH_SELINUX
+#include <policycoreutils.h>
+#endif
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
@@ -266,6 +269,16 @@ static void DoUmountFstabFile(const struct CmdArgs *ctx)
     }
 }
 
+static void DoRestorecon(const struct CmdArgs *ctx)
+{
+#ifdef WITH_SELINUX
+    INIT_LOGI("start restorecon ......\n");
+    restorecon();
+    INIT_LOGI("finish restorecon ......\n");
+#endif
+    return;
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "exec ", 1, 10, DoExec },
     { "mknode ", 1, 5, DoMakeNode },
@@ -279,6 +292,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "ifup ", 1, 1, DoIfup },
     { "mount_fstab ", 1, 1, DoMountFstabFile },
     { "umount_fstab ", 1, 1, DoUmountFstabFile },
+    { "restorecon ", 0, 0, DoRestorecon },
 };
 
 const struct CmdTable *GetCmdTable(int *number)
