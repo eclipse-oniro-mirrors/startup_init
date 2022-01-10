@@ -36,6 +36,7 @@ extern "C" {
 
 #define FS_MANAGER_BUFFER_SIZE 512
 #define BLOCK_SIZE_BUFFER (64)
+#define RESIZE_BUFFER_SIZE 1024
 
 bool IsSupportedFilesystem(const char *fsType)
 {
@@ -153,6 +154,97 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
     return status;
 }
 
+static int DoResizeF2fs(const char* device, const unsigned long long size)
+{
+    char *file = "/system/bin/resize.f2fs";
+    if (access(file, F_OK) != 0) {
+        INIT_LOGE("resize.f2fs is not exists.");
+        return -1;
+    }
+
+    int ret = 0;
+    if (size <= 0) {
+        char *cmd[] = {
+            file, "-s", (char *)device, NULL
+        };
+        int argc = ARRAY_LENGTH(cmd);
+        char **argv = (char **)cmd;
+        ret = ExecCommand(argc, argv);
+    } else {
+        unsigned long long realSize = size * ((unsigned long long)1024 * 1024 / 512);
+        char sizeStr[RESIZE_BUFFER_SIZE] = {0};
+        sprintf_s(sizeStr, RESIZE_BUFFER_SIZE, "%llu", realSize);
+        char *cmd[] = {
+            file, "-s", "-t", sizeStr, (char *)device, NULL
+        };
+        int argc = ARRAY_LENGTH(cmd);
+        char **argv = (char **)cmd;
+        ret = ExecCommand(argc, argv);
+    }
+    return ret;
+}
+
+static int DoFsckF2fs(const char* device)
+{
+    char *file = "/system/bin/fsck.f2fs";
+    if (access(file, F_OK) != 0) {
+        INIT_LOGE("fsck.f2fs is not exists.");
+        return -1;
+    }
+
+    char *cmd[] = {
+        file, "-a", (char *)device, NULL
+    };
+    int argc = ARRAY_LENGTH(cmd);
+    char **argv = (char **)cmd;
+    return(ExecCommand(argc, argv));
+}
+
+static int DoResizeExt(const char* device, const unsigned long long size)
+{
+    char *file = "/system/bin/resize2fs";
+    if (access(file, F_OK) != 0) {
+        INIT_LOGE("resize2fs is not exists.");
+        return -1;
+    }
+
+    int ret = 0;
+    if (size <= 0) {
+        char *cmd[] = {
+            file, "-f", (char *)device, NULL
+        };
+        int argc = ARRAY_LENGTH(cmd);
+        char **argv = (char **)cmd;
+        ret = ExecCommand(argc, argv);
+    } else {
+        char sizeStr[RESIZE_BUFFER_SIZE] = {0};
+        sprintf_s(sizeStr, RESIZE_BUFFER_SIZE, "%lluM", size);
+        char *cmd[] = {
+            file, "-f", (char *)device, sizeStr, NULL
+        };
+        int argc = ARRAY_LENGTH(cmd);
+        char **argv = (char **)cmd;
+        ret = ExecCommand(argc, argv);
+    }
+    return ret;
+}
+
+static int DoFsckExt(const char* device)
+{
+    char *file = "/system/bin/e2fsck";
+    if (access(file, F_OK) != 0) {
+        INIT_LOGE("e2fsck is not exists.");
+        return -1;
+    }
+
+    char *cmd[] = {
+        file, "-y", (char *)device, NULL
+    };
+    int argc = ARRAY_LENGTH(cmd);
+    char **argv = (char **)cmd;
+    return ExecCommand(argc, argv);
+}
+
 static int Mount(const char *source, const char *target, const char *fsType,
     unsigned long flags, const char *data)
 {
@@ -204,6 +296,28 @@ int MountOneItem(FstabItem *item)
     if (FM_MANAGER_WAIT_ENABLED(item->fsManagerFlags)) {
         WaitForFile(item->deviceName, WAIT_MAX_COUNT);
     }
+
+    if (strcmp(item->fsType, "f2fs") == 0 && strcmp(item->mountPoint, "/data") == 0) {
+        int ret = DoResizeF2fs(item->deviceName, 0);
+        if (ret != 0) {
+            INIT_LOGE("Failed to resize.f2fs dir %s , ret = %d", item->deviceName, ret);
+        }
+
+        ret = DoFsckF2fs(item->deviceName);
+        if (ret != 0) {
+            INIT_LOGE("Failed to fsck.f2fs dir %s , ret = %d", item->deviceName, ret);
+        }
+    } else if (strcmp(item->fsType, "ext4") == 0 && strcmp(item->mountPoint, "/data") == 0) {
+        int ret = DoResizeExt(item->deviceName, 0);
+        if (ret != 0) {
+            INIT_LOGE("Failed to resize2fs dir %s , ret = %d", item->deviceName, ret);
+        }
+        ret = DoFsckExt(item->deviceName);
+        if (ret != 0) {
+            INIT_LOGE("Failed to e2fsck dir %s , ret = %d", item->deviceName, ret);
+        }
+    }
+
     int rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
     if (rc != 0) {
         FSMGR_LOGE("Mount %s to %s failed %d", item->deviceName, item->mountPoint, errno);
