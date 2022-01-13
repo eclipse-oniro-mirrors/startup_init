@@ -20,11 +20,12 @@
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "fs_manager/fs_manager.h"
-#include "misc_info.h"
 #include "param_wrapper.h"
 #include "begetctl.h"
 
+constexpr int MAX_LOGO_SIZE = 1024 * 2038;
 constexpr int PARTITION_INFO_POS = 1144;
 constexpr int PARTITION_INFO_MAX_LENGTH = 256;
 constexpr int BLOCK_SZIE_1 = 512;
@@ -159,7 +160,7 @@ static int WriteLogo(int fd, const std::string &logoPath)
         return -1;
     }
 
-    if (st.st_size < 0 || st.st_size > updater::MAX_LOGO_SIZE) {
+    if (st.st_size < 0 || st.st_size > MAX_LOGO_SIZE) {
         std::cout << "Invalid logo file with size \n";
         ClearLogo(fd);
         return -1;
