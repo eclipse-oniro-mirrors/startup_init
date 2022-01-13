@@ -46,10 +46,6 @@
 #ifndef TIOCSCTTY
 #define TIOCSCTTY 0x540E
 #endif
-// 240 seconds, 4 minutes
-static const int DEFAULT_CRASH_TIME = 240;
-// maximum number of crashes within time DEFAULT_CRASH_TIME for one service
-static const int DEFAULT_CRASH_COUNT = 4;
 
 static int SetAllAmbientCapability(void)
 {
@@ -335,8 +331,8 @@ void ServiceReap(Service *service)
             ExecReboot("reboot");
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
-        if (CalculateCrashTime(service, DEFAULT_CRASH_TIME, DEFAULT_CRASH_COUNT) == false) {
-            INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, DEFAULT_CRASH_COUNT);
+        if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
+            INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, service->crashCount);
             return;
         }
     }
