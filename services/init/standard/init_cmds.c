@@ -292,7 +292,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "ifup ", 1, 1, DoIfup },
     { "mount_fstab ", 1, 1, DoMountFstabFile },
     { "umount_fstab ", 1, 1, DoUmountFstabFile },
-    { "restorecon ", 0, 0, DoRestorecon },
+    { "restorecon ", 0, 1, DoRestorecon },
 };
 
 const struct CmdTable *GetCmdTable(int *number)
