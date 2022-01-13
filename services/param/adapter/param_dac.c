@@ -28,29 +28,31 @@ static ParamSecurityLabel g_localSecurityLabel = {};
 static void GetUserIdByName(FILE *fp, uid_t *uid, const char *name, uint32_t nameLen)
 {
     *uid = -1;
-    (void)fseek(fp, 0, SEEK_SET);
+    (void)fp;
     struct passwd *data = NULL;
-    while ((data = fgetpwent(fp)) != NULL) {
+    while ((data = getpwent()) != 0) {
         if ((data->pw_name != NULL) && (strlen(data->pw_name) == nameLen) &&
             (strncmp(data->pw_name, name, nameLen) == 0)) {
             *uid = data->pw_uid;
-            return;
+            break;
         }
     }
+    endpwent();
 }
 
 static void GetGroupIdByName(FILE *fp, gid_t *gid, const char *name, uint32_t nameLen)
 {
     *gid = -1;
-    (void)fseek(fp, 0, SEEK_SET);
+    (void)fp;
     struct group *data = NULL;
-    while ((data = fgetgrent(fp)) != NULL) {
+    while ((data = getgrent()) != NULL) {
         if ((data->gr_name != NULL) && (strlen(data->gr_name) == nameLen) &&
             (strncmp(data->gr_name, name, nameLen) == 0)) {
             *gid = data->gr_gid;
             break;
         }
     }
+    endgrent();
 }
 
 // user:group:r|w
