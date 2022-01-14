@@ -385,6 +385,8 @@ static const char *GetDeviceBasePath(const char *subsystem)
         devPath = "/dev/snd";
     } else if (STRINGEQUAL(subsystem, "functionfs")) {
         devPath = "/dev/functionfs";
+    } else if (STRINGEQUAL(subsystem, "dma_heap")) {
+        devPath = "/dev/dma_heap";
     } else {
         devPath = "/dev";
     }
