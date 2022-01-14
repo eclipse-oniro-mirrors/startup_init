@@ -27,5 +27,6 @@ net_bw_acct:x:3007:
 readproc:x:3009:
 wakelock:x:3010:
 uhid:x:3011:
+access_token:x:3020:
 misc:x:9998:
 app:x:10000:
