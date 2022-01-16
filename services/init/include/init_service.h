@@ -51,7 +51,7 @@ extern "C" {
 
 #define FULL_CAP 0xFFFFFFFF
 // init
-#define DEFAULT_UMASK_INIT 002
+#define DEFAULT_UMASK_INIT 022
 
 #define CAP_NUM 2
 
