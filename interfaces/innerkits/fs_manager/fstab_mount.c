@@ -180,7 +180,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
         char **argv = (char **)cmd;
         ret = ExecCommand(argc, argv);
     }
-    FSMGR_LOGI("resize.f2fs is ending.");
+    BEGET_LOGI("resize.f2fs is ending.");
     return ret;
 }
 
@@ -197,7 +197,7 @@ static int DoFsckF2fs(const char* device)
     };
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
-    FSMGR_LOGI("fsck.f2fs is ending.");
+    BEGET_LOGI("fsck.f2fs is ending.");
     return(ExecCommand(argc, argv));
 }
 
@@ -227,7 +227,7 @@ static int DoResizeExt(const char* device, const unsigned long long size)
         char **argv = (char **)cmd;
         ret = ExecCommand(argc, argv);
     }
-    FSMGR_LOGI("resize2fs is ending.");
+    BEGET_LOGI("resize2fs is ending.");
     return ret;
 }
 
@@ -244,7 +244,7 @@ static int DoFsckExt(const char* device)
     };
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
-    FSMGR_LOGI("e2fsck is ending.");
+    BEGET_LOGI("e2fsck is ending.");
     return ExecCommand(argc, argv);
 }
 
