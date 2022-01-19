@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <sys/un.h>
-#include "init_log.h"
+#include "beget_ext.h"
 #include "securec.h"
 
 #define N_DEC 10
@@ -32,36 +32,36 @@
 
 static int GetControlFromEnv(const char *path, int length)
 {
-    INIT_CHECK_RETURN_VALUE(path != NULL && length > 0, -1);
-    INIT_LOGI("GetControlFromEnv path is %s ", path);
+    BEGET_CHECK_RETURN_VALUE(path != NULL && length > 0, -1);
+    BEGET_LOGI("GetControlFromEnv path is %s ", path);
     const char *val = getenv(path);
-    INIT_ERROR_CHECK(val != NULL, return -1, "GetControlFromEnv val is null %d", errno);
+    BEGET_ERROR_CHECK(val != NULL, return -1, "GetControlFromEnv val is null %d", errno);
     errno = 0;
     int fd = strtol(val, NULL, N_DEC);
-    INIT_CHECK_RETURN_VALUE(errno == 0, -1);
-    INIT_LOGI("GetControlFromEnv fd is %d ", fd);
-    INIT_ERROR_CHECK(fcntl(fd, F_GETFD) >= 0, return -1, "GetControlFromEnv errno %d ", errno);
+    BEGET_CHECK_RETURN_VALUE(errno == 0, -1);
+    BEGET_LOGI("GetControlFromEnv fd is %d ", fd);
+    BEGET_ERROR_CHECK(fcntl(fd, F_GETFD) >= 0, return -1, "GetControlFromEnv errno %d ", errno);
     return fd;
 }
 
 int GetControlSocket(const char *name)
 {
-    INIT_CHECK_RETURN_VALUE(name != NULL, -1);
+    BEGET_CHECK_RETURN_VALUE(name != NULL, -1);
     char path[MAX_SOCKET_ENV_PREFIX_LEN] = {0};
-    INIT_CHECK_RETURN_VALUE(snprintf_s(path, sizeof(path), sizeof(path) - 1, OHOS_SOCKET_ENV_PREFIX"%s",
+    BEGET_CHECK_RETURN_VALUE(snprintf_s(path, sizeof(path), sizeof(path) - 1, OHOS_SOCKET_ENV_PREFIX"%s",
         name) != -1, -1);
-    INIT_LOGI("GetControlSocket path is %s ", path);
+    BEGET_LOGI("GetControlSocket path is %s ", path);
     int fd = GetControlFromEnv(path, MAX_SOCKET_ENV_PREFIX_LEN);
-    INIT_ERROR_CHECK(fd >= 0, return -1, "GetControlFromEnv fail ");
+    BEGET_ERROR_CHECK(fd >= 0, return -1, "GetControlFromEnv fail ");
     struct sockaddr_un addr;
     socklen_t addrlen = sizeof(addr);
     int ret = getsockname(fd, (struct sockaddr*)&addr, &addrlen);
-    INIT_ERROR_CHECK(ret >= 0, return -1, "GetControlSocket errno %d ", errno);
+    BEGET_ERROR_CHECK(ret >= 0, return -1, "GetControlSocket errno %d ", errno);
     char sockDir[MAX_SOCKET_DIR_LEN] = {0};
-    INIT_CHECK_RETURN_VALUE(snprintf_s(sockDir, sizeof(sockDir), sizeof(sockDir) - 1, OHOS_SOCKET_DIR"/%s",
+    BEGET_CHECK_RETURN_VALUE(snprintf_s(sockDir, sizeof(sockDir), sizeof(sockDir) - 1, OHOS_SOCKET_DIR"/%s",
         name) != -1, -1);
-    INIT_LOGI("sockDir %s ", sockDir);
-    INIT_LOGI("addr.sun_path %s ", addr.sun_path);
+    BEGET_LOGI("sockDir %s ", sockDir);
+    BEGET_LOGI("addr.sun_path %s ", addr.sun_path);
     if (strncmp(sockDir, addr.sun_path, strlen(sockDir)) == 0) {
         return fd;
     }

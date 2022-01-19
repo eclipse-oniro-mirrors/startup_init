@@ -13,4 +13,5 @@
 
 declare_args() {
   param_feature_watcher = true
+  param_test = false
 }

@@ -41,7 +41,7 @@ static void WaitAtStartup(const char *source)
 {
     unsigned int count = 0;
     struct stat sourceInfo;
-    unsigned int waitTime = 500000;
+    const unsigned int waitTime = 500000;
     do {
         usleep(waitTime);
         count++;

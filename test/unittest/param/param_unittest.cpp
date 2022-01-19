@@ -38,7 +38,7 @@ extern "C" {
 extern void TimerCallbackForSave(ParamTaskPtr timer, void *context);
 }
 
-static ParamTask *g_worker = nullptr;
+static ParamTaskPtr g_worker = nullptr;
 class ParamUnitTest : public ::testing::Test {
 public:
     ParamUnitTest() {}
@@ -229,7 +229,7 @@ public:
     int TestParamTraversal()
     {
         char value[PARAM_BUFFER_SIZE + PARAM_BUFFER_SIZE] = { 0 };
-        TraversalParam (GetParamWorkSpace(),
+        TraversalParam(GetParamWorkSpace(), "",
             [](ParamHandle handle, void *cookie) {
                 ReadParamName(GetParamWorkSpace(), handle, (char *)cookie, PARAM_BUFFER_SIZE);
                 u_int32_t len = PARAM_BUFFER_SIZE;
@@ -299,24 +299,33 @@ public:
         return 0;
     }
 
-    ParamTask *CreateAndGetStreamTask()
+    ParamTaskPtr CreateAndGetStreamTask()
     {
-        LibuvServerTask *server = (LibuvServerTask *)GetParamWorkSpace()->serverTask;
-        if (server == nullptr) {
-            EXPECT_NE(0, 0);
-            return nullptr;
-        }
+        ParamStreamInfo info = {};
+        info.flags = PARAM_TEST_FLAGS;
+        info.server = NULL;
+        info.close = NULL;
+        info.recvMessage = ProcessMessage;
+        info.incomingConnect = NULL;
+        ParamTaskPtr client = NULL;
+        int ret = ParamStreamCreate(&client, GetParamWorkSpace()->serverTask, &info, sizeof(ParamWatcher));
+        PARAM_CHECK(ret == 0, return NULL, "Failed to create client");
 
-        // create stream task
-        server->incomingConnect((ParamTaskPtr)server, 0);
-        ParamWatcher *watcher = GetNextParamWatcher(GetTriggerWorkSpace(), nullptr);
-        return (watcher != nullptr) ? watcher->stream : nullptr;
+        ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
+        PARAM_CHECK(watcher != NULL, return NULL, "Failed to get watcher");
+        ListInit(&watcher->triggerHead);
+        watcher->stream = client;
+        GetParamWorkSpace()->watcherTask = client;
+        return GetParamWorkSpace()->watcherTask;
     }
 
     int TestServiceProcessMessage(const char *name, const char *value, int userLabel)
     {
         if (g_worker == nullptr) {
             g_worker = CreateAndGetStreamTask();
+        }
+        if (g_worker == nullptr) {
+            return 0;
         }
         uint32_t labelLen = 0;
         ParamSecurityOps *paramSecurityOps = &GetParamWorkSpace()->paramSecurityOps;
@@ -353,6 +362,9 @@ public:
     {
         if (g_worker == nullptr) {
             g_worker = CreateAndGetStreamTask();
+        }
+        if (g_worker == nullptr) {
+            return 0;
         }
         uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + PARAM_ALIGN(strlen(value) + 1);
         ParamMessage *request = (ParamMessage *)(ParamMessage *)CreateParamMessage(type, name, msgSize);
@@ -431,7 +443,7 @@ public:
     int TestCloseTriggerWatch()
     {
         ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(g_worker);
-        ClearWatcherTrigger(watcher);
+        ClearWatchTrigger(watcher, TRIGGER_PARAM_WAIT);
         ParamTaskClose(g_worker);
         g_worker = nullptr;
         SystemWriteParam("init.svc.param_watcher", "stopped");

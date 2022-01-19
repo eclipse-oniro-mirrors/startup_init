@@ -20,7 +20,7 @@ namespace init_param {
 uint32_t WatcherManagerProxy::AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher)
 {
     WATCHER_CHECK(watcher != nullptr, return ERR_INVALID_VALUE, "Invalid param");
-    WATCHER_LOGD("WatcherManagerProxy::AddWatcher %s", keyPrefix.c_str());
+    WATCHER_LOGV("WatcherManagerProxy::AddWatcher %s", keyPrefix.c_str());
     auto remote = Remote();
     WATCHER_CHECK(remote != nullptr, return 0, "Can not get remote");
 
@@ -37,7 +37,7 @@ uint32_t WatcherManagerProxy::AddWatcher(const std::string &keyPrefix, const spt
 }
 int32_t WatcherManagerProxy::DelWatcher(const std::string &keyPrefix, uint32_t watcherId)
 {
-    WATCHER_LOGD("WatcherManagerProxy::DelWatcher %s", keyPrefix.c_str());
+    WATCHER_LOGV("WatcherManagerProxy::DelWatcher %s", keyPrefix.c_str());
     auto remote = Remote();
     WATCHER_CHECK(remote != nullptr, return ERR_FLATTEN_OBJECT, "Can not get remote");
 

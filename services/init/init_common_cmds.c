@@ -33,6 +33,7 @@
 #include "init.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
+#include "init_plugin_manager.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
 #include "securec.h"
@@ -178,20 +179,20 @@ static void DoSleep(const struct CmdArgs *ctx)
 
 static void DoStart(const struct CmdArgs *ctx)
 {
-    INIT_LOGD("DoStart %s", ctx->argv[0]);
+    INIT_LOGV("DoStart %s", ctx->argv[0]);
     StartServiceByName(ctx->argv[0], true);
 }
 
 static void DoStop(const struct CmdArgs *ctx)
 {
-    INIT_LOGD("DoStop %s", ctx->argv[0]);
+    INIT_LOGV("DoStop %s", ctx->argv[0]);
     StopServiceByName(ctx->argv[0]);
     return;
 }
 
 static void DoReset(const struct CmdArgs *ctx)
 {
-    INIT_LOGD("DoReset %s", ctx->argv[0]);
+    INIT_LOGV("DoReset %s", ctx->argv[0]);
     Service *service = GetServiceByName(ctx->argv[0]);
     if (service == NULL) {
         INIT_LOGE("Reset cmd cannot find service %s.", ctx->argv[0]);
@@ -461,6 +462,7 @@ static void DoSetrlimit(const struct CmdArgs *ctx)
     for (unsigned int i = 0; i < ARRAY_LENGTH(resource); ++i) {
         if (strcmp(ctx->argv[0], resource[i]) == 0) {
             rcs = (int)i;
+            break;
         }
     }
     if (rcs == -1) {
@@ -572,7 +574,7 @@ const char *GetMatchCmd(const char *cmdStr, int *index)
             return cmds[i].name;
         }
     }
-    return NULL;
+    return PluginGetCmdIndex(startCmd, index);
 }
 
 const char *GetCmdKey(int index)
@@ -640,7 +642,11 @@ void DoCmdByName(const char *name, const char *cmdContent)
         return;
     }
     const struct CmdTable *cmd = GetCmdByName(name);
-    ExecCmd(cmd, cmdContent);
+    if (cmd != NULL) {
+        ExecCmd(cmd, cmdContent);
+        return;
+    }
+    PluginExecCmdByName(name, cmdContent);
 }
 
 void DoCmdByIndex(int index, const char *cmdContent)
@@ -660,4 +666,5 @@ void DoCmdByIndex(int index, const char *cmdContent)
         ExecCmd(&cmds[index - cmdCnt], cmdContent);
         return;
     }
+    PluginExecCmdByCmdIndex(index, cmdContent);
 }

@@ -219,7 +219,7 @@ void ProcessUevent(int sockFd, char **devices, int num)
     while ((n = ReadUeventMessage(sockFd, ueventBuffer, sizeof(ueventBuffer) - 1)) > 0) {
         ParseUeventMessage(ueventBuffer, n, &uevent);
         if (uevent.syspath == NULL) {
-            INIT_LOGD("Ignore unexpected uevent");
+            INIT_LOGV("Ignore unexpected uevent");
             return;
         }
         if (devices != NULL && num > 0) {

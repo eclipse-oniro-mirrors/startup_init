@@ -26,15 +26,22 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "init_utils.h"
+
 void CheckAndCreateDir(const char *fileName)
 {
     if (fileName == NULL || *fileName == '\0') {
         return;
     }
     char *path = strndup(fileName, strrchr(fileName, '/') - fileName);
-    if (path != NULL && access(path, F_OK) != 0) {
-        mkdir(path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    if (path == NULL) {
+        return;
     }
+    if (access(path, F_OK) == 0) {
+        free(path);
+        return;
+    }
+    MakeDirRecursive(path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     free(path);
 }
 

@@ -31,7 +31,6 @@
 
 #include <linux/module.h>
 #include "fs_manager/fs_manager.h"
-#include "fs_manager/fs_manager_log.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
 #include "init_param.h"
@@ -89,7 +88,7 @@ static void DoIfup(const struct CmdArgs *ctx)
     struct ifreq interface;
     INIT_ERROR_CHECK(strncpy_s(interface.ifr_name, IFNAMSIZ - 1, ctx->argv[0], strlen(ctx->argv[0])) == EOK,
         return, "DoIfup failed to copy interface name");
-    INIT_LOGD("interface name: %s", interface.ifr_name);
+    INIT_LOGV("interface name: %s", interface.ifr_name);
 
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     INIT_ERROR_CHECK(fd >= 0, return, "DoIfup failed to create socket, err = %d", errno);
@@ -114,7 +113,7 @@ static void DoInsmod(const struct CmdArgs *ctx)
         index++;
     }
     INIT_ERROR_CHECK(fileName != NULL, return, "Can not find file name from param %s", ctx->argv[0]);
-    INIT_LOGD("Install mode %s ", fileName);
+    INIT_LOGV("Install mode %s ", fileName);
     char *realPath = GetRealPath(fileName);
     INIT_ERROR_CHECK(realPath != NULL, return, "Can not get real file name from param %s", ctx->argv[0]);
     if (ctx->argc > 1 && ctx->argv[1] != NULL && strcmp(ctx->argv[1], "-f") == 0) { // [-f]
@@ -141,19 +140,19 @@ static void DoInsmod(const struct CmdArgs *ctx)
 
 static void DoSetParam(const struct CmdArgs *ctx)
 {
-    INIT_LOGD("set param name: %s, value %s ", ctx->argv[0], ctx->argv[1]);
+    INIT_LOGV("set param name: %s, value %s ", ctx->argv[0], ctx->argv[1]);
     SystemWriteParam(ctx->argv[0], ctx->argv[1]);
 }
 
 static void DoLoadPersistParams(const struct CmdArgs *ctx)
 {
-    INIT_LOGD("load persist params : %s", ctx->argv[0]);
+    INIT_LOGV("load persist params : %s", ctx->argv[0]);
     LoadPersistParams();
 }
 
 static void DoTriggerCmd(const struct CmdArgs *ctx)
 {
-    INIT_LOGD("DoTrigger :%s", ctx->argv[0]);
+    INIT_LOGV("DoTrigger :%s", ctx->argv[0]);
     DoTriggerExec(ctx->argv[0]);
 }
 
@@ -163,7 +162,7 @@ static void DoLoadDefaultParams(const struct CmdArgs *ctx)
     if (ctx->argc > 1 && strcmp(ctx->argv[1], "onlyadd") == 0) {
         mode = LOAD_PARAM_ONLY_ADD;
     }
-    INIT_LOGD("DoLoadDefaultParams args : %s %d", ctx->argv[0], mode);
+    INIT_LOGV("DoLoadDefaultParams args : %s %d", ctx->argv[0], mode);
     LoadDefaultParams(ctx->argv[0], mode);
 }
 
@@ -253,14 +252,12 @@ static void DoMakeDevice(const struct CmdArgs *ctx)
 static void DoMountFstabFile(const struct CmdArgs *ctx)
 {
     INIT_LOGI("Mount partitions from fstab file \" %s \"", ctx->argv[0]);
-    FsManagerLogInit(LOG_TO_KERNEL, "");
     (void)MountAllWithFstabFile(ctx->argv[0], 0);
 }
 
 static void DoUmountFstabFile(const struct CmdArgs *ctx)
 {
     INIT_LOGI("Umount partitions from fstab file \" %s \"", ctx->argv[0]);
-    FsManagerLogInit(LOG_TO_KERNEL, "");
     int rc = UmountAllWithFstabFile(ctx->argv[0]);
     if (rc < 0) {
         INIT_LOGE("Run command umount_fstab failed");

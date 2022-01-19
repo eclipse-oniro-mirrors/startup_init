@@ -47,6 +47,8 @@ extern "C" {
 #define SERVICE_ATTR_ONDEMAND 0x200     // ondemand, manage socket by init
 
 #define MAX_SERVICE_NAME 32
+#define MAX_APL_NAME 32
+#define MAX_JOB_NAME 128
 #define MAX_WRITEPID_FILES 100
 
 #define FULL_CAP 0xFFFFFFFF
@@ -56,6 +58,22 @@ extern "C" {
 #define CAP_NUM 2
 
 #define SERVICES_ARR_NAME_IN_JSON "services"
+
+#define IsOnDemandService(service) \
+    (((service)->attribute & SERVICE_ATTR_ONDEMAND) == SERVICE_ATTR_ONDEMAND)
+
+typedef enum {
+    START_MODE_CONDITION,
+    START_MODE_BOOT,
+    START_MODE_NARMAL,
+} ServiceStartMode;
+
+typedef enum {
+    END_PRE_FORK,
+    END_AFTER_FORK,
+    END_AFTER_EXEC,
+    END_RECV_READY,
+} ServiceEndMode;
 
 typedef struct {
     uid_t uID;
@@ -70,9 +88,20 @@ typedef struct {
     char **argv;
 } ServiceArgs;
 
+typedef enum {
+    JOB_ON_BOOT,
+    JOB_ON_START,
+    JOB_ON_STOP,
+    JOB_ON_RESTART,
+    JOB_ON_MAX
+} ServiceJobType;
+
 typedef struct {
-    ListNode node;
-    char name[MAX_SERVICE_NAME + 1];
+    char *jobsName[JOB_ON_MAX];
+} ServiceJobs;
+
+typedef struct Service_ {
+    char *name;
 #ifdef WITH_SELINUX
     char secon[MAX_SECON_LEN];
 #endif // WITH_SELINUX
@@ -83,13 +112,20 @@ typedef struct {
     int crashTime;
     unsigned int attribute;
     int importance;
+    int startMode : 4; // startCondition/ startBoot / startNormal
+    int endMode : 4; // preFork/ fork / exec / ready
     Perms servPerm;
+    char apl[MAX_APL_NAME + 1];
+    ServiceArgs capsArgs;
     ServiceArgs pathArgs;
     ServiceArgs extraArgs;
     ServiceArgs writePidArgs;
     CmdLines *restartArg;
     ServiceSocket *socketCfg;
     ServiceFile *fileCfg;
+    int *fds;
+    size_t fdCount;
+    ServiceJobs serviceJobs;
 } Service;
 
 int ServiceStart(Service *service);
@@ -102,6 +138,11 @@ int IsForbidden(const char *fieldStr);
 int SetImportantValue(Service *curServ, const char *attrName, int value, int flag);
 int GetServiceCaps(const cJSON *curArrItem, Service *curServ);
 int ServiceExec(const Service *service);
+void CloseServiceFds(Service *service, bool needFree);
+int UpdaterServiceFds(Service *service, int *fds, size_t fdCount);
+
+int ServiceAddWatcher(ServiceWatcher *watcherHandle, Service *service, int fd);
+void ServiceDelWatcher(ServiceWatcher watcherHandle);
 
 #ifdef __cplusplus
 #if __cplusplus

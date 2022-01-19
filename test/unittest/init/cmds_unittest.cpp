@@ -18,7 +18,6 @@
 #include "init_param.h"
 #include "init_unittest.h"
 #include "init_utils.h"
-#include "param_libuvadp.h"
 #include "trigger_manager.h"
 
 using namespace testing::ext;

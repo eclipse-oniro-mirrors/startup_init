@@ -76,7 +76,7 @@ struct ListNode g_firmwares = {
 
 static int ParseDeviceConfig(char *p)
 {
-    INIT_LOGD("Parse device config info: %s", p);
+    INIT_LOGV("Parse device config info: %s", p);
     char **items = NULL;
     int count = -1;
     // format: <device node> <mode> <uid> <gid> <parameter>
@@ -108,6 +108,7 @@ static int ParseDeviceConfig(char *p)
     } else {
         config->parameter = NULL;
     }
+    ListInit(&config->paramNode);
     ListAddTail(&g_devices, &config->list);
     FreeStringVector(items, count);
     return 0;
@@ -115,7 +116,7 @@ static int ParseDeviceConfig(char *p)
 
 static int ParseSysfsConfig(char *p)
 {
-    INIT_LOGD("Parse sysfs config info: %s", p);
+    INIT_LOGV("Parse sysfs config info: %s", p);
     char **items = NULL;
     int count = -1;
     // format: <syspath> <attribute> <mode> <uid> <gid>
@@ -149,7 +150,7 @@ static int ParseSysfsConfig(char *p)
 
 static int ParseFirmwareConfig(char *p)
 {
-    INIT_LOGD("Parse firmware config info: %s", p);
+    INIT_LOGV("Parse firmware config info: %s", p);
     INIT_CHECK_ONLY_ELOG(!INVALIDSTRING(p), "Invalid argument");
 
     // Sanity checks
@@ -201,7 +202,7 @@ int ParseUeventConfig(char *buffer)
         }
         *right = '\0'; // Replace ']' with '\0';
         section = p;
-        INIT_LOGD("section is [%s]", section);
+        INIT_LOGV("section is [%s]", section);
         if ((type = GetSection(section)) == SECTION_INVALID) {
             INIT_LOGE("Invalid section \" %s \"", section);
             callback = NULL; // reset callback
@@ -223,7 +224,7 @@ static void DoUeventConfigParse(char *buffer, size_t length)
     const int maxItemCount = DEFAULTITEMCOUNT;
 
     items = SplitStringExt(buffer, "\n", &count, maxItemCount);
-    INIT_LOGD("Dump items count = %d", count);
+    INIT_LOGV("Dump items count = %d", count);
     for (int i = 0; i < count; i++) {
         char *p = items[i];
         // Skip lead white space

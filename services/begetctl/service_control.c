@@ -12,90 +12,55 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+#include "service_control.h"
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+
+#include "begetctl.h"
 #include "securec.h"
 #include "sys_param.h"
-#include "begetctl.h"
 
 #define SERVICE_START_NUMBER 2
 #define SERVICE_CONTROL_NUMBER 3
 #define CONTROL_SERVICE_POS 2
 #define SERVICE_CONTROL_MAX_SIZE 50
 
-static void ServiceControlUsage()
+static void ServiceControlUsage(BShellHandle shell, int argc, char **argv)
 {
-    printf("Please input correct params, example:\n");
-    printf("    start_service serviceName\n");
-    printf("    stop_service serviceName\n");
-    printf("    service_control start serviceName\n");
-    printf("    service_control stop serviceName\n");
+    BShellCmdHelp(shell, argc, argv);
     return;
 }
 
-static void ServiceControl(int argc, char** argv)
+static int main_cmd(BShellHandle shell, int argc, char **argv)
 {
-    if (argc != SERVICE_CONTROL_NUMBER) {
-        ServiceControlUsage();
-        return;
-    }
-    char serviceCtl[SERVICE_CONTROL_MAX_SIZE];
-    if (strcmp(argv[1], "start") == 0) {
-        if (strncpy_s(serviceCtl, sizeof(serviceCtl), "ohos.ctl.start", sizeof(serviceCtl) - 1) != EOK) {
-            printf("strncpy_s failed.\n");
-            return;
-        }
-    } else if (strcmp(argv[1], "stop") == 0) {
-        if (strncpy_s(serviceCtl, sizeof(serviceCtl), "ohos.ctl.stop", sizeof(serviceCtl) - 1) != EOK) {
-            printf("strncpy_s failed.\n");
-            return;
-        }
-    } else {
-        ServiceControlUsage();
-        return;
-    }
-    if (SystemSetParameter(serviceCtl, argv[CONTROL_SERVICE_POS]) != 0) {
-        printf("%s service:%s failed.\n", argv[1], argv[CONTROL_SERVICE_POS]);
-        return;
-    }
-    return;
-}
-
-static int main_cmd(int argc, char** argv)
-{
-    if (argc != SERVICE_START_NUMBER && argc != SERVICE_CONTROL_NUMBER) {
-        ServiceControlUsage();
-        return -1;
-    }
-
-    char serviceCtl[SERVICE_CONTROL_MAX_SIZE];
-    if (strcmp(argv[0], "start_service") == 0) {
-        if (strncpy_s(serviceCtl, sizeof(serviceCtl), "ohos.ctl.start", sizeof(serviceCtl) - 1) != EOK) {
-            printf("strncpy_s failed.\n");
-            return -1;
-        }
-    } else if (strcmp(argv[0], "stop_service") == 0) {
-        if (strncpy_s(serviceCtl, sizeof(serviceCtl), "ohos.ctl.stop", sizeof(serviceCtl) - 1) != EOK) {
-            printf("strncpy_s failed.\n");
-            return -1;
-        }
-    } else {
-        ServiceControl(argc, argv);
+    if (argc < SERVICE_START_NUMBER) {
+        ServiceControlUsage(shell, argc, argv);
         return 0;
     }
-
-    if (SystemSetParameter(serviceCtl, argv[1]) != 0) {
-        printf("%s service:%s failed.\n", argv[0], argv[1]);
-        return -1;
+    if (strcmp(argv[0], "start_service") == 0) {
+        ServiceControlWithExtra(argv[1], 0, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
+    } else if (strcmp(argv[0], "stop_service") == 0) {
+        ServiceControlWithExtra(argv[1], 1, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
+    } else if (strcmp(argv[0], "start") == 0) {
+        ServiceControlWithExtra(argv[1], 0, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
+    } else if (strcmp(argv[0], "stop") == 0) {
+        ServiceControlWithExtra(argv[1], 1, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
+    } else {
+        ServiceControlUsage(shell, argc, argv);
     }
     return 0;
 }
 
-MODULE_CONSTRUCTOR()
+MODULE_CONSTRUCTOR(void)
 {
-    (void)BegetCtlCmdAdd("service", main_cmd);
-    (void)BegetCtlCmdAdd("service_control", main_cmd);
-    (void)BegetCtlCmdAdd("start_service", main_cmd);
-    (void)BegetCtlCmdAdd("stop_service", main_cmd);
+    CmdInfo infos[] = {
+        {"service_control", main_cmd, "stop service", "service_control stop servicename", "service_control stop"},
+        {"service_control", main_cmd, "start service", "service_control start servicename", "service_control start"},
+        {"stop_service", main_cmd, "stop service", "stop_service servicename", ""},
+        {"start_service", main_cmd, "start service", "start_service servicename", ""}
+    };
+    for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
+        BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);
+    }
 }

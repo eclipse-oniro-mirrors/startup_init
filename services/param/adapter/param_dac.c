@@ -30,7 +30,7 @@ static void GetUserIdByName(FILE *fp, uid_t *uid, const char *name, uint32_t nam
     *uid = -1;
     (void)fp;
     struct passwd *data = NULL;
-    while ((data = getpwent()) != 0) {
+    while ((data = getpwent()) != NULL) {
         if ((data->pw_name != NULL) && (strlen(data->pw_name) == nameLen) &&
             (strncmp(data->pw_name, name, nameLen) == 0)) {
             *uid = data->pw_uid;
@@ -78,7 +78,7 @@ static int GetParamDacData(FILE *fpForGroup, FILE *fpForUser, ParamDacData *dacD
 static int InitLocalSecurityLabel(ParamSecurityLabel **security, int isInit)
 {
     UNUSED(isInit);
-    PARAM_LOGD("InitLocalSecurityLabel uid:%d gid:%d euid: %d egid: %d ", getuid(), getgid(), geteuid(), getegid());
+    PARAM_LOGV("InitLocalSecurityLabel uid:%d gid:%d euid: %d egid: %d ", getuid(), getgid(), geteuid(), getegid());
     g_localSecurityLabel.cred.pid = getpid();
     g_localSecurityLabel.cred.uid = geteuid();
     g_localSecurityLabel.cred.gid = getegid();
@@ -172,7 +172,7 @@ static int GetParamSecurityLabel(SecurityLabelFunc label, const char *path, void
     if ((stat(path, &st) == 0) && !S_ISDIR(st.st_mode)) {
         return ProcessParamFile(path, &cxt);
     }
-    PARAM_LOGD("GetParamSecurityLabel %s ", path);
+    PARAM_LOGV("GetParamSecurityLabel %s ", path);
     return ReadFileInDir(path, ".para.dac", ProcessParamFile, &cxt);
 }
 
@@ -185,50 +185,34 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
 
 static int CheckUserInGroup(gid_t groupId, uid_t uid)
 {
-    struct group *data = getgrgid(groupId);
-    if (data == NULL) {
+    static char buffer[255] = {0}; // 255 max size
+    static char userBuff[255] = {0}; // 255 max size
+    struct group *grpResult = NULL;
+    struct group grp = {};
+    int ret = getgrgid_r(groupId, &grp, buffer, sizeof(buffer), &grpResult);
+    if (ret != 0 || grpResult == NULL) {
         return -1;
     }
-    struct passwd *user = getpwuid(uid);
-    if (user == NULL) {
+    struct passwd data = {};
+    struct passwd *userResult = NULL;
+    ret = getpwuid_r(uid, &data, userBuff, sizeof(userBuff), &userResult);
+    if (ret != 0 || userResult == NULL) {
         return -1;
     }
 
-    PARAM_LOGD("CheckUserInGroup pw_name %s ", user->pw_name);
+    PARAM_LOGV("CheckUserInGroup pw_name %s ", userResult->pw_name);
+    if (strcmp(grpResult->gr_name, userResult->pw_name) == 0) {
+        return 0;
+    }
     int index = 0;
-    while (data->gr_mem[index]) {
-        PARAM_LOGD("CheckUserInGroup %s ", data->gr_mem[index]);
-        if (strcmp(data->gr_mem[index], user->pw_name) == 0) {
+    while (grpResult->gr_mem[index]) {
+        PARAM_LOGV("CheckUserInGroup %s ", grpResult->gr_mem[index]);
+        if (strcmp(grpResult->gr_mem[index], userResult->pw_name) == 0) {
             return 0;
         }
         index++;
     }
-    if (strcmp(data->gr_name, user->pw_name) == 0) {
-        return 0;
-    }
     return -1;
-}
-
-static int CheckMatchGroup(gid_t groupId)
-{
-    if (getpid() == 1) {
-        return -1;
-    }
-    int num = getgroups(0, NULL);
-    PARAM_CHECK(num > 0, return -1, "Failed to getgroups");
-    gid_t *groups = calloc(1, sizeof(gid_t) * num);
-    PARAM_CHECK(groups != NULL, return -1, "Failed to alloc for groups");
-    num = getgroups(num, groups);
-    PARAM_CHECK(num > 0, free(groups);
-        return -1, "Failed to getgroups");
-    for (int index = 0; index < num; index++) {
-        if (groups[index] == groupId) {
-            free(groups);
-            return 0;
-        }
-    }
-    free(groups);
-    return  -1;
 }
 
 static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, uint32_t mode)
@@ -246,9 +230,7 @@ static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamA
         localMode = mode & (DAC_READ | DAC_WRITE | DAC_WATCH);
     } else if (srcLabel->cred.gid == auditData->dacData.gid) {
         localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
-    } else if (CheckUserInGroup(auditData->dacData.gid, srcLabel->cred.uid) == 0) { // user in group
-        localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
-    } else if (CheckMatchGroup(auditData->dacData.gid) == 0) {
+    } else if (CheckUserInGroup(auditData->dacData.gid, srcLabel->cred.uid) == 0) {  // user in group
         localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
     } else {
         localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_OTHER_START;
@@ -256,17 +238,17 @@ static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamA
     if ((auditData->dacData.mode & localMode) != 0) {
         ret = DAC_RESULT_PERMISSION;
     }
-    PARAM_LOGD("Src label gid:%d uid:%d ", srcLabel->cred.gid, srcLabel->cred.uid);
-    PARAM_LOGD("local label gid:%d uid:%d mode %o",
+    PARAM_LOGV("Src label gid:%d uid:%d ", srcLabel->cred.gid, srcLabel->cred.uid);
+    PARAM_LOGV("local label gid:%d uid:%d mode %o",
         auditData->dacData.gid, auditData->dacData.uid, auditData->dacData.mode);
-    PARAM_LOGD("%s check %o localMode %o ret %d", auditData->name, mode, localMode, ret);
+    PARAM_LOGV("%s check %o localMode %o ret %d", auditData->name, mode, localMode, ret);
     return ret;
 }
 
 PARAM_STATIC int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
 {
     PARAM_CHECK(ops != NULL, return -1, "Invalid param");
-    PARAM_LOGD("RegisterSecurityDacOps %d", isInit);
+    PARAM_LOGV("RegisterSecurityDacOps %d", isInit);
     ops->securityGetLabel = NULL;
     ops->securityDecodeLabel = NULL;
     ops->securityEncodeLabel = NULL;

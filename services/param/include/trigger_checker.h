@@ -49,7 +49,7 @@ struct tagTriggerNode_;
 typedef int (*PARAM_CHECK_DONE)(struct tagTriggerNode_ *trigger, const char *content, uint32_t size);
 typedef struct {
     char triggerContent[MAX_TRIGGER_NAME_LEN];
-    PARAM_CHECK_DONE triggerExecuter;
+    PARAM_CHECK_DONE triggerCheckDone;
     int dataNumber;
     int endIndex;
     int dataUnit;

@@ -84,13 +84,19 @@ typedef enum {
 #define PARAN_LABEL "PARAM"
 #define PARAM_LOGI(fmt, ...) STARTUP_LOGI(PARAN_LOG_FILE, PARAN_LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGE(fmt, ...) STARTUP_LOGE(PARAN_LOG_FILE, PARAN_LABEL, fmt, ##__VA_ARGS__)
-#define PARAM_LOGD(fmt, ...) STARTUP_LOGD(PARAN_LOG_FILE, PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_LOGV(fmt, ...) STARTUP_LOGV(PARAN_LOG_FILE, PARAN_LABEL, fmt, ##__VA_ARGS__)
 
 #define PARAM_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                \
         PARAM_LOGE(__VA_ARGS__);     \
         exper;                       \
     }
+
+#ifdef INIT_AGENT
+#define PARAM_DUMP printf
+#else
+#define PARAM_DUMP PARAM_LOGI
+#endif
 
 #define MAX_LABEL_LEN 256
 #define PARAM_BUFFER_SIZE 256

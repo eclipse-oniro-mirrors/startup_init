@@ -14,6 +14,8 @@
  */
 
 #include <cerrno>
+#include <cstdlib>
+#include <cstdio>
 #include <cstdint>
 #include <fcntl.h>
 #include <getopt.h>
@@ -21,9 +23,12 @@
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
+
+#include "begetctl.h"
+#include "sys_param.h"
 #include "fs_manager/fs_manager.h"
 #include "param_wrapper.h"
-#include "begetctl.h"
 
 constexpr int MAX_LOGO_SIZE = 1024 * 2038;
 constexpr int PARTITION_INFO_POS = 1144;
@@ -40,12 +45,14 @@ static std::string GetMiscDevicePath()
 {
     std::string miscDev {};
     // Get misc device path from fstab
-    std::string hardwareVal {};
-    int ret = OHOS::system::GetStringParameter("ohos.boot.hardware", hardwareVal, "");
+    uint32_t size = PARAM_VALUE_LEN_MAX;
+    std::vector<char> buffer(PARAM_VALUE_LEN_MAX);
+    int ret = SystemGetParameter((char *)"ohos.boot.hardware", buffer.data(), &size);
     if (ret != 0) {
         std::cout << "get ohos.boot.hardware failed\n";
         return "";
     }
+    std::string hardwareVal(buffer.data());
     std::string fstabFileName = std::string("fstab.") + hardwareVal;
     std::string fstabFile = std::string("/vendor/etc/") + fstabFileName;
     Fstab *fstab = ReadFstabFromFile(fstabFile.c_str(), false);
@@ -225,7 +232,7 @@ static void WriteLogoToMisc(const std::string &logoPath)
     close(fd1);
 }
 
-static int main_cmd(int argc, char **argv)
+static int main_cmd(BShellHandle shell, int argc, char **argv)
 {
     int rc = -1;
     int optIndex = -1;
@@ -250,7 +257,15 @@ static int main_cmd(int argc, char **argv)
     return 0;
 }
 
-MODULE_CONSTRUCTOR()
+MODULE_CONSTRUCTOR(void)
 {
-    (void)BegetCtlCmdAdd("misc_daemon", main_cmd);
+    CmdInfo infos[] = {
+        {
+            (char *)"misc_daemon", main_cmd, (char *)"write start logo",
+            (char *)"misc_daemon --write_logo xxx.rgb", (char *)"misc_daemon --write_logo"
+        }
+    };
+    for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
+        BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);
+    }
 }

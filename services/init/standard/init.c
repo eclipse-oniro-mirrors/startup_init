@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,27 +21,94 @@
 #include <sys/sysmacros.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
+#include <sys/socket.h>
 #include <linux/major.h>
 #include "device.h"
+#include "fd_holder_service.h"
 #include "fs_manager/fs_manager.h"
 #include "init_log.h"
 #include "init_mount.h"
+#include "init_group_manager.h"
 #include "init_param.h"
+#include "init_service.h"
+#include "init_service_manager.h"
 #include "init_utils.h"
 #include "securec.h"
 #include "switch_root.h"
 #include "ueventd.h"
 #include "ueventd_socket.h"
+#include "fd_holder_internal.h"
 #ifdef WITH_SELINUX
 #include <policycoreutils.h>
 #include <selinux/selinux.h>
 #endif // WITH_SELINUX
 
+static int FdHolderSockInit(void)
+{
+    int sock = -1;
+    int on = 1;
+    int fdHolderBufferSize = 4 * 1024; // 4KiB
+    sock = socket(AF_UNIX, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0);
+    if (sock < 0) {
+        INIT_LOGE("Failed to create fd holder socket, err = %d", errno);
+        return -1;
+    }
+
+    setsockopt(sock, SOL_SOCKET, SO_RCVBUFFORCE, &fdHolderBufferSize, sizeof(fdHolderBufferSize));
+    setsockopt(sock, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
+
+    if (access(INIT_HOLDER_SOCKET_PATH, F_OK) == 0) {
+        INIT_LOGI("%s exist, remove it", INIT_HOLDER_SOCKET_PATH);
+        unlink(INIT_HOLDER_SOCKET_PATH);
+    }
+    struct sockaddr_un addr;
+    if (strncpy_s(addr.sun_path, sizeof(addr.sun_path),
+        INIT_HOLDER_SOCKET_PATH, strlen(INIT_HOLDER_SOCKET_PATH)) != 0) {
+        INIT_LOGE("Faild to copy fd hoder socket path");
+        close(sock);
+        return -1;
+    }
+    socklen_t len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path) + 1);
+    if (bind(sock, (struct sockaddr *)&addr, len) < 0) {
+        INIT_LOGE("Failed to binder fd folder socket");
+        close(sock);
+        return -1;
+    }
+
+    // Owned by root
+    if (lchown(addr.sun_path, 0, 0)) {
+        INIT_LOGW("Failed to change owner of fd holder socket, err = %d", errno);
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    if (fchmodat(AT_FDCWD, addr.sun_path, mode, AT_SYMLINK_NOFOLLOW)) {
+        INIT_LOGW("Failed to change mode of fd holder socket, err = %d", errno);
+    }
+    INIT_LOGI("Init fd holder socket done");
+    return sock;
+}
+
 void SystemInit(void)
 {
     SignalInit();
     MakeDirRecursive("/dev/unix/socket", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    int sock = FdHolderSockInit();
+    if (sock >= 0) {
+        RegisterFdHoldWatcher(sock);
+    }
+}
+
+static void EnableDevKmsg(void)
+{
+    /* printk_devkmsg default value is ratelimit, We need to set "on" and remove the restrictions */
+    int fd = open("/proc/sys/kernel/printk_devkmsg", O_WRONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IRGRP);
+    if (fd < 0) {
+        return;
+    }
+    char *kmsgStatus = "on";
+    write(fd, kmsgStatus, strlen(kmsgStatus) + 1);
+    close(fd);
+    fd = -1;
+    return;
 }
 
 void LogInit(void)
@@ -170,12 +237,38 @@ void SystemLoadSelinux(void)
 #endif // WITH_SELINUX
 }
 
+static void BootStateChange(const char *content)
+{
+    INIT_LOGI("boot start %s finish.", content);
+    if (strcmp("init", content) == 0) {
+        StartAllServices(START_MODE_BOOT);
+        return;
+    }
+    if (strcmp("post-init", content) == 0) {
+        StartAllServices(START_MODE_NARMAL);
+        return;
+    }
+}
+
+#if defined(OHOS_SERVICE_DUMP)
+static void SystemDump(int id, const char *name, int argc, const char **argv)
+{
+    INIT_ERROR_CHECK(argv != NULL && argc >= 1, return, "Invalid install parameter");
+    INIT_LOGI("Dump system info %s", argv[0]);
+    DumpAllServices();
+    DumpParametersAndTriggers();
+}
+#endif
+
 void SystemConfig(void)
 {
-    // load SELinux context and policy
-    SystemLoadSelinux();
+    InitServiceSpace();
+    InitParseGroupCfg();
+    PluginManagerInit();
 
     InitParamService();
+    RegisterBootStateChange(BootStateChange);
+
     // parse parameters
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
@@ -185,15 +278,17 @@ void SystemConfig(void)
     INIT_LOGI("Parse init config file done.");
 
     // dump config
-#ifdef OHOS_SERVICE_DUMP
-    DumpAllServices();
-    DumpParametersAndTriggers();
+#if defined(OHOS_SERVICE_DUMP)
+    AddCmdExecutor("display", SystemDump);
+    (void)AddCompleteJob("param:ohos.servicectrl.display", "ohos.servicectrl.display=*", "display system");
 #endif
 
     // execute init
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
+    // load SELinux context and policy
+    SystemLoadSelinux();
 }
 
 void SystemRun(void)

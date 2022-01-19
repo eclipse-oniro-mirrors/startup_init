@@ -18,7 +18,6 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <string.h>
-#include <strings.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
@@ -106,26 +105,34 @@ static int SetSocketEnv(int fd, const char *name)
     return 0;
 }
 
-int CreateServiceSocket(ServiceSocket *sockopt)
+int CreateServiceSocket(Service *service)
 {
-    INIT_CHECK(sockopt != NULL, return 0);
-    ServiceSocket *tmpSock = sockopt;
+    INIT_CHECK(service != NULL && service->socketCfg != NULL, return 0);
+    int ret = 0;
+    ServiceSocket *tmpSock = service->socketCfg;
     while (tmpSock != NULL) {
         int fd = CreateSocket(tmpSock);
         INIT_CHECK_RETURN_VALUE(fd >= 0, -1);
-        int ret = SetSocketEnv(fd, tmpSock->name);
+        if (IsOnDemandService(service)) {
+            ret = ServiceAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
+            INIT_CHECK_RETURN_VALUE(ret == 0, -1);
+        }
+        ret = SetSocketEnv(fd, tmpSock->name);
         INIT_CHECK_RETURN_VALUE(ret >= 0, -1);
         tmpSock = tmpSock->next;
     }
     return 0;
 }
 
-void CloseServiceSocket(ServiceSocket *sockopt)
+void CloseServiceSocket(Service *service)
 {
-    INIT_CHECK(sockopt != NULL, return);
+    INIT_CHECK(service != NULL && service->socketCfg != NULL, return);
     struct sockaddr_un addr;
-    ServiceSocket *tmpSock = sockopt;
-    while (tmpSock != NULL) {
+    ServiceSocket *sockopt = service->socketCfg;
+    while (sockopt != NULL) {
+        if (sockopt->watcher != NULL) {
+            ServiceDelWatcher(sockopt->watcher);
+        }
         if (sockopt->sockFd >= 0) {
             close(sockopt->sockFd);
             sockopt->sockFd = -1;
@@ -133,7 +140,7 @@ void CloseServiceSocket(ServiceSocket *sockopt)
         if (GetSocketAddr(&addr, sockopt->name) == 0) {
             unlink(addr.sun_path);
         }
-        tmpSock = tmpSock->next;
+        sockopt = sockopt->next;
     }
     return;
 }

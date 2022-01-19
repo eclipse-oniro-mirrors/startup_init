@@ -52,7 +52,7 @@ uint32_t WatcherManager::AddWatcher(const std::string &keyPrefix, const sptr<IWa
     int ret = GetWatcherId(watcherId);
     WATCHER_CHECK(ret == 0, return 0, "Failed to get watcher id for %s", keyPrefix.c_str());
 
-    WATCHER_LOGD("AddWatcher prefix %s watcherId %u", keyPrefix.c_str(), watcherId);
+    WATCHER_LOGV("AddWatcher prefix %s watcherId %u", keyPrefix.c_str(), watcherId);
     bool newGroup = false;
     WatcherGroupPtr group = GetWatcherGroup(keyPrefix);
     if (group == nullptr) {
@@ -83,7 +83,7 @@ int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t watche
     WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
     auto paramWatcher = GetWatcher(watcherId);
     WATCHER_CHECK(group != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), watcherId);
-    WATCHER_LOGD("DelWatcher prefix %s watcherId %u", keyPrefix.c_str(), watcherId);
+    WATCHER_LOGV("DelWatcher prefix %s watcherId %u", keyPrefix.c_str(), watcherId);
     return DelWatcher(group, paramWatcher);
 }
 
@@ -111,7 +111,7 @@ int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
     request->id.watcherId = group->GetGroupId();
     request->msgSize = sizeof(ParamMessage);
 
-    WATCHER_LOGD("SendMessage %s", group->GetKeyPrefix().c_str());
+    WATCHER_LOGV("SendMessage %s", group->GetKeyPrefix().c_str());
     int ret = PARAM_CODE_ERROR;
     int fd = GetServerFd(false);
     if (fd != INVALID_SOCKET) {
@@ -127,7 +127,7 @@ void WatcherManager::ProcessWatcherMessage(const std::vector<char> &buffer, uint
 {
     ParamMessage *msg = (ParamMessage *)buffer.data();
     WATCHER_CHECK(msg != NULL, return, "Invalid msg");
-    WATCHER_LOGD("ProcessWatcherMessage %d", msg->type);
+    WATCHER_LOGV("ProcessWatcherMessage %d", msg->type);
     uint32_t offset = 0;
     if (msg->type != MSG_NOTIFY_PARAM) {
         return;
@@ -135,7 +135,7 @@ void WatcherManager::ProcessWatcherMessage(const std::vector<char> &buffer, uint
     WATCHER_CHECK(msg->msgSize <= dataSize, return, "Invalid msg size %d", msg->msgSize);
     ParamMsgContent *valueContent = GetNextContent((const ParamMessage *)msg, &offset);
     WATCHER_CHECK(valueContent != NULL, return, "Invalid msg ");
-    WATCHER_LOGD("ProcessWatcherMessage name %s watcherId %u ", msg->key, msg->id.watcherId);
+    WATCHER_LOGV("ProcessWatcherMessage name %s watcherId %u ", msg->key, msg->id.watcherId);
     WatcherGroupPtr group = GetWatcherGroup(msg->id.watcherId);
     if (group != nullptr) {
         std::lock_guard<std::mutex> lock(watcherMutex_);
@@ -167,7 +167,7 @@ WatcherManager::WatcherGroupPtr WatcherManager::GetWatcherGroup(const std::strin
 
 void WatcherManager::AddParamWatcher(const std::string &keyPrefix, WatcherGroupPtr group, ParamWatcherPtr watcher)
 {
-    WATCHER_LOGD("AddParamWatcher prefix %s watcherId %u", keyPrefix.c_str(), watcher->GetWatcherId());
+    WATCHER_LOGV("AddParamWatcher prefix %s watcherId %u", keyPrefix.c_str(), watcher->GetWatcherId());
     uint32_t groupId = group->GetGroupId();
     std::lock_guard<std::mutex> lock(watcherMutex_);
     groupMap_[keyPrefix] = groupId;
@@ -186,7 +186,7 @@ void WatcherManager::DelParamWatcher(ParamWatcherPtr watcher)
     ListRemove(watcher->GetGroupNode());
     ListInit(watcher->GetGroupNode());
     watchers_.erase(watcher->GetWatcherId());
-    WATCHER_LOGD("DelParamWatcher watcherId %u", watcher->GetWatcherId());
+    WATCHER_LOGV("DelParamWatcher watcherId %u", watcher->GetWatcherId());
 }
 
 void WatcherManager::DelWatcherGroup(WatcherGroupPtr group)
@@ -221,11 +221,11 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, ParamWatcherP
         ParamWatcherPtr watcher;
         std::string keyPrefix;
     };
-    WATCHER_LOGD("SendLocalChange key %s  ", keyPrefix.c_str());
+    WATCHER_LOGV("SendLocalChange key %s  ", keyPrefix.c_str());
     std::vector<char> buffer(PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX);
     struct Context context = {buffer.data(), watcher, keyPrefix};
     // walk watcher
-    SystemTraversalParameter([](ParamHandle handle, void *cookie) {
+    SystemTraversalParameter("", [](ParamHandle handle, void *cookie) {
             struct Context *context = (struct Context *)(cookie);
             SystemGetParameterName(handle, context->buffer, PARAM_NAME_LEN_MAX);
             if (!FilterParam(context->buffer, context->keyPrefix)) {
@@ -233,7 +233,7 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, ParamWatcherP
             }
             uint32_t size = PARAM_CONST_VALUE_LEN_MAX;
             SystemGetParameterValue(handle, context->buffer + PARAM_NAME_LEN_MAX, &size);
-            WATCHER_LOGD("SendLocalChange key %s value: %s ", context->buffer, context->buffer + PARAM_NAME_LEN_MAX);
+            WATCHER_LOGV("SendLocalChange key %s value: %s ", context->buffer, context->buffer + PARAM_NAME_LEN_MAX);
             context->watcher->ProcessParameterChange(context->buffer, context->buffer + PARAM_NAME_LEN_MAX);
         }, (void *)&context);
 }
@@ -266,7 +266,7 @@ void WatcherManager::RunLoop()
         close(serverFd_);
         serverFd_ = INVALID_SOCKET;
     }
-    WATCHER_LOGD("Exit runLoop");
+    WATCHER_LOGV("Exit runLoop");
 }
 
 void WatcherManager::StartLoop()
@@ -304,7 +304,7 @@ int WatcherManager::GetServerFd(bool retry)
         usleep(sleepTime);
         retryCount++;
     } while (retryCount < maxRetry);
-    WATCHER_LOGD("GetServerFd serverFd_ %d retryCount %d ", serverFd_, retryCount);
+    WATCHER_LOGV("GetServerFd serverFd_ %d retryCount %d ", serverFd_, retryCount);
     return serverFd_;
 }
 
@@ -323,7 +323,7 @@ void WatcherManager::OnStart()
 
 void WatcherManager::StopLoop()
 {
-    WATCHER_LOGD("WatcherManager StopLoop serverFd_ %d", serverFd_);
+    WATCHER_LOGV("WatcherManager StopLoop serverFd_ %d", serverFd_);
     stop_ = true;
     if (serverFd_ > 0) {
         shutdown(serverFd_, SHUT_RDWR);
@@ -362,7 +362,7 @@ void WatcherManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &rem
     WATCHER_CHECK(remote != nullptr, return, "Invalid remote obj");
     auto paramWatcher = manager_->GetWatcher(remote);
     WATCHER_CHECK(paramWatcher != nullptr, return, "Failed to get remote watcher info ");
-    WATCHER_LOGD("OnRemoteDied watcherId %u", paramWatcher->GetWatcherId());
+    WATCHER_LOGV("OnRemoteDied watcherId %u", paramWatcher->GetWatcherId());
     manager_->DelWatcher(paramWatcher->GetWatcherGroup(), paramWatcher);
 }
 

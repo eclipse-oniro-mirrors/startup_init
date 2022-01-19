@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,14 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "init_service_manager.h"
+#ifndef EVENT_EPOLL_H
+#define EVENT_EPOLL_H
+#include <sys/epoll.h>
+#include "le_utils.h"
 
-void SocketPollInit(int sockFd, const char* serviceName)
-{
-    return;
-}
+#include "le_loop.h"
 
-int CreateAndPollSocket(Service *service)
-{
-    return 0;
-}
+typedef struct {
+    EventLoop loop;
+    int epollFd;
+    struct epoll_event waitEvents[0];
+} EventEpoll;
+
+LE_STATUS CreateEpollLoop(EventLoop **loop, uint32_t maxevents, uint32_t timeout);
+
+#endif

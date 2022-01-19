@@ -119,9 +119,9 @@ static int MountToNewTarget(const char *target)
             // Just ignore this one or return error?
             continue;
         }
-        INIT_LOGD("new mount point is: %s", newMountPoint);
+        INIT_LOGV("new mount point is: %s", newMountPoint);
         if (!UnderBasicMountPoint(mountPoint)) {
-            INIT_LOGD("Move mount %s to %s", mountPoint, newMountPoint);
+            INIT_LOGV("Move mount %s to %s", mountPoint, newMountPoint);
             if (mount(mountPoint, newMountPoint, NULL, MS_MOVE, NULL) < 0) {
                 INIT_LOGE("Failed to mount moving %s to %s, err = %d", mountPoint, newMountPoint, errno);
                 // If one mount entry cannot move to new mountpoint, umount it.

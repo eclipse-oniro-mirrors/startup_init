@@ -61,7 +61,7 @@ static int SavePersistParam(const WorkSpace *workSpace, const ParamTrieNode *nod
 
 static int BatchSavePersistParam(const WorkSpace *workSpace)
 {
-    PARAM_LOGD("BatchSavePersistParam");
+    PARAM_LOGV("BatchSavePersistParam");
     if (g_persistWorkSpace.persistParamOps.batchSaveBegin == NULL ||
         g_persistWorkSpace.persistParamOps.batchSave == NULL ||
         g_persistWorkSpace.persistParamOps.batchSaveEnd == NULL) {
@@ -124,7 +124,7 @@ int LoadPersistParam(ParamWorkSpace *workSpace)
     return 0;
 }
 
-PARAM_STATIC void TimerCallbackForSave(ParamTaskPtr timer, void *context)
+PARAM_STATIC void TimerCallbackForSave(const ParamTaskPtr timer, void *context)
 {
     UNUSED(context);
     UNUSED(timer);
@@ -147,7 +147,7 @@ int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *v
         PARAM_LOGE("Can not save persist param before load %s ", name);
         return 0;
     }
-    PARAM_LOGD("WritePersistParam name %s ", name);
+    PARAM_LOGV("WritePersistParam name %s ", name);
     if (g_persistWorkSpace.persistParamOps.save != NULL) {
         g_persistWorkSpace.persistParamOps.save(name, value);
     }
@@ -161,7 +161,7 @@ int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *v
     time_t currTimer;
     (void)time(&currTimer);
     uint32_t diff = (uint32_t)difftime(currTimer, g_persistWorkSpace.lastSaveTimer);
-    PARAM_LOGD("WritePersistParam name %s  %d ", name, diff);
+    PARAM_LOGV("WritePersistParam name %s  %d ", name, diff);
     if (diff > PARAM_MUST_SAVE_PARAM_DIFF) {
         if (g_persistWorkSpace.saveTimer != NULL) {
             ParamTaskClose(g_persistWorkSpace.saveTimer);
@@ -171,7 +171,8 @@ int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *v
     }
     PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_UPDATE);
     if (g_persistWorkSpace.saveTimer == NULL) {
-        ParamTimerCreate(&g_persistWorkSpace.saveTimer, TimerCallbackForSave, &workSpace->paramSpace);
+        ParamTimerCreate(&g_persistWorkSpace.saveTimer,
+            TimerCallbackForSave, &workSpace->paramSpace);
         ParamTimerStart(g_persistWorkSpace.saveTimer, PARAM_MUST_SAVE_PARAM_DIFF * MS_UNIT, MS_UNIT);
     }
     return 0;

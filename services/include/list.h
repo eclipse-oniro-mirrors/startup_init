@@ -15,6 +15,7 @@
 
 #ifndef BASE_STARTUP_INITLITE_LIST_H
 #define BASE_STARTUP_INITLITE_LIST_H
+#include <stddef.h>
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -25,7 +26,7 @@ extern "C" {
 typedef struct ListNode {
     struct ListNode *next;
     struct ListNode *prev;
-} ListNode;
+} ListNode, ListHead;
 
 #define ListEmpty(node)   ((node).next == &(node) && (node).prev == &(node))
 #define ListEntry(ptr, type, member)   ((type *)((char *)(ptr) - offsetof(type, member)))

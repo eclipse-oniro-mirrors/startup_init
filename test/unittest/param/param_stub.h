@@ -14,7 +14,6 @@
  */
 #ifndef PARAM_TEST_STUB_
 #define PARAM_TEST_STUB_
-#include "param_libuvadp.h"
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_service.h"

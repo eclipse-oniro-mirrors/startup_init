@@ -14,9 +14,22 @@
  */
 
 #include "init_jobs_internal.h"
+#include "init_group_manager.h"
 #include "init_param.h"
+
+static int CheckJobValid(const char *jobName)
+{
+    // check job in group
+    return CheckNodeValid(NODE_TYPE_JOBS, jobName);
+}
 
 void ParseAllJobs(const cJSON *fileRoot)
 {
-    ParseTriggerConfig(fileRoot);
+    ParseTriggerConfig(fileRoot, CheckJobValid);
+}
+
+int DoJobNow(const char *jobName)
+{
+    DoJobExecNow(jobName);
+    return 0;
 }

@@ -102,7 +102,7 @@ void WatcherManagerKits::SetParamWatcher(const std::string &keyPrefix, ParamWatc
 
 void WatcherManagerKits::ReAddWatcher()
 {
-    WATCHER_LOGD("ReAddWatcher ");
+    WATCHER_LOGV("ReAddWatcher ");
     int count = 0;
     const int maxRetryCount = 100;
     const int sleepTime = 100;
@@ -118,7 +118,7 @@ void WatcherManagerKits::ReAddWatcher()
         if (iter->second == nullptr) {
             continue;
         }
-        WATCHER_LOGD("ReAddWatcher keyPrefix %s ", iter->first.c_str());
+        WATCHER_LOGV("ReAddWatcher keyPrefix %s ", iter->first.c_str());
         uint32_t watcherId = watcherManager->AddWatcher(iter->first, iter->second);
         WATCHER_CHECK(watcherId != 0, continue, "Failed to add watcher for %s", iter->first.c_str());
         iter->second->SetWatcherId(watcherId);
@@ -158,7 +158,7 @@ int32_t WatcherManagerKits::DelWatcher(const std::string &keyPrefix)
 void WatcherManagerKits::ParamWatcher::OnParamerterChange(const std::string &name, const std::string &value)
 {
     Watcher::OnParamerterChange(name, value);
-    WATCHER_LOGD("OnParamerterChange name %s value %s", name.c_str(), value.c_str());
+    WATCHER_LOGV("OnParamerterChange name %s value %s", name.c_str(), value.c_str());
     if (callback_ != nullptr) {
         callback_(name.c_str(), value.c_str(), context_);
     }

@@ -14,9 +14,9 @@
  */
 
 // lite release not support set parameter.
-int SetUeventDeviceParameter(const char *devNode, const char *paramValue)
+int SetUeventDeviceParameter(const char *devNode, int action)
 {
     (void)(devNode);
-    (void)(paramValue);
+    (void)(action);
     return 0;
 }

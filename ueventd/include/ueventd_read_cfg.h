@@ -30,7 +30,9 @@ struct DeviceUdevConf {
     uid_t uid;
     gid_t gid;
     const char *parameter;
+    int action;
     struct ListNode list;
+    struct ListNode paramNode;
 };
 
 struct SysUdevConf {

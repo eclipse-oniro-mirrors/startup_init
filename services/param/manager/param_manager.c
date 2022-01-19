@@ -117,6 +117,8 @@ int ReadParamWithCheck(const ParamWorkSpace *workSpace, const char *name, uint32
     if (node != NULL && node->dataIndex != 0) {
         *handle = node->dataIndex;
         return 0;
+    } else if (node != NULL) {
+        return PARAM_CODE_NODE_EXIST;
     }
     return PARAM_CODE_NOT_FOUND;
 }
@@ -205,17 +207,28 @@ static int ProcessParamTraversal(const WorkSpace *workSpace, const ParamTrieNode
     if (current->dataIndex == 0) {
         return 0;
     }
+    ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, current->dataIndex);
+    if (entry == NULL) {
+        return 0;
+    }
+    if ((strcmp("#", context->prefix) != 0) &&
+        (strncmp(entry->data, context->prefix, strlen(context->prefix)) != 0)) {
+        return 0;
+    }
     context->traversalParamPtr(current->dataIndex, context->context);
     return 0;
 }
 
-int TraversalParam(const ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, void *cookie)
+int TraversalParam(const ParamWorkSpace *workSpace,
+    const char *prefix, TraversalParamPtr walkFunc, void *cookie)
 {
     PARAM_CHECK(workSpace != NULL && walkFunc != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     ParamTraversalContext context = {
-        walkFunc, cookie
+        walkFunc, cookie, prefix
     };
-    return TraversalTrieNode(&workSpace->paramSpace, NULL, ProcessParamTraversal, &context);
+    ParamTrieNode *root = FindTrieNode(&workSpace->paramSpace, prefix, strlen(prefix), NULL);
+    PARAM_LOGV("TraversalParam prefix %s", prefix);
+    return TraversalTrieNode(&workSpace->paramSpace, root, ProcessParamTraversal, &context);
 }
 
 int CheckParamPermission(const ParamWorkSpace *workSpace,
@@ -252,21 +265,21 @@ static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrie
         return 0;
     }
     if (verbose) {
-        printf("\tTrie node info [%u,%u,%u] data: %u label: %u key length:%d \n\t  key: %s \n",
+        PARAM_DUMP("\tTrie node info [%u,%u,%u] data: %u label: %u key length:%d \n\t  key: %s \n",
             current->left, current->right, current->child,
             current->dataIndex, current->labelIndex, current->length, current->key);
     }
     if (current->dataIndex != 0) {
         ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, current->dataIndex);
         if (entry != NULL) {
-            printf("\tparameter length info [%d, %d] \n\t  param: %s \n",
+            PARAM_DUMP("\tparameter length info [%d, %d] \n\t  param: %s \n",
                 entry->keyLength, entry->valueLength, (entry != NULL) ? entry->data : "null");
         }
     }
     if (current->labelIndex != 0 && verbose) {
         ParamSecruityNode *label = (ParamSecruityNode *)GetTrieNode(workSpace, current->labelIndex);
         if (label != NULL) {
-            printf("\tparameter label dac %d %d %o \n\t  label: %s \n",
+            PARAM_DUMP("\tparameter label dac %d %d %o \n\t  label: %s \n",
                 label->uid, label->gid, label->mode, (label->length > 0) ? label->data : "null");
         }
     }
@@ -275,31 +288,31 @@ static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrie
 
 static void DumpWorkSpace(const ParamWorkSpace *workSpace, int verbose)
 {
-    printf("workSpace information \n");
-    printf("    map file: %s \n", workSpace->paramSpace.fileName);
+    PARAM_DUMP("workSpace information \n");
+    PARAM_DUMP("    map file: %s \n", workSpace->paramSpace.fileName);
     if (workSpace->paramSpace.area != NULL) {
-        printf("    total size: %d \n", workSpace->paramSpace.area->dataSize);
-        printf("    first offset: %d \n", workSpace->paramSpace.area->firstNode);
-        printf("    current offset: %d \n", workSpace->paramSpace.area->currOffset);
-        printf("    total node: %d \n", workSpace->paramSpace.area->trieNodeCount);
-        printf("    total param node: %d \n", workSpace->paramSpace.area->paramNodeCount);
-        printf("    total security node: %d\n", workSpace->paramSpace.area->securityNodeCount);
+        PARAM_DUMP("    total size: %d \n", workSpace->paramSpace.area->dataSize);
+        PARAM_DUMP("    first offset: %d \n", workSpace->paramSpace.area->firstNode);
+        PARAM_DUMP("    current offset: %d \n", workSpace->paramSpace.area->currOffset);
+        PARAM_DUMP("    total node: %d \n", workSpace->paramSpace.area->trieNodeCount);
+        PARAM_DUMP("    total param node: %d \n", workSpace->paramSpace.area->paramNodeCount);
+        PARAM_DUMP("    total security node: %d\n", workSpace->paramSpace.area->securityNodeCount);
     }
-    printf("    node info: \n");
+    PARAM_DUMP("    node info: \n");
     TraversalTrieNode(&workSpace->paramSpace, NULL, DumpTrieDataNodeTraversal, (void *)&verbose);
 }
 
 void DumpParameters(const ParamWorkSpace *workSpace, int verbose)
 {
     PARAM_CHECK(workSpace != NULL && workSpace->securityLabel != NULL, return, "Invalid param");
-    printf("Dump all paramters begin ...\n");
+    PARAM_DUMP("Dump all paramters begin ...\n");
     DumpWorkSpace(workSpace, verbose);
     if (verbose) {
-        printf("Local sercurity information\n");
-        printf("\t pid: %d uid: %d gid: %d \n",
+        PARAM_DUMP("Local sercurity information\n");
+        PARAM_DUMP("\t pid: %d uid: %d gid: %d \n",
             workSpace->securityLabel->cred.pid,
             workSpace->securityLabel->cred.uid,
             workSpace->securityLabel->cred.gid);
     }
-    printf("Dump all paramters finish\n");
+    PARAM_DUMP("Dump all paramters finish\n");
 }

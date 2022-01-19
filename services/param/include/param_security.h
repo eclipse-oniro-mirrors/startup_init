@@ -93,6 +93,7 @@ typedef struct {
     void *context;
 } LabelFuncContext;
 
+int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditData);
 
 #ifdef PARAM_SUPPORT_SELINUX
 #ifdef PARAM_SUPPORT_DAC

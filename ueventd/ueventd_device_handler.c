@@ -267,7 +267,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
             continue;
         }
         if (STRINGEQUAL(bus, "/sys/bus/platform")) {
-            INIT_LOGD("Find a platform device: %s", parent);
+            INIT_LOGV("Find a platform device: %s", parent);
             parent = FindPlatformDeviceName(parent);
             if (parent != NULL) {
                 BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
@@ -315,7 +315,7 @@ static void HandleDeviceNode(const struct Uevent *uevent, const char *deviceNode
             INIT_LOGE("Create device \" %s \" failed", deviceNode);
         } else {
 #ifndef __RAMDISK__
-            if (SetUeventDeviceParameter(deviceNode, "added") != 0) {
+            if (SetUeventDeviceParameter(deviceNode, action) != 0) {
                 INIT_LOGE("Set device parameter added failed");
             }
 #endif
@@ -325,7 +325,7 @@ static void HandleDeviceNode(const struct Uevent *uevent, const char *deviceNode
             INIT_LOGE("Remove device \" %s \" failed", deviceNode);
         } else {
 #ifndef __RAMDISK__
-            if (SetUeventDeviceParameter(deviceNode, "removed") != 0) {
+            if (SetUeventDeviceParameter(deviceNode, action) != 0) {
                 INIT_LOGE("Set device parameter removed failed");
             }
 #endif
@@ -460,7 +460,7 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
         INIT_LOGE("Cannot get device path or device name");
         return;
     }
-    INIT_LOGD("HandleOtherDeviceEvent, devPath = %s, devName = %s", devPath, devName);
+    INIT_LOGV("HandleOtherDeviceEvent, devPath = %s, devName = %s", devPath, devName);
 
     // For usb devices, should take care of it specially.
     // if usb devices report DEVNAME, just create device node.

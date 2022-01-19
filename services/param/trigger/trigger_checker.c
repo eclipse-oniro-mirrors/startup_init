@@ -53,7 +53,9 @@ int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, in
 void CalculatorFree(LogicCalculator *calculator)
 {
     PARAM_CHECK(calculator != NULL, return, "Invalid param");
-    free(calculator->data);
+    if (calculator->data != NULL) {
+        free(calculator->data);
+    }
     calculator->data = NULL;
 }
 
@@ -267,7 +269,7 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
 
 int ConvertInfixToPrefix(const char *condition, char *prefix, uint32_t prefixLen)
 {
-    PARAM_CHECK(condition != NULL, return -1, "Invalid condition");
+    PARAM_CHECK(condition != NULL && prefix != NULL, return -1, "Invalid condition");
     char e = 0;
     int ret;
     uint32_t curr = 0;
