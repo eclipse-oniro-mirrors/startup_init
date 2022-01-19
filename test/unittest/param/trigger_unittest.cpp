@@ -94,7 +94,7 @@ public:
         INIT_ERROR_CHECK(fileBuf != nullptr, return -1, "Failed to read file content %s", configFile);
         cJSON *fileRoot = cJSON_Parse(fileBuf);
         INIT_ERROR_CHECK(fileRoot != nullptr, return -1, "Failed to parse json file %s", configFile);
-        ParseTriggerConfig(fileRoot);
+        ParseTriggerConfig(fileRoot, nullptr);
         cJSON_Delete(fileRoot);
         free(fileBuf);
         fileBuf = nullptr;
