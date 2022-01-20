@@ -176,6 +176,23 @@ static void DoSleep(const struct CmdArgs *ctx)
     sleep((unsigned int)sleepTime);
 }
 
+static void DoWait(const struct CmdArgs *ctx)
+{
+    const int filePos = 0;
+    const int timePos = 1;
+    unsigned long waitSecond = WAIT_MAX_SECOND;
+
+    if (ctx->argc == timePos + 1) {
+        errno = 0;
+        waitSecond = strtoul(ctx->argv[timePos], NULL, DECIMAL_BASE);
+        INIT_ERROR_CHECK(errno == 0,
+        return, "cannot covert sleep time in command \" wait \"");
+    }
+
+    INIT_LOGI("Waiting %s %lu second(s)", ctx->argv[filePos], waitSecond);
+    WaitForFile(ctx->argv[filePos], waitSecond);
+}
+
 static void DoStart(const struct CmdArgs *ctx)
 {
     INIT_LOGD("DoStart %s", ctx->argv[0]);
@@ -364,7 +381,7 @@ static int GetMountFlag(unsigned long *mountflag, const char *targetStr, const c
         }
     }
     if (strncmp(targetStr, "wait", strlen("wait")) == 0) {
-        WaitForFile(source, WAIT_MAX_COUNT);
+        WaitForFile(source, WAIT_MAX_SECOND);
         return 1;
     }
     return 0;
@@ -502,6 +519,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "reboot ", 1, 1, DoRebootCmd },
     { "setrlimit ", 3, 3, DoSetrlimit },
     { "sleep ", 1, 1, DoSleep },
+    { "wait ", 1, 2, DoWait },
     { "hostname ", 1, 1, DoSetHostname },
     { "domainname ", 1, 1, DoSetDomainname }
 };

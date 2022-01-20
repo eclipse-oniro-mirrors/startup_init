@@ -117,7 +117,7 @@ static void OpenConsole(void)
 {
     const int stdError = 2;
     setsid();
-    WaitForFile("/dev/console", WAIT_MAX_COUNT);
+    WaitForFile("/dev/console", WAIT_MAX_SECOND);
     int fd = open("/dev/console", O_RDWR);
     if (fd >= 0) {
         ioctl(fd, TIOCSCTTY, 0);

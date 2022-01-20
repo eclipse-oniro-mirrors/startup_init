@@ -260,19 +260,19 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
     return items;
 }
 
-void WaitForFile(const char *source, unsigned int maxCount)
+void WaitForFile(const char *source, unsigned int maxSecond)
 {
-    unsigned int maxCountTmp = maxCount;
-    INIT_ERROR_CHECK(maxCountTmp <= WAIT_MAX_COUNT, maxCountTmp = WAIT_MAX_COUNT, "WaitForFile max time is 5s");
+    INIT_ERROR_CHECK(maxSecond <= WAIT_MAX_SECOND, maxSecond = WAIT_MAX_SECOND, "WaitForFile max time is 5s");
     struct stat sourceInfo = {};
     unsigned int waitTime = 500000;
+    /* 500ms interval, check maxSecond*2 times total */
+    unsigned int maxCount = maxSecond * 2;
     unsigned int count = 0;
     do {
         usleep(waitTime);
         count++;
-    } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCountTmp));
-    float secTime = ConvertMicrosecondToSecond(waitTime);
-    INIT_CHECK_ONLY_ELOG(count != maxCountTmp, "wait for file:%s failed after %f.", source, maxCountTmp * secTime);
+    } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount));
+    INIT_CHECK_ONLY_ELOG(count != maxCount, "wait for file:%s failed after %d second.", source, maxSecond);
     return;
 }
 
