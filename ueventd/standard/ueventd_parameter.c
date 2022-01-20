@@ -85,12 +85,13 @@ static void *ThreadRun(void *data)
             parameterCtrl->empty = 1;
             continue;
         }
+        parameterCtrl->empty = 0;
         const char *paramValue = (config->action == ACTION_ADD) ? "added" : "removed";
         INIT_LOGI("[uevent] SystemSetParameter %s act %s", config->parameter, paramValue);
         if (SystemSetParameter(config->parameter, paramValue) != 0) {
             INIT_LOGE("[uevent] SystemSetParameter %s failed", config->parameter);
             pthread_mutex_lock(&(parameterCtrl->parameterLock));
-            ListAddTail(&config->paramNode, &parameterCtrl->parameterList);
+            ListAddTail(&parameterCtrl->parameterList, &config->paramNode);
             pthread_mutex_unlock(&(parameterCtrl->parameterLock));
             parameterCtrl->empty = 1;
         }
