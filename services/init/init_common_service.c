@@ -78,7 +78,7 @@ static int SetAccessToken(const Service *service)
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "%s failed", service->name);
     INIT_ERROR_CHECK(service->capsArgs.count > 0, return SERVICE_SUCCESS,
         "%s invalid, count is %d", service->name, service->capsArgs.count);
-    WaitForFile("/dev/ioctl_device", WAIT_MAX_COUNT);
+    WaitForFile("/dev/ioctl_device", WAIT_MAX_SECOND);
     uint64_t tokenId = GetAccessTokenId(service->name, service->capsArgs.argv, service->capsArgs.count,
         (char *)service->apl);
     if (tokenId  == 0) {

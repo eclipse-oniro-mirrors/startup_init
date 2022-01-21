@@ -164,7 +164,7 @@ void LE_CloseSignalTask(const LoopHandle loopHandle, const SignalHandle signalHa
 /**
  * 监控句柄变化
  */
-#define TASK_WATCHER 0x04
+#define TASK_WATCHER 0x10
 #define WATCHER_ONCE  0x0100
 typedef void (*ProcessWatchEvent)(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context);
 typedef struct {
