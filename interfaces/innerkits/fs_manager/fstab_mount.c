@@ -298,7 +298,7 @@ int MountOneItem(FstabItem *item)
         return -1;
     }
     if (FM_MANAGER_WAIT_ENABLED(item->fsManagerFlags)) {
-        WaitForFile(item->deviceName, WAIT_MAX_COUNT);
+        WaitForFile(item->deviceName, WAIT_MAX_SECOND);
     }
 
     if (strcmp(item->fsType, "f2fs") == 0 && strcmp(item->mountPoint, "/data") == 0) {
