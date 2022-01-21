@@ -19,8 +19,6 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sched.h>
-#include <stdio.h>
 
 #include "cJSON.h"
 #include "init_cmds.h"

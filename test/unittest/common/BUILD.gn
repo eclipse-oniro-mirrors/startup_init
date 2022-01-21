@@ -24,7 +24,10 @@ if (defined(ohos_lite)) {
     ]
     defines = [ "OHOS_LITE" ]
     if (storage_type == "emmc") {
-      defines += [ "USE_EMMC_STORAGE" ]
+      defines += [
+      "USE_EMMC_STORAGE",
+      "_GNU_SOURCE",
+    ]
     }
 
     include_dirs = [
