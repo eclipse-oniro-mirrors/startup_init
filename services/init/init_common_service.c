@@ -253,6 +253,8 @@ static void PublishHoldFds(Service *service)
         }
         INIT_LOGI("File descriptors of Service \' %s \' published", service->name);
     }
+}
+
 static int SetAffinityBetweenProcAndCore(pid_t pid, int cpuIndex)
 {
     cpu_set_t setMask;
