@@ -66,7 +66,7 @@ int ServiceExec(const Service *service)
         if (setpriority(PRIO_PROCESS, 0, service->importance) != 0) {
             INIT_LOGE("setpriority failed for %s, importance = %d, err=%d",
                 service->name, service->importance, errno);
-            //_exit(0x7f); // 0x7f: user specified
+                _exit(0x7f); // 0x7f: user specified
         }
     }
     INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
