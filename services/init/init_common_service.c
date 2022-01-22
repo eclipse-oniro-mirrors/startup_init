@@ -51,10 +51,6 @@
 #define TIOCSCTTY 0x540E
 #endif
 
-static const int DEFAULT_CRASH_TIME = 240;
-// maximum number of crashes within time DEFAULT_CRASH_TIME for one service
-static const int DEFAULT_CRASH_COUNT = 4;
-
 static int SetAllAmbientCapability(void)
 {
     for (int i = 0; i <= CAP_LAST_CAP; ++i) {
@@ -469,9 +465,8 @@ void ServiceReap(Service *service)
             ExecReboot("reboot");
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
-        if (CalculateCrashTime(service, DEFAULT_CRASH_TIME, DEFAULT_CRASH_COUNT) == false) {
-            INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, DEFAULT_CRASH_COUNT);
-            return;
+        if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
+            INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, service->crashCount);
         }
     }
     // service no need to restart which socket managed by init until socket message detected
