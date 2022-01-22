@@ -124,8 +124,6 @@ typedef struct Service_ {
     ServiceArgs capsArgs;
     CpuArgs cpuInfo;
     Perms servPerm;
-    char apl[MAX_APL_NAME + 1];
-    ServiceArgs capsArgs;
     ServiceArgs pathArgs;
     ServiceArgs extraArgs;
     ServiceArgs writePidArgs;
