@@ -18,6 +18,8 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sched.h>
+#include <stdio.h>
 #ifdef __MUSL__
 #include <stropts.h>
 #endif
@@ -177,6 +179,41 @@ void SetSecon(Service *service)
 #endif // WITH_SELINUX
 }
 
+static int SetAffinityBetweenProcAndCore(pid_t pid, int cpuIndex)
+{
+    cpu_set_t setMask;
+    CPU_ZERO(&setMask);
+    CPU_SET(cpuIndex, &setMask);
+    int ret = sched_setaffinity(pid, sizeof(cpu_set_t), &setMask);
+    if (ret != 0) {
+        INIT_LOGI("Set affinity between process(pid=%d) with CPU's core %d failed", pid, cpuIndex);
+        return SERVICE_FAILURE;
+    } else {
+        INIT_LOGE("Set affinity between process(pid=%d) with CPU's core %d successfully", pid, cpuIndex);
+    }
+    return SERVICE_SUCCESS;
+}
+
+static int BindCpuCore(Service *service)
+{
+    if (service == NULL || service->cpuInfo.cpuNum <= 0) {
+        return SERVICE_SUCCESS;
+    }
+    long cpuNum = sysconf(_SC_NPROCESSORS_CONF);
+    INIT_ERROR_CHECK(service->cpuInfo.cpuNum <= cpuNum, return SERVICE_FAILURE,
+        "%s cpus cores exceeds total number of device cores", service->name);
+    int index = 0;
+    for (int i = 0; i < service->cpuInfo.cpuNum; i++) {
+        index = (int)service->cpuInfo.cpus[i];
+        if ((int)cpuNum <= index) {
+            INIT_LOGW("%s core number %d of CPU cores does not exist", service->name, index);
+            continue;
+        }
+        (void)SetAffinityBetweenProcAndCore(getpid(), index);
+    }
+    return SERVICE_SUCCESS;
+}
+
 int ServiceStart(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
@@ -205,6 +242,9 @@ int ServiceStart(Service *service)
         if (service->attribute & SERVICE_ATTR_CONSOLE) {
             OpenConsole();
         }
+        // bind cpu core
+        INIT_CHECK_ONLY_ELOG(BindCpuCore(service) == SERVICE_SUCCESS,
+            "binding core number failed for service %s", service->name);
         // permissions
         INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
             "service %s exit! set perms failed! err %d.", service->name, errno);
