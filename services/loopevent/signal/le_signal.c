@@ -52,7 +52,7 @@ LE_STATUS LE_CreateSignalTask(const LoopHandle loopHandle, SignalHandle *signalH
 {
     LE_CHECK(loopHandle != NULL && signalHandle != NULL, return LE_INVALID_PARAM, "Invalid parameters");
     LE_CHECK(processSignal != NULL, return LE_FAILURE, "Invalid parameters processSignal");
-    sigset_t mask = {};
+    sigset_t mask;
     sigemptyset(&mask);
     int sfd = signalfd(-1, &mask, SFD_NONBLOCK);
     LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
@@ -61,6 +61,7 @@ LE_STATUS LE_CreateSignalTask(const LoopHandle loopHandle, SignalHandle *signalH
     LE_CHECK(task != NULL, return LE_NO_MEMORY, "Failed to create task");
     task->base.handleEvent = HandleSignalEvent_;
     task->base.innerClose = HandleSignalTaskClose_;
+    task->sigNumber = 0;
     sigemptyset(&task->mask);
     task->processSignal = processSignal;
     *signalHandle = (SignalHandle)task;
@@ -72,8 +73,7 @@ LE_STATUS LE_AddSignal(const LoopHandle loopHandle, const SignalHandle signalHan
     LE_CHECK(loopHandle != NULL && signalHandle != NULL, return LE_INVALID_PARAM, "Invalid parameters");
     EventLoop *loop = (EventLoop *)loopHandle;
     SignalTask *task = (SignalTask *)signalHandle;
-    int empty = sigisemptyset(&task->mask);
-    LE_LOGI("LE_AddSignal %d %d", signal, empty);
+    LE_LOGI("LE_AddSignal %d %d", signal, task->sigNumber);
     if (sigismember(&task->mask, signal)) {
         return LE_SUCCESS;
     }
@@ -81,11 +81,12 @@ LE_STATUS LE_AddSignal(const LoopHandle loopHandle, const SignalHandle signalHan
     sigprocmask(SIG_BLOCK, &task->mask, NULL);
     int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK);
     LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
-    if (empty) {
+    if (task->sigNumber == 0) {
         loop->addEvent(loop, (const BaseTask *)task, Event_Read);
     } else {
         loop->modEvent(loop, (const BaseTask *)task, Event_Read);
     }
+    task->sigNumber++;
     return LE_SUCCESS;
 }
 
@@ -94,14 +95,15 @@ LE_STATUS LE_RemoveSignal(const LoopHandle loopHandle, const SignalHandle signal
     LE_CHECK(loopHandle != NULL && signalHandle != NULL, return LE_INVALID_PARAM, "Invalid parameters");
     EventLoop *loop = (EventLoop *)loopHandle;
     SignalTask *task = (SignalTask *)signalHandle;
-    LE_LOGI("LE_RemoveSignal %d ", signal);
+    LE_LOGI("LE_RemoveSignal %d %d", signal, task->sigNumber);
     if (!sigismember(&task->mask, signal)) {
         return LE_SUCCESS;
     }
     sigdelset(&task->mask, signal);
+    task->sigNumber--;
     int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK);
     LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
-    if (sigisemptyset(&task->mask)) {
+    if (task->sigNumber <= 0) {
         loop->delEvent(loop, GetSocketFd(signalHandle), Event_Read);
     }
     return LE_SUCCESS;

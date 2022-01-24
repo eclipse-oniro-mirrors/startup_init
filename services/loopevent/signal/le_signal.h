@@ -23,6 +23,7 @@
 typedef struct {
     BaseTask base;
     sigset_t mask;
+    int sigNumber;
     LE_ProcessSignal processSignal;
 } SignalTask;
 
