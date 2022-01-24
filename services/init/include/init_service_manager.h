@@ -33,9 +33,6 @@ extern "C" {
 #define CRITICAL_STR_IN_CFG "critical"
 #define DISABLED_STR_IN_CFG "disabled"
 #define CONSOLE_STR_IN_CFG "console"
-#define D_CAPS_STR_IN_CFG "d-caps"
-#define APL_STR_IN_CFG "apl"
-#define CPU_CORE_STAR_IN_CFG "cpucore"
 
 #define MAX_SERVICES_CNT_IN_FILE 100
 
