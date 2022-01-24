@@ -46,7 +46,6 @@ extern "C" {
 #define SERVICE_ATTR_DYNAMIC 0x100      // dynamic service
 #define SERVICE_ATTR_ONDEMAND 0x200     // ondemand, manage socket by init
 
-#define MAX_APL_NAME 32
 #define MAX_SERVICE_NAME 32
 #define MAX_WRITEPID_FILES 100
 
@@ -57,11 +56,6 @@ extern "C" {
 #define CAP_NUM 2
 
 #define SERVICES_ARR_NAME_IN_JSON "services"
-
-typedef struct {
-    int *cpus;
-    int cpuNum;
-} CpuArgs;
 
 typedef struct {
     uid_t uID;
@@ -89,9 +83,6 @@ typedef struct {
     int crashTime;
     unsigned int attribute;
     int importance;
-    char apl[MAX_APL_NAME + 1];
-    ServiceArgs capsArgs;
-    CpuArgs cpuInfo;
     Perms servPerm;
     ServiceArgs pathArgs;
     ServiceArgs extraArgs;

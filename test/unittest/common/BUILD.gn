@@ -22,10 +22,7 @@ if (defined(ohos_lite)) {
       "-lpthread",
       "-lm",
     ]
-    defines = [
-      "_GNU_SOURCE",
-      "OHOS_LITE",
-    ]
+    defines = [ "OHOS_LITE" ]
     if (storage_type == "emmc") {
       defines += [ "USE_EMMC_STORAGE" ]
     }
