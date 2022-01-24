@@ -47,5 +47,6 @@ ohos_static_library("libinit_utils") {
     "//base/startup/init_lite/services/log:init_log",
     "//third_party/bounds_checking_function:libsec_static",
   ]
+  defines = [ "_GNU_SOURCE" ]
   part_name = "init"
 }

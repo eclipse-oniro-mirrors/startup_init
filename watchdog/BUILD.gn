@@ -25,6 +25,7 @@ if (defined(ohos_lite)) {
     deps = [ "//base/startup/init_lite/services/log:init_log" ]
     if (ohos_kernel_type == "linux") {
       defines = [ "LINUX_WATCHDOG" ]
+      defines += [ "_GNU_SOURCE" ]
     }
   }
 } else {
@@ -37,6 +38,7 @@ if (defined(ohos_lite)) {
     ]
     deps = [ "//base/startup/init_lite/services/log:init_log" ]
     defines = [ "LINUX_WATCHDOG" ]
+    defines += [ "_GNU_SOURCE" ]
     install_enable = true
     part_name = "init"
   }

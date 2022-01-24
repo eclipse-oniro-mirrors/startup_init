@@ -61,7 +61,6 @@ const int TEST_MAX_ONE_ARG_LEN = 64;                  // max length of one param
 const int CAT_BUF_SIZE = 512;                         // standard Cat buffer size from vfs_shell_cmd
 
 // job test releated
-const pid_t INVALID_PID = -1;
 const std::string PRE_INIT_DIR = ROOT_DIR + "preInitDir/";
 const std::string INIT_DIR = PRE_INIT_DIR + "initDir";
 const std::string POST_INIT_DIR = INIT_DIR + "postInitDir";

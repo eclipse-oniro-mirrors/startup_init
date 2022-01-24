@@ -172,7 +172,7 @@ if (defined(ohos_lite)) {
     if (defined(product_name) && product_name == "rk3568") {
       defines += [ "PRODUCT_RK" ]
     }
-
+    defines += [ "_GNU_SOURCE" ]
     install_images = [
       "system",
       "updater",
