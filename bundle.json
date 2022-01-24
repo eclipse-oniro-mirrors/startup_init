@@ -15,6 +15,7 @@
         "name": "init",
         "subsystem": "startup",
         "adapted_system_type": [
+            "small",
             "standard"
         ],
         "rom": "",
@@ -35,6 +36,8 @@
         },
         "build": {
             "sub_component": [
+                "//base/startup/init_lite/services:init_lite",
+                "//base/startup/init_lite/ueventd:ueventd",
                 "//base/startup/init_lite/services:startup_init",
                 "//base/startup/init_lite/ueventd:startup_ueventd",
                 "//base/startup/init_lite/watchdog:watchdog",
@@ -73,7 +76,8 @@
                 }
             ],
             "test": [
-                "//base/startup/init_lite/test/unittest:init_test"
+                "//base/startup/init_lite/test/unittest:init_test",
+                "//base/startup/init_lite/test/unittest/common:unittest"
             ]
         }
     }
