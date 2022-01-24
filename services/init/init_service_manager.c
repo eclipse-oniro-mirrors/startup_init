@@ -376,8 +376,11 @@ static int ParseServiceSocket(const cJSON *curArrItem, Service *curServ)
         cJSON *sockJ = cJSON_GetArrayItem(filedJ, i);
         ret = AddServiceSocket(sockJ, curServ);
         if (ret != 0) {
-            break;
+            return ret;
         }
+    }
+    if (IsOnDemandService(curServ)) {
+        ret = CreateServiceSocket(curServ);
     }
     return ret;
 }

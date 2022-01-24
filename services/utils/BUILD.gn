@@ -11,42 +11,63 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
+if (defined(ohos_lite)) {
+  static_library("libinit_tools") {
+    sources = [
+      "//base/startup/init_lite/services/utils/init_hashmap.c",
+      "//base/startup/init_lite/services/utils/list.c",
+    ]
 
-ohos_static_library("libinit_tools") {
-  sources = [
-    "//base/startup/init_lite/services/utils/init_hashmap.c",
-    "//base/startup/init_lite/services/utils/list.c",
-  ]
+    include_dirs = [
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/services/include",
+    ]
 
-  include_dirs = [
-    "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/include",
-  ]
+    deps = [
+      "//base/startup/init_lite/services/log:init_log",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
+  }
+} else {
+  import("//build/ohos.gni")
 
-  deps = [
-    "//base/startup/init_lite/services/log:init_log",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
-  part_name = "init"
-}
+  ohos_static_library("libinit_tools") {
+    sources = [
+      "//base/startup/init_lite/services/utils/init_hashmap.c",
+      "//base/startup/init_lite/services/utils/list.c",
+    ]
 
-ohos_static_library("libinit_utils") {
-  sources = [ "init_utils.c" ]
+    include_dirs = [
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/services/include",
+    ]
 
-  include_dirs = [
-    "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/include",
-  ]
+    deps = [
+      "//base/startup/init_lite/services/log:init_log",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
+    part_name = "init"
+  }
 
-  deps = [
-    "//base/startup/init_lite/services/log:init_log",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
-  defines = [ "_GNU_SOURCE" ]
-  part_name = "init"
+  ohos_static_library("libinit_utils") {
+    sources = [ "init_utils.c" ]
+
+    include_dirs = [
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/services/include",
+    ]
+
+    deps = [
+      "//base/startup/init_lite/services/log:init_log",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
+    defines = [ "_GNU_SOURCE" ]
+    part_name = "init"
+  }
 }

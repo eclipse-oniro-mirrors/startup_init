@@ -15,9 +15,11 @@
 #include "init.h"
 #include "init_log.h"
 #include "init_jobs_internal.h"
+#include "init_utils.h"
 #ifndef __LINUX__
 #include "init_stage.h"
 #endif
+#include "loop_event.h"
 #include "parameter.h"
 #include "securec.h"
 
@@ -33,6 +35,7 @@ static void PrintSysInfo(void)
 void SystemInit(void)
 {
     SignalInit();
+    MakeDirRecursive("/dev/unix/socket", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 }
 
 void LogInit(void)
@@ -77,9 +80,5 @@ void SystemConfig(void)
 
 void SystemRun(void)
 {
-    while (1) {
-        // pause only returns when a signal was caught and the signal-catching function returned.
-        // pause only returns -1, no need to process the return value.
-        (void)pause();
-    }
+    LE_RunLoop(LE_GetDefaultLoop());
 }

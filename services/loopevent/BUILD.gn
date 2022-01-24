@@ -10,40 +10,59 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//build/ohos.gni")
 
-ohos_static_library("loopevent") {
-  sources = [
-    "loop/le_epoll.c",
-    "loop/le_loop.c",
-    "signal/le_signal.c",
-    "socket/le_socket.c",
-    "task/le_asynctask.c",
-    "task/le_streamtask.c",
-    "task/le_task.c",
-    "task/le_watchtask.c",
-    "timer/le_timer.c",
-    "utils/le_utils.c",
-  ]
+common_sources = [
+  "loop/le_epoll.c",
+  "loop/le_loop.c",
+  "signal/le_signal.c",
+  "socket/le_socket.c",
+  "task/le_asynctask.c",
+  "task/le_streamtask.c",
+  "task/le_task.c",
+  "task/le_watchtask.c",
+  "timer/le_timer.c",
+  "utils/le_utils.c",
+]
 
-  include_dirs = [
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/include",
-    "include",
-    "loop",
-    "socket",
-    "task",
-    "timer",
-    "utils",
-    "signal",
-  ]
+common_include = [
+  "//base/startup/init_lite/services/log",
+  "//base/startup/init_lite/interfaces/innerkits/include",
+  "//base/startup/init_lite/services/include",
+  "include",
+  "loop",
+  "socket",
+  "task",
+  "timer",
+  "utils",
+  "signal",
+]
 
-  deps = [
-    "//base/startup/init_lite/services/log:init_log",
-    "//base/startup/init_lite/services/utils:libinit_tools",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
-  part_name = "init"
-  subsystem_name = "startup"
+if (defined(ohos_lite)) {
+  static_library("loopevent") {
+    sources = common_sources
+
+    include_dirs = common_include
+
+    deps = [
+      "//base/startup/init_lite/services/log:init_log",
+      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
+  }
+} else {
+  import("//build/ohos.gni")
+
+  ohos_static_library("loopevent") {
+    sources = common_sources
+
+    include_dirs = common_include
+
+    deps = [
+      "//base/startup/init_lite/services/log:init_log",
+      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
+    part_name = "init"
+    subsystem_name = "startup"
+  }
 }

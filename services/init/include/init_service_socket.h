@@ -27,6 +27,10 @@ extern "C" {
 
 #define MAX_SOCK_NAME_LEN 16
 #define SOCK_OPT_NUMS 6
+
+#define IsConnectionBasedSocket(sockopt) \
+    ((sockopt)->type == SOCK_STREAM || (sockopt)->type == SOCK_SEQPACKET)
+
 enum SockOptionTab {
     SERVICE_SOCK_NAME = 0,
     SERVICE_SOCK_TYPE,
@@ -51,6 +55,8 @@ typedef struct ServiceSocket_ {
 
 int CreateServiceSocket(struct Service_ *service);
 void CloseServiceSocket(struct Service_ *service);
+int SocketAddWatcher(ServiceWatcher *watcherHandle, struct Service_ *service, int fd);
+void SocketDelWatcher(ServiceWatcher watcherHandle);
 
 #ifdef __cplusplus
 #if __cplusplus

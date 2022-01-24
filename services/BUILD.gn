@@ -51,6 +51,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/include",
       "//base/startup/init_lite/services/init/include",
       "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/services/loopevent/include",
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
@@ -64,6 +65,7 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
       "//base/startup/init_lite/initsync:initsync",
+      "//base/startup/init_lite/services/loopevent:loopevent",
       "//base/startup/syspara_lite/frameworks/parameter:parameter",
       "//build/lite/config/component/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",

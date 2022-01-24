@@ -381,7 +381,7 @@ static void PollSocketAfresh(Service *service)
             INIT_LOGE("Invaid socket %s for service", service->name);
             tmpSock = tmpSock->next;
         }
-        ServiceAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
+        SocketAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
         tmpSock = tmpSock->next;
     }
     return;
