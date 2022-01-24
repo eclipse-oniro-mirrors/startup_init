@@ -20,20 +20,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "hilog/log.h"
+#include "beget_ext.h"
 #include "init_utils.h"
 #include "securec.h"
 #include "sys_param.h"
 
-static int StartDynamicProcess(const char *name, const char *extArgv[], int extArgc)
+static int StartProcess(const char *name, const char *extArgv[], int extArgc)
 {
     if (name == NULL) {
-        HILOG_ERROR(LOG_CORE, "Start dynamic service failed, service name is null.");
+        BEGET_LOGE("Start dynamic service failed, service name is null.");
         return -1;
     }
     int extraArg = 0;
     if ((extArgv != NULL) && (extArgc > 0)) {
-        HILOG_INFO(LOG_CORE, "Start service by extra args");
+        BEGET_LOGI("Start service by extra args");
         extraArg = 1;
     }
     if (extraArg == 1) {
@@ -44,97 +44,102 @@ static int StartDynamicProcess(const char *name, const char *extArgv[], int extA
         len += strlen(name) + extArgc + 1;
         char *nameValue = (char *)calloc(len, sizeof(char));
         if (nameValue == NULL) {
-            HILOG_ERROR(LOG_CORE, "Failed calloc err=%{public}d", errno);
+            BEGET_LOGE("Failed calloc err=%d", errno);
             return -1;
         }
         if (strncat_s(nameValue, len, name, strlen(name)) != 0) {
-            HILOG_ERROR(LOG_CORE, "Failed strncat_s name err=%{public}d", errno);
+            BEGET_LOGE("Failed strncat_s name err=%d", errno);
             return -1;
         }
         for (int j = 0; j < extArgc; j++) {
             if (strncat_s(nameValue, len, "|", 1) != 0) {
-                HILOG_ERROR(LOG_CORE, "Failed strncat_s \"|\"err=%{public}d", errno);
+                BEGET_LOGE("Failed strncat_s \"|\"err=%d", errno);
                 return -1;
             }
             if (strncat_s(nameValue, len, extArgv[j], strlen(extArgv[j])) != 0) {
-                HILOG_ERROR(LOG_CORE, "Failed strncat_s err=%{public}d", errno);
+                BEGET_LOGE("Failed strncat_s err=%d", errno);
                 return -1;
             }
         }
         if (SystemSetParameter("ohos.ctl.start", nameValue) != 0) {
-            HILOG_ERROR(LOG_CORE, "Set param for %{public}s failed.\n", nameValue);
+            BEGET_LOGE("Set param for %s failed.\n", nameValue);
             free(nameValue);
             return -1;
         }
         free(nameValue);
     } else {
         if (SystemSetParameter("ohos.ctl.start", name) != 0) {
-            HILOG_ERROR(LOG_CORE, "Set param for %{public}s failed.\n", name);
+            BEGET_LOGE("Set param for %s failed.\n", name);
             return -1;
         }
     }
     return 0;
 }
 
-static int StopDynamicProcess(const char *serviceName)
+static int StopProcess(const char *serviceName)
 {
     if (serviceName == NULL) {
-        HILOG_ERROR(LOG_CORE, "Stop dynamic service failed, service is null.\n");
+        BEGET_LOGE("Stop dynamic service failed, service is null.\n");
         return -1;
     }
     if (SystemSetParameter("ohos.ctl.stop", serviceName) != 0) {
-        HILOG_ERROR(LOG_CORE, "Set param for %{public}s failed.\n", serviceName);
+        BEGET_LOGE("Set param for %s failed.\n", serviceName);
         return -1;
     }
     return 0;
 }
 
-static int GetCurrentServiceStatus(const char *serviceName, char *paramValue, unsigned int valueLen)
+static int GetCurrentServiceStatus(const char *serviceName, char *status, int len)
 {
     char paramName[PARAM_NAME_LEN_MAX] = {0};
     if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", serviceName) == -1) {
-        HILOG_ERROR(LOG_CORE, "Failed snprintf_s err=%{public}d", errno);
-        return -1;
-    }
-    if (SystemGetParameter(paramName, paramValue, &valueLen) != 0) {
-        HILOG_ERROR(LOG_CORE, "Failed get paramName.");
-        return -1;
-    }
-    return 0;
-}
-
-static int RestartDynamicProcess(const char *serviceName, const char *extArgv[], int extArgc)
-{
-    if (serviceName == NULL) {
-        HILOG_ERROR(LOG_CORE, "Restart dynamic service failed, service is null.\n");
+        BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
     char paramValue[PARAM_VALUE_LEN_MAX] = {0};
     unsigned int valueLen = PARAM_VALUE_LEN_MAX;
-    if (GetCurrentServiceStatus(serviceName, paramValue, valueLen) != 0) {
-        HILOG_ERROR(LOG_CORE, "Get service status failed.\n");
+    if (SystemGetParameter(paramName, paramValue, &valueLen) != 0) {
+        BEGET_LOGE("Failed get paramName.");
         return -1;
     }
-    if (strcmp(paramValue, "running") == 0) {
-        if (StopDynamicProcess(serviceName) != 0) {
-            HILOG_ERROR(LOG_CORE, "Stop service %{public}s failed", serviceName);
+    if (strncpy_s(status, len, paramValue, len - 1) < 0) {
+        BEGET_LOGE("Failed strncpy_s err=%d", errno);
+        return -1;
+    }
+    return 0;
+}
+
+static int RestartProcess(const char *serviceName, const char *extArgv[], int extArgc)
+{
+    if (serviceName == NULL) {
+        BEGET_LOGE("Restart dynamic service failed, service is null.\n");
+        return -1;
+    }
+    char status[PARAM_VALUE_LEN_MAX] = {0};
+    if (GetCurrentServiceStatus(serviceName, status, PARAM_VALUE_LEN_MAX) != 0) {
+        BEGET_LOGE("Get service status failed.\n");
+        return -1;
+    }
+    if (strcmp(status, "running") == 0) {
+        if (StopProcess(serviceName) != 0) {
+            BEGET_LOGE("Stop service %s failed", serviceName);
             return -1;
         }
         if (ServiceWaitForStatus(serviceName, "stopped", DEFAULT_PARAM_WAIT_TIMEOUT) != 0) {
-            HILOG_ERROR(LOG_CORE, "Failed wait service %{public}s stopped", serviceName);
+            BEGET_LOGE("Failed wait service %s stopped", serviceName);
             return -1;
         }
-        if (StartDynamicProcess(serviceName, extArgv, extArgc) != 0) {
-            HILOG_ERROR(LOG_CORE, "Start service %{public}s failed", serviceName);
+        if (StartProcess(serviceName, extArgv, extArgc) != 0) {
+            BEGET_LOGE("Start service %s failed", serviceName);
             return -1;
         }
-    } else if (strcmp(paramValue, "stopped") == 0) {
-        if (StartDynamicProcess(serviceName, extArgv, extArgc) != 0) {
-            HILOG_ERROR(LOG_CORE, "Start service %{public}s failed", serviceName);
+    } else if (strcmp(status, "stopped") == 0) {
+        if (StartProcess(serviceName, extArgv, extArgc) != 0) {
+            BEGET_LOGE("Start service %s failed", serviceName);
             return -1;
         }
     } else {
-        HILOG_ERROR(LOG_CORE, "Current service status: %{public}s is not support.", paramValue);
+        BEGET_LOGE("Current service status: %s is not support.", status);
     }
     return 0;
 }
@@ -142,22 +147,22 @@ static int RestartDynamicProcess(const char *serviceName, const char *extArgv[],
 int ServiceControlWithExtra(const char *serviceName, int action, const char *extArgv[], int extArgc)
 {
     if (serviceName == NULL) {
-        HILOG_ERROR(LOG_CORE, "Service wait failed, service is null.\n");
+        BEGET_LOGE("Service wait failed, service is null.\n");
         return -1;
     }
     int ret = 0;
     switch (action) {
         case START:
-            ret = StartDynamicProcess(serviceName, extArgv, extArgc);
+            ret = StartProcess(serviceName, extArgv, extArgc);
             break;
         case STOP:
-            ret = StopDynamicProcess(serviceName);
+            ret = StopProcess(serviceName);
             break;
         case RESTART:
-            ret = RestartDynamicProcess(serviceName, extArgv, extArgc);
+            ret = RestartProcess(serviceName, extArgv, extArgc);
             break;
         default:
-            HILOG_ERROR(LOG_CORE, "Set service %{public}s action %d error", serviceName, action);
+            BEGET_LOGE("Set service %s action %d error", serviceName, action);
             ret = -1;
             break;
     }
@@ -167,7 +172,7 @@ int ServiceControlWithExtra(const char *serviceName, int action, const char *ext
 int ServiceControl(const char *serviceName, int action)
 {
     if (serviceName == NULL) {
-        HILOG_ERROR(LOG_CORE, "Service getctl failed, service is null.\n");
+        BEGET_LOGE("Service getctl failed, service is null.");
         return -1;
     }
     int ret = ServiceControlWithExtra(serviceName, action, NULL, 0);
@@ -178,18 +183,18 @@ int ServiceControl(const char *serviceName, int action)
 int ServiceWaitForStatus(const char *serviceName, const char *status, int waitTimeout)
 {
     if (serviceName == NULL) {
-        HILOG_ERROR(LOG_CORE, "Service wait failed, service is null.\n");
+        BEGET_LOGE("Service wait failed, service is null.");
         return -1;
     }
     char paramName[PARAM_NAME_LEN_MAX] = {0};
     if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", serviceName) == -1) {
-        HILOG_ERROR(LOG_CORE, "Failed snprintf_s err=%{public}d", errno);
+        BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
     if (SystemWaitParameter(paramName, status, waitTimeout) != 0) {
-        HILOG_ERROR(LOG_CORE, "Wait param for %{public}s failed.\n", paramName);
+        BEGET_LOGE("Wait param for %s failed.", paramName);
         return -1;
     }
-    HILOG_INFO(LOG_CORE, "Success wait");
+    BEGET_LOGI("Success wait");
     return 0;
 }

@@ -41,7 +41,7 @@ HWTEST_F(UtilsUnitTest, TestMakeDir, TestSize.Level0)
     dir = nullptr;
     ret = MakeDirRecursive(dir, mode);
     EXPECT_EQ(ret, -1);
-    ret = MakeDir(dir, 9999);
+    ret = MakeDir(dir, 9999999);
     EXPECT_EQ(ret, -1);
 }
 

@@ -23,8 +23,6 @@ static void ParseAllImports(const cJSON *root);
 static void ParseInitCfgContents(const char *cfgName, const cJSON *root)
 {
     INIT_ERROR_CHECK(root != NULL, return, "Root is null");
-    INIT_LOGI("Parse init cfg %s ", cfgName);
-
     ParseAllServices(root);
     // parse jobs
     ParseAllJobs(root);
@@ -32,8 +30,9 @@ static void ParseInitCfgContents(const char *cfgName, const cJSON *root)
     ParseAllImports(root);
 }
 
-static int ParseInitCfg(const char *configFile, void *context)
+int ParseInitCfg(const char *configFile, void *context)
 {
+    INIT_LOGI("ParseInitCfg %s", configFile);
     UNUSED(context);
     char *fileBuf = ReadFileToBuf(configFile);
     INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Failed to read file content %s", configFile);
@@ -85,10 +84,7 @@ static void ParseAllImports(const cJSON *root)
 void ReadConfig(void)
 {
     // parse cfg
-    if (InChargerMode() == 1) {
-        ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
-        ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
-    } else if (InUpdaterMode() == 0) {
+    if (InUpdaterMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CFG_PATH, ".cfg", ParseInitCfg, NULL);
     } else {

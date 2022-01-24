@@ -65,7 +65,8 @@ int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId);
  * 遍历参数。
  *
  */
-int SystemTraversalParameter(void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie);
+int SystemTraversalParameter(const char *prefix,
+    void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie);
 
 /**
  * 外部接口
@@ -95,6 +96,7 @@ int SystemWatchParameter(const char *keyprefix, ParameterChangePtr change, void 
 
 void SystemDumpParameters(int verbose);
 
+int SysCheckParamExist(const char *name);
 #ifdef __cplusplus
 #if __cplusplus
 }

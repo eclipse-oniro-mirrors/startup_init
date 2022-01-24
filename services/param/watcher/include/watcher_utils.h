@@ -30,7 +30,7 @@ namespace init_param {
 #define WATCHER_LABEL "PARAM_WATCHER"
 #define WATCHER_LOGI(fmt, ...) STARTUP_LOGI(WATCHER_LOG_FILE, WATCHER_LABEL, fmt, ##__VA_ARGS__)
 #define WATCHER_LOGE(fmt, ...) STARTUP_LOGE(WATCHER_LOG_FILE, WATCHER_LABEL, fmt, ##__VA_ARGS__)
-#define WATCHER_LOGD(fmt, ...) STARTUP_LOGD(WATCHER_LOG_FILE, WATCHER_LABEL, fmt, ##__VA_ARGS__)
+#define WATCHER_LOGV(fmt, ...) STARTUP_LOGV(WATCHER_LOG_FILE, WATCHER_LABEL, fmt, ##__VA_ARGS__)
 
 #define WATCHER_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                    \

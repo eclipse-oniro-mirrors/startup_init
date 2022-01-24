@@ -18,19 +18,27 @@ group("watchdog") {
 if (defined(ohos_lite)) {
   executable("watchdog_service") {
     sources = [ "init_watchdog.c" ]
-    include_dirs = [ "//base/startup/init_lite/services/log" ]
+    include_dirs = [
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+    ]
     deps = [ "//base/startup/init_lite/services/log:init_log" ]
     if (ohos_kernel_type == "linux") {
       defines = [ "LINUX_WATCHDOG" ]
+      defines += [ "_GNU_SOURCE" ]
     }
   }
 } else {
   import("//build/ohos.gni")
   ohos_executable("watchdog_service") {
     sources = [ "init_watchdog.c" ]
-    include_dirs = [ "//base/startup/init_lite/services/log" ]
+    include_dirs = [
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+    ]
     deps = [ "//base/startup/init_lite/services/log:init_log" ]
     defines = [ "LINUX_WATCHDOG" ]
+    defines += [ "_GNU_SOURCE" ]
     install_enable = true
     part_name = "init"
   }

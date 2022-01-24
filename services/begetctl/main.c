@@ -12,77 +12,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+
 #include "begetctl.h"
+#include "shell.h"
+#include "shell_utils.h"
+#include "sys_param.h"
 
-struct CMD_LIST_ST {
-    struct CMD_LIST_ST *next;
-    const char *name;
-    BegetCtlCmdPtr cmd;
-};
-
-static struct CMD_LIST_ST *m_cmdList = NULL;
-
-int BegetCtlCmdAdd(const char *name, BegetCtlCmdPtr cmd)
+static BShellHandle g_handle = NULL;
+static int32_t ShellOuput(const char *data, int32_t len)
 {
-    if (name == NULL) {
-        return -1;
+    for (int32_t i = 0; i < len; i++) {
+        putchar(*(data + i));
     }
-
-    struct CMD_LIST_ST *item = (struct CMD_LIST_ST *)malloc(sizeof(struct CMD_LIST_ST));
-    if (item == NULL) {
-        return -1;
-    }
-
-    item->name = strdup(name);
-    if (item->name == NULL) {
-        free((void *)item);
-        return -1;
-    }
-    item->cmd = cmd;
-
-    item->next = m_cmdList;
-    m_cmdList = item;
-
-    return 0;
+    (void)fflush(stdout);
+    return len;
 }
 
-static const struct CMD_LIST_ST *BegetCtlCmdFind(const char *name)
+BShellHandle GetShellHandle(void)
 {
-    const struct CMD_LIST_ST *item = m_cmdList;
-
-    while (item != NULL) {
-        if (strcmp(item->name, name) == 0) {
-            return item;
-        }
-        item = item->next;
+    if (g_handle == NULL) {
+        BShellInfo info = {PARAM_SHELL_DEFAULT_PROMPT, NULL, ShellOuput};
+        BShellEnvInit(&g_handle, &info);
     }
-    return NULL;
+    return g_handle;
 }
 
-static void BegetCtlUsage(const char *command)
+static void signalHandler(int signal)
 {
-    const struct CMD_LIST_ST *item = m_cmdList;
-    int notFirst = 0;
-
-    while (item != NULL) {
-        if (notFirst) {
-            printf(" ");
-        }
-        notFirst = 1;
-        printf("%s", item->name);
-        item = item->next;
-    }
-    printf("\n");
+    demoExit();
+    exit(0);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
+    (void)signal(SIGINT, signalHandler);
     const char *last = strrchr(argv[0], '/');
-
     // Get the first ending command name
     if (last != NULL) {
         last = last + 1;
@@ -91,19 +58,15 @@ int main(int argc, char **argv)
     }
 
     // If it is begetctl with subcommand name, try to do subcommand first
+    int number = argc;
+    char **args = argv;
     if ((argc > 1) && (strcmp(last, "begetctl") == 0)) {
-        argc = argc - 1;
-        argv = argv + 1;
-        last = argv[0];
+        number = argc - 1;
+        args = argv + 1;
     }
-
-    // Match the command
-    const struct CMD_LIST_ST *cmd = BegetCtlCmdFind(last);
-    if (cmd == NULL) {
-        BegetCtlUsage(last);
-        return 0;
-    }
-
-    // Do command
-    return cmd->cmd(argc, argv);
+    SetInitLogLevel(0);
+    BShellParamCmdRegister(g_handle, 0);
+    BShellEnvDirectExecute(g_handle, number, args);
+    demoExit();
+    return 0;
 }

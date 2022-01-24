@@ -35,7 +35,8 @@ enum SockOptionTab {
     SERVICE_SOCK_GID,
     SERVICE_SOCK_SETOPT
 };
-
+typedef void *ServiceWatcher;
+struct Service_;
 typedef struct ServiceSocket_ {
     struct ServiceSocket_ *next;
     int type;      // socket type
@@ -44,11 +45,12 @@ typedef struct ServiceSocket_ {
     bool passcred; // setsocketopt
     mode_t perm;   // Setting permissions
     int sockFd;
+    ServiceWatcher watcher;
     char name[0]; // service name
 } ServiceSocket;
 
-int CreateServiceSocket(ServiceSocket *sockopt);
-void CloseServiceSocket(ServiceSocket *sockopt);
+int CreateServiceSocket(struct Service_ *service);
+void CloseServiceSocket(struct Service_ *service);
 
 #ifdef __cplusplus
 #if __cplusplus

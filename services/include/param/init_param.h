@@ -86,7 +86,7 @@ void PostTrigger(EventType type, const char *content, uint32_t contentLen);
  * 解析trigger文件。
  *
  */
-int ParseTriggerConfig(const cJSON *fileRoot);
+int ParseTriggerConfig(const cJSON *fileRoot, int (*checkJobValid)(const char *jobName));
 
 /**
  * 对Init接口
@@ -94,6 +94,14 @@ int ParseTriggerConfig(const cJSON *fileRoot);
  *
  */
 void DoTriggerExec(const char *triggerName);
+void DoJobExecNow(const char *triggerName);
+
+/**
+ * 对Init接口
+ * 按名字添加一个job，用于group支持。
+ *
+ */
+int AddCompleteJob(const char *name, const char *condition, const char *cmdContent);
 
 /**
  * 对Init接口
@@ -102,6 +110,7 @@ void DoTriggerExec(const char *triggerName);
  */
 void DumpParametersAndTriggers(void);
 
+void RegisterBootStateChange(void (*bootStateChange)(const char *));
 #ifdef __cplusplus
 #if __cplusplus
 }

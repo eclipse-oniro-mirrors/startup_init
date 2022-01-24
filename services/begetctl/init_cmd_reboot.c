@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,27 +20,10 @@
 #include "begetctl.h"
 
 #define REBOOT_CMD_NUMBER 2
-#ifdef PRODUCT_RK
-#define USAGE_INFO "usage: reboot shutdown\n"\
-    "       reboot updater\n"\
-    "       reboot updater[:options]\n" \
-    "       reboot flashd\n" \
-    "       reboot flashd[:options]\n" \
-    "       reboot loader\n" \
-    "       reboot\n"
-#else
-#define USAGE_INFO "usage: reboot shutdown\n"\
-    "       reboot updater\n"\
-    "       reboot updater[:options]\n" \
-    "       reboot flashd\n" \
-    "       reboot flashd[:options]\n" \
-    "       reboot\n"
-#endif
-
-static int main_cmd(int argc, char* argv[])
+static int main_cmd(BShellHandle shell, int argc, char* argv[])
 {
     if (argc > REBOOT_CMD_NUMBER) {
-        printf("%s", USAGE_INFO);
+        BShellCmdHelp(shell, argc, argv);
         return 0;
     }
 
@@ -52,7 +35,7 @@ static int main_cmd(int argc, char* argv[])
 #endif
         strncmp(argv[1], "updater:", strlen("updater:")) != 0 &&
         strncmp(argv[1], "flashd:", strlen("flashd:")) != 0) {
-        printf("%s", USAGE_INFO);
+        BShellCmdHelp(shell, argc, argv);
         return 0;
     }
     int ret;
@@ -72,8 +55,20 @@ static int main_cmd(int argc, char* argv[])
     return 0;
 }
 
-MODULE_CONSTRUCTOR()
+MODULE_CONSTRUCTOR(void)
 {
-    (void)BegetCtlCmdAdd("reboot", main_cmd);
-    (void)BegetCtlCmdAdd("devctl", main_cmd);
+    CmdInfo infos[] = {
+        {"reboot", main_cmd, "reboot system", "reboot", ""},
+        {"reboot", main_cmd, "shutdown system", "reboot shutdown", ""},
+        {"reboot", main_cmd, "reboot and boot into updater", "reboot updater", ""},
+        {"reboot", main_cmd, "reboot and boot into updater", "reboot updater[:options]", ""},
+        {"reboot", main_cmd, "reboot and boot into flashd", "reboot flashd", ""},
+        {"reboot", main_cmd, "reboot and boot into flashd", "reboot flashd[:options]", ""},
+#ifdef PRODUCT_RK
+        {"reboot", main_cmd, "reboot loader", "reboot loader", ""}
+#endif
+    };
+    for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {
+        BShellEnvRegitsterCmd(GetShellHandle(), &infos[i - 1]);
+    }
 }

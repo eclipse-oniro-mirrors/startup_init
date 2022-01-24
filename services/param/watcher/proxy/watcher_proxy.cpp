@@ -25,7 +25,7 @@ namespace OHOS {
 namespace init_param {
 void WatcherProxy::OnParamerterChange(const std::string &name, const std::string &value)
 {
-    WATCHER_LOGD("WatcherProxy::OnParamerterChange %s %s", name.c_str(), value.c_str());
+    WATCHER_LOGV("WatcherProxy::OnParamerterChange %s %s", name.c_str(), value.c_str());
     MessageParcel data;
     MessageParcel reply;
     MessageOption option { MessageOption::TF_ASYNC };

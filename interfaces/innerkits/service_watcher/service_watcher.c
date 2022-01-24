@@ -19,23 +19,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "hilog/log.h"
+#include "beget_ext.h"
 #include "init_utils.h"
 #include "securec.h"
 
 int ServiceWatchForStatus(const char *serviceName, void *context, ServiceStatusChangePtr changeCallback)
 {
     if (serviceName == NULL) {
-        HILOG_ERROR(LOG_CORE, "Service wait failed, service is null.\n");
+        BEGET_LOGE("Service wait failed, service is null.");
         return -1;
     }
     char paramName[PARAM_NAME_LEN_MAX] = {0};
     if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", serviceName) == -1) {
-        HILOG_ERROR(LOG_CORE, "Failed snprintf_s err=%{public}d", errno);
+        BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
     if (SystemWatchParameter(paramName, changeCallback, context) != 0) {
-        HILOG_ERROR(LOG_CORE, "Wait param for %{public}s failed.\n", paramName);
+        BEGET_LOGE("Wait param for %s failed.", paramName);
         return -1;
     }
     return 0;

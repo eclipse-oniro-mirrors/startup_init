@@ -62,7 +62,7 @@ static int LoadPersistParam(PersistParamGetPtr persistParamGet, void *context)
 
 static int SavePersistParam(const char *name, const char *value)
 {
-    PARAM_LOGD("SavePersistParam %s=%s", name, value);
+    PARAM_LOGV("SavePersistParam %s=%s", name, value);
     return 0;
 }
 
@@ -79,7 +79,7 @@ static int BatchSavePersistParam(PERSIST_SAVE_HANDLE handle, const char *name, c
     FILE *fp = (FILE *)handle;
     int ret = fprintf(fp, "%s=%s\n", name, value);
     PARAM_CHECK(ret > 0, return -1, "Failed to write param");
-    PARAM_LOGD("BatchSavePersistParam %s=%s", name, value);
+    PARAM_LOGV("BatchSavePersistParam %s=%s", name, value);
     return 0;
 }
 

@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "init_log.h"
+#include "beget_ext.h"
 #include "init_utils.h"
 #include "securec.h"
 
@@ -34,17 +34,17 @@ int GetControlFile(const char *pathName)
         return -1;
     }
     char path[PATH_MAX] = { 0 };
-    INIT_ERROR_CHECK(snprintf_s(path, sizeof(path), sizeof(path) - 1, OHOS_FILE_ENV_PREFIX "%s", pathName) >= 0,
+    BEGET_ERROR_CHECK(snprintf_s(path, sizeof(path), sizeof(path) - 1, OHOS_FILE_ENV_PREFIX "%s", pathName) >= 0,
         return -1, "Failed snprintf_s err=%d", errno);
-    INIT_ERROR_CHECK(StringReplaceChr(path, '/', '_') == 0,
+    BEGET_ERROR_CHECK(StringReplaceChr(path, '/', '_') == 0,
         return -1, "Failed string replace char");
-    INIT_LOGI("Environment path is %s ", path);
+    BEGET_LOGI("Environment path is %s ", path);
     const char *val = getenv(path);
-    INIT_ERROR_CHECK(val != NULL, return -1, "Failed getenv err=%d", errno);
+    BEGET_ERROR_CHECK(val != NULL, return -1, "Failed getenv err=%d", errno);
     errno = 0;
     int fd = strtol(val, NULL, N_DEC);
-    INIT_ERROR_CHECK(errno == 0, return -1, "Failed strtol val");
-    INIT_LOGI("Get environment fd is %d ", fd);
-    INIT_ERROR_CHECK(fcntl(fd, F_GETFD) >= 0, return -1, "Failed fcntl fd err=%d ", errno);
+    BEGET_ERROR_CHECK(errno == 0, return -1, "Failed strtol val");
+    BEGET_LOGI("Get environment fd is %d ", fd);
+    BEGET_ERROR_CHECK(fcntl(fd, F_GETFD) >= 0, return -1, "Failed fcntl fd err=%d ", errno);
     return fd;
 }

@@ -18,14 +18,13 @@
 #include "init_adapter.h"
 #include "init_log.h"
 #include "init_service_manager.h"
-#include "uv.h"
+#include "loop_event.h"
 
-uv_signal_t g_sigchldHandler;
-uv_signal_t g_sigtermHandler;
+SignalHandle g_sigHandle = NULL;
 
-static void SigHandler(int sig)
+static void ProcessSignal(const struct signalfd_siginfo *siginfo)
 {
-    switch (sig) {
+    switch (siginfo->ssi_signo) {
         case SIGCHLD: {
             pid_t sigPID;
             int procStat = 0;
@@ -53,29 +52,21 @@ static void SigHandler(int sig)
             break;
         }
         default:
-            INIT_LOGI("SigHandler, unsupported signal %d.", sig);
+            INIT_LOGI("SigHandler, unsupported signal %d.", siginfo->ssi_signo);
             break;
     }
 }
 
-static void UVSignalHandler(uv_signal_t *handle, int signum)
-{
-    SigHandler(signum);
-}
-
 void SignalInit(void)
 {
-    int ret = uv_signal_init(uv_default_loop(), &g_sigchldHandler);
-    int ret1 = uv_signal_init(uv_default_loop(), &g_sigtermHandler);
-    if (ret != 0 && ret1 != 0) {
+    if (LE_CreateSignalTask(LE_GetDefaultLoop(), &g_sigHandle, ProcessSignal) != 0) {
         INIT_LOGW("initialize signal handler failed");
         return;
     }
-
-    if (uv_signal_start(&g_sigchldHandler, UVSignalHandler, SIGCHLD) != 0) {
+    if (LE_AddSignal(LE_GetDefaultLoop(), g_sigHandle, SIGCHLD) != 0) {
         INIT_LOGW("start SIGCHLD handler failed");
     }
-    if (uv_signal_start(&g_sigtermHandler, UVSignalHandler, SIGTERM) != 0) {
+    if (LE_AddSignal(LE_GetDefaultLoop(), g_sigHandle, SIGTERM) != 0) {
         INIT_LOGW("start SIGTERM handler failed");
     }
 }

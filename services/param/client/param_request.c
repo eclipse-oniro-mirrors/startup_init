@@ -24,6 +24,7 @@
 #include "init_utils.h"
 #include "param_manager.h"
 #include "param_message.h"
+#include "param_security.h"
 
 #define INVALID_SOCKET (-1)
 #define INIT_PROCESS_PID 1
@@ -45,7 +46,7 @@ static int InitParamClient(void)
     if (PARAM_TEST_FLAG(g_clientSpace.paramSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
-    PARAM_LOGD("InitParamClient");
+    PARAM_LOGV("InitParamClient");
     pthread_mutex_init(&g_clientSpace.mutex, NULL);
     g_clientSpace.clientFd = INVALID_SOCKET;
     return InitParamWorkSpace(&g_clientSpace.paramSpace, 1);
@@ -53,16 +54,8 @@ static int InitParamClient(void)
 
 void ClientInit(void)
 {
-    PARAM_LOGD("ClientInit");
+    PARAM_LOGV("ClientInit");
     (void)InitParamClient();
-    // set log switch
-    const uint32_t switchLength = 10; // 10 swtch length
-    char logSwitch[switchLength] = {0};
-    uint32_t len = switchLength;
-    (void)SystemGetParameter("param.debugging", logSwitch, &len);
-    if (strcmp(logSwitch, "1") == 0) {
-        SetInitLogLevel(INIT_DEBUG);
-    }
 }
 
 void ClientDeinit(void)
@@ -97,15 +90,19 @@ static int FillLabelContent(const ParamMessage *request, uint32_t *start, uint32
 
 static int ProcessRecvMsg(const ParamMessage *recvMsg)
 {
-    PARAM_LOGD("ProcessRecvMsg type: %u msgId: %u name %s", recvMsg->type, recvMsg->id.msgId, recvMsg->key);
+    PARAM_LOGV("ProcessRecvMsg type: %u msgId: %u name %s", recvMsg->type, recvMsg->id.msgId, recvMsg->key);
     int result = PARAM_CODE_INVALID_PARAM;
     switch (recvMsg->type) {
         case MSG_SET_PARAM:
             result = ((ParamResponseMessage *)recvMsg)->result;
             break;
-        case MSG_NOTIFY_PARAM:
+        case MSG_NOTIFY_PARAM: {
+            uint32_t offset = 0;
+            ParamMsgContent *valueContent = GetNextContent(recvMsg, &offset);
+            PARAM_CHECK(valueContent != NULL, return PARAM_CODE_TIMEOUT, "Invalid msg");
             result = 0;
             break;
+        }
         default:
             break;
     }
@@ -141,7 +138,7 @@ static int StartRequest(int *fd, ParamMessage *request, int timeout)
         ret = errno;
         close(clientFd);
         *fd = INVALID_SOCKET;
-        if (errno == EAGAIN || recvLen == 0) {
+        if (errno == EAGAIN || recvLen <= 0) {
             ret = PARAM_CODE_TIMEOUT;
             break;
         }
@@ -222,7 +219,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
     ParamHandle handle = 0;
     ret = ReadParamWithCheck(&g_clientSpace.paramSpace, name, DAC_READ, &handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
         PARAM_CHECK(ret == 0, return ret, "Forbid to wait parameter %s", name);
     }
     if (timeout <= 0) {
@@ -269,7 +266,7 @@ int SystemGetParameter(const char *name, char *value, unsigned int *len)
     PARAM_CHECK(name != NULL && len != NULL, return -1, "The name or value is null");
     ParamHandle handle = 0;
     int ret = ReadParamWithCheck(&g_clientSpace.paramSpace, name, DAC_READ, &handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
         PARAM_CHECK(ret == 0, return ret, "Forbid to get parameter %s", name);
     }
     return ReadParamValue(&g_clientSpace.paramSpace, handle, value, len);
@@ -280,10 +277,24 @@ int SystemFindParameter(const char *name, ParamHandle *handle)
     InitParamClient();
     PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
     int ret = ReadParamWithCheck(&g_clientSpace.paramSpace, name, DAC_READ, handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
         PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
     }
-    return 0;
+    return ret;
+}
+
+int SysCheckParamExist(const char *name)
+{
+    InitParamClient();
+    PARAM_CHECK(name != NULL, return -1, "The name or handle is null");
+    ParamHandle handle;
+    int ret = ReadParamWithCheck(&g_clientSpace.paramSpace, name, DAC_READ, &handle);
+    PARAM_LOGI("SysCheckParamExist %s result %d", name, ret);
+    if (ret == PARAM_CODE_NODE_EXIST) {
+        return 0;
+    }
+    PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
+    return ret;
 }
 
 int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId)
@@ -304,18 +315,19 @@ int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
     return ReadParamValue(&g_clientSpace.paramSpace, handle, value, len);
 }
 
-int SystemTraversalParameter(
+int SystemTraversalParameter(const char *prefix,
     void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie)
 {
     InitParamClient();
     PARAM_CHECK(traversalParameter != NULL, return -1, "The param is null");
     ParamHandle handle = 0;
     // check default dac
-    int ret = ReadParamWithCheck(&g_clientSpace.paramSpace, "#", DAC_READ, &handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+    const char *tmp = (prefix == NULL || strlen(prefix) == 0) ? "#" : prefix;
+    int ret = ReadParamWithCheck(&g_clientSpace.paramSpace, tmp, DAC_READ, &handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
         PARAM_CHECK(ret == 0, return ret, "Forbid to traversal parameters");
     }
-    return TraversalParam(&g_clientSpace.paramSpace, traversalParameter, cookie);
+    return TraversalParam(&g_clientSpace.paramSpace, tmp, traversalParameter, cookie);
 }
 
 void SystemDumpParameters(int verbose)
@@ -324,7 +336,7 @@ void SystemDumpParameters(int verbose)
     // check default dac
     ParamHandle handle = 0;
     int ret = ReadParamWithCheck(&g_clientSpace.paramSpace, "#", DAC_READ, &handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
         PARAM_CHECK(ret == 0, return, "Forbid to dump parameters");
     }
     DumpParameters(&g_clientSpace.paramSpace, verbose);
@@ -338,8 +350,25 @@ int WatchParamCheck(const char *keyprefix)
     PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", keyprefix);
     ParamHandle handle = 0;
     ret = ReadParamWithCheck(&g_clientSpace.paramSpace, keyprefix, DAC_WATCH, &handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0) {
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
         PARAM_CHECK(ret == 0, return ret, "Forbid to watch parameter %s", keyprefix);
+    }
+    return 0;
+}
+
+int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditData)
+{
+    uint32_t labelIndex = 0;
+    FindTrieNode(&g_clientSpace.paramSpace.paramSpace, name, strlen(name), &labelIndex);
+    ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(&g_clientSpace.paramSpace.paramSpace, labelIndex);
+    PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %d", labelIndex);
+
+    auditData->name = name;
+    auditData->dacData.uid = node->uid;
+    auditData->dacData.gid = node->gid;
+    auditData->dacData.mode = node->mode;
+    if (node->length > 0) {
+        auditData->label = strdup(node->data);
     }
     return 0;
 }

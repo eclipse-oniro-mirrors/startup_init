@@ -14,13 +14,10 @@ import("//build/ohos.gni")
 
 declare_args() {
   param_security = "dac"
-  param_test = "false"
 }
 
 ohos_static_library("param_service") {
   sources = [
-    "//base/startup/init_lite/services/utils/init_utils.c",
-    "//base/startup/init_lite/services/utils/list.c",
     "adapter/param_libuvadp.c",
     "adapter/param_persistadp.c",
     "manager/param_manager.c",
@@ -41,15 +38,13 @@ ohos_static_library("param_service") {
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/init/include",
     "//base/startup/init_lite/services/log",
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/services/loopevent/include",
     "//third_party/libuv/include",
     "//third_party/cJSON",
   ]
 
   defines = [ "PARAM_SUPPORT_SAVE_PERSIST" ]
-
-  if (param_test == "true") {
-    defines += [ "PARAM_TEST" ]
-  }
 
   if (param_security == "selinux") {
     sources += [ "adapter/param_selinux.c" ]
@@ -60,8 +55,11 @@ ohos_static_library("param_service") {
   }
 
   deps = [
+    "//base/startup/init_lite/services/log:init_log",
+    "//base/startup/init_lite/services/loopevent:loopevent",
+    "//base/startup/init_lite/services/utils:libinit_tools",
+    "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
-    "//third_party/libuv:uv_static",
   ]
   part_name = "init"
   subsystem_name = "startup"
@@ -82,8 +80,9 @@ ohos_shared_library("param_client") {
     "//base/startup/init_lite/services/include/param",
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/log",
+    "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
-    "//third_party/libuv/include",
+    "//base/startup/init_lite/services/loopevent/include",
   ]
 
   defines = [ "INIT_AGENT" ]
@@ -94,10 +93,6 @@ ohos_shared_library("param_client") {
   } else {
     sources += [ "adapter/param_dac.c" ]
     defines += [ "PARAM_SUPPORT_DAC" ]
-  }
-
-  if (param_test == "true") {
-    defines += [ "PARAM_TEST" ]
   }
 
   deps = [

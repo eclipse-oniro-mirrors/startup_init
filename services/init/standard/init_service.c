@@ -23,6 +23,7 @@
 #include "init_log.h"
 #include "init_param.h"
 #include "init_utils.h"
+#include "loop_event.h"
 #include "securec.h"
 
 #define MIN_IMPORTANT_LEVEL (-20)
@@ -63,8 +64,9 @@ int ServiceExec(const Service *service)
         return SERVICE_FAILURE, "Exec service failed! null ptr.");
     if (service->importance != 0) {
         if (setpriority(PRIO_PROCESS, 0, service->importance) != 0) {
-            INIT_LOGE("setpriority failed for %s, importance = %d", service->name, service->importance);
-            _exit(0x7f); // 0x7f: user specified
+            INIT_LOGE("setpriority failed for %s, importance = %d, err=%d",
+                service->name, service->importance, errno);
+                _exit(0x7f); // 0x7f: user specified
         }
     }
     INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
@@ -77,4 +79,44 @@ int ServiceExec(const Service *service)
             "service %s execve failed! err %d.", service->name, errno);
     }
     return SERVICE_SUCCESS;
+}
+
+static void ProcessWatchEvent_(const WatcherHandle watcherHandle, int fd, uint32_t *events, const void *context)
+{
+    *events = 0;
+    Service *service = (Service *)context;
+    ServiceSocket *tmpSock = service->socketCfg;
+    while (tmpSock != NULL) {
+        if (tmpSock->sockFd == fd) {
+            tmpSock->watcher = NULL;
+            break;
+        }
+        tmpSock = tmpSock->next;
+    }
+    if (tmpSock == NULL) { // not found socket
+        INIT_LOGE("Service %s not match socket fd %d!", service->name, fd);
+        close(fd);
+        return;
+    }
+    if (ServiceStart(service) != SERVICE_SUCCESS) {
+        INIT_LOGE("Service %s start failed!", service->name);
+    }
+}
+
+int ServiceAddWatcher(ServiceWatcher *watcherHandle, Service *service, int fd)
+{
+    WatcherHandle handle;
+    LE_WatchInfo info = {};
+    info.fd = fd;
+    info.flags = WATCHER_ONCE;
+    info.events = Event_Read;
+    info.processEvent = ProcessWatchEvent_;
+    int ret = LE_StartWatcher(LE_GetDefaultLoop(), &handle, &info, service);
+    *watcherHandle = (ServiceWatcher)handle;
+    return ret;
+}
+
+void ServiceDelWatcher(ServiceWatcher watcherHandle)
+{
+    LE_RemoveWatcher(LE_GetDefaultLoop(), (WatcherHandle)watcherHandle);
 }

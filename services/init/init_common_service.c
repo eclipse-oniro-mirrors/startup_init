@@ -32,10 +32,12 @@
 #include "init_adapter.h"
 #include "init_cmds.h"
 #include "init_log.h"
+#include "init_jobs_internal.h"
 #include "init_service.h"
 #include "init_service_manager.h"
 #include "init_service_socket.h"
 #include "init_utils.h"
+#include "fd_holder_internal.h"
 #include "securec.h"
 
 #ifdef WITH_SELINUX
@@ -55,6 +57,32 @@ static int SetAllAmbientCapability(void)
         }
     }
     return SERVICE_SUCCESS;
+}
+
+int __attribute__((weak)) SetSelfTokenID(uint64_t tokenID)
+{
+    return SERVICE_SUCCESS;
+}
+
+uint64_t __attribute__((weak)) GetAccessTokenId(const char *processname, char **dcap, int dacpNum, char *apl)
+{
+    return SERVICE_SUCCESS;
+}
+
+static int SetAccessToken(const Service *service)
+{
+    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "%s failed", service->name);
+    INIT_ERROR_CHECK(service->capsArgs.count > 0, return SERVICE_SUCCESS,
+        "%s invalid, count is %d", service->name, service->capsArgs.count);
+    WaitForFile("/dev/ioctl_device", WAIT_MAX_SECOND);
+    uint64_t tokenId = GetAccessTokenId(service->name, service->capsArgs.argv, service->capsArgs.count,
+        (char *)service->apl);
+    if (tokenId  == 0) {
+        INIT_LOGE("Set totken id %lld of service \' %s \' failed", service->name, tokenId);
+        return SERVICE_FAILURE;
+    }
+    int ret = SetSelfTokenID(tokenId);
+    return ret == 0 ? SERVICE_SUCCESS : SERVICE_FAILURE;
 }
 
 static int SetPerms(const Service *service)
@@ -110,6 +138,8 @@ static int SetPerms(const Service *service)
             return SERVICE_FAILURE;
         }
     }
+    int ret = SetAccessToken(service);
+    INIT_CHECK_ONLY_ELOG(ret == 0, "set access token failed for service %s", service->name);
     return SERVICE_SUCCESS;
 }
 
@@ -159,7 +189,7 @@ static int WritePid(const Service *service)
         if (realPath != NULL) {
             free(realPath);
         }
-        INIT_LOGD("ServiceStart writepid filename=%s, childPid=%s, ok", service->writePidArgs.argv[i], pidString);
+        INIT_LOGV("ServiceStart writepid filename=%s, childPid=%s, ok", service->writePidArgs.argv[i], pidString);
     }
     return SERVICE_SUCCESS;
 }
@@ -177,12 +207,59 @@ void SetSecon(Service *service)
 #endif // WITH_SELINUX
 }
 
+void CloseServiceFds(Service *service, bool needFree)
+{
+    if (service == NULL) {
+        return;
+    }
+
+    INIT_LOGI("Closing service \' %s \' fds", service->name);
+    // fdCount > 0, There is no reason fds is NULL
+    if (service->fdCount != 0) {
+        size_t fdCount = service->fdCount;
+        int *fds = service->fds;
+        for (size_t i = 0; i < fdCount; i++) {
+            INIT_LOGV("Closing fd: %d", fds[i]);
+            close(fds[i]);
+            fds[i] = -1;
+        }
+    }
+    service->fdCount = 0;
+    if (needFree && service->fds != NULL) {
+        free(service->fds);
+        service->fds = NULL;
+    }
+}
+
+static void PublishHoldFds(Service *service)
+{
+    INIT_ERROR_CHECK(service != NULL, return, "Publish hold fds with invalid service");
+    char fdBuffer[MAX_FD_HOLDER_BUFFER] = {};
+    if (service->fdCount > 0 && service->fds != NULL) {
+        size_t pos = 0;
+        for (size_t i = 0; i < service->fdCount; i++) {
+            (void)snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1,
+                "%d ", service->fds[i]);
+            pos = strlen(fdBuffer);
+        }
+        fdBuffer[pos - 1] = '\0'; // Remove last ' '
+        INIT_LOGI("fd buffer: [%s]", fdBuffer);
+        char envName[MAX_BUFFER_LEN] = {};
+        (void)snprintf_s(envName, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, ENV_FD_HOLD_PREFIX"%s", service->name);
+        if (setenv(envName, fdBuffer, 1) < 0) {
+            INIT_LOGE("Failed to set env %s", envName);
+        }
+        INIT_LOGI("File descriptors of Service \' %s \' published", service->name);
+    }
+}
+
 int ServiceStart(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
     INIT_ERROR_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "service : %s had started already.", service->name);
     INIT_ERROR_CHECK(service->pathArgs.count > 0,
         return SERVICE_FAILURE, "start service %s pathArgs is NULL.", service->name);
+
     if (service->attribute & SERVICE_ATTR_INVALID) {
         INIT_LOGE("start service %s invalid.", service->name);
         return SERVICE_FAILURE;
@@ -196,15 +273,22 @@ int ServiceStart(Service *service)
     }
     int pid = fork();
     if (pid == 0) {
+        // deal start job
+        if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
+            DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
+        }
+
         if (!IsOnDemandService(service)) {
-            int ret = CreateServiceSocket(service->socketCfg);
-            INIT_ERROR_CHECK(ret >= 0, _exit(PROCESS_EXIT_CODE),
+            int ret = CreateServiceSocket(service);
+            INIT_ERROR_CHECK(ret >= 0, return SERVICE_FAILURE,
                 "service %s exit! create socket failed!", service->name);
         }
+
         CreateServiceFile(service->fileCfg);
         if (service->attribute & SERVICE_ATTR_CONSOLE) {
             OpenConsole();
         }
+        PublishHoldFds(service);
         // permissions
         INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
             "service %s exit! set perms failed! err %d.", service->name, errno);
@@ -227,13 +311,21 @@ int ServiceStart(Service *service)
 int ServiceStop(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "stop service failed! null ptr.");
+    if (service->serviceJobs.jobsName[JOB_ON_STOP] != NULL) {
+        DoJobNow(service->serviceJobs.jobsName[JOB_ON_STOP]);
+    }
     service->attribute &= ~SERVICE_ATTR_NEED_RESTART;
     service->attribute |= SERVICE_ATTR_NEED_STOP;
     if (service->pid <= 0) {
         return SERVICE_SUCCESS;
     }
-    CloseServiceSocket(service->socketCfg);
+    CloseServiceSocket(service);
     CloseServiceFile(service->fileCfg);
+    // Service stop means service is killed by init or command(i.e stop_service) or system is rebooting
+    // There is no reason still to hold fds
+    if (service->fdCount != 0) {
+        CloseServiceFds(service, true);
+    }
     INIT_ERROR_CHECK(kill(service->pid, SIGKILL) == 0, return SERVICE_FAILURE,
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
     NotifyServiceChange(service->name, "stopping");
@@ -285,7 +377,11 @@ static void PollSocketAfresh(Service *service)
     }
     ServiceSocket *tmpSock = service->socketCfg;
     while (tmpSock != NULL) {
-        SocketPollInit(tmpSock->sockFd, service->name);
+        if (tmpSock->sockFd <= 0) {
+            INIT_LOGE("Invaid socket %s for service", service->name);
+            tmpSock = tmpSock->next;
+        }
+        ServiceAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
         tmpSock = tmpSock->next;
     }
     return;
@@ -304,7 +400,7 @@ void ServiceReap(Service *service)
     }
 
     if (!IsOnDemandService(service)) {
-        CloseServiceSocket(service->socketCfg);
+        CloseServiceSocket(service);
     }
     CloseServiceFile(service->fileCfg);
     // stopped by system-init itself, no need to restart even if it is not one-shot service
@@ -333,7 +429,6 @@ void ServiceReap(Service *service)
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
         if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
             INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, service->crashCount);
-            return;
         }
     }
     // service no need to restart which socket managed by init until socket message detected
@@ -352,4 +447,65 @@ void ServiceReap(Service *service)
         INIT_LOGE("reap service %s start failed!", service->name);
     }
     service->attribute &= (~SERVICE_ATTR_NEED_RESTART);
+}
+
+int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
+{
+    if (service == NULL) {
+        INIT_LOGE("Invalid service info");
+        return -1;
+    }
+
+    if (fdCount == 0) {
+        INIT_LOGE("Update service fds with fdCount is 0, ignore.");
+        return 0;
+    }
+
+    // if service->fds is NULL, allocate new memory to hold the fds
+    // else if service->fds is not NULL, we will try to override it.
+    // There are two cases:
+    // 1) service->fdCount != fdCount:
+    //  It is not easy to re-use the memory of service->fds, so we have to free the memory first
+    //  then re-allocate memory to store new fds
+    // 2) service->fdCount == fdCount
+    //  A situation we happy to meet, just override it.
+
+    int ret = 0;
+    if (service->fdCount == fdCount) {
+        // case 2
+        CloseServiceFds(service, false);
+        if (memcpy_s(service->fds, sizeof(int) * (fdCount + 1), fds, sizeof(int) * fdCount) != 0) {
+            INIT_LOGE("Failed to copy fds to service");
+            // Something wrong happened, maybe service->fds is broken, clear it.
+            free(service->fds);
+            service->fds = NULL;
+            service->fdCount = 0;
+            ret = -1;
+        } else {
+            service->fdCount = fdCount;
+        }
+    } else {
+        if (service->fdCount > 0) {
+            // case 1
+            CloseServiceFds(service, true);
+        }
+        service->fds = calloc(fdCount + 1, sizeof(int));
+        if (service->fds == NULL) {
+            INIT_LOGE("Service \' %s \' failed to allocate memory for fds", service->name);
+            ret = -1;
+        } else {
+            if (memcpy_s(service->fds, sizeof(int) * (fdCount + 1), fds, sizeof(int) * fdCount) != 0) {
+                INIT_LOGE("Failed to copy fds to service");
+                // Something wrong happened, maybe service->fds is broken, clear it.
+                free(service->fds);
+                service->fds = NULL;
+                service->fdCount = 0;
+                return -1;
+            } else {
+                service->fdCount = fdCount;
+            }
+        }
+    }
+    INIT_LOGI("Hold fd for service \' %s \' done", service->name);
+    return ret;
 }

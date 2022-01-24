@@ -15,9 +15,11 @@
 #include <cerrno>
 #include <unistd.h>
 #include <sys/socket.h>
-#include "init_unittest.h"
+#include "init_service.h"
+#include "init_service_manager.h"
 #include "init_service_socket.h"
 #include "init_socket.h"
+#include "init_unittest.h"
 #include "securec.h"
 using namespace std;
 using namespace testing::ext;
@@ -31,6 +33,8 @@ public:
 };
 HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
 {
+    Service *service = (Service *)calloc(1, sizeof(Service));
+    ASSERT_NE(service, nullptr);
     ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket));
     ASSERT_NE(sockopt, nullptr);
     sockopt->type = SOCK_SEQPACKET;
@@ -41,18 +45,19 @@ HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
     sockopt->passcred = true;
     const char *testSocName = "test_socket";
     errno_t ret = strncpy_s(sockopt->name, strlen(testSocName) + 1, testSocName, strlen(testSocName));
+    sockopt->next = NULL;
     EXPECT_EQ(ret, EOK);
-    int ret1 = CreateServiceSocket(sockopt);
+    if (service->socketCfg == NULL) {
+        service->socketCfg = sockopt;
+    } else {
+        sockopt->next = service->socketCfg->next;
+        service->socketCfg->next = sockopt;
+    }
+    int ret1 = CreateServiceSocket(service);
     EXPECT_EQ(ret1, 0);
     ret1 = GetControlSocket(testSocName);
     EXPECT_GE(ret1, 0);
-    ret1 = CreateServiceSocket(sockopt);
-    EXPECT_EQ(ret1, 0);
-    sockopt->sockFd = 0;
-    ret1 = CreateServiceSocket(sockopt);
-    EXPECT_EQ(ret1, 0);
-    CloseServiceSocket(sockopt);
-    free(sockopt);
-    sockopt = nullptr;
+    CloseServiceSocket(service);
+    ReleaseService(service);
 }
 } // namespace init_ut

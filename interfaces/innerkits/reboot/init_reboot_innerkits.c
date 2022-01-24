@@ -18,7 +18,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "init_log.h"
+#include "beget_ext.h"
 #include "param.h"
 #include "securec.h"
 #include "sys_param.h"
@@ -36,18 +36,18 @@ int DoReboot(const char *option)
 {
     char value[MAX_REBOOT_OPTION_SIZE];
     if (option == NULL || strlen(option) == 0) {
-        INIT_ERROR_CHECK(snprintf_s(value, MAX_REBOOT_OPTION_SIZE, strlen("reboot") + 1, "%s", "reboot") >= 0,
+        BEGET_ERROR_CHECK(snprintf_s(value, MAX_REBOOT_OPTION_SIZE, strlen("reboot") + 1, "%s", "reboot") >= 0,
             return -1, "reboot options too large, overflow");
-        INIT_ERROR_CHECK(SystemSetParameter(DOREBOOT_PARAM, value) == 0, return -1,
+        BEGET_ERROR_CHECK(SystemSetParameter(DOREBOOT_PARAM, value) == 0, return -1,
             "Set parameter to trigger reboot command \" %s \" failed", value);
         return 0;
     }
     int length = strlen(option);
-    INIT_ERROR_CHECK(length <= MAX_REBOOT_OPTION_SIZE, return -1,
+    BEGET_ERROR_CHECK(length <= MAX_REBOOT_OPTION_SIZE, return -1,
         "Reboot option \" %s \" is too large, overflow", option);
-    INIT_ERROR_CHECK(snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "%s%s", "reboot,",
+    BEGET_ERROR_CHECK(snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "%s%s", "reboot,",
         option) >= 0, return -1, "Failed to copy boot option \" %s \"", option);
-    INIT_ERROR_CHECK(SystemSetParameter(DOREBOOT_PARAM, value) == 0, return -1,
+    BEGET_ERROR_CHECK(SystemSetParameter(DOREBOOT_PARAM, value) == 0, return -1,
         "Set parameter to trigger reboot command \" %s \" failed", value);
     return 0;
 }

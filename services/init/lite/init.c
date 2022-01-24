@@ -47,6 +47,7 @@ void SystemPrepare(void)
 
 void SystemConfig(void)
 {
+    InitServiceSpace();
     // read config
     ReadConfig();
 

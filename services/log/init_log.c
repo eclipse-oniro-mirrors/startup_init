@@ -29,7 +29,6 @@
 
 #define MAX_LOG_SIZE 1024
 #define BASE_YEAR 1900
-#define UNLIKELY(x)    __builtin_expect(!!(x), 0)
 
 static InitLogLevel g_logLevel = INIT_INFO;
 static const char *LOG_LEVEL_STR[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
@@ -78,7 +77,6 @@ void InitToHiLog(InitLogLevel logLevel, const char *fmt, ...)
 }
 #endif
 
-#ifndef INIT_AGENT // for init
 static int g_fd = -1;
 void OpenLogDevice(void)
 {
@@ -89,21 +87,7 @@ void OpenLogDevice(void)
     return;
 }
 
-void EnableDevKmsg(void)
-{
-    /* printk_devkmsg default value is ratelimit, We need to set "on" and remove the restrictions */
-    int fd = open("/proc/sys/kernel/printk_devkmsg", O_WRONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IRGRP);
-    if (fd < 0) {
-        return;
-    }
-    char *kmsgStatus = "on";
-    write(fd, kmsgStatus, strlen(kmsgStatus) + 1);
-    close(fd);
-    fd = -1;
-    return;
-}
-
-void InitLog(const char *outFileName, InitLogLevel logLevel, const char *kLevel, const char *fmt, ...)
+void InitLogInit(const char *outFileName, InitLogLevel logLevel, const char *kLevel, const char *fmt, ...)
 {
     if (logLevel < g_logLevel) {
         return;
@@ -139,8 +123,8 @@ void InitLog(const char *outFileName, InitLogLevel logLevel, const char *kLevel,
     }
     return;
 }
-#else // for other process
-void InitLog(const char *outFileName, InitLogLevel logLevel, const char *kLevel, const char *fmt, ...)
+
+void InitLogAgent(const char *outFileName, InitLogLevel logLevel, const char *kLevel, const char *fmt, ...)
 {
     if (logLevel < g_logLevel) {
         return;
@@ -149,8 +133,7 @@ void InitLog(const char *outFileName, InitLogLevel logLevel, const char *kLevel,
     INIT_CHECK_ONLY_RETURN(second >= 0 && outFileName != NULL);
     struct tm *t = localtime(&second);
     INIT_CHECK_ONLY_RETURN(t != NULL);
-    FILE *outfile = NULL;
-    outfile = fopen(outFileName, "a+");
+    FILE *outfile = fopen(outFileName, "a+");
     INIT_CHECK_ONLY_RETURN(outfile != NULL);
     (void)fprintf(outfile, "[%d-%d-%d %d:%d:%d][pid=%d][%s][%s] ",
         (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec,
@@ -163,4 +146,3 @@ void InitLog(const char *outFileName, InitLogLevel logLevel, const char *kLevel,
     fclose(outfile);
     return;
 }
-#endif

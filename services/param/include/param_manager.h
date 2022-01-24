@@ -42,6 +42,8 @@ typedef struct {
     ParamSecurityOps paramSecurityOps;
     ParamTaskPtr serverTask;
     ParamTaskPtr timer;
+    ParamTaskPtr watcherTask;
+    char buffer[PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX];
 } ParamWorkSpace;
 
 typedef struct {
@@ -67,8 +69,10 @@ typedef void (*TraversalParamPtr)(ParamHandle handle, void *context);
 typedef struct {
     TraversalParamPtr traversalParamPtr;
     void *context;
+    const char *prefix;
 } ParamTraversalContext;
-int TraversalParam(const ParamWorkSpace *workSpace, TraversalParamPtr walkFunc, void *cookie);
+int TraversalParam(const ParamWorkSpace *workSpace,
+    const char *prefix, TraversalParamPtr walkFunc, void *cookie);
 
 ParamWorkSpace *GetParamWorkSpace(void);
 ParamWorkSpace *GetClientParamWorkSpace(void);

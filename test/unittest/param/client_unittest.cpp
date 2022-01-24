@@ -88,7 +88,7 @@ static void TestForMultiThread()
 
 static void TestParamTraversal()
 {
-    SystemTraversalParameter([](ParamHandle handle, void *cookie) {
+    SystemTraversalParameter("", [](ParamHandle handle, void *cookie) {
             char value[PARAM_BUFFER_SIZE + PARAM_BUFFER_SIZE] = { 0 };
             uint32_t commitId = 0;
             int ret = SystemGetParameterCommitId(handle, &commitId);
@@ -148,54 +148,6 @@ static void TestPermission()
     RegisterSecurityOps(paramSecurityOps, 0);
 }
 
-static void TestCmd()
-{
-    // set
-    const char *argForSet[] = { "param", "set", "aaaa", "2222" };
-    RunParamCommand(ARRAY_LENGTH(argForSet), const_cast<char **>(argForSet));
-
-    // set fail
-    const char *argForSet1[] = { "param", "set", "aaaa&&&&&&&&&####", "2222" };
-    RunParamCommand(ARRAY_LENGTH(argForSet1), const_cast<char **>(argForSet1));
-
-    // get
-    const char *argForGet[] = { "param", "get", "aaaa" };
-    RunParamCommand(ARRAY_LENGTH(argForGet), const_cast<char **>(argForGet));
-
-    // get not exit
-    const char *argForGet1[] = { "param", "get", "aaaaaaaa" };
-    RunParamCommand(ARRAY_LENGTH(argForGet1), const_cast<char **>(argForGet1));
-
-    // get all
-    const char *argForGet2[] = { "param", "get" };
-    RunParamCommand(ARRAY_LENGTH(argForGet2), const_cast<char **>(argForGet2));
-
-    // set 失败
-    const char *argForSet2[] = { "param", "set", "aaaa" };
-    RunParamCommand(ARRAY_LENGTH(argForSet2), const_cast<char **>(argForSet2));
-
-    const char *argForSet3[] = { "paramset", "aaaa", "aaaa" };
-    RunParamCommand(ARRAY_LENGTH(argForSet3), const_cast<char **>(argForSet3));
-
-    const char *argForSet4[] = { "paramset", "aaaa" };
-    RunParamCommand(ARRAY_LENGTH(argForSet4), const_cast<char **>(argForSet4));
-
-    const char *argForSet5[] = { "param" };
-    RunParamCommand(ARRAY_LENGTH(argForSet5), const_cast<char **>(argForSet5));
-
-    const char *argForSet6[] = { "param", "44444" };
-    RunParamCommand(ARRAY_LENGTH(argForSet6), const_cast<char **>(argForSet6));
-
-    const char *argForSet7[] = { "paramget", "aaaa" };
-    RunParamCommand(ARRAY_LENGTH(argForSet7), const_cast<char **>(argForSet7));
-
-    const char *argForSet8[] = { "param", "dump", "verbose" };
-    RunParamCommand(ARRAY_LENGTH(argForSet8), const_cast<char **>(argForSet8));
-
-    const char *argForSet9[] = { "param", "wait", "test.wait.001", "*", "1" };
-    RunParamCommand(ARRAY_LENGTH(argForSet9), const_cast<char **>(argForSet9));
-}
-
 void TestClientApi(char testBuffer[], uint32_t size, const char *name, const char *value)
 {
     ParamHandle handle;
@@ -216,6 +168,7 @@ void TestClientApi(char testBuffer[], uint32_t size, const char *name, const cha
 
 void TestClient(int index)
 {
+    PARAM_LOGI("TestClient %d \n", index);
     char testBuffer[PARAM_BUFFER_SIZE] = { 0 };
     const std::string value = "test.add.client.value.001";
     std::string name = "test.add.client.001";
@@ -253,8 +206,6 @@ void TestClient(int index)
             EXPECT_NE(ret, 0);
             // test permission
             TestPermission();
-            // test cmd
-            TestCmd();
             break;
         }
         case 5: // 5 multi thread test

@@ -20,13 +20,13 @@ config("exported_header_files") {
 }
 
 fs_manager_sources = [
-  "fs_manager/fs_manager_log.c",
   "fs_manager/fstab.c",
   "fs_manager/fstab_mount.c",
 ]
 
 ohos_shared_library("libbegetutil") {
   sources = [
+    "fd_holder/fd_holder.c",
     "file/init_file.c",
     "reboot/init_reboot_innerkits.c",
     "service_control/service_control.c",
@@ -36,19 +36,23 @@ ohos_shared_library("libbegetutil") {
 
   include_dirs = [
     "./include",
-    "//base/startup/init_lite/services/log",
     "//third_party/bounds_checking_function/include",
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/include/param",
+    "//base/startup/init_lite/interfaces/innerkits/fd_holder",
   ]
+  defines = [ "INIT_AGENT" ]
   deps = [
-    "//base/startup/init_lite/services/log:init_log",
+    "//base/startup/init_lite/interfaces/innerkits/fd_holder:libfdholder_internal_static",
     "//base/startup/init_lite/services/param:param_client",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/openssl:libcrypto_static",
     "//utils/native/base:utils",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  deps += [ "//base/startup/init_lite/services/log:init_log" ]
+
   public_configs = [ ":exported_header_files" ]
   part_name = "init"
   install_images = [
@@ -62,6 +66,7 @@ ohos_shared_library("libservice_watcher") {
   sources = [ "service_watcher/service_watcher.c" ]
 
   include_dirs = [
+    "./include",
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/include/param",
     "//third_party/bounds_checking_function/include",
@@ -72,8 +77,9 @@ ohos_shared_library("libservice_watcher") {
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
-  public_configs = [ ":exported_header_files" ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  deps += [ "//base/startup/init_lite/services/log:init_log" ]
+
   part_name = "init"
   install_images = [
     "system",
@@ -90,5 +96,6 @@ ohos_static_library("libfsmanager_static") {
     "//base/startup/init_lite/services/log",
     "//base/startup/init_lite/services/include",
   ]
+  deps = [ "//base/startup/init_lite/services/log:init_log" ]
   part_name = "init"
 }

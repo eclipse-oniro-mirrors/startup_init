@@ -42,7 +42,6 @@ typedef struct {
 } CapStrCapNum;
 
 typedef struct {
-    ListNode services;
     int serviceCount;
 } ServiceSpace;
 
@@ -50,18 +49,13 @@ Service *GetServiceByPid(pid_t pid);
 Service *GetServiceByName(const char *servName);
 cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrName);
 int ParseOneService(const cJSON *curItem, Service *service);
-void SocketPollInit(int sockFd, const char* serviceName);
-int CreateAndPollSocket(Service *service);
+
 void StartServiceByName(const char *serviceName, bool checkDynamic);
 void StopServiceByName(const char *serviceName);
 void StopAllServices(int flags);
 void ParseAllServices(const cJSON *fileRoot);
 void ReleaseService(Service *service);
-
-static inline bool IsOnDemandService(Service *service)
-{
-    return !!(service->attribute & SERVICE_ATTR_ONDEMAND);
-}
+void StartAllServices(int startMode);
 
 #ifdef OHOS_SERVICE_DUMP
 void DumpAllServices();

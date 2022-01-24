@@ -35,7 +35,7 @@ static int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, uint32_t spa
         return PARAM_CODE_INVALID_PARAM, "Invalid allocTrieNode %s", workSpace->fileName);
     PARAM_CHECK(workSpace->compareTrieNode != NULL,
         return PARAM_CODE_INVALID_PARAM, "Invalid compareTrieNode %s", workSpace->fileName);
-    PARAM_LOGD("InitWorkSpace %s ", workSpace->fileName);
+    PARAM_LOGV("InitWorkSpace %s readOnly %d", workSpace->fileName, readOnly);
     CheckAndCreateDir(workSpace->fileName);
 
     int fd = open(workSpace->fileName, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
@@ -62,7 +62,7 @@ static int InitWorkSpace_(WorkSpace *workSpace, int mode, int prot, uint32_t spa
     } else {
         workSpace->area = (ParamTrieHeader *)areaAddr;
     }
-    PARAM_LOGD("InitWorkSpace success, readOnly %d currOffset %u firstNode %u dataSize %u",
+    PARAM_LOGV("InitWorkSpace success, readOnly %d currOffset %u firstNode %u dataSize %u",
         readOnly, workSpace->area->currOffset, workSpace->area->firstNode, workSpace->area->dataSize);
     return 0;
 }

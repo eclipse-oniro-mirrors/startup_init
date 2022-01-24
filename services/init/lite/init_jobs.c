@@ -30,19 +30,19 @@ static int g_jobCnt = 0;
 
 void DumpAllJobs(void)
 {
-    INIT_LOGD("Start to dump all jobs...");
+    INIT_LOGV("Start to dump all jobs...");
     for (int i = 0; i < g_jobCnt; i++) {
-        INIT_LOGD("\tjob name: %s", g_jobs[i].name);
+        INIT_LOGV("\tjob name: %s", g_jobs[i].name);
         if (g_jobs[i].cmdLines == NULL) {
             continue;
         }
-        INIT_LOGD("\tlist all commands:");
+        INIT_LOGV("\tlist all commands:");
         for (int j = 0; j < g_jobs[i].cmdLines->cmdNum; j++) {
             CmdLine *cmd = &g_jobs[i].cmdLines->cmds[j];
-            INIT_LOGD("\t\tcommand: %s %s", GetCmdKey(cmd->cmdIndex), cmd->cmdContent);
+            INIT_LOGV("\t\tcommand: %s %s", GetCmdKey(cmd->cmdIndex), cmd->cmdContent);
         }
     }
-    INIT_LOGD("Finish dump all jobs");
+    INIT_LOGV("Finish dump all jobs");
 }
 
 static int GetJobName(const cJSON *jobItem, Job *resJob)
@@ -130,7 +130,7 @@ void DoJob(const char *jobName)
         return;
     }
 
-    INIT_LOGD("Call job with name %s", jobName);
+    INIT_LOGV("Call job with name %s", jobName);
     for (int i = 0; i < g_jobCnt; ++i) {
         if (strncmp(jobName, g_jobs[i].name, strlen(g_jobs[i].name)) == 0) {
             CmdLines *cmdLines = g_jobs[i].cmdLines;
@@ -159,4 +159,9 @@ void ReleaseAllJobs(void)
     free(g_jobs);
     g_jobs = NULL;
     g_jobCnt = 0;
+}
+
+int DoJobNow(const char *jobName)
+{
+    return 0;
 }

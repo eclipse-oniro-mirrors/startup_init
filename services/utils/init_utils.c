@@ -138,7 +138,6 @@ char *ReadFileData(const char *fileName)
     return buffer;
 }
 
-
 int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int length)
 {
     INIT_ERROR_CHECK(name != NULL && buffer != NULL && value != NULL, return -1, "Failed get parameters");
@@ -237,7 +236,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
     while (p != NULL) {
         if (count > itemCounts - 1) {
             itemCounts += (itemCounts / 2) + 1; // 2 Request to increase the original memory by half.
-            INIT_LOGD("Too many items,expand size");
+            INIT_LOGV("Too many items,expand size");
             char **expand = (char **)(realloc(items, sizeof(char *) * itemCounts));
             INIT_ERROR_CHECK(expand != NULL, FreeStringVector(items, count);
                 return NULL, "Failed to expand memory for uevent config parser");
@@ -374,7 +373,7 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
         if (dp->d_type == DT_DIR) {
             continue;
         }
-        INIT_LOGD("ReadFileInDir %s", dp->d_name);
+        INIT_LOGV("ReadFileInDir %s", dp->d_name);
         if (includeExt != NULL) {
             char *tmp = strstr(dp->d_name, includeExt);
             if (tmp == NULL) {
@@ -410,21 +409,6 @@ int InUpdaterMode(void)
     }
 }
 
-int InChargerMode(void)
-{
-    char *data = ReadFileData(PARAM_CMD_LINE);
-    char value[CMDLINE_VALUE_LEN_MAX];
-    int ret = 0;
-
-    if ((GetProcCmdlineValue("reboot_reason", data, value, CMDLINE_VALUE_LEN_MAX) == 0) &&
-        (strcmp(value, "poweroff_charge") == 0)) {
-        ret = 1;
-    }
-    INIT_LOGE("GetProcCmdlineValue():reboot_reason=%s\n", value);
-    free(data);
-    return ret;
-}
-
 int StringReplaceChr(char *strl, char oldChr, char newChr)
 {
     INIT_ERROR_CHECK(strl != NULL, return -1, "Invalid parament");
@@ -435,6 +419,16 @@ int StringReplaceChr(char *strl, char oldChr, char newChr)
         }
         p++;
     }
-    INIT_LOGD("strl is %s", strl);
+    INIT_LOGV("strl is %s", strl);
     return 0;
+}
+
+int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue)
+{
+    for (int i = 0; i < argNum; i++) {
+        if (strcmp(infos[i].name, name) == 0) {
+            return infos[i].value;
+        }
+    }
+    return defValue;
 }

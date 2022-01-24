@@ -17,7 +17,6 @@
 #include "init_param.h"
 #include "init_unittest.h"
 #include "init_utils.h"
-#include "param_libuvadp.h"
 #include "param_manager.h"
 #include "param_service.h"
 #include "param_stub.h"
@@ -45,23 +44,27 @@ static const int triggerBuffer = 512;
 static uint32_t g_execCmdId = 0;
 static int g_matchTrigger = 0;
 static char g_matchTriggerName[triggerBuffer] = { 0 };
-static void TestCmdExec(const TriggerNode *trigger, const CommandNode *cmd, const char *content, uint32_t size)
+static int TestCmdExec(const TriggerNode *trigger, const char *content, uint32_t size)
 {
-    if (cmd->cmdKeyIndex == CMD_INDEX_FOR_PARA_WAIT || cmd->cmdKeyIndex == CMD_INDEX_FOR_PARA_WATCH) {
-        TriggerExtData *extData = TRIGGER_GET_EXT_DATA(trigger, TriggerExtData);
-        if (extData != nullptr && extData->excuteCmd != nullptr) {
-            extData->excuteCmd(extData, cmd->cmdKeyIndex, content);
-        }
-        return;
+    PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
+    PARAM_LOGI("DoTriggerExecute_ trigger type: %d %s", trigger->type, GetTriggerName(trigger));
+    PARAM_CHECK(trigger->type <= TRIGGER_UNKNOW, return -1,
+        "Invalid trigger type %d", trigger->type);
+    CommandNode *cmd = GetNextCmdNode((JobNode *)trigger, NULL);
+    while (cmd != NULL) {
+        g_execCmdId = cmd->cmdKeyIndex;
+        cmd = GetNextCmdNode((JobNode *)trigger, cmd);
     }
-    g_execCmdId = cmd->cmdKeyIndex;
+    return 0;
 }
 
 static int TestTriggerExecute(TriggerNode *trigger, const char *content, uint32_t size)
 {
-    int ret = memcpy_s(g_matchTriggerName, (int)sizeof(g_matchTriggerName) - 1, trigger->name, strlen(trigger->name));
+    JobNode *node = (JobNode *)trigger;
+    int ret = memcpy_s(g_matchTriggerName,
+        (int)sizeof(g_matchTriggerName) - 1, node->name, strlen(node->name));
     EXPECT_EQ(ret, 0);
-    g_matchTriggerName[strlen(trigger->name)] = '\0';
+    g_matchTriggerName[strlen(node->name)] = '\0';
     g_matchTrigger++;
     return 0;
 }
@@ -91,7 +94,7 @@ public:
         INIT_ERROR_CHECK(fileBuf != nullptr, return -1, "Failed to read file content %s", configFile);
         cJSON *fileRoot = cJSON_Parse(fileBuf);
         INIT_ERROR_CHECK(fileRoot != nullptr, return -1, "Failed to parse json file %s", configFile);
-        ParseTriggerConfig(fileRoot);
+        ParseTriggerConfig(fileRoot, nullptr);
         cJSON_Delete(fileRoot);
         free(fileBuf);
         fileBuf = nullptr;
@@ -111,10 +114,7 @@ public:
         PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
         PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
         PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
-        LibuvEventTask *task = (LibuvEventTask *)(GetTriggerWorkSpace()->eventHandle);
-        if (task != nullptr) { // 触发队列执行
-            task->process(1, nullptr, 0);
-        }
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         return 0;
     }
 
@@ -123,10 +123,15 @@ public:
         return &GetTriggerWorkSpace()->triggerHead[type];
     }
 
+    JobNode *AddTrigger(int type, const char *name, const char *condition, uint32_t size)
+    {
+        return UpdateJobTrigger(GetTriggerWorkSpace(), type, condition, name);
+    }
+
     int TestAddTriggerForBoot()
     {
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_BOOT), "init-later", "", 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), "init-later");
+        JobNode *node = AddTrigger(TRIGGER_BOOT, "init-later", "", 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), "init-later");
         EXPECT_EQ(node, trigger);
         if (trigger == nullptr) {
             return -1;
@@ -146,8 +151,8 @@ public:
     int TestAddTriggerForParm()
     {
         const char *triggerName = "param:test_param.000";
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, "test_param.000=1", 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, "test_param.000=1", 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
         if (trigger == nullptr) {
             return -1;
@@ -195,8 +200,8 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param, value);
         EXPECT_GE(ret, 0);
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, buffer, 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
 
         g_matchTrigger = 0;
@@ -218,12 +223,11 @@ public:
     {
         const char *triggerName = "param:test_param.222";
         const char *param = "test_param.aaa.222.2222";
-        const char *value = "1";
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=*", param);
         EXPECT_GE(ret, 0);
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, buffer, 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
 
         g_matchTrigger = 0;
@@ -234,8 +238,6 @@ public:
         EXPECT_EQ(0, strcmp(triggerName, g_matchTriggerName));
 
         g_matchTrigger = 0;
-        ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param, value);
-        EXPECT_GE(ret, 0);
         CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM, param, strlen(param), TestTriggerExecute);
         EXPECT_EQ(1, g_matchTrigger);
         EXPECT_EQ(0, strcmp(triggerName, g_matchTriggerName));
@@ -250,8 +252,8 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s || %s", param1, param2);
         EXPECT_GE(ret, 0);
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, buffer, 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
 
         g_matchTrigger = 0;
@@ -274,8 +276,8 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=%s && %s=%s", param1, "1", param2, "2");
         EXPECT_GE(ret, 0);
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, buffer, 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
 
         g_matchTrigger = 0;
@@ -304,8 +306,8 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "aaaa && %s=%s && %s=%s", param1, "1", param2, "2");
         EXPECT_GE(ret, 0);
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_UNKNOW), triggerName, buffer, 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        JobNode *node = AddTrigger(TRIGGER_UNKNOW, triggerName, buffer, 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
 
         g_matchTrigger = 0;
@@ -346,19 +348,17 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param, value);
         EXPECT_GE(ret, 0);
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, buffer, 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
 
         const uint32_t cmdIndex = 100;
         ret = AddCommand(trigger, cmdIndex, value);
         EXPECT_EQ(ret, 0);
         // 修改命令为测试执行
-        GetTriggerWorkSpace()->cmdExec = TestCmdExec;
-        LibuvEventTask *task = (LibuvEventTask *)(GetTriggerWorkSpace()->eventHandle);
+        RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
         SystemWriteParam(param, value);
-        // 触发队列执行
-        task->process(1, nullptr, 0);
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         EXPECT_EQ(g_execCmdId, cmdIndex);
         return 0;
     }
@@ -371,18 +371,15 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param, value);
         EXPECT_GE(ret, 0);
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, buffer, 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
         const uint32_t cmdIndex = 102;
         ret = AddCommand(trigger, cmdIndex, value);
         EXPECT_EQ(ret, 0);
-        // 修改命令为测试执行
-        GetTriggerWorkSpace()->cmdExec = TestCmdExec;
-        LibuvEventTask *task = (LibuvEventTask *)(GetTriggerWorkSpace()->eventHandle);
-        task->beforeProcess(EVENT_TRIGGER_PARAM, buffer, strlen(buffer));
-        // 触发队列执行
-        task->process(EVENT_TRIGGER_PARAM, nullptr, 0);
+        RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
+        SystemWriteParam(param, value);
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         EXPECT_EQ(g_execCmdId, cmdIndex);
         return 0;
     }
@@ -396,8 +393,8 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param, value);
         EXPECT_GE(ret, 0);
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, buffer, 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
         if (trigger == nullptr) {
             return -1;
@@ -406,13 +403,10 @@ public:
         ret = AddCommand(trigger, cmdIndex, value);
         EXPECT_EQ(ret, 0);
         TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_ONCE);
+        SystemWriteParam(param, value);
 
-        // 修改命令为测试执行
-        GetTriggerWorkSpace()->cmdExec = TestCmdExec;
-        LibuvEventTask *task = (LibuvEventTask *)(GetTriggerWorkSpace()->eventHandle);
-        task->beforeProcess(EVENT_TRIGGER_PARAM, buffer, strlen(buffer));
-        // 触发队列执行
-        task->process(EVENT_TRIGGER_PARAM, nullptr, 0);
+        RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         EXPECT_EQ(g_execCmdId, cmdIndex);
         trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         if (trigger != nullptr) {
@@ -430,8 +424,8 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param, value);
         EXPECT_GE(ret, 0);
-        TriggerNode *node = AddTrigger(GetTriggerHeader(TRIGGER_PARAM), triggerName, buffer, 0);
-        TriggerNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
+        JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
         if (trigger == nullptr) {
             return -1;
@@ -440,17 +434,11 @@ public:
         ret = AddCommand(trigger, cmdIndex, value);
         EXPECT_EQ(ret, 0);
         TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_ONCE);
+        SystemWriteParam(param, value);
 
-        // 修改命令为测试执行
-        GetTriggerWorkSpace()->cmdExec = TestCmdExec;
-        LibuvEventTask *task = (LibuvEventTask *)(GetTriggerWorkSpace()->eventHandle);
-        task->beforeProcess(EVENT_TRIGGER_PARAM, buffer, strlen(buffer));
-
-        // 删除对应的trigger
-        FreeTrigger(trigger);
-
-        // 触发队列执行
-        task->process(EVENT_TRIGGER_PARAM, nullptr, 0);
+        RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
+        FreeTrigger(GetTriggerWorkSpace(), (TriggerNode *)trigger);
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         EXPECT_NE(g_execCmdId, cmdIndex);
         trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         if (trigger != nullptr) {
@@ -466,7 +454,7 @@ public:
         const char *triggerName = "boot2:test_param.5555";
         const char *param = "test_param.dddd.aaa.5555";
         const char *value = "5555";
-        TriggerNode *trigger = AddTrigger(GetTriggerHeader(TRIGGER_BOOT), boot, nullptr, 0);
+        JobNode *trigger = AddTrigger(TRIGGER_BOOT, boot, nullptr, 0);
         const int testCmdIndex = 1105;
         int ret = AddCommand(trigger, testCmdIndex, value);
         EXPECT_EQ(ret, 0);
@@ -478,22 +466,15 @@ public:
         char buffer[triggerBuffer];
         ret = sprintf_s(buffer, sizeof(buffer), "boot2 && %s=%s", param, value);
         EXPECT_GE(ret, 0);
-        trigger = AddTrigger(GetTriggerHeader(TRIGGER_UNKNOW), triggerName, buffer, 0);
+        trigger = AddTrigger(TRIGGER_UNKNOW, triggerName, buffer, 0);
         const int testCmdIndex2 = 105;
         ret = AddCommand(trigger, testCmdIndex2, value);
 
-        // 修改命令为测试执行
-        GetTriggerWorkSpace()->cmdExec = TestCmdExec;
-        // 设置属性值
+        RegisterTriggerExec(TRIGGER_UNKNOW, TestCmdExec);
         SystemWriteParam(param, value);
 
-        // 触发boot
         TestBootEvent(boot);
-
-        LibuvEventTask *task = (LibuvEventTask *)(GetTriggerWorkSpace()->eventHandle);
-        // 触发队列执行
-        task->process(EVENT_TRIGGER_PARAM, nullptr, 0);
-        // 连续执行两个trigger
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         EXPECT_EQ(g_execCmdId, (uint32_t)testCmdIndex2);
         return 0;
     }

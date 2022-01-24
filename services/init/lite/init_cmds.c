@@ -118,3 +118,14 @@ const struct CmdTable *GetCmdTable(int *number)
     *number = (int)ARRAY_LENGTH(g_cmdTable);
     return g_cmdTable;
 }
+
+void PluginExecCmdByName(const char *name, const char *cmdContent)
+{
+}
+void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
+{
+}
+const char *PluginGetCmdIndex(const char *cmdStr, int *index)
+{
+    return NULL;
+}

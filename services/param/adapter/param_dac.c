@@ -78,7 +78,7 @@ static int GetParamDacData(FILE *fpForGroup, FILE *fpForUser, ParamDacData *dacD
 static int InitLocalSecurityLabel(ParamSecurityLabel **security, int isInit)
 {
     UNUSED(isInit);
-    PARAM_LOGD("InitLocalSecurityLabel uid:%d gid:%d euid: %d egid: %d ", getuid(), getgid(), geteuid(), getegid());
+    PARAM_LOGV("InitLocalSecurityLabel uid:%d gid:%d euid: %d egid: %d ", getuid(), getgid(), geteuid(), getegid());
     g_localSecurityLabel.cred.pid = getpid();
     g_localSecurityLabel.cred.uid = geteuid();
     g_localSecurityLabel.cred.gid = getegid();
@@ -172,7 +172,7 @@ static int GetParamSecurityLabel(SecurityLabelFunc label, const char *path, void
     if ((stat(path, &st) == 0) && !S_ISDIR(st.st_mode)) {
         return ProcessParamFile(path, &cxt);
     }
-    PARAM_LOGD("GetParamSecurityLabel %s ", path);
+    PARAM_LOGV("GetParamSecurityLabel %s ", path);
     return ReadFileInDir(path, ".para.dac", ProcessParamFile, &cxt);
 }
 
@@ -200,13 +200,13 @@ static int CheckUserInGroup(gid_t groupId, uid_t uid)
         return -1;
     }
 
-    PARAM_LOGD("CheckUserInGroup pw_name %s ", userResult->pw_name);
+    PARAM_LOGV("CheckUserInGroup pw_name %s ", userResult->pw_name);
     if (strcmp(grpResult->gr_name, userResult->pw_name) == 0) {
         return 0;
     }
     int index = 0;
     while (grpResult->gr_mem[index]) {
-        PARAM_LOGD("CheckUserInGroup %s ", grpResult->gr_mem[index]);
+        PARAM_LOGV("CheckUserInGroup %s ", grpResult->gr_mem[index]);
         if (strcmp(grpResult->gr_mem[index], userResult->pw_name) == 0) {
             return 0;
         }
@@ -238,17 +238,17 @@ static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamA
     if ((auditData->dacData.mode & localMode) != 0) {
         ret = DAC_RESULT_PERMISSION;
     }
-    PARAM_LOGD("Src label gid:%d uid:%d ", srcLabel->cred.gid, srcLabel->cred.uid);
-    PARAM_LOGD("local label gid:%d uid:%d mode %o",
+    PARAM_LOGV("Src label gid:%d uid:%d ", srcLabel->cred.gid, srcLabel->cred.uid);
+    PARAM_LOGV("local label gid:%d uid:%d mode %o",
         auditData->dacData.gid, auditData->dacData.uid, auditData->dacData.mode);
-    PARAM_LOGD("%s check %o localMode %o ret %d", auditData->name, mode, localMode, ret);
+    PARAM_LOGV("%s check %o localMode %o ret %d", auditData->name, mode, localMode, ret);
     return ret;
 }
 
 PARAM_STATIC int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
 {
     PARAM_CHECK(ops != NULL, return -1, "Invalid param");
-    PARAM_LOGD("RegisterSecurityDacOps %d", isInit);
+    PARAM_LOGV("RegisterSecurityDacOps %d", isInit);
     ops->securityGetLabel = NULL;
     ops->securityDecodeLabel = NULL;
     ops->securityEncodeLabel = NULL;

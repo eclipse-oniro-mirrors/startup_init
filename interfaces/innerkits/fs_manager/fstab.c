@@ -24,9 +24,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "beget_ext.h"
 #include "fs_manager/fs_manager.h"
-#include "fs_manager/fs_manager_log.h"
-#include "init_log.h"
 #include "init_utils.h"
 #include "securec.h"
 
@@ -54,12 +53,12 @@ unsigned int ConvertFlags(char *flagBuffer)
         {"required", FS_MANAGER_REQUIRED},
     };
 
-    INIT_CHECK_RETURN_VALUE(flagBuffer != NULL && *flagBuffer != '\0', 0); // No valid flags.
+    BEGET_CHECK_RETURN_VALUE(flagBuffer != NULL && *flagBuffer != '\0', 0); // No valid flags.
     int flagCount = 0;
     unsigned int flags = 0;
     const int maxCount = 3;
     char **vector = SplitStringExt(flagBuffer, ",", &flagCount, maxCount);
-    INIT_CHECK_RETURN_VALUE(vector != NULL && flagCount != 0, 0);
+    BEGET_CHECK_RETURN_VALUE(vector != NULL && flagCount != 0, 0);
     for (size_t i = 0; i < ARRAY_LENGTH(fsFlags); i++) {
         for (int j = 0; j < flagCount; j++) {
             if (strcmp(fsFlags[i].name, vector[j]) == 0) {
@@ -127,7 +126,7 @@ void ReleaseFstab(Fstab *fstab)
 
 static int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts)
 {
-    INIT_CHECK_RETURN_VALUE(str != NULL && fstab != NULL, -1);
+    BEGET_CHECK_RETURN_VALUE(str != NULL && fstab != NULL, -1);
     const char *separator = " \t";
     char *rest = NULL;
     FstabItem *item = NULL;
@@ -135,37 +134,37 @@ static int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts)
 
     if ((item = (FstabItem *)calloc(1, sizeof(FstabItem))) == NULL) {
         errno = ENOMEM;
-        FSMGR_LOGE("Allocate memory for FS table item failed, err = %d", errno);
+        BEGET_LOGE("Allocate memory for FS table item failed, err = %d", errno);
         return -1;
     }
 
     do {
         if ((p = strtok_r(str, separator, &rest)) == NULL) {
-            FSMGR_LOGE("Failed to parse block device.");
+            BEGET_LOGE("Failed to parse block device.");
             break;
         }
         item->deviceName = strdup(p);
 
         if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            FSMGR_LOGE("Failed to parse mount point.");
+            BEGET_LOGE("Failed to parse mount point.");
             break;
         }
         item->mountPoint = strdup(p);
 
         if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            FSMGR_LOGE("Failed to parse fs type.");
+            BEGET_LOGE("Failed to parse fs type.");
             break;
         }
         item->fsType = strdup(p);
 
         if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            FSMGR_LOGE("Failed to parse mount options.");
+            BEGET_LOGE("Failed to parse mount options.");
             break;
         }
         item->mountOptions = strdup(p);
 
         if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            FSMGR_LOGE("Failed to parse fs manager flags.");
+            BEGET_LOGE("Failed to parse fs manager flags.");
             break;
         }
         // @fsManagerFlags only for fstab
@@ -193,18 +192,18 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
 
     char *realPath = GetRealPath(file);
     if (realPath == NULL) {
-        FSMGR_LOGE("Invalid file");
+        BEGET_LOGE("Invalid file");
         return NULL;
     }
     FILE *fp = fopen(realPath, "r");
     free(realPath);
     if (fp == NULL) {
-        FSMGR_LOGE("Open %s failed, err = %d", file, errno);
+        BEGET_LOGE("Open %s failed, err = %d", file, errno);
         return NULL;
     }
 
     if ((fstab = (Fstab *)calloc(1, sizeof(Fstab))) == NULL) {
-        FSMGR_LOGE("Allocate memory for FS table failed, err = %d", errno);
+        BEGET_LOGE("Allocate memory for FS table failed, err = %d", errno);
         fclose(fp);
         fp = NULL;
         return NULL;
@@ -234,7 +233,7 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
             }
             // If one line in fstab file parsed with a failure. just give a warning
             // and skip it.
-            FSMGR_LOGW("Cannot parse file \" %s \" at line %zu. skip it", file, ln);
+            BEGET_LOGW("Cannot parse file \" %s \" at line %zu. skip it", file, ln);
             continue;
         }
     }
@@ -270,7 +269,7 @@ FstabItem *FindFstabItemForPath(Fstab fstab, const char *path)
     char tmp[PATH_MAX] = {0};
     char *dir = NULL;
     if (strncpy_s(tmp, PATH_MAX - 1,  path, strlen(path)) != EOK) {
-        FSMGR_LOGE("Failed to copy path.");
+        BEGET_LOGE("Failed to copy path.");
         return NULL;
     }
 
@@ -294,28 +293,28 @@ char *GetFstabFile(void)
     char file[PATH_MAX] = {0};
     if (InUpdaterMode() == 1) {
         if (strncpy_s(file, PATH_MAX, "/etc/fstab.updater", strlen("/etc/fstab.updater")) != 0) {
-            FSMGR_LOGE("Failed strncpy_s err=%d", errno);
+            BEGET_LOGE("Failed strncpy_s err=%d", errno);
             return NULL;
         }
     } else {
         char hardware[MAX_BUFFER_LEN] = {0};
         char *buffer = ReadFileData("/proc/cmdline");
         if (buffer == NULL) {
-            FSMGR_LOGE("Failed read \"/proc/cmdline\"");
+            BEGET_LOGE("Failed read \"/proc/cmdline\"");
             return NULL;
         }
         int ret = GetProcCmdlineValue("hardware", buffer, hardware, MAX_BUFFER_LEN);
         free(buffer);
         if (ret != 0) {
-            FSMGR_LOGE("Failed get hardware from cmdline");
+            BEGET_LOGE("Failed get hardware from cmdline");
             return NULL;
         }
         if (snprintf_s(file, PATH_MAX, PATH_MAX - 1, "/vendor/etc/fstab.%s", hardware) == -1) {
-            FSMGR_LOGE("Fail snprintf_s err=%d", errno);
+            BEGET_LOGE("Fail snprintf_s err=%d", errno);
             return NULL;
         }
     }
-    FSMGR_LOGI("file is %s", file);
+    BEGET_LOGI("file is %s", file);
     return strdup(file); // After the return value is used up, it must be free.
 }
 
@@ -326,11 +325,11 @@ int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char 
     }
     FstabItem *item = FindFstabItemForMountPoint(*fstab, mountPoint);
     if (item == NULL) {
-        FSMGR_LOGE("Failed get fstab item from point \" %s \"", mountPoint);
+        BEGET_LOGE("Failed get fstab item from point \" %s \"", mountPoint);
         return -1;
     }
     if (strncpy_s(deviceName, nameLen, item->deviceName, strlen(item->deviceName)) != 0) {
-        FSMGR_LOGE("Failed strncpy_s err=%d", errno);
+        BEGET_LOGE("Failed strncpy_s err=%d", errno);
         return -1;
     }
     return 0;
@@ -387,7 +386,7 @@ static unsigned long ParseDefaultMountFlag(const char *str)
 unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpecificDataSize)
 {
     unsigned long flags = 0;
-    INIT_CHECK_RETURN_VALUE(mountFlag != NULL && fsSpecificData != NULL, 0);
+    BEGET_CHECK_RETURN_VALUE(mountFlag != NULL && fsSpecificData != NULL, 0);
     int flagCount = 0;
     // Why max count of mount flags is 15?
     // There are lots for mount flags defined in sys/mount.h
@@ -409,7 +408,7 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
             flags |= ParseDefaultMountFlag(p);
         } else {
             if (strncat_s(fsSpecificData, fsSpecificDataSize - 1, p, strlen(p)) != EOK) {
-                FSMGR_LOGW("Failed to append mount flag \" %s \", ignore it.", p);
+                BEGET_LOGW("Failed to append mount flag \" %s \", ignore it.", p);
                 continue;
             }
             if (i == flagCount - 1) { // last flags, do not need to append ','
@@ -417,7 +416,7 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
             }
             // Combined each mount flag with ','
             if (strncat_s(fsSpecificData, fsSpecificDataSize - 1, ",", 1) != EOK) {
-                FSMGR_LOGW("Failed to append comma.");
+                BEGET_LOGW("Failed to append comma.");
                 break; // If cannot add ',' to the end of flags, there is not reason to continue.
             }
         }

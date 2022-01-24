@@ -43,6 +43,9 @@ int WritePersistParam(ParamWorkSpace *workSpace, const char *name, const char *v
 #ifdef STARTUP_INIT_TEST
 int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *msg);
 int AddSecurityLabel(const ParamAuditData *auditData, void *context);
+int OnIncomingConnect(LoopHandle loop, TaskHandle server);
+PARAM_STATIC void ProcessBeforeEvent(const ParamTaskPtr stream,
+    uint64_t eventId, const uint8_t *content, uint32_t size);
 #endif
 
 int ProcessParamWaitAdd(ParamWorkSpace *worksapce, const ParamTaskPtr worker, const ParamMessage *msg);

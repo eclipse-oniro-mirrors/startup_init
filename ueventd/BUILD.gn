@@ -32,6 +32,7 @@ if (defined(ohos_lite)) {
       include_dirs = [
         "//third_party/bounds_checking_function/include",
         "//base/startup/init_lite/services/log",
+        "//base/startup/init_lite/interfaces/innerkits/include",
         "//base/startup/init_lite/services/include",
         "//base/startup/init_lite/services/utils",
         "//base/startup/init_lite/ueventd/include",
@@ -72,6 +73,7 @@ if (defined(ohos_lite)) {
   service_ueventd_include = [
     "//third_party/bounds_checking_function/include",
     "//base/startup/init_lite/services/log",
+    "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/utils",
     "//base/startup/init_lite/ueventd/include",
