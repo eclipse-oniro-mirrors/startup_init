@@ -429,6 +429,7 @@ void ServiceReap(Service *service)
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
         if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
             INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, service->crashCount);
+            return;
         }
     }
     // service no need to restart which socket managed by init until socket message detected
