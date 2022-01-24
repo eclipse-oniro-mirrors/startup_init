@@ -168,13 +168,7 @@ void ReleaseService(Service *service)
     }
     FreeServiceArg(&service->pathArgs);
     FreeServiceArg(&service->writePidArgs);
-    FreeServiceArg(&service->capsArgs);
 
-    if (service->cpuInfo.cpus != NULL) {
-        free(service->cpuInfo.cpus);
-        service->cpuInfo.cpus = NULL;
-    }
-    service->cpuInfo.cpuNum = 0;
     if (service->servPerm.caps != NULL) {
         free(service->servPerm.caps);
         service->servPerm.caps = NULL;
@@ -236,12 +230,7 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
     for (int i = 0; i < count + 1; ++i) {
         args->argv[i] = NULL;
     }
-    // ServiceArgs have a variety of uses, some requiring a NULL ending, some not
-    if (strcmp(name, D_CAPS_STR_IN_CFG) != 0) {
-        args->count = count + 1;
-    } else {
-        args->count = count;
-    }
+    args->count = count + 1;
     for (int i = 0; i < count; ++i) {
         char *curParam = cJSON_GetStringValue(cJSON_GetArrayItem(obj, i));
         INIT_ERROR_CHECK(curParam != NULL, return SERVICE_FAILURE, "Invalid arg %d", i);
@@ -519,7 +508,7 @@ static int CheckServiceKeyName(const cJSON *curService)
     char *cfgServiceKeyList[] = {
         "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
         "writepid", "critical", "socket", "console", "dynamic", "file", "ondemand",
-        "d-caps", "apl", "jobs", "start-mode", "end-mode", "cpucore",
+        "d-caps", "apl", "jobs", "start-mode", "end-mode",
 #ifdef WITH_SELINUX
         SECON_STR_IN_CFG,
 #endif // WITH_SELINUX
@@ -640,49 +629,6 @@ int  GetCritical(const cJSON *curArrItem, Service *curServ, const char *attrName
     return SERVICE_SUCCESS;
 }
 
-static int Comparefunc(const void *before, const void *after)
-{
-    return (*(int*)before - *(int*)after);
-}
-
-static int GetCpuArgs(const cJSON *argJson, const char *name, CpuArgs *args)
-{
-    INIT_ERROR_CHECK(argJson != NULL, return SERVICE_FAILURE, "Invalid argJson");
-    cJSON *obj = cJSON_GetObjectItem(argJson, name);
-    INIT_CHECK(obj != NULL, return SERVICE_FAILURE);
-
-    int ret = cJSON_IsArray(obj);
-    INIT_ERROR_CHECK(ret, return SERVICE_FAILURE, "Invalid type");
-    int count = cJSON_GetArraySize(obj);
-    int tmpArray[count];
-    for (int i = 0; i < count; ++i) {
-        cJSON *item = cJSON_GetArrayItem(obj, i);
-        INIT_ERROR_CHECK(item != NULL, return SERVICE_FAILURE, "prase invalid");
-        tmpArray[i] = (int)cJSON_GetNumberValue(item);
-    }
-    qsort(tmpArray, count, sizeof(int), Comparefunc);
-    int cpuCount = 0;
-    for (int j = 0; j < count; j++) {
-        if (j == 0 && tmpArray[0] == 0) {
-            tmpArray[cpuCount++] = 0;
-            continue;
-        }
-        if (tmpArray[j] != tmpArray[j-1]) {
-            tmpArray[cpuCount++] = tmpArray[j];
-        }
-    }
-    args->cpus=(int*)malloc(cpuCount * sizeof(int));
-    INIT_ERROR_CHECK(args->cpus != NULL, return SERVICE_FAILURE, "Failed to malloc for argv");
-    for (int i = 0; i < cpuCount; ++i) {
-        args->cpus[i] = -1;
-    }
-    args->cpuNum = cpuCount;
-    for (int i = 0; i < count; ++i) {
-        args->cpus[i] = tmpArray[i];
-    }
-    return SERVICE_SUCCESS;
-}
-
 int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
@@ -713,10 +659,8 @@ int ParseOneService(const cJSON *curItem, Service *service)
     ret = GetServiceAttr(curItem, service, CONSOLE_STR_IN_CFG, SERVICE_ATTR_CONSOLE, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get console for service %s", service->name);
 
-    (void)GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
-    (void)GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
-    (void)GetStringItem(curItem, APL_STR_IN_CFG, service->apl, MAX_APL_NAME);
-    (void)GetCpuArgs(curItem, CPU_CORE_STAR_IN_CFG, &service->cpuInfo);
+    ret = GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
+    INIT_CHECK_ONLY_ELOG(ret == 0, "No writepid arg for service %s", service->name);
     ret = GetServiceCaps(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
     ret = GetDynamicService(curItem, service);

@@ -46,7 +46,6 @@ extern "C" {
 #define SERVICE_ATTR_DYNAMIC 0x100      // dynamic service
 #define SERVICE_ATTR_ONDEMAND 0x200     // ondemand, manage socket by init
 
-#define MAX_APL_NAME 32
 #define MAX_SERVICE_NAME 32
 #define MAX_APL_NAME 32
 #define MAX_JOB_NAME 128
@@ -75,11 +74,6 @@ typedef enum {
     END_AFTER_EXEC,
     END_RECV_READY,
 } ServiceEndMode;
-
-typedef struct {
-    int *cpus;
-    int cpuNum;
-} CpuArgs;
 
 typedef struct {
     uid_t uID;
@@ -122,7 +116,6 @@ typedef struct Service_ {
     int endMode : 4; // preFork/ fork / exec / ready
     char apl[MAX_APL_NAME + 1];
     ServiceArgs capsArgs;
-    CpuArgs cpuInfo;
     Perms servPerm;
     ServiceArgs pathArgs;
     ServiceArgs extraArgs;
