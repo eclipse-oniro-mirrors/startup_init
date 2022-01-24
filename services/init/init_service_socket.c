@@ -110,7 +110,7 @@ static void ProcessWatchEvent_(const WatcherHandle watcherHandle, int fd, uint32
 {
     *events = 0;
     Service *service = (Service *)context;
-    ServiceSocket *tmpSock = service->socketCfg;;
+    ServiceSocket *tmpSock = service->socketCfg;
     while (tmpSock != NULL) {
         if (tmpSock->sockFd == fd) {
             tmpSock->watcher = NULL;
