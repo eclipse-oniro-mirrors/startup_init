@@ -56,7 +56,7 @@ void StopAllServices(int flags);
 void ParseAllServices(const cJSON *fileRoot);
 void ReleaseService(Service *service);
 void StartAllServices(int startMode);
-
+void LoadAccessTokenId(void);
 #ifdef OHOS_SERVICE_DUMP
 void DumpAllServices();
 #endif
