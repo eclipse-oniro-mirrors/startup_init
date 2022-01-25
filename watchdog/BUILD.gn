@@ -23,9 +23,9 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/include",
     ]
     deps = [ "//base/startup/init_lite/services/log:init_log" ]
+    defines = [ "_GNU_SOURCE" ]
     if (ohos_kernel_type == "linux") {
-      defines = [ "LINUX_WATCHDOG" ]
-      defines += [ "_GNU_SOURCE" ]
+      defines += [ "LINUX_WATCHDOG" ]
     }
   }
 } else {

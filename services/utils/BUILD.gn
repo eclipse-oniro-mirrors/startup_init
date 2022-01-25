@@ -29,6 +29,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/log:init_log",
       "//third_party/bounds_checking_function:libsec_static",
     ]
+    defines = [ "_GNU_SOURCE" ]
   }
 } else {
   import("//build/ohos.gni")
@@ -50,6 +51,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/log:init_log",
       "//third_party/bounds_checking_function:libsec_static",
     ]
+    defines = [ "_GNU_SOURCE" ]
     part_name = "init"
   }
 
