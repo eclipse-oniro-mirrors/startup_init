@@ -245,8 +245,8 @@ int ServiceStart(Service *service)
     }
     int pid = fork();
     if (pid == 0) {
-	INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS,
-	    "set access token failed for service %s", service->name);
+        INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS,
+            "set access token failed for service %s", service->name);
         // deal start job
         if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
             DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
