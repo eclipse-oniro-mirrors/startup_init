@@ -1,0 +1,42 @@
+{
+    "name": "@ohos/startup_init_lite",
+    "description": "ohos init lite process",
+    "homePage": "https://gitee.com/openharmony",
+    "version": "3.1",
+    "license": "Apache License 2.0",
+    "repository": "https://gitee.com/openharmony/startup_init_lite",
+    "publishAs": "code-segment",
+    "segment": {
+        "destPath": "base/startup/init_lite"
+    },
+    "dirs": {},
+    "scripts": {},
+    "component": {
+        "name": "init_lite",
+        "subsystem": "startup",
+        "adapted_system_type": [
+            "small"
+        ],
+        "rom": "31KB",
+        "ram": "~200KB",
+        "deps": {
+            "components": [
+                "syspara_lite"
+            ],
+            "third_party": [
+                "cJSON",
+                "bounds_checking_function"
+            ]
+        },
+        "build": {
+            "sub_component": [
+                "//base/startup/init_lite/services:init_lite",
+                "//base/startup/init_lite/watchdog:watchdog",
+                "//base/startup/init_lite/ueventd:ueventd"
+            ],
+            "test": [
+                "//base/startup/init_lite/test/unittest/common:unittest"
+            ]
+        }
+    }
+}

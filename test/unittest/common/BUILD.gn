@@ -84,9 +84,6 @@ if (defined(ohos_lite)) {
     deps = [ ":init_test" ]
   }
 } else {
-  import("//build/ohos.gni")
-  sources = []
   group("unittest") {
-    deps = []
   }
 }
