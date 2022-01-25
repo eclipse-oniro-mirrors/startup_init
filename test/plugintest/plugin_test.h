@@ -29,13 +29,13 @@
 #define PLUGIN_LOGE(fmt, ...) STARTUP_LOGE(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
 #define PLUGIN_LOGV(fmt, ...) STARTUP_LOGV(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
 
-#define PLUGIN_CHECK(ret, exper, ...)                                                                                      \
-    if (!(ret)) {                                                                                                      \
-        PLUGIN_LOGE(__VA_ARGS__);                                                                                          \
-        exper;                                                                                                         \
+#define PLUGIN_CHECK(ret, exper, ...)          \
+    if (!(ret)) {                              \
+        PLUGIN_LOGE(__VA_ARGS__);              \
+        exper;                                 \
     }
-#define PLUGIN_ONLY_CHECK(ret, exper, ...)                                                                                 \
-    if (!(ret)) {                                                                                                      \
-        exper;                                                                                                         \
+#define PLUGIN_ONLY_CHECK(ret, exper, ...)     \
+    if (!(ret)) {                              \
+        exper;                                 \
     }
 #endif
