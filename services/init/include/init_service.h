@@ -15,6 +15,7 @@
 #ifndef BASE_STARTUP_INITLITE_SERVICE_H
 #define BASE_STARTUP_INITLITE_SERVICE_H
 #include <sys/types.h>
+#include <stdint.h>
 
 #include "cJSON.h"
 #include "init_cmds.h"
@@ -114,6 +115,7 @@ typedef struct Service_ {
     int importance;
     int startMode : 4; // startCondition/ startBoot / startNormal
     int endMode : 4; // preFork/ fork / exec / ready
+    uint64_t tokenId;
     char apl[MAX_APL_NAME + 1];
     ServiceArgs capsArgs;
     Perms servPerm;
@@ -140,6 +142,8 @@ int GetServiceCaps(const cJSON *curArrItem, Service *curServ);
 int ServiceExec(const Service *service);
 void CloseServiceFds(Service *service, bool needFree);
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount);
+int SetAccessToken(const Service *service);
+void GetAccessToken(void);
 
 #ifdef __cplusplus
 #if __cplusplus

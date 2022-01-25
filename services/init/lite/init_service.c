@@ -74,3 +74,13 @@ int ServiceExec(const Service *service)
     }
     return SERVICE_SUCCESS;
 }
+
+int SetAccessToken(const Service *service)
+{
+    return SERVICE_SUCCESS;
+}
+
+void GetAccessToken(void)
+{
+    return;
+}
