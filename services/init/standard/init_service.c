@@ -23,7 +23,6 @@
 #include "init_log.h"
 #include "init_param.h"
 #include "init_utils.h"
-#include "loop_event.h"
 #include "securec.h"
 
 #define MIN_IMPORTANT_LEVEL (-20)
@@ -79,44 +78,4 @@ int ServiceExec(const Service *service)
             "service %s execve failed! err %d.", service->name, errno);
     }
     return SERVICE_SUCCESS;
-}
-
-static void ProcessWatchEvent_(const WatcherHandle watcherHandle, int fd, uint32_t *events, const void *context)
-{
-    *events = 0;
-    Service *service = (Service *)context;
-    ServiceSocket *tmpSock = service->socketCfg;
-    while (tmpSock != NULL) {
-        if (tmpSock->sockFd == fd) {
-            tmpSock->watcher = NULL;
-            break;
-        }
-        tmpSock = tmpSock->next;
-    }
-    if (tmpSock == NULL) { // not found socket
-        INIT_LOGE("Service %s not match socket fd %d!", service->name, fd);
-        close(fd);
-        return;
-    }
-    if (ServiceStart(service) != SERVICE_SUCCESS) {
-        INIT_LOGE("Service %s start failed!", service->name);
-    }
-}
-
-int ServiceAddWatcher(ServiceWatcher *watcherHandle, Service *service, int fd)
-{
-    WatcherHandle handle;
-    LE_WatchInfo info = {};
-    info.fd = fd;
-    info.flags = WATCHER_ONCE;
-    info.events = Event_Read;
-    info.processEvent = ProcessWatchEvent_;
-    int ret = LE_StartWatcher(LE_GetDefaultLoop(), &handle, &info, service);
-    *watcherHandle = (ServiceWatcher)handle;
-    return ret;
-}
-
-void ServiceDelWatcher(ServiceWatcher watcherHandle)
-{
-    LE_RemoveWatcher(LE_GetDefaultLoop(), (WatcherHandle)watcherHandle);
 }

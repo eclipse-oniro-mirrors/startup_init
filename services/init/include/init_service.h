@@ -141,9 +141,6 @@ int ServiceExec(const Service *service);
 void CloseServiceFds(Service *service, bool needFree);
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount);
 
-int ServiceAddWatcher(ServiceWatcher *watcherHandle, Service *service, int fd);
-void ServiceDelWatcher(ServiceWatcher watcherHandle);
-
 #ifdef __cplusplus
 #if __cplusplus
 }

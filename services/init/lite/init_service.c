@@ -74,13 +74,3 @@ int ServiceExec(const Service *service)
     }
     return SERVICE_SUCCESS;
 }
-
-int ServiceAddWatcher(ServiceWatcher *watcherHandle, Service *service, int fd)
-{
-    return 0;
-}
-
-void ServiceDelWatcher(ServiceWatcher watcherHandle)
-{
-    return;
-}

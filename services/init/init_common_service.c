@@ -381,7 +381,7 @@ static void PollSocketAfresh(Service *service)
             INIT_LOGE("Invaid socket %s for service", service->name);
             tmpSock = tmpSock->next;
         }
-        ServiceAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
+        SocketAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
         tmpSock = tmpSock->next;
     }
     return;
@@ -429,6 +429,7 @@ void ServiceReap(Service *service)
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
         if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
             INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, service->crashCount);
+            return;
         }
     }
     // service no need to restart which socket managed by init until socket message detected

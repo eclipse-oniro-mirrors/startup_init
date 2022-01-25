@@ -25,6 +25,7 @@
 
 #include "init_log.h"
 #include "init_service.h"
+#include "loop_event.h"
 #include "securec.h"
 
 #define HOS_SOCKET_DIR "/dev/unix/socket"
@@ -105,6 +106,49 @@ static int SetSocketEnv(int fd, const char *name)
     return 0;
 }
 
+static void ProcessWatchEvent_(const WatcherHandle watcherHandle, int fd, uint32_t *events, const void *context)
+{
+    *events = 0;
+    Service *service = (Service *)context;
+    ServiceSocket *tmpSock = service->socketCfg;
+    while (tmpSock != NULL) {
+        if (tmpSock->sockFd == fd) {
+            tmpSock->watcher = NULL;
+            break;
+        }
+        tmpSock = tmpSock->next;
+    }
+    if (tmpSock == NULL) { // not found socket
+        INIT_LOGE("Service %s not match socket fd %d!", service->name, fd);
+        close(fd);
+        return;
+    }
+    INIT_LOGI("Socket information detected, fd:%d service name:%s", fd, service->name);
+    SocketDelWatcher(watcherHandle);
+    if (ServiceStart(service) != SERVICE_SUCCESS) {
+        INIT_LOGE("Service %s start failed!", service->name);
+    }
+}
+
+int SocketAddWatcher(ServiceWatcher *watcherHandle, Service *service, int fd)
+{
+    WatcherHandle handle;
+    LE_WatchInfo info = {};
+    info.fd = fd;
+    info.flags = WATCHER_ONCE;
+    info.events = Event_Read;
+    info.processEvent = ProcessWatchEvent_;
+    int ret = LE_StartWatcher(LE_GetDefaultLoop(), &handle, &info, service);
+    INIT_LOGI("Start to monitor socket, fd:%d service name:%s", fd, service->name);
+    *watcherHandle = (ServiceWatcher)handle;
+    return ret;
+}
+
+void SocketDelWatcher(ServiceWatcher watcherHandle)
+{
+    LE_RemoveWatcher(LE_GetDefaultLoop(), (WatcherHandle)watcherHandle);
+}
+
 int CreateServiceSocket(Service *service)
 {
     INIT_CHECK(service != NULL && service->socketCfg != NULL, return 0);
@@ -114,7 +158,11 @@ int CreateServiceSocket(Service *service)
         int fd = CreateSocket(tmpSock);
         INIT_CHECK_RETURN_VALUE(fd >= 0, -1);
         if (IsOnDemandService(service)) {
-            ret = ServiceAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
+            if (IsConnectionBasedSocket(tmpSock)) {
+                ret = listen(tmpSock->sockFd, MAX_SOCKET_FD_LEN);
+                INIT_CHECK_RETURN_VALUE(ret == 0, -1);
+            }
+            ret = SocketAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
             INIT_CHECK_RETURN_VALUE(ret == 0, -1);
         }
         ret = SetSocketEnv(fd, tmpSock->name);
@@ -131,7 +179,7 @@ void CloseServiceSocket(Service *service)
     ServiceSocket *sockopt = service->socketCfg;
     while (sockopt != NULL) {
         if (sockopt->watcher != NULL) {
-            ServiceDelWatcher(sockopt->watcher);
+            SocketDelWatcher(sockopt->watcher);
         }
         if (sockopt->sockFd >= 0) {
             close(sockopt->sockFd);
