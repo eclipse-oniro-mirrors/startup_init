@@ -168,6 +168,7 @@ void ReleaseService(Service *service)
     }
     FreeServiceArg(&service->pathArgs);
     FreeServiceArg(&service->writePidArgs);
+    FreeServiceArg(&service->capsArgs);
 
     if (service->servPerm.caps != NULL) {
         free(service->servPerm.caps);
@@ -230,7 +231,12 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
     for (int i = 0; i < count + 1; ++i) {
         args->argv[i] = NULL;
     }
-    args->count = count + 1;
+     // ServiceArgs have a variety of uses, some requiring a NULL ending, some not
+    if (strcmp(name, D_CAPS_STR_IN_CFG) != 0) {
+        args->count = count + 1;
+    } else {
+        args->count = count;
+    }
     for (int i = 0; i < count; ++i) {
         char *curParam = cJSON_GetStringValue(cJSON_GetArrayItem(obj, i));
         INIT_ERROR_CHECK(curParam != NULL, return SERVICE_FAILURE, "Invalid arg %d", i);
@@ -662,8 +668,9 @@ int ParseOneService(const cJSON *curItem, Service *service)
     ret = GetServiceAttr(curItem, service, CONSOLE_STR_IN_CFG, SERVICE_ATTR_CONSOLE, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get console for service %s", service->name);
 
-    ret = GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
-    INIT_CHECK_ONLY_ELOG(ret == 0, "No writepid arg for service %s", service->name);
+    (void)GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
+    (void)GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
+    (void)GetStringItem(curItem, APL_STR_IN_CFG, service->apl, MAX_APL_NAME);
     ret = GetServiceCaps(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
     ret = GetDynamicService(curItem, service);
@@ -869,4 +876,9 @@ void StartAllServices(int startMode)
     }
 #endif
     INIT_LOGI("StartAllServices %d finsh", startMode);
+}
+
+void LoadAccessTokenId(void)
+{
+    GetAccessToken();
 }
