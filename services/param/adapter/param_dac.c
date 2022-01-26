@@ -190,13 +190,13 @@ static int CheckUserInGroup(gid_t groupId, uid_t uid)
     struct group *grpResult = NULL;
     struct group grp = {};
     int ret = getgrgid_r(groupId, &grp, buffer, sizeof(buffer), &grpResult);
-    if (ret != 0 || grpResult == NULL) {
+    if (ret != 0 || grpResult == NULL || grpResult->gr_name == NULL) {
         return -1;
     }
     struct passwd data = {};
     struct passwd *userResult = NULL;
     ret = getpwuid_r(uid, &data, userBuff, sizeof(userBuff), &userResult);
-    if (ret != 0 || userResult == NULL) {
+    if (ret != 0 || userResult == NULL || userResult->pw_name == NULL) {
         return -1;
     }
 
