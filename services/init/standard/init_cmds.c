@@ -276,6 +276,12 @@ static void DoRestorecon(const struct CmdArgs *ctx)
     return;
 }
 
+static void DoLoadAccessTokenId(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("load access token id  : %s", ctx->argv[0]);
+    LoadAccessTokenId();
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "exec ", 1, 10, DoExec },
     { "mknode ", 1, 5, DoMakeNode },
@@ -286,6 +292,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "setparam ", 2, 2, DoSetParam },
     { "load_persist_params ", 1, 1, DoLoadPersistParams },
     { "load_param ", 1, 2, DoLoadDefaultParams },
+    { "load_access_token_id ", 1, 1, DoLoadAccessTokenId },
     { "ifup ", 1, 1, DoIfup },
     { "mount_fstab ", 1, 1, DoMountFstabFile },
     { "umount_fstab ", 1, 1, DoUmountFstabFile },

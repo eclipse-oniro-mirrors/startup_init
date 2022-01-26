@@ -33,6 +33,8 @@ extern "C" {
 #define CRITICAL_STR_IN_CFG "critical"
 #define DISABLED_STR_IN_CFG "disabled"
 #define CONSOLE_STR_IN_CFG "console"
+#define D_CAPS_STR_IN_CFG "d-caps"
+#define APL_STR_IN_CFG "apl"
 
 #define MAX_SERVICES_CNT_IN_FILE 100
 
@@ -56,7 +58,7 @@ void StopAllServices(int flags);
 void ParseAllServices(const cJSON *fileRoot);
 void ReleaseService(Service *service);
 void StartAllServices(int startMode);
-
+void LoadAccessTokenId(void);
 #ifdef OHOS_SERVICE_DUMP
 void DumpAllServices();
 #endif

@@ -59,32 +59,6 @@ static int SetAllAmbientCapability(void)
     return SERVICE_SUCCESS;
 }
 
-int __attribute__((weak)) SetSelfTokenID(uint64_t tokenID)
-{
-    return SERVICE_SUCCESS;
-}
-
-uint64_t __attribute__((weak)) GetAccessTokenId(const char *processname, char **dcap, int dacpNum, char *apl)
-{
-    return SERVICE_SUCCESS;
-}
-
-static int SetAccessToken(const Service *service)
-{
-    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "%s failed", service->name);
-    INIT_ERROR_CHECK(service->capsArgs.count > 0, return SERVICE_SUCCESS,
-        "%s invalid, count is %d", service->name, service->capsArgs.count);
-    WaitForFile("/dev/ioctl_device", WAIT_MAX_SECOND);
-    uint64_t tokenId = GetAccessTokenId(service->name, service->capsArgs.argv, service->capsArgs.count,
-        (char *)service->apl);
-    if (tokenId  == 0) {
-        INIT_LOGE("Set totken id %lld of service \' %s \' failed", service->name, tokenId);
-        return SERVICE_FAILURE;
-    }
-    int ret = SetSelfTokenID(tokenId);
-    return ret == 0 ? SERVICE_SUCCESS : SERVICE_FAILURE;
-}
-
 static int SetPerms(const Service *service)
 {
     INIT_CHECK_RETURN_VALUE(KeepCapability() == 0, SERVICE_FAILURE);
@@ -138,8 +112,6 @@ static int SetPerms(const Service *service)
             return SERVICE_FAILURE;
         }
     }
-    int ret = SetAccessToken(service);
-    INIT_CHECK_ONLY_ELOG(ret == 0, "set access token failed for service %s", service->name);
     return SERVICE_SUCCESS;
 }
 
@@ -273,6 +245,8 @@ int ServiceStart(Service *service)
     }
     int pid = fork();
     if (pid == 0) {
+        INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS,
+            "set access token failed for service %s", service->name);
         // deal start job
         if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
             DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
