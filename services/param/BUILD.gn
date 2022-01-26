@@ -10,6 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//base/startup/init_lite/begetd.gni")
 import("//build/ohos.gni")
 
 declare_args() {
@@ -45,6 +46,10 @@ ohos_static_library("param_service") {
   ]
 
   defines = [ "PARAM_SUPPORT_SAVE_PERSIST" ]
+
+  if (defined(boot_kernel_extended_cmdline)) {
+    defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
+  }
 
   if (param_security == "selinux") {
     sources += [ "adapter/param_selinux.c" ]

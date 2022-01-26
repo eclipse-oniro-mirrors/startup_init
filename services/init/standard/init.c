@@ -121,8 +121,6 @@ void LogInit(void)
     }
 }
 
-#ifndef DISABLE_INIT_TWO_STAGES
-
 static char **GetRequiredDevices(Fstab fstab, int *requiredNum)
 {
     int num = 0;
@@ -167,6 +165,9 @@ static void StartInitSecondStage(void)
 {
     const char *fstabFile = "/etc/fstab.required";
     Fstab *fstab = NULL;
+    if (access(fstabFile, F_OK) != 0) {
+        fstabFile = "/system/etc/fstab.required";
+    }
     INIT_ERROR_CHECK(access(fstabFile, F_OK) == 0, abort(), "Failed get fstab.required");
     fstab = ReadFstabFromFile(fstabFile, false);
     INIT_ERROR_CHECK(fstab != NULL, abort(), "Read fstab file \" %s \" failed\n", fstabFile);
@@ -186,10 +187,13 @@ static void StartInitSecondStage(void)
             // If mount required partitions failure.
             // There is no necessary to continue.
             // Just abort
-            INIT_LOGE("Mount requried partitions failed");
+            INIT_LOGE("Mount requried partitions failed; please check fstab file");
+            // Execute sh for debugging
+            execv("/bin/sh", NULL);
             abort();
         }
     }
+#ifndef DISABLE_INIT_TWO_STAGES
     SwitchRoot("/usr");
     // Execute init second stage
     char * const args[] = {
@@ -201,8 +205,8 @@ static void StartInitSecondStage(void)
         INIT_LOGE("Failed to exec \"/bin/init\", err = %d", errno);
         exit(-1);
     }
-}
 #endif
+}
 
 void SystemPrepare(void)
 {
@@ -210,7 +214,6 @@ void SystemPrepare(void)
     // Make sure init log always output to /dev/kmsg.
     EnableDevKmsg();
     CreateDeviceNode();
-#ifndef DISABLE_INIT_TWO_STAGES
     // Only ohos normal system support
     // two stages of init.
     // If we are in updater mode, only one stage of init,
@@ -218,9 +221,6 @@ void SystemPrepare(void)
     if (InUpdaterMode() == 0) {
         StartInitSecondStage();
     }
-#else
-    INIT_LOGI("DISABLE_INIT_TWO_STAGES defined");
-#endif
 }
 
 void SystemLoadSelinux(void)
