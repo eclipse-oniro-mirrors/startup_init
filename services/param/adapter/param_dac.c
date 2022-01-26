@@ -217,6 +217,9 @@ static int CheckUserInGroup(gid_t groupId, uid_t uid)
 
 static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, uint32_t mode)
 {
+#ifndef PARAM_SUPPORT_DAC_CHECK
+    return DAC_RESULT_PERMISSION;
+#endif
     int ret = DAC_RESULT_FORBIDED;
     PARAM_CHECK(srcLabel != NULL && auditData != NULL && auditData->name != NULL, return ret, "Invalid param");
     PARAM_CHECK((mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) != 0, return ret, "Invalid mode %x", mode);
