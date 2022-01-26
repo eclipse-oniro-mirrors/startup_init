@@ -19,11 +19,14 @@
 #include <sys/param.h>
 #include <sys/resource.h>
 
+#include "init_group_manager.h"
 #include "init.h"
 #include "init_log.h"
 #include "init_param.h"
 #include "init_utils.h"
 #include "securec.h"
+#include "token_setproc.h"
+#include "nativetoken_kit.h"
 
 #define MIN_IMPORTANT_LEVEL (-20)
 #define MAX_IMPORTANT_LEVEL 19
@@ -78,4 +81,36 @@ int ServiceExec(const Service *service)
             "service %s execve failed! err %d.", service->name, errno);
     }
     return SERVICE_SUCCESS;
+}
+
+int SetAccessToken(const Service *service)
+{
+    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "%s failed", service->name);
+    int ret = SetSelfTokenID(service->tokenId);
+    INIT_LOGI("%s: token id %lld, set token id result %d", service->name, service->tokenId, ret);
+    return ret == 0 ? SERVICE_SUCCESS : SERVICE_FAILURE;
+}
+
+void GetAccessToken(void)
+{
+    InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
+    while (node != NULL) {
+        Service *service = node->data.service;
+        if (service != NULL) {
+            if (service->capsArgs.count == 0) {
+                service->capsArgs.argv = NULL;
+            }
+            if (strlen(service->apl) == 0) {
+                (void)strncpy_s(service->apl, sizeof(service->apl),
+		    "system_core", sizeof(service->apl) - 1);
+            }
+            uint64_t tokenId = GetAccessTokenId(service->name, (const char **)service->capsArgs.argv,
+                service->capsArgs.count, service->apl);
+            if (tokenId  == 0) {
+                INIT_LOGE("Set totken id %lld of service \' %s \' failed", service->name, tokenId);
+            }
+            service->tokenId = tokenId;
+        }
+        node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
+    }
 }
