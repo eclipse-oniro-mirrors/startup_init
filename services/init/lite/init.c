@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 #include "init.h"
-#include "init_log.h"
+#include "init_group_manager.h"
 #include "init_jobs_internal.h"
+#include "init_log.h"
 #include "init_utils.h"
 #ifndef __LINUX__
 #include "init_stage.h"

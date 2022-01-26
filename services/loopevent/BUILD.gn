@@ -42,7 +42,7 @@ if (defined(ohos_lite)) {
     sources = common_sources
 
     include_dirs = common_include
-
+    defines = [ "_GNU_SOURCE" ]
     deps = [
       "//base/startup/init_lite/services/log:init_log",
       "//base/startup/init_lite/services/utils:libinit_tools",
@@ -56,7 +56,7 @@ if (defined(ohos_lite)) {
     sources = common_sources
 
     include_dirs = common_include
-
+    defines = [ "_GNU_SOURCE" ]
     deps = [
       "//base/startup/init_lite/services/log:init_log",
       "//base/startup/init_lite/services/utils:libinit_tools",
