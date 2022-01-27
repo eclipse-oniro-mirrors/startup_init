@@ -52,6 +52,9 @@ ohos_static_library("param_service") {
   } else {
     sources += [ "adapter/param_dac.c" ]
     defines += [ "PARAM_SUPPORT_DAC" ]
+    if (use_musl) {
+      defines += [ "PARAM_SUPPORT_DAC_CHECK" ]
+    }
   }
 
   deps = [
@@ -93,6 +96,9 @@ ohos_shared_library("param_client") {
   } else {
     sources += [ "adapter/param_dac.c" ]
     defines += [ "PARAM_SUPPORT_DAC" ]
+    if (use_musl) {
+      defines += [ "PARAM_SUPPORT_DAC_CHECK" ]
+    }
   }
 
   deps = [
