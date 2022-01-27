@@ -183,6 +183,7 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
     return 0;
 }
 
+#ifdef PARAM_SUPPORT_DAC_CHECK
 static int CheckUserInGroup(gid_t groupId, uid_t uid)
 {
     static char buffer[255] = {0}; // 255 max size
@@ -214,6 +215,7 @@ static int CheckUserInGroup(gid_t groupId, uid_t uid)
     }
     return -1;
 }
+#endif
 
 static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, uint32_t mode)
 {
