@@ -21,12 +21,12 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
-#include <sys/un.h>
 
 #include "init_log.h"
 #include "init_service.h"
 #include "loop_event.h"
 #include "securec.h"
+#define SOCKET_BUFF_SIZE (256 * 1024)
 
 #define HOS_SOCKET_DIR "/dev/unix/socket"
 #define HOS_SOCKET_ENV_PREFIX "OHOS_SOCKET_"
@@ -43,49 +43,99 @@ static int GetSocketAddr(struct sockaddr_un *addr, const char *name)
     return 0;
 }
 
+static int SetSocketAddr(ServiceSocket *sockopt, sockaddr_union *addr)
+{
+    int ret = 0;
+    if (sockopt->family == AF_NETLINK) {
+#ifndef __LITEOS__
+        if (memset_s(&(addr->addrnl), sizeof(addr->addrnl), 0, sizeof(addr->addrnl)) != EOK) {
+            INIT_LOGE("Faild to clear socket address");
+            return -1;
+        }
+        addr->addrnl.nl_family = AF_NETLINK;
+        addr->addrnl.nl_pid = getpid();
+        addr->addrnl.nl_groups = 0xffffffff;
+#else
+        INIT_LOGE("No support in liteos kernel");
+        return -1;
+#endif
+    } else {
+        ret = GetSocketAddr(&(addr->addrun), sockopt->name);
+        INIT_ERROR_CHECK(ret == 0, return -1, "Failed to format addr %s", sockopt->name);
+        if (access(addr->addrun.sun_path, F_OK) == 0) {
+            INIT_LOGI("%s already exist, remove it", addr->addrun.sun_path);
+            unlink(addr->addrun.sun_path);
+        }
+    }
+    return ret;
+}
+
+static int SetSocketOptionAndBind(ServiceSocket *sockopt)
+{
+    if (sockopt->option & SOCKET_OPTION_PASSCRED) {
+        int on = 1;
+        if (setsockopt(sockopt->sockFd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on))) {
+            INIT_LOGE("Failed to setsockopt");
+            return -1;
+        }
+    }
+    if (sockopt->option & SOCKET_OPTION_RCVBUFFORCE) {
+        int buffSize = SOCKET_BUFF_SIZE;
+        if (setsockopt(sockopt->sockFd, SOL_SOCKET, SO_RCVBUFFORCE, &buffSize, sizeof(buffSize))) {
+            INIT_LOGE("Failed to setsockopt");
+            return -1;
+        }
+    }
+    sockaddr_union addr = {};
+    if (SetSocketAddr(sockopt, &addr) != 0) {
+        INIT_LOGE("Failed to set socket addr");
+        return -1;
+    }
+    if (sockopt->family == AF_NETLINK) {
+#ifndef __LITEOS__
+        if (bind(sockopt->sockFd, (struct sockaddr *)&(addr.addrnl), sizeof(addr.addrnl))) {
+            INIT_LOGE("Create socket for service %s failed: %d", sockopt->name, errno);
+            return -1;
+        }
+#else
+        INIT_LOGE("No support in liteos kernel");
+        return -1;
+#endif
+    } else {
+        if (bind(sockopt->sockFd, (struct sockaddr *)&(addr.addrun), sizeof(addr.addrun))) {
+            INIT_LOGE("Create socket for service %s failed: %d", sockopt->name, errno);
+            return -1;
+        }
+        if (lchown(addr.addrun.sun_path, sockopt->uid, sockopt->gid)) {
+            INIT_LOGE("lchown fail %d ", errno);
+            unlink(addr.addrun.sun_path);
+            return -1;
+        }
+        if (fchmodat(AT_FDCWD, addr.addrun.sun_path, sockopt->perm, AT_SYMLINK_NOFOLLOW)) {
+            INIT_LOGE("fchmodat fail %d ", errno);
+            unlink(addr.addrun.sun_path);
+            return -1;
+        }
+    }
+    return 0;
+}
+
 static int CreateSocket(ServiceSocket *sockopt)
 {
     INIT_ERROR_CHECK(sockopt != NULL, return SERVICE_FAILURE, "Invalid socket opt");
+    INIT_LOGI("name: %s, family: %d, type: %u, protocol: %d, perm: %u, uid: %u, gid: %u, option: %u",
+        sockopt->name, sockopt->family, sockopt->type, sockopt->protocol,
+        sockopt->perm, sockopt->uid,    sockopt->gid,  sockopt->option);
     if (sockopt->sockFd >= 0) {
         close(sockopt->sockFd);
         sockopt->sockFd = -1;
     }
-    sockopt->sockFd = socket(PF_UNIX, sockopt->type, 0);
+    sockopt->sockFd = socket(sockopt->family, sockopt->type, sockopt->protocol);
     INIT_ERROR_CHECK(sockopt->sockFd >= 0, return -1, "socket fail %d ", errno);
 
-    struct sockaddr_un addr;
-    int ret = GetSocketAddr(&addr, sockopt->name);
-    INIT_ERROR_CHECK(ret == 0, return -1, "Failed to format addr %s", sockopt->name);
-
-    do {
-        ret = -1;
-        if (access(addr.sun_path, F_OK) == 0) {
-            INIT_LOGI("%s already exist, remove it", addr.sun_path);
-            unlink(addr.sun_path);
-        }
-        if (sockopt->passcred) {
-            int on = 1;
-            if (setsockopt(sockopt->sockFd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on))) {
-                break;
-            }
-        }
-        if (bind(sockopt->sockFd, (struct sockaddr *)&addr, sizeof(addr))) {
-            INIT_LOGE("Create socket for service %s failed: %d", sockopt->name, errno);
-            break;
-        }
-        if (lchown(addr.sun_path, sockopt->uid, sockopt->gid)) {
-            INIT_LOGE("lchown fail %d ", errno);
-            break;
-        }
-        if (fchmodat(AT_FDCWD, addr.sun_path, sockopt->perm, AT_SYMLINK_NOFOLLOW)) {
-            INIT_LOGE("fchmodat fail %d ", errno);
-            break;
-        }
-        ret = 0;
-    } while (0);
+    int ret = SetSocketOptionAndBind(sockopt);
     if (ret != 0) {
         close(sockopt->sockFd);
-        unlink(addr.sun_path);
         return -1;
     }
     INIT_LOGI("CreateSocket %s success", sockopt->name);
@@ -162,8 +212,10 @@ int CreateServiceSocket(Service *service)
                 ret = listen(tmpSock->sockFd, MAX_SOCKET_FD_LEN);
                 INIT_CHECK_RETURN_VALUE(ret == 0, -1);
             }
-            ret = SocketAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
-            INIT_CHECK_RETURN_VALUE(ret == 0, -1);
+            if (strcmp(service->name, "ueventd") != 0) {
+                ret = SocketAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
+                INIT_CHECK_RETURN_VALUE(ret == 0, -1);
+            }
         }
         ret = SetSocketEnv(fd, tmpSock->name);
         INIT_CHECK_RETURN_VALUE(ret >= 0, -1);

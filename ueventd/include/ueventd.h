@@ -61,6 +61,8 @@ typedef enum SUBYSTEM {
 } SUBSYSTEMTYPE;
 
 #define CMDLINE_VALUE_LEN_MAX 512
+#define UEVENTD_POLL_TIME 30000
+#define UEVENTD_FLAG "/dev/.ueventd_trigger_done"
 
 extern char bootDevice[CMDLINE_VALUE_LEN_MAX];
 

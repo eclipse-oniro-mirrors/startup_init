@@ -331,7 +331,7 @@ static void HandleDeviceNode(const struct Uevent *uevent, const char *deviceNode
 #endif
         }
     } else if (action == ACTION_CHANGE) {
-        INIT_LOGI("Device %s changed", uevent->syspath);
+        INIT_LOGV("Device %s changed", uevent->syspath);
     }
     // Ignore other actions
     FreeSymbolLinks(symLinks);

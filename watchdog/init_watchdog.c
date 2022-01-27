@@ -33,9 +33,10 @@
 
 #include "init_log.h"
 
-#define WAIT_MAX_COUNT 10
+#define WAIT_MAX_COUNT 20
 #define DEFAULT_INTERVAL 3
 #define DEFAULT_GAP 3
+#define CONVERSION_BASE 1000000U
 
 static void WaitAtStartup(const char *source)
 {
@@ -47,7 +48,7 @@ static void WaitAtStartup(const char *source)
         count++;
     } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < WAIT_MAX_COUNT));
     if (count == WAIT_MAX_COUNT) {
-        INIT_LOGE("wait for file:%s failed after %f.", source, WAIT_MAX_COUNT>>1);
+        INIT_LOGE("wait for file:%s failed after %u seconds.", source, (WAIT_MAX_COUNT * waitTime) / CONVERSION_BASE);
     }
     return;
 }
