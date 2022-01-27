@@ -89,6 +89,8 @@ ohos_shared_library("param_client") {
   ]
 
   defines = [ "INIT_AGENT" ]
+  
+  defines += [ "_GNU_SOURCE" ]
 
   if (param_security == "selinux") {
     sources += [ "adapter/param_selinux.c" ]

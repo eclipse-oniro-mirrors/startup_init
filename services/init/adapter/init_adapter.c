@@ -60,7 +60,7 @@ int SetAmbientCapability(int cap)
     return 0;
 }
 
-#ifdef __LINUX__
+#if (defined __LINUX__) && (defined NEED_EXEC_RCS_LINUX)
 static pid_t g_waitPid = -1;
 static sem_t *g_waitSem = NULL;
 static void SignalRegWaitSem(pid_t waitPid, sem_t *waitSem)
