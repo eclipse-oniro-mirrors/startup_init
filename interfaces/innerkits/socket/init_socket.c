@@ -53,9 +53,17 @@ int GetControlSocket(const char *name)
     BEGET_LOGI("GetControlSocket path is %s ", path);
     int fd = GetControlFromEnv(path, MAX_SOCKET_ENV_PREFIX_LEN);
     BEGET_ERROR_CHECK(fd >= 0, return -1, "GetControlFromEnv fail ");
+    int addrFamily = 0;
+    socklen_t afLen = sizeof(addrFamily);
+    int ret = getsockopt(fd, SOL_SOCKET, SO_DOMAIN, &addrFamily, &afLen);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "get socket option fail, errno %d ", errno);
+    BEGET_LOGI("socket %s fd %d address family %d", name, fd, addrFamily);
+    if (addrFamily != AF_UNIX) {
+        return fd;
+    }
     struct sockaddr_un addr;
     socklen_t addrlen = sizeof(addr);
-    int ret = getsockname(fd, (struct sockaddr*)&addr, &addrlen);
+    ret = getsockname(fd, (struct sockaddr*)&addr, &addrlen);
     BEGET_ERROR_CHECK(ret >= 0, return -1, "GetControlSocket errno %d ", errno);
     char sockDir[MAX_SOCKET_DIR_LEN] = {0};
     BEGET_CHECK_RETURN_VALUE(snprintf_s(sockDir, sizeof(sockDir), sizeof(sockDir) - 1, OHOS_SOCKET_DIR"/%s",

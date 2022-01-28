@@ -31,6 +31,7 @@ if (defined(ohos_lite)) {
       "_GNU_SOURCE",  #syscall function need this macro definition
       "OHOS_LITE",
     ]
+    defines += [ "__MUSL__" ]
     sources = [
       "init/adapter/init_adapter.c",
       "init/lite/init.c",

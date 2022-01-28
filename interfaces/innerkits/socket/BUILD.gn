@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
 service_socket_sources =
     [ "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c" ]
 service_socket_include = [
@@ -24,19 +23,31 @@ service_socket_deps = [
   "//third_party/bounds_checking_function:libsec_static",
 ]
 
-ohos_static_library("libsocket_static") {
-  sources = service_socket_sources
-  include_dirs = service_socket_include
-  deps = service_socket_deps
-}
+if (defined(ohos_lite)) {
+  if (ohos_kernel_type == "linux") {
+    static_library("libsocket_static") {
+      sources = service_socket_sources
+      include_dirs = service_socket_include
+      deps = service_socket_deps
+    }
+  }
+} else {
+  import("//build/ohos.gni")
 
-ohos_shared_library("libsocket") {
-  sources = service_socket_sources
-  include_dirs = service_socket_include
-  deps = service_socket_deps
-  part_name = "init"
-  install_images = [
-    "system",
-    "updater",
-  ]
+  ohos_static_library("libsocket_static") {
+    sources = service_socket_sources
+    include_dirs = service_socket_include
+    deps = service_socket_deps
+  }
+
+  ohos_shared_library("libsocket") {
+    sources = service_socket_sources
+    include_dirs = service_socket_include
+    deps = service_socket_deps
+    part_name = "init"
+    install_images = [
+      "system",
+      "updater",
+    ]
+  }
 }

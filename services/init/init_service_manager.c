@@ -191,16 +191,21 @@ void ReleaseService(Service *service)
     free(service);
 }
 
+static char *GetStringValue(const cJSON *json, const char *name, size_t *strLen)
+{
+    char *fieldStr = cJSON_GetStringValue(cJSON_GetObjectItem(json, name));
+    INIT_ERROR_CHECK(fieldStr != NULL, return NULL, "Failed to get string for %s", name);
+    *strLen = strlen(fieldStr);
+    return fieldStr;
+}
+
 static int GetStringItem(const cJSON *json, const char *name, char *buffer, int buffLen)
 {
     INIT_ERROR_CHECK(json != NULL, return SERVICE_FAILURE, "Invalid json for %s", name);
-    char *fieldStr = cJSON_GetStringValue(cJSON_GetObjectItem(json, name));
-    if (fieldStr == NULL) {
-        return SERVICE_FAILURE;
-    }
-    size_t strLen = strlen(fieldStr);
-    INIT_ERROR_CHECK((strLen != 0) && (strLen <= (size_t)buffLen), return SERVICE_FAILURE,
-        "Invalid str filed %s for %s", fieldStr, name);
+    size_t strLen = 0;
+    char *fieldStr = GetStringValue(json, name, &strLen);
+    INIT_ERROR_CHECK((fieldStr != NULL) && (strLen != 0) && (strLen <= (size_t)buffLen),
+        return SERVICE_FAILURE, "Invalid str filed %s for %s", fieldStr, name);
     return strcpy_s(buffer, buffLen, fieldStr);
 }
 
@@ -317,50 +322,130 @@ static int GetServiceAttr(const cJSON *curArrItem, Service *curServ, const char 
     return processAttr(curServ, attrName, value, flag);
 }
 
-static int AddServiceSocket(cJSON *json, Service *service)
+static int ParseSocketFamily(cJSON *json, ServiceSocket *sockopt)
 {
-    char *opt[SOCK_OPT_NUMS] = {
-        NULL,
-    };
-    INIT_CHECK_RETURN_VALUE(cJSON_IsString(json) && cJSON_GetStringValue(json), SERVICE_FAILURE);
-    char *sockStr = cJSON_GetStringValue(json);
-    int num = SplitString(sockStr, " ", opt, SOCK_OPT_NUMS);
-    INIT_CHECK_RETURN_VALUE(num == SOCK_OPT_NUMS, SERVICE_FAILURE);
-
-    if (opt[SERVICE_SOCK_NAME] == NULL || opt[SERVICE_SOCK_TYPE] == NULL || opt[SERVICE_SOCK_PERM] == NULL ||
-        opt[SERVICE_SOCK_UID] == NULL || opt[SERVICE_SOCK_GID] == NULL || opt[SERVICE_SOCK_SETOPT] == NULL) {
-        INIT_LOGE("Invalid socket opt");
-        return SERVICE_FAILURE;
+    sockopt->family = AF_UNIX;
+    size_t strLen = 0;
+    char *stringValue = GetStringValue(json, "family", &strLen);
+    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), return SERVICE_FAILURE,
+        "Failed to get string for family");
+    if (strncmp(stringValue, "AF_UNIX", strLen) == 0) {
+        sockopt->family = AF_UNIX;
+    } else if (strncmp(stringValue, "AF_NETLINK", strLen) == 0) {
+        sockopt->family = AF_NETLINK;
     }
+    return 0;
+}
 
-    ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket) + strlen(opt[SERVICE_SOCK_NAME]) + 1);
-    INIT_INFO_CHECK(sockopt != NULL, return SERVICE_FAILURE, "Failed to malloc for socket %s", opt[SERVICE_SOCK_NAME]);
-    sockopt->sockFd = -1;
-    int ret = strcpy_s(sockopt->name, strlen(opt[SERVICE_SOCK_NAME]) + 1, opt[SERVICE_SOCK_NAME]);
-    INIT_INFO_CHECK(ret == 0, free(sockopt);
-        return SERVICE_FAILURE, "Failed to copy socket name %s", opt[SERVICE_SOCK_NAME]);
-
+static int ParseSocketType(cJSON *json, ServiceSocket *sockopt)
+{
     sockopt->type = SOCK_SEQPACKET;
-    if (strncmp(opt[SERVICE_SOCK_TYPE], "stream", strlen(opt[SERVICE_SOCK_TYPE])) == 0) {
+    size_t strLen = 0;
+    char *stringValue = GetStringValue(json, "type", &strLen);
+    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), return SERVICE_FAILURE,
+        "Failed to get string for type");
+    if (strncmp(stringValue, "SOCK_SEQPACKET", strLen) == 0) {
+        sockopt->type = SOCK_SEQPACKET;
+    } else if (strncmp(stringValue, "SOCK_STREAM", strLen) == 0) {
         sockopt->type = SOCK_STREAM;
-    } else if (strncmp(opt[SERVICE_SOCK_TYPE], "dgram", strlen(opt[SERVICE_SOCK_TYPE])) == 0) {
+    } else if (strncmp(stringValue, "SOCK_DGRAM", strLen) == 0) {
         sockopt->type = SOCK_DGRAM;
     }
-    sockopt->perm = strtoul(opt[SERVICE_SOCK_PERM], 0, OCTAL_BASE);
-    sockopt->uid = DecodeUid(opt[SERVICE_SOCK_UID]);
-    sockopt->gid = DecodeUid(opt[SERVICE_SOCK_GID]);
-    if (sockopt->uid == (uid_t)-1 || sockopt->gid == (uid_t)-1) {
-        free(sockopt);
-        sockopt = NULL;
-        INIT_LOGE("Invalid uid or gid");
-        return SERVICE_FAILURE;
+    return 0;
+}
+
+static int ParseSocketProtocol(cJSON *json, ServiceSocket *sockopt)
+{
+    sockopt->protocol = 0;
+    size_t strLen = 0;
+    char *stringValue = GetStringValue(json, "protocol", &strLen);
+    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), return SERVICE_FAILURE,
+        "Failed to get string for protocol");
+    if (strncmp(stringValue, "default", strLen) == 0) {
+        sockopt->protocol = 0;
+    } else if (strncmp(stringValue, "NETLINK_KOBJECT_UEVENT", strLen) == 0) {
+#ifndef __LITEOS__
+        sockopt->protocol = NETLINK_KOBJECT_UEVENT;
+#else
+        return -1;
+#endif
     }
-    sockopt->passcred = false;
-    if (strncmp(opt[SERVICE_SOCK_SETOPT], "passcred", strlen(opt[SERVICE_SOCK_SETOPT])) == 0) {
-        sockopt->passcred = true;
+    return 0;
+}
+
+static int ParseSocketOption(cJSON *json, ServiceSocket *sockopt)
+{
+    sockopt->option = 0;
+    unsigned int tempType = 0;
+    int typeCnt = 0;
+    char *stringValue = NULL;
+    cJSON *typeItem = NULL;
+    cJSON *typeArray = GetArrayItem(json, &typeCnt, "option");
+    INIT_CHECK((typeArray != NULL) && (typeCnt > 0), return 0);
+    for (int i = 0; i < typeCnt; ++i) {
+        typeItem = cJSON_GetArrayItem(typeArray, i);
+        INIT_CHECK_RETURN_VALUE(cJSON_IsString(typeItem), SERVICE_FAILURE);
+        stringValue = cJSON_GetStringValue(typeItem);
+        INIT_ERROR_CHECK(stringValue != NULL, return SERVICE_FAILURE, "Failed to get string for type");
+        if (strncmp(stringValue, "SOCKET_OPTION_PASSCRED", strlen(stringValue)) == 0) {
+            sockopt->option |= SOCKET_OPTION_PASSCRED;
+        } else if (strncmp(stringValue, "SOCKET_OPTION_RCVBUFFORCE", strlen(stringValue)) == 0) {
+            sockopt->option |= SOCKET_OPTION_RCVBUFFORCE;
+        } else if (strncmp(stringValue, "SOCK_CLOEXEC", strlen(stringValue)) == 0) {
+            tempType |= SOCK_CLOEXEC;
+        } else if (strncmp(stringValue, "SOCK_NONBLOCK", strlen(stringValue)) == 0) {
+            tempType |= SOCK_NONBLOCK;
+        }
     }
-    sockopt->watcher = NULL;
+    if (tempType != 0) {
+        sockopt->type |= tempType;
+    }
+    return 0;
+}
+
+static int AddServiceSocket(cJSON *json, Service *service)
+{
+    size_t strLen = 0;
+    char* fieldStr = GetStringValue(json, "name", &strLen);
+    INIT_ERROR_CHECK(fieldStr != NULL, return SERVICE_FAILURE, "Failed to get socket name");
+    INIT_ERROR_CHECK(strLen <= MAX_SERVICE_NAME, return SERVICE_FAILURE, "socket name exceeds length limit");
+    ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket) + strLen + 1);
+    INIT_INFO_CHECK(sockopt != NULL, return SERVICE_FAILURE, "Failed to malloc for service %s", service->name);
+
+    int ret = strcpy_s(sockopt->name, strLen + 1, fieldStr);
+    INIT_INFO_CHECK(ret == 0, free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
+        "Failed to copy socket name %s", fieldStr);
     sockopt->sockFd = -1;
+    sockopt->watcher = NULL;
+
+    ret = ParseSocketFamily(json, sockopt);
+    INIT_ERROR_CHECK(ret == 0, free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
+        "Failed to parse socket family");
+    ret = ParseSocketType(json, sockopt);
+    INIT_ERROR_CHECK(ret == 0, free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
+        "Failed to parse socket type");
+    ret = ParseSocketProtocol(json, sockopt);
+    INIT_ERROR_CHECK(ret == 0, free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
+        "Failed to parse socket protocol");
+
+    char *stringValue = GetStringValue(json, "permissions", &strLen);
+    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
+        "Failed to get string for permissions");
+    sockopt->perm = strtoul(stringValue, 0, OCTAL_BASE);
+    stringValue = GetStringValue(json, "uid", &strLen);
+    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
+        "Failed to get string for uid");
+    sockopt->uid = DecodeUid(stringValue);
+    stringValue = GetStringValue(json, "gid", &strLen);
+    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
+        "Failed to get string for gid");
+    sockopt->gid = DecodeUid(stringValue);
+    INIT_ERROR_CHECK((sockopt->uid != (uid_t)-1) && (sockopt->gid != (uid_t)-1),
+        free(sockopt); sockopt = NULL; return SERVICE_FAILURE, "Invalid uid or gid");
+    ret = ParseSocketOption(json, sockopt);
+    INIT_ERROR_CHECK(ret == 0, free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
+        "Failed to parse socket option");
+
     sockopt->next = NULL;
     if (service->socketCfg == NULL) {
         service->socketCfg = sockopt;

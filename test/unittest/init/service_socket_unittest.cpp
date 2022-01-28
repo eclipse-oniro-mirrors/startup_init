@@ -42,7 +42,7 @@ HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
     sockopt->uid = 1000;
     sockopt->gid = 1000;
     sockopt->perm = 0660;
-    sockopt->passcred = true;
+    sockopt->option = SOCKET_OPTION_PASSCRED;
     const char *testSocName = "test_socket";
     errno_t ret = strncpy_s(sockopt->name, strlen(testSocName) + 1, testSocName, strlen(testSocName));
     sockopt->next = NULL;

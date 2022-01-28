@@ -14,8 +14,9 @@
  */
 #ifndef BASE_STARTUP_INITLITE_SERVICE_H
 #define BASE_STARTUP_INITLITE_SERVICE_H
-#include <sys/types.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 #include "cJSON.h"
 #include "init_cmds.h"
@@ -49,6 +50,7 @@ extern "C" {
 
 #define MAX_SERVICE_NAME 32
 #define MAX_APL_NAME 32
+#define MAX_ENV_NAME 64
 #define MAX_JOB_NAME 128
 #define MAX_WRITEPID_FILES 100
 
