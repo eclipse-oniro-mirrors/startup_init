@@ -108,6 +108,11 @@ static void DoLoadCfg(const struct CmdArgs *ctx)
     (void)fclose(fp);
 }
 
+int FileCryptEnable(char *fileCryptOption)
+{
+    return 0;
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "exec ", 1, 10, DoExec },
     { "loadcfg ", 1, 1, DoLoadCfg },
