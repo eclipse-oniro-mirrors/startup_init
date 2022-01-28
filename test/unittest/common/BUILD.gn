@@ -25,6 +25,7 @@ if (defined(ohos_lite)) {
     defines = [
       "OHOS_LITE",
       "__MUSL__",
+      "_GNU_SOURCE",
     ]
     if (storage_type == "emmc") {
       defines += [ "USE_EMMC_STORAGE" ]
