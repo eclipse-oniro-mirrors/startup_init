@@ -79,6 +79,11 @@ typedef enum {
 } ServiceEndMode;
 
 typedef struct {
+    int *cpus;
+    int cpuNum;
+} CpuArgs;
+
+typedef struct {
     uid_t uID;
     gid_t *gIDArray;
     int gIDCnt;
@@ -130,6 +135,7 @@ typedef struct Service_ {
     int *fds;
     size_t fdCount;
     ServiceJobs serviceJobs;
+    CpuArgs cpuInfo;
 } Service;
 
 int ServiceStart(Service *service);

@@ -183,6 +183,7 @@ ohos_unittest("init_ut") {
     "STARTUP_INIT_TEST",
     "PARAM_SUPPORT_SAVE_PERSIST",
     "PARAM_SUPPORT_DAC",
+    "_GNU_SOURCE",
   ]
   defines += [ "_GNU_SOURCE" ]
 
