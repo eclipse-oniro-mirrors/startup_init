@@ -26,6 +26,7 @@ if (defined(ohos_lite)) {
     if (storage_type == "emmc") {
       defines += [ "USE_EMMC_STORAGE" ]
     }
+    defines += [ "_GNU_SOURCE" ]
 
     include_dirs = [
       "//base/startup/init_lite/services/include",
