@@ -146,7 +146,7 @@ const char *PluginGetCmdIndex(const char *cmdStr, int *index)
 {
     char cmdName[MAX_CMD_NAME_LEN] = {};
     int i = 0;
-    while ((i < MAX_CMD_NAME_LEN) && (*(cmdStr + i) != ' ')) {
+    while ((i < MAX_CMD_NAME_LEN) && (*(cmdStr + i) != '\0') && (*(cmdStr + i) != ' ')) {
         cmdName[i] = *(cmdStr + i);
         i++;
     }
