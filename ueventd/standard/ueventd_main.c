@@ -58,7 +58,7 @@ int main(int argc, char **argv)
                 ProcessUevent(ueventSockFd, NULL, 0); // Not require boot devices
             }
         }
-        int fd = open(UEVENTD_FLAG, O_RDWR | O_CREAT);
+        int fd = open(UEVENTD_FLAG, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
         if (fd < 0) {
             INIT_LOGE("Failed to create ueventd flag!");
             return -1;
