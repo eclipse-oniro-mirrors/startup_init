@@ -184,6 +184,7 @@ ohos_unittest("init_ut") {
     "PARAM_SUPPORT_SAVE_PERSIST",
     "PARAM_SUPPORT_DAC",
   ]
+  defines += [ "_GNU_SOURCE" ]
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 

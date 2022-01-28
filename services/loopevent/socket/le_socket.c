@@ -20,6 +20,7 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <stddef.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>

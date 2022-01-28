@@ -81,6 +81,7 @@ if (defined(ohos_lite)) {
     }
     if (ohos_kernel_type == "linux") {
       defines += [ "NEED_EXEC_RCS_LINUX" ]
+      defines += [ "_GNU_SOURCE" ]
       ldflags += [
         "-lm",
         "-lpthread",
