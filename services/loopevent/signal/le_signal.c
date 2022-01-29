@@ -54,7 +54,7 @@ LE_STATUS LE_CreateSignalTask(const LoopHandle loopHandle, SignalHandle *signalH
     LE_CHECK(processSignal != NULL, return LE_FAILURE, "Invalid parameters processSignal");
     sigset_t mask;
     sigemptyset(&mask);
-    int sfd = signalfd(-1, &mask, SFD_NONBLOCK);
+    int sfd = signalfd(-1, &mask, SFD_NONBLOCK | SFD_CLOEXEC);
     LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
     LE_BaseInfo info = {TASK_SIGNAL, NULL};
     SignalTask *task = (SignalTask *)CreateTask(loopHandle, sfd, &info, sizeof(SignalTask));
@@ -79,7 +79,7 @@ LE_STATUS LE_AddSignal(const LoopHandle loopHandle, const SignalHandle signalHan
     }
     sigaddset(&task->mask, signal);
     sigprocmask(SIG_BLOCK, &task->mask, NULL);
-    int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK);
+    int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK | SFD_CLOEXEC);
     LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
     if (task->sigNumber == 0) {
         loop->addEvent(loop, (const BaseTask *)task, Event_Read);
@@ -101,7 +101,7 @@ LE_STATUS LE_RemoveSignal(const LoopHandle loopHandle, const SignalHandle signal
     }
     sigdelset(&task->mask, signal);
     task->sigNumber--;
-    int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK);
+    int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK | SFD_CLOEXEC);
     LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
     if (task->sigNumber <= 0) {
         loop->delEvent(loop, GetSocketFd(signalHandle), Event_Read);

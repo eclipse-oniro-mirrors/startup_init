@@ -225,6 +225,16 @@ static void PublishHoldFds(Service *service)
     }
 }
 
+static void ClearEnvironment(void)
+{
+    sigset_t mask;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGCHLD);
+    sigaddset(&mask, SIGTERM);
+    sigprocmask(SIG_UNBLOCK, &mask, NULL);
+    return;
+}
+
 int ServiceStart(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
@@ -251,6 +261,8 @@ int ServiceStart(Service *service)
         if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
             DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
         }
+
+        (void)ClearEnvironment();
 
         if (!IsOnDemandService(service)) {
             int ret = CreateServiceSocket(service);
