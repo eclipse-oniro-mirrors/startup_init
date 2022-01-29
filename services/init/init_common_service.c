@@ -432,9 +432,7 @@ void ServiceReap(Service *service)
     // If the service set timer
     // which means the timer handler will start the service
     // Init should not start it automatically.
-    if (IsServiceWithTimerEnabled(service)) {
-        return;
-    }
+    INIT_CHECK(IsServiceWithTimerEnabled(service) == 0, return);
 
     if (!IsOnDemandService(service)) {
         CloseServiceSocket(service);
@@ -481,9 +479,7 @@ void ServiceReap(Service *service)
         INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "Failed to exec restartArg for %s", service->name);
     }
     ret = ServiceStart(service);
-    if (ret != SERVICE_SUCCESS) {
-        INIT_LOGE("reap service %s start failed!", service->name);
-    }
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "reap service %s start failed!", service->name);
     service->attribute &= (~SERVICE_ATTR_NEED_RESTART);
 }
 
