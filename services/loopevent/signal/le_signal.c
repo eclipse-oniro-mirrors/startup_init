@@ -79,7 +79,7 @@ LE_STATUS LE_AddSignal(const LoopHandle loopHandle, const SignalHandle signalHan
     }
     sigaddset(&task->mask, signal);
     sigprocmask(SIG_BLOCK, &task->mask, NULL);
-    int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK);
+    int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK | SFD_CLOEXEC);
     LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
     if (task->sigNumber == 0) {
         loop->addEvent(loop, (const BaseTask *)task, Event_Read);
