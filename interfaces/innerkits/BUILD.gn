@@ -31,6 +31,7 @@ ohos_shared_library("libbegetutil") {
     "reboot/init_reboot_innerkits.c",
     "service_control/service_control.c",
     "socket/init_socket.c",
+    "syscap/init_syscap.c",
   ]
   sources += fs_manager_sources
 

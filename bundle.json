@@ -57,7 +57,8 @@
                             "fs_manager/fs_manager.h",
                             "init_reboot.h",
                             "service_control.h",
-                            "beget_ext.h"
+                            "beget_ext.h",
+                            "systemcapability.h"
                         ]
                     },
                     "name": "//base/startup/init_lite/interfaces/innerkits:libbegetutil"
