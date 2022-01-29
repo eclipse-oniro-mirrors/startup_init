@@ -101,7 +101,7 @@ LE_STATUS LE_RemoveSignal(const LoopHandle loopHandle, const SignalHandle signal
     }
     sigdelset(&task->mask, signal);
     task->sigNumber--;
-    int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK);
+    int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK | SFD_CLOEXEC);
     LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
     if (task->sigNumber <= 0) {
         loop->delEvent(loop, GetSocketFd(signalHandle), Event_Read);
