@@ -182,7 +182,7 @@ static char *GetServiceCtrlName(ParamWorkSpace *workSpace, const char *name, con
         "ohos.ctl.stop"
     };
     static char *installParam[] = {
-        "ohos.servicectrl"
+        "ohos.servicectrl."
     };
     static char *powerCtrlArg[][2] = {
         {"reboot,shutdown", "reboot.shutdown"},
@@ -206,7 +206,7 @@ static char *GetServiceCtrlName(ParamWorkSpace *workSpace, const char *name, con
     }
 
     for (size_t i = 0; i < ARRAY_LENGTH(installParam); i++) {
-        if (strcmp(name, installParam[i]) == 0) {
+        if (strncmp(name, installParam[i], strlen(installParam[i])) == 0) {
             return BuildKey(workSpace, "%s.%s", name, value);
         }
     }

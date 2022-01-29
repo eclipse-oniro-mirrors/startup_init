@@ -26,6 +26,7 @@
 #   include "init_selinux_param.h"
 #endif // WITH_SELINUX
 #include "list.h"
+#include "loop_event.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -47,6 +48,7 @@ extern "C" {
 #define SERVICE_ATTR_CONSOLE 0x080      // console
 #define SERVICE_ATTR_DYNAMIC 0x100      // dynamic service
 #define SERVICE_ATTR_ONDEMAND 0x200     // ondemand, manage socket by init
+#define SERVICE_ATTR_TIMERSTART 0x400   // Mark a service will be started by timer
 
 #define MAX_SERVICE_NAME 32
 #define MAX_APL_NAME 32
@@ -64,6 +66,15 @@ extern "C" {
 
 #define IsOnDemandService(service) \
     (((service)->attribute & SERVICE_ATTR_ONDEMAND) == SERVICE_ATTR_ONDEMAND)
+
+#define IsServiceWithTimerEnabled(service) \
+    (((service)->attribute & SERVICE_ATTR_TIMERSTART) == SERVICE_ATTR_TIMERSTART)
+
+#define DisableServiceTimer(service) \
+    ((service)->attribute &= ~SERVICE_ATTR_TIMERSTART)
+
+#define EnableServiceTimer(service) \
+    ((service)->attribute |= SERVICE_ATTR_TIMERSTART)
 
 typedef enum {
     START_MODE_CONDITION,
@@ -134,6 +145,7 @@ typedef struct Service_ {
     ServiceFile *fileCfg;
     int *fds;
     size_t fdCount;
+    TimerHandle timer;
     ServiceJobs serviceJobs;
     CpuArgs cpuInfo;
 } Service;
@@ -152,6 +164,8 @@ void CloseServiceFds(Service *service, bool needFree);
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount);
 int SetAccessToken(const Service *service);
 void GetAccessToken(void);
+void ServiceStopTimer(Service *service);
+void ServiceStartTimer(Service *service, uint64_t timeout);
 
 #ifdef __cplusplus
 #if __cplusplus
