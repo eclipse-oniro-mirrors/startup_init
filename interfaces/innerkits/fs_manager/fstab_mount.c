@@ -276,9 +276,11 @@ static int Mount(const char *source, const char *target, const char *fsType,
         if (errno == EAGAIN) {
             BEGET_LOGE("Mount %s to %s failed. try again", source, target);
             continue;
-        } else {
-            break;
         }
+        if (errno == EBUSY) {
+            rc = 0;
+        }
+        break;
     }
     return rc;
 }
