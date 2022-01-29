@@ -54,7 +54,7 @@ LE_STATUS LE_CreateSignalTask(const LoopHandle loopHandle, SignalHandle *signalH
     LE_CHECK(processSignal != NULL, return LE_FAILURE, "Invalid parameters processSignal");
     sigset_t mask;
     sigemptyset(&mask);
-    int sfd = signalfd(-1, &mask, SFD_NONBLOCK);
+    int sfd = signalfd(-1, &mask, SFD_NONBLOCK | SFD_CLOEXEC);
     LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
     LE_BaseInfo info = {TASK_SIGNAL, NULL};
     SignalTask *task = (SignalTask *)CreateTask(loopHandle, sfd, &info, sizeof(SignalTask));
