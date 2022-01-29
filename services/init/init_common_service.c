@@ -289,6 +289,12 @@ int ServiceStart(Service *service)
             DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
         }
 
+        sigset_t mask;
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGCHLD);
+        sigaddset(&mask, SIGTERM);
+        sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
         if (!IsOnDemandService(service)) {
             int ret = CreateServiceSocket(service);
             INIT_ERROR_CHECK(ret >= 0, return SERVICE_FAILURE,
