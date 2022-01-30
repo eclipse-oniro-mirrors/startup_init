@@ -275,7 +275,10 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
 {
     int gidCount;
     cJSON *arrItem = cJSON_GetObjectItemCaseSensitive(curArrItem, GID_STR_IN_CFG);
-    if (!cJSON_IsArray(arrItem)) {
+    if (!arrItem) {
+        curServ->servPerm.gIDCnt = 0;
+        return SERVICE_SUCCESS;
+    } else if (!cJSON_IsArray(arrItem)) {
         gidCount = 1;
     } else {
         gidCount = cJSON_GetArraySize(arrItem);
