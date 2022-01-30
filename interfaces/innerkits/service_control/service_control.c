@@ -198,3 +198,49 @@ int ServiceWaitForStatus(const char *serviceName, const char *status, int waitTi
     BEGET_LOGI("Success wait");
     return 0;
 }
+
+int StartServiceByTimer(const char *serviceName, uint64_t timeout)
+{
+    if (serviceName == NULL) {
+        BEGET_LOGE("Request start serivce by timer with invalid service name");
+        return -1;
+    }
+
+    if (timeout == 0) {
+        // start service immediately.
+        return ServiceControl(serviceName, START);
+    }
+    // restrict timeout value, not too long.
+    char value[PARAM_VALUE_LEN_MAX] = {};
+    if (snprintf_s(value, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "%s|%lld", serviceName, timeout) == -1) {
+        BEGET_LOGE("Failed to build parameter value");
+        return -1;
+    }
+
+    if (SystemSetParameter("ohos.servicectrl.timer_start", value) != 0) {
+        BEGET_LOGE("Failed to set parameter \' ohos.servicectrl.timer_start \' with value \' %s \'", value);
+        return -1;
+    }
+    return 0;
+}
+
+int StopServiceTimer(const char *serviceName)
+{
+    if (serviceName == NULL) {
+        BEGET_LOGE("Request stop serivce timer with invalid service name");
+        return -1;
+    }
+
+    char value[PARAM_VALUE_LEN_MAX] = {};
+    int ret = strncpy_s(value, PARAM_VALUE_LEN_MAX - 1, serviceName, strlen(serviceName));
+    if (ret < 0) {
+        BEGET_LOGE("Failed to copy service name to parameter");
+        return -1;
+    }
+
+    if (SystemSetParameter("ohos.servicectrl", value) != 0) {
+        BEGET_LOGE("Failed to set parameter \' ohos.servicectrl.timer_stop \' with value \' %s \'", value);
+        return -1;
+    }
+    return 0;
+}

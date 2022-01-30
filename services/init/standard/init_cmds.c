@@ -282,6 +282,55 @@ static void DoLoadAccessTokenId(const struct CmdArgs *ctx)
     LoadAccessTokenId();
 }
 
+static void DoTimerStart(const struct CmdArgs*ctx)
+{
+    INIT_LOGI("Timer start service with arg = %s", ctx->argv[0]);
+    char *arg = ctx->argv[0];
+    int count = 0;
+    int expectedCount = 2;
+    char **splitArgs = SplitStringExt(ctx->argv[0], "|", &count, expectedCount);
+    if (splitArgs == NULL) {
+        INIT_LOGE("Call timer_start with invalid arguments");
+        return;
+    }
+
+    if (count != expectedCount) {
+        INIT_LOGE("Call timer_start with unexpect arguments %s", arg);
+        FreeStringVector(splitArgs, count);
+        return;
+    }
+
+    Service *service = GetServiceByName(splitArgs[0]);
+    if (service == NULL) {
+        INIT_LOGE("Cannot find service in timer_start command");
+        FreeStringVector(splitArgs, count);
+        return;
+    }
+
+    errno = 0;
+    uint64_t timeout = strtoull(splitArgs[1], NULL, DECIMAL_BASE);
+    if (errno != 0) {
+        INIT_LOGE("call timer_start with invalid timer");
+        FreeStringVector(splitArgs, count);
+        return;
+    }
+    // not need this anymore , release memory.
+    FreeStringVector(splitArgs, count);
+    ServiceStartTimer(service, timeout);
+}
+
+static void DoTimerStop(const struct CmdArgs*ctx)
+{
+    INIT_LOGI("Stop service timer with arg = %s", ctx->argv[0]);
+    const char *serviceName = ctx->argv[0];
+    Service *service = GetServiceByName(serviceName);
+    if (service == NULL) {
+        INIT_LOGE("Cannot find service in timer_stop command");
+        return;
+    }
+    ServiceStopTimer(service);
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "exec ", 1, 10, DoExec },
     { "mknode ", 1, 5, DoMakeNode },
@@ -297,6 +346,8 @@ static const struct CmdTable g_cmdTable[] = {
     { "mount_fstab ", 1, 1, DoMountFstabFile },
     { "umount_fstab ", 1, 1, DoUmountFstabFile },
     { "restorecon ", 0, 1, DoRestorecon },
+    { "timer_start", 1, 1, DoTimerStart },
+    { "timer_stop", 1, 1, DoTimerStop },
 };
 
 const struct CmdTable *GetCmdTable(int *number)

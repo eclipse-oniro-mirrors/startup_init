@@ -34,7 +34,8 @@ int ServiceControlWithExtra(const char *serviceName, int action, const char *ext
 int ServiceControl(const char *serviceName, int action);
 // Service status can set "running", "stopping", "stopped", "reseting". waitTimeout(s).
 int ServiceWaitForStatus(const char *serviceName, const char *status, int waitTimeout);
-
+int StartServiceByTimer(const char *serviceName, uint64_t timeout);
+int StopServiceTimer(const char *serviceName);
 #ifdef __cplusplus
 #if __cplusplus
 }
