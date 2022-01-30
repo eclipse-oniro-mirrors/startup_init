@@ -232,7 +232,7 @@ void ReleaseService(Service *service)
 static char *GetStringValue(const cJSON *json, const char *name, size_t *strLen)
 {
     char *fieldStr = cJSON_GetStringValue(cJSON_GetObjectItem(json, name));
-    INIT_ERROR_CHECK(fieldStr != NULL, return NULL, "Failed to get string for %s", name);
+    INIT_CHECK(fieldStr != NULL, return NULL);
     *strLen = strlen(fieldStr);
     return fieldStr;
 }
@@ -242,8 +242,8 @@ static int GetStringItem(const cJSON *json, const char *name, char *buffer, int 
     INIT_ERROR_CHECK(json != NULL, return SERVICE_FAILURE, "Invalid json for %s", name);
     size_t strLen = 0;
     char *fieldStr = GetStringValue(json, name, &strLen);
-    INIT_ERROR_CHECK((fieldStr != NULL) && (strLen != 0) && (strLen <= (size_t)buffLen),
-        return SERVICE_FAILURE, "Invalid str filed %s for %s", fieldStr, name);
+    INIT_CHECK((fieldStr != NULL) && (strLen != 0) && (strLen <= (size_t)buffLen),
+        return SERVICE_FAILURE);
     return strcpy_s(buffer, buffLen, fieldStr);
 }
 
