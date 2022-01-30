@@ -304,7 +304,7 @@ static void DoUmount(const struct CmdArgs *ctx)
     int ret = GetMountStatusForMountPoint(ctx->argv[0]);
     if (ret == 0) {
         ret = umount(ctx->argv[0]);
-        if ((ret != 0) && (ctx->argc > 1) && (strcmp(ctx->argv[0], "MNT_FORCE") == 0)) {
+        if ((ret != 0) && (ctx->argc > 1) && (strcmp(ctx->argv[1], "MNT_FORCE") == 0)) {
             ret = umount2(ctx->argv[0], MNT_FORCE);
         }
     }
