@@ -288,11 +288,10 @@ FstabItem *FindFstabItemForPath(Fstab fstab, const char *path)
     return item;
 }
 
-char *GetFstabFile(void)
+static char *GetFstabFile(char *fileName, int size)
 {
-    char file[PATH_MAX] = {0};
     if (InUpdaterMode() == 1) {
-        if (strncpy_s(file, PATH_MAX, "/etc/fstab.updater", strlen("/etc/fstab.updater")) != 0) {
+        if (strncpy_s(fileName, size, "/etc/fstab.updater", strlen("/etc/fstab.updater")) != 0) {
             BEGET_LOGE("Failed strncpy_s err=%d", errno);
             return NULL;
         }
@@ -309,13 +308,13 @@ char *GetFstabFile(void)
             BEGET_LOGE("Failed get hardware from cmdline");
             return NULL;
         }
-        if (snprintf_s(file, PATH_MAX, PATH_MAX - 1, "/vendor/etc/fstab.%s", hardware) == -1) {
+        if (snprintf_s(fileName, size, size - 1, "/vendor/etc/fstab.%s", hardware) == -1) {
             BEGET_LOGE("Fail snprintf_s err=%d", errno);
             return NULL;
         }
     }
-    BEGET_LOGI("file is %s", file);
-    return strdup(file); // After the return value is used up, it must be free.
+    BEGET_LOGI("file is %s", fileName);
+    return fileName;
 }
 
 int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char *deviceName, int nameLen)
@@ -425,6 +424,22 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
     FreeStringVector(flagsVector, flagCount);
     return flags;
 }
+
+int GetBlockDevicePath(const char *partName, char *path, int size)
+{
+    char *fstabFile = GetFstabFile(path, size);
+    if (fstabFile == NULL) {
+        return -1;
+    }
+    Fstab *fstab = ReadFstabFromFile(fstabFile, false);
+    if (fstab == NULL) {
+        return -1;
+    }
+    int ret = GetBlockDeviceByMountPoint(partName, fstab, path, size);
+    ReleaseFstab(fstab);
+    return ret;
+}
+
 #ifdef __cplusplus
 #if __cplusplus
 }

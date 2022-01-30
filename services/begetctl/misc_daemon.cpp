@@ -43,35 +43,13 @@ struct option g_options[] = {
 
 static std::string GetMiscDevicePath()
 {
-    std::string miscDev {};
-    // Get misc device path from fstab
-    uint32_t size = PARAM_VALUE_LEN_MAX;
-    std::vector<char> buffer(PARAM_VALUE_LEN_MAX);
-    int ret = SystemGetParameter((char *)"ohos.boot.hardware", buffer.data(), &size);
+    char miscDevice[PATH_MAX] = {0};
+    int ret = GetBlockDevicePath("/misc", miscDevice, PATH_MAX);
     if (ret != 0) {
-        std::cout << "get ohos.boot.hardware failed\n";
-        return "";
+        return std::string("");
     }
-    std::string hardwareVal(buffer.data());
-    std::string fstabFileName = std::string("fstab.") + hardwareVal;
-    std::string fstabFile = std::string("/vendor/etc/") + fstabFileName;
-    Fstab *fstab = ReadFstabFromFile(fstabFile.c_str(), false);
-    if (fstab == nullptr) {
-        std::cout << "Failed to read fstab\n";
-        return miscDev;
-    }
-
-    FstabItem *misc = FindFstabItemForMountPoint(*fstab, "/misc");
-    if (misc == nullptr) {
-        std::cout << "Cannot find misc partition from fstab\n";
-        ReleaseFstab(fstab);
-        return miscDev;
-    }
-    miscDev = misc->deviceName;
-    ReleaseFstab(fstab);
-    return miscDev;
+    return std::string(miscDevice);
 }
-
 
 static void ClearLogo(int fd)
 {

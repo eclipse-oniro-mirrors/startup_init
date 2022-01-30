@@ -40,7 +40,9 @@
 #include "init_service_socket.h"
 #include "init_utils.h"
 #include "fd_holder_internal.h"
+#include "loop_event.h"
 #include "securec.h"
+#include "service_control.h"
 
 #ifdef WITH_SELINUX
 #include "init_selinux_param.h"
@@ -212,8 +214,15 @@ static void PublishHoldFds(Service *service)
     if (service->fdCount > 0 && service->fds != NULL) {
         size_t pos = 0;
         for (size_t i = 0; i < service->fdCount; i++) {
-            (void)snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1,
-                "%d ", service->fds[i]);
+            int fd = dup(service->fds[i]);
+            if (fd < 0) {
+                INIT_LOGE("Duplicate file descriptors of Service \' %s \' failed. err = %d", service->name, errno);
+                continue;
+            }
+            if (snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1, "%d ", fd) < 0) {
+                INIT_LOGE("snprintf_s failed err=%d", errno);
+                return;
+            }
             pos = strlen(fdBuffer);
         }
         fdBuffer[pos - 1] = '\0'; // Remove last ' '
@@ -299,7 +308,7 @@ int ServiceStart(Service *service)
             DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
         }
 
-        (void)ClearEnvironment();
+        ClearEnvironment();
 
         if (!IsOnDemandService(service)) {
             int ret = CreateServiceSocket(service);
@@ -329,7 +338,7 @@ int ServiceStart(Service *service)
     }
     INIT_LOGI("service %s starting pid %d", service->name, pid);
     service->pid = pid;
-    NotifyServiceChange(service->name, "running");
+    NotifyServiceChange(service, SERVICE_STARTED);
     return SERVICE_SUCCESS;
 }
 
@@ -351,9 +360,13 @@ int ServiceStop(Service *service)
     if (service->fdCount != 0) {
         CloseServiceFds(service, true);
     }
+
+    if (IsServiceWithTimerEnabled(service)) {
+        ServiceStopTimer(service);
+    }
     INIT_ERROR_CHECK(kill(service->pid, SIGKILL) == 0, return SERVICE_FAILURE,
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
-    NotifyServiceChange(service->name, "stopping");
+    NotifyServiceChange(service, SERVICE_STOPPING);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
     return SERVICE_SUCCESS;
 }
@@ -381,16 +394,18 @@ static bool CalculateCrashTime(Service *service, int crashTimeLimit, int crashCo
     return true;
 }
 
-static int ExecRestartCmd(const Service *service)
+static int ExecRestartCmd(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Exec service failed! null ptr.");
-    INIT_ERROR_CHECK(service->restartArg != NULL, return SERVICE_FAILURE, "restartArg is null");
-
+    if (service->restartArg == NULL) {
+        return SERVICE_SUCCESS;
+    }
     for (int i = 0; i < service->restartArg->cmdNum; i++) {
         INIT_LOGI("ExecRestartCmd cmdLine->cmdContent %s ", service->restartArg->cmds[i].cmdContent);
         DoCmdByIndex(service->restartArg->cmds[i].cmdIndex, service->restartArg->cmds[i].cmdContent);
     }
     free(service->restartArg);
+    service->restartArg = NULL;
     return SERVICE_SUCCESS;
 }
 
@@ -417,12 +432,17 @@ void ServiceReap(Service *service)
     INIT_CHECK(service != NULL, return);
     INIT_LOGI("Reap service %s, pid %d.", service->name, service->pid);
     service->pid = -1;
-    NotifyServiceChange(service->name, "stopped");
+    NotifyServiceChange(service, SERVICE_STOPPED);
 
     if (service->attribute & SERVICE_ATTR_INVALID) {
         INIT_LOGE("Reap service %s invalid.", service->name);
         return;
     }
+
+    // If the service set timer
+    // which means the timer handler will start the service
+    // Init should not start it automatically.
+    INIT_CHECK(IsServiceWithTimerEnabled(service) == 0, return);
 
     if (!IsOnDemandService(service)) {
         CloseServiceSocket(service);
@@ -463,15 +483,14 @@ void ServiceReap(Service *service)
         return;
     }
 
-    int ret;
-    if (service->restartArg != NULL) {
-        ret = ExecRestartCmd(service);
-        INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "Failed to exec restartArg for %s", service->name);
+    int ret = ExecRestartCmd(service);
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "Failed to exec restartArg for %s", service->name);
+
+    if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
+        DoJobNow(service->serviceJobs.jobsName[JOB_ON_RESTART]);
     }
     ret = ServiceStart(service);
-    if (ret != SERVICE_SUCCESS) {
-        INIT_LOGE("reap service %s start failed!", service->name);
-    }
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "reap service %s start failed!", service->name);
     service->attribute &= (~SERVICE_ATTR_NEED_RESTART);
 }
 
@@ -534,4 +553,64 @@ int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
     }
     INIT_LOGI("Hold fd for service \' %s \' done", service->name);
     return ret;
+}
+
+void ServiceStopTimer(Service *service)
+{
+    INIT_ERROR_CHECK(service != NULL, return, "Stop timer with invalid service");
+    if (IsServiceWithTimerEnabled(service)) {
+        // Stop timer first
+        if (service->timer) {
+            LE_StopTimer(LE_GetDefaultLoop(), service->timer);
+        }
+        service->timer = NULL;
+        DisableServiceTimer(service);
+    }
+}
+
+static void ServiceTimerStartProcess(const TimerHandle handler, void *context)
+{
+    UNUSED(handler);
+    Service *service = (Service *)context;
+
+    if (service == NULL) {
+        INIT_LOGE("Service timer process with invalid service");
+        return;
+    }
+
+    // OK, service is ready to start.
+    // Before start the service, stop service timer.
+    // make sure it will not enter timer handler next time.
+    ServiceStopTimer(service);
+    int ret = ServiceStart(service);
+    if (ret != SERVICE_SUCCESS) {
+        INIT_LOGE("Start service \' %s \' in timer failed");
+    }
+}
+
+void ServiceStartTimer(Service *service, uint64_t timeout)
+{
+    bool oldTimerClean = false;
+    INIT_ERROR_CHECK(service != NULL, return, "Start timer with invalid service");
+    // If the service already set a timer.
+    // And a new request coming. close it and create a new one.
+    if (IsServiceWithTimerEnabled(service)) {
+        ServiceStopTimer(service);
+        oldTimerClean = true;
+    }
+    LE_STATUS status = LE_CreateTimer(LE_GetDefaultLoop(), &service->timer, ServiceTimerStartProcess,
+        (void *)service);
+    if (status != LE_SUCCESS) {
+        INIT_LOGE("Create service timer for service \' %s \' failed, status = %d", service->name, status);
+        if (oldTimerClean) {
+            INIT_LOGE("previous timer is cleared");
+        }
+        return;
+    }
+    status = LE_StartTimer(LE_GetDefaultLoop(), service->timer, timeout, 1);
+    if (status != LE_SUCCESS) {
+        INIT_LOGE("Start service timer for service \' %s \' failed, status = %d", service->name, status);
+        return;
+    }
+    EnableServiceTimer(service);
 }

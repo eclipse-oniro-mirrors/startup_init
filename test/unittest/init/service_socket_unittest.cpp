@@ -33,9 +33,10 @@ public:
 };
 HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
 {
-    Service *service = (Service *)calloc(1, sizeof(Service));
+    const char *testSocName = "test_socket";
+    Service *service = (Service *)AddService("TestCreateSocket");
     ASSERT_NE(service, nullptr);
-    ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket));
+    ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket) + strlen(testSocName) + 1);
     ASSERT_NE(sockopt, nullptr);
     sockopt->type = SOCK_SEQPACKET;
     sockopt->sockFd = -1;
@@ -43,7 +44,6 @@ HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
     sockopt->gid = 1000;
     sockopt->perm = 0660;
     sockopt->option = SOCKET_OPTION_PASSCRED;
-    const char *testSocName = "test_socket";
     errno_t ret = strncpy_s(sockopt->name, strlen(testSocName) + 1, testSocName, strlen(testSocName));
     sockopt->next = NULL;
     EXPECT_EQ(ret, EOK);

@@ -40,6 +40,8 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/interfaces/innerkits/reboot/init_reboot_innerkits.c",
     "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c",
     "//base/startup/init_lite/services/begetctl/param_cmd.c",
+    "//base/startup/init_lite/services/begetctl/shell/shell_bas.c",
+    "//base/startup/init_lite/services/begetctl/shell/shell_main.c",
     "//base/startup/init_lite/services/init/adapter/init_adapter.c",
     "//base/startup/init_lite/services/init/init_capability.c",
     "//base/startup/init_lite/services/init/init_common_cmds.c",
@@ -86,6 +88,7 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/services/utils/init_hashmap.c",
     "//base/startup/init_lite/services/utils/init_utils.c",
     "//base/startup/init_lite/services/utils/list.c",
+    "//base/startup/init_lite/ueventd/standard/ueventd_parameter.c",
     "//base/startup/init_lite/ueventd/ueventd.c",
     "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
     "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
@@ -108,6 +111,7 @@ ohos_unittest("init_ut") {
   }
 
   sources += [
+    "begetctl/begetctl_unittest.cpp",
     "init/cmds_unittest.cpp",
     "init/group_unittest.cpp",
     "init/init_reboot_unittest.cpp",
@@ -131,6 +135,7 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/services/init/standard",
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/interfaces/innerkits/fd_holder",
+    "//base/startup/init_lite/services/begetctl",
     "//base/startup/init_lite/services/begetctl/shell",
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/init/include",
@@ -160,7 +165,6 @@ ohos_unittest("init_ut") {
     "//utils/native/base/include",
     "//utils/system/safwk/native/include",
     "//third_party/bounds_checking_function/include",
-    "//third_party/libuv/include",
     "//third_party/cJSON",
     "//base/security/access_token/interfaces/innerkits/token_setproc/include",
     "//base/security/access_token/interfaces/innerkits/nativetoken/include",
@@ -174,7 +178,6 @@ ohos_unittest("init_ut") {
     "//third_party/cJSON:cjson_static",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest",
-    "//third_party/libuv:uv_static",
     "//utils/native/base:utils",
   ]
 

@@ -60,7 +60,7 @@ void ReleaseFstab(Fstab *fstab);
 Fstab *ReadFstabFromFile(const char *file, bool procMounts);
 FstabItem *FindFstabItemForPath(Fstab fstab, const char *path);
 FstabItem* FindFstabItemForMountPoint(Fstab fstab, const char *mp);
-char *GetFstabFile(void);
+
 int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char *deviceName, int nameLen);
 bool IsSupportedFilesystem(const char *fsType);
 int DoFormat(const char *devPath, const char *fsType);
@@ -70,6 +70,8 @@ int MountAllWithFstabFile(const char *fstabFile, bool required);
 int MountAllWithFstab(const Fstab *fstab, bool required);
 int UmountAllWithFstabFile(const char *file);
 unsigned long GetMountFlags(char *mountFlag, char *fsSpecificFlags, size_t fsSpecificFlagSize);
+
+int GetBlockDevicePath(const char *partName, char *path, int size);
 #ifdef __cplusplus
 #if __cplusplus
 }

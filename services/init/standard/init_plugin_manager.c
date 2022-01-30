@@ -284,6 +284,7 @@ int SetPluginInterface(void)
         return 0;
     }
     char *realPath = GetRealPath("/system/lib/libplugin.z.so");
+#ifndef STARTUP_INIT_TEST
     void* handle = dlopen(realPath, RTLD_LAZY);
     if (handle == NULL) {
         INIT_LOGE("Failed to load module %s, err %s", realPath, dlerror());
@@ -291,6 +292,9 @@ int SetPluginInterface(void)
         return -1;
     }
     GetPluginInterfaceFunc getPluginInterface = (GetPluginInterfaceFunc)dlsym(handle, "GetPluginInterface");
+#else
+    GetPluginInterfaceFunc getPluginInterface = GetPluginInterface;
+#endif
     INIT_LOGI("PluginManagerInit getPluginInterface %p ", getPluginInterface);
     if (getPluginInterface != NULL) {
         pluginInterface = getPluginInterface();
@@ -303,8 +307,9 @@ int SetPluginInterface(void)
         INIT_LOGI("PluginManagerInit pluginInterface %p %p %p",
             pluginInterface, pluginInterface->pluginRegister, getPluginInterface);
     }
-
     free(realPath);
+#ifndef STARTUP_INIT_TEST
     dlclose(handle);
+#endif
     return 0;
 }

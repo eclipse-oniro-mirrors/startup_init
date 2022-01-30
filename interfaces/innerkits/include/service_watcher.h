@@ -17,14 +17,16 @@
 #define SERVICE_WATCH_API_H
 
 #include "sys_param.h"
+#include "service_control.h"
 
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
-typedef ParameterChangePtr ServiceStatusChangePtr;
-int ServiceWatchForStatus(const char *serviceName, void *context, ServiceStatusChangePtr changeCallback);
+
+typedef void (*ServiceStatusChangePtr)(const char *key, ServiceStatus status);
+int ServiceWatchForStatus(const char *serviceName, ServiceStatusChangePtr changeCallback);
 
 #ifdef __cplusplus
 #if __cplusplus

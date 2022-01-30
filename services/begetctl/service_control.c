@@ -46,6 +46,19 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
         ServiceControlWithExtra(argv[1], 0, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
     } else if (strcmp(argv[0], "stop") == 0) {
         ServiceControlWithExtra(argv[1], 1, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
+    } else if (strcmp(argv[0], "timer_start") == 0) {
+        if (argc < SERVICE_START_NUMBER) {
+            return -1;
+        }
+        char *timeBuffer = argv[SERVICE_START_NUMBER];
+        errno = 0;
+        uint64_t timeout = strtoull(timeBuffer, NULL, 10);
+        if (errno != 0) {
+            return -1;
+        }
+        StartServiceByTimer(argv[1], timeout);
+    } else if (strcmp(argv[0], "timer_stop") == 0) {
+        StopServiceTimer(argv[1]);
     } else {
         ServiceControlUsage(shell, argc, argv);
     }
@@ -58,7 +71,9 @@ MODULE_CONSTRUCTOR(void)
         {"service_control", main_cmd, "stop service", "service_control stop servicename", "service_control stop"},
         {"service_control", main_cmd, "start service", "service_control start servicename", "service_control start"},
         {"stop_service", main_cmd, "stop service", "stop_service servicename", ""},
-        {"start_service", main_cmd, "start service", "start_service servicename", ""}
+        {"start_service", main_cmd, "start service", "start_service servicename", ""},
+        {"timer_start", main_cmd, "start service by timer", "timer_start servicename timeout", ""},
+        {"timer_stop", main_cmd, "stop service timer", "timer_stop servicename", ""},
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
         BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);

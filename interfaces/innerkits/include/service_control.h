@@ -24,6 +24,22 @@ extern "C" {
 #endif
 #endif
 
+#define STARTUP_SERVICE_CTL "startup.service.ctl"
+
+typedef enum {
+    SERVICE_IDLE = 0, // service add
+    SERVICE_STARTING, // service start
+    SERVICE_STARTED,
+    SERVICE_READY,
+    SERVICE_STOPPING,
+    SERVICE_STOPPED,
+    SERVICE_ERROR,
+    SERVICE_SUSPENDED,
+    SERVICE_FREEZED,
+    SERVICE_DISABLED,
+    SERVICE_CRITIAL
+} ServiceStatus;
+
 enum ServiceAction {
     START = 0,
     STOP = 1,
@@ -32,9 +48,10 @@ enum ServiceAction {
 
 int ServiceControlWithExtra(const char *serviceName, int action, const char *extArgv[], int extArgc);
 int ServiceControl(const char *serviceName, int action);
-// Service status can set "running", "stopping", "stopped", "reseting". waitTimeout(s).
-int ServiceWaitForStatus(const char *serviceName, const char *status, int waitTimeout);
-
+int ServiceWaitForStatus(const char *serviceName, ServiceStatus status, int waitTimeout);
+int ServiceSetReady(const char *serviceName);
+int StartServiceByTimer(const char *serviceName, uint64_t timeout);
+int StopServiceTimer(const char *serviceName);
 #ifdef __cplusplus
 #if __cplusplus
 }

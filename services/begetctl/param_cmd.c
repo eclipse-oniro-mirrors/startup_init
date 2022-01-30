@@ -151,11 +151,16 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
     ParamAuditData auditData = {};
     int ret = GetParamSecurityAuditData(name, 0, &auditData);
     if (ret != 0) {
+        BSH_LOGE("Failed to get param security for %s", name);
         return;
     }
     char permissionStr[MASK_LENGTH_MAX] = {'-', '-', '-', 0};
     struct passwd *user = getpwuid(auditData.dacData.uid);
     struct group *group = getgrgid(auditData.dacData.gid);
+    if (user == NULL || group == NULL) {
+        BSH_LOGE("Failed to get group for user for %s", name);
+        return;
+    }
     BShellEnvOutput(shell, "Parameter infomation:\r\n");
     BShellEnvOutput(shell, "    dac  : %s(%s) %s(%s) (%s) \r\n",
         user->pw_name, GetPermissionString(auditData.dacData.mode, 0, permissionStr, MASK_LENGTH_MAX),
@@ -346,7 +351,7 @@ static int32_t BShellParamCmdWait(BShellHandle shell, int32_t argc, char *argv[]
 static int32_t BShellParamCmdDump(BShellHandle shell, int32_t argc, char *argv[])
 {
     BSH_CHECK(shell != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
-    if (argc > 2 && strcmp(argv[1], "verbose") == 0) { // 2 min arg
+    if (argc >= 2 && strcmp(argv[1], "verbose") == 0) { // 2 min arg
         SystemSetParameter("ohos.servicectrl.display", "system");
         SystemDumpParameters(1);
     } else {

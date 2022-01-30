@@ -22,19 +22,34 @@
 #include "beget_ext.h"
 #include "init_utils.h"
 #include "securec.h"
+#include "service_control.h"
 
-int ServiceWatchForStatus(const char *serviceName, void *context, ServiceStatusChangePtr changeCallback)
+static void ServiceStateChange(const char *key, const char *value, void *context)
+{
+    ServiceStatusChangePtr callback = (ServiceStatusChangePtr)context;
+    int size = 0;
+    const InitArgInfo *statusMap = GetServieStatusMap(&size);
+    ServiceStatus status = (ServiceStatus)GetMapValue(value, statusMap, size, SERVICE_IDLE);
+    if (strlen(key) > strlen(STARTUP_SERVICE_CTL)) {
+        callback(key + strlen(STARTUP_SERVICE_CTL), status);
+    } else {
+        BEGET_LOGE("Invalid service name %s %s", key, value);
+    }
+}
+
+int ServiceWatchForStatus(const char *serviceName, ServiceStatusChangePtr changeCallback)
 {
     if (serviceName == NULL) {
         BEGET_LOGE("Service wait failed, service is null.");
         return -1;
     }
     char paramName[PARAM_NAME_LEN_MAX] = {0};
-    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", serviceName) == -1) {
+    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1,
+        "%s.%s", STARTUP_SERVICE_CTL, serviceName) == -1) {
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
-    if (SystemWatchParameter(paramName, changeCallback, context) != 0) {
+    if (SystemWatchParameter(paramName, ServiceStateChange, (void *)changeCallback) != 0) {
         BEGET_LOGE("Wait param for %s failed.", paramName);
         return -1;
     }

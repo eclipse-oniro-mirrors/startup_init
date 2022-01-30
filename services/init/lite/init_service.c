@@ -23,10 +23,10 @@
 #include "init_service_manager.h"
 #include "securec.h"
 
-void NotifyServiceChange(const char *serviceName, const char *change)
+void NotifyServiceChange(Service *service, int status)
 {
-    UNUSED(serviceName);
-    UNUSED(change);
+    UNUSED(service);
+    UNUSED(status);
 }
 
 int IsForbidden(const char *fieldStr)

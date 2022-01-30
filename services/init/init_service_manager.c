@@ -29,6 +29,8 @@
 #include "init_service_socket.h"
 #include "init_utils.h"
 #include "securec.h"
+#include "service_control.h"
+
 #ifdef WITH_SELINUX
 #   include "init_selinux_param.h"
 #endif // WITH_SELINUX
@@ -43,7 +45,7 @@ static const int CRITICAL_CONFIG_ARRAY_LEN = 3;
 #ifdef OHOS_SERVICE_DUMP
 static void DumpServiceArgs(const char *info, const ServiceArgs *args)
 {
-    INIT_LOGI("\t\t%s count %d", info, args->count);
+    INIT_LOGI("\tservice %s count %d", info, args->count);
     for (int j = 0; j < args->count; j++) {
         if (args->argv[j] != NULL) {
             INIT_LOGI("\t\tinfo [%d] %s", j, args->argv[j]);
@@ -51,8 +53,45 @@ static void DumpServiceArgs(const char *info, const ServiceArgs *args)
     }
 }
 
+static void DumpServiceJobs(const Service *service)
+{
+    INIT_LOGI("\tservice job info");
+    if (service->serviceJobs.jobsName[JOB_ON_BOOT] != NULL) {
+        INIT_LOGI("\t\tservice boot job %s", service->serviceJobs.jobsName[JOB_ON_BOOT]);
+    }
+    if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
+        INIT_LOGI("\t\tservice start job %s", service->serviceJobs.jobsName[JOB_ON_START]);
+    }
+    if (service->serviceJobs.jobsName[JOB_ON_STOP] != NULL) {
+        INIT_LOGI("\t\tservice stop job %s", service->serviceJobs.jobsName[JOB_ON_STOP]);
+    }
+    if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
+        INIT_LOGI("\t\tservice restart job %s", service->serviceJobs.jobsName[JOB_ON_RESTART]);
+    }
+}
+
+static void DumpServiceSocket(const Service *service)
+{
+    INIT_LOGI("\tservice socket info");
+    ServiceSocket *sockopt = service->socketCfg;
+    while (sockopt != NULL) {
+        INIT_LOGI("\t\tsocket name: %s", sockopt->name);
+        INIT_LOGI("\t\tsocket type: %d", sockopt->type);
+        INIT_LOGI("\t\tsocket uid: %d", sockopt->uid);
+        INIT_LOGI("\t\tsocket gid: %d", sockopt->gid);
+        sockopt = sockopt->next;
+    }
+}
+
 void DumpAllServices()
 {
+    const InitArgInfo startModeMap[] = {
+        {"condition", START_MODE_CONDITION},
+        {"boot", START_MODE_BOOT},
+        {"normal", START_MODE_NARMAL}
+    };
+    int size = 0;
+    const InitArgInfo *statusMap = GetServieStatusMap(&size);
     INIT_LOGI("Ready to dump all services:");
     INIT_LOGI("total service number: %d", g_serviceSpace.serviceCount);
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
@@ -67,30 +106,21 @@ void DumpAllServices()
         INIT_LOGI("\tservice crashCnt: [%d]", service->crashCnt);
         INIT_LOGI("\tservice attribute: [%d]", service->attribute);
         INIT_LOGI("\tservice importance: [%d]", service->importance);
+        INIT_LOGI("\tservice startMode: [%s]", startModeMap[service->status].name);
+        INIT_LOGI("\tservice status: [%s]", statusMap[service->status].name);
         INIT_LOGI("\tservice perms uID [%d]", service->servPerm.uID);
         DumpServiceArgs("path arg", &service->pathArgs);
         DumpServiceArgs("writepid file", &service->writePidArgs);
+        DumpServiceJobs(service);
+        DumpServiceSocket(service);
 
         INIT_LOGI("\tservice perms groupId %d", service->servPerm.gIDCnt);
         for (int i = 0; i < service->servPerm.gIDCnt; i++) {
             INIT_LOGI("\t\tservice perms groupId %d", service->servPerm.gIDArray[i]);
         }
-
         INIT_LOGI("\tservice perms capability %d", service->servPerm.capsCnt);
         for (int i = 0; i < (int)service->servPerm.capsCnt; i++) {
             INIT_LOGI("\t\tservice perms capability %d", service->servPerm.caps[i]);
-        }
-        if (service->restartArg != NULL) {
-            for (int j = 0; j < service->restartArg->cmdNum; j++) {
-                CmdLine *cmd = &service->restartArg->cmds[j];
-                INIT_LOGI("\t\tcmd arg: %s %s", GetCmdKey(cmd->cmdIndex), cmd->cmdContent);
-            }
-        }
-        if (service->socketCfg != NULL) {
-            INIT_LOGI("\tservice socket name: %s", service->socketCfg->name);
-            INIT_LOGI("\tservice socket type: %d", service->socketCfg->type);
-            INIT_LOGI("\tservice socket uid: %d", service->socketCfg->uid);
-            INIT_LOGI("\tservice socket gid: %d", service->socketCfg->gid);
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
@@ -128,20 +158,23 @@ static void FreeServiceSocket(ServiceSocket *sockopt)
     return;
 }
 
-static Service *AddService(const char *name)
+Service *AddService(const char *name)
 {
     // check service in group
     if (CheckNodeValid(NODE_TYPE_SERVICES, name) != 0) {
+        INIT_LOGI("Service %s not exist in group ", name);
         return NULL;
     }
     InitGroupNode *node = AddGroupNode(NODE_TYPE_SERVICES, name);
     if (node == NULL) {
+        INIT_LOGE("Failed to create service name %s", name);
         return NULL;
     }
     Service *service = (Service *)calloc(1, sizeof(Service));
     INIT_ERROR_CHECK(service != NULL, return NULL, "Failed to malloc for service");
     node->data.service = service;
     service->name = node->name;
+    service->status = SERVICE_IDLE;
     g_serviceSpace.serviceCount++;
     INIT_LOGV("AddService %s", node->name);
     return service;
@@ -597,6 +630,10 @@ static int GetServiceOnDemand(const cJSON *curArrItem, Service *curServ)
     bool isOnDemand = (bool)cJSON_GetNumberValue(item);
     INIT_INFO_CHECK(isOnDemand, return SERVICE_SUCCESS,
         "Service : %s ondemand value is false, it will be manage socket by itself", curServ->name);
+    if (curServ->attribute & SERVICE_ATTR_CRITICAL) {
+        INIT_LOGE("Service : %s is invalid which has both critical and ondemand attribute", curServ->name);
+        return SERVICE_FAILURE;
+    }
 
     curServ->attribute |= SERVICE_ATTR_ONDEMAND;
     return SERVICE_SUCCESS;
@@ -651,12 +688,12 @@ static int GetServiceMode(Service *service, const cJSON *json)
     char *value = cJSON_GetStringValue(cJSON_GetObjectItem(json, "start-mode"));
     if (value != NULL) {
         service->startMode = GetMapValue(value,
-            (InitArgInfo *)&startModeMap, (int)ARRAY_LENGTH(startModeMap), START_MODE_NARMAL);
+            (InitArgInfo *)startModeMap, (int)ARRAY_LENGTH(startModeMap), START_MODE_NARMAL);
     }
     value = cJSON_GetStringValue(cJSON_GetObjectItem(json, "end-mode"));
     if (value != NULL) {
         service->endMode = GetMapValue(value,
-            (InitArgInfo *)&endModeMap, (int)ARRAY_LENGTH(endModeMap), END_AFTER_EXEC);
+            (InitArgInfo *)endModeMap, (int)ARRAY_LENGTH(endModeMap), END_AFTER_EXEC);
     }
     return 0;
 }
@@ -670,6 +707,8 @@ static int GetServiceJobs(Service *service, cJSON *json)
         char *jobName = cJSON_GetStringValue(cJSON_GetObjectItem(json, jobTypes[i]));
         if (jobName != NULL) {
             service->serviceJobs.jobsName[i] = strdup(jobName);
+            // save job name for group job check
+            AddGroupNode(NODE_TYPE_JOBS, jobName);
         }
     }
     return SERVICE_SUCCESS;
@@ -916,7 +955,7 @@ void StartServiceByName(const char *servName, bool checkDynamic)
 
     if (checkDynamic && (service->attribute & SERVICE_ATTR_DYNAMIC)) {
         INIT_LOGI("%s is dynamic service.", servName);
-        NotifyServiceChange(servName, "stopped");
+        NotifyServiceChange(service, SERVICE_STOPPED);
         return;
     }
     if (ServiceStart(service) != SERVICE_SUCCESS) {
@@ -940,17 +979,25 @@ void StopServiceByName(const char *servName)
     return;
 }
 
-void StopAllServices(int flags)
+void StopAllServices(int flags, const char **exclude, int size,
+    int (*filter)(const Service *service, const char **exclude, int size))
 {
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
     while (node != NULL) {
         Service *service = node->data.service;
-        if (service != NULL) {
-            service->attribute |= flags;
-            int ret = ServiceStop(service);
-            if (ret != SERVICE_SUCCESS) {
-                INIT_LOGE("Service %s stop failed!", service->name);
-            }
+        if (service == NULL) {
+            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
+            continue;
+        }
+        INIT_LOGI("StopAllServices stop service %s ", service->name);
+        if (filter != NULL && filter(service, exclude, size) != 0) {
+            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
+            continue;
+        }
+        service->attribute |= flags;
+        int ret = ServiceStop(service);
+        if (ret != SERVICE_SUCCESS) {
+            INIT_LOGE("Service %s stop failed!", service->name);
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
@@ -982,7 +1029,6 @@ Service *GetServiceByName(const char *servName)
 void StartAllServices(int startMode)
 {
     INIT_LOGI("StartAllServices %d", startMode);
-#ifdef SUPPORT_GROUP_SERVICE_START
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
     while (node != NULL) {
         Service *service = node->data.service;
@@ -999,7 +1045,7 @@ void StartAllServices(int startMode)
         }
         if (service->attribute & SERVICE_ATTR_DYNAMIC) {
             INIT_LOGI("%s is dynamic service.", service->name);
-            NotifyServiceChange(service->name, "stopped");
+            NotifyServiceChange(service, SERVICE_STOPPED);
             node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
             continue;
         }
@@ -1008,7 +1054,6 @@ void StartAllServices(int startMode)
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
-#endif
     INIT_LOGI("StartAllServices %d finsh", startMode);
 }
 

@@ -22,10 +22,12 @@
 #include "init_unittest.h"
 #include "init_utils.h"
 #include "ueventd_read_cfg.h"
+#include "ueventd_parameter.h"
 
 using namespace std;
 using namespace testing::ext;
 
+#define TEST_PATH "/data/ueventd_ut"
 namespace ueventd_ut {
 static bool FileExists(const std::string &file)
 {
@@ -130,19 +132,19 @@ class UeventdConfigUnitTest : public testing::Test {
 public:
 static void SetUpTestCase(void)
 {
-    int rc = mkdir("/data/ueventd_ut", S_IRWXU | S_IRWXG | S_IRWXO);
+    int rc = mkdir(TEST_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
     if (rc < 0) {
         if (errno != ENOENT) {
             cout << "Failed to prepare test directory." << errno << endl;
         } else {
-            cout << "\"/data/ueventd_ut\" already exists." << endl;
+            cout << " " << TEST_PATH << " already exists." << endl;
         }
     }
 }
 
 static void TearDownTestCase(void)
 {
-    DeleteDir("/data/ueventd_ut");
+    DeleteDir(TEST_PATH);
 }
 
 void SetUp() {};
@@ -153,11 +155,11 @@ HWTEST_F(UeventdConfigUnitTest, TestSectionConfigParse, TestSize.Level0)
 {
     GenerateConfigFiles("[device]\n", "/dev/test 0666 1000 1000\n", "/data/ueventd_ut/valid.config");
     GenerateConfigFiles("[device]\n", "/dev/test1 0666 1000\n", "/data/ueventd_ut/valid.config");
-    GenerateConfigFiles("[device]\n", "/dev/test2 0666 1000 1000 1000\n", "/data/ueventd_ut/valid.config");
+    GenerateConfigFiles("[device]\n", "/dev/test2 0666 1000 1000 1000 1000\n", "/data/ueventd_ut/valid.config");
     GenerateConfigFiles("[sysfs]\n", "/dir/to/nothing attr_nowhere 0666 1000 1000\n",
-        "/data/ueventd_ut/valid.config");
-    GenerateConfigFiles("[firmware]\n", "/etc\n", "/data/ueventd_ut/valid.config");
-    ParseUeventdConfigFile("/data/ueventd_ut/valid.config");
+        TEST_PATH "/valid.config");
+    GenerateConfigFiles("[firmware]\n", "/etc\n", TEST_PATH"/valid.config");
+    ParseUeventdConfigFile(TEST_PATH"/valid.config");
     uid_t uid = 0;
     gid_t gid = 0;
     mode_t mode = 0;
@@ -194,5 +196,18 @@ HWTEST_F(UeventdConfigUnitTest, TestConfigEntry, TestSize.Level0)
     file = "[device]";
     rc = ParseUeventConfig(const_cast<char*>(file.c_str())); // valid section
     EXPECT_EQ(rc, 0);
+}
+
+HWTEST_F(UeventdConfigUnitTest, TestParameter, TestSize.Level0)
+{
+    GenerateConfigFiles("[device]\n", "/dev/testbinder1 0666 1000 1000 ohos.dev.binder\n", TEST_PATH"/valid.config");
+    ParseUeventdConfigFile(TEST_PATH"/valid.config");
+    GenerateConfigFiles("[device]\n", "/dev/testbinder2 0666 1000 1000 ohos.dev.binder\n", TEST_PATH"/valid.config");
+    ParseUeventdConfigFile(TEST_PATH"/valid.config");
+    GenerateConfigFiles("[device]\n", "/dev/testbinder3 0666 1000 1000 ohos.dev.binder\n", TEST_PATH"/valid.config");
+    ParseUeventdConfigFile(TEST_PATH"/valid.config");
+    SetUeventDeviceParameter("/dev/testbinder1", 0);
+    SetUeventDeviceParameter("/dev/testbinder2", 0);
+    SetUeventDeviceParameter("/dev/testbinder3", 0);
 }
 } // namespace ueventd_ut

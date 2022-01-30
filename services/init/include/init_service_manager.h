@@ -55,11 +55,14 @@ int ParseOneService(const cJSON *curItem, Service *service);
 
 void StartServiceByName(const char *serviceName, bool checkDynamic);
 void StopServiceByName(const char *serviceName);
-void StopAllServices(int flags);
+void StopAllServices(int flags, const char **exclude, int size,
+    int (*filter)(const Service *service, const char **exclude, int size));
 void ParseAllServices(const cJSON *fileRoot);
 void ReleaseService(Service *service);
 void StartAllServices(int startMode);
 void LoadAccessTokenId(void);
+Service *AddService(const char *name);
+
 #ifdef OHOS_SERVICE_DUMP
 void DumpAllServices();
 #endif

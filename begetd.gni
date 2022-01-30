@@ -14,4 +14,9 @@
 declare_args() {
   param_feature_watcher = true
   param_test = false
+
+  if (defined(product_name) && product_name == "rk3568") {
+    boot_kernel_extended_cmdline =
+        "hardware=rk3568 default_boot_device=fe310000.sdhci"
+  }
 }

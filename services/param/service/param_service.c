@@ -39,6 +39,7 @@ static void OnClose(ParamTaskPtr client)
     ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
     if (client == g_paramWorkSpace.watcherTask) {
         ClearWatchTrigger(watcher, TRIGGER_PARAM_WATCH);
+        g_paramWorkSpace.watcherTask = NULL;
     } else {
         ClearWatchTrigger(watcher, TRIGGER_PARAM_WAIT);
     }
@@ -182,7 +183,7 @@ static char *GetServiceCtrlName(ParamWorkSpace *workSpace, const char *name, con
         "ohos.ctl.stop"
     };
     static char *installParam[] = {
-        "ohos.servicectrl"
+        "ohos.servicectrl."
     };
     static char *powerCtrlArg[][2] = {
         {"reboot,shutdown", "reboot.shutdown"},
@@ -206,7 +207,7 @@ static char *GetServiceCtrlName(ParamWorkSpace *workSpace, const char *name, con
     }
 
     for (size_t i = 0; i < ARRAY_LENGTH(installParam); i++) {
-        if (strcmp(name, installParam[i]) == 0) {
+        if (strncmp(name, installParam[i], strlen(installParam[i])) == 0) {
             return BuildKey(workSpace, "%s.%s", name, value);
         }
     }
@@ -497,7 +498,7 @@ static int HandleParamWatcherDel(ParamWorkSpace *workSpace, const ParamTaskPtr w
 
 PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *msg)
 {
-    PARAM_CHECK(msg != NULL, return -1, "Invalid msg");
+    PARAM_CHECK((msg != NULL) && (msg->msgSize >= sizeof(ParamMessage)), return -1, "Invalid msg");
     PARAM_CHECK(worker != NULL, return -1, "Invalid worker");
     int ret = PARAM_CODE_INVALID_PARAM;
     switch (msg->type) {
@@ -589,6 +590,7 @@ static int GetParamValueFromBuffer(const char *name, const char *buffer, char *v
 
 static int LoadParamFromCmdLine(void)
 {
+    int ret;
     static const char *cmdLines[] = {
         OHOS_BOOT"hardware",
         OHOS_BOOT"bootgroup",
@@ -611,7 +613,14 @@ static int LoadParamFromCmdLine(void)
         return -1, "Failed to read file %s", PARAM_CMD_LINE);
 
     for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
-        int ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
+    #ifdef BOOT_EXTENDED_CMDLINE
+        ret = GetParamValueFromBuffer(cmdLines[i], BOOT_EXTENDED_CMDLINE, value, PARAM_CONST_VALUE_LEN_MAX);
+        if (ret != 0) {
+            ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
+        }
+    #else
+        ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
+    #endif
         if (ret == 0) {
             PARAM_LOGV("Add param from cmdline %s %s", cmdLines[i], value);
             ret = CheckParamName(cmdLines[i], 0);

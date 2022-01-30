@@ -194,9 +194,6 @@ HWTEST_F(CmdsUnitTest, TestGetCmdKey, TestSize.Level1)
 {
     const char *cmd1 = GetCmdKey(0);
     EXPECT_STREQ(cmd1, "start ");
-    const int execPos = 17;
-    cmd1 = GetCmdKey(execPos);
-    EXPECT_STREQ(cmd1, "exec ");
 }
 
 HWTEST_F(CmdsUnitTest, TestDoCmdByIndex, TestSize.Level1)

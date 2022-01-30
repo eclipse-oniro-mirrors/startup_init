@@ -20,6 +20,7 @@
 
 #include "fs_manager/fs_manager.h"
 #include "init_log.h"
+#include "init_jobs_internal.h"
 #include "init_service.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
@@ -82,11 +83,15 @@ static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage
 }
 
 static int CheckAndRebootToUpdater(const char *valueData, const char *cmd,
-    const char *cmdExt, const char *boot, const char *miscFile)
+    const char *cmdExt, const char *boot)
 {
+    char miscFile[PATH_MAX] = {0};
+    int ret = GetBlockDevicePath("/misc", miscFile, PATH_MAX);
+    INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get misc path for %s.", valueData);
+
     // "updater" or "updater:"
     struct RBMiscUpdateMessage msg;
-    int ret = RBMiscReadUpdaterMessage(miscFile, &msg);
+    ret = RBMiscReadUpdaterMessage(miscFile, &msg);
     INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get misc info for %s.", cmd);
 
     if (boot != NULL) {
@@ -118,74 +123,110 @@ static int CheckAndRebootToUpdater(const char *valueData, const char *cmd,
     return ret;
 }
 
-static int CheckRebootParam(const char *valueData)
+int DoRebootCmd(const char *cmd, const char *opt)
 {
-    if (valueData == NULL) {
-        return 0;
-    }
-    static const char *cmdParams[] = {
-        "shutdown", "updater", "updater:", "flash", "flash:", "NoArgument", "loader", "bootloader"
-    };
-    size_t i = 0;
-    for (; i < ARRAY_LENGTH(cmdParams); i++) {
-        if (strncmp(valueData, cmdParams[i], strlen(cmdParams[i])) == 0) {
-            break;
-        }
-    }
-    INIT_CHECK_RETURN_VALUE(i < ARRAY_LENGTH(cmdParams), -1);
+    // by job to stop service and unmount
+    DoJobNow("reboot");
+#ifndef PRODUCT_RK
+    return CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
+#else
+    reboot(RB_AUTOBOOT);
+    return 0;
+#endif
+}
+
+int DoShutdownCmd(const char *cmd, const char *opt)
+{
+    // by job to stop service and unmount
+    DoJobNow("reboot");
+#ifndef STARTUP_INIT_TEST
+    return reboot(RB_POWER_OFF);
+#else
+    return 0;
+#endif
+}
+
+int DoUpdaterCmd(const char *cmd, const char *opt)
+{
+    // by job to stop service and unmount
+    DoJobNow("reboot");
+    return CheckAndRebootToUpdater(opt, "updater", "updater:", "boot_updater");
+}
+
+int DoFlashdCmd(const char *cmd, const char *opt)
+{
+    // by job to stop service and unmount
+    DoJobNow("reboot");
+    return CheckAndRebootToUpdater(opt, "flash", "flash:", "boot_flash");
+}
+
+#ifdef PRODUCT_RK
+int DoLoaderCmd(const char *cmd, const char *opt)
+{
+    syscall(__NR_reboot, REBOOT_MAGIC1, REBOOT_MAGIC2, REBOOT_CMD_RESTART2, "loader");
     return 0;
 }
+#endif
+
+int DoSuspendCmd(const char *cmd, const char *opt)
+{
+    // by job to stop service and unmount
+    DoJobNow("suspend");
+#ifndef STARTUP_INIT_TEST
+    return reboot(RB_POWER_OFF);
+#else
+    return 0;
+#endif
+}
+
+int DoFreezeCmd(const char *cmd, const char *opt)
+{
+    // by job to stop service and unmount
+    DoJobNow("freeze");
+#ifndef STARTUP_INIT_TEST
+    return reboot(RB_POWER_OFF);
+#else
+    return 0;
+#endif
+}
+
+struct {
+    char *cmdName;
+    int (*doCmd)(const char *cmd, const char *opt);
+} g_rebootCmd[] = {
+    { "reboot", DoRebootCmd },
+    { "shutdown", DoShutdownCmd },
+    { "bootloader", DoShutdownCmd },
+    { "updater", DoUpdaterCmd },
+    { "flashd", DoFlashdCmd },
+#ifdef PRODUCT_RK
+    { "loader", DoLoaderCmd },
+#endif
+    { "suspend", DoSuspendCmd },
+    { "freeze", DoFreezeCmd },
+};
 
 void ExecReboot(const char *value)
 {
     INIT_ERROR_CHECK(value != NULL && strlen(value) <= MAX_VALUE_LENGTH, return, "Invalid arg");
-    const char *valueData = NULL;
-    if (strncmp(value, "reboot,", strlen("reboot,")) == 0) {
-        valueData = value + strlen("reboot,");
-    } else if (strcmp(value, "reboot") != 0) {
-        INIT_LOGE("Reboot value = %s, must started with reboot", value);
+    char *cmd = NULL;
+    if (strcmp(value, "reboot") == 0) {
+        cmd = "reboot";
+    } else if (strncmp(value, "reboot,", strlen("reboot,")) == 0) {
+        cmd = (char *)(value + strlen("reboot,"));
+    } else {
+        INIT_LOGE("Invalid rebot cmd %s.", value);
         return;
     }
-    INIT_ERROR_CHECK(CheckRebootParam(valueData) == 0, return, "Invalid arg %s for reboot.", value);
-    char miscDevice[PATH_MAX] = {0};
-    char *fstabFile = GetFstabFile();
-    if (fstabFile != NULL) {
-        Fstab *fstab = ReadFstabFromFile(fstabFile, false);
-        free(fstabFile);
-        if (fstab != NULL) {
-            INIT_CHECK_ONLY_ELOG(GetBlockDeviceByMountPoint("/misc", fstab, miscDevice, PATH_MAX) == 0,
-                "Failed to get misc device name.");
-            ReleaseFstab(fstab);
+
+    INIT_LOGE("ExecReboot %s.", cmd);
+    for (int i = 0; i < (int)ARRAY_LENGTH(g_rebootCmd); i++) {
+        if (strncmp(cmd, g_rebootCmd[i].cmdName, strlen(g_rebootCmd[i].cmdName)) == 0) {
+            int ret = g_rebootCmd[i].doCmd(cmd, cmd);
+            INIT_LOGI("Reboot %s %s.", value, (ret == 0) ? "success" : "fail");
+            return;
         }
     }
-    StopAllServices(SERVICE_ATTR_INVALID);
-    sync();
-    INIT_CHECK_ONLY_ELOG(GetMountStatusForMountPoint("/vendor") == 0 || umount("/vendor") == 0,
-        "Failed to umount vendor. errno = %d.", errno);
-    INIT_CHECK_ONLY_ELOG(GetMountStatusForMountPoint("/data") == 0 || umount("/data") == 0 ||
-        umount2("/data", MNT_FORCE) == 0, "Failed umount data. errno = %d.", errno);
-    int ret = 0;
-    if (valueData == NULL) {
-#ifndef PRODUCT_RK
-        ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL, miscDevice);
-#else
-        reboot(RB_AUTOBOOT);
-#endif
-    } else if (strcmp(valueData, "shutdown") == 0) {
-#ifndef STARTUP_INIT_TEST
-        ret = reboot(RB_POWER_OFF);
-    } else if (strcmp(valueData, "bootloader") == 0) {
-        ret = reboot(RB_POWER_OFF);
-#endif
-    } else if (strncmp(valueData, "updater", strlen("updater")) == 0) {
-        ret = CheckAndRebootToUpdater(valueData, "updater", "updater:", "boot_updater", miscDevice);
-    } else if (strncmp(valueData, "flash", strlen("flash")) == 0) {
-        ret = CheckAndRebootToUpdater(valueData, "flash", "flash:", "boot_flash", miscDevice);
-#ifdef PRODUCT_RK
-    } else if (strncmp(valueData, "loader", strlen("loader")) == 0) {
-        syscall(__NR_reboot, REBOOT_MAGIC1, REBOOT_MAGIC2, REBOOT_CMD_RESTART2, "loader");
-#endif
-    }
-    INIT_LOGI("Reboot %s %s.", value, (ret == 0) ? "success" : "fail");
+    INIT_LOGE("Invalid rebot cmd %s.", value);
     return;
 }

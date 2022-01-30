@@ -34,15 +34,14 @@ static int GetBootGroupMode(void)
 {
     static const char *groupModes[] = {
         "device.boot.group",
-        "device.charing.group",
-        "device.updater.group"
+        "device.charing.group"
     };
     for (size_t i = 0; i < ARRAY_LENGTH(groupModes); i++) {
         if (strcmp(g_initWorkspace.groupModeStr, groupModes[i]) == 0) {
             return i;
         }
     }
-    return (int)GROUP_BOOT;
+    return (int)GROUP_UNKNOW;
 }
 
 static int ParseGroupCfgItem(cJSON *root, int type, const char *itemName)
@@ -65,7 +64,7 @@ static int ParseGroupCfgItem(cJSON *root, int type, const char *itemName)
 
 static int InitParseGroupCfg_(const char *groupCfg)
 {
-    INIT_LOGV("parse group config %s", groupCfg);
+    INIT_LOGI("Parse group config %s", groupCfg);
     char *fileBuf = ReadFileToBuf(groupCfg);
     INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Failed to read file content %s", groupCfg);
     cJSON *fileRoot = cJSON_Parse(fileBuf);
@@ -115,10 +114,10 @@ static char *GetAbsolutePath(const char *path, const char *cfgName, char *buffer
         ext = strcmp(cfgName + cfgNameLen - strlen(".cfg"), ".cfg") == 0;
     }
     if (cfgName[0] != '/') {
-        const char *format = ext != 0 ? "%s/%s" : "%s/%s.cfg";
+        const char *format = (ext != 0) ? "%s/%s" : "%s/%s.cfg";
         len = sprintf_s(buffer, buffSize, format, path, cfgName);
     } else {
-        const char *format = ext != 0 ? "%s" : "%s.cfg";
+        const char *format = (ext != 0) ? "%s" : "%s.cfg";
         len = sprintf_s(buffer, buffSize, format, cfgName);
     }
     if (len <= 0) {
@@ -176,7 +175,6 @@ void InitServiceSpace(void)
         if (ret != 0) {
             INIT_LOGE("%s", "Failed to create hash map");
         }
-        INIT_LOGI("HashMapCreate %p", g_initWorkspace.hashMap[i]);
     }
 
     for (int i = 0; i < NODE_TYPE_MAX; i++) {
@@ -203,10 +201,12 @@ int InitParseGroupCfg(void)
     char buffer[128] = {0}; // 128 buffer size
     char *realPath = GetAbsolutePath(GROUP_DEFAULT_PATH,
         g_initWorkspace.groupModeStr, buffer, sizeof(buffer));
+    INIT_ERROR_CHECK(realPath != NULL, return -1,
+        "Failed to get path for %s", g_initWorkspace.groupModeStr);
     InitParseGroupCfg_(realPath);
     InitGroupNode *groupRoot = g_initWorkspace.groupNodes[NODE_TYPE_GROUPS];
     int level = 0;
-    while (groupRoot != NULL && level < GROUP_IMPORT_MAX_LEVEL) { // for more import
+    while ((groupRoot != NULL) && (level < GROUP_IMPORT_MAX_LEVEL)) { // for more import
         g_initWorkspace.groupNodes[NODE_TYPE_GROUPS] = NULL;
         InitImportGroupCfg_(groupRoot);
         groupRoot = g_initWorkspace.groupNodes[NODE_TYPE_GROUPS];
@@ -294,6 +294,7 @@ int CheckNodeValid(int type, const char *name)
     if (type >= NODE_TYPE_GROUPS) {
         return -1;
     }
+#ifndef INIT_TEST
     if (g_initWorkspace.groupMode == GROUP_BOOT) {
         return 0;
     }
@@ -301,6 +302,16 @@ int CheckNodeValid(int type, const char *name)
     if (node != NULL) {
         return 0;
     }
+#else
+    HashNode *node = HashMapGet(g_initWorkspace.hashMap[type], name);
+    if (node != NULL) {
+        INIT_LOGI("Found %s in %s group", name, type == NODE_TYPE_JOBS ? "job" : "service");
+        return 0;
+    }
+    if (g_initWorkspace.groupMode == GROUP_BOOT) {
+        return 0;
+    }
+#endif
     return -1;
 }
 

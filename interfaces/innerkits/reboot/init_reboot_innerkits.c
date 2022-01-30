@@ -35,20 +35,31 @@
 int DoReboot(const char *option)
 {
     char value[MAX_REBOOT_OPTION_SIZE];
+    int ret = 0;
     if (option == NULL || strlen(option) == 0) {
-        BEGET_ERROR_CHECK(snprintf_s(value, MAX_REBOOT_OPTION_SIZE, strlen("reboot") + 1, "%s", "reboot") >= 0,
-            return -1, "reboot options too large, overflow");
-        BEGET_ERROR_CHECK(SystemSetParameter(DOREBOOT_PARAM, value) == 0, return -1,
-            "Set parameter to trigger reboot command \" %s \" failed", value);
+        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
+        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
+        ret = SystemSetParameter(DOREBOOT_PARAM, "reboot");
+        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set reboot param");
         return 0;
     }
     int length = strlen(option);
     BEGET_ERROR_CHECK(length <= MAX_REBOOT_OPTION_SIZE, return -1,
         "Reboot option \" %s \" is too large, overflow", option);
-    BEGET_ERROR_CHECK(snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "%s%s", "reboot,",
-        option) >= 0, return -1, "Failed to copy boot option \" %s \"", option);
-    BEGET_ERROR_CHECK(SystemSetParameter(DOREBOOT_PARAM, value) == 0, return -1,
-        "Set parameter to trigger reboot command \" %s \" failed", value);
+    ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "reboot,%s", option);
+    BEGET_ERROR_CHECK(ret >= 0, return -1, "Failed to copy boot option \" %s \"", option);
+
+    if (strcmp(option, DEVICE_CMD_SUSPEND) == 0) {
+        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_SUSPEND);
+        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
+    } else if (strcmp(option, DEVICE_CMD_FREEZE) == 0) {
+        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_FREEZE);
+        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
+    } else {
+        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
+        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
+    }
+    ret = SystemSetParameter(DOREBOOT_PARAM, value);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Set parameter to trigger reboot command \" %s \" failed", value);
     return 0;
 }
-

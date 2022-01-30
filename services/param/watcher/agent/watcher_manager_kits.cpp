@@ -149,9 +149,16 @@ int32_t WatcherManagerKits::DelWatcher(const std::string &keyPrefix)
     WATCHER_CHECK(watcher != nullptr, return 0, "Can not find watcher for keyPrefix %s", keyPrefix.c_str());
     auto watcherManager = GetService();
     WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to get watcher manager");
+    WATCHER_LOGV("DelWatcher keyPrefix_ %s ", keyPrefix.c_str());
     int ret = watcherManager->DelWatcher(keyPrefix, watcher->GetWatcherId());
     WATCHER_CHECK(ret == 0, return -1, "Failed to delete watcher for %s", keyPrefix.c_str());
-    SetParamWatcher(keyPrefix, nullptr);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto iter = watchers_.find(keyPrefix);
+        if (iter != watchers_.end()) {
+            watchers_.erase(iter);
+        }
+    }
     return 0;
 }
 

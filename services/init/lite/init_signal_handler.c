@@ -26,7 +26,7 @@ void ReapService(Service *service)
     if (service->attribute & SERVICE_ATTR_IMPORTANT) {
         // important process exit, need to reboot system
         service->pid = -1;
-        StopAllServices(0);
+        StopAllServices(0, NULL, 0, NULL);
         RebootSystem();
     }
     ServiceReap(service);
@@ -49,7 +49,7 @@ static void SigHandler(int sig)
             break;
         }
         case SIGTERM: {
-            StopAllServices(0);
+            StopAllServices(0, NULL, 0, NULL);
             break;
         }
         default:
