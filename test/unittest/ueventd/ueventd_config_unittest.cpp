@@ -27,7 +27,7 @@
 using namespace std;
 using namespace testing::ext;
 
-#define TEST_PATH "/data/ueventd_ut"
+const char *TEST_PATH = "/data/ueventd_ut";
 namespace ueventd_ut {
 static bool FileExists(const std::string &file)
 {
