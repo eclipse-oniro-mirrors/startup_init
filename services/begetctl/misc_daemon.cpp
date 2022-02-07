@@ -211,7 +211,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
     if (argc >= 2 && strcmp((char *)"--write_logo", argv[0]) == 0) { // 2 min arg
         WriteLogoToMisc(argv[1]);
     } else {
-        char *helpArgs[] = {const_cast<char *>("misc_daemon"), NULL};
+        char *helpArgs[] = {const_cast<char *>("misc_daemon"), nullptr};
         BShellCmdHelp(shell, 1, helpArgs);
     }
     return 0;
