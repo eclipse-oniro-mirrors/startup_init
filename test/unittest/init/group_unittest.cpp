@@ -103,18 +103,19 @@ public:
     void TearDown(void) {};
 };
 
+HashInfo g_info = {
+    TestHashNodeCompare,
+    TestHashKeyCompare,
+    TestHashNodeFunction,
+    TestHashKeyFunction,
+    TestHashNodeFree,
+    2
+};
+
 HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
 {
     HashMapHandle handle;
-    HashInfo info = {
-        TestHashNodeCompare,
-        TestHashKeyCompare,
-        TestHashNodeFunction,
-        TestHashKeyFunction,
-        TestHashNodeFree,
-        2
-    };
-    HashMapCreate(&handle, &info);
+    HashMapCreate(&handle, &g_info);
     const char *str1 = "Test hash map node 1";
     const char *str2 = "Test hash map node 2";
     const char *str3 = "Test hash map node 3";
@@ -126,14 +127,12 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
     EXPECT_NE(node != NULL, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
-        printf("HashMapGet str1 %s\n", tmp->name);
         EXPECT_EQ(strcmp(tmp->name, str1), 0);
     }
     node = HashMapGet(handle, (const void *)str2);
     EXPECT_NE(node != NULL, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
-        printf("HashMapGet str2 %s\n", tmp->name);
         EXPECT_EQ(strcmp(tmp->name, str2), 0);
     }
     TestHashNode *node3 = TestCreateHashNode(str3);
@@ -146,8 +145,20 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
     EXPECT_NE(node != NULL, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
-        printf("HashMapGet str3 %s\n", tmp->name);
         EXPECT_EQ(strcmp(tmp->name, str3), 0);
+    }
+    TestHashNode *node4 = TestCreateHashNode("pre-init");
+    HashMapAdd(handle, &node4->node);
+
+    const char *act = "load_persist_props_action";
+    TestHashNode *node5 = TestCreateHashNode(act);
+    HashMapAdd(handle, &node5->node);
+    HashMapRemove(handle, "pre-init");
+    node = HashMapGet(handle, (const void *)act);
+    EXPECT_NE(node != NULL, 0);
+    if (node) {
+        TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
+        EXPECT_EQ(strcmp(tmp->name, act), 0);
     }
     HashMapDestory(handle);
 }
@@ -174,7 +185,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
     const char *xxx14 = "{"
 	    "\"groups\": [\"subsystem.xxx11.group\""
     "}";
-    const char *cmdLine = "BOOT_IMAGE=/kernel init=/init bootgroup=device.boot.group";
+    const char *cmdLine = "BOOT_IMAGE=/kernel init=/init bootgroup=device.charing.group";
     CreateTestFile(GROUP_DEFAULT_PATH "/device.boot.group.cfg", data);
     CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx1.group.cfg", xxx1);
     CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx11.group.cfg", xxx11);
@@ -184,6 +195,9 @@ HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
 
     InitServiceSpace();
+    InitWorkspace *workspace = GetInitWorkspace();
+    EXPECT_EQ(workspace->groupMode, GROUP_CHARING);
+    workspace->groupMode = GROUP_BOOT;
     int ret = InitParseGroupCfg();
     EXPECT_EQ(ret, 0);
 }
@@ -208,6 +222,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService, TestSize.Level1)
             "\"name\" : \"test-service2\","
             "\"path\" : [\"/dev/test_service\"],"
             "\"console\":1,"
+            "\"start-mode\" : \"boot\","
             "\"writepid\":[\"/dev/test_service\"],"
             "\"jobs\" : {"
                     "\"on-boot\" : \"boot:bootjob1\","
@@ -225,9 +240,11 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService, TestSize.Level1)
 
     Service *service = GetServiceByName("test-service");
     ASSERT_NE(service != nullptr, 0);
+    EXPECT_EQ(service->startMode, START_MODE_CONDITION);
     ReleaseService(service);
     service = GetServiceByName("test-service2");
     ASSERT_NE(service != nullptr, 0);
+    EXPECT_EQ(service->startMode, START_MODE_BOOT);
     ReleaseService(service);
 }
 
@@ -313,5 +330,23 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService2, TestSize.Level1)
     Service *service = GetServiceByName("test-service6");
     ASSERT_NE(service, nullptr);
     workspace->groupMode = GROUP_BOOT;
+}
+
+HWTEST_F(InitGroupManagerUnitTest, TestParseServiceCpucore, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service22\",\"path\":[\"/data/init_ut/test_service\"],"
+        "\"importance\":-20,\"uid\":\"root\",\"writepid\":[\"/dev/test_service\"],\"console\":1,\"dynamic\":true,"
+        "\"gid\":[\"root\"], \"cpucore\":[5, 2, 4, 1, 2, 0, 1]}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    Service *service = AddService("test_service22");
+    if (service != NULL) {
+        int ret = ParseOneService(serviceItem, service);
+        EXPECT_EQ(ret, 0);
+        ReleaseService(service);
+    }
+    cJSON_Delete(jobItem);
 }
 }  // namespace init_ut

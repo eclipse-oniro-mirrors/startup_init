@@ -30,8 +30,8 @@ extern "C" {
 #define GROUP_NAME_MAX_LENGTH 64
 #define GROUP_HASHMAP_BUCKET 32
 #ifdef STARTUP_INIT_TEST
-#define GROUP_DEFAULT_PATH "/home/axw/init_ut" // "/system/init"
-#define BOOT_CMD_LINE GROUP_DEFAULT_PATH "/proc/cmdline"
+#define GROUP_DEFAULT_PATH "/data/init_ut"
+#define BOOT_CMD_LINE "/data/init_ut/cmdline"
 #else
 #define GROUP_DEFAULT_PATH "/system/etc"
 #define BOOT_CMD_LINE "/proc/cmdline"
@@ -42,7 +42,6 @@ extern "C" {
 typedef enum {
     GROUP_BOOT,
     GROUP_CHARING,
-    GROUP_UPDATER,
     GROUP_UNKNOW
 } InitGroupType;
 

@@ -28,18 +28,6 @@
 using namespace testing::ext;
 using namespace std;
 
-const static int32_t g_maxCount = 6;
-static int32_t g_repeatCount = 0;
-static void TimerCallback(ParamTaskPtr timer, void *context)
-{
-    TestClient(g_repeatCount);
-    g_repeatCount = g_repeatCount + 1;
-    if (g_repeatCount >= g_maxCount) {
-        ParamTaskClose(timer);
-        StopParamService();
-    }
-}
-
 static const int triggerBuffer = 512;
 static uint32_t g_execCmdId = 0;
 static int g_matchTrigger = 0;
@@ -77,16 +65,6 @@ public:
     void SetUp() {}
     void TearDown() {}
     void TestBody() {}
-
-    int TestRunClient()
-    {
-        TestClient(0);
-        ParamTaskPtr timer = nullptr;
-        ParamTimerCreate(&timer, TimerCallback, nullptr);
-        ParamTimerStart(timer, 500, g_maxCount); // 500ms
-        StartParamService();
-        return 0;
-    }
 
     int ParseInitCfg(const char *configFile)
     {
@@ -586,11 +564,4 @@ HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger5, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestExecuteParamTrigger5();
-}
-
-HWTEST_F(TriggerUnitTest, TestRunClient, TestSize.Level0)
-{
-    TriggerUnitTest test;
-    int ret = test.TestRunClient();
-    EXPECT_EQ(ret, 0);
 }

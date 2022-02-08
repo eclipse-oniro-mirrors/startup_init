@@ -113,7 +113,11 @@ static int StartRequest(int *fd, ParamMessage *request, int timeout)
 {
     int ret = 0;
     struct timeval time;
+#ifndef STARTUP_INIT_TEST
     time.tv_sec = timeout;
+#else
+    time.tv_sec = 1;
+#endif
     time.tv_usec = 0;
     do {
         int clientFd = *fd;

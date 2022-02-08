@@ -172,7 +172,14 @@ if (defined(ohos_lite)) {
       cflags += [ "-DWITH_SELINUX" ]
     }
 
-    defines = [ "OHOS_SERVICE_DUMP" ]
+    defines = []
+    if (param_test) {
+      defines += [
+        "OHOS_SERVICE_DUMP",
+        "INIT_TEST",
+      ]
+    }
+
     if (!enable_ramdisk) {
       defines += [ "DISABLE_INIT_TWO_STAGES" ]
     }
@@ -263,9 +270,15 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
+  ohos_prebuilt_etc("charing.group") {
+    source = "//base/startup/init_lite/services/etc/device.charing.group.cfg"
+    part_name = "init"
+  }
+
   group("init_etc") {
     deps = [
       ":boot.group",
+      ":charing.group",
       ":group",
       ":init.cfg",
       ":init.usb.cfg",

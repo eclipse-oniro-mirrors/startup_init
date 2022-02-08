@@ -57,6 +57,7 @@ int InUpdaterMode(void);
 int StringReplaceChr(char *strl, char oldChr, char newChr);
 
 int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue);
+const InitArgInfo *GetServieStatusMap(int *size);
 #ifdef __cplusplus
 #if __cplusplus
 }

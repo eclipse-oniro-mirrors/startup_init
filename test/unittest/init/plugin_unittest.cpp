@@ -44,6 +44,7 @@ void TestCmdExecutor(int id, const char *name, int argc, const char **argv)
 HWTEST_F(PluginUnitTest, PluginAddCmd, TestSize.Level1)
 {
     InitServiceSpace();
+    SetPluginInterface();
     PluginManagerInit();
     PluginInterface *pluginInterface = GetPluginInterface();
     ASSERT_NE(pluginInterface, nullptr);

@@ -107,7 +107,7 @@ static void ExecuteQueueWork(uint32_t maxCount)
 PARAM_STATIC void ProcessBeforeEvent(const ParamTaskPtr stream,
     uint64_t eventId, const uint8_t *content, uint32_t size)
 {
-    PARAM_LOGV("ProcessBeforeEvent %s eventId %lu ", (char *)content, eventId);
+    PARAM_LOGV("ProcessBeforeEvent %s ", (char *)content);
     switch (eventId) {
         case EVENT_TRIGGER_PARAM: {
             CheckTrigger(&g_triggerWorkSpace, TRIGGER_PARAM,
@@ -228,7 +228,7 @@ static int GetTriggerType(const char *type)
     }
     const char *triggerTypeStr[] = {
         "pre-init", "boot", "early-init", "init", "early-init", "late-init", "post-init",
-        "early-fs", "post-fs", "late-fs", "post-fs-data"
+        "fs", "early-fs", "post-fs", "late-fs", "early-boot", "post-fs-data", "reboot"
     };
     for (size_t i = 0; i < ARRAY_LENGTH(triggerTypeStr); i++) {
         if (strcmp(triggerTypeStr[i], type) == 0) {
@@ -260,14 +260,14 @@ static int ParseTrigger_(const TriggerWorkSpace *workSpace,
     PARAM_CHECK(workSpace != NULL, return -1, "Failed to create trigger list");
     char *name = cJSON_GetStringValue(cJSON_GetObjectItem(triggerItem, "name"));
     PARAM_CHECK(name != NULL, return -1, "Can not get name from cfg");
-
-    if (checkJobValid != NULL && checkJobValid(name) != 0) {
-        PARAM_LOGI("ParseTrigger trigger %s is not valid", name);
-        return 0;
-    }
     char *condition = cJSON_GetStringValue(cJSON_GetObjectItem(triggerItem, "condition"));
     int type = GetTriggerType(name);
     PARAM_CHECK(type <= TRIGGER_UNKNOW, return -1, "Failed to get trigger index");
+    if (type != TRIGGER_BOOT && checkJobValid != NULL && checkJobValid(name) != 0) {
+        PARAM_LOGI("Trigger %s not exist in group", name);
+        return 0;
+    }
+
     TriggerHeader *header = GetTriggerHeader(workSpace, type);
     PARAM_CHECK(header != NULL, return -1, "Failed to get header %d", type);
     JobNode *trigger = UpdateJobTrigger(workSpace, type, condition, name);
@@ -376,6 +376,8 @@ void DoTriggerExec(const char *triggerName)
         PARAM_LOGI("DoTriggerExec trigger %s", trigger->name);
         TRIGGER_SET_FLAG((TriggerNode *)trigger, TRIGGER_FLAGS_QUEUE);
         ExecuteQueuePush(&g_triggerWorkSpace, (TriggerNode *)trigger);
+    } else {
+        PARAM_LOGE("Can not find trigger %s", triggerName);
     }
 }
 

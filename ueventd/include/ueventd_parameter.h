@@ -15,7 +15,17 @@
 
 #ifndef BASE_STARTUP_INITLITE_UEVENTD_PARAMETER_H
 #define BASE_STARTUP_INITLITE_UEVENTD_PARAMETER_H
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
 
 int SetUeventDeviceParameter(const char *devNode, int action);
 
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
 #endif

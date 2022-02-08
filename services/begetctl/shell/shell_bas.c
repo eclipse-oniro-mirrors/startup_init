@@ -551,15 +551,33 @@ int32_t BShellEnvRegitsterCmd(BShellHandle handle, CmdInfo *cmdInfo)
     return 0;
 }
 
+static const char *GetRealCmdName(const char *name)
+{
+    int i = 0;
+    int last = 0;
+    while (*(name + i) != '\0') {
+        if (*(name + i) == '/') {
+            last = i;
+        }
+        i++;
+    }
+    if ((last != 0) && (name + last != NULL)) {
+        return name + last + 1;
+    } else {
+        return name;
+    }
+}
+
 BShellCommand *BShellEnvGetCmd(BShellHandle handle, int32_t argc, char *argv[])
 {
     BSH_CHECK(handle != NULL, return NULL, "Invalid shell env");
     BSH_CHECK(argc >= 1, return NULL, "Invalid argc");
-    BSH_LOGV("BShellEnvGetCmd %s", argv[0]);
+    const char *cmdName = GetRealCmdName(argv[0]);
+    BSH_LOGV("BShellEnvGetCmd %s cmd %s", argv[0], cmdName);
     BShellEnv *shell = (BShellEnv *)handle;
     BShellCommand *cmd = shell->command;
     while (cmd != NULL) {
-        if (strcmp(cmd->name, argv[0]) != 0) {
+        if (strcmp(cmd->name, cmdName) != 0) {
             cmd = cmd->next;
             continue;
         }
@@ -571,7 +589,11 @@ BShellCommand *BShellEnvGetCmd(BShellHandle handle, int32_t argc, char *argv[])
             if (cmd->multikeys[i] == NULL) {
                 return cmd;
             }
-            if (strcmp(cmd->multikeys[i], argv[i]) != 0) {
+            char *tmp = argv[i];
+            if (i == 0) {
+                tmp = (char *)cmdName;
+            }
+            if (strcmp(cmd->multikeys[i], tmp) != 0) {
                 break;
             }
         }

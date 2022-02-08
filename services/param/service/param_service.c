@@ -39,6 +39,7 @@ static void OnClose(ParamTaskPtr client)
     ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
     if (client == g_paramWorkSpace.watcherTask) {
         ClearWatchTrigger(watcher, TRIGGER_PARAM_WATCH);
+        g_paramWorkSpace.watcherTask = NULL;
     } else {
         ClearWatchTrigger(watcher, TRIGGER_PARAM_WAIT);
     }
@@ -497,7 +498,7 @@ static int HandleParamWatcherDel(ParamWorkSpace *workSpace, const ParamTaskPtr w
 
 PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *msg)
 {
-    PARAM_CHECK(msg != NULL, return -1, "Invalid msg");
+    PARAM_CHECK((msg != NULL) && (msg->msgSize >= sizeof(ParamMessage)), return -1, "Invalid msg");
     PARAM_CHECK(worker != NULL, return -1, "Invalid worker");
     int ret = PARAM_CODE_INVALID_PARAM;
     switch (msg->type) {

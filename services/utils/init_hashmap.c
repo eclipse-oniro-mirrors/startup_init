@@ -114,7 +114,7 @@ void HashMapRemove(HashMapHandle handle, const void *key)
         int ret = tab->keyCompare(node, key);
         if (ret == 0) {
             INIT_LOGV("HashMapRemove tableId %d hashCode %d node %p", tab->tableId, hashCode, node);
-            if (preNode == tab->buckets[hashCode]) {
+            if (node == tab->buckets[hashCode]) {
                 tab->buckets[hashCode] = node->next;
             } else {
                 preNode->next = node->next;

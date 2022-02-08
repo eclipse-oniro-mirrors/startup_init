@@ -22,6 +22,13 @@ extern "C" {
 #endif
 #endif
 
+#define STARTUP_DEVICE_CTL "startup.device.ctl"
+#define DEVICE_CMD_STOP "stop"
+#define DEVICE_CMD_SUSPEND "suspend"
+#define DEVICE_CMD_RESUME "resume"
+#define DEVICE_CMD_FREEZE "freeze"
+#define DEVICE_CMD_RESTORE "restore"
+
 int DoReboot(const char *cmdContent);
 
 #ifdef __cplusplus

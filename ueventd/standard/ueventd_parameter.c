@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "ueventd_parameter.h"
+
 #include <errno.h>
 #include <pthread.h>
 #include <sys/time.h>

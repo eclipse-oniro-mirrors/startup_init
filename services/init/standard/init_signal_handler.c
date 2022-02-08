@@ -48,7 +48,7 @@ static void ProcessSignal(const struct signalfd_siginfo *siginfo)
         }
         case SIGTERM: {
             INIT_LOGI("SigHandler, SIGTERM received.");
-            StopAllServices(0);
+            StopAllServices(0, NULL, 0, NULL);
             break;
         }
         default:

@@ -26,9 +26,10 @@
 #include <vector>
 
 #include "begetctl.h"
-#include "sys_param.h"
 #include "fs_manager/fs_manager.h"
-#include "param_wrapper.h"
+#include "shell.h"
+#include "shell_utils.h"
+#include "sys_param.h"
 
 constexpr int MAX_LOGO_SIZE = 1024 * 2038;
 constexpr int PARTITION_INFO_POS = 1144;
@@ -36,42 +37,15 @@ constexpr int PARTITION_INFO_MAX_LENGTH = 256;
 constexpr int BLOCK_SZIE_1 = 512;
 constexpr uint64_t LOGO_MAGIC = 0XABCABCAB;
 
-struct option g_options[] = {
-    { "write_logo", required_argument, nullptr, 0 },
-    { nullptr, 0, nullptr, 0 },
-};
-
 static std::string GetMiscDevicePath()
 {
-    std::string miscDev {};
-    // Get misc device path from fstab
-    uint32_t size = PARAM_VALUE_LEN_MAX;
-    std::vector<char> buffer(PARAM_VALUE_LEN_MAX);
-    int ret = SystemGetParameter((char *)"ohos.boot.hardware", buffer.data(), &size);
+    char miscDevice[PATH_MAX] = {0};
+    int ret = GetBlockDevicePath("/misc", miscDevice, PATH_MAX);
     if (ret != 0) {
-        std::cout << "get ohos.boot.hardware failed\n";
-        return "";
+        return std::string("");
     }
-    std::string hardwareVal(buffer.data());
-    std::string fstabFileName = std::string("fstab.") + hardwareVal;
-    std::string fstabFile = std::string("/vendor/etc/") + fstabFileName;
-    Fstab *fstab = ReadFstabFromFile(fstabFile.c_str(), false);
-    if (fstab == nullptr) {
-        std::cout << "Failed to read fstab\n";
-        return miscDev;
-    }
-
-    FstabItem *misc = FindFstabItemForMountPoint(*fstab, "/misc");
-    if (misc == nullptr) {
-        std::cout << "Cannot find misc partition from fstab\n";
-        ReleaseFstab(fstab);
-        return miscDev;
-    }
-    miscDev = misc->deviceName;
-    ReleaseFstab(fstab);
-    return miscDev;
+    return std::string(miscDevice);
 }
-
 
 static void ClearLogo(int fd)
 {
@@ -135,47 +109,47 @@ static int WriteLogo(int fd, const std::string &logoPath)
     }
     int addrOffset = (PARTITION_INFO_POS + PARTITION_INFO_MAX_LENGTH + BLOCK_SZIE_1 - 1) / BLOCK_SZIE_1;
     if (lseek(fd, addrOffset * BLOCK_SZIE_1, SEEK_SET) < 0) {
-        std::cout << "Failed to seek file\n";
+        BSH_LOGI("Failed lseek logoPath %s errno %d ", logoPath.c_str(), errno);
         return -1;
     }
 
     uint32_t magic = 0;
     if (read(fd, &magic, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        std::cout << "Failed to read magic number\n";
+        BSH_LOGI("Failed magic logoPath %s errno %d ", logoPath.c_str(), errno);
         return -1;
     }
 
     if (magic == LOGO_MAGIC) {
-        std::cout << "Get matched magic number, logo already written\n";
+        BSH_LOGI("Get matched magic number, logo already written\n");
         return 0;
     }
     struct stat st {};
     magic = LOGO_MAGIC;
     lseek(fd, addrOffset * BLOCK_SZIE_1, SEEK_SET);
     if (write(fd, &magic, sizeof(magic)) != sizeof(magic)) {
-        std::cout << "Write magic number failed\n";
+        BSH_LOGI("Write magic number failed %d", errno);
         return -1;
     }
 
     if (stat(logoPath.c_str(), &st) < 0) {
         if (errno == ENOENT) {
-            std::cout << logoPath << " is not exist\n";
+            BSH_LOGI("%s is not exist", logoPath.c_str());
         } else {
-            std::cout << "Failed to get " << logoPath << " stat\n";
+            BSH_LOGI("Failed to get %s stat", logoPath.c_str());
         }
         ClearLogo(fd);
         return -1;
     }
 
     if (st.st_size < 0 || st.st_size > MAX_LOGO_SIZE) {
-        std::cout << "Invalid logo file with size \n";
+        BSH_LOGE("Invalid logo file with size ");
         ClearLogo(fd);
         return -1;
     }
 
     uint32_t logoSize =  static_cast<uint32_t>(st.st_size);
     if (write(fd, &logoSize, sizeof(logoSize)) != sizeof(logoSize)) {
-        std::cout << "Write logo size failed\n";
+        BSH_LOGE("Write logo size failed ");
         ClearLogo(fd);
         return -1;
     }
@@ -194,15 +168,15 @@ static void WriteLogoToMisc(const std::string &logoPath)
     if (miscDev.empty()) {
         return;
     }
-
+    BSH_LOGI("WriteLogoToMisc miscDev %s ", miscDev.c_str());
     int fd = open(miscDev.c_str(), O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd < 0) {
-        std::cout << "Failed to open " << miscDev << ", err = " << errno << std::endl;
+        BSH_LOGI("Failed to writeLogoToMisc miscDev %s errno %d ", miscDev.c_str(), errno);
         return;
     }
 
     if (WriteLogo(fd, logoPath) < 0) {
-        std::cout << "Write logo to " << miscDev << " failed" << std::endl;
+        BSH_LOGI("Failed WriteLogo miscDev %s errno %d ", miscDev.c_str(), errno);
     }
     close(fd);
     int addrOffset = (PARTITION_INFO_POS + PARTITION_INFO_MAX_LENGTH + BLOCK_SZIE_1 - 1) / BLOCK_SZIE_1;
@@ -211,7 +185,7 @@ static void WriteLogoToMisc(const std::string &logoPath)
         return;
     }
     if (lseek(fd1, addrOffset * BLOCK_SZIE_1, SEEK_SET) < 0) {
-        std::cout << "Failed to seek file\n";
+        BSH_LOGI("Failed lseek miscDev %s errno %d ", miscDev.c_str(), errno);
         close(fd1);
         return;
     }
@@ -219,12 +193,12 @@ static void WriteLogoToMisc(const std::string &logoPath)
     uint32_t magic = 0;
     uint32_t size = 0;
     if (read(fd1, &magic, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        std::cout << "Failed to read magic number\n";
+        BSH_LOGI("Failed read miscDev %s errno %d ", miscDev.c_str(), errno);
         close(fd1);
         return;
     }
     if (read(fd1, &size, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        std::cout << "Failed to read magic number\n";
+        BSH_LOGI("Failed read migic miscDev %s errno %d ", miscDev.c_str(), errno);
         close(fd1);
         return;
     }
@@ -234,25 +208,11 @@ static void WriteLogoToMisc(const std::string &logoPath)
 
 static int main_cmd(BShellHandle shell, int argc, char **argv)
 {
-    int rc = -1;
-    int optIndex = -1;
-    while ((rc = getopt_long(argc, argv, "",  g_options, &optIndex)) != -1) {
-        switch (rc) {
-            case 0: {
-                std::string optionName = g_options[optIndex].name;
-                if (optionName == "write_logo") {
-                    std::string logoPath = optarg;
-                    WriteLogoToMisc(logoPath);
-                }
-                break;
-            }
-            case '?':
-                std::cout << "Invalid arugment\n";
-                break;
-            default:
-                std::cout << "Invalid arugment\n";
-                break;
-        }
+    if (argc >= 2 && strcmp((char *)"--write_logo", argv[0]) == 0) { // 2 min arg
+        WriteLogoToMisc(argv[1]);
+    } else {
+        char *helpArgs[] = {const_cast<char *>("misc_daemon"), nullptr};
+        BShellCmdHelp(shell, 1, helpArgs);
     }
     return 0;
 }

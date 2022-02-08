@@ -89,10 +89,11 @@ static int StopProcess(const char *serviceName)
     return 0;
 }
 
-static int GetCurrentServiceStatus(const char *serviceName, char *status, int len)
+static int GetCurrentServiceStatus(const char *serviceName, ServiceStatus *status)
 {
     char paramName[PARAM_NAME_LEN_MAX] = {0};
-    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", serviceName) == -1) {
+    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1,
+        "%s.%s", STARTUP_SERVICE_CTL, serviceName) == -1) {
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
@@ -102,10 +103,9 @@ static int GetCurrentServiceStatus(const char *serviceName, char *status, int le
         BEGET_LOGE("Failed get paramName.");
         return -1;
     }
-    if (strncpy_s(status, len, paramValue, len - 1) < 0) {
-        BEGET_LOGE("Failed strncpy_s err=%d", errno);
-        return -1;
-    }
+    int size = 0;
+    const InitArgInfo *statusMap = GetServieStatusMap(&size);
+    *status = GetMapValue(paramValue, statusMap, size, SERVICE_IDLE);
     return 0;
 }
 
@@ -115,17 +115,17 @@ static int RestartProcess(const char *serviceName, const char *extArgv[], int ex
         BEGET_LOGE("Restart dynamic service failed, service is null.\n");
         return -1;
     }
-    char status[PARAM_VALUE_LEN_MAX] = {0};
-    if (GetCurrentServiceStatus(serviceName, status, PARAM_VALUE_LEN_MAX) != 0) {
+    ServiceStatus status = SERVICE_IDLE;
+    if (GetCurrentServiceStatus(serviceName, &status) != 0) {
         BEGET_LOGE("Get service status failed.\n");
         return -1;
     }
-    if (strcmp(status, "running") == 0) {
+    if (status == SERVICE_STARTED || status == SERVICE_READY) {
         if (StopProcess(serviceName) != 0) {
             BEGET_LOGE("Stop service %s failed", serviceName);
             return -1;
         }
-        if (ServiceWaitForStatus(serviceName, "stopped", DEFAULT_PARAM_WAIT_TIMEOUT) != 0) {
+        if (ServiceWaitForStatus(serviceName, SERVICE_STOPPED, DEFAULT_PARAM_WAIT_TIMEOUT) != 0) {
             BEGET_LOGE("Failed wait service %s stopped", serviceName);
             return -1;
         }
@@ -133,13 +133,13 @@ static int RestartProcess(const char *serviceName, const char *extArgv[], int ex
             BEGET_LOGE("Start service %s failed", serviceName);
             return -1;
         }
-    } else if (strcmp(status, "stopped") == 0) {
+    } else if (status != SERVICE_STARTING) {
         if (StartProcess(serviceName, extArgv, extArgc) != 0) {
             BEGET_LOGE("Start service %s failed", serviceName);
             return -1;
         }
     } else {
-        BEGET_LOGE("Current service status: %s is not support.", status);
+        BEGET_LOGE("Current service status: %d is not support.", status);
     }
     return 0;
 }
@@ -179,23 +179,49 @@ int ServiceControl(const char *serviceName, int action)
     return ret;
 }
 
-// Service status can set "running", "stopping", "stopped", "reseting". waitTimeout(s).
-int ServiceWaitForStatus(const char *serviceName, const char *status, int waitTimeout)
+int ServiceWaitForStatus(const char *serviceName, ServiceStatus status, int waitTimeout)
+{
+    char *state = NULL;
+    int size = 0;
+    const InitArgInfo *statusMap = GetServieStatusMap(&size);
+    if (((int)status < size) && (statusMap[status].value == (int)status)) {
+        state = statusMap[status].name;
+    }
+    if (serviceName == NULL || state == NULL || waitTimeout <= 0) {
+        BEGET_LOGE("Service wait failed, service name is null or status invalid %d", status);
+        return -1;
+    }
+    char paramName[PARAM_NAME_LEN_MAX] = {0};
+    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "%s.%s",
+        STARTUP_SERVICE_CTL, serviceName) == -1) {
+        BEGET_LOGE("Failed snprintf_s err=%d", errno);
+        return -1;
+    }
+    if (SystemWaitParameter(paramName, state, waitTimeout) != 0) {
+        BEGET_LOGE("Wait param for %s failed.", paramName);
+        return -1;
+    }
+    BEGET_LOGI("Success wait");
+    return 0;
+}
+
+int ServiceSetReady(const char *serviceName)
 {
     if (serviceName == NULL) {
         BEGET_LOGE("Service wait failed, service is null.");
         return -1;
     }
     char paramName[PARAM_NAME_LEN_MAX] = {0};
-    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s", serviceName) == -1) {
+    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "%s.%s",
+        STARTUP_SERVICE_CTL, serviceName) == -1) {
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
-    if (SystemWaitParameter(paramName, status, waitTimeout) != 0) {
-        BEGET_LOGE("Wait param for %s failed.", paramName);
+    if (SystemSetParameter(paramName, "ready") != 0) {
+        BEGET_LOGE("Set param for %s failed.", paramName);
         return -1;
     }
-    BEGET_LOGI("Success wait");
+    BEGET_LOGI("Success set %d read", serviceName);
     return 0;
 }
 

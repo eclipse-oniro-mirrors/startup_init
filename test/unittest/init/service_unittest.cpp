@@ -54,7 +54,7 @@ HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
     ASSERT_NE(nullptr, jobItem);
     cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
     ASSERT_NE(nullptr, serviceItem);
-    Service *service = (Service *)calloc(1, sizeof(Service));
+    Service *service = AddService("test_service");
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
 
@@ -64,22 +64,19 @@ HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
     ret = ServiceStop(service);
     EXPECT_EQ(ret, 0);
 
-    if (service != nullptr) {
-        free(service);
-        service = nullptr;
-    }
+    ReleaseService(service);
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceStartAbnormal, TestSize.Level1)
 {
-    const char *jsonStr = "{\"services\":{\"name\":\"test_service\",\"path\":[\"/data/init_ut/test_service\"],"
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/data/init_ut/test_service\"],"
         "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,\"dynamic\":true,"
         "\"gid\":[\"system\"]}}";
     cJSON* jobItem = cJSON_Parse(jsonStr);
     ASSERT_NE(nullptr, jobItem);
     cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
     ASSERT_NE(nullptr, serviceItem);
-    Service *service = (Service *)calloc(1, sizeof(Service));
+    Service *service = AddService("test_service1");
     ASSERT_NE(nullptr, service);
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
@@ -98,15 +95,12 @@ HWTEST_F(ServiceUnitTest, TestServiceStartAbnormal, TestSize.Level1)
     service->pid = -1;
     ret = ServiceStop(service);
     EXPECT_EQ(ret, 0);
-    if (service != nullptr) {
-        free(service);
-        service = nullptr;
-    }
+    ReleaseService(service);
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceReap, TestSize.Level1)
 {
-    Service *service = (Service *)calloc(1, sizeof(Service));
+    Service *service = AddService("test_service2");
     ASSERT_NE(nullptr, service);
     ServiceReap(service);
     EXPECT_EQ(service->attribute, 0);
@@ -125,31 +119,21 @@ HWTEST_F(ServiceUnitTest, TestServiceReap, TestSize.Level1)
     ServiceReap(service);
     EXPECT_EQ(service->attribute, SERVICE_ATTR_ONCE);
 
-    if (service->restartArg != nullptr) {
-        free(service);
-        service = nullptr;
-    }
-    if (service != nullptr) {
-        free(service);
-        service = nullptr;
-    }
+    ReleaseService(service);
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceReapOther, TestSize.Level1)
 {
-    const char *serviceStr = "{\"services\":{\"name\":\"test_service\",\"path\":[\"/data/init_ut/test_service\"],"
+    const char *serviceStr = "{\"services\":{\"name\":\"test_service4\",\"path\":[\"/data/init_ut/test_service\"],"
         "\"onrestart\":[\"sleep 1\"],\"console\":1,\"writepid\":[\"/dev/test_service\"]}}";
 
     cJSON* jobItem = cJSON_Parse(serviceStr);
     ASSERT_NE(nullptr, jobItem);
     cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
     ASSERT_NE(nullptr, serviceItem);
-
-    Service *service = (Service *)calloc(1, sizeof(Service));
+    Service *service = AddService("test_service4");
     ASSERT_NE(nullptr, service);
-    int ret = GetCmdLinesFromJson(cJSON_GetObjectItem(serviceItem, "onrestart"), &service->restartArg);
-    EXPECT_EQ(ret, 0);
-    ret = ParseOneService(serviceItem, service);
+    int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
 
     ServiceReap(service);
@@ -169,10 +153,7 @@ HWTEST_F(ServiceUnitTest, TestServiceReapOther, TestSize.Level1)
 
     ret = ServiceStop(service);
     EXPECT_EQ(ret, 0);
-    if (service != nullptr) {
-        free(service);
-        service = nullptr;
-    }
+    ReleaseService(service);
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceManagerRelease, TestSize.Level1)
@@ -180,7 +161,8 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerRelease, TestSize.Level1)
     Service *service = nullptr;
     ReleaseService(service);
     EXPECT_TRUE(service == nullptr);
-    service = (Service *)malloc(sizeof(Service));
+    service = AddService("test_service5");
+    ASSERT_NE(nullptr, service);
     service->pathArgs.argv = (char **)malloc(sizeof(char *));
     service->pathArgs.count = 1;
     const char *path = "/data/init_ut/test_service_release";
@@ -205,14 +187,15 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerRelease, TestSize.Level1)
 HWTEST_F(ServiceUnitTest, TestServiceManagerGetService, TestSize.Level1)
 {
     Service *service = GetServiceByPid(1);
-    StopAllServices(1);
+    StopAllServices(1, nullptr, 0, nullptr);
     EXPECT_TRUE(service == nullptr);
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
 {
-    Service *service = (Service *)malloc(sizeof(Service));
-    ASSERT_NE(service, nullptr);
+    Service *service = AddService("test_service7");
+    ASSERT_NE(nullptr, service);
+
     service->pathArgs.argv = (char **)malloc(sizeof(char *));
     ASSERT_NE(service->pathArgs.argv, nullptr);
     service->pathArgs.count = 1;
@@ -226,10 +209,6 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
     const int invalidImportantValue = 20;
     ret = SetImportantValue(service, "", invalidImportantValue, 1);
     EXPECT_EQ(ret, -1);
-    if (service != nullptr) {
-        FreeStringVector(service->pathArgs.argv, service->pathArgs.count);
-        free(service);
-        service = nullptr;
-    }
+    ReleaseService(service);
 }
 } // namespace init_ut

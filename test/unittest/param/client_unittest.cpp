@@ -20,6 +20,7 @@
 #include "sys_param.h"
 
 using namespace std;
+using namespace testing::ext;
 
 static int g_testPermissionResult = DAC_RESULT_PERMISSION;
 static void ClientCheckParamValue(const char *name, const char *expectValue)
@@ -166,56 +167,6 @@ void TestClientApi(char testBuffer[], uint32_t size, const char *name, const cha
     EXPECT_EQ(strcmp(testBuffer, value), 0);
 }
 
-void TestClient(int index)
-{
-    PARAM_LOGI("TestClient %d \n", index);
-    char testBuffer[PARAM_BUFFER_SIZE] = { 0 };
-    const std::string value = "test.add.client.value.001";
-    std::string name = "test.add.client.001";
-    name += std::to_string(index);
-    switch (index) {
-        case 0: {
-            ParamWorkSpace *space = GetClientParamWorkSpace();
-            if (space != nullptr && space->securityLabel != nullptr) {
-                space->securityLabel->cred.uid = 1000; // 1000 test uid
-                space->securityLabel->cred.gid = 1000; // 1000 test gid
-            }
-        }
-        case 1: { // 1 set test
-            SystemSetParameter(name.c_str(), value.c_str());
-            ClientCheckParamValue(name.c_str(), value.c_str());
-            SystemWaitParameter(name.c_str(), value.c_str(), 1);
-            TestPersistParam();
-            // wait
-            SystemWaitParameter(name.c_str(), value.c_str(), 1);
-            SystemWaitParameter(name.c_str(), nullptr, 0);
-            break;
-        }
-        case 2: { // 2 api test
-            TestClientApi(testBuffer, PARAM_BUFFER_SIZE, name.c_str(), value.c_str());
-            break;
-        }
-        case 3: // 3 Traversal test
-            TestParamTraversal();
-            SystemDumpParameters(1);
-            break;
-        case 4: { // 4 watcher test
-            int ret = WatchParamCheck(name.c_str());
-            EXPECT_EQ(ret, 0);
-            ret = WatchParamCheck("&&&&&.test.tttt");
-            EXPECT_NE(ret, 0);
-            // test permission
-            TestPermission();
-            break;
-        }
-        case 5: // 5 multi thread test
-            TestForMultiThread();
-            break;
-        default:
-            break;
-    }
-}
-
 int TestEncodeSecurityLabel(const ParamSecurityLabel *srcLabel, char *buffer, uint32_t *bufferSize)
 {
     PARAM_CHECK(bufferSize != nullptr, return -1, "Invalid param");
@@ -246,3 +197,66 @@ int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
 {
     return 0;
 }
+
+namespace init_ut {
+class ClientUnitTest : public ::testing::Test {
+public:
+    ClientUnitTest() {}
+    virtual ~ClientUnitTest() {}
+
+    void SetUp(void)
+    {
+        ParamWorkSpace *space = GetClientParamWorkSpace();
+        if (space != nullptr && space->securityLabel != nullptr) {
+            space->securityLabel->cred.uid = 1000; // 1000 test uid
+            space->securityLabel->cred.gid = 1000; // 1000 test gid
+        }
+    }
+    void TearDown(void) {}
+    void TestBody(void) {}
+};
+
+HWTEST_F(ClientUnitTest, TestClient_01, TestSize.Level0)
+{
+    const std::string name = "test.add.client.001.001";
+    const std::string value = "test.add.client.value.001.001";
+    SystemSetParameter(name.c_str(), value.c_str());
+    ClientCheckParamValue(name.c_str(), value.c_str());
+    SystemWaitParameter(name.c_str(), value.c_str(), 1);
+    TestPersistParam();
+    // wait
+    SystemWaitParameter(name.c_str(), value.c_str(), 1);
+    SystemWaitParameter(name.c_str(), nullptr, 0);
+}
+
+HWTEST_F(ClientUnitTest, TestClient_02, TestSize.Level0)
+{
+    char testBuffer[PARAM_BUFFER_SIZE] = { 0 };
+    const std::string value = "test.add.client.value.001";
+    const std::string name = "test.add.client.001.003";
+    TestClientApi(testBuffer, PARAM_BUFFER_SIZE, name.c_str(), value.c_str());
+}
+
+HWTEST_F(ClientUnitTest, TestClient_03, TestSize.Level0)
+{
+    // 3 Traversal test
+    TestParamTraversal();
+    SystemDumpParameters(1);
+}
+
+HWTEST_F(ClientUnitTest, TestClient_04, TestSize.Level0)
+{
+    const std::string name = "test.add.client.001.004";
+    int ret = WatchParamCheck(name.c_str());
+    EXPECT_EQ(ret, 0);
+    ret = WatchParamCheck("&&&&&.test.tttt");
+    EXPECT_NE(ret, 0);
+    // test permission
+    TestPermission();
+}
+
+HWTEST_F(ClientUnitTest, TestClient_05, TestSize.Level0)
+{
+    TestForMultiThread();
+}
+}  // namespace init_ut

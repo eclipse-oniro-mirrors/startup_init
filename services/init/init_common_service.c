@@ -42,6 +42,7 @@
 #include "fd_holder_internal.h"
 #include "loop_event.h"
 #include "securec.h"
+#include "service_control.h"
 
 #ifdef WITH_SELINUX
 #include "init_selinux_param.h"
@@ -213,8 +214,15 @@ static void PublishHoldFds(Service *service)
     if (service->fdCount > 0 && service->fds != NULL) {
         size_t pos = 0;
         for (size_t i = 0; i < service->fdCount; i++) {
-            (void)snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1,
-                "%d ", service->fds[i]);
+            int fd = dup(service->fds[i]);
+            if (fd < 0) {
+                INIT_LOGE("Duplicate file descriptors of Service \' %s \' failed. err = %d", service->name, errno);
+                continue;
+            }
+            if (snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1, "%d ", fd) < 0) {
+                INIT_LOGE("snprintf_s failed err=%d", errno);
+                return;
+            }
             pos = strlen(fdBuffer);
         }
         fdBuffer[pos - 1] = '\0'; // Remove last ' '
@@ -330,7 +338,7 @@ int ServiceStart(Service *service)
     }
     INIT_LOGI("service %s starting pid %d", service->name, pid);
     service->pid = pid;
-    NotifyServiceChange(service->name, "running");
+    NotifyServiceChange(service, SERVICE_STARTED);
     return SERVICE_SUCCESS;
 }
 
@@ -358,7 +366,7 @@ int ServiceStop(Service *service)
     }
     INIT_ERROR_CHECK(kill(service->pid, SIGKILL) == 0, return SERVICE_FAILURE,
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
-    NotifyServiceChange(service->name, "stopping");
+    NotifyServiceChange(service, SERVICE_STOPPING);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
     return SERVICE_SUCCESS;
 }
@@ -386,16 +394,18 @@ static bool CalculateCrashTime(Service *service, int crashTimeLimit, int crashCo
     return true;
 }
 
-static int ExecRestartCmd(const Service *service)
+static int ExecRestartCmd(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Exec service failed! null ptr.");
-    INIT_ERROR_CHECK(service->restartArg != NULL, return SERVICE_FAILURE, "restartArg is null");
-
+    if (service->restartArg == NULL) {
+        return SERVICE_SUCCESS;
+    }
     for (int i = 0; i < service->restartArg->cmdNum; i++) {
         INIT_LOGI("ExecRestartCmd cmdLine->cmdContent %s ", service->restartArg->cmds[i].cmdContent);
         DoCmdByIndex(service->restartArg->cmds[i].cmdIndex, service->restartArg->cmds[i].cmdContent);
     }
     free(service->restartArg);
+    service->restartArg = NULL;
     return SERVICE_SUCCESS;
 }
 
@@ -422,7 +432,7 @@ void ServiceReap(Service *service)
     INIT_CHECK(service != NULL, return);
     INIT_LOGI("Reap service %s, pid %d.", service->name, service->pid);
     service->pid = -1;
-    NotifyServiceChange(service->name, "stopped");
+    NotifyServiceChange(service, SERVICE_STOPPED);
 
     if (service->attribute & SERVICE_ATTR_INVALID) {
         INIT_LOGE("Reap service %s invalid.", service->name);
@@ -473,10 +483,11 @@ void ServiceReap(Service *service)
         return;
     }
 
-    int ret;
-    if (service->restartArg != NULL) {
-        ret = ExecRestartCmd(service);
-        INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "Failed to exec restartArg for %s", service->name);
+    int ret = ExecRestartCmd(service);
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "Failed to exec restartArg for %s", service->name);
+
+    if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
+        DoJobNow(service->serviceJobs.jobsName[JOB_ON_RESTART]);
     }
     ret = ServiceStart(service);
     INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "reap service %s start failed!", service->name);

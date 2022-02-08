@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "ueventd_parameter.h"
+
 // lite release not support set parameter.
 int SetUeventDeviceParameter(const char *devNode, int action)
 {

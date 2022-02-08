@@ -211,6 +211,7 @@ static void StartInitSecondStage(void)
 void SystemPrepare(void)
 {
     MountBasicFs();
+    LogInit();
     // Make sure init log always output to /dev/kmsg.
     EnableDevKmsg();
     CreateDeviceNode();
@@ -241,7 +242,12 @@ static void BootStateChange(const char *content)
 {
     INIT_LOGI("boot start %s finish.", content);
     if (strcmp("init", content) == 0) {
-        StartAllServices(START_MODE_BOOT);
+        static const char *bootServiceNames[] = {
+            "hdf_devmgr", "samgr", "appspawn", "faultloggerd"
+        };
+        for (int i = 0; i < ARRAY_LENGTH(bootServiceNames); i++) {
+            StartServiceByName(bootServiceNames[i], 0);
+        }
         return;
     }
     if (strcmp("post-init", content) == 0) {

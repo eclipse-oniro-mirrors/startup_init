@@ -36,6 +36,8 @@ int main(int argc, char * const argv[])
 
     if (isSecondStage == 0) {
         SystemPrepare();
+    } else {
+        LogInit();
     }
     LogInit();
     (void)AtlibInit();

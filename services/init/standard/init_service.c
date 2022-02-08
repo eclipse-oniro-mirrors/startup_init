@@ -27,16 +27,29 @@
 #include "securec.h"
 #include "token_setproc.h"
 #include "nativetoken_kit.h"
+#include "service_control.h"
 
 #define MIN_IMPORTANT_LEVEL (-20)
 #define MAX_IMPORTANT_LEVEL 19
 
-void NotifyServiceChange(const char *serviceName, const char *change)
+void NotifyServiceChange(Service *service, int status)
 {
+    int size = 0;
+    const InitArgInfo *statusMap = GetServieStatusMap(&size);
+    INIT_ERROR_CHECK(statusMap != NULL && size > status, service->status = status;
+        return, "Service status error %d", status);
+    INIT_LOGI("NotifyServiceChange %s %s to %s", service->name,
+        statusMap[service->status].name, statusMap[status].name);
+    service->status = status;
+    if (status == SERVICE_IDLE) {
+        return;
+    }
     char paramName[PARAM_NAME_LEN_MAX] = { 0 };
-    INIT_CHECK_ONLY_ELOG(snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "init.svc.%s",
-        serviceName) >= 0, "snprintf_s paramName error %d ", errno);
-    SystemWriteParam(paramName, change);
+    int ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1,
+        "%s.%s", STARTUP_SERVICE_CTL, service->name);
+    if (ret >= 0) {
+        SystemWriteParam(paramName, statusMap[status].name);
+    }
 }
 
 int IsForbidden(const char *fieldStr)
@@ -86,9 +99,10 @@ int ServiceExec(const Service *service)
 int SetAccessToken(const Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "%s failed", service->name);
-    int ret = SetSelfTokenID(service->tokenId);
-    INIT_LOGI("%s: token id %lld, set token id result %d", service->name, service->tokenId, ret);
-    return ret == 0 ? SERVICE_SUCCESS : SERVICE_FAILURE;
+    if (service->tokenId != 0 && SetSelfTokenID(service->tokenId) != 0) {
+        INIT_LOGE("%s: token id %lld, set token id result %d", service->name, service->tokenId, errno);
+    }
+    return 0;
 }
 
 void GetAccessToken(void)

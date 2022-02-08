@@ -133,6 +133,7 @@ typedef struct Service_ {
     int importance;
     int startMode : 4; // startCondition/ startBoot / startNormal
     int endMode : 4; // preFork/ fork / exec / ready
+    int status : 4; // ServiceStatus
     uint64_t tokenId;
     char apl[MAX_APL_NAME + 1];
     ServiceArgs capsArgs;
@@ -155,7 +156,7 @@ int ServiceStop(Service *service);
 void ServiceReap(Service *service);
 void ReapService(Service *service);
 
-void NotifyServiceChange(const char *serviceName, const char *change);
+void NotifyServiceChange(Service *service, int status);
 int IsForbidden(const char *fieldStr);
 int SetImportantValue(Service *curServ, const char *attrName, int value, int flag);
 int GetServiceCaps(const cJSON *curArrItem, Service *curServ);

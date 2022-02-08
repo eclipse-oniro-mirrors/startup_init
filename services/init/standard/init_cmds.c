@@ -282,6 +282,40 @@ static void DoLoadAccessTokenId(const struct CmdArgs *ctx)
     LoadAccessTokenId();
 }
 
+static int FilterService(const Service *service, const char **exclude, int size)
+{
+    for (int i = 0; i < size; i++) {
+        if (exclude[i] != NULL && strcmp(service->name, exclude[i]) == 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void DoStopAllServices(const struct CmdArgs *ctx)
+{
+    StopAllServices(SERVICE_ATTR_INVALID, (const char **)ctx->argv, ctx->argc, FilterService);
+    return;
+}
+
+static void DoUmount(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("DoUmount %s",  ctx->argv[0]);
+    int ret = GetMountStatusForMountPoint(ctx->argv[0]);
+    if (ret == 0) {
+        ret = umount(ctx->argv[0]);
+        if ((ret != 0) && (ctx->argc > 1) && (strcmp(ctx->argv[1], "MNT_FORCE") == 0)) {
+            ret = umount2(ctx->argv[0], MNT_FORCE);
+        }
+    }
+    INIT_ERROR_CHECK(ret == 0, return, "Failed to umount %s errno = %d.", ctx->argv[0], errno);
+}
+
+static void DoSync(const struct CmdArgs *ctx)
+{
+    sync();
+}
+
 static void DoTimerStart(const struct CmdArgs*ctx)
 {
     INIT_LOGI("Timer start service with arg = %s", ctx->argv[0]);
@@ -346,6 +380,9 @@ static const struct CmdTable g_cmdTable[] = {
     { "mount_fstab ", 1, 1, DoMountFstabFile },
     { "umount_fstab ", 1, 1, DoUmountFstabFile },
     { "restorecon ", 0, 1, DoRestorecon },
+    { "stopAllServices ", 0, 10, DoStopAllServices },
+    { "umount ", 1, 1, DoUmount },
+    { "sync ", 0, 1, DoSync },
     { "timer_start", 1, 1, DoTimerStart },
     { "timer_stop", 1, 1, DoTimerStop },
 };
