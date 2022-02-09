@@ -5,6 +5,8 @@ radio:x:1001:
 bluetooth:x:1002:
 graphics:x:1003:
 log:x:1007:
+user_data_rw:x:1008:
+dfs:x:1009:
 wifi:x:1010:
 media:x:1013:
 dhcp:x:1014:
