@@ -260,9 +260,9 @@ static int BindCpuCore(Service *service)
         CPU_SET(index, &setMask);
     }
     if (sched_setaffinity(pid, sizeof(setMask), &setMask) != 0) {
-        INIT_LOGI("%s set affinity between process(pid=%d) with CPU's core %d failed", service->name, pid);
+        INIT_LOGI("%s set affinity between process(pid=%d) with CPU's core failed", service->name, pid);
     } else {
-        INIT_LOGE("%s et affinity between process(pid=%d) with CPU's core %d successfully", service->name, pid);
+        INIT_LOGE("%s set affinity between process(pid=%d) with CPU's core successfully", service->name, pid);
     }
     return SERVICE_SUCCESS;
 }
