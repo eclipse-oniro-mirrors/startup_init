@@ -236,21 +236,6 @@ static void PublishHoldFds(Service *service)
     }
 }
 
-static int SetAffinityBetweenProcAndCore(pid_t pid, int cpuIndex)
-{
-    cpu_set_t setMask;
-    CPU_ZERO(&setMask);
-    CPU_SET(cpuIndex, &setMask);
-    int ret = sched_setaffinity(pid, sizeof(cpu_set_t), &setMask);
-    if (ret != 0) {
-        INIT_LOGI("Set affinity between process(pid=%d) with CPU's core %d failed", pid, cpuIndex);
-        return SERVICE_FAILURE;
-    } else {
-        INIT_LOGE("Set affinity between process(pid=%d) with CPU's core %d successfully", pid, cpuIndex);
-    }
-    return SERVICE_SUCCESS;
-}
-
 static int BindCpuCore(Service *service)
 {
     if (service == NULL || service->cpuInfo.cpuNum <= 0) {
@@ -260,13 +245,24 @@ static int BindCpuCore(Service *service)
     INIT_ERROR_CHECK(service->cpuInfo.cpuNum <= cpuNum, return SERVICE_FAILURE,
         "%s cpus cores exceeds total number of device cores", service->name);
     int index = 0;
+    cpu_set_t setMask;
+    CPU_ZERO(&setMask);
+    int pid =  getpid();
     for (int i = 0; i < service->cpuInfo.cpuNum; i++) {
         index = (int)service->cpuInfo.cpus[i];
         if ((int)cpuNum <= index) {
             INIT_LOGW("%s core number %d of CPU cores does not exist", service->name, index);
             continue;
         }
-        (void)SetAffinityBetweenProcAndCore(getpid(), index);
+        if (CPU_ISSET(index, &setMask)) {
+            continue;
+        }
+        CPU_SET(index, &setMask);
+    }
+    if (sched_setaffinity(pid, sizeof(setMask), &setMask) != 0) {
+        INIT_LOGI("%s set affinity between process(pid=%d) with CPU's core failed", service->name, pid);
+    } else {
+        INIT_LOGE("%s set affinity between process(pid=%d) with CPU's core successfully", service->name, pid);
     }
     return SERVICE_SUCCESS;
 }
