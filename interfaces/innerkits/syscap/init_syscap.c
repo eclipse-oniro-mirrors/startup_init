@@ -25,6 +25,7 @@
 
 #define SYSCAP_MAX_SIZE 100
 #define SYSCAP_PREFIX_NAME "SystemCapability"
+#define CONST_SYSCAP_PREFIX_NAME "const.SystemCapability"
 
 bool HasSystemCapability(const char *cap)
 {
@@ -32,12 +33,12 @@ bool HasSystemCapability(const char *cap)
     char paramValue[PARAM_VALUE_LEN_MAX] = { 0 };
     unsigned int valueLen = PARAM_VALUE_LEN_MAX;
 
-    if (strncmp(SYSCAP_PREFIX_NAME, cap, sizeof(SYSCAP_PREFIX_NAME) - 1) != 0) {
-        if (strncpy_s(capName, sizeof(capName), cap, sizeof(capName) - 1) < 0) {
-            BEGET_LOGE("Failed strncpy_s err=%d", errno);
+    if (strncmp(SYSCAP_PREFIX_NAME, cap, sizeof(SYSCAP_PREFIX_NAME) - 1) == 0) {
+        if (snprintf_s(capName, SYSCAP_MAX_SIZE, SYSCAP_MAX_SIZE - 1, "const.%s", cap) == -1) {
+            BEGET_LOGE("Failed snprintf_s err=%d", errno);
             return false;
         }
-    } else if (snprintf_s(capName, SYSCAP_MAX_SIZE, SYSCAP_MAX_SIZE - 1, SYSCAP_PREFIX_NAME".%s", cap) == -1) {
+    } else if (snprintf_s(capName, SYSCAP_MAX_SIZE, SYSCAP_MAX_SIZE - 1, CONST_SYSCAP_PREFIX_NAME".%s", cap) == -1) {
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return false;
     }
