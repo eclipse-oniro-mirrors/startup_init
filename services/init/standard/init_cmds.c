@@ -41,6 +41,8 @@
 #include <policycoreutils.h>
 #endif
 
+#define ARRAY_LEN(array) (sizeof(array) / (sizeof(array[0])))
+
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
     INIT_CHECK_RETURN_VALUE((symValue != NULL) && (paramValue != NULL) && (paramLen != 0), -1);
@@ -365,6 +367,89 @@ static void DoTimerStop(const struct CmdArgs*ctx)
     ServiceStopTimer(service);
 }
 
+static int SyncExecCommand(int argc, char *const *argv)
+{
+    if (argc == 0 || argv == NULL || argv[0] == NULL) {
+        return -1;
+    }
+    pid_t pid = fork();
+    if (pid < 0) {
+        INIT_LOGE("Fork new process to format failed: %d", errno);
+        return -1;
+    }
+    if (pid == 0) {
+        execv(argv[0], argv);
+        exit(-1);
+    }
+    int status;
+    waitpid(pid, &status, 0);
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+        INIT_LOGE("Command %s failed with status %d", argv[0], WEXITSTATUS(status));
+    }
+    return WEXITSTATUS(status);
+}
+
+static void DoInitGlobalKey(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("DoInitGlobalKey: start");
+    if (ctx == NULL || ctx->argc != 1) {
+        INIT_LOGE("DoInitGlobalKey: para invalid");
+        return;
+    }
+    const char *dataDir = "/data";
+    if (strncmp(ctx->argv[0], dataDir, strlen(dataDir)) != 0) {
+        INIT_LOGE("DoInitGlobalKey: not data partitation");
+        return;
+    }
+    char *const argv[] = {
+        "/system/bin/sdc",
+        "filecrypt",
+        "init_global_key",
+        NULL
+    };
+    int argc = ARRAY_LEN(argv);
+    int ret = SyncExecCommand(argc, argv);
+    INIT_LOGI("DoInitGlobalKey: end, ret = %d", ret);
+}
+
+static void DoInitMainUser(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("DoInitMainUser: start");
+    if (ctx == NULL) {
+        INIT_LOGE("DoInitMainUser: para invalid");
+        return;
+    }
+    char *const argv[] = {
+        "/system/bin/sdc",
+        "filecrypt",
+        "init_main_user",
+        NULL
+    };
+    int argc = ARRAY_LEN(argv);
+    int ret = SyncExecCommand(argc, argv);
+    INIT_LOGI("DoInitMainUser: end, ret = %d", ret);
+}
+
+int FileCryptEnable(char *fileCryptOption)
+{
+    INIT_LOGI("FileCryptEnable: start");
+    if (fileCryptOption == NULL) {
+        INIT_LOGE("FileCryptEnable:option null");
+        return -EINVAL;
+    }
+    char *const argv[] = {
+        "/system/bin/sdc",
+        "filecrypt",
+        "enable",
+        fileCryptOption,
+        NULL
+    };
+    int argc = ARRAY_LEN(argv);
+    int ret = SyncExecCommand(argc, argv);
+    INIT_LOGI("FileCryptEnable: end, ret = %d", ret);
+    return ret;
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "exec ", 1, 10, DoExec },
     { "mknode ", 1, 5, DoMakeNode },
@@ -385,6 +470,8 @@ static const struct CmdTable g_cmdTable[] = {
     { "sync ", 0, 1, DoSync },
     { "timer_start", 1, 1, DoTimerStart },
     { "timer_stop", 1, 1, DoTimerStop },
+    { "init_global_key ", 1, 1, DoInitGlobalKey },
+    { "init_main_user ", 0, 1, DoInitMainUser },
 };
 
 const struct CmdTable *GetCmdTable(int *number)
