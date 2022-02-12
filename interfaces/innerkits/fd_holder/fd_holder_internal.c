@@ -40,7 +40,7 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
         msghdr->msg_controllen += CMSG_SPACE(sizeof(struct ucred));
     }
 
-    msghdr->msg_control = calloc(1, (msghdr->msg_controllen == 0 ? 1 : msghdr->msg_controllen));
+    msghdr->msg_control = calloc(1, ((msghdr->msg_controllen == 0) ? 1 : msghdr->msg_controllen));
     if (msghdr->msg_control == NULL) {
         BEGET_LOGE("Failed to build control message");
         return -1;

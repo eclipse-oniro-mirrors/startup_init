@@ -18,7 +18,6 @@
 #include <string.h>
 
 #include "begetctl.h"
-#include "securec.h"
 #include "sys_param.h"
 
 #define SERVICE_START_NUMBER 2

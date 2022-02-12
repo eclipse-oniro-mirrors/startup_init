@@ -17,7 +17,6 @@
 #include <time.h>
 
 #include "plugin_test.h"
-#include "init_param.h"
 #include "init_plugin.h"
 
 #define MAX_COUNT 1000

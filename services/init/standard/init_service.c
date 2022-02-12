@@ -115,8 +115,7 @@ void GetAccessToken(void)
                 service->capsArgs.argv = NULL;
             }
             if (strlen(service->apl) == 0) {
-                (void)strncpy_s(service->apl, sizeof(service->apl),
-		    "system_core", sizeof(service->apl) - 1);
+                (void)strncpy_s(service->apl, sizeof(service->apl), "system_core", sizeof(service->apl) - 1);
             }
             uint64_t tokenId = GetAccessTokenId(service->name, (const char **)service->capsArgs.argv,
                 service->capsArgs.count, service->apl);

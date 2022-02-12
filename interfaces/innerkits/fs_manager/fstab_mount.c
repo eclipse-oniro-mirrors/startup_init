@@ -170,7 +170,8 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
         char **argv = (char **)cmd;
         ret = ExecCommand(argc, argv);
     } else {
-        unsigned long long realSize = size * ((unsigned long long)1024 * 1024 / 512);
+        unsigned long long realSize = size *
+            ((unsigned long long)RESIZE_BUFFER_SIZE * RESIZE_BUFFER_SIZE / FS_MANAGER_BUFFER_SIZE);
         char sizeStr[RESIZE_BUFFER_SIZE] = {0};
         sprintf_s(sizeStr, RESIZE_BUFFER_SIZE, "%llu", realSize);
         char *cmd[] = {
