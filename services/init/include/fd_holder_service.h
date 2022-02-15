@@ -19,6 +19,6 @@ extern "C" {
 #endif
 void RegisterFdHoldWatcher(int sock);
 #ifdef __cplusplus
-extern "C" {
+}
 #endif
 #endif // BASE_STARTUP_INITLITE_FD_HOLDER_SERVICE_H

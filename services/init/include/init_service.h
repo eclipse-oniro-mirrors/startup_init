@@ -17,6 +17,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <sched.h>
+#include <stdio.h>
 
 #include "cJSON.h"
 #include "init_cmds.h"
@@ -90,11 +92,6 @@ typedef enum {
 } ServiceEndMode;
 
 typedef struct {
-    int *cpus;
-    int cpuNum;
-} CpuArgs;
-
-typedef struct {
     uid_t uID;
     gid_t *gIDArray;
     int gIDCnt;
@@ -148,7 +145,7 @@ typedef struct Service_ {
     size_t fdCount;
     TimerHandle timer;
     ServiceJobs serviceJobs;
-    CpuArgs cpuInfo;
+    cpu_set_t cpuSet;
 } Service;
 
 int ServiceStart(Service *service);
