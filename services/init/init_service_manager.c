@@ -175,6 +175,7 @@ Service *AddService(const char *name)
     node->data.service = service;
     service->name = node->name;
     service->status = SERVICE_IDLE;
+    CPU_ZERO(&service->cpuSet);
     g_serviceSpace.serviceCount++;
     INIT_LOGV("AddService %s", node->name);
     return service;
@@ -644,10 +645,7 @@ static int CheckServiceKeyName(const cJSON *curService)
     char *cfgServiceKeyList[] = {
         "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
         "writepid", "critical", "socket", "console", "dynamic", "file", "ondemand",
-        "d-caps", "apl", "jobs", "start-mode", "end-mode", "cpucore",
-#ifdef WITH_SELINUX
-        SECON_STR_IN_CFG,
-#endif // WITH_SELINUX
+        "d-caps", "apl", "jobs", "start-mode", "end-mode", "cpucore", "secon"
     };
     INIT_CHECK_RETURN_VALUE(curService != NULL, SERVICE_FAILURE);
     cJSON *child = curService->child;
