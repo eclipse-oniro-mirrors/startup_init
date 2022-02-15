@@ -158,6 +158,7 @@ static int StartUeventd(char **requiredDevices, int num)
         return -1;
     }
     RetriggerUevent(ueventSockFd, requiredDevices, num);
+    close(ueventSockFd);
     return 0;
 }
 
