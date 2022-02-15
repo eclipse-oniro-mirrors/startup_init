@@ -25,7 +25,7 @@
 static int BuildClientSocket(void)
 {
     int sockFd;
-    sockFd = socket(AF_UNIX, SOCK_DGRAM|SOCK_CLOEXEC, 0);
+    sockFd = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0);
     if (sockFd < 0) {
         BEGET_LOGE("Failed to build socket, err = %d", errno);
         return -1;

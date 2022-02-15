@@ -202,7 +202,7 @@ static int32_t BShellParamCmdLs(BShellHandle shell, int32_t argc, char *argv[])
     char *buffer = GetLocalBuffer(&buffSize);
     char *realParameter = GetRealParameter(shell, (input == NULL) ? "" : input, buffer, buffSize);
     BSH_CHECK(realParameter != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
-    char *prefix = strdup(strlen(realParameter) == 0 ? "#" : realParameter);
+    char *prefix = strdup((strlen(realParameter) == 0) ? "#" : realParameter);
     BSH_LOGV("BShellParamCmdLs prefix %s", prefix);
     int ret = 0;
     if (all != 0) {

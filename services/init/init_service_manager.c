@@ -274,7 +274,7 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
     for (int i = 0; i < count + 1; ++i) {
         args->argv[i] = NULL;
     }
-     // ServiceArgs have a variety of uses, some requiring a NULL ending, some not
+    // ServiceArgs have a variety of uses, some requiring a NULL ending, some not
     if (strcmp(name, D_CAPS_STR_IN_CFG) != 0) {
         args->count = count + 1;
     } else {

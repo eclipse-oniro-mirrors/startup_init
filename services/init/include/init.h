@@ -30,6 +30,7 @@ extern "C" {
 #define DEFAULT_UID_KIT_FRAMEWORK 3
 // max length of one param/path
 #define  MAX_ONE_ARG_LEN 200
+#define  FD_HOLDER_BUFFER_SIZE 4096
 
 #define UNUSED(x) (void)(x)
 

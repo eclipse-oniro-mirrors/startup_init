@@ -47,8 +47,8 @@ static int FdHolderSockInit(void)
 {
     int sock = -1;
     int on = 1;
-    int fdHolderBufferSize = 4 * 1024; // 4KiB
-    sock = socket(AF_UNIX, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0);
+    int fdHolderBufferSize = FD_HOLDER_BUFFER_SIZE; // 4KiB
+    sock = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     if (sock < 0) {
         INIT_LOGE("Failed to create fd holder socket, err = %d", errno);
         return -1;

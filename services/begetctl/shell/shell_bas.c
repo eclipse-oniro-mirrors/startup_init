@@ -152,7 +152,7 @@ void BShellEnvOutputResult(BShellHandle handle, int32_t result)
 
 static void BShellEnvOutputParam(BShellHandle handle, char *var)
 {
-    BShellEnvOutput(handle, var[0] == '$' ? var + 1 : var);
+    BShellEnvOutput(handle, (var[0] == '$') ? var + 1 : var);
     BShellEnvOutputString(handle, " = ");
     BShellEnvOutputString(handle, BShellEnvGetStringParam(handle, var));
 }

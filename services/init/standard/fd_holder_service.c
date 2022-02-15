@@ -23,6 +23,8 @@
 #include "loop_event.h"
 #include "securec.h"
 
+#define MSG_ARRAY_INDEX 2
+
 static void FreeFds(int *fds)
 {
     if (fds != NULL) {
@@ -190,7 +192,7 @@ static void HandlerFdHolder(int sock)
     }
     char *serviceName = msg[0];
     char *action = msg[1];
-    char *pollStr = msg[2];
+    char *pollStr = msg[MSG_ARRAY_INDEX];
 
     Service *service = GetServiceByName(serviceName);
     if (CheckFdHolderPermission(service, requestPid) < 0) {

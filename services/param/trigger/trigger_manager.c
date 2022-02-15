@@ -410,8 +410,7 @@ static int CheckParamMatch_(const TriggerWorkSpace *workSpace,
     PARAM_CHECK((type == TRIGGER_PARAM) || (type == TRIGGER_PARAM_WAIT), return -1, "Invaid type");
 
     CalculatorInit(calculator, MAX_CONDITION_NUMBER, sizeof(LogicData), 1);
-    int ret = GetValueFromContent(content, contentSize,
-            0, calculator->inputName, SUPPORT_DATA_BUFFER_MAX);
+    int ret = GetValueFromContent(content, contentSize, 0, calculator->inputName, SUPPORT_DATA_BUFFER_MAX);
     PARAM_CHECK(ret == 0, return -1, "Failed parse content name");
     ret = GetValueFromContent(content, contentSize,
         strlen(calculator->inputName) + 1, calculator->inputContent, SUPPORT_DATA_BUFFER_MAX);
@@ -727,7 +726,7 @@ int CheckWatchTriggerTimeout(void)
 
 TriggerHeader *GetTriggerHeader(const TriggerWorkSpace *workSpace, int type)
 {
-    if (workSpace== NULL || type >= TRIGGER_MAX) {
+    if (workSpace == NULL || type >= TRIGGER_MAX) {
         return NULL;
     }
     return (TriggerHeader *)&workSpace->triggerHead[type];
