@@ -175,7 +175,6 @@ Service *AddService(const char *name)
     node->data.service = service;
     service->name = node->name;
     service->status = SERVICE_IDLE;
-    CPU_ZERO(&service->cpuSet);
     g_serviceSpace.serviceCount++;
     INIT_LOGV("AddService %s", node->name);
     return service;

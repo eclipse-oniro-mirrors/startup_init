@@ -17,6 +17,11 @@
 
 static const pid_t INIT_PROCESS_PID = 1;
 
+int __attribute__((weak)) AtlibInit(void)
+{
+    return 0;
+}
+
 int main(int argc, char * const argv[])
 {
     int isSecondStage = 0;
@@ -35,6 +40,7 @@ int main(int argc, char * const argv[])
         LogInit();
     }
     LogInit();
+    (void)AtlibInit();
     SystemInit();
     SystemExecuteRcs();
     SystemConfig();
