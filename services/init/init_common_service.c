@@ -18,8 +18,6 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sched.h>
-#include <stdio.h>
 #ifdef __MUSL__
 #include <stropts.h>
 #endif
@@ -238,32 +236,17 @@ static void PublishHoldFds(Service *service)
 
 static int BindCpuCore(Service *service)
 {
-    if (service == NULL || service->cpuInfo.cpuNum <= 0) {
+    if (service == NULL) {
         return SERVICE_SUCCESS;
     }
-    long cpuNum = sysconf(_SC_NPROCESSORS_CONF);
-    INIT_ERROR_CHECK(service->cpuInfo.cpuNum <= cpuNum, return SERVICE_FAILURE,
-        "%s cpus cores exceeds total number of device cores", service->name);
-    int index = 0;
-    cpu_set_t setMask;
-    CPU_ZERO(&setMask);
-    int pid =  getpid();
-    for (int i = 0; i < service->cpuInfo.cpuNum; i++) {
-        index = (int)service->cpuInfo.cpus[i];
-        if ((int)cpuNum <= index) {
-            INIT_LOGW("%s core number %d of CPU cores does not exist", service->name, index);
-            continue;
-        }
-        if (CPU_ISSET(index, &setMask)) {
-            continue;
-        }
-        CPU_SET(index, &setMask);
+#ifndef __LITEOS__
+    int pid = getpid();
+    if (sched_setaffinity(pid, sizeof(service->cpuSet), &service->cpuSet) != 0) {
+        INIT_LOGE("%s set affinity between process(pid=%d) with CPU's core failed", service->name, pid);
+        return SERVICE_FAILURE;
     }
-    if (sched_setaffinity(pid, sizeof(setMask), &setMask) != 0) {
-        INIT_LOGI("%s set affinity between process(pid=%d) with CPU's core failed", service->name, pid);
-    } else {
-        INIT_LOGE("%s set affinity between process(pid=%d) with CPU's core successfully", service->name, pid);
-    }
+    INIT_LOGI("%s set affinity between process(pid=%d) with CPU's core successfully", service->name, pid);
+#endif
     return SERVICE_SUCCESS;
 }
 

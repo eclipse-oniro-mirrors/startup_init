@@ -275,6 +275,23 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
+  ohos_prebuilt_etc("syscap.para") {
+    source =
+        "${preloader_output_dir}/${product_name}/system/etc/param/syscap.para"
+    module_install_dir = "etc/param/"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("syscap.json") {
+    source = "${preloader_output_dir}/${product_name}/system/etc/syscap.json"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("systemcapability.json") {
+    source = "${preloader_output_dir}/${product_name}/system/etc/SystemCapability.json"
+    part_name = "init"
+  }
+
   group("init_etc") {
     deps = [
       ":boot.group",
@@ -286,6 +303,9 @@ if (defined(ohos_lite)) {
       ":ohos.para",
       ":ohos.para.dac",
       ":passwd",
+      ":syscap.json",
+      ":syscap.para",
+      ":systemcapability.json",
     ]
   }
 }

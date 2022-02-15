@@ -97,8 +97,7 @@ LE_STATUS LE_StartAsyncEvent(const LoopHandle loopHandle,
     const TaskHandle taskHandle, uint64_t eventId, const uint8_t *data, uint32_t buffLen)
 {
     LE_CHECK(loopHandle != NULL && taskHandle != NULL, return LE_INVALID_PARAM, "Invalid parameters");
-    BufferHandle handle = NULL;
-    handle = LE_CreateBuffer(loopHandle, buffLen + 1 + sizeof(eventId));
+    BufferHandle handle = LE_CreateBuffer(loopHandle, buffLen + 1 + sizeof(eventId));
     char *buff = (char *)LE_GetBufferInfo(handle, NULL, NULL);
     int ret = memcpy_s(buff, sizeof(eventId), &eventId, sizeof(eventId));
     LE_CHECK(ret == 0, return -1, "Failed to copy data");

@@ -18,6 +18,8 @@
 #include "le_task.h"
 #include "loop_event.h"
 
+#define TIMEOUT_BASE 1000
+
 typedef struct {
     BaseTask base;
     LE_ProcessTimer processTimer;

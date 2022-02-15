@@ -22,7 +22,6 @@
 #endif
 #include "loop_event.h"
 #include "parameter.h"
-#include "securec.h"
 
 static void PrintSysInfo(void)
 {

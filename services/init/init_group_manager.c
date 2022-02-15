@@ -114,10 +114,10 @@ static char *GetAbsolutePath(const char *path, const char *cfgName, char *buffer
         ext = strcmp(cfgName + cfgNameLen - strlen(".cfg"), ".cfg") == 0;
     }
     if (cfgName[0] != '/') {
-        const char *format = (ext != 0) ? "%s/%s" : "%s/%s.cfg";
+        const char *format = ((ext != 0) ? "%s/%s" : "%s/%s.cfg");
         len = sprintf_s(buffer, buffSize, format, path, cfgName);
     } else {
-        const char *format = (ext != 0) ? "%s" : "%s.cfg";
+        const char *format = ((ext != 0) ? "%s" : "%s.cfg");
         len = sprintf_s(buffer, buffSize, format, cfgName);
     }
     if (len <= 0) {

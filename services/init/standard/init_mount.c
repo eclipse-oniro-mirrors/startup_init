@@ -16,7 +16,6 @@
 #include "fs_manager/fs_manager.h"
 #include "init_cmds.h"
 #include "init_log.h"
-#include "securec.h"
 
 int MountRequriedPartitions(const Fstab *fstab)
 {

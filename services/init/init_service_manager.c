@@ -175,6 +175,7 @@ Service *AddService(const char *name)
     node->data.service = service;
     service->name = node->name;
     service->status = SERVICE_IDLE;
+    CPU_ZERO(&service->cpuSet);
     g_serviceSpace.serviceCount++;
     INIT_LOGV("AddService %s", node->name);
     return service;
@@ -203,11 +204,6 @@ void ReleaseService(Service *service)
     FreeServiceArg(&service->writePidArgs);
     FreeServiceArg(&service->capsArgs);
 
-    if (service->cpuInfo.cpus != NULL) {
-        free(service->cpuInfo.cpus);
-        service->cpuInfo.cpus = NULL;
-    }
-    service->cpuInfo.cpuNum = 0;
     if (service->servPerm.caps != NULL) {
         free(service->servPerm.caps);
         service->servPerm.caps = NULL;
@@ -274,7 +270,7 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
     for (int i = 0; i < count + 1; ++i) {
         args->argv[i] = NULL;
     }
-     // ServiceArgs have a variety of uses, some requiring a NULL ending, some not
+    // ServiceArgs have a variety of uses, some requiring a NULL ending, some not
     if (strcmp(name, D_CAPS_STR_IN_CFG) != 0) {
         args->count = count + 1;
     } else {
@@ -767,12 +763,7 @@ int  GetCritical(const cJSON *curArrItem, Service *curServ, const char *attrName
     return SERVICE_SUCCESS;
 }
 
-static int Comparefunc(const void *before, const void *after)
-{
-    return (*(int*)before - *(int*)after);
-}
-
-static int GetCpuArgs(const cJSON *argJson, const char *name, CpuArgs *args)
+static int GetCpuArgs(const cJSON *argJson, const char *name, Service *service)
 {
     INIT_ERROR_CHECK(argJson != NULL, return SERVICE_FAILURE, "Invalid argJson");
     cJSON *obj = cJSON_GetObjectItem(argJson, name);
@@ -781,31 +772,20 @@ static int GetCpuArgs(const cJSON *argJson, const char *name, CpuArgs *args)
     int ret = cJSON_IsArray(obj);
     INIT_ERROR_CHECK(ret, return SERVICE_FAILURE, "Invalid type");
     int count = cJSON_GetArraySize(obj);
-    int tmpArray[count];
+    int cpus = -1;
+    int cpuNumMax = sysconf(_SC_NPROCESSORS_CONF);
     for (int i = 0; i < count; ++i) {
         cJSON *item = cJSON_GetArrayItem(obj, i);
         INIT_ERROR_CHECK(item != NULL, return SERVICE_FAILURE, "prase invalid");
-        tmpArray[i] = (int)cJSON_GetNumberValue(item);
-    }
-    qsort(tmpArray, count, sizeof(int), Comparefunc);
-    int cpuCount = 0;
-    for (int j = 0; j < count; j++) {
-        if (j == 0 && tmpArray[0] == 0) {
-            tmpArray[cpuCount++] = 0;
+        cpus = (int)cJSON_GetNumberValue(item);
+        if (cpuNumMax <= cpus) {
+            INIT_LOGW("%s core number %d of CPU cores does not exist", service->name, cpus);
             continue;
         }
-        if (tmpArray[j] != tmpArray[j-1]) {
-            tmpArray[cpuCount++] = tmpArray[j];
+        if (CPU_ISSET(cpus, &service->cpuSet)) {
+            continue;
         }
-    }
-    args->cpus=(int*)malloc(cpuCount * sizeof(int));
-    INIT_ERROR_CHECK(args->cpus != NULL, return SERVICE_FAILURE, "Failed to malloc for argv");
-    for (int i = 0; i < cpuCount; ++i) {
-        args->cpus[i] = -1;
-    }
-    args->cpuNum = cpuCount;
-    for (int i = 0; i < count; ++i) {
-        args->cpus[i] = tmpArray[i];
+        CPU_SET(cpus, &service->cpuSet);
     }
     return SERVICE_SUCCESS;
 }
@@ -843,7 +823,7 @@ int ParseOneService(const cJSON *curItem, Service *service)
     (void)GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
     (void)GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
     (void)GetStringItem(curItem, APL_STR_IN_CFG, service->apl, MAX_APL_NAME);
-    (void)GetCpuArgs(curItem, CPU_CORE_STR_IN_CFG, &service->cpuInfo);
+    (void)GetCpuArgs(curItem, CPU_CORE_STR_IN_CFG, service);
     ret = GetServiceCaps(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
     ret = GetDynamicService(curItem, service);
