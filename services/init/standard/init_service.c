@@ -99,10 +99,9 @@ int ServiceExec(const Service *service)
 int SetAccessToken(const Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "%s failed", service->name);
-    if (service->tokenId != 0 && SetSelfTokenID(service->tokenId) != 0) {
-        INIT_LOGE("%s: token id %lld, set token id result %d", service->name, service->tokenId, errno);
-    }
-    return 0;
+    int ret = SetSelfTokenID(service->tokenId);
+    INIT_LOGI("%s: token id %lld, set token id result %d", service->name, service->tokenId, ret);
+    return ret == 0 ? SERVICE_SUCCESS : SERVICE_FAILURE;
 }
 
 void GetAccessToken(void)
