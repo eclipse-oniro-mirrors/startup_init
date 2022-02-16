@@ -150,6 +150,9 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]
+
+    external_deps = [ "profiler:libhidebug" ]
+
     cflags = []
 
     if (use_musl) {

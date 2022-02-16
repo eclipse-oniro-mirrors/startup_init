@@ -25,7 +25,8 @@
                 "ipc",                
                 "safwk",
                 "samgr_standard",
-                "utils_base"
+                "utils_base",
+                "profiler"
             ],
             "third_party": [
                 "cJSON",

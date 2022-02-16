@@ -19,6 +19,7 @@
 #include <sys/param.h>
 #include <sys/resource.h>
 
+#include "hidebug_base.h"
 #include "init_group_manager.h"
 #include "init.h"
 #include "init_log.h"
@@ -85,6 +86,7 @@ int ServiceExec(const Service *service)
         }
     }
     INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
+    InitEnvironmentParam(service->name);
     // L2 Can not be reset env
     if (service->extraArgs.argv != NULL && service->extraArgs.count > 0) {
         INIT_CHECK_ONLY_ELOG(execv(service->extraArgs.argv[0], service->extraArgs.argv) == 0,
