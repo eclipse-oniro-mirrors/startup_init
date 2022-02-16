@@ -63,6 +63,7 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
             curr += begin - start;
         }
         while (*begin != '{') {
+            INIT_CHECK_RETURN_VALUE(*begin != '\0', -1);
             begin++;
         }
         begin++;
