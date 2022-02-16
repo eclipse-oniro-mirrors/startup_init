@@ -25,7 +25,6 @@ ohos_shared_library("libpluginparamtest") {
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/services/loopevent/include",
     "//base/startup/init_lite/ueventd/include",
-    "//developtools/profiler/hidebug/interfaces/native/innerkits/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
   ]
@@ -34,7 +33,6 @@ ohos_shared_library("libpluginparamtest") {
     "//base/startup/init_lite/interfaces/innerkits/plugin:libplugin",
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/utils:libinit_tools",
-    "//developtools/profiler/hidebug/interfaces/native/innerkits:libhidebug",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   part_name = "init"

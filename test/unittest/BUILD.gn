@@ -162,7 +162,6 @@ ohos_unittest("init_ut") {
     "//foundation/distributedschedule/samgr/adapter/interfaces/innerkits/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "//base/startup/init_lite/ueventd/include",
-    "//developtools/profiler/hidebug/interfaces/native/innerkits/include",
     "//utils/native/base/include",
     "//utils/system/safwk/native/include",
     "//third_party/bounds_checking_function/include",
@@ -175,7 +174,6 @@ ohos_unittest("init_ut") {
     "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
     "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
     "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
-    "//developtools/profiler/hidebug/interfaces/native/innerkits:libhidebug",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
     "//third_party/googletest:gmock",
@@ -192,7 +190,10 @@ ohos_unittest("init_ut") {
   ]
   defines += [ "_GNU_SOURCE" ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "profiler:libhidebug",
+  ]
 
   if (param_feature_watcher) {
     external_deps += [

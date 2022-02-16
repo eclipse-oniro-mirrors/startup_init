@@ -134,7 +134,6 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//base/startup/init_lite/interfaces/innerkits/fd_holder",
       "//base/startup/init_lite/ueventd/include",
-      "//developtools/profiler/hidebug/interfaces/native/innerkits/include",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
     ]
@@ -148,10 +147,12 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/utils:libinit_tools",
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
-      "//developtools/profiler/hidebug/interfaces/native/innerkits:libhidebug",
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]
+
+    external_deps = [ "profiler:libhidebug" ]
+
     cflags = []
 
     if (use_musl) {
