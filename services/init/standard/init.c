@@ -244,12 +244,7 @@ static void BootStateChange(const char *content)
 {
     INIT_LOGI("boot start %s finish.", content);
     if (strcmp("init", content) == 0) {
-        static const char *bootServiceNames[] = {
-            "hdf_devmgr", "samgr", "appspawn", "faultloggerd"
-        };
-        for (int i = 0; i < ARRAY_LENGTH(bootServiceNames); i++) {
-            StartServiceByName(bootServiceNames[i], 0);
-        }
+        StartAllServices(START_MODE_BOOT);
         return;
     }
     if (strcmp("post-init", content) == 0) {
