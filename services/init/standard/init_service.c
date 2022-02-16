@@ -119,7 +119,7 @@ void GetAccessToken(void)
             uint64_t tokenId = GetAccessTokenId(service->name, (const char **)service->capsArgs.argv,
                 service->capsArgs.count, service->apl);
             if (tokenId  == 0) {
-                INIT_LOGE("Set totken id %lld of service \' %s \' failed", service->name, tokenId);
+                INIT_LOGE("Get totken id %lld of service \' %s \' failed", tokenId, service->name);
             }
             service->tokenId = tokenId;
         }

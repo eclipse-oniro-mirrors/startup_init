@@ -62,6 +62,7 @@ static int FdHolderSockInit(void)
         unlink(INIT_HOLDER_SOCKET_PATH);
     }
     struct sockaddr_un addr;
+    addr.sun_family = AF_UNIX;
     if (strncpy_s(addr.sun_path, sizeof(addr.sun_path),
         INIT_HOLDER_SOCKET_PATH, strlen(INIT_HOLDER_SOCKET_PATH)) != 0) {
         INIT_LOGE("Faild to copy fd hoder socket path");
@@ -70,7 +71,7 @@ static int FdHolderSockInit(void)
     }
     socklen_t len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path) + 1);
     if (bind(sock, (struct sockaddr *)&addr, len) < 0) {
-        INIT_LOGE("Failed to binder fd folder socket");
+        INIT_LOGE("Failed to binder fd folder socket %d", errno);
         close(sock);
         return -1;
     }
