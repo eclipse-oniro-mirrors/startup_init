@@ -151,10 +151,6 @@ if (defined(ohos_lite)) {
       "//third_party/cJSON:cjson_static",
     ]
 
-    if (support_jsapi) {
-      external_deps = [ "profiler:libhidebug" ]
-    }
-
     cflags = []
 
     if (use_musl) {

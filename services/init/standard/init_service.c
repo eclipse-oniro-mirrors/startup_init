@@ -14,14 +14,11 @@
  */
 #include "init_service.h"
 
+#include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
 #include <sys/resource.h>
-
-#ifdef SUPPORT_PROFILER_HIDEBUG
-#include "hidebug_base.h"
-#endif
 
 #include "init_group_manager.h"
 #include "init.h"
@@ -90,9 +87,19 @@ int ServiceExec(const Service *service)
     }
     INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
 #ifdef SUPPORT_PROFILER_HIDEBUG
-    InitEnvironmentParam(service->name);
+    void* handle = dlopen("/system/lib/libhidebug.so", RTLD_LAZY);
+    if (handle == NULL) {
+        INIT_LOGE("Failed to dlopen libhidebug.so, %s\n", dlerror());
+        return SERVICE_FAILURE;
+    }
+    bool (* initParam)();
+    initParam = (bool (*)())dlsym(handle, "InitEnvironmentParam");
+    if (initParam == NULL) {
+        INIT_LOGE("Failed to dlsym InitEnvironmentParam, %s\n", dlerror());
+        return SERVICE_FAILURE;
+    }
+    (*initParam)(service->name);
 #endif
-
     // L2 Can not be reset env
     if (service->extraArgs.argv != NULL && service->extraArgs.count > 0) {
         INIT_CHECK_ONLY_ELOG(execv(service->extraArgs.argv[0], service->extraArgs.argv) == 0,

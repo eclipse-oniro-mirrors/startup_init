@@ -191,9 +191,6 @@ ohos_unittest("init_ut") {
   defines += [ "_GNU_SOURCE" ]
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-  if (support_jsapi) {
-    external_deps += [ "profiler:libhidebug" ]
-  }
 
   if (param_feature_watcher) {
     external_deps += [
