@@ -199,7 +199,7 @@ static int DoFsckF2fs(const char* device)
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
     BEGET_LOGI("fsck.f2fs is ending.");
-    return(ExecCommand(argc, argv));
+    return ExecCommand(argc, argv);
 }
 
 static int DoResizeExt(const char* device, const unsigned long long size)
