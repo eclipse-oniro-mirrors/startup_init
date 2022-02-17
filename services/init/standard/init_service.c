@@ -19,7 +19,10 @@
 #include <sys/param.h>
 #include <sys/resource.h>
 
+#ifdef SUPPORT_PROFILER_HIDEBUG
 #include "hidebug_base.h"
+#endif
+
 #include "init_group_manager.h"
 #include "init.h"
 #include "init_log.h"
@@ -86,7 +89,10 @@ int ServiceExec(const Service *service)
         }
     }
     INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
+#ifdef SUPPORT_PROFILER_HIDEBUG
     InitEnvironmentParam(service->name);
+#endif
+
     // L2 Can not be reset env
     if (service->extraArgs.argv != NULL && service->extraArgs.count > 0) {
         INIT_CHECK_ONLY_ELOG(execv(service->extraArgs.argv[0], service->extraArgs.argv) == 0,
