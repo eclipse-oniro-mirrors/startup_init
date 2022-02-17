@@ -151,7 +151,9 @@ if (defined(ohos_lite)) {
       "//third_party/cJSON:cjson_static",
     ]
 
-    external_deps = [ "profiler:libhidebug" ]
+    if (support_jsapi) {
+      external_deps = [ "profiler:libhidebug" ]
+    }
 
     cflags = []
 
@@ -185,6 +187,9 @@ if (defined(ohos_lite)) {
 
     if (!enable_ramdisk) {
       defines += [ "DISABLE_INIT_TWO_STAGES" ]
+    }
+    if (support_jsapi) {
+      defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
     }
 
     if (defined(product_name) && product_name == "rk3568") {
