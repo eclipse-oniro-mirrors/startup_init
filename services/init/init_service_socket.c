@@ -202,6 +202,7 @@ void SocketDelWatcher(ServiceWatcher watcherHandle)
 int CreateServiceSocket(Service *service)
 {
     INIT_CHECK(service != NULL && service->socketCfg != NULL, return 0);
+    INIT_CHECK(service->socketCfg->sockFd == -1, return 0);
     int ret = 0;
     ServiceSocket *tmpSock = service->socketCfg;
     while (tmpSock != NULL) {

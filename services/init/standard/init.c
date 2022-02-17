@@ -62,6 +62,7 @@ static int FdHolderSockInit(void)
         unlink(INIT_HOLDER_SOCKET_PATH);
     }
     struct sockaddr_un addr;
+    addr.sun_family = AF_UNIX;
     if (strncpy_s(addr.sun_path, sizeof(addr.sun_path),
         INIT_HOLDER_SOCKET_PATH, strlen(INIT_HOLDER_SOCKET_PATH)) != 0) {
         INIT_LOGE("Faild to copy fd hoder socket path");
@@ -70,7 +71,7 @@ static int FdHolderSockInit(void)
     }
     socklen_t len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path) + 1);
     if (bind(sock, (struct sockaddr *)&addr, len) < 0) {
-        INIT_LOGE("Failed to binder fd folder socket");
+        INIT_LOGE("Failed to binder fd folder socket %d", errno);
         close(sock);
         return -1;
     }
@@ -158,6 +159,7 @@ static int StartUeventd(char **requiredDevices, int num)
         return -1;
     }
     RetriggerUevent(ueventSockFd, requiredDevices, num);
+    close(ueventSockFd);
     return 0;
 }
 
@@ -242,12 +244,7 @@ static void BootStateChange(const char *content)
 {
     INIT_LOGI("boot start %s finish.", content);
     if (strcmp("init", content) == 0) {
-        static const char *bootServiceNames[] = {
-            "hdf_devmgr", "samgr", "appspawn", "faultloggerd"
-        };
-        for (int i = 0; i < ARRAY_LENGTH(bootServiceNames); i++) {
-            StartServiceByName(bootServiceNames[i], 0);
-        }
+        StartAllServices(START_MODE_BOOT);
         return;
     }
     if (strcmp("post-init", content) == 0) {

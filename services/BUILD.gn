@@ -184,6 +184,9 @@ if (defined(ohos_lite)) {
     if (!enable_ramdisk) {
       defines += [ "DISABLE_INIT_TWO_STAGES" ]
     }
+    if (support_jsapi) {
+      defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
+    }
 
     if (defined(product_name) && product_name == "rk3568") {
       defines += [ "PRODUCT_RK" ]

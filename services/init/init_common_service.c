@@ -352,8 +352,8 @@ int ServiceStop(Service *service)
 
 static bool CalculateCrashTime(Service *service, int crashTimeLimit, int crashCountLimit)
 {
-    INIT_ERROR_CHECK(service != NULL && crashTimeLimit > 0 && crashCountLimit > 0, return 0,
-        "Service name=%s, input params error.", service->name);
+    INIT_ERROR_CHECK(service != NULL && crashTimeLimit > 0 && crashCountLimit > 0,
+        return false, "input params error.");
     time_t curTime = time(NULL);
     if (service->crashCnt == 0) {
         service->firstCrashTime = curTime;

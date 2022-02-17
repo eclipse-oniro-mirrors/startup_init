@@ -69,7 +69,7 @@ typedef struct {
 
 typedef struct {
     ParamMessage msg;
-    uint32_t result;
+    int32_t result;
 } ParamResponseMessage;
 
 typedef LoopBase *ParamTaskPtr;
