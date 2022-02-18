@@ -43,6 +43,8 @@
 
 #define ARRAY_LEN(array) (sizeof(array) / (sizeof(array[0])))
 
+static const char *g_fscryptPolicyKey = "fscrypt.policy.config";
+
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
     INIT_CHECK_RETURN_VALUE((symValue != NULL) && (paramValue != NULL) && (paramLen != 0), -1);
@@ -437,16 +439,13 @@ int FileCryptEnable(char *fileCryptOption)
         INIT_LOGE("FileCryptEnable:option null");
         return -EINVAL;
     }
-    char *const argv[] = {
-        "/system/bin/sdc",
-        "filecrypt",
-        "enable",
-        fileCryptOption,
-        NULL
-    };
-    int argc = ARRAY_LEN(argv);
-    int ret = SyncExecCommand(argc, argv);
-    INIT_LOGI("FileCryptEnable: end, ret = %d", ret);
+    int ret = SystemWriteParam(g_fscryptPolicyKey, fileCryptOption);
+    if (ret != 0) {
+        INIT_LOGE("FileCryptEnable:set fscrypt config failed");
+        return ret;
+    }
+    INIT_LOGI("FileCryptEnable:set fscrypt config success, policy:%s", fileCryptOption);
+
     return ret;
 }
 
