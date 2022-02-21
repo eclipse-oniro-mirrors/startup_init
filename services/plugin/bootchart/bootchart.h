@@ -15,12 +15,10 @@
 
 #ifndef _PLUGIN_BOOTCHART_H
 #define _PLUGIN_BOOTCHART_H
-#include <errno.h>
 #include <pthread.h>
 #include <stdint.h>
-#include <sys/time.h>
 
-#define DEFAULT_BUFFER 1024
+#define DEFAULT_BUFFER 2048
 typedef struct {
     int start;
     int stop;

@@ -65,12 +65,16 @@ static int RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdate
 
 static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage *boot)
 {
-    char *realPath = GetRealPath(path);
-    INIT_ERROR_CHECK(realPath != NULL, return -1, "Failed to get realpath %s", path);
     int ret = 0;
-    FILE *fp = fopen(realPath, "rb");
-    free(realPath);
-    realPath = NULL;
+    FILE *fp = NULL;
+    char *realPath = GetRealPath(path);
+    if (realPath != NULL) {
+        fp = fopen(realPath, "rb");
+        free(realPath);
+        realPath = NULL;
+    } else {
+        fp = fopen(path, "rb");
+    }
     if (fp != NULL) {
         size_t readLen = fread(boot, 1, sizeof(struct RBMiscUpdateMessage), fp);
         (void)fclose(fp);
@@ -83,7 +87,7 @@ static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage
     return ret;
 }
 
-int GetBootModeFromMisc()
+int GetBootModeFromMisc(void)
 {
     char miscFile[PATH_MAX] = {0};
     int ret = GetBlockDevicePath("/misc", miscFile, PATH_MAX);

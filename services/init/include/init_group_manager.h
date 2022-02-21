@@ -87,7 +87,7 @@ HashMapHandle GetGroupHashMap(int type);
 #ifdef STARTUP_INIT_TEST
 InitWorkspace *GetInitWorkspace(void);
 #endif
-int GetBootModeFromMisc();
+int GetBootModeFromMisc(void);
 #ifdef __cplusplus
 #if __cplusplus
 }

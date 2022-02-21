@@ -18,6 +18,7 @@
 #include <dirent.h>
 #include <stdint.h>
 #include <sys/utsname.h>
+#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -32,7 +33,7 @@
 static BootchartCtrl *g_bootchartCtrl = NULL;
 static PluginInterface *g_pluginInterface = NULL;
 
-static uint64_t GetJiffies()
+static uint64_t GetJiffies(void)
 {
     struct timespec time1 = {0};
     clock_gettime(CLOCK_MONOTONIC, &time1);
@@ -62,48 +63,48 @@ char *ReadFileToBuffer(const char *fileName, char *buffer, uint32_t bufferSize)
     return (readLen > 0) ? buffer : NULL;
 }
 
-static void BootchartLogHeader()
+static void BootchartLogHeader(void)
 {
     char date[32]; // 32 data size
-    time_t now_t = time(NULL);
-    struct tm now = *localtime(&now_t);
-    strftime(date, sizeof(date), "%F %T", &now);
-
+    time_t tm = time(NULL);
+    PLUGIN_CHECK(tm >= 0, return, "Failed to get time");
+    struct tm *now = localtime(&tm);
+    PLUGIN_CHECK(now != NULL, return, "Failed to get local time");
+    size_t size = strftime(date, sizeof(date), "%F %T", now);
+    PLUGIN_CHECK(size >= 0, return, "Failed to strftime");
     struct utsname uts;
     if (uname(&uts) == -1) {
         return;
     }
 
-    char finger[PARAM_VALUE_LEN_MAX] = {};
-    uint32_t size = sizeof(finger);
+    char release[PARAM_VALUE_LEN_MAX] = {};
+    uint32_t len = sizeof(release);
     if (g_pluginInterface->systemReadParam != NULL) {
-        g_pluginInterface->systemReadParam("const.build.fingerprint", finger, &size);
+        (void)g_pluginInterface->systemReadParam("hw_sc.build.os.releasetype", release, &len);
     }
-    /*if (strlen(finger) == 0) {
-        return;
-    }*/
-
     char *cmdLine = ReadFileToBuffer("/proc/cmdline", g_bootchartCtrl->buffer, g_bootchartCtrl->bufferSize);
     PLUGIN_CHECK(cmdLine != NULL, return, "Failed to open file /data/bootchart/header");
 
     FILE *file = fopen("/data/bootchart/header", "we");
     PLUGIN_CHECK(file != NULL, return, "Failed to open file /data/bootchart/header");
 
-    fprintf(file, "version = openharmony init\n");
-    fprintf(file, "title = Boot chart for openharmony (%s)\n", date);
-    fprintf(file, "system.uname = %s %s %s %s\n", uts.sysname, uts.release, uts.version, uts.machine);
-    //fprintf(file, "system.release = %s\n", finger);
-    fprintf(file, "system.cpu = %s\n", uts.machine);
-    fprintf(file, "system.kernel.options = %s\n", cmdLine);
-    fclose(file);
+    (void)fprintf(file, "version = openharmony init\n");
+    (void)fprintf(file, "title = Boot chart for openharmony (%s)\n", date);
+    (void)fprintf(file, "system.uname = %s %s %s %s\n", uts.sysname, uts.release, uts.version, uts.machine);
+    if (strlen(release) > 0) {
+        (void)fprintf(file, "system.release = %s\n", release);
+    }
+    (void)fprintf(file, "system.cpu = %s\n", uts.machine);
+    (void)fprintf(file, "system.kernel.options = %s\n", cmdLine);
+    (void)fclose(file);
 }
 
 static void bootchartLogFile(FILE *log, const char *procfile)
 {
-    fprintf(log, "%lld\n", GetJiffies());
+    (void)fprintf(log, "%lld\n", GetJiffies());
     char *data = ReadFileToBuffer(procfile, g_bootchartCtrl->buffer, g_bootchartCtrl->bufferSize);
     if (data != NULL) {
-        fprintf(log, "%s\n", data);
+        (void)fprintf(log, "%s\n", data);
     }
 }
 
@@ -135,21 +136,20 @@ static void bootchartLogProcessStat(FILE *log, pid_t pid)
         }
         if (end != NULL) {
             stat[start - stat + 1] = '\0';
-            fputs(stat, log);
-            fputs(name, log);
-            fputs(end, log);
+            (void)fputs(stat, log);
+            (void)fputs(name, log);
+            (void)fputs(end, log);
         } else {
-            fputs(stat, log);
+            (void)fputs(stat, log);
         }
     } else {
-        fputs(stat, log);
+        (void)fputs(stat, log);
     }
 }
 
 static void bootchartLogProcess(FILE *log)
 {
-    fprintf(log, "%lld\n", GetJiffies());
-
+    (void)fprintf(log, "%lld\n", GetJiffies());
     DIR *pDir = opendir("/proc");
     PLUGIN_CHECK(pDir != NULL, return, "Read dir /proc failed.%d", errno);
     struct dirent *entry;
@@ -161,7 +161,7 @@ static void bootchartLogProcess(FILE *log)
         bootchartLogProcessStat(log, pid);
     }
     closedir(pDir);
-    fputc('\n', log);
+    (void)fputc('\n', log);
 }
 
 static void *BootchartThreadMain(void *data)
@@ -200,21 +200,21 @@ static void *BootchartThreadMain(void *data)
 
     if (statFile != NULL) {
         (void)fflush(statFile);
-        fclose(statFile);
+        (void)fclose(statFile);
     }
     if (procFile != NULL) {
         (void)fflush(procFile);
-        fclose(procFile);
+        (void)fclose(procFile);
     }
     if (diskFile != NULL) {
         (void)fflush(diskFile);
-        fclose(diskFile);
+        (void)fclose(diskFile);
     }
     PLUGIN_LOGI("bootcharting stop");
     return NULL;
 }
 
-static void BootchartDestory()
+static void BootchartDestory(void)
 {
     pthread_mutex_destroy(&(g_bootchartCtrl->mutex));
     pthread_cond_destroy(&(g_bootchartCtrl->cond));
@@ -222,7 +222,7 @@ static void BootchartDestory()
     g_bootchartCtrl = NULL;
 }
 
-static int DoBootchartStart()
+static int DoBootchartStart(void)
 {
     if (g_pluginInterface == NULL) {
         PLUGIN_LOGI("Invalid bootchart plugin");
@@ -267,7 +267,7 @@ static int DoBootchartStart()
     return 0;
 }
 
-static int DoBootchartStop()
+static int DoBootchartStop(void)
 {
     if (g_bootchartCtrl == NULL || !g_bootchartCtrl->start) {
         PLUGIN_LOGI("bootcharting not start");
@@ -307,7 +307,8 @@ static int BootchartInit(void)
                  "Invalid install parameter");
 
     for (int i = 0; i < (int)(sizeof(g_bootchartCmds) / sizeof(g_bootchartCmds[0])); i++) {
-        g_bootchartCmds[i].index = g_pluginInterface->addCmdExecutor(g_bootchartCmds[i].name, g_bootchartCmds[i].cmdExecutor);
+        g_bootchartCmds[i].index = g_pluginInterface->addCmdExecutor(
+            g_bootchartCmds[i].name, g_bootchartCmds[i].cmdExecutor);
         PLUGIN_LOGI("BootchartInit %d", g_bootchartCmds[i].index);
     }
     return 0;

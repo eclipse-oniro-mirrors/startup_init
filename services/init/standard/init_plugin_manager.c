@@ -315,7 +315,7 @@ static int PluginCmdUninstall(int id, const char *name, int argc, const char **a
     return 0;
 }
 
-static int LoadPluginCfg()
+static int LoadPluginCfg(void)
 {
     char *fileBuf = ReadFileToBuf(DEFAULT_PLUGIN_CFG);
     INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Failed to read file content %s", DEFAULT_PLUGIN_CFG);

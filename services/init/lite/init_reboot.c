@@ -29,7 +29,7 @@ void ExecReboot(const char *value)
     return;
 }
 
-int GetBootModeFromMisc()
+int GetBootModeFromMisc(void)
 {
     return 0;
 }
