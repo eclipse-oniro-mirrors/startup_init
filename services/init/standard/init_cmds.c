@@ -450,6 +450,40 @@ int FileCryptEnable(char *fileCryptOption)
     return ret;
 }
 
+static void DoMkswap(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("DoMkswap: start");
+    if (ctx == NULL) {
+        INIT_LOGE("DoMkswap: para invalid");
+        return;
+    }
+    char *const argv[] = {
+        "/system/bin/mkswap",
+        ctx->argv[0],
+        NULL
+    };
+    int argc = ARRAY_LEN(argv);
+    int ret = SyncExecCommand(argc, argv);
+    INIT_LOGI("DoMkswap: end, ret = %d", ret);
+}
+
+static void DoSwapon(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("DoSwapon: start");
+    if (ctx == NULL) {
+        INIT_LOGE("DoSwapon: para invalid");
+        return;
+    }
+    char *const argv[] = {
+        "/system/bin/swapon",
+        ctx->argv[0],
+        NULL
+    };
+    int argc = ARRAY_LEN(argv);
+    int ret = SyncExecCommand(argc, argv);
+    INIT_LOGI("DoSwapon: end, ret = %d", ret);
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "exec ", 1, 10, DoExec },
     { "mknode ", 1, 5, DoMakeNode },
@@ -472,6 +506,8 @@ static const struct CmdTable g_cmdTable[] = {
     { "timer_stop", 1, 1, DoTimerStop },
     { "init_global_key ", 1, 1, DoInitGlobalKey },
     { "init_main_user ", 0, 1, DoInitMainUser },
+    { "mkswap", 1, 1, DoMkswap},
+    { "swapon", 1, 1, DoSwapon},
 };
 
 const struct CmdTable *GetCmdTable(int *number)
