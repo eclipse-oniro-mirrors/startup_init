@@ -45,6 +45,13 @@ static int bootchartCmdStart(BShellHandle shell, int argc, char **argv)
         char *helpArgs[] = {"bootchart", NULL};
         BShellCmdHelp(shell, 1, helpArgs);
     }
+    char enable[4] = {}; // 4 enable size
+    uint32_t size = sizeof(enable);
+    int ret = SystemGetParameter("init.bootchart.enabled", enable, &size);
+    if (ret != 0 || strcmp(enable, "1") != 0) {
+        BShellEnvOutput(shell, "Not bootcharting\r\n");
+        return 0;
+    }
     SystemSetParameter("ohos.servicectrl.bootchart", "start");
     return 0;
 }

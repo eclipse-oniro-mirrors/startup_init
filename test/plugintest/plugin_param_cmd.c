@@ -130,7 +130,7 @@ static int32_t BShellParamCmdDisplay(BShellHandle shell, int32_t argc, char *arg
 
 void ServiceStatusChangeTest(const char *key, ServiceStatus status)
 {
-    PLUGIN_LOGI("ServiceStatusChangeTest %s status: %d", key, status);
+    PLUGIN_LOGI("group-test-stage3: wait service %s status: %d", key, status);
     if (status == SERVICE_READY || status == SERVICE_STARTED) {
         PLUGIN_LOGI("Service %s start work", key);
     }
@@ -141,6 +141,7 @@ static int32_t BShellParamCmdGroupTest(BShellHandle shell, int32_t argc, char *a
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGI("BShellParamCmdGroupTest %s stage: %s", argv[0], argv[1]);
     if (argc > 2 && strcmp(argv[1], "wait") == 0) { // 2 service name index
+        PLUGIN_LOGI("group-test-stage3: wait service %s", argv[2]); // 2 service name index
         ServiceWatchForStatus(argv[2], ServiceStatusChangeTest); // 2 service name index
         LE_RunLoop(LE_GetDefaultLoop());
     }
