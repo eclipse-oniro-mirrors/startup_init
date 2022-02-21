@@ -39,7 +39,5 @@ ohos_shared_library("libbootchart") {
 }
 
 group("plugin") {
-  deps = [
-    ":libbootchart",
-  ]
+  deps = [ ":libbootchart" ]
 }

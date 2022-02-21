@@ -99,7 +99,7 @@ static void BootchartLogHeader(void)
     (void)fclose(file);
 }
 
-static void bootchartLogFile(FILE *log, const char *procfile)
+static void BootchartLogFile(FILE *log, const char *procfile)
 {
     (void)fprintf(log, "%lld\n", GetJiffies());
     char *data = ReadFileToBuffer(procfile, g_bootchartCtrl->buffer, g_bootchartCtrl->bufferSize);
@@ -108,7 +108,7 @@ static void bootchartLogFile(FILE *log, const char *procfile)
     }
 }
 
-static void bootchartLogProcessStat(FILE *log, pid_t pid)
+static void BootchartLogProcessStat(FILE *log, pid_t pid)
 {
     static char path[255] = { }; // 255 path length
     static char nameBuffer[255] = { }; // 255 path length
@@ -158,7 +158,7 @@ static void bootchartLogProcess(FILE *log)
         if (pid == 0) {
             continue;
         }
-        bootchartLogProcessStat(log, pid);
+        BootchartLogProcessStat(log, pid);
     }
     closedir(pDir);
     (void)fputc('\n', log);
@@ -192,8 +192,8 @@ static void *BootchartThreadMain(void *data)
             }
             pthread_mutex_unlock(&(g_bootchartCtrl->mutex));
             PLUGIN_LOGI("bootcharting running");
-            bootchartLogFile(statFile, "/proc/stat");
-            bootchartLogFile(diskFile, "/proc/diskstats");
+            BootchartLogFile(statFile, "/proc/stat");
+            BootchartLogFile(diskFile, "/proc/diskstats");
             bootchartLogProcess(procFile);
         }
     } while (0);
