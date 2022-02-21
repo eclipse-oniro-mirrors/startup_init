@@ -345,8 +345,6 @@ static void BShellEnvProcessInput(BShellHandle handle, char data)
 {
     BSH_CHECK(handle != NULL, return, "Invalid shell env");
     BShellEnv *shell = (BShellEnv *)handle;
-    BSH_LOGV("BShellEnvProcessInput %s shellState %d, input 0x%x",
-        shell->prompt, shell->shellState, data);
     if (shell->shellState == BSH_IN_NORMAL) {
         BShellKey *key = BShellEnvGetKey(handle, data);
         if (key != NULL) {
@@ -547,7 +545,6 @@ int32_t BShellEnvRegitsterCmd(BShellHandle handle, CmdInfo *cmdInfo)
     }
     cmd->next = shell->command;
     shell->command = cmd;
-    BSH_LOGV("BShellEnvRegitsterCmd cmd %s multikey %s", cmd->name, cmd->multikey);
     return 0;
 }
 

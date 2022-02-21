@@ -16,6 +16,7 @@ import("//build/ohos.gni")
 ohos_executable("begetctl") {
   sources = [
     "init_cmd_reboot.c",
+    "bootchart_cmd.c",
     "main.c",
     "misc_daemon.cpp",
     "param_cmd.c",
@@ -30,6 +31,7 @@ ohos_executable("begetctl") {
   }
 
   include_dirs = [
+    ".",
     "shell",
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/log",
@@ -37,6 +39,7 @@ ohos_executable("begetctl") {
     "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
     "//base/startup/init_lite/services/include/param/",
     "//base/startup/init_lite/services/param/include",
+    "//base/startup/init_lite/services/loopevent/include",
     "//third_party/bounds_checking_function/include",
   ]
   deps = [
@@ -45,6 +48,19 @@ ohos_executable("begetctl") {
     "//base/startup/init_lite/services/param:param_client",
     "//third_party/bounds_checking_function:libsec_static",
   ]
+
+  if (param_test) {
+    sources += [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
+    deps += [
+      "//base/startup/init_lite/services/param/watcher:param_watcheragent",
+      "//base/startup/init_lite/services/loopevent:loopevent",
+      "//base/startup/init_lite/interfaces/innerkits:libservice_watcher",
+    ]
+    defines += [
+      "OHOS_SERVICE_DUMP",
+      "INIT_TEST",
+    ]
+  }
 
   symlink_target_name = [
     "misc_daemon",
@@ -81,6 +97,7 @@ ohos_executable("paramshell") {
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
     "//base/startup/init_lite/services/include/param/",
+    "//base/startup/init_lite/services/loopevent/include",
     "//base/startup/init_lite/services/param/include",
     "//third_party/bounds_checking_function/include",
   ]
@@ -94,7 +111,12 @@ ohos_executable("paramshell") {
     sources += [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
     deps += [
       "//base/startup/init_lite/services/param/watcher:param_watcheragent",
-      "//base/startup/init_lite/test/plugintest:pluginparamtest",
+      "//base/startup/init_lite/services/loopevent:loopevent",
+      "//base/startup/init_lite/interfaces/innerkits:libservice_watcher",
+    ]
+    defines += [
+      "OHOS_SERVICE_DUMP",
+      "INIT_TEST",
     ]
   }
 

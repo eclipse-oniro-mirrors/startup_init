@@ -27,6 +27,7 @@ extern "C" {
 #endif
 
 #define DEFAULT_PLUGIN_PATH "/system/lib/plugin"
+#define DEFAULT_PLUGIN_CFG "/system/etc/plugin_modules.cfg"
 typedef enum {
     PLUGIN_STATE_IDLE,
     PLUGIN_STATE_INIT,
@@ -36,9 +37,11 @@ typedef enum {
 
 typedef struct PluginInfo_ {
     int state;
+    int startMode;
     int (*pluginInit)();
     void (*pluginExit)();
     char *name;
+    char *libName;
 } PluginInfo;
 
 typedef struct {
@@ -47,7 +50,7 @@ typedef struct {
     char *name;
 } PluginCmd;
 
-typedef void (*CmdExecutor)(int id, const char *name, int argc, const char **argv);
+typedef int (*CmdExecutor)(int id, const char *name, int argc, const char **argv);
 typedef struct {
     ListNode node;
     int id;
@@ -56,10 +59,11 @@ typedef struct {
 
 void PluginExecCmdByName(const char *name, const char *cmdContent);
 void PluginExecCmdByCmdIndex(int index, const char *cmdContent);
+int PluginExecCmd(const char *name, int argc, const char **argv);
 const char *PluginGetCmdIndex(const char *cmdStr, int *index);
 
 int PluginUninstall(const char *name);
-int PluginInstall(const char *name);
+int PluginInstall(const char *name, const char *libName);
 void PluginManagerInit(void);
 
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);

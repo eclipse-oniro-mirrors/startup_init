@@ -17,18 +17,19 @@
 #include <time.h>
 
 #include "plugin_test.h"
+#include "init_param.h"
 #include "init_plugin.h"
 
 #define MAX_COUNT 1000
 #define TEST_CMD_NAME "param_randrom_write"
 static PluginInterface *g_pluginInterface = NULL;
 static int g_testCmdIndex = 0;
-static void PluginParamCmdWriteParam(int id, const char *name, int argc, const char **argv)
+static int PluginParamCmdWriteParam(int id, const char *name, int argc, const char **argv)
 {
     PLUGIN_LOGI("PluginParamCmdWriteParam %d %s", id, name);
-    PLUGIN_CHECK(argv != NULL && argc >= 1, return, "Invalid install parameter");
+    PLUGIN_CHECK(argv != NULL && argc >= 1, return -1, "Invalid install parameter");
     PLUGIN_CHECK(g_pluginInterface != NULL && g_pluginInterface->systemWriteParam != NULL,
-        return, "Invalid install parameter");
+        return -1, "Invalid install parameter");
     PLUGIN_LOGI("PluginParamCmdWriteParam argc %d %s", argc, argv[0]);
     int maxCount = MAX_COUNT;
     if (argc > 1) {
@@ -46,6 +47,7 @@ static void PluginParamCmdWriteParam(int id, const char *name, int argc, const c
         }
         count++;
     }
+    return 0;
 }
 
 static int PluginParamTestInit(void)

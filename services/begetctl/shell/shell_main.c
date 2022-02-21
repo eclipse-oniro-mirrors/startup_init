@@ -68,8 +68,6 @@ int main(int argc, char *args[])
     if (tcgetattr(0, &tio)) {
         return -1;
     }
-    setuid(2000); // 2000 shell group
-    setgid(2000); // 2000 shell group
     tio.c_lflag &= ~(ECHO | ICANON | ISIG);
     tio.c_cc[VTIME] = 0;
     tio.c_cc[VMIN] = 1;
@@ -92,6 +90,9 @@ int main(int argc, char *args[])
             }
         }
         BShellParamCmdRegister(g_handle, 1);
+#ifdef INIT_TEST
+        BShellCmdRegister(g_handle, 1);
+#endif
         BShellEnvStart(g_handle);
         BShellEnvLoop(g_handle);
     } while (0);

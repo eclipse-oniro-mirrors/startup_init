@@ -21,6 +21,7 @@
 #include "fs_manager/fs_manager.h"
 #include "init_log.h"
 #include "init_jobs_internal.h"
+#include "init_group_manager.h"
 #include "init_service.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
@@ -65,7 +66,7 @@ static int RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdate
 static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage *boot)
 {
     char *realPath = GetRealPath(path);
-    INIT_CHECK_RETURN_VALUE(realPath != NULL, -1);
+    INIT_ERROR_CHECK(realPath != NULL, return -1, "Failed to get realpath %s", path);
     int ret = 0;
     FILE *fp = fopen(realPath, "rb");
     free(realPath);
@@ -80,6 +81,20 @@ static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage
     }
 
     return ret;
+}
+
+int GetBootModeFromMisc()
+{
+    char miscFile[PATH_MAX] = {0};
+    int ret = GetBlockDevicePath("/misc", miscFile, PATH_MAX);
+    INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get misc path");
+    struct RBMiscUpdateMessage msg;
+    ret = RBMiscReadUpdaterMessage(miscFile, &msg);
+    INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get misc info");
+    if (memcmp(msg.command, "boot_charing", strlen("boot_charing")) == 0) {
+        return GROUP_CHARING;
+    }
+    return 0;
 }
 
 static int CheckAndRebootToUpdater(const char *valueData, const char *cmd,
@@ -190,6 +205,15 @@ int DoFreezeCmd(const char *cmd, const char *opt)
 #endif
 }
 
+#ifdef INIT_TEST
+int DoCharingCmd()
+{
+    // by job to stop service and unmount
+    DoJobNow("reboot");
+    return CheckAndRebootToUpdater(NULL, "charing", "charing:", "boot_charing");
+}
+#endif
+
 struct {
     char *cmdName;
     int (*doCmd)(const char *cmd, const char *opt);
@@ -204,6 +228,9 @@ struct {
 #endif
     { "suspend", DoSuspendCmd },
     { "freeze", DoFreezeCmd },
+#ifdef INIT_TEST
+    { "charing", DoCharingCmd }
+#endif
 };
 
 void ExecReboot(const char *value)

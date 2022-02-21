@@ -30,6 +30,9 @@ static int main_cmd(BShellHandle shell, int argc, char* argv[])
     if (argc == REBOOT_CMD_NUMBER && strcmp(argv[1], "shutdown") != 0 &&
         strcmp(argv[1], "updater") != 0 &&
         strcmp(argv[1], "flashd") != 0 &&
+#ifdef INIT_TEST
+        strcmp(argv[1], "charing") != 0 &&
+#endif
 #ifdef PRODUCT_RK
         strcmp(argv[1], "loader") != 0 &&
 #endif
@@ -64,6 +67,9 @@ MODULE_CONSTRUCTOR(void)
         {"reboot", main_cmd, "reboot and boot into updater", "reboot updater[:options]", ""},
         {"reboot", main_cmd, "reboot and boot into flashd", "reboot flashd", ""},
         {"reboot", main_cmd, "reboot and boot into flashd", "reboot flashd[:options]", ""},
+#ifdef INIT_TEST
+        {"reboot", main_cmd, "reboot and boot into charing", "reboot charing", ""},
+#endif
 #ifdef PRODUCT_RK
         {"reboot", main_cmd, "reboot loader", "reboot loader", ""}
 #endif

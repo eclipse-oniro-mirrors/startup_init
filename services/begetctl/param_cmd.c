@@ -387,6 +387,8 @@ static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[
     g_isSetTerminal = 1;
     pid_t pid = fork();
     if (pid == 0) {
+        setuid(2000); // 2000 shell group
+        setgid(2000); // 2000 shell group
         if (argc >= 2) { // 2 min argc
             char *args[] = {SHELL_NAME, argv[1], NULL};
             ret = execv(CMD_PATH, args);

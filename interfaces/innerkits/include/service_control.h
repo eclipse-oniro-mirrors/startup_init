@@ -29,8 +29,8 @@ extern "C" {
 typedef enum {
     SERVICE_IDLE = 0, // service add
     SERVICE_STARTING, // service start
-    SERVICE_STARTED,
-    SERVICE_READY,
+    SERVICE_STARTED, // service ok
+    SERVICE_READY, // service ok
     SERVICE_STOPPING,
     SERVICE_STOPPED,
     SERVICE_ERROR,

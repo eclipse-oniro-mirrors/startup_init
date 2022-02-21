@@ -112,7 +112,7 @@ void OpenLogDevice(void);
 #endif
 #endif
 
-#define BEGET_LOG_FILE "beget.log"
+#define BEGET_LOG_FILE "begetctrl.log"
 #define BEGET_LABEL "BEGET"
 #define BEGET_LOGI(fmt, ...) STARTUP_LOGI(BEGET_LOG_FILE, BEGET_LABEL, fmt, ##__VA_ARGS__)
 #define BEGET_LOGE(fmt, ...) STARTUP_LOGE(BEGET_LOG_FILE, BEGET_LABEL, fmt, ##__VA_ARGS__)

@@ -29,10 +29,11 @@ extern "C" {
 typedef struct {
     int (*pluginRegister)(const char *name, const char *config, int (*pluginInit)(void), void (*pluginExit)(void));
     int (*addCmdExecutor)(const char *cmdName,
-        void (*CmdExecutor)(int id, const char *name, int argc, const char **argv));
+        int (*CmdExecutor)(int id, const char *name, int argc, const char **argv));
     void (*removeCmdExecutor)(const char *cmdName, int id);
     int (*systemWriteParam)(const char *name, const char *value);
     int (*systemReadParam)(const char *name, char *value, unsigned int *len);
+    int (*securityLabelSet)(const char *name, const char *label, const char *paraType);
 } PluginInterface;
 
 PluginInterface *GetPluginInterface(void);

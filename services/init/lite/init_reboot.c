@@ -28,3 +28,8 @@ void ExecReboot(const char *value)
     }
     return;
 }
+
+int GetBootModeFromMisc()
+{
+    return 0;
+}
