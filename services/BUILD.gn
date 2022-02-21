@@ -312,10 +312,10 @@ if (defined(ohos_lite)) {
       ":ohos.para",
       ":ohos.para.dac",
       ":passwd",
+      ":plugin_modules",
       ":syscap.json",
       ":syscap.para",
       ":systemcapability.json",
-      ":plugin_modules"
     ]
   }
 }
