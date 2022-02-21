@@ -33,12 +33,12 @@
 static BootchartCtrl *g_bootchartCtrl = NULL;
 static PluginInterface *g_pluginInterface = NULL;
 
-static uint64_t GetJiffies(void)
+static int64_t GetJiffies(void)
 {
     struct timespec time1 = {0};
     clock_gettime(CLOCK_MONOTONIC, &time1);
-    uint64_t jiffies1 = (uint64_t)time1.tv_nsec / NANO_PRE_JIFFY;
-    uint64_t jiffies2 = (uint64_t)time1.tv_sec * (1000000000 / NANO_PRE_JIFFY); // 1000000000 to nsec
+    int64_t jiffies1 = (int64_t)time1.tv_nsec / NANO_PRE_JIFFY;
+    int64_t jiffies2 = (int64_t)time1.tv_sec * (1000000000 / NANO_PRE_JIFFY); // 1000000000 to nsec
     return jiffies1 + jiffies2;
 }
 
