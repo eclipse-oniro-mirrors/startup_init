@@ -140,8 +140,8 @@ static int32_t BShellParamCmdGroupTest(BShellHandle shell, int32_t argc, char *a
 {
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGI("BShellParamCmdGroupTest %s stage: %s", argv[0], argv[1]);
-    if (argc > 2 && strcmp(argv[1], "wait") == 0) {
-        ServiceWatchForStatus(argv[2], ServiceStatusChangeTest);
+    if (argc > 2 && strcmp(argv[1], "wait") == 0) { // 2 service name index
+        ServiceWatchForStatus(argv[2], ServiceStatusChangeTest); // 2 service name index
         LE_RunLoop(LE_GetDefaultLoop());
     }
     return 0;
