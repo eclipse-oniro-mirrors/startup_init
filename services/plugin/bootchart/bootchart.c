@@ -191,7 +191,7 @@ static void *BootchartThreadMain(void *data)
                 break;
             }
             pthread_mutex_unlock(&(g_bootchartCtrl->mutex));
-            PLUGIN_LOGI("bootcharting running");
+            PLUGIN_LOGV("bootcharting running");
             BootchartLogFile(statFile, "/proc/stat");
             BootchartLogFile(diskFile, "/proc/diskstats");
             bootchartLogProcess(procFile);
