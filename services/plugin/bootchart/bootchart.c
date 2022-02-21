@@ -112,13 +112,12 @@ static void BootchartLogProcessStat(FILE *log, pid_t pid)
 {
     static char path[255] = { }; // 255 path length
     static char nameBuffer[255] = { }; // 255 path length
-    // /proc/<pid>/stat only has truncated task names, so get the full name from /proc/<pid>/cmdline.
     int ret = sprintf_s(path, sizeof(path) - 1, "/proc/%d/cmdline", pid);
     PLUGIN_CHECK(ret > 0, return, "Failed to format path %d", pid);
     path[ret] = '\0';
 
     char *name = ReadFileToBuffer(path, nameBuffer, sizeof(nameBuffer));
-    // Read process stat line.
+    // Read process stat line
     ret = sprintf_s(path, sizeof(path) - 1, "/proc/%d/stat", pid);
     PLUGIN_CHECK(ret > 0, return, "Failed to format path %d", pid);
     path[ret] = '\0';
@@ -128,7 +127,6 @@ static void BootchartLogProcessStat(FILE *log, pid_t pid)
         return;
     }
     if (name != NULL && strlen(name) > 0) {
-        // Substitute the process name with its real name.
         char *end = NULL;
         char *start = strstr(stat, "(");
         if (start != NULL) {
@@ -154,7 +152,7 @@ static void bootchartLogProcess(FILE *log)
     PLUGIN_CHECK(pDir != NULL, return, "Read dir /proc failed.%d", errno);
     struct dirent *entry;
     while ((entry = readdir(pDir)) != NULL) {
-        pid_t pid = (pid_t)atoi(entry->d_name); // // Only process processor
+        pid_t pid = (pid_t)atoi(entry->d_name); // Only process processor
         if (pid == 0) {
             continue;
         }
@@ -228,7 +226,6 @@ static int DoBootchartStart(void)
         PLUGIN_LOGI("Invalid bootchart plugin");
         return -1;
     }
-    // We don't care about the content, but we do care that /data/bootchart/enabled actually exists.
     char enable[4] = {}; // 4 enable size
     uint32_t size = sizeof(enable);
     if (g_pluginInterface->systemReadParam != NULL) {
