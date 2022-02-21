@@ -35,10 +35,11 @@ public:
 };
 
 int g_cmdExecId = 0;
-void TestCmdExecutor(int id, const char *name, int argc, const char **argv)
+int TestCmdExecutor(int id, const char *name, int argc, const char **argv)
 {
     printf("TestCmdExecutor id %d, name %s \n", id, name);
     g_cmdExecId = id;
+    return 0;
 }
 
 HWTEST_F(PluginUnitTest, PluginAddCmd, TestSize.Level1)
@@ -100,7 +101,7 @@ HWTEST_F(PluginUnitTest, PluginInstallTest, TestSize.Level1)
     pluginInterface->pluginRegister(moduleName,
         "/home/axw/init_ut/etc/init/plugin_param_test.cfg",
         PluginTestInit, PluginTestExit);
-    PluginInstall(moduleName);
+    PluginInstall(moduleName, NULL);
     PluginUninstall(moduleName);
 }
 }  // namespace init_ut

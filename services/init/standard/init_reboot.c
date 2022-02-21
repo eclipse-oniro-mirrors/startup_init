@@ -81,9 +81,8 @@ static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage
         INIT_ERROR_CHECK(readLen > 0, ret = -1, "Failed to read misc for reboot");
     } else {
         ret = -1;
-        INIT_LOGE("Failed to open %s", path);
+        INIT_LOGE("Failed to open %s errno %d", path, errno);
     }
-
     return ret;
 }
 
