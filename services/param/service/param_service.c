@@ -613,14 +613,14 @@ static int LoadParamFromCmdLine(void)
         return -1, "Failed to read file %s", PARAM_CMD_LINE);
 
     for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
-    #ifdef BOOT_EXTENDED_CMDLINE
+#ifdef BOOT_EXTENDED_CMDLINE
         ret = GetParamValueFromBuffer(cmdLines[i], BOOT_EXTENDED_CMDLINE, value, PARAM_CONST_VALUE_LEN_MAX);
         if (ret != 0) {
             ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
         }
-    #else
+#else
         ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
-    #endif
+#endif
         if (ret == 0) {
             PARAM_LOGV("Add param from cmdline %s %s", cmdLines[i], value);
             ret = CheckParamName(cmdLines[i], 0);
