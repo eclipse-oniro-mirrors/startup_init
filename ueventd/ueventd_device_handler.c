@@ -34,6 +34,9 @@
 #include "securec.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
+#ifdef WITH_SELINUX
+#include <policycoreutils.h>
+#endif
 
 static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
 {
@@ -77,6 +80,21 @@ static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid
     if (chmod(deviceNode, mode) != 0) {
         INIT_LOGW("Failed to change \" %s \" mode", deviceNode);
     }
+}
+
+static void SetDeviceLable(const char *dir, const char *path)
+{
+#ifdef WITH_SELINUX
+    int rc = 0;
+    if (!STRINGEQUAL(dir, "/dev")) {
+        rc = RestoreconRecurse(dir);
+    }
+
+    rc += Restorecon(path);
+    if (rc != 0) {
+        INIT_LOGI("restorecon device node[%s] failed. %d", path, errno);
+    }
+#endif
 }
 
 static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode, char **symLinks, bool isBlock)
@@ -126,6 +144,7 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
     if (symLinks != NULL) {
         CreateSymbolLinks(deviceNode, symLinks);
     }
+    SetDeviceLable(devicePath, deviceNode);
     // No matter what result the symbol links returns,
     // as long as create device node done, just returns success.
     rc = 0;

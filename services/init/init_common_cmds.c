@@ -36,6 +36,9 @@
 #include "init_plugin_manager.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
+#ifdef WITH_SELINUX
+#include "policycoreutils.h"
+#endif
 #include "securec.h"
 
 static char *g_fileCryptOptions = NULL;
@@ -321,6 +324,13 @@ static void DoMkDir(const struct CmdArgs *ctx)
         INIT_LOGE("DoMkDir, failed for '%s', err %d.", ctx->argv[0], errno);
         return;
     }
+
+#ifdef WITH_SELINUX
+    if (RestoreconRecurse(ctx->argv[0])) {
+        INIT_LOGE("DoMkDir, Restorecon failed for '%s', err %d.", ctx->argv[0], errno);
+    }
+#endif
+
     if (ctx->argc <= 1) {
         return;
     }
