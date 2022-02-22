@@ -254,12 +254,13 @@ static void BootStateChange(const char *content)
 }
 
 #if defined(OHOS_SERVICE_DUMP)
-static void SystemDump(int id, const char *name, int argc, const char **argv)
+static int SystemDump(int id, const char *name, int argc, const char **argv)
 {
-    INIT_ERROR_CHECK(argv != NULL && argc >= 1, return, "Invalid install parameter");
+    INIT_ERROR_CHECK(argv != NULL && argc >= 1, return 0, "Invalid install parameter");
     INIT_LOGI("Dump system info %s", argv[0]);
     DumpAllServices();
     DumpParametersAndTriggers();
+    return 0;
 }
 #endif
 

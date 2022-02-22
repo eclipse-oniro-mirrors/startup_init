@@ -34,7 +34,6 @@ int main(int argc, char * const argv[])
     } else {
         LogInit();
     }
-    LogInit();
     SystemInit();
     SystemExecuteRcs();
     SystemConfig();

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef PLUGIN_TEST_
-#define PLUGIN_TEST_
+#ifndef PLUGIN_ADAPTER_
+#define PLUGIN_ADAPTER_
 #include <memory.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -22,20 +22,26 @@
 #include "init_log.h"
 #include "securec.h"
 
+typedef struct {
+    char *name;
+    int (*cmdExecutor)(int id, const char *name, int argc, const char **argv);
+    int index;
+} PluginCmd;
+
 #define READ_DURATION 100000
-#define PLUGIN_LOG_FILE "begetctrl.log"
+#define PLUGIN_LOG_FILE "plugintest.log"
 #define PLUGIN_LABEL "PLUGIN"
 #define PLUGIN_LOGI(fmt, ...) STARTUP_LOGI(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
 #define PLUGIN_LOGE(fmt, ...) STARTUP_LOGE(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
 #define PLUGIN_LOGV(fmt, ...) STARTUP_LOGV(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
 
-#define PLUGIN_CHECK(ret, exper, ...)          \
-    if (!(ret)) {                              \
-        PLUGIN_LOGE(__VA_ARGS__);              \
-        exper;                                 \
+#define PLUGIN_CHECK(ret, exper, ...) \
+    if (!(ret)) { \
+        PLUGIN_LOGE(__VA_ARGS__); \
+        exper; \
     }
-#define PLUGIN_ONLY_CHECK(ret, exper, ...)     \
-    if (!(ret)) {                              \
-        exper;                                 \
+#define PLUGIN_ONLY_CHECK(ret, exper, ...) \
+    if (!(ret)) { \
+        exper; \
     }
 #endif

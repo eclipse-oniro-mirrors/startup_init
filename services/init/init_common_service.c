@@ -239,6 +239,9 @@ static int BindCpuCore(Service *service)
     if (service == NULL) {
         return SERVICE_SUCCESS;
     }
+    if (CPU_COUNT(&service->cpuSet) == 0) {
+        return SERVICE_SUCCESS;
+    }
 #ifndef __LITEOS__
     int pid = getpid();
     if (sched_setaffinity(pid, sizeof(service->cpuSet), &service->cpuSet) != 0) {

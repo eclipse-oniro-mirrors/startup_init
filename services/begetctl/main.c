@@ -66,6 +66,9 @@ int main(int argc, char *argv[])
     }
     SetInitLogLevel(0);
     BShellParamCmdRegister(g_handle, 0);
+#ifdef INIT_TEST
+    BShellCmdRegister(g_handle, 0);
+#endif
     BShellEnvDirectExecute(g_handle, number, args);
     demoExit();
     return 0;

@@ -296,6 +296,11 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
+  ohos_prebuilt_etc("plugin_modules") {
+    source = "//base/startup/init_lite/services/etc/plugin_modules.cfg"
+    part_name = "init"
+  }
+
   group("init_etc") {
     deps = [
       ":boot.group",
@@ -307,6 +312,7 @@ if (defined(ohos_lite)) {
       ":ohos.para",
       ":ohos.para.dac",
       ":passwd",
+      ":plugin_modules",
       ":syscap.json",
       ":syscap.para",
       ":systemcapability.json",

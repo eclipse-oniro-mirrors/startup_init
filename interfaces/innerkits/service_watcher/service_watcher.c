@@ -31,7 +31,7 @@ static void ServiceStateChange(const char *key, const char *value, void *context
     const InitArgInfo *statusMap = GetServieStatusMap(&size);
     ServiceStatus status = (ServiceStatus)GetMapValue(value, statusMap, size, SERVICE_IDLE);
     if (strlen(key) > strlen(STARTUP_SERVICE_CTL)) {
-        callback(key + strlen(STARTUP_SERVICE_CTL), status);
+        callback(key + strlen(STARTUP_SERVICE_CTL) + 1, status);
     } else {
         BEGET_LOGE("Invalid service name %s %s", key, value);
     }

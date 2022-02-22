@@ -20,7 +20,9 @@
 #include <sys/wait.h>
 
 #include "begetctl.h"
+#include "loop_event.h"
 #include "plugin_test.h"
+#include "service_watcher.h"
 #include "shell_utils.h"
 #include "sys_param.h"
 
@@ -118,15 +120,55 @@ static int32_t BShellParamCmdInstall(BShellHandle shell, int32_t argc, char *arg
     return 0;
 }
 
-MODULE_CONSTRUCTOR(void)
+static int32_t BShellParamCmdDisplay(BShellHandle shell, int32_t argc, char *argv[])
 {
-    CmdInfo infos[] = {
-        {"read", BShellParamCmdRead, "read system parameter", "read [start | stop]", ""},
-        {"watcher", BShellParamCmdWatch, "watcher system parameter", "watcher [name]", ""},
-        {"install", BShellParamCmdInstall, "install plugin", "install [name]", ""},
-        {"uninstall", BShellParamCmdInstall, "uninstall plugin", "uninstall [name]", ""},
-    };
-    for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
-        BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
+    PLUGIN_LOGV("BShellParamCmdDisplay %s %s", argv[0], argv[1]);
+    SystemSetParameter("ohos.servicectrl.display", argv[1]);
+    return 0;
+}
+
+void ServiceStatusChangeTest(const char *key, ServiceStatus status)
+{
+    PLUGIN_LOGI("group-test-stage3: wait service %s status: %d", key, status);
+    if (status == SERVICE_READY || status == SERVICE_STARTED) {
+        PLUGIN_LOGI("Service %s start work", key);
     }
+}
+
+static int32_t BShellParamCmdGroupTest(BShellHandle shell, int32_t argc, char *argv[])
+{
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
+    PLUGIN_LOGI("BShellParamCmdGroupTest %s stage: %s", argv[0], argv[1]);
+    if (argc > 2 && strcmp(argv[1], "wait") == 0) { // 2 service name index
+        PLUGIN_LOGI("group-test-stage3: wait service %s", argv[2]); // 2 service name index
+        ServiceWatchForStatus(argv[2], ServiceStatusChangeTest); // 2 service name index
+        LE_RunLoop(LE_GetDefaultLoop());
+    }
+    return 0;
+}
+
+int32_t BShellCmdRegister(BShellHandle shell, int execMode)
+{
+    if (execMode == 0) {
+        CmdInfo infos[] = {
+            {"init", BShellParamCmdGroupTest, "init group test", "init group test [stage]", "init group test"},
+        };
+        for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
+            BShellEnvRegitsterCmd(shell, &infos[i]);
+        }
+    } else {
+        CmdInfo infos[] = {
+            {"display", BShellParamCmdDisplay, "display system service", "display service", "display service"},
+            {"read", BShellParamCmdRead, "read system parameter", "read [start | stop]", ""},
+            {"watcher", BShellParamCmdWatch, "watcher system parameter", "watcher [name]", ""},
+            {"install", BShellParamCmdInstall, "install plugin", "install [name]", ""},
+            {"uninstall", BShellParamCmdInstall, "uninstall plugin", "uninstall [name]", ""},
+            {"group", BShellParamCmdGroupTest, "group test", "group test [stage]", "group test"},
+        };
+        for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
+            BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);
+        }
+    }
+    return 0;
 }

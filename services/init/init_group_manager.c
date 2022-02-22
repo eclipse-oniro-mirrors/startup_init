@@ -187,7 +187,15 @@ void InitServiceSpace(void)
             g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr));
         if (ret != 0) {
             INIT_LOGE("%s", "Failed to get boot group");
+#ifdef INIT_TEST
+            if (GetBootModeFromMisc() == GROUP_CHARING) {
+                strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), "device.charing.group");
+            } else {
+                strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), BOOT_GROUP_DEFAULT);
+            }
+#else
             strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), BOOT_GROUP_DEFAULT);
+#endif
         }
         free(data);
     }

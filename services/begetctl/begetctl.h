@@ -39,6 +39,7 @@ void demoExit(void);
 
 int SetParamShellPrompt(BShellHandle shell, const char *param);
 int32_t BShellParamCmdRegister(BShellHandle shell, int execMode);
+int32_t BShellCmdRegister(BShellHandle shell, int execMode);
 
 #ifdef __cplusplus
 #if __cplusplus
