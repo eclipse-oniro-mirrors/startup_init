@@ -99,6 +99,12 @@ if (defined(ohos_lite)) {
     include_dirs = service_ueventd_include
     deps = service_ueventd_deps
     defines = [ "__RAMDISK__" ]
+    cflags = []
+
+    if (build_selinux) {
+      external_deps = [ "selinux:librestorecon" ]
+      cflags += [ "-DWITH_SELINUX" ]
+    }
   }
 
   ohos_executable("ueventd") {
@@ -114,6 +120,13 @@ if (defined(ohos_lite)) {
     ]
     deps = service_ueventd_deps
     deps += [ "//base/startup/init_lite/services/param:param_client" ]
+    cflags = []
+
+    if (build_selinux) {
+      external_deps = [ "selinux:librestorecon" ]
+      cflags += [ "-DWITH_SELINUX" ]
+    }
+
     install_images = [
       "system",
       "updater",

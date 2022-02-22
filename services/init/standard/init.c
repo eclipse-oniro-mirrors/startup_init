@@ -230,13 +230,14 @@ void SystemLoadSelinux(void)
 {
 #ifdef WITH_SELINUX
     // load selinux policy and context
-    if (load_policy() < 0) {
+    if (LoadPolicy() < 0) {
         INIT_LOGE("main, load_policy failed.");
     } else {
         INIT_LOGI("main, load_policy success.");
     }
 
     setcon("u:r:init:s0");
+    (void)RestoreconRecurse("/dev");
 #endif // WITH_SELINUX
 }
 
@@ -272,6 +273,10 @@ void SystemConfig(void)
     InitParamService();
     RegisterBootStateChange(BootStateChange);
 
+    // load SELinux context and policy
+    // Do not move position!
+    SystemLoadSelinux();
+
     // parse parameters
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
@@ -290,8 +295,6 @@ void SystemConfig(void)
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
-    // load SELinux context and policy
-    SystemLoadSelinux();
 }
 
 void SystemRun(void)

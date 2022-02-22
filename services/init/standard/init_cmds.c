@@ -274,9 +274,14 @@ static void DoUmountFstabFile(const struct CmdArgs *ctx)
 static void DoRestorecon(const struct CmdArgs *ctx)
 {
 #ifdef WITH_SELINUX
-    INIT_LOGI("start restorecon ......\n");
-    restorecon();
-    INIT_LOGI("finish restorecon ......\n");
+    if (ctx->argc != 1) {
+        INIT_LOGE("DoRestorecon invalid arguments.");
+        return;
+    }
+
+    if (RestoreconRecurse(ctx->argv[0])) {
+        INIT_LOGE("DoRestorecon failed for '%s', err %d.", ctx->argv[0], errno);
+    }
 #endif
     return;
 }
@@ -498,7 +503,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "ifup ", 1, 1, DoIfup },
     { "mount_fstab ", 1, 1, DoMountFstabFile },
     { "umount_fstab ", 1, 1, DoUmountFstabFile },
-    { "restorecon ", 0, 1, DoRestorecon },
+    { "restorecon ", 1, 1, DoRestorecon },
     { "stopAllServices ", 0, 10, DoStopAllServices },
     { "umount ", 1, 1, DoUmount },
     { "sync ", 0, 1, DoSync },
