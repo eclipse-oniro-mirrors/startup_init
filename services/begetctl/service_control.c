@@ -20,6 +20,7 @@
 
 #include "begetctl.h"
 #include "sys_param.h"
+#include "init_utils.h"
 
 #define SERVICE_START_NUMBER 2
 #define SERVICE_CONTROL_NUMBER 3
@@ -52,7 +53,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
         }
         char *timeBuffer = argv[SERVICE_START_NUMBER];
         errno = 0;
-        uint64_t timeout = strtoull(timeBuffer, NULL, 10);
+        uint64_t timeout = strtoull(timeBuffer, NULL, DECIMAL_BASE);
         if (errno != 0) {
             return -1;
         }

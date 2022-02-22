@@ -321,7 +321,7 @@ static void DoSync(const struct CmdArgs *ctx)
     sync();
 }
 
-static void DoTimerStart(const struct CmdArgs*ctx)
+static void DoTimerStart(const struct CmdArgs *ctx)
 {
     INIT_LOGI("Timer start service with arg = %s", ctx->argv[0]);
     char *arg = ctx->argv[0];
@@ -358,7 +358,7 @@ static void DoTimerStart(const struct CmdArgs*ctx)
     ServiceStartTimer(service, timeout);
 }
 
-static void DoTimerStop(const struct CmdArgs*ctx)
+static void DoTimerStop(const struct CmdArgs *ctx)
 {
     INIT_LOGI("Stop service timer with arg = %s", ctx->argv[0]);
     const char *serviceName = ctx->argv[0];
@@ -370,7 +370,7 @@ static void DoTimerStop(const struct CmdArgs*ctx)
     ServiceStopTimer(service);
 }
 
-static int SyncExecCommand(int argc, char *const *argv)
+static int SyncExecCommand(int argc, char * const *argv)
 {
     if (argc == 0 || argv == NULL || argv[0] == NULL) {
         return -1;
@@ -404,7 +404,7 @@ static void DoInitGlobalKey(const struct CmdArgs *ctx)
         INIT_LOGE("DoInitGlobalKey: not data partitation");
         return;
     }
-    char *const argv[] = {
+    char * const argv[] = {
         "/system/bin/sdc",
         "filecrypt",
         "init_global_key",
@@ -422,7 +422,7 @@ static void DoInitMainUser(const struct CmdArgs *ctx)
         INIT_LOGE("DoInitMainUser: para invalid");
         return;
     }
-    char *const argv[] = {
+    char * const argv[] = {
         "/system/bin/sdc",
         "filecrypt",
         "init_main_user",
