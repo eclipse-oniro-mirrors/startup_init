@@ -21,7 +21,7 @@
 #include "init_log.h"
 #include "init_socket.h"
 
-static void PollUeventdSocket(int ueventSockFd)
+static void PollUeventdSocketTimeout(int ueventSockFd)
 {
     struct pollfd pfd = {};
     pfd.events = POLLIN;
@@ -72,6 +72,6 @@ int main(int argc, char **argv)
         INIT_LOGI("ueventd start to process uevent message");
         ProcessUevent(ueventSockFd, NULL, 0); // Not require boot devices
     }
-    PollUeventdSocket(ueventSockFd);
+    PollUeventdSocketTimeout(ueventSockFd);
     return 0;
 }
