@@ -32,7 +32,8 @@ static void PollUeventdSocketTimeout(int ueventSockFd)
         pfd.revents = 0;
         ret = poll(&pfd, 1, UEVENTD_POLL_TIME);
         if (ret == 0) {
-            break;
+            INIT_LOGI("poll ueventd socket timeout, ueventd exit");
+            return;
         } else if (ret < 0) {
             INIT_LOGE("Failed to poll ueventd socket!");
             return;
