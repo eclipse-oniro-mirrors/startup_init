@@ -21,11 +21,33 @@
 #include "init_log.h"
 #include "init_socket.h"
 
+static void PollUeventdSocketTimeout(int ueventSockFd)
+{
+    struct pollfd pfd = {};
+    pfd.events = POLLIN;
+    pfd.fd = ueventSockFd;
+    int ret = -1;
+
+    while (1) {
+        pfd.revents = 0;
+        ret = poll(&pfd, 1, UEVENTD_POLL_TIME);
+        if (ret == 0) {
+            INIT_LOGI("poll ueventd socket timeout, ueventd exit");
+            return;
+        } else if (ret < 0) {
+            INIT_LOGE("Failed to poll ueventd socket!");
+            return;
+        }
+        if (pfd.revents & POLLIN) {
+            ProcessUevent(ueventSockFd, NULL, 0); // Not require boot devices
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
     char *ueventdConfigs[] = {"/etc/ueventd.config", NULL};
     int i = 0;
-    int ret = -1;
     while (ueventdConfigs[i] != NULL) {
         ParseUeventdConfigFile(ueventdConfigs[i++]);
     }
@@ -41,23 +63,6 @@ int main(int argc, char **argv)
     if (access(UEVENTD_FLAG, F_OK)) {
         INIT_LOGI("ueventd first start to trigger");
         RetriggerUevent(ueventSockFd, NULL, 0); // Not require boot devices
-        struct pollfd pfd = {};
-        pfd.events = POLLIN;
-        pfd.fd = ueventSockFd;
-
-        while (1) {
-            pfd.revents = 0;
-            ret = poll(&pfd, 1, UEVENTD_POLL_TIME);
-            if (ret == 0) {
-                break;
-            } else if (ret < 0) {
-                INIT_LOGE("Failed to poll ueventd socket!");
-                return -1;
-            }
-            if (pfd.revents & POLLIN) {
-                ProcessUevent(ueventSockFd, NULL, 0); // Not require boot devices
-            }
-        }
         int fd = open(UEVENTD_FLAG, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
         if (fd < 0) {
             INIT_LOGE("Failed to create ueventd flag!");
@@ -68,5 +73,6 @@ int main(int argc, char **argv)
         INIT_LOGI("ueventd start to process uevent message");
         ProcessUevent(ueventSockFd, NULL, 0); // Not require boot devices
     }
+    PollUeventdSocketTimeout(ueventSockFd);
     return 0;
 }
