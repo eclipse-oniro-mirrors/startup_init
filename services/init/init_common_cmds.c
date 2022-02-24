@@ -508,8 +508,16 @@ static void DoSetrlimit(const struct CmdArgs *ctx)
     // format: setrlimit resource curValue maxValue
     const int rlimMaxPos = 2;
     struct rlimit limit;
-    limit.rlim_cur = (rlim_t)atoi(ctx->argv[1]);
-    limit.rlim_max = (rlim_t)atoi(ctx->argv[rlimMaxPos]);
+    if (strcmp(ctx->argv[1], "unlimited") == 0) {
+        limit.rlim_cur = RLIM_INFINITY;
+    } else {
+        limit.rlim_cur = (rlim_t)atoi(ctx->argv[1]);
+    }
+    if (strcmp(ctx->argv[rlimMaxPos], "unlimited") == 0) {
+        limit.rlim_max = RLIM_INFINITY;
+    } else {
+        limit.rlim_max = (rlim_t)atoi(ctx->argv[rlimMaxPos]);
+    }
     int rcs = -1;
     for (unsigned int i = 0; i < ARRAY_LENGTH(resource); ++i) {
         if (strcmp(ctx->argv[0], resource[i]) == 0) {
