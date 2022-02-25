@@ -80,7 +80,7 @@ static void StartTiggerExecute_(TriggerNode *trigger, const char *content, uint3
             GetTriggerName(trigger), trigger->flags);
         triggerHead->executeTrigger(trigger, content, size);
         TRIGGER_CLEAR_FLAG(trigger, TRIGGER_FLAGS_QUEUE);
-        if (TRIGGER_TEST_FLAG(trigger, TRIGGER_FLAGS_SUBTRIGGER)) { // boot:xxx=xxx trigger
+        if (TRIGGER_TEST_FLAG(trigger, TRIGGER_FLAGS_SUBTRIGGER)) { // boot && xxx=xxx trigger
             const char *condition = triggerHead->getCondition(trigger);
             CheckTrigger(&g_triggerWorkSpace, TRIGGER_UNKNOW, condition, strlen(condition), ExecuteTiggerImmediately);
         }

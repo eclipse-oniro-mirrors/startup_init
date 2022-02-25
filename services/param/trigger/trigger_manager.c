@@ -376,6 +376,9 @@ static int CheckParamCondition_(LogicCalculator *calculator,
 static int CheckUnknowCondition_(LogicCalculator *calculator,
     const char *condition, const char *content, uint32_t contentSize)
 {
+    if (condition != NULL && content != NULL && strcmp(content, condition) == 0) {
+        return 1;
+    }
     return ComputeCondition(calculator, condition);
 }
 
