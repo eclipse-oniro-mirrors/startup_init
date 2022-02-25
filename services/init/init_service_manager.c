@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "cJSON.h"
@@ -959,6 +960,11 @@ void StopServiceByName(const char *servName)
 void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size))
 {
+    Service *service = GetServiceByName("appspawn");
+    if (service != NULL && service->pid != 0) {
+        waitpid(service->pid, 0, 0);
+    }
+
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
     while (node != NULL) {
         Service *service = node->data.service;
