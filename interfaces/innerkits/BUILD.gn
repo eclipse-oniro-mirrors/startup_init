@@ -63,29 +63,38 @@ ohos_shared_library("libbegetutil") {
 }
 
 # watcher lib must separate compilation avoid interdependence.
-ohos_shared_library("libservice_watcher") {
-  sources = [ "service_watcher/service_watcher.c" ]
+ohos_shared_library("libbeget_proxy") {
+  sources = [
+    "//base/startup/init_lite/device_info/device_info_kits.cpp",
+    "//base/startup/init_lite/device_info/device_info_proxy.cpp",
+    "service_watcher/service_watcher.c",
+  ]
 
   include_dirs = [
     "./include",
+    "//base/startup/init_lite/device_info",
+    "//utils/native/base/include",
+    "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/include/param",
     "//third_party/bounds_checking_function/include",
   ]
 
   deps = [
+    "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param/watcher:param_watcheragent",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_shared",
+    "//utils/native/base:utils",
   ]
 
-  deps += [ "//base/startup/init_lite/services/log:init_log" ]
-
+  external_deps = [
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr_standard:samgr_proxy",
+  ]
   part_name = "init"
-  install_images = [
-    "system",
-    "updater",
-  ]
+  install_images = [ "system" ]
 }
 
 # For init only

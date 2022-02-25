@@ -52,7 +52,7 @@ ohos_executable("begetctl") {
   if (param_test) {
     sources += [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
     deps += [
-      "//base/startup/init_lite/interfaces/innerkits:libservice_watcher",
+      "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
       "//base/startup/init_lite/services/loopevent:loopevent",
       "//base/startup/init_lite/services/param/watcher:param_watcheragent",
     ]
@@ -110,7 +110,7 @@ ohos_executable("paramshell") {
   if (param_test) {
     sources += [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
     deps += [
-      "//base/startup/init_lite/interfaces/innerkits:libservice_watcher",
+      "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
       "//base/startup/init_lite/services/loopevent:loopevent",
       "//base/startup/init_lite/services/param/watcher:param_watcheragent",
     ]

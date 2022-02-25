@@ -43,11 +43,12 @@
                 "//base/startup/init_lite/services/begetctl:paramshell",
                 "//base/startup/init_lite/services/plugin:plugin",
                 "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-                "//base/startup/init_lite/interfaces/innerkits:libservice_watcher",
+                "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
                 "//base/startup/init_lite/interfaces/innerkits/file:libfile",
                 "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
                 "//base/startup/init_lite/services/loopevent:loopevent",
-                "//base/startup/init_lite/interfaces/innerkits/plugin:libplugin"
+                "//base/startup/init_lite/interfaces/innerkits/plugin:libplugin",
+                "//base/startup/init_lite/device_info:device_info_group"
             ],
             "inner_kits": [
                 {
@@ -72,7 +73,7 @@
                             "service_watcher.h"
                         ]
                     },
-                    "name": "//base/startup/init_lite/interfaces/innerkits:libservice_watcher"
+                    "name": "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy"
                 }
             ],
             "test": [

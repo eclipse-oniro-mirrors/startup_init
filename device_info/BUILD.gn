@@ -1,0 +1,66 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//build/ohos/sa_profile/sa_profile.gni")
+
+ohos_sa_profile("device_info_profile") {
+  sources = [ "etc/3902.xml" ]
+  part_name = "init"
+}
+
+ohos_prebuilt_etc("device_info.cfg") {
+  source = "etc/deviceinfoservice.cfg"
+  relative_install_dir = "init"
+  part_name = "init"
+}
+
+ohos_shared_library("deviceinfoservice") {
+  sources = [ "device_info_stub.cpp" ]
+
+  defines = [
+    "INIT_AGENT",
+    "DINFO_LABEL=\"DeviceInfoService\"",
+  ]
+  include_dirs = [
+    ".",
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/syspara_lite/hals/parameter/include",
+    "//utils/native/base/include",
+    "//utils/system/safwk/native/include",
+  ]
+
+  deps = [
+    "//base/startup/init_lite/services/log:agent_log",
+    "//base/startup/syspara_lite/hals/parameter:sysparam_hal",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//utils/native/base:utils",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "hilog_native:libhilog",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr_standard:samgr_proxy",
+  ]
+  install_images = [ "system" ]
+  part_name = "init"
+}
+
+group("device_info_group") {
+  deps = [
+    ":device_info.cfg",
+    ":device_info_profile",
+    ":deviceinfoservice",
+  ]
+}
