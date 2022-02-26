@@ -33,6 +33,11 @@ bool HasSystemCapability(const char *cap)
     char paramValue[PARAM_VALUE_LEN_MAX] = { 0 };
     unsigned int valueLen = PARAM_VALUE_LEN_MAX;
 
+    if (cap == NULL) {
+        BEGET_LOGE("cap input is null.");
+        return false;
+    }
+
     if (strncmp(SYSCAP_PREFIX_NAME, cap, sizeof(SYSCAP_PREFIX_NAME) - 1) == 0) {
         if (snprintf_s(capName, SYSCAP_MAX_SIZE, SYSCAP_MAX_SIZE - 1, "const.%s", cap) == -1) {
             BEGET_LOGE("Failed snprintf_s err=%d", errno);
