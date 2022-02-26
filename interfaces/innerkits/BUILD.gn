@@ -54,6 +54,8 @@ ohos_shared_library("libbegetutil") {
 
   deps += [ "//base/startup/init_lite/services/log:init_log" ]
 
+  symlink_target_name = [ "libdeviceinfo_ndk.z.so" ]
+
   public_configs = [ ":exported_header_files" ]
   part_name = "init"
   install_images = [
