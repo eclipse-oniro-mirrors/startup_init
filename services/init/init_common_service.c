@@ -80,9 +80,6 @@ static int SetPerms(const Service *service)
         }
     }
 
-    // umask call always succeeds and return the previous mask value which is not needed here
-    (void)umask(DEFAULT_UMASK_INIT);
-
     struct __user_cap_header_struct capHeader;
     capHeader.version = _LINUX_CAPABILITY_VERSION_3;
     capHeader.pid = 0;

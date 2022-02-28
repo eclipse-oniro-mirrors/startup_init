@@ -91,6 +91,8 @@ static int FdHolderSockInit(void)
 void SystemInit(void)
 {
     SignalInit();
+    // umask call always succeeds and return the previous mask value which is not needed here
+    (void)umask(DEFAULT_UMASK_INIT);
     MakeDirRecursive("/dev/unix/socket", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     int sock = FdHolderSockInit();
     if (sock >= 0) {
