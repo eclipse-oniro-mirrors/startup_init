@@ -25,6 +25,7 @@
 #include "service_watcher.h"
 #include "shell_utils.h"
 #include "sys_param.h"
+#include "parameter.h"
 
 #define READ_DURATION 100000
 static char *GetLocalBuffer(uint32_t *buffSize)
@@ -148,6 +149,16 @@ static int32_t BShellParamCmdGroupTest(BShellHandle shell, int32_t argc, char *a
     return 0;
 }
 
+static int32_t BShellParamCmdUdidGet(BShellHandle shell, int32_t argc, char *argv[])
+{
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
+    PLUGIN_LOGI("BShellParamCmdUdidGet ");
+    char localDeviceId[65] = {0}; // 65 udid len
+    AclGetDevUdid(localDeviceId, 65); // 65 udid len
+    BShellEnvOutput(shell, "    udid: %s\r\n", localDeviceId);
+    return 0;
+}
+
 int32_t BShellCmdRegister(BShellHandle shell, int execMode)
 {
     if (execMode == 0) {
@@ -165,6 +176,7 @@ int32_t BShellCmdRegister(BShellHandle shell, int execMode)
             {"install", BShellParamCmdInstall, "install plugin", "install [name]", ""},
             {"uninstall", BShellParamCmdInstall, "uninstall plugin", "uninstall [name]", ""},
             {"group", BShellParamCmdGroupTest, "group test", "group test [stage]", "group test"},
+            {"display", BShellParamCmdUdidGet, "display udid", "display udid", "display udid"},
         };
         for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
             BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);
