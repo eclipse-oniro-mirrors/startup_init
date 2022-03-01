@@ -43,6 +43,7 @@
                 "//base/startup/init_lite/services/begetctl:paramshell",
                 "//base/startup/init_lite/services/plugin:plugin",
                 "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+                "//base/startup/init_lite/interfaces/kits:deviceinfo_ndk",
                 "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
                 "//base/startup/init_lite/interfaces/innerkits/file:libfile",
                 "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",

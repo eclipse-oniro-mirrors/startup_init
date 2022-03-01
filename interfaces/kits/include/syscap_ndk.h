@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef INIT_SYSCAP_API_H
-#define INIT_SYSCAP_API_H
+#ifndef SYSCAP_NDK_H
+#define SYSCAP_NDK_H
 
 #include <stdbool.h>
 
@@ -24,8 +24,7 @@ extern "C" {
 #endif
 #endif
 
-
-bool HasSystemCapability(const char *cap);
+bool canIUse(const char *cap);
 
 #ifdef __cplusplus
 #if __cplusplus
