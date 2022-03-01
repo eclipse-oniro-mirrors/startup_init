@@ -18,17 +18,25 @@ base/startup/init_lite/             # init组件
 └── services
     ├── include                  # init组件头文件目录
     ├── src                      # init组件源文件目录
+    ├── etc                      # init配置文件目录（json格式，镜像烧写后部署于/etc/init.cfg）
     └── test                     # init组件测试用例源文件目录
         └── unittest
+
+device
+└──hihope
+        └──rk3568
+                └──build
+                       └──rootfs  # init配置文件目录（适用于rk3568平台）
+
 vendor
-└──huawei
-        └──camera
-                └──init_configs  # init配置文件目录（json格式，镜像烧写后部署于/etc/init.cfg）
+└──hisilicon
+        └──hispark_taurus_linux
+                       └──init_configs  # init配置文件目录（适用于L1 Linux内核版本）
 ```
 
 ## 约束<a name="section12212842173518"></a>
 
-目前支持小型系统设备（参考内存≥1MB），如Hi3516DV300、Hi3518EV300。
+目前支持小型系统设备（参考内存≥1MB），如Hi3516DV300、Hi3518EV300以及RK3568等
 
 ## 使用说明<a name="section837771600"></a>
 
@@ -44,7 +52,20 @@ init将系统启动分为三个阶段：
 
 除上述jobs数组之外，init.cfg中还有一个services数组，用于存放所有需要由init进程启动的系统关键服务的服务名、可执行文件路径、权限和其他属性信息。
 
-配置文件init.cfg位于代码仓库/vendor/hisilicon/hispark\_aries/init\_configs/目录，部署在/etc/下，采用json格式，文件大小目前限制在100KB以内。
+对于每个service的启动，从init拉起的方式上来区分，大致可分为以下三种策略：
+
+* 通过start命令  
+在job中添加start service的命令，init将会在执行该job的阶段将对应服务拉起
+* 分组并行启动  
+无须显式添加start命令，服务的start-mode属性为非condition配置，init将会为该服务按策略分组并在该分组服务启动时统一拉起
+* 按需启动
+按需启动的服务应当被认为是无须在系统启动过程中被拉起的，而是当需要时，这个当需要时的触发条件可能是被init监听的相关socket有消息上报、samgr收到客户端的请求需要拉起SA服务等情况，按需启动的服务需要配置ondemand属性为true，start-mode属性需要配置为condition
+
+对于每个服务的启动，进程的运行，init提供了以保障系统安全性为目的的沙盒运行环境。每个进程运行时都有不同的环境约束，各个分层之间进程的资源隔离，确保每个进程都在各自的沙盒环境下运行，只访问允许的系统资源。
+
+每个沙盒环境的分为只读资源和可写资源，只读资源由init在初始化时创建好，通过mount bind把只读文件指向全局FS中对应的目录，然后启动相应沙盒进程时通过chroot跳入到沙盒环境运行。对于可写目录，通过对全局/data目录进行划分，由存储服务进行统一管理分配，通过mnt namespace完成可写目录的沙盒化。
+
+init的关键配置文件init.cfg位于代码仓库base/startup/init_lite/service/etc目录，部署在/etc/下，采用json格式，文件大小目前限制在100KB以内。
 
 配置文件格式和内容说明如下所示：
 
@@ -62,32 +83,56 @@ init将系统启动分为三个阶段：
         }, {
             "name" : "init",
             "cmds" : [
-                "start service1",
-                "start service2"
-             ]
+                "copy /testfile /testfile2",
+                "symlink /testfile /testlink",
+                "write /testfile 0",
+                "ifup lo",
+                "hostname testhost",
+                "domainname testdomain"
+            ]
         }, {
-             "name" : "post-init",
-             "cmds" : []
+            "name" : "post-init",
+            "cmds" : [
+                "trigger testjob",
+                "trigger testjob2"
+            ]
+        }, {
+            "name" : "services:service2",
+            "cmds" : [
+                "chmod 0773 /data/service2"
+            ]
         }
     ],
     "services" : [{
             "name" : "service1",
-            "path" : "/bin/process1",
-            "uid" : 1,
-            "gid" : 1,
-            "secon" : "u:r:untrusted_app:s0",
-            "once" : 0,
-            "importance" : 1,
-            "caps" : [0, 1, 2, 5]
-    }, {
+            "path" : ["/system/bin/process1"],
+            "socket" : [{
+                "name" : "process1",
+                "family" : "AF_NETLINK",
+                "type" : "SOCK_DGRAM",
+                "protocol" : "NETLINK_KOBJECT_UEVENT",
+                "permissions" : "0660",
+                "uid" : "system",
+                "gid" : "system",
+                "option" : [
+                    "SOCKET_OPTION_PASSCRED",
+                    "SOCKET_OPTION_RCVBUFFORCE"
+                ]
+            }],
+            "critical" : [ 0, 15, 5],
+            "ondemand" : true,
+            "start-mode" : "condition"
+        }, {
             "name" : "service2",
-            "path" : "/bin/process2",
-            "uid" : 2,
-            "gid" : 2,
-            "secon" : "u:r:untrusted_app:s0",
-            "once" : 1,
-            "importance" : 0,
-            "caps" : []
+            "path" : ["/system/bin/process2"],
+            "start-mode" : "condition",
+            "disabled" : 1,
+            "console" : 1,
+            "uid" : "root",
+            "gid" : ["shell", "log", "readproc"],
+            "jobs" : {
+                "on-start" : "services:service2"
+            }
         }
     ]
 }
@@ -185,6 +230,78 @@ init将系统启动分为三个阶段：
 <td class="cellrowborder" valign="top" width="55.76%" headers="mcps1.2.4.1.3 "><p id="p13986141320510"><a name="p13986141320510"></a><a name="p13986141320510"></a>加载其他cfg文件命令。后面跟着的目标文件大小不得超过50KB，且目前仅支持加载/patch/fstab.cfg，其他文件路径和文件名均不支持。/patch/fstab.cfg文件的每一行都是一条命令，命令类型和格式必须符合本表格描述，命令条数不得超过20条。</p>
 </td>
 </tr>
+<tr id="row96921442712"><td class="cellrowborder" valign="top" width="10.15%" headers="mcps1.2.4.1.1 "><p id="p1693642018"><a name="p1693642018"></a><a name="p1693642018"></a>export</p>
+</td>
+<td class="cellrowborder" valign="top" width="34.089999999999996%" headers="mcps1.2.4.1.2 "><p id="p1969364211116"><a name="p1969364211116"></a><a name="p1969364211116"></a>export key value</p>
+<p id="p1858112368211"><a name="p1858112368211"></a><a name="p1858112368211"></a>如：export TEST /data/test</p>
+</td>
+<td class="cellrowborder" valign="top" width="55.76%" headers="mcps1.2.4.1.3 "><p id="p13986141320510"><a name="p13986141320510"></a><a name="p13986141320510"></a>设置环境变量命令。后面跟两个参数，第一个参数是环境变量名，第二个参数是环境变量值。</p>
+</td>
+</tr>
+<tr id="row96921442712"><td class="cellrowborder" valign="top" width="10.15%" headers="mcps1.2.4.1.1 "><p id="p1693642018"><a name="p1693642018"></a><a name="p1693642018"></a>rm</p>
+</td>
+<td class="cellrowborder" valign="top" width="34.089999999999996%" headers="mcps1.2.4.1.2 "><p id="p1969364211116"><a name="p1969364211116"></a><a name="p1969364211116"></a>rm filename</p>
+<p id="p1858112368211"><a name="p1858112368211"></a><a name="p1858112368211"></a>如：rm /data/testfile</p>
+</td>
+<td class="cellrowborder" valign="top" width="55.76%" headers="mcps1.2.4.1.3 "><p id="p13986141320510"><a name="p13986141320510"></a><a name="p13986141320510"></a>删除文件命令。后面跟一个参数，即文件的绝对路径。</p>
+</td>
+</tr>
+<tr id="row96921442712"><td class="cellrowborder" valign="top" width="10.15%" headers="mcps1.2.4.1.1 "><p id="p1693642018"><a name="p1693642018"></a><a name="p1693642018"></a>rmdir</p>
+</td>
+<td class="cellrowborder" valign="top" width="34.089999999999996%" headers="mcps1.2.4.1.2 "><p id="p1969364211116"><a name="p1969364211116"></a><a name="p1969364211116"></a>rmdir dirname</p>
+<p id="p1858112368211"><a name="p1858112368211"></a><a name="p1858112368211"></a>如：rmdir /data/testdir</p>
+</td>
+<td class="cellrowborder" valign="top" width="55.76%" headers="mcps1.2.4.1.3 "><p id="p13986141320510"><a name="p13986141320510"></a><a name="p13986141320510"></a>删除目录命令。后面跟一个参数，即目录的绝对路径。</p>
+</td>
+</tr>
+<tr id="row96921442712"><td class="cellrowborder" valign="top" width="10.15%" headers="mcps1.2.4.1.1 "><p id="p1693642018"><a name="p1693642018"></a><a name="p1693642018"></a>write</p>
+</td>
+<td class="cellrowborder" valign="top" width="34.089999999999996%" headers="mcps1.2.4.1.2 "><p id="p1969364211116"><a name="p1969364211116"></a><a name="p1969364211116"></a>write filename value</p>
+<p id="p1858112368211"><a name="p1858112368211"></a><a name="p1858112368211"></a>如：write /data/testfile 0</p>
+</td>
+<td class="cellrowborder" valign="top" width="55.76%" headers="mcps1.2.4.1.3 "><p id="p13986141320510"><a name="p13986141320510"></a><a name="p13986141320510"></a>写文件命令。后面跟两个参数，第一个参数是文件的绝对路径，第二个参数是要写入文件的字符串。</p>
+</td>
+</tr>
+<tr id="row96921442712"><td class="cellrowborder" valign="top" width="10.15%" headers="mcps1.2.4.1.1 "><p id="p1693642018"><a name="p1693642018"></a><a name="p1693642018"></a>stop</p>
+</td>
+<td class="cellrowborder" valign="top" width="34.089999999999996%" headers="mcps1.2.4.1.2 "><p id="p1969364211116"><a name="p1969364211116"></a><a name="p1969364211116"></a>stop servicename</p>
+<p id="p1858112368211"><a name="p1858112368211"></a><a name="p1858112368211"></a>如：stop console</p>
+</td>
+<td class="cellrowborder" valign="top" width="55.76%" headers="mcps1.2.4.1.3 "><p id="p13986141320510"><a name="p13986141320510"></a><a name="p13986141320510"></a>关闭服务命令。后面跟一个参数，即要关闭的服务名。</p>
+</td>
+</tr>
+<tr id="row96921442712"><td class="cellrowborder" valign="top" width="10.15%" headers="mcps1.2.4.1.1 "><p id="p1693642018"><a name="p1693642018"></a><a name="p1693642018"></a>copy</p>
+</td>
+<td class="cellrowborder" valign="top" width="34.089999999999996%" headers="mcps1.2.4.1.2 "><p id="p1969364211116"><a name="p1969364211116"></a><a name="p1969364211116"></a>copy oldfile newfile</p>
+<p id="p1858112368211"><a name="p1858112368211"></a><a name="p1858112368211"></a>如：copy /data/old /data/new</p>
+</td>
+<td class="cellrowborder" valign="top" width="55.76%" headers="mcps1.2.4.1.3 "><p id="p13986141320510"><a name="p13986141320510"></a><a name="p13986141320510"></a>拷贝文件命令。后面跟两个参数，第一个参数是原文件绝对路径，第二个参数是新文件绝对路径。</p>
+</td>
+</tr>
+<tr id="row96921442712"><td class="cellrowborder" valign="top" width="10.15%" headers="mcps1.2.4.1.1 "><p id="p1693642018"><a name="p1693642018"></a><a name="p1693642018"></a>reset</p>
+</td>
+<td class="cellrowborder" valign="top" width="34.089999999999996%" headers="mcps1.2.4.1.2 "><p id="p1969364211116"><a name="p1969364211116"></a><a name="p1969364211116"></a>reset servicename</p>
+<p id="p1858112368211"><a name="p1858112368211"></a><a name="p1858112368211"></a>如：reset console</p>
+</td>
+<td class="cellrowborder" valign="top" width="55.76%" headers="mcps1.2.4.1.3 "><p id="p13986141320510"><a name="p13986141320510"></a><a name="p13986141320510"></a>重启服务命令。后面跟一个参数，即要重启的服务名。目前reset命令的策略是，如果一个服务没有启动，则该命令会将其拉起，如果一个服务处于运行状态，则该命令会将其关闭后重启。</p>
+</td>
+</tr>
+<tr id="row96921442712"><td class="cellrowborder" valign="top" width="10.15%" headers="mcps1.2.4.1.1 "><p id="p1693642018"><a name="p1693642018"></a><a name="p1693642018"></a>reboot</p>
+</td>
+<td class="cellrowborder" valign="top" width="34.089999999999996%" headers="mcps1.2.4.1.2 "><p id="p1969364211116"><a name="p1969364211116"></a><a name="p1969364211116"></a>reboot (subsystem)</p>
+<p id="p1858112368211"><a name="p1858112368211"></a><a name="p1858112368211"></a>如：reboot updater</p>
+</td>
+<td class="cellrowborder" valign="top" width="55.76%" headers="mcps1.2.4.1.3 "><p id="p13986141320510"><a name="p13986141320510"></a><a name="p13986141320510"></a>重启系统命令。后面可以跟一个参数，也可以没有参数，当没有参数时执行该命令，将会使设备重启到当前系统，当后面跟参数时，参数应当是子系统的名字，例如,reboot updater，将会重启进入updater子系统。</p>
+</td>
+</tr>
+<tr id="row96921442712"><td class="cellrowborder" valign="top" width="10.15%" headers="mcps1.2.4.1.1 "><p id="p1693642018"><a name="p1693642018"></a><a name="p1693642018"></a>sleep</p>
+</td>
+<td class="cellrowborder" valign="top" width="34.089999999999996%" headers="mcps1.2.4.1.2 "><p id="p1969364211116"><a name="p1969364211116"></a><a name="p1969364211116"></a>sleep time</p>
+<p id="p1858112368211"><a name="p1858112368211"></a><a name="p1858112368211"></a>如：sleep 5</p>
+</td>
+<td class="cellrowborder" valign="top" width="55.76%" headers="mcps1.2.4.1.3 "><p id="p13986141320510"><a name="p13986141320510"></a><a name="p13986141320510"></a>睡眠命令。后面可以跟一个参数，该参数是睡眠时间。</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -232,14 +349,49 @@ init将系统启动分为三个阶段：
 </tr>
 <tr id="row386110321155"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p14861113212156"><a name="p14861113212156"></a><a name="p14861113212156"></a>importance</p>
 </td>
-<td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p166448210816"><a name="p166448210816"></a><a name="p166448210816"></a>当前服务进程是否为关键系统进程：</p>
-<p id="p8572182712811"><a name="p8572182712811"></a><a name="p8572182712811"></a>0：非关键系统进程，当该进程退出时，init不会将系统复位重启；</p>
-<p id="p11861032111516"><a name="p11861032111516"></a><a name="p11861032111516"></a>1：关键系统进程，当该进程退出时，init将系统复位重启。</p>
+<td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p166448210816"><a name="p166448210816"></a><a name="p166448210816"></a>当前服务进程优先级， 取值范围[19, -20]</p>
 </td>
 </tr>
 <tr id="row1689310618179"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p108931367177"><a name="p108931367177"></a><a name="p108931367177"></a>caps</p>
 </td>
 <td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p489313618173"><a name="p489313618173"></a><a name="p489313618173"></a>当前服务所需的capability值，根据安全子系统已支持的capability，评估所需的capability，遵循最小权限原则配置（当前最多可配置100个值）。</p>
+</td>
+</tr>
+<tr id="row1689310618179"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p108931367177"><a name="p108931367177"></a><a name="p108931367177"></a>critical</p>
+</td>
+<td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p489313618173"><a name="p489313618173"></a><a name="p489313618173"></a>critical服务启动失败后， 需要M秒内重新拉起， 拉起失败N次后， 直接重启系统， N默认为4， M默认20。（仅L2以上提供 "critical" : [0, 2, 10]）</p>
+<p id="p103571840105812"><a name="p103571840105812"></a><a name="p103571840105812"></a>0：不使能；</p>
+<p id="p103571840105812"><a name="p103571840105812"></a><a name="p103571840105812"></a>1：使能；</p>
+</td>
+</tr>
+<tr id="row1689310618179"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p108931367177"><a name="p108931367177"></a><a name="p108931367177"></a>cpucores</p>
+</td>
+<td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p489313618173"><a name="p489313618173"></a><a name="p489313618173"></a>服务需要的绑定的cpu核心数， 类型为int型数组</p>
+</td>
+</tr>
+<tr id="row1689310618179"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p108931367177"><a name="p108931367177"></a><a name="p108931367177"></a>d-caps</p>
+</td>
+<td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p489313618173"><a name="p489313618173"></a><a name="p489313618173"></a>分布式能力 (仅L2以上提供)</p>
+</td>
+</tr>
+<tr id="row1689310618179"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p108931367177"><a name="p108931367177"></a><a name="p108931367177"></a>apl</p>
+</td>
+<td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p489313618173"><a name="p489313618173"></a><a name="p489313618173"></a>能力特权级别：system_core, normal, system_basic。 默认system_core (仅L2以上提供)</p>
+</td>
+</tr>
+<tr id="row1689310618179"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p108931367177"><a name="p108931367177"></a><a name="p108931367177"></a>start-mode</p>
+</td>
+<td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p489313618173"><a name="p489313618173"></a><a name="p489313618173"></a>服务的启动模式，具体描述：init服务启动控制(仅L2以上提供)</p>
+</td>
+</tr>
+<tr id="row1689310618179"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p108931367177"><a name="p108931367177"></a><a name="p108931367177"></a>jobs</p>
+</td>
+<td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p489313618173"><a name="p489313618173"></a><a name="p489313618173"></a>当前服务在不同阶段可以执行的job。具体说明可以看：init服务并行控制(仅L2以上提供)</p>
+</td>
+</tr>
+<tr id="row1689310618179"><td class="cellrowborder" valign="top" width="10.37%" headers="mcps1.2.3.1.1 "><p id="p108931367177"><a name="p108931367177"></a><a name="p108931367177"></a>ondemand</p>
+</td>
+<td class="cellrowborder" valign="top" width="89.63%" headers="mcps1.2.3.1.2 "><p id="p489313618173"><a name="p489313618173"></a><a name="p489313618173"></a>按需启动的服务需要配置的属性，配置有该属性的服务不会被start命令拉起，如果该服务同时配置有socket，init将会在解析服务时创建该socket并将其监听，当socket有消息上报时，init拉起对应服务</p>
 </td>
 </tr>
 </tbody>
