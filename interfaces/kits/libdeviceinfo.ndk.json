@@ -1,5 +1,5 @@
 [
     {
-        "name": "HasSystemCapability"
+        "name": "canIUse"
     }
 ]
