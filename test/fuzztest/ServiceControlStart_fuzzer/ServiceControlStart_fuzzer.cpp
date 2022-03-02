@@ -20,7 +20,7 @@ namespace OHOS {
     bool FuzzServiceControlStart(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (!ServiceControl(reinterpret_cast<const char*>(data)), START) {
+        if (!ServiceControl(reinterpret_cast<const char*>(data), START)) {
             result = true;
         }
         return result;

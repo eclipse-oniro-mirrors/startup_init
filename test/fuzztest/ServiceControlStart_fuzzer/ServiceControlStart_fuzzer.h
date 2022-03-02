@@ -15,5 +15,6 @@
 
 #ifndef TEST_FUZZTEST_STARTDYNAMICPROCESS_FUZZER_H
 #define TEST_FUZZTEST_STARTDYNAMICPROCESS_FUZZER_H
+#include "fuzz_utils.h"
 #define FUZZ_PROJECT_NAME "ServiceControlStart_fuzzer"
 #endif

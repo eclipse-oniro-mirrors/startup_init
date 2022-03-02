@@ -30,7 +30,10 @@ ohos_static_library("libfuzz_utils") {
 ohos_fuzztest("DoRebootFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+  include_dirs = [
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
 
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
@@ -53,7 +56,10 @@ ohos_fuzztest("DoRebootFuzzTest") {
 ohos_fuzztest("GetControlFileFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+  include_dirs = [
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
 
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
@@ -76,7 +82,10 @@ ohos_fuzztest("GetControlFileFuzzTest") {
 ohos_fuzztest("GetControlSocketFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+  include_dirs = [
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
 
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
@@ -128,6 +137,7 @@ ohos_fuzztest("ReadFileInDirFuzzTest") {
   include_dirs = [
     "//base/startup/init_lite/services/init/include",
     "//base/startup/init_lite/services/include",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
   ]
 
   deps = [
@@ -150,7 +160,10 @@ ohos_fuzztest("ReadFileInDirFuzzTest") {
 ohos_fuzztest("ServiceControlStartFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+  include_dirs = [
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/services/param:param_client",
@@ -171,7 +184,10 @@ ohos_fuzztest("ServiceControlStartFuzzTest") {
 ohos_fuzztest("ServiceControlStopFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+  include_dirs = [
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/services/param:param_client",
@@ -219,7 +235,10 @@ ohos_fuzztest("SystemDumpParametersFuzzTest") {
 ohos_fuzztest("SystemFindParameterFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/services/include/param" ]
+  include_dirs = [
+    "//base/startup/init_lite/services/include/param",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
@@ -242,7 +261,10 @@ ohos_fuzztest("SystemFindParameterFuzzTest") {
 ohos_fuzztest("SystemGetParameterFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/services/include/param" ]
+  include_dirs = [
+    "//base/startup/init_lite/services/include/param",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
@@ -265,7 +287,10 @@ ohos_fuzztest("SystemGetParameterFuzzTest") {
 ohos_fuzztest("SystemGetParameterCommitIdFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/services/include/param" ]
+  include_dirs = [
+    "//base/startup/init_lite/services/include/param",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
@@ -290,7 +315,10 @@ ohos_fuzztest("SystemGetParameterCommitIdFuzzTest") {
 ohos_fuzztest("SystemGetParameterNameFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/services/include/param" ]
+  include_dirs = [
+    "//base/startup/init_lite/services/include/param",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
@@ -314,7 +342,10 @@ ohos_fuzztest("SystemGetParameterNameFuzzTest") {
 ohos_fuzztest("SystemGetParameterValueFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/services/include/param" ]
+  include_dirs = [
+    "//base/startup/init_lite/services/include/param",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
@@ -338,7 +369,10 @@ ohos_fuzztest("SystemGetParameterValueFuzzTest") {
 ohos_fuzztest("SystemSetParameterFuzztest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/services/include/param" ]
+  include_dirs = [
+    "//base/startup/init_lite/services/include/param",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
@@ -391,7 +425,10 @@ ohos_fuzztest("SystemTraversalParameterFuzztest") {
 ohos_fuzztest("SystemWaitParameterFuzzTest") {
   module_out_path = module_output_path
 
-  include_dirs = [ "//base/startup/init_lite/services/include/param" ]
+  include_dirs = [
+    "//base/startup/init_lite/services/include/param",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
+  ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
@@ -417,6 +454,7 @@ ohos_fuzztest("SystemWatchParameterFuzzTest") {
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
     "//base/startup/init_lite/services/init/include",
+    "//base/startup/init_lite/test/fuzztest/utils/include",
   ]
 
   deps = [
@@ -454,7 +492,7 @@ ohos_fuzztest("UmountAllFstabFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init_lite/interfaces/innerkits:libfsmanager_static",
     "//base/startup/init_lite/services/log:init_log",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//base/startup/init_lite/test/fuzztest:libfuzz_utils",
@@ -483,8 +521,8 @@ group("fuzztest") {
     ":GetControlSocketFuzzTest",
     ":MountAllFstabFuzzTest",
     ":ReadFileInDirFuzzTest",
-    ":StartDynamicProcessFuzzTest",
-    ":StopDynamicProcessFuzzTest",
+    ":ServiceControlStartFuzzTest",
+    ":ServiceControlStopFuzzTest",
     ":SystemDumpParametersFuzzTest",
     ":SystemFindParameterFuzzTest",
     ":SystemGetParameterCommitIdFuzzTest",

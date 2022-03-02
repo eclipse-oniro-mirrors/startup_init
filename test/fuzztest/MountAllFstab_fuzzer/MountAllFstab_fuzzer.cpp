@@ -29,7 +29,7 @@ namespace OHOS {
             std::cout << "[fuzz] open file fstab.test failed";
             return false;
         }
-        if (reinterpret_cast<int>(fwrite(data, 1, size, pFile)) != size) {
+        if (fwrite(data, 1, size, pFile) != size) {
             std::cout << "[fuzz] write data to fstab.test failed";
             (void)fclose(pFile);
             return false;

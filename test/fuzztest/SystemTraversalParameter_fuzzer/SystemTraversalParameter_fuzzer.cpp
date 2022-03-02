@@ -51,7 +51,7 @@ namespace OHOS {
         if (ret != EOK) {
             return false;
         }
-        if (!SystemTraversalParameter(FakeShowParam, reinterpret_cast<void*>(cookie))) {
+        if (!SystemTraversalParameter(nullptr, FakeShowParam, reinterpret_cast<void*>(cookie))) {
             result = true;
         }
         free(cookie->data);
