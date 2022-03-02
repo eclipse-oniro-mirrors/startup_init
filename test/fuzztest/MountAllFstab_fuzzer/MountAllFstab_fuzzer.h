@@ -15,5 +15,6 @@
 
 #ifndef TEST_FUZZTEST_MOUNTALLFSTAB_FUZZER_H
 #define TEST_FUZZTEST_MOUNTALLFSTAB_FUZZER_H
+#include "fuzz_utils.h"
 #define FUZZ_PROJECT_NAME "MountAllFstab_fuzzer"
 #endif

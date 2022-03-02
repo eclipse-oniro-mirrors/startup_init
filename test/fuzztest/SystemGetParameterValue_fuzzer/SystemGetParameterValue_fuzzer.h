@@ -15,5 +15,6 @@
 
 #ifndef TEST_FUZZTEST_SYSTEMGETPARAMETERVALUE_FUZZER_H
 #define TEST_FUZZTEST_SYSTEMGETPARAMETERVALUE_FUZZER_H
+#include "fuzz_utils.h"
 #define FUZZ_PROJECT_NAME "SystemGetParameterValue_fuzzer"
 #endif
