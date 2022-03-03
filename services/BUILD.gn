@@ -125,6 +125,7 @@ if (defined(ohos_lite)) {
     include_dirs = [
       "//base/security/access_token/interfaces/innerkits/token_setproc/include",
       "//base/security/access_token/interfaces/innerkits/nativetoken/include",
+      "//base/startup/init_lite/interfaces/innerkits/sandbox/include",
       "//base/startup/init_lite/services/include/param",
       "//base/startup/init_lite/services/include",
       "//base/startup/init_lite/services/init/include",
@@ -141,6 +142,7 @@ if (defined(ohos_lite)) {
       "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
       "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
       "//base/startup/init_lite/interfaces/innerkits:libfsmanager_static",
+      "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox_static",
       "//base/startup/init_lite/services/log:init_log",
       "//base/startup/init_lite/services/loopevent:loopevent",
       "//base/startup/init_lite/services/param:param_service",
@@ -301,10 +303,23 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
+  ohos_prebuilt_etc("system-sandbox.json") {
+    source = "//base/startup/init_lite/interfaces/innerkits/sandbox/system-sandbox.json"
+    part_name = "init"
+    module_install_dir = "etc/sandbox"
+  }
+
+  ohos_prebuilt_etc("chipset-sandbox.json") {
+    source = "//base/startup/init_lite/interfaces/innerkits/sandbox/chipset-sandbox.json"
+    part_name = "init"
+    module_install_dir = "etc/sandbox"
+  }
+
   group("init_etc") {
     deps = [
       ":boot.group",
       ":charing.group",
+      ":chipset-sandbox.json",
       ":group",
       ":init.cfg",
       ":init.usb.cfg",
@@ -315,6 +330,7 @@ if (defined(ohos_lite)) {
       ":plugin_modules",
       ":syscap.json",
       ":syscap.para",
+      ":system-sandbox.json",
       ":systemcapability.json",
     ]
   }

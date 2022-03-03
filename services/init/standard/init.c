@@ -38,10 +38,14 @@
 #include "ueventd.h"
 #include "ueventd_socket.h"
 #include "fd_holder_internal.h"
+#include "sandbox.h"
+#include "sandbox_namespace.h"
 #ifdef WITH_SELINUX
 #include <policycoreutils.h>
 #include <selinux/selinux.h>
 #endif // WITH_SELINUX
+
+static bool g_enableSandbox;
 
 static int FdHolderSockInit(void)
 {
@@ -88,6 +92,28 @@ static int FdHolderSockInit(void)
     return sock;
 }
 
+static void RegisterSandbox(const char *sandbox)
+{
+    if (sandbox == NULL) {
+        INIT_LOGE("Invaild parameters.");
+        return;
+    }
+    InitDefaultNamespace();
+    if (!InitSandboxWithName(sandbox)) {
+        INIT_LOGE("Failed init sandbox with name %s.", sandbox);
+    }
+
+    // DumpSandboxByName(sandbox);
+    if (PrepareSandbox(sandbox) != 0) {
+        INIT_LOGE("Failed prepare sandbox %s.", sandbox);
+        DestroySandbox(sandbox);
+    }
+    if (EnterDefaultNamespace() < 0) {
+        INIT_LOGE("Fail set default namespace.");
+    }
+    CloseDefaultNamespace();
+}
+
 void SystemInit(void)
 {
     SignalInit();
@@ -98,6 +124,8 @@ void SystemInit(void)
     if (sock >= 0) {
         RegisterFdHoldWatcher(sock);
     }
+    RegisterSandbox("system");
+    RegisterSandbox("chipset");
 }
 
 static void EnableDevKmsg(void)
@@ -267,6 +295,24 @@ static int SystemDump(int id, const char *name, int argc, const char **argv)
 }
 #endif
 
+static void IsEnableSandbox(void)
+{
+    const char *name = "const.sandbox";
+    char value[MAX_BUFFER_LEN] = {0};
+    unsigned int len = MAX_BUFFER_LEN;
+    if (SystemReadParam(name, value, &len) != 0) {
+        INIT_LOGE("Failed read param.");
+        g_enableSandbox = false;
+    }
+    if (strcmp(value, "enable") == 0) {
+        INIT_LOGI("Support sandbox.");
+        g_enableSandbox = true;
+    } else {
+        INIT_LOGI("Not support sandbox.");
+        g_enableSandbox = false;
+    }
+}
+
 void SystemConfig(void)
 {
     InitServiceSpace();
@@ -293,7 +339,7 @@ void SystemConfig(void)
     AddCmdExecutor("display", SystemDump);
     (void)AddCompleteJob("param:ohos.servicectrl.display", "ohos.servicectrl.display=*", "display system");
 #endif
-
+    IsEnableSandbox();
     // execute init
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
@@ -303,4 +349,34 @@ void SystemConfig(void)
 void SystemRun(void)
 {
     StartParamService();
+}
+
+int SetServiceEnterSandbox(const char *path)
+{
+    if (g_enableSandbox == false) {
+        return -1;
+    }
+    INIT_ERROR_CHECK(path != NULL, return -1, "Service path is null.");
+    if (strstr(path, "/system/bin") != NULL) {
+        if (strcmp(path, "/system/bin/sh") == 0) {
+            INIT_LOGI("Console cannot enter sandbox.");
+        } else if (strcmp(path, "/system/bin/hdcd") == 0) {
+            INIT_LOGI("Hdcd cannot enter sandbox.");
+        } else if (strcmp(path, "/system/bin/appspawn") == 0) {
+            INIT_LOGI("Appspawn cannot enter sandbox.");
+        } else if (strcmp(path, "/system/bin/ueventd") == 0) {
+            INIT_LOGI("Ueventd cannot enter sandbox.");
+        } else if (strcmp(path, "/system/bin/hilogd") == 0) {
+            INIT_LOGI("Hilogd cannot enter sandbox.");
+        } else {
+            INIT_ERROR_CHECK(EnterSandbox("system") == 0, return -1,
+                "Service %s failed enter sandbox system.", path);
+        }
+    } else if (strstr(path, "/vendor/bin") != NULL) {
+        INIT_ERROR_CHECK(EnterSandbox("system") == 0, return -1,
+            "Service %s failed enter sandbox system.", path);
+    } else {
+        INIT_LOGE("Service path %s is not support sandbox", path);
+    }
+    return 0;
 }

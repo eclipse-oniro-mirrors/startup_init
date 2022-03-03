@@ -37,3 +37,4 @@ const.build.characteristics=default
 const.product.model=ohos
 const.product.name="OpenHarmony 2.0 Canary"
 persist.sys.usb.config=hdc
+const.sandbox=enable

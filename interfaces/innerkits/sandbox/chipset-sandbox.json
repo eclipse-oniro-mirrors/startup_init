@@ -1,0 +1,58 @@
+{
+    "sandbox-root" : "/mnt/sandbox/chipset",
+    "mount-bind-paths" : [{
+            "src-path" : "/system/lib/vndk",
+            "sandbox-path" : "/system/lib/vndk",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/system/lib/platform-vndk",
+            "sandbox-path" : "/system/lib/platform-vndk",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/system/lib/ndk",
+            "sandbox-path" : "/system/lib/ndk",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/lib",
+            "sandbox-path" : "/vendor/lib",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/bin",
+            "sandbox-path" : "/vendor/bin",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/etc",
+            "sandbox-path" : "/vendor/etc",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/dev",
+            "sandbox-path" : "/dev",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/proc",
+            "sandbox-path" : "/proc",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/data",
+            "sandbox-path" : "/data",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/sys",
+            "sandbox-path" : "/sys",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }
+    ],
+    "mount-bind-files" : [{
+    }],
+    "symbol-links" : [{
+            "target-name" : "/vendor/lib",
+            "link-name" : "/lib"
+        }, {
+            "target-name" : "/vendor/bin",
+            "link-name" : "/bin"
+        }, {
+            "target-name" : "/vendor/etc",
+            "link-name" : "/etc"
+        }
+    ]
+}

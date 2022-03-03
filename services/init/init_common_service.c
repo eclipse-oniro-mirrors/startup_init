@@ -280,8 +280,10 @@ int ServiceStart(Service *service)
     }
     int pid = fork();
     if (pid == 0) {
-        INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS,
-            "set access token failed for service %s", service->name);
+        INIT_CHECK_ONLY_ELOG(SetServiceEnterSandbox(service->pathArgs.argv[0]) == SERVICE_SUCCESS,
+            "Failed %s sandbox.", service->name);
+
+        INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS, "access token failed %s", service->name);
         // deal start job
         if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
             DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
@@ -290,8 +292,7 @@ int ServiceStart(Service *service)
         ClearEnvironment();
 
         if (!IsOnDemandService(service)) {
-            int ret = CreateServiceSocket(service);
-            INIT_ERROR_CHECK(ret >= 0, return SERVICE_FAILURE,
+            INIT_ERROR_CHECK(CreateServiceSocket(service) >= 0, return SERVICE_FAILURE,
                 "service %s exit! create socket failed!", service->name);
         }
 
