@@ -50,10 +50,10 @@ int DoReboot(const char *option)
     BEGET_ERROR_CHECK(ret >= 0, return -1, "Failed to copy boot option \" %s \"", option);
 
     if (strcmp(option, DEVICE_CMD_SUSPEND) == 0) {
-        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_SUSPEND);
+        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
         BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
     } else if (strcmp(option, DEVICE_CMD_FREEZE) == 0) {
-        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_FREEZE);
+        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
         BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
     } else {
         ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
