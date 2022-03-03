@@ -14,6 +14,9 @@
  */
 
 #include "param_manager.h"
+#ifdef WITH_SELINUX
+#include "selinux_parameter.h"
+#endif
 
 #include <ctype.h>
 
@@ -240,6 +243,18 @@ int CheckParamPermission(const ParamWorkSpace *workSpace,
         return 0;
     }
     PARAM_CHECK(name != NULL && srcLabel != NULL, return -1, "Invalid param");
+#ifdef WITH_SELINUX
+    SetSelinuxLogCallback();
+    if (srcLabel != NULL && mode == DAC_WRITE) {
+        PARAM_LOGI("selinux SetParamCheck name %s, pid: %d", name, srcLabel->cred.pid);
+        struct ucred uc;
+        uc.pid = srcLabel->cred.pid;
+        uc.uid = srcLabel->cred.uid;
+        uc.gid = srcLabel->cred.gid;
+        int ret = SetParamCheck(name, &uc);
+        PARAM_LOGI("pid: %d SetParamCheck %s, result: %d", srcLabel->cred.pid, name, ret);
+    }
+#endif
     if (workSpace->paramSecurityOps.securityCheckParamPermission == NULL) {
         return DAC_RESULT_FORBIDED;
     }

@@ -62,6 +62,11 @@ ohos_static_library("param_service") {
     }
   }
 
+  if (build_selinux) {
+    external_deps = [ "selinux:libparaperm_checker_static" ]
+    defines += [ "WITH_SELINUX" ]
+  }
+
   deps = [
     "//base/startup/init_lite/services/log:init_log",
     "//base/startup/init_lite/services/loopevent:loopevent",
@@ -106,6 +111,11 @@ ohos_shared_library("param_client") {
     if (use_musl) {
       defines += [ "PARAM_SUPPORT_DAC_CHECK" ]
     }
+  }
+
+  if (build_selinux) {
+    external_deps = [ "selinux:libparaperm_checker_static" ]
+    defines += [ "WITH_SELINUX" ]
   }
 
   deps = [
