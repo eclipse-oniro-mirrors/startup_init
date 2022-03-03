@@ -63,11 +63,6 @@ if (defined(ohos_lite)) {
 
     cflags = [ "-Wall" ]
 
-    if (build_selinux) {
-      external_deps = [ "selinux:libparaperm_checker_static" ]
-      defines += [ "WITH_SELINUX" ]
-    }
-
     deps = [
       "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
       "//base/startup/init_lite/initsync:initsync",

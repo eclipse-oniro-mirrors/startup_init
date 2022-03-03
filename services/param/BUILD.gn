@@ -41,11 +41,15 @@ ohos_static_library("param_service") {
     "//base/startup/init_lite/services/log",
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/services/loopevent/include",
+    "//base/security/selinux/interfaces/policycoreutils/include",
     "//third_party/libuv/include",
     "//third_party/cJSON",
   ]
 
   defines = [ "PARAM_SUPPORT_SAVE_PERSIST" ]
+  if (build_selinux) {
+    defines += [ "WITH_SELINUX" ]
+  }
 
   if (defined(boot_kernel_extended_cmdline)) {
     defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
@@ -60,11 +64,6 @@ ohos_static_library("param_service") {
     if (use_musl) {
       defines += [ "PARAM_SUPPORT_DAC_CHECK" ]
     }
-  }
-
-  if (build_selinux) {
-    external_deps = [ "selinux:libparaperm_checker_static" ]
-    defines += [ "WITH_SELINUX" ]
   }
 
   deps = [
@@ -95,12 +94,16 @@ ohos_shared_library("param_client") {
     "//base/startup/init_lite/services/log",
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
+    "//base/security/selinux/interfaces/policycoreutils/include",
     "//base/startup/init_lite/services/loopevent/include",
   ]
 
   defines = [ "INIT_AGENT" ]
-
   defines += [ "_GNU_SOURCE" ]
+
+  if (build_selinux) {
+    defines += [ "WITH_SELINUX" ]
+  }
 
   if (param_security == "selinux") {
     sources += [ "adapter/param_selinux.c" ]
@@ -111,11 +114,6 @@ ohos_shared_library("param_client") {
     if (use_musl) {
       defines += [ "PARAM_SUPPORT_DAC_CHECK" ]
     }
-  }
-
-  if (build_selinux) {
-    external_deps = [ "selinux:libparaperm_checker_static" ]
-    defines += [ "WITH_SELINUX" ]
   }
 
   deps = [
