@@ -131,89 +131,98 @@ static int CheckAndRebootToUpdater(const char *valueData, const char *cmd,
         INIT_ERROR_CHECK(ret == 0, return -1, "Failed to format update for %s.", cmd);
     }
 
-    ret = -1;
     if (RBMiscWriteUpdaterMessage(miscFile, &msg) == 0) {
-        ret = 0;
+        return 0;
+    }
+    return -1;
+}
+
+static int DoRebootCmd(const char *cmd, const char *opt)
+{
+    // by job to stop service and unmount
+    DoJobNow("reboot");
+    int ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
+    if (ret == 0) {
 #ifndef STARTUP_INIT_TEST
-        ret = reboot(RB_AUTOBOOT);
+        return reboot(RB_AUTOBOOT);
 #endif
     }
-    return ret;
-}
-
-int DoRebootCmd(const char *cmd, const char *opt)
-{
-    // by job to stop service and unmount
-    DoJobNow("reboot");
-#ifndef PRODUCT_RK
-    return CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
-#else
-    reboot(RB_AUTOBOOT);
     return 0;
-#endif
 }
 
-int DoShutdownCmd(const char *cmd, const char *opt)
+static int DoShutdownCmd(const char *cmd, const char *opt)
 {
     // by job to stop service and unmount
     DoJobNow("reboot");
+    int ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
+    if (ret == 0) {
 #ifndef STARTUP_INIT_TEST
-    return reboot(RB_POWER_OFF);
-#else
-    return 0;
+        return reboot(RB_POWER_OFF);
 #endif
+    }
+    return 0;
 }
 
-int DoUpdaterCmd(const char *cmd, const char *opt)
+static int DoUpdaterCmd(const char *cmd, const char *opt)
 {
     // by job to stop service and unmount
     DoJobNow("reboot");
-    return CheckAndRebootToUpdater(opt, "updater", "updater:", "boot_updater");
+    int ret = CheckAndRebootToUpdater(opt, "updater", "updater:", "boot_updater");
+    if (ret == 0) {
+#ifndef STARTUP_INIT_TEST
+        return reboot(RB_AUTOBOOT);
+#endif
+    }
+    return 0;
 }
 
-int DoFlashdCmd(const char *cmd, const char *opt)
+static int DoFlashdCmd(const char *cmd, const char *opt)
 {
     // by job to stop service and unmount
     DoJobNow("reboot");
-    return CheckAndRebootToUpdater(opt, "flash", "flash:", "boot_flash");
+    int ret = CheckAndRebootToUpdater(opt, "flash", "flash:", "boot_flash");
+    if (ret == 0) {
+#ifndef STARTUP_INIT_TEST
+        return reboot(RB_AUTOBOOT);
+#endif
+    }
+    return 0;
 }
 
 #ifdef PRODUCT_RK
-int DoLoaderCmd(const char *cmd, const char *opt)
+static int DoLoaderCmd(const char *cmd, const char *opt)
 {
     syscall(__NR_reboot, REBOOT_MAGIC1, REBOOT_MAGIC2, REBOOT_CMD_RESTART2, "loader");
     return 0;
 }
 #endif
 
-int DoSuspendCmd(const char *cmd, const char *opt)
+static int DoSuspendCmd(const char *cmd, const char *opt)
 {
     // by job to stop service and unmount
     DoJobNow("suspend");
+    int ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
+    if (ret == 0) {
 #ifndef STARTUP_INIT_TEST
-    return reboot(RB_POWER_OFF);
-#else
-    return 0;
+        INIT_LOGE("DoSuspendCmd %s RB_SW_SUSPEND.", cmd);
+        return reboot(RB_SW_SUSPEND);
 #endif
-}
-
-int DoFreezeCmd(const char *cmd, const char *opt)
-{
-    // by job to stop service and unmount
-    DoJobNow("freeze");
-#ifndef STARTUP_INIT_TEST
-    return reboot(RB_POWER_OFF);
-#else
+    }
     return 0;
-#endif
 }
 
 #ifdef INIT_TEST
-int DoCharingCmd()
+static int DoCharingCmd()
 {
     // by job to stop service and unmount
     DoJobNow("reboot");
-    return CheckAndRebootToUpdater(NULL, "charing", "charing:", "boot_charing");
+    int ret = CheckAndRebootToUpdater(NULL, "charing", "charing:", "boot_charing");
+    if (ret == 0) {
+#ifndef STARTUP_INIT_TEST
+        return reboot(RB_AUTOBOOT);
+#endif
+    }
+    return 0;
 }
 #endif
 
@@ -230,7 +239,6 @@ struct {
     { "loader", DoLoaderCmd },
 #endif
     { "suspend", DoSuspendCmd },
-    { "freeze", DoFreezeCmd },
 #ifdef INIT_TEST
     { "charing", DoCharingCmd }
 #endif
@@ -249,14 +257,14 @@ void ExecReboot(const char *value)
         return;
     }
 
-    INIT_LOGE("ExecReboot %s.", cmd);
+    INIT_LOGI("ExecReboot %s param %s.", cmd, value);
     for (int i = 0; i < (int)ARRAY_LENGTH(g_rebootCmd); i++) {
         if (strncmp(cmd, g_rebootCmd[i].cmdName, strlen(g_rebootCmd[i].cmdName)) == 0) {
             int ret = g_rebootCmd[i].doCmd(cmd, cmd);
-            INIT_LOGI("Reboot %s %s.", value, (ret == 0) ? "success" : "fail");
+            INIT_LOGI("Reboot %s %s errno %d .", cmd, (ret == 0) ? "success" : "fail", errno);
             return;
         }
     }
-    INIT_LOGE("Invalid rebot cmd %s.", value);
+    INIT_LOGE("Invalid reboot cmd %s.", value);
     return;
 }

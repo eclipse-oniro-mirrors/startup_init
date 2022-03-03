@@ -64,6 +64,9 @@ int main(int argc, char *argv[])
         number = argc - 1;
         args = argv + 1;
     }
+    if (number >= 1 && strcmp(args[0], "devctl") == 0) {
+        memcpy_s(args[0], strlen(args[0]), "reboot", strlen("reboot"));
+    }
     SetInitLogLevel(0);
     BShellParamCmdRegister(g_handle, 0);
 #ifdef INIT_TEST
