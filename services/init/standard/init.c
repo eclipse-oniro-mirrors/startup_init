@@ -103,7 +103,6 @@ static void RegisterSandbox(const char *sandbox)
         INIT_LOGE("Failed init sandbox with name %s.", sandbox);
     }
 
-    // DumpSandboxByName(sandbox);
     if (PrepareSandbox(sandbox) != 0) {
         INIT_LOGE("Failed prepare sandbox %s.", sandbox);
         DestroySandbox(sandbox);
