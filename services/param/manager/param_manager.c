@@ -270,7 +270,9 @@ int CheckParamPermissionWithSelinux(const ParamSecurityLabel *srcLabel, const ch
     uc.uid = srcLabel->cred.uid;
     uc.gid = srcLabel->cred.gid;
     int ret = setParamCheck(name, &uc);
-    PARAM_LOGI("Selinux check name %s pid %d uid %d %d result %d", name, uc.pid, uc.uid, uc.gid, ret);
+    if (ret != 0) {
+        PARAM_LOGI("Selinux check name %s pid %d uid %d %d result %d", name, uc.pid, uc.uid, uc.gid, ret);
+    }
     return ret;
 }
 #endif

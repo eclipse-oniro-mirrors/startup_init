@@ -27,7 +27,6 @@ int ConntectServer(int fd, const char *servername)
     PARAM_CHECK(fd >= 0, return -1, "Invalid fd %d", fd);
     int opt = 1;
     int ret = setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &opt, sizeof(opt));
-    PARAM_LOGE("Failed to setsockopt for SO_PASSCRED %d", errno);
     PARAM_CHECK(servername != NULL, return -1, "Invalid servername");
     struct sockaddr_un addr;
     /* fill socket address structure with server's address */
