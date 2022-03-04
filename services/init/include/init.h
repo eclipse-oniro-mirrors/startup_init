@@ -43,7 +43,7 @@ void SystemExecuteRcs(void);
 
 void ReadConfig(void);
 void SignalInit(void);
-int SetServiceEnterSandbox(const char *path);
+void SetServiceEnterSandbox(const char *path, unsigned int attribute);
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -92,27 +92,6 @@ static int FdHolderSockInit(void)
     return sock;
 }
 
-static void RegisterSandbox(const char *sandbox)
-{
-    if (sandbox == NULL) {
-        INIT_LOGE("Invaild parameters.");
-        return;
-    }
-    InitDefaultNamespace();
-    if (!InitSandboxWithName(sandbox)) {
-        INIT_LOGE("Failed init sandbox with name %s.", sandbox);
-    }
-
-    if (PrepareSandbox(sandbox) != 0) {
-        INIT_LOGE("Failed prepare sandbox %s.", sandbox);
-        DestroySandbox(sandbox);
-    }
-    if (EnterDefaultNamespace() < 0) {
-        INIT_LOGE("Fail set default namespace.");
-    }
-    CloseDefaultNamespace();
-}
-
 void SystemInit(void)
 {
     SignalInit();
@@ -123,8 +102,6 @@ void SystemInit(void)
     if (sock >= 0) {
         RegisterFdHoldWatcher(sock);
     }
-    RegisterSandbox("system");
-    RegisterSandbox("chipset");
 }
 
 static void EnableDevKmsg(void)
@@ -304,10 +281,10 @@ static void IsEnableSandbox(void)
         g_enableSandbox = false;
     }
     if (strcmp(value, "enable") == 0) {
-        INIT_LOGI("Support sandbox.");
+        INIT_LOGI("Enable sandbox.");
         g_enableSandbox = true;
     } else {
-        INIT_LOGI("Not support sandbox.");
+        INIT_LOGI("Disable sandbox.");
         g_enableSandbox = false;
     }
 }
@@ -350,32 +327,30 @@ void SystemRun(void)
     StartParamService();
 }
 
-int SetServiceEnterSandbox(const char *path)
+void SetServiceEnterSandbox(const char *execPath, unsigned int attribute)
 {
     if (g_enableSandbox == false) {
-        return -1;
+        return;
     }
-    INIT_ERROR_CHECK(path != NULL, return -1, "Service path is null.");
-    if (strstr(path, "/system/bin") != NULL) {
-        if (strcmp(path, "/system/bin/sh") == 0) {
-            INIT_LOGI("Console cannot enter sandbox.");
-        } else if (strcmp(path, "/system/bin/hdcd") == 0) {
-            INIT_LOGI("Hdcd cannot enter sandbox.");
-        } else if (strcmp(path, "/system/bin/appspawn") == 0) {
-            INIT_LOGI("Appspawn cannot enter sandbox.");
-        } else if (strcmp(path, "/system/bin/ueventd") == 0) {
-            INIT_LOGI("Ueventd cannot enter sandbox.");
-        } else if (strcmp(path, "/system/bin/hilogd") == 0) {
-            INIT_LOGI("Hilogd cannot enter sandbox.");
+    if ((attribute & SERVICE_ATTR_SANDBOX) != SERVICE_ATTR_SANDBOX) {
+        return;
+    }
+    INIT_ERROR_CHECK(execPath != NULL, return, "Service path is null.");
+    if (strncmp(execPath, "/system/bin/", strlen("/system/bin/")) == 0) {
+        if (strcmp(execPath, "/system/bin/appspawn") == 0) {
+            INIT_LOGI("Appspawn skip enter sandbox.");
+        } else if (strcmp(execPath, "/system/bin/hilogd") == 0) {
+            INIT_LOGI("Hilogd skip enter sandbox.");
         } else {
-            INIT_ERROR_CHECK(EnterSandbox("system") == 0, return -1,
-                "Service %s failed enter sandbox system.", path);
+            INIT_ERROR_CHECK(EnterSandbox("system") == 0, return,
+                "Service %s failed enter sandbox system.", execPath);
         }
-    } else if (strstr(path, "/vendor/bin") != NULL) {
-        INIT_ERROR_CHECK(EnterSandbox("system") == 0, return -1,
-            "Service %s failed enter sandbox system.", path);
+    } else if (strncmp(execPath, "/vendor/bin/", strlen("/vendor/bin/")) == 0) {
+        // chipset sandbox will be implemented later.
+        INIT_ERROR_CHECK(EnterSandbox("system") == 0, return,
+            "Service %s failed enter sandbox system.", execPath);
     } else {
-        INIT_LOGE("Service path %s is not support sandbox", path);
+        INIT_LOGE("Service %s does not enter sandbox", execPath);
     }
-    return 0;
+    return;
 }

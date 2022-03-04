@@ -594,12 +594,12 @@ void DestroySandbox(const char *name)
 int EnterSandbox(const char *name)
 {
     if (name == NULL) {
-        BEGET_LOGE("Destroy sandbox name is NULL.");
+        BEGET_LOGE("Sandbox name is NULL.");
         return -1;
     }
     struct SandboxMap *map = GetSandboxMapByName(name);
     if (map == NULL) {
-        BEGET_LOGE("Failed get sandbox map by name %s.", name);
+        BEGET_LOGE("Failed to get sandbox map by name %s.", name);
         return -1;
     }
     sandbox_t *sandbox = map->sandbox;
@@ -608,16 +608,16 @@ int EnterSandbox(const char *name)
         return -1;
     }
     if (sandbox->isCreated == false) {
-        BEGET_LOGE("Sandbox has not created.");
+        BEGET_LOGE("Sandbox %s has not been created.", name);
         return -1;
     }
     if (sandbox->ns > 0) {
         if (SetNamespce(sandbox->ns, CLONE_NEWNS) < 0) {
-            BEGET_LOGE("Failed set namespace CLONE_NEWNS, err=%d.", errno);
+            BEGET_LOGE("Failed to enter mount namespace for sandbox \' %s \', err=%d.", name, errno);
             return -1;
         }
     } else {
-        BEGET_LOGE("System sandbox namespace fd is error.");
+        BEGET_LOGE("Sandbox \' %s \' namespace fd is invalid.", name);
         return -1;
     }
     return 0;

@@ -280,8 +280,7 @@ int ServiceStart(Service *service)
     }
     int pid = fork();
     if (pid == 0) {
-        INIT_CHECK_ONLY_ELOG(SetServiceEnterSandbox(service->pathArgs.argv[0]) == SERVICE_SUCCESS,
-            "Failed %s sandbox.", service->name);
+        SetServiceEnterSandbox(service->pathArgs.argv[0], service->attribute);
 
         INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS, "access token failed %s", service->name);
         // deal start job
