@@ -973,7 +973,7 @@ void StopAllServices(int flags, const char **exclude, int size,
             continue;
         }
         INIT_LOGI("StopAllServices stop service %s ", service->name);
-        if (filter != NULL && filter(service, exclude, size) != 0) {
+        if (filter != NULL && filter(service, exclude, size) == 0) {
             node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
             continue;
         }
