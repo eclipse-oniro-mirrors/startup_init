@@ -244,9 +244,9 @@ int CheckParamPermissionWithSelinux(const ParamSecurityLabel *srcLabel, const ch
     }
     static void (*setSelinuxLogCallback)();
     static int (*setParamCheck)(const char *paraName, struct ucred *uc);
-    g_selinuxHandle = dlopen("/system/lib/libparaperm_checker_static.so", RTLD_LAZY);
+    g_selinuxHandle = dlopen("/system/lib/libparaperm_checker.so", RTLD_LAZY);
     if (g_selinuxHandle == NULL) {
-        PARAM_LOGE("Failed to dlopen libparaperm_checker_static.so, %s\n", dlerror());
+        PARAM_LOGE("Failed to dlopen libparaperm_checker.so, %s\n", dlerror());
         return DAC_RESULT_FORBIDED;
     }
     if (setSelinuxLogCallback == NULL) {
