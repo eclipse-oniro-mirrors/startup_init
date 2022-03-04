@@ -124,6 +124,7 @@ LE_STATUS LE_AcceptStreamClient(const LoopHandle loopHandle,
 LE_STATUS LE_Send(const LoopHandle loopHandle,
     const TaskHandle taskHandle, const BufferHandle handle, uint32_t buffLen);
 void LE_CloseStreamTask(const LoopHandle loopHandle, const TaskHandle taskHandle);
+int LE_GetSocketFd(const TaskHandle taskHandle);
 
 /**
  * 异步事件服务

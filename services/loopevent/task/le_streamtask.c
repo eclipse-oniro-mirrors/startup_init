@@ -245,3 +245,9 @@ void LE_CloseStreamTask(const LoopHandle loopHandle, const TaskHandle taskHandle
     LE_CHECK(loopHandle != NULL && taskHandle != NULL, return, "Invalid parameters");
     LE_CloseTask(loopHandle, taskHandle);
 }
+
+int LE_GetSocketFd(const TaskHandle taskHandle)
+{
+    LE_CHECK(taskHandle != NULL, return -1, "Invalid parameters");
+    return GetSocketFd(taskHandle);
+}
