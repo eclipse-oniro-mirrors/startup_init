@@ -228,7 +228,7 @@ static int GetTriggerType(const char *type)
     }
     const char *triggerTypeStr[] = {
         "pre-init", "boot", "early-init", "init", "early-init", "late-init", "post-init",
-        "fs", "early-fs", "post-fs", "late-fs", "early-boot", "post-fs-data", "reboot"
+        "fs", "early-fs", "post-fs", "late-fs", "early-boot", "post-fs-data", "reboot", "suspend"
     };
     for (size_t i = 0; i < ARRAY_LENGTH(triggerTypeStr); i++) {
         if (strcmp(triggerTypeStr[i], type) == 0) {
