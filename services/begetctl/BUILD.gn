@@ -68,9 +68,7 @@ ohos_executable("begetctl") {
       "//third_party/selinux/libselinux/include/",
       "//base/security/selinux/interfaces/policycoreutils/include/",
     ]
-    deps += [
-      "//third_party/selinux:libselinux",
-    ]
+    deps += [ "//third_party/selinux:libselinux" ]
     defines += [ "WITH_SELINUX" ]
   }
 
