@@ -205,7 +205,7 @@ static int DoSuspendCmd(const char *cmd, const char *opt)
     if (ret == 0) {
 #ifndef STARTUP_INIT_TEST
         INIT_LOGE("DoSuspendCmd %s RB_SW_SUSPEND.", cmd);
-        return reboot(RB_SW_SUSPEND);
+        return reboot(RB_AUTOBOOT);
 #endif
     }
     return 0;
