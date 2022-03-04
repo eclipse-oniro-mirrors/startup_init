@@ -78,8 +78,7 @@
                 }
             ],
             "test": [
-                "//base/startup/init_lite/test/unittest:init_test",
-                "//base/startup/init_lite/test/fuzztest:fuzztest"
+                "//base/startup/init_lite/test/unittest:init_test"
             ]
         }
     }
