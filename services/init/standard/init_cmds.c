@@ -509,7 +509,7 @@ static void DoSwapon(const struct CmdArgs *ctx)
 static void DoMkSandbox(const struct CmdArgs *ctx)
 {
     INIT_LOGI("DoMkSandbox: start");
-    if ((ctx == NULL) || (ctx->argc != 1)){
+    if ((ctx == NULL) || (ctx->argc != 1)) {
         INIT_LOGE("Call DoMkSandbox with invalid arguments");
         return;
     }
