@@ -236,12 +236,9 @@ int TraversalParam(const ParamWorkSpace *workSpace,
 }
 
 #ifdef WITH_SELINUX
-void *g_selinuxHandle = NULL;
-int CheckParamPermissionWithSelinux(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
+static void *g_selinuxHandle = NULL;
+static int CheckParamPermissionWithSelinux(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
-    if (srcLabel == NULL || mode != DAC_WRITE) {
-        return DAC_RESULT_PERMISSION;
-    }
     static void (*setSelinuxLogCallback)();
     static int (*setParamCheck)(const char *paraName, struct ucred *uc);
     g_selinuxHandle = dlopen("/system/lib/libparaperm_checker.z.so", RTLD_LAZY);
@@ -287,9 +284,11 @@ int CheckParamPermission(const ParamWorkSpace *workSpace,
     }
     PARAM_CHECK(name != NULL && srcLabel != NULL, return -1, "Invalid param");
 #ifdef WITH_SELINUX
-    int ret = CheckParamPermissionWithSelinux(srcLabel, name, mode);
-    if (ret == DAC_RESULT_PERMISSION) {
-        return DAC_RESULT_PERMISSION;
+    if (mode == DAC_WRITE) {
+        int ret = CheckParamPermissionWithSelinux(srcLabel, name, mode);
+        if (ret == DAC_RESULT_PERMISSION) {
+            return DAC_RESULT_PERMISSION;
+        }
     }
 #endif
     if (workSpace->paramSecurityOps.securityCheckParamPermission == NULL) {
