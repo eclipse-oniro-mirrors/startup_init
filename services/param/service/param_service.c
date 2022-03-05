@@ -15,6 +15,7 @@
 
 #include "param_service.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -67,7 +68,9 @@ static int AddParam(WorkSpace *workSpace, const char *name, const char *value, u
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
         SaveIndex(&node->dataIndex, offset);
     }
-    *dataIndex = node->dataIndex;
+    if (dataIndex != NULL) {
+        *dataIndex = node->dataIndex;
+    }
     return 0;
 }
 
@@ -111,13 +114,15 @@ static int CheckParamValue(const WorkSpace *workSpace, const ParamTrieNode *node
 
 int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd)
 {
-    PARAM_CHECK(workSpace != NULL && dataIndex != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
+    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
     ParamTrieNode *node = FindTrieNode(workSpace, name, strlen(name), NULL);
     int ret = CheckParamValue(workSpace, node, name, value);
     PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
     if (node != NULL && node->dataIndex != 0) {
-        *dataIndex = node->dataIndex;
+        if (dataIndex != NULL) {
+            *dataIndex = node->dataIndex;
+        }
         if (onlyAdd) {
             return 0;
         }
@@ -164,7 +169,7 @@ static char *BuildKey(ParamWorkSpace *workSpace, const char *format, ...)
     size_t buffSize = sizeof(workSpace->buffer);
     int len = vsnprintf_s(workSpace->buffer, buffSize, buffSize - 1, format, vargs);
     va_end(vargs);
-    if (len > 0 && len < buffSize) {
+    if (len > 0 && (size_t)len < buffSize) {
         workSpace->buffer[len] = '\0';
         for (int i = 0; i < len; i++) {
             if (workSpace->buffer[i] == '|') {
@@ -521,35 +526,107 @@ PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *m
     return 0;
 }
 
+static int LoadOneParam_(char *line, uint32_t mode, const char *exclude[], uint32_t count)
+{
+    char *name;
+    char *value;
+    char *pos;
+
+    // Skip spaces
+    name = line;
+    while (isspace(*name) && (*name != '\0')) {
+        name++;
+    }
+    // Empty line
+    if (*name == '\0') {
+        return 0;
+    }
+    // Comment line
+    if (*name == '#') {
+        return 0;
+    }
+
+    value = name;
+    // find the first delimiter '='
+    while (*value != '\0') {
+        if (*value == '=') {
+            (*value) = '\0';
+            value = value + 1;
+            break;
+        }
+        value++;
+    }
+
+    // empty name, just ignore this line
+    if (*name == '\0') {
+        return 0;
+    }
+
+    // Trim the ending spaces of name
+    pos = value - 1;
+    pos -= 1;
+    while (isspace(*pos) && pos > name) {
+        (*pos) = '\0';
+        pos--;
+    }
+
+    // Filter excluded parameters
+    for (uint32_t i = 0; i < count; i++) {
+        if (strncmp(name, exclude[i], strlen(exclude[i])) == 0) {
+            return 0;
+        }
+    }
+
+    // Skip spaces for value
+    while (isspace(*value) && (*value != '\0')) {
+        value++;
+    }
+
+    // Trim the ending spaces of value
+    pos = value + strlen(value);
+    pos--;
+    while (isspace(*pos) && pos > value) {
+        (*pos) = '\0';
+        pos--;
+    }
+
+    // Strip starting and ending " for value
+    if ((*value == '"') && (pos > value) && (*pos == '"')) {
+        value = value + 1;
+        *pos = '\0';
+    }
+
+    int ret = CheckParamName(name, 0);
+    // Invalid name, just ignore
+    if (ret != 0) {
+        return 0;
+    }
+    PARAM_LOGV("Add default parameter [%s] [%s]", name, value);
+    return WriteParam(&g_paramWorkSpace.paramSpace,
+        name, value, NULL, mode & LOAD_PARAM_ONLY_ADD);
+}
+
 static int LoadDefaultParam_(const char *fileName, uint32_t mode, const char *exclude[], uint32_t count)
 {
+    // max length for each line of para files: max name length + max value length + spaces
+#define PARAM_LINE_MAX_LENGTH (PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10)
+
     uint32_t paramNum = 0;
     FILE *fp = fopen(fileName, "r");
-    PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
-    char *buff = calloc(1, sizeof(SubStringInfo) * (SUBSTR_INFO_VALUE + 1) + PARAM_BUFFER_SIZE);
-    PARAM_CHECK(buff != NULL, (void)fclose(fp);
-        return -1, "Failed to alloc memory for load %s", fileName);
+    if (fp == NULL) {
+        return -1;
+    }
 
-    SubStringInfo *info = (SubStringInfo *)(buff + PARAM_BUFFER_SIZE);
-    while (fgets(buff, PARAM_BUFFER_SIZE, fp) != NULL) {
-        buff[PARAM_BUFFER_SIZE - 1] = '\0';
-        int subStrNumber = GetSubStringInfo(buff, strlen(buff), '=', info, SUBSTR_INFO_VALUE + 1);
-        if (subStrNumber <= SUBSTR_INFO_VALUE) {
-            continue;
-        }
-        // 过滤
-        for (uint32_t i = 0; i < count; i++) {
-            if (strncmp(info[0].value, exclude[i], strlen(exclude[i])) == 0) {
-                PARAM_LOGI("Do not set %s parameters", info[0].value);
-                continue;
-            }
-        }
-        int ret = CheckParamName(info[0].value, 0);
-        PARAM_CHECK(ret == 0, continue, "Illegal param name %s", info[0].value);
-        PARAM_LOGV("Add default parameter %s  %s", info[0].value, info[1].value);
-        uint32_t dataIndex = 0;
-        ret = WriteParam(&g_paramWorkSpace.paramSpace,
-            info[0].value, info[1].value, &dataIndex, mode & LOAD_PARAM_ONLY_ADD);
+    char *buff = calloc(1, PARAM_LINE_MAX_LENGTH);
+    if (buff == NULL) {
+        (void)fclose(fp);
+        return -1;
+    }
+
+    while (fgets(buff, PARAM_LINE_MAX_LENGTH, fp) != NULL) {
+        buff[PARAM_LINE_MAX_LENGTH - 1] = '\0';
+
+        int ret = LoadOneParam_(buff, mode, exclude, count);
         PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buff);
         paramNum++;
     }
@@ -625,9 +702,8 @@ static int LoadParamFromCmdLine(void)
             PARAM_LOGV("Add param from cmdline %s %s", cmdLines[i], value);
             ret = CheckParamName(cmdLines[i], 0);
             PARAM_CHECK(ret == 0, break, "Invalid name %s", cmdLines[i]);
-            uint32_t dataIndex = 0;
             PARAM_LOGV("**** cmdLines[%d] %s, value %s", i, cmdLines[i], value);
-            ret = WriteParam(&g_paramWorkSpace.paramSpace, cmdLines[i], value, &dataIndex, 0);
+            ret = WriteParam(&g_paramWorkSpace.paramSpace, cmdLines[i], value, NULL, 0);
             PARAM_CHECK(ret == 0, break, "Failed to write param %s %s", cmdLines[i], value);
         } else {
             PARAM_LOGE("Can not find arrt %s", cmdLines[i]);
