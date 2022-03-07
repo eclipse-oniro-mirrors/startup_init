@@ -317,6 +317,7 @@ if (defined(ohos_lite)) {
 
   group("init_etc") {
     deps = [
+      ":app-sandbox.json",
       ":boot.group",
       ":charing.group",
       ":chipset-sandbox.json",
@@ -328,6 +329,7 @@ if (defined(ohos_lite)) {
       ":ohos.para.dac",
       ":passwd",
       ":plugin_modules",
+      ":privapp-sandbox.json",
       ":syscap.json",
       ":syscap.para",
       ":system-sandbox.json",
