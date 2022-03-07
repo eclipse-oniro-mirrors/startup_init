@@ -326,6 +326,8 @@ if (defined(ohos_lite)) {
         "//base/startup/init_lite/interfaces/innerkits/sandbox/app-sandbox.json"
     part_name = "init"
     module_install_dir = "etc/sandbox"
+  }
+
   ohos_prebuilt_etc("init.reboot") {
     source = "//base/startup/init_lite/services/etc/init.reboot.cfg"
     part_name = "init"
