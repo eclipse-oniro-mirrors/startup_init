@@ -983,7 +983,7 @@ void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size))
 {
     Service *service = GetServiceByName("appspawn");
-    if (service != NULL && service->pid != 0) {
+    if (((SERVICE_ATTR_NEEDWAIT & flags) == SERVICE_ATTR_NEEDWAIT) && service != NULL && service->pid != 0) {
         waitpid(service->pid, 0, 0);
     }
 
@@ -999,7 +999,7 @@ void StopAllServices(int flags, const char **exclude, int size,
             node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
             continue;
         }
-        service->attribute |= flags;
+        service->attribute |= (flags & SERVICE_ATTR_INVALID);
         int ret = ServiceStop(service);
         if (ret != SERVICE_SUCCESS) {
             INIT_LOGE("Service %s stop failed!", service->name);
