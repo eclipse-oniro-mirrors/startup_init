@@ -48,7 +48,8 @@
                 "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
                 "//base/startup/init_lite/services/loopevent:loopevent",
                 "//base/startup/init_lite/interfaces/innerkits/plugin:libplugin",
-                "//base/startup/init_lite/device_info:device_info_group"
+                "//base/startup/init_lite/device_info:device_info_group",
+                "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox"
             ],
             "inner_kits": [
                 {

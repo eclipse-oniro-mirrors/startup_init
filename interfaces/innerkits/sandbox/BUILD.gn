@@ -1,0 +1,67 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/startup/init_lite/begetd.gni")
+import("//build/ohos.gni")
+
+config("exported_header_files") {
+  visibility = [ ":*" ]
+  include_dirs = [ "include/" ]
+}
+
+ohos_shared_library("libsandbox") {
+  sources = [
+    "sandbox.c",
+    "sandbox_namespace.c",
+  ]
+  public_configs = [ ":exported_header_files" ]
+  include_dirs = [
+    "//third_party/bounds_checking_function/include",
+    "//base/startup/init_lite/services/include",
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//third_party/cJSON",
+  ]
+  defines = [ "INIT_AGENT" ]
+  deps = [
+    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson_static",
+  ]
+
+  deps += [ "//base/startup/init_lite/services/log:init_log" ]
+
+  part_name = "init"
+  install_images = [ "system" ]
+}
+
+# For init only
+ohos_static_library("libsandbox_static") {
+  sources = [
+    "sandbox.c",
+    "sandbox_namespace.c",
+  ]
+  public_configs = [ ":exported_header_files" ]
+  include_dirs = [
+    "//third_party/bounds_checking_function/include",
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/services/include",
+    "//third_party/cJSON",
+  ]
+  deps = [
+    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/cJSON:cjson_static",
+  ]
+  deps += [ "//base/startup/init_lite/services/log:init_log" ]
+  part_name = "init"
+}

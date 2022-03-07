@@ -641,7 +641,7 @@ static int CheckServiceKeyName(const cJSON *curService)
     char *cfgServiceKeyList[] = {
         "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
         "writepid", "critical", "socket", "console", "dynamic", "file", "ondemand",
-        "d-caps", "apl", "jobs", "start-mode", "end-mode", "cpucore", "secon"
+        "d-caps", "apl", "jobs", "start-mode", "end-mode", "cpucore", "secon", "sandbox"
     };
     INIT_CHECK_RETURN_VALUE(curService != NULL, SERVICE_FAILURE);
     cJSON *child = curService->child;
@@ -788,6 +788,26 @@ static int GetCpuArgs(const cJSON *argJson, const char *name, Service *service)
     return SERVICE_SUCCESS;
 }
 
+static int GetServiceSandbox(const cJSON *curItem, Service *service)
+{
+    MarkServiceWithSandbox(service);
+    cJSON *item = cJSON_GetObjectItem(curItem, "sandbox");
+    if (item == NULL) {
+        return SERVICE_SUCCESS;
+    }
+
+    INIT_ERROR_CHECK(cJSON_IsNumber(item), return SERVICE_FAILURE,
+        "Service : %s sandbox value only support number.", service->name);
+    int isSandbox = (int)cJSON_GetNumberValue(item);
+    if (isSandbox == 1) {
+        MarkServiceWithSandbox(service);
+    } else {
+        UnMarkServiceWithSandbox(service);
+    }
+
+    return SERVICE_SUCCESS;
+}
+
 int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
@@ -822,6 +842,8 @@ int ParseOneService(const cJSON *curItem, Service *service)
     (void)GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
     (void)GetStringItem(curItem, APL_STR_IN_CFG, service->apl, MAX_APL_NAME);
     (void)GetCpuArgs(curItem, CPU_CORE_STR_IN_CFG, service);
+    ret = GetServiceSandbox(curItem, service);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get sandbox for service %s", service->name);
     ret = GetServiceCaps(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
     ret = GetDynamicService(curItem, service);

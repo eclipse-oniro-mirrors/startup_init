@@ -1,0 +1,58 @@
+{
+    "sandbox-root" : "/mnt/sandbox/priv-app",
+    "mount-bind-paths" : [{
+            "src-path" : "/mnt",
+            "sandbox-path" : "/mnt",
+            "sandbox-flags" : [ "bind", "rec" ]
+        }, {
+            "src-path" : "/system/bin",
+            "sandbox-path" : "/system/bin",
+            "sandbox-flags" : [ "bind", "rec" ]
+        }, {
+            "src-path" : "/system/bin",
+            "sandbox-path" : "/system/common/bin",
+            "sandbox-flags" : [ "bind", "rec" ]
+        }, {
+            "src-path" : "/system/lib",
+            "sandbox-path" : "/system/lib",
+            "sandbox-flags" : [ "bind", "rec" ]
+        }, {
+            "src-path" : "/system/lib/module",
+            "sandbox-path" : "/system/lib/module",
+            "sandbox-flags" : [ "bind", "rec" ]
+        }, {
+            "src-path" : "/system/etc",
+            "sandbox-path" : "/system/etc",
+            "sandbox-flags" : [ "bind", "rec" ]
+        }, {
+            "src-path" : "/sys",
+            "sandbox-path" : "/sys",
+            "sandbox-flags" : [ "bind", "rec" ]
+        }, {
+            "src-path" : "/proc",
+            "sandbox-path" : "/proc",
+            "sandbox-flags" : [ "bind", "rec" ]
+        }, {
+            "src-path" : "/dev",
+            "sandbox-path" : "/dev",
+            "sandbox-flags" : [ "bind", "rec" ]
+        }, {
+            "src-path" : "/data",
+            "sandbox-path" : "/data",
+            "sandbox-flags" : [ "bind", "rec" ]
+        }
+    ],
+    "mount-bind-files": [{
+    }],
+    "symbol-links": [{
+            "target-name" : "/system/bin",
+            "link-name" : "/bin"
+        }, {
+            "target-name" : "/system/lib",
+            "link-name" : "/lib"
+        }, {
+            "target-name" : "/system/etc",
+            "link-name" : "/etc"
+        }
+    ]
+}

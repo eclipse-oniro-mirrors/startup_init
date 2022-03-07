@@ -82,3 +82,10 @@ void SystemRun(void)
 {
     LE_RunLoop(LE_GetDefaultLoop());
 }
+
+void SetServiceEnterSandbox(const char *path, unsigned int attribute)
+{
+    UNUSED(path);
+    UNUSED(attribute);
+    return;
+}

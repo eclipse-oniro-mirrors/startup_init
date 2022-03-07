@@ -38,10 +38,14 @@
 #include "ueventd.h"
 #include "ueventd_socket.h"
 #include "fd_holder_internal.h"
+#include "sandbox.h"
+#include "sandbox_namespace.h"
 #ifdef WITH_SELINUX
 #include <policycoreutils.h>
 #include <selinux/selinux.h>
 #endif // WITH_SELINUX
+
+static bool g_enableSandbox;
 
 static int FdHolderSockInit(void)
 {
@@ -267,6 +271,24 @@ static int SystemDump(int id, const char *name, int argc, const char **argv)
 }
 #endif
 
+static void IsEnableSandbox(void)
+{
+    const char *name = "const.sandbox";
+    char value[MAX_BUFFER_LEN] = {0};
+    unsigned int len = MAX_BUFFER_LEN;
+    if (SystemReadParam(name, value, &len) != 0) {
+        INIT_LOGE("Failed read param.");
+        g_enableSandbox = false;
+    }
+    if (strcmp(value, "enable") == 0) {
+        INIT_LOGI("Enable sandbox.");
+        g_enableSandbox = true;
+    } else {
+        INIT_LOGI("Disable sandbox.");
+        g_enableSandbox = false;
+    }
+}
+
 void SystemConfig(void)
 {
     InitServiceSpace();
@@ -293,7 +315,7 @@ void SystemConfig(void)
     AddCmdExecutor("display", SystemDump);
     (void)AddCompleteJob("param:ohos.servicectrl.display", "ohos.servicectrl.display=*", "display system");
 #endif
-
+    IsEnableSandbox();
     // execute init
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
@@ -303,4 +325,32 @@ void SystemConfig(void)
 void SystemRun(void)
 {
     StartParamService();
+}
+
+void SetServiceEnterSandbox(const char *execPath, unsigned int attribute)
+{
+    if (g_enableSandbox == false) {
+        return;
+    }
+    if ((attribute & SERVICE_ATTR_SANDBOX) != SERVICE_ATTR_SANDBOX) {
+        return;
+    }
+    INIT_ERROR_CHECK(execPath != NULL, return, "Service path is null.");
+    if (strncmp(execPath, "/system/bin/", strlen("/system/bin/")) == 0) {
+        if (strcmp(execPath, "/system/bin/appspawn") == 0) {
+            INIT_LOGI("Appspawn skip enter sandbox.");
+        } else if (strcmp(execPath, "/system/bin/hilogd") == 0) {
+            INIT_LOGI("Hilogd skip enter sandbox.");
+        } else {
+            INIT_ERROR_CHECK(EnterSandbox("system") == 0, return,
+                "Service %s failed enter sandbox system.", execPath);
+        }
+    } else if (strncmp(execPath, "/vendor/bin/", strlen("/vendor/bin/")) == 0) {
+        // chipset sandbox will be implemented later.
+        INIT_ERROR_CHECK(EnterSandbox("system") == 0, return,
+            "Service %s failed enter sandbox system.", execPath);
+    } else {
+        INIT_LOGE("Service %s does not enter sandbox", execPath);
+    }
+    return;
 }

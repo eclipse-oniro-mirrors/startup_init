@@ -37,6 +37,8 @@
 #include "init_param.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
+#include "sandbox.h"
+#include "sandbox_namespace.h"
 #include "securec.h"
 #ifdef WITH_SELINUX
 #include <policycoreutils.h>
@@ -510,6 +512,34 @@ static void DoSwapon(const struct CmdArgs *ctx)
     INIT_LOGI("DoSwapon: end, ret = %d", ret);
 }
 
+static void DoMkSandbox(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("DoMkSandbox: start");
+    if ((ctx == NULL) || (ctx->argc != 1)) {
+        INIT_LOGE("Call DoMkSandbox with invalid arguments");
+        return;
+    }
+
+    const char *sandbox = ctx->argv[0];
+    if (sandbox == NULL) {
+        INIT_LOGE("Invaild sandbox name.");
+        return;
+    }
+    InitDefaultNamespace();
+    if (!InitSandboxWithName(sandbox)) {
+        INIT_LOGE("Failed to init sandbox with name %s.", sandbox);
+    }
+
+    if (PrepareSandbox(sandbox) != 0) {
+        INIT_LOGE("Failed to prepare sandbox %s.", sandbox);
+        DestroySandbox(sandbox);
+    }
+    if (EnterDefaultNamespace() < 0) {
+        INIT_LOGE("Failed to set default namespace.");
+    }
+    CloseDefaultNamespace();
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "exec ", 1, 10, DoExec },
     { "mknode ", 1, 5, DoMakeNode },
@@ -534,6 +564,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "init_main_user ", 0, 1, DoInitMainUser },
     { "mkswap", 1, 1, DoMkswap},
     { "swapon", 1, 1, DoSwapon},
+    { "mksandbox", 1, 1, DoMkSandbox},
 };
 
 const struct CmdTable *GetCmdTable(int *number)

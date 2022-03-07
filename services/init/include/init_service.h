@@ -51,7 +51,8 @@ extern "C" {
 #define SERVICE_ATTR_DYNAMIC 0x100      // dynamic service
 #define SERVICE_ATTR_ONDEMAND 0x200     // ondemand, manage socket by init
 #define SERVICE_ATTR_TIMERSTART 0x400   // Mark a service will be started by timer
-#define SERVICE_ATTR_NEEDWAIT 0x800   // Mark a service will be started by timer
+#define SERVICE_ATTR_NEEDWAIT 0x800     // Mark a service will be started by timer
+#define SERVICE_ATTR_SANDBOX 0x1000     // make service will enter sandbox
 
 #define MAX_SERVICE_NAME 32
 #define MAX_APL_NAME 32
@@ -78,6 +79,12 @@ extern "C" {
 
 #define EnableServiceTimer(service) \
     ((service)->attribute |= SERVICE_ATTR_TIMERSTART)
+
+#define MarkServiceWithSandbox(service) \
+    ((service)->attribute |= SERVICE_ATTR_SANDBOX)
+
+#define UnMarkServiceWithSandbox(service) \
+    ((service)->attribute &= ~SERVICE_ATTR_SANDBOX)
 
 typedef enum {
     START_MODE_CONDITION,

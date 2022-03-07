@@ -20,6 +20,7 @@ ohos_executable("begetctl") {
     "main.c",
     "misc_daemon.cpp",
     "param_cmd.c",
+    "sandbox.cpp",
     "service_control.c",
     "shell/shell_bas.c",
   ]
@@ -41,12 +42,16 @@ ohos_executable("begetctl") {
     "//base/startup/init_lite/services/param/include",
     "//base/startup/init_lite/services/loopevent/include",
     "//third_party/bounds_checking_function/include",
+    "//base/startup/init_lite/interfaces/innerkits/sandbox/include",
+    "//utils/native/base/include",
   ]
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+    "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox_static",
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param:param_client",
     "//third_party/bounds_checking_function:libsec_static",
+    "//utils/native/base:utils",
   ]
 
   if (param_test) {
@@ -82,6 +87,7 @@ ohos_executable("begetctl") {
     "stop_service",
     "service",
     "param",
+    "sandbox",
   ]
 
   install_images = [ "system" ]
