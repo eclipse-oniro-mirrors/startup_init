@@ -190,13 +190,14 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
     ssize_t readn = 0;
     Fstab *fstab = NULL;
 
+    FILE *fp = NULL;
     char *realPath = GetRealPath(file);
-    if (realPath == NULL) {
-        BEGET_LOGE("Invalid file");
-        return NULL;
+    if (realPath != NULL) {
+        fp = fopen(realPath, "r");
+        free(realPath);
+    } else {
+        fp = fopen(file, "r"); // no file system, can not get real path
     }
-    FILE *fp = fopen(realPath, "r");
-    free(realPath);
     if (fp == NULL) {
         BEGET_LOGE("Open %s failed, err = %d", file, errno);
         return NULL;

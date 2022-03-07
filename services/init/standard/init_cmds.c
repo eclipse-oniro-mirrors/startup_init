@@ -319,7 +319,13 @@ static int FilterService(const Service *service, const char **exclude, int size)
 
 static void DoStopAllServices(const struct CmdArgs *ctx)
 {
-    StopAllServices(SERVICE_ATTR_INVALID, (const char **)ctx->argv, ctx->argc, FilterService);
+    int flags = SERVICE_ATTR_INVALID;
+    if (ctx->argc >= 1 && strcmp(ctx->argv[0], "true") == 0) {
+        flags |= SERVICE_ATTR_NEEDWAIT;
+        StopAllServices(flags, (const char **)(&ctx->argv[1]), ctx->argc - 1, FilterService);
+    } else {
+        StopAllServices(flags, (const char **)ctx->argv, ctx->argc, FilterService);
+    }
     return;
 }
 
