@@ -55,11 +55,21 @@ ohos_executable("begetctl") {
       "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
       "//base/startup/init_lite/services/loopevent:loopevent",
       "//base/startup/init_lite/services/param/watcher:param_watcheragent",
+      "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
     ]
     defines += [
       "OHOS_SERVICE_DUMP",
       "INIT_TEST",
     ]
+  }
+
+  if (build_selinux) {
+    include_dirs += [
+      "//third_party/selinux/libselinux/include/",
+      "//base/security/selinux/interfaces/policycoreutils/include/",
+    ]
+    deps += [ "//third_party/selinux:libselinux" ]
+    defines += [ "WITH_SELINUX" ]
   }
 
   symlink_target_name = [
@@ -113,6 +123,7 @@ ohos_executable("paramshell") {
       "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
       "//base/startup/init_lite/services/loopevent:loopevent",
       "//base/startup/init_lite/services/param/watcher:param_watcheragent",
+      "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
     ]
     defines += [
       "OHOS_SERVICE_DUMP",

@@ -24,9 +24,12 @@
 #include <sys/msg.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include "init_param.h"
 #include "init_utils.h"
+#include "loop_event.h"
 #include "param_message.h"
 #include "param_manager.h"
 #include "param_request.h"
@@ -339,7 +342,17 @@ static int HandleParamSet(const ParamTaskPtr worker, const ParamMessage *msg)
         PARAM_CHECK(ret == 0, return ret,
             "Failed to decode param %d name %s %s", ret, msg->key, valueContent->content);
     }
-
+    if (srcLabel != NULL) {
+        struct ucred cr = {-1, -1, -1};
+        socklen_t crSize = sizeof(cr);
+        if (getsockopt(LE_GetSocketFd(worker), SOL_SOCKET, SO_PEERCRED, &cr, &crSize) < 0) {
+            PARAM_LOGE("Failed to get opt %d", errno);
+            return SendResponseMsg(worker, msg, -1);
+        }
+        srcLabel->cred.uid = cr.uid;
+        srcLabel->cred.pid = cr.pid;
+        srcLabel->cred.gid = cr.gid;
+    }
     ret = SystemSetParam(msg->key, valueContent->content, srcLabel);
     if (srcLabel != NULL && g_paramWorkSpace.paramSecurityOps.securityFreeLabel != NULL) {
         g_paramWorkSpace.paramSecurityOps.securityFreeLabel(srcLabel);

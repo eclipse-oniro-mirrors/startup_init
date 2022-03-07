@@ -28,6 +28,10 @@
 #include "param_utils.h"
 #include "shell_utils.h"
 #include "sys_param.h"
+#ifdef WITH_SELINUX
+#include <policycoreutils.h>
+#include <selinux/selinux.h>
+#endif // WITH_SELINUX
 
 #define MASK_LENGTH_MAX 4
 pid_t g_shellPid = 0;
@@ -389,6 +393,9 @@ static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[
     if (pid == 0) {
         setuid(2000); // 2000 shell group
         setgid(2000); // 2000 shell group
+#ifdef WITH_SELINUX
+        setcon("u:r:normal_hap_domain:s0");
+#endif
         if (argc >= 2) { // 2 min argc
             char *args[] = {SHELL_NAME, argv[1], NULL};
             ret = execv(CMD_PATH, args);
