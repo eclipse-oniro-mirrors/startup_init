@@ -21,6 +21,10 @@ namespace init_param {
 int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
     MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
+    std::u16string myDescripter = IWatcherManager::GetDescriptor();
+    std::u16string remoteDescripter = data.ReadInterfaceToken();
+    WATCHER_CHECK(myDescripter == remoteDescripter, return -1, "Invalid remoteDescripter");
+
     switch (code) {
         case ADD_WATCHER: {
             std::string key = data.ReadString();
