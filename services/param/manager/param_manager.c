@@ -114,9 +114,10 @@ int ReadParamWithCheck(const ParamWorkSpace *workSpace, const char *name, uint32
     PARAM_CHECK(handle != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param handle");
     PARAM_CHECK(workSpace != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param name");
     *handle = -1;
+#ifdef READ_CHECK
     int ret = CheckParamPermission(workSpace, workSpace->securityLabel, name, op);
     PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
-
+#endif
     ParamTrieNode *node = FindTrieNode(&workSpace->paramSpace, name, strlen(name), NULL);
     if (node != NULL && node->dataIndex != 0) {
         *handle = node->dataIndex;
