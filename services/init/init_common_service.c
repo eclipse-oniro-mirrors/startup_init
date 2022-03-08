@@ -33,7 +33,6 @@
 #include "init_cmds.h"
 #include "init_log.h"
 #include "init_jobs_internal.h"
-#include "init_param.h"
 #include "init_service.h"
 #include "init_service_manager.h"
 #include "init_service_socket.h"
@@ -449,7 +448,6 @@ void ServiceReap(Service *service)
         if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
             INIT_LOGE("Critical service \" %s \" crashed %d times, rebooting system",
                 service->name, service->crashCount);
-            SystemWriteParam("startup.device.ctl", "stop");
             ExecReboot("reboot");
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
