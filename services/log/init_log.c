@@ -105,7 +105,6 @@ void InitLogInit(const char *outFileName, InitLogLevel logLevel, const char *kLe
     if (vsnprintf_s(tmpFmt, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, fmt, vargs) == -1) {
         close(g_fd);
         g_fd = -1;
-        va_end(vargs);
         return;
     }
 
@@ -114,7 +113,6 @@ void InitLogInit(const char *outFileName, InitLogLevel logLevel, const char *kLe
         kLevel, getpid(), "INIT", LOG_LEVEL_STR[logLevel], tmpFmt) == -1) {
         close(g_fd);
         g_fd = -1;
-        va_end(vargs);
         return;
     }
     va_end(vargs);
