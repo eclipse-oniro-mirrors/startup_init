@@ -64,6 +64,12 @@ static int SetAllAmbientCapability(void)
 static int SetPerms(const Service *service)
 {
     INIT_CHECK_RETURN_VALUE(KeepCapability() == 0, SERVICE_FAILURE);
+
+    if (service->servPerm.gIDCnt == 0) {
+        // use uid as gid
+        INIT_ERROR_CHECK(setgid(service->servPerm.uID) == 0, return SERVICE_FAILURE,
+            "SetPerms, setgid for %s failed. %d", service->name, errno);
+    }
     if (service->servPerm.gIDCnt > 0) {
         INIT_ERROR_CHECK(setgid(service->servPerm.gIDArray[0]) == 0, return SERVICE_FAILURE,
             "SetPerms, setgid for %s failed. %d", service->name, errno);
