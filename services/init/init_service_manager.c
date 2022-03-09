@@ -607,8 +607,7 @@ static int GetDynamicService(const cJSON *curArrItem, Service *curServ)
 
     INIT_ERROR_CHECK(cJSON_IsBool(item), return SERVICE_FAILURE,
         "Service : %s dynamic value only support bool.", curServ->name);
-    bool isDynamic = (bool)cJSON_GetNumberValue(item);
-    INIT_INFO_CHECK(isDynamic, return SERVICE_SUCCESS,
+    INIT_INFO_CHECK(cJSON_IsTrue(item), return SERVICE_SUCCESS,
         "Service : %s dynamic value is false, it will be started with init.", curServ->name);
     INIT_CHECK_RETURN_VALUE(!IsServiceInMainStrap(curServ), SERVICE_SUCCESS);
     INIT_LOGI("%s is dynamic service", curServ->name);
@@ -627,8 +626,7 @@ static int GetServiceOnDemand(const cJSON *curArrItem, Service *curServ)
 
     INIT_ERROR_CHECK(cJSON_IsBool(item), return SERVICE_FAILURE,
         "Service : %s ondemand value only support bool.", curServ->name);
-    bool isOnDemand = (bool)cJSON_GetNumberValue(item);
-    INIT_INFO_CHECK(isOnDemand, return SERVICE_SUCCESS,
+    INIT_INFO_CHECK(cJSON_IsTrue(item), return SERVICE_SUCCESS,
         "Service : %s ondemand value is false, it will be manage socket by itself", curServ->name);
     if (curServ->attribute & SERVICE_ATTR_CRITICAL) {
         INIT_LOGE("Service : %s is invalid which has both critical and ondemand attribute", curServ->name);
