@@ -17,7 +17,7 @@ build_version = 2.0
 hw_sc.build.os.enable=true
 
 # ohos API version number.
-hw_sc.build.os.apiversion=8
+hw_sc.build.os.apiversion=9
 
 # ohos system version.
 hw_sc.build.os.version=2.2.0
