@@ -14,6 +14,7 @@
  */
 #include "init_cmds.h"
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <net/if.h>
@@ -180,6 +181,22 @@ static void DoExec(const struct CmdArgs *ctx)
     if (pid == 0) {
         INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, _exit(0x7f),
             "DoExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
+#ifdef SUPPORT_PROFILER_HIDEBUG
+        if (access("/system/lib/libhidebug.so", F_OK) == 0) {
+            void* handle = dlopen("/system/lib/libhidebug.so", RTLD_LAZY);
+            if (handle == NULL) {
+                INIT_LOGE("Failed to dlopen libhidebug.so, %s\n", dlerror());
+                return;
+            }
+            bool (* initParam)();
+            initParam = (bool (*)())dlsym(handle, "InitEnvironmentParam");
+            if (initParam == NULL) {
+                INIT_LOGE("Failed to dlsym InitEnvironmentParam, %s\n", dlerror());
+                return;
+            }
+            (*initParam)(ctx->argv[0]);
+        }
+#endif
         int ret = execv(ctx->argv[0], ctx->argv);
         if (ret == -1) {
             INIT_LOGE("DoExec: execute \"%s\" failed: %d.", ctx->argv[0], errno);
