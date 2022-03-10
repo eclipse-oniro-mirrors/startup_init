@@ -40,7 +40,6 @@ if (defined(ohos_lite)) {
       "system",
       "updater",
     ]
-    relative_install_dir = "platform-vndk"
     install_enable = true
     part_name = "init"
     subsystem_name = "startup"
