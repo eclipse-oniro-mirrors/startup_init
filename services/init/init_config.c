@@ -93,7 +93,10 @@ static void ParseAllImports(const cJSON *root)
 void ReadConfig(void)
 {
     // parse cfg
-    if (InUpdaterMode() == 0) {
+    if (InChargerMode() == 1) {
+        ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
+        ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
+    } else if (InUpdaterMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CFG_PATH, ".cfg", ParseInitCfg, NULL);
         ReadFileInDir("/vendor/etc/init", ".cfg", ParseInitCfg, NULL);

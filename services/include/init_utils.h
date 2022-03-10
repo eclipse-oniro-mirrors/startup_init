@@ -35,6 +35,8 @@ typedef struct {
 #define DECIMAL_BASE 10
 #define WAIT_MAX_SECOND 5
 #define MAX_BUFFER_LEN 256
+#define CMDLINE_VALUE_LEN_MAX 512
+#define PARAM_CMD_LINE "/proc/cmdline"
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 
 uid_t DecodeUid(const char *name);
@@ -54,6 +56,7 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
 char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxItemCount);
 void FreeStringVector(char **vector, int count);
 int InUpdaterMode(void);
+int InChargerMode(void);
 int StringReplaceChr(char *strl, char oldChr, char newChr);
 
 int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue);
