@@ -29,6 +29,7 @@ static int main_cmd(BShellHandle shell, int argc, char* argv[])
 
     if (argc == REBOOT_CMD_NUMBER && strcmp(argv[1], "shutdown") != 0 &&
         strcmp(argv[1], "updater") != 0 &&
+        strcmp(argv[1], "suspend") != 0 &&
         strcmp(argv[1], "flashd") != 0 &&
 #ifdef INIT_TEST
         strcmp(argv[1], "charing") != 0 &&
@@ -63,6 +64,7 @@ MODULE_CONSTRUCTOR(void)
     CmdInfo infos[] = {
         {"reboot", main_cmd, "reboot system", "reboot", ""},
         {"reboot", main_cmd, "shutdown system", "reboot shutdown", ""},
+        {"reboot", main_cmd, "suspend system", "reboot suspend", ""},
         {"reboot", main_cmd, "reboot and boot into updater", "reboot updater", ""},
         {"reboot", main_cmd, "reboot and boot into updater", "reboot updater[:options]", ""},
         {"reboot", main_cmd, "reboot and boot into flashd", "reboot flashd", ""},

@@ -305,7 +305,10 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
 {
     int gidCount;
     cJSON *arrItem = cJSON_GetObjectItemCaseSensitive(curArrItem, GID_STR_IN_CFG);
-    if (!cJSON_IsArray(arrItem)) {
+    if (!arrItem) {
+        curServ->servPerm.gIDCnt = 0;
+        return SERVICE_SUCCESS;
+    } else if (!cJSON_IsArray(arrItem)) {
         gidCount = 1;
     } else {
         gidCount = cJSON_GetArraySize(arrItem);
@@ -961,7 +964,7 @@ void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size))
 {
     Service *service = GetServiceByName("appspawn");
-    if (service != NULL && service->pid != 0) {
+    if (((SERVICE_ATTR_NEEDWAIT & flags) == SERVICE_ATTR_NEEDWAIT) && service != NULL && service->pid != 0) {
         waitpid(service->pid, 0, 0);
     }
 
@@ -977,7 +980,7 @@ void StopAllServices(int flags, const char **exclude, int size,
             node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
             continue;
         }
-        service->attribute |= flags;
+        service->attribute |= (flags & SERVICE_ATTR_INVALID);
         int ret = ServiceStop(service);
         if (ret != SERVICE_SUCCESS) {
             INIT_LOGE("Service %s stop failed!", service->name);

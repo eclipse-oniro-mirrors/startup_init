@@ -17,6 +17,7 @@
 
 #include "init_adapter.h"
 #include "init_log.h"
+#include "init_param.h"
 #include "init_service_manager.h"
 #include "loop_event.h"
 
@@ -48,7 +49,9 @@ static void ProcessSignal(const struct signalfd_siginfo *siginfo)
         }
         case SIGTERM: {
             INIT_LOGI("SigHandler, SIGTERM received.");
-            StopAllServices(0, NULL, 0, NULL);
+            SystemWriteParam("startup.device.ctl", "stop");
+            // exec reboot use toybox reboot cmd
+            ExecReboot("reboot");
             break;
         }
         default:
