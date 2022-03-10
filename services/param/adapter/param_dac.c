@@ -85,6 +85,9 @@ static int InitLocalSecurityLabel(ParamSecurityLabel **security, int isInit)
     *security = &g_localSecurityLabel;
     // support check write permission in client
     (*security)->flags |= LABEL_CHECK_FOR_ALL_PROCESS;
+#ifdef WITH_SELINUX
+    (*security)->flags = 0;
+#endif
     return 0;
 }
 

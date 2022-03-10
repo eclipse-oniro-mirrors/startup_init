@@ -25,10 +25,12 @@
 int ConntectServer(int fd, const char *servername)
 {
     PARAM_CHECK(fd >= 0, return -1, "Invalid fd %d", fd);
+    int opt = 1;
+    int ret = setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &opt, sizeof(opt));
     PARAM_CHECK(servername != NULL, return -1, "Invalid servername");
     struct sockaddr_un addr;
     /* fill socket address structure with server's address */
-    int ret = memset_s(&addr, sizeof(addr), 0, sizeof(addr));
+    ret = memset_s(&addr, sizeof(addr), 0, sizeof(addr));
     PARAM_CHECK(ret == 0, return -1, "Failed to memset server address");
     addr.sun_family = AF_UNIX;
     ret = sprintf_s(addr.sun_path, sizeof(addr.sun_path) - 1, "%s", servername);

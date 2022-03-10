@@ -16,6 +16,10 @@
 #include "param_manager.h"
 
 #include <ctype.h>
+#include <dlfcn.h>
+#ifdef WITH_SELINUX
+#include "selinux_parameter.h"
+#endif
 
 #if !defined PARAM_SUPPORT_SELINUX && !defined PARAM_SUPPORT_DAC
 static ParamSecurityLabel g_defaultSecurityLabel;
@@ -110,9 +114,10 @@ int ReadParamWithCheck(const ParamWorkSpace *workSpace, const char *name, uint32
     PARAM_CHECK(handle != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param handle");
     PARAM_CHECK(workSpace != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param name");
     *handle = -1;
+#ifdef READ_CHECK
     int ret = CheckParamPermission(workSpace, workSpace->securityLabel, name, op);
     PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
-
+#endif
     ParamTrieNode *node = FindTrieNode(&workSpace->paramSpace, name, strlen(name), NULL);
     if (node != NULL && node->dataIndex != 0) {
         *handle = node->dataIndex;
@@ -231,6 +236,45 @@ int TraversalParam(const ParamWorkSpace *workSpace,
     return TraversalTrieNode(&workSpace->paramSpace, root, ProcessParamTraversal, &context);
 }
 
+#ifdef WITH_SELINUX
+static void *g_selinuxHandle = NULL;
+static int CheckParamPermissionWithSelinux(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
+{
+    static void (*setSelinuxLogCallback)();
+    static int (*setParamCheck)(const char *paraName, struct ucred *uc);
+    g_selinuxHandle = dlopen("/system/lib/libparaperm_checker.z.so", RTLD_LAZY);
+    if (g_selinuxHandle == NULL) {
+        PARAM_LOGE("Failed to dlopen libparaperm_checker.z.so, %s\n", dlerror());
+        return DAC_RESULT_FORBIDED;
+    }
+    if (setSelinuxLogCallback == NULL) {
+        setSelinuxLogCallback = (void (*)())dlsym(g_selinuxHandle, "SetSelinuxLogCallback");
+        if (setSelinuxLogCallback == NULL) {
+            PARAM_LOGE("Failed to dlsym setSelinuxLogCallback, %s\n", dlerror());
+            return DAC_RESULT_FORBIDED;
+        }
+    }
+    (*setSelinuxLogCallback)();
+
+    if (setParamCheck == NULL) {
+        setParamCheck = (int (*)(const char *paraName, struct ucred *uc))dlsym(g_selinuxHandle, "SetParamCheck");
+        if (setParamCheck == NULL) {
+            PARAM_LOGE("Failed to dlsym setParamCheck, %s\n", dlerror());
+            return DAC_RESULT_FORBIDED;
+        }
+    }
+    struct ucred uc;
+    uc.pid = srcLabel->cred.pid;
+    uc.uid = srcLabel->cred.uid;
+    uc.gid = srcLabel->cred.gid;
+    int ret = setParamCheck(name, &uc);
+    if (ret != 0) {
+        PARAM_LOGI("Selinux check name %s pid %d uid %d %d result %d", name, uc.pid, uc.uid, uc.gid, ret);
+    }
+    return ret;
+}
+#endif
+
 int CheckParamPermission(const ParamWorkSpace *workSpace,
     const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
@@ -240,6 +284,14 @@ int CheckParamPermission(const ParamWorkSpace *workSpace,
         return 0;
     }
     PARAM_CHECK(name != NULL && srcLabel != NULL, return -1, "Invalid param");
+#ifdef WITH_SELINUX
+    if (mode == DAC_WRITE) {
+        int ret = CheckParamPermissionWithSelinux(srcLabel, name, mode);
+        if (ret == DAC_RESULT_PERMISSION) {
+            return DAC_RESULT_PERMISSION;
+        }
+    }
+#endif
     if (workSpace->paramSecurityOps.securityCheckParamPermission == NULL) {
         return DAC_RESULT_FORBIDED;
     }
