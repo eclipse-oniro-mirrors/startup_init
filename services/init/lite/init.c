@@ -80,7 +80,15 @@ void SystemConfig(void)
 
 void SystemRun(void)
 {
+#ifndef __LITEOS__
     LE_RunLoop(LE_GetDefaultLoop());
+#else
+    while (1) {
+        // pause only returns when a signal was caught and the signal-catching function returned.
+        // pause only returns -1, no need to process the return value.
+        (void)pause();
+    }
+#endif
 }
 
 void SetServiceEnterSandbox(const char *path, unsigned int attribute)
