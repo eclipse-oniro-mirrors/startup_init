@@ -168,8 +168,9 @@ int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int l
             endIndex = i;
             break;
         }
-        if (*tmp == ' ') {
+        if (*tmp == ' ' || *tmp == '\n' || *tmp == '\r' || *tmp == '\t') {
             endIndex = i;
+            break;
         }
         if (*tmp == '=') {
             if (endIndex != 0) { // for root=uuid=xxxx
