@@ -684,6 +684,7 @@ static int LoadParamFromCmdLine(void)
     static const char *cmdLines[] = {
         OHOS_BOOT"hardware",
         OHOS_BOOT"bootgroup",
+        OHOS_BOOT"reboot_reason",
 #ifdef STARTUP_INIT_TEST
         OHOS_BOOT"mem",
         OHOS_BOOT"console",

@@ -411,6 +411,21 @@ int InUpdaterMode(void)
     }
 }
 
+int InChargerMode(void)
+{
+    char *data = ReadFileData(PARAM_CMD_LINE);
+    char value[CMDLINE_VALUE_LEN_MAX];
+    int ret = 0;
+
+    if ((GetProcCmdlineValue("reboot_reason", data, value, CMDLINE_VALUE_LEN_MAX) == 0) &&
+        (strcmp(value, "poweroff_charge") == 0)) {
+        ret = 1;
+    }
+    INIT_LOGE("GetProcCmdlineValue():reboot_reason=%s ,ret=%d\n", value, ret);
+    free(data);
+    return ret;
+}
+
 int StringReplaceChr(char *strl, char oldChr, char newChr)
 {
     INIT_ERROR_CHECK(strl != NULL, return -1, "Invalid parament");
