@@ -13,10 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef FUZZ_UTILS_H
-#define FUZZ_UTILS_H
-#include <stdint.h>
-#include <stdlib.h>
+#include "test_startup_ServiceControlStart_fuzzer.h"
+#include "service_control.h"
 
-void CloseStdout(void);
-#endif
+namespace OHOS {
+    bool FuzzServiceControlStart(const uint8_t* data, size_t size)
+    {
+        bool result = false;
+        if (!ServiceControl(reinterpret_cast<const char*>(data), START)) {
+            result = true;
+        }
+        return result;
+    }
+}
+
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+{
+    /* Run your code on data */
+    OHOS::FuzzServiceControlStart(data, size);
+    return 0;
+}
