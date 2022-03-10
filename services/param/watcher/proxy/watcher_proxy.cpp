@@ -32,6 +32,7 @@ void WatcherProxy::OnParamerterChange(const std::string &name, const std::string
     auto remote = Remote();
     WATCHER_CHECK(remote != nullptr, return, "Can not get remote");
 
+    data.WriteInterfaceToken(WatcherProxy::GetDescriptor());
     data.WriteString(name);
     data.WriteString(value);
     int ret = remote->SendRequest(PARAM_CHANGE, data, reply, option);

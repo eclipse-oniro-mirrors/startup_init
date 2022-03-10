@@ -25,6 +25,7 @@ uint32_t WatcherManagerProxy::AddWatcher(const std::string &keyPrefix, const spt
     WATCHER_CHECK(remote != nullptr, return 0, "Can not get remote");
 
     MessageParcel data;
+    data.WriteInterfaceToken(WatcherManagerProxy::GetDescriptor());
     data.WriteString(keyPrefix);
     bool ret = data.WriteRemoteObject(watcher->AsObject());
     WATCHER_CHECK(ret, return 0, "Can not get remote");
@@ -42,6 +43,7 @@ int32_t WatcherManagerProxy::DelWatcher(const std::string &keyPrefix, uint32_t w
     WATCHER_CHECK(remote != nullptr, return ERR_FLATTEN_OBJECT, "Can not get remote");
 
     MessageParcel data;
+    data.WriteInterfaceToken(WatcherManagerProxy::GetDescriptor());
     data.WriteString(keyPrefix);
     data.WriteUint32(watcherId);
     MessageParcel reply;
