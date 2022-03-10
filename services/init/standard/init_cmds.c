@@ -182,18 +182,29 @@ static void DoExec(const struct CmdArgs *ctx)
         INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, _exit(0x7f),
             "DoExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
 #ifdef SUPPORT_PROFILER_HIDEBUG
-        void* handle = dlopen("/system/lib/libhidebug.so", RTLD_LAZY);
-        if (handle == NULL) {
-            INIT_LOGE("Failed to dlopen libhidebug.so, %s\n", dlerror());
-            return;
-        }
-        bool (* initParam)();
-        initParam = (bool (*)())dlsym(handle, "InitEnvironmentParam");
-        if (initParam == NULL) {
-            INIT_LOGE("Failed to dlsym InitEnvironmentParam, %s\n", dlerror());
-            return;
-        }
-        (*initParam)(ctx->argv[0]);
+        do {
+            if (access("/system/lib/libhidebug.so", F_OK) != 0) {
+                INIT_LOGE("access failed, errno = %d\n", errno);
+                break;
+            }
+            void* handle = dlopen("/system/lib/libhidebug.so", RTLD_LAZY);
+            if (handle == NULL) {
+                INIT_LOGE("Failed to dlopen libhidebug.so, %s\n", dlerror());
+                break;
+            }
+            bool (* initParam)();
+            initParam = (bool (*)())dlsym(handle, "InitEnvironmentParam");
+            if (initParam == NULL) {
+                INIT_LOGE("Failed to dlsym InitEnvironmentParam, %s\n", dlerror());
+                dlclose(handle);
+                break;
+            }
+            bool ret = (*initParam)(ctx->argv[0]);
+            if (!ret) {
+                INIT_LOGE("init parameters failed.\n");
+            }
+            dlclose(handle);
+        } while (0);
 #endif
         int ret = execv(ctx->argv[0], ctx->argv);
         if (ret == -1) {
