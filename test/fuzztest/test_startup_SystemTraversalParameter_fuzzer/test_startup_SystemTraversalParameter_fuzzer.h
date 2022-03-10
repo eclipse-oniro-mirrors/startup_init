@@ -13,10 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef FUZZ_UTILS_H
-#define FUZZ_UTILS_H
-#include <stdint.h>
-#include <stdlib.h>
+#ifndef TEST_FUZZTEST_SYSTEMTRAVERSALPARAMETER_FUZZER_H
+#define TEST_FUZZTEST_SYSTEMTRAVERSALPARAMETER_FUZZER_H
+#include "fuzz_utils.h"
+#define FUZZ_PROJECT_NAME "SystemTraversalParameter_fuzzer"
 
-void CloseStdout(void);
+typedef struct {
+    size_t size;
+    char *data;
+} Cookie;
+
 #endif

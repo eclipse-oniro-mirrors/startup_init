@@ -13,10 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef FUZZ_UTILS_H
-#define FUZZ_UTILS_H
-#include <stdint.h>
-#include <stdlib.h>
+#include "test_startup_SystemFindParameter_fuzzer.h"
+#include "sys_param.h"
 
-void CloseStdout(void);
-#endif
+static ParamHandle handle;
+
+namespace OHOS {
+    bool FuzzSystemFindParameter(const uint8_t* data, size_t size)
+    {
+        bool result = false;
+        if (!SystemFindParameter(reinterpret_cast<const char*>(data), &handle)) {
+            result = true;
+        }
+        return result;
+    }
+}
+
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+{
+    /* Run your code on data */
+    OHOS::FuzzSystemFindParameter(data, size);
+    return 0;
+}

@@ -13,10 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef FUZZ_UTILS_H
-#define FUZZ_UTILS_H
-#include <stdint.h>
-#include <stdlib.h>
+#include "test_startup_SystemGetParameterCommitId_fuzzer.h"
+#include "sys_param.h"
 
-void CloseStdout(void);
-#endif
+namespace OHOS {
+    bool FuzzSystemGetParameterCommitId(const uint8_t* data, size_t size)
+    {
+        bool result = false;
+        uint32_t commitId = 0;
+        if (!SystemGetParameterCommitId(reinterpret_cast<ParamHandle>(data), &commitId)) {
+            result = true;
+        }
+        return result;
+    }
+}
+
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+{
+    /* Run your code on data */
+    OHOS::FuzzSystemGetParameterCommitId(data, size);
+    return 0;
+}
