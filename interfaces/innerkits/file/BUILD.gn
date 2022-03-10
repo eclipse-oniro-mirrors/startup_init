@@ -29,6 +29,7 @@ ohos_static_library("libfile_static") {
   sources = service_file_sources
   include_dirs = service_file_include
   deps = service_file_deps
+  part_name = "init"
 }
 
 ohos_shared_library("libfile") {

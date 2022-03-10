@@ -105,6 +105,7 @@ if (defined(ohos_lite)) {
       external_deps = [ "selinux:librestorecon" ]
       cflags += [ "-DWITH_SELINUX" ]
     }
+    part_name = "init"
   }
 
   ohos_executable("ueventd") {
