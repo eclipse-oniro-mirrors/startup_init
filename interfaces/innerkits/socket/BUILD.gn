@@ -38,6 +38,7 @@ if (defined(ohos_lite)) {
     sources = service_socket_sources
     include_dirs = service_socket_include
     deps = service_socket_deps
+    part_name = "init"
   }
 
   ohos_shared_library("libsocket") {
