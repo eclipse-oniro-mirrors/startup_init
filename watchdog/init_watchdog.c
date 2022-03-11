@@ -15,12 +15,16 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <sched.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "sched.h"
 
 #ifdef LINUX_WATCHDOG
 #include <linux/watchdog.h>
@@ -75,7 +79,9 @@ int main(int argc, const char *argv[])
     gap = (gap > 0) ? gap : DEFAULT_GAP;
 
     INIT_LOGI("watchdoge started (interval %d, margin %d), fd = %d\n", interval, gap, fd);
-
+    if (setpriority(PRIO_PROCESS, 0, 14) != 0) { // 14 is process priority
+        INIT_LOGE("setpriority failed err=%d\n", errno);
+    }
     int timeoutSet = interval + gap;
     int timeoutGet = 0;
     int ret = ioctl(fd, WDIOC_SETTIMEOUT, &timeoutSet);
