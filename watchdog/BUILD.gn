@@ -23,7 +23,10 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/include",
     ]
     deps = [ "//base/startup/init_lite/services/log:init_log" ]
-    defines = [ "_GNU_SOURCE" ]
+    defines = [
+      "_GNU_SOURCE",
+      "OHOS_LITE_WATCHDOG"
+    ]
     if (ohos_kernel_type == "linux") {
       defines += [ "LINUX_WATCHDOG" ]
     }
