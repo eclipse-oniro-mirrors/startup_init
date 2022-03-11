@@ -24,8 +24,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "sched.h"
-
 #ifdef LINUX_WATCHDOG
 #include <linux/watchdog.h>
 #else
