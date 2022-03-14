@@ -21,7 +21,7 @@ sdcard_r:x:1028:
 package_info:x:1032:
 logd:x:1036:
 shared_relro:x:1037:
-audioserver:x:1041:
+audio:x:1041:
 cameraserver:x:1047:
 shell:x:2000:
 cache:x:2001:
