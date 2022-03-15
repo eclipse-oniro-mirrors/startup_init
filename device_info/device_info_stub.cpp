@@ -77,9 +77,7 @@ bool DeviceInfoStub::CheckPermission(MessageParcel &data, const std::string &per
     int32_t result = TypePermissionState::PERMISSION_GRANTED;
     int32_t tokenType = AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType == TOKEN_NATIVE) {
-#ifdef SUPPORT_NATIVE
         result = AccessTokenKit::VerifyNativeToken(callerToken, permission);
-#endif
     } else if (tokenType == TOKEN_HAP) {
         result = AccessTokenKit::VerifyAccessToken(callerToken, permission);
     } else {
@@ -90,7 +88,7 @@ bool DeviceInfoStub::CheckPermission(MessageParcel &data, const std::string &per
         DINFO_LOGE("AccessTokenID:%d, permission:%s denied!", callerToken, permission.c_str());
         return false;
     }
-    DINFO_LOGI("dAccessTokenID:%d, permission:%s matched!", callerToken, permission.c_str());
+    DINFO_LOGI("tokenType %d dAccessTokenID:%d, permission:%s matched!", tokenType, callerToken, permission.c_str());
     return true;
 }
 
