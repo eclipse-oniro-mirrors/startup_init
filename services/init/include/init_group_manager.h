@@ -88,6 +88,7 @@ HashMapHandle GetGroupHashMap(int type);
 InitWorkspace *GetInitWorkspace(void);
 #endif
 int GetBootModeFromMisc(void);
+void clearMisc(void);
 #ifdef __cplusplus
 #if __cplusplus
 }
