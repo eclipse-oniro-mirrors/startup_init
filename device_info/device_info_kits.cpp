@@ -129,7 +129,8 @@ const char *AclGetSerial(void)
     OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
     int ret = instance.GetSerialID(result);
     if (ret == 0) {
-        (void)strcpy_s(serialNumber, sizeof(serialNumber), result.c_str());
+        ret = strcpy_s(serialNumber, sizeof(serialNumber), result.c_str());
+        DINFO_CHECK(ret == 0, return -1, "Failed to copy");
     }
     DINFO_LOGI("GetSerial %s", serialNumber);
     return serialNumber;

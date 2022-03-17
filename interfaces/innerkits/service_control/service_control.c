@@ -221,7 +221,7 @@ int ServiceSetReady(const char *serviceName)
         BEGET_LOGE("Set param for %s failed.", paramName);
         return -1;
     }
-    BEGET_LOGI("Success set %d read", serviceName);
+    BEGET_LOGI("Success set %s read", serviceName);
     return 0;
 }
 

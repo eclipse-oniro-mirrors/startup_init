@@ -229,7 +229,10 @@ static void PublishHoldFds(Service *service)
         fdBuffer[pos - 1] = '\0'; // Remove last ' '
         INIT_LOGI("fd buffer: [%s]", fdBuffer);
         char envName[MAX_BUFFER_LEN] = {};
-        (void)snprintf_s(envName, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, ENV_FD_HOLD_PREFIX"%s", service->name);
+        if (snprintf_s(envName, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, ENV_FD_HOLD_PREFIX"%s", service->name) < 0) {
+            INIT_LOGE("snprintf_s failed err=%d", errno);
+            return;
+        }
         if (setenv(envName, fdBuffer, 1) < 0) {
             INIT_LOGE("Failed to set env %s", envName);
         }
