@@ -68,6 +68,7 @@ public:
         MessageParcel reply;
         MessageOption option;
 
+        data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
         data.WriteString(keyPrefix);
         sptr<IWatcher> watcher = new TestWatcher();
         bool ret = data.WriteRemoteObject(watcher->AsObject());
@@ -87,6 +88,7 @@ public:
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
         data.WriteString(keyPrefix);
         data.WriteUint32(watcherId);
         watcherManager->OnRemoteRequest(IWatcherManager::DEL_WATCHER, data, reply, option);
@@ -138,6 +140,8 @@ public:
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+
+        data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
         data.WriteString(keyPrefix);
         sptr<IWatcher> watcher = new TestWatcher();
         bool ret = data.WriteRemoteObject(watcher->AsObject());
