@@ -182,6 +182,9 @@ int SystemSetParameter(const char *name, const char *value)
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value");
     int ret = CheckParamName(name, 0);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
+    ret = CheckParamValue(&g_clientSpace.paramSpace.paramSpace, NULL, name, value);
+    PARAM_CHECK(ret == 0, return ret, "Illegal param value %s", value);
+
     uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + PARAM_ALIGN(strlen(value) + 1);
     uint32_t labelLen = 0;
     ParamSecurityOps *ops = GetClientParamSecurityOps();

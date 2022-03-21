@@ -99,6 +99,9 @@ int32_t BShellEnvOutput(BShellHandle handle, char *fmt, ...)
     int len = vsnprintf_s(shell->data, sizeof(shell->data), sizeof(shell->data) - 1, fmt, list);
     va_end(list);
     if (len <= 0) {
+        va_start(list, fmt);
+        vfprintf(stdout, fmt, list);
+        va_end(list);
         return -1;
     }
     return BShellEnvOutputString(handle, shell->data);
@@ -301,7 +304,7 @@ static void BShellEnvHandleNormal(BShellHandle handle, uint8_t data)
     } else {
         BShellEnvOutputString(shell, BShellEnvErrString(handle, BSH_CMD_TOO_LONG));
         BShellEnvOutputString(shell, shell->prompt);
-        BShellEnvOutputString(shell, shell->buffer);
+
         shell->cursor = shell->length;
     }
 }

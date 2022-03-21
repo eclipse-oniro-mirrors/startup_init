@@ -165,6 +165,22 @@ int ReadParamName(const ParamWorkSpace *workSpace, ParamHandle handle, char *nam
     return 0;
 }
 
+int CheckParamValue(const WorkSpace *workSpace, const ParamTrieNode *node, const char *name, const char *value)
+{
+    if (IS_READY_ONLY(name)) {
+        PARAM_CHECK(strlen(value) < PARAM_CONST_VALUE_LEN_MAX,
+            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s", value);
+        if (node != NULL && node->dataIndex != 0) {
+            PARAM_LOGE("Read-only param was already set %s", name);
+            return PARAM_CODE_READ_ONLY;
+        }
+    } else {
+        PARAM_CHECK(strlen(value) < PARAM_VALUE_LEN_MAX,
+            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s", value);
+    }
+    return 0;
+}
+
 int CheckParamName(const char *name, int info)
 {
     PARAM_CHECK(name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
