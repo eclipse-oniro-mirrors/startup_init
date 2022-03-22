@@ -38,7 +38,9 @@ HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
     ASSERT_NE(service, nullptr);
     ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket) + strlen(testSocName) + 1);
     ASSERT_NE(sockopt, nullptr);
-    sockopt->type = SOCK_SEQPACKET;
+    sockopt->type = SOCK_STREAM;
+    sockopt->protocol = 0;
+    sockopt->family = PF_UNIX;
     sockopt->sockFd = -1;
     sockopt->uid = 1000;
     sockopt->gid = 1000;
