@@ -131,6 +131,16 @@ int SpliteString(char *line, const char *exclude[], uint32_t count,
         value++;
     }
 
+    // Skip spaces
+    char *tmp = name;
+    while ((tmp < value) && (*tmp != '\0')) {
+        if (isspace(*tmp)) {
+            (*tmp) = '\0';
+            break;
+        }
+        tmp++;
+    }
+
     // empty name, just ignore this line
     if (*value == '\0') {
         return 0;

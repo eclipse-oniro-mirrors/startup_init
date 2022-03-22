@@ -27,7 +27,7 @@
 #define BSH_KEY_CTRLC 0x03  // ctr + c
 #define BSH_KEY_ESC 0x1B    // ecs
 
-#define BSH_COMMAND_MAX_LENGTH 5 * 1024
+#define BSH_COMMAND_MAX_LENGTH (5 * 1024)
 #define BSH_PARAMETER_MAX_NUMBER 10
 #define BSH_CMD_NAME_END 48
 #define BSH_CMD_MAX_KEY 5

@@ -123,7 +123,7 @@ PARAM_STATIC int AddSecurityLabel(const ParamAuditData *auditData, void *context
     PARAM_CHECK(context != NULL, return -1, "Invalid context");
     ParamWorkSpace *workSpace = (ParamWorkSpace *)context;
     int ret = CheckParamName(auditData->name, 1);
-    PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", auditData->name);
+    PARAM_CHECK(ret == 0, return ret, "Illegal param name \"%s\"", auditData->name);
 
     ParamTrieNode *node = FindTrieNode(&workSpace->paramSpace, auditData->name, strlen(auditData->name), NULL);
     if (node == NULL) {
