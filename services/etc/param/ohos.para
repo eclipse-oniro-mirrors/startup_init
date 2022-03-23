@@ -11,21 +11,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-build_version = 2.0
+build_version = 3.1
 
 # whether ohos is enabled.
 hw_sc.build.os.enable=true
 
 # ohos API version number.
-hw_sc.build.os.apiversion=9
+hw_sc.build.os.apiversion=8
 
 # ohos system version.
-hw_sc.build.os.version=2.2.0
+hw_sc.build.os.version=3.1.0
 
 # ohos device type please use hw_sc.build.os.devicetype
 
 # ohos release type
-hw_sc.build.os.releasetype=Canary1
+hw_sc.build.os.releasetype=Release
 
 const.actionable_compatible_property.enabled=false
 const.postinstall.fstab.prefix=/system
@@ -35,7 +35,7 @@ const.allow.mock.location=0
 const.debuggable=1
 const.build.characteristics=default
 const.product.model=ohos
-const.product.name="OpenHarmony 2.0 Canary"
+const.product.name="OpenHarmony 3.1 Release"
 persist.sys.usb.config=hdc
 const.sandbox=enable
 # const.build.characteristics=default
@@ -54,7 +54,7 @@ const.product.hardwareversion=default
 const.product.bootloader.version=bootloader
 # OHOS_ABI_LIST[] = {"default"}
 const.product.cpu.abilist=default
-# OHOS_SECURITY_PATCH_TAG[] = { "2020-09-01" }
+# OHOS_SECURITY_PATCH_TAG[] = { "2022-03-30" }
 const.ohos.version.security_patch=2022-03-30
 # OHOS_DISPLAY_VERSION[] = {"OpenHarmony 3.1 release"}
 const.product.software.version=OpenHarmony 3.1 release
@@ -72,8 +72,8 @@ const.product.build.host=default
 const.product.build.date=default
 # OHOS_HARDWARE_PROFILE[] = {"default"}
 const.product.hardwareprofile=default
-# OHOS_RELEASE_TYPE[] = { "Canary1" }
-const.ohos.releasetype=Canary1
+# OHOS_RELEASE_TYPE[] = { "Release" }
+const.ohos.releasetype=Release
 # OHOS_SDK_API_LEVEL = 8;
 const.ohos.apiversion=8
 # OHOS_BUILD_ROOT_HASH[] = { "default" }
