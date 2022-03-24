@@ -570,7 +570,7 @@ static void ServiceTimerStartProcess(const TimerHandle handler, void *context)
     ServiceStopTimer(service);
     int ret = ServiceStart(service);
     if (ret != SERVICE_SUCCESS) {
-        INIT_LOGE("Start service \' %s \' in timer failed");
+        INIT_LOGE("Start service \' %s \' in timer failed", service->name);
     }
 }
 

@@ -220,11 +220,12 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
     PARAM_CHECK(calculator != NULL && condition != NULL, return -1, "Invalid calculator");
     uint32_t currIndex = 0;
     uint32_t start = 0;
+    size_t conditionLen = strlen(condition);
     int noneOper = 1;
     CalculatorClear(calculator);
     LogicData data1 = {};
     LogicData data2 = {};
-    while (currIndex < strlen(condition)) {
+    while (currIndex < conditionLen) {
         if (condition[currIndex] == '|' || condition[currIndex] == '&') {
             noneOper = 0;
             int ret = CalculatorPop(calculator, (void*)&data2);
@@ -274,10 +275,11 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, uint32_t prefixLen
     int ret;
     uint32_t curr = 0;
     uint32_t prefixIndex = 0;
+    size_t conditionLen = strlen(condition);
     LogicCalculator calculator;
     CalculatorInit(&calculator, MAX_CALC_PARAM, 1, 0);
 
-    while (curr < strlen(condition)) {
+    while (curr < conditionLen) {
         if (condition[curr] == ')') {
             CalculatorPopChar(&calculator, &e);
             while (e != '(') {

@@ -134,7 +134,7 @@ static void HandlerGetFds(int sock, Service *service)
     }
 
     if (service->fds == NULL || service->fdCount == 0) {
-        INIT_LOGE("Service \' %s \' does not have any held fds");
+        INIT_LOGE("Service \' %s \' does not have any held fds", service->name);
         errorInfo = "Service without any fds";
     }
 
