@@ -59,5 +59,6 @@ a2dp_host:x:3043:
 hdf_devmgr:x:3044:
 connected_tag_host:x:3045:
 dms:x:5522:
+sensor:x:6688:
 misc:x:9998:
 app:x:10000:
