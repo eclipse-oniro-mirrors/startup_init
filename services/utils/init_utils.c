@@ -58,7 +58,8 @@ uid_t DecodeUid(const char *name)
 {
     INIT_CHECK_RETURN_VALUE(name != NULL, -1);
     int digitFlag = 1;
-    for (unsigned int i = 0; i < strlen(name); ++i) {
+    size_t nameLen = strlen(name);
+    for (unsigned int i = 0; i < nameLen; ++i) {
         if (isalpha(name[i])) {
             digitFlag = 0;
             break;
