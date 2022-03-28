@@ -60,8 +60,9 @@ int GetSubStringInfo(const char *buff, uint32_t buffLen, char delimiter, SubStri
 {
     PARAM_CHECK(buff != NULL && info != NULL, return 0, "Invalid buff");
     size_t i = 0;
+    size_t buffStrLen = strlen(buff);
     // 去掉开始的空格
-    for (; i < strlen(buff); i++) {
+    for (; i < buffStrLen; i++) {
         if (!isspace(buff[i])) {
             break;
         }
