@@ -59,6 +59,7 @@ nfc_host:x:3042:
 a2dp_host:x:3043:
 hdf_devmgr:x:3044:
 connected_tag_host:x:3045:
+dslm:x:3046:
 dms:x:5522:
 sensor:x:6688:
 misc:x:9998:
