@@ -304,6 +304,7 @@ int CheckParamPermission(const ParamWorkSpace *workSpace,
     if (mode == DAC_WRITE) {
         int ret = CheckParamPermissionWithSelinux(srcLabel, name, mode);
         if (ret == DAC_RESULT_PERMISSION) {
+            PARAM_LOGI("CheckParamPermission %s", name);
             return DAC_RESULT_PERMISSION;
         }
     }

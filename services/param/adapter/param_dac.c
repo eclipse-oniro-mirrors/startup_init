@@ -253,10 +253,10 @@ static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamA
     if ((auditData->dacData.mode & localMode) != 0) {
         ret = DAC_RESULT_PERMISSION;
     }
-    PARAM_LOGV("Src label gid:%d uid:%d ", srcLabel->cred.gid, srcLabel->cred.uid);
-    PARAM_LOGV("local label gid:%d uid:%d mode %o",
+    PARAM_LOGI("Src label gid:%d uid:%d ", srcLabel->cred.gid, srcLabel->cred.uid);
+    PARAM_LOGI("local label gid:%d uid:%d mode %o",
         auditData->dacData.gid, auditData->dacData.uid, auditData->dacData.mode);
-    PARAM_LOGV("%s check %o localMode %o ret %d", auditData->name, mode, localMode, ret);
+    PARAM_LOGI("%s check %o localMode %o ret %d", auditData->name, mode, localMode, ret);
     return ret;
 #endif
 }
