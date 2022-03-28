@@ -4,6 +4,7 @@ system:x:1000:
 radio:x:1001:
 bluetooth:x:1002:
 graphics:x:1003:
+samgr:x:1005:
 file_manager:x:1006:
 log:x:1007:
 user_data_rw:x:1008:
