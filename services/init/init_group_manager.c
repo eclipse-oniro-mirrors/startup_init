@@ -24,7 +24,8 @@ static InitWorkspace g_initWorkspace = {0, 0, {0}, {0}, {0}};
 int GenerateHashCode(const char *key)
 {
     int code = 0;
-    for (size_t i = 0; i < strlen(key); i++) {
+    size_t keyLen = strlen(key);
+    for (size_t i = 0; i < keyLen; i++) {
         code += key[i] - 'A';
     }
     return code;

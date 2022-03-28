@@ -298,7 +298,7 @@ static void InitSandbox(sandbox_t *sandbox, const char *sandboxConfig, const cha
         return;
     }
     if (sandbox->isCreated) {
-        BEGET_LOGE("Sandbox %s has created.");
+        BEGET_LOGE("Sandbox %s has created.", name);
         return;
     }
     if (UnshareNamespace(CLONE_NEWNS) < 0) {
