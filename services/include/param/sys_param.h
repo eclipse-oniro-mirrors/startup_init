@@ -97,6 +97,7 @@ int SystemWatchParameter(const char *keyprefix, ParameterChangePtr change, void 
 void SystemDumpParameters(int verbose);
 
 int SysCheckParamExist(const char *name);
+long long GetSystemCommitId();
 #ifdef __cplusplus
 #if __cplusplus
 }
