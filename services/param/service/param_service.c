@@ -70,6 +70,8 @@ static int AddParam(WorkSpace *workSpace, const char *name, const char *value, u
         uint32_t offset = AddParamNode(workSpace, name, strlen(name), value, strlen(value));
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
         SaveIndex(&node->dataIndex, offset);
+        long long globalCommitId = atomic_load_explicit(&workSpace->area->commitId, memory_order_relaxed);
+        atomic_store_explicit(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
     }
     if (dataIndex != NULL) {
         *dataIndex = node->dataIndex;
@@ -86,6 +88,7 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     uint32_t valueLen = strlen(value);
     uint32_t commitId = atomic_load_explicit(&entry->commitId, memory_order_relaxed);
     atomic_store_explicit(&entry->commitId, commitId | PARAM_FLAGS_MODIFY, memory_order_relaxed);
+    long long globalCommitId = atomic_load_explicit(&workSpace->area->commitId, memory_order_relaxed);
 
     if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
         int ret = memcpy_s(entry->data + entry->keyLength + 1, PARAM_VALUE_LEN_MAX, value, valueLen + 1);
@@ -94,6 +97,7 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     }
     uint32_t flags = commitId & ~PARAM_FLAGS_COMMITID;
     atomic_store_explicit(&entry->commitId, (++commitId) | flags, memory_order_release);
+    atomic_store_explicit(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
     futex_wake(&entry->commitId, INT_MAX);
     return 0;
 }

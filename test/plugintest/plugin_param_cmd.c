@@ -83,7 +83,8 @@ static int32_t BShellParamCmdRead(BShellHandle shell, int32_t argc, char *argv[]
 static void HandleParamChange(const char *key, const char *value, void *context)
 {
     PLUGIN_CHECK(key != NULL && value != NULL, return, "Invalid parameter");
-    printf("Receive parameter change %s %s \n", key, value);
+    long long commit = GetSystemCommitId();
+    printf("Receive parameter commit %lld change %s %s \n", commit, key, value);
 }
 
 static void *CmdWatcher(void *args)
