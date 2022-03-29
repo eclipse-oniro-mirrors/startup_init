@@ -62,12 +62,17 @@ static int HandlerHoldFds(Service *service, int *fds, size_t fdCount, const char
 
 static void SendErrorInfo(int sock, const char *errInfo, const char *serviceName)
 {
+    int ret = 0;
     char errBuffer[MAX_FD_HOLDER_BUFFER] = {};
     if (UNLIKELY(errInfo == NULL)) { // Should not happen.
         char *defaultError = "Unknonw error";
-        (void)strncpy_s(errBuffer, MAX_FD_HOLDER_BUFFER, defaultError, strlen(defaultError));
+        ret = strncpy_s(errBuffer, MAX_FD_HOLDER_BUFFER, defaultError, strlen(defaultError));
     } else {
-        (void)strncpy_s(errBuffer, MAX_FD_HOLDER_BUFFER, errInfo, strlen(errInfo));
+        ret = strncpy_s(errBuffer, MAX_FD_HOLDER_BUFFER, errInfo, strlen(errInfo));
+    }
+    if (ret != 0) {
+        INIT_LOGE("Failed to copy, err = %d", errno);
+        return;
     }
 
     struct iovec iovec = {
@@ -96,7 +101,10 @@ static void SendFdsInfo(int sock, Service *service)
         return;
     }
     char sendBuffer[MAX_FD_HOLDER_BUFFER] = {};
-    (void)strncpy_s(sendBuffer, MAX_FD_HOLDER_BUFFER, "send done", strlen("send done"));
+    if (strncpy_s(sendBuffer, MAX_FD_HOLDER_BUFFER, "send done", strlen("send done")) != 0) {
+        INIT_LOGE("Failed to copy, err = %d", errno);
+        return;
+    }
     struct iovec iovec = {
         .iov_base = sendBuffer,
         .iov_len = strlen(sendBuffer),
@@ -134,7 +142,7 @@ static void HandlerGetFds(int sock, Service *service)
     }
 
     if (service->fds == NULL || service->fdCount == 0) {
-        INIT_LOGE("Service \' %s \' does not have any held fds");
+        INIT_LOGE("Service \' %s \' does not have any held fds", service->name);
         errorInfo = "Service without any fds";
     }
 
