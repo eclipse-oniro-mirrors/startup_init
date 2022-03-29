@@ -28,7 +28,6 @@ ohos_shared_library("deviceinfoservice") {
   sources = [ "device_info_stub.cpp" ]
 
   defines = [
-    "INIT_AGENT",
     "DINFO_LABEL=\"DeviceInfoService\"",
   ]
   include_dirs = [

@@ -22,61 +22,45 @@
 #include <time.h>
 #include "securec.h"
 
-#define UNUSED(x) \
-    do { \
-        (void)(x) \
-    } while (0)
+#ifdef OHOS_LITE
+#include "hilog/log.h"
+#endif
+#ifdef INIT_AGENT
+#include "hilog_base/log_base.h"
+#endif
 
 #define MAX_LOG_SIZE 1024
 #define BASE_YEAR 1900
 
 static InitLogLevel g_logLevel = INIT_INFO;
-static const char *LOG_LEVEL_STR[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
-
 void SetInitLogLevel(InitLogLevel logLevel)
 {
     g_logLevel = logLevel;
 }
 
-#ifdef OHOS_LITE
-static LogLevel ConvertToHiLog(InitLogLevel level)
+#ifdef INIT_FILE
+static void LogToFile(const char *logFile, const char *fileName, int line, const char *info)
 {
-    switch (level) {
-        case INIT_DEBUG:
-            return LOG_DEBUG;
-        case INIT_INFO:
-            return LOG_INFO;
-        case INIT_WARN:
-            return LOG_WARN;
-        case INIT_ERROR:
-            return LOG_ERROR;
-        case INIT_FATAL:
-            return LOG_FATAL;
-        // Unexpected log level, set level as lowest
-        default:
-            return LOG_DEBUG;
-    }
-}
-
-void InitToHiLog(InitLogLevel logLevel, const char *fmt, ...)
-{
-    if (logLevel < g_logLevel) {
+    time_t second = time(0);
+    if (second <= 0) {
         return;
     }
-
-    va_list list;
-    va_start(list, fmt);
-    char tmpFmt[MAX_LOG_SIZE];
-    if (vsnprintf_s(tmpFmt, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, fmt, list) == -1) {
-        va_end(list);
+    struct tm *t = localtime(&second);
+    FILE *outfile = fopen(logFile, "a+");
+    if (t == NULL || outfile == NULL) {
         return;
     }
-    (void)HiLogPrint(LOG_CORE, ConvertToHiLog(logLevel), LOG_DOMAIN, INIT_LOG_TAG, "%{public}s", tmpFmt);
-    va_end(list);
+    (void)fprintf(outfile, "[%d-%d-%d %d:%d:%d][pid=%d][%s:%d]%s \n",
+        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec,
+        getpid(), fileName, line, info);
+    (void)fflush(outfile);
+    fclose(outfile);
     return;
 }
 #endif
 
+#ifdef INIT_DMESG
+#ifndef OHOS_LITE
 static int g_fd = -1;
 void OpenLogDevice(void)
 {
@@ -87,11 +71,10 @@ void OpenLogDevice(void)
     return;
 }
 
-void InitLogInit(const char *outFileName, InitLogLevel logLevel, const char *kLevel, const char *fmt, ...)
+ void LogToDmesg(InitLogLevel logLevel, const char *domain, const char *fileName, int line, const char *info)
 {
-    if (logLevel < g_logLevel) {
-        return;
-    }
+    static const char *LOG_LEVEL_STR[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
+    static const char *LOG_KLEVEL_STR[] = { "<7>", "<6>", "<4>", "<3>", "<3>" };
 
     if (UNLIKELY(g_fd < 0)) {
         OpenLogDevice();
@@ -99,52 +82,48 @@ void InitLogInit(const char *outFileName, InitLogLevel logLevel, const char *kLe
             return;
         }
     }
-    va_list vargs;
-    va_start(vargs, fmt);
-    char tmpFmt[MAX_LOG_SIZE];
-    if (vsnprintf_s(tmpFmt, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, fmt, vargs) == -1) {
-        close(g_fd);
-        g_fd = -1;
-        va_end(vargs);
-        return;
-    }
-
     char logInfo[MAX_LOG_SIZE];
-    if (snprintf_s(logInfo, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, "%s[pid=%d][%s][%s] %s",
-        kLevel, getpid(), "INIT", LOG_LEVEL_STR[logLevel], tmpFmt) == -1) {
+    if (snprintf_s(logInfo, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, "%s[pid=%d %d][%s][%s][%s:%d]%s",
+        LOG_KLEVEL_STR[logLevel], getpid(), getppid(), domain, LOG_LEVEL_STR[logLevel], fileName, line, info) == -1) {
         close(g_fd);
         g_fd = -1;
-        va_end(vargs);
         return;
     }
-    va_end(vargs);
-
     if (write(g_fd, logInfo, strlen(logInfo)) < 0) {
         close(g_fd);
         g_fd = -1;
     }
     return;
 }
+#endif
+#endif
 
-void InitLogAgent(const char *outFileName, InitLogLevel logLevel, const char *kLevel, const char *fmt, ...)
+void InitLog(InitLogLevel logLevel, const char *domain, const char *fileName, int line, const char *fmt, ...)
 {
-    if (logLevel < g_logLevel) {
+    va_list vargs;
+    va_start(vargs, fmt);
+    char tmpFmt[MAX_LOG_SIZE];
+    if (vsnprintf_s(tmpFmt, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, fmt, vargs) == -1) {
+        va_end(vargs);
         return;
     }
-    time_t second = time(0);
-    INIT_CHECK_ONLY_RETURN(second >= 0 && outFileName != NULL);
-    struct tm *t = localtime(&second);
-    INIT_CHECK_ONLY_RETURN(t != NULL);
-    FILE *outfile = fopen(outFileName, "a+");
-    INIT_CHECK_ONLY_RETURN(outfile != NULL);
-    (void)fprintf(outfile, "[%d-%d-%d %d:%d:%d][pid=%d][%s][%s] ",
-        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec,
-        getpid(), kLevel, LOG_LEVEL_STR[logLevel]);
-    va_list list;
-    va_start(list, fmt);
-    (void)vfprintf(outfile, fmt, list);
-    va_end(list);
-    (void)fflush(outfile);
-    fclose(outfile);
-    return;
+    va_end(vargs);
+#ifdef OHOS_LITE
+    static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+    (void)HiLogPrint(LOG_CORE, LOG_LEVEL[logLevel],
+        domain, INIT_LOG_TAG, "[%{public}s:%{public}d]%{public}s", fileName, line, tmpFmt);
+#else
+#ifdef INIT_DMESG
+    LogToDmesg(logLevel, domain, fileName, line, tmpFmt);
+#endif
+#endif
+
+#ifdef INIT_AGENT
+    static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+    HiLogBasePrint(LOG_CORE, LOG_LEVEL[logLevel],
+        0, domain, "[%{public}s:%d]%{public}s", fileName, line, tmpFmt);
+#ifdef INIT_FILE
+    LogToFile("/data/init_agent/begetctl.log", fileName, line, tmpFmt);
+#endif
+#endif
 }

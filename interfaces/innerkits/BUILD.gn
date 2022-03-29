@@ -27,6 +27,7 @@ fs_manager_sources = [
 ohos_shared_library("libbegetutil") {
   sources = [
     "fd_holder/fd_holder.c",
+    "fd_holder/fd_holder_internal.c",
     "file/init_file.c",
     "reboot/init_reboot_innerkits.c",
     "service_control/service_control.c",
@@ -42,17 +43,16 @@ ohos_shared_library("libbegetutil") {
     "//base/startup/init_lite/services/include/param",
     "//base/startup/init_lite/interfaces/innerkits/fd_holder",
   ]
-  defines = [ "INIT_AGENT" ]
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/fd_holder:libfdholder_internal_static",
+    "//base/startup/init_lite/services/log:agent_log",
+    "//base/startup/init_lite/services/loopevent:loopevent",
     "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/services/utils:libinit_tools",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/openssl:libcrypto_static",
     "//utils/native/base:utils",
   ]
-
-  deps += [ "//base/startup/init_lite/services/log:init_log" ]
 
   public_configs = [ ":exported_header_files" ]
   part_name = "init"
@@ -106,6 +106,6 @@ ohos_static_library("libfsmanager_static") {
     "//base/startup/init_lite/services/log",
     "//base/startup/init_lite/services/include",
   ]
-  deps = [ "//base/startup/init_lite/services/log:init_log" ]
+
   part_name = "init"
 }

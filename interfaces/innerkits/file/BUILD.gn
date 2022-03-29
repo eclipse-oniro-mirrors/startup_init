@@ -20,7 +20,7 @@ service_file_include = [
   "//third_party/bounds_checking_function/include",
 ]
 service_file_deps = [
-  "//base/startup/init_lite/services/log:init_log",
+  "//base/startup/init_lite/services/log:agent_log",
   "//base/startup/init_lite/services/utils:libinit_utils",
   "//third_party/bounds_checking_function:libsec_static",
 ]

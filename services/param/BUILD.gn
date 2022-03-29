@@ -98,8 +98,7 @@ ohos_shared_library("param_client") {
     "//base/startup/init_lite/services/loopevent/include",
   ]
 
-  defines = [ "INIT_AGENT" ]
-  defines += [ "_GNU_SOURCE" ]
+  defines = [ "_GNU_SOURCE" ]
 
   if (build_selinux) {
     defines += [ "WITH_SELINUX" ]

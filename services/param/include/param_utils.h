@@ -80,11 +80,10 @@ typedef enum {
 #define PARAM_CLEAR_FLAG(node, flag) ((node) &= ~(flag))
 #define PARAM_TEST_FLAG(node, flag) (((node) & (flag)) == (flag))
 
-#define PARAN_LOG_FILE "param.log"
 #define PARAN_LABEL "PARAM"
-#define PARAM_LOGI(fmt, ...) STARTUP_LOGI(PARAN_LOG_FILE, PARAN_LABEL, fmt, ##__VA_ARGS__)
-#define PARAM_LOGE(fmt, ...) STARTUP_LOGE(PARAN_LOG_FILE, PARAN_LABEL, fmt, ##__VA_ARGS__)
-#define PARAM_LOGV(fmt, ...) STARTUP_LOGV(PARAN_LOG_FILE, PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_LOGI(fmt, ...) STARTUP_LOGI(PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_LOGE(fmt, ...) STARTUP_LOGE(PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_LOGV(fmt, ...) STARTUP_LOGV(PARAN_LABEL, fmt, ##__VA_ARGS__)
 
 #define PARAM_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                \

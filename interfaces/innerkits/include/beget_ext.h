@@ -22,12 +22,6 @@ extern "C" {
 #endif
 #endif
 
-#if defined(ENABLE_HILOG) || defined(OHOS_LITE)
-#include "hilog/log.h"
-#undef LOG_DOMAIN
-#define LOG_DOMAIN 0xD000719
-#endif
-
 typedef enum InitLogLevel {
     INIT_DEBUG = 0,
     INIT_INFO,
@@ -36,88 +30,21 @@ typedef enum InitLogLevel {
     INIT_FATAL
 } InitLogLevel;
 
-#ifndef INIT_LOG_PATH
-#define INIT_LOG_PATH "/data/init_agent/"
-#endif
-
 #define FILE_NAME   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
-void InitLogInit(const char *outFileName, InitLogLevel logLevel, const char *kLevel, const char *fmt, ...);
-void InitLogAgent(const char *outFileName, InitLogLevel logLevel, const char *kLevel, const char *fmt, ...);
-void OpenLogDevice(void);
+void SetInitLogLevel(InitLogLevel logLevel);
+void InitLog(InitLogLevel logLevel, const char *domain, const char *fileName, int line, const char *fmt, ...);
 
-#ifndef INIT_AGENT
-#define InitLogPrint InitLogInit
-#else
-#define InitLogPrint InitLogAgent
-#endif
+#define STARTUP_LOGV(domain, fmt, ...) InitLog(INIT_DEBUG, domain, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
+#define STARTUP_LOGI(domain, fmt, ...) InitLog(INIT_INFO, domain, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
+#define STARTUP_LOGW(domain, fmt, ...) InitLog(INIT_WARN, domain, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
+#define STARTUP_LOGE(domain, fmt, ...) InitLog(INIT_ERROR, domain, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
+#define STARTUP_LOGF(domain, fmt, ...) InitLog(INIT_FATAL, domain, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
 
-#ifndef OHOS_LITE
-#ifndef ENABLE_HILOG
-#define STARTUP_LOGV(logFile, LABEL, fmt, ...) \
-    do {    \
-        InitLogPrint(INIT_LOG_PATH logFile, INIT_DEBUG, LABEL, "[%s:%d)] " fmt "\n", \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-    } while (0)
-
-#define STARTUP_LOGI(logFile, LABEL, fmt, ...) \
-    do {    \
-        InitLogPrint(INIT_LOG_PATH logFile, INIT_INFO, LABEL, "[%s:%d)] " fmt "\n", \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-    } while (0)
-
-#define STARTUP_LOGE(logFile, LABEL, fmt, ...) \
-    do {    \
-        InitLogPrint(INIT_LOG_PATH logFile, INIT_ERROR, LABEL, "[%s:%d)] " fmt "\n", \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-    } while (0)
-
-#define STARTUP_LOGW(logFile, LABEL, fmt, ...) \
-    do {    \
-        InitLogPrint(INIT_LOG_PATH logFile, INIT_WARN, LABEL, "[%s:%d)] " fmt "\n", \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-    } while (0)
-
-#else
-#define STARTUP_LOGV(logFile, LABEL, fmt, ...) \
-    do {    \
-        InitLogPrint(INIT_LOG_PATH logFile, INIT_DEBUG, LABEL, "[%s:%d)] " fmt "\n", \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-        (void)HiLogPrint(LOG_APP, LOG_DEBUG, LOG_DOMAIN, LABEL, "[%{public}s(%{public}d)] " fmt, \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-    } while (0)
-
-#define STARTUP_LOGI(logFile, LABEL, fmt, ...) \
-    do {    \
-        InitLogPrint(INIT_LOG_PATH logFile, INIT_INFO, LABEL, "[%s:%d)] " fmt "\n", \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-        (void)HiLogPrint(LOG_APP, LOG_INFO, LOG_DOMAIN, LABEL, "[%{public}s(%{public}d)] " fmt, \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-    } while (0)
-
-#define STARTUP_LOGE(logFile, LABEL, fmt, ...) \
-    do {    \
-        InitLogPrint(INIT_LOG_PATH logFile, INIT_ERROR, LABEL, "[%s:%d)] " fmt "\n", \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-        (void)HiLogPrint(LOG_APP, LOG_ERROR, LOG_DOMAIN, LABEL, "[%{public}s(%{public}d)] " fmt, \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-    } while (0)
-
-#define STARTUP_LOGW(logFile, LABEL, fmt, ...) \
-    do {    \
-        InitLogPrint(INIT_LOG_PATH logFile, INIT_WARN, LABEL, "[%s:%d)] " fmt "\n", \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-        (void)HiLogPrint(LOG_APP, LOG_WARN, LOG_DOMAIN, LABEL, "[%{public}s(%{public}d)] " fmt, \
-            (FILE_NAME), (__LINE__), ##__VA_ARGS__); \
-    } while (0)
-#endif
-#endif
-
-#define BEGET_LOG_FILE "begetctrl.log"
 #define BEGET_LABEL "BEGET"
-#define BEGET_LOGI(fmt, ...) STARTUP_LOGI(BEGET_LOG_FILE, BEGET_LABEL, fmt, ##__VA_ARGS__)
-#define BEGET_LOGE(fmt, ...) STARTUP_LOGE(BEGET_LOG_FILE, BEGET_LABEL, fmt, ##__VA_ARGS__)
-#define BEGET_LOGV(fmt, ...) STARTUP_LOGV(BEGET_LOG_FILE, BEGET_LABEL, fmt, ##__VA_ARGS__)
-#define BEGET_LOGW(fmt, ...) STARTUP_LOGW(BEGET_LOG_FILE, BEGET_LABEL, fmt, ##__VA_ARGS__)
+#define BEGET_LOGI(fmt, ...) STARTUP_LOGI(BEGET_LABEL, fmt, ##__VA_ARGS__)
+#define BEGET_LOGE(fmt, ...) STARTUP_LOGE(BEGET_LABEL, fmt, ##__VA_ARGS__)
+#define BEGET_LOGV(fmt, ...) STARTUP_LOGV(BEGET_LABEL, fmt, ##__VA_ARGS__)
+#define BEGET_LOGW(fmt, ...) STARTUP_LOGW(BEGET_LABEL, fmt, ##__VA_ARGS__)
 
 #define BEGET_ERROR_CHECK(ret, statement, format, ...) \
     if (!(ret)) {                                     \

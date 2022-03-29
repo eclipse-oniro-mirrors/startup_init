@@ -37,8 +37,6 @@ ohos_shared_library("param_watcheragent") {
     "//base/startup/init_lite/services/loopevent/include",
   ]
 
-  defines = [ "INIT_AGENT" ]
-
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param:param_client",
@@ -82,8 +80,6 @@ ohos_shared_library("param_watcher") {
     "//foundation/distributedschedule/samgr/adapter/interfaces/innerkits/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
   ]
-
-  defines = [ "INIT_AGENT" ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",

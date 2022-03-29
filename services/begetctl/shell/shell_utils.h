@@ -24,9 +24,9 @@
 
 #define BSH_LOG_FILE "begetctrl.log"
 #define BSH_LABEL "SHELL"
-#define BSH_LOGI(fmt, ...) STARTUP_LOGI(BSH_LOG_FILE, BSH_LABEL, fmt, ##__VA_ARGS__)
-#define BSH_LOGE(fmt, ...) STARTUP_LOGE(BSH_LOG_FILE, BSH_LABEL, fmt, ##__VA_ARGS__)
-#define BSH_LOGV(fmt, ...) STARTUP_LOGV(BSH_LOG_FILE, BSH_LABEL, fmt, ##__VA_ARGS__)
+#define BSH_LOGI(fmt, ...) STARTUP_LOGI(BSH_LABEL, fmt, ##__VA_ARGS__)
+#define BSH_LOGE(fmt, ...) STARTUP_LOGE(BSH_LABEL, fmt, ##__VA_ARGS__)
+#define BSH_LOGV(fmt, ...) STARTUP_LOGV(BSH_LABEL, fmt, ##__VA_ARGS__)
 
 #define BSH_CHECK(ret, exper, ...) \
     if (!(ret)) { \

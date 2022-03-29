@@ -13,6 +13,7 @@
 if (defined(ohos_lite)) {
   static_library("init_log") {
     sources = [ "init_log.c" ]
+    defines = [ "OHOS_LITE" ]
     public_deps = [ "//third_party/bounds_checking_function:libsec_static" ]
     include_dirs = [
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
@@ -24,6 +25,7 @@ if (defined(ohos_lite)) {
   import("//build/ohos.gni")
   ohos_static_library("init_log") {
     sources = [ "init_log.c" ]
+    defines = [ "INIT_DMESG" ]
     deps = [ "//third_party/bounds_checking_function:libsec_static" ]
     include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
     part_name = "startup"
@@ -40,6 +42,7 @@ if (defined(ohos_lite)) {
       "system",
       "updater",
     ]
+    external_deps = [ "hilog_native:libhilog_base" ]
     relative_install_dir = "platform-vndk"
     install_enable = true
     part_name = "init"

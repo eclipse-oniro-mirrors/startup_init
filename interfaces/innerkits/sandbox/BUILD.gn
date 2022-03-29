@@ -31,14 +31,13 @@ ohos_shared_library("libsandbox") {
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//third_party/cJSON",
   ]
-  defines = [ "INIT_AGENT" ]
   deps = [
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/cJSON:cjson_static",
   ]
 
-  deps += [ "//base/startup/init_lite/services/log:init_log" ]
+  deps += [ "//base/startup/init_lite/services/log:agent_log" ]
 
   part_name = "init"
   install_images = [ "system" ]
@@ -62,6 +61,5 @@ ohos_static_library("libsandbox_static") {
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
   ]
-  deps += [ "//base/startup/init_lite/services/log:init_log" ]
   part_name = "init"
 }
