@@ -25,6 +25,10 @@
             "sandbox-path" : "/system/fonts",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
+            "src-path" : "/system/usr",
+            "sandbox-path" : "/system/usr",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
             "src-path" : "/vendor",
             "sandbox-path" : "/vendor",
             "sandbox-flags" : [ "bind", "rec", "private" ]
@@ -55,6 +59,10 @@
         }, {
             "src-path" : "/storage",
             "sandbox-path" : "/storage",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/sys_prod",
+            "sandbox-path" : "/sys_prod",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],

@@ -92,6 +92,7 @@ static char *GetRealParameter(BShellHandle shell, const char *name, char *buffer
     } else {
         realLen = sprintf_s(buffer, buffSize, "%s", name);
     }
+    BSH_CHECK(realLen > 0, return NULL, "Failed to format buffer");
     buffer[realLen] = '\0';
     BSH_LOGV("GetRealParameter current %s input %s real %s", current, name, buffer);
     return buffer;

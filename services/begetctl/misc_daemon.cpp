@@ -81,13 +81,13 @@ static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
         (void)fclose(rgbFile);
         return;
     }
-    uint32_t ret = fread(buffer, 1, size, rgbFile);
-    if (ret < 0) {
+    (void)fread(buffer, 1, size, rgbFile);
+    if (ferror(rgbFile)) {
         (void)fclose(rgbFile);
         free(buffer);
         return;
     }
-    ret = write(fd, buffer, size);
+    uint32_t ret = write(fd, buffer, size);
     if (ret != size) {
         (void)fclose(rgbFile);
         free(buffer);
