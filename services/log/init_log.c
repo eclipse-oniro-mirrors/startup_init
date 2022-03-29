@@ -100,6 +100,9 @@ void OpenLogDevice(void)
 
 void InitLog(InitLogLevel logLevel, const char *domain, const char *fileName, int line, const char *fmt, ...)
 {
+    if (g_logLevel >= logLevel) {
+        return;
+    }
     va_list vargs;
     va_start(vargs, fmt);
     char tmpFmt[MAX_LOG_SIZE];

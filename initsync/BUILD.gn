@@ -27,7 +27,7 @@ shared_library("libinitsync_shared") {
     "//base/startup/init_lite/interfaces/innerkits/include",
   ]
   public_deps = [
-    "//base/startup/init_lite/services/log:agent_log",
+    "//base/startup/init_lite/services/log:init_log",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
 }
