@@ -78,7 +78,7 @@ static unsigned int GetCapByString(const char *capStr)
             return capStrCapNum[j].CapNum;
         }
     }
-    return CAP_LAST_CAP + 1;
+    return -1;
 }
 
 int GetServiceCaps(const cJSON *curArrItem, Service *service)
