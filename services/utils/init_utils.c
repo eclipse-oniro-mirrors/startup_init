@@ -196,7 +196,7 @@ int SplitString(char *srcPtr, const char *del, char **dstPtr, int maxNum)
     char *buf = NULL;
     dstPtr[0] = strtok_r(srcPtr, del, &buf);
     int counter = 0;
-    while (dstPtr[counter] != NULL && (counter < maxNum)) {
+    while ((counter < maxNum) && (dstPtr[counter] != NULL)) {
         counter++;
         if (counter >= maxNum) {
             break;

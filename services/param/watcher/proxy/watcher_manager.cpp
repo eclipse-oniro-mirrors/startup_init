@@ -60,13 +60,14 @@ uint32_t WatcherManager::AddWatcher(const std::string &keyPrefix, const sptr<IWa
         uint32_t groupId = 0;
         ret = GetGroupId(groupId);
         WATCHER_CHECK(ret == 0, return 0, "Failed to get group id for %s", keyPrefix.c_str());
-        group = std::make_shared<WatcherGroup>(groupId, keyPrefix);
-        WATCHER_CHECK(group != nullptr, return 0, "Failed to create group for %s", keyPrefix.c_str());
+        TUNE_MAKE_SHARED(group = std::make_shared<WatcherGroup>(groupId, keyPrefix),
+            WATCHER_LOGE("Failed to create group for %s", keyPrefix.c_str()); return 0);
     } else {
         newGroup = group->Emptry();
     }
-    ParamWatcherPtr paramWather = std::make_shared<ParamWatcher>(watcherId, watcher, group);
-    WATCHER_CHECK(paramWather != nullptr, return 0, "Failed to create watcher for %s", keyPrefix.c_str());
+    ParamWatcherPtr paramWather = nullptr;
+    TUNE_MAKE_SHARED(paramWather = std::make_shared<ParamWatcher>(watcherId, watcher, group),
+        WATCHER_LOGE("Failed to create watcher for %s", keyPrefix.c_str()); return 0);
     AddParamWatcher(keyPrefix, group, paramWather);
     if (newGroup) {
         StartLoop();

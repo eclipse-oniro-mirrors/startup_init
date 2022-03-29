@@ -47,9 +47,9 @@ HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
     sockopt->perm = 0660;
     sockopt->option = SOCKET_OPTION_PASSCRED;
     errno_t ret = strncpy_s(sockopt->name, strlen(testSocName) + 1, testSocName, strlen(testSocName));
-    sockopt->next = NULL;
+    sockopt->next = nullptr;
     EXPECT_EQ(ret, EOK);
-    if (service->socketCfg == NULL) {
+    if (service->socketCfg == nullptr) {
         service->socketCfg = sockopt;
     } else {
         sockopt->next = service->socketCfg->next;

@@ -940,7 +940,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_003, TestSize.Level0)
                 break;
             }
         } while (size > 0);
-        EXPECT_TRUE(hasZpfs == true);
+        EXPECT_TRUE(hasZpfs);
         fclose(fd);
     }
 }

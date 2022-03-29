@@ -29,6 +29,14 @@
 #include "parcel.h"
 #include "system_ability.h"
 #include "watcher_manager_stub.h"
+#define TUNE_MAKE_SHARED(exec_expr0, exec_expr1) \
+    do { \
+        try { \
+            exec_expr0; \
+        } catch(...) { \
+            exec_expr1; \
+        }; \
+    } while (0)
 
 namespace OHOS {
 namespace init_param {

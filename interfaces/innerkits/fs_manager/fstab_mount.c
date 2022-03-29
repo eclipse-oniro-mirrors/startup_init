@@ -143,7 +143,7 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
             FreeStringVector(mountItems, count);
         }
     }
-    if (found == true) {
+    if (found) {
         status = MOUNT_MOUNTED;
     } else if (feof(fp) > 0) {
         status = MOUNT_UMOUNTED;
