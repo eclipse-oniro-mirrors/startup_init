@@ -307,7 +307,7 @@ int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId)
     return ReadParamCommitId(&g_clientSpace.paramSpace, handle, commitId);
 }
 
-long long GetSystemCommitId()
+long long GetSystemCommitId(void)
 {
     PARAM_CHECK(g_clientSpace.paramSpace.paramSpace.area != NULL, return 0, "The handle is null");
     return g_clientSpace.paramSpace.paramSpace.area->commitId;
