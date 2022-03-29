@@ -43,7 +43,6 @@ if (defined(ohos_lite)) {
       "updater",
     ]
     external_deps = [ "hilog_native:libhilog_base" ]
-    relative_install_dir = "platform-vndk"
     install_enable = true
     part_name = "init"
     subsystem_name = "startup"

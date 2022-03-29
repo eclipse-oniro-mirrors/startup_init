@@ -595,7 +595,8 @@ static int JobNodeGetNodeHasCode(const HashNode *node)
 {
     JobNode *jobNode = HASHMAP_ENTRY(node, JobNode, hashNode);
     int code = 0;
-    for (size_t i = 0; i < strlen(jobNode->name); i++) {
+    size_t nameLen = strlen(jobNode->name);
+    for (size_t i = 0; i < nameLen; i++) {
         code += jobNode->name[i] - 'A';
     }
     return code;
@@ -605,7 +606,8 @@ static int JobNodeGetKeyHasCode(const void *key)
 {
     int code = 0;
     const char *buff = (char *)key;
-    for (size_t i = 0; i < strlen(buff); i++) {
+    size_t buffLen = strlen(buff);
+    for (size_t i = 0; i < buffLen; i++) {
         code += buff[i] - 'A';
     }
     return code;

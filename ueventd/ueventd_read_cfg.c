@@ -216,9 +216,6 @@ int ParseUeventConfig(char *buffer)
 
 static void DoUeventConfigParse(char *buffer, size_t length)
 {
-    if (length < 0) {
-        return;
-    }
     char **items = NULL;
     int count = -1;
     const int maxItemCount = DEFAULTITEMCOUNT;

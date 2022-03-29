@@ -85,6 +85,7 @@ typedef struct {
 } ParamSecruityNode;
 
 typedef struct {
+    atomic_llong commitId;
     uint32_t trieNodeCount;
     uint32_t paramNodeCount;
     uint32_t securityNodeCount;

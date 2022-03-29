@@ -185,6 +185,8 @@ ohos_unittest("init_ut") {
   ]
 
   defines = [
+    "READ_CHECK",
+    "PARAM_SUPPORT_DAC_CHECK",
     "INIT_AGENT",
     "STARTUP_INIT_TEST",
     "PARAM_SUPPORT_SAVE_PERSIST",
