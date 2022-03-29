@@ -74,6 +74,7 @@ ohos_executable("begetctl") {
       "//base/security/selinux/interfaces/policycoreutils/include/",
     ]
     deps += [ "//third_party/selinux:libselinux" ]
+    external_deps = [ "selinux:libparaperm_checker" ]
     defines += [ "WITH_SELINUX" ]
   }
 
