@@ -31,6 +31,7 @@
 #ifdef WITH_SELINUX
 #include <policycoreutils.h>
 #include <selinux/selinux.h>
+#include "selinux_parameter.h"
 #endif // WITH_SELINUX
 
 #define MASK_LENGTH_MAX 4
@@ -166,6 +167,20 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
         return;
     }
     BShellEnvOutput(shell, "Parameter infomation:\r\n");
+#ifdef WITH_SELINUX
+    char *context = NULL;
+    if (strcmp(name, "#") != 0) {
+        GetParamLabel(name, &context);
+    }
+    if (context != NULL) {
+        BShellEnvOutput(shell, "selinux  : %s \r\n", context);
+    } else {
+        BShellEnvOutput(shell, "selinux  : null \r\n");
+    }
+    if (context != NULL) {
+        free(context);
+    }
+#endif
     BShellEnvOutput(shell, "    dac  : %s(%s) %s(%s) (%s) \r\n",
         user->pw_name, GetPermissionString(auditData.dacData.mode, 0, permissionStr, MASK_LENGTH_MAX),
         group->gr_name, GetPermissionString(auditData.dacData.mode, DAC_GROUP_START, permissionStr, MASK_LENGTH_MAX),

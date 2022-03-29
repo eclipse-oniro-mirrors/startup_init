@@ -120,8 +120,7 @@ int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, 
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
     ParamTrieNode *node = FindTrieNode(workSpace, name, strlen(name), NULL);
-    int ret = CheckParamValue(workSpace, node, name, value);
-    PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
+    int ret = 0;
     if (node != NULL && node->dataIndex != 0) {
         if (dataIndex != NULL) {
             *dataIndex = node->dataIndex;
@@ -129,8 +128,12 @@ int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, 
         if (onlyAdd) {
             return 0;
         }
+        ret = CheckParamValue(workSpace, NULL, name, value);
+        PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         return UpdateParam(workSpace, &node->dataIndex, name, value);
     }
+    ret = CheckParamValue(workSpace, node, name, value);
+    PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
     return AddParam((WorkSpace *)workSpace, name, value, dataIndex);
 }
 
