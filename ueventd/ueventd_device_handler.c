@@ -246,6 +246,18 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
     }
 }
 
+static void FreeSymbolLinks(char **links, int length)
+{
+    if (links != NULL) {
+        for (int i = 0; i < length && links[i] != NULL; i++) {
+            free(links[i]);
+            links[i] = NULL;
+        }
+        free(links);
+        links = NULL;
+    }
+}
+
 static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
 {
     if (uevent == NULL || uevent->subsystem == NULL || STRINGEQUAL(uevent->subsystem, "block") == 0) {
@@ -278,6 +290,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
         char subsystem[SYSPATH_SIZE];
         if (snprintf_s(subsystem, SYSPATH_SIZE, SYSPATH_SIZE - 1, "%s/subsystem", parent) == -1) {
             INIT_LOGE("Failed to build subsystem path for device \" %s \"", uevent->syspath);
+            FreeSymbolLinks(links, BLOCKDEVICE_LINKS);
             return NULL;
         }
         char *bus = GetRealPath(subsystem);
@@ -303,18 +316,6 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
 
     links[linkNum] = NULL;
     return links;
-}
-
-static void FreeSymbolLinks(char **links)
-{
-    if (links != NULL) {
-        for (int i = 0; links[i] != NULL; i++) {
-            free(links[i]);
-            links[i] = NULL;
-        }
-        free(links);
-        links = NULL;
-    }
 }
 
 static void HandleDeviceNode(const struct Uevent *uevent, const char *deviceNode, bool isBlock)
@@ -353,7 +354,7 @@ static void HandleDeviceNode(const struct Uevent *uevent, const char *deviceNode
         INIT_LOGV("Device %s changed", uevent->syspath);
     }
     // Ignore other actions
-    FreeSymbolLinks(symLinks);
+    FreeSymbolLinks(symLinks, BLOCKDEVICE_LINKS);
 }
 
 static const char *GetDeviceName(char *sysPath, const char *deviceName)

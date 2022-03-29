@@ -151,7 +151,7 @@ static int ParseSysfsConfig(char *p)
 static int ParseFirmwareConfig(char *p)
 {
     INIT_LOGV("Parse firmware config info: %s", p);
-    INIT_CHECK_ONLY_ELOG(!INVALIDSTRING(p), "Invalid argument");
+    INIT_ERROR_CHECK(!INVALIDSTRING(p), return -1, "Invalid argument");
 
     // Sanity checks
     struct stat st = {};

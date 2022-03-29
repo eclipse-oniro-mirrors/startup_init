@@ -204,11 +204,6 @@ static int CheckUserInGroup(gid_t groupId, uid_t uid)
         return -1;
     }
 
-    if (grpResult->gr_name == NULL || grpResult->gr_name == NULL) {
-        PARAM_LOGE("CheckUserInGroup gr_name %s pw_name %s %d %d",
-            grpResult->gr_name, userResult->pw_name, groupId, uid);
-        return -1;
-    }
     PARAM_LOGV("CheckUserInGroup pw_name %s ", userResult->pw_name);
     if (strcmp(grpResult->gr_name, userResult->pw_name) == 0) {
         return 0;

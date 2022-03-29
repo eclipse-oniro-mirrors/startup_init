@@ -31,16 +31,16 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
 static void DoExec(const struct CmdArgs *ctx)
 {
     // format: exec /xxx/xxx/xxx xxx
+    if (ctx == NULL || ctx->argv[0] == NULL) {
+        INIT_LOGE("DoExec: invalid arguments");
+        return;
+    }
     pid_t pid = fork();
     if (pid < 0) {
         INIT_LOGE("DoExec: failed to fork child process to exec \"%s\"", ctx->argv[0]);
         return;
     }
     if (pid == 0) {
-        if (ctx == NULL || ctx->argv[0] == NULL) {
-            INIT_LOGE("DoExec: invalid arguments");
-            _exit(0x7f);
-        }
         int ret = execve(ctx->argv[0], ctx->argv, NULL);
         if (ret == -1) {
             INIT_LOGE("DoExec: execute \"%s\" failed: %d.", ctx->argv[0], errno);

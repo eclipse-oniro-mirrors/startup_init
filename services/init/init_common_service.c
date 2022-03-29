@@ -454,14 +454,14 @@ void ServiceReap(Service *service)
     }
 
     if (service->attribute & SERVICE_ATTR_CRITICAL) { // critical
-        if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
+        if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("Critical service \" %s \" crashed %d times, rebooting system",
                 service->name, service->crashCount);
             ServiceStop(GetServiceByName("appspawn"));
             ExecReboot("reboot");
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
-        if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
+        if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, service->crashCount);
             return;
         }

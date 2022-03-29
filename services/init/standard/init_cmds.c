@@ -177,12 +177,12 @@ static void DoLoadDefaultParams(const struct CmdArgs *ctx)
 static void DoExec(const struct CmdArgs *ctx)
 {
     // format: exec /xxx/xxx/xxx xxx
+    INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, return,
+        "DoExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
     pid_t pid = fork();
     INIT_ERROR_CHECK(pid >= 0, return, "DoExec: failed to fork child process to exec \"%s\"", ctx->argv[0]);
 
     if (pid == 0) {
-        INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, _exit(0x7f),
-            "DoExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
 #ifdef SUPPORT_PROFILER_HIDEBUG
         do {
             if (access("/system/lib/libhidebug.so", F_OK) != 0) {
