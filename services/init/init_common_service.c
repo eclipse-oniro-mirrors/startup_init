@@ -356,6 +356,7 @@ int ServiceStop(Service *service)
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
     NotifyServiceChange(service, SERVICE_STOPPING);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
+    service->pid = -1;
     return SERVICE_SUCCESS;
 }
 

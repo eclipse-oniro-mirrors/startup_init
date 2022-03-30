@@ -22,6 +22,9 @@ extern "C" {
 #endif
 #endif
 
+#ifndef INIT_LOG_PATH
+#define INIT_LOG_PATH "/data/init_agent/"
+#endif
 typedef enum InitLogLevel {
     INIT_DEBUG = 0,
     INIT_INFO,
@@ -45,6 +48,9 @@ void InitLog(InitLogLevel logLevel, const char *domain, const char *fileName, in
 #define BEGET_LOGE(fmt, ...) STARTUP_LOGE(BEGET_LABEL, fmt, ##__VA_ARGS__)
 #define BEGET_LOGV(fmt, ...) STARTUP_LOGV(BEGET_LABEL, fmt, ##__VA_ARGS__)
 #define BEGET_LOGW(fmt, ...) STARTUP_LOGW(BEGET_LABEL, fmt, ##__VA_ARGS__)
+
+#define InitLogPrint(outFileName, logLevel, kLevel, fmt, ...) \
+    InitLog(logLevel, BEGET_LABEL, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
 
 #define BEGET_ERROR_CHECK(ret, statement, format, ...) \
     if (!(ret)) {                                     \
