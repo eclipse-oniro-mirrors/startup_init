@@ -26,6 +26,7 @@ fs_manager_sources = [
 
 ohos_shared_library("libbegetutil") {
   sources = [
+    "//base/startup/init_lite/services/log/init_log.c",
     "fd_holder/fd_holder.c",
     "fd_holder/fd_holder_internal.c",
     "file/init_file.c",
@@ -35,7 +36,7 @@ ohos_shared_library("libbegetutil") {
     "syscap/init_syscap.c",
   ]
   sources += fs_manager_sources
-
+  defines = [ "INIT_AGENT" ]
   include_dirs = [
     "./include",
     "//third_party/bounds_checking_function/include",
@@ -44,7 +45,6 @@ ohos_shared_library("libbegetutil") {
     "//base/startup/init_lite/interfaces/innerkits/fd_holder",
   ]
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/loopevent:loopevent",
     "//base/startup/init_lite/services/param:param_client",
     "//base/startup/init_lite/services/utils:libinit_tools",
@@ -53,7 +53,7 @@ ohos_shared_library("libbegetutil") {
     "//third_party/openssl:libcrypto_static",
     "//utils/native/base:utils",
   ]
-
+  external_deps = [ "hilog_native:libhilog_base" ]
   public_configs = [ ":exported_header_files" ]
   part_name = "init"
   install_images = [
