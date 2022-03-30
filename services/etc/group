@@ -63,6 +63,7 @@ connected_tag_host:x:3045:
 dslm:x:3046:
 dms:x:5522:
 sensor:x:6688:
+input:x:6696:
 msdp:x:6699:
 misc:x:9998:
 app:x:10000:
