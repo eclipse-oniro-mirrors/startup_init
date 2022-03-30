@@ -20,8 +20,8 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <time.h>
-#include "securec.h"
 
+#include "securec.h"
 #ifdef OHOS_LITE
 #include "hilog/log.h"
 #endif
@@ -71,7 +71,7 @@ void OpenLogDevice(void)
     return;
 }
 
- void LogToDmesg(InitLogLevel logLevel, const char *domain, const char *fileName, int line, const char *info)
+void LogToDmesg(InitLogLevel logLevel, const char *domain, const char *fileName, int line, const char *info)
 {
     static const char *LOG_LEVEL_STR[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
     static const char *LOG_KLEVEL_STR[] = { "<7>", "<6>", "<4>", "<3>", "<3>" };

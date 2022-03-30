@@ -27,9 +27,7 @@ ohos_prebuilt_etc("device_info.cfg") {
 ohos_shared_library("deviceinfoservice") {
   sources = [ "device_info_stub.cpp" ]
 
-  defines = [
-    "DINFO_LABEL=\"DeviceInfoService\"",
-  ]
+  defines = [ "DINFO_LABEL=\"DeviceInfoService\"" ]
   include_dirs = [
     ".",
     "//base/startup/init_lite/interfaces/innerkits/include",
