@@ -91,7 +91,7 @@ static char *GetRealParameter(BShellHandle shell, const char *name, char *buffer
     } else {
         realLen = sprintf_s(buffer, buffSize, "%s", name);
     }
-    BSH_CHECK(realLen > 0, return NULL, "Failed to format buffer");
+    BSH_CHECK(realLen >= 0, return NULL, "Failed to format buffer");
     buffer[realLen] = '\0';
     BSH_LOGV("GetRealParameter current %s input %s real %s", current, name, buffer);
     return buffer;
@@ -159,7 +159,7 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
         BSH_LOGE("Failed to get param security for %s", name);
         return;
     }
-    char permissionStr[MASK_LENGTH_MAX] = {'-', '-', '-', 0};
+    char permissionStr[3][MASK_LENGTH_MAX] = {}; // 3 permission
     struct passwd *user = getpwuid(auditData.dacData.uid);
     struct group *group = getgrgid(auditData.dacData.gid);
     if (user == NULL || group == NULL) {
@@ -168,9 +168,9 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
     }
     BShellEnvOutput(shell, "Parameter infomation:\r\n");
     BShellEnvOutput(shell, "    dac  : %s(%s) %s(%s) (%s) \r\n",
-        user->pw_name, GetPermissionString(auditData.dacData.mode, 0, permissionStr, MASK_LENGTH_MAX),
-        group->gr_name, GetPermissionString(auditData.dacData.mode, DAC_GROUP_START, permissionStr, MASK_LENGTH_MAX),
-        GetPermissionString(auditData.dacData.mode, DAC_OTHER_START, permissionStr, MASK_LENGTH_MAX));
+        user->pw_name, GetPermissionString(auditData.dacData.mode, 0, permissionStr[0], MASK_LENGTH_MAX),
+        group->gr_name, GetPermissionString(auditData.dacData.mode, DAC_GROUP_START, permissionStr[1], MASK_LENGTH_MAX),
+        GetPermissionString(auditData.dacData.mode, DAC_OTHER_START, permissionStr[2], MASK_LENGTH_MAX)); // 2 other
     BShellEnvOutput(shell, "    name : %s\r\n", name);
     if (value != NULL) {
         BShellEnvOutput(shell, "    value: %s\r\n", value);

@@ -102,23 +102,6 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     return 0;
 }
 
-static int CheckParamValue(const WorkSpace *workSpace, const ParamTrieNode *node, const char *name, const char *value)
-{
-    if (IS_READY_ONLY(name)) {
-        PARAM_CHECK(strlen(value) < PARAM_CONST_VALUE_LEN_MAX,
-            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s", value);
-        if (node != NULL && node->dataIndex != 0) {
-            PARAM_LOGE("Read-only param was already set %s", name);
-            return PARAM_CODE_READ_ONLY;
-        }
-    } else {
-        // 限制非read only的参数，防止参数值修改后，原空间不能保存
-        PARAM_CHECK(strlen(value) < PARAM_VALUE_LEN_MAX,
-            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s", value);
-    }
-    return 0;
-}
-
 int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd)
 {
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
@@ -144,7 +127,7 @@ PARAM_STATIC int AddSecurityLabel(const ParamAuditData *auditData, void *context
     PARAM_CHECK(context != NULL, return -1, "Invalid context");
     ParamWorkSpace *workSpace = (ParamWorkSpace *)context;
     int ret = CheckParamName(auditData->name, 1);
-    PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", auditData->name);
+    PARAM_CHECK(ret == 0, return ret, "Illegal param name \"%s\"", auditData->name);
 
     ParamTrieNode *node = FindTrieNode(&workSpace->paramSpace, auditData->name, strlen(auditData->name), NULL);
     if (node == NULL) {
@@ -543,78 +526,10 @@ PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *m
     return 0;
 }
 
-static int LoadOneParam_(char *line, uint32_t mode, const char *exclude[], uint32_t count)
+static int LoadOneParam_ (const uint32_t *context, const char *name, const char *value)
 {
-    char *name;
-    char *value;
-    char *pos;
-
-    // Skip spaces
-    name = line;
-    while (isspace(*name) && (*name != '\0')) {
-        name++;
-    }
-    // Empty line
-    if (*name == '\0') {
-        return 0;
-    }
-    // Comment line
-    if (*name == '#') {
-        return 0;
-    }
-
-    value = name;
-    // find the first delimiter '='
-    while (*value != '\0') {
-        if (*value == '=') {
-            (*value) = '\0';
-            value = value + 1;
-            break;
-        }
-        value++;
-    }
-
-    // empty name, just ignore this line
-    if (*name == '\0') {
-        return 0;
-    }
-
-    // Trim the ending spaces of name
-    pos = value - 1;
-    pos -= 1;
-    while (isspace(*pos) && pos > name) {
-        (*pos) = '\0';
-        pos--;
-    }
-
-    // Filter excluded parameters
-    for (uint32_t i = 0; i < count; i++) {
-        if (strncmp(name, exclude[i], strlen(exclude[i])) == 0) {
-            return 0;
-        }
-    }
-
-    // Skip spaces for value
-    while (isspace(*value) && (*value != '\0')) {
-        value++;
-    }
-
-    // Trim the ending spaces of value
-    pos = value + strlen(value);
-    pos--;
-    while (isspace(*pos) && pos > value) {
-        (*pos) = '\0';
-        pos--;
-    }
-
-    // Strip starting and ending " for value
-    if ((*value == '"') && (pos > value) && (*pos == '"')) {
-        value = value + 1;
-        *pos = '\0';
-    }
-
+    uint32_t mode = *(uint32_t *)context;
     int ret = CheckParamName(name, 0);
-    // Invalid name, just ignore
     if (ret != 0) {
         return 0;
     }
@@ -623,32 +538,22 @@ static int LoadOneParam_(char *line, uint32_t mode, const char *exclude[], uint3
         name, value, NULL, mode & LOAD_PARAM_ONLY_ADD);
 }
 
-static int LoadDefaultParam_(const char *fileName, uint32_t mode, const char *exclude[], uint32_t count)
+static int LoadDefaultParam_ (const char *fileName, uint32_t mode, const char *exclude[], uint32_t count)
 {
-    // max length for each line of para files: max name length + max value length + spaces
-#define PARAM_LINE_MAX_LENGTH (PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10)
-
     uint32_t paramNum = 0;
     FILE *fp = fopen(fileName, "r");
     if (fp == NULL) {
         return -1;
     }
 
-    char *buff = calloc(1, PARAM_LINE_MAX_LENGTH);
-    if (buff == NULL) {
-        (void)fclose(fp);
-        return -1;
-    }
-
-    while (fgets(buff, PARAM_LINE_MAX_LENGTH, fp) != NULL) {
-        buff[PARAM_LINE_MAX_LENGTH - 1] = '\0';
-
-        int ret = LoadOneParam_(buff, mode, exclude, count);
-        PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buff);
+    while (fgets(g_paramWorkSpace.buffer, sizeof(g_paramWorkSpace.buffer), fp) != NULL) {
+        g_paramWorkSpace.buffer[sizeof(g_paramWorkSpace.buffer) - 1] = '\0';
+        int ret = SpliteString(g_paramWorkSpace.buffer, exclude, count, LoadOneParam_, &mode);
+        PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, g_paramWorkSpace.buffer);
         paramNum++;
     }
     (void)fclose(fp);
-    free(buff);
+
     PARAM_LOGI("Load parameters success %s total %u", fileName, paramNum);
     return 0;
 }

@@ -107,3 +107,70 @@ int GetSubStringInfo(const char *buff, uint32_t buffLen, char delimiter, SubStri
     }
     return curr;
 }
+
+int SpliteString(char *line, const char *exclude[], uint32_t count,
+    int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context)
+{
+    // Skip spaces
+    char *name = line;
+    while (isspace(*name) && (*name != '\0')) {
+        name++;
+    }
+    // Empty line or Comment line
+    if (*name == '\0' || *name == '#') {
+        return 0;
+    }
+
+    char *value = name;
+    // find the first delimiter '='
+    while (*value != '\0') {
+        if (*value == '=') {
+            (*value) = '\0';
+            value = value + 1;
+            break;
+        }
+        value++;
+    }
+
+    // Skip spaces
+    char *tmp = name;
+    while ((tmp < value) && (*tmp != '\0')) {
+        if (isspace(*tmp)) {
+            (*tmp) = '\0';
+            break;
+        }
+        tmp++;
+    }
+
+    // empty name, just ignore this line
+    if (*value == '\0') {
+        return 0;
+    }
+
+    // Filter excluded parameters
+    for (uint32_t i = 0; i < count; i++) {
+        if (strncmp(name, exclude[i], strlen(exclude[i])) == 0) {
+            return 0;
+        }
+    }
+
+    // Skip spaces for value
+    while (isspace(*value) && (*value != '\0')) {
+        value++;
+    }
+
+    // Trim the ending spaces of value
+    char *pos = value + strlen(value);
+    pos--;
+    while (isspace(*pos) && pos > value) {
+        (*pos) = '\0';
+        pos--;
+    }
+
+    // Strip starting and ending " for value
+    if ((*value == '"') && (pos > value) && (*pos == '"')) {
+        value = value + 1;
+        *pos = '\0';
+    }
+    return result(context, name, value);
+}

@@ -118,6 +118,8 @@ typedef struct {
 
 void CheckAndCreateDir(const char *fileName);
 int GetSubStringInfo(const char *buff, uint32_t buffLen, char delimiter, SubStringInfo *info, int subStrNumber);
+int SpliteString(char *line, const char *exclude[], uint32_t count,
+    int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context);
 #ifdef __cplusplus
 #if __cplusplus
 }
