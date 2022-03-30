@@ -25,9 +25,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/include",
     ]
 
-    deps = [
-      "//third_party/bounds_checking_function:libsec_static",
-    ]
+    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
     defines = [ "_GNU_SOURCE" ]
   }
 } else {

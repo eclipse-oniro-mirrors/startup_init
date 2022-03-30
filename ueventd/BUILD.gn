@@ -15,6 +15,7 @@ if (defined(ohos_lite)) {
   if (ohos_kernel_type == "linux") {
     executable("ueventd_linux") {
       sources = [
+        "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c",
         "//base/startup/init_lite/services/utils/init_utils.c",
         "//base/startup/init_lite/services/utils/list.c",
         "//base/startup/init_lite/ueventd/lite/ueventd_parameter.c",
@@ -24,7 +25,6 @@ if (defined(ohos_lite)) {
         "//base/startup/init_lite/ueventd/ueventd_main.c",
         "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
         "//base/startup/init_lite/ueventd/ueventd_socket.c",
-        "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c"
       ]
 
       defines = [ "__MUSL__" ]
@@ -63,13 +63,13 @@ if (defined(ohos_lite)) {
 } else {
   import("//build/ohos.gni")
   service_ueventd_sources = [
+    "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c",
     "//base/startup/init_lite/services/utils/list.c",
     "//base/startup/init_lite/ueventd/ueventd.c",
     "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
     "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
     "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
     "//base/startup/init_lite/ueventd/ueventd_socket.c",
-    "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c"
   ]
 
   service_ueventd_include = [

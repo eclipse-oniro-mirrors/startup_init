@@ -23,11 +23,10 @@
 #include "securec.h"
 
 #define READ_DURATION 100000
-#define PLUGIN_LOG_FILE "begetctrl.log"
 #define PLUGIN_LABEL "PLUGIN"
-#define PLUGIN_LOGI(fmt, ...) STARTUP_LOGI(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
-#define PLUGIN_LOGE(fmt, ...) STARTUP_LOGE(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
-#define PLUGIN_LOGV(fmt, ...) STARTUP_LOGV(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
+#define PLUGIN_LOGI(fmt, ...) STARTUP_LOGI(PLUGIN_LABEL, fmt, ##__VA_ARGS__)
+#define PLUGIN_LOGE(fmt, ...) STARTUP_LOGE(PLUGIN_LABEL, fmt, ##__VA_ARGS__)
+#define PLUGIN_LOGV(fmt, ...) STARTUP_LOGV(PLUGIN_LABEL, fmt, ##__VA_ARGS__)
 
 #define PLUGIN_CHECK(ret, exper, ...)          \
     if (!(ret)) {                              \
