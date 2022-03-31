@@ -43,7 +43,7 @@ typedef struct {
     ParamTaskPtr serverTask;
     ParamTaskPtr timer;
     ParamTaskPtr watcherTask;
-    char buffer[PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX];
+    char buffer[PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10]; // 10 max len
 } ParamWorkSpace;
 
 typedef struct {
@@ -61,6 +61,7 @@ int ReadParamValue(const ParamWorkSpace *workSpace, ParamHandle handle, char *va
 int ReadParamName(const ParamWorkSpace *workSpace, ParamHandle handle, char *name, uint32_t len);
 int ReadParamCommitId(const ParamWorkSpace *workSpace, ParamHandle handle, uint32_t *commitId);
 
+int CheckParamValue(const WorkSpace *workSpace, const ParamTrieNode *node, const char *name, const char *value);
 int CheckParamName(const char *name, int paramInfo);
 int CheckParamPermission(const ParamWorkSpace *workSpace,
     const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);

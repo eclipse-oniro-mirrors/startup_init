@@ -229,7 +229,10 @@ static void PublishHoldFds(Service *service)
         fdBuffer[pos - 1] = '\0'; // Remove last ' '
         INIT_LOGI("fd buffer: [%s]", fdBuffer);
         char envName[MAX_BUFFER_LEN] = {};
-        (void)snprintf_s(envName, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, ENV_FD_HOLD_PREFIX"%s", service->name);
+        if (snprintf_s(envName, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, ENV_FD_HOLD_PREFIX"%s", service->name) < 0) {
+            INIT_LOGE("snprintf_s failed err=%d", errno);
+            return;
+        }
         if (setenv(envName, fdBuffer, 1) < 0) {
             INIT_LOGE("Failed to set env %s", envName);
         }
@@ -451,14 +454,14 @@ void ServiceReap(Service *service)
     }
 
     if (service->attribute & SERVICE_ATTR_CRITICAL) { // critical
-        if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
+        if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("Critical service \" %s \" crashed %d times, rebooting system",
                 service->name, service->crashCount);
             ServiceStop(GetServiceByName("appspawn"));
             ExecReboot("reboot");
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
-        if (CalculateCrashTime(service, service->crashTime, service->crashCount) == false) {
+        if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, service->crashCount);
             return;
         }
@@ -570,7 +573,7 @@ static void ServiceTimerStartProcess(const TimerHandle handler, void *context)
     ServiceStopTimer(service);
     int ret = ServiceStart(service);
     if (ret != SERVICE_SUCCESS) {
-        INIT_LOGE("Start service \' %s \' in timer failed");
+        INIT_LOGE("Start service \' %s \' in timer failed", service->name);
     }
 }
 

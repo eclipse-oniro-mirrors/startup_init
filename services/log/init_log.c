@@ -80,7 +80,7 @@ void InitToHiLog(InitLogLevel logLevel, const char *fmt, ...)
 static int g_fd = -1;
 void OpenLogDevice(void)
 {
-    int fd = open("/dev/kmsg", O_WRONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IRGRP);
+    int fd = open("/dev/kmsg", O_WRONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     if (fd >= 0) {
         g_fd = fd;
     }

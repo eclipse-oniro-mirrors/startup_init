@@ -58,7 +58,8 @@ uid_t DecodeUid(const char *name)
 {
     INIT_CHECK_RETURN_VALUE(name != NULL, -1);
     int digitFlag = 1;
-    for (unsigned int i = 0; i < strlen(name); ++i) {
+    size_t nameLen = strlen(name);
+    for (unsigned int i = 0; i < nameLen; ++i) {
         if (isalpha(name[i])) {
             digitFlag = 0;
             break;
@@ -195,7 +196,7 @@ int SplitString(char *srcPtr, const char *del, char **dstPtr, int maxNum)
     char *buf = NULL;
     dstPtr[0] = strtok_r(srcPtr, del, &buf);
     int counter = 0;
-    while (dstPtr[counter] != NULL && (counter < maxNum)) {
+    while ((counter < maxNum) && (dstPtr[counter] != NULL)) {
         counter++;
         if (counter >= maxNum) {
             break;

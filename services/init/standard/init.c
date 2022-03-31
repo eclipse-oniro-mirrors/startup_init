@@ -107,7 +107,7 @@ void SystemInit(void)
 static void EnableDevKmsg(void)
 {
     /* printk_devkmsg default value is ratelimit, We need to set "on" and remove the restrictions */
-    int fd = open("/proc/sys/kernel/printk_devkmsg", O_WRONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IRGRP);
+    int fd = open("/proc/sys/kernel/printk_devkmsg", O_WRONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     if (fd < 0) {
         return;
     }

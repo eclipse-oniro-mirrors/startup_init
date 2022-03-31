@@ -27,7 +27,7 @@ extern "C" {
 
 // 配置
 #define LOOP_EVENT_USE_EPOLL 1
-#define LOOP_DEFAULT_BUFFER 1024
+#define LOOP_DEFAULT_BUFFER (1024 * 5)
 #define LOOP_MAX_BUFFER (1024 * 64)
 
 #define LOOP_MAX_CLIENT 1024

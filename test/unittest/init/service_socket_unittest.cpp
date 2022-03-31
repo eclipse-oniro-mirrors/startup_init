@@ -38,16 +38,18 @@ HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
     ASSERT_NE(service, nullptr);
     ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket) + strlen(testSocName) + 1);
     ASSERT_NE(sockopt, nullptr);
-    sockopt->type = SOCK_SEQPACKET;
+    sockopt->type = SOCK_STREAM;
+    sockopt->protocol = 0;
+    sockopt->family = PF_UNIX;
     sockopt->sockFd = -1;
     sockopt->uid = 1000;
     sockopt->gid = 1000;
     sockopt->perm = 0660;
     sockopt->option = SOCKET_OPTION_PASSCRED;
     errno_t ret = strncpy_s(sockopt->name, strlen(testSocName) + 1, testSocName, strlen(testSocName));
-    sockopt->next = NULL;
+    sockopt->next = nullptr;
     EXPECT_EQ(ret, EOK);
-    if (service->socketCfg == NULL) {
+    if (service->socketCfg == nullptr) {
         service->socketCfg = sockopt;
     } else {
         sockopt->next = service->socketCfg->next;
