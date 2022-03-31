@@ -123,23 +123,11 @@ static int CheckParamValue(const WorkSpace *workSpace, const ParamTrieNode *node
 
 int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd)
 {
-    char strValue[PARAM_CONST_VALUE_LEN_MAX + 1] = {};
-    int res = strcpy_s(strValue, strlen(value) + 1, value);
-    if (res != EOK ) {
-        PARAM_LOGE("Error, strcpy failed!");
-        return -1;
-    }
-
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
-    PARAM_CHECK(strValue != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
+    PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
     ParamTrieNode *node = FindTrieNode(workSpace, name, strlen(name), NULL);
-    int ret = CheckParamValue(workSpace, node, name, strValue);
-    PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, strValue);
-
-    if (strcmp(name,"ohos.boot.sn") == 0  && CheckAndResetSnValue(strValue) != 0) {
-        PARAM_LOGE("Error,Reset sn value failed!");
-        return PARAM_CODE_INVALID_PARAM;
-    }
+    int ret = CheckParamValue(workSpace, node, name, value);
+    PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
 
     if (node != NULL && node->dataIndex != 0) {
         if (dataIndex != NULL) {
@@ -148,45 +136,9 @@ int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, 
         if (onlyAdd) {
             return 0;
         }
-        return UpdateParam(workSpace, &node->dataIndex, name, strValue);
+        return UpdateParam(workSpace, &node->dataIndex, name, value);
     }
-    return AddParam((WorkSpace *)workSpace, name, strValue, dataIndex);
-}
-
-int CheckAndResetSnValue(char *value) 
-{
-    char snFile[PARAM_CONST_VALUE_LEN_MAX] = {};
-    int res = 0;
-    if (value[0] == '/') {
-        res = strcpy_s(snFile, strlen(value) + 1, value);
-        if (res != EOK ) {
-            PARAM_LOGE("Error, strcpy failed!");
-            return -1;
-        }
-    } else {
-        return 0;
-    }
-
-    char *data = ReadFileData(snFile);
-    if (data == NULL) {
-        PARAM_LOGE("Error, Read sn file failed!");
-        return -1;
-    }
-
-    int index = 0;
-    for (size_t i = 0; i < strlen(data); i++) {
-        if (*(data + i) != ':') {
-            *(data + index) = *(data + i);
-            index++;
-        }
-    }
-    data[index] = '\0';
-    res = strcpy_s(value, strlen(data) + 1, data);
-    if (res != EOK ) {
-        PARAM_LOGE("Error, strcpy failed!");
-        return -1;
-    }
-    return 0;
+    return AddParam((WorkSpace *)workSpace, name, value, dataIndex);
 }
 
 PARAM_STATIC int AddSecurityLabel(const ParamAuditData *auditData, void *context)
@@ -736,21 +688,21 @@ static int GetParamValueFromBuffer(const char *name, const char *buffer, char *v
 static int LoadParamFromCmdLine(void)
 {
     int ret;
-    static const char *cmdLines[] = {
-        OHOS_BOOT"hardware",
-        OHOS_BOOT"bootgroup",
-        OHOS_BOOT"reboot_reason",
-        OHOS_BOOT"sn",
+    static const cmdLineInfo cmdLines[] = {
+        {OHOS_BOOT"hardware", CommonDealFun},
+        {OHOS_BOOT"bootgroup", CommonDealFun},
+        {OHOS_BOOT"reboot_reason", CommonDealFun},
+        {OHOS_BOOT"sn", SnDealFun},
 #ifdef STARTUP_INIT_TEST
-        OHOS_BOOT"mem",
-        OHOS_BOOT"console",
-        OHOS_BOOT"mmz",
-        OHOS_BOOT"androidboot.selinux",
-        OHOS_BOOT"init",
-        OHOS_BOOT"root",
-        OHOS_BOOT"uuid",
-        OHOS_BOOT"rootfstype",
-        OHOS_BOOT"blkdevparts"
+        {OHOS_BOOT"mem", CommonDealFun},
+        {OHOS_BOOT"console", CommonDealFun},
+        {OHOS_BOOT"mmz", CommonDealFun},
+        {OHOS_BOOT"androidboot.selinux", CommonDealFun},
+        {OHOS_BOOT"init", CommonDealFun},
+        {OHOS_BOOT"root", CommonDealFun},
+        {OHOS_BOOT"uuid", CommonDealFun},
+        {OHOS_BOOT"rootfstype", CommonDealFun},
+        {OHOS_BOOT"blkdevparts", CommonDealFun}
 #endif
     };
     char *data = ReadFileData(PARAM_CMD_LINE);
@@ -761,34 +713,82 @@ static int LoadParamFromCmdLine(void)
 
     for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
 #ifdef BOOT_EXTENDED_CMDLINE
-        ret = GetParamValueFromBuffer(cmdLines[i], BOOT_EXTENDED_CMDLINE, value, PARAM_CONST_VALUE_LEN_MAX);
+        ret = GetParamValueFromBuffer(cmdLines[i].name, BOOT_EXTENDED_CMDLINE, value, PARAM_CONST_VALUE_LEN_MAX);
         if (ret != 0) {
-            ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
+            ret = GetParamValueFromBuffer(cmdLines[i].name, data, value, PARAM_CONST_VALUE_LEN_MAX);
         }
 #else
-        ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
+        ret = GetParamValueFromBuffer(cmdLines[i].name, data, value, PARAM_CONST_VALUE_LEN_MAX);
 #endif
-        //if cmdline not set sn or set sn value is null,read sn from default file
-        if (strcmp(cmdLines[i],"ohos.boot.sn") == 0 && ret != 0) {
-            ret = 0;
-            strcpy_s(value,strlen(SN_FILE) + 1,SN_FILE);
-        }
 
-        if (ret == 0) {
-            PARAM_LOGV("Add param from cmdline %s %s", cmdLines[i], value);
-            ret = CheckParamName(cmdLines[i], 0);
-            PARAM_CHECK(ret == 0, break, "Invalid name %s", cmdLines[i]);
-            PARAM_LOGV("**** cmdLines[%d] %s, value %s", i, cmdLines[i], value);
-            ret = WriteParam(&g_paramWorkSpace.paramSpace, cmdLines[i], value, NULL, 0);
-            PARAM_CHECK(ret == 0, break, "Failed to write param %s %s", cmdLines[i], value);
-        } else {
-            PARAM_LOGE("Can not find arrt %s", cmdLines[i]);
-        }
+        cmdLines[i].processor(cmdLines[i].name, value, ret);
     }
     PARAM_LOGV("Parse cmdline finish %s", PARAM_CMD_LINE);
     free(data);
     free(value);
     return 0;
+}
+
+int CommonDealFun(const char* name, const char* value, int res)
+{
+    PARAM_LOGI("Add param from cmdline %s %s", name, value);
+    int ret = 0;
+    if (res == 0) {
+        ret = CheckParamName(name, 0);
+        PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
+        PARAM_LOGV("**** name %s, value %s", name, value);
+        ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, NULL, 0);
+        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
+    PARAM_LOGE("----Debug1 name is:%s , value is :%s!",name,value);
+    } else {
+        PARAM_LOGE("Can not find arrt %s", name);
+    }
+    return ret;
+}
+
+int SnDealFun(const char* name, const char* value, int res)
+{
+    PARAM_LOGI("Add SN param from cmdline %s %s", name, value);
+    int ret = CheckParamName(name, 0);
+    PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
+
+    char *data = NULL;
+    if (res != 0) { //if cmdline not set sn or set sn value is null,read sn from default file
+        data = ReadFileData(SN_FILE);
+        if (data == NULL) {
+            PARAM_LOGE("Error, Read sn from default file failed!");
+            return -1;
+        }
+        PARAM_LOGE("----Debug2 name is:%s , value is :%s!", name, data);
+    } else if (value[0] == '/') {
+        data = ReadFileData(value);
+        if (data == NULL) {
+            PARAM_LOGE("Error, Read sn from cmdline file failed!");
+            return -1;
+        }
+        PARAM_LOGE("----Debug3 name is:%s , value is :%s!", name, data);
+    } else {
+        PARAM_LOGV("**** name %s, value %s", name, value);
+        ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, NULL, 0);
+        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
+        PARAM_LOGE("----Debug4 name is:%s , value is :%s!", name, value);
+        return ret;
+    }
+
+    int index = 0;
+    for (size_t i = 0; i < strlen(data); i++) {
+        if (*(data + i) != ':') {
+            *(data + index) = *(data + i);
+            index++;
+        }
+    }
+    data[index] = '\0';
+    PARAM_LOGE("----Debug5 name is:%s , value is :%s!", name, data);
+    PARAM_LOGV("**** name %s, value %s", name, data);
+    ret = WriteParam(&g_paramWorkSpace.paramSpace, name, data, NULL, 0);
+    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, data);
+
+    return ret;
 }
 
 int SystemWriteParam(const char *name, const char *value)
