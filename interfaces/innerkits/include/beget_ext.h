@@ -50,7 +50,7 @@ void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const 
 
 #define BASE_DOMAIN 0xA000
 #ifndef BEGET_DOMAIN
-#define BEGET_DOMAIN BASE_DOMAIN + 0xb
+#define BEGET_DOMAIN (BASE_DOMAIN + 0xb)
 #endif
 #define BEGET_LABEL "BEGET"
 #define BEGET_LOGI(fmt, ...) STARTUP_LOGI(BEGET_DOMAIN, BEGET_LABEL, fmt, ##__VA_ARGS__)

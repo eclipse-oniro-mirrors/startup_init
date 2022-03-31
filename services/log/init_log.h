@@ -33,7 +33,7 @@ extern "C" {
 #endif
 
 #ifndef INIT_LOG_DOMAIN
-#define INIT_LOG_DOMAIN BASE_DOMAIN + 1
+#define INIT_LOG_DOMAIN (BASE_DOMAIN + 1)
 #endif
 
 void OpenLogDevice(void);

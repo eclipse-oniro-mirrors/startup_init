@@ -36,7 +36,7 @@ ohos_shared_library("libbegetutil") {
     "syscap/init_syscap.c",
   ]
   sources += fs_manager_sources
-  defines = [ "INIT_AGENT"]
+  defines = [ "INIT_AGENT" ]
   include_dirs = [
     "./include",
     "//third_party/bounds_checking_function/include",
@@ -81,7 +81,7 @@ ohos_shared_library("libbeget_proxy") {
     "//third_party/bounds_checking_function/include",
   ]
 
-  defines = [ "INIT_AGENT"]
+  defines = [ "INIT_AGENT" ]
   deps = [
     "//base/startup/init_lite/services/param/watcher:param_watcheragent",
     "//base/startup/init_lite/services/utils:libinit_utils",
