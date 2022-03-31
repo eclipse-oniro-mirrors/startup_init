@@ -648,7 +648,7 @@ static int SnDealFun(const char* name, const char* value, int res)
     data[index] = '\0';
     PARAM_LOGV("**** name %s, value %s", name, data);
     ret = WriteParam(&g_paramWorkSpace.paramSpace, name, data, NULL, 0);
-    PARAM_CHECK(ret == 0, free(data); 
+    PARAM_CHECK(ret == 0, free(data);
         return ret, "Failed to write param %s %s", name, data);
     free(data);
 
@@ -658,8 +658,7 @@ static int SnDealFun(const char* name, const char* value, int res)
 static int LoadParamFromCmdLine(void)
 {
     int ret;
-    static const cmdLineInfo cmdLines[] = {
-        { OHOS_BOOT"hardware", CommonDealFun },
+    static const cmdLineInfo cmdLines[] = { {OHOS_BOOT"hardware", CommonDealFun},
         { OHOS_BOOT"bootgroup", CommonDealFun },
         { OHOS_BOOT"reboot_reason", CommonDealFun },
         { OHOS_BOOT"sn", SnDealFun },
