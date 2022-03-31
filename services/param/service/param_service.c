@@ -658,20 +658,20 @@ static int SnDealFun(const char* name, const char* value, int res)
 static int LoadParamFromCmdLine(void)
 {
     int ret;
-    static const cmdLineInfo cmdLines[] = { { OHOS_BOOT"hardware", CommonDealFun },
-        { OHOS_BOOT"bootgroup", CommonDealFun },
-        { OHOS_BOOT"reboot_reason", CommonDealFun },
-        { OHOS_BOOT"sn", SnDealFun },
+    static const cmdLineInfo cmdLines[] = { {OHOS_BOOT"hardware", CommonDealFun},
+                                            {OHOS_BOOT"bootgroup", CommonDealFun},
+                                            {OHOS_BOOT"reboot_reason", CommonDealFun},
+                                            {OHOS_BOOT"sn", SnDealFun},
 #ifdef STARTUP_INIT_TEST
-        { OHOS_BOOT"mem", CommonDealFun },
-        { OHOS_BOOT"console", CommonDealFun },
-        { OHOS_BOOT"mmz", CommonDealFun },
-        { OHOS_BOOT"androidboot.selinux", CommonDealFun },
-        { OHOS_BOOT"init", CommonDealFun },
-        { OHOS_BOOT"root", CommonDealFun },
-        { OHOS_BOOT"uuid", CommonDealFun },
-        { OHOS_BOOT"rootfstype", CommonDealFun },
-        { OHOS_BOOT"blkdevparts", CommonDealFun }
+                                            {OHOS_BOOT"mem", CommonDealFun},
+                                            {OHOS_BOOT"console", CommonDealFun},
+                                            {OHOS_BOOT"mmz", CommonDealFun},
+                                            {OHOS_BOOT"androidboot.selinux", CommonDealFun},
+                                            {OHOS_BOOT"init", CommonDealFun},
+                                            {OHOS_BOOT"root", CommonDealFun},
+                                            {OHOS_BOOT"uuid", CommonDealFun},
+                                            {OHOS_BOOT"rootfstype", CommonDealFun},
+                                            {OHOS_BOOT"blkdevparts", CommonDealFun},
 #endif
     };
     char *data = ReadFileData(PARAM_CMD_LINE);
