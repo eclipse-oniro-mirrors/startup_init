@@ -739,7 +739,6 @@ int CommonDealFun(const char* name, const char* value, int res)
         PARAM_LOGV("**** name %s, value %s", name, value);
         ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, NULL, 0);
         PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
-    PARAM_LOGE("----Debug1 name is:%s , value is :%s!",name,value);
     } else {
         PARAM_LOGE("Can not find arrt %s", name);
     }
@@ -759,19 +758,16 @@ int SnDealFun(const char* name, const char* value, int res)
             PARAM_LOGE("Error, Read sn from default file failed!");
             return -1;
         }
-        PARAM_LOGE("----Debug2 name is:%s , value is :%s!", name, data);
     } else if (value[0] == '/') {
         data = ReadFileData(value);
         if (data == NULL) {
             PARAM_LOGE("Error, Read sn from cmdline file failed!");
             return -1;
         }
-        PARAM_LOGE("----Debug3 name is:%s , value is :%s!", name, data);
     } else {
         PARAM_LOGV("**** name %s, value %s", name, value);
         ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, NULL, 0);
         PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
-        PARAM_LOGE("----Debug4 name is:%s , value is :%s!", name, value);
         return ret;
     }
 
@@ -783,7 +779,6 @@ int SnDealFun(const char* name, const char* value, int res)
         }
     }
     data[index] = '\0';
-    PARAM_LOGE("----Debug5 name is:%s , value is :%s!", name, data);
     PARAM_LOGV("**** name %s, value %s", name, data);
     ret = WriteParam(&g_paramWorkSpace.paramSpace, name, data, NULL, 0);
     PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, data);
