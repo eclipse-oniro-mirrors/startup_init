@@ -619,7 +619,7 @@ static int SnDealFun(const char* name, const char* value, int res)
     PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
 
     char *data = NULL;
-    if (res != 0) { //if cmdline not set sn or set sn value is null,read sn from default file
+    if (res != 0) { // if cmdline not set sn or set sn value is null,read sn from default file
         data = ReadFileData(SN_FILE);
         if (data == NULL) {
             PARAM_LOGE("Error, Read sn from default file failed!");
@@ -648,7 +648,8 @@ static int SnDealFun(const char* name, const char* value, int res)
     data[index] = '\0';
     PARAM_LOGV("**** name %s, value %s", name, data);
     ret = WriteParam(&g_paramWorkSpace.paramSpace, name, data, NULL, 0);
-    PARAM_CHECK(ret == 0, free(data); return ret, "Failed to write param %s %s", name, data);
+    PARAM_CHECK(ret == 0, free(data); 
+        return ret, "Failed to write param %s %s", name, data);
     free(data);
 
     return ret;
@@ -658,20 +659,20 @@ static int LoadParamFromCmdLine(void)
 {
     int ret;
     static const cmdLineInfo cmdLines[] = {
-        {OHOS_BOOT"hardware", CommonDealFun},
-        {OHOS_BOOT"bootgroup", CommonDealFun},
-        {OHOS_BOOT"reboot_reason", CommonDealFun},
-        {OHOS_BOOT"sn", SnDealFun},
+        { OHOS_BOOT"hardware", CommonDealFun },
+        { OHOS_BOOT"bootgroup", CommonDealFun },
+        { OHOS_BOOT"reboot_reason", CommonDealFun },
+        { OHOS_BOOT"sn", SnDealFun },
 #ifdef STARTUP_INIT_TEST
-        {OHOS_BOOT"mem", CommonDealFun},
-        {OHOS_BOOT"console", CommonDealFun},
-        {OHOS_BOOT"mmz", CommonDealFun},
-        {OHOS_BOOT"androidboot.selinux", CommonDealFun},
-        {OHOS_BOOT"init", CommonDealFun},
-        {OHOS_BOOT"root", CommonDealFun},
-        {OHOS_BOOT"uuid", CommonDealFun},
-        {OHOS_BOOT"rootfstype", CommonDealFun},
-        {OHOS_BOOT"blkdevparts", CommonDealFun}
+        { OHOS_BOOT"mem", CommonDealFun },
+        { OHOS_BOOT"console", CommonDealFun },
+        { OHOS_BOOT"mmz", CommonDealFun },
+        { OHOS_BOOT"androidboot.selinux", CommonDealFun },
+        { OHOS_BOOT"init", CommonDealFun },
+        { OHOS_BOOT"root", CommonDealFun },
+        { OHOS_BOOT"uuid", CommonDealFun },
+        { OHOS_BOOT"rootfstype", CommonDealFun },
+        { OHOS_BOOT"blkdevparts", CommonDealFun }
 #endif
     };
     char *data = ReadFileData(PARAM_CMD_LINE);
