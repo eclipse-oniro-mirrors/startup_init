@@ -100,7 +100,7 @@ void LogToDmesg(InitLogLevel logLevel, const char *domain, const char *fileName,
 
 void InitLog(InitLogLevel logLevel, const char *domain, const char *fileName, int line, const char *fmt, ...)
 {
-    if (g_logLevel >= logLevel) {
+    if (g_logLevel > logLevel) {
         return;
     }
     va_list vargs;
