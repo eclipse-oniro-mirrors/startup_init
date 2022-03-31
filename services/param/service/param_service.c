@@ -596,6 +596,64 @@ static int GetParamValueFromBuffer(const char *name, const char *buffer, char *v
     return ret;
 }
 
+static int CommonDealFun(const char* name, const char* value, int res)
+{
+    PARAM_LOGI("Add param from cmdline %s %s", name, value);
+    int ret = 0;
+    if (res == 0) {
+        ret = CheckParamName(name, 0);
+        PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
+        PARAM_LOGV("**** name %s, value %s", name, value);
+        ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, NULL, 0);
+        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
+    } else {
+        PARAM_LOGE("Can not find arrt %s", name);
+    }
+    return ret;
+}
+
+static int SnDealFun(const char* name, const char* value, int res)
+{
+    PARAM_LOGI("Add SN param from cmdline %s %s", name, value);
+    int ret = CheckParamName(name, 0);
+    PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
+
+    char *data = NULL;
+    if (res != 0) { //if cmdline not set sn or set sn value is null,read sn from default file
+        data = ReadFileData(SN_FILE);
+        if (data == NULL) {
+            PARAM_LOGE("Error, Read sn from default file failed!");
+            return -1;
+        }
+    } else if (value[0] == '/') {
+        data = ReadFileData(value);
+        if (data == NULL) {
+            PARAM_LOGE("Error, Read sn from cmdline file failed!");
+            return -1;
+        }
+    } else {
+        PARAM_LOGV("**** name %s, value %s", name, value);
+        ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, NULL, 0);
+        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
+        return ret;
+    }
+
+    int index = 0;
+    for (size_t i = 0; i < strlen(data); i++) {
+        if (*(data + i) != ':') {
+            *(data + index) = *(data + i);
+            index++;
+        }
+    }
+    data[index] = '\0';
+    PARAM_LOGV("**** name %s, value %s", name, data);
+    ret = WriteParam(&g_paramWorkSpace.paramSpace, name, data, NULL, 0);
+    PARAM_CHECK(ret == 0, free(data); return ret, "Failed to write param %s %s", name, data);
+    free(data);
+
+    return ret;
+}
+
 static int LoadParamFromCmdLine(void)
 {
     int ret;
@@ -638,63 +696,6 @@ static int LoadParamFromCmdLine(void)
     free(data);
     free(value);
     return 0;
-}
-
-int CommonDealFun(const char* name, const char* value, int res)
-{
-    PARAM_LOGI("Add param from cmdline %s %s", name, value);
-    int ret = 0;
-    if (res == 0) {
-        ret = CheckParamName(name, 0);
-        PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
-        PARAM_LOGV("**** name %s, value %s", name, value);
-        ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, NULL, 0);
-        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
-    } else {
-        PARAM_LOGE("Can not find arrt %s", name);
-    }
-    return ret;
-}
-
-int SnDealFun(const char* name, const char* value, int res)
-{
-    PARAM_LOGI("Add SN param from cmdline %s %s", name, value);
-    int ret = CheckParamName(name, 0);
-    PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
-
-    char *data = NULL;
-    if (res != 0) { //if cmdline not set sn or set sn value is null,read sn from default file
-        data = ReadFileData(SN_FILE);
-        if (data == NULL) {
-            PARAM_LOGE("Error, Read sn from default file failed!");
-            return -1;
-        }
-    } else if (value[0] == '/') {
-        data = ReadFileData(value);
-        if (data == NULL) {
-            PARAM_LOGE("Error, Read sn from cmdline file failed!");
-            return -1;
-        }
-    } else {
-        PARAM_LOGV("**** name %s, value %s", name, value);
-        ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, NULL, 0);
-        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
-        return ret;
-    }
-
-    int index = 0;
-    for (size_t i = 0; i < strlen(data); i++) {
-        if (*(data + i) != ':') {
-            *(data + index) = *(data + i);
-            index++;
-        }
-    }
-    data[index] = '\0';
-    PARAM_LOGV("**** name %s, value %s", name, data);
-    ret = WriteParam(&g_paramWorkSpace.paramSpace, name, data, NULL, 0);
-    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, data);
-
-    return ret;
 }
 
 int SystemWriteParam(const char *name, const char *value)

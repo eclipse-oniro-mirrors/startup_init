@@ -39,8 +39,6 @@ typedef struct cmdLineInfo {
 } cmdLineInfo;
 
 int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd);
-int CommonDealFun(const char* name, const char* value, int);
-int SnDealFun(const char* name, const char* value, int);
 
 int InitPersistParamWorkSpace(const ParamWorkSpace *workSpace);
 void ClosePersistParamWorkSpace(void);
