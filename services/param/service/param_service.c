@@ -37,6 +37,12 @@
 
 static ParamWorkSpace g_paramWorkSpace = { 0, {}, NULL, {}, NULL, NULL };
 
+#ifdef USE_MTK_EMMC
+static const char SN_FILE[] = {"/proc/bootdevice/cid"};
+#else
+static const char SN_FILE[] = {"/sys/block/mmcblk0/device/cid"};
+#endif
+
 static void OnClose(ParamTaskPtr client)
 {
     PARAM_LOGV("OnClose %p", client);
@@ -117,11 +123,24 @@ static int CheckParamValue(const WorkSpace *workSpace, const ParamTrieNode *node
 
 int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd)
 {
+    char strValue[PARAM_CONST_VALUE_LEN_MAX + 1] = {};
+    int res = strcpy_s(strValue, strlen(value) + 1, value);
+    if (res != EOK ) {
+        PARAM_LOGE("Error, strcpy failed!");
+        return -1;
+    }
+
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
-    PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
+    PARAM_CHECK(strValue != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
     ParamTrieNode *node = FindTrieNode(workSpace, name, strlen(name), NULL);
-    int ret = CheckParamValue(workSpace, node, name, value);
-    PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
+    int ret = CheckParamValue(workSpace, node, name, strValue);
+    PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, strValue);
+
+    if (strcmp(name,"ohos.boot.sn") == 0  && CheckAndResetSnValue(strValue) != 0) {
+        PARAM_LOGE("Error,Reset sn value failed!");
+        return PARAM_CODE_INVALID_PARAM;
+    }
+
     if (node != NULL && node->dataIndex != 0) {
         if (dataIndex != NULL) {
             *dataIndex = node->dataIndex;
@@ -129,9 +148,45 @@ int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, 
         if (onlyAdd) {
             return 0;
         }
-        return UpdateParam(workSpace, &node->dataIndex, name, value);
+        return UpdateParam(workSpace, &node->dataIndex, name, strValue);
     }
-    return AddParam((WorkSpace *)workSpace, name, value, dataIndex);
+    return AddParam((WorkSpace *)workSpace, name, strValue, dataIndex);
+}
+
+int CheckAndResetSnValue(char *value) 
+{
+    char snFile[PARAM_CONST_VALUE_LEN_MAX] = {};
+    int res = 0;
+    if (value[0] == '/') {
+        res = strcpy_s(snFile, strlen(value) + 1, value);
+        if (res != EOK ) {
+            PARAM_LOGE("Error, strcpy failed!");
+            return -1;
+        }
+    } else {
+        return 0;
+    }
+
+    char *data = ReadFileData(snFile);
+    if (data == NULL) {
+        PARAM_LOGE("Error, Read sn file failed!");
+        return -1;
+    }
+
+    int index = 0;
+    for (size_t i = 0; i < strlen(data); i++) {
+        if (*(data + i) != ':') {
+            *(data + index) = *(data + i);
+            index++;
+        }
+    }
+    data[index] = '\0';
+    res = strcpy_s(value, strlen(data) + 1, data);
+    if (res != EOK ) {
+        PARAM_LOGE("Error, strcpy failed!");
+        return -1;
+    }
+    return 0;
 }
 
 PARAM_STATIC int AddSecurityLabel(const ParamAuditData *auditData, void *context)
@@ -685,6 +740,7 @@ static int LoadParamFromCmdLine(void)
         OHOS_BOOT"hardware",
         OHOS_BOOT"bootgroup",
         OHOS_BOOT"reboot_reason",
+        OHOS_BOOT"sn",
 #ifdef STARTUP_INIT_TEST
         OHOS_BOOT"mem",
         OHOS_BOOT"console",
@@ -712,6 +768,12 @@ static int LoadParamFromCmdLine(void)
 #else
         ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
 #endif
+        //if cmdline not set sn or set sn value is null,read sn from default file
+        if (strcmp(cmdLines[i],"ohos.boot.sn") == 0 && ret != 0) {
+            ret = 0;
+            strcpy_s(value,strlen(SN_FILE) + 1,SN_FILE);
+        }
+
         if (ret == 0) {
             PARAM_LOGV("Add param from cmdline %s %s", cmdLines[i], value);
             ret = CheckParamName(cmdLines[i], 0);
