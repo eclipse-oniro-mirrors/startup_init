@@ -39,7 +39,7 @@ void SetInitLogLevel(InitLogLevel logLevel)
 }
 
 #ifdef INIT_FILE
-static void LogToFile(const char *logFile, const char *fileName, int line, const char *info)
+static void LogToFile(const char *logFile, const char *tag, const char *info)
 {
     time_t second = time(0);
     if (second <= 0) {
@@ -50,9 +50,8 @@ static void LogToFile(const char *logFile, const char *fileName, int line, const
     if (t == NULL || outfile == NULL) {
         return;
     }
-    (void)fprintf(outfile, "[%d-%d-%d %d:%d:%d][pid=%d][%s:%d]%s \n",
-        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec,
-        getpid(), fileName, line, info);
+    (void)fprintf(outfile, "[%d-%d-%d %d:%d:%d][pid=%d][%s]%s \n",
+        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, getpid(), tag, info);
     (void)fflush(outfile);
     fclose(outfile);
     return;
@@ -71,7 +70,7 @@ void OpenLogDevice(void)
     return;
 }
 
-void LogToDmesg(InitLogLevel logLevel, const char *domain, const char *fileName, int line, const char *info)
+void LogToDmesg(InitLogLevel logLevel, const char *tag, const char *info)
 {
     static const char *LOG_LEVEL_STR[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
     static const char *LOG_KLEVEL_STR[] = { "<7>", "<6>", "<4>", "<3>", "<3>" };
@@ -83,8 +82,8 @@ void LogToDmesg(InitLogLevel logLevel, const char *domain, const char *fileName,
         }
     }
     char logInfo[MAX_LOG_SIZE];
-    if (snprintf_s(logInfo, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, "%s[pid=%d %d][%s][%s][%s:%d]%s",
-        LOG_KLEVEL_STR[logLevel], getpid(), getppid(), domain, LOG_LEVEL_STR[logLevel], fileName, line, info) == -1) {
+    if (snprintf_s(logInfo, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, "%s[pid=%d %d][%s][%s]%s",
+        LOG_KLEVEL_STR[logLevel], getpid(), getppid(), tag, LOG_LEVEL_STR[logLevel], info) == -1) {
         close(g_fd);
         g_fd = -1;
         return;
@@ -98,7 +97,7 @@ void LogToDmesg(InitLogLevel logLevel, const char *domain, const char *fileName,
 #endif
 #endif
 
-void InitLog(InitLogLevel logLevel, const char *domain, const char *fileName, int line, const char *fmt, ...)
+void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *fmt, ...)
 {
     if (g_logLevel > logLevel) {
         return;
@@ -113,20 +112,18 @@ void InitLog(InitLogLevel logLevel, const char *domain, const char *fileName, in
     va_end(vargs);
 #ifdef OHOS_LITE
     static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
-    (void)HiLogPrint(LOG_CORE, LOG_LEVEL[logLevel],
-        domain, INIT_LOG_TAG, "[%{public}s:%{public}d]%{public}s", fileName, line, tmpFmt);
+    (void)HiLogPrint(LOG_CORE, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);
 #else
 #ifdef INIT_DMESG
-    LogToDmesg(logLevel, domain, fileName, line, tmpFmt);
+    LogToDmesg(logLevel, tag, tmpFmt);
 #endif
 #endif
 
 #ifdef INIT_AGENT
     static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
-    HiLogBasePrint(LOG_CORE, LOG_LEVEL[logLevel],
-        0, domain, "[%{public}s:%d]%{public}s", fileName, line, tmpFmt);
+    HiLogBasePrint(LOG_CORE, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);
 #ifdef INIT_FILE
-    LogToFile("/data/init_agent/begetctl.log", fileName, line, tmpFmt);
+    LogToFile("/data/init_agent/begetctl.log", tag, tmpFmt);
 #endif
 #endif
 }

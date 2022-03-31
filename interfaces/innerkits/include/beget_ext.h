@@ -35,22 +35,31 @@ typedef enum InitLogLevel {
 
 #define FILE_NAME   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
 void SetInitLogLevel(InitLogLevel logLevel);
-void InitLog(InitLogLevel logLevel, const char *domain, const char *fileName, int line, const char *fmt, ...);
+void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *fmt, ...);
 
-#define STARTUP_LOGV(domain, fmt, ...) InitLog(INIT_DEBUG, domain, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
-#define STARTUP_LOGI(domain, fmt, ...) InitLog(INIT_INFO, domain, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
-#define STARTUP_LOGW(domain, fmt, ...) InitLog(INIT_WARN, domain, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
-#define STARTUP_LOGE(domain, fmt, ...) InitLog(INIT_ERROR, domain, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
-#define STARTUP_LOGF(domain, fmt, ...) InitLog(INIT_FATAL, domain, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
+#define STARTUP_LOGV(domain, tag, fmt, ...) \
+    InitLog(INIT_DEBUG, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+#define STARTUP_LOGI(domain, tag, fmt, ...) \
+    InitLog(INIT_INFO, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+#define STARTUP_LOGW(domain, tag, fmt, ...) \
+    InitLog(INIT_WARN, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+#define STARTUP_LOGE(domain, tag, fmt, ...) \
+    InitLog(INIT_ERROR, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+#define STARTUP_LOGF(domain, tag, fmt, ...) \
+    InitLog(INIT_FATAL, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 
+#define BASE_DOMAIN 0xA000
+#ifndef BEGET_DOMAIN
+#define BEGET_DOMAIN BASE_DOMAIN + 0xb
+#endif
 #define BEGET_LABEL "BEGET"
-#define BEGET_LOGI(fmt, ...) STARTUP_LOGI(BEGET_LABEL, fmt, ##__VA_ARGS__)
-#define BEGET_LOGE(fmt, ...) STARTUP_LOGE(BEGET_LABEL, fmt, ##__VA_ARGS__)
-#define BEGET_LOGV(fmt, ...) STARTUP_LOGV(BEGET_LABEL, fmt, ##__VA_ARGS__)
-#define BEGET_LOGW(fmt, ...) STARTUP_LOGW(BEGET_LABEL, fmt, ##__VA_ARGS__)
+#define BEGET_LOGI(fmt, ...) STARTUP_LOGI(BEGET_DOMAIN, BEGET_LABEL, fmt, ##__VA_ARGS__)
+#define BEGET_LOGE(fmt, ...) STARTUP_LOGE(BEGET_DOMAIN, BEGET_LABEL, fmt, ##__VA_ARGS__)
+#define BEGET_LOGV(fmt, ...) STARTUP_LOGV(BEGET_DOMAIN, BEGET_LABEL, fmt, ##__VA_ARGS__)
+#define BEGET_LOGW(fmt, ...) STARTUP_LOGW(BEGET_DOMAIN, BEGET_LABEL, fmt, ##__VA_ARGS__)
 
 #define InitLogPrint(outFileName, logLevel, kLevel, fmt, ...) \
-    InitLog(logLevel, BEGET_LABEL, (FILE_NAME), (__LINE__), fmt, ##__VA_ARGS__)
+    InitLog(logLevel, BEGET_DOMAIN, kLevel, fmt, ##__VA_ARGS__)
 
 #define BEGET_ERROR_CHECK(ret, statement, format, ...) \
     if (!(ret)) {                                     \

@@ -39,9 +39,13 @@ public:
 } // namespace device_info
 } // namespace OHOS
 
-#define DINFO_LOGI(fmt, ...) STARTUP_LOGI("begetctrl.log", "DeviceInfoKits", fmt, ##__VA_ARGS__)
-#define DINFO_LOGE(fmt, ...) STARTUP_LOGE("begetctrl.log", "DeviceInfoKits", fmt, ##__VA_ARGS__)
-#define DINFO_LOGV(fmt, ...) STARTUP_LOGV("begetctrl.log", "DeviceInfoKits", fmt, ##__VA_ARGS__)
+#ifndef DINFO_DOMAIN
+#define DINFO_DOMAIN (BASE_DOMAIN + 8)
+#endif
+
+#define DINFO_LOGI(fmt, ...) STARTUP_LOGI(DINFO_DOMAIN, "DeviceInfoKits", fmt, ##__VA_ARGS__)
+#define DINFO_LOGE(fmt, ...) STARTUP_LOGE(DINFO_DOMAIN, "DeviceInfoKits", fmt, ##__VA_ARGS__)
+#define DINFO_LOGV(fmt, ...) STARTUP_LOGV(DINFO_DOMAIN, "DeviceInfoKits", fmt, ##__VA_ARGS__)
 
 #define DINFO_CHECK(ret, exper, ...) \
     if (!(ret)) { \

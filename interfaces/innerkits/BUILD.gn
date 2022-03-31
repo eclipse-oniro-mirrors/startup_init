@@ -36,7 +36,7 @@ ohos_shared_library("libbegetutil") {
     "syscap/init_syscap.c",
   ]
   sources += fs_manager_sources
-  defines = [ "INIT_AGENT" ]
+  defines = [ "INIT_AGENT"]
   include_dirs = [
     "./include",
     "//third_party/bounds_checking_function/include",
@@ -67,6 +67,7 @@ ohos_shared_library("libbeget_proxy") {
   sources = [
     "//base/startup/init_lite/device_info/device_info_kits.cpp",
     "//base/startup/init_lite/device_info/device_info_proxy.cpp",
+    "//base/startup/init_lite/services/log/init_log.c",
     "service_watcher/service_watcher.c",
   ]
 
@@ -80,8 +81,8 @@ ohos_shared_library("libbeget_proxy") {
     "//third_party/bounds_checking_function/include",
   ]
 
+  defines = [ "INIT_AGENT"]
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param/watcher:param_watcheragent",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_shared",
@@ -89,6 +90,7 @@ ohos_shared_library("libbeget_proxy") {
   ]
 
   external_deps = [
+    "hilog_native:libhilog_base",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",

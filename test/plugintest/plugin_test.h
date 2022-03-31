@@ -22,11 +22,14 @@
 #include "init_log.h"
 #include "securec.h"
 
+#ifndef PLUGIN_DOMAIN
+#define PLUGIN_DOMAIN (BASE_DOMAIN + 7)
+#endif
 #define READ_DURATION 100000
 #define PLUGIN_LABEL "PLUGIN"
-#define PLUGIN_LOGI(fmt, ...) STARTUP_LOGI(PLUGIN_LABEL, fmt, ##__VA_ARGS__)
-#define PLUGIN_LOGE(fmt, ...) STARTUP_LOGE(PLUGIN_LABEL, fmt, ##__VA_ARGS__)
-#define PLUGIN_LOGV(fmt, ...) STARTUP_LOGV(PLUGIN_LABEL, fmt, ##__VA_ARGS__)
+#define PLUGIN_LOGI(fmt, ...) STARTUP_LOGI(PLUGIN_DOMAIN, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
+#define PLUGIN_LOGE(fmt, ...) STARTUP_LOGE(PLUGIN_DOMAIN, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
+#define PLUGIN_LOGV(fmt, ...) STARTUP_LOGV(PLUGIN_DOMAIN, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
 
 #define PLUGIN_CHECK(ret, exper, ...)          \
     if (!(ret)) {                              \

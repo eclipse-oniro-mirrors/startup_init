@@ -27,10 +27,13 @@
 #define LE_SET_FLAGS(flags, flag) ((flags) |= (flag))
 #define LE_CLEAR_FLAGS(flags, flag) ((flags) &= ~(flag))
 
+#ifndef LE_DOMAIN
+#define LE_DOMAIN (BASE_DOMAIN + 4)
+#endif
 #define LE_LABEL "LoopEvent"
-#define LE_LOGI(fmt, ...) STARTUP_LOGI(LE_LABEL, fmt, ##__VA_ARGS__)
-#define LE_LOGE(fmt, ...) STARTUP_LOGE(LE_LABEL, fmt, ##__VA_ARGS__)
-#define LE_LOGV(fmt, ...) STARTUP_LOGV(LE_LABEL, fmt, ##__VA_ARGS__)
+#define LE_LOGI(fmt, ...) STARTUP_LOGI(LE_DOMAIN, LE_LABEL, fmt, ##__VA_ARGS__)
+#define LE_LOGE(fmt, ...) STARTUP_LOGE(LE_DOMAIN, LE_LABEL, fmt, ##__VA_ARGS__)
+#define LE_LOGV(fmt, ...) STARTUP_LOGV(LE_DOMAIN, LE_LABEL, fmt, ##__VA_ARGS__)
 
 #define LE_CHECK(ret, exper, ...)                                                                                      \
     if (!(ret)) {                                                                                                      \
