@@ -658,7 +658,7 @@ static int SnDealFun(const char* name, const char* value, int res)
 static int LoadParamFromCmdLine(void)
 {
     int ret;
-    static const cmdLineInfo cmdLines[] = { {OHOS_BOOT"hardware", CommonDealFun},
+    static const cmdLineInfo cmdLines[] = { { OHOS_BOOT"hardware", CommonDealFun },
         { OHOS_BOOT"bootgroup", CommonDealFun },
         { OHOS_BOOT"reboot_reason", CommonDealFun },
         { OHOS_BOOT"sn", SnDealFun },
