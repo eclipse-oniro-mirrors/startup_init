@@ -61,6 +61,7 @@ a2dp_host:x:3043:
 hdf_devmgr:x:3044:
 connected_tag_host:x:3045:
 dslm:x:3046:
+work_scheduler:x:3047:
 dms:x:5522:
 sensor:x:6688:
 input:x:6696:
