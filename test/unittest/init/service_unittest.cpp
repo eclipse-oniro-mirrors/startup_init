@@ -48,7 +48,7 @@ public:
 HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service\",\"path\":[\"/data/init_ut/test_service\"],"
-        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,\"dynamic\":true,"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
         "\"gid\":[\"system\"]}}";
     cJSON* jobItem = cJSON_Parse(jsonStr);
     ASSERT_NE(nullptr, jobItem);
@@ -70,7 +70,7 @@ HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
 HWTEST_F(ServiceUnitTest, TestServiceStartAbnormal, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/data/init_ut/test_service\"],"
-        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,\"dynamic\":true,"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
         "\"gid\":[\"system\"]}}";
     cJSON* jobItem = cJSON_Parse(jsonStr);
     ASSERT_NE(nullptr, jobItem);

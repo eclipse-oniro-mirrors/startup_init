@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_STOPDYNAMICPROCESS_FUZZER_H
-#define TEST_FUZZTEST_STOPDYNAMICPROCESS_FUZZER_H
+#ifndef TEST_FUZZTEST_STOPONDEMANDPROCESS_FUZZER_H
+#define TEST_FUZZTEST_STOPONDEMANDPROCESS_FUZZER_H
 #include "fuzz_utils.h"
 #define FUZZ_PROJECT_NAME "ServiceControlStop_fuzzer"
 #endif

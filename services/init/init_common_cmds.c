@@ -202,7 +202,7 @@ static void DoWait(const struct CmdArgs *ctx)
 static void DoStart(const struct CmdArgs *ctx)
 {
     INIT_LOGV("DoStart %s", ctx->argv[0]);
-    StartServiceByName(ctx->argv[0], true);
+    StartServiceByName(ctx->argv[0]);
 }
 
 static void DoStop(const struct CmdArgs *ctx)
@@ -226,7 +226,7 @@ static void DoReset(const struct CmdArgs *ctx)
             return;
         }
     } else {
-        StartServiceByName(ctx->argv[0], false);
+        StartServiceByName(ctx->argv[0]);
     }
     return;
 }

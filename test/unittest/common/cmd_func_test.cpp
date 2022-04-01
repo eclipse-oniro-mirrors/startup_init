@@ -957,7 +957,7 @@ HWTEST_F(StartupInitUTest, cmdJobTest_001, TestSize.Level0)
     DoJob(nullptr);
     DoJob("job name does not exist");
     ReleaseAllJobs();
-    StartServiceByName("service name does not exist", false);
+    StartServiceByName("service name does not exist");
     StopAllServices(0, nullptr, 0, nullptr);
     ServiceReap(nullptr);
     EXPECT_NE(0, ServiceStart(nullptr));

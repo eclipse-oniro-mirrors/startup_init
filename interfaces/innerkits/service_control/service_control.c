@@ -28,7 +28,7 @@
 static int StartProcess(const char *name, const char *extArgv[], int extArgc)
 {
     if (name == NULL) {
-        BEGET_LOGE("Start dynamic service failed, service name is null.");
+        BEGET_LOGE("Start ondemand service failed, service name is null.");
         return -1;
     }
     int extraArg = 0;
@@ -79,7 +79,7 @@ static int StartProcess(const char *name, const char *extArgv[], int extArgc)
 static int StopProcess(const char *serviceName)
 {
     if (serviceName == NULL) {
-        BEGET_LOGE("Stop dynamic service failed, service is null.\n");
+        BEGET_LOGE("Stop ondemand service failed, service is null.\n");
         return -1;
     }
     if (SystemSetParameter("ohos.ctl.stop", serviceName) != 0) {
@@ -112,7 +112,7 @@ static int GetCurrentServiceStatus(const char *serviceName, ServiceStatus *statu
 static int RestartProcess(const char *serviceName, const char *extArgv[], int extArgc)
 {
     if (serviceName == NULL) {
-        BEGET_LOGE("Restart dynamic service failed, service is null.\n");
+        BEGET_LOGE("Restart ondemand service failed, service is null.\n");
         return -1;
     }
     ServiceStatus status = SERVICE_IDLE;

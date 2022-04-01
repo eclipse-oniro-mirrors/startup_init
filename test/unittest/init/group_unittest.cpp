@@ -335,7 +335,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService2, TestSize.Level1)
 HWTEST_F(InitGroupManagerUnitTest, TestParseServiceCpucore, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service22\",\"path\":[\"/data/init_ut/test_service\"],"
-        "\"importance\":-20,\"uid\":\"root\",\"writepid\":[\"/dev/test_service\"],\"console\":1,\"dynamic\":true,"
+        "\"importance\":-20,\"uid\":\"root\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
         "\"gid\":[\"root\"], \"cpucore\":[5, 2, 4, 1, 2, 0, 1]}}";
     cJSON* jobItem = cJSON_Parse(jsonStr);
     ASSERT_NE(nullptr, jobItem);
