@@ -33,6 +33,11 @@ struct CmdLineEntry {
     int set;
 };
 
+typedef struct cmdLineInfo {
+    const char* name;
+    int (*processor)(const char* name, const char* value, int);
+} cmdLineInfo;
+
 int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex, int onlyAdd);
 
 int InitPersistParamWorkSpace(const ParamWorkSpace *workSpace);
