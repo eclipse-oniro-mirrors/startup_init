@@ -23,6 +23,9 @@
 
 #include "securec.h"
 #ifdef OHOS_LITE
+#ifndef INIT_LOG_INIT
+#define INIT_LOG_INIT LOG_CORE
+#endif
 #include "hilog/log.h"
 #endif
 #ifdef INIT_AGENT
@@ -112,7 +115,7 @@ void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const 
     va_end(vargs);
 #ifdef OHOS_LITE
     static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
-    (void)HiLogPrint(LOG_CORE, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);
+    (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);
 #else
 #ifdef INIT_DMESG
     LogToDmesg(logLevel, tag, tmpFmt);
