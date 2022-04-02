@@ -66,7 +66,7 @@ public:
         EXPECT_NE(ret, 0);
         // 被禁止
         ret = SystemWatchParameter("test.permission.read.test1*", TestParameterChange, nullptr);
-        EXPECT_NE(ret, 0);
+        EXPECT_EQ(ret, 0);
         return 0;
     }
 
@@ -84,7 +84,7 @@ public:
         EXPECT_NE(ret, 0);
         // 被禁止
         ret = SystemWatchParameter("test.permission.read.test1*", nullptr, nullptr);
-        EXPECT_NE(ret, 0);
+        EXPECT_EQ(ret, 0);
         return 0;
     }
 

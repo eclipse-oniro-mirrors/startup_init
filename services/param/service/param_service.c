@@ -119,9 +119,9 @@ int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, 
             *dataIndex = node->dataIndex;
         }
         if (onlyAdd) {
-            return 0;
+            return PARAM_CODE_READ_ONLY;
         }
-        ret = CheckParamValue(workSpace, NULL, name, value);
+        ret = CheckParamValue(workSpace, node, name, value);
         PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         return UpdateParam(workSpace, &node->dataIndex, name, value);
     }
