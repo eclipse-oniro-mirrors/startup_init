@@ -74,7 +74,6 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/utils:libinit_tools",
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/openssl:libcrypto_static",
       "//utils/native/base:utils",
     ]
     external_deps = [ "hilog_native:libhilog_base" ]
