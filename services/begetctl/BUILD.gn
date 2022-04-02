@@ -60,6 +60,8 @@ ohos_executable("begetctl") {
       "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
       "//base/startup/init_lite/services/loopevent:loopevent",
       "//base/startup/init_lite/services/param/watcher:param_watcheragent",
+      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//base/startup/init_lite/services/utils:libinit_utils",
       "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
     ]
     defines += [
@@ -130,6 +132,8 @@ ohos_executable("paramshell") {
       "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
       "//base/startup/init_lite/services/loopevent:loopevent",
       "//base/startup/init_lite/services/param/watcher:param_watcheragent",
+      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//base/startup/init_lite/services/utils:libinit_utils",
       "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
     ]
     defines += [

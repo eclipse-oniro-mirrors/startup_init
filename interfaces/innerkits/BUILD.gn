@@ -11,101 +11,128 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//base/startup/init_lite/begetd.gni")
-import("//build/ohos.gni")
+if (defined(ohos_lite)) {
+  static_library("libbegetutil") {
+    sources = [ "//base/startup/init_lite/services/log/init_log.c" ]
+    defines = [
+      "_GNU_SOURCE",
+      "OHOS_LITE",
+      "INIT_LOG_INIT=3",
+    ]
+    include_dirs = [
+      "./include",
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/include/param",
+      "//base/startup/init_lite/interfaces/innerkits/fd_holder",
+    ]
+    deps = [
+      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
+      "//base/startup/init_lite/services/loopevent:loopevent",
+      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
+  }
+} else {
+  import("//base/startup/init_lite/begetd.gni")
+  import("//build/ohos.gni")
 
-config("exported_header_files") {
-  visibility = [ ":*" ]
-  include_dirs = [ "include/" ]
-}
+  config("exported_header_files") {
+    visibility = [ ":*" ]
+    include_dirs = [ "include/" ]
+  }
 
-fs_manager_sources = [
-  "fs_manager/fstab.c",
-  "fs_manager/fstab_mount.c",
-]
-
-ohos_shared_library("libbegetutil") {
-  sources = [
-    "fd_holder/fd_holder.c",
-    "file/init_file.c",
-    "reboot/init_reboot_innerkits.c",
-    "service_control/service_control.c",
-    "socket/init_socket.c",
-    "syscap/init_syscap.c",
-  ]
-  sources += fs_manager_sources
-
-  include_dirs = [
-    "./include",
-    "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/include/param",
-    "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-  ]
-  defines = [ "INIT_AGENT" ]
-  deps = [
-    "//base/startup/init_lite/interfaces/innerkits/fd_holder:libfdholder_internal_static",
-    "//base/startup/init_lite/services/param:param_client",
-    "//base/startup/init_lite/services/utils:libinit_utils",
-    "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/openssl:libcrypto_static",
-    "//utils/native/base:utils",
+  fs_manager_sources = [
+    "fs_manager/fstab.c",
+    "fs_manager/fstab_mount.c",
   ]
 
-  deps += [ "//base/startup/init_lite/services/log:init_log" ]
+  ohos_shared_library("libbegetutil") {
+    sources = [
+      "//base/startup/init_lite/services/log/init_log.c",
+      "fd_holder/fd_holder.c",
+      "fd_holder/fd_holder_internal.c",
+      "file/init_file.c",
+      "reboot/init_reboot_innerkits.c",
+      "service_control/service_control.c",
+      "socket/init_socket.c",
+      "syscap/init_syscap.c",
+    ]
+    sources += fs_manager_sources
+    defines = [ "INIT_AGENT" ]
 
-  public_configs = [ ":exported_header_files" ]
-  part_name = "init"
-  install_images = [
-    "system",
-    "updater",
-  ]
-}
+    include_dirs = [
+      "./include",
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/include/param",
+      "//base/startup/init_lite/interfaces/innerkits/fd_holder",
+    ]
+    deps = [
+      "//base/startup/init_lite/services/loopevent:loopevent",
+      "//base/startup/init_lite/services/param:param_client",
+      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//base/startup/init_lite/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/openssl:libcrypto_static",
+      "//utils/native/base:utils",
+    ]
+    external_deps = [ "hilog_native:libhilog_base" ]
+    public_configs = [ ":exported_header_files" ]
+    part_name = "init"
+    install_images = [
+      "system",
+      "updater",
+    ]
+  }
 
-# watcher lib must separate compilation avoid interdependence.
-ohos_shared_library("libbeget_proxy") {
-  sources = [
-    "//base/startup/init_lite/device_info/device_info_kits.cpp",
-    "//base/startup/init_lite/device_info/device_info_proxy.cpp",
-    "service_watcher/service_watcher.c",
-  ]
+  # watcher lib must separate compilation avoid interdependence.
+  ohos_shared_library("libbeget_proxy") {
+    sources = [
+      "//base/startup/init_lite/device_info/device_info_kits.cpp",
+      "//base/startup/init_lite/device_info/device_info_proxy.cpp",
+      "//base/startup/init_lite/services/log/init_log.c",
+      "service_watcher/service_watcher.c",
+    ]
 
-  include_dirs = [
-    "./include",
-    "//base/startup/init_lite/device_info",
-    "//utils/native/base/include",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/include/param",
-    "//third_party/bounds_checking_function/include",
-  ]
+    include_dirs = [
+      "./include",
+      "//base/startup/init_lite/device_info",
+      "//utils/native/base/include",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/include/param",
+      "//third_party/bounds_checking_function/include",
+    ]
 
-  deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param/watcher:param_watcheragent",
-    "//base/startup/init_lite/services/utils:libinit_utils",
-    "//third_party/bounds_checking_function:libsec_shared",
-    "//utils/native/base:utils",
-  ]
+    defines = [ "INIT_AGENT" ]
+    deps = [
+      "//base/startup/init_lite/services/param/watcher:param_watcheragent",
+      "//base/startup/init_lite/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//utils/native/base:utils",
+    ]
 
-  external_deps = [
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
-  ]
-  part_name = "init"
-  install_images = [ "system" ]
-}
+    external_deps = [
+      "hilog_native:libhilog_base",
+      "ipc:ipc_core",
+      "safwk:system_ability_fwk",
+      "samgr_standard:samgr_proxy",
+    ]
+    part_name = "init"
+    install_images = [ "system" ]
+  }
 
-# For init only
-ohos_static_library("libfsmanager_static") {
-  sources = fs_manager_sources
-  include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/services/include",
-  ]
-  deps = [ "//base/startup/init_lite/services/log:init_log" ]
-  part_name = "init"
+  # For init only
+  ohos_static_library("libfsmanager_static") {
+    sources = fs_manager_sources
+    include_dirs = [
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/services/include",
+    ]
+
+    part_name = "init"
+  }
 }

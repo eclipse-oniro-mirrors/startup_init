@@ -28,12 +28,14 @@ typedef struct {
     int index;
 } PluginCmd;
 
+#ifndef PLUGIN_DOMAIN
+#define PLUGIN_DOMAIN (BASE_DOMAIN + 6)
+#endif
 #define READ_DURATION 100000
-#define PLUGIN_LOG_FILE "plugintest.log"
 #define PLUGIN_LABEL "PLUGIN"
-#define PLUGIN_LOGI(fmt, ...) STARTUP_LOGI(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
-#define PLUGIN_LOGE(fmt, ...) STARTUP_LOGE(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
-#define PLUGIN_LOGV(fmt, ...) STARTUP_LOGV(PLUGIN_LOG_FILE, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
+#define PLUGIN_LOGI(fmt, ...) STARTUP_LOGI(PLUGIN_DOMAIN, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
+#define PLUGIN_LOGE(fmt, ...) STARTUP_LOGE(PLUGIN_DOMAIN, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
+#define PLUGIN_LOGV(fmt, ...) STARTUP_LOGV(PLUGIN_DOMAIN, PLUGIN_LABEL, fmt, ##__VA_ARGS__)
 
 #define PLUGIN_CHECK(ret, exper, ...) \
     if (!(ret)) { \

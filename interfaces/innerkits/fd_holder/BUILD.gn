@@ -21,9 +21,5 @@ ohos_static_library("libfdholder_internal_static") {
     "//base/startup/init_lite/services/log",
     "//base/startup/init_lite/interfaces/innerkits/include",
   ]
-
-  deps = [ "//base/startup/init_lite/services/log:init_log" ]
-
-  defines = [ "INIT_AGENT" ]
   part_name = "init"
 }

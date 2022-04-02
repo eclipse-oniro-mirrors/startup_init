@@ -15,6 +15,7 @@ if (defined(ohos_lite)) {
   if (ohos_kernel_type == "linux") {
     executable("ueventd_linux") {
       sources = [
+        "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c",
         "//base/startup/init_lite/services/utils/init_utils.c",
         "//base/startup/init_lite/services/utils/list.c",
         "//base/startup/init_lite/ueventd/lite/ueventd_parameter.c",
@@ -39,7 +40,6 @@ if (defined(ohos_lite)) {
       ]
 
       deps = [
-        "//base/startup/init_lite/interfaces/innerkits/socket:libsocket_static",
         "//base/startup/init_lite/services/log:init_log",
         "//third_party/bounds_checking_function:libsec_static",
       ]
@@ -63,6 +63,7 @@ if (defined(ohos_lite)) {
 } else {
   import("//build/ohos.gni")
   service_ueventd_sources = [
+    "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c",
     "//base/startup/init_lite/services/utils/list.c",
     "//base/startup/init_lite/ueventd/ueventd.c",
     "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
@@ -81,7 +82,6 @@ if (defined(ohos_lite)) {
   ]
 
   service_ueventd_deps = [
-    "//base/startup/init_lite/interfaces/innerkits/socket:libsocket_static",
     "//base/startup/init_lite/services/log:init_log",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",

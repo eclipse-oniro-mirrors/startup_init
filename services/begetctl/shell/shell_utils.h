@@ -22,11 +22,14 @@
 #include "init_log.h"
 #include "securec.h"
 
-#define BSH_LOG_FILE "begetctrl.log"
 #define BSH_LABEL "SHELL"
-#define BSH_LOGI(fmt, ...) STARTUP_LOGI(BSH_LOG_FILE, BSH_LABEL, fmt, ##__VA_ARGS__)
-#define BSH_LOGE(fmt, ...) STARTUP_LOGE(BSH_LOG_FILE, BSH_LABEL, fmt, ##__VA_ARGS__)
-#define BSH_LOGV(fmt, ...) STARTUP_LOGV(BSH_LOG_FILE, BSH_LABEL, fmt, ##__VA_ARGS__)
+#ifndef BSH_DOMAIN
+#define BSH_DOMAIN (BASE_DOMAIN + 5)
+#endif
+
+#define BSH_LOGI(fmt, ...) STARTUP_LOGI(BSH_DOMAIN, BSH_LABEL, fmt, ##__VA_ARGS__)
+#define BSH_LOGE(fmt, ...) STARTUP_LOGE(BSH_DOMAIN, BSH_LABEL, fmt, ##__VA_ARGS__)
+#define BSH_LOGV(fmt, ...) STARTUP_LOGV(BSH_DOMAIN, BSH_LABEL, fmt, ##__VA_ARGS__)
 
 #define BSH_CHECK(ret, exper, ...) \
     if (!(ret)) { \

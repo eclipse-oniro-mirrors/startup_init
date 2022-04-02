@@ -21,10 +21,7 @@ ohos_shared_library("libplugin") {
     "//base/startup/init_lite/services/log",
   ]
 
-  deps = [
-    "//base/startup/init_lite/services/log:init_log",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
+  deps = [ "//third_party/bounds_checking_function:libsec_static" ]
   install_enable = true
   part_name = "init"
 }
