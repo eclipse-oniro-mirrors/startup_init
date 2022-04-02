@@ -584,20 +584,6 @@ static int ParseServiceFile(const cJSON *curArrItem, Service *curServ)
     return ret;
 }
 
-static bool IsServiceInMainStrap(Service *curServ)
-{
-    char *mainServiceList[] = {
-        "appspawn", "udevd",  "samgr",      "multimodalinput", "weston",         "installs",
-        "hiview",   "hilogd", "hdf_devmgr", "distributedsche", "softbus_server", "foundation"
-    };
-    unsigned int length = ARRAY_LENGTH(mainServiceList);
-    for (unsigned int i = 0; i < length; ++i) {
-        INIT_INFO_CHECK(strncmp(curServ->name, mainServiceList[i], strlen(mainServiceList[i])) != 0, return true,
-            "%s must be main service", curServ->name);
-    }
-    return false;
-}
-
 static int GetServiceOnDemand(const cJSON *curArrItem, Service *curServ)
 {
     cJSON *item = cJSON_GetObjectItem(curArrItem, "ondemand");
