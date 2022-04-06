@@ -116,7 +116,6 @@ ohos_shared_library("param_client") {
   }
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   install_images = [
