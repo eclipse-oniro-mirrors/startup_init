@@ -33,7 +33,6 @@ ohos_shared_library("syscap") {
   public_configs = [ ":syscap_config" ]
   part_name = "init"
   install_images = [
-    "system",
-    "updater",
+    "system"
   ]
 }
