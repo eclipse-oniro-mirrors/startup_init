@@ -398,10 +398,9 @@ static int ExecRestartCmd(Service *service)
     return SERVICE_SUCCESS;
 }
 
-static void PollSocketAfresh(Service *service)
+static void CheckServiceSocket(Service *service)
 {
     if (service->socketCfg == NULL) {
-        INIT_LOGE("service %s socket config is NULL!", service->name);
         return;
     }
     ServiceSocket *tmpSock = service->socketCfg;
@@ -469,7 +468,7 @@ void ServiceReap(Service *service)
     }
     // service no need to restart which socket managed by init until socket message detected
     if (IsOnDemandService(service)) {
-        PollSocketAfresh(service);
+        CheckServiceSocket(service);
         return;
     }
 
