@@ -89,11 +89,16 @@ int ServiceExec(const Service *service)
     INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
 #ifdef SUPPORT_PROFILER_HIDEBUG
     do {
-        if (access("/system/lib/libhidebug.so", F_OK) != 0) {
+#ifdef __aarch64__
+        const char *debugSoPath = "/system/lib64/libhidebug.so";
+#else
+        const char *debugSoPath = "/system/lib/libhidebug.so";
+#endif
+        if (access(debugSoPath, F_OK) != 0) {
             INIT_LOGE("access failed, errno = %d\n", errno);
             break;
         }
-        void* handle = dlopen("/system/lib/libhidebug.so", RTLD_LAZY);
+        void* handle = dlopen(debugSoPath, RTLD_LAZY);
         if (handle == NULL) {
             INIT_LOGE("Failed to dlopen libhidebug.so, %s\n", dlerror());
             break;

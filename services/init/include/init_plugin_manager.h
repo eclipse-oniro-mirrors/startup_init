@@ -25,8 +25,11 @@
 extern "C" {
 #endif
 #endif
-
+#ifdef __aarch64__
+#define DEFAULT_PLUGIN_PATH "/system/lib64/plugin"
+#else
 #define DEFAULT_PLUGIN_PATH "/system/lib/plugin"
+#endif
 #define DEFAULT_PLUGIN_CFG "/system/etc/plugin_modules.cfg"
 typedef enum {
     PLUGIN_STATE_IDLE,

@@ -304,26 +304,41 @@ if (defined(ohos_lite)) {
   }
 
   ohos_prebuilt_etc("system-sandbox.json") {
-    source = "//base/startup/init_lite/interfaces/innerkits/sandbox/system-sandbox.json"
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/system-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/system-sandbox.json"
+    }
     part_name = "init"
     module_install_dir = "etc/sandbox"
   }
 
   ohos_prebuilt_etc("chipset-sandbox.json") {
-    source = "//base/startup/init_lite/interfaces/innerkits/sandbox/chipset-sandbox.json"
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/chipset-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/chipset-sandbox.json"
+    }
     part_name = "init"
     module_install_dir = "etc/sandbox"
   }
 
   ohos_prebuilt_etc("privapp-sandbox.json") {
-    source = "//base/startup/init_lite/interfaces/innerkits/sandbox/privapp-sandbox.json"
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/privapp-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/privapp-sandbox.json"
+    }
     part_name = "init"
     module_install_dir = "etc/sandbox"
   }
 
   ohos_prebuilt_etc("app-sandbox.json") {
-    source =
-        "//base/startup/init_lite/interfaces/innerkits/sandbox/app-sandbox.json"
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/app-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/app-sandbox.json"
+    }
     part_name = "init"
     module_install_dir = "etc/sandbox"
   }
