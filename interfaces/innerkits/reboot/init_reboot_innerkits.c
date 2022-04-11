@@ -32,7 +32,7 @@
 #define DOREBOOT_PARAM "reboot.ut"
 #endif
 
-int DoReboot(const char *option)
+int DoReboot_(const char *option)
 {
     char value[MAX_REBOOT_OPTION_SIZE];
     int ret = 0;
@@ -61,5 +61,27 @@ int DoReboot(const char *option)
     }
     ret = SystemSetParameter(DOREBOOT_PARAM, value);
     BEGET_ERROR_CHECK(ret == 0, return -1, "Set parameter to trigger reboot command \" %s \" failed", value);
+    return 0;
+}
+
+int DoReboot(const char *option)
+{
+    // check if param set ok
+    const int maxCount = 10;
+    int count = 0;
+    DoReboot_(option);
+    while (count < maxCount) {
+        usleep(100 * 1000); // 100 * 1000 wait 100ms
+        char result[10] = {0}; // 10 stop len
+        uint32_t len = sizeof(result);
+        int ret = SystemGetParameter(STARTUP_DEVICE_CTL, result, &len);
+        if (ret == 0 && strcmp(result, DEVICE_CMD_STOP) == 0) {
+            BEGET_LOGE("Success to reboot system");
+            return 0;
+        }
+        count++;
+        DoReboot_(option);
+    }
+    BEGET_LOGE("Failed to reboot system");
     return 0;
 }

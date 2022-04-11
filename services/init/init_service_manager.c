@@ -814,8 +814,7 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
     int ret = 0;
 #ifdef WITH_SELINUX
-    ret = GetStringItem(curItem, SECON_STR_IN_CFG, service->secon, MAX_SECON_LEN);
-    INIT_CHECK_ONLY_ELOG(ret == 0, "GetServiceSecon %s section not found, skip", SECON_STR_IN_CFG);
+    (void)GetStringItem(curItem, SECON_STR_IN_CFG, service->secon, MAX_SECON_LEN);
 #endif // WITH_SELINUX
     ret = GetServiceArgs(curItem, "path", MAX_PATH_ARGS_CNT, &service->pathArgs);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get path for service %s", service->name);
@@ -984,8 +983,10 @@ void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size))
 {
     Service *service = GetServiceByName("appspawn");
-    if (((SERVICE_ATTR_NEEDWAIT & flags) == SERVICE_ATTR_NEEDWAIT) && service != NULL && service->pid != 0) {
+    if (service != NULL && service->pid != -1) { // notify appspawn stop
+        kill(service->pid, SIGTERM);
         waitpid(service->pid, 0, 0);
+        service->pid = -1;
     }
 
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);

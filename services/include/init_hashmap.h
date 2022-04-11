@@ -59,6 +59,8 @@ void HashMapRemove(HashMapHandle handle, const void *key);
 HashNode *HashMapGet(HashMapHandle handle, const void *key);
 HashNode *HashMapFind(HashMapHandle handle,
     int hashCode, const void *key, HashKeyCompare keyCompare);
+void HashMapTraverse(HashMapHandle handle, void (*hashNodeTraverse)(const HashNode *node, const void *context),
+    const void *context);
 #ifdef __cplusplus
 #if __cplusplus
 }
