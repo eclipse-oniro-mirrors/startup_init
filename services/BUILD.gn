@@ -271,6 +271,12 @@ if (defined(ohos_lite)) {
     module_install_dir = "etc/param"
   }
 
+  ohos_prebuilt_etc("ohos_const.para") {
+    source = "//base/startup/init_lite/services/etc/param/ohos_const/ohos.para"
+    part_name = "init"
+    module_install_dir = "etc/param/ohos_const"
+  }
+
   ohos_prebuilt_etc("boot.group") {
     source = "//base/startup/init_lite/services/etc/device.boot.group.cfg"
     part_name = "init"
@@ -347,6 +353,7 @@ if (defined(ohos_lite)) {
       ":init.usb.configfs.cfg",
       ":ohos.para",
       ":ohos.para.dac",
+      ":ohos_const.para",
       ":passwd",
       ":plugin_modules",
       ":privapp-sandbox.json",
