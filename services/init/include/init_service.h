@@ -50,7 +50,7 @@ extern "C" {
 #define SERVICE_ATTR_CONSOLE 0x080      // console
 #define SERVICE_ATTR_ONDEMAND 0x100     // ondemand, manage socket by init
 #define SERVICE_ATTR_TIMERSTART 0x200   // Mark a service will be started by timer
-#define SERVICE_ATTR_NEEDWAIT 0x400     // Mark a service will be started by timer
+#define SERVICE_ATTR_NEEDWAIT 0x400     // service should execute waitpid while stopping
 #define SERVICE_ATTR_SANDBOX 0x800     // make service will enter sandbox
 
 #define MAX_SERVICE_NAME 32
