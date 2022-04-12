@@ -230,7 +230,9 @@ static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamA
     int ret = DAC_RESULT_FORBIDED;
     PARAM_CHECK(srcLabel != NULL && auditData != NULL && auditData->name != NULL, return ret, "Invalid param");
     PARAM_CHECK((mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) != 0, return ret, "Invalid mode %x", mode);
-
+    if (srcLabel->cred.uid == 0) {
+        return DAC_RESULT_PERMISSION;
+    }
     /**
      * DAC group 实现的label的定义
      * user:group:read|write|watch
