@@ -23,6 +23,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <linux/major.h>
+
+#include "config_policy_utils.h"
 #include "device.h"
 #include "fd_holder_service.h"
 #include "fs_manager/fs_manager.h"
@@ -289,23 +291,38 @@ static void IsEnableSandbox(void)
     }
 }
 
+// Init provide this function for static lib link
+__attribute__((weak)) int SystemGetParameter(const char *name, char *value, unsigned int *len)
+{
+    return SystemReadParam(name, value, len);
+}
+
+static void InitLoadParamFiles(void)
+{
+    // Load const params, these can't be override!
+    LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
+    CfgFiles *files = GetCfgFiles("etc/param");
+    for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; files && i >= 0; i--) {
+        if (files->paths[i]) {
+            LoadDefaultParams(files->paths[i], LOAD_PARAM_ONLY_ADD);
+        }
+    }
+    FreeCfgFiles(files);
+}
+
 void SystemConfig(void)
 {
     InitServiceSpace();
+    InitParamService();
     InitParseGroupCfg();
     PluginManagerInit();
-
-    InitParamService();
     RegisterBootStateChange(BootStateChange);
 
     // load SELinux context and policy
     // Do not move position!
     SystemLoadSelinux();
-
     // parse parameters
-    LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
-    LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
-    LoadDefaultParams("/system/etc/param", LOAD_PARAM_ONLY_ADD);
+    InitLoadParamFiles();
     // read config
     ReadConfig();
     INIT_LOGI("Parse init config file done.");
