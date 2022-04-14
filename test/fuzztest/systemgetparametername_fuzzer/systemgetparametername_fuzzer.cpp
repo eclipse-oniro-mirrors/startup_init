@@ -13,10 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef FUZZ_UTILS_H
-#define FUZZ_UTILS_H
-#include <stdint.h>
-#include <stdlib.h>
+#include "systemgetparametername_fuzzer.h"
+#include "sys_param.h"
 
-void CloseStdout(void);
-#endif
+namespace OHOS {
+    bool FuzzSystemGetParameterName(const uint8_t* data, size_t size)
+    {
+        bool result = false;
+        char buffer[PARAM_NAME_LEN_MAX] = {0};
+        if (!SystemGetParameterName(reinterpret_cast<ParamHandle>(data), buffer, PARAM_NAME_LEN_MAX)) {
+            result = true;
+        }
+        return result;
+    }
+}
+
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+{
+    /* Run your code on data */
+    OHOS::FuzzSystemGetParameterName(data, size);
+    return 0;
+}

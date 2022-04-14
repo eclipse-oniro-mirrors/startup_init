@@ -13,10 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef FUZZ_UTILS_H
-#define FUZZ_UTILS_H
-#include <stdint.h>
-#include <stdlib.h>
+#include "getcontrolfile_fuzzer.h"
+#include "init_file.h"
 
-void CloseStdout(void);
-#endif
+namespace OHOS {
+    bool FuzzGetControlFile(const uint8_t* data, size_t size)
+    {
+        bool result = false;
+        if (!GetControlFile(reinterpret_cast<const char*>(data))) {
+            result = true;
+        }
+        return result;
+    }
+}
+
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+{
+    /* Run your code on data */
+    OHOS::FuzzGetControlFile(data, size);
+    return 0;
+}

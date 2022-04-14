@@ -13,10 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef FUZZ_UTILS_H
-#define FUZZ_UTILS_H
-#include <stdint.h>
-#include <stdlib.h>
+#include "systemdumpparameters_fuzzer.h"
+#include "sys_param.h"
+#include "fuzz_utils.h"
 
-void CloseStdout(void);
-#endif
+namespace OHOS {
+    bool FuzzSystemDumpParameters(const uint8_t* data, size_t size)
+    {
+        CloseStdout();
+        SystemDumpParameters(reinterpret_cast<int>(data));
+        return true;
+    }
+}
+
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+{
+    /* Run your code on data */
+    OHOS::FuzzSystemDumpParameters(data, size);
+    return 0;
+}
