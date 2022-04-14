@@ -111,7 +111,7 @@ hdc_push_cmd ${ohos_root}/base/startup/init_lite/test/unittest/test_data/trigger
 sleep 0.2
 hdc_push_cmd ${ohos_root}/base/startup/init_lite/test/unittest/test_data/proc/cmdline  /data/init_ut/proc/cmdline
 sleep 0.25
-hdc file send ${ohos_root}/out/ohos-arm-release/exe.unstripped/tests/unittest/startup/init/init_ut /data/init_ut/init_ut
+hdc file send ${ohos_root}/out/rk3568/tests/unittest/startup/init/init_ut /data/init_ut/init_ut
 sleep 0.25
 hdc_shell_cmd "cp /data/init_ut/init_ut /bin/init_ut"
 
@@ -119,7 +119,7 @@ hdc_shell_cmd "chmod 777 /data/init_ut/* -R"
 sleep 0.2
 hdc_shell_cmd "chmod 777 /bin/init_ut"
 
-hdc_shell_cmd "export GCOV_PREFIX=${ut_target_path}/coverage&&export GCOV_PREFIX_STRIP=20&&init_ut"
+hdc_shell_cmd "export GCOV_PREFIX=${ut_target_path}/coverage&&export GCOV_PREFIX_STRIP=15&&init_ut"
 sleep 0.2
 
 if [ $? -ne 0 ]; then
@@ -140,7 +140,7 @@ done
 
 
 echo "Find out all gcno files and copy to ${ohos_init}"
-find ${ohos_root}/out/ohos-arm-release/obj/ -name "*.gcno" -type f -exec cp {} . \;
+find ${ohos_root}/out/rk3568/obj/base/startup/ -name "*.gcno" -type f -exec cp {} . \;
 if [ $? -ne 0 ]; then
     echo "find gcno failed."
     popd 2>&1 > /dev/null

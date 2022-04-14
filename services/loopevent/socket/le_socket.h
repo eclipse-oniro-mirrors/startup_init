@@ -18,7 +18,17 @@
 #include "le_utils.h"
 #include "loop_event.h"
 
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
 int CreateSocket(int flags, const char *server);
 int AcceptSocket(int fd, int flags);
 
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
 #endif

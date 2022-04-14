@@ -20,6 +20,8 @@
 #include "init_unittest.h"
 #include "init_utils.h"
 #include "securec.h"
+#include "init_service.h"
+#include "le_timer.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -239,6 +241,9 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService, TestSize.Level1)
     cJSON_Delete(fileRoot);
 
     Service *service = GetServiceByName("test-service");
+    ServiceStartTimer(service, 1);
+    ((TimerTask *)service->timer)->base.handleEvent(LE_GetDefaultLoop(), (LoopBase *)service->timer, Event_Read);
+    ServiceStopTimer(service);
     ASSERT_NE(service != nullptr, 0);
     EXPECT_EQ(service->startMode, START_MODE_CONDITION);
     ReleaseService(service);
