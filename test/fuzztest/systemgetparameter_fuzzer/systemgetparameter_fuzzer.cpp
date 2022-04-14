@@ -15,7 +15,6 @@
 
 #include "systemgetparameter_fuzzer.h"
 
-#include <iostream>
 #include "sys_param.h"
 
 namespace OHOS {

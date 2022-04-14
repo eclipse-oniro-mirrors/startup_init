@@ -17,7 +17,6 @@
 
 #include <iostream>
 #include "fs_manager/fs_manager.h"
-#include "fuzz_utils.h"
 
 namespace OHOS {
     bool FuzzMountAllWithFstabFile(const uint8_t* data, size_t size)

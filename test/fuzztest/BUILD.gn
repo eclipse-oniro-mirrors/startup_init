@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2022-2022 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -56,7 +56,8 @@ ohos_fuzztest("DoRebootFuzzTest") {
 
 ohos_fuzztest("GetControlFileFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/getcontrolfile_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/getcontrolfile_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/interfaces/innerkits/include",
@@ -76,16 +77,15 @@ ohos_fuzztest("GetControlFileFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "getcontrolfile_fuzzer/getcontrolfile_fuzzer.cpp",
-  ]
+  sources = [ "getcontrolfile_fuzzer/getcontrolfile_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
 ohos_fuzztest("GetControlSocketFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/getcontrolsocket_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/getcontrolsocket_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/interfaces/innerkits/include",
@@ -111,7 +111,8 @@ ohos_fuzztest("GetControlSocketFuzzTest") {
 
 ohos_fuzztest("MountAllFstabFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/mountallfstab_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/mountallfstab_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/interfaces/innerkits/include",
@@ -132,16 +133,15 @@ ohos_fuzztest("MountAllFstabFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "mountallfstab_fuzzer/mountallfstab_fuzzer.cpp",
-  ]
+  sources = [ "mountallfstab_fuzzer/mountallfstab_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
 ohos_fuzztest("ReadFileInDirFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/readfileindir_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/readfileindir_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/init/include",
@@ -161,16 +161,15 @@ ohos_fuzztest("ReadFileInDirFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "readfileindir_fuzzer/readfileindir_fuzzer.cpp",
-  ]
+  sources = [ "readfileindir_fuzzer/readfileindir_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
 ohos_fuzztest("ServiceControlStartFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/servicecontrolstart_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/servicecontrolstart_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/interfaces/innerkits/include",
@@ -195,7 +194,8 @@ ohos_fuzztest("ServiceControlStartFuzzTest") {
 
 ohos_fuzztest("ServiceControlStopFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/servicecontrolstop_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/servicecontrolstop_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/interfaces/innerkits/include",
@@ -220,7 +220,8 @@ ohos_fuzztest("ServiceControlStopFuzzTest") {
 
 ohos_fuzztest("SystemDumpParametersFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/systemdumpparameters_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/systemdumpparameters_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -248,7 +249,8 @@ ohos_fuzztest("SystemDumpParametersFuzzTest") {
 
 ohos_fuzztest("SystemFindParameterFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/systemfindparameter_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/systemfindparameter_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -275,7 +277,8 @@ ohos_fuzztest("SystemFindParameterFuzzTest") {
 
 ohos_fuzztest("SystemGetParameterFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/systemgetparameter_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/systemgetparameter_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -302,7 +305,8 @@ ohos_fuzztest("SystemGetParameterFuzzTest") {
 
 ohos_fuzztest("SystemGetParameterCommitIdFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/systemgetparametercommitId_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/systemgetparametercommitid_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -322,14 +326,17 @@ ohos_fuzztest("SystemGetParameterCommitIdFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "systemgetparametercommitid_fuzzer/systemgetparametercommitid_fuzzer.cpp" ]
+  sources = [
+    "systemgetparametercommitid_fuzzer/systemgetparametercommitid_fuzzer.cpp",
+  ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
 ohos_fuzztest("SystemGetParameterNameFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/systemgetparametername_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/systemgetparametername_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -349,14 +356,16 @@ ohos_fuzztest("SystemGetParameterNameFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "systemgetparametername_fuzzer/systemgetparametername_fuzzer.cpp" ]
+  sources =
+      [ "systemgetparametername_fuzzer/systemgetparametername_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
 ohos_fuzztest("SystemGetParameterValueFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/systemgetparametervalue_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/systemgetparametervalue_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -376,14 +385,16 @@ ohos_fuzztest("SystemGetParameterValueFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "systemgetparametervalue_fuzzer/systemgetparametervalue_fuzzer.cpp" ]
+  sources =
+      [ "systemgetparametervalue_fuzzer/systemgetparametervalue_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
 ohos_fuzztest("SystemSetParameterFuzztest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/systemsetparameter_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/systemsetparameter_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -410,7 +421,8 @@ ohos_fuzztest("SystemSetParameterFuzztest") {
 
 ohos_fuzztest("SystemTraversalParameterFuzztest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/systemtraversalparameter_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/systemtraversalparameter_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -433,14 +445,16 @@ ohos_fuzztest("SystemTraversalParameterFuzztest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "systemtraversalparameter_fuzzer/systemtraversalparameter_fuzzer.cpp" ]
+  sources =
+      [ "systemtraversalparameter_fuzzer/systemtraversalparameter_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
 ohos_fuzztest("SystemWaitParameterFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/systemwaitparameter_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/systemwaitparameter_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -467,7 +481,8 @@ ohos_fuzztest("SystemWaitParameterFuzzTest") {
 
 ohos_fuzztest("SystemWatchParameterFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/systemwatchparameter_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/systemwatchparameter_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -503,7 +518,8 @@ ohos_fuzztest("SystemWatchParameterFuzzTest") {
 
 ohos_fuzztest("UmountAllFstabFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init_lite/test/fuzztest/umountallfstab_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init_lite/test/fuzztest/umountallfstab_fuzzer"
 
   include_dirs = [
     "//base/startup/init_lite/interfaces/innerkits/include",
@@ -524,9 +540,7 @@ ohos_fuzztest("UmountAllFstabFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "umountallfstab_fuzzer/umountallfstab_fuzzer.cpp",
-  ]
+  sources = [ "umountallfstab_fuzzer/umountallfstab_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
