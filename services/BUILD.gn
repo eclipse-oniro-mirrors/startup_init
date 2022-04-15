@@ -231,6 +231,30 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
+  ohos_prebuilt_etc("misc.cfg") {
+    source = "//base/startup/init_lite/services/etc/misc.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("watchdog.cfg") {
+    source = "//base/startup/init_lite/services/etc/watchdog.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("console.cfg") {
+    source = "//base/startup/init_lite/services/etc/console.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("ueventd.cfg") {
+    source = "//base/startup/init_lite/services/etc/ueventd.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
   ohos_prebuilt_etc("passwd") {
     source = "//base/startup/init_lite/services/etc/passwd"
     install_images = [
