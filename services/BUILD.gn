@@ -385,15 +385,13 @@ if (defined(ohos_lite)) {
       ":boot.group",
       ":charing.group",
       ":chipset-sandbox.json",
+      ":console.cfg",
       ":group",
       ":init.cfg",
-      ":misc.cfg",
-      ":watchdog.cfg",
-      ":console.cfg",
-      ":ueventd.cfg",
       ":init.reboot",
       ":init.usb.cfg",
       ":init.usb.configfs.cfg",
+      ":misc.cfg",
       ":ohos.para",
       ":ohos.para.dac",
       ":ohos_const.para",
@@ -404,6 +402,8 @@ if (defined(ohos_lite)) {
       ":syscap.para",
       ":system-sandbox.json",
       ":systemcapability.json",
+      ":ueventd.cfg",
+      ":watchdog.cfg",
     ]
   }
 }
