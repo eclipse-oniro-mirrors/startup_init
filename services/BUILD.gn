@@ -349,6 +349,12 @@ if (defined(ohos_lite)) {
     module_install_dir = "etc/sandbox"
   }
 
+  ohos_prebuilt_etc("appdata-sandbox.json") {
+    source = "//base/startup/appspawn_standard/appdata-sandbox.json"
+    part_name = "init"
+    module_install_dir = "etc/sandbox"
+  }
+
   ohos_prebuilt_etc("init.reboot") {
     source = "//base/startup/init_lite/services/etc/init.reboot.cfg"
     part_name = "init"
@@ -358,6 +364,7 @@ if (defined(ohos_lite)) {
   group("init_etc") {
     deps = [
       ":app-sandbox.json",
+      ":appdata-sandbox.json",
       ":boot.group",
       ":charing.group",
       ":chipset-sandbox.json",
