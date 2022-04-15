@@ -36,6 +36,10 @@
             "src-path" : "/data",
             "sandbox-path" : "/data",
             "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/system/fonts",
+            "sandbox-path" : "/system/fonts",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
     "mount-bind-files" : [{
