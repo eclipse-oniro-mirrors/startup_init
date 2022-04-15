@@ -141,6 +141,7 @@ typedef struct Service_ {
     uint64_t tokenId;
     char apl[MAX_APL_NAME + 1];
     ServiceArgs capsArgs;
+    ServiceArgs permArgs;
     Perms servPerm;
     ServiceArgs pathArgs;
     ServiceArgs extraArgs;

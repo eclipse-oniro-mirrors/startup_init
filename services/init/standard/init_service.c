@@ -148,8 +148,15 @@ void GetAccessToken(void)
             if (strlen(service->apl) == 0) {
                 (void)strncpy_s(service->apl, sizeof(service->apl), "system_core", sizeof(service->apl) - 1);
             }
-            uint64_t tokenId = GetAccessTokenId(service->name, (const char **)service->capsArgs.argv,
-                service->capsArgs.count, service->apl);
+            NativeInfo nativeInfo = {
+                service->capsArgs.count,
+                service->permArgs.count,
+                (const char **)service->capsArgs.argv,
+                (const char **)service->permArgs.argv,
+                service->name,
+                service->apl,
+            };
+            uint64_t tokenId = GetAccessTokenId(&nativeInfo);
             if (tokenId  == 0) {
                 INIT_LOGE("Get totken id %lld of service \' %s \' failed", tokenId, service->name);
             }
