@@ -134,6 +134,7 @@ ohos_unittest("init_ut") {
   configs = [ "//base/startup/init_lite/test/unittest:utest_config" ]
 
   include_dirs = [
+    "//base/customization/config_policy/interfaces/innerkits/include",
     "//base/startup/init_lite/services/init/standard",
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/interfaces/innerkits/fd_holder",
@@ -174,6 +175,7 @@ ohos_unittest("init_ut") {
   ]
 
   deps = [
+    "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
     "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
     "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
     "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
