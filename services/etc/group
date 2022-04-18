@@ -17,6 +17,7 @@ keystore:x:1017:
 usb:x:1018:
 drm:x:1019:
 media_rw:x:1023:
+dsoftbus:x:1024:
 nfc:x:1027:
 sdcard_r:x:1028:
 package_info:x:1032:
