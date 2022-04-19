@@ -53,7 +53,7 @@ struct SandboxMountFlags {
     unsigned long value;
 };
 
-struct SandboxMountFlags g_flags[] = {
+static const struct SandboxMountFlags g_flags[] = {
     {
         .flag = "bind",
         .value = MS_BIND,
@@ -84,7 +84,7 @@ struct SandboxMap {
     const char *configfile;
 };
 
-struct SandboxMap g_map[] = {
+static const struct SandboxMap g_map[] = {
     {
         .name = "system",
         .sandbox = &g_systemSandbox,
@@ -276,7 +276,7 @@ static int ParseSandboxConfig(sandbox_t *sandbox, const char *sandboxConfig)
     return 0;
 }
 
-static struct SandboxMap *GetSandboxMapByName(const char *name)
+static const struct SandboxMap *GetSandboxMapByName(const char *name)
 {
     if (name == NULL) {
         BEGET_LOGE("Failed get sandbox map name is NULL.");
@@ -445,7 +445,7 @@ int PrepareSandbox(const char *name)
 {
     BEGET_ERROR_CHECK(name != NULL, return -1, "Prepare sandbox name is NULL.");
     BEGET_ERROR_CHECK(getuid() == 0, return -1, "Current process uid is not root, exit.");
-    struct SandboxMap *map = GetSandboxMapByName(name);
+    const struct SandboxMap *map = GetSandboxMapByName(name);
     BEGET_ERROR_CHECK(map != NULL, return -1, "Failed get sandbox map by name %s.", name);
     sandbox_t *sandbox = map->sandbox;
     BEGET_CHECK(IsValidSandbox(sandbox) == true, return -1);
@@ -549,7 +549,7 @@ bool InitSandboxWithName(const char *name)
         BEGET_LOGE("Init sandbox name is NULL.");
         return isFound;
     }
-    struct SandboxMap *map = GetSandboxMapByName(name);
+    const struct SandboxMap *map = GetSandboxMapByName(name);
     if (map != NULL) {
         InitSandbox(map->sandbox, map->configfile, name);
         isFound = true;
@@ -567,7 +567,7 @@ void DestroySandbox(const char *name)
         BEGET_LOGE("Destroy sandbox name is NULL.");
         return;
     }
-    struct SandboxMap *map = GetSandboxMapByName(name);
+    const struct SandboxMap *map = GetSandboxMapByName(name);
     if (map == NULL) {
         BEGET_LOGE("Failed get sandbox map by name %s.", name);
         return;
@@ -597,7 +597,7 @@ int EnterSandbox(const char *name)
         BEGET_LOGE("Sandbox name is NULL.");
         return -1;
     }
-    struct SandboxMap *map = GetSandboxMapByName(name);
+    const struct SandboxMap *map = GetSandboxMapByName(name);
     if (map == NULL) {
         BEGET_LOGE("Failed to get sandbox map by name %s.", name);
         return -1;
@@ -629,7 +629,7 @@ void DumpSandboxByName(const char *name)
         BEGET_LOGE("Init sandbox name is NULL.");
         return;
     }
-    struct SandboxMap *map = GetSandboxMapByName(name);
+    const struct SandboxMap *map = GetSandboxMapByName(name);
     if (map == NULL) {
         return;
     }
