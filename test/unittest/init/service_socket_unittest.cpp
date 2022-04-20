@@ -21,6 +21,7 @@
 #include "init_socket.h"
 #include "init_unittest.h"
 #include "securec.h"
+#include "le_task.h"
 using namespace std;
 using namespace testing::ext;
 namespace init_ut {
@@ -34,8 +35,11 @@ public:
 HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
 {
     const char *testSocName = "test_socket";
+    uint32_t eventid = 1;
     Service *service = (Service *)AddService("TestCreateSocket");
     ASSERT_NE(service, nullptr);
+    service->socketCfg = nullptr;
+    service->attribute = SERVICE_ATTR_ONDEMAND;
     ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket) + strlen(testSocName) + 1);
     ASSERT_NE(sockopt, nullptr);
     sockopt->type = SOCK_STREAM;
@@ -56,6 +60,8 @@ HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
         service->socketCfg->next = sockopt;
     }
     int ret1 = CreateServiceSocket(service);
+    ((WatcherTask *)((ServiceSocket *)service->socketCfg)->watcher)->processEvent(
+        LE_GetDefaultLoop(), 0, &eventid, service);
     EXPECT_EQ(ret1, 0);
     ret1 = GetControlSocket(testSocName);
     EXPECT_GE(ret1, 0);
