@@ -117,7 +117,7 @@ static int GetServiceName(const cJSON* curArrItem, Service* curServ)
 
     size_t strLen = strlen(fieldStr);
     if (strLen == 0 || strLen > MAX_SERVICE_NAME) {
-        INIT_LOGE("GetServiceName strLen = %d, error", strLen);
+        INIT_LOGE("GetServiceName strLen = %u, error", strLen);
         return SERVICE_FAILURE;
     }
 
@@ -335,7 +335,7 @@ static int GetServicePathAndArgs(const cJSON* curArrItem, Service* curServ)
             if (curParam == NULL) {
                 INIT_LOGE("GetServicePathAndArgs curParam == NULL, error");
             } else {
-                INIT_LOGE("GetServicePathAndArgs strlen = %d, error", strlen(curParam));
+                INIT_LOGE("GetServicePathAndArgs strlen = %u, error", strlen(curParam));
             }
             return SERVICE_FAILURE;
         }
@@ -711,7 +711,7 @@ void ParseAllServices(const cJSON* fileRoot)
             INIT_LOGE("Parse information for service %s failed. ", tmp[i].name);
             continue;
         } else {
-            INIT_LOGD("service[%d] name=%s, uid=%d, critical=%d, disabled=%d",
+            INIT_LOGD("service[%d] name=%s, uid=%u, critical=%d, disabled=%d",
                 i, tmp[i].name, tmp[i].servPerm.uID, (tmp[i].attribute & SERVICE_ATTR_CRITICAL) ? 1 : 0,
                 (tmp[i].attribute & SERVICE_ATTR_DISABLED) ? 1 : 0);
         }

@@ -327,7 +327,7 @@ static void DoSleep(const char *cmdContent, int maxArg)
     if (sleepTime > sleepTimeLimit) {
         sleepTime = sleepTimeLimit;
     }
-    INIT_LOGI("Sleeping %d second(s)", sleepTime);
+    INIT_LOGI("Sleeping %u second(s)", sleepTime);
     sleep((unsigned int)sleepTime);
 out:
     FreeCmd(ctx);

@@ -85,7 +85,7 @@ static int GetServiceStringCaps(const cJSON* filedJ, Service* curServ)          
     for (; i < curServ->servPerm.capsCnt; ++i) {
         if (cJSON_GetArrayItem(filedJ, i) == NULL || !cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i))
             || strlen(cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i))) <= 0) {      // check all errors
-            INIT_LOGE("service=%s, parse item[%d] as string, error.", curServ->name, i);
+            INIT_LOGE("service=%s, parse item[%u] as string, error.", curServ->name, i);
             break;
         }
         char* fieldStr = cJSON_GetStringValue(cJSON_GetArrayItem(filedJ, i));
@@ -158,7 +158,7 @@ int GetServiceCaps(const cJSON* curArrItem, Service* curServ)
         curServ->servPerm.caps[i] = (unsigned int)cJSON_GetNumberValue(capJ);
         if (curServ->servPerm.caps[i] > CAP_LAST_CAP && curServ->servPerm.caps[i] != FULL_CAP) {
             // resources will be released by function: ReleaseServiceMem
-            INIT_LOGE("service=%s, caps = %d, error.", curServ->name, curServ->servPerm.caps[i]);
+            INIT_LOGE("service=%s, caps = %u, error.", curServ->name, curServ->servPerm.caps[i]);
             return SERVICE_FAILURE;
         }
     }

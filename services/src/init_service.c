@@ -89,7 +89,7 @@ static int SetPerms(const Service *service)
     }
     if (service->servPerm.uID != 0) {
         if (setuid(service->servPerm.uID) != 0) {
-            INIT_LOGE("setuid of service: %s failed, uid = %d", service->name, service->servPerm.uID);
+            INIT_LOGE("setuid of service: %s failed, uid = %u", service->name, service->servPerm.uID);
             return SERVICE_FAILURE;
         }
     }
