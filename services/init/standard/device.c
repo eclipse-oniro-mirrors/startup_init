@@ -56,7 +56,7 @@ void MountBasicFs(void)
     if (mount("devpts", "/dev/pts", "devpts", 0, NULL) != 0) {
         INIT_LOGE("Mount devpts failed. %s", strerror(errno));
     }
-    if (mount("proc", "/proc", "proc", 0, "hidepid=2") != 0) {
+    if (mount("proc", "/proc", "proc", 0, "gid=3009,hidepid=2") != 0) {
         INIT_LOGE("Mount procfs failed. %s", strerror(errno));
     }
     if (mount("sysfs", "/sys", "sysfs", 0, NULL) != 0) {
