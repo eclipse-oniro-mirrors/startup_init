@@ -302,7 +302,7 @@ static void DoChown(const struct CmdArgs *ctx)
     const int pathPos = 2;
     int ret = SetOwner(ctx->argv[pathPos], ctx->argv[0], ctx->argv[1]);
     if (ret != 0) {
-        INIT_LOGE("Failed to change owner for %s, err %d.", ctx->argv[pathPos], errno);
+        INIT_LOGV("Failed to change owner for %s, err %d.", ctx->argv[pathPos], errno);
     }
     return;
 }
@@ -358,7 +358,7 @@ static void DoChmod(const struct CmdArgs *ctx)
     }
 
     if (chmod(ctx->argv[1], mode) != 0) {
-        INIT_LOGE("Failed to change mode \" %s \" mode to %04o, err = %d", ctx->argv[1], mode, errno);
+        INIT_LOGV("Failed to change mode \" %s \" mode to %04o, err = %d", ctx->argv[1], mode, errno);
     }
 }
 
