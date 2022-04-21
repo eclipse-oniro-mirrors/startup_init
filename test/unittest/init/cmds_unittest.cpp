@@ -38,7 +38,7 @@ public:
 
 HWTEST_F(CmdsUnitTest, TestCmdExecByName, TestSize.Level1)
 {
-    SetInitLogLevel(INIT_INFO);
+    SetInitLogLevel(INIT_FATAL);
     DoCmdByName("load_param ", "     /system/etc/param            onlyadd");
     DoCmdByName("symlink ", "/proc/self/fd/0 /dev/stdin");
     DoCmdByName("insmod ",
