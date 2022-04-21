@@ -102,6 +102,7 @@ if (defined(ohos_lite)) {
 } else {
   import("//base/startup/init_lite/begetd.gni")
   import("//build/ohos.gni")
+  import("//build/ohos/native_stub/native_stub.gni")
 
   ohos_executable("init") {
     sources = [
@@ -155,6 +156,8 @@ if (defined(ohos_lite)) {
       "//third_party/cJSON:cjson_static",
     ]
 
+    deps += [ "//base/startup/init_lite/services/init/plugin_engine:libinit_stub_versionscript" ]
+
     cflags = []
 
     if (use_musl) {
@@ -195,6 +198,11 @@ if (defined(ohos_lite)) {
     if (defined(product_name) && product_name == "rk3568") {
       defines += [ "PRODUCT_RK" ]
     }
+    version_script = get_label_info(
+                         "//base/startup/init_lite/services/init/plugin_engine:libinit_stub_versionscript",
+                         "target_gen_dir") + "/" + get_label_info(
+                         "//base/startup/init_lite/services/init/plugin_engine:libinit_stub_versionscript",
+                         "name") + stub_version_script_suffix
     defines += [ "_GNU_SOURCE" ]
     install_images = [
       "system",

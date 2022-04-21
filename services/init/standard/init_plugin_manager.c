@@ -21,7 +21,6 @@
 #include "init_utils.h"
 #include "init_log.h"
 #include "init_group_manager.h"
-#include "init_plugin.h"
 #include "init_service_manager.h"
 #include "securec.h"
 
@@ -59,7 +58,7 @@ int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd)
     return cmdExec->id;
 }
 
-static void RemoveCmdExecutor(const char *cmdName, int id)
+void RemoveCmdExecutor(const char *cmdName, int id)
 {
     INIT_ERROR_CHECK(cmdName != NULL, return, "Invalid input param");
     InitGroupNode *groupNode = GetGroupNode(NODE_TYPE_CMDS, cmdName);
@@ -273,7 +272,7 @@ static PluginInfo *GetPluginInfo(const char *name)
     return info;
 }
 
-static int PluginRegister(const char *name, const char *config, int (*pluginInit)(void), void (*pluginExit)(void))
+int PluginRegister(const char *name, const char *config, int (*pluginInit)(void), void (*pluginExit)(void))
 {
     INIT_LOGI("PluginRegister %s %p %p", name, pluginInit, pluginExit);
     INIT_ERROR_CHECK(name != NULL, return -1, "Invalid plugin name");
@@ -364,47 +363,6 @@ void PluginManagerInit(void)
     // "ohos.servicectrl.install"
     (void)AddCmdExecutor("install", PluginCmdInstall);
     (void)AddCmdExecutor("uninstall", PluginCmdUninstall);
-    // register interface
-    SetPluginInterface();
     // read cfg and start static plugin
     LoadPluginCfg();
-}
-
-int SetPluginInterface(void)
-{
-    static PluginInterface *pluginInterface = NULL;
-    if (pluginInterface != NULL) {
-        return 0;
-    }
-    char *realPath = GetRealPath("/system/lib/libplugin.z.so");
-#ifndef STARTUP_INIT_TEST
-    void* handle = dlopen(realPath, RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
-    if (handle == NULL) {
-        INIT_LOGE("Failed to load module %s, err %s", realPath, dlerror());
-        free(realPath);
-        return -1;
-    }
-    GetPluginInterfaceFunc getPluginInterface = (GetPluginInterfaceFunc)dlsym(handle, "GetPluginInterface");
-#else
-    GetPluginInterfaceFunc getPluginInterface = GetPluginInterface;
-#endif
-    INIT_LOGI("PluginManagerInit getPluginInterface %p ", getPluginInterface);
-    if (getPluginInterface != NULL) {
-        pluginInterface = getPluginInterface();
-        if (pluginInterface != NULL) {
-            pluginInterface->pluginRegister = PluginRegister;
-            pluginInterface->addCmdExecutor = AddCmdExecutor;
-            pluginInterface->removeCmdExecutor = RemoveCmdExecutor;
-            pluginInterface->systemWriteParam = SystemWriteParam;
-            pluginInterface->systemReadParam = SystemReadParam;
-            pluginInterface->securityLabelSet = NULL;
-        }
-        INIT_LOGI("PluginManagerInit pluginInterface %p %p %p",
-            pluginInterface, pluginInterface->pluginRegister, getPluginInterface);
-    }
-    free(realPath);
-#ifndef STARTUP_INIT_TEST
-    dlclose(handle);
-#endif
-    return 0;
 }

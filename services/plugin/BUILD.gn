@@ -27,12 +27,13 @@ ohos_shared_library("libbootchart") {
   ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/plugin:libplugin",
     "//base/startup/init_lite/services/log:init_log",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
   ]
+
+  external_deps = [ "init:libinit_plugin_engine" ]
 
   part_name = "init"
   module_install_dir = "lib/plugin"

@@ -1,0 +1,38 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//build/ohos/native_stub/native_stub.gni")
+
+config("libinit_plugin_engine_config") {
+  include_dirs =
+      [ "//base/startup/init_lite/services/init/plugin_engine/include" ]
+}
+
+ohos_native_stub_library("libinit_plugin_engine") {
+  output_extension = "so"
+  public_configs = [ ":libinit_plugin_engine_config" ]
+  stub_description_file = "./stub/libinit.stub.json"
+}
+
+ohos_native_stub_versionscript("libinit_stub_versionscript") {
+  stub_description_file = "./stub/libinit.stub.json"
+}
+
+ohos_native_stub_library("libinit_stub_empty") {
+  output_extension = "so"
+  stub_description_file = "./stub/libinit.stub.empty.json"
+  part_name = "init"
+  install_enable = true
+  symlink_target_name = [ "libinit_plugin_engine.so" ]
+}
