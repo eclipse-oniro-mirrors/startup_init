@@ -48,6 +48,10 @@
             "src-path" : "/sys_prod",
             "sandbox-path" : "/sys_prod",
             "sandbox-flags" : [ "bind", "rec" ]
+        }, {
+            "src-path" : "/storage",
+            "sandbox-path" : "/storage",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
     "mount-bind-files" : [{
