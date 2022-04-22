@@ -18,18 +18,15 @@
 
 #include "plugin_test.h"
 #include "init_param.h"
-#include "init_plugin.h"
+#include "init_plugin_engine.h"
 
 #define MAX_COUNT 1000
 #define TEST_CMD_NAME "param_randrom_write"
-static PluginInterface *g_pluginInterface = NULL;
 static int g_testCmdIndex = 0;
 static int PluginParamCmdWriteParam(int id, const char *name, int argc, const char **argv)
 {
     PLUGIN_LOGI("PluginParamCmdWriteParam %d %s", id, name);
     PLUGIN_CHECK(argv != NULL && argc >= 1, return -1, "Invalid install parameter");
-    PLUGIN_CHECK(g_pluginInterface != NULL && g_pluginInterface->systemWriteParam != NULL,
-        return -1, "Invalid install parameter");
     PLUGIN_LOGI("PluginParamCmdWriteParam argc %d %s", argc, argv[0]);
     int maxCount = MAX_COUNT;
     if (argc > 1) {
@@ -42,7 +39,7 @@ static int PluginParamCmdWriteParam(int id, const char *name, int argc, const ch
         const int wait = READ_DURATION + READ_DURATION; // 100ms
         int ret = sprintf_s(buffer, sizeof(buffer), "%d", count);
         if (ret > 0) {
-            g_pluginInterface->systemWriteParam(argv[0], buffer);
+            SystemWriteParam(argv[0], buffer);
             usleep(wait);
         }
         count++;
@@ -52,30 +49,21 @@ static int PluginParamCmdWriteParam(int id, const char *name, int argc, const ch
 
 static int PluginParamTestInit(void)
 {
-    g_pluginInterface = GetPluginInterface();
-    PLUGIN_CHECK(g_pluginInterface != NULL && g_pluginInterface->addCmdExecutor != NULL,
-        return -1, "Invalid install parameter");
-    g_testCmdIndex = g_pluginInterface->addCmdExecutor(TEST_CMD_NAME, PluginParamCmdWriteParam);
+    g_testCmdIndex = AddCmdExecutor(TEST_CMD_NAME, PluginParamCmdWriteParam);
     PLUGIN_LOGI("PluginParamTestInit %d", g_testCmdIndex);
     return 0;
 }
 
 static void PluginParamTestExit(void)
 {
-    PLUGIN_LOGI("PluginParamTestExit %d", g_testCmdIndex);
-    PLUGIN_CHECK(g_pluginInterface != NULL && g_pluginInterface->removeCmdExecutor != NULL,
-        return, "Invalid install parameter");
-    g_pluginInterface->removeCmdExecutor(TEST_CMD_NAME, g_testCmdIndex);
+    RemoveCmdExecutor(TEST_CMD_NAME, g_testCmdIndex);
 }
 
 PLUGIN_CONSTRUCTOR(void)
 {
-    g_pluginInterface = GetPluginInterface();
-    if (g_pluginInterface != NULL && g_pluginInterface->pluginRegister != NULL) {
-        g_pluginInterface->pluginRegister("pluginparamtest",
+    PluginRegister("pluginparamtest",
             "/system/etc/plugin/plugin_param_test.cfg",
             PluginParamTestInit, PluginParamTestExit);
-    }
-    PLUGIN_LOGI("PLUGIN_CONSTRUCTOR pluginInterface %p %p %p",
-        g_pluginInterface, g_pluginInterface->pluginRegister, GetPluginInterface);
+    PLUGIN_LOGI("PLUGIN_CONSTRUCTOR pluginInterface %p",
+        g_pluginInterface->pluginRegister);
 }

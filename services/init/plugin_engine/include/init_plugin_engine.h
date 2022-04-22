@@ -26,17 +26,18 @@ extern "C" {
 #define PLUGIN_CONSTRUCTOR(void) static void _init(void) __attribute__((constructor)); static void _init(void)
 #define PLUGIN_DESTRUCTOR(void) static void _destroy(void) __attribute__((destructor)); static void _destroy(void)
 
-typedef struct {
-    int (*pluginRegister)(const char *name, const char *config, int (*pluginInit)(void), void (*pluginExit)(void));
-    int (*addCmdExecutor)(const char *cmdName,
-        int (*CmdExecutor)(int id, const char *name, int argc, const char **argv));
-    void (*removeCmdExecutor)(const char *cmdName, int id);
-    int (*systemWriteParam)(const char *name, const char *value);
-    int (*systemReadParam)(const char *name, char *value, unsigned int *len);
-    int (*securityLabelSet)(const char *name, const char *label, const char *paraType);
-} PluginInterface;
+int SystemWriteParam(const char *name, const char *value);
 
-PluginInterface *GetPluginInterface(void);
+int SystemReadParam(const char *name, char *value, unsigned int *len);
+
+typedef int (*CmdExecutor)(int id, const char *name, int argc, const char **argv);
+
+int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);
+
+void RemoveCmdExecutor(const char *cmdName, int id);
+
+int PluginRegister(const char *name, const char *config, int (*pluginInit)(void), void (*pluginExit)(void));
+
 #ifdef __cplusplus
 #if __cplusplus
 }

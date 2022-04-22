@@ -17,7 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "init_plugin.h"
 #include "list.h"
 
 #ifdef __cplusplus
@@ -72,8 +71,7 @@ void PluginManagerInit(void);
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);
 
 int ParseInitCfg(const char *configFile, void *context);
-typedef PluginInterface *(*GetPluginInterfaceFunc)();
-int SetPluginInterface(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

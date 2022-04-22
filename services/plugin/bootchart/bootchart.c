@@ -22,7 +22,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "init_plugin.h"
+#include "init_plugin_engine.h"
 #include "init_param.h"
 #include "init_utils.h"
 #include "plugin_adapter.h"
@@ -31,7 +31,6 @@
 #define NANO_PRE_JIFFY 10000000
 
 static BootchartCtrl *g_bootchartCtrl = NULL;
-static PluginInterface *g_pluginInterface = NULL;
 
 static long long GetJiffies(void)
 {
@@ -79,9 +78,7 @@ static void BootchartLogHeader(void)
 
     char release[PARAM_VALUE_LEN_MAX] = {};
     uint32_t len = sizeof(release);
-    if (g_pluginInterface->systemReadParam != NULL) {
-        (void)g_pluginInterface->systemReadParam("hw_sc.build.os.releasetype", release, &len);
-    }
+    (void)SystemReadParam("hw_sc.build.os.releasetype", release, &len);
     char *cmdLine = ReadFileToBuffer("/proc/cmdline", g_bootchartCtrl->buffer, g_bootchartCtrl->bufferSize);
     PLUGIN_CHECK(cmdLine != NULL, return, "Failed to open file /data/bootchart/header");
 
@@ -222,15 +219,9 @@ static void BootchartDestory(void)
 
 static int DoBootchartStart(void)
 {
-    if (g_pluginInterface == NULL) {
-        PLUGIN_LOGI("Invalid bootchart plugin");
-        return -1;
-    }
     char enable[4] = {}; // 4 enable size
     uint32_t size = sizeof(enable);
-    if (g_pluginInterface->systemReadParam != NULL) {
-        g_pluginInterface->systemReadParam("init.bootchart.enabled", enable, &size);
-    }
+    SystemReadParam("init.bootchart.enabled", enable, &size);
     if (strcmp(enable, "1") != 0) {
         PLUGIN_LOGI("Not bootcharting");
         return 0;
@@ -298,13 +289,8 @@ static PluginCmd g_bootchartCmds[] = {
 
 static int BootchartInit(void)
 {
-    PLUGIN_LOGI("BootchartInit ");
-    g_pluginInterface = GetPluginInterface();
-    PLUGIN_CHECK(g_pluginInterface != NULL && g_pluginInterface->addCmdExecutor != NULL, return -1,
-                 "Invalid install parameter");
-
     for (int i = 0; i < (int)(sizeof(g_bootchartCmds) / sizeof(g_bootchartCmds[0])); i++) {
-        g_bootchartCmds[i].index = g_pluginInterface->addCmdExecutor(
+        g_bootchartCmds[i].index = AddCmdExecutor(
             g_bootchartCmds[i].name, g_bootchartCmds[i].cmdExecutor);
         PLUGIN_LOGI("BootchartInit %d", g_bootchartCmds[i].index);
     }
@@ -314,20 +300,14 @@ static int BootchartInit(void)
 static void BootchartExit(void)
 {
     PLUGIN_LOGI("BootchartExit %d", g_bootchartCmds[0]);
-    PLUGIN_CHECK(g_pluginInterface != NULL && g_pluginInterface->removeCmdExecutor != NULL, return,
-                 "Invalid install parameter");
     for (int i = 0; i < (int)(sizeof(g_bootchartCmds) / sizeof(g_bootchartCmds[0])); i++) {
-        g_pluginInterface->removeCmdExecutor(g_bootchartCmds[i].name, g_bootchartCmds[i].index);
+        RemoveCmdExecutor(g_bootchartCmds[i].name, g_bootchartCmds[i].index);
     }
 }
 
 PLUGIN_CONSTRUCTOR(void)
 {
-    g_pluginInterface = GetPluginInterface();
-    if (g_pluginInterface != NULL && g_pluginInterface->pluginRegister != NULL) {
-        g_pluginInterface->pluginRegister("bootchart", NULL, BootchartInit, BootchartExit);
-    }
-    PLUGIN_LOGI("bootchart pluginInterface %p %p %p",
-        g_pluginInterface, g_pluginInterface->pluginRegister, GetPluginInterface,
+    PluginRegister("bootchart", NULL, BootchartInit, BootchartExit);
+    PLUGIN_LOGI("bootchart pluginInterface %p %p",
         BootchartInit, BootchartExit);
 }

@@ -30,11 +30,13 @@ ohos_shared_library("libpluginparamtest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/plugin:libplugin",
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/utils:libinit_tools",
     "//third_party/bounds_checking_function:libsec_static",
   ]
+
+  external_deps = [ "init:libinit_plugin_engine" ]
+
   part_name = "init"
   module_install_dir = "lib/plugin"
 }

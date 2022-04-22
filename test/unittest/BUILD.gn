@@ -36,7 +36,6 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/interfaces/innerkits/file/init_file.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab_mount.c",
-    "//base/startup/init_lite/interfaces/innerkits/plugin/init_plugin.c",
     "//base/startup/init_lite/interfaces/innerkits/reboot/init_reboot_innerkits.c",
     "//base/startup/init_lite/interfaces/innerkits/sandbox/sandbox.c",
     "//base/startup/init_lite/interfaces/innerkits/sandbox/sandbox_namespace.c",
@@ -199,7 +198,10 @@ ohos_unittest("init_ut") {
   ]
   defines += [ "_GNU_SOURCE" ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "init:libinit_plugin_engine",
+  ]
 
   if (param_feature_watcher) {
     external_deps += [
