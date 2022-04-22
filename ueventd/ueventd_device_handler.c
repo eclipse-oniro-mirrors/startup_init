@@ -82,18 +82,41 @@ static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid
     }
 }
 
-static void SetDeviceLable(const char *dir, const char *path)
+static void SetDeviceLable(const char *path)
 {
 #ifdef WITH_SELINUX
     int rc = 0;
-    if (!STRINGEQUAL(dir, "/dev")) {
-        rc = RestoreconRecurse(dir);
+    char buffer[PATH_MAX] = {};
+    const char *p = NULL;
+    char *slash = NULL;
+
+    p = path;
+    slash = strchr(path, '/');
+    while (slash != NULL) {
+        int gap = slash - p;
+        p = slash + 1;
+        if (gap == 0) {
+            slash = strchr(p, '/');
+            continue;
+        }
+        if (gap < 0) { // end with '/'
+            break;
+        }
+
+        if (memcpy_s(buffer, PATH_MAX, path, p - path - 1) != EOK) {
+            INIT_LOGE("[uevent] Failed to memcpy path %s", path);
+            return;
+        }
+        rc += Restorecon(buffer);
+        slash = strchr(p, '/');
     }
 
     rc += Restorecon(path);
     if (rc != 0) {
-        INIT_LOGI("restorecon device node[%s] failed. %d", path, errno);
+        INIT_LOGE("[uevent] Failed to Restorecon \" %s \"", path);
     }
+
+    return;
 #endif
 }
 
@@ -144,7 +167,7 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
     if (symLinks != NULL) {
         CreateSymbolLinks(deviceNode, symLinks);
     }
-    SetDeviceLable(devicePath, deviceNode);
+    SetDeviceLable(deviceNode);
     // No matter what result the symbol links returns,
     // as long as create device node done, just returns success.
     rc = 0;
