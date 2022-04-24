@@ -268,3 +268,8 @@ void ExecReboot(const char *value)
     INIT_LOGE("Invalid reboot cmd %s.", value);
     return;
 }
+
+void clearMisc(void)
+{
+    (void)CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
+}

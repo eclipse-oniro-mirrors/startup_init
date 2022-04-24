@@ -258,6 +258,7 @@ static void BootStateChange(const char *content)
     }
     if (strcmp("post-init", content) == 0) {
         StartAllServices(START_MODE_NARMAL);
+        clearMisc();
         return;
     }
 }
