@@ -25,10 +25,9 @@
 #define OCT_BASE 8
 static ParamSecurityLabel g_localSecurityLabel = {};
 
-static void GetUserIdByName(FILE *fp, uid_t *uid, const char *name, uint32_t nameLen)
+static void GetUserIdByName(uid_t *uid, const char *name, uint32_t nameLen)
 {
     *uid = -1;
-    (void)fp;
     struct passwd *data = NULL;
     while ((data = getpwent()) != NULL) {
         if ((data->pw_name != NULL) && (strlen(data->pw_name) == nameLen) &&
@@ -40,10 +39,9 @@ static void GetUserIdByName(FILE *fp, uid_t *uid, const char *name, uint32_t nam
     endpwent();
 }
 
-static void GetGroupIdByName(FILE *fp, gid_t *gid, const char *name, uint32_t nameLen)
+static void GetGroupIdByName(gid_t *gid, const char *name, uint32_t nameLen)
 {
     *gid = -1;
-    (void)fp;
     struct group *data = NULL;
     while ((data = getgrent()) != NULL) {
         if ((data->gr_name != NULL) && (strlen(data->gr_name) == nameLen) &&
@@ -56,7 +54,7 @@ static void GetGroupIdByName(FILE *fp, gid_t *gid, const char *name, uint32_t na
 }
 
 // user:group:r|w
-static int GetParamDacData(FILE *fpForGroup, FILE *fpForUser, ParamDacData *dacData, const char *value)
+static int GetParamDacData(ParamDacData *dacData, const char *value)
 {
     if (dacData == NULL) {
         return -1;
@@ -69,8 +67,8 @@ static int GetParamDacData(FILE *fpForGroup, FILE *fpForUser, ParamDacData *dacD
     if (mode == NULL) {
         return -1;
     }
-    GetUserIdByName(fpForUser, &dacData->uid, value, groupName - value);
-    GetGroupIdByName(fpForGroup, &dacData->gid, groupName + 1, mode - groupName - 1);
+    GetUserIdByName(&dacData->uid, value, groupName - value);
+    GetGroupIdByName(&dacData->gid, groupName + 1, mode - groupName - 1);
     dacData->mode = strtol(mode + 1, NULL, OCT_BASE);
     return 0;
 }
@@ -116,44 +114,48 @@ static int DecodeSecurityLabel(ParamSecurityLabel **srcLabel, const char *buffer
     return 0;
 }
 
+typedef struct {
+    SecurityLabelFunc label;
+    void *context;
+} LoadContext;
+
+static int LoadOneParam_ (const uint32_t *context, const char *name, const char *value)
+{
+    LoadContext *loadContext = (LoadContext *)context;
+    ParamAuditData auditData = {0};
+    auditData.name = name;
+#ifdef STARTUP_INIT_TEST
+    auditData.label = value;
+#endif
+    int ret = GetParamDacData(&auditData.dacData, value);
+    PARAM_CHECK(ret == 0, return -1, "Failed to get param info %d %s", ret, name);
+    ret = loadContext->label(&auditData, loadContext->context);
+    PARAM_CHECK(ret == 0, return -1, "Failed to write param info %d \"%s\"", ret, name);
+    return 0;
+}
+
 static int LoadParamLabels(const char *fileName, SecurityLabelFunc label, void *context)
 {
+    LoadContext loadContext = {
+        label, context
+    };
     uint32_t infoCount = 0;
-    ParamAuditData auditData = {0};
-    FILE *fpForGroup = fopen(GROUP_FILE_PATH, "r");
-    FILE *fpForUser = fopen(USER_FILE_PATH, "r");
     FILE *fp = fopen(fileName, "r");
-    char *buff = (char *)calloc(1, PARAM_BUFFER_SIZE);
-    SubStringInfo *info = calloc(1, sizeof(SubStringInfo) * (SUBSTR_INFO_DAC + 1));
-    while (fp != NULL && fpForGroup != NULL && fpForUser != NULL &&
-        info != NULL && buff != NULL && fgets(buff, PARAM_BUFFER_SIZE, fp) != NULL) {
-        buff[PARAM_BUFFER_SIZE - 1] = '\0';
-        int subStrNumber = GetSubStringInfo(buff, strlen(buff), ' ', info, SUBSTR_INFO_DAC + 1);
-        if (subStrNumber <= SUBSTR_INFO_DAC) {
+    const uint32_t buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10; // 10 size
+    char *buff = (char *)calloc(1,  buffSize);
+    while (fp != NULL && buff != NULL && fgets(buff, buffSize, fp) != NULL) {
+        buff[buffSize - 1] = '\0';
+
+        int ret = SpliteString(buff, NULL, 0, LoadOneParam_, (uint32_t *)&loadContext);
+        if (ret != 0) {
+            PARAM_LOGE("Failed to splite string %s fileName %s", buff, fileName);
             continue;
         }
-        auditData.name = info[SUBSTR_INFO_NAME].value;
-#ifdef STARTUP_INIT_TEST
-        auditData.label = info[SUBSTR_INFO_NAME].value;
-#endif
-        int ret = GetParamDacData(fpForGroup, fpForUser, &auditData.dacData, info[SUBSTR_INFO_DAC].value);
-        PARAM_CHECK(ret == 0, continue, "Failed to get param info %d %s", ret, buff);
-        ret = label(&auditData, context);
-        PARAM_CHECK(ret == 0, continue, "Failed to write param info %d %s", ret, buff);
         infoCount++;
     }
     PARAM_LOGI("Load parameter label total %u success %s", infoCount, fileName);
     if (fp != NULL) {
         (void)fclose(fp);
-    }
-    if (info != NULL) {
-        free(info);
-    }
-    if (fpForGroup != NULL) {
-        (void)fclose(fpForGroup);
-    }
-    if (fpForUser != NULL) {
-        (void)fclose(fpForUser);
     }
     if (buff != NULL) {
         free(buff);
@@ -204,11 +206,6 @@ static int CheckUserInGroup(gid_t groupId, uid_t uid)
         return -1;
     }
 
-    if (grpResult->gr_name == NULL || grpResult->gr_name == NULL) {
-        PARAM_LOGE("CheckUserInGroup gr_name %s pw_name %s %d %d",
-            grpResult->gr_name, userResult->pw_name, groupId, uid);
-        return -1;
-    }
     PARAM_LOGV("CheckUserInGroup pw_name %s ", userResult->pw_name);
     if (strcmp(grpResult->gr_name, userResult->pw_name) == 0) {
         return 0;
@@ -233,7 +230,9 @@ static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamA
     int ret = DAC_RESULT_FORBIDED;
     PARAM_CHECK(srcLabel != NULL && auditData != NULL && auditData->name != NULL, return ret, "Invalid param");
     PARAM_CHECK((mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) != 0, return ret, "Invalid mode %x", mode);
-
+    if (srcLabel->cred.uid == 0) {
+        return DAC_RESULT_PERMISSION;
+    }
     /**
      * DAC group 实现的label的定义
      * user:group:read|write|watch
@@ -251,10 +250,10 @@ static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamA
     if ((auditData->dacData.mode & localMode) != 0) {
         ret = DAC_RESULT_PERMISSION;
     }
-    PARAM_LOGV("Src label gid:%d uid:%d ", srcLabel->cred.gid, srcLabel->cred.uid);
-    PARAM_LOGV("local label gid:%d uid:%d mode %o",
+    PARAM_LOGI("Src label gid:%d uid:%d ", srcLabel->cred.gid, srcLabel->cred.uid);
+    PARAM_LOGI("local label gid:%d uid:%d mode %o",
         auditData->dacData.gid, auditData->dacData.uid, auditData->dacData.mode);
-    PARAM_LOGV("%s check %o localMode %o ret %d", auditData->name, mode, localMode, ret);
+    PARAM_LOGI("%s check %o localMode %o ret %d", auditData->name, mode, localMode, ret);
     return ret;
 #endif
 }

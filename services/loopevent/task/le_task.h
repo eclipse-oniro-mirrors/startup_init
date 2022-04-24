@@ -35,6 +35,12 @@
 #define LoopMutexUnlock(x) pthread_mutex_unlock(x)
 #endif
 
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+
 typedef struct {
     ListNode node;
     uint32_t buffSize;
@@ -117,4 +123,11 @@ BaseTask *CreateTask(const LoopHandle loopHandle, int fd, const LE_BaseInfo *inf
 void CloseTask(const LoopHandle loopHandle, BaseTask *task);
 int GetSocketFd(const TaskHandle task);
 int CheckTaskFlags(const BaseTask *task, uint32_t flags);
+
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
+
 #endif

@@ -21,6 +21,7 @@
 #include "init_socket.h"
 #include "init_unittest.h"
 #include "securec.h"
+#include "le_task.h"
 using namespace std;
 using namespace testing::ext;
 namespace init_ut {
@@ -34,26 +35,33 @@ public:
 HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
 {
     const char *testSocName = "test_socket";
+    uint32_t eventid = 1;
     Service *service = (Service *)AddService("TestCreateSocket");
     ASSERT_NE(service, nullptr);
+    service->socketCfg = nullptr;
+    service->attribute = SERVICE_ATTR_ONDEMAND;
     ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket) + strlen(testSocName) + 1);
     ASSERT_NE(sockopt, nullptr);
-    sockopt->type = SOCK_SEQPACKET;
+    sockopt->type = SOCK_STREAM;
+    sockopt->protocol = 0;
+    sockopt->family = PF_UNIX;
     sockopt->sockFd = -1;
     sockopt->uid = 1000;
     sockopt->gid = 1000;
     sockopt->perm = 0660;
     sockopt->option = SOCKET_OPTION_PASSCRED;
     errno_t ret = strncpy_s(sockopt->name, strlen(testSocName) + 1, testSocName, strlen(testSocName));
-    sockopt->next = NULL;
+    sockopt->next = nullptr;
     EXPECT_EQ(ret, EOK);
-    if (service->socketCfg == NULL) {
+    if (service->socketCfg == nullptr) {
         service->socketCfg = sockopt;
     } else {
         sockopt->next = service->socketCfg->next;
         service->socketCfg->next = sockopt;
     }
     int ret1 = CreateServiceSocket(service);
+    ((WatcherTask *)((ServiceSocket *)service->socketCfg)->watcher)->processEvent(
+        LE_GetDefaultLoop(), 0, &eventid, service);
     EXPECT_EQ(ret1, 0);
     ret1 = GetControlSocket(testSocName);
     EXPECT_GE(ret1, 0);

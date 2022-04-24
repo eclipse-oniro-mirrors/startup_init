@@ -584,39 +584,6 @@ static int ParseServiceFile(const cJSON *curArrItem, Service *curServ)
     return ret;
 }
 
-static bool IsServiceInMainStrap(Service *curServ)
-{
-    char *mainServiceList[] = {
-        "appspawn", "udevd",  "samgr",      "multimodalinput", "weston",         "installs",
-        "hiview",   "hilogd", "hdf_devmgr", "distributedsche", "softbus_server", "foundation"
-    };
-    unsigned int length = ARRAY_LENGTH(mainServiceList);
-    for (unsigned int i = 0; i < length; ++i) {
-        INIT_INFO_CHECK(strncmp(curServ->name, mainServiceList[i], strlen(mainServiceList[i])) != 0, return true,
-            "%s must be main service", curServ->name);
-    }
-    return false;
-}
-
-static int GetDynamicService(const cJSON *curArrItem, Service *curServ)
-{
-    cJSON *item = cJSON_GetObjectItem(curArrItem, "dynamic");
-    if (item == NULL) {
-        return SERVICE_SUCCESS;
-    }
-
-    INIT_ERROR_CHECK(cJSON_IsBool(item), return SERVICE_FAILURE,
-        "Service : %s dynamic value only support bool.", curServ->name);
-    INIT_INFO_CHECK(cJSON_IsTrue(item), return SERVICE_SUCCESS,
-        "Service : %s dynamic value is false, it will be started with init.", curServ->name);
-    INIT_CHECK_RETURN_VALUE(!IsServiceInMainStrap(curServ), SERVICE_SUCCESS);
-    INIT_LOGI("%s is dynamic service", curServ->name);
-
-    curServ->attribute |= SERVICE_ATTR_DYNAMIC;
-    curServ->attribute |= SERVICE_ATTR_ONCE;
-    return SERVICE_SUCCESS;
-}
-
 static int GetServiceOnDemand(const cJSON *curArrItem, Service *curServ)
 {
     cJSON *item = cJSON_GetObjectItem(curArrItem, "ondemand");
@@ -627,7 +594,7 @@ static int GetServiceOnDemand(const cJSON *curArrItem, Service *curServ)
     INIT_ERROR_CHECK(cJSON_IsBool(item), return SERVICE_FAILURE,
         "Service : %s ondemand value only support bool.", curServ->name);
     INIT_INFO_CHECK(cJSON_IsTrue(item), return SERVICE_SUCCESS,
-        "Service : %s ondemand value is false, it will be manage socket by itself", curServ->name);
+        "Service : %s ondemand value is false, it should be pulled up by init", curServ->name);
     if (curServ->attribute & SERVICE_ATTR_CRITICAL) {
         INIT_LOGE("Service : %s is invalid which has both critical and ondemand attribute", curServ->name);
         return SERVICE_FAILURE;
@@ -641,7 +608,7 @@ static int CheckServiceKeyName(const cJSON *curService)
 {
     char *cfgServiceKeyList[] = {
         "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
-        "writepid", "critical", "socket", "console", "dynamic", "file", "ondemand",
+        "writepid", "critical", "socket", "console", "file", "ondemand",
         "d-caps", "apl", "jobs", "start-mode", "end-mode", "cpucore", "secon", "sandbox"
     };
     INIT_CHECK_RETURN_VALUE(curService != NULL, SERVICE_FAILURE);
@@ -847,8 +814,6 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get sandbox for service %s", service->name);
     ret = GetServiceCaps(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
-    ret = GetDynamicService(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get dynamic flag for service %s", service->name);
     ret = GetServiceOnDemand(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get ondemand flag for service %s", service->name);
     ret = GetServiceMode(service, curItem);
@@ -945,7 +910,7 @@ static Service *GetServiceByExtServName(const char *fullServName)
     return service;
 }
 
-void StartServiceByName(const char *servName, bool checkDynamic)
+void StartServiceByName(const char *servName)
 {
     INIT_LOGE("StartServiceByName Service %s", servName);
     Service *service = GetServiceByName(servName);
@@ -954,11 +919,6 @@ void StartServiceByName(const char *servName, bool checkDynamic)
     }
     INIT_ERROR_CHECK(service != NULL, return, "Cannot find service %s.", servName);
 
-    if (checkDynamic && (service->attribute & SERVICE_ATTR_DYNAMIC)) {
-        INIT_LOGI("%s is dynamic service.", servName);
-        NotifyServiceChange(service, SERVICE_STOPPED);
-        return;
-    }
     if (ServiceStart(service) != SERVICE_SUCCESS) {
         INIT_LOGE("Service %s start failed!", servName);
     }
@@ -1046,12 +1006,6 @@ void StartAllServices(int startMode)
             if (CreateServiceSocket(service) != 0) {
                 INIT_LOGE("service %s exit! create socket failed!", service->name);
             }
-            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
-            continue;
-        }
-        if (service->attribute & SERVICE_ATTR_DYNAMIC) {
-            INIT_LOGI("%s is dynamic service.", service->name);
-            NotifyServiceChange(service, SERVICE_STOPPED);
             node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
             continue;
         }

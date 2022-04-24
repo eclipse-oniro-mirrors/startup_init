@@ -189,7 +189,7 @@ static void SendTriggerEvent(int type, const char *content, uint32_t contentLen)
         } else if (strncmp(content, OHOS_SERVICE_CTRL_PREFIX, prefixSize) == 0) {
             DoServiceCtrlTrigger(content + prefixSize, contentLen - prefixSize, 1);
         } else if (strncmp(content, OHOS_CTRL_START, strlen(OHOS_CTRL_START)) == 0) {
-            StartServiceByName(content + strlen(OHOS_CTRL_START), false);
+            StartServiceByName(content + strlen(OHOS_CTRL_START));
         } else if (strncmp(content, OHOS_CTRL_STOP, strlen(OHOS_CTRL_STOP)) == 0) {
             StopServiceByName(content + strlen(OHOS_CTRL_STOP));
         } else {

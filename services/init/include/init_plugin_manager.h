@@ -17,7 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "init_plugin.h"
 #include "list.h"
 
 #ifdef __cplusplus
@@ -25,8 +24,11 @@
 extern "C" {
 #endif
 #endif
-
+#ifdef __aarch64__
+#define DEFAULT_PLUGIN_PATH "/system/lib64/plugin"
+#else
 #define DEFAULT_PLUGIN_PATH "/system/lib/plugin"
+#endif
 #define DEFAULT_PLUGIN_CFG "/system/etc/plugin_modules.cfg"
 typedef enum {
     PLUGIN_STATE_IDLE,
@@ -69,8 +71,7 @@ void PluginManagerInit(void);
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);
 
 int ParseInitCfg(const char *configFile, void *context);
-typedef PluginInterface *(*GetPluginInterfaceFunc)();
-int SetPluginInterface(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

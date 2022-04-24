@@ -36,7 +36,6 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/interfaces/innerkits/file/init_file.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab_mount.c",
-    "//base/startup/init_lite/interfaces/innerkits/plugin/init_plugin.c",
     "//base/startup/init_lite/interfaces/innerkits/reboot/init_reboot_innerkits.c",
     "//base/startup/init_lite/interfaces/innerkits/sandbox/sandbox.c",
     "//base/startup/init_lite/interfaces/innerkits/sandbox/sandbox_namespace.c",
@@ -117,6 +116,7 @@ ohos_unittest("init_ut") {
     "init/cmds_unittest.cpp",
     "init/group_unittest.cpp",
     "init/init_reboot_unittest.cpp",
+    "init/loopevent_unittest.cpp",
     "init/mount_unittest.cpp",
     "init/plugin_unittest.cpp",
     "init/service_file_unittest.cpp",
@@ -125,6 +125,7 @@ ohos_unittest("init_ut") {
     "init/utils_unittest.cpp",
     "param/client_unittest.cpp",
     "param/dac_unittest.cpp",
+    "param/param_shell_unittest.cpp",
     "param/param_unittest.cpp",
     "param/selinux_unittest.cpp",
     "param/trigger_unittest.cpp",
@@ -134,6 +135,7 @@ ohos_unittest("init_ut") {
   configs = [ "//base/startup/init_lite/test/unittest:utest_config" ]
 
   include_dirs = [
+    "//base/customization/config_policy/interfaces/innerkits/include",
     "//base/startup/init_lite/services/init/standard",
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/interfaces/innerkits/fd_holder",
@@ -174,6 +176,7 @@ ohos_unittest("init_ut") {
   ]
 
   deps = [
+    "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
     "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
     "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
     "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
@@ -185,6 +188,8 @@ ohos_unittest("init_ut") {
   ]
 
   defines = [
+    "READ_CHECK",
+    "PARAM_SUPPORT_DAC_CHECK",
     "INIT_AGENT",
     "STARTUP_INIT_TEST",
     "PARAM_SUPPORT_SAVE_PERSIST",
@@ -193,7 +198,10 @@ ohos_unittest("init_ut") {
   ]
   defines += [ "_GNU_SOURCE" ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "init:libinit_plugin_engine",
+  ]
 
   if (param_feature_watcher) {
     external_deps += [

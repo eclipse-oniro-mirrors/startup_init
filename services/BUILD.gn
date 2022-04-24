@@ -102,6 +102,7 @@ if (defined(ohos_lite)) {
 } else {
   import("//base/startup/init_lite/begetd.gni")
   import("//build/ohos.gni")
+  import("//build/ohos/native_stub/native_stub.gni")
 
   ohos_executable("init") {
     sources = [
@@ -123,6 +124,7 @@ if (defined(ohos_lite)) {
     sources += init_common_sources
 
     include_dirs = [
+      "//base/customization/config_policy/interfaces/innerkits/include",
       "//base/security/access_token/interfaces/innerkits/token_setproc/include",
       "//base/security/access_token/interfaces/innerkits/nativetoken/include",
       "//base/startup/init_lite/interfaces/innerkits/sandbox/include",
@@ -139,6 +141,7 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function/include",
     ]
     deps = [
+      "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
       "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
       "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
       "//base/startup/init_lite/interfaces/innerkits:libfsmanager_static",
@@ -152,6 +155,8 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]
+
+    deps += [ "//base/startup/init_lite/services/init/plugin_engine:libinit_stub_versionscript" ]
 
     cflags = []
 
@@ -193,6 +198,11 @@ if (defined(ohos_lite)) {
     if (defined(product_name) && product_name == "rk3568") {
       defines += [ "PRODUCT_RK" ]
     }
+    version_script = get_label_info(
+                         "//base/startup/init_lite/services/init/plugin_engine:libinit_stub_versionscript",
+                         "target_gen_dir") + "/" + get_label_info(
+                         "//base/startup/init_lite/services/init/plugin_engine:libinit_stub_versionscript",
+                         "name") + stub_version_script_suffix
     defines += [ "_GNU_SOURCE" ]
     install_images = [
       "system",
@@ -228,6 +238,30 @@ if (defined(ohos_lite)) {
     } else {
       source = "//base/startup/init_lite/services/etc/init.cfg"
     }
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("misc.cfg") {
+    source = "//base/startup/init_lite/services/etc/misc.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("watchdog.cfg") {
+    source = "//base/startup/init_lite/services/etc/watchdog.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("console.cfg") {
+    source = "//base/startup/init_lite/services/etc/console.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("ueventd.cfg") {
+    source = "//base/startup/init_lite/services/etc/ueventd.cfg"
+    relative_install_dir = "init"
     part_name = "init"
   }
 
@@ -271,6 +305,12 @@ if (defined(ohos_lite)) {
     module_install_dir = "etc/param"
   }
 
+  ohos_prebuilt_etc("ohos_const.para") {
+    source = "//base/startup/init_lite/services/etc/param/ohos_const/ohos.para"
+    part_name = "init"
+    module_install_dir = "etc/param/ohos_const"
+  }
+
   ohos_prebuilt_etc("boot.group") {
     source = "//base/startup/init_lite/services/etc/device.boot.group.cfg"
     part_name = "init"
@@ -304,26 +344,41 @@ if (defined(ohos_lite)) {
   }
 
   ohos_prebuilt_etc("system-sandbox.json") {
-    source = "//base/startup/init_lite/interfaces/innerkits/sandbox/system-sandbox.json"
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/system-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/system-sandbox.json"
+    }
     part_name = "init"
     module_install_dir = "etc/sandbox"
   }
 
   ohos_prebuilt_etc("chipset-sandbox.json") {
-    source = "//base/startup/init_lite/interfaces/innerkits/sandbox/chipset-sandbox.json"
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/chipset-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/chipset-sandbox.json"
+    }
     part_name = "init"
     module_install_dir = "etc/sandbox"
   }
 
   ohos_prebuilt_etc("privapp-sandbox.json") {
-    source = "//base/startup/init_lite/interfaces/innerkits/sandbox/privapp-sandbox.json"
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/privapp-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/privapp-sandbox.json"
+    }
     part_name = "init"
     module_install_dir = "etc/sandbox"
   }
 
   ohos_prebuilt_etc("app-sandbox.json") {
-    source =
-        "//base/startup/init_lite/interfaces/innerkits/sandbox/app-sandbox.json"
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/app-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/app-sandbox.json"
+    }
     part_name = "init"
     module_install_dir = "etc/sandbox"
   }
@@ -340,13 +395,16 @@ if (defined(ohos_lite)) {
       ":boot.group",
       ":charing.group",
       ":chipset-sandbox.json",
+      ":console.cfg",
       ":group",
       ":init.cfg",
       ":init.reboot",
       ":init.usb.cfg",
       ":init.usb.configfs.cfg",
+      ":misc.cfg",
       ":ohos.para",
       ":ohos.para.dac",
+      ":ohos_const.para",
       ":passwd",
       ":plugin_modules",
       ":privapp-sandbox.json",
@@ -354,6 +412,8 @@ if (defined(ohos_lite)) {
       ":syscap.para",
       ":system-sandbox.json",
       ":systemcapability.json",
+      ":ueventd.cfg",
+      ":watchdog.cfg",
     ]
   }
 }

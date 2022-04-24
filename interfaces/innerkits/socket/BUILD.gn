@@ -19,7 +19,7 @@ service_socket_include = [
   "//third_party/bounds_checking_function/include",
 ]
 service_socket_deps = [
-  "//base/startup/init_lite/services/log:init_log",
+  "//base/startup/init_lite/services/log:agent_log",
   "//third_party/bounds_checking_function:libsec_static",
 ]
 
@@ -50,6 +50,5 @@ if (defined(ohos_lite)) {
       "system",
       "updater",
     ]
-    relative_install_dir = "platform-vndk"
   }
 }

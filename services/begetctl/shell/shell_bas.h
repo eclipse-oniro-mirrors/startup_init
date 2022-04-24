@@ -27,10 +27,22 @@
 #define BSH_KEY_CTRLC 0x03  // ctr + c
 #define BSH_KEY_ESC 0x1B    // ecs
 
-#define BSH_COMMAND_MAX_LENGTH 256
+#define BSH_COMMAND_MAX_LENGTH (5 * 1024)
 #define BSH_PARAMETER_MAX_NUMBER 10
 #define BSH_CMD_NAME_END 48
 #define BSH_CMD_MAX_KEY 5
+
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+
+#ifdef STARTUP_INIT_TEST
+#define SHELLSTATIC
+#else
+#define SHELLSTATIC static
+#endif
 
 typedef enum {
     BSH_IN_NORMAL = 0,
@@ -90,4 +102,15 @@ void BShellEnvOutputByte(BShellHandle handle, char data);
 void BShellEnvOutputResult(BShellHandle handle, int32_t result);
 char *BShellEnvErrString(BShellHandle handle, int32_t err);
 const char *BShellEnvGetStringParam(BShellHandle handle, const char *name);
+
+#ifdef STARTUP_INIT_TEST
+void BShellEnvProcessInput(BShellHandle handle, char data);
+BShellKey *BShellEnvGetDefaultKey(uint8_t code);
+#endif
+
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
 #endif

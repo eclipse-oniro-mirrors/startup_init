@@ -54,7 +54,7 @@ Service *GetServiceByName(const char *servName);
 cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrName);
 int ParseOneService(const cJSON *curItem, Service *service);
 
-void StartServiceByName(const char *serviceName, bool checkDynamic);
+void StartServiceByName(const char *serviceName);
 void StopServiceByName(const char *serviceName);
 void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size));

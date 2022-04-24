@@ -21,6 +21,12 @@
 #include "le_utils.h"
 #include "init_hashmap.h"
 
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+
 typedef struct EventLoop_ {
     LE_STATUS (*close)(const struct EventLoop_ *loop);
     LE_STATUS (*runLoop)(const struct EventLoop_ *loop);
@@ -40,5 +46,11 @@ LE_STATUS AddTask(EventLoop *loop, BaseTask *task);
 BaseTask *GetTaskByFd(EventLoop *loop, int fd);
 void DelTask(EventLoop *loop, BaseTask *task);
 LE_STATUS ProcessEvent(const EventLoop *loop, int fd, uint32_t oper);
+
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
 
 #endif

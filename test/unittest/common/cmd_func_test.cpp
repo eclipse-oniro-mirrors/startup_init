@@ -733,6 +733,8 @@ static void CheckCmd(const TestCmdLine *resCmd)
         EXPECT_NE(' ', resCmd->cmdContent[0]);    // should not start with space
     } else if (strcmp("loadcfg ", resCmd->name) == 0) {
         EXPECT_NE(' ', resCmd->cmdContent[0]);   // should not start with space
+    } else if (strcmp("export ", resCmd->name) == 0) {
+        EXPECT_NE(' ', resCmd->cmdContent[0]);   // should not start with space
     } else {    // unknown cmd
         EXPECT_TRUE(false);
     }
@@ -940,7 +942,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_003, TestSize.Level0)
                 break;
             }
         } while (size > 0);
-        EXPECT_TRUE(hasZpfs == true);
+        EXPECT_TRUE(hasZpfs);
         fclose(fd);
     }
 }
@@ -957,7 +959,7 @@ HWTEST_F(StartupInitUTest, cmdJobTest_001, TestSize.Level0)
     DoJob(nullptr);
     DoJob("job name does not exist");
     ReleaseAllJobs();
-    StartServiceByName("service name does not exist", false);
+    StartServiceByName("service name does not exist");
     StopAllServices(0, nullptr, 0, nullptr);
     ServiceReap(nullptr);
     EXPECT_NE(0, ServiceStart(nullptr));

@@ -48,7 +48,8 @@
                 "//base/startup/init_lite/interfaces/innerkits/file:libfile",
                 "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
                 "//base/startup/init_lite/services/loopevent:loopevent",
-                "//base/startup/init_lite/interfaces/innerkits/plugin:libplugin",
+                "//base/startup/init_lite/services/init/plugin_engine:libinit_plugin_engine",
+                "//base/startup/init_lite/services/init/plugin_engine:libinit_stub_empty",
                 "//base/startup/init_lite/device_info:device_info_group",
                 "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox"
             ],
@@ -76,10 +77,20 @@
                         ]
                     },
                     "name": "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy"
+                },
+                {
+                    "header": {
+                        "header_base": "//base/startup/init_lite/services/init/plugin_engine/include",
+                        "header_files": [
+                            "init_plugin_engine.h"
+                        ]
+                    },
+                    "name": "//base/startup/init_lite/services/init/plugin_engine:libinit_plugin_engine"
                 }
             ],
             "test": [
-                "//base/startup/init_lite/test/unittest:init_test"
+                "//base/startup/init_lite/test/unittest:init_test",
+                "//base/startup/init_lite/test/fuzztest:fuzztest"
             ]
         }
     }

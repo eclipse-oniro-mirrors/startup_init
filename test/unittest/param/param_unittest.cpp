@@ -18,9 +18,17 @@
 #include "init_unittest.h"
 #include "param_stub.h"
 #include "trigger_manager.h"
+#include "param_message.h"
+#include "param_utils.h"
 
 using namespace testing::ext;
 using namespace std;
+
+static void OnClose(ParamTaskPtr client)
+{
+    UNUSED(client);
+}
+
 static int CheckServerParamValue(const char *name, const char *expectValue)
 {
     char tmp[PARAM_BUFFER_SIZE] = { 0 };
@@ -304,7 +312,7 @@ public:
         ParamStreamInfo info = {};
         info.flags = PARAM_TEST_FLAGS;
         info.server = NULL;
-        info.close = NULL;
+        info.close = OnClose;
         info.recvMessage = ProcessMessage;
         info.incomingConnect = NULL;
         ParamTaskPtr client = NULL;
@@ -353,7 +361,6 @@ public:
             ProcessMessage((const ParamTaskPtr)g_worker, (const ParamMessage *)request);
         } while (0);
         free(request);
-        CheckServerParamValue(name, value);
         RegisterSecurityOps(paramSecurityOps, 1);
         return 0;
     }
@@ -630,7 +637,7 @@ HWTEST_F(ParamUnitTest, TestServiceCtrl, TestSize.Level0)
 {
     ParamUnitTest test;
     int ret = test.TestServiceCtrl("server1", 0770);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = test.TestServiceCtrl("server2", 0772);
     EXPECT_EQ(ret, 0);
 }
@@ -639,19 +646,19 @@ HWTEST_F(ParamUnitTest, TestPowerCtrl, TestSize.Level0)
 {
     ParamUnitTest test;
     int ret = test.TestPowerCtrl("reboot,shutdown", 0770);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,shutdown", 0772);
     EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,updater", 0770);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,updater", 0772);
     EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,flash", 0770);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,flash", 0772);
     EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot", 0770);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot", 0772);
     EXPECT_EQ(ret, 0);
 }

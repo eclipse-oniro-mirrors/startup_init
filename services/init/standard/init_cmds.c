@@ -177,19 +177,24 @@ static void DoLoadDefaultParams(const struct CmdArgs *ctx)
 static void DoExec(const struct CmdArgs *ctx)
 {
     // format: exec /xxx/xxx/xxx xxx
+    INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, return,
+        "DoExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
     pid_t pid = fork();
     INIT_ERROR_CHECK(pid >= 0, return, "DoExec: failed to fork child process to exec \"%s\"", ctx->argv[0]);
 
     if (pid == 0) {
-        INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, _exit(0x7f),
-            "DoExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
 #ifdef SUPPORT_PROFILER_HIDEBUG
         do {
-            if (access("/system/lib/libhidebug.so", F_OK) != 0) {
+#ifdef __aarch64__
+            const char *debugSoPath = "/system/lib64/libhidebug.so";
+#else
+            const char *debugSoPath = "/system/lib/libhidebug.so";
+#endif
+            if (access(debugSoPath, F_OK) != 0) {
                 INIT_LOGE("access failed, errno = %d\n", errno);
                 break;
             }
-            void* handle = dlopen("/system/lib/libhidebug.so", RTLD_LAZY);
+            void* handle = dlopen(debugSoPath, RTLD_LAZY);
             if (handle == NULL) {
                 INIT_LOGE("Failed to dlopen libhidebug.so, %s\n", dlerror());
                 break;

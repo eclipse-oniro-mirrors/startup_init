@@ -23,6 +23,7 @@
 #include "iwatcher_manager.h"
 #include "message_parcel.h"
 #include "param_utils.h"
+#include "param_request.h"
 #include "sys_param.h"
 #include "system_ability_definition.h"
 #include "watcher.h"
@@ -43,7 +44,14 @@ public:
     WatcherAgentUnitTest() {}
     virtual ~WatcherAgentUnitTest() {}
 
-    void SetUp() {}
+    void SetUp()
+    {
+        ParamWorkSpace *space = GetClientParamWorkSpace();
+        if (space != nullptr && space->securityLabel != nullptr) {
+            space->securityLabel->cred.uid = 1000; // 1000 test uid
+            space->securityLabel->cred.gid = 1000; // 1000 test gid
+        }
+    }
     void TearDown() {}
     void TestBody() {}
 
@@ -58,7 +66,7 @@ public:
         EXPECT_NE(ret, 0);
         // 被禁止
         ret = SystemWatchParameter("test.permission.read.test1*", TestParameterChange, nullptr);
-        EXPECT_NE(ret, 0);
+        EXPECT_EQ(ret, 0);
         return 0;
     }
 
@@ -76,7 +84,7 @@ public:
         EXPECT_NE(ret, 0);
         // 被禁止
         ret = SystemWatchParameter("test.permission.read.test1*", nullptr, nullptr);
-        EXPECT_NE(ret, 0);
+        EXPECT_EQ(ret, 0);
         return 0;
     }
 

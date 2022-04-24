@@ -38,7 +38,7 @@ public:
 
 HWTEST_F(CmdsUnitTest, TestCmdExecByName, TestSize.Level1)
 {
-    SetInitLogLevel(INIT_INFO);
+    SetInitLogLevel(INIT_FATAL);
     DoCmdByName("load_param ", "     /system/etc/param            onlyadd");
     DoCmdByName("symlink ", "/proc/self/fd/0 /dev/stdin");
     DoCmdByName("insmod ",
@@ -63,6 +63,19 @@ HWTEST_F(CmdsUnitTest, TestCmdExecByName, TestSize.Level1)
     DoCmdByName("makedev ", "999 999");
     DoCmdByName("mount_fstab ", "");
     DoCmdByName("umount_fstab ", "");
+    DoCmdByName("mksandbox ", "system");
+    DoCmdByName("timer_start ", "media_service|5000");
+    DoCmdByName("timer_stop ", "media_service");
+    DoCmdByName("exec ", "media_service");
+    DoCmdByName("load_access_token_id ", "media_service");
+    DoCmdByName("stopAllServices ", "");
+    DoCmdByName("umount ", "");
+    DoCmdByName("mount ", "");
+    DoCmdByName("init_global_key ", "");
+    DoCmdByName("init_main_user ", "testUser");
+    DoCmdByName("mkswap ", "");
+    DoCmdByName("swapon ", "");
+    DoCmdByName("sync ", "");
 }
 
 HWTEST_F(CmdsUnitTest, TestCommonMkdir, TestSize.Level1)

@@ -20,6 +20,8 @@
 #include "init_unittest.h"
 #include "init_utils.h"
 #include "securec.h"
+#include "init_service.h"
+#include "le_timer.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -72,13 +74,13 @@ static void TestHashNodeFree(const HashNode *node)
 static TestHashNode *TestCreateHashNode(const char *value)
 {
     TestHashNode *node = (TestHashNode *)malloc(sizeof(TestHashNode) + strlen(value) + 1);
-    if (node == NULL) {
-        return NULL;
+    if (node == nullptr) {
+        return nullptr;
     }
     int ret = strcpy_s(node->name, strlen(value) + 1, value);
     if (ret != 0) {
         free(node);
-        return NULL;
+        return nullptr;
     }
     HASHMAPInitNode(&node->node);
     return node;
@@ -87,7 +89,7 @@ static TestHashNode *TestCreateHashNode(const char *value)
 static void CreateTestFile(const char *fileName, const char *data)
 {
     FILE *tmpFile = fopen(fileName, "wr");
-    if (tmpFile != NULL) {
+    if (tmpFile != nullptr) {
         fprintf(tmpFile, "%s", data);
         (void)fflush(tmpFile);
         fclose(tmpFile);
@@ -124,13 +126,13 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
     HashMapAdd(handle, &node1->node);
     HashMapAdd(handle, &node2->node);
     HashNode *node = HashMapGet(handle, (const void *)str1);
-    EXPECT_NE(node != NULL, 0);
+    EXPECT_NE(node != nullptr, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, str1), 0);
     }
     node = HashMapGet(handle, (const void *)str2);
-    EXPECT_NE(node != NULL, 0);
+    EXPECT_NE(node != nullptr, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, str2), 0);
@@ -142,7 +144,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
     node3 = TestCreateHashNode("Test hash map node 5");
     HashMapAdd(handle, &node3->node);
     node = HashMapGet(handle, (const void *)str3);
-    EXPECT_NE(node != NULL, 0);
+    EXPECT_NE(node != nullptr, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, str3), 0);
@@ -155,7 +157,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
     HashMapAdd(handle, &node5->node);
     HashMapRemove(handle, "pre-init");
     node = HashMapGet(handle, (const void *)act);
-    EXPECT_NE(node != NULL, 0);
+    EXPECT_NE(node != nullptr, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, act), 0);
@@ -239,6 +241,9 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService, TestSize.Level1)
     cJSON_Delete(fileRoot);
 
     Service *service = GetServiceByName("test-service");
+    ServiceStartTimer(service, 1);
+    ((TimerTask *)service->timer)->base.handleEvent(LE_GetDefaultLoop(), (LoopBase *)service->timer, Event_Read);
+    ServiceStopTimer(service);
     ASSERT_NE(service != nullptr, 0);
     EXPECT_EQ(service->startMode, START_MODE_CONDITION);
     ReleaseService(service);
@@ -335,14 +340,14 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService2, TestSize.Level1)
 HWTEST_F(InitGroupManagerUnitTest, TestParseServiceCpucore, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service22\",\"path\":[\"/data/init_ut/test_service\"],"
-        "\"importance\":-20,\"uid\":\"root\",\"writepid\":[\"/dev/test_service\"],\"console\":1,\"dynamic\":true,"
+        "\"importance\":-20,\"uid\":\"root\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
         "\"gid\":[\"root\"], \"cpucore\":[5, 2, 4, 1, 2, 0, 1]}}";
     cJSON* jobItem = cJSON_Parse(jsonStr);
     ASSERT_NE(nullptr, jobItem);
     cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
     ASSERT_NE(nullptr, serviceItem);
     Service *service = AddService("test_service22");
-    if (service != NULL) {
+    if (service != nullptr) {
         int ret = ParseOneService(serviceItem, service);
         EXPECT_EQ(ret, 0);
         ReleaseService(service);

@@ -151,7 +151,7 @@ static int ParseSysfsConfig(char *p)
 static int ParseFirmwareConfig(char *p)
 {
     INIT_LOGV("Parse firmware config info: %s", p);
-    INIT_CHECK_ONLY_ELOG(!INVALIDSTRING(p), "Invalid argument");
+    INIT_ERROR_CHECK(!INVALIDSTRING(p), return -1, "Invalid argument");
 
     // Sanity checks
     struct stat st = {};
@@ -216,9 +216,6 @@ int ParseUeventConfig(char *buffer)
 
 static void DoUeventConfigParse(char *buffer, size_t length)
 {
-    if (length < 0) {
-        return;
-    }
     char **items = NULL;
     int count = -1;
     const int maxItemCount = DEFAULTITEMCOUNT;

@@ -204,29 +204,29 @@ HWTEST_F(DacUnitTest, TestDacCheckUserParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     dacData.mode = 0400;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WRITE);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0400;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WATCH);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
 
     // write
     dacData.mode = 0200;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_READ);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0200;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WRITE);
     EXPECT_EQ(ret, 0);
     dacData.mode = 0200;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WATCH);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
 
     // watch
     dacData.mode = 0100;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_READ);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0100;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WRITE);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0100;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WATCH);
     EXPECT_EQ(ret, 0);
@@ -245,29 +245,29 @@ HWTEST_F(DacUnitTest, TestDacCheckGroupParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     dacData.mode = 0040;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WRITE);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0040;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WATCH);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
 
     // write
     dacData.mode = 0020;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_READ);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0020;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WRITE);
     EXPECT_EQ(ret, 0);
     dacData.mode = 0020;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WATCH);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
 
     // watch
     dacData.mode = 0010;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_READ);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0010;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WRITE);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0010;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WATCH);
     EXPECT_EQ(ret, 0);
@@ -286,29 +286,29 @@ HWTEST_F(DacUnitTest, TestDacCheckOtherParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     dacData.mode = 0004;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WRITE);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0004;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WATCH);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
 
     // write
     dacData.mode = 0002;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_READ);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0002;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WRITE);
     EXPECT_EQ(ret, 0);
     dacData.mode = 0002;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WATCH);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
 
     // watch
     dacData.mode = 0001;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_READ);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0001;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WRITE);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     dacData.mode = 0001;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WATCH);
     EXPECT_EQ(ret, 0);

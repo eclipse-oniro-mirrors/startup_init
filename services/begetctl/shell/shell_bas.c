@@ -86,7 +86,9 @@ int32_t BShellCmdHelp(BShellHandle handle, int32_t argc, char *argv[])
 
 static int32_t BShellCmdExit(BShellHandle handle, int32_t argc, char *argv[])
 {
+#ifndef STARTUP_INIT_TEST
     kill(getpid(), SIGINT);
+#endif
     return 0;
 }
 
@@ -99,6 +101,9 @@ int32_t BShellEnvOutput(BShellHandle handle, char *fmt, ...)
     int len = vsnprintf_s(shell->data, sizeof(shell->data), sizeof(shell->data) - 1, fmt, list);
     va_end(list);
     if (len <= 0) {
+        va_start(list, fmt);
+        vfprintf(stdout, fmt, list);
+        va_end(list);
         return -1;
     }
     return BShellEnvOutputString(handle, shell->data);
@@ -301,7 +306,7 @@ static void BShellEnvHandleNormal(BShellHandle handle, uint8_t data)
     } else {
         BShellEnvOutputString(shell, BShellEnvErrString(handle, BSH_CMD_TOO_LONG));
         BShellEnvOutputString(shell, shell->prompt);
-        BShellEnvOutputString(shell, shell->buffer);
+
         shell->cursor = shell->length;
     }
 }
@@ -310,7 +315,9 @@ static int32_t BShellEnvHandleCtrC(BShellHandle handle, uint8_t code)
 {
     BSH_CHECK(handle != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
     BSH_LOGV("BShellEnvHandleCtrC %d", getpid());
+#ifndef STARTUP_INIT_TEST
     kill(getpid(), SIGKILL);
+#endif
     return 0;
 }
 
@@ -341,7 +348,7 @@ BShellKey *BShellEnvGetDefaultKey(uint8_t code)
     return NULL;
 }
 
-static void BShellEnvProcessInput(BShellHandle handle, char data)
+SHELLSTATIC void BShellEnvProcessInput(BShellHandle handle, char data)
 {
     BSH_CHECK(handle != NULL, return, "Invalid shell env");
     BShellEnv *shell = (BShellEnv *)handle;

@@ -67,16 +67,20 @@ int ServiceExec(const Service *service)
     INIT_ERROR_CHECK(service != NULL && service->pathArgs.count > 0,
         return SERVICE_FAILURE, "Exec service failed! null ptr.");
     INIT_LOGI("service->name is %s ", service->name);
-    char *env[] = { "LD_LIBRARY_PATH=/storage/app/libs", NULL, NULL };
-    char sockEnv[MAX_ENV_NAME] = {0};
+    char sockEnvName[MAX_ENV_NAME] = {0};
+    char sockEnvValue[MAX_ENV_NAME] = {0};
     if (service->socketCfg != NULL) {
-        INIT_ERROR_CHECK(snprintf_s(sockEnv, sizeof(sockEnv), sizeof(sockEnv) - 1, "OHOS_SOCKET_%s=%d",
-            service->socketCfg->name, service->socketCfg->sockFd) != -1,
-            return SERVICE_FAILURE, "format socket env failed!");
-        env[1] = sockEnv;
+        INIT_ERROR_CHECK(snprintf_s(sockEnvName, MAX_ENV_NAME, MAX_ENV_NAME - 1, "OHOS_SOCKET_%s",
+            service->socketCfg->name) != -1,
+            return SERVICE_FAILURE, "format socket env name failed!");
+        INIT_ERROR_CHECK(snprintf_s(sockEnvValue, MAX_ENV_NAME, MAX_ENV_NAME - 1, "%d",
+            service->socketCfg->sockFd) != -1,
+            return SERVICE_FAILURE, "format socket env value failed!");
     }
-    if (execve(service->pathArgs.argv[0], service->pathArgs.argv, env) != 0) {
-        INIT_LOGE("service %s execve failed! err %d.", service->name, errno);
+    INIT_CHECK_ONLY_ELOG(setenv(sockEnvName, sockEnvValue, 1) == 0, "DoExport: set %s with %s failed: %d",
+        sockEnvName, sockEnvValue, errno);
+    if (execv(service->pathArgs.argv[0], service->pathArgs.argv) != 0) {
+        INIT_LOGE("service %s execv failed! err %d.", service->name, errno);
         return errno;
     }
     return SERVICE_SUCCESS;

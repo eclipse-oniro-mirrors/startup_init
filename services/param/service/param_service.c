@@ -37,6 +37,12 @@
 
 static ParamWorkSpace g_paramWorkSpace = { 0, {}, NULL, {}, NULL, NULL };
 
+#ifdef USE_MTK_EMMC
+static const char SN_FILE[] = {"/proc/bootdevice/cid"};
+#else
+static const char SN_FILE[] = {"/sys/block/mmcblk0/device/cid"};
+#endif
+
 static void OnClose(ParamTaskPtr client)
 {
     PARAM_LOGV("OnClose %p", client);
@@ -70,6 +76,8 @@ static int AddParam(WorkSpace *workSpace, const char *name, const char *value, u
         uint32_t offset = AddParamNode(workSpace, name, strlen(name), value, strlen(value));
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
         SaveIndex(&node->dataIndex, offset);
+        long long globalCommitId = atomic_load_explicit(&workSpace->area->commitId, memory_order_relaxed);
+        atomic_store_explicit(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
     }
     if (dataIndex != NULL) {
         *dataIndex = node->dataIndex;
@@ -86,6 +94,7 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     uint32_t valueLen = strlen(value);
     uint32_t commitId = atomic_load_explicit(&entry->commitId, memory_order_relaxed);
     atomic_store_explicit(&entry->commitId, commitId | PARAM_FLAGS_MODIFY, memory_order_relaxed);
+    long long globalCommitId = atomic_load_explicit(&workSpace->area->commitId, memory_order_relaxed);
 
     if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
         int ret = memcpy_s(entry->data + entry->keyLength + 1, PARAM_VALUE_LEN_MAX, value, valueLen + 1);
@@ -94,24 +103,8 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     }
     uint32_t flags = commitId & ~PARAM_FLAGS_COMMITID;
     atomic_store_explicit(&entry->commitId, (++commitId) | flags, memory_order_release);
+    atomic_store_explicit(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
     futex_wake(&entry->commitId, INT_MAX);
-    return 0;
-}
-
-static int CheckParamValue(const WorkSpace *workSpace, const ParamTrieNode *node, const char *name, const char *value)
-{
-    if (IS_READY_ONLY(name)) {
-        PARAM_CHECK(strlen(value) < PARAM_CONST_VALUE_LEN_MAX,
-            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s", value);
-        if (node != NULL && node->dataIndex != 0) {
-            PARAM_LOGE("Read-only param was already set %s", name);
-            return PARAM_CODE_READ_ONLY;
-        }
-    } else {
-        // 限制非read only的参数，防止参数值修改后，原空间不能保存
-        PARAM_CHECK(strlen(value) < PARAM_VALUE_LEN_MAX,
-            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s", value);
-    }
     return 0;
 }
 
@@ -120,17 +113,20 @@ int WriteParam(const WorkSpace *workSpace, const char *name, const char *value, 
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
     ParamTrieNode *node = FindTrieNode(workSpace, name, strlen(name), NULL);
-    int ret = CheckParamValue(workSpace, node, name, value);
-    PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
+    int ret = 0;
     if (node != NULL && node->dataIndex != 0) {
         if (dataIndex != NULL) {
             *dataIndex = node->dataIndex;
         }
         if (onlyAdd) {
-            return 0;
+            return PARAM_CODE_READ_ONLY;
         }
+        ret = CheckParamValue(workSpace, node, name, value);
+        PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         return UpdateParam(workSpace, &node->dataIndex, name, value);
     }
+    ret = CheckParamValue(workSpace, node, name, value);
+    PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
     return AddParam((WorkSpace *)workSpace, name, value, dataIndex);
 }
 
@@ -140,7 +136,7 @@ PARAM_STATIC int AddSecurityLabel(const ParamAuditData *auditData, void *context
     PARAM_CHECK(context != NULL, return -1, "Invalid context");
     ParamWorkSpace *workSpace = (ParamWorkSpace *)context;
     int ret = CheckParamName(auditData->name, 1);
-    PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", auditData->name);
+    PARAM_CHECK(ret == 0, return ret, "Illegal param name \"%s\"", auditData->name);
 
     ParamTrieNode *node = FindTrieNode(&workSpace->paramSpace, auditData->name, strlen(auditData->name), NULL);
     if (node == NULL) {
@@ -539,78 +535,10 @@ PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *m
     return 0;
 }
 
-static int LoadOneParam_(char *line, uint32_t mode, const char *exclude[], uint32_t count)
+static int LoadOneParam_ (const uint32_t *context, const char *name, const char *value)
 {
-    char *name;
-    char *value;
-    char *pos;
-
-    // Skip spaces
-    name = line;
-    while (isspace(*name) && (*name != '\0')) {
-        name++;
-    }
-    // Empty line
-    if (*name == '\0') {
-        return 0;
-    }
-    // Comment line
-    if (*name == '#') {
-        return 0;
-    }
-
-    value = name;
-    // find the first delimiter '='
-    while (*value != '\0') {
-        if (*value == '=') {
-            (*value) = '\0';
-            value = value + 1;
-            break;
-        }
-        value++;
-    }
-
-    // empty name, just ignore this line
-    if (*name == '\0') {
-        return 0;
-    }
-
-    // Trim the ending spaces of name
-    pos = value - 1;
-    pos -= 1;
-    while (isspace(*pos) && pos > name) {
-        (*pos) = '\0';
-        pos--;
-    }
-
-    // Filter excluded parameters
-    for (uint32_t i = 0; i < count; i++) {
-        if (strncmp(name, exclude[i], strlen(exclude[i])) == 0) {
-            return 0;
-        }
-    }
-
-    // Skip spaces for value
-    while (isspace(*value) && (*value != '\0')) {
-        value++;
-    }
-
-    // Trim the ending spaces of value
-    pos = value + strlen(value);
-    pos--;
-    while (isspace(*pos) && pos > value) {
-        (*pos) = '\0';
-        pos--;
-    }
-
-    // Strip starting and ending " for value
-    if ((*value == '"') && (pos > value) && (*pos == '"')) {
-        value = value + 1;
-        *pos = '\0';
-    }
-
+    uint32_t mode = *(uint32_t *)context;
     int ret = CheckParamName(name, 0);
-    // Invalid name, just ignore
     if (ret != 0) {
         return 0;
     }
@@ -619,32 +547,22 @@ static int LoadOneParam_(char *line, uint32_t mode, const char *exclude[], uint3
         name, value, NULL, mode & LOAD_PARAM_ONLY_ADD);
 }
 
-static int LoadDefaultParam_(const char *fileName, uint32_t mode, const char *exclude[], uint32_t count)
+static int LoadDefaultParam_ (const char *fileName, uint32_t mode, const char *exclude[], uint32_t count)
 {
-    // max length for each line of para files: max name length + max value length + spaces
-#define PARAM_LINE_MAX_LENGTH (PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10)
-
     uint32_t paramNum = 0;
     FILE *fp = fopen(fileName, "r");
     if (fp == NULL) {
         return -1;
     }
 
-    char *buff = calloc(1, PARAM_LINE_MAX_LENGTH);
-    if (buff == NULL) {
-        (void)fclose(fp);
-        return -1;
-    }
-
-    while (fgets(buff, PARAM_LINE_MAX_LENGTH, fp) != NULL) {
-        buff[PARAM_LINE_MAX_LENGTH - 1] = '\0';
-
-        int ret = LoadOneParam_(buff, mode, exclude, count);
-        PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buff);
+    while (fgets(g_paramWorkSpace.buffer, sizeof(g_paramWorkSpace.buffer), fp) != NULL) {
+        g_paramWorkSpace.buffer[sizeof(g_paramWorkSpace.buffer) - 1] = '\0';
+        int ret = SpliteString(g_paramWorkSpace.buffer, exclude, count, LoadOneParam_, &mode);
+        PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, g_paramWorkSpace.buffer);
         paramNum++;
     }
     (void)fclose(fp);
-    free(buff);
+
     PARAM_LOGI("Load parameters success %s total %u", fileName, paramNum);
     return 0;
 }
@@ -678,23 +596,96 @@ static int GetParamValueFromBuffer(const char *name, const char *buffer, char *v
     return ret;
 }
 
+static int CommonDealFun(const char* name, const char* value, int res)
+{
+    PARAM_LOGI("Add param from cmdline %s %s", name, value);
+    int ret = 0;
+    if (res == 0) {
+        ret = CheckParamName(name, 0);
+        PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
+        PARAM_LOGV("**** name %s, value %s", name, value);
+        ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, NULL, 0);
+        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
+    } else {
+        PARAM_LOGE("Can not find arrt %s", name);
+    }
+    return ret;
+}
+
+static int SnDealFun(const char* name, const char* value, int res)
+{
+    PARAM_LOGI("Add SN param from cmdline %s %s", name, value);
+    int ret = CheckParamName(name, 0);
+    PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
+
+    char *data = NULL;
+    if (res != 0) { // if cmdline not set sn or set sn value is null,read sn from default file
+        data = ReadFileData(SN_FILE);
+        if (data == NULL) {
+            PARAM_LOGE("Error, Read sn from default file failed!");
+            return -1;
+        }
+    } else if (value[0] == '/') {
+        data = ReadFileData(value);
+        if (data == NULL) {
+            PARAM_LOGE("Error, Read sn from cmdline file failed!");
+            return -1;
+        }
+    } else {
+        PARAM_LOGV("**** name %s, value %s", name, value);
+        ret = WriteParam(&g_paramWorkSpace.paramSpace, name, value, NULL, 0);
+        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
+        return ret;
+    }
+
+    int index = 0;
+    for (size_t i = 0; i < strlen(data); i++) {
+        if (*(data + i) != ':') {
+            *(data + index) = *(data + i);
+            index++;
+        }
+    }
+    data[index] = '\0';
+    PARAM_LOGV("**** name %s, value %s", name, data);
+    ret = WriteParam(&g_paramWorkSpace.paramSpace, name, data, NULL, 0);
+    PARAM_CHECK(ret == 0, free(data);
+        return ret, "Failed to write param %s %s", name, data);
+    free(data);
+
+    return ret;
+}
+
 static int LoadParamFromCmdLine(void)
 {
     int ret;
-    static const char *cmdLines[] = {
-        OHOS_BOOT"hardware",
-        OHOS_BOOT"bootgroup",
-        OHOS_BOOT"reboot_reason",
+    static const cmdLineInfo cmdLines[] = {
+        {OHOS_BOOT"hardware", CommonDealFun
+        },
+        {OHOS_BOOT"bootgroup", CommonDealFun
+        },
+        {OHOS_BOOT"reboot_reason", CommonDealFun
+        },
+        {OHOS_BOOT"sn", SnDealFun
+        },
 #ifdef STARTUP_INIT_TEST
-        OHOS_BOOT"mem",
-        OHOS_BOOT"console",
-        OHOS_BOOT"mmz",
-        OHOS_BOOT"androidboot.selinux",
-        OHOS_BOOT"init",
-        OHOS_BOOT"root",
-        OHOS_BOOT"uuid",
-        OHOS_BOOT"rootfstype",
-        OHOS_BOOT"blkdevparts"
+        {OHOS_BOOT"mem", CommonDealFun
+        },
+        {OHOS_BOOT"console", CommonDealFun
+        },
+        {OHOS_BOOT"mmz", CommonDealFun
+        },
+        {OHOS_BOOT"androidboot.selinux", CommonDealFun
+        },
+        {OHOS_BOOT"init", CommonDealFun
+        },
+        {OHOS_BOOT"root", CommonDealFun
+        },
+        {OHOS_BOOT"uuid", CommonDealFun
+        },
+        {OHOS_BOOT"rootfstype", CommonDealFun
+        },
+        {OHOS_BOOT"blkdevparts", CommonDealFun
+        },
 #endif
     };
     char *data = ReadFileData(PARAM_CMD_LINE);
@@ -705,23 +696,15 @@ static int LoadParamFromCmdLine(void)
 
     for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
 #ifdef BOOT_EXTENDED_CMDLINE
-        ret = GetParamValueFromBuffer(cmdLines[i], BOOT_EXTENDED_CMDLINE, value, PARAM_CONST_VALUE_LEN_MAX);
+        ret = GetParamValueFromBuffer(cmdLines[i].name, BOOT_EXTENDED_CMDLINE, value, PARAM_CONST_VALUE_LEN_MAX);
         if (ret != 0) {
-            ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
+            ret = GetParamValueFromBuffer(cmdLines[i].name, data, value, PARAM_CONST_VALUE_LEN_MAX);
         }
 #else
-        ret = GetParamValueFromBuffer(cmdLines[i], data, value, PARAM_CONST_VALUE_LEN_MAX);
+        ret = GetParamValueFromBuffer(cmdLines[i].name, data, value, PARAM_CONST_VALUE_LEN_MAX);
 #endif
-        if (ret == 0) {
-            PARAM_LOGV("Add param from cmdline %s %s", cmdLines[i], value);
-            ret = CheckParamName(cmdLines[i], 0);
-            PARAM_CHECK(ret == 0, break, "Invalid name %s", cmdLines[i]);
-            PARAM_LOGV("**** cmdLines[%d] %s, value %s", i, cmdLines[i], value);
-            ret = WriteParam(&g_paramWorkSpace.paramSpace, cmdLines[i], value, NULL, 0);
-            PARAM_CHECK(ret == 0, break, "Failed to write param %s %s", cmdLines[i], value);
-        } else {
-            PARAM_LOGE("Can not find arrt %s", cmdLines[i]);
-        }
+
+        cmdLines[i].processor(cmdLines[i].name, value, ret);
     }
     PARAM_LOGV("Parse cmdline finish %s", PARAM_CMD_LINE);
     free(data);

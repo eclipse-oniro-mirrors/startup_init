@@ -36,11 +36,15 @@ static int CreatePipeServerSocket_(const char *server, int maxClient)
 
     unlink(server);
     struct sockaddr_un serverAddr;
-    memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
+    int ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
+    LE_CHECK(ret == 0, close(listenfd);
+        return ret, "Failed to memory set. error: %s", strerror(errno));
     serverAddr.sun_family = AF_UNIX;
-    strcpy_s(serverAddr.sun_path, sizeof(serverAddr.sun_path), server);
+    ret = strcpy_s(serverAddr.sun_path, sizeof(serverAddr.sun_path), server);
+    LE_CHECK(ret == 0, close(listenfd);
+        return ret, "Failed to copy. error: %s", strerror(errno));
     uint32_t size = offsetof(struct sockaddr_un, sun_path) + strlen(server);
-    int ret = bind(listenfd, (struct sockaddr *)&serverAddr, size);
+    ret = bind(listenfd, (struct sockaddr *)&serverAddr, size);
     LE_CHECK(ret >= 0, close(listenfd);
         return ret, "Failed to bind socket. error: %s", strerror(errno));
 
@@ -91,13 +95,14 @@ static int CreatePipeSocket_(const char *server)
 
 LE_STATUS GetSockaddrFromServer_(const char *server, struct sockaddr_in *addr)
 {
-    memset_s(addr, sizeof(struct sockaddr_in), 0, sizeof(struct sockaddr_in));
+    int ret = memset_s(addr, sizeof(struct sockaddr_in), 0, sizeof(struct sockaddr_in));
+    LE_CHECK(ret == 0, return ret, "Failed to memory set. error: %s", strerror(errno));
     addr->sin_family = AF_INET;
     const char *portStr = strstr(server, ":");
     LE_CHECK(portStr != NULL, return LE_FAILURE, "Failed to get addr %s", server);
     uint16_t port = atoi(portStr + 1);
     addr->sin_port = htons(port);
-    int ret = inet_pton(AF_INET, server, &addr->sin_addr);
+    ret = inet_pton(AF_INET, server, &addr->sin_addr);
     LE_CHECK(ret >= 0, return LE_FAILURE, "Failed to inet_pton addr %s", server);
     return LE_SUCCESS;
 }

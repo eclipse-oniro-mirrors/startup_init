@@ -98,8 +98,7 @@ ohos_shared_library("param_client") {
     "//base/startup/init_lite/services/loopevent/include",
   ]
 
-  defines = [ "INIT_AGENT" ]
-  defines += [ "_GNU_SOURCE" ]
+  defines = [ "_GNU_SOURCE" ]
 
   if (build_selinux) {
     defines += [ "WITH_SELINUX" ]
@@ -116,10 +115,10 @@ ohos_shared_library("param_client") {
     }
   }
 
-  deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
+  deps = [ "//third_party/bounds_checking_function:libsec_static" ]
+  if (is_standard_system) {
+    deps += [ "//base/startup/init_lite/services/log:agent_log" ]
+  }
   install_images = [
     "system",
     "updater",
