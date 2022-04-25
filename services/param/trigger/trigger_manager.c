@@ -389,11 +389,12 @@ static int ExecTriggerMatch_(const TriggerWorkSpace *workSpace,
     PARAM_CHECK(head != NULL, return 0, "Failed to get header %d", type);
     TriggerNode *trigger = head->nextTrigger(head, NULL);
     while (trigger != NULL) {
+        TriggerNode *next = head->nextTrigger(head, trigger);
         const char *condition = head->getCondition(trigger);
         if (head->checkCondition(calculator, condition, content, contentSize) == 1) {
             calculator->triggerCheckDone(trigger, content, contentSize);
         }
-        trigger = head->nextTrigger(head, trigger);
+        trigger = next;
     }
     return 0;
 }
