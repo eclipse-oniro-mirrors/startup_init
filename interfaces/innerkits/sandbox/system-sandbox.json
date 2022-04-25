@@ -45,9 +45,17 @@
             "sandbox-path" : "/data",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
+            "src-path" : "/sys/kernel/debug/tracing",
+            "sandbox-path" : "/sys/kernel/debug/tracing",
+            "sandbox-flags" : [ "bind", "private" ]
+        }, {
+            "src-path" : "/sys/kernel/debug",
+            "sandbox-path" : "/sys/kernel/debug",
+            "sandbox-flags" : [ "bind", "private" ]
+        }, {
             "src-path" : "/sys",
             "sandbox-path" : "/sys",
-            "sandbox-flags" : [ "bind", "rec", "private" ]
+            "sandbox-flags" : [ "bind", "private" ]
         }, {
             "src-path" : "/config",
             "sandbox-path" : "/config",
