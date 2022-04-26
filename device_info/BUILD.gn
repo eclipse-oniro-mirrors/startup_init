@@ -32,15 +32,12 @@ ohos_shared_library("deviceinfoservice") {
     ".",
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/syspara_lite/hals/parameter/include",
-    "//utils/native/base/include",
-    "//utils/system/safwk/native/include",
   ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/syspara_lite/hals/parameter:sysparam_hal",
     "//third_party/bounds_checking_function:libsec_shared",
-    "//utils/native/base:utils",
   ]
 
   external_deps = [
@@ -49,6 +46,7 @@ ohos_shared_library("deviceinfoservice") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
+    "utils_base:utils",
   ]
   install_images = [ "system" ]
   part_name = "init"

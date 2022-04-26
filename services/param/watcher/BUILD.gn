@@ -41,13 +41,13 @@ ohos_shared_library("param_watcheragent") {
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param:param_client",
     "//third_party/bounds_checking_function:libsec_static",
-    "//utils/native/base:utils",
   ]
 
   external_deps = [
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
+    "utils_base:utils",
   ]
 
   part_name = "init"
@@ -70,28 +70,20 @@ ohos_shared_library("param_watcher") {
     "//base/startup/init_lite/services/log",
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/services/loopevent/include",
-    "//third_party/libuv/include",
     "//third_party/cJSON",
-    "//utils/native/base/include",
-    "//utils/system/safwk/native/include",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
-    "//foundation/distributedschedule/safwk/services/safwk/include",
-    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk",
-    "//foundation/distributedschedule/samgr/adapter/interfaces/innerkits/include",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
   ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param:param_client",
     "//third_party/bounds_checking_function:libsec_static",
-    "//utils/native/base:utils",
   ]
 
   external_deps = [
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
+    "utils_base:utils",
   ]
   install_images = [ "system" ]
   part_name = "init"
