@@ -298,6 +298,9 @@ int ParseTriggerConfig(const cJSON *fileRoot, int (*checkJobValid)(const char *j
 {
     PARAM_CHECK(fileRoot != NULL, return -1, "Invalid file");
     cJSON *triggers = cJSON_GetObjectItemCaseSensitive(fileRoot, TRIGGER_ARR_NAME_IN_JSON);
+    if (triggers == NULL) {
+        return 0;
+    }
     PARAM_CHECK(cJSON_IsArray(triggers), return -1, "Trigger item must array");
 
     int size = cJSON_GetArraySize(triggers);
