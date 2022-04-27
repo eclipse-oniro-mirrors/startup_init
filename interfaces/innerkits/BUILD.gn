@@ -74,9 +74,11 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/utils:libinit_tools",
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//utils/native/base:utils",
     ]
-    external_deps = [ "hilog_native:libhilog_base" ]
+    external_deps = [
+      "hilog_native:libhilog_base",
+      "utils_base:utils",
+    ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
     install_images = [
@@ -97,7 +99,6 @@ if (defined(ohos_lite)) {
     include_dirs = [
       "./include",
       "//base/startup/init_lite/device_info",
-      "//utils/native/base/include",
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//base/startup/init_lite/services/include",
       "//base/startup/init_lite/services/include/param",
@@ -109,7 +110,6 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/param/watcher:param_watcheragent",
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//utils/native/base:utils",
     ]
 
     external_deps = [
@@ -117,6 +117,7 @@ if (defined(ohos_lite)) {
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
       "samgr_standard:samgr_proxy",
+      "utils_base:utils",
     ]
     part_name = "init"
     install_images = [ "system" ]

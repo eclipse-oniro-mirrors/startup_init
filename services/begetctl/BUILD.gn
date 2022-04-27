@@ -37,13 +37,11 @@ ohos_executable("begetctl") {
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/log",
     "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
     "//base/startup/init_lite/services/include/param/",
     "//base/startup/init_lite/services/param/include",
     "//base/startup/init_lite/services/loopevent/include",
     "//third_party/bounds_checking_function/include",
     "//base/startup/init_lite/interfaces/innerkits/sandbox/include",
-    "//utils/native/base/include",
   ]
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
@@ -51,9 +49,9 @@ ohos_executable("begetctl") {
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param:param_client",
     "//third_party/bounds_checking_function:libsec_static",
-    "//utils/native/base:utils",
   ]
 
+  external_deps = [ "utils_base:utils" ]
   if (param_test) {
     sources += [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
     deps += [
@@ -62,21 +60,18 @@ ohos_executable("begetctl") {
       "//base/startup/init_lite/services/param/watcher:param_watcheragent",
       "//base/startup/init_lite/services/utils:libinit_tools",
       "//base/startup/init_lite/services/utils:libinit_utils",
-      "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
     ]
     defines += [
       "OHOS_SERVICE_DUMP",
       "INIT_TEST",
     ]
+    external_deps += [ "startup_l2:syspara" ]
   }
 
   if (build_selinux) {
-    include_dirs += [
-      "//third_party/selinux/libselinux/include/",
-      "//base/security/selinux/interfaces/policycoreutils/include/",
-    ]
+    include_dirs += [ "//third_party/selinux/libselinux/include/" ]
     deps += [ "//third_party/selinux:libselinux" ]
-    external_deps = [ "selinux:libparaperm_checker" ]
+    external_deps += [ "selinux:libparaperm_checker" ]
     defines += [ "WITH_SELINUX" ]
   }
 

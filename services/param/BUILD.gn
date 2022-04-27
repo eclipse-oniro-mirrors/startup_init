@@ -42,7 +42,6 @@ ohos_static_library("param_service") {
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/services/loopevent/include",
     "//base/security/selinux/interfaces/policycoreutils/include",
-    "//third_party/libuv/include",
     "//third_party/cJSON",
   ]
 
