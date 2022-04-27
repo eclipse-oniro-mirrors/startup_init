@@ -221,7 +221,7 @@ static int DoBootchartStart(void)
 {
     char enable[4] = {}; // 4 enable size
     uint32_t size = sizeof(enable);
-    SystemReadParam("init.bootchart.enabled", enable, &size);
+    SystemReadParam("persist.init.bootchart.enabled", enable, &size);
     if (strcmp(enable, "1") != 0) {
         PLUGIN_LOGI("Not bootcharting");
         return 0;
