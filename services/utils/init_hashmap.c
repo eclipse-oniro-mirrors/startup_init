@@ -174,7 +174,8 @@ HashNode *HashMapFind(HashMapHandle handle,
     return GetHashNodeByKey(tab, tab->buckets[hashCode], key, keyCompare);
 }
 
-void HashMapTraverse(HashMapHandle handle, void (*hashNodeTraverse)(const HashNode *node, const void *context), const void *context)
+void HashMapTraverse(HashMapHandle handle, void (*hashNodeTraverse)(const HashNode *node, const void *context),
+    const void *context)
 {
     INIT_ERROR_CHECK(handle != NULL && hashNodeTraverse != NULL, return, "Invalid param");
     HashTab *tab = (HashTab *)handle;
