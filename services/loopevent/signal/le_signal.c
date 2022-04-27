@@ -33,7 +33,7 @@ static LE_STATUS HandleSignalEvent_(const LoopHandle loop, const TaskHandle task
     }
     struct signalfd_siginfo fdsi;
     ssize_t s = read(GetSocketFd(task), &fdsi, sizeof(fdsi));
-    LE_CHECK(s == sizeof(fdsi), return LE_FAILURE, "Failed to read sign");
+    LE_CHECK(s == sizeof(fdsi), return LE_FAILURE, "Failed to read sign %d %d", s, errno);
     SignalTask *sigTask = (SignalTask *)task;
     if (sigTask->processSignal) {
         sigTask->processSignal(&fdsi);

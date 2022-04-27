@@ -100,6 +100,7 @@ typedef int (*LE_IncommingConntect)(const LoopHandle loopHandle, const TaskHandl
 typedef struct {
     LE_BaseInfo baseInfo;
     char *server;
+    int socketId;
     LE_DisConntectComplete disConntectComplete;
     LE_IncommingConntect incommingConntect;
     LE_SendMessageComplete sendMessageComplete;

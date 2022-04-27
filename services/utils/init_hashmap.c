@@ -113,7 +113,6 @@ void HashMapRemove(HashMapHandle handle, const void *key)
     while (node != NULL) {
         int ret = tab->keyCompare(node, key);
         if (ret == 0) {
-            INIT_LOGV("HashMapRemove tableId %d hashCode %d node %p", tab->tableId, hashCode, node);
             if (node == tab->buckets[hashCode]) {
                 tab->buckets[hashCode] = node->next;
             } else {
@@ -173,4 +172,19 @@ HashNode *HashMapFind(HashMapHandle handle,
         "Invalid hashcode %d %d", tab->maxBucket, hashCode);
     INIT_LOGV("HashMapGet tableId %d hashCode %d", tab->tableId, hashCode);
     return GetHashNodeByKey(tab, tab->buckets[hashCode], key, keyCompare);
+}
+
+void HashMapTraverse(HashMapHandle handle, void (*hashNodeTraverse)(const HashNode *node, const void *context),
+    const void *context)
+{
+    INIT_ERROR_CHECK(handle != NULL && hashNodeTraverse != NULL, return, "Invalid param");
+    HashTab *tab = (HashTab *)handle;
+    for (int i = 0; i < tab->maxBucket; i++) {
+        HashNode *node = tab->buckets[i];
+        while (node != NULL) {
+            HashNode *next = node->next;
+            hashNodeTraverse(node, context);
+            node = next;
+        }
+    }
 }

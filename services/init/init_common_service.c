@@ -259,13 +259,15 @@ static int BindCpuCore(Service *service)
     return SERVICE_SUCCESS;
 }
 
-static void ClearEnvironment(void)
+static void ClearEnvironment(Service *service)
 {
-    sigset_t mask;
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGCHLD);
-    sigaddset(&mask, SIGTERM);
-    sigprocmask(SIG_UNBLOCK, &mask, NULL);
+    if (strcmp(service->name, "appspawn") != 0) {
+        sigset_t mask;
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGCHLD);
+        sigaddset(&mask, SIGTERM);
+        sigprocmask(SIG_UNBLOCK, &mask, NULL);
+    }
     return;
 }
 
@@ -297,7 +299,7 @@ int ServiceStart(Service *service)
             DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
         }
 
-        ClearEnvironment();
+        ClearEnvironment(service);
 
         if (!IsOnDemandService(service)) {
             INIT_ERROR_CHECK(CreateServiceSocket(service) >= 0, return SERVICE_FAILURE,

@@ -164,8 +164,11 @@ LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,
     LE_CHECK(info->incommingConntect != NULL, return LE_INVALID_PARAM,
         "Invalid parameters incommingConntect %s", info->server);
 
-    int fd = CreateSocket(info->baseInfo.flags, info->server);
-    LE_CHECK(fd > 0, return LE_FAILURE, "Failed to create socket %s", info->server);
+    int fd = info->socketId;
+    if (info->socketId <= 0) {
+        fd = CreateSocket(info->baseInfo.flags, info->server);
+        LE_CHECK(fd > 0, return LE_FAILURE, "Failed to create socket %s", info->server);
+    }
 
     EventLoop *loop = (EventLoop *)loopHandle;
     StreamServerTask *task = (StreamServerTask *)CreateTask(loopHandle, fd, &info->baseInfo,
