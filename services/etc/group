@@ -66,6 +66,7 @@ device_usage_stats:x:3048:
 faceauth_host:x:3049:
 pinauth_host:x:3050:
 dms:x:5522:
+update:x:6666:
 sensor:x:6688:
 input:x:6696:
 msdp:x:6699:
