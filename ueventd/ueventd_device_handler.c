@@ -182,7 +182,7 @@ static int RemoveDeviceNode(const char *deviceNode, char **symLinks)
     }
     if (symLinks != NULL) {
         for (int i = 0; symLinks[i] != NULL; i++) {
-            char realPath[DEVICE_FILE_SIZE] = {};
+            char realPath[DEVICE_FILE_SIZE] = {0};
             const char *linkName = symLinks[i];
             ssize_t ret = readlink(linkName, realPath, DEVICE_FILE_SIZE - 1);
             if (ret < 0) {
