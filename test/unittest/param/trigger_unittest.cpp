@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <gtest/gtest.h>
 
 #include "init_jobs_internal.h"
 #include "init_param.h"
-#include "init_unittest.h"
 #include "init_utils.h"
+#include "loop_event.h"
 #include "param_manager.h"
-#include "param_service.h"
 #include "param_stub.h"
 #include "param_utils.h"
 #include "securec.h"
@@ -31,13 +31,12 @@ using namespace std;
 static const int triggerBuffer = 512;
 static uint32_t g_execCmdId = 0;
 static int g_matchTrigger = 0;
-static char g_matchTriggerName[triggerBuffer] = { 0 };
+static char g_matchTriggerName[triggerBuffer] = {0};
 static int TestCmdExec(const TriggerNode *trigger, const char *content, uint32_t size)
 {
     PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
     PARAM_LOGI("DoTriggerExecute_ trigger type: %d %s", trigger->type, GetTriggerName(trigger));
-    PARAM_CHECK(trigger->type <= TRIGGER_UNKNOW, return -1,
-        "Invalid trigger type %d", trigger->type);
+    PARAM_CHECK(trigger->type <= TRIGGER_UNKNOW, return -1, "Invalid trigger type %d", trigger->type);
     CommandNode *cmd = GetNextCmdNode((JobNode *)trigger, NULL);
     while (cmd != NULL) {
         g_execCmdId = cmd->cmdKeyIndex;
@@ -49,8 +48,7 @@ static int TestCmdExec(const TriggerNode *trigger, const char *content, uint32_t
 static int TestTriggerExecute(TriggerNode *trigger, const char *content, uint32_t size)
 {
     JobNode *node = (JobNode *)trigger;
-    int ret = memcpy_s(g_matchTriggerName,
-        (int)sizeof(g_matchTriggerName) - 1, node->name, strlen(node->name));
+    int ret = memcpy_s(g_matchTriggerName, (int)sizeof(g_matchTriggerName) - 1, node->name, strlen(node->name));
     EXPECT_EQ(ret, 0);
     g_matchTriggerName[strlen(node->name)] = '\0';
     g_matchTrigger++;
@@ -87,7 +85,7 @@ public:
         EXPECT_EQ(matchCmd != 0, 1);
 
         ReadConfig();
-        ParseInitCfg(PARAM_DEFAULT_PATH "/trigger_test.cfg");
+        ParseInitCfg(STARTUP_INIT_UT_PATH "/trigger_test.cfg");
         // trigger
         PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
         PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
@@ -459,7 +457,7 @@ public:
 
     int TestDumpTrigger()
     {
-        DumpTrigger(GetTriggerWorkSpace());
+        SystemDumpTriggers(1);
         return 0;
     }
 };

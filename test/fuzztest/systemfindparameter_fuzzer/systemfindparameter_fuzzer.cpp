@@ -14,7 +14,7 @@
  */
 
 #include "systemfindparameter_fuzzer.h"
-#include "sys_param.h"
+#include "init_param.h"
 
 static ParamHandle handle;
 

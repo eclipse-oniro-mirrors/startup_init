@@ -58,7 +58,6 @@ ohos_static_library("libsandbox_static") {
   ]
   deps = [
     "//base/startup/init_lite/services/utils:libinit_utils",
-    "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
   ]
   part_name = "init"

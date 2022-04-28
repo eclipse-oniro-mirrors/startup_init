@@ -19,9 +19,8 @@
 #include <unistd.h>
 
 #include "beget_ext.h"
-#include "param.h"
 #include "securec.h"
-#include "sys_param.h"
+#include "init_param.h"
 
 // Refer to parameter limit, value size should not bigger than 96
 #define MAX_REBOOT_OPTION_SIZE PARAM_VALUE_LEN_MAX

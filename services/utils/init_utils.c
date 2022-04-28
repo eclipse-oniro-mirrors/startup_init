@@ -33,6 +33,7 @@
 
 #define MAX_BUF_SIZE  1024
 #define MAX_DATA_BUFFER 2048
+#define MAX_SMALL_BUFFER 512
 
 #ifdef STARTUP_UT
 #define LOG_FILE_NAME "/media/sf_ubuntu/test/log.txt"
@@ -124,16 +125,16 @@ char *ReadFileData(const char *fileName)
     }
     char *buffer = NULL;
     int fd = -1;
-    do {
-        fd = open(fileName, O_RDONLY);
-        INIT_ERROR_CHECK(fd >= 0, break, "Failed to read file %s", fileName);
-
-        buffer = (char *)malloc(MAX_DATA_BUFFER); // fsmanager not create, can not get fileStat st_size
-        INIT_ERROR_CHECK(buffer != NULL, break, "Failed to allocate memory for %s", fileName);
-        ssize_t readLen = read(fd, buffer, MAX_DATA_BUFFER - 1);
-        INIT_ERROR_CHECK(readLen > 0, break, "Failed to read data for %s", fileName);
-        buffer[readLen] = '\0';
-    } while (0);
+    fd = open(fileName, O_RDONLY);
+    INIT_ERROR_CHECK(fd >= 0, return NULL, "Failed to read file %s", fileName);
+    buffer = (char *)malloc(MAX_SMALL_BUFFER); // fsmanager not create, can not get fileStat st_size
+    INIT_ERROR_CHECK(buffer != NULL, close(fd);
+        return NULL, "Failed to allocate memory for %s", fileName);
+    ssize_t readLen = read(fd, buffer, MAX_SMALL_BUFFER - 1);
+    INIT_ERROR_CHECK(readLen > 0, close(fd);
+        free(buffer);
+        return NULL, "Failed to read data for %s", fileName);
+    buffer[readLen] = '\0';
     if (fd != -1) {
         close(fd);
     }
@@ -414,7 +415,7 @@ int InUpdaterMode(void)
 
 int InChargerMode(void)
 {
-    char *data = ReadFileData(PARAM_CMD_LINE);
+    char *data = ReadFileData(BOOT_CMD_LINE);
     char value[CMDLINE_VALUE_LEN_MAX];
     int ret = 0;
 
@@ -473,4 +474,15 @@ const InitArgInfo *GetServieStatusMap(int *size)
         *size = ARRAY_LENGTH(g_servieStatusMap);
     }
     return g_servieStatusMap;
+}
+
+uint32_t GetRandom()
+{
+    uint32_t ulSeed = 0;
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd > 0) {
+        read(fd, &ulSeed, sizeof(ulSeed));
+    }
+    close(fd);
+    return ulSeed;
 }

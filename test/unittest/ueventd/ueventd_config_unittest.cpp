@@ -19,7 +19,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "init_utils.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_parameter.h"

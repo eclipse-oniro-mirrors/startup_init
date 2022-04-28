@@ -18,7 +18,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "sys_param.h"
+#include "init_param.h"
 #include "beget_ext.h"
 #include "securec.h"
 #include "systemcapability.h"

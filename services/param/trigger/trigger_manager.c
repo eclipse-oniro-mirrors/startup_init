@@ -522,8 +522,9 @@ static void DumpTrigger_(const TriggerWorkSpace *workSpace, int type)
     }
 }
 
-void DumpTrigger(const TriggerWorkSpace *workSpace)
+void SystemDumpTriggers(int verbose)
 {
+    TriggerWorkSpace *workSpace = GetTriggerWorkSpace();
     PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace ");
     PARAM_DUMP("Ready to dump all trigger memory \n");
     PARAM_DUMP("workspace queue BOOT info:\n");

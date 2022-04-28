@@ -102,6 +102,14 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
             if ((epoll->waitEvents[index].events & EPOLLOUT) == EPOLLOUT) {
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, Event_Write);
             }
+            if ((epoll->waitEvents[index].events & EPOLLERR) == EPOLLERR) {
+                LE_LOGV("RunLoop_ error %d", epoll->waitEvents[index].data.fd);
+                ProcessEvent(loop, epoll->waitEvents[index].data.fd, Event_Error);
+            }
+            if ((epoll->waitEvents[index].events & EPOLLHUP) == EPOLLHUP) {
+                LE_LOGV("RunLoop_ error %d", epoll->waitEvents[index].data.fd);
+                ProcessEvent(loop, epoll->waitEvents[index].data.fd, Event_Error);
+            }
         }
         if (loop->stop) {
             break;
@@ -121,6 +129,8 @@ LE_STATUS CreateEpollLoop(EventLoop **loop, uint32_t maxevents, uint32_t timeout
         return LE_FAILURE, "Failed to create epoll");
 
     *loop = (EventLoop *)epoll;
+    epoll->loop.maxevents = maxevents;
+    epoll->loop.timeout = timeout;
     epoll->loop.close = Close_;
     epoll->loop.runLoop = RunLoop_;
     epoll->loop.delEvent = DelEvent_;

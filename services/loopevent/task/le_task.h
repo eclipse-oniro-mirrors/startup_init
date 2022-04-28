@@ -48,6 +48,7 @@ typedef struct {
     uint8_t data[0];
 } LE_Buffer;
 
+#define TASK_FLAGS_INVALID 0x80000000
 typedef LE_STATUS (*HandleTaskEvent)(const LoopHandle loop, const TaskHandle task, uint32_t oper);
 typedef void (*HandleTaskClose)(const LoopHandle loop, const TaskHandle task);
 #define TASKINFO \

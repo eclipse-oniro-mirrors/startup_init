@@ -20,7 +20,7 @@
 
 #include "init_file.h"
 #include "init_service_file.h"
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "securec.h"
 
 using namespace testing::ext;

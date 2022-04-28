@@ -14,7 +14,7 @@
  */
 #ifndef INIT_SERVICE_SOCKET_
 #define INIT_SERVICE_SOCKET_
-#ifndef __LITEOS__
+#ifndef __LITEOS_A__
 #include <linux/netlink.h>
 #endif
 #include <stdio.h>
@@ -51,7 +51,7 @@ struct Service_;
 #define SOCKET_OPTION_RCVBUFFORCE 0x004  // SO_RCVBUFFORCE
 
 typedef union {
-#ifndef __LITEOS__
+#ifndef __LITEOS_A__
     struct sockaddr_nl addrnl;
 #endif
     struct sockaddr_un addrun;

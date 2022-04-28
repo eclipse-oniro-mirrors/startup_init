@@ -493,7 +493,7 @@ ohos_fuzztest("SystemWatchParameterFuzzTest") {
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/param:param_client",
-    "//base/startup/init_lite/services/param/watcher:param_watcheragent",
+    "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
     "//third_party/bounds_checking_function:libsec_static",
     "//utils/native/base:utils",
   ]

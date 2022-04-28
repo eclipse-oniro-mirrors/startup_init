@@ -12,23 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <gtest/gtest.h>
 #include <pthread.h>
 #include <sys/eventfd.h>
-#include "init_unittest.h"
-#include "init_utils.h"
-#include "init_param.h"
-#include "init_hashmap.h"
-#include "loop_event.h"
-#include "le_loop.h"
+
+#include "begetctl.h"
 #include "init.h"
-#include "param_utils.h"
-#include "le_task.h"
-#include "le_socket.h"
+#include "init_hashmap.h"
+#include "init_param.h"
+#include "init_utils.h"
 #include "le_epoll.h"
-#include "param_message.h"
+#include "le_loop.h"
+#include "le_socket.h"
+#include "le_task.h"
+#include "loop_event.h"
 #include "param_manager.h"
-#include "param_service.h"
+#include "param_message.h"
+#include "param_utils.h"
 #include "trigger_manager.h"
 
 using namespace testing::ext;
@@ -92,13 +92,13 @@ static void *RunLoopThread(void *arg)
 namespace init_ut {
 class LoopEventUnittest : public testing::Test {
 public:
-    LoopEventUnittest() {};
-    virtual ~LoopEventUnittest() {};
-    static void SetUpTestCase(void) {};
-    static void TearDownTestCase(void) {};
-    void SetUp() {};
-    void TearDown() {};
-    void TestBody(void) {};
+    LoopEventUnittest(){};
+    virtual ~LoopEventUnittest(){};
+    static void SetUpTestCase(void){};
+    static void TearDownTestCase(void){};
+    void SetUp(){};
+    void TearDown(){};
+    void TestBody(void){};
     void StreamTaskTest()
     {
         LE_StreamInfo streamInfo = {};
@@ -106,8 +106,7 @@ public:
         streamInfo.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_CONNECT | TASK_TEST;
         streamInfo.server = (char *)"/data/testpipea";
         TaskHandle clientTaskHandle = nullptr;
-        LE_AcceptStreamClient(LE_GetDefaultLoop(), (TaskHandle)GetParamWorkSpace()->serverTask,
-            &clientTaskHandle, &streamInfo);
+        LE_AcceptStreamClient(LE_GetDefaultLoop(), (TaskHandle)serverTask_, &clientTaskHandle, &streamInfo);
         if (clientTaskHandle == nullptr) {
             return;
         }
@@ -133,7 +132,7 @@ public:
         ((StreamClientTask *)clientTaskHandleb)->stream.base.handleEvent(LE_GetDefaultLoop(),
             clientTaskHandleb, Event_Write);
         ((StreamClientTask *)clientTaskHandleb)->stream.base.innerClose(LE_GetDefaultLoop(), clientTaskHandleb);
-        
+
         TaskHandle clientTaskHandlec = nullptr;
         streamInfo.baseInfo.flags = TASK_STREAM | TASK_TCP | TASK_SERVER;
         streamInfo.server = (char *)"0.0.0.0:10110";
@@ -151,18 +150,17 @@ public:
     }
     void LeTaskTest()
     {
-        ParamTaskPtr serverTask = nullptr;
         LE_StreamServerInfo info = {};
         info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_SERVER | TASK_TEST;
         info.server = (char *)"/data/testpipe";
         info.baseInfo.close = Close;
         info.incommingConntect = IncomingConnect;
-        LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask, &info);
-        if (serverTask == nullptr) {
+        LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask_, &info);
+        if (serverTask_ == nullptr) {
             return;
         }
-        ((StreamServerTask *)serverTask)->base.handleEvent(LE_GetDefaultLoop(), serverTask, Event_Write);
-        ((StreamServerTask *)serverTask)->base.handleEvent(LE_GetDefaultLoop(), serverTask, Event_Read);
+        ((StreamServerTask *)serverTask_)->base.handleEvent(LE_GetDefaultLoop(), serverTask_, Event_Write);
+        ((StreamServerTask *)serverTask_)->base.handleEvent(LE_GetDefaultLoop(), serverTask_, Event_Read);
 
         uint64_t eventId = 0;
         ParamStreamInfo paramStreamInfo = {};
@@ -172,7 +170,7 @@ public:
         paramStreamInfo.recvMessage = ProcessMessage;
         paramStreamInfo.incomingConnect = NULL;
         ParamTaskPtr client = NULL;
-        int ret = ParamStreamCreate(&client, GetParamWorkSpace()->serverTask, &paramStreamInfo, sizeof(ParamWatcher));
+        int ret = ParamStreamCreate(&client, serverTask_, &paramStreamInfo, sizeof(ParamWatcher));
         PARAM_CHECK(ret == 0, return, "Failed to create client");
 
         BufferHandle handle = LE_CreateBuffer(LE_GetDefaultLoop(), 1 + sizeof(eventId));
@@ -186,7 +184,7 @@ public:
             LE_FreeBuffer(LE_GetDefaultLoop(), (TaskHandle)&client, nextBuff);
         }
 
-        ret = ParamStreamCreate(&client, GetParamWorkSpace()->serverTask, &paramStreamInfo, sizeof(ParamWatcher));
+        ret = ParamStreamCreate(&client, serverTask_, &paramStreamInfo, sizeof(ParamWatcher));
         PARAM_CHECK(ret == 0, return, "Failed to create client");
         ((StreamConnectTask *)(&client))->stream.base.handleEvent(LE_GetDefaultLoop(),
             (TaskHandle)(&client), Event_Read);
@@ -237,6 +235,9 @@ public:
         AcceptSocket(-1, TASK_PIPE);
         AcceptSocket(-1, TASK_TCP);
     }
+
+private:
+    ParamTaskPtr serverTask_ = NULL;
 };
 
 HWTEST_F(LoopEventUnittest, StreamTaskTest, TestSize.Level1)
@@ -287,4 +288,4 @@ HWTEST_F(LoopEventUnittest, RunLoopThread, TestSize.Level1)
     epoll_ctl(epoll->epollFd, EPOLL_CTL_MOD, fd, &event);
     pthread_join(tid, nullptr);
 }
-} // namespace init_ut
+}  // namespace init_ut

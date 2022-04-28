@@ -12,19 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cstdio>
-#include <cstring>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "if_system_ability_manager.h"
+#include "init_param.h"
 #include "iservice_registry.h"
 #include "iwatcher.h"
 #include "iwatcher_manager.h"
 #include "message_parcel.h"
+#include "param_manager.h"
 #include "param_utils.h"
-#include "param_request.h"
-#include "sys_param.h"
 #include "system_ability_definition.h"
 #include "watcher.h"
 #include "watcher_manager_kits.h"
@@ -46,10 +43,9 @@ public:
 
     void SetUp()
     {
-        ParamWorkSpace *space = GetClientParamWorkSpace();
-        if (space != nullptr && space->securityLabel != nullptr) {
-            space->securityLabel->cred.uid = 1000; // 1000 test uid
-            space->securityLabel->cred.gid = 1000; // 1000 test gid
+        if (GetParamSecurityLabel() != nullptr) {
+            GetParamSecurityLabel()->cred.uid = 1000;  // 1000 test uid
+            GetParamSecurityLabel()->cred.gid = 1000;  // 1000 test gid
         }
     }
     void TearDown() {}
@@ -66,7 +62,7 @@ public:
         EXPECT_NE(ret, 0);
         // 被禁止
         ret = SystemWatchParameter("test.permission.read.test1*", TestParameterChange, nullptr);
-        EXPECT_EQ(ret, 0);
+        EXPECT_NE(ret, 0);
         return 0;
     }
 
@@ -84,7 +80,7 @@ public:
         EXPECT_NE(ret, 0);
         // 被禁止
         ret = SystemWatchParameter("test.permission.read.test1*", nullptr, nullptr);
-        EXPECT_EQ(ret, 0);
+        EXPECT_NE(ret, 0);
         return 0;
     }
 

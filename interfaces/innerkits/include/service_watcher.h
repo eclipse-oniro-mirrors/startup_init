@@ -16,7 +16,7 @@
 #ifndef SERVICE_WATCH_API_H
 #define SERVICE_WATCH_API_H
 
-#include "sys_param.h"
+#include "init_param.h"
 #include "service_control.h"
 
 #ifdef __cplusplus

@@ -17,7 +17,7 @@
 #include "init_cmds.h"
 #include "init_reboot.h"
 #include "init_param.h"
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "init_utils.h"
 #include "trigger_manager.h"
 

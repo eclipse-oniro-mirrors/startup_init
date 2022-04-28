@@ -32,28 +32,28 @@
 static int CreatePipeServerSocket_(const char *server, int maxClient)
 {
     int listenfd = socket(PF_UNIX, SOCK_STREAM, 0);
-    LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket");
+    LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket errno %d", errno);
 
     unlink(server);
     struct sockaddr_un serverAddr;
     int ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
     LE_CHECK(ret == 0, close(listenfd);
-        return ret, "Failed to memory set. error: %s", strerror(errno));
+        return ret, "Failed to memory set. error: %d", errno);
     serverAddr.sun_family = AF_UNIX;
     ret = strcpy_s(serverAddr.sun_path, sizeof(serverAddr.sun_path), server);
     LE_CHECK(ret == 0, close(listenfd);
-        return ret, "Failed to copy. error: %s", strerror(errno));
+        return ret, "Failed to copy.  error: %d", errno);
     uint32_t size = offsetof(struct sockaddr_un, sun_path) + strlen(server);
     ret = bind(listenfd, (struct sockaddr *)&serverAddr, size);
     LE_CHECK(ret >= 0, close(listenfd);
-        return ret, "Failed to bind socket. error: %s", strerror(errno));
+        return ret, "Failed to bind socket.  error: %d", errno);
 
     SetNoBlock(listenfd);
     ret = listen(listenfd, maxClient);
     LE_CHECK(ret >= 0, close(listenfd);
-        return ret, "Failed to listen socket error: %s", strerror(errno));
+        return ret, "Failed to listen socket  error: %d", errno);
     ret = chmod(server, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-    LE_CHECK(ret == 0, return ret, "Failed to chmod %s, err %d. ", server, errno);
+    LE_CHECK(ret == 0, return -1, "Failed to chmod %s, err %d. ", server, errno);
     LE_LOGV("CreatePipeSocket listen fd: %d server:%s ", listenfd, serverAddr.sun_path);
     return listenfd;
 }
@@ -166,7 +166,7 @@ int CreateSocket(int flags, const char *server)
 {
     int fd = -1;
     int type = flags & 0x0000ff00;
-    LE_LOGV("CreateSocket flags %#x type %#x server %s", flags, type, server);
+    LE_LOGV("CreateSocket flags %x type %x server %s", flags, type, server);
     if (type == TASK_TCP) {
         if (LE_TEST_FLAGS(flags, TASK_SERVER)) {
             fd = CreateTcpServerSocket_(server, LOOP_MAX_CLIENT);

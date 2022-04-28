@@ -17,14 +17,52 @@
 #define BASE_STARTUP_INIT_PARAM_H
 #include <stdint.h>
 #include <stdio.h>
-
+#ifdef PARAM_SUPPORT_TRIGGER
 #include "cJSON.h"
-#include "param.h"
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
+
+#define DEFAULT_PARAM_WAIT_TIMEOUT 30 // 30s
+#define DEFAULT_PARAM_SET_TIMEOUT 10 // 10s
+
+#ifndef PARAM_NAME_LEN_MAX
+#define PARAM_CONST_VALUE_LEN_MAX 4096
+#define PARAM_VALUE_LEN_MAX  96
+#define PARAM_NAME_LEN_MAX  96
+#endif
+
+typedef uint32_t ParamHandle;
+
+typedef enum {
+    PARAM_CODE_ERROR = -1,
+    PARAM_CODE_SUCCESS = 0,
+    PARAM_CODE_INVALID_PARAM = 100,
+    PARAM_CODE_INVALID_NAME,
+    PARAM_CODE_INVALID_VALUE,
+    PARAM_CODE_REACHED_MAX,
+    PARAM_CODE_NOT_SUPPORT,
+    PARAM_CODE_TIMEOUT,
+    PARAM_CODE_NOT_FOUND,
+    PARAM_CODE_READ_ONLY,
+    PARAM_CODE_FAIL_CONNECT,
+    PARAM_CODE_NODE_EXIST,
+    PARAM_CODE_MAX
+} PARAM_CODE;
+
+typedef enum {
+    EVENT_TRIGGER_PARAM,
+    EVENT_TRIGGER_BOOT,
+    EVENT_TRIGGER_PARAM_WAIT,
+    EVENT_TRIGGER_PARAM_WATCH
+} EventType;
+
+#define LOAD_PARAM_NORMAL 0x00
+#define LOAD_PARAM_ONLY_ADD 0x01
+
 /**
  * Init 接口
  * 初始化参数服务
@@ -55,7 +93,7 @@ int LoadDefaultParams(const char *fileName, unsigned int mode);
 
 /**
  * Init 接口
- * 加载默认参数。
+ * 加载持久化参数。
  *
  */
 int LoadPersistParams(void);
@@ -74,22 +112,23 @@ int SystemWriteParam(const char *name, const char *value);
  */
 int SystemReadParam(const char *name, char *value, unsigned int *len);
 
+#ifdef PARAM_SUPPORT_TRIGGER
 /**
- * 对Init接口
+ * 对外接口
  * 触发一个trigger操作。
  *
  */
 void PostTrigger(EventType type, const char *content, uint32_t contentLen);
 
 /**
- * 对Init接口
+ * 对外接口
  * 解析trigger文件。
  *
  */
 int ParseTriggerConfig(const cJSON *fileRoot, int (*checkJobValid)(const char *jobName));
 
 /**
- * 对Init接口
+ * 对外接口
  * 按名字执行对应的trigger。
  *
  */
@@ -97,20 +136,94 @@ void DoTriggerExec(const char *triggerName);
 void DoJobExecNow(const char *triggerName);
 
 /**
- * 对Init接口
+ * 对外接口
  * 按名字添加一个job，用于group支持。
  *
  */
 int AddCompleteJob(const char *name, const char *condition, const char *cmdContent);
 
+void RegisterBootStateChange(void (*bootStateChange)(const char *));
+
 /**
- * 对Init接口
+ * 对外接口
  * dump 参数和trigger信息
  *
  */
-void DumpParametersAndTriggers(void);
+void SystemDumpTriggers(int verbose);
+#endif
 
-void RegisterBootStateChange(void (*bootStateChange)(const char *));
+/**
+ * 对外接口
+ * 设置参数，主要用于其他进程使用，通过管道修改参数。
+ *
+ */
+int SystemSetParameter(const char *name, const char *value);
+
+/**
+ * 对外接口
+ * 查询参数，主要用于其他进程使用，需要给定足够的内存保存参数。
+ * 如果 value == null，获取value的长度
+ * 否则value的大小认为是len
+ *
+ */
+#define SystemGetParameter SystemReadParam
+
+/**
+ * 对外接口
+ * 查询参数，主要用于其他进程使用，找到对应属性的handle。
+ *
+ */
+int SystemFindParameter(const char *name, ParamHandle *handle);
+
+/**
+ * 对外接口
+ * 根据handle获取对应数据的修改标识。
+ * commitId 获取计数变化
+ *
+ */
+int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId);
+
+/**
+ * 外部接口
+ * 遍历参数。
+ *
+ */
+int SystemTraversalParameter(const char *prefix,
+    void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie);
+
+/**
+ * 外部接口
+ * 查询参数，主要用于其他进程使用，需要给定足够的内存保存参数。
+ * 如果 value == null，获取value的长度
+ * 否则value的大小认为是len
+ *
+ */
+int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len);
+
+/**
+ * 外部接口
+ * 获取参数值。
+ *
+ */
+int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len);
+
+/**
+ * 外部接口
+ * 等待某个参数值被修改，阻塞直到参数值被修改或超时
+ *
+ */
+int SystemWaitParameter(const char *name, const char *value, int32_t timeout);
+
+typedef void (*ParameterChangePtr)(const char *key, const char *value, void *context);
+int SystemWatchParameter(const char *keyprefix, ParameterChangePtr change, void *context);
+
+int SysCheckParamExist(const char *name);
+long long GetSystemCommitId(void);
+
+void SystemDumpParameters(int verbose);
+
+int WatchParamCheck(const char *keyprefix);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

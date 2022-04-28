@@ -183,36 +183,7 @@ static void DoExec(const struct CmdArgs *ctx)
     INIT_ERROR_CHECK(pid >= 0, return, "DoExec: failed to fork child process to exec \"%s\"", ctx->argv[0]);
 
     if (pid == 0) {
-#ifdef SUPPORT_PROFILER_HIDEBUG
-        do {
-#ifdef __aarch64__
-            const char *debugSoPath = "/system/lib64/libhidebug.so";
-#else
-            const char *debugSoPath = "/system/lib/libhidebug.so";
-#endif
-            if (access(debugSoPath, F_OK) != 0) {
-                INIT_LOGE("access failed, errno = %d\n", errno);
-                break;
-            }
-            void* handle = dlopen(debugSoPath, RTLD_LAZY);
-            if (handle == NULL) {
-                INIT_LOGE("Failed to dlopen libhidebug.so, %s\n", dlerror());
-                break;
-            }
-            bool (* initParam)();
-            initParam = (bool (*)())dlsym(handle, "InitEnvironmentParam");
-            if (initParam == NULL) {
-                INIT_LOGE("Failed to dlsym InitEnvironmentParam, %s\n", dlerror());
-                dlclose(handle);
-                break;
-            }
-            bool ret = (*initParam)(ctx->argv[0]);
-            if (!ret) {
-                INIT_LOGE("init parameters failed.\n");
-            }
-            dlclose(handle);
-        } while (0);
-#endif
+        OpenHidebug(ctx->argv[0]);
         int ret = execv(ctx->argv[0], ctx->argv);
         if (ret == -1) {
             INIT_LOGE("DoExec: execute \"%s\" failed: %d.", ctx->argv[0], errno);
@@ -587,4 +558,38 @@ const struct CmdTable *GetCmdTable(int *number)
 {
     *number = (int)ARRAY_LENGTH(g_cmdTable);
     return g_cmdTable;
+}
+
+void OpenHidebug(const char *name)
+{
+#ifdef SUPPORT_PROFILER_HIDEBUG
+#ifdef __aarch64__
+    const char *debugSoPath = "/system/lib64/libhidebug.so";
+#else
+    const char *debugSoPath = "/system/lib/libhidebug.so";
+#endif
+    do {
+        if (access(debugSoPath, F_OK) != 0) {
+            INIT_LOGE("access failed, errno = %d\n", errno);
+            break;
+        }
+        void* handle = dlopen(debugSoPath, RTLD_LAZY);
+        if (handle == NULL) {
+            INIT_LOGE("Failed to dlopen libhidebug.so, %s\n", dlerror());
+            break;
+        }
+        bool (* initParam)();
+        initParam = (bool (*)())dlsym(handle, "InitEnvironmentParam");
+        if (initParam == NULL) {
+            INIT_LOGE("Failed to dlsym InitEnvironmentParam, %s\n", dlerror());
+            dlclose(handle);
+            break;
+        }
+        bool ret = (*initParam)(name);
+        if (!ret) {
+            INIT_LOGV("init parameters failed.\n");
+        }
+        dlclose(handle);
+    } while (0);
+#endif
 }

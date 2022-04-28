@@ -175,6 +175,10 @@ LE_STATUS LE_Send(const LoopHandle loopHandle,
     const TaskHandle taskHandle, const BufferHandle buffHandle, uint32_t buffLen)
 {
     EventLoop *loop = (EventLoop *)loopHandle;
+    if (((BaseTask *)taskHandle)->flags & TASK_FLAGS_INVALID) {
+        LE_FreeBuffer(loopHandle, taskHandle, buffHandle);
+        return LE_INVALID_TASK;
+    }
     LE_Buffer *buffer = (LE_Buffer *)buffHandle;
     buffer->dataSize = buffLen;
     if (CheckTaskFlags((BaseTask *)taskHandle, TASK_STREAM | TASK_CONNECT)) {

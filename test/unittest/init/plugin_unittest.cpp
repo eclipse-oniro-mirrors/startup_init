@@ -18,7 +18,7 @@
 #include "init_param.h"
 #include "init_plugin_engine.h"
 #include "init_plugin_manager.h"
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "init_utils.h"
 #include "securec.h"
 

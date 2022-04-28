@@ -22,11 +22,10 @@ ohos_shared_library("syscap") {
 
   include_dirs = [
     "../include",
-    "../../../services/include/param",
+    "//base/startup/init_lite/services/include/param",
   ]
   deps = [
-    "../../../services/log:init_log",
-    "../../../services/param:param_client",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
 

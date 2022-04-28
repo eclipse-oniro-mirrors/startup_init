@@ -12,6 +12,7 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//build/ohos/sa_profile/sa_profile.gni")
+import("//base/startup/init_lite/begetd.gni")
 
 ohos_sa_profile("device_info_profile") {
   sources = [ "etc/3902.xml" ]
@@ -25,19 +26,27 @@ ohos_prebuilt_etc("device_info.cfg") {
 }
 
 ohos_shared_library("deviceinfoservice") {
-  sources = [ "device_info_stub.cpp" ]
+  sources = [
+    "//base/startup/init_lite/interfaces/innerkits/syspara/param_comm.c",
+    "device_info_stub.cpp",
+  ]
 
-  defines = [ "DINFO_LABEL=\"DeviceInfoService\"" ]
   include_dirs = [
     ".",
+    "//base/startup/init_lite/services/include/param",
     "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/syspara_lite/hals/parameter/include",
+    "//base/startup/init_lite/interfaces/innerkits/include/syspara",
+    "//base/startup/init_lite/interfaces/innerkits/syspara",
   ]
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/syspara_lite/hals/parameter:sysparam_hal",
+    "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/services/loopevent:loopevent",
+    "//base/startup/init_lite/services/utils:libinit_tools",
+    "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/openssl:libcrypto_shared",
   ]
 
   external_deps = [
@@ -53,9 +62,11 @@ ohos_shared_library("deviceinfoservice") {
 }
 
 group("device_info_group") {
-  deps = [
-    ":device_info.cfg",
-    ":device_info_profile",
-    ":deviceinfoservice",
-  ]
+  if (param_feature_deviceinfo) {
+    deps = [
+      ":device_info.cfg",
+      ":device_info_profile",
+      ":deviceinfoservice",
+    ]
+  }
 }

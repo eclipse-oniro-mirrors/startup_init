@@ -12,29 +12,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <dlfcn.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
 
 #include "init_utils.h"
+#include "param_manager.h"
 #include "param_security.h"
 #include "param_utils.h"
+#ifdef PARAM_SUPPORT_SELINUX
+#include "selinux_parameter.h"
+#endif
 
-#define SELINUX_LABEL_LEN 128
-typedef struct SELinuxSecurityLabel {
-    ParamSecurityLabel securityLabel;
-    char label[SELINUX_LABEL_LEN];
-} SELinuxSecurityLabel;
-
-static SELinuxSecurityLabel g_localSecurityLabel = {};
-
-static int InitLocalSecurityLabel(ParamSecurityLabel **security, int isInit)
+static SelinuxSpace g_selinuxSpace = {0};
+static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
 {
     UNUSED(isInit);
-    PARAM_LOGI("TestDacGetLabel uid:%d gid:%d euid: %d egid: %d ", getuid(), getgid(), geteuid(), getegid());
-    g_localSecurityLabel.securityLabel.cred.pid = getpid();
-    g_localSecurityLabel.securityLabel.cred.uid = geteuid();
-    g_localSecurityLabel.securityLabel.cred.gid = getegid();
-    *security = &g_localSecurityLabel.securityLabel;
+    PARAM_CHECK(security != NULL, return -1, "Invalid security");
+    security->cred.pid = getpid();
+    security->cred.uid = geteuid();
+    security->cred.gid = getegid();
+    security->flags[PARAM_SECURITY_SELINUX] = 0;
+#if !(defined STARTUP_INIT_TEST || defined LOCAL_TEST)
+    if (g_selinuxSpace.selinuxHandle == NULL) {
+        g_selinuxSpace.selinuxHandle = dlopen("/system/lib/libparaperm_checker.z.so", RTLD_LAZY);
+        PARAM_CHECK(g_selinuxSpace.selinuxHandle != NULL,
+            return -1, "Failed to dlsym selinuxHandle, %s", dlerror());
+    }
+    void *handle = g_selinuxSpace.selinuxHandle;
+    if (g_selinuxSpace.setSelinuxLogCallback == NULL) {
+        g_selinuxSpace.setSelinuxLogCallback = (void (*)())dlsym(handle, "SetSelinuxLogCallback");
+        PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL,
+            return -1, "Failed to dlsym setSelinuxLogCallback %s", dlerror());
+    }
+    if (g_selinuxSpace.setParamCheck == NULL) {
+        g_selinuxSpace.setParamCheck = (SelinuxSetParamCheck)dlsym(handle, "SetParamCheck");
+        PARAM_CHECK(g_selinuxSpace.setParamCheck != NULL, return -1, "Failed to dlsym setParamCheck %s", dlerror());
+    }
+    if (g_selinuxSpace.getParamList == NULL) {
+        g_selinuxSpace.getParamList = (ParamContextsList * (*)()) dlsym(handle, "GetParamList");
+        PARAM_CHECK(g_selinuxSpace.getParamList != NULL, return -1, "Failed to dlsym getParamList %s", dlerror());
+    }
+    if (g_selinuxSpace.getParamLabel == NULL) {
+        g_selinuxSpace.getParamLabel = (int (*)(const char *, char **))dlsym(handle, "GetParamLabel");
+        PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return -1, "Failed to dlsym getParamLabel %s", dlerror());
+    }
+    if (g_selinuxSpace.readParamCheck == NULL) {
+        g_selinuxSpace.readParamCheck = (int (*)(const char *))dlsym(handle, "ReadParamCheck");
+        PARAM_CHECK(g_selinuxSpace.readParamCheck != NULL, return -1, "Failed to dlsym readParamCheck %s", dlerror());
+    }
+    if (g_selinuxSpace.destroyParamList == NULL) {
+        g_selinuxSpace.destroyParamList =
+            (void (*)(ParamContextsList **))dlsym(handle, "DestroyParamList");
+        PARAM_CHECK(g_selinuxSpace.destroyParamList != NULL,
+            return -1, "Failed to dlsym destroyParamList %s", dlerror());
+    }
+#endif
+    PARAM_LOGV("Load sulinux lib success.");
     return 0;
 }
 
@@ -43,76 +77,31 @@ static int FreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
     return 0;
 }
 
-static int EncodeSecurityLabel(const ParamSecurityLabel *srcLabel, char *buffer, uint32_t *bufferSize)
+static int SelinuxGetParamSecurityLabel(const char *path)
 {
-    PARAM_CHECK(bufferSize != NULL, return -1, "Invalid param");
-    if (buffer == NULL) {
-        *bufferSize = sizeof(SELinuxSecurityLabel);
-        return 0;
-    }
-    PARAM_CHECK(*bufferSize >= sizeof(SELinuxSecurityLabel), return -1, "Invalid buffersize %u", *bufferSize);
-    *bufferSize = sizeof(SELinuxSecurityLabel);
-    return memcpy_s(buffer, *bufferSize, srcLabel, sizeof(SELinuxSecurityLabel));
-}
-
-static int DecodeSecurityLabel(ParamSecurityLabel **srcLabel, const char *buffer, uint32_t bufferSize)
-{
-    PARAM_CHECK(bufferSize >= sizeof(SELinuxSecurityLabel), return -1, "Invalid buffersize %u", bufferSize);
-    PARAM_CHECK(srcLabel != NULL && buffer != NULL, return -1, "Invalid param");
-    *srcLabel = &((SELinuxSecurityLabel *)buffer)->securityLabel;
-    return 0;
-}
-
-static int LoadParamLabels(const char *fileName, SecurityLabelFunc label, void *context)
-{
-    FILE *fp = fopen(fileName, "r");
-    PARAM_CHECK(fp != NULL, return -1, "Open file %s fail", fileName);
-
-    SubStringInfo *info = calloc(1, sizeof(SubStringInfo) * (SUBSTR_INFO_DAC + 1));
-    char *buff = (char *)calloc(1, PARAM_BUFFER_SIZE);
-    int infoCount = 0;
-    ParamAuditData auditData = {0};
-    while (info != NULL && buff != NULL && fgets(buff, PARAM_BUFFER_SIZE, fp) != NULL) {
-        buff[PARAM_BUFFER_SIZE - 1] = '\0';
-        int subStrNumber = GetSubStringInfo(buff, strlen(buff), ' ', info, SUBSTR_INFO_DAC + 1);
-        if (subStrNumber <= SUBSTR_INFO_DAC) {
+    UNUSED(path);
+    PARAM_CHECK(g_selinuxSpace.getParamList != NULL, return DAC_RESULT_FORBIDED, "Invalid getParamList");
+    ParamContextsList *head = g_selinuxSpace.getParamList();
+    ParamContextsList *node = head;
+    int count = 0;
+    while (node != NULL) {
+        PARAM_LOGV("GetParamSecurityLabel name %s content %s", node->info.paraName, node->info.paraContext);
+        if (node->info.paraContext == NULL || node->info.paraName == NULL) {
+            node = node->next;
             continue;
         }
-        auditData.name = info[SUBSTR_INFO_NAME].value;
-        auditData.label = info[SUBSTR_INFO_LABEL].value;
-        int ret = label(&auditData, context);
-        PARAM_CHECK(ret == 0, continue, "Failed to write param info %d %s", ret, buff);
-        infoCount++;
+        int ret = AddWorkSpace(node->info.paraContext, 0, PARAM_WORKSPACE_DEF);
+        PARAM_CHECK(ret == 0, continue,
+            "Failed to add selinx workspace %s %s", node->info.paraName, node->info.paraContext);
+        node = node->next;
+        count++;
     }
-    if (buff != NULL) {
-        free(buff);
-    }
-    if (info != NULL) {
-        free(info);
-    }
-    (void)fclose(fp);
-    PARAM_LOGI("Load parameter info %d success %s", infoCount, fileName);
+    g_selinuxSpace.destroyParamList(&head);
+    int ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, 0, PARAM_WORKSPACE_MAX);
+    PARAM_CHECK(ret == 0, return -1,
+        "Failed to add selinx workspace %s %s", node->info.paraName, node->info.paraContext);
+
     return 0;
-}
-
-static int ProcessParamFile(const char *fileName, void *context)
-{
-    LabelFuncContext *cxt = (LabelFuncContext *)context;
-    return LoadParamLabels(fileName, cxt->label, cxt->context);
-}
-
-static int GetParamSecurityLabel(SecurityLabelFunc label, const char *path, void *context)
-{
-    PARAM_CHECK(label != NULL, return -1, "Invalid param");
-    int ret;
-    struct stat st;
-    LabelFuncContext cxt = { label, context };
-    if ((stat(path, &st) == 0) && !S_ISDIR(st.st_mode)) {
-        ret = ProcessParamFile(path, &cxt);
-    } else {
-        ret = ReadFileInDir(path, ".para.selinux", ProcessParamFile, &cxt);
-    }
-    return ret;
 }
 
 static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char *fileName, int flags)
@@ -122,34 +111,76 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
     return 0;
 }
 
-static int CheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, uint32_t mode)
+static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
-    PARAM_LOGI("CheckParamPermission ");
-    PARAM_CHECK(srcLabel != NULL && auditData != NULL && auditData->name != NULL, return -1, "Invalid param");
-    return 0;
+    int ret = DAC_RESULT_FORBIDED;
+    PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL, return ret, "Invalid setSelinuxLogCallback");
+    PARAM_CHECK(g_selinuxSpace.setParamCheck != NULL, return ret, "Invalid setParamCheck");
+    PARAM_CHECK(g_selinuxSpace.readParamCheck != NULL, return ret, "Invalid readParamCheck");
+    // log
+    g_selinuxSpace.setSelinuxLogCallback();
+
+    // check
+    struct ucred uc;
+    uc.pid = srcLabel->cred.pid;
+    uc.uid = srcLabel->cred.uid;
+    uc.gid = srcLabel->cred.gid;
+    if (mode == DAC_WRITE) {
+        ret = g_selinuxSpace.setParamCheck(name, &uc);
+    } else {
+        ret = g_selinuxSpace.readParamCheck(name);
+    }
+    if (ret != 0) {
+        PARAM_LOGI("Selinux check name %s pid %d uid %d %d result %d", name, uc.pid, uc.uid, uc.gid, ret);
+    }
+    return ret;
 }
 
-PARAM_STATIC int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
+int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
 {
     PARAM_CHECK(ops != NULL, return -1, "Invalid param");
+    int ret = strcpy_s(ops->name, sizeof(ops->name), "selinux");
     ops->securityGetLabel = NULL;
-    ops->securityDecodeLabel = NULL;
-    ops->securityEncodeLabel = NULL;
     ops->securityInitLabel = InitLocalSecurityLabel;
     ops->securityCheckFilePermission = CheckFilePermission;
-    ops->securityCheckParamPermission = CheckParamPermission;
+    ops->securityCheckParamPermission = SelinuxCheckParamPermission;
     ops->securityFreeLabel = FreeLocalSecurityLabel;
     if (isInit) {
-        ops->securityGetLabel = GetParamSecurityLabel;
-        ops->securityDecodeLabel = DecodeSecurityLabel;
-    } else {
-        ops->securityEncodeLabel = EncodeSecurityLabel;
+        ops->securityGetLabel = SelinuxGetParamSecurityLabel;
     }
-    return 0;
+    return ret;
 }
-#ifdef PARAM_SUPPORT_SELINUX
-int RegisterSecurityOps(ParamSecurityOps *ops, int isInit)
+
+const char *GetSelinuxContent(const char *name, char *buffer, uint32_t size)
 {
-    return RegisterSecuritySelinuxOps(ops, isInit);
+    PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return NULL, "Invalid getParamLabel");
+    PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL, return NULL, "Invalid setSelinuxLogCallback");
+    // log
+    g_selinuxSpace.setSelinuxLogCallback();
+
+    char *label = NULL;
+    int ret = g_selinuxSpace.getParamLabel(name, &label);
+    if (ret == 0 && label != NULL) {
+        if (strcpy_s(buffer, size, label) == 0) {
+            free(label);
+            PARAM_LOGV("GetSelinuxContent name %s label %s", name, buffer);
+            return buffer;
+        }
+        free(label);
+    }
+    PARAM_LOGE("Failed to get content for name %s ret %d", name, ret);
+    strcpy_s(buffer, size, WORKSPACE_NAME_DEF_SELINUX);
+    return buffer;
+}
+
+#if defined STARTUP_INIT_TEST || defined LOCAL_TEST
+void SetSelinuxOps(const SelinuxSpace *space)
+{
+    g_selinuxSpace.setSelinuxLogCallback = space->setSelinuxLogCallback;
+    g_selinuxSpace.setParamCheck = space->setParamCheck;
+    g_selinuxSpace.getParamLabel = space->getParamLabel;
+    g_selinuxSpace.readParamCheck = space->readParamCheck;
+    g_selinuxSpace.getParamList = space->getParamList;
+    g_selinuxSpace.destroyParamList = space->destroyParamList;
 }
 #endif

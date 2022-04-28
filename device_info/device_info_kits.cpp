@@ -22,11 +22,6 @@
 #include "system_ability_definition.h"
 #include "securec.h"
 
-namespace {
-static constexpr int UDID_LEN = 65;
-static constexpr int MAX_SERIAL_LEN = 65;
-} // namespace name
-
 namespace OHOS {
 namespace device_info {
 DeviceInfoKits::DeviceInfoKits() {}
@@ -96,48 +91,4 @@ int32_t DeviceInfoKits::GetSerialID(std::string& result)
 }
 } // namespace device_info
 } // namespace OHOS
-
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
 #endif
-#endif /* __cplusplus */
-
-int AclGetDevUdid(char *udid, int size)
-{
-    if (udid == nullptr || size < UDID_LEN) {
-        return -1;
-    }
-    printf("AclGetDevUdid \n");
-    DINFO_LOGI("AclGetDevUdid");
-    std::string result = {};
-    OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
-    int ret = instance.GetUdid(result);
-    if (ret == 0) {
-        ret = strcpy_s(udid, size, result.c_str());
-    }
-    printf("GetDevUdid %s \n", udid);
-    DINFO_LOGI("GetDevUdid %s", udid);
-    return ret;
-}
-
-const char *AclGetSerial(void)
-{
-    DINFO_LOGI("AclGetSerial");
-    static char serialNumber[MAX_SERIAL_LEN] = {"1234567890"};
-    std::string result = {};
-    OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
-    int ret = instance.GetSerialID(result);
-    if (ret == 0) {
-        ret = strcpy_s(serialNumber, sizeof(serialNumber), result.c_str());
-        DINFO_CHECK(ret == 0, return nullptr, "Failed to copy");
-    }
-    DINFO_LOGI("GetSerial %s", serialNumber);
-    return serialNumber;
-}
-
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
-#endif /* __cplusplus */

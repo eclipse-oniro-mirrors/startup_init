@@ -18,7 +18,7 @@
 #include "iservice_registry.h"
 #include "iwatcher.h"
 #include "iwatcher_manager.h"
-#include "param_request.h"
+#include "init_param.h"
 #include "system_ability_definition.h"
 #include "watcher_utils.h"
 

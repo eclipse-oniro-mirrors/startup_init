@@ -25,13 +25,13 @@ init_common_sources = [
 
 if (defined(ohos_lite)) {
   # feature: init
-  executable("init_lite") {
+  executable("lite_init") {
     output_name = "init"
     defines = [
-      "_GNU_SOURCE",  #syscall function need this macro definition
+      "_GNU_SOURCE",
       "OHOS_LITE",
+      "__MUSL__",
     ]
-    defines += [ "__MUSL__" ]
     sources = [
       "init/adapter/init_adapter.c",
       "init/lite/init.c",
@@ -40,49 +40,49 @@ if (defined(ohos_lite)) {
       "init/lite/init_reboot.c",
       "init/lite/init_service.c",
       "init/lite/init_signal_handler.c",
-      "log/init_log.c",
-      "utils/init_hashmap.c",
-      "utils/init_utils.c",
-      "utils/list.c",
     ]
-
     sources += init_common_sources
 
     include_dirs = [
       "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/include/param",
       "//base/startup/init_lite/services/init/include",
       "//base/startup/init_lite/services/log",
       "//base/startup/init_lite/services/loopevent/include",
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
-      "//base/startup/syspara_lite/interfaces/kits",
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
       "//base/startup/init_lite/interfaces/innerkits/fd_holder",
     ]
 
     cflags = [ "-Wall" ]
-
+    ldflags = []
     deps = [
       "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
-      "//base/startup/init_lite/initsync:initsync",
+      "//base/startup/init_lite/services/log:init_log",
       "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/syspara_lite/frameworks/parameter:parameter",
-      "//build/lite/config/component/cJSON:cjson_shared",
-      "//third_party/bounds_checking_function:libsec_shared",
+      "//base/startup/init_lite/services/param:param_init",
+      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//build/lite/config/component/cJSON:cjson_static",
+      "//third_party/bounds_checking_function:libsec_static",
     ]
-    ldflags = []
+
     if (ohos_kernel_type == "liteos_a") {
+      defines += [ "__LITEOS_A__" ]
       include_dirs += [
         "//kernel/liteos_a/syscall",
-        "//base/startup/init_lite/interfaces/kits",
+        "//kernel/liteos_a/kernel/include",
+        "//base/startup/init_lite/interfaces/kits/syscap",
         "//base/startup/init_lite/initsync/include",
       ]
       deps += [ "//base/startup/init_lite/initsync:initsync" ]
     }
     if (ohos_kernel_type == "linux") {
-      defines += [ "NEED_EXEC_RCS_LINUX" ]
-      defines += [ "_GNU_SOURCE" ]
+      defines += [
+        "NEED_EXEC_RCS_LINUX",
+        "__LINUX__",
+      ]
       ldflags += [
         "-lm",
         "-lpthread",
@@ -96,7 +96,46 @@ if (defined(ohos_lite)) {
 
   if (ohos_build_type == "debug") {
     group("unittest") {
-      deps = [ "//base/startup/init_lite/test/unittest/common:unittest" ]
+      deps = [ "//base/startup/init_lite/test/unittest/lite:init_test" ]
+    }
+  }
+
+  copy("ohos.para") {
+    sources = [ "//base/startup/init_lite/services/etc/param/ohos.para" ]
+    outputs = [ "$root_out_dir/system/etc/param/ohos.para" ]
+  }
+
+  copy("ohos.para.dac") {
+    sources = [ "//base/startup/init_lite/services/etc/param/ohos.para.dac" ]
+    outputs = [ "$root_out_dir/system/etc/param/ohos.para.dac" ]
+  }
+  copy("ohos.const") {
+    sources =
+        [ "//base/startup/init_lite/services/etc/param/ohos_const/ohos.para" ]
+    outputs = [ "$root_out_dir/system/etc/param/ohos_const/ohos.para" ]
+  }
+
+  copy("ohos.passwd") {
+    sources = [ "//base/startup/init_lite/services/etc_lite/passwd" ]
+    outputs = [ "$root_out_dir/etc/passwd" ]
+  }
+  copy("ohos.group") {
+    sources = [ "//base/startup/init_lite/services/etc_lite/group" ]
+    outputs = [ "$root_out_dir/etc/group" ]
+  }
+
+  group("init_lite") {
+    deps = [
+      ":lite_init",
+      ":ohos.const",
+      ":ohos.para",
+      ":ohos.para.dac",
+    ]
+    if (ohos_kernel_type == "linux") {
+      deps += [
+        ":ohos.group",
+        ":ohos.passwd",
+      ]
     }
   }
 } else {
@@ -148,7 +187,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox_static",
       "//base/startup/init_lite/services/log:init_log",
       "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/param:param_service",
+      "//base/startup/init_lite/services/param:param_init",
       "//base/startup/init_lite/services/utils:libinit_tools",
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
@@ -180,7 +219,7 @@ if (defined(ohos_lite)) {
       cflags += [ "-DWITH_SELINUX" ]
     }
 
-    defines = []
+    defines = [ "PARAM_SUPPORT_TRIGGER" ]
     if (param_test) {
       defines += [
         "OHOS_SERVICE_DUMP",
@@ -218,13 +257,12 @@ if (defined(ohos_lite)) {
       ":init",
       ":init_etc",
       "//base/startup/init_lite/services/param:param_client",
-      "//base/startup/init_lite/services/param:param_service",
+      "//base/startup/init_lite/services/param:param_init",
     ]
     if (param_feature_watcher) {
       deps += [
         "//base/startup/init_lite/services/param/watcher:param_watcher",
         "//base/startup/init_lite/services/param/watcher:param_watcher.rc",
-        "//base/startup/init_lite/services/param/watcher:param_watcheragent",
         "//base/startup/init_lite/services/param/watcher/sa_profile:param_watcher_profile",
       ]
     }

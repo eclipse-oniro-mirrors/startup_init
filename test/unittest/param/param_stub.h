@@ -14,27 +14,32 @@
  */
 #ifndef PARAM_TEST_STUB_
 #define PARAM_TEST_STUB_
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <gtest/gtest.h>
+#include <time.h>
+
 #include "param_manager.h"
 #include "param_security.h"
-#include "param_service.h"
 #include "param_utils.h"
 
 #ifdef __cplusplus
-#if __cplusplus
+#    if __cplusplus
 extern "C" {
-#endif
-#endif
-extern int RunParamCommand(int argc, char *argv[]);
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
+#    endif
 #endif
 
-void TestClient(int index);
-int TestEncodeSecurityLabel(const ParamSecurityLabel *srcLabel, char *buffer, uint32_t *bufferSize);
-int TestDecodeSecurityLabel(ParamSecurityLabel **srcLabel, const char *buffer, uint32_t bufferSize);
-int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, uint32_t mode);
+void PrepareInitUnitTestEnv(void);
+void TestSetSelinuxOps(void);
+void SetTestPermissionResult(int result);
+
+int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
 int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel);
 
-#endif // PARAM_TEST_STUB_
+#ifdef __cplusplus
+#    if __cplusplus
+}
+#    endif
+#endif
+#endif  // PARAM_TEST_STUB_

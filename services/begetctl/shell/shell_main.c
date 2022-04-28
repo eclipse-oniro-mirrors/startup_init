@@ -76,25 +76,26 @@ int main(int argc, char *args[])
     SetInitLogLevel(0);
     BSH_LOGV("BShellEnvStart %d", argc);
     do {
-        if (g_handle == NULL) {
-            BShellInfo info = {PARAM_SHELL_DEFAULT_PROMPT, ShellInput, ShellOuput};
-            BShellEnvInit(&g_handle, &info);
+        BShellHandle handle = GetShellHandle();
+        if (handle == NULL) {
+            printf("Failed to get shell handle \n");
+            return 0;
         }
-        const ParamInfo *param = BShellEnvGetReservedParam(g_handle, PARAM_REVERESD_NAME_CURR_PARAMETER);
+        const ParamInfo *param = BShellEnvGetReservedParam(handle, PARAM_REVERESD_NAME_CURR_PARAMETER);
         BSH_CHECK(param != NULL && param->type == PARAM_STRING, break, "Failed to get revered param");
-        BShellEnvSetParam(g_handle, param->name, param->desc, param->type, (void *)"");
+        BShellEnvSetParam(handle, param->name, param->desc, param->type, (void *)"");
         if (argc > 1) {
-            int ret = SetParamShellPrompt(g_handle, args[1]);
+            int ret = SetParamShellPrompt(handle, args[1]);
             if (ret != 0) {
                 break;
             }
         }
-        BShellParamCmdRegister(g_handle, 1);
+        BShellParamCmdRegister(handle, 1);
 #ifdef INIT_TEST
-        BShellCmdRegister(g_handle, 1);
+        BShellCmdRegister(handle, 1);
 #endif
-        BShellEnvStart(g_handle);
-        BShellEnvLoop(g_handle);
+        BShellEnvStart(handle);
+        BShellEnvLoop(handle);
     } while (0);
     demoExit();
     tcsetattr(0, TCSAFLUSH, &terminalState);

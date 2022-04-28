@@ -11,116 +11,205 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//base/startup/init_lite/begetd.gni")
-import("//build/ohos.gni")
 
-declare_args() {
-  param_security = "dac"
-}
+param_comm_sources = [
+  "adapter/param_dac.c",
+  "manager/param_manager.c",
+  "manager/param_trie.c",
+  "manager/param_utils.c",
+]
 
-ohos_static_library("param_service") {
-  sources = [
-    "adapter/param_libuvadp.c",
+if (!defined(ohos_lite) || ohos_kernel_type == "linux") {
+  param_service_sources = [
+    "linux/param_osadp.c",
+    "linux/param_msgadp.c",
+    "linux/param_message.c",
+    "linux/param_service.c",
     "adapter/param_persistadp.c",
-    "manager/param_manager.c",
-    "manager/param_message.c",
-    "manager/param_trie.c",
-    "manager/param_utils.c",
-    "service/param_persist.c",
-    "service/param_service.c",
+    "manager/param_persist.c",
+  ]
+
+  param_trigger_sources = [
     "trigger/trigger_checker.c",
     "trigger/trigger_manager.c",
     "trigger/trigger_processor.c",
   ]
-
-  include_dirs = [
-    "include",
-    "adapter",
-    "//base/startup/init_lite/services/include/param",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/init/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/loopevent/include",
-    "//base/security/selinux/interfaces/policycoreutils/include",
-    "//third_party/cJSON",
-  ]
-
-  defines = [ "PARAM_SUPPORT_SAVE_PERSIST" ]
-  if (build_selinux) {
-    defines += [ "WITH_SELINUX" ]
-  }
-
-  if (defined(boot_kernel_extended_cmdline)) {
-    defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
-  }
-
-  if (param_security == "selinux") {
-    sources += [ "adapter/param_selinux.c" ]
-    defines += [ "PARAM_SUPPORT_SELINUX" ]
-  } else {
-    sources += [ "adapter/param_dac.c" ]
-    defines += [ "PARAM_SUPPORT_DAC" ]
-    if (use_musl) {
-      defines += [ "PARAM_SUPPORT_DAC_CHECK" ]
-    }
-  }
-
-  deps = [
-    "//base/startup/init_lite/services/log:init_log",
-    "//base/startup/init_lite/services/loopevent:loopevent",
-    "//base/startup/init_lite/services/utils:libinit_tools",
-    "//base/startup/init_lite/services/utils:libinit_utils",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
-  part_name = "init"
-  subsystem_name = "startup"
 }
 
-ohos_shared_library("param_client") {
-  sources = [
-    "//base/startup/init_lite/services/utils/init_utils.c",
-    "client/param_request.c",
-    "manager/param_manager.c",
-    "manager/param_message.c",
-    "manager/param_trie.c",
-    "manager/param_utils.c",
+action("lite_const_param_to") {
+  script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
+  args = [
+    "--source",
+    rebase_path("//base/startup/init_lite/services/etc/param/ohos_const/ohos.para"),
+    "--dest_dir",
+    rebase_path("$root_out_dir/gen/init_lite/"),
+    "--priority", "0"
   ]
+  outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
+}
 
-  include_dirs = [
-    "include",
-    "//base/startup/init_lite/services/include/param",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
-    "//base/security/selinux/interfaces/policycoreutils/include",
-    "//base/startup/init_lite/services/loopevent/include",
+action("lite_ohos_param_to") {
+  script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
+  args = [
+    "--source",
+    rebase_path("//base/startup/init_lite/services/etc/param/ohos.para"),
+    "--dest_dir",
+    rebase_path("$root_out_dir/gen/init_lite/"),
+    "--priority", "0"
   ]
+  outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
+}
 
-  defines = [ "_GNU_SOURCE" ]
+param_include_dirs = [
+  "include",
+  "adapter",
+  "linux",
+  "//base/startup/init_lite/services/include/param",
+  "//base/startup/init_lite/services/include",
+  "//base/startup/init_lite/services/init/include",
+  "//base/startup/init_lite/services/log",
+  "//base/startup/init_lite/interfaces/innerkits/include",
+  "//base/startup/init_lite/services/loopevent/include",
+  "//base/security/selinux/interfaces/policycoreutils/include",
+  "//third_party/libuv/include",
+  "//third_party/bounds_checking_function/include",
+  "//third_party/cJSON",
+]
 
-  if (build_selinux) {
-    defines += [ "WITH_SELINUX" ]
-  }
-
-  if (param_security == "selinux") {
-    sources += [ "adapter/param_selinux.c" ]
-    defines += [ "PARAM_SUPPORT_SELINUX" ]
-  } else {
-    sources += [ "adapter/param_dac.c" ]
-    defines += [ "PARAM_SUPPORT_DAC" ]
-    if (use_musl) {
-      defines += [ "PARAM_SUPPORT_DAC_CHECK" ]
+if (defined(ohos_lite)) {
+  static_library("param_init") {
+    defines = []
+    deps = []
+    sources = param_comm_sources
+    include_dirs = param_include_dirs
+    if (defined(boot_kernel_extended_cmdline)) {
+      defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
+    }
+    defines += [
+      "_GNU_SOURCE",
+    ]
+    if (ohos_kernel_type == "linux") {
+      sources += param_service_sources
+      sources += param_trigger_sources
+      defines += [ "__LINUX__"]
+    } else if (ohos_kernel_type == "liteos_a") {
+      sources += [
+        "adapter/param_persistadp.c",
+        "manager/param_persist.c",
+        "liteos/param_service.c",
+        "liteos/param_osadp.c",
+      ]
+      defines += [
+        "WORKSPACE_AREA_NEED_MUTEX",
+        "PARAM_PERSIST_SAVE_MUTEX",
+        "PARAMWORKSPACE_NEED_MUTEX",
+        "__LITEOS_A__",
+        "PARAM_SUPPORT_CYCLE_CHECK"
+      ]
+      deps += [
+        ":lite_const_param_to",
+        ":lite_ohos_param_to"
+      ]
+      include_dirs += [ "$root_out_dir/gen/init_lite" ]
+      defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
     }
   }
 
-  deps = [ "//third_party/bounds_checking_function:libsec_static" ]
-  if (is_standard_system) {
-    deps += [ "//base/startup/init_lite/services/log:agent_log" ]
+  static_library("param_client") {
+    sources = param_comm_sources
+    include_dirs = param_include_dirs
+    defines = [ "_GNU_SOURCE" ]
+    if (ohos_kernel_type == "linux") {
+      sources += [
+        "linux/param_request.c",
+        "linux/param_message.c",
+        "linux/param_osadp.c",
+      ]
+      defines += [ "__LINUX__"]
+    } else if (ohos_kernel_type == "liteos_a") {
+      sources += [
+        "adapter/param_persistadp.c",
+        "manager/param_persist.c",
+        "liteos/param_client.c",
+        "liteos/param_osadp.c",
+      ]
+      defines += [
+        "__LITEOS_A__",
+        "WORKSPACE_AREA_NEED_MUTEX",
+        "PARAM_PERSIST_SAVE_MUTEX",
+        "PARAMWORKSPACE_NEED_MUTEX",
+      ]
+    } else if (ohos_kernel_type == "liteos_m") {
+      sources += [
+        "adapter/param_persistadp.c",
+        "manager/param_persist.c",
+        "liteos/param_client.c",
+        "liteos/param_osadp.c",
+      ]
+      defines += [
+        "__LITEOS_M__",
+        "WORKSPACE_AREA_NEED_MUTEX",
+        "PARAM_PERSIST_SAVE_MUTEX",
+        "PARAMWORKSPACE_NEED_MUTEX",
+        "DATA_PATH=\"${config_ohos_startup_init_lite_data_path}\"",
+      ]
+      deps = [
+        ":lite_const_param_to",
+        ":lite_ohos_param_to"
+      ]
+      include_dirs += [ "$root_out_dir/gen/init_lite" ]
+      defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
+    }
   }
-  install_images = [
-    "system",
-    "updater",
-  ]
-  part_name = "init"
+} else {
+  import("//build/ohos.gni")
+
+  ohos_static_library("param_init") {
+    sources = param_comm_sources
+    sources += param_service_sources
+    sources += param_trigger_sources
+    include_dirs = param_include_dirs
+
+    defines = [
+      "_GNU_SOURCE",
+    ]
+
+    if (defined(boot_kernel_extended_cmdline)) {
+      defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
+    }
+
+    if (build_selinux) {
+      sources += [ "adapter/param_selinux.c" ]
+      defines += [ "PARAM_SUPPORT_SELINUX" ]
+    }
+
+    deps = [
+      "//base/startup/init_lite/services/log:init_log",
+      "//base/startup/init_lite/services/loopevent:loopevent",
+      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//base/startup/init_lite/services/utils:libinit_utils",
+    ]
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
+  ohos_static_library("param_client") {
+    sources = param_comm_sources
+    sources += [
+      "linux/param_request.c",
+      "linux/param_message.c",
+      "linux/param_osadp.c",
+    ]
+    include_dirs = param_include_dirs
+
+    defines = [ "_GNU_SOURCE" ]
+    if (build_selinux) {
+      sources += [ "adapter/param_selinux.c" ]
+      defines += [
+        "PARAM_SUPPORT_SELINUX",
+        "PARAMWORKSPACE_NEED_MUTEX"
+      ]
+    }
+    part_name = "init"
+  }
 }

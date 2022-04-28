@@ -268,7 +268,8 @@ static int SystemDump(int id, const char *name, int argc, const char **argv)
     INIT_ERROR_CHECK(argv != NULL && argc >= 1, return 0, "Invalid install parameter");
     INIT_LOGI("Dump system info %s", argv[0]);
     DumpAllServices();
-    DumpParametersAndTriggers();
+    SystemDumpParameters(1);
+    SystemDumpTriggers(1);
     return 0;
 }
 #endif
@@ -289,12 +290,6 @@ static void IsEnableSandbox(void)
         INIT_LOGI("Disable sandbox.");
         g_enableSandbox = false;
     }
-}
-
-// Init provide this function for static lib link
-__attribute__((weak)) int SystemGetParameter(const char *name, char *value, unsigned int *len)
-{
-    return SystemReadParam(name, value, len);
 }
 
 static void InitLoadParamFiles(void)

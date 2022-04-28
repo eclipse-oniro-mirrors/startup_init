@@ -15,7 +15,7 @@
 
 #include "systemgetparameter_fuzzer.h"
 
-#include "sys_param.h"
+#include "init_param.h"
 
 namespace OHOS {
     bool FuzzSystemGetParameter(const uint8_t* data, size_t size)

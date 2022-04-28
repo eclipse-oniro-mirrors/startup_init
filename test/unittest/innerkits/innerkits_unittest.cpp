@@ -17,7 +17,7 @@
 #include <sys/mount.h>
 #include "fs_manager/fs_manager.h"
 #include "init_log.h"
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "securec.h"
 
 using namespace testing::ext;

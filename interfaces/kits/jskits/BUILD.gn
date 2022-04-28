@@ -1,0 +1,68 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+ohos_shared_library("deviceinfo1") {
+  include_dirs = [
+    "//base/startup/init_lite/interfaces/innerkits/include",
+  ]
+
+  sources = [ "src/native_deviceinfo_js.cpp" ]
+
+  deps = [
+    "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+  ]
+  external_deps = [ "napi:ace_napi" ]
+  relative_install_dir = "module"
+  subsystem_name = "startup"
+  part_name = "startup_l2"
+}
+
+ohos_shared_library("systemparameter1") {
+  include_dirs = [
+    "src",
+  ]
+
+  sources = [
+    "src/native_parameters_js.cpp",
+    "src/native_parameters_watch.cpp",
+  ]
+
+  deps = [
+    "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+  ]
+
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "napi:ace_napi",
+  ]
+  relative_install_dir = "module"
+  subsystem_name = "startup"
+  part_name = "startup_l2"
+}
+
+group("syspara_js_init") {
+  deps = [
+    "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+  ]
+  if (support_jsapi) {
+    deps += [
+      ":deviceinfo1",
+      ":systemparameter1",
+    ]
+  }
+}

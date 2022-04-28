@@ -17,6 +17,9 @@
 #define BASE_STARTUP_PARAM_PERSIST_H
 #include <stdint.h>
 #include <sys/types.h>
+
+#include "param_osadp.h"
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -27,25 +30,20 @@ typedef int (*PersistParamGetPtr)(const char *name, const char *value, void *con
 
 typedef void *PERSIST_SAVE_HANDLE;
 typedef struct {
-    int (*load)(PersistParamGetPtr persistParamGet, void *context);
+    int (*load)();
     int (*save)(const char *name, const char *value);
     int (*batchSaveBegin)(PERSIST_SAVE_HANDLE *handle);
     int (*batchSave)(PERSIST_SAVE_HANDLE handle, const char *name, const char *value);
     void (*batchSaveEnd)(PERSIST_SAVE_HANDLE handle);
 } PersistParamOps;
 
-#ifndef PARAM_SUPPORT_SAVE_PERSIST
-#define PARAM_SUPPORT_SAVE_PERSIST 1 // default
-#endif
-
-#ifdef PARAM_SUPPORT_SAVE_PERSIST
 int RegisterPersistParamOps(PersistParamOps *ops);
-#endif
 
 #ifndef STARTUP_INIT_TEST
 #define PARAM_MUST_SAVE_PARAM_DIFF 10 // 10s
 #else
 #define PARAM_MUST_SAVE_PARAM_DIFF 1
+void TimerCallbackForSave(ParamTaskPtr timer, void *context);
 #endif
 
 #ifdef __cplusplus

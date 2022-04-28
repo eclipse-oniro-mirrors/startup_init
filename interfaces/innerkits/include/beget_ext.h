@@ -15,6 +15,7 @@
 
 #ifndef BEGET_EXT_API_H
 #define BEGET_EXT_API_H
+#include <stdint.h>
 
 #ifdef __cplusplus
 #if __cplusplus

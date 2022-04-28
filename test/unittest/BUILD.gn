@@ -40,6 +40,9 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/interfaces/innerkits/sandbox/sandbox.c",
     "//base/startup/init_lite/interfaces/innerkits/sandbox/sandbox_namespace.c",
     "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c",
+    "//base/startup/init_lite/interfaces/innerkits/syspara/param_comm.c",
+    "//base/startup/init_lite/interfaces/innerkits/syspara/parameter.c",
+    "//base/startup/init_lite/interfaces/innerkits/syspara/sysversion.c",
     "//base/startup/init_lite/services/begetctl/param_cmd.c",
     "//base/startup/init_lite/services/begetctl/shell/shell_bas.c",
     "//base/startup/init_lite/services/begetctl/shell/shell_main.c",
@@ -73,16 +76,15 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/services/loopevent/timer/le_timer.c",
     "//base/startup/init_lite/services/loopevent/utils/le_utils.c",
     "//base/startup/init_lite/services/param/adapter/param_dac.c",
-    "//base/startup/init_lite/services/param/adapter/param_libuvadp.c",
     "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
-    "//base/startup/init_lite/services/param/adapter/param_selinux.c",
-    "//base/startup/init_lite/services/param/client/param_request.c",
+    "//base/startup/init_lite/services/param/linux/param_message.c",
+    "//base/startup/init_lite/services/param/linux/param_osadp.c",
+    "//base/startup/init_lite/services/param/linux/param_request.c",
+    "//base/startup/init_lite/services/param/linux/param_service.c",
     "//base/startup/init_lite/services/param/manager/param_manager.c",
-    "//base/startup/init_lite/services/param/manager/param_message.c",
+    "//base/startup/init_lite/services/param/manager/param_persist.c",
     "//base/startup/init_lite/services/param/manager/param_trie.c",
     "//base/startup/init_lite/services/param/manager/param_utils.c",
-    "//base/startup/init_lite/services/param/service/param_persist.c",
-    "//base/startup/init_lite/services/param/service/param_service.c",
     "//base/startup/init_lite/services/param/trigger/trigger_checker.c",
     "//base/startup/init_lite/services/param/trigger/trigger_manager.c",
     "//base/startup/init_lite/services/param/trigger/trigger_processor.c",
@@ -97,6 +99,11 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/ueventd/ueventd_socket.c",
   ]
 
+  if (defined(build_selinux) && build_selinux) {
+    sources +=
+        [ "//base/startup/init_lite/services/param/adapter/param_selinux.c" ]
+  }
+
   if (param_feature_watcher) {
     sources += [
       "//base/startup/init_lite/services/param/watcher/agent/watcher.cpp",
@@ -106,8 +113,6 @@ ohos_unittest("init_ut") {
       "//base/startup/init_lite/services/param/watcher/proxy/watcher_manager.cpp",
       "//base/startup/init_lite/services/param/watcher/proxy/watcher_manager_stub.cpp",
       "//base/startup/init_lite/services/param/watcher/proxy/watcher_proxy.cpp",
-      "param/watcher_agent_unittest.cpp",
-      "param/watcher_proxy_unittest.cpp",
     ]
   }
 
@@ -126,9 +131,11 @@ ohos_unittest("init_ut") {
     "param/client_unittest.cpp",
     "param/dac_unittest.cpp",
     "param/param_shell_unittest.cpp",
+    "param/param_stub.cpp",
     "param/param_unittest.cpp",
-    "param/selinux_unittest.cpp",
+    "param/paramservice_unittest.cpp",
     "param/trigger_unittest.cpp",
+    "syspara/syspara_unittest.cpp",
     "ueventd/ueventd_config_unittest.cpp",
   ]
 
@@ -138,7 +145,9 @@ ohos_unittest("init_ut") {
     "//base/customization/config_policy/interfaces/innerkits/include",
     "//base/startup/init_lite/services/init/standard",
     "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/interfaces/innerkits/include/syspara",
     "//base/startup/init_lite/interfaces/innerkits/fd_holder",
+    "//base/startup/init_lite/interfaces/innerkits/syspara",
     "//base/startup/init_lite/services/begetctl",
     "//base/startup/init_lite/services/begetctl/shell",
     "//base/startup/init_lite/services/include",
@@ -153,20 +162,19 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/services/loopevent/timer",
     "//base/startup/init_lite/services/loopevent/utils",
     "//base/startup/init_lite/services/param/adapter",
+    "//base/startup/init_lite/services/param/linux",
     "//base/startup/init_lite/services/param/include",
     "//base/startup/init_lite/services/param/watcher/agent",
     "//base/startup/init_lite/services/param/watcher/include",
     "//base/startup/init_lite/services/param/watcher/proxy",
     "//base/startup/init_lite/test/unittest",
     "//base/startup/init_lite/test/unittest/param",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "//foundation/distributedschedule/safwk/services/safwk/include",
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk",
     "//foundation/distributedschedule/samgr/adapter/interfaces/innerkits/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "//base/startup/init_lite/ueventd/include",
-    "//utils/native/base/include",
     "//utils/system/safwk/native/include",
     "//third_party/bounds_checking_function/include",
     "//third_party/cJSON",
@@ -179,35 +187,56 @@ ohos_unittest("init_ut") {
     "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
     "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
     "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest",
-    "//utils/native/base:utils",
+    "//third_party/openssl:libcrypto_shared",
   ]
 
   defines = [
     "READ_CHECK",
-    "PARAM_SUPPORT_DAC_CHECK",
     "INIT_AGENT",
+    "INIT_FILE",
     "STARTUP_INIT_TEST",
-    "PARAM_SUPPORT_SAVE_PERSIST",
     "PARAM_SUPPORT_DAC",
     "_GNU_SOURCE",
+    "PARAM_SUPPORT_TRIGGER",
   ]
   defines += [ "_GNU_SOURCE" ]
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "init:libinit_plugin_engine",
+    "utils_base:utils",
   ]
 
-  if (param_feature_watcher) {
+  if (!defined(ohos_lite) && param_feature_watcher) {
+    sources += [
+      "param/watcher_agent_unittest.cpp",
+      "param/watcher_proxy_unittest.cpp",
+    ]
     external_deps += [
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
       "samgr_standard:samgr_proxy",
+    ]
+  }
+
+  if (defined(build_selinux) && build_selinux) {
+    sources += [ "param/selinux_unittest.cpp" ]
+    include_dirs += [
+      "//third_party/selinux/libselinux/include/",
+      "//base/security/selinux/interfaces/policycoreutils/include/",
+    ]
+    deps += [
+      "//base/security/selinux:libload_policy",
+      "//base/security/selinux:librestorecon",
+      "//third_party/selinux:libselinux",
+    ]
+    defines += [
+      "WITH_SELINUX",
+      "PARAM_SUPPORT_SELINUX",
     ]
   }
 

@@ -19,23 +19,26 @@ service_file_include = [
   "//base/startup/init_lite/services/include",
   "//third_party/bounds_checking_function/include",
 ]
-service_file_deps = [
-  "//base/startup/init_lite/services/log:agent_log",
-  "//base/startup/init_lite/services/utils:libinit_utils",
-  "//third_party/bounds_checking_function:libsec_static",
-]
 
 ohos_static_library("libfile_static") {
   sources = service_file_sources
   include_dirs = service_file_include
-  deps = service_file_deps
+  deps = [
+  "//base/startup/init_lite/services/log:agent_log",
+  "//base/startup/init_lite/services/utils:libinit_utils",
+  "//third_party/bounds_checking_function:libsec_static",
+]
   part_name = "init"
 }
 
 ohos_shared_library("libfile") {
   sources = service_file_sources
   include_dirs = service_file_include
-  deps = service_file_deps
+  deps = [
+  "//base/startup/init_lite/services/log:agent_log",
+  "//base/startup/init_lite/services/utils:libinit_utils",
+  "//third_party/bounds_checking_function:libsec_shared",
+]
   part_name = "init"
   install_images = [ "system" ]
 }

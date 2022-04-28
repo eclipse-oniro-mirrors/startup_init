@@ -28,6 +28,7 @@ common_include = [
   "//base/startup/init_lite/services/log",
   "//base/startup/init_lite/interfaces/innerkits/include",
   "//base/startup/init_lite/services/include",
+  "//third_party/bounds_checking_function/include",
   "include",
   "loop",
   "socket",
@@ -43,7 +44,6 @@ if (defined(ohos_lite)) {
 
     include_dirs = common_include
     defines = [ "_GNU_SOURCE" ]
-    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
   }
 } else {
   import("//build/ohos.gni")
@@ -53,7 +53,6 @@ if (defined(ohos_lite)) {
 
     include_dirs = common_include
     defines = [ "_GNU_SOURCE" ]
-    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
     part_name = "init"
     subsystem_name = "startup"
   }

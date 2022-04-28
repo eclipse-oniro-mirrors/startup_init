@@ -87,36 +87,7 @@ int ServiceExec(const Service *service)
         }
     }
     INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
-#ifdef SUPPORT_PROFILER_HIDEBUG
-    do {
-#ifdef __aarch64__
-        const char *debugSoPath = "/system/lib64/libhidebug.so";
-#else
-        const char *debugSoPath = "/system/lib/libhidebug.so";
-#endif
-        if (access(debugSoPath, F_OK) != 0) {
-            INIT_LOGE("access failed, errno = %d\n", errno);
-            break;
-        }
-        void* handle = dlopen(debugSoPath, RTLD_LAZY);
-        if (handle == NULL) {
-            INIT_LOGE("Failed to dlopen libhidebug.so, %s\n", dlerror());
-            break;
-        }
-        bool (* initParam)();
-        initParam = (bool (*)())dlsym(handle, "InitEnvironmentParam");
-        if (initParam == NULL) {
-            INIT_LOGE("Failed to dlsym InitEnvironmentParam, %s\n", dlerror());
-            dlclose(handle);
-            break;
-        }
-        bool ret = (*initParam)(service->name);
-        if (!ret) {
-            INIT_LOGE("init parameters failed.\n");
-        }
-        dlclose(handle);
-    } while (0);
-#endif
+    OpenHidebug(service->name);
     // L2 Can not be reset env
     if (service->extraArgs.argv != NULL && service->extraArgs.count > 0) {
         INIT_CHECK_ONLY_ELOG(execv(service->extraArgs.argv[0], service->extraArgs.argv) == 0,
