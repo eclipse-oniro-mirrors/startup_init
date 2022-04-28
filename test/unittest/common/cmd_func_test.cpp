@@ -24,6 +24,7 @@
 #include "init_cmds.h"
 #include "init_jobs_internal.h"
 #include "init_service_manager.h"
+#include "beget_ext.h"
 #include "securec.h"
 #include "gtest/gtest.h"
 
@@ -83,22 +84,17 @@ public:
         const mode_t mode = 0755;
         if (mkdir(TEST_DRI.c_str(), mode) != 0) {
             if (errno != EEXIST) {
-                printf("[----------] StartupInitUTest, mkdir for %s failed, error %d.\n",\
-                    TEST_DRI.c_str(), errno);
                 return;
             }
         }
 
         FILE *testFile = fopen(TEST_FILE.c_str(), "w+");
         if (testFile == nullptr) {
-            printf("[----------] StartupInitUTest, open file %s failed, error %d.\n",\
-                TEST_FILE.c_str(), errno);
             return;
         }
 
         std::string writeContent = "This is a test file for startup subsystem init module.";
         if (fwrite(writeContent.c_str(), writeContent.length(), 1, testFile) != 1) {
-            printf("[----------] StartupInitUTest, open file %s failed, error %d.\n", TEST_FILE.c_str(), errno);
             fclose(testFile);
             return;
         }
@@ -107,32 +103,28 @@ public:
 #ifndef USE_EMMC_STORAGE    // emmc storage does not support chmod/chown
 
         if (chmod(TEST_FILE.c_str(), TEST_FILE_MODE) != 0) {
-            printf("[----------] StartupInitUTest, chmod for file %s failed, error %d.\n", TEST_FILE.c_str(), errno);
             return;
         }
 
         if (chown(TEST_FILE.c_str(), TEST_FILE_UID, TEST_FILE_GID) != 0) {
-            printf("[----------] StartupInitUTest, chown for file %s failed, error %d.\n", TEST_FILE.c_str(), errno);
             return;
         }
-
 #endif  // USE_EMMC_STORAGE
-
-        printf("[----------] StartupInitUTest, cmd func test setup.\n");
     }
 
     static void TearDownTestCase()
     {
         if (remove(TEST_FILE.c_str()) != 0) {
-            printf("[----------] StartupInitUTest, remove %s failed, error %d.\n", TEST_FILE.c_str(), errno);
+            return;
         }
-
         if (remove(TEST_DRI.c_str()) != 0) {
-            printf("[----------] StartupInitUTest, remove %s failed, error %d.\n", TEST_DRI.c_str(), errno);
+            return;
         }
-        printf("[----------] StartupInitUTest, cmd func test teardown.\n");
     }
-    void SetUp() {}
+    void SetUp()
+    {
+        SetInitLogLevel(INIT_FATAL);
+    }
     void TearDown() {}
 };
 
@@ -144,19 +136,16 @@ void ParseCmdLine(const char *content, TestCmdLine *resCmd)
 
     const struct CmdTable *cmd = GetCmdByName(content);
     if (cmd == nullptr) {
-        printf("Cannot support command: %s \n", content);
         (void)memset_s(resCmd, sizeof(TestCmdLine), 0, sizeof(TestCmdLine));
         return;
     }
     if (strlen(content) <= (strlen(cmd->name) + 1)) {
-        printf("Error content for command: %s \n", content);
         (void)memset_s(resCmd, sizeof(TestCmdLine), 0, sizeof(TestCmdLine));
         return;
     }
     int ret1 = strcpy_s(resCmd->name, MAX_CMD_NAME_LEN, cmd->name);
     int ret2 = strcpy_s(resCmd->cmdContent, MAX_CMD_CONTENT_LEN, content + strlen(cmd->name));
     if (ret1 || ret2) {
-        printf("Error copy command: %s \n", content);
         (void)memset_s(resCmd, sizeof(TestCmdLine), 0, sizeof(TestCmdLine));
         return;
     }
@@ -243,7 +232,6 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_004, TestSize.Level0)
         size_t curCmdLen = g_supportedCmds[i].length();
         char *curCmd = (char *)malloc(curCmdLen + MAX_CMD_CONTENT_LEN + 10);
         if (curCmd == nullptr) {
-            printf("[----------] StartupInitUTest, cmdFuncParseCmdTest004, malloc failed.\n");
             break;
         }
         errno_t ret = memcpy_s(curCmd, curCmdLen + MAX_CMD_CONTENT_LEN + 10, \
@@ -251,7 +239,6 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_004, TestSize.Level0)
         errno_t ret2 = memcpy_s(curCmd + curCmdLen, MAX_CMD_CONTENT_LEN + 10, \
             toLongContent, strlen(toLongContent));
         if (ret != EOK || ret2 != EOK) {
-            printf("[----------] StartupInitUTest, cmdFuncParseCmdTest004, memcpy_s failed.\n");
             free(curCmd);
             curCmd = nullptr;
             break;
@@ -491,8 +478,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_006, TestSize.Level0)
 
     // delete dir
     if (remove(cmdContentStr.c_str()) != 0) {
-        printf("[----------] StartupInitUTest, cmdFuncDoCmdTest006 remove %s failed, error %d.\n",\
-            TEST_DRI.c_str(), errno);
+        EXPECT_EQ(0, 0);
     }
 
     // chmod success
@@ -831,13 +817,11 @@ static void CreateIllegalCfg()
 {
     FILE *testCfgFile = fopen(TEST_CFG_ILLEGAL.c_str(), "w+");
     if (testCfgFile == nullptr) {
-        printf("[----------] StartupInitUTest, open file %s failed, error %d.\n", TEST_CFG_ILLEGAL.c_str(), errno);
         return;
     }
 
     std::string writeContent = "mount zpfs /patch/etc:/etc /etc";
     if (fwrite(writeContent.c_str(), writeContent.length(), 1, testCfgFile) != 1) {
-        printf("[----------] StartupInitUTest, open file %s failed, error %d.\n", TEST_CFG_ILLEGAL.c_str(), errno);
         fclose(testCfgFile);
         return;
     }
@@ -894,8 +878,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level0)
 
     // remove tmp file
     if (remove(TEST_CFG_ILLEGAL.c_str()) != 0) {
-        printf("[----------] StartupInitUTest, remove %s failed, error %d.\n",\
-            TEST_CFG_ILLEGAL.c_str(), errno);
+        EXPECT_EQ(0, 0);
     }
 }
 
@@ -979,7 +962,6 @@ HWTEST_F(StartupInitUTest, cmdJobTest_002, TestSize.Level0)
     cJSON* jobItem = cJSON_Parse(cfgJson.c_str());
     EXPECT_NE(nullptr, jobItem);
     if (jobItem == nullptr) {
-        printf("[----------] StartupInitUTest, job test, parse %s failed.\n", cfgJson.c_str());
         return;
     }
     ParseAllJobs(jobItem);
@@ -996,7 +978,6 @@ HWTEST_F(StartupInitUTest, cmdJobTest_002, TestSize.Level0)
     if (remove(POST_INIT_DIR.c_str()) != 0 ||
         remove(INIT_DIR.c_str()) != 0 ||
         remove(PRE_INIT_DIR.c_str()) != 0) {
-        printf("[----------] StartupInitUTest, job test, remove failed, error %d.\n", errno);
     }
     ReleaseAllJobs();
 }
