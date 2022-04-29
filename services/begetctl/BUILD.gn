@@ -85,6 +85,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/param:param_client",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
+    external_deps = [ "utils_base:utils" ]
 
     if (param_test) {
       sources +=
@@ -107,10 +108,7 @@ if (defined(ohos_lite)) {
         "//base/security/selinux/interfaces/policycoreutils/include/",
       ]
       deps += [ "//third_party/selinux:libselinux" ]
-      external_deps = [
-        "selinux:libparaperm_checker",
-        "utils_base:utils",
-      ]
+      external_deps += [ "selinux:libparaperm_checker" ]
       defines += [ "PARAM_SUPPORT_SELINUX" ]
     }
 
