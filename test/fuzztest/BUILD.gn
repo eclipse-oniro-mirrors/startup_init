@@ -38,8 +38,6 @@ ohos_fuzztest("DoRebootFuzzTest") {
 
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-    "//base/startup/init_lite/services/log:init_log",
-    "//base/startup/init_lite/services/param:param_client",
     "//third_party/bounds_checking_function:libsec_static",
   ]
 
@@ -175,10 +173,7 @@ ohos_fuzztest("ServiceControlStartFuzzTest") {
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/test/fuzztest/utils/include",
   ]
-  deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-    "//base/startup/init_lite/services/param:param_client",
-  ]
+  deps = [ "//base/startup/init_lite/interfaces/innerkits:libbegetutil" ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
   cflags = [
@@ -201,10 +196,7 @@ ohos_fuzztest("ServiceControlStopFuzzTest") {
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/test/fuzztest/utils/include",
   ]
-  deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-    "//base/startup/init_lite/services/param:param_client",
-  ]
+  deps = [ "//base/startup/init_lite/interfaces/innerkits:libbegetutil" ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
   cflags = [
@@ -229,8 +221,7 @@ ohos_fuzztest("SystemDumpParametersFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
@@ -258,8 +249,7 @@ ohos_fuzztest("SystemFindParameterFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -286,8 +276,7 @@ ohos_fuzztest("SystemGetParameterFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -314,8 +303,7 @@ ohos_fuzztest("SystemGetParameterCommitIdFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -344,8 +332,7 @@ ohos_fuzztest("SystemGetParameterNameFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -373,8 +360,7 @@ ohos_fuzztest("SystemGetParameterValueFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -402,8 +388,7 @@ ohos_fuzztest("SystemSetParameterFuzztest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -432,8 +417,7 @@ ohos_fuzztest("SystemTraversalParameterFuzztest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
@@ -462,8 +446,7 @@ ohos_fuzztest("SystemWaitParameterFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -491,9 +474,8 @@ ohos_fuzztest("SystemWatchParameterFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
     "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
     "//utils/native/base:utils",
   ]

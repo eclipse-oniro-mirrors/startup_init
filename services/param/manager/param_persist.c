@@ -43,7 +43,8 @@ static int SavePersistParam(const WorkSpace *workSpace, const ParamTrieNode *nod
     int ret = memcpy_s(name, PARAM_NAME_LEN_MAX - 1, entry->data, entry->keyLength);
     PARAM_CHECK(ret == EOK, return -1, "Failed to read param name %s", entry->data);
     name[entry->keyLength] = '\0';
-    ret = g_persistWorkSpace.persistParamOps.batchSave((PERSIST_SAVE_HANDLE)cookie, name, entry->data + entry->keyLength + 1);
+    ret = g_persistWorkSpace.persistParamOps.batchSave(
+        (PERSIST_SAVE_HANDLE)cookie, name, entry->data + entry->keyLength + 1);
     PARAM_CHECK(ret == 0, return -1, "Failed to write param %s", current->key);
     return ret;
 }

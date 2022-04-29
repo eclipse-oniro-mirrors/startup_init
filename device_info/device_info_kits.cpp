@@ -91,4 +91,3 @@ int32_t DeviceInfoKits::GetSerialID(std::string& result)
 }
 } // namespace device_info
 } // namespace OHOS
-#endif

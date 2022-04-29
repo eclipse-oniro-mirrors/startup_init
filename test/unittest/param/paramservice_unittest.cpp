@@ -34,6 +34,7 @@ static int CheckServerParamValue(const char *name, const char *expectValue)
     return 0;
 }
 
+namespace init_ut {
 static ParamTaskPtr g_worker = nullptr;
 class ParamServiceUnitTest : public ::testing::Test {
 public:
@@ -526,3 +527,4 @@ HWTEST_F(ParamServiceUnitTest, TestPowerCtrl, TestSize.Level0)
     ret = test.TestPowerCtrl("reboot", 0772);
     EXPECT_EQ(ret, 0);
 }
+}  // namespace init_ut

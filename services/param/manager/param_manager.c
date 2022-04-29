@@ -918,7 +918,7 @@ void UpdatePersistCommitId(void)
     atomic_store_explicit(&space->area->commitPersistId, ++globalCommitId, memory_order_release);
 }
 
-#ifdef STARTUP_INIT_TEST
+#if defined STARTUP_INIT_TEST || defined LOCAL_TEST
 ParamSecurityOps *GetParamSecurityOps(int type)
 {
     PARAM_CHECK(type < PARAM_SECURITY_MAX, return NULL, "Invalid type");

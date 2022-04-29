@@ -96,10 +96,10 @@ public:
 
         std::string writeContent = "This is a test file for startup subsystem init module.";
         if (fwrite(writeContent.c_str(), writeContent.length(), 1, testFile) != 1) {
-            fclose(testFile);
+            (void)fclose(testFile);
             return;
         }
-        fclose(testFile);
+        (void)fclose(testFile);
 
 #ifndef USE_EMMC_STORAGE    // emmc storage does not support chmod/chown
 
@@ -708,13 +708,14 @@ static void CheckCmd(const TestCmdLine *resCmd)
         size_t spacePos = 0;
         size_t spaceCnt = 0;
         for (size_t i = 1; i < strlen(resCmd->cmdContent); ++i) {
-            if (resCmd->cmdContent[i] == ' ') {
-                ++spaceCnt;
-                if (spacePos != 0) {
-                    EXPECT_NE(spacePos + 1, i);    // consecutive spaces should not appear
-                }
-                spacePos = i;
+            if (resCmd->cmdContent[i] != ' ') {
+                continue;
             }
+            ++spaceCnt;
+            if (spacePos != 0) {
+                EXPECT_NE(spacePos + 1, i);    // consecutive spaces should not appear
+            }
+            spacePos = i;
         }
         EXPECT_EQ(spaceCnt, 2);    // 2 spaces allowed in cmd content
     } else if (strcmp("mount ", resCmd->name) == 0) {
@@ -824,11 +825,11 @@ static void CreateIllegalCfg()
 
     std::string writeContent = "mount zpfs /patch/etc:/etc /etc";
     if (fwrite(writeContent.c_str(), writeContent.length(), 1, testCfgFile) != 1) {
-        fclose(testCfgFile);
+        (void)fclose(testCfgFile);
         return;
     }
 
-    fclose(testCfgFile);
+    (void)fclose(testCfgFile);
 }
 
 /*

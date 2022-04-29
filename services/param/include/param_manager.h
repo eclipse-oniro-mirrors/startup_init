@@ -41,7 +41,7 @@ extern "C" {
 #define PARAM_CTRL_SERVICE 0x1
 
 #define PARAM_WORKSPACE_CHECK(space, exper, ...) \
-    if (((*space).flags & WORKSPACE_FLAGS_INIT) != WORKSPACE_FLAGS_INIT) {\
+    if (((*space).flags & WORKSPACE_FLAGS_INIT) != WORKSPACE_FLAGS_INIT) { \
         PARAM_LOGE(__VA_ARGS__);     \
         exper;                       \
     }
@@ -55,7 +55,6 @@ typedef struct {
 #ifdef PARAMWORKSPACE_NEED_MUTEX
     ParamRWMutex rwlock;
 #endif
-    //atomic_llong commitId;
 } ParamWorkSpace;
 
 typedef struct {

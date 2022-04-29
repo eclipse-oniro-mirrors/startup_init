@@ -18,16 +18,15 @@
 #include <cstdlib>
 #include <cstring>
 #include <gtest/gtest.h>
-#include <time.h>
 
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_utils.h"
 
 #ifdef __cplusplus
-#    if __cplusplus
+#if __cplusplus
 extern "C" {
-#    endif
+#endif
 #endif
 
 void PrepareInitUnitTestEnv(void);
@@ -38,8 +37,8 @@ int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *nam
 int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel);
 
 #ifdef __cplusplus
-#    if __cplusplus
+#if __cplusplus
 }
-#    endif
+#endif
 #endif
 #endif  // PARAM_TEST_STUB_

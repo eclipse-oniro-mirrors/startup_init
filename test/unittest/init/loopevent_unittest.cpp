@@ -92,14 +92,14 @@ static void *RunLoopThread(void *arg)
 namespace init_ut {
 class LoopEventUnittest : public testing::Test {
 public:
-    LoopEventUnittest(){};
-    virtual ~LoopEventUnittest(){};
-    static void SetUpTestCase(void){};
-    static void TearDownTestCase(void){};
-    void SetUp(){};
-    void TearDown(){};
-    void TestBody(void){};
-    void StreamTaskTest()
+    LoopEventUnittest() {};
+    virtual ~LoopEventUnittest() {};
+    static void SetUpTestCase(void) {};
+    static void TearDownTestCase(void) {};
+    void SetUp() {};
+    void TearDown() {};
+    void TestBody(void) {};
+    void StreamTaskTest ()
     {
         LE_StreamInfo streamInfo = {};
         streamInfo.recvMessage = OnReceiveRequest;

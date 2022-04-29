@@ -108,8 +108,8 @@ public:
     }
 
 private:
-    ParamSecurityOps initParamSercurityOps{};
-    ParamSecurityOps clientParamSercurityOps{};
+    ParamSecurityOps initParamSercurityOps {};
+    ParamSecurityOps clientParamSercurityOps {};
 };
 
 HWTEST_F(DacUnitTest, TestDacInitLocalLabel, TestSize.Level0)

@@ -117,9 +117,10 @@ typedef struct SelinuxSpace_ {
 int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit);
 #endif
 
-#ifdef STARTUP_INIT_TEST
+#if defined STARTUP_INIT_TEST || defined LOCAL_TEST
 ParamSecurityOps *GetParamSecurityOps(int type);
 int RegisterSecurityOps(int onlyRead);
+void SetSelinuxOps(const SelinuxSpace *space);
 #endif
 
 #ifdef __cplusplus

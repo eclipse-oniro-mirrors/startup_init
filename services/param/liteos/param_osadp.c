@@ -41,8 +41,7 @@ static void TimerHandle(union sigval v)
 static void SetTimeSpec(struct timespec *ts, int64_t msec)
 {
     ts->tv_sec = msec / MSEC_PER_SEC; // 1000LL ms --> m
-    msec -= ts->tv_sec * MSEC_PER_SEC; // 1000LL ms --> m
-    ts->tv_nsec = msec * NSEC_PER_MSEC;
+    ts->tv_nsec = (msec - ts->tv_sec * MSEC_PER_SEC) * NSEC_PER_MSEC;
 }
 
 static int StartTimer(const ParamTimer *paramTimer, int64_t whenMsec, int64_t repeat)
@@ -205,6 +204,7 @@ int ParamMutexDelete(ParamMutex *mutex)
 #ifdef __LITEOS_M__
 void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly)
 {
+    PARAM_CHECK(spaceSize <= PARAM_WORKSPACE_MAX, return, "Invalid spaceSize %u", spaceSize);
     UNUSED(fileName);
     UNUSED(handle);
     UNUSED(readOnly);

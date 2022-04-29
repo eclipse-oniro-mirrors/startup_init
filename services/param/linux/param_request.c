@@ -114,7 +114,7 @@ static int ReadMessage(int fd, char *buffer, int timeout)
             break;
         }
         if (errno == EAGAIN || errno == EINTR) {
-            usleep(10*1000);
+            usleep(10*1000); // 10*1000 wait 10ms
             continue;
         }
     } while (1);

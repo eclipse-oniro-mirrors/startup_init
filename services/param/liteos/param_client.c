@@ -39,7 +39,7 @@ static int InitParamClient(void)
     // init persist to save
     InitPersistParamWorkSpace();
 #ifdef PARAM_LOAD_CFG_FROM_CODE
-    for (size_t i = 0; i < ARRAY_LENGTH(g_paramDefCfgNodes); i++){
+    for (size_t i = 0; i < ARRAY_LENGTH(g_paramDefCfgNodes); i++) {
         PARAM_LOGI("InitParamClient name %s = %s", g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
         uint32_t dataIndex = 0;
         ret = WriteParam(g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value, &dataIndex, 0);

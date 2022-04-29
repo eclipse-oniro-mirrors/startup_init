@@ -94,8 +94,8 @@ int ParamTaskSendMsg(const ParamTaskPtr stream, const ParamMessage *msg)
     uint8_t *buffer = LE_GetBufferInfo(bufferHandle, NULL, NULL);
     int ret = memcpy_s(buffer, dataSize, msg, dataSize);
     free((void *)msg);
-    PARAM_CHECK(ret == EOK, LE_FreeBuffer(LE_GetDefaultLoop(), NULL, buffer);
-        return -1, "Failed to fill name");
+    PARAM_CHECK(ret == EOK, LE_FreeBuffer(LE_GetDefaultLoop(), NULL, bufferHandle);
+        return -1, "Failed to copy message");
     return LE_Send(LE_GetDefaultLoop(), stream, bufferHandle, dataSize);
 }
 

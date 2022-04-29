@@ -66,14 +66,15 @@ int FillParamMsgContent(const ParamMessage *request, uint32_t *start, int type, 
 ParamMessage *CreateParamMessage(int type, const char *name, uint32_t msgSize)
 {
     PARAM_CHECK(name != NULL, return NULL, "Invalid name");
+    uint32_t size = msgSize;
     if (msgSize < sizeof(ParamMessage)) {
-        msgSize = sizeof(ParamMessage);
+        size = sizeof(ParamMessage);
     }
-    ParamMessage *msg = (ParamMessage *)calloc(1, msgSize);
+    ParamMessage *msg = (ParamMessage *)calloc(1, size);
     PARAM_CHECK(msg != NULL, return NULL, "Failed to malloc message");
     msg->type = type;
     msg->id.msgId = 0;
-    msg->msgSize = msgSize;
+    msg->msgSize = size;
     int ret = strcpy_s(msg->key, sizeof(msg->key) - 1, name);
     PARAM_CHECK(ret == EOK, free(msg);
         return NULL, "Failed to fill name");

@@ -169,9 +169,12 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
     struct group *group = getgrgid(auditData.dacData.gid);
     if (user != NULL && group != NULL) {
         BShellEnvOutput(shell, "    dac  : %s(%s) %s(%s) (%s) \r\n",
-            user->pw_name, GetPermissionString(auditData.dacData.mode, 0, permissionStr[0], MASK_LENGTH_MAX),
-            group->gr_name, GetPermissionString(auditData.dacData.mode, DAC_GROUP_START, permissionStr[1], MASK_LENGTH_MAX),
-            GetPermissionString(auditData.dacData.mode, DAC_OTHER_START, permissionStr[2], MASK_LENGTH_MAX)); // 2 other
+            user->pw_name,
+            GetPermissionString(auditData.dacData.mode, 0, permissionStr[0], MASK_LENGTH_MAX),
+            group->gr_name,
+            GetPermissionString(auditData.dacData.mode,DAC_GROUP_START, permissionStr[1], MASK_LENGTH_MAX),
+             // 2 other
+            GetPermissionString(auditData.dacData.mode, DAC_OTHER_START, permissionStr[2], MASK_LENGTH_MAX));
     }
     if (strcmp("#", name) != 0) {
         BShellEnvOutput(shell, "    name : %s\r\n", name);

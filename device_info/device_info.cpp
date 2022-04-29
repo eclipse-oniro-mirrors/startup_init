@@ -46,8 +46,8 @@ int AclGetDevUdid(char *udid, int size)
 
 const char *AclGetSerial(void)
 {
-    static char serialNumber[MAX_SERIAL_LEN] = {"1234567890"};   
-#ifdef PARAM_FEATURE_DEVICEINFO    
+    static char serialNumber[MAX_SERIAL_LEN] = {"1234567890"};
+#ifdef PARAM_FEATURE_DEVICEINFO
     std::string result = {};
     OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
     int ret = instance.GetSerialID(result);

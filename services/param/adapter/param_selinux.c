@@ -50,7 +50,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         PARAM_CHECK(g_selinuxSpace.setParamCheck != NULL, return -1, "Failed to dlsym setParamCheck %s", dlerror());
     }
     if (g_selinuxSpace.getParamList == NULL) {
-        g_selinuxSpace.getParamList = (ParamContextsList * (*)()) dlsym(handle, "GetParamList");
+        g_selinuxSpace.getParamList = (ParamContextsList *(*)()) dlsym(handle, "GetParamList");
         PARAM_CHECK(g_selinuxSpace.getParamList != NULL, return -1, "Failed to dlsym getParamList %s", dlerror());
     }
     if (g_selinuxSpace.getParamLabel == NULL) {

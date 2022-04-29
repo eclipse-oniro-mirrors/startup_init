@@ -34,6 +34,10 @@
 #include <pthread.h>
 #endif
 
+#if defined FUTEX_WAIT || defined FUTEX_WAKE
+#include <linux/futex.h>
+#endif
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -47,9 +51,7 @@ extern "C" {
 #define PARAM_NR_FUTEX __NR_futex
 #endif
 
-#if defined FUTEX_WAIT || defined FUTEX_WAKE
-#include <linux/futex.h>
-#else
+#if !(defined FUTEX_WAIT || defined FUTEX_WAKE)
 #define FUTEX_WAIT 0
 #define FUTEX_WAKE 1
 
@@ -63,8 +65,8 @@ extern "C" {
 #define futex_wake(ftx, count) PARAM_FUTEX(ftx, FUTEX_WAKE, count, 0, 0)
 #define futex_wait(ftx, value) PARAM_FUTEX(ftx, FUTEX_WAIT, value, 100, 0)
 #else
-#define futex_wake(ftx, count) (void)(ftx);
-#define futex_wait(ftx, value) (void)(ftx);
+#define futex_wake(ftx, count) (void)(ftx)
+#define futex_wait(ftx, value) (void)(ftx)
 #endif
 #endif
 

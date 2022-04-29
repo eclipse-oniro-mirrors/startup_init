@@ -28,9 +28,8 @@
 extern "C" {
 #endif
 #endif
-extern void SetSelinuxOps(const SelinuxSpace *space);
-static int g_testPermissionResult = DAC_RESULT_PERMISSION;
 
+static int g_testPermissionResult = DAC_RESULT_PERMISSION;
 void SetTestPermissionResult(int result)
 {
     g_testPermissionResult = result;
@@ -177,31 +176,8 @@ static void LoadParamFromCfg(void)
     }
 #endif
 }
-void PrepareInitUnitTestEnv(void)
-{
-    static int evnOk = 0;
-    if (evnOk) {
-        return;
-    }
-    PARAM_LOGI("PrepareInitUnitTestEnv");
-    mkdir(STARTUP_INIT_UT_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
-    SetInitLogLevel(INIT_DEBUG);
-
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
-    // for cmdline
-    const char *cmdLine = "bootgroup=device.charing.group earlycon=uart8250,mmio32,0xfe660000 \
-        root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568";
-    CreateTestFile(BOOT_CMD_LINE, cmdLine);
-
-    // for dac
-    std::string dacData = "ohos.servicectrl.   = system:servicectrl:0775 \n";
-    dacData += "test.permission.       = root:root:0770\n";
-    dacData += "test.permission.read. =  root:root:0774\n";
-    dacData += "test.permission.write.=  root:root:0772\n";
-    dacData += "test.permission.watcher. = root:root:0771\n";
-    CreateTestFile(STARTUP_INIT_UT_PATH "/system/etc/param/ohos.para.dac", dacData.c_str());
-
-    const char *triggerData = "{"
+static const char *g_triggerData = "{"
         "\"jobs\" : [{"
         "        \"name\" : \"early-init\","
         "        \"cmds\" : ["
@@ -209,7 +185,6 @@ void PrepareInitUnitTestEnv(void)
         "            \"    load_persist_params \","
         "            \"    load_persist_params        \","
         "            \" #   load_persist_params \","
-        "            \"#restorecon /adb_keys\","
         "            \"   restorecon /postinstall\","
         "            \"mkdir /acct/uid\","
         "            \"chown root system /dev/memcg/memory.pressure_level\","
@@ -254,7 +229,33 @@ void PrepareInitUnitTestEnv(void)
         "    }"
         "]"
     "}";
-    CreateTestFile(STARTUP_INIT_UT_PATH"/trigger_test.cfg", triggerData);
+#endif
+
+void PrepareInitUnitTestEnv(void)
+{
+    static int evnOk = 0;
+    if (evnOk) {
+        return;
+    }
+    PARAM_LOGI("PrepareInitUnitTestEnv");
+    mkdir(STARTUP_INIT_UT_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
+    SetInitLogLevel(INIT_DEBUG);
+
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+    // for cmdline
+    const char *cmdLine = "bootgroup=device.charing.group earlycon=uart8250,mmio32,0xfe660000 \
+        root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    // for dac
+    std::string dacData = "ohos.servicectrl.   = system:servicectrl:0775 \n";
+    dacData += "test.permission.       = root:root:0770\n";
+    dacData += "test.permission.read. =  root:root:0774\n";
+    dacData += "test.permission.write.=  root:root:0772\n";
+    dacData += "test.permission.watcher. = root:root:0771\n";
+    CreateTestFile(STARTUP_INIT_UT_PATH "/system/etc/param/ohos.para.dac", dacData.c_str());
+
+    CreateTestFile(STARTUP_INIT_UT_PATH"/trigger_test.cfg", g_triggerData);
     TestSetSelinuxOps();
 #endif
     InitParamService();

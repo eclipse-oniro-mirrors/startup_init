@@ -140,8 +140,8 @@ public:
     }
 
 private:
-    ParamSecurityOps initParamSercurityOps{};
-    ParamSecurityOps clientParamSercurityOps{};
+    ParamSecurityOps initParamSercurityOps {};
+    ParamSecurityOps clientParamSercurityOps {};
 };
 
 HWTEST_F(SelinuxUnitTest, TestSelinuxInitLocalLabel, TestSize.Level0)
