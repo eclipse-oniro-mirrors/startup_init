@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,15 +13,133 @@
  * limitations under the License.
  */
 
+#include "init_mount.h"
+
+#include <errno.h>
+#include <stdbool.h>
 #include "fs_manager/fs_manager.h"
 #include "init_cmds.h"
 #include "init_log.h"
+#include "init_utils.h"
+#include "securec.h"
 
 int MountRequriedPartitions(const Fstab *fstab)
 {
-    INIT_ERROR_CHECK(fstab != NULL, return -1, "Failed fstab is NULL");
+    INIT_ERROR_CHECK(fstab != NULL, return -1, "fstab is NULL");
     int rc;
     INIT_LOGI("Mount required partitions");
     rc = MountAllWithFstab(fstab, 1);
     return rc;
+}
+
+#define OHOS_REQUIRED_MOUNT_PREFIX "ohos.required_mount."
+static int ParseRequiredMountInfo(const char *item, Fstab *fstab)
+{
+    char mountOptions[MAX_BUFFER_LEN] = {};
+    char partName[PARTITION_NAME_SIZE] = {};
+    // Sanity checks
+    if (item == NULL || *item == '\0' || fstab == NULL) {
+        return -1;
+    }
+
+    char *p = NULL;
+    const char *q = item;
+    if ((p = strstr(item, "=")) != NULL) {
+        q = item + strlen(OHOS_REQUIRED_MOUNT_PREFIX); // Get partition name
+        if (q == NULL || *q == '\0' || (p - q) <= 0) {
+            return -1;
+        }
+        if (strncpy_s(partName, PARTITION_NAME_SIZE -1, q, p - q) != EOK) {
+            INIT_LOGE("Failed to copy requried partition name");
+            return -1;
+        }
+        p++; // skip '='
+        if (strncpy_s(mountOptions, MAX_BUFFER_LEN -1, p, strlen(p)) != EOK) {
+            INIT_LOGE("Failed to copy requried mount info: %s", item);
+            return -1;
+        }
+    }
+    INIT_LOGV("Mount option of partition %s is [%s]", partName, mountOptions);
+    if (ParseFstabPerLine(mountOptions, fstab, false, "@") < 0) {
+        INIT_LOGE("Failed to parse mount options of partition \' %s \', options: %s", partName, mountOptions);
+        return -1;
+    }
+    return 0;
+}
+
+static Fstab* LoadFstabFromCommandLine(void)
+{
+    Fstab *fstab = NULL;
+    char *cmdline = ReadFileData("/proc/cmdline");
+    bool isDone = false;
+
+    if (cmdline == NULL) {
+        INIT_LOGE("Read from \'/proc/cmdline\' failed, err = %d", errno);
+        return NULL;
+    }
+    if ((fstab = (Fstab *)calloc(1, sizeof(Fstab))) == NULL) {
+        INIT_LOGE("Allocate memory for FS table failed, err = %d", errno);
+        return NULL;
+    }
+
+    char *start = cmdline;
+    char *end = start + strlen(cmdline);
+    while (start < end) {
+        char *token = strstr(start, " ");
+        if (token == NULL) {
+            break;
+        }
+
+        // Startswith " "
+        if (token == start) {
+            start++;
+            continue;
+        }
+        *token = '\0';
+        if (strncmp(start, OHOS_REQUIRED_MOUNT_PREFIX,
+            strlen(OHOS_REQUIRED_MOUNT_PREFIX)) != 0) {
+            start = token + 1;
+            continue;
+        }
+        isDone = true;
+        if (ParseRequiredMountInfo(start, fstab) < 0) {
+            INIT_LOGE("Failed to parse \' %s \'", start);
+            isDone = false;
+            break;
+        }
+        start = token + 1;
+    }
+
+    // handle last one
+    if (start < end) {
+        if (strncmp(start, OHOS_REQUIRED_MOUNT_PREFIX,
+            strlen(OHOS_REQUIRED_MOUNT_PREFIX)) == 0 &&
+            ParseRequiredMountInfo(start, fstab) < 0) {
+            INIT_LOGE("Failed to parse \' %s \'", start);
+            isDone = false;
+        }
+    }
+
+    if (!isDone) {
+        ReleaseFstab(fstab);
+        fstab = NULL;
+    }
+    free(cmdline);
+    return fstab;
+}
+
+Fstab* LoadRequiredFstab(void)
+{
+    Fstab *fstab = NULL;
+    fstab = LoadFstabFromCommandLine();
+    if (fstab == NULL) {
+        INIT_LOGI("Cannot load fstab from command line, try read from fstab.required");
+        const char *fstabFile = "/etc/fstab.required";
+        if (access(fstabFile, F_OK) != 0) {
+            fstabFile = "/system/etc/fstab.required";
+        }
+        INIT_ERROR_CHECK(access(fstabFile, F_OK) == 0, abort(), "Failed get fstab.required");
+        fstab = ReadFstabFromFile(fstabFile, false);
+    }
+    return fstab;
 }
