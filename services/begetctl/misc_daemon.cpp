@@ -87,8 +87,8 @@ static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
         free(buffer);
         return;
     }
-    uint32_t ret = write(fd, buffer, size);
-    if (ret != size) {
+    ssize_t ret = write(fd, buffer, size);
+    if (ret == -1 || ret != size) {
         (void)fclose(rgbFile);
         free(buffer);
         return;
