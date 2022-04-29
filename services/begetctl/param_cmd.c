@@ -169,17 +169,14 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
     }
     BShellEnvOutput(shell, "Parameter infomation:\r\n");
 #ifdef WITH_SELINUX
-    char *context = NULL;
+    const char *context = NULL;
     if (strcmp(name, "#") != 0) {
-        GetParamLabel(name, &context);
+        context = GetParamLabel(name);
     }
     if (context != NULL) {
         BShellEnvOutput(shell, "selinux  : %s \r\n", context);
     } else {
         BShellEnvOutput(shell, "selinux  : null \r\n");
-    }
-    if (context != NULL) {
-        free(context);
     }
 #endif
     BShellEnvOutput(shell, "    dac  : %s(%s) %s(%s) (%s) \r\n",
