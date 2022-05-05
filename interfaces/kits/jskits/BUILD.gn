@@ -14,9 +14,7 @@
 import("//build/ohos.gni")
 
 ohos_shared_library("deviceinfo_init") {
-  include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
-  ]
+  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
 
   sources = [ "src/native_deviceinfo_js.cpp" ]
 
@@ -34,9 +32,7 @@ ohos_shared_library("deviceinfo_init") {
 }
 
 ohos_shared_library("systemparameter_init") {
-  include_dirs = [
-    "src",
-  ]
+  include_dirs = [ "src" ]
 
   sources = [
     "src/native_parameters_js.cpp",

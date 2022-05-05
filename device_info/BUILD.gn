@@ -10,9 +10,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//base/startup/init_lite/begetd.gni")
 import("//build/ohos.gni")
 import("//build/ohos/sa_profile/sa_profile.gni")
-import("//base/startup/init_lite/begetd.gni")
 
 ohos_sa_profile("device_info_profile") {
   sources = [ "etc/3902.xml" ]
@@ -41,8 +41,8 @@ ohos_shared_library("deviceinfoservice") {
 
   deps = [
     "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
     "//base/startup/init_lite/services/loopevent:loopevent",
+    "//base/startup/init_lite/services/param:param_client",
     "//base/startup/init_lite/services/utils:libinit_tools",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_shared",

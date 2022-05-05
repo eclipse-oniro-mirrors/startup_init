@@ -30,9 +30,9 @@ ohos_shared_library("libpluginparamtest") {
   ]
 
   deps = [
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/services/log:agent_log",
     "//base/startup/init_lite/services/utils:libinit_tools",
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
 

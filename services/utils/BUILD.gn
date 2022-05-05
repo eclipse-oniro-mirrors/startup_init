@@ -15,8 +15,8 @@ if (defined(ohos_lite)) {
   static_library("libinit_tools") {
     sources = [
       "//base/startup/init_lite/services/utils/init_hashmap.c",
+      "//base/startup/init_lite/services/utils/init_utils.c",
       "//base/startup/init_lite/services/utils/list.c",
-      "//base/startup/init_lite/services/utils/init_utils.c"
     ]
 
     include_dirs = [
