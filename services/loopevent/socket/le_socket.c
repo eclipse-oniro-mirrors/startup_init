@@ -161,7 +161,7 @@ static int AcceptTcpSocket_(int serverFd)
     LE_LOGV("AcceptTcpSocket_ client: %s ", inet_ntoa(clientAddr.sin_addr));
     return fd;
 }
-
+INIT_LOCAL_API
 int CreateSocket(int flags, const char *server)
 {
     int fd = -1;
@@ -186,7 +186,7 @@ int CreateSocket(int flags, const char *server)
     }
     return fd;
 }
-
+INIT_LOCAL_API
 int AcceptSocket(int fd, int flags)
 {
     int clientFd = -1;
