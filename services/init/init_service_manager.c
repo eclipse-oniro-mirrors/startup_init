@@ -205,6 +205,7 @@ void ReleaseService(Service *service)
     FreeServiceArg(&service->writePidArgs);
     FreeServiceArg(&service->capsArgs);
     FreeServiceArg(&service->permArgs);
+    FreeServiceArg(&service->permAclsArgs);
 
     if (service->servPerm.caps != NULL) {
         free(service->servPerm.caps);
@@ -809,6 +810,7 @@ int ParseOneService(const cJSON *curItem, Service *service)
     (void)GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
     (void)GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
     (void)GetServiceArgs(curItem, "permission", MAX_WRITEPID_FILES, &service->permArgs);
+    (void)GetServiceArgs(curItem, "permission_acls", MAX_WRITEPID_FILES, &service->permAclsArgs);
     (void)GetStringItem(curItem, APL_STR_IN_CFG, service->apl, MAX_APL_NAME);
     (void)GetCpuArgs(curItem, CPU_CORE_STR_IN_CFG, service);
     ret = GetServiceSandbox(curItem, service);
