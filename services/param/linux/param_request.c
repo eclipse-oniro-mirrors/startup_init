@@ -160,7 +160,7 @@ int SystemSetParameter(const char *name, const char *value)
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value");
     int ctrlService = 0;
     int ret = CheckParameterSet(name, value, GetParamSecurityLabel(), &ctrlService);
-    PARAM_CHECK(ret == 0, return ret, "Forbit to set parameter %s", name);
+    PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
 
     size_t msgSize = sizeof(ParamMsgContent);
     msgSize = (msgSize < RECV_BUFFER_MAX) ? RECV_BUFFER_MAX : msgSize;
