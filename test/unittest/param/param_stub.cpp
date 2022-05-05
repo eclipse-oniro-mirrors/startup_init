@@ -75,8 +75,7 @@ static const char *TestGetParamLabel(const char *paraName)
     BEGET_LOGI("TestGetParamLabel %s", paraName);
     for (size_t i = 0; i < ARRAY_LENGTH(selinuxLabels); i++) {
         if (strncmp(selinuxLabels[i][0], paraName, strlen(selinuxLabels[i][0])) == 0) {
-            *context = strdup(selinuxLabels[i][1]);
-            return 0;
+            return selinuxLabels[i][1];
         }
     }
     int code = TestGenHashCode(paraName);

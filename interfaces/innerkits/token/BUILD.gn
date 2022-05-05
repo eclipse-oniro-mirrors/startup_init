@@ -65,7 +65,8 @@ ndk_lib("token_notes1") {
   }
   deps = []
   if (ohos_kernel_type != "liteos_m") {
-    deps += [ "//base/startup/init_lite/interfaces/innerkits/token:token_shared" ]
+    deps +=
+        [ "//base/startup/init_lite/interfaces/innerkits/token:token_shared" ]
   }
   head_files = [ "//base/startup/init_lite/interfaces/include/token" ]
 }
