@@ -44,7 +44,7 @@
 #include <policycoreutils.h>
 #endif
 
-#define ARRAY_LEN(array) (sizeof(array) / (sizeof(array[0])))
+#define ARRAY_LEN(array) (sizeof(array) / (sizeof((array)[0])))
 
 static const char *g_fscryptPolicyKey = "fscrypt.policy.config";
 

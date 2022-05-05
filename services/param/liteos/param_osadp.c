@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "param_osadp.h"
+
 #include <fcntl.h>
 #include <pthread.h>
 #include <string.h>
@@ -24,9 +26,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
-
-#include "param_osadp.h"
-#include "param_osadp.h"
 
 #define NSEC_PER_MSEC 1000000LL
 #define MSEC_PER_SEC 1000LL
