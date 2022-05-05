@@ -14,6 +14,7 @@
  */
 
 #include "systemgetparametercommitid_fuzzer.h"
+#include "fuzz_utils.h"
 #include "sys_param.h"
 
 namespace OHOS {
@@ -21,7 +22,9 @@ namespace OHOS {
     {
         bool result = false;
         uint32_t commitId = 0;
-        if (!SystemGetParameterCommitId(reinterpret_cast<ParamHandle>(data), &commitId)) {
+        char *rest = nullptr;
+        ParamHandle handle = (ParamHandle)strtoul(reinterpret_cast<char *>(const_cast<uint8_t *>(data)), &rest, BASE);
+        if (!SystemGetParameterCommitId(handle, &commitId)) {
             result = true;
         }
         return result;

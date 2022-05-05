@@ -14,6 +14,7 @@
  */
 
 #include "systemgetparametervalue_fuzzer.h"
+#include "fuzz_utils.h"
 #include "sys_param.h"
 
 namespace OHOS {
@@ -22,7 +23,9 @@ namespace OHOS {
         bool result = false;
         char buffer[PARAM_CONST_VALUE_LEN_MAX] = {0};
         uint32_t len = PARAM_CONST_VALUE_LEN_MAX;
-        if (!SystemGetParameterValue(reinterpret_cast<ParamHandle>(data), buffer, &len)) {
+        char *rest = nullptr;
+        ParamHandle handle = (ParamHandle)strtoul(reinterpret_cast<char *>(const_cast<uint8_t *>(data)), &rest, BASE);
+        if (!SystemGetParameterValue(handle, buffer, &len)) {
             result = true;
         }
         return result;
