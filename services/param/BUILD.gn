@@ -21,11 +21,11 @@ param_comm_sources = [
 
 if (!defined(ohos_lite) || ohos_kernel_type == "linux") {
   param_service_sources = [
-    "linux/param_osadp.c",
-    "linux/param_msgadp.c",
-    "linux/param_message.c",
-    "linux/param_service.c",
     "adapter/param_persistadp.c",
+    "linux/param_message.c",
+    "linux/param_msgadp.c",
+    "linux/param_osadp.c",
+    "linux/param_service.c",
     "manager/param_persist.c",
   ]
 
@@ -40,10 +40,12 @@ action("lite_const_param_to") {
   script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
   args = [
     "--source",
-    rebase_path("//base/startup/init_lite/services/etc/param/ohos_const/ohos.para"),
+    rebase_path(
+        "//base/startup/init_lite/services/etc/param/ohos_const/ohos.para"),
     "--dest_dir",
     rebase_path("$root_out_dir/gen/init_lite/"),
-    "--priority", "0"
+    "--priority",
+    "0",
   ]
   outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
 }
@@ -55,7 +57,8 @@ action("lite_ohos_param_to") {
     rebase_path("//base/startup/init_lite/services/etc/param/ohos.para"),
     "--dest_dir",
     rebase_path("$root_out_dir/gen/init_lite/"),
-    "--priority", "0"
+    "--priority",
+    "0",
   ]
   outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
 }
@@ -85,30 +88,28 @@ if (defined(ohos_lite)) {
     if (defined(boot_kernel_extended_cmdline)) {
       defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
     }
-    defines += [
-      "_GNU_SOURCE",
-    ]
+    defines += [ "_GNU_SOURCE" ]
     if (ohos_kernel_type == "linux") {
       sources += param_service_sources
       sources += param_trigger_sources
-      defines += [ "__LINUX__"]
+      defines += [ "__LINUX__" ]
     } else if (ohos_kernel_type == "liteos_a") {
       sources += [
         "adapter/param_persistadp.c",
-        "manager/param_persist.c",
-        "liteos/param_service.c",
         "liteos/param_osadp.c",
+        "liteos/param_service.c",
+        "manager/param_persist.c",
       ]
       defines += [
         "WORKSPACE_AREA_NEED_MUTEX",
         "PARAM_PERSIST_SAVE_MUTEX",
         "PARAMWORKSPACE_NEED_MUTEX",
         "__LITEOS_A__",
-        "PARAM_SUPPORT_CYCLE_CHECK"
+        "PARAM_SUPPORT_CYCLE_CHECK",
       ]
       deps += [
         ":lite_const_param_to",
-        ":lite_ohos_param_to"
+        ":lite_ohos_param_to",
       ]
       include_dirs += [ "$root_out_dir/gen/init_lite" ]
       defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
@@ -121,17 +122,17 @@ if (defined(ohos_lite)) {
     defines = [ "_GNU_SOURCE" ]
     if (ohos_kernel_type == "linux") {
       sources += [
-        "linux/param_request.c",
         "linux/param_message.c",
         "linux/param_osadp.c",
+        "linux/param_request.c",
       ]
-      defines += [ "__LINUX__"]
+      defines += [ "__LINUX__" ]
     } else if (ohos_kernel_type == "liteos_a") {
       sources += [
         "adapter/param_persistadp.c",
-        "manager/param_persist.c",
         "liteos/param_client.c",
         "liteos/param_osadp.c",
+        "manager/param_persist.c",
       ]
       defines += [
         "__LITEOS_A__",
@@ -142,9 +143,9 @@ if (defined(ohos_lite)) {
     } else if (ohos_kernel_type == "liteos_m") {
       sources += [
         "adapter/param_persistadp.c",
-        "manager/param_persist.c",
         "liteos/param_client.c",
         "liteos/param_osadp.c",
+        "manager/param_persist.c",
       ]
       defines += [
         "__LITEOS_M__",
@@ -155,7 +156,7 @@ if (defined(ohos_lite)) {
       ]
       deps = [
         ":lite_const_param_to",
-        ":lite_ohos_param_to"
+        ":lite_ohos_param_to",
       ]
       include_dirs += [ "$root_out_dir/gen/init_lite" ]
       defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
@@ -170,9 +171,7 @@ if (defined(ohos_lite)) {
     sources += param_trigger_sources
     include_dirs = param_include_dirs
 
-    defines = [
-      "_GNU_SOURCE",
-    ]
+    defines = [ "_GNU_SOURCE" ]
 
     if (defined(boot_kernel_extended_cmdline)) {
       defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
@@ -196,9 +195,9 @@ if (defined(ohos_lite)) {
   ohos_static_library("param_client") {
     sources = param_comm_sources
     sources += [
-      "linux/param_request.c",
       "linux/param_message.c",
       "linux/param_osadp.c",
+      "linux/param_request.c",
     ]
     include_dirs = param_include_dirs
 
@@ -207,7 +206,7 @@ if (defined(ohos_lite)) {
       sources += [ "adapter/param_selinux.c" ]
       defines += [
         "PARAM_SUPPORT_SELINUX",
-        "PARAMWORKSPACE_NEED_MUTEX"
+        "PARAMWORKSPACE_NEED_MUTEX",
       ]
     }
     part_name = "init"

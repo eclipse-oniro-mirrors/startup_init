@@ -44,6 +44,27 @@ extern "C" {
 #endif
 #endif
 
+#if (defined __LITEOS_A__ || defined __LITEOS_M__)
+#define DAC_DEFAULT_MODE 0777
+#ifdef STARTUP_INIT_TEST
+#define PARAM_WORKSPACE_MAX (1024 * 50)
+#else
+#define PARAM_WORKSPACE_MAX (1024 * 30)
+#endif
+#define PARAM_WORKSPACE_SMALL PARAM_WORKSPACE_MAX
+#define PARAM_WORKSPACE_DEF PARAM_WORKSPACE_MAX
+#else
+#define PARAM_WORKSPACE_MAX (80 * 1024)
+#define PARAM_WORKSPACE_SMALL (1024 * 10)
+#ifdef STARTUP_INIT_TEST
+#define DAC_DEFAULT_MODE 0777
+#define PARAM_WORKSPACE_DEF (1024 * 50)
+#else
+#define DAC_DEFAULT_MODE 0774
+#define PARAM_WORKSPACE_DEF (1024 * 30)
+#endif
+#endif
+
 // support futex
 #ifndef __NR_futex
 #define PARAM_NR_FUTEX 202 /* syscall number */

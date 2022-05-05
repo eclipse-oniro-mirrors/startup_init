@@ -24,6 +24,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
+
+#include "param_osadp.h"
 #include "param_osadp.h"
 
 #define NSEC_PER_MSEC 1000000LL
@@ -46,6 +48,7 @@ static void SetTimeSpec(struct timespec *ts, int64_t msec)
 
 static int StartTimer(const ParamTimer *paramTimer, int64_t whenMsec, int64_t repeat)
 {
+    UNUSED(repeat);
     struct itimerspec ts;
     SetTimeSpec(&ts.it_value, whenMsec);
     SetTimeSpec(&ts.it_interval, whenMsec);

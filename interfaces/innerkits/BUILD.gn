@@ -11,12 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//base/startup/init_lite/begetd.gni")
-syspara_sources = [
-  "syscap/init_syscap.c",
-  "syspara/param_comm.c",
-  "syspara/parameter.c",
-  "syspara/sysversion.c",
-]
+if (!defined(ohos_lite) || ohos_kernel_type != "liteos_m") {
+  syspara_sources = [
+    "syscap/init_syscap.c",
+    "syspara/param_comm.c",
+    "syspara/parameter.c",
+    "syspara/sysversion.c",
+  ]
+}
 
 config("exported_header_files") {
   visibility = [ ":*" ]
@@ -81,14 +83,14 @@ if (defined(ohos_lite)) {
   if (ohos_kernel_type == "liteos_m") {
     static_library("libbegetutil") {
       sources = [ "//base/startup/init_lite/services/log/init_log.c" ]
-      sources += syspara_sources
+      sources += [ "syscap/init_syscap.c" ]
       public_configs = [ ":exported_header_files" ]
 
       defines = [
         "_GNU_SOURCE",
         "INIT_LOG_INIT=3",
         "OHOS_LITE",
-        "__LITEOS_M__"
+        "__LITEOS_M__",
       ]
       include_dirs = [
         "./include",
@@ -131,9 +133,9 @@ if (defined(ohos_lite)) {
       lib_extension = ".so"
     }
     deps = [ ":libbegetutil" ]
-    head_files = [ "//base/startup/init_lite/interfaces/innerkits/include/syspara" ]
+    head_files =
+        [ "//base/startup/init_lite/interfaces/innerkits/include/syspara" ]
   }
-
 } else {
   import("//build/ohos.gni")
 
@@ -237,18 +239,21 @@ if (defined(ohos_lite)) {
 
     if (param_feature_deviceinfo) {
       sources += [
-        "//base/startup/init_lite/device_info/device_info_proxy.cpp",
         "//base/startup/init_lite/device_info/device_info_kits.cpp",
+        "//base/startup/init_lite/device_info/device_info_proxy.cpp",
       ]
       defines += [ "PARAM_FEATURE_DEVICEINFO" ]
     } else {
-      sources += [ "//base/startup/init_lite/interfaces/innerkits/syspara/param_comm.c" ]
+      sources += [
+        "//base/startup/init_lite/interfaces/innerkits/syspara/param_comm.c",
+      ]
       deps += [
-        "//base/startup/init_lite/services/param:param_client",
         "//base/startup/init_lite/services/loopevent:loopevent",
+        "//base/startup/init_lite/services/param:param_client",
         "//base/startup/init_lite/services/utils:libinit_tools",
         "//base/startup/init_lite/services/utils:libinit_utils",
-        "//third_party/openssl:libcrypto_shared" ]
+        "//third_party/openssl:libcrypto_shared",
+      ]
     }
 
     external_deps = [
