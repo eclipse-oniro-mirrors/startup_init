@@ -76,7 +76,6 @@ HWTEST_F(SysparaUnitTest, parameterTest001_2, TestSize.Level0)
     EXPECT_STRNE(GetSoftwareModel(), nullptr);
     EXPECT_STRNE(GetHardwareModel(), nullptr);
     EXPECT_STRNE(GetHardwareProfile(), nullptr);
-    EXPECT_STRNE(GetSerial(), nullptr);
     EXPECT_STRNE(GetOSFullName(), nullptr);
     EXPECT_STRNE(GetOsReleaseType(), nullptr);
     EXPECT_STRNE(GetDisplayVersion(), nullptr);
