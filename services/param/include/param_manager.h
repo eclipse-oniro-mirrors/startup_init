@@ -110,7 +110,7 @@ typedef struct {
     char *prefix;
 } ParamTraversalContext;
 
-const char *GetSelinuxContent(const char *name, char *buffer, uint32_t size);
+const char *GetSelinuxContent(const char *name);
 
 int LoadParamFromCmdLine(void);
 void LoadSelinuxLabel(void);

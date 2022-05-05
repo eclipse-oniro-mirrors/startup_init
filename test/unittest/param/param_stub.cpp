@@ -70,7 +70,7 @@ static int TestSetParamCheck(const char *paraName, struct ucred *uc)
     return g_testPermissionResult;
 }
 
-static int TestGetParamLabel(const char *paraName, char **context)
+static const char *TestGetParamLabel(const char *paraName)
 {
     BEGET_LOGI("TestGetParamLabel %s", paraName);
     for (size_t i = 0; i < ARRAY_LENGTH(selinuxLabels); i++) {
@@ -81,8 +81,7 @@ static int TestGetParamLabel(const char *paraName, char **context)
     }
     int code = TestGenHashCode(paraName);
     code = code % (ARRAY_LENGTH(selinuxLabels));
-    *context = strdup(selinuxLabels[code][1]);
-    return 0;
+    return selinuxLabels[code][1];
 }
 
 static const char *forbitReadParamName[] = {

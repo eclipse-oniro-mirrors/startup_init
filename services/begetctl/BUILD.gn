@@ -10,6 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//base/startup/init_lite/begetd.gni")
 
 if (defined(ohos_lite)) {
   executable("begetctl") {
@@ -44,8 +45,12 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function:libsec_static",
     ]
   }
+  group("begetctl_cmd") {
+    if (param_begetctl_liteos_support) {
+      deps = [ ":begetctl" ]
+    }
+  }
 } else {
-  import("//base/startup/init_lite/begetd.gni")
   import("//build/ohos.gni")
 
   ohos_executable("begetctl") {

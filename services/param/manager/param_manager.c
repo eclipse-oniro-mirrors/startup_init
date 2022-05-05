@@ -543,9 +543,9 @@ int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, u
     }
 #ifdef PARAM_SUPPORT_SELINUX
     if (ret == DAC_RESULT_PERMISSION && mode != DAC_WRITE) { // open workspace for client read
-        char content[SELINUX_CONTENT_LEN] = {0};
-        if (GetSelinuxContent(name, content, sizeof(content)) != NULL) {
-            AddWorkSpace(content, 1, PARAM_WORKSPACE_DEF);
+        const char *label = GetSelinuxContent(name);
+        if (label != NULL) {
+            AddWorkSpace(label, 1, PARAM_WORKSPACE_DEF);
         } else {
             ret = DAC_RESULT_FORBIDED;
         }
@@ -678,9 +678,8 @@ WorkSpace *GetWorkSpace(const char *name)
 #ifndef PARAM_SUPPORT_SELINUX
     tmpName = WORKSPACE_NAME_NORMAL;
 #else
-    char content[SELINUX_CONTENT_LEN] = {0};
     if (strcmp(name, WORKSPACE_NAME_DAC) != 0) {
-        tmpName = (char *)GetSelinuxContent(name, content, sizeof(content));
+        tmpName = (char *)GetSelinuxContent(name);
     }
 #endif
     WorkSpace *space = NULL;
@@ -833,7 +832,11 @@ int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditD
     auditData->dacData.gid = node->gid;
     auditData->dacData.mode = node->mode;
 #ifdef PARAM_SUPPORT_SELINUX
-    GetSelinuxContent(name, auditData->label, sizeof(auditData->label));
+    const char *tmpName = GetSelinuxContent(name);
+    if (tmpName != NULL) {
+        int ret = strcpy_s(auditData->label, sizeof(auditData->label), tmpName);
+        PARAM_CHECK(ret == 0, return 0, "Failed to copy label for %s", name);
+    }
 #endif
     return 0;
 }

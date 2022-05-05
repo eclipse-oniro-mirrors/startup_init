@@ -54,7 +54,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         PARAM_CHECK(g_selinuxSpace.getParamList != NULL, return -1, "Failed to dlsym getParamList %s", dlerror());
     }
     if (g_selinuxSpace.getParamLabel == NULL) {
-        g_selinuxSpace.getParamLabel = (int (*)(const char *, char **))dlsym(handle, "GetParamLabel");
+        g_selinuxSpace.getParamLabel = (const char * (*)(const char *))dlsym(handle, "GetParamLabel");
         PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return -1, "Failed to dlsym getParamLabel %s", dlerror());
     }
     if (g_selinuxSpace.readParamCheck == NULL) {
@@ -151,26 +151,14 @@ int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
     return ret;
 }
 
-const char *GetSelinuxContent(const char *name, char *buffer, uint32_t size)
+const char *GetSelinuxContent(const char *name)
 {
     PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return NULL, "Invalid getParamLabel");
     PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL, return NULL, "Invalid setSelinuxLogCallback");
     // log
     g_selinuxSpace.setSelinuxLogCallback();
 
-    char *label = NULL;
-    int ret = g_selinuxSpace.getParamLabel(name, &label);
-    if (ret == 0 && label != NULL) {
-        if (strcpy_s(buffer, size, label) == 0) {
-            free(label);
-            PARAM_LOGV("GetSelinuxContent name %s label %s", name, buffer);
-            return buffer;
-        }
-        free(label);
-    }
-    PARAM_LOGE("Failed to get content for name %s ret %d", name, ret);
-    strcpy_s(buffer, size, WORKSPACE_NAME_DEF_SELINUX);
-    return buffer;
+    return g_selinuxSpace.getParamLabel(name);
 }
 
 #if defined STARTUP_INIT_TEST || defined LOCAL_TEST
