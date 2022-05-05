@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -70,10 +70,10 @@ unsigned int ConvertFlags(char *flagBuffer)
     return flags;
 }
 
-static void AddToFstab(Fstab *fstab, FstabItem *item)
+static int AddToFstab(Fstab *fstab, FstabItem *item)
 {
     if (fstab == NULL || item == NULL) {
-        return;
+        return -1;
     }
     if (fstab->head != NULL) {
         item->next = fstab->head->next;
@@ -81,6 +81,7 @@ static void AddToFstab(Fstab *fstab, FstabItem *item)
     } else {
         fstab->head = item;
     }
+    return 0;
 }
 
 void ReleaseFstabItem(FstabItem *item)
@@ -124,13 +125,17 @@ void ReleaseFstab(Fstab *fstab)
     }
 }
 
-static int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts)
+int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts, const char *separator)
 {
     BEGET_CHECK_RETURN_VALUE(str != NULL && fstab != NULL, -1);
-    const char *separator = " \t";
     char *rest = NULL;
     FstabItem *item = NULL;
     char *p = NULL;
+
+    if (separator == NULL || *separator == '\0') {
+        BEGET_LOGE("Invalid separator for parsing fstab");
+        return -1;
+    }
 
     if ((item = (FstabItem *)calloc(1, sizeof(FstabItem))) == NULL) {
         errno = ENOMEM;
@@ -174,8 +179,7 @@ static int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts)
         } else {
             item->fsManagerFlags = 0;
         }
-        AddToFstab(fstab, item);
-        return 0;
+        return AddToFstab(fstab, item);
     } while (0);
 
     ReleaseFstabItem(item);
@@ -227,7 +231,7 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
             continue;
         }
 
-        if (ParseFstabPerLine(p, fstab, procMounts) < 0) {
+        if (ParseFstabPerLine(p, fstab, procMounts, " \t") < 0) {
             if (errno == ENOMEM) {
                 // Ran out of memory, there is no reason to continue.
                 break;
@@ -300,7 +304,7 @@ static char *GetFstabFile(char *fileName, int size)
         char hardware[MAX_BUFFER_LEN] = {0};
         char *buffer = ReadFileData("/proc/cmdline");
         if (buffer == NULL) {
-            BEGET_LOGE("Failed read \"/proc/cmdline\"");
+            BEGET_LOGE("Failed to read \"/proc/cmdline\"");
             return NULL;
         }
         int ret = GetProcCmdlineValue("hardware", buffer, hardware, MAX_BUFFER_LEN);
@@ -310,11 +314,11 @@ static char *GetFstabFile(char *fileName, int size)
             return NULL;
         }
         if (snprintf_s(fileName, size, size - 1, "/vendor/etc/fstab.%s", hardware) == -1) {
-            BEGET_LOGE("Fail snprintf_s err=%d", errno);
+            BEGET_LOGE("Failed to build fstab file, err=%d", errno);
             return NULL;
         }
     }
-    BEGET_LOGI("file is %s", fileName);
+    BEGET_LOGI("fstab file is %s", fileName);
     return fileName;
 }
 
@@ -325,11 +329,11 @@ int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char 
     }
     FstabItem *item = FindFstabItemForMountPoint(*fstab, mountPoint);
     if (item == NULL) {
-        BEGET_LOGE("Failed get fstab item from point \" %s \"", mountPoint);
+        BEGET_LOGE("Failed to get fstab item from point \" %s \"", mountPoint);
         return -1;
     }
     if (strncpy_s(deviceName, nameLen, item->deviceName, strlen(item->deviceName)) != 0) {
-        BEGET_LOGE("Failed strncpy_s err=%d", errno);
+        BEGET_LOGE("Failed to copy block device name, err=%d", errno);
         return -1;
     }
     return 0;
@@ -416,7 +420,7 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
             }
             // Combined each mount flag with ','
             if (strncat_s(fsSpecificData, fsSpecificDataSize - 1, ",", 1) != EOK) {
-                BEGET_LOGW("Failed to append comma.");
+                BEGET_LOGW("Failed to append comma");
                 break; // If cannot add ',' to the end of flags, there is not reason to continue.
             }
         }

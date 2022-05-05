@@ -18,5 +18,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define BASE 10
 void CloseStdout(void);
 #endif

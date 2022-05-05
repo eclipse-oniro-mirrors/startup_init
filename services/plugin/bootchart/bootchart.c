@@ -308,6 +308,4 @@ static void BootchartExit(void)
 PLUGIN_CONSTRUCTOR(void)
 {
     PluginRegister("bootchart", NULL, BootchartInit, BootchartExit);
-    PLUGIN_LOGI("bootchart pluginInterface %p %p",
-        BootchartInit, BootchartExit);
 }

@@ -15,13 +15,16 @@
 
 #include "systemgetparametercommitid_fuzzer.h"
 #include "init_param.h"
+#include "fuzz_utils.h"
 
 namespace OHOS {
     bool FuzzSystemGetParameterCommitId(const uint8_t* data, size_t size)
     {
         bool result = false;
         uint32_t commitId = 0;
-        if (!SystemGetParameterCommitId(reinterpret_cast<ParamHandle>(data), &commitId)) {
+        char *rest = nullptr;
+        ParamHandle handle = (ParamHandle)strtoul(reinterpret_cast<char *>(const_cast<uint8_t *>(data)), &rest, BASE);
+        if (!SystemGetParameterCommitId(handle, &commitId)) {
             result = true;
         }
         return result;

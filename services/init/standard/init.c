@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -173,16 +173,9 @@ static int StartUeventd(char **requiredDevices, int num)
 
 static void StartInitSecondStage(void)
 {
-    const char *fstabFile = "/etc/fstab.required";
-    Fstab *fstab = NULL;
-    if (access(fstabFile, F_OK) != 0) {
-        fstabFile = "/system/etc/fstab.required";
-    }
-    INIT_ERROR_CHECK(access(fstabFile, F_OK) == 0, abort(), "Failed get fstab.required");
-    fstab = ReadFstabFromFile(fstabFile, false);
-    INIT_ERROR_CHECK(fstab != NULL, abort(), "Read fstab file \" %s \" failed\n", fstabFile);
-
     int requiredNum = 0;
+    Fstab* fstab = LoadRequiredFstab();
+    INIT_ERROR_CHECK(fstab != NULL, abort(), "Failed to load required fstab");
     char **devices = GetRequiredDevices(*fstab, &requiredNum);
     if (devices != NULL && requiredNum > 0) {
         int ret = StartUeventd(devices, requiredNum);

@@ -15,13 +15,16 @@
 
 #include "systemgetparametername_fuzzer.h"
 #include "init_param.h"
+#include "fuzz_utils.h"
 
 namespace OHOS {
     bool FuzzSystemGetParameterName(const uint8_t* data, size_t size)
     {
         bool result = false;
         char buffer[PARAM_NAME_LEN_MAX] = {0};
-        if (!SystemGetParameterName(reinterpret_cast<ParamHandle>(data), buffer, PARAM_NAME_LEN_MAX)) {
+        char *rest = nullptr;
+        ParamHandle handle = (ParamHandle)strtoul(reinterpret_cast<char *>(const_cast<uint8_t *>(data)), &rest, BASE);
+        if (!SystemGetParameterName(handle, buffer, PARAM_NAME_LEN_MAX)) {
             result = true;
         }
         return result;

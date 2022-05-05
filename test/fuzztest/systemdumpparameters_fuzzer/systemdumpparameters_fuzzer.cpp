@@ -21,7 +21,8 @@ namespace OHOS {
     bool FuzzSystemDumpParameters(const uint8_t* data, size_t size)
     {
         CloseStdout();
-        SystemDumpParameters(reinterpret_cast<int>(data));
+        int verbose = atoi(reinterpret_cast<char *>(const_cast<uint8_t *>(data)));
+        SystemDumpParameters(verbose);
         return true;
     }
 }

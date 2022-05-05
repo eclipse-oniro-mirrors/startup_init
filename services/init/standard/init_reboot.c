@@ -121,14 +121,16 @@ static int CheckAndRebootToUpdater(const char *valueData, const char *cmd,
         INIT_ERROR_CHECK(ret == 0, return -1, "Failed to format cmd for %s.", cmd);
     }
 
-    if ((cmdExt != NULL) && (valueData != NULL) && (strncmp(valueData, cmdExt, strlen(cmdExt)) == 0)) {
-        const char *p = valueData + strlen(cmdExt);
-        ret = snprintf_s(msg.update, MAX_UPDATE_SIZE, MAX_UPDATE_SIZE - 1, "%s", p);
-        INIT_ERROR_CHECK(ret > 0, return -1, "Failed to format param for %s.", cmd);
-        msg.update[MAX_UPDATE_SIZE - 1] = 0;
-    } else {
-        ret = memset_s(msg.update, MAX_UPDATE_SIZE, 0, MAX_UPDATE_SIZE);
-        INIT_ERROR_CHECK(ret == 0, return -1, "Failed to format update for %s.", cmd);
+    if (strncmp(cmd, "updater", strlen("updater")) != 0) {
+        if ((cmdExt != NULL) && (valueData != NULL) && (strncmp(valueData, cmdExt, strlen(cmdExt)) == 0)) {
+            const char *p = valueData + strlen(cmdExt);
+            ret = snprintf_s(msg.update, MAX_UPDATE_SIZE, MAX_UPDATE_SIZE - 1, "%s", p);
+            INIT_ERROR_CHECK(ret > 0, return -1, "Failed to format param for %s.", cmd);
+            msg.update[MAX_UPDATE_SIZE - 1] = 0;
+        } else {
+            ret = memset_s(msg.update, MAX_UPDATE_SIZE, 0, MAX_UPDATE_SIZE);
+            INIT_ERROR_CHECK(ret == 0, return -1, "Failed to format update for %s.", cmd);
+        }
     }
 
     if (RBMiscWriteUpdaterMessage(miscFile, &msg) == 0) {
