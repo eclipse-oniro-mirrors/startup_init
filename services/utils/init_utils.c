@@ -32,14 +32,7 @@
 #include "service_control.h"
 
 #define MAX_BUF_SIZE  1024
-#define MAX_DATA_BUFFER 2048
-#define MAX_SMALL_BUFFER 512
-
-#ifdef STARTUP_UT
-#define LOG_FILE_NAME "/media/sf_ubuntu/test/log.txt"
-#else
-#define LOG_FILE_NAME "/data/startup_log.txt"
-#endif
+#define MAX_SMALL_BUFFER 3096
 
 #define MAX_JSON_FILE_LEN 102400    // max init.cfg size 100KB
 #define CONVERT_MICROSEC_TO_SEC(x) ((x) / 1000 / 1000.0)
@@ -131,7 +124,7 @@ char *ReadFileData(const char *fileName)
     INIT_ERROR_CHECK(buffer != NULL, close(fd);
         return NULL, "Failed to allocate memory for %s", fileName);
     ssize_t readLen = read(fd, buffer, MAX_SMALL_BUFFER - 1);
-    INIT_ERROR_CHECK(readLen > 0, close(fd);
+    INIT_ERROR_CHECK((readLen > 0) && (readLen < (MAX_SMALL_BUFFER - 1)), close(fd);
         free(buffer);
         return NULL, "Failed to read data for %s", fileName);
     buffer[readLen] = '\0';
@@ -373,11 +366,11 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
         return -1, "Failed to malloc for %s", dirPath);
 
     struct dirent *dp;
+    uint32_t count = 0;
     while ((dp = readdir(pDir)) != NULL) {
         if (dp->d_type == DT_DIR) {
             continue;
         }
-        INIT_LOGV("ReadFileInDir %s", dp->d_name);
         if (includeExt != NULL) {
             char *tmp = strstr(dp->d_name, includeExt);
             if (tmp == NULL) {
@@ -394,9 +387,11 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
         }
         struct stat st;
         if (stat(fileName, &st) == 0) {
+            count++;
             processFile(fileName, context);
         }
     }
+    INIT_LOGI("ReadFileInDir dirPath %s %d", dirPath, count);
     free(fileName);
     closedir(pDir);
     return 0;

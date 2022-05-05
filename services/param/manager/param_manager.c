@@ -752,7 +752,7 @@ WorkSpace *GetNextWorkSpace(WorkSpace *curr)
 int SystemReadParam(const char *name, char *value, unsigned int *len)
 {
     PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Invalid space");
-    PARAM_CHECK(name != NULL && len != NULL, return -1, "The name or value is null");
+    PARAM_CHECK(name != NULL && len != NULL && strlen(name) > 0, return -1, "The name or value is null");
     ParamHandle handle = 0;
     int ret = ReadParamWithCheck(name, DAC_READ, &handle);
     if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
