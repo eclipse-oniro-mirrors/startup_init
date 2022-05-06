@@ -44,8 +44,6 @@
 #include <policycoreutils.h>
 #endif
 
-#define ARRAY_LEN(array) (sizeof(array) / (sizeof((array)[0])))
-
 static const char *g_fscryptPolicyKey = "fscrypt.policy.config";
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
@@ -425,7 +423,7 @@ static void DoInitGlobalKey(const struct CmdArgs *ctx)
         "init_global_key",
         NULL
     };
-    int argc = ARRAY_LEN(argv);
+    int argc = ARRAY_LENGTH(argv);
     int ret = SyncExecCommand(argc, argv);
     INIT_LOGI("DoInitGlobalKey: end, ret = %d", ret);
 }
@@ -443,7 +441,7 @@ static void DoInitMainUser(const struct CmdArgs *ctx)
         "init_main_user",
         NULL
     };
-    int argc = ARRAY_LEN(argv);
+    int argc = ARRAY_LENGTH(argv);
     int ret = SyncExecCommand(argc, argv);
     INIT_LOGI("DoInitMainUser: end, ret = %d", ret);
 }
@@ -477,7 +475,7 @@ static void DoMkswap(const struct CmdArgs *ctx)
         ctx->argv[0],
         NULL
     };
-    int argc = ARRAY_LEN(argv);
+    int argc = ARRAY_LENGTH(argv);
     int ret = SyncExecCommand(argc, argv);
     INIT_LOGI("DoMkswap: end, ret = %d", ret);
 }
@@ -494,7 +492,7 @@ static void DoSwapon(const struct CmdArgs *ctx)
         ctx->argv[0],
         NULL
     };
-    int argc = ARRAY_LEN(argv);
+    int argc = ARRAY_LENGTH(argv);
     int ret = SyncExecCommand(argc, argv);
     INIT_LOGI("DoSwapon: end, ret = %d", ret);
 }

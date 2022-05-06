@@ -15,10 +15,10 @@
 #include "watcher_manager_kits.h"
 
 #include "if_system_ability_manager.h"
+#include "init_param.h"
 #include "iservice_registry.h"
 #include "iwatcher.h"
 #include "iwatcher_manager.h"
-#include "init_param.h"
 #include "system_ability_definition.h"
 #include "watcher_utils.h"
 

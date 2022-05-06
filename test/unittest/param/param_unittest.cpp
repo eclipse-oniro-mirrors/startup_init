@@ -40,6 +40,7 @@ static int CheckServerParamValue(const char *name, const char *expectValue)
     return 0;
 }
 
+namespace init_ut {
 class ParamUnitTest : public ::testing::Test {
 public:
     ParamUnitTest() {}
@@ -387,4 +388,5 @@ HWTEST_F(ParamUnitTest, TestDumpParamMemory, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestDumpParamMemory();
+}
 }

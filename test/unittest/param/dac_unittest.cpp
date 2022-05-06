@@ -23,6 +23,7 @@
 using namespace testing::ext;
 using namespace std;
 
+namespace init_ut {
 class DacUnitTest : public ::testing::Test {
 public:
     DacUnitTest() {}
@@ -251,4 +252,5 @@ HWTEST_F(DacUnitTest, TestClientDacCheckFilePermission, TestSize.Level0)
 {
     DacUnitTest test;
     test.TestClientDacCheckFilePermission(STARTUP_INIT_UT_PATH "/trigger_test.cfg");
+}
 }

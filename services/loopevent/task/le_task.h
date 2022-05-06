@@ -23,10 +23,9 @@
 #include "loop_event.h"
 
 #ifndef LOOP_EVENT_USE_MUTEX
-#define LoopMutex char
-#define LoopMutexInit(x)
-#define LoopMutexLock(x)
-#define LoopMutexUnlock(x)
+#define LoopMutexInit(x) (void)(x)
+#define LoopMutexLock(x) (void)(x)
+#define LoopMutexUnlock(x) (void)(x)
 #else
 #include <pthread.h>
 #define LoopMutex pthread_mutex_t
@@ -79,7 +78,11 @@ typedef struct {
 
 typedef struct {
     BaseTask base;
+#ifdef LOOP_EVENT_USE_MUTEX
     LoopMutex mutex;
+#else
+    char mutex;
+#endif
     ListHead buffHead;
 } StreamTask;
 

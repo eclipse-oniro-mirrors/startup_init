@@ -29,6 +29,8 @@ extern "C" {
 #endif
 #endif
 
+#define TEST_PATH "/data/ueventd_ut"
+
 void PrepareInitUnitTestEnv(void);
 void TestSetSelinuxOps(void);
 void SetTestPermissionResult(int result);

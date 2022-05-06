@@ -23,6 +23,7 @@
 using namespace testing::ext;
 using namespace std;
 
+namespace init_ut {
 class SelinuxUnitTest : public ::testing::Test {
 public:
     SelinuxUnitTest() {}
@@ -173,4 +174,5 @@ HWTEST_F(SelinuxUnitTest, TestClientDacCheckParaPermission, TestSize.Level0)
     SelinuxUnitTest test;
     test.TestClientSelinuxCheckParaPermissionWrite("aaa.bbb.bbb.ccc", "user:group1:r");
     test.TestClientSelinuxCheckParaPermissionRead("aaa.bbb.bbb.ccc", "user:group1:r");
+}
 }
