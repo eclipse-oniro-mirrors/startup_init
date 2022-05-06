@@ -17,13 +17,16 @@
 #define LE_SOCKET_H
 #include "le_utils.h"
 #include "loop_event.h"
+#include "beget_ext.h"
 
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
+INIT_LOCAL_API
 int CreateSocket(int flags, const char *server);
+INIT_LOCAL_API
 int AcceptSocket(int fd, int flags);
 
 #ifdef __cplusplus

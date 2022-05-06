@@ -25,6 +25,15 @@ extern "C" {
 #ifndef INIT_LOG_PATH
 #define INIT_LOG_PATH "/data/init_agent/"
 #endif
+
+#if defined(__GNUC__) && (__GNUC__ >= 4)
+    #define INIT_PUBLIC_API __attribute__((visibility ("default")))
+    #define INIT_LOCAL_API __attribute__((visibility("hidden")))
+#else
+    #define INIT_PUBLIC_API
+    #define INIT_LOCAL_API
+#endif
+
 typedef enum InitLogLevel {
     INIT_DEBUG = 0,
     INIT_INFO,
