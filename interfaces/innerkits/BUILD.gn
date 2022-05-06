@@ -233,6 +233,12 @@ if (defined(ohos_lite)) {
         "//base/startup/init_lite/services/param/watcher/include",
         "//base/startup/init_lite/services/log",
       ]
+      deps += [
+        "//base/startup/init_lite/services/param:param_client",
+        "//base/startup/init_lite/services/utils:libinit_tools",
+        "//base/startup/init_lite/services/utils:libinit_utils",
+        "//third_party/openssl:libcrypto_shared",
+      ]
     } else {
       defines += [ "NO_PARAM_WATCHER" ]
     }

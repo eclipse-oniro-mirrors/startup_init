@@ -17,6 +17,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <climits>
 
 #include "param_comm.h"
 #include "init_param.h"
@@ -161,6 +162,11 @@ std::string GetDeviceType(void)
         return deviceTypeMap[type];
     }
     return std::string(type);
+}
+
+int GetIntParameter(const std::string key, int def)
+{
+    return GetIntParameter(key, def, INT_MIN, INT_MAX);
 }
 }  // namespace system
 }  // namespace OHOS
