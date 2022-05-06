@@ -59,7 +59,7 @@ init将系统启动分为三个阶段：
 * 分组并行启动  
 无须显式添加start命令，服务的start-mode属性为非condition配置，init将会为该服务按策略分组并在该分组服务启动时统一拉起
 * 按需启动
-按需启动的服务应当被认为是无须在系统启动过程中被拉起的，而是当需要时，这个当需要时的触发条件可能是被init监听的相关socket有消息上报、samgr收到客户端的请求需要拉起SA服务等情况，按需启动的服务需要配置ondemand属性为true，start-mode属性需要配置为condition
+按需启动的服务应当被认为是无须在系统启动过程中被拉起的，而是当需要时，这个当需要时的触发条件可能是被init监听的相关socket有消息上报、samgr收到客户端的请求需要拉起SA服务等情况，按需启动的服务需要配置ondemand属性为true，该属性拥有高优先级，配置该属性后服务将不再受start-mode属性控制，统一通过按需启动方式拉起
 
 对于每个服务的启动，进程的运行，init提供了以保障系统安全性为目的的沙盒运行环境。每个进程运行时都有不同的环境约束，各个分层之间进程的资源隔离，确保每个进程都在各自的沙盒环境下运行，只访问允许的系统资源。
 
@@ -120,8 +120,7 @@ init的关键配置文件init.cfg位于代码仓库base/startup/init_lite/servic
                 ]
             }],
             "critical" : [ 0, 15, 5],
-            "ondemand" : true,
-            "start-mode" : "condition"
+            "ondemand" : true
         }, {
             "name" : "service2",
             "path" : ["/system/bin/process2"],
