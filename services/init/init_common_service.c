@@ -180,6 +180,11 @@ void SetSecon(Service *service)
         } else {
             INIT_LOGI("service %s secon set to %s.", service->name, service->secon);
         }
+    } else {
+        if (setexeccon("u:r:limit_domain:s0") < 0) {
+            INIT_LOGE("failed to set service %s's secon (%s).", service->name, "u:r:limit_domain:s0");
+        }
+        INIT_LOGE("Please config secon field in service %s's cfg file, limit_domain will be blocked by selinux", service->name);
     }
 #endif // WITH_SELINUX
 }
