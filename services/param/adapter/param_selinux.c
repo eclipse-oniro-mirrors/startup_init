@@ -24,6 +24,12 @@
 #include "selinux_parameter.h"
 #endif
 
+#ifdef __aarch64__
+#define CHECKER_LIB_NAME "/system/lib64/libparaperm_checker.z.so"
+#else
+#define CHECKER_LIB_NAME "/system/lib/libparaperm_checker.z.so"
+#endif
+
 static SelinuxSpace g_selinuxSpace = {0};
 static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
 {
@@ -35,7 +41,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
     security->flags[PARAM_SECURITY_SELINUX] = 0;
 #if !(defined STARTUP_INIT_TEST || defined LOCAL_TEST)
     if (g_selinuxSpace.selinuxHandle == NULL) {
-        g_selinuxSpace.selinuxHandle = dlopen("/system/lib/libparaperm_checker.z.so", RTLD_LAZY);
+        g_selinuxSpace.selinuxHandle = dlopen(CHECKER_LIB_NAME, RTLD_LAZY);
         PARAM_CHECK(g_selinuxSpace.selinuxHandle != NULL,
             return -1, "Failed to dlsym selinuxHandle, %s", dlerror());
     }
