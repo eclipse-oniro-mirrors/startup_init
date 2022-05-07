@@ -28,3 +28,10 @@ persist.sys.usb.config  = root:root:0777
 # default forbit other user to start service
 ohos.servicectrl.   = system:servicectrl:0775
 
+#permission for system
+persist.window.boot. = root:system:0775
+
+#permission for log
+debug.bytrace.   = root:system:0775
+
+persist.distributed_hardware.device_manager. = system:system:0775

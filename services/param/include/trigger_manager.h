@@ -187,7 +187,6 @@ void ClearTrigger(const TriggerWorkSpace *workSpace, int8_t type);
 int AddCommand(JobNode *trigger, uint32_t cmdIndex, const char *content);
 CommandNode *GetNextCmdNode(const JobNode *trigger, const CommandNode *curr);
 
-void DumpTrigger(const TriggerWorkSpace *workSpace);
 void PostParamTrigger(int type, const char *name, const char *value);
 
 void ClearWatchTrigger(ParamWatcher *watcher, int type);
@@ -196,6 +195,10 @@ int CheckWatchTriggerTimeout(void);
 
 const char *GetTriggerName(const TriggerNode *trigger);
 void RegisterTriggerExec(int type, int32_t (*executeTrigger)(const TriggerNode *, const char *, uint32_t));
+
+#ifdef STARTUP_INIT_TEST
+void ProcessBeforeEvent(const ParamTaskPtr stream, uint64_t eventId, const uint8_t *content, uint32_t size);
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 }

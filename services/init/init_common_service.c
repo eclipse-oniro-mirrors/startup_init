@@ -248,7 +248,7 @@ static int BindCpuCore(Service *service)
     if (CPU_COUNT(&service->cpuSet) == 0) {
         return SERVICE_SUCCESS;
     }
-#ifndef __LITEOS__
+#ifndef __LITEOS_A__
     int pid = getpid();
     if (sched_setaffinity(pid, sizeof(service->cpuSet), &service->cpuSet) != 0) {
         INIT_LOGE("%s set affinity between process(pid=%d) with CPU's core failed", service->name, pid);
@@ -459,7 +459,6 @@ void ServiceReap(Service *service)
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("Critical service \" %s \" crashed %d times, rebooting system",
                 service->name, service->crashCount);
-            ServiceStop(GetServiceByName("appspawn"));
             ExecReboot("reboot");
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {

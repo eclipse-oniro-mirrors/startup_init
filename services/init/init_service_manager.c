@@ -403,7 +403,7 @@ static int ParseSocketProtocol(cJSON *json, ServiceSocket *sockopt)
     if (strncmp(stringValue, "default", strLen) == 0) {
         sockopt->protocol = 0;
     } else if (strncmp(stringValue, "NETLINK_KOBJECT_UEVENT", strLen) == 0) {
-#ifndef __LITEOS__
+#ifndef __LITEOS_A__
         sockopt->protocol = NETLINK_KOBJECT_UEVENT;
 #else
         return -1;

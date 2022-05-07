@@ -36,8 +36,16 @@ typedef struct {
 #define WAIT_MAX_SECOND 5
 #define MAX_BUFFER_LEN 256
 #define CMDLINE_VALUE_LEN_MAX 512
-#define PARAM_CMD_LINE "/proc/cmdline"
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
+
+#ifndef STARTUP_INIT_UT_PATH
+#ifdef STARTUP_INIT_TEST // ut
+#define STARTUP_INIT_UT_PATH "/data/init_ut"
+#else
+#define STARTUP_INIT_UT_PATH ""
+#endif
+#endif
+#define BOOT_CMD_LINE STARTUP_INIT_UT_PATH"/proc/cmdline"
 
 uid_t DecodeUid(const char *name);
 char *ReadFileToBuf(const char *configFile);
@@ -61,6 +69,7 @@ int StringReplaceChr(char *strl, char oldChr, char newChr);
 
 int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue);
 const InitArgInfo *GetServieStatusMap(int *size);
+unsigned int GetRandom(void);
 #ifdef __cplusplus
 #if __cplusplus
 }

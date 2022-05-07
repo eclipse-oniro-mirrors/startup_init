@@ -19,7 +19,7 @@
 #include "init_service_manager.h"
 #include "init_service_socket.h"
 #include "init_socket.h"
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "securec.h"
 #include "le_task.h"
 using namespace std;

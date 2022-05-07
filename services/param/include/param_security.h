@@ -16,7 +16,17 @@
 #ifndef BASE_STARTUP_PARAM_SECURITY_H
 #define BASE_STARTUP_PARAM_SECURITY_H
 #include <stdint.h>
+#ifndef __LINUX__
+#include <sys/socket.h>
+#endif
 #include <sys/types.h>
+#ifdef PARAM_SUPPORT_SELINUX
+#include "selinux_parameter.h"
+#else
+typedef struct ParamContextsList_ {
+} ParamContextsList;
+#endif
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -25,21 +35,17 @@ extern "C" {
 
 #define DAC_GROUP_START 3
 #define DAC_OTHER_START 6
-#define DAC_READ 0x0100
-#define DAC_WRITE 0x0080
-#define DAC_WATCH 0x0040
+#define DAC_READ 0x0100  // 4
+#define DAC_WRITE 0x0080 // 2
+#define DAC_WATCH 0x0040 // 1
 #define DAC_ALL_PERMISSION 0777
 
 #define LABEL_ALL_PERMISSION 0x04
-#define LABEL_CHECK_FOR_ALL_PROCESS 0x02
+#define LABEL_CHECK_IN_ALL_PROCESS 0x02
 #define LABEL_INIT_FOR_INIT 0x01
 
-#define LABEL_IS_CLIENT_CHECK_PERMITTED(label)                                                                   \
-    ((label) != NULL) && ((((label)->flags & (LABEL_CHECK_FOR_ALL_PROCESS)) == (LABEL_CHECK_FOR_ALL_PROCESS)) && \
-                          (((label)->flags & (LABEL_ALL_PERMISSION)) != (LABEL_ALL_PERMISSION)))
-
-#define LABEL_IS_ALL_PERMITTED(label) \
-    (((label) == NULL) || ((label)->flags & LABEL_ALL_PERMISSION) == (LABEL_ALL_PERMISSION))
+#define SELINUX_CONTENT_LEN 64
+#define SYS_UID_INDEX      1000
 
 typedef enum {
     DAC_RESULT_PERMISSION = 0,
@@ -53,54 +59,68 @@ typedef struct UserCred {
     gid_t gid;
 } UserCred;
 
+typedef enum {
+    PARAM_SECURITY_DAC = 0,
+#ifdef PARAM_SUPPORT_SELINUX
+    PARAM_SECURITY_SELINUX,
+#endif
+    PARAM_SECURITY_MAX
+} ParamSecurityType;
+
 typedef struct {
-    uint32_t flags;
     UserCred cred;
+    uint32_t flags[PARAM_SECURITY_MAX];
 } ParamSecurityLabel;
 
 typedef struct {
     pid_t pid;
     uid_t uid;
     gid_t gid;
-    uint32_t mode; // 访问权限
+    uint32_t mode;
 } ParamDacData;
 
 typedef struct {
     ParamDacData dacData;
     const char *name;
-    const char *label;
+#ifdef PARAM_SUPPORT_SELINUX
+    char label[SELINUX_CONTENT_LEN];
+#endif
 } ParamAuditData;
 
-typedef int (*SecurityLabelFunc)(const ParamAuditData *auditData, void *context);
-
 typedef struct {
-    int (*securityInitLabel)(ParamSecurityLabel **label, int isInit);
-    int (*securityGetLabel)(SecurityLabelFunc label, const char *path, void *context);
+    char name[10];
+    int (*securityInitLabel)(ParamSecurityLabel *label, int isInit);
+    int (*securityGetLabel)(const char *path);
     int (*securityCheckFilePermission)(const ParamSecurityLabel *label, const char *fileName, int flags);
-    int (*securityCheckParamPermission)(const ParamSecurityLabel *srcLabel,
-        const ParamAuditData *auditData, uint32_t mode);
-    int (*securityEncodeLabel)(const ParamSecurityLabel *srcLabel, char *buffer, uint32_t *bufferSize);
-    int (*securityDecodeLabel)(ParamSecurityLabel **srcLabel, const char *buffer, uint32_t bufferSize);
+    int (*securityCheckParamPermission)(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
     int (*securityFreeLabel)(ParamSecurityLabel *srcLabel);
 } ParamSecurityOps;
 
 typedef int (*RegisterSecurityOpsPtr)(ParamSecurityOps *ops, int isInit);
 
-int RegisterSecurityOps(ParamSecurityOps *ops, int isInit);
-
-typedef struct {
-    SecurityLabelFunc label;
-    void *context;
-} LabelFuncContext;
-
 int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditData);
 
+int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit);
+void LoadGroupUser(void);
+
+typedef int (*SelinuxSetParamCheck)(const char *paraName, struct ucred *uc);
+typedef struct SelinuxSpace_ {
+    void *selinuxHandle;
+    void (*setSelinuxLogCallback)();
+    int (*setParamCheck)(const char *paraName, struct ucred *uc);
+    const char *(*getParamLabel)(const char *paraName);
+    int (*readParamCheck)(const char *paraName);
+    ParamContextsList *(*getParamList)();
+    void (*destroyParamList)(ParamContextsList **list);
+} SelinuxSpace;
 #ifdef PARAM_SUPPORT_SELINUX
-#ifdef PARAM_SUPPORT_DAC
-#error param security only support one.
+int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit);
 #endif
-#else
-#define PARAM_SUPPORT_DAC 1 // default support dac
+
+#if defined STARTUP_INIT_TEST || defined LOCAL_TEST
+ParamSecurityOps *GetParamSecurityOps(int type);
+int RegisterSecurityOps(int onlyRead);
+void SetSelinuxOps(const SelinuxSpace *space);
 #endif
 
 #ifdef __cplusplus
@@ -108,4 +128,4 @@ int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditD
 }
 #endif
 #endif
-#endif // BASE_STARTUP_PARAM_SECURITY_H
+#endif  // BASE_STARTUP_PARAM_SECURITY_H

@@ -87,6 +87,9 @@ LE_STATUS ProcessEvent(const EventLoop *loop, int fd, uint32_t oper)
 {
     BaseTask *task = GetTaskByFd((EventLoop *)loop, fd);
     if (task != NULL) {
+        if (oper & Event_Error) {
+            task->flags |= TASK_FLAGS_INVALID;
+        }
         task->handleEvent((LoopHandle)loop, (TaskHandle)task, oper);
     } else {
         LE_LOGE("ProcessEvent can not find task for %d", fd);

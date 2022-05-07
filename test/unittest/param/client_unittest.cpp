@@ -12,20 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <gtest/gtest.h>
 
-#include "init_unittest.h"
+#include "init_param.h"
 #include "init_utils.h"
-#include "param_request.h"
 #include "param_stub.h"
-#include "sys_param.h"
 
 using namespace std;
 using namespace testing::ext;
 
-static int g_testPermissionResult = DAC_RESULT_PERMISSION;
 static void ClientCheckParamValue(const char *name, const char *expectValue)
 {
-    char tmp[PARAM_BUFFER_SIZE] = { 0 };
+    char tmp[PARAM_BUFFER_SIZE] = {0};
     u_int32_t len = sizeof(tmp);
     int ret = SystemGetParameter(name, tmp, &len);
     printf("ClientCheckParamValue name %s value: \'%s\' expectValue:\'%s\' \n", name, tmp, expectValue);
@@ -47,6 +45,7 @@ static void *TestSendParamSetMsg(void *args)
     }
     std::string name = (char *)args;
     printf("TestSendParamSetMsg name :\'%s\' \n", name.c_str());
+    SystemWriteParam(name.c_str(), name.c_str());
     SystemSetParameter(name.c_str(), name.c_str());
     ClientCheckParamValue(name.c_str(), name.c_str());
     return nullptr;
@@ -89,8 +88,10 @@ static void TestForMultiThread()
 
 static void TestParamTraversal()
 {
-    SystemTraversalParameter("", [](ParamHandle handle, void *cookie) {
-            char value[PARAM_BUFFER_SIZE + PARAM_BUFFER_SIZE] = { 0 };
+    SystemTraversalParameter(
+        "",
+        [](ParamHandle handle, void *cookie) {
+            char value[PARAM_BUFFER_SIZE + PARAM_BUFFER_SIZE] = {0};
             uint32_t commitId = 0;
             int ret = SystemGetParameterCommitId(handle, &commitId);
             EXPECT_EQ(ret, 0);
@@ -102,57 +103,43 @@ static void TestParamTraversal()
         nullptr);
 }
 
-static void TestPersistParam()
-{
-    SystemSetParameter("persist.111.ffff.bbbb.cccc.dddd.eeee", "1101");
-    SystemSetParameter("persist.111.aaaa.bbbb.cccc.dddd.eeee", "1102");
-    SystemSetParameter("persist.111.bbbb.cccc.dddd.eeee", "1103");
-    ClientCheckParamValue("persist.111.bbbb.cccc.dddd.eeee", "1103");
-    SystemSetParameter("persist.111.cccc.bbbb.cccc.dddd.eeee", "1104");
-    SystemSetParameter("persist.111.eeee.bbbb.cccc.dddd.eeee", "1105");
-    ClientCheckParamValue("persist.111.ffff.bbbb.cccc.dddd.eeee", "1101");
-    SystemSetParameter("persist.111.ffff.bbbb.cccc.dddd.eeee", "1106");
-    ClientCheckParamValue("persist.111.ffff.bbbb.cccc.dddd.eeee", "1106");
-}
-
 static void TestPermission()
 {
     const char *testName = "persist.111.ffff.bbbb.cccc.dddd.eeee.55555";
-    char tmp[PARAM_BUFFER_SIZE] = { 0 };
+    char tmp[PARAM_BUFFER_SIZE] = {0};
     int ret;
     // 允许本地校验
-    ParamSecurityOps *paramSecurityOps = &GetClientParamWorkSpace()->paramSecurityOps;
+    ParamSecurityOps *paramSecurityOps = GetParamSecurityOps(0);
     paramSecurityOps->securityCheckParamPermission = TestCheckParamPermission;
-    g_testPermissionResult = DAC_RESULT_FORBIDED;
-    if ((GetClientParamWorkSpace() != nullptr) && (GetClientParamWorkSpace()->securityLabel != nullptr)) {
-        GetClientParamWorkSpace()->securityLabel->flags = LABEL_CHECK_FOR_ALL_PROCESS;
+    SetTestPermissionResult(DAC_RESULT_FORBIDED);
+    if ((GetParamSecurityLabel() != nullptr)) {
+        GetParamSecurityLabel()->flags[0] = LABEL_CHECK_IN_ALL_PROCESS;
         ret = SystemSetParameter(testName, "22202");
         EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
     }
-    paramSecurityOps->securityEncodeLabel = TestEncodeSecurityLabel;
-    paramSecurityOps->securityDecodeLabel = TestDecodeSecurityLabel;
     paramSecurityOps->securityFreeLabel = TestFreeLocalSecurityLabel;
     paramSecurityOps->securityCheckParamPermission = TestCheckParamPermission;
-    g_testPermissionResult = 0;
+    SetTestPermissionResult(0);
+    SystemWriteParam(testName, "22202");
     ret = SystemSetParameter(testName, "22202");
-    EXPECT_EQ(ret, 0);
     ClientCheckParamValue(testName, "22202");
 
     const int testResult = 201;
-    g_testPermissionResult = testResult;
+    SetTestPermissionResult(testResult);
     // 禁止写/读
     ret = SystemSetParameter(testName, "3333");
     EXPECT_EQ(ret, testResult);
     u_int32_t len = sizeof(tmp);
     ret = SystemGetParameter(testName, tmp, &len);
     EXPECT_EQ(ret, testResult);
-    RegisterSecurityOps(paramSecurityOps, 0);
+    RegisterSecurityOps(0);
 }
 
 void TestClientApi(char testBuffer[], uint32_t size, const char *name, const char *value)
 {
     ParamHandle handle;
     int ret = SystemFindParameter(name, &handle);
+    SystemWriteParam(name, value);
     SystemSetParameter(name, value);
     ret = SystemFindParameter(name, &handle);
     EXPECT_EQ(ret, 0);
@@ -167,49 +154,21 @@ void TestClientApi(char testBuffer[], uint32_t size, const char *name, const cha
     EXPECT_EQ(strcmp(testBuffer, value), 0);
 }
 
-int TestEncodeSecurityLabel(const ParamSecurityLabel *srcLabel, char *buffer, uint32_t *bufferSize)
-{
-    PARAM_CHECK(bufferSize != nullptr, return -1, "Invalid param");
-    if (buffer == nullptr) {
-        *bufferSize = sizeof(ParamSecurityLabel);
-        return 0;
-    }
-    PARAM_CHECK(*bufferSize >= sizeof(ParamSecurityLabel), return -1, "Invalid buffersize %u", *bufferSize);
-    *bufferSize = sizeof(ParamSecurityLabel);
-    return memcpy_s(buffer, *bufferSize, srcLabel, sizeof(ParamSecurityLabel));
-}
-
-int TestDecodeSecurityLabel(ParamSecurityLabel **srcLabel, const char *buffer, uint32_t bufferSize)
-{
-    PARAM_CHECK(bufferSize >= sizeof(ParamSecurityLabel), return -1, "Invalid buffersize %u", bufferSize);
-    PARAM_CHECK(srcLabel != nullptr && buffer != nullptr, return -1, "Invalid param");
-    *srcLabel = (ParamSecurityLabel *)buffer;
-    return 0;
-}
-
-int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const ParamAuditData *auditData, uint32_t mode)
-{
-    // DAC_RESULT_FORBIDED
-    return g_testPermissionResult;
-}
-
-int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
-{
-    return 0;
-}
-
 namespace init_ut {
 class ClientUnitTest : public ::testing::Test {
 public:
     ClientUnitTest() {}
     virtual ~ClientUnitTest() {}
+    static void SetUpTestCase(void)
+    {
+        PrepareInitUnitTestEnv();
+    };
 
     void SetUp(void)
     {
-        ParamWorkSpace *space = GetClientParamWorkSpace();
-        if (space != nullptr && space->securityLabel != nullptr) {
-            space->securityLabel->cred.uid = 1000; // 1000 test uid
-            space->securityLabel->cred.gid = 1000; // 1000 test gid
+        if (GetParamSecurityLabel() != nullptr) {
+            GetParamSecurityLabel()->cred.uid = 1000;  // 1000 test uid
+            GetParamSecurityLabel()->cred.gid = 1000;  // 1000 test gid
         }
     }
     void TearDown(void) {}
@@ -220,10 +179,11 @@ HWTEST_F(ClientUnitTest, TestClient_01, TestSize.Level0)
 {
     const std::string name = "test.add.client.001.001";
     const std::string value = "test.add.client.value.001.001";
+    // direct write
+    SystemWriteParam(name.c_str(), value.c_str());
     SystemSetParameter(name.c_str(), value.c_str());
     ClientCheckParamValue(name.c_str(), value.c_str());
     SystemWaitParameter(name.c_str(), value.c_str(), 1);
-    TestPersistParam();
     // wait
     SystemWaitParameter(name.c_str(), value.c_str(), 1);
     SystemWaitParameter(name.c_str(), nullptr, 0);
@@ -231,7 +191,7 @@ HWTEST_F(ClientUnitTest, TestClient_01, TestSize.Level0)
 
 HWTEST_F(ClientUnitTest, TestClient_02, TestSize.Level0)
 {
-    char testBuffer[PARAM_BUFFER_SIZE] = { 0 };
+    char testBuffer[PARAM_BUFFER_SIZE] = {0};
     const std::string value = "test.add.client.value.001";
     const std::string name = "test.add.client.001.003";
     TestClientApi(testBuffer, PARAM_BUFFER_SIZE, name.c_str(), value.c_str());
@@ -248,7 +208,9 @@ HWTEST_F(ClientUnitTest, TestClient_04, TestSize.Level0)
 {
     const std::string name = "test.add.client.001.004";
     int ret = WatchParamCheck(name.c_str());
+#ifndef OHOS_LITE
     EXPECT_EQ(ret, 0);
+#endif
     ret = WatchParamCheck("&&&&&.test.tttt");
     EXPECT_NE(ret, 0);
     // test permission

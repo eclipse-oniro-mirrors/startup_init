@@ -23,10 +23,9 @@
 #include "loop_event.h"
 
 #ifndef LOOP_EVENT_USE_MUTEX
-#define LoopMutex char
-#define LoopMutexInit(x)
-#define LoopMutexLock(x)
-#define LoopMutexUnlock(x)
+#define LoopMutexInit(x) (void)(x)
+#define LoopMutexLock(x) (void)(x)
+#define LoopMutexUnlock(x) (void)(x)
 #else
 #include <pthread.h>
 #define LoopMutex pthread_mutex_t
@@ -48,6 +47,7 @@ typedef struct {
     uint8_t data[0];
 } LE_Buffer;
 
+#define TASK_FLAGS_INVALID 0x80000000
 typedef LE_STATUS (*HandleTaskEvent)(const LoopHandle loop, const TaskHandle task, uint32_t oper);
 typedef void (*HandleTaskClose)(const LoopHandle loop, const TaskHandle task);
 #define TASKINFO \
@@ -78,7 +78,11 @@ typedef struct {
 
 typedef struct {
     BaseTask base;
+#ifdef LOOP_EVENT_USE_MUTEX
     LoopMutex mutex;
+#else
+    char mutex;
+#endif
     ListHead buffHead;
 } StreamTask;
 

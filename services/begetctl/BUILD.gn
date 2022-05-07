@@ -11,134 +11,182 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//base/startup/init_lite/begetd.gni")
-import("//build/ohos.gni")
 
-ohos_executable("begetctl") {
-  sources = [
-    "bootchart_cmd.c",
-    "init_cmd_reboot.c",
-    "main.c",
-    "misc_daemon.cpp",
-    "param_cmd.c",
-    "sandbox.cpp",
-    "service_control.c",
-    "shell/shell_bas.c",
-  ]
-
-  defines = [ "INIT_AGENT" ]
-
-  if (defined(product_name) && product_name == "rk3568") {
-    defines += [ "PRODUCT_RK" ]
-  }
-
-  include_dirs = [
-    ".",
-    "shell",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/include/param/",
-    "//base/startup/init_lite/services/param/include",
-    "//base/startup/init_lite/services/loopevent/include",
-    "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/interfaces/innerkits/sandbox/include",
-  ]
-  deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-    "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox_static",
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
-
-  external_deps = [ "utils_base:utils" ]
-  if (param_test) {
-    sources += [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
-    deps += [
-      "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
-      "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/param/watcher:param_watcheragent",
+if (defined(ohos_lite)) {
+  executable("begetctl") {
+    output_name = "begetctl"
+    sources = [
+      "main.c",
+      "param_cmd.c",
+      "shell/shell_bas.c",
+    ]
+    defines = [
+      "_GNU_SOURCE",  #syscall function need this macro definition
+      "__MUSL__",
+    ]
+    include_dirs = [
+      ".",
+      "shell",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/services/include/param/",
+      "//base/startup/init_lite/services/param/include",
+      "//base/startup/init_lite/services/loopevent/include",
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/interfaces/innerkits/sandbox/include",
+      "//third_party/cJSON",
+    ]
+    deps = [
+      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
+      "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
       "//base/startup/init_lite/services/utils:libinit_tools",
-      "//base/startup/init_lite/services/utils:libinit_utils",
-    ]
-    defines += [
-      "OHOS_SERVICE_DUMP",
-      "INIT_TEST",
-    ]
-    external_deps += [ "startup_l2:syspara" ]
-  }
-
-  if (build_selinux) {
-    include_dirs += [ "//third_party/selinux/libselinux/include/" ]
-    deps += [ "//third_party/selinux:libselinux" ]
-    external_deps += [ "selinux:libparaperm_checker" ]
-    defines += [ "WITH_SELINUX" ]
-  }
-
-  symlink_target_name = [
-    "misc_daemon",
-    "reboot",
-    "devctl",
-    "service",
-    "service_control",
-    "start_service",
-    "stop_service",
-    "service",
-    "param",
-    "sandbox",
-  ]
-
-  install_images = [ "system" ]
-  install_enable = true
-
-  part_name = "init"
-}
-
-ohos_executable("paramshell") {
-  sources = [
-    "param_cmd.c",
-    "shell/shell_bas.c",
-    "shell/shell_main.c",
-  ]
-
-  defines = [ "INIT_AGENT" ]
-
-  include_dirs = [
-    ".",
-    "shell",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
-    "//base/startup/init_lite/services/include/param/",
-    "//base/startup/init_lite/services/loopevent/include",
-    "//base/startup/init_lite/services/param/include",
-    "//third_party/bounds_checking_function/include",
-  ]
-  deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
-
-  if (param_test) {
-    sources += [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
-    deps += [
-      "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
-      "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/param/watcher:param_watcheragent",
-      "//base/startup/init_lite/services/utils:libinit_tools",
-      "//base/startup/init_lite/services/utils:libinit_utils",
-      "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
-    ]
-    defines += [
-      "OHOS_SERVICE_DUMP",
-      "INIT_TEST",
+      "//build/lite/config/component/cJSON:cjson_static",
+      "//third_party/bounds_checking_function:libsec_static",
     ]
   }
+  group("begetctl_cmd") {
+    if (param_begetctl_liteos_support) {
+      deps = [ ":begetctl" ]
+    }
+  }
+} else {
+  import("//build/ohos.gni")
 
-  install_images = [ "system" ]
-  install_enable = true
+  ohos_executable("begetctl") {
+    sources = [
+      "bootchart_cmd.c",
+      "init_cmd_reboot.c",
+      "main.c",
+      "misc_daemon.cpp",
+      "param_cmd.c",
+      "sandbox.cpp",
+      "service_control.c",
+      "shell/shell_bas.c",
+    ]
 
-  part_name = "init"
+    defines = [ "_GNU_SOURCE" ]
+
+    if (defined(product_name) && product_name == "rk3568") {
+      defines += [ "PRODUCT_RK" ]
+    }
+
+    include_dirs = [
+      ".",
+      "shell",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/services/include/param/",
+      "//base/startup/init_lite/services/param/include",
+      "//base/startup/init_lite/services/loopevent/include",
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/interfaces/innerkits/sandbox/include",
+    ]
+    deps = [
+      "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+      "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox",
+      "//base/startup/init_lite/services/log:agent_log",
+      "//base/startup/init_lite/services/param:param_client",
+      "//third_party/bounds_checking_function:libsec_shared",
+    ]
+    external_deps = [ "utils_base:utils" ]
+
+    if (param_test) {
+      sources +=
+          [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
+      deps += [
+        "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
+        "//base/startup/init_lite/services/loopevent:loopevent",
+        "//base/startup/init_lite/services/utils:libinit_tools",
+        "//base/startup/init_lite/services/utils:libinit_utils",
+      ]
+      defines += [
+        "OHOS_SERVICE_DUMP",
+        "INIT_TEST",
+      ]
+    }
+
+    if (build_selinux) {
+      include_dirs += [
+        "//third_party/selinux/libselinux/include/",
+        "//base/security/selinux/interfaces/policycoreutils/include/",
+      ]
+      deps += [ "//third_party/selinux:libselinux" ]
+      external_deps += [ "selinux:libparaperm_checker" ]
+      defines += [ "PARAM_SUPPORT_SELINUX" ]
+    }
+
+    symlink_target_name = [
+      "misc_daemon",
+      "reboot",
+      "devctl",
+      "service",
+      "service_control",
+      "start_service",
+      "stop_service",
+      "service",
+      "param",
+      "sandbox",
+    ]
+
+    install_images = [ "system" ]
+    install_enable = true
+
+    part_name = "init"
+  }
+
+  ohos_executable("paramshell") {
+    sources = [
+      "param_cmd.c",
+      "shell/shell_bas.c",
+      "shell/shell_main.c",
+    ]
+
+    defines = [ "_GNU_SOURCE" ]
+
+    include_dirs = [
+      ".",
+      "shell",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/services/include/param/",
+      "//base/startup/init_lite/services/loopevent/include",
+      "//base/startup/init_lite/services/param/include",
+      "//third_party/bounds_checking_function/include",
+    ]
+    deps = [
+      "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+      "//base/startup/init_lite/services/log:agent_log",
+      "//base/startup/init_lite/services/param:param_client",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
+
+    if (build_selinux) {
+      deps += [ "//third_party/selinux:libselinux" ]
+      external_deps = [ "selinux:libparaperm_checker" ]
+      defines += [ "PARAM_SUPPORT_SELINUX" ]
+    }
+
+    if (param_test) {
+      sources +=
+          [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
+      deps += [
+        "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
+        "//base/startup/init_lite/services/loopevent:loopevent",
+        "//base/startup/init_lite/services/utils:libinit_tools",
+        "//base/startup/init_lite/services/utils:libinit_utils",
+      ]
+      defines += [
+        "OHOS_SERVICE_DUMP",
+        "INIT_TEST",
+      ]
+    }
+
+    install_images = [ "system" ]
+    install_enable = true
+
+    part_name = "init"
+  }
 }

@@ -19,7 +19,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "init_utils.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_parameter.h"
@@ -27,7 +27,6 @@
 using namespace std;
 using namespace testing::ext;
 
-#define TEST_PATH "/data/ueventd_ut"
 namespace ueventd_ut {
 static bool FileExists(const std::string &file)
 {

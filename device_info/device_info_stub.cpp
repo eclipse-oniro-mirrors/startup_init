@@ -19,16 +19,12 @@
 #include "idevice_info.h"
 #include "ipc_skeleton.h"
 #include "accesstoken_kit.h"
-#include "parameter_hal.h"
 #include "parcel.h"
 #include "string_ex.h"
 #include "system_ability_definition.h"
+#include "param_comm.h"
 
 using std::u16string;
-namespace {
-static constexpr int UDID_LEN = 65;
-} // namespace name
-
 namespace OHOS {
 using namespace Security;
 using namespace Security::AccessToken;
@@ -50,7 +46,7 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
                 return ERR_FAIL;
             }
             char localDeviceInfo[UDID_LEN] = {0};
-            ret = HalGetDevUdid(localDeviceInfo, UDID_LEN);
+            ret = GetDevUdid_(localDeviceInfo, UDID_LEN);
             DINFO_CHECK(ret == 0, break, "Failed to get dev udid");
             reply.WriteString16(Str8ToStr16(localDeviceInfo));
             break;
@@ -59,9 +55,10 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
             if (!CheckPermission(data, PERMISSION_UDID)) {
                 return ERR_FAIL;
             }
-            const char *serialNumber = HalGetSerial();
+            const char *serialNumber = GetSerial_();
             DINFO_CHECK(serialNumber != nullptr, break, "Failed to get serialNumber");
             reply.WriteString16(Str8ToStr16(serialNumber));
+            free((void *)serialNumber);
             break;
         }
         default: {

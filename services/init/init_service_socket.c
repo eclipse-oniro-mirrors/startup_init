@@ -47,7 +47,7 @@ static int SetSocketAddr(ServiceSocket *sockopt, sockaddr_union *addr)
 {
     int ret = 0;
     if (sockopt->family == AF_NETLINK) {
-#ifndef __LITEOS__
+#ifndef __LITEOS_A__
         if (memset_s(&(addr->addrnl), sizeof(addr->addrnl), 0, sizeof(addr->addrnl)) != EOK) {
             INIT_LOGE("Faild to clear socket address");
             return -1;
@@ -92,7 +92,7 @@ static int SetSocketOptionAndBind(ServiceSocket *sockopt)
         return -1;
     }
     if (sockopt->family == AF_NETLINK) {
-#ifndef __LITEOS__
+#ifndef __LITEOS_A__
         if (bind(sockopt->sockFd, (struct sockaddr *)&(addr.addrnl), sizeof(addr.addrnl))) {
             INIT_LOGE("Create socket for service %s failed: %d", sockopt->name, errno);
             return -1;

@@ -13,19 +13,21 @@
  * limitations under the License.
  */
 #include <fcntl.h>
-#include <sys/ioctl.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include "begetctl.h"
+#include "init_param.h"
 #include "loop_event.h"
+#include "parameter.h"
 #include "plugin_test.h"
 #include "service_watcher.h"
 #include "shell_utils.h"
-#include "sys_param.h"
-#include "parameter.h"
 
 #define READ_DURATION 100000
 static char *GetLocalBuffer(uint32_t *buffSize)
@@ -44,7 +46,7 @@ static void *CmdReader(void *args)
     uint32_t buffSize = 0;
     char *buffer = GetLocalBuffer(&buffSize);
     while (g_stop == 0) {
-        int wait = READ_DURATION + READ_DURATION; // 100ms rand
+        int wait = READ_DURATION + READ_DURATION;  // 100ms rand
         uint32_t size = buffSize;
         int ret = SystemGetParameter("test.randrom.read", buffer, &size);
         if (ret == 0) {
@@ -142,9 +144,9 @@ static int32_t BShellParamCmdGroupTest(BShellHandle shell, int32_t argc, char *a
 {
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGI("BShellParamCmdGroupTest %s stage: %s", argv[0], argv[1]);
-    if (argc > 2 && strcmp(argv[1], "wait") == 0) { // 2 service name index
-        PLUGIN_LOGI("group-test-stage3: wait service %s", argv[2]); // 2 service name index
-        ServiceWatchForStatus(argv[2], ServiceStatusChangeTest); // 2 service name index
+    if (argc > 2 && strcmp(argv[1], "wait") == 0) {                  // 2 service name index
+        PLUGIN_LOGI("group-test-stage3: wait service %s", argv[2]);  // 2 service name index
+        ServiceWatchForStatus(argv[2], ServiceStatusChangeTest);     // 2 service name index
         LE_RunLoop(LE_GetDefaultLoop());
     }
     return 0;
@@ -154,8 +156,8 @@ static int32_t BShellParamCmdUdidGet(BShellHandle shell, int32_t argc, char *arg
 {
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGI("BShellParamCmdUdidGet ");
-    char localDeviceId[65] = {0}; // 65 udid len
-    AclGetDevUdid(localDeviceId, 65); // 65 udid len
+    char localDeviceId[65] = {0};      // 65 udid len
+    AclGetDevUdid(localDeviceId, 65);  // 65 udid len
     BShellEnvOutput(shell, "    udid: %s\r\n", localDeviceId);
     return 0;
 }

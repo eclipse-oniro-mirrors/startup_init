@@ -19,7 +19,7 @@
 #include "begetctl.h"
 #include "shell.h"
 #include "shell_utils.h"
-#include "sys_param.h"
+#include "init_param.h"
 
 static BShellHandle g_handle = NULL;
 static int32_t ShellOuput(const char *data, int32_t len)
@@ -69,12 +69,17 @@ int main(int argc, char *argv[])
             printf("Failed to copy\n");
         }
     }
+    BShellHandle handle = GetShellHandle();
+    if (handle == NULL) {
+        printf("Failed to get shell handle \n");
+        return 0;
+    }
     SetInitLogLevel(0);
-    BShellParamCmdRegister(g_handle, 0);
+    BShellParamCmdRegister(handle, 0);
 #ifdef INIT_TEST
-    BShellCmdRegister(g_handle, 0);
+    BShellCmdRegister(handle, 0);
 #endif
-    BShellEnvDirectExecute(g_handle, number, args);
+    BShellEnvDirectExecute(handle, number, args);
     demoExit();
     return 0;
 }

@@ -17,6 +17,7 @@
 #include "init_log.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
+#include "init_param.h"
 
 static void ParseAllImports(const cJSON *root);
 
@@ -93,7 +94,11 @@ static void ParseAllImports(const cJSON *root)
 void ReadConfig(void)
 {
     // parse cfg
-    if (InChargerMode() == 1) {
+    char buffer[32] = {0}; // 32 reason max leb
+    uint32_t len = sizeof(buffer);
+    SystemReadParam("ohos.boot.reboot_reason", buffer, &len);
+    INIT_LOGV("ohos.boot.reboot_reason %s", buffer);
+    if (strcmp(buffer, "poweroff_charge") == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (InUpdaterMode() == 0) {

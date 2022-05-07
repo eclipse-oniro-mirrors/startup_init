@@ -14,7 +14,7 @@
  */
 
 #include "systemdumpparameters_fuzzer.h"
-#include "sys_param.h"
+#include "init_param.h"
 #include "fuzz_utils.h"
 
 namespace OHOS {

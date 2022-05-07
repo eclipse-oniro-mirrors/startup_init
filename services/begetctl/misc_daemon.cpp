@@ -29,7 +29,7 @@
 #include "fs_manager/fs_manager.h"
 #include "shell.h"
 #include "shell_utils.h"
-#include "sys_param.h"
+#include "init_param.h"
 
 constexpr int MAX_LOGO_SIZE = 1024 * 2038;
 constexpr int PARTITION_INFO_POS = 1144;

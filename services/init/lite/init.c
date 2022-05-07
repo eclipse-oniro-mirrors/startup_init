@@ -13,6 +13,12 @@
  * limitations under the License.
  */
 #include "init.h"
+
+#include <sys/sysmacros.h>
+#include <unistd.h>
+#ifdef __LINUX__
+#include <linux/major.h>
+#endif
 #include "init_group_manager.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
@@ -20,17 +26,8 @@
 #ifndef __LINUX__
 #include "init_stage.h"
 #endif
+#include "init_param.h"
 #include "loop_event.h"
-#include "parameter.h"
-
-static void PrintSysInfo(void)
-{
-    const char *sysInfo = GetVersionId();
-    if (sysInfo != NULL) {
-        INIT_LOGE("%s", sysInfo);
-        return;
-    }
-}
 
 void SystemInit(void)
 {
@@ -40,17 +37,31 @@ void SystemInit(void)
 
 void LogInit(void)
 {
+#ifdef __LINUX__
+    int ret = mknod("/dev/kmsg", S_IFCHR | S_IWUSR | S_IRUSR, makedev(MEM_MAJOR, 11));
+    if (ret == 0) {
+        OpenLogDevice();
+    }
+#endif
     return;
 }
 
 void SystemPrepare(void)
 {
-    PrintSysInfo();
 }
 
 void SystemConfig(void)
 {
     InitServiceSpace();
+#ifdef LITEOS_SUPPORT_PARAM
+    InitParamService();
+    // parse parameters
+    LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
+    LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
+    LoadDefaultParams("/system/etc/param", LOAD_PARAM_ONLY_ADD);
+
+    LoadPersistParams();
+#endif
     // read config
     ReadConfig();
 
@@ -80,7 +91,7 @@ void SystemConfig(void)
 
 void SystemRun(void)
 {
-#ifndef __LITEOS__
+#ifndef __LITEOS_A__
     LE_RunLoop(LE_GetDefaultLoop());
 #else
     while (1) {

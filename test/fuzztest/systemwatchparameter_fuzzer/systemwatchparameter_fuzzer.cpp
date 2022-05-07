@@ -16,7 +16,7 @@
 #include "systemwatchparameter_fuzzer.h"
 
 #include "init.h"
-#include "sys_param.h"
+#include "init_param.h"
 
 static void HandleParamChange(const char *key, const char *value, void *context)
 {

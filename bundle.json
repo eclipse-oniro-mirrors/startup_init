@@ -22,7 +22,7 @@
         "deps": {
             "components": [
                 "selinux",
-                "ipc",                
+                "ipc",
                 "safwk",
                 "samgr_standard",
                 "utils_base",
@@ -43,7 +43,7 @@
                 "//base/startup/init_lite/services/begetctl:paramshell",
                 "//base/startup/init_lite/services/plugin:plugin",
                 "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-                "//base/startup/init_lite/interfaces/kits:deviceinfo_ndk",
+                "//base/startup/init_lite/interfaces/kits/syscap:deviceinfo_ndk",
                 "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
                 "//base/startup/init_lite/interfaces/innerkits/file:libfile",
                 "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
@@ -64,7 +64,12 @@
                             "init_reboot.h",
                             "service_control.h",
                             "beget_ext.h",
-                            "systemcapability.h"
+                            "systemcapability.h",
+                            "syspara/parameter.h",
+                            "syspara/parameters.h",
+                            "syspara/param_wrapper.h",
+                            "syspara/sysparam_errno.h",
+                            "syspara/sysversion.h"
                         ]
                     },
                     "name": "//base/startup/init_lite/interfaces/innerkits:libbegetutil"
@@ -73,7 +78,9 @@
                     "header": {
                         "header_base": "//base/startup/init_lite/interfaces/innerkits/include/",
                         "header_files": [
-                            "service_watcher.h"
+                            "service_watcher.h",
+                            "syspara/parameter.h",
+                            "syspara/sysparam_errno.h"
                         ]
                     },
                     "name": "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy"

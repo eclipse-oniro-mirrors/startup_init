@@ -15,7 +15,7 @@
 #include <cerrno>
 #include <unistd.h>
 #include "fs_manager/fs_manager.h"
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "init_mount.h"
 #include "securec.h"
 using namespace std;

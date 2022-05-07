@@ -22,7 +22,10 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/log",
       "//base/startup/init_lite/interfaces/innerkits/include",
     ]
-    deps = [ "//base/startup/init_lite/services/log:init_log" ]
+    deps = [
+      "//base/startup/init_lite/services/log:init_log",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
     defines = [
       "_GNU_SOURCE",
       "OHOS_LITE_WATCHDOG",
@@ -39,7 +42,10 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/log",
       "//base/startup/init_lite/interfaces/innerkits/include",
     ]
-    deps = [ "//base/startup/init_lite/services/log:init_log" ]
+    deps = [
+      "//base/startup/init_lite/services/log:init_log",
+      "//third_party/bounds_checking_function:libsec_shared",
+    ]
     defines = [ "LINUX_WATCHDOG" ]
     defines += [ "_GNU_SOURCE" ]
     install_enable = true

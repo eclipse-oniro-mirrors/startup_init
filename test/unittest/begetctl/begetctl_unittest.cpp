@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "begetctl.h"
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "securec.h"
 #include "shell.h"
 
@@ -23,7 +23,10 @@ using namespace testing::ext;
 namespace init_ut {
 class BegetctlUnitTest : public testing::Test {
 public:
-    static void SetUpTestCase(void) {};
+    static void SetUpTestCase(void)
+    {
+        PrepareInitUnitTestEnv();
+    };
     static void TearDownTestCase(void) {};
     void SetUp(void) {};
     void TearDown(void) {};

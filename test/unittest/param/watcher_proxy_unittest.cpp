@@ -12,19 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cstdio>
-#include <cstring>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "if_system_ability_manager.h"
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "iservice_registry.h"
 #include "iwatcher.h"
 #include "iwatcher_manager.h"
 #include "message_parcel.h"
 #include "param_message.h"
-#include "param_request.h"
+#include "init_param.h"
 #include "param_utils.h"
 #include "parcel.h"
 #include "securec.h"

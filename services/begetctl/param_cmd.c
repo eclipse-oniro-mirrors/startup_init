@@ -27,12 +27,12 @@
 #include "param_security.h"
 #include "param_utils.h"
 #include "shell_utils.h"
-#include "sys_param.h"
-#ifdef WITH_SELINUX
+#include "init_param.h"
+#ifdef PARAM_SUPPORT_SELINUX
 #include <policycoreutils.h>
 #include <selinux/selinux.h>
 #include "selinux_parameter.h"
-#endif // WITH_SELINUX
+#endif // PARAM_SUPPORT_SELINUX
 
 #define MASK_LENGTH_MAX 4
 pid_t g_shellPid = 0;
@@ -160,30 +160,25 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
         BSH_LOGE("Failed to get param security for %s", name);
         return;
     }
+    BShellEnvOutput(shell, "Parameter infomation:\r\n");
+#ifdef PARAM_SUPPORT_SELINUX
+    BShellEnvOutput(shell, "selinux  : %s \r\n", auditData.label);
+#endif
     char permissionStr[3][MASK_LENGTH_MAX] = {}; // 3 permission
     struct passwd *user = getpwuid(auditData.dacData.uid);
     struct group *group = getgrgid(auditData.dacData.gid);
-    if (user == NULL || group == NULL) {
-        BSH_LOGE("Failed to get group for user for %s", name);
-        return;
+    if (user != NULL && group != NULL) {
+        BShellEnvOutput(shell, "    dac  : %s(%s) %s(%s) (%s) \r\n",
+            user->pw_name,
+            GetPermissionString(auditData.dacData.mode, 0, permissionStr[0], MASK_LENGTH_MAX),
+            group->gr_name,
+            GetPermissionString(auditData.dacData.mode,DAC_GROUP_START, permissionStr[1], MASK_LENGTH_MAX),
+             // 2 other
+            GetPermissionString(auditData.dacData.mode, DAC_OTHER_START, permissionStr[2], MASK_LENGTH_MAX));
     }
-    BShellEnvOutput(shell, "Parameter infomation:\r\n");
-#ifdef WITH_SELINUX
-    const char *context = NULL;
-    if (strcmp(name, "#") != 0) {
-        context = GetParamLabel(name);
+    if (strcmp("#", name) != 0) {
+        BShellEnvOutput(shell, "    name : %s\r\n", name);
     }
-    if (context != NULL) {
-        BShellEnvOutput(shell, "selinux  : %s \r\n", context);
-    } else {
-        BShellEnvOutput(shell, "selinux  : null \r\n");
-    }
-#endif
-    BShellEnvOutput(shell, "    dac  : %s(%s) %s(%s) (%s) \r\n",
-        user->pw_name, GetPermissionString(auditData.dacData.mode, 0, permissionStr[0], MASK_LENGTH_MAX),
-        group->gr_name, GetPermissionString(auditData.dacData.mode, DAC_GROUP_START, permissionStr[1], MASK_LENGTH_MAX),
-        GetPermissionString(auditData.dacData.mode, DAC_OTHER_START, permissionStr[2], MASK_LENGTH_MAX)); // 2 other
-    BShellEnvOutput(shell, "    name : %s\r\n", name);
     if (value != NULL) {
         BShellEnvOutput(shell, "    value: %s\r\n", value);
     }
@@ -406,7 +401,7 @@ static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[
     if (pid == 0) {
         setuid(2000); // 2000 shell group
         setgid(2000); // 2000 shell group
-#ifdef WITH_SELINUX
+#ifdef PARAM_SUPPORT_SELINUX
         setcon("u:r:normal_hap_domain:s0");
 #endif
         if (argc >= 2) { // 2 min argc

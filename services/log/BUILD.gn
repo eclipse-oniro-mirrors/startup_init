@@ -15,34 +15,44 @@ if (defined(ohos_lite)) {
     sources = [ "init_log.c" ]
     defines = [
       "_GNU_SOURCE",
-      "OHOS_LITE",
       "INIT_LOG_INIT=1",
+      "OHOS_LITE",
     ]
+
+    if (ohos_kernel_type == "linux") {
+      defines += [ "INIT_DMESG" ]
+    }
     include_dirs = [
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
       "//base/startup/init_lite/interfaces/innerkits/include",
+      "//third_party/bounds_checking_function/include",
     ]
-    deps = [
-      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
-      "//third_party/bounds_checking_function:libsec_static",
-    ]
+    deps = [ "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static" ]
   }
 } else {
   import("//build/ohos.gni")
   ohos_static_library("init_log") {
     sources = [ "init_log.c" ]
     defines = [ "INIT_DMESG" ]
-    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
-    include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+    include_dirs = [
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//third_party/bounds_checking_function/include",
+    ]
     part_name = "startup"
     subsystem_name = "startup"
   }
 
   ohos_shared_library("agent_log") {
     sources = [ "init_log.c" ]
-    defines = [ "INIT_AGENT" ]
-    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
-    include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+    defines = [
+      "INIT_AGENT",
+      "INIT_FILE",
+    ]
+    deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
+    include_dirs = [
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//third_party/bounds_checking_function/include",
+    ]
     part_name = "startup"
     install_images = [
       "system",

@@ -18,7 +18,7 @@
 #include "fuzz_utils.h"
 #include "init.h"
 #include "securec.h"
-#include "sys_param.h"
+#include "init_param.h"
 
 static void FakeShowParam(ParamHandle handle, void *cookie)
 {

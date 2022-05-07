@@ -21,7 +21,6 @@
         "ram": "~200KB",
         "deps": {
             "components": [
-                "syspara_lite"
             ],
             "third_party": [
                 "cJSON",
@@ -30,12 +29,30 @@
         },
         "build": {
             "sub_component": [
+                "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
                 "//base/startup/init_lite/services:init_lite",
+                "//base/startup/init_lite/services/begetctl:begetctl_cmd",
                 "//base/startup/init_lite/watchdog:watchdog",
                 "//base/startup/init_lite/ueventd:ueventd"
             ],
+            "inner_kits": [
+                {
+                    "header": {
+                        "header_base": "//base/startup/init_lite/interfaces/innerkits/include/",
+                        "header_files": [
+                            "beget_ext.h",
+                            "syspara/parameter.h",
+                            "syspara/parameters.h",
+                            "syspara/param_wrapper.h",
+                            "syspara/sysparam_errno.h",
+                            "syspara/sysversion.h"
+                        ]
+                    },
+                    "name": "//base/startup/init_lite/interfaces/innerkits:libbegetutil"
+                }
+            ],
             "test": [
-                "//base/startup/init_lite/test/unittest/common:unittest"
+                "//base/startup/init_lite/test/unittest/lite:init_test"
             ]
         }
     }

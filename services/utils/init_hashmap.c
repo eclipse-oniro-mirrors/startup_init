@@ -28,18 +28,12 @@ typedef struct {
 static uint32_t g_tableId = 0;
 int32_t HashMapCreate(HashMapHandle *handle, const HashInfo *info)
 {
-    INIT_ERROR_CHECK(handle != NULL && info != NULL, return -1, "Invalid param");
+    INIT_ERROR_CHECK(handle != NULL && info != NULL && info->maxBucket > 0, return -1, "Invalid param");
     INIT_ERROR_CHECK(info->keyHash != NULL && info->nodeHash != NULL, return -1, "Invalid param");
     INIT_ERROR_CHECK(info->nodeCompare != NULL && info->keyCompare != NULL, return -1, "Invalid param");
-    uint32_t maxBucket = info->maxBucket;
-    if (info->maxBucket > HASH_TAB_BUCKET_MAX) {
-        maxBucket = HASH_TAB_BUCKET_MAX;
-    } else if (info->maxBucket < HASH_TAB_BUCKET_MIN) {
-        maxBucket = HASH_TAB_BUCKET_MIN;
-    }
-    HashTab *tab = (HashTab *)calloc(1, sizeof(HashTab) + sizeof(HashNode*) * maxBucket);
+    HashTab *tab = (HashTab *)calloc(1, sizeof(HashTab) + sizeof(HashNode*) * info->maxBucket);
     INIT_ERROR_CHECK(tab != NULL, return -1, "Failed to create hash tab");
-    tab->maxBucket = maxBucket;
+    tab->maxBucket = info->maxBucket;
     tab->keyHash = info->keyHash;
     tab->nodeCompare = info->nodeCompare;
     tab->keyCompare = info->keyCompare;
@@ -127,7 +121,7 @@ void HashMapRemove(HashMapHandle handle, const void *key)
 
 HashNode *HashMapGet(HashMapHandle handle, const void *key)
 {
-    INIT_ERROR_CHECK(handle != NULL && key != NULL, return NULL, "Invalid param");
+    INIT_ERROR_CHECK(handle != NULL && key != NULL, return NULL, "Invalid param %s", key);
     HashTab *tab = (HashTab *)handle;
     int hashCode = tab->keyHash(key);
     hashCode = (hashCode < 0) ? -hashCode : hashCode;
@@ -170,7 +164,6 @@ HashNode *HashMapFind(HashMapHandle handle,
     HashTab *tab = (HashTab *)handle;
     INIT_ERROR_CHECK(hashCode < tab->maxBucket, return NULL,
         "Invalid hashcode %d %d", tab->maxBucket, hashCode);
-    INIT_LOGV("HashMapGet tableId %d hashCode %d", tab->tableId, hashCode);
     return GetHashNodeByKey(tab, tab->buckets[hashCode], key, keyCompare);
 }
 

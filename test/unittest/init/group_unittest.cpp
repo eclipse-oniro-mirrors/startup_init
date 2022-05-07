@@ -17,11 +17,10 @@
 #include "init_hashmap.h"
 #include "init_param.h"
 #include "init_service_manager.h"
-#include "init_unittest.h"
 #include "init_utils.h"
-#include "securec.h"
-#include "init_service.h"
 #include "le_timer.h"
+#include "param_stub.h"
+#include "securec.h"
 
 using namespace testing::ext;
 using namespace std;

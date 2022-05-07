@@ -16,7 +16,7 @@
 #include <sys/statvfs.h>
 #include "init_cmds.h"
 #include "init_param.h"
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "init_utils.h"
 #include "trigger_manager.h"
 
@@ -28,8 +28,7 @@ class CmdsUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void)
     {
-        InitParamService();
-        mkdir("/data/init_ut", S_IRWXU | S_IRWXG | S_IRWXO);
+        PrepareInitUnitTestEnv();
     };
     static void TearDownTestCase(void) {};
     void SetUp() {};

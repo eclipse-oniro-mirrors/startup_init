@@ -15,7 +15,7 @@
 #include <cerrno>
 #include <unistd.h>
 #include <sys/socket.h>
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "init_utils.h"
 #include "init_service_socket.h"
 #include "init_socket.h"

@@ -21,7 +21,8 @@
 #include <thread>
 
 #include "param_message.h"
-#include "sys_param.h"
+#include "param_message.h"
+#include "init_param.h"
 #include "system_ability_definition.h"
 #include "watcher_utils.h"
 

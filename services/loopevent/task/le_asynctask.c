@@ -47,7 +47,7 @@ static LE_STATUS HandleAsyncEvent_(const LoopHandle loopHandle, const TaskHandle
     if (LE_TEST_FLAGS(oper, Event_Read)) {
         uint64_t eventId = 0;
         int ret = read(GetSocketFd(taskHandle), &eventId, sizeof(eventId));
-        LE_LOGV("HandleAsyncEvent_ read fd:%d ret: %d eventId %lu", GetSocketFd(taskHandle), ret, eventId);
+        LE_LOGV("HandleAsyncEvent_ read fd:%d ret: %d eventId %llu", GetSocketFd(taskHandle), ret, eventId);
         DoAsyncEvent_(loopHandle, asyncTask);
         if (IsBufferEmpty(&asyncTask->stream)) {
             loop->modEvent(loop, (const BaseTask *)taskHandle, Event_Read);
