@@ -21,8 +21,10 @@
 
 #include "beget_ext.h"
 #include "init_utils.h"
+#include "parameter.h"
 #include "securec.h"
 #include "service_control.h"
+#include "sysparam_errno.h"
 
 static void ServiceStateChange(const char *key, const char *value, void *context)
 {
@@ -54,4 +56,17 @@ int ServiceWatchForStatus(const char *serviceName, ServiceStatusChangePtr change
         return -1;
     }
     return 0;
+}
+
+int WatchParameter(const char *keyprefix, ParameterChgPtr callback, void *context)
+{
+    if (keyprefix == NULL) {
+        return EC_INVALID;
+    }
+#ifdef NO_PARAM_WATCHER
+    printf("ParameterWatcher is disabled.");
+    return EC_INVALID;
+#else
+    return SystemWatchParameter(keyprefix, callback, context);
+#endif
 }

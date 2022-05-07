@@ -33,7 +33,7 @@ static LE_STATUS SetTimer_(int tfd, uint64_t timeout)
     timeValue.it_interval.tv_nsec = nsec;
     timeValue.it_value.tv_sec = sec;
     timeValue.it_value.tv_nsec = nsec;
-    LE_LOGV("SetTimer_ sec %lu tv_nsec %lu", sec, nsec);
+    LE_LOGV("SetTimer_ sec %llu tv_nsec %lu", sec, nsec);
     int ret = timerfd_settime(tfd, 0, &timeValue, NULL);
     LE_CHECK(ret == 0, return LE_FAILURE, "Failed to set timer %d", errno);
     return 0;

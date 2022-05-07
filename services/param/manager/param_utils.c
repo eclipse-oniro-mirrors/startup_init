@@ -30,6 +30,7 @@
 
 void CheckAndCreateDir(const char *fileName)
 {
+#ifndef __LITEOS_M__
     if (fileName == NULL || *fileName == '\0') {
         return;
     }
@@ -43,69 +44,7 @@ void CheckAndCreateDir(const char *fileName)
     }
     MakeDirRecursive(path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     free(path);
-}
-
-static void TrimString(char *string, uint32_t currLen)
-{
-    for (int i = currLen - 1; i >= 0; i--) {
-        if (string[i] == ' ' || string[i] == '\0') {
-            string[i] = '\0';
-        } else {
-            break;
-        }
-    }
-}
-
-int GetSubStringInfo(const char *buff, uint32_t buffLen, char delimiter, SubStringInfo *info, int subStrNumber)
-{
-    PARAM_CHECK(buff != NULL && info != NULL, return 0, "Invalid buff");
-    size_t i = 0;
-    size_t buffStrLen = strlen(buff);
-    // 去掉开始的空格
-    for (; i < buffStrLen; i++) {
-        if (!isspace(buff[i])) {
-            break;
-        }
-    }
-    // 过滤掉注释
-    if (buff[i] == '#') {
-        return -1;
-    }
-    // 分割字符串
-    int spaceIsValid = 0;
-    int curr = 0;
-    int valueCurr = 0;
-    for (; i < buffLen; i++) {
-        if (buff[i] == '\n' || buff[i] == '\r' || buff[i] == '\0') {
-            break;
-        }
-        if (buff[i] == delimiter && valueCurr != 0) {
-            info[curr].value[valueCurr] = '\0';
-            TrimString(info[curr].value, valueCurr);
-            valueCurr = 0;
-            curr++;
-            spaceIsValid = 0;
-        } else {
-            if (!spaceIsValid && isspace(buff[i])) { // 过滤开始前的无效字符
-                continue;
-            }
-            spaceIsValid = 1;
-            if ((valueCurr + 1) >= (int)sizeof(info[curr].value)) {
-                continue;
-            }
-            info[curr].value[valueCurr++] = buff[i];
-        }
-        if (curr >= subStrNumber) {
-            break;
-        }
-    }
-    if (valueCurr > 0) {
-        info[curr].value[valueCurr] = '\0';
-        TrimString(info[curr].value, valueCurr);
-        valueCurr = 0;
-        curr++;
-    }
-    return curr;
+#endif
 }
 
 int SpliteString(char *line, const char *exclude[], uint32_t count,
@@ -173,4 +112,63 @@ int SpliteString(char *line, const char *exclude[], uint32_t count,
         *pos = '\0';
     }
     return result(context, name, value);
+}
+
+static char *BuildKey(const char *format, ...)
+{
+    const size_t buffSize = 1024;  // 1024 for format key
+    char *buffer = malloc(buffSize);
+    PARAM_CHECK(buffer != NULL, return NULL, "Failed to malloc for format");
+    va_list vargs;
+    va_start(vargs, format);
+    int len = vsnprintf_s(buffer, buffSize, buffSize - 1, format, vargs);
+    va_end(vargs);
+    if (len > 0 && (size_t)len < buffSize) {
+        buffer[len] = '\0';
+        for (int i = 0; i < len; i++) {
+            if (buffer[i] == '|') {
+                buffer[i] = '\0';
+            }
+        }
+        return buffer;
+    }
+    return NULL;
+}
+
+char *GetServiceCtrlName(const char *name, const char *value)
+{
+    static char *ctrlParam[] = {
+        "ohos.ctl.start",
+        "ohos.ctl.stop"
+    };
+    static char *installParam[] = {
+        "ohos.servicectrl."
+    };
+    static char *powerCtrlArg[][2] = {
+        {"reboot,shutdown", "reboot.shutdown"},
+        {"reboot,updater", "reboot.updater"},
+        {"reboot,flashd", "reboot.flashd"},
+        {"reboot", "reboot"},
+    };
+    char *key = NULL;
+    if (strcmp("ohos.startup.powerctrl", name) == 0) {
+        for (size_t i = 0; i < ARRAY_LENGTH(powerCtrlArg); i++) {
+            if (strncmp(value, powerCtrlArg[i][0], strlen(powerCtrlArg[i][0])) == 0) {
+                return BuildKey("%s%s", OHOS_SERVICE_CTRL_PREFIX, powerCtrlArg[i][1]);
+            }
+        }
+        return key;
+    }
+    for (size_t i = 0; i < ARRAY_LENGTH(ctrlParam); i++) {
+        if (strcmp(name, ctrlParam[i]) == 0) {
+            return BuildKey("%s%s", OHOS_SERVICE_CTRL_PREFIX, value);
+        }
+    }
+
+    for (size_t i = 0; i < ARRAY_LENGTH(installParam); i++) {
+        if (strncmp(name, installParam[i], strlen(installParam[i])) == 0) {
+            return BuildKey("%s.%s", name, value);
+        }
+    }
+    return key;
 }

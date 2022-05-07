@@ -17,7 +17,7 @@
 #include <string.h>
 
 #include "begetctl.h"
-#include "sys_param.h"
+#include "init_param.h"
 
 static int bootchartCmdEnable(BShellHandle shell, int argc, char **argv)
 {

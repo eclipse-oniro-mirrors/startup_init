@@ -22,7 +22,7 @@
 #include "iwatcher.h"
 #include "iwatcher_manager.h"
 #include "singleton.h"
-#include "sys_param.h"
+#include "init_param.h"
 #include "watcher.h"
 #include "watcher_utils.h"
 

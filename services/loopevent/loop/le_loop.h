@@ -37,7 +37,11 @@ typedef struct EventLoop_ {
     uint32_t maxevents;
     uint32_t timeout;
     uint32_t stop;
+#ifdef LOOP_EVENT_USE_MUTEX
     LoopMutex mutex;
+#else
+    char mutex;
+#endif
     HashMapHandle taskMap;
 } EventLoop;
 

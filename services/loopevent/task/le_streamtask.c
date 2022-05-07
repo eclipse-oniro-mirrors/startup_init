@@ -84,21 +84,21 @@ static LE_STATUS HandleStreamEvent_(const LoopHandle loopHandle, const TaskHandl
     StreamConnectTask *stream = (StreamConnectTask *)handle;
     LE_LOGV("HandleStreamEvent_ fd:%d oper 0x%x", GetSocketFd(handle), oper);
 
-    LE_STATUS statue = LE_SUCCESS;
+    LE_STATUS status = LE_SUCCESS;
     if (LE_TEST_FLAGS(oper, Event_Write)) {
-        statue = HandleSendMsg_(loopHandle, handle, stream->sendMessageComplete);
+        status = HandleSendMsg_(loopHandle, handle, stream->sendMessageComplete);
     }
     if (LE_TEST_FLAGS(oper, Event_Read)) {
-        statue = HandleRecvMsg_(loopHandle, handle, stream->recvMessage);
+        status = HandleRecvMsg_(loopHandle, handle, stream->recvMessage);
     }
-    if (statue == LE_DIS_CONNECTED) {
+    if (status == LE_DIS_CONNECTED) {
         loop->delEvent(loop, GetSocketFd(handle), Event_Read | Event_Write);
         if (stream->disConntectComplete) {
             stream->disConntectComplete(handle);
         }
         LE_CloseStreamTask(loopHandle, handle);
     }
-    return statue;
+    return status;
 }
 
 static LE_STATUS HandleClientEvent_(const LoopHandle loopHandle, const TaskHandle handle, uint32_t oper)
@@ -106,25 +106,25 @@ static LE_STATUS HandleClientEvent_(const LoopHandle loopHandle, const TaskHandl
     StreamClientTask *client = (StreamClientTask *)handle;
     LE_LOGV("HandleClientEvent_ fd:%d oper 0x%x", GetSocketFd(handle), oper);
 
-    LE_STATUS statue = LE_SUCCESS;
+    LE_STATUS status = LE_SUCCESS;
     if (LE_TEST_FLAGS(oper, Event_Write)) {
         if (client->connected == 0 && client->connectComplete) {
             client->connectComplete(handle);
         }
         client->connected = 1;
-        statue = HandleSendMsg_(loopHandle, handle, client->sendMessageComplete);
+        status = HandleSendMsg_(loopHandle, handle, client->sendMessageComplete);
     }
     if (LE_TEST_FLAGS(oper, Event_Read)) {
-        statue = HandleRecvMsg_(loopHandle, handle, client->recvMessage);
+        status = HandleRecvMsg_(loopHandle, handle, client->recvMessage);
     }
-    if (statue == LE_DIS_CONNECTED) {
+    if (status == LE_DIS_CONNECTED) {
         if (client->disConntectComplete) {
             client->disConntectComplete(handle);
         }
         client->connected = 0;
         LE_CloseStreamTask(loopHandle, handle);
     }
-    return statue;
+    return status;
 }
 
 static void HandleStreamTaskClose_(const LoopHandle loopHandle, const TaskHandle taskHandle)

@@ -22,7 +22,7 @@ shared_library("libinitsync_shared") {
   cflags = [ "-Wall" ]
   include_dirs = [
     "//base/startup/init_lite/initsync/include",
-    "//base/startup/init_lite/interfaces/kits",
+    "//base/startup/init_lite/interfaces/kits/syscap",
     "//base/startup/init_lite/services/log",
     "//base/startup/init_lite/interfaces/innerkits/include",
   ]
@@ -37,7 +37,7 @@ static_library("libinitsync_static") {
   cflags = [ "-Wall" ]
   include_dirs = [
     "//base/startup/init_lite/initsync/include",
-    "//base/startup/init_lite/interfaces/kits",
+    "//base/startup/init_lite/interfaces/kits/syscap",
     "//base/startup/init_lite/services/log",
     "//base/startup/init_lite/interfaces/innerkits/include",
   ]

@@ -17,34 +17,13 @@
 #define BASE_STARTUP_PARAM_TRIE_H
 #include <stdatomic.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/syscall.h>
 
+#include "init_hashmap.h"
+#include "init_param.h"
+#include "list.h"
+#include "param_osadp.h"
 #include "param_security.h"
 #include "securec.h"
-#include "sys_param.h"
-
-#ifndef __NR_futex
-#define PARAM_NR_FUTEX 202 /* syscall number */
-#else
-#define PARAM_NR_FUTEX __NR_futex
-#endif
-
-#if defined FUTEX_WAIT || defined FUTEX_WAKE
-#include <linux/futex.h>
-#else
-#define FUTEX_WAIT 0
-#define FUTEX_WAKE 1
-
-#define PARAM_FUTEX(ftx, op, value, timeout, bitset)                         \
-    do {                                                                   \
-        struct timespec d_timeout = { 0, 1000 * 1000 * (timeout) };        \
-        syscall(PARAM_NR_FUTEX, ftx, op, value, &d_timeout, NULL, bitset); \
-    } while (0)
-
-#define futex_wake(ftx, count) PARAM_FUTEX(ftx, FUTEX_WAKE, count, 0, 0)
-#define futex_wait(ftx, value) PARAM_FUTEX(ftx, FUTEX_WAIT, value, 100, 0)
-#endif
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -52,8 +31,12 @@ extern "C" {
 #endif
 #endif
 
-#define PARAM_WORKSPACE_MAX (80 * 1024)
-#define FILENAME_LEN_MAX 255
+#ifdef PARAM_SUPPORT_SELINUX
+#define HASH_BUTT 32
+#else
+#define HASH_BUTT 1
+#endif
+
 typedef struct {
     uint32_t left;
     uint32_t right;
@@ -86,36 +69,44 @@ typedef struct {
 
 typedef struct {
     atomic_llong commitId;
+    atomic_llong commitPersistId;
     uint32_t trieNodeCount;
     uint32_t paramNodeCount;
     uint32_t securityNodeCount;
+    uint32_t startIndex;
     uint32_t currOffset;
     uint32_t firstNode;
     uint32_t dataSize;
-    uint32_t reserved_[28];
     char data[0];
 } ParamTrieHeader;
 
 struct WorkSpace_;
 typedef struct WorkSpace_ {
-    char fileName[FILENAME_LEN_MAX + 1];
+    int flags;
+    HashNode hashNode;
+    ListNode node;
     uint32_t (*allocTrieNode)(struct WorkSpace_ *workSpace, const char *key, uint32_t keyLen);
     int (*compareTrieNode)(const ParamTrieNode *node, const char *key2, uint32_t key2Len);
+    MemHandle memHandle;
     ParamTrieHeader *area;
+#ifdef WORKSPACE_AREA_NEED_MUTEX
+    ParamRWMutex rwlock;
+#endif
+    char fileName[0];
 } WorkSpace;
 
-int InitWorkSpace(const char *fileName, WorkSpace *workSpace, int onlyRead);
+int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t spaceSize);
 void CloseWorkSpace(WorkSpace *workSpace);
 
 ParamTrieNode *GetTrieNode(const WorkSpace *workSpace, uint32_t offset);
 void SaveIndex(uint32_t *index, uint32_t offset);
 
 ParamTrieNode *AddTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen);
-ParamTrieNode *FindTrieNode(const WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel);
+ParamTrieNode *FindTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel);
 
-typedef int (*TraversalTrieNodePtr)(const WorkSpace *workSpace, const ParamTrieNode *node, void *cookie);
+typedef int (*TraversalTrieNodePtr)(const WorkSpace *workSpace, const ParamTrieNode *node, const void *cookie);
 int TraversalTrieNode(const WorkSpace *workSpace,
-    const ParamTrieNode *subTrie, TraversalTrieNodePtr walkFunc, void *cookie);
+    const ParamTrieNode *subTrie, TraversalTrieNodePtr walkFunc, const void *cookie);
 
 uint32_t AddParamSecruityNode(WorkSpace *workSpace, const ParamAuditData *auditData);
 uint32_t AddParamNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, const char *value, uint32_t valueLen);
@@ -124,4 +115,4 @@ uint32_t AddParamNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, co
 }
 #endif
 #endif
-#endif // BASE_STARTUP_PARAM_TRIE_H
+#endif  // BASE_STARTUP_PARAM_TRIE_H

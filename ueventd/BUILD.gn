@@ -120,7 +120,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/include",
     ]
     deps = service_ueventd_deps
-    deps += [ "//base/startup/init_lite/services/param:param_client" ]
+    deps += [ "//base/startup/init_lite/interfaces/innerkits:libbegetutil" ]
     cflags = []
 
     if (build_selinux) {

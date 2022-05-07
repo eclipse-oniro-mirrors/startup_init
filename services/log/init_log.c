@@ -62,7 +62,6 @@ static void LogToFile(const char *logFile, const char *tag, const char *info)
 #endif
 
 #ifdef INIT_DMESG
-#ifndef OHOS_LITE
 static int g_fd = -1;
 void OpenLogDevice(void)
 {
@@ -98,7 +97,6 @@ void LogToDmesg(InitLogLevel logLevel, const char *tag, const char *info)
     return;
 }
 #endif
-#endif
 
 void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *fmt, ...)
 {
@@ -116,12 +114,10 @@ void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const 
 #ifdef OHOS_LITE
     static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
     (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);
-#else
+#endif
 #ifdef INIT_DMESG
     LogToDmesg(logLevel, tag, tmpFmt);
 #endif
-#endif
-
 #ifdef INIT_AGENT
     static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
     HiLogBasePrint(LOG_CORE, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);

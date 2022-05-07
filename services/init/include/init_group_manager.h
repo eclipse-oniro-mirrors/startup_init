@@ -29,13 +29,8 @@ extern "C" {
 #define GROUP_IMPORT_MAX_LEVEL 5
 #define GROUP_NAME_MAX_LENGTH 64
 #define GROUP_HASHMAP_BUCKET 32
-#ifdef STARTUP_INIT_TEST
-#define GROUP_DEFAULT_PATH "/data/init_ut"
-#define BOOT_CMD_LINE "/data/init_ut/cmdline"
-#else
-#define GROUP_DEFAULT_PATH "/system/etc"
-#define BOOT_CMD_LINE "/proc/cmdline"
-#endif
+
+#define GROUP_DEFAULT_PATH STARTUP_INIT_UT_PATH"/system/etc"
 #define BOOT_GROUP_NAME "bootgroup"
 #define BOOT_GROUP_DEFAULT "device.boot.group"
 

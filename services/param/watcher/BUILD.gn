@@ -18,41 +18,6 @@ ohos_prebuilt_etc("param_watcher.rc") {
   part_name = "init"
 }
 
-ohos_shared_library("param_watcheragent") {
-  sources = [
-    "agent/watcher.cpp",
-    "agent/watcher_manager_kits.cpp",
-    "agent/watcher_manager_proxy.cpp",
-    "agent/watcher_stub.cpp",
-  ]
-
-  include_dirs = [
-    "//base/startup/init_lite/services/param/include",
-    "//base/startup/init_lite/services/include/param",
-    "//base/startup/init_lite/services/param/watcher/include",
-    "//base/startup/init_lite/services/param/watcher/agent",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/loopevent/include",
-  ]
-
-  deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
-
-  external_deps = [
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
-    "utils_base:utils",
-  ]
-
-  part_name = "init"
-}
-
 ohos_shared_library("param_watcher") {
   sources = [
     "//base/startup/init_lite/services/utils/list.c",
@@ -64,6 +29,7 @@ ohos_shared_library("param_watcher") {
   include_dirs = [
     "//base/startup/init_lite/services/param/include",
     "//base/startup/init_lite/services/include/param",
+    "//base/startup/init_lite/services/param/linux",
     "//base/startup/init_lite/services/param/watcher/proxy",
     "//base/startup/init_lite/services/param/watcher/include",
     "//base/startup/init_lite/services/include",
@@ -74,9 +40,8 @@ ohos_shared_library("param_watcher") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/param:param_client",
-    "//third_party/bounds_checking_function:libsec_static",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [

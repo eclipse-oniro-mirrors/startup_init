@@ -49,6 +49,7 @@ static int ParseGroupCfgItem(cJSON *root, int type, const char *itemName)
 {
     int itemNumber = 0;
     cJSON *json = GetArrayItem(root, &itemNumber, itemName);
+    INIT_LOGI("ParseGroupCfgItem %s itemNumber %d", itemName, itemNumber);
     if (json == NULL) {
         return 0;
     }
@@ -66,7 +67,7 @@ static int ParseGroupCfgItem(cJSON *root, int type, const char *itemName)
 static int InitParseGroupCfg_(const char *groupCfg)
 {
     INIT_LOGI("Parse group config %s", groupCfg);
-    char *fileBuf = ReadFileToBuf(groupCfg);
+    char *fileBuf = ReadFileData(groupCfg);
     INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Failed to read file content %s", groupCfg);
     cJSON *fileRoot = cJSON_Parse(fileBuf);
     INIT_ERROR_CHECK(fileRoot != NULL, free(fileBuf);
@@ -181,22 +182,17 @@ void InitServiceSpace(void)
     for (int i = 0; i < NODE_TYPE_MAX; i++) {
         g_initWorkspace.groupNodes[i] = NULL;
     }
-    // get boot mode
+    // get boot mode, set default mode
+    strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), BOOT_GROUP_DEFAULT);
     char *data = ReadFileData(BOOT_CMD_LINE);
     if (data != NULL) {
         int ret = GetProcCmdlineValue(BOOT_GROUP_NAME, data,
             g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr));
         if (ret != 0) {
             INIT_LOGE("%s", "Failed to get boot group");
-#ifdef INIT_TEST
             if (GetBootModeFromMisc() == GROUP_CHARING) {
                 strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), "device.charing.group");
-            } else {
-                strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), BOOT_GROUP_DEFAULT);
             }
-#else
-            strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), BOOT_GROUP_DEFAULT);
-#endif
         }
         free(data);
     }

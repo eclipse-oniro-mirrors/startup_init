@@ -48,7 +48,8 @@ typedef enum {
     LE_FAILURE = 10000,
     LE_INVALID_PARAM,
     LE_NO_MEMORY,
-    LE_DIS_CONNECTED
+    LE_DIS_CONNECTED,
+    LE_INVALID_TASK
 } LE_STATUS;
 
 typedef struct {

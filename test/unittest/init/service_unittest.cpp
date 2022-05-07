@@ -20,7 +20,7 @@
 #include "init_service.h"
 #include "init_service_manager.h"
 #include "init_service_socket.h"
-#include "init_unittest.h"
+#include "param_stub.h"
 #include "init_utils.h"
 #include "securec.h"
 

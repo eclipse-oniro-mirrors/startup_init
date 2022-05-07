@@ -19,8 +19,9 @@
 #include <stdint.h>
 
 #include "init_log.h"
+#include "init_param.h"
+#include "init_utils.h"
 #include "securec.h"
-#include "sys_param.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -33,6 +34,17 @@ typedef enum {
     PARAM_CODE_ERROR_MAP_FILE,
 } PARAM_INNER_CODE;
 
+struct CmdLineEntry {
+    char *key;
+    int set;
+};
+
+typedef struct cmdLineInfo {
+    const char *name;
+    int (*processor)(const char *name, const char *value, int);
+} cmdLineInfo;
+
+#define FILENAME_LEN_MAX 255
 #define MS_UNIT 1000
 #define UNUSED(x) (void)(x)
 #define PARAM_ALIGN(len) (((len) + 0x03) & (~0x03))
@@ -48,28 +60,29 @@ typedef enum {
 #define OHOS_SERVICE_CTRL_PREFIX "ohos.servicectrl."
 #define OHOS_BOOT "ohos.boot."
 
-#define CLIENT_PIPE_NAME "/dev/unix/socket/paramservice"
-#define CLIENT_PARAM_STORAGE_PATH "/dev/__parameters__/param_storage"
-
 #ifdef STARTUP_INIT_TEST
 #define PARAM_STATIC
-#define PARAM_DEFAULT_PATH "/data/init_ut"
-#define PIPE_NAME PARAM_DEFAULT_PATH"/param/paramservice"
-#define PARAM_STORAGE_PATH PARAM_DEFAULT_PATH "/__parameters__/param_storage"
-#define PARAM_PERSIST_SAVE_PATH PARAM_DEFAULT_PATH "/param/persist_parameters"
-#define PARAM_PERSIST_SAVE_TMP_PATH PARAM_DEFAULT_PATH "/param/tmp_persist_parameters"
 #else
-#define PARAM_DEFAULT_PATH ""
 #define PARAM_STATIC static
-#define PIPE_NAME "/dev/unix/socket/paramservice"
-#define PARAM_STORAGE_PATH "/dev/__parameters__/param_storage"
-#define PARAM_PERSIST_SAVE_PATH "/data/parameters/persist_parameters"
-#define PARAM_PERSIST_SAVE_TMP_PATH "/data/parameters/tmp_persist_parameters"
 #endif
 
-#define PARAM_CMD_LINE "/proc/cmdline"
-#define GROUP_FILE_PATH "/etc/group"
-#define USER_FILE_PATH "/etc/passwd"
+#ifndef DATA_PATH
+#if defined __LITEOS_M__
+#define DATA_PATH          ""
+#elif defined __LITEOS_A__
+#define DATA_PATH          STARTUP_INIT_UT_PATH"/storage/data/system/param/"
+#elif defined __LINUX__
+#define DATA_PATH          STARTUP_INIT_UT_PATH"/storage/data/system/param/"
+#else
+#define DATA_PATH          STARTUP_INIT_UT_PATH"/data/parameters/"
+#endif
+#endif
+
+#define CLIENT_PIPE_NAME "/dev/unix/socket/paramservice"
+#define PIPE_NAME STARTUP_INIT_UT_PATH "/dev/unix/socket/paramservice"
+#define PARAM_STORAGE_PATH STARTUP_INIT_UT_PATH "/dev/__parameters__"
+#define PARAM_PERSIST_SAVE_PATH DATA_PATH "persist_parameters"
+#define PARAM_PERSIST_SAVE_TMP_PATH DATA_PATH "tmp_persist_parameters"
 
 #define WORKSPACE_FLAGS_INIT 0x01
 #define WORKSPACE_FLAGS_LOADED 0x02
@@ -94,6 +107,11 @@ typedef enum {
         exper;                       \
     }
 
+#define PARAM_ONLY_CHECK(retCode, exper) \
+    if (!(retCode)) {                \
+        exper;                       \
+    }
+
 #ifdef INIT_AGENT
 #define PARAM_DUMP printf
 #else
@@ -113,13 +131,8 @@ typedef enum {
 #define SUBSTR_INFO_DAC 1
 #endif
 
-typedef struct {
-    int length;
-    char value[PARAM_BUFFER_SIZE];
-} SubStringInfo;
-
+char *GetServiceCtrlName(const char *name, const char *value);
 void CheckAndCreateDir(const char *fileName);
-int GetSubStringInfo(const char *buff, uint32_t buffLen, char delimiter, SubStringInfo *info, int subStrNumber);
 int SpliteString(char *line, const char *exclude[], uint32_t count,
     int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context);
 #ifdef __cplusplus

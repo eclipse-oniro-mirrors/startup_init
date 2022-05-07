@@ -32,13 +32,7 @@
 #include "service_control.h"
 
 #define MAX_BUF_SIZE  1024
-#define MAX_DATA_BUFFER 2048
-
-#ifdef STARTUP_UT
-#define LOG_FILE_NAME "/media/sf_ubuntu/test/log.txt"
-#else
-#define LOG_FILE_NAME "/data/startup_log.txt"
-#endif
+#define MAX_SMALL_BUFFER 3096
 
 #define MAX_JSON_FILE_LEN 102400    // max init.cfg size 100KB
 #define CONVERT_MICROSEC_TO_SEC(x) ((x) / 1000 / 1000.0)
@@ -124,16 +118,16 @@ char *ReadFileData(const char *fileName)
     }
     char *buffer = NULL;
     int fd = -1;
-    do {
-        fd = open(fileName, O_RDONLY);
-        INIT_ERROR_CHECK(fd >= 0, break, "Failed to read file %s", fileName);
-
-        buffer = (char *)malloc(MAX_DATA_BUFFER); // fsmanager not create, can not get fileStat st_size
-        INIT_ERROR_CHECK(buffer != NULL, break, "Failed to allocate memory for %s", fileName);
-        ssize_t readLen = read(fd, buffer, MAX_DATA_BUFFER - 1);
-        INIT_ERROR_CHECK(readLen > 0, break, "Failed to read data for %s", fileName);
-        buffer[readLen] = '\0';
-    } while (0);
+    fd = open(fileName, O_RDONLY);
+    INIT_ERROR_CHECK(fd >= 0, return NULL, "Failed to read file %s", fileName);
+    buffer = (char *)malloc(MAX_SMALL_BUFFER); // fsmanager not create, can not get fileStat st_size
+    INIT_ERROR_CHECK(buffer != NULL, close(fd);
+        return NULL, "Failed to allocate memory for %s", fileName);
+    ssize_t readLen = read(fd, buffer, MAX_SMALL_BUFFER - 1);
+    INIT_ERROR_CHECK((readLen > 0) && (readLen < (MAX_SMALL_BUFFER - 1)), close(fd);
+        free(buffer);
+        return NULL, "Failed to read data for %s", fileName);
+    buffer[readLen] = '\0';
     if (fd != -1) {
         close(fd);
     }
@@ -372,11 +366,11 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
         return -1, "Failed to malloc for %s", dirPath);
 
     struct dirent *dp;
+    uint32_t count = 0;
     while ((dp = readdir(pDir)) != NULL) {
         if (dp->d_type == DT_DIR) {
             continue;
         }
-        INIT_LOGV("ReadFileInDir %s", dp->d_name);
         if (includeExt != NULL) {
             char *tmp = strstr(dp->d_name, includeExt);
             if (tmp == NULL) {
@@ -393,9 +387,11 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
         }
         struct stat st;
         if (stat(fileName, &st) == 0) {
+            count++;
             processFile(fileName, context);
         }
     }
+    INIT_LOGI("ReadFileInDir dirPath %s %d", dirPath, count);
     free(fileName);
     closedir(pDir);
     return 0;
@@ -414,7 +410,7 @@ int InUpdaterMode(void)
 
 int InChargerMode(void)
 {
-    char *data = ReadFileData(PARAM_CMD_LINE);
+    char *data = ReadFileData(BOOT_CMD_LINE);
     char value[CMDLINE_VALUE_LEN_MAX];
     int ret = 0;
 
@@ -473,4 +469,15 @@ const InitArgInfo *GetServieStatusMap(int *size)
         *size = ARRAY_LENGTH(g_servieStatusMap);
     }
     return g_servieStatusMap;
+}
+
+uint32_t GetRandom()
+{
+    uint32_t ulSeed = 0;
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd > 0) {
+        read(fd, &ulSeed, sizeof(ulSeed));
+    }
+    close(fd);
+    return ulSeed;
 }

@@ -12,28 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <cstdio>
-#include <cstring>
 
+#include "param_manager.h"
 #include "param_security.h"
+#include "param_stub.h"
 #include "param_utils.h"
 #include "securec.h"
-#include "init_unittest.h"
-
-extern "C" {
-extern int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit);
-}
 
 using namespace testing::ext;
 using namespace std;
 
-static int SecurityLabelGet(const ParamAuditData *auditData, void *context)
-{
-    return 0;
-}
-
+namespace init_ut {
 class DacUnitTest : public ::testing::Test {
 public:
     DacUnitTest() {}
@@ -51,10 +41,10 @@ public:
         if (initParamSercurityOps.securityInitLabel == nullptr || initParamSercurityOps.securityFreeLabel == nullptr) {
             return -1;
         }
-        ParamSecurityLabel *label = nullptr;
+        ParamSecurityLabel label = {};
         ret = initParamSercurityOps.securityInitLabel(&label, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
-        ret = initParamSercurityOps.securityFreeLabel(label);
+        ret = initParamSercurityOps.securityFreeLabel(&label);
         EXPECT_EQ(ret, 0);
         return 0;
     }
@@ -66,12 +56,12 @@ public:
         if (initParamSercurityOps.securityCheckFilePermission == nullptr) {
             return -1;
         }
-        ParamSecurityLabel *label = nullptr;
+        ParamSecurityLabel label = {};
         ret = initParamSercurityOps.securityInitLabel(&label, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
-        ret = initParamSercurityOps.securityCheckFilePermission(label, fileName, DAC_WRITE);
+        ret = initParamSercurityOps.securityCheckFilePermission(&label, fileName, DAC_WRITE);
         EXPECT_EQ(ret, 0);
-        ret = initParamSercurityOps.securityFreeLabel(label);
+        ret = initParamSercurityOps.securityFreeLabel(&label);
         EXPECT_EQ(ret, 0);
         return 0;
     }
@@ -83,16 +73,17 @@ public:
         if (initParamSercurityOps.securityCheckFilePermission == nullptr) {
             return -1;
         }
-        ParamSecurityLabel *srclabel = nullptr;
-        ret = initParamSercurityOps.securityInitLabel(&srclabel, LABEL_INIT_FOR_INIT);
-        EXPECT_EQ(ret, 0);
-
         ParamAuditData auditData = {};
         auditData.name = name;
-        auditData.label = nullptr;
-        memcpy_s(&auditData.dacData, sizeof(ParamDacData), dacData, sizeof(ParamDacData));
-        ret = initParamSercurityOps.securityCheckParamPermission(srclabel, &auditData, mode);
-        initParamSercurityOps.securityFreeLabel(srclabel);
+        ret = memcpy_s(&auditData.dacData, sizeof(auditData.dacData), dacData, sizeof(auditData.dacData));
+        EXPECT_EQ(ret, 0);
+        ret = AddSecurityLabel(&auditData);
+        EXPECT_EQ(ret, 0);
+        ParamSecurityLabel srclabel = {};
+        ret = initParamSercurityOps.securityInitLabel(&srclabel, LABEL_INIT_FOR_INIT);
+        EXPECT_EQ(ret, 0);
+        ret = initParamSercurityOps.securityCheckParamPermission(&srclabel, name, mode);
+        initParamSercurityOps.securityFreeLabel(&srclabel);
         return ret;
     }
 
@@ -100,9 +91,6 @@ public:
     {
         int ret = RegisterSecurityDacOps(&clientParamSercurityOps, 0);
         EXPECT_EQ(ret, 0);
-        if (clientParamSercurityOps.securityDecodeLabel != nullptr) {
-            EXPECT_EQ(1, 0);
-        }
         if (clientParamSercurityOps.securityGetLabel != nullptr) {
             EXPECT_EQ(1, 0);
         }
@@ -110,58 +98,13 @@ public:
             EXPECT_EQ(1, 0);
             return -1;
         }
-        ParamSecurityLabel *label = nullptr;
+        ParamSecurityLabel label = {};
         ret = clientParamSercurityOps.securityInitLabel(&label, 0);
         EXPECT_EQ(ret, 0);
-        ret = clientParamSercurityOps.securityCheckFilePermission(label, fileName, DAC_READ);
+        ret = clientParamSercurityOps.securityCheckFilePermission(&label, fileName, DAC_READ);
         EXPECT_EQ(ret, 0);
-        ret = clientParamSercurityOps.securityFreeLabel(label);
+        ret = clientParamSercurityOps.securityFreeLabel(&label);
         EXPECT_EQ(ret, 0);
-        return 0;
-    }
-
-    int TestEncode(const ParamSecurityLabel *label, std::vector<char> &buffer)
-    {
-        int ret = RegisterSecurityDacOps(&clientParamSercurityOps, 0);
-        EXPECT_EQ(ret, 0);
-        if (clientParamSercurityOps.securityDecodeLabel != nullptr) {
-            EXPECT_EQ(1, 0);
-        }
-        if (clientParamSercurityOps.securityGetLabel != nullptr) {
-            EXPECT_EQ(1, 0);
-        }
-        if (clientParamSercurityOps.securityEncodeLabel == nullptr) {
-            EXPECT_EQ(1, 0);
-            return -1;
-        }
-        uint32_t bufferSize = 0;
-        ret = clientParamSercurityOps.securityEncodeLabel(label, nullptr, &bufferSize);
-        EXPECT_EQ(ret, 0);
-        buffer.resize(bufferSize + 1);
-        ret = clientParamSercurityOps.securityEncodeLabel(label, buffer.data(), &bufferSize);
-        EXPECT_EQ(ret, 0);
-        return 0;
-    }
-
-    int TestDecode(const ParamSecurityLabel *label, std::vector<char> &buffer)
-    {
-        int ret = RegisterSecurityDacOps(&clientParamSercurityOps, 1);
-        EXPECT_EQ(ret, 0);
-        if (clientParamSercurityOps.securityDecodeLabel == nullptr) {
-            EXPECT_EQ(1, 0);
-        }
-        if (clientParamSercurityOps.securityEncodeLabel != nullptr) {
-            EXPECT_EQ(1, 0);
-            return -1;
-        }
-        ParamSecurityLabel *tmp = nullptr;
-        ret = clientParamSercurityOps.securityDecodeLabel(&tmp, buffer.data(), buffer.size());
-        if (label == nullptr || tmp == nullptr) {
-            return -1;
-        }
-        EXPECT_EQ(ret, 0);
-        EXPECT_EQ(label->cred.gid, tmp->cred.gid);
-        EXPECT_EQ(label->cred.uid, tmp->cred.uid);
         return 0;
     }
 
@@ -176,19 +119,10 @@ HWTEST_F(DacUnitTest, TestDacInitLocalLabel, TestSize.Level0)
     test.TestDacInitLocalLabel();
 }
 
-HWTEST_F(DacUnitTest, TestDacLabelEncode, TestSize.Level0)
-{
-    DacUnitTest test;
-    std::vector<char> buffer;
-    ParamSecurityLabel label = {0, { 4444, 5555}};
-    test.TestEncode(&label, buffer);
-    test.TestDecode(&label, buffer);
-}
-
 HWTEST_F(DacUnitTest, TestDacCheckFilePermission, TestSize.Level0)
 {
     DacUnitTest test;
-    test.TestDacCheckFilePermission(PARAM_DEFAULT_PATH"/trigger_test.cfg");
+    test.TestDacCheckFilePermission(STARTUP_INIT_UT_PATH "/trigger_test.cfg");
 }
 
 HWTEST_F(DacUnitTest, TestDacCheckUserParaPermission, TestSize.Level0)
@@ -204,29 +138,29 @@ HWTEST_F(DacUnitTest, TestDacCheckUserParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     dacData.mode = 0400;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WRITE);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0400;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WATCH);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
 
     // write
     dacData.mode = 0200;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_READ);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0200;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WRITE);
     EXPECT_EQ(ret, 0);
     dacData.mode = 0200;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WATCH);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
 
     // watch
     dacData.mode = 0100;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_READ);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0100;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WRITE);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0100;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WATCH);
     EXPECT_EQ(ret, 0);
@@ -245,29 +179,29 @@ HWTEST_F(DacUnitTest, TestDacCheckGroupParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     dacData.mode = 0040;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WRITE);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0040;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WATCH);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
 
     // write
     dacData.mode = 0020;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_READ);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0020;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WRITE);
     EXPECT_EQ(ret, 0);
     dacData.mode = 0020;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WATCH);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
 
     // watch
     dacData.mode = 0010;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_READ);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0010;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WRITE);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0010;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WATCH);
     EXPECT_EQ(ret, 0);
@@ -286,29 +220,29 @@ HWTEST_F(DacUnitTest, TestDacCheckOtherParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     dacData.mode = 0004;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WRITE);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0004;
     ret = test.TestDacCheckParaPermission("test.permission.read.aaa", &dacData, DAC_WATCH);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
 
     // write
     dacData.mode = 0002;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_READ);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0002;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WRITE);
     EXPECT_EQ(ret, 0);
     dacData.mode = 0002;
     ret = test.TestDacCheckParaPermission("test.permission.write.aaa", &dacData, DAC_WATCH);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
 
     // watch
     dacData.mode = 0001;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_READ);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0001;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WRITE);
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     dacData.mode = 0001;
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WATCH);
     EXPECT_EQ(ret, 0);
@@ -317,5 +251,6 @@ HWTEST_F(DacUnitTest, TestDacCheckOtherParaPermission, TestSize.Level0)
 HWTEST_F(DacUnitTest, TestClientDacCheckFilePermission, TestSize.Level0)
 {
     DacUnitTest test;
-    test.TestClientDacCheckFilePermission(PARAM_DEFAULT_PATH"/trigger_test.cfg");
+    test.TestClientDacCheckFilePermission(STARTUP_INIT_UT_PATH "/trigger_test.cfg");
+}
 }

@@ -21,7 +21,7 @@
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 #include "list.h"
-#include "sys_param.h"
+#include "init_param.h"
 #include "ueventd.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_utils.h"

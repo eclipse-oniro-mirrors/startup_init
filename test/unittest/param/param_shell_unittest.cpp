@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <gtest/gtest.h>
+
 #include "begetctl.h"
-#include "init_unittest.h"
 #include "securec.h"
 #include "shell.h"
 #include "shell_utils.h"

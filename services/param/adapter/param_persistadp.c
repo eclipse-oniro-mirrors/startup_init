@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "init_utils.h"
+#include "param_manager.h"
 #include "param_persist.h"
 #include "param_utils.h"
 
@@ -27,49 +28,77 @@ typedef struct {
     PersistParamGetPtr persistParamGet;
 } PersistAdpContext;
 
-static int LoadPersistParam(PersistParamGetPtr persistParamGet, void *context)
+// for linux, no mutex
+static ParamMutex g_saveMutex = {};
+
+static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
+{
+    uint32_t dataIndex = 0;
+    int ret = WriteParam(name, value, &dataIndex, 0);
+    PARAM_CHECK(ret == 0, return ret, "Failed to write param %d name:%s %s", ret, name, value);
+    return 0;
+}
+
+static int LoadPersistParam()
 {
     CheckAndCreateDir(PARAM_PERSIST_SAVE_PATH);
     int updaterMode = InUpdaterMode();
     char *tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_TMP_PATH : "/param/tmp_persist_parameters";
     FILE *fp = fopen(tmpPath, "r");
     if (fp == NULL) {
-        fp = fopen((updaterMode == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters", "r");
+        tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters";
+        fp = fopen(tmpPath, "r");
         PARAM_LOGI("LoadPersistParam open file %s", PARAM_PERSIST_SAVE_PATH);
     }
     PARAM_CHECK(fp != NULL, return -1, "No valid persist parameter file %s", PARAM_PERSIST_SAVE_PATH);
 
-    char *buff = (char *)calloc(1, PARAM_BUFFER_SIZE);
-    SubStringInfo *info = calloc(1, sizeof(SubStringInfo) * (SUBSTR_INFO_VALUE + 1));
-    while (info != NULL && buff != NULL && fgets(buff, PARAM_BUFFER_SIZE, fp) != NULL) {
-        buff[PARAM_BUFFER_SIZE - 1] = '\0';
-        int subStrNumber = GetSubStringInfo(buff, strlen(buff), '=', info, SUBSTR_INFO_VALUE + 1);
-        if (subStrNumber <= SUBSTR_INFO_VALUE) {
-            continue;
-        }
-        int ret = persistParamGet(info[0].value, info[1].value, context);
-        PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buff);
+    const int buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
+    char *buffer = malloc(buffSize);
+    if (buffer == NULL) {
+        (void)fclose(fp);
+        return -1;
     }
-    if (info != NULL) {
-        free(info);
-    }
-    if (buff != NULL) {
-        free(buff);
+    uint32_t paramNum = 0;
+    while (fgets(buffer, buffSize, fp) != NULL) {
+        buffer[buffSize - 1] = '\0';
+        int ret = SpliteString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
+        PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);
+        paramNum++;
     }
     (void)fclose(fp);
+    free(buffer);
+    PARAM_LOGI("LoadPersistParam from file %s paramNum %d", tmpPath, paramNum);
     return 0;
 }
 
 static int SavePersistParam(const char *name, const char *value)
 {
-    PARAM_LOGV("SavePersistParam %s=%s", name, value);
-    return 0;
+    ParamMutexPend(&g_saveMutex);
+    char *path = (InUpdaterMode() == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters";
+    FILE *fp = fopen(path, "a+");
+    int ret = -1;
+    if (fp != NULL) {
+        ret = fprintf(fp, "%s=%s\n", name, value);
+        (void)fclose(fp);
+    }
+    ParamMutexPost(&g_saveMutex);
+    if (ret <= 0) {
+        PARAM_LOGE("Failed to save persist param %s", name);
+    }
+    return ret;
 }
 
 static int BatchSavePersistParamBegin(PERSIST_SAVE_HANDLE *handle)
 {
-    FILE *fp = fopen((InUpdaterMode() == 0) ? PARAM_PERSIST_SAVE_TMP_PATH : "/param/tmp_persist_parameters", "w");
-    PARAM_CHECK(fp != NULL, return -1, "Open file %s fail error %d", PARAM_PERSIST_SAVE_TMP_PATH, errno);
+    ParamMutexPend(&g_saveMutex);
+    char *path = (InUpdaterMode() == 0) ? PARAM_PERSIST_SAVE_TMP_PATH : "/param/tmp_persist_parameters";
+    unlink(path);
+    FILE *fp = fopen(path, "w");
+    if (fp == NULL) {
+        ParamMutexPost(&g_saveMutex);
+        PARAM_LOGE("Open file %s fail error %d", path, errno);
+        return -1;
+    }
     *handle = (PERSIST_SAVE_HANDLE)fp;
     return 0;
 }
@@ -95,11 +124,13 @@ static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle)
         unlink("/param/persist_parameters");
         ret = rename("/param/tmp_persist_parameters", "/param/persist_parameters");
     }
+    ParamMutexPost(&g_saveMutex);
     PARAM_CHECK(ret == 0, return, "BatchSavePersistParamEnd %s fail error %d", PARAM_PERSIST_SAVE_TMP_PATH, errno);
 }
 
 int RegisterPersistParamOps(PersistParamOps *ops)
 {
+    ParamMutexCeate(&g_saveMutex);
     PARAM_CHECK(ops != NULL, return -1, "Invalid ops");
     ops->save = SavePersistParam;
     ops->load = LoadPersistParam;

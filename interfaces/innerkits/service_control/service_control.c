@@ -23,7 +23,7 @@
 #include "beget_ext.h"
 #include "init_utils.h"
 #include "securec.h"
-#include "sys_param.h"
+#include "init_param.h"
 
 static int StartProcess(const char *name, const char *extArgv[], int extArgc)
 {

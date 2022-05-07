@@ -14,7 +14,7 @@
  */
 
 #include "systemwaitparameter_fuzzer.h"
-#include "sys_param.h"
+#include "init_param.h"
 
 namespace OHOS {
     bool FuzzSystemWaitParameter(const uint8_t* data, size_t size)

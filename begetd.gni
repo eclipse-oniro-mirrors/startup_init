@@ -13,8 +13,12 @@
 
 declare_args() {
   param_feature_watcher = true
+  param_feature_deviceinfo = true
   param_test = true
-
+  param_begetctl_liteos_support = false
+  enable_ohos_startup_init_lite_use_thirdparty_mbedtls = true
+  enable_ohos_startup_init_lite_use_posix_file_api = false
+  config_ohos_startup_init_lite_data_path = ""
   if (defined(product_name) && product_name == "rk3568") {
     boot_kernel_extended_cmdline =
         "hardware=rk3568 default_boot_device=fe310000.sdhci"
