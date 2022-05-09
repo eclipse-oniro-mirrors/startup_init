@@ -142,6 +142,7 @@ typedef struct Service_ {
     char apl[MAX_APL_NAME + 1];
     ServiceArgs capsArgs;
     ServiceArgs permArgs;
+    ServiceArgs permAclsArgs;
     Perms servPerm;
     ServiceArgs pathArgs;
     ServiceArgs extraArgs;

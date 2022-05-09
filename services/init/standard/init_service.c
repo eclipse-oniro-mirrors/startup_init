@@ -122,8 +122,10 @@ void GetAccessToken(void)
             NativeTokenInfoParams nativeTokenInfoParams = {
                 service->capsArgs.count,
                 service->permArgs.count,
+                service->permAclsArgs.count,
                 (const char **)service->capsArgs.argv,
                 (const char **)service->permArgs.argv,
+                (const char **)service->permAclsArgs.argv,
                 service->name,
                 service->apl,
             };
