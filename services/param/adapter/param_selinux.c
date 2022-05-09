@@ -50,8 +50,6 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         g_selinuxSpace.setSelinuxLogCallback = (void (*)())dlsym(handle, "SetSelinuxLogCallback");
         PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL,
             return -1, "Failed to dlsym setSelinuxLogCallback %s", dlerror());
-        // log
-        g_selinuxSpace.setSelinuxLogCallback();
     }
     if (g_selinuxSpace.setParamCheck == NULL) {
         g_selinuxSpace.setParamCheck = (SelinuxSetParamCheck)dlsym(handle, "SetParamCheck");
@@ -74,6 +72,10 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
             (void (*)(ParamContextsList **))dlsym(handle, "DestroyParamList");
         PARAM_CHECK(g_selinuxSpace.destroyParamList != NULL,
             return -1, "Failed to dlsym destroyParamList %s", dlerror());
+    }
+    if (isInit) {
+        // log
+        g_selinuxSpace.setSelinuxLogCallback();
     }
 #endif
     PARAM_LOGV("Load sulinux lib success.");
@@ -133,7 +135,7 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
     if (mode == DAC_WRITE) {
         ret = g_selinuxSpace.setParamCheck(name, &uc);
     } else {
-        ret = g_selinuxSpace.readParamCheck(name);
+        ret = 0;
     }
     if (ret != 0) {
         PARAM_LOGI("Selinux check name %s pid %d uid %d %d result %d", name, uc.pid, uc.uid, uc.gid, ret);
