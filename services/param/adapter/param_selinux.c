@@ -50,6 +50,8 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         g_selinuxSpace.setSelinuxLogCallback = (void (*)())dlsym(handle, "SetSelinuxLogCallback");
         PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL,
             return -1, "Failed to dlsym setSelinuxLogCallback %s", dlerror());
+        // log
+        g_selinuxSpace.setSelinuxLogCallback();
     }
     if (g_selinuxSpace.setParamCheck == NULL) {
         g_selinuxSpace.setParamCheck = (SelinuxSetParamCheck)dlsym(handle, "SetParamCheck");
