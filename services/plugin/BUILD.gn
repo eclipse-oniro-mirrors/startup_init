@@ -36,7 +36,11 @@ ohos_shared_library("libbootchart") {
   external_deps = [ "init:libinit_plugin_engine" ]
 
   part_name = "init"
-  module_install_dir = "lib/plugin"
+  if (target_cpu == "arm64") {
+    module_install_dir = "lib64/plugin"
+  } else {
+    module_install_dir = "lib/plugin"
+  }
 }
 
 group("plugin") {
