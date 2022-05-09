@@ -120,11 +120,8 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
 static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
     int ret = DAC_RESULT_FORBIDED;
-    PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL, return ret, "Invalid setSelinuxLogCallback");
     PARAM_CHECK(g_selinuxSpace.setParamCheck != NULL, return ret, "Invalid setParamCheck");
     PARAM_CHECK(g_selinuxSpace.readParamCheck != NULL, return ret, "Invalid readParamCheck");
-    // log
-    g_selinuxSpace.setSelinuxLogCallback();
 
     // check
     struct ucred uc;
@@ -160,10 +157,6 @@ int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
 const char *GetSelinuxContent(const char *name)
 {
     PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return NULL, "Invalid getParamLabel");
-    PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL, return NULL, "Invalid setSelinuxLogCallback");
-    // log
-    g_selinuxSpace.setSelinuxLogCallback();
-
     return g_selinuxSpace.getParamLabel(name);
 }
 
