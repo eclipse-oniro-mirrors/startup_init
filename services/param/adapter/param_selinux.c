@@ -73,10 +73,6 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         PARAM_CHECK(g_selinuxSpace.destroyParamList != NULL,
             return -1, "Failed to dlsym destroyParamList %s", dlerror());
     }
-    if (isInit) {
-        // log
-        g_selinuxSpace.setSelinuxLogCallback();
-    }
 #endif
     PARAM_LOGV("Load sulinux lib success.");
     return 0;
@@ -124,8 +120,11 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
 static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
     int ret = DAC_RESULT_FORBIDED;
+    PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL, return ret, "Invalid setSelinuxLogCallback");
     PARAM_CHECK(g_selinuxSpace.setParamCheck != NULL, return ret, "Invalid setParamCheck");
     PARAM_CHECK(g_selinuxSpace.readParamCheck != NULL, return ret, "Invalid readParamCheck");
+    // log
+    g_selinuxSpace.setSelinuxLogCallback();
 
     // check
     struct ucred uc;
@@ -135,7 +134,7 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
     if (mode == DAC_WRITE) {
         ret = g_selinuxSpace.setParamCheck(name, &uc);
     } else {
-        ret = 0;
+        ret = g_selinuxSpace.readParamCheck(name);
     }
     if (ret != 0) {
         PARAM_LOGI("Selinux check name %s pid %d uid %d %d result %d", name, uc.pid, uc.uid, uc.gid, ret);
@@ -161,6 +160,10 @@ int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
 const char *GetSelinuxContent(const char *name)
 {
     PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return NULL, "Invalid getParamLabel");
+    PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL, return NULL, "Invalid setSelinuxLogCallback");
+    // log
+    g_selinuxSpace.setSelinuxLogCallback();
+
     return g_selinuxSpace.getParamLabel(name);
 }
 
