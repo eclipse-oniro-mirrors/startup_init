@@ -134,7 +134,7 @@ int SplitString(char *srcPtr, char **dstPtr, int maxNum)
     char *buf = NULL;
     dstPtr[0] = strtok_r(srcPtr, " ", &buf);
     int counter = 0;
-    while (dstPtr[counter] != NULL && (counter < maxNum)) {
+    while ((counter < maxNum) && dstPtr[counter] != NULL) {
         counter++;
         dstPtr[counter] = strtok_r(NULL, " ", &buf);
     }
