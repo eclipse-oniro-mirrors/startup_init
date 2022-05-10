@@ -144,7 +144,7 @@ static int GetSha256Value(const char *input, char *udid, int udidSize)
     mbedtls_sha256_context context;
     mbedtls_sha256_init(&context);
     mbedtls_sha256_starts_ret(&context, 0);
-    mbedtls_sha256_update_ret(&context, (const unsigned char)input, strlen(input));
+    mbedtls_sha256_update_ret(&context, (const unsigned char *)input, strlen(input));
     mbedtls_sha256_finish_ret(&context, hash);
 
     for (size_t i = 0; i < HASH_LENGTH; i++) {
@@ -194,6 +194,9 @@ const char *GetSerial_(void)
 
 int GetDevUdid_(char *udid, int size)
 {
+    if (size < UDID_LEN || udid == NULL) {
+        return EC_FAILURE;
+    }
     const char *manufacture = GetManufacture_();
     const char *model = GetProductModel_();
     const char *sn = GetSerial_();
