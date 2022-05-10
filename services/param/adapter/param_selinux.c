@@ -126,10 +126,14 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
 
 static int SelinuxReadParamCheck(const char *name)
 {
-    PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return NULL, "Invalid getParamLabel");
+    int ret = DAC_RESULT_FORBIDED;
+    PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return ret, "Invalid getParamLabel");
     const char *label = g_selinuxSpace.getParamLabel(name);
-    // open file with readonly
-    int ret = AddWorkSpace(label, 1, PARAM_WORKSPACE_MAX);
+    if (label == NULL) { // open file with readonly
+        ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, 1, PARAM_WORKSPACE_MAX);
+    } else {
+        ret = AddWorkSpace(label, 1, PARAM_WORKSPACE_MAX);
+    }
     if (ret != 0) {
         return DAC_RESULT_FORBIDED;
     }
