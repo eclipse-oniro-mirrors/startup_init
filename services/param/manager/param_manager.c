@@ -500,6 +500,9 @@ int SystemTraversalParameter(const char *prefix, TraversalParamPtr traversalPara
         }
         context.prefix = (char *)prefix;
     }
+#ifdef PARAM_SUPPORT_SELINUX
+    OpenPermissionWorkSpace();
+#endif
     WorkSpace *workSpace = GetFristWorkSpace();
     if (workSpace != NULL && strcmp(workSpace->fileName, WORKSPACE_NAME_DAC) == 0) {
         workSpace = GetNextWorkSpace(workSpace);
@@ -541,16 +544,6 @@ int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, u
             }
         }
     }
-#ifdef PARAM_SUPPORT_SELINUX
-    if (ret == DAC_RESULT_PERMISSION && mode != DAC_WRITE) { // open workspace for client read
-        const char *label = GetSelinuxContent(name);
-        if (label != NULL) {
-            AddWorkSpace(label, 1, PARAM_WORKSPACE_DEF);
-        } else {
-            ret = DAC_RESULT_FORBIDED;
-        }
-    }
-#endif
     return ret;
 }
 
