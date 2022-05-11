@@ -214,6 +214,7 @@ int ReadParamWithCheck(const char *name, uint32_t op, ParamHandle *handle)
     int ret = CheckParamPermission(&g_paramWorkSpace.securityLabel, name, op);
     PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
     WorkSpace *space = GetWorkSpace(name);
+    PARAM_CHECK(space != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     ParamTrieNode *node = FindTrieNode(space, name, strlen(name), NULL);
     if (node != NULL && node->dataIndex != 0) {
         *handle = GetParamHandle(space, node->dataIndex, name);
@@ -407,6 +408,7 @@ int AddSecurityLabel(const ParamAuditData *auditData)
     PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Invalid space");
     PARAM_CHECK(auditData != NULL && auditData->name != NULL, return -1, "Invalid auditData");
     WorkSpace *workSpace = GetWorkSpace(WORKSPACE_NAME_DAC);
+    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     int ret = CheckParamName(auditData->name, 1);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name \"%s\"", auditData->name);
 
@@ -501,6 +503,7 @@ int SystemTraversalParameter(const char *prefix, TraversalParamPtr traversalPara
         context.prefix = (char *)prefix;
     }
 #ifdef PARAM_SUPPORT_SELINUX
+    // open all workspace
     OpenPermissionWorkSpace();
 #endif
     WorkSpace *workSpace = GetFristWorkSpace();
@@ -602,7 +605,10 @@ void SystemDumpParameters(int verbose)
     if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
         PARAM_CHECK(ret == 0, return, "Forbid to dump parameters");
     }
-
+#ifdef PARAM_SUPPORT_SELINUX
+    // open all workspace
+    OpenPermissionWorkSpace();
+#endif
     PARAM_DUMP("Dump all paramters begin ...\n");
     if (verbose) {
         PARAM_DUMP("Local sercurity information\n");
@@ -660,7 +666,7 @@ int AddWorkSpace(const char *name, int onlyRead, uint32_t spaceSize)
         free(workSpace);
     }
     WORKSPACE_RW_UNLOCK(g_paramWorkSpace);
-    PARAM_LOGI("AddWorkSpace %s success", name);
+    PARAM_LOGI("AddWorkSpace %s %s", name, ret == 0 ? "success" : "fail");
     return ret;
 }
 
@@ -816,6 +822,7 @@ int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditD
     uint32_t labelIndex = 0;
     // get from dac
     WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
+    PARAM_CHECK(space != NULL, return -1, "Invalid workSpace");
     FindTrieNode(space, name, strlen(name), &labelIndex);
     ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(space, labelIndex);
     PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %d", labelIndex);

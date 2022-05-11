@@ -104,7 +104,7 @@ static int SelinuxGetAllLabel(int readOnly)
         node = node->next;
         count++;
     }
-    g_selinuxSpace.destroyParamList(&head);
+
     int ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, readOnly, PARAM_WORKSPACE_MAX);
     PARAM_CHECK(ret == 0, return -1,
         "Failed to add selinux workspace %s %s", node->info.paraName, node->info.paraContext);
