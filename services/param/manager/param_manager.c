@@ -658,6 +658,8 @@ int AddWorkSpace(const char *name, int onlyRead, uint32_t spaceSize)
         const size_t size = strlen(realName) + 1;
         workSpace = (WorkSpace *)malloc(sizeof(WorkSpace) + size);
         PARAM_CHECK(workSpace != NULL, break, "Failed to create workspace for %s", realName);
+        workSpace->flags = 0;
+        workSpace->area = NULL;
         ListInit(&workSpace->node);
         ret = strcpy_s(workSpace->fileName, size, realName);
         PARAM_CHECK(ret == 0, break, "Failed to copy file name %s", realName);
@@ -785,14 +787,23 @@ int SysCheckParamExist(const char *name)
 {
     PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Invalid space");
     PARAM_CHECK(name != NULL, return -1, "The name or handle is null");
-    ParamHandle handle;
-    int ret = ReadParamWithCheck(name, DAC_READ, &handle);
-    PARAM_LOGI("SysCheckParamExist %s result %d", name, ret);
-    if (ret == PARAM_CODE_NODE_EXIST) {
-        return 0;
+#ifdef PARAM_SUPPORT_SELINUX
+    // open all workspace
+    OpenPermissionWorkSpace();
+#endif
+    WorkSpace *workSpace = GetFristWorkSpace();
+    while (workSpace != NULL) {
+        PARAM_LOGV("SysCheckParamExist name %s in space %s", name, workSpace->fileName);
+        WorkSpace *next = GetNextWorkSpace(workSpace);
+        ParamTrieNode *node = FindTrieNode(workSpace, name, strlen(name), NULL);
+        if (node != NULL && node->dataIndex != 0) {
+            return 0;
+        } else if (node != NULL) {
+            return PARAM_CODE_NODE_EXIST;
+        }
+        workSpace = next;
     }
-    PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
-    return ret;
+    return PARAM_CODE_NOT_FOUND;
 }
 
 int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId)
@@ -862,14 +873,18 @@ int CheckParameterSet(const char *name, const char *value, const ParamSecurityLa
     PARAM_CHECK(ret == 0, return ret, "Illegal param value %s", value);
     *ctrlService = 0;
 
-#ifndef PARAM_SUPPORT_SELINUX
-    if ((getpid() != 1) && ((srcLabel->flags[0] & LABEL_CHECK_IN_ALL_PROCESS) != LABEL_CHECK_IN_ALL_PROCESS)) {
+    if (getpid() != 1) { // none init
+#ifdef PARAM_SUPPORT_SELINUX
         *ctrlService |= PARAM_NEED_CHECK_IN_SERVICE;
-#ifndef STARTUP_INIT_TEST
         return 0;
+#else
+        if ((srcLabel->flags[0] & LABEL_CHECK_IN_ALL_PROCESS) != LABEL_CHECK_IN_ALL_PROCESS) {
+            *ctrlService |= PARAM_NEED_CHECK_IN_SERVICE;
+            return 0;
+        }
 #endif
     }
-#endif
+
     char *key = GetServiceCtrlName(name, value);
     ret = CheckParamPermission(srcLabel, (key == NULL) ? name : key, DAC_WRITE);
     if (key != NULL) {  // ctrl param

@@ -25,7 +25,7 @@
 #include "param_utils.h"
 
 #define USER_BUFFER_LEN 64
-#define GROUP_FORMAT "ohos.group"
+#define GROUP_FORMAT "const.group"
 
 #define OCT_BASE 8
 static void GetUserIdByName(uid_t *uid, const char *name, uint32_t nameLen)
@@ -160,6 +160,7 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
 
 static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
 {
+#ifdef __MUSL__
     static char buffer[USER_BUFFER_LEN] = {0};
     uint32_t labelIndex = 0;
     int ret = sprintf_s(buffer, sizeof(buffer) - 1, "%s.%d.%d", GROUP_FORMAT, groupId, uid);
@@ -172,6 +173,9 @@ static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
         return 0;
     }
     return -1;
+#else
+    return 0;
+#endif
 }
 
 static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
@@ -245,6 +249,10 @@ static void AddGroupUser(int uid, int gid, int mode, const char *format)
 
 void LoadGroupUser(void)
 {
+#ifndef __MUSL__
+    return;
+#endif
+
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     PARAM_LOGV("LoadGroupUser ");
     uid_t uid = 0;
@@ -263,7 +271,7 @@ void LoadGroupUser(void)
         while (data->gr_mem[index]) { // user in this group
             GetUserIdByName(&uid, data->gr_mem[index], strlen(data->gr_mem[index]));
             PARAM_LOGV("LoadGroupUser %s gid %d uid %d user %s", data->gr_name, data->gr_gid, uid, data->gr_mem[index]);
-            AddGroupUser(uid, data->gr_gid, 0550, "ohos.group"); // 0550 read and watch
+            AddGroupUser(uid, data->gr_gid, 0550, GROUP_FORMAT); // 0550 read and watch
             index++;
         }
     }
