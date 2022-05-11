@@ -213,6 +213,16 @@ int ReadParamWithCheck(const char *name, uint32_t op, ParamHandle *handle)
     *handle = -1;
     int ret = CheckParamPermission(&g_paramWorkSpace.securityLabel, name, op);
     PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
+#ifdef PARAM_SUPPORT_SELINUX
+    if (ret == DAC_RESULT_PERMISSION) {
+        const char *label = GetSelinuxContent(name);
+        if (label != NULL) {
+            AddWorkSpace(label, 1, PARAM_WORKSPACE_DEF);
+        } else {
+            AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, 1, PARAM_WORKSPACE_DEF);
+        }
+    }
+#endif
     WorkSpace *space = GetWorkSpace(name);
     PARAM_CHECK(space != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     ParamTrieNode *node = FindTrieNode(space, name, strlen(name), NULL);
