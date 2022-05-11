@@ -73,4 +73,5 @@ msdp:x:6699:
 misc:x:9998:
 app:x:10000:
 useriam:x:1088:
+backup:x:1089:
 net_manager:x:1099:
