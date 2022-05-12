@@ -155,7 +155,7 @@ int InitParamWorkSpace(int onlyRead)
         // add default dac policy
         ParamAuditData auditData = {};
         auditData.name = "#";
-        auditData.dacData.gid = 0; // for root
+        auditData.dacData.gid = 2000; // 2000 for shell
         auditData.dacData.uid = 0; // for root
         auditData.dacData.mode = DAC_DEFAULT_MODE; // 0774 default mode
         ret = AddSecurityLabel(&auditData);

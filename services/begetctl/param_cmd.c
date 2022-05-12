@@ -114,6 +114,7 @@ int SetParamShellPrompt(BShellHandle shell, const char *param)
         BShellEnvOutput(shell, "Error: parameter \'%s\' not found\r\n", realParameter);
         return -1;
     } else if (ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
+        BShellEnvOutput(shell, "Error: Forbid to enter parameters \'%s\'\r\n", realParameter);
         return -1;
     }
     if (strcmp(realParameter, "#") == 0) {
