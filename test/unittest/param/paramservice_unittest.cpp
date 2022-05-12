@@ -510,7 +510,7 @@ HWTEST_F(ParamServiceUnitTest, TestServiceCtrl, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     int ret = test.TestServiceCtrl("server1", 0770);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = test.TestServiceCtrl("server2", 0772);
     EXPECT_EQ(ret, 0);
 }
@@ -519,19 +519,19 @@ HWTEST_F(ParamServiceUnitTest, TestPowerCtrl, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     int ret = test.TestPowerCtrl("reboot,shutdown", 0770);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,shutdown", 0772);
     EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,updater", 0770);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,updater", 0772);
     EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,flash", 0770);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,flash", 0772);
     EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot", 0770);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot", 0772);
     EXPECT_EQ(ret, 0);
 }

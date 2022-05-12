@@ -73,6 +73,5 @@ HWTEST_F(MountUnitTest, TestGetBlockDevicePath, TestSize.Level1)
     EXPECT_EQ(ret, -1);
     ret = GetBlockDeviceByMountPoint("mountPoint", &fstab, devicename, sizeof(devicename));
     EXPECT_EQ(ret, 0);
-
 }
 } // namespace init_ut

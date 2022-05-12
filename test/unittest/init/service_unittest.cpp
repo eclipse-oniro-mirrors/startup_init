@@ -16,7 +16,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include "init_cmds.h"
 #include "init_service.h"
 #include "init_service_manager.h"
@@ -24,6 +24,7 @@
 #include "param_stub.h"
 #include "init_utils.h"
 #include "securec.h"
+#include "init_group_manager.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -286,5 +287,6 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
 HWTEST_F(ServiceUnitTest, TestClientDeinit, TestSize.Level1)
 {
     ClientDeinit();
+    HashMapDestory(GetInitWorkspace()->hashMap[0]);
 }
 } // namespace init_ut

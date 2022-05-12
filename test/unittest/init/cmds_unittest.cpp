@@ -71,6 +71,9 @@ HWTEST_F(CmdsUnitTest, TestCmdExecByName, TestSize.Level1)
     DoCmdByName("mksandbox ", "system");
     DoCmdByName("mksandbox ", "notsupport");
     DoCmdByName("mksandbox ", "");
+}
+HWTEST_F(CmdsUnitTest, TestCmdExecByName1, TestSize.Level1)
+{
     DoCmdByName("timer_start ", "media_service|5000");
     DoCmdByName("timer_stop ", "media_service");
     DoCmdByName("exec ", "media_service");

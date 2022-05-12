@@ -52,6 +52,5 @@ HWTEST_F(InitRebootUnitTest, TestInitReboot, TestSize.Level1)
     EXPECT_EQ(ret, 0);
     ret = DoReboot(DEVICE_CMD_FREEZE);
     EXPECT_EQ(ret, 0);
-
 }
 } // namespace init_ut

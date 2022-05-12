@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <dirent.h>
 #include "param_stub.h"
+#include <dirent.h>
 #include "beget_ext.h"
 #include "init_param.h"
 #include "param_manager.h"
@@ -23,9 +23,6 @@
 #ifdef PARAM_LOAD_CFG_FROM_CODE
 #include "param_cfg.h"
 #endif
-
-#define TEST_PATH_UEVENT "/data/ueventd_ut"
-#define TEST_PATH_MOUNTCFG "/data/init_ut/mount_unitest/"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -185,8 +182,8 @@ static void PrepareUeventdcfg(void)
         "/dev/testbinder2 0666 1000 1000 const.dev.binder\n"
         "[device]\n"
         "/dev/testbinder3 0666 1000 1000 const.dev.binder\n";
-    mkdir(TEST_PATH_UEVENT, S_IRWXU | S_IRWXG | S_IRWXO);
-    CreateTestFile(TEST_PATH_UEVENT"/valid.config", ueventdcfg);
+    mkdir("/data/ueventd_ut", S_IRWXU | S_IRWXG | S_IRWXO);
+    CreateTestFile("/data/ueventd_ut/valid.config", ueventdcfg);
 }
 static void PrepareModCfg(void)
 {
@@ -209,7 +206,7 @@ static void PrepareInnerKitsCfg()
         "aa aa aa\n"
         "aa aa aa aa\n";
     mkdir("/data/init_ut/mount_unitest/", S_IRWXU | S_IRWXG | S_IRWXO);
-    CreateTestFile(TEST_PATH_MOUNTCFG"ReadFstabFromFile1.fstable", innerKitsCfg);
+    CreateTestFile("/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable", innerKitsCfg);
 }
 static bool IsDir(const std::string &path)
 {
@@ -227,19 +224,19 @@ static bool DeleteDir(const std::string &path)
     }
 
     struct dirent *dp = nullptr;
-    if (pDir != nullptr) {
-        while ((dp = readdir(pDir.get())) != nullptr) {
-            std::string currentName(dp->d_name);
-            if (currentName[0] != '.') {
-                std::string tmpName(path);
-                tmpName.append("/" + currentName);
-                if (IsDir(tmpName)) {
-                    DeleteDir(tmpName);
-                }
-                remove(tmpName.c_str());
+    while ((dp = readdir(pDir.get())) != nullptr) {
+        std::string currentName(dp->d_name);
+        if (currentName[0] != '.') {
+            std::string tmpName(path);
+            tmpName.append("/" + currentName);
+            if (IsDir(tmpName)) {
+                DeleteDir(tmpName);
             }
+            remove(tmpName.c_str());
         }
-        remove(path.c_str());
+    }
+    if (remove(path.c_str()) != 0) {
+        return false;
     }
     return true;
 }
@@ -321,7 +318,7 @@ void PrepareInitUnitTestEnv(void)
     PrepareUeventdcfg();
     PrepareInnerKitsCfg();
     PrepareModCfg();
-    SetInitLogLevel(INIT_DEBUG);
+    SetInitLogLevel(INIT_FATAL);
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     // for cmdline

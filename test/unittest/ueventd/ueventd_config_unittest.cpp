@@ -31,9 +31,7 @@ bool IsMatch(const char *target, const char *pattern);
 using namespace std;
 using namespace testing::ext;
 
-#define TEST_PATH "/data/ueventd_ut"
 namespace ueventd_ut {
-
 class UeventdConfigUnitTest : public testing::Test {
 public:
 static void SetUpTestCase(void) {};
@@ -44,7 +42,7 @@ void TearDown() {};
 
 HWTEST_F(UeventdConfigUnitTest, TestSectionConfigParse, TestSize.Level0)
 {
-    ParseUeventdConfigFile(TEST_PATH"/valid.config");
+    ParseUeventdConfigFile("/data/ueventd_ut/valid.config");
     uid_t uid = 0;
     gid_t gid = 0;
     mode_t mode = 0;
@@ -86,7 +84,7 @@ HWTEST_F(UeventdConfigUnitTest, TestConfigEntry, TestSize.Level0)
 
 HWTEST_F(UeventdConfigUnitTest, TestParameter, TestSize.Level0)
 {
-    ParseUeventdConfigFile(TEST_PATH"/valid.config");
+    ParseUeventdConfigFile("/data/ueventd_ut/valid.config");
     SetUeventDeviceParameter("/dev/testbinder1", 0);
     SetUeventDeviceParameter("/dev/testbinder2", 0);
     SetUeventDeviceParameter("/dev/testbinder3", 0);

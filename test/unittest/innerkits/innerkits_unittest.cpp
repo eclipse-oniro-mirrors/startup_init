@@ -20,7 +20,6 @@
 #include "param_stub.h"
 #include "securec.h"
 
-#define TEST_PATH_MOUNTCFG "/data/init_ut/mount_unitest/"
 using namespace testing::ext;
 using namespace std;
 
@@ -39,7 +38,7 @@ HWTEST_F(InnerkitsUnitTest, ReadFstabFromFile_unitest, TestSize.Level1)
     const std::string fstabFile1 = "/data/fstab.updater1";
     fstab = ReadFstabFromFile(fstabFile1.c_str(), false);
     EXPECT_EQ(fstab, nullptr);
-    const std::string fstabFile2 = TEST_PATH_MOUNTCFG"ReadFstabFromFile1.fstable";
+    const std::string fstabFile2 = "/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable";
     fstab = ReadFstabFromFile(fstabFile2.c_str(), false);
     EXPECT_NE(fstab, nullptr);
     ParseFstabPerLine(const_cast<char *>("test"), fstab, true, nullptr);
@@ -48,7 +47,7 @@ HWTEST_F(InnerkitsUnitTest, ReadFstabFromFile_unitest, TestSize.Level1)
 
 HWTEST_F(InnerkitsUnitTest, FindFstabItemForPath_unitest, TestSize.Level1)
 {
-    const std::string fstabFile1 = TEST_PATH_MOUNTCFG"ReadFstabFromFile1.fstable";
+    const std::string fstabFile1 = "/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable";
     Fstab *fstab = nullptr;
     fstab = ReadFstabFromFile(fstabFile1.c_str(), false);
     ASSERT_NE(fstab, nullptr);
@@ -79,7 +78,7 @@ HWTEST_F(InnerkitsUnitTest, FindFstabItemForPath_unitest, TestSize.Level1)
 
 HWTEST_F(InnerkitsUnitTest, FindFstabItemForMountPoint_unitest, TestSize.Level1)
 {
-    const std::string fstabFile1 = TEST_PATH_MOUNTCFG"ReadFstabFromFile1.fstable";
+    const std::string fstabFile1 = "/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable";
     Fstab *fstab = nullptr;
     fstab = ReadFstabFromFile(fstabFile1.c_str(), false);
     ASSERT_NE(fstab, nullptr);
@@ -101,7 +100,7 @@ HWTEST_F(InnerkitsUnitTest, FindFstabItemForMountPoint_unitest, TestSize.Level1)
 
 HWTEST_F(InnerkitsUnitTest, GetMountFlags_unitest, TestSize.Level1)
 {
-    const std::string fstabFile1 = TEST_PATH_MOUNTCFG"ReadFstabFromFile1.fstable";
+    const std::string fstabFile1 = "/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable";
     Fstab *fstab = nullptr;
     fstab = ReadFstabFromFile(fstabFile1.c_str(), true);
     ASSERT_NE(fstab, nullptr);

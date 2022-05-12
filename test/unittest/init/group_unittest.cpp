@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <stdlib.h>
+#include <cstdlib>
 #include "init_cmds.h"
 #include "init_group_manager.h"
 #include "init_hashmap.h"
@@ -397,6 +397,5 @@ HWTEST_F(InitGroupManagerUnitTest, TestProcessWatchEvent, TestSize.Level1)
     ASSERT_EQ(ret, 0);
     uint32_t event;
     ((WatcherTask *)watcher)->processEvent((WatcherHandle)watcher, 0, &event, service);
-
 }
 }  // namespace init_ut

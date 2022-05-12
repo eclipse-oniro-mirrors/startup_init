@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <errno.h>
-#include <stdio.h>
+#include <cerrno>
+#include <cstdio>
 #include "init_unittest.h"
 #include "init.h"
 #include "loop_event.h"

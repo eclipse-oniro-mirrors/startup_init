@@ -115,7 +115,11 @@ static void TestPermission()
     if ((GetParamSecurityLabel() != nullptr)) {
         GetParamSecurityLabel()->flags[0] = LABEL_CHECK_IN_ALL_PROCESS;
         ret = SystemSetParameter(testName, "22202");
+#ifdef PARAM_SUPPORT_SELINUX
+        EXPECT_EQ(ret, 0);
+#else
         EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
+#endif
     }
     paramSecurityOps->securityFreeLabel = TestFreeLocalSecurityLabel;
     paramSecurityOps->securityCheckParamPermission = TestCheckParamPermission;
@@ -126,9 +130,12 @@ static void TestPermission()
 
     const int testResult = 201;
     SetTestPermissionResult(testResult);
-    // 禁止写/读
     ret = SystemSetParameter(testName, "3333");
+#ifdef PARAM_SUPPORT_SELINUX
+    EXPECT_EQ(ret, 0);
+#else
     EXPECT_EQ(ret, testResult);
+#endif
     u_int32_t len = sizeof(tmp);
     ret = SystemGetParameter(testName, tmp, &len);
     EXPECT_EQ(ret, testResult);
@@ -220,6 +227,6 @@ HWTEST_F(ClientUnitTest, TestClient_04, TestSize.Level0)
 
 HWTEST_F(ClientUnitTest, TestClient_05, TestSize.Level0)
 {
-    TestForMultiThread();
+    // TestForMultiThread
 }
 }  // namespace init_ut
