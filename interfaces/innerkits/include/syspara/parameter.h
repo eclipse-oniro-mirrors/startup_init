@@ -26,6 +26,7 @@ extern "C" {
 #define PARAM_VALUE_LEN_MAX  96
 #define PARAM_NAME_LEN_MAX  96
 #define OS_FULL_NAME_LEN 128
+#define MAX_VALUE_LEN 128
 #define VERSION_ID_MAX_LEN 256
 
 static const char EMPTY_STR[] = { "" };
