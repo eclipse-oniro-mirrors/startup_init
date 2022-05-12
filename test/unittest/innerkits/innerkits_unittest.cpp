@@ -20,6 +20,7 @@
 #include "param_stub.h"
 #include "securec.h"
 
+#define TEST_PATH_MOUNTCFG "/data/init_ut/mount_unitest/"
 using namespace testing::ext;
 using namespace std;
 
@@ -38,27 +39,16 @@ HWTEST_F(InnerkitsUnitTest, ReadFstabFromFile_unitest, TestSize.Level1)
     const std::string fstabFile1 = "/data/fstab.updater1";
     fstab = ReadFstabFromFile(fstabFile1.c_str(), false);
     EXPECT_EQ(fstab, nullptr);
-    const std::string fstabFile2 = "/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable";
+    const std::string fstabFile2 = TEST_PATH_MOUNTCFG"ReadFstabFromFile1.fstable";
     fstab = ReadFstabFromFile(fstabFile2.c_str(), false);
     EXPECT_NE(fstab, nullptr);
-    const std::string fstabFile3 = "/data/init_ut/mount_unitest/ReadFstabFromFile2.fstable";
-    fstab = ReadFstabFromFile(fstabFile3.c_str(), false);
-    EXPECT_NE(fstab, nullptr);
-    const std::string fstabFile4 = "/data/init_ut/mount_unitest/ReadFstabFromFile3.fstable";
-    fstab = ReadFstabFromFile(fstabFile4.c_str(), false);
-    EXPECT_NE(fstab, nullptr);
-    const std::string fstabFile5 = "/data/init_ut/mount_unitest/ReadFstabFromFile4.fstable";
-    fstab = ReadFstabFromFile(fstabFile5.c_str(), false);
-    EXPECT_NE(fstab, nullptr);
-    const std::string fstabFile6 = "/data/init_ut/mount_unitest/ReadFstabFromFile5.fstable";
-    fstab = ReadFstabFromFile(fstabFile6.c_str(), false);
-    EXPECT_NE(fstab, nullptr);
+    ParseFstabPerLine(const_cast<char *>("test"), fstab, true, nullptr);
     ReleaseFstab(fstab);
 }
 
 HWTEST_F(InnerkitsUnitTest, FindFstabItemForPath_unitest, TestSize.Level1)
 {
-    const std::string fstabFile1 = "/data/init_ut/mount_unitest/FindFstabItemForPath1.fstable";
+    const std::string fstabFile1 = TEST_PATH_MOUNTCFG"ReadFstabFromFile1.fstable";
     Fstab *fstab = nullptr;
     fstab = ReadFstabFromFile(fstabFile1.c_str(), false);
     ASSERT_NE(fstab, nullptr);
@@ -89,7 +79,7 @@ HWTEST_F(InnerkitsUnitTest, FindFstabItemForPath_unitest, TestSize.Level1)
 
 HWTEST_F(InnerkitsUnitTest, FindFstabItemForMountPoint_unitest, TestSize.Level1)
 {
-    const std::string fstabFile1 = "/data/init_ut/mount_unitest/FindFstabItemForMountPoint1.fstable";
+    const std::string fstabFile1 = TEST_PATH_MOUNTCFG"ReadFstabFromFile1.fstable";
     Fstab *fstab = nullptr;
     fstab = ReadFstabFromFile(fstabFile1.c_str(), false);
     ASSERT_NE(fstab, nullptr);
@@ -111,9 +101,9 @@ HWTEST_F(InnerkitsUnitTest, FindFstabItemForMountPoint_unitest, TestSize.Level1)
 
 HWTEST_F(InnerkitsUnitTest, GetMountFlags_unitest, TestSize.Level1)
 {
-    const std::string fstabFile1 = "/data/init_ut/mount_unitest/GetMountFlags1.fstable";
+    const std::string fstabFile1 = TEST_PATH_MOUNTCFG"ReadFstabFromFile1.fstable";
     Fstab *fstab = nullptr;
-    fstab = ReadFstabFromFile(fstabFile1.c_str(), false);
+    fstab = ReadFstabFromFile(fstabFile1.c_str(), true);
     ASSERT_NE(fstab, nullptr);
     struct FstabItem* item = nullptr;
     const std::string mp = "/hos";

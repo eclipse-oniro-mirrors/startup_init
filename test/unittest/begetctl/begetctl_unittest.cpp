@@ -94,12 +94,46 @@ HWTEST_F(BegetctlUnitTest, TestShellWait, TestSize.Level1)
     };
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
 }
+HWTEST_F(BegetctlUnitTest, TestShellWaitFalse, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    const char *args[] = {
+        "param", "wait"
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+}
 
 HWTEST_F(BegetctlUnitTest, TestShellWaitWithKey, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
         "param", "wait", "aaaaa", "12*", "30"
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+}
+HWTEST_F(BegetctlUnitTest, TestShellParamShell, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    const char *args[] = {
+        "param", "shell"
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+}
+HWTEST_F(BegetctlUnitTest, TestShellLsWithvalue, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    BShellEnvSetParam(GetShellHandle(), PARAM_REVERESD_NAME_CURR_PARAMETER, "..a", PARAM_STRING, (void *)"..a");
+    const char *args[] = {
+        "param", "ls", PARAM_REVERESD_NAME_CURR_PARAMETER
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+}
+HWTEST_F(BegetctlUnitTest, TestShellLsWithvalueExist, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    BShellEnvSetParam(GetShellHandle(), PARAM_REVERESD_NAME_CURR_PARAMETER, "#", PARAM_STRING, (void *)"#");
+    const char *args[] = {
+        "param", "ls", "-r", PARAM_REVERESD_NAME_CURR_PARAMETER
     };
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
 }

@@ -14,9 +14,11 @@
  */
 #include <cerrno>
 #include <unistd.h>
+#include <fcntl.h>
 #include "fs_manager/fs_manager.h"
 #include "param_stub.h"
 #include "init_mount.h"
+#include "init.h"
 #include "securec.h"
 using namespace std;
 using namespace testing::ext;
@@ -39,6 +41,38 @@ HWTEST_F(MountUnitTest, TestMountRequriedPartitions, TestSize.Level0)
         int ret = MountRequriedPartitions(fstab);
         EXPECT_EQ(ret, -1);
         ReleaseFstab(fstab);
+    } else {
+        Fstab fstab1;
+        fstab1.head = nullptr;
+        int ret = MountRequriedPartitions(&fstab1);
+        EXPECT_EQ(ret, -1);
     }
+}
+HWTEST_F(MountUnitTest, TestGetBlockDevicePath, TestSize.Level1)
+{
+    char path[20] = {0}; // 20 is path length
+    int fd = open("/bin/updater", O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,  S_IRWXU);
+    if (fd < 0) {
+        return;
+    }
+    GetBlockDevicePath(nullptr, nullptr, 0);
+    GetBlockDevicePath(nullptr, path, sizeof(path));
+    close(fd);
+    ReadConfig();
+    unlink("/bin/updater");
+    ReadConfig();
+    int ret = GetBlockDeviceByMountPoint(nullptr, nullptr, nullptr, 0);
+    EXPECT_EQ(ret, -1);
+    FstabItem fstabitem = {(char *)"deviceName", (char *)"mountPoint",
+        (char *)"fsType", (char *)"mountOptions", 1, nullptr};
+    Fstab fstab = {&fstabitem};
+    char devicename[20]; // 20 is devicename length
+    ret = GetBlockDeviceByMountPoint("notmountpoint", &fstab, devicename, sizeof(devicename));
+    EXPECT_EQ(ret, -1);
+    ret = GetBlockDeviceByMountPoint("mountPoint", &fstab, devicename, 0);
+    EXPECT_EQ(ret, -1);
+    ret = GetBlockDeviceByMountPoint("mountPoint", &fstab, devicename, sizeof(devicename));
+    EXPECT_EQ(ret, 0);
+
 }
 } // namespace init_ut

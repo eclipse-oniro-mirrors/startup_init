@@ -16,6 +16,7 @@
 #include <sys/statvfs.h>
 #include "init_cmds.h"
 #include "init_param.h"
+#include "init_group_manager.h"
 #include "param_stub.h"
 #include "init_utils.h"
 #include "trigger_manager.h"
@@ -37,12 +38,13 @@ public:
 
 HWTEST_F(CmdsUnitTest, TestCmdExecByName, TestSize.Level1)
 {
-    SetInitLogLevel(INIT_FATAL);
     DoCmdByName("load_param ", "     /system/etc/param            onlyadd");
     DoCmdByName("symlink ", "/proc/self/fd/0 /dev/stdin");
+    DoCmdByName("symlink ", "/notfile ");
     DoCmdByName("insmod ",
         "libdemo.z.so anony=1 mmz_allocator=hisi mmz=anonymous,0,0xA8000000,384M || report_error");
     DoCmdByName("insmod ", "/vendor/modules/hi_irq.ko");
+    DoCmdByName("insmod ", "/data/init_ut/test_insmod");
 
     DoCmdByName("setparam ", "sys.usb.config ${persist.sys.usb.config}");
 
@@ -59,22 +61,36 @@ HWTEST_F(CmdsUnitTest, TestCmdExecByName, TestSize.Level1)
     DoCmdByName("reboot ", "");
     DoCmdByName("ifup ", "lo");
     DoCmdByName("mknode ", "/dev/null b 0666 1 3");
+    DoCmdByName("mknode ", "/dev/null C 0666 1 3");
+    DoCmdByName("mknode ", "/dev/null F 0666 1 3");
+    DoCmdByName("mknode ", "/dev/null A 0666 1 3");
     DoCmdByName("makedev ", "999 999");
     DoCmdByName("mount_fstab ", "");
     DoCmdByName("umount_fstab ", "");
+    DoCmdByName("mksandbox ", "system chipset");
     DoCmdByName("mksandbox ", "system");
+    DoCmdByName("mksandbox ", "notsupport");
+    DoCmdByName("mksandbox ", "");
     DoCmdByName("timer_start ", "media_service|5000");
     DoCmdByName("timer_stop ", "media_service");
     DoCmdByName("exec ", "media_service");
     DoCmdByName("load_access_token_id ", "media_service");
-    DoCmdByName("stopAllServices ", "");
+    DoCmdByName("stopAllServices ", "true");
     DoCmdByName("umount ", "");
     DoCmdByName("mount ", "");
-    DoCmdByName("init_global_key ", "");
+    DoCmdByName("mount ", "ext4 /dev/block/platform/soc/10100000.himci.eMMC/by-name/vendor "
+        "/data wait filecrypt=555");
+    DoCmdByName("init_global_key ", "/data");
+    DoCmdByName("init_global_key ", "arg0 arg1");
     DoCmdByName("init_main_user ", "testUser");
+    DoCmdByName("init_main_user ", nullptr);
     DoCmdByName("mkswap ", "");
     DoCmdByName("swapon ", "");
     DoCmdByName("sync ", "");
+    DoCmdByName("restorecon ", "");
+    DoCmdByName("suspend ", "");
+    DoCmdByName("wait ", "1");
+    DoCmdByName("wait ", "aaa 1");
 }
 
 HWTEST_F(CmdsUnitTest, TestCommonMkdir, TestSize.Level1)
@@ -216,6 +232,7 @@ HWTEST_F(CmdsUnitTest, TestDoCmdByIndex, TestSize.Level1)
 
     const int execPos = 17;
     DoCmdByIndex(execPos, "sleep 1");
+    DoCmdByIndex(23, "test"); // 23 is cmd index
 }
 
 HWTEST_F(CmdsUnitTest, TestGetCmdLinesFromJson, TestSize.Level1)
@@ -245,5 +262,12 @@ HWTEST_F(CmdsUnitTest, TestGetCmdLinesFromJson, TestSize.Level1)
     }
     free(cmdLines);
     cmdLines = nullptr;
+}
+HWTEST_F(CmdsUnitTest, TestInitCmdFunc, TestSize.Level1)
+{
+    FileCryptEnable((char *)"test");
+    FileCryptEnable(nullptr);
+    int ret = GetBootModeFromMisc();
+    EXPECT_EQ(ret, 0);
 }
 } // namespace init_ut

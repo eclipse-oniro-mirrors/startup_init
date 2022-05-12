@@ -36,7 +36,9 @@ static atomic_uint g_requestId = ATOMIC_VAR_INIT(1);
 static ClientWorkSpace g_clientSpace = {};
 
 __attribute__((constructor)) static void ClientInit(void);
+#ifndef STARTUP_INIT_TEST
 __attribute__((destructor)) static void ClientDeinit(void);
+#endif
 
 static int InitParamClient(void)
 {

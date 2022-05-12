@@ -54,41 +54,10 @@ hdc_shell_cmd "umask 022"
 hdc_shell_cmd "mkdir -p ${ut_target_path}"
 hdc_shell_cmd "mkdir -p ${ut_target_path}/proc"
 
-function push_testdata_to_device() {
-    if [ $# -ne 2 ]; then
-        echo "Usage $0 module_path module_name"
-        return
-    fi
-    local module_path=$1
-    local module_name=$2
-    hdc_shell_cmd "mkdir -p ${ut_target_path}/${module_name}"
-        sleep 0.25
-    for file in $(ls ${module_path}); do
-        if [ -d ${module_path}/${file} ];then
-            push_testdata_to_device "${module_path}/$file" "${module_name}/${file}"
-        elif [ -f ${module_path}/${file} ]; then
-            hdc_push_cmd "${module_path}/$file" "${ut_target_path}/${module_name}/$file"
-        else
-            echo "Invalid file: ${module_path}/${file}. Ignore"
-        fi
-        sleep 0.25
-    done
-}
 
 ohos_root="$1"
 ohos_root=${ohos_root%%/}
 ohos_init="${ohos_root}/base/startup/init_lite"
-test_mount_data_path="${ohos_root}/base/update/updater/test/unittest/test_data"
-
-modules=(mount_unitest)
-for module in ${modules[*]}; do
-    module_test_data=${test_mount_data_path}/${module}
-    if [ ! -d ${module_test_data} ]; then
-        echo "${module_test_data} is not directory"
-        continue
-    fi
-    push_testdata_to_device ${module_test_data} ${module}
-done
 
 hdc_shell_cmd "mkdir -p ${ut_target_path}/coverage"
 sleep 0.25

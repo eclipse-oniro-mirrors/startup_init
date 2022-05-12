@@ -69,6 +69,9 @@ HWTEST_F(PluginUnitTest, PluginAddCmd, TestSize.Level1)
     g_cmdExecId = -1;
     PluginExecCmdByCmdIndex(cmdIndex, cmdContent);
     ASSERT_EQ(cmdExecId1, g_cmdExecId);
+    const char *argv[] = {"test"};
+    PluginExecCmd("install", 1, argv);
+    PluginExecCmd("uninstall", 1, argv);
 
     // del
     RemoveCmdExecutor("testCmd4", cmdExecId4);

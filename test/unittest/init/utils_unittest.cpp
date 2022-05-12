@@ -23,6 +23,10 @@
 using namespace std;
 using namespace testing::ext;
 
+extern "C" {
+float ConvertMicrosecondToSecond(int x);
+}
+
 namespace init_ut {
 class UtilsUnitTest : public testing::Test {
 public:
@@ -60,5 +64,10 @@ HWTEST_F(UtilsUnitTest, TestString, TestSize.Level0)
     ret = StringReplaceChr(rStr, oldChr, newChr);
     EXPECT_EQ(ret, 0);
     EXPECT_STREQ(rStr, "dbc");
+}
+HWTEST_F(UtilsUnitTest, TestConvertMicrosecondToSecond, TestSize.Level0)
+{
+    float sec = ConvertMicrosecondToSecond(1000000); // 1000000 microseconds
+    EXPECT_EQ(sec, 1);
 }
 } // namespace init_ut

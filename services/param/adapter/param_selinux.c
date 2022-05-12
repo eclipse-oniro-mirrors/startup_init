@@ -135,7 +135,11 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
     if (mode == DAC_WRITE) {
         ret = g_selinuxSpace.setParamCheck(name, &uc);
     } else {
+#ifndef STARTUP_INIT_TEST
         ret = 0;
+#else
+        ret = g_selinuxSpace.readParamCheck(name);
+#endif
     }
     if (ret != 0) {
         PARAM_LOGI("Selinux check name %s pid %d uid %d %d result %d", name, uc.pid, uc.uid, uc.gid, ret);

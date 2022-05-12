@@ -948,9 +948,11 @@ void StopAllServices(int flags, const char **exclude, int size,
 {
     Service *service = GetServiceByName("appspawn");
     if (service != NULL && service->pid != -1) { // notify appspawn stop
+#ifndef STARTUP_INIT_TEST
         kill(service->pid, SIGTERM);
         waitpid(service->pid, 0, 0);
         service->pid = -1;
+#endif
     }
 
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);

@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "param_stub.h"
 
+#include <dirent.h>
+#include "param_stub.h"
 #include "beget_ext.h"
 #include "init_param.h"
 #include "param_manager.h"
@@ -22,6 +23,9 @@
 #ifdef PARAM_LOAD_CFG_FROM_CODE
 #include "param_cfg.h"
 #endif
+
+#define TEST_PATH_UEVENT "/data/ueventd_ut"
+#define TEST_PATH_MOUNTCFG "/data/init_ut/mount_unitest/"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -87,7 +91,6 @@ static const char *forbitReadParamName[] = {
     "ohos.servicectrl.",
     // "test.permission.write",
 };
-
 static int TestReadParamCheck(const char *paraName)
 {
     // forbit to read ohos.servicectrl.
@@ -98,7 +101,6 @@ static int TestReadParamCheck(const char *paraName)
     }
     return g_testPermissionResult;
 }
-
 static void TestDestroyParamList(ParamContextsList **list)
 {
 #ifdef PARAM_SUPPORT_SELINUX
@@ -112,7 +114,6 @@ static void TestDestroyParamList(ParamContextsList **list)
     }
 #endif
 }
-
 static ParamContextsList *TestGetParamList(void)
 {
 #ifdef PARAM_SUPPORT_SELINUX
@@ -149,7 +150,6 @@ void TestSetSelinuxOps(void)
     SetSelinuxOps(&space);
 #endif
 }
-
 static void CreateTestFile(const char *fileName, const char *data)
 {
     CheckAndCreateDir(fileName);
@@ -161,7 +161,88 @@ static void CreateTestFile(const char *fileName, const char *data)
         fclose(tmpFile);
     }
 }
+static void PrepareUeventdcfg(void)
+{
+    const char *ueventdcfg = "[device]\n"
+        "/dev/test 0666 1000 1000\n"
+        "[device]\n"
+        "/dev/test1 0666 1000\n"
+        "[device]\n"
+        "/dev/test2 0666 1000 1000 1000 1000\n"
+        "[sysfs]\n"
+        "/dir/to/nothing attr_nowhere 0666 1000 1000\n"
+        "[sysfs]\n"
+        "  #/dir/to/nothing attr_nowhere 0666\n"
+        "[sysfs\n"
+        "/dir/to/nothing attr_nowhere 0666\n"
+        "[firmware]\n"
+        "/etc\n"
+        "[device]\n"
+        "/dev/testbinder 0666 1000 1000 const.dev.binder\n"
+        "[device]\n"
+        "/dev/testbinder1 0666 1000 1000 const.dev.binder\n"
+        "[device]\n"
+        "/dev/testbinder2 0666 1000 1000 const.dev.binder\n"
+        "[device]\n"
+        "/dev/testbinder3 0666 1000 1000 const.dev.binder\n";
+    mkdir(TEST_PATH_UEVENT, S_IRWXU | S_IRWXG | S_IRWXO);
+    CreateTestFile(TEST_PATH_UEVENT"/valid.config", ueventdcfg);
+}
+static void PrepareModCfg(void)
+{
+    const char *modCfg = "testinsmod";
+    CreateTestFile("/data/init_ut/test_insmod", modCfg);
+}
+static void PrepareInnerKitsCfg()
+{
+    const char *innerKitsCfg = "/dev/block/platform/soc/10100000.himci.eMMC/by-name/system /system "
+        "ext4 ro,barrier=1 wait\n"
+        "/dev/block/platform/soc/10100000.himci.eMMC/by-name/vendor /vendor "
+        "ext4 ro,barrier=1 wait\n"
+        "/dev/block/platform/soc/10100000.himci.eMMC/by-name/hos "
+        "/hos ntfs nosuid,nodev,noatime,barrier=1,data=ordered wait\n"
+        "/dev/block/platform/soc/10100000.himci.eMMC/by-name/userdata /data ext4 "
+        "nosuid,nodev,noatime,barrier=1,data=ordered,noauto_da_alloc "
+        "wait,reservedsize=104857600\n"
+        "  aaaa\n"
+        "aa aa\n"
+        "aa aa aa\n"
+        "aa aa aa aa\n";
+    mkdir("/data/init_ut/mount_unitest/", S_IRWXU | S_IRWXG | S_IRWXO);
+    CreateTestFile(TEST_PATH_MOUNTCFG"ReadFstabFromFile1.fstable", innerKitsCfg);
+}
+static bool IsDir(const std::string &path)
+{
+    struct stat st {};
+    if (stat(path.c_str(), &st) < 0) {
+        return false;
+    }
+    return S_ISDIR(st.st_mode);
+}
+static bool DeleteDir(const std::string &path)
+{
+    auto pDir = std::unique_ptr<DIR, decltype(&closedir)>(opendir(path.c_str()), closedir);
+    if (pDir == nullptr) {
+        return false;
+    }
 
+    struct dirent *dp = nullptr;
+    if (pDir != nullptr) {
+        while ((dp = readdir(pDir.get())) != nullptr) {
+            std::string currentName(dp->d_name);
+            if (currentName[0] != '.') {
+                std::string tmpName(path);
+                tmpName.append("/" + currentName);
+                if (IsDir(tmpName)) {
+                    DeleteDir(tmpName);
+                }
+                remove(tmpName.c_str());
+            }
+        }
+        remove(path.c_str());
+    }
+    return true;
+}
 static void LoadParamFromCfg(void)
 {
 #ifdef PARAM_LOAD_CFG_FROM_CODE
@@ -237,6 +318,9 @@ void PrepareInitUnitTestEnv(void)
     }
     PARAM_LOGI("PrepareInitUnitTestEnv");
     mkdir(STARTUP_INIT_UT_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
+    PrepareUeventdcfg();
+    PrepareInnerKitsCfg();
+    PrepareModCfg();
     SetInitLogLevel(INIT_DEBUG);
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)

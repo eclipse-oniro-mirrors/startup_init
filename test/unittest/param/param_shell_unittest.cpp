@@ -19,6 +19,7 @@
 #include "shell.h"
 #include "shell_utils.h"
 #include "shell_bas.h"
+#include "init_param.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -35,18 +36,28 @@ public:
     void TestBody(void) {};
     void TestInitParamShell()
     {
+        SystemSetParameter("aaa", "aaa");
         BShellHandle bshd = GetShellHandle();
         if (bshd == nullptr) {
             return;
         }
         const char *args[] = {"paramshell", "\n"};
         const ParamInfo *param = BShellEnvGetReservedParam(bshd, PARAM_REVERESD_NAME_CURR_PARAMETER);
-        int ret = BShellEnvSetParam(bshd, param->name, param->desc, param->type, (void *)"");
+        int ret = BShellEnvSetParam(bshd, PARAM_REVERESD_NAME_CURR_PARAMETER, "..a", PARAM_STRING, (void *)"..a");
         EXPECT_EQ(ret, 0);
+        SetParamShellPrompt(bshd, args[1]);
+        SetParamShellPrompt(bshd, "..");
+
+        ret = BShellEnvSetParam(bshd, param->name, param->desc, param->type, (void *)"");
+        SetParamShellPrompt(bshd, "..");
+
+        SetParamShellPrompt(bshd, ".a");
+        SetParamShellPrompt(bshd, ".");
         SetParamShellPrompt(bshd, args[1]);
         BShellParamCmdRegister(bshd, 1);
         BShellEnvStart(bshd);
         ret = BShellEnvOutputPrompt(bshd, "testprompt");
+        ret = BShellEnvOutputPrompt(bshd, "testprompt1111111111111111111111111111111111111111111111111111111111");
         BShellEnvOutputByte(bshd, 'o');
         EXPECT_EQ(ret, 0);
     }
@@ -133,6 +144,7 @@ public:
     void TestParamShellcmdEndkey()
     {
         BShellHandle bshd = GetShellHandle();
+        bshd->input(nullptr, 0);
         BShellKey *key = BShellEnvGetDefaultKey('\b');
         EXPECT_NE(key, nullptr);
         if (strcpy_s(bshd->buffer, sizeof(bshd->buffer), "testbbackspace") != EOK) {
@@ -159,6 +171,11 @@ public:
         EXPECT_NE(key, nullptr);
         BShellEnvProcessInput(bshd, (char)3); // 3 is ctrl c
         BShellEnvProcessInput(bshd, '\e');
+        BShellEnvProcessInput(bshd, '[');
+        bshd->length = 1;
+        bshd->cursor = 1;
+        BShellEnvProcessInput(bshd, 'C');
+        BShellEnvProcessInput(bshd, 'D');
     }
 };
 
@@ -190,9 +207,12 @@ HWTEST_F(ParamShellUnitTest, TestParamShellInput, TestSize.Level1)
 }
 HWTEST_F(ParamShellUnitTest, TestParamShellcmd2, TestSize.Level1)
 {
-    BShellHandle bshd = GetShellHandle();
     ParamShellUnitTest test;
     test.TestParamShellcmdEndkey();
-    BShellEnvDestory(bshd);
+    GetSystemCommitId();
+    BShellEnvLoop(nullptr);
+    BShellEnvErrString(GetShellHandle(), 1);
+    BShellEnvOutputResult(GetShellHandle(), 1);
+    demoExit();
 }
 }  // namespace init_ut

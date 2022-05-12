@@ -12,12 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <stdlib.h>
 #include "init_cmds.h"
 #include "init_group_manager.h"
 #include "init_hashmap.h"
 #include "init_param.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
+#include "init_unittest.h"
 #include "le_timer.h"
 #include "param_stub.h"
 #include "securec.h"
@@ -199,7 +201,11 @@ HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
     InitWorkspace *workspace = GetInitWorkspace();
     EXPECT_EQ(workspace->groupMode, GROUP_CHARING);
     workspace->groupMode = GROUP_BOOT;
+    if (strcpy_s(workspace->groupModeStr, GROUP_NAME_MAX_LENGTH, "device.boot.group") != EOK) {
+        EXPECT_EQ(1, 0);
+    } // test read cfgfile
     int ret = InitParseGroupCfg();
+    StartAllServices(GROUP_CHARING);
     EXPECT_EQ(ret, 0);
 }
 
@@ -340,17 +346,57 @@ HWTEST_F(InitGroupManagerUnitTest, TestParseServiceCpucore, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service22\",\"path\":[\"/data/init_ut/test_service\"],"
         "\"importance\":-20,\"uid\":\"root\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
-        "\"gid\":[\"root\"], \"cpucore\":[5, 2, 4, 1, 2, 0, 1]}}";
+        "\"gid\":[\"root\"], \"cpucore\":[5, 2, 4, 1, 2, 0, 1], \"critical\":[1]}}";
     cJSON* jobItem = cJSON_Parse(jsonStr);
     ASSERT_NE(nullptr, jobItem);
     cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
     ASSERT_NE(nullptr, serviceItem);
     Service *service = AddService("test_service22");
+    const int invalidImportantValue = 20;
+    SetImportantValue(service, "", invalidImportantValue, 1);
     if (service != nullptr) {
         int ret = ParseOneService(serviceItem, service);
+        GetAccessToken();
+        DoCmdByName("timer_start ", "test_service22|5000");
+        DoCmdByName("timer_start ", "test_service22|aa");
+        DoCmdByName("timer_start ", "");
         EXPECT_EQ(ret, 0);
+        StartServiceByName("test_service22|path");
         ReleaseService(service);
     }
     cJSON_Delete(jobItem);
+}
+HWTEST_F(InitGroupManagerUnitTest, TestNodeFree, TestSize.Level1)
+{
+    DoCmdByName("stopAllServices ", "");
+}
+HWTEST_F(InitGroupManagerUnitTest, TestUpdaterServiceFds, TestSize.Level1)
+{
+    Service *service = AddService("test_service8");
+    ASSERT_NE(nullptr, service);
+    int *fds = (int *)malloc(sizeof(int) * 1); // ServiceStop will release fds
+    UpdaterServiceFds(nullptr, nullptr, 0);
+    UpdaterServiceFds(service, fds, 1);
+    UpdaterServiceFds(service, fds, 0);
+    UpdaterServiceFds(service, fds, 1);
+    UpdaterServiceFds(service, nullptr, 1);
+    UpdaterServiceFds(service, fds, 1);
+    int ret = UpdaterServiceFds(service, nullptr, 2); // 2 is fd num
+    ASSERT_NE(ret, 0);
+    service->attribute = SERVICE_ATTR_TIMERSTART;
+    ServiceStartTimer(service, 0);
+}
+HWTEST_F(InitGroupManagerUnitTest, TestProcessWatchEvent, TestSize.Level1)
+{
+    Service *service = AddService("test_service9");
+    ASSERT_NE(nullptr, service);
+    ServiceSocket servercfg = {.next = nullptr, .sockFd = 0};
+    service->socketCfg = &servercfg;
+    ServiceWatcher watcher;
+    int ret = SocketAddWatcher(&watcher, service, 0);
+    ASSERT_EQ(ret, 0);
+    uint32_t event;
+    ((WatcherTask *)watcher)->processEvent((WatcherHandle)watcher, 0, &event, service);
+
 }
 }  // namespace init_ut

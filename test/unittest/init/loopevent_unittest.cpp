@@ -34,28 +34,15 @@
 using namespace testing::ext;
 using namespace std;
 
-using HashTab = struct {
-    HashNodeCompare nodeCompare;
-    HashKeyCompare keyCompare;
-    HashNodeFunction nodeHash;
-    HashKeyFunction keyHash;
-    HashNodeOnFree nodeFree;
-    int maxBucket;
-    uint32_t tableId;
-    HashNode *buckets[0];
-};
+extern "C" {
+void OnClose(ParamTaskPtr client);
+}
 
 static void OnReceiveRequest(const TaskHandle task, const uint8_t *buffer, uint32_t nread)
 {
     UNUSED(task);
     UNUSED(buffer);
     UNUSED(nread);
-}
-
-static void Close(ParamTaskPtr client)
-{
-    (void)(client);
-    return;
 }
 
 static void ProcessAsyncEvent(const TaskHandle taskHandle, uint64_t eventId, const uint8_t *buffer, uint32_t buffLen)
@@ -81,11 +68,10 @@ static void ProcessWatchEventTest(WatcherHandle taskHandle, int fd, uint32_t *ev
     UNUSED(context);
 }
 
-static EventLoop *g_testLoop = nullptr;
-
 static void *RunLoopThread(void *arg)
 {
-    LE_RunLoop((LoopHandle)g_testLoop);
+    UNUSED(arg);
+    StartParamService();
     return nullptr;
 }
 
@@ -99,6 +85,16 @@ public:
     void SetUp() {};
     void TearDown() {};
     void TestBody(void) {};
+    int CreateServerTask()
+    {
+        CheckTaskFlags(nullptr, Event_Write);
+        ParamStreamInfo info = {};
+        info.server = const_cast<char *>(PIPE_NAME);
+        info.close = NULL;
+        info.recvMessage = NULL;
+        info.incomingConnect = OnIncomingConnect;
+        return ParamServerCreate(&serverTask_, &info);
+    }
     void StreamTaskTest ()
     {
         LE_StreamInfo streamInfo = {};
@@ -117,8 +113,6 @@ public:
 
         ((StreamConnectTask *)clientTaskHandle)->stream.base.handleEvent(LE_GetDefaultLoop(),
             (TaskHandle)clientTaskHandle, 0);
-        ((HashTab *)((EventLoop *)LE_GetDefaultLoop())->taskMap)->nodeFree(
-            &((BaseTask *)(&clientTaskHandle))->hashNode);
 
         streamInfo.baseInfo.flags = TASK_STREAM | TASK_PIPE |  TASK_SERVER;
         streamInfo.server = (char *)"/data/testpipeb";
@@ -153,7 +147,7 @@ public:
         LE_StreamServerInfo info = {};
         info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_SERVER | TASK_TEST;
         info.server = (char *)"/data/testpipe";
-        info.baseInfo.close = Close;
+        info.baseInfo.close = OnClose;
         info.incommingConntect = IncomingConnect;
         LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask_, &info);
         if (serverTask_ == nullptr) {
@@ -166,7 +160,7 @@ public:
         ParamStreamInfo paramStreamInfo = {};
         paramStreamInfo.flags = PARAM_TEST_FLAGS;
         paramStreamInfo.server = NULL;
-        paramStreamInfo.close = Close;
+        paramStreamInfo.close = OnClose;
         paramStreamInfo.recvMessage = ProcessMessage;
         paramStreamInfo.incomingConnect = NULL;
         ParamTaskPtr client = NULL;
@@ -178,16 +172,20 @@ public:
         AddBuffer((StreamTask *)client, buffer);
         ((StreamConnectTask *)client)->stream.base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)(&client), Event_Write);
 
+        ParamMessage *request = (ParamMessage *)CreateParamMessage(MSG_SET_PARAM, "name", sizeof(ParamMessage));
+        ((StreamConnectTask *)client)->recvMessage(LE_GetDefaultLoop(), reinterpret_cast<uint8_t *>(request),
+            sizeof(ParamMessage));
+
         LE_Buffer *next = nullptr;
         LE_Buffer *nextBuff = GetNextBuffer((StreamTask *)client, next);
         if (nextBuff != nullptr) {
             LE_FreeBuffer(LE_GetDefaultLoop(), (TaskHandle)&client, nextBuff);
         }
-
-        ret = ParamStreamCreate(&client, serverTask_, &paramStreamInfo, sizeof(ParamWatcher));
-        PARAM_CHECK(ret == 0, return, "Failed to create client");
-        ((StreamConnectTask *)(&client))->stream.base.handleEvent(LE_GetDefaultLoop(),
-            (TaskHandle)(&client), Event_Read);
+        ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
+        PARAM_CHECK(watcher != nullptr, return, "Failed to get watcher");
+        ListInit(&watcher->triggerHead);
+        OnClose(client);
+        return;
     }
     void ProcessEventTest()
     {
@@ -217,23 +215,30 @@ public:
             return;
         }
         ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, Event_Read);
+        ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, 0);
+        ((WatcherTask *)handle)->base.flags = WATCHER_ONCE;
+        ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, Event_Read);
     }
     void CreateSocketTest()
     {
-        ParamTaskPtr clientTask = nullptr;
+        ParamTaskPtr serverTask = nullptr;
         LE_StreamServerInfo info = {};
         info.baseInfo.flags = TASK_PIPE | TASK_CONNECT | TASK_TEST;
         info.server = (char *)"/data/testpipe";
-        info.baseInfo.close = Close;
+        info.baseInfo.close = OnClose;
         info.incommingConntect = IncomingConnect;
-        LE_CreateStreamServer(LE_GetDefaultLoop(), &clientTask, &info);
-        EXPECT_NE(clientTask, nullptr);
-        if (clientTask == nullptr) {
+        info.socketId = 1111; // 1111 is test fd
+        LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask, &info);
+        EXPECT_NE(serverTask, nullptr);
+        if (serverTask == nullptr) {
             return;
         }
-        LE_GetSocketFd(clientTask);
+        ((StreamServerTask *)serverTask)->base.taskId.fd = -1;
+        OnIncomingConnect(LE_GetDefaultLoop(), serverTask);
+        LE_GetSocketFd(serverTask);
         AcceptSocket(-1, TASK_PIPE);
         AcceptSocket(-1, TASK_TCP);
+        AcceptSocket(-1, TASK_TEST);
     }
 
 private:
@@ -243,6 +248,7 @@ private:
 HWTEST_F(LoopEventUnittest, StreamTaskTest, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
+    loopevtest.CreateServerTask();
     loopevtest.StreamTaskTest();
 }
 
@@ -273,19 +279,20 @@ HWTEST_F(LoopEventUnittest, ProcessWatcherTask, TestSize.Level1)
 }
 HWTEST_F(LoopEventUnittest, RunLoopThread, TestSize.Level1)
 {
+    InitParamService();
     pthread_t tid = 0;
     int fd = eventfd(1, EFD_NONBLOCK | EFD_CLOEXEC);
-    LE_CreateLoop((LoopHandle *)&g_testLoop);
-    EventEpoll *epoll = (EventEpoll *)g_testLoop;
     struct epoll_event event = {};
     event.events = EPOLLIN;
     if (fd >= 0) {
-        epoll_ctl(epoll->epollFd, EPOLL_CTL_ADD, fd, &event);
+        epoll_ctl(((EventEpoll *)LE_GetDefaultLoop())->epollFd, EPOLL_CTL_ADD, fd, &event);
     }
     pthread_create(&tid, nullptr, RunLoopThread, nullptr);
-    LE_StopLoop((LoopHandle)g_testLoop);
     event.events = EPOLLOUT;
-    epoll_ctl(epoll->epollFd, EPOLL_CTL_MOD, fd, &event);
+    epoll_ctl(((EventEpoll *)LE_GetDefaultLoop())->epollFd, EPOLL_CTL_ADD, fd, &event);
+    ((EventLoop *)LE_GetDefaultLoop())->taskMap = nullptr;
+    StopParamService();
     pthread_join(tid, nullptr);
+    InitParamService();
 }
 }  // namespace init_ut

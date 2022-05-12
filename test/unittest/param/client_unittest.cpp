@@ -133,6 +133,7 @@ static void TestPermission()
     ret = SystemGetParameter(testName, tmp, &len);
     EXPECT_EQ(ret, testResult);
     RegisterSecurityOps(0);
+    SetTestPermissionResult(0); // recover testpermission result
 }
 
 void TestClientApi(char testBuffer[], uint32_t size, const char *name, const char *value)

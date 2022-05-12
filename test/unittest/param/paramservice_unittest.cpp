@@ -21,6 +21,9 @@
 
 using namespace testing::ext;
 using namespace std;
+extern "C" {
+void OnClose(ParamTaskPtr client);
+}
 static int CheckServerParamValue(const char *name, const char *expectValue)
 {
     char tmp[PARAM_BUFFER_SIZE] = {0};
@@ -44,8 +47,14 @@ public:
     static void SetUpTestCase(void)
     {
         PrepareInitUnitTestEnv();
-    };
-    void SetUp() {}
+    }
+    void SetUp()
+    {
+        if (GetParamSecurityLabel() != nullptr) {
+            GetParamSecurityLabel()->cred.uid = 1000;  // 1000 test uid
+            GetParamSecurityLabel()->cred.gid = 1000;  // 1000 test gid
+        }
+    }
     void TearDown() {}
     void TestBody() {}
 
@@ -288,7 +297,7 @@ public:
         ParamStreamInfo info = {};
         info.flags = PARAM_TEST_FLAGS;
         info.server = NULL;
-        info.close = NULL;
+        info.close = OnClose;
         info.recvMessage = ProcessMessage;
         info.incomingConnect = NULL;
         ParamTaskPtr client = NULL;
@@ -327,7 +336,6 @@ public:
             ProcessMessage((const ParamTaskPtr)g_worker, (const ParamMessage *)request);
         } while (0);
         free(request);
-        CheckServerParamValue(name, value);
         RegisterSecurityOps(1);
         return 0;
     }
