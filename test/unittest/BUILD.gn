@@ -57,10 +57,10 @@ ohos_unittest("init_ut") {
     "//base/startup/init_lite/services/init/init_service_socket.c",
     "//base/startup/init_lite/services/init/standard/device.c",
     "//base/startup/init_lite/services/init/standard/init.c",
+    "//base/startup/init_lite/services/init/standard/init_cmdexecutor.c",
     "//base/startup/init_lite/services/init/standard/init_cmds.c",
     "//base/startup/init_lite/services/init/standard/init_jobs.c",
     "//base/startup/init_lite/services/init/standard/init_mount.c",
-    "//base/startup/init_lite/services/init/standard/init_plugin_manager.c",
     "//base/startup/init_lite/services/init/standard/init_reboot.c",
     "//base/startup/init_lite/services/init/standard/init_service.c",
     "//base/startup/init_lite/services/init/standard/init_signal_handler.c",
@@ -124,7 +124,6 @@ ohos_unittest("init_ut") {
     "init/init_reboot_unittest.cpp",
     "init/loopevent_unittest.cpp",
     "init/mount_unittest.cpp",
-    "init/plugin_unittest.cpp",
     "init/service_file_unittest.cpp",
     "init/service_socket_unittest.cpp",
     "init/service_unittest.cpp",
@@ -138,6 +137,13 @@ ohos_unittest("init_ut") {
     "param/trigger_unittest.cpp",
     "syspara/syspara_unittest.cpp",
     "ueventd/ueventd_config_unittest.cpp",
+  ]
+
+  sources += [
+    "//base/startup/init_lite/interfaces/innerkits/hookmgr/hookmgr.c",
+    "//base/startup/init_lite/interfaces/innerkits/modulemgr/modulemgr.c",
+    "innerkits/hookmgr_unittest.cpp",
+    "innerkits/modulemgr_unittest.cpp",
   ]
 
   configs = [ "//base/startup/init_lite/test/unittest:utest_config" ]
@@ -208,7 +214,7 @@ ohos_unittest("init_ut") {
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "init:libinit_plugin_engine",
+    "init:libinit_module_engine",
     "utils_base:utils",
   ]
 
@@ -246,5 +252,8 @@ ohos_unittest("init_ut") {
 
 group("init_test") {
   testonly = true
-  deps = [ ":init_ut" ]
+  deps = [
+    ":init_ut",
+    "//base/startup/init_lite/test/moduletest:paramtestmodule",
+  ]
 }

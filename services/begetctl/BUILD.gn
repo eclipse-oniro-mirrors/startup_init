@@ -94,7 +94,7 @@ if (defined(ohos_lite)) {
 
     if (param_test) {
       sources +=
-          [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
+          [ "//base/startup/init_lite/test/moduletest/param_test_cmds.c" ]
       deps += [
         "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
         "//base/startup/init_lite/services/loopevent:loopevent",
@@ -171,7 +171,7 @@ if (defined(ohos_lite)) {
 
     if (param_test) {
       sources +=
-          [ "//base/startup/init_lite/test/plugintest/plugin_param_cmd.c" ]
+          [ "//base/startup/init_lite/test/moduletest/param_test_cmds.c" ]
       deps += [
         "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
         "//base/startup/init_lite/services/loopevent:loopevent",

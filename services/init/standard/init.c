@@ -18,6 +18,7 @@
 #include <poll.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 #include <sys/sysmacros.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -46,6 +47,7 @@
 #include <policycoreutils.h>
 #include <selinux/selinux.h>
 #endif // WITH_SELINUX
+#include "bootstage.h"
 
 static bool g_enableSandbox;
 
@@ -298,22 +300,66 @@ static void InitLoadParamFiles(void)
     FreeCfgFiles(files);
 }
 
+typedef struct HOOK_TIMING_STAT {
+    struct timespec startTime;
+    struct timespec endTime;
+} HOOK_TIMING_STAT;
+
+static void InitPreHook(const HOOK_INFO *hookInfo)
+{
+    HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)hookInfo->cookie;
+    clock_gettime(CLOCK_MONOTONIC, &(stat->startTime));
+}
+
+static void InitPostHook(const HOOK_INFO *hookInfo)
+{
+    long long diff;
+    HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)hookInfo->cookie;
+    clock_gettime(CLOCK_MONOTONIC, &(stat->endTime));
+
+    diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) / 1000);
+    if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
+        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) * 1000;
+    } else {
+        diff -= (stat->endTime.tv_nsec - stat->startTime.tv_nsec) * 1000;
+    }
+
+    INIT_LOGI("Executing hook [%d:%d:%p] cost [%lld]ms, return %d.",
+                hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, hookInfo->retVal);
+}
+
 void SystemConfig(void)
 {
+    HOOK_TIMING_STAT timingStat;
+    HOOK_EXEC_ARGS args;
+
+    args.flags = 0;
+    args.cookie = (void *)&timingStat;
+    args.preHook = InitPreHook;
+    args.postHook = InitPostHook;
+
+    HookMgrExecute(NULL, INIT_GLOBAL_INIT, (void *)&args);
     InitServiceSpace();
+
+    HookMgrExecute(NULL, INIT_PRE_PARAM_SERVICE, (void *)&args);
     InitParamService();
     InitParseGroupCfg();
-    PluginManagerInit();
     RegisterBootStateChange(BootStateChange);
 
     // load SELinux context and policy
     // Do not move position!
     SystemLoadSelinux();
     // parse parameters
+    HookMgrExecute(NULL, INIT_PRE_PARAM_LOAD, (void *)&args);
     InitLoadParamFiles();
     // read config
+    HookMgrExecute(NULL, INIT_PRE_CFG_LOAD, (void *)&args);
     ReadConfig();
     INIT_LOGI("Parse init config file done.");
+    HookMgrExecute(NULL, INIT_POST_CFG_LOAD, (void *)&args);
+
+    // Destroy all hooks
+    HookMgrDestroy(NULL);
 
     // dump config
 #if defined(OHOS_SERVICE_DUMP)

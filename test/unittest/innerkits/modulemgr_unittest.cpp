@@ -16,8 +16,8 @@
 #include "init_group_manager.h"
 #include "init_hashmap.h"
 #include "init_param.h"
-#include "init_plugin_engine.h"
-#include "init_plugin_manager.h"
+#include "init_module_engine.h"
+#include "init_cmdexecutor.h"
 #include "param_stub.h"
 #include "init_utils.h"
 #include "securec.h"
@@ -26,7 +26,7 @@ using namespace testing::ext;
 using namespace std;
 
 namespace init_ut {
-class PluginUnitTest : public testing::Test {
+class ModuleMgrUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) {};
@@ -42,10 +42,9 @@ int TestCmdExecutor(int id, const char *name, int argc, const char **argv)
     return 0;
 }
 
-HWTEST_F(PluginUnitTest, PluginAddCmd, TestSize.Level1)
+HWTEST_F(ModuleMgrUnitTest, PluginAddCmd, TestSize.Level1)
 {
     InitServiceSpace();
-    PluginManagerInit();
     const char *testName = "testCmd1";
     const char *cmdContent = "testCmd1 test1 test2 test3";
     int cmdExecId1 = AddCmdExecutor(testName, TestCmdExecutor);
@@ -74,24 +73,58 @@ HWTEST_F(PluginUnitTest, PluginAddCmd, TestSize.Level1)
     RemoveCmdExecutor("testCmd4", cmdExecId4);
 }
 
-static int PluginTestInit(void)
+HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
 {
-    g_cmdExecId = AddCmdExecutor("testCmd4", TestCmdExecutor);
-    return 0;
-}
+    int ret;
+    int cnt;
 
-static void PluginTestExit(void)
-{
-    RemoveCmdExecutor("testCmd4", g_cmdExecId);
-}
+    // Create module manager
+    MODULE_MGR *moduleMgr = ModuleMgrCreate("init");
+    ASSERT_NE(moduleMgr, nullptr);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 0);
 
-HWTEST_F(PluginUnitTest, PluginInstallTest, TestSize.Level1)
-{
-    const char *moduleName = "testplugin";
-    PluginRegister(moduleName,
-        "/home/axw/init_ut/etc/init/plugin_param_test.cfg",
-        PluginTestInit, PluginTestExit);
-    PluginInstall(moduleName, NULL);
-    PluginUninstall(moduleName);
+    // Install one module
+    ret = ModuleMgrInstall(moduleMgr, "libbootchart", 0, NULL);
+    ASSERT_EQ(ret, 0);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 1);
+
+    // Uninstall the module
+    ModuleMgrUninstall(moduleMgr, "libbootchart");
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 0);
+
+    // Install two module
+    ret = ModuleMgrInstall(moduleMgr, "libbootchart", 0, NULL);
+    ASSERT_EQ(ret, 0);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 1);
+    ret = ModuleMgrInstall(moduleMgr, "notexist", 0, NULL);
+    ASSERT_NE(ret, 0);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 1);
+
+    // Uninstall the module
+    ModuleMgrUninstall(moduleMgr, "libbootchart");
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 0);
+    ModuleMgrUninstall(moduleMgr, "notexist");
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 0);
+
+    ModuleMgrDestroy(moduleMgr);
+
+    // Scan all modules
+    moduleMgr = ModuleMgrScan("init");
+    ASSERT_NE(moduleMgr, nullptr);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_NE(cnt, 0);
+
+    ModuleMgrUninstall(moduleMgr, NULL);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 0);
+
+    ModuleMgrDestroy(moduleMgr);
 }
 }  // namespace init_ut

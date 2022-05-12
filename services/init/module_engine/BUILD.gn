@@ -14,14 +14,17 @@
 import("//build/ohos.gni")
 import("//build/ohos/native_stub/native_stub.gni")
 
-config("libinit_plugin_engine_config") {
-  include_dirs =
-      [ "//base/startup/init_lite/services/init/plugin_engine/include" ]
+config("libinit_module_engine_config") {
+  include_dirs = [
+    "//base/startup/init_lite/services/init/module_engine/include",
+    "//base/startup/init_lite/services/include",
+    "//base/startup/init_lite/interfaces/innerkits/include",
+  ]
 }
 
-ohos_native_stub_library("libinit_plugin_engine") {
+ohos_native_stub_library("libinit_module_engine") {
   output_extension = "so"
-  public_configs = [ ":libinit_plugin_engine_config" ]
+  public_configs = [ ":libinit_module_engine_config" ]
   stub_description_file = "./stub/libinit.stub.json"
 }
 
@@ -34,5 +37,5 @@ ohos_native_stub_library("libinit_stub_empty") {
   stub_description_file = "./stub/libinit.stub.empty.json"
   part_name = "init"
   install_enable = true
-  symlink_target_name = [ "libinit_plugin_engine.so" ]
+  symlink_target_name = [ "libinit_module_engine.so" ]
 }

@@ -18,7 +18,7 @@
 #include <string.h>
 #include "init_service.h"
 #include "init_hashmap.h"
-#include "init_plugin_manager.h"
+#include "init_cmdexecutor.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -55,7 +55,6 @@ typedef struct InitGroupNode_ {
     unsigned char type;
     union {
         Service *service;
-        PluginInfo *pluginInfo;
         PluginCmd *cmd;
     } data;
     char name[0];

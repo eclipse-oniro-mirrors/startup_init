@@ -14,8 +14,8 @@
 import("//base/startup/init_lite/begetd.gni")
 import("//build/ohos.gni")
 
-ohos_shared_library("libpluginparamtest") {
-  sources = [ "plugin_param_test.c" ]
+ohos_shared_library("libparamtestmodule") {
+  sources = [ "param_test_module.c" ]
 
   include_dirs = [
     "//base/startup/init_lite/services/include/param",
@@ -36,23 +36,14 @@ ohos_shared_library("libpluginparamtest") {
     "//third_party/bounds_checking_function:libsec_shared",
   ]
 
-  external_deps = [ "init:libinit_plugin_engine" ]
+  external_deps = [ "init:libinit_module_engine" ]
 
   part_name = "init"
-  module_install_dir = "lib/plugin"
+  module_install_dir = "lib/init"
 }
 
-ohos_prebuilt_etc("plugin_param_test.cfg") {
-  source = "//base/startup/init_lite/test/plugintest/plugin_param_test.cfg"
-  part_name = "init"
-  module_install_dir = "etc/plugin"
-}
-
-group("pluginparamtest") {
+group("paramtestmodule") {
   if (param_test) {
-    deps = [
-      ":libpluginparamtest",
-      ":plugin_param_test.cfg",
-    ]
+    deps = [ ":libparamtestmodule" ]
   }
 }

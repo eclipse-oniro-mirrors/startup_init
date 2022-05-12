@@ -14,14 +14,14 @@
 import("//base/startup/init_lite/begetd.gni")
 import("//build/ohos.gni")
 
-ohos_shared_library("libbootchart") {
+ohos_shared_library("bootchart") {
   sources = [ "bootchart/bootchart.c" ]
 
   include_dirs = [
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/services/include/param",
     "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/services/plugin",
+    "//base/startup/init_lite/services/modules",
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//third_party/bounds_checking_function/include",
   ]
@@ -33,16 +33,31 @@ ohos_shared_library("libbootchart") {
     "//third_party/cJSON:cjson_static",
   ]
 
-  external_deps = [ "init:libinit_plugin_engine" ]
+  external_deps = [ "init:libinit_module_engine" ]
 
   part_name = "init"
-  if (target_cpu == "arm64") {
-    module_install_dir = "lib64/plugin"
-  } else {
-    module_install_dir = "lib/plugin"
-  }
+  module_install_dir = "lib/init"
 }
 
-group("plugin") {
-  deps = [ ":libbootchart" ]
+config("libbootchart_static_config") {
+  include_dirs = [
+    "//base/startup/init_lite/services/log",
+    "//base/startup/init_lite/services/modules",
+    "//base/startup/init_lite/services/init/module_engine/include",
+    "//base/startup/init_lite/services/include",
+    "//base/startup/init_lite/interfaces/innerkits/include",
+  ]
+}
+
+ohos_source_set("libbootchart_static") {
+  sources = [ "bootchart/bootchart_static.c" ]
+  public_configs = [ ":libbootchart_static_config" ]
+}
+
+group("modules") {
+  deps = [ ":bootchart" ]
+}
+
+group("static_modules") {
+  deps = [ ":libbootchart_static" ]
 }

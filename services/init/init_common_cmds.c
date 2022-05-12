@@ -33,7 +33,7 @@
 #include "init.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
-#include "init_plugin_manager.h"
+#include "init_cmdexecutor.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
 #ifdef WITH_SELINUX

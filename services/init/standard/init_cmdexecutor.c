@@ -12,9 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "init_plugin_manager.h"
-
-#include <dlfcn.h>
 
 #include "cJSON.h"
 #include "init_param.h"
@@ -23,6 +20,8 @@
 #include "init_group_manager.h"
 #include "init_service_manager.h"
 #include "securec.h"
+#include "modulemgr.h"
+#include "init_module_engine.h"
 
 #define MAX_CMD_ARGC 10
 static int g_cmdExecutorId = 0;
@@ -189,180 +188,4 @@ const char *PluginGetCmdIndex(const char *cmdStr, int *index)
     *index = ((hashCode + 1) << 16) | cmd->cmdId; // 16 left shift
     INIT_LOGI("PluginGetCmdIndex content: %s index %d", cmd->name, *index);
     return cmd->name;
-}
-
-static int LoadModule(const char *name, const char *libName)
-{
-    char path[128] = {0}; // 128 path for plugin
-    int ret = 0;
-    if (libName == NULL) {
-        ret = sprintf_s(path, sizeof(path), "%s/lib%s.z.so", DEFAULT_PLUGIN_PATH, name);
-    } else {
-        ret = sprintf_s(path, sizeof(path), "%s/%s", DEFAULT_PLUGIN_PATH, libName);
-    }
-    INIT_ERROR_CHECK(ret > 0, return -1, "Failed to sprintf path %s", name);
-    char *realPath = GetRealPath(path);
-    void* handle = dlopen(realPath, RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
-    if (handle == NULL) {
-        INIT_LOGE("Failed to load module %s, err %s", realPath, dlerror());
-        free(realPath);
-        return -1;
-    }
-    free(realPath);
-    dlclose(handle);
-    return 0;
-}
-
-int PluginInstall(const char *name, const char *libName)
-{
-    // load so, and init module
-    int ret = LoadModule(name, libName);
-    INIT_ERROR_CHECK(ret == 0, return -1, "pluginInit is null %s", name);
-
-    PluginInfo *info = NULL;
-    InitGroupNode *groupNode = GetGroupNode(NODE_TYPE_PLUGINS, name);
-    if (groupNode != NULL && groupNode->data.pluginInfo != NULL) {
-        info = groupNode->data.pluginInfo;
-    }
-    INIT_ERROR_CHECK(info != NULL, return -1, "Failed to pluginInit %s", name);
-    INIT_LOGI("PluginInstall %s %d", name, info->state);
-    if (info->state == PLUGIN_STATE_INIT) {
-        INIT_ERROR_CHECK(info->pluginInit != NULL, return -1, "pluginInit is null %s", name);
-        ret = info->pluginInit();
-        INIT_ERROR_CHECK(ret == 0, return -1, "Failed to pluginInit %s", name);
-        info->state = PLUGIN_STATE_RUNNING;
-    }
-    return 0;
-}
-
-int PluginUninstall(const char *name)
-{
-    InitGroupNode *groupNode = GetGroupNode(NODE_TYPE_PLUGINS, name);
-    INIT_ERROR_CHECK(groupNode != NULL && groupNode->data.pluginInfo != NULL,
-        return 0, "Can not find plugin %s", name);
-    PluginInfo *info = groupNode->data.pluginInfo;
-    INIT_ERROR_CHECK(info != NULL, return -1, "Failed to pluginInit %s", name);
-
-    INIT_LOGI("PluginUninstall %s %d %p", name, info->state, info->pluginInit);
-    if (info->state == PLUGIN_STATE_RUNNING) {
-        INIT_ERROR_CHECK(info->pluginExit != NULL, return -1, "pluginExit is null %s", name);
-        info->pluginExit();
-        info->state = PLUGIN_STATE_INIT;
-    }
-    return 0;
-}
-
-static PluginInfo *GetPluginInfo(const char *name)
-{
-    InitGroupNode *groupNode = GetGroupNode(NODE_TYPE_PLUGINS, name);
-    if (groupNode == NULL) {
-        groupNode = AddGroupNode(NODE_TYPE_PLUGINS, name);
-        INIT_ERROR_CHECK(groupNode != NULL, return NULL, "Failed to create group node");
-    }
-    PluginInfo *info = groupNode->data.pluginInfo;
-    if (info == NULL) {
-        info = (PluginInfo *)calloc(1, sizeof(PluginInfo));
-        INIT_ERROR_CHECK(info != NULL, return NULL, "Failed to create module");
-        groupNode->data.pluginInfo = info;
-        info->name = groupNode->name;
-        info->state = 0;
-        info->startMode = 0;
-        info->libName = NULL;
-    }
-    return info;
-}
-
-int PluginRegister(const char *name, const char *config, int (*pluginInit)(void), void (*pluginExit)(void))
-{
-    INIT_LOGI("PluginRegister %s %p %p", name, pluginInit, pluginExit);
-    INIT_ERROR_CHECK(name != NULL, return -1, "Invalid plugin name");
-    INIT_ERROR_CHECK(pluginInit != NULL && pluginExit != NULL,
-        return -1, "Invalid plugin constructor %s", name);
-    InitServiceSpace();
-    PluginInfo *info = GetPluginInfo(name);
-    INIT_ERROR_CHECK(info != NULL, return -1, "Failed to create group node");
-    info->state = PLUGIN_STATE_INIT;
-    info->pluginInit = pluginInit;
-    info->pluginExit = pluginExit;
-
-    // load config
-    if (config != NULL) {
-        ParseInitCfg(config, NULL);
-    }
-    return 0;
-}
-
-static int PluginCmdInstall(int id, const char *name, int argc, const char **argv)
-{
-    INIT_ERROR_CHECK(argv != NULL && argc >= 1, return -1, "Invalid install parameter");
-    PluginInfo *info = GetPluginInfo(argv[0]);
-    int ret = 0;
-    if (info == NULL) {
-        ret = PluginInstall(argv[0], NULL);
-    } else {
-        ret = PluginInstall(argv[0], info->libName);
-    }
-    INIT_ERROR_CHECK(ret == 0, return ret, "Install plugin %s fail", argv[0]);
-    return 0;
-}
-
-static int PluginCmdUninstall(int id, const char *name, int argc, const char **argv)
-{
-    INIT_ERROR_CHECK(argv != NULL && argc >= 1, return -1, "Invalid install parameter");
-    int ret = PluginUninstall(argv[0]);
-    INIT_ERROR_CHECK(ret == 0, return ret, "Uninstall plugin %s fail", argv[0]);
-    return 0;
-}
-
-static int LoadPluginCfg(void)
-{
-    char *fileBuf = ReadFileToBuf(DEFAULT_PLUGIN_CFG);
-    INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Failed to read file content %s", DEFAULT_PLUGIN_CFG);
-    cJSON *root = cJSON_Parse(fileBuf);
-    INIT_ERROR_CHECK(root != NULL, free(fileBuf);
-        return -1, "Failed to parse json file %s", DEFAULT_PLUGIN_CFG);
-    int itemNumber = 0;
-    cJSON *json = GetArrayItem(root, &itemNumber, "modules");
-    if (json == NULL) {
-        free(fileBuf);
-        return 0;
-    }
-    for (int i = 0; i < itemNumber; ++i) {
-        cJSON *item = cJSON_GetArrayItem(json, i);
-        char *moduleName = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
-        if (moduleName == NULL) {
-            INIT_LOGE("Failed to get plugin info");
-            continue;
-        }
-        PluginInfo *info = GetPluginInfo(moduleName);
-        if (info == NULL) {
-            INIT_LOGE("Failed to get plugin for module %s", moduleName);
-            continue;
-        }
-
-        info->startMode = 0;
-        char *mode = cJSON_GetStringValue(cJSON_GetObjectItem(item, "start-mode"));
-        if (mode == NULL || (strcmp(mode, "static") != 0)) {
-            info->startMode = 1;
-        }
-        char *libName = cJSON_GetStringValue(cJSON_GetObjectItem(item, "lib-name"));
-        if (libName != NULL) {
-            info->libName = strdup(libName); // do not care error
-        }
-        INIT_LOGI("LoadPluginCfg module %s %d libName %s", moduleName, info->startMode, info->libName);
-        if (info->startMode == 0) {
-            PluginInstall(moduleName, info->libName);
-        }
-    }
-    free(fileBuf);
-    return 0;
-}
-
-void PluginManagerInit(void)
-{
-    // "ohos.servicectrl.install"
-    (void)AddCmdExecutor("install", PluginCmdInstall);
-    (void)AddCmdExecutor("uninstall", PluginCmdUninstall);
-    // read cfg and start static plugin
-    LoadPluginCfg();
 }

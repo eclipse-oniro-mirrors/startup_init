@@ -17,14 +17,16 @@
 #define BASE_STARTUP_INIT_PLUGIN_H
 #include <stdint.h>
 #include <stdio.h>
+#include "modulemgr.h"
+#include "bootstage.h"
+#include "init_modulemgr.h"
+#include "init_cmdexecutor.h"
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
-
-#define PLUGIN_CONSTRUCTOR(void) static void _init(void) __attribute__((constructor)); static void _init(void)
-#define PLUGIN_DESTRUCTOR(void) static void _destroy(void) __attribute__((destructor)); static void _destroy(void)
 
 int SystemWriteParam(const char *name, const char *value);
 
@@ -35,8 +37,6 @@ typedef int (*CmdExecutor)(int id, const char *name, int argc, const char **argv
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);
 
 void RemoveCmdExecutor(const char *cmdName, int id);
-
-int PluginRegister(const char *name, const char *config, int (*pluginInit)(void), void (*pluginExit)(void));
 
 #ifdef __cplusplus
 #if __cplusplus

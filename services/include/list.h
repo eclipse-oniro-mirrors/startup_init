@@ -23,6 +23,24 @@ extern "C" {
 #endif
 #endif
 
+/**
+ * @brief Double linked list structure is show as below:
+ * 
+ *     |￣￣￣￣￣|-----------------------------------------------|
+ *  |->|  head  |                                               |
+ *  |  |________|<-------------------------------------------|  |
+ *  |   |                                                    |  |
+ *  |   └-next->|▔▔▔▔▔▔|-next->|▔▔▔▔▔▔|-next->|▔▔▔▔▔▔|-next--|  |
+ *  └------prev-| node |<-prev-| node |<-prev-| node |<-prev----|
+ *              |------|       |------|       |------|
+ *              | extra|       | extra|       | extra|
+ *              |______|       |______|       |______|
+ * 
+ */
+
+/**
+ * @brief Double linked list node
+ */
 typedef struct ListNode {
     struct ListNode *next;
     struct ListNode *prev;
@@ -32,9 +50,125 @@ typedef struct ListNode {
 #define ListEntry(ptr, type, member)   ((type *)((char *)(ptr) - offsetof(type, member)))
 #define ForEachListEntry(list, node)   for (node = (list)->next; node != (list); node = node->next)
 
+/**
+ * @brief Initialize a double-linked list head
+ *
+ * All other list API should be initialized by this function.\n
+ *
+ * @param head list head, make sure head is valid pointer
+ * @return None
+ */
 void ListInit(struct ListNode *list);
+
+/**
+ * @brief Add a node to the end of the list
+ *
+ * @param head list head, make sure head is valid pointer
+ * @param item new node to be added
+ * @return None
+ */
 void ListAddTail(struct ListNode *list, struct ListNode *item);
+
+/**
+ * @brief Remove a node from the list
+ *
+ * @param item the node to be removed from the list.
+ *             This function does not free any memory within item.
+ * @return None
+ */
 void ListRemove(struct ListNode *item);
+
+/**
+ * @brief ListNode comparision function prototype
+ *
+ * @param node ListNode to be compared.
+ * @param newNode new ListNode to be compared.
+ * @return
+ *     <0 if node < newNode
+ *     =0 if node = newNode
+ *     >0 if Node > newNode
+ */
+typedef int (*ListCompareProc)(ListNode *node, ListNode *newNode);
+
+/**
+ * @brief Add a node to the list with order
+ *
+ * @param head list head, make sure head is valid pointer
+ * @param item new node to be added
+ * @param compareProc comparison function for adding node
+ *      if it is ascending order, this function should return an integer less than,
+ *      equal to, or greater than zero if the first argument is considered to be
+ *      respectively less than, equal to, or greater than the second.
+ * @return None
+ */
+void ListAddWithOrder(struct ListNode *head, struct ListNode *item, ListCompareProc compareProc);
+
+/**
+ * @brief ListNode traversing and find function prototype
+ *
+ * @param node ListNode to be compared.
+ * @param data value for traversing
+ * @return
+ *     return 0 if node value equals data for ListFind
+ */
+typedef int (*ListTraversalProc)(ListNode *node, void *data);
+
+/**
+ * @brief Find a node by traversing the list
+ *
+ * @param head list head, make sure head is valid pointer.
+ * @param data comparing data.
+ * @param compareProc comparing function, return 0 if matched.
+ * @return the found node; return NULL if none is found.
+ */
+ListNode *ListFind(const ListNode *head, void *data, ListTraversalProc compareProc);
+
+/* Traversing from end to start */
+#define TRAVERSE_REVERSE_ORDER   0x1
+/* Stop traversing when error returned */
+#define TRAVERSE_STOP_WHEN_ERROR 0x2
+
+/**
+ * @brief Traversal the list with specified function
+ *
+ * @param head list head, make sure head is valid pointer.
+ * @param cookie optinal traversing data.
+ * @param traversalProc comparing function, return 0 if matched.
+ * @param flags optinal traversing flags:
+ *  TRAVERSE_REVERSE_ORDER: traversing from last node to first node;
+ *                          default behaviour is from first node to last node
+ *  TRAVERSE_STOP_WHEN_ERROR: stop traversing if traversalProc return non-zero
+ *                          default behaviour will ignore traversalProc return values
+ * @return return -1 for invalid input arguments.
+ *         when TRAVERSE_STOP_WHEN_ERROR is specified, it will return errors from traversalProc
+ */
+int ListTraversal(ListNode *head, void *data, ListTraversalProc traversalProc, int flags);
+
+/**
+ * @brief ListNode destroy function prototype
+ *
+ * @param node ListNode to be destroyed.
+ * @return None
+ */
+typedef void (*ListDestroyProc)(ListNode *node);
+
+/**
+ * @brief Find a node by traversing the list
+ *
+ * @param head list head, make sure head is valid pointer.
+ * @param destroyProc destroy function; if NULL, it will free each node by default.
+ * @return None
+ */
+void ListRemoveAll(ListNode *head, ListDestroyProc destroyProc);
+
+/**
+ * @brief Get list count
+ *
+ * @param head list head, make sure head is valid pointer.
+ * @return the count of nodes in the list; return 0 if error
+ */
+int ListGetCnt(const ListNode *head);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
