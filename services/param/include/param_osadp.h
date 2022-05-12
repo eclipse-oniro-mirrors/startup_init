@@ -53,6 +53,8 @@ extern "C" {
 #endif
 #define PARAM_WORKSPACE_SMALL PARAM_WORKSPACE_MAX
 #define PARAM_WORKSPACE_DEF PARAM_WORKSPACE_MAX
+#define DAC_DEFAULT_GROUP 0
+#define DAC_DEFAULT_USER 0
 #else
 #define PARAM_WORKSPACE_MAX (80 * 1024)
 #define PARAM_WORKSPACE_SMALL (1024 * 10)
@@ -63,6 +65,8 @@ extern "C" {
 #define DAC_DEFAULT_MODE 0774
 #define PARAM_WORKSPACE_DEF (1024 * 30)
 #endif
+#define DAC_DEFAULT_GROUP 2000
+#define DAC_DEFAULT_USER 0
 #endif
 
 // support futex

@@ -105,6 +105,7 @@ int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t spaceSize)
     }
     workSpace->compareTrieNode = CompareParamTrieNode;
     workSpace->allocTrieNode = AllocateParamTrieNode;
+    workSpace->area = NULL;
     int ret = InitWorkSpace_(workSpace, spaceSize, onlyRead);
     PARAM_CHECK(ret == 0, return ret, "Failed to init workspace  %s", workSpace->fileName);
     PARAMSPACE_AREA_INIT_LOCK(workSpace);
@@ -397,7 +398,7 @@ void SaveIndex(uint32_t *index, uint32_t offset)
 
 ParamTrieNode *FindTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel)
 {
-    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid workSpace");
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return NULL, "Invalid workSpace");
     ParamTrieNode *node = NULL;
     PARAMSPACE_AREA_RD_LOCK(workSpace);
     node = FindTrieNode_(workSpace, key, keyLen, matchLabel);

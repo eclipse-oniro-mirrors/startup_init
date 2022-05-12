@@ -201,7 +201,10 @@ if (defined(ohos_lite)) {
     ]
     include_dirs = param_include_dirs
 
-    defines = [ "_GNU_SOURCE" ]
+    defines = [
+      "_GNU_SOURCE",
+      "INIT_AGENT",
+    ]
     if (build_selinux) {
       sources += [ "adapter/param_selinux.c" ]
       defines += [

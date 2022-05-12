@@ -110,8 +110,11 @@ int SetParamShellPrompt(BShellHandle shell, const char *param)
     }
     // check parameter
     int ret = SysCheckParamExist(realParameter);
-    if (ret != 0) {
+    if (ret == PARAM_CODE_NOT_FOUND) {
         BShellEnvOutput(shell, "Error: parameter \'%s\' not found\r\n", realParameter);
+        return -1;
+    } else if (ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
+        BShellEnvOutput(shell, "Error: Forbid to enter parameters \'%s\'\r\n", realParameter);
         return -1;
     }
     if (strcmp(realParameter, "#") == 0) {
@@ -223,14 +226,19 @@ static int32_t BShellParamCmdLs(BShellHandle shell, int32_t argc, char *argv[])
             BShellEnvOutput(shell, "Error: Forbid to list parameters\r\n");
         }
     } else {
-        ParamHandle handle;
-        ret = SystemFindParameter(prefix, &handle);
-        if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-            BShellEnvOutput(shell, "Error: Forbid to list parameters\r\n");
-        } else if (ret == 0) {
-            ShowParamForCmdLs(handle, (void *)shell);
+        ret = SysCheckParamExist(prefix);
+        if (ret == 0) {
+            ParamHandle handle;
+            ret = SystemFindParameter(prefix, &handle);
+            if (ret != 0) {
+                BShellEnvOutput(shell, "Error: Forbid to list parameters\r\n");
+            } else {
+                ShowParamForCmdLs(handle, (void *)shell);
+            }
         } else if (ret == PARAM_CODE_NODE_EXIST) {
             ShowParam(shell, prefix, NULL);
+        } else if (ret != PARAM_CODE_NOT_FOUND) {
+            BShellEnvOutput(shell, "Error: Forbid to list parameters\r\n");
         } else {
             BShellEnvOutput(shell, "Parameter %s not found\r\n", prefix);
         }
