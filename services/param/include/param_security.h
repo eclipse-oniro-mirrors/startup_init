@@ -102,6 +102,7 @@ int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditD
 
 int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit);
 void LoadGroupUser(void);
+void OpenPermissionWorkSpace(void);
 
 typedef int (*SelinuxSetParamCheck)(const char *paraName, struct ucred *uc);
 typedef struct SelinuxSpace_ {

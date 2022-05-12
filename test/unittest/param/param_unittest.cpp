@@ -78,7 +78,7 @@ public:
         const char *value = "2001";
         uint32_t labelIndex = 0;
         SystemWriteParam(name, value);
-        // 获取到跟属性
+        // get root
         WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
         (void)FindTrieNode(workspace, name, strlen(name), &labelIndex);
         ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(workspace, labelIndex);
@@ -86,7 +86,7 @@ public:
             EXPECT_EQ(1, 0);
             return 0;
         }
-        EXPECT_EQ(node->gid, 0);
+        EXPECT_EQ(node->gid, DAC_DEFAULT_GROUP);
         return 0;
     }
 
