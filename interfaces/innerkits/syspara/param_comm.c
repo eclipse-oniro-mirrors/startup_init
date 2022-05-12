@@ -31,6 +31,14 @@
 
 static const char *g_emptyStr = "";
 
+int IsValidValue(const char *value, unsigned int len)
+{
+    if ((value == NULL) || !strlen(value) || (strlen(value) + 1 > len)) {
+        return 0;
+    }
+    return 1;
+}
+
 int HalGetParameter(const char *key, const char *def, char *value, uint32_t len)
 {
     if ((key == NULL) || (value == NULL)) {
