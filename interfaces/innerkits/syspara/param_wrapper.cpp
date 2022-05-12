@@ -106,10 +106,10 @@ int GetStringParameter(const std::string key, std::string &value, const std::str
     uint32_t size = 0;
     int ret = SystemReadParam(key.c_str(), NULL, &size);
     if (ret == 0) {
-        std::vector<char> value(size + 1);
-        ret = SystemReadParam(key.c_str(), value.data(), &size);
+        std::vector<char> data(size + 1);
+        ret = SystemReadParam(key.c_str(), data.data(), &size);
         if (ret == 0) {
-            value = std::string(value.data());
+            value = std::string(data.data());
             return EC_SUCCESS;
         }
     }
