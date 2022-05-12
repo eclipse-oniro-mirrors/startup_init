@@ -67,7 +67,7 @@ std::string GetParameter(const std::string& key, const std::string& def)
     uint32_t size = 0;
     int ret = SystemReadParam(key.c_str(), NULL, &size);
     if (ret != 0) {
-        if (IsValidValue(def.c_str(), def.size()) == 1) {
+        if (IsValidValue(def.c_str(), MAX_VALUE_LEN) == 1) {
             return std::string(def);
         }
         return "";
@@ -77,7 +77,7 @@ std::string GetParameter(const std::string& key, const std::string& def)
     if (ret == 0) {
         return std::string(value.data());
     }
-    if (IsValidValue(def.c_str(), def.size()) == 1) {
+    if (IsValidValue(def.c_str(), MAX_VALUE_LEN) == 1) {
         return std::string(def);
     }
     return "";
@@ -113,7 +113,7 @@ int GetStringParameter(const std::string key, std::string &value, const std::str
             return EC_SUCCESS;
         }
     }
-    if (IsValidValue(def.c_str(), def.size()) == 1) {
+    if (IsValidValue(def.c_str(), MAX_VALUE_LEN) == 1) {
         value = std::string(def);
         return EC_SUCCESS;
     }
