@@ -66,15 +66,17 @@ std::string GetParameter(const std::string& key, const std::string& def)
 {
     uint32_t size = 0;
     int ret = SystemReadParam(key.c_str(), NULL, &size);
-    if (ret != 0) {
+    if (ret == 0) {
+        std::vector<char> value(size + 1);
+        ret = SystemReadParam(key.c_str(), value.data(), &size);
+        if (ret == 0) {
+            return std::string(value.data());
+        }
+    }
+    if (IsValidValue(def.c_str(), MAX_VALUE_LEN) == 1) {
         return std::string(def);
     }
-    std::vector<char> value(size + 1);
-    ret = SystemReadParam(key.c_str(), value.data(), &size);
-    if (ret == 0) {
-        return std::string(value.data());
-    }
-    return std::string(def);
+    return "";
 }
 
 bool GetBoolParameter(const std::string& key, bool def)
@@ -99,16 +101,18 @@ int GetStringParameter(const std::string key, std::string &value, const std::str
 {
     uint32_t size = 0;
     int ret = SystemReadParam(key.c_str(), NULL, &size);
-    if (ret != 0) {
-        value = def;
-        return EC_FAILURE;
-    }
-    value.resize(size + 1);
-    ret = SystemReadParam(key.c_str(), const_cast<char *>(value.data()), &size);
     if (ret == 0) {
+        std::vector<char> data(size + 1);
+        ret = SystemReadParam(key.c_str(), data.data(), &size);
+        if (ret == 0) {
+            value = std::string(data.data());
+            return EC_SUCCESS;
+        }
+    }
+    if (IsValidValue(def.c_str(), MAX_VALUE_LEN) == 1) {
+        value = std::string(def);
         return EC_SUCCESS;
     }
-    value = def;
     return EC_FAILURE;
 }
 

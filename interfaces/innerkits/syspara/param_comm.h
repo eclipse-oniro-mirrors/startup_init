@@ -39,6 +39,7 @@ const char *GetProductModel_(void);
 const char *GetManufacture_(void);
 const char *GetSerial_(void);
 int GetDevUdid_(char *udid, int size);
+int IsValidValue(const char *value, unsigned int len);
 
 #ifdef __cplusplus
 #if __cplusplus
