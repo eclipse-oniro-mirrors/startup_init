@@ -112,7 +112,6 @@ if (defined(ohos_lite)) {
         ":lite_ohos_param_to",
       ]
       include_dirs += [ "$root_out_dir/gen/init_lite" ]
-      defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
     }
   }
 
@@ -159,7 +158,6 @@ if (defined(ohos_lite)) {
         ":lite_ohos_param_to",
       ]
       include_dirs += [ "$root_out_dir/gen/init_lite" ]
-      defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
     }
   }
 } else {
