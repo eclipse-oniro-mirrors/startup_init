@@ -40,11 +40,17 @@ HWTEST_F(InitRebootUnitTest, TestInitReboot, TestSize.Level1)
     ExecReboot("reboot,bootloader");
     ExecReboot("reboot,updater:123");
     ExecReboot("reboot,flash:123");
+    ExecReboot("reboot,flashd:123");
+    ExecReboot("reboot,suspend:123");
     const char *option = nullptr;
     int ret = DoReboot(option);
     EXPECT_EQ(ret, 0);
     option = "updater";
     ret = DoReboot(option);
+    EXPECT_EQ(ret, 0);
+    ret = DoReboot(DEVICE_CMD_SUSPEND);
+    EXPECT_EQ(ret, 0);
+    ret = DoReboot(DEVICE_CMD_FREEZE);
     EXPECT_EQ(ret, 0);
 }
 } // namespace init_ut

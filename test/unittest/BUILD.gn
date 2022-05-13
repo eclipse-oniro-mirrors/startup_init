@@ -119,16 +119,16 @@ ohos_unittest("init_ut") {
 
   sources += [
     "begetctl/begetctl_unittest.cpp",
+    "init/SignalInitUnitTest.cpp",
     "init/cmds_unittest.cpp",
     "init/group_unittest.cpp",
     "init/init_reboot_unittest.cpp",
-    "init/loopevent_unittest.cpp",
     "init/mount_unittest.cpp",
     "init/plugin_unittest.cpp",
     "init/service_file_unittest.cpp",
     "init/service_socket_unittest.cpp",
-    "init/service_unittest.cpp",
     "init/utils_unittest.cpp",
+    "innerkits/innerkits_unittest.cpp",
     "param/client_unittest.cpp",
     "param/dac_unittest.cpp",
     "param/param_shell_unittest.cpp",
@@ -242,6 +242,10 @@ ohos_unittest("init_ut") {
   }
 
   cflags_cc = [ "-fexceptions" ]
+  sources += [
+    "init/loopevent_unittest.cpp",
+    "init/service_unittest.cpp",
+  ]
 }
 
 group("init_test") {

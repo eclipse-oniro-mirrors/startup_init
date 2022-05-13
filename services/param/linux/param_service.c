@@ -33,7 +33,7 @@
 
 static ParamService g_paramService = {};
 
-static void OnClose(ParamTaskPtr client)
+PARAM_STATIC void OnClose(ParamTaskPtr client)
 {
     PARAM_LOGV("OnClose %p", client);
     ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);

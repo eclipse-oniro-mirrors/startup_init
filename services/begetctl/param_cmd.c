@@ -43,7 +43,9 @@ void demoExit(void)
 {
     BShellEnvDestory(GetShellHandle());
     if (g_shellPid != 0) {
+#ifndef STARTUP_INIT_TEST
         kill(g_shellPid, SIGKILL);
+#endif
     }
     if (g_isSetTerminal != 0) {
         tcsetattr(0, TCSAFLUSH, &g_terminalState);
@@ -391,6 +393,7 @@ static int32_t BShellParamCmdPwd(BShellHandle shell, int32_t argc, char *argv[])
 
 static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[])
 {
+#ifndef STARTUP_INIT_TEST
     BSH_CHECK(shell != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
     BSH_LOGV("BShellParamCmdShell %d %s", argc, argv[1]);
     int ret = 0;
@@ -431,6 +434,7 @@ static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[
         tcsetattr(0, TCSAFLUSH, &g_terminalState);
         g_isSetTerminal = 0;
     }
+#endif
     return 0;
 }
 

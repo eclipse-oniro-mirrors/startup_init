@@ -31,7 +31,13 @@ using namespace std;
 static const int triggerBuffer = 512;
 static uint32_t g_execCmdId = 0;
 static int g_matchTrigger = 0;
-static char g_matchTriggerName[triggerBuffer] = {0};
+static char g_matchTriggerName[triggerBuffer] = { 0 };
+static void BootStateChange(const char *content)
+{
+    UNUSED(content);
+    return;
+}
+
 static int TestCmdExec(const TriggerNode *trigger, const char *content, uint32_t size)
 {
     PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
@@ -127,8 +133,10 @@ public:
     int TestAddTriggerForParm()
     {
         const char *triggerName = "param:test_param.000";
+        int id = 0;
         JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, "test_param.000=1", 0);
         JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
+        GetTriggerHeader(TRIGGER_PARAM)->compareData(reinterpret_cast<struct tagTriggerNode_ *>(trigger), &id);
         EXPECT_EQ(trigger, node);
         if (trigger == nullptr) {
             return -1;
@@ -458,6 +466,8 @@ public:
     int TestDumpTrigger()
     {
         SystemDumpTriggers(1);
+        RegisterBootStateChange(BootStateChange);
+        (void)AddCompleteJob("param:ohos.servicectrl.display", "ohos.servicectrl.display=*", "display system");
         return 0;
     }
 };
@@ -562,4 +572,9 @@ HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger5, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestExecuteParamTrigger5();
+}
+HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger6, TestSize.Level0)
+{
+    TriggerUnitTest test;
+    test.TestDumpTrigger();
 }
