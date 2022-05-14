@@ -93,9 +93,9 @@ const struct CmdArgs *GetCmdArg(const char *cmdContent, const char *delim, int a
     struct CmdArgs *ctx = (struct CmdArgs *)calloc(1, sizeof(struct CmdArgs) + sizeof(char *) * (argsCount + 1));
     INIT_ERROR_CHECK(ctx != NULL, return NULL, "Failed to malloc memory for arg");
     ctx->argc = 0;
-    char *p = (char *)cmdContent;
-    char *end = (char *)cmdContent + strlen(cmdContent);
-    char *token = NULL;
+    const char *p = cmdContent;
+    const char *end = cmdContent + strlen(cmdContent);
+    const char *token = NULL;
     do {
         // Skip lead whitespaces
         while (isspace(*p)) {
@@ -463,6 +463,21 @@ static void DoMount(const struct CmdArgs *ctx)
     }
 }
 
+static int DoWriteWithMultiArgs(const struct CmdArgs *ctx, int fd) {
+    char buf[MAX_CMD_CONTENT_LEN];
+
+    /* Write to proc files should be done at once */
+    buf[0] = '\0';
+    strcat_s(buf, sizeof(buf), ctx->argv[1]);
+    int idx = 2;
+    while (idx < ctx->argc) {
+        strcat_s(buf, sizeof(buf), " ");
+        strcat_s(buf, sizeof(buf), ctx->argv[idx]);
+        idx++;
+    }
+    return write(fd, buf, strlen(buf));
+}
+
 static void DoWrite(const struct CmdArgs *ctx)
 {
     // format: write path content
@@ -475,11 +490,17 @@ static void DoWrite(const struct CmdArgs *ctx)
     } else {
         fd = open(ctx->argv[0], O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, S_IRUSR | S_IWUSR);
     }
-    if (fd >= 0) {
-        size_t ret = write(fd, ctx->argv[1], strlen(ctx->argv[1]));
-        INIT_CHECK_ONLY_ELOG(ret >= 0, "DoWrite: write to file %s failed: %d", ctx->argv[0], errno);
-        close(fd);
+    if (fd < 0) {
+        return;
     }
+    size_t ret;
+    if (ctx->argc > 2) {
+        ret = DoWriteWithMultiArgs(ctx, fd);
+    } else {
+        ret = write(fd, ctx->argv[1], strlen(ctx->argv[1]));
+    }
+    INIT_CHECK_ONLY_ELOG(ret >= 0, "DoWrite: write to file %s failed: %d", ctx->argv[0], errno);
+    close(fd);
 }
 
 static void DoRmdir(const struct CmdArgs *ctx)
@@ -557,7 +578,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "export ", 2, 2, DoExport },
     { "rm ", 1, 1, DoRm },
     { "rmdir ", 1, 1, DoRmdir },
-    { "write ", 2, 2, DoWrite },
+    { "write ", 2, 10, DoWrite },
     { "stop ", 1, 1, DoStop },
     { "reset ", 1, 1, DoReset },
     { "copy ", 2, 2, DoCopy },
