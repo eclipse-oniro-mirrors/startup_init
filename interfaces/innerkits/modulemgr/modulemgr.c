@@ -27,6 +27,11 @@
 #include "modulemgr.h"
 
 #define MODULE_SUFFIX_D ".z.so"
+#ifdef SUPPORT_64BIT
+#define MODULE_LIB_NAME "lib64"
+#else
+#define MODULE_LIB_NAME "lib"
+#endif
 
 struct tagMODULE_MGR {
     ListNode modules;
@@ -114,7 +119,7 @@ static void *moduleInstall(MODULE_ITEM *module, int argc, const char *argv[])
     if (module->moduleMgr->name[0] == '/') {
         snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s/%s" MODULE_SUFFIX_D, module->moduleMgr->name, module->name);
     } else {
-        snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/lib/%s/%s" MODULE_SUFFIX_D, module->moduleMgr->name, module->name);
+        snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s/%s" MODULE_SUFFIX_D, module->moduleMgr->name, module->name);
     }
 
     currentInstallArgs = &(module->moduleMgr->installArgs);
@@ -236,7 +241,7 @@ MODULE_MGR *ModuleMgrScan(const char *modulePath)
     if (modulePath[0] == '/') {
         snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s", modulePath);
     } else {
-        snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/lib/%s", modulePath);
+        snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s", modulePath);
     }
 
     scanModules(moduleMgr, path);

@@ -212,6 +212,10 @@ ohos_unittest("init_ut") {
   ]
   defines += [ "_GNU_SOURCE" ]
 
+  if (target_cpu == "arm64") {
+    defines += [ "SUPPORT_64BIT" ]
+  }
+
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "init:libinit_module_engine",
