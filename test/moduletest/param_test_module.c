@@ -15,19 +15,25 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "plugin_test.h"
 #include "init_param.h"
-#include "init_plugin_engine.h"
+#include "modulemgr.h"
+#include "init_module_engine.h"
+#include "securec.h"
 
 #define MAX_COUNT 1000
 #define TEST_CMD_NAME "param_randrom_write"
+
+#define READ_DURATION 100000
+
 static int g_testCmdIndex = 0;
 static int PluginParamCmdWriteParam(int id, const char *name, int argc, const char **argv)
 {
-    PLUGIN_LOGI("PluginParamCmdWriteParam %d %s", id, name);
-    PLUGIN_CHECK(argv != NULL && argc >= 1, return -1, "Invalid install parameter");
-    PLUGIN_LOGI("PluginParamCmdWriteParam argc %d %s", argc, argv[0]);
+    if ((argv == NULL) || (argc < 1)) {
+        return -1;
+    }
     int maxCount = MAX_COUNT;
     if (argc > 1) {
         maxCount = atoi(argv[1]);
@@ -47,23 +53,12 @@ static int PluginParamCmdWriteParam(int id, const char *name, int argc, const ch
     return 0;
 }
 
-static int PluginParamTestInit(void)
+MODULE_CONSTRUCTOR(void)
 {
     g_testCmdIndex = AddCmdExecutor(TEST_CMD_NAME, PluginParamCmdWriteParam);
-    PLUGIN_LOGI("PluginParamTestInit %d", g_testCmdIndex);
-    return 0;
 }
 
-static void PluginParamTestExit(void)
+MODULE_DESTRUCTOR(void)
 {
     RemoveCmdExecutor(TEST_CMD_NAME, g_testCmdIndex);
-}
-
-PLUGIN_CONSTRUCTOR(void)
-{
-    PluginRegister("pluginparamtest",
-            "/system/etc/plugin/plugin_param_test.cfg",
-            PluginParamTestInit, PluginParamTestExit);
-    PLUGIN_LOGI("PLUGIN_CONSTRUCTOR pluginInterface %p",
-        g_pluginInterface->pluginRegister);
 }

@@ -1,0 +1,13 @@
+[
+    { "name": "SystemWriteParam" },
+    { "name": "SystemReadParam" },
+    { "name": "AddCmdExecutor" },
+    { "name": "RemoveCmdExecutor" },
+    { "name": "InitAddGlobalInitHook" },
+    { "name": "InitAddPreParamServiceHook" },
+    { "name": "InitAddPreParamLoadHook" },
+    { "name": "InitAddPreCfgLoadHook" },
+    { "name": "InitAddPostCfgLoadHook" },
+    { "name": "InitModuleMgrInstall" },
+    { "name": "InitModuleMgrUnInstall" }
+]

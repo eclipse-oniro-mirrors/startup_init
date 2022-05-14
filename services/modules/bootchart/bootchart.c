@@ -22,7 +22,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "init_plugin_engine.h"
+#include "init_module_engine.h"
 #include "init_param.h"
 #include "init_utils.h"
 #include "plugin_adapter.h"
@@ -219,13 +219,6 @@ static void BootchartDestory(void)
 
 static int DoBootchartStart(void)
 {
-    char enable[4] = {}; // 4 enable size
-    uint32_t size = sizeof(enable);
-    SystemReadParam("persist.init.bootchart.enabled", enable, &size);
-    if (strcmp(enable, "1") != 0) {
-        PLUGIN_LOGI("Not bootcharting");
-        return 0;
-    }
     mkdir("/data/bootchart", S_IRWXU | S_IRWXG | S_IRWXO);
     if (g_bootchartCtrl != NULL) {
         PLUGIN_LOGI("bootcharting has been start");
@@ -271,41 +264,14 @@ static int DoBootchartStop(void)
     return 0;
 }
 
-static int DoBootchartCmd(int id, const char *name, int argc, const char **argv)
+MODULE_CONSTRUCTOR(void)
 {
-    PLUGIN_LOGI("DoBootchartCmd argc %d %s", argc, name);
-    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
-    if (strcmp(argv[0], "start") == 0) {
-        return DoBootchartStart();
-    } else if (strcmp(argv[0], "stop") == 0) {
-        return DoBootchartStop();
-    }
-    return 0;
+    PLUGIN_LOGI("DoBootchartStart now ...");
+    DoBootchartStart();
 }
 
-static PluginCmd g_bootchartCmds[] = {
-    {"bootchart", DoBootchartCmd, 0},
-};
-
-static int BootchartInit(void)
+MODULE_DESTRUCTOR(void)
 {
-    for (int i = 0; i < (int)(sizeof(g_bootchartCmds) / sizeof(g_bootchartCmds[0])); i++) {
-        g_bootchartCmds[i].index = AddCmdExecutor(
-            g_bootchartCmds[i].name, g_bootchartCmds[i].cmdExecutor);
-        PLUGIN_LOGI("BootchartInit %d", g_bootchartCmds[i].index);
-    }
-    return 0;
-}
-
-static void BootchartExit(void)
-{
-    PLUGIN_LOGI("BootchartExit %d", g_bootchartCmds[0]);
-    for (int i = 0; i < (int)(sizeof(g_bootchartCmds) / sizeof(g_bootchartCmds[0])); i++) {
-        RemoveCmdExecutor(g_bootchartCmds[i].name, g_bootchartCmds[i].index);
-    }
-}
-
-PLUGIN_CONSTRUCTOR(void)
-{
-    PluginRegister("bootchart", NULL, BootchartInit, BootchartExit);
+    PLUGIN_LOGI("DoBootchartStop now ...");
+    DoBootchartStop();
 }

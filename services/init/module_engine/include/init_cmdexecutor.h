@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef STARTUP_INIT_PULUGIN_MANAGER_H
-#define STARTUP_INIT_PULUGIN_MANAGER_H
+#ifndef STARTUP_INIT_CMD_EXECUTOR_H
+#define STARTUP_INIT_CMD_EXECUTOR_H
 #include <stdlib.h>
 #include <string.h>
 
@@ -24,27 +24,6 @@
 extern "C" {
 #endif
 #endif
-#ifdef __aarch64__
-#define DEFAULT_PLUGIN_PATH "/system/lib64/plugin"
-#else
-#define DEFAULT_PLUGIN_PATH "/system/lib/plugin"
-#endif
-#define DEFAULT_PLUGIN_CFG "/system/etc/plugin_modules.cfg"
-typedef enum {
-    PLUGIN_STATE_IDLE,
-    PLUGIN_STATE_INIT,
-    PLUGIN_STATE_RUNNING,
-    PLUGIN_STATE_DESTORYED
-} PluginState;
-
-typedef struct PluginInfo_ {
-    int state;
-    int startMode;
-    int (*pluginInit)();
-    void (*pluginExit)();
-    char *name;
-    char *libName;
-} PluginInfo;
 
 typedef struct {
     ListNode cmdExecutor;
@@ -64,17 +43,11 @@ void PluginExecCmdByCmdIndex(int index, const char *cmdContent);
 int PluginExecCmd(const char *name, int argc, const char **argv);
 const char *PluginGetCmdIndex(const char *cmdStr, int *index);
 
-int PluginUninstall(const char *name);
-int PluginInstall(const char *name, const char *libName);
-void PluginManagerInit(void);
-
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);
-
-int ParseInitCfg(const char *configFile, void *context);
 
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif
-#endif // STARTUP_INIT_PULUGIN_MANAGER_H
+#endif

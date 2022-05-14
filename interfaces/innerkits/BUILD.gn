@@ -144,6 +144,11 @@ if (defined(ohos_lite)) {
     "fs_manager/fstab_mount.c",
   ]
 
+  modulemgr_sources = [
+    "hookmgr/hookmgr.c",
+    "modulemgr/modulemgr.c",
+  ]
+
   ohos_shared_library("libbegetutil") {
     sources = [
       "//base/startup/init_lite/services/log/init_log.c",
@@ -157,6 +162,7 @@ if (defined(ohos_lite)) {
     sources += fs_manager_sources
     sources += syspara_sources
     sources += [ "syspara/param_wrapper.cpp" ]
+    sources += modulemgr_sources
 
     defines = [
       "INIT_AGENT",

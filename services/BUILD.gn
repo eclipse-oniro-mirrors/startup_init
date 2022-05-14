@@ -150,15 +150,22 @@ if (defined(ohos_lite)) {
       "init/standard/device.c",
       "init/standard/fd_holder_service.c",
       "init/standard/init.c",
+      "init/standard/init_cmdexecutor.c",
       "init/standard/init_cmds.c",
       "init/standard/init_jobs.c",
       "init/standard/init_mount.c",
-      "init/standard/init_plugin_manager.c",
       "init/standard/init_reboot.c",
       "init/standard/init_service.c",
       "init/standard/init_signal_handler.c",
       "init/standard/switch_root.c",
     ]
+
+    modulemgr_sources = [
+      "//base/startup/init_lite/interfaces/innerkits/hookmgr/hookmgr.c",
+      "//base/startup/init_lite/interfaces/innerkits/modulemgr/modulemgr.c",
+      "init/module_engine/init_modulemgr.c",
+    ]
+    sources += modulemgr_sources
 
     sources += init_common_sources
 
@@ -170,6 +177,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/include/param",
       "//base/startup/init_lite/services/include",
       "//base/startup/init_lite/services/init/include",
+      "//base/startup/init_lite/services/init/module_engine/include",
       "//base/startup/init_lite/services/log",
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//base/startup/init_lite/services/loopevent/include",
@@ -195,7 +203,9 @@ if (defined(ohos_lite)) {
       "//third_party/cJSON:cjson_static",
     ]
 
-    deps += [ "//base/startup/init_lite/services/init/plugin_engine:libinit_stub_versionscript" ]
+    deps += [ "//base/startup/init_lite/services/init/module_engine:libinit_stub_versionscript" ]
+
+    deps += [ "//base/startup/init_lite/services/modules:static_modules" ]
 
     cflags = []
 
@@ -238,9 +248,9 @@ if (defined(ohos_lite)) {
       defines += [ "PRODUCT_RK" ]
     }
     version_script = get_label_info(
-                         "//base/startup/init_lite/services/init/plugin_engine:libinit_stub_versionscript",
+                         "//base/startup/init_lite/services/init/module_engine:libinit_stub_versionscript",
                          "target_gen_dir") + "/" + get_label_info(
-                         "//base/startup/init_lite/services/init/plugin_engine:libinit_stub_versionscript",
+                         "//base/startup/init_lite/services/init/module_engine:libinit_stub_versionscript",
                          "name") + stub_version_script_suffix
     defines += [ "_GNU_SOURCE" ]
     install_images = [
@@ -376,11 +386,6 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
-  ohos_prebuilt_etc("plugin_modules") {
-    source = "//base/startup/init_lite/services/etc/plugin_modules.cfg"
-    part_name = "init"
-  }
-
   ohos_prebuilt_etc("system-sandbox.json") {
     if (target_cpu == "arm64") {
       source = "//base/startup/init_lite/interfaces/innerkits/sandbox/system-sandbox64.json"
@@ -451,7 +456,6 @@ if (defined(ohos_lite)) {
       ":ohos.para.dac",
       ":ohos_const.para",
       ":passwd",
-      ":plugin_modules",
       ":privapp-sandbox.json",
       ":syscap.json",
       ":syscap.para",

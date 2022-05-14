@@ -1,7 +1,0 @@
-[
-    { "name": "SystemWriteParam" },
-    { "name": "SystemReadParam" },
-    { "name": "AddCmdExecutor" },
-    { "name": "RemoveCmdExecutor" },
-    { "name": "PluginRegister" }
-]

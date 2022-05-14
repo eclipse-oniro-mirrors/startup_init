@@ -20,13 +20,6 @@
 #include <stdio.h>
 
 #include "init_log.h"
-#include "securec.h"
-
-typedef struct {
-    char *name;
-    int (*cmdExecutor)(int id, const char *name, int argc, const char **argv);
-    int index;
-} PluginCmd;
 
 #ifndef PLUGIN_DOMAIN
 #define PLUGIN_DOMAIN (BASE_DOMAIN + 6)
