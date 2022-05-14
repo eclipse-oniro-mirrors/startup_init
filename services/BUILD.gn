@@ -237,6 +237,10 @@ if (defined(ohos_lite)) {
       ]
     }
 
+    if (target_cpu == "arm64") {
+      defines += [ "SUPPORT_64BIT" ]
+    }
+
     if (!enable_ramdisk) {
       defines += [ "DISABLE_INIT_TWO_STAGES" ]
     }
