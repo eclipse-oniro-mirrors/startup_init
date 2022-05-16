@@ -41,9 +41,12 @@ static void ProcessSignal(const struct signalfd_siginfo *siginfo)
                 if (WIFEXITED(procStat)) {
                     INIT_LOGE("Child process %d exit with code : %d", sigPID, WEXITSTATUS(procStat));
                 }
-                INIT_LOGI("SigHandler, SIGCHLD received, sigPID = %d.", sigPID);
+                Service* service = GetServiceByPid(sigPID);
+                INIT_LOGI("SigHandler, SIGCHLD received, Service:%s pid:%d uid:%d status:%d.",
+                    service == NULL ? "Unknown" : service->name,
+                    sigPID, siginfo->ssi_uid, procStat);
                 CheckWaitPid(sigPID);
-                ServiceReap(GetServiceByPid(sigPID));
+                ServiceReap(service);
             }
             break;
         }
