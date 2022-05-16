@@ -28,7 +28,7 @@ def parse_args(args):
     build_utils.add_depfile_option(parser)
     parser.add_option('--output', help='fixed para file')
     parser.add_option('--source-file', help='source para file')
-    parser.add_option('--extra', help='extra params')
+    parser.add_option('--extra', action="append", type="string", dest="extra", help='extra params')
 
     options, _ = parser.parse_args(args)
     return options
@@ -45,10 +45,9 @@ def parse_params(line, contents):
     contents[name] = value
 
 def parse_extra_params(extras, contents):
-    lines = extras.split(" ")
-    for line in lines:
-        line = line.strip()
-        parse_params(line, contents)
+    for extra in extras:
+        extra = extra.strip()
+        parse_params(extra, contents)
 
 def fix_para_file(options):
     contents = {}
@@ -75,13 +74,9 @@ def main(args):
 
     depfile_deps = ([options.source_file])
 
-    build_utils.call_and_write_depfile_if_stale(
-        lambda: fix_para_file(options),
-        options,
-        input_paths=depfile_deps,
-        output_paths=([options.output]),
-        force=False,
-        add_pydeps=False)
+    fix_para_file(options)
+    build_utils.write_depfile(options.depfile,
+                options.output, depfile_deps, add_pydeps=False)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
