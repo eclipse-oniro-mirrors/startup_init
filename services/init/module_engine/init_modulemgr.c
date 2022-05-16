@@ -64,8 +64,16 @@ static int moduleMgrCommandsInit(int stage, int prio, void *cookie)
     return 0;
 }
 
+static int loadAutorunModules(int stage, int prio, void *cookie)
+{
+    MODULE_MGR *autorun = ModuleMgrScan("init/autorun");
+    INIT_LOGI("Load autorun modules return %p", autorun);
+    return 0;
+}
+
 MODULE_CONSTRUCTOR(void)
 {
     // Depends on parameter service
+    InitAddGlobalInitHook(0, loadAutorunModules);
     InitAddPreCfgLoadHook(0, moduleMgrCommandsInit);
 }
