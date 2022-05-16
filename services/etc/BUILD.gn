@@ -1,0 +1,246 @@
+# Copyright (c) 2020-2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+if (defined(ohos_lite)) {
+  copy("ohos.para") {
+    sources = [ "//base/startup/init_lite/services/etc/param/ohos.para" ]
+    outputs = [ "$root_out_dir/system/etc/param/ohos.para" ]
+  }
+
+  copy("ohos.para.dac") {
+    sources = [ "//base/startup/init_lite/services/etc/param/ohos.para.dac" ]
+    outputs = [ "$root_out_dir/system/etc/param/ohos.para.dac" ]
+  }
+  copy("ohos.const") {
+    sources =
+        [ "//base/startup/init_lite/services/etc/param/ohos_const/ohos.para" ]
+    outputs = [ "$root_out_dir/system/etc/param/ohos_const/ohos.para" ]
+  }
+
+  copy("ohos.passwd") {
+    sources = [ "//base/startup/init_lite/services/etc_lite/passwd" ]
+    outputs = [ "$root_out_dir/etc/passwd" ]
+  }
+  copy("ohos.group") {
+    sources = [ "//base/startup/init_lite/services/etc_lite/group" ]
+    outputs = [ "$root_out_dir/etc/group" ]
+  }
+
+  group("etc_files") {
+    deps = [
+      ":ohos.const",
+      ":ohos.para",
+      ":ohos.para.dac",
+    ]
+    if (ohos_kernel_type == "linux") {
+      deps += [
+        ":ohos.group",
+        ":ohos.passwd",
+      ]
+    }
+  }
+} else {
+  import("//base/startup/init_lite/services/etc/param/param_fixer.gni")
+  import("//build/ohos.gni")
+
+  # init etc files group
+  ohos_prebuilt_etc("init.cfg") {
+    if (!enable_ramdisk) {
+      source =
+          "//base/startup/init_lite/services/etc/init.without_two_stages.cfg"
+    } else {
+      source = "//base/startup/init_lite/services/etc/init.cfg"
+    }
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("misc.cfg") {
+    source = "//base/startup/init_lite/services/etc/misc.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("watchdog.cfg") {
+    source = "//base/startup/init_lite/services/etc/watchdog.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("console.cfg") {
+    source = "//base/startup/init_lite/services/etc/console.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("ueventd.cfg") {
+    source = "//base/startup/init_lite/services/etc/ueventd.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("passwd") {
+    source = "//base/startup/init_lite/services/etc/passwd"
+    install_images = [
+      "system",
+      "updater",
+    ]
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("group") {
+    source = "//base/startup/init_lite/services/etc/group"
+    install_images = [
+      "system",
+      "updater",
+    ]
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("init.usb.cfg") {
+    source = "//base/startup/init_lite/services/etc/init.usb.cfg"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("init.usb.configfs.cfg") {
+    source = "//base/startup/init_lite/services/etc/init.usb.configfs.cfg"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_para("ohos.para") {
+    source = "//base/startup/init_lite/services/etc/param/ohos.para"
+    part_name = "init"
+    if (target_cpu == "arm64") {
+      extra_paras = "const.product.cpu.abilist=arm64-v8a"
+    }
+    module_install_dir = "etc/param"
+  }
+
+  ohos_prebuilt_etc("ohos.para.dac") {
+    source = "//base/startup/init_lite/services/etc/param/ohos.para.dac"
+    part_name = "init"
+    module_install_dir = "etc/param"
+  }
+
+  ohos_prebuilt_etc("ohos_const.para") {
+    source = "//base/startup/init_lite/services/etc/param/ohos_const/ohos.para"
+    part_name = "init"
+    module_install_dir = "etc/param/ohos_const"
+  }
+
+  ohos_prebuilt_etc("boot.group") {
+    source = "//base/startup/init_lite/services/etc/device.boot.group.cfg"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("charing.group") {
+    source = "//base/startup/init_lite/services/etc/device.charing.group.cfg"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("syscap.para") {
+    source =
+        "${preloader_output_dir}/${product_name}/system/etc/param/syscap.para"
+    module_install_dir = "etc/param/"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("syscap.json") {
+    source = "${preloader_output_dir}/${product_name}/system/etc/syscap.json"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("systemcapability.json") {
+    source = "${preloader_output_dir}/${product_name}/system/etc/SystemCapability.json"
+    part_name = "init"
+  }
+
+  ohos_prebuilt_etc("system-sandbox.json") {
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/system-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/system-sandbox.json"
+    }
+    part_name = "init"
+    module_install_dir = "etc/sandbox"
+  }
+
+  ohos_prebuilt_etc("chipset-sandbox.json") {
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/chipset-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/chipset-sandbox.json"
+    }
+    part_name = "init"
+    module_install_dir = "etc/sandbox"
+  }
+
+  ohos_prebuilt_etc("privapp-sandbox.json") {
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/privapp-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/privapp-sandbox.json"
+    }
+    part_name = "init"
+    module_install_dir = "etc/sandbox"
+  }
+
+  ohos_prebuilt_etc("app-sandbox.json") {
+    if (target_cpu == "arm64") {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/app-sandbox64.json"
+    } else {
+      source = "//base/startup/init_lite/interfaces/innerkits/sandbox/app-sandbox.json"
+    }
+    part_name = "init"
+    module_install_dir = "etc/sandbox"
+  }
+
+  ohos_prebuilt_etc("appdata-sandbox.json") {
+    source = "//base/startup/appspawn_standard/appdata-sandbox.json"
+    part_name = "init"
+    module_install_dir = "etc/sandbox"
+  }
+
+  ohos_prebuilt_etc("init.reboot") {
+    source = "//base/startup/init_lite/services/etc/init.reboot.cfg"
+    part_name = "init"
+    module_install_dir = "etc/init"
+  }
+
+  group("etc_files") {
+    deps = [
+      ":app-sandbox.json",
+      ":appdata-sandbox.json",
+      ":boot.group",
+      ":charing.group",
+      ":chipset-sandbox.json",
+      ":console.cfg",
+      ":group",
+      ":init.cfg",
+      ":init.reboot",
+      ":init.usb.cfg",
+      ":init.usb.configfs.cfg",
+      ":misc.cfg",
+      ":ohos.para",
+      ":ohos.para.dac",
+      ":ohos_const.para",
+      ":passwd",
+      ":privapp-sandbox.json",
+      ":syscap.json",
+      ":syscap.para",
+      ":system-sandbox.json",
+      ":systemcapability.json",
+      ":ueventd.cfg",
+      ":watchdog.cfg",
+    ]
+  }
+}
