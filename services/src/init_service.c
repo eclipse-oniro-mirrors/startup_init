@@ -207,9 +207,10 @@ int ServiceStart(Service *service)
         INIT_CHECK_ONLY_ELOG(execv(service->pathArgs[0], service->pathArgs) == 0,
             "service %s execve failed! err %d.", service->name, errno);
 #else
-        char* env[] = {"LD_LIBRARY_PATH=/storage/app/libs", NULL};
-        INIT_CHECK_ONLY_ELOG(execve(service->pathArgs[0], service->pathArgs, env) == 0,
-            "service %s execve failed! err %d.", service->name, errno);
+        if (execv(service->pathArgs[0], service->pathArgs) != 0) {
+            INIT_LOGE("service %s execv failed! err %d.", service->name, errno);
+            return errno;
+        }
 #endif
         _exit(0x7f); // 0x7f: user specified
     } else if (pid < 0) {
