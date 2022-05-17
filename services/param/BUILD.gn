@@ -167,12 +167,17 @@ if (defined(ohos_lite)) {
     sources = param_comm_sources
     sources += param_service_sources
     sources += param_trigger_sources
+    sources += [ "adapter/param_dac.c" ]
     include_dirs = param_include_dirs
 
     defines = [ "_GNU_SOURCE" ]
 
     if (defined(boot_kernel_extended_cmdline)) {
       defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
+    }
+
+    if ("${product_name}" == "m40") {
+      defines += [ "USE_MTK_EMMC" ]
     }
 
     if (build_selinux) {
