@@ -19,9 +19,9 @@ template("ohos_prebuilt_para") {
 
   _fixed_param_target = "${target_name}_param_fixed"
   _fixed_param_file = target_gen_dir + "/${target_name}.fixed/" +
-                      get_path_info(_fixed_param_target, "file")
-  _output_para_file = get_path_info(invoker.source, "file")
+                      get_path_info(invoker.source, "file")
 
+  _output_para_file = get_path_info(invoker.source, "file")
   action_with_pydeps(_fixed_param_target) {
     deps = []
     script = "//base/startup/init_lite/services/etc/param/param_fixer.py"
@@ -35,10 +35,12 @@ template("ohos_prebuilt_para") {
       rebase_path(depfile, root_build_dir),
     ]
     if (defined(invoker.extra_paras)) {
-      args += [
-        "--extra",
-        invoker.extra_paras,
-      ]
+      foreach(extra, invoker.extra_paras) {
+        args += [
+          "--extra",
+          extra,
+        ]
+      }
     }
     inputs = [ invoker.source ]
     outputs = [ _fixed_param_file ]
@@ -68,9 +70,11 @@ template("ohos_prebuilt_para") {
                            ])
     set_sources_assignment_filter([])
     sources = [ _fixed_param_file ]
-    outputs = [ "${target_out_dir}/${_output_para_file}" ]
+    outputs = [ "${target_out_dir}/${target_name}/${_output_para_file}" ]
     module_type = "etc"
     install_enable = true
+    module_source_dir = "${target_out_dir}/${target_name}"
+    module_install_name = _output_para_file
     if (defined(invoker.install_enable)) {
       install_enable = invoker.install_enable
     }
