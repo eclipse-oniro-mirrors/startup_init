@@ -167,7 +167,6 @@ if (defined(ohos_lite)) {
     sources = param_comm_sources
     sources += param_service_sources
     sources += param_trigger_sources
-    sources += [ "adapter/param_dac.c" ]
     include_dirs = param_include_dirs
 
     defines = [ "_GNU_SOURCE" ]
