@@ -13,13 +13,16 @@
  * limitations under the License.
  */
 
+#include <limits.h>
 #include <poll.h>
 #include "ueventd.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_socket.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
+#include "init_param.h"
 #include "init_socket.h"
+#include "securec.h"
 
 static void PollUeventdSocketTimeout(int ueventSockFd)
 {
@@ -46,7 +49,24 @@ static void PollUeventdSocketTimeout(int ueventSockFd)
 
 int main(int argc, char **argv)
 {
-    char *ueventdConfigs[] = {"/etc/ueventd.config", NULL};
+    char *vendorConfig = NULL;
+    do {
+        char hardware[CMDLINE_VALUE_LEN_MAX] = {0};
+        unsigned int buffLen = (unsigned int)CMDLINE_VALUE_LEN_MAX;
+        int ret = SystemReadParam("ohos.boot.hardware", hardware, &buffLen);
+        if (ret != 0) {
+            INIT_LOGE("Failed to get hardware parameter value");
+            break;
+        }
+        char configFile[PATH_MAX] = {0};
+        ret = snprintf_s(configFile, PATH_MAX, PATH_MAX -1, "/vendor/etc/ueventd.%s.config", hardware);
+        if (ret < 0) {
+            INIT_LOGE("Failed to format vendor config file path");
+            break;
+        }
+        vendorConfig = configFile;
+    } while (0);
+    char *ueventdConfigs[] = {"/etc/ueventd.config", vendorConfig, NULL};
     int i = 0;
     while (ueventdConfigs[i] != NULL) {
         ParseUeventdConfigFile(ueventdConfigs[i++]);
