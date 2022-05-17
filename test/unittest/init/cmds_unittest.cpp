@@ -77,6 +77,7 @@ HWTEST_F(CmdsUnitTest, TestCmdExecByName1, TestSize.Level1)
     DoCmdByName("timer_start ", "media_service|5000");
     DoCmdByName("timer_stop ", "media_service");
     DoCmdByName("exec ", "media_service");
+    DoCmdByName("syncexec ", "/system/bin/toybox");
     DoCmdByName("load_access_token_id ", "media_service");
     DoCmdByName("stopAllServices ", "true");
     DoCmdByName("umount ", "");

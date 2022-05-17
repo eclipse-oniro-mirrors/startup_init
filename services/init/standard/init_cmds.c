@@ -89,6 +89,32 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
     return 0;
 }
 
+static int SyncExecCommand(int argc, char * const *argv)
+{
+    if (argc == 0 || argv == NULL || argv[0] == NULL) {
+        return -1;
+    }
+    pid_t pid = fork();
+    if (pid < 0) {
+        INIT_LOGE("Fork new process to format failed: %d", errno);
+        return -1;
+    }
+    if (pid == 0) {
+        INIT_CHECK_ONLY_ELOG(execv(argv[0], argv) == 0, "execv %s failed! err %d.", argv[0], errno);
+        exit(-1);
+    }
+    int status;
+    pid_t ret = waitpid(pid, &status, 0);
+    if (ret != pid) {
+        INIT_LOGE("Failed to wait pid %d, errno %d", pid, errno);
+        return ret;
+    }
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+        INIT_LOGE("Command %s failed with status %d", argv[0], WEXITSTATUS(status));
+    }
+    return 0;
+}
+
 static void DoIfup(const struct CmdArgs *ctx)
 {
     struct ifreq interface;
@@ -170,6 +196,16 @@ static void DoLoadDefaultParams(const struct CmdArgs *ctx)
     }
     INIT_LOGV("DoLoadDefaultParams args : %s %d", ctx->argv[0], mode);
     LoadDefaultParams(ctx->argv[0], mode);
+}
+
+static void DoSyncExec(const struct CmdArgs *ctx)
+{
+    // format: syncexec /xxx/xxx/xxx xxx
+    INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, return,
+        "DoSyncExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
+    int ret = SyncExecCommand(ctx->argc, ctx->argv);
+    INIT_LOGI("DoSyncExec end with ret %d", ret);
+    return;
 }
 
 static void DoExec(const struct CmdArgs *ctx)
@@ -383,28 +419,6 @@ static void DoTimerStop(const struct CmdArgs *ctx)
     ServiceStopTimer(service);
 }
 
-static int SyncExecCommand(int argc, char * const *argv)
-{
-    if (argc == 0 || argv == NULL || argv[0] == NULL) {
-        return -1;
-    }
-    pid_t pid = fork();
-    if (pid < 0) {
-        INIT_LOGE("Fork new process to format failed: %d", errno);
-        return -1;
-    }
-    if (pid == 0) {
-        execv(argv[0], argv);
-        exit(-1);
-    }
-    int status;
-    waitpid(pid, &status, 0);
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-        INIT_LOGE("Command %s failed with status %d", argv[0], WEXITSTATUS(status));
-    }
-    return WEXITSTATUS(status);
-}
-
 static void DoInitGlobalKey(const struct CmdArgs *ctx)
 {
     INIT_LOGI("DoInitGlobalKey: start");
@@ -526,6 +540,7 @@ static void DoMkSandbox(const struct CmdArgs *ctx)
 }
 
 static const struct CmdTable g_cmdTable[] = {
+    { "syncexec ", 1, 10, DoSyncExec },
     { "exec ", 1, 10, DoExec },
     { "mknode ", 1, 5, DoMakeNode },
     { "makedev ", 2, 2, DoMakeDevice },
