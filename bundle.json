@@ -51,7 +51,8 @@
                 "//base/startup/init_lite/services/init/module_engine:libinit_module_engine",
                 "//base/startup/init_lite/services/init/module_engine:libinit_stub_empty",
                 "//base/startup/init_lite/device_info:device_info_group",
-                "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox"
+                "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox",
+                "//base/startup/init_lite/test/exec_test:exectest"
             ],
             "inner_kits": [
                 {

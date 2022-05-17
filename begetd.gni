@@ -15,6 +15,7 @@ declare_args() {
   param_feature_watcher = true
   param_feature_deviceinfo = true
   param_test = true
+  control_test = false
   param_begetctl_liteos_support = false
   enable_ohos_startup_init_lite_use_thirdparty_mbedtls = true
   enable_ohos_startup_init_lite_use_posix_file_api = false
