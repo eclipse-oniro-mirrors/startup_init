@@ -210,6 +210,12 @@ if (defined(ohos_lite)) {
     module_install_dir = "etc/sandbox"
   }
 
+  ohos_prebuilt_etc("product-sandbox.json") {
+    source = "//base/startup/appspawn_standard/product-sandbox.json"
+    part_name = "init"
+    module_install_dir = "etc/sandbox"
+  }
+
   ohos_prebuilt_etc("init.reboot") {
     source = "//base/startup/init_lite/services/etc/init.reboot.cfg"
     part_name = "init"
@@ -235,6 +241,7 @@ if (defined(ohos_lite)) {
       ":ohos_const.para",
       ":passwd",
       ":privapp-sandbox.json",
+      ":product-sandbox.json",
       ":syscap.json",
       ":syscap.para",
       ":system-sandbox.json",
