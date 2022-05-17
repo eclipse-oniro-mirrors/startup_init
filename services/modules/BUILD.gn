@@ -36,7 +36,11 @@ ohos_shared_library("bootchart") {
   external_deps = [ "init:libinit_module_engine" ]
 
   part_name = "init"
-  module_install_dir = "lib/init"
+  if (target_cpu == "arm64") {
+    module_install_dir = "lib64/init"
+  } else {
+    module_install_dir = "lib/init"
+  }
 }
 
 config("libbootchart_static_config") {
