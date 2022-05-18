@@ -175,6 +175,10 @@ if (defined(ohos_lite)) {
       defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
     }
 
+    if ("${product_name}" == "m40") {
+      defines += [ "USE_MTK_EMMC" ]
+    }
+
     if (build_selinux) {
       sources += [ "adapter/param_selinux.c" ]
       defines += [ "PARAM_SUPPORT_SELINUX" ]
