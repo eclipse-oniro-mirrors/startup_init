@@ -47,7 +47,7 @@ ohos_executable("fd_holder_test") {
 }
 
 ohos_prebuilt_etc("fd_holder_test.cfg") {
-  source = [ "//base/startup/init_lite/test/exec_test/fd_holder_test.cfg" ]
+  source = "//base/startup/init_lite/test/exec_test/fd_holder_test.cfg"
   part_name = "init"
   module_install_dir = "etc/init"
 }
