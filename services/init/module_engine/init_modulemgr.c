@@ -67,7 +67,7 @@ static int moduleMgrCommandsInit(int stage, int prio, void *cookie)
 static int loadAutorunModules(int stage, int prio, void *cookie)
 {
     MODULE_MGR *autorun = ModuleMgrScan("init/autorun");
-    INIT_LOGI("Load autorun modules return %p", autorun);
+    INIT_LOGV("Load autorun modules return %p", autorun);
     return 0;
 }
 
