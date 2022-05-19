@@ -177,12 +177,14 @@ void SetSecon(Service *service)
     if (*(service->secon)) {
         if (setexeccon(service->secon) < 0) {
             INIT_LOGE("failed to set service %s's secon (%s).", service->name, service->secon);
+            _exit(PROCESS_EXIT_CODE);
         } else {
             INIT_LOGI("service %s secon set to %s.", service->name, service->secon);
         }
     } else {
         if (setexeccon("u:r:limit_domain:s0") < 0) {
             INIT_LOGE("failed to set service %s's secon (%s).", service->name, "u:r:limit_domain:s0");
+            _exit(PROCESS_EXIT_CODE);
         }
         INIT_LOGE("Please set secon field in service %s's cfg file, limit_domain will be blocked", service->name);
     }
