@@ -249,7 +249,7 @@ static const char *GetOSName(void)
 static const char *BuildOSFullName(void)
 {
     const char release[] = "Release";
-    char value[OS_FULL_NAME_LEN];
+    char value[OS_FULL_NAME_LEN] = {0};
     const char *releaseType = GetOsReleaseType();
     int length;
     if ((releaseType == NULL) || (strncmp(releaseType, release, sizeof(release) - 1) == 0)) {
@@ -291,7 +291,7 @@ static int GetSdkApiLevel(void)
 
 static const char *BuildVersionId(void)
 {
-    char value[VERSION_ID_MAX_LEN];
+    char value[VERSION_ID_MAX_LEN] = {0};
 
     int len = sprintf_s(value, VERSION_ID_MAX_LEN, "%s/%s/%s/%s/%s/%s/%s/%d/%s/%s",
         GetDeviceType(), GetManufacture(), GetBrand(), GetProductSeries(),

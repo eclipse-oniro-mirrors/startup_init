@@ -324,7 +324,7 @@ static void InitPostHook(const HOOK_INFO *hookInfo)
         diff -= (stat->endTime.tv_nsec - stat->startTime.tv_nsec) * 1000;
     }
 
-    INIT_LOGI("Executing hook [%d:%d:%p] cost [%lld]ms, return %d.",
+    INIT_LOGV("Executing hook [%d:%d:%p] cost [%lld]ms, return %d.",
                 hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, hookInfo->retVal);
 }
 

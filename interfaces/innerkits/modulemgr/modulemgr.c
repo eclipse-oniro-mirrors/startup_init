@@ -117,9 +117,15 @@ static void *moduleInstall(MODULE_ITEM *module, int argc, const char *argv[])
     module->moduleMgr->installArgs.argv = argv;
 
     if (module->moduleMgr->name[0] == '/') {
-        snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s/%s" MODULE_SUFFIX_D, module->moduleMgr->name, module->name);
+        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s/%s" MODULE_SUFFIX_D,
+            module->moduleMgr->name, module->name) < 0) {
+            return NULL;
+        }
     } else {
-        snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s/%s" MODULE_SUFFIX_D, module->moduleMgr->name, module->name);
+        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s/%s" MODULE_SUFFIX_D,
+            module->moduleMgr->name, module->name) < 0) {
+            return NULL;
+        }
     }
 
     currentInstallArgs = &(module->moduleMgr->installArgs);
@@ -239,9 +245,13 @@ MODULE_MGR *ModuleMgrScan(const char *modulePath)
     }
 
     if (modulePath[0] == '/') {
-        snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s", modulePath);
+        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s", modulePath) < 0) {
+            return NULL;
+        }
     } else {
-        snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s", modulePath);
+        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s", modulePath) < 0) {
+            return NULL;
+        };
     }
 
     scanModules(moduleMgr, path);

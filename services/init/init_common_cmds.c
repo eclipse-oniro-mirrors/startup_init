@@ -463,16 +463,17 @@ static void DoMount(const struct CmdArgs *ctx)
     }
 }
 
-static int DoWriteWithMultiArgs(const struct CmdArgs *ctx, int fd) {
+static int DoWriteWithMultiArgs(const struct CmdArgs *ctx, int fd)
+{
     char buf[MAX_CMD_CONTENT_LEN];
 
     /* Write to proc files should be done at once */
     buf[0] = '\0';
-    strcat_s(buf, sizeof(buf), ctx->argv[1]);
+    INIT_ERROR_CHECK(strcat_s(buf, sizeof(buf), ctx->argv[1]) == 0, return -1, "Failed to format buf");
     int idx = 2;
     while (idx < ctx->argc) {
-        strcat_s(buf, sizeof(buf), " ");
-        strcat_s(buf, sizeof(buf), ctx->argv[idx]);
+        INIT_ERROR_CHECK(strcat_s(buf, sizeof(buf), " ") == 0, return -1, "Failed to format buf");
+        INIT_ERROR_CHECK(strcat_s(buf, sizeof(buf), ctx->argv[idx]) == 0, return -1, "Failed to format buf");
         idx++;
     }
     return write(fd, buf, strlen(buf));
@@ -493,7 +494,7 @@ static void DoWrite(const struct CmdArgs *ctx)
     if (fd < 0) {
         return;
     }
-    size_t ret;
+    ssize_t ret;
     if (ctx->argc > 2) {
         ret = DoWriteWithMultiArgs(ctx, fd);
     } else {
