@@ -48,7 +48,8 @@ int main(int argc, char *argv[])
         {"updater_sa", UPDATE_DISTRIBUTED_SERVICE_ID},
         {"softbus_server", SOFTBUS_SERVER_SA_ID},
     };
-    if ((argc != 2) || (argv[1] == NULL)) {
+    int parameterNum = 2;
+    if ((argc != parameterNum) || (argv[1] == nullptr)) {
         cout << "Invaild parameter" << endl;
     }
     const string name = argv[1];
