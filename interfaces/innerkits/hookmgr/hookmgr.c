@@ -271,7 +271,7 @@ static int hookTraversalProc(ListNode *node, void *cookie)
     if ((args != NULL) && (args->preHook != NULL)) {
         args->preHook(&hookInfo);
     }
-    hookInfo.retVal = hookItem->hook(hookInfo.stage, hookItem->prio, args->cookie);
+    hookInfo.retVal = hookItem->hook(hookInfo.stage, hookItem->prio, hookInfo.cookie);
     if ((args != NULL) && (args->postHook != NULL)) {
         args->postHook(&hookInfo);
     }

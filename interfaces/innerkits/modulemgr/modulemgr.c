@@ -22,6 +22,7 @@
 #include <dirent.h>
 #include <linux/limits.h>
 
+#include "init_log.h"
 #include "list.h"
 #include "securec.h"
 #include "modulemgr.h"
@@ -121,11 +122,13 @@ static void *moduleInstall(MODULE_ITEM *module, int argc, const char *argv[])
     } else {
         snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s/%s" MODULE_SUFFIX_D, module->moduleMgr->name, module->name);
     }
-
+    INIT_LOGV("moduleInstall path %s", path);
     currentInstallArgs = &(module->moduleMgr->installArgs);
     handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
     currentInstallArgs = NULL;
-
+    if (handle == NULL) {
+        INIT_LOGE("moduleInstall path %s fail %d", path, errno);
+    }
     return handle;
 }
 
