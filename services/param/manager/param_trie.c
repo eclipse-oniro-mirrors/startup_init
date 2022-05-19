@@ -45,7 +45,7 @@ static int InitWorkSpace_(WorkSpace *workSpace, uint32_t spaceSize, int readOnly
     PARAM_CHECK(ret == 0, return -1, "Failed to get file name %s", workSpace->fileName);
     void *areaAddr = GetSharedMem(buffer, &workSpace->memHandle, spaceSize, readOnly);
     PARAM_CHECK(areaAddr != NULL, return PARAM_CODE_ERROR_MAP_FILE,
-        "Failed to map memory error %d areaAddr %p spaceSize %d", errno, areaAddr, spaceSize);
+        "Failed to map memory error %d spaceSize %d", errno, spaceSize);
     if (!readOnly) {
         workSpace->area = (ParamTrieHeader *)areaAddr;
         workSpace->area->trieNodeCount = 0;

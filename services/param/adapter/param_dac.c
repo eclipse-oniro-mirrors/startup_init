@@ -234,11 +234,11 @@ int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
     return ret;
 }
 
-static void AddGroupUser(int uid, int gid, int mode, const char *format)
+static void AddGroupUser(unsigned int uid, unsigned int gid, int mode, const char *format)
 {
     ParamAuditData auditData = {0};
     char buffer[USER_BUFFER_LEN] = {0};
-    int ret = sprintf_s(buffer, sizeof(buffer) - 1, "%s.%d.%d", format, gid, uid);
+    int ret = sprintf_s(buffer, sizeof(buffer) - 1, "%s.%u.%u", format, gid, uid);
     PARAM_CHECK(ret >= 0, return, "Failed to format name for %s.%d.%d", format, gid, uid);
     auditData.name = buffer;
     auditData.dacData.uid = uid;
