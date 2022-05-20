@@ -264,10 +264,10 @@ void WaitForFile(const char *source, unsigned int maxSecond)
     /* 500ms interval, check maxSecond*2 times total */
     unsigned int maxCount = maxSecond * 2;
     unsigned int count = 0;
-    do {
+    while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount)) {
         usleep(waitTime);
         count++;
-    } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount));
+    }
     INIT_CHECK_ONLY_ELOG(count != maxCount, "wait for file:%s failed after %d second.", source, maxSecond);
     return;
 }
