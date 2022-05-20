@@ -25,6 +25,9 @@
 #include "init_log.h"
 #include "init_service.h"
 #include "loop_event.h"
+#ifdef WITH_SELINUX
+#include "policycoreutils.h"
+#endif
 #include "securec.h"
 #define SOCKET_BUFF_SIZE (256 * 1024)
 
@@ -139,6 +142,12 @@ static int CreateSocket(ServiceSocket *sockopt)
         return -1;
     }
     INIT_LOGI("CreateSocket %s success", sockopt->name);
+
+#ifdef WITH_SELINUX
+    if (RestoreconRecurse(HOS_SOCKET_DIR)) {
+        INIT_LOGE("DoRestorecon failed for '%s', err %d.", sockopt->name, errno);
+    }
+#endif
     return sockopt->sockFd;
 }
 
