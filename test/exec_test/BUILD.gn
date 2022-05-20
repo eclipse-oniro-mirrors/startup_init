@@ -70,7 +70,7 @@ ohos_executable("server") {
 }
 
 ohos_executable("ondemandTest") {
-  sources = [ "//base/startup/init_lite/test/test_bin/ondemand_test/sa_service_ondemand_test.cpp" ]
+  sources = [ "sa_service_ondemand_test.cpp" ]
 
   external_deps = [
     "ipc:ipc_core",
