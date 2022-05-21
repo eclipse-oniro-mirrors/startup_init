@@ -65,6 +65,7 @@ work_scheduler:x:3047:
 device_usage_stats:x:3048:
 faceauth_host:x:3049:
 pinauth_host:x:3050:
+installs:x:3060:
 dms:x:5522:
 update:x:6666:
 charger:x:6667:
