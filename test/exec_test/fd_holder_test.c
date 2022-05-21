@@ -69,7 +69,7 @@ int main(int argc, char **argv)
         }
         free(fds);
         outfdCount = 0;
-        while(1) {
+        while (1) {
             pause();
         }
     }
