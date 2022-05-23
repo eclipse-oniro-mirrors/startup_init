@@ -266,7 +266,7 @@ static int BindCpuCore(Service *service)
 
 static void ClearEnvironment(Service *service)
 {
-    if (strcmp(service->name, "appspawn") != 0) {
+    if (strcmp(service->name, "appspawn") != 0 && strcmp(service->name, "nwebspawn") != 0) {
         sigset_t mask;
         sigemptyset(&mask);
         sigaddset(&mask, SIGCHLD);
