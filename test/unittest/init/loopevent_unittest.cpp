@@ -153,7 +153,6 @@ public:
         if (serverTask_ == nullptr) {
             return;
         }
-        ((StreamServerTask *)serverTask_)->base.handleEvent(LE_GetDefaultLoop(), serverTask_, Event_Write);
         ((StreamServerTask *)serverTask_)->base.handleEvent(LE_GetDefaultLoop(), serverTask_, Event_Read);
 
         uint64_t eventId = 0;
@@ -170,7 +169,7 @@ public:
         BufferHandle handle = LE_CreateBuffer(LE_GetDefaultLoop(), 1 + sizeof(eventId));
         LE_Buffer *buffer = (LE_Buffer *)handle;
         AddBuffer((StreamTask *)client, buffer);
-        ((StreamConnectTask *)client)->stream.base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)(&client), Event_Write);
+        ((StreamConnectTask *)client)->stream.base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)(client), Event_Write);
 
         ParamMessage *request = (ParamMessage *)CreateParamMessage(MSG_SET_PARAM, "name", sizeof(ParamMessage));
         ((StreamConnectTask *)client)->recvMessage(LE_GetDefaultLoop(), reinterpret_cast<uint8_t *>(request),
@@ -179,7 +178,7 @@ public:
         LE_Buffer *next = nullptr;
         LE_Buffer *nextBuff = GetNextBuffer((StreamTask *)client, next);
         if (nextBuff != nullptr) {
-            LE_FreeBuffer(LE_GetDefaultLoop(), (TaskHandle)&client, nextBuff);
+            LE_FreeBuffer(LE_GetDefaultLoop(), (TaskHandle)client, nextBuff);
         }
         ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
         PARAM_CHECK(watcher != nullptr, return, "Failed to get watcher");
