@@ -274,7 +274,8 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
         args->argv[i] = NULL;
     }
     // ServiceArgs have a variety of uses, some requiring a NULL ending, some not
-    if (strcmp(name, D_CAPS_STR_IN_CFG) != 0) {
+    if (strcmp(name, D_CAPS_STR_IN_CFG) != 0 && strcmp(name, "permission_acls") != 0 &&
+        strcmp(name, "permission") != 0) {
         args->count = count + 1;
     } else {
         args->count = count;
@@ -611,7 +612,8 @@ static int CheckServiceKeyName(const cJSON *curService)
     char *cfgServiceKeyList[] = {
         "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
         "writepid", "critical", "socket", "console", "file", "ondemand",
-        "d-caps", "apl", "jobs", "start-mode", "end-mode", "cpucore", "secon", "sandbox"
+        "d-caps", "apl", "jobs", "start-mode", "end-mode", "cpucore", "secon", "sandbox",
+        "permission", "permission_acls"
     };
     INIT_CHECK_RETURN_VALUE(curService != NULL, SERVICE_FAILURE);
     cJSON *child = curService->child;
