@@ -72,6 +72,7 @@ dscreen:x:3054:
 daudio:x:3055:
 dhardware:x:3056:
 installs:x:3060:
+huks_server:x:3510:
 dms:x:5522:
 update:x:6666:
 charger:x:6667:
