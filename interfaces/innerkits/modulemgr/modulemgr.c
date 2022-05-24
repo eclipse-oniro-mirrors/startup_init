@@ -22,6 +22,7 @@
 #include <dirent.h>
 #include <linux/limits.h>
 
+#include "beget_ext.h"
 #include "list.h"
 #include "securec.h"
 #include "modulemgr.h"
@@ -127,11 +128,13 @@ static void *moduleInstall(MODULE_ITEM *module, int argc, const char *argv[])
             return NULL;
         }
     }
-
+    BEGET_LOGV("moduleInstall path %s", path);
     currentInstallArgs = &(module->moduleMgr->installArgs);
     handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
     currentInstallArgs = NULL;
-
+    if (handle == NULL) {
+        BEGET_LOGE("moduleInstall path %s fail %d", path, errno);
+    }
     return handle;
 }
 

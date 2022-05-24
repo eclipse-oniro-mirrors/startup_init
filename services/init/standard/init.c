@@ -253,6 +253,8 @@ static void BootStateChange(const char *content)
     }
     if (strcmp("post-init", content) == 0) {
         StartAllServices(START_MODE_NARMAL);
+        // Destroy all hooks
+        HookMgrDestroy(NULL);
         return;
     }
 }
@@ -357,9 +359,6 @@ void SystemConfig(void)
     ReadConfig();
     INIT_LOGI("Parse init config file done.");
     HookMgrExecute(NULL, INIT_POST_CFG_LOAD, (void *)&args);
-
-    // Destroy all hooks
-    HookMgrDestroy(NULL);
 
     // dump config
 #if defined(OHOS_SERVICE_DUMP)

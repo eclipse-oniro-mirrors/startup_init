@@ -29,7 +29,8 @@ enum INIT_BOOTSTAGE {
     INIT_PRE_PARAM_SERVICE = 10,
     INIT_PRE_PARAM_LOAD    = 20,
     INIT_PRE_CFG_LOAD      = 30,
-    INIT_POST_CFG_LOAD     = 40
+    INIT_POST_PERSIST_PARAM_LOAD   = 40,
+    INIT_POST_CFG_LOAD     = 50
 };
 
 inline int InitAddGlobalInitHook(int prio, OhosHook hook)
@@ -57,6 +58,10 @@ inline int InitAddPostCfgLoadHook(int prio, OhosHook hook)
     return HookMgrAdd(NULL, INIT_POST_CFG_LOAD, prio, hook);
 }
 
+inline int InitAddPostPersistParamLoadHook(int prio, OhosHook hook)
+{
+    return HookMgrAdd(NULL, INIT_POST_PERSIST_PARAM_LOAD, prio, hook);
+}
 #ifdef __cplusplus
 #if __cplusplus
 }

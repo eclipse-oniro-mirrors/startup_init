@@ -25,7 +25,7 @@ int InitModuleMgrInstall(const char *moduleName)
     }
 
     if (defaultModuleMgr == NULL) {
-        defaultModuleMgr = ModuleMgrCreate(moduleName);
+        defaultModuleMgr = ModuleMgrCreate("init");
     }
     if (defaultModuleMgr == NULL) {
         return -1;
@@ -43,8 +43,11 @@ static int ModuleMgrCmdInstall(int id, const char *name, int argc, const char **
 {
     INIT_ERROR_CHECK(argv != NULL && argc >= 1, return -1, "Invalid install parameter");
     int ret;
-    ret = ModuleMgrInstall(NULL, argv[0], argc-1, argv+1);
-    INIT_ERROR_CHECK(ret == 0, return ret, "Install module %s fail", argv[0]);
+    if (defaultModuleMgr == NULL) {
+        defaultModuleMgr = ModuleMgrCreate("init");
+    }
+    ret = ModuleMgrInstall(defaultModuleMgr, argv[0], argc-1, argv+1);
+    INIT_ERROR_CHECK(ret == 0, return ret, "Install module %s fail errno %d", argv[0], ret);
     return 0;
 }
 

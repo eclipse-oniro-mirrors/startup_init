@@ -34,5 +34,5 @@ static int bootchartEarlyHook(int stage, int prio, void *cookie)
 MODULE_CONSTRUCTOR(void)
 {
     // Depends on parameter service
-    InitAddPreCfgLoadHook(0, bootchartEarlyHook);
+    InitAddPostPersistParamLoadHook(0, bootchartEarlyHook);
 }
