@@ -29,8 +29,9 @@
 #include <sys/sysmacros.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
 #include <linux/module.h>
+
+#include "bootstage.h"
 #include "fs_manager/fs_manager.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
@@ -178,8 +179,9 @@ static void DoSetParam(const struct CmdArgs *ctx)
 
 static void DoLoadPersistParams(const struct CmdArgs *ctx)
 {
-    INIT_LOGV("load persist params : %s", ctx->argv[0]);
+    INIT_LOGV("LoadPersistParams");
     LoadPersistParams();
+    HookMgrExecute(NULL, INIT_POST_PERSIST_PARAM_LOAD, NULL);
 }
 
 static void DoTriggerCmd(const struct CmdArgs *ctx)

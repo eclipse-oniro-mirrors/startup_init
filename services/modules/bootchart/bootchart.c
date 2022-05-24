@@ -264,14 +264,45 @@ static int DoBootchartStop(void)
     return 0;
 }
 
+static int DoBootchartCmd(int id, const char *name, int argc, const char **argv)
+{
+    PLUGIN_LOGI("DoBootchartCmd argc %d %s", argc, name);
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
+    if (strcmp(argv[0], "start") == 0) {
+        return DoBootchartStart();
+    } else if (strcmp(argv[0], "stop") == 0) {
+        return DoBootchartStop();
+    }
+    return 0;
+}
+
+static int32_t g_executorId = -1;
+static int BootchartInit(void)
+{
+    if (g_executorId == -1) {
+        g_executorId = AddCmdExecutor("bootchart", DoBootchartCmd);
+        PLUGIN_LOGI("BootchartInit executorId %d", g_executorId);
+    }
+    return 0;
+}
+
+static void BootchartExit(void)
+{
+    PLUGIN_LOGI("BootchartExit executorId %d", g_executorId);
+    if (g_executorId != -1) {
+        RemoveCmdExecutor("bootchart", g_executorId);
+    }
+}
+
 MODULE_CONSTRUCTOR(void)
 {
     PLUGIN_LOGI("DoBootchartStart now ...");
-    DoBootchartStart();
+    BootchartInit();
 }
 
 MODULE_DESTRUCTOR(void)
 {
     PLUGIN_LOGI("DoBootchartStop now ...");
     DoBootchartStop();
+    BootchartExit();
 }
