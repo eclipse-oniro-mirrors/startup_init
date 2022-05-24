@@ -27,6 +27,7 @@ audio:x:1041:
 cameraserver:x:1047:
 uiserver:x:1048:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr
+hiview:x:1201:
 shell:x:2000:
 cache:x:2001:
 net_bw_stats:x:3006:
