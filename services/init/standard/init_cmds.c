@@ -598,10 +598,7 @@ void OpenHidebug(const char *name)
             dlclose(handle);
             break;
         }
-        bool ret = (*initParam)(name);
-        if (!ret) {
-            INIT_LOGV("init parameters failed.\n");
-        }
+        (*initParam)(name);
         dlclose(handle);
     } while (0);
 #endif
