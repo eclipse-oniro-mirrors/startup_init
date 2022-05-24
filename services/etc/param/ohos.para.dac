@@ -27,6 +27,8 @@ persist.sys.usb.config  = root:root:0777
 
 # default forbit other user to start service
 ohos.servicectrl.   = system:servicectrl:0775
+ohos.startup.powerctrl. = system:powerctrl:0775
+ohos.boot. = system:bootctrl:0775
 
 #permission for system
 persist.window.boot. = root:system:0775

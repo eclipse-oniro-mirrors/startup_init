@@ -26,6 +26,8 @@ shared_relro:x:1037:
 audio:x:1041:
 cameraserver:x:1047:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr
+powerctrl:x:1051:root,shell,system,update,power_host
+bootctrl:x:1052:root,shell,system
 shell:x:2000:
 cache:x:2001:
 net_bw_stats:x:3006:
