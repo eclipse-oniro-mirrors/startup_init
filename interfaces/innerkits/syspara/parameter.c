@@ -233,7 +233,7 @@ const char *GetSerial(void)
 {
     static const char ohos_serial[PARAM_VALUE_LEN_MAX]  = {0};
     uint32_t len = PARAM_VALUE_LEN_MAX;
-    int ret = SystemGetParameter("ohos.boot.sn", ohos_serial, &len); 
+    int ret = SystemGetParameter("ohos.boot.sn", ohos_serial, &len);
     if (ret != 0) {
         return NULL;
     }
