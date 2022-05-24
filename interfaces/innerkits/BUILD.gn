@@ -297,4 +297,43 @@ if (defined(ohos_lite)) {
 
     part_name = "init"
   }
+
+  ohos_static_library("libbegetutil_static") {
+    sources = [ "//base/startup/init_lite/services/log/init_log.c" ]
+    sources += syspara_sources
+    sources += [ "syspara/param_wrapper.cpp" ]
+
+    defines = [
+      "INIT_AGENT",
+      "INIT_FILE",
+      "_GNU_SOURCE",
+    ]
+    if (target_cpu == "arm64") {
+      defines += [ "SUPPORT_64BIT" ]
+    }
+
+    include_dirs = [
+      "./include",
+      "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/include/param",
+      "//base/startup/init_lite/services/param/include",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/interfaces/innerkits/include/syspara",
+      "//base/startup/init_lite/interfaces/innerkits/syspara",
+    ]
+    deps = [
+      "//base/startup/init_lite/services/loopevent:loopevent",
+      "//base/startup/init_lite/services/param:param_client",
+      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//base/startup/init_lite/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/openssl:libcrypto_shared",
+    ]
+    external_deps = [
+      "hilog_native:libhilog_base",
+      "utils_base:utils",
+    ]
+    part_name = "init"
+  }
 }
