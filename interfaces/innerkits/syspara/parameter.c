@@ -231,7 +231,7 @@ const char *GetBuildTime(void)
 
 const char *GetSerial(void)
 {
-    static const char ohos_serial[PARAM_VALUE_LEN_MAX]  = {0};
+    static char ohos_serial[PARAM_VALUE_LEN_MAX]  = {0};
     uint32_t len = PARAM_VALUE_LEN_MAX;
     int ret = SystemGetParameter("ohos.boot.sn", ohos_serial, &len);
     if (ret != 0) {
