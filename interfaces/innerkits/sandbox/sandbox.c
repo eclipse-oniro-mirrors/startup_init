@@ -38,10 +38,13 @@
 #define SANDBOX_SYMLINK_TARGET "target-name"
 #define SANDBOX_SYMLINK_NAME "link-name"
 
+#ifndef SUPPORT_64BIT
 #define SANDBOX_SYSTEM_CONFIG_FILE "/system/etc/sandbox/system-sandbox.json"
 #define SANDBOX_CHIPSET_CONFIG_FILE "/system/etc/sandbox/chipset-sandbox.json"
-#define SANDBOX_PRIVAPP_CONFIG_FILE "/system/etc/sandbox/privapp-sandbox.json"
-#define SANDBOX_APP_CONFIG_FILE "/system/etc/sandbox/app-sandbox.json"
+#else
+#define SANDBOX_SYSTEM_CONFIG_FILE "/system/etc/sandbox/system-sandbox64.json"
+#define SANDBOX_CHIPSET_CONFIG_FILE "/system/etc/sandbox/chipset-sandbox64.json"
+#endif
 
 #define SANDBOX_MOUNT_FLAGS_MS_BIND "bind"
 #define SANDBOX_MOUNT_FLAGS_MS_PRIVATE "private"

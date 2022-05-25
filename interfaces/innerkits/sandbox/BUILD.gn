@@ -20,6 +20,9 @@ config("exported_header_files") {
 }
 
 ohos_shared_library("libsandbox") {
+  if (target_cpu == "arm64") {
+    defines = [ "SUPPORT_64BIT" ]
+  }
   sources = [
     "sandbox.c",
     "sandbox_namespace.c",
