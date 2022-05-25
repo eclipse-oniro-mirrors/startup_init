@@ -602,7 +602,7 @@ int EnterSandbox(const char *name)
         return -1;
     }
     if (sandbox->ns > 0) {
-        if (SetNamespce(sandbox->ns, CLONE_NEWNS) < 0) {
+        if (SetNamespace(sandbox->ns, CLONE_NEWNS) < 0) {
             BEGET_LOGE("Failed to enter mount namespace for sandbox \' %s \', err=%d.", name, errno);
             return -1;
         }

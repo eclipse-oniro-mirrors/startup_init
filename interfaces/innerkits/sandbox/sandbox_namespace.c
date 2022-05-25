@@ -51,7 +51,7 @@ int UnshareNamespace(int nsType)
     }
 }
 
-int SetNamespce(int nsFd, int nsType)
+int SetNamespace(int nsFd, int nsType)
 {
     if (nsFd < 0) {
         BEGET_LOGE("Failed get namespace fd");
@@ -78,7 +78,7 @@ int EnterDefaultNamespace(void)
     if (g_defaultNs < 0) {
         return -1;
     }
-    return SetNamespce(g_defaultNs, CLONE_NEWNS);
+    return SetNamespace(g_defaultNs, CLONE_NEWNS);
 }
 
 void CloseDefaultNamespace(void)

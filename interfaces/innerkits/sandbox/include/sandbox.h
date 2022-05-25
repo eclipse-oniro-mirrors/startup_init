@@ -56,7 +56,6 @@ bool InitSandboxWithName(const char *name);
 int PrepareSandbox(const char *name);
 int EnterSandbox(const char *name);
 void DestroySandbox(const char *name);
-int CheckSupportSandbox(void);
 void DumpSandboxByName(const char *name);
 #ifdef __cplusplus
 }
