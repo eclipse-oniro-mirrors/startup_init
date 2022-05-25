@@ -49,24 +49,7 @@ static void PollUeventdSocketTimeout(int ueventSockFd)
 
 int main(int argc, char **argv)
 {
-    char *vendorConfig = NULL;
-    do {
-        char hardware[CMDLINE_VALUE_LEN_MAX] = {0};
-        unsigned int buffLen = (unsigned int)CMDLINE_VALUE_LEN_MAX;
-        int ret = SystemReadParam("ohos.boot.hardware", hardware, &buffLen);
-        if (ret != 0) {
-            INIT_LOGE("Failed to get hardware parameter value");
-            break;
-        }
-        char configFile[PATH_MAX] = {0};
-        ret = snprintf_s(configFile, PATH_MAX, PATH_MAX -1, "/vendor/etc/ueventd.%s.config", hardware);
-        if (ret < 0) {
-            INIT_LOGE("Failed to format vendor config file path");
-            break;
-        }
-        vendorConfig = configFile;
-    } while (0);
-    char *ueventdConfigs[] = {"/etc/ueventd.config", vendorConfig, NULL};
+    char *ueventdConfigs[] = {"/etc/ueventd.config", "/vendor/etc/ueventd.config", NULL};
     int i = 0;
     while (ueventdConfigs[i] != NULL) {
         ParseUeventdConfigFile(ueventdConfigs[i++]);

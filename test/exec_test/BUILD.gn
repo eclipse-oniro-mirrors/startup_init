@@ -69,12 +69,28 @@ ohos_executable("server") {
   part_name = "init"
 }
 
+ohos_executable("ondemandTest") {
+  sources = [ "sa_service_ondemand_test.cpp" ]
+
+  external_deps = [
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr_standard:samgr_proxy",
+    "utils_base:utils",
+  ]
+
+  install_images = [ "system" ]
+  install_enable = true
+  part_name = "init"
+}
+
 group("exectest") {
   if (control_test) {
     deps = [
       ":client",
       ":fd_holder_test",
       ":fd_holder_test.cfg",
+      ":ondemandTest",
       ":server",
     ]
   }

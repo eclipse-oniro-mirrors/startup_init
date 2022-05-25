@@ -69,6 +69,9 @@ int main(int argc, char **argv)
         }
         free(fds);
         outfdCount = 0;
+        while (1) {
+            pause();
+        }
     }
     char *files[] = {"/data/test/1", "/data/test/2"};
     SaveFds("fd_holder_test", FD_COUNT, (char **)files);

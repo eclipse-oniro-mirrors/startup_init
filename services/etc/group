@@ -72,6 +72,7 @@ dscreen:x:3054:
 daudio:x:3055:
 dhardware:x:3056:
 installs:x:3060:
+huks_server:x:3510:
 dms:x:5522:
 update:x:6666:
 charger:x:6667:
@@ -86,7 +87,7 @@ useriam:x:1088:
 backup:x:1089:
 storage_manager:1090:
 net_manager:x:1099:
-edm:x:3051:
+account:x:3058:
 download:x:3815:
 pasteboard:x:3816:
 wallpaper:x:3817:
