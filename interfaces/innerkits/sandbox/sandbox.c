@@ -97,16 +97,6 @@ static const struct SandboxMap g_map[] = {
         .name = "chipset",
         .sandbox = &g_chipsetSandbox,
         .configfile = SANDBOX_CHIPSET_CONFIG_FILE,
-    },
-    {
-        .name = "priv-app",
-        .sandbox = &g_privAppSandbox,
-        .configfile = SANDBOX_PRIVAPP_CONFIG_FILE,
-    },
-    {
-        .name = "app",
-        .sandbox = &g_appSandbox,
-        .configfile = SANDBOX_APP_CONFIG_FILE,
     }
 };
 
