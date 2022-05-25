@@ -75,11 +75,8 @@ static const struct SandboxMountFlags g_flags[] = {
     }
 };
 
-
 static sandbox_t g_systemSandbox;
 static sandbox_t g_chipsetSandbox;
-static sandbox_t g_privAppSandbox;
-static sandbox_t g_appSandbox;
 
 struct SandboxMap {
     const char *name;
