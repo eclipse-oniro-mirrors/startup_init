@@ -85,6 +85,7 @@ misc:x:9998:
 app:x:10000:
 useriam:x:1088:
 backup:x:1089:
+storage_manager:x:1090:
 net_manager:x:1099:
 edm:x:3057:
 account:x:3058:
