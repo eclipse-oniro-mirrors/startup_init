@@ -585,7 +585,6 @@ void OpenHidebug(const char *name)
 #endif
     do {
         if (access(debugSoPath, F_OK) != 0) {
-            INIT_LOGE("access failed, errno = %d\n", errno);
             break;
         }
         void* handle = dlopen(debugSoPath, RTLD_LAZY);
@@ -600,10 +599,7 @@ void OpenHidebug(const char *name)
             dlclose(handle);
             break;
         }
-        bool ret = (*initParam)(name);
-        if (!ret) {
-            INIT_LOGV("init parameters failed.\n");
-        }
+        (*initParam)(name);
         dlclose(handle);
     } while (0);
 #endif
