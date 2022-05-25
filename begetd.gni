@@ -16,6 +16,7 @@ declare_args() {
   enable_ohos_startup_init_feature_deviceinfo = true
   param_test = true
   control_test = false
+
   # init begetctl support liteos
   enable_ohos_startup_init_feature_begetctl_liteos = false
   enable_ohos_startup_init_lite_use_thirdparty_mbedtls = true

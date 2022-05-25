@@ -201,10 +201,11 @@ if (defined(ohos_lite)) {
         "../param/param_stub.cpp",
         "../param/param_unittest.cpp",
         "../param/paramservice_unittest.cpp",
-        "../syspara/syspara_unittest.cpp",
         "cmd_func_test.cpp",
       ]
-
+      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+        sources += [ "../syspara/syspara_unittest.cpp" ]
+      }
       deps += [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//base/startup/init_lite/services/loopevent:loopevent",

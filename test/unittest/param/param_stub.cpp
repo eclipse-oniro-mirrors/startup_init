@@ -323,7 +323,7 @@ void PrepareInitUnitTestEnv(void)
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     // for cmdline
-    const char *cmdLine = "bootgroup=device.charing.group earlycon=uart8250,mmio32,0xfe660000 \
+    const char *cmdLine = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 \
         root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568";
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
 

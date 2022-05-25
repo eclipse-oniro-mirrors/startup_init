@@ -18,7 +18,6 @@
 #include "param_message.h"
 #include "param_stub.h"
 #include "trigger_manager.h"
-#include "le_timer.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -428,7 +427,6 @@ public:
         AddWatch(MSG_ADD_WATCHER, name, value);
         char buffer[] = "testbuff";
         CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM_WATCH, buffer, strlen(buffer), TestTriggerExecute);
-        SystemDumpTriggers(1);
         AddWatch(MSG_DEL_WATCHER, name, value);
         return 0;
     }
@@ -509,11 +507,6 @@ HWTEST_F(ParamServiceUnitTest, TestAddParamWatch3, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestAddParamWatch3();
-    if (GetParamService()->timer != nullptr) {
-        ((TimerTask *)GetParamService()->timer)->processTimer(nullptr, nullptr);
-    }
-    int hashCode = CheckWatchTriggerTimeout();
-    EXPECT_EQ(hashCode, 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, TestCloseTriggerWatch, TestSize.Level0)
