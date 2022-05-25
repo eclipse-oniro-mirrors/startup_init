@@ -20,6 +20,7 @@
 #include "param_stub.h"
 #include "init_utils.h"
 #include "trigger_manager.h"
+#include "init_group_manager.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -52,5 +53,6 @@ HWTEST_F(InitRebootUnitTest, TestInitReboot, TestSize.Level1)
     EXPECT_EQ(ret, 0);
     ret = DoReboot(DEVICE_CMD_FREEZE);
     EXPECT_EQ(ret, 0);
+    clearMisc();
 }
 } // namespace init_ut

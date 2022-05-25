@@ -18,9 +18,16 @@
 #include "param_message.h"
 #include "param_stub.h"
 #include "trigger_manager.h"
+#include "le_timer.h"
 
 using namespace testing::ext;
 using namespace std;
+
+static int TestTriggerExecute(TriggerNode *trigger, const char *content, uint32_t size)
+{
+    return 0;
+}
+
 extern "C" {
 void OnClose(ParamTaskPtr client);
 }
@@ -85,7 +92,7 @@ public:
         // 获取到跟属性
         WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
         (void)FindTrieNode(workspace, name, strlen(name), &labelIndex);
-        ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(workspace, labelIndex);
+        ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (node == nullptr) {
             EXPECT_EQ(1, 0);
             return 0;
@@ -110,7 +117,7 @@ public:
         AddSecurityLabel(&auditData);
         WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
         (void)FindTrieNode(workspace, name, strlen(name), &labelIndex);
-        ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(workspace, labelIndex);
+        ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (node == nullptr) {
             EXPECT_EQ(1, 0);
             return 0;
@@ -143,7 +150,7 @@ public:
         uint32_t labelIndex = 0;
         WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
         ParamTrieNode *paramNode = FindTrieNode(workspace, name, strlen(name), &labelIndex);
-        ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(workspace, labelIndex);
+        ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {
             EXPECT_EQ(1, 0);
             return 0;
@@ -168,7 +175,7 @@ public:
         AddSecurityLabel(&auditData);
         WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
         ParamTrieNode *paramNode = FindTrieNode(workspace, name, strlen(name), &labelIndex);
-        ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(workspace, labelIndex);
+        ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {
             EXPECT_EQ(1, 0);
             return 0;
@@ -419,6 +426,10 @@ public:
         newName += ".test.test.test";
         SystemWriteParam(newName.c_str(), value);
         AddWatch(MSG_ADD_WATCHER, name, value);
+        char buffer[] = "testbuff";
+        CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM_WATCH, buffer, strlen(buffer), TestTriggerExecute);
+        SystemDumpTriggers(1);
+        AddWatch(MSG_DEL_WATCHER, name, value);
         return 0;
     }
 
@@ -498,6 +509,11 @@ HWTEST_F(ParamServiceUnitTest, TestAddParamWatch3, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestAddParamWatch3();
+    if (GetParamService()->timer != nullptr) {
+        ((TimerTask *)GetParamService()->timer)->processTimer(nullptr, nullptr);
+    }
+    int hashCode = CheckWatchTriggerTimeout();
+    EXPECT_EQ(hashCode, 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, TestCloseTriggerWatch, TestSize.Level0)
@@ -510,7 +526,11 @@ HWTEST_F(ParamServiceUnitTest, TestServiceCtrl, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     int ret = test.TestServiceCtrl("server1", 0770);
+#ifdef PARAM_SUPPORT_SELINUX
     EXPECT_EQ(ret, 0);
+#else
+     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestServiceCtrl("server2", 0772);
     EXPECT_EQ(ret, 0);
 }
@@ -519,19 +539,35 @@ HWTEST_F(ParamServiceUnitTest, TestPowerCtrl, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     int ret = test.TestPowerCtrl("reboot,shutdown", 0770);
+#ifdef PARAM_SUPPORT_SELINUX
     EXPECT_EQ(ret, 0);
+#else
+     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestPowerCtrl("reboot,shutdown", 0772);
     EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,updater", 0770);
+#ifdef PARAM_SUPPORT_SELINUX
     EXPECT_EQ(ret, 0);
+#else
+     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestPowerCtrl("reboot,updater", 0772);
     EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot,flash", 0770);
+#ifdef PARAM_SUPPORT_SELINUX
     EXPECT_EQ(ret, 0);
+#else
+     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestPowerCtrl("reboot,flash", 0772);
     EXPECT_EQ(ret, 0);
     ret = test.TestPowerCtrl("reboot", 0770);
+#ifdef PARAM_SUPPORT_SELINUX
     EXPECT_EQ(ret, 0);
+#else
+     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestPowerCtrl("reboot", 0772);
     EXPECT_EQ(ret, 0);
 }

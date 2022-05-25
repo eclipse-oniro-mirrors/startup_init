@@ -26,7 +26,6 @@ int32_t DeviceInfoProxy::GetUdid(std::string& result)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option { MessageOption::TF_SYNC };
-    printf("DeviceInfoProxy::GetUdid \n");
     data.WriteInterfaceToken(DeviceInfoProxy::GetDescriptor());
     int32_t ret = Remote()->SendRequest(COMMAND_GET_UDID, data, reply, option);
     DINFO_CHECK(ret == ERR_NONE, return ret, "getUdid failed, error code is %d", ret);

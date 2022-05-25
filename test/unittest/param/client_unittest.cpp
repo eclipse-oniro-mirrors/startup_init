@@ -26,7 +26,7 @@ static void ClientCheckParamValue(const char *name, const char *expectValue)
     char tmp[PARAM_BUFFER_SIZE] = {0};
     u_int32_t len = sizeof(tmp);
     int ret = SystemGetParameter(name, tmp, &len);
-    printf("ClientCheckParamValue name %s value: \'%s\' expectValue:\'%s\' \n", name, tmp, expectValue);
+    PARAM_LOGI("ClientCheckParamValue name %s value: \'%s\' expectValue:\'%s\' ", name, tmp, expectValue);
     if (ret == 0 && len > 0) {
         EXPECT_NE((int)strlen(tmp), 0);
         if (expectValue != nullptr) {
@@ -44,10 +44,8 @@ static void *TestSendParamSetMsg(void *args)
         return nullptr;
     }
     std::string name = (char *)args;
-    printf("TestSendParamSetMsg name :\'%s\' \n", name.c_str());
-    SystemWriteParam(name.c_str(), name.c_str());
+    PARAM_LOGI("TestSendParamSetMsg name :\'%s\' ", name.c_str());
     SystemSetParameter(name.c_str(), name.c_str());
-    ClientCheckParamValue(name.c_str(), name.c_str());
     return nullptr;
 }
 
@@ -58,7 +56,7 @@ static void *TestSendParamWaitMsg(void *args)
     }
     std::string name = "Wati.";
     name = name + (char *)args;
-    printf("TestSendParamWaitMsg name :\'%s\' \n", name.c_str());
+    PARAM_LOGI("TestSendParamWaitMsg name :\'%s\' \n", name.c_str());
     SystemWaitParameter(name.c_str(), name.c_str(), 1);
     return nullptr;
 }
@@ -66,7 +64,7 @@ static void *TestSendParamWaitMsg(void *args)
 static void TestForMultiThread()
 {
     static const int threadMaxNumer = 2;
-    printf("TestForMultiThread \n");
+    PARAM_LOGI("TestForMultiThread \n");
     pthread_t tids[threadMaxNumer + threadMaxNumer];
     const char *names[] = {
         "thread.1111.2222.3333.4444.5555",
@@ -227,6 +225,6 @@ HWTEST_F(ClientUnitTest, TestClient_04, TestSize.Level0)
 
 HWTEST_F(ClientUnitTest, TestClient_05, TestSize.Level0)
 {
-    // TestForMultiThread
+    TestForMultiThread();
 }
 }  // namespace init_ut

@@ -27,8 +27,12 @@ extern "C" {
 #endif
 
 typedef int (*PersistParamGetPtr)(const char *name, const char *value, void *context);
-
 typedef void *PERSIST_SAVE_HANDLE;
+typedef struct {
+    void *context;
+    PersistParamGetPtr persistParamGet;
+} PersistAdpContext;
+
 typedef struct {
     int (*load)();
     int (*save)(const char *name, const char *value);

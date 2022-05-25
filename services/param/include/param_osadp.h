@@ -20,11 +20,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/syscall.h>
-
-#include "param_utils.h"
-#include "securec.h"
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+#include <sys/syscall.h>
 #include "loop_event.h"
 #else
 #include <time.h>
@@ -32,11 +29,15 @@
 
 #ifndef __LITEOS_M__
 #include <pthread.h>
+#include <stdatomic.h>
 #endif
 
 #if defined FUTEX_WAIT || defined FUTEX_WAKE
 #include <linux/futex.h>
 #endif
+
+#include "param_utils.h"
+#include "securec.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -135,6 +136,7 @@ typedef struct {
 } ParamMutex;
 #endif
 
+void  paramMutexEnvInit(void);
 int ParamRWMutexCreate(ParamRWMutex *lock);
 int ParamRWMutexWRLock(ParamRWMutex *lock);
 int ParamRWMutexRDLock(ParamRWMutex *lock);
@@ -176,9 +178,25 @@ typedef struct {
 void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly);
 void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize);
 
+// for atomic
+#ifdef __LITEOS_M__
+#define ATOMIC_UINT32 uint32_t
+#define ATOMIC_LLONG  long long
+#define ATOMIC_INIT(commitId, value) *(commitId) = (value)
+#define ATOMIC_LOAD_EXPLICIT(commitId, order) *(commitId)
+#define ATOMIC_STORE_EXPLICIT(commitId, value, order) *(commitId) = (value)
+#else
+#define ATOMIC_UINT32 atomic_uint
+#define ATOMIC_LLONG atomic_llong
+#define ATOMIC_INIT(commitId, value) atomic_init((commitId), (value))
+#define ATOMIC_LOAD_EXPLICIT(commitId, order) atomic_load_explicit((commitId), (order))
+#define ATOMIC_STORE_EXPLICIT(commitId, value, order) atomic_store_explicit((commitId), (value), (order))
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif
+
+uint32_t Difftime(time_t curr, time_t base);
 #endif // BASE_STARTUP_PARAM_MESSAGE_H

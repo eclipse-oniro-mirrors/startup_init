@@ -207,6 +207,7 @@ static void PrepareInnerKitsCfg()
         "aa aa aa aa\n";
     mkdir("/data/init_ut/mount_unitest/", S_IRWXU | S_IRWXG | S_IRWXO);
     CreateTestFile("/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable", innerKitsCfg);
+    CreateTestFile("/etc/fstab.required", "test");
 }
 static bool IsDir(const std::string &path)
 {
@@ -360,6 +361,12 @@ int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *nam
 int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
 {
     return 0;
+}
+
+static __attribute__((constructor(101))) void ParamTestStubInit(void)
+{
+    PARAM_LOGI("ParamTestStubInit");
+    PrepareInitUnitTestEnv();
 }
 #ifdef __cplusplus
 #if __cplusplus

@@ -23,7 +23,11 @@ if (defined(ohos_lite)) {
     defines = [
       "_GNU_SOURCE",  #syscall function need this macro definition
       "__MUSL__",
+      "OHOS_LITE",
     ]
+    if (param_test) {
+      sources += [ "//base/startup/init_lite/test/moduletest/syspara.cpp" ]
+    }
     include_dirs = [
       ".",
       "shell",
@@ -46,7 +50,8 @@ if (defined(ohos_lite)) {
     ]
   }
   group("begetctl_cmd") {
-    if (param_begetctl_liteos_support) {
+    if (enable_ohos_startup_init_feature_begetctl_liteos &&
+        ohos_kernel_type != "liteos_m") {
       deps = [ ":begetctl" ]
     }
   }
@@ -86,21 +91,16 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
       "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox",
-      "//base/startup/init_lite/services/log:agent_log",
-      "//base/startup/init_lite/services/param:param_client",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
     external_deps = [ "utils_base:utils" ]
 
     if (param_test) {
-      sources +=
-          [ "//base/startup/init_lite/test/moduletest/param_test_cmds.c" ]
-      deps += [
-        "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
-        "//base/startup/init_lite/services/loopevent:loopevent",
-        "//base/startup/init_lite/services/utils:libinit_tools",
-        "//base/startup/init_lite/services/utils:libinit_utils",
+      sources += [
+        "//base/startup/init_lite/test/moduletest/param_test_cmds.c",
+        "//base/startup/init_lite/test/moduletest/syspara.cpp",
       ]
+      deps += [ "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy" ]
       defines += [
         "OHOS_SERVICE_DUMP",
         "INIT_TEST",
@@ -126,7 +126,6 @@ if (defined(ohos_lite)) {
       "start_service",
       "stop_service",
       "service",
-      "param",
       "sandbox",
     ]
 
@@ -158,8 +157,6 @@ if (defined(ohos_lite)) {
     ]
     deps = [
       "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-      "//base/startup/init_lite/services/log:agent_log",
-      "//base/startup/init_lite/services/param:param_client",
       "//third_party/bounds_checking_function:libsec_static",
     ]
 
@@ -170,8 +167,10 @@ if (defined(ohos_lite)) {
     }
 
     if (param_test) {
-      sources +=
-          [ "//base/startup/init_lite/test/moduletest/param_test_cmds.c" ]
+      sources += [
+        "//base/startup/init_lite/test/moduletest/param_test_cmds.c",
+        "//base/startup/init_lite/test/moduletest/syspara.cpp",
+      ]
       deps += [
         "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
         "//base/startup/init_lite/services/loopevent:loopevent",
@@ -188,5 +187,60 @@ if (defined(ohos_lite)) {
     install_enable = true
 
     part_name = "init"
+  }
+
+  ohos_executable("param") {
+    sources = [
+      "main.c",
+      "param_cmd.c",
+      "shell/shell_bas.c",
+    ]
+
+    defines = [
+      "INIT_AGENT",
+      "INIT_FILE",
+      "_GNU_SOURCE",
+    ]
+
+    include_dirs = [
+      ".",
+      "shell",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/log",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/services/include/param/",
+      "//base/startup/init_lite/services/loopevent/include",
+      "//base/startup/init_lite/services/param/include",
+      "//third_party/bounds_checking_function/include",
+    ]
+    deps = [
+      "//base/startup/init_lite/services/log:agent_log",
+      "//base/startup/init_lite/services/loopevent:loopevent",
+      "//base/startup/init_lite/services/param:param_client",
+      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//base/startup/init_lite/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
+
+    external_deps = [
+      "hilog_native:libhilog_base",
+      "utils_base:utils",
+    ]
+    if (build_selinux) {
+      deps += [ "//third_party/selinux:libselinux" ]
+      external_deps += [ "selinux:libparaperm_checker" ]
+      defines += [ "PARAM_SUPPORT_SELINUX" ]
+    }
+    install_images = [ "system" ]
+    install_enable = true
+    part_name = "init"
+  }
+
+  group("begetctl_cmd") {
+    deps = [
+      ":begetctl",
+      ":param",
+      ":paramshell",
+    ]
   }
 }

@@ -111,7 +111,7 @@ int SetParamShellPrompt(BShellHandle shell, const char *param)
         return -1;
     }
     // check parameter
-    int ret = SysCheckParamExist(realParameter);
+    int ret = SystemCheckParamExist(realParameter);
     if (ret == PARAM_CODE_NOT_FOUND) {
         BShellEnvOutput(shell, "Error: parameter \'%s\' not found\r\n", realParameter);
         return -1;
@@ -228,7 +228,7 @@ static int32_t BShellParamCmdLs(BShellHandle shell, int32_t argc, char *argv[])
             BShellEnvOutput(shell, "Error: Forbid to list parameters\r\n");
         }
     } else {
-        ret = SysCheckParamExist(prefix);
+        ret = SystemCheckParamExist(prefix);
         if (ret == 0) {
             ParamHandle handle;
             ret = SystemFindParameter(prefix, &handle);
@@ -398,7 +398,7 @@ static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[
     BSH_LOGV("BShellParamCmdShell %d %s", argc, argv[1]);
     int ret = 0;
     if (argc > 1) {
-        ret = SysCheckParamExist(argv[1]);
+        ret = SystemCheckParamExist(argv[1]);
         if (ret != 0) {
             BShellEnvOutput(shell, "Error: parameter \'%s\' not found\r\n", argv[1]);
             return -1;

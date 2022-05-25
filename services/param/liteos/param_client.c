@@ -25,15 +25,15 @@ __attribute__((destructor)) static void ClientDeinit(void);
 
 static int InitParamClient(void)
 {
-    if (getpid() == 1) {
-        PARAM_LOGI("Init process, do not init client");
-        return 0;
-    }
     if (PARAM_TEST_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
-    PARAM_LOGV("InitParamClient");
+#ifdef __LITEOS_M__
+    int ret = InitParamWorkSpace(0);
+#else
     int ret = InitParamWorkSpace(1);
+#endif
+    PARAM_LOGV("InitParamClient");
     PARAM_CHECK(ret == 0, return -1, "Failed to init param workspace");
     PARAM_SET_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT);
     // init persist to save
@@ -48,6 +48,7 @@ static int InitParamClient(void)
     }
 #endif
 #ifdef __LITEOS_M__
+    LoadParamFromBuild();
     // get persist param
     LoadPersistParams();
 #endif
@@ -133,4 +134,21 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 int WatchParamCheck(const char *keyprefix)
 {
     return PARAM_CODE_NOT_SUPPORT;
+}
+
+int SystemCheckParamExist(const char *name)
+{
+    (void)InitParamClient();
+    return SysCheckParamExist(name);
+}
+
+int SystemFindParameter(const char *name, ParamHandle *handle)
+{
+    (void)InitParamClient();
+    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
+    int ret = ReadParamWithCheck(name, DAC_READ, handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
+        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
+    }
+    return ret;
 }

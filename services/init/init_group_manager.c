@@ -35,7 +35,7 @@ static int GetBootGroupMode(void)
 {
     static const char *groupModes[] = {
         "device.boot.group",
-        "device.charing.group"
+        "device.charge.group"
     };
     for (size_t i = 0; i < ARRAY_LENGTH(groupModes); i++) {
         if (strcmp(g_initWorkspace.groupModeStr, groupModes[i]) == 0) {
@@ -190,8 +190,8 @@ void InitServiceSpace(void)
             g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr));
         if (ret != 0) {
             INIT_LOGE("%s", "Failed to get boot group");
-            if (GetBootModeFromMisc() == GROUP_CHARING) {
-                strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), "device.charing.group");
+            if (GetBootModeFromMisc() == GROUP_CHARGE) {
+                strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), "device.charge.group");
             }
         }
         free(data);

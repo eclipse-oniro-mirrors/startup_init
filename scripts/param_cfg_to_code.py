@@ -34,10 +34,10 @@ def GetParamFromCfg(cfgName):
     dict = {}
     with open(cfgName) as afile:
         data = afile.readline()
-        while data:        
+        while data:
             name, value = DecodeCfgLine(data)
             if len(name) != 0 and len(value) != 0:
-                dict[name] = value    
+                dict[name] = value
                 print("sample file name={%s %s}"%(name, value))
             data = afile.readline()
     return dict
@@ -46,29 +46,29 @@ def DecodeCodeLine(data):
     data.replace('\n', '').replace('\r', '')
     data = data.strip()
     if (not data.startswith("PARAM_MAP")):
-        return "", ""   
-    dataLen = len(data)     
+        return "", ""
+    dataLen = len(data)
     data = data[len("PARAM_MAP") + 1 :  dataLen - 1]
     data = data.strip()
     strs = data.split(',')
     if len(strs) <= 1:
         return "", ""
-    return strs[0].strip(), strs[1].strip()
+    return strs[0].strip(), data[len(strs[0]) + 1: ].strip()
 
 def GetParamFromCCode(codeName):
     dict = {}
-    with open(codeName) as afile:
+    with open(codeName, "r+") as afile:
         data = afile.readline()
-        while data:        
+        while data:
             name, value = DecodeCodeLine(data)
             if len(name) != 0 and len(value) != 0:
-                dict[name] = value    
+                dict[name] = value
             data = afile.readline()
     return dict
 
 def WriteMapToCode(codeName, dict):
     try:
-        f = open(codeName, 'w+')
+        f = open(codeName, 'w')
         # write file header
         f.write('#ifndef PARAM_LITE_DEF_CFG_' + os.linesep)
         f.write('#define PARAM_LITE_DEF_CFG_' + os.linesep)
@@ -89,8 +89,12 @@ def WriteMapToCode(codeName, dict):
         # write data
         f.write('static Node g_paramDefCfgNodes[] = {' + os.linesep)
         for name, value in  dict.items():
-            str = "    PARAM_MAP({0}, {1})".format(name, value)
-            f.write(str + os.linesep) 
+            if (value.startswith("\"")):
+                str = "    PARAM_MAP({0}, {1})".format(name, value)
+                f.write(str + os.linesep)
+            else:
+                str = "    PARAM_MAP({0}, \"{1}\")".format(name, value)
+                f.write(str + os.linesep)
         f.write('};' + os.linesep + os.linesep)
 
         #end
@@ -103,7 +107,7 @@ def WriteMapToCode(codeName, dict):
     except IOError:
         print("Error: open or write file %s fail"%{codeName})
     else:
-        f.close() 
+        f.close()
     return 0
 
 def AddToCodeDict(codeDict, cfgDict, high = True):
@@ -115,7 +119,7 @@ def AddToCodeDict(codeDict, cfgDict, high = True):
         elif not hasKey:
             codeDict[name] = value
     return codeDict
-    
+
 def main():
     parser = argparse.ArgumentParser(
     description='A common change param.para file to h.')
@@ -142,12 +146,14 @@ def main():
     assert os.path.exists(source)
 
     srcDict = GetParamFromCfg(source)
-    dst = out_dir + "param_cfg.h" 
+    dst = out_dir + "param_cfg.h"
+
     if os.path.exists(dst):
         dstDict = GetParamFromCCode(dst)
     else:
         dstDict = {}
-    dstDict = AddToCodeDict(dstDict, srcDict, True)
+
+    dstDict = AddToCodeDict(dstDict, srcDict, args.priority == "1")
     WriteMapToCode(dst, dstDict)
     return 0
 

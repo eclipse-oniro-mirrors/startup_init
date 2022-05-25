@@ -14,6 +14,15 @@
  */
 #include "sysversion.h"
 
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "beget_ext.h"
+#include "param_comm.h"
+#include "parameter.h"
+#include "securec.h"
+
 /* *
  * Major(M) version number.
  */
@@ -34,6 +43,26 @@ static int g_featureVersion = 0;
  */
 static int g_buildVersion = 0;
 
+static void GetVersions(void)
+{
+    static int versionInited = 0;
+    if (versionInited) {
+        return;
+    }
+    const char *fullName = GetFullName_();
+    const char *tmp = strstr(fullName, "-");
+    if (tmp == NULL) {
+        return;
+    }
+    tmp++; // skip "-"
+    int ret = sscanf_s(tmp, "%d.%d.%d.%d", &g_majorVersion, &g_seniorVersion, &g_featureVersion, &g_buildVersion);
+    BEGET_LOGV("fullName %s %d.%d.%d.%d ret %d",
+        fullName, g_majorVersion, g_seniorVersion, g_featureVersion, g_buildVersion, ret);
+    if (ret == 4) { // 4 parameters
+        versionInited = 1;
+    }
+}
+
 /* *
  * Obtains the major (M) version number, which increases with any updates to the overall architecture.
  * <p>The M version number monotonically increases from 1 to 99.
@@ -43,6 +72,7 @@ static int g_buildVersion = 0;
  */
 int GetMajorVersion(void)
 {
+    GetVersions();
     return g_majorVersion;
 }
 
@@ -56,6 +86,7 @@ int GetMajorVersion(void)
  */
 int GetSeniorVersion(void)
 {
+    GetVersions();
     return g_seniorVersion;
 }
 
@@ -68,6 +99,7 @@ int GetSeniorVersion(void)
  */
 int GetFeatureVersion(void)
 {
+    GetVersions();
     return g_featureVersion;
 }
 
@@ -80,5 +112,6 @@ int GetFeatureVersion(void)
  */
 int GetBuildVersion(void)
 {
+    GetVersions();
     return g_buildVersion;
 }

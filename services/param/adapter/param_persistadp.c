@@ -23,11 +23,6 @@
 #include "param_persist.h"
 #include "param_utils.h"
 
-typedef struct {
-    void *context;
-    PersistParamGetPtr persistParamGet;
-} PersistAdpContext;
-
 // for linux, no mutex
 static ParamMutex g_saveMutex = {};
 

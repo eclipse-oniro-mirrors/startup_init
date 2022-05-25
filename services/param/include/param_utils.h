@@ -66,16 +66,16 @@ typedef struct cmdLineInfo {
 #define PARAM_STATIC static
 #endif
 
+#ifdef __LITEOS_M__
 #ifndef DATA_PATH
-#if defined __LITEOS_M__
 #define DATA_PATH          ""
+#endif
 #elif defined __LITEOS_A__
 #define DATA_PATH          STARTUP_INIT_UT_PATH"/storage/data/system/param/"
 #elif defined __LINUX__
 #define DATA_PATH          STARTUP_INIT_UT_PATH"/storage/data/system/param/"
 #else
 #define DATA_PATH          STARTUP_INIT_UT_PATH"/data/parameters/"
-#endif
 #endif
 
 #define CLIENT_PIPE_NAME "/dev/unix/socket/paramservice"

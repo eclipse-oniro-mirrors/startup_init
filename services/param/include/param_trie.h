@@ -15,7 +15,6 @@
 
 #ifndef BASE_STARTUP_PARAM_TRIE_H
 #define BASE_STARTUP_PARAM_TRIE_H
-#include <stdatomic.h>
 #include <stdio.h>
 
 #include "init_hashmap.h"
@@ -53,7 +52,7 @@ typedef struct {
 #define PARAM_FLAGS_COMMITID 0x0000ffff
 
 typedef struct {
-    atomic_uint commitId;
+    ATOMIC_UINT32 commitId;
     uint16_t keyLength;
     uint16_t valueLength;
     char data[0];
@@ -65,11 +64,11 @@ typedef struct {
     uint16_t mode;
     uint16_t length;
     char data[0];
-} ParamSecruityNode;
+} ParamSecurityNode;
 
 typedef struct {
-    atomic_llong commitId;
-    atomic_llong commitPersistId;
+    ATOMIC_LLONG commitId;
+    ATOMIC_LLONG commitPersistId;
     uint32_t trieNodeCount;
     uint32_t paramNodeCount;
     uint32_t securityNodeCount;

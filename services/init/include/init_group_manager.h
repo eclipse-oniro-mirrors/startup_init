@@ -36,7 +36,7 @@ extern "C" {
 
 typedef enum {
     GROUP_BOOT,
-    GROUP_CHARING,
+    GROUP_CHARGE,
     GROUP_UNKNOW
 } InitGroupType;
 

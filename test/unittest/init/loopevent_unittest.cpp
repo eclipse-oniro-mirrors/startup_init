@@ -176,14 +176,12 @@ public:
             sizeof(ParamMessage));
 
         LE_Buffer *next = nullptr;
-        LE_Buffer *nextBuff = GetNextBuffer((StreamTask *)client, next);
-        if (nextBuff != nullptr) {
-            LE_FreeBuffer(LE_GetDefaultLoop(), (TaskHandle)client, nextBuff);
-        }
+        EXPECT_EQ(GetNextBuffer((StreamTask *)client, next), nullptr);
         ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
         PARAM_CHECK(watcher != nullptr, return, "Failed to get watcher");
         ListInit(&watcher->triggerHead);
         OnClose(client);
+        LE_FreeBuffer(LE_GetDefaultLoop(), (TaskHandle)client, nullptr);
         return;
     }
     void ProcessEventTest()
@@ -249,6 +247,13 @@ HWTEST_F(LoopEventUnittest, StreamTaskTest, TestSize.Level1)
     LoopEventUnittest loopevtest = LoopEventUnittest();
     loopevtest.CreateServerTask();
     loopevtest.StreamTaskTest();
+    LE_StreamInfo streamInfo = {};
+    streamInfo.recvMessage = OnReceiveRequest;
+    streamInfo.baseInfo.flags = TASK_PIPE |  TASK_CONNECT;
+    streamInfo.server = (char *)PIPE_NAME;
+    TaskHandle clientTaskHandlec = nullptr;
+    LE_CreateStreamClient(LE_GetDefaultLoop(), &clientTaskHandlec, &streamInfo);
+    EXPECT_NE(clientTaskHandlec, nullptr);
 }
 
 HWTEST_F(LoopEventUnittest, LeTaskTest, TestSize.Level1)
@@ -289,9 +294,11 @@ HWTEST_F(LoopEventUnittest, RunLoopThread, TestSize.Level1)
     pthread_create(&tid, nullptr, RunLoopThread, nullptr);
     event.events = EPOLLOUT;
     epoll_ctl(((EventEpoll *)LE_GetDefaultLoop())->epollFd, EPOLL_CTL_ADD, fd, &event);
+    HashMapHandle taskMap = ((EventLoop *)LE_GetDefaultLoop())->taskMap;
     ((EventLoop *)LE_GetDefaultLoop())->taskMap = nullptr;
     StopParamService();
     pthread_join(tid, nullptr);
     InitParamService();
+    ((EventLoop *)LE_GetDefaultLoop())->taskMap = taskMap;
 }
 }  // namespace init_ut

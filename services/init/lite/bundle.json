@@ -32,7 +32,7 @@
                 "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
                 "//base/startup/init_lite/services:init_lite",
                 "//base/startup/init_lite/services/begetctl:begetctl_cmd",
-                "//base/startup/init_lite/watchdog:watchdog",
+                "//base/startup/init_lite/watchdog:init_watchdog",
                 "//base/startup/init_lite/ueventd:ueventd"
             ],
             "inner_kits": [
@@ -52,7 +52,7 @@
                 }
             ],
             "test": [
-                "//base/startup/init_lite/test/unittest/lite:init_test"
+                "//base/startup/init_lite/services:unittest"
             ]
         }
     }

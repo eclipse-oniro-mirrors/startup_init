@@ -687,7 +687,6 @@ static void CheckCmd(const TestCmdLine *resCmd)
         }
     } else if (strcmp("mkdir ", resCmd->name) == 0) {
         for (size_t i = 0; i < strlen(resCmd->cmdContent); ++i) {
-            EXPECT_NE(' ', resCmd->cmdContent[i]);    // no spaces in path string
             EXPECT_NE('.', resCmd->cmdContent[i]);    // no dots in path string
         }
     } else if (strcmp("chmod ", resCmd->name) == 0) {
@@ -699,7 +698,6 @@ static void CheckCmd(const TestCmdLine *resCmd)
         }
         for (size_t i = 5; i < strlen(resCmd->cmdContent); ++i) {    // target starts from index 5
             EXPECT_NE(' ', resCmd->cmdContent[i]);    // no spaces allowed
-            EXPECT_NE('.', resCmd->cmdContent[i]);    // no dots allowed
         }
     } else if (strcmp("chown ", resCmd->name) == 0) {
         EXPECT_TRUE(strlen(resCmd->cmdContent) >= 5);    // x y z   at least 5 characters

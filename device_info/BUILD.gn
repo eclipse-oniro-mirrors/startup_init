@@ -62,7 +62,7 @@ ohos_shared_library("deviceinfoservice") {
 }
 
 group("device_info_group") {
-  if (param_feature_deviceinfo) {
+  if (enable_ohos_startup_init_feature_deviceinfo) {
     deps = [
       ":device_info.cfg",
       ":device_info_profile",

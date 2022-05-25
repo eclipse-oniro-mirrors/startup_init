@@ -22,8 +22,9 @@ if (defined(ohos_lite)) {
     outputs = [ "$root_out_dir/system/etc/param/ohos.para.dac" ]
   }
   copy("ohos.const") {
-    sources =
-        [ "//base/startup/init_lite/services/etc/param/ohos_const/ohos.para" ]
+    sources = [
+      "//base/startup/init_lite/services/etc_lite/param/ohos_const/ohos.para",
+    ]
     outputs = [ "$root_out_dir/system/etc/param/ohos_const/ohos.para" ]
   }
 

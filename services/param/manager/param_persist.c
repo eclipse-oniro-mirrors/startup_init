@@ -25,6 +25,14 @@
 #include "param_trie.h"
 
 static ParamPersistWorkSpace g_persistWorkSpace = {0, 0, NULL, 0, {}};
+static int IsNeedToSave(const char *name)
+{
+#if defined(__LITEOS_M__) || defined(__LITEOS_A__)
+    return IS_READY_ONLY(name) ? 0 : 1;
+#else
+    return (strncmp(name, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) == 0) ? 1 : 0;
+#endif
+}
 
 static int SavePersistParam(const WorkSpace *workSpace, const ParamTrieNode *node, const void *cookie)
 {
@@ -36,7 +44,8 @@ static int SavePersistParam(const WorkSpace *workSpace, const ParamTrieNode *nod
     if (entry == NULL) {
         return 0;
     }
-    if (strncmp(entry->data, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) != 0) {
+
+    if (!IsNeedToSave(entry->data)) {
         return 0;
     }
     static char name[PARAM_NAME_LEN_MAX] = {0};
@@ -61,11 +70,16 @@ static int BatchSavePersistParam()
     PERSIST_SAVE_HANDLE handle;
     int ret = g_persistWorkSpace.persistParamOps.batchSaveBegin(&handle);
     PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Failed to save persist");
+#if defined(__LITEOS_M__) || defined(__LITEOS_A__)
+    const char *prefix = "";
+#else
+    const char *prefix = PARAM_PERSIST_PREFIX;
+#endif
     // walk and save persist param
-    WorkSpace *workSpace = GetFristWorkSpace();
+    WorkSpace *workSpace = GetFirstWorkSpace();
     while (workSpace != NULL) {
         WorkSpace *next = GetNextWorkSpace(workSpace);
-        ParamTrieNode *root = FindTrieNode(workSpace, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX), NULL);
+        ParamTrieNode *root = FindTrieNode(workSpace, prefix, strlen(prefix), NULL);
         PARAMSPACE_AREA_RD_LOCK(workSpace);
         TraversalTrieNode(workSpace, root, SavePersistParam, (void *)handle);
         PARAMSPACE_AREA_RW_UNLOCK(workSpace);
@@ -112,7 +126,7 @@ PARAM_STATIC void TimerCallbackForSave(const ParamTaskPtr timer, void *context)
 #else
     // check commit
     long long commit =  GetPersistCommitId();
-    PARAM_LOGV("TimerCallbackForSave commit %lld ", commit);
+    PARAM_LOGV("TimerCallbackForSave commit %lld %lld", commit, g_persistWorkSpace.commitId);
     if (g_persistWorkSpace.commitId == commit) {
         return;
     }
@@ -124,7 +138,7 @@ PARAM_STATIC void TimerCallbackForSave(const ParamTaskPtr timer, void *context)
 int WritePersistParam(const char *name, const char *value)
 {
     PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
-    if (strncmp(name, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) != 0) {
+    if (!IsNeedToSave(name)) {
         return 0;
     }
     PARAM_LOGV("WritePersistParam name %s ", name);
@@ -145,7 +159,7 @@ int WritePersistParam(const char *name, const char *value)
     // check timer for save all
     time_t currTimer;
     (void)time(&currTimer);
-    uint32_t diff = (uint32_t)difftime(currTimer, g_persistWorkSpace.lastSaveTimer);
+    uint32_t diff = Difftime(currTimer, g_persistWorkSpace.lastSaveTimer);
     if (diff > PARAM_MUST_SAVE_PARAM_DIFF) {
         if (g_persistWorkSpace.saveTimer != NULL) {
             ParamTimerClose(g_persistWorkSpace.saveTimer);
@@ -319,7 +333,7 @@ static int ProcessParamFile(const char *fileName, void *context)
 
 int LoadDefaultParams(const char *fileName, uint32_t mode)
 {
-    PARAM_CHECK(fileName != NULL, return -1, "Invalid fielname for load");
+    PARAM_CHECK(fileName != NULL, return -1, "Invalid filename for load");
     PARAM_LOGI("load default parameters %s.", fileName);
     int ret = 0;
     struct stat st;
@@ -333,23 +347,24 @@ int LoadDefaultParams(const char *fileName, uint32_t mode)
     return LoadSecurityLabel(fileName);
 }
 
-static void LoadBuildParameter(void)
+void LoadParamFromBuild(void)
 {
-    // load dynamic parameter
+    PARAM_LOGI("load parameters from build ");
 #ifdef INCREMENTAL_VERSION
-    WriteParam(name, value, NULL, LOAD_PARAM_NORMAL);
+    WriteParam("const.product.incremental.version", INCREMENTAL_VERSION, NULL, LOAD_PARAM_NORMAL);
 #endif
 #ifdef BUILD_TYPE
-    WriteParam(name, BUILD_TYPE, NULL, LOAD_PARAM_NORMAL);
+    WriteParam("const.product.build.type", BUILD_TYPE, NULL, LOAD_PARAM_NORMAL);
 #endif
 #ifdef BUILD_USER
-    WriteParam(name, BUILD_USER, NULL, LOAD_PARAM_NORMAL);
+    WriteParam("const.product.build.user", BUILD_USER, NULL, LOAD_PARAM_NORMAL);
 #endif
 #ifdef BUILD_TIME
-    WriteParam(name, BUILD_TIME, NULL, LOAD_PARAM_NORMAL);
+    PARAM_LOGI("const.product.build.date %s", BUILD_TIME);
+    WriteParam("const.product.build.date", BUILD_TIME, NULL, LOAD_PARAM_NORMAL);
 #endif
 #ifdef BUILD_HOST
-    WriteParam(name, BUILD_HOST, NULL, LOAD_PARAM_NORMAL);
+    WriteParam("const.product.build.host", BUILD_HOST, NULL, LOAD_PARAM_NORMAL);
 #endif
 #ifdef BUILD_ROOTHASH
     WriteParam("const.ohos.buildroothash", BUILD_ROOTHASH, NULL, LOAD_PARAM_NORMAL);
@@ -358,9 +373,6 @@ static void LoadBuildParameter(void)
 
 int LoadPersistParams(void)
 {
-    // first get build parameter
-    LoadBuildParameter();
-
     // get persist parameter
     int ret = InitPersistParamWorkSpace();
     PARAM_CHECK(ret == 0, return ret, "Failed to init persist param");

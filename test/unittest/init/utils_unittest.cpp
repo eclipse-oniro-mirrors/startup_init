@@ -65,9 +65,12 @@ HWTEST_F(UtilsUnitTest, TestString, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     EXPECT_STREQ(rStr, "dbc");
 }
-HWTEST_F(UtilsUnitTest, TestConvertMicrosecondToSecond, TestSize.Level0)
+HWTEST_F(UtilsUnitTest, TestUtilsApi, TestSize.Level0)
 {
     float sec = ConvertMicrosecondToSecond(1000000); // 1000000 microseconds
     EXPECT_EQ(sec, 1);
+    EXPECT_EQ(WriteAll(2, "test", strlen("test")), 4);
+    EXPECT_EQ(InChargerMode(), 0);
+    GetRandom();
 }
 } // namespace init_ut

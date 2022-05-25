@@ -17,6 +17,7 @@
 #define INIT_UTILS_H
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #ifdef __cplusplus
@@ -69,7 +70,7 @@ int StringReplaceChr(char *strl, char oldChr, char newChr);
 
 int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue);
 const InitArgInfo *GetServieStatusMap(int *size);
-unsigned int GetRandom(void);
+uint32_t GetRandom(void);
 #ifdef __cplusplus
 #if __cplusplus
 }

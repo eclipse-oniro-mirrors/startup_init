@@ -46,7 +46,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         const char *libname = (InUpdaterMode() == 1) ? CHECKER_UPDATER_LIB_NAME : CHECKER_LIB_NAME;
         g_selinuxSpace.selinuxHandle = dlopen(libname, RTLD_LAZY);
         PARAM_CHECK(g_selinuxSpace.selinuxHandle != NULL,
-            return -1, "Failed to dlsym selinuxHandle, %s", dlerror());
+            return 0, "Failed to dlsym selinuxHandle, %s", dlerror());
     }
     void *handle = g_selinuxSpace.selinuxHandle;
     if (g_selinuxSpace.setSelinuxLogCallback == NULL) {
@@ -130,8 +130,7 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
 static int SelinuxReadParamCheck(const char *name)
 {
     int ret = DAC_RESULT_FORBIDED;
-    PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return ret, "Invalid getParamLabel");
-    const char *label = g_selinuxSpace.getParamLabel(name);
+    const char *label = GetSelinuxContent(name);
     if (label == NULL) { // open file with readonly
         ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, 1, PARAM_WORKSPACE_MAX);
     } else {
@@ -167,6 +166,11 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
     return ret;
 }
 
+static int UpdaterCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
+{
+    return DAC_RESULT_PERMISSION;
+}
+
 int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
 {
     PARAM_CHECK(ops != NULL, return -1, "Invalid param");
@@ -174,7 +178,11 @@ int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
     ops->securityGetLabel = NULL;
     ops->securityInitLabel = InitLocalSecurityLabel;
     ops->securityCheckFilePermission = CheckFilePermission;
-    ops->securityCheckParamPermission = SelinuxCheckParamPermission;
+    if (InUpdaterMode() == 1) {
+        ops->securityCheckParamPermission = UpdaterCheckParamPermission;
+    } else {
+        ops->securityCheckParamPermission = SelinuxCheckParamPermission;
+    }
     ops->securityFreeLabel = FreeLocalSecurityLabel;
     if (isInit) {
         ops->securityGetLabel = SelinuxGetParamSecurityLabel;
@@ -184,8 +192,12 @@ int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
 
 const char *GetSelinuxContent(const char *name)
 {
-    PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return NULL, "Invalid getParamLabel");
-    return g_selinuxSpace.getParamLabel(name);
+    if (g_selinuxSpace.getParamLabel != NULL) {
+        return g_selinuxSpace.getParamLabel(name);
+    } else {
+        PARAM_LOGE("Can not init selinux");
+        return WORKSPACE_NAME_DEF_SELINUX;
+    }
 }
 
 void OpenPermissionWorkSpace(void)

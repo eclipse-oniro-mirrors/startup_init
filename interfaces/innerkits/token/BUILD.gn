@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import("//base/startup/init_lite/begetd.gni")
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
 
@@ -49,24 +50,29 @@ if (ohos_kernel_type == "liteos_m") {
   }
 }
 
-lite_component("token") {
+lite_component("inittoken") {
   features = []
-  if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
-    features += [ ":token_shared" ]
-  }
-  if (ohos_kernel_type == "liteos_m") {
-    features += [ ":token_static" ]
+  if (enable_ohos_startup_init_feature_begetctl_liteos) {
+    if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
+      features += [ ":token_shared" ]
+    }
+    if (ohos_kernel_type == "liteos_m") {
+      features += [ ":token_static" ]
+    }
   }
 }
 
-ndk_lib("token_notes1") {
-  if (ohos_kernel_type != "liteos_m") {
-    lib_extension = ".so"
-  }
+ndk_lib("inittoken_notes") {
   deps = []
-  if (ohos_kernel_type != "liteos_m") {
-    deps +=
-        [ "//base/startup/init_lite/interfaces/innerkits/token:token_shared" ]
+  head_files = []
+  if (enable_ohos_startup_init_feature_begetctl_liteos) {
+    if (ohos_kernel_type != "liteos_m") {
+      lib_extension = ".so"
+    }
+    if (ohos_kernel_type != "liteos_m") {
+      deps +=
+          [ "//base/startup/init_lite/interfaces/innerkits/token:token_shared" ]
+    }
+    head_files += [ "//base/startup/init_lite/interfaces/include/token" ]
   }
-  head_files = [ "//base/startup/init_lite/interfaces/include/token" ]
 }

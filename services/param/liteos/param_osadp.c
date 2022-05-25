@@ -17,15 +17,21 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <string.h>
+#ifdef __LITEOS_A__
 #include <sys/ipc.h>
 #include <sys/mman.h>
 #include <sys/shm.h>
+#else
+#include "los_task.h"
+#endif
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
+
+#include "param_security.h"
 
 #define NSEC_PER_MSEC 1000000LL
 #define MSEC_PER_SEC 1000LL
@@ -86,12 +92,9 @@ int ParamTimerStart(const ParamTaskPtr timer, uint64_t timeout, uint64_t repeat)
 {
     PARAM_CHECK(timer != NULL, return -1, "Invalid timer");
     ParamTimer *paramTimer = (ParamTimer *)timer;
-    PARAM_LOGE("ParamTimerStart timeout %llu ", timeout);
+    PARAM_LOGV("ParamTimerStart timeout %llu ", timeout);
     int32_t ret = StartTimer(paramTimer, timeout, repeat);
-    if (ret < 0) {
-        PARAM_LOGE("Failed to start timer");
-        return -1;
-    }
+    PARAM_CHECK(ret >= 0, return -1, "Failed to start timer");
     return 0;
 }
 
@@ -130,6 +133,11 @@ void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
     PARAM_CHECK(mem != NULL && handle != NULL, return, "Invalid mem or handle");
     shmdt(mem);
     shmctl(handle->shmid, IPC_RMID, NULL);
+}
+
+void paramMutexEnvInit(void)
+{
+    return;
 }
 
 int ParamRWMutexCreate(ParamRWMutex *lock)
@@ -221,6 +229,13 @@ void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
     free(mem);
 }
 
+void paramMutexEnvInit(void)
+{
+    uint32_t ret = OsMuxInit();
+    PARAM_CHECK(ret == LOS_OK, return, "Failed to init mutex ret %d", ret);
+    return;
+}
+
 int ParamRWMutexCreate(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
@@ -232,32 +247,32 @@ int ParamRWMutexCreate(ParamRWMutex *lock)
 int ParamRWMutexWRLock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxPend(&lock->mutex, LOS_WAIT_FOREVER);
-    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d", ret);
+    uint32_t ret = LOS_MuxPend(lock->mutex, LOS_WAIT_FOREVER);
+    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d %d", ret, lock->mutex);
     return 0;
 }
 
 int ParamRWMutexRDLock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxPend(&lock->mutex, LOS_WAIT_FOREVER);
-    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d", ret);
+    uint32_t ret = LOS_MuxPend(lock->mutex, LOS_WAIT_FOREVER);
+    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d %d", ret, lock->mutex);
     return 0;
 }
 
 int ParamRWMutexUnlock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxPost(&lock->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d", ret);
+    uint32_t ret = LOS_MuxPost(lock->mutex);
+    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d %d", ret, lock->mutex);
     return 0;
 }
 
 int ParamRWMutexDelete(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxDelete(&lock->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d", ret);
+    uint32_t ret = LOS_MuxDelete(lock->mutex);
+    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d %d", ret, lock->mutex);
     return 0;
 }
 
@@ -272,24 +287,102 @@ int ParamMutexCeate(ParamMutex *mutex)
 int ParamMutexPend(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxPend(&mutex->mutex, LOS_WAIT_FOREVER);
-    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d", ret);
+    uint32_t ret = LOS_MuxPend(mutex->mutex, LOS_WAIT_FOREVER);
+    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d %d", ret, mutex->mutex);
     return 0;
 }
 
 int ParamMutexPost(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxPost(&mutex->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d", ret);
+    uint32_t ret = LOS_MuxPost(mutex->mutex);
+    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lockret %d %d", ret, mutex->mutex);
     return 0;
 }
 
 int ParamMutexDelete(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid mutex");
-    uint32_t ret = LOS_MuxDelete(&mutex->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to delete mutex lock ret %d", ret);
+    uint32_t ret = LOS_MuxDelete(mutex->mutex);
+    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to delete mutex lock ret %d %d", ret, mutex->mutex);
     return 0;
 }
 #endif
+
+#ifndef STARTUP_INIT_TEST
+static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
+{
+    UNUSED(isInit);
+    PARAM_CHECK(security != NULL, return -1, "Invalid security");
+#if defined __LITEOS_A__
+    security->cred.pid = getpid();
+    security->cred.uid = getuid();
+    security->cred.gid = 0;
+#else
+    security->cred.pid = 0;
+    security->cred.uid = 0;
+    security->cred.gid = 0;
+#endif
+    security->flags[PARAM_SECURITY_DAC] |= LABEL_CHECK_IN_ALL_PROCESS;
+    return 0;
+}
+
+static int FreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
+{
+    return 0;
+}
+
+static int DacGetParamSecurityLabel(const char *path)
+{
+    UNUSED(path);
+    return 0;
+}
+
+static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char *fileName, int flags)
+{
+    UNUSED(flags);
+    PARAM_CHECK(localLabel != NULL && fileName != NULL, return -1, "Invalid param");
+    return 0;
+}
+
+static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
+{
+#if defined(__LITEOS_A__)
+    uid_t uid = getuid();
+    return uid <= SYS_UID_INDEX ? DAC_RESULT_PERMISSION : DAC_RESULT_FORBIDED;
+#endif
+#if defined(__LITEOS_M__)
+    return DAC_RESULT_PERMISSION;
+#endif
+    return DAC_RESULT_PERMISSION;
+}
+
+int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
+{
+    PARAM_CHECK(ops != NULL, return -1, "Invalid param");
+    PARAM_LOGV("RegisterSecurityDacOps %d", isInit);
+    int ret = strcpy_s(ops->name, sizeof(ops->name), "dac");
+    ops->securityGetLabel = NULL;
+    ops->securityInitLabel = InitLocalSecurityLabel;
+    ops->securityCheckFilePermission = CheckFilePermission;
+    ops->securityCheckParamPermission = DacCheckParamPermission;
+    ops->securityFreeLabel = FreeLocalSecurityLabel;
+    if (isInit) {
+        ops->securityGetLabel = DacGetParamSecurityLabel;
+    }
+    return ret;
+}
+
+void LoadGroupUser(void)
+{
+}
+#endif
+
+uint32_t Difftime(time_t curr, time_t base)
+{
+#ifndef __LITEOS_M__
+    return (uint32_t)difftime(curr, base);
+#else
+    return 0;
+#endif
+}

@@ -34,6 +34,12 @@ if (defined(ohos_lite)) {
       defines += [ "LINUX_WATCHDOG" ]
     }
   }
+
+  group("init_watchdog") {
+    if (ohos_kernel_type == "linux" || ohos_kernel_type == "liteos_a") {
+      deps = [ ":watchdog_service" ]
+    }
+  }
 } else {
   import("//build/ohos.gni")
   ohos_executable("watchdog_service") {

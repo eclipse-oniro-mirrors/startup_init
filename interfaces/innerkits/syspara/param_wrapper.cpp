@@ -19,6 +19,7 @@
 #include <vector>
 #include <climits>
 
+#include "beget_ext.h"
 #include "param_comm.h"
 #include "init_param.h"
 #include "sysparam_errno.h"
@@ -73,7 +74,7 @@ std::string GetParameter(const std::string& key, const std::string& def)
             return std::string(value.data());
         }
     }
-    if (IsValidValue(def.c_str(), MAX_VALUE_LEN) == 1) {
+    if (IsValidParamValue(def.c_str(), MAX_VALUE_LEN) == 1) {
         return std::string(def);
     }
     return "";
@@ -109,7 +110,7 @@ int GetStringParameter(const std::string key, std::string &value, const std::str
             return EC_SUCCESS;
         }
     }
-    if (IsValidValue(def.c_str(), MAX_VALUE_LEN) == 1) {
+    if (IsValidParamValue(def.c_str(), MAX_VALUE_LEN) == 1) {
         value = std::string(def);
         return EC_SUCCESS;
     }

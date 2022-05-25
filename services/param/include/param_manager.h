@@ -81,7 +81,7 @@ int InitParamWorkSpace(int onlyRead);
 void CloseParamWorkSpace(void);
 WorkSpace *GetWorkSpace(const char *name);
 int AddWorkSpace(const char *name, int onlyRead, uint32_t spacesize);
-WorkSpace *GetFristWorkSpace(void);
+WorkSpace *GetFirstWorkSpace(void);
 WorkSpace *GetNextWorkSpace(WorkSpace *curr);
 
 ParamTrieNode *GetTrieNodeByHandle(ParamHandle handle);
@@ -112,6 +112,7 @@ typedef struct {
 
 const char *GetSelinuxContent(const char *name);
 
+void LoadParamFromBuild(void);
 int LoadParamFromCmdLine(void);
 void LoadSelinuxLabel(void);
 
@@ -120,6 +121,7 @@ void ClosePersistParamWorkSpace(void);
 int WritePersistParam(const char *name, const char *value);
 long long GetPersistCommitId(void);
 void UpdatePersistCommitId(void);
+int SysCheckParamExist(const char *name);
 
 #ifdef STARTUP_INIT_TEST
 ParamService *GetParamService();
