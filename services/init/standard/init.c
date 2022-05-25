@@ -216,10 +216,10 @@ static void StartInitSecondStage(void)
 void SystemPrepare(void)
 {
     MountBasicFs();
+    CreateDeviceNode();
     LogInit();
     // Make sure init log always output to /dev/kmsg.
     EnableDevKmsg();
-    CreateDeviceNode();
     // Only ohos normal system support
     // two stages of init.
     // If we are in updater mode, only one stage of init,
