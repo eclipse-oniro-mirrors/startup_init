@@ -16,7 +16,7 @@ vpn:x:1016:
 keystore:x:1017:
 usb:x:1018:
 drm:x:1019:
-wifi:x:1020:
+location:x:1020:
 media_rw:x:1023:
 dsoftbus:x:1024:
 nfc:x:1027:
