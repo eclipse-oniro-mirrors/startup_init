@@ -94,14 +94,7 @@ static void ParseAllImports(const cJSON *root)
 void ReadConfig(void)
 {
     // parse cfg
-    char buffer[32] = {0}; // 32 reason max leb
-    uint32_t len = sizeof(buffer);
-    SystemReadParam("ohos.boot.reboot_reason", buffer, &len);
-    INIT_LOGV("ohos.boot.reboot_reason %s", buffer);
-    if (strcmp(buffer, "poweroff_charge") == 0) {
-        ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
-        ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
-    } else if (InUpdaterMode() == 0) {
+    if (InUpdaterMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CFG_PATH, ".cfg", ParseInitCfg, NULL);
         ReadFileInDir("/vendor/etc/init", ".cfg", ParseInitCfg, NULL);
