@@ -28,25 +28,6 @@
 
 #include "init_utils.h"
 
-void CheckAndCreateDir(const char *fileName)
-{
-#ifndef __LITEOS_M__
-    if (fileName == NULL || *fileName == '\0') {
-        return;
-    }
-    char *path = strndup(fileName, strrchr(fileName, '/') - fileName);
-    if (path == NULL) {
-        return;
-    }
-    if (access(path, F_OK) == 0) {
-        free(path);
-        return;
-    }
-    MakeDirRecursive(path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    free(path);
-#endif
-}
-
 int SpliteString(char *line, const char *exclude[], uint32_t count,
     int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context)
 {

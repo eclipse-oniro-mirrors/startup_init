@@ -87,9 +87,11 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/loopevent/include",
       "//third_party/bounds_checking_function/include",
       "//base/startup/init_lite/interfaces/innerkits/sandbox/include",
+      "//base/startup/init_lite/interfaces/innerkits/control_fd",
     ]
     deps = [
       "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+      "//base/startup/init_lite/interfaces/innerkits/control_fd:libcontrolfd",
       "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox",
       "//third_party/bounds_checking_function:libsec_shared",
     ]

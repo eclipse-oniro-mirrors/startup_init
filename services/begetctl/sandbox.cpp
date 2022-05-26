@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "begetctl.h"
+#include "control_fd.h"
 #include "init_utils.h"
 #include "sandbox.h"
 #include "sandbox_namespace.h"
@@ -32,8 +33,8 @@
 
 using namespace OHOS;
 struct option g_options[] = {
-    { "config_file", required_argument, nullptr, 'c' },
-    { "sandbox_name", required_argument, nullptr, 's' },
+    { "service_name", required_argument, nullptr, 's' },
+    { "namespace_name", required_argument, nullptr, 'n' },
     { "process_name", required_argument, nullptr, 'p' },
     { "help", no_argument, nullptr, 'h' },
     { nullptr, 0, nullptr, 0 },
@@ -41,43 +42,17 @@ struct option g_options[] = {
 
 static void Usage()
 {
-    std::cout << "sandbox -c, --config_file=sandbox config file \"config file with json format\"" << std::endl;
-    std::cout << "sandbox -s, --sandbox_name=sandbox name \"Sandbox name, system, chipset etc.\"" << std::endl;
+    std::cout << "sandbox -s | -n [-p] | -p | -h" << std::endl;
+    std::cout << "sandbox -s, --service_name=sandbox service \"enter service sandbox\"" << std::endl;
+    std::cout << "sandbox -n, --namespace_name=namespace name \"namespace name, system, chipset etc.\"" << std::endl;
     std::cout << "sandbox -p, --process=process name \"sh, hdcd, hdf_devhost, etc.\"" << std::endl;
     std::cout << "sandbox -h, --help \"Show help\"" << std::endl;
     exit(0);
 }
 
-static std::string SearchConfigBySandboxName(const std::string &sandboxName)
+static void RunSandbox(const std::string &sandboxName)
 {
-    std::map<std::string, std::string> sandboxConfigMap = {
-        {"system", "/system/etc/system-sandbox.json"},
-        {"chipset", "/system/etc/chipset-sandbox.json"},
-        {"priv-app", "/system/etc/priv-app-sandbox.json"},
-        {"app", "/system/etc/app-sandbox.json"},
-    };
-    auto it = sandboxConfigMap.find(sandboxName);
-    if (it == sandboxConfigMap.end()) {
-        return "";
-    } else {
-        return it->second;
-    }
-}
-
-static void RunSandbox(const std::string &configFile, const std::string &name)
-{
-    std::string config {};
-    std::string sandboxName {};
-    if (!name.empty()) {
-        config = SearchConfigBySandboxName(name);
-        sandboxName = name;
-    } else {
-        // Without sandbox name, give one.
-        sandboxName = "sandbox_test";
-    }
-
-    if (config.empty()) {
-        std::cout << "No sandbox name " << sandboxName << "or config file specified!" << std::endl;
+    if (sandboxName.empty()) {
         return;
     }
     InitDefaultNamespace();
@@ -139,18 +114,21 @@ static void EnterExec(const std::string &processName)
     return;
 }
 
-static void RunCmd(const std::string &configFile, const std::string &sandboxName, const std::string &processName)
+static void RunCmd(const std::string &serviceName, const std::string &namespaceName, const std::string &processName)
 {
-    if (!sandboxName.empty() && processName.empty()) {
-        RunSandbox(configFile, sandboxName);
+    if (!namespaceName.empty() && processName.empty() && serviceName.empty()) {
+        RunSandbox(namespaceName);
         EnterShell();
-    } else if (!sandboxName.empty() && !processName.empty()) {
-        RunSandbox(configFile, sandboxName);
+    } else if (!namespaceName.empty() && !processName.empty() && serviceName.empty()) {
+        RunSandbox(namespaceName);
         EnterExec(processName);
-    } else if (sandboxName.empty() && !processName.empty()) {
+    } else if (namespaceName.empty() && !processName.empty() && serviceName.empty()) {
         std::cout << "process name:" << processName << std::endl;
-        RunSandbox(configFile, std::string("system"));
+        RunSandbox(std::string("system"));
         EnterExec(processName);
+    } else if (namespaceName.empty() && processName.empty() && !serviceName.empty()) {
+        std::cout << "enter sandbox service name " << serviceName << std::endl;
+        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_SANDBOX, serviceName.c_str(), "FIFO");
     } else {
         Usage();
     }
@@ -160,35 +138,35 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
 {
     int rc = -1;
     int optIndex = -1;
-    std::string configFile {};
-    std::string sandboxName {};
+    std::string serviceName {};
+    std::string namespaceName {};
     std::string processName {};
-    while ((rc = getopt_long(argc, argv, "c:s:p:h",  g_options, &optIndex)) != -1) {
+    while ((rc = getopt_long(argc, argv, "s:n:p:h",  g_options, &optIndex)) != -1) {
         switch (rc) {
             case 0: {
                 std::string optionName = g_options[optIndex].name;
-                if (optionName == "config_file") {
-                    configFile = optarg;
+                if (optionName == "service_name") {
+                    serviceName = optarg;
                 } else if (optionName == "help") {
                     Usage();
-                } else if (optionName == "sandbox_name") {
-                    sandboxName = optarg;
+                } else if (optionName == "namespace_name") {
+                    namespaceName = optarg;
                 } else if (optionName == "process_name") {
                     processName = optarg;
                 }
                 break;
             }
-            case 'c':
-                configFile = optarg;
+            case 's':
+                serviceName = optarg;
                 break;
             case 'h':
                 Usage();
                 break;
-            case 's':
-                sandboxName = optarg;
+            case 'n':
+                namespaceName = optarg;
                 break;
             case 'p':
-                std::cout << "1111 process name:" << optarg << std::endl;
+                std::cout << "process name:" << optarg << std::endl;
                 processName = optarg;
                 break;
             case '?':
@@ -199,7 +177,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
                 break;
         }
     }
-    RunCmd(configFile, sandboxName, processName);
+    RunCmd(serviceName, namespaceName, processName);
     return 0;
 }
 
@@ -207,8 +185,18 @@ MODULE_CONSTRUCTOR(void)
 {
     CmdInfo infos[] = {
         {
-            (char *)"sandbox", main_cmd, (char *)"sandbox debug tool",
-            (char *)"sandbox -s, --sandbox=system, chipset, priv-app, or app",
+            (char *)"sandbox", main_cmd, (char *)"enter service sandbox",
+            (char *)"sandbox -s service_name",
+            NULL
+        },
+        {
+            (char *)"sandbox", main_cmd, (char *)"enter namespace, system, chipset etc.",
+            (char *)"sandbox -n namespace_name [-p]",
+            NULL
+        },
+        {
+            (char *)"sandbox", main_cmd, (char *)"enter namespace and exec process",
+            (char *)"sandbox -p process_name",
             NULL
         }
     };

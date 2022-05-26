@@ -69,23 +69,10 @@ static int CreatePipeSocket_(const char *server)
     LE_CHECK(ret == 0, close(fd);
         return ret, "Failed to memset_s serverAddr");
     serverAddr.sun_family = AF_UNIX;
-    // bind local
-    ret = sprintf_s(serverAddr.sun_path, sizeof(serverAddr.sun_path), "%s_%d", server, getpid());
-    LE_CHECK(ret > 0, close(fd);
-        return ret, "Failed to sprintf_s sun_path");
-    uint32_t size = offsetof(struct sockaddr_un, sun_path) + strlen(serverAddr.sun_path);
-    ret = bind(fd, (struct sockaddr *)&serverAddr, size);
-    LE_CHECK(ret >= 0, close(fd);
-        return ret, "Failed to bind socket");
-
-    ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
-    LE_CHECK(ret == 0, close(fd);
-        return ret, "Failed to memset_s serverAddr");
-    serverAddr.sun_family = AF_UNIX;
     ret = strcpy_s(serverAddr.sun_path, sizeof(serverAddr.sun_path), server);
     LE_CHECK(ret == 0, close(fd);
         return ret, "Failed to strcpy_s sun_path");
-    size = offsetof(struct sockaddr_un, sun_path) + strlen(serverAddr.sun_path);
+    uint32_t size = offsetof(struct sockaddr_un, sun_path) + strlen(serverAddr.sun_path);
     ret = connect(fd, (struct sockaddr *)&serverAddr, size);
     LE_CHECK(ret >= 0, close(fd);
         return ret, "Failed to connect socket");

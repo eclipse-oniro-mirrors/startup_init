@@ -46,45 +46,45 @@ static const int CRITICAL_CONFIG_ARRAY_LEN = 3;
 #ifdef OHOS_SERVICE_DUMP
 static void DumpServiceArgs(const char *info, const ServiceArgs *args)
 {
-    INIT_LOGI("\tservice %s count %d", info, args->count);
+    printf("\tservice %s count %d", info, args->count);
     for (int j = 0; j < args->count; j++) {
         if (args->argv[j] != NULL) {
-            INIT_LOGI("\t\tinfo [%d] %s", j, args->argv[j]);
+            printf("\t\tinfo [%d] %s", j, args->argv[j]);
         }
     }
 }
 
 static void DumpServiceJobs(const Service *service)
 {
-    INIT_LOGI("\tservice job info");
+    printf("\tservice job info");
     if (service->serviceJobs.jobsName[JOB_ON_BOOT] != NULL) {
-        INIT_LOGI("\t\tservice boot job %s", service->serviceJobs.jobsName[JOB_ON_BOOT]);
+        printf("\t\tservice boot job %s", service->serviceJobs.jobsName[JOB_ON_BOOT]);
     }
     if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
-        INIT_LOGI("\t\tservice start job %s", service->serviceJobs.jobsName[JOB_ON_START]);
+        printf("\t\tservice start job %s", service->serviceJobs.jobsName[JOB_ON_START]);
     }
     if (service->serviceJobs.jobsName[JOB_ON_STOP] != NULL) {
-        INIT_LOGI("\t\tservice stop job %s", service->serviceJobs.jobsName[JOB_ON_STOP]);
+        printf("\t\tservice stop job %s", service->serviceJobs.jobsName[JOB_ON_STOP]);
     }
     if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
-        INIT_LOGI("\t\tservice restart job %s", service->serviceJobs.jobsName[JOB_ON_RESTART]);
+        printf("\t\tservice restart job %s", service->serviceJobs.jobsName[JOB_ON_RESTART]);
     }
 }
 
 static void DumpServiceSocket(const Service *service)
 {
-    INIT_LOGI("\tservice socket info");
+    printf("\tservice socket info");
     ServiceSocket *sockopt = service->socketCfg;
     while (sockopt != NULL) {
-        INIT_LOGI("\t\tsocket name: %s", sockopt->name);
-        INIT_LOGI("\t\tsocket type: %d", sockopt->type);
-        INIT_LOGI("\t\tsocket uid: %d", sockopt->uid);
-        INIT_LOGI("\t\tsocket gid: %d", sockopt->gid);
+        printf("\t\tsocket name: %s", sockopt->name);
+        printf("\t\tsocket type: %d", sockopt->type);
+        printf("\t\tsocket uid: %d", sockopt->uid);
+        printf("\t\tsocket gid: %d", sockopt->gid);
         sockopt = sockopt->next;
     }
 }
 
-void DumpAllServices()
+void DumpOneService(const Service *service)
 {
     const InitArgInfo startModeMap[] = {
         {"condition", START_MODE_CONDITION},
@@ -93,8 +93,33 @@ void DumpAllServices()
     };
     int size = 0;
     const InitArgInfo *statusMap = GetServieStatusMap(&size);
-    INIT_LOGI("Ready to dump all services:");
-    INIT_LOGI("total service number: %d", g_serviceSpace.serviceCount);
+    printf("\tservice name: [%s]", service->name);
+    printf("\tservice pid: [%d]", service->pid);
+    printf("\tservice crashCnt: [%d]", service->crashCnt);
+    printf("\tservice attribute: [%d]", service->attribute);
+    printf("\tservice importance: [%d]", service->importance);
+    printf("\tservice startMode: [%s]", startModeMap[service->status].name);
+    printf("\tservice status: [%s]", statusMap[service->status].name);
+    printf("\tservice perms uID [%d]", service->servPerm.uID);
+    DumpServiceArgs("path arg", &service->pathArgs);
+    DumpServiceArgs("writepid file", &service->writePidArgs);
+    DumpServiceJobs(service);
+    DumpServiceSocket(service);
+
+    printf("\tservice perms groupId %d", service->servPerm.gIDCnt);
+    for (int i = 0; i < service->servPerm.gIDCnt; i++) {
+        printf("\t\tservice perms groupId %d", service->servPerm.gIDArray[i]);
+    }
+    printf("\tservice perms capability %d", service->servPerm.capsCnt);
+    for (int i = 0; i < (int)service->servPerm.capsCnt; i++) {
+        printf("\t\tservice perms capability %d", service->servPerm.caps[i]);
+    }
+}
+
+void DumpAllServices()
+{
+    printf("Ready to dump all services:");
+    printf("total service number: %d", g_serviceSpace.serviceCount);
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
     while (node != NULL) {
         if (node->data.service == NULL) {
@@ -102,30 +127,10 @@ void DumpAllServices()
             continue;
         }
         Service *service = node->data.service;
-        INIT_LOGI("\tservice name: [%s]", service->name);
-        INIT_LOGI("\tservice pid: [%d]", service->pid);
-        INIT_LOGI("\tservice crashCnt: [%d]", service->crashCnt);
-        INIT_LOGI("\tservice attribute: [%d]", service->attribute);
-        INIT_LOGI("\tservice importance: [%d]", service->importance);
-        INIT_LOGI("\tservice startMode: [%s]", startModeMap[service->status].name);
-        INIT_LOGI("\tservice status: [%s]", statusMap[service->status].name);
-        INIT_LOGI("\tservice perms uID [%d]", service->servPerm.uID);
-        DumpServiceArgs("path arg", &service->pathArgs);
-        DumpServiceArgs("writepid file", &service->writePidArgs);
-        DumpServiceJobs(service);
-        DumpServiceSocket(service);
-
-        INIT_LOGI("\tservice perms groupId %d", service->servPerm.gIDCnt);
-        for (int i = 0; i < service->servPerm.gIDCnt; i++) {
-            INIT_LOGI("\t\tservice perms groupId %d", service->servPerm.gIDArray[i]);
-        }
-        INIT_LOGI("\tservice perms capability %d", service->servPerm.capsCnt);
-        for (int i = 0; i < (int)service->servPerm.capsCnt; i++) {
-            INIT_LOGI("\t\tservice perms capability %d", service->servPerm.caps[i]);
-        }
+        DumpOneService(service);
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
-    INIT_LOGI("Dump all services finished");
+    printf("Dump all services finished");
 }
 #endif
 

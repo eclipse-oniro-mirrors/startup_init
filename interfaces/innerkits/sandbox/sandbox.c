@@ -210,7 +210,7 @@ static int GetSandboxInfo(sandbox_t *sandbox, cJSON *root, const char *itemName)
     } else if (strcmp(itemName, SANDBOX_SYMLINK_TAG) == 0) {
         func = AddSymbolLinksToSandbox;
     } else {
-        BEGET_LOGE("Failed %s item name is not support.", itemName);
+        BEGET_LOGE("%s item name is not support.", itemName);
         return -1;
     }
     for (int i = 0; i < counts; i++) {
@@ -269,7 +269,7 @@ static int ParseSandboxConfig(sandbox_t *sandbox, const char *sandboxConfig)
 static const struct SandboxMap *GetSandboxMapByName(const char *name)
 {
     if (name == NULL) {
-        BEGET_LOGE("Failed get sandbox map name is NULL.");
+        BEGET_LOGE("Sandbox map name is NULL.");
         return NULL;
     }
     int len = ARRAY_LENGTH(g_map);
@@ -296,7 +296,7 @@ static void InitSandbox(sandbox_t *sandbox, const char *sandboxConfig, const cha
     }
     sandbox->ns = GetNamespaceFd("/proc/self/ns/mnt");
     if (sandbox->ns < 0) {
-        BEGET_LOGE("Failed get sandbox namespace fd.");
+        BEGET_LOGE("Get sandbox namespace fd is failed");
         return;
     }
 
@@ -436,7 +436,7 @@ int PrepareSandbox(const char *name)
     BEGET_ERROR_CHECK(name != NULL, return -1, "Prepare sandbox name is NULL.");
     BEGET_ERROR_CHECK(getuid() == 0, return -1, "Current process uid is not root, exit.");
     const struct SandboxMap *map = GetSandboxMapByName(name);
-    BEGET_ERROR_CHECK(map != NULL, return -1, "Failed get sandbox map by name %s.", name);
+    BEGET_ERROR_CHECK(map != NULL, return -1, "Cannot get sandbox map by name %s.", name);
     sandbox_t *sandbox = map->sandbox;
     BEGET_CHECK(IsValidSandbox(sandbox) == true, return -1);
     BEGET_INFO_CHECK(sandbox->isCreated == false, return 0, "Sandbox %s already created", sandbox->name);
@@ -559,7 +559,7 @@ void DestroySandbox(const char *name)
     }
     const struct SandboxMap *map = GetSandboxMapByName(name);
     if (map == NULL) {
-        BEGET_LOGE("Failed get sandbox map by name %s.", name);
+        BEGET_LOGE("Cannot get sandbox map by name %s.", name);
         return;
     }
     sandbox_t *sandbox = map->sandbox;
@@ -589,7 +589,7 @@ int EnterSandbox(const char *name)
     }
     const struct SandboxMap *map = GetSandboxMapByName(name);
     if (map == NULL) {
-        BEGET_LOGE("Failed to get sandbox map by name %s.", name);
+        BEGET_LOGE("Cannot get sandbox map by name %s.", name);
         return -1;
     }
     sandbox_t *sandbox = map->sandbox;
@@ -603,7 +603,7 @@ int EnterSandbox(const char *name)
     }
     if (sandbox->ns > 0) {
         if (SetNamespace(sandbox->ns, CLONE_NEWNS) < 0) {
-            BEGET_LOGE("Failed to enter mount namespace for sandbox \' %s \', err=%d.", name, errno);
+            BEGET_LOGE("Cannot enter mount namespace for sandbox \' %s \', err=%d.", name, errno);
             return -1;
         }
     } else {

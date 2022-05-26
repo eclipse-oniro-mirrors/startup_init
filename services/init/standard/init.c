@@ -29,6 +29,7 @@
 #include "device.h"
 #include "fd_holder_service.h"
 #include "fs_manager/fs_manager.h"
+#include "init_control_fd_service.h"
 #include "init_log.h"
 #include "init_mount.h"
 #include "init_group_manager.h"
@@ -106,6 +107,7 @@ void SystemInit(void)
     if (sock >= 0) {
         RegisterFdHoldWatcher(sock);
     }
+    InitControlFd();
 }
 
 static void EnableDevKmsg(void)
@@ -392,15 +394,15 @@ void SetServiceEnterSandbox(const char *execPath, unsigned int attribute)
         } else if (strcmp(execPath, "/system/bin/hilogd") == 0) {
             INIT_LOGI("Hilogd skip enter sandbox.");
         } else {
-            INIT_ERROR_CHECK(EnterSandbox("system") == 0, return,
-                "Service %s failed enter sandbox system.", execPath);
+            INIT_INFO_CHECK(EnterSandbox("system") == 0, return,
+                "Service %s skip enter sandbox system.", execPath);
         }
     } else if (strncmp(execPath, "/vendor/bin/", strlen("/vendor/bin/")) == 0) {
         // chipset sandbox will be implemented later.
-        INIT_ERROR_CHECK(EnterSandbox("system") == 0, return,
-            "Service %s failed enter sandbox system.", execPath);
+        INIT_INFO_CHECK(EnterSandbox("system") == 0, return,
+            "Service %s skip enter sandbox system.", execPath);
     } else {
-        INIT_LOGE("Service %s does not enter sandbox", execPath);
+        INIT_LOGI("Service %s does not enter sandbox", execPath);
     }
     return;
 }

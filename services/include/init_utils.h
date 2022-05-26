@@ -59,6 +59,7 @@ size_t WriteAll(int fd, const char *buffer, size_t size);
 char *GetRealPath(const char *source);
 int StringToInt(const char *str, int defaultValue);
 int MakeDirRecursive(const char *dir, mode_t mode);
+void CheckAndCreateDir(const char *fileName);
 int MakeDir(const char *dir, mode_t mode);
 int ReadFileInDir(const char *dirPath, const char *includeExt,
     int (*processFile)(const char *fileName, void *context), void *context);

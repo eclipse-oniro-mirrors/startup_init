@@ -24,6 +24,7 @@
 #include <sys/capability.h>
 #include <sys/ioctl.h>
 #include <sys/param.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
@@ -278,6 +279,57 @@ static void ClearEnvironment(Service *service)
     return;
 }
 
+static int InitServicePropertys(Service *service)
+{
+    INIT_ERROR_CHECK(service != NULL, return -1, "Invaild parameter.");
+    SetServiceEnterSandbox(service->pathArgs.argv[0], service->attribute);
+    INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS, "access token failed %s", service->name);
+    // deal start job
+    if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
+        DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
+    }
+    ClearEnvironment(service);
+
+    if (!IsOnDemandService(service)) {
+        INIT_ERROR_CHECK(CreateServiceSocket(service) >= 0, return -1,
+            "service %s exit! create socket failed!", service->name);
+    }
+
+    CreateServiceFile(service->fileCfg);
+    if (service->attribute & SERVICE_ATTR_CONSOLE) {
+        OpenConsole();
+    }
+
+    PublishHoldFds(service);
+    INIT_CHECK_ONLY_ELOG(BindCpuCore(service) == SERVICE_SUCCESS,
+        "binding core number failed for service %s", service->name);
+    // permissions
+    INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
+        "service %s exit! set perms failed! err %d.", service->name, errno);
+    // write pid
+    INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
+        "service %s exit! write pid failed!", service->name);
+    SetSecon(service);
+    return 0;
+}
+
+void EnterServiceSandbox(Service *service)
+{
+    INIT_ERROR_CHECK(InitServicePropertys(service) == 0, return, "Failed init service property");
+    if (service->importance != 0) {
+        if (setpriority(PRIO_PROCESS, 0, service->importance) != 0) {
+            INIT_LOGE("setpriority failed for %s, importance = %d, err=%d",
+                service->name, service->importance, errno);
+                _exit(0x7f); // 0x7f: user specified
+        }
+    }
+    INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
+    char *argv[] = { (char *)"/bin/sh", NULL };
+    INIT_CHECK_ONLY_ELOG(execv(argv[0], argv) == 0,
+        "service %s execv sh failed! err %d.", service->name, errno);
+    _exit(PROCESS_EXIT_CODE);
+}
+
 int ServiceStart(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
@@ -298,35 +350,7 @@ int ServiceStart(Service *service)
     }
     int pid = fork();
     if (pid == 0) {
-        SetServiceEnterSandbox(service->pathArgs.argv[0], service->attribute);
-
-        INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS, "access token failed %s", service->name);
-        // deal start job
-        if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
-            DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
-        }
-
-        ClearEnvironment(service);
-
-        if (!IsOnDemandService(service)) {
-            INIT_ERROR_CHECK(CreateServiceSocket(service) >= 0, return SERVICE_FAILURE,
-                "service %s exit! create socket failed!", service->name);
-        }
-
-        CreateServiceFile(service->fileCfg);
-        if (service->attribute & SERVICE_ATTR_CONSOLE) {
-            OpenConsole();
-        }
-        PublishHoldFds(service);
-        INIT_CHECK_ONLY_ELOG(BindCpuCore(service) == SERVICE_SUCCESS,
-            "binding core number failed for service %s", service->name);
-        // permissions
-        INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
-            "service %s exit! set perms failed! err %d.", service->name, errno);
-        // write pid
-        INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
-            "service %s exit! write pid failed!", service->name);
-        SetSecon(service);
+        INIT_ERROR_CHECK(InitServicePropertys(service) == 0, return SERVICE_FAILURE, "Failed init service property");
         ServiceExec(service);
         _exit(PROCESS_EXIT_CODE);
     } else if (pid < 0) {
