@@ -30,7 +30,7 @@ int GetNamespaceFd(const char *nsPath)
     }
     int ns = open(nsPath, O_RDONLY | O_CLOEXEC);
     if (ns < 0) {
-        BEGET_LOGE("Failed unshare namespace, err=%d", errno);
+        BEGET_LOGE("Open default namespace failed, err=%d", errno);
         return -1;
     }
     return ns;
@@ -40,25 +40,25 @@ int UnshareNamespace(int nsType)
 {
     if (nsType == CLONE_NEWNS) {
         if (unshare(nsType) < 0) {
-            BEGET_LOGE("Failed unshare namespace, err=%d", errno);
+            BEGET_LOGE("Unshare namespace failed, err=%d", errno);
             return -1;
         } else {
             return 0;
         }
     } else {
-        BEGET_LOGE("Failed unshare, type is not support");
+        BEGET_LOGE("Namespace type is not support");
         return -1;
     }
 }
 
-int SetNamespce(int nsFd, int nsType)
+int SetNamespace(int nsFd, int nsType)
 {
     if (nsFd < 0) {
-        BEGET_LOGE("Failed get namespace fd");
+        BEGET_LOGE("Namespace fd is invaild");
         return -1;
     }
     if (nsType != CLONE_NEWNS) {
-        BEGET_LOGE("Failed get namespace type");
+        BEGET_LOGE("Namespace type is not support");
         return -1;
     }
     return setns(nsFd, nsType);
@@ -78,7 +78,7 @@ int EnterDefaultNamespace(void)
     if (g_defaultNs < 0) {
         return -1;
     }
-    return SetNamespce(g_defaultNs, CLONE_NEWNS);
+    return SetNamespace(g_defaultNs, CLONE_NEWNS);
 }
 
 void CloseDefaultNamespace(void)

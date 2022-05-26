@@ -349,6 +349,25 @@ int MakeDirRecursive(const char *dir, mode_t mode)
     return MakeDir(dir, mode);
 }
 
+void CheckAndCreateDir(const char *fileName)
+{
+#ifndef __LITEOS_M__
+    if (fileName == NULL || *fileName == '\0') {
+        return;
+    }
+    char *path = strndup(fileName, strrchr(fileName, '/') - fileName);
+    if (path == NULL) {
+        return;
+    }
+    if (access(path, F_OK) == 0) {
+        free(path);
+        return;
+    }
+    MakeDirRecursive(path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    free(path);
+#endif
+}
+
 int StringToInt(const char *str, int defaultValue)
 {
     if (str == NULL || *str == '\0') {

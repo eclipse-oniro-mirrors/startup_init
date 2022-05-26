@@ -124,6 +124,7 @@ if (defined(ohos_lite)) {
       "init/standard/init.c",
       "init/standard/init_cmdexecutor.c",
       "init/standard/init_cmds.c",
+      "init/standard/init_control_fd_service.c",
       "init/standard/init_jobs.c",
       "init/standard/init_mount.c",
       "init/standard/init_reboot.c",
@@ -158,12 +159,14 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/ueventd/include",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
+      "//base/startup/init_lite/interfaces/innerkits/control_fd",
     ]
     deps = [
       "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
       "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
       "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
       "//base/startup/init_lite/interfaces/innerkits:libfsmanager_static",
+      "//base/startup/init_lite/interfaces/innerkits/control_fd:libcontrolfd_static",
       "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox_static",
       "//base/startup/init_lite/services/log:init_log",
       "//base/startup/init_lite/services/loopevent:loopevent",

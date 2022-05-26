@@ -66,6 +66,7 @@ Service *AddService(const char *name);
 
 #ifdef OHOS_SERVICE_DUMP
 void DumpAllServices();
+void DumpOneService(const Service *service);
 #endif
 #ifdef __cplusplus
 #if __cplusplus

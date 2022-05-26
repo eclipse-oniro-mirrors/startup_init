@@ -173,7 +173,7 @@ int SetAccessToken(const Service *service);
 void GetAccessToken(void);
 void ServiceStopTimer(Service *service);
 void ServiceStartTimer(Service *service, uint64_t timeout);
-
+void EnterServiceSandbox(Service *service);
 #ifdef __cplusplus
 #if __cplusplus
 }
