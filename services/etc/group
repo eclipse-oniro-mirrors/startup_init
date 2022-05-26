@@ -89,3 +89,9 @@ storage_manager:1090:
 net_manager:x:1099:
 edm:x:3057:
 account:x:3058:
+download:x:3815:
+pasteboard:x:3816:
+wallpaper:x:3817:
+screenlock:x:3818:
+time:x:3819:
+inputmethod:x:3820:
