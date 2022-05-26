@@ -54,7 +54,6 @@ riladapter_host:x:3032:
 sensor_dal_host:x:3033:
 vibrator_dal_host:x:3034:
 light_dal_host:x:3035:
-wifi_c_host:x:3036:
 disp_gralloc_host:x:3037:
 dcamera_host:x:3038:
 hwc_host:x:3039:
