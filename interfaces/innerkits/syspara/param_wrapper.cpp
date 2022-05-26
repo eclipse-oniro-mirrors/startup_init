@@ -32,7 +32,7 @@ namespace system {
 bool SetParameter(const std::string& key, const std::string& value)
 {
     int ret = SystemSetParameter(key.c_str(), value.c_str());
-    return (ret == 0) ? EC_SUCCESS : EC_FAILURE;
+    return (ret == 0) ? true : false;
 }
 
 template<typename T>
