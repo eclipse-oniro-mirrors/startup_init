@@ -23,7 +23,7 @@ extern "C" {
 
 int GetNamespaceFd(const char *nsPath);
 int UnshareNamespace(int nsType);
-int SetNamespce(int nsFd, int nsType);
+int SetNamespace(int nsFd, int nsType);
 void InitDefaultNamespace(void);
 int EnterDefaultNamespace(void);
 void CloseDefaultNamespace(void);
@@ -34,3 +34,4 @@ void CloseDefaultNamespace(void);
 #endif
 #endif
 #endif
+

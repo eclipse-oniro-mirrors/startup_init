@@ -38,10 +38,13 @@
 #define SANDBOX_SYMLINK_TARGET "target-name"
 #define SANDBOX_SYMLINK_NAME "link-name"
 
+#ifndef SUPPORT_64BIT
 #define SANDBOX_SYSTEM_CONFIG_FILE "/system/etc/sandbox/system-sandbox.json"
 #define SANDBOX_CHIPSET_CONFIG_FILE "/system/etc/sandbox/chipset-sandbox.json"
-#define SANDBOX_PRIVAPP_CONFIG_FILE "/system/etc/sandbox/privapp-sandbox.json"
-#define SANDBOX_APP_CONFIG_FILE "/system/etc/sandbox/app-sandbox.json"
+#else
+#define SANDBOX_SYSTEM_CONFIG_FILE "/system/etc/sandbox/system-sandbox64.json"
+#define SANDBOX_CHIPSET_CONFIG_FILE "/system/etc/sandbox/chipset-sandbox64.json"
+#endif
 
 #define SANDBOX_MOUNT_FLAGS_MS_BIND "bind"
 #define SANDBOX_MOUNT_FLAGS_MS_PRIVATE "private"
@@ -72,11 +75,8 @@ static const struct SandboxMountFlags g_flags[] = {
     }
 };
 
-
 static sandbox_t g_systemSandbox;
 static sandbox_t g_chipsetSandbox;
-static sandbox_t g_privAppSandbox;
-static sandbox_t g_appSandbox;
 
 struct SandboxMap {
     const char *name;
@@ -94,16 +94,6 @@ static const struct SandboxMap g_map[] = {
         .name = "chipset",
         .sandbox = &g_chipsetSandbox,
         .configfile = SANDBOX_CHIPSET_CONFIG_FILE,
-    },
-    {
-        .name = "priv-app",
-        .sandbox = &g_privAppSandbox,
-        .configfile = SANDBOX_PRIVAPP_CONFIG_FILE,
-    },
-    {
-        .name = "app",
-        .sandbox = &g_appSandbox,
-        .configfile = SANDBOX_APP_CONFIG_FILE,
     }
 };
 
@@ -612,7 +602,7 @@ int EnterSandbox(const char *name)
         return -1;
     }
     if (sandbox->ns > 0) {
-        if (SetNamespce(sandbox->ns, CLONE_NEWNS) < 0) {
+        if (SetNamespace(sandbox->ns, CLONE_NEWNS) < 0) {
             BEGET_LOGE("Failed to enter mount namespace for sandbox \' %s \', err=%d.", name, errno);
             return -1;
         }
