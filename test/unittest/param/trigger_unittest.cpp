@@ -200,6 +200,7 @@ public:
         CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM, buffer, strlen(buffer), TestTriggerExecute);
         EXPECT_EQ(1, g_matchTrigger);
         EXPECT_EQ(0, strcmp(triggerName, g_matchTriggerName));
+        CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM_WATCH, buffer, strlen(buffer), TestTriggerExecute);
         return 0;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +15,7 @@
 
 #ifndef STARTUP_SYSPARAM_PARAMETER_API_H
 #define STARTUP_SYSPARAM_PARAMETER_API_H
-
+#include <stdint.h>
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -49,7 +49,7 @@ static const char EMPTY_STR[] = { "" };
  * @since 1
  * @version 1
  */
-int GetParameter(const char *key, const char *def, char *value, unsigned int len);
+int GetParameter(const char *key, const char *def, char *value, uint32_t len);
 
 /**
  * @brief Sets or updates a system parameter.
@@ -148,10 +148,10 @@ int AclGetDevUdid(char *udid, int size);
  * @since 1
  * @version 1
  */
-unsigned int FindParameter(const char *key);
-unsigned int GetParameterCommitId(unsigned int handle);
-int GetParameterName(unsigned int handle, char *key, unsigned int len);
-int GetParameterValue(unsigned int handle, char *value, unsigned int len);
+uint32_t FindParameter(const char *key);
+uint32_t GetParameterCommitId(uint32_t handle);
+int GetParameterName(uint32_t handle, char *key, uint32_t len);
+int GetParameterValue(uint32_t handle, char *value, uint32_t len);
 long long GetSystemCommitId(void);
 
 #ifdef __cplusplus

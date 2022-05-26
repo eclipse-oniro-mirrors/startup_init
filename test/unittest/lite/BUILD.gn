@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 if (defined(ohos_lite)) {
+  import("//base/startup/init_lite/begetd.gni")
   import("//build/lite/config/component/lite_component.gni")
   import("//build/lite/config/test.gni")
   if (ohos_kernel_type == "linux" || ohos_kernel_type == "liteos_a") {
@@ -38,7 +39,6 @@ if (defined(ohos_lite)) {
   }
   param_common_sources = [
     "//base/startup/init_lite/services/param/adapter/param_dac.c",
-    "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
     "//base/startup/init_lite/services/param/manager/param_manager.c",
     "//base/startup/init_lite/services/param/manager/param_persist.c",
     "//base/startup/init_lite/services/param/manager/param_trie.c",
@@ -79,6 +79,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/init/include",
       "//base/startup/init_lite/services/log",
       "//base/startup/init_lite/services/loopevent/include",
+      "//base/startup/init_lite/services/loopevent/timer",
       "//base/startup/init_lite/services/param/adapter",
       "//base/startup/init_lite/services/param/linux",
       "//base/startup/init_lite/services/param/include",
@@ -89,6 +90,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/test/unittest/param",
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//base/startup/init_lite/interfaces/innerkits/include/syspara",
+      "//base/startup/init_lite/interfaces/innerkits/syspara",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
@@ -108,6 +110,7 @@ if (defined(ohos_lite)) {
       ]
       sources += init_common_sources
       sources += [
+        "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
         "//base/startup/init_lite/services/param/liteos/param_client.c",
         "//base/startup/init_lite/services/param/liteos/param_osadp.c",
         "//base/startup/init_lite/services/param/liteos/param_service.c",
@@ -122,11 +125,15 @@ if (defined(ohos_lite)) {
       ]
 
       # add cfg.h
-      deps += [
-        "//base/startup/init_lite/services/param:lite_const_param_to",
-        "//base/startup/init_lite/services/param:lite_ohos_param_to",
-      ]
-
+      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+        deps += [
+          "$ohos_product_adapter_dir/utils/sys_param:hal_sysparam",
+          "//base/startup/init_lite/services/param:lite_const_param_to",
+          "//base/startup/init_lite/services/param:lite_ohos_param_to",
+        ]
+        include_dirs += [ "$root_out_dir/gen/init_lite" ]
+        defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
+      }
       deps += [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//base/startup/init_lite/initsync:initsync",
@@ -134,7 +141,6 @@ if (defined(ohos_lite)) {
         "//build/lite/config/component/cJSON:cjson_static",
         "//third_party/mbedtls:mbedtls",
       ]
-      include_dirs += [ "$root_out_dir/gen/init_lite" ]
     }
 
     if (ohos_kernel_type == "liteos_m") {
@@ -144,6 +150,14 @@ if (defined(ohos_lite)) {
         "//base/startup/init_lite/services/param/liteos/param_osadp.c",
         "//base/startup/init_lite/services/param/liteos/param_service.c",
       ]
+      if (enable_ohos_startup_init_lite_use_posix_file_api) {
+        sources += [
+          "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
+        ]
+      } else {
+        sources +=
+            [ "//base/startup/init_lite/services/param/liteos/param_hal.c" ]
+      }
       sources += [
         "../param/dac_unittest.cpp",
         "../param/param_stub.cpp",
@@ -152,23 +166,26 @@ if (defined(ohos_lite)) {
       ]
 
       # add cfg.h
-      deps += [
-        "//base/startup/init_lite/services/param:lite_const_param_to",
-        "//base/startup/init_lite/services/param:lite_ohos_param_to",
-      ]
-
+      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+        deps += [
+          "//base/startup/init_lite/services/param:lite_const_param_to",
+          "//base/startup/init_lite/services/param:lite_ohos_param_to",
+        ]
+        include_dirs += [ "$root_out_dir/gen/init_lite" ]
+        defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
+      }
       deps += [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
         "//base/startup/init_lite/services/utils:libinit_tools",
         "//third_party/mbedtls:mbedtls",
       ]
-      include_dirs += [ "$root_out_dir/gen/init_lite" ]
     }
     if (ohos_kernel_type == "linux") {
       defines += [ "__LINUX__" ]
 
       sources += init_common_sources
       sources += [
+        "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
         "//base/startup/init_lite/services/param/linux/param_message.c",
         "//base/startup/init_lite/services/param/linux/param_msgadp.c",
         "//base/startup/init_lite/services/param/linux/param_osadp.c",
@@ -184,10 +201,11 @@ if (defined(ohos_lite)) {
         "../param/param_stub.cpp",
         "../param/param_unittest.cpp",
         "../param/paramservice_unittest.cpp",
-        "../syspara/syspara_unittest.cpp",
         "cmd_func_test.cpp",
       ]
-
+      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+        sources += [ "../syspara/syspara_unittest.cpp" ]
+      }
       deps += [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//base/startup/init_lite/services/loopevent:loopevent",

@@ -47,6 +47,7 @@ HWTEST_F(ModuleMgrUnitTest, PluginAddCmd, TestSize.Level1)
     InitServiceSpace();
     const char *testName = "testCmd1";
     const char *cmdContent = "testCmd1 test1 test2 test3";
+    const char *cmdContentNotValid = "testCmd1 t e s t 1 t e s t 2 t";
     int cmdExecId1 = AddCmdExecutor(testName, TestCmdExecutor);
     ASSERT_NE(cmdExecId1 > 0, 0);
     int cmdExecId2 = AddCmdExecutor("testCmd2", TestCmdExecutor);
@@ -55,6 +56,7 @@ HWTEST_F(ModuleMgrUnitTest, PluginAddCmd, TestSize.Level1)
     ASSERT_NE(cmdExecId2 > 0, 0);
     int cmdExecId4 = AddCmdExecutor("testCmd4", TestCmdExecutor);
     ASSERT_NE(cmdExecId4 > 0, 0);
+    PluginExecCmd("testCmd4", 0, nullptr);
 
     int cmdIndex = 0;
     const char *cmdName = PluginGetCmdIndex(cmdContent, &cmdIndex);
@@ -65,6 +67,8 @@ HWTEST_F(ModuleMgrUnitTest, PluginAddCmd, TestSize.Level1)
     g_cmdExecId = -1;
     PluginExecCmdByName(cmdName, cmdContent);
     ASSERT_EQ(cmdExecId1, g_cmdExecId);
+    PluginExecCmdByName(cmdName, nullptr);
+    PluginExecCmdByName(cmdName, cmdContentNotValid);
     g_cmdExecId = -1;
     PluginExecCmdByCmdIndex(cmdIndex, cmdContent);
     ASSERT_EQ(cmdExecId1, g_cmdExecId);
@@ -127,7 +131,7 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
     ModuleMgrUninstall(moduleMgr, NULL);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 0);
-
+    ModuleMgrGetArgs();
     ModuleMgrDestroy(moduleMgr);
 }
 }  // namespace init_ut

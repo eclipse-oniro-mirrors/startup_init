@@ -185,7 +185,7 @@ HWTEST_F(CmdsUnitTest, TestCommonWrite, TestSize.Level1)
     close(fd);
     fd = -1;
     // abnormal
-    DoCmdByName("write ", "/data/init_ut/test_dir0/test_file_write2 aaa");
+    DoCmdByName("write ", "/data/init_ut/test_dir0/test_file_write2 aaa 2");
 }
 
 HWTEST_F(CmdsUnitTest, TestCommonRm, TestSize.Level1)

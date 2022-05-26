@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//base/startup/init_lite/begetd.gni")
-if (!defined(ohos_lite) || ohos_kernel_type != "liteos_m") {
+if (!defined(ohos_lite) || enable_ohos_startup_init_feature_begetctl_liteos) {
   syspara_sources = [
     "syscap/init_syscap.c",
     "syspara/param_comm.c",
@@ -36,15 +36,22 @@ if (defined(ohos_lite)) {
   if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
     shared_library("libbegetutil") {
       sources = [ "//base/startup/init_lite/services/log/init_log.c" ]
-      sources += syspara_sources
-
-      public_configs = [ ":exported_header_files" ]
-      cflags = [ "-fPIC" ]
       defines = [
         "_GNU_SOURCE",
         "INIT_LOG_INIT=3",
         "OHOS_LITE",
       ]
+      deps = []
+      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+        sources += syspara_sources
+        defines += [ "LITEOS_SUPPORT" ]
+        deps += [ "$ohos_product_adapter_dir/utils/sys_param:hal_sysparam" ]
+      } else {
+        sources += [ "syscap/init_syscap.c" ]
+      }
+
+      public_configs = [ ":exported_header_files" ]
+      cflags = [ "-fPIC" ]
       include_dirs = [
         "./include",
         "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
@@ -55,22 +62,14 @@ if (defined(ohos_lite)) {
         "//base/startup/init_lite/services/param/include",
         "//base/startup/init_lite/interfaces/innerkits/include",
       ]
-      deps = [
+      deps += [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//base/startup/init_lite/services/utils:libinit_tools",
         "//third_party/bounds_checking_function:libsec_shared",
         "//third_party/mbedtls:mbedtls",
       ]
 
-      defines += [
-        "INCREMENTAL_VERSION=\"${ohos_version}\"",
-        "BUILD_TYPE=\"${ohos_build_type}\"",
-        "BUILD_USER=\"${ohos_build_user}\"",
-        "BUILD_TIME=\"${ohos_build_time}\"",
-        "BUILD_HOST=\"${ohos_build_host}\"",
-        "BUILD_ROOTHASH=\"${ohos_build_roothash}\"",
-        "USE_MBEDTLS",
-      ]
+      defines += [ "USE_MBEDTLS" ]
       deps += [ "//base/startup/init_lite/services/param:param_client" ]
       if (ohos_kernel_type == "liteos_a") {
         defines += [ "__LITEOS_A__" ]
@@ -83,7 +82,6 @@ if (defined(ohos_lite)) {
   if (ohos_kernel_type == "liteos_m") {
     static_library("libbegetutil") {
       sources = [ "//base/startup/init_lite/services/log/init_log.c" ]
-      sources += [ "syscap/init_syscap.c" ]
       public_configs = [ ":exported_header_files" ]
 
       defines = [
@@ -92,6 +90,7 @@ if (defined(ohos_lite)) {
         "OHOS_LITE",
         "__LITEOS_M__",
       ]
+
       include_dirs = [
         "./include",
         "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
@@ -108,14 +107,14 @@ if (defined(ohos_lite)) {
         "//third_party/bounds_checking_function:libsec_static",
       ]
 
-      defines += [
-        "INCREMENTAL_VERSION=\"${ohos_version}\"",
-        "BUILD_TYPE=\"${ohos_build_type}\"",
-        "BUILD_USER=\"${ohos_build_user}\"",
-        "BUILD_TIME=\"${ohos_build_time}\"",
-        "BUILD_HOST=\"${ohos_build_host}\"",
-        "BUILD_ROOTHASH=\"${ohos_build_roothash}\"",
-      ]
+      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+        deps += [ "$ohos_product_adapter_dir/utils/sys_param:hal_sysparam" ]
+        defines += [ "LITEOS_SUPPORT" ]
+        sources += syspara_sources
+      } else {
+        sources += [ "syscap/init_syscap.c" ]
+      }
+
       if (enable_ohos_startup_init_lite_use_thirdparty_mbedtls) {
         deps += [ "//third_party/mbedtls:mbedtls" ]
         defines += [ "USE_MBEDTLS" ]
@@ -168,7 +167,6 @@ if (defined(ohos_lite)) {
       "INIT_AGENT",
       "INIT_FILE",
       "_GNU_SOURCE",
-      "INIT_FILE",
     ]
     if (target_cpu == "arm64") {
       defines += [ "SUPPORT_64BIT" ]
@@ -232,7 +230,7 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function:libsec_shared",
     ]
 
-    if (param_feature_watcher) {
+    if (enable_ohos_startup_init_feature_watcher) {
       sources += [
         "//base/startup/init_lite/services/param/watcher/agent/watcher.cpp",
         "//base/startup/init_lite/services/param/watcher/agent/watcher_manager_kits.cpp",
@@ -253,7 +251,7 @@ if (defined(ohos_lite)) {
       defines += [ "NO_PARAM_WATCHER" ]
     }
 
-    if (param_feature_deviceinfo) {
+    if (enable_ohos_startup_init_feature_deviceinfo) {
       sources += [
         "//base/startup/init_lite/device_info/device_info_kits.cpp",
         "//base/startup/init_lite/device_info/device_info_proxy.cpp",

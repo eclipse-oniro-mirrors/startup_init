@@ -13,7 +13,6 @@
 import("//base/startup/init_lite/begetd.gni")
 
 param_comm_sources = [
-  "adapter/param_dac.c",
   "manager/param_manager.c",
   "manager/param_trie.c",
   "manager/param_utils.c",
@@ -36,33 +35,6 @@ if (!defined(ohos_lite) || ohos_kernel_type == "linux") {
   ]
 }
 
-action("lite_const_param_to") {
-  script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
-  args = [
-    "--source",
-    rebase_path(
-        "//base/startup/init_lite/services/etc/param/ohos_const/ohos.para"),
-    "--dest_dir",
-    rebase_path("$root_out_dir/gen/init_lite/"),
-    "--priority",
-    "0",
-  ]
-  outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
-}
-
-action("lite_ohos_param_to") {
-  script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
-  args = [
-    "--source",
-    rebase_path("//base/startup/init_lite/services/etc/param/ohos.para"),
-    "--dest_dir",
-    rebase_path("$root_out_dir/gen/init_lite/"),
-    "--priority",
-    "0",
-  ]
-  outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
-}
-
 param_include_dirs = [
   "include",
   "adapter",
@@ -77,9 +49,62 @@ param_include_dirs = [
   "//third_party/libuv/include",
   "//third_party/bounds_checking_function/include",
   "//third_party/cJSON",
+  "//utils/native/lite/include",
 ]
 
+if (enable_ohos_startup_init_feature_begetctl_liteos) {
+  action("lite_const_param_to") {
+    script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
+    args = [
+      "--source",
+      rebase_path(
+          "//base/startup/init_lite/services/etc_lite/param/ohos_const/ohos.para"),
+      "--dest_dir",
+      rebase_path("$root_out_dir/gen/init_lite/"),
+      "--priority",
+      "0",
+    ]
+    outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
+  }
+
+  action("lite_ohos_param_to") {
+    script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
+    args = [
+      "--source",
+      rebase_path("//base/startup/init_lite/services/etc/param/ohos.para"),
+      "--dest_dir",
+      rebase_path("$root_out_dir/gen/init_lite/"),
+      "--priority",
+      "0",
+    ]
+    outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
+  }
+
+  action("vendor_param_to") {
+    script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
+    args = [
+      "--source",
+      rebase_path("$ohos_product_adapter_dir/utils/sys_param/vendor.para"),
+      "--dest_dir",
+      rebase_path("$root_out_dir/gen/init_lite/"),
+      "--priority",
+      "1",
+    ]
+    outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
+  }
+}
+
 if (defined(ohos_lite)) {
+  param_build_defines = [
+    "_GNU_SOURCE",
+    "INCREMENTAL_VERSION=\"${ohos_version}\"",
+    "BUILD_TYPE=\"${ohos_build_type}\"",
+    "BUILD_USER=\"${ohos_build_user}\"",
+    "BUILD_TIME=\"${ohos_build_time}\"",
+    "BUILD_HOST=\"${ohos_build_host}\"",
+    "BUILD_ROOTHASH=\"${ohos_build_roothash}\"",
+  ]
+
   static_library("param_init") {
     defines = []
     deps = []
@@ -88,10 +113,11 @@ if (defined(ohos_lite)) {
     if (defined(boot_kernel_extended_cmdline)) {
       defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
     }
-    defines += [ "_GNU_SOURCE" ]
+    defines += param_build_defines
     if (ohos_kernel_type == "linux") {
       sources += param_service_sources
       sources += param_trigger_sources
+      sources += [ "adapter/param_dac.c" ]
       defines += [ "__LINUX__" ]
     } else if (ohos_kernel_type == "liteos_a") {
       sources += [
@@ -107,24 +133,21 @@ if (defined(ohos_lite)) {
         "__LITEOS_A__",
         "PARAM_SUPPORT_CYCLE_CHECK",
       ]
-      deps += [
-        ":lite_const_param_to",
-        ":lite_ohos_param_to",
-      ]
-      include_dirs += [ "$root_out_dir/gen/init_lite" ]
     }
   }
 
   static_library("param_client") {
     sources = param_comm_sources
     include_dirs = param_include_dirs
-    defines = [ "_GNU_SOURCE" ]
+    defines = param_build_defines
+
     if (ohos_kernel_type == "linux") {
       sources += [
         "linux/param_message.c",
         "linux/param_osadp.c",
         "linux/param_request.c",
       ]
+      sources += [ "adapter/param_dac.c" ]
       defines += [ "__LINUX__" ]
     } else if (ohos_kernel_type == "liteos_a") {
       sources += [
@@ -141,11 +164,15 @@ if (defined(ohos_lite)) {
       ]
     } else if (ohos_kernel_type == "liteos_m") {
       sources += [
-        "adapter/param_persistadp.c",
         "liteos/param_client.c",
         "liteos/param_osadp.c",
         "manager/param_persist.c",
       ]
+      if (enable_ohos_startup_init_lite_use_posix_file_api) {
+        sources += [ "adapter/param_persistadp.c" ]
+      } else {
+        sources += [ "liteos/param_hal.c" ]
+      }
       defines += [
         "__LITEOS_M__",
         "WORKSPACE_AREA_NEED_MUTEX",
@@ -153,11 +180,15 @@ if (defined(ohos_lite)) {
         "PARAMWORKSPACE_NEED_MUTEX",
         "DATA_PATH=\"${config_ohos_startup_init_lite_data_path}\"",
       ]
-      deps = [
-        ":lite_const_param_to",
-        ":lite_ohos_param_to",
-      ]
-      include_dirs += [ "$root_out_dir/gen/init_lite" ]
+      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+        deps = [
+          ":lite_const_param_to",
+          ":lite_ohos_param_to",
+          ":vendor_param_to",
+        ]
+        include_dirs += [ "$root_out_dir/gen/init_lite" ]
+        defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
+      }
     }
   }
 } else {
@@ -167,8 +198,8 @@ if (defined(ohos_lite)) {
     sources = param_comm_sources
     sources += param_service_sources
     sources += param_trigger_sources
+    sources += [ "adapter/param_dac.c" ]
     include_dirs = param_include_dirs
-
     defines = [ "_GNU_SOURCE" ]
 
     if (defined(boot_kernel_extended_cmdline)) {
@@ -196,6 +227,7 @@ if (defined(ohos_lite)) {
 
   ohos_static_library("param_client") {
     sources = param_comm_sources
+    sources += [ "adapter/param_dac.c" ]
     sources += [
       "linux/param_message.c",
       "linux/param_osadp.c",

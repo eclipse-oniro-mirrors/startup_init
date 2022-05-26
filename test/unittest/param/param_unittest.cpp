@@ -81,7 +81,7 @@ public:
         // get root
         WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
         (void)FindTrieNode(workspace, name, strlen(name), &labelIndex);
-        ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(workspace, labelIndex);
+        ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (node == nullptr) {
             EXPECT_EQ(1, 0);
             return 0;
@@ -106,7 +106,7 @@ public:
         AddSecurityLabel(&auditData);
         WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
         (void)FindTrieNode(workspace, name, strlen(name), &labelIndex);
-        ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(workspace, labelIndex);
+        ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (node == nullptr) {
             EXPECT_EQ(1, 0);
             return 0;
@@ -139,7 +139,7 @@ public:
         uint32_t labelIndex = 0;
         WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
         ParamTrieNode *paramNode = FindTrieNode(workspace, name, strlen(name), &labelIndex);
-        ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(workspace, labelIndex);
+        ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {
             EXPECT_EQ(1, 0);
             return 0;
@@ -164,7 +164,7 @@ public:
         AddSecurityLabel(&auditData);
         WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
         ParamTrieNode *paramNode = FindTrieNode(workspace, name, strlen(name), &labelIndex);
-        ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(workspace, labelIndex);
+        ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {
             EXPECT_EQ(1, 0);
             return 0;

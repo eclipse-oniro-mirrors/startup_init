@@ -207,6 +207,7 @@ static void PrepareInnerKitsCfg()
         "aa aa aa aa\n";
     mkdir("/data/init_ut/mount_unitest/", S_IRWXU | S_IRWXG | S_IRWXO);
     CreateTestFile("/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable", innerKitsCfg);
+    CreateTestFile("/etc/fstab.required", "test");
 }
 static bool IsDir(const std::string &path)
 {
@@ -322,7 +323,7 @@ void PrepareInitUnitTestEnv(void)
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     // for cmdline
-    const char *cmdLine = "bootgroup=device.charing.group earlycon=uart8250,mmio32,0xfe660000 \
+    const char *cmdLine = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 \
         root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568";
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
 
@@ -360,6 +361,12 @@ int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *nam
 int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
 {
     return 0;
+}
+
+static __attribute__((constructor(101))) void ParamTestStubInit(void)
+{
+    PARAM_LOGI("ParamTestStubInit");
+    PrepareInitUnitTestEnv();
 }
 #ifdef __cplusplus
 #if __cplusplus

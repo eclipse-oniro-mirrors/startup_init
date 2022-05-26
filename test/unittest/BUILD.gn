@@ -33,6 +33,8 @@ config("utest_config") {
 ohos_unittest("init_ut") {
   module_out_path = "startup/init"
   sources = [
+    "//base/startup/init_lite/device_info/device_info.cpp",
+    "//base/startup/init_lite/device_info/device_info_stub.cpp",
     "//base/startup/init_lite/interfaces/innerkits/file/init_file.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab.c",
     "//base/startup/init_lite/interfaces/innerkits/fs_manager/fstab_mount.c",
@@ -105,7 +107,7 @@ ohos_unittest("init_ut") {
         [ "//base/startup/init_lite/services/param/adapter/param_selinux.c" ]
   }
 
-  if (param_feature_watcher) {
+  if (enable_ohos_startup_init_feature_watcher) {
     sources += [
       "//base/startup/init_lite/services/param/watcher/agent/watcher.cpp",
       "//base/startup/init_lite/services/param/watcher/agent/watcher_manager_kits.cpp",
@@ -119,6 +121,7 @@ ohos_unittest("init_ut") {
 
   sources += [
     "begetctl/begetctl_unittest.cpp",
+    "deviceinfo/DeviceInfoUnittest.cpp",
     "init/SignalInitUnitTest.cpp",
     "init/cmds_unittest.cpp",
     "init/group_unittest.cpp",
@@ -150,6 +153,7 @@ ohos_unittest("init_ut") {
 
   include_dirs = [
     "//base/customization/config_policy/interfaces/innerkits/include",
+    "//base/startup/init_lite/device_info",
     "//base/startup/init_lite/services/init/standard",
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/interfaces/innerkits/include/syspara",
@@ -222,7 +226,7 @@ ohos_unittest("init_ut") {
     "utils_base:utils",
   ]
 
-  if (!defined(ohos_lite) && param_feature_watcher) {
+  if (!defined(ohos_lite) && enable_ohos_startup_init_feature_watcher) {
     sources += [
       "param/watcher_agent_unittest.cpp",
       "param/watcher_proxy_unittest.cpp",
@@ -250,7 +254,14 @@ ohos_unittest("init_ut") {
       "PARAM_SUPPORT_SELINUX",
     ]
   }
-
+  if (enable_ohos_startup_init_feature_deviceinfo) {
+    sources += [
+      "//base/startup/init_lite/device_info/device_info_kits.cpp",
+      "//base/startup/init_lite/device_info/device_info_proxy.cpp",
+    ]
+    defines += [ "PARAM_FEATURE_DEVICEINFO" ]
+    external_deps += [ "access_token:libaccesstoken_sdk" ]
+  }
   cflags_cc = [ "-fexceptions" ]
   sources += [
     "init/loopevent_unittest.cpp",

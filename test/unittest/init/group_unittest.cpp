@@ -163,6 +163,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, act), 0);
     }
+    HashMapTraverse(handle, nullptr, nullptr);
     HashMapDestory(handle);
 }
 
@@ -188,7 +189,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
     const char *xxx14 = "{"
 	    "\"groups\": [\"subsystem.xxx11.group\""
     "}";
-    const char *cmdLine = "BOOT_IMAGE=/kernel init=/init bootgroup=device.charing.group";
+    const char *cmdLine = "BOOT_IMAGE=/kernel init=/init bootgroup=device.charge.group";
     CreateTestFile(GROUP_DEFAULT_PATH "/device.boot.group.cfg", data);
     CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx1.group.cfg", xxx1);
     CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx11.group.cfg", xxx11);
@@ -199,13 +200,13 @@ HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
 
     InitServiceSpace();
     InitWorkspace *workspace = GetInitWorkspace();
-    EXPECT_EQ(workspace->groupMode, GROUP_CHARING);
+    EXPECT_EQ(workspace->groupMode, GROUP_CHARGE);
     workspace->groupMode = GROUP_BOOT;
     if (strcpy_s(workspace->groupModeStr, GROUP_NAME_MAX_LENGTH, "device.boot.group") != EOK) {
         EXPECT_EQ(1, 0);
     } // test read cfgfile
     int ret = InitParseGroupCfg();
-    StartAllServices(GROUP_CHARING);
+    StartAllServices(GROUP_CHARGE);
     EXPECT_EQ(ret, 0);
 }
 
@@ -297,7 +298,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddServiceDeny, TestSize.Level1)
         "}]"
     "}";
     InitWorkspace *workspace = GetInitWorkspace();
-    workspace->groupMode = GROUP_CHARING;
+    workspace->groupMode = GROUP_CHARGE;
 
     cJSON *fileRoot = cJSON_Parse(serviceStr);
     ASSERT_NE(nullptr, fileRoot);
@@ -327,7 +328,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService2, TestSize.Level1)
     "}";
 
     InitWorkspace *workspace = GetInitWorkspace();
-    workspace->groupMode = GROUP_CHARING;
+    workspace->groupMode = GROUP_CHARGE;
 
     InitGroupNode *node = AddGroupNode(NODE_TYPE_SERVICES, "test-service6");
     ASSERT_NE(nullptr, node);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -79,7 +79,7 @@ int GetParameter(const char *key, const char *def, char *value, uint32_t len)
     if ((key == NULL) || (value == NULL)) {
         return EC_INVALID;
     }
-    int ret = HalGetParameter(key, def, value, len);
+    int ret = GetParameter_(key, def, value, len);
     return (ret != 0) ? EC_INVALID : strlen(value);
 }
 
@@ -193,13 +193,13 @@ const char *GetIncrementalVersion(void)
     return GetProperty("const.product.incremental.version", &incrementalVersion);
 }
 
-const char *HalGetOsReleaseType(void)
+const char *GetOsReleaseType(void)
 {
     static const char *osReleaseType = NULL;
     return GetProperty("const.ohos.releasetype", &osReleaseType);
 }
 
-const char *HalGetSdkApiVersion(void)
+static const char *GetSdkApiVersion_(void)
 {
     static const char *sdkApiVersion = NULL;
     return GetProperty("const.ohos.apiversion", &sdkApiVersion);
@@ -231,13 +231,7 @@ const char *GetBuildTime(void)
 
 const char *GetSerial(void)
 {
-    static char ohos_serial[PARAM_VALUE_LEN_MAX]  = {0};
-    uint32_t len = PARAM_VALUE_LEN_MAX;
-    int ret = SystemGetParameter("ohos.boot.sn", ohos_serial, &len);
-    if (ret != 0) {
-        return NULL;
-    }
-    return ohos_serial;
+    return GetSerial_();
 }
 
 int GetDevUdid(char *udid, int size)
@@ -245,27 +239,17 @@ int GetDevUdid(char *udid, int size)
     return GetDevUdid_(udid, size);
 }
 
-static const char *GetOSName(void)
-{
-    static const char *osName = NULL;
-    return GetProperty("const.ohos.name", &osName);
-}
-
 static const char *BuildOSFullName(void)
 {
     const char release[] = "Release";
     char value[OS_FULL_NAME_LEN] = {0};
     const char *releaseType = GetOsReleaseType();
-    int length;
-    if ((releaseType == NULL) || (strncmp(releaseType, release, sizeof(release) - 1) == 0)) {
-        length = sprintf_s(value, OS_FULL_NAME_LEN, "%s-%d.%d.%d.%d",
-            GetOSName(), GetMajorVersion(), GetSeniorVersion(), GetFeatureVersion(), GetBuildVersion());
-    } else {
-        length = sprintf_s(value, OS_FULL_NAME_LEN, "%s-%d.%d.%d.%d(%s)",
-            GetOSName(), GetMajorVersion(), GetSeniorVersion(), GetFeatureVersion(), GetBuildVersion(), releaseType);
-    }
-    if (length < 0) {
-        return EMPTY_STR;
+    const char *fillname = GetFullName_();
+    if ((releaseType != NULL) && (strncmp(releaseType, release, sizeof(release) - 1) != 0)) {
+        int length = sprintf_s(value, OS_FULL_NAME_LEN, "%s(%s)", fillname, releaseType);
+        if (length < 0) {
+            return EMPTY_STR;
+        }
     }
     const char *osFullName = strdup(value);
     return osFullName;
@@ -284,24 +268,14 @@ const char *GetOSFullName(void)
     return osFullName;
 }
 
-static int GetSdkApiLevel(void)
-{
-    static const char *sdkApiLevel = NULL;
-    GetProperty("const.ohos.sdkapilevel", &sdkApiLevel);
-    if (sdkApiLevel == NULL) {
-        return 0;
-    }
-    return atoi(sdkApiLevel);
-}
-
 static const char *BuildVersionId(void)
 {
     char value[VERSION_ID_MAX_LEN] = {0};
 
-    int len = sprintf_s(value, VERSION_ID_MAX_LEN, "%s/%s/%s/%s/%s/%s/%s/%d/%s/%s",
+    int len = sprintf_s(value, VERSION_ID_MAX_LEN, "%s/%s/%s/%s/%s/%s/%s/%s/%s/%s",
         GetDeviceType(), GetManufacture(), GetBrand(), GetProductSeries(),
         GetOSFullName(), GetProductModel(), GetSoftwareModel(),
-        GetSdkApiLevel(), GetIncrementalVersion(), GetBuildType());
+        GetSdkApiVersion_(), GetIncrementalVersion(), GetBuildType());
     if (len <= 0) {
         return EMPTY_STR;
     }
@@ -320,12 +294,6 @@ const char *GetVersionId(void)
         return EMPTY_STR;
     }
     return ohosVersionId;
-}
-
-const char *GetOsReleaseType(void)
-{
-    static const char *osReleaseType = NULL;
-    return GetProperty("const.ohos.releasetype", &osReleaseType);
 }
 
 int GetSdkApiVersion(void)

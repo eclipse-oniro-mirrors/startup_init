@@ -29,16 +29,11 @@
 
 #define INVALID_SOCKET (-1)
 #define INIT_PROCESS_PID 1
-
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
-
 static atomic_uint g_requestId = ATOMIC_VAR_INIT(1);
 static ClientWorkSpace g_clientSpace = {};
-
-__attribute__((constructor)) static void ClientInit(void);
-#ifndef STARTUP_INIT_TEST
+__attribute__((constructor(100))) static void ClientInit(void);
 __attribute__((destructor)) static void ClientDeinit(void);
-#endif
 
 static int InitParamClient(void)
 {
@@ -69,8 +64,13 @@ void ClientInit(void)
 
 void ClientDeinit(void)
 {
+#ifndef STARTUP_INIT_TEST
     if (PARAM_TEST_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT)) {
         CloseParamWorkSpace();
+    }
+#endif
+    if (g_clientSpace.clientFd != INVALID_SOCKET) {
+        close(g_clientSpace.clientFd);
     }
     PARAM_SET_FLAG(g_clientSpace.flags, 0);
     pthread_mutex_destroy(&g_clientSpace.mutex);
@@ -120,35 +120,36 @@ static int ReadMessage(int fd, char *buffer, int timeout)
             continue;
         }
     } while (1);
-    PARAM_LOGE("ReadMessage errno %d diff %u timeout %d ret %d", errno, diff, timeout, ret);
+    if (ret != 0) {
+        PARAM_LOGE("ReadMessage fd: %d errno %d diff %u timeout %d ret %d", errno, diff, timeout, ret);
+    }
     return ret;
 }
 
-static int StartRequest(int *fd, ParamMessage *request, int timeout)
+static int GetClientSocket(int timeout)
 {
-    int ret = 0;
     struct timeval time;
-#ifndef STARTUP_INIT_TEST
     time.tv_sec = timeout;
-#else
-    time.tv_sec = 1;
-#endif
     time.tv_usec = 0;
-    int clientFd = *fd;
-    if (clientFd == INVALID_SOCKET) {
-        clientFd = socket(AF_UNIX, SOCK_STREAM, 0);
-        PARAM_CHECK(clientFd >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to create socket");
-        ret = ConntectServer(clientFd, CLIENT_PIPE_NAME);
-        PARAM_CHECK(ret == 0, close(clientFd);
-            return PARAM_CODE_FAIL_CONNECT, "Failed to connect server");
+    int clientFd = socket(AF_UNIX, SOCK_STREAM, 0);
+    PARAM_CHECK(clientFd >= 0, return -1, "Failed to create socket");
+    int ret = ConntectServer(clientFd, CLIENT_PIPE_NAME);
+    if (ret == 0) {
         setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, (char *)&time, sizeof(struct timeval));
         setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO, (char *)&time, sizeof(struct timeval));
-        *fd = clientFd;
+    } else {
+        close(clientFd);
+        clientFd = INVALID_SOCKET;
     }
+    return clientFd;
+}
 
+static int StartRequest(int clientFd, ParamMessage *request, int timeout)
+{
+    int ret = 0;
     ssize_t sendLen = send(clientFd, (char *)request, request->msgSize, 0);
     PARAM_CHECK(sendLen >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to send message");
-    PARAM_LOGV("sendMessage sendLen %zd", sendLen);
+    PARAM_LOGV("sendMessage sendLen fd %d %zd", clientFd, sendLen);
     ret = ReadMessage(clientFd, (char *)request, timeout);
     if (ret == 0) {
         ret = ProcessRecvMsg(request);
@@ -176,9 +177,16 @@ int SystemSetParameter(const char *name, const char *value)
     request->msgSize = offset + sizeof(ParamMessage);
     request->id.msgId = atomic_fetch_add(&g_requestId, 1);
 
+    PARAM_LOGV("SystemSetParameter name %s", name);
+    int fd = INVALID_SOCKET;
     pthread_mutex_lock(&g_clientSpace.mutex);
-    ret = StartRequest(&g_clientSpace.clientFd, request, DEFAULT_PARAM_SET_TIMEOUT);
+    if (g_clientSpace.clientFd == INVALID_SOCKET) {
+        g_clientSpace.clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
+    }
+    fd = g_clientSpace.clientFd;
     pthread_mutex_unlock(&g_clientSpace.mutex);
+    PARAM_CHECK(fd > 0, return -1, "Failed to connect server for set %s", name);
+    ret = StartRequest(fd, request, DEFAULT_PARAM_SET_TIMEOUT);
     free(request);
     return ret;
 }
@@ -222,13 +230,32 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 
     request->msgSize = offset + sizeof(ParamMessage);
     request->id.waitId = atomic_fetch_add(&g_requestId, 1);
-    int fd = INVALID_SOCKET;
-    ret = StartRequest(&fd, request, timeout);
-    if (fd != INVALID_SOCKET) {
-        close(fd);
-    }
+#ifdef STARTUP_INIT_TEST
+    timeout = 1;
+#endif
+    int fd = GetClientSocket(timeout);
+    PARAM_CHECK(fd > 0, return -1, "Failed to connect server for wait %s", name);
+    ret = StartRequest(fd, request, timeout);
+    close(fd);
     free(request);
     PARAM_LOGI("SystemWaitParameter %s value %s result %d ", name, value, ret);
+    return ret;
+}
+
+int SystemCheckParamExist(const char *name)
+{
+    (void)InitParamClient();
+    return SysCheckParamExist(name);
+}
+
+int SystemFindParameter(const char *name, ParamHandle *handle)
+{
+    (void)InitParamClient();
+    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
+    int ret = ReadParamWithCheck(name, DAC_READ, handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
+        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
+    }
     return ret;
 }
 

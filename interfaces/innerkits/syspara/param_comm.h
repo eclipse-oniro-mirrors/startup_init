@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,9 @@
 
 #ifndef INIT_PARAM_COMM_H
 #define INIT_PARAM_COMM_H
+#include <stdint.h>
+#include "beget_ext.h"
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -29,18 +32,19 @@ extern "C" {
 #define DECIMAL 10
 #define HEX 16
 
-const char *GetProperty(const char *key, const char **paramHolder);
+INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder);
 
-int StringToULL(const char *str, unsigned long long int *out);
-int StringToLL(const char *str, long long int *out);
-int HalGetParameter(const char *key, const char *def, char *value, unsigned int len);
+INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out);
+INIT_LOCAL_API int StringToLL(const char *str, long long int *out);
+INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, uint32_t len);
 
-const char *GetProductModel_(void);
-const char *GetManufacture_(void);
-const char *GetSerial_(void);
-int GetDevUdid_(char *udid, int size);
-int IsValidValue(const char *value, unsigned int len);
+INIT_LOCAL_API const char *GetProductModel_(void);
+INIT_LOCAL_API const char *GetManufacture_(void);
+INIT_LOCAL_API const char *GetSerial_(void);
+INIT_LOCAL_API int GetDevUdid_(char *udid, int size);
+INIT_LOCAL_API int IsValidParamValue(const char *value, uint32_t len);
 
+INIT_LOCAL_API const char *GetFullName_(void);
 #ifdef __cplusplus
 #if __cplusplus
 }

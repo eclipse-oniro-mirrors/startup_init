@@ -81,16 +81,10 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
     UNUSED(isInit);
     PARAM_CHECK(security != NULL, return -1, "Invalid security");
     security->cred.pid = getpid();
-#if defined __LITEOS_A__ || defined __LITEOS_M__
-    security->cred.uid = getuid();
-    security->cred.gid = 0;
-    security->flags[PARAM_SECURITY_DAC] |= LABEL_CHECK_IN_ALL_PROCESS;
-#else
     security->cred.uid = geteuid();
     security->cred.gid = getegid();
     // support check write permission in client
     security->flags[PARAM_SECURITY_DAC] |= LABEL_CHECK_IN_ALL_PROCESS;
-#endif
     return 0;
 }
 
@@ -166,7 +160,7 @@ static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
     int ret = sprintf_s(buffer, sizeof(buffer) - 1, "%s.%d.%d", GROUP_FORMAT, groupId, uid);
     PARAM_CHECK(ret >= 0, return -1, "Failed to format name for %s.%d.%d", GROUP_FORMAT, groupId, uid);
     (void)FindTrieNode(space, buffer, strlen(buffer), &labelIndex);
-    ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(space, labelIndex);
+    ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
     PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %d", labelIndex);
     PARAM_LOGV("CheckUserInGroup %s groupid %d uid %d", buffer, groupId, uid);
     if (node->gid == groupId && node->uid == uid) {
@@ -180,21 +174,13 @@ static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
 
 static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
-#if defined(__LITEOS_A__)
-    uid_t uid = getuid();
-    return uid <= SYS_UID_INDEX ? DAC_RESULT_PERMISSION : DAC_RESULT_FORBIDED;
-#endif
-#if defined(__LITEOS_M__)
-    return DAC_RESULT_PERMISSION;
-#endif
-
     int ret = DAC_RESULT_FORBIDED;
     uint32_t labelIndex = 0;
     // get dac label
     WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
     PARAM_CHECK(space != NULL, return DAC_RESULT_FORBIDED, "Failed to get dac space %s", name);
     (void)FindTrieNode(space, name, strlen(name), &labelIndex);
-    ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(space, labelIndex);
+    ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
     PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %d", labelIndex);
     /**
      * DAC group
@@ -252,8 +238,6 @@ void LoadGroupUser(void)
 #ifndef __MUSL__
     return;
 #endif
-
-#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     PARAM_LOGV("LoadGroupUser ");
     uid_t uid = 0;
     struct group *data = NULL;
@@ -277,5 +261,4 @@ void LoadGroupUser(void)
     }
     PARAM_LOGV("LoadGroupUser getgrent fail errnor %d ", errno);
     endgrent();
-#endif
 }

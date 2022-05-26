@@ -105,7 +105,7 @@ void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const 
     }
     va_list vargs;
     va_start(vargs, fmt);
-    char tmpFmt[MAX_LOG_SIZE];
+    char tmpFmt[MAX_LOG_SIZE] = {0};
     if (vsnprintf_s(tmpFmt, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, fmt, vargs) == -1) {
         va_end(vargs);
         return;

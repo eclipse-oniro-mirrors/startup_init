@@ -77,7 +77,6 @@ void DeviceInfoKits::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &rem
 
 int32_t DeviceInfoKits::GetUdid(std::string& result)
 {
-    printf("DeviceInfoKits::GetUdid \n");
     auto deviceService = GetService();
     DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get watcher manager");
     return deviceService->GetUdid(result);

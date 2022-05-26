@@ -28,11 +28,6 @@
 
 using namespace testing::ext;
 using namespace std;
-
-extern "C" {
-void ClientDeinit(void);
-}
-
 namespace init_ut {
 class ServiceUnitTest : public testing::Test {
 public:
@@ -283,10 +278,5 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
     ret = SetImportantValue(service, "", invalidImportantValue, 1);
     EXPECT_EQ(ret, -1);
     ReleaseService(service);
-}
-HWTEST_F(ServiceUnitTest, TestClientDeinit, TestSize.Level1)
-{
-    ClientDeinit();
-    HashMapDestory(GetInitWorkspace()->hashMap[0]);
 }
 } // namespace init_ut

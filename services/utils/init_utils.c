@@ -50,6 +50,7 @@ float ConvertMicrosecondToSecond(int x)
 
 uid_t DecodeUid(const char *name)
 {
+#ifndef __LITEOS_M__
     INIT_CHECK_RETURN_VALUE(name != NULL, -1);
     int digitFlag = 1;
     size_t nameLen = strlen(name);
@@ -71,6 +72,9 @@ uid_t DecodeUid(const char *name)
         }
         return userInf->pw_uid;
     }
+#else
+    return -1;
+#endif
 }
 
 char *ReadFileToBuf(const char *configFile)

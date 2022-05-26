@@ -48,6 +48,8 @@ static int InitWorkSpace_(WorkSpace *workSpace, uint32_t spaceSize, int readOnly
         "Failed to map memory error %d spaceSize %d", errno, spaceSize);
     if (!readOnly) {
         workSpace->area = (ParamTrieHeader *)areaAddr;
+        ATOMIC_INIT(&workSpace->area->commitId, 0);
+        ATOMIC_INIT(&workSpace->area->commitPersistId, 0);
         workSpace->area->trieNodeCount = 0;
         workSpace->area->paramNodeCount = 0;
         workSpace->area->securityNodeCount = 0;
@@ -325,14 +327,14 @@ uint32_t AddParamSecruityNode(WorkSpace *workSpace, const ParamAuditData *auditD
     PARAM_CHECK(auditData != NULL && auditData->name != NULL, return 0, "Invalid auditData");
 #ifdef PARAM_SUPPORT_SELINUX
     const uint32_t labelLen = strlen(auditData->label);
-    uint32_t realLen = sizeof(ParamSecruityNode) + PARAM_ALIGN(labelLen + 1);
+    uint32_t realLen = sizeof(ParamSecurityNode) + PARAM_ALIGN(labelLen + 1);
 #else
-    uint32_t realLen = sizeof(ParamSecruityNode);
+    uint32_t realLen = sizeof(ParamSecurityNode);
 #endif
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize, return 0,
         "Failed to allocate currOffset %u, dataSize %u datalen %u",
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);
-    ParamSecruityNode *node = (ParamSecruityNode *)(workSpace->area->data + workSpace->area->currOffset);
+    ParamSecurityNode *node = (ParamSecurityNode *)(workSpace->area->data + workSpace->area->currOffset);
     node->uid = auditData->dacData.uid;
     node->gid = auditData->dacData.gid;
     node->mode = auditData->dacData.mode;
@@ -369,7 +371,7 @@ uint32_t AddParamNode(WorkSpace *workSpace, const char *key, uint32_t keyLen, co
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);
 
     ParamNode *node = (ParamNode *)(workSpace->area->data + workSpace->area->currOffset);
-    atomic_init(&node->commitId, 0);
+    ATOMIC_INIT(&node->commitId, 0);
 
     node->keyLength = keyLen;
     node->valueLength = valueLen;

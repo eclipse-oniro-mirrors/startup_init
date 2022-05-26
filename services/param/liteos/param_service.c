@@ -25,8 +25,9 @@ void InitParamService(void)
     PARAM_CHECK(ret == 0, return, "Init parameter workspace fail");
     ret = InitPersistParamWorkSpace();
     PARAM_CHECK(ret == 0, return, "Init persist parameter workspace fail");
-    // read cmd to param
-    LoadParamFromCmdLine();
+
+    // from build
+    LoadParamFromBuild();
 }
 
 int StartParamService(void)

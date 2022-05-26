@@ -49,7 +49,7 @@ typedef enum {
     PARAM_CODE_NOT_FOUND,
     PARAM_CODE_READ_ONLY,
     PARAM_CODE_FAIL_CONNECT,
-    PARAM_CODE_NODE_EXIST,
+    PARAM_CODE_NODE_EXIST, // 9
     PARAM_CODE_MAX
 } PARAM_CODE;
 
@@ -89,7 +89,7 @@ void StopParamService(void);
  * 加载默认的参数值
  *
  */
-int LoadDefaultParams(const char *fileName, unsigned int mode);
+int LoadDefaultParams(const char *fileName, uint32_t mode);
 
 /**
  * Init 接口
@@ -110,7 +110,7 @@ int SystemWriteParam(const char *name, const char *value);
  * 查询参数。
  *
  */
-int SystemReadParam(const char *name, char *value, unsigned int *len);
+int SystemReadParam(const char *name, char *value, uint32_t *len);
 
 #ifdef PARAM_SUPPORT_TRIGGER
 /**
@@ -217,7 +217,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout);
 typedef void (*ParameterChangePtr)(const char *key, const char *value, void *context);
 int SystemWatchParameter(const char *keyprefix, ParameterChangePtr change, void *context);
 
-int SysCheckParamExist(const char *name);
+int SystemCheckParamExist(const char *name);
 long long GetSystemCommitId(void);
 
 void SystemDumpParameters(int verbose);

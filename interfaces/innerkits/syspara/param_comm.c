@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,7 @@
 
 static const char *g_emptyStr = "";
 
-int IsValidValue(const char *value, unsigned int len)
+INIT_LOCAL_API int IsValidParamValue(const char *value, uint32_t len)
 {
     if ((value == NULL) || (strlen(value) + 1 > len)) {
         return 0;
@@ -39,7 +39,7 @@ int IsValidValue(const char *value, unsigned int len)
     return 1;
 }
 
-int HalGetParameter(const char *key, const char *def, char *value, uint32_t len)
+INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, uint32_t len)
 {
     if ((key == NULL) || (value == NULL)) {
         return EC_INVALID;
@@ -53,7 +53,7 @@ int HalGetParameter(const char *key, const char *def, char *value, uint32_t len)
     return (SystemGetParameter(key, value, &size) == 0) ? EC_SUCCESS : EC_FAILURE;
 }
 
-const char *GetProperty(const char *key, const char **paramHolder)
+INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder)
 {
     if (paramHolder == NULL) {
         return NULL;
@@ -78,7 +78,7 @@ const char *GetProperty(const char *key, const char **paramHolder)
     return *paramHolder;
 }
 
-int StringToLL(const char *str, long long int *out)
+INIT_LOCAL_API int StringToLL(const char *str, long long int *out)
 {
     const char* s = str;
     while (isspace(*s)) {
@@ -101,7 +101,7 @@ int StringToLL(const char *str, long long int *out)
     return 0;
 }
 
-int StringToULL(const char *str, unsigned long long int *out)
+INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out)
 {
     const char* s = str;
     while (isspace(*s)) {
@@ -128,13 +128,13 @@ int StringToULL(const char *str, unsigned long long int *out)
     return 0;
 }
 
-const char *GetProductModel_(void)
+INIT_LOCAL_API const char *GetProductModel_(void)
 {
     static const char *productModel = NULL;
     return GetProperty("const.product.model", &productModel);
 }
 
-const char *GetManufacture_(void)
+INIT_LOCAL_API const char *GetManufacture_(void)
 {
     static const char *productManufacture = NULL;
     return GetProperty("const.product.manufacturer", &productManufacture);
@@ -193,14 +193,22 @@ static int GetSha256Value(const char *input, char *udid, int udidSize)
 }
 #endif
 
-const char *GetSerial_(void)
+INIT_LOCAL_API const char *GetSerial_(void)
 {
-    const char *serialNumberss = NULL;
-    GetProperty("ohos.boot.sn", &serialNumberss);
-    return serialNumberss;
+#ifdef LITEOS_SUPPORT
+    return HalGetSerial();
+#else
+    static char ohos_serial[PARAM_VALUE_LEN_MAX]  = {0};
+    uint32_t len = PARAM_VALUE_LEN_MAX;
+    int ret = SystemGetParameter("ohos.boot.sn", ohos_serial, &len);
+    if (ret != 0) {
+        return NULL;
+    }
+    return ohos_serial;
+#endif
 }
 
-int GetDevUdid_(char *udid, int size)
+INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
 {
     if (size < UDID_LEN || udid == NULL) {
         return EC_FAILURE;
@@ -213,12 +221,10 @@ int GetDevUdid_(char *udid, int size)
     }
     int tmpSize = strlen(manufacture) + strlen(model) + strlen(sn) + 1;
     if (tmpSize <= 0 || tmpSize > DEV_BUF_MAX_LENGTH) {
-        free((void *)sn);
         return -1;
     }
     char *tmp = (char *)malloc(tmpSize);
     if (tmp == NULL) {
-        free((void *)sn);
         return -1;
     }
 
@@ -226,12 +232,16 @@ int GetDevUdid_(char *udid, int size)
     if ((strcat_s(tmp, tmpSize, manufacture) != 0) || (strcat_s(tmp, tmpSize, model) != 0) ||
         (strcat_s(tmp, tmpSize, sn) != 0)) {
         free(tmp);
-        free((void *)sn);
         return -1;
     }
 
     int ret = GetSha256Value(tmp, udid, size);
     free(tmp);
-    free((void *)sn);
     return ret;
+}
+
+INIT_LOCAL_API const char *GetFullName_(void)
+{
+    static const char *fillname = NULL;
+    return GetProperty("const.ohos.fullname", &fillname);
 }

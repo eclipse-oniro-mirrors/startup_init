@@ -62,23 +62,23 @@ static void CheckAndSendTrigger(uint32_t dataIndex, const char *name, const char
     ParamNode *entry = (ParamNode *)GetTrieNode(GetWorkSpace(name), dataIndex);
     PARAM_CHECK(entry != NULL, return, "Failed to get data %s ", name);
     uint32_t trigger = 1;
-    if ((atomic_load_explicit(&entry->commitId, memory_order_relaxed) & PARAM_FLAGS_TRIGGED) != PARAM_FLAGS_TRIGGED) {
+    if ((ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed) & PARAM_FLAGS_TRIGGED) != PARAM_FLAGS_TRIGGED) {
         trigger = (CheckAndMarkTrigger(TRIGGER_PARAM, name) != 0) ? 1 : 0;
     }
     if (trigger) {
-        atomic_store_explicit(&entry->commitId,
-            atomic_load_explicit(&entry->commitId, memory_order_relaxed) | PARAM_FLAGS_TRIGGED, memory_order_release);
+        ATOMIC_STORE_EXPLICIT(&entry->commitId,
+            ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed) | PARAM_FLAGS_TRIGGED, memory_order_release);
         // notify event to process trigger
         PostParamTrigger(EVENT_TRIGGER_PARAM, name, value);
     }
 
     int wait = 1;
-    if ((atomic_load_explicit(&entry->commitId, memory_order_relaxed) & PARAM_FLAGS_WAITED) != PARAM_FLAGS_WAITED) {
+    if ((ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed) & PARAM_FLAGS_WAITED) != PARAM_FLAGS_WAITED) {
         wait = (CheckAndMarkTrigger(TRIGGER_PARAM_WAIT, name) != 0) ? 1 : 0;
     }
     if (wait) {
-        atomic_store_explicit(&entry->commitId,
-            atomic_load_explicit(&entry->commitId, memory_order_relaxed) | PARAM_FLAGS_WAITED, memory_order_release);
+        ATOMIC_STORE_EXPLICIT(&entry->commitId,
+            ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed) | PARAM_FLAGS_WAITED, memory_order_release);
         PostParamTrigger(EVENT_TRIGGER_PARAM_WAIT, name, value);
     }
     PostParamTrigger(EVENT_TRIGGER_PARAM_WATCH, name, value);
@@ -228,7 +228,11 @@ static int HandleParamWaitAdd(const ParamTaskPtr worker, const ParamMessage *msg
 {
     PARAM_CHECK(msg != NULL, return -1, "Invalid message");
     uint32_t offset = 0;
+#ifndef STARTUP_INIT_TEST
     uint32_t timeout = DEFAULT_PARAM_WAIT_TIMEOUT;
+#else
+    uint32_t timeout = 0;
+#endif
     ParamMsgContent *valueContent = GetNextContent(msg, &offset);
     PARAM_CHECK(valueContent != NULL, return -1, "Invalid msg");
     PARAM_CHECK(valueContent->contentSize <= PARAM_CONST_VALUE_LEN_MAX, return -1, "Invalid msg");
@@ -376,6 +380,8 @@ void InitParamService(void)
     LoadSelinuxLabel();
     // from cmdline
     LoadParamFromCmdLine();
+    // from build
+    LoadParamFromBuild();
 }
 
 int StartParamService(void)

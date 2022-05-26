@@ -94,8 +94,8 @@ int GetBootModeFromMisc(void)
     struct RBMiscUpdateMessage msg;
     ret = RBMiscReadUpdaterMessage(miscFile, &msg);
     INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get misc info");
-    if (memcmp(msg.command, "boot_charing", strlen("boot_charing")) == 0) {
-        return GROUP_CHARING;
+    if (memcmp(msg.command, "boot_charge", strlen("boot_charge")) == 0) {
+        return GROUP_CHARGE;
     }
     return 0;
 }
@@ -214,11 +214,11 @@ static int DoSuspendCmd(const char *cmd, const char *opt)
 }
 
 #ifdef INIT_TEST
-static int DoCharingCmd()
+static int DoChargeCmd()
 {
     // by job to stop service and unmount
     DoJobNow("reboot");
-    int ret = CheckAndRebootToUpdater(NULL, "charing", "charing:", "boot_charing");
+    int ret = CheckAndRebootToUpdater(NULL, "charge", "charge:", "boot_charge");
     if (ret == 0) {
 #ifndef STARTUP_INIT_TEST
         return reboot(RB_AUTOBOOT);
@@ -242,7 +242,7 @@ struct {
 #endif
     { "suspend", DoSuspendCmd },
 #ifdef INIT_TEST
-    { "charing", DoCharingCmd }
+    { "charge", DoChargeCmd }
 #endif
 };
 

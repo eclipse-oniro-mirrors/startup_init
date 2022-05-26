@@ -69,7 +69,6 @@ static ParamHandle GetParamHandle(const WorkSpace *workSpace, uint32_t index, co
     uint32_t hashCode = (uint32_t)GenerateKeyHasCode(workSpace->fileName, strlen(workSpace->fileName));
     uint32_t handle = (hashCode % HASH_BUTT) << 24; // 24 left shift
     handle = handle | (index + workSpace->area->startIndex);
-    PARAM_LOGV("GetParamHandle handle 0x%x index %u, name %s space %p", handle, index, name, workSpace);
     return handle;
 }
 
@@ -121,10 +120,7 @@ int InitParamWorkSpace(int onlyRead)
     if (PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
-    g_paramWorkSpace.securityLabel.cred.pid = getpid();
-    g_paramWorkSpace.securityLabel.cred.uid = geteuid();
-    g_paramWorkSpace.securityLabel.cred.gid = getegid();
-
+    paramMutexEnvInit();
     HashInfo info = {
         WorkSpaceNodeCompare,
         WorkSpaceKeyCompare,
@@ -186,10 +182,10 @@ void CloseParamWorkSpace(void)
 
 static uint32_t ReadCommitId(ParamNode *entry)
 {
-    uint32_t commitId = atomic_load_explicit(&entry->commitId, memory_order_acquire);
+    uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_acquire);
     while (commitId & PARAM_FLAGS_MODIFY) {
         futex_wait(&entry->commitId, commitId);
-        commitId = atomic_load_explicit(&entry->commitId, memory_order_acquire);
+        commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_acquire);
     }
     return commitId & PARAM_FLAGS_COMMITID;
 }
@@ -336,13 +332,13 @@ static int AddParam(WorkSpace *workSpace, const char *name, const char *value, u
         uint32_t offset = AddParamNode(workSpace, name, strlen(name), value, strlen(value));
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
         SaveIndex(&node->dataIndex, offset);
-        long long globalCommitId = atomic_load_explicit(&workSpace->area->commitId, memory_order_relaxed);
-        atomic_store_explicit(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
+        long long globalCommitId = ATOMIC_LOAD_EXPLICIT(&workSpace->area->commitId, memory_order_relaxed);
+        ATOMIC_STORE_EXPLICIT(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
 #ifdef PARAM_SUPPORT_SELINUX
         WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
         if (space != workSpace) { // dac commit is global commit
-            globalCommitId = atomic_load_explicit(&space->area->commitId, memory_order_relaxed);
-            atomic_store_explicit(&space->area->commitId, ++globalCommitId, memory_order_release);
+            globalCommitId = ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_relaxed);
+            ATOMIC_STORE_EXPLICIT(&space->area->commitId, ++globalCommitId, memory_order_release);
         }
 #endif
     }
@@ -360,22 +356,22 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     PARAM_CHECK(entry->keyLength == strlen(name), return PARAM_CODE_INVALID_NAME, "Failed to check name len %s", name);
 
     uint32_t valueLen = strlen(value);
-    uint32_t commitId = atomic_load_explicit(&entry->commitId, memory_order_relaxed);
-    atomic_store_explicit(&entry->commitId, commitId | PARAM_FLAGS_MODIFY, memory_order_relaxed);
-    long long globalCommitId = atomic_load_explicit(&workSpace->area->commitId, memory_order_relaxed);
+    uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed);
+    ATOMIC_STORE_EXPLICIT(&entry->commitId, commitId | PARAM_FLAGS_MODIFY, memory_order_relaxed);
+    long long globalCommitId = ATOMIC_LOAD_EXPLICIT(&workSpace->area->commitId, memory_order_relaxed);
     if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
         int ret = memcpy_s(entry->data + entry->keyLength + 1, PARAM_VALUE_LEN_MAX, value, valueLen + 1);
         PARAM_CHECK(ret == EOK, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
         entry->valueLength = valueLen;
     }
     uint32_t flags = commitId & ~PARAM_FLAGS_COMMITID;
-    atomic_store_explicit(&entry->commitId, (++commitId) | flags, memory_order_release);
-    atomic_store_explicit(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
+    ATOMIC_STORE_EXPLICIT(&entry->commitId, (++commitId) | flags, memory_order_release);
+    ATOMIC_STORE_EXPLICIT(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
 #ifdef PARAM_SUPPORT_SELINUX
     WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
     if (space != workSpace) { // dac commit is global commit
-        globalCommitId = atomic_load_explicit(&space->area->commitId, memory_order_relaxed);
-        atomic_store_explicit(&space->area->commitId, ++globalCommitId, memory_order_release);
+        globalCommitId = ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_relaxed);
+        ATOMIC_STORE_EXPLICIT(&space->area->commitId, ++globalCommitId, memory_order_release);
     }
 #endif
     PARAM_LOGV("UpdateParam name %s value: %s", name, value);
@@ -434,12 +430,12 @@ int AddSecurityLabel(const ParamAuditData *auditData)
         SaveIndex(&node->labelIndex, offset);
     } else {
 #ifdef STARTUP_INIT_TEST
-        ParamSecruityNode *label = (ParamSecruityNode *)GetTrieNode(workSpace, node->labelIndex);
+        ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, node->labelIndex);
         label->mode = auditData->dacData.mode;
         label->uid = auditData->dacData.uid;
         label->gid = auditData->dacData.gid;
 #endif
-        PARAM_LOGE("Error, repeate to add label for name %s", auditData->name);
+        PARAM_LOGE("Error, repeat to add label for name %s", auditData->name);
     }
     PARAM_LOGV("AddSecurityLabel label %d gid %d uid %d mode %o name: %s", offset,
         auditData->dacData.gid, auditData->dacData.uid, auditData->dacData.mode, auditData->name);
@@ -463,8 +459,8 @@ ParamNode *SystemCheckMatchParamWait(const char *name, const char *value)
     if ((param->keyLength != nameLength) || (strncmp(param->data, name, nameLength) != 0)) {  // compare name
         return NULL;
     }
-    atomic_store_explicit(&param->commitId,
-        atomic_load_explicit(&param->commitId, memory_order_relaxed) | PARAM_FLAGS_WAITED, memory_order_release);
+    ATOMIC_STORE_EXPLICIT(&param->commitId,
+        ATOMIC_LOAD_EXPLICIT(&param->commitId, memory_order_relaxed) | PARAM_FLAGS_WAITED, memory_order_release);
     if ((strncmp(value, "*", 1) == 0) || (strcmp(param->data + nameLength + 1, value) == 0)) { // compare value
         return param;
     }
@@ -513,10 +509,9 @@ int SystemTraversalParameter(const char *prefix, TraversalParamPtr traversalPara
         context.prefix = (char *)prefix;
     }
 #ifdef PARAM_SUPPORT_SELINUX
-    // open all workspace
     OpenPermissionWorkSpace();
 #endif
-    WorkSpace *workSpace = GetFristWorkSpace();
+    WorkSpace *workSpace = GetFirstWorkSpace();
     if (workSpace != NULL && strcmp(workSpace->fileName, WORKSPACE_NAME_DAC) == 0) {
         workSpace = GetNextWorkSpace(workSpace);
     }
@@ -580,7 +575,7 @@ static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrie
         }
     }
     if (current->labelIndex != 0 && verbose) {
-        ParamSecruityNode *label = (ParamSecruityNode *)GetTrieNode(workSpace, current->labelIndex);
+        ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, current->labelIndex);
         if (label != NULL) {
             PARAM_DUMP("\tparameter label dac %d %d %o \n\t  label: %s \n",
                 label->uid, label->gid, label->mode, (label->length > 0) ? label->data : "null");
@@ -627,7 +622,7 @@ void SystemDumpParameters(int verbose)
             g_paramWorkSpace.securityLabel.cred.uid,
             g_paramWorkSpace.securityLabel.cred.gid);
     }
-    WorkSpace *workSpace = GetFristWorkSpace();
+    WorkSpace *workSpace = GetFirstWorkSpace();
     while (workSpace != NULL) {
         WorkSpace *next = GetNextWorkSpace(workSpace);
         HashNodeTraverseForDump(workSpace, verbose);
@@ -735,7 +730,7 @@ ParamTrieNode *GetTrieNodeByHandle(ParamHandle handle)
     return (ParamTrieNode *)GetTrieNode(workSpace, index);
 }
 
-WorkSpace *GetFristWorkSpace(void)
+WorkSpace *GetFirstWorkSpace(void)
 {
     WorkSpace *workSpace = NULL;
     WORKSPACE_RD_LOCK(g_paramWorkSpace);
@@ -760,7 +755,7 @@ WorkSpace *GetNextWorkSpace(WorkSpace *curr)
     return workSpace;
 }
 
-int SystemReadParam(const char *name, char *value, unsigned int *len)
+int SystemReadParam(const char *name, char *value, uint32_t *len)
 {
     PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Invalid space");
     PARAM_CHECK(name != NULL && len != NULL && strlen(name) > 0, return -1, "The name or value is null");
@@ -772,17 +767,6 @@ int SystemReadParam(const char *name, char *value, unsigned int *len)
     return ReadParamValue(handle, value, len);
 }
 
-int SystemFindParameter(const char *name, ParamHandle *handle)
-{
-    PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Invalid space");
-    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
-    int ret = ReadParamWithCheck(name, DAC_READ, handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
-    }
-    return ret;
-}
-
 int SysCheckParamExist(const char *name)
 {
     PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Invalid space");
@@ -791,7 +775,7 @@ int SysCheckParamExist(const char *name)
     // open all workspace
     OpenPermissionWorkSpace();
 #endif
-    WorkSpace *workSpace = GetFristWorkSpace();
+    WorkSpace *workSpace = GetFirstWorkSpace();
     while (workSpace != NULL) {
         PARAM_LOGV("SysCheckParamExist name %s in space %s", name, workSpace->fileName);
         WorkSpace *next = GetNextWorkSpace(workSpace);
@@ -820,7 +804,7 @@ long long GetSystemCommitId(void)
     if (space == NULL || space->area == NULL) {
         return 0;
     }
-    return atomic_load_explicit(&space->area->commitId, memory_order_acquire);
+    return ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_acquire);
 }
 
 int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len)
@@ -845,7 +829,7 @@ int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditD
     WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
     PARAM_CHECK(space != NULL, return -1, "Invalid workSpace");
     FindTrieNode(space, name, strlen(name), &labelIndex);
-    ParamSecruityNode *node = (ParamSecruityNode *)GetTrieNode(space, labelIndex);
+    ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
     PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %d", labelIndex);
 
     auditData->name = name;
@@ -873,6 +857,7 @@ int CheckParameterSet(const char *name, const char *value, const ParamSecurityLa
     PARAM_CHECK(ret == 0, return ret, "Illegal param value %s", value);
     *ctrlService = 0;
 
+#ifndef __LITEOS_M__
     if (getpid() != 1) { // none init
 #ifdef PARAM_SUPPORT_SELINUX
         *ctrlService |= PARAM_NEED_CHECK_IN_SERVICE;
@@ -884,7 +869,7 @@ int CheckParameterSet(const char *name, const char *value, const ParamSecurityLa
         }
 #endif
     }
-
+#endif
     char *key = GetServiceCtrlName(name, value);
     ret = CheckParamPermission(srcLabel, (key == NULL) ? name : key, DAC_WRITE);
     if (key != NULL) {  // ctrl param
@@ -932,7 +917,7 @@ long long GetPersistCommitId(void)
     if (space == NULL || space->area == NULL) {
         return 0;
     }
-    return atomic_load_explicit(&space->area->commitPersistId, memory_order_acquire);
+    return ATOMIC_LOAD_EXPLICIT(&space->area->commitPersistId, memory_order_acquire);
 }
 
 void UpdatePersistCommitId(void)
@@ -942,8 +927,8 @@ void UpdatePersistCommitId(void)
     if (space == NULL || space->area == NULL) {
         return;
     }
-    long long globalCommitId = atomic_load_explicit(&space->area->commitPersistId, memory_order_relaxed);
-    atomic_store_explicit(&space->area->commitPersistId, ++globalCommitId, memory_order_release);
+    long long globalCommitId = ATOMIC_LOAD_EXPLICIT(&space->area->commitPersistId, memory_order_relaxed);
+    ATOMIC_STORE_EXPLICIT(&space->area->commitPersistId, ++globalCommitId, memory_order_release);
 }
 
 #if defined STARTUP_INIT_TEST || defined LOCAL_TEST

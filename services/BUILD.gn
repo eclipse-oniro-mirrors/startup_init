@@ -10,6 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//base/startup/init_lite/begetd.gni")
 
 init_common_sources = [
   "init/init_capability.c",
@@ -32,6 +33,9 @@ if (defined(ohos_lite)) {
       "OHOS_LITE",
       "__MUSL__",
     ]
+    if (enable_ohos_startup_init_feature_begetctl_liteos) {
+      defines += [ "LITEOS_SUPPORT" ]
+    }
     sources = [
       "init/adapter/init_adapter.c",
       "init/lite/init.c",
@@ -94,20 +98,20 @@ if (defined(ohos_lite)) {
     }
   }
 
-  if (ohos_build_type == "debug") {
-    group("unittest") {
+  group("init_lite") {
+    if (ohos_kernel_type != "liteos_m") {
+      deps = [
+        ":lite_init",
+        "etc:etc_files",
+      ]
+    }
+  }
+  group("unittest") {
+    if (ohos_build_type == "debug" && ohos_kernel_type != "liteos_m") {
       deps = [ "//base/startup/init_lite/test/unittest/lite:init_test" ]
     }
   }
-
-  group("init_lite") {
-    deps = [
-      ":lite_init",
-      "etc:etc_files",
-    ]
-  }
 } else {
-  import("//base/startup/init_lite/begetd.gni")
   import("//build/ohos.gni")
   import("//build/ohos/native_stub/native_stub.gni")
 
@@ -241,7 +245,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/param:param_client",
       "//base/startup/init_lite/services/param:param_init",
     ]
-    if (param_feature_watcher) {
+    if (enable_ohos_startup_init_feature_watcher) {
       deps += [
         "//base/startup/init_lite/services/param/watcher:param_watcher",
         "//base/startup/init_lite/services/param/watcher:param_watcher.rc",

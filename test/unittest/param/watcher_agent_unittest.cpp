@@ -97,6 +97,7 @@ public:
         if (watcher != nullptr) {
             watcher->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
             watcher->OnRemoteRequest(IWatcher::PARAM_CHANGE + 1, data, reply, option);
+            watcher->OnParamerterChange("testname", "testvalue");
         }
         return 0;
     }

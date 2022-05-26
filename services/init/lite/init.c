@@ -53,7 +53,7 @@ void SystemPrepare(void)
 void SystemConfig(void)
 {
     InitServiceSpace();
-#ifdef LITEOS_SUPPORT_PARAM
+#ifdef LITEOS_SUPPORT
     InitParamService();
     // parse parameters
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
