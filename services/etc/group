@@ -97,3 +97,7 @@ wallpaper:x:3817:
 screenlock:x:3818:
 time:x:3819:
 inputmethod:x:3820:
+watchdog:x:1100:
+paramwatcher:x:1101:
+deviceinfo:x:1102:
+accessibility:x:1103:
