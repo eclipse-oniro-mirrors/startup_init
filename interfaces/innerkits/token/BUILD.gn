@@ -50,29 +50,26 @@ if (ohos_kernel_type == "liteos_m") {
   }
 }
 
-lite_component("inittoken") {
+lite_component("token") {
   features = []
-  if (enable_ohos_startup_init_feature_begetctl_liteos) {
-    if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
-      features += [ ":token_shared" ]
-    }
-    if (ohos_kernel_type == "liteos_m") {
-      features += [ ":token_static" ]
-    }
+
+  if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
+    features += [ ":token_shared" ]
+  }
+  if (ohos_kernel_type == "liteos_m") {
+    features += [ ":token_static" ]
   }
 }
 
-ndk_lib("inittoken_notes") {
+ndk_lib("token_notes") {
   deps = []
   head_files = []
-  if (enable_ohos_startup_init_feature_begetctl_liteos) {
-    if (ohos_kernel_type != "liteos_m") {
-      lib_extension = ".so"
-    }
-    if (ohos_kernel_type != "liteos_m") {
-      deps +=
-          [ "//base/startup/init_lite/interfaces/innerkits/token:token_shared" ]
-    }
-    head_files += [ "//base/startup/init_lite/interfaces/include/token" ]
+  if (ohos_kernel_type != "liteos_m") {
+    lib_extension = ".so"
   }
+  if (ohos_kernel_type != "liteos_m") {
+    deps +=
+        [ "//base/startup/init_lite/interfaces/innerkits/token:token_shared" ]
+  }
+  head_files += [ "//base/startup/init_lite/interfaces/include/token" ]
 }
