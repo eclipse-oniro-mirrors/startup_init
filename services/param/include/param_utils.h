@@ -132,7 +132,6 @@ typedef struct cmdLineInfo {
 #endif
 
 char *GetServiceCtrlName(const char *name, const char *value);
-void CheckAndCreateDir(const char *fileName);
 int SpliteString(char *line, const char *exclude[], uint32_t count,
     int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context);
 #ifdef __cplusplus

@@ -13,6 +13,10 @@
             "sandbox-path" : "/system/lib64",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
+            "src-path" : "/system/lib",
+            "sandbox-path" : "/system/lib",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
             "src-path" : "/system/profile",
             "sandbox-path" : "/system/profile",
             "sandbox-flags" : [ "bind", "rec", "private" ]
@@ -79,6 +83,9 @@
     "symbol-links" : [{
             "target-name" : "/system/lib64",
             "link-name" : "/lib64"
+        }, {
+            "target-name" : "/system/lib",
+            "link-name" : "/lib"
         }, {
             "target-name" : "/system/bin",
             "link-name" : "/bin"
