@@ -377,7 +377,7 @@ ohos_fuzztest("SystemGetParameterValueFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemSetParameterFuzztest") {
+ohos_fuzztest("SystemSetParameterFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
       "//base/startup/init_lite/test/fuzztest/systemsetparameter_fuzzer"
@@ -404,7 +404,7 @@ ohos_fuzztest("SystemSetParameterFuzztest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemTraversalParameterFuzztest") {
+ohos_fuzztest("SystemTraversalParameterFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
       "//base/startup/init_lite/test/fuzztest/systemtraversalparameter_fuzzer"
@@ -546,8 +546,8 @@ group("fuzztest") {
     ":SystemGetParameterFuzzTest",
     ":SystemGetParameterNameFuzzTest",
     ":SystemGetParameterValueFuzzTest",
-    ":SystemSetParameterFuzztest",
-    ":SystemTraversalParameterFuzztest",
+    ":SystemSetParameterFuzzTest",
+    ":SystemTraversalParameterFuzzTest",
     ":SystemWaitParameterFuzzTest",
     ":SystemWatchParameterFuzzTest",
     ":UmountAllFstabFuzzTest",
