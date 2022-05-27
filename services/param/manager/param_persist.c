@@ -259,6 +259,8 @@ int LoadParamFromCmdLine(void)
         },
         {OHOS_BOOT"bootgroup", CommonDealFun
         },
+        {OHOS_BOOT"reboot_reason", CommonDealFun
+        },
         {OHOS_BOOT"sn", SnDealFun
         }
     };
