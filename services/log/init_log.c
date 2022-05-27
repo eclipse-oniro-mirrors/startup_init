@@ -32,6 +32,7 @@
 #include "hilog_base/log_base.h"
 #endif
 
+#define DEF_LOG_SIZE 128
 #define MAX_LOG_SIZE 1024
 #define BASE_YEAR 1900
 
@@ -105,9 +106,13 @@ void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const 
     }
     va_list vargs;
     va_start(vargs, fmt);
-    char tmpFmt[MAX_LOG_SIZE] = {0};
-    if (vsnprintf_s(tmpFmt, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, fmt, vargs) == -1) {
+    char tmpFmt[DEF_LOG_SIZE] = {0};
+    if (vsnprintf_s(tmpFmt, sizeof(tmpFmt), sizeof(tmpFmt) - 1, fmt, vargs) == -1) {
         va_end(vargs);
+#ifdef OHOS_LITE
+        static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+        (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", fmt);
+#endif
         return;
     }
     va_end(vargs);

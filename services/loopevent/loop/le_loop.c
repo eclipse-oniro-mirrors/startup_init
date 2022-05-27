@@ -92,7 +92,6 @@ LE_STATUS ProcessEvent(const EventLoop *loop, int fd, uint32_t oper)
         }
         task->handleEvent((LoopHandle)loop, (TaskHandle)task, oper);
     } else {
-        LE_LOGE("ProcessEvent can not find task for %d", fd);
         loop->delEvent(loop, fd, oper);
     }
     return LE_SUCCESS;

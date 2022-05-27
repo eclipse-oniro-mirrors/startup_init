@@ -44,13 +44,13 @@ static int InitParamClient(void)
     if (PARAM_TEST_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
-    PARAM_LOGV("InitParamClient");
+    PARAM_LOGI("InitParamClient %p", &g_clientSpace);
     pthread_mutex_init(&g_clientSpace.mutex, NULL);
     g_clientSpace.clientFd = INVALID_SOCKET;
     int ret = InitParamWorkSpace(1);
     PARAM_CHECK(ret == 0, return -1, "Failed to init param workspace");
     PARAM_SET_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT);
-    PARAM_LOGI("InitParamClient finish");
+    PARAM_LOGI("InitParamClient %p finish", &g_clientSpace);
     return 0;
 }
 
@@ -64,6 +64,7 @@ void ClientInit(void)
 
 void ClientDeinit(void)
 {
+    PARAM_LOGI("ClientDeinit %p", &g_clientSpace);
 #ifndef STARTUP_INIT_TEST
     if (PARAM_TEST_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT)) {
         CloseParamWorkSpace();
@@ -74,6 +75,7 @@ void ClientDeinit(void)
     }
     PARAM_SET_FLAG(g_clientSpace.flags, 0);
     pthread_mutex_destroy(&g_clientSpace.mutex);
+    PARAM_LOGI("ClientDeinit %p finish", &g_clientSpace);
 }
 
 static int ProcessRecvMsg(const ParamMessage *recvMsg)
@@ -177,7 +179,6 @@ int SystemSetParameter(const char *name, const char *value)
     request->msgSize = offset + sizeof(ParamMessage);
     request->id.msgId = atomic_fetch_add(&g_requestId, 1);
 
-    PARAM_LOGV("SystemSetParameter name %s", name);
     int fd = INVALID_SOCKET;
     pthread_mutex_lock(&g_clientSpace.mutex);
     if (g_clientSpace.clientFd == INVALID_SOCKET) {
@@ -188,6 +189,7 @@ int SystemSetParameter(const char *name, const char *value)
     PARAM_CHECK(fd > 0, return -1, "Failed to connect server for set %s", name);
     ret = StartRequest(fd, request, DEFAULT_PARAM_SET_TIMEOUT);
     free(request);
+    PARAM_LOGI("SystemSetParameter name %s %d", name, ret);
     return ret;
 }
 

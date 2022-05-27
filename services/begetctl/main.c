@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
         printf("Failed to get shell handle \n");
         return 0;
     }
-    SetInitLogLevel(0);
+
     BShellParamCmdRegister(handle, 0);
 #ifdef INIT_TEST
     BShellCmdRegister(handle, 0);
