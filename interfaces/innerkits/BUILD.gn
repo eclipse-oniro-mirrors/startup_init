@@ -226,8 +226,10 @@ if (defined(ohos_lite)) {
     ]
 
     deps = [
+      ":libbegetutil",
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/openssl:libcrypto_shared",
     ]
 
     if (enable_ohos_startup_init_feature_watcher) {
@@ -240,12 +242,6 @@ if (defined(ohos_lite)) {
       include_dirs += [
         "//base/startup/init_lite/services/param/watcher/include",
         "//base/startup/init_lite/services/log",
-      ]
-      deps += [
-        "//base/startup/init_lite/services/param:param_client",
-        "//base/startup/init_lite/services/utils:libinit_tools",
-        "//base/startup/init_lite/services/utils:libinit_utils",
-        "//third_party/openssl:libcrypto_shared",
       ]
     } else {
       defines += [ "NO_PARAM_WATCHER" ]
@@ -260,13 +256,6 @@ if (defined(ohos_lite)) {
     } else {
       sources += [
         "//base/startup/init_lite/interfaces/innerkits/syspara/param_comm.c",
-      ]
-      deps += [
-        "//base/startup/init_lite/services/loopevent:loopevent",
-        "//base/startup/init_lite/services/param:param_client",
-        "//base/startup/init_lite/services/utils:libinit_tools",
-        "//base/startup/init_lite/services/utils:libinit_utils",
-        "//third_party/openssl:libcrypto_shared",
       ]
     }
 
