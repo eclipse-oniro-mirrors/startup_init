@@ -700,7 +700,6 @@ WorkSpace *GetWorkSpace(const char *name)
         space = HASHMAP_ENTRY(node, WorkSpace, hashNode);
     }
     WORKSPACE_RW_UNLOCK(g_paramWorkSpace);
-    PARAM_LOGV("GetWorkSpace %s space-name %s, space %p", name, tmpName, space);
     return (space != NULL && space->area != NULL) ? space : NULL;
 }
 
