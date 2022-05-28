@@ -73,7 +73,6 @@ int main(int argc, char *args[])
     tio.c_cc[VMIN] = 1;
     tcsetattr(0, TCSAFLUSH, &tio);
 
-    SetInitLogLevel(0);
     BSH_LOGV("BShellEnvStart %d", argc);
     do {
         BShellHandle handle = GetShellHandle();
