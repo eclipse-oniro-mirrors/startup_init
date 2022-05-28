@@ -20,6 +20,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "securec.h"
 #ifdef OHOS_LITE
@@ -45,17 +46,18 @@ void SetInitLogLevel(InitLogLevel logLevel)
 #ifdef INIT_FILE
 static void LogToFile(const char *logFile, const char *tag, const char *info)
 {
-    time_t second = time(0);
-    if (second <= 0) {
+    struct timespec curr;
+    if (clock_gettime(CLOCK_REALTIME, &curr) != 0) {
         return;
     }
-    struct tm *t = localtime(&second);
     FILE *outfile = fopen(logFile, "a+");
-    if (t == NULL || outfile == NULL) {
+    if (outfile == NULL) {
         return;
     }
-    (void)fprintf(outfile, "[%d-%d-%d %d:%d:%d][pid=%d][%s]%s \n",
-        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, getpid(), tag, info);
+    struct tm t;
+    char dateTime[80]; // 80 data time
+    strftime(dateTime, sizeof(dateTime), "%Y-%m-%d %H:%M:%S", localtime_r(&curr.tv_sec, &t));
+    (void)fprintf(outfile, "[%s.%ld][pid=%d %d][%s]%s \n", dateTime, curr.tv_nsec, getpid(), gettid(), tag, info);
     (void)fflush(outfile);
     fclose(outfile);
     return;
@@ -116,6 +118,7 @@ void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const 
         return;
     }
     va_end(vargs);
+
 #ifdef OHOS_LITE
     static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
     (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);

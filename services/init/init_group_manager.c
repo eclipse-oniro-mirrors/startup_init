@@ -299,24 +299,18 @@ int CheckNodeValid(int type, const char *name)
     if (type >= NODE_TYPE_GROUPS) {
         return -1;
     }
-#ifndef INIT_TEST
-    if (g_initWorkspace.groupMode == GROUP_BOOT) {
-        return 0;
-    }
-    HashNode *node = HashMapGet(g_initWorkspace.hashMap[type], name);
-    if (node != NULL) {
-        return 0;
-    }
-#else
     HashNode *node = HashMapGet(g_initWorkspace.hashMap[type], name);
     if (node != NULL) {
         INIT_LOGI("Found %s in %s group", name, type == NODE_TYPE_JOBS ? "job" : "service");
         return 0;
     }
     if (g_initWorkspace.groupMode == GROUP_BOOT) {
+        // for boot start, can not start charger service
+        if (strcmp(name, "charger") == 0) {
+            return -1;
+        }
         return 0;
     }
-#endif
     return -1;
 }
 

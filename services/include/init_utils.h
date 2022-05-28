@@ -66,7 +66,6 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
 char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxItemCount);
 void FreeStringVector(char **vector, int count);
 int InUpdaterMode(void);
-int InChargerMode(void);
 int StringReplaceChr(char *strl, char oldChr, char newChr);
 
 int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue);
