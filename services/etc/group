@@ -4,7 +4,6 @@ system:x:1000:
 radio:x:1001:
 bluetooth:x:1002:
 graphics:x:1003:
-samgr:x:1005:
 file_manager:x:1006:
 log:x:1007:
 user_data_rw:x:1008:
@@ -76,6 +75,7 @@ installs:x:3060:
 deviceauth:x:3333:
 huks_server:x:3510:
 dms:x:5522:
+samgr:x:5555:
 update:x:6666:
 charger:x:6667:
 battery_stats:x:6668:
