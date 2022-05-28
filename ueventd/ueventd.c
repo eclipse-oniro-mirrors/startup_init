@@ -20,7 +20,12 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
+#include <fcntl.h>
 #include <unistd.h>
+
 #include "ueventd_device_handler.h"
 #include "ueventd_firmware_handler.h"
 #include "ueventd_read_cfg.h"
@@ -119,6 +124,48 @@ static void HandleUevent(const struct Uevent *uevent)
     }
 }
 
+#define DEFAULT_RW_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
+
+typedef struct {
+    const char *dev;
+    mode_t mode;
+} DYNAMIC_DEVICE_NODE;
+
+#define DEV_NODE_PATH_PREFIX "/dev/"
+#define DEV_NODE_PATH_PREFIX_LEN 5
+
+static const DYNAMIC_DEVICE_NODE dynamicDevices[] = {
+    { DEV_NODE_PATH_PREFIX"tty",             S_IFCHR | DEFAULT_RW_MODE },
+    { DEV_NODE_PATH_PREFIX"binder",          S_IFCHR | DEFAULT_RW_MODE }
+};
+
+static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
+{
+    mode_t mask;
+    int idx = 0;
+
+    if (uevent->deviceName == NULL) {
+        return;
+    }
+
+    while (idx < sizeof(dynamicDevices)/sizeof(dynamicDevices[0])) {
+        if (strcmp(uevent->deviceName, dynamicDevices[idx].dev + DEV_NODE_PATH_PREFIX_LEN) != 0) {
+            idx++;
+            continue;
+        }
+
+        // Matched
+        mask = umask(0);
+        if (mknod(dynamicDevices[idx].dev, dynamicDevices[idx].mode,
+                    makedev(uevent->major, uevent->minor)) != 0) {
+            INIT_LOGE("Create device node %s failed. %s", dynamicDevices[idx].dev, strerror(errno));
+        }
+        // Restore umask
+        umask(mask);
+        break;
+    }
+}
+
 static void HandleUeventRequired(const struct Uevent *uevent, char **devices, int num)
 {
     const char *deviceName;
@@ -146,6 +193,10 @@ static void HandleUeventRequired(const struct Uevent *uevent, char **devices, in
                 break;
             }
         }
+        return;
+    }
+    if ((type == SUBSYSTEM_OTHERS) && (num > 0)) {
+        HandleRequiredDynamicDeviceNodes(uevent);
     }
 }
 
