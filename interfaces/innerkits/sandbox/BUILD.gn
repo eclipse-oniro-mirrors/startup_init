@@ -63,5 +63,8 @@ ohos_static_library("libsandbox_static") {
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/cJSON:cjson_static",
   ]
+  if (target_cpu == "arm64") {
+    defines = [ "SUPPORT_64BIT" ]
+  }
   part_name = "init"
 }

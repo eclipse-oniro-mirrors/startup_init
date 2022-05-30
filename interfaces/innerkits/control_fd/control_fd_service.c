@@ -16,7 +16,6 @@
 #include <stdbool.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <sys/wait.h>
 
 #include "beget_ext.h"
 #include "control_fd.h"
