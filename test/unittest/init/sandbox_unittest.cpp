@@ -21,7 +21,6 @@
 #include "sandbox_namespace.h"
 #include "securec.h"
 
-// constexpr static mode_t FILE_MODE = 0766;
 using namespace testing::ext;
 namespace init_ut {
 const int NULL_ROOT_PATH = 1;
@@ -32,22 +31,29 @@ const int LINK_ARRARY_START = 5;
 const int LINK_ARRARY_END = 8;
 const int FLAGS_NUMBER = 3;
 
-const char *test_sandbox_name = "test";
-const char *sandbox_json_path = "test-sandbox.json";
+const char *TEST_SANDBOX_NAME = "test";
+const char *SANDBOX_JSON_NAME = "test-sandbox.json";
 
+const char *SANDBOX_CONFIG[] = {"sandbox-root", "mount-bind-paths", "mount-bind-files", "symbol-links"};
+const char *SANDBOX_ROOT[] = { "/mnt/sandbox/test", "/mnt/sandbox/chipset", "/mnt/error"};
+const char *SANDBOX_FLAGS[] = {"bind", "rec", "private"};
+const char *MOUNT_BIND_PATHS[] = {"src-path", "sandbox-path", "sandbox-flags"};
+const char *SYMBOL_LINKS[] = {"target-name", "link-name"};
+const char *APP_PATHS[] = {"/mnt", "/sys", "/proc", "/dev", "/data",
+						   "/system/bin", "/system/lib", "/system/etc", "/system"};
 
-void RestartSandbox(const char *sandbox)
+int RestartSandbox(const char *sandbox)
 {
     if (sandbox == nullptr) {
         std::cout << "invalid parameters" << std::endl;
-        return;
+        return 0;
     }
     InitDefaultNamespace();
     std::cout << "init namespace" << std::endl;
     if (!InitSandboxWithName(sandbox)) {
         CloseDefaultNamespace();
         std::cout << "Failed to init sandbox with name " << sandbox << std::endl;
-        return;
+        return 0;
     }
     std::cout << "init sandbox with name" << std::endl;
     DumpSandboxByName(sandbox);
@@ -56,36 +62,37 @@ void RestartSandbox(const char *sandbox)
         std::cout << "Failed to prepare sandbox %s" << sandbox << std::endl;
         DestroySandbox(sandbox);
         CloseDefaultNamespace();
-        return;
+        return 0;
     }
     std::cout << "prepare sandbox" << std::endl;
     if (EnterDefaultNamespace() < 0) {
         std::cout << "Failed to set default namespace" << std::endl;
         DestroySandbox(sandbox);
         CloseDefaultNamespace();
-        return;
+        return 0;
     }
     std::cout << "enter default namespace" << std::endl;
     CloseDefaultNamespace();
     std::cout << "close namespace" << std::endl;
+	return 1;
 }
 
-cJSON *MakeSandboxJson(const char *SandboxFileName, const int MODE)
+cJSON *MakeSandboxJson(const char *sandboxFileName, const int MODE)
 {
-    const char *SANDBOX_CONFIG[] = {"sandbox-root", "mount-bind-paths", "mount-bind-files", "symbol-links"};
-    const char *SANDBOX_ROOT[] = { "/mnt/sandbox/test", "/mnt/sandbox/chipset", "/mnt/error"};
-    const char *SANDBOX_FLAGS[] = {"bind", "rec", "private"};
-    const char *MOUNT_BIND_PATHS[] = {"src-path", "sandbox-path", "sandbox-flags"};
-    const char *SYMBOL_LINKS[] = {"target-name", "link-name"};
-    const char *APP_PATHS[] = {"/mnt", "/sys", "/proc", "/dev", "/data",
-                               "/system/bin", "/system/lib", "/system/etc", "/system"};
+
 
     cJSON *mJsonSandbox = cJSON_CreateObject();             // json file object
     cJSON *mJsonMtBdPth = cJSON_CreateArray();              // mount-bind-paths
     cJSON *mJsonMtBdFl = cJSON_CreateArray();               // mount-bind-files
     cJSON *mJsonSymLk = cJSON_CreateArray();                // symbol-links
-    cJSON *mJsonMtBdPth_Itm_SdxFlg = cJSON_CreateArray();   // mount-bind-paths items sandbox-flags
-    cJSON *mJsonMtBdFl_Itm = cJSON_CreateObject();          // mount-bind-files items
+    cJSON *mJsonMtBdPthItmSdxFlg = cJSON_CreateArray();   // mount-bind-paths items sandbox-flags
+    cJSON *mJsonMtBdFlItm = cJSON_CreateObject();          // mount-bind-files items
+	
+	if (mJsonSandbox == nullptr || mJsonMtBdPth == nullptr || mJsonMtBdFl == nullptr ||
+		mJsonSymLk == nullptr || mJsonMtBdPthItmSdxFlg == nullptr || mJsonMtBdFlItm == nullptr) {
+		std::cout << "create json object error" << std::endl;
+		return nullptr;
+	}
     cJSON *mJsonMtBdPth_Itm;                                // point to mount-bind-paths items
     cJSON *mJsonSymLk_Itm;                                  // point to symbol-links items
 
@@ -97,7 +104,7 @@ cJSON *MakeSandboxJson(const char *SandboxFileName, const int MODE)
     // assemble SANDBOX_FLAGS
     if (MODE != NULL_MOUNT_FLAGS) {
         for (int i = 0; i < FLAGS_NUMBER; i++) {
-            cJSON_AddItemToArray(mJsonMtBdPth_Itm_SdxFlg, cJSON_CreateString(SANDBOX_FLAGS[i]));
+            cJSON_AddItemToArray(mJsonMtBdPthItmSdxFlg, cJSON_CreateString(SANDBOX_FLAGS[i]));
         }
     }
 
@@ -113,12 +120,12 @@ cJSON *MakeSandboxJson(const char *SandboxFileName, const int MODE)
             cJSON_AddItemToObject(mJsonMtBdPth_Itm, MOUNT_BIND_PATHS[0], nullptr);
             cJSON_AddItemToObject(mJsonMtBdPth_Itm, MOUNT_BIND_PATHS[1], nullptr);
         }
-        cJSON_AddItemToObject(mJsonMtBdPth_Itm, MOUNT_BIND_PATHS[MOUNT_FLAG_COUNT], mJsonMtBdPth_Itm_SdxFlg);
+        cJSON_AddItemToObject(mJsonMtBdPth_Itm, MOUNT_BIND_PATHS[MOUNT_FLAG_COUNT], mJsonMtBdPthItmSdxFlg);
     }
 
     if (MODE != NULL_MOUNT) {
         // Append items to mount-bind-files
-        cJSON_AddItemToArray(mJsonMtBdFl, mJsonMtBdFl_Itm);
+        cJSON_AddItemToArray(mJsonMtBdFl, mJsonMtBdFlItm);
         // assemble symbol-links items
         for (int i = LINK_ARRARY_START; i < LINK_ARRARY_END; i++) {
             // Append items to symbol-links
@@ -136,12 +143,12 @@ cJSON *MakeSandboxJson(const char *SandboxFileName, const int MODE)
     return mJsonSandbox;
 }
 
-bool makeFileByJson(cJSON * mJson, const char *SandboxFileName)
+bool MakeFileByJson(cJSON * mJson, const char *sandboxFileName)
 {
-    std::string const SANDBOX_JSON_PATH = std::string("/etc/sandbox/") + std::string(SandboxFileName);
+    std::string const SANDBOX_JSON_PATH = std::string("/etc/sandbox/") + std::string(sandboxFileName);
     const char* c_SANDBOX_JSON_PATH = SANDBOX_JSON_PATH.c_str();
 
-    int fd = open(c_SANDBOX_JSON_PATH, O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0766);
+    int fd = open(c_SANDBOX_JSON_PATH, O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
     if (fd < 0) {
         std::cout << "open sandbox json file failed" << std::endl;
         return false;
@@ -154,6 +161,7 @@ bool makeFileByJson(cJSON * mJson, const char *SandboxFileName)
         return false;
     }
     free(cjValue1);
+	close(fd);
     return true;
 }
 
@@ -166,9 +174,14 @@ public:
 };
 
 HWTEST_F(SandboxUnitTest, TestCreateNormalSandbox, TestSize.Level1) {
-    cJSON *mJson = MakeSandboxJson(sandbox_json_path, 0);
-    makeFileByJson(mJson, sandbox_json_path);
-    RestartSandbox(test_sandbox_name);
+    cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, 0);
+	if (mJson == nullptr) {
+		std::cout << "created mJson error, mJson is null." << std::endl;
+		return;
+	}
+    MakeFileByJson(mJson, SANDBOX_JSON_NAME);
+    int ret = RestartSandbox(TEST_SANDBOX_NAME);
+	ASSERT_EQ(ret, 1);
 }
 
 HWTEST_F(SandboxUnitTest, TestEnterErrorSandbox, TestSize.Level1) {
@@ -177,8 +190,8 @@ HWTEST_F(SandboxUnitTest, TestEnterErrorSandbox, TestSize.Level1) {
     const char *pname = nullptr;
     int ret2 = EnterSandbox(pname);
     ASSERT_EQ(ret2, -1);
-    DestroySandbox(test_sandbox_name);
-    int ret3 = EnterSandbox(test_sandbox_name);
+    DestroySandbox(TEST_SANDBOX_NAME);
+    int ret3 = EnterSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret3, -1);
 }
 
@@ -200,11 +213,15 @@ HWTEST_F(SandboxUnitTest, TestCreateErrorSandbox1, TestSize.Level1) {
 }
 
 HWTEST_F(SandboxUnitTest, TestCreateErrorSandbox2, TestSize.Level1) {
-    cJSON *mJson = MakeSandboxJson(sandbox_json_path, NULL_ROOT_PATH);
-    bool ret1 = makeFileByJson(mJson, sandbox_json_path);
+    cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, NULL_ROOT_PATH);
+	if (mJson == nullptr) {
+		std::cout << "created mJson error, mJson is null." << std::endl;
+		return;
+	}
+    bool ret1 = MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     ASSERT_TRUE(ret1);
-    InitSandboxWithName(test_sandbox_name);
-    int ret = PrepareSandbox(test_sandbox_name);
+    InitSandboxWithName(TEST_SANDBOX_NAME);
+    int ret = PrepareSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);
     ret = PrepareSandbox("xapp");
     ASSERT_EQ(ret, -1);
@@ -212,23 +229,31 @@ HWTEST_F(SandboxUnitTest, TestCreateErrorSandbox2, TestSize.Level1) {
 
 HWTEST_F(SandboxUnitTest, TestCreateSandboxNoneJsonError, TestSize.Level1) {
     unlink("/etc/sandbox/test-sandbox.json");
-    int ret = PrepareSandbox(test_sandbox_name);
+    int ret = PrepareSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);
 }
 
 HWTEST_F(SandboxUnitTest, TestCreateSandboxMountFlagsError, TestSize.Level1) {
-    cJSON *mJson = MakeSandboxJson(sandbox_json_path, NULL_MOUNT_FLAGS);
-    makeFileByJson(mJson, sandbox_json_path);
-    int ret = PrepareSandbox(test_sandbox_name);
+    cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, NULL_MOUNT_FLAGS);
+	if (mJson == nullptr) {
+		std::cout << "created mJson error, mJson is null." << std::endl;
+		return;
+	}
+    MakeFileByJson(mJson, SANDBOX_JSON_NAME);
+    int ret = PrepareSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);
 }
 
 HWTEST_F(SandboxUnitTest, TestCreateSandboxMountNULLError, TestSize.Level1) {
-    cJSON *mJson = MakeSandboxJson(sandbox_json_path, NULL_MOUNT_ITEM);
-    makeFileByJson(mJson, sandbox_json_path);
-    int ret = PrepareSandbox(test_sandbox_name);
+    cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, NULL_MOUNT_ITEM);
+	if (mJson == nullptr) {
+		std::cout << "created mJson error, mJson is null." << std::endl;
+		return;
+	}
+    MakeFileByJson(mJson, SANDBOX_JSON_NAME);
+    int ret = PrepareSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);
-    InitSandboxWithName(test_sandbox_name);
+    InitSandboxWithName(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);
 }
 
@@ -247,5 +272,9 @@ HWTEST_F(SandboxUnitTest, TestSetNamespace, TestSize.Level1) {
 HWTEST_F(SandboxUnitTest, TestGetNamespaceFd, TestSize.Level1) {
     int ret1 = GetNamespaceFd("");
     ASSERT_EQ(ret1, -1);
+	std::string const sandboxJsonPth = std::string("/mnt/sandbox/") + std::string(TEST_SANDBOX_NAME);
+    const char* cSandboxJsonPth = sandboxJsonPth.c_str();
+	ret1 = GetNamespaceFd(cSandboxJsonPth);
+	EXPECT_GT(ret1, 1);
 }
 }
