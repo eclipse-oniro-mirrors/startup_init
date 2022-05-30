@@ -95,6 +95,7 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function/include",
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
       "//base/startup/init_lite/interfaces/innerkits/fd_holder",
+      "//base/startup/init_lite/interfaces/hals",
     ]
 
     sources = sysparam_source
