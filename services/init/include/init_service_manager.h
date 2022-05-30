@@ -63,11 +63,8 @@ void ReleaseService(Service *service);
 void StartAllServices(int startMode);
 void LoadAccessTokenId(void);
 Service *AddService(const char *name);
-
-#ifdef OHOS_SERVICE_DUMP
-void DumpAllServices();
+void DumpAllServices(void);
 void DumpOneService(const Service *service);
-#endif
 #ifdef __cplusplus
 #if __cplusplus
 }

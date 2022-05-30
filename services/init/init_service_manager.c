@@ -43,7 +43,6 @@ static const int CRITICAL_DEFAULT_CRASH_TIME = 20;
 static const int CRITICAL_DEFAULT_CRASH_COUNT =  4;
 static const int CRITICAL_CONFIG_ARRAY_LEN = 3;
 
-#ifdef OHOS_SERVICE_DUMP
 static void DumpServiceArgs(const char *info, const ServiceArgs *args)
 {
     printf("\tservice %s count %d \n", info, args->count);
@@ -116,7 +115,7 @@ void DumpOneService(const Service *service)
     }
 }
 
-void DumpAllServices()
+void DumpAllServices(void)
 {
     printf("Ready to dump all services: \n");
     printf("total service number: %d \n", g_serviceSpace.serviceCount);
@@ -132,7 +131,6 @@ void DumpAllServices()
     }
     printf("Dump all services finished \n");
 }
-#endif
 
 static void FreeServiceArg(ServiceArgs *arg)
 {

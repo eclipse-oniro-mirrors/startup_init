@@ -130,6 +130,7 @@ if (defined(ohos_lite)) {
       "stop_service",
       "service",
       "sandbox",
+      "dump_service",
     ]
 
     install_images = [ "system" ]

@@ -266,7 +266,6 @@ static int SystemDump(int id, const char *name, int argc, const char **argv)
 {
     INIT_ERROR_CHECK(argv != NULL && argc >= 1, return 0, "Invalid install parameter");
     INIT_LOGI("Dump system info %s", argv[0]);
-    DumpAllServices();
     SystemDumpParameters(1);
     SystemDumpTriggers(1);
     return 0;
@@ -318,18 +317,19 @@ static void InitPreHook(const HOOK_INFO *hookInfo)
 static void InitPostHook(const HOOK_INFO *hookInfo)
 {
     long long diff;
+    const long long baseTime = 1000;
     HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)hookInfo->cookie;
     clock_gettime(CLOCK_MONOTONIC, &(stat->endTime));
 
-    diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) / 1000);
+    diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) / baseTime);
     if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
-        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) * 1000;
+        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) * baseTime;
     } else {
-        diff -= (stat->endTime.tv_nsec - stat->startTime.tv_nsec) * 1000;
+        diff -= (stat->endTime.tv_nsec - stat->startTime.tv_nsec) * baseTime;
     }
 
     INIT_LOGV("Executing hook [%d:%d:%p] cost [%lld]ms, return %d.",
-                hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, hookInfo->retVal);
+        hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, hookInfo->retVal);
 }
 
 void SystemConfig(void)

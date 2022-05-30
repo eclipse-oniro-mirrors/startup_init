@@ -47,11 +47,9 @@ static void ProcessDumpServiceControlFd(uint16_t type, const char *serviceCmd)
     Service *service  = GetServiceByName(serviceCmd);
 
     if (service == NULL) {
-#ifdef OHOS_SERVICE_DUMP
         DumpAllServices();
     } else {
         DumpOneService(service);
-#endif
     }
     return;
 }
