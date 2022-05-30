@@ -21,6 +21,7 @@
 #include <sched.h>
 #include <sys/mount.h>
 #include <sys/syscall.h>
+#include <sys/types.h>
 #include <errno.h>
 #include "beget_ext.h"
 #include "init_utils.h"
@@ -50,6 +51,12 @@
 #define SANDBOX_MOUNT_FLAGS_MS_PRIVATE "private"
 #define SANDBOX_MOUNT_FLAGS_MS_REC "rec"
 #define SANDBOX_MOUNT_FLAGS_MS_MOVE "move"
+
+typedef enum SandboxTag {
+    SANDBOX_TAG_MOUNT_PATH = 0,
+    SANDBOX_TAG_MOUNT_FILE,
+    SANDBOX_TAG_SYMLINK
+} SandboxTag;
 
 struct SandboxMountFlags {
     const char *flag;
@@ -112,66 +119,72 @@ static unsigned long GetSandboxMountFlags(cJSON *item)
     return 0;
 }
 
-typedef int (*AddInfoToSandboxCallback)(sandbox_t *sandbox, cJSON *item);
+typedef int (*AddInfoToSandboxCallback)(sandbox_t *sandbox, cJSON *item, const char *type);
 
-static int AddMountInfoToSandbox(sandbox_t *sandbox, cJSON *item)
+static int AddMountInfoToSandbox(sandbox_t *sandbox, cJSON *item, const char *type)
 {
-    if (sandbox == NULL || item == NULL) {
+    if (sandbox == NULL || item == NULL || type == NULL) {
         return -1;
     }
+    char *srcPath = cJSON_GetStringValue(cJSON_GetObjectItem(item, SANDBOX_SOURCE));
+    BEGET_ERROR_CHECK(srcPath != NULL, return 0, "Get src-path is null");
+    char *dstPath = cJSON_GetStringValue(cJSON_GetObjectItem(item, SANDBOX_TARGET));
+    BEGET_ERROR_CHECK(dstPath != NULL, return 0, "Get sandbox-path is null");
+    cJSON *obj = cJSON_GetObjectItem(item, SANDBOX_FLAGS);
+    BEGET_ERROR_CHECK(obj != NULL, return 0, "Get sandbox-flags is null");
+    int ret = cJSON_IsArray(obj);
+    BEGET_ERROR_CHECK(ret, return 0, "Sandbox-flags is not array");
+    int count = cJSON_GetArraySize(obj);
+    BEGET_ERROR_CHECK(count > 0, return 0, "Get sandbox-flags array size is zero");
     mountlist_t *tmpMount = (mountlist_t *)calloc(1, sizeof(mountlist_t));
     BEGET_ERROR_CHECK(tmpMount != NULL, return -1, "Failed calloc err=%d", errno);
     tmpMount->info = (mount_t *)calloc(1, sizeof(mount_t));
-    BEGET_ERROR_CHECK(tmpMount->info != NULL, return -1, "Failed calloc err=%d", errno);
-
-    char *srcPath = cJSON_GetStringValue(cJSON_GetObjectItem(item, SANDBOX_SOURCE));
-    if (srcPath != NULL) {
-        tmpMount->info->source = strdup(srcPath);
-    }
-    char *dstPath = cJSON_GetStringValue(cJSON_GetObjectItem(item, SANDBOX_TARGET));
-    if (dstPath != NULL) {
-        tmpMount->info->target = strdup(dstPath);
-    }
-    cJSON *obj = cJSON_GetObjectItem(item, SANDBOX_FLAGS);
-    BEGET_ERROR_CHECK(obj != NULL, return -1, "Failed get sandbox-flags.");
-    int ret = cJSON_IsArray(obj);
-    BEGET_ERROR_CHECK(ret, return -1, "Failed get sandbox-flags array. ");
-    int count = cJSON_GetArraySize(obj);
-    BEGET_ERROR_CHECK(count > 0, return -1, "Failed get sandbox-flags array size.");
+    BEGET_ERROR_CHECK(tmpMount->info != NULL, free(tmpMount); return -1, "Failed calloc err=%d", errno);
+    tmpMount->info->source = strdup(srcPath);
+    tmpMount->info->target = strdup(dstPath);
     for (int i = 0; i < count; i++) {
         cJSON *item = cJSON_GetArrayItem(obj, i);
         tmpMount->info->flags |= GetSandboxMountFlags(item);
     }
-
-    if (sandbox->mounts == NULL) {
-        sandbox->mounts = tmpMount;
-        tmpMount->next = NULL;
-    } else {
-        tmpMount->next = sandbox->mounts->next;
-        sandbox->mounts->next = tmpMount;
+    if (strcmp(type, SANDBOX_MOUNT_PATH_TAG) == 0) {
+        if (sandbox->pathMounts == NULL) {
+            sandbox->pathMounts = tmpMount;
+            tmpMount->next = NULL;
+        } else {
+            tmpMount->next = sandbox->pathMounts->next;
+            sandbox->pathMounts->next = tmpMount;
+        }
+    } else if (strcmp(type, SANDBOX_MOUNT_FILE_TAG) == 0) {
+        if (sandbox->fileMounts == NULL) {
+            sandbox->fileMounts = tmpMount;
+            tmpMount->next = NULL;
+        } else {
+            tmpMount->next = sandbox->fileMounts->next;
+            sandbox->fileMounts->next = tmpMount;
+        }
     }
     return 0;
 }
 
-static int AddSymbolLinksToSandbox(sandbox_t *sandbox, cJSON *item)
+static int AddSymbolLinksToSandbox(sandbox_t *sandbox, cJSON *item, const char *type)
 {
-    if (sandbox == NULL || item == NULL) {
+    if (sandbox == NULL || item == NULL || type == NULL) {
         return -1;
     }
+    if (strcmp(type, SANDBOX_SYMLINK_TAG) != 0) {
+        BEGET_LOGE("Type is not sandbox symbolLink.");
+        return -1;
+    }
+    char *target = cJSON_GetStringValue(cJSON_GetObjectItem(item, SANDBOX_SYMLINK_TARGET));
+    BEGET_ERROR_CHECK(target != NULL, return 0, "Get target-name is null");
+    char *name = cJSON_GetStringValue(cJSON_GetObjectItem(item, SANDBOX_SYMLINK_NAME));
+    BEGET_ERROR_CHECK(name != NULL, return 0, "Get link-name is null");
     linklist_t *tmpLink = (linklist_t *)calloc(1, sizeof(linklist_t));
     BEGET_ERROR_CHECK(tmpLink != NULL, return -1, "Failed calloc err=%d", errno);
     tmpLink->info = (linker_t *)calloc(1, sizeof(linker_t));
-    BEGET_ERROR_CHECK(tmpLink->info != NULL, return -1, "Failed calloc err=%d", errno);
-
-    char *target = cJSON_GetStringValue(cJSON_GetObjectItem(item, SANDBOX_SYMLINK_TARGET));
-    if (target != NULL) {
-        tmpLink->info->target = strdup(target);
-    }
-    char *name = cJSON_GetStringValue(cJSON_GetObjectItem(item, SANDBOX_SYMLINK_NAME));
-    if (name != NULL) {
-        tmpLink->info->linkName = strdup(name);
-    }
-
+    BEGET_ERROR_CHECK(tmpLink->info != NULL, free(tmpLink); return -1, "Failed calloc err=%d", errno);
+    tmpLink->info->target = strdup(target);
+    tmpLink->info->linkName = strdup(name);
     if (sandbox->links == NULL) {
         sandbox->links = tmpLink;
         tmpLink->next = NULL;
@@ -188,24 +201,25 @@ static int GetSandboxInfo(sandbox_t *sandbox, cJSON *root, const char *itemName)
         BEGET_LOGE("Get sandbox mount info with invalid argument");
         return -1;
     }
-
     cJSON *obj = cJSON_GetObjectItem(root, itemName);
     if (obj == NULL) {
         BEGET_LOGE("Cannot find item \' %s \' in sandbox config", itemName);
-        return -1;
+        return 0;
     }
     if (!cJSON_IsArray(obj)) {
         BEGET_LOGE("%s with invalid type, should be array", itemName);
-        return -1;
+        return 0;
     }
 
     int counts = cJSON_GetArraySize(obj);
     if (counts <= 0) {
-        BEGET_LOGE("%s with invalid content", itemName);
-        return -1;
+        BEGET_LOGE("Item %s array size is zero.", itemName);
+        return 0;
     }
-    AddInfoToSandboxCallback func;
+    AddInfoToSandboxCallback func = NULL;
     if (strcmp(itemName, SANDBOX_MOUNT_PATH_TAG) == 0) {
+        func = AddMountInfoToSandbox;
+    } else if (strcmp(itemName, SANDBOX_MOUNT_FILE_TAG) == 0) {
         func = AddMountInfoToSandbox;
     } else if (strcmp(itemName, SANDBOX_SYMLINK_TAG) == 0) {
         func = AddSymbolLinksToSandbox;
@@ -216,7 +230,7 @@ static int GetSandboxInfo(sandbox_t *sandbox, cJSON *root, const char *itemName)
     for (int i = 0; i < counts; i++) {
         cJSON *item = cJSON_GetArrayItem(obj, i);
         BEGET_ERROR_CHECK(item != NULL, return -1, "Failed get json array item %d", i);
-        if (func(sandbox, item) < 0) {
+        if (func(sandbox, item, itemName) < 0) {
             BEGET_LOGE("Failed add info to sandbox.");
             return -1;
         }
@@ -254,11 +268,19 @@ static int ParseSandboxConfig(sandbox_t *sandbox, const char *sandboxConfig)
             return -1;
         }
     }
+    BEGET_LOGI("config file %s", sandboxConfig);
     if (GetSandboxInfo(sandbox, root, SANDBOX_MOUNT_PATH_TAG) < 0) {
+        BEGET_LOGE("config file %s, SANDBOX_MOUNT_PATH_TAG error", sandboxConfig);
+        cJSON_Delete(root);
+        return -1;
+    }
+    if (GetSandboxInfo(sandbox, root, SANDBOX_MOUNT_FILE_TAG) < 0) {
+        BEGET_LOGE("config file %s, SANDBOX_MOUNT_FILE_TAG error", sandboxConfig);
         cJSON_Delete(root);
         return -1;
     }
     if (GetSandboxInfo(sandbox, root, SANDBOX_SYMLINK_TAG) < 0) {
+        BEGET_LOGE("config file %s, SANDBOX_SYMLINK_TAG error", sandboxConfig);
         cJSON_Delete(root);
         return -1;
     }
@@ -330,7 +352,7 @@ static int CheckAndMakeDir(const char *dir, mode_t mode)
     return 0;
 }
 
-static int BindMount(const char *source, const char *target, unsigned long flags)
+static int BindMount(const char *source, const char *target, unsigned long flags, SandboxTag tag)
 {
     if (source == NULL || target == NULL) {
         BEGET_LOGE("Mount with invalid arguments");
@@ -338,8 +360,18 @@ static int BindMount(const char *source, const char *target, unsigned long flags
         return -1;
     }
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-    if (CheckAndMakeDir(target, mode) != 0) {
-        BEGET_LOGE("Failed make %s dir.", target);
+    if (tag == SANDBOX_TAG_MOUNT_PATH) {
+        if (CheckAndMakeDir(target, mode) != 0) {
+            BEGET_LOGE("Failed make %s dir.", target);
+            return -1;
+        }
+    } else if (tag == SANDBOX_TAG_MOUNT_FILE) {
+        if (CheckAndCreatFile(target, mode) != 0) {
+            BEGET_LOGE("Failed make %s file.", target);
+            return -1;
+        }
+    } else {
+        BEGET_LOGE("Tag is error.");
         return -1;
     }
 
@@ -356,7 +388,9 @@ static int BindMount(const char *source, const char *target, unsigned long flags
     // do mount
     if (mount(source, target, NULL, flags, NULL) != 0) {
         BEGET_LOGE("Failed to bind mount \' %s \' to \' %s \', err = %d", source, target, errno);
-        return -1;
+        if (errno != ENOTDIR) {  // mount errno is 'Not a directory' can ignore
+            return -1;
+        }
     }
 
     return 0;
@@ -373,19 +407,16 @@ static bool IsValidSandbox(sandbox_t *sandbox)
         return false;
     }
 
-    if (sandbox->mounts == NULL) {
-        return false;
-    }
     return true;
 }
 
-static int MountSandboxInfo(const mountlist_t *mounts, const char *rootPath)
+static int MountSandboxInfo(const mountlist_t *mounts, const char *rootPath, SandboxTag tag)
 {
     if (mounts == NULL) {
-        return -1;
+        return 0;
     }
     if (mounts->info == NULL) {
-        return -1;
+        return 0;
     }
     while (mounts != NULL) {
         mount_t *mount = mounts->info;
@@ -395,7 +426,7 @@ static int MountSandboxInfo(const mountlist_t *mounts, const char *rootPath)
             BEGET_LOGE("Failed snprintf_s err=%d", errno);
             return -1;
         }
-        int rc = BindMount(source, target, mount->flags);
+        int rc = BindMount(source, target, mount->flags, tag);
         BEGET_ERROR_CHECK(rc == 0, return -1, "Failed bind mount %s to %s.", source, target);
         mounts = mounts->next;
     }
@@ -405,10 +436,10 @@ static int MountSandboxInfo(const mountlist_t *mounts, const char *rootPath)
 static int LinkSandboxInfo(const linklist_t *links, const char *rootPath)
 {
     if (links == NULL) {
-        return -1;
+        return 0;
     }
     if (links->info == NULL) {
-        return -1;
+        return 0;
     }
     while (links != NULL) {
         linker_t *link = links->info;
@@ -445,11 +476,16 @@ int PrepareSandbox(const char *name)
     BEGET_ERROR_CHECK(CheckAndMakeDir(sandbox->rootPath, mode) == 0, return -1, "Failed root %s.", sandbox->rootPath);
     int rc = mount(NULL, "/", NULL, MS_REC | MS_SLAVE, NULL);
     BEGET_ERROR_CHECK(rc == 0, return -1, "Failed set mount slave err = %d", errno);
-    rc = BindMount(sandbox->rootPath, sandbox->rootPath, MS_BIND | MS_REC);
+    rc = BindMount(sandbox->rootPath, sandbox->rootPath, MS_BIND | MS_REC, SANDBOX_TAG_MOUNT_PATH);
     BEGET_ERROR_CHECK(rc == 0, return -1, "Failed to mount rootpath bind err = %d", errno);
 
     // 1) walk through all mounts and do bind mount
-    rc = MountSandboxInfo(sandbox->mounts, sandbox->rootPath);
+    rc = MountSandboxInfo(sandbox->pathMounts, sandbox->rootPath, SANDBOX_TAG_MOUNT_PATH);
+    if (rc < 0) {
+        return -1;
+    }
+
+    rc = MountSandboxInfo(sandbox->fileMounts, sandbox->rootPath, SANDBOX_TAG_MOUNT_FILE);
     if (rc < 0) {
         return -1;
     }
@@ -573,7 +609,8 @@ void DestroySandbox(const char *name)
         sandbox->rootPath = NULL;
     }
     FreeLinks(sandbox->links);
-    FreeMounts(sandbox->mounts);
+    FreeMounts(sandbox->fileMounts);
+    FreeMounts(sandbox->pathMounts);
     if (sandbox->ns > 0) {
         (void)close(sandbox->ns);
     }
@@ -628,11 +665,18 @@ void DumpSandboxByName(const char *name)
     BEGET_LOGI("Sandbox name: %s.", map->sandbox->name);
     BEGET_LOGI("Sandbox rootPath: %s.", map->sandbox->rootPath);
     BEGET_LOGI("Sandbox mounts info:");
-    mountlist_t *mounts = map->sandbox->mounts;
+    mountlist_t *mounts = map->sandbox->pathMounts;
     while (mounts != NULL) {
         mount_t *mount = mounts->info;
-        BEGET_LOGI("Sandbox mounts list source: %s", mount->source);
-        BEGET_LOGI("Sandbox mounts list target: %s", mount->target);
+        BEGET_LOGI("Sandbox path mounts list source: %s", mount->source);
+        BEGET_LOGI("Sandbox path mounts list target: %s", mount->target);
+        mounts = mounts->next;
+    }
+    mounts = map->sandbox->fileMounts;
+    while (mounts != NULL) {
+        mount_t *mount = mounts->info;
+        BEGET_LOGI("Sandbox file mounts list source: %s", mount->source);
+        BEGET_LOGI("Sandbox file mounts list target: %s", mount->target);
         mounts = mounts->next;
     }
     BEGET_LOGI("Sandbox links info:");
