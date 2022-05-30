@@ -79,8 +79,6 @@ int RestartSandbox(const char *sandbox)
 
 cJSON *MakeSandboxJson(const char *sandboxFileName, const int MODE)
 {
-
-
     cJSON *mJsonSandbox = cJSON_CreateObject();             // json file object
     cJSON *mJsonMtBdPth = cJSON_CreateArray();              // mount-bind-paths
     cJSON *mJsonMtBdFl = cJSON_CreateArray();               // mount-bind-files
@@ -214,10 +212,10 @@ HWTEST_F(SandboxUnitTest, TestCreateErrorSandbox1, TestSize.Level1) {
 
 HWTEST_F(SandboxUnitTest, TestCreateErrorSandbox2, TestSize.Level1) {
     cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, NULL_ROOT_PATH);
-	if (mJson == nullptr) {
-		std::cout << "created mJson error, mJson is null." << std::endl;
-		return;
-	}
+    if (mJson == nullptr) {
+        std::cout << "created mJson error, mJson is null." << std::endl;
+        return;
+    }
     bool ret1 = MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     ASSERT_TRUE(ret1);
     InitSandboxWithName(TEST_SANDBOX_NAME);
@@ -235,10 +233,10 @@ HWTEST_F(SandboxUnitTest, TestCreateSandboxNoneJsonError, TestSize.Level1) {
 
 HWTEST_F(SandboxUnitTest, TestCreateSandboxMountFlagsError, TestSize.Level1) {
     cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, NULL_MOUNT_FLAGS);
-	if (mJson == nullptr) {
-		std::cout << "created mJson error, mJson is null." << std::endl;
-		return;
-	}
+    if (mJson == nullptr) {
+        std::cout << "created mJson error, mJson is null." << std::endl;
+        return;
+    }
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     int ret = PrepareSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);
@@ -246,10 +244,10 @@ HWTEST_F(SandboxUnitTest, TestCreateSandboxMountFlagsError, TestSize.Level1) {
 
 HWTEST_F(SandboxUnitTest, TestCreateSandboxMountNULLError, TestSize.Level1) {
     cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, NULL_MOUNT_ITEM);
-	if (mJson == nullptr) {
-		std::cout << "created mJson error, mJson is null." << std::endl;
-		return;
-	}
+    if (mJson == nullptr) {
+        std::cout << "created mJson error, mJson is null." << std::endl;
+        return;
+    }
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     int ret = PrepareSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);
