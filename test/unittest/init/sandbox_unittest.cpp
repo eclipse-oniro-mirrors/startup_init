@@ -40,7 +40,7 @@ const char *SANDBOX_FLAGS[] = {"bind", "rec", "private"};
 const char *MOUNT_BIND_PATHS[] = {"src-path", "sandbox-path", "sandbox-flags"};
 const char *SYMBOL_LINKS[] = {"target-name", "link-name"};
 const char *APP_PATHS[] = {"/mnt", "/sys", "/proc", "/dev", "/data",
-						   "/system/bin", "/system/lib", "/system/etc", "/system"};
+                           "/system/bin", "/system/lib", "/system/etc", "/system"};
 
 int RestartSandbox(const char *sandbox)
 {
@@ -272,9 +272,9 @@ HWTEST_F(SandboxUnitTest, TestSetNamespace, TestSize.Level1) {
 HWTEST_F(SandboxUnitTest, TestGetNamespaceFd, TestSize.Level1) {
     int ret1 = GetNamespaceFd("");
     ASSERT_EQ(ret1, -1);
-	std::string const sandboxJsonPth = std::string("/mnt/sandbox/") + std::string(TEST_SANDBOX_NAME);
+    std::string const sandboxJsonPth = std::string("/mnt/sandbox/") + std::string(TEST_SANDBOX_NAME);
     const char* cSandboxJsonPth = sandboxJsonPth.c_str();
-	ret1 = GetNamespaceFd(cSandboxJsonPth);
-	EXPECT_GT(ret1, 1);
+    ret1 = GetNamespaceFd(cSandboxJsonPth);
+    EXPECT_GT(ret1, 1);
 }
 }
