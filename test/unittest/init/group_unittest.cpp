@@ -87,16 +87,6 @@ static TestHashNode *TestCreateHashNode(const char *value)
     return node;
 }
 
-static void CreateTestFile(const char *fileName, const char *data)
-{
-    FILE *tmpFile = fopen(fileName, "wr");
-    if (tmpFile != nullptr) {
-        fprintf(tmpFile, "%s", data);
-        (void)fflush(tmpFile);
-        fclose(tmpFile);
-    }
-}
-
 namespace init_ut {
 class InitGroupManagerUnitTest : public testing::Test {
 public:
@@ -169,35 +159,6 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
 
 HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
 {
-    const char *data = "{"
-	    "\"jobs\": [\"param:job1\", \"param:job2\", \"param:job4\"],"
-	    "\"services\": [\"service:service1\", \"service:service3\", \"service:service2\"],"
-	    "\"groups\": [\"subsystem.xxx1.group\", \"subsystem.xxx2.group\", \"subsystem.xxx4.group\"]"
-    "}";
-    const char *xxx1 = "{"
-	    "\"groups\": [\"subsystem.xxx11.group\""
-    "}";
-    const char *xxx11 = "{"
-	    "\"groups\": [\"subsystem.xxx12.group\""
-    "}";
-    const char *xxx12 = "{"
-	    "\"groups\": [\"subsystem.xxx13.group\""
-    "}";
-    const char *xxx13 = "{"
-	    "\"groups\": [\"subsystem.xxx14.group\""
-    "}";
-    const char *xxx14 = "{"
-	    "\"groups\": [\"subsystem.xxx11.group\""
-    "}";
-    const char *cmdLine = "BOOT_IMAGE=/kernel init=/init bootgroup=device.charge.group";
-    CreateTestFile(GROUP_DEFAULT_PATH "/device.boot.group.cfg", data);
-    CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx1.group.cfg", xxx1);
-    CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx11.group.cfg", xxx11);
-    CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx12.group.cfg", xxx12);
-    CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx13.group.cfg", xxx13);
-    CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx14.group.cfg", xxx14);
-    CreateTestFile(BOOT_CMD_LINE, cmdLine);
-
     InitServiceSpace();
     InitWorkspace *workspace = GetInitWorkspace();
     EXPECT_EQ(workspace->groupMode, GROUP_CHARGE);

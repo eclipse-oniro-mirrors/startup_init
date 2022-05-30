@@ -108,9 +108,7 @@ static LE_STATUS HandleClientEvent_(const LoopHandle loopHandle, const TaskHandl
 
     LE_STATUS status = LE_SUCCESS;
     if (LE_TEST_FLAGS(oper, Event_Write)) {
-        if (client->connected == 0 && client->connectComplete) {
-            client->connectComplete(handle);
-        }
+        LE_ONLY_CHECK(!(client->connected == 0 && client->connectComplete), client->connectComplete(handle));
         client->connected = 1;
         status = HandleSendMsg_(loopHandle, handle, client->sendMessageComplete);
     }
@@ -143,9 +141,7 @@ static LE_STATUS HandleServerEvent_(const LoopHandle loopHandle, const TaskHandl
         return LE_FAILURE;
     }
     StreamServerTask *server = (StreamServerTask *)serverTask;
-    if (server->incommingConntect == NULL) {
-        return LE_SUCCESS;
-    }
+    LE_ONLY_CHECK(server->incommingConntect != NULL, return LE_SUCCESS);
 
     int ret = server->incommingConntect(loopHandle, serverTask);
     if (ret != LE_SUCCESS) {

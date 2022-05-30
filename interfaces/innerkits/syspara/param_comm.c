@@ -28,6 +28,7 @@
 #include "openssl/sha.h"
 #endif
 #include "securec.h"
+#include "beget_ext.h"
 
 static const char *g_emptyStr = "";
 
@@ -55,9 +56,7 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
 
 INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder)
 {
-    if (paramHolder == NULL) {
-        return NULL;
-    }
+    BEGET_CHECK(paramHolder != NULL, return NULL);
     if (*paramHolder != NULL) {
         return *paramHolder;
     }
@@ -65,9 +64,7 @@ INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder
     int ret = SystemGetParameter(key, NULL, &len);
     if (ret == 0 && len > 0) {
         char *res = (char *)malloc(len + 1);
-        if (res == NULL) {
-            return g_emptyStr;
-        }
+        BEGET_CHECK(res != NULL, return g_emptyStr);
         ret = SystemGetParameter(key, res, &len);
         if (ret != 0) {
             free(res);
@@ -95,9 +92,7 @@ INIT_LOCAL_API int StringToLL(const char *str, long long int *out)
     if (errno != 0) {
         return -1;
     }
-    if (s == end || *end != '\0') {
-        return -1;
-    }
+    BEGET_CHECK(!(s == end || *end != '\0'), return -1);
     return 0;
 }
 
@@ -107,11 +102,7 @@ INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out)
     while (isspace(*s)) {
         s++;
     }
-
-    if (s[0] == '-') {
-        return -1;
-    }
-
+    BEGET_CHECK(s[0] != '-', return -1);
     int base = (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) ? HEX : DECIMAL;
     char* end = NULL;
     errno = 0;
@@ -119,12 +110,8 @@ INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out)
     if (errno != 0) {
         return -1;
     }
-    if (end == s) {
-        return -1;
-    }
-    if (*end != '\0') {
-        return -1;
-    }
+    BEGET_CHECK(end != s, return -1);
+    BEGET_CHECK(*end == '\0', return -1);
     return 0;
 }
 
@@ -201,9 +188,7 @@ INIT_LOCAL_API const char *GetSerial_(void)
     static char ohos_serial[PARAM_VALUE_LEN_MAX]  = {0};
     uint32_t len = PARAM_VALUE_LEN_MAX;
     int ret = SystemGetParameter("ohos.boot.sn", ohos_serial, &len);
-    if (ret != 0) {
-        return NULL;
-    }
+    BEGET_CHECK(ret == 0, return NULL);
     return ohos_serial;
 #endif
 }
@@ -223,10 +208,8 @@ INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
     if (tmpSize <= 0 || tmpSize > DEV_BUF_MAX_LENGTH) {
         return -1;
     }
-    char *tmp = (char *)malloc(tmpSize);
-    if (tmp == NULL) {
-        return -1;
-    }
+    char *tmp = NULL;
+    BEGET_CHECK((tmp = (char *)malloc(tmpSize)) != NULL, return -1);
 
     (void)memset_s(tmp, tmpSize, 0, tmpSize);
     if ((strcat_s(tmp, tmpSize, manufacture) != 0) || (strcat_s(tmp, tmpSize, model) != 0) ||

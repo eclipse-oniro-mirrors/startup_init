@@ -18,9 +18,16 @@
 #include "param_message.h"
 #include "param_stub.h"
 #include "trigger_manager.h"
+#include "param_utils.h"
+#include "param_osadp.h"
+#include "param_manager.h"
 
 using namespace testing::ext;
 using namespace std;
+
+extern "C" {
+int WorkSpaceNodeCompare(const HashNode *node1, const HashNode *node2);
+}
 
 static void OnClose(ParamTaskPtr client)
 {
@@ -388,5 +395,30 @@ HWTEST_F(ParamUnitTest, TestDumpParamMemory, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestDumpParamMemory();
+}
+HWTEST_F(ParamUnitTest, TestLinuxRWLock, TestSize.Level0)
+{
+    ParamRWMutexCreate(nullptr);
+    ParamRWMutexWRLock(nullptr);
+    ParamRWMutexRDLock(nullptr);
+    ParamRWMutexUnlock(nullptr);
+    ParamRWMutexDelete(nullptr);
+    ParamMutexDelete(nullptr);
+    WorkSpace *workspace1 = (WorkSpace *)malloc(sizeof(WorkSpace) + strlen("testfilename1"));
+    WorkSpace *workspace2 = (WorkSpace *)malloc(sizeof(WorkSpace) + strlen("testfilename1"));
+    if (strcpy_s(workspace1->fileName, strlen("testfilename1"), "testfilename") != EOK) {
+        EXPECT_EQ(0, 1);
+    }
+    if (strcpy_s(workspace2->fileName, strlen("testfilename1"), "testfilename") != EOK) {
+        EXPECT_EQ(0, 1);
+    }
+    EXPECT_EQ(WorkSpaceNodeCompare(&(workspace1->hashNode), &(workspace2->hashNode)), 0);
+    EXPECT_NE(GetPersistCommitId(), -1);
+    EXPECT_NE(GetPersistCommitId(), -1);
+    EXPECT_STREQ(GetServiceCtrlName("ohos.ctl.start", "test"), "ohos.servicectrl.test");
+    EXPECT_STREQ(GetServiceCtrlName("ohos.startup.powerctrl", "reboot"), "ohos.servicectrl.reboot");
+    EXPECT_STREQ(GetServiceCtrlName("ohos.servicectrl.", "test"), "ohos.servicectrl..test");
+    free(workspace1);
+    free(workspace2);
 }
 }

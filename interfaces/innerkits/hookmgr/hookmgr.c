@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "list.h"
+#include "beget_ext.h"
 #include "hookmgr.h"
 
 // Forward declaration
@@ -58,17 +59,11 @@ static HOOK_MGR *defaultHookMgr = NULL;
 
 static HOOK_MGR *getHookMgr(HOOK_MGR *hookMgr, int autoCreate)
 {
-    if (hookMgr != NULL) {
-        return hookMgr;
-    }
+    BEGET_CHECK(hookMgr == NULL, return hookMgr);
     // Use default HOOK_MGR if possible
-    if (defaultHookMgr != NULL) {
-        return defaultHookMgr;
-    }
+    BEGET_CHECK(defaultHookMgr == NULL, return defaultHookMgr);
 
-    if (!autoCreate) {
-        return NULL;
-    }
+    BEGET_CHECK(autoCreate, return NULL);
 
     // Create default HOOK_MGR if not created
     defaultHookMgr = HookMgrCreate("default");
@@ -88,9 +83,7 @@ static void hookStageDestroy(ListNode *node)
 {
     HOOK_STAGE *stage;
 
-    if (node == NULL) {
-        return;
-    }
+    BEGET_CHECK(node != NULL, return);
 
     stage = (HOOK_STAGE *)node;
     ListRemoveAll(&(stage->hooks), NULL);
@@ -103,19 +96,13 @@ static HOOK_STAGE *getHookStage(HOOK_MGR *hookMgr, int stage, int createIfNotFou
     HOOK_STAGE *stageItem;
 
     stageItem = (HOOK_STAGE *)ListFind(&(hookMgr->stages), (void *)(&stage), hookStageCompare);
-    if (stageItem != NULL) {
-        return stageItem;
-    }
+    BEGET_CHECK(stageItem == NULL, return stageItem);
 
-    if (!createIfNotFound) {
-        return NULL;
-    }
+    BEGET_CHECK(createIfNotFound, return NULL);
 
     // Not found, create it
     stageItem = (HOOK_STAGE *)malloc(sizeof(HOOK_STAGE));
-    if (stageItem == NULL) {
-        return NULL;
-    }
+    BEGET_CHECK(stageItem != NULL, return NULL);
     stageItem->stage = stage;
     ListInit(&(stageItem->hooks));
     ListAddTail(&(hookMgr->stages), (ListNode *)stageItem);
@@ -143,12 +130,8 @@ static int hookItemCompareValue(ListNode *node, void *data)
     struct HOOKITEM_COMPARE_VAL *compareVal = (struct HOOKITEM_COMPARE_VAL *)data;
 
     hookItem = (const HOOK_ITEM *)node;
-    if (hookItem->prio != compareVal->prio) {
-        return (hookItem->prio - compareVal->prio);
-    }
-    if (hookItem->hook == compareVal->hook) {
-        return 0;
-    }
+    BEGET_CHECK(hookItem->prio == compareVal->prio, return (hookItem->prio - compareVal->prio));
+    BEGET_CHECK(hookItem->hook != compareVal->hook, return 0);
     return -1;
 }
 
@@ -162,15 +145,11 @@ static int addHookToStage(HOOK_STAGE *hookStage, int prio, OhosHook hook)
     compareVal.prio = prio;
     compareVal.hook = hook;
     hookItem = (HOOK_ITEM *)ListFind(&(hookStage->hooks), (void *)(&compareVal), hookItemCompareValue);
-    if (hookItem != NULL) {
-        return 0;
-    }
+    BEGET_CHECK(hookItem == NULL, return 0);
 
     // Create new item
     hookItem = (HOOK_ITEM *)malloc(sizeof(HOOK_ITEM));
-    if (hookItem == NULL) {
-        return -1;
-    }
+    BEGET_CHECK(hookItem != NULL, return -1);
     hookItem->prio = prio;
     hookItem->hook = hook;
     hookItem->stage = hookStage;
@@ -183,21 +162,15 @@ static int addHookToStage(HOOK_STAGE *hookStage, int prio, OhosHook hook)
 int HookMgrAdd(HOOK_MGR *hookMgr, int stage, int prio, OhosHook hook)
 {
     HOOK_STAGE *stageItem;
-    if (hook == NULL) {
-        return -1;
-    }
+    BEGET_CHECK(hook != NULL, return -1);
 
     // Get HOOK_MGR
     hookMgr = getHookMgr(hookMgr, true);
-    if (hookMgr == NULL) {
-        return -1;
-    }
+    BEGET_CHECK(hookMgr != NULL, return -1);
 
     // Get HOOK_STAGE list
     stageItem = getHookStage(hookMgr, stage, true);
-    if (stageItem == NULL) {
-        return -1;
-    }
+    BEGET_CHECK(stageItem != NULL, return -1);
 
     // Add hook to stage
     return addHookToStage(stageItem, prio, hook);
@@ -208,9 +181,7 @@ static int hookTraversalDelProc(ListNode *node, void *cookie)
     HOOK_ITEM *hookItem = (HOOK_ITEM *)node;
 
     // Not equal, just return
-    if ((void *)hookItem->hook != cookie) {
-        return 0;
-    }
+    BEGET_CHECK((void *)hookItem->hook == cookie, return 0);
 
     // Remove from the list
     ListRemove(node);
@@ -230,15 +201,11 @@ void HookMgrDel(HOOK_MGR *hookMgr, int stage, OhosHook hook)
 
     // Get HOOK_MGR
     hookMgr = getHookMgr(hookMgr, 0);
-    if (hookMgr == NULL) {
-        return;
-    }
+    BEGET_CHECK(hookMgr != NULL, return);
 
     // Get HOOK_STAGE list
     stageItem = getHookStage(hookMgr, stage, false);
-    if (stageItem == NULL) {
-        return;
-    }
+    BEGET_CHECK(stageItem != NULL, return);
 
     if (hook != NULL) {
         ListTraversal(&(stageItem->hooks), hook, hookTraversalDelProc, 0);
@@ -289,15 +256,11 @@ int HookMgrExecute(HOOK_MGR *hookMgr, int stage, const HOOK_EXEC_ARGS *args)
 
     // Get HOOK_MGR
     hookMgr = getHookMgr(hookMgr, 0);
-    if (hookMgr == NULL) {
-        return -1;
-    }
+    BEGET_CHECK(hookMgr != NULL, return -1)
 
     // Get HOOK_STAGE list
     stageItem = getHookStage(hookMgr, stage, false);
-    if (stageItem == NULL) {
-        return -1;
-    }
+    BEGET_CHECK(stageItem != NULL, return -1);
 
     flags = 0;
     if (args != NULL) {
@@ -313,13 +276,9 @@ HOOK_MGR *HookMgrCreate(const char *name)
 {
     HOOK_MGR *ret;
 
-    if (name == NULL) {
-        return NULL;
-    }
+    BEGET_CHECK(name != NULL, return NULL);
     ret = (HOOK_MGR *)malloc(sizeof(HOOK_MGR));
-    if (ret == NULL) {
-        return NULL;
-    }
+    BEGET_CHECK(ret != NULL, return NULL);
 
     ret->name = strdup(name);
     if (ret->name == NULL) {
@@ -333,9 +292,7 @@ HOOK_MGR *HookMgrCreate(const char *name)
 void HookMgrDestroy(HOOK_MGR *hookMgr)
 {
     hookMgr = getHookMgr(hookMgr, 0);
-    if (hookMgr == NULL) {
-        return;
-    }
+    BEGET_CHECK(hookMgr != NULL, return);
 
     ListRemoveAll(&(hookMgr->stages), hookStageDestroy);
 
@@ -390,14 +347,10 @@ void HookMgrTraversal(HOOK_MGR *hookMgr, void *cookie, OhosHookTraversal travers
 {
     HOOK_TRAVERSAL_ARGS stageArgs;
 
-    if (traversal == NULL) {
-        return;
-    }
+    BEGET_CHECK(traversal != NULL, return);
 
     hookMgr = getHookMgr(hookMgr, 0);
-    if (hookMgr == NULL) {
-        return;
-    }
+    BEGET_CHECK(hookMgr != NULL, return);
 
     // Prepare common args
     stageArgs.hookInfo.cookie = cookie;
@@ -414,15 +367,11 @@ int HookMgrGetHooksCnt(HOOK_MGR *hookMgr, int stage)
     HOOK_STAGE *stageItem;
 
     hookMgr = getHookMgr(hookMgr, 0);
-    if (hookMgr == NULL) {
-        return 0;
-    }
+    BEGET_CHECK(hookMgr != NULL, return 0);
 
     // Get HOOK_STAGE list
     stageItem = getHookStage(hookMgr, stage, false);
-    if (stageItem == NULL) {
-        return 0;
-    }
+    BEGET_CHECK(stageItem != NULL, return 0);
 
     return ListGetCnt(&(stageItem->hooks));
 }
@@ -433,9 +382,7 @@ int HookMgrGetHooksCnt(HOOK_MGR *hookMgr, int stage)
 int HookMgrGetStagesCnt(HOOK_MGR *hookMgr)
 {
     hookMgr = getHookMgr(hookMgr, 0);
-    if (hookMgr == NULL) {
-        return 0;
-    }
+    BEGET_CHECK(hookMgr != NULL, return 0);
 
     return ListGetCnt(&(hookMgr->stages));
 }

@@ -17,6 +17,7 @@
 #include "init_jobs_internal.h"
 #include "init_param.h"
 #include "init_utils.h"
+#include "init_hashmap.h"
 #include "loop_event.h"
 #include "param_manager.h"
 #include "param_stub.h"
@@ -466,9 +467,9 @@ public:
 
     int TestDumpTrigger()
     {
-        SystemDumpTriggers(1);
         RegisterBootStateChange(BootStateChange);
         (void)AddCompleteJob("param:ohos.servicectrl.display", "ohos.servicectrl.display=*", "display system");
+        HashMapDestory(GetTriggerWorkSpace()->hashMap);
         return 0;
     }
 };

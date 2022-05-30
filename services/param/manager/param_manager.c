@@ -22,7 +22,7 @@
 
 static ParamWorkSpace g_paramWorkSpace = {};
 
-static int WorkSpaceNodeCompare(const HashNode *node1, const HashNode *node2)
+PARAM_STATIC int WorkSpaceNodeCompare(const HashNode *node1, const HashNode *node2)
 {
     WorkSpace *workSpace1 = HASHMAP_ENTRY(node1, WorkSpace, hashNode);
     WorkSpace *workSpace2 = HASHMAP_ENTRY(node2, WorkSpace, hashNode);

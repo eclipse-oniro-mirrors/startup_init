@@ -92,14 +92,9 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
 
 static int SyncExecCommand(int argc, char * const *argv)
 {
-    if (argc == 0 || argv == NULL || argv[0] == NULL) {
-        return -1;
-    }
+    INIT_CHECK(!(argc == 0 || argv == NULL || argv[0] == NULL), return -1);
     pid_t pid = fork();
-    if (pid < 0) {
-        INIT_LOGE("Fork new process to format failed: %d", errno);
-        return -1;
-    }
+    INIT_ERROR_CHECK(!(pid < 0), return -1, "Fork new process to format failed: %d", errno);
     if (pid == 0) {
         INIT_CHECK_ONLY_ELOG(execv(argv[0], argv) == 0, "execv %s failed! err %d.", argv[0], errno);
         exit(-1);
@@ -110,9 +105,8 @@ static int SyncExecCommand(int argc, char * const *argv)
         INIT_LOGE("Failed to wait pid %d, errno %d", pid, errno);
         return ret;
     }
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-        INIT_LOGE("Command %s failed with status %d", argv[0], WEXITSTATUS(status));
-    }
+    INIT_CHECK_ONLY_ELOG(!(!WIFEXITED(status) || WEXITSTATUS(status) != 0),
+        "Command %s failed with status %d", argv[0], WEXITSTATUS(status));
     return 0;
 }
 
@@ -221,9 +215,7 @@ static void DoExec(const struct CmdArgs *ctx)
     if (pid == 0) {
         OpenHidebug(ctx->argv[0]);
         int ret = execv(ctx->argv[0], ctx->argv);
-        if (ret == -1) {
-            INIT_LOGE("DoExec: execute \"%s\" failed: %d.", ctx->argv[0], errno);
-        }
+        INIT_CHECK_ONLY_ELOG(ret != -1, "DoExec: execute \"%s\" failed: %d.", ctx->argv[0], errno);
         _exit(0x7f);
     }
     return;

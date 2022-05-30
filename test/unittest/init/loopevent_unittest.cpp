@@ -34,8 +34,23 @@
 using namespace testing::ext;
 using namespace std;
 
+using HashTab = struct {
+    HashNodeCompare nodeCompare;
+    HashKeyCompare keyCompare;
+    HashNodeFunction nodeHash;
+    HashKeyFunction keyHash;
+    HashNodeOnFree nodeFree;
+    int maxBucket;
+    uint32_t tableId;
+    HashNode *buckets[0];
+};
+
 extern "C" {
 void OnClose(ParamTaskPtr client);
+}
+static LE_STATUS TestHandleTaskEvent(const LoopHandle loop, const TaskHandle task, uint32_t oper)
+{
+    return LE_SUCCESS;
 }
 
 static void OnReceiveRequest(const TaskHandle task, const uint8_t *buffer, uint32_t nread)
@@ -187,6 +202,14 @@ public:
     void ProcessEventTest()
     {
         ProcessEvent((EventLoop *)LE_GetDefaultLoop(), 1, Event_Read);
+        LE_BaseInfo info = {TASK_EVENT, NULL};
+        int testfd = 65535; // 65535 is not exist fd
+        BaseTask *task = CreateTask(LE_GetDefaultLoop(), testfd, &info, sizeof(StreamClientTask));
+        task->handleEvent = TestHandleTaskEvent;
+        if (task != nullptr) {
+            ProcessEvent((EventLoop *)LE_GetDefaultLoop(), testfd, Event_Read);
+        }
+        ((HashTab *)(((EventLoop *)LE_GetDefaultLoop())->taskMap))->nodeFree(&task->hashNode);
     }
     void ProcessasynEvent()
     {

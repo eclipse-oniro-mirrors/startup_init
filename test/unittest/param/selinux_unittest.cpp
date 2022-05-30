@@ -137,6 +137,16 @@ public:
         EXPECT_EQ(ret, 0);
         ret = clientParamSercurityOps.securityFreeLabel(&srclabel);
         EXPECT_EQ(ret, 0);
+        int fd = open("/bin/updater", O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,  S_IRWXU);
+        if (fd < 0) {
+            return 0;
+        }
+        RegisterSecuritySelinuxOps(&clientParamSercurityOps, 0);
+        if (clientParamSercurityOps.securityCheckParamPermission != nullptr) {
+            clientParamSercurityOps.securityCheckParamPermission(nullptr, nullptr, 0);
+        }
+        close(fd);
+        unlink("/bin/updater");
         return 0;
     }
 

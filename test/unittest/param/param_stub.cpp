@@ -20,6 +20,7 @@
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_utils.h"
+#include "init_group_manager.h"
 #ifdef PARAM_LOAD_CFG_FROM_CODE
 #include "param_cfg.h"
 #endif
@@ -209,6 +210,35 @@ static void PrepareInnerKitsCfg()
     CreateTestFile("/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable", innerKitsCfg);
     CreateTestFile("/etc/fstab.required", "test");
 }
+static void PrepareGroupTestCfg()
+{
+    const char *data = "{"
+	    "\"jobs\": [\"param:job1\", \"param:job2\", \"param:job4\"],"
+	    "\"services\": [\"service:service1\", \"service:service3\", \"service:service2\"],"
+	    "\"groups\": [\"subsystem.xxx1.group\", \"subsystem.xxx2.group\", \"subsystem.xxx4.group\"]"
+    "}";
+    const char *xxx1 = "{"
+	    "\"groups\": [\"subsystem.xxx11.group\""
+    "}";
+    const char *xxx11 = "{"
+	    "\"groups\": [\"subsystem.xxx12.group\""
+    "}";
+    const char *xxx12 = "{"
+	    "\"groups\": [\"subsystem.xxx13.group\""
+    "}";
+    const char *xxx13 = "{"
+	    "\"groups\": [\"subsystem.xxx14.group\""
+    "}";
+    const char *xxx14 = "{"
+	    "\"groups\": [\"subsystem.xxx11.group\""
+    "}";
+    CreateTestFile(GROUP_DEFAULT_PATH "/device.boot.group.cfg", data);
+    CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx1.group.cfg", xxx1);
+    CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx11.group.cfg", xxx11);
+    CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx12.group.cfg", xxx12);
+    CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx13.group.cfg", xxx13);
+    CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx14.group.cfg", xxx14);
+}
 static bool IsDir(const std::string &path)
 {
     struct stat st {};
@@ -319,12 +349,14 @@ void PrepareInitUnitTestEnv(void)
     PrepareUeventdcfg();
     PrepareInnerKitsCfg();
     PrepareModCfg();
+    PrepareGroupTestCfg();
     SetInitLogLevel(INIT_FATAL);
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     // for cmdline
-    const char *cmdLine = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 \
-        root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568";
+    const char *cmdLine = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
+        "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568"
+        " BOOT_IMAGE=/kernel init=/init ohos.required_mount.test=test";
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
 
     // for dac

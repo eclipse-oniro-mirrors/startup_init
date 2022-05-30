@@ -18,9 +18,14 @@
 #include "init_param.h"
 #include "parameter.h"
 #include "sysparam_errno.h"
+#include "param_comm.h"
+#include "param_wrapper.h"
+#include "sysversion.h"
 
 using namespace testing::ext;
-
+extern "C" {
+int GetIntParameter(const char *key, int def);
+}
 namespace OHOS {
 class SysparaUnitTest : public testing::Test {
 public:
@@ -29,7 +34,6 @@ public:
     void SetUp() {}
     void TearDown() {}
 };
-
 
 HWTEST_F(SysparaUnitTest, parameterTest001, TestSize.Level0)
 {
@@ -260,5 +264,30 @@ HWTEST_F(SysparaUnitTest, parameterTest0012, TestSize.Level0)
     EXPECT_EQ(ret, -1);
     ret = GetParameterName(handle, nameGet1, 32);
     EXPECT_EQ(ret, -1);
+}
+HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)
+{
+    long long int out = 0;
+    unsigned long long int uout = 0;
+    char key1[] = "test.int";
+    char value1[] = "101";
+    int ret = SetParameter(key1, value1);
+    EXPECT_EQ(ret, 0);
+    GetParameter_(nullptr, nullptr, nullptr, 0);
+    EXPECT_EQ(GetIntParameter(key1, 0), 0);
+    EXPECT_EQ(IsValidParamValue(nullptr, 0), 0);
+    EXPECT_EQ(IsValidParamValue("testvalue", strlen("testvalue") + 1), 1);
+    EXPECT_EQ(StringToLL("0x11", &out), 0);
+    EXPECT_EQ(StringToULL("0x11", &uout), 0);
+    EXPECT_EQ(StringToLL("not vailed", &out), -1);
+    EXPECT_EQ(StringToULL("not vailed", &uout), -1);
+    SystemSetParameter("ohos.boot.sn", "1");
+    char udid[UDID_LEN] = {0};
+    ret = GetDevUdid(udid, UDID_LEN);
+    EXPECT_NE(ret, -1);
+    EXPECT_NE(GetMajorVersion(), 0);
+    GetSeniorVersion();
+    GetFeatureVersion();
+    GetBuildVersion();
 }
 }  // namespace OHOS
