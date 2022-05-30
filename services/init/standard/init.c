@@ -126,7 +126,6 @@ static void EnableDevKmsg(void)
 
 void LogInit(void)
 {
-    CloseStdio();
     int ret = mknod("/dev/kmsg", S_IFCHR | S_IWUSR | S_IRUSR,
         makedev(MEM_MAJOR, DEV_KMSG_MINOR));
     if (ret == 0) {
@@ -200,6 +199,10 @@ static void StartInitSecondStage(void)
             abort();
         }
     }
+
+    // It will panic if close stdio before execv("/bin/sh", NULL)
+    CloseStdio();
+
 #ifndef DISABLE_INIT_TWO_STAGES
     SwitchRoot("/usr");
     // Execute init second stage
