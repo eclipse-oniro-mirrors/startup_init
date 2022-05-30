@@ -29,21 +29,21 @@ config("exported_header_files") {
   ]
 }
 
+include_common = [
+  "./include",
+  "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
+  "//third_party/bounds_checking_function/include",
+  "//base/startup/init_lite/services/include",
+  "//base/startup/init_lite/services/include/param",
+  "//base/startup/init_lite/interfaces/innerkits/fd_holder",
+  "//base/startup/init_lite/services/param/include",
+  "//base/startup/init_lite/interfaces/innerkits/include",
+  "//base/startup/init_lite/interfaces/hals",
+]
+
 if (defined(ohos_lite)) {
   import("//build/lite/config/component/lite_component.gni")
   import("//build/lite/ndk/ndk.gni")
-
-  include_common = [
-    "./include",
-    "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
-    "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/include/param",
-    "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-    "//base/startup/init_lite/services/param/include",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/interfaces/hals",
-  ]
 
   if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
     shared_library("libbegetutil") {
@@ -167,15 +167,7 @@ if (defined(ohos_lite)) {
       defines += [ "SUPPORT_64BIT" ]
     }
 
-    include_dirs = [
-      "./include",
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/include/param",
-      "//base/startup/init_lite/services/param/include",
-      "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-    ]
+    include_dirs = include_common
     deps = [
       "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox",
       "//base/startup/init_lite/services/loopevent:loopevent",
@@ -209,17 +201,7 @@ if (defined(ohos_lite)) {
       "service_watcher/service_watcher.c",
     ]
 
-    include_dirs = [
-      "./include",
-      "//base/startup/init_lite/device_info",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/interfaces/innerkits/syspara",
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/include/param",
-      "//base/startup/init_lite/services/param/include",
-      "//third_party/bounds_checking_function/include",
-    ]
-
+    include_dirs = include_common
     deps = [
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
@@ -305,16 +287,7 @@ if (defined(ohos_lite)) {
       defines += [ "SUPPORT_64BIT" ]
     }
 
-    include_dirs = [
-      "./include",
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/include/param",
-      "//base/startup/init_lite/services/param/include",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/interfaces/innerkits/include/syspara",
-      "//base/startup/init_lite/interfaces/innerkits/syspara",
-    ]
+    include_dirs = include_common
     deps = [
       "//base/startup/init_lite/services/loopevent:loopevent",
       "//base/startup/init_lite/services/param:param_client",
