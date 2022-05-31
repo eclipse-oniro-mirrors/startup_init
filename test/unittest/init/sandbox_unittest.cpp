@@ -74,7 +74,7 @@ int RestartSandbox(const char *sandbox)
     std::cout << "enter default namespace" << std::endl;
     CloseDefaultNamespace();
     std::cout << "close namespace" << std::endl;
-	return 1;
+    return 1;
 }
 
 cJSON *MakeSandboxJson(const char *sandboxFileName, const int MODE)
@@ -85,12 +85,12 @@ cJSON *MakeSandboxJson(const char *sandboxFileName, const int MODE)
     cJSON *mJsonSymLk = cJSON_CreateArray();                // symbol-links
     cJSON *mJsonMtBdPthItmSdxFlg = cJSON_CreateArray();   // mount-bind-paths items sandbox-flags
     cJSON *mJsonMtBdFlItm = cJSON_CreateObject();          // mount-bind-files items
-	
-	if (mJsonSandbox == nullptr || mJsonMtBdPth == nullptr || mJsonMtBdFl == nullptr ||
-		mJsonSymLk == nullptr || mJsonMtBdPthItmSdxFlg == nullptr || mJsonMtBdFlItm == nullptr) {
-		std::cout << "create json object error" << std::endl;
-		return nullptr;
-	}
+
+    if (mJsonSandbox == nullptr || mJsonMtBdPth == nullptr || mJsonMtBdFl == nullptr ||
+        mJsonSymLk == nullptr || mJsonMtBdPthItmSdxFlg == nullptr || mJsonMtBdFlItm == nullptr) {
+        std::cout << "create json object error" << std::endl;
+        return nullptr;
+    }s
     cJSON *mJsonMtBdPth_Itm;                                // point to mount-bind-paths items
     cJSON *mJsonSymLk_Itm;                                  // point to symbol-links items
 
@@ -159,7 +159,7 @@ bool MakeFileByJson(cJSON * mJson, const char *sandboxFileName)
         return false;
     }
     free(cjValue1);
-	close(fd);
+    close(fd);
     return true;
 }
 
@@ -173,10 +173,10 @@ public:
 
 HWTEST_F(SandboxUnitTest, TestCreateNormalSandbox, TestSize.Level1) {
     cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, 0);
-	if (mJson == nullptr) {
-		std::cout << "created mJson error, mJson is null." << std::endl;
-		return;
-	}
+    if (mJson == nullptr) {
+        std::cout << "created mJson error, mJson is null." << std::endl;
+        return;
+    }
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     int ret = RestartSandbox(TEST_SANDBOX_NAME);
 	ASSERT_EQ(ret, 1);
