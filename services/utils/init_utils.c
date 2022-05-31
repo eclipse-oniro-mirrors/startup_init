@@ -368,6 +368,30 @@ void CheckAndCreateDir(const char *fileName)
 #endif
 }
 
+int CheckAndCreatFile(const char *file, mode_t mode)
+{
+    if (access(file, F_OK) == 0) {
+        BEGET_LOGW("File \' %s \' already exist", file);
+        return 0;
+    } else {
+        if (errno == ENOENT) {
+            CheckAndCreateDir(file);
+            int fd = open(file, O_CREAT, mode);
+            if (fd < 0) {
+                BEGET_LOGE("Failed create %s, err=%d", file, errno);
+                return -1;
+            } else {
+                BEGET_LOGI("Success create %s", file);
+                close(fd);
+            }
+        } else {
+            BEGET_LOGW("Failed to access \' %s \', err = %d", file, errno);
+            return -1;
+        }
+    }
+    return 0;
+}
+
 int StringToInt(const char *str, int defaultValue)
 {
     if (str == NULL || *str == '\0') {
