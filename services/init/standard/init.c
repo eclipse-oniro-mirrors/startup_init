@@ -405,7 +405,7 @@ void SetServiceEnterSandbox(const char *execPath, unsigned int attribute)
         }
     } else if (strncmp(execPath, "/vendor/bin/", strlen("/vendor/bin/")) == 0) {
         // chipset sandbox will be implemented later.
-        INIT_INFO_CHECK(EnterSandbox("system") == 0, return,
+        INIT_INFO_CHECK(EnterSandbox("chipset") == 0, return,
             "Service %s skip enter sandbox system.", execPath);
     } else {
         INIT_LOGI("Service %s does not enter sandbox", execPath);
