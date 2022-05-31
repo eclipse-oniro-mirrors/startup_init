@@ -58,7 +58,6 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
             const char *serialNumber = GetSerial_();
             DINFO_CHECK(serialNumber != nullptr, break, "Failed to get serialNumber");
             reply.WriteString16(Str8ToStr16(serialNumber));
-            free((void *)serialNumber);
             break;
         }
         default: {
