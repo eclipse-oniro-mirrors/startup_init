@@ -293,6 +293,12 @@ static void IsEnableSandbox(void)
 
 static void InitLoadParamFiles(void)
 {
+    if (InUpdaterMode() != 0) {
+        LoadDefaultParams("/etc/param/ohos_const", LOAD_PARAM_NORMAL);
+        LoadDefaultParams("/etc/param", LOAD_PARAM_ONLY_ADD);
+        return;
+    }
+
     // Load const params, these can't be override!
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     CfgFiles *files = GetCfgFiles("etc/param");
