@@ -143,9 +143,8 @@ cJSON *MakeSandboxJson(const char *sandboxFileName, const int MODE)
 
 bool MakeFileByJson(cJSON * mJson, const char *sandboxFileName)
 {
-    std::string const SANDBOX_JSON_PATH = std::string("/etc/sandbox/") + std::string(sandboxFileName);
-    const char* c_SANDBOX_JSON_PATH = SANDBOX_JSON_PATH.c_str();
-
+    const std::string  sandboxJsonPth = std::string("/mnt/sandbox/") + std::string(TEST_SANDBOX_NAME);
+    const char* cSandboxJsonPth = sandboxJsonPth.c_str();
     int fd = open(c_SANDBOX_JSON_PATH, O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
     if (fd < 0) {
         std::cout << "open sandbox json file failed" << std::endl;
@@ -270,7 +269,7 @@ HWTEST_F(SandboxUnitTest, TestSetNamespace, TestSize.Level1) {
 HWTEST_F(SandboxUnitTest, TestGetNamespaceFd, TestSize.Level1) {
     int ret1 = GetNamespaceFd("");
     ASSERT_EQ(ret1, -1);
-    std::string const sandboxJsonPth = std::string("/mnt/sandbox/") + std::string(TEST_SANDBOX_NAME);
+    const std::string  sandboxJsonPth = std::string("/mnt/sandbox/") + std::string(TEST_SANDBOX_NAME);
     const char* cSandboxJsonPth = sandboxJsonPth.c_str();
     ret1 = GetNamespaceFd(cSandboxJsonPth);
     EXPECT_GT(ret1, 1);
