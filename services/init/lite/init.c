@@ -65,11 +65,6 @@ void SystemConfig(void)
     // read config
     ReadConfig();
 
-    // dump config
-#ifdef OHOS_SERVICE_DUMP
-    DumpAllServices();
-#endif
-
     // execute init
     DoJob("pre-init");
 #ifndef __LINUX__
