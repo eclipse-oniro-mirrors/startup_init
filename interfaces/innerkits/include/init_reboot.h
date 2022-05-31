@@ -21,8 +21,11 @@
 extern "C" {
 #endif
 #endif
-
+#ifndef STARTUP_INIT_TEST
 #define STARTUP_DEVICE_CTL "startup.device.ctl"
+#else
+#define STARTUP_DEVICE_CTL "startup.device.test"
+#endif
 #define DEVICE_CMD_STOP "stop"
 #define DEVICE_CMD_SUSPEND "suspend"
 #define DEVICE_CMD_RESUME "resume"
