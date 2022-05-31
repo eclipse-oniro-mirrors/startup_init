@@ -33,6 +33,15 @@ int MountRequriedPartitions(const Fstab *fstab)
 }
 
 #define OHOS_REQUIRED_MOUNT_PREFIX "ohos.required_mount."
+/*
+ * Fstab includes block device node, mount point, file system type, MNT_ Flags and options.
+ * We separate them by spaces in fstab.required file, but the separator is '@' in CmdLine.
+ * The prefix "ohos.required_mount." is the flag of required fstab information in CmdLine.
+ * Format as shown below:
+ * <block device>@<mount point>@<fstype>@<mount options>@<fstab options>
+ * e.g.
+ * ohos.required_mount.system=/dev/block/xxx/by-name/system@/usr@ext4@ro,barrier=1@wait,required
+ */
 static int ParseRequiredMountInfo(const char *item, Fstab *fstab)
 {
     char mountOptions[MAX_BUFFER_LEN] = {};
