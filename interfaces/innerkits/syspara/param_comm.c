@@ -20,7 +20,9 @@
 #include <string.h>
 
 #include "init_param.h"
+#ifdef LITEOS_SUPPORT
 #include "hal_sys_param.h"
+#endif
 #include "parameter.h"
 #include "sysparam_errno.h"
 #ifdef USE_MBEDTLS
