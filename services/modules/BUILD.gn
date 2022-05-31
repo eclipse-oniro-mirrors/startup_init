@@ -18,12 +18,8 @@ ohos_shared_library("bootchart") {
   sources = [ "bootchart/bootchart.c" ]
 
   include_dirs = [
-    "//base/startup/init_lite/services/include",
+    ".",
     "//base/startup/init_lite/services/include/param",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/services/modules",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//third_party/bounds_checking_function/include",
   ]
 
   deps = [
@@ -44,18 +40,13 @@ ohos_shared_library("bootchart") {
 }
 
 config("libbootchart_static_config") {
-  include_dirs = [
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/services/modules",
-    "//base/startup/init_lite/services/init/module_engine/include",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-  ]
+  include_dirs = [ "." ]
 }
 
 ohos_source_set("libbootchart_static") {
   sources = [ "bootchart/bootchart_static.c" ]
   public_configs = [ ":libbootchart_static_config" ]
+  public_configs += [ "//base/startup/init_lite/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
 }
 
 group("modules") {
