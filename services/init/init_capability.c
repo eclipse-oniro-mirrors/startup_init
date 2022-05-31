@@ -73,12 +73,15 @@ static unsigned int GetCapByString(const char *capStr)
         { "AUDIT_READ", CAP_AUDIT_READ },
     };
     int mapSize = (int)ARRAY_LENGTH(capStrCapNum);
+    int capLen = strlen("CAP_");
     for (int j = 0; j < mapSize; j++) {
-        if (strcmp(capStr, capStrCapNum[j].capStr) == 0) {
+        if ((strcmp(capStr, capStrCapNum[j].capStr) == 0) ||
+            ((strncmp(capStr, "CAP_", capLen) == 0) &&
+            (strcmp(capStr + capLen, capStrCapNum[j].capStr) == 0))) {
             return capStrCapNum[j].CapNum;
         }
     }
-    return -1;
+    return CAP_LAST_CAP + 1;
 }
 
 int GetServiceCaps(const cJSON *curArrItem, Service *service)
@@ -97,26 +100,27 @@ int GetServiceCaps(const cJSON *curArrItem, Service *service)
     service->servPerm.caps = (unsigned int *)calloc(1, sizeof(unsigned int) * capsCnt);
     INIT_ERROR_CHECK(service->servPerm.caps != NULL, return SERVICE_FAILURE,
         "Failed to malloc for service %s", service->name);
-    service->servPerm.capsCnt = capsCnt;
+    service->servPerm.capsCnt = 0;
     unsigned int caps = FULL_CAP;
     for (int i = 0; i < capsCnt; ++i) { // number form
+        char *capStr = NULL;
         cJSON *capJson = cJSON_GetArrayItem(filedJ, i);
         if (cJSON_IsNumber(capJson)) { // for number
             caps = (unsigned int)cJSON_GetNumberValue(capJson);
         } else if (cJSON_IsString(capJson)) {
-            char *capStr = cJSON_GetStringValue(capJson);
+            capStr = cJSON_GetStringValue(capJson);
             if (capStr == NULL || strlen(capStr) <= 0) { // check all errors
                 INIT_LOGE("service=%s, parse item[%d] as string, error.", service->name, i);
                 break;
             }
             caps = GetCapByString(capStr);
         }
-        INIT_CHECK_RETURN_VALUE(caps >= 0, SERVICE_FAILURE);
         if ((caps > CAP_LAST_CAP) && (caps != (unsigned int)FULL_CAP)) {
-            INIT_LOGE("service=%s, caps = %d, error.", service->name, caps);
-            return SERVICE_FAILURE;
+            INIT_LOGE("service=%s not support caps = %s caps %d", service->name, capStr, caps);
+            continue;
         }
-        service->servPerm.caps[i] = (unsigned int)caps;
+        service->servPerm.caps[service->servPerm.capsCnt] = (unsigned int)caps;
+        service->servPerm.capsCnt++;
     }
     return 0;
 }
