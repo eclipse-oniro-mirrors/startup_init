@@ -181,3 +181,16 @@ void HashMapTraverse(HashMapHandle handle, void (*hashNodeTraverse)(const HashNo
         }
     }
 }
+
+int HashMapIsEmpty(HashMapHandle handle)
+{
+    INIT_ERROR_CHECK(handle != NULL, return 1, "Invalid param");
+    HashTab *tab = (HashTab *)handle;
+    for (int i = 0; i < tab->maxBucket; i++) {
+        HashNode *node = tab->buckets[i];
+        if (node != NULL) {
+            return 0;
+        }
+    }
+    return 1;
+}
