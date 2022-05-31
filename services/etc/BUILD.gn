@@ -119,6 +119,10 @@ if (defined(ohos_lite)) {
 
   ohos_prebuilt_para("ohos.para") {
     source = "//base/startup/init_lite/services/etc/param/ohos.para"
+    install_images = [
+      "system",
+      "updater",
+    ]
     part_name = "init"
     if (target_cpu == "arm64") {
       extra_paras = [ "const.product.cpu.abilist=arm64-v8a" ]
@@ -128,6 +132,10 @@ if (defined(ohos_lite)) {
 
   ohos_prebuilt_para("ohos.para.dac") {
     source = "//base/startup/init_lite/services/etc/param/ohos.para.dac"
+    install_images = [
+      "system",
+      "updater",
+    ]
     part_name = "init"
     module_install_dir = "etc/param"
   }
