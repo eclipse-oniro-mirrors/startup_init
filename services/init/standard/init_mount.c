@@ -47,26 +47,18 @@ static int ParseRequiredMountInfo(const char *item, Fstab *fstab)
     char mountOptions[MAX_BUFFER_LEN] = {};
     char partName[PARTITION_NAME_SIZE] = {};
     // Sanity checks
-    if (item == NULL || *item == '\0' || fstab == NULL) {
-        return -1;
-    }
+    INIT_CHECK(!(item == NULL || *item == '\0' || fstab == NULL), return -1);
 
     char *p = NULL;
     const char *q = item;
     if ((p = strstr(item, "=")) != NULL) {
         q = item + strlen(OHOS_REQUIRED_MOUNT_PREFIX); // Get partition name
-        if (q == NULL || *q == '\0' || (p - q) <= 0) {
-            return -1;
-        }
-        if (strncpy_s(partName, PARTITION_NAME_SIZE -1, q, p - q) != EOK) {
-            INIT_LOGE("Failed to copy requried partition name");
-            return -1;
-        }
+        INIT_CHECK(!(q == NULL || *q == '\0' || (p - q) <= 0), return -1);
+        INIT_ERROR_CHECK(strncpy_s(partName, PARTITION_NAME_SIZE -1, q, p - q) == EOK,
+            return -1, "Failed to copy requried partition name");
         p++; // skip '='
-        if (strncpy_s(mountOptions, MAX_BUFFER_LEN -1, p, strlen(p)) != EOK) {
-            INIT_LOGE("Failed to copy requried mount info: %s", item);
-            return -1;
-        }
+        INIT_ERROR_CHECK(strncpy_s(mountOptions, MAX_BUFFER_LEN -1, p, strlen(p)) == EOK,
+            return -1, "Failed to copy requried mount info: %s", item);
     }
     INIT_LOGV("Mount option of partition %s is [%s]", partName, mountOptions);
     if (ParseFstabPerLine(mountOptions, fstab, false, "@") < 0) {
@@ -79,18 +71,12 @@ static int ParseRequiredMountInfo(const char *item, Fstab *fstab)
 static Fstab* LoadFstabFromCommandLine(void)
 {
     Fstab *fstab = NULL;
-    char *cmdline = ReadFileData("/proc/cmdline");
+    char *cmdline = ReadFileData(BOOT_CMD_LINE);
     bool isDone = false;
 
-    if (cmdline == NULL) {
-        INIT_LOGE("Read from \'/proc/cmdline\' failed, err = %d", errno);
-        return NULL;
-    }
-    if ((fstab = (Fstab *)calloc(1, sizeof(Fstab))) == NULL) {
-        INIT_LOGE("Allocate memory for FS table failed, err = %d", errno);
-        return NULL;
-    }
-
+    INIT_ERROR_CHECK(cmdline != NULL, return NULL, "Read from \'/proc/cmdline\' failed, err = %d", errno);
+    INIT_ERROR_CHECK((fstab = (Fstab *)calloc(1, sizeof(Fstab))) != NULL, return NULL,
+        "Allocate memory for FS table failed, err = %d", errno);
     char *start = cmdline;
     char *end = start + strlen(cmdline);
     while (start < end) {
@@ -144,9 +130,7 @@ Fstab* LoadRequiredFstab(void)
     if (fstab == NULL) {
         INIT_LOGI("Cannot load fstab from command line, try read from fstab.required");
         const char *fstabFile = "/etc/fstab.required";
-        if (access(fstabFile, F_OK) != 0) {
-            fstabFile = "/system/etc/fstab.required";
-        }
+        INIT_CHECK(access(fstabFile, F_OK) == 0, fstabFile = "/system/etc/fstab.required");
         INIT_ERROR_CHECK(access(fstabFile, F_OK) == 0, abort(), "Failed get fstab.required");
         fstab = ReadFstabFromFile(fstabFile, false);
     }

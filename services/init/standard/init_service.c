@@ -43,9 +43,7 @@ void NotifyServiceChange(Service *service, int status)
     INIT_LOGI("NotifyServiceChange %s %s to %s", service->name,
         statusMap[service->status].name, statusMap[status].name);
     service->status = status;
-    if (status == SERVICE_IDLE) {
-        return;
-    }
+    INIT_CHECK(status != SERVICE_IDLE, return);
     char paramName[PARAM_NAME_LEN_MAX] = { 0 };
     int ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1,
         "%s.%s", STARTUP_SERVICE_CTL, service->name);
@@ -80,11 +78,8 @@ int ServiceExec(const Service *service)
     INIT_ERROR_CHECK(service != NULL && service->pathArgs.count > 0,
         return SERVICE_FAILURE, "Exec service failed! null ptr.");
     if (service->importance != 0) {
-        if (setpriority(PRIO_PROCESS, 0, service->importance) != 0) {
-            INIT_LOGE("setpriority failed for %s, importance = %d, err=%d",
-                service->name, service->importance, errno);
-                _exit(0x7f); // 0x7f: user specified
-        }
+        INIT_ERROR_CHECK(setpriority(PRIO_PROCESS, 0, service->importance) == 0, _exit(0x7f),
+            "setpriority failed for %s, importance = %d, err=%d", service->name, service->importance, errno);
     }
     INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
     OpenHidebug(service->name);
@@ -130,9 +125,8 @@ void GetAccessToken(void)
                 service->apl,
             };
             uint64_t tokenId = GetAccessTokenId(&nativeTokenInfoParams);
-            if (tokenId  == 0) {
-                INIT_LOGE("Get totken id %lld of service \' %s \' failed", tokenId, service->name);
-            }
+            INIT_CHECK_ONLY_ELOG(tokenId  != 0,
+                "Get totken id %lld of service \' %s \' failed", tokenId, service->name);
             service->tokenId = tokenId;
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);

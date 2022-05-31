@@ -25,6 +25,7 @@
 #include "init_utils.h"
 #include "securec.h"
 #include "init_group_manager.h"
+#include "trigger_manager.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -45,7 +46,10 @@ public:
     void SetUp() {};
     void TearDown() {};
 };
-
+HWTEST_F(ServiceUnitTest, TestDestoryHashMap, TestSize.Level1)
+{
+    HashMapDestory(GetInitWorkspace()->hashMap[0]);
+}
 HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service\",\"path\":[\"/data/init_ut/test_service\"],"

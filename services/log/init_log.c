@@ -50,10 +50,8 @@ static void LogToFile(const char *logFile, const char *tag, const char *info)
     if (clock_gettime(CLOCK_REALTIME, &curr) != 0) {
         return;
     }
-    FILE *outfile = fopen(logFile, "a+");
-    if (outfile == NULL) {
-        return;
-    }
+    FILE *outfile = NULL;
+    INIT_CHECK_ONLY_RETURN((outfile = fopen(logFile, "a+")) != NULL);
     struct tm t;
     char dateTime[80]; // 80 data time
     strftime(dateTime, sizeof(dateTime), "%Y-%m-%d %H:%M:%S", localtime_r(&curr.tv_sec, &t));

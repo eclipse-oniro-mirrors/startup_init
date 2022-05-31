@@ -651,14 +651,6 @@ static void CheckService(const cJSON* curItem)
         cJSON *capJ = cJSON_GetArrayItem(filedJ, i);
         EXPECT_TRUE(cJSON_IsNumber(capJ));
         EXPECT_TRUE(cJSON_GetNumberValue(capJ) >= 0.0);
-
-        // only shell can have all capabilities
-        if ((unsigned int)cJSON_GetNumberValue(capJ) == MAX_CAPABILITY_VALUE) {
-            if (nameStr != nullptr) {
-                EXPECT_EQ(0, strcmp(nameStr, "shell"));
-            }
-            EXPECT_EQ(1, capsCnt);
-        }
     }
 }
 

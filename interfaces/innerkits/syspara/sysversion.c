@@ -50,6 +50,9 @@ static void GetVersions(void)
         return;
     }
     const char *fullName = GetFullName_();
+    if (fullName == NULL) {
+        return;
+    }
     const char *tmp = strstr(fullName, "-");
     if (tmp == NULL) {
         return;

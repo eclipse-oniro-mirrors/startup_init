@@ -77,11 +77,10 @@ void CloseTask(const LoopHandle loopHandle, BaseTask *task)
 
 LE_Buffer *CreateBuffer(uint32_t bufferSize)
 {
-    if (bufferSize >= LOOP_MAX_BUFFER) {
-        return NULL;
-    }
-    LE_Buffer *buffer = (LE_Buffer *)malloc(sizeof(LE_Buffer) + bufferSize);
-    LE_CHECK(buffer != NULL, return NULL, "Failed to alloc memory for buffer");
+    LE_ONLY_CHECK(bufferSize < LOOP_MAX_BUFFER, return NULL);
+    LE_Buffer *buffer = NULL;
+    LE_CHECK((buffer = (LE_Buffer *)malloc(sizeof(LE_Buffer) + bufferSize)) != NULL,
+        return NULL, "Failed to alloc memory for buffer");
     ListInit(&buffer->node);
     buffer->buffSize = bufferSize;
     buffer->dataSize = 0;

@@ -80,6 +80,8 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/log",
       "//base/startup/init_lite/services/loopevent/include",
       "//base/startup/init_lite/services/loopevent/timer",
+      "//base/startup/init_lite/services/loopevent/task",
+      "//base/startup/init_lite/services/loopevent/utils",
       "//base/startup/init_lite/services/param/adapter",
       "//base/startup/init_lite/services/param/linux",
       "//base/startup/init_lite/services/param/include",
