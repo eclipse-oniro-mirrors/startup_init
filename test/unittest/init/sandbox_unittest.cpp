@@ -90,7 +90,7 @@ cJSON *MakeSandboxJson(const char *sandboxFileName, const int MODE)
         mJsonSymLk == nullptr || mJsonMtBdPthItmSdxFlg == nullptr || mJsonMtBdFlItm == nullptr) {
         std::cout << "create json object error" << std::endl;
         return nullptr;
-    }s
+    }
     cJSON *mJsonMtBdPth_Itm;                                // point to mount-bind-paths items
     cJSON *mJsonSymLk_Itm;                                  // point to symbol-links items
 
@@ -179,7 +179,7 @@ HWTEST_F(SandboxUnitTest, TestCreateNormalSandbox, TestSize.Level1) {
     }
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     int ret = RestartSandbox(TEST_SANDBOX_NAME);
-	ASSERT_EQ(ret, 1);
+    ASSERT_EQ(ret, 1);
 }
 
 HWTEST_F(SandboxUnitTest, TestEnterErrorSandbox, TestSize.Level1) {
