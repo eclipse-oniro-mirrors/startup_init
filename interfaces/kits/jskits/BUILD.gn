@@ -55,16 +55,3 @@ ohos_shared_library("systemparameter") {
   subsystem_name = "startup"
   part_name = "init"
 }
-
-group("syspara_js_init") {
-  deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-  ]
-  if (support_jsapi) {
-    deps += [
-      ":deviceinfo",
-      ":systemparameter",
-    ]
-  }
-}
