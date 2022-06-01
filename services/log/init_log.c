@@ -27,10 +27,10 @@
         (void)(x) \
     } while (0)
 
-#define MAX_LOG_SIZE 1024
+#define MAX_LOG_SIZE 128
 #define BASE_YEAR 1900
 
-static InitLogLevel g_logLevel = INIT_INFO;
+static InitLogLevel g_logLevel = INIT_ERROR;
 static const char *LOG_LEVEL_STR[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
 
 void SetInitLogLevel(InitLogLevel logLevel)
