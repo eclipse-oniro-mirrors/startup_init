@@ -29,6 +29,20 @@ config("exported_header_files") {
   ]
 }
 
+include_common = [
+  "./include",
+  "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
+  "//third_party/bounds_checking_function/include",
+  "//base/startup/init_lite/services/include",
+  "//base/startup/init_lite/services/include/param",
+  "//base/startup/init_lite/interfaces/innerkits/fd_holder",
+  "//base/startup/init_lite/services/param/include",
+  "//base/startup/init_lite/interfaces/innerkits/include",
+  "//base/startup/init_lite/interfaces/innerkits/include/syspara",
+  "//base/startup/init_lite/interfaces/hals",
+  "//base/startup/init_lite/interfaces/innerkits/syspara",
+]
+
 if (defined(ohos_lite)) {
   import("//build/lite/config/component/lite_component.gni")
   import("//build/lite/ndk/ndk.gni")
@@ -42,6 +56,7 @@ if (defined(ohos_lite)) {
         "OHOS_LITE",
       ]
       deps = []
+      include_dirs = include_common
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
         sources += syspara_sources
         defines += [ "LITEOS_SUPPORT" ]
@@ -52,16 +67,7 @@ if (defined(ohos_lite)) {
 
       public_configs = [ ":exported_header_files" ]
       cflags = [ "-fPIC" ]
-      include_dirs = [
-        "./include",
-        "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
-        "//third_party/bounds_checking_function/include",
-        "//base/startup/init_lite/services/include",
-        "//base/startup/init_lite/services/include/param",
-        "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-        "//base/startup/init_lite/services/param/include",
-        "//base/startup/init_lite/interfaces/innerkits/include",
-      ]
+
       deps += [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//base/startup/init_lite/services/utils:libinit_tools",
@@ -91,16 +97,7 @@ if (defined(ohos_lite)) {
         "__LITEOS_M__",
       ]
 
-      include_dirs = [
-        "./include",
-        "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
-        "//third_party/bounds_checking_function/include",
-        "//base/startup/init_lite/services/include",
-        "//base/startup/init_lite/services/include/param",
-        "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-        "//base/startup/init_lite/services/param/include",
-        "//base/startup/init_lite/interfaces/innerkits/include",
-      ]
+      include_dirs = include_common
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
         "//base/startup/init_lite/services/utils:libinit_tools",
@@ -172,15 +169,7 @@ if (defined(ohos_lite)) {
       defines += [ "SUPPORT_64BIT" ]
     }
 
-    include_dirs = [
-      "./include",
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/include/param",
-      "//base/startup/init_lite/services/param/include",
-      "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-    ]
+    include_dirs = include_common
     deps = [
       "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox",
       "//base/startup/init_lite/services/loopevent:loopevent",
@@ -214,17 +203,7 @@ if (defined(ohos_lite)) {
       "service_watcher/service_watcher.c",
     ]
 
-    include_dirs = [
-      "./include",
-      "//base/startup/init_lite/device_info",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/interfaces/innerkits/syspara",
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/include/param",
-      "//base/startup/init_lite/services/param/include",
-      "//third_party/bounds_checking_function/include",
-    ]
-
+    include_dirs = include_common
     deps = [
       ":libbegetutil",
       "//base/startup/init_lite/services/utils:libinit_utils",
@@ -299,16 +278,7 @@ if (defined(ohos_lite)) {
       defines += [ "SUPPORT_64BIT" ]
     }
 
-    include_dirs = [
-      "./include",
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/include/param",
-      "//base/startup/init_lite/services/param/include",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/interfaces/innerkits/include/syspara",
-      "//base/startup/init_lite/interfaces/innerkits/syspara",
-    ]
+    include_dirs = include_common
     deps = [
       "//base/startup/init_lite/services/loopevent:loopevent",
       "//base/startup/init_lite/services/param:param_client",

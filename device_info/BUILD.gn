@@ -37,6 +37,7 @@ ohos_shared_library("deviceinfoservice") {
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/interfaces/innerkits/include/syspara",
     "//base/startup/init_lite/interfaces/innerkits/syspara",
+    "//base/startup/init_lite/interfaces/hals",
   ]
 
   deps = [
