@@ -115,6 +115,32 @@ if (defined(ohos_lite)) {
   import("//build/ohos.gni")
   import("//build/ohos/native_stub/native_stub.gni")
 
+  ohos_executable("init_early") {
+    sources = [
+      "init/standard/device.c",
+      "init/standard/init_mount.c",
+      "init/standard/main_early.c",
+      "init/standard/switch_root.c",
+    ]
+    include_dirs = [
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/init/include",
+    ]
+    deps = [
+      "//base/startup/init_lite/interfaces/innerkits:libfsmanager_static",
+      "//base/startup/init_lite/services/log:init_log",
+      "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
+      "//third_party/bounds_checking_function:libsec_static",
+      "//third_party/cJSON:cjson_static",
+    ]
+    install_images = [
+      "updater",
+      "ramdisk",
+    ]
+    install_enable = true
+    part_name = "init"
+  }
+
   ohos_executable("init") {
     sources = [
       "//base/startup/init_lite/interfaces/innerkits/fd_holder/fd_holder_internal.c",
@@ -126,11 +152,9 @@ if (defined(ohos_lite)) {
       "init/standard/init_cmds.c",
       "init/standard/init_control_fd_service.c",
       "init/standard/init_jobs.c",
-      "init/standard/init_mount.c",
       "init/standard/init_reboot.c",
       "init/standard/init_service.c",
       "init/standard/init_signal_handler.c",
-      "init/standard/switch_root.c",
     ]
 
     modulemgr_sources = [
@@ -155,7 +179,6 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/loopevent/include",
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-      "//base/startup/init_lite/ueventd/include",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/startup/init_lite/interfaces/innerkits/control_fd",
@@ -172,7 +195,6 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/param:param_init",
       "//base/startup/init_lite/services/utils:libinit_tools",
       "//base/startup/init_lite/services/utils:libinit_utils",
-      "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/cJSON:cjson_static",
     ]
@@ -235,7 +257,6 @@ if (defined(ohos_lite)) {
     install_images = [
       "system",
       "updater",
-      "ramdisk",
     ]
     install_enable = true
     part_name = "init"
@@ -244,6 +265,7 @@ if (defined(ohos_lite)) {
   group("startup_init") {
     deps = [
       ":init",
+      ":init_early",
       "etc:etc_files",
       "//base/startup/init_lite/services/param:param_client",
       "//base/startup/init_lite/services/param:param_init",
