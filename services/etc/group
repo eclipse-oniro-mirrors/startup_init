@@ -16,6 +16,7 @@ keystore:x:1017:
 usb:x:1018:
 drm:x:1019:
 gps:x:1020:
+location_host:x:1021:
 media_rw:x:1023:
 dsoftbus:x:1024:
 nfc:x:1027:
