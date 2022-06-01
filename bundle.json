@@ -51,7 +51,8 @@
                 "//base/startup/init_lite/device_info:device_info_group",
                 "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox",
                 "//base/startup/init_lite/test/exec_test:exectest",
-                "//base/startup/init_lite/interfaces/innerkits/control_fd:libcontrolfd"
+                "//base/startup/init_lite/interfaces/innerkits/control_fd:libcontrolfd",
+                "//base/startup/init_lite/interfaces/kits/jskits:syspara_js_init"
             ],
             "inner_kits": [
                 {

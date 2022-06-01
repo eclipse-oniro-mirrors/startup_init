@@ -26,15 +26,22 @@
 #include <string>
 #include <unistd.h>
 
-#include "hilog/log.h"
+#include "beget_ext.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "param_wrapper.h"
 #include "parameter.h"
 
+#define PARAM_JS_LABEL "PARAM_JS"
+#define PARAM_JS_DOMAIN (BASE_DOMAIN + 0xc)
+#define PARAM_JS_LOGI(fmt, ...) STARTUP_LOGI(PARAM_JS_DOMAIN, PARAM_JS_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_JS_LOGE(fmt, ...) STARTUP_LOGE(PARAM_JS_DOMAIN, PARAM_JS_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_JS_LOGV(fmt, ...) STARTUP_LOGV(PARAM_JS_DOMAIN, PARAM_JS_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_JS_LOGW(fmt, ...) STARTUP_LOGW(PARAM_JS_DOMAIN, PARAM_JS_LABEL, fmt, ##__VA_ARGS__)
+
 #define PARAM_JS_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                       \
-        HiLog::Error(LABEL, __VA_ARGS__);   \
+        PARAM_JS_LOGE(__VA_ARGS__);   \
         exper;                              \
     }
 

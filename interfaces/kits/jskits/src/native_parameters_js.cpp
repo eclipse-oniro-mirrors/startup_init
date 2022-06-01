@@ -14,8 +14,6 @@
  */
 #include "native_parameters_js.h"
 
-static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "StartupParametersJs" };
-using namespace OHOS::HiviewDFX;
 static constexpr int MAX_LENGTH = 128;
 static constexpr int ARGC_NUMBER = 2;
 static constexpr int ARGC_THREE_NUMBER = 3;
@@ -47,9 +45,7 @@ static void SetCallbackWork(napi_env env, StorageAsyncContextPtr asyncContext)
         [](napi_env env, void *data) {
             StorageAsyncContext *asyncContext = (StorageAsyncContext *)data;
             asyncContext->status = SetParameter(asyncContext->key, asyncContext->value);
-            HiLog::Debug(LABEL,
-                "JSApp set::asyncContext-> status = %{public}d, asyncContext->key = %{public}s, asyncContext->value = "
-                "%{public}s.",
+            PARAM_JS_LOGV("JSApp set::asyncContext-> status = %d, asyncContext->key = %s, asyncContext->value = %s.",
                 asyncContext->status, asyncContext->key, asyncContext->value);
         },
         [](napi_env env, napi_status status, void *data) {
@@ -154,7 +150,7 @@ static napi_value SetSync(napi_env env, napi_callback_info info)
     std::string keyStr = keyBuf;
     std::string valueStr = valueBuf;
     int setResult = SetParameter(keyStr.c_str(), valueStr.c_str());
-    HiLog::Debug(LABEL, "JSApp SetSync::setResult = %{public}d, input keyBuf = %{public}s.", setResult, keyBuf);
+    PARAM_JS_LOGV( "JSApp SetSync::setResult = %d, input keyBuf = %s.", setResult, keyBuf);
 
     napi_value napiValue = nullptr;
     if (setResult != 0) { // set failed
@@ -202,7 +198,7 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
         valueStr = valueBuf;
     }
     int ret = OHOS::system::GetStringParameter(keyStr, getValue, valueStr);
-    HiLog::Debug(LABEL, "JSApp GetSync::getValue = %{public}s, input keyStr = %{public}s.", getValue.c_str(), keyBuf);
+    PARAM_JS_LOGV( "JSApp GetSync::getValue = %s, input keyStr = %s.", getValue.c_str(), keyBuf);
 
     napi_value napiValue = nullptr;
     if (ret == 0) {
@@ -222,9 +218,7 @@ static void GetCallbackWork(napi_env env, StorageAsyncContextPtr asyncContext)
             StorageAsyncContext *asyncContext = (StorageAsyncContext *)data;
             asyncContext->status =
                 OHOS::system::GetStringParameter(asyncContext->key, asyncContext->getValue, asyncContext->value);
-            HiLog::Debug(LABEL,
-                "JSApp get::asyncContext->status = %{public}d, asyncContext->getValue = %{public}s, asyncContext->key "
-                "= %{public}s, value = %{public}s.",
+            PARAM_JS_LOGV("JSApp get status = %d, asyncContext->getValue = %s, asyncContext->key = %s, value = %s.",
                 asyncContext->status, asyncContext->getValue.c_str(), asyncContext->key, asyncContext->value);
         },
         [](napi_env env, napi_status status, void *data) {
