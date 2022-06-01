@@ -64,11 +64,14 @@ def GetParamFromCCode(codeName):
             if len(name) != 0 and len(value) != 0:
                 dict[name] = value
             data = afile.readline()
+        afile.truncate(0)
     return dict
 
 def WriteMapToCode(codeName, dict):
     try:
         f = open(codeName, 'w')
+        # start with 0
+        f.seek(0)
         # write file header
         f.write('#ifndef PARAM_LITE_DEF_CFG_' + os.linesep)
         f.write('#define PARAM_LITE_DEF_CFG_' + os.linesep)
