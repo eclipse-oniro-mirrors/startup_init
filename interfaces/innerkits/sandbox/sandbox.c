@@ -47,6 +47,10 @@
 #define SANDBOX_CHIPSET_CONFIG_FILE "/system/etc/sandbox/chipset-sandbox64.json"
 #endif
 
+#ifdef STARTUP_INIT_TEST
+#define SANDBOX_TEST_CONFIG_FILE "/system/etc/sandbox/test-sandbox.json"
+#endif
+
 #define SANDBOX_MOUNT_FLAGS_MS_BIND "bind"
 #define SANDBOX_MOUNT_FLAGS_MS_PRIVATE "private"
 #define SANDBOX_MOUNT_FLAGS_MS_REC "rec"
@@ -84,6 +88,9 @@ static const struct SandboxMountFlags g_flags[] = {
 
 static sandbox_t g_systemSandbox;
 static sandbox_t g_chipsetSandbox;
+#ifdef STARTUP_INIT_TEST
+static sandbox_t g_testSandbox;
+#endif
 
 struct SandboxMap {
     const char *name;
@@ -101,7 +108,14 @@ static const struct SandboxMap g_map[] = {
         .name = "chipset",
         .sandbox = &g_chipsetSandbox,
         .configfile = SANDBOX_CHIPSET_CONFIG_FILE,
+    },
+#ifdef STARTUP_INIT_TEST
+    {
+        .name = "test",
+        .sandbox = &g_testSandbox,
+        .configfile = SANDBOX_TEST_CONFIG_FILE,
     }
+#endif
 };
 
 static unsigned long GetSandboxMountFlags(cJSON *item)

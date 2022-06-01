@@ -127,6 +127,7 @@ ohos_unittest("init_ut") {
     "init/group_unittest.cpp",
     "init/init_reboot_unittest.cpp",
     "init/mount_unittest.cpp",
+    "init/sandbox_unittest.cpp",
     "init/service_file_unittest.cpp",
     "init/service_socket_unittest.cpp",
     "init/utils_unittest.cpp",
