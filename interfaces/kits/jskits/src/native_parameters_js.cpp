@@ -150,7 +150,7 @@ static napi_value SetSync(napi_env env, napi_callback_info info)
     std::string keyStr = keyBuf;
     std::string valueStr = valueBuf;
     int setResult = SetParameter(keyStr.c_str(), valueStr.c_str());
-    PARAM_JS_LOGV( "JSApp SetSync::setResult = %d, input keyBuf = %s.", setResult, keyBuf);
+    PARAM_JS_LOGV("JSApp SetSync::setResult = %d, input keyBuf = %s.", setResult, keyBuf);
 
     napi_value napiValue = nullptr;
     if (setResult != 0) { // set failed
@@ -198,7 +198,7 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
         valueStr = valueBuf;
     }
     int ret = OHOS::system::GetStringParameter(keyStr, getValue, valueStr);
-    PARAM_JS_LOGV( "JSApp GetSync::getValue = %s, input keyStr = %s.", getValue.c_str(), keyBuf);
+    PARAM_JS_LOGV("JSApp GetSync::getValue = %s, input keyStr = %s.", getValue.c_str(), keyBuf);
 
     napi_value napiValue = nullptr;
     if (ret == 0) {
