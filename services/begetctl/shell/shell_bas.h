@@ -91,7 +91,6 @@ typedef struct BShellEnv_ {
     BShellKey *keyHandle;
     BShellStatus status;
     BShellInput_ input;
-    BShellOutput_ output;
     char data[BSH_COMMAND_MAX_LENGTH];
 } BShellEnv;
 

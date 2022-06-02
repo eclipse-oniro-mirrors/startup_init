@@ -87,10 +87,9 @@ typedef struct BShellParam_ {
 typedef struct BShellInfo_ {
     char *prompt;
     BShellInput_ input;
-    BShellOutput_ output;
 } BShellInfo;
 
-int BShellEnvInit(BShellHandle *handle, BShellInfo *info);
+int BShellEnvInit(BShellHandle *handle, const BShellInfo *info);
 int BShellEnvStart(BShellHandle handle);
 void BShellEnvDestory(BShellHandle handle);
 

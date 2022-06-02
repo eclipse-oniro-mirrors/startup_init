@@ -95,12 +95,12 @@ static int32_t BShellCmdExit(BShellHandle handle, int32_t argc, char *argv[])
 int32_t BShellEnvOutput(BShellHandle handle, char *fmt, ...)
 {
     BSH_CHECK(handle != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
-	va_list list;
+    va_list list;
     va_start(list, fmt);
-    vfprintf(stdout, fmt, list);
+    int len = vfprintf(stdout, fmt, list);
     va_end(list);
     (void)fflush(stdout);
-    return 0;
+    return len;
 }
 
 int32_t BShellEnvOutputString(BShellHandle handle, const char *string)
@@ -108,7 +108,7 @@ int32_t BShellEnvOutputString(BShellHandle handle, const char *string)
     BSH_CHECK(handle != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
     printf("%s", string);
     (void)fflush(stdout);
-    return 0;
+    return strlen(string);
 }
 
 int32_t BShellEnvOutputPrompt(BShellHandle handle, const char *prompt)
@@ -402,7 +402,7 @@ void BShellEnvLoop(BShellHandle handle)
     }
 }
 
-int32_t BShellEnvInit(BShellHandle *handle, BShellInfo *info)
+int32_t BShellEnvInit(BShellHandle *handle, const BShellInfo *info)
 {
     BSH_CHECK(handle != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
     BSH_CHECK(info != NULL && info->prompt != NULL, return BSH_INVALID_PARAM, "Invalid cmd name");
@@ -413,7 +413,6 @@ int32_t BShellEnvInit(BShellHandle *handle, BShellInfo *info)
     shell->cursor = 0;
     shell->shellState = BSH_IN_NORMAL;
     shell->input = info->input;
-    shell->output = info->output;
     shell->prompt = strdup(info->prompt);
     shell->command = NULL;
     shell->param = NULL;

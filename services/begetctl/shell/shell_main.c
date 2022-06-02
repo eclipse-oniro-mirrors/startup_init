@@ -30,15 +30,6 @@ static void signalHandler(int signal)
     exit(0);
 }
 
-static int32_t ShellOuput(const char *data, int32_t len)
-{
-    for (int32_t i = 0; i < len; i++) {
-        putchar(*(data + i));
-    }
-    (void)fflush(stdout);
-    return len;
-}
-
 static int32_t ShellInput(char *data, int32_t len)
 {
     for (int32_t i = 0; i < len; i++) {
@@ -50,7 +41,7 @@ static int32_t ShellInput(char *data, int32_t len)
 BShellHandle GetShellHandle(void)
 {
     if (g_handle == NULL) {
-        BShellInfo info = {PARAM_SHELL_DEFAULT_PROMPT, ShellInput, ShellOuput};
+        BShellInfo info = {PARAM_SHELL_DEFAULT_PROMPT, ShellInput};
         BShellEnvInit(&g_handle, &info);
     }
     return g_handle;
