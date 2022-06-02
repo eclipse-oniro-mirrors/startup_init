@@ -94,7 +94,7 @@ int BShellEnvInit(BShellHandle *handle, BShellInfo *info);
 int BShellEnvStart(BShellHandle handle);
 void BShellEnvDestory(BShellHandle handle);
 
-int BShellEnvRegitsterCmd(BShellHandle handle, CmdInfo *cmdInfo);
+int BShellEnvRegitsterCmd(BShellHandle handle, const CmdInfo *cmdInfo);
 int BShellEnvSetParam(BShellHandle handle, const char *name, const char *desc, BShellParamType type, void *value);
 const BShellParam *BShellEnvGetParam(BShellHandle handle, const char *name);
 int BShellEnvRegisterKeyHandle(BShellHandle handle, uint8_t code, BShellkeyHandle keyHandle);

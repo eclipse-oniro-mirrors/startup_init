@@ -90,7 +90,7 @@ static int32_t SysParaApiDumpCmd(BShellHandle shell, int32_t argc, char *argv[])
 
 MODULE_CONSTRUCTOR(void)
 {
-    CmdInfo infos[] = {
+    const CmdInfo infos[] = {
         {(char *)"dump", SysParaApiDumpCmd, (char *)"dump api", (char *)"dump api", (char *)"dump api"},
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {

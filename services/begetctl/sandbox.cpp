@@ -183,7 +183,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
 
 MODULE_CONSTRUCTOR(void)
 {
-    CmdInfo infos[] = {
+    const CmdInfo infos[] = {
         {
             (char *)"sandbox", main_cmd, (char *)"enter service sandbox",
             (char *)"sandbox -s service_name",

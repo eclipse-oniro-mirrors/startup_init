@@ -67,7 +67,7 @@ static int bootchartCmdStop(BShellHandle shell, int argc, char **argv)
 }
 MODULE_CONSTRUCTOR(void)
 {
-    CmdInfo infos[] = {
+    const CmdInfo infos[] = {
         {"bootchart", bootchartCmdEnable, "bootchart enable", "bootchart enable", "bootchart enable"},
         {"bootchart", bootchartCmdDisable, "bootchart disable", "bootchart disable", "bootchart disable"},
         {"bootchart", bootchartCmdStart, "bootchart start", "bootchart start", "bootchart start"},

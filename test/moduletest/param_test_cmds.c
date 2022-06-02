@@ -165,14 +165,14 @@ static int32_t BShellParamCmdUdidGet(BShellHandle shell, int32_t argc, char *arg
 int32_t BShellCmdRegister(BShellHandle shell, int execMode)
 {
     if (execMode == 0) {
-        CmdInfo infos[] = {
+        const CmdInfo infos[] = {
             {"init", BShellParamCmdGroupTest, "init group test", "init group test [stage]", "init group test"},
         };
         for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
             BShellEnvRegitsterCmd(shell, &infos[i]);
         }
     } else {
-        CmdInfo infos[] = {
+        const CmdInfo infos[] = {
             {"display", BShellParamCmdDisplay, "display system service", "display service", "display service"},
             {"read", BShellParamCmdRead, "read system parameter", "read [start | stop]", ""},
             {"watcher", BShellParamCmdWatch, "watcher system parameter", "watcher [name]", ""},

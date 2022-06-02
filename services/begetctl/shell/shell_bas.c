@@ -95,26 +95,20 @@ static int32_t BShellCmdExit(BShellHandle handle, int32_t argc, char *argv[])
 int32_t BShellEnvOutput(BShellHandle handle, char *fmt, ...)
 {
     BSH_CHECK(handle != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
-    BShellEnv *shell = (BShellEnv *)handle;
-    va_list list;
+	va_list list;
     va_start(list, fmt);
-    int len = vsnprintf_s(shell->data, sizeof(shell->data), sizeof(shell->data) - 1, fmt, list);
+    vfprintf(stdout, fmt, list);
     va_end(list);
-    if (len <= 0) {
-        va_start(list, fmt);
-        vfprintf(stdout, fmt, list);
-        va_end(list);
-        return -1;
-    }
-    return BShellEnvOutputString(handle, shell->data);
+    (void)fflush(stdout);
+    return 0;
 }
 
 int32_t BShellEnvOutputString(BShellHandle handle, const char *string)
 {
     BSH_CHECK(handle != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
-    BShellEnv *shell = (BShellEnv *)handle;
-    BSH_CHECK(shell->output != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
-    return shell->output(string, strlen(string));
+    printf("%s", string);
+    (void)fflush(stdout);
+    return 0;
 }
 
 int32_t BShellEnvOutputPrompt(BShellHandle handle, const char *prompt)
@@ -142,9 +136,8 @@ int32_t BShellEnvOutputPrompt(BShellHandle handle, const char *prompt)
 void BShellEnvOutputByte(BShellHandle handle, char data)
 {
     BSH_CHECK(handle != NULL, return, "Invalid shell env");
-    BShellEnv *shell = (BShellEnv *)handle;
-    BSH_CHECK(shell->output != NULL, return, "Invalid shell env");
-    shell->output(&data, 1);
+    printf("%c", data);
+    (void)fflush(stdout);
 }
 
 void BShellEnvOutputResult(BShellHandle handle, int32_t result)
@@ -152,7 +145,8 @@ void BShellEnvOutputResult(BShellHandle handle, int32_t result)
     if (result == 0) {
         return;
     }
-    BShellEnvOutput(handle, "result: 0x%08x\r\n", result);
+    printf("result: 0x%08x\r\n", result);
+    (void)fflush(stdout);
 }
 
 static void BShellEnvOutputParam(BShellHandle handle, char *var)
@@ -399,7 +393,6 @@ void BShellEnvLoop(BShellHandle handle)
 {
     BSH_CHECK(handle != NULL, return, "Invalid shell env");
     BShellEnv *shell = (BShellEnv *)handle;
-    BSH_CHECK(shell->output != NULL, return, "Invalid shell output");
     BSH_CHECK(shell->input != NULL, return, "Invalid shell input");
     while (1) {
         char data = 0;
@@ -438,7 +431,7 @@ int BShellEnvStart(BShellHandle handle)
     BShellEnvOutputString(handle, BShellEnvErrString(handle, BSH_SHELL_INFO));
     BShellEnvOutputString(handle, shell->prompt);
 
-    CmdInfo infos[] = {
+    const CmdInfo infos[] = {
         {"exit", BShellCmdExit, "exit parameter shell", "exit"},
         {"help", BShellCmdHelp, "help command", "help"}
     };
@@ -507,7 +500,7 @@ void BShellEnvDestory(BShellHandle handle)
     free(shell);
 }
 
-int32_t BShellEnvRegitsterCmd(BShellHandle handle, CmdInfo *cmdInfo)
+int32_t BShellEnvRegitsterCmd(BShellHandle handle, const CmdInfo *cmdInfo)
 {
     BSH_CHECK(handle != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
     BSH_CHECK(cmdInfo != NULL && cmdInfo->name != NULL, return BSH_INVALID_PARAM, "Invalid cmd name");
@@ -741,8 +734,6 @@ const ParamInfo *BShellEnvGetReservedParam(BShellHandle handle, const char *name
 int32_t BShellEnvDirectExecute(BShellHandle handle, int argc, char *args[])
 {
     BSH_CHECK(handle != NULL, return -1, "Invalid shell env");
-    BShellEnv *shell = (BShellEnv *)handle;
-    BSH_CHECK(shell->output != NULL, return -1, "Invalid shell output");
     BShellCommand *cmd = BShellEnvGetCmd(handle, argc, args);
     if (cmd != NULL) {
         int32_t ret = cmd->executer(handle, argc - cmd->argStart, &args[cmd->argStart]);

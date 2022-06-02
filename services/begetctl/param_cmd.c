@@ -428,7 +428,7 @@ static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[
 
 static int32_t BShellParamCmdRegForShell(BShellHandle shell)
 {
-    CmdInfo infos[] = {
+    const CmdInfo infos[] = {
         {"ls", BShellParamCmdLs, "display system parameter", "ls [-r] [name]", NULL},
         {"get", BShellParamCmdGet, "get system parameter", "get [name]", NULL},
         {"set", BShellParamCmdSet, "set system parameter", "set name value", NULL},
@@ -446,7 +446,7 @@ static int32_t BShellParamCmdRegForShell(BShellHandle shell)
 
 static int32_t BShellParamCmdRegForIndepent(BShellHandle shell)
 {
-    CmdInfo infos[] = {
+    const CmdInfo infos[] = {
         {"param", BShellParamCmdLs, "display system parameter", "param ls [-r] [name]", "param ls"},
         {"param", BShellParamCmdGet, "get system parameter", "param get [name]", "param get"},
         {"param", BShellParamCmdSet, "set system parameter", "param set name value", "param set"},

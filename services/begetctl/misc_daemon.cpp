@@ -219,7 +219,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
 
 MODULE_CONSTRUCTOR(void)
 {
-    CmdInfo infos[] = {
+    const CmdInfo infos[] = {
         {
             (char *)"misc_daemon", main_cmd, (char *)"write start logo",
             (char *)"misc_daemon --write_logo xxx.rgb", (char *)"misc_daemon --write_logo"
