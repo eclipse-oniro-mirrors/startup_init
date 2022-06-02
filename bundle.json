@@ -42,7 +42,6 @@
                 "//base/startup/init_lite/services/begetctl:begetctl_cmd",
                 "//base/startup/init_lite/services/modules:modules",
                 "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-                "//base/startup/init_lite/interfaces/kits/syscap:deviceinfo_ndk",
                 "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
                 "//base/startup/init_lite/interfaces/innerkits/file:libfile",
                 "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
@@ -51,7 +50,8 @@
                 "//base/startup/init_lite/device_info:device_info_group",
                 "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox",
                 "//base/startup/init_lite/test/exec_test:exectest",
-                "//base/startup/init_lite/interfaces/innerkits/control_fd:libcontrolfd"
+                "//base/startup/init_lite/interfaces/innerkits/control_fd:libcontrolfd",
+                "//base/startup/init_lite/interfaces/kits:kitsgroup"
             ],
             "inner_kits": [
                 {
