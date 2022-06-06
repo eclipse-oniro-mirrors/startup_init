@@ -30,6 +30,11 @@ if (defined(ohos_lite)) {
 } else {
   import("//build/ohos.gni")
 
+  config("init_utils_exported_configs") {
+    visibility = [ ":*" ]
+    include_dirs = [ "//base/startup/init_lite/services/include" ]
+  }
+
   ohos_static_library("libinit_tools") {
     sources = [
       "//base/startup/init_lite/services/utils/init_hashmap.c",
@@ -42,6 +47,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//base/startup/init_lite/services/include",
     ]
+    public_configs = [ ":init_utils_exported_configs" ]
     defines = [ "_GNU_SOURCE" ]
     part_name = "init"
   }
@@ -55,6 +61,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//base/startup/init_lite/services/include",
     ]
+    public_configs = [ ":init_utils_exported_configs" ]
     defines = [ "_GNU_SOURCE" ]
     part_name = "init"
   }

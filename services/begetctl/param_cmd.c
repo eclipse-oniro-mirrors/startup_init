@@ -28,6 +28,7 @@
 #include "param_utils.h"
 #include "shell_utils.h"
 #include "init_param.h"
+#include "beget_ext.h"
 #ifdef PARAM_SUPPORT_SELINUX
 #include <policycoreutils.h>
 #include <selinux/selinux.h>
@@ -47,9 +48,7 @@ void demoExit(void)
         kill(g_shellPid, SIGKILL);
 #endif
     }
-    if (g_isSetTerminal != 0) {
-        tcsetattr(0, TCSAFLUSH, &g_terminalState);
-    }
+    BEGET_CHECK(g_isSetTerminal == 0, tcsetattr(0, TCSAFLUSH, &g_terminalState));
 }
 
 #define CMD_PATH "/system/bin/paramshell"
@@ -60,9 +59,7 @@ void demoExit(void)
 static char *GetLocalBuffer(uint32_t *buffSize)
 {
     static char buffer[PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX] = {0};
-    if (buffSize != NULL) {
-        *buffSize = sizeof(buffer);
-    }
+    BEGET_CHECK(buffSize == NULL, *buffSize = sizeof(buffer));
     return buffer;
 }
 
@@ -138,9 +135,7 @@ int SetParamShellPrompt(BShellHandle shell, const char *param)
 
 static char *GetPermissionString(uint32_t mode, int shift, char *str, int size)
 {
-    if (size < MASK_LENGTH_MAX) {
-        return str;
-    }
+    BEGET_CHECK(!(size < MASK_LENGTH_MAX), return str);
     str[0] = '-';
     str[1] = '-';
     str[2] = '-'; // 2 watcher
@@ -161,10 +156,7 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
 {
     ParamAuditData auditData = {};
     int ret = GetParamSecurityAuditData(name, 0, &auditData);
-    if (ret != 0) {
-        BSH_LOGE("Failed to get param security for %s", name);
-        return;
-    }
+    BSH_CHECK(ret == 0, return, "Failed to get param security for %s", name);
     BShellEnvOutput(shell, "Parameter infomation:\r\n");
 #ifdef PARAM_SUPPORT_SELINUX
     BShellEnvOutput(shell, "selinux  : %s \r\n", auditData.label);
@@ -258,9 +250,7 @@ static int32_t BShellParamCmdCat(BShellHandle shell, int32_t argc, char *argv[])
     char *realParameter = GetRealParameter(shell, argv[1], buffer, buffSize);
     BSH_CHECK(realParameter != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
     int ret = SystemGetParameter(realParameter, buffer, &buffSize);
-    if (ret == 0) {
-        BShellEnvOutput(shell, "    %s\r\n", buffer);
-    }
+    BSH_CHECK(ret != 0, BShellEnvOutput(shell, "    %s\r\n", buffer));
     return 0;
 }
 
@@ -276,9 +266,7 @@ static void ShowParamForCmdGet(ParamHandle handle, void *cookie)
 {
     uint32_t buffSize = 0;
     char *buffer = GetLocalBuffer(&buffSize);
-    if (buffSize < (PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX)) {
-        return;
-    }
+    BSH_CHECK(!(buffSize < (PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX)), return);
     char *value = buffer + PARAM_NAME_LEN_MAX;
     (void)SystemGetParameterName(handle, buffer, PARAM_NAME_LEN_MAX);
     uint32_t valueLen = buffSize - PARAM_NAME_LEN_MAX;

@@ -112,12 +112,14 @@ int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t spaceSize)
     PARAM_CHECK(ret == 0, return ret, "Failed to init workspace  %s", workSpace->fileName);
     PARAMSPACE_AREA_INIT_LOCK(workSpace);
     PARAM_SET_FLAG(workSpace->flags, WORKSPACE_FLAGS_INIT);
+    PARAM_LOGI("InitWorkSpace %s", workSpace->fileName);
     return ret;
 }
 
 void CloseWorkSpace(WorkSpace *workSpace)
 {
     PARAM_CHECK(workSpace != NULL, return, "The workspace is null");
+    PARAM_LOGI("CloseWorkSpace %s", workSpace->fileName);
     if (!PARAM_TEST_FLAG(workSpace->flags, WORKSPACE_FLAGS_INIT)) {
         free(workSpace);
         return;

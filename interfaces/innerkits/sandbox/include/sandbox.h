@@ -44,7 +44,8 @@ typedef struct LinkList {
 } linklist_t;
 
 typedef struct {
-    mountlist_t *mounts;
+    mountlist_t *pathMounts;
+    mountlist_t *fileMounts;
     linklist_t *links;
     char *rootPath; // /mnt/sandbox/system|vendor|xxx
     char name[MAX_BUFFER_LEN]; // name of sandbox. i.e system, chipset etc.

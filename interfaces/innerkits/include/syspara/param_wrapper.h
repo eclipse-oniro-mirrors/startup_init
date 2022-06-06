@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef STARTUP_SYSVERSION_API_H
-#define STARTUP_SYSVERSION_API_H
+#ifndef PARAM_WRAPPER_H
+#define PARAM_WRAPPER_H
 
 #include <string>
 
@@ -25,4 +25,4 @@ int GetIntParameter(const std::string key, int def);
 }
 }
 
-#endif // STARTUP_SYSVERSION_API_H
+#endif // PARAM_WRAPPER_H

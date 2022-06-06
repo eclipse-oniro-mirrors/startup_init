@@ -44,14 +44,10 @@ MODULE_MGR *ModuleMgrCreate(const char *name)
 {
     MODULE_MGR *moduleMgr;
 
-    if (name == NULL) {
-        return NULL;
-    }
+    BEGET_CHECK(name != NULL, return NULL);
 
     moduleMgr = (MODULE_MGR *)malloc(sizeof(MODULE_MGR));
-    if (moduleMgr == NULL) {
-        return NULL;
-    }
+    BEGET_CHECK(moduleMgr != NULL, return NULL);
     ListInit(&(moduleMgr->modules));
     moduleMgr->name = strdup(name);
     if (moduleMgr->name == NULL) {
@@ -66,14 +62,10 @@ MODULE_MGR *ModuleMgrCreate(const char *name)
 
 void ModuleMgrDestroy(MODULE_MGR *moduleMgr)
 {
-    if (moduleMgr == NULL) {
-        return;
-    }
+    BEGET_CHECK(moduleMgr != NULL, return);
 
     ModuleMgrUninstall(moduleMgr, NULL);
-    if (moduleMgr->name != NULL) {
-        free((void *)moduleMgr->name);
-    }
+    BEGET_CHECK(moduleMgr->name == NULL, free((void *)moduleMgr->name));
     free((void *)moduleMgr);
 }
 
@@ -93,17 +85,11 @@ static void moduleDestroy(ListNode *node)
 {
     MODULE_ITEM *module;
 
-    if (node == NULL) {
-        return;
-    }
+    BEGET_CHECK(node != NULL, return);
 
     module = (MODULE_ITEM *)node;
-    if (module->name != NULL) {
-        free((void *)module->name);
-    }
-    if (module->handle != NULL) {
-        dlclose(module->handle);
-    }
+    BEGET_CHECK(module->name == NULL, free((void *)module->name));
+    BEGET_CHECK(module->handle == NULL, dlclose(module->handle));
     free((void *)module);
 }
 
@@ -132,9 +118,7 @@ static void *moduleInstall(MODULE_ITEM *module, int argc, const char *argv[])
     currentInstallArgs = &(module->moduleMgr->installArgs);
     handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
     currentInstallArgs = NULL;
-    if (handle == NULL) {
-        BEGET_LOGE("moduleInstall path %s fail %d", path, errno);
-    }
+    BEGET_CHECK_ONLY_ELOG(handle != NULL, "moduleInstall path %s fail %d", path, errno);
     return handle;
 }
 
@@ -147,15 +131,10 @@ int ModuleMgrInstall(MODULE_MGR *moduleMgr, const char *moduleName,
     MODULE_ITEM *module;
 
     // Get module manager
-    if ((moduleMgr == NULL) || (moduleName == NULL)) {
-        return -1;
-    }
-
+    BEGET_CHECK(!(moduleMgr == NULL || moduleName == NULL), return -1);
     // Create module item
     module = (MODULE_ITEM *)malloc(sizeof(MODULE_ITEM));
-    if (module == NULL) {
-        return -1;
-    }
+    BEGET_CHECK(module != NULL, return -1);
 
     module->handle = NULL;
     module->moduleMgr = moduleMgr;
@@ -189,14 +168,10 @@ static int stringEndsWith(const char *srcStr, const char *endStr)
     int srcStrLen = strlen(srcStr);
     int endStrLen = strlen(endStr);
 
-    if (srcStrLen < endStrLen) {
-        return -1;
-    }
+    BEGET_CHECK(!(srcStrLen < endStrLen), return -1);
 
     srcStr += (srcStrLen - endStrLen);
-    if (strcmp(srcStr, endStr) == 0) {
-        return (srcStrLen - endStrLen);
-    }
+    BEGET_CHECK(strcmp(srcStr, endStr) != 0, return (srcStrLen - endStrLen));
     return -1;
 }
 
@@ -208,9 +183,7 @@ static void scanModules(MODULE_MGR *moduleMgr, const char *path)
     struct dirent *file;
 
     dir = opendir(path);
-    if (dir == NULL) {
-        return;
-    }
+    BEGET_CHECK(dir != NULL, return);
 
     while (1) {
         file = readdir(dir);
@@ -243,18 +216,13 @@ MODULE_MGR *ModuleMgrScan(const char *modulePath)
     char path[PATH_MAX];
 
     moduleMgr = ModuleMgrCreate(modulePath);
-    if (moduleMgr == NULL) {
-        return NULL;
-    }
+    BEGET_CHECK(moduleMgr != NULL, return NULL);
 
     if (modulePath[0] == '/') {
-        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s", modulePath) < 0) {
-            return NULL;
-        }
+        BEGET_CHECK(!(snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s", modulePath) < 0), return NULL);
     } else {
-        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s", modulePath) < 0) {
-            return NULL;
-        };
+        BEGET_CHECK(!(snprintf_s(path, sizeof(path), sizeof(path) - 1,
+            "/system/" MODULE_LIB_NAME "/%s", modulePath) < 0), return NULL);
     }
 
     scanModules(moduleMgr, path);
@@ -275,11 +243,7 @@ static int moduleCompare(ListNode *node, void *data)
 void ModuleMgrUninstall(MODULE_MGR *moduleMgr, const char *name)
 {
     MODULE_ITEM *module;
-
-    if (moduleMgr == NULL) {
-        return;
-    }
-
+    BEGET_CHECK(moduleMgr != NULL, return);
     // Uninstall all modules if no name specified
     if (name == NULL) {
         ListRemoveAll(&(moduleMgr->modules), moduleDestroy);
@@ -288,9 +252,7 @@ void ModuleMgrUninstall(MODULE_MGR *moduleMgr, const char *name)
 
     // Find module by name
     module = (MODULE_ITEM *)ListFind(&(moduleMgr->modules), (void *)name, moduleCompare);
-    if (module == NULL) {
-        return;
-    }
+    BEGET_CHECK(module != NULL, return);
 
     // Remove from the list
     ListRemove((ListNode *)module);
@@ -300,9 +262,6 @@ void ModuleMgrUninstall(MODULE_MGR *moduleMgr, const char *name)
 
 int ModuleMgrGetCnt(const MODULE_MGR *moduleMgr)
 {
-    if (moduleMgr == NULL) {
-        return 0;
-    }
-
+    BEGET_CHECK(moduleMgr != NULL, return 0);
     return ListGetCnt(&(moduleMgr->modules));
 }

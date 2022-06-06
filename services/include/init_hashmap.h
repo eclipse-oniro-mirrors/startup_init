@@ -52,6 +52,7 @@ typedef struct {
 
 typedef void *HashMapHandle;
 
+int HashMapIsEmpty(HashMapHandle handle);
 int32_t HashMapCreate(HashMapHandle *handle, const HashInfo *info);
 void HashMapDestory(HashMapHandle handle);
 int32_t HashMapAdd(HashMapHandle handle, HashNode *hashNode);

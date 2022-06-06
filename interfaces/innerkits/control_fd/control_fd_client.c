@@ -118,17 +118,26 @@ static void CmdDisConnectComplete(const TaskHandle client)
 
 static void CmdAgentInit(WatcherHandle handle, const char *path, bool read, ProcessWatchEvent func)
 {
+    if (path == NULL) {
+        BEGET_LOGE("[control_fd] Invaild parameter");
+        return;
+    }
     BEGET_LOGI("[control_fd] client open %s", (read ? "read" : "write"));
+    char *realPath = GetRealPath(path);
+    if (realPath == NULL) {
+        BEGET_LOGE("[control_fd] Failed get real path %s", path);
+        return;
+    }
     if (read == true) {
-        g_FifoReadFd = open(path, O_RDONLY | O_TRUNC | O_NONBLOCK);
-        BEGET_ERROR_CHECK(g_FifoReadFd >= 0, return, "[control_fd] Failed to open fifo read");
+        g_FifoReadFd = open(realPath, O_RDONLY | O_TRUNC | O_NONBLOCK);
+        BEGET_ERROR_CHECK(g_FifoReadFd >= 0, free(realPath); return, "[control_fd] Failed to open fifo read");
         BEGET_LOGI("[control_fd] g_FifoReadFd is %d", g_FifoReadFd);
     } else {
-        g_FifoWriteFd = open(path, O_WRONLY | O_TRUNC);
-        BEGET_ERROR_CHECK(g_FifoWriteFd >= 0, return, "[control_fd] Failed to open fifo write");
+        g_FifoWriteFd = open(realPath, O_WRONLY | O_TRUNC);
+        BEGET_ERROR_CHECK(g_FifoWriteFd >= 0, free(realPath); return, "[control_fd] Failed to open fifo write");
         BEGET_LOGI("[control_fd] g_FifoWriteFd is %d", g_FifoWriteFd);
     }
-
+    free(realPath);
     // start watcher for stdin
     LE_WatchInfo info = {};
     info.flags = 0;

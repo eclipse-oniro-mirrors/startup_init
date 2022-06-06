@@ -61,6 +61,7 @@ if (defined(ohos_lite)) {
   ohos_executable("begetctl") {
     sources = [
       "bootchart_cmd.c",
+      "dump_service.c",
       "init_cmd_reboot.c",
       "main.c",
       "misc_daemon.cpp",
@@ -129,6 +130,7 @@ if (defined(ohos_lite)) {
       "stop_service",
       "service",
       "sandbox",
+      "dump_service",
     ]
 
     install_images = [ "system" ]

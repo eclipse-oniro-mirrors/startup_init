@@ -20,6 +20,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "securec.h"
 #ifdef OHOS_LITE
@@ -32,6 +33,7 @@
 #include "hilog_base/log_base.h"
 #endif
 
+#define DEF_LOG_SIZE 128
 #define MAX_LOG_SIZE 1024
 #define BASE_YEAR 1900
 
@@ -44,17 +46,16 @@ void SetInitLogLevel(InitLogLevel logLevel)
 #ifdef INIT_FILE
 static void LogToFile(const char *logFile, const char *tag, const char *info)
 {
-    time_t second = time(0);
-    if (second <= 0) {
+    struct timespec curr;
+    if (clock_gettime(CLOCK_REALTIME, &curr) != 0) {
         return;
     }
-    struct tm *t = localtime(&second);
-    FILE *outfile = fopen(logFile, "a+");
-    if (t == NULL || outfile == NULL) {
-        return;
-    }
-    (void)fprintf(outfile, "[%d-%d-%d %d:%d:%d][pid=%d][%s]%s \n",
-        (t->tm_year + BASE_YEAR), (t->tm_mon + 1), t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, getpid(), tag, info);
+    FILE *outfile = NULL;
+    INIT_CHECK_ONLY_RETURN((outfile = fopen(logFile, "a+")) != NULL);
+    struct tm t;
+    char dateTime[80]; // 80 data time
+    strftime(dateTime, sizeof(dateTime), "%Y-%m-%d %H:%M:%S", localtime_r(&curr.tv_sec, &t));
+    (void)fprintf(outfile, "[%s.%ld][pid=%d %d][%s]%s \n", dateTime, curr.tv_nsec, getpid(), gettid(), tag, info);
     (void)fflush(outfile);
     fclose(outfile);
     return;
@@ -105,12 +106,17 @@ void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const 
     }
     va_list vargs;
     va_start(vargs, fmt);
-    char tmpFmt[MAX_LOG_SIZE] = {0};
-    if (vsnprintf_s(tmpFmt, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, fmt, vargs) == -1) {
+    char tmpFmt[DEF_LOG_SIZE] = {0};
+    if (vsnprintf_s(tmpFmt, sizeof(tmpFmt), sizeof(tmpFmt) - 1, fmt, vargs) == -1) {
         va_end(vargs);
+#ifdef OHOS_LITE
+        static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+        (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", fmt);
+#endif
         return;
     }
     va_end(vargs);
+
 #ifdef OHOS_LITE
     static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
     (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);

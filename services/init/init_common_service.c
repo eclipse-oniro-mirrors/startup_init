@@ -105,18 +105,14 @@ static int SetPerms(const Service *service)
         capData[CAP_TO_INDEX(service->servPerm.caps[i])].inheritable |= CAP_TO_MASK(service->servPerm.caps[i]);
     }
 
-    if (capset(&capHeader, capData) != 0) {
-        INIT_LOGE("capset faild for service: %s, error: %d", service->name, errno);
-        return SERVICE_FAILURE;
-    }
+    INIT_ERROR_CHECK(capset(&capHeader, capData) == 0, return SERVICE_FAILURE,
+        "capset faild for service: %s, error: %d", service->name, errno);
     for (unsigned int i = 0; i < service->servPerm.capsCnt; ++i) {
         if (service->servPerm.caps[i] == FULL_CAP) {
             return SetAllAmbientCapability();
         }
-        if (SetAmbientCapability(service->servPerm.caps[i]) != 0) {
-            INIT_LOGE("SetAmbientCapability faild for service: %s", service->name);
-            return SERVICE_FAILURE;
-        }
+        INIT_ERROR_CHECK(SetAmbientCapability(service->servPerm.caps[i]) == 0, return SERVICE_FAILURE,
+            "SetAmbientCapability faild for service: %s", service->name);
     }
     return SERVICE_SUCCESS;
 }
@@ -183,10 +179,8 @@ void SetSecon(Service *service)
             INIT_LOGI("service %s secon set to %s.", service->name, service->secon);
         }
     } else {
-        if (setexeccon("u:r:limit_domain:s0") < 0) {
-            INIT_LOGE("failed to set service %s's secon (%s).", service->name, "u:r:limit_domain:s0");
-            _exit(PROCESS_EXIT_CODE);
-        }
+        INIT_ERROR_CHECK(!(setexeccon("u:r:limit_domain:s0") < 0), _exit(PROCESS_EXIT_CODE),
+            "failed to set service %s's secon (%s).", service->name, "u:r:limit_domain:s0");
         INIT_LOGE("Please set secon field in service %s's cfg file, limit_domain will be blocked", service->name);
     }
 #endif // WITH_SELINUX
@@ -228,22 +222,16 @@ static void PublishHoldFds(Service *service)
                 INIT_LOGE("Duplicate file descriptors of Service \' %s \' failed. err = %d", service->name, errno);
                 continue;
             }
-            if (snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1, "%d ", fd) < 0) {
-                INIT_LOGE("snprintf_s failed err=%d", errno);
-                return;
-            }
+            INIT_ERROR_CHECK(!(snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1,
+                "%d ", fd) < 0), return, "snprintf_s failed err=%d", errno);
             pos = strlen(fdBuffer);
         }
         fdBuffer[pos - 1] = '\0'; // Remove last ' '
         INIT_LOGI("fd buffer: [%s]", fdBuffer);
         char envName[MAX_BUFFER_LEN] = {};
-        if (snprintf_s(envName, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, ENV_FD_HOLD_PREFIX"%s", service->name) < 0) {
-            INIT_LOGE("snprintf_s failed err=%d", errno);
-            return;
-        }
-        if (setenv(envName, fdBuffer, 1) < 0) {
-            INIT_LOGE("Failed to set env %s", envName);
-        }
+        INIT_ERROR_CHECK(!(snprintf_s(envName, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, ENV_FD_HOLD_PREFIX"%s",
+            service->name) < 0), return, "snprintf_s failed err=%d", errno);
+        INIT_CHECK_ONLY_ELOG(!(setenv(envName, fdBuffer, 1) < 0), "Failed to set env %s", envName);
         INIT_LOGI("File descriptors of Service \' %s \' published", service->name);
     }
 }
@@ -258,10 +246,8 @@ static int BindCpuCore(Service *service)
     }
 #ifndef __LITEOS_A__
     int pid = getpid();
-    if (sched_setaffinity(pid, sizeof(service->cpuSet), &service->cpuSet) != 0) {
-        INIT_LOGE("%s set affinity between process(pid=%d) with CPU's core failed", service->name, pid);
-        return SERVICE_FAILURE;
-    }
+    INIT_ERROR_CHECK(sched_setaffinity(pid, sizeof(service->cpuSet), &service->cpuSet) == 0,
+        return SERVICE_FAILURE, "%s set affinity between process(pid=%d) with CPU's core failed", service->name, pid);
     INIT_LOGI("%s set affinity between process(pid=%d) with CPU's core successfully", service->name, pid);
 #endif
     return SERVICE_SUCCESS;
@@ -629,9 +615,7 @@ void ServiceStartTimer(Service *service, uint64_t timeout)
         return;
     }
     status = LE_StartTimer(LE_GetDefaultLoop(), service->timer, timeout, 1);
-    if (status != LE_SUCCESS) {
-        INIT_LOGE("Start service timer for service \' %s \' failed, status = %d", service->name, status);
-        return;
-    }
+    INIT_ERROR_CHECK(status == LE_SUCCESS, return,
+        "Start service timer for service \' %s \' failed, status = %d", service->name, status);
     EnableServiceTimer(service);
 }

@@ -4,7 +4,6 @@ system:x:1000:
 radio:x:1001:
 bluetooth:x:1002:
 graphics:x:1003:
-samgr:x:1005:
 file_manager:x:1006:
 log:x:1007:
 user_data_rw:x:1008:
@@ -17,6 +16,7 @@ keystore:x:1017:
 usb:x:1018:
 drm:x:1019:
 gps:x:1020:
+location_host:x:1021:
 media_rw:x:1023:
 dsoftbus:x:1024:
 nfc:x:1027:
@@ -76,6 +76,7 @@ installs:x:3060:
 deviceauth:x:3333:
 huks_server:x:3510:
 dms:x:5522:
+samgr:x:5555:
 update:x:6666:
 charger:x:6667:
 battery_stats:x:6668:
@@ -101,4 +102,5 @@ watchdog:x:1100:
 paramwatcher:x:1101:
 deviceinfo:x:1102:
 accessibility:x:1103:
+motion_dal_host:x:3065:
 memmgr:x:1111:

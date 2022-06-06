@@ -23,20 +23,17 @@
 #include "sysparam_errno.h"
 #include "securec.h"
 #include "sysversion.h"
+#include "beget_ext.h"
 
 int WaitParameter(const char *key, const char *value, int timeout)
 {
-    if ((key == NULL) || (value == NULL)) {
-        return EC_INVALID;
-    }
+    BEGET_CHECK(!(key == NULL || value == NULL), return EC_INVALID);
     return SystemWaitParameter(key, value, timeout);
 }
 
 uint32_t FindParameter(const char *key)
 {
-    if (key == NULL) {
-        return (uint32_t)(-1);
-    }
+    BEGET_CHECK(key != NULL, return (uint32_t)(-1));
     uint32_t handle = 0;
     int ret = SystemFindParameter(key, &handle);
     if (ret != 0) {
@@ -49,9 +46,7 @@ uint32_t GetParameterCommitId(uint32_t handle)
 {
     uint32_t commitId = 0;
     int ret = SystemGetParameterCommitId(handle, &commitId);
-    if (ret != 0) {
-        return (uint32_t)(-1);
-    }
+    BEGET_CHECK(ret == 0, return (uint32_t)(-1));
     return commitId;
 }
 

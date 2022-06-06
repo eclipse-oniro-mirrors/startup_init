@@ -17,6 +17,7 @@
 #define CONTROL_FD_
 
 #include <stdint.h>
+#include <fcntl.h>
 #include "loop_event.h"
 
 #ifdef __cplusplus
@@ -53,7 +54,7 @@ typedef enum {
 typedef struct {
     uint16_t msgSize;
     uint16_t type;
-    uint32_t pid;
+    pid_t pid;
     char fifoName[FIFO_PATH_SIZE];
     char cmd[0];
 } CmdMessage;

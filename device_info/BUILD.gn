@@ -37,14 +37,11 @@ ohos_shared_library("deviceinfoservice") {
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/interfaces/innerkits/include/syspara",
     "//base/startup/init_lite/interfaces/innerkits/syspara",
+    "//base/startup/init_lite/interfaces/hals",
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:agent_log",
-    "//base/startup/init_lite/services/loopevent:loopevent",
-    "//base/startup/init_lite/services/param:param_client",
-    "//base/startup/init_lite/services/utils:libinit_tools",
-    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/openssl:libcrypto_shared",
   ]

@@ -47,11 +47,7 @@ extern "C" {
 #define SELINUX_CONTENT_LEN 64
 #define SYS_UID_INDEX      1000
 
-typedef enum {
-    DAC_RESULT_PERMISSION = 0,
-    DAC_RESULT_INVALID_PARAM = 1000,
-    DAC_RESULT_FORBIDED,
-} DAC_RESULT;
+#define DAC_RESULT_PERMISSION 0
 
 typedef struct UserCred {
     pid_t pid;

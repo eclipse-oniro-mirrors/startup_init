@@ -31,9 +31,7 @@ static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHand
         watcher->processEvent(taskHandle, fd, &events, (void *)userData);
     }
     watcher = (WatcherTask *)GetTaskByFd((EventLoop *)loopHandle, fd);
-    if (watcher == NULL) {
-        return 0;
-    }
+    LE_ONLY_CHECK(watcher != NULL, return 0);
     if (watcher->base.flags & WATCHER_ONCE) {
         loop->delEvent(loop, fd, watcher->events);
         return 0;
