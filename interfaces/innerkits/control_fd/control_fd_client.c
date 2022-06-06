@@ -70,6 +70,9 @@ static void ProcessFifoRead(const WatcherHandle taskHandle, int fd, uint32_t *ev
     int readlen = read(fd, buf, FIFO_BUF_SIZE - 1);
     if (readlen > 0) {
         fprintf(stdout, "%s", buf);
+    } else {
+        DestroyCmdFifo(g_FifoReadFd, g_FifoWriteFd, g_FifoReadPath, g_FifoWritePath);
+        return;
     }
     int ret = fflush(stdout);
     BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed fflush err=%d", errno);
@@ -79,20 +82,21 @@ static void ProcessFifoRead(const WatcherHandle taskHandle, int fd, uint32_t *ev
     *events = Event_Read;
 }
 
-static void DestroyCmdFifo(void)
+void DestroyCmdFifo(int rfd, int wfd, const char *readPath, const char *writePath)
 {
-    if (g_FifoReadFd >= 0) {
-        (void)close(g_FifoReadFd);
+    if (rfd >= 0) {
+        (void)close(rfd);
     }
-    if (g_FifoWriteFd >= 0) {
-        (void)close(g_FifoWriteFd);
+    if (wfd >= 0) {
+        (void)close(wfd);
     }
-    g_FifoReadFd = -1;
-    g_FifoWriteFd = -1;
-    int ret = unlink(g_FifoReadPath);
-    BEGET_CHECK_ONLY_ELOG(ret == 0, "Failed unlink fifo %s", g_FifoReadPath);
-    ret = unlink(g_FifoWritePath);
-    BEGET_CHECK_ONLY_ELOG(ret == 0, "Failed unlink fifo %s", g_FifoReadPath);
+
+    if (readPath != NULL) {
+        BEGET_CHECK_ONLY_ELOG(unlink(readPath) == 0, "Failed unlink fifo %s", readPath);
+    }
+    if (writePath != NULL) {
+        BEGET_CHECK_ONLY_ELOG(unlink(writePath) == 0, "Failed unlink fifo %s", writePath);
+    }
 }
 
 static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
@@ -108,7 +112,7 @@ static void CmdOnConntectComplete(const TaskHandle client)
 static void CmdOnClose(const TaskHandle task)
 {
     BEGET_LOGI("[control_fd] CmdOnClose");
-    DestroyCmdFifo();
+    DestroyCmdFifo(g_FifoReadFd, g_FifoWriteFd, g_FifoReadPath, g_FifoWritePath);
 }
 
 static void CmdDisConnectComplete(const TaskHandle client)
@@ -270,5 +274,5 @@ void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd, const
     BEGET_LOGI("Cmd Client exit ");
     LE_CloseStreamTask(LE_GetDefaultLoop(), agent->task);
     free(agent);
-    DestroyCmdFifo();
+    DestroyCmdFifo(g_FifoReadFd, g_FifoWriteFd, g_FifoReadPath, g_FifoWritePath);
 }

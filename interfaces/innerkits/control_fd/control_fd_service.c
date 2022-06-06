@@ -41,24 +41,15 @@ static void CmdOnSendMessageComplete(const TaskHandle task, const BufferHandle h
     BEGET_LOGI("[control_fd] CmdOnSendMessageComplete ");
 }
 
-static int OpenFifo(int pid, bool read, const char *pipeName)
+static int OpenFifo(bool read, const char *pipePath)
 {
     // create pipe for cmd
-    if (pipeName == NULL) {
+    if (pipePath == NULL) {
         return -1;
-    }
-    char buffer[FIFO_PATH_SIZE] = {0};
-    int ret = 0;
-    if (read == true) {
-        ret = sprintf_s(buffer, sizeof(buffer) - 1, "/dev/fifo/%s1.%d", pipeName, pid);
-        BEGET_ERROR_CHECK(ret > 0, return -1, "[control_fd] Failed sprintf_s err=%d", errno);
-    } else {
-        ret = sprintf_s(buffer, sizeof(buffer) - 1, "/dev/fifo/%s0.%d", pipeName, pid);
-        BEGET_ERROR_CHECK(ret > 0, return -1, "[control_fd] Failed sprintf_s err=%d", errno);
     }
 
     int flags = read ? (O_RDONLY | O_TRUNC | O_NONBLOCK) : (O_WRONLY | O_TRUNC);
-    return open(buffer, flags);
+    return open(pipePath, flags);
 }
 
 static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
@@ -73,11 +64,16 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
         BEGET_LOGE("[control_fd] Failed msg ");
         return;
     }
-
-    int reader = OpenFifo(msg->pid, true, msg->fifoName); // read
+    char readPath[FIFO_PATH_SIZE] = {0};
+    int ret = sprintf_s(readPath, sizeof(readPath) - 1, "/dev/fifo/%s1.%d", msg->fifoName, msg->pid);
+    BEGET_ERROR_CHECK(ret > 0, return, "[control_fd] Failed sprintf_s err=%d", errno);
+    int reader = OpenFifo(true, readPath); // read
     BEGET_ERROR_CHECK(reader > 0, return, "[control_fd] Failed to open filo");
 
-    int writer = OpenFifo(msg->pid, false, msg->fifoName); // write
+    char writePath[FIFO_PATH_SIZE] = {0};
+    ret = sprintf_s(writePath, sizeof(writePath) - 1, "/dev/fifo/%s0.%d", msg->fifoName, msg->pid);
+    BEGET_ERROR_CHECK(ret > 0, return, "[control_fd] Failed sprintf_s err=%d", errno);
+    int writer = OpenFifo(false, writePath); // write
     BEGET_ERROR_CHECK(writer > 0, return, "[control_fd] Failed to open filo");
 
     pid_t pid = fork();
@@ -85,11 +81,14 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
         (void)dup2(reader, STDIN_FILENO);
         (void)dup2(writer, STDOUT_FILENO);
         (void)dup2(writer, STDERR_FILENO); // Redirect fd to 0, 1, 2
+        (void)close(reader);
+        (void)close(writer);
         g_controlFdFunc(msg->type, msg->cmd, NULL);
         exit(0);
     } else if (pid < 0) {
         BEGET_LOGE("[control_fd] Failed fork service");
     }
+    DestroyCmdFifo(reader, writer, readPath, writePath);
     return;
 }
 

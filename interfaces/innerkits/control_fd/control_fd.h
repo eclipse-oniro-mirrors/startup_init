@@ -61,6 +61,7 @@ typedef struct {
 
 void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func);
 void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd, const char *fifoName);
+void DestroyCmdFifo(int rfd, int wfd, const char *readPath, const char *writePath);
 
 #ifdef __cplusplus
 #if __cplusplus
