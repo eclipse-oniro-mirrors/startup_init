@@ -135,9 +135,9 @@ int32_t WatcherManagerKits::AddWatcher(const std::string &keyPrefix, ParameterCh
     watcher = new ParamWatcher(keyPrefix, callback, context);
     WATCHER_CHECK(watcher != nullptr, return -1, "Failed to create watcher for %s", keyPrefix.c_str());
     auto watcherManager = GetService();
-    WATCHER_CHECK(watcherManager != nullptr, delete watcher; return -1, "Failed to get watcher manager");
+    WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to get watcher manager");
     uint32_t watcherId = watcherManager->AddWatcher(keyPrefix, watcher);
-    WATCHER_CHECK(watcherId != 0, delete watcher; return -1, "Failed to add watcher for %s", keyPrefix.c_str());
+    WATCHER_CHECK(watcherId != 0, return -1, "Failed to add watcher for %s", keyPrefix.c_str());
     watcher->SetWatcherId(watcherId);
     SetParamWatcher(keyPrefix, watcher);
     return watcher->GetWatcherId();
