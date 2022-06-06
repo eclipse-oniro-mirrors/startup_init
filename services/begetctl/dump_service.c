@@ -38,7 +38,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
 
 MODULE_CONSTRUCTOR(void)
 {
-    CmdInfo infos[] = {
+    const CmdInfo infos[] = {
         {"dump_service", main_cmd, "dump one service info by serviceName", "dump_service serviceName", NULL},
         {"dump_service", main_cmd, "dump all services info", "dump_service all", NULL},
     };
