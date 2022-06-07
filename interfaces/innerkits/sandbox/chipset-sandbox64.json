@@ -1,5 +1,5 @@
 {
-    "sandbox-root" : "/mnt/sandbox/system",
+    "sandbox-root" : "/mnt/sandbox/chipset",
     "mount-bind-paths" : [{
             "src-path" : "/system/bin",
             "sandbox-path" : "/system/bin",
