@@ -103,3 +103,4 @@ paramwatcher:x:1101:
 deviceinfo:x:1102:
 accessibility:x:1103:
 motion_dal_host:x:3065:
+memmgr:x:1111:
