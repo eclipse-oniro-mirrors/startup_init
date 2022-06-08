@@ -438,7 +438,7 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
             processFile(fileName, context);
         }
     }
-    INIT_LOGI("ReadFileInDir dirPath %s %d", dirPath, count);
+    INIT_LOGV("ReadFileInDir dirPath %s %d", dirPath, count);
     free(fileName);
     closedir(pDir);
     return 0;

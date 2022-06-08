@@ -20,6 +20,7 @@
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_utils.h"
+#include "param_base.h"
 #ifdef PARAM_SUPPORT_SELINUX
 #include "selinux_parameter.h"
 #endif
@@ -41,6 +42,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
     security->cred.uid = geteuid();
     security->cred.gid = getegid();
     security->flags[PARAM_SECURITY_SELINUX] = 0;
+    PARAM_LOGV("InitLocalSecurityLabel");
 #if !(defined STARTUP_INIT_TEST || defined LOCAL_TEST)
     if (g_selinuxSpace.selinuxHandle == NULL) {
         const char *libname = (InUpdaterMode() == 1) ? CHECKER_UPDATER_LIB_NAME : CHECKER_LIB_NAME;
@@ -111,6 +113,7 @@ static int SelinuxGetAllLabel(int readOnly)
     int ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, readOnly, PARAM_WORKSPACE_MAX);
     PARAM_CHECK(ret == 0, return -1,
         "Failed to add selinux workspace %s", WORKSPACE_NAME_DEF_SELINUX);
+    PARAM_LOGI("SelinuxGetAllLabel count %d", count);
     return 0;
 }
 
@@ -171,10 +174,10 @@ static int UpdaterCheckParamPermission(const ParamSecurityLabel *srcLabel, const
     return DAC_RESULT_PERMISSION;
 }
 
-int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
+INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
 {
     PARAM_CHECK(ops != NULL, return -1, "Invalid param");
-    int ret = strcpy_s(ops->name, sizeof(ops->name), "selinux");
+    int ret = ParamStrCpy(ops->name, sizeof(ops->name), "selinux");
     ops->securityGetLabel = NULL;
     ops->securityInitLabel = InitLocalSecurityLabel;
     ops->securityCheckFilePermission = CheckFilePermission;
@@ -190,7 +193,7 @@ int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
     return ret;
 }
 
-const char *GetSelinuxContent(const char *name)
+INIT_INNER_API const char *GetSelinuxContent(const char *name)
 {
     if (g_selinuxSpace.getParamLabel != NULL) {
         return g_selinuxSpace.getParamLabel(name);
@@ -200,7 +203,7 @@ const char *GetSelinuxContent(const char *name)
     }
 }
 
-void OpenPermissionWorkSpace(void)
+INIT_LOCAL_API void OpenPermissionWorkSpace(void)
 {
     // open workspace by readonly
     SelinuxGetAllLabel(1);

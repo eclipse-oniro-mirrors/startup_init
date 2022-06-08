@@ -17,7 +17,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "init_log.h"
 
 #ifdef __cplusplus
 #if __cplusplus

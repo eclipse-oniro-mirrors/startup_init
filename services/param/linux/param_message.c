@@ -21,8 +21,8 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include "param_message.h"
 #include "param_utils.h"
+#include "securec.h"
 
 int ConntectServer(int fd, const char *servername)
 {

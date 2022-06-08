@@ -13,13 +13,21 @@
 
 import("//build/ohos.gni")
 
-ohos_static_library("libfdholder_internal_static") {
+config("exported_header_files") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init_lite/interfaces/innerkits/fd_holder",
+  ]
+}
+
+ohos_static_library("fdholder") {
   sources = [ "fd_holder_internal.c" ]
   include_dirs = [
-    ".",
+    "//base/startup/init_lite/services/loopevent/include",
     "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/log",
     "//base/startup/init_lite/interfaces/innerkits/include",
   ]
+  public_configs = [ ":exported_header_files" ]
   part_name = "init"
 }

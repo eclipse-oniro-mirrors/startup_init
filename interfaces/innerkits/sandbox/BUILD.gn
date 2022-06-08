@@ -16,13 +16,11 @@ import("//build/ohos.gni")
 
 config("exported_header_files") {
   visibility = [ ":*" ]
-  include_dirs = [ "include/" ]
+  include_dirs =
+      [ "//base/startup/init_lite/interfaces/innerkits/sandbox/include" ]
 }
 
-ohos_shared_library("libsandbox") {
-  if (target_cpu == "arm64") {
-    defines = [ "SUPPORT_64BIT" ]
-  }
+ohos_static_library("sandbox") {
   sources = [
     "sandbox.c",
     "sandbox_namespace.c",
@@ -33,35 +31,6 @@ ohos_shared_library("libsandbox") {
     "//base/startup/init_lite/services/include",
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//third_party/cJSON",
-  ]
-  deps = [
-    "//base/startup/init_lite/services/utils:libinit_utils",
-    "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/cJSON:cjson_static",
-  ]
-
-  deps += [ "//base/startup/init_lite/services/log:agent_log" ]
-
-  part_name = "init"
-  install_images = [ "system" ]
-}
-
-# For init only
-ohos_static_library("libsandbox_static") {
-  sources = [
-    "sandbox.c",
-    "sandbox_namespace.c",
-  ]
-  public_configs = [ ":exported_header_files" ]
-  include_dirs = [
-    "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/include",
-    "//third_party/cJSON",
-  ]
-  deps = [
-    "//base/startup/init_lite/services/utils:libinit_utils",
-    "//third_party/cJSON:cjson_static",
   ]
   if (target_cpu == "arm64") {
     defines = [ "SUPPORT_64BIT" ]

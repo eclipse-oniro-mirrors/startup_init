@@ -22,7 +22,6 @@
 #include "list.h"
 #include "param_message.h"
 #include "param_utils.h"
-#include "securec.h"
 #include "trigger_checker.h"
 
 #ifdef __cplusplus

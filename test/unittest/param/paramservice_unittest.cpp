@@ -249,9 +249,9 @@ public:
         SystemTraversalParameter(
             "",
             [](ParamHandle handle, void *cookie) {
-                ReadParamName(handle, (char *)cookie, PARAM_BUFFER_SIZE);
+                SystemGetParameterName(handle, (char *)cookie, PARAM_BUFFER_SIZE);
                 u_int32_t len = PARAM_BUFFER_SIZE;
-                ReadParamValue(handle, ((char *)cookie) + PARAM_BUFFER_SIZE, &len);
+                SystemGetParameterValue(handle, ((char *)cookie) + PARAM_BUFFER_SIZE, &len);
                 printf("$$$$$$$$Param %s=%s \n", (char *)cookie, ((char *)cookie) + PARAM_BUFFER_SIZE);
             },
             (void *)value);

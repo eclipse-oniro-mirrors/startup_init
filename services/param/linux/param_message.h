@@ -22,7 +22,6 @@
 #include "loop_event.h"
 #include "param_osadp.h"
 #include "param_utils.h"
-#include "securec.h"
 
 #ifdef __cplusplus
 #if __cplusplus

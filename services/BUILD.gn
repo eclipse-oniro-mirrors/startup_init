@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021 Huawei Device Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,242 +11,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//base/startup/init_lite/begetd.gni")
+group("startup_init") {
+  deps = []
 
-init_common_sources = [
-  "init/init_capability.c",
-  "init/init_common_cmds.c",
-  "init/init_common_service.c",
-  "init/init_config.c",
-  "init/init_group_manager.c",
-  "init/init_service_file.c",
-  "init/init_service_manager.c",
-  "init/init_service_socket.c",
-  "init/main.c",
-]
-
-if (defined(ohos_lite)) {
-  # feature: init
-  executable("lite_init") {
-    output_name = "init"
-    defines = [
-      "_GNU_SOURCE",
-      "OHOS_LITE",
-      "__MUSL__",
-    ]
-    if (enable_ohos_startup_init_feature_begetctl_liteos) {
-      defines += [ "LITEOS_SUPPORT" ]
-    }
-    sources = [
-      "init/adapter/init_adapter.c",
-      "init/lite/init.c",
-      "init/lite/init_cmds.c",
-      "init/lite/init_jobs.c",
-      "init/lite/init_reboot.c",
-      "init/lite/init_service.c",
-      "init/lite/init_signal_handler.c",
-    ]
-    sources += init_common_sources
-
-    include_dirs = [
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/include/param",
-      "//base/startup/init_lite/services/init/include",
-      "//base/startup/init_lite/services/log",
-      "//base/startup/init_lite/services/loopevent/include",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//third_party/cJSON",
-      "//third_party/bounds_checking_function/include",
-      "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
-      "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-    ]
-
-    cflags = [ "-Wall" ]
-    ldflags = []
+  # for liteos
+  if (defined(ohos_lite) && ohos_kernel_type != "liteos_m") {
     deps = [
-      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
-      "//base/startup/init_lite/services/log:init_log",
-      "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/param:param_init",
-      "//base/startup/init_lite/services/utils:libinit_tools",
-      "//build/lite/config/component/cJSON:cjson_static",
-      "//third_party/bounds_checking_function:libsec_static",
-    ]
-
-    if (ohos_kernel_type == "liteos_a") {
-      defines += [ "__LITEOS_A__" ]
-      include_dirs += [
-        "//kernel/liteos_a/syscall",
-        "//kernel/liteos_a/kernel/include",
-        "//base/startup/init_lite/interfaces/kits/syscap",
-        "//base/startup/init_lite/initsync/include",
-      ]
-      deps += [ "//base/startup/init_lite/initsync:initsync" ]
-    }
-    if (ohos_kernel_type == "linux") {
-      defines += [
-        "NEED_EXEC_RCS_LINUX",
-        "__LINUX__",
-      ]
-      ldflags += [
-        "-lm",
-        "-lpthread",
-      ]
-      deps += [
-        "//third_party/mksh",
-        "//third_party/toybox",
-      ]
-    }
-  }
-
-  group("init_lite") {
-    if (ohos_kernel_type != "liteos_m") {
-      deps = [
-        ":lite_init",
-        "etc:etc_files",
-      ]
-    }
-  }
-  group("unittest") {
-    if (ohos_build_type == "debug" && ohos_kernel_type != "liteos_m") {
-      deps = [ "//base/startup/init_lite/test/unittest/lite:init_test" ]
-    }
-  }
-} else {
-  import("//build/ohos.gni")
-  import("//build/ohos/native_stub/native_stub.gni")
-
-  ohos_executable("init") {
-    sources = [
-      "//base/startup/init_lite/interfaces/innerkits/fd_holder/fd_holder_internal.c",
-      "init/adapter/init_adapter.c",
-      "init/standard/device.c",
-      "init/standard/fd_holder_service.c",
-      "init/standard/init.c",
-      "init/standard/init_cmdexecutor.c",
-      "init/standard/init_cmds.c",
-      "init/standard/init_control_fd_service.c",
-      "init/standard/init_jobs.c",
-      "init/standard/init_mount.c",
-      "init/standard/init_reboot.c",
-      "init/standard/init_service.c",
-      "init/standard/init_signal_handler.c",
-      "init/standard/switch_root.c",
-    ]
-
-    modulemgr_sources = [
-      "//base/startup/init_lite/interfaces/innerkits/hookmgr/hookmgr.c",
-      "//base/startup/init_lite/interfaces/innerkits/modulemgr/modulemgr.c",
-    ]
-    sources += modulemgr_sources
-
-    sources += init_common_sources
-
-    include_dirs = [
-      "//base/customization/config_policy/interfaces/innerkits/include",
-      "//base/security/access_token/interfaces/innerkits/token_setproc/include",
-      "//base/security/access_token/interfaces/innerkits/nativetoken/include",
-      "//base/startup/init_lite/interfaces/innerkits/sandbox/include",
-      "//base/startup/init_lite/services/include/param",
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/init/include",
-      "//base/startup/init_lite/interfaces/innerkits/init_module_engine/include",
-      "//base/startup/init_lite/services/log",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/services/loopevent/include",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-      "//base/startup/init_lite/ueventd/include",
-      "//third_party/cJSON",
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init_lite/interfaces/innerkits/control_fd",
-    ]
-    deps = [
-      "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
-      "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
-      "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
-      "//base/startup/init_lite/interfaces/innerkits:libfsmanager_static",
-      "//base/startup/init_lite/interfaces/innerkits/control_fd:libcontrolfd_static",
-      "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox_static",
-      "//base/startup/init_lite/services/log:init_log",
-      "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/param:param_init",
-      "//base/startup/init_lite/services/utils:libinit_tools",
-      "//base/startup/init_lite/services/utils:libinit_utils",
-      "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
-      "//third_party/bounds_checking_function:libsec_static",
-      "//third_party/cJSON:cjson_static",
-    ]
-
-    deps += [ "//base/startup/init_lite/interfaces/innerkits/init_module_engine:libinit_stub_versionscript" ]
-    deps += [ "//base/startup/init_lite/interfaces/innerkits/init_module_engine:init_module_engine_sources" ]
-
-    deps += [ "//base/startup/init_lite/services/modules:static_modules" ]
-
-    cflags = []
-
-    if (use_musl) {
-      deps += [
-        "//third_party/mksh:sh",
-        "//third_party/toybox:toybox",
-      ]
-    }
-
-    if (build_selinux) {
-      include_dirs += [
-        "//third_party/selinux/libselinux/include/",
-        "//base/security/selinux/interfaces/policycoreutils/include/",
-      ]
-      deps += [
-        "//base/security/selinux:libload_policy",
-        "//base/security/selinux:librestorecon",
-        "//third_party/selinux:libselinux",
-      ]
-      cflags += [ "-DWITH_SELINUX" ]
-    }
-
-    defines = [ "PARAM_SUPPORT_TRIGGER" ]
-    if (param_test) {
-      defines += [
-        "OHOS_SERVICE_DUMP",
-        "INIT_TEST",
-      ]
-    }
-
-    if (target_cpu == "arm64") {
-      defines += [ "SUPPORT_64BIT" ]
-    }
-
-    if (!enable_ramdisk) {
-      defines += [ "DISABLE_INIT_TWO_STAGES" ]
-    }
-    if (support_jsapi) {
-      defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
-    }
-
-    if (defined(product_name) && product_name == "rk3568") {
-      defines += [ "PRODUCT_RK" ]
-    }
-    version_script = get_label_info(
-                         "//base/startup/init_lite/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
-                         "target_gen_dir") + "/" + get_label_info(
-                         "//base/startup/init_lite/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
-                         "name") + stub_version_script_suffix
-    defines += [ "_GNU_SOURCE" ]
-    install_images = [
-      "system",
-      "updater",
-      "ramdisk",
-    ]
-    install_enable = true
-    part_name = "init"
-  }
-
-  group("startup_init") {
-    deps = [
-      ":init",
       "etc:etc_files",
-      "//base/startup/init_lite/services/param:param_client",
-      "//base/startup/init_lite/services/param:param_init",
+      "init/lite:init",
+    ]
+
+    # for unittest
+    if (ohos_build_type == "debug") {
+      deps += [ "//base/startup/init_lite/test/unittest/lite:init_test" ]
+    }
+  }
+
+  # for standard
+  if (!defined(ohos_lite)) {
+    deps = [
+      "etc:etc_files",
+      "init/standard:init",
     ]
     if (enable_ohos_startup_init_feature_watcher) {
       deps += [

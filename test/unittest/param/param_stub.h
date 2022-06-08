@@ -22,6 +22,7 @@
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_utils.h"
+#include "securec.h"
 
 #ifdef __cplusplus
 #if __cplusplus

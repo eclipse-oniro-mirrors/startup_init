@@ -19,23 +19,24 @@
 #endif
 
 #define MIN_SLEEP (100 * 1000)
-static ClientWorkSpace g_clientSpace = {};
+static int g_flags = 0;
 __attribute__((constructor)) static void ClientInit(void);
 __attribute__((destructor)) static void ClientDeinit(void);
 
 static int InitParamClient(void)
 {
-    if (PARAM_TEST_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT)) {
+    if (PARAM_TEST_FLAG(g_flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
 #ifdef __LITEOS_M__
     int ret = InitParamWorkSpace(0);
 #else
+    EnableInitLog(INIT_INFO);
     int ret = InitParamWorkSpace(1);
 #endif
     PARAM_LOGV("InitParamClient");
     PARAM_CHECK(ret == 0, return -1, "Failed to init param workspace");
-    PARAM_SET_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT);
+    PARAM_SET_FLAG(g_flags, WORKSPACE_FLAGS_INIT);
     // init persist to save
     InitPersistParamWorkSpace();
 #ifdef PARAM_LOAD_CFG_FROM_CODE
@@ -65,10 +66,10 @@ void ClientInit(void)
 
 void ClientDeinit(void)
 {
-    if (PARAM_TEST_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT)) {
+    if (PARAM_TEST_FLAG(g_flags, WORKSPACE_FLAGS_INIT)) {
         CloseParamWorkSpace();
     }
-    PARAM_SET_FLAG(g_clientSpace.flags, 0);
+    PARAM_SET_FLAG(g_flags, 0);
 }
 
 int SystemSetParameter(const char *name, const char *value)

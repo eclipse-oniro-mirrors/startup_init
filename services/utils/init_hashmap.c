@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "init_hashmap.h"
+#include "init_log.h"
 
 typedef struct {
     HashNodeCompare nodeCompare;
@@ -39,8 +40,7 @@ int32_t HashMapCreate(HashMapHandle *handle, const HashInfo *info)
     tab->keyCompare = info->keyCompare;
     tab->nodeHash = info->nodeHash;
     tab->nodeFree = info->nodeFree;
-    tab->tableId = g_tableId;
-    INIT_LOGI("Create hash map success %d", g_tableId);
+    tab->tableId = g_tableId++;
     *handle = (HashMapHandle)tab;
     return 0;
 }

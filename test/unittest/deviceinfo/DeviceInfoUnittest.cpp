@@ -69,7 +69,9 @@ HWTEST_F(DeviceInfoUnittest, GetDevUdidTest, TestSize.Level1)
     ASSERT_NE(nullptr, samgr);
     OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
     auto deathRecipientPtr = instance.GetDeathRecipient();
-    deathRecipientPtr->OnRemoteDied(object);
+    if (deathRecipientPtr) {
+        deathRecipientPtr->OnRemoteDied(object);
+    }
 }
 HWTEST_F(DeviceInfoUnittest, StubTest, TestSize.Level1)
 {

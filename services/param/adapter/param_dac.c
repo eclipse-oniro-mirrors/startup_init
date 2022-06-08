@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,19 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <errno.h>
 #include <grp.h>
 #include <pwd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <errno.h>
+#include <dirent.h>
+#include <fcntl.h>
 
 #include "init_utils.h"
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_trie.h"
 #include "param_utils.h"
+#include "param_base.h"
 
 #define USER_BUFFER_LEN 64
+#define MAX_BUF_SIZE  1024
 #define GROUP_FORMAT "const.group"
 
 #define OCT_BASE 8
@@ -141,8 +146,41 @@ static int DacGetParamSecurityLabel(const char *path)
     if ((stat(path, &st) == 0) && !S_ISDIR(st.st_mode)) {
         return ProcessParamFile(path, NULL);
     }
+
     PARAM_LOGV("DacGetParamSecurityLabel %s ", path);
-    return ReadFileInDir(path, ".para.dac", ProcessParamFile, NULL);
+    DIR *pDir = opendir(path);
+    PARAM_CHECK(pDir != NULL, return -1, "Read dir :%s failed.%d", path, errno);
+    char *fileName = malloc(MAX_BUF_SIZE);
+    PARAM_CHECK(fileName != NULL, closedir(pDir);
+        return -1, "Failed to malloc for %s", path);
+
+    struct dirent *dp;
+    uint32_t count = 0;
+    while ((dp = readdir(pDir)) != NULL) {
+        if (dp->d_type == DT_DIR) {
+            continue;
+        }
+        char *tmp = strstr(dp->d_name, ".para.dac");
+        if (tmp == NULL) {
+            continue;
+        }
+        if (strcmp(tmp, ".para.dac") != 0) {
+            continue;
+        }
+        int ret = ParamSprintf(fileName, MAX_BUF_SIZE, "%s/%s", path, dp->d_name);
+        if (ret <= 0) {
+            PARAM_LOGE("Failed to get file name for %s", dp->d_name);
+            continue;
+        }
+        if ((stat(fileName, &st) == 0) && !S_ISDIR(st.st_mode)) {
+            count++;
+            ProcessParamFile(fileName, NULL);
+        }
+    }
+    PARAM_LOGI("DacGetParamSecurityLabel path %s %d", path, count);
+    free(fileName);
+    closedir(pDir);
+    return 0;
 }
 
 static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char *fileName, int flags)
@@ -157,7 +195,7 @@ static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
 #ifdef __MUSL__
     static char buffer[USER_BUFFER_LEN] = {0};
     uint32_t labelIndex = 0;
-    int ret = sprintf_s(buffer, sizeof(buffer) - 1, "%s.%d.%d", GROUP_FORMAT, groupId, uid);
+    int ret = ParamSprintf(buffer, sizeof(buffer), "%s.%d.%d", GROUP_FORMAT, groupId, uid);
     PARAM_CHECK(ret >= 0, return -1, "Failed to format name for %s.%d.%d", GROUP_FORMAT, groupId, uid);
     (void)FindTrieNode(space, buffer, strlen(buffer), &labelIndex);
     ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
@@ -204,12 +242,11 @@ static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const cha
     return ret;
 }
 
-int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
+INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
 {
     PARAM_CHECK(ops != NULL, return -1, "Invalid param");
     PARAM_LOGV("RegisterSecurityDacOps %d", isInit);
-    int ret = strcpy_s(ops->name, sizeof(ops->name), "dac");
-    ops->securityGetLabel = NULL;
+    int ret = ParamStrCpy(ops->name, sizeof(ops->name), "dac");
     ops->securityInitLabel = InitLocalSecurityLabel;
     ops->securityCheckFilePermission = CheckFilePermission;
     ops->securityCheckParamPermission = DacCheckParamPermission;
@@ -224,7 +261,7 @@ static void AddGroupUser(unsigned int uid, unsigned int gid, int mode, const cha
 {
     ParamAuditData auditData = {0};
     char buffer[USER_BUFFER_LEN] = {0};
-    int ret = sprintf_s(buffer, sizeof(buffer) - 1, "%s.%u.%u", format, gid, uid);
+    int ret = ParamSprintf(buffer, sizeof(buffer), "%s.%u.%u", format, gid, uid);
     PARAM_CHECK(ret >= 0, return, "Failed to format name for %s.%d.%d", format, gid, uid);
     auditData.name = buffer;
     auditData.dacData.uid = uid;
@@ -233,7 +270,7 @@ static void AddGroupUser(unsigned int uid, unsigned int gid, int mode, const cha
     AddSecurityLabel(&auditData);
 }
 
-void LoadGroupUser(void)
+INIT_LOCAL_API void LoadGroupUser(void)
 {
 #ifndef __MUSL__
     return;

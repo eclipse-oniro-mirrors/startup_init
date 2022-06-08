@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,56 +26,33 @@
 #include "param_manager.h"
 #include "param_message.h"
 #include "param_security.h"
+#include "securec.h"
 
 #define INVALID_SOCKET (-1)
-#define INIT_PROCESS_PID 1
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
 static atomic_uint g_requestId = ATOMIC_VAR_INIT(1);
-static ClientWorkSpace g_clientSpace = {};
-__attribute__((constructor(100))) static void ClientInit(void);
-__attribute__((destructor)) static void ClientDeinit(void);
+static int g_clientFd = INVALID_SOCKET;
+pthread_mutex_t g_clientMutex = PTHREAD_MUTEX_INITIALIZER;
 
-static int InitParamClient(void)
+__attribute__((constructor)) static void ParameterInit(void)
 {
-    if (getpid() == INIT_PROCESS_PID) {
-        PARAM_LOGI("Init process, do not init client");
-        return 0;
+    if (getpid() == 1) {
+        return;
     }
-    if (PARAM_TEST_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT)) {
-        return 0;
-    }
-    PARAM_LOGI("InitParamClient %p", &g_clientSpace);
-    pthread_mutex_init(&g_clientSpace.mutex, NULL);
-    g_clientSpace.clientFd = INVALID_SOCKET;
-    int ret = InitParamWorkSpace(1);
-    PARAM_CHECK(ret == 0, return -1, "Failed to init param workspace");
-    PARAM_SET_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT);
-    PARAM_LOGI("InitParamClient %p finish", &g_clientSpace);
-    return 0;
+    EnableInitLog(INIT_INFO);
+    PARAM_LOGI("ParameterInit ");
+    InitParamWorkSpace(1);
 }
 
-void ClientInit(void)
+__attribute__((destructor)) static void ParameterDeinit(void)
 {
-    PARAM_LOGV("ClientInit");
-#ifndef STARTUP_INIT_TEST
-    (void)InitParamClient();
-#endif
-}
-
-void ClientDeinit(void)
-{
-    PARAM_LOGI("ClientDeinit %p", &g_clientSpace);
-#ifndef STARTUP_INIT_TEST
-    if (PARAM_TEST_FLAG(g_clientSpace.flags, WORKSPACE_FLAGS_INIT)) {
-        CloseParamWorkSpace();
+    PARAM_LOGI("ParameterDeinit ");
+    if (g_clientFd != INVALID_SOCKET) {
+        close(g_clientFd);
+        g_clientFd = INVALID_SOCKET;
     }
-#endif
-    if (g_clientSpace.clientFd != INVALID_SOCKET) {
-        close(g_clientSpace.clientFd);
-    }
-    PARAM_SET_FLAG(g_clientSpace.flags, 0);
-    pthread_mutex_destroy(&g_clientSpace.mutex);
-    PARAM_LOGI("ClientDeinit %p finish", &g_clientSpace);
+    CloseParamWorkSpace();
+    pthread_mutex_destroy(&g_clientMutex);
 }
 
 static int ProcessRecvMsg(const ParamMessage *recvMsg)
@@ -99,7 +76,7 @@ static int ProcessRecvMsg(const ParamMessage *recvMsg)
     return result;
 }
 
-static int ReadMessage(int fd, char *buffer, int timeout)
+static int ReadMessage(int fd, char *buffer, uint32_t timeout)
 {
     int ret = 0;
     uint32_t diff = 0;
@@ -123,7 +100,7 @@ static int ReadMessage(int fd, char *buffer, int timeout)
         }
     } while (1);
     if (ret != 0) {
-        PARAM_LOGE("ReadMessage fd: %d errno %d diff %u timeout %d ret %d", errno, diff, timeout, ret);
+        PARAM_LOGE("ReadMessage errno %d diff %u timeout %d ret %d", errno, diff, timeout, ret);
     }
     return ret;
 }
@@ -161,7 +138,6 @@ static int StartRequest(int clientFd, ParamMessage *request, int timeout)
 
 int SystemSetParameter(const char *name, const char *value)
 {
-    (void)InitParamClient();
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value");
     int ctrlService = 0;
     int ret = CheckParameterSet(name, value, GetParamSecurityLabel(), &ctrlService);
@@ -179,13 +155,14 @@ int SystemSetParameter(const char *name, const char *value)
     request->msgSize = offset + sizeof(ParamMessage);
     request->id.msgId = atomic_fetch_add(&g_requestId, 1);
 
+    PARAM_LOGI("SystemSetParameter name %s", name);
     int fd = INVALID_SOCKET;
-    pthread_mutex_lock(&g_clientSpace.mutex);
-    if (g_clientSpace.clientFd == INVALID_SOCKET) {
-        g_clientSpace.clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
+    pthread_mutex_lock(&g_clientMutex);
+    if (g_clientFd == INVALID_SOCKET) {
+        g_clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
     }
-    fd = g_clientSpace.clientFd;
-    pthread_mutex_unlock(&g_clientSpace.mutex);
+    fd = g_clientFd;
+    pthread_mutex_unlock(&g_clientMutex);
     PARAM_CHECK(fd > 0, return -1, "Failed to connect server for set %s", name);
     ret = StartRequest(fd, request, DEFAULT_PARAM_SET_TIMEOUT);
     free(request);
@@ -195,7 +172,6 @@ int SystemSetParameter(const char *name, const char *value)
 
 int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 {
-    InitParamClient();
     PARAM_CHECK(name != NULL, return -1, "Invalid name");
     int ret = CheckParamName(name, 0);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
@@ -246,13 +222,11 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 
 int SystemCheckParamExist(const char *name)
 {
-    (void)InitParamClient();
     return SysCheckParamExist(name);
 }
 
 int SystemFindParameter(const char *name, ParamHandle *handle)
 {
-    (void)InitParamClient();
     PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
     int ret = ReadParamWithCheck(name, DAC_READ, handle);
     if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
@@ -263,7 +237,6 @@ int SystemFindParameter(const char *name, ParamHandle *handle)
 
 int WatchParamCheck(const char *keyprefix)
 {
-    (void)InitParamClient();
     PARAM_CHECK(keyprefix != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid keyprefix");
     int ret = CheckParamName(keyprefix, 0);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", keyprefix);

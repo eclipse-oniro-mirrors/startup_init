@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,49 +11,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if (defined(ohos_lite)) {
-  static_library("libinit_tools") {
-    sources = [
-      "//base/startup/init_lite/services/utils/init_hashmap.c",
-      "//base/startup/init_lite/services/utils/init_utils.c",
-      "//base/startup/init_lite/services/utils/list.c",
-    ]
+config("exported_header_files") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "//base/startup/init_lite/services/include",
+    "//base/startup/init_lite/services/log",
+  ]
+}
 
+if (defined(ohos_lite)) {
+  static_library("libinit_utils") {
+    sources = [ "init_utils.c" ]
+    public_configs = [ ":exported_header_files" ]
     include_dirs = [
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init_lite/services/log",
       "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/services/include",
+      "//third_party/bounds_checking_function/include",
     ]
     defines = [ "_GNU_SOURCE" ]
   }
 } else {
   import("//build/ohos.gni")
-
-  ohos_static_library("libinit_tools") {
-    sources = [
-      "//base/startup/init_lite/services/utils/init_hashmap.c",
-      "//base/startup/init_lite/services/utils/list.c",
-    ]
-
-    include_dirs = [
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init_lite/services/log",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/services/include",
-    ]
-    defines = [ "_GNU_SOURCE" ]
-    part_name = "init"
-  }
-
   ohos_static_library("libinit_utils") {
     sources = [ "init_utils.c" ]
-
+    public_configs = [ ":exported_header_files" ]
     include_dirs = [
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init_lite/services/log",
       "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/services/include",
+      "//third_party/bounds_checking_function/include",
     ]
     defines = [ "_GNU_SOURCE" ]
     part_name = "init"

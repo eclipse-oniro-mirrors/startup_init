@@ -20,6 +20,8 @@
 void InitParamService(void)
 {
     PARAM_LOGI("InitParamService");
+    CheckAndCreateDir(PARAM_STORAGE_PATH"/");
+    CheckAndCreateDir(DATA_PATH);
     // param space
     int ret = InitParamWorkSpace(0);
     PARAM_CHECK(ret == 0, return, "Init parameter workspace fail");

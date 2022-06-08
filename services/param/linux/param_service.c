@@ -30,6 +30,7 @@
 #include "param_manager.h"
 #include "param_message.h"
 #include "trigger_manager.h"
+#include "securec.h"
 
 static ParamService g_paramService = {};
 
@@ -93,6 +94,7 @@ static int SendResponseMsg(ParamTaskPtr worker, const ParamMessage *msg, int res
     response->result = result;
     response->msg.msgSize = sizeof(ParamResponseMessage);
     ParamTaskSendMsg(worker, (ParamMessage *)response);
+    PARAM_LOGI("SendResponseMsg msgId %d", msg->id.msgId);
     return 0;
 }
 
@@ -170,6 +172,7 @@ static int HandleParamSet(const ParamTaskPtr worker, const ParamMessage *msg)
     srcLabel.cred.uid = cr.uid;
     srcLabel.cred.pid = cr.pid;
     srcLabel.cred.gid = cr.gid;
+    PARAM_LOGI("HandleParamSet msgId %d pid %d key: %s", msg->id.msgId, cr.pid, msg->key);
     int ret = SystemSetParam(msg->key, valueContent->content, &srcLabel);
     return SendResponseMsg(worker, msg, ret);
 }
@@ -352,10 +355,27 @@ PARAM_STATIC int OnIncomingConnect(LoopHandle loop, TaskHandle server)
     return 0;
 }
 
+static void LoadSelinuxLabel(void)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return, "Invalid paramSpace");
+    PARAM_WORKSPACE_CHECK(paramSpace, return, "Invalid space");
+
+    // load security label
+#ifdef PARAM_SUPPORT_SELINUX
+    ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
+    PARAM_LOGI("load selinux label %p", ops->securityGetLabel);
+    if (ops != NULL && ops->securityGetLabel != NULL) {
+        ops->securityGetLabel(NULL);
+    }
+#endif
+}
+
 void InitParamService(void)
 {
     PARAM_LOGI("InitParamService pipe: %s.", PIPE_NAME);
     CheckAndCreateDir(PIPE_NAME);
+    CheckAndCreateDir(PARAM_STORAGE_PATH"/");
     // param space
     int ret = InitParamWorkSpace(0);
     PARAM_CHECK(ret == 0, return, "Init parameter workspace fail");
@@ -371,17 +391,18 @@ void InitParamService(void)
         ret = ParamServerCreate(&g_paramService.serverTask, &info);
         PARAM_CHECK(ret == 0, return, "Failed to create server");
     }
-    // init trigger space
-    ret = InitTriggerWorkSpace();
-    PARAM_CHECK(ret == 0, return, "Failed to init trigger");
-    RegisterTriggerExec(TRIGGER_PARAM_WAIT, ExecuteWatchTrigger_);
-    RegisterTriggerExec(TRIGGER_PARAM_WATCH, ExecuteWatchTrigger_);
     // read selinux label
     LoadSelinuxLabel();
     // from cmdline
     LoadParamFromCmdLine();
     // from build
     LoadParamFromBuild();
+
+    // init trigger space
+    ret = InitTriggerWorkSpace();
+    PARAM_CHECK(ret == 0, return, "Failed to init trigger");
+    RegisterTriggerExec(TRIGGER_PARAM_WAIT, ExecuteWatchTrigger_);
+    RegisterTriggerExec(TRIGGER_PARAM_WATCH, ExecuteWatchTrigger_);
 }
 
 int StartParamService(void)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,38 +71,6 @@ typedef struct {
     PersistParamOps persistParamOps;
 } ParamPersistWorkSpace;
 
-typedef struct {
-    uint32_t flags;
-    int clientFd;
-    pthread_mutex_t mutex;
-} ClientWorkSpace;
-
-int InitParamWorkSpace(int onlyRead);
-void CloseParamWorkSpace(void);
-WorkSpace *GetWorkSpace(const char *name);
-int AddWorkSpace(const char *name, int onlyRead, uint32_t spacesize);
-WorkSpace *GetFirstWorkSpace(void);
-WorkSpace *GetNextWorkSpace(WorkSpace *curr);
-
-ParamTrieNode *GetTrieNodeByHandle(ParamHandle handle);
-
-int CheckParameterSet(const char *name, const char *value, const ParamSecurityLabel *srcLabel, int *ctrlService);
-
-int ReadParamWithCheck(const char *name, uint32_t op, ParamHandle *handle);
-int ReadParamValue(ParamHandle handle, char *value, uint32_t *len);
-int ReadParamName(ParamHandle handle, char *name, uint32_t len);
-int ReadParamCommitId(ParamHandle handle, uint32_t *commitId);
-
-int CheckParamValue(const ParamTrieNode *node, const char *name, const char *value);
-int CheckParamName(const char *name, int paramInfo);
-int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
-ParamNode *SystemCheckMatchParamWait(const char *name, const char *value);
-
-int WriteParam(const char *name, const char *value, uint32_t *dataIndex, int onlyAdd);
-int AddSecurityLabel(const ParamAuditData *auditData);
-int LoadSecurityLabel(const char *fileName);
-ParamSecurityLabel *GetParamSecurityLabel(void);
-
 typedef void (*TraversalParamPtr)(ParamHandle handle, void *context);
 typedef struct {
     TraversalParamPtr traversalParamPtr;
@@ -110,19 +78,37 @@ typedef struct {
     char *prefix;
 } ParamTraversalContext;
 
-const char *GetSelinuxContent(const char *name);
+INIT_LOCAL_API int AddWorkSpace(const char *name, int onlyRead, uint32_t spacesize);
+INIT_LOCAL_API WorkSpace *GetFirstWorkSpace(void);
+INIT_LOCAL_API WorkSpace *GetNextWorkSpace(WorkSpace *curr);
+INIT_LOCAL_API WorkSpace *GetWorkSpace(const char *name);
+INIT_LOCAL_API ParamTrieNode *GetTrieNodeByHandle(ParamHandle handle);
+INIT_LOCAL_API int ReadParamWithCheck(const char *name, uint32_t op, ParamHandle *handle);
+INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, const char *value);
+INIT_LOCAL_API int CheckParamName(const char *name, int paramInfo);
 
-void LoadParamFromBuild(void);
-int LoadParamFromCmdLine(void);
-void LoadSelinuxLabel(void);
+INIT_LOCAL_API ParamNode *SystemCheckMatchParamWait(const char *name, const char *value);
+INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dataIndex, int onlyAdd);
+INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData);
+INIT_LOCAL_API ParamSecurityLabel *GetParamSecurityLabel(void);
 
-int InitPersistParamWorkSpace(void);
-void ClosePersistParamWorkSpace(void);
-int WritePersistParam(const char *name, const char *value);
-long long GetPersistCommitId(void);
-void UpdatePersistCommitId(void);
-int SysCheckParamExist(const char *name);
+INIT_LOCAL_API void LoadParamFromBuild(void);
+INIT_LOCAL_API int LoadParamFromCmdLine(void);
+INIT_LOCAL_API int InitPersistParamWorkSpace(void);
+INIT_LOCAL_API void ClosePersistParamWorkSpace(void);
+INIT_LOCAL_API int WritePersistParam(const char *name, const char *value);
 
+INIT_INNER_API int CheckParameterSet(const char *name, const char *value,
+    const ParamSecurityLabel *srcLabel, int *ctrlService);
+INIT_INNER_API ParamHandle GetParamHandle(const WorkSpace *workSpace, uint32_t index, const char *name);
+INIT_INNER_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
+INIT_INNER_API int InitParamWorkSpace(int onlyRead);
+INIT_INNER_API void CloseParamWorkSpace(void);
+INIT_INNER_API const char *GetSelinuxContent(const char *name);
+INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void);
+
+INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditData);
+INIT_INNER_API int SysCheckParamExist(const char *name);
 #ifdef STARTUP_INIT_TEST
 ParamService *GetParamService();
 #endif

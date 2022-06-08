@@ -37,7 +37,6 @@
 #endif
 
 #include "param_utils.h"
-#include "securec.h"
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -23,7 +23,7 @@ ohos_shared_library("bootchart") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:init_log",
+    "//base/startup/init_lite/services/param/base:parameterbase",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",

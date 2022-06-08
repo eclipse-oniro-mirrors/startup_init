@@ -36,18 +36,18 @@ extern "C" {
 #define INIT_LOG_DOMAIN (BASE_DOMAIN + 1)
 #endif
 
-void OpenLogDevice(void);
+INIT_LOCAL_API void OpenLogDevice(void);
 
 #define INIT_LOGV(fmt, ...) \
-    InitLog(INIT_DEBUG, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_DEBUG, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGI(fmt, ...) \
-    InitLog(INIT_INFO, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_INFO, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGW(fmt, ...) \
-    InitLog(INIT_WARN, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_WARN, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGE(fmt, ...) \
-    InitLog(INIT_ERROR, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_ERROR, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGF(fmt, ...) \
-    InitLog(INIT_FATAL, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_FATAL, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 
 #ifndef UNLIKELY
 #define UNLIKELY(x)    __builtin_expect(!!(x), 0)

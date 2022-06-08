@@ -22,8 +22,7 @@ ohos_executable("client") {
     "//third_party/bounds_checking_function/include",
   ]
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/socket:libsocket_static",
-    "//base/startup/init_lite/services/log:init_log",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   install_images = [ "system" ]
@@ -60,8 +59,7 @@ ohos_executable("server") {
     "//third_party/bounds_checking_function/include",
   ]
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/socket:libsocket_static",
-    "//base/startup/init_lite/services/log:init_log",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   install_images = [ "system" ]

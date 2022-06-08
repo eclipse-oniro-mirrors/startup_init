@@ -25,7 +25,9 @@ config("exported_header_files") {
   include_dirs = [
     "//base/startup/init_lite/interfaces/innerkits/include",
     "//base/startup/init_lite/interfaces/innerkits/include/syspara",
+    "//base/startup/init_lite/interfaces/innerkits/include/fs_manager",
     "//base/startup/init_lite/interfaces/innerkits/include/token",
+    "//base/startup/init_lite/interfaces/innerkits/include/sandbox/include",
   ]
 }
 
@@ -49,14 +51,25 @@ if (defined(ohos_lite)) {
 
   if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
     shared_library("libbegetutil") {
-      sources = [ "//base/startup/init_lite/services/log/init_log.c" ]
+      cflags = [ "-fPIC" ]
       defines = [
         "_GNU_SOURCE",
-        "INIT_LOG_INIT=3",
         "OHOS_LITE",
+        "USE_MBEDTLS",
       ]
-      deps = []
+      sources = []
       include_dirs = include_common
+      public_configs = [ ":exported_header_files" ]
+      deps = [
+        "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
+        "//third_party/bounds_checking_function:libsec_shared",
+        "//third_party/mbedtls:mbedtls_shared",
+      ]
+      deps += [
+        "//base/startup/init_lite/services/log:init_log",
+        "//base/startup/init_lite/services/param/base:parameterbase",
+        "//base/startup/init_lite/services/utils:libinit_utils",
+      ]
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
         sources += syspara_sources
         defines += [ "LITEOS_SUPPORT" ]
@@ -64,35 +77,26 @@ if (defined(ohos_lite)) {
       } else {
         sources += [ "syscap/init_syscap.c" ]
       }
-
-      public_configs = [ ":exported_header_files" ]
-      cflags = [ "-fPIC" ]
-
-      deps += [
-        "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
-        "//base/startup/init_lite/services/utils:libinit_tools",
-        "//third_party/bounds_checking_function:libsec_shared",
-        "//third_party/mbedtls:mbedtls",
-      ]
-
-      defines += [ "USE_MBEDTLS" ]
-      deps += [ "//base/startup/init_lite/services/param:param_client" ]
       if (ohos_kernel_type == "liteos_a") {
         defines += [ "__LITEOS_A__" ]
+        deps += [
+          "//base/startup/init_lite/services/param/liteos:param_client_lite",
+        ]
       } else if (ohos_kernel_type == "linux") {
+        sources += [ "socket/init_socket.c" ]
         defines += [ "__LINUX__" ]
-        deps += [ "//base/startup/init_lite/services/loopevent:loopevent" ]
+        deps += [
+          "//base/startup/init_lite/services/loopevent:loopevent",
+          "//base/startup/init_lite/services/param/linux:param_client",
+        ]
       }
     }
   }
   if (ohos_kernel_type == "liteos_m") {
     static_library("libbegetutil") {
-      sources = [ "//base/startup/init_lite/services/log/init_log.c" ]
       public_configs = [ ":exported_header_files" ]
-
       defines = [
         "_GNU_SOURCE",
-        "INIT_LOG_INIT=3",
         "OHOS_LITE",
         "__LITEOS_M__",
       ]
@@ -100,7 +104,6 @@ if (defined(ohos_lite)) {
       include_dirs = include_common
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
-        "//base/startup/init_lite/services/utils:libinit_tools",
         "//third_party/bounds_checking_function:libsec_static",
       ]
 
@@ -116,7 +119,11 @@ if (defined(ohos_lite)) {
         deps += [ "//third_party/mbedtls:mbedtls" ]
         defines += [ "USE_MBEDTLS" ]
       }
-      deps += [ "//base/startup/init_lite/services/param:param_client" ]
+      deps += [
+        "//base/startup/init_lite/services/param/base:parameterbase",
+        "//base/startup/init_lite/services/param/liteos:param_client_lite",
+        "//base/startup/init_lite/services/utils:libinit_utils",
+      ]
     }
   }
 
@@ -134,12 +141,6 @@ if (defined(ohos_lite)) {
   }
 } else {
   import("//build/ohos.gni")
-
-  fs_manager_sources = [
-    "fs_manager/fstab.c",
-    "fs_manager/fstab_mount.c",
-  ]
-
   modulemgr_sources = [
     "hookmgr/hookmgr.c",
     "modulemgr/modulemgr.c",
@@ -147,15 +148,9 @@ if (defined(ohos_lite)) {
 
   ohos_shared_library("libbegetutil") {
     sources = [
-      "//base/startup/init_lite/services/log/init_log.c",
-      "fd_holder/fd_holder.c",
-      "fd_holder/fd_holder_internal.c",
-      "file/init_file.c",
       "reboot/init_reboot_innerkits.c",
       "service_control/service_control.c",
-      "socket/init_socket.c",
     ]
-    sources += fs_manager_sources
     sources += syspara_sources
     sources += [ "syspara/param_wrapper.cpp" ]
     sources += modulemgr_sources
@@ -164,6 +159,7 @@ if (defined(ohos_lite)) {
       "INIT_AGENT",
       "INIT_FILE",
       "_GNU_SOURCE",
+      "USE_MBEDTLS",
     ]
     if (target_cpu == "arm64") {
       defines += [ "SUPPORT_64BIT" ]
@@ -171,13 +167,20 @@ if (defined(ohos_lite)) {
 
     include_dirs = include_common
     deps = [
-      "//base/startup/init_lite/interfaces/innerkits/sandbox:libsandbox",
+      "//base/startup/init_lite/interfaces/innerkits/control_fd:libcontrolfd",
+      "//base/startup/init_lite/interfaces/innerkits/fd_holder:fdholder",
+      "//base/startup/init_lite/interfaces/innerkits/file:libfile",
+      "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_static",
+      "//base/startup/init_lite/interfaces/innerkits/sandbox:sandbox",
+      "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
+      "//base/startup/init_lite/services/log:agent_log",
       "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/param:param_client",
-      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//base/startup/init_lite/services/param/base:parameterbase",
+      "//base/startup/init_lite/services/param/linux:param_client",
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/openssl:libcrypto_shared",
+      "//third_party/cJSON:cjson_static",
+      "//third_party/mbedtls:mbedtls_shared",
     ]
     external_deps = [
       "hilog_native:libhilog_base",
@@ -196,19 +199,17 @@ if (defined(ohos_lite)) {
     defines = [
       "INIT_AGENT",
       "_GNU_SOURCE",
+      "USE_MBEDTLS",
     ]
     sources = [
       "//base/startup/init_lite/device_info/device_info.cpp",
-      "//base/startup/init_lite/services/log/init_log.c",
       "service_watcher/service_watcher.c",
     ]
 
     include_dirs = include_common
     deps = [
       ":libbegetutil",
-      "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/openssl:libcrypto_shared",
     ]
 
     if (enable_ohos_startup_init_feature_watcher) {
@@ -250,29 +251,15 @@ if (defined(ohos_lite)) {
     install_images = [ "system" ]
   }
 
-  # For init only
-  ohos_static_library("libfsmanager_static") {
-    sources = fs_manager_sources
-    include_dirs = [
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init_lite/services/log",
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/param/include",
-    ]
-
-    part_name = "init"
-  }
-
   ohos_static_library("libbegetutil_static") {
-    sources = [ "//base/startup/init_lite/services/log/init_log.c" ]
-    sources += syspara_sources
+    sources = syspara_sources
     sources += [ "syspara/param_wrapper.cpp" ]
 
     defines = [
       "INIT_AGENT",
       "INIT_FILE",
       "_GNU_SOURCE",
+      "USE_MBEDTLS",
     ]
     if (target_cpu == "arm64") {
       defines += [ "SUPPORT_64BIT" ]
@@ -280,12 +267,13 @@ if (defined(ohos_lite)) {
 
     include_dirs = include_common
     deps = [
+      "//base/startup/init_lite/services/log:agent_log",
       "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/param:param_client",
-      "//base/startup/init_lite/services/utils:libinit_tools",
+      "//base/startup/init_lite/services/param/base:parameterbase",
+      "//base/startup/init_lite/services/param/linux:param_client",
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/openssl:libcrypto_shared",
+      "//third_party/mbedtls:mbedtls_shared",
     ]
     external_deps = [
       "hilog_native:libhilog_base",

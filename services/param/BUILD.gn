@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,241 +11,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//base/startup/init_lite/begetd.gni")
+import("//build/ohos.gni")
 
-param_comm_sources = [
-  "manager/param_manager.c",
-  "manager/param_trie.c",
-  "manager/param_utils.c",
-]
+group("parameter") {
+  deps = []
 
-if (!defined(ohos_lite) || ohos_kernel_type == "linux") {
-  param_service_sources = [
-    "adapter/param_persistadp.c",
-    "linux/param_message.c",
-    "linux/param_msgadp.c",
-    "linux/param_osadp.c",
-    "linux/param_service.c",
-    "manager/param_persist.c",
-  ]
-
-  param_trigger_sources = [
-    "trigger/trigger_checker.c",
-    "trigger/trigger_manager.c",
-    "trigger/trigger_processor.c",
-  ]
-}
-
-param_include_dirs = [
-  "include",
-  "adapter",
-  "linux",
-  "//base/startup/init_lite/services/include/param",
-  "//base/startup/init_lite/services/include",
-  "//base/startup/init_lite/services/init/include",
-  "//base/startup/init_lite/services/log",
-  "//base/startup/init_lite/interfaces/innerkits/include",
-  "//base/startup/init_lite/services/loopevent/include",
-  "//base/security/selinux/interfaces/policycoreutils/include",
-  "//third_party/libuv/include",
-  "//third_party/bounds_checking_function/include",
-  "//third_party/cJSON",
-  "//utils/native/lite/include",
-]
-
-if (defined(ohos_lite)) {
-  param_build_defines = [
-    "_GNU_SOURCE",
-    "INCREMENTAL_VERSION=\"${ohos_version}\"",
-    "BUILD_TYPE=\"${ohos_build_type}\"",
-    "BUILD_USER=\"${ohos_build_user}\"",
-    "BUILD_TIME=\"${ohos_build_time}\"",
-    "BUILD_HOST=\"${ohos_build_host}\"",
-    "BUILD_ROOTHASH=\"${ohos_build_roothash}\"",
-  ]
-
-  if (enable_ohos_startup_init_feature_begetctl_liteos) {
-    action("lite_const_param_to") {
-      script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
-      args = [
-        "--source",
-        rebase_path(
-            "//base/startup/init_lite/services/etc_lite/param/ohos_const/ohos.para"),
-        "--dest_dir",
-        rebase_path("$root_out_dir/gen/init_lite/"),
-        "--priority",
-        "0",
-      ]
-      outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
-    }
-
-    action("lite_ohos_param_to") {
-      script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
-      args = [
-        "--source",
-        rebase_path("//base/startup/init_lite/services/etc/param/ohos.para"),
-        "--dest_dir",
-        rebase_path("$root_out_dir/gen/init_lite/"),
-        "--priority",
-        "0",
-      ]
-      outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
-    }
-
-    action("vendor_param_to") {
-      script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
-      args = [
-        "--source",
-        rebase_path("$ohos_product_adapter_dir/utils/sys_param/vendor.para"),
-        "--dest_dir",
-        rebase_path("$root_out_dir/gen/init_lite/"),
-        "--priority",
-        "1",
-      ]
-      outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
-    }
-  }
-
-  static_library("param_init") {
-    defines = []
-    deps = []
-    sources = param_comm_sources
-    include_dirs = param_include_dirs
-    if (defined(boot_kernel_extended_cmdline)) {
-      defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
-    }
-    defines += param_build_defines
+  # parameter only support linux for l2 and l1
+  if (defined(ohos_lite)) {
     if (ohos_kernel_type == "linux") {
-      sources += param_service_sources
-      sources += param_trigger_sources
-      sources += [ "adapter/param_dac.c" ]
-      defines += [ "__LINUX__" ]
+      deps += [
+        "base:parameterbase",
+        "linux:param_client",
+        "linux:param_init",
+      ]
     } else if (ohos_kernel_type == "liteos_a") {
-      sources += [
-        "adapter/param_persistadp.c",
-        "liteos/param_osadp.c",
-        "liteos/param_service.c",
-        "manager/param_persist.c",
-      ]
-      defines += [
-        "WORKSPACE_AREA_NEED_MUTEX",
-        "PARAM_PERSIST_SAVE_MUTEX",
-        "PARAMWORKSPACE_NEED_MUTEX",
-        "__LITEOS_A__",
-        "PARAM_SUPPORT_CYCLE_CHECK",
+      deps += [
+        "liteos:param_client_lite",
+        "liteos:param_init_lite",
       ]
     }
-  }
-
-  static_library("param_client") {
-    sources = param_comm_sources
-    include_dirs = param_include_dirs
-    defines = param_build_defines
-
-    if (ohos_kernel_type == "linux") {
-      sources += [
-        "linux/param_message.c",
-        "linux/param_osadp.c",
-        "linux/param_request.c",
-      ]
-      sources += [ "adapter/param_dac.c" ]
-      defines += [ "__LINUX__" ]
-    } else if (ohos_kernel_type == "liteos_a") {
-      sources += [
-        "adapter/param_persistadp.c",
-        "liteos/param_client.c",
-        "liteos/param_osadp.c",
-        "manager/param_persist.c",
-      ]
-      defines += [
-        "__LITEOS_A__",
-        "WORKSPACE_AREA_NEED_MUTEX",
-        "PARAM_PERSIST_SAVE_MUTEX",
-        "PARAMWORKSPACE_NEED_MUTEX",
-      ]
-    } else if (ohos_kernel_type == "liteos_m") {
-      sources += [
-        "liteos/param_client.c",
-        "liteos/param_osadp.c",
-        "manager/param_persist.c",
-      ]
-      if (enable_ohos_startup_init_lite_use_posix_file_api) {
-        sources += [ "adapter/param_persistadp.c" ]
-      } else {
-        sources += [ "liteos/param_hal.c" ]
-      }
-      defines += [
-        "__LITEOS_M__",
-        "WORKSPACE_AREA_NEED_MUTEX",
-        "PARAM_PERSIST_SAVE_MUTEX",
-        "PARAMWORKSPACE_NEED_MUTEX",
-        "DATA_PATH=\"${config_ohos_startup_init_lite_data_path}\"",
-      ]
-      if (enable_ohos_startup_init_feature_begetctl_liteos) {
-        deps = [
-          ":lite_const_param_to",
-          ":lite_ohos_param_to",
-          ":vendor_param_to",
-        ]
-        include_dirs += [ "$root_out_dir/gen/init_lite" ]
-        defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
-      }
-    }
-  }
-} else {
-  import("//build/ohos.gni")
-
-  ohos_static_library("param_init") {
-    sources = param_comm_sources
-    sources += param_service_sources
-    sources += param_trigger_sources
-    sources += [ "adapter/param_dac.c" ]
-    include_dirs = param_include_dirs
-    defines = [ "_GNU_SOURCE" ]
-
-    if (defined(boot_kernel_extended_cmdline)) {
-      defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
-    }
-
-    if ("${product_name}" == "m40") {
-      defines += [ "USE_MTK_EMMC" ]
-    }
-
-    if (build_selinux) {
-      sources += [ "adapter/param_selinux.c" ]
-      defines += [ "PARAM_SUPPORT_SELINUX" ]
-    }
-
-    deps = [
-      "//base/startup/init_lite/services/log:init_log",
-      "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/utils:libinit_tools",
-      "//base/startup/init_lite/services/utils:libinit_utils",
+  } else {
+    deps += [
+      "base:parameterbase",
+      "linux:param_client",
+      "linux:param_init",
     ]
-    part_name = "init"
-    subsystem_name = "startup"
-  }
-
-  ohos_static_library("param_client") {
-    sources = param_comm_sources
-    sources += [ "adapter/param_dac.c" ]
-    sources += [
-      "linux/param_message.c",
-      "linux/param_osadp.c",
-      "linux/param_request.c",
-    ]
-    include_dirs = param_include_dirs
-
-    defines = [
-      "_GNU_SOURCE",
-      "INIT_AGENT",
-    ]
-    if (build_selinux) {
-      sources += [ "adapter/param_selinux.c" ]
-      defines += [
-        "PARAM_SUPPORT_SELINUX",
-        "PARAMWORKSPACE_NEED_MUTEX",
-      ]
-    }
-    part_name = "init"
   }
 }
