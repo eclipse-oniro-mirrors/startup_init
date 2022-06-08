@@ -163,7 +163,10 @@ int InitParamWorkSpace(int onlyRead)
 
 void CloseParamWorkSpace(void)
 {
-    PARAM_LOGI("CloseParamWorkSpace");
+    PARAM_LOGI("CloseParamWorkSpace %p", &g_paramWorkSpace);
+    if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
+        return;
+    }
     WORKSPACE_RW_LOCK(g_paramWorkSpace);
     if (g_paramWorkSpace.workSpaceHashHandle != NULL) {
         HashMapDestory(g_paramWorkSpace.workSpaceHashHandle);
