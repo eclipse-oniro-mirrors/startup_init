@@ -28,6 +28,7 @@
 #include "config_policy_utils.h"
 #include "device.h"
 #include "fd_holder_service.h"
+#include "fs_manager/fs_manager.h"
 #include "init_control_fd_service.h"
 #include "init_log.h"
 #include "init_mount.h"
@@ -37,6 +38,9 @@
 #include "init_service_manager.h"
 #include "init_utils.h"
 #include "securec.h"
+#include "switch_root.h"
+#include "ueventd.h"
+#include "ueventd_socket.h"
 #include "fd_holder_internal.h"
 #include "sandbox.h"
 #include "sandbox_namespace.h"
@@ -106,6 +110,20 @@ void SystemInit(void)
     InitControlFd();
 }
 
+static void EnableDevKmsg(void)
+{
+    /* printk_devkmsg default value is ratelimit, We need to set "on" and remove the restrictions */
+    int fd = open("/proc/sys/kernel/printk_devkmsg", O_WRONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    if (fd < 0) {
+        return;
+    }
+    char *kmsgStatus = "on";
+    write(fd, kmsgStatus, strlen(kmsgStatus) + 1);
+    close(fd);
+    fd = -1;
+    return;
+}
+
 void LogInit(void)
 {
     int ret = mknod("/dev/kmsg", S_IFCHR | S_IWUSR | S_IRUSR,
@@ -115,9 +133,105 @@ void LogInit(void)
     }
 }
 
+static char **GetRequiredDevices(Fstab fstab, int *requiredNum)
+{
+    int num = 0;
+    FstabItem *item = fstab.head;
+    while (item != NULL) {
+        if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
+            num++;
+        }
+        item = item->next;
+    }
+    char **devices = (char **)calloc(num, sizeof(char *));
+    INIT_ERROR_CHECK(devices != NULL, return NULL, "Failed calloc err=%d", errno);
+
+    int i = 0;
+    item = fstab.head;
+    while (item != NULL) {
+        if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
+            devices[i] = strdup(item->deviceName);
+            INIT_ERROR_CHECK(devices[i] != NULL, FreeStringVector(devices, num); return NULL,
+                "Failed strdup err=%d", errno);
+            i++;
+        }
+        item = item->next;
+    }
+    *requiredNum = num;
+    return devices;
+}
+
+static int StartUeventd(char **requiredDevices, int num)
+{
+    INIT_ERROR_CHECK(requiredDevices != NULL && num > 0, return -1, "Failed parameters");
+    int ueventSockFd = UeventdSocketInit();
+    if (ueventSockFd < 0) {
+        INIT_LOGE("Failed to create uevent socket");
+        return -1;
+    }
+    RetriggerUevent(ueventSockFd, requiredDevices, num);
+    close(ueventSockFd);
+    return 0;
+}
+
+static void StartInitSecondStage(void)
+{
+    int requiredNum = 0;
+    Fstab* fstab = LoadRequiredFstab();
+    INIT_ERROR_CHECK(fstab != NULL, abort(), "Failed to load required fstab");
+    char **devices = GetRequiredDevices(*fstab, &requiredNum);
+    if (devices != NULL && requiredNum > 0) {
+        int ret = StartUeventd(devices, requiredNum);
+        if (ret == 0) {
+            ret = MountRequriedPartitions(fstab);
+        }
+        FreeStringVector(devices, requiredNum);
+        devices = NULL;
+        ReleaseFstab(fstab);
+        fstab = NULL;
+        if (ret < 0) {
+            // If mount required partitions failure.
+            // There is no necessary to continue.
+            // Just abort
+            INIT_LOGE("Mount requried partitions failed; please check fstab file");
+            // Execute sh for debugging
+            execv("/bin/sh", NULL);
+            abort();
+        }
+    }
+
+    // It will panic if close stdio before execv("/bin/sh", NULL)
+    CloseStdio();
+
+#ifndef DISABLE_INIT_TWO_STAGES
+    SwitchRoot("/usr");
+    // Execute init second stage
+    char * const args[] = {
+        "/bin/init",
+        "--second-stage",
+        NULL,
+    };
+    if (execv("/bin/init", args) != 0) {
+        INIT_LOGE("Failed to exec \"/bin/init\", err = %d", errno);
+        exit(-1);
+    }
+#endif
+}
+
 void SystemPrepare(void)
 {
-    // Second stage, nothing to prepare
+    MountBasicFs();
+    CreateDeviceNode();
+    LogInit();
+    // Make sure init log always output to /dev/kmsg.
+    EnableDevKmsg();
+    // Only ohos normal system support
+    // two stages of init.
+    // If we are in updater mode, only one stage of init,
+    INIT_LOGI("DISABLE_INIT_TWO_STAGES not defined");
+    if (InUpdaterMode() == 0) {
+        StartInitSecondStage();
+    }
 }
 
 void SystemLoadSelinux(void)
