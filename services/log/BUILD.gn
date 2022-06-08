@@ -31,18 +31,6 @@ if (defined(ohos_lite)) {
   }
 } else {
   import("//build/ohos.gni")
-
-  #
-  # exported include directories
-  #
-  config("init_log_exported_config") {
-    visibility = [ ":*" ]
-    include_dirs = [
-      ".",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-    ]
-  }
-
   ohos_static_library("init_log") {
     sources = [ "init_log.c" ]
     defines = [ "INIT_DMESG" ]
@@ -50,7 +38,6 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//third_party/bounds_checking_function/include",
     ]
-    public_configs = [ ":init_log_exported_config" ]
     part_name = "startup"
     subsystem_name = "startup"
   }
@@ -71,7 +58,6 @@ if (defined(ohos_lite)) {
       "system",
       "updater",
     ]
-    public_configs = [ ":init_log_exported_config" ]
     external_deps = [ "hilog_native:libhilog_base" ]
     install_enable = true
     part_name = "init"
