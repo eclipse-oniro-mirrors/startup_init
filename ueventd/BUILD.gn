@@ -96,13 +96,6 @@ if (defined(ohos_lite)) {
     ]
   }
 
-  #
-  # exported include directories
-  #
-  config("libueventd_exported_config") {
-    visibility = [ ":*" ]
-    include_dirs = [ "./include" ]
-  }
   ohos_static_library("libueventd_ramdisk_static") {
     sources = service_ueventd_sources
     include_dirs = service_ueventd_include
@@ -114,8 +107,6 @@ if (defined(ohos_lite)) {
       external_deps = [ "selinux:librestorecon" ]
       cflags += [ "-DWITH_SELINUX" ]
     }
-
-    public_configs = [ ":libueventd_exported_config" ]
     part_name = "init"
   }
 
