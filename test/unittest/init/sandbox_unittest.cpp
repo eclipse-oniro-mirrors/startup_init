@@ -143,7 +143,7 @@ cJSON *MakeSandboxJson(const char *sandboxFileName, const int MODE)
 
 bool MakeFileByJson(cJSON * mJson, const char *sandboxFileName)
 {
-    const std::string  sandboxJsonPth = std::string("/etc/sandbox/") + std::string(TEST_SANDBOX_NAME);
+    const std::string  sandboxJsonPth = std::string("/etc/sandbox/") + std::string(sandboxFileName);
     const char* cSandboxJsonPth = sandboxJsonPth.c_str();
     int fd = open(cSandboxJsonPth, O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
     if (fd < 0) {
