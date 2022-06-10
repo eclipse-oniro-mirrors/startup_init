@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Huawei Device Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -32,17 +32,22 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/init/lite/init_service.c",
       "//base/startup/init_lite/services/init/lite/init_signal_handler.c",
       "//base/startup/init_lite/services/log/init_log.c",
-      "//base/startup/init_lite/services/utils/init_hashmap.c",
       "//base/startup/init_lite/services/utils/init_utils.c",
-      "//base/startup/init_lite/services/utils/list.c",
     ]
   }
   param_common_sources = [
-    "//base/startup/init_lite/services/param/adapter/param_dac.c",
     "//base/startup/init_lite/services/param/manager/param_manager.c",
     "//base/startup/init_lite/services/param/manager/param_persist.c",
-    "//base/startup/init_lite/services/param/manager/param_trie.c",
-    "//base/startup/init_lite/services/param/manager/param_utils.c",
+    "//base/startup/init_lite/services/param/manager/param_server.c",
+  ]
+
+  base_sources = [
+    "//base/startup/init_lite/services/log/init_commlog.c",
+    "//base/startup/init_lite/services/param/base/param_base.c",
+    "//base/startup/init_lite/services/param/base/param_comm.c",
+    "//base/startup/init_lite/services/param/base/param_trie.c",
+    "//base/startup/init_lite/services/utils/init_hashmap.c",
+    "//base/startup/init_lite/services/utils/list.c",
   ]
 
   sysparam_source = [
@@ -83,6 +88,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/loopevent/task",
       "//base/startup/init_lite/services/loopevent/utils",
       "//base/startup/init_lite/services/param/adapter",
+      "//base/startup/init_lite/services/param/base",
       "//base/startup/init_lite/services/param/linux",
       "//base/startup/init_lite/services/param/include",
       "//base/startup/init_lite/services/param/watcher/agent",
@@ -102,6 +108,7 @@ if (defined(ohos_lite)) {
 
     sources = sysparam_source
     sources += param_common_sources
+    sources += base_sources
     deps = [ "//third_party/bounds_checking_function:libsec_static" ]
 
     if (ohos_kernel_type == "liteos_a") {
@@ -115,6 +122,7 @@ if (defined(ohos_lite)) {
       sources += [
         "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
         "//base/startup/init_lite/services/param/liteos/param_client.c",
+        "//base/startup/init_lite/services/param/liteos/param_litedac.c",
         "//base/startup/init_lite/services/param/liteos/param_osadp.c",
         "//base/startup/init_lite/services/param/liteos/param_service.c",
       ]
@@ -131,8 +139,8 @@ if (defined(ohos_lite)) {
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
         deps += [
           "$ohos_product_adapter_dir/utils/sys_param:hal_sysparam",
-          "//base/startup/init_lite/services/param:lite_const_param_to",
-          "//base/startup/init_lite/services/param:lite_ohos_param_to",
+          "//base/startup/init_lite/services/param/liteos:lite_const_param_to",
+          "//base/startup/init_lite/services/param/liteos:lite_ohos_param_to",
         ]
         include_dirs += [ "$root_out_dir/gen/init_lite" ]
         defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
@@ -150,6 +158,7 @@ if (defined(ohos_lite)) {
       defines += [ "__LITEOS_M__" ]
       sources += [
         "//base/startup/init_lite/services/param/liteos/param_client.c",
+        "//base/startup/init_lite/services/param/liteos/param_litedac.c",
         "//base/startup/init_lite/services/param/liteos/param_osadp.c",
         "//base/startup/init_lite/services/param/liteos/param_service.c",
       ]
@@ -179,7 +188,6 @@ if (defined(ohos_lite)) {
       }
       deps += [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
-        "//base/startup/init_lite/services/utils:libinit_tools",
         "//third_party/mbedtls:mbedtls",
       ]
     }
@@ -188,6 +196,7 @@ if (defined(ohos_lite)) {
 
       sources += init_common_sources
       sources += [
+        "//base/startup/init_lite/services/param/adapter/param_dac.c",
         "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
         "//base/startup/init_lite/services/param/linux/param_message.c",
         "//base/startup/init_lite/services/param/linux/param_msgadp.c",

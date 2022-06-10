@@ -9,5 +9,6 @@
     { "name": "InitAddPreCfgLoadHook" },
     { "name": "InitAddPostCfgLoadHook" },
     { "name": "InitModuleMgrInstall" },
-    { "name": "InitModuleMgrUnInstall" }
+    { "name": "InitModuleMgrUnInstall" },
+    { "name": "StartupLog" }
 ]

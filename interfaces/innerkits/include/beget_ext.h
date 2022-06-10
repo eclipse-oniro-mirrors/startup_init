@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #ifndef BEGET_EXT_API_H
 #define BEGET_EXT_API_H
 #include <stdint.h>
+#include <stdarg.h>
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -29,9 +30,11 @@ extern "C" {
 
 #if defined(__GNUC__) && (__GNUC__ >= 4)
     #define INIT_PUBLIC_API __attribute__((visibility ("default")))
+    #define INIT_INNER_API __attribute__((visibility ("default")))
     #define INIT_LOCAL_API __attribute__((visibility("hidden")))
 #else
     #define INIT_PUBLIC_API
+    #define INIT_INNER_API
     #define INIT_LOCAL_API
 #endif
 
@@ -43,20 +46,23 @@ typedef enum InitLogLevel {
     INIT_FATAL
 } InitLogLevel;
 
+typedef void (*InitCommLog)(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, va_list vargs);
 #define FILE_NAME   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
-void SetInitLogLevel(InitLogLevel logLevel);
-void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *fmt, ...);
+
+INIT_PUBLIC_API void StartupLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
+INIT_PUBLIC_API void EnableInitLog(InitLogLevel level);
+INIT_PUBLIC_API void SetInitCommLog(InitCommLog logFunc);
 
 #define STARTUP_LOGV(domain, tag, fmt, ...) \
-    InitLog(INIT_DEBUG, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_DEBUG, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGI(domain, tag, fmt, ...) \
-    InitLog(INIT_INFO, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_INFO, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGW(domain, tag, fmt, ...) \
-    InitLog(INIT_WARN, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_WARN, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGE(domain, tag, fmt, ...) \
-    InitLog(INIT_ERROR, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_ERROR, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGF(domain, tag, fmt, ...) \
-    InitLog(INIT_FATAL, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_FATAL, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 
 #define BASE_DOMAIN 0xA000
 #ifndef BEGET_DOMAIN
@@ -69,7 +75,7 @@ void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const 
 #define BEGET_LOGW(fmt, ...) STARTUP_LOGW(BEGET_DOMAIN, BEGET_LABEL, fmt, ##__VA_ARGS__)
 
 #define InitLogPrint(outFileName, logLevel, kLevel, fmt, ...) \
-    InitLog(logLevel, BEGET_DOMAIN, kLevel, fmt, ##__VA_ARGS__)
+    StartupLog(logLevel, BEGET_DOMAIN, kLevel, fmt, ##__VA_ARGS__)
 
 #define BEGET_ERROR_CHECK(ret, statement, format, ...) \
     if (!(ret)) {                                     \

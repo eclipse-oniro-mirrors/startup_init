@@ -64,8 +64,6 @@ ohos_fuzztest("GetControlFileFuzzTest") {
 
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-    "//base/startup/init_lite/services/log:init_log",
-    "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
 
@@ -119,8 +117,6 @@ ohos_fuzztest("MountAllFstabFuzzTest") {
 
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-    "//base/startup/init_lite/services/log:init_log",
-    "//base/startup/init_lite/services/utils:libinit_utils",
     "//base/startup/init_lite/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
@@ -148,8 +144,7 @@ ohos_fuzztest("ReadFileInDirFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/services/log:init_log",
-    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
 
@@ -509,9 +504,7 @@ ohos_fuzztest("UmountAllFstabFuzzTest") {
   ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libfsmanager_static",
-    "//base/startup/init_lite/services/log:init_log",
-    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//base/startup/init_lite/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]

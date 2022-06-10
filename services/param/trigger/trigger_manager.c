@@ -26,6 +26,7 @@
 #include "init_cmds.h"
 #include "param_manager.h"
 #include "trigger_checker.h"
+#include "securec.h"
 
 int AddCommand(JobNode *trigger, uint32_t cmdKeyIndex, const char *content)
 {

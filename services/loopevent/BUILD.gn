@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -38,19 +38,25 @@ common_include = [
   "signal",
 ]
 
+config("exported_header_files") {
+  visibility = [ ":*" ]
+  include_dirs = [ "//base/startup/init_lite/services/loopevent/include" ]
+}
+
 if (defined(ohos_lite)) {
   static_library("loopevent") {
     sources = common_sources
-
+    cflags = [ "-fPIC" ]
     include_dirs = common_include
     defines = [ "_GNU_SOURCE" ]
+    public_configs = [ ":exported_header_files" ]
   }
 } else {
   import("//build/ohos.gni")
 
   ohos_static_library("loopevent") {
     sources = common_sources
-
+    public_configs = [ ":exported_header_files" ]
     include_dirs = common_include
     defines = [ "_GNU_SOURCE" ]
     part_name = "init"

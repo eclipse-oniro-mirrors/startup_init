@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,11 +38,6 @@
 #define BASE_YEAR 1900
 
 static InitLogLevel g_logLevel = INIT_INFO;
-void SetInitLogLevel(InitLogLevel logLevel)
-{
-    g_logLevel = logLevel;
-}
-
 #ifdef INIT_FILE
 static void LogToFile(const char *logFile, const char *tag, const char *info)
 {
@@ -66,7 +61,7 @@ static void LogToFile(const char *logFile, const char *tag, const char *info)
 
 #ifdef INIT_DMESG
 static int g_fd = -1;
-void OpenLogDevice(void)
+INIT_LOCAL_API void OpenLogDevice(void)
 {
     int fd = open("/dev/kmsg", O_WRONLY | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     if (fd >= 0) {
@@ -101,23 +96,19 @@ void LogToDmesg(InitLogLevel logLevel, const char *tag, const char *info)
 }
 #endif
 
-void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *fmt, ...)
+static void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs)
 {
     if (g_logLevel > logLevel) {
         return;
     }
-    va_list vargs;
-    va_start(vargs, fmt);
     char tmpFmt[DEF_LOG_SIZE] = {0};
     if (vsnprintf_s(tmpFmt, sizeof(tmpFmt), sizeof(tmpFmt) - 1, fmt, vargs) == -1) {
-        va_end(vargs);
 #ifdef OHOS_LITE
         static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
         (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", fmt);
 #endif
         return;
     }
-    va_end(vargs);
 
 #ifdef OHOS_LITE
     static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
@@ -133,4 +124,10 @@ void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const 
     LogToFile("/data/init_agent/begetctl.log", tag, tmpFmt);
 #endif
 #endif
+}
+
+INIT_PUBLIC_API void EnableInitLog(InitLogLevel level)
+{
+    g_logLevel = level;
+    SetInitCommLog(InitLog);
 }

@@ -18,10 +18,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "init_log.h"
+#include "beget_ext.h"
 #include "init_param.h"
 #include "init_utils.h"
-#include "securec.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -131,7 +130,6 @@ typedef struct cmdLineInfo {
 #define SUBSTR_INFO_DAC 1
 #endif
 
-char *GetServiceCtrlName(const char *name, const char *value);
 int SpliteString(char *line, const char *exclude[], uint32_t count,
     int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context);
 #ifdef __cplusplus

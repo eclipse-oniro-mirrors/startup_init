@@ -18,6 +18,7 @@
 #include <ctype.h>
 #include "init_param.h"
 #include "trigger_manager.h"
+#include "securec.h"
 
 #define MAX_CALC_PARAM 100
 // 申请整块能存作为计算的节点

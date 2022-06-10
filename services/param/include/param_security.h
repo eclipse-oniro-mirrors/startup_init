@@ -27,6 +27,8 @@ typedef struct ParamContextsList_ {
 } ParamContextsList;
 #endif
 
+#include "beget_ext.h"
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -93,13 +95,6 @@ typedef struct {
 } ParamSecurityOps;
 
 typedef int (*RegisterSecurityOpsPtr)(ParamSecurityOps *ops, int isInit);
-
-int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditData);
-
-int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit);
-void LoadGroupUser(void);
-void OpenPermissionWorkSpace(void);
-
 typedef int (*SelinuxSetParamCheck)(const char *paraName, struct ucred *uc);
 typedef struct SelinuxSpace_ {
     void *selinuxHandle;
@@ -111,14 +106,18 @@ typedef struct SelinuxSpace_ {
     void (*destroyParamList)(ParamContextsList **list);
 } SelinuxSpace;
 #ifdef PARAM_SUPPORT_SELINUX
-int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit);
+INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit);
 #endif
 
 #if defined STARTUP_INIT_TEST || defined LOCAL_TEST
-ParamSecurityOps *GetParamSecurityOps(int type);
 int RegisterSecurityOps(int onlyRead);
 void SetSelinuxOps(const SelinuxSpace *space);
 #endif
+
+INIT_LOCAL_API ParamSecurityOps *GetParamSecurityOps(int type);
+INIT_LOCAL_API void LoadGroupUser(void);
+INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit);
+INIT_LOCAL_API void OpenPermissionWorkSpace(void);
 
 #ifdef __cplusplus
 #if __cplusplus

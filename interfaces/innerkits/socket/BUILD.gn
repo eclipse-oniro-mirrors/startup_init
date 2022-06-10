@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -18,37 +18,20 @@ service_socket_include = [
   "//base/startup/init_lite/services/log",
   "//third_party/bounds_checking_function/include",
 ]
-service_socket_deps = [
-  "//base/startup/init_lite/services/log:init_log",
-  "//third_party/bounds_checking_function:libsec_static",
-]
 
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "linux") {
-    static_library("libsocket_static") {
+    static_library("libsocket") {
       sources = service_socket_sources
       include_dirs = service_socket_include
-      deps = service_socket_deps
     }
   }
 } else {
   import("//build/ohos.gni")
 
-  ohos_static_library("libsocket_static") {
+  ohos_static_library("libsocket") {
     sources = service_socket_sources
     include_dirs = service_socket_include
-    deps = service_socket_deps
     part_name = "init"
-  }
-
-  ohos_shared_library("libsocket") {
-    sources = service_socket_sources
-    include_dirs = service_socket_include
-    deps = service_socket_deps
-    part_name = "init"
-    install_images = [
-      "system",
-      "updater",
-    ]
   }
 }

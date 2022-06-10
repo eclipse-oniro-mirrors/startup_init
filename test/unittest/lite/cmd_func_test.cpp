@@ -125,7 +125,7 @@ public:
     }
     void SetUp()
     {
-        SetInitLogLevel(INIT_FATAL);
+        EnableInitLog(INIT_FATAL);
     }
     void TearDown() {}
 };

@@ -21,6 +21,7 @@
 
 #include "param_message.h"
 #include "param_utils.h"
+#include "securec.h"
 
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
 

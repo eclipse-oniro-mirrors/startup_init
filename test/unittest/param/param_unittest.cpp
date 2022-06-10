@@ -245,9 +245,9 @@ public:
         SystemTraversalParameter(
             "",
             [](ParamHandle handle, void *cookie) {
-                ReadParamName(handle, (char *)cookie, PARAM_BUFFER_SIZE);
+                SystemGetParameterName(handle, (char *)cookie, PARAM_BUFFER_SIZE);
                 u_int32_t len = PARAM_BUFFER_SIZE;
-                ReadParamValue(handle, ((char *)cookie) + PARAM_BUFFER_SIZE, &len);
+                SystemGetParameterValue(handle, ((char *)cookie) + PARAM_BUFFER_SIZE, &len);
                 printf("$$$$$$$$Param %s=%s \n", (char *)cookie, ((char *)cookie) + PARAM_BUFFER_SIZE);
             },
             (void *)value);
@@ -413,11 +413,6 @@ HWTEST_F(ParamUnitTest, TestLinuxRWLock, TestSize.Level0)
         EXPECT_EQ(0, 1);
     }
     EXPECT_EQ(WorkSpaceNodeCompare(&(workspace1->hashNode), &(workspace2->hashNode)), 0);
-    EXPECT_NE(GetPersistCommitId(), -1);
-    EXPECT_NE(GetPersistCommitId(), -1);
-    EXPECT_STREQ(GetServiceCtrlName("ohos.ctl.start", "test"), "ohos.servicectrl.test");
-    EXPECT_STREQ(GetServiceCtrlName("ohos.startup.powerctrl", "reboot"), "ohos.servicectrl.reboot");
-    EXPECT_STREQ(GetServiceCtrlName("ohos.servicectrl.", "test"), "ohos.servicectrl..test");
     free(workspace1);
     free(workspace2);
 }

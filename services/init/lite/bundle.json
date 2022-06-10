@@ -30,7 +30,7 @@
         "build": {
             "sub_component": [
                 "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-                "//base/startup/init_lite/services:init_lite",
+                "//base/startup/init_lite/services:startup_init",
                 "//base/startup/init_lite/services/begetctl:begetctl_cmd",
                 "//base/startup/init_lite/watchdog:init_watchdog",
                 "//base/startup/init_lite/ueventd:ueventd"
@@ -52,7 +52,7 @@
                 }
             ],
             "test": [
-                "//base/startup/init_lite/services:unittest"
+                "//base/startup/init_lite/services:startup_init"
             ]
         }
     }

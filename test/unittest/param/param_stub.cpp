@@ -350,13 +350,14 @@ void PrepareInitUnitTestEnv(void)
     PrepareInnerKitsCfg();
     PrepareModCfg();
     PrepareGroupTestCfg();
-    SetInitLogLevel(INIT_FATAL);
+    EnableInitLog(INIT_DEBUG);
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     // for cmdline
     const char *cmdLine = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
         "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568"
-        " BOOT_IMAGE=/kernel init=/init ohos.required_mount.test=test";
+        " BOOT_IMAGE=/kernel init=/init "
+        "/dev/block/platform/soc/10100000.himci.eMMC/by-name/misc@none@none@none@wait,required";
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
 
     // for dac

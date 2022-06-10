@@ -24,6 +24,7 @@
 #include "param_utils.h"
 #include "trigger_checker.h"
 #include "trigger_manager.h"
+#include "securec.h"
 
 #define MAX_TRIGGER_COUNT_RUN_ONCE 20
 static TriggerWorkSpace g_triggerWorkSpace = {};

@@ -14,6 +14,7 @@
  */
 #include "param_osadp.h"
 
+#include <errno.h>
 #include <pthread.h>
 #include <sys/ipc.h>
 #include <sys/mman.h>
