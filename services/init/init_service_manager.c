@@ -93,6 +93,11 @@ void DumpOneService(const Service *service)
     int size = 0;
     const InitArgInfo *statusMap = GetServieStatusMap(&size);
     printf("\tservice name: [%s] \n", service->name);
+#ifdef WITH_SELINUX
+    if (service->secon != NULL) {
+        printf("\tservice secon: [%s] \n", service->secon);
+    }
+#endif
     printf("\tservice pid: [%d] \n", service->pid);
     printf("\tservice crashCnt: [%d] \n", service->crashCnt);
     printf("\tservice attribute: [%d] \n", service->attribute);
@@ -204,6 +209,12 @@ void ReleaseService(Service *service)
     if (service == NULL) {
         return;
     }
+#ifdef WITH_SELINUX
+    if (service->secon != NULL) {
+        free(service->secon);
+        service->secon = NULL;
+    }
+#endif
     FreeServiceArg(&service->pathArgs);
     FreeServiceArg(&service->writePidArgs);
     FreeServiceArg(&service->capsArgs);
@@ -788,7 +799,12 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
     int ret = 0;
 #ifdef WITH_SELINUX
-    (void)GetStringItem(curItem, SECON_STR_IN_CFG, service->secon, MAX_SECON_LEN);
+    size_t strLen = 0;
+    char *fieldStr = GetStringValue(curItem, SECON_STR_IN_CFG, &strLen);
+    if (fieldStr != NULL) {
+        service->secon = strdup(fieldStr);
+        INIT_ERROR_CHECK(service->secon != NULL, return -1, "Failed to get secon for service %s", service->name);
+    }
 #endif // WITH_SELINUX
     ret = GetServiceArgs(curItem, "path", MAX_PATH_ARGS_CNT, &service->pathArgs);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get path for service %s", service->name);
