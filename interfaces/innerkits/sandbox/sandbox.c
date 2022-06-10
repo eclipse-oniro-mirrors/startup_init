@@ -252,53 +252,35 @@ static int GetSandboxInfo(sandbox_t *sandbox, cJSON *root, const char *itemName)
     return 0;
 }
 
-static int ParseSandboxConfig(sandbox_t *sandbox, const char *sandboxConfig)
+static int ParseSandboxConfig(cJSON *root, sandbox_t *sandbox)
 {
-    if (sandbox == NULL || sandboxConfig == NULL) {
-        BEGET_LOGE("Parse sandbox config with invalid argument");
+    if ((root == NULL) || (sandbox == NULL)) {
+        BEGET_LOGE("Invaild parameter.");
         return -1;
     }
-    char *contents = ReadFileToBuf(sandboxConfig);
-    if (contents == NULL) {
-        return -1;
-    }
-    cJSON *root = cJSON_Parse(contents);
-    if (root == NULL) {
-        BEGET_LOGE("Parse sandbox config \' %s \' failed", sandboxConfig);
-        return -1;
-    }
+
     cJSON *sandboxRoot = cJSON_GetObjectItem(root, SANDBOX_ROOT_TAG);
-    if (sandboxRoot == NULL) {
-        BEGET_LOGE("Cannot find item \' %s \' in sandbox config", SANDBOX_ROOT_TAG);
-        cJSON_Delete(root);
-        return -1;
-    }
+    BEGET_ERROR_CHECK(sandboxRoot != NULL, return -1,
+        "Cannot find item \' %s \' in sandbox config", SANDBOX_ROOT_TAG);
+
     char *rootdir = cJSON_GetStringValue(sandboxRoot);
     if (rootdir != NULL) {
         sandbox->rootPath = strdup(rootdir);
-        if (sandbox->rootPath == NULL) {
-            BEGET_LOGE("Get sandbox root path out of memory");
-            cJSON_Delete(root);
-            return -1;
-        }
+        BEGET_ERROR_CHECK(sandbox->rootPath != NULL, return -1,
+            "Get sandbox root path out of memory");
     }
-    BEGET_LOGI("config file %s", sandboxConfig);
     if (GetSandboxInfo(sandbox, root, SANDBOX_MOUNT_PATH_TAG) < 0) {
-        BEGET_LOGE("config file %s, SANDBOX_MOUNT_PATH_TAG error", sandboxConfig);
-        cJSON_Delete(root);
+        BEGET_LOGE("config info %s error", SANDBOX_MOUNT_PATH_TAG);
         return -1;
     }
     if (GetSandboxInfo(sandbox, root, SANDBOX_MOUNT_FILE_TAG) < 0) {
-        BEGET_LOGE("config file %s, SANDBOX_MOUNT_FILE_TAG error", sandboxConfig);
-        cJSON_Delete(root);
+        BEGET_LOGE("config info %s error", SANDBOX_MOUNT_FILE_TAG);
         return -1;
     }
     if (GetSandboxInfo(sandbox, root, SANDBOX_SYMLINK_TAG) < 0) {
-        BEGET_LOGE("config file %s, SANDBOX_SYMLINK_TAG error", sandboxConfig);
-        cJSON_Delete(root);
+        BEGET_LOGE("config info %s error", SANDBOX_SYMLINK_TAG);
         return -1;
     }
-    cJSON_Delete(root);
     return 0;
 }
 
@@ -342,7 +324,17 @@ static void InitSandbox(sandbox_t *sandbox, const char *sandboxConfig, const cha
     }
 
     // parse json config
-    if (ParseSandboxConfig(sandbox, sandboxConfig) < 0) {
+    char *contents = ReadFileToBuf(sandboxConfig);
+    if (contents == NULL) {
+        return;
+    }
+    cJSON *root = cJSON_Parse(contents);
+    free(contents);
+    BEGET_ERROR_CHECK(root != NULL, return, "Parse sandbox config \' %s \' failed", sandboxConfig);
+    int ret = ParseSandboxConfig(root, sandbox);
+    cJSON_Delete(root);
+    if (ret < 0) {
+        DestroySandbox(name);
         return;
     }
 }
