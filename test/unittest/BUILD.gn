@@ -208,7 +208,8 @@ ohos_unittest("init_ut") {
     "//third_party/cJSON:cjson_static",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest",
-    "//third_party/openssl:libcrypto_shared",
+    "//third_party/mbedtls:mbedtls_shared",
+    "//utils/native/base:utils",
   ]
 
   defines = [
@@ -219,6 +220,7 @@ ohos_unittest("init_ut") {
     "PARAM_SUPPORT_DAC",
     "_GNU_SOURCE",
     "PARAM_SUPPORT_TRIGGER",
+    "USE_MBEDTLS",
   ]
   defines += [ "_GNU_SOURCE" ]
 
