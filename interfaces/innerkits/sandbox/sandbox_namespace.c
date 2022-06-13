@@ -25,9 +25,7 @@ static int g_defaultNs;
 
 int GetNamespaceFd(const char *nsPath)
 {
-    if (nsPath == NULL) {
-        return -1;
-    }
+    BEGET_CHECK(nsPath != NULL, return -1);
     int ns = open(nsPath, O_RDONLY | O_CLOEXEC);
     if (ns < 0) {
         BEGET_LOGE("Open default namespace failed, err=%d", errno);
@@ -66,18 +64,14 @@ int SetNamespace(int nsFd, int nsType)
 
 void InitDefaultNamespace(void)
 {
-    if (g_defaultNs > 0) {
-        (void)close(g_defaultNs);
-    }
+    BEGET_CHECK(!(g_defaultNs > 0), (void)close(g_defaultNs));
     g_defaultNs = GetNamespaceFd("/proc/self/ns/mnt");
     return;
 }
 
 int EnterDefaultNamespace(void)
 {
-    if (g_defaultNs < 0) {
-        return -1;
-    }
+    BEGET_CHECK(!(g_defaultNs < 0), return -1);
     return SetNamespace(g_defaultNs, CLONE_NEWNS);
 }
 

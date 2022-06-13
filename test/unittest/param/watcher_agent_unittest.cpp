@@ -87,6 +87,7 @@ public:
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        data.WriteInterfaceToken(IWatcher::GetDescriptor());
         data.WriteString(name);
         data.WriteString("watcherId");
 

@@ -20,6 +20,7 @@
 
 #include "param_trie.h"
 #include "securec.h"
+#include "param_utils.h"
 
 ParamNode *SystemCheckMatchParamWait(const char *name, const char *value)
 {
@@ -257,7 +258,7 @@ static char *BuildKey(const char *format, ...)
     return NULL;
 }
 
-static char *GetServiceCtrlName(const char *name, const char *value)
+PARAM_STATIC char *GetServiceCtrlName(const char *name, const char *value)
 {
     static char *ctrlParam[] = {
         "ohos.ctl.start",

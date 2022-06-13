@@ -30,7 +30,7 @@ config("utest_config") {
   ldflags = [ "--coverage" ]
 }
 
-ohos_unittest("init_ut") {
+ohos_unittest("init_unittest") {
   module_out_path = "startup/init"
   sources = [
     "//base/startup/init_lite/device_info/device_info.cpp",
@@ -278,7 +278,7 @@ ohos_unittest("init_ut") {
 group("init_test") {
   testonly = true
   deps = [
-    ":init_ut",
+    ":init_unittest",
     "//base/startup/init_lite/test/moduletest:paramtestmodule",
   ]
 }

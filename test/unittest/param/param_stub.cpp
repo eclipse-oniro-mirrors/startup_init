@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 #endif
-
+int LoadParamFromCmdLine(void);
 static int g_testPermissionResult = DAC_RESULT_PERMISSION;
 void SetTestPermissionResult(int result)
 {
@@ -338,6 +338,22 @@ static const char *g_triggerData = "{"
     "}";
 #endif
 
+void PrepareCmdLineHasSn()
+{
+    // for cmdline
+    const char *cmdLineHasSnroot = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
+        "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568"
+        " BOOT_IMAGE=/kernel ohos.boot.sn=/test init=/init ohos.required_mount.system="
+        "/dev/block/platform/soc/10100000.himci.eMMC/by-name/misc@none@none@none@wait,required";
+    CreateTestFile(BOOT_CMD_LINE, cmdLineHasSnroot);
+    LoadParamFromCmdLine();
+    const char *cmdLineHasntSn = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
+        "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568"
+        " BOOT_IMAGE=/kernel init=/init ohos.required_mount.system="
+        "/dev/block/platform/soc/10100000.himci.eMMC/by-name/misc@none@none@none@wait,required";
+    CreateTestFile(BOOT_CMD_LINE, cmdLineHasntSn);
+}
+
 void PrepareInitUnitTestEnv(void)
 {
     static int evnOk = 0;
@@ -353,13 +369,7 @@ void PrepareInitUnitTestEnv(void)
     EnableInitLog(INIT_DEBUG);
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
-    // for cmdline
-    const char *cmdLine = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
-        "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568"
-        " BOOT_IMAGE=/kernel init=/init "
-        "/dev/block/platform/soc/10100000.himci.eMMC/by-name/misc@none@none@none@wait,required";
-    CreateTestFile(BOOT_CMD_LINE, cmdLine);
-
+    PrepareCmdLineHasSn();
     // for dac
     std::string dacData = "ohos.servicectrl.   = system:servicectrl:0775 \n";
     dacData += "test.permission.       = root:root:0770\n";

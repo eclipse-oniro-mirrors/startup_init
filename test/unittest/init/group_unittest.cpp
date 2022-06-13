@@ -153,7 +153,8 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, act), 0);
     }
-    HashMapTraverse(handle, nullptr, nullptr);
+    HashMapIsEmpty(handle);
+    HashMapTraverse(handle, [](const HashNode *node, const void *context) {return;}, nullptr);
     HashMapDestory(handle);
 }
 
@@ -298,7 +299,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService2, TestSize.Level1)
     ASSERT_NE(nullptr, fileRoot);
     ParseAllServices(fileRoot);
     cJSON_Delete(fileRoot);
-
+    DumpAllServices();
     Service *service = GetServiceByName("test-service6");
     ASSERT_NE(service, nullptr);
     workspace->groupMode = GROUP_BOOT;

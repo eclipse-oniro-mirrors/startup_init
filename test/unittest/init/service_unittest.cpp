@@ -273,7 +273,7 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
     service->pathArgs.count = 1;
     const char *path = "/data/init_ut/test_service_release";
     service->pathArgs.argv[0] = strdup(path);
-
+    EnterServiceSandbox(service);
     service->importance = 20;
     int ret = ServiceExec(service);
     EXPECT_EQ(ret, 0);

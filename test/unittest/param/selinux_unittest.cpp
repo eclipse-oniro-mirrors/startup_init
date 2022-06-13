@@ -22,7 +22,9 @@
 
 using namespace testing::ext;
 using namespace std;
-
+extern "C" {
+void OpenPermissionWorkSpace(void);
+}
 namespace init_ut {
 class SelinuxUnitTest : public ::testing::Test {
 public:
@@ -184,5 +186,6 @@ HWTEST_F(SelinuxUnitTest, TestClientDacCheckParaPermission, TestSize.Level0)
     SelinuxUnitTest test;
     test.TestClientSelinuxCheckParaPermissionWrite("aaa.bbb.bbb.ccc", "user:group1:r");
     test.TestClientSelinuxCheckParaPermissionRead("aaa.bbb.bbb.ccc", "user:group1:r");
+    OpenPermissionWorkSpace();
 }
 }
