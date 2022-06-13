@@ -107,6 +107,7 @@ if (defined(ohos_lite)) {
         "//third_party/bounds_checking_function:libsec_static",
       ]
 
+      sources = []
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
         deps += [ "$ohos_product_adapter_dir/utils/sys_param:hal_sysparam" ]
         defines += [ "LITEOS_SUPPORT" ]
