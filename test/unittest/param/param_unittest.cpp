@@ -27,6 +27,7 @@ using namespace std;
 
 extern "C" {
 int WorkSpaceNodeCompare(const HashNode *node1, const HashNode *node2);
+char *GetServiceCtrlName(const char *name, const char *value);
 }
 
 static void OnClose(ParamTaskPtr client)
@@ -415,5 +416,11 @@ HWTEST_F(ParamUnitTest, TestLinuxRWLock, TestSize.Level0)
     EXPECT_EQ(WorkSpaceNodeCompare(&(workspace1->hashNode), &(workspace2->hashNode)), 0);
     free(workspace1);
     free(workspace2);
+}
+HWTEST_F(ParamUnitTest, TestGetServiceCtlName, TestSize.Level0)
+{
+    EXPECT_STREQ(GetServiceCtrlName("ohos.startup.powerctrl", "reboot,updater"), "ohos.servicectrl.reboot.updater");
+    EXPECT_STREQ(GetServiceCtrlName("ohos.ctl.stop", "test"), "ohos.servicectrl.test");
+    EXPECT_STREQ(GetServiceCtrlName("ohos.servicectrl.stop", "test"), "ohos.servicectrl.stop.test");
 }
 }

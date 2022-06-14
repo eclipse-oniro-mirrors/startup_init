@@ -120,8 +120,8 @@ cJSON *MakeSandboxJson(const char *sandboxFileName, const int MODE)
         }
         cJSON_AddItemToObject(mJsonMtBdPth_Itm, MOUNT_BIND_PATHS[MOUNT_FLAG_COUNT], mJsonMtBdPthItmSdxFlg);
     }
-
     if (MODE != NULL_MOUNT) {
+        cJSON_AddItemToObject(mJsonMtBdFlItm, SANDBOX_CONFIG[1], cJSON_CreateString("/data/init_ut/testsandboxfile"));
         // Append items to mount-bind-files
         cJSON_AddItemToArray(mJsonMtBdFl, mJsonMtBdFlItm);
         // assemble symbol-links items
@@ -143,7 +143,7 @@ cJSON *MakeSandboxJson(const char *sandboxFileName, const int MODE)
 
 bool MakeFileByJson(cJSON * mJson, const char *sandboxFileName)
 {
-    const std::string  sandboxJsonPth = std::string("/etc/sandbox/") + std::string(sandboxFileName);
+    const std::string  sandboxJsonPth = std::string("/data/init_ut/") + std::string(sandboxFileName);
     const char* cSandboxJsonPth = sandboxJsonPth.c_str();
     int fd = open(cSandboxJsonPth, O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
     if (fd < 0) {

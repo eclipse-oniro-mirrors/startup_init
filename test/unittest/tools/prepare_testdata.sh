@@ -47,7 +47,7 @@ hdc_shell_cmd "mount -o remount,rw /"
 ut_target_path="/data/init_ut"
 echo "Remove ${ut_target_path}"
 hdc_shell_cmd "rm -rf ${ut_target_path}"
-hdc_shell_cmd "rm /bin/init_ut"
+hdc_shell_cmd "rm /bin/init_unittest"
 
 echo "Create ${ut_target_path}"
 hdc_shell_cmd "umask 022"
@@ -80,19 +80,19 @@ hdc_push_cmd ${ohos_root}/base/startup/init_lite/test/unittest/test_data/trigger
 sleep 0.2
 hdc_push_cmd ${ohos_root}/base/startup/init_lite/test/unittest/test_data/proc/cmdline  /data/init_ut/proc/cmdline
 sleep 0.25
-hdc file send ${ohos_root}/out/rk3568/tests/unittest/startup/init/init_ut /data/init_ut/init_ut
+hdc file send ${ohos_root}/out/rk3568/tests/unittest/startup/init/init_unittest /data/init_ut/init_unittest
 sleep 0.25
-hdc_shell_cmd "cp /data/init_ut/init_ut /bin/init_ut"
+hdc_shell_cmd "cp /data/init_ut/init_unittest /bin/init_unittest"
 
 hdc_shell_cmd "chmod 777 /data/init_ut/* -R"
 sleep 0.2
-hdc_shell_cmd "chmod 777 /bin/init_ut"
+hdc_shell_cmd "chmod 777 /bin/init_unittest"
 
-hdc_shell_cmd "export GCOV_PREFIX=${ut_target_path}/coverage&&export GCOV_PREFIX_STRIP=15&&init_ut"
+hdc_shell_cmd "export GCOV_PREFIX=${ut_target_path}/coverage&&export GCOV_PREFIX_STRIP=15&&init_unittest"
 sleep 0.2
 
 if [ $? -ne 0 ]; then
-    echo "Execute init_ut in device failed. please check the log"
+    echo "Execute init_unittest in device failed. please check the log"
 fi
 echo "Running init unittests end..."
 echo "Ready to generate coverage..."

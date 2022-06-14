@@ -310,10 +310,12 @@ void EnterServiceSandbox(Service *service)
         }
     }
     INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
+#ifndef STARTUP_INIT_TEST
     char *argv[] = { (char *)"/bin/sh", NULL };
     INIT_CHECK_ONLY_ELOG(execv(argv[0], argv) == 0,
         "service %s execv sh failed! err %d.", service->name, errno);
     _exit(PROCESS_EXIT_CODE);
+#endif
 }
 
 int ServiceStart(Service *service)
