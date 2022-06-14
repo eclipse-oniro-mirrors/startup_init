@@ -101,6 +101,7 @@ typedef struct SelinuxSpace_ {
     void (*setSelinuxLogCallback)();
     int (*setParamCheck)(const char *paraName, struct ucred *uc);
     const char *(*getParamLabel)(const char *paraName);
+    void (*initParamSelinux)();
     int (*readParamCheck)(const char *paraName);
     ParamContextsList *(*getParamList)();
     void (*destroyParamList)(ParamContextsList **list);
