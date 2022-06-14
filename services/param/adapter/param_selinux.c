@@ -51,11 +51,6 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
             return 0, "Failed to dlsym selinuxHandle, %s", dlerror());
     }
     void *handle = g_selinuxSpace.selinuxHandle;
-    if (g_selinuxSpace.setSelinuxLogCallback == NULL) {
-        g_selinuxSpace.setSelinuxLogCallback = (void (*)())dlsym(handle, "SetSelinuxLogCallback");
-        PARAM_CHECK(g_selinuxSpace.setSelinuxLogCallback != NULL,
-            return -1, "Failed to dlsym setSelinuxLogCallback %s", dlerror());
-    }
     if (g_selinuxSpace.setParamCheck == NULL) {
         g_selinuxSpace.setParamCheck = (SelinuxSetParamCheck)dlsym(handle, "SetParamCheck");
         PARAM_CHECK(g_selinuxSpace.setParamCheck != NULL, return -1, "Failed to dlsym setParamCheck %s", dlerror());
@@ -68,9 +63,9 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         g_selinuxSpace.getParamLabel = (const char * (*)(const char *))dlsym(handle, "GetParamLabel");
         PARAM_CHECK(g_selinuxSpace.getParamLabel != NULL, return -1, "Failed to dlsym getParamLabel %s", dlerror());
     }
-    if (g_selinuxSpace.readParamCheck == NULL) {
-        g_selinuxSpace.readParamCheck = (int (*)(const char *))dlsym(handle, "ReadParamCheck");
-        PARAM_CHECK(g_selinuxSpace.readParamCheck != NULL, return -1, "Failed to dlsym readParamCheck %s", dlerror());
+    if (g_selinuxSpace.initParamSelinux == NULL) {
+        g_selinuxSpace.initParamSelinux = (void (*)())dlsym(handle, "InitParamSelinux");
+        PARAM_CHECK(g_selinuxSpace.initParamSelinux != NULL, return -1, "Failed to dlsym initParamSelinux ");
     }
     if (g_selinuxSpace.destroyParamList == NULL) {
         g_selinuxSpace.destroyParamList =
@@ -78,11 +73,9 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         PARAM_CHECK(g_selinuxSpace.destroyParamList != NULL,
             return -1, "Failed to dlsym destroyParamList %s", dlerror());
     }
-    if (isInit) { // log
-        g_selinuxSpace.setSelinuxLogCallback();
-    }
+    g_selinuxSpace.initParamSelinux();
 #endif
-    PARAM_LOGV("Load sulinux lib success.");
+    PARAM_LOGV("Load selinux lib success.");
     return 0;
 }
 
