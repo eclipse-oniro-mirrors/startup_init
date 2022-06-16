@@ -171,7 +171,7 @@ static int WritePid(const Service *service)
 void SetSecon(Service *service)
 {
 #ifdef WITH_SELINUX
-    if (*(service->secon)) {
+    if (service->secon != NULL) {
         if (setexeccon(service->secon) < 0) {
             INIT_LOGE("failed to set service %s's secon (%s).", service->name, service->secon);
             _exit(PROCESS_EXIT_CODE);
