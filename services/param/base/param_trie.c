@@ -409,5 +409,12 @@ INIT_LOCAL_API ParamTrieNode *FindTrieNode(WorkSpace *workSpace,
     PARAMSPACE_AREA_RD_LOCK(workSpace);
     node = FindTrieNode_(workSpace, key, keyLen, matchLabel);
     PARAMSPACE_AREA_RW_UNLOCK(workSpace);
+    if (node != NULL && node->dataIndex != 0) {
+        ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
+        if (entry != NULL && entry->keyLength == keyLen) {
+            return node;
+        }
+        return NULL;
+    }
     return node;
 }

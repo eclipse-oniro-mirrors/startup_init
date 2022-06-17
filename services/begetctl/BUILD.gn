@@ -189,7 +189,8 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/startup/init_lite/services/log:agent_log",
       "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/param:parameter",
+      "//base/startup/init_lite/services/param/base:parameterbase",
+      "//base/startup/init_lite/services/param/linux:param_client",
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_static",
     ]

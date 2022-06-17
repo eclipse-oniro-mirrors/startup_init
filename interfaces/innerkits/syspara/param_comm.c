@@ -50,11 +50,14 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
     }
     uint32_t size = len;
     int ret = SystemGetParameter(key, NULL, &size);
-    if (ret == PARAM_CODE_INVALID_NAME || ret == DAC_RESULT_FORBIDED || ret == PARAM_CODE_INVALID_PARAM) {
-        return EC_FAILURE;
-    }
-    if ((size > len) || (ret != 0)) {
-        return strcpy_s(value, len, def);
+    if (ret != 0) {
+        if (def == NULL || strlen(def) > len) {
+            return EC_INVALID;
+        }
+        ret = strcpy_s(value, len, def);
+        return (ret == 0) ? 0 : EC_FAILURE;
+    } else if (size > len) {
+        return EC_INVALID;
     }
     size = len;
     return (SystemGetParameter(key, value, &size) == 0) ? EC_SUCCESS : EC_FAILURE;
