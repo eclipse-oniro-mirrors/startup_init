@@ -256,7 +256,7 @@ static int Mount(const char *source, const char *target, const char *fsType,
     int rc = -1;
 
     if (source == NULL || target == NULL || fsType == NULL) {
-        BEGET_LOGE("Invalid argment for mount.");
+        BEGET_LOGE("Invalid argument for mount.");
         return -1;
     }
     if (stat(target, &st) != 0 && errno != ENOENT) {

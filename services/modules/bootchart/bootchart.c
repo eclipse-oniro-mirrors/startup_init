@@ -260,7 +260,7 @@ static int DoBootchartStop(void)
     pthread_mutex_unlock(&(g_bootchartCtrl->mutex));
     pthread_join(g_bootchartCtrl->threadId, NULL);
     BootchartDestory();
-    PLUGIN_LOGI("bootcharting stoped");
+    PLUGIN_LOGI("bootcharting stopped");
     return 0;
 }
 

@@ -142,7 +142,7 @@ ListNode *ListFind(const ListNode *head, void *data, ListTraversalProc comparePr
  * @brief Traversal the list with specified function
  *
  * @param head list head, make sure head is valid pointer.
- * @param cookie optinal traversing data.
+ * @param cookie optional traversing data.
  * @param traversalProc comparing function, return 0 if matched.
  * @param flags optinal traversing flags:
  *  TRAVERSE_REVERSE_ORDER: traversing from last node to first node;
