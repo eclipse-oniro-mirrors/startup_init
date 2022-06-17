@@ -52,7 +52,7 @@ int UnshareNamespace(int nsType)
 int SetNamespace(int nsFd, int nsType)
 {
     if (nsFd < 0) {
-        BEGET_LOGE("Namespace fd is invaild");
+        BEGET_LOGE("Namespace fd is invalid");
         return -1;
     }
     if (nsType != CLONE_NEWNS) {

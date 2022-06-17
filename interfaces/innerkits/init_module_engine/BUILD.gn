@@ -28,7 +28,7 @@ config("init_module_engine_exported_config") {
 }
 
 #
-# innerkits for module developement
+# innerkits for module development
 #
 ohos_native_stub_library("libinit_module_engine") {
   output_extension = "so"
