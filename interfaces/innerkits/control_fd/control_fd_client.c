@@ -43,7 +43,7 @@ static void ProcessFifoWrite(const WatcherHandle taskHandle, int fd, uint32_t *e
     }
     int fifow = *((int *)context);
     if (fifow < 0) {
-        BEGET_LOGE("[control_fd] invaild fifo write fd");
+        BEGET_LOGE("[control_fd] invalid fifo write fd");
         return;
     }
     char rbuf[FIFO_BUF_SIZE] = {0};

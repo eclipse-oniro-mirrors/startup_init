@@ -158,7 +158,7 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
     ParamAuditData auditData = {};
     int ret = GetParamSecurityAuditData(name, 0, &auditData);
     BSH_CHECK(ret == 0, return, "Failed to get param security for %s", name);
-    BShellEnvOutput(shell, "Parameter infomation:\r\n");
+    BShellEnvOutput(shell, "Parameter information:\r\n");
 #ifdef PARAM_SUPPORT_SELINUX
     BShellEnvOutput(shell, "selinux  : %s \r\n", auditData.label);
 #endif

@@ -220,7 +220,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
 {
     INIT_CHECK_RETURN_VALUE((maxItemCount >= 0) && (buffer != NULL) && (del != NULL) && (returnCount != NULL), NULL);
     // Why is this number?
-    // Now we use this function to split a string with a given delimeter
+    // Now we use this function to split a string with a given delimiter
     // We do not know how many sub-strings out there after splitting.
     // 50 is just a guess value.
     const int defaultItemCounts = 50;

@@ -116,7 +116,7 @@ static void SendFdsInfo(int sock, Service *service)
     };
 
     if (BuildControlMessage(&msghdr, service->fds, service->fdCount, false) < 0) {
-        SendErrorInfo(sock, "Faild to build send message", service->name);
+        SendErrorInfo(sock, "Failed to build send message", service->name);
     } else {
         if (TEMP_FAILURE_RETRY(sendmsg(sock, &msghdr, MSG_NOSIGNAL)) < 0) {
             INIT_LOGE("Failed to send fd info to service \' %s \', err = %d", service->name, errno);
@@ -220,7 +220,7 @@ static void HandlerFdHolder(int sock)
         // In this case, ignore fds, just close them if fd passed to init
         HandlerGetFds(sock, service);
     } else {
-        INIT_LOGE("Unexpect action: %s", action);
+        INIT_LOGE("Unexpected action: %s", action);
     }
     FreeFds(fds);
     CloseFds(fds, fdCount);

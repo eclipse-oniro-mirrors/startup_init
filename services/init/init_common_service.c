@@ -106,13 +106,13 @@ static int SetPerms(const Service *service)
     }
 
     INIT_ERROR_CHECK(capset(&capHeader, capData) == 0, return SERVICE_FAILURE,
-        "capset faild for service: %s, error: %d", service->name, errno);
+        "capset failed for service: %s, error: %d", service->name, errno);
     for (unsigned int i = 0; i < service->servPerm.capsCnt; ++i) {
         if (service->servPerm.caps[i] == FULL_CAP) {
             return SetAllAmbientCapability();
         }
         INIT_ERROR_CHECK(SetAmbientCapability(service->servPerm.caps[i]) == 0, return SERVICE_FAILURE,
-            "SetAmbientCapability faild for service: %s", service->name);
+            "SetAmbientCapability failed for service: %s", service->name);
     }
     return SERVICE_SUCCESS;
 }
@@ -267,7 +267,7 @@ static void ClearEnvironment(Service *service)
 
 static int InitServicePropertys(Service *service)
 {
-    INIT_ERROR_CHECK(service != NULL, return -1, "Invaild parameter.");
+    INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
     SetServiceEnterSandbox(service->pathArgs.argv[0], service->attribute);
     INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS, "access token failed %s", service->name);
     // deal start job
@@ -427,7 +427,7 @@ static void CheckServiceSocket(Service *service)
     ServiceSocket *tmpSock = service->socketCfg;
     while (tmpSock != NULL) {
         if (tmpSock->sockFd <= 0) {
-            INIT_LOGE("Invaid socket %s for service", service->name);
+            INIT_LOGE("Invalid socket %s for service", service->name);
             tmpSock = tmpSock->next;
         }
         SocketAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
