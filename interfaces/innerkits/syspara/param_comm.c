@@ -191,7 +191,10 @@ INIT_LOCAL_API const char *GetSerial_(void)
 #ifdef LITEOS_SUPPORT
     return HalGetSerial();
 #else
-    static char ohos_serial[PARAM_VALUE_LEN_MAX]  = {0};
+    static char *ohos_serial = NULL;
+    if (ohos_serial == NULL) {
+        BEGET_CHECK((ohos_serial = (char *)calloc(1, PARAM_VALUE_LEN_MAX)) != NULL, return NULL);
+    }
     uint32_t len = PARAM_VALUE_LEN_MAX;
     int ret = SystemGetParameter("ohos.boot.sn", ohos_serial, &len);
     BEGET_CHECK(ret == 0, return NULL);
