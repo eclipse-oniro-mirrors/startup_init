@@ -55,7 +55,7 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
         cmsg->cmsg_len = CMSG_LEN(sizeof(int) * fdCount);
         int ret = memcpy_s(CMSG_DATA(cmsg), cmsg->cmsg_len, fds, sizeof(int) * fdCount);
         if (ret != 0) {
-            BEGET_LOGE("Controll message is not valid");
+            BEGET_LOGE("Control message is not valid");
             free(msghdr->msg_control);
             return -1;
         }
@@ -65,7 +65,7 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
 
     if (sendUcred) {
         if (cmsg == NULL) {
-            BEGET_LOGE("Controll message is not valid");
+            BEGET_LOGE("Control message is not valid");
             free(msghdr->msg_control);
             return -1;
         }
@@ -106,7 +106,7 @@ int *ReceiveFds(int sock, struct iovec iovec, size_t *outFdCount, bool nonblock,
     BEGET_ERROR_CHECK(rc >= 0, return NULL, "Failed to get fds from remote, err = %d", errno);
 
     if ((msghdr.msg_flags) & MSG_TRUNC) {
-        BEGET_LOGE("Message was trucated when receiving fds");
+        BEGET_LOGE("Message was truncated when receiving fds");
         return NULL;
     }
 

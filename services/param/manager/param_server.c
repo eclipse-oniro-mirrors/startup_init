@@ -23,7 +23,7 @@ static int LoadSecurityLabel(const char *fileName)
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return -1, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
-    PARAM_CHECK(fileName != NULL, return -1, "Invalid fielname for load");
+    PARAM_CHECK(fileName != NULL, return -1, "Invalid filename for load");
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     // load security label
     ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_DAC);

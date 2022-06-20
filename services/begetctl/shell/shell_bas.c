@@ -720,7 +720,7 @@ const ParamInfo *BShellEnvGetReservedParam(BShellHandle handle, const char *name
 {
     BSH_CHECK(handle != NULL, return NULL, "Invalid shell env");
     static ParamInfo reservedParams[] = {
-        {PARAM_REVERESD_NAME_CURR_PARAMETER, "current paramater", PARAM_STRING}
+        {PARAM_REVERESD_NAME_CURR_PARAMETER, "current parameter", PARAM_STRING}
     };
     for (size_t i = 0; i < sizeof(reservedParams) / sizeof(reservedParams[0]); i++) {
         if (strcmp(name, reservedParams[i].name) == 0) {

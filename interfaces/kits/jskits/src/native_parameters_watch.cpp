@@ -232,7 +232,7 @@ static void AddWatcherCallback(ParamWatcherPtr watcher, napi_ref callbackRef)
 
 static void DelWatcherCallback(ParamWatcherPtr watcher, uint32_t next)
 {
-    PARAM_JS_LOGV("JSApp watcher key %s delete callack %u", watcher->keyPrefix, next);
+    PARAM_JS_LOGV("JSApp watcher key %s delete callback %u", watcher->keyPrefix, next);
     std::lock_guard<std::mutex> lock(watcher->mutex);
     watcher->callbackReferences.erase(next);
 }
@@ -490,7 +490,7 @@ static napi_value SwithWatchOn(napi_env env, napi_callback_info info)
 {
     napi_value callback = nullptr;
     ParamWatcherPtr watcher = GetWatcherInfo(env, info, &callback);
-    PARAM_JS_CHECK(watcher != nullptr, return GetNapiValue(env, -1), "Failed to get watcher swith param");
+    PARAM_JS_CHECK(watcher != nullptr, return GetNapiValue(env, -1), "Failed to get watcher switch param");
 
     if (CheckCallbackEqual(env, callback, watcher)) {
         PARAM_JS_LOGE("JSApp watcher repeater switch on %s", watcher->keyPrefix);

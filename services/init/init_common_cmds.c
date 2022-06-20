@@ -173,7 +173,7 @@ static void DoSleep(const struct CmdArgs *ctx)
 {
     errno = 0;
     unsigned long sleepTime = strtoul(ctx->argv[0], NULL, DECIMAL_BASE);
-    INIT_ERROR_CHECK(errno == 0, return, "cannot covert sleep time in command \" sleep \"");
+    INIT_ERROR_CHECK(errno == 0, return, "cannot convert sleep time in command \" sleep \"");
 
     // Limit sleep time in 5 seconds
     const unsigned long sleepTimeLimit = 5;
@@ -192,7 +192,7 @@ static void DoWait(const struct CmdArgs *ctx)
         errno = 0;
         waitSecond = strtoul(ctx->argv[timePos], NULL, DECIMAL_BASE);
         INIT_ERROR_CHECK(errno == 0,
-        return, "cannot covert sleep time in command \" wait \"");
+        return, "cannot convert sleep time in command \" wait \"");
     }
 
     INIT_LOGI("Waiting %s %lu second(s)", ctx->argv[filePos], waitSecond);
@@ -548,7 +548,7 @@ static void DoSetrlimit(const struct CmdArgs *ctx)
         }
     }
     if (rcs == -1) {
-        INIT_LOGE("DoSetrlimit failed, resouces :%s not support.", ctx->argv[0]);
+        INIT_LOGE("DoSetrlimit failed, resources :%s not support.", ctx->argv[0]);
         return;
     }
     INIT_CHECK_ONLY_ELOG(setrlimit(rcs, &limit) == 0, "DoSetrlimit failed : %d", errno);

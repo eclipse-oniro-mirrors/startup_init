@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     };
     int parameterNum = 2;
     if ((argc != parameterNum) || (argv[1] == nullptr)) {
-        cout << "Invaild parameter" << endl;
+        cout << "Invalid parameter" << endl;
     }
     const string name = argv[1];
     int abilityId = 0;
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
         cout << "sa service name " << item->first << "ability id " << item->second << endl;
         abilityId = item->second;
     } else {
-        cout << "Invaild sa service name" << endl;
+        cout << "Invalid sa service name" << endl;
         return 0;
     }
 

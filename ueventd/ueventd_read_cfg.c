@@ -155,7 +155,7 @@ static int ParseFirmwareConfig(char *p)
 
     // Sanity checks
     struct stat st = {};
-    INIT_ERROR_CHECK(stat(p, &st) == 0, return -1, "Invalid firware file: %s, err = %d", p, errno);
+    INIT_ERROR_CHECK(stat(p, &st) == 0, return -1, "Invalid firmware file: %s, err = %d", p, errno);
     INIT_ERROR_CHECK(S_ISDIR(st.st_mode), return -1, "Expect directory in firmware config");
     struct FirmwareUdevConf *config = calloc(1, sizeof(struct FirmwareUdevConf));
     INIT_CHECK(config != NULL, errno = ENOMEM;

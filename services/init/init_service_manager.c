@@ -36,7 +36,7 @@
 #   include "init_selinux_param.h"
 #endif // WITH_SELINUX
 
-// All serivce processes that init will fork+exec.
+// All service processes that init will fork+exec.
 static ServiceSpace g_serviceSpace = { 0 };
 static const int CRITICAL_DEFAULT_CRASH_TIME = 20;
 // maximum number of crashes within time CRITICAL_DEFAULT_CRASH_TIME for one service
@@ -1042,7 +1042,7 @@ void StartAllServices(int startMode)
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
-    INIT_LOGI("StartAllServices %d finsh", startMode);
+    INIT_LOGI("StartAllServices %d finish", startMode);
 }
 
 void LoadAccessTokenId(void)

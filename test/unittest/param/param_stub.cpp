@@ -63,7 +63,7 @@ static const char *forbitWriteParamName[] = {
 
 static int TestSetParamCheck(const char *paraName, struct ucred *uc)
 {
-    // forbit to read ohos.servicectrl.
+    // forbid to read ohos.servicectrl.
     for (size_t i = 0; i < ARRAY_LENGTH(forbitWriteParamName); i++) {
         if (strncmp(paraName, forbitWriteParamName[i], strlen(forbitWriteParamName[i])) == 0) {
             return 1;
@@ -91,7 +91,7 @@ static const char *forbitReadParamName[] = {
 };
 static int TestReadParamCheck(const char *paraName)
 {
-    // forbit to read ohos.servicectrl.
+    // forbid to read ohos.servicectrl.
     for (size_t i = 0; i < ARRAY_LENGTH(forbitReadParamName); i++) {
         if (strncmp(paraName, forbitReadParamName[i], strlen(forbitReadParamName[i])) == 0) {
             return 1;
