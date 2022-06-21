@@ -231,6 +231,7 @@ if (defined(ohos_lite)) {
     if (enable_ohos_startup_init_feature_deviceinfo) {
       sources += [
         "//base/startup/init_lite/device_info/device_info_kits.cpp",
+        "//base/startup/init_lite/device_info/device_info_load.cpp",
         "//base/startup/init_lite/device_info/device_info_proxy.cpp",
       ]
       defines += [ "PARAM_FEATURE_DEVICEINFO" ]

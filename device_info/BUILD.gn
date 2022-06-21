@@ -31,6 +31,13 @@ ohos_shared_library("deviceinfoservice") {
     "device_info_stub.cpp",
   ]
 
+  defines = [
+    "INIT_AGENT",
+    "INIT_FILE",
+    "_GNU_SOURCE",
+    "USE_MBEDTLS",
+  ]
+
   include_dirs = [
     ".",
     "//base/startup/init_lite/services/include/param",
@@ -43,7 +50,7 @@ ohos_shared_library("deviceinfoservice") {
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/openssl:libcrypto_shared",
+    "//third_party/mbedtls:mbedtls_shared",
   ]
 
   external_deps = [
