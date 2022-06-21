@@ -483,7 +483,7 @@ static int AddServiceSocket(cJSON *json, Service *service)
     stringValue = GetStringValue(json, "gid", &strLen);
     INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
         "Failed to get string for gid");
-    sockopt->gid = DecodeUid(stringValue);
+    sockopt->gid = DecodeGid(stringValue);
     INIT_ERROR_CHECK((sockopt->uid != (uid_t)-1) && (sockopt->gid != (uid_t)-1),
         free(sockopt); sockopt = NULL; return SERVICE_FAILURE, "Invalid uid or gid");
     ret = ParseSocketOption(json, sockopt);
@@ -555,7 +555,7 @@ static int AddServiceFile(cJSON *json, Service *service)
     }
     fileOpt->perm = strtoul(opt[SERVICE_FILE_PERM], 0, OCTAL_BASE);
     fileOpt->uid = DecodeUid(opt[SERVICE_FILE_UID]);
-    fileOpt->gid = DecodeUid(opt[SERVICE_FILE_GID]);
+    fileOpt->gid = DecodeGid(opt[SERVICE_FILE_GID]);
     if (fileOpt->uid == (uid_t)-1 || fileOpt->gid == (gid_t)-1) {
         free(fileOpt);
         fileOpt = NULL;
