@@ -291,7 +291,7 @@ static int SetOwner(const char *file, const char *ownerStr, const char *groupStr
 
     uid_t owner = DecodeUid(ownerStr);
     INIT_ERROR_CHECK(owner != (uid_t)-1, return -1, "SetOwner invalid uid :%s.", ownerStr);
-    gid_t group = DecodeUid(groupStr);
+    gid_t group = DecodeGid(groupStr);
     INIT_ERROR_CHECK(group != (gid_t)-1, return -1, "SetOwner invalid gid :%s.", groupStr);
     return (chown(file, owner, group) != 0) ? -1 : 0;
 }

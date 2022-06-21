@@ -48,7 +48,7 @@ float ConvertMicrosecondToSecond(int x)
     return ((x / THOUSAND_UNIT_INT) / THOUSAND_UNIT_FLOAT);
 }
 
-uid_t DecodeUid(const char *name)
+static uid_t DecodeId(const char *name, bool isUid)
 {
 #ifndef __LITEOS_M__
     INIT_CHECK_RETURN_VALUE(name != NULL, -1);
@@ -70,11 +70,21 @@ uid_t DecodeUid(const char *name)
         if (userInf == NULL) {
             return -1;
         }
-        return userInf->pw_uid;
+        return isUid ? userInf->pw_uid : userInf->pw_gid;
     }
 #else
     return -1;
 #endif
+}
+
+uid_t DecodeUid(const char *name)
+{
+    return DecodeId(name, true);
+}
+
+gid_t DecodeGid(const char *name)
+{
+    return DecodeId(name, false);
 }
 
 char *ReadFileToBuf(const char *configFile)
