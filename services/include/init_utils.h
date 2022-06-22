@@ -60,6 +60,7 @@ void WaitForFile(const char *source, unsigned int maxSecond);
 size_t WriteAll(int fd, const char *buffer, size_t size);
 char *GetRealPath(const char *source);
 int StringToInt(const char *str, int defaultValue);
+int StringToUint(const char *name, unsigned int *value);
 int MakeDirRecursive(const char *dir, mode_t mode);
 void CheckAndCreateDir(const char *fileName);
 int CheckAndCreatFile(const char *file, mode_t mode);
