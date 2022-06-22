@@ -320,7 +320,6 @@ static void DoRestorecon(const struct CmdArgs *ctx)
 
 static void DoLoadAccessTokenId(const struct CmdArgs *ctx)
 {
-    INIT_LOGI("load access token id  : %s", ctx->argv[0]);
     LoadAccessTokenId();
 }
 

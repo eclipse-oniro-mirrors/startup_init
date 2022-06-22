@@ -11,22 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-build_version = 2.0
-
-# whether ohos is enabled.
-hw_sc.build.os.enable=true
-
-# ohos API version number.
-hw_sc.build.os.apiversion=9
-
-# ohos system version.
-hw_sc.build.os.version=2.2.0
-
-# ohos device type please use hw_sc.build.os.devicetype
-
-# ohos release type
-hw_sc.build.os.releasetype=Canary1
-
 const.actionable_compatible_property.enabled=false
 const.postinstall.fstab.prefix=/system
 const.secure=1
@@ -55,4 +39,3 @@ const.product.build.host=default
 const.product.build.date=default
 const.product.hardwareprofile=default
 const.ohos.buildroothash=default
-const.ohos.sdkapilevel=8

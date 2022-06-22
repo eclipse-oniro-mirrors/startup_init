@@ -158,7 +158,6 @@ if (defined(ohos_lite)) {
 
     defines = [
       "INIT_AGENT",
-      "INIT_FILE",
       "_GNU_SOURCE",
       "USE_MBEDTLS",
     ]
@@ -258,7 +257,6 @@ if (defined(ohos_lite)) {
 
     defines = [
       "INIT_AGENT",
-      "INIT_FILE",
       "_GNU_SOURCE",
       "USE_MBEDTLS",
     ]
