@@ -148,6 +148,7 @@ if (defined(ohos_lite)) {
 
   ohos_shared_library("libbegetutil") {
     sources = [
+      "fd_holder/fd_holder.c",
       "reboot/init_reboot_innerkits.c",
       "service_control/service_control.c",
     ]
