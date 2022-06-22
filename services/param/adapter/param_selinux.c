@@ -78,7 +78,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         PARAM_CHECK(g_selinuxSpace.destroyParamList != NULL,
             return -1, "Failed to dlsym destroyParamList %s", dlerror());
     }
-    if (isInit) { // log
+    if (isInit != 0) { // log
         g_selinuxSpace.setSelinuxLogCallback();
     }
 #endif
