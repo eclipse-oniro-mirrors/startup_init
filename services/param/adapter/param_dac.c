@@ -118,7 +118,7 @@ static int LoadParamLabels(const char *fileName)
         buff[buffSize - 1] = '\0';
         int ret = SpliteString(buff, NULL, 0, LoadOneParam_, NULL);
         if (ret != 0) {
-            PARAM_LOGE("Failed to splite string %s fileName %s", buff, fileName);
+            PARAM_LOGE("Failed to split string %s fileName %s", buff, fileName);
             continue;
         }
         infoCount++;

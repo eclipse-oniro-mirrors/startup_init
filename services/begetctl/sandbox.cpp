@@ -170,10 +170,10 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
                 processName = optarg;
                 break;
             case '?':
-                std::cout << "Invalid arugment\n";
+                std::cout << "Invalid argument\n";
                 break;
             default:
-                std::cout << "Invalid arugment\n";
+                std::cout << "Invalid argument\n";
                 break;
         }
     }

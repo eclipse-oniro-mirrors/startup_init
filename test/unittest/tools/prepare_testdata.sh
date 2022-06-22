@@ -36,7 +36,7 @@ function hdc_push_cmd() {
     if [ $# -ne 2 ];then
         return;
     fi
-    echo "Pushing resouces to device"
+    echo "Pushing resources to device"
     hdc file send $@
     sleep 0.2
 }

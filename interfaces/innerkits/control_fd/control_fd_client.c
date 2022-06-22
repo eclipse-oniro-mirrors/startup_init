@@ -38,12 +38,12 @@ static int g_FifoWriteFd = -1;
 static void ProcessFifoWrite(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
 {
     if ((fd < 0) || (events == NULL) || (context == NULL)) {
-        BEGET_LOGE("[control_fd] Invaild fifo write parameter");
+        BEGET_LOGE("[control_fd] Invalid fifo write parameter");
         return;
     }
     int fifow = *((int *)context);
     if (fifow < 0) {
-        BEGET_LOGE("[control_fd] invaild fifo write fd");
+        BEGET_LOGE("[control_fd] invalid fifo write fd");
         return;
     }
     char rbuf[FIFO_BUF_SIZE] = {0};
@@ -63,7 +63,7 @@ static void ProcessFifoWrite(const WatcherHandle taskHandle, int fd, uint32_t *e
 static void ProcessFifoRead(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
 {
     if ((fd < 0) || (events == NULL)) {
-        BEGET_LOGE("[control_fd] Invaild fifo read parameter");
+        BEGET_LOGE("[control_fd] Invalid fifo read parameter");
         return;
     }
     char buf[FIFO_BUF_SIZE] = {0};
@@ -123,7 +123,7 @@ static void CmdDisConnectComplete(const TaskHandle client)
 static void CmdAgentInit(WatcherHandle handle, const char *path, bool read, ProcessWatchEvent func)
 {
     if (path == NULL) {
-        BEGET_LOGE("[control_fd] Invaild parameter");
+        BEGET_LOGE("[control_fd] Invalid parameter");
         return;
     }
     BEGET_LOGI("[control_fd] client open %s", (read ? "read" : "write"));
@@ -173,7 +173,7 @@ static void CmdOnSendMessageComplete(const TaskHandle task, const BufferHandle h
 static CmdAgent *CmdAgentCreate(const char *server)
 {
     if (server == NULL) {
-        BEGET_LOGE("[control_fd] Invaild parameter");
+        BEGET_LOGE("[control_fd] Invalid parameter");
         return NULL;
     }
     TaskHandle task = NULL;
@@ -197,7 +197,7 @@ static CmdAgent *CmdAgentCreate(const char *server)
 static int CreateFifo(const char *pipeName)
 {
     if (pipeName == NULL) {
-        BEGET_LOGE("[control_fd] Invaild parameter");
+        BEGET_LOGE("[control_fd] Invalid parameter");
         return -1;
     }
     // create fifo for cmd
@@ -214,7 +214,7 @@ static int CreateFifo(const char *pipeName)
 static int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd, const char *fifoName)
 {
     if ((agent == NULL) || (cmd == NULL) || (fifoName == NULL)) {
-        BEGET_LOGE("[control_fd] Invaild parameter");
+        BEGET_LOGE("[control_fd] Invalid parameter");
         return -1;
     }
     int ret = 0;
@@ -242,7 +242,7 @@ static int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd,
 static int CmdMakeFifoInit(const char *fifoPath)
 {
     if (fifoPath == NULL) {
-        BEGET_LOGE("[control_fd] Invaild parameter");
+        BEGET_LOGE("[control_fd] Invalid parameter");
         return -1;
     }
     int ret = sprintf_s(g_FifoReadPath, sizeof(g_FifoReadPath) - 1, "/dev/fifo/%s0.%d", fifoPath, getpid());
@@ -260,7 +260,7 @@ static int CmdMakeFifoInit(const char *fifoPath)
 void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd, const char *fifoName)
 {
     if ((socketPath == NULL) || (cmd == NULL)) {
-        BEGET_LOGE("[control_fd] Invaild parameter");
+        BEGET_LOGE("[control_fd] Invalid parameter");
     }
     BEGET_LOGI("[control_fd] CmdAgentInit");
     int ret = CmdMakeFifoInit(fifoName);

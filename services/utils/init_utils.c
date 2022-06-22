@@ -48,7 +48,7 @@ float ConvertMicrosecondToSecond(int x)
     return ((x / THOUSAND_UNIT_INT) / THOUSAND_UNIT_FLOAT);
 }
 
-uid_t DecodeUid(const char *name)
+static uid_t DecodeId(const char *name, bool isUid)
 {
 #ifndef __LITEOS_M__
     INIT_CHECK_RETURN_VALUE(name != NULL, -1);
@@ -70,11 +70,21 @@ uid_t DecodeUid(const char *name)
         if (userInf == NULL) {
             return -1;
         }
-        return userInf->pw_uid;
+        return isUid ? userInf->pw_uid : userInf->pw_gid;
     }
 #else
     return -1;
 #endif
+}
+
+uid_t DecodeUid(const char *name)
+{
+    return DecodeId(name, true);
+}
+
+gid_t DecodeGid(const char *name)
+{
+    return DecodeId(name, false);
 }
 
 char *ReadFileToBuf(const char *configFile)
@@ -220,7 +230,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
 {
     INIT_CHECK_RETURN_VALUE((maxItemCount >= 0) && (buffer != NULL) && (del != NULL) && (returnCount != NULL), NULL);
     // Why is this number?
-    // Now we use this function to split a string with a given delimeter
+    // Now we use this function to split a string with a given delimiter
     // We do not know how many sub-strings out there after splitting.
     // 50 is just a guess value.
     const int defaultItemCounts = 50;

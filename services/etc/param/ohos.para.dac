@@ -25,7 +25,7 @@ const.allow.mock.location   = root:root:0777
 const.debuggable  = root:root:0777
 persist.sys.usb.config  = root:root:0777
 
-# default forbit other user to start service
+# default forbid other user to start service
 ohos.servicectrl.   = system:servicectrl:0775
 ohos.startup.powerctrl. = system:powerctrl:0775
 ohos.boot. = system:bootctrl:0775

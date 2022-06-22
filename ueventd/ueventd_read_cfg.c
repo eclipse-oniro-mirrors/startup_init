@@ -102,7 +102,7 @@ static int ParseDeviceConfig(char *p)
     INIT_ERROR_CHECK(errno == 0, config->mode = DEVMODE,
         "Invalid mode in config file for device node %s. use default mode", config->name);
     config->uid = (uid_t)DecodeUid(items[DEVICE_CONFIG_UID_NUM]);
-    config->gid = (gid_t)DecodeUid(items[DEVICE_CONFIG_GID_NUM]);
+    config->gid = (gid_t)DecodeGid(items[DEVICE_CONFIG_GID_NUM]);
     if (count == expectedCount) {
         config->parameter = strdup(items[DEVICE_CONFIG_PARAM_NUM]); // device parameter
     } else {
@@ -142,7 +142,7 @@ static int ParseSysfsConfig(char *p)
     INIT_ERROR_CHECK(errno == 0, config->mode = DEVMODE,
         "Invalid mode in config file for sys path %s. use default mode", config->sysPath);
     config->uid = (uid_t)DecodeUid(items[SYS_CONFIG_UID_NUM]);
-    config->gid = (gid_t)DecodeUid(items[SYS_CONFIG_GID_NUM]);
+    config->gid = (gid_t)DecodeGid(items[SYS_CONFIG_GID_NUM]);
     ListAddTail(&g_sysDevices, &config->list);
     FreeStringVector(items, count);
     return 0;
@@ -155,7 +155,7 @@ static int ParseFirmwareConfig(char *p)
 
     // Sanity checks
     struct stat st = {};
-    INIT_ERROR_CHECK(stat(p, &st) == 0, return -1, "Invalid firware file: %s, err = %d", p, errno);
+    INIT_ERROR_CHECK(stat(p, &st) == 0, return -1, "Invalid firmware file: %s, err = %d", p, errno);
     INIT_ERROR_CHECK(S_ISDIR(st.st_mode), return -1, "Expect directory in firmware config");
     struct FirmwareUdevConf *config = calloc(1, sizeof(struct FirmwareUdevConf));
     INIT_CHECK(config != NULL, errno = ENOMEM;

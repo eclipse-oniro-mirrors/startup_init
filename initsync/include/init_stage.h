@@ -51,7 +51,7 @@ typedef struct {
 
 #define QUICKSTART_NODE         "/dev/quickstart"
 
-/* Simple sample Useage:
+/* Simple sample Usage:
  *   INIT PROCESS
  * SystemInitStage(QS_STAGE1)----(1)fork----> key APP
  *      |(2)                                     |(3)
