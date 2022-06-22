@@ -39,11 +39,14 @@ ohos_shared_library("deviceinfoservice") {
     "//base/startup/init_lite/interfaces/innerkits/syspara",
     "//base/startup/init_lite/interfaces/hals",
   ]
-
+  defines = [
+    "_GNU_SOURCE",
+    "USE_MBEDTLS",
+  ]
   deps = [
     "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/openssl:libcrypto_shared",
+    "//third_party/mbedtls:mbedtls_shared",
   ]
 
   external_deps = [
