@@ -126,7 +126,7 @@ typedef struct {
 typedef struct Service_ {
     char *name;
 #ifdef WITH_SELINUX
-    char secon[MAX_SECON_LEN];
+    char *secon;
 #endif // WITH_SELINUX
     int pid;
     int crashCnt;

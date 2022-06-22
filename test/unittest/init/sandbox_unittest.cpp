@@ -194,9 +194,9 @@ HWTEST_F(SandboxUnitTest, TestEnterErrorSandbox, TestSize.Level1) {
 
 HWTEST_F(SandboxUnitTest, TestCreateErrorSandbox1, TestSize.Level1) {
     const char *pname = nullptr;
-    std::cout << "test destory nullptr" << std::endl;
+    std::cout << "test destroy nullptr" << std::endl;
     DestroySandbox(pname);
-    std::cout << "test destory xapp" << std::endl;
+    std::cout << "test destroy xapp" << std::endl;
     DestroySandbox("xapp");
     std::cout << "test enter xapp" << std::endl;
     int ret1 = EnterSandbox("xapp");

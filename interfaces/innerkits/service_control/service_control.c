@@ -228,7 +228,7 @@ int ServiceSetReady(const char *serviceName)
 int StartServiceByTimer(const char *serviceName, uint64_t timeout)
 {
     if (serviceName == NULL) {
-        BEGET_LOGE("Request start serivce by timer with invalid service name");
+        BEGET_LOGE("Request start service by timer with invalid service name");
         return -1;
     }
 
@@ -253,7 +253,7 @@ int StartServiceByTimer(const char *serviceName, uint64_t timeout)
 int StopServiceTimer(const char *serviceName)
 {
     if (serviceName == NULL) {
-        BEGET_LOGE("Request stop serivce timer with invalid service name");
+        BEGET_LOGE("Request stop service timer with invalid service name");
         return -1;
     }
 

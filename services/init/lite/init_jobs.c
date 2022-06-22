@@ -70,12 +70,12 @@ static void ParseJob(const cJSON *jobItem, Job *resJob)
 
     cJSON *cmdsItem = cJSON_GetObjectItem(jobItem, CMDS_ARR_NAME_IN_JSON);
     if (!cJSON_IsArray(cmdsItem)) {
-        INIT_LOGE("job %s is not an arrary", resJob->name);
+        INIT_LOGE("job %s is not an array", resJob->name);
         return;
     }
     int ret = GetCmdLinesFromJson(cmdsItem, &resJob->cmdLines);
     if (ret != 0) {
-        INIT_LOGE("ParseJob, faild to get cmds for job!");
+        INIT_LOGE("ParseJob, failed to get cmds for job!");
         return;
     }
     return;

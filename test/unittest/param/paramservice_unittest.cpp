@@ -447,7 +447,7 @@ public:
 
     int TestServiceCtrl(const char *serviceName, int mode)
     {
-        // service forbit
+        // service forbid
         ParamAuditData auditData = {};
         auditData.name = "ohos.servicectrl.";
         auditData.dacData.gid = 202;  // 202 test dac gid
@@ -459,7 +459,7 @@ public:
 
     int TestPowerCtrl(const char *reboot, int mode)
     {
-        // service forbit
+        // service forbid
         ParamAuditData auditData = {};
         auditData.name = "ohos.servicectrl.";
         auditData.dacData.gid = 202;  // 202 test dac gid

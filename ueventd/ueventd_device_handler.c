@@ -307,7 +307,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
         return NULL;
     }
 
-    // Reverse walk through sysPath, and check subystem file under each directory.
+    // Reverse walk through sysPath, and check subsystem file under each directory.
     char *parent = dirname(sysPath);
     while (parent != NULL && !STRINGEQUAL(parent, "/") && !STRINGEQUAL(parent, ".")) {
         char subsystem[SYSPATH_SIZE];

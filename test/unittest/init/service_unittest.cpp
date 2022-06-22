@@ -273,8 +273,14 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
     service->pathArgs.count = 1;
     const char *path = "/data/init_ut/test_service_release";
     service->pathArgs.argv[0] = strdup(path);
-    EnterServiceSandbox(service);
     service->importance = 20;
+    service->servPerm.gIDCnt = -1;
+    service->servPerm.uID = 0;
+    unsigned int *caps = (unsigned int *)calloc(1, sizeof(unsigned int) * 1);
+    caps[0] = FULL_CAP;
+    service->servPerm.caps = caps;
+    service->servPerm.capsCnt = 1;
+    EnterServiceSandbox(service);
     int ret = ServiceExec(service);
     EXPECT_EQ(ret, 0);
 

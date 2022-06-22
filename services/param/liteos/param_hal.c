@@ -63,7 +63,7 @@ static int LoadPersistParam(void)
 
         uint32_t currLen = 0;
         while (currLen < fileSize) {
-            if (buffer[currLen] == '\n') { // splite line
+            if (buffer[currLen] == '\n') { // split line
                 buffer[currLen] = '\0';
                 int ret = SpliteString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
                 PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);

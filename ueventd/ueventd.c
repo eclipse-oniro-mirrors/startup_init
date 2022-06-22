@@ -169,7 +169,7 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
 static void HandleUeventRequired(const struct Uevent *uevent, char **devices, int num)
 {
     const char *deviceName;
-    INIT_ERROR_CHECK(devices != NULL && num > 0, return, "Fault paramters");
+    INIT_ERROR_CHECK(devices != NULL && num > 0, return, "Fault parameters");
     if (uevent->action == ACTION_ADD) {
         ChangeSysAttributePermissions(uevent->syspath);
     }
@@ -332,7 +332,7 @@ static void Trigger(const char *path, int sockFd, char **devices, int num)
             }
             char ueventBuffer[PATH_MAX];
             if (snprintf_s(ueventBuffer, PATH_MAX, PATH_MAX - 1, "%s/%s", path, "uevent") == -1) {
-                INIT_LOGW("Cannnot build uevent path under %s", path);
+                INIT_LOGW("Cannot build uevent path under %s", path);
                 continue;
             }
             DoTrigger(ueventBuffer, sockFd, devices, num);

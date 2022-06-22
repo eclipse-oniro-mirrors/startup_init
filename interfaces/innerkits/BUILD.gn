@@ -244,7 +244,6 @@ if (defined(ohos_lite)) {
     external_deps = [
       "hilog_native:libhilog_base",
       "ipc:ipc_core",
-      "safwk:system_ability_fwk",
       "samgr_standard:samgr_proxy",
       "utils_base:utils",
     ]

@@ -79,7 +79,7 @@ void ListAddTail(struct ListNode *list, struct ListNode *item);
 void ListRemove(struct ListNode *item);
 
 /**
- * @brief ListNode comparision function prototype
+ * @brief ListNode comparison function prototype
  *
  * @param node ListNode to be compared.
  * @param newNode new ListNode to be compared.
@@ -132,9 +132,9 @@ ListNode *ListFind(const ListNode *head, void *data, ListTraversalProc comparePr
  * @brief Traversal the list with specified function
  *
  * @param head list head, make sure head is valid pointer.
- * @param cookie optinal traversing data.
+ * @param cookie optional traversing data.
  * @param traversalProc comparing function, return 0 if matched.
- * @param flags optinal traversing flags:
+ * @param flags optional traversing flags:
  *  TRAVERSE_REVERSE_ORDER: traversing from last node to first node;
  *                          default behaviour is from first node to last node
  *  TRAVERSE_STOP_WHEN_ERROR: stop traversing if traversalProc return non-zero

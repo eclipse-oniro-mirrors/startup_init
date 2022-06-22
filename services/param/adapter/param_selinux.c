@@ -180,7 +180,7 @@ INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
         ops->securityCheckParamPermission = SelinuxCheckParamPermission;
     }
     ops->securityFreeLabel = FreeLocalSecurityLabel;
-    if (isInit) {
+    if (isInit != 0) {
         ops->securityGetLabel = SelinuxGetParamSecurityLabel;
     }
     return ret;

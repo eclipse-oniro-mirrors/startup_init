@@ -76,7 +76,7 @@ void DeviceInfoKits::FinishStartSASuccess(const sptr<IRemoteObject> &remoteObjec
 
 void DeviceInfoKits::FinishStartSAFailed()
 {
-    DINFO_LOGI("get tokensync sa failed.");
+    DINFO_LOGI("get deviceinfo sa failed.");
 
     // get lock which wait_for release and send a notice
     std::unique_lock<std::mutex> lock(lock_);

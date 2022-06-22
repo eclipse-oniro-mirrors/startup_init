@@ -74,7 +74,7 @@ static int FdHolderSockInit(void)
     addr.sun_family = AF_UNIX;
     if (strncpy_s(addr.sun_path, sizeof(addr.sun_path),
         INIT_HOLDER_SOCKET_PATH, strlen(INIT_HOLDER_SOCKET_PATH)) != 0) {
-        INIT_LOGE("Faild to copy fd hoder socket path");
+        INIT_LOGE("Failed to copy fd hoder socket path");
         close(sock);
         return -1;
     }
@@ -193,7 +193,7 @@ static void StartInitSecondStage(void)
             // If mount required partitions failure.
             // There is no necessary to continue.
             // Just abort
-            INIT_LOGE("Mount requried partitions failed; please check fstab file");
+            INIT_LOGE("Mount required partitions failed; please check fstab file");
             // Execute sh for debugging
             execv("/bin/sh", NULL);
             abort();

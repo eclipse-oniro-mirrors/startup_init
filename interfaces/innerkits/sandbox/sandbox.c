@@ -231,7 +231,7 @@ static int GetSandboxInfo(sandbox_t *sandbox, cJSON *root, const char *itemName)
 
 static int ParseSandboxConfig(cJSON *root, sandbox_t *sandbox)
 {
-    BEGET_ERROR_CHECK(!(root == NULL || sandbox == NULL), return -1, "Invaild parameter.");
+    BEGET_ERROR_CHECK(!(root == NULL || sandbox == NULL), return -1, "Invalid parameter.");
 
     cJSON *sandboxRoot = cJSON_GetObjectItem(root, SANDBOX_ROOT_TAG);
     BEGET_ERROR_CHECK(sandboxRoot != NULL, return -1,
