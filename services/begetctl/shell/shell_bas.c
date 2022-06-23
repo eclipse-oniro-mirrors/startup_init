@@ -175,9 +175,7 @@ static void BShellEnvParseParam(BShellEnv *shell)
                 quotes = quotes ? 0 : 1;
             }
             if (record == 1) {
-                if (shell->argc >= BSH_PARAMETER_MAX_NUMBER) {
-                    break;
-                }
+                BSH_CHECK(shell->argc < BSH_PARAMETER_MAX_NUMBER, return, "argc out of range");
                 shell->args[shell->argc++] = shell->buffer + i;
                 record = 0;
             }
