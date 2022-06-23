@@ -318,6 +318,20 @@ static int GetUid(cJSON *json, uid_t *uid)
     return SERVICE_SUCCESS;
 }
 
+static int GetGid(cJSON *json, gid_t *gid, Service *curServ)
+{
+    INIT_CHECK_RETURN_VALUE(json != NULL, SERVICE_SUCCESS);
+    if (cJSON_IsString(json)) {
+        char *str = cJSON_GetStringValue(json);
+        INIT_ERROR_CHECK(str != NULL, return SERVICE_FAILURE, "Failed to get gid for %s", curServ->name);
+        *gid = DecodeGid(str);
+    } else if (cJSON_IsNumber(json)) {
+        *gid = (gid_t)cJSON_GetNumberValue(json);
+    }
+    INIT_ERROR_CHECK(*gid != (gid_t)(-1), return SERVICE_FAILURE, "Failed to get gid for %s", curServ->name);
+    return SERVICE_SUCCESS;
+}
+
 static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
 {
     int gidCount;
@@ -338,15 +352,15 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
 
     gid_t gid;
     if (!cJSON_IsArray(arrItem)) {
-        int ret = GetUid(arrItem, &gid);
-        INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to uid");
+        int ret = GetGid(arrItem, &gid, curServ);
+        INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to gid");
         curServ->servPerm.gIDArray[0] = gid;
         return SERVICE_SUCCESS;
     }
 
     for (int i = 0; i < gidCount; ++i) {
         cJSON *item = cJSON_GetArrayItem(arrItem, i);
-        int ret = GetUid(item, &gid);
+        int ret = GetGid(item, &gid, curServ);
         if (ret != 0) {
             curServ->servPerm.gIDArray[i] = 0;
             continue;

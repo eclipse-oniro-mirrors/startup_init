@@ -77,13 +77,13 @@ uid_t DecodeUid(const char *name)
         if (!StringToUint(name, &uid)) {
             return uid;
         } else {
-            INIT_LOGE("Failed to decode uid");
+            INIT_LOGE("Failed to decode uid for %s", name);
             return -1;
         }
     }
     struct passwd *p = getpwnam(name);
     if (p == NULL) {
-        INIT_LOGE("Failed to decode uid");
+        INIT_LOGE("Failed to decode uid for %s", name);
         return -1;
     }
     return p->pw_uid;
@@ -101,7 +101,7 @@ gid_t DecodeGid(const char *name)
         if (!StringToUint(name, &gid)) {
             return gid;
         } else {
-            INIT_LOGE("Failed to decode gid");
+            INIT_LOGE("Failed to decode gid for %s", name);
             return -1;
         }
     }
