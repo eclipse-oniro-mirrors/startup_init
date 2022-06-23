@@ -122,21 +122,21 @@ static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrie
         return 0;
     }
     if (verbose) {
-        PARAM_DUMP("\tTrie node info [%u,%u,%u] data: %u label: %u key length:%d \n\t  key: %s \n",
+        PARAM_DUMP("\tTrie node info [%u,%u,%u] data: %u label: %u key length:%u \n\t  key: %s \n",
             current->left, current->right, current->child,
             current->dataIndex, current->labelIndex, current->length, current->key);
     }
     if (current->dataIndex != 0) {
         ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, current->dataIndex);
         if (entry != NULL) {
-            PARAM_DUMP("\tparameter length info [%d, %d] \n\t  param: %s \n",
+            PARAM_DUMP("\tparameter length info [%u, %u] \n\t  param: %s \n",
                 entry->keyLength, entry->valueLength, (entry != NULL) ? entry->data : "null");
         }
     }
     if (current->labelIndex != 0 && verbose) {
         ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, current->labelIndex);
         if (label != NULL) {
-            PARAM_DUMP("\tparameter label dac %d %d %o \n\t  label: %s \n",
+            PARAM_DUMP("\tparameter label dac %u %u %o \n\t  label: %s \n",
                 label->uid, label->gid, label->mode, (label->length > 0) ? label->data : "null");
         }
     }
@@ -147,12 +147,12 @@ static void HashNodeTraverseForDump(WorkSpace *workSpace, int verbose)
 {
     PARAM_DUMP("    map file: %s \n", workSpace->fileName);
     if (workSpace->area != NULL) {
-        PARAM_DUMP("    total size: %d \n", workSpace->area->dataSize);
-        PARAM_DUMP("    first offset: %d \n", workSpace->area->firstNode);
-        PARAM_DUMP("    current offset: %d \n", workSpace->area->currOffset);
-        PARAM_DUMP("    total node: %d \n", workSpace->area->trieNodeCount);
-        PARAM_DUMP("    total param node: %d \n", workSpace->area->paramNodeCount);
-        PARAM_DUMP("    total security node: %d\n", workSpace->area->securityNodeCount);
+        PARAM_DUMP("    total size: %u \n", workSpace->area->dataSize);
+        PARAM_DUMP("    first offset: %u \n", workSpace->area->firstNode);
+        PARAM_DUMP("    current offset: %u \n", workSpace->area->currOffset);
+        PARAM_DUMP("    total node: %u \n", workSpace->area->trieNodeCount);
+        PARAM_DUMP("    total param node: %u \n", workSpace->area->paramNodeCount);
+        PARAM_DUMP("    total security node: %u\n", workSpace->area->securityNodeCount);
     }
     PARAM_DUMP("    node info: \n");
     PARAMSPACE_AREA_RD_LOCK(workSpace);
@@ -174,7 +174,7 @@ void SystemDumpParameters(int verbose)
     PARAM_DUMP("Dump all paramters begin ...\n");
     if (verbose) {
         PARAM_DUMP("Local sercurity information\n");
-        PARAM_DUMP("\t pid: %d uid: %d gid: %d \n",
+        PARAM_DUMP("\t pid: %d uid: %u gid: %u \n",
             paramSpace->securityLabel.cred.pid,
             paramSpace->securityLabel.cred.uid,
             paramSpace->securityLabel.cred.gid);
