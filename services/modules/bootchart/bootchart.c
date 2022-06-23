@@ -78,7 +78,7 @@ static void BootchartLogHeader(void)
 
     char release[PARAM_VALUE_LEN_MAX] = {};
     uint32_t len = sizeof(release);
-    (void)SystemReadParam("hw_sc.build.os.releasetype", release, &len);
+    (void)SystemReadParam("const.ohos.releasetype", release, &len);
     char *cmdLine = ReadFileToBuffer("/proc/cmdline", g_bootchartCtrl->buffer, g_bootchartCtrl->bufferSize);
     PLUGIN_CHECK(cmdLine != NULL, return, "Failed to open file /data/bootchart/header");
 

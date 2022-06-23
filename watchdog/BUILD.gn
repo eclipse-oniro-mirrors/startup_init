@@ -17,10 +17,12 @@ group("watchdog") {
 
 if (defined(ohos_lite)) {
   executable("watchdog_service") {
-    sources = [ "init_watchdog.c" ]
+    sources = [
+      "//base/startup/init_lite/services/log/init_commlog.c",
+      "//base/startup/init_lite/watchdog/init_watchdog.c",
+    ]
     deps = [
       "//base/startup/init_lite/services/log:init_log",
-      "//base/startup/init_lite/services/param/base:parameterbase",
       "//third_party/bounds_checking_function:libsec_static",
     ]
     defines = [

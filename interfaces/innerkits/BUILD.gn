@@ -67,7 +67,6 @@ if (defined(ohos_lite)) {
       ]
       deps += [
         "//base/startup/init_lite/services/log:init_log",
-        "//base/startup/init_lite/services/param/base:parameterbase",
         "//base/startup/init_lite/services/utils:libinit_utils",
       ]
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
@@ -87,6 +86,7 @@ if (defined(ohos_lite)) {
         defines += [ "__LINUX__" ]
         deps += [
           "//base/startup/init_lite/services/loopevent:loopevent",
+          "//base/startup/init_lite/services/param/base:parameterbase",
           "//base/startup/init_lite/services/param/linux:param_client",
         ]
       }
@@ -121,7 +121,6 @@ if (defined(ohos_lite)) {
         defines += [ "USE_MBEDTLS" ]
       }
       deps += [
-        "//base/startup/init_lite/services/param/base:parameterbase",
         "//base/startup/init_lite/services/param/liteos:param_client_lite",
         "//base/startup/init_lite/services/utils:libinit_utils",
       ]
@@ -149,6 +148,7 @@ if (defined(ohos_lite)) {
 
   ohos_shared_library("libbegetutil") {
     sources = [
+      "fd_holder/fd_holder.c",
       "reboot/init_reboot_innerkits.c",
       "service_control/service_control.c",
     ]

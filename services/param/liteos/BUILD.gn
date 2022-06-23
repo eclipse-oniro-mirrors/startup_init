@@ -12,11 +12,6 @@
 # limitations under the License.
 import("//base/startup/init_lite/begetd.gni")
 
-param_comm_sources = [
-  "//base/startup/init_lite/services/param/manager/param_manager.c",
-  "//base/startup/init_lite/services/param/manager/param_server.c",
-]
-
 param_include_dirs = [
   "//base/startup/init_lite/services/param/include",
   "//base/startup/init_lite/services/param/adapter",
@@ -91,10 +86,27 @@ config("exported_header_files") {
   ]
 }
 
+base_sources = [
+  "//base/startup/init_lite/services/log/init_commlog.c",
+  "//base/startup/init_lite/services/param/base/param_base.c",
+  "//base/startup/init_lite/services/param/base/param_comm.c",
+  "//base/startup/init_lite/services/param/base/param_trie.c",
+  "//base/startup/init_lite/services/param/liteos/param_client.c",
+  "//base/startup/init_lite/services/param/liteos/param_litedac.c",
+  "//base/startup/init_lite/services/param/liteos/param_osadp.c",
+  "//base/startup/init_lite/services/param/manager/param_manager.c",
+  "//base/startup/init_lite/services/param/manager/param_persist.c",
+  "//base/startup/init_lite/services/utils/init_hashmap.c",
+  "//base/startup/init_lite/services/utils/list.c",
+]
+
 static_library("param_init_lite") {
   defines = []
   deps = []
-  sources = param_comm_sources
+  sources = [
+    "//base/startup/init_lite/services/param/manager/param_manager.c",
+    "//base/startup/init_lite/services/param/manager/param_server.c",
+  ]
   include_dirs = param_include_dirs
   defines += param_build_defines
   public_configs = [ ":exported_header_files" ]
@@ -116,18 +128,15 @@ static_library("param_init_lite") {
 }
 
 static_library("param_client_lite") {
-  sources = param_comm_sources
+  sources = base_sources
   include_dirs = param_include_dirs
   cflags = [ "-fPIC" ]
   defines = param_build_defines
   public_configs = [ ":exported_header_files" ]
 
   if (ohos_kernel_type == "liteos_a") {
-    sources += [
-      "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
-      "//base/startup/init_lite/services/param/liteos/param_client.c",
-      "//base/startup/init_lite/services/param/manager/param_persist.c",
-    ]
+    sources +=
+        [ "//base/startup/init_lite/services/param/adapter/param_persistadp.c" ]
     defines += [
       "__LITEOS_A__",
       "WORKSPACE_AREA_NEED_MUTEX",
@@ -135,16 +144,8 @@ static_library("param_client_lite") {
       "PARAMWORKSPACE_NEED_MUTEX",
     ]
   } else if (ohos_kernel_type == "liteos_m") {
-    sources += [
-      "//base/startup/init_lite/services/log/init_commlog.c",
-      "//base/startup/init_lite/services/param/base/param_base.c",
-      "//base/startup/init_lite/services/param/base/param_comm.c",
-      "//base/startup/init_lite/services/param/base/param_trie.c",
-      "//base/startup/init_lite/services/param/liteos/param_client.c",
-      "//base/startup/init_lite/services/param/manager/param_persist.c",
-      "//base/startup/init_lite/services/utils/init_hashmap.c",
-      "//base/startup/init_lite/services/utils/list.c",
-    ]
+    sources +=
+        [ "//base/startup/init_lite/services/param/manager/param_server.c" ]
     if (enable_ohos_startup_init_lite_use_posix_file_api) {
       sources += [
         "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
