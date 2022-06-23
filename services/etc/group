@@ -105,4 +105,5 @@ paramwatcher:x:1101:
 deviceinfo:x:1102:
 accessibility:x:1103:
 motion_dal_host:x:3065:
+uhdf_driver:x:3066:
 memmgr:x:1111:
