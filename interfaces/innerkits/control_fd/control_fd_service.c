@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <fcntl.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -41,15 +42,20 @@ static void CmdOnSendMessageComplete(const TaskHandle task, const BufferHandle h
     BEGET_LOGI("[control_fd] CmdOnSendMessageComplete ");
 }
 
-static int OpenFifo(bool read, const char *pipePath)
+static int ReadFifoPath(const char *name, bool read, pid_t pid, char *resolvedPath)
 {
-    // create pipe for cmd
-    if (pipePath == NULL) {
+    if ((name == NULL) || (pid < 0) || resolvedPath == NULL) {
         return -1;
     }
-
+    int flag = read ? 1 : 0;
+    char path[PATH_MAX] = {0};
+    int ret = sprintf_s(path, sizeof(path) - 1, "/dev/fifo/%s%d.%d", name, flag, pid);
+    BEGET_ERROR_CHECK(ret > 0, return -1, "[control_fd] Failed sprintf_s err=%d", errno);
+    char *realPath = realpath(path, resolvedPath);
+    BEGET_ERROR_CHECK(realPath != NULL, return -1, "[control_fd] Failed get real path %s, err=%d", path, errno);
     int flags = read ? (O_RDONLY | O_TRUNC | O_NONBLOCK) : (O_WRONLY | O_TRUNC);
-    return open(pipePath, flags);
+    int fd = open(resolvedPath, flags);
+    return fd;
 }
 
 static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
@@ -64,17 +70,13 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
         BEGET_LOGE("[control_fd] Failed msg ");
         return;
     }
-    char readPath[FIFO_PATH_SIZE] = {0};
-    int ret = sprintf_s(readPath, sizeof(readPath) - 1, "/dev/fifo/%s1.%d", msg->fifoName, msg->pid);
-    BEGET_ERROR_CHECK(ret > 0, return, "[control_fd] Failed sprintf_s err=%d", errno);
-    int reader = OpenFifo(true, readPath); // read
-    BEGET_ERROR_CHECK(reader > 0, return, "[control_fd] Failed to open filo");
+    char readPath[PATH_MAX] = {0};
+    int reader = ReadFifoPath(msg->fifoName, true, msg->pid, readPath); // read
+    BEGET_ERROR_CHECK(reader > 0, return, "[control_fd] Failed to open fifo read, err=%d", errno);
 
-    char writePath[FIFO_PATH_SIZE] = {0};
-    ret = sprintf_s(writePath, sizeof(writePath) - 1, "/dev/fifo/%s0.%d", msg->fifoName, msg->pid);
-    BEGET_ERROR_CHECK(ret > 0, return, "[control_fd] Failed sprintf_s err=%d", errno);
-    int writer = OpenFifo(false, writePath); // write
-    BEGET_ERROR_CHECK(writer > 0, return, "[control_fd] Failed to open filo");
+    char writePath[PATH_MAX] = {0};
+    int writer = ReadFifoPath(msg->fifoName, false, msg->pid, writePath); // write
+    BEGET_ERROR_CHECK(writer > 0, return, "[control_fd] Failed to open fifo write, err=%d", errno);
 
     pid_t pid = fork();
     if (pid == 0) {
