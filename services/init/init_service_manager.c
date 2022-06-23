@@ -76,9 +76,9 @@ static void DumpServiceSocket(const Service *service)
     ServiceSocket *sockopt = service->socketCfg;
     while (sockopt != NULL) {
         printf("\t\tsocket name: %s \n", sockopt->name);
-        printf("\t\tsocket type: %d \n", sockopt->type);
-        printf("\t\tsocket uid: %d \n", sockopt->uid);
-        printf("\t\tsocket gid: %d \n", sockopt->gid);
+        printf("\t\tsocket type: %u \n", sockopt->type);
+        printf("\t\tsocket uid: %u \n", sockopt->uid);
+        printf("\t\tsocket gid: %u \n", sockopt->gid);
         sockopt = sockopt->next;
     }
 }
@@ -100,11 +100,11 @@ void DumpOneService(const Service *service)
 #endif
     printf("\tservice pid: [%d] \n", service->pid);
     printf("\tservice crashCnt: [%d] \n", service->crashCnt);
-    printf("\tservice attribute: [%d] \n", service->attribute);
+    printf("\tservice attribute: [%u] \n", service->attribute);
     printf("\tservice importance: [%d] \n", service->importance);
     printf("\tservice startMode: [%s] \n", startModeMap[service->status].name);
     printf("\tservice status: [%s] \n", statusMap[service->status].name);
-    printf("\tservice perms uID [%d] \n", service->servPerm.uID);
+    printf("\tservice perms uID [%u] \n", service->servPerm.uID);
     DumpServiceArgs("path arg", &service->pathArgs);
     DumpServiceArgs("writepid file", &service->writePidArgs);
     DumpServiceJobs(service);
@@ -112,11 +112,11 @@ void DumpOneService(const Service *service)
 
     printf("\tservice perms groupId %d \n", service->servPerm.gIDCnt);
     for (int i = 0; i < service->servPerm.gIDCnt; i++) {
-        printf("\t\tservice perms groupId %d \n", service->servPerm.gIDArray[i]);
+        printf("\t\tservice perms groupId %u \n", service->servPerm.gIDArray[i]);
     }
-    printf("\tservice perms capability %d \n", service->servPerm.capsCnt);
+    printf("\tservice perms capability %u \n", service->servPerm.capsCnt);
     for (int i = 0; i < (int)service->servPerm.capsCnt; i++) {
-        printf("\t\tservice perms capability %d \n", service->servPerm.caps[i]);
+        printf("\t\tservice perms capability %u \n", service->servPerm.caps[i]);
     }
 }
 

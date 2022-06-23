@@ -49,15 +49,18 @@ static int StartProcess(const char *name, const char *extArgv[], int extArgc)
         }
         if (strncat_s(nameValue, len, name, strlen(name)) != 0) {
             BEGET_LOGE("Failed strncat_s name err=%d", errno);
+            free(nameValue);
             return -1;
         }
         for (int j = 0; j < extArgc; j++) {
             if (strncat_s(nameValue, len, "|", 1) != 0) {
                 BEGET_LOGE("Failed strncat_s \"|\"err=%d", errno);
+                free(nameValue);
                 return -1;
             }
             if (strncat_s(nameValue, len, extArgv[j], strlen(extArgv[j])) != 0) {
                 BEGET_LOGE("Failed strncat_s err=%d", errno);
+                free(nameValue);
                 return -1;
             }
         }
