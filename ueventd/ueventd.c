@@ -50,7 +50,7 @@ static const char *actions[] = {
     [ACTION_OFFLINE] = "offline",
     [ACTION_BIND] = "bind",
     [ACTION_UNBIND] = "unbind",
-    [ACTION_UNKNOWN] = "unknow",
+    [ACTION_UNKNOWN] = "unknown",
 };
 
 static SUBSYSTEMTYPE GetSubsystemType(const char *subsystem)
