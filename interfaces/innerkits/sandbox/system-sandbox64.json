@@ -69,10 +69,6 @@
             "sandbox-path" : "/mnt",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
-            "src-path" : "/storage",
-            "sandbox-path" : "/storage",
-            "sandbox-flags" : [ "bind", "rec", "private" ]
-        }, {
             "src-path" : "/sys_prod",
             "sandbox-path" : "/sys_prod",
             "sandbox-flags" : [ "bind", "rec", "private" ]
