@@ -32,7 +32,7 @@
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
 static atomic_uint g_requestId = ATOMIC_VAR_INIT(1);
 static int g_clientFd = INVALID_SOCKET;
-pthread_mutex_t g_clientMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_clientMutex = PTHREAD_MUTEX_INITIALIZER;
 
 __attribute__((constructor)) static void ParameterInit(void)
 {

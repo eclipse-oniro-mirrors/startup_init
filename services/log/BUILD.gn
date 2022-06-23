@@ -52,10 +52,7 @@ if (defined(ohos_lite)) {
 
   ohos_static_library("agent_log") {
     sources = base_sources
-    defines = [
-      "INIT_AGENT",
-      "INIT_FILE",
-    ]
+    defines = [ "INIT_AGENT" ]
     public_configs = [ ":exported_header_files" ]
     include_dirs = [ "//third_party/bounds_checking_function/include" ]
     external_deps = [ "hilog_native:libhilog_base" ]

@@ -215,7 +215,6 @@ ohos_unittest("init_unittest") {
   defines = [
     "READ_CHECK",
     "INIT_AGENT",
-    "INIT_FILE",
     "STARTUP_INIT_TEST",
     "PARAM_SUPPORT_DAC",
     "_GNU_SOURCE",

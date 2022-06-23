@@ -134,10 +134,10 @@ INIT_PUBLIC_API int InitParamWorkSpace(int onlyRead)
     PARAM_CHECK(ret == 0, return -1, "Failed to create hash map for workspace");
     WORKSPACE_INIT_LOCK(g_paramWorkSpace);
     ListInit(&g_paramWorkSpace.workSpaceList);
+    PARAM_SET_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT);
 
     ret = RegisterSecurityOps(onlyRead);
     PARAM_CHECK(ret == 0, return -1, "Failed to get security operations");
-    PARAM_SET_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT);
 
 #ifndef PARAM_SUPPORT_SELINUX
     ret = AddWorkSpace(WORKSPACE_NAME_NORMAL, onlyRead, PARAM_WORKSPACE_MAX);
@@ -363,6 +363,10 @@ int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
 
 INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void)
 {
+    if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
+        PARAM_LOGE("GetParamWorkSpace %p", &g_paramWorkSpace);
+        return NULL;
+    }
     return &g_paramWorkSpace;
 }
 
@@ -403,6 +407,7 @@ INIT_LOCAL_API int ParamStrCpy(char *strDest, size_t destMax, const char *strSrc
         *strDest = *strSrc;
         strDest++;
         strSrc++;
+        i++;
     }
     *strDest = '\0';
 #else

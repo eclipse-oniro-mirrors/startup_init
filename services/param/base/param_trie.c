@@ -119,7 +119,7 @@ INIT_LOCAL_API int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t sp
 INIT_LOCAL_API void CloseWorkSpace(WorkSpace *workSpace)
 {
     PARAM_CHECK(workSpace != NULL, return, "The workspace is null");
-    PARAM_LOGI("CloseWorkSpace %s", workSpace->fileName);
+    PARAM_LOGV("CloseWorkSpace %s", workSpace->fileName);
     if (!PARAM_TEST_FLAG(workSpace->flags, WORKSPACE_FLAGS_INIT)) {
         free(workSpace);
         return;

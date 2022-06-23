@@ -11,12 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-build_version  = root:root:0777
-hw_sc.build.os.enable = root:root:0777
-hw_sc.build.os.apiversion = root:root:0777
-hw_sc.build.os.version = root:root:0777
-hw_sc.build.os.releasetype = root:root:0777
-
 const.actionable_compatible_property.enabled = root:root:0777
 const.postinstall.fstab.prefix = root:root:0777
 const.secure = root:root:0777

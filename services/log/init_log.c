@@ -121,7 +121,7 @@ static void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag,
     static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
     HiLogBasePrint(LOG_CORE, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);
 #ifdef INIT_FILE
-    LogToFile("/data/init_agent/begetctl.log", tag, tmpFmt);
+    LogToFile(INIT_LOG_PATH"begetctl.log", tag, tmpFmt);
 #endif
 #endif
 }
