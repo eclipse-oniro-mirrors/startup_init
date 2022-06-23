@@ -29,26 +29,16 @@ public:
     static DeviceInfoKits &GetInstance();
     int32_t GetUdid(std::string& result);
     int32_t GetSerialID(std::string& result);
-    void ResetService(const wptr<IRemoteObject> &remote);
 
-    // For death event procession
-    class DeathRecipient final : public IRemoteObject::DeathRecipient {
-    public:
-        DeathRecipient() = default;
-        ~DeathRecipient() final = default;
-        DISALLOW_COPY_AND_MOVE(DeathRecipient);
-        void OnRemoteDied(const wptr<IRemoteObject> &remote) final;
-    };
-    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient()
-    {
-        return deathRecipient_;
-    }
-
+    void FinishStartSASuccess(const sptr<IRemoteObject> &remoteObject);
+    void FinishStartSAFailed();
 private:
+    static const int DEVICEINFO_LOAD_SA_TIMEOUT_MS = 60000;
+    void LoadDeviceInfoSa();
     sptr<IDeviceInfo> GetService();
     std::mutex lock_;
+    std::condition_variable deviceInfoLoadCon_;
     sptr<IDeviceInfo> deviceInfoService_ {};
-    sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
 };
 } // namespace device_info
 } // namespace OHOS

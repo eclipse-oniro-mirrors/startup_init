@@ -16,6 +16,7 @@
 
 #include "beget_ext.h"
 #include "device_info_proxy.h"
+#include "device_info_load.h"
 #include "idevice_info.h"
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
@@ -33,59 +34,66 @@ DeviceInfoKits &DeviceInfoKits::GetInstance()
     return DelayedRefSingleton<DeviceInfoKits>::GetInstance();
 }
 
-void DeviceInfoKits::ResetService(const wptr<IRemoteObject> &remote)
+void DeviceInfoKits::LoadDeviceInfoSa()
 {
-    std::lock_guard<std::mutex> lock(lock_);
-    if (deviceInfoService_ != nullptr) {
-        sptr<IRemoteObject> object = deviceInfoService_->AsObject();
-        if ((object != nullptr) && (remote == object)) {
-            object->RemoveDeathRecipient(deathRecipient_);
-            deviceInfoService_ = nullptr;
-        }
+    DINFO_LOGV("deviceInfoService_ is %d", deviceInfoService_ == nullptr);
+
+    auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    DINFO_CHECK(sam != nullptr, return, "GetSystemAbilityManager return null");
+
+    sptr<DeviceInfoLoad> deviceInfoLoad = new (std::nothrow) DeviceInfoLoad();
+    DINFO_CHECK(deviceInfoLoad != nullptr, return, "new deviceInfoLoad fail.");
+
+    int32_t ret = sam->LoadSystemAbility(SYSPARAM_DEVICE_SERVICE_ID, deviceInfoLoad);
+    DINFO_CHECK(ret == ERR_OK, return, "LoadSystemAbility deviceinfo sa failed");
+
+    std::unique_lock<std::mutex> lock(lock_);
+    // wait_for release lock and block until time out(60s) or match the condition with notice
+    auto waitStatus = deviceInfoLoadCon_.wait_for(lock, std::chrono::milliseconds(DEVICEINFO_LOAD_SA_TIMEOUT_MS),
+        [this]() { return deviceInfoService_ != nullptr; });
+    if (!waitStatus) {
+        // time out or loadcallback fail
+        DINFO_LOGE("tokensync load sa timeout");
+        return;
     }
 }
 
 sptr<IDeviceInfo> DeviceInfoKits::GetService()
 {
-    std::lock_guard<std::mutex> lock(lock_);
-    if (deviceInfoService_ != nullptr) {
-        return deviceInfoService_;
-    }
-
-    sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    DINFO_CHECK(samgr != nullptr, return nullptr, "Get samgr failed");
-    sptr<IRemoteObject> object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
-    DINFO_CHECK(object != nullptr, return nullptr, "Get device service object from samgr failed");
-    if (deathRecipient_ == nullptr) {
-        deathRecipient_ = new DeathRecipient();
-    }
-
-    if ((object->IsProxyObject()) && (!object->AddDeathRecipient(deathRecipient_))) {
-        DINFO_LOGE("Failed to add death recipient");
-    }
-    deviceInfoService_ = iface_cast<IDeviceInfo>(object);
-    if (deviceInfoService_ == nullptr) {
-        DINFO_LOGE("device service iface_cast failed");
-    }
+    LoadDeviceInfoSa();
     return deviceInfoService_;
 }
 
-void DeviceInfoKits::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
+void DeviceInfoKits::FinishStartSASuccess(const sptr<IRemoteObject> &remoteObject)
 {
-    DelayedRefSingleton<DeviceInfoKits>::GetInstance().ResetService(remote);
+    DINFO_LOGI("get deviceinfo sa success.");
+    deviceInfoService_ = iface_cast<IDeviceInfo>(remoteObject);
+
+    // get lock which wait_for release and send a notice so that wait_for can out of block
+    std::unique_lock<std::mutex> lock(lock_);
+    deviceInfoLoadCon_.notify_one();
+}
+
+void DeviceInfoKits::FinishStartSAFailed()
+{
+    DINFO_LOGI("get deviceinfo sa failed.");
+
+    // get lock which wait_for release and send a notice
+    std::unique_lock<std::mutex> lock(lock_);
+    deviceInfoLoadCon_.notify_one();
 }
 
 int32_t DeviceInfoKits::GetUdid(std::string& result)
 {
     auto deviceService = GetService();
-    DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get watcher manager");
+    DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
     return deviceService->GetUdid(result);
 }
 
 int32_t DeviceInfoKits::GetSerialID(std::string& result)
 {
     auto deviceService = GetService();
-    DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get watcher manager");
+    DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
     return deviceService->GetSerialID(result);
 }
 } // namespace device_info
