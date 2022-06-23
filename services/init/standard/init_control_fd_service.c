@@ -27,7 +27,7 @@
 static void ProcessSandboxControlFd(uint16_t type, const char *serviceCmd)
 {
     if ((type != ACTION_SANDBOX) || (serviceCmd == NULL)) {
-        INIT_LOGE("Invaild parameter");
+        INIT_LOGE("Invalid parameter");
         return;
     }
     Service *service  = GetServiceByName(serviceCmd);

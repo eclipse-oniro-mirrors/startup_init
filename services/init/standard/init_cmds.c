@@ -376,7 +376,7 @@ static void DoTimerStart(const struct CmdArgs *ctx)
     }
 
     if (count != expectedCount) {
-        INIT_LOGE("Call timer_start with unexpect arguments %s", arg);
+        INIT_LOGE("Call timer_start with unexpected arguments %s", arg);
         FreeStringVector(splitArgs, count);
         return;
     }
@@ -514,7 +514,7 @@ static void DoMkSandbox(const struct CmdArgs *ctx)
 
     const char *sandbox = ctx->argv[0];
     if (sandbox == NULL) {
-        INIT_LOGE("Invaild sandbox name.");
+        INIT_LOGE("Invalid sandbox name.");
         return;
     }
     InitDefaultNamespace();

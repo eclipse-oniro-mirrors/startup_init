@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <grp.h>
 #include <limits.h>
 #include <pwd.h>
 #include <stdlib.h>
@@ -48,30 +49,71 @@ float ConvertMicrosecondToSecond(int x)
     return ((x / THOUSAND_UNIT_INT) / THOUSAND_UNIT_FLOAT);
 }
 
+static bool CheckDigit(const char *name)
+{
+    size_t nameLen = strlen(name);
+    for (size_t i = 0; i < nameLen; ++i) {
+        if (!isdigit(name[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+int StringToUint(const char *name, unsigned int *value)
+{
+    errno = 0;
+    *value = (unsigned int)strtoul(name, 0, DECIMAL_BASE);
+    INIT_CHECK_RETURN_VALUE(errno == 0, -1);
+    return 0;
+}
+
 uid_t DecodeUid(const char *name)
 {
 #ifndef __LITEOS_M__
     INIT_CHECK_RETURN_VALUE(name != NULL, -1);
-    int digitFlag = 1;
-    size_t nameLen = strlen(name);
-    for (unsigned int i = 0; i < nameLen; ++i) {
-        if (isalpha(name[i])) {
-            digitFlag = 0;
+    uid_t uid = -1;
+    if (CheckDigit(name)) {
+        if (!StringToUint(name, &uid)) {
+            return uid;
+        } else {
+            INIT_LOGE("Failed to decode uid");
+            return -1;
+        }
+    }
+    struct passwd *p = getpwnam(name);
+    if (p == NULL) {
+        INIT_LOGE("Failed to decode uid");
+        return -1;
+    }
+    return p->pw_uid;
+#else
+    return -1;
+#endif
+}
+
+gid_t DecodeGid(const char *name)
+{
+#ifndef __LITEOS_M__
+    INIT_CHECK_RETURN_VALUE(name != NULL, -1);
+    gid_t gid = -1;
+    if (CheckDigit(name)) {
+        if (!StringToUint(name, &gid)) {
+            return gid;
+        } else {
+            INIT_LOGE("Failed to decode gid");
+            return -1;
+        }
+    }
+    struct group *data = NULL;
+    while ((data = getgrent()) != NULL) {
+        if ((data->gr_name != NULL) && (strcmp(data->gr_name, name) == 0)) {
+            gid = data->gr_gid;
             break;
         }
     }
-    if (digitFlag) {
-        errno = 0;
-        uid_t result = strtoul(name, 0, DECIMAL_BASE);
-        INIT_CHECK_RETURN_VALUE(errno == 0, -1);
-        return result;
-    } else {
-        struct passwd *userInf = getpwnam(name);
-        if (userInf == NULL) {
-            return -1;
-        }
-        return userInf->pw_uid;
-    }
+    endgrent();
+    return gid;
 #else
     return -1;
 #endif
@@ -220,7 +262,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
 {
     INIT_CHECK_RETURN_VALUE((maxItemCount >= 0) && (buffer != NULL) && (del != NULL) && (returnCount != NULL), NULL);
     // Why is this number?
-    // Now we use this function to split a string with a given delimeter
+    // Now we use this function to split a string with a given delimiter
     // We do not know how many sub-strings out there after splitting.
     // 50 is just a guess value.
     const int defaultItemCounts = 50;

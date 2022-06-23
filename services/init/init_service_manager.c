@@ -36,7 +36,7 @@
 #   include "init_selinux_param.h"
 #endif // WITH_SELINUX
 
-// All serivce processes that init will fork+exec.
+// All service processes that init will fork+exec.
 static ServiceSpace g_serviceSpace = { 0 };
 static const int CRITICAL_DEFAULT_CRASH_TIME = 20;
 // maximum number of crashes within time CRITICAL_DEFAULT_CRASH_TIME for one service
@@ -93,6 +93,11 @@ void DumpOneService(const Service *service)
     int size = 0;
     const InitArgInfo *statusMap = GetServieStatusMap(&size);
     printf("\tservice name: [%s] \n", service->name);
+#ifdef WITH_SELINUX
+    if (service->secon != NULL) {
+        printf("\tservice secon: [%s] \n", service->secon);
+    }
+#endif
     printf("\tservice pid: [%d] \n", service->pid);
     printf("\tservice crashCnt: [%d] \n", service->crashCnt);
     printf("\tservice attribute: [%d] \n", service->attribute);
@@ -204,6 +209,12 @@ void ReleaseService(Service *service)
     if (service == NULL) {
         return;
     }
+#ifdef WITH_SELINUX
+    if (service->secon != NULL) {
+        free(service->secon);
+        service->secon = NULL;
+    }
+#endif
     FreeServiceArg(&service->pathArgs);
     FreeServiceArg(&service->writePidArgs);
     FreeServiceArg(&service->capsArgs);
@@ -483,7 +494,7 @@ static int AddServiceSocket(cJSON *json, Service *service)
     stringValue = GetStringValue(json, "gid", &strLen);
     INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
         "Failed to get string for gid");
-    sockopt->gid = DecodeUid(stringValue);
+    sockopt->gid = DecodeGid(stringValue);
     INIT_ERROR_CHECK((sockopt->uid != (uid_t)-1) && (sockopt->gid != (uid_t)-1),
         free(sockopt); sockopt = NULL; return SERVICE_FAILURE, "Invalid uid or gid");
     ret = ParseSocketOption(json, sockopt);
@@ -555,7 +566,7 @@ static int AddServiceFile(cJSON *json, Service *service)
     }
     fileOpt->perm = strtoul(opt[SERVICE_FILE_PERM], 0, OCTAL_BASE);
     fileOpt->uid = DecodeUid(opt[SERVICE_FILE_UID]);
-    fileOpt->gid = DecodeUid(opt[SERVICE_FILE_GID]);
+    fileOpt->gid = DecodeGid(opt[SERVICE_FILE_GID]);
     if (fileOpt->uid == (uid_t)-1 || fileOpt->gid == (gid_t)-1) {
         free(fileOpt);
         fileOpt = NULL;
@@ -788,7 +799,12 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
     int ret = 0;
 #ifdef WITH_SELINUX
-    (void)GetStringItem(curItem, SECON_STR_IN_CFG, service->secon, MAX_SECON_LEN);
+    size_t strLen = 0;
+    char *fieldStr = GetStringValue(curItem, SECON_STR_IN_CFG, &strLen);
+    if (fieldStr != NULL) {
+        service->secon = strdup(fieldStr);
+        INIT_ERROR_CHECK(service->secon != NULL, return -1, "Failed to get secon for service %s", service->name);
+    }
 #endif // WITH_SELINUX
     ret = GetServiceArgs(curItem, "path", MAX_PATH_ARGS_CNT, &service->pathArgs);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get path for service %s", service->name);
@@ -1026,7 +1042,7 @@ void StartAllServices(int startMode)
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
-    INIT_LOGI("StartAllServices %d finsh", startMode);
+    INIT_LOGI("StartAllServices %d finish", startMode);
 }
 
 void LoadAccessTokenId(void)

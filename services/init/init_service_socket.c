@@ -52,7 +52,7 @@ static int SetSocketAddr(ServiceSocket *sockopt, sockaddr_union *addr)
     if (sockopt->family == AF_NETLINK) {
 #ifndef __LITEOS_A__
         if (memset_s(&(addr->addrnl), sizeof(addr->addrnl), 0, sizeof(addr->addrnl)) != EOK) {
-            INIT_LOGE("Faild to clear socket address");
+            INIT_LOGE("Failed to clear socket address");
             return -1;
         }
         addr->addrnl.nl_family = AF_NETLINK;

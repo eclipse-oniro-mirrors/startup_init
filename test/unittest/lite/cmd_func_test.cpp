@@ -45,7 +45,7 @@ const gid_t TEST_FILE_GID = 999;
 const mode_t TEST_FILE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 #endif
 
-// init.cfg releated
+// init.cfg related
 const std::string CFG_FILE = "/etc/init.cfg";
 const std::string SERVICE_ARR_NAME_IN_JSON = "services";
 const std::string JOBS_ARR_NAME_IN_JSON = "jobs";
@@ -62,7 +62,7 @@ const int TEST_MAX_PATH_ARGS_CNT = 20;                // max path and args count
 const int TEST_MAX_ONE_ARG_LEN = 64;                  // max length of one param/path
 const int CAT_BUF_SIZE = 512;                         // standard Cat buffer size from vfs_shell_cmd
 
-// job test releated
+// job test related
 const std::string PRE_INIT_DIR = ROOT_DIR + "preInitDir/";
 const std::string INIT_DIR = PRE_INIT_DIR + "initDir";
 const std::string POST_INIT_DIR = INIT_DIR + "postInitDir";

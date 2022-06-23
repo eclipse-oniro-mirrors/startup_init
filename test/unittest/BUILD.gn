@@ -208,7 +208,8 @@ ohos_unittest("init_unittest") {
     "//third_party/cJSON:cjson_static",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest",
-    "//third_party/openssl:libcrypto_shared",
+    "//third_party/mbedtls:mbedtls_shared",
+    "//utils/native/base:utils",
   ]
 
   defines = [
@@ -218,6 +219,7 @@ ohos_unittest("init_unittest") {
     "PARAM_SUPPORT_DAC",
     "_GNU_SOURCE",
     "PARAM_SUPPORT_TRIGGER",
+    "USE_MBEDTLS",
   ]
   defines += [ "_GNU_SOURCE" ]
 
@@ -262,6 +264,7 @@ ohos_unittest("init_unittest") {
   if (enable_ohos_startup_init_feature_deviceinfo) {
     sources += [
       "//base/startup/init_lite/device_info/device_info_kits.cpp",
+      "//base/startup/init_lite/device_info/device_info_load.cpp",
       "//base/startup/init_lite/device_info/device_info_proxy.cpp",
     ]
     defines += [ "PARAM_FEATURE_DEVICEINFO" ]

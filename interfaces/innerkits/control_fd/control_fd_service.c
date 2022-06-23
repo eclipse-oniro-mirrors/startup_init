@@ -95,7 +95,7 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
 static int SendMessage(LoopHandle loop, TaskHandle task, const char *message)
 {
     if (message == NULL) {
-        BEGET_LOGE("[control_fd] Invaild parameter");
+        BEGET_LOGE("[control_fd] Invalid parameter");
         return -1;
     }
     BufferHandle handle = NULL;
@@ -135,7 +135,7 @@ static int CmdOnIncommingConntect(const LoopHandle loop, const TaskHandle server
 void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func)
 {
     if ((socketPath == NULL) || (func == NULL)) {
-        BEGET_LOGE("[control_fd] Invaild parameter");
+        BEGET_LOGE("[control_fd] Invalid parameter");
         return;
     }
     LE_StreamServerInfo info = {};

@@ -72,7 +72,7 @@ int main(int argc, char *args[])
             return 0;
         }
         const ParamInfo *param = BShellEnvGetReservedParam(handle, PARAM_REVERESD_NAME_CURR_PARAMETER);
-        BSH_CHECK(param != NULL && param->type == PARAM_STRING, break, "Failed to get revered param");
+        BSH_CHECK(param != NULL && param->type == PARAM_STRING, break, "Failed to get reversed param");
         BShellEnvSetParam(handle, param->name, param->desc, param->type, (void *)"");
         if (argc > 1) {
             int ret = SetParamShellPrompt(handle, args[1]);

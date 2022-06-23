@@ -403,16 +403,16 @@ static int ExecTriggerMatch_(const TriggerWorkSpace *workSpace,
 static int CheckBootMatch_(const TriggerWorkSpace *workSpace,
     int type, LogicCalculator *calculator, const char *content, uint32_t contentSize)
 {
-    PARAM_CHECK(workSpace != NULL, return -1, "Invaid space");
-    PARAM_CHECK((type == TRIGGER_BOOT) || (type == TRIGGER_PARAM_WATCH), return -1, "Invaid type");
+    PARAM_CHECK(workSpace != NULL, return -1, "Invalid space");
+    PARAM_CHECK((type == TRIGGER_BOOT) || (type == TRIGGER_PARAM_WATCH), return -1, "Invalid type");
     return ExecTriggerMatch_(workSpace, type, calculator, content, contentSize);
 }
 
 static int CheckParamMatch_(const TriggerWorkSpace *workSpace,
     int type, LogicCalculator *calculator, const char *content, uint32_t contentSize)
 {
-    PARAM_CHECK(workSpace != NULL, return -1, "Invaid space");
-    PARAM_CHECK((type == TRIGGER_PARAM) || (type == TRIGGER_PARAM_WAIT), return -1, "Invaid type");
+    PARAM_CHECK(workSpace != NULL, return -1, "Invalid space");
+    PARAM_CHECK((type == TRIGGER_PARAM) || (type == TRIGGER_PARAM_WAIT), return -1, "Invalid type");
 
     CalculatorInit(calculator, MAX_CONDITION_NUMBER, sizeof(LogicData), 1);
     int ret = GetValueFromContent(content, contentSize, 0, calculator->inputName, SUPPORT_DATA_BUFFER_MAX);
@@ -427,7 +427,7 @@ static int CheckUnknowMatch_(const TriggerWorkSpace *workSpace,
     int type, LogicCalculator *calculator, const char *content, uint32_t contentSize)
 {
     PARAM_CHECK(workSpace != NULL && content != NULL, return -1, "Failed arg for trigger");
-    PARAM_CHECK(type == TRIGGER_UNKNOW, return -1, "Invaid type");
+    PARAM_CHECK(type == TRIGGER_UNKNOW, return -1, "Invalid type");
 
     CalculatorInit(calculator, MAX_CONDITION_NUMBER, sizeof(LogicData), 1);
     int ret = memcpy_s(calculator->triggerContent, sizeof(calculator->triggerContent), content, contentSize);

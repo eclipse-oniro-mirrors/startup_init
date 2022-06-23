@@ -171,7 +171,7 @@ void SystemDumpParameters(int verbose)
     if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
         PARAM_CHECK(ret == 0, return, "Forbid to dump parameters");
     }
-    PARAM_DUMP("Dump all paramters begin ...\n");
+    PARAM_DUMP("Dump all parameters begin ...\n");
     if (verbose) {
         PARAM_DUMP("Local sercurity information\n");
         PARAM_DUMP("\t pid: %d uid: %d gid: %d \n",
@@ -185,7 +185,7 @@ void SystemDumpParameters(int verbose)
         HashNodeTraverseForDump(workSpace, verbose);
         workSpace = next;
     }
-    PARAM_DUMP("Dump all paramters finish\n");
+    PARAM_DUMP("Dump all parameters finish\n");
 }
 
 INIT_INNER_API int SysCheckParamExist(const char *name)

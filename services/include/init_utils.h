@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 #ifdef __cplusplus
@@ -49,6 +50,7 @@ typedef struct {
 #define BOOT_CMD_LINE STARTUP_INIT_UT_PATH"/proc/cmdline"
 
 uid_t DecodeUid(const char *name);
+gid_t DecodeGid(const char *name);
 char *ReadFileToBuf(const char *configFile);
 int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int length);
 char *ReadFileData(const char *fileName);
@@ -58,6 +60,7 @@ void WaitForFile(const char *source, unsigned int maxSecond);
 size_t WriteAll(int fd, const char *buffer, size_t size);
 char *GetRealPath(const char *source);
 int StringToInt(const char *str, int defaultValue);
+int StringToUint(const char *name, unsigned int *value);
 int MakeDirRecursive(const char *dir, mode_t mode);
 void CheckAndCreateDir(const char *fileName);
 int CheckAndCreatFile(const char *file, mode_t mode);

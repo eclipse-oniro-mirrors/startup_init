@@ -55,10 +55,10 @@ static int ParseRequiredMountInfo(const char *item, Fstab *fstab)
         q = item + strlen(OHOS_REQUIRED_MOUNT_PREFIX); // Get partition name
         INIT_CHECK(!(q == NULL || *q == '\0' || (p - q) <= 0), return -1);
         INIT_ERROR_CHECK(strncpy_s(partName, PARTITION_NAME_SIZE -1, q, p - q) == EOK,
-            return -1, "Failed to copy requried partition name");
+            return -1, "Failed to copy required partition name");
         p++; // skip '='
         INIT_ERROR_CHECK(strncpy_s(mountOptions, MAX_BUFFER_LEN -1, p, strlen(p)) == EOK,
-            return -1, "Failed to copy requried mount info: %s", item);
+            return -1, "Failed to copy required mount info: %s", item);
     }
     INIT_LOGV("Mount option of partition %s is [%s]", partName, mountOptions);
     if (ParseFstabPerLine(mountOptions, fstab, false, "@") < 0) {

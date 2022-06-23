@@ -62,7 +62,7 @@ HWTEST_F(SysparaUnitTest, parameterTest001_1, TestSize.Level0)
     printf("SDK api version =%d\n", GetSdkApiVersion());
     printf("Incremental version = %s\n", GetIncrementalVersion());
     printf("formal id =%s\n", GetVersionId());
-    printf("build tyep =%s\n", GetBuildType());
+    printf("build type =%s\n", GetBuildType());
     printf("build user =%s\n", GetBuildUser());
     printf("Build host = %s\n", GetBuildHost());
     printf("build time =%s\n", GetBuildTime());
