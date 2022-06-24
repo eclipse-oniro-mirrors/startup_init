@@ -40,16 +40,11 @@
                 "//base/startup/init_lite/ueventd:startup_ueventd",
                 "//base/startup/init_lite/watchdog:watchdog",
                 "//base/startup/init_lite/services/begetctl:begetctl_cmd",
-                "//base/startup/init_lite/services/loopevent:loopevent",
-                "//base/startup/init_lite/services/modules:modules",
+                "//base/startup/init_lite/services/loopevent:loopeventgroup",
+                "//base/startup/init_lite/services/modules:modulesgroup",
                 "//base/startup/init_lite/services/param:parameter",
-                "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-                "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
-                "//base/startup/init_lite/interfaces/innerkits/file:libfile",
-                "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
-                "//base/startup/init_lite/interfaces/innerkits/init_module_engine:init_module_engine",
+                "//base/startup/init_lite/interfaces/innerkits:innergroup",
                 "//base/startup/init_lite/device_info:device_info_group",
-                "//base/startup/init_lite/test/exec_test:exectest",
                 "//base/startup/init_lite/interfaces/kits:kitsgroup"
             ],
             "inner_kits": [
@@ -95,8 +90,7 @@
                 }
             ],
             "test": [
-                "//base/startup/init_lite/test/unittest:init_test",
-                "//base/startup/init_lite/test/fuzztest:fuzztest"
+                "//base/startup/init_lite/test:testgroup"
             ]
         }
     }

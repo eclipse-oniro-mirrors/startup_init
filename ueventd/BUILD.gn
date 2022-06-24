@@ -52,17 +52,6 @@ if (defined(ohos_lite)) {
       outputs = [ "$root_out_dir/etc/ueventd.config" ]
     }
   }
-
-  group("ueventd") {
-    if (ohos_kernel_type == "linux") {
-      deps = [
-        ":ueventd.config",
-        ":ueventd_linux",
-      ]
-    } else {
-      deps = []
-    }
-  }
 } else {
   import("//build/ohos.gni")
   service_ueventd_sources = [
@@ -147,6 +136,25 @@ if (defined(ohos_lite)) {
     install_images = [
       "system",
       "updater",
+    ]
+  }
+}
+
+group("startup_ueventd") {
+  if (defined(ohos_lite)) {
+    if (ohos_kernel_type == "linux") {
+      deps = [
+        ":ueventd.config",
+        ":ueventd_linux",
+      ]
+    } else {
+      deps = []
+    }
+  } else {
+    deps = [
+      "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
+      "//base/startup/init_lite/ueventd:ueventd",
+      "//base/startup/init_lite/ueventd:ueventd.config",
     ]
   }
 }

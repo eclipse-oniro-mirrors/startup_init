@@ -11,70 +11,77 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
-import("//build/ohos/native_stub/native_stub.gni")
+if (defined(ohos_lite)) {
+  group("libinit_module_engine") {
+  }
+} else {
+  import("//build/ohos.gni")
+  import("//build/ohos/native_stub/native_stub.gni")
 
-#
-# exported include directories
-#
-config("init_module_engine_exported_config") {
-  visibility = [ ":*" ]
-  include_dirs = [
-    "include/",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/log",
-  ]
-}
+  #
+  # exported include directories
+  #
+  config("init_module_engine_exported_config") {
+    visibility = [ ":*" ]
+    include_dirs = [
+      "include/",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/services/log",
+    ]
+  }
 
-#
-# innerkits for module development
-#
-ohos_native_stub_library("libinit_module_engine") {
-  output_extension = "so"
-  public_configs = [ ":init_module_engine_exported_config" ]
-  stub_description_file = "./stub/libinit.stub.json"
-}
+  #
+  # innerkits for module development
+  #
+  ohos_native_stub_library("libinit_module_engine") {
+    output_extension = "so"
+    public_configs = [ ":init_module_engine_exported_config" ]
+    stub_description_file = "./stub/libinit.stub.json"
+  }
 
-#
-# For init linking,
-# export symbols defined in this json files only
-#
-ohos_native_stub_versionscript("libinit_stub_versionscript") {
-  stub_description_file = "./stub/libinit.stub.json"
-}
+  #
+  # For init linking,
+  # export symbols defined in this json files only
+  #
+  ohos_native_stub_versionscript("libinit_stub_versionscript") {
+    stub_description_file = "./stub/libinit.stub.json"
+  }
 
-#
-# Generate empty library with symlink name to satisfy init loading required libraries
-#
-ohos_native_stub_library("libinit_stub_empty") {
-  output_extension = "so"
-  stub_description_file = "./stub/libinit.stub.empty.json"
-  part_name = "init"
-  install_enable = true
-  symlink_target_name = [ "libinit_module_engine.so" ]
-}
+  #
+  # Generate empty library with symlink name to satisfy init loading required libraries
+  #
+  ohos_native_stub_library("libinit_stub_empty") {
+    output_extension = "so"
+    stub_description_file = "./stub/libinit.stub.empty.json"
+    part_name = "init"
+    install_enable = true
+    symlink_target_name = [ "libinit_module_engine.so" ]
+  }
 
-config("init_module_engine_sources_config") {
-  include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/init_module_engine/include",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/log",
-  ]
-}
+  config("init_module_engine_sources_config") {
+    include_dirs = [
+      "//base/startup/init_lite/interfaces/innerkits/init_module_engine/include",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/services/include",
+      "//base/startup/init_lite/services/log",
+    ]
+  }
 
-ohos_source_set("init_module_engine_sources") {
-  sources = [ "init_modulemgr.c" ]
-  public_configs = [ ":init_module_engine_sources_config" ]
+  ohos_source_set("init_module_engine_sources") {
+    sources = [ "init_modulemgr.c" ]
+    public_configs = [ ":init_module_engine_sources_config" ]
+  }
 }
 
 #
 # init module engine all modules
 #
-group("init_module_engine") {
-  deps = [
-    ":libinit_module_engine",
-    ":libinit_stub_empty",
-  ]
+group("modulegroup") {
+  if (!defined(ohos_lite)) {
+    deps = [
+      ":libinit_module_engine",
+      ":libinit_stub_empty",
+    ]
+  }
 }

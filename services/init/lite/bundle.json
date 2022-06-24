@@ -29,11 +29,13 @@
         },
         "build": {
             "sub_component": [
-                "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
                 "//base/startup/init_lite/services:startup_init",
+                "//base/startup/init_lite/ueventd:startup_ueventd",
+                "//base/startup/init_lite/watchdog:watchdog",
                 "//base/startup/init_lite/services/begetctl:begetctl_cmd",
-                "//base/startup/init_lite/watchdog:init_watchdog",
-                "//base/startup/init_lite/ueventd:ueventd"
+                "//base/startup/init_lite/services/loopevent:loopeventgroup",
+                "//base/startup/init_lite/services/modules:modulesgroup",
+                "//base/startup/init_lite/services/param:parameter"
             ],
             "inner_kits": [
                 {
@@ -52,7 +54,7 @@
                 }
             ],
             "test": [
-                "//base/startup/init_lite/services:startup_init"
+                "//base/startup/init_lite/test:testgroup"
             ]
         }
     }

@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//base/startup/init_lite/begetd.gni")
-import("//build/ohos.gni")
 
 group("parameter") {
   deps = []
