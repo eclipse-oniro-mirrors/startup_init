@@ -23,7 +23,7 @@ namespace OHOS {
 namespace init_param {
 class Watcher : public WatcherStub {
 public:
-    explicit Watcher() = default;
+    Watcher() = default;
     ~Watcher() = default;
 
     void OnParamerterChange(const std::string &name, const std::string &value) override;
