@@ -75,7 +75,7 @@ int GetParameter(const char *key, const char *def, char *value, uint32_t len)
         return EC_INVALID;
     }
     int ret = GetParameter_(key, def, value, len);
-    return (ret != 0) ? EC_INVALID : strlen(value);
+    return (ret != 0) ? ret : strlen(value);
 }
 
 int GetIntParameter(const char *key, int def)
@@ -99,6 +99,10 @@ int SetParameter(const char *key, const char *value)
         return EC_INVALID;
     }
     int ret = SystemSetParameter(key, value);
+    if (ret == PARAM_CODE_INVALID_NAME || ret == DAC_RESULT_FORBIDED ||
+        ret == PARAM_CODE_INVALID_PARAM || ret == PARAM_CODE_INVALID_VALUE) {
+        return EC_INVALID;
+    }
     return (ret == 0) ? EC_SUCCESS : EC_FAILURE;
 }
 
