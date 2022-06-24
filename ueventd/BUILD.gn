@@ -13,6 +13,14 @@
 
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "linux") {
+    service_ueventd_deps = [
+      "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
+      "//base/startup/init_lite/services/log:init_log",
+      "//base/startup/init_lite/services/param/base:parameterbase",
+      "//base/startup/init_lite/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_static",
+    ]
+
     executable("ueventd_linux") {
       sources = [
         "//base/startup/init_lite/services/utils/init_utils.c",
@@ -36,10 +44,8 @@ if (defined(ohos_lite)) {
         "//base/startup/init_lite/ueventd/include",
       ]
 
-      deps = [
-        "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-        "//third_party/bounds_checking_function:libsec_static",
-      ]
+      deps = service_ueventd_deps
+      deps += [ "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared" ]
     }
     copy("ueventd.config") {
       sources = [ "etc/ueventd_l1.config" ]
@@ -79,16 +85,10 @@ if (defined(ohos_lite)) {
   service_ueventd_deps = [
     "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
     "//base/startup/init_lite/services/log:init_log",
+    "//base/startup/init_lite/services/param/base:parameterbase",
     "//base/startup/init_lite/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  group("startup_ueventd") {
-    deps = [
-      "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
-      "//base/startup/init_lite/ueventd:ueventd",
-      "//base/startup/init_lite/ueventd:ueventd.config",
-    ]
-  }
 
   #
   # exported include directories
@@ -125,7 +125,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/include",
     ]
     deps = service_ueventd_deps
-    deps += [ "//base/startup/init_lite/interfaces/innerkits:libbegetutil" ]
+    deps += [ "//base/startup/init_lite/services/param/linux:param_client" ]
     cflags = []
 
     if (build_selinux) {

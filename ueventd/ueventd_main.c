@@ -49,6 +49,8 @@ static void PollUeventdSocketTimeout(int ueventSockFd)
 
 int main(int argc, char **argv)
 {
+    // start log
+    EnableInitLog(INIT_INFO);
     char *ueventdConfigs[] = {"/etc/ueventd.config", "/vendor/etc/ueventd.config", NULL};
     int i = 0;
     while (ueventdConfigs[i] != NULL) {
