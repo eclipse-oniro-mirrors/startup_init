@@ -357,16 +357,17 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
         curServ->servPerm.gIDArray[0] = gid;
         return SERVICE_SUCCESS;
     }
-
+    int gidArrayIndex = 0;
     for (int i = 0; i < gidCount; ++i) {
         cJSON *item = cJSON_GetArrayItem(arrItem, i);
         int ret = GetGid(item, &gid, curServ);
         if (ret != 0) {
-            curServ->servPerm.gIDArray[i] = 0;
+            INIT_LOGE("parse service %s %d gid failed skip this", curServ->name, i);
             continue;
         }
-        curServ->servPerm.gIDArray[i] = gid;
+        curServ->servPerm.gIDArray[gidArrayIndex++] = gid;
     }
+    curServ->servPerm.gIDCnt = gidArrayIndex;
     return SERVICE_SUCCESS;
 }
 
