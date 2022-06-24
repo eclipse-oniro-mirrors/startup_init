@@ -70,6 +70,7 @@ if (defined(ohos_lite)) {
       "init_cmd_reboot.c",
       "main.c",
       "misc_daemon.cpp",
+      "modulectl.c",
       "param_cmd.c",
       "sandbox.cpp",
       "service_control.c",

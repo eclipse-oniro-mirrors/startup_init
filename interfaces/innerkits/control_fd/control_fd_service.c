@@ -27,21 +27,6 @@ static CmdService g_cmdService;
 
 CallbackControlFdProcess g_controlFdFunc = NULL;
 
-static void CmdOnClose(const TaskHandle task)
-{
-    BEGET_LOGI("[control_fd] CmdOnClose");
-}
-
-static void CmdDisConnectComplete(const TaskHandle client)
-{
-    BEGET_LOGI("[control_fd] CmdDisConnectComplete");
-}
-
-static void CmdOnSendMessageComplete(const TaskHandle task, const BufferHandle handle)
-{
-    BEGET_LOGI("[control_fd] CmdOnSendMessageComplete ");
-}
-
 static int ReadFifoPath(const char *name, bool read, pid_t pid, char *resolvedPath)
 {
     if ((name == NULL) || (pid < 0) || resolvedPath == NULL) {
@@ -60,7 +45,6 @@ static int ReadFifoPath(const char *name, bool read, pid_t pid, char *resolvedPa
 
 static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
 {
-    BEGET_LOGI("[control_fd] CmdOnRecvMessage");
     if (buffer == NULL) {
         return;
     }
@@ -115,14 +99,13 @@ static int SendMessage(LoopHandle loop, TaskHandle task, const char *message)
 
 static int CmdOnIncommingConntect(const LoopHandle loop, const TaskHandle server)
 {
-    BEGET_LOGI("[control_fd] CmdOnIncommingConntect");
     TaskHandle client = NULL;
     LE_StreamInfo info = {};
     info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_CONNECT;
-    info.baseInfo.close = CmdOnClose;
+    info.baseInfo.close = NULL;
     info.baseInfo.userDataSize = sizeof(CmdAgent);
-    info.disConntectComplete = CmdDisConnectComplete;
-    info.sendMessageComplete = CmdOnSendMessageComplete;
+    info.disConntectComplete = NULL;
+    info.sendMessageComplete = NULL;
     info.recvMessage = CmdOnRecvMessage;
     int ret = LE_AcceptStreamClient(LE_GetDefaultLoop(), server, &client, &info);
     BEGET_ERROR_CHECK(ret == 0, return -1, "[control_fd] Failed accept stream")

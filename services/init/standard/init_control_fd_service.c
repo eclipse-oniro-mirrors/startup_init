@@ -21,6 +21,7 @@
 #include "control_fd.h"
 #include "init_service.h"
 #include "init_service_manager.h"
+#include "init_modulemgr.h"
 #include "init_utils.h"
 #include "init_log.h"
 
@@ -54,6 +55,33 @@ static void ProcessDumpServiceControlFd(uint16_t type, const char *serviceCmd)
     return;
 }
 
+static void ProcessModuleMgrControlFd(uint16_t type, const char *serviceCmd)
+{
+#define MODULE_INSTALL_PREFIX    "install:"
+#define MODULE_UNINSTALL_PREFIX  "uninstall:"
+    int cmdLen;
+
+    if ((type != ACTION_MODULEMGR) || (serviceCmd == NULL)) {
+        return;
+    }
+    if (strcmp(serviceCmd, "list") == 0) {
+        InitModuleMgrDump();
+        return;
+    }
+    cmdLen = strlen(MODULE_INSTALL_PREFIX);
+    if (strncmp(serviceCmd, MODULE_INSTALL_PREFIX, cmdLen) == 0) {
+        INIT_LOGI("Install %s now ...\n", serviceCmd + cmdLen);
+        InitModuleMgrInstall(serviceCmd + cmdLen);
+        return;
+    }
+    cmdLen = strlen(MODULE_UNINSTALL_PREFIX);
+    if (strncmp(serviceCmd, MODULE_UNINSTALL_PREFIX, cmdLen) == 0) {
+        INIT_LOGI("Uninstall %s now ...\n", serviceCmd + cmdLen);
+        InitModuleMgrUnInstall(serviceCmd + cmdLen);
+        return;
+    }
+}
+
 static void ProcessParamShellControlFd(uint16_t type, const char *serviceCmd)
 {
     if ((type != ACTION_PARAM_SHELL) || (serviceCmd == NULL)) {
@@ -84,6 +112,9 @@ void ProcessControlFd(uint16_t type, const char *serviceCmd, const void *context
             break;
         case ACTION_PARAM_SHELL :
             ProcessParamShellControlFd(type, serviceCmd);
+            break;
+        case ACTION_MODULEMGR :
+            ProcessModuleMgrControlFd(type, serviceCmd);
             break;
         default :
             INIT_LOGW("Unknown control fd type.");
