@@ -26,6 +26,7 @@ typedef struct {
     char *source;  // source 目录，一般是全局的fs 目录
     char *target;  // 沙盒化后的目录
     unsigned long flags;
+    bool ignoreErrors;
 } mount_t;
 
 typedef struct MountList {
