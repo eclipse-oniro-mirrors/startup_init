@@ -3,6 +3,7 @@
     { "name": "SystemReadParam" },
     { "name": "AddCmdExecutor" },
     { "name": "RemoveCmdExecutor" },
+    { "name": "HookMgrAdd" },
     { "name": "InitAddGlobalInitHook" },
     { "name": "InitAddPreParamServiceHook" },
     { "name": "InitAddPreParamLoadHook" },

@@ -28,6 +28,8 @@ int InitModuleMgrInstall(const char *moduleName);
 
 void InitModuleMgrUnInstall(const char *moduleName);
 
+void InitModuleMgrDump(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

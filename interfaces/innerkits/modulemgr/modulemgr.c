@@ -265,3 +265,46 @@ int ModuleMgrGetCnt(const MODULE_MGR *moduleMgr)
     BEGET_CHECK(moduleMgr != NULL, return 0);
     return ListGetCnt(&(moduleMgr->modules));
 }
+
+typedef struct tagMODULE_TRAVERSAL_ARGS {
+    void  *cookie;
+    OhosModuleTraversal traversal;
+} MODULE_TRAVERSAL_ARGS;
+
+static int moduleTraversalProc(ListNode *node, void *cookie)
+{
+    MODULE_ITEM *module;
+    MODULE_TRAVERSAL_ARGS *args;
+    MODULE_INFO info;
+
+    module = (MODULE_ITEM *)node;
+    args = (MODULE_TRAVERSAL_ARGS *)cookie;
+
+    info.cookie = args->cookie;
+    info.handle = module->handle;
+    info.name = module->name;
+    args->traversal(&info);
+
+    return 0;
+}
+
+/**
+ * @brief Traversing all hooks in the HookManager
+ *
+ * @param moduleMgr HookManager handle.
+ *                If hookMgr is NULL, it will use default HookManager
+ * @param cookie traversal cookie.
+ * @param traversal traversal function.
+ * @return None.
+ */
+void ModuleMgrTraversal(const MODULE_MGR *moduleMgr, void *cookie, OhosModuleTraversal traversal)
+{
+    MODULE_TRAVERSAL_ARGS args;
+    if (moduleMgr == NULL) {
+        return;
+    }
+
+    args.cookie = cookie;
+    args.traversal = traversal;
+    ListTraversal((ListNode *)(&(moduleMgr->modules)), (void *)(&args), moduleTraversalProc, 0);
+}

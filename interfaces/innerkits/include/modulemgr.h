@@ -128,6 +128,33 @@ void ModuleMgrUninstall(MODULE_MGR *moduleMgr, const char *name);
  */
 int ModuleMgrGetCnt(const MODULE_MGR *moduleMgr);
 
+/**
+ * @brief Module information for traversing modules
+ */
+typedef struct tagMODULE_INFO {
+    const char *name;     /* module name */
+    void *handle;         /* module handler */
+    void *cookie;         /* hook execution cookie */
+} MODULE_INFO;
+
+/**
+ * @brief Module traversal function prototype
+ *
+ * @param moduleInfo MODULE_INFO for traversing each module.
+ * @return None
+ */
+typedef void (*OhosModuleTraversal)(const MODULE_INFO *moduleInfo);
+
+/**
+ * @brief Traversing all modules in the ModuleManager
+ *
+ * @param moduleMgr module manager handle
+ * @param cookie traversal cookie.
+ * @param traversal traversal function.
+ * @return None.
+ */
+void ModuleMgrTraversal(const MODULE_MGR *moduleMgr, void *cookie, OhosModuleTraversal traversal);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

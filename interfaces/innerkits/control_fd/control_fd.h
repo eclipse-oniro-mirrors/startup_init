@@ -48,6 +48,7 @@ typedef enum {
     ACTION_SANDBOX = 0,
     ACTION_DUMP,
     ACTION_PARAM_SHELL,
+    ACTION_MODULEMGR,
     ACTION_MAX
 } ActionType;
 

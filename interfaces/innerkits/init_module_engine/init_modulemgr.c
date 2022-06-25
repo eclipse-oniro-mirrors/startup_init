@@ -39,6 +39,20 @@ void InitModuleMgrUnInstall(const char *moduleName)
     ModuleMgrUninstall(defaultModuleMgr, moduleName);
 }
 
+static void InitModuleDump(const MODULE_INFO *moduleInfo)
+{
+    printf("%s\n", moduleInfo->name);
+}
+
+void InitModuleMgrDump(void)
+{
+    if (defaultModuleMgr == NULL) {
+        return;
+    }
+
+    ModuleMgrTraversal(defaultModuleMgr, NULL, InitModuleDump);
+}
+
 static int ModuleMgrCmdInstall(int id, const char *name, int argc, const char **argv)
 {
     INIT_ERROR_CHECK(argv != NULL && argc >= 1, return -1, "Invalid install parameter");
