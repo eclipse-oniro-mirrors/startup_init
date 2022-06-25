@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <sched.h>
 #include <sys/mount.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -35,6 +36,7 @@
 #define SANDBOX_SOURCE "src-path"
 #define SANDBOX_TARGET "sandbox-path"
 #define SANDBOX_FLAGS "sandbox-flags"
+#define SANDBOX_IGNORE_ERRORS "ignore"
 #define SANDBOX_SYMLINK_TAG "symbol-links"
 #define SANDBOX_SYMLINK_TARGET "target-name"
 #define SANDBOX_SYMLINK_NAME "link-name"
@@ -152,6 +154,10 @@ static int AddMountInfoToSandbox(sandbox_t *sandbox, cJSON *item, const char *ty
     BEGET_ERROR_CHECK(tmpMount->info != NULL, free(tmpMount); return -1, "Failed calloc err=%d", errno);
     tmpMount->info->source = strdup(srcPath);
     tmpMount->info->target = strdup(dstPath);
+    tmpMount->info->ignoreErrors = false;
+    if (cJSON_GetNumberValue(cJSON_GetObjectItem(item, SANDBOX_IGNORE_ERRORS))) {
+        tmpMount->info->ignoreErrors = true;
+    }
     for (int i = 0; i < count; i++) {
         cJSON *item = cJSON_GetArrayItem(obj, i);
         tmpMount->info->flags |= GetSandboxMountFlags(item);
@@ -298,10 +304,13 @@ static void InitSandbox(sandbox_t *sandbox, const char *sandboxConfig, const cha
 
 static int CheckAndMakeDir(const char *dir, mode_t mode)
 {
-    if (access(dir, F_OK) == 0) {
+    struct stat sb;
+
+    if ((stat(dir, &sb) == 0) && S_ISDIR(sb.st_mode)) {
         BEGET_LOGW("Mount point \' %s \' already exist", dir);
         return 0;
     } else {
+        BEGET_LOGI("Ready to create dir [%s] now ...", dir);
         if (errno == ENOENT) {
             BEGET_ERROR_CHECK(MakeDirRecursive(dir, mode) == 0, return -1,
                 "Failed MakeDirRecursive %s, err=%d", dir, errno);
@@ -323,7 +332,7 @@ static int BindMount(const char *source, const char *target, unsigned long flags
     unsigned long tmpflags = flags;
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     if (tag == SANDBOX_TAG_MOUNT_PATH) {
-        BEGET_ERROR_CHECK(CheckAndMakeDir(target, mode) == 0, return -1, "Failed make %s dir.", target);
+        CheckAndMakeDir(target, mode);
     } else if (tag == SANDBOX_TAG_MOUNT_FILE) {
         BEGET_ERROR_CHECK(CheckAndCreatFile(target, mode) == 0, return -1, "Failed make %s file.", target);
     } else {
@@ -366,6 +375,7 @@ static int MountSandboxInfo(const mountlist_t *mounts, const char *rootPath, San
     if (mounts == NULL) {
         return 0;
     }
+    BEGET_LOGI("MountSandboxInfo now ...");
     BEGET_CHECK(mounts->info != NULL, return 0);
     while (mounts != NULL) {
         mount_t *mount = mounts->info;
@@ -373,9 +383,16 @@ static int MountSandboxInfo(const mountlist_t *mounts, const char *rootPath, San
         char target[PATH_MAX] = {};
         BEGET_ERROR_CHECK(!(snprintf_s(target, PATH_MAX, PATH_MAX - 1, "%s%s", rootPath, mount->target) < 0),
             return -1, "Failed snprintf_s err=%d", errno);
+        BEGET_LOGI("Do BindMount from [%s] to [%s] now ...", source, target);
         int rc = BindMount(source, target, mount->flags, tag);
-        BEGET_ERROR_CHECK(rc == 0, return -1, "Failed bind mount %s to %s.", source, target);
-        mounts = mounts->next;
+        if (rc != 0) {
+            BEGET_LOGW("Failed bind mount %s to %s.", source, target);
+        }
+        if (mount->ignoreErrors) {
+            mounts = mounts->next;
+            continue;
+        }
+        return -1;
     }
     return 0;
 }
