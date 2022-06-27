@@ -31,6 +31,9 @@
 #include "init_utils.h"
 #include "securec.h"
 #include "service_control.h"
+#ifdef ASAN_DETECTOR
+#include "init_param.h"
+#endif
 
 #ifdef WITH_SELINUX
 #   include "init_selinux_param.h"
@@ -809,6 +812,78 @@ static int GetServiceSandbox(const cJSON *curItem, Service *service)
     return SERVICE_SUCCESS;
 }
 
+#ifdef ASAN_DETECTOR
+static int WrapPath(char *dest, size_t len, char *source, int i)
+{
+    char *q = source;
+    char *p = dest;
+    if (q == NULL) {
+        return -1;
+    }
+
+    while (*p != '\0') {
+        if (--i <= 0) {
+            int ret = memmove_s(p + strlen(source), len, p, strlen(p) + 1);
+            INIT_ERROR_CHECK(ret == 0, return -1, "Dest is %s, source is %s, ret is %d.", dest, source, ret);
+            break;
+        }
+        p++;
+    }
+    while (*q != '\0') {
+        *p = *q;
+        p++;
+        q++;
+    }
+
+    return 0;
+}
+
+static int GetWrapServiceNameValue(const char *serviceName)
+{
+    char wrapServiceNameKey[PARAM_VALUE_LEN_MAX] = {0};
+    char wrapServiceNameValue[PARAM_VALUE_LEN_MAX] = {0};
+    unsigned int valueLen = PARAM_VALUE_LEN_MAX;
+
+    int len = sprintf_s(wrapServiceNameKey, PARAM_VALUE_LEN_MAX, "wrap.%s", serviceName);
+    INIT_INFO_CHECK(len > 0 && (len < PARAM_VALUE_LEN_MAX), return -1, "Invalid to format wrapServiceNameKey");
+
+    int ret = SystemReadParam(wrapServiceNameKey, wrapServiceNameValue, &valueLen);
+    INIT_INFO_CHECK(ret == 0, return -1, "Not wrap %s.", serviceName);
+    INIT_LOGI("Asan: GetParameter %s the value is %s.", serviceName, wrapServiceNameValue);
+    return 0;
+}
+
+void SetServicePathWithAsan(Service *service)
+{
+    char tmpPathName[MAX_ONE_ARG_LEN] = {0};
+    int anchorPos = -1;
+
+    if (GetWrapServiceNameValue(service->name) != 0) {
+        return;
+    }
+
+    int ret = strcpy_s(tmpPathName, MAX_ONE_ARG_LEN, service->pathArgs.argv[0]);
+    INIT_ERROR_CHECK(ret == 0, return, "Asan: failed to copy service path %s", service->pathArgs.argv[0]);
+
+    if (strstr(tmpPathName, "/system/bin") != NULL) {
+        anchorPos = strlen("/system") + 1;
+    } else if (strstr(tmpPathName, "/vendor/bin") != NULL) {
+        anchorPos = strlen("/vendor") + 1;
+    } else {
+        INIT_LOGE("Asan: %s is not a system or vendor binary", tmpPathName);
+        return;
+    }
+
+    ret = WrapPath(tmpPathName, MAX_ONE_ARG_LEN, "/asan", anchorPos);
+    INIT_ERROR_CHECK(ret == 0, return, "Asan: failed to add asan path.");
+    free(service->pathArgs.argv[0]);
+    service->pathArgs.argv[0] = strdup(tmpPathName);
+    INIT_LOGI("Asan: replace module %s with %s successfully.", service->name, service->pathArgs.argv[0]);
+
+    return;
+}
+#endif
+
 int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
@@ -827,6 +902,9 @@ int ParseOneService(const cJSON *curItem, Service *service)
         INIT_LOGE("Service %s is forbidden.", service->name);
         return SERVICE_FAILURE;
     }
+#ifdef ASAN_DETECTOR
+    SetServicePathWithAsan(service);
+#endif
     ret = GetUid(cJSON_GetObjectItem(curItem, UID_STR_IN_CFG), &service->servPerm.uID);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get uid for service %s", service->name);
     ret = GetServiceGids(curItem, service);
