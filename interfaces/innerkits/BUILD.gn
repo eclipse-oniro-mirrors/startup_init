@@ -28,6 +28,7 @@ config("exported_header_files") {
     "//base/startup/init_lite/interfaces/innerkits/include/fs_manager",
     "//base/startup/init_lite/interfaces/innerkits/include/token",
     "//base/startup/init_lite/interfaces/innerkits/include/sandbox/include",
+    "//base/startup/init_lite/services/include",
   ]
 }
 

@@ -34,7 +34,6 @@
 #endif
 
 #define DEF_LOG_SIZE 128
-#define MAX_LOG_SIZE 1024
 #define BASE_YEAR 1900
 
 static InitLogLevel g_logLevel = INIT_INFO;
@@ -81,20 +80,37 @@ void LogToDmesg(InitLogLevel logLevel, const char *tag, const char *info)
             return;
         }
     }
-    char logInfo[MAX_LOG_SIZE];
-    if (snprintf_s(logInfo, MAX_LOG_SIZE, MAX_LOG_SIZE - 1, "%s[pid=%d %d][%s][%s]%s",
-        LOG_KLEVEL_STR[logLevel], getpid(), getppid(), tag, LOG_LEVEL_STR[logLevel], info) == -1) {
-        close(g_fd);
-        g_fd = -1;
+    char logInfo[DEF_LOG_SIZE + DEF_LOG_SIZE] = {0};
+    if (snprintf_s(logInfo, sizeof(logInfo), sizeof(logInfo) - 1, "%s[pid=%d][%s][%s]%s",
+        LOG_KLEVEL_STR[logLevel], getpid(), tag, LOG_LEVEL_STR[logLevel], info) == -1) {
+        logInfo[sizeof(logInfo) - 2] = '\n'; // 2 add \n to tail
+        logInfo[sizeof(logInfo) - 1] = '\0';
         return;
     }
     if (write(g_fd, logInfo, strlen(logInfo)) < 0) {
-        close(g_fd);
-        g_fd = -1;
+        printf("%s\n", logInfo);
     }
     return;
 }
 #endif
+
+static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *logInfo)
+{
+#ifdef OHOS_LITE
+    static const LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+    (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", logInfo);
+#endif
+#ifdef INIT_DMESG
+    LogToDmesg(logLevel, tag, logInfo);
+#endif
+#ifdef INIT_AGENT
+    static const LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+    HiLogBasePrint(LOG_CORE, LOG_LEVEL[logLevel], domain, tag, "%{public}s", logInfo);
+#endif
+#ifdef INIT_FILE
+    LogToFile(INIT_LOG_PATH"begetctl.log", tag, logInfo);
+#endif
+}
 
 static void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs)
 {
@@ -103,27 +119,12 @@ static void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag,
     }
     char tmpFmt[DEF_LOG_SIZE] = {0};
     if (vsnprintf_s(tmpFmt, sizeof(tmpFmt), sizeof(tmpFmt) - 1, fmt, vargs) == -1) {
-#ifdef OHOS_LITE
-        static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
-        (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", fmt);
-#endif
+        tmpFmt[sizeof(tmpFmt) - 2] = '\n'; // 2 add \n to tail
+        tmpFmt[sizeof(tmpFmt) - 1] = '\0';
+        PrintLog(logLevel, domain, tag, tmpFmt);
         return;
     }
-
-#ifdef OHOS_LITE
-    static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
-    (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);
-#endif
-#ifdef INIT_DMESG
-    LogToDmesg(logLevel, tag, tmpFmt);
-#endif
-#ifdef INIT_AGENT
-    static LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
-    HiLogBasePrint(LOG_CORE, LOG_LEVEL[logLevel], domain, tag, "%{public}s", tmpFmt);
-#ifdef INIT_FILE
-    LogToFile(INIT_LOG_PATH"begetctl.log", tag, tmpFmt);
-#endif
-#endif
+    PrintLog(logLevel, domain, tag, tmpFmt);
 }
 
 INIT_PUBLIC_API void EnableInitLog(InitLogLevel level)
