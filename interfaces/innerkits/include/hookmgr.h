@@ -66,15 +66,24 @@ extern "C" {
 /* Forward declaration for HookManager */
 typedef struct tagHOOK_MGR HOOK_MGR;
 
+/* Forward declaration for HOOK_INFO */
+typedef struct tagHOOK_INFO HOOK_INFO;
+
 /**
  * @brief Hook function prototype
  *
- * @param stage hook stage
- * @param prio hook priority
- * @param cookie input arguments for running the hook function
+ * @param hookInfo hook information
+ * @param executionContext input arguments for running the hook execution context
  * @return return 0 if succeed; other values if failed.
  */
-typedef int (*OhosHook)(int stage, int priority, void *cookie);
+typedef int (*OhosHook)(const HOOK_INFO *hookInfo, void *executionContext);
+
+struct tagHOOK_INFO {
+    int stage;          /* hook stage */
+    int prio;           /* hook priority */
+    OhosHook hook;      /* hook function */
+    void *hookCookie;   /* hook function cookie, for current hook only */
+};
 
 /**
  * @brief Add a hook function
@@ -89,6 +98,16 @@ typedef int (*OhosHook)(int stage, int priority, void *cookie);
 int HookMgrAdd(HOOK_MGR *hookMgr, int stage, int prio, OhosHook hook);
 
 /**
+ * @brief Add a hook function with full hook information
+ *
+ * @param hookMgr HookManager handle.
+ *                If hookMgr is NULL, it will use default HookManager
+ * @param hookInfo full hook information
+ * @return return 0 if succeed; other values if failed.
+ */
+int HookMgrAddEx(HOOK_MGR *hookMgr, const HOOK_INFO *hookInfo);
+
+/**
  * @brief Delete hook function
  *
  * @param hookMgr HookManager handle.
@@ -101,23 +120,23 @@ int HookMgrAdd(HOOK_MGR *hookMgr, int stage, int prio, OhosHook hook);
 void HookMgrDel(HOOK_MGR *hookMgr, int stage, OhosHook hook);
 
 /**
- * @brief Hook information for executing or traversing hooks
- */
-typedef struct tagHOOK_INFO {
-    int stage;     /* hook stage */
-    int prio;      /* hook priority */
-    OhosHook hook; /* hook function */
-    void *cookie;  /* hook execution cookie */
-    int retVal;    /* hook execution return value */
-} HOOK_INFO;
-
-/**
- * @brief preHook and postHook function prototype for HookMgrExecute
+ * @brief preHook function prototype for HookMgrExecute each hook
  *
- * @param context HOOK_INFO for executing each hook.
+ * @param hookInfo HOOK_INFO for the each hook.
+ * @param executionContext input arguments for running the hook execution context.
  * @return None
  */
-typedef void (*OhosHookExecutionHook)(const HOOK_INFO *hookInfo);
+typedef void (*OhosHookPreExecution)(const HOOK_INFO *hookInfo, void *executionContext);
+
+/**
+ * @brief postHook function prototype for HookMgrExecute each hook
+ *
+ * @param hookInfo HOOK_INFO for the each hook.
+ * @param executionContext input arguments for running the hook execution context.
+ * @param executionRetVal return value for running the hook.
+ * @return None
+ */
+typedef void (*OhosHookPostExecution)(const HOOK_INFO *hookInfo, void *executionContext, int executionRetVal);
 
 /* Executing hooks in descending priority order */
 #define HOOK_EXEC_REVERSE_ORDER     0x01
@@ -127,16 +146,14 @@ typedef void (*OhosHookExecutionHook)(const HOOK_INFO *hookInfo);
 /**
  * @brief Extra execution arguments for HookMgrExecute
  */
-typedef struct tagHOOK_EXEC_ARGS {
+typedef struct tagHOOK_EXEC_OPTIONS {
     /* Executing flags */
     int flags;
-    /* Executing cookie */
-    void *cookie;
     /* preHook for before executing each hook */
-    OhosHookExecutionHook preHook;
+    OhosHookPreExecution preHook;
     /* postHook for before executing each hook */
-    OhosHookExecutionHook postHook;
-} HOOK_EXEC_ARGS;
+    OhosHookPostExecution postHook;
+} HOOK_EXEC_OPTIONS;
 
 /**
  * @brief Executing each hooks in specified stages
@@ -147,7 +164,7 @@ typedef struct tagHOOK_EXEC_ARGS {
  * @param extraArgs HOOK_EXEC_ARGS for executing each hook.
  * @return return 0 if succeed; other values if failed.
  */
-int HookMgrExecute(HOOK_MGR *hookMgr, int stage, const HOOK_EXEC_ARGS *extraArgs);
+int HookMgrExecute(HOOK_MGR *hookMgr, int stage, void *executionContext, const HOOK_EXEC_OPTIONS *extraArgs);
 
 /**
  * @brief Create a HookManager handle
@@ -172,18 +189,18 @@ void HookMgrDestroy(HOOK_MGR *hookMgr);
  * @param hookInfo HOOK_INFO for traversing each hook.
  * @return None
  */
-typedef void (*OhosHookTraversal)(const HOOK_INFO *hookInfo);
+typedef void (*OhosHookTraversal)(const HOOK_INFO *hookInfo, void *traversalCookie);
 
 /**
  * @brief Traversing all hooks in the HookManager
  *
  * @param hookMgr HookManager handle.
  *                If hookMgr is NULL, it will use default HookManager
- * @param cookie traversal cookie.
+ * @param traversalCookie traversal cookie.
  * @param traversal traversal function.
  * @return None.
  */
-void HookMgrTraversal(HOOK_MGR *hookMgr, void *cookie, OhosHookTraversal traversal);
+void HookMgrTraversal(HOOK_MGR *hookMgr, void *traversalCookie, OhosHookTraversal traversal);
 
 /**
  * @brief Get number of hooks in specified stage

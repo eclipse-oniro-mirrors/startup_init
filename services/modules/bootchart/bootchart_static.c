@@ -16,7 +16,7 @@
 #include "init_module_engine.h"
 #include "plugin_adapter.h"
 
-static int bootchartEarlyHook(int stage, int prio, void *cookie)
+static int bootchartEarlyHook(const HOOK_INFO *info, void *cookie)
 {
     char enable[4] = {}; // 4 enable size
     uint32_t size = sizeof(enable);

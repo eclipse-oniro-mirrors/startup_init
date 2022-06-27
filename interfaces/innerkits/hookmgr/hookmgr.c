@@ -30,8 +30,7 @@ typedef struct tagHOOK_STAGE HOOK_STAGE;
  */
 typedef struct tagHOOK_ITEM {
     ListNode node;
-    int prio;
-    OhosHook hook;
+    HOOK_INFO info;
     HOOK_STAGE *stage;
 } HOOK_ITEM;
 
@@ -116,7 +115,7 @@ static int hookItemCompare(ListNode *node, ListNode *newNode)
 
     hookItem = (const HOOK_ITEM *)node;
     newItem = (const HOOK_ITEM *)newNode;
-    return (hookItem->prio - newItem->prio);
+    return (hookItem->info.prio - newItem->info.prio);
 }
 
 struct HOOKITEM_COMPARE_VAL {
@@ -130,13 +129,13 @@ static int hookItemCompareValue(ListNode *node, void *data)
     struct HOOKITEM_COMPARE_VAL *compareVal = (struct HOOKITEM_COMPARE_VAL *)data;
 
     hookItem = (const HOOK_ITEM *)node;
-    BEGET_CHECK(hookItem->prio == compareVal->prio, return (hookItem->prio - compareVal->prio));
-    BEGET_CHECK(hookItem->hook != compareVal->hook, return 0);
+    BEGET_CHECK(hookItem->info.prio == compareVal->prio, return (hookItem->info.prio - compareVal->prio));
+    BEGET_CHECK(hookItem->info.hook != compareVal->hook, return 0);
     return -1;
 }
 
 // Add hook to stage list with prio ordered
-static int addHookToStage(HOOK_STAGE *hookStage, int prio, OhosHook hook)
+static int addHookToStage(HOOK_STAGE *hookStage, int prio, OhosHook hook, void *hookCookie)
 {
     HOOK_ITEM *hookItem;
     struct HOOKITEM_COMPARE_VAL compareVal;
@@ -150,8 +149,10 @@ static int addHookToStage(HOOK_STAGE *hookStage, int prio, OhosHook hook)
     // Create new item
     hookItem = (HOOK_ITEM *)malloc(sizeof(HOOK_ITEM));
     BEGET_CHECK(hookItem != NULL, return -1);
-    hookItem->prio = prio;
-    hookItem->hook = hook;
+    hookItem->info.stage = hookStage->stage;
+    hookItem->info.prio = prio;
+    hookItem->info.hook = hook;
+    hookItem->info.hookCookie = hookCookie;
     hookItem->stage = hookStage;
 
     // Insert with order
@@ -159,21 +160,32 @@ static int addHookToStage(HOOK_STAGE *hookStage, int prio, OhosHook hook)
     return 0;
 }
 
-int HookMgrAdd(HOOK_MGR *hookMgr, int stage, int prio, OhosHook hook)
+int HookMgrAddEx(HOOK_MGR *hookMgr, const HOOK_INFO *hookInfo)
 {
     HOOK_STAGE *stageItem;
-    BEGET_CHECK(hook != NULL, return -1);
+    BEGET_CHECK(hookInfo != NULL, return -1);
+    BEGET_CHECK(hookInfo->hook != NULL, return -1);
 
     // Get HOOK_MGR
     hookMgr = getHookMgr(hookMgr, true);
     BEGET_CHECK(hookMgr != NULL, return -1);
 
     // Get HOOK_STAGE list
-    stageItem = getHookStage(hookMgr, stage, true);
+    stageItem = getHookStage(hookMgr, hookInfo->stage, true);
     BEGET_CHECK(stageItem != NULL, return -1);
 
     // Add hook to stage
-    return addHookToStage(stageItem, prio, hook);
+    return addHookToStage(stageItem, hookInfo->prio, hookInfo->hook, hookInfo->hookCookie);
+}
+
+int HookMgrAdd(HOOK_MGR *hookMgr, int stage, int prio, OhosHook hook)
+{
+    HOOK_INFO info;
+    info.stage = stage;
+    info.prio = prio;
+    info.hook = hook;
+    info.hookCookie = NULL;
+    return HookMgrAddEx(hookMgr, &info);
 }
 
 static int hookTraversalDelProc(ListNode *node, void *cookie)
@@ -181,7 +193,7 @@ static int hookTraversalDelProc(ListNode *node, void *cookie)
     HOOK_ITEM *hookItem = (HOOK_ITEM *)node;
 
     // Not equal, just return
-    BEGET_CHECK((void *)hookItem->hook == cookie, return 0);
+    BEGET_CHECK((void *)hookItem->info.hook == cookie, return 0);
 
     // Remove from the list
     ListRemove(node);
@@ -219,40 +231,36 @@ void HookMgrDel(HOOK_MGR *hookMgr, int stage, OhosHook hook)
     hookStageDestroy((ListNode *)stageItem);
 }
 
-static int hookTraversalProc(ListNode *node, void *cookie)
+typedef struct tagHOOK_EXECUTION_ARGS {
+    void *executionContext;
+    const HOOK_EXEC_OPTIONS *options;
+} HOOK_EXECUTION_ARGS;
+
+static int hookExecutionProc(ListNode *node, void *cookie)
 {
+    int ret;
     HOOK_ITEM *hookItem = (HOOK_ITEM *)node;
-    HOOK_INFO hookInfo;
-    const HOOK_EXEC_ARGS *args = (const HOOK_EXEC_ARGS *)cookie;
+    HOOK_EXECUTION_ARGS *args = (HOOK_EXECUTION_ARGS *)cookie;
 
-    hookInfo.stage = hookItem->stage->stage;
-    hookInfo.prio = hookItem->prio;
-    hookInfo.hook = hookItem->hook;
-    hookInfo.cookie = NULL;
-    hookInfo.retVal = 0;
-
-    if (args != NULL) {
-        hookInfo.cookie = args->cookie;
+    if ((args->options != NULL) && (args->options->preHook != NULL)) {
+        args->options->preHook(&hookItem->info, args->executionContext);
+    }
+    ret = hookItem->info.hook(&hookItem->info, args->executionContext);
+    if ((args->options != NULL) && (args->options->postHook != NULL)) {
+        args->options->postHook(&hookItem->info, args->executionContext, ret);
     }
 
-    if ((args != NULL) && (args->preHook != NULL)) {
-        args->preHook(&hookInfo);
-    }
-    hookInfo.retVal = hookItem->hook(hookInfo.stage, hookItem->prio, hookInfo.cookie);
-    if ((args != NULL) && (args->postHook != NULL)) {
-        args->postHook(&hookInfo);
-    }
-
-    return hookInfo.retVal;
+    return ret;
 }
 
 /*
  * 执行钩子函数
  */
-int HookMgrExecute(HOOK_MGR *hookMgr, int stage, const HOOK_EXEC_ARGS *args)
+int HookMgrExecute(HOOK_MGR *hookMgr, int stage, void *executionContext, const HOOK_EXEC_OPTIONS *options)
 {
     int flags;
     HOOK_STAGE *stageItem;
+    HOOK_EXECUTION_ARGS args;
 
     // Get HOOK_MGR
     hookMgr = getHookMgr(hookMgr, 0);
@@ -263,13 +271,16 @@ int HookMgrExecute(HOOK_MGR *hookMgr, int stage, const HOOK_EXEC_ARGS *args)
     BEGET_CHECK(stageItem != NULL, return -1);
 
     flags = 0;
-    if (args != NULL) {
-        flags = args->flags;
+    if (options != NULL) {
+        flags = options->flags;
     }
 
+    args.executionContext = executionContext;
+    args.options = options;
+
     // Traversal all hooks in the specified stage
-    return ListTraversal(&(stageItem->hooks), (void *)args,
-                         hookTraversalProc, flags);
+    return ListTraversal(&(stageItem->hooks), (void *)(&args),
+                         hookExecutionProc, flags);
 }
 
 HOOK_MGR *HookMgrCreate(const char *name)
@@ -306,7 +317,7 @@ void HookMgrDestroy(HOOK_MGR *hookMgr)
 }
 
 typedef struct tagHOOK_TRAVERSAL_ARGS {
-    HOOK_INFO hookInfo;
+    void *traversalCookie;
     OhosHookTraversal traversal;
 } HOOK_TRAVERSAL_ARGS;
 
@@ -318,32 +329,21 @@ static int hookItemTraversal(ListNode *node, void *data)
     hookItem = (HOOK_ITEM *)node;
     stageArgs = (HOOK_TRAVERSAL_ARGS *)data;
 
-    stageArgs->hookInfo.prio = hookItem->prio;
-    stageArgs->hookInfo.hook = hookItem->hook;
-
-    stageArgs->traversal(&(stageArgs->hookInfo));
+    stageArgs->traversal(&(hookItem->info), stageArgs->traversalCookie);
     return 0;
 }
 
 static int hookStageTraversal(ListNode *node, void *data)
 {
-    HOOK_STAGE *stageItem;
-    HOOK_TRAVERSAL_ARGS *stageArgs;
-
-    stageItem = (HOOK_STAGE *)node;
-    stageArgs = (HOOK_TRAVERSAL_ARGS *)data;
-
-    stageArgs->hookInfo.stage = stageItem->stage;
-
+    HOOK_STAGE *stageItem = (HOOK_STAGE *)node;
     ListTraversal(&(stageItem->hooks), data, hookItemTraversal, 0);
-
     return 0;
 }
 
 /*
  * 遍历所有的hooks
  */
-void HookMgrTraversal(HOOK_MGR *hookMgr, void *cookie, OhosHookTraversal traversal)
+void HookMgrTraversal(HOOK_MGR *hookMgr, void *traversalCookie, OhosHookTraversal traversal)
 {
     HOOK_TRAVERSAL_ARGS stageArgs;
 
@@ -353,8 +353,7 @@ void HookMgrTraversal(HOOK_MGR *hookMgr, void *cookie, OhosHookTraversal travers
     BEGET_CHECK(hookMgr != NULL, return);
 
     // Prepare common args
-    stageArgs.hookInfo.cookie = cookie;
-    stageArgs.hookInfo.retVal = 0;
+    stageArgs.traversalCookie = traversalCookie;
     stageArgs.traversal = traversal;
     ListTraversal(&(hookMgr->stages), (void *)(&stageArgs), hookStageTraversal, 0);
 }

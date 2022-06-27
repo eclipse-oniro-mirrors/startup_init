@@ -317,17 +317,17 @@ typedef struct HOOK_TIMING_STAT {
     struct timespec endTime;
 } HOOK_TIMING_STAT;
 
-static void InitPreHook(const HOOK_INFO *hookInfo)
+static void InitPreHook(const HOOK_INFO *hookInfo, void *executionContext)
 {
-    HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)hookInfo->cookie;
+    HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->startTime));
 }
 
-static void InitPostHook(const HOOK_INFO *hookInfo)
+static void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext, int executionRetVal)
 {
     long long diff;
     const long long baseTime = 1000;
-    HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)hookInfo->cookie;
+    HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->endTime));
 
     diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) / baseTime);
@@ -338,23 +338,22 @@ static void InitPostHook(const HOOK_INFO *hookInfo)
     }
 
     INIT_LOGV("Executing hook [%d:%d:%p] cost [%lld]ms, return %d.",
-        hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, hookInfo->retVal);
+        hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, executionRetVal);
 }
 
 void SystemConfig(void)
 {
     HOOK_TIMING_STAT timingStat;
-    HOOK_EXEC_ARGS args;
+    HOOK_EXEC_OPTIONS options;
 
-    args.flags = 0;
-    args.cookie = (void *)&timingStat;
-    args.preHook = InitPreHook;
-    args.postHook = InitPostHook;
+    options.flags = 0;
+    options.preHook = InitPreHook;
+    options.postHook = InitPostHook;
 
-    HookMgrExecute(NULL, INIT_GLOBAL_INIT, (void *)&args);
+    HookMgrExecute(NULL, INIT_GLOBAL_INIT, (void *)&timingStat, (void *)&options);
     InitServiceSpace();
 
-    HookMgrExecute(NULL, INIT_PRE_PARAM_SERVICE, (void *)&args);
+    HookMgrExecute(NULL, INIT_PRE_PARAM_SERVICE, (void *)&timingStat, (void *)&options);
     InitParamService();
     InitParseGroupCfg();
     RegisterBootStateChange(BootStateChange);
@@ -363,13 +362,13 @@ void SystemConfig(void)
     // Do not move position!
     SystemLoadSelinux();
     // parse parameters
-    HookMgrExecute(NULL, INIT_PRE_PARAM_LOAD, (void *)&args);
+    HookMgrExecute(NULL, INIT_PRE_PARAM_LOAD, (void *)&timingStat, (void *)&options);
     InitLoadParamFiles();
     // read config
-    HookMgrExecute(NULL, INIT_PRE_CFG_LOAD, (void *)&args);
+    HookMgrExecute(NULL, INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
     INIT_LOGI("Parse init config file done.");
-    HookMgrExecute(NULL, INIT_POST_CFG_LOAD, (void *)&args);
+    HookMgrExecute(NULL, INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 
     // dump config
 #if defined(OHOS_SERVICE_DUMP)

@@ -175,7 +175,7 @@ static void DoLoadPersistParams(const struct CmdArgs *ctx)
 {
     INIT_LOGV("LoadPersistParams");
     LoadPersistParams();
-    HookMgrExecute(NULL, INIT_POST_PERSIST_PARAM_LOAD, NULL);
+    HookMgrExecute(NULL, INIT_POST_PERSIST_PARAM_LOAD, NULL, NULL);
 }
 
 static void DoTriggerCmd(const struct CmdArgs *ctx)
