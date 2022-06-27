@@ -117,6 +117,9 @@ ohos_executable("init") {
   if (support_jsapi) {
     defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
   }
+  if (asan_detector) {
+    defines += [ "ASAN_DETECTOR" ]
+  }
 
   if (defined(product_name) && product_name == "rk3568") {
     defines += [ "PRODUCT_RK" ]
