@@ -10,21 +10,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//base/startup/init_lite/begetd.gni")
 
-import("//build/ohos.gni")
-
-group("kitsgroup") {
+group("testgroup") {
+  testonly = true
   if (!defined(ohos_lite)) {
     deps = [
-      "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
-      "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+      "exec_test:exectest",
+      "fuzztest:fuzztest",
+      "moduletest:paramtestmodule",
+      "unittest:init_unittest",
     ]
-    deps += [ "syscap:deviceinfo_ndk" ]
-    if (support_jsapi) {
-      deps += [
-        "jskits:deviceinfo",
-        "jskits:systemparameter",
-      ]
+  } else {
+    if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
+      deps = [ "unittest/lite:init_test" ]
     }
   }
 }

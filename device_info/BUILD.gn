@@ -11,59 +11,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//base/startup/init_lite/begetd.gni")
-import("//build/ohos.gni")
-import("//build/ohos/sa_profile/sa_profile.gni")
+if (!defined(ohos_lite)) {
+  import("//build/ohos.gni")
+  import("//build/ohos/sa_profile/sa_profile.gni")
 
-ohos_sa_profile("device_info_profile") {
-  sources = [ "etc/3902.xml" ]
-  part_name = "init"
-}
+  ohos_sa_profile("device_info_profile") {
+    sources = [ "etc/3902.xml" ]
+    part_name = "init"
+  }
 
-ohos_prebuilt_etc("device_info.cfg") {
-  source = "etc/deviceinfoservice.cfg"
-  relative_install_dir = "init"
-  part_name = "init"
-}
+  ohos_prebuilt_etc("device_info.cfg") {
+    source = "etc/deviceinfoservice.cfg"
+    relative_install_dir = "init"
+    part_name = "init"
+  }
 
-ohos_shared_library("deviceinfoservice") {
-  sources = [
-    "//base/startup/init_lite/interfaces/innerkits/syspara/param_comm.c",
-    "device_info_stub.cpp",
-  ]
+  ohos_shared_library("deviceinfoservice") {
+    sources = [
+      "//base/startup/init_lite/interfaces/innerkits/syspara/param_comm.c",
+      "device_info_stub.cpp",
+    ]
 
-  include_dirs = [
-    ".",
-    "//base/startup/init_lite/services/include/param",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/interfaces/innerkits/include/syspara",
-    "//base/startup/init_lite/interfaces/innerkits/syspara",
-    "//base/startup/init_lite/interfaces/hals",
-  ]
-  defines = [
-    "INIT_AGENT",
-    "_GNU_SOURCE",
-    "USE_MBEDTLS",
-  ]
-  deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-    "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/mbedtls:mbedtls_shared",
-  ]
+    include_dirs = [
+      ".",
+      "//base/startup/init_lite/services/include/param",
+      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init_lite/interfaces/innerkits/include/syspara",
+      "//base/startup/init_lite/interfaces/innerkits/syspara",
+      "//base/startup/init_lite/interfaces/hals",
+    ]
+    defines = [
+      "INIT_AGENT",
+      "_GNU_SOURCE",
+      "USE_MBEDTLS",
+    ]
+    deps = [
+      "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/mbedtls:mbedtls_shared",
+    ]
 
-  external_deps = [
-    "access_token:libaccesstoken_sdk",
-    "hilog_native:libhilog",
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
-    "utils_base:utils",
-  ]
-  install_images = [ "system" ]
-  part_name = "init"
+    external_deps = [
+      "access_token:libaccesstoken_sdk",
+      "hilog_native:libhilog",
+      "ipc:ipc_core",
+      "safwk:system_ability_fwk",
+      "samgr_standard:samgr_proxy",
+      "utils_base:utils",
+    ]
+    install_images = [ "system" ]
+    part_name = "init"
+  }
 }
 
 group("device_info_group") {
-  if (enable_ohos_startup_init_feature_deviceinfo) {
+  if (!defined(ohos_lite) && enable_ohos_startup_init_feature_deviceinfo) {
     deps = [
       ":device_info.cfg",
       ":device_info_profile",

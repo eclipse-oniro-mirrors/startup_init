@@ -54,12 +54,6 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function:libsec_static",
     ]
   }
-  group("begetctl_cmd") {
-    if (enable_ohos_startup_init_feature_begetctl_liteos &&
-        ohos_kernel_type != "liteos_m") {
-      deps = [ ":begetctl" ]
-    }
-  }
 } else {
   import("//build/ohos.gni")
 
@@ -208,8 +202,15 @@ if (defined(ohos_lite)) {
     install_enable = true
     part_name = "init"
   }
+}
 
-  group("begetctl_cmd") {
+group("begetctl_cmd") {
+  if (defined(ohos_lite)) {
+    if (enable_ohos_startup_init_feature_begetctl_liteos &&
+        ohos_kernel_type != "liteos_m") {
+      deps = [ ":begetctl" ]
+    }
+  } else {
     deps = [
       ":begetctl",
       ":param",

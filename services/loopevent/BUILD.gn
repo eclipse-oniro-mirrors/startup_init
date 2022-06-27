@@ -63,3 +63,13 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
   }
 }
+
+group("loopeventgroup") {
+  if (defined(ohos_lite)) {
+    if (ohos_kernel_type == "linux") {
+      deps = [ ":loopevent" ]
+    }
+  } else {
+    deps = [ ":loopevent" ]
+  }
+}

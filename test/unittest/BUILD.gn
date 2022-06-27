@@ -276,11 +276,3 @@ ohos_unittest("init_unittest") {
     "init/service_unittest.cpp",
   ]
 }
-
-group("init_test") {
-  testonly = true
-  deps = [
-    ":init_unittest",
-    "//base/startup/init_lite/test/moduletest:paramtestmodule",
-  ]
-}

@@ -11,10 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("watchdog") {
-  deps = [ ":watchdog_service" ]
-}
-
 if (defined(ohos_lite)) {
   executable("watchdog_service") {
     sources = [
@@ -33,12 +29,6 @@ if (defined(ohos_lite)) {
       defines += [ "LINUX_WATCHDOG" ]
     }
   }
-
-  group("init_watchdog") {
-    if (ohos_kernel_type == "linux" || ohos_kernel_type == "liteos_a") {
-      deps = [ ":watchdog_service" ]
-    }
-  }
 } else {
   import("//build/ohos.gni")
   ohos_executable("watchdog_service") {
@@ -52,5 +42,17 @@ if (defined(ohos_lite)) {
     defines += [ "_GNU_SOURCE" ]
     install_enable = true
     part_name = "init"
+  }
+}
+
+group("watchdog") {
+  if (defined(ohos_lite)) {
+    if (ohos_kernel_type == "linux" || ohos_kernel_type == "liteos_a") {
+      deps = [ ":watchdog_service" ]
+    } else {
+      deps = []
+    }
+  } else {
+    deps = [ ":watchdog_service" ]
   }
 }

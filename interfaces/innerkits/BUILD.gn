@@ -139,6 +139,9 @@ if (defined(ohos_lite)) {
     head_files =
         [ "//base/startup/init_lite/interfaces/innerkits/include/syspara" ]
   }
+
+  group("libbeget_proxy") {
+  }
 } else {
   import("//build/ohos.gni")
   modulemgr_sources = [
@@ -279,5 +282,17 @@ if (defined(ohos_lite)) {
       "utils_base:utils",
     ]
     part_name = "init"
+  }
+}
+
+group("innergroup") {
+  deps = [ ":libbegetutil" ]
+  if (!defined(ohos_lite)) {
+    deps += [
+      ":libbeget_proxy",
+      "file:libfile",
+      "init_module_engine:modulegroup",
+      "socket:libsocket",
+    ]
   }
 }
