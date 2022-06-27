@@ -33,15 +33,15 @@ struct HookExecCtx {
     int retErr;
 };
 
-static int OhosHookTestCommon(void *cookie, int result)
+static int OhosHookTestCommon(void *executionContext, int result)
 {
     struct HookExecCtx *ctx;
 
-    if (cookie == NULL) {
+    if (executionContext == NULL) {
         return 0;
     }
 
-    ctx = (struct HookExecCtx *)cookie;
+    ctx = (struct HookExecCtx *)executionContext;
     ctx->result = result;
     if (ctx->retErr) {
         return -1;
@@ -49,22 +49,22 @@ static int OhosHookTestCommon(void *cookie, int result)
     return 0;
 }
 
-static int OhosTestHookRetOK(int stage, int priority, void *cookie)
+static int OhosTestHookRetOK(const HOOK_INFO *hookInfo, void *executionContext)
 {
-    return OhosHookTestCommon(cookie, 1);
+    return OhosHookTestCommon(executionContext, 1);
 }
 
-static int OhosTestHookRetOKEx(int stage, int priority, void *cookie)
+static int OhosTestHookRetOKEx(const HOOK_INFO *hookInfo, void *executionContext)
 {
-    return OhosHookTestCommon(cookie, 2);
+    return OhosHookTestCommon(executionContext, 2);
 }
 
-static int OhosTestHookRetOKEx2(int stage, int priority, void *cookie)
+static int OhosTestHookRetOKEx2(const HOOK_INFO *hookInfo, void *executionContext)
 {
-    return OhosHookTestCommon(cookie, 3);
+    return OhosHookTestCommon(executionContext, 3);
 }
 
-static void OhosHookPrint(const HOOK_INFO *hookInfo)
+static void OhosHookPrint(const HOOK_INFO *hookInfo, void *traversalCookie)
 {
     printf("\tstage[%02d] prio[%02d] hook[%p].\n", hookInfo->stage, hookInfo->prio, hookInfo->hook);
 }
@@ -251,52 +251,51 @@ HWTEST_F(HookMgrUnitTest, HookMgrExecute_unitest, TestSize.Level1)
 {
     int ret;
     struct HookExecCtx ctx;
-    HOOK_EXEC_ARGS args;
+    HOOK_EXEC_OPTIONS options;
 
     ctx.result = 0;
     ctx.retErr = 0;
 
-    args.flags = 0;
-    args.cookie = (void *)&ctx;
-    args.preHook = NULL;
-    args.postHook = NULL;
+    options.flags = 0;
+    options.preHook = NULL;
+    options.postHook = NULL;
 
     ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 0, OhosTestHookRetOK);
     EXPECT_EQ(ret, 0);
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, &args);
+    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 1);
 
     // Check ignore error
     ctx.retErr = 1;
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, &args);
+    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 1);
 
     // Do not ignore return errors
     ctx.retErr = 1;
-    args.flags = HOOK_EXEC_EXIT_WHEN_ERROR;
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, &args);
+    options.flags = HOOK_EXEC_EXIT_WHEN_ERROR;
+    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, &options);
     ASSERT_NE(ret, 0);
     EXPECT_EQ(ctx.result, 1);
-    args.flags = 0;
+    options.flags = 0;
 
     // Add another hook with same priority
     ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 0, OhosTestHookRetOKEx);
     EXPECT_EQ(ret, 0);
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, &args);
+    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 2);
 
     // Add another hook with higher priority
     ret = HookMgrAdd(NULL, STAGE_TEST_ONE, -1, OhosTestHookRetOKEx);
     EXPECT_EQ(ret, 0);
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, &args);
+    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 2);
 
     HookMgrDel(NULL, STAGE_TEST_ONE, OhosTestHookRetOKEx);
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, &args);
+    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 1);
 }

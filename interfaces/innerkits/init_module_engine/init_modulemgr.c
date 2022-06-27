@@ -72,7 +72,7 @@ static int ModuleMgrCmdUninstall(int id, const char *name, int argc, const char 
     return 0;
 }
 
-static int moduleMgrCommandsInit(int stage, int prio, void *cookie)
+static int moduleMgrCommandsInit(const HOOK_INFO *info, void *cookie)
 {
     // "ohos.servicectrl.install"
     (void)AddCmdExecutor("install", ModuleMgrCmdInstall);
@@ -81,7 +81,7 @@ static int moduleMgrCommandsInit(int stage, int prio, void *cookie)
     return 0;
 }
 
-static int loadAutorunModules(int stage, int prio, void *cookie)
+static int loadAutorunModules(const HOOK_INFO *info, void *cookie)
 {
     MODULE_MGR *autorun = ModuleMgrScan("init/autorun");
     INIT_LOGV("Load autorun modules return %p", autorun);

@@ -15,6 +15,7 @@
 
 #ifndef BASE_STARTUP_INIT_PLUGIN_H
 #define BASE_STARTUP_INIT_PLUGIN_H
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "modulemgr.h"
@@ -31,6 +32,8 @@ extern "C" {
 int SystemWriteParam(const char *name, const char *value);
 
 int SystemReadParam(const char *name, char *value, unsigned int *len);
+
+int LoadParamsFile(const char *fileName, bool onlyAdd);
 
 typedef int (*CmdExecutor)(int id, const char *name, int argc, const char **argv);
 
