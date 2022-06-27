@@ -33,34 +33,36 @@ enum INIT_BOOTSTAGE {
     INIT_POST_CFG_LOAD     = 50
 };
 
+HOOK_MGR *GetBootStageHookMgr();
+
 inline int InitAddGlobalInitHook(int prio, OhosHook hook)
 {
-    return HookMgrAdd(NULL, INIT_GLOBAL_INIT, prio, hook);
+    return HookMgrAdd(GetBootStageHookMgr(), INIT_GLOBAL_INIT, prio, hook);
 }
 
 inline int InitAddPreParamServiceHook(int prio, OhosHook hook)
 {
-    return HookMgrAdd(NULL, INIT_PRE_PARAM_SERVICE, prio, hook);
+    return HookMgrAdd(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, prio, hook);
 }
 
 inline int InitAddPreParamLoadHook(int prio, OhosHook hook)
 {
-    return HookMgrAdd(NULL, INIT_PRE_PARAM_LOAD, prio, hook);
+    return HookMgrAdd(GetBootStageHookMgr(), INIT_PRE_PARAM_LOAD, prio, hook);
 }
 
 inline int InitAddPreCfgLoadHook(int prio, OhosHook hook)
 {
-    return HookMgrAdd(NULL, INIT_PRE_CFG_LOAD, prio, hook);
+    return HookMgrAdd(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, prio, hook);
 }
 
 inline int InitAddPostCfgLoadHook(int prio, OhosHook hook)
 {
-    return HookMgrAdd(NULL, INIT_POST_CFG_LOAD, prio, hook);
+    return HookMgrAdd(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, prio, hook);
 }
 
 inline int InitAddPostPersistParamLoadHook(int prio, OhosHook hook)
 {
-    return HookMgrAdd(NULL, INIT_POST_PERSIST_PARAM_LOAD, prio, hook);
+    return HookMgrAdd(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, prio, hook);
 }
 #ifdef __cplusplus
 #if __cplusplus
