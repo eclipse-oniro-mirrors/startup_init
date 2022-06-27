@@ -9,6 +9,7 @@ log:x:1007:
 user_data_rw:x:1008:
 dfs:x:1009:
 wifi:x:1010:
+wifi_group:x:1011:wifi,wifi_host
 media:x:1013:
 dhcp:x:1014:
 vpn:x:1016:
