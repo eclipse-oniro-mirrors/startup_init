@@ -28,6 +28,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/include",
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//base/startup/init_lite/services/log",
+      "//third_party/cJSON",
     ]
   }
 
@@ -65,6 +66,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//base/startup/init_lite/services/include",
       "//base/startup/init_lite/services/log",
+      "//third_party/cJSON",
     ]
   }
 

@@ -22,6 +22,7 @@
 #include "bootstage.h"
 #include "init_modulemgr.h"
 #include "init_cmdexecutor.h"
+#include "init_running_hooks.h"
 
 #ifdef __cplusplus
 #if __cplusplus

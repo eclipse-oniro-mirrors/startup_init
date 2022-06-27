@@ -31,6 +31,7 @@ param_include_dirs = [
   "//base/startup/init_lite/services/include",
   "//base/startup/init_lite/services/init/include",
   "//base/startup/init_lite/services/log",
+  "//base/startup/init_lite/interfaces/innerkits/init_module_engine/include",
   "//base/startup/init_lite/services/loopevent/include",
   "//third_party/bounds_checking_function/include",
   "//third_party/cJSON",
@@ -75,6 +76,7 @@ if (defined(ohos_lite)) {
     defines += [
       "_GNU_SOURCE",
       "__LINUX__",
+      "OHOS_LITE",
       "INCREMENTAL_VERSION=\"${ohos_version}\"",
       "BUILD_TYPE=\"${ohos_build_type}\"",
       "BUILD_USER=\"${ohos_build_user}\"",

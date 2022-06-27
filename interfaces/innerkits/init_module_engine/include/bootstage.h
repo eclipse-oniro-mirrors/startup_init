@@ -17,6 +17,7 @@
 #define BASE_STARTUP_BOOTSTAGE_H
 
 #include "hookmgr.h"
+#include "cJSON.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -29,6 +30,7 @@ enum INIT_BOOTSTAGE {
     INIT_PRE_PARAM_SERVICE = 10,
     INIT_PRE_PARAM_LOAD    = 20,
     INIT_PRE_CFG_LOAD      = 30,
+    INIT_SERVICE_PARSE     = 35,
     INIT_POST_PERSIST_PARAM_LOAD   = 40,
     INIT_POST_CFG_LOAD     = 50
 };
@@ -64,6 +66,32 @@ inline int InitAddPostPersistParamLoadHook(int prio, OhosHook hook)
 {
     return HookMgrAdd(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, prio, hook);
 }
+
+/**
+ * @brief service config parsing context information
+ */
+typedef struct tagSERVICE_PARSE_CTX {
+    const char *serviceName;    /* Service name */
+    const cJSON *serviceNode;   /* Service JSON node */
+} SERVICE_PARSE_CTX;
+
+/**
+ * @brief service config parse hook function prototype
+ *
+ * @param serviceParseCtx service config parsing context information
+ * @return None
+ */
+typedef void (*ServiceParseHook)(SERVICE_PARSE_CTX *serviceParseCtx);
+
+/**
+ * @brief Register a hook for service config parsing
+ *
+ * @param hook service config parsing hook
+ *   in the hook, we can parse extra fields in the config file.
+ * @return return 0 if succeed; other values if failed.
+ */
+int InitAddServiceParseHook(ServiceParseHook hook);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

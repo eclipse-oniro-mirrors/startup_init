@@ -53,7 +53,10 @@ if (!defined(ohos_lite)) {
 
 group("static_modules") {
   if (!defined(ohos_lite)) {
-    deps = [ ":libbootchart_static" ]
+    deps = [
+      ":libbootchart_static",
+      "bootevent:libbootevent_static",
+    ]
   }
 }
 
