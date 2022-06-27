@@ -249,6 +249,14 @@ void SystemLoadSelinux(void)
 #endif // WITH_SELINUX
 }
 
+#define INIT_BOOTSTAGE_HOOK_NAME "bootstage"
+static HOOK_MGR *bootStageHookMgr = NULL;
+
+HOOK_MGR *GetBootStageHookMgr()
+{
+    return bootStageHookMgr;
+}
+
 static void BootStateChange(const char *content)
 {
     INIT_LOGI("boot start %s finish.", content);
@@ -259,7 +267,8 @@ static void BootStateChange(const char *content)
     if (strcmp("post-init", content) == 0) {
         StartAllServices(START_MODE_NARMAL);
         // Destroy all hooks
-        HookMgrDestroy(NULL);
+        HookMgrDestroy(bootStageHookMgr);
+        bootStageHookMgr = NULL;
         return;
     }
 }
@@ -350,10 +359,16 @@ void SystemConfig(void)
     options.preHook = InitPreHook;
     options.postHook = InitPostHook;
 
-    HookMgrExecute(NULL, INIT_GLOBAL_INIT, (void *)&timingStat, (void *)&options);
+    /*
+     * Create bootstage hook manager for booting only.
+     * When boot completed, this manager will be destroyed.
+     */
+    bootStageHookMgr = HookMgrCreate(INIT_BOOTSTAGE_HOOK_NAME);
+
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, (void *)&timingStat, (void *)&options);
     InitServiceSpace();
 
-    HookMgrExecute(NULL, INIT_PRE_PARAM_SERVICE, (void *)&timingStat, (void *)&options);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, (void *)&timingStat, (void *)&options);
     InitParamService();
     InitParseGroupCfg();
     RegisterBootStateChange(BootStateChange);
@@ -362,13 +377,13 @@ void SystemConfig(void)
     // Do not move position!
     SystemLoadSelinux();
     // parse parameters
-    HookMgrExecute(NULL, INIT_PRE_PARAM_LOAD, (void *)&timingStat, (void *)&options);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_PARAM_LOAD, (void *)&timingStat, (void *)&options);
     InitLoadParamFiles();
     // read config
-    HookMgrExecute(NULL, INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
     INIT_LOGI("Parse init config file done.");
-    HookMgrExecute(NULL, INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 
     // dump config
 #if defined(OHOS_SERVICE_DUMP)
