@@ -310,7 +310,6 @@ static int CheckAndMakeDir(const char *dir, mode_t mode)
         BEGET_LOGW("Mount point \' %s \' already exist", dir);
         return 0;
     } else {
-        BEGET_LOGI("Ready to create dir [%s] now ...", dir);
         if (errno == ENOENT) {
             BEGET_ERROR_CHECK(MakeDirRecursive(dir, mode) == 0, return -1,
                 "Failed MakeDirRecursive %s, err=%d", dir, errno);
@@ -332,7 +331,7 @@ static int BindMount(const char *source, const char *target, unsigned long flags
     unsigned long tmpflags = flags;
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     if (tag == SANDBOX_TAG_MOUNT_PATH) {
-        CheckAndMakeDir(target, mode);
+        BEGET_ERROR_CHECK(CheckAndMakeDir(target, mode) == 0, return -1, "Failed make %s dir.", target);
     } else if (tag == SANDBOX_TAG_MOUNT_FILE) {
         BEGET_ERROR_CHECK(CheckAndCreatFile(target, mode) == 0, return -1, "Failed make %s file.", target);
     } else {
@@ -375,7 +374,6 @@ static int MountSandboxInfo(const mountlist_t *mounts, const char *rootPath, San
     if (mounts == NULL) {
         return 0;
     }
-    BEGET_LOGI("MountSandboxInfo now ...");
     BEGET_CHECK(mounts->info != NULL, return 0);
     while (mounts != NULL) {
         mount_t *mount = mounts->info;
@@ -383,7 +381,6 @@ static int MountSandboxInfo(const mountlist_t *mounts, const char *rootPath, San
         char target[PATH_MAX] = {};
         BEGET_ERROR_CHECK(!(snprintf_s(target, PATH_MAX, PATH_MAX - 1, "%s%s", rootPath, mount->target) < 0),
             return -1, "Failed snprintf_s err=%d", errno);
-        BEGET_LOGI("Do BindMount from [%s] to [%s] now ...", source, target);
         int rc = BindMount(source, target, mount->flags, tag);
         if (rc != 0) {
             BEGET_LOGW("Failed bind mount %s to %s.", source, target);
