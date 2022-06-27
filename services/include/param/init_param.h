@@ -71,6 +71,7 @@ typedef enum {
  *
  */
 void InitParamService(void);
+void LoadSpecialParam(void);
 
 /**
  * Init 接口

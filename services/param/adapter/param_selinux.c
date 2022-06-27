@@ -23,6 +23,8 @@
 #include "param_base.h"
 #ifdef PARAM_SUPPORT_SELINUX
 #include "selinux_parameter.h"
+#include <policycoreutils.h>
+#include <selinux/selinux.h>
 #endif
 
 #ifdef __aarch64__
@@ -67,6 +69,9 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         g_selinuxSpace.initParamSelinux = (void (*)())dlsym(handle, "InitParamSelinux");
         PARAM_CHECK(g_selinuxSpace.initParamSelinux != NULL, return -1, "Failed to dlsym initParamSelinux ");
     }
+    if (g_selinuxSpace.readParamCheck == NULL) {
+        g_selinuxSpace.readParamCheck = (int (*)(const char *))dlsym(handle, "ReadParamCheck");
+    }
     if (g_selinuxSpace.destroyParamList == NULL) {
         g_selinuxSpace.destroyParamList =
             (void (*)(ParamContextsList **))dlsym(handle, "DestroyParamList");
@@ -84,11 +89,25 @@ static int FreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
     return 0;
 }
 
+static void SetSelinuxFileCon(const char *name, const char *context)
+{
+    static char buffer[FILENAME_LEN_MAX] = {0};
+    int len = ParamSprintf(buffer, sizeof(buffer), "%s/%s", PARAM_STORAGE_PATH, context);
+    if (len > 0) {
+        buffer[len] = '\0';
+        PARAM_LOGI("setfilecon name %s path: %s %s ", name, context, buffer);
+        if (setfilecon(buffer, context) < 0) {
+            PARAM_LOGE("Failed to setfilecon %s ", context);
+        }
+    }
+}
+
 static int SelinuxGetAllLabel(int readOnly)
 {
     PARAM_CHECK(g_selinuxSpace.getParamList != NULL, return DAC_RESULT_FORBIDED, "Invalid getParamList");
     ParamContextsList *head = g_selinuxSpace.getParamList();
     ParamContextsList *node = head;
+
     int count = 0;
     while (node != NULL) {
         PARAM_LOGV("GetParamSecurityLabel name %s content %s", node->info.paraName, node->info.paraContext);
@@ -97,15 +116,27 @@ static int SelinuxGetAllLabel(int readOnly)
             continue;
         }
         int ret = AddWorkSpace(node->info.paraContext, readOnly, PARAM_WORKSPACE_DEF);
-        PARAM_CHECK(ret == 0, continue,
-            "Failed to add selinux workspace %s %s", node->info.paraName, node->info.paraContext);
-        node = node->next;
+        if (ret != 0) {
+            PARAM_LOGE("Forbid to add selinux workspace %s %s", node->info.paraName, node->info.paraContext);
+            node = node->next;
+            continue;
+        }
         count++;
+        if (readOnly != 0) {
+            node = node->next;
+            continue;
+        }
+        // set selinx label
+        SetSelinuxFileCon(node->info.paraName, node->info.paraContext);
+        node = node->next;
     }
 
     int ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, readOnly, PARAM_WORKSPACE_MAX);
     PARAM_CHECK(ret == 0, return -1,
         "Failed to add selinux workspace %s", WORKSPACE_NAME_DEF_SELINUX);
+    if (readOnly == 0) {
+        SetSelinuxFileCon(WORKSPACE_NAME_DEF_SELINUX, WORKSPACE_NAME_DEF_SELINUX);
+    }
     PARAM_LOGI("SelinuxGetAllLabel count %d", count);
     return 0;
 }
@@ -126,10 +157,15 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
 static int SelinuxReadParamCheck(const char *name)
 {
     int ret = DAC_RESULT_FORBIDED;
+    if (g_selinuxSpace.readParamCheck != NULL) {
+        ret = g_selinuxSpace.readParamCheck(name);
+        PARAM_LOGI("SelinuxReadParamCheck name %s ret %d", name, ret);
+    }
     const char *label = GetSelinuxContent(name);
     if (label == NULL) { // open file with readonly
         ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, 1, PARAM_WORKSPACE_MAX);
     } else {
+        PARAM_LOGI("SelinuxReadParamCheck name %s label %s", name, label);
         ret = AddWorkSpace(label, 1, PARAM_WORKSPACE_MAX);
     }
     if (ret != 0) {

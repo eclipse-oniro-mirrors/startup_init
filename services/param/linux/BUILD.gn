@@ -111,6 +111,10 @@ if (defined(ohos_lite)) {
     }
 
     if (build_selinux) {
+      include_dirs += [
+        "//third_party/selinux/libselinux/include/",
+        "//base/security/selinux/interfaces/policycoreutils/include/",
+      ]
       defines += [ "PARAM_SUPPORT_SELINUX" ]
     }
     part_name = "init"
@@ -121,11 +125,17 @@ if (defined(ohos_lite)) {
     sources = param_client_sources
     include_dirs = param_include_dirs
     public_configs = [ ":exported_header_files" ]
+    deps = []
     defines = [
       "_GNU_SOURCE",
       "INIT_AGENT",
     ]
     if (build_selinux) {
+      deps += [
+        "//base/security/selinux:libload_policy",
+        "//base/security/selinux:librestorecon",
+        "//third_party/selinux:libselinux",
+      ]
       defines += [
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
