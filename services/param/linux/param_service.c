@@ -391,18 +391,22 @@ void InitParamService(void)
         ret = ParamServerCreate(&g_paramService.serverTask, &info);
         PARAM_CHECK(ret == 0, return, "Failed to create server");
     }
-    // read selinux label
-    LoadSelinuxLabel();
-    // from cmdline
-    LoadParamFromCmdLine();
-    // from build
-    LoadParamFromBuild();
 
     // init trigger space
     ret = InitTriggerWorkSpace();
     PARAM_CHECK(ret == 0, return, "Failed to init trigger");
     RegisterTriggerExec(TRIGGER_PARAM_WAIT, ExecuteWatchTrigger_);
     RegisterTriggerExec(TRIGGER_PARAM_WATCH, ExecuteWatchTrigger_);
+}
+
+void LoadSpecialParam(void)
+{
+    // read selinux label
+    LoadSelinuxLabel();
+    // from cmdline
+    LoadParamFromCmdLine();
+    // from build
+    LoadParamFromBuild();
 }
 
 int StartParamService(void)

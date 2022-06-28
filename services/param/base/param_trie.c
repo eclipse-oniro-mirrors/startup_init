@@ -23,7 +23,7 @@
 #include "param_osadp.h"
 #include "param_utils.h"
 
-int GetRealFileName(WorkSpace *workSpace, char *buffer, uint32_t size)
+static int GetRealFileName(WorkSpace *workSpace, char *buffer, uint32_t size)
 {
     int ret = ParamSprintf(buffer, size, "%s/%s", PARAM_STORAGE_PATH, workSpace->fileName);
     PARAM_CHECK(ret > 0, return -1, "Failed to copy file name %s", workSpace->fileName);

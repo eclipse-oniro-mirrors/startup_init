@@ -107,6 +107,8 @@ def WriteMapToCode(codeName, dict):
         f.write('#endif' + os.linesep)
         f.write('#endif' + os.linesep)
         f.write('#endif // PARAM_LITE_DEF_CFG_' + os.linesep)
+        f.write(os.linesep)
+        f.truncate()
     except IOError:
         print("Error: open or write file %s fail"%{codeName})
     else:

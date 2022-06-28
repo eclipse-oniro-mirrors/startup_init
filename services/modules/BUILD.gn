@@ -24,9 +24,8 @@ if (!defined(ohos_lite)) {
     ]
 
     deps = [
-      "//base/startup/init_lite/services/param/base:parameterbase",
-      "//base/startup/init_lite/services/utils:libinit_utils",
-      "//third_party/bounds_checking_function:libsec_static",
+      "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+      "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/cJSON:cjson_static",
     ]
 

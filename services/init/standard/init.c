@@ -379,6 +379,9 @@ void SystemConfig(void)
     // load SELinux context and policy
     // Do not move position!
     SystemLoadSelinux();
+
+    LoadSpecialParam();
+
     // parse parameters
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_PARAM_LOAD, (void *)&timingStat, (void *)&options);
     InitLoadParamFiles();
