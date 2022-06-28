@@ -254,6 +254,15 @@ static HOOK_MGR *bootStageHookMgr = NULL;
 
 HOOK_MGR *GetBootStageHookMgr()
 {
+    if (bootStageHookMgr != NULL) {
+        return bootStageHookMgr;
+    }
+
+    /*
+     * Create bootstage hook manager for booting only.
+     * When boot completed, this manager will be destroyed.
+     */
+    bootStageHookMgr = HookMgrCreate(INIT_BOOTSTAGE_HOOK_NAME);
     return bootStageHookMgr;
 }
 
@@ -358,12 +367,6 @@ void SystemConfig(void)
     options.flags = 0;
     options.preHook = InitPreHook;
     options.postHook = InitPostHook;
-
-    /*
-     * Create bootstage hook manager for booting only.
-     * When boot completed, this manager will be destroyed.
-     */
-    bootStageHookMgr = HookMgrCreate(INIT_BOOTSTAGE_HOOK_NAME);
 
     HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, (void *)&timingStat, (void *)&options);
     InitServiceSpace();
