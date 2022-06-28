@@ -255,5 +255,5 @@ A single job can hold a maximum of 30 commands \(only  **start**,  **mkdir**,  *
 
 [startup\_bootstrap\_lite](https://gitee.com/openharmony/startup_bootstrap_lite/blob/master/README.md)
 
-**[startup\_init\_lite](https://gitee.com/openharmony/startup_init_lite/blob/master/README.md)**
+**[startup\_init\_lite]**
 
