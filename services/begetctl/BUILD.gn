@@ -73,7 +73,7 @@ if (defined(ohos_lite)) {
 
     defines = [ "_GNU_SOURCE" ]
 
-    if (defined(product_name) && product_name == "rk3568") {
+    if (enable_ohos_startup_init_feature_loader) {
       defines += [ "PRODUCT_RK" ]
     }
 

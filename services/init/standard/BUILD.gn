@@ -121,7 +121,7 @@ ohos_executable("init") {
     defines += [ "ASAN_DETECTOR" ]
   }
 
-  if (defined(product_name) && product_name == "rk3568") {
+  if (enable_ohos_startup_init_feature_loader) {
     defines += [ "PRODUCT_RK" ]
   }
   version_script = get_label_info(
