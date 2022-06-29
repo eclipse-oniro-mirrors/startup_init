@@ -31,6 +31,10 @@
 #include "param_message.h"
 #include "trigger_manager.h"
 #include "securec.h"
+#ifndef OHOS_LITE
+#include "hookmgr.h"
+#include "init_running_hooks.h"
+#endif
 
 static ParamService g_paramService = {};
 
@@ -137,12 +141,62 @@ static int SendWatcherNotifyMessage(const TriggerExtInfo *extData, const char *c
     return 0;
 }
 
+#ifndef OHOS_LITE
+/**
+ * Parameter Set Hooking
+ */
+static int ParamSetHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
+{
+    PARAM_SET_CTX *paramSetContext = (PARAM_SET_CTX *)executionContext;
+    ParamSetHook realHook = (ParamSetHook)hookInfo->hookCookie;
+
+    realHook(paramSetContext);
+    return 0;
+};
+
+int ParamSetHookAdd(ParamSetHook hook)
+{
+    HOOK_INFO info;
+
+    info.stage = INIT_PARAM_SET_HOOK_STAGE;
+    info.prio = 0;
+    info.hook = ParamSetHookWrapper;
+    info.hookCookie = (void *)hook;
+
+    return HookMgrAddEx(NULL, &info);
+}
+
+static int ParamSetHookExecute(const char *name, const char *value)
+{
+    PARAM_SET_CTX context;
+
+    context.name = name;
+    context.value = value;
+    context.skipParamSet = 0;
+
+    (void)HookMgrExecute(NULL, INIT_PARAM_SET_HOOK_STAGE, (void *)(&context), NULL);
+
+    return context.skipParamSet;
+}
+#endif
+
 static int SystemSetParam(const char *name, const char *value, const ParamSecurityLabel *srcLabel)
 {
     PARAM_LOGV("SystemWriteParam name %s value: %s", name, value);
     int ctrlService = 0;
     int ret = CheckParameterSet(name, value, srcLabel, &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
+
+#ifndef OHOS_LITE
+    /*
+     * Execute param set hooks before setting parameter values
+     */
+    if (ParamSetHookExecute(name, value)) {
+        // Hook has processed the parameter set request
+        PARAM_LOGI("param [%s] set in the hook.", name);
+        return 0;
+    }
+#endif
 
     if (ctrlService & PARAM_CTRL_SERVICE) {  // ctrl param
         PostParamTrigger(EVENT_TRIGGER_PARAM, name, value);

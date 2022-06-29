@@ -35,7 +35,34 @@ extern "C" {
  *              |------|       |------|       |------|
  *              | extra|       | extra|       | extra|
  *              |______|       |______|       |______|
+ *
+ * Usage Example:
+ * 1. Define structure for each item in the list
+ *   typedef struct tagTEST_LIST_ITEM {
+ *       ListNode node;
+ *       int value;
+ *   } TEST_LIST_ITEM;
  * 
+ * 2. Define a list and init list by ListAddTail
+ *   ListNode testList;
+ *   c(&testList);
+ * 
+ * 3. Define a list item instance
+ *   TEST_LIST_ITEM item;
+ *   item.value = 0;
+ * 
+ * 4. Add list item to list
+ *   ListAddTail(&testList, (ListNode *)(&item));
+ * 
+ * 5. Advanced usage: add with order
+ *   // Ordering compare function
+ *   static int TestListItemCompareProc(ListNode *node, ListNode *newNode)
+ *   {
+ *       TEST_LIST_ITEM *left = (TEST_LIST_ITEM *)node;
+ *       TEST_LIST_ITEM *right = (TEST_LIST_ITEM *)newNode;
+ *       return left->value - right->value;
+ *   }
+ *   ListAddWithOrder(&testList, (ListNode *)(&item))
  */
 
 /**

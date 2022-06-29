@@ -39,6 +39,11 @@
 #   include "init_selinux_param.h"
 #endif // WITH_SELINUX
 
+#ifndef OHOS_LITE
+#include "hookmgr.h"
+#include "bootstage.h"
+#endif
+
 // All service processes that init will fork+exec.
 static ServiceSpace g_serviceSpace = { 0 };
 static const int CRITICAL_DEFAULT_CRASH_TIME = 20;
@@ -639,35 +644,6 @@ static int GetServiceOnDemand(const cJSON *curArrItem, Service *curServ)
     return SERVICE_SUCCESS;
 }
 
-static int CheckServiceKeyName(const cJSON *curService)
-{
-    char *cfgServiceKeyList[] = {
-        "name", "path", "uid", "gid", "once", "importance", "caps", "disabled",
-        "writepid", "critical", "socket", "console", "file", "ondemand",
-        "d-caps", "apl", "jobs", "start-mode", "end-mode", "cpucore", "secon", "sandbox",
-        "permission", "permission_acls"
-    };
-    INIT_CHECK_RETURN_VALUE(curService != NULL, SERVICE_FAILURE);
-    cJSON *child = curService->child;
-    INIT_CHECK_RETURN_VALUE(child != NULL, SERVICE_FAILURE);
-    while (child != NULL) {
-        int i = 0;
-        int keyListSize = ARRAY_LENGTH(cfgServiceKeyList);
-        for (; i < keyListSize; i++) {
-            if (strcmp(child->string, cfgServiceKeyList[i]) == 0) {
-                break;
-            }
-        }
-        if (i < keyListSize) {
-            child = child->next;
-        } else {
-            INIT_LOGE("CheckServiceKeyName, key name %s is not found. error.", child->string);
-            return SERVICE_FAILURE;
-        }
-    }
-    return SERVICE_SUCCESS;
-}
-
 static int GetServiceMode(Service *service, const cJSON *json)
 {
     const InitArgInfo startModeMap[] = {
@@ -940,6 +916,42 @@ int ParseOneService(const cJSON *curItem, Service *service)
     return ret;
 }
 
+#ifndef OHOS_LITE
+/**
+ * Service Config File Parse Hooking
+ */
+static int ServiceParseHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
+{
+    SERVICE_PARSE_CTX *serviceParseContext = (SERVICE_PARSE_CTX *)executionContext;
+    ServiceParseHook realHook = (ServiceParseHook)hookInfo->hookCookie;
+
+    realHook(serviceParseContext);
+    return 0;
+};
+
+int InitAddServiceParseHook(ServiceParseHook hook)
+{
+    HOOK_INFO info;
+
+    info.stage = INIT_SERVICE_PARSE;
+    info.prio = 0;
+    info.hook = ServiceParseHookWrapper;
+    info.hookCookie = (void *)hook;
+
+    return HookMgrAddEx(GetBootStageHookMgr(), &info);
+}
+
+static void ParseServiceHookExecute(const char *name, const cJSON *serviceNode)
+{
+    SERVICE_PARSE_CTX context;
+
+    context.serviceName = name;
+    context.serviceNode = serviceNode;
+
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_PARSE, (void *)(&context), NULL);
+}
+#endif
+
 void ParseAllServices(const cJSON *fileRoot)
 {
     int servArrSize = 0;
@@ -956,10 +968,6 @@ void ParseAllServices(const cJSON *fileRoot)
         int ret = GetStringItem(curItem, "name", serviceName, MAX_SERVICE_NAME);
         if (ret != 0) {
             INIT_LOGE("Failed to get service name %s", serviceName);
-            continue;
-        }
-        if (CheckServiceKeyName(curItem) != SERVICE_SUCCESS) { // invalid service
-            INIT_LOGE("Invalid service name %s", serviceName);
             continue;
         }
         Service *service = GetServiceByName(serviceName);
@@ -987,6 +995,14 @@ void ParseAllServices(const cJSON *fileRoot)
             FreeServiceFile(service->fileCfg);
             service->fileCfg = NULL;
         }
+
+#ifndef OHOS_LITE
+        /*
+         * Execute service parsing hooks
+         */
+        ParseServiceHookExecute(serviceName, curItem);
+#endif
+
         ret = GetCmdLinesFromJson(cJSON_GetObjectItem(curItem, "onrestart"), &service->restartArg);
         INIT_CHECK(ret == SERVICE_SUCCESS, service->restartArg = NULL);
     }
