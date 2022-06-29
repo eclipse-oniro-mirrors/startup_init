@@ -68,7 +68,7 @@ static int ModuleMgrCmdInstall(int id, const char *name, int argc, const char **
 static int ModuleMgrCmdUninstall(int id, const char *name, int argc, const char **argv)
 {
     INIT_ERROR_CHECK(argv != NULL && argc >= 1, return -1, "Invalid install parameter");
-    ModuleMgrUninstall(NULL, argv[0]);
+    ModuleMgrUninstall(defaultModuleMgr, argv[0]);
     return 0;
 }
 

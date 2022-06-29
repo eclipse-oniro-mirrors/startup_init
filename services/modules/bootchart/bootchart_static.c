@@ -26,7 +26,7 @@ static int bootchartEarlyHook(const HOOK_INFO *info, void *cookie)
         return 0;
     }
 
-    InitModuleMgrInstall("libbootchart");
+    InitModuleMgrInstall("bootchart");
     PLUGIN_LOGI("bootchart enabled.");
     return 0;
 }
