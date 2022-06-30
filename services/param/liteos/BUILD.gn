@@ -35,46 +35,20 @@ param_build_defines = [
   "BUILD_ROOTHASH=\"${ohos_build_roothash}\"",
 ]
 
-if (enable_ohos_startup_init_feature_begetctl_liteos) {
-  action("lite_const_param_to") {
-    script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
-    args = [
-      "--source",
-      rebase_path(
-          "//base/startup/init_lite/services/etc_lite/param/ohos_const/ohos.para"),
-      "--dest_dir",
-      rebase_path("$root_out_dir/gen/init_lite/"),
-      "--priority",
-      "0",
-    ]
-    outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
-  }
-
-  action("lite_ohos_param_to") {
-    script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
-    args = [
-      "--source",
-      rebase_path("//base/startup/init_lite/services/etc/param/ohos.para"),
-      "--dest_dir",
-      rebase_path("$root_out_dir/gen/init_lite/"),
-      "--priority",
-      "0",
-    ]
-    outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
-  }
-
-  action("vendor_param_to") {
-    script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
-    args = [
-      "--source",
-      rebase_path("$ohos_product_adapter_dir/utils/sys_param/vendor.para"),
-      "--dest_dir",
-      rebase_path("$root_out_dir/gen/init_lite/"),
-      "--priority",
-      "1",
-    ]
-    outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
-  }
+action("lite_ohos_param_to") {
+  script = "//base/startup/init_lite/scripts/param_cfg_to_code.py"
+  args = [
+    "--source",
+    rebase_path(
+        "//base/startup/init_lite/services/etc_lite/param/ohos_const/ohos.para"),
+    "--source",
+    rebase_path("$ohos_product_adapter_dir/utils/sys_param/vendor.para"),
+    "--source",
+    rebase_path("//base/startup/init_lite/services/etc/param/ohos.para"),
+    "--dest_dir",
+    rebase_path("$root_out_dir/gen/init_lite/"),
+  ]
+  outputs = [ "$target_gen_dir/${target_name}_param_cfg_to_code.log" ]
 }
 
 config("exported_header_files") {
@@ -162,11 +136,7 @@ static_library("param_client_lite") {
       "DATA_PATH=\"${config_ohos_startup_init_lite_data_path}\"",
     ]
     if (enable_ohos_startup_init_feature_begetctl_liteos) {
-      deps = [
-        ":lite_const_param_to",
-        ":lite_ohos_param_to",
-        ":vendor_param_to",
-      ]
+      deps = [ ":lite_ohos_param_to" ]
       include_dirs += [ "$root_out_dir/gen/init_lite" ]
       defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
     }

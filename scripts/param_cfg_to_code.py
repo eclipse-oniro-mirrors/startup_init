@@ -130,36 +130,34 @@ def main():
     description='A common change param.para file to h.')
     parser.add_argument(
         '--source',
+        action='append',
         help='The source to change.',
         required=True)
     parser.add_argument(
         '--dest_dir',
         help='Path that the source should be changed to.',
         required=True)
-    parser.add_argument(
-        '--priority',
-        help='If priority is 1, replace the parameter if it exist.',
-        required=True)
     args = parser.parse_args()
 
     out_dir = args.dest_dir
     if not os.path.exists(out_dir):
         os.makedirs(out_dir, exist_ok=True)
-    print(out_dir)
+    print("out_dir " + out_dir)
 
-    source = args.source
-    assert os.path.exists(source)
+    for source in args.source:
+        print("source " + source)
+        assert os.path.exists(source)
 
-    srcDict = GetParamFromCfg(source)
-    dst = out_dir + "param_cfg.h"
+        srcDict = GetParamFromCfg(source)
+        dst = out_dir + "param_cfg.h"
 
-    if os.path.exists(dst):
-        dstDict = GetParamFromCCode(dst)
-    else:
-        dstDict = {}
+        if os.path.exists(dst):
+            dstDict = GetParamFromCCode(dst)
+        else:
+            dstDict = {}
 
-    dstDict = AddToCodeDict(dstDict, srcDict, args.priority == "1")
-    WriteMapToCode(dst, dstDict)
+        dstDict = AddToCodeDict(dstDict, srcDict, False)
+        WriteMapToCode(dst, dstDict)
     return 0
 
 

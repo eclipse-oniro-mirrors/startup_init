@@ -139,7 +139,6 @@ if (defined(ohos_lite)) {
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
         deps += [
           "$ohos_product_adapter_dir/utils/sys_param:hal_sysparam",
-          "//base/startup/init_lite/services/param/liteos:lite_const_param_to",
           "//base/startup/init_lite/services/param/liteos:lite_ohos_param_to",
         ]
         include_dirs += [ "$root_out_dir/gen/init_lite" ]
@@ -180,8 +179,7 @@ if (defined(ohos_lite)) {
       # add cfg.h
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
         deps += [
-          "//base/startup/init_lite/services/param:lite_const_param_to",
-          "//base/startup/init_lite/services/param:lite_ohos_param_to",
+          "//base/startup/init_lite/services/param/liteos:lite_ohos_param_to",
         ]
         include_dirs += [ "$root_out_dir/gen/init_lite" ]
         defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
