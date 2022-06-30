@@ -34,7 +34,7 @@ typedef struct {
 } PersistAdpContext;
 
 typedef struct {
-    int (*load)();
+    int (*load)(void);
     int (*save)(const char *name, const char *value);
     int (*batchSaveBegin)(PERSIST_SAVE_HANDLE *handle);
     int (*batchSave)(PERSIST_SAVE_HANDLE handle, const char *name, const char *value);

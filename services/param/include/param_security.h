@@ -98,12 +98,12 @@ typedef int (*RegisterSecurityOpsPtr)(ParamSecurityOps *ops, int isInit);
 typedef int (*SelinuxSetParamCheck)(const char *paraName, struct ucred *uc);
 typedef struct SelinuxSpace_ {
     void *selinuxHandle;
-    void (*setSelinuxLogCallback)();
+    void (*setSelinuxLogCallback)(void);
     int (*setParamCheck)(const char *paraName, struct ucred *uc);
     const char *(*getParamLabel)(const char *paraName);
-    void (*initParamSelinux)();
+    void (*initParamSelinux)(void);
     int (*readParamCheck)(const char *paraName);
-    ParamContextsList *(*getParamList)();
+    ParamContextsList *(*getParamList)(void);
     void (*destroyParamList)(ParamContextsList **list);
 } SelinuxSpace;
 #ifdef PARAM_SUPPORT_SELINUX
