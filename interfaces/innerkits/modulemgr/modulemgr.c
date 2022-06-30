@@ -109,7 +109,7 @@ static void *moduleInstall(MODULE_ITEM *module, int argc, const char *argv[])
             return NULL;
         }
     } else {
-        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s/%s" MODULE_SUFFIX_D,
+        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s/lib%s" MODULE_SUFFIX_D,
             module->moduleMgr->name, module->name) < 0) {
             return NULL;
         }

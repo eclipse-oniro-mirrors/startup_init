@@ -58,34 +58,10 @@ static int CommonDealFun(const char *name, const char *value, int res)
     return ret;
 }
 
-static int SnDealFun(const char *name, const char *value, int res)
+static int ReadSnFromFile(const char *name, const char *file)
 {
-#ifdef USE_MTK_EMMC
-    static const char SN_FILE[] = {"/proc/bootdevice/cid"};
-#else
-    static const char SN_FILE[] = {"/sys/block/mmcblk0/device/cid"};
-#endif
-    int ret = CheckParamName(name, 0);
-    PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
-    char *data = NULL;
-    if (res != 0) {  // if cmdline not set sn or set sn value is null,read sn from default file
-        data = ReadFileData(SN_FILE);
-        if (data == NULL) {
-            PARAM_LOGE("Error, Read sn from default file failed!");
-            return -1;
-        }
-    } else if (value[0] == '/') {
-        data = ReadFileData(value);
-        if (data == NULL) {
-            PARAM_LOGE("Error, Read sn from cmdline file failed!");
-            return -1;
-        }
-    } else {
-        PARAM_LOGV("**** name %s, value %s", name, value);
-        ret = WriteParam(name, value, NULL, 0);
-        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
-        return ret;
-    }
+    char *data = ReadFileData(file);
+    PARAM_CHECK(data != NULL, return -1, "Read sn from %s file failed!", file);
 
     int index = 0;
     for (size_t i = 0; i < strlen(data); i++) {
@@ -100,11 +76,38 @@ static int SnDealFun(const char *name, const char *value, int res)
     }
     data[index] = '\0';
     PARAM_LOGV("**** name %s, value %s", name, data);
-    ret = WriteParam(name, data, NULL, 0);
-    PARAM_CHECK(ret == 0, free(data);
-        return ret, "Failed to write param %s %s", name, data);
+    int ret = WriteParam(name, data, NULL, 0);
     free(data);
+    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, data);
+    return ret;
+}
 
+static int SnDealFun(const char *name, const char *value, int res)
+{
+    const char *snFileList [] = {
+        "/sys/block/mmcblk0/device/cid",
+        "/proc/bootdevice/cid"
+    };
+    int ret = CheckParamName(name, 0);
+    PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
+    if (value != NULL && res == 0 && value[0] != '/') {
+        PARAM_LOGV("**** name %s, value %s", name, value);
+        ret = WriteParam(name, value, NULL, 0);
+        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
+        return ret;
+    }
+    if (value != NULL && value[0] == '/') {
+        ret = ReadSnFromFile(name, value);
+        if (ret == 0) {
+            return ret;
+        }
+    }
+    for (size_t i = 0; i < ARRAY_LENGTH(snFileList); i++) {
+        ret = ReadSnFromFile(name, snFileList[i]);
+        if (ret == 0) {
+            break;
+        }
+    }
     return ret;
 }
 
