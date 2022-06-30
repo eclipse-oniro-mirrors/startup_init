@@ -45,7 +45,9 @@ typedef struct cmdLineInfo {
 
 #define FILENAME_LEN_MAX 255
 #define MS_UNIT 1000
+#ifndef UNUSED
 #define UNUSED(x) (void)(x)
+#endif
 #define PARAM_ALIGN(len) (((len) + 0x03) & (~0x03))
 #define PARAM_ENTRY(ptr, type, member) (type *)((char *)(ptr)-offsetof(type, member))
 
