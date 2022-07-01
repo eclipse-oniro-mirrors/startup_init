@@ -37,7 +37,10 @@ DeviceInfoKits &DeviceInfoKits::GetInstance()
 void DeviceInfoKits::LoadDeviceInfoSa()
 {
     DINFO_LOGV("deviceInfoService_ is %d", deviceInfoService_ == nullptr);
-
+    std::unique_lock<std::mutex> lock(lock_);
+    if (deviceInfoService_ != nullptr) {
+        return;
+    }
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     DINFO_CHECK(sam != nullptr, return, "GetSystemAbilityManager return null");
 
@@ -47,7 +50,6 @@ void DeviceInfoKits::LoadDeviceInfoSa()
     int32_t ret = sam->LoadSystemAbility(SYSPARAM_DEVICE_SERVICE_ID, deviceInfoLoad);
     DINFO_CHECK(ret == ERR_OK, return, "LoadSystemAbility deviceinfo sa failed");
 
-    std::unique_lock<std::mutex> lock(lock_);
     // wait_for release lock and block until time out(60s) or match the condition with notice
     auto waitStatus = deviceInfoLoadCon_.wait_for(lock, std::chrono::milliseconds(DEVICEINFO_LOAD_SA_TIMEOUT_MS),
         [this]() { return deviceInfoService_ != nullptr; });
@@ -67,19 +69,18 @@ sptr<IDeviceInfo> DeviceInfoKits::GetService()
 void DeviceInfoKits::FinishStartSASuccess(const sptr<IRemoteObject> &remoteObject)
 {
     DINFO_LOGI("get deviceinfo sa success.");
-    deviceInfoService_ = iface_cast<IDeviceInfo>(remoteObject);
-
     // get lock which wait_for release and send a notice so that wait_for can out of block
     std::unique_lock<std::mutex> lock(lock_);
+    deviceInfoService_ = iface_cast<IDeviceInfo>(remoteObject);
     deviceInfoLoadCon_.notify_one();
 }
 
 void DeviceInfoKits::FinishStartSAFailed()
 {
     DINFO_LOGI("get deviceinfo sa failed.");
-
     // get lock which wait_for release and send a notice
     std::unique_lock<std::mutex> lock(lock_);
+    deviceInfoService_ = nullptr;
     deviceInfoLoadCon_.notify_one();
 }
 
