@@ -59,6 +59,7 @@ vibrator_host:x:3034:
 light_host:x:3035:
 disp_gralloc_host:x:3037:
 dcamera_host:x:3038:
+daudio_host:x:3059:
 hwc_host:x:3039:
 gralloc_host:x:3040:
 nfc_host:x:3042:
