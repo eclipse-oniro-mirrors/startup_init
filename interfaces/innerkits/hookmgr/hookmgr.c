@@ -85,7 +85,7 @@ static void hookStageDestroy(ListNode *node)
     BEGET_CHECK(node != NULL, return);
 
     stage = (HOOK_STAGE *)node;
-    ListRemoveAll(&(stage->hooks), NULL);
+    OH_ListRemoveAll(&(stage->hooks), NULL);
     free((void *)stage);
 }
 
@@ -94,7 +94,7 @@ static HOOK_STAGE *getHookStage(HOOK_MGR *hookMgr, int stage, int createIfNotFou
 {
     HOOK_STAGE *stageItem;
 
-    stageItem = (HOOK_STAGE *)ListFind(&(hookMgr->stages), (void *)(&stage), hookStageCompare);
+    stageItem = (HOOK_STAGE *)OH_ListFind(&(hookMgr->stages), (void *)(&stage), hookStageCompare);
     BEGET_CHECK(stageItem == NULL, return stageItem);
 
     BEGET_CHECK(createIfNotFound, return NULL);
@@ -103,8 +103,8 @@ static HOOK_STAGE *getHookStage(HOOK_MGR *hookMgr, int stage, int createIfNotFou
     stageItem = (HOOK_STAGE *)malloc(sizeof(HOOK_STAGE));
     BEGET_CHECK(stageItem != NULL, return NULL);
     stageItem->stage = stage;
-    ListInit(&(stageItem->hooks));
-    ListAddTail(&(hookMgr->stages), (ListNode *)stageItem);
+    OH_ListInit(&(stageItem->hooks));
+    OH_ListAddTail(&(hookMgr->stages), (ListNode *)stageItem);
     return stageItem;
 }
 
@@ -143,7 +143,7 @@ static int addHookToStage(HOOK_STAGE *hookStage, int prio, OhosHook hook, void *
     // Check if exists
     compareVal.prio = prio;
     compareVal.hook = hook;
-    hookItem = (HOOK_ITEM *)ListFind(&(hookStage->hooks), (void *)(&compareVal), hookItemCompareValue);
+    hookItem = (HOOK_ITEM *)OH_ListFind(&(hookStage->hooks), (void *)(&compareVal), hookItemCompareValue);
     BEGET_CHECK(hookItem == NULL, return 0);
 
     // Create new item
@@ -156,7 +156,7 @@ static int addHookToStage(HOOK_STAGE *hookStage, int prio, OhosHook hook, void *
     hookItem->stage = hookStage;
 
     // Insert with order
-    ListAddWithOrder(&(hookStage->hooks), (ListNode *)hookItem, hookItemCompare);
+    OH_ListAddWithOrder(&(hookStage->hooks), (ListNode *)hookItem, hookItemCompare);
     return 0;
 }
 
@@ -196,7 +196,7 @@ static int hookTraversalDelProc(ListNode *node, void *cookie)
     BEGET_CHECK((void *)hookItem->info.hook == cookie, return 0);
 
     // Remove from the list
-    ListRemove(node);
+    OH_ListRemove(node);
     // Destroy myself
     free((void *)node);
 
@@ -220,12 +220,12 @@ void HookMgrDel(HOOK_MGR *hookMgr, int stage, OhosHook hook)
     BEGET_CHECK(stageItem != NULL, return);
 
     if (hook != NULL) {
-        ListTraversal(&(stageItem->hooks), hook, hookTraversalDelProc, 0);
+        OH_ListTraversal(&(stageItem->hooks), hook, hookTraversalDelProc, 0);
         return;
     }
 
     // Remove from list
-    ListRemove((ListNode *)stageItem);
+    OH_ListRemove((ListNode *)stageItem);
 
     // Destroy stage item
     hookStageDestroy((ListNode *)stageItem);
@@ -279,8 +279,7 @@ int HookMgrExecute(HOOK_MGR *hookMgr, int stage, void *executionContext, const H
     args.options = options;
 
     // Traversal all hooks in the specified stage
-    return ListTraversal(&(stageItem->hooks), (void *)(&args),
-                         hookExecutionProc, flags);
+    return OH_ListTraversal(&(stageItem->hooks), (void *)(&args), hookExecutionProc, flags);
 }
 
 HOOK_MGR *HookMgrCreate(const char *name)
@@ -296,7 +295,7 @@ HOOK_MGR *HookMgrCreate(const char *name)
         free((void *)ret);
         return NULL;
     }
-    ListInit(&(ret->stages));
+    OH_ListInit(&(ret->stages));
     return ret;
 }
 
@@ -305,7 +304,7 @@ void HookMgrDestroy(HOOK_MGR *hookMgr)
     hookMgr = getHookMgr(hookMgr, 0);
     BEGET_CHECK(hookMgr != NULL, return);
 
-    ListRemoveAll(&(hookMgr->stages), hookStageDestroy);
+    OH_ListRemoveAll(&(hookMgr->stages), hookStageDestroy);
 
     if (hookMgr == defaultHookMgr) {
         defaultHookMgr = NULL;
@@ -336,7 +335,7 @@ static int hookItemTraversal(ListNode *node, void *data)
 static int hookStageTraversal(ListNode *node, void *data)
 {
     HOOK_STAGE *stageItem = (HOOK_STAGE *)node;
-    ListTraversal(&(stageItem->hooks), data, hookItemTraversal, 0);
+    OH_ListTraversal(&(stageItem->hooks), data, hookItemTraversal, 0);
     return 0;
 }
 
@@ -355,7 +354,7 @@ void HookMgrTraversal(HOOK_MGR *hookMgr, void *traversalCookie, OhosHookTraversa
     // Prepare common args
     stageArgs.traversalCookie = traversalCookie;
     stageArgs.traversal = traversal;
-    ListTraversal(&(hookMgr->stages), (void *)(&stageArgs), hookStageTraversal, 0);
+    OH_ListTraversal(&(hookMgr->stages), (void *)(&stageArgs), hookStageTraversal, 0);
 }
 
 /*
@@ -372,7 +371,7 @@ int HookMgrGetHooksCnt(HOOK_MGR *hookMgr, int stage)
     stageItem = getHookStage(hookMgr, stage, false);
     BEGET_CHECK(stageItem != NULL, return 0);
 
-    return ListGetCnt(&(stageItem->hooks));
+    return OH_ListGetCnt(&(stageItem->hooks));
 }
 
 /*
@@ -383,5 +382,5 @@ int HookMgrGetStagesCnt(HOOK_MGR *hookMgr)
     hookMgr = getHookMgr(hookMgr, 0);
     BEGET_CHECK(hookMgr != NULL, return 0);
 
-    return ListGetCnt(&(hookMgr->stages));
+    return OH_ListGetCnt(&(hookMgr->stages));
 }

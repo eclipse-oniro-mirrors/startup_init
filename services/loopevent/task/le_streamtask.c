@@ -195,7 +195,7 @@ LE_STATUS LE_CreateStreamClient(const LoopHandle loopHandle,
         return LE_NO_MEMORY, "Failed to create task");
     task->stream.base.handleEvent = HandleClientEvent_;
     task->stream.base.innerClose = HandleStreamTaskClose_;
-    ListInit(&task->stream.buffHead);
+    OH_ListInit(&task->stream.buffHead);
     LoopMutexInit(&task->stream.mutex);
 
     task->connectComplete = info->connectComplete;
@@ -229,7 +229,7 @@ LE_STATUS LE_AcceptStreamClient(const LoopHandle loopHandle, const TaskHandle se
     task->sendMessageComplete = info->sendMessageComplete;
     task->recvMessage = info->recvMessage;
     task->serverTask = (StreamServerTask *)server;
-    ListInit(&task->stream.buffHead);
+    OH_ListInit(&task->stream.buffHead);
     LoopMutexInit(&task->stream.mutex);
     if ((info->baseInfo.flags & TASK_TEST) != TASK_TEST) {
         EventLoop *loop = (EventLoop *)loopHandle;

@@ -130,10 +130,10 @@ INIT_PUBLIC_API int InitParamWorkSpace(int onlyRead)
         WorkSpaceFree,
         HASH_BUTT
     };
-    int ret = HashMapCreate(&g_paramWorkSpace.workSpaceHashHandle, &info);
+    int ret = OH_HashMapCreate(&g_paramWorkSpace.workSpaceHashHandle, &info);
     PARAM_CHECK(ret == 0, return -1, "Failed to create hash map for workspace");
     WORKSPACE_INIT_LOCK(g_paramWorkSpace);
-    ListInit(&g_paramWorkSpace.workSpaceList);
+    OH_ListInit(&g_paramWorkSpace.workSpaceList);
     PARAM_SET_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT);
 
     ret = RegisterSecurityOps(onlyRead);
@@ -173,7 +173,7 @@ INIT_INNER_API void CloseParamWorkSpace(void)
     }
     WORKSPACE_RW_LOCK(g_paramWorkSpace);
     if (g_paramWorkSpace.workSpaceHashHandle != NULL) {
-        HashMapDestory(g_paramWorkSpace.workSpaceHashHandle);
+        OH_HashMapDestory(g_paramWorkSpace.workSpaceHashHandle);
         g_paramWorkSpace.workSpaceHashHandle = NULL;
     }
     WORKSPACE_RW_UNLOCK(g_paramWorkSpace);
@@ -198,7 +198,7 @@ INIT_LOCAL_API int AddWorkSpace(const char *name, int onlyRead, uint32_t spaceSi
     const char *realName = WORKSPACE_NAME_NORMAL;
 #endif
     WORKSPACE_RW_LOCK(g_paramWorkSpace);
-    HashNode *node = HashMapGet(g_paramWorkSpace.workSpaceHashHandle, (const void *)realName);
+    HashNode *node = OH_HashMapGet(g_paramWorkSpace.workSpaceHashHandle, (const void *)realName);
     if (node != NULL) {
         WORKSPACE_RW_UNLOCK(g_paramWorkSpace);
         return 0;
@@ -212,17 +212,17 @@ INIT_LOCAL_API int AddWorkSpace(const char *name, int onlyRead, uint32_t spaceSi
         PARAM_CHECK(workSpace != NULL, break, "Failed to create workspace for %s", realName);
         workSpace->flags = 0;
         workSpace->area = NULL;
-        ListInit(&workSpace->node);
+        OH_ListInit(&workSpace->node);
         ret = ParamStrCpy(workSpace->fileName, size, realName);
         PARAM_CHECK(ret == 0, break, "Failed to copy file name %s", realName);
         HASHMAPInitNode(&workSpace->hashNode);
         ret = InitWorkSpace(workSpace, onlyRead, spaceSize);
         PARAM_CHECK(ret == 0, break, "Failed to init workspace %s", realName);
-        ret = HashMapAdd(g_paramWorkSpace.workSpaceHashHandle, &workSpace->hashNode);
+        ret = OH_HashMapAdd(g_paramWorkSpace.workSpaceHashHandle, &workSpace->hashNode);
         PARAM_CHECK(ret == 0, CloseWorkSpace(workSpace);
             workSpace = NULL;
             break, "Failed to add hash node");
-        ListAddTail(&g_paramWorkSpace.workSpaceList, &workSpace->node);
+        OH_ListAddTail(&g_paramWorkSpace.workSpaceList, &workSpace->node);
         ret = 0;
         workSpace = NULL;
     } while (0);

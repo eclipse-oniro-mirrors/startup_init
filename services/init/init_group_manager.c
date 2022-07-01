@@ -99,7 +99,7 @@ static int InitFreeGroupNodes_(InitGroupNode *groupRoot)
     while (groupNode != NULL) {
         groupRoot = groupNode->next;
         if (groupNode->type < NODE_TYPE_GROUPS) { // remove from hashmap
-            HashMapRemove(g_initWorkspace.hashMap[groupNode->type], groupNode->name);
+            OH_HashMapRemove(g_initWorkspace.hashMap[groupNode->type], groupNode->name);
         }
         free(groupNode);
         groupNode = groupRoot;
@@ -173,7 +173,7 @@ void InitServiceSpace(void)
         GROUP_HASHMAP_BUCKET
     };
     for (size_t i = 0; i < ARRAY_LENGTH(g_initWorkspace.hashMap); i++) {
-        int ret = HashMapCreate(&g_initWorkspace.hashMap[i], &info);
+        int ret = OH_HashMapCreate(&g_initWorkspace.hashMap[i], &info);
         if (ret != 0) {
             INIT_LOGE("%s", "Failed to create hash map");
         }
@@ -242,7 +242,7 @@ InitGroupNode *AddGroupNode(int type, const char *name)
     g_initWorkspace.groupNodes[type] = groupNode;
 
     if (type < NODE_TYPE_GROUPS) { // add hashmap
-        HashMapAdd(g_initWorkspace.hashMap[type], &groupNode->hashNode);
+        OH_HashMapAdd(g_initWorkspace.hashMap[type], &groupNode->hashNode);
     }
     return groupNode;
 }
@@ -253,7 +253,7 @@ InitGroupNode *GetGroupNode(int type, const char *name)
         return NULL;
     }
     INIT_LOGV("GetGroupNode type %d %p name %s", type, g_initWorkspace.hashMap[type], name);
-    HashNode *node = HashMapGet(g_initWorkspace.hashMap[type], name);
+    HashNode *node = OH_HashMapGet(g_initWorkspace.hashMap[type], name);
     if (node == NULL) {
         return NULL;
     }
@@ -275,7 +275,7 @@ void DelGroupNode(int type, const char *name)
         return;
     }
     INIT_LOGV("DelGroupNode type %d %p name %s", type, g_initWorkspace.hashMap[type], name);
-    HashMapRemove(g_initWorkspace.hashMap[type], name);
+    OH_HashMapRemove(g_initWorkspace.hashMap[type], name);
     InitGroupNode *groupNode = g_initWorkspace.groupNodes[type];
     InitGroupNode *preNode = groupNode;
     while (groupNode != NULL) {
@@ -299,7 +299,7 @@ int CheckNodeValid(int type, const char *name)
     if (type >= NODE_TYPE_GROUPS) {
         return -1;
     }
-    HashNode *node = HashMapGet(g_initWorkspace.hashMap[type], name);
+    HashNode *node = OH_HashMapGet(g_initWorkspace.hashMap[type], name);
     if (node != NULL) {
         INIT_LOGI("Found %s in %s group", name, type == NODE_TYPE_JOBS ? "job" : "service");
         return 0;

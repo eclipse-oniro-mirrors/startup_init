@@ -43,17 +43,17 @@ int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd)
         groupNode->data.cmd = cmd;
         cmd->cmdId = g_cmdId++;
         cmd->name = groupNode->name;
-        ListInit(&cmd->cmdExecutor);
+        OH_ListInit(&cmd->cmdExecutor);
     }
     if (execCmd == NULL) {
         return 0;
     }
     PluginCmdExecutor *cmdExec = (PluginCmdExecutor *)calloc(1, sizeof(PluginCmdExecutor));
     INIT_ERROR_CHECK(cmdExec != NULL, return -1, "Failed to create cmd listener");
-    ListInit(&cmdExec->node);
+    OH_ListInit(&cmdExec->node);
     cmdExec->id = ++g_cmdExecutorId;
     cmdExec->execCmd = execCmd;
-    ListAddTail(&cmd->cmdExecutor, &cmdExec->node);
+    OH_ListAddTail(&cmd->cmdExecutor, &cmdExec->node);
     return cmdExec->id;
 }
 
@@ -69,7 +69,7 @@ void RemoveCmdExecutor(const char *cmdName, int id)
     while (node != &cmd->cmdExecutor) {
         PluginCmdExecutor *cmdExec = ListEntry(node, PluginCmdExecutor, node);
         if (cmdExec->id == id) {
-            ListRemove(&cmdExec->node);
+            OH_ListRemove(&cmdExec->node);
             free(cmdExec);
             break;
         }
@@ -148,7 +148,7 @@ void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
 {
     int hashCode = ((index >> 16) & 0x0000ffff) - 1; // 16 left shift
     int cmdId = (index & 0x0000ffff);
-    HashNode *node = HashMapFind(GetGroupHashMap(NODE_TYPE_CMDS),
+    HashNode *node = OH_HashMapFind(GetGroupHashMap(NODE_TYPE_CMDS),
         hashCode, (const void *)&cmdId, CompareCmdId);
     if (node == NULL) {
         return;

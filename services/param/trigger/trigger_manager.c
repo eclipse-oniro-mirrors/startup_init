@@ -93,8 +93,8 @@ static TriggerNode *AddTriggerNode_(TriggerHeader *triggerHead,
             return NULL, "Failed to copy conditition");
     node->type = type;
     node->flags = 0;
-    ListInit(&node->node);
-    ListAddTail(&triggerHead->triggerList, &node->node);
+    OH_ListInit(&node->node);
+    OH_ListAddTail(&triggerHead->triggerList, &node->node);
     triggerHead->triggerCount++;
     return node;
 }
@@ -106,7 +106,7 @@ static int32_t AddJobNode_(TriggerNode *trigger, const TriggerExtInfo *extInfo)
     PARAM_CHECK(ret == EOK, return -1, "Failed to copy name for trigger");
     node->firstCmd = NULL;
     node->lastCmd = NULL;
-    ret = HashMapAdd(GetTriggerWorkSpace()->hashMap, &node->hashNode);
+    ret = OH_HashMapAdd(GetTriggerWorkSpace()->hashMap, &node->hashNode);
     PARAM_CHECK(ret == 0, return -1, "Failed to add hash node");
     return 0;
 }
@@ -153,9 +153,9 @@ static void DelJobTrigger_(const TriggerWorkSpace *workSpace, TriggerNode *trigg
     }
     jobNode->lastCmd = NULL;
     jobNode->firstCmd = NULL;
-    ListRemove(&trigger->node);
+    OH_ListRemove(&trigger->node);
     triggerHead->triggerCount--;
-    HashMapRemove(workSpace->hashMap, jobNode->name);
+    OH_HashMapRemove(workSpace->hashMap, jobNode->name);
 
     if (!TRIGGER_IN_QUEUE(trigger)) {
         free(jobNode);
@@ -203,13 +203,13 @@ static void DelWatchTrigger_(const TriggerWorkSpace *workSpace, TriggerNode *tri
     PARAM_CHECK(workSpace != NULL, return, "Param is null");
     TriggerHeader *triggerHead = GetTriggerHeader(workSpace, trigger->type);
     PARAM_CHECK(triggerHead != NULL, return, "Failed to get header %d", trigger->type);
-    ListRemove(&trigger->node);
+    OH_ListRemove(&trigger->node);
     if (trigger->type == TRIGGER_PARAM_WAIT) {
         WaitNode *node = (WaitNode *)trigger;
-        ListRemove(&node->item);
+        OH_ListRemove(&node->item);
     } else if (trigger->type == TRIGGER_PARAM_WATCH) {
         WatchNode *node = (WatchNode *)trigger;
-        ListRemove(&node->item);
+        OH_ListRemove(&node->item);
     }
     PARAM_LOGV("DelWatchTrigger_ %s count %d", GetTriggerName(trigger), triggerHead->triggerCount);
     triggerHead->triggerCount--;
@@ -285,7 +285,7 @@ JobNode *UpdateJobTrigger(const TriggerWorkSpace *workSpace,
 JobNode *GetTriggerByName(const TriggerWorkSpace *workSpace, const char *triggerName)
 {
     PARAM_CHECK(workSpace != NULL && triggerName != NULL, return NULL, "Invalid param");
-    HashNode *node = HashMapGet(workSpace->hashMap, triggerName);
+    HashNode *node = OH_HashMapGet(workSpace->hashMap, triggerName);
     if (node == NULL) {
         return NULL;
     }
@@ -313,7 +313,7 @@ void ClearTrigger(const TriggerWorkSpace *workSpace, int8_t type)
         FreeTrigger(workSpace, trigger);
         trigger = next;
     }
-    ListInit(&head->triggerList);
+    OH_ListInit(&head->triggerList);
 }
 
 int ExecuteQueuePush(TriggerWorkSpace *workSpace, const TriggerNode *trigger)
@@ -565,7 +565,7 @@ static int32_t CompareData_(const struct tagTriggerNode_ *trigger, const void *d
 
 static void TriggerHeadSetDefault(TriggerHeader *head)
 {
-    ListInit(&head->triggerList);
+    OH_ListInit(&head->triggerList);
     head->triggerCount = 0;
     head->cmdNodeCount = 0;
     head->addTrigger = AddJobTrigger_;
@@ -633,7 +633,7 @@ void InitTriggerHead(const TriggerWorkSpace *workSpace)
         64
     };
     PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace");
-    int ret = HashMapCreate((HashMapHandle *)&workSpace->hashMap, &info);
+    int ret = OH_HashMapCreate((HashMapHandle *)&workSpace->hashMap, &info);
     PARAM_CHECK(ret == 0, return, "Failed to create hash map");
 
     TriggerHeader *head = (TriggerHeader *)&workSpace->triggerHead[TRIGGER_BOOT];

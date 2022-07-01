@@ -313,7 +313,7 @@ public:
 
         ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
         PARAM_CHECK(watcher != NULL, return NULL, "Failed to get watcher");
-        ListInit(&watcher->triggerHead);
+        OH_ListInit(&watcher->triggerHead);
         watcher->stream = client;
         GetParamService()->watcherTask = client;
         return GetParamService()->watcherTask;

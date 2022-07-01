@@ -81,7 +81,7 @@ LE_Buffer *CreateBuffer(uint32_t bufferSize)
     LE_Buffer *buffer = NULL;
     LE_CHECK((buffer = (LE_Buffer *)malloc(sizeof(LE_Buffer) + bufferSize)) != NULL,
         return NULL, "Failed to alloc memory for buffer");
-    ListInit(&buffer->node);
+    OH_ListInit(&buffer->node);
     buffer->buffSize = bufferSize;
     buffer->dataSize = 0;
     return buffer;
@@ -110,7 +110,7 @@ LE_Buffer *GetFirstBuffer(StreamTask *task)
 void AddBuffer(StreamTask *task, LE_Buffer *buffer)
 {
     LoopMutexLock(&task->mutex);
-    ListAddTail(&task->buffHead, &buffer->node);
+    OH_ListAddTail(&task->buffHead, &buffer->node);
     LoopMutexUnlock(&task->mutex);
 }
 
@@ -141,7 +141,7 @@ void FreeBuffer(const LoopHandle loop, StreamTask *task, LE_Buffer *buffer)
     if (CheckTaskFlags((BaseTask *)task, TASK_STREAM | TASK_CONNECT) ||
         CheckTaskFlags((BaseTask *)task, TASK_EVENT | TASK_ASYNC_EVENT)) {
         LoopMutexLock(&task->mutex);
-        ListRemove(&buffer->node);
+        OH_ListRemove(&buffer->node);
         LoopMutexUnlock(&task->mutex);
     }
     free(buffer);

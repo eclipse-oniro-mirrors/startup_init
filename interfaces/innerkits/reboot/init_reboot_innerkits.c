@@ -31,7 +31,7 @@
 #define DOREBOOT_PARAM "reboot.ut"
 #endif
 
-int DoReboot_(const char *option)
+static int DoReboot_(const char *option)
 {
     char value[MAX_REBOOT_OPTION_SIZE];
     int ret = 0;

@@ -108,54 +108,54 @@ HashInfo g_info = {
 HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
 {
     HashMapHandle handle;
-    HashMapCreate(&handle, &g_info);
+    OH_HashMapCreate(&handle, &g_info);
     const char *str1 = "Test hash map node 1";
     const char *str2 = "Test hash map node 2";
     const char *str3 = "Test hash map node 3";
     TestHashNode *node1 = TestCreateHashNode(str1);
     TestHashNode *node2 = TestCreateHashNode(str2);
-    HashMapAdd(handle, &node1->node);
-    HashMapAdd(handle, &node2->node);
-    HashNode *node = HashMapGet(handle, (const void *)str1);
+    OH_HashMapAdd(handle, &node1->node);
+    OH_HashMapAdd(handle, &node2->node);
+    HashNode *node = OH_HashMapGet(handle, (const void *)str1);
     EXPECT_NE(node != nullptr, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, str1), 0);
     }
-    node = HashMapGet(handle, (const void *)str2);
+    node = OH_HashMapGet(handle, (const void *)str2);
     EXPECT_NE(node != nullptr, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, str2), 0);
     }
     TestHashNode *node3 = TestCreateHashNode(str3);
-    HashMapAdd(handle, &node3->node);
+    OH_HashMapAdd(handle, &node3->node);
     node3 = TestCreateHashNode("Test hash map node 4");
-    HashMapAdd(handle, &node3->node);
+    OH_HashMapAdd(handle, &node3->node);
     node3 = TestCreateHashNode("Test hash map node 5");
-    HashMapAdd(handle, &node3->node);
-    node = HashMapGet(handle, (const void *)str3);
+    OH_HashMapAdd(handle, &node3->node);
+    node = OH_HashMapGet(handle, (const void *)str3);
     EXPECT_NE(node != nullptr, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, str3), 0);
     }
     TestHashNode *node4 = TestCreateHashNode("pre-init");
-    HashMapAdd(handle, &node4->node);
+    OH_HashMapAdd(handle, &node4->node);
 
     const char *act = "load_persist_props_action";
     TestHashNode *node5 = TestCreateHashNode(act);
-    HashMapAdd(handle, &node5->node);
-    HashMapRemove(handle, "pre-init");
-    node = HashMapGet(handle, (const void *)act);
+    OH_HashMapAdd(handle, &node5->node);
+    OH_HashMapRemove(handle, "pre-init");
+    node = OH_HashMapGet(handle, (const void *)act);
     EXPECT_NE(node != nullptr, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, act), 0);
     }
-    HashMapIsEmpty(handle);
-    HashMapTraverse(handle, [](const HashNode *node, const void *context) {return;}, nullptr);
-    HashMapDestory(handle);
+    OH_HashMapIsEmpty(handle);
+    OH_HashMapTraverse(handle, [](const HashNode *node, const void *context) {return;}, nullptr);
+    OH_HashMapDestory(handle);
 }
 
 HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)

@@ -108,8 +108,8 @@ static int ParseDeviceConfig(char *p)
     } else {
         config->parameter = NULL;
     }
-    ListInit(&config->paramNode);
-    ListAddTail(&g_devices, &config->list);
+    OH_ListInit(&config->paramNode);
+    OH_ListAddTail(&g_devices, &config->list);
     FreeStringVector(items, count);
     return 0;
 }
@@ -143,7 +143,7 @@ static int ParseSysfsConfig(char *p)
         "Invalid mode in config file for sys path %s. use default mode", config->sysPath);
     config->uid = (uid_t)DecodeUid(items[SYS_CONFIG_UID_NUM]);
     config->gid = (gid_t)DecodeGid(items[SYS_CONFIG_GID_NUM]);
-    ListAddTail(&g_sysDevices, &config->list);
+    OH_ListAddTail(&g_sysDevices, &config->list);
     FreeStringVector(items, count);
     return 0;
 }
@@ -161,7 +161,7 @@ static int ParseFirmwareConfig(char *p)
     INIT_CHECK(config != NULL, errno = ENOMEM;
         return -1);
     config->fmPath = strdup(p);
-    ListAddTail(&g_firmwares, &config->list);
+    OH_ListAddTail(&g_firmwares, &config->list);
     return 0;
 }
 

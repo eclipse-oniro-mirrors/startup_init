@@ -48,7 +48,7 @@ MODULE_MGR *ModuleMgrCreate(const char *name)
 
     moduleMgr = (MODULE_MGR *)malloc(sizeof(MODULE_MGR));
     BEGET_CHECK(moduleMgr != NULL, return NULL);
-    ListInit(&(moduleMgr->modules));
+    OH_ListInit(&(moduleMgr->modules));
     moduleMgr->name = strdup(name);
     if (moduleMgr->name == NULL) {
         free((void *)moduleMgr);
@@ -154,7 +154,7 @@ int ModuleMgrInstall(MODULE_MGR *moduleMgr, const char *moduleName,
     }
 
     // Add to list
-    ListAddTail(&(moduleMgr->modules), (ListNode *)module);
+    OH_ListAddTail(&(moduleMgr->modules), (ListNode *)module);
 
     return 0;
 }
@@ -252,16 +252,16 @@ void ModuleMgrUninstall(MODULE_MGR *moduleMgr, const char *name)
     BEGET_CHECK(moduleMgr != NULL, return);
     // Uninstall all modules if no name specified
     if (name == NULL) {
-        ListRemoveAll(&(moduleMgr->modules), moduleDestroy);
+        OH_ListRemoveAll(&(moduleMgr->modules), moduleDestroy);
         return;
     }
     BEGET_LOGV("ModuleMgrUninstall moduleName %s", name);
     // Find module by name
-    module = (MODULE_ITEM *)ListFind(&(moduleMgr->modules), (void *)name, moduleCompare);
+    module = (MODULE_ITEM *)OH_ListFind(&(moduleMgr->modules), (void *)name, moduleCompare);
     BEGET_ERROR_CHECK(module != NULL, return, "Can not find module %s", name);
 
     // Remove from the list
-    ListRemove((ListNode *)module);
+    OH_ListRemove((ListNode *)module);
     // Destroy the module
     moduleDestroy((ListNode *)module);
 }
@@ -269,7 +269,7 @@ void ModuleMgrUninstall(MODULE_MGR *moduleMgr, const char *name)
 int ModuleMgrGetCnt(const MODULE_MGR *moduleMgr)
 {
     BEGET_CHECK(moduleMgr != NULL, return 0);
-    return ListGetCnt(&(moduleMgr->modules));
+    return OH_ListGetCnt(&(moduleMgr->modules));
 }
 
 typedef struct tagMODULE_TRAVERSAL_ARGS {
@@ -312,5 +312,5 @@ void ModuleMgrTraversal(const MODULE_MGR *moduleMgr, void *cookie, OhosModuleTra
 
     args.cookie = cookie;
     args.traversal = traversal;
-    ListTraversal((ListNode *)(&(moduleMgr->modules)), (void *)(&args), moduleTraversalProc, 0);
+    OH_ListTraversal((ListNode *)(&(moduleMgr->modules)), (void *)(&args), moduleTraversalProc, 0);
 }

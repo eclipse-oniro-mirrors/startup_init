@@ -240,16 +240,16 @@ static int32_t AddWatchNode(struct tagTriggerNode_ *trigger, const struct Trigge
     PARAM_CHECK(watcher != NULL, return -1, "Failed to get param watcher data");
     if (extInfo->type == TRIGGER_PARAM_WAIT) {
         WaitNode *node = (WaitNode *)trigger;
-        ListInit(&node->item);
+        OH_ListInit(&node->item);
         node->timeout = extInfo->info.waitInfo.timeout;
         node->stream = extInfo->stream;
         node->waitId = extInfo->info.waitInfo.waitId;
-        ListAddTail(&watcher->triggerHead, &node->item);
+        OH_ListAddTail(&watcher->triggerHead, &node->item);
     } else {
         WatchNode *node = (WatchNode *)trigger;
-        ListInit(&node->item);
+        OH_ListInit(&node->item);
         node->watchId = extInfo->info.watchInfo.watchId;
-        ListAddTail(&watcher->triggerHead, &node->item);
+        OH_ListAddTail(&watcher->triggerHead, &node->item);
     }
     return 0;
 }
@@ -401,7 +401,7 @@ PARAM_STATIC int OnIncomingConnect(LoopHandle loop, TaskHandle server)
 
     ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
     PARAM_CHECK(watcher != NULL, return -1, "Failed to get watcher");
-    ListInit(&watcher->triggerHead);
+    OH_ListInit(&watcher->triggerHead);
     watcher->stream = client;
 #ifdef STARTUP_INIT_TEST
     g_paramService.watcherTask = client;

@@ -80,7 +80,7 @@ static int CreatePipeSocket_(const char *server)
     return fd;
 }
 
-LE_STATUS GetSockaddrFromServer_(const char *server, struct sockaddr_in *addr)
+static LE_STATUS GetSockaddrFromServer_(const char *server, struct sockaddr_in *addr)
 {
     int ret = memset_s(addr, sizeof(struct sockaddr_in), 0, sizeof(struct sockaddr_in));
     LE_CHECK(ret == 0, return ret, "Failed to memory set. error: %s", strerror(errno));

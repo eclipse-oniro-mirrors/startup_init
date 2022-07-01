@@ -41,7 +41,7 @@ static ListNode *getBootEventParaList(bool autoCreate)
     if (bootEventList == NULL) {
         return NULL;
     }
-    ListInit(bootEventList);
+    OH_ListInit(bootEventList);
     return bootEventList;
 }
 
@@ -77,7 +77,7 @@ static void BootEventParaAdd(const char *paramName)
     }
 
     // Add to list
-    ListAddTail(list, (ListNode *)item);
+    OH_ListAddTail(list, (ListNode *)item);
 }
 
 static int BootEventParaListCompareProc(ListNode *node, void *data)
@@ -109,15 +109,15 @@ static void BootEventParaFireByName(const char *paramName)
         return;
     }
 
-    found = ListFind(getBootEventParaList(false), (void *)paramName, BootEventParaListCompareProc);
+    found = OH_ListFind(getBootEventParaList(false), (void *)paramName, BootEventParaListCompareProc);
     if (found != NULL) {
         // Remove from list
-        ListRemove(found);
+        OH_ListRemove(found);
         BootEventParaItemDestroy((BOOT_EVENT_PARAM_ITEM *)found);
     }
 
     // Check if all boot event params are fired
-    if (ListGetCnt(getBootEventParaList(false)) > 0) {
+    if (OH_ListGetCnt(getBootEventParaList(false)) > 0) {
         return;
     }
 

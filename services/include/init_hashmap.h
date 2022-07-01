@@ -51,15 +51,15 @@ typedef struct {
 
 typedef void *HashMapHandle;
 
-int HashMapIsEmpty(HashMapHandle handle);
-int32_t HashMapCreate(HashMapHandle *handle, const HashInfo *info);
-void HashMapDestory(HashMapHandle handle);
-int32_t HashMapAdd(HashMapHandle handle, HashNode *hashNode);
-void HashMapRemove(HashMapHandle handle, const void *key);
-HashNode *HashMapGet(HashMapHandle handle, const void *key);
-HashNode *HashMapFind(HashMapHandle handle,
+int OH_HashMapIsEmpty(HashMapHandle handle);
+int32_t OH_HashMapCreate(HashMapHandle *handle, const HashInfo *info);
+void OH_HashMapDestory(HashMapHandle handle);
+int32_t OH_HashMapAdd(HashMapHandle handle, HashNode *hashNode);
+void OH_HashMapRemove(HashMapHandle handle, const void *key);
+HashNode *OH_HashMapGet(HashMapHandle handle, const void *key);
+HashNode *OH_HashMapFind(HashMapHandle handle,
     int hashCode, const void *key, HashKeyCompare keyCompare);
-void HashMapTraverse(HashMapHandle handle, void (*hashNodeTraverse)(const HashNode *node, const void *context),
+void OH_HashMapTraverse(HashMapHandle handle, void (*hashNodeTraverse)(const HashNode *node, const void *context),
     const void *context);
 #ifdef __cplusplus
 #if __cplusplus

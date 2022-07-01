@@ -333,7 +333,7 @@ int MountOneItem(FstabItem *item)
     return rc;
 }
 
-int CheckRequiredAndMount(FstabItem *item, bool required)
+static int CheckRequiredAndMount(FstabItem *item, bool required)
 {
     int rc = 0;
     if (item == NULL) {
