@@ -467,7 +467,7 @@ int CheckTrigger(TriggerWorkSpace *workSpace, int type,
     PARAM_LOGV("CheckTrigger_ type: %d content: %s ", type, content);
     TriggerHeader *triggerHead = GetTriggerHeader(workSpace, type);
     if (triggerHead != NULL) {
-        LogicCalculator calculator = {0};
+        LogicCalculator calculator = {{0}};
         calculator.triggerCheckDone = triggerCheckDone;
         int ret = triggerHead->checkTriggerMatch(workSpace, type, &calculator, content, contentSize);
         CalculatorFree(&calculator);
