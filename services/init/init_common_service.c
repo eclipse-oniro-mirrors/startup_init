@@ -117,24 +117,6 @@ static int SetPerms(const Service *service)
     return SERVICE_SUCCESS;
 }
 
-static void OpenConsole(void)
-{
-    const int stdError = 2;
-    setsid();
-    WaitForFile("/dev/console", WAIT_MAX_SECOND);
-    int fd = open("/dev/console", O_RDWR);
-    if (fd >= 0) {
-        ioctl(fd, TIOCSCTTY, 0);
-        dup2(fd, 0);
-        dup2(fd, 1);
-        dup2(fd, stdError); // Redirect fd to 0, 1, 2
-        close(fd);
-    } else {
-        INIT_LOGE("Open /dev/console failed. err = %d", errno);
-    }
-    return;
-}
-
 static int WritePid(const Service *service)
 {
     const int maxPidStrLen = 50;

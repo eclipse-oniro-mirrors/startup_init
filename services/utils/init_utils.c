@@ -23,6 +23,7 @@
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
@@ -554,4 +555,24 @@ uint32_t GetRandom()
     }
     close(fd);
     return ulSeed;
+}
+
+void OpenConsole(void)
+{
+#ifndef __LITEOS_M__
+    const int stdError = 2;
+    setsid();
+    WaitForFile("/dev/console", WAIT_MAX_SECOND);
+    int fd = open("/dev/console", O_RDWR);
+    if (fd >= 0) {
+        ioctl(fd, TIOCSCTTY, 0);
+        dup2(fd, 0);
+        dup2(fd, 1);
+        dup2(fd, stdError); // Redirect fd to 0, 1, 2
+        close(fd);
+    } else {
+        INIT_LOGE("Open /dev/console failed. err = %d", errno);
+    }
+    return;
+#endif
 }

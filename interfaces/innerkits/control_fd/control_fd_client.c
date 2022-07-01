@@ -17,9 +17,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <termios.h>
 #include <time.h>
 #include <unistd.h>
 #include <limits.h>
@@ -29,74 +31,44 @@
 #include "init_utils.h"
 #include "securec.h"
 
-static char g_FifoReadPath[FIFO_PATH_SIZE] = {0};
-static int g_FifoReadFd = -1;
-
-static char g_FifoWritePath[FIFO_PATH_SIZE] = {0};
-static int g_FifoWriteFd = -1;
-
-static void ProcessFifoWrite(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
+static void ProcessPtyWrite(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
 {
     if ((fd < 0) || (events == NULL) || (context == NULL)) {
         BEGET_LOGE("[control_fd] Invalid fifo write parameter");
         return;
     }
-    int fifow = *((int *)context);
-    if (fifow < 0) {
-        BEGET_LOGE("[control_fd] invalid fifo write fd");
-        return;
-    }
-    char rbuf[FIFO_BUF_SIZE] = {0};
-    int rlen = read(fd, rbuf, FIFO_BUF_SIZE - 1);
+    CmdAgent *agent = (CmdAgent *)context;
+    char rbuf[PTY_BUF_SIZE] = {0};
+    int rlen = read(fd, rbuf, PTY_BUF_SIZE - 1);
     int ret = fflush(stdin);
     BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed fflush err=%d", errno);
     if (rlen > 0) {
-        int wlen = write(fifow, rbuf, rlen);
+        int wlen = write(agent->ptyFd, rbuf, rlen);
         BEGET_ERROR_CHECK(wlen == rlen, return, "[control_fd] Failed write fifo err=%d", errno);
     }
-    printf("#");
     ret = fflush(stdout);
     BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed fflush err=%d", errno);
     *events = Event_Read;
 }
 
-static void ProcessFifoRead(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
+static void ProcessPtyRead(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
 {
-    if ((fd < 0) || (events == NULL)) {
+    if ((fd < 0) || (events == NULL) || (context == NULL)) {
         BEGET_LOGE("[control_fd] Invalid fifo read parameter");
         return;
     }
-    char buf[FIFO_BUF_SIZE] = {0};
-    int readlen = read(fd, buf, FIFO_BUF_SIZE - 1);
+    CmdAgent *agent = (CmdAgent *)context;
+    char buf[PTY_BUF_SIZE] = {0};
+    int readlen = read(fd, buf, PTY_BUF_SIZE - 1);
     if (readlen > 0) {
         fprintf(stdout, "%s", buf);
     } else {
-        DestroyCmdFifo(g_FifoReadFd, g_FifoWriteFd, g_FifoReadPath, g_FifoWritePath);
+        (void)close(agent->ptyFd);
         return;
     }
     int ret = fflush(stdout);
     BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed fflush err=%d", errno);
-    printf("#");
-    ret = fflush(stdout);
-    BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed fflush err=%d", errno);
     *events = Event_Read;
-}
-
-void DestroyCmdFifo(int rfd, int wfd, const char *readPath, const char *writePath)
-{
-    if (rfd >= 0) {
-        (void)close(rfd);
-    }
-    if (wfd >= 0) {
-        (void)close(wfd);
-    }
-
-    if (readPath != NULL) {
-        BEGET_CHECK_ONLY_ELOG(unlink(readPath) == 0, "Failed unlink fifo %s", readPath);
-    }
-    if (writePath != NULL) {
-        BEGET_CHECK_ONLY_ELOG(unlink(writePath) == 0, "Failed unlink fifo %s", writePath);
-    }
 }
 
 static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
@@ -112,7 +84,11 @@ static void CmdOnConntectComplete(const TaskHandle client)
 static void CmdOnClose(const TaskHandle task)
 {
     BEGET_LOGI("[control_fd] CmdOnClose");
-    DestroyCmdFifo(g_FifoReadFd, g_FifoWriteFd, g_FifoReadPath, g_FifoWritePath);
+    CmdAgent *agent = (CmdAgent *)LE_GetUserData(task);
+    BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] Invalid agent");
+    (void)close(agent->ptyFd);
+    agent->ptyFd = -1;
+    LE_StopLoop(LE_GetDefaultLoop());
 }
 
 static void CmdDisConnectComplete(const TaskHandle client)
@@ -120,54 +96,9 @@ static void CmdDisConnectComplete(const TaskHandle client)
     BEGET_LOGI("[control_fd] CmdDisConnectComplete");
 }
 
-static void CmdAgentInit(WatcherHandle handle, const char *path, bool read, ProcessWatchEvent func)
-{
-    if (path == NULL) {
-        BEGET_LOGE("[control_fd] Invalid parameter");
-        return;
-    }
-    BEGET_LOGI("[control_fd] client open %s", (read ? "read" : "write"));
-    char *realPath = GetRealPath(path);
-    if (realPath == NULL) {
-        BEGET_LOGE("[control_fd] Failed get real path %s", path);
-        return;
-    }
-    if (read == true) {
-        g_FifoReadFd = open(realPath, O_RDONLY | O_TRUNC | O_NONBLOCK);
-        BEGET_ERROR_CHECK(g_FifoReadFd >= 0, free(realPath); return, "[control_fd] Failed to open fifo read");
-        BEGET_LOGI("[control_fd] g_FifoReadFd is %d", g_FifoReadFd);
-    } else {
-        g_FifoWriteFd = open(realPath, O_WRONLY | O_TRUNC);
-        BEGET_ERROR_CHECK(g_FifoWriteFd >= 0, free(realPath); return, "[control_fd] Failed to open fifo write");
-        BEGET_LOGI("[control_fd] g_FifoWriteFd is %d", g_FifoWriteFd);
-    }
-    free(realPath);
-    // start watcher for stdin
-    LE_WatchInfo info = {};
-    info.flags = 0;
-    info.events = Event_Read;
-    info.processEvent = func;
-    if (read == true) {
-        info.fd = g_FifoReadFd; // read fifo0
-        BEGET_ERROR_CHECK(LE_StartWatcher(LE_GetDefaultLoop(), &handle, &info, NULL) == LE_SUCCESS,
-            return, "[control_fd] Failed le_loop start watcher fifo read");
-    } else {
-        info.fd = STDIN_FILENO; // read stdin and write fifo1
-        BEGET_ERROR_CHECK(LE_StartWatcher(LE_GetDefaultLoop(), &handle, &info, &g_FifoWriteFd) == LE_SUCCESS,
-            return, "[control_fd] Failed le_loop start watcher stdin");
-    }
-    return;
-}
-
 static void CmdOnSendMessageComplete(const TaskHandle task, const BufferHandle handle)
 {
     BEGET_LOGI("[control_fd] CmdOnSendMessageComplete");
-    CmdAgent *agent = (CmdAgent *)LE_GetUserData(task);
-    BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] Invalid agent");
-    CmdAgentInit(agent->input, g_FifoWritePath, false, ProcessFifoWrite);
-    printf("#");
-    int ret = fflush(stdout);
-    BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed fflush err=%d", errno);
 }
 
 static CmdAgent *CmdAgentCreate(const char *server)
@@ -194,85 +125,86 @@ static CmdAgent *CmdAgentCreate(const char *server)
     return agent;
 }
 
-static int CreateFifo(const char *pipeName)
+static int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd, const char *ptyName)
 {
-    if (pipeName == NULL) {
-        BEGET_LOGE("[control_fd] Invalid parameter");
-        return -1;
-    }
-    // create fifo for cmd
-    CheckAndCreateDir(pipeName);
-    int ret = mkfifo(pipeName, CONTROL_FD_FIFO_MODE);
-    if (ret != 0) {
-        if (errno != EEXIST) {
-            return -1;
-        }
-    }
-    return 0;
-}
-
-static int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd, const char *fifoName)
-{
-    if ((agent == NULL) || (cmd == NULL) || (fifoName == NULL)) {
+    if ((agent == NULL) || (cmd == NULL) || (ptyName == NULL)) {
         BEGET_LOGE("[control_fd] Invalid parameter");
         return -1;
     }
     int ret = 0;
     BufferHandle handle = NULL;
-    uint32_t bufferSize = sizeof(CmdMessage) + strlen(cmd) + FIFO_PATH_SIZE + 1;
+    uint32_t bufferSize = sizeof(CmdMessage) + strlen(cmd) + PTY_PATH_SIZE + 1;
     handle = LE_CreateBuffer(LE_GetDefaultLoop(), bufferSize);
     char *buff = (char *)LE_GetBufferInfo(handle, NULL, NULL);
     BEGET_ERROR_CHECK(buff != NULL, return -1, "[control_fd] Failed get buffer info");
     CmdMessage *message = (CmdMessage *)buff;
     message->msgSize = bufferSize;
     message->type = type;
-    message->pid = getpid();
-    ret = strcpy_s(message->fifoName, FIFO_PATH_SIZE - 1, fifoName);
+    ret = strcpy_s(message->ptyName, PTY_PATH_SIZE - 1, ptyName);
     BEGET_ERROR_CHECK(ret == 0, LE_FreeBuffer(LE_GetDefaultLoop(), agent->task, handle);
-        return -1, "[control_fd] Failed to copy fifo name %s", fifoName);
-    ret = strcpy_s(message->cmd, bufferSize - sizeof(CmdMessage) - FIFO_PATH_SIZE, cmd);
+        return -1, "[control_fd] Failed to copy pty name %s", ptyName);
+    ret = strcpy_s(message->cmd, bufferSize - sizeof(CmdMessage) - PTY_PATH_SIZE, cmd);
     BEGET_ERROR_CHECK(ret == 0, LE_FreeBuffer(LE_GetDefaultLoop(), agent->task, handle);
         return -1, "[control_fd] Failed to copy cmd %s", cmd);
     ret = LE_Send(LE_GetDefaultLoop(), agent->task, handle, bufferSize);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "[control_fd] Failed LE_Send msg type %d, pid %d, cmd %s",
-        message->type, message->pid, message->cmd);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "[control_fd] Failed LE_Send msg type %d, cmd %s",
+        message->type, message->cmd);
     return 0;
 }
 
-static int CmdMakeFifoInit(const char *fifoPath)
+static int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd)
 {
-    if (fifoPath == NULL) {
-        BEGET_LOGE("[control_fd] Invalid parameter");
+    if ((cmd == NULL) || (agent == NULL)) {
         return -1;
     }
-    int ret = sprintf_s(g_FifoReadPath, sizeof(g_FifoReadPath) - 1, "/dev/fifo/%s0.%d", fifoPath, getpid());
-    BEGET_ERROR_CHECK(ret > 0, return -1, "[control_fd] Failed sprintf_s err=%d", errno);
-    ret = CreateFifo(g_FifoReadPath);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "[control_fd] Failed create fifo err=%d", errno);
-    
-    ret = sprintf_s(g_FifoWritePath, sizeof(g_FifoWritePath) - 1, "/dev/fifo/%s1.%d", fifoPath, getpid());
-    BEGET_ERROR_CHECK(ret > 0, return -1, "[control_fd] Failed sprintf_s err=%d", errno);
-    ret = CreateFifo(g_FifoWritePath);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "[control_fd] Failed create fifo err=%d", errno);
+    // initialize terminal
+    struct termios term;
+    int ret = tcgetattr(STDIN_FILENO, &term);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed tcgetattr stdin, err=%d", errno);
+    cfmakeraw(&term);
+    term.c_cc[VTIME] = 0;
+    term.c_cc[VMIN] = 1;
+    ret = tcsetattr(STDIN_FILENO, TCSANOW, &term);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed tcsetattr term, err=%d", errno);
+    // open master pty and get slave pty
+    int pfd = open("/dev/ptmx", O_RDWR | O_CLOEXEC);
+    BEGET_ERROR_CHECK(pfd >= 0, return -1, "Failed open pty err=%d", errno);
+    BEGET_ERROR_CHECK(grantpt(pfd) >= 0, close(pfd); return -1, "Failed to call grantpt");
+    BEGET_ERROR_CHECK(unlockpt(pfd) >= 0, close(pfd); return -1, "Failed to call unlockpt");
+    char ptsbuffer[PTY_PATH_SIZE] = {0};
+    ret = ptsname_r(pfd, ptsbuffer, sizeof(ptsbuffer));
+    BEGET_ERROR_CHECK(ret >= 0, close(pfd); return -1, "Failed to get pts name err=%d", errno);
+    BEGET_LOGI("ptsbuffer is %s", ptsbuffer);
+    agent->ptyFd = pfd;
+
+    LE_WatchInfo info = {};
+    info.flags = 0;
+    info.events = Event_Read;
+    info.processEvent = ProcessPtyRead;
+    info.fd = pfd; // read ptmx
+    BEGET_ERROR_CHECK(LE_StartWatcher(LE_GetDefaultLoop(), &agent->reader, &info, agent) == LE_SUCCESS,
+        close(pfd); return -1, "[control_fd] Failed le_loop start watcher ptmx read");
+    info.processEvent = ProcessPtyWrite;
+    info.fd = STDIN_FILENO; // read stdin and write ptmx
+    BEGET_ERROR_CHECK(LE_StartWatcher(LE_GetDefaultLoop(), &agent->input, &info, agent) == LE_SUCCESS,
+        close(pfd); return -1, "[control_fd] Failed le_loop start watcher stdin read and write ptmx");
+    ret = SendCmdMessage(agent, type, cmd, ptsbuffer);
+    BEGET_ERROR_CHECK(ret == 0, close(pfd); return -1, "[control_fd] Failed send message");
     return 0;
 }
 
-void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd, const char *fifoName)
+void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd)
 {
     if ((socketPath == NULL) || (cmd == NULL)) {
         BEGET_LOGE("[control_fd] Invalid parameter");
     }
     BEGET_LOGI("[control_fd] CmdAgentInit");
-    int ret = CmdMakeFifoInit(fifoName);
-    BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed init fifo");
     CmdAgent *agent = CmdAgentCreate(socketPath);
     BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] Failed to create agent");
-    CmdAgentInit(agent->reader, g_FifoReadPath, true, ProcessFifoRead);
-    ret = SendCmdMessage(agent, type, cmd, fifoName);
-    BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed send message");
+    int ret = InitPtyInterface(agent, type, cmd);
+    if (ret != 0) {
+        return;
+    }
     LE_RunLoop(LE_GetDefaultLoop());
     BEGET_LOGI("Cmd Client exit ");
-    LE_CloseStreamTask(LE_GetDefaultLoop(), agent->task);
-    free(agent);
-    DestroyCmdFifo(g_FifoReadFd, g_FifoWriteFd, g_FifoReadPath, g_FifoWritePath);
 }

@@ -15,7 +15,9 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <sys/ioctl.h>
 #include <sys/wait.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "beget_ext.h"
@@ -27,20 +29,12 @@ static CmdService g_cmdService;
 
 CallbackControlFdProcess g_controlFdFunc = NULL;
 
-static int ReadFifoPath(const char *name, bool read, pid_t pid, char *resolvedPath)
+static void OnClose(const TaskHandle task)
 {
-    if ((name == NULL) || (pid < 0) || resolvedPath == NULL) {
-        return -1;
-    }
-    int flag = read ? 1 : 0;
-    char path[PATH_MAX] = {0};
-    int ret = sprintf_s(path, sizeof(path) - 1, "/dev/fifo/%s%d.%d", name, flag, pid);
-    BEGET_ERROR_CHECK(ret > 0, return -1, "[control_fd] Failed sprintf_s err=%d", errno);
-    char *realPath = realpath(path, resolvedPath);
-    BEGET_ERROR_CHECK(realPath != NULL, return -1, "[control_fd] Failed get real path %s, err=%d", path, errno);
-    int flags = read ? (O_RDONLY | O_TRUNC | O_NONBLOCK) : (O_WRONLY | O_TRUNC);
-    int fd = open(resolvedPath, flags);
-    return fd;
+    CmdTask *agent = (CmdTask *)LE_GetUserData(task);
+    BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] Can not get agent");
+    OH_ListRemove(&agent->item);
+    OH_ListInit(&agent->item);
 }
 
 static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
@@ -48,33 +42,35 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
     if (buffer == NULL) {
         return;
     }
+    CmdTask *agent = (CmdTask *)LE_GetUserData(task);
+    BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] Can not get agent");
+
     // parse msg to exec
     CmdMessage *msg = (CmdMessage *)buffer;
-    if ((msg->type < 0) || (msg->type >= ACTION_MAX) || (msg->cmd[0] == '\0') || (msg->fifoName[0] == '\0')) {
-        BEGET_LOGE("[control_fd] Failed msg ");
+    if ((msg->type < 0) || (msg->type >= ACTION_MAX) || (msg->cmd[0] == '\0') || (msg->ptyName[0] == '\0')) {
+        BEGET_LOGE("[control_fd] Received msg is invaild");
         return;
     }
-    char readPath[PATH_MAX] = {0};
-    int reader = ReadFifoPath(msg->fifoName, true, msg->pid, readPath); // read
-    BEGET_ERROR_CHECK(reader > 0, return, "[control_fd] Failed to open fifo read, err=%d", errno);
 
-    char writePath[PATH_MAX] = {0};
-    int writer = ReadFifoPath(msg->fifoName, false, msg->pid, writePath); // write
-    BEGET_ERROR_CHECK(writer > 0, return, "[control_fd] Failed to open fifo write, err=%d", errno);
-
-    pid_t pid = fork();
-    if (pid == 0) {
-        (void)dup2(reader, STDIN_FILENO);
-        (void)dup2(writer, STDOUT_FILENO);
-        (void)dup2(writer, STDERR_FILENO); // Redirect fd to 0, 1, 2
-        (void)close(reader);
-        (void)close(writer);
+    agent->pid = fork();
+    if (agent->pid == 0) {
+        OpenConsole();
+        char *realPath = GetRealPath(msg->ptyName);
+        BEGET_ERROR_CHECK(realPath != NULL, return, "Failed get realpath, err=%d", errno);
+        char *strl = strstr(realPath, "/dev/pts");
+        BEGET_ERROR_CHECK(strl != NULL, return, "pty slave path %s is invaild", realPath);
+        int fd = open(realPath, O_RDWR);
+        free(realPath);
+        BEGET_ERROR_CHECK(fd >= 0, return, "Failed open %s, err=%d", realPath, errno);
+        (void)dup2(fd, STDIN_FILENO);
+        (void)dup2(fd, STDOUT_FILENO);
+        (void)dup2(fd, STDERR_FILENO); // Redirect fd to 0, 1, 2
+        (void)close(fd);
         g_controlFdFunc(msg->type, msg->cmd, NULL);
         exit(0);
-    } else if (pid < 0) {
+    } else if (agent->pid < 0) {
         BEGET_LOGE("[control_fd] Failed fork service");
     }
-    DestroyCmdFifo(reader, writer, readPath, writePath);
     return;
 }
 
@@ -102,18 +98,20 @@ static int CmdOnIncommingConntect(const LoopHandle loop, const TaskHandle server
     TaskHandle client = NULL;
     LE_StreamInfo info = {};
     info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_CONNECT;
-    info.baseInfo.close = NULL;
-    info.baseInfo.userDataSize = sizeof(CmdAgent);
+    info.baseInfo.close = OnClose;
+    info.baseInfo.userDataSize = sizeof(CmdTask);
     info.disConntectComplete = NULL;
     info.sendMessageComplete = NULL;
     info.recvMessage = CmdOnRecvMessage;
     int ret = LE_AcceptStreamClient(LE_GetDefaultLoop(), server, &client, &info);
     BEGET_ERROR_CHECK(ret == 0, return -1, "[control_fd] Failed accept stream")
-    CmdAgent *agent = (CmdAgent *)LE_GetUserData(client);
+    CmdTask *agent = (CmdTask *)LE_GetUserData(client);
     BEGET_ERROR_CHECK(agent != NULL, return -1, "[control_fd] Invalid agent");
     agent->task = client;
+    OH_ListInit(&agent->item);
     ret = SendMessage(LE_GetDefaultLoop(), agent->task, "connect success.");
     BEGET_ERROR_CHECK(ret == 0, return -1, "[control_fd] Failed send msg");
+    OH_ListAddTail(&g_cmdService.head, &agent->item);
     return 0;
 }
 
@@ -123,6 +121,7 @@ void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func)
         BEGET_LOGE("[control_fd] Invalid parameter");
         return;
     }
+    OH_ListInit(&g_cmdService.head);
     LE_StreamServerInfo info = {};
     info.baseInfo.flags = TASK_STREAM | TASK_SERVER | TASK_PIPE;
     info.server = (char *)socketPath;
@@ -134,4 +133,22 @@ void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func)
     info.recvMessage = NULL;
     g_controlFdFunc = func;
     (void)LE_CreateStreamServer(LE_GetDefaultLoop(), &g_cmdService.serverTask, &info);
+}
+
+static int ClientTraversalProc(ListNode *node, void *data)
+{
+    CmdTask *info = ListEntry(node, CmdTask, item);
+    int pid = *(int *)data;
+    return pid - info->pid;
+}
+
+void CmdServiceProcessDelClient(pid_t pid)
+{
+    ListNode *node = OH_ListFind(&g_cmdService.head, (void *)&pid, ClientTraversalProc);
+    if (node != NULL) {
+        CmdTask *agent = ListEntry(node, CmdTask, item);
+        OH_ListRemove(&agent->item);
+        OH_ListInit(&agent->item);
+        LE_CloseTask(LE_GetDefaultLoop(), agent->task);
+    }
 }
