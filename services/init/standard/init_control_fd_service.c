@@ -57,27 +57,12 @@ static void ProcessDumpServiceControlFd(uint16_t type, const char *serviceCmd)
 
 static void ProcessModuleMgrControlFd(uint16_t type, const char *serviceCmd)
 {
-#define MODULE_INSTALL_PREFIX    "install:"
-#define MODULE_UNINSTALL_PREFIX  "uninstall:"
-    int cmdLen;
-
     if ((type != ACTION_MODULEMGR) || (serviceCmd == NULL)) {
         return;
     }
+    INIT_LOGE("ProcessModuleMgrControlFd argc [%s] \n", serviceCmd);
     if (strcmp(serviceCmd, "list") == 0) {
         InitModuleMgrDump();
-        return;
-    }
-    cmdLen = strlen(MODULE_INSTALL_PREFIX);
-    if (strncmp(serviceCmd, MODULE_INSTALL_PREFIX, cmdLen) == 0) {
-        INIT_LOGI("Install %s now ...\n", serviceCmd + cmdLen);
-        InitModuleMgrInstall(serviceCmd + cmdLen);
-        return;
-    }
-    cmdLen = strlen(MODULE_UNINSTALL_PREFIX);
-    if (strncmp(serviceCmd, MODULE_UNINSTALL_PREFIX, cmdLen) == 0) {
-        INIT_LOGI("Uninstall %s now ...\n", serviceCmd + cmdLen);
-        InitModuleMgrUnInstall(serviceCmd + cmdLen);
         return;
     }
 }

@@ -92,18 +92,18 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
     ASSERT_EQ(cnt, 0);
 
     // Install one module
-    ret = ModuleMgrInstall(moduleMgr, "libbootchart", 0, NULL);
+    ret = ModuleMgrInstall(moduleMgr, "bootchart", 0, NULL);
     ASSERT_EQ(ret, 0);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 1);
 
     // Uninstall the module
-    ModuleMgrUninstall(moduleMgr, "libbootchart");
+    ModuleMgrUninstall(moduleMgr, "bootchart");
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 0);
 
     // Install two module
-    ret = ModuleMgrInstall(moduleMgr, "libbootchart", 0, NULL);
+    ret = ModuleMgrInstall(moduleMgr, "bootchart", 0, NULL);
     ASSERT_EQ(ret, 0);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 1);
@@ -113,7 +113,7 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
     ASSERT_EQ(cnt, 1);
 
     // Uninstall the module
-    ModuleMgrUninstall(moduleMgr, "libbootchart");
+    ModuleMgrUninstall(moduleMgr, "bootchart");
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 0);
     ModuleMgrUninstall(moduleMgr, "notexist");

@@ -366,10 +366,8 @@ void PrepareInitUnitTestEnv(void)
     PrepareInnerKitsCfg();
     PrepareModCfg();
     PrepareGroupTestCfg();
-    EnableInitLog(INIT_DEBUG);
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
-    PrepareCmdLineHasSn();
     // for dac
     std::string dacData = "ohos.servicectrl.   = system:servicectrl:0775 \n";
     dacData += "test.permission.       = root:root:0770\n";
@@ -377,11 +375,15 @@ void PrepareInitUnitTestEnv(void)
     dacData += "test.permission.write.=  root:root:0772\n";
     dacData += "test.permission.watcher. = root:root:0771\n";
     CreateTestFile(STARTUP_INIT_UT_PATH "/system/etc/param/ohos.para.dac", dacData.c_str());
-
     CreateTestFile(STARTUP_INIT_UT_PATH"/trigger_test.cfg", g_triggerData);
-    TestSetSelinuxOps();
 #endif
     InitParamService();
+
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+    PrepareCmdLineHasSn();
+    TestSetSelinuxOps();
+    LoadSpecialParam();
+#endif
 
     // read system parameters
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
@@ -408,6 +410,7 @@ int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
 
 static __attribute__((constructor(101))) void ParamTestStubInit(void)
 {
+    EnableInitLog(INIT_DEBUG);
     PARAM_LOGI("ParamTestStubInit");
     PrepareInitUnitTestEnv();
 }

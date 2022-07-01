@@ -19,33 +19,45 @@
 #include "begetctl.h"
 #include "control_fd.h"
 #include "init_utils.h"
+#include "init_param.h"
 #include "securec.h"
+#include "shell_utils.h"
 
 #define MODULE_CTL_CMD_ARGS 2
-static int main_cmd(BShellHandle shell, int argc, char **argv)
+static int32_t ModuleInstallCmd(BShellHandle shell, int32_t argc, char *argv[])
 {
-    char combinedArgs[MAX_BUFFER_LEN];
-
-    if (argc < MODULE_CTL_CMD_ARGS) {
+    if (argc != MODULE_CTL_CMD_ARGS) {
         BShellCmdHelp(shell, argc, argv);
         return 0;
     }
-    if (argc > MODULE_CTL_CMD_ARGS) {
-        (void)snprintf_s(combinedArgs, sizeof(combinedArgs),
-                sizeof(combinedArgs) - 1, "%s:%s", argv[1], argv[2]);
-        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_MODULEMGR, combinedArgs, "FIFO");
-    } else {
-        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_MODULEMGR, argv[1], "FIFO");
+    BSH_LOGV("ModuleInstallCmd %s %s \n", argv[0], argv[1]);
+    char combinedArgs[MAX_BUFFER_LEN];
+    int ret = sprintf_s(combinedArgs, sizeof(combinedArgs), "ohos.servicectrl.%s", argv[0]);
+    BSH_CHECK(ret > 0, return -1, "Invalid buffer");
+    combinedArgs[ret] = '\0';
+    SystemSetParameter(combinedArgs, argv[1]);
+    return 0;
+}
+
+static int ModuleDisplayCmd(BShellHandle shell, int argc, char **argv)
+{
+    if (argc < 1) {
+        BShellCmdHelp(shell, argc, argv);
+        return 0;
     }
+    CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_MODULEMGR, argv[0], "FIFO");
     return 0;
 }
 
 MODULE_CONSTRUCTOR(void)
 {
     const CmdInfo infos[] = {
-        {"modulectl", main_cmd, "dump all modules installed", "modulectl list", NULL},
-        {"modulectl", main_cmd, "install or uninstall specified module",
-                                "modulectl install|uninstall moduleName", NULL},
+        {"modulectl", ModuleDisplayCmd, "dump all modules installed",
+            "modulectl list", "modulectl list"},
+        {"modulectl", ModuleInstallCmd, "install specified module",
+            "modulectl install moduleName", "modulectl install"},
+        {"modulectl", ModuleInstallCmd, "uninstall specified module",
+            "modulectl uninstall moduleName", "modulectl uninstall"},
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
         BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);

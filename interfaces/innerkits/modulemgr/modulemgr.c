@@ -129,7 +129,7 @@ int ModuleMgrInstall(MODULE_MGR *moduleMgr, const char *moduleName,
                      int argc, const char *argv[])
 {
     MODULE_ITEM *module;
-
+    BEGET_LOGV("ModuleMgrInstall moduleName %s", moduleName);
     // Get module manager
     BEGET_CHECK(!(moduleMgr == NULL || moduleName == NULL), return -1);
     // Create module item
@@ -148,6 +148,7 @@ int ModuleMgrInstall(MODULE_MGR *moduleMgr, const char *moduleName,
     // Install
     module->handle = moduleInstall(module, argc, argv);
     if (module->handle == NULL) {
+        BEGET_LOGE("Failed to install module %s", moduleName);
         moduleDestroy((ListNode *)module);
         return -1;
     }
@@ -201,7 +202,12 @@ static void scanModules(MODULE_MGR *moduleMgr, const char *path)
         }
 
         file->d_name[end] = '\0';
-        ret = ModuleMgrInstall(moduleMgr, file->d_name, 0, NULL);
+        BEGET_LOGV("scanModules module %s", file->d_name);
+        if (strncmp(file->d_name, "lib", strlen("lib")) == 0) {
+            ret = ModuleMgrInstall(moduleMgr, file->d_name + strlen("lib"), 0, NULL);
+        } else {
+            ret = ModuleMgrInstall(moduleMgr, file->d_name, 0, NULL);
+        }
     }
 
     closedir(dir);
@@ -249,10 +255,10 @@ void ModuleMgrUninstall(MODULE_MGR *moduleMgr, const char *name)
         ListRemoveAll(&(moduleMgr->modules), moduleDestroy);
         return;
     }
-
+    BEGET_LOGV("ModuleMgrUninstall moduleName %s", name);
     // Find module by name
     module = (MODULE_ITEM *)ListFind(&(moduleMgr->modules), (void *)name, moduleCompare);
-    BEGET_CHECK(module != NULL, return);
+    BEGET_ERROR_CHECK(module != NULL, return, "Can not find module %s", name);
 
     // Remove from the list
     ListRemove((ListNode *)module);
