@@ -49,6 +49,7 @@ float ConvertMicrosecondToSecond(int x)
     return ((x / THOUSAND_UNIT_INT) / THOUSAND_UNIT_FLOAT);
 }
 
+#ifndef __LITEOS_M__
 static bool CheckDigit(const char *name)
 {
     size_t nameLen = strlen(name);
@@ -59,6 +60,7 @@ static bool CheckDigit(const char *name)
     }
     return true;
 }
+#endif
 
 int StringToUint(const char *name, unsigned int *value)
 {
@@ -88,6 +90,7 @@ uid_t DecodeUid(const char *name)
     }
     return p->pw_uid;
 #else
+    (void)name;
     return -1;
 #endif
 }
@@ -115,6 +118,7 @@ gid_t DecodeGid(const char *name)
     endgrent();
     return gid;
 #else
+    (void)name;
     return -1;
 #endif
 }
@@ -407,6 +411,8 @@ void CheckAndCreateDir(const char *fileName)
     }
     MakeDirRecursive(path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     free(path);
+#else
+    (void)fileName;
 #endif
 }
 
