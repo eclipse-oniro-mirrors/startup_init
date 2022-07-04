@@ -309,7 +309,6 @@ void EnterServiceSandbox(Service *service)
                 _exit(0x7f); // 0x7f: user specified
         }
     }
-    INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
 #ifndef STARTUP_INIT_TEST
     char *argv[] = { (char *)"/bin/sh", NULL };
     INIT_CHECK_ONLY_ELOG(execv(argv[0], argv) == 0,

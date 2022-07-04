@@ -81,7 +81,6 @@ int ServiceExec(const Service *service)
         INIT_ERROR_CHECK(setpriority(PRIO_PROCESS, 0, service->importance) == 0, _exit(0x7f),
             "setpriority failed for %s, importance = %d, err=%d", service->name, service->importance, errno);
     }
-    INIT_CHECK_ONLY_ELOG(unsetenv("UV_THREADPOOL_SIZE") == 0, "set UV_THREADPOOL_SIZE error : %d.", errno);
     OpenHidebug(service->name);
     // L2 Can not be reset env
     if (service->extraArgs.argv != NULL && service->extraArgs.count > 0) {
