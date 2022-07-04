@@ -222,8 +222,8 @@ static void HandlerFdHolder(int sock)
     } else {
         INIT_LOGE("Unexpected action: %s", action);
     }
-    FreeFds(fds);
     CloseFds(fds, fdCount);
+    FreeFds(fds);
     FreeStringVector(msg, msgCount);
 }
 
