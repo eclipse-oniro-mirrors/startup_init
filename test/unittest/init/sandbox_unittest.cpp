@@ -108,7 +108,7 @@ cJSON *MakeSandboxJson(const char *sandboxFileName, const int MODE)
 
     // assemble mount-bind-paths items
     // Append items to mount-bind-paths
-    for (int i = 0; i < (sizeof(APP_PATHS) / sizeof(char *)); i++) {
+    for (size_t i = 0; i < (sizeof(APP_PATHS) / sizeof(char *)); i++) {
         cJSON_AddItemToArray(mJsonMtBdPth, mJsonMtBdPth_Itm = cJSON_CreateObject());
         int MOUNT_FLAG_COUNT = 2;
         if (MODE != NULL_MOUNT_ITEM) {

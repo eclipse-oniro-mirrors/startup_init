@@ -111,7 +111,7 @@ typedef struct {
 
 typedef struct {
     BaseTask base;
-    int events;
+    uint32_t events;
     ProcessWatchEvent processEvent;
 } WatcherTask;
 

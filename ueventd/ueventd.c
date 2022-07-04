@@ -142,7 +142,7 @@ static const DYNAMIC_DEVICE_NODE dynamicDevices[] = {
 static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
 {
     mode_t mask;
-    int idx = 0;
+    size_t idx = 0;
 
     if (uevent->deviceName == NULL) {
         return;
