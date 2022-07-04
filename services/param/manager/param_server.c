@@ -200,12 +200,11 @@ int LoadDefaultParams(const char *fileName, uint32_t mode)
 {
     PARAM_CHECK(fileName != NULL, return -1, "Invalid filename for load");
     PARAM_LOGI("load default parameters %s.", fileName);
-    int ret = 0;
     struct stat st;
     if ((stat(fileName, &st) == 0) && !S_ISDIR(st.st_mode)) {
-        ret = ProcessParamFile(fileName, &mode);
+        (void)ProcessParamFile(fileName, &mode);
     } else {
-        ret = ReadFileInDir(fileName, ".para", ProcessParamFile, &mode);
+        (void)ReadFileInDir(fileName, ".para", ProcessParamFile, &mode);
     }
 
     // load security label
