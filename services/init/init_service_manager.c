@@ -321,6 +321,8 @@ static int GetUid(cJSON *json, uid_t *uid)
         *uid = DecodeUid(str);
     } else if (cJSON_IsNumber(json)) {
         *uid = (uid_t)cJSON_GetNumberValue(json);
+    } else {
+        *uid = (uid_t)(-1);
     }
     INIT_CHECK_RETURN_VALUE(*uid != (uid_t)(-1), SERVICE_FAILURE);
     return SERVICE_SUCCESS;
@@ -967,12 +969,12 @@ void ParseAllServices(const cJSON *fileRoot)
         cJSON *curItem = cJSON_GetArrayItem(serviceArr, i);
         int ret = GetStringItem(curItem, "name", serviceName, MAX_SERVICE_NAME);
         if (ret != 0) {
-            INIT_LOGE("Failed to get service name %s", serviceName);
+            INIT_LOGE("Failed to get service name");
             continue;
         }
         Service *service = GetServiceByName(serviceName);
         if (service != NULL) {
-            INIT_LOGE("Service name %s has been exist", serviceName);
+            INIT_LOGE("Service \' %s \' already exist", serviceName);
             continue;
         }
         service = AddService(serviceName);
