@@ -228,7 +228,6 @@ void SystemPrepare(void)
     // Only ohos normal system support
     // two stages of init.
     // If we are in updater mode, only one stage of init,
-    INIT_LOGI("DISABLE_INIT_TWO_STAGES not defined");
     if (InUpdaterMode() == 0) {
         StartInitSecondStage();
     }

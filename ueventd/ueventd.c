@@ -166,37 +166,44 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
     }
 }
 
-static void HandleUeventRequired(const struct Uevent *uevent, char **devices, int num)
+static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **devices, int num)
 {
     const char *deviceName;
+    for (int i = 0; i < num; i++) {
+        if (uevent->partitionName == NULL) {
+            deviceName = strstr(devices[i], "/dev/block");
+            if (deviceName == NULL) {
+                INIT_LOGI("device %s not match \"/dev/block\"", devices[i]);
+                continue;
+            }
+            deviceName += strlen("/dev/block");
+            if (strstr(uevent->syspath, deviceName) == NULL) {
+                continue;
+            }
+            INIT_LOGI("%s match with required partition %s success, now handle it", uevent->syspath, deviceName);
+            HandleBlockDeviceEvent(uevent);
+            return;
+        } else if (strstr(devices[i], uevent->partitionName) != NULL) {
+            INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
+            HandleBlockDeviceEvent(uevent);
+            return;
+        }
+    }
+}
+
+static void HandleUeventRequired(const struct Uevent *uevent, char **devices, int num)
+{
     INIT_ERROR_CHECK(devices != NULL && num > 0, return, "Fault parameters");
     if (uevent->action == ACTION_ADD) {
         ChangeSysAttributePermissions(uevent->syspath);
     }
-
     SUBSYSTEMTYPE type = GetSubsystemType(uevent->subsystem);
     if (type == SUBSYSTEM_BLOCK) {
-        for (int i = 0; i < num; i++) {
-            if (uevent->partitionName == NULL) {
-                INIT_LOGI("Match with %s for %s", devices[i], uevent->syspath);
-                deviceName = strstr(devices[i], "/dev/block");
-                INIT_INFO_CHECK(deviceName != NULL, continue,
-                    "device %s not match \"/dev/block\".", devices[i]);
-                deviceName += sizeof("/dev/block") - 1;
-                INIT_INFO_CHECK(strstr(uevent->syspath, deviceName) != NULL, continue,
-                    "uevent->syspath %s not match deviceName %s", uevent->syspath, deviceName);
-                HandleBlockDeviceEvent(uevent);
-                break;
-            } else if (strstr(devices[i], uevent->partitionName) != NULL) {
-                INIT_LOGI("Handle block device partitionName %s", uevent->partitionName);
-                HandleBlockDeviceEvent(uevent);
-                break;
-            }
-        }
-        return;
-    }
-    if ((type == SUBSYSTEM_OTHERS) && (num > 0)) {
+        HandleRequiredBlockDeviceNodes(uevent, devices, num);
+    } else if (type == SUBSYSTEM_OTHERS) {
         HandleRequiredDynamicDeviceNodes(uevent);
+    } else {
+        return;
     }
 }
 
@@ -281,7 +288,6 @@ void ProcessUevent(int sockFd, char **devices, int num)
     }
 }
 
-static int g_triggerDone = 0;
 static void DoTrigger(const char *ueventPath, int sockFd, char **devices, int num)
 {
     if (ueventPath == NULL || ueventPath[0] == '\0') {
@@ -346,13 +352,9 @@ void RetriggerUevent(int sockFd, char **devices, int num)
     char *buffer = ReadFileData("/proc/cmdline");
     int ret = GetProcCmdlineValue("default_boot_device", buffer, bootDevice, CMDLINE_VALUE_LEN_MAX);
     INIT_CHECK_ONLY_ELOG(ret == 0, "Failed get default_boot_device value from cmdline");
-
-    if (!g_triggerDone) {
-        Trigger("/sys/block", sockFd, devices, num);
-        Trigger("/sys/class", sockFd, devices, num);
-        Trigger("/sys/devices", sockFd, devices, num);
-        g_triggerDone = 1;
-    }
+    Trigger("/sys/block", sockFd, devices, num);
+    Trigger("/sys/class", sockFd, devices, num);
+    Trigger("/sys/devices", sockFd, devices, num);
     if (buffer != NULL) {
         free(buffer);
     }
