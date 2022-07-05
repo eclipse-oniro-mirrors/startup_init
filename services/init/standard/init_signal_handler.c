@@ -15,6 +15,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 
+#include "control_fd.h"
 #include "init_adapter.h"
 #include "init_log.h"
 #include "init_param.h"
@@ -41,6 +42,7 @@ static void ProcessSignal(const struct signalfd_siginfo *siginfo)
                 if (WIFEXITED(procStat)) {
                     INIT_LOGE("Child process %d exit with code : %d", sigPID, WEXITSTATUS(procStat));
                 }
+                CmdServiceProcessDelClient(sigPID);
                 Service* service = GetServiceByPid(sigPID);
                 INIT_LOGI("SigHandler, SIGCHLD received, Service:%s pid:%d uid:%d status:%d.",
                     service == NULL ? "Unknown" : service->name,
