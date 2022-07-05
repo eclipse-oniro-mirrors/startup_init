@@ -183,7 +183,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/services/param/linux:param_client",
       "//base/startup/init_lite/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/cJSON:cjson_static",
+      "//third_party/cJSON:cjson",
       "//third_party/mbedtls:mbedtls_shared",
     ]
     external_deps = [
