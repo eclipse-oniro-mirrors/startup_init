@@ -18,6 +18,9 @@
 
 #include <stdint.h>
 #include <fcntl.h>
+#include <limits.h>
+
+#include "list.h"
 #include "loop_event.h"
 
 #ifdef __cplusplus
@@ -29,18 +32,27 @@ extern "C" {
 #define INIT_CONTROL_FD_SOCKET_PATH "/dev/unix/socket/init_control_fd"
 
 #define CONTROL_FD_FIFO_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
-#define FIFO_BUF_SIZE 4096
-#define FIFO_PATH_SIZE 128
+#define PTY_BUF_SIZE 4096
+#define PTY_PATH_SIZE 128
 
 typedef struct CmdService_ {
     TaskHandle serverTask;
+    struct ListNode head;
 } CmdService;
 
 typedef struct CmdAgent_ {
     TaskHandle task;
     WatcherHandle input; // watch stdin
-    WatcherHandle reader; // watch read pipe
+    WatcherHandle reader; // watch read pty
+    int ptyFd;
 } CmdAgent;
+
+typedef struct CmdTask_ {
+    TaskHandle task;
+    struct ListNode item;
+    int ptyFd;
+    pid_t pid;
+} CmdTask;
 
 typedef void (* CallbackControlFdProcess)(uint16_t type, const char *serviceCmd, const void *context);
 
@@ -55,14 +67,13 @@ typedef enum {
 typedef struct {
     uint16_t msgSize;
     uint16_t type;
-    pid_t pid;
-    char fifoName[FIFO_PATH_SIZE];
+    char ptyName[PTY_PATH_SIZE];
     char cmd[0];
 } CmdMessage;
 
 void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func);
-void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd, const char *fifoName);
-void DestroyCmdFifo(int rfd, int wfd, const char *readPath, const char *writePath);
+void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd);
+void CmdServiceProcessDelClient(pid_t pid);
 
 #ifdef __cplusplus
 #if __cplusplus

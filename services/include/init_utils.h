@@ -75,6 +75,7 @@ int StringReplaceChr(char *strl, char oldChr, char newChr);
 int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue);
 const InitArgInfo *GetServieStatusMap(int *size);
 uint32_t GetRandom(void);
+void OpenConsole(void);
 #ifdef __cplusplus
 #if __cplusplus
 }

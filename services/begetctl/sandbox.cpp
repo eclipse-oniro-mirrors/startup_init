@@ -128,7 +128,7 @@ static void RunCmd(const std::string &serviceName, const std::string &namespaceN
         EnterExec(processName);
     } else if (namespaceName.empty() && processName.empty() && !serviceName.empty()) {
         std::cout << "enter sandbox service name " << serviceName << std::endl;
-        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_SANDBOX, serviceName.c_str(), "FIFO");
+        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_SANDBOX, serviceName.c_str());
     } else {
         Usage();
     }

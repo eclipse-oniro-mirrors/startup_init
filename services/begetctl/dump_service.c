@@ -29,7 +29,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
     }
     if (strcmp(argv[0], "dump_service") == 0) {
         printf("dump service info \n");
-        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, argv[1], "FIFO");
+        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, argv[1]);
     } else {
         BShellCmdHelp(shell, argc, argv);
     }
