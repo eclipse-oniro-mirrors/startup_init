@@ -194,7 +194,7 @@ public:
         EXPECT_EQ(GetNextBuffer((StreamTask *)client, next), nullptr);
         ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
         PARAM_CHECK(watcher != nullptr, return, "Failed to get watcher");
-        ListInit(&watcher->triggerHead);
+        OH_ListInit(&watcher->triggerHead);
         OnClose(client);
         LE_FreeBuffer(LE_GetDefaultLoop(), (TaskHandle)client, nullptr);
         return;

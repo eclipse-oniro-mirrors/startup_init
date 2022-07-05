@@ -68,7 +68,7 @@ static LE_STATUS CreateLoop_(EventLoop **loop, uint32_t maxevents, uint32_t time
         TaskNodeFree,
         128
     };
-    return HashMapCreate(&(*loop)->taskMap, &info);
+    return OH_HashMapCreate(&(*loop)->taskMap, &info);
 }
 
 LE_STATUS CloseLoop(EventLoop *loop)
@@ -76,7 +76,7 @@ LE_STATUS CloseLoop(EventLoop *loop)
     if (!loop->stop) {
         return LE_SUCCESS;
     }
-    HashMapDestory(loop->taskMap);
+    OH_HashMapDestory(loop->taskMap);
     if (loop->close) {
         loop->close(loop);
     }
@@ -100,7 +100,7 @@ LE_STATUS ProcessEvent(const EventLoop *loop, int fd, uint32_t oper)
 LE_STATUS AddTask(EventLoop *loop, BaseTask *task)
 {
     LoopMutexLock(&loop->mutex);
-    HashMapAdd(loop->taskMap, &task->hashNode);
+    OH_HashMapAdd(loop->taskMap, &task->hashNode);
     LoopMutexUnlock(&loop->mutex);
     return LE_SUCCESS;
 }
@@ -110,7 +110,7 @@ BaseTask *GetTaskByFd(EventLoop *loop, int fd)
     BaseTask *task = NULL;
     LoopMutexLock(&loop->mutex);
     TaskId id = {0, {fd}};
-    HashNode *node = HashMapGet(loop->taskMap, &id);
+    HashNode *node = OH_HashMapGet(loop->taskMap, &id);
     if (node != NULL) {
         task = HASHMAP_ENTRY(node, BaseTask, hashNode);
     }
@@ -123,7 +123,7 @@ void DelTask(EventLoop *loop, BaseTask *task)
     loop->delEvent(loop, task->taskId.fd,
         Event_Read | Event_Write | Event_Error | Event_Free | Event_Timeout | Event_Signal);
     LoopMutexLock(&loop->mutex);
-    HashMapRemove(loop->taskMap, (TaskId *)task);
+    OH_HashMapRemove(loop->taskMap, (TaskId *)task);
     LoopMutexUnlock(&loop->mutex);
     return;
 }

@@ -124,7 +124,7 @@ INIT_LOCAL_API void CloseWorkSpace(WorkSpace *workSpace)
         free(workSpace);
         return;
     }
-    ListRemove(&workSpace->node);
+    OH_ListRemove(&workSpace->node);
     PARAM_CHECK(workSpace->area != NULL, return, "The workspace area is null");
 #ifdef WORKSPACE_AREA_NEED_MUTEX
     ParamRWMutexDelete(&workSpace->rwlock);

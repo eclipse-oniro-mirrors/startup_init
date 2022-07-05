@@ -48,7 +48,7 @@ public:
 };
 HWTEST_F(ServiceUnitTest, TestDestoryHashMap, TestSize.Level1)
 {
-    HashMapDestory(GetInitWorkspace()->hashMap[0]);
+    OH_HashMapDestory(GetInitWorkspace()->hashMap[0]);
 }
 HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
 {

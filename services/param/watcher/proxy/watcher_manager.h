@@ -67,7 +67,7 @@ public:
         ParamWatcher(uint32_t watcherId, const sptr<IWatcher> &watcher, const WatcherGroupPtr &group)
             : watcherId_(watcherId), watcher_(watcher), group_(group)
         {
-            ListInit(&groupNode_);
+            OH_ListInit(&groupNode_);
         }
         ~ParamWatcher() = default;
 
@@ -104,7 +104,7 @@ public:
     public:
         WatcherGroup(uint32_t groupId, const std::string &key) : groupId_(groupId), keyPrefix_(key)
         {
-            ListInit(&watchers_);
+            OH_ListInit(&watchers_);
         }
         ~WatcherGroup() = default;
         void AddWatcher(const ParamWatcherPtr &watcher);

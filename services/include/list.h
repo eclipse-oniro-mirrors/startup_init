@@ -43,7 +43,7 @@ extern "C" {
  *       int value;
  *   } TEST_LIST_ITEM;
  * 
- * 2. Define a list and init list by ListAddTail
+ * 2. Define a list and init list by OH_ListAddTail
  *   ListNode testList;
  *   c(&testList);
  * 
@@ -52,7 +52,7 @@ extern "C" {
  *   item.value = 0;
  * 
  * 4. Add list item to list
- *   ListAddTail(&testList, (ListNode *)(&item));
+ *   OH_ListAddTail(&testList, (ListNode *)(&item));
  * 
  * 5. Advanced usage: add with order
  *   // Ordering compare function
@@ -62,7 +62,7 @@ extern "C" {
  *       TEST_LIST_ITEM *right = (TEST_LIST_ITEM *)newNode;
  *       return left->value - right->value;
  *   }
- *   ListAddWithOrder(&testList, (ListNode *)(&item))
+ *   OH_ListAddWithOrder(&testList, (ListNode *)(&item))
  */
 
 /**
@@ -85,7 +85,7 @@ typedef struct ListNode {
  * @param head list head, make sure head is valid pointer
  * @return None
  */
-void ListInit(struct ListNode *list);
+void OH_ListInit(struct ListNode *list);
 
 /**
  * @brief Add a node to the end of the list
@@ -94,7 +94,7 @@ void ListInit(struct ListNode *list);
  * @param item new node to be added
  * @return None
  */
-void ListAddTail(struct ListNode *list, struct ListNode *item);
+void OH_ListAddTail(struct ListNode *list, struct ListNode *item);
 
 /**
  * @brief Remove a node from the list
@@ -103,7 +103,7 @@ void ListAddTail(struct ListNode *list, struct ListNode *item);
  *             This function does not free any memory within item.
  * @return None
  */
-void ListRemove(struct ListNode *item);
+void OH_ListRemove(struct ListNode *item);
 
 /**
  * @brief ListNode comparison function prototype
@@ -128,7 +128,7 @@ typedef int (*ListCompareProc)(ListNode *node, ListNode *newNode);
  *      respectively less than, equal to, or greater than the second.
  * @return None
  */
-void ListAddWithOrder(struct ListNode *head, struct ListNode *item, ListCompareProc compareProc);
+void OH_ListAddWithOrder(struct ListNode *head, struct ListNode *item, ListCompareProc compareProc);
 
 /**
  * @brief ListNode traversing and find function prototype
@@ -136,7 +136,7 @@ void ListAddWithOrder(struct ListNode *head, struct ListNode *item, ListCompareP
  * @param node ListNode to be compared.
  * @param data value for traversing
  * @return
- *     return 0 if node value equals data for ListFind
+ *     return 0 if node value equals data for OH_ListFind
  */
 typedef int (*ListTraversalProc)(ListNode *node, void *data);
 
@@ -148,7 +148,7 @@ typedef int (*ListTraversalProc)(ListNode *node, void *data);
  * @param compareProc comparing function, return 0 if matched.
  * @return the found node; return NULL if none is found.
  */
-ListNode *ListFind(const ListNode *head, void *data, ListTraversalProc compareProc);
+ListNode *OH_ListFind(const ListNode *head, void *data, ListTraversalProc compareProc);
 
 /* Traversing from end to start */
 #define TRAVERSE_REVERSE_ORDER   0x1
@@ -169,7 +169,7 @@ ListNode *ListFind(const ListNode *head, void *data, ListTraversalProc comparePr
  * @return return -1 for invalid input arguments.
  *         when TRAVERSE_STOP_WHEN_ERROR is specified, it will return errors from traversalProc
  */
-int ListTraversal(ListNode *head, void *data, ListTraversalProc traversalProc, int flags);
+int OH_ListTraversal(ListNode *head, void *data, ListTraversalProc traversalProc, int flags);
 
 /**
  * @brief ListNode destroy function prototype
@@ -186,7 +186,7 @@ typedef void (*ListDestroyProc)(ListNode *node);
  * @param destroyProc destroy function; if NULL, it will free each node by default.
  * @return None
  */
-void ListRemoveAll(ListNode *head, ListDestroyProc destroyProc);
+void OH_ListRemoveAll(ListNode *head, ListDestroyProc destroyProc);
 
 /**
  * @brief Get list count
@@ -194,7 +194,7 @@ void ListRemoveAll(ListNode *head, ListDestroyProc destroyProc);
  * @param head list head, make sure head is valid pointer.
  * @return the count of nodes in the list; return 0 if error
  */
-int ListGetCnt(const ListNode *head);
+int OH_ListGetCnt(const ListNode *head);
 
 #ifdef __cplusplus
 #if __cplusplus

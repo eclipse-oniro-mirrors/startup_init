@@ -45,7 +45,7 @@ struct MountFlags {
     unsigned long flags;
 };
 
-unsigned int ConvertFlags(char *flagBuffer)
+static unsigned int ConvertFlags(char *flagBuffer)
 {
     static struct FsManagerFlags fsFlags[] = {
         {"check", FS_MANAGER_CHECK},

@@ -173,7 +173,7 @@ void WatcherManager::AddParamWatcher(const std::string &keyPrefix, WatcherGroupP
     std::lock_guard<std::mutex> lock(watcherMutex_);
     groupMap_[keyPrefix] = groupId;
     watchers_[watcher->GetWatcherId()] = watcher;
-    ListAddTail(group->GetWatchers(), watcher->GetGroupNode());
+    OH_ListAddTail(group->GetWatchers(), watcher->GetGroupNode());
 
     if (watcherGroups_.find(groupId) != watcherGroups_.end()) {
         return;
@@ -184,8 +184,8 @@ void WatcherManager::AddParamWatcher(const std::string &keyPrefix, WatcherGroupP
 void WatcherManager::DelParamWatcher(ParamWatcherPtr watcher)
 {
     std::lock_guard<std::mutex> lock(watcherMutex_);
-    ListRemove(watcher->GetGroupNode());
-    ListInit(watcher->GetGroupNode());
+    OH_ListRemove(watcher->GetGroupNode());
+    OH_ListInit(watcher->GetGroupNode());
     watchers_.erase(watcher->GetWatcherId());
     WATCHER_LOGV("DelParamWatcher watcherId %u", watcher->GetWatcherId());
 }

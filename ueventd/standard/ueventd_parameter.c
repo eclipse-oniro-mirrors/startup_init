@@ -54,8 +54,8 @@ static struct DeviceUdevConf *GetFristParameter(DeviceParameterCtrl *parameterCt
     pthread_mutex_lock(&(parameterCtrl->parameterLock));
     if (!ListEmpty(parameterCtrl->parameterList)) {
         conf = ListEntry(parameterCtrl->parameterList.next, struct DeviceUdevConf, paramNode);
-        ListRemove(&conf->paramNode);
-        ListInit(&conf->paramNode);
+        OH_ListRemove(&conf->paramNode);
+        OH_ListInit(&conf->paramNode);
     }
     pthread_mutex_unlock(&(parameterCtrl->parameterLock));
     return conf;
@@ -93,7 +93,7 @@ static void *ThreadRun(void *data)
         if (SystemSetParameter(config->parameter, paramValue) != 0) {
             INIT_LOGE("[uevent] SystemSetParameter %s failed", config->parameter);
             pthread_mutex_lock(&(parameterCtrl->parameterLock));
-            ListAddTail(&parameterCtrl->parameterList, &config->paramNode);
+            OH_ListAddTail(&parameterCtrl->parameterList, &config->paramNode);
             pthread_mutex_unlock(&(parameterCtrl->parameterLock));
             parameterCtrl->empty = 1;
         }
@@ -105,7 +105,7 @@ static void AddParameter(DeviceParameterCtrl *parameterCtrl, struct DeviceUdevCo
 {
     pthread_mutex_lock(&(parameterCtrl->parameterLock));
     if (ListEmpty(config->paramNode)) {
-        ListAddTail(&parameterCtrl->parameterList, &config->paramNode);
+        OH_ListAddTail(&parameterCtrl->parameterList, &config->paramNode);
     }
     pthread_mutex_unlock(&(parameterCtrl->parameterLock));
     if (parameterCtrl->threadId == 0) {

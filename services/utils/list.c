@@ -27,7 +27,7 @@
  * @param head list head, make sure head is valid pointer
  * @return None
  */
-void ListInit(struct ListNode *node)
+void OH_ListInit(struct ListNode *node)
 {
     if (node == NULL) {
         return;
@@ -43,7 +43,7 @@ void ListInit(struct ListNode *node)
  * @param item new node to be added
  * @return None
  */
-void ListAddTail(struct ListNode *head, struct ListNode *item)
+void OH_ListAddTail(struct ListNode *head, struct ListNode *item)
 {
     if (head == NULL || item == NULL) {
         return;
@@ -61,7 +61,7 @@ void ListAddTail(struct ListNode *head, struct ListNode *item)
  *             This function does not free any memory within item.
  * @return None
  */
-void ListRemove(struct ListNode *item)
+void OH_ListRemove(struct ListNode *item)
 {
     if (item == NULL) {
         return;
@@ -81,7 +81,7 @@ void ListRemove(struct ListNode *item)
  *      respectively less than, equal to, or greater than the second.
  * @return None
  */
-void ListAddWithOrder(struct ListNode *head, struct ListNode *item, ListCompareProc compareProc)
+void OH_ListAddWithOrder(struct ListNode *head, struct ListNode *item, ListCompareProc compareProc)
 {
     ListNode *match;
     int ret;
@@ -117,7 +117,7 @@ void ListAddWithOrder(struct ListNode *head, struct ListNode *item, ListCompareP
  * @param compareProc comparing function, return 0 if matched.
  * @return the found node; return NULL if none is found.
  */
-ListNode *ListFind(const ListNode *head, void *data, ListTraversalProc compareProc)
+ListNode *OH_ListFind(const ListNode *head, void *data, ListTraversalProc compareProc)
 {
     ListNode *match;
     if ((head == NULL) || (compareProc == NULL)) {
@@ -152,7 +152,7 @@ ListNode *ListFind(const ListNode *head, void *data, ListTraversalProc comparePr
  * @return return -1 for invalid input arguments.
  *         when TRAVERSE_STOP_WHEN_ERROR is specified, it will return errors from traversalProc
  */
-int ListTraversal(ListNode *head, void *data, ListTraversalProc traversalProc, int flags)
+int OH_ListTraversal(ListNode *head, void *data, ListTraversalProc traversalProc, int flags)
 {
     int ret;
     ListNode *match;
@@ -203,14 +203,14 @@ static int listDestroyTraversal(ListNode *node, void *data)
  * @param destroyProc destroy function; if NULL, it will free each node by default.
  * @return None
  */
-void ListRemoveAll(ListNode *head, ListDestroyProc destroyProc)
+void OH_ListRemoveAll(ListNode *head, ListDestroyProc destroyProc)
 {
     if (head == NULL) {
         return;
     }
 
-    ListTraversal(head, (void *)destroyProc, listDestroyTraversal, 0);
-    ListInit(head);
+    OH_ListTraversal(head, (void *)destroyProc, listDestroyTraversal, 0);
+    OH_ListInit(head);
 }
 
 /**
@@ -219,7 +219,7 @@ void ListRemoveAll(ListNode *head, ListDestroyProc destroyProc)
  * @param head list head, make sure head is valid pointer.
  * @return the count of nodes in the list; return 0 if error
  */
-int ListGetCnt(const ListNode *head)
+int OH_ListGetCnt(const ListNode *head)
 {
     int cnt;
     ListNode *node;

@@ -470,7 +470,7 @@ public:
     {
         RegisterBootStateChange(BootStateChange);
         (void)AddCompleteJob("param:ohos.servicectrl.display", "ohos.servicectrl.display=*", "display system");
-        HashMapDestory(GetTriggerWorkSpace()->hashMap);
+        OH_HashMapDestory(GetTriggerWorkSpace()->hashMap);
         return 0;
     }
 };

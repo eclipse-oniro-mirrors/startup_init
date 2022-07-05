@@ -84,7 +84,7 @@ LE_STATUS LE_CreateAsyncTask(const LoopHandle loopHandle,
     task->stream.base.handleEvent = HandleAsyncEvent_;
     task->stream.base.innerClose = HandleAsyncTaskClose_;
 
-    ListInit(&task->stream.buffHead);
+    OH_ListInit(&task->stream.buffHead);
     LoopMutexInit(&task->stream.mutex);
     task->processAsyncEvent = processAsyncEvent;
     EventLoop *loop = (EventLoop *)loopHandle;

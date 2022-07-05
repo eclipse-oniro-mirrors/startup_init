@@ -34,7 +34,7 @@ INIT_LOCAL_API WorkSpace *GetWorkSpace(const char *name)
 #endif
     WorkSpace *space = NULL;
     WORKSPACE_RD_LOCK(*paramSpace);
-    HashNode *node = HashMapGet(paramSpace->workSpaceHashHandle, (const void *)tmpName);
+    HashNode *node = OH_HashMapGet(paramSpace->workSpaceHashHandle, (const void *)tmpName);
     if (node != NULL) {
         space = HASHMAP_ENTRY(node, WorkSpace, hashNode);
     }
@@ -63,7 +63,7 @@ INIT_LOCAL_API ParamTrieNode *GetTrieNodeByHandle(ParamHandle handle)
     int hashCode = ((handle >> 24) & 0x000000ff);  // 24 left shift
     uint32_t index = handle & 0x00ffffff;
     WORKSPACE_RD_LOCK(*paramSpace);
-    HashNode *node = HashMapFind(paramSpace->workSpaceHashHandle, hashCode, (const void *)&index, CompareIndex);
+    HashNode *node = OH_HashMapFind(paramSpace->workSpaceHashHandle, hashCode, (const void *)&index, CompareIndex);
     if (node == NULL) {
         WORKSPACE_RW_UNLOCK(*paramSpace);
         PARAM_LOGV("Failed to get workspace for 0x%x index %d hashCode %d", handle, index, hashCode);
