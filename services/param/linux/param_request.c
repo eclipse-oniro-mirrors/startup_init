@@ -163,7 +163,7 @@ int SystemSetParameter(const char *name, const char *value)
     }
     fd = g_clientFd;
     pthread_mutex_unlock(&g_clientMutex);
-    PARAM_CHECK(fd > 0, return -1, "Failed to connect server for set %s", name);
+    PARAM_CHECK(fd >= 0, return -1, "Failed to connect server for set %s", name);
     ret = StartRequest(fd, request, DEFAULT_PARAM_SET_TIMEOUT);
     free(request);
     PARAM_LOGI("SystemSetParameter name %s %d", name, ret);
@@ -212,7 +212,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     timeout = 1;
 #endif
     int fd = GetClientSocket(timeout);
-    PARAM_CHECK(fd > 0, return -1, "Failed to connect server for wait %s", name);
+    PARAM_CHECK(fd >= 0, return -1, "Failed to connect server for wait %s", name);
     ret = StartRequest(fd, request, timeout);
     close(fd);
     free(request);
