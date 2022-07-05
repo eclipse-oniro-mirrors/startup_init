@@ -15,8 +15,8 @@ base_sources = [ "init_log.c" ]
 config("exported_header_files") {
   visibility = [ ":*" ]
   include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/log",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/services/log",
   ]
 }
 

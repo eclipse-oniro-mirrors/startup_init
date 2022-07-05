@@ -1,4 +1,4 @@
-# init\_lite<a name="EN-US_TOPIC_0000001129033057"></a>
+# init<a name="EN-US_TOPIC_0000001129033057"></a>
 
 -   [Introduction](#section469617221261)
 -   [Directory Structure](#section15884114210197)
@@ -8,27 +8,27 @@
 
 ## Introduction<a name="section469617221261"></a>
 
-The init\_lite module starts system service processes from the time the kernel loads the first user-space process to the time the first application is started. In addition to loading key system processes, the module needs to configure their permissions during the startup and keep the specified process alive after sub-processes are started. If a process exits abnormally, the module needs to restart it, and to perform system reset for a special process.
+The init module starts system service processes from the time the kernel loads the first user-space process to the time the first application is started. In addition to loading key system processes, the module needs to configure their permissions during the startup and keep the specified process alive after sub-processes are started. If a process exits abnormally, the module needs to restart it, and to perform system reset for a special process.
 
 ## Directory Structure<a name="section15884114210197"></a>
 
 ```
-base/startup/init_lite/             # init_lite module
+base/startup/init/             # init module
 ├── LICENSE
 └── services
-    ├── include                  # Header files for the init_lite module
-    ├── src                      # Source files for the init_lite module
-    └── test                     # Source files of the test cases for the init_lite module
+    ├── include                  # Header files for the init module
+    ├── src                      # Source files for the init module
+    └── test                     # Source files of the test cases for the init module
         └── unittest
 vendor
 └──huawei
         └──camera
-                └──init_configs  # init_lite configuration files (in JSON format, and deployed in /etc/init.cfg after image burning)
+                └──init_configs  # init configuration files (in JSON format, and deployed in /etc/init.cfg after image burning)
 ```
 
 ## Constraints<a name="section12212842173518"></a>
 
-Currently, the init\_lite module applies only to small-system devices \(reference memory ≥ 1 MB\), for example, Hi3516D V300 and Hi3518E V300.
+Currently, the init module applies only to small-system devices \(reference memory ≥ 1 MB\), for example, Hi3516D V300 and Hi3518E V300.
 
 ## Usage<a name="section837771600"></a>
 

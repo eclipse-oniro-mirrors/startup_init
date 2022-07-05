@@ -14,7 +14,7 @@ init组件负责处理从内核加载第一个用户态进程开始，到第一�
 ## 目录<a name="section15884114210197"></a>
 
 ```
-base/startup/init_lite/          # init组件
+base/startup/init/          # init组件
 ├── device_info
 ├── initsync
 ├── interfaces                   # init提供的对外接口
@@ -84,7 +84,7 @@ init将系统启动分为三个阶段：
 
 每个沙盒环境的分为只读资源和可写资源，只读资源由init在初始化时创建好，通过mount bind把只读文件指向全局FS中对应的目录，然后启动相应沙盒进程时通过SetNamespace跳入到沙盒环境运行。对于可写目录，通过对全局/data目录进行划分，由存储服务进行统一管理分配，通过mnt namespace完成可写目录的沙盒化。
 
-init的关键配置文件init.cfg位于代码仓库base/startup/init_lite/service/etc目录，部署在/etc/下，采用json格式，文件大小目前限制在100KB以内。
+init的关键配置文件init.cfg位于代码仓库base/startup/init/service/etc目录，部署在/etc/下，采用json格式，文件大小目前限制在100KB以内。
 
 配置文件格式和内容说明如下所示：
 

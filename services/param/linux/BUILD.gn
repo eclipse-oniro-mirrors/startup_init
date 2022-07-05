@@ -10,29 +10,29 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//base/startup/init_lite/begetd.gni")
+import("//base/startup/init/begetd.gni")
 import("//build/ohos.gni")
 
 config("exported_header_files") {
   visibility = [ ":*" ]
   include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/interfaces/service/include/param",
-    "//base/startup/init_lite/interfaces/service/param/include",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/service/include/param",
+    "//base/startup/init/interfaces/service/param/include",
   ]
 }
 
 param_include_dirs = [
-  "//base/startup/init_lite/services/param/include",
-  "//base/startup/init_lite/services/param/adapter",
-  "//base/startup/init_lite/services/param/linux",
-  "//base/startup/init_lite/services/param/base",
-  "//base/startup/init_lite/services/include/param",
-  "//base/startup/init_lite/services/include",
-  "//base/startup/init_lite/services/init/include",
-  "//base/startup/init_lite/services/log",
-  "//base/startup/init_lite/interfaces/innerkits/init_module_engine/include",
-  "//base/startup/init_lite/services/loopevent/include",
+  "//base/startup/init/services/param/include",
+  "//base/startup/init/services/param/adapter",
+  "//base/startup/init/services/param/linux",
+  "//base/startup/init/services/param/base",
+  "//base/startup/init/services/include/param",
+  "//base/startup/init/services/include",
+  "//base/startup/init/services/init/include",
+  "//base/startup/init/services/log",
+  "//base/startup/init/interfaces/innerkits/init_module_engine/include",
+  "//base/startup/init/services/loopevent/include",
   "//third_party/bounds_checking_function/include",
   "//third_party/cJSON",
   "//utils/native/lite/include",
@@ -40,25 +40,25 @@ param_include_dirs = [
 ]
 
 param_service_sources = [
-  "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
-  "//base/startup/init_lite/services/param/linux/param_message.c",
-  "//base/startup/init_lite/services/param/linux/param_msgadp.c",
-  "//base/startup/init_lite/services/param/linux/param_service.c",
-  "//base/startup/init_lite/services/param/manager/param_manager.c",
-  "//base/startup/init_lite/services/param/manager/param_persist.c",
-  "//base/startup/init_lite/services/param/manager/param_server.c",
+  "//base/startup/init/services/param/adapter/param_persistadp.c",
+  "//base/startup/init/services/param/linux/param_message.c",
+  "//base/startup/init/services/param/linux/param_msgadp.c",
+  "//base/startup/init/services/param/linux/param_service.c",
+  "//base/startup/init/services/param/manager/param_manager.c",
+  "//base/startup/init/services/param/manager/param_persist.c",
+  "//base/startup/init/services/param/manager/param_server.c",
 ]
 
 param_trigger_sources = [
-  "//base/startup/init_lite/services/param/trigger/trigger_checker.c",
-  "//base/startup/init_lite/services/param/trigger/trigger_manager.c",
-  "//base/startup/init_lite/services/param/trigger/trigger_processor.c",
+  "//base/startup/init/services/param/trigger/trigger_checker.c",
+  "//base/startup/init/services/param/trigger/trigger_manager.c",
+  "//base/startup/init/services/param/trigger/trigger_processor.c",
 ]
 
 param_client_sources = [
-  "//base/startup/init_lite/services/param/linux/param_message.c",
-  "//base/startup/init_lite/services/param/linux/param_request.c",
-  "//base/startup/init_lite/services/param/manager/param_manager.c",
+  "//base/startup/init/services/param/linux/param_message.c",
+  "//base/startup/init/services/param/linux/param_request.c",
+  "//base/startup/init/services/param/manager/param_manager.c",
 ]
 
 # only for linux

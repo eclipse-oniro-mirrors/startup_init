@@ -57,7 +57,7 @@ hdc_shell_cmd "mkdir -p ${ut_target_path}/proc"
 
 ohos_root="$1"
 ohos_root=${ohos_root%%/}
-ohos_init="${ohos_root}/base/startup/init_lite"
+ohos_init="${ohos_root}/base/startup/init"
 
 hdc_shell_cmd "mkdir -p ${ut_target_path}/coverage"
 sleep 0.25
@@ -71,14 +71,14 @@ hdc_shell_cmd "mkdir -p ${ut_target_path}/vendor"
 hdc_shell_cmd "mkdir -p ${ut_target_path}/vendor/etc"
 hdc_shell_cmd "mkdir -p ${ut_target_path}/vendor/etc/param"
 
-hdc_shell_cmd "cp ${ohos_root}/base/startup/init_lite/test/unittest/test_data/system/etc/param/ohos_const/* ${ut_target_path}/system/etc/param/ohos_const/"
-hdc_push_cmd ${ohos_root}/base/startup/init_lite/test/unittest/test_data/system/etc/param/ohos.para ${ut_target_path}/system/etc/param/ohos.para
-hdc_push_cmd ${ohos_root}/base/startup/init_lite/test/unittest/test_data/system/etc/param/ohos.para.dac ${ut_target_path}/system/etc/param/ohos.para.dac
-hdc_push_cmd ${ohos_root}/base/startup/init_lite/test/unittest/test_data/system/etc/param/ohos.para.selinux ${ut_target_path}/system/etc/param/ohos.para.selinux
+hdc_shell_cmd "cp ${ohos_root}/base/startup/init/test/unittest/test_data/system/etc/param/ohos_const/* ${ut_target_path}/system/etc/param/ohos_const/"
+hdc_push_cmd ${ohos_root}/base/startup/init/test/unittest/test_data/system/etc/param/ohos.para ${ut_target_path}/system/etc/param/ohos.para
+hdc_push_cmd ${ohos_root}/base/startup/init/test/unittest/test_data/system/etc/param/ohos.para.dac ${ut_target_path}/system/etc/param/ohos.para.dac
+hdc_push_cmd ${ohos_root}/base/startup/init/test/unittest/test_data/system/etc/param/ohos.para.selinux ${ut_target_path}/system/etc/param/ohos.para.selinux
 
-hdc_push_cmd ${ohos_root}/base/startup/init_lite/test/unittest/test_data/trigger_test.cfg  /data/init_ut/trigger_test.cfg
+hdc_push_cmd ${ohos_root}/base/startup/init/test/unittest/test_data/trigger_test.cfg  /data/init_ut/trigger_test.cfg
 sleep 0.2
-hdc_push_cmd ${ohos_root}/base/startup/init_lite/test/unittest/test_data/proc/cmdline  /data/init_ut/proc/cmdline
+hdc_push_cmd ${ohos_root}/base/startup/init/test/unittest/test_data/proc/cmdline  /data/init_ut/proc/cmdline
 sleep 0.25
 hdc file send ${ohos_root}/out/rk3568/tests/unittest/startup/init/init_unittest /data/init_ut/init_unittest
 sleep 0.25

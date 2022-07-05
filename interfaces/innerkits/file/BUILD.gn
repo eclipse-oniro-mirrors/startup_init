@@ -13,14 +13,14 @@
 import("//build/ohos.gni")
 config("exported_header_files") {
   visibility = [ ":*" ]
-  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+  include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
 }
 
 ohos_static_library("libfile") {
   sources = [ "init_file.c" ]
   include_dirs = [
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/services/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/include",
     "//third_party/bounds_checking_function/include",
   ]
   public_configs = [ ":exported_header_files" ]

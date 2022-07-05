@@ -16,7 +16,7 @@ import("//build/ohos.gni")
 ohos_shared_library("deviceinfo_ndk") {
   sources = [ "src/syscap_ndk.c" ]
   include_dirs = [ "./include" ]
-  deps = [ "//base/startup/init_lite/interfaces/innerkits:libbegetutil" ]
+  deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
   part_name = "init"
 }
 

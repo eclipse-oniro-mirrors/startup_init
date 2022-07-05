@@ -14,8 +14,8 @@
 config("exported_header_files") {
   visibility = [ ":*" ]
   include_dirs = [
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/log",
+    "//base/startup/init/services/include",
+    "//base/startup/init/services/log",
   ]
 }
 
@@ -24,7 +24,7 @@ if (defined(ohos_lite)) {
     sources = [ "init_utils.c" ]
     public_configs = [ ":exported_header_files" ]
     include_dirs = [
-      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init/interfaces/innerkits/include",
       "//third_party/bounds_checking_function/include",
     ]
     defines = [ "_GNU_SOURCE" ]
@@ -35,7 +35,7 @@ if (defined(ohos_lite)) {
     sources = [ "init_utils.c" ]
     public_configs = [ ":exported_header_files" ]
     include_dirs = [
-      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init/interfaces/innerkits/include",
       "//third_party/bounds_checking_function/include",
     ]
     defines = [ "_GNU_SOURCE" ]

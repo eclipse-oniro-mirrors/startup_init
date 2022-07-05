@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//base/startup/init_lite/begetd.gni")
+import("//base/startup/init/begetd.gni")
 if (!defined(ohos_lite) || enable_ohos_startup_init_feature_begetctl_liteos) {
   syspara_sources = [
     "syscap/init_syscap.c",
@@ -23,12 +23,12 @@ if (!defined(ohos_lite) || enable_ohos_startup_init_feature_begetctl_liteos) {
 config("exported_header_files") {
   visibility = [ ":*" ]
   include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/interfaces/innerkits/include/syspara",
-    "//base/startup/init_lite/interfaces/innerkits/include/fs_manager",
-    "//base/startup/init_lite/interfaces/innerkits/include/token",
-    "//base/startup/init_lite/interfaces/innerkits/include/sandbox/include",
-    "//base/startup/init_lite/services/include",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/syspara",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//base/startup/init/interfaces/innerkits/include/token",
+    "//base/startup/init/interfaces/innerkits/include/sandbox/include",
+    "//base/startup/init/services/include",
   ]
 }
 
@@ -36,14 +36,14 @@ include_common = [
   "./include",
   "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
   "//third_party/bounds_checking_function/include",
-  "//base/startup/init_lite/services/include",
-  "//base/startup/init_lite/services/include/param",
-  "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-  "//base/startup/init_lite/services/param/include",
-  "//base/startup/init_lite/interfaces/innerkits/include",
-  "//base/startup/init_lite/interfaces/innerkits/include/syspara",
-  "//base/startup/init_lite/interfaces/hals",
-  "//base/startup/init_lite/interfaces/innerkits/syspara",
+  "//base/startup/init/services/include",
+  "//base/startup/init/services/include/param",
+  "//base/startup/init/interfaces/innerkits/fd_holder",
+  "//base/startup/init/services/param/include",
+  "//base/startup/init/interfaces/innerkits/include",
+  "//base/startup/init/interfaces/innerkits/include/syspara",
+  "//base/startup/init/interfaces/hals",
+  "//base/startup/init/interfaces/innerkits/syspara",
 ]
 
 if (defined(ohos_lite)) {
@@ -67,8 +67,8 @@ if (defined(ohos_lite)) {
         "//third_party/mbedtls:mbedtls_shared",
       ]
       deps += [
-        "//base/startup/init_lite/services/log:init_log",
-        "//base/startup/init_lite/services/utils:libinit_utils",
+        "//base/startup/init/services/log:init_log",
+        "//base/startup/init/services/utils:libinit_utils",
       ]
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
         sources += syspara_sources
@@ -79,16 +79,15 @@ if (defined(ohos_lite)) {
       }
       if (ohos_kernel_type == "liteos_a") {
         defines += [ "__LITEOS_A__" ]
-        deps += [
-          "//base/startup/init_lite/services/param/liteos:param_client_lite",
-        ]
+        deps +=
+            [ "//base/startup/init/services/param/liteos:param_client_lite" ]
       } else if (ohos_kernel_type == "linux") {
         sources += [ "socket/init_socket.c" ]
         defines += [ "__LINUX__" ]
         deps += [
-          "//base/startup/init_lite/services/loopevent:loopevent",
-          "//base/startup/init_lite/services/param/base:parameterbase",
-          "//base/startup/init_lite/services/param/linux:param_client",
+          "//base/startup/init/services/loopevent:loopevent",
+          "//base/startup/init/services/param/base:parameterbase",
+          "//base/startup/init/services/param/linux:param_client",
         ]
       }
     }
@@ -122,8 +121,8 @@ if (defined(ohos_lite)) {
         defines += [ "USE_MBEDTLS" ]
       }
       deps += [
-        "//base/startup/init_lite/services/param/liteos:param_client_lite",
-        "//base/startup/init_lite/services/utils:libinit_utils",
+        "//base/startup/init/services/param/liteos:param_client_lite",
+        "//base/startup/init/services/utils:libinit_utils",
       ]
     }
   }
@@ -137,8 +136,7 @@ if (defined(ohos_lite)) {
       lib_extension = ".so"
     }
     deps = [ ":libbegetutil" ]
-    head_files =
-        [ "//base/startup/init_lite/interfaces/innerkits/include/syspara" ]
+    head_files = [ "//base/startup/init/interfaces/innerkits/include/syspara" ]
   }
 
   group("libbeget_proxy") {
@@ -171,17 +169,17 @@ if (defined(ohos_lite)) {
 
     include_dirs = include_common
     deps = [
-      "//base/startup/init_lite/interfaces/innerkits/control_fd:libcontrolfd",
-      "//base/startup/init_lite/interfaces/innerkits/fd_holder:fdholder",
-      "//base/startup/init_lite/interfaces/innerkits/file:libfile",
-      "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_static",
-      "//base/startup/init_lite/interfaces/innerkits/sandbox:sandbox",
-      "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
-      "//base/startup/init_lite/services/log:agent_log",
-      "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/param/base:parameterbase",
-      "//base/startup/init_lite/services/param/linux:param_client",
-      "//base/startup/init_lite/services/utils:libinit_utils",
+      "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
+      "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
+      "//base/startup/init/interfaces/innerkits/file:libfile",
+      "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+      "//base/startup/init/interfaces/innerkits/sandbox:sandbox",
+      "//base/startup/init/interfaces/innerkits/socket:libsocket",
+      "//base/startup/init/services/log:agent_log",
+      "//base/startup/init/services/loopevent:loopevent",
+      "//base/startup/init/services/param/base:parameterbase",
+      "//base/startup/init/services/param/linux:param_client",
+      "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/cJSON:cjson",
       "//third_party/mbedtls:mbedtls_shared",
@@ -206,7 +204,7 @@ if (defined(ohos_lite)) {
       "USE_MBEDTLS",
     ]
     sources = [
-      "//base/startup/init_lite/device_info/device_info.cpp",
+      "//base/startup/init/device_info/device_info.cpp",
       "service_watcher/service_watcher.c",
     ]
 
@@ -218,14 +216,14 @@ if (defined(ohos_lite)) {
 
     if (enable_ohos_startup_init_feature_watcher) {
       sources += [
-        "//base/startup/init_lite/services/param/watcher/agent/watcher.cpp",
-        "//base/startup/init_lite/services/param/watcher/agent/watcher_manager_kits.cpp",
-        "//base/startup/init_lite/services/param/watcher/agent/watcher_manager_proxy.cpp",
-        "//base/startup/init_lite/services/param/watcher/agent/watcher_stub.cpp",
+        "//base/startup/init/services/param/watcher/agent/watcher.cpp",
+        "//base/startup/init/services/param/watcher/agent/watcher_manager_kits.cpp",
+        "//base/startup/init/services/param/watcher/agent/watcher_manager_proxy.cpp",
+        "//base/startup/init/services/param/watcher/agent/watcher_stub.cpp",
       ]
       include_dirs += [
-        "//base/startup/init_lite/services/param/watcher/include",
-        "//base/startup/init_lite/services/log",
+        "//base/startup/init/services/param/watcher/include",
+        "//base/startup/init/services/log",
       ]
     } else {
       defines += [ "NO_PARAM_WATCHER" ]
@@ -233,15 +231,14 @@ if (defined(ohos_lite)) {
 
     if (enable_ohos_startup_init_feature_deviceinfo) {
       sources += [
-        "//base/startup/init_lite/device_info/device_info_kits.cpp",
-        "//base/startup/init_lite/device_info/device_info_load.cpp",
-        "//base/startup/init_lite/device_info/device_info_proxy.cpp",
+        "//base/startup/init/device_info/device_info_kits.cpp",
+        "//base/startup/init/device_info/device_info_load.cpp",
+        "//base/startup/init/device_info/device_info_proxy.cpp",
       ]
       defines += [ "PARAM_FEATURE_DEVICEINFO" ]
     } else {
-      sources += [
-        "//base/startup/init_lite/interfaces/innerkits/syspara/param_comm.c",
-      ]
+      sources +=
+          [ "//base/startup/init/interfaces/innerkits/syspara/param_comm.c" ]
     }
 
     external_deps = [
@@ -270,11 +267,11 @@ if (defined(ohos_lite)) {
 
     include_dirs = include_common
     deps = [
-      "//base/startup/init_lite/services/log:agent_log",
-      "//base/startup/init_lite/services/loopevent:loopevent",
-      "//base/startup/init_lite/services/param/base:parameterbase",
-      "//base/startup/init_lite/services/param/linux:param_client",
-      "//base/startup/init_lite/services/utils:libinit_utils",
+      "//base/startup/init/services/log:agent_log",
+      "//base/startup/init/services/loopevent:loopevent",
+      "//base/startup/init/services/param/base:parameterbase",
+      "//base/startup/init/services/param/linux:param_client",
+      "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/mbedtls:mbedtls_shared",
     ]

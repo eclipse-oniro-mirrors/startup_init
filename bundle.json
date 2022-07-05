@@ -7,7 +7,7 @@
     "repository": "https://gitee.com/openharmony/startup_init_lite",
     "publishAs": "code-segment",
     "segment": {
-        "destPath": "base/startup/init_lite"
+        "destPath": "base/startup/init"
     },
     "dirs": {},
     "scripts": {},
@@ -36,21 +36,21 @@
         },
         "build": {
             "sub_component": [
-                "//base/startup/init_lite/services:startup_init",
-                "//base/startup/init_lite/ueventd:startup_ueventd",
-                "//base/startup/init_lite/watchdog:watchdog",
-                "//base/startup/init_lite/services/begetctl:begetctl_cmd",
-                "//base/startup/init_lite/services/loopevent:loopeventgroup",
-                "//base/startup/init_lite/services/modules:modulesgroup",
-                "//base/startup/init_lite/services/param:parameter",
-                "//base/startup/init_lite/interfaces/innerkits:innergroup",
-                "//base/startup/init_lite/device_info:device_info_group",
-                "//base/startup/init_lite/interfaces/kits:kitsgroup"
+                "//base/startup/init/services:startup_init",
+                "//base/startup/init/ueventd:startup_ueventd",
+                "//base/startup/init/watchdog:watchdog",
+                "//base/startup/init/services/begetctl:begetctl_cmd",
+                "//base/startup/init/services/loopevent:loopeventgroup",
+                "//base/startup/init/services/modules:modulesgroup",
+                "//base/startup/init/services/param:parameter",
+                "//base/startup/init/interfaces/innerkits:innergroup",
+                "//base/startup/init/device_info:device_info_group",
+                "//base/startup/init/interfaces/kits:kitsgroup"
             ],
             "inner_kits": [
                 {
                     "header": {
-                        "header_base": "//base/startup/init_lite/interfaces/innerkits/include/",
+                        "header_base": "//base/startup/init/interfaces/innerkits/include/",
                         "header_files": [
                             "init_socket.h",
                             "init_file.h",
@@ -66,31 +66,31 @@
                             "syspara/sysversion.h"
                         ]
                     },
-                    "name": "//base/startup/init_lite/interfaces/innerkits:libbegetutil"
+                    "name": "//base/startup/init/interfaces/innerkits:libbegetutil"
                 },
                 {
                     "header": {
-                        "header_base": "//base/startup/init_lite/interfaces/innerkits/include/",
+                        "header_base": "//base/startup/init/interfaces/innerkits/include/",
                         "header_files": [
                             "service_watcher.h",
                             "syspara/parameter.h",
                             "syspara/sysparam_errno.h"
                         ]
                     },
-                    "name": "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy"
+                    "name": "//base/startup/init/interfaces/innerkits:libbeget_proxy"
                 },
                 {
                     "header": {
-                        "header_base": "//base/startup/init_lite/interfaces/innerkits",
+                        "header_base": "//base/startup/init/interfaces/innerkits",
                         "header_files": [
                             "init_module_engine/include/init_module_engine.h"
                         ]
                     },
-                    "name": "//base/startup/init_lite/interfaces/innerkits/init_module_engine:libinit_module_engine"
+                    "name": "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine"
                 }
             ],
             "test": [
-                "//base/startup/init_lite/test:testgroup"
+                "//base/startup/init/test:testgroup"
             ]
         }
     }

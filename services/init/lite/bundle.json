@@ -7,7 +7,7 @@
     "repository": "https://gitee.com/openharmony/startup_init_lite",
     "publishAs": "code-segment",
     "segment": {
-        "destPath": "base/startup/init_lite"
+        "destPath": "base/startup/init"
     },
     "dirs": {},
     "scripts": {},
@@ -29,18 +29,18 @@
         },
         "build": {
             "sub_component": [
-                "//base/startup/init_lite/services:startup_init",
-                "//base/startup/init_lite/ueventd:startup_ueventd",
-                "//base/startup/init_lite/watchdog:watchdog",
-                "//base/startup/init_lite/services/begetctl:begetctl_cmd",
-                "//base/startup/init_lite/services/loopevent:loopeventgroup",
-                "//base/startup/init_lite/services/modules:modulesgroup",
-                "//base/startup/init_lite/services/param:parameter"
+                "//base/startup/init/services:startup_init",
+                "//base/startup/init/ueventd:startup_ueventd",
+                "//base/startup/init/watchdog:watchdog",
+                "//base/startup/init/services/begetctl:begetctl_cmd",
+                "//base/startup/init/services/loopevent:loopeventgroup",
+                "//base/startup/init/services/modules:modulesgroup",
+                "//base/startup/init/services/param:parameter"
             ],
             "inner_kits": [
                 {
                     "header": {
-                        "header_base": "//base/startup/init_lite/interfaces/innerkits/include/",
+                        "header_base": "//base/startup/init/interfaces/innerkits/include/",
                         "header_files": [
                             "beget_ext.h",
                             "syspara/parameter.h",
@@ -50,11 +50,11 @@
                             "syspara/sysversion.h"
                         ]
                     },
-                    "name": "//base/startup/init_lite/interfaces/innerkits:libbegetutil"
+                    "name": "//base/startup/init/interfaces/innerkits:libbegetutil"
                 }
             ],
             "test": [
-                "//base/startup/init_lite/test:testgroup"
+                "//base/startup/init/test:testgroup"
             ]
         }
     }
