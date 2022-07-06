@@ -97,8 +97,12 @@ void LogToDmesg(InitLogLevel logLevel, const char *tag, const char *info)
 static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *logInfo)
 {
 #ifdef OHOS_LITE
+#ifdef __LITEOS_M__
+    printf("[%s]%s \n", tag, logInfo);
+#else
     static const LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
     (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", logInfo);
+#endif
 #endif
 #ifdef INIT_DMESG
     LogToDmesg(logLevel, tag, logInfo);

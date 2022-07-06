@@ -77,6 +77,7 @@ if (defined(ohos_lite)) {
       "_GNU_SOURCE",
       "__LINUX__",
       "OHOS_LITE",
+      "PARAM_SUPPORT_REAL_CHECK",
       "INCREMENTAL_VERSION=\"${ohos_version}\"",
       "BUILD_TYPE=\"${ohos_build_type}\"",
       "BUILD_USER=\"${ohos_build_user}\"",
@@ -102,7 +103,10 @@ if (defined(ohos_lite)) {
     sources += param_trigger_sources
     include_dirs = param_include_dirs
     public_configs = [ ":exported_header_files" ]
-    defines = [ "_GNU_SOURCE" ]
+    defines = [
+      "_GNU_SOURCE",
+      "PARAM_SUPPORT_REAL_CHECK",
+    ]
 
     if (defined(boot_kernel_extended_cmdline)) {
       defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]

@@ -157,17 +157,13 @@ if (defined(ohos_lite)) {
       defines += [ "__LITEOS_M__" ]
       sources += [
         "//base/startup/init_lite/services/param/liteos/param_client.c",
+        "//base/startup/init_lite/services/param/liteos/param_hal.c",
         "//base/startup/init_lite/services/param/liteos/param_litedac.c",
         "//base/startup/init_lite/services/param/liteos/param_osadp.c",
         "//base/startup/init_lite/services/param/liteos/param_service.c",
       ]
       if (enable_ohos_startup_init_lite_use_posix_file_api) {
-        sources += [
-          "//base/startup/init_lite/services/param/adapter/param_persistadp.c",
-        ]
-      } else {
-        sources +=
-            [ "//base/startup/init_lite/services/param/liteos/param_hal.c" ]
+        defines += [ "PARAM_SUPPORT_POSIX" ]
       }
       sources += [
         "../param/dac_unittest.cpp",

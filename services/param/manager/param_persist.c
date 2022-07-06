@@ -35,7 +35,7 @@ static int IsNeedToSave(const char *name)
     return (strncmp(name, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) == 0) ? 1 : 0;
 #endif
 }
-#ifdef PARAM_SUPPORT_CYCLE_CHECK
+
 static long long GetPersistCommitId(void)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
@@ -50,7 +50,6 @@ static long long GetPersistCommitId(void)
     PARAMSPACE_AREA_RW_UNLOCK(space);
     return globalCommitId;
 }
-#endif
 
 static void UpdatePersistCommitId(void)
 {
@@ -145,27 +144,32 @@ INIT_LOCAL_API void ClosePersistParamWorkSpace(void)
     g_persistWorkSpace.flags = 0;
 }
 
+void CheckAndSavePersistParam(void)
+{
+    // check commit
+    long long commit = GetPersistCommitId();
+    PARAM_LOGV("CheckAndSavePersistParam commit %lld %lld", commit, g_persistWorkSpace.commitId);
+    if (g_persistWorkSpace.commitId == commit) {
+        return;
+    }
+    g_persistWorkSpace.commitId = commit;
+    (void)BatchSavePersistParam();
+}
+
 PARAM_STATIC void TimerCallbackForSave(const ParamTaskPtr timer, void *context)
 {
     UNUSED(context);
     UNUSED(timer);
-    // for liteos，we must cycle check
-#ifndef PARAM_SUPPORT_CYCLE_CHECK
+    PARAM_LOGV("TimerCallbackForSave ");
+    // for liteos-a，we must cycle check
+#if (!defined(PARAM_SUPPORT_CYCLE_CHECK) || defined(PARAM_SUPPORT_REAL_CHECK))
     ParamTimerClose(g_persistWorkSpace.saveTimer);
     g_persistWorkSpace.saveTimer = NULL;
     if (!PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_UPDATE)) {
         return;
     }
-#else
-    // check commit
-    long long commit = GetPersistCommitId();
-    PARAM_LOGV("TimerCallbackForSave commit %lld %lld", commit, g_persistWorkSpace.commitId);
-    if (g_persistWorkSpace.commitId == commit) {
-        return;
-    }
-    g_persistWorkSpace.commitId = commit;
 #endif
-    (void)BatchSavePersistParam();
+    CheckAndSavePersistParam();
 }
 
 INIT_LOCAL_API int WritePersistParam(const char *name, const char *value)
@@ -180,7 +184,11 @@ INIT_LOCAL_API int WritePersistParam(const char *name, const char *value)
     }
     // update commit for check
     UpdatePersistCommitId();
-
+    // for liteos-m, start task to check and save parameter
+    // for linux, start timer after set persist parameter
+    // for liteos-a, start timer in init to check and save parameter
+#ifdef PARAM_SUPPORT_REAL_CHECK
+    PARAM_LOGI("WritePersistParam start check ");
     if (!PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
         PARAM_LOGE("Can not save persist param before load %s ", name);
         return 0;
@@ -200,7 +208,7 @@ INIT_LOCAL_API int WritePersistParam(const char *name, const char *value)
         }
         return BatchSavePersistParam();
     }
-#ifndef PARAM_SUPPORT_CYCLE_CHECK
+
     PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_UPDATE);
     if (g_persistWorkSpace.saveTimer == NULL) {
         ParamTimerCreate(&g_persistWorkSpace.saveTimer, TimerCallbackForSave, NULL);
@@ -228,7 +236,9 @@ int LoadPersistParams(void)
     // save new persist param
     ret = BatchSavePersistParam();
     PARAM_CHECK(ret == 0, return ret, "Failed to load persist param");
+    // for liteos-a, start time to check in init
 #ifdef PARAM_SUPPORT_CYCLE_CHECK
+    PARAM_LOGV("LoadPersistParams start check time ");
     if (g_persistWorkSpace.saveTimer == NULL) {
         ParamTimerCreate(&g_persistWorkSpace.saveTimer, TimerCallbackForSave, NULL);
         ParamTimerStart(g_persistWorkSpace.saveTimer, PARAM_MUST_SAVE_PARAM_DIFF * MS_UNIT, MS_UNIT);

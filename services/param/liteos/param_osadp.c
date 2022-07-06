@@ -179,7 +179,7 @@ int ParamRWMutexDelete(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamMutexCeate(ParamMutex *mutex)
+int ParamMutexCreate(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid mutex");
     pthread_mutexattr_t mutexattr;
@@ -233,8 +233,6 @@ void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
 
 void paramMutexEnvInit(void)
 {
-    uint32_t ret = OsMuxInit();
-    PARAM_CHECK(ret == LOS_OK, return, "Failed to init mutex ret %d", ret);
     return;
 }
 
@@ -278,7 +276,7 @@ int ParamRWMutexDelete(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamMutexCeate(ParamMutex *mutex)
+int ParamMutexCreate(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
     uint32_t ret = LOS_MuxCreate(&mutex->mutex);

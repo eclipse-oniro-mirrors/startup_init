@@ -320,7 +320,7 @@ INIT_LOCAL_API ParamSecurityLabel *GetParamSecurityLabel()
     return &paramSpace->securityLabel;
 }
 
-int SpliteString(char *line, const char *exclude[], uint32_t count,
+int SplitParamString(char *line, const char *exclude[], uint32_t count,
     int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context)
 {
     // Skip spaces

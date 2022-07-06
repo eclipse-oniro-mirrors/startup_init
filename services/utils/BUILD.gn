@@ -27,7 +27,10 @@ if (defined(ohos_lite)) {
       "//base/startup/init_lite/interfaces/innerkits/include",
       "//third_party/bounds_checking_function/include",
     ]
-    defines = [ "_GNU_SOURCE" ]
+    defines = [
+      "_GNU_SOURCE",
+      "OHOS_LITE",
+    ]
   }
 } else {
   import("//build/ohos.gni")
