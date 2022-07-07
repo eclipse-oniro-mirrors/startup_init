@@ -61,7 +61,7 @@ public:
         ret = SystemWatchParameter("test.permission.watcher.tes^^^^t1*", TestParameterChange, nullptr);
         EXPECT_NE(ret, 0);
         ret = SystemWatchParameter("test.permission.read.test1*", TestParameterChange, nullptr);
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
         return 0;
     }
 
@@ -78,7 +78,7 @@ public:
         ret = SystemWatchParameter("test.permission.watcher.tes^^^^t1*", nullptr, nullptr);
         EXPECT_NE(ret, 0);
         ret = SystemWatchParameter("test.permission.read.test1*", nullptr, nullptr);
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
         return 0;
     }
 

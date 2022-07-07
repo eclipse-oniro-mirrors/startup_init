@@ -101,6 +101,7 @@ typedef struct cmdLineInfo {
 #define PARAM_LOGI(fmt, ...) STARTUP_LOGI(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGE(fmt, ...) STARTUP_LOGE(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGV(fmt, ...) STARTUP_LOGV(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_LOGW(fmt, ...) STARTUP_LOGW(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 
 #define PARAM_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                \

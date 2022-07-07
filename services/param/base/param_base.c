@@ -299,12 +299,11 @@ INIT_INNER_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, cons
                 continue;
             }
             if (ops->securityCheckParamPermission == NULL) {
-                ret = DAC_RESULT_FORBIDED;
                 continue;
             }
             ret = ops->securityCheckParamPermission(srcLabel, name, mode);
-            PARAM_LOGV("CheckParamPermission %s %s ret %d", ops->name, name, ret);
-            if (ret == DAC_RESULT_PERMISSION) {
+            if (ret == DAC_RESULT_FORBIDED) {
+                PARAM_LOGW("CheckParamPermission %s %s FORBID", ops->name, name);
                 break;
             }
         }
