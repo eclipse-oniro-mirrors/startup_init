@@ -193,7 +193,10 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
 #endif
     }
     if (ret != 0) {
-        PARAM_LOGI("Selinux check name %s pid %d uid %d %d result %d", name, uc.pid, uc.uid, uc.gid, ret);
+        PARAM_LOGW("Selinux check name %s pid %d uid %d %d result %d", name, uc.pid, uc.uid, uc.gid, ret);
+        ret = DAC_RESULT_FORBIDED;
+    } else {
+        ret = DAC_RESULT_PERMISSION;
     }
     return ret;
 }

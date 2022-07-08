@@ -237,8 +237,13 @@ static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const cha
     if ((node->mode & localMode) != 0) {
         ret = DAC_RESULT_PERMISSION;
     }
-    PARAM_LOGV("Param '%s' label gid:%d uid:%d mode 0%o", name, srcLabel->cred.gid, srcLabel->cred.uid, localMode);
-    PARAM_LOGV("Cfg label %d gid:%d uid:%d mode 0%o result %d", labelIndex, node->gid, node->uid, node->mode, ret);
+    if (ret != DAC_RESULT_PERMISSION) {
+        PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%o", name, srcLabel->cred.gid, srcLabel->cred.uid, localMode);
+        PARAM_LOGW("Cfg label %d gid:%d uid:%d mode 0%o ", labelIndex, node->gid, node->uid, node->mode);
+#ifndef STARTUP_INIT_TEST
+        ret = DAC_RESULT_PERMISSION;
+#endif
+    }
     return ret;
 }
 
