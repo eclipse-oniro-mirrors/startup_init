@@ -215,14 +215,16 @@ static void HandlerFdHolder(int sock)
     if (strcmp(action, ACTION_HOLD) == 0) {
         INIT_LOGI("Service \' %s \' request init to %s fds", serviceName, action);
         if (HandlerHoldFds(service, fds, fdCount, pollStr) < 0) {
+            CloseFds(fds, fdCount);
         }
     } else if (strcmp(action, ACTION_GET) == 0) {
         // In this case, ignore fds, just close them if fd passed to init
+        CloseFds(fds, fdCount);
         HandlerGetFds(sock, service);
     } else {
         INIT_LOGE("Unexpected action: %s", action);
+        CloseFds(fds, fdCount);
     }
-    CloseFds(fds, fdCount);
     FreeFds(fds);
     FreeStringVector(msg, msgCount);
 }
