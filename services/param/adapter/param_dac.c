@@ -116,7 +116,7 @@ static int LoadParamLabels(const char *fileName)
     char *buff = (char *)calloc(1, buffSize);
     while (fp != NULL && buff != NULL && fgets(buff, buffSize, fp) != NULL) {
         buff[buffSize - 1] = '\0';
-        int ret = SpliteString(buff, NULL, 0, LoadOneParam_, NULL);
+        int ret = SplitParamString(buff, NULL, 0, LoadOneParam_, NULL);
         if (ret != 0) {
             PARAM_LOGE("Failed to split string %s fileName %s", buff, fileName);
             continue;

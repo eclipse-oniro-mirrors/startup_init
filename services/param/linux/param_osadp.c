@@ -49,7 +49,7 @@ int ParamRWMutexDelete(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamMutexCeate(ParamMutex *mutex)
+int ParamMutexCreate(ParamMutex *mutex)
 {
     return 0;
 }

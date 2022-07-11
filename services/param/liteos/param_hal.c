@@ -28,6 +28,83 @@
 
 // for linux, no mutex
 static ParamMutex g_saveMutex = {};
+#ifdef PARAM_SUPPORT_POSIX
+#define MODE_READ O_RDONLY
+#define MODE_APPEND (O_RDWR | O_CREAT | O_APPEND)
+#define MODE_CREATE (O_RDWR | O_CREAT | O_TRUNC)
+#else
+#define MODE_READ O_RDONLY_FS
+#define MODE_APPEND (O_RDWR_FS | O_CREAT_FS | O_APPEND_FS)
+#define MODE_CREATE (O_RDWR_FS | O_CREAT_FS | O_TRUNC_FS)
+#endif
+
+static int ParamFileOpen(const char* path, int oflag, int mode)
+{
+#ifdef PARAM_SUPPORT_POSIX
+    return open(path, oflag, mode);
+#else
+    return UtilsFileOpen(path, oflag, mode);
+#endif
+}
+
+static int ParamFileClose(int fd)
+{
+#ifdef PARAM_SUPPORT_POSIX
+    return close(fd);
+#else
+    return UtilsFileClose(fd);
+#endif
+}
+
+static int ParamFileRead(int fd, char* buf, unsigned int len)
+{
+#ifdef PARAM_SUPPORT_POSIX
+    return read(fd, buf, len);
+#else
+    return UtilsFileRead(fd, buf, len);
+#endif
+}
+
+static int ParamFileWrite(int fd, const char* buf, unsigned int len)
+{
+#ifdef PARAM_SUPPORT_POSIX
+    return write(fd, buf, len);
+#else
+    return UtilsFileWrite(fd, buf, len);
+#endif
+}
+
+static int ParamFileDelete(const char* path)
+{
+#ifdef PARAM_SUPPORT_POSIX
+    return unlink(path);
+#else
+    return UtilsFileDelete(path);
+#endif
+}
+
+static int ParamFileStat(const char* path, unsigned int* fileSize)
+{
+#ifdef PARAM_SUPPORT_POSIX
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) {
+        return -1;
+    }
+	*fileSize = lseek(fd, 0, SEEK_END);
+    lseek(fd, 0, SEEK_SET);
+    return 0;
+#else
+    return UtilsFileStat(path, fileSize);
+#endif
+}
+
+static void ParamFileSync(int ft)
+{
+#ifdef PARAM_SUPPORT_POSIX
+    fsync(ft);
+#else
+#endif
+}
 
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
@@ -45,27 +122,27 @@ static int LoadPersistParam(void)
     int fd = -1;
     uint32_t paramNum = 0;
     do {
-        fd = UtilsFileOpen(path, O_RDONLY_FS, 0);
+        fd = ParamFileOpen(path, MODE_READ, 0);
         if (fd < 0) {
             path = PARAM_PERSIST_SAVE_PATH;
-            fd = UtilsFileOpen(path, O_RDONLY_FS, 0);
+            fd = ParamFileOpen(path, MODE_READ, 0);
             PARAM_LOGI("LoadPersistParam open file %s", path);
         }
         PARAM_CHECK(fd >= 0, break, "No valid persist parameter file %s", path);
         // read file
         uint32_t fileSize = 0;
-        int ret = UtilsFileStat(path, &fileSize);
+        int ret = ParamFileStat(path, &fileSize);
         PARAM_CHECK(ret == 0, break, "Failed to get file state %s", path);
         buffer = malloc(fileSize);
         PARAM_CHECK(buffer != NULL, break, "Failed to get file");
-        ret = UtilsFileRead(fd, buffer, fileSize);
+        ret = ParamFileRead(fd, buffer, fileSize);
         PARAM_CHECK(ret == 0, break, "Failed to get read file %s", path);
 
         uint32_t currLen = 0;
         while (currLen < fileSize) {
             if (buffer[currLen] == '\n') { // split line
                 buffer[currLen] = '\0';
-                int ret = SpliteString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
+                int ret = SplitParamString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
                 PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);
                 paramNum++;
             }
@@ -73,30 +150,30 @@ static int LoadPersistParam(void)
         }
     } while (0);
     if (fd > 0) {
-        UtilsFileClose(fd);
+        ParamFileClose(fd);
     }
     if (buffer != NULL) {
         free(buffer);
     }
-    PARAM_LOGI("LoadPersistParam from file %s paramNum %d", path, paramNum);
+    PARAM_LOGI("LoadPersistParam paramNum %d", paramNum);
     return 0;
 }
 
 static int PersistWrite(int fd, const char *name, const char *value)
 {
-    int ret = UtilsFileWrite(fd, name, strlen(name));
+    int ret = ParamFileWrite(fd, name, strlen(name));
     if (ret <= 0) {
         PARAM_LOGE("Failed to save persist param %s", name);
     }
-    ret = UtilsFileWrite(fd, "=", strlen("="));
+    ret = ParamFileWrite(fd, "=", strlen("="));
     if (ret <= 0) {
         PARAM_LOGE("Failed to save persist param %s", name);
     }
-    ret = UtilsFileWrite(fd, value, strlen(value));
+    ret = ParamFileWrite(fd, value, strlen(value));
     if (ret <= 0) {
         PARAM_LOGE("Failed to save persist param %s", name);
     }
-    ret = UtilsFileWrite(fd, "\n", strlen("\n"));
+    ret = ParamFileWrite(fd, "\n", strlen("\n"));
     if (ret <= 0) {
         PARAM_LOGE("Failed to save persist param %s", name);
     }
@@ -107,10 +184,14 @@ static int SavePersistParam(const char *name, const char *value)
 {
     ParamMutexPend(&g_saveMutex);
     int ret = -1;
-    int fd = UtilsFileOpen(PARAM_PERSIST_SAVE_PATH, O_RDWR_FS | O_CREAT_FS | O_APPEND_FS, 0);
+    int fd = ParamFileOpen(PARAM_PERSIST_SAVE_PATH, MODE_APPEND, 0);
     if (fd > 0) {
         ret = PersistWrite(fd, name, value);
-        UtilsFileClose(fd);
+        ParamFileSync(fd);
+        ParamFileClose(fd);
+    }
+    if (ret != 0) {
+        PARAM_LOGE("SavePersistParam %s errno %d", name, errno);
     }
     ParamMutexPost(&g_saveMutex);
     return ret;
@@ -119,10 +200,10 @@ static int SavePersistParam(const char *name, const char *value)
 static int BatchSavePersistParamBegin(PERSIST_SAVE_HANDLE *handle)
 {
     ParamMutexPend(&g_saveMutex);
-    int fd = UtilsFileOpen(PARAM_PERSIST_SAVE_TMP_PATH, O_RDWR_FS | O_CREAT_FS | O_TRUNC_FS, 0);
+    int fd = ParamFileOpen(PARAM_PERSIST_SAVE_PATH, MODE_CREATE, 0);
     if (fd < 0) {
         ParamMutexPost(&g_saveMutex);
-        PARAM_LOGE("Open file %s fail error %d", PARAM_PERSIST_SAVE_TMP_PATH, errno);
+        PARAM_LOGE("Open file %s fail error %d", PARAM_PERSIST_SAVE_PATH, errno);
         return -1;
     }
     *handle = (PERSIST_SAVE_HANDLE)fd;
@@ -142,17 +223,15 @@ static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle)
 {
     int ret;
     int fd = (int)handle;
-    UtilsFileClose(fd);
-    UtilsFileDelete(PARAM_PERSIST_SAVE_PATH);
-    ret = UtilsFileMove(PARAM_PERSIST_SAVE_TMP_PATH, PARAM_PERSIST_SAVE_PATH);
+    ParamFileSync(fd);
+    ParamFileClose(fd);
     ParamMutexPost(&g_saveMutex);
-    PARAM_CHECK(ret == 0, return, "BatchSavePersistParamEnd %s fail error %d", PARAM_PERSIST_SAVE_TMP_PATH, errno);
+    PARAM_CHECK(ret == 0, return, "BatchSavePersistParamEnd fail error %d", errno);
 }
 
 int RegisterPersistParamOps(PersistParamOps *ops)
 {
-    PARAM_LOGI("RegisterPersistParamOps");
-    ParamMutexCeate(&g_saveMutex);
+    ParamMutexCreate(&g_saveMutex);
     PARAM_CHECK(ops != NULL, return -1, "Invalid ops");
     ops->save = SavePersistParam;
     ops->load = LoadPersistParam;

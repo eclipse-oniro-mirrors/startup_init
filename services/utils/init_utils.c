@@ -496,12 +496,16 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
 // Check if in updater mode.
 int InUpdaterMode(void)
 {
+#ifdef OHOS_LITE
+    return 0;
+#else
     const char * const updaterExecutabeFile = "/bin/updater";
     if (access(updaterExecutabeFile, X_OK) == 0) {
         return 1;
     } else {
         return 0;
     }
+#endif
 }
 
 int StringReplaceChr(char *strl, char oldChr, char newChr)

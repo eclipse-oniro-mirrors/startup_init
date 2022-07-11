@@ -142,7 +142,7 @@ int ParamRWMutexRDLock(ParamRWMutex *lock);
 int ParamRWMutexUnlock(ParamRWMutex *lock);
 int ParamRWMutexDelete(ParamRWMutex *lock);
 
-int ParamMutexCeate(ParamMutex *mutex);
+int ParamMutexCreate(ParamMutex *mutex);
 int ParamMutexPend(ParamMutex *mutex);
 int ParamMutexPost(ParamMutex *mutex);
 int ParamMutexDelete(ParamMutex *mutex);

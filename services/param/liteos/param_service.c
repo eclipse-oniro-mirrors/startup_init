@@ -12,15 +12,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <errno.h>
+#include <unistd.h>
 
 #include "init_param.h"
 #include "init_utils.h"
 #include "param_manager.h"
+#ifdef PARAM_LOAD_CFG_FROM_CODE
+#include "param_cfg.h"
+#endif
+#ifdef __LITEOS_M__
+#include "ohos_init.h"
+#include "cmsis_os2.h"
+#include "parameter.h"
+#endif
+
+static const char *StringTrim(char *buffer, int size, const char *name)
+{
+    char *tmp = (char *)name;
+    while (*tmp != '\0' && *tmp != '"') {
+        tmp++;
+    }
+    if (*tmp == '\0') {
+        return name;
+    }
+    // skip "
+    tmp++;
+    int i = 0;
+    while (*tmp != '\0' && i < size) {
+        buffer[i++] = *tmp;
+        tmp++;
+    }
+    if (i >= size) {
+        return name;
+    }
+    while (i > 0) {
+        if (buffer[i] == '"') {
+            buffer[i] = '\0';
+            return buffer;
+        }
+        i--;
+    }
+    return name;
+}
 
 void InitParamService(void)
 {
-    PARAM_LOGI("InitParamService");
-    CheckAndCreateDir(PARAM_STORAGE_PATH"/");
+    PARAM_LOGI("InitParamService %s", DATA_PATH);
+    CheckAndCreateDir(PARAM_STORAGE_PATH "/");
     CheckAndCreateDir(DATA_PATH);
     // param space
     int ret = InitParamWorkSpace(0);
@@ -30,6 +69,19 @@ void InitParamService(void)
 
     // from build
     LoadParamFromBuild();
+#ifdef PARAM_LOAD_CFG_FROM_CODE
+    char *buffer = calloc(1, PARAM_VALUE_LEN_MAX);
+    PARAM_CHECK(buffer != NULL, return, "Failed to malloc for buffer");
+    for (size_t i = 0; i < ARRAY_LENGTH(g_paramDefCfgNodes); i++) {
+        PARAM_LOGV("InitParamService name %s = %s", g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
+        uint32_t dataIndex = 0;
+        ret = WriteParam(g_paramDefCfgNodes[i].name,
+            StringTrim(buffer, PARAM_VALUE_LEN_MAX, g_paramDefCfgNodes[i].value), &dataIndex, 0);
+        PARAM_CHECK(ret == 0, continue, "Failed to set param %d name %s %s",
+            ret, g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
+    }
+    free(buffer);
+#endif
 }
 
 int StartParamService(void)
@@ -61,3 +113,42 @@ int SystemWriteParam(const char *name, const char *value)
     }
     return ret;
 }
+
+#ifdef __LITEOS_M__
+#define OS_DELAY 1000 // * 30 // 30s
+#define STACK_SIZE 1024
+
+static void ParamServiceTask(int *arg)
+{
+    char buffer[10] = {0};
+    (void)arg;
+    PARAM_LOGI("ParamServiceTask start");
+    while (1) {
+        CheckAndSavePersistParam();
+        osDelay(OS_DELAY);
+    }
+}
+
+void LiteParamService(void)
+{
+    EnableInitLog(INIT_INFO);
+    PARAM_LOGI("LiteParamService");
+    InitParamService();
+    // get persist param
+    LoadPersistParams();
+
+    osThreadAttr_t attr;
+    attr.name = "ParamServiceTask";
+    attr.attr_bits = 0U;
+    attr.cb_mem = NULL;
+    attr.cb_size = 0U;
+    attr.stack_mem = NULL;
+    attr.stack_size = 0;
+    attr.priority = osPriorityBelowNormal;
+
+    if (osThreadNew((osThreadFunc_t)ParamServiceTask, NULL, &attr) == NULL) {
+        PARAM_LOGE("Failed to create ParamServiceTask! %d", errno);
+    }
+}
+CORE_INIT(LiteParamService);
+#endif
