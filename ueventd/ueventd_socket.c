@@ -14,18 +14,11 @@
  */
 
 #include <poll.h>
-#include <fcntl.h>
-#include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
-#include <ctype.h>
-#include <signal.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <linux/netlink.h>
-#include <sys/stat.h>
-#include <sys/sysmacros.h>
 #include "securec.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
