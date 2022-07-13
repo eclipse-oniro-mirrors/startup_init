@@ -44,8 +44,8 @@
 #ifdef WITH_SELINUX
 #include <policycoreutils.h>
 #endif
+#include "fscrypt_utils.h"
 
-static const char *g_fscryptPolicyKey = "fscrypt.policy.config";
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
@@ -412,6 +412,18 @@ static void DoTimerStop(const struct CmdArgs *ctx)
     ServiceStopTimer(service);
 }
 
+static bool InitFscryptPolicy(void)
+{
+    const char *policy = LoadFscryptPolicy();
+    if (!policy) {
+        return false;
+    }
+    if (SetFscryptSysparam(policy) == 0) {
+        return true;
+    }
+    return false;
+}
+
 static void DoInitGlobalKey(const struct CmdArgs *ctx)
 {
     INIT_LOGI("DoInitGlobalKey: start");
@@ -424,6 +436,12 @@ static void DoInitGlobalKey(const struct CmdArgs *ctx)
         INIT_LOGE("DoInitGlobalKey: not data partitation");
         return;
     }
+
+    if (!InitFscryptPolicy()) {
+        INIT_LOGE("DoInitGlobalKey: init policy failed");
+        return;
+    }
+
     char * const argv[] = {
         "/system/bin/sdc",
         "filecrypt",
@@ -442,6 +460,11 @@ static void DoInitMainUser(const struct CmdArgs *ctx)
         INIT_LOGE("DoInitMainUser: para invalid");
         return;
     }
+    if (LoadFscryptPolicy() == NULL) {
+        INIT_LOGI("DoInitMainUser: file crypto is not enabled");
+        return;
+    }
+
     char * const argv[] = {
         "/system/bin/sdc",
         "filecrypt",
@@ -451,23 +474,6 @@ static void DoInitMainUser(const struct CmdArgs *ctx)
     int argc = ARRAY_LENGTH(argv);
     int ret = SyncExecCommand(argc, argv);
     INIT_LOGI("DoInitMainUser: end, ret = %d", ret);
-}
-
-int FileCryptEnable(char *fileCryptOption)
-{
-    INIT_LOGI("FileCryptEnable: start");
-    if (fileCryptOption == NULL) {
-        INIT_LOGE("FileCryptEnable:option null");
-        return -EINVAL;
-    }
-    int ret = SystemWriteParam(g_fscryptPolicyKey, fileCryptOption);
-    if (ret != 0) {
-        INIT_LOGE("FileCryptEnable:set fscrypt config failed");
-        return ret;
-    }
-    INIT_LOGI("FileCryptEnable:set fscrypt config success, policy:%s", fileCryptOption);
-
-    return ret;
 }
 
 static void DoMkswap(const struct CmdArgs *ctx)
@@ -594,4 +600,14 @@ void OpenHidebug(const char *name)
         dlclose(handle);
     } while (0);
 #endif
+}
+
+int SetFileCryptPolicy(const char *dir)
+{
+    INIT_LOGI("SetFileCryptPolicy:start:%s", dir);
+    if (dir == NULL) {
+        INIT_LOGE("SetFileCryptPolicy:dir is null");
+        return -EINVAL;
+    }
+    return FscryptPolicyEnable(dir);
 }

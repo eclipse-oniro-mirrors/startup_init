@@ -30,6 +30,9 @@ config("utest_config") {
   ldflags = [ "--coverage" ]
 }
 
+FSCRYPT_PATH =
+    "//foundation/filemanagement/storage_service/services/storage_daemon"
+
 ohos_unittest("init_unittest") {
   module_out_path = "startup/init"
   sources = [
@@ -198,9 +201,11 @@ ohos_unittest("init_unittest") {
     "//base/security/access_token/interfaces/innerkits/nativetoken/include",
     "//base/startup/init/interfaces/innerkits/sandbox/include",
     "//base/startup/init/interfaces/innerkits/hals",
+    "${FSCRYPT_PATH}/include/libfscrypt",
   ]
 
   deps = [
+    "${FSCRYPT_PATH}/libfscrypt:libfscryptutils_static",
     "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
     "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
     "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",

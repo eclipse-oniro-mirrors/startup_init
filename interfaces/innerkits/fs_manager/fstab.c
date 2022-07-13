@@ -42,6 +42,12 @@ struct MountFlags {
     unsigned long flags;
 };
 
+#define POLICY_BUFFER (100)
+
+static const char *g_fscryptPre = "fscrypt=";
+static const char *g_mountPoint = "/data";
+static char g_fscryptPolicy[POLICY_BUFFER] = { 0 };
+
 static unsigned int ConvertFlags(char *flagBuffer)
 {
     static struct FsManagerFlags fsFlags[] = {
@@ -384,7 +390,40 @@ static unsigned long ParseDefaultMountFlag(const char *str)
     return flags;
 }
 
-unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpecificDataSize)
+static bool IsFscryptOption(const char *option)
+{
+    if (!option) {
+        return false;
+    }
+    if (strncmp(option, g_fscryptPre, strlen(g_fscryptPre)) == 0) {
+        return true;
+    }
+    return false;
+}
+
+static void StoreFscryptPolicy(const char *option)
+{
+    if (!option) {
+        return;
+    }
+    if (strcpy_s(g_fscryptPolicy, POLICY_BUFFER - 1, option) != EOK) {
+        g_fscryptPolicy[0] = '\0';
+        BEGET_LOGE("StoreFscryptPolicy: copy policy failed");
+        return;
+    }
+    BEGET_LOGI("StoreFscryptPolicy:load fscrypt policy, %s", option);
+}
+
+const char *LoadFscryptPolicy(void)
+{
+    if (strnlen(g_fscryptPolicy, POLICY_BUFFER - 1) == 0) {
+        return NULL;
+    }
+    return g_fscryptPolicy;
+}
+
+unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpecificDataSize,
+    const char *mountPoint)
 {
     unsigned long flags = 0;
     BEGET_CHECK_RETURN_VALUE(mountFlag != NULL && fsSpecificData != NULL, 0);
@@ -408,6 +447,11 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
         if (IsDefaultMountFlags(p)) {
             flags |= ParseDefaultMountFlag(p);
         } else {
+            if (IsFscryptOption(p) &&
+                !strncmp(mountPoint, g_mountPoint, strlen(g_mountPoint))) {
+                StoreFscryptPolicy(p + strlen(g_fscryptPre));
+                continue;
+            }
             if (strncat_s(fsSpecificData, fsSpecificDataSize - 1, p, strlen(p)) != EOK) {
                 BEGET_LOGW("Failed to append mount flag \" %s \", ignore it.", p);
                 continue;

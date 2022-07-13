@@ -81,7 +81,7 @@ const struct CmdTable *GetCmdByName(const char *name);
 void ExecReboot(const char *value);
 char *BuildStringFromCmdArg(const struct CmdArgs *ctx, int startIndex);
 void ExecCmd(const struct CmdTable *cmd, const char *cmdContent);
-int FileCryptEnable(char *fileCryptOption);
+int SetFileCryptPolicy(const char *dir);
 
 void OpenHidebug(const char *name);
 #ifdef __cplusplus
