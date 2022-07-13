@@ -24,7 +24,6 @@
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include "init_utils.h"
-#include "list.h"
 #include "ueventd.h"
 #ifndef __RAMDISK__
 #include "ueventd_parameter.h"

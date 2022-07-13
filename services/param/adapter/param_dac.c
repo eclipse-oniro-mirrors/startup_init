@@ -16,12 +16,8 @@
 #include <grp.h>
 #include <pwd.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <errno.h>
 #include <dirent.h>
-#include <fcntl.h>
 
-#include "init_utils.h"
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_trie.h"

@@ -22,7 +22,6 @@
 #include "init_param.h"
 #include "sysparam_errno.h"
 #include "securec.h"
-#include "sysversion.h"
 #include "beget_ext.h"
 
 int WaitParameter(const char *key, const char *value, int timeout)

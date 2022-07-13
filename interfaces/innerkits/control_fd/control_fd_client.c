@@ -14,21 +14,13 @@
  */
 #include <errno.h>
 #include <fcntl.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/ioctl.h>
-#include <sys/select.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <termios.h>
-#include <time.h>
 #include <unistd.h>
-#include <limits.h>
 
 #include "beget_ext.h"
 #include "control_fd.h"
-#include "init_utils.h"
 #include "securec.h"
 
 static void ProcessPtyWrite(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)

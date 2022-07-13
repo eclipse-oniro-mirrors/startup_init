@@ -14,12 +14,8 @@
  */
 #include <fcntl.h>
 #include <pthread.h>
-#include <stdio.h>
 #include <string.h>
-#include <sys/ioctl.h>
 #include <sys/time.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
 #include "begetctl.h"
 #include "init_param.h"
@@ -27,7 +23,6 @@
 #include "parameter.h"
 #include "plugin_test.h"
 #include "service_watcher.h"
-#include "shell_utils.h"
 
 #define READ_DURATION 100000
 static char *GetLocalBuffer(uint32_t *buffSize)

@@ -14,7 +14,6 @@
  */
 #include "ueventd_parameter.h"
 
-#include <errno.h>
 #include <pthread.h>
 #include <sys/time.h>
 
@@ -24,7 +23,6 @@
 #include "init_param.h"
 #include "ueventd.h"
 #include "ueventd_read_cfg.h"
-#include "ueventd_utils.h"
 
 typedef struct {
     int inited;
