@@ -74,7 +74,8 @@ typedef struct {
     pid_t pid;
     uid_t uid;
     gid_t gid;
-    uint32_t mode;
+    uint16_t mode;
+    uint8_t paramType;
 } ParamDacData;
 
 typedef struct {

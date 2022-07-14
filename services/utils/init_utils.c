@@ -586,3 +586,47 @@ void OpenConsole(void)
     return;
 #endif
 }
+
+INIT_LOCAL_API int StringToLL(const char *str, long long int *out)
+{
+    INIT_ERROR_CHECK(str != NULL && out != NULL, return -1, "Invalid parament");
+    const char *s = str;
+    while (isspace(*s)) {
+        s++;
+    }
+
+    size_t len = strlen(str);
+    int positiveHex = (len > 1 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X'));
+    int negativeHex = (len > 2 && s[0] == '-' && s[1] == '0' && (s[2] == 'x' || s[2] == 'X')); // 2: shorttest
+    int base = (positiveHex || negativeHex) ? HEX_BASE : DECIMAL_BASE;
+    char *end = NULL;
+    errno = 0;
+    *out = strtoll(s, &end, base);
+    if (errno != 0) {
+        INIT_LOGE("StringToLL %s err = %d", str, errno);
+        return -1;
+    }
+    BEGET_CHECK(!(s == end || *end != '\0'), return -1);
+    return 0;
+}
+
+INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out)
+{
+    INIT_ERROR_CHECK(str != NULL && out != NULL, return -1, "Invalid parament");
+    const char *s = str;
+    while (isspace(*s)) {
+        s++;
+    }
+    BEGET_CHECK(s[0] != '-', return -1);
+    int base = (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) ? HEX_BASE : DECIMAL_BASE;
+    char *end = NULL;
+    errno = 0;
+    *out = strtoull(s, &end, base);
+    if (errno != 0) {
+        INIT_LOGE("StringToULL %s err = %d", str, errno);
+        return -1;
+    }
+    BEGET_CHECK(end != s, return -1);
+    BEGET_CHECK(*end == '\0', return -1);
+    return 0;
+}
