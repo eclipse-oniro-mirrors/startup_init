@@ -61,7 +61,7 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
         BEGET_ERROR_CHECK(strl != NULL, return, "pty slave path %s is invaild", realPath);
         int fd = open(realPath, O_RDWR);
         free(realPath);
-        BEGET_ERROR_CHECK(fd >= 0, return, "Failed open %s, err=%d", realPath, errno);
+        BEGET_ERROR_CHECK(fd >= 0, return, "Failed open %s, err=%d", msg->ptyName, errno);
         (void)dup2(fd, STDIN_FILENO);
         (void)dup2(fd, STDOUT_FILENO);
         (void)dup2(fd, STDERR_FILENO); // Redirect fd to 0, 1, 2
