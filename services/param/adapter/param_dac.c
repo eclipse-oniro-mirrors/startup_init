@@ -17,6 +17,7 @@
 #include <pwd.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <string.h>
 
 #include "param_manager.h"
 #include "param_security.h"
@@ -60,6 +61,15 @@ static void GetGroupIdByName(gid_t *gid, const char *name, uint32_t nameLen)
 // user:group:r|w
 static int GetParamDacData(ParamDacData *dacData, const char *value)
 {
+    static const struct {
+        const char *name;
+        int value;
+    } paramTypes[] = {
+        { "int", PARAM_TYPE_INT },
+        { "string", PARAM_TYPE_STRING },
+        { "bool", PARAM_TYPE_BOOL },
+    };
+
     if (dacData == NULL) {
         return -1;
     }
@@ -73,7 +83,19 @@ static int GetParamDacData(ParamDacData *dacData, const char *value)
     }
     GetUserIdByName(&dacData->uid, value, groupName - value);
     GetGroupIdByName(&dacData->gid, groupName + 1, mode - groupName - 1);
-    dacData->mode = strtol(mode + 1, NULL, OCT_BASE);
+
+    dacData->paramType = PARAM_TYPE_STRING;
+    char *type = strstr(mode + 1, ":");
+    if (type != NULL) {
+        *type = '\0';
+        type++;
+        for (size_t i = 0; (type != NULL) && (i < ARRAY_LENGTH(paramTypes)); i++) {
+            if (strcmp(paramTypes[i].name, type) == 0) {
+                dacData->paramType = paramTypes[i].value;
+            }
+        }
+    }
+    dacData->mode = (uint16_t)strtol(mode + 1, NULL, OCT_BASE);
     return 0;
 }
 

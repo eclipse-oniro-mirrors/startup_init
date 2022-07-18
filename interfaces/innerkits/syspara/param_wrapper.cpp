@@ -22,6 +22,7 @@
 #include "beget_ext.h"
 #include "param_comm.h"
 #include "init_param.h"
+#include "init_utils.h"
 #include "sysparam_errno.h"
 #include "securec.h"
 #include "parameter.h"

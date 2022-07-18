@@ -306,7 +306,7 @@ INIT_INNER_API int CheckParameterSet(const char *name,
     PARAM_CHECK(srcLabel != NULL && ctrlService != NULL, return -1, "Invalid param ");
     int ret = CheckParamName(name, 0);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
-    ret = CheckParamValue(NULL, name, value);
+    ret = CheckParamValue(NULL, name, value, GetParamValueType(name));
     PARAM_CHECK(ret == 0, return ret, "Illegal param value %s", value);
     *ctrlService = 0;
 
