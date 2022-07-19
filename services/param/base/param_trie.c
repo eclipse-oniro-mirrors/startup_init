@@ -323,16 +323,11 @@ INIT_LOCAL_API int TraversalTrieNode(const WorkSpace *workSpace,
     return 0;
 }
 
-INIT_LOCAL_API uint32_t AddParamSecruityNode(WorkSpace *workSpace, const ParamAuditData *auditData)
+INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAuditData *auditData)
 {
     PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return 0, "Invalid param");
     PARAM_CHECK(auditData != NULL && auditData->name != NULL, return 0, "Invalid auditData");
-#ifdef PARAM_SUPPORT_SELINUX
-    const uint32_t labelLen = strlen(auditData->label);
-    uint32_t realLen = sizeof(ParamSecurityNode) + PARAM_ALIGN(labelLen + 1);
-#else
     uint32_t realLen = sizeof(ParamSecurityNode);
-#endif
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize, return 0,
         "Failed to allocate currOffset %u, dataSize %u datalen %u",
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);
@@ -340,22 +335,14 @@ INIT_LOCAL_API uint32_t AddParamSecruityNode(WorkSpace *workSpace, const ParamAu
     node->uid = auditData->dacData.uid;
     node->gid = auditData->dacData.gid;
     node->mode = auditData->dacData.mode;
-    node->length = 0;
-#ifdef PARAM_SUPPORT_SELINUX
-    if (labelLen != 0) {
-        int ret = ParamMemcpy(node->data, labelLen, auditData->label, labelLen);
-        PARAM_CHECK(ret == 0, return 0, "Failed to copy key");
-        node->data[labelLen] = '\0';
-        node->length = labelLen;
-    }
-#endif
+    node->type = auditData->dacData.paramType & PARAM_TYPE_MASK;
     uint32_t offset = workSpace->area->currOffset;
     workSpace->area->currOffset += realLen;
     workSpace->area->securityNodeCount++;
     return offset;
 }
 
-INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace,
+INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     const char *key, uint32_t keyLen, const char *value, uint32_t valueLen)
 {
     PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return 0, "Invalid param");
@@ -366,7 +353,7 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace,
     if ((valueLen > PARAM_VALUE_LEN_MAX) || IS_READY_ONLY(key)) {
         realLen += keyLen + valueLen;
     } else {
-        realLen += keyLen + PARAM_VALUE_LEN_MAX;
+        realLen += keyLen + GetParamMaxLen(type);
     }
     realLen = PARAM_ALIGN(realLen);
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize, return 0,
@@ -376,6 +363,7 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace,
     ParamNode *node = (ParamNode *)(workSpace->area->data + workSpace->area->currOffset);
     ATOMIC_INIT(&node->commitId, 0);
 
+    node->type = type;
     node->keyLength = keyLen;
     node->valueLength = valueLen;
     int ret = ParamSprintf(node->data, realLen, "%s=%s", key, value);
@@ -417,4 +405,15 @@ INIT_LOCAL_API ParamTrieNode *FindTrieNode(WorkSpace *workSpace,
         return NULL;
     }
     return node;
+}
+
+uint32_t GetParamMaxLen(uint8_t type)
+{
+    static const uint32_t typeLengths[] = {
+        PARAM_VALUE_LEN_MAX, 32, 8 // 8 max bool length 32 max int length
+    };
+    if (type >= ARRAY_LENGTH(typeLengths)) {
+        return PARAM_VALUE_LEN_MAX;
+    }
+    return typeLengths[type];
 }

@@ -84,8 +84,9 @@ INIT_LOCAL_API WorkSpace *GetNextWorkSpace(WorkSpace *curr);
 INIT_LOCAL_API WorkSpace *GetWorkSpace(const char *name);
 INIT_LOCAL_API ParamTrieNode *GetTrieNodeByHandle(ParamHandle handle);
 INIT_LOCAL_API int ReadParamWithCheck(const char *name, uint32_t op, ParamHandle *handle);
-INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, const char *value);
+INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, const char *value, uint8_t paramType);
 INIT_LOCAL_API int CheckParamName(const char *name, int paramInfo);
+INIT_LOCAL_API uint8_t GetParamValueType(const char *name);
 
 INIT_LOCAL_API ParamNode *SystemCheckMatchParamWait(const char *name, const char *value);
 INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dataIndex, int onlyAdd);

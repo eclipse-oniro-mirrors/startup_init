@@ -84,46 +84,6 @@ INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder
     return *paramHolder;
 }
 
-INIT_LOCAL_API int StringToLL(const char *str, long long int *out)
-{
-    const char* s = str;
-    while (isspace(*s)) {
-        s++;
-    }
-
-    size_t len = strlen(str);
-    int positiveHex = (len > 1 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X'));
-    int negativeHex = (len > 2 && s[0] == '-' && s[1] == '0' && (s[2] == 'x' || s[2] == 'X')); // 2: shorttest
-    int base = (positiveHex || negativeHex) ? HEX : DECIMAL;
-    char* end = NULL;
-    errno = 0;
-    *out = strtoll(s, &end, base);
-    if (errno != 0) {
-        return -1;
-    }
-    BEGET_CHECK(!(s == end || *end != '\0'), return -1);
-    return 0;
-}
-
-INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out)
-{
-    const char* s = str;
-    while (isspace(*s)) {
-        s++;
-    }
-    BEGET_CHECK(s[0] != '-', return -1);
-    int base = (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) ? HEX : DECIMAL;
-    char* end = NULL;
-    errno = 0;
-    *out = strtoull(s, &end, base);
-    if (errno != 0) {
-        return -1;
-    }
-    BEGET_CHECK(end != s, return -1);
-    BEGET_CHECK(*end == '\0', return -1);
-    return 0;
-}
-
 INIT_LOCAL_API const char *GetProductModel_(void)
 {
     static const char *productModel = NULL;

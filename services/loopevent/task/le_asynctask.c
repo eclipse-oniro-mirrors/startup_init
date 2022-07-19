@@ -22,15 +22,28 @@
 static void DoAsyncEvent_(const LoopHandle loopHandle, AsyncEventTask *asyncTask)
 {
     LE_CHECK(loopHandle != NULL && asyncTask != NULL, return, "Invalid parameters");
-    LE_Buffer *buffer = GetFirstBuffer(&asyncTask->stream);
-    while (buffer != NULL) {
+    ListNode tmpHdr;
+    OH_ListInit(&tmpHdr);
+    StreamTask *task = &asyncTask->stream;
+    LoopMutexLock(&task->mutex);
+    tmpHdr.next = task->buffHead.next;
+    tmpHdr.prev = task->buffHead.prev;
+    task->buffHead.next->prev = &tmpHdr;
+    task->buffHead.prev->next = &tmpHdr;
+    OH_ListInit(&task->buffHead);
+    LoopMutexUnlock(&task->mutex);
+
+    ListNode *node = tmpHdr.next;
+    while (node != &tmpHdr) {
+        LE_Buffer *buffer = ListEntry(node, LE_Buffer, node);
         uint64_t eventId = *(uint64_t*)(buffer->data);
         if (asyncTask->processAsyncEvent) {
             asyncTask->processAsyncEvent((TaskHandle)asyncTask, eventId,
                 (uint8_t *)(buffer->data + sizeof(uint64_t)), buffer->dataSize);
         }
-        FreeBuffer(loopHandle, &asyncTask->stream, buffer);
-        buffer = GetFirstBuffer(&asyncTask->stream);
+        OH_ListRemove(&buffer->node);
+        free(buffer);
+        node = tmpHdr.next;
     }
 }
 #ifdef STARTUP_INIT_TEST

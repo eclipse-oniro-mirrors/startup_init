@@ -78,6 +78,10 @@ int StringReplaceChr(char *strl, char oldChr, char newChr);
 
 uint32_t GetRandom(void);
 void OpenConsole(void);
+
+INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out);
+INIT_LOCAL_API int StringToLL(const char *str, long long int *out);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

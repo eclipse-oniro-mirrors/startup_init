@@ -155,6 +155,7 @@ INIT_PUBLIC_API int InitParamWorkSpace(int onlyRead)
         auditData.dacData.gid = DAC_DEFAULT_GROUP; // 2000 for shell
         auditData.dacData.uid = DAC_DEFAULT_USER; // for root
         auditData.dacData.mode = DAC_DEFAULT_MODE; // 0774 default mode
+        auditData.dacData.paramType = PARAM_TYPE_STRING;
         ret = AddSecurityLabel(&auditData);
         PARAM_CHECK(ret == 0, return ret, "Failed to add default dac label");
     } else {

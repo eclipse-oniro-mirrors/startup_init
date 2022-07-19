@@ -33,4 +33,4 @@ debug.bytrace.   = root:system:0775
 persist.distributed_hardware.device_manager. = system:system:0775
 bootevent. = samgr:samgr:0777
 hw_sc. = root:root:0777
-startup.service.ctl. = root:root:0775:int
+startup.service.ctl. = system:servicectrl:0775:int
