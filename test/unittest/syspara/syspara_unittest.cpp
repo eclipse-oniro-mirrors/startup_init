@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include "init_param.h"
+#include "init_utils.h"
 #include "parameter.h"
 #include "sysparam_errno.h"
 #include "param_comm.h"

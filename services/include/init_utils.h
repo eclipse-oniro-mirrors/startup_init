@@ -21,6 +21,8 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#include "beget_ext.h"
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -32,6 +34,8 @@ typedef struct {
     int value;
 } InitArgInfo;
 
+#define MAX_INT_LEN 20
+#define HEX_BASE 16
 #define BINARY_BASE 2
 #define OCTAL_BASE 8
 #define DECIMAL_BASE 10
@@ -72,8 +76,6 @@ void FreeStringVector(char **vector, int count);
 int InUpdaterMode(void);
 int StringReplaceChr(char *strl, char oldChr, char newChr);
 
-int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue);
-const InitArgInfo *GetServieStatusMap(int *size);
 uint32_t GetRandom(void);
 void OpenConsole(void);
 #ifdef __cplusplus

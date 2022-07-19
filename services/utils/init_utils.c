@@ -522,40 +522,6 @@ int StringReplaceChr(char *strl, char oldChr, char newChr)
     return 0;
 }
 
-int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue)
-{
-    if ((argNum == 0) || (infos == NULL) || (name == NULL)) {
-        return defValue;
-    }
-    for (int i = 0; i < argNum; i++) {
-        if (strcmp(infos[i].name, name) == 0) {
-            return infos[i].value;
-        }
-    }
-    return defValue;
-}
-
-const static InitArgInfo g_servieStatusMap[] = {
-    {"created", SERVICE_IDLE},
-    {"starting", SERVICE_STARTING},
-    {"running", SERVICE_STARTED},
-    {"ready", SERVICE_READY},
-    {"stopping", SERVICE_STOPPING},
-    {"stopped", SERVICE_STOPPED},
-    {"suspended", SERVICE_SUSPENDED},
-    {"freezed", SERVICE_FREEZED},
-    {"disabled", SERVICE_DISABLED},
-    {"critial", SERVICE_CRITIAL}
-};
-
-const InitArgInfo *GetServieStatusMap(int *size)
-{
-    if (size != 0) {
-        *size = ARRAY_LENGTH(g_servieStatusMap);
-    }
-    return g_servieStatusMap;
-}
-
 uint32_t GetRandom()
 {
     uint32_t ulSeed = 0;

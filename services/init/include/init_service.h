@@ -88,7 +88,7 @@ extern "C" {
 typedef enum {
     START_MODE_CONDITION,
     START_MODE_BOOT,
-    START_MODE_NARMAL,
+    START_MODE_NORMAL,
 } ServiceStartMode;
 
 typedef enum {

@@ -96,10 +96,14 @@ void DumpOneService(const Service *service)
     const InitArgInfo startModeMap[] = {
         {"condition", START_MODE_CONDITION},
         {"boot", START_MODE_BOOT},
-        {"normal", START_MODE_NARMAL}
+        {"normal", START_MODE_NORMAL}
     };
-    int size = 0;
-    const InitArgInfo *statusMap = GetServieStatusMap(&size);
+
+    const static char *serviceStatusMap[] = {
+        "created", "starting", "running", "ready",
+        "stopping", "stopped", "suspended", "freezed", "disabled", "critical"
+    };
+
     printf("\tservice name: [%s] \n", service->name);
 #ifdef WITH_SELINUX
     if (service->secon != NULL) {
@@ -110,8 +114,8 @@ void DumpOneService(const Service *service)
     printf("\tservice crashCnt: [%d] \n", service->crashCnt);
     printf("\tservice attribute: [%u] \n", service->attribute);
     printf("\tservice importance: [%d] \n", service->importance);
-    printf("\tservice startMode: [%s] \n", startModeMap[service->status].name);
-    printf("\tservice status: [%s] \n", statusMap[service->status].name);
+    printf("\tservice startMode: [%s] \n", startModeMap[service->startMode].name);
+    printf("\tservice status: [%s] \n", serviceStatusMap[service->status]);
     printf("\tservice perms uID [%u] \n", service->servPerm.uID);
     DumpServiceArgs("path arg", &service->pathArgs);
     DumpServiceArgs("writepid file", &service->writePidArgs);
@@ -646,12 +650,25 @@ static int GetServiceOnDemand(const cJSON *curArrItem, Service *curServ)
     return SERVICE_SUCCESS;
 }
 
+static int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue)
+{
+    if ((argNum == 0) || (infos == NULL) || (name == NULL)) {
+        return defValue;
+    }
+    for (int i = 0; i < argNum; i++) {
+        if (strcmp(infos[i].name, name) == 0) {
+            return infos[i].value;
+        }
+    }
+    return defValue;
+}
+
 static int GetServiceMode(Service *service, const cJSON *json)
 {
     const InitArgInfo startModeMap[] = {
         {"condition", START_MODE_CONDITION},
         {"boot", START_MODE_BOOT},
-        {"normal", START_MODE_NARMAL}
+        {"normal", START_MODE_NORMAL}
     };
     const InitArgInfo endModeMap[] = {
         {"pre-fork", END_PRE_FORK},
@@ -659,12 +676,12 @@ static int GetServiceMode(Service *service, const cJSON *json)
         {"after-exec", END_AFTER_EXEC},
         {"ready", END_RECV_READY}
     };
-    service->startMode = START_MODE_NARMAL;
+    service->startMode = START_MODE_NORMAL;
     service->endMode = END_AFTER_EXEC;
     char *value = cJSON_GetStringValue(cJSON_GetObjectItem(json, "start-mode"));
     if (value != NULL) {
         service->startMode = GetMapValue(value,
-            (InitArgInfo *)startModeMap, (int)ARRAY_LENGTH(startModeMap), START_MODE_NARMAL);
+            (InitArgInfo *)startModeMap, (int)ARRAY_LENGTH(startModeMap), START_MODE_NORMAL);
     }
     value = cJSON_GetStringValue(cJSON_GetObjectItem(json, "end-mode"));
     if (value != NULL) {
