@@ -72,7 +72,6 @@ bool DeviceInfoStub::CheckPermission(MessageParcel &data, const std::string &per
     AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     int32_t result = TypePermissionState::PERMISSION_GRANTED;
     int32_t tokenType = AccessTokenKit::GetTokenTypeFlag(callerToken);
-
     if (tokenType == TOKEN_INVALID) {
         DINFO_LOGE("AccessToken type:%d, permission:%d denied!", tokenType, callerToken);
         return false;
