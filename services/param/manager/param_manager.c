@@ -212,6 +212,7 @@ INIT_INNER_API int SysCheckParamExist(const char *name)
 
 INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditData)
 {
+    UNUSED(type);
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return -1, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
