@@ -69,7 +69,7 @@ typedef struct cmdLineInfo {
 
 #ifdef __LITEOS_M__
 #ifndef DATA_PATH
-#define DATA_PATH          ""
+#define DATA_PATH          "/"
 #endif
 #elif defined __LITEOS_A__
 #define DATA_PATH          STARTUP_INIT_UT_PATH"/storage/data/system/param/"
@@ -101,6 +101,7 @@ typedef struct cmdLineInfo {
 #define PARAM_LOGI(fmt, ...) STARTUP_LOGI(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGE(fmt, ...) STARTUP_LOGE(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGV(fmt, ...) STARTUP_LOGV(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_LOGW(fmt, ...) STARTUP_LOGW(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 
 #define PARAM_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                \
@@ -132,7 +133,7 @@ typedef struct cmdLineInfo {
 #define SUBSTR_INFO_DAC 1
 #endif
 
-int SpliteString(char *line, const char *exclude[], uint32_t count,
+int SplitParamString(char *line, const char *exclude[], uint32_t count,
     int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context);
 #ifdef __cplusplus
 #if __cplusplus

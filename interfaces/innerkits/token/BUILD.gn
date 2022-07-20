@@ -18,7 +18,6 @@ import("//build/lite/ndk/ndk.gni")
 
 if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
   shared_library("token_shared") {
-    cflags = [ "-Wall" ]
     include_dirs = [
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/interfaces/innerkits/include/token",

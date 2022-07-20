@@ -19,7 +19,6 @@ lite_component("initsync") {
 
 shared_library("libinitsync_shared") {
   sources = [ "src/init_sync.c" ]
-  cflags = [ "-Wall" ]
   include_dirs = [
     "//base/startup/init/initsync/include",
     "//base/startup/init/interfaces/kits/syscap",
@@ -34,7 +33,6 @@ shared_library("libinitsync_shared") {
 
 static_library("libinitsync_static") {
   sources = [ "src/init_sync.c" ]
-  cflags = [ "-Wall" ]
   include_dirs = [
     "//base/startup/init/initsync/include",
     "//base/startup/init/interfaces/kits/syscap",

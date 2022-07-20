@@ -16,12 +16,9 @@
 #include <grp.h>
 #include <pwd.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <errno.h>
 #include <dirent.h>
-#include <fcntl.h>
+#include <string.h>
 
-#include "init_utils.h"
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_trie.h"
@@ -64,6 +61,15 @@ static void GetGroupIdByName(gid_t *gid, const char *name, uint32_t nameLen)
 // user:group:r|w
 static int GetParamDacData(ParamDacData *dacData, const char *value)
 {
+    static const struct {
+        const char *name;
+        int value;
+    } paramTypes[] = {
+        { "int", PARAM_TYPE_INT },
+        { "string", PARAM_TYPE_STRING },
+        { "bool", PARAM_TYPE_BOOL },
+    };
+
     if (dacData == NULL) {
         return -1;
     }
@@ -77,7 +83,19 @@ static int GetParamDacData(ParamDacData *dacData, const char *value)
     }
     GetUserIdByName(&dacData->uid, value, groupName - value);
     GetGroupIdByName(&dacData->gid, groupName + 1, mode - groupName - 1);
-    dacData->mode = strtol(mode + 1, NULL, OCT_BASE);
+
+    dacData->paramType = PARAM_TYPE_STRING;
+    char *type = strstr(mode + 1, ":");
+    if (type != NULL) {
+        *type = '\0';
+        type++;
+        for (size_t i = 0; (type != NULL) && (i < ARRAY_LENGTH(paramTypes)); i++) {
+            if (strcmp(paramTypes[i].name, type) == 0) {
+                dacData->paramType = paramTypes[i].value;
+            }
+        }
+    }
+    dacData->mode = (uint16_t)strtol(mode + 1, NULL, OCT_BASE);
     return 0;
 }
 
@@ -116,7 +134,7 @@ static int LoadParamLabels(const char *fileName)
     char *buff = (char *)calloc(1, buffSize);
     while (fp != NULL && buff != NULL && fgets(buff, buffSize, fp) != NULL) {
         buff[buffSize - 1] = '\0';
-        int ret = SpliteString(buff, NULL, 0, LoadOneParam_, NULL);
+        int ret = SplitParamString(buff, NULL, 0, LoadOneParam_, NULL);
         if (ret != 0) {
             PARAM_LOGE("Failed to split string %s fileName %s", buff, fileName);
             continue;
@@ -237,8 +255,13 @@ static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const cha
     if ((node->mode & localMode) != 0) {
         ret = DAC_RESULT_PERMISSION;
     }
-    PARAM_LOGV("Param '%s' label gid:%d uid:%d mode 0%o", name, srcLabel->cred.gid, srcLabel->cred.uid, localMode);
-    PARAM_LOGV("Cfg label %d gid:%d uid:%d mode 0%o result %d", labelIndex, node->gid, node->uid, node->mode, ret);
+    if (ret != DAC_RESULT_PERMISSION) {
+        PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%o", name, srcLabel->cred.gid, srcLabel->cred.uid, localMode);
+        PARAM_LOGW("Cfg label %d gid:%d uid:%d mode 0%o ", labelIndex, node->gid, node->uid, node->mode);
+#ifndef STARTUP_INIT_TEST
+        ret = DAC_RESULT_PERMISSION;
+#endif
+    }
     return ret;
 }
 

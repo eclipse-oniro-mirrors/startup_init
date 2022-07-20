@@ -21,12 +21,21 @@
         "ram": "",
         "deps": {
             "components": [
-                "selinux",
-                "ipc",
+                "startup",
                 "safwk",
-                "samgr_standard",
                 "utils_base",
-                "profiler"
+                "napi",
+                "ipc",
+                "config_policy",
+                "hilog_native",
+                "thirdparty_bounds_checking_function",
+                "samgr_standard",
+                "hiviewdfx_hilog_native",
+                "selinux",
+                "hiviewdfx",
+                "access_token",
+                "common",
+                "dsoftbus"
             ],
             "third_party": [
                 "cJSON",

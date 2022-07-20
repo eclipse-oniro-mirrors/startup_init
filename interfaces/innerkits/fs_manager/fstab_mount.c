@@ -17,7 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/wait.h>

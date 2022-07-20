@@ -13,6 +13,7 @@
 import("//base/startup/init/begetd.gni")
 
 param_include_dirs = [
+  "//base/startup/init/interfaces/innerkits/include/syspara",
   "//base/startup/init/services/param/include",
   "//base/startup/init/services/param/adapter",
   "//base/startup/init/services/include/param",
@@ -116,22 +117,26 @@ static_library("param_client_lite") {
       "WORKSPACE_AREA_NEED_MUTEX",
       "PARAM_PERSIST_SAVE_MUTEX",
       "PARAMWORKSPACE_NEED_MUTEX",
+      "PARAM_SUPPORT_CYCLE_CHECK",
     ]
   } else if (ohos_kernel_type == "liteos_m") {
-    sources += [ "//base/startup/init/services/param/manager/param_server.c" ]
+    sources += [
+      "//base/startup/init/services/param/liteos/param_hal.c",
+      "//base/startup/init/services/param/liteos/param_service.c",
+      "//base/startup/init/services/param/manager/param_server.c",
+    ]
     if (enable_ohos_startup_init_lite_use_posix_file_api) {
-      sources +=
-          [ "//base/startup/init/services/param/adapter/param_persistadp.c" ]
-    } else {
-      sources += [ "//base/startup/init/services/param/liteos/param_hal.c" ]
+      defines += [ "PARAM_SUPPORT_POSIX" ]
     }
     defines += [
       "__LITEOS_M__",
       "WORKSPACE_AREA_NEED_MUTEX",
       "PARAM_PERSIST_SAVE_MUTEX",
       "PARAMWORKSPACE_NEED_MUTEX",
-      "DATA_PATH=\"${config_ohos_startup_init_lite_data_path}\"",
     ]
+    if (config_ohos_startup_init_lite_data_path != "") {
+      defines += [ "DATA_PATH=\"${config_ohos_startup_init_lite_data_path}\"" ]
+    }
     if (enable_ohos_startup_init_feature_begetctl_liteos) {
       deps = [ ":lite_ohos_param_to" ]
       include_dirs += [ "$root_out_dir/gen/init" ]

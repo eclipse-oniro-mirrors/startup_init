@@ -129,7 +129,53 @@ INIT_LOCAL_API int ReadParamWithCheck(const char *name, uint32_t op, ParamHandle
     return PARAM_CODE_NOT_FOUND;
 }
 
-INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, const char *value)
+INIT_LOCAL_API uint8_t GetParamValueType(const char *name)
+{
+    uint32_t labelIndex = 0;
+    WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
+    if (space == NULL) {
+        return PARAM_TYPE_STRING;
+    }
+    (void)FindTrieNode(space, name, strlen(name), &labelIndex);
+    ParamSecurityNode *securityNode = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
+    if (securityNode == NULL) {
+        return PARAM_TYPE_STRING;
+    }
+    return securityNode->type;
+}
+
+static int CheckParamValueType(const char *name, const char *value, uint8_t paramType)
+{
+    if (paramType == PARAM_TYPE_INT) {
+        long long int temp1 = 0;
+        if (strlen(value) > 1 && value[0] == '-' && StringToLL(value, &temp1) != 0) {
+            PARAM_LOGE("Illegal param value %s for int", value);
+            return PARAM_CODE_INVALID_VALUE;
+        }
+        unsigned long long int temp2 = 0;
+        if (StringToULL(value, &temp2) != 0) {
+            PARAM_LOGE("Illegal param value %s for int", value);
+            return PARAM_CODE_INVALID_VALUE;
+        }
+    } else if (paramType == PARAM_TYPE_BOOL) {
+        static const char *validValue[] = {
+            "1", "0", "true", "false", "y", "yes", "on", "off", "n", "no"
+        };
+        size_t i = 0;
+        for (; i < ARRAY_LENGTH(validValue); i++) {
+            if (strcasecmp(validValue[i], value) == 0) {
+                break;
+            }
+        }
+        if (i >= ARRAY_LENGTH(validValue)) {
+            PARAM_LOGE("Illegal param value %s for bool", value);
+            return PARAM_CODE_INVALID_VALUE;
+        }
+    }
+    return 0;
+}
+
+INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, const char *value, uint8_t paramType)
 {
     if (IS_READY_ONLY(name)) {
         PARAM_CHECK(strlen(value) < PARAM_CONST_VALUE_LEN_MAX,
@@ -139,10 +185,10 @@ INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, 
             return PARAM_CODE_READ_ONLY;
         }
     } else {
-        PARAM_CHECK(strlen(value) < PARAM_VALUE_LEN_MAX,
-            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s", value);
+        PARAM_CHECK(strlen(value) < GetParamMaxLen(paramType),
+            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s length", value);
     }
-    return 0;
+    return CheckParamValueType(name, value, paramType);
 }
 
 INIT_LOCAL_API int CheckParamName(const char *name, int info)
@@ -181,13 +227,13 @@ INIT_LOCAL_API int CheckParamName(const char *name, int info)
     return 0;
 }
 
-static int AddParam(WorkSpace *workSpace, const char *name, const char *value, uint32_t *dataIndex)
+static int AddParam(WorkSpace *workSpace, uint8_t type, const char *name, const char *value, uint32_t *dataIndex)
 {
     ParamTrieNode *node = AddTrieNode(workSpace, name, strlen(name));
     PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "Failed to add node");
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
     if (entry == NULL) {
-        uint32_t offset = AddParamNode(workSpace, name, strlen(name), value, strlen(value));
+        uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value));
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
         SaveIndex(&node->dataIndex, offset);
         long long globalCommitId = ATOMIC_LOAD_EXPLICIT(&workSpace->area->commitId, memory_order_relaxed);
@@ -255,16 +301,21 @@ INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dat
         if ((mode & LOAD_PARAM_ONLY_ADD) == LOAD_PARAM_ONLY_ADD) {
             return PARAM_CODE_READ_ONLY;
         }
-        ret = CheckParamValue(node, name, value);
+        ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
+        PARAM_CHECK(entry != NULL, return PARAM_CODE_REACHED_MAX,
+            "Failed to update param value %s %u", name, node->dataIndex);
+        // use save type to check value
+        ret = CheckParamValue(node, name, value, entry->type);
         PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         PARAMSPACE_AREA_RW_LOCK(workSpace);
         ret = UpdateParam(workSpace, &node->dataIndex, name, value);
         PARAMSPACE_AREA_RW_UNLOCK(workSpace);
     } else {
-        ret = CheckParamValue(node, name, value);
+        uint8_t type = GetParamValueType(name);
+        ret = CheckParamValue(node, name, value, type);
         PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         PARAMSPACE_AREA_RW_LOCK(workSpace);
-        ret = AddParam((WorkSpace *)workSpace, name, value, dataIndex);
+        ret = AddParam((WorkSpace *)workSpace, type, name, value, dataIndex);
         PARAMSPACE_AREA_RW_UNLOCK(workSpace);
     }
     return ret;
@@ -288,7 +339,7 @@ INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData)
     PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "Failed to add node %s", auditData->name);
     uint32_t offset = node->labelIndex;
     if (node->labelIndex == 0) {  // can not support update for label
-        offset = AddParamSecruityNode(workSpace, auditData);
+        offset = AddParamSecurityNode(workSpace, auditData);
         PARAM_CHECK(offset != 0, return PARAM_CODE_REACHED_MAX, "Failed to add label");
         SaveIndex(&node->labelIndex, offset);
     } else {
@@ -297,11 +348,13 @@ INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData)
         label->mode = auditData->dacData.mode;
         label->uid = auditData->dacData.uid;
         label->gid = auditData->dacData.gid;
+        label->type = auditData->dacData.paramType & PARAM_TYPE_MASK;
 #endif
         PARAM_LOGE("Error, repeat to add label for name %s", auditData->name);
     }
-    PARAM_LOGV("AddSecurityLabel label %d gid %d uid %d mode %o name: %s", offset,
-        auditData->dacData.gid, auditData->dacData.uid, auditData->dacData.mode, auditData->name);
+    PARAM_LOGV("AddSecurityLabel label %d gid %d uid %d mode %o type:%d name: %s", offset,
+        auditData->dacData.gid, auditData->dacData.uid, auditData->dacData.mode,
+        auditData->dacData.paramType, auditData->name);
     return 0;
 }
 
@@ -320,7 +373,7 @@ INIT_LOCAL_API ParamSecurityLabel *GetParamSecurityLabel()
     return &paramSpace->securityLabel;
 }
 
-int SpliteString(char *line, const char *exclude[], uint32_t count,
+int SplitParamString(char *line, const char *exclude[], uint32_t count,
     int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context)
 {
     // Skip spaces

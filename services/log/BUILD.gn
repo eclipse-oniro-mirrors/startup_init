@@ -33,6 +33,9 @@ if (defined(ohos_lite)) {
     if (ohos_kernel_type == "linux") {
       defines += [ "INIT_DMESG" ]
     }
+    if (ohos_kernel_type == "liteos_m") {
+      defines += [ "__LITEOS_M__" ]
+    }
     include_dirs = [
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
       "//third_party/bounds_checking_function/include",

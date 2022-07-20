@@ -55,7 +55,6 @@ executable("init") {
     "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
   ]
 
-  cflags = [ "-Wall" ]
   ldflags = []
   deps = [
     "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",

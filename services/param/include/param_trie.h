@@ -50,9 +50,15 @@ typedef struct {
 #define PARAM_FLAGS_WAITED 0x20000000
 #define PARAM_FLAGS_COMMITID 0x0000ffff
 
+#define PARAM_TYPE_MASK   0x0f
+#define PARAM_TYPE_STRING 0x00
+#define PARAM_TYPE_INT    0x01
+#define PARAM_TYPE_BOOL   0x02
+
 typedef struct {
     ATOMIC_UINT32 commitId;
-    uint16_t keyLength;
+    uint8_t type;
+    uint8_t keyLength;
     uint16_t valueLength;
     char data[0];
 } ParamNode;
@@ -61,7 +67,8 @@ typedef struct {
     uid_t uid;
     gid_t gid;
     uint16_t mode;
-    uint16_t length;
+    uint8_t type;
+    uint8_t length;
     char data[0];
 } ParamSecurityNode;
 
@@ -107,9 +114,12 @@ typedef int (*TraversalTrieNodePtr)(const WorkSpace *workSpace, const ParamTrieN
 INIT_LOCAL_API int TraversalTrieNode(const WorkSpace *workSpace,
     const ParamTrieNode *subTrie, TraversalTrieNodePtr walkFunc, const void *cookie);
 
-INIT_LOCAL_API uint32_t AddParamSecruityNode(WorkSpace *workSpace, const ParamAuditData *auditData);
-INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace,
+INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAuditData *auditData);
+INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     const char *key, uint32_t keyLen, const char *value, uint32_t valueLen);
+
+uint32_t GetParamMaxLen(uint8_t type);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

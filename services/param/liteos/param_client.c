@@ -14,12 +14,10 @@
  */
 #include "init_param.h"
 #include "param_manager.h"
-#ifdef PARAM_LOAD_CFG_FROM_CODE
-#include "param_cfg.h"
-#endif
 
 #define MIN_SLEEP (100 * 1000)
 static int g_flags = 0;
+
 __attribute__((constructor)) static void ClientInit(void);
 __attribute__((destructor)) static void ClientDeinit(void);
 
@@ -28,39 +26,25 @@ static int InitParamClient(void)
     if (PARAM_TEST_FLAG(g_flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
-#ifdef __LITEOS_M__
-    int ret = InitParamWorkSpace(0);
-#else
     EnableInitLog(INIT_INFO);
-    int ret = InitParamWorkSpace(1);
-#endif
     PARAM_LOGV("InitParamClient");
+    int ret = InitParamWorkSpace(1);
     PARAM_CHECK(ret == 0, return -1, "Failed to init param workspace");
     PARAM_SET_FLAG(g_flags, WORKSPACE_FLAGS_INIT);
     // init persist to save
     InitPersistParamWorkSpace();
-#ifdef PARAM_LOAD_CFG_FROM_CODE
-    for (size_t i = 0; i < ARRAY_LENGTH(g_paramDefCfgNodes); i++) {
-        PARAM_LOGI("InitParamClient name %s = %s", g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
-        uint32_t dataIndex = 0;
-        ret = WriteParam(g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value, &dataIndex, 0);
-        PARAM_CHECK(ret == 0, continue, "Failed to set param %d name %s %s",
-            ret, g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
-    }
-#endif
-#ifdef __LITEOS_M__
-    LoadParamFromBuild();
-    // get persist param
-    LoadPersistParams();
-#endif
     return 0;
 }
 
 void ClientInit(void)
 {
     PARAM_LOGV("ClientInit");
+#ifdef __LITEOS_M__
+    InitParamService();
+#else
 #ifndef STARTUP_INIT_TEST
     (void)InitParamClient();
+#endif
 #endif
 }
 
@@ -75,7 +59,6 @@ void ClientDeinit(void)
 int SystemSetParameter(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value %s", name);
-    InitParamClient();
     int ctrlService = 0;
     int ret = CheckParameterSet(name, value, GetParamSecurityLabel(), &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
@@ -139,13 +122,11 @@ int WatchParamCheck(const char *keyprefix)
 
 int SystemCheckParamExist(const char *name)
 {
-    (void)InitParamClient();
     return SysCheckParamExist(name);
 }
 
 int SystemFindParameter(const char *name, ParamHandle *handle)
 {
-    (void)InitParamClient();
     PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
     int ret = ReadParamWithCheck(name, DAC_READ, handle);
     if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {

@@ -29,13 +29,8 @@ extern "C" {
 #define HASH_LENGTH 32
 #define DEV_BUF_LENGTH 3
 #define DEV_BUF_MAX_LENGTH 1024
-#define DECIMAL 10
-#define HEX 16
 
 INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder);
-
-INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out);
-INIT_LOCAL_API int StringToLL(const char *str, long long int *out);
 INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, uint32_t len);
 
 INIT_LOCAL_API const char *GetProductModel_(void);

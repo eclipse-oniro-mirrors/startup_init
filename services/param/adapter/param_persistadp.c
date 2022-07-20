@@ -56,7 +56,7 @@ static int LoadPersistParam()
     uint32_t paramNum = 0;
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
-        int ret = SpliteString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
+        int ret = SplitParamString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
         PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);
         paramNum++;
     }
@@ -125,7 +125,7 @@ static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle)
 
 int RegisterPersistParamOps(PersistParamOps *ops)
 {
-    ParamMutexCeate(&g_saveMutex);
+    ParamMutexCreate(&g_saveMutex);
     PARAM_CHECK(ops != NULL, return -1, "Invalid ops");
     ops->save = SavePersistParam;
     ops->load = LoadPersistParam;

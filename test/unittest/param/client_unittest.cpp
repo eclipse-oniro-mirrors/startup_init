@@ -135,8 +135,9 @@ static void TestPermission()
     EXPECT_EQ(ret, testResult);
 #endif
     u_int32_t len = sizeof(tmp);
+    SetTestPermissionResult(DAC_RESULT_FORBIDED);
     ret = SystemGetParameter(testName, tmp, &len);
-    EXPECT_EQ(ret, testResult);
+    EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
     RegisterSecurityOps(0);
     SetTestPermissionResult(0); // recover testpermission result
 }

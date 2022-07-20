@@ -75,7 +75,7 @@ dscreen:x:3054:
 daudio:x:3055:
 dhardware:x:3056:
 installs:x:3060:
-codec_service:x:3061:
+vendor_mpp_driver:x:3061:
 deviceauth:x:3333:
 huks_server:x:3510:
 dms:x:5522:
@@ -109,3 +109,4 @@ accessibility:x:1103:
 motion_host:x:3065:
 uhdf_driver:x:3066:
 memmgr:x:1111:
+ispserver:x:3821:

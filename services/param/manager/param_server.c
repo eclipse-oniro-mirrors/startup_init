@@ -174,7 +174,7 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode, const char *ex
     }
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
-        int ret = SpliteString(buffer, exclude, count, LoadOneParam_, &mode);
+        int ret = SplitParamString(buffer, exclude, count, LoadOneParam_, &mode);
         PARAM_CHECK(ret == 0, continue, "Failed to set param '%s' error:%d ", buffer, ret);
         paramNum++;
     }
@@ -215,23 +215,34 @@ INIT_LOCAL_API void LoadParamFromBuild(void)
 {
     PARAM_LOGI("load parameters from build ");
 #ifdef INCREMENTAL_VERSION
-    WriteParam("const.product.incremental.version", INCREMENTAL_VERSION, NULL, LOAD_PARAM_NORMAL);
+    if (strlen(INCREMENTAL_VERSION) > 0) {
+        WriteParam("const.product.incremental.version", INCREMENTAL_VERSION, NULL, LOAD_PARAM_NORMAL);
+    }
 #endif
 #ifdef BUILD_TYPE
-    WriteParam("const.product.build.type", BUILD_TYPE, NULL, LOAD_PARAM_NORMAL);
+    if (strlen(BUILD_TYPE) > 0) {
+        WriteParam("const.product.build.type", BUILD_TYPE, NULL, LOAD_PARAM_NORMAL);
+    }
 #endif
 #ifdef BUILD_USER
-    WriteParam("const.product.build.user", BUILD_USER, NULL, LOAD_PARAM_NORMAL);
+    if (strlen(BUILD_USER) > 0) {
+        WriteParam("const.product.build.user", BUILD_USER, NULL, LOAD_PARAM_NORMAL);
+    }
 #endif
 #ifdef BUILD_TIME
-    PARAM_LOGI("const.product.build.date %s", BUILD_TIME);
-    WriteParam("const.product.build.date", BUILD_TIME, NULL, LOAD_PARAM_NORMAL);
+    if (strlen(BUILD_TIME) > 0) {
+        WriteParam("const.product.build.date", BUILD_TIME, NULL, LOAD_PARAM_NORMAL);
+    }
 #endif
 #ifdef BUILD_HOST
-    WriteParam("const.product.build.host", BUILD_HOST, NULL, LOAD_PARAM_NORMAL);
+    if (strlen(BUILD_HOST) > 0) {
+        WriteParam("const.product.build.host", BUILD_HOST, NULL, LOAD_PARAM_NORMAL);
+    }
 #endif
 #ifdef BUILD_ROOTHASH
-    WriteParam("const.ohos.buildroothash", BUILD_ROOTHASH, NULL, LOAD_PARAM_NORMAL);
+    if (strlen(BUILD_ROOTHASH) > 0) {
+        WriteParam("const.ohos.buildroothash", BUILD_ROOTHASH, NULL, LOAD_PARAM_NORMAL);
+    }
 #endif
 }
 

@@ -20,9 +20,9 @@
 
 #include "param_comm.h"
 #include "init_param.h"
+#include "init_utils.h"
 #include "sysparam_errno.h"
 #include "securec.h"
-#include "sysversion.h"
 #include "beget_ext.h"
 
 int WaitParameter(const char *key, const char *value, int timeout)
