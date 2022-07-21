@@ -30,11 +30,6 @@ int WorkSpaceNodeCompare(const HashNode *node1, const HashNode *node2);
 char *GetServiceCtrlName(const char *name, const char *value);
 }
 
-static void OnClose(ParamTaskPtr client)
-{
-    UNUSED(client);
-}
-
 static int CheckServerParamValue(const char *name, const char *expectValue)
 {
     char tmp[PARAM_BUFFER_SIZE] = {0};
