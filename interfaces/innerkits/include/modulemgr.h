@@ -75,7 +75,7 @@ void ModuleMgrDestroy(MODULE_MGR *moduleMgr);
 /**
  * @brief Install a module
  * 
- * The final module path is: /system/lib/{moduleMgrPath}/{moduleNmae}.z.so
+ * The final module path is: /system/lib/{moduleMgrPath}/{moduleName}.z.so
  *
  * @param moduleMgr module manager handle
  * @param moduleName module name
