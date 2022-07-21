@@ -34,7 +34,7 @@ static int WorkSpaceKeyCompare(const HashNode *node1, const void *key)
     return strcmp(workSpace1->fileName, (char *)key);
 }
 
-static int GenerateKeyHasCode(const char *buff, uint32_t len)
+static int GenerateKeyHasCode(const char *buff, size_t len)
 {
     int code = 0;
     for (size_t i = 0; i < len; i++) {
