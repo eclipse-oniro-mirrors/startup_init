@@ -862,6 +862,16 @@ void SetServicePathWithAsan(Service *service)
 }
 #endif
 
+static void ParseOneServiceArgs(const cJSON *curItem, Service *service)
+{
+    (void)GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
+    (void)GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
+    (void)GetServiceArgs(curItem, "permission", MAX_WRITEPID_FILES, &service->permArgs);
+    (void)GetServiceArgs(curItem, "permission_acls", MAX_WRITEPID_FILES, &service->permAclsArgs);
+    (void)GetStringItem(curItem, APL_STR_IN_CFG, service->apl, MAX_APL_NAME);
+    (void)GetCpuArgs(curItem, CPU_CORE_STR_IN_CFG, service);
+}
+
 int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
@@ -899,12 +909,7 @@ int ParseOneService(const cJSON *curItem, Service *service)
     ret = GetServiceAttr(curItem, service, CONSOLE_STR_IN_CFG, SERVICE_ATTR_CONSOLE, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get console for service %s", service->name);
 
-    (void)GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
-    (void)GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
-    (void)GetServiceArgs(curItem, "permission", MAX_WRITEPID_FILES, &service->permArgs);
-    (void)GetServiceArgs(curItem, "permission_acls", MAX_WRITEPID_FILES, &service->permAclsArgs);
-    (void)GetStringItem(curItem, APL_STR_IN_CFG, service->apl, MAX_APL_NAME);
-    (void)GetCpuArgs(curItem, CPU_CORE_STR_IN_CFG, service);
+    ParseOneServiceArgs(curItem, service);
     ret = GetServiceSandbox(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get sandbox for service %s", service->name);
     ret = GetServiceCaps(curItem, service);

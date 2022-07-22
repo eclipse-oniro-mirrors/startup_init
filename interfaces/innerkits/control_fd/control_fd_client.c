@@ -31,11 +31,11 @@ static void ProcessPtyWrite(const WatcherHandle taskHandle, int fd, uint32_t *ev
     }
     CmdAgent *agent = (CmdAgent *)context;
     char rbuf[PTY_BUF_SIZE] = {0};
-    int rlen = read(fd, rbuf, PTY_BUF_SIZE - 1);
+    ssize_t rlen = read(fd, rbuf, PTY_BUF_SIZE - 1);
     int ret = fflush(stdin);
     BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed fflush err=%d", errno);
     if (rlen > 0) {
-        int wlen = write(agent->ptyFd, rbuf, rlen);
+        ssize_t wlen = write(agent->ptyFd, rbuf, rlen);
         BEGET_ERROR_CHECK(wlen == rlen, return, "[control_fd] Failed write fifo err=%d", errno);
     }
     ret = fflush(stdout);
@@ -51,7 +51,7 @@ static void ProcessPtyRead(const WatcherHandle taskHandle, int fd, uint32_t *eve
     }
     CmdAgent *agent = (CmdAgent *)context;
     char buf[PTY_BUF_SIZE] = {0};
-    int readlen = read(fd, buf, PTY_BUF_SIZE - 1);
+    long readlen = read(fd, buf, PTY_BUF_SIZE - 1);
     if (readlen > 0) {
         fprintf(stdout, "%s", buf);
     } else {
