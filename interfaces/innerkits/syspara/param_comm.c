@@ -33,6 +33,8 @@
 #include "securec.h"
 #include "beget_ext.h"
 
+static const char *g_emptyStr = "";
+
 INIT_LOCAL_API int IsValidParamValue(const char *value, uint32_t len)
 {
     if ((value == NULL) || (strlen(value) + 1 > len)) {
@@ -71,11 +73,11 @@ INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder
     int ret = SystemGetParameter(key, NULL, &len);
     if (ret == 0 && len > 0) {
         char *res = (char *)malloc(len + 1);
-        BEGET_CHECK(res != NULL, return NULL);
+        BEGET_CHECK(res != NULL, return g_emptyStr);
         ret = SystemGetParameter(key, res, &len);
         if (ret != 0) {
             free(res);
-            return NULL;
+            return g_emptyStr;
         }
         *paramHolder = res;
     }
