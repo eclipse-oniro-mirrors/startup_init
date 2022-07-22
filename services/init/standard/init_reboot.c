@@ -143,12 +143,10 @@ static int DoRebootCmd(const char *cmd, const char *opt)
 {
     // by job to stop service and unmount
     DoJobNow("reboot");
-    int ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
-    if (ret == 0) {
+    (void)CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
 #ifndef STARTUP_INIT_TEST
         return reboot(RB_AUTOBOOT);
 #endif
-    }
     return 0;
 }
 
@@ -156,12 +154,10 @@ static int DoShutdownCmd(const char *cmd, const char *opt)
 {
     // by job to stop service and unmount
     DoJobNow("reboot");
-    int ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
-    if (ret == 0) {
+    (void)CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
 #ifndef STARTUP_INIT_TEST
         return reboot(RB_POWER_OFF);
 #endif
-    }
     return 0;
 }
 
@@ -194,6 +190,8 @@ static int DoFlashdCmd(const char *cmd, const char *opt)
 #ifdef PRODUCT_RK
 static int DoLoaderCmd(const char *cmd, const char *opt)
 {
+    // by job to stop service and unmount
+    DoJobNow("reboot");
     syscall(__NR_reboot, REBOOT_MAGIC1, REBOOT_MAGIC2, REBOOT_CMD_RESTART2, "loader");
     return 0;
 }
@@ -203,13 +201,11 @@ static int DoSuspendCmd(const char *cmd, const char *opt)
 {
     // by job to stop service and unmount
     DoJobNow("suspend");
-    int ret = CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
-    if (ret == 0) {
+    (void)CheckAndRebootToUpdater(NULL, "reboot", NULL, NULL);
 #ifndef STARTUP_INIT_TEST
         INIT_LOGE("DoSuspendCmd %s RB_SW_SUSPEND.", cmd);
         return reboot(RB_AUTOBOOT);
 #endif
-    }
     return 0;
 }
 
