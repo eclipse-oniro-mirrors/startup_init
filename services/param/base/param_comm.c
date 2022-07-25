@@ -72,7 +72,10 @@ INIT_LOCAL_API ParamTrieNode *GetTrieNodeByHandle(ParamHandle handle)
     WorkSpace *workSpace = HASHMAP_ENTRY(node, WorkSpace, hashNode);
     WORKSPACE_RW_UNLOCK(*paramSpace);
     index = index - workSpace->area->startIndex;
-    return (ParamTrieNode *)GetTrieNode(workSpace, index);
+    if (PARAM_IS_ALIGNED(index)) {
+        return (ParamTrieNode *)GetTrieNode(workSpace, index);
+    }
+    return NULL;
 }
 
 INIT_LOCAL_API WorkSpace *GetFirstWorkSpace(void)
