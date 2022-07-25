@@ -100,7 +100,7 @@ static int CmdOnIncommingConntect(const LoopHandle loop, const TaskHandle server
     info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_CONNECT;
     info.baseInfo.close = OnClose;
     info.baseInfo.userDataSize = sizeof(CmdTask);
-    info.disConntectComplete = NULL;
+    info.disConnectComplete = NULL;
     info.sendMessageComplete = NULL;
     info.recvMessage = CmdOnRecvMessage;
     int ret = LE_AcceptStreamClient(LE_GetDefaultLoop(), server, &client, &info);
@@ -127,7 +127,7 @@ void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func)
     info.server = (char *)socketPath;
     info.socketId = -1;
     info.baseInfo.close = NULL;
-    info.disConntectComplete = NULL;
+    info.disConnectComplete = NULL;
     info.incommingConntect = CmdOnIncommingConntect;
     info.sendMessageComplete = NULL;
     info.recvMessage = NULL;

@@ -93,8 +93,8 @@ static LE_STATUS HandleStreamEvent_(const LoopHandle loopHandle, const TaskHandl
     }
     if (status == LE_DIS_CONNECTED) {
         loop->delEvent(loop, GetSocketFd(handle), Event_Read | Event_Write);
-        if (stream->disConntectComplete) {
-            stream->disConntectComplete(handle);
+        if (stream->disConnectComplete) {
+            stream->disConnectComplete(handle);
         }
         LE_CloseStreamTask(loopHandle, handle);
     }
@@ -116,8 +116,8 @@ static LE_STATUS HandleClientEvent_(const LoopHandle loopHandle, const TaskHandl
         status = HandleRecvMsg_(loopHandle, handle, client->recvMessage);
     }
     if (status == LE_DIS_CONNECTED) {
-        if (client->disConntectComplete) {
-            client->disConntectComplete(handle);
+        if (client->disConnectComplete) {
+            client->disConnectComplete(handle);
         }
         client->connected = 0;
         LE_CloseStreamTask(loopHandle, handle);
@@ -201,7 +201,7 @@ LE_STATUS LE_CreateStreamClient(const LoopHandle loopHandle,
     task->connectComplete = info->connectComplete;
     task->sendMessageComplete = info->sendMessageComplete;
     task->recvMessage = info->recvMessage;
-    task->disConntectComplete = info->disConntectComplete;
+    task->disConnectComplete = info->disConnectComplete;
     EventLoop *loop = (EventLoop *)loopHandle;
     loop->addEvent(loop, (const BaseTask *)task, Event_Read);
     *taskHandle = (TaskHandle)task;
@@ -225,7 +225,7 @@ LE_STATUS LE_AcceptStreamClient(const LoopHandle loopHandle, const TaskHandle se
         return LE_NO_MEMORY, "Failed to create task");
     task->stream.base.handleEvent = HandleStreamEvent_;
     task->stream.base.innerClose = HandleStreamTaskClose_;
-    task->disConntectComplete = info->disConntectComplete;
+    task->disConnectComplete = info->disConnectComplete;
     task->sendMessageComplete = info->sendMessageComplete;
     task->recvMessage = info->recvMessage;
     task->serverTask = (StreamServerTask *)server;

@@ -91,12 +91,12 @@ typedef struct {
     StreamServerTask *serverTask;
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;
-    LE_DisConntectComplete disConntectComplete;
+    LE_DisConntectComplete disConnectComplete;
 } StreamConnectTask;
 
 typedef struct {
     StreamTask stream;
-    LE_DisConntectComplete disConntectComplete;
+    LE_DisConntectComplete disConnectComplete;
     LE_ConntectComplete connectComplete;
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;

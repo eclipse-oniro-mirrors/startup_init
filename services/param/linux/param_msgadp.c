@@ -69,7 +69,7 @@ int ParamStreamCreate(ParamTaskPtr *stream, ParamTaskPtr server,
         info.baseInfo.flags |= TASK_TEST;
     }
     info.baseInfo.close = streamInfo->close;
-    info.disConntectComplete = NULL;
+    info.disConnectComplete = NULL;
     info.sendMessageComplete = NULL;
     info.recvMessage = OnReceiveRequest;
     g_recvMessage = streamInfo->recvMessage;

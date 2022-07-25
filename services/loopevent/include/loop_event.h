@@ -102,7 +102,7 @@ typedef struct {
     LE_BaseInfo baseInfo;
     char *server;
     int socketId;
-    LE_DisConntectComplete disConntectComplete;
+    LE_DisConntectComplete disConnectComplete;
     LE_IncommingConntect incommingConntect;
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;
@@ -111,7 +111,7 @@ typedef struct {
 typedef struct {
     LE_BaseInfo baseInfo;
     char *server;
-    LE_DisConntectComplete disConntectComplete;
+    LE_DisConntectComplete disConnectComplete;
     LE_ConntectComplete connectComplete;
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;
