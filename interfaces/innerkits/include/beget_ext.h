@@ -65,7 +65,7 @@ INIT_PUBLIC_API void SetInitCommLog(InitCommLog logFunc);
 #define STARTUP_LOGF(domain, tag, fmt, ...) \
     StartupLog(INIT_FATAL, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 
-#define BASE_DOMAIN 0xA000
+#define BASE_DOMAIN 0xD002C00
 #ifndef BEGET_DOMAIN
 #define BEGET_DOMAIN (BASE_DOMAIN + 0xb)
 #endif
