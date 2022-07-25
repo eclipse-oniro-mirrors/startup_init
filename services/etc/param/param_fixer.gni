@@ -24,7 +24,7 @@ template("ohos_prebuilt_para") {
   _output_para_file = get_path_info(invoker.source, "file")
   action_with_pydeps(_fixed_param_target) {
     deps = []
-    script = "//base/startup/init_lite/services/etc/param/param_fixer.py"
+    script = "//base/startup/init/services/etc/param/param_fixer.py"
     depfile = "${target_gen_dir}/${target_name}.d"
     args = [
       "--output",

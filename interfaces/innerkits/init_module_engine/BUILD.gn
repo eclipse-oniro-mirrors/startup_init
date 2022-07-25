@@ -25,9 +25,9 @@ if (defined(ohos_lite)) {
     visibility = [ ":*" ]
     include_dirs = [
       "include/",
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/services/log",
+      "//base/startup/init/services/include",
+      "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/services/log",
       "//third_party/cJSON",
     ]
   }
@@ -62,10 +62,10 @@ if (defined(ohos_lite)) {
 
   config("init_module_engine_sources_config") {
     include_dirs = [
-      "//base/startup/init_lite/interfaces/innerkits/init_module_engine/include",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/services/include",
-      "//base/startup/init_lite/services/log",
+      "//base/startup/init/interfaces/innerkits/init_module_engine/include",
+      "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/services/include",
+      "//base/startup/init/services/log",
       "//third_party/cJSON",
     ]
   }

@@ -11,14 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//base/startup/init_lite/begetd.gni")
+import("//base/startup/init/begetd.gni")
 import("//build/ohos.gni")
 
 config("exported_header_files") {
   visibility = [ ":*" ]
   include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/interfaces/innerkits/control_fd",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/control_fd",
   ]
 }
 
@@ -31,8 +31,8 @@ ohos_static_library("libcontrolfd") {
   include_dirs = [
     ".",
     "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/loopevent/include",
+    "//base/startup/init/services/include",
+    "//base/startup/init/services/loopevent/include",
   ]
   part_name = "init"
 }

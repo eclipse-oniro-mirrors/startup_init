@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import("//base/startup/init_lite/begetd.gni")
+import("//base/startup/init/begetd.gni")
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
 
 if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
   shared_library("token_shared") {
     include_dirs = [
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/interfaces/innerkits/include/token",
+      "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/interfaces/innerkits/include/token",
       "//utils/native/lite/include",
-      "//base/startup/init_lite/interfaces/innerkits/token",
+      "//base/startup/init/interfaces/innerkits/token",
     ]
     sources = [ "src/token_impl_posix/token.c" ]
 
@@ -38,10 +38,10 @@ if (ohos_kernel_type == "liteos_m") {
     sources = [ "src/token_impl_hal/token.c" ]
 
     include_dirs = [
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/interfaces/innerkits/include/token",
+      "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/interfaces/innerkits/include/token",
       "//utils/native/lite/include",
-      "//base/startup/init_lite/interfaces/innerkits/token",
+      "//base/startup/init/interfaces/innerkits/token",
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite",
     ]
 
@@ -67,8 +67,7 @@ ndk_lib("token_notes") {
     lib_extension = ".so"
   }
   if (ohos_kernel_type != "liteos_m") {
-    deps +=
-        [ "//base/startup/init_lite/interfaces/innerkits/token:token_shared" ]
+    deps += [ "//base/startup/init/interfaces/innerkits/token:token_shared" ]
   }
-  head_files += [ "//base/startup/init_lite/interfaces/include/token" ]
+  head_files += [ "//base/startup/init/interfaces/include/token" ]
 }

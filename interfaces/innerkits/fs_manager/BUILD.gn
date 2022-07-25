@@ -16,7 +16,7 @@ import("//build/ohos.gni")
 config("libfsmanager_exported_configs") {
   visibility = [ ":*" ]
   include_dirs =
-      [ "//base/startup/init_lite/interfaces/innerkits/include/fs_manager" ]
+      [ "//base/startup/init/interfaces/innerkits/include/fs_manager" ]
 }
 
 ohos_static_library("libfsmanager_static") {
@@ -25,11 +25,11 @@ ohos_static_library("libfsmanager_static") {
     "fstab_mount.c",
   ]
   include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include",
     "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/param/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/include",
+    "//base/startup/init/services/param/include",
   ]
   public_configs = [ ":libfsmanager_exported_configs" ]
   part_name = "init"

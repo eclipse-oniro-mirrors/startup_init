@@ -14,34 +14,34 @@
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "linux") {
     service_ueventd_deps = [
-      "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
-      "//base/startup/init_lite/services/log:init_log",
-      "//base/startup/init_lite/services/param/base:parameterbase",
-      "//base/startup/init_lite/services/utils:libinit_utils",
+      "//base/startup/init/interfaces/innerkits/socket:libsocket",
+      "//base/startup/init/services/log:init_log",
+      "//base/startup/init/services/param/base:parameterbase",
+      "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_static",
     ]
 
     executable("ueventd_linux") {
       sources = [
-        "//base/startup/init_lite/services/utils/init_utils.c",
-        "//base/startup/init_lite/services/utils/list.c",
-        "//base/startup/init_lite/ueventd/lite/ueventd_parameter.c",
-        "//base/startup/init_lite/ueventd/ueventd.c",
-        "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
-        "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
-        "//base/startup/init_lite/ueventd/ueventd_main.c",
-        "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
-        "//base/startup/init_lite/ueventd/ueventd_socket.c",
+        "//base/startup/init/services/utils/init_utils.c",
+        "//base/startup/init/services/utils/list.c",
+        "//base/startup/init/ueventd/lite/ueventd_parameter.c",
+        "//base/startup/init/ueventd/ueventd.c",
+        "//base/startup/init/ueventd/ueventd_device_handler.c",
+        "//base/startup/init/ueventd/ueventd_firmware_handler.c",
+        "//base/startup/init/ueventd/ueventd_main.c",
+        "//base/startup/init/ueventd/ueventd_read_cfg.c",
+        "//base/startup/init/ueventd/ueventd_socket.c",
       ]
       defines = [ "__MUSL__" ]
       defines += [ "_GNU_SOURCE" ]
 
       include_dirs = [
-        "//base/startup/init_lite/services/log",
-        "//base/startup/init_lite/services/include",
-        "//base/startup/init_lite/services/include/param",
-        "//base/startup/init_lite/services/utils",
-        "//base/startup/init_lite/ueventd/include",
+        "//base/startup/init/services/log",
+        "//base/startup/init/services/include",
+        "//base/startup/init/services/include/param",
+        "//base/startup/init/services/utils",
+        "//base/startup/init/ueventd/include",
       ]
 
       deps = service_ueventd_deps
@@ -55,27 +55,27 @@ if (defined(ohos_lite)) {
 } else {
   import("//build/ohos.gni")
   service_ueventd_sources = [
-    "//base/startup/init_lite/services/utils/list.c",
-    "//base/startup/init_lite/ueventd/ueventd.c",
-    "//base/startup/init_lite/ueventd/ueventd_device_handler.c",
-    "//base/startup/init_lite/ueventd/ueventd_firmware_handler.c",
-    "//base/startup/init_lite/ueventd/ueventd_read_cfg.c",
-    "//base/startup/init_lite/ueventd/ueventd_socket.c",
+    "//base/startup/init/services/utils/list.c",
+    "//base/startup/init/ueventd/ueventd.c",
+    "//base/startup/init/ueventd/ueventd_device_handler.c",
+    "//base/startup/init/ueventd/ueventd_firmware_handler.c",
+    "//base/startup/init/ueventd/ueventd_read_cfg.c",
+    "//base/startup/init/ueventd/ueventd_socket.c",
   ]
 
   service_ueventd_include = [
     "//third_party/bounds_checking_function/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/utils",
-    "//base/startup/init_lite/ueventd/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/include",
+    "//base/startup/init/services/utils",
+    "//base/startup/init/ueventd/include",
   ]
 
   service_ueventd_deps = [
-    "//base/startup/init_lite/interfaces/innerkits/socket:libsocket",
-    "//base/startup/init_lite/services/log:init_log",
-    "//base/startup/init_lite/services/param/base:parameterbase",
-    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//base/startup/init/interfaces/innerkits/socket:libsocket",
+    "//base/startup/init/services/log:init_log",
+    "//base/startup/init/services/param/base:parameterbase",
+    "//base/startup/init/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
 
@@ -105,16 +105,16 @@ if (defined(ohos_lite)) {
   ohos_executable("ueventd") {
     sources = service_ueventd_sources
     sources += [
-      "//base/startup/init_lite/ueventd/standard/ueventd_parameter.c",
-      "//base/startup/init_lite/ueventd/ueventd_main.c",
+      "//base/startup/init/ueventd/standard/ueventd_parameter.c",
+      "//base/startup/init/ueventd/ueventd_main.c",
     ]
     include_dirs = service_ueventd_include
     include_dirs += [
-      "//base/startup/init_lite/services/include/param",
-      "//base/startup/init_lite/interfaces/innerkits/include",
+      "//base/startup/init/services/include/param",
+      "//base/startup/init/interfaces/innerkits/include",
     ]
     deps = service_ueventd_deps
-    deps += [ "//base/startup/init_lite/services/param/linux:param_client" ]
+    deps += [ "//base/startup/init/services/param/linux:param_client" ]
     cflags = []
 
     if (build_selinux) {
@@ -131,7 +131,7 @@ if (defined(ohos_lite)) {
   }
 
   ohos_prebuilt_etc("ueventd.config") {
-    source = "//base/startup/init_lite/ueventd/etc/ueventd.config"
+    source = "//base/startup/init/ueventd/etc/ueventd.config"
     part_name = "init"
     install_images = [
       "system",
@@ -152,9 +152,9 @@ group("startup_ueventd") {
     }
   } else {
     deps = [
-      "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
-      "//base/startup/init_lite/ueventd:ueventd",
-      "//base/startup/init_lite/ueventd:ueventd.config",
+      "//base/startup/init/ueventd:libueventd_ramdisk_static",
+      "//base/startup/init/ueventd:ueventd",
+      "//base/startup/init/ueventd:ueventd.config",
     ]
   }
 }
