@@ -16,7 +16,6 @@
 #include "ueventd_read_cfg.h"
 
 #include <ctype.h>
-#include <limits.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>

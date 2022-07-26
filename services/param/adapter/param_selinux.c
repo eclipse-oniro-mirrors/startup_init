@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include <dlfcn.h>
-#include <sys/stat.h>
 #include <sys/socket.h>
 
 #include "init_utils.h"

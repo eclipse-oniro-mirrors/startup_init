@@ -15,13 +15,8 @@
 
 #include "trigger_manager.h"
 
-#include <errno.h>
-#include <fcntl.h>
 #include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 #include "init_cmds.h"
 #include "param_manager.h"

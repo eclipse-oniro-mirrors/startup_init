@@ -14,16 +14,13 @@
  */
 
 #include <ctype.h>
-#include <fcntl.h>
 #include <libgen.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <sys/mount.h>
-#include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include "beget_ext.h"
 #include "fs_manager/fs_manager.h"
 #include "init_utils.h"

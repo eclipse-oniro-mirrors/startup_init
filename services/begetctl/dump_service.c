@@ -18,7 +18,6 @@
 
 #include "begetctl.h"
 #include "control_fd.h"
-#include "init_utils.h"
 
 #define DUMP_SERVICE_INFO_CMD_ARGS 2
 static int main_cmd(BShellHandle shell, int argc, char **argv)

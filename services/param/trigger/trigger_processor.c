@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include <ctype.h>
-#include <unistd.h>
 
 #include "init_cmds.h"
 #include "init_param.h"

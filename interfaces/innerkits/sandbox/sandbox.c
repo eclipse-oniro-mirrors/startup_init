@@ -22,7 +22,6 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
-#include <sys/types.h>
 #include <errno.h>
 #include "beget_ext.h"
 #include "init_utils.h"

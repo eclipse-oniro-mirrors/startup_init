@@ -15,13 +15,10 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <sched.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
 #ifdef LINUX_WATCHDOG

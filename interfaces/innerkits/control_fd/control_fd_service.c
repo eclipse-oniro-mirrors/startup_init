@@ -13,11 +13,6 @@
  * limitations under the License.
  */
 #include <fcntl.h>
-#include <limits.h>
-#include <stdbool.h>
-#include <sys/ioctl.h>
-#include <sys/wait.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "beget_ext.h"

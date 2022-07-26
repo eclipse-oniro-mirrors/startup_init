@@ -15,10 +15,7 @@
 #include "param_osadp.h"
 
 #include <errno.h>
-#include <pthread.h>
-#include <sys/ipc.h>
 #include <sys/mman.h>
-#include <sys/shm.h>
 
 #include "param_message.h"
 #include "param_utils.h"

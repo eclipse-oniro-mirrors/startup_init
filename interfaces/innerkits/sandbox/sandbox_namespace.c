@@ -17,7 +17,6 @@
 #include <fcntl.h>
 #include <sched.h>
 #include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include "beget_ext.h"
 

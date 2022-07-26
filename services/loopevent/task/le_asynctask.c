@@ -14,7 +14,6 @@
  */
 #include "le_task.h"
 
-#include <errno.h>
 #include <sys/eventfd.h>
 
 #include "le_loop.h"
