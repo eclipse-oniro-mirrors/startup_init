@@ -141,9 +141,9 @@ static LE_STATUS HandleServerEvent_(const LoopHandle loopHandle, const TaskHandl
         return LE_FAILURE;
     }
     StreamServerTask *server = (StreamServerTask *)serverTask;
-    LE_ONLY_CHECK(server->incommingConntect != NULL, return LE_SUCCESS);
+    LE_ONLY_CHECK(server->incommingConnect != NULL, return LE_SUCCESS);
 
-    int ret = server->incommingConntect(loopHandle, serverTask);
+    int ret = server->incommingConnect(loopHandle, serverTask);
     if (ret != LE_SUCCESS) {
         LE_LOGE("HandleServerEvent_ fd %d do not accept socket", GetSocketFd(serverTask));
     }
@@ -157,8 +157,8 @@ LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,
 {
     LE_CHECK(loopHandle != NULL && taskHandle != NULL && info != NULL, return LE_INVALID_PARAM, "Invalid parameters");
     LE_CHECK(info->server != NULL, return LE_INVALID_PARAM, "Invalid parameters server");
-    LE_CHECK(info->incommingConntect != NULL, return LE_INVALID_PARAM,
-        "Invalid parameters incommingConntect %s", info->server);
+    LE_CHECK(info->incommingConnect != NULL, return LE_INVALID_PARAM,
+        "Invalid parameters incommingConnect %s", info->server);
 
     int fd = info->socketId;
     if (info->socketId <= 0) {
@@ -173,7 +173,7 @@ LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,
         return LE_NO_MEMORY, "Failed to create task");
     task->base.handleEvent = HandleServerEvent_;
     task->base.innerClose = HandleStreamTaskClose_;
-    task->incommingConntect = info->incommingConntect;
+    task->incommingConnect = info->incommingConnect;
     loop->addEvent(loop, (const BaseTask *)task, Event_Read);
     int ret = memcpy_s(task->server, strlen(info->server) + 1, info->server, strlen(info->server) + 1);
     LE_CHECK(ret == 0, return LE_FAILURE, "Failed to copy server name %s", info->server);

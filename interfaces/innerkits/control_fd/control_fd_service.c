@@ -93,7 +93,7 @@ static int SendMessage(LoopHandle loop, TaskHandle task, const char *message)
     return 0;
 }
 
-static int CmdOnIncommingConntect(const LoopHandle loop, const TaskHandle server)
+static int CmdOnIncommingConnect(const LoopHandle loop, const TaskHandle server)
 {
     TaskHandle client = NULL;
     LE_StreamInfo info = {};
@@ -128,7 +128,7 @@ void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func)
     info.socketId = -1;
     info.baseInfo.close = NULL;
     info.disConnectComplete = NULL;
-    info.incommingConntect = CmdOnIncommingConntect;
+    info.incommingConnect = CmdOnIncommingConnect;
     info.sendMessageComplete = NULL;
     info.recvMessage = NULL;
     g_controlFdFunc = func;

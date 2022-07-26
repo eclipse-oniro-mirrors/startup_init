@@ -52,7 +52,7 @@ int ParamServerCreate(ParamTaskPtr *stream, const ParamStreamInfo *streamInfo)
     info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_SERVER;
     info.server = streamInfo->server;
     info.baseInfo.close = streamInfo->close;
-    info.incommingConntect = streamInfo->incomingConnect;
+    info.incommingConnect = streamInfo->incomingConnect;
     return LE_CreateStreamServer(LE_GetDefaultLoop(), stream, &info);
 }
 
