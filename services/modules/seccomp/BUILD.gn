@@ -1,0 +1,133 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/startup/init/begetd.gni")
+import(
+    "//base/startup/init/services/modules/seccomp/scripts/seccomp_policy_fixer.gni")
+import("//build/config/clang/clang.gni")
+import("//build/ohos.gni")
+import("//build/ohos/kernel/kernel.gni")
+
+INIT_PART = "init"
+
+action("syscall_to_nr_arm") {
+  script = "${clang_base_path}/bin/clang"
+  output_dir = target_gen_dir + "/libsyscall_to_nr_arm"
+  args = [
+    "-I",
+    rebase_path(
+        "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include/asm-arm"),
+    "-I",
+    rebase_path(
+        "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include"),
+    "-dD",
+    "-E",
+    "-Wall",
+    "-nostdinc",
+    "-o",
+    rebase_path(output_dir),
+    rebase_path("gen_syscall_name_nrs.c"),
+  ]
+
+  outputs = [ output_dir ]
+}
+
+action("syscall_to_nr_arm64") {
+  script = "${clang_base_path}/bin/clang"
+  output_dir = target_gen_dir + "/libsyscall_to_nr_arm64"
+  args = [
+    "-I",
+    rebase_path(
+        "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include/asm-arm64"),
+    "-I",
+    rebase_path(
+        "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include"),
+    "-dD",
+    "-E",
+    "-Wall",
+    "-nostdinc",
+    "-o",
+    rebase_path(output_dir),
+    rebase_path("gen_syscall_name_nrs.c"),
+  ]
+
+  outputs = [ output_dir ]
+}
+
+ohos_prebuilt_seccomp("system_filter") {
+  sources = []
+  if (target_cpu == "arm") {
+    sources += [ "seccomp_policy/system_arm.seccomp.policy" ]
+  } else if (target_cpu == "arm64") {
+    sources += [
+      # 64-bit machine also need check use 32-bit syscall
+      "seccomp_policy/system_arm.seccomp.policy",
+      "seccomp_policy/system_arm64.seccomp.policy",
+    ]
+  }
+
+  filtername = "g_systemSeccompFilter"
+  include_dirs = [ "." ]
+  part_name = INIT_PART
+  subsystem_name = "startup"
+
+  install_enable = true
+  install_images = [
+    "system",
+    "ramdisk",
+  ]
+}
+
+ohos_prebuilt_seccomp("appspawn_filter") {
+  sources = []
+  if (target_cpu == "arm") {
+    sources += [ "seccomp_policy/spawn_arm.seccomp.policy" ]
+  } else if (target_cpu == "arm64") {
+    sources += [
+      # 64-bit machine also need check use 32-bit syscall
+      "seccomp_policy/spawn_arm.seccomp.policy",
+      "seccomp_policy/spawn_arm64.seccomp.policy",
+    ]
+  }
+
+  filtername = "g_appspawnSeccompFilter"
+  include_dirs = [ "." ]
+  part_name = INIT_PART
+  subsystem_name = "startup"
+
+  install_enable = true
+  install_images = [
+    "system",
+    "ramdisk",
+  ]
+}
+
+ohos_static_library("seccomp_static") {
+  sources = [ "//base/startup/init/services/modules/seccomp/seccomp_policy.c" ]
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/seccomp/include",
+    "//base/startup/init/services/modules/seccomp",
+  ]
+
+  deps = [
+    ":appspawn_filter",
+    ":system_filter",
+  ]
+
+  license_file = "//base/startup/init/LICENSE"
+
+  part_name = INIT_PART
+  subsystem_name = "startup"
+}

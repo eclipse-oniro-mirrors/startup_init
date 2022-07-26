@@ -48,6 +48,12 @@
 #include <selinux/selinux.h>
 #endif // WITH_SELINUX
 
+#ifdef WITH_SECCOMP
+#include "seccomp_policy.h"
+#define APPSPAWN_NAME ("appspawn")
+#define NWEBSPAWN_NAME ("nwebspawn")
+#endif
+
 #ifndef TIOCSCTTY
 #define TIOCSCTTY 0x540E
 #endif
@@ -61,6 +67,20 @@ static int SetAllAmbientCapability(void)
     }
     return SERVICE_SUCCESS;
 }
+
+#ifdef WITH_SECCOMP
+static int SetSystemSeccompPolicy(const Service *service)
+{
+    if (strncmp(APPSPAWN_NAME, service->name, strlen(APPSPAWN_NAME)) \
+        && strncmp(NWEBSPAWN_NAME, service->name, strlen(NWEBSPAWN_NAME))) {
+        if (!SetSeccompPolicy(SYSTEM)) {
+            INIT_LOGE("init seccomp failed, name is %s\n", service->name);
+            return SERVICE_FAILURE;
+        }
+    }
+    return SERVICE_SUCCESS;
+}
+#endif
 
 static int SetPerms(const Service *service)
 {
@@ -271,9 +291,16 @@ static int InitServicePropertys(Service *service)
     PublishHoldFds(service);
     INIT_CHECK_ONLY_ELOG(BindCpuCore(service) == SERVICE_SUCCESS,
         "binding core number failed for service %s", service->name);
+
+#ifdef WITH_SECCOMP
+    INIT_ERROR_CHECK(SetSystemSeccompPolicy(service) == SERVICE_SUCCESS, return -1,
+        "service %s exit! set seccomp failed! err %d.", service->name, errno);
+#endif
+    
     // permissions
     INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
         "service %s exit! set perms failed! err %d.", service->name, errno);
+    
     // write pid
     INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
         "service %s exit! write pid failed!", service->name);

@@ -288,6 +288,9 @@ if (defined(ohos_lite)) {
 
 group("innergroup") {
   deps = [ ":libbegetutil" ]
+  if (build_seccomp) {
+    deps += [ "seccomp:seccomp" ]
+  }
   if (!defined(ohos_lite)) {
     deps += [
       ":libbeget_proxy",

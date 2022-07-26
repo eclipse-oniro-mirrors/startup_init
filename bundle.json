@@ -96,6 +96,15 @@
                         ]
                     },
                     "name": "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine"
+                },
+                {
+                    "header": {
+                        "header_base": "//base/startup/init/interfaces/innerkits/seccomp/include/",
+                        "header_files": [
+                            "seccomp_policy.h"
+                        ]
+                    },
+                    "name": "//base/startup/init/interfaces/innerkits/seccomp:seccomp"
                 }
             ],
             "test": [
