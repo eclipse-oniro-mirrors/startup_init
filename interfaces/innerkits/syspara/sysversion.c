@@ -17,7 +17,7 @@
 /* *
  * Major(M) version number.
  */
-static int g_majorVersion = 2;
+static int g_majorVersion = 3;
 
 /* *
  * Senior(S) version number.
@@ -27,12 +27,12 @@ static int g_seniorVersion = 2;
 /* *
  * Feature(F) version number.
  */
-static int g_featureVersion = 0;
+static int g_featureVersion = 3;
 
 /* *
  * Build(B) version number.
  */
-static int g_buildVersion = 0;
+static int g_buildVersion = 5;
 
 /* *
  * Obtains the major (M) version number, which increases with any updates to the overall architecture.
