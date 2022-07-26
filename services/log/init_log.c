@@ -98,6 +98,8 @@ static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag
 {
 #ifdef OHOS_LITE
 #ifdef __LITEOS_M__
+    (void)logLevel;
+    (void)domain;
     printf("[%s]%s \n", tag, logInfo);
 #else
     static const LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
