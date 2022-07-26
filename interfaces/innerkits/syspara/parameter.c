@@ -252,8 +252,8 @@ static const char *BuildOSFullName(void)
         if (length < 0) {
             return NULL;
         }
+        return value;
     }
-
     return strdup(fillname);
 }
 
