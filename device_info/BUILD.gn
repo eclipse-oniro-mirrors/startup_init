@@ -53,11 +53,11 @@ if (!defined(ohos_lite)) {
 
     external_deps = [
       "access_token:libaccesstoken_sdk",
+      "c_utils:utils",
       "hilog_native:libhilog",
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
       "samgr_standard:samgr_proxy",
-      "utils_base:utils",
     ]
     install_images = [ "system" ]
     part_name = "init"

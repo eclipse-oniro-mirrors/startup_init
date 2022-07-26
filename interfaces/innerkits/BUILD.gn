@@ -188,8 +188,8 @@ if (defined(ohos_lite)) {
       "//third_party/mbedtls:mbedtls_shared",
     ]
     external_deps = [
+      "c_utils:utils",
       "hilog_native:libhilog_base",
-      "utils_base:utils",
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
@@ -245,10 +245,10 @@ if (defined(ohos_lite)) {
     }
 
     external_deps = [
+      "c_utils:utils",
       "hilog_native:libhilog_base",
       "ipc:ipc_core",
       "samgr_standard:samgr_proxy",
-      "utils_base:utils",
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
@@ -279,8 +279,8 @@ if (defined(ohos_lite)) {
       "//third_party/mbedtls:mbedtls_shared",
     ]
     external_deps = [
+      "c_utils:utils",
       "hilog_native:libhilog_base",
-      "utils_base:utils",
     ]
     part_name = "init"
   }

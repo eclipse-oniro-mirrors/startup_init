@@ -23,7 +23,7 @@
             "components": [
                 "startup",
                 "safwk",
-                "utils_base",
+                "c_utils",
                 "napi",
                 "ipc",
                 "config_policy",

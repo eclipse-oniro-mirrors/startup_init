@@ -209,7 +209,6 @@ ohos_unittest("init_unittest") {
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest",
     "//third_party/mbedtls:mbedtls_shared",
-    "//utils/native/base:utils",
   ]
 
   defines = [
@@ -228,9 +227,9 @@ ohos_unittest("init_unittest") {
   }
 
   external_deps = [
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "init:libinit_module_engine",
-    "utils_base:utils",
   ]
 
   if (!defined(ohos_lite) && enable_ohos_startup_init_feature_watcher) {

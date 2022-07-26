@@ -45,10 +45,10 @@ ohos_shared_library("param_watcher") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "utils_base:utils",
   ]
   install_images = [ "system" ]
   part_name = "init"
