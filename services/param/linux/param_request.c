@@ -15,7 +15,6 @@
 #include "init_param.h"
 
 #include <errno.h>
-#include <fcntl.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <string.h>
@@ -26,7 +25,6 @@
 #include "param_manager.h"
 #include "param_message.h"
 #include "param_security.h"
-#include "securec.h"
 
 #define INVALID_SOCKET (-1)
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;

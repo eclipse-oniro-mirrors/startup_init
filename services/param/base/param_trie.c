@@ -16,7 +16,6 @@
 #include "param_trie.h"
 
 #include <errno.h>
-#include <unistd.h>
 
 #include "init_param.h"
 #include "param_base.h"

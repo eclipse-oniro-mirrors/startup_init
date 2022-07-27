@@ -14,15 +14,9 @@
  */
 #include <ctype.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include "init_param.h"
 #include "init_utils.h"

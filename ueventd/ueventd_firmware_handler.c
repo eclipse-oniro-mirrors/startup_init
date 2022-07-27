@@ -15,9 +15,6 @@
 
 #include "ueventd_firmware_handler.h"
 
-#include <errno.h>
-#include <stdlib.h>
-
 #include "ueventd.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"

@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 #include "watcher.h"
-
-#include "iservice_registry.h"
-#include "securec.h"
-#include "system_ability_definition.h"
 #include "watcher_utils.h"
 
 namespace OHOS {

@@ -19,8 +19,6 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include "beget_ext.h"
 #include "init_utils.h"

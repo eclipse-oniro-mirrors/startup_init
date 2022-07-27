@@ -15,12 +15,9 @@
 
 #include "le_task.h"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/socket.h>
 
 #include "le_loop.h"
-#include "le_socket.h"
+#include "le_utils.h"
 
 int CheckTaskFlags(const BaseTask *task, uint32_t flags)
 {

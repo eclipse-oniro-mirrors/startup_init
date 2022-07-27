@@ -19,7 +19,6 @@
 #include <string.h>
 
 #include "begetctl.h"
-#include "init_param.h"
 #include "init_utils.h"
 
 #define SERVICE_START_NUMBER 2

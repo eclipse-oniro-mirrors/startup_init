@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 #include "le_task.h"
-
-#include <errno.h>
-#include <sys/eventfd.h>
-
 #include "le_loop.h"
 
 static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHandle taskHandle, uint32_t oper)

@@ -14,7 +14,6 @@
  */
 
 #include <cstdlib>
-#include <cstdio>
 #include <cstdint>
 
 #include "begetctl.h"
