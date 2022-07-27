@@ -28,7 +28,7 @@ void DeviceInfoLoad::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
     const sptr<IRemoteObject>& remoteObject)
 {
     DINFO_CHECK(systemAbilityId == SYSPARAM_DEVICE_SERVICE_ID, return,
-        "start aystemabilityId is not deviceinfo! %d", systemAbilityId);
+        "start systemabilityId is not deviceinfo! %d", systemAbilityId);
     DINFO_CHECK(remoteObject != nullptr, return, "remoteObject is null.");
 
     DINFO_LOGI("OnLoadSystemAbilitySuccess start systemAbilityId: %d success!", systemAbilityId);
@@ -38,7 +38,7 @@ void DeviceInfoLoad::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
 void DeviceInfoLoad::OnLoadSystemAbilityFail(int32_t systemAbilityId)
 {
     DINFO_CHECK(systemAbilityId == SYSPARAM_DEVICE_SERVICE_ID, return,
-        "start aystemabilityId is not deviceinfo! %d", systemAbilityId);
+        "start systemabilityId is not deviceinfo! %d", systemAbilityId);
 
     DINFO_LOGI("OnLoadSystemAbilityFail systemAbilityId: %d failed.", systemAbilityId);
 
