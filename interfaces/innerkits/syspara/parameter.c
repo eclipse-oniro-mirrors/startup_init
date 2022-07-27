@@ -242,19 +242,23 @@ static const char *BuildOSFullName(void)
 {
     const char release[] = "Release";
     const char *releaseType = GetOsReleaseType();
-    const char *fillname = GetFullName_();
-    if ((releaseType != NULL) && (strncmp(releaseType, release, sizeof(release) - 1) != 0)) {
+    const char *fullName = GetFullName_();
+    if (fullName == NULL || releaseType == NULL) {
+        return NULL;
+    }
+    if (strncmp(releaseType, release, sizeof(release) - 1) != 0) {
         char *value = calloc(1, OS_FULL_NAME_LEN);
         if (value == NULL) {
             return NULL;
         }
-        int length = sprintf_s(value, OS_FULL_NAME_LEN, "%s(%s)", fillname, releaseType);
+        int length = sprintf_s(value, OS_FULL_NAME_LEN, "%s(%s)", fullName, releaseType);
         if (length < 0) {
+            free(value);
             return NULL;
         }
         return value;
     }
-    return strdup(fillname);
+    return strdup(fullName);
 }
 
 const char *GetOSFullName(void)
