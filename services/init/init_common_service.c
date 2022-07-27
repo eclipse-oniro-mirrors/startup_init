@@ -272,10 +272,10 @@ static int InitServicePropertys(Service *service)
     INIT_CHECK_ONLY_ELOG(BindCpuCore(service) == SERVICE_SUCCESS,
         "binding core number failed for service %s", service->name);
     // permissions
-    INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
+    INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, return -1,
         "service %s exit! set perms failed! err %d.", service->name, errno);
     // write pid
-    INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, _exit(PROCESS_EXIT_CODE),
+    INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, return -1,
         "service %s exit! write pid failed!", service->name);
     SetSecon(service);
     return 0;
@@ -319,7 +319,9 @@ int ServiceStart(Service *service)
     }
     int pid = fork();
     if (pid == 0) {
-        INIT_ERROR_CHECK(InitServicePropertys(service) == 0, return SERVICE_FAILURE, "Failed init service property");
+        // fail must exit sub process
+        INIT_ERROR_CHECK(InitServicePropertys(service) == 0,
+            _exit(PROCESS_EXIT_CODE), "Failed init service property");
         ServiceExec(service);
         _exit(PROCESS_EXIT_CODE);
     } else if (pid < 0) {
