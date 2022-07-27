@@ -241,17 +241,24 @@ int GetDevUdid(char *udid, int size)
 static const char *BuildOSFullName(void)
 {
     const char release[] = "Release";
-    char value[OS_FULL_NAME_LEN] = {0};
     const char *releaseType = GetOsReleaseType();
-    const char *fillname = GetFullName_();
-    if ((releaseType != NULL) && (strncmp(releaseType, release, sizeof(release) - 1) != 0)) {
-        int length = sprintf_s(value, OS_FULL_NAME_LEN, "%s(%s)", fillname, releaseType);
-        if (length < 0) {
-            return EMPTY_STR;
-        }
+    const char *fullName = GetFullName_();
+    if (fullName == NULL || releaseType == NULL) {
+        return NULL;
     }
-    const char *osFullName = strdup(value);
-    return osFullName;
+    if (strncmp(releaseType, release, sizeof(release) - 1) != 0) {
+        char *value = calloc(1, OS_FULL_NAME_LEN);
+        if (value == NULL) {
+            return NULL;
+        }
+        int length = sprintf_s(value, OS_FULL_NAME_LEN, "%s(%s)", fullName, releaseType);
+        if (length < 0) {
+            free(value);
+            return NULL;
+        }
+        return value;
+    }
+    return strdup(fullName);
 }
 
 const char *GetOSFullName(void)
@@ -270,13 +277,16 @@ const char *GetOSFullName(void)
 static const char *BuildVersionId(void)
 {
     char value[VERSION_ID_MAX_LEN] = {0};
+    if (GetDeviceType() == NULL) {
+        return NULL;
+    }
 
     int len = sprintf_s(value, VERSION_ID_MAX_LEN, "%s/%s/%s/%s/%s/%s/%s/%s/%s/%s",
         GetDeviceType(), GetManufacture(), GetBrand(), GetProductSeries(),
         GetOSFullName(), GetProductModel(), GetSoftwareModel(),
         GetSdkApiVersion_(), GetIncrementalVersion(), GetBuildType());
     if (len <= 0) {
-        return EMPTY_STR;
+        return NULL;
     }
     const char *versionId = strdup(value);
     return versionId;
