@@ -76,7 +76,7 @@ typedef struct cmdLineInfo {
 #elif defined __LINUX__
 #define DATA_PATH          STARTUP_INIT_UT_PATH"/storage/data/system/param/"
 #else
-#define DATA_PATH          STARTUP_INIT_UT_PATH"/data/parameters/"
+#define DATA_PATH          STARTUP_INIT_UT_PATH"/data/service/el1/startup/parameters/"
 #endif
 
 #define CLIENT_PIPE_NAME "/dev/unix/socket/paramservice"
