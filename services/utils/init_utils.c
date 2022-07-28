@@ -285,7 +285,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
             INIT_LOGV("Too many items,expand size");
             char **expand = (char **)(realloc(items, sizeof(char *) * itemCounts));
             INIT_ERROR_CHECK(expand != NULL, FreeStringVector(items, count);
-                return NULL, "Failed to expand memory for uevent config parser");
+                return NULL, "Failed to expand memory");
             items = expand;
         }
         size_t len = strlen(p);
@@ -627,4 +627,24 @@ INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out)
     BEGET_CHECK(end != s, return -1);
     BEGET_CHECK(*end == '\0', return -1);
     return 0;
+}
+
+void TrimTail(char *str, char c)
+{
+    char *end = str + strlen(str) - 1;
+    while (end >= str && *end == c) {
+        *end = '\0';
+        end--;
+    }
+}
+
+char *TrimHead(char *str, char c)
+{
+    char *head = str;
+    const char *end = str + strlen(str);
+    while (head < end && *head == c) {
+        *head = '\0';
+        head++;
+    }
+    return head;
 }

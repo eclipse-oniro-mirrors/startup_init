@@ -367,8 +367,8 @@ void SystemConfig(void)
     options.preHook = InitPreHook;
     options.postHook = InitPostHook;
 
-    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, (void *)&timingStat, (void *)&options);
     InitServiceSpace();
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, (void *)&timingStat, (void *)&options);
 
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, (void *)&timingStat, (void *)&options);
     InitParamService();

@@ -75,6 +75,7 @@ static Fstab* LoadFstabFromCommandLine(void)
     bool isDone = false;
 
     INIT_ERROR_CHECK(cmdline != NULL, return NULL, "Read from \'/proc/cmdline\' failed, err = %d", errno);
+    TrimTail(cmdline, '\n');
     INIT_ERROR_CHECK((fstab = (Fstab *)calloc(1, sizeof(Fstab))) != NULL, return NULL,
         "Allocate memory for FS table failed, err = %d", errno);
     char *start = cmdline;
