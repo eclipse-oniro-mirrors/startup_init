@@ -1,0 +1,22 @@
+--- device_info/BUILD.gn
++++ device_info/BUILD.gn
+@@ -31,7 +31,7 @@ ohos_shared_library("deviceinfoservice") {
+     "device_info_stub.cpp",
+   ]
+ 
+-  include_dirs = [
++  include_dirs = [ "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include/",
+     ".",
+     "//base/startup/init_lite/services/include/param",
+     "//base/startup/init_lite/interfaces/innerkits/include",
+@@ -48,10 +48,8 @@ ohos_shared_library("deviceinfoservice") {
+ 
+   external_deps = [
+     "access_token:libaccesstoken_sdk",
+-    "hilog_native:libhilog",
+     "ipc:ipc_core",
+     "safwk:system_ability_fwk",
+-    "samgr_standard:samgr_proxy",
+     "utils_base:utils",
+   ]
+   install_images = [ "system" ]

@@ -26,7 +26,7 @@ ohos_shared_library("param_watcher") {
     "proxy/watcher_proxy.cpp",
   ]
 
-  include_dirs = [ "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include/",
+  include_dirs = [
     "//base/startup/init/services/param/include",
     "//base/startup/init/services/include/param",
     "//base/startup/init/services/param/linux",
@@ -41,11 +41,13 @@ ohos_shared_library("param_watcher") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "samgr_standard:samgr_proxy",
     "utils_base:utils",
   ]
   install_images = [ "system" ]
