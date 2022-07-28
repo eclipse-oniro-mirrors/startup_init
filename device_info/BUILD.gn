@@ -32,7 +32,7 @@ if (!defined(ohos_lite)) {
       "device_info_stub.cpp",
     ]
 
-    include_dirs = [ 
+    include_dirs = [
       "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include/",
       ".",
       "//base/startup/init/services/include/param",

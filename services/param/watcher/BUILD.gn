@@ -40,9 +40,7 @@ ohos_shared_library("param_watcher") {
     "//third_party/cJSON",
   ]
 
-  deps = [
-    "//base/startup/init/interfaces/innerkits:libbegetutil",
-  ]
+  deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
 
   external_deps = [
     "ipc:ipc_core",
