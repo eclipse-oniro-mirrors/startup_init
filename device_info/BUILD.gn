@@ -34,7 +34,7 @@ if (!defined(ohos_lite)) {
 
     include_dirs = [
       ".",
-	  "//foundation/distributedschedule/samgr/interfaceserkits/samgr_proxy/include/",
+      "//foundation/distributedschedule/samgr/interfaceserkits/samgr_proxy/include/",
       "//base/startup/init/services/include/param",
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/interfaces/innerkits/include/syspara",
