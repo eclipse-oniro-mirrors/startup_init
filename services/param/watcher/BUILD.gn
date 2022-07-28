@@ -26,7 +26,8 @@ ohos_shared_library("param_watcher") {
     "proxy/watcher_proxy.cpp",
   ]
 
-  include_dirs = [ "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include/",
+  include_dirs = [
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include/",
     "//base/startup/init/services/param/include",
     "//base/startup/init/services/include/param",
     "//base/startup/init/services/param/linux",
