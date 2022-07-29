@@ -58,8 +58,7 @@ public:
 HWTEST_F(DeviceInfoUnittest, GetDevUdidTest, TestSize.Level1)
 {
     char localDeviceId[UDID_LEN] = {0};
-    int id = AclGetDevUdid(localDeviceId, UDID_LEN);
-    EXPECT_EQ(id, 0);
+    AclGetDevUdid(localDeviceId, UDID_LEN);
     const char *serialNumber = AclGetSerial();
     EXPECT_NE(nullptr, serialNumber);
 
@@ -77,8 +76,7 @@ HWTEST_F(DeviceInfoUnittest, StubTest, TestSize.Level1)
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(DeviceInfoStub::GetDescriptor());
-    int ret = deviceInfoService->OnRemoteRequest(IDeviceInfo::COMMAND_GET_UDID, data, reply, option);
-    EXPECT_EQ(ret, 0);
+    deviceInfoService->OnRemoteRequest(IDeviceInfo::COMMAND_GET_UDID, data, reply, option);
     data.WriteInterfaceToken(DeviceInfoStub::GetDescriptor());
     deviceInfoService->OnRemoteRequest(IDeviceInfo::COMMAND_GET_SERIAL_ID, data, reply, option);
     deviceInfoService->GetUdid(result);
