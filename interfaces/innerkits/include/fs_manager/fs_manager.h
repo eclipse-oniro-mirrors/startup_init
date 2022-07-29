@@ -76,7 +76,7 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificFlags, size_t fsSpe
 int GetBlockDevicePath(const char *partName, char *path, int size);
 
 // Get fscrypt policy if exist
-const char *LoadFscryptPolicy(void);
+int LoadFscryptPolicy(char *buf, size_t size);
 #ifdef __cplusplus
 #if __cplusplus
 }

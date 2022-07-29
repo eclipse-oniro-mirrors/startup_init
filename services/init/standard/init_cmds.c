@@ -46,6 +46,7 @@
 #endif
 #include "fscrypt_utils.h"
 
+#define FSCRYPT_POLICY_BUF_SIZE (60)
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
@@ -414,8 +415,8 @@ static void DoTimerStop(const struct CmdArgs *ctx)
 
 static bool InitFscryptPolicy(void)
 {
-    const char *policy = LoadFscryptPolicy();
-    if (!policy) {
+    char policy[FSCRYPT_POLICY_BUF_SIZE];
+    if (LoadFscryptPolicy(policy, FSCRYPT_POLICY_BUF_SIZE) != 0) {
         return false;
     }
     if (SetFscryptSysparam(policy) == 0) {
@@ -436,9 +437,8 @@ static void DoInitGlobalKey(const struct CmdArgs *ctx)
         INIT_LOGE("DoInitGlobalKey: not data partitation");
         return;
     }
-
     if (!InitFscryptPolicy()) {
-        INIT_LOGE("DoInitGlobalKey: init policy failed");
+        INIT_LOGI("DoInitGlobalKey:init fscrypt failed,not enable fscrypt");
         return;
     }
 
@@ -458,10 +458,6 @@ static void DoInitMainUser(const struct CmdArgs *ctx)
     INIT_LOGI("DoInitMainUser: start");
     if (ctx == NULL) {
         INIT_LOGE("DoInitMainUser: para invalid");
-        return;
-    }
-    if (LoadFscryptPolicy() == NULL) {
-        INIT_LOGI("DoInitMainUser: file crypto is not enabled");
         return;
     }
 
@@ -604,7 +600,6 @@ void OpenHidebug(const char *name)
 
 int SetFileCryptPolicy(const char *dir)
 {
-    INIT_LOGI("SetFileCryptPolicy:start:%s", dir);
     if (dir == NULL) {
         INIT_LOGE("SetFileCryptPolicy:dir is null");
         return -EINVAL;

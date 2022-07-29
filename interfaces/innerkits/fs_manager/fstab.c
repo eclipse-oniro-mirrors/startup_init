@@ -42,11 +42,7 @@ struct MountFlags {
     unsigned long flags;
 };
 
-#define POLICY_BUFFER (100)
-
-static const char *g_fscryptPre = "fscrypt=";
-static const char *g_mountPoint = "/data";
-static char g_fscryptPolicy[POLICY_BUFFER] = { 0 };
+static char *g_fscryptPolicy = NULL;
 
 static unsigned int ConvertFlags(char *flagBuffer)
 {
@@ -392,10 +388,12 @@ static unsigned long ParseDefaultMountFlag(const char *str)
 
 static bool IsFscryptOption(const char *option)
 {
+    BEGET_LOGI("IsFscryptOption start");
     if (!option) {
         return false;
     }
-    if (strncmp(option, g_fscryptPre, strlen(g_fscryptPre)) == 0) {
+    char *fscryptPre = "fscrypt=";
+    if (strncmp(option, fscryptPre, strlen(fscryptPre)) == 0) {
         return true;
     }
     return false;
@@ -403,23 +401,41 @@ static bool IsFscryptOption(const char *option)
 
 static void StoreFscryptPolicy(const char *option)
 {
-    if (!option) {
+    if (option == NULL) {
         return;
     }
-    if (strcpy_s(g_fscryptPolicy, POLICY_BUFFER - 1, option) != EOK) {
-        g_fscryptPolicy[0] = '\0';
-        BEGET_LOGE("StoreFscryptPolicy: copy policy failed");
+    if (g_fscryptPolicy != NULL) {
+        BEGET_LOGW("StoreFscryptPolicy:inited policy is not empty");
+        free(g_fscryptPolicy);
+    }
+    g_fscryptPolicy = strdup(option);
+    if (g_fscryptPolicy == NULL) {
+        BEGET_LOGE("StoreFscryptPolicy:no memory");
         return;
     }
-    BEGET_LOGI("StoreFscryptPolicy:load fscrypt policy, %s", option);
+    BEGET_LOGI("StoreFscryptPolicy:store fscrypt policy, %s", option);
 }
 
-const char *LoadFscryptPolicy(void)
+int LoadFscryptPolicy(char *buf, size_t size)
 {
-    if (strnlen(g_fscryptPolicy, POLICY_BUFFER - 1) == 0) {
-        return NULL;
+    BEGET_LOGI("LoadFscryptPolicy start");
+    if (buf == NULL || g_fscryptPolicy == NULL) {
+        BEGET_LOGE("LoadFscryptPolicy:buf or fscrypt policy is empty");
+        return -ENOMEM;
     }
-    return g_fscryptPolicy;
+    if (size <= 0) {
+        BEGET_LOGE("LoadFscryptPloicy:size is invalid");
+        return -EINVAL;
+    }
+    if (strcpy_s(buf, size, g_fscryptPolicy) != 0) {
+        BEGET_LOGE("loadFscryptPolicy:strcmp failed, error = %d", errno);
+        return -EFAULT;
+    }
+    free(g_fscryptPolicy);
+    g_fscryptPolicy = NULL;
+    BEGET_LOGI("LoadFscryptPolicy success");
+
+    return 0;
 }
 
 unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpecificDataSize,
@@ -448,8 +464,8 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
             flags |= ParseDefaultMountFlag(p);
         } else {
             if (IsFscryptOption(p) &&
-                !strncmp(mountPoint, g_mountPoint, strlen(g_mountPoint))) {
-                StoreFscryptPolicy(p + strlen(g_fscryptPre));
+                !strncmp(mountPoint, "/data", strlen("/data"))) {
+                StoreFscryptPolicy(p + strlen("fscrypt="));
                 continue;
             }
             if (strncat_s(fsSpecificData, fsSpecificDataSize - 1, p, strlen(p)) != EOK) {

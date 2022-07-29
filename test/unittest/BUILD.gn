@@ -108,6 +108,13 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/ueventd/ueventd_socket.c",
   ]
 
+  sources += [
+    "${FSCRYPT_PATH}/libfscrypt/src/fscrypt_control.c",
+    "${FSCRYPT_PATH}/libfscrypt/src/fscrypt_utils.c",
+    "${FSCRYPT_PATH}/libfscrypt/src/key_control.c",
+    "${FSCRYPT_PATH}/libfscrypt/src/sysparam_static.c",
+  ]
+
   if (defined(build_selinux) && build_selinux) {
     sources += [ "//base/startup/init/services/param/adapter/param_selinux.c" ]
   }
@@ -215,8 +222,6 @@ ohos_unittest("init_unittest") {
     "//third_party/mbedtls:mbedtls_shared",
     "//utils/native/base:utils",
   ]
-
-  deps += [ "${FSCRYPT_PATH}/libfscrypt:libfscryptutils_static" ]
 
   defines = [
     "READ_CHECK",
