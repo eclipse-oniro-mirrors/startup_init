@@ -29,23 +29,37 @@ void paramMutexEnvInit(void)
 
 int ParamRWMutexCreate(ParamRWMutex *lock)
 {
+    PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
+    pthread_rwlockattr_t rwlockatt;
+    pthread_rwlockattr_init(&rwlockatt);
+    pthread_rwlockattr_setpshared(&rwlockatt, PTHREAD_PROCESS_SHARED);
+    pthread_rwlock_init(&lock->rwlock, &rwlockatt);
     return 0;
 }
 int ParamRWMutexWRLock(ParamRWMutex *lock)
 {
+    PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
+    pthread_rwlock_wrlock(&lock->rwlock);
     return 0;
 }
 int ParamRWMutexRDLock(ParamRWMutex *lock)
 {
+    PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
+    pthread_rwlock_rdlock(&lock->rwlock);
     return 0;
 }
 int ParamRWMutexUnlock(ParamRWMutex *lock)
 {
+    PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
+    pthread_rwlock_unlock(&lock->rwlock);
     return 0;
 }
 
 int ParamRWMutexDelete(ParamRWMutex *lock)
 {
+    PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
+    uint32_t ret = pthread_rwlock_destroy(&lock->rwlock);
+    PARAM_CHECK(ret == 0, return -1, "Failed to mutex lock ret %d", ret);
     return 0;
 }
 

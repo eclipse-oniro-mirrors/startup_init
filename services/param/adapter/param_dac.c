@@ -211,7 +211,7 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
 static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
 {
 #ifdef __MUSL__
-    static char buffer[USER_BUFFER_LEN] = {0};
+    char buffer[USER_BUFFER_LEN] = {0};
     uint32_t labelIndex = 0;
     int ret = ParamSprintf(buffer, sizeof(buffer), "%s.%d.%d", GROUP_FORMAT, groupId, uid);
     PARAM_CHECK(ret >= 0, return -1, "Failed to format name for %s.%d.%d", GROUP_FORMAT, groupId, uid);
