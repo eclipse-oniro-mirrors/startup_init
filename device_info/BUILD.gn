@@ -54,9 +54,9 @@ if (!defined(ohos_lite)) {
 
     external_deps = [
       "access_token:libaccesstoken_sdk",
+      "c_utils:utils",
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
-      "utils_base:utils",
     ]
     install_images = [ "system" ]
     part_name = "init"

@@ -43,9 +43,9 @@ ohos_shared_library("param_watcher") {
   deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
 
   external_deps = [
+    "c_utils:utils",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "utils_base:utils",
   ]
   install_images = [ "system" ]
   part_name = "init"

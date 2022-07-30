@@ -73,6 +73,14 @@
             "src-path" : "/sys_prod",
             "sandbox-path" : "/sys_prod",
             "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor",
+            "sandbox-path" : "/chipset",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/chip_prod",
+            "sandbox-path" : "/chip_prod",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
     "mount-bind-files" : [{

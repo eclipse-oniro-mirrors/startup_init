@@ -88,7 +88,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
-    external_deps = [ "utils_base:utils" ]
+    external_deps = [ "c_utils:utils" ]
 
     if (param_test) {
       sources += [
@@ -190,8 +190,8 @@ if (defined(ohos_lite)) {
     ]
 
     external_deps = [
+      "c_utils:utils",
       "hilog_native:libhilog_base",
-      "utils_base:utils",
     ]
     if (build_selinux) {
       deps += [ "//third_party/selinux:libselinux" ]
