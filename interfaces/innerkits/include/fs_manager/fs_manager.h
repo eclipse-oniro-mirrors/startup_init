@@ -70,9 +70,13 @@ MountStatus GetMountStatusForMountPoint(const char *mp);
 int MountAllWithFstabFile(const char *fstabFile, bool required);
 int MountAllWithFstab(const Fstab *fstab, bool required);
 int UmountAllWithFstabFile(const char *file);
-unsigned long GetMountFlags(char *mountFlag, char *fsSpecificFlags, size_t fsSpecificFlagSize);
+unsigned long GetMountFlags(char *mountFlag, char *fsSpecificFlags, size_t fsSpecificFlagSize,
+    const char *mountPoint);
 
 int GetBlockDevicePath(const char *partName, char *path, int size);
+
+// Get fscrypt policy if exist
+int LoadFscryptPolicy(char *buf, size_t size);
 #ifdef __cplusplus
 #if __cplusplus
 }

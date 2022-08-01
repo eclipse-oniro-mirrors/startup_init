@@ -42,6 +42,8 @@ struct MountFlags {
     unsigned long flags;
 };
 
+static char *g_fscryptPolicy = NULL;
+
 static unsigned int ConvertFlags(char *flagBuffer)
 {
     static struct FsManagerFlags fsFlags[] = {
@@ -384,7 +386,60 @@ static unsigned long ParseDefaultMountFlag(const char *str)
     return flags;
 }
 
-unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpecificDataSize)
+static bool IsFscryptOption(const char *option)
+{
+    BEGET_LOGI("IsFscryptOption start");
+    if (!option) {
+        return false;
+    }
+    char *fscryptPre = "fscrypt=";
+    if (strncmp(option, fscryptPre, strlen(fscryptPre)) == 0) {
+        return true;
+    }
+    return false;
+}
+
+static void StoreFscryptPolicy(const char *option)
+{
+    if (option == NULL) {
+        return;
+    }
+    if (g_fscryptPolicy != NULL) {
+        BEGET_LOGW("StoreFscryptPolicy:inited policy is not empty");
+        free(g_fscryptPolicy);
+    }
+    g_fscryptPolicy = strdup(option);
+    if (g_fscryptPolicy == NULL) {
+        BEGET_LOGE("StoreFscryptPolicy:no memory");
+        return;
+    }
+    BEGET_LOGI("StoreFscryptPolicy:store fscrypt policy, %s", option);
+}
+
+int LoadFscryptPolicy(char *buf, size_t size)
+{
+    BEGET_LOGI("LoadFscryptPolicy start");
+    if (buf == NULL || g_fscryptPolicy == NULL) {
+        BEGET_LOGE("LoadFscryptPolicy:buf or fscrypt policy is empty");
+        return -ENOMEM;
+    }
+    if (size <= 0) {
+        BEGET_LOGE("LoadFscryptPloicy:size is invalid");
+        return -EINVAL;
+    }
+    if (strcpy_s(buf, size, g_fscryptPolicy) != 0) {
+        BEGET_LOGE("loadFscryptPolicy:strcmp failed, error = %d", errno);
+        return -EFAULT;
+    }
+    free(g_fscryptPolicy);
+    g_fscryptPolicy = NULL;
+    BEGET_LOGI("LoadFscryptPolicy success");
+
+    return 0;
+}
+
+unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpecificDataSize,
+    const char *mountPoint)
 {
     unsigned long flags = 0;
     BEGET_CHECK_RETURN_VALUE(mountFlag != NULL && fsSpecificData != NULL, 0);
@@ -408,6 +463,11 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
         if (IsDefaultMountFlags(p)) {
             flags |= ParseDefaultMountFlag(p);
         } else {
+            if (IsFscryptOption(p) &&
+                !strncmp(mountPoint, "/data", strlen("/data"))) {
+                StoreFscryptPolicy(p + strlen("fscrypt="));
+                continue;
+            }
             if (strncat_s(fsSpecificData, fsSpecificDataSize - 1, p, strlen(p)) != EOK) {
                 BEGET_LOGW("Failed to append mount flag \" %s \", ignore it.", p);
                 continue;

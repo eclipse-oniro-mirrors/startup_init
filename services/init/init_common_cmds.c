@@ -41,8 +41,6 @@
 #endif
 #include "securec.h"
 
-static char *g_fileCryptOptions = NULL;
-
 static char *AddOneArg(const char *param, size_t paramLen)
 {
     int valueCount = 1;
@@ -345,6 +343,11 @@ static void DoMkDir(const struct CmdArgs *ctx)
     if (ret != 0) {
         INIT_LOGE("Failed to change owner %s, err %d.", ctx->argv[0], errno);
     }
+    ret = SetFileCryptPolicy(ctx->argv[0]);
+    if (ret != 0) {
+        INIT_LOGW("failed to set file fscrypt");
+    }
+
     return;
 }
 
@@ -397,16 +400,6 @@ static int GetMountFlag(unsigned long *mountflag, const char *targetStr, const c
         WaitForFile(source, WAIT_MAX_SECOND);
         return 1;
     }
-    const char *fileCryptPre = "filecrypt=";
-    size_t len = strlen(fileCryptPre);
-    if (strncmp(targetStr, fileCryptPre, len) == 0) {
-        size_t maxLen = strlen(targetStr) + 1;
-        g_fileCryptOptions = calloc(sizeof(char), maxLen);
-        INIT_ERROR_CHECK(g_fileCryptOptions != NULL, return 0, "Failed to alloc memory");
-        int ret = snprintf_s(g_fileCryptOptions, maxLen, maxLen - 1, "%s", targetStr + len);
-        INIT_ERROR_CHECK(ret >= 0, return 0, "Failed to snprintf");
-        return 1;
-    }
 
     return 0;
 }
@@ -448,18 +441,6 @@ static void DoMount(const struct CmdArgs *ctx)
     }
     if (ret != 0) {
         INIT_LOGE("Failed to mount for %s, err %d.", target, errno);
-    }
-    if ((g_fileCryptOptions != NULL) && (strncmp(target, "/data", strlen("/data")) == 0)) {
-        ret = FileCryptEnable(g_fileCryptOptions);
-        if (ret < 0) {
-            INIT_LOGE("File Crypt enabled failed");
-            free(g_fileCryptOptions);
-            g_fileCryptOptions = NULL;
-            return;
-        }
-        free(g_fileCryptOptions);
-        g_fileCryptOptions = NULL;
-        INIT_LOGI("File Crypt enabled success");
     }
 }
 
