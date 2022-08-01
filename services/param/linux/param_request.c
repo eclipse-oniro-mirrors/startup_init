@@ -38,7 +38,6 @@ __attribute__((constructor)) static void ParameterInit(void)
         return;
     }
     EnableInitLog(INIT_INFO);
-    PARAM_LOGI("ParameterInit ");
     InitParamWorkSpace(1);
 }
 
@@ -49,7 +48,6 @@ __attribute__((destructor)) static void ParameterDeinit(void)
         close(g_clientFd);
         g_clientFd = INVALID_SOCKET;
     }
-    CloseParamWorkSpace();
     pthread_mutex_destroy(&g_clientMutex);
 }
 
