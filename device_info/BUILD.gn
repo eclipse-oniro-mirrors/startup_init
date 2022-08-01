@@ -33,6 +33,7 @@ if (!defined(ohos_lite)) {
     ]
 
     include_dirs = [
+      "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include/",
       ".",
       "//base/startup/init/services/include/param",
       "//base/startup/init/interfaces/innerkits/include",
@@ -54,10 +55,8 @@ if (!defined(ohos_lite)) {
     external_deps = [
       "access_token:libaccesstoken_sdk",
       "c_utils:utils",
-      "hilog_native:libhilog",
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
-      "samgr_standard:samgr_proxy",
     ]
     install_images = [ "system" ]
     part_name = "init"
