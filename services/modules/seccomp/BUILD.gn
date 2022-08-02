@@ -112,6 +112,26 @@ ohos_prebuilt_seccomp("appspawn_filter") {
   ]
 }
 
+ohos_prebuilt_seccomp("nwebspawn_filter") {
+  if (target_cpu == "arm") {
+    sources = [ "seccomp_policy/renderer_arm.seccomp.policy" ]
+  } else if (target_cpu == "arm64") {
+    sources = [ "seccomp_policy/renderer_arm64.seccomp.policy" ]
+  }
+
+  filtername = "g_nwebspawnSeccompFilter"
+  include_dirs = [ "." ]
+  part_name = INIT_PART
+  subsystem_name = "startup"
+
+  install_enable = true
+  install_images = [
+    "system",
+    "ramdisk",
+    "updater",
+  ]
+}
+
 ohos_static_library("seccomp_static") {
   sources = [ "//base/startup/init/services/modules/seccomp/seccomp_policy.c" ]
 
@@ -123,6 +143,7 @@ ohos_static_library("seccomp_static") {
 
   deps = [
     ":appspawn_filter",
+    ":nwebspawn_filter",
     ":system_filter",
   ]
 

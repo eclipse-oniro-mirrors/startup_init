@@ -232,13 +232,13 @@ class GenBpfPolicy:
         self.gen_mode = mode_str.get(mode)
 
     @staticmethod
-    def gen_bpf_eq32(self, const_str, jt, jf):
+    def gen_bpf_eq32(const_str, jt, jf):
         bpf_policy = []
         bpf_policy.append(BPF_JEQ.format(const_str + ' & 0xffffffff', jt, jf))
         return bpf_policy
 
     @staticmethod
-    def gen_bpf_eq64(self, const_str, jt, jf):
+    def gen_bpf_eq64(const_str, jt, jf):
         bpf_policy = []
         bpf_policy.append(BPF_JEQ.format('((unsigned long)' + const_str + ') >> 32', 0, jf + 2))
         bpf_policy.append(BPF_LOAD_MEM.format(0))
