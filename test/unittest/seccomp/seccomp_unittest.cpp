@@ -90,7 +90,7 @@ public:
         sigemptyset(&set);
         sigaddset(&set, SIGCHLD);
         sigprocmask(SIG_BLOCK, &set, nullptr);
-        if (signal(SIGCHLD, handler) == nullptr) {
+        if (signal(SIGCHLD, Handler) == nullptr) {
             std::cout << "signal failed:" << strerror(errno) << std::endl;
         }
 
