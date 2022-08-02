@@ -24,9 +24,6 @@ init_common_sources = [
   "../main.c",
 ]
 
-FSCRYPT_PATH =
-    "//foundation/filemanagement/storage_service/services/storage_daemon"
-
 import("//build/ohos.gni")
 import("//build/ohos/native_stub/native_stub.gni")
 
@@ -54,10 +51,7 @@ ohos_executable("init") {
   sources += modulemgr_sources
   sources += init_common_sources
 
-  include_dirs = [
-    "//base/startup/init/services/init/include",
-    "${FSCRYPT_PATH}/include/libfscrypt",
-  ]
+  include_dirs = [ "//base/startup/init/services/init/include" ]
 
   deps = [
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
@@ -82,7 +76,6 @@ ohos_executable("init") {
   deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript" ]
   deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_sources" ]
   deps += [ "//base/startup/init/services/modules:static_modules" ]
-  deps += [ "${FSCRYPT_PATH}/libfscrypt:libfscryptutils_static" ]
 
   cflags = []
 

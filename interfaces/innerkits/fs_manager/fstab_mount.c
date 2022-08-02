@@ -293,8 +293,7 @@ int MountOneItem(FstabItem *item)
     unsigned long mountFlags;
     char fsSpecificData[FS_MANAGER_BUFFER_SIZE] = {0};
 
-    mountFlags = GetMountFlags(item->mountOptions, fsSpecificData, sizeof(fsSpecificData),
-        item->mountPoint);
+    mountFlags = GetMountFlags(item->mountOptions, fsSpecificData, sizeof(fsSpecificData));
     if (!IsSupportedFilesystem(item->fsType)) {
         BEGET_LOGE("Unsupported file system \" %s \"", item->fsType);
         return 0;

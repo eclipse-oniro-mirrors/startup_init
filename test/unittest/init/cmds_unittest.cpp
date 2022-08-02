@@ -269,6 +269,8 @@ HWTEST_F(CmdsUnitTest, TestGetCmdLinesFromJson, TestSize.Level1)
 }
 HWTEST_F(CmdsUnitTest, TestInitCmdFunc, TestSize.Level1)
 {
+    FileCryptEnable((char *)"test");
+    FileCryptEnable(nullptr);
     int ret = GetBootModeFromMisc();
     EXPECT_EQ(ret, 0);
 }

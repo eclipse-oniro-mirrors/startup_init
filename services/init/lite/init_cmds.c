@@ -108,6 +108,11 @@ static void DoLoadCfg(const struct CmdArgs *ctx)
     (void)fclose(fp);
 }
 
+int FileCryptEnable(char *fileCryptOption)
+{
+    return 0;
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "exec ", 1, 10, DoExec },
     { "loadcfg ", 1, 1, DoLoadCfg },
@@ -128,8 +133,4 @@ void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
 const char *PluginGetCmdIndex(const char *cmdStr, int *index)
 {
     return NULL;
-}
-int SetFileCryptPolicy(const char *dir)
-{
-    return 0;
 }

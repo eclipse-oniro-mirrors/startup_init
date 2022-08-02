@@ -30,9 +30,6 @@ config("utest_config") {
   ldflags = [ "--coverage" ]
 }
 
-FSCRYPT_PATH =
-    "//foundation/filemanagement/storage_service/services/storage_daemon"
-
 ohos_unittest("init_unittest") {
   module_out_path = "startup/init"
   sources = [
@@ -106,13 +103,6 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/ueventd/ueventd_firmware_handler.c",
     "//base/startup/init/ueventd/ueventd_read_cfg.c",
     "//base/startup/init/ueventd/ueventd_socket.c",
-  ]
-
-  sources += [
-    "${FSCRYPT_PATH}/libfscrypt/src/fscrypt_control.c",
-    "${FSCRYPT_PATH}/libfscrypt/src/fscrypt_utils.c",
-    "${FSCRYPT_PATH}/libfscrypt/src/key_control.c",
-    "${FSCRYPT_PATH}/libfscrypt/src/sysparam_static.c",
   ]
 
   if (defined(build_selinux) && build_selinux) {
@@ -208,7 +198,6 @@ ohos_unittest("init_unittest") {
     "//base/security/access_token/interfaces/innerkits/nativetoken/include",
     "//base/startup/init/interfaces/innerkits/sandbox/include",
     "//base/startup/init/interfaces/innerkits/hals",
-    "${FSCRYPT_PATH}/include/libfscrypt",
   ]
 
   deps = [
