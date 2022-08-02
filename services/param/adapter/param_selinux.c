@@ -164,10 +164,10 @@ static int SelinuxReadParamCheck(const char *name)
     if (label == NULL) { // open file with readonly
         ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, 1, PARAM_WORKSPACE_MAX);
     } else {
-        PARAM_LOGI("SelinuxReadParamCheck name %s label %s", name, label);
         ret = AddWorkSpace(label, 1, PARAM_WORKSPACE_MAX);
     }
     if (ret != 0) {
+        PARAM_LOGV("SelinuxReadParamCheck name %s label %s ", name, label);
         return DAC_RESULT_FORBIDED;
     }
     return DAC_RESULT_PERMISSION;
