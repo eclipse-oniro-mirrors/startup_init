@@ -27,6 +27,7 @@
 #include "parameter.h"
 #endif
 
+#ifdef PARAM_LOAD_CFG_FROM_CODE
 static const char *StringTrim(char *buffer, int size, const char *name)
 {
     char *tmp = (char *)name;
@@ -55,6 +56,7 @@ static const char *StringTrim(char *buffer, int size, const char *name)
     }
     return name;
 }
+#endif
 
 void InitParamService(void)
 {
