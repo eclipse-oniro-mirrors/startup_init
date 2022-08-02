@@ -75,7 +75,7 @@ typedef int (*RecvMessage)(const ParamTaskPtr stream, const ParamMessage *msg);
 typedef struct {
     uint32_t flags;
     char *server;
-    LE_IncommingConntect incomingConnect;
+    LE_IncommingConnect incomingConnect;
     RecvMessage recvMessage;
     LE_Close close;
 } ParamStreamInfo;
@@ -97,7 +97,7 @@ int FillParamMsgContent(const ParamMessage *request, uint32_t *start, int type, 
 ParamMsgContent *GetNextContent(const ParamMessage *reqest, uint32_t *offset);
 ParamMessage *CreateParamMessage(int type, const char *name, uint32_t msgSize);
 
-int ConntectServer(int fd, const char *servername);
+int ConnectServer(int fd, const char *servername);
 
 #ifdef STARTUP_INIT_TEST
 int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *msg);

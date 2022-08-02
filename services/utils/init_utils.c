@@ -543,7 +543,7 @@ const static InitArgInfo g_servieStatusMap[] = {
     {"suspended", SERVICE_SUSPENDED},
     {"freezed", SERVICE_FREEZED},
     {"disabled", SERVICE_DISABLED},
-    {"critial", SERVICE_CRITIAL}
+    {"critical", SERVICE_CRITICAL}
 };
 
 const InitArgInfo *GetServieStatusMap(int *size)

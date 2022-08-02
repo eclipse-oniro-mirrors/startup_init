@@ -108,7 +108,7 @@ static int GetClientSocket(int timeout)
     time.tv_usec = 0;
     int clientFd = socket(AF_UNIX, SOCK_STREAM, 0);
     PARAM_CHECK(clientFd >= 0, return -1, "Failed to create socket");
-    int ret = ConntectServer(clientFd, CLIENT_PIPE_NAME);
+    int ret = ConnectServer(clientFd, CLIENT_PIPE_NAME);
     if (ret == 0) {
         setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, (char *)&time, sizeof(struct timeval));
         setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO, (char *)&time, sizeof(struct timeval));

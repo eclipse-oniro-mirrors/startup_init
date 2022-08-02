@@ -68,9 +68,9 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
     BEGET_LOGI("[control_fd] CmdOnRecvMessage %s len %d.", (char *)buffer, buffLen);
 }
 
-static void CmdOnConntectComplete(const TaskHandle client)
+static void CmdOnConnectComplete(const TaskHandle client)
 {
-    BEGET_LOGI("[control_fd] CmdOnConntectComplete");
+    BEGET_LOGI("[control_fd] CmdOnConnectComplete");
 }
 
 static void CmdOnClose(const TaskHandle task)
@@ -105,8 +105,8 @@ static CmdAgent *CmdAgentCreate(const char *server)
     info.server = (char *)server;
     info.baseInfo.userDataSize = sizeof(CmdAgent);
     info.baseInfo.close = CmdOnClose;
-    info.disConntectComplete = CmdDisConnectComplete;
-    info.connectComplete = CmdOnConntectComplete;
+    info.disConnectComplete = CmdDisConnectComplete;
+    info.connectComplete = CmdOnConnectComplete;
     info.sendMessageComplete = CmdOnSendMessageComplete;
     info.recvMessage = CmdOnRecvMessage;
     LE_STATUS status = LE_CreateStreamClient(LE_GetDefaultLoop(), &task, &info);
