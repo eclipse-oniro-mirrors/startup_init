@@ -129,7 +129,7 @@ int32_t WatcherManagerKits::AddWatcher(const std::string &keyPrefix, ParameterCh
 {
     WATCHER_LOGI("AddWatcher keyPrefix %s", keyPrefix.c_str());
     ParamWatcherKitPtr watcher = GetParamWatcher(keyPrefix);
-    WATCHER_CHECK(watcher == nullptr, return watcher->GetWatcherId(),
+    WATCHER_CHECK(watcher == nullptr, return -1,
         "Has been watched by keyPrefix %s", keyPrefix.c_str());
 
     watcher = new ParamWatcher(keyPrefix, callback, context);
