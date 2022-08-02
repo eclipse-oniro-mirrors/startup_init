@@ -19,7 +19,6 @@
 #include "begetctl.h"
 #include "shell.h"
 #include "shell_utils.h"
-#include "init_param.h"
 
 static BShellHandle g_handle = NULL;
 BShellHandle GetShellHandle(void)

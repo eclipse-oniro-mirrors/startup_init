@@ -13,11 +13,6 @@
  * limitations under the License.
  */
 #include <fcntl.h>
-#include <limits.h>
-#include <stdbool.h>
-#include <sys/ioctl.h>
-#include <sys/wait.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "beget_ext.h"
@@ -93,14 +88,14 @@ static int SendMessage(LoopHandle loop, TaskHandle task, const char *message)
     return 0;
 }
 
-static int CmdOnIncommingConntect(const LoopHandle loop, const TaskHandle server)
+static int CmdOnIncommingConnect(const LoopHandle loop, const TaskHandle server)
 {
     TaskHandle client = NULL;
     LE_StreamInfo info = {};
     info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_CONNECT;
     info.baseInfo.close = OnClose;
     info.baseInfo.userDataSize = sizeof(CmdTask);
-    info.disConntectComplete = NULL;
+    info.disConnectComplete = NULL;
     info.sendMessageComplete = NULL;
     info.recvMessage = CmdOnRecvMessage;
     int ret = LE_AcceptStreamClient(LE_GetDefaultLoop(), server, &client, &info);
@@ -127,8 +122,8 @@ void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func)
     info.server = (char *)socketPath;
     info.socketId = -1;
     info.baseInfo.close = NULL;
-    info.disConntectComplete = NULL;
-    info.incommingConntect = CmdOnIncommingConntect;
+    info.disConnectComplete = NULL;
+    info.incommingConnect = CmdOnIncommingConnect;
     info.sendMessageComplete = NULL;
     info.recvMessage = NULL;
     g_controlFdFunc = func;

@@ -14,18 +14,15 @@
 import("//build/ohos.gni")
 
 ohos_shared_library("deviceinfo") {
-  include_dirs = [ "//base/startup/init_lite/interfaces/innerkits/include" ]
+  include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
 
   sources = [ "src/native_deviceinfo_js.cpp" ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
   ]
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-    "napi:ace_napi",
-  ]
+  external_deps = [ "napi:ace_napi" ]
   relative_install_dir = "module"
   subsystem_name = "startup"
   part_name = "init"
@@ -43,14 +40,11 @@ ohos_shared_library("systemparameter") {
   ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
   ]
 
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-    "napi:ace_napi",
-  ]
+  external_deps = [ "napi:ace_napi" ]
   relative_install_dir = "module"
   subsystem_name = "startup"
   part_name = "init"

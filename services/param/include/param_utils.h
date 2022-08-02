@@ -49,6 +49,7 @@ typedef struct cmdLineInfo {
 #define UNUSED(x) (void)(x)
 #endif
 #define PARAM_ALIGN(len) (((len) + 0x03) & (~0x03))
+#define PARAM_IS_ALIGNED(x) (((x) & 0x03) == 0)
 #define PARAM_ENTRY(ptr, type, member) (type *)((char *)(ptr)-offsetof(type, member))
 
 #define IS_READY_ONLY(name) \
@@ -76,7 +77,7 @@ typedef struct cmdLineInfo {
 #elif defined __LINUX__
 #define DATA_PATH          STARTUP_INIT_UT_PATH"/storage/data/system/param/"
 #else
-#define DATA_PATH          STARTUP_INIT_UT_PATH"/data/parameters/"
+#define DATA_PATH          STARTUP_INIT_UT_PATH"/data/service/el1/startup/parameters/"
 #endif
 
 #define CLIENT_PIPE_NAME "/dev/unix/socket/paramservice"

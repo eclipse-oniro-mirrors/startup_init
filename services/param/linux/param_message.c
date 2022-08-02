@@ -20,7 +20,7 @@
 #include "param_utils.h"
 #include "securec.h"
 
-int ConntectServer(int fd, const char *servername)
+int ConnectServer(int fd, const char *servername)
 {
     PARAM_CHECK(fd >= 0, return -1, "Invalid fd %d", fd);
     int opt = 1;
@@ -36,7 +36,7 @@ int ConntectServer(int fd, const char *servername)
     int len = offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path);
     ret = connect(fd, (struct sockaddr *)&addr, len);
     PARAM_CHECK(ret != -1, return -1, "Failed to connect server %s %d", servername, errno);
-    PARAM_LOGV("ConntectServer %s success", servername);
+    PARAM_LOGV("ConnectServer %s success", servername);
     return 0;
 }
 

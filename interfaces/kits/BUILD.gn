@@ -16,8 +16,8 @@ import("//build/ohos.gni")
 group("kitsgroup") {
   if (!defined(ohos_lite)) {
     deps = [
-      "//base/startup/init_lite/interfaces/innerkits:libbeget_proxy",
-      "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+      "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+      "//base/startup/init/interfaces/innerkits:libbegetutil",
     ]
     deps += [ "syscap:deviceinfo_ndk" ]
     if (support_jsapi) {

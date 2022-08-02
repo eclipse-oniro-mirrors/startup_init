@@ -15,7 +15,6 @@
 #include "init_param.h"
 
 #include <errno.h>
-#include <fcntl.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <string.h>
@@ -26,7 +25,6 @@
 #include "param_manager.h"
 #include "param_message.h"
 #include "param_security.h"
-#include "securec.h"
 
 #define INVALID_SOCKET (-1)
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
@@ -40,7 +38,6 @@ __attribute__((constructor)) static void ParameterInit(void)
         return;
     }
     EnableInitLog(INIT_INFO);
-    PARAM_LOGI("ParameterInit ");
     InitParamWorkSpace(1);
 }
 
@@ -51,7 +48,6 @@ __attribute__((destructor)) static void ParameterDeinit(void)
         close(g_clientFd);
         g_clientFd = INVALID_SOCKET;
     }
-    CloseParamWorkSpace();
     pthread_mutex_destroy(&g_clientMutex);
 }
 
@@ -112,7 +108,7 @@ static int GetClientSocket(int timeout)
     time.tv_usec = 0;
     int clientFd = socket(AF_UNIX, SOCK_STREAM, 0);
     PARAM_CHECK(clientFd >= 0, return -1, "Failed to create socket");
-    int ret = ConntectServer(clientFd, CLIENT_PIPE_NAME);
+    int ret = ConnectServer(clientFd, CLIENT_PIPE_NAME);
     if (ret == 0) {
         setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, (char *)&time, sizeof(struct timeval));
         setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO, (char *)&time, sizeof(struct timeval));

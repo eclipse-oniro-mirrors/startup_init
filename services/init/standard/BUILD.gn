@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//base/startup/init_lite/begetd.gni")
+import("//base/startup/init/begetd.gni")
 
 init_common_sources = [
   "../init_capability.c",
@@ -23,6 +23,9 @@ init_common_sources = [
   "../init_service_socket.c",
   "../main.c",
 ]
+
+FSCRYPT_PATH =
+    "//foundation/filemanagement/storage_service/services/storage_daemon"
 
 import("//build/ohos.gni")
 import("//build/ohos/native_stub/native_stub.gni")
@@ -45,37 +48,41 @@ ohos_executable("init") {
   ]
 
   modulemgr_sources = [
-    "//base/startup/init_lite/interfaces/innerkits/hookmgr/hookmgr.c",
-    "//base/startup/init_lite/interfaces/innerkits/modulemgr/modulemgr.c",
+    "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
+    "//base/startup/init/interfaces/innerkits/modulemgr/modulemgr.c",
   ]
   sources += modulemgr_sources
   sources += init_common_sources
 
-  include_dirs = [ "//base/startup/init_lite/services/init/include" ]
+  include_dirs = [
+    "//base/startup/init/services/init/include",
+    "${FSCRYPT_PATH}/include/libfscrypt",
+  ]
 
   deps = [
-    "//base/startup/init_lite/interfaces/innerkits/control_fd:libcontrolfd",
-    "//base/startup/init_lite/interfaces/innerkits/fd_holder:fdholder",
-    "//base/startup/init_lite/interfaces/innerkits/fs_manager:libfsmanager_static",
-    "//base/startup/init_lite/interfaces/innerkits/sandbox:sandbox",
-    "//base/startup/init_lite/services/loopevent:loopevent",
-    "//base/startup/init_lite/services/param/base:parameterbase",
-    "//base/startup/init_lite/services/param/linux:param_init",
-    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
+    "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/interfaces/innerkits/sandbox:sandbox",
+    "//base/startup/init/services/loopevent:loopevent",
+    "//base/startup/init/services/param/base:parameterbase",
+    "//base/startup/init/services/param/linux:param_init",
+    "//base/startup/init/services/utils:libinit_utils",
   ]
 
   deps += [
     "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
     "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
     "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
-    "//base/startup/init_lite/ueventd:libueventd_ramdisk_static",
+    "//base/startup/init/ueventd:libueventd_ramdisk_static",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
   ]
 
-  deps += [ "//base/startup/init_lite/interfaces/innerkits/init_module_engine:libinit_stub_versionscript" ]
-  deps += [ "//base/startup/init_lite/interfaces/innerkits/init_module_engine:init_module_engine_sources" ]
-  deps += [ "//base/startup/init_lite/services/modules:static_modules" ]
+  deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript" ]
+  deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_sources" ]
+  deps += [ "//base/startup/init/services/modules:static_modules" ]
+  deps += [ "${FSCRYPT_PATH}/libfscrypt:libfscryptutils_static" ]
 
   cflags = []
 
@@ -84,6 +91,13 @@ ohos_executable("init") {
       "//third_party/mksh:sh",
       "//third_party/toybox:toybox",
     ]
+  }
+
+  if (build_seccomp) {
+    cflags += [ "-DWITH_SECCOMP" ]
+    include_dirs +=
+        [ "//base/startup/init/interfaces/innerkits/seccomp/include" ]
+    deps += [ "//base/startup/init/services/modules/seccomp:seccomp_static" ]
   }
 
   if (build_selinux) {
@@ -125,9 +139,9 @@ ohos_executable("init") {
     defines += [ "PRODUCT_RK" ]
   }
   version_script = get_label_info(
-                       "//base/startup/init_lite/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
+                       "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
                        "target_gen_dir") + "/" + get_label_info(
-                       "//base/startup/init_lite/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
+                       "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
                        "name") + stub_version_script_suffix
   defines += [ "_GNU_SOURCE" ]
   install_images = [

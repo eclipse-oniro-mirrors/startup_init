@@ -12,10 +12,10 @@
 # limitations under the License.
 
 service_socket_sources =
-    [ "//base/startup/init_lite/interfaces/innerkits/socket/init_socket.c" ]
+    [ "//base/startup/init/interfaces/innerkits/socket/init_socket.c" ]
 service_socket_include = [
-  "//base/startup/init_lite/interfaces/innerkits/include",
-  "//base/startup/init_lite/services/log",
+  "//base/startup/init/interfaces/innerkits/include",
+  "//base/startup/init/services/log",
   "//third_party/bounds_checking_function/include",
 ]
 

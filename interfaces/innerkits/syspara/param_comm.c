@@ -15,7 +15,6 @@
 
 #include "param_comm.h"
 
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -32,8 +31,6 @@
 #endif
 #include "securec.h"
 #include "beget_ext.h"
-
-static const char *g_emptyStr = "";
 
 INIT_LOCAL_API int IsValidParamValue(const char *value, uint32_t len)
 {
@@ -73,11 +70,11 @@ INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder
     int ret = SystemGetParameter(key, NULL, &len);
     if (ret == 0 && len > 0) {
         char *res = (char *)malloc(len + 1);
-        BEGET_CHECK(res != NULL, return g_emptyStr);
+        BEGET_CHECK(res != NULL, return NULL);
         ret = SystemGetParameter(key, res, &len);
         if (ret != 0) {
             free(res);
-            return g_emptyStr;
+            return NULL;
         }
         *paramHolder = res;
     }
@@ -154,14 +151,14 @@ INIT_LOCAL_API const char *GetSerial_(void)
 #ifdef LITEOS_SUPPORT
     return HalGetSerial();
 #else
-    static char *ohos_serial = NULL;
-    if (ohos_serial == NULL) {
-        BEGET_CHECK((ohos_serial = (char *)calloc(1, PARAM_VALUE_LEN_MAX)) != NULL, return NULL);
+    static char *ohosSerial = NULL;
+    if (ohosSerial == NULL) {
+        BEGET_CHECK((ohosSerial = (char *)calloc(1, PARAM_VALUE_LEN_MAX)) != NULL, return NULL);
     }
     uint32_t len = PARAM_VALUE_LEN_MAX;
-    int ret = SystemGetParameter("ohos.boot.sn", ohos_serial, &len);
+    int ret = SystemGetParameter("ohos.boot.sn", ohosSerial, &len);
     BEGET_CHECK(ret == 0, return NULL);
-    return ohos_serial;
+    return ohosSerial;
 #endif
 }
 

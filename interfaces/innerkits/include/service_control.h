@@ -37,7 +37,7 @@ typedef enum {
     SERVICE_SUSPENDED,
     SERVICE_FREEZED,
     SERVICE_DISABLED,
-    SERVICE_CRITIAL
+    SERVICE_CRITICAL
 } ServiceStatus;
 
 enum ServiceAction {

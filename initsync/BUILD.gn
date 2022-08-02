@@ -14,19 +14,19 @@
 import("//build/lite/config/component/lite_component.gni")
 
 lite_component("initsync") {
-  features = [ "//base/startup/init_lite/initsync:libinitsync_shared" ]
+  features = [ "//base/startup/init/initsync:libinitsync_shared" ]
 }
 
 shared_library("libinitsync_shared") {
   sources = [ "src/init_sync.c" ]
   include_dirs = [
-    "//base/startup/init_lite/initsync/include",
-    "//base/startup/init_lite/interfaces/kits/syscap",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init/initsync/include",
+    "//base/startup/init/interfaces/kits/syscap",
+    "//base/startup/init/services/log",
+    "//base/startup/init/interfaces/innerkits/include",
   ]
   public_deps = [
-    "//base/startup/init_lite/services/log:init_log",
+    "//base/startup/init/services/log:init_log",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
 }
@@ -34,10 +34,10 @@ shared_library("libinitsync_shared") {
 static_library("libinitsync_static") {
   sources = [ "src/init_sync.c" ]
   include_dirs = [
-    "//base/startup/init_lite/initsync/include",
-    "//base/startup/init_lite/interfaces/kits/syscap",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
+    "//base/startup/init/initsync/include",
+    "//base/startup/init/interfaces/kits/syscap",
+    "//base/startup/init/services/log",
+    "//base/startup/init/interfaces/innerkits/include",
   ]
   public_deps = [ "//third_party/bounds_checking_function:libsec_static" ]
 }

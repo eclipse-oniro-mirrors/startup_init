@@ -17,7 +17,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 /**
  * @brief Initialize a double-linked list head

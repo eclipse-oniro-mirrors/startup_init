@@ -15,15 +15,15 @@ import("//build/ohos.gni")
 
 config("bootevent_static_config") {
   include_dirs = [
-    "//base/startup/init_lite/services/param/linux",
-    "//base/startup/init_lite/services/loopevent/include",
-    "//base/startup/init_lite/services/param/include",
-    "//base/startup/init_lite/services/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/include/param",
   ]
 }
 
 ohos_source_set("libbootevent_static") {
   sources = [ "bootevent.c" ]
   public_configs = [ ":bootevent_static_config" ]
-  public_configs += [ "//base/startup/init_lite/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
+  public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
 }

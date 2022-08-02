@@ -14,11 +14,11 @@
 if (defined(ohos_lite)) {
   executable("watchdog_service") {
     sources = [
-      "//base/startup/init_lite/services/log/init_commlog.c",
-      "//base/startup/init_lite/watchdog/init_watchdog.c",
+      "//base/startup/init/services/log/init_commlog.c",
+      "//base/startup/init/watchdog/init_watchdog.c",
     ]
     deps = [
-      "//base/startup/init_lite/services/log:init_log",
+      "//base/startup/init/services/log:init_log",
       "//third_party/bounds_checking_function:libsec_static",
     ]
     defines = [
@@ -34,8 +34,8 @@ if (defined(ohos_lite)) {
   ohos_executable("watchdog_service") {
     sources = [ "init_watchdog.c" ]
     deps = [
-      "//base/startup/init_lite/services/log:init_log",
-      "//base/startup/init_lite/services/param/base:parameterbase",
+      "//base/startup/init/services/log:init_log",
+      "//base/startup/init/services/param/base:parameterbase",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
     defines = [ "LINUX_WATCHDOG" ]

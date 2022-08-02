@@ -52,7 +52,7 @@ int ParamServerCreate(ParamTaskPtr *stream, const ParamStreamInfo *streamInfo)
     info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_SERVER;
     info.server = streamInfo->server;
     info.baseInfo.close = streamInfo->close;
-    info.incommingConntect = streamInfo->incomingConnect;
+    info.incommingConnect = streamInfo->incomingConnect;
     return LE_CreateStreamServer(LE_GetDefaultLoop(), stream, &info);
 }
 
@@ -69,7 +69,7 @@ int ParamStreamCreate(ParamTaskPtr *stream, ParamTaskPtr server,
         info.baseInfo.flags |= TASK_TEST;
     }
     info.baseInfo.close = streamInfo->close;
-    info.disConntectComplete = NULL;
+    info.disConnectComplete = NULL;
     info.sendMessageComplete = NULL;
     info.recvMessage = OnReceiveRequest;
     g_recvMessage = streamInfo->recvMessage;

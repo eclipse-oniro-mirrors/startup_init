@@ -20,9 +20,7 @@
 #include "ueventd_socket.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
-#include "init_param.h"
 #include "init_socket.h"
-#include "securec.h"
 
 static void PollUeventdSocketTimeout(int ueventSockFd)
 {

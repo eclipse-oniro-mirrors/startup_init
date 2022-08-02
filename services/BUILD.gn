@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//base/startup/init_lite/begetd.gni")
+import("//base/startup/init/begetd.gni")
 group("startup_init") {
   deps = []
 
@@ -23,7 +23,7 @@ group("startup_init") {
 
     # for unittest
     if (ohos_build_type == "debug") {
-      deps += [ "//base/startup/init_lite/test/unittest/lite:init_test" ]
+      deps += [ "//base/startup/init/test/unittest/lite:init_test" ]
     }
   }
 
@@ -35,9 +35,9 @@ group("startup_init") {
     ]
     if (enable_ohos_startup_init_feature_watcher) {
       deps += [
-        "//base/startup/init_lite/services/param/watcher:param_watcher",
-        "//base/startup/init_lite/services/param/watcher:param_watcher.rc",
-        "//base/startup/init_lite/services/param/watcher/sa_profile:param_watcher_profile",
+        "//base/startup/init/services/param/watcher:param_watcher",
+        "//base/startup/init/services/param/watcher:param_watcher.rc",
+        "//base/startup/init/services/param/watcher/sa_profile:param_watcher_profile",
       ]
     }
   }

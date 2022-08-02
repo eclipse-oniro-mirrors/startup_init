@@ -25,9 +25,9 @@ common_sources = [
 ]
 
 common_include = [
-  "//base/startup/init_lite/services/log",
-  "//base/startup/init_lite/interfaces/innerkits/include",
-  "//base/startup/init_lite/services/include",
+  "//base/startup/init/services/log",
+  "//base/startup/init/interfaces/innerkits/include",
+  "//base/startup/init/services/include",
   "//third_party/bounds_checking_function/include",
   "include",
   "loop",
@@ -40,7 +40,7 @@ common_include = [
 
 config("exported_header_files") {
   visibility = [ ":*" ]
-  include_dirs = [ "//base/startup/init_lite/services/loopevent/include" ]
+  include_dirs = [ "//base/startup/init/services/loopevent/include" ]
 }
 
 if (defined(ohos_lite)) {

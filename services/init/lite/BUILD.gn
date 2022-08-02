@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//base/startup/init_lite/begetd.gni")
+import("//base/startup/init/begetd.gni")
 
 init_common_sources = [
   "../init_capability.c",
@@ -47,9 +47,9 @@ executable("init") {
   sources += init_common_sources
 
   include_dirs = [
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/interfaces/innerkits/fd_holder",
-    "//base/startup/init_lite/services/init/include",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/services/init/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
     "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
@@ -58,10 +58,10 @@ executable("init") {
   ldflags = []
   deps = [
     "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
-    "//base/startup/init_lite/services/log:init_log",
-    "//base/startup/init_lite/services/loopevent:loopevent",
-    "//base/startup/init_lite/services/param/base:parameterbase",
-    "//base/startup/init_lite/services/utils:libinit_utils",
+    "//base/startup/init/services/log:init_log",
+    "//base/startup/init/services/loopevent:loopevent",
+    "//base/startup/init/services/param/base:parameterbase",
+    "//base/startup/init/services/utils:libinit_utils",
     "//build/lite/config/component/cJSON:cjson_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
@@ -71,12 +71,12 @@ executable("init") {
     include_dirs += [
       "//kernel/liteos_a/syscall",
       "//kernel/liteos_a/kernel/include",
-      "//base/startup/init_lite/interfaces/kits/syscap",
-      "//base/startup/init_lite/initsync/include",
+      "//base/startup/init/interfaces/kits/syscap",
+      "//base/startup/init/initsync/include",
     ]
     deps += [
-      "//base/startup/init_lite/initsync:initsync",
-      "//base/startup/init_lite/services/param/liteos:param_init_lite",
+      "//base/startup/init/initsync:initsync",
+      "//base/startup/init/services/param/liteos:param_init_lite",
     ]
   }
   if (ohos_kernel_type == "linux") {
@@ -89,7 +89,7 @@ executable("init") {
       "-lpthread",
     ]
     deps += [
-      "//base/startup/init_lite/services/param/linux:param_init",
+      "//base/startup/init/services/param/linux:param_init",
       "//third_party/mksh",
       "//third_party/toybox",
     ]

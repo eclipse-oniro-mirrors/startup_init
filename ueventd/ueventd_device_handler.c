@@ -37,6 +37,17 @@
 #include <policycoreutils.h>
 #endif
 
+static bool IsBootDeviceLinkDir(const char *linkDir, const char *bootDevice)
+{
+    size_t pathLen = strlen("/dev/block/platform/");
+    INIT_CHECK_RETURN_VALUE(strncmp(linkDir, "/dev/block/platform/", pathLen) == 0, false);
+    const char *vernier = linkDir + pathLen;
+    INIT_CHECK_RETURN_VALUE(strncmp(vernier, bootDevice, strlen(bootDevice)) == 0, false);
+    vernier += strlen(bootDevice);
+    INIT_CHECK_RETURN_VALUE(strncmp(vernier, "/by-name", strlen("/by-name")) == 0, false);
+    return true;
+}
+
 static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
 {
     if (INVALIDSTRING(deviceNode) || symLinks == NULL) {
@@ -54,6 +65,11 @@ static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
         const char *linkDir = dirname(linkBuf);
         if (MakeDirRecursive(linkDir, DIRMODE) < 0) {
             INIT_LOGE("[uevent] Failed to create dir \" %s \", err = %d", linkDir, errno);
+            return;
+        }
+        if (IsBootDeviceLinkDir(linkDir, bootDevice) && access("/dev/block/by-name", F_OK) != 0) {
+            INIT_CHECK_ONLY_ELOG(symlink(linkDir, "/dev/block/by-name") == 0,
+                "Failed to create by-name symlink, err %d", errno);
         }
         errno = 0;
         int rc = symlink(deviceNode, linkName);
@@ -214,32 +230,6 @@ static char *FindPlatformDeviceName(char *path)
     return NULL;
 }
 
-static void BuildBootDeviceSymbolLink(char **links, int linkNum, const char *partitionName)
-{
-    if (links == NULL) {
-        INIT_LOGE("Function parameter error.");
-        return;
-    }
-    if (linkNum > BLOCKDEVICE_LINKS - 1) {
-        INIT_LOGW("Too many links, ignore.");
-        return;
-    }
-    if (partitionName == NULL) {
-        INIT_LOGW("Partition name is null, skip creating links");
-        return;
-    }
-    links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
-    if (links[linkNum] == NULL) {
-        INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
-        return;
-    }
-
-    if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
-        "/dev/block/by-name/%s", partitionName) == -1) {
-        INIT_LOGE("Failed to build link");
-    }
-}
-
 static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
     const char *partitionName, const char *deviceName)
 {
@@ -325,10 +315,6 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
             parent = FindPlatformDeviceName(parent);
             if (parent != NULL) {
                 BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
-            }
-            linkNum++;
-            if ((parent != NULL) && STRINGEQUAL(parent, bootDevice)) {
-                BuildBootDeviceSymbolLink(links, linkNum, uevent->partitionName);
                 linkNum++;
             }
         }

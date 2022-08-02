@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//base/startup/init_lite/begetd.gni")
+import("//base/startup/init/begetd.gni")
 if (!defined(ohos_lite)) {
   import("//build/ohos.gni")
   import("//build/ohos/sa_profile/sa_profile.gni")
@@ -28,17 +28,18 @@ if (!defined(ohos_lite)) {
 
   ohos_shared_library("deviceinfoservice") {
     sources = [
-      "//base/startup/init_lite/interfaces/innerkits/syspara/param_comm.c",
+      "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
       "device_info_stub.cpp",
     ]
 
     include_dirs = [
+      "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include/",
       ".",
-      "//base/startup/init_lite/services/include/param",
-      "//base/startup/init_lite/interfaces/innerkits/include",
-      "//base/startup/init_lite/interfaces/innerkits/include/syspara",
-      "//base/startup/init_lite/interfaces/innerkits/syspara",
-      "//base/startup/init_lite/interfaces/hals",
+      "//base/startup/init/services/include/param",
+      "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/interfaces/innerkits/include/syspara",
+      "//base/startup/init/interfaces/innerkits/syspara",
+      "//base/startup/init/interfaces/hals",
     ]
     defines = [
       "INIT_AGENT",
@@ -46,18 +47,16 @@ if (!defined(ohos_lite)) {
       "USE_MBEDTLS",
     ]
     deps = [
-      "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
+      "//base/startup/init/interfaces/innerkits:libbegetutil",
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/mbedtls:mbedtls_shared",
     ]
 
     external_deps = [
       "access_token:libaccesstoken_sdk",
-      "hilog_native:libhilog",
+      "c_utils:utils",
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
-      "samgr_standard:samgr_proxy",
-      "utils_base:utils",
     ]
     install_images = [ "system" ]
     part_name = "init"

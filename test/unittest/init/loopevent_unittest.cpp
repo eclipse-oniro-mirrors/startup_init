@@ -163,7 +163,7 @@ public:
         info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_SERVER | TASK_TEST;
         info.server = (char *)"/data/testpipe";
         info.baseInfo.close = OnClose;
-        info.incommingConntect = IncomingConnect;
+        info.incommingConnect = IncomingConnect;
         LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask_, &info);
         if (serverTask_ == nullptr) {
             return;
@@ -246,7 +246,7 @@ public:
         info.baseInfo.flags = TASK_PIPE | TASK_CONNECT | TASK_TEST;
         info.server = (char *)"/data/testpipe";
         info.baseInfo.close = OnClose;
-        info.incommingConntect = IncomingConnect;
+        info.incommingConnect = IncomingConnect;
         info.socketId = 1111; // 1111 is test fd
         LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask, &info);
         EXPECT_NE(serverTask, nullptr);

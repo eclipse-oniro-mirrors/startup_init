@@ -14,10 +14,7 @@
  */
 #include "param_persist.h"
 
-#include <errno.h>
-#include <fcntl.h>
 #include <time.h>
-#include <unistd.h>
 
 #include "init_param.h"
 #include "init_utils.h"

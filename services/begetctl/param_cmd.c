@@ -14,19 +14,15 @@
  */
 #include <grp.h>
 #include <pwd.h>
-#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <termios.h>
 
 #include "begetctl.h"
-#include "init_utils.h"
 #include "param_manager.h"
 #include "param_security.h"
-#include "param_utils.h"
 #include "shell_utils.h"
 #include "init_param.h"
 #include "beget_ext.h"

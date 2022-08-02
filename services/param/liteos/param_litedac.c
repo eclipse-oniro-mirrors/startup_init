@@ -52,6 +52,9 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
 
 static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
+    UNUSED(srcLabel);
+    UNUSED(name);
+    UNUSED(mode);
 #if defined(__LITEOS_A__)
     uid_t uid = getuid();
     return uid <= SYS_UID_INDEX ? DAC_RESULT_PERMISSION : DAC_RESULT_FORBIDED;

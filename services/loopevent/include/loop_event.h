@@ -93,17 +93,17 @@ typedef struct {
 #define TASK_SERVER (0x01 << 16)
 #define TASK_CONNECT (0x02 << 16)
 #define TASK_TEST (0x01 << 24)
-typedef void (*LE_DisConntectComplete)(const TaskHandle client);
-typedef void (*LE_ConntectComplete)(const TaskHandle client);
+typedef void (*LE_DisConnectComplete)(const TaskHandle client);
+typedef void (*LE_ConnectComplete)(const TaskHandle client);
 typedef void (*LE_SendMessageComplete)(const TaskHandle taskHandle, BufferHandle handle);
 typedef void (*LE_RecvMessage)(const TaskHandle taskHandle, const uint8_t *buffer, uint32_t buffLen);
-typedef int (*LE_IncommingConntect)(const LoopHandle loopHandle, const TaskHandle serverTask);
+typedef int (*LE_IncommingConnect)(const LoopHandle loopHandle, const TaskHandle serverTask);
 typedef struct {
     LE_BaseInfo baseInfo;
     char *server;
     int socketId;
-    LE_DisConntectComplete disConntectComplete;
-    LE_IncommingConntect incommingConntect;
+    LE_DisConnectComplete disConnectComplete;
+    LE_IncommingConnect incommingConnect;
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;
 } LE_StreamServerInfo;
@@ -111,8 +111,8 @@ typedef struct {
 typedef struct {
     LE_BaseInfo baseInfo;
     char *server;
-    LE_DisConntectComplete disConntectComplete;
-    LE_ConntectComplete connectComplete;
+    LE_DisConnectComplete disConnectComplete;
+    LE_ConnectComplete connectComplete;
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;
 } LE_StreamInfo;

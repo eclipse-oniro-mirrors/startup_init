@@ -18,12 +18,10 @@
 #include <cstdio>
 #include <cstdint>
 #include <fcntl.h>
-#include <getopt.h>
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <vector>
 
 #include "begetctl.h"
 #include "fs_manager/fs_manager.h"

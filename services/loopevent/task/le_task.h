@@ -72,7 +72,7 @@ typedef struct LiteTask_ {
 
 typedef struct {
     BaseTask base;
-    LE_IncommingConntect incommingConntect;
+    LE_IncommingConnect incommingConnect;
     char server[0];
 } StreamServerTask;
 
@@ -91,13 +91,13 @@ typedef struct {
     StreamServerTask *serverTask;
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;
-    LE_DisConntectComplete disConntectComplete;
+    LE_DisConnectComplete disConnectComplete;
 } StreamConnectTask;
 
 typedef struct {
     StreamTask stream;
-    LE_DisConntectComplete disConntectComplete;
-    LE_ConntectComplete connectComplete;
+    LE_DisConnectComplete disConnectComplete;
+    LE_ConnectComplete connectComplete;
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;
     uint32_t connected : 1;

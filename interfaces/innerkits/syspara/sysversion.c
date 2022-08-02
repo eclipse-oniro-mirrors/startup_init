@@ -14,13 +14,11 @@
  */
 #include "sysversion.h"
 
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "beget_ext.h"
 #include "param_comm.h"
-#include "parameter.h"
 #include "securec.h"
 
 /* *

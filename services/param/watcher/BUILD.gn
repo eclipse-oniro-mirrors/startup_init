@@ -20,35 +20,32 @@ ohos_prebuilt_etc("param_watcher.rc") {
 
 ohos_shared_library("param_watcher") {
   sources = [
-    "//base/startup/init_lite/services/utils/list.c",
+    "//base/startup/init/services/utils/list.c",
     "proxy/watcher_manager.cpp",
     "proxy/watcher_manager_stub.cpp",
     "proxy/watcher_proxy.cpp",
   ]
 
   include_dirs = [
-    "//base/startup/init_lite/services/param/include",
-    "//base/startup/init_lite/services/include/param",
-    "//base/startup/init_lite/services/param/linux",
-    "//base/startup/init_lite/services/param/watcher/proxy",
-    "//base/startup/init_lite/services/param/watcher/include",
-    "//base/startup/init_lite/services/include",
-    "//base/startup/init_lite/services/log",
-    "//base/startup/init_lite/interfaces/innerkits/include",
-    "//base/startup/init_lite/services/loopevent/include",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include/",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/services/loopevent/include",
     "//third_party/cJSON",
   ]
 
-  deps = [
-    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
-    "//third_party/bounds_checking_function:libsec_shared",
-  ]
+  deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
 
   external_deps = [
+    "c_utils:utils",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
-    "utils_base:utils",
   ]
   install_images = [ "system" ]
   part_name = "init"
