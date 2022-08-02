@@ -248,7 +248,7 @@ if (defined(ohos_lite)) {
       "c_utils:utils",
       "hilog_native:libhilog_base",
       "ipc:ipc_core",
-      "samgr_standard:samgr_proxy",
+      "samgr:samgr_proxy",
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
