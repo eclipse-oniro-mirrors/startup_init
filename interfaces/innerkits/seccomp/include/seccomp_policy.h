@@ -28,7 +28,8 @@ extern "C" {
 typedef enum {
     SYSTEM,
     APPSPAWN,
-    APP
+    APP,
+    NWEBSPAWN,
 } PolicyType;
 
 bool SetSeccompPolicy(PolicyType policy);

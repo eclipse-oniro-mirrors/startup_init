@@ -76,6 +76,9 @@ bool SetSeccompPolicy(PolicyType policy)
         case APPSPAWN:
             ret = InstallSeccompPolicy(g_appspawnSeccompFilter, g_appspawnSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
             break;
+        case NWEBSPAWN:
+            ret = InstallSeccompPolicy(g_nwebspawnSeccompFilter, g_nwebspawnSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
+            break;
         default:
             ret = false;
     }

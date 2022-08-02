@@ -27,6 +27,7 @@ ohos_shared_library("seccomp") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/modules/seccomp:appspawn_filter",
+    "//base/startup/init/services/modules/seccomp:nwebspawn_filter",
     "//base/startup/init/services/modules/seccomp:system_filter",
   ]
 
