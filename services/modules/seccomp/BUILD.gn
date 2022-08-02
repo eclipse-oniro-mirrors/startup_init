@@ -85,6 +85,7 @@ ohos_prebuilt_seccomp("system_filter") {
   install_images = [
     "system",
     "ramdisk",
+    "updater",
   ]
 }
 
@@ -109,6 +110,7 @@ ohos_prebuilt_seccomp("appspawn_filter") {
   install_images = [
     "system",
     "ramdisk",
+    "updater",
   ]
 }
 
