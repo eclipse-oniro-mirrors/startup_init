@@ -460,6 +460,10 @@ static void DoInitMainUser(const struct CmdArgs *ctx)
         INIT_LOGE("DoInitMainUser: para invalid");
         return;
     }
+    if (!InitFscryptPolicy()) {
+        INIT_LOGI("DoInitMainUser:init fscrypt failed,not enable fscrypt");
+        return;
+    }
 
     char * const argv[] = {
         "/system/bin/sdc",
