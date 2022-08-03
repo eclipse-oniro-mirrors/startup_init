@@ -23,5 +23,5 @@ ONLY_CHECK_ARGS
 "seccomp_filters.h"
 
 @allowListWithArgs
-setresuid: if arg0 >= 10000 && arg1 >= 10000 && arg2 >= 10000
-setresgid: if arg0 >= 10000 && arg1 >= 10000 && arg2 >= 10000
+setresuid: if arg0 >= 0 && arg1 >= 0 && arg2 >= 0
+setresgid: if arg0 >= 0 && arg1 >= 0 && arg2 >= 0
