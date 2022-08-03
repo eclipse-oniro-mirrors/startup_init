@@ -151,18 +151,20 @@ int SystemSetParameter(const char *name, const char *value)
     request->msgSize = offset + sizeof(ParamMessage);
     request->id.msgId = atomic_fetch_add(&g_requestId, 1);
 
-    PARAM_LOGI("SystemSetParameter name %s", name);
+    PARAM_LOGI("SystemSetParameter name %s msgid:%d ", name, request->id.msgId);
     int fd = INVALID_SOCKET;
     pthread_mutex_lock(&g_clientMutex);
     if (g_clientFd == INVALID_SOCKET) {
         g_clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
     }
     fd = g_clientFd;
+    ret = PARAM_CODE_INVALID_PARAM;
+    if (fd >= 0) {
+        ret = StartRequest(fd, request, DEFAULT_PARAM_SET_TIMEOUT);
+    }
+    PARAM_LOGI("SystemSetParameter name %s msgid:%d  ret: %d ", name, request->id.msgId, ret);
     pthread_mutex_unlock(&g_clientMutex);
-    PARAM_CHECK(fd >= 0, return -1, "Failed to connect server for set %s", name);
-    ret = StartRequest(fd, request, DEFAULT_PARAM_SET_TIMEOUT);
     free(request);
-    PARAM_LOGI("SystemSetParameter name %s %d", name, ret);
     return ret;
 }
 
