@@ -273,7 +273,7 @@ static void BootStateChange(const char *content)
         return;
     }
     if (strcmp("post-init", content) == 0) {
-        StartAllServices(START_MODE_NARMAL);
+        StartAllServices(START_MODE_NORMAL);
         // Destroy all hooks
         HookMgrDestroy(bootStageHookMgr);
         bootStageHookMgr = NULL;

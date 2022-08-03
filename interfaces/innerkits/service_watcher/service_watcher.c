@@ -28,9 +28,10 @@
 static void ServiceStateChange(const char *key, const char *value, void *context)
 {
     ServiceStatusChangePtr callback = (ServiceStatusChangePtr)context;
-    int size = 0;
-    const InitArgInfo *statusMap = GetServieStatusMap(&size);
-    ServiceStatus status = (ServiceStatus)GetMapValue(value, statusMap, size, SERVICE_IDLE);
+    uint32_t v = 0;
+    int ret = StringToUint(value, &v);
+    BEGET_ERROR_CHECK(ret == 0, return, "Failed to get value from %s", value);
+    ServiceStatus status = (ServiceStatus)v;
     if (strlen(key) > strlen(STARTUP_SERVICE_CTL)) {
         callback(key + strlen(STARTUP_SERVICE_CTL) + 1, status);
     } else {

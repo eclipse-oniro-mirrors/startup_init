@@ -154,6 +154,9 @@ int GetParameterName(uint32_t handle, char *key, uint32_t len);
 int GetParameterValue(uint32_t handle, char *value, uint32_t len);
 long long GetSystemCommitId(void);
 
+int32_t GetIntParameter(const char *key, int32_t def);
+uint32_t GetUintParameter(const char *key, uint32_t def);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

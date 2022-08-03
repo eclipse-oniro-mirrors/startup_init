@@ -22,8 +22,9 @@
 
 #include "beget_ext.h"
 #include "init_utils.h"
-#include "securec.h"
 #include "init_param.h"
+#include "parameter.h"
+#include "securec.h"
 
 static int StartProcess(const char *name, const char *extArgv[], int extArgc)
 {
@@ -100,15 +101,8 @@ static int GetCurrentServiceStatus(const char *serviceName, ServiceStatus *statu
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
-    char paramValue[PARAM_VALUE_LEN_MAX] = {0};
-    unsigned int valueLen = PARAM_VALUE_LEN_MAX;
-    if (SystemGetParameter(paramName, paramValue, &valueLen) != 0) {
-        BEGET_LOGE("Failed get paramName.");
-        return -1;
-    }
-    int size = 0;
-    const InitArgInfo *statusMap = GetServieStatusMap(&size);
-    *status = GetMapValue(paramValue, statusMap, size, SERVICE_IDLE);
+    uint32_t value = GetUintParameter(paramName, SERVICE_IDLE);
+    *status = (ServiceStatus)value;
     return 0;
 }
 
@@ -184,13 +178,7 @@ int ServiceControl(const char *serviceName, int action)
 
 int ServiceWaitForStatus(const char *serviceName, ServiceStatus status, int waitTimeout)
 {
-    char *state = NULL;
-    int size = 0;
-    const InitArgInfo *statusMap = GetServieStatusMap(&size);
-    if (((int)status < size) && (statusMap[status].value == (int)status)) {
-        state = statusMap[status].name;
-    }
-    if (serviceName == NULL || state == NULL || waitTimeout <= 0) {
+    if (serviceName == NULL || waitTimeout <= 0) {
         BEGET_LOGE("Service wait failed, service name is null or status invalid %d", status);
         return -1;
     }
@@ -200,7 +188,12 @@ int ServiceWaitForStatus(const char *serviceName, ServiceStatus status, int wait
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
-    if (SystemWaitParameter(paramName, state, waitTimeout) != 0) {
+    char value[MAX_INT_LEN] = {0};
+    if (snprintf_s(value, sizeof(value), sizeof(value) - 1, "%d", (int)status) == -1) {
+        BEGET_LOGE("Failed snprintf_s err=%d", errno);
+        return -1;
+    }
+    if (SystemWaitParameter(paramName, value, waitTimeout) != 0) {
         BEGET_LOGE("Wait param for %s failed.", paramName);
         return -1;
     }
@@ -220,7 +213,12 @@ int ServiceSetReady(const char *serviceName)
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
-    if (SystemSetParameter(paramName, "ready") != 0) {
+    char value[MAX_INT_LEN] = {0};
+    if (snprintf_s(value, sizeof(value), sizeof(value) - 1, "%d", (int)SERVICE_READY) == -1) {
+        BEGET_LOGE("Failed snprintf_s err=%d", errno);
+        return -1;
+    }
+    if (SystemSetParameter(paramName, value) != 0) {
         BEGET_LOGE("Set param for %s failed.", paramName);
         return -1;
     }

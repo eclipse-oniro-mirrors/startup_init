@@ -29,10 +29,10 @@ extern "C" {
 typedef enum {
     SERVICE_IDLE = 0, // service add
     SERVICE_STARTING, // service start
-    SERVICE_STARTED, // service ok
-    SERVICE_READY, // service ok
+    SERVICE_STARTED, // 2 service ok running
+    SERVICE_READY, // 3 service ok running
     SERVICE_STOPPING,
-    SERVICE_STOPPED,
+    SERVICE_STOPPED, // 5
     SERVICE_ERROR,
     SERVICE_SUSPENDED,
     SERVICE_FREEZED,

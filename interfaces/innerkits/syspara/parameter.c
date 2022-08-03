@@ -78,21 +78,6 @@ int GetParameter(const char *key, const char *def, char *value, uint32_t len)
     return (ret != 0) ? ret : strlen(value);
 }
 
-int GetIntParameter(const char *key, int def)
-{
-    int out = 0;
-    char value[32] = {0}; // 32 max for int
-    int ret = GetParameter(key, "0", value, sizeof(value));
-    if (ret != 0) {
-        return out;
-    }
-    long long int result = 0;
-    if (StringToLL(value, &result) != 0) {
-        return def;
-    }
-    return (int32_t)result;
-}
-
 int SetParameter(const char *key, const char *value)
 {
     if ((key == NULL) || (value == NULL)) {
@@ -325,4 +310,38 @@ const char *GetBuildRootHash(void)
 {
     static const char *buildRootHash = NULL;
     return GetProperty("const.ohos.buildroothash", &buildRootHash);
+}
+
+int32_t GetIntParameter(const char *key, int32_t def)
+{
+    char value[MAX_INT_LEN] = {0};
+    int ret = GetParameter(key, "0", value, sizeof(value));
+    if (ret != 0) {
+        return def;
+    }
+    long long int result = 0;
+    if (StringToLL(value, &result) != 0) {
+        return def;
+    }
+    if (result <= INT32_MIN && result >= INT32_MAX) {
+        return def;
+    }
+    return (int32_t)result;
+}
+
+uint32_t GetUintParameter(const char *key, uint32_t def)
+{
+    char value[MAX_INT_LEN] = {0};
+    int ret = GetParameter(key, "0", value, sizeof(value));
+    if (ret != 0) {
+        return def;
+    }
+    unsigned long long int result = 0;
+    if (StringToULL(value, &result) != 0) {
+        return def;
+    }
+    if (result >= UINT32_MAX) {
+        return def;
+    }
+    return (uint32_t)result;
 }

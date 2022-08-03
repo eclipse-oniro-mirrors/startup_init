@@ -36,19 +36,16 @@
 
 void NotifyServiceChange(Service *service, int status)
 {
-    int size = 0;
-    const InitArgInfo *statusMap = GetServieStatusMap(&size);
-    INIT_ERROR_CHECK(statusMap != NULL && size > status, service->status = status;
-        return, "Service status error %d", status);
-    INIT_LOGI("NotifyServiceChange %s %s to %s", service->name,
-        statusMap[service->status].name, statusMap[status].name);
+    INIT_LOGI("NotifyServiceChange %s %d to %d", service->name, service->status, status);
     service->status = status;
     INIT_CHECK(status != SERVICE_IDLE, return);
     char paramName[PARAM_NAME_LEN_MAX] = { 0 };
     int ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1,
         "%s.%s", STARTUP_SERVICE_CTL, service->name);
-    if (ret >= 0) {
-        SystemWriteParam(paramName, statusMap[status].name);
+    char statusStr[MAX_INT_LEN] = {0};
+    int ret1 = snprintf_s(statusStr, sizeof(statusStr), sizeof(statusStr) - 1, "%d", status);
+    if (ret >= 0 && ret1 > 0) {
+        SystemWriteParam(paramName, statusStr);
     }
 }
 
