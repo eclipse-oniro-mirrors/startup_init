@@ -23,7 +23,6 @@
 extern "C" {
 #endif
 #endif
-#define PARTITION_NAME_SIZE 32
 Fstab* LoadRequiredFstab(void);
 int MountRequriedPartitions(const Fstab *fstab);
 #ifdef __cplusplus

@@ -120,6 +120,8 @@ INIT_LOCAL_API int LoadParamFromCmdLine(void)
         },
         {OHOS_BOOT"reboot_reason", CommonDealFun
         },
+        {OHOS_BOOT"bootslots", CommonDealFun
+        },
         {OHOS_BOOT"sn", SnDealFun
         }
     };

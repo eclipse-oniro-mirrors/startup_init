@@ -182,7 +182,8 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
             INIT_LOGI("%s match with required partition %s success, now handle it", uevent->syspath, deviceName);
             HandleBlockDeviceEvent(uevent);
             return;
-        } else if (strstr(devices[i], uevent->partitionName) != NULL) {
+        } else if (strstr(devices[i], uevent->partitionName) != NULL ||
+            strstr(uevent->partitionName, "vendor") != NULL || strstr(uevent->partitionName, "system") != NULL) {
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
             HandleBlockDeviceEvent(uevent);
             return;
