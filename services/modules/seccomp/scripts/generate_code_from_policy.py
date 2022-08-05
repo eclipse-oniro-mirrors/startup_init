@@ -48,6 +48,7 @@ mode_str = {
     'ONLY_CHECK_ARGS': 1
 }
 
+
 def is_hex_digit(s):
     try:
         int(s, 16)
