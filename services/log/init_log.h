@@ -37,7 +37,16 @@ extern "C" {
 #endif
 
 INIT_LOCAL_API void OpenLogDevice(void);
+INIT_LOCAL_API void InitLog(InitLogLevel logLevel,
+    unsigned int domain, const char *tag, const char *fmt, va_list vargs);
 
+#ifdef PARAM_BASE
+#define INIT_LOGV(fmt, ...)
+#define INIT_LOGI(fmt, ...)
+#define INIT_LOGW(fmt, ...)
+#define INIT_LOGE(fmt, ...)
+#define INIT_LOGF(fmt, ...)
+#else
 #define INIT_LOGV(fmt, ...) \
     StartupLog(INIT_DEBUG, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGI(fmt, ...) \
@@ -48,6 +57,7 @@ INIT_LOCAL_API void OpenLogDevice(void);
     StartupLog(INIT_ERROR, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGF(fmt, ...) \
     StartupLog(INIT_FATAL, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+#endif
 
 #ifndef UNLIKELY
 #define UNLIKELY(x)    __builtin_expect(!!(x), 0)

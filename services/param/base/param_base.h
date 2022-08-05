@@ -30,11 +30,19 @@ extern "C" {
 #endif
 #endif
 
+typedef struct {
+    uint8_t updaterMode;
+    InitCommLog logFunc;
+#ifdef PARAM_SUPPORT_SELINUX
+    int (*setfilecon)(const char *name, const char *content);
+#endif
+} PARAM_WORKSPACE_OPS;
+
+INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *ops);
+INIT_LOCAL_API void CloseParamWorkSpace(void);
 INIT_LOCAL_API int ParamSprintf(char *buffer, size_t buffSize, const char *format, ...);
 INIT_LOCAL_API int ParamMemcpy(void *dest, size_t destMax, const void *src, size_t count);
 INIT_LOCAL_API int ParamStrCpy(char *strDest, size_t destMax, const char *strSrc);
-INIT_INNER_API int ReadFileInDir(const char *dirPath, const char *includeExt,
-    int (*processFile)(const char *fileName, void *context), void *context);
 
 #ifdef __cplusplus
 #if __cplusplus

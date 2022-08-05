@@ -246,7 +246,7 @@ static ParamTrieNode *FindSubTrie(const WorkSpace *workSpace,
     return FindSubTrie(workSpace, subTrie, key, keyLen, matchLabel);
 }
 
-ParamTrieNode *FindTrieNode_(const WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel)
+static ParamTrieNode *FindTrieNode_(const WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel)
 {
     PARAM_CHECK(key != NULL && keyLen > 0, return NULL, "Invalid key ");
     PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return 0, "Invalid workSpace %s", key);
@@ -406,7 +406,7 @@ INIT_LOCAL_API ParamTrieNode *FindTrieNode(WorkSpace *workSpace,
     return node;
 }
 
-uint32_t GetParamMaxLen(uint8_t type)
+INIT_LOCAL_API uint32_t GetParamMaxLen(uint8_t type)
 {
     static const uint32_t typeLengths[] = {
         PARAM_VALUE_LEN_MAX, 32, 8 // 8 max bool length 32 max int length

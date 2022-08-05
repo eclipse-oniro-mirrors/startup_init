@@ -19,6 +19,24 @@
 #include "param_trie.h"
 #include "param_base.h"
 
+INIT_LOCAL_API int GenerateKeyHasCode(const char *buff, size_t len)
+{
+    int code = 0;
+    for (size_t i = 0; i < len; i++) {
+        code += buff[i] - 'A';
+    }
+    return code;
+}
+
+INIT_LOCAL_API ParamHandle GetParamHandle(const WorkSpace *workSpace, uint32_t index, const char *name)
+{
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return -1, "Invalid param");
+    uint32_t hashCode = (uint32_t)GenerateKeyHasCode(workSpace->fileName, strlen(workSpace->fileName));
+    uint32_t handle = (hashCode % HASH_BUTT) << 24; // 24 left shift
+    handle = handle | (index + workSpace->area->startIndex);
+    return handle;
+}
+
 INIT_LOCAL_API WorkSpace *GetWorkSpace(const char *name)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
@@ -29,7 +47,8 @@ INIT_LOCAL_API WorkSpace *GetWorkSpace(const char *name)
     tmpName = WORKSPACE_NAME_NORMAL;
 #else
     if (strcmp(name, WORKSPACE_NAME_DAC) != 0) {
-        tmpName = (char *)GetSelinuxContent(name);
+        tmpName = (paramSpace->selinuxSpace.getParamLabel != NULL) ?
+            (char *)paramSpace->selinuxSpace.getParamLabel(name) : WORKSPACE_NAME_NORMAL;
     }
 #endif
     WorkSpace *space = NULL;
@@ -376,7 +395,7 @@ INIT_LOCAL_API ParamSecurityLabel *GetParamSecurityLabel()
     return &paramSpace->securityLabel;
 }
 
-int SplitParamString(char *line, const char *exclude[], uint32_t count,
+INIT_LOCAL_API int SplitParamString(char *line, const char *exclude[], uint32_t count,
     int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context)
 {
     // Skip spaces
@@ -441,4 +460,178 @@ int SplitParamString(char *line, const char *exclude[], uint32_t count,
         *pos = '\0';
     }
     return result(context, name, value);
+}
+
+INIT_LOCAL_API int AddWorkSpace(const char *name, int onlyRead, uint32_t spaceSize)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid workspace");
+    int ret = 0;
+    // check exist
+#ifdef PARAM_SUPPORT_SELINUX
+    const char *realName = name;
+#else
+    const char *realName = WORKSPACE_NAME_NORMAL;
+#endif
+    WORKSPACE_RW_LOCK(*paramSpace);
+    HashNode *node = OH_HashMapGet(paramSpace->workSpaceHashHandle, (const void *)realName);
+    if (node != NULL) {
+        WORKSPACE_RW_UNLOCK(*paramSpace);
+        return 0;
+    }
+    PARAM_LOGV("AddWorkSpace %s spaceSize: %u onlyRead %s", name, spaceSize, onlyRead ? "true" : "false");
+    WorkSpace *workSpace = NULL;
+    do {
+        ret = -1;
+        const size_t size = strlen(realName) + 1;
+        workSpace = (WorkSpace *)malloc(sizeof(WorkSpace) + size);
+        PARAM_CHECK(workSpace != NULL, break, "Failed to create workspace for %s", realName);
+        workSpace->flags = 0;
+        workSpace->area = NULL;
+        OH_ListInit(&workSpace->node);
+        ret = ParamStrCpy(workSpace->fileName, size, realName);
+        PARAM_CHECK(ret == 0, break, "Failed to copy file name %s", realName);
+        HASHMAPInitNode(&workSpace->hashNode);
+        ret = InitWorkSpace(workSpace, onlyRead, spaceSize);
+        PARAM_CHECK(ret == 0, break, "Failed to init workspace %s", realName);
+        ret = OH_HashMapAdd(paramSpace->workSpaceHashHandle, &workSpace->hashNode);
+        PARAM_CHECK(ret == 0, CloseWorkSpace(workSpace);
+            workSpace = NULL;
+            break, "Failed to add hash node");
+        OH_ListAddTail(&paramSpace->workSpaceList, &workSpace->node);
+        ret = 0;
+        workSpace = NULL;
+    } while (0);
+    if (workSpace != NULL) {
+        free(workSpace);
+    }
+    WORKSPACE_RW_UNLOCK(*paramSpace);
+    PARAM_LOGV("AddWorkSpace %s %s", name, ret == 0 ? "success" : "fail");
+    return ret;
+}
+
+INIT_LOCAL_API uint32_t ReadCommitId(ParamNode *entry)
+{
+    uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_acquire);
+    while (commitId & PARAM_FLAGS_MODIFY) {
+        futex_wait(&entry->commitId, commitId);
+        commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_acquire);
+    }
+    return commitId & PARAM_FLAGS_COMMITID;
+}
+
+INIT_LOCAL_API int ReadParamValue(ParamHandle handle, char *value, uint32_t *length)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid workspace");
+    PARAM_CHECK(length != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
+    ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
+    if (entry == NULL) {
+        return -1;
+    }
+    if (value == NULL) {
+        *length = entry->valueLength + 1;
+        return 0;
+    }
+    PARAM_CHECK(*length > entry->valueLength, return PARAM_CODE_INVALID_PARAM,
+        "Invalid value len %u %u", *length, entry->valueLength);
+    uint32_t commitId = ReadCommitId(entry);
+    do {
+        int ret = ParamMemcpy(value, *length, entry->data + entry->keyLength + 1, entry->valueLength);
+        PARAM_CHECK(ret == 0, return -1, "Failed to copy value");
+        value[entry->valueLength] = '\0';
+        *length = entry->valueLength;
+    } while (commitId != ReadCommitId(entry));
+    return 0;
+}
+
+INIT_LOCAL_API int ReadParamName(ParamHandle handle, char *name, uint32_t length)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid workspace");
+    PARAM_CHECK(name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
+    ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
+    if (entry == NULL) {
+        return -1;
+    }
+    PARAM_CHECK(length > entry->keyLength, return -1, "Invalid param size %u %u", entry->keyLength, length);
+    int ret = ParamMemcpy(name, length, entry->data, entry->keyLength);
+    PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_PARAM, "Failed to copy name");
+    name[entry->keyLength] = '\0';
+    return 0;
+}
+
+INIT_LOCAL_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
+{
+    PARAM_CHECK(srcLabel != NULL, return DAC_RESULT_FORBIDED, "The srcLabel is null");
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return DAC_RESULT_FORBIDED, "Invalid workspace");
+    int ret = DAC_RESULT_PERMISSION;
+    // for root, all permission
+    if (srcLabel->cred.uid != 0) {
+        for (int i = 0; i < PARAM_SECURITY_MAX; i++) {
+            if (PARAM_TEST_FLAG(paramSpace->securityLabel.flags[i], LABEL_ALL_PERMISSION)) {
+                continue;
+            }
+            ParamSecurityOps *ops = GetParamSecurityOps(i);
+            if (ops == NULL) {
+                continue;
+            }
+            if (ops->securityCheckParamPermission == NULL) {
+                continue;
+            }
+            ret = ops->securityCheckParamPermission(srcLabel, name, mode);
+            if (ret == DAC_RESULT_FORBIDED) {
+                PARAM_LOGW("CheckParamPermission %s %s FORBID", ops->name, name);
+                break;
+            }
+        }
+    }
+    return ret;
+}
+
+INIT_LOCAL_API int ParamSprintf(char *buffer, size_t buffSize, const char *format, ...)
+{
+    int len = -1;
+    va_list vargs;
+    va_start(vargs, format);
+#ifdef PARAM_BASE
+    len = vsnprintf(buffer, buffSize - 1, format, vargs);
+#else
+    len = vsnprintf_s(buffer, buffSize, buffSize - 1, format, vargs);
+#endif
+    va_end(vargs);
+    return len;
+}
+
+INIT_LOCAL_API int ParamMemcpy(void *dest, size_t destMax, const void *src, size_t count)
+{
+    int ret = 0;
+#ifdef PARAM_BASE
+    memcpy(dest, src, count);
+#else
+    ret = memcpy_s(dest, destMax, src, count);
+#endif
+    return ret;
+}
+
+INIT_LOCAL_API int ParamStrCpy(char *strDest, size_t destMax, const char *strSrc)
+{
+    int ret = 0;
+#ifdef PARAM_BASE
+    if (strlen(strSrc) >= destMax) {
+        return -1;
+    }
+    size_t i = 0;
+    while ((i < destMax) && *strSrc != '\0') {
+        *strDest = *strSrc;
+        strDest++;
+        strSrc++;
+        i++;
+    }
+    *strDest = '\0';
+#else
+    ret = strcpy_s(strDest, destMax, strSrc);
+#endif
+    return ret;
 }

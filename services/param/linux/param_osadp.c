@@ -20,11 +20,11 @@
 #include "param_message.h"
 #include "param_utils.h"
 
-void paramMutexEnvInit(void)
+INIT_LOCAL_API void paramMutexEnvInit(void)
 {
 }
 
-int ParamRWMutexCreate(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexCreate(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     pthread_rwlockattr_t rwlockatt;
@@ -33,26 +33,27 @@ int ParamRWMutexCreate(ParamRWMutex *lock)
     pthread_rwlock_init(&lock->rwlock, &rwlockatt);
     return 0;
 }
-int ParamRWMutexWRLock(ParamRWMutex *lock)
+
+INIT_LOCAL_API int ParamRWMutexWRLock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     pthread_rwlock_wrlock(&lock->rwlock);
     return 0;
 }
-int ParamRWMutexRDLock(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexRDLock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     pthread_rwlock_rdlock(&lock->rwlock);
     return 0;
 }
-int ParamRWMutexUnlock(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexUnlock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     pthread_rwlock_unlock(&lock->rwlock);
     return 0;
 }
 
-int ParamRWMutexDelete(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexDelete(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     uint32_t ret = pthread_rwlock_destroy(&lock->rwlock);
@@ -60,24 +61,24 @@ int ParamRWMutexDelete(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamMutexCreate(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexCreate(ParamMutex *mutex)
 {
     return 0;
 }
-int ParamMutexPend(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexPend(ParamMutex *mutex)
 {
     return 0;
 }
-int ParamMutexPost(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexPost(ParamMutex *mutex)
 {
     return 0;
 }
-int ParamMutexDelete(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex)
 {
     return 0;
 }
 
-void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly)
+INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly)
 {
     PARAM_CHECK(fileName != NULL, return NULL, "Invalid filename or handle");
     int mode = readOnly ? O_RDONLY : O_CREAT | O_RDWR | O_TRUNC;
@@ -96,13 +97,13 @@ void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, 
     return areaAddr;
 }
 
-void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
+INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
 {
     PARAM_CHECK(mem != NULL && handle != NULL, return, "Invalid mem or handle");
     munmap((char *)mem, dataSize);
 }
 
-uint32_t Difftime(time_t curr, time_t base)
+INIT_LOCAL_API uint32_t Difftime(time_t curr, time_t base)
 {
     return (uint32_t)difftime(curr, base);
 }

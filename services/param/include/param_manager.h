@@ -21,6 +21,7 @@
 
 #include "init_param.h"
 #include "list.h"
+#include "param_base.h"
 #include "param_osadp.h"
 #include "param_persist.h"
 #include "param_security.h"
@@ -54,6 +55,10 @@ typedef struct {
     ListHead workSpaceList;
 #ifdef PARAMWORKSPACE_NEED_MUTEX
     ParamRWMutex rwlock;
+#endif
+    PARAM_WORKSPACE_OPS ops;
+#ifdef PARAM_SUPPORT_SELINUX
+    SelinuxSpace selinuxSpace;
 #endif
 } ParamWorkSpace;
 
@@ -99,17 +104,19 @@ INIT_LOCAL_API int InitPersistParamWorkSpace(void);
 INIT_LOCAL_API void ClosePersistParamWorkSpace(void);
 INIT_LOCAL_API int WritePersistParam(const char *name, const char *value);
 
-INIT_INNER_API int CheckParameterSet(const char *name, const char *value,
+INIT_LOCAL_API uint32_t ReadCommitId(ParamNode *entry);
+INIT_LOCAL_API int ReadParamName(ParamHandle handle, char *name, uint32_t length);
+INIT_LOCAL_API int ReadParamValue(ParamHandle handle, char *value, uint32_t *length);
+INIT_LOCAL_API int CheckParameterSet(const char *name, const char *value,
     const ParamSecurityLabel *srcLabel, int *ctrlService);
-INIT_INNER_API ParamHandle GetParamHandle(const WorkSpace *workSpace, uint32_t index, const char *name);
-INIT_INNER_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
-INIT_INNER_API int InitParamWorkSpace(int onlyRead);
-INIT_INNER_API void CloseParamWorkSpace(void);
-INIT_INNER_API const char *GetSelinuxContent(const char *name);
-INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void);
+INIT_LOCAL_API ParamHandle GetParamHandle(const WorkSpace *workSpace, uint32_t index, const char *name);
+INIT_LOCAL_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
 
+INIT_LOCAL_API int SysCheckParamExist(const char *name);
+INIT_LOCAL_API int GenerateKeyHasCode(const char *buff, size_t len);
+
+INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void);
 INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditData);
-INIT_INNER_API int SysCheckParamExist(const char *name);
 #ifdef STARTUP_INIT_TEST
 ParamService *GetParamService();
 #endif

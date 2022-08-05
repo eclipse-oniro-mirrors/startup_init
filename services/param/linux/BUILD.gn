@@ -19,6 +19,8 @@ config("exported_header_files") {
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/service/include/param",
     "//base/startup/init/interfaces/service/param/include",
+    "//third_party/bounds_checking_function/include",
+    "//third_party/selinux/libselinux/include",
   ]
 }
 
@@ -112,6 +114,10 @@ if (defined(ohos_lite)) {
       defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
     }
 
+    if (param_base_log) {
+      defines += [ "PARAM_BASE_LOG" ]
+    }
+
     if (build_selinux) {
       include_dirs += [
         "//third_party/selinux/libselinux/include/",
@@ -133,15 +139,13 @@ if (defined(ohos_lite)) {
       "INIT_AGENT",
     ]
     if (build_selinux) {
-      deps += [
-        "//base/security/selinux:libload_policy",
-        "//base/security/selinux:librestorecon",
-        "//third_party/selinux:libselinux",
-      ]
       defines += [
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
+    }
+    if (param_base_log) {
+      defines += [ "PARAM_BASE_LOG" ]
     }
     part_name = "init"
     subsystem_name = "startup"

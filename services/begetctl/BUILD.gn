@@ -25,7 +25,10 @@ common_include_dirs = [
   "//base/startup/init/services/init/include",
   "//base/startup/init/services/log",
   "//base/startup/init/interfaces/innerkits/include",
+  "//base/startup/init/interfaces/innerkits/sandbox/include",
+  "//base/security/selinux/interfaces/policycoreutils/include",
   "//third_party/bounds_checking_function/include",
+  "//third_party/selinux/libselinux/include",
 ]
 
 if (defined(ohos_lite)) {
@@ -77,12 +80,7 @@ if (defined(ohos_lite)) {
       defines += [ "PRODUCT_RK" ]
     }
 
-    include_dirs = [
-      "//third_party/bounds_checking_function/include",
-      "//base/startup/init/interfaces/innerkits/sandbox/include",
-      "//base/startup/init/interfaces/innerkits/control_fd",
-    ]
-    include_dirs += common_include_dirs
+    include_dirs = common_include_dirs
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
       "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
@@ -103,12 +101,10 @@ if (defined(ohos_lite)) {
     }
 
     if (build_selinux) {
-      include_dirs += [
-        "//third_party/selinux/libselinux/include/",
-        "//base/security/selinux/interfaces/policycoreutils/include/",
+      deps += [
+        "//base/security/selinux:libselinux_parameter_static",
+        "//third_party/selinux:libselinux",
       ]
-      deps += [ "//third_party/selinux:libselinux" ]
-      external_deps += [ "selinux:libparaperm_checker" ]
       defines += [ "PARAM_SUPPORT_SELINUX" ]
     }
 
@@ -140,12 +136,14 @@ if (defined(ohos_lite)) {
     include_dirs = common_include_dirs
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
-      "//third_party/bounds_checking_function:libsec_static",
+      "//third_party/bounds_checking_function:libsec_shared",
     ]
 
     if (build_selinux) {
-      deps += [ "//third_party/selinux:libselinux" ]
-      external_deps = [ "selinux:libparaperm_checker" ]
+      deps += [
+        "//base/security/selinux:libselinux_parameter_static",
+        "//third_party/selinux:libselinux",
+      ]
       defines += [ "PARAM_SUPPORT_SELINUX" ]
     }
 
@@ -183,19 +181,24 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/loopevent:loopevent",
-      "//base/startup/init/services/param/base:parameterbase",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_static",
     ]
-
+    if (use_musl == false) {
+      deps += [ "//base/startup/init/services/param/base:parameterbase" ]
+    } else {
+      deps += [ "//base/startup/init/services/param/base:parameterbase_ext" ]
+    }
     external_deps = [
       "c_utils:utils",
       "hilog_native:libhilog_base",
     ]
     if (build_selinux) {
-      deps += [ "//third_party/selinux:libselinux" ]
-      external_deps += [ "selinux:libparaperm_checker" ]
+      deps += [
+        "//base/security/selinux:libselinux_parameter_static",
+        "//third_party/selinux:libselinux",
+      ]
       defines += [ "PARAM_SUPPORT_SELINUX" ]
     }
     install_images = [ "system" ]

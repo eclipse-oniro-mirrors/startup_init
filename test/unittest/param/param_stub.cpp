@@ -105,8 +105,8 @@ static void TestDestroyParamList(ParamContextsList **list)
     ParamContextsList *head = *list;
     while (head != nullptr) {
         ParamContextsList *next = head->next;
-        free(head->info.paraName);
-        free(head->info.paraContext);
+        free((void *)head->info.paraName);
+        free((void *)head->info.paraContext);
         free(head);
         head = next;
     }
@@ -137,15 +137,14 @@ static ParamContextsList *TestGetParamList(void)
 
 void TestSetSelinuxOps(void)
 {
-    SelinuxSpace space = {};
-    space.setSelinuxLogCallback = TestSetSelinuxLogCallback;
-    space.setParamCheck = TestSetParamCheck;
-    space.getParamLabel = TestGetParamLabel;
-    space.readParamCheck = TestReadParamCheck;
-    space.getParamList = TestGetParamList;
-    space.destroyParamList = TestDestroyParamList;
 #ifdef PARAM_SUPPORT_SELINUX
-    SetSelinuxOps(&space);
+    SelinuxSpace *selinuxSpace = &GetParamWorkSpace()->selinuxSpace;
+    selinuxSpace->setSelinuxLogCallback = TestSetSelinuxLogCallback;
+    selinuxSpace->setParamCheck = TestSetParamCheck;
+    selinuxSpace->getParamLabel = TestGetParamLabel;
+    selinuxSpace->readParamCheck = TestReadParamCheck;
+    selinuxSpace->getParamList = TestGetParamList;
+    selinuxSpace->destroyParamList = TestDestroyParamList;
 #endif
 }
 static void CreateTestFile(const char *fileName, const char *data)

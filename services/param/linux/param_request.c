@@ -21,7 +21,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#ifdef PARAM_BASE_LOG
+#include "init_log.h"
+#endif
 #include "init_utils.h"
+#include "param_base.h"
 #include "param_manager.h"
 #include "param_message.h"
 #include "param_security.h"
@@ -38,12 +42,19 @@ __attribute__((constructor)) static void ParameterInit(void)
         return;
     }
     EnableInitLog(INIT_INFO);
-    InitParamWorkSpace(1);
+    PARAM_WORKSPACE_OPS ops = {0};
+    ops.updaterMode = 0;
+#ifdef PARAM_BASE_LOG
+    ops.logFunc = InitLog;
+#endif
+#ifdef PARAM_SUPPORT_SELINUX
+    ops.setfilecon = NULL;
+#endif
+    InitParamWorkSpace(1, &ops);
 }
 
 __attribute__((destructor)) static void ParameterDeinit(void)
 {
-    PARAM_LOGI("ParameterDeinit ");
     if (g_clientFd != INVALID_SOCKET) {
         close(g_clientFd);
         g_clientFd = INVALID_SOCKET;
