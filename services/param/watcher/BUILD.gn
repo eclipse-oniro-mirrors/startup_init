@@ -27,7 +27,7 @@ ohos_shared_library("param_watcher") {
   ]
 
   include_dirs = [
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include/",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include/",
     "//base/startup/init/services/param/include",
     "//base/startup/init/services/include/param",
     "//base/startup/init/services/param/linux",

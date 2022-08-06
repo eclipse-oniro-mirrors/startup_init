@@ -195,11 +195,11 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/param/watcher/proxy",
     "//base/startup/init/test/unittest",
     "//base/startup/init/test/unittest/param",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
-    "//foundation/distributedschedule/safwk/services/safwk/include",
-    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk",
-    "//foundation/distributedschedule/samgr/adapter/interfaces/innerkits/include",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include",
+    "//foundation/systemabilitymgr/safwk/services/safwk/include",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk",
+    "//foundation/systemabilitymgr/samgr/adapter/interfaces/innerkits/include",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include",
     "//base/startup/init/ueventd/include",
     "//utils/system/safwk/native/include",
     "//third_party/bounds_checking_function/include",
@@ -251,7 +251,7 @@ ohos_unittest("init_unittest") {
     external_deps += [
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
-      "samgr_standard:samgr_proxy",
+      "samgr:samgr_proxy",
     ]
   }
 
