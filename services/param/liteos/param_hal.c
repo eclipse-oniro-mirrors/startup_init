@@ -224,7 +224,7 @@ static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle)
     int ret;
     int fd = (int)handle;
     ParamFileSync(fd);
-    ParamFileClose(fd);
+    ret = ParamFileClose(fd);
     ParamMutexPost(&g_saveMutex);
     PARAM_CHECK(ret == 0, return, "BatchSavePersistParamEnd fail error %d", errno);
 }
