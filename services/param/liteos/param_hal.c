@@ -142,7 +142,7 @@ static int LoadPersistParam(void)
         while (currLen < fileSize) {
             if (buffer[currLen] == '\n') { // split line
                 buffer[currLen] = '\0';
-                int ret = SplitParamString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
+                ret = SplitParamString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
                 PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);
                 paramNum++;
             }
