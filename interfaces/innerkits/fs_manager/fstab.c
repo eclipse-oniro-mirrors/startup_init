@@ -338,6 +338,16 @@ int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char 
     return 0;
 }
 
+int GetBlockDeviceByName(const char *deviceName, const Fstab *fstab, char* miscDev, size_t size)
+{
+    for (FstabItem *item = fstab->head; item != NULL; item = item->next) {
+        if (strstr(item->deviceName, deviceName) != NULL) {
+            BEGET_CHECK_RETURN_VALUE(strcpy_s(miscDev, size, item->deviceName) != 0, 0);
+        }
+    }
+    return -1;
+}
+
 static const struct MountFlags mountFlags[] = {
     { "noatime", MS_NOATIME },
     { "noexec", MS_NOEXEC },
@@ -487,21 +497,114 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
     return flags;
 }
 
-int GetBlockDevicePath(const char *partName, char *path, int size)
+int GetBlockDevicePath(const char *partName, char *path, size_t size)
 {
-    char *fstabFile = GetFstabFile(path, size);
-    if (fstabFile == NULL) {
-        return -1;
-    }
-    Fstab *fstab = ReadFstabFromFile(fstabFile, false);
+    Fstab *fstab = LoadFstabFromCommandLine();
     if (fstab == NULL) {
-        return -1;
+        BEGET_LOGI("fstab not found from cmdline, try to get it from file");
+        char *fstabFile = GetFstabFile(path, size);
+        BEGET_CHECK_RETURN_VALUE(fstabFile != NULL, -1);
+        fstab = ReadFstabFromFile(fstabFile, false);
     }
+    BEGET_CHECK_RETURN_VALUE(fstab != NULL, -1);
     int ret = GetBlockDeviceByMountPoint(partName, fstab, path, size);
+    BEGET_INFO_CHECK(ret == 0, ret = GetBlockDeviceByName(partName, fstab, path, size),
+        "mount point not found, try to get it by device name");
     ReleaseFstab(fstab);
     return ret;
 }
 
+#define OHOS_REQUIRED_MOUNT_PREFIX "ohos.required_mount."
+/*
+ * Fstab includes block device node, mount point, file system type, MNT_ Flags and options.
+ * We separate them by spaces in fstab.required file, but the separator is '@' in CmdLine.
+ * The prefix "ohos.required_mount." is the flag of required fstab information in CmdLine.
+ * Format as shown below:
+ * <block device>@<mount point>@<fstype>@<mount options>@<fstab options>
+ * e.g.
+ * ohos.required_mount.system=/dev/block/xxx/by-name/system@/usr@ext4@ro,barrier=1@wait,required
+ */
+static int ParseRequiredMountInfo(const char *item, Fstab *fstab)
+{
+    char mountOptions[MAX_BUFFER_LEN] = {};
+    char partName[NAME_SIZE] = {};
+    // Sanity checks
+    BEGET_CHECK(!(item == NULL || *item == '\0' || fstab == NULL), return -1);
+
+    char *p = NULL;
+    const char *q = item;
+    if ((p = strstr(item, "=")) != NULL) {
+        q = item + strlen(OHOS_REQUIRED_MOUNT_PREFIX); // Get partition name
+        BEGET_CHECK(!(q == NULL || *q == '\0' || (p - q) <= 0), return -1);
+        BEGET_ERROR_CHECK(strncpy_s(partName, NAME_SIZE -1, q, p - q) == EOK,
+            return -1, "Failed to copy required partition name");
+        p++; // skip '='
+        BEGET_ERROR_CHECK(strncpy_s(mountOptions, MAX_BUFFER_LEN -1, p, strlen(p)) == EOK,
+            return -1, "Failed to copy required mount info: %s", item);
+    }
+    BEGET_LOGV("Mount option of partition %s is [%s]", partName, mountOptions);
+    if (ParseFstabPerLine(mountOptions, fstab, false, "@") < 0) {
+        BEGET_LOGE("Failed to parse mount options of partition \' %s \', options: %s", partName, mountOptions);
+        return -1;
+    }
+    return 0;
+}
+
+Fstab* LoadFstabFromCommandLine(void)
+{
+    Fstab *fstab = NULL;
+    char *cmdline = ReadFileData(BOOT_CMD_LINE);
+    bool isDone = false;
+
+    BEGET_ERROR_CHECK(cmdline != NULL, return NULL, "Read from \'/proc/cmdline\' failed, err = %d", errno);
+    TrimTail(cmdline, '\n');
+    BEGET_ERROR_CHECK((fstab = (Fstab *)calloc(1, sizeof(Fstab))) != NULL, return NULL,
+        "Allocate memory for FS table failed, err = %d", errno);
+    char *start = cmdline;
+    char *end = start + strlen(cmdline);
+    while (start < end) {
+        char *token = strstr(start, " ");
+        if (token == NULL) {
+            break;
+        }
+
+        // Startswith " "
+        if (token == start) {
+            start++;
+            continue;
+        }
+        *token = '\0';
+        if (strncmp(start, OHOS_REQUIRED_MOUNT_PREFIX,
+            strlen(OHOS_REQUIRED_MOUNT_PREFIX)) != 0) {
+            start = token + 1;
+            continue;
+        }
+        isDone = true;
+        if (ParseRequiredMountInfo(start, fstab) < 0) {
+            BEGET_LOGE("Failed to parse \' %s \'", start);
+            isDone = false;
+            break;
+        }
+        start = token + 1;
+    }
+
+    // handle last one
+    if (start < end) {
+        if (strncmp(start, OHOS_REQUIRED_MOUNT_PREFIX,
+            strlen(OHOS_REQUIRED_MOUNT_PREFIX)) == 0 &&
+            ParseRequiredMountInfo(start, fstab) < 0) {
+            BEGET_LOGE("Failed to parse \' %s \'", start);
+            isDone = false;
+        }
+    }
+
+    if (!isDone) {
+        ReleaseFstab(fstab);
+        fstab = NULL;
+    }
+    free(cmdline);
+    return fstab;
+}
 #ifdef __cplusplus
 #if __cplusplus
 }

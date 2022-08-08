@@ -29,6 +29,8 @@ extern "C" {
 #define FS_MANAGER_CHECK  0x00000001
 #define FS_MANAGER_WAIT  0x00000002
 #define FS_MANAGER_REQUIRED  0x00000004
+#define NAME_SIZE 32
+#define MAX_SLOT 2
 
 #define VALID_FS_MANAGER_FLAGS (FS_MANAGER_CHECK | FS_MANAGER_WAIT | FS_MANAGER_REQUIRED)
 #define FS_MANAGER_FLAGS_ENABLED(fsMgrFlags, flag) (((fsMgrFlags) & FS_MANAGER_##flag) != 0)
@@ -56,6 +58,21 @@ typedef struct {
     struct FstabItem *head;
 } Fstab;
 
+typedef enum SlotFlag {
+    UNBOOT = 0,
+    ACTIVE = 1,
+} SlotFlag;
+
+typedef struct SlotInfo {
+    int slotName;
+    char *slotSuffix;
+    SlotFlag slotFlag;
+    unsigned int retryCount;
+    unsigned int reserved;
+} SlotInfo;
+
+Fstab* LoadFstabFromCommandLine(void);
+int GetSlotInfo(void);
 void ReleaseFstab(Fstab *fstab);
 Fstab *ReadFstabFromFile(const char *file, bool procMounts);
 FstabItem *FindFstabItemForPath(Fstab fstab, const char *path);
@@ -63,6 +80,7 @@ FstabItem* FindFstabItemForMountPoint(Fstab fstab, const char *mp);
 int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts, const char *separator);
 
 int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char *deviceName, int nameLen);
+int GetBlockDeviceByName(const char *deviceName, const Fstab *fstab, char* miscDev, size_t size);
 bool IsSupportedFilesystem(const char *fsType);
 int DoFormat(const char *devPath, const char *fsType);
 int MountOneItem(FstabItem *item);
@@ -73,7 +91,7 @@ int UmountAllWithFstabFile(const char *file);
 unsigned long GetMountFlags(char *mountFlag, char *fsSpecificFlags, size_t fsSpecificFlagSize,
     const char *mountPoint);
 
-int GetBlockDevicePath(const char *partName, char *path, int size);
+int GetBlockDevicePath(const char *partName, char *path, size_t size);
 
 // Get fscrypt policy if exist
 int LoadFscryptPolicy(char *buf, size_t size);
