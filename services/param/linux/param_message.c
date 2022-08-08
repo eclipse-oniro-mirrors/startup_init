@@ -33,7 +33,7 @@ int ConnectServer(int fd, const char *servername)
     addr.sun_family = AF_UNIX;
     ret = sprintf_s(addr.sun_path, sizeof(addr.sun_path) - 1, "%s", servername);
     PARAM_CHECK(ret > EOK, return -1, "Failed to sprintf_s server address");
-    int len = offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path);
+    size_t len = offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path);
     ret = connect(fd, (struct sockaddr *)&addr, len);
     PARAM_CHECK(ret != -1, return -1, "Failed to connect server %s %d", servername, errno);
     PARAM_LOGV("ConnectServer %s success", servername);
