@@ -17,10 +17,11 @@
 #include "init_module_engine.h"
 #include "trigger_manager.h"
 #include "init_log.h"
+#include "plugin_adapter.h"
 
 #define BOOT_EVENT_PARA_PREFIX      "bootevent."
 #define BOOT_EVENT_PARA_PREFIX_LEN  10
-
+#ifdef BOOTEVENT
 typedef struct tagBOOT_EVENT_PARAM_ITEM {
     ListNode    node;
     const char  *paramName;
@@ -132,44 +133,40 @@ static void BootEventParaFireByName(const char *paramName)
 
 #define BOOT_EVENT_FIELD_NAME "bootevents"
 
+#endif
+
 static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
 {
-    int cnt;
-    cJSON *bootEvents = cJSON_GetObjectItem(serviceParseCtx->serviceNode, BOOT_EVENT_FIELD_NAME);
-
-    // No bootevents in config file
-    if (bootEvents == NULL) {
-        return;
-    }
-
-    // Single bootevent in config file
-    if (!cJSON_IsArray(bootEvents)) {
-        BootEventParaAdd(cJSON_GetStringValue(bootEvents));
-        return;
-    }
-
-    // Multiple bootevents in config file
-    cnt = cJSON_GetArraySize(bootEvents);
-    for (int i = 0; i < cnt; i++) {
-        cJSON *item = cJSON_GetArrayItem(bootEvents, i);
-        BootEventParaAdd(cJSON_GetStringValue(item));
-    }
+    PLUGIN_LOGI("ServiceParseBootEventHook %s", serviceParseCtx->serviceName);
 }
 
-static void ParamSetBootEventHook(PARAM_SET_CTX *paramSetCtx)
+static int DoBootEventCmd(int id, const char *name, int argc, const char **argv)
 {
-    // Check if the parameter is started with "bootevent."
-    if (strncmp(paramSetCtx->name, BOOT_EVENT_PARA_PREFIX, BOOT_EVENT_PARA_PREFIX_LEN) != 0) {
-        return;
-    }
+    PLUGIN_LOGI("DoBootEventCmd argc %d %s", argc, name);
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
+    // argv[0] samgr.ready.true
+    PLUGIN_LOGI("DoBootEventCmd argv %s", argv[0]);
+    return 0;
+}
 
-    // Delete the bootevent param for list
-    BootEventParaFireByName(paramSetCtx->name);
+void ClearServiceBootEventHook(SERVICE_INFO_CTX *serviceCtx)
+{
+    PLUGIN_LOGI("ClearServiceBootEventHook serviceName %s", serviceCtx->serviceName);
+}
+
+static int32_t g_executorId = -1;
+static int ParamSetBootEventHook(const HOOK_INFO *hookInfo, void *cookie)
+{
+    if (g_executorId == -1) {
+        g_executorId = AddCmdExecutor("bootevent", DoBootEventCmd);
+        PLUGIN_LOGI("DoBootEventCmd executorId %d", g_executorId);
+    }
+    return 0;
 }
 
 MODULE_CONSTRUCTOR(void)
 {
     InitAddServiceParseHook(ServiceParseBootEventHook);
-
-    ParamSetHookAdd(ParamSetBootEventHook);
+    InitAddGlobalInitHook(0, ParamSetBootEventHook);
+    InitAddClearServiceHook(ClearServiceBootEventHook);
 }

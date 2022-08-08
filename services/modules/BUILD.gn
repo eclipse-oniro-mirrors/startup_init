@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021 Huawei Device Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,56 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if (!defined(ohos_lite)) {
-  import("//base/startup/init/begetd.gni")
-  import("//build/ohos.gni")
-
-  ohos_shared_library("bootchart") {
-    sources = [ "bootchart/bootchart.c" ]
-
-    include_dirs = [
-      ".",
-      "//base/startup/init/services/include/param",
-    ]
-
-    deps = [
-      "//base/startup/init/interfaces/innerkits:libbegetutil",
-      "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/cJSON:cjson_static",
-    ]
-
-    external_deps = [ "init:libinit_module_engine" ]
-
-    part_name = "init"
-    if (target_cpu == "arm64") {
-      module_install_dir = "lib64/init"
-    } else {
-      module_install_dir = "lib/init"
-    }
-  }
-
-  config("libbootchart_static_config") {
-    include_dirs = [ "." ]
-  }
-
-  ohos_source_set("libbootchart_static") {
-    sources = [ "bootchart/bootchart_static.c" ]
-    public_configs = [ ":libbootchart_static_config" ]
-    public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
-  }
-}
-
 group("static_modules") {
   if (!defined(ohos_lite)) {
     deps = [
-      ":libbootchart_static",
+      "bootchart:libbootchart_static",
       "bootevent:libbootevent_static",
+      "init_hook:inithook",
     ]
   }
 }
 
 group("modulesgroup") {
   if (!defined(ohos_lite)) {
-    deps = [ ":bootchart" ]
+    deps = [ "bootchart:bootchart" ]
   }
 }

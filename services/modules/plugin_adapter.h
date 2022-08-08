@@ -21,6 +21,12 @@
 
 #include "init_log.h"
 
+#define PROCESS_EXIT_CODE 0x7f // 0x7f: user specified
+
+#ifndef UNUSED
+#define UNUSED(x) (void)(x)
+#endif
+
 #ifndef PLUGIN_DOMAIN
 #define PLUGIN_DOMAIN (BASE_DOMAIN + 6)
 #endif
@@ -39,4 +45,10 @@
     if (!(ret)) { \
         exper; \
     }
+
+#define HOOKID(name) HOOK_ID_##name
+enum HOOK_ID_ {
+    HOOKID(BOOTCHART),
+    HOOKID(SELINUX),
+};
 #endif

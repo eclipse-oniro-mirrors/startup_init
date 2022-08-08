@@ -32,7 +32,13 @@ enum INIT_BOOTSTAGE {
     INIT_PRE_CFG_LOAD      = 30,
     INIT_SERVICE_PARSE     = 35,
     INIT_POST_PERSIST_PARAM_LOAD   = 40,
-    INIT_POST_CFG_LOAD     = 50
+    INIT_POST_CFG_LOAD     = 50,
+    INIT_REBOOT            = 55,
+    INIT_SERVICE_CLEAR     = 56,
+    INIT_SERVICE_DUMP      = 57,
+    INIT_SERVICE_FORK_BEFORE       = 58,
+    INIT_SERVICE_SET_PERMS = 59,
+    INIT_JOB_PARSE         = 70,
 };
 
 HOOK_MGR *GetBootStageHookMgr();
@@ -76,12 +82,44 @@ typedef struct tagSERVICE_PARSE_CTX {
 } SERVICE_PARSE_CTX;
 
 /**
+ * @brief job config parsing context information
+ */
+typedef struct tagJOB_PARSE_CTX {
+    const char *jobName;    /* job name */
+    const cJSON *jobNode;   /* job JSON node */
+} JOB_PARSE_CTX;
+
+/**
+ * @brief service info
+ */
+typedef struct tagSERVICE_INFO_CTX {
+    const char *serviceName;    /* Service name */
+    const char *reserved;       /* reserved info */
+} SERVICE_INFO_CTX;
+
+/**
  * @brief service config parse hook function prototype
  *
  * @param serviceParseCtx service config parsing context information
  * @return None
  */
 typedef void (*ServiceParseHook)(SERVICE_PARSE_CTX *serviceParseCtx);
+
+/**
+ * @brief job config parse hook function prototype
+ *
+ * @param JobParseHook job config parsing context information
+ * @return None
+ */
+typedef void (*JobParseHook)(JOB_PARSE_CTX *jobParseCtx);
+
+/**
+ * @brief service hook function prototype
+ *
+ * @param ServiceHook service info
+ * @return None
+ */
+typedef void (*ServiceHook)(SERVICE_INFO_CTX *serviceCtx);
 
 /**
  * @brief Register a hook for service config parsing
@@ -91,6 +129,50 @@ typedef void (*ServiceParseHook)(SERVICE_PARSE_CTX *serviceParseCtx);
  * @return return 0 if succeed; other values if failed.
  */
 int InitAddServiceParseHook(ServiceParseHook hook);
+
+/**
+ * @brief service config parsing context information
+ */
+typedef struct tagReboot {
+    char *reason;
+} RebootHookCtx;
+
+/**
+ * @brief service config parse hook function prototype
+ *
+ * @param serviceParseCtx service config parsing context information
+ * @return None
+ */
+typedef void (*InitRebootHook)(RebootHookCtx *ctx);
+/**
+ * @brief Register a hook for reboot
+ *
+ * @param hook
+ *
+ * @return return 0 if succeed; other values if failed.
+ */
+int InitAddRebootHook(InitRebootHook hook);
+
+/**
+ * @brief Register a hook for job config parsing
+ *
+ * @param hook job config parsing hook
+ *   in the hook, we can parse extra fields in the config file.
+ * @return return 0 if succeed; other values if failed.
+ */
+int InitAddJobParseHook(JobParseHook hook);
+
+/**
+ * @brief Register a hook for service
+ *
+ * @param hook service hook
+ *   in the hook, we can get service.
+ * @param hookState init boot state
+ * @return return 0 if succeed; other values if failed.
+ */
+int InitAddServiceHook(ServiceHook hook, int hookState);
+
+int InitAddClearServiceHook(ServiceHook hook);
 
 #ifdef __cplusplus
 #if __cplusplus

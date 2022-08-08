@@ -155,8 +155,11 @@ typedef struct Service_ {
     TimerHandle timer;
     ServiceJobs serviceJobs;
     cpu_set_t cpuSet;
+    struct ListNode extDataNode;
 } Service;
 
+Service *GetServiceByPid(pid_t pid);
+Service *GetServiceByName(const char *servName);
 int ServiceStart(Service *service);
 int ServiceStop(Service *service);
 void ServiceReap(Service *service);

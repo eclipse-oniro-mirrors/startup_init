@@ -43,6 +43,11 @@
 #include "securec.h"
 #include "service_control.h"
 
+#ifndef OHOS_LITE
+#include "hookmgr.h"
+#include "bootstage.h"
+#endif
+
 #ifdef WITH_SELINUX
 #include "init_selinux_param.h"
 #include <selinux/selinux.h>
@@ -79,6 +84,45 @@ static int SetSystemSeccompPolicy(const Service *service)
         }
     }
     return SERVICE_SUCCESS;
+}
+#endif
+
+#ifndef OHOS_LITE
+/**
+ * service Hooking
+ */
+static int ServiceHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
+{
+    SERVICE_INFO_CTX *serviceContext = (SERVICE_INFO_CTX *)executionContext;
+    ServiceHook realHook = (ServiceHook)hookInfo->hookCookie;
+
+    realHook(serviceContext);
+    return 0;
+};
+
+int InitAddServiceHook(ServiceHook hook, int hookState)
+{
+    HOOK_INFO info;
+
+    info.stage = hookState;
+    info.prio = 0;
+    info.hook = ServiceHookWrapper;
+    info.hookCookie = (void *)hook;
+
+    return HookMgrAddEx(GetBootStageHookMgr(), &info);
+}
+
+/**
+ * service hooking execute
+ */
+static void ServiceHookExecute(const char *serviceName, const char *info, int stage)
+{
+    SERVICE_INFO_CTX context;
+
+    context.serviceName = serviceName;
+    context.reserved = info;
+
+    (void)HookMgrExecute(GetBootStageHookMgr(), stage, (void *)(&context), NULL);
 }
 #endif
 
@@ -134,6 +178,12 @@ static int SetPerms(const Service *service)
         INIT_ERROR_CHECK(SetAmbientCapability(service->servPerm.caps[i]) == 0, return SERVICE_FAILURE,
             "SetAmbientCapability failed for service: %s", service->name);
     }
+#ifndef OHOS_LITE
+    /*
+     * service set Perms hooks
+     */
+    ServiceHookExecute(service->name, NULL, INIT_SERVICE_SET_PERMS);
+#endif
     return SERVICE_SUCCESS;
 }
 
@@ -344,6 +394,12 @@ int ServiceStart(Service *service)
         INIT_LOGE("start service %s invalid, please check %s.", service->name, service->pathArgs.argv[0]);
         return SERVICE_FAILURE;
     }
+#ifndef OHOS_LITE
+    /*
+     * before service fork hooks
+     */
+    ServiceHookExecute(service->name, NULL, INIT_SERVICE_FORK_BEFORE);
+#endif
     int pid = fork();
     if (pid == 0) {
         // fail must exit sub process
@@ -388,6 +444,7 @@ int ServiceStop(Service *service)
     NotifyServiceChange(service, SERVICE_STOPPING);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
     service->pid = -1;
+    NotifyServiceChange(service, SERVICE_STOPPED);
     return SERVICE_SUCCESS;
 }
 

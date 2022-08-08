@@ -49,8 +49,6 @@ typedef struct {
     int serviceCount;
 } ServiceSpace;
 
-Service *GetServiceByPid(pid_t pid);
-Service *GetServiceByName(const char *servName);
 cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrName);
 int ParseOneService(const cJSON *curItem, Service *service);
 

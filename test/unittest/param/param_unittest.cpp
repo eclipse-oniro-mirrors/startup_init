@@ -27,7 +27,11 @@ using namespace std;
 
 extern "C" {
 int WorkSpaceNodeCompare(const HashNode *node1, const HashNode *node2);
-char *GetServiceCtrlName(const char *name, const char *value);
+}
+
+static void OnClose(ParamTaskPtr client)
+{
+    UNUSED(client);
 }
 
 static int CheckServerParamValue(const char *name, const char *expectValue)
@@ -412,10 +416,24 @@ HWTEST_F(ParamUnitTest, TestLinuxRWLock, TestSize.Level0)
     free(workspace1);
     free(workspace2);
 }
+
 HWTEST_F(ParamUnitTest, TestGetServiceCtlName, TestSize.Level0)
 {
-    EXPECT_STREQ(GetServiceCtrlName("ohos.startup.powerctrl", "reboot,updater"), "ohos.servicectrl.reboot.updater");
-    EXPECT_STREQ(GetServiceCtrlName("ohos.ctl.stop", "test"), "ohos.servicectrl.test");
-    EXPECT_STREQ(GetServiceCtrlName("ohos.servicectrl.stop", "test"), "ohos.servicectrl.stop.test");
+    ServiceCtrlInfo *serviceInfo = NULL;
+    GetServiceCtrlInfo("ohos.startup.powerctrl", "reboot,updater", &serviceInfo);
+    if (serviceInfo != NULL) {
+        EXPECT_STREQ(serviceInfo->realKey, "ohos.servicectrl.reboot.updater.reboot,updater");
+        free(serviceInfo);
+    }
+    GetServiceCtrlInfo("ohos.ctl.stop", "test", &serviceInfo);
+    if (serviceInfo != NULL) {
+        EXPECT_STREQ(serviceInfo->realKey, "ohos.servicectrl.stop.test");
+        free(serviceInfo);
+    }
+    GetServiceCtrlInfo("ohos.servicectrl.stop", "test", &serviceInfo);
+    if (serviceInfo != NULL) {
+        EXPECT_STREQ(serviceInfo->realKey, "ohos.servicectrl.stop.test");
+        free(serviceInfo);
+    }
 }
 }

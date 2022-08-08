@@ -91,6 +91,18 @@ static void DumpServiceSocket(const Service *service)
     }
 }
 
+#ifndef OHOS_LITE
+static void DumpServiceHookExecute(const char *name, const char *info)
+{
+    SERVICE_INFO_CTX context;
+
+    context.serviceName = name;
+    context.reserved = info;
+
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_DUMP, (void *)(&context), NULL);
+}
+#endif
+
 void DumpOneService(const Service *service)
 {
     const InitArgInfo startModeMap[] = {
@@ -130,6 +142,12 @@ void DumpOneService(const Service *service)
     for (int i = 0; i < (int)service->servPerm.capsCnt; i++) {
         printf("\t\tservice perms capability %u \n", service->servPerm.caps[i]);
     }
+#ifndef OHOS_LITE
+    /*
+     *  dump service hooks
+     */
+    DumpServiceHookExecute(service->name, NULL);
+#endif
 }
 
 void DumpAllServices(void)
@@ -197,6 +215,7 @@ Service *AddService(const char *name)
     service->name = node->name;
     service->status = SERVICE_IDLE;
     CPU_ZERO(&service->cpuSet);
+    OH_ListInit(&service->extDataNode);
     g_serviceSpace.serviceCount++;
     INIT_LOGV("AddService %s", node->name);
     return service;
