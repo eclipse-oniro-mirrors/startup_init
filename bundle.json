@@ -44,18 +44,25 @@
             ]
         },
         "build": {
-            "sub_component": [
-                "//base/startup/init/services:startup_init",
-                "//base/startup/init/ueventd:startup_ueventd",
-                "//base/startup/init/watchdog:watchdog",
-                "//base/startup/init/services/begetctl:begetctl_cmd",
-                "//base/startup/init/services/loopevent:loopeventgroup",
-                "//base/startup/init/services/modules:modulesgroup",
-                "//base/startup/init/services/param:parameter",
-                "//base/startup/init/interfaces/innerkits:innergroup",
-                "//base/startup/init/device_info:device_info_group",
-                "//base/startup/init/interfaces/kits:kitsgroup"
-            ],
+            "group_type": {
+                "base_group": [
+                ],
+                "fwk_group": [
+                    "//base/startup/init/services:startup_init",
+                    "//base/startup/init/ueventd:startup_ueventd",
+                    "//base/startup/init/services/begetctl:begetctl_cmd",
+                    "//base/startup/init/services/loopevent:loopeventgroup",
+                    "//base/startup/init/services/modules:modulesgroup",
+                    "//base/startup/init/services/param:parameter",
+                    "//base/startup/init/interfaces/innerkits:innergroup",
+                    "//base/startup/init/device_info:device_info_group",
+                    "//base/startup/init/interfaces/kits:kitsgroup"
+                ],
+                "service_group": [
+                    "//base/startup/init/watchdog:watchdog",
+                    "//base/startup/init/services/etc:watchdog.cfg"
+                ]
+              },
             "inner_kits": [
                 {
                     "header": {
