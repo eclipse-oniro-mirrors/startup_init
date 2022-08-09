@@ -18,140 +18,145 @@
 #include "trigger_manager.h"
 #include "init_log.h"
 #include "plugin_adapter.h"
+#include "init_hook.h"
+#include "init_service.h"
+#include "bootstage.h"
+#include "securec.h"
 
 #define BOOT_EVENT_PARA_PREFIX      "bootevent."
 #define BOOT_EVENT_PARA_PREFIX_LEN  10
-#ifdef BOOTEVENT
+#define BOOT_EVENT_TIMESTAMP_MAX_LEN  50
+static int bootEventNum = 0;
+
+enum {
+    BOOTEVENT_FORK,
+    BOOTEVENT_READY,
+    BOOTEVENT_MAX
+};
+
 typedef struct tagBOOT_EVENT_PARAM_ITEM {
     ListNode    node;
     const char  *paramName;
+    struct timespec timestamp[BOOTEVENT_MAX];
 } BOOT_EVENT_PARAM_ITEM;
 
-static ListNode *bootEventList = NULL;
-
-static ListNode *getBootEventParaList(bool autoCreate)
-{
-    if (!autoCreate) {
-        return bootEventList;
-    }
-    if (bootEventList != NULL) {
-        return bootEventList;
-    }
-    // Create list node
-    bootEventList = (ListNode *)malloc(sizeof(ListNode));
-    if (bootEventList == NULL) {
-        return NULL;
-    }
-    OH_ListInit(bootEventList);
-    return bootEventList;
-}
-
-static void BootEventParaAdd(const char *paramName)
-{
-    ListNode *list;
-    BOOT_EVENT_PARAM_ITEM *item;
-
-    if (paramName == NULL) {
-        return;
-    }
-
-    // Only bootevent. parameters can be added
-    if (strncmp(paramName, BOOT_EVENT_PARA_PREFIX, BOOT_EVENT_PARA_PREFIX_LEN) != 0) {
-        return;
-    }
-
-    INIT_LOGI("Add bootevent [%s] ...", paramName);
-    list = getBootEventParaList(true);
-    if (list == NULL) {
-        return;
-    }
-
-    // Create item
-    item = (BOOT_EVENT_PARAM_ITEM *)malloc(sizeof(BOOT_EVENT_PARAM_ITEM));
-    if (item == NULL) {
-        return;
-    }
-    item->paramName = strdup(paramName);
-    if (item->paramName == NULL) {
-        free((void *)item);
-        return;
-    }
-
-    // Add to list
-    OH_ListAddTail(list, (ListNode *)item);
-}
+static ListNode bootEventList = {&bootEventList, &bootEventList};
 
 static int BootEventParaListCompareProc(ListNode *node, void *data)
 {
     BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)node;
-
-    if (strcmp(item->paramName, (const char *)data) == 0) {
+    if (strcmp(item->paramName + BOOT_EVENT_PARA_PREFIX_LEN, (const char *)data) == 0) {
         return 0;
     }
-
     return -1;
 }
 
-static void BootEventParaItemDestroy(BOOT_EVENT_PARAM_ITEM *item)
+static int AddServiceBootEvent(const char *serviceName, const char *paramName)
 {
-    if (item->paramName != NULL) {
-        free((void *)item->paramName);
+    ServiceExtData *extData = NULL;
+    ListNode *found = NULL;
+    if (strncmp(paramName, BOOT_EVENT_PARA_PREFIX, BOOT_EVENT_PARA_PREFIX_LEN) != 0) {
+        return -1;
     }
-    free((void *)item);
+    found = OH_ListFind(&bootEventList, (void *)paramName, BootEventParaListCompareProc);
+    if (found != NULL) {
+        return -1;
+    }
+    for (int i = HOOK_ID_BOOTEVENT; i < HOOK_ID_BOOTEVENT_MAX; i++) {
+        extData = AddServiceExtData(serviceName, i, NULL, sizeof(BOOT_EVENT_PARAM_ITEM));
+        if (extData != NULL) {
+            break;
+        }
+    }
+    if (extData == NULL) {
+        return -1;
+    }
+    BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)extData->data;
+    OH_ListInit(&item->node);
+    for (int i = 0; i < BOOTEVENT_MAX; i++) {
+        item->timestamp[i].tv_nsec = 0;
+        item->timestamp[i].tv_sec = 0;
+    }
+    item->paramName = strdup(paramName);
+    if (item->paramName == NULL) {
+        INIT_LOGI("strdup failed");
+        return -1;
+    }
+    OH_ListAddTail(&bootEventList, (ListNode *)&item->node);
+    return 0;
 }
 
 #define BOOT_EVENT_BOOT_COMPLETED "bootevent.boot.completed"
 
 static void BootEventParaFireByName(const char *paramName)
 {
-    ListNode *found;
-
-    if (bootEventList == NULL) {
+    ListNode *found = NULL;
+    char *bootEventValue = strrchr(paramName, '.');
+    if (bootEventValue == NULL) {
         return;
     }
+    bootEventValue[0] = '\0';
 
-    found = OH_ListFind(getBootEventParaList(false), (void *)paramName, BootEventParaListCompareProc);
-    if (found != NULL) {
-        // Remove from list
-        OH_ListRemove(found);
-        BootEventParaItemDestroy((BOOT_EVENT_PARAM_ITEM *)found);
+    found = OH_ListFind(&bootEventList, (void *)paramName, BootEventParaListCompareProc);
+    if (found == NULL) {
+        return;
     }
-
+    if (((BOOT_EVENT_PARAM_ITEM *)found)->timestamp[BOOTEVENT_READY].tv_sec != 0) {
+        return;
+    }
+    INIT_CHECK_ONLY_RETURN(clock_gettime(CLOCK_MONOTONIC,
+        &(((BOOT_EVENT_PARAM_ITEM *)found)->timestamp[BOOTEVENT_READY])) == 0);
+    bootEventNum--;
     // Check if all boot event params are fired
-    if (OH_ListGetCnt(getBootEventParaList(false)) > 0) {
+    if (bootEventNum > 0) {
         return;
     }
-
-    // Delete hooks for boot event
-    free((void *)bootEventList);
-    bootEventList = NULL;
-
     // All parameters are fired, set boot completed now ...
     INIT_LOGI("All bootevents are fired, boot complete now ...");
     SystemWriteParam(BOOT_EVENT_BOOT_COMPLETED, "true");
+    return;
 }
 
 #define BOOT_EVENT_FIELD_NAME "bootevents"
-
-#endif
-
 static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
 {
-    PLUGIN_LOGI("ServiceParseBootEventHook %s", serviceParseCtx->serviceName);
+    int cnt;
+    cJSON *bootEvents = cJSON_GetObjectItem(serviceParseCtx->serviceNode, BOOT_EVENT_FIELD_NAME);
+
+    // No bootevents in config file
+    if (bootEvents == NULL) {
+        return;
+    }
+    // Single bootevent in config file
+    if (!cJSON_IsArray(bootEvents)) {
+        if (AddServiceBootEvent(serviceParseCtx->serviceName,
+            cJSON_GetStringValue(bootEvents)) != 0) {
+            INIT_LOGI("Add service bootevent failed %s", serviceParseCtx->serviceName);
+            return;
+        }
+        bootEventNum++;
+        return;
+    }
+
+    // Multiple bootevents in config file
+    cnt = cJSON_GetArraySize(bootEvents);
+    for (int i = 0; i < cnt; i++) {
+        cJSON *item = cJSON_GetArrayItem(bootEvents, i);
+        if (AddServiceBootEvent(serviceParseCtx->serviceName,
+            cJSON_GetStringValue(item)) != 0) {
+            INIT_LOGI("Add service bootevent failed %s", serviceParseCtx->serviceName);
+            return;
+        }
+        bootEventNum++;
+    }
 }
 
 static int DoBootEventCmd(int id, const char *name, int argc, const char **argv)
 {
-    PLUGIN_LOGI("DoBootEventCmd argc %d %s", argc, name);
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     // argv[0] samgr.ready.true
-    PLUGIN_LOGI("DoBootEventCmd argv %s", argv[0]);
+    BootEventParaFireByName(argv[0]);
     return 0;
-}
-
-void ClearServiceBootEventHook(SERVICE_INFO_CTX *serviceCtx)
-{
-    PLUGIN_LOGI("ClearServiceBootEventHook serviceName %s", serviceCtx->serviceName);
 }
 
 static int32_t g_executorId = -1;
@@ -159,14 +164,67 @@ static int ParamSetBootEventHook(const HOOK_INFO *hookInfo, void *cookie)
 {
     if (g_executorId == -1) {
         g_executorId = AddCmdExecutor("bootevent", DoBootEventCmd);
-        PLUGIN_LOGI("DoBootEventCmd executorId %d", g_executorId);
     }
     return 0;
 }
 
+static void DumpServiceBootEvent(SERVICE_INFO_CTX *serviceCtx)
+{
+    if (serviceCtx->reserved != NULL && strcmp(serviceCtx->reserved, "bootevent") != 0) {
+        return;
+    }
+    for (int i = HOOK_ID_BOOTEVENT; i < HOOK_ID_BOOTEVENT_MAX; i++) {
+        ServiceExtData *serviceExtData = GetServiceExtData(serviceCtx->serviceName, i);
+        if (serviceExtData == NULL) {
+            return;
+        }
+        BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)serviceExtData->data;
+        char booteventForkTimeStamp[BOOT_EVENT_TIMESTAMP_MAX_LEN] = "";
+        char booteventReadyTimeStamp[BOOT_EVENT_TIMESTAMP_MAX_LEN] = "";
+        INIT_CHECK_ONLY_RETURN(sprintf_s(booteventForkTimeStamp, BOOT_EVENT_TIMESTAMP_MAX_LEN, "%ld.%ld",
+            (long)item->timestamp[BOOTEVENT_FORK].tv_sec, (long)item->timestamp[BOOTEVENT_FORK].tv_nsec) >= 0);
+        INIT_CHECK_ONLY_RETURN(sprintf_s(booteventReadyTimeStamp, BOOT_EVENT_TIMESTAMP_MAX_LEN, "%ld.%ld",
+            (long)item->timestamp[BOOTEVENT_READY].tv_sec, (long)item->timestamp[BOOTEVENT_READY].tv_nsec) >= 0);
+        printf("\t%-20.20s\t%-50s\t%-20.20s\t%-20.20s\n", serviceCtx->serviceName, item->paramName,
+            booteventForkTimeStamp, booteventReadyTimeStamp);
+    }
+    return;
+}
+
+static void ClearServiceBootEvent(SERVICE_INFO_CTX *serviceCtx)
+{
+    if (serviceCtx->reserved == NULL || strcmp(serviceCtx->reserved, "bootevent") == 0) {
+        for (int i = HOOK_ID_BOOTEVENT; i < HOOK_ID_BOOTEVENT_MAX; i++) {
+            ServiceExtData *extData = GetServiceExtData(serviceCtx->serviceName, i);
+            if (extData == NULL) {
+                return;
+            }
+            OH_ListRemove(&((BOOT_EVENT_PARAM_ITEM *)extData->data)->node);
+            DelServiceExtData(serviceCtx->serviceName, i);
+        }
+    }
+    return;
+}
+
+static void SetServiceBootEventFork(SERVICE_INFO_CTX *serviceCtx)
+{
+    for (int i = HOOK_ID_BOOTEVENT; i < HOOK_ID_BOOTEVENT_MAX; i++) {
+        ServiceExtData *extData = GetServiceExtData(serviceCtx->serviceName, i);
+        if (extData == NULL || ((BOOT_EVENT_PARAM_ITEM *)extData->data)->timestamp[BOOTEVENT_FORK].tv_sec != 0) {
+            return;
+        }
+        INIT_CHECK_ONLY_RETURN(clock_gettime(CLOCK_MONOTONIC,
+            &(((BOOT_EVENT_PARAM_ITEM *)extData->data)->timestamp[BOOTEVENT_FORK])) == 0);
+    }
+    return;
+}
+
 MODULE_CONSTRUCTOR(void)
 {
+    EnableInitLog(INIT_DEBUG);
+    InitAddServiceHook(SetServiceBootEventFork, INIT_SERVICE_FORK_BEFORE);
+    InitAddServiceHook(ClearServiceBootEvent, INIT_SERVICE_CLEAR);
+    InitAddServiceHook(DumpServiceBootEvent, INIT_SERVICE_DUMP);
     InitAddServiceParseHook(ServiceParseBootEventHook);
     InitAddGlobalInitHook(0, ParamSetBootEventHook);
-    InitAddClearServiceHook(ClearServiceBootEventHook);
 }

@@ -61,8 +61,8 @@ void ReleaseService(Service *service);
 void StartAllServices(int startMode);
 void LoadAccessTokenId(void);
 Service *AddService(const char *name);
-void DumpAllServices(void);
-void DumpOneService(const Service *service);
+void DumpServiceHookExecute(const char *name, const char *info);
+void ProcessControlFd(uint16_t type, const char *serviceCmd, const void *context);
 #ifdef __cplusplus
 #if __cplusplus
 }

@@ -17,29 +17,46 @@
 #include <string.h>
 
 #include "begetctl.h"
+#include "beget_ext.h"
 #include "control_fd.h"
+#include "securec.h"
+#include "init_param.h"
 
 #define DUMP_SERVICE_INFO_CMD_ARGS 2
+#define DUMP_SERVICE_BOOTEVENT_CMD_ARGS 3
 static int main_cmd(BShellHandle shell, int argc, char **argv)
 {
-    if (argc != DUMP_SERVICE_INFO_CMD_ARGS) {
-        BShellCmdHelp(shell, argc, argv);
-        return 0;
-    }
-    if (strcmp(argv[0], "dump_service") == 0) {
+    if (argc == DUMP_SERVICE_INFO_CMD_ARGS) {
         printf("dump service info \n");
         CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, argv[1]);
+    } else if (argc == DUMP_SERVICE_BOOTEVENT_CMD_ARGS) {
+        printf("dump service bootevent info \n");
+        int serviceNameLen = strlen(argv[1]) + strlen(argv[2]) + 2; // 2 is \0 and #
+        char *serviceBootevent = (char *)calloc(1, serviceNameLen);
+        BEGET_ERROR_CHECK(sprintf_s(serviceBootevent, serviceNameLen, "%s#%s", argv[1], argv[2]) >= 0,
+            return 0, "dumpservice arg create failed");
+        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, serviceBootevent);
+        free(serviceBootevent);
     } else {
         BShellCmdHelp(shell, argc, argv);
     }
     return 0;
 }
 
+static int ClearBootEvent(BShellHandle shell, int argc, char **argv)
+{
+    return SystemSetParameter("ohos.servicectrl.clear", "bootevent");
+}
+
 MODULE_CONSTRUCTOR(void)
 {
     const CmdInfo infos[] = {
         {"dump_service", main_cmd, "dump one service info by serviceName", "dump_service serviceName", NULL},
+        {"dump_service", main_cmd, "dump one service bootevent", "dump_service serviceName bootevent", NULL},
         {"dump_service", main_cmd, "dump all services info", "dump_service all", NULL},
+        {"dump_service", main_cmd, "dump all services bootevent", "dump_service all bootevent", NULL},
+        {"service", ClearBootEvent, "Clear all services bootevent", "service clear bootevent",
+            "service clear bootevent"},
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
         BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);

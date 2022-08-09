@@ -16,9 +16,12 @@ import("//build/ohos.gni")
 config("bootevent_static_config") {
   include_dirs = [
     "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/init/include",
     "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/modules/init_hook",
     "//base/startup/init/services/param/include",
     "//base/startup/init/services/include/param",
+    "//third_party/bounds_checking_function/include/",
   ]
 }
 
@@ -27,4 +30,12 @@ ohos_source_set("libbootevent_static") {
   include_dirs = [ ".." ]
   public_configs = [ ":bootevent_static_config" ]
   public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
+  if (build_selinux) {
+    include_dirs += [
+      "//third_party/selinux/libselinux/include/",
+      "//base/security/selinux/interfaces/policycoreutils/include/",
+      "//base/startup/init/services/include/param",
+    ]
+    defines = [ "WITH_SELINUX" ]
+  }
 }
