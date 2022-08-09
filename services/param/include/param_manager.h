@@ -34,8 +34,12 @@ extern "C" {
 #endif
 
 #define WORKSPACE_NAME_DAC "param_sec_dac"
-#define WORKSPACE_NAME_NORMAL "param_storage"
 #define WORKSPACE_NAME_DEF_SELINUX "u:object_r:default_param:s0"
+#ifndef PARAM_SUPPORT_SELINUX
+#define WORKSPACE_NAME_NORMAL "param_storage"
+#else
+#define WORKSPACE_NAME_NORMAL WORKSPACE_NAME_DEF_SELINUX
+#endif
 
 #define PARAM_NEED_CHECK_IN_SERVICE 0x2
 #define PARAM_CTRL_SERVICE 0x1
@@ -71,6 +75,13 @@ typedef struct {
     PersistParamOps persistParamOps;
 } ParamPersistWorkSpace;
 
+typedef struct {
+    char realKey[PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 1];
+    char cmdName[32];
+    uint32_t valueOffset;
+    uint8_t ctrlParam;
+} ServiceCtrlInfo;
+
 typedef void (*TraversalParamPtr)(ParamHandle handle, void *context);
 typedef struct {
     TraversalParamPtr traversalParamPtr;
@@ -99,7 +110,7 @@ INIT_LOCAL_API int InitPersistParamWorkSpace(void);
 INIT_LOCAL_API void ClosePersistParamWorkSpace(void);
 INIT_LOCAL_API int WritePersistParam(const char *name, const char *value);
 
-INIT_INNER_API int CheckParameterSet(const char *name, const char *value,
+INIT_LOCAL_API int CheckParameterSet(const char *name, const char *value,
     const ParamSecurityLabel *srcLabel, int *ctrlService);
 INIT_INNER_API ParamHandle GetParamHandle(const WorkSpace *workSpace, uint32_t index, const char *name);
 INIT_INNER_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
@@ -110,6 +121,8 @@ INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void);
 
 INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditData);
 INIT_INNER_API int SysCheckParamExist(const char *name);
+INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, ServiceCtrlInfo **ctrlInfo);
+
 #ifdef STARTUP_INIT_TEST
 ParamService *GetParamService();
 #endif

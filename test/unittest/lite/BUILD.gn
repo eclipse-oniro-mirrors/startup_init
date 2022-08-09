@@ -36,6 +36,7 @@ if (defined(ohos_lite)) {
     ]
   }
   param_common_sources = [
+    "//base/startup/init/services/modules/init_hook/param_hook.c",
     "//base/startup/init/services/param/manager/param_manager.c",
     "//base/startup/init/services/param/manager/param_persist.c",
     "//base/startup/init/services/param/manager/param_server.c",
@@ -94,10 +95,14 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/param/watcher/agent",
       "//base/startup/init/services/param/watcher/include",
       "//base/startup/init/services/param/watcher/proxy",
+      "//base/startup/init/services/modules",
+      "//base/startup/init/services/modules/init_hook",
+      "//base/startup/init/services/modules/selinux",
       "//base/startup/init/test/unittest",
       "//base/startup/init/test/unittest/param",
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/interfaces/innerkits/include/syspara",
+      "//base/startup/init/interfaces/innerkits/init_module_engine/include",
       "//base/startup/init/interfaces/innerkits/syspara",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",

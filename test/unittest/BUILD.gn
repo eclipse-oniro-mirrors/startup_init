@@ -81,6 +81,8 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/loopevent/task/le_watchtask.c",
     "//base/startup/init/services/loopevent/timer/le_timer.c",
     "//base/startup/init/services/loopevent/utils/le_utils.c",
+    "//base/startup/init/services/modules/init_hook/init_hook.c",
+    "//base/startup/init/services/modules/init_hook/param_hook.c",
     "//base/startup/init/services/param/adapter/param_dac.c",
     "//base/startup/init/services/param/adapter/param_persistadp.c",
     "//base/startup/init/services/param/base/param_base.c",
@@ -157,6 +159,7 @@ ohos_unittest("init_unittest") {
 
   sources += [
     "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/init_modulemgr.c",
     "//base/startup/init/interfaces/innerkits/modulemgr/modulemgr.c",
     "innerkits/hookmgr_unittest.cpp",
     "innerkits/modulemgr_unittest.cpp",
@@ -185,6 +188,10 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/loopevent/signal",
     "//base/startup/init/services/loopevent/task",
     "//base/startup/init/services/loopevent/timer",
+    "//base/startup/init/services/loopevent/utils",
+    "//base/startup/init/services/modules",
+    "//base/startup/init/services/modules/init_hook",
+    "//base/startup/init/services/modules/selinux",
     "//base/startup/init/services/loopevent/utils",
     "//base/startup/init/services/param/adapter",
     "//base/startup/init/services/param/base",

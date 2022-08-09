@@ -60,6 +60,7 @@ executable("init") {
     "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
     "//base/startup/init/services/log:init_log",
     "//base/startup/init/services/loopevent:loopevent",
+    "//base/startup/init/services/modules/init_hook:inithook",
     "//base/startup/init/services/param/base:parameterbase",
     "//base/startup/init/services/utils:libinit_utils",
     "//build/lite/config/component/cJSON:cjson_static",

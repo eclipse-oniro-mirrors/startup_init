@@ -13,5 +13,7 @@
     { "name": "InitAddPostCfgLoadHook" },
     { "name": "InitModuleMgrInstall" },
     { "name": "InitModuleMgrUnInstall" },
-    { "name": "StartupLog" }
+    { "name": "StartupLog" },
+    { "name": "DoJobNow" },
+    { "name": "GetServiceExtData" }
 ]

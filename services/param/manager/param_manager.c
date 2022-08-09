@@ -18,9 +18,11 @@
 #include <ctype.h>
 #include <limits.h>
 
+#include "init_cmds.h"
+#include "init_hook.h"
 #include "param_trie.h"
-#include "securec.h"
 #include "param_utils.h"
+#include "securec.h"
 
 ParamNode *SystemCheckMatchParamWait(const char *name, const char *value)
 {
@@ -238,66 +240,70 @@ INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAu
     return 0;
 }
 
-static char *BuildKey(const char *format, ...)
+static int CreateCtrlInfo(ServiceCtrlInfo **ctrlInfo, const char *cmd, uint32_t offset,
+        uint8_t ctrlParam, const char *format, ...)
 {
-    const size_t buffSize = 1024;  // 1024 for format key
-    char *buffer = malloc(buffSize);
-    PARAM_CHECK(buffer != NULL, return NULL, "Failed to malloc for format");
+    *ctrlInfo = calloc(1, sizeof(ServiceCtrlInfo));
+    PARAM_CHECK(ctrlInfo != NULL, return -1, "Failed to alloc memory %s", cmd);
     va_list vargs;
     va_start(vargs, format);
-    int len = vsnprintf_s(buffer, buffSize, buffSize - 1, format, vargs);
+    int len = vsnprintf_s((*ctrlInfo)->realKey,
+        sizeof((*ctrlInfo)->realKey), sizeof((*ctrlInfo)->realKey) - 1, format, vargs);
     va_end(vargs);
-    if (len > 0 && (size_t)len < buffSize) {
-        buffer[len] = '\0';
-        for (int i = 0; i < len; i++) {
-            if (buffer[i] == '|') {
-                buffer[i] = '\0';
-            }
-        }
-        return buffer;
+    int ret = strcpy_s((*ctrlInfo)->cmdName, sizeof((*ctrlInfo)->cmdName), cmd);
+    (*ctrlInfo)->valueOffset = offset;
+    if (ret != 0 || len <= 0) {
+        free(*ctrlInfo);
+        return -1;
     }
-    return NULL;
+    (*ctrlInfo)->ctrlParam = ctrlParam;
+    return 0;
 }
 
-PARAM_STATIC char *GetServiceCtrlName(const char *name, const char *value)
+INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, ServiceCtrlInfo **ctrlInfo)
 {
-    static char *ctrlParam[] = {
-        "ohos.ctl.start",
-        "ohos.ctl.stop"
-    };
-    static char *installParam[] = {
-        "ohos.servicectrl."
-    };
-    static char *powerCtrlArg[][2] = {
-        {"reboot,shutdown", "reboot.shutdown"},
-        {"reboot,updater", "reboot.updater"},
-        {"reboot,flashd", "reboot.flashd"},
-        {"reboot", "reboot"},
-    };
-    char *key = NULL;
+    PARAM_CHECK(ctrlInfo != NULL, return -1, "Invalid ctrlInfo %s", name);
+    *ctrlInfo = NULL;
+    size_t size = 0;
     if (strcmp("ohos.startup.powerctrl", name) == 0) {
-        for (size_t i = 0; i < ARRAY_LENGTH(powerCtrlArg); i++) {
-            if (strncmp(value, powerCtrlArg[i][0], strlen(powerCtrlArg[i][0])) == 0) {
-                return BuildKey("%s%s", OHOS_SERVICE_CTRL_PREFIX, powerCtrlArg[i][1]);
+        const ParamCmdInfo *powerCtrlArg = GetStartupPowerCtl(&size);
+        for (size_t i = 0; i < size; i++) {
+            if (strncmp(value, powerCtrlArg[i].name, strlen(powerCtrlArg[i].name)) == 0) {
+                uint32_t valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen(powerCtrlArg[i].replace) + 1;
+                return CreateCtrlInfo(ctrlInfo, powerCtrlArg[i].cmd, valueOffset, 1,
+                    "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, powerCtrlArg[i].replace, value);
             }
         }
-        return key;
+        return 0;
     }
-    for (size_t i = 0; i < ARRAY_LENGTH(ctrlParam); i++) {
-        if (strcmp(name, ctrlParam[i]) == 0) {
-            return BuildKey("%s%s", OHOS_SERVICE_CTRL_PREFIX, value);
+    if (strncmp("ohos.ctl.", name, strlen("ohos.ctl.")) == 0) {
+        const ParamCmdInfo *ctrlParam = GetServiceStartCtrl(&size);
+        for (size_t i = 0; i < size; i++) {
+            if (strcmp(name, ctrlParam[i].name) == 0) {
+                uint32_t valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen(ctrlParam[i].replace) + 1;
+                return CreateCtrlInfo(ctrlInfo, ctrlParam[i].cmd, valueOffset,  1,
+                    "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, ctrlParam[i].replace, value);
+            }
         }
     }
-
-    for (size_t i = 0; i < ARRAY_LENGTH(installParam); i++) {
-        if (strncmp(name, installParam[i], strlen(installParam[i])) == 0) {
-            return BuildKey("%s.%s", name, value);
+    if (strncmp("ohos.servicectrl.", name, strlen("ohos.servicectrl.")) == 0) {
+        const ParamCmdInfo *installParam = GetServiceCtl(&size);
+        for (size_t i = 0; i < size; i++) {
+            if (strncmp(name, installParam[i].name, strlen(installParam[i].name)) == 0) {
+                return CreateCtrlInfo(ctrlInfo, installParam[i].cmd, strlen(name) + 1,  1, "%s.%s", name, value);
+            }
         }
     }
-    return key;
+    const ParamCmdInfo *other = GetOtherSpecial(&size);
+    for (size_t i = 0; i < size; i++) {
+        if (strncmp(name, other[i].name, strlen(other[i].name)) == 0) {
+            return CreateCtrlInfo(ctrlInfo, other[i].cmd, strlen(other[i].name),  0, "%s.%s", name, value);
+        }
+    }
+    return 0;
 }
 
-INIT_INNER_API int CheckParameterSet(const char *name,
+INIT_LOCAL_API int CheckParameterSet(const char *name,
     const char *value, const ParamSecurityLabel *srcLabel, int *ctrlService)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
@@ -311,24 +317,25 @@ INIT_INNER_API int CheckParameterSet(const char *name,
     PARAM_CHECK(ret == 0, return ret, "Illegal param value %s", value);
     *ctrlService = 0;
 
-#ifndef __LITEOS_M__
-    if (getpid() != 1) { // none init
-#ifdef PARAM_SUPPORT_SELINUX
-        *ctrlService |= PARAM_NEED_CHECK_IN_SERVICE;
-        return 0;
-#else
-        if ((srcLabel->flags[0] & LABEL_CHECK_IN_ALL_PROCESS) != LABEL_CHECK_IN_ALL_PROCESS) {
-            *ctrlService |= PARAM_NEED_CHECK_IN_SERVICE;
+    ServiceCtrlInfo *serviceInfo = NULL;
+    GetServiceCtrlInfo(name, value, &serviceInfo);
+    ret = CheckParamPermission(srcLabel, (serviceInfo == NULL) ? name : serviceInfo->realKey, DAC_WRITE);
+    if (ret == 0) {
+        if (serviceInfo == NULL) {
             return 0;
         }
+        if (serviceInfo->ctrlParam != 0) {  // ctrl param
+            *ctrlService |= PARAM_CTRL_SERVICE;
+        }
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+        // do hook cmd
+        PARAM_LOGI("CheckParameterSet realKey %s cmd: '%s' value: %s",
+            serviceInfo->realKey, serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
+        DoCmdByName(serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
 #endif
     }
-#endif
-    char *key = GetServiceCtrlName(name, value);
-    ret = CheckParamPermission(srcLabel, (key == NULL) ? name : key, DAC_WRITE);
-    if (key != NULL) {  // ctrl param
-        free(key);
-        *ctrlService |= PARAM_CTRL_SERVICE;
+    if (serviceInfo != NULL) {
+        free(serviceInfo);
     }
     return ret;
 }

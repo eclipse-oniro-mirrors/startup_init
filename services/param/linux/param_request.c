@@ -135,9 +135,10 @@ static int StartRequest(int clientFd, ParamMessage *request, int timeout)
 int SystemSetParameter(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value");
-    int ctrlService = 0;
-    int ret = CheckParameterSet(name, value, GetParamSecurityLabel(), &ctrlService);
-    PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
+    int ret = CheckParamName(name, 0);
+    PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
+    ret = CheckParamValue(NULL, name, value, GetParamValueType(name));
+    PARAM_CHECK(ret == 0, return ret, "Illegal param value %s", value);
 
     size_t msgSize = sizeof(ParamMsgContent);
     msgSize = (msgSize < RECV_BUFFER_MAX) ? RECV_BUFFER_MAX : msgSize;
