@@ -15,7 +15,6 @@
  */
 
 #include "init_hook.h"
-#include "init_service.h"
 #include "init_utils.h"
 #include "plugin_adapter.h"
 #include "securec.h"
