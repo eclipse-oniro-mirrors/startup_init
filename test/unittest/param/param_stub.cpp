@@ -343,14 +343,18 @@ void PrepareCmdLineHasSn()
     // for cmdline
     const char *cmdLineHasSnroot = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
         "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568"
-        " BOOT_IMAGE=/kernel ohos.boot.sn=/test init=/init ohos.required_mount.system="
-        "/dev/block/platform/soc/10100000.himci.eMMC/by-name/misc@none@none@none@wait,required";
+        " BOOT_IMAGE=/kernel ohos.boot.sn=/test init=/init";
     CreateTestFile(BOOT_CMD_LINE, cmdLineHasSnroot);
     LoadParamFromCmdLine();
     const char *cmdLineHasntSn = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
-        "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568"
-        " BOOT_IMAGE=/kernel init=/init ohos.required_mount.system="
-        "/dev/block/platform/soc/10100000.himci.eMMC/by-name/misc@none@none@none@wait,required";
+        "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568 "
+        "BOOT_IMAGE=/kernel init=/init default_boot_device=fe310000.sdhci bootslots=2 "
+        "ohos.required_mount.system="
+        "/dev/block/platform/fe310000.sdhci/by-name/system@/usr@ext4@ro,barrier=1@wait,required "
+        "ohos.required_mount.vendor="
+        "/dev/block/platform/fe310000.sdhci/by-name/vendor@/vendor@ext4@ro,barrier=1@wait,required "
+        "ohos.required_mount.misc="
+        "/dev/block/platform/fe310000.sdhci/by-name/misc@none@none@none@wait,required";
     CreateTestFile(BOOT_CMD_LINE, cmdLineHasntSn);
 }
 
