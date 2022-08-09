@@ -128,7 +128,6 @@ INIT_LOCAL_API int GenerateKeyHasCode(const char *buff, size_t len);
 
 INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void);
 INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditData);
-INIT_INNER_API int SysCheckParamExist(const char *name);
 INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, ServiceCtrlInfo **ctrlInfo);
 
 #ifdef STARTUP_INIT_TEST
