@@ -89,7 +89,6 @@ static int ServiceClearHookWrapper(const HOOK_INFO *hookInfo, void *executionCon
     SERVICE_INFO_CTX *ctx = (SERVICE_INFO_CTX *)executionContext;
     ServiceHook realHook = (ServiceHook)hookInfo->hookCookie;
     realHook(ctx);
-    INIT_LOGI("ServiceClearHookWrapper realHook %p", realHook);
     return 0;
 };
 
@@ -100,7 +99,6 @@ int InitAddClearServiceHook(ServiceHook hook)
     info.prio = 0;
     info.hook = ServiceClearHookWrapper;
     info.hookCookie = (void *)hook;
-    PLUGIN_LOGI("InitAddClearServiceHook hook %p info.stage %d %p", hook, info.stage, GetBootStageHookMgr());
     return HookMgrAddEx(GetBootStageHookMgr(), &info);
 }
 

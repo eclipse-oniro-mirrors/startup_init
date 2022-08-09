@@ -41,7 +41,7 @@ const ParamCmdInfo *GetOtherSpecial(size_t *size);
 typedef struct {
     struct ListNode node;
     uint32_t dataId;
-    uint8_t data[];
+    uint8_t data[0];
 } ServiceExtData;
 
 ServiceExtData *AddServiceExtData(const char *serviceName, uint32_t id, void *data, uint32_t dataLen);
