@@ -23,6 +23,7 @@
 #include "le_timer.h"
 #include "param_stub.h"
 #include "securec.h"
+#include "control_fd.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -299,7 +300,8 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService2, TestSize.Level1)
     ASSERT_NE(nullptr, fileRoot);
     ParseAllServices(fileRoot);
     cJSON_Delete(fileRoot);
-    DumpAllServices();
+    char cmdStr[] = "all#bootevent";
+    ProcessControlFd(ACTION_DUMP, cmdStr, NULL);
     Service *service = GetServiceByName("test-service6");
     ASSERT_NE(service, nullptr);
     workspace->groupMode = GROUP_BOOT;

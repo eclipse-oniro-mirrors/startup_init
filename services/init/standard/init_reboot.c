@@ -36,12 +36,14 @@
 #endif
 
 #define MAX_VALUE_LENGTH 500
-#define MAX_COMMAND_SIZE 20
-#define MAX_UPDATE_SIZE 100
+#define MAX_COMMAND_SIZE 32
+#define MAX_UPDATE_SIZE 1280
+#define MAX_RESERVED_SIZE 736
 
 struct RBMiscUpdateMessage {
     char command[MAX_COMMAND_SIZE];
     char update[MAX_UPDATE_SIZE];
+    char reserved[MAX_RESERVED_SIZE];
 };
 
 static int RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdateMessage *boot)

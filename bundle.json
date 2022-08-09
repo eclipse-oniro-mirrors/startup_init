@@ -29,7 +29,7 @@
                 "config_policy",
                 "hilog_native",
                 "thirdparty_bounds_checking_function",
-                "samgr_standard",
+                "samgr",
                 "hiviewdfx_hilog_native",
                 "selinux",
                 "hiviewdfx",

@@ -42,6 +42,7 @@ int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);
 
 void RemoveCmdExecutor(const char *cmdName, int id);
 
+int DoJobNow(const char *jobName);
 #ifdef __cplusplus
 #if __cplusplus
 }

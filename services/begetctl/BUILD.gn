@@ -120,6 +120,14 @@ if (defined(ohos_lite)) {
       "sandbox",
       "dump_service",
     ]
+
+    if (product_name == "rk3568") {
+      sources += [ "partitionslot.cpp" ]
+      external_deps +=
+          [ "drivers_peripheral_partitionslot:libpartition_slot_manager" ]
+      symlink_target_name += [ "partitionslot" ]
+    }
+
     install_images = [ "system" ]
     install_enable = true
     part_name = "init"

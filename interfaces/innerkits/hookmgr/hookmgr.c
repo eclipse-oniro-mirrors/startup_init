@@ -121,6 +121,7 @@ static int hookItemCompare(ListNode *node, ListNode *newNode)
 struct HOOKITEM_COMPARE_VAL {
     int prio;
     OhosHook hook;
+    void *hookCookie;
 };
 
 static int hookItemCompareValue(ListNode *node, void *data)
@@ -130,7 +131,9 @@ static int hookItemCompareValue(ListNode *node, void *data)
 
     hookItem = (const HOOK_ITEM *)node;
     BEGET_CHECK(hookItem->info.prio == compareVal->prio, return (hookItem->info.prio - compareVal->prio));
-    BEGET_CHECK(hookItem->info.hook != compareVal->hook, return 0);
+    if (hookItem->info.hook == compareVal->hook && hookItem->info.hookCookie == compareVal->hookCookie) {
+        return 0;
+    }
     return -1;
 }
 
@@ -143,6 +146,7 @@ static int addHookToStage(HOOK_STAGE *hookStage, int prio, OhosHook hook, void *
     // Check if exists
     compareVal.prio = prio;
     compareVal.hook = hook;
+    compareVal.hookCookie = hookCookie;
     hookItem = (HOOK_ITEM *)OH_ListFind(&(hookStage->hooks), (void *)(&compareVal), hookItemCompareValue);
     BEGET_CHECK(hookItem == NULL, return 0);
 

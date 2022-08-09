@@ -274,23 +274,9 @@ static void BootStateChange(const char *content)
     }
     if (strcmp("post-init", content) == 0) {
         StartAllServices(START_MODE_NORMAL);
-        // Destroy all hooks
-        HookMgrDestroy(bootStageHookMgr);
-        bootStageHookMgr = NULL;
         return;
     }
 }
-
-#if defined(OHOS_SERVICE_DUMP)
-static int SystemDump(int id, const char *name, int argc, const char **argv)
-{
-    INIT_ERROR_CHECK(argv != NULL && argc >= 1, return 0, "Invalid install parameter");
-    INIT_LOGI("Dump system info %s", argv[0]);
-    SystemDumpParameters(1);
-    SystemDumpTriggers(1);
-    return 0;
-}
-#endif
 
 static void IsEnableSandbox(void)
 {
@@ -390,11 +376,6 @@ void SystemConfig(void)
     INIT_LOGI("Parse init config file done.");
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 
-    // dump config
-#if defined(OHOS_SERVICE_DUMP)
-    AddCmdExecutor("display", SystemDump);
-    (void)AddCompleteJob("param:ohos.servicectrl.display", "ohos.servicectrl.display=*", "display system");
-#endif
     IsEnableSandbox();
     // execute init
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));

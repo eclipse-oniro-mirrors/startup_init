@@ -43,8 +43,7 @@ static int InitWorkSpace_(WorkSpace *workSpace, uint32_t spaceSize, int readOnly
     int ret = GetRealFileName(workSpace, buffer, sizeof(buffer));
     PARAM_CHECK(ret == 0, return -1, "Failed to get file name %s", workSpace->fileName);
     void *areaAddr = GetSharedMem(buffer, &workSpace->memHandle, spaceSize, readOnly);
-    PARAM_CHECK(areaAddr != NULL, return PARAM_CODE_ERROR_MAP_FILE,
-        "Failed to map memory error %d spaceSize %d", errno, spaceSize);
+    PARAM_ONLY_CHECK(areaAddr != NULL, return PARAM_CODE_ERROR_MAP_FILE);
     if (!readOnly) {
         workSpace->area = (ParamTrieHeader *)areaAddr;
         ATOMIC_INIT(&workSpace->area->commitId, 0);
@@ -108,7 +107,7 @@ INIT_LOCAL_API int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t sp
     workSpace->allocTrieNode = AllocateParamTrieNode;
     workSpace->area = NULL;
     int ret = InitWorkSpace_(workSpace, spaceSize, onlyRead);
-    PARAM_CHECK(ret == 0, return ret, "Failed to init workspace  %s", workSpace->fileName);
+    PARAM_ONLY_CHECK(ret == 0, return ret);
     PARAMSPACE_AREA_INIT_LOCK(workSpace);
     PARAM_SET_FLAG(workSpace->flags, WORKSPACE_FLAGS_INIT);
     PARAM_LOGV("InitWorkSpace %s for %s", workSpace->fileName, (onlyRead == 0) ? "init" : "other");

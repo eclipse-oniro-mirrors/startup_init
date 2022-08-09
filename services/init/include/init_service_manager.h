@@ -49,8 +49,6 @@ typedef struct {
     int serviceCount;
 } ServiceSpace;
 
-Service *GetServiceByPid(pid_t pid);
-Service *GetServiceByName(const char *servName);
 cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrName);
 int ParseOneService(const cJSON *curItem, Service *service);
 
@@ -63,8 +61,8 @@ void ReleaseService(Service *service);
 void StartAllServices(int startMode);
 void LoadAccessTokenId(void);
 Service *AddService(const char *name);
-void DumpAllServices(void);
-void DumpOneService(const Service *service);
+void DumpServiceHookExecute(const char *name, const char *info);
+void ProcessControlFd(uint16_t type, const char *serviceCmd, const void *context);
 #ifdef __cplusplus
 #if __cplusplus
 }

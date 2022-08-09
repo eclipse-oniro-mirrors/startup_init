@@ -63,6 +63,7 @@ if (defined(ohos_lite)) {
       public_configs = [ ":exported_header_files" ]
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
+        "//base/startup/init/services/modules/init_hook:inithook",
         "//third_party/bounds_checking_function:libsec_shared",
         "//third_party/mbedtls:mbedtls_shared",
       ]
@@ -252,7 +253,7 @@ if (defined(ohos_lite)) {
       "c_utils:utils",
       "hilog_native:libhilog_base",
       "ipc:ipc_core",
-      "samgr_standard:samgr_proxy",
+      "samgr:samgr_proxy",
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"

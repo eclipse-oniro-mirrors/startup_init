@@ -14,7 +14,6 @@
  */
 #include <ctype.h>
 
-#include "init_cmds.h"
 #include "init_param.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
@@ -24,6 +23,8 @@
 #include "trigger_checker.h"
 #include "trigger_manager.h"
 #include "securec.h"
+#include "hookmgr.h"
+#include "bootstage.h"
 
 #define MAX_TRIGGER_COUNT_RUN_ONCE 20
 static TriggerWorkSpace g_triggerWorkSpace = {};
@@ -140,65 +141,11 @@ PARAM_STATIC void ProcessBeforeEvent(const ParamTaskPtr stream,
     }
 }
 
-static const char *GetCmdInfo(const char *content, uint32_t contentSize)
-{
-    static char buffer[PARAM_NAME_LEN_MAX] = {0};
-    uint32_t index = 0;
-    while (index < contentSize && index < PARAM_NAME_LEN_MAX) {
-        if (*(content + index) == '=' || *(content + index) == ',') {
-            break;
-        }
-        buffer[index] = *(content + index);
-        index++;
-    }
-    if (index >= (PARAM_NAME_LEN_MAX - 1)) {
-        return NULL;
-    }
-    buffer[index] = ' ';
-    buffer[index + 1] = '\0';
-    int cmdIndex = 0;
-    return GetMatchCmd(buffer, &cmdIndex);
-}
-
-static void DoServiceCtrlTrigger(const char *cmdStart, uint32_t len, int onlyValue)
-{
-    char *cmdParam = (char *)cmdStart;
-    const char *matchCmd = GetCmdInfo(cmdStart, len);
-    if (matchCmd != NULL) {
-        size_t cmdLen = strlen(matchCmd);
-        if (onlyValue != 0 && cmdParam != NULL && strlen(cmdParam) > cmdLen) {
-            cmdParam += cmdLen + 1;
-        }
-        PARAM_LOGV("DoServiceCtrlTrigger matchCmd %s cmdParam %s", matchCmd, cmdParam);
-#ifndef STARTUP_INIT_TEST
-        DoCmdByName(matchCmd, cmdParam);
-#endif
-    } else {
-        PARAM_LOGE("DoServiceCtrlTrigger cmd %s not found", cmdStart);
-    }
-}
-
 static void SendTriggerEvent(int type, const char *content, uint32_t contentLen)
 {
     PARAM_CHECK(content != NULL, return, "Invalid param");
     PARAM_LOGV("SendTriggerEvent type %d content %s", type, content);
-    if (type == EVENT_TRIGGER_PARAM) {
-        int ctrlSize = strlen(SYS_POWER_CTRL);
-        int prefixSize = strlen(OHOS_SERVICE_CTRL_PREFIX);
-        if (strncmp(content, SYS_POWER_CTRL, ctrlSize) == 0) {
-            DoServiceCtrlTrigger(content + ctrlSize, contentLen - ctrlSize, 0);
-        } else if (strncmp(content, OHOS_SERVICE_CTRL_PREFIX, prefixSize) == 0) {
-            DoServiceCtrlTrigger(content + prefixSize, contentLen - prefixSize, 1);
-        } else if (strncmp(content, OHOS_CTRL_START, strlen(OHOS_CTRL_START)) == 0) {
-            StartServiceByName(content + strlen(OHOS_CTRL_START));
-        } else if (strncmp(content, OHOS_CTRL_STOP, strlen(OHOS_CTRL_STOP)) == 0) {
-            StopServiceByName(content + strlen(OHOS_CTRL_STOP));
-        } else {
-            ParamEventSend(g_triggerWorkSpace.eventHandle, (uint64_t)type, content, contentLen);
-        }
-    } else {
-        ParamEventSend(g_triggerWorkSpace.eventHandle, (uint64_t)type, content, contentLen);
-    }
+    ParamEventSend(g_triggerWorkSpace.eventHandle, (uint64_t)type, content, contentLen);
 }
 
 void PostParamTrigger(int type, const char *name, const char *value)
@@ -252,6 +199,40 @@ static int GetCommandInfo(const char *cmdLine, int *cmdKeyIndex, char **content)
     }
     *content = str;
     return 0;
+}
+
+/**
+ * job Config File Parse Hooking
+ */
+static int JobParseHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
+{
+    JOB_PARSE_CTX *jobParseContext = (JOB_PARSE_CTX *)executionContext;
+    JobParseHook realHook = (JobParseHook)hookInfo->hookCookie;
+
+    realHook(jobParseContext);
+    return 0;
+};
+
+int InitAddJobParseHook(JobParseHook hook)
+{
+    HOOK_INFO info;
+
+    info.stage = INIT_JOB_PARSE;
+    info.prio = 0;
+    info.hook = JobParseHookWrapper;
+    info.hookCookie = (void *)hook;
+
+    return HookMgrAddEx(GetBootStageHookMgr(), &info);
+}
+
+static void ParseJobHookExecute(const char *name, const cJSON *jobNode)
+{
+    JOB_PARSE_CTX context;
+
+    context.jobName = name;
+    context.jobNode = jobNode;
+
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_JOB_PARSE, (void *)(&context), NULL);
 }
 
 static int ParseTrigger_(const TriggerWorkSpace *workSpace,
@@ -310,6 +291,10 @@ int ParseTriggerConfig(const cJSON *fileRoot, int (*checkJobValid)(const char *j
     for (int i = 0; i < size && i < TRIGGER_MAX_CMD; ++i) {
         cJSON *item = cJSON_GetArrayItem(triggers, i);
         ParseTrigger_(&g_triggerWorkSpace, item, checkJobValid);
+        /*
+         * execute job parsing hooks
+         */
+        ParseJobHookExecute(cJSON_GetStringValue(cJSON_GetObjectItem(item, "name")), item);
     }
     return 0;
 }

@@ -29,10 +29,6 @@
 #include "param_message.h"
 #include "trigger_manager.h"
 #include "securec.h"
-#ifndef OHOS_LITE
-#include "hookmgr.h"
-#include "init_running_hooks.h"
-#endif
 #ifdef PARAM_SUPPORT_SELINUX
 #include "selinux_parameter.h"
 #include <policycoreutils.h>
@@ -144,45 +140,6 @@ static int SendWatcherNotifyMessage(const TriggerExtInfo *extData, const char *c
     return 0;
 }
 
-#ifndef OHOS_LITE
-/**
- * Parameter Set Hooking
- */
-static int ParamSetHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
-{
-    PARAM_SET_CTX *paramSetContext = (PARAM_SET_CTX *)executionContext;
-    ParamSetHook realHook = (ParamSetHook)hookInfo->hookCookie;
-
-    realHook(paramSetContext);
-    return 0;
-};
-
-int ParamSetHookAdd(ParamSetHook hook)
-{
-    HOOK_INFO info;
-
-    info.stage = INIT_PARAM_SET_HOOK_STAGE;
-    info.prio = 0;
-    info.hook = ParamSetHookWrapper;
-    info.hookCookie = (void *)hook;
-
-    return HookMgrAddEx(NULL, &info);
-}
-
-static int ParamSetHookExecute(const char *name, const char *value)
-{
-    PARAM_SET_CTX context;
-
-    context.name = name;
-    context.value = value;
-    context.skipParamSet = 0;
-
-    (void)HookMgrExecute(NULL, INIT_PARAM_SET_HOOK_STAGE, (void *)(&context), NULL);
-
-    return context.skipParamSet;
-}
-#endif
-
 static int SystemSetParam(const char *name, const char *value, const ParamSecurityLabel *srcLabel)
 {
     PARAM_LOGV("SystemWriteParam name %s value: %s", name, value);
@@ -190,20 +147,7 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
     int ret = CheckParameterSet(name, value, srcLabel, &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
 
-#ifndef OHOS_LITE
-    /*
-     * Execute param set hooks before setting parameter values
-     */
-    if (ParamSetHookExecute(name, value)) {
-        // Hook has processed the parameter set request
-        PARAM_LOGI("param [%s] set in the hook.", name);
-        return 0;
-    }
-#endif
-
-    if (ctrlService & PARAM_CTRL_SERVICE) {  // ctrl param
-        PostParamTrigger(EVENT_TRIGGER_PARAM, name, value);
-    } else {
+    if ((ctrlService & PARAM_CTRL_SERVICE) != PARAM_CTRL_SERVICE) { // ctrl param
         uint32_t dataIndex = 0;
         ret = WriteParam(name, value, &dataIndex, 0);
         PARAM_CHECK(ret == 0, return ret, "Failed to set param %d name %s %s", ret, name, value);

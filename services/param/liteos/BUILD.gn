@@ -14,6 +14,7 @@ import("//base/startup/init/begetd.gni")
 
 param_include_dirs = [
   "//base/startup/init/interfaces/innerkits/include/syspara",
+  "//base/startup/init/services/modules/init_hook",
   "//base/startup/init/services/param/include",
   "//base/startup/init/services/param/adapter",
   "//base/startup/init/services/param/base",

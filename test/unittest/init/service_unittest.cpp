@@ -26,6 +26,9 @@
 #include "securec.h"
 #include "init_group_manager.h"
 #include "trigger_manager.h"
+#include "bootstage.h"
+#include "init_hook.h"
+#include "plugin_adapter.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -261,6 +264,36 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerGetService, TestSize.Level1)
     ASSERT_NE(nullptr, service);
     ret = ParseOneService(serviceItem, service);
     EXPECT_NE(ret, 0);
+}
+HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
+{
+    Service *service = nullptr;
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service8\",\"path\":[\"/data/init_ut/test_service\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"bootevents\" : [\"bootevent1\", \"bootevent2\"],"
+        "\"gid\":[\"system\"], \"critical\":[1,2]}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    service = AddService("test_service2");
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    if (ret < 0) {
+        return;
+    }
+
+    SERVICE_PARSE_CTX context;
+    context.serviceName = "test_service2";
+    context.serviceNode = serviceItem;
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_PARSE, (void *)(&context), NULL);
+    ASSERT_NE(GetServiceExtData("test_service2", HOOK_ID_BOOTEVENT), nullptr);
+    SERVICE_INFO_CTX serviceInfoContext;
+    serviceInfoContext.serviceName = "test_service2";
+    serviceInfoContext.reserved = nullptr;
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), NULL);
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_DUMP, (void *)(&serviceInfoContext), NULL);
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)(&serviceInfoContext), NULL);
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)

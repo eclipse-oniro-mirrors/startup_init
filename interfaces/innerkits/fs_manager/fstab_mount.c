@@ -21,9 +21,11 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <linux/limits.h>
 #include "beget_ext.h"
 #include "fs_manager/fs_manager.h"
 #include "init_utils.h"
+#include "param/init_param.h"
 #include "securec.h"
 
 #ifdef __cplusplus
@@ -35,6 +37,8 @@ extern "C" {
 #define FS_MANAGER_BUFFER_SIZE 512
 #define BLOCK_SIZE_BUFFER (64)
 #define RESIZE_BUFFER_SIZE 1024
+const off_t MISC_PARTITION_ACTIVE_SLOT_OFFSET = 1400;
+const off_t MISC_PARTITION_ACTIVE_SLOT_SIZE = 4;
 
 bool IsSupportedFilesystem(const char *fsType)
 {
@@ -285,6 +289,68 @@ static int Mount(const char *source, const char *target, const char *fsType,
     return rc;
 }
 
+static int GetSlotInfoFromParameter(const char *slotInfoName)
+{
+    char name[PARAM_NAME_LEN_MAX] = {0};
+    BEGET_ERROR_CHECK(sprintf_s(name, sizeof(name), "ohos.boot.%s", slotInfoName) > 0,
+        return -1, "Failed to format slot parameter name");
+    char value[PARAM_VALUE_LEN_MAX] = {0};
+    uint32_t valueLen = PARAM_VALUE_LEN_MAX;
+    return SystemGetParameter(name, value, &valueLen) == 0 ? atoi(value) : -1;
+}
+
+static int GetSlotInfoFromCmdLine(const char *slotInfoName)
+{
+    char value[MAX_BUFFER_LEN] = {0};
+    char *buffer = ReadFileData(BOOT_CMD_LINE);
+    BEGET_ERROR_CHECK(buffer != NULL, return -1, "Failed to read cmdline");
+    BEGET_ERROR_CHECK(GetProcCmdlineValue(slotInfoName, buffer, value, MAX_BUFFER_LEN) == 0,
+        free(buffer); buffer = NULL; return -1, "Failed to get %s value from cmdline", slotInfoName);
+    free(buffer);
+    buffer = NULL;
+    return atoi(value);
+}
+
+static int GetSlotInfoFromMisc(off_t offset, off_t size)
+{
+    char miscDev[MAX_BUFFER_LEN] = {0};
+    BEGET_ERROR_CHECK(GetBlockDevicePath("/misc", miscDev, MAX_BUFFER_LEN) == 0,
+        return -1, "Failed to get misc device");
+    int fd = open(miscDev, O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    BEGET_ERROR_CHECK(fd >= 0, return -1, "Failed to open misc device, errno %d", errno);
+    BEGET_ERROR_CHECK(lseek(fd, offset, SEEK_SET) >= 0, close(fd); return -1,
+        "Failed to lseek misc device fd, errno %d", errno);
+    int slotInfo = 0;
+    BEGET_ERROR_CHECK(read(fd, &slotInfo, size) == size, close(fd); return -1,
+        "Failed to read current slot from misc, errno %d", errno);
+    close(fd);
+    return slotInfo;
+}
+
+int GetBootSlots(void)
+{
+    int bootSlots = GetSlotInfoFromParameter("bootslots");
+    BEGET_CHECK_RETURN_VALUE(bootSlots <= 0, bootSlots);
+    BEGET_LOGI("No valid slot value found from parameter, try to get it from cmdline");
+    return GetSlotInfoFromCmdLine("bootslots");
+}
+
+int GetCurrentSlot(void)
+{
+    // get current slot from parameter
+    int currentSlot = GetSlotInfoFromParameter("currentslot");
+    BEGET_CHECK_RETURN_VALUE(currentSlot <= 0, currentSlot);
+    BEGET_LOGI("No valid slot value found from parameter, try to get it from cmdline");
+
+    // get current slot from cmdline
+    currentSlot = GetSlotInfoFromCmdLine("currentslot");
+    BEGET_CHECK_RETURN_VALUE(currentSlot <= 0, currentSlot);
+    BEGET_LOGI("No valid slot value found from cmdline, try to get it from misc");
+
+    // get current slot from misc
+    return GetSlotInfoFromMisc(MISC_PARTITION_ACTIVE_SLOT_OFFSET, MISC_PARTITION_ACTIVE_SLOT_SIZE);
+}
+
 int MountOneItem(FstabItem *item)
 {
     if (item == NULL) {
@@ -333,6 +399,21 @@ int MountOneItem(FstabItem *item)
     return rc;
 }
 
+static void AdjustPartitionNameByPartitionSlot(FstabItem *item)
+{
+    BEGET_CHECK_ONLY_RETURN(strstr(item->deviceName, "/system") != NULL ||
+        strstr(item->deviceName, "/vendor") != NULL);
+    char buffer[MAX_BUFFER_LEN] = {0};
+    int slot = GetCurrentSlot();
+    BEGET_ERROR_CHECK(slot > 0 && slot <= MAX_SLOT, slot = 1, "slot value %d is invalid, set default value", slot);
+    BEGET_INFO_CHECK(slot > 1, return, "default partition doesn't need to add suffix");
+    BEGET_ERROR_CHECK(sprintf_s(buffer, sizeof(buffer), "%s_%c", item->deviceName, 'a' + slot - 1) > 0,
+        return, "Failed to format partition name suffix, use default partition name");
+    free(item->deviceName);
+    item->deviceName = strdup(buffer);
+    BEGET_LOGI("partition name with slot suffix: %s", item->deviceName);
+}
+
 static int CheckRequiredAndMount(FstabItem *item, bool required)
 {
     int rc = 0;
@@ -341,6 +422,9 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
     }
     if (required) { // Mount partition during first startup.
         if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
+            int bootSlots = GetBootSlots();
+            BEGET_INFO_CHECK(bootSlots <= 1, AdjustPartitionNameByPartitionSlot(item),
+                "boot slots is %d, now adjust partition name according to current slot", bootSlots);
             rc = MountOneItem(item);
         }
     } else { // Mount partition during second startup.
