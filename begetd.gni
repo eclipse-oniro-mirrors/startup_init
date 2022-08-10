@@ -17,6 +17,7 @@ declare_args() {
   param_test = true
   control_test = false
   param_base_log = false
+  enable_ohos_startup_init_feature_ab_partition = false
 
   # init begetctl support liteos
   enable_ohos_startup_init_feature_begetctl_liteos = false
