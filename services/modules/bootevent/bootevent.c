@@ -36,7 +36,7 @@ enum {
 
 typedef struct tagBOOT_EVENT_PARAM_ITEM {
     ListNode    node;
-    const char  *paramName;
+    char  *paramName;
     struct timespec timestamp[BOOTEVENT_MAX];
 } BOOT_EVENT_PARAM_ITEM;
 
@@ -51,6 +51,15 @@ static int BootEventParaListCompareProc(ListNode *node, void *data)
     return -1;
 }
 
+static int ParseBooteventCompareProc(ListNode *node, void *data)
+{
+    BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)node;
+    if (strcmp(item->paramName, (const char *)data) == 0) {
+        return 0;
+    }
+    return -1;
+}
+
 static int AddServiceBootEvent(const char *serviceName, const char *paramName)
 {
     ServiceExtData *extData = NULL;
@@ -58,7 +67,7 @@ static int AddServiceBootEvent(const char *serviceName, const char *paramName)
     if (strncmp(paramName, BOOT_EVENT_PARA_PREFIX, BOOT_EVENT_PARA_PREFIX_LEN) != 0) {
         return -1;
     }
-    found = OH_ListFind(&bootEventList, (void *)paramName, BootEventParaListCompareProc);
+    found = OH_ListFind(&bootEventList, (void *)paramName, ParseBooteventCompareProc);
     if (found != NULL) {
         return -1;
     }
@@ -79,6 +88,7 @@ static int AddServiceBootEvent(const char *serviceName, const char *paramName)
     }
     item->paramName = strdup(paramName);
     if (item->paramName == NULL) {
+        DelServiceExtData(serviceName, extData->dataId);
         INIT_LOGI("strdup failed");
         return -1;
     }
@@ -145,7 +155,7 @@ static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
         if (AddServiceBootEvent(serviceParseCtx->serviceName,
             cJSON_GetStringValue(item)) != 0) {
             INIT_LOGI("Add service bootevent failed %s", serviceParseCtx->serviceName);
-            return;
+            continue;
         }
         bootEventNum++;
     }
@@ -199,6 +209,7 @@ static void ClearServiceBootEvent(SERVICE_INFO_CTX *serviceCtx)
             if (extData == NULL) {
                 return;
             }
+            free(((BOOT_EVENT_PARAM_ITEM *)extData->data)->paramName);
             OH_ListRemove(&((BOOT_EVENT_PARAM_ITEM *)extData->data)->node);
             DelServiceExtData(serviceCtx->serviceName, i);
         }
