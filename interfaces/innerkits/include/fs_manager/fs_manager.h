@@ -72,7 +72,8 @@ typedef struct SlotInfo {
 } SlotInfo;
 
 Fstab* LoadFstabFromCommandLine(void);
-int GetSlotInfo(void);
+int GetBootSlots(void);
+int GetCurrentSlot(void);
 void ReleaseFstab(Fstab *fstab);
 Fstab *ReadFstabFromFile(const char *file, bool procMounts);
 FstabItem *FindFstabItemForPath(Fstab fstab, const char *path);

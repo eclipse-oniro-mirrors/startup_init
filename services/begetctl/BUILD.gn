@@ -125,7 +125,7 @@ if (defined(ohos_lite)) {
       "dump_service",
     ]
 
-    if (product_name == "rk3568") {
+    if (enable_ohos_startup_init_feature_ab_partition) {
       sources += [ "partitionslot.cpp" ]
       external_deps +=
           [ "drivers_peripheral_partitionslot:libpartition_slot_manager" ]

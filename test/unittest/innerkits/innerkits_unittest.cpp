@@ -117,4 +117,23 @@ HWTEST_F(InnerkitsUnitTest, GetMountFlags_unitest, TestSize.Level1)
     ReleaseFstab(fstab);
     fstab = nullptr;
 }
+
+HWTEST_F(InnerkitsUnitTest, GetSlotInfo_unittest, TestSize.Level1)
+{
+    EXPECT_NE(GetBootSlots(), -1);
+    EXPECT_NE(GetCurrentSlot(), -1);
+}
+
+HWTEST_F(InnerkitsUnitTest, LoadFstabFromCommandLine_unittest, TestSize.Level1)
+{
+    EXPECT_NE(LoadFstabFromCommandLine(), (Fstab *)NULL);
+}
+
+HWTEST_F(InnerkitsUnitTest, GetBlockDevicePath_unittest, TestSize.Level1)
+{
+    char devicePath[MAX_BUFFER_LEN] = {0};
+    EXPECT_EQ(GetBlockDevicePath("/vendor", devicePath, MAX_BUFFER_LEN), 0);
+    EXPECT_EQ(GetBlockDevicePath("/misc", devicePath, MAX_BUFFER_LEN), 0);
+    EXPECT_EQ(GetBlockDevicePath("/invalid", devicePath, MAX_BUFFER_LEN), -1);
+}
 } // namespace init_ut
