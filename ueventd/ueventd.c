@@ -167,21 +167,13 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
 
 static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **devices, int num)
 {
-    const char *deviceName;
     for (int i = 0; i < num; i++) {
         if (uevent->partitionName == NULL) {
-            deviceName = strstr(devices[i], "/dev/block");
-            if (deviceName == NULL) {
-                INIT_LOGI("device %s not match \"/dev/block\"", devices[i]);
-                continue;
+            if (strstr(devices[i], uevent->deviceName) != NULL) {
+                INIT_LOGI("%s match with required partition %s success, now handle it", devices[i], uevent->deviceName);
+                HandleBlockDeviceEvent(uevent);
+                return;
             }
-            deviceName += strlen("/dev/block");
-            if (strstr(uevent->syspath, deviceName) == NULL) {
-                continue;
-            }
-            INIT_LOGI("%s match with required partition %s success, now handle it", uevent->syspath, deviceName);
-            HandleBlockDeviceEvent(uevent);
-            return;
         } else if (strstr(devices[i], uevent->partitionName) != NULL ||
             strstr(uevent->partitionName, "vendor") != NULL || strstr(uevent->partitionName, "system") != NULL) {
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
