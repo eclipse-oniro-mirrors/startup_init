@@ -102,7 +102,7 @@ typedef struct SelinuxSpace_ {
     void (*setSelinuxLogCallback)(void);
     int (*setParamCheck)(const char *paraName, struct ucred *uc);
     const char *(*getParamLabel)(const char *paraName);
-    void (*initParamSelinux)(void);
+    int (*initParamSelinux)(void);
     int (*readParamCheck)(const char *paraName);
     ParamContextsList *(*getParamList)(void);
     void (*destroyParamList)(ParamContextsList **list);
@@ -111,15 +111,11 @@ typedef struct SelinuxSpace_ {
 INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit);
 #endif
 
-#if defined STARTUP_INIT_TEST || defined LOCAL_TEST
-int RegisterSecurityOps(int onlyRead);
-void SetSelinuxOps(const SelinuxSpace *space);
-#endif
-
 INIT_LOCAL_API ParamSecurityOps *GetParamSecurityOps(int type);
 INIT_LOCAL_API void LoadGroupUser(void);
 INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit);
 INIT_LOCAL_API void OpenPermissionWorkSpace(void);
+INIT_LOCAL_API int RegisterSecurityOps(int onlyRead);
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -20,6 +20,7 @@
 #ifdef PARAM_SUPPORT_TRIGGER
 #include "cJSON.h"
 #endif
+#include "sys_param.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -107,13 +108,6 @@ int LoadPersistParams(void);
  *
  */
 int SystemWriteParam(const char *name, const char *value);
-
-/**
- * Init 接口
- * 查询参数。
- *
- */
-int SystemReadParam(const char *name, char *value, uint32_t *len);
 
 #ifdef PARAM_SUPPORT_TRIGGER
 /**

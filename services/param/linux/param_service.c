@@ -18,13 +18,22 @@
 #include <string.h>
 #include <sys/socket.h>
 
+#ifdef PARAM_BASE_LOG
+#include "init_log.h"
+#endif
 #include "init_param.h"
 #include "init_utils.h"
 #include "loop_event.h"
+#include "param_base.h"
 #include "param_manager.h"
 #include "param_message.h"
 #include "trigger_manager.h"
 #include "securec.h"
+#ifdef PARAM_SUPPORT_SELINUX
+#include "selinux_parameter.h"
+#include <policycoreutils.h>
+#include <selinux/selinux.h>
+#endif
 
 static ParamService g_paramService = {};
 
@@ -369,7 +378,15 @@ void InitParamService(void)
     CheckAndCreateDir(PIPE_NAME);
     CheckAndCreateDir(PARAM_STORAGE_PATH"/");
     // param space
-    int ret = InitParamWorkSpace(0);
+    PARAM_WORKSPACE_OPS ops = {0};
+    ops.updaterMode = InUpdaterMode();
+#ifdef PARAM_BASE_LOG
+    ops.logFunc = InitLog;
+#endif
+#ifdef PARAM_SUPPORT_SELINUX
+    ops.setfilecon = setfilecon;
+#endif
+    int ret = InitParamWorkSpace(0, &ops);
     PARAM_CHECK(ret == 0, return, "Init parameter workspace fail");
     ret = InitPersistParamWorkSpace();
     PARAM_CHECK(ret == 0, return, "Init persist parameter workspace fail");

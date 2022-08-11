@@ -74,7 +74,6 @@ if (defined(ohos_lite)) {
   service_ueventd_deps = [
     "//base/startup/init/interfaces/innerkits/socket:libsocket",
     "//base/startup/init/services/log:init_log",
-    "//base/startup/init/services/param/base:parameterbase",
     "//base/startup/init/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
@@ -92,7 +91,11 @@ if (defined(ohos_lite)) {
     deps = service_ueventd_deps
     defines = [ "__RAMDISK__" ]
     cflags = []
-
+    if (use_musl == false) {
+      deps += [ "//base/startup/init/services/param/base:parameterbase" ]
+    } else {
+      deps += [ "//base/startup/init/services/param/base:parameterbase_ext" ]
+    }
     if (build_selinux) {
       external_deps = [ "selinux:librestorecon" ]
       cflags += [ "-DWITH_SELINUX" ]
@@ -116,7 +119,11 @@ if (defined(ohos_lite)) {
     deps = service_ueventd_deps
     deps += [ "//base/startup/init/services/param/linux:param_client" ]
     cflags = []
-
+    if (use_musl == false) {
+      deps += [ "//base/startup/init/services/param/base:parameterbase" ]
+    } else {
+      deps += [ "//base/startup/init/services/param/base:parameterbase_ext" ]
+    }
     if (build_selinux) {
       external_deps = [ "selinux:librestorecon" ]
       cflags += [ "-DWITH_SELINUX" ]

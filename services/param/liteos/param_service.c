@@ -64,7 +64,7 @@ void InitParamService(void)
     CheckAndCreateDir(PARAM_STORAGE_PATH "/");
     CheckAndCreateDir(DATA_PATH);
     // param space
-    int ret = InitParamWorkSpace(0);
+    int ret = InitParamWorkSpace(0, NULL);
     PARAM_CHECK(ret == 0, return, "Init parameter workspace fail");
     ret = InitPersistParamWorkSpace();
     PARAM_CHECK(ret == 0, return, "Init persist parameter workspace fail");

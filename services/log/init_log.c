@@ -116,7 +116,8 @@ static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag
 #endif
 }
 
-static void InitLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs)
+INIT_LOCAL_API void InitLog(InitLogLevel logLevel,
+    unsigned int domain, const char *tag, const char *fmt, va_list vargs)
 {
     if (g_logLevel > logLevel) {
         return;

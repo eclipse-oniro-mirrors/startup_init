@@ -136,17 +136,17 @@ typedef struct {
 } ParamMutex;
 #endif
 
-void  paramMutexEnvInit(void);
-int ParamRWMutexCreate(ParamRWMutex *lock);
-int ParamRWMutexWRLock(ParamRWMutex *lock);
-int ParamRWMutexRDLock(ParamRWMutex *lock);
-int ParamRWMutexUnlock(ParamRWMutex *lock);
-int ParamRWMutexDelete(ParamRWMutex *lock);
+INIT_LOCAL_API void  paramMutexEnvInit(void);
+INIT_LOCAL_API int ParamRWMutexCreate(ParamRWMutex *lock);
+INIT_LOCAL_API int ParamRWMutexWRLock(ParamRWMutex *lock);
+INIT_LOCAL_API int ParamRWMutexRDLock(ParamRWMutex *lock);
+INIT_LOCAL_API int ParamRWMutexUnlock(ParamRWMutex *lock);
+INIT_LOCAL_API int ParamRWMutexDelete(ParamRWMutex *lock);
 
-int ParamMutexCreate(ParamMutex *mutex);
-int ParamMutexPend(ParamMutex *mutex);
-int ParamMutexPost(ParamMutex *mutex);
-int ParamMutexDelete(ParamMutex *mutex);
+INIT_LOCAL_API int ParamMutexCreate(ParamMutex *mutex);
+INIT_LOCAL_API int ParamMutexPend(ParamMutex *mutex);
+INIT_LOCAL_API int ParamMutexPost(ParamMutex *mutex);
+INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex);
 
 #ifdef WORKSPACE_AREA_NEED_MUTEX
 #define PARAMSPACE_AREA_INIT_LOCK(workspace) ParamRWMutexCreate(&workspace->rwlock)
@@ -175,8 +175,8 @@ int ParamMutexDelete(ParamMutex *mutex);
 typedef struct {
     int shmid;
 } MemHandle;
-void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly);
-void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize);
+INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly);
+INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize);
 
 // for atomic
 #ifdef __LITEOS_M__
@@ -198,5 +198,5 @@ void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize);
 #endif
 #endif
 
-uint32_t Difftime(time_t curr, time_t base);
+INIT_LOCAL_API uint32_t Difftime(time_t curr, time_t base);
 #endif // BASE_STARTUP_PARAM_MESSAGE_H

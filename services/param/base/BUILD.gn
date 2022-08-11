@@ -24,9 +24,7 @@ config("exported_header_files") {
   ]
 }
 
-base_sources = [
-  "//base/startup/init/services/log/init_commlog.c",
-  "//base/startup/init/services/param/base/param_base.c",
+comm_sources = [
   "//base/startup/init/services/param/base/param_comm.c",
   "//base/startup/init/services/param/base/param_trie.c",
   "//base/startup/init/services/utils/init_hashmap.c",
@@ -38,12 +36,16 @@ base_include_dirs = [
   "//base/startup/init/services/param/adapter",
   "//base/startup/init/services/param/linux",
   "//base/startup/init/services/param/base",
-  "//base/security/selinux/interfaces/policycoreutils/include",
+  "//third_party/bounds_checking_function/include",
 ]
 
 if (defined(ohos_lite)) {
   static_library("parameterbase") {
-    sources = base_sources
+    sources = comm_sources
+    sources += [
+      "//base/startup/init/services/log/init_commlog.c",
+      "//base/startup/init/services/param/base/param_base.c",
+    ]
     include_dirs = base_include_dirs
     cflags = [ "-fPIC" ]
     defines = [ "_GNU_SOURCE" ]
@@ -54,16 +56,12 @@ if (defined(ohos_lite)) {
         "//base/startup/init/services/param/adapter/param_dac.c",
         "//base/startup/init/services/param/linux/param_osadp.c",
       ]
-      defines += [
-        "__LINUX__",
-        "PARAM_BASE",
-      ]
+      defines += [ "__LINUX__" ]
     } else if (ohos_kernel_type == "liteos_a") {
       sources += [
         "//base/startup/init/services/param/liteos/param_litedac.c",
         "//base/startup/init/services/param/liteos/param_osadp.c",
       ]
-      include_dirs += [ "//third_party/bounds_checking_function/include" ]
       defines += [
         "__LITEOS_A__",
         "WORKSPACE_AREA_NEED_MUTEX",
@@ -73,21 +71,24 @@ if (defined(ohos_lite)) {
     }
   }
 } else {
-  ohos_static_library("parameterbase") {
-    sources = base_sources
+  ohos_source_set("parameterbase") {
+    sources = comm_sources
     sources += [
       "//base/startup/init/services/param/adapter/param_dac.c",
+      "//base/startup/init/services/param/base/param_base.c",
       "//base/startup/init/services/param/linux/param_osadp.c",
     ]
     cflags = [ "-fPIC" ]
     include_dirs = base_include_dirs
     public_configs = [ ":exported_header_files" ]
     defines = [ "_GNU_SOURCE" ]
+    deps = []
 
     if (use_musl) {
       defines += [ "PARAM_BASE" ]
     } else {
       include_dirs += [ "//third_party/bounds_checking_function/include" ]
+      sources += [ "//base/startup/init/services/log/init_commlog.c" ]
     }
     if (build_selinux) {
       include_dirs += [
@@ -100,6 +101,41 @@ if (defined(ohos_lite)) {
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
+      deps += [ "//base/security/selinux:libselinux_parameter_static" ]
+    }
+    if (param_base_log) {
+      defines += [ "PARAM_BASE_LOG" ]
+    }
+    part_name = "init"
+  }
+
+  # extend for base
+  ohos_static_library("parameterbase_ext") {
+    sources = comm_sources
+    sources += [
+      "//base/startup/init/services/log/init_commlog.c",
+      "//base/startup/init/services/param/linux/param_osadp.c",
+    ]
+    cflags = [ "-fPIC" ]
+    include_dirs = base_include_dirs
+    public_configs = [ ":exported_header_files" ]
+    defines = [ "_GNU_SOURCE" ]
+    deps = []
+
+    include_dirs += [ "//third_party/bounds_checking_function/include" ]
+    if (build_selinux) {
+      include_dirs += [
+        "//third_party/selinux/libselinux/include/",
+        "//base/security/selinux/interfaces/policycoreutils/include/",
+      ]
+      defines += [
+        "PARAM_SUPPORT_SELINUX",
+        "PARAMWORKSPACE_NEED_MUTEX",
+      ]
+      deps += [ "//base/security/selinux:libselinux_parameter_static" ]
+    }
+    if (param_base_log) {
+      defines += [ "PARAM_BASE_LOG" ]
     }
     part_name = "init"
   }

@@ -13,28 +13,34 @@
  * limitations under the License.
  */
 
-#ifndef BASE_STARTUP_PARAM_BASE_H
-#define BASE_STARTUP_PARAM_BASE_H
-#include "sys_param.h"
-#include "beget_ext.h"
-#ifndef PARAM_BASE
-#include "securec.h"
-#endif
-
+#ifndef BASE_STARTUP_INIT_SYS_PARAM_H
+#define BASE_STARTUP_INIT_SYS_PARAM_H
+#include <stdarg.h>
+#include <stdint.h>
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
 
-INIT_LOCAL_API void CloseParamWorkSpace(void);
-INIT_LOCAL_API int ParamSprintf(char *buffer, size_t buffSize, const char *format, ...);
-INIT_LOCAL_API int ParamMemcpy(void *dest, size_t destMax, const void *src, size_t count);
-INIT_LOCAL_API int ParamStrCpy(char *strDest, size_t destMax, const char *strSrc);
+typedef struct {
+    uint8_t updaterMode;
+    void (*logFunc)(int logLevel, uint32_t domain, const char *tag, const char *fmt, va_list vargs);
+    int (*setfilecon)(const char *name, const char *content);
+} PARAM_WORKSPACE_OPS;
+
+int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *ops);
+
+/**
+ * Init 接口
+ * 查询参数。
+ *
+ */
+int SystemReadParam(const char *name, char *value, uint32_t *len);
 
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif
-#endif // BASE_STARTUP_PARAM_BASE_H
+#endif

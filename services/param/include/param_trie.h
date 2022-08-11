@@ -118,7 +118,7 @@ INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAu
 INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     const char *key, uint32_t keyLen, const char *value, uint32_t valueLen);
 
-uint32_t GetParamMaxLen(uint8_t type);
+INIT_LOCAL_API uint32_t GetParamMaxLen(uint8_t type);
 
 #ifdef __cplusplus
 #if __cplusplus

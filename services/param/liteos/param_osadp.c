@@ -109,7 +109,7 @@ void ParamTimerClose(ParamTaskPtr timer)
 }
 
 #ifdef __LITEOS_A__
-void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly)
+INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly)
 {
     PARAM_CHECK(fileName != NULL && handle != NULL, return NULL, "Invalid filename or handle");
     int mode = readOnly ? O_RDONLY : O_CREAT | O_RDWR;
@@ -130,19 +130,19 @@ void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, 
     return areaAddr;
 }
 
-void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
+INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
 {
     PARAM_CHECK(mem != NULL && handle != NULL, return, "Invalid mem or handle");
     shmdt(mem);
     shmctl(handle->shmid, IPC_RMID, NULL);
 }
 
-void paramMutexEnvInit(void)
+INIT_LOCAL_API void paramMutexEnvInit(void)
 {
     return;
 }
 
-int ParamRWMutexCreate(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexCreate(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     pthread_rwlockattr_t rwlockatt;
@@ -152,26 +152,26 @@ int ParamRWMutexCreate(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamRWMutexWRLock(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexWRLock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     pthread_rwlock_wrlock(&lock->rwlock);
     return 0;
 }
-int ParamRWMutexRDLock(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexRDLock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     pthread_rwlock_rdlock(&lock->rwlock);
     return 0;
 }
-int ParamRWMutexUnlock(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexUnlock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     pthread_rwlock_unlock(&lock->rwlock);
     return 0;
 }
 
-int ParamRWMutexDelete(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexDelete(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     uint32_t ret = pthread_rwlock_destroy(&lock->rwlock);
@@ -179,7 +179,7 @@ int ParamRWMutexDelete(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamMutexCreate(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexCreate(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid mutex");
     pthread_mutexattr_t mutexattr;
@@ -188,7 +188,7 @@ int ParamMutexCreate(ParamMutex *mutex)
     pthread_mutex_init(&mutex->mutex, &mutexattr);
     return 0;
 }
-int ParamMutexPend(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexPend(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid mutex");
     if (pthread_mutex_lock(&mutex->mutex) != 0) {
@@ -197,14 +197,14 @@ int ParamMutexPend(ParamMutex *mutex)
     }
     return 0;
 }
-int ParamMutexPost(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexPost(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid mutex");
     pthread_mutex_unlock(&mutex->mutex);
     return 0;
 }
 
-int ParamMutexDelete(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
     uint32_t ret = pthread_mutex_destroy(&mutex->mutex);
@@ -214,7 +214,7 @@ int ParamMutexDelete(ParamMutex *mutex)
 #endif
 
 #ifdef __LITEOS_M__
-void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly)
+INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly)
 {
     PARAM_CHECK(spaceSize <= PARAM_WORKSPACE_MAX, return, "Invalid spaceSize %u", spaceSize);
     UNUSED(fileName);
@@ -223,7 +223,7 @@ void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, 
     return (void *)malloc(spaceSize);
 }
 
-void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
+INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
 {
     PARAM_CHECK(mem != NULL && handle != NULL, return, "Invalid mem or handle");
     UNUSED(handle);
@@ -231,12 +231,12 @@ void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
     free(mem);
 }
 
-void paramMutexEnvInit(void)
+INIT_LOCAL_API void paramMutexEnvInit(void)
 {
     return;
 }
 
-int ParamRWMutexCreate(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexCreate(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     uint32_t ret = LOS_MuxCreate(&lock->mutex);
@@ -244,7 +244,7 @@ int ParamRWMutexCreate(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamRWMutexWRLock(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexWRLock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     uint32_t ret = LOS_MuxPend(lock->mutex, LOS_WAIT_FOREVER);
@@ -252,7 +252,7 @@ int ParamRWMutexWRLock(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamRWMutexRDLock(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexRDLock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     uint32_t ret = LOS_MuxPend(lock->mutex, LOS_WAIT_FOREVER);
@@ -260,7 +260,7 @@ int ParamRWMutexRDLock(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamRWMutexUnlock(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexUnlock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     uint32_t ret = LOS_MuxPost(lock->mutex);
@@ -268,7 +268,7 @@ int ParamRWMutexUnlock(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamRWMutexDelete(ParamRWMutex *lock)
+INIT_LOCAL_API int ParamRWMutexDelete(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     uint32_t ret = LOS_MuxDelete(lock->mutex);
@@ -276,7 +276,7 @@ int ParamRWMutexDelete(ParamRWMutex *lock)
     return 0;
 }
 
-int ParamMutexCreate(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexCreate(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
     uint32_t ret = LOS_MuxCreate(&mutex->mutex);
@@ -284,7 +284,7 @@ int ParamMutexCreate(ParamMutex *mutex)
     return 0;
 }
 
-int ParamMutexPend(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexPend(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
     uint32_t ret = LOS_MuxPend(mutex->mutex, LOS_WAIT_FOREVER);
@@ -292,7 +292,7 @@ int ParamMutexPend(ParamMutex *mutex)
     return 0;
 }
 
-int ParamMutexPost(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexPost(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
     uint32_t ret = LOS_MuxPost(mutex->mutex);
@@ -300,7 +300,7 @@ int ParamMutexPost(ParamMutex *mutex)
     return 0;
 }
 
-int ParamMutexDelete(ParamMutex *mutex)
+INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid mutex");
     uint32_t ret = LOS_MuxDelete(mutex->mutex);
@@ -309,7 +309,7 @@ int ParamMutexDelete(ParamMutex *mutex)
 }
 #endif
 
-uint32_t Difftime(time_t curr, time_t base)
+INIT_LOCAL_API uint32_t Difftime(time_t curr, time_t base)
 {
 #ifndef __LITEOS_M__
     return (uint32_t)difftime(curr, base);
