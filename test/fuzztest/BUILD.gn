@@ -368,7 +368,7 @@ ohos_fuzztest("test_startup_SystemGetParameterValueFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("test_startup_SystemSetParameterFuzztest") {
+ohos_fuzztest("test_startup_SystemSetParameterFuzzTest") {
   module_out_path = module_output_path
 
   include_dirs = [
@@ -394,7 +394,7 @@ ohos_fuzztest("test_startup_SystemSetParameterFuzztest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("test_startup_SystemTraversalParameterFuzztest") {
+ohos_fuzztest("test_startup_SystemTraversalParameterFuzzTest") {
   module_out_path = module_output_path
 
   include_dirs = [
@@ -532,8 +532,8 @@ group("fuzztest") {
     ":test_startup_SystemGetParameterFuzzTest",
     ":test_startup_SystemGetParameterNameFuzzTest",
     ":test_startup_SystemGetParameterValueFuzzTest",
-    ":test_startup_SystemSetParameterFuzztest",
-    ":test_startup_SystemTraversalParameterFuzztest",
+    ":test_startup_SystemSetParameterFuzzTest",
+    ":test_startup_SystemTraversalParameterFuzzTest",
     ":test_startup_SystemWaitParameterFuzzTest",
     ":test_startup_SystemWatchParameterFuzzTest",
     ":test_startup_UmountAllFstabFuzzTest",
