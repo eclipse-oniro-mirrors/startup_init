@@ -24,7 +24,6 @@ if (defined(ohos_lite)) {
     executable("ueventd_linux") {
       sources = [
         "//base/startup/init/services/utils/init_utils.c",
-        "//base/startup/init/services/utils/list.c",
         "//base/startup/init/ueventd/lite/ueventd_parameter.c",
         "//base/startup/init/ueventd/ueventd.c",
         "//base/startup/init/ueventd/ueventd_device_handler.c",
@@ -55,7 +54,6 @@ if (defined(ohos_lite)) {
 } else {
   import("//build/ohos.gni")
   service_ueventd_sources = [
-    "//base/startup/init/services/utils/list.c",
     "//base/startup/init/ueventd/ueventd.c",
     "//base/startup/init/ueventd/ueventd_device_handler.c",
     "//base/startup/init/ueventd/ueventd_firmware_handler.c",

@@ -114,6 +114,8 @@ if (defined(ohos_lite)) {
     sources = comm_sources
     sources += [
       "//base/startup/init/services/log/init_commlog.c",
+      "//base/startup/init/services/param/adapter/param_dac.c",
+      "//base/startup/init/services/param/base/param_base.c",
       "//base/startup/init/services/param/linux/param_osadp.c",
     ]
     cflags = [ "-fPIC" ]
@@ -128,6 +130,8 @@ if (defined(ohos_lite)) {
         "//third_party/selinux/libselinux/include/",
         "//base/security/selinux/interfaces/policycoreutils/include/",
       ]
+      sources +=
+          [ "//base/startup/init/services/param/adapter/param_selinux.c" ]
       defines += [
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
