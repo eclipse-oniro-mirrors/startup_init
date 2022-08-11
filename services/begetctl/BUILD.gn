@@ -124,7 +124,7 @@ if (defined(ohos_lite)) {
     if (enable_ohos_startup_init_feature_ab_partition) {
       sources += [ "partitionslot.cpp" ]
       external_deps +=
-          [ "drivers_peripheral_partitionslot:libpartition_slot_manager" ]
+          [ "drivers_interface_partitionslot:libpartitionslot_proxy_1.0" ]
       symlink_target_name += [ "partitionslot" ]
     }
 
