@@ -242,7 +242,7 @@ INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAu
 }
 
 static int CreateCtrlInfo(ServiceCtrlInfo **ctrlInfo, const char *cmd, uint32_t offset,
-        uint8_t ctrlParam, const char *format, ...)
+    uint8_t ctrlParam, const char *format, ...)
 {
     *ctrlInfo = calloc(1, sizeof(ServiceCtrlInfo));
     PARAM_CHECK(ctrlInfo != NULL, return -1, "Failed to alloc memory %s", cmd);

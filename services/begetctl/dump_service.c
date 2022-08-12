@@ -31,7 +31,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
         CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, argv[1]);
     } else if (argc == DUMP_SERVICE_BOOTEVENT_CMD_ARGS) {
         printf("dump service bootevent info \n");
-        int serviceNameLen = strlen(argv[1]) + strlen(argv[2]) + 2; // 2 is \0 and #
+        size_t serviceNameLen = strlen(argv[1]) + strlen(argv[2]) + 2; // 2 is \0 and #
         char *serviceBootevent = (char *)calloc(1, serviceNameLen);
         BEGET_ERROR_CHECK(sprintf_s(serviceBootevent, serviceNameLen, "%s#%s", argv[1], argv[2]) >= 0,
             return 0, "dumpservice arg create failed");

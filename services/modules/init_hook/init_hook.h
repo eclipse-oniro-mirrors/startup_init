@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef STARTUP_INIT_PARAM_HOOK_
-#define STARTUP_INIT_PARAM_HOOK_
+#ifndef STARTUP_INIT_PARAM_HOOK
+#define STARTUP_INIT_PARAM_HOOK
 #include <stdio.h>
 #include <stdint.h>
 
