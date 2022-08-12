@@ -26,7 +26,7 @@
 #define BOOT_EVENT_PARA_PREFIX      "bootevent."
 #define BOOT_EVENT_PARA_PREFIX_LEN  10
 #define BOOT_EVENT_TIMESTAMP_MAX_LEN  50
-static int bootEventNum = 0;
+static int g_bootEventNum = 0;
 
 enum {
     BOOTEVENT_FORK,
@@ -116,9 +116,9 @@ static void BootEventParaFireByName(const char *paramName)
     }
     INIT_CHECK_ONLY_RETURN(clock_gettime(CLOCK_MONOTONIC,
         &(((BOOT_EVENT_PARAM_ITEM *)found)->timestamp[BOOTEVENT_READY])) == 0);
-    bootEventNum--;
+    g_bootEventNum--;
     // Check if all boot event params are fired
-    if (bootEventNum > 0) {
+    if (g_bootEventNum > 0) {
         return;
     }
     // All parameters are fired, set boot completed now ...
@@ -144,7 +144,7 @@ static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
             INIT_LOGI("Add service bootevent failed %s", serviceParseCtx->serviceName);
             return;
         }
-        bootEventNum++;
+        g_bootEventNum++;
         return;
     }
 
@@ -157,7 +157,7 @@ static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
             INIT_LOGI("Add service bootevent failed %s", serviceParseCtx->serviceName);
             continue;
         }
-        bootEventNum++;
+        g_bootEventNum++;
     }
 }
 

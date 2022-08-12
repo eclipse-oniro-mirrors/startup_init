@@ -292,7 +292,7 @@ FstabItem *FindFstabItemForPath(Fstab fstab, const char *path)
     return item;
 }
 
-static char *GetFstabFile(char *fileName, int size)
+static char *GetFstabFile(char *fileName, size_t size)
 {
     if (InUpdaterMode() == 1) {
         if (strncpy_s(fileName, size, "/etc/fstab.updater", strlen("/etc/fstab.updater")) != 0) {

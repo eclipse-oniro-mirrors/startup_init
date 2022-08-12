@@ -102,11 +102,11 @@ int InitAddClearServiceHook(ServiceHook hook)
     return HookMgrAddEx(GetBootStageHookMgr(), &info);
 }
 
-static int CmdClear_(int id, const char *name, int argc, const char **argv)
+static int CmdClear(int id, const char *name, int argc, const char **argv)
 {
     SERVICE_INFO_CTX ctx = {0};
     ctx.reserved = argc >= 1 ? argv[0] : NULL;
-    PLUGIN_LOGI("CmdClear_ %s cmd: %s", name, ctx.reserved);
+    PLUGIN_LOGI("CmdClear %s cmd: %s", name, ctx.reserved);
 
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
     while (node != NULL) {
@@ -123,7 +123,7 @@ static int CmdClear_(int id, const char *name, int argc, const char **argv)
 
 static int ParamSetBootEventHook(const HOOK_INFO *hookInfo, void *cookie)
 {
-    AddCmdExecutor("clear", CmdClear_);
+    AddCmdExecutor("clear", CmdClear);
     return 0;
 }
 
