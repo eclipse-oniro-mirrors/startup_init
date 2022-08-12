@@ -216,7 +216,7 @@ INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex)
 #ifdef __LITEOS_M__
 INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly)
 {
-    PARAM_CHECK(spaceSize <= PARAM_WORKSPACE_MAX, return, "Invalid spaceSize %u", spaceSize);
+    PARAM_CHECK(spaceSize <= PARAM_WORKSPACE_MAX, return NULL, "Invalid spaceSize %u", spaceSize);
     UNUSED(fileName);
     UNUSED(handle);
     UNUSED(readOnly);
@@ -296,7 +296,7 @@ INIT_LOCAL_API int ParamMutexPost(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
     uint32_t ret = LOS_MuxPost(mutex->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lockret %d %d", ret, mutex->mutex);
+    PARAM_CHECK(ret == LOS_OK, return -1, "Failed to mutex lock ret %d %d", ret, mutex->mutex);
     return 0;
 }
 
