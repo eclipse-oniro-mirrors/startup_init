@@ -161,6 +161,7 @@ statx
 prlimit64
 cacheflush
 set_tls
+sched_setscheduler
 
 @allowListWithArgs
 getrusage:if arg0 == RUSAGE_SELF || arg0 == RUSAGE_THREAD

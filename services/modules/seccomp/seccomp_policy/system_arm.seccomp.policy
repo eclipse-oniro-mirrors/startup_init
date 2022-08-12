@@ -216,6 +216,9 @@ setsockopt
 getsockopt
 sendmsg
 recvmsg
+semget
+add_key
+keyctl
 inotify_add_watch
 inotify_rm_watch
 openat

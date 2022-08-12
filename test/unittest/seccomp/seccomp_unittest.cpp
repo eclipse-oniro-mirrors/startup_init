@@ -31,7 +31,8 @@
 #include <asm/unistd.h>
 #include <syscall.h>
 #include <climits>
-#include <linux/openat2.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #include "seccomp_policy.h"
 
@@ -137,15 +138,13 @@ public:
     }
 
 #if defined __aarch64__
-    static bool CheckOpenat2()
+    static bool CheckShmget()
     {
-        struct open_how how = {};
-        int fd = syscall(__NR_openat2, AT_FDCWD, ".", &how);
-        if (fd == -1) {
+        int fd = shmget(1, 4096, 0666);
+        if (fd < 0) {
             return false;
         }
 
-        close(fd);
         return true;
     }
 
@@ -182,7 +181,7 @@ public:
 
     static bool CheckSetresuidArgsOutOfRange()
     {
-        int ret = syscall(__NR_setresuid, 1000, 1000, 1000);
+        int ret = syscall(__NR_setresuid, 800, 800, 800);
         if (ret == 0) {
             return true;
         }
@@ -193,7 +192,7 @@ public:
     void TestSystemSycall()
     {
         // system blocklist
-        int ret = CheckSyscall(SYSTEM, CheckOpenat2, false);
+        int ret = CheckSyscall(SYSTEM, CheckShmget, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
@@ -242,7 +241,7 @@ public:
 
     static bool CheckSetresuid32ArgsOutOfRange()
     {
-        int ret = syscall(__NR_setresuid32, 1000, 1000, 1000);
+        int ret = syscall(__NR_setresuid32, 800, 800, 800);
         if (ret == 0) {
             return true;
         }
@@ -283,6 +282,6 @@ HWTEST_F(SeccompUnitTest, TestSystemSycall, TestSize.Level1)
 HWTEST_F(SeccompUnitTest, TestSetUidGidFilter, TestSize.Level1)
 {
     SeccompUnitTest test;
-    test.TestSystemSycall();
+    test.TestSetUidGidFilter();
 }
 }

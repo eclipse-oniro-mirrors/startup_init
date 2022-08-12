@@ -18,11 +18,17 @@ group("static_modules") {
       "bootevent:libbootevent_static",
       "init_hook:inithook",
     ]
+    if (build_seccomp) {
+      deps += [ "seccomp:libseccomp_static" ]
+    }
   }
 }
 
 group("modulesgroup") {
   if (!defined(ohos_lite)) {
     deps = [ "bootchart:bootchart" ]
+    if (build_seccomp) {
+      deps += [ "seccomp:seccomp_module" ]
+    }
   }
 }

@@ -131,6 +131,7 @@ madvise
 getrandom
 statx
 prlimit64
+sched_setscheduler
 
 @allowListWithArgs
 getrusage:if arg0 == RUSAGE_SELF || arg0 == RUSAGE_THREAD
