@@ -37,8 +37,7 @@ extern "C" {
 #endif
 
 INIT_LOCAL_API void OpenLogDevice(void);
-INIT_LOCAL_API void InitLog(InitLogLevel logLevel,
-    unsigned int domain, const char *tag, const char *fmt, va_list vargs);
+INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs);
 
 #ifdef PARAM_BASE
 #define INIT_LOGV(fmt, ...)

@@ -96,11 +96,11 @@ typedef struct {
 } ParamSecurityOps;
 
 typedef int (*RegisterSecurityOpsPtr)(ParamSecurityOps *ops, int isInit);
-typedef int (*SelinuxSetParamCheck)(const char *paraName, struct ucred *uc);
+typedef int (*SelinuxSetParamCheck)(const char *paraName, const char *destContext, struct ucred *uc);
 typedef struct SelinuxSpace_ {
     void *selinuxHandle;
     void (*setSelinuxLogCallback)(void);
-    int (*setParamCheck)(const char *paraName, struct ucred *uc);
+    int (*setParamCheck)(const char *paraName, const char *destContext, struct ucred *uc);
     const char *(*getParamLabel)(const char *paraName);
     int (*initParamSelinux)(void);
     int (*readParamCheck)(const char *paraName);

@@ -47,7 +47,7 @@ typedef enum InitLogLevel {
     INIT_FATAL
 } InitLogLevel;
 
-typedef void (*InitCommLog)(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, va_list vargs);
+typedef void (*InitCommLog)(int logLevel, uint32_t domain, const char *tag, const char *fmt, va_list vargs);
 #define FILE_NAME   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
 
 INIT_PUBLIC_API void StartupLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
