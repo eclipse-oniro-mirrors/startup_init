@@ -33,7 +33,7 @@
 static bool IsSupportFilterFlag(unsigned int filterFlag)
 {
     errno = 0;
-    int ret = syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER, filterFlag, NULL);
+    long ret = syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER, filterFlag, NULL);
     if (ret != -1 || errno != EFAULT) {
         SECCOMP_LOGE("not support  seccomp flag %u", filterFlag);
         return false;

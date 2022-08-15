@@ -92,7 +92,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
     security->flags[PARAM_SECURITY_SELINUX] = 0;
     PARAM_LOGV("InitLocalSecurityLabel");
 #if !(defined STARTUP_INIT_TEST || defined LOCAL_TEST)
-    if (isInit) {
+    if ((bool)isInit) {
         int ret = InitSelinuxOpsForInit(&GetParamWorkSpace()->selinuxSpace);
         PARAM_CHECK(ret == 0, return -1, "Failed to init selinux ops");
     } else {
