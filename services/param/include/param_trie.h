@@ -80,7 +80,7 @@ typedef struct {
 
 struct WorkSpace_;
 typedef struct WorkSpace_ {
-    int flags;
+    unsigned int flags;
     HashNode hashNode;
     ListNode node;
     uint32_t (*allocTrieNode)(struct WorkSpace_ *workSpace, const char *key, uint32_t keyLen);
