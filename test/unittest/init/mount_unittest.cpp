@@ -56,8 +56,7 @@ HWTEST_F(MountUnitTest, TestGetBlockDevicePath, TestSize.Level1)
     if (fd < 0) {
         return;
     }
-    GetBlockDevicePath(nullptr, nullptr, 0);
-    GetBlockDevicePath(nullptr, path, sizeof(path));
+    GetBlockDevicePath("/test", path, sizeof(path));
     close(fd);
     ReadConfig();
     unlink("/bin/updater");

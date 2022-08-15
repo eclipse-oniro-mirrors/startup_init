@@ -499,6 +499,7 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
 
 int GetBlockDevicePath(const char *partName, char *path, size_t size)
 {
+    BEGET_CHECK_RETURN_VALUE(partName != NULL && path != NULL, -1);
     Fstab *fstab = LoadFstabFromCommandLine();
     if (fstab == NULL) {
         BEGET_LOGI("fstab not found from cmdline, try to get it from file");
