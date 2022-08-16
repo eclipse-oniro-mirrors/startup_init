@@ -6,6 +6,7 @@
     { "name": "AddCmdExecutor" },
     { "name": "RemoveCmdExecutor" },
     { "name": "HookMgrAdd" },
+    { "name": "GetBootStageHookMgr"},
     { "name": "InitAddGlobalInitHook" },
     { "name": "InitAddPreParamServiceHook" },
     { "name": "InitAddPreParamLoadHook" },
