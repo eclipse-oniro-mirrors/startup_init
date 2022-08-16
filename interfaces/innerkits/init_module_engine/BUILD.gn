@@ -57,6 +57,10 @@ if (defined(ohos_lite)) {
     stub_description_file = "./stub/libinit.stub.empty.json"
     part_name = "init"
     install_enable = true
+    install_images = [
+      "system",
+      "updater",
+    ]
     symlink_target_name = [ "libinit_module_engine.so" ]
   }
 

@@ -392,6 +392,13 @@ INIT_LOCAL_API ParamSecurityLabel *GetParamSecurityLabel()
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return NULL, "Invalid paramSpace");
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+#ifndef STARTUP_INIT_TEST
+    paramSpace->securityLabel.cred.pid = getpid();
+    paramSpace->securityLabel.cred.uid = geteuid();
+    paramSpace->securityLabel.cred.gid = getegid();
+#endif
+#endif
     return &paramSpace->securityLabel;
 }
 
