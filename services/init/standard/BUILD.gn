@@ -99,9 +99,6 @@ ohos_executable("init") {
 
   if (build_seccomp) {
     cflags += [ "-DWITH_SECCOMP" ]
-    include_dirs +=
-        [ "//base/startup/init/interfaces/innerkits/seccomp/include" ]
-    deps += [ "//base/startup/init/services/modules/seccomp:seccomp_static" ]
   }
 
   if (build_selinux) {

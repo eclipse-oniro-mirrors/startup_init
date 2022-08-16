@@ -197,6 +197,7 @@ getgid
 getegid
 gettid
 sysinfo
+semget
 socket
 socketpair
 bind
@@ -216,6 +217,8 @@ readahead
 brk
 munmap
 mremap
+add_key
+keyctl
 clone
 execve
 mmap

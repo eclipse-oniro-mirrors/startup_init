@@ -15,7 +15,10 @@
 
 #include "seccomp_policy.h"
 #include "seccomp_filters.h"
-#include "seccomp_utils.h"
+#include "plugin_adapter.h"
+#ifdef SECCOMP_PLUGIN
+#include "init_module_engine.h"
+#endif
 
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -35,7 +38,7 @@ static bool IsSupportFilterFlag(unsigned int filterFlag)
     errno = 0;
     long ret = syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER, filterFlag, NULL);
     if (ret != -1 || errno != EFAULT) {
-        SECCOMP_LOGE("not support  seccomp flag %u", filterFlag);
+        PLUGIN_LOGE("not support  seccomp flag %u", filterFlag);
         return false;
     }
 
@@ -59,7 +62,7 @@ static bool InstallSeccompPolicy(const struct sock_filter* filter, size_t filter
     }
 
     if (syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER, flag, &prog) != 0) {
-        SECCOMP_LOGE("SetSeccompFilter failed");
+        PLUGIN_LOGE("SetSeccompFilter failed");
         return false;
     }
 
@@ -85,3 +88,54 @@ bool SetSeccompPolicy(PolicyType policy)
 
     return ret;
 }
+
+#ifdef SECCOMP_PLUGIN
+static int DoSetSeccompPolicyStart(void)
+{
+    bool ret = false;
+    ret = SetSeccompPolicy(SYSTEM);
+    PLUGIN_CHECK(ret == true, return -1, "SetSeccompPolicy failed");
+
+    return 0;
+}
+
+static int DoSetSeccompPolicyCmd(int id, const char *name, int argc, const char **argv)
+{
+    PLUGIN_LOGI("DoBootchartCmd argc %d %s", argc, name);
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
+    if (strcmp(argv[0], "start") == 0) {
+        return DoSetSeccompPolicyStart();
+    }
+    return 0;
+}
+
+static int32_t g_executorId = -1;
+static int SetSeccompPolicyInit(void)
+{
+    if (g_executorId == -1) {
+        g_executorId = AddCmdExecutor("SetSeccompPolicy", DoSetSeccompPolicyCmd);
+        PLUGIN_LOGI("SetSeccompPolicy executorId %d", g_executorId);
+    }
+    return 0;
+}
+
+static void SetSeccompPolicyExit(void)
+{
+    PLUGIN_LOGI("SetSeccompPolicy executorId %d", g_executorId);
+    if (g_executorId != -1) {
+        RemoveCmdExecutor("SetSeccompPolicy", g_executorId);
+    }
+}
+
+MODULE_CONSTRUCTOR(void)
+{
+    PLUGIN_LOGI("DoSetSeccompPolicyStart now ...");
+    SetSeccompPolicyInit();
+}
+
+MODULE_DESTRUCTOR(void)
+{
+    PLUGIN_LOGI("DoSetSeccompPolicyStop now ...");
+    SetSeccompPolicyExit();
+}
+#endif

@@ -33,6 +33,7 @@
 #include "init_adapter.h"
 #include "init_cmds.h"
 #include "init_log.h"
+#include "init_cmdexecutor.h"
 #include "init_jobs_internal.h"
 #include "init_service.h"
 #include "init_service_manager.h"
@@ -54,7 +55,6 @@
 #endif // WITH_SELINUX
 
 #ifdef WITH_SECCOMP
-#include "seccomp_policy.h"
 #define APPSPAWN_NAME ("appspawn")
 #define NWEBSPAWN_NAME ("nwebspawn")
 #endif
@@ -73,19 +73,15 @@ static int SetAllAmbientCapability(void)
     return SERVICE_SUCCESS;
 }
 
-#ifdef WITH_SECCOMP
-static int SetSystemSeccompPolicy(const Service *service)
+static void SetSystemSeccompPolicy(const Service *service)
 {
+#ifdef WITH_SECCOMP
     if (strncmp(APPSPAWN_NAME, service->name, strlen(APPSPAWN_NAME)) \
         && strncmp(NWEBSPAWN_NAME, service->name, strlen(NWEBSPAWN_NAME))) {
-        if (!SetSeccompPolicy(SYSTEM)) {
-            INIT_LOGE("init seccomp failed, name is %s\n", service->name);
-            return SERVICE_FAILURE;
-        }
+        PluginExecCmdByName("SetSeccompPolicy", "start");
     }
-    return SERVICE_SUCCESS;
-}
 #endif
+}
 
 #ifndef OHOS_LITE
 /**
@@ -342,10 +338,7 @@ static int InitServicePropertys(Service *service)
     INIT_CHECK_ONLY_ELOG(BindCpuCore(service) == SERVICE_SUCCESS,
         "binding core number failed for service %s", service->name);
 
-#ifdef WITH_SECCOMP
-    INIT_ERROR_CHECK(SetSystemSeccompPolicy(service) == SERVICE_SUCCESS, return -1,
-        "service %s exit! set seccomp failed! err %d.", service->name, errno);
-#endif
+    SetSystemSeccompPolicy(service);
     
     // permissions
     INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, return -1,
