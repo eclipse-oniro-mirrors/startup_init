@@ -105,7 +105,7 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
         g_paramWorkSpace.ops.setfilecon = ops->setfilecon;
 #endif
     }
-    PARAM_LOGI("InitParamWorkSpace %p %x", &g_paramWorkSpace, g_paramWorkSpace.flags);
+    PARAM_LOGI("InitParamWorkSpace %x", g_paramWorkSpace.flags);
     if (PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
@@ -118,7 +118,7 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
     }
     // for ut, do not init workspace
     char path[PATH_MAX] = { 0 };
-    (void)readlink("/proc/self/exe", path, sizeof(path));
+    (void)readlink("/proc/self/exe", path, sizeof(path) - 1);
     char *name = strrchr(path, '/');
     if (name != NULL) {
         name++;
