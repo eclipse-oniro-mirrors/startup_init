@@ -21,7 +21,7 @@ if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
     include_dirs = [
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/interfaces/innerkits/include/token",
-      "//utils/native/lite/include",
+      "//commonlibrary/utils_lite/include",
       "//base/startup/init/interfaces/innerkits/token",
     ]
     sources = [ "src/token_impl_posix/token.c" ]
@@ -40,7 +40,7 @@ if (ohos_kernel_type == "liteos_m") {
     include_dirs = [
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/interfaces/innerkits/include/token",
-      "//utils/native/lite/include",
+      "//commonlibrary/utils_lite/include",
       "//base/startup/init/interfaces/innerkits/token",
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite",
     ]
