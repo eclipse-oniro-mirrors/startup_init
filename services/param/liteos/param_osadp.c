@@ -314,6 +314,8 @@ INIT_LOCAL_API uint32_t Difftime(time_t curr, time_t base)
 #ifndef __LITEOS_M__
     return (uint32_t)difftime(curr, base);
 #else
+    (void)curr;
+    (void)base;
     return 0;
 #endif
 }
