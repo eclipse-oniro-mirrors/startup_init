@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 
+#include <dirent.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
 #include <linux/limits.h>
 
 #include "beget_ext.h"
+#include "init_utils.h"
 #include "list.h"
 #include "securec.h"
 #include "modulemgr.h"
@@ -107,8 +108,9 @@ static void *moduleInstall(MODULE_ITEM *module, int argc, const char *argv[])
             return NULL;
         }
     } else {
-        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "/system/" MODULE_LIB_NAME "/%s/lib%s" MODULE_SUFFIX_D,
-            module->moduleMgr->name, module->name) < 0) {
+        const char *fmt = (InUpdaterMode() == 0) ? "/system/" MODULE_LIB_NAME : "/" MODULE_LIB_NAME;
+        if (snprintf_s(path, sizeof(path), sizeof(path) - 1,
+            "%s/%s/lib%s" MODULE_SUFFIX_D, fmt, module->moduleMgr->name, module->name) < 0) {
             return NULL;
         }
     }
@@ -225,8 +227,9 @@ MODULE_MGR *ModuleMgrScan(const char *modulePath)
     if (modulePath[0] == '/') {
         BEGET_CHECK(!(snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s", modulePath) < 0), return NULL);
     } else {
+        const char *fmt = (InUpdaterMode() == 0) ? "/system/" MODULE_LIB_NAME : "/" MODULE_LIB_NAME;
         BEGET_CHECK(!(snprintf_s(path, sizeof(path), sizeof(path) - 1,
-            "/system/" MODULE_LIB_NAME "/%s", modulePath) < 0), return NULL);
+            "%s/%s", fmt, modulePath) < 0), return NULL);
     }
 
     scanModules(moduleMgr, path);
