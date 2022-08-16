@@ -106,17 +106,17 @@ static void TestPermission()
     const char *testName = "persist.111.ffff.bbbb.cccc.dddd.eeee.55555";
     char tmp[PARAM_BUFFER_SIZE] = {0};
     int ret;
-    // 允许本地校验
+
     ParamSecurityOps *paramSecurityOps = GetParamSecurityOps(0);
     paramSecurityOps->securityCheckParamPermission = TestCheckParamPermission;
     SetTestPermissionResult(DAC_RESULT_FORBIDED);
     if ((GetParamSecurityLabel() != nullptr)) {
         GetParamSecurityLabel()->flags[0] = LABEL_CHECK_IN_ALL_PROCESS;
         ret = SystemSetParameter(testName, "22202");
-#ifdef PARAM_SUPPORT_SELINUX
-        EXPECT_EQ(ret, 0);
-#else
+#ifdef __LITEOS_A__
         EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
+#else
+        EXPECT_EQ(ret, 0); // 本地不在校验
 #endif
     }
     paramSecurityOps->securityFreeLabel = TestFreeLocalSecurityLabel;
@@ -129,11 +129,12 @@ static void TestPermission()
     const int testResult = 201;
     SetTestPermissionResult(testResult);
     ret = SystemSetParameter(testName, "3333");
-#ifdef PARAM_SUPPORT_SELINUX
-    EXPECT_EQ(ret, 0);
-#else
+#ifdef __LITEOS_A__
     EXPECT_EQ(ret, testResult);
+#else
+    EXPECT_EQ(ret, 0); // 本地不在校验
 #endif
+
     u_int32_t len = sizeof(tmp);
     SetTestPermissionResult(DAC_RESULT_FORBIDED);
     ret = SystemGetParameter(testName, tmp, &len);

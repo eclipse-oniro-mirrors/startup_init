@@ -529,9 +529,11 @@ HWTEST_F(ParamServiceUnitTest, TestServiceCtrl, TestSize.Level0)
     ParamServiceUnitTest test;
     int ret = test.TestServiceCtrl("server1", 0770);
     EXPECT_NE(ret, 0);
+#ifdef PARAM_SUPPORT_SELINUX
     // selinux forbid
     ret = test.TestServiceCtrl("server2", 0772);
     EXPECT_NE(ret, 0);
+#endif
 }
 
 HWTEST_F(ParamServiceUnitTest, TestPowerCtrl, TestSize.Level0)
@@ -539,23 +541,31 @@ HWTEST_F(ParamServiceUnitTest, TestPowerCtrl, TestSize.Level0)
     ParamServiceUnitTest test;
     int ret = test.TestPowerCtrl("reboot,shutdown", 0770);
     EXPECT_NE(ret, 0);
+#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,shutdown", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestPowerCtrl("reboot,updater", 0770);
     EXPECT_NE(ret, 0);
+#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,updater", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestPowerCtrl("reboot,flash", 0770);
     EXPECT_NE(ret, 0);
+#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,flash", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestPowerCtrl("reboot", 0770);
     EXPECT_NE(ret, 0);
+#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
+#endif
 }
 }  // namespace init_ut
