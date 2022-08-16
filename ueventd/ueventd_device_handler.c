@@ -89,11 +89,11 @@ static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid
         return;
     }
     if (chown(deviceNode, uid, gid) != 0) {
-        INIT_LOGW("Failed to change \" %s \" owner", deviceNode);
+        INIT_LOGW("Failed to change \" %s \" owner, errno %d", deviceNode, errno);
     }
 
     if (chmod(deviceNode, mode) != 0) {
-        INIT_LOGW("Failed to change \" %s \" mode", deviceNode);
+        INIT_LOGW("Failed to change \" %s \" mode, errno %d", deviceNode, errno);
     }
 }
 
