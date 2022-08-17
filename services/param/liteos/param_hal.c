@@ -103,11 +103,13 @@ static void ParamFileSync(int ft)
 #ifdef PARAM_SUPPORT_POSIX
     fsync(ft);
 #else
+    (void)ft;
 #endif
 }
 
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
+    (void)context;
     uint32_t dataIndex = 0;
     int ret = WriteParam(name, value, &dataIndex, 0);
     PARAM_CHECK(ret == 0, return ret, "Failed to write param %d name:%s %s", ret, name, value);
