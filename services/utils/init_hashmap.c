@@ -60,6 +60,7 @@ static HashNode *GetHashNodeByNode(const HashTab *tab, const HashNode *root, con
 
 static HashNode *GetHashNodeByKey(const HashTab *tab, const HashNode *root, const void *key, HashKeyCompare keyCompare)
 {
+    (void)tab;
     HashNode *node = (HashNode *)root;
     while (node != NULL) {
         int ret = keyCompare(node, key);
