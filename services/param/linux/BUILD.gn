@@ -38,7 +38,7 @@ param_include_dirs = [
   "//base/startup/init/services/loopevent/include",
   "//third_party/bounds_checking_function/include",
   "//third_party/cJSON",
-  "//utils/native/lite/include",
+  "//commonlibrary/utils_lite/include",
   "//base/security/selinux/interfaces/policycoreutils/include",
 ]
 
