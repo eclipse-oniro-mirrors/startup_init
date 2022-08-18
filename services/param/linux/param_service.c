@@ -18,9 +18,7 @@
 #include <string.h>
 #include <sys/socket.h>
 
-#ifdef PARAM_BASE_LOG
 #include "init_log.h"
-#endif
 #include "init_param.h"
 #include "init_utils.h"
 #include "loop_event.h"
@@ -380,9 +378,8 @@ void InitParamService(void)
     // param space
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = InUpdaterMode();
-#ifdef PARAM_BASE_LOG
+    // init open log
     ops.logFunc = InitLog;
-#endif
 #ifdef PARAM_SUPPORT_SELINUX
     ops.setfilecon = setfilecon;
 #endif

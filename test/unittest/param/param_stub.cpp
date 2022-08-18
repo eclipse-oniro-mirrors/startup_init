@@ -61,7 +61,7 @@ static const char *forbitWriteParamName[] = {
     "test.persmission.watch"
 };
 
-static int TestSetParamCheck(const char *paraName, struct ucred *uc)
+static int TestSetParamCheck(const char *paraName, const char *context, struct ucred *uc)
 {
     // forbid to read ohos.servicectrl.
     for (size_t i = 0; i < ARRAY_LENGTH(forbitWriteParamName); i++) {

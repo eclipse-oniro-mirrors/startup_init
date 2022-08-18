@@ -154,7 +154,7 @@ static int SelinuxGetAllLabel(int readOnly)
             node = node->next;
             continue;
         }
-        // set selinx label
+        // set selinux label
         SetSelinuxFileCon(node->info.paraName, node->info.paraContext);
         node = node->next;
     }
@@ -200,15 +200,12 @@ static int SelinuxReadParamCheck(const char *name)
     if (selinuxSpace->readParamCheck != NULL) {
         ret = selinuxSpace->readParamCheck(name);
         PARAM_LOGI("SelinuxReadParamCheck name %s ret %d", name, ret);
+        return ret;
     }
-    const char *label = GetSelinuxContent(name);
-    if (label == NULL) { // open file with readonly
-        ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, 1, PARAM_WORKSPACE_MAX);
-    } else {
-        ret = AddWorkSpace(label, 1, PARAM_WORKSPACE_MAX);
-    }
-    if (ret != 0) {
-        PARAM_LOGV("SelinuxReadParamCheck name %s label %s ", name, label);
+    PARAM_LOGW("SelinuxReadParamCheck name %s label %s", name, GetSelinuxContent(name));
+    WorkSpace *space = GetWorkSpace(name);
+    if (space == NULL) {
+        PARAM_LOGW("SelinuxReadParamCheck name %s label %s forbid", name, GetSelinuxContent(name));
         return DAC_RESULT_FORBIDED;
     }
     return DAC_RESULT_PERMISSION;
@@ -225,7 +222,8 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
     uc.gid = srcLabel->cred.gid;
     if (mode == DAC_WRITE) {
         PARAM_CHECK(selinuxSpace->setParamCheck != NULL, return ret, "Invalid setParamCheck");
-        ret = selinuxSpace->setParamCheck(name, &uc);
+        const char *context = GetSelinuxContent(name);
+        ret = selinuxSpace->setParamCheck(name, context, &uc);
     } else {
 #ifndef STARTUP_INIT_TEST
         ret = SelinuxReadParamCheck(name);
