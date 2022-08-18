@@ -14,13 +14,15 @@
  */
 
 #include "servicecontrolstart_fuzzer.h"
+#include<string>
 #include "service_control.h"
 
 namespace OHOS {
     bool FuzzServiceControlStart(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (!ServiceControl(reinterpret_cast<const char*>(data), START)) {
+        std::string str(reinterpret_cast<const char*>(data), size);
+        if (!ServiceControl(str.c_str(), START)) {
             result = true;
         }
         return result;

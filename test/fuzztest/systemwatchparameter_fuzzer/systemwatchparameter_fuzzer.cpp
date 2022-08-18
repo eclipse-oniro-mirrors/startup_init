@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include<string>
 #include "systemwatchparameter_fuzzer.h"
 
 #include "init.h"
@@ -31,7 +32,8 @@ namespace OHOS {
     bool FuzzSystemWatchParameter(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (!SystemWatchParameter(reinterpret_cast<const char*>(data), HandleParamChange, NULL)) {
+        std::string str(reinterpret_cast<const char*>(data), size);
+        if (!SystemWatchParameter(str.c_str(), HandleParamChange, NULL)) {
             result = true;
         }
         return result;

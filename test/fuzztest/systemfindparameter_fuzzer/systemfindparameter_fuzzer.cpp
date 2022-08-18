@@ -14,6 +14,7 @@
  */
 
 #include "systemfindparameter_fuzzer.h"
+#include<string>
 #include "init_param.h"
 
 static ParamHandle handle;
@@ -22,7 +23,8 @@ namespace OHOS {
     bool FuzzSystemFindParameter(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (!SystemFindParameter(reinterpret_cast<const char*>(data), &handle)) {
+        std::string str(reinterpret_cast<const char*>(data), size);
+        if (!SystemFindParameter(str.c_str(), &handle)) {
             result = true;
         }
         return result;

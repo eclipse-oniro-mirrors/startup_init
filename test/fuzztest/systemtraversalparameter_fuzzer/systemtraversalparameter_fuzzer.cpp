@@ -15,6 +15,7 @@
 
 #include "systemtraversalparameter_fuzzer.h"
 
+#include <string>
 #include "fuzz_utils.h"
 #include "init.h"
 #include "securec.h"
@@ -42,12 +43,16 @@ namespace OHOS {
         if (size <= 0) {
             return false;
         }
+        if (size > PARAM_CONST_VALUE_LEN_MAX + PARAM_NAME_LEN_MAX) {
+            return true;
+        }
         cookie->data = static_cast<char *>(malloc(size));
         if (cookie->data == nullptr) {
             return true;
         }
         cookie->size = size;
-        int ret = memcpy_s(cookie->data, size, data, size);
+        std::string str(reinterpret_cast<const char*>(data), size - 1);
+        int ret = memcpy_s(cookie->data, size, str.c_str(), size);
         if (ret != EOK) {
             return false;
         }
