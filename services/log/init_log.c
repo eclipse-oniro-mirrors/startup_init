@@ -127,8 +127,6 @@ INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, 
     if (vsnprintf_s(tmpFmt, sizeof(tmpFmt), sizeof(tmpFmt) - 1, fmt, vargs) == -1) {
         tmpFmt[sizeof(tmpFmt) - 2] = '\n'; // 2 add \n to tail
         tmpFmt[sizeof(tmpFmt) - 1] = '\0';
-        PrintLog(logLevel, domain, tag, tmpFmt);
-        return;
     }
     PrintLog(logLevel, domain, tag, tmpFmt);
 }
