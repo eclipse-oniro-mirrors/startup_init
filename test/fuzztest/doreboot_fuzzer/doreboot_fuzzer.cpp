@@ -14,13 +14,15 @@
  */
 
 #include "doreboot_fuzzer.h"
+#include<string>
 #include "init_reboot.h"
 
 namespace OHOS {
     bool FuzzDoReboot(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (!DoReboot(reinterpret_cast<const char*>(data))) {
+        std::string str(reinterpret_cast<const char*>(data), size);
+        if (!DoReboot(str.c_str())) {
             result = true;
         }
         return result;

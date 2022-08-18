@@ -14,13 +14,15 @@
  */
 
 #include "systemsetparameter_fuzzer.h"
+#include <string>
 #include "init_param.h"
 
 namespace OHOS {
     bool FuzzSystemSetParameter(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (!SystemSetParameter(reinterpret_cast<const char*>(data), reinterpret_cast<const char*>(data))) {
+        std::string str(reinterpret_cast<const char*>(data), size);
+        if (!SystemSetParameter(str.c_str(), str.c_str())) {
             result = true;
         }
         return result;
