@@ -25,6 +25,9 @@
 #else
 typedef struct ParamContextsList_ {
 } ParamContextsList;
+
+typedef struct SrcInfo {
+} SrcInfo;
 #endif
 
 #include "beget_ext.h"
@@ -97,7 +100,7 @@ typedef struct {
 } ParamSecurityOps;
 
 typedef int (*RegisterSecurityOpsPtr)(ParamSecurityOps *ops, int isInit);
-typedef int (*SelinuxSetParamCheck)(const char *paraName, const char *destContext, int32_t sockFd, struct ucred *uc);
+typedef int (*SelinuxSetParamCheck)(const char *paraName, const char *destContext, const SrcInfo *info);
 typedef struct SelinuxSpace_ {
     void *selinuxHandle;
     void (*setSelinuxLogCallback)(void);

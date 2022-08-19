@@ -216,8 +216,7 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
     SelinuxSpace *selinuxSpace = &GetParamWorkSpace()->selinuxSpace;
     int ret = DAC_RESULT_FORBIDED;
     // check
-    SrcInfo info = { 0 };
-    struct ucred uc;
+    SrcInfo info;
     info.uc.pid = srcLabel->cred.pid;
     info.uc.uid = srcLabel->cred.uid;
     info.uc.gid = srcLabel->cred.gid;
@@ -234,7 +233,8 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
 #endif
     }
     if (ret != 0) {
-        PARAM_LOGW("Selinux check name %s pid %d uid %d %d result %d", name, info.uc.pid, info.uc.uid, info.uc.gid, ret);
+        PARAM_LOGW("Selinux check name %s pid %d uid %d %d result %d", name, info.uc.pid,
+            info.uc.uid, info.uc.gid, ret);
         ret = DAC_RESULT_FORBIDED;
     } else {
         ret = DAC_RESULT_PERMISSION;
