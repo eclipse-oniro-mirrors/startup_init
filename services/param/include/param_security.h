@@ -66,6 +66,7 @@ typedef enum {
 } ParamSecurityType;
 
 typedef struct {
+    int32_t sockFd;
     UserCred cred;
     uint32_t flags[PARAM_SECURITY_MAX];
 } ParamSecurityLabel;
@@ -96,11 +97,11 @@ typedef struct {
 } ParamSecurityOps;
 
 typedef int (*RegisterSecurityOpsPtr)(ParamSecurityOps *ops, int isInit);
-typedef int (*SelinuxSetParamCheck)(const char *paraName, const char *destContext, struct ucred *uc);
+typedef int (*SelinuxSetParamCheck)(const char *paraName, const char *destContext, int32_t sockFd, struct ucred *uc);
 typedef struct SelinuxSpace_ {
     void *selinuxHandle;
     void (*setSelinuxLogCallback)(void);
-    int (*setParamCheck)(const char *paraName, const char *destContext, struct ucred *uc);
+    int (*setParamCheck)(const char *paraName, const char *destContext, const SrcInfo *info);
     const char *(*getParamLabel)(const char *paraName);
     int (*initParamSelinux)(void);
     int (*readParamCheck)(const char *paraName);
