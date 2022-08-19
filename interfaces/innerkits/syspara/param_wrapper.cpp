@@ -29,6 +29,7 @@
 
 namespace OHOS {
 namespace system {
+static constexpr int MAX_VALUE_LEN = 128;
 bool SetParameter(const std::string& key, const std::string& value)
 {
     int ret = SystemSetParameter(key.c_str(), value.c_str());
