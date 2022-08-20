@@ -168,6 +168,7 @@ static int HandleParamSet(const ParamTaskPtr worker, const ParamMessage *msg)
         PARAM_LOGE("Failed to get opt %d", errno);
         return SendResponseMsg(worker, msg, -1);
     }
+    srcLabel.sockFd = LE_GetSocketFd(worker);
     srcLabel.cred.uid = cr.uid;
     srcLabel.cred.pid = cr.pid;
     srcLabel.cred.gid = cr.gid;

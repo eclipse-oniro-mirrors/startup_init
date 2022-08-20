@@ -216,14 +216,15 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
     SelinuxSpace *selinuxSpace = &GetParamWorkSpace()->selinuxSpace;
     int ret = DAC_RESULT_FORBIDED;
     // check
-    struct ucred uc;
-    uc.pid = srcLabel->cred.pid;
-    uc.uid = srcLabel->cred.uid;
-    uc.gid = srcLabel->cred.gid;
+    SrcInfo info;
+    info.uc.pid = srcLabel->cred.pid;
+    info.uc.uid = srcLabel->cred.uid;
+    info.uc.gid = srcLabel->cred.gid;
+    info.sockFd = srcLabel->sockFd;
     if (mode == DAC_WRITE) {
         PARAM_CHECK(selinuxSpace->setParamCheck != NULL, return ret, "Invalid setParamCheck");
         const char *context = GetSelinuxContent(name);
-        ret = selinuxSpace->setParamCheck(name, context, &uc);
+        ret = selinuxSpace->setParamCheck(name, context, &info);
     } else {
 #ifndef STARTUP_INIT_TEST
         ret = SelinuxReadParamCheck(name);
@@ -232,7 +233,8 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
 #endif
     }
     if (ret != 0) {
-        PARAM_LOGW("Selinux check name %s pid %d uid %d %d result %d", name, uc.pid, uc.uid, uc.gid, ret);
+        PARAM_LOGW("Selinux check name %s pid %d uid %d %d result %d", name, info.uc.pid,
+            info.uc.uid, info.uc.gid, ret);
         ret = DAC_RESULT_FORBIDED;
     } else {
         ret = DAC_RESULT_PERMISSION;
