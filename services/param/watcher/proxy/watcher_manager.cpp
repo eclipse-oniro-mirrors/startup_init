@@ -316,6 +316,7 @@ void WatcherManager::OnStart()
     if (!res) {
         WATCHER_LOGE("WatcherManager Publish failed");
     }
+    SystemSetParameter("bootevent.param_watcher.started", "true");
     if (deathRecipient_ == nullptr) {
         deathRecipient_ = new DeathRecipient(this);
     }

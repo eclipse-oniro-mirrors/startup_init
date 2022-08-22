@@ -22,10 +22,16 @@
 #include "init_service.h"
 #include "bootstage.h"
 #include "securec.h"
+#include "init_utils.h"
 
 #define BOOT_EVENT_PARA_PREFIX      "bootevent."
 #define BOOT_EVENT_PARA_PREFIX_LEN  10
 #define BOOT_EVENT_TIMESTAMP_MAX_LEN  50
+#define BOOT_EVENT_FILEPATH_MAX_LEN  60
+#define SECTOMSEC  1000000
+#define SECTONSEC  1000000000
+#define MSECTONSEC  1000
+#define BOOTEVENT_OUTPUT_PATH "/data/service/el0/startup/init/"
 static int g_bootEventNum = 0;
 
 enum {
@@ -172,11 +178,71 @@ static int DoBootEventCmd(int id, const char *name, int argc, const char **argv)
     return 0;
 }
 
+static int AddItemToJson(cJSON *root, const char *name, double startime, int tid, double durTime)
+{
+    cJSON *obj = cJSON_CreateObject(); // release obj at traverse done
+    INIT_CHECK_RETURN_VALUE(obj != NULL, -1);
+    cJSON_AddStringToObject(obj, "name", name);
+    cJSON_AddNumberToObject(obj, "ts", startime);
+    cJSON_AddStringToObject(obj, "ph", "X");
+    cJSON_AddNumberToObject(obj, "pid", 0);
+    cJSON_AddNumberToObject(obj, "tid", tid);
+    cJSON_AddNumberToObject(obj, "dur", durTime);
+    cJSON_AddItemToArray(root, obj);
+    return 0;
+}
+
+static int BooteventTraversal(ListNode *node, void *root)
+{
+    static int tid = 1; // 1 bootevent start num
+    BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)node;
+    double forkTime = item->timestamp[BOOTEVENT_FORK].tv_sec * SECTOMSEC +
+        (double)item->timestamp[BOOTEVENT_FORK].tv_nsec / MSECTONSEC;
+    double readyTime = item->timestamp[BOOTEVENT_READY].tv_sec * SECTOMSEC +
+        (double)item->timestamp[BOOTEVENT_READY].tv_nsec / MSECTONSEC;
+    double durTime = readyTime - forkTime;
+    if (tid == 1) {
+        // set time datum is 0
+        INIT_CHECK_RETURN_VALUE(AddItemToJson((cJSON *)root, item->paramName, 0,
+            1, 0) == 0, -1);
+    }
+    INIT_CHECK_RETURN_VALUE(AddItemToJson((cJSON *)root, item->paramName, forkTime,
+        tid++, durTime > 0 ? durTime : 0) == 0, -1);
+    return 0;
+}
+
+static int SaveServiceBootEvent(int id, const char *name, int argc, const char **argv)
+{
+    time_t nowTime = time(NULL);
+    INIT_CHECK_RETURN_VALUE(nowTime > 0, -1);
+    struct tm *p = localtime(&nowTime);
+    INIT_CHECK_RETURN_VALUE(p != NULL, -1);
+    char booteventFileName[BOOT_EVENT_FILEPATH_MAX_LEN] = "";
+    INIT_CHECK_RETURN_VALUE(snprintf(booteventFileName, BOOT_EVENT_FILEPATH_MAX_LEN,
+        BOOTEVENT_OUTPUT_PATH"%d%d%d-%d%d.bootevent",
+        1900 + p->tm_year, p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min) >= 0, -1); // 1900 is start year
+    CheckAndCreatFile(booteventFileName, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    FILE *tmpFile = fopen(booteventFileName, "wr");
+    INIT_CHECK_RETURN_VALUE(tmpFile != NULL, -1);
+    cJSON *root = cJSON_CreateArray();
+    INIT_CHECK_RETURN_VALUE(root != NULL, -1);
+    OH_ListTraversal(&bootEventList, (void *)root, BooteventTraversal, 0);
+    char *buff = cJSON_Print(root);
+    INIT_CHECK_RETURN_VALUE(buff != NULL, -1);
+    INIT_CHECK_RETURN_VALUE(fprintf(tmpFile, "%s\n", buff) >= 0, -1);
+    free(buff);
+    cJSON_Delete(root);
+    (void)fflush(tmpFile);
+    (void)fclose(tmpFile);
+    return 0;
+}
+
 static int32_t g_executorId = -1;
 static int ParamSetBootEventHook(const HOOK_INFO *hookInfo, void *cookie)
 {
     if (g_executorId == -1) {
         g_executorId = AddCmdExecutor("bootevent", DoBootEventCmd);
+        AddCmdExecutor("save.bootevent", SaveServiceBootEvent);
     }
     return 0;
 }
@@ -194,10 +260,12 @@ static void DumpServiceBootEvent(SERVICE_INFO_CTX *serviceCtx)
         BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)serviceExtData->data;
         char booteventForkTimeStamp[BOOT_EVENT_TIMESTAMP_MAX_LEN] = "";
         char booteventReadyTimeStamp[BOOT_EVENT_TIMESTAMP_MAX_LEN] = "";
-        INIT_CHECK_ONLY_RETURN(sprintf_s(booteventForkTimeStamp, BOOT_EVENT_TIMESTAMP_MAX_LEN, "%ld.%ld",
-            (long)item->timestamp[BOOTEVENT_FORK].tv_sec, (long)item->timestamp[BOOTEVENT_FORK].tv_nsec) >= 0);
-        INIT_CHECK_ONLY_RETURN(sprintf_s(booteventReadyTimeStamp, BOOT_EVENT_TIMESTAMP_MAX_LEN, "%ld.%ld",
-            (long)item->timestamp[BOOTEVENT_READY].tv_sec, (long)item->timestamp[BOOTEVENT_READY].tv_nsec) >= 0);
+        INIT_CHECK_ONLY_RETURN(sprintf_s(booteventForkTimeStamp, BOOT_EVENT_TIMESTAMP_MAX_LEN, "%f",
+            item->timestamp[BOOTEVENT_FORK].tv_sec +
+            (double)item->timestamp[BOOTEVENT_FORK].tv_nsec / SECTONSEC) >= 0);
+        INIT_CHECK_ONLY_RETURN(sprintf_s(booteventReadyTimeStamp, BOOT_EVENT_TIMESTAMP_MAX_LEN, "%f",
+            (long)item->timestamp[BOOTEVENT_READY].tv_sec +
+            (double)item->timestamp[BOOTEVENT_READY].tv_nsec / SECTONSEC) >= 0);
         printf("\t%-20.20s\t%-50s\t%-20.20s\t%-20.20s\n", serviceCtx->serviceName, item->paramName,
             booteventForkTimeStamp, booteventReadyTimeStamp);
     }

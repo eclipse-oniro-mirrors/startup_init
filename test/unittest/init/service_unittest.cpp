@@ -261,35 +261,56 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerGetService, TestSize.Level1)
     ret = ParseOneService(serviceItem, service);
     EXPECT_NE(ret, 0);
 }
+
+/**
+* @tc.name: TestServiceBootEventHook
+* @tc.desc: test bootevent module exec correct
+* @tc.type: FUNC
+* @tc.require: issueI5NTX4
+* @tc.author:
+*/
 HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
 {
-    Service *service = nullptr;
-    const char *jsonStr = "{\"services\":{\"name\":\"test_service8\",\"path\":[\"/data/init_ut/test_service\"],"
-        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
-        "\"bootevents\" : [\"bootevent1\", \"bootevent2\"],"
-        "\"gid\":[\"system\"], \"critical\":[1,2]}}";
-    cJSON* jobItem = cJSON_Parse(jsonStr);
-    ASSERT_NE(nullptr, jobItem);
-    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
-    ASSERT_NE(nullptr, serviceItem);
-    service = AddService("test_service2");
-    ASSERT_NE(nullptr, service);
-    int ret = ParseOneService(serviceItem, service);
-    if (ret < 0) {
-        return;
-    }
+    const char *serviceStr = "{"
+	    "\"services\": [{"
+            "\"name\" : \"test-service\","
+            "\"path\" : [\"/dev/test_service\"],"
+            "\"start-mode\" : \"condition\","
+            "\"writepid\":[\"/dev/test_service\"],"
+            "\"bootevents\" : \"bootevent2\""
+        "},{"
+            "\"name\" : \"test-service\","
+            "\"path\" : [\"/dev/test_service\"],"
+            "\"start-mode\" : \"condition\","
+            "\"writepid\":[\"/dev/test_service\"],"
+            "\"bootevents\" : \"bootevent.bootevent2\""
+        "},{"
+            "\"name\" : \"test-service2\","
+            "\"path\" : [\"/dev/test_service\"],"
+            "\"console\":1,"
+            "\"start-mode\" : \"boot\","
+            "\"writepid\":[\"/dev/test_service\"],"
+            "\"bootevents\" : [\"bootevent.bootevent1\", \"bootevent.bootevent2\"]"
+        "}]"
+    "}";
 
-    SERVICE_PARSE_CTX context;
-    context.serviceName = "test_service2";
-    context.serviceNode = serviceItem;
-    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_PARSE, (void *)(&context), NULL);
-    ASSERT_NE(GetServiceExtData("test_service2", HOOK_ID_BOOTEVENT), nullptr);
     SERVICE_INFO_CTX serviceInfoContext;
-    serviceInfoContext.serviceName = "test_service2";
-    serviceInfoContext.reserved = nullptr;
+    serviceInfoContext.serviceName = "test-service2";
+    serviceInfoContext.reserved = "bootevent";
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_DUMP, (void *)(&serviceInfoContext), NULL);
+
+    cJSON *fileRoot = cJSON_Parse(serviceStr);
+    ASSERT_NE(nullptr, fileRoot);
+    ParseAllServices(fileRoot);
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), NULL);
+    SystemWriteParam("bootevent.bootevent1", "true");
+    SystemWriteParam("bootevent.bootevent1", "true");
+    SystemWriteParam("bootevent.bootevent2", "true");
+    SystemSetParameter("ohos.servicectrl.save.bootevent", "save.bootevent");
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_DUMP, (void *)(&serviceInfoContext), NULL);
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)(&serviceInfoContext), NULL);
+    cJSON_Delete(fileRoot);
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)

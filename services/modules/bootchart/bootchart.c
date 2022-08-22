@@ -29,6 +29,7 @@
 #include "securec.h"
 
 #define NANO_PRE_JIFFY 10000000
+#define BOOTCHART_OUTPUT_PATH "/data/service/el0/startup/init/"
 
 static BootchartCtrl *g_bootchartCtrl = NULL;
 
@@ -80,10 +81,10 @@ static void BootchartLogHeader(void)
     uint32_t len = sizeof(release);
     (void)SystemReadParam("const.ohos.releasetype", release, &len);
     char *cmdLine = ReadFileToBuffer("/proc/cmdline", g_bootchartCtrl->buffer, g_bootchartCtrl->bufferSize);
-    PLUGIN_CHECK(cmdLine != NULL, return, "Failed to open file /data/bootchart/header");
+    PLUGIN_CHECK(cmdLine != NULL, return, "Failed to open file "BOOTCHART_OUTPUT_PATH"header");
 
-    FILE *file = fopen("/data/bootchart/header", "we");
-    PLUGIN_CHECK(file != NULL, return, "Failed to open file /data/bootchart/header");
+    FILE *file = fopen(BOOTCHART_OUTPUT_PATH"header", "we");
+    PLUGIN_CHECK(file != NULL, return, "Failed to open file "BOOTCHART_OUTPUT_PATH"header");
 
     (void)fprintf(file, "version = openharmony init\n");
     (void)fprintf(file, "title = Boot chart for openharmony (%s)\n", date);
@@ -162,9 +163,9 @@ static void bootchartLogProcess(FILE *log)
 static void *BootchartThreadMain(void *data)
 {
     PLUGIN_LOGI("bootcharting start");
-    FILE *statFile = fopen("/data/bootchart/proc_stat.log", "w");
-    FILE *procFile = fopen("/data/bootchart/proc_ps.log", "w");
-    FILE *diskFile = fopen("/data/bootchart/proc_diskstats.log", "w");
+    FILE *statFile = fopen(BOOTCHART_OUTPUT_PATH"proc_stat.log", "w");
+    FILE *procFile = fopen(BOOTCHART_OUTPUT_PATH"proc_ps.log", "w");
+    FILE *diskFile = fopen(BOOTCHART_OUTPUT_PATH"proc_diskstats.log", "w");
     do {
         if (statFile == NULL || procFile == NULL || diskFile == NULL) {
             PLUGIN_LOGE("Failed to open file");
@@ -219,7 +220,6 @@ static void BootchartDestory(void)
 
 static int DoBootchartStart(void)
 {
-    mkdir("/data/bootchart", S_IRWXU | S_IRWXG | S_IRWXO);
     if (g_bootchartCtrl != NULL) {
         PLUGIN_LOGI("bootcharting has been start");
         return 0;
