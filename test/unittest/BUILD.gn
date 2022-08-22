@@ -264,6 +264,13 @@ ohos_unittest("init_unittest") {
     ]
   }
 
+  if (defined(build_seccomp) && build_seccomp) {
+    sources += [ "seccomp/seccomp_unittest.cpp" ]
+    include_dirs +=
+        [ "//base/startup/init/interfaces/innerkits/seccomp/include" ]
+    external_deps += [ "init:seccomp" ]
+  }
+
   if (defined(build_selinux) && build_selinux) {
     sources += [ "param/selinux_unittest.cpp" ]
     include_dirs += [

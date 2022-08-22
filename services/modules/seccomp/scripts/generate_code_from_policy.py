@@ -452,7 +452,7 @@ class GenBpfPolicy:
         self.gen_range_list(syscall_nr_list)
         range_size = (int)((len(self.syscall_nr_range) - 1) / 127) + 1
         alone_range_cnt = self.count_alone_range()
-        if alone_range_cnt >= len(self.syscall_nr_range) / 2:
+        if alone_range_cnt == len(self.syscall_nr_range):
             #Scattered distribution
             self.gen_transverse_bpf_policy()
             return

@@ -31,7 +31,6 @@
 #include <asm/unistd.h>
 #include <syscall.h>
 #include <climits>
-#include <linux/openat2.h>
 
 #include "seccomp_policy.h"
 
@@ -137,15 +136,12 @@ public:
     }
 
 #if defined __aarch64__
-    static bool CheckOpenat2()
+    static bool CheckGetMempolicy()
     {
-        struct open_how how = {};
-        int fd = syscall(__NR_openat2, AT_FDCWD, ".", &how);
-        if (fd == -1) {
+        int ret = syscall(__NR_get_mempolicy, NULL, NULL, 0, NULL, 0);
+        if (ret < 0) {
             return false;
         }
-
-        close(fd);
         return true;
     }
 
@@ -193,7 +189,7 @@ public:
     void TestSystemSycall()
     {
         // system blocklist
-        int ret = CheckSyscall(SYSTEM, CheckOpenat2, false);
+        int ret = CheckSyscall(SYSTEM, CheckGetMempolicy, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
@@ -274,13 +270,13 @@ public:
 #endif
 };
 
+/**
+ * @tc.name: TestSystemSycall
+ * @tc.desc: Verify the system seccomp policy.
+ * @tc.type: FUNC
+ * @tc.require: issueI5IUWJ
+ */
 HWTEST_F(SeccompUnitTest, TestSystemSycall, TestSize.Level1)
-{
-    SeccompUnitTest test;
-    test.TestSystemSycall();
-}
-
-HWTEST_F(SeccompUnitTest, TestSetUidGidFilter, TestSize.Level1)
 {
     SeccompUnitTest test;
     test.TestSystemSycall();
