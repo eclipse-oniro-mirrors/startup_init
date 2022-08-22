@@ -130,7 +130,7 @@ fi
 echo "Filter out don\'t cared dir"
 lcov --remove init_ut_tmp.info "*foundation*" "*init/adapter/init_adapter.c*" "*third_party*" \
     "*device.c*" "*prebuilts*" "*test/unittest/*"  "*utils/native/*" "*utils/system/*" \
-    "*init.c*" "*init_signal_handler.c*" "*fstab_mount.c*" "*ueventd.c*" \
+    "*init.c*" "*init_signal_handler.c*" "*ueventd.c*" \
     "*ueventd_device_handler.c*" "*ueventd_firmware_handler.c*" "*ueventd_socket.c*" -o ${ohos_init}/init_ut.info
 
 genhtml -o ${HOME}/init_coverage init_ut.info

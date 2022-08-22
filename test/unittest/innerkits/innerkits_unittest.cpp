@@ -136,4 +136,15 @@ HWTEST_F(InnerkitsUnitTest, GetBlockDevicePath_unittest, TestSize.Level1)
     EXPECT_EQ(GetBlockDevicePath("/misc", devicePath, MAX_BUFFER_LEN), 0);
     EXPECT_EQ(GetBlockDevicePath("/invalid", devicePath, MAX_BUFFER_LEN), -1);
 }
+
+HWTEST_F(InnerkitsUnitTest, DoFormat_unittest, TestSize.Level1)
+{
+    EXPECT_NE(DoFormat("/testpath", "ext4"), 1);
+    EXPECT_NE(DoFormat("/testpath", "f2fs"), 1);
+}
+
+HWTEST_F(InnerkitsUnitTest, MountAllWithFstabFile_unittest, TestSize.Level1)
+{
+    EXPECT_NE(MountAllWithFstabFile("/etc/fstab.required", 0), 1);
+}
 } // namespace init_ut
