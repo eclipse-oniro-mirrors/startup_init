@@ -111,3 +111,4 @@ motion_host:x:3065:
 uhdf_driver:x:3066:
 memmgr:x:1111:
 ispserver:x:3821:
+appspawn:x:4000:
