@@ -16,7 +16,7 @@
 #include <iostream>
 
 #include "begetctl.h"
-#include "partitionslot_manager.h"
+#include "v1_0/ipartition_slot.h"
 
 using namespace OHOS::HDI::Partitionslot::V1_0;
 const int32_t PARTITION_ARGC = 2;
@@ -24,8 +24,13 @@ const int32_t PARTITION_ARGC = 2;
 static int GetSlot(BShellHandle handle, int32_t argc, char *argv[])
 {
     std::cout << "Command: partitionslot getslot" << std::endl;
+    sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
     int bootSlots = 0;
-    int currentSlot = PartitionSlotManager::GetInstance()->GetCurrentSlot(bootSlots);
+    int currentSlot = 0;
+    if (partitionslot == nullptr) {
+        return 0;
+    }
+    partitionslot->GetCurrentSlot(currentSlot, bootSlots);
     std::cout << "The number of slots: " << bootSlots << "," <<  "current slot: " << currentSlot << std::endl;
     return 0;
 }
@@ -39,7 +44,11 @@ static int GetSuffix(BShellHandle handle, int32_t argc, char *argv[])
     std::cout << "Command: partitionslot getsuffix" << std::endl;
     int slot = atoi(argv[1]);
     std::string suffix = "";
-    PartitionSlotManager::GetInstance()->GetSlotSuffix(slot, suffix);
+    sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
+    if (partitionslot == nullptr) {
+        return 0;
+    }
+    partitionslot->GetSlotSuffix(slot, suffix);
     std::cout << "The slot " << slot << " matches with suffix: " << suffix << std::endl;
     return 0;
 }
@@ -52,7 +61,11 @@ static int SetActiveSlot(BShellHandle handle, int32_t argc, char *argv[])
     }
     std::cout << "Command: partitionslot setactive" << std::endl;
     int slot = atoi(argv[1]);
-    PartitionSlotManager::GetInstance()->SetActiveSlot(slot);
+    sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
+    if (partitionslot == nullptr) {
+        return 0;
+    }
+    partitionslot->SetActiveSlot(slot);
     std::cout << "Set active slot: " << slot << std::endl;
     return 0;
 }
@@ -65,7 +78,11 @@ static int SetUnbootSlot(BShellHandle handle, int32_t argc, char *argv[])
     }
     std::cout << "Command: partitionslot setunboot" << std::endl;
     int slot = atoi(argv[1]);
-    PartitionSlotManager::GetInstance()->SetSlotUnbootable(slot);
+    sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
+    if (partitionslot == nullptr) {
+        return 0;
+    }
+    partitionslot->SetSlotUnbootable(slot);
     std::cout << "Set unboot slot: " << slot << std::endl;
     return 0;
 }
