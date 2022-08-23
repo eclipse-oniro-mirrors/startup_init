@@ -205,9 +205,16 @@ static void PrepareInnerKitsCfg()
         "aa aa\n"
         "aa aa aa\n"
         "aa aa aa aa\n";
+    const char *fstabRequired = "# fstab file.\n"
+        "#<src> <mnt_point> <type> <mnt_flags and options> <fs_mgr_flags>\n"
+        "/dev/block/platform/fe310000.sdhci/by-name/testsystem /usr ext4 ro,barrier=1 wait,required\n"
+        "/dev/block/platform/fe310000.sdhci/by-name/testvendor /vendor ext4 ro,barrier=1 wait,required\n"
+        "/dev/block/platform/fe310000.sdhci/by-name/testuserdata1 /data f2fs noatime,nosuid,nodev wait,check,quota\n"
+        "/dev/block/platform/fe310000.sdhci/by-name/testuserdata2 /data ext4 noatime,fscrypt=xxx wait,check,quota\n"
+        "/dev/block/platform/fe310000.sdhci/by-name/testmisc /misc none none wait,required";
     mkdir("/data/init_ut/mount_unitest/", S_IRWXU | S_IRWXG | S_IRWXO);
     CreateTestFile("/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable", innerKitsCfg);
-    CreateTestFile("/etc/fstab.required", "test");
+    CreateTestFile("/etc/fstab.required", fstabRequired);
 }
 static void PrepareGroupTestCfg()
 {
