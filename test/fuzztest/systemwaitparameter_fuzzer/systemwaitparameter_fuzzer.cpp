@@ -14,13 +14,15 @@
  */
 
 #include "systemwaitparameter_fuzzer.h"
+#include <string>
 #include "init_param.h"
 
 namespace OHOS {
     bool FuzzSystemWaitParameter(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (!SystemWaitParameter(reinterpret_cast<const char*>(data), reinterpret_cast<const char*>(data), 1)) {
+        std::string str(reinterpret_cast<const char*>(data), size);
+        if (!SystemWaitParameter(str.c_str(), str.c_str(), 1)) {
             result = true;
         }
         return result;

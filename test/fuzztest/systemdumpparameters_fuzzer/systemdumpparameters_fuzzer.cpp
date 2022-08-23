@@ -14,6 +14,7 @@
  */
 
 #include "systemdumpparameters_fuzzer.h"
+#include <string>
 #include "init_param.h"
 #include "fuzz_utils.h"
 
@@ -21,7 +22,8 @@ namespace OHOS {
     bool FuzzSystemDumpParameters(const uint8_t* data, size_t size)
     {
         CloseStdout();
-        int verbose = atoi(reinterpret_cast<char *>(const_cast<uint8_t *>(data)));
+        std::string str(reinterpret_cast<const char*>(data), size);
+        int verbose = atoi(str.c_str());
         SystemDumpParameters(verbose);
         return true;
     }

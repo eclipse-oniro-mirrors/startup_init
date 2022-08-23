@@ -14,13 +14,19 @@
  */
 
 #include "getcontrolfile_fuzzer.h"
+#include <string>
+#include <climits>
 #include "init_file.h"
 
 namespace OHOS {
     bool FuzzGetControlFile(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (!GetControlFile(reinterpret_cast<const char*>(data))) {
+        if (size > PATH_MAX) {
+            return true;
+        }
+        std::string str(reinterpret_cast<const char*>(data), size);
+        if (!GetControlFile(str.c_str())) {
             result = true;
         }
         return result;
