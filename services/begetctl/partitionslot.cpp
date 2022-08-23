@@ -19,7 +19,7 @@
 #include "v1_0/ipartition_slot.h"
 
 using namespace OHOS::HDI::Partitionslot::V1_0;
-const int32_t PARTITION_ARGC = 2;
+static const int32_t PARTITION_ARGC = 2;
 
 static int GetSlot(BShellHandle handle, int32_t argc, char *argv[])
 {

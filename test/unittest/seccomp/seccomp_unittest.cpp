@@ -57,7 +57,7 @@ public:
     {
         pid_t pid = fork();
         if (pid == 0) {
-            if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
+            if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) {
                 std::cout << "PR_SET_NO_NEW_PRIVS set fail " << std::endl;
                 exit(EXIT_FAILURE);
             }
@@ -115,7 +115,7 @@ public:
             return -1;
         }
 
-        if (flag) {
+        if (flag != 0) {
             std::cout << "Child process time out" << std::endl;
         }
 
