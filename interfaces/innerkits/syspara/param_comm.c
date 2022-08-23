@@ -42,7 +42,7 @@ INIT_LOCAL_API int IsValidParamValue(const char *value, uint32_t len)
 
 INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, uint32_t len)
 {
-    if ((key == NULL) || (value == NULL)) {
+    if ((key == NULL) || (value == NULL) || (len > (uint32_t)PARAM_BUFFER_MAX)) {
         return EC_INVALID;
     }
     uint32_t size = len;
