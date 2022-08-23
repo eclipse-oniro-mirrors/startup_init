@@ -67,7 +67,7 @@ def fix_para_file(options):
 
     with open(options.output, 'w') as f:
         for key in contents:
-            f.write(key + "=" + contents[key] + '\n')
+            f.write("".join([key, "=", contents[key], '\n']))
 
 def main(args):
     options = parse_args(args)

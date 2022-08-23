@@ -69,50 +69,48 @@ def GetParamFromCCode(codeName):
 
 def WriteMapToCode(codeName, dict):
     try:
-        f = open(codeName, 'w')
-        # start with 0
-        f.seek(0)
-        # write file header
-        f.write('#ifndef PARAM_LITE_DEF_CFG_' + os.linesep)
-        f.write('#define PARAM_LITE_DEF_CFG_' + os.linesep)
-        f.write('#include <stdint.h>' + os.linesep + os.linesep)
-        f.write('#ifdef __cplusplus' + os.linesep)
-        f.write('#if __cplusplus' + os.linesep)
-        f.write('extern "C" {' + os.linesep)
-        f.write('#endif' + os.linesep)
-        f.write('#endif' + os.linesep + os.linesep)
+        with open(codeName, "w") as f:
+            # start with 0
+            f.seek(0)
+            # write file header
+            f.write('#ifndef PARAM_LITE_DEF_CFG_' + os.linesep)
+            f.write('#define PARAM_LITE_DEF_CFG_' + os.linesep)
+            f.write('#include <stdint.h>' + os.linesep + os.linesep)
+            f.write('#ifdef __cplusplus' + os.linesep)
+            f.write('#if __cplusplus' + os.linesep)
+            f.write('extern "C" {' + os.linesep)
+            f.write('#endif' + os.linesep)
+            f.write('#endif' + os.linesep + os.linesep)
 
-        #define struct
-        f.write('typedef struct Node_ {' + os.linesep)
-        f.write('    const char *name;' + os.linesep)
-        f.write('    const char *value;' + os.linesep)
-        f.write('} Node;' + os.linesep  + os.linesep)
-        f.write('#define PARAM_MAP(name, value) {(const char *)#name, (const char *)#value},')
-        f.write(os.linesep  + os.linesep)
-        # write data
-        f.write('static Node g_paramDefCfgNodes[] = {' + os.linesep)
-        for name, value in  dict.items():
-            if (value.startswith("\"")):
-                str = "    PARAM_MAP({0}, {1})".format(name, value)
-                f.write(str + os.linesep)
-            else:
-                str = "    PARAM_MAP({0}, \"{1}\")".format(name, value)
-                f.write(str + os.linesep)
-        f.write('};' + os.linesep + os.linesep)
+            #define struct
+            f.write('typedef struct Node_ {' + os.linesep)
+            f.write('    const char *name;' + os.linesep)
+            f.write('    const char *value;' + os.linesep)
+            f.write('} Node;' + os.linesep  + os.linesep)
+            f.write('#define PARAM_MAP(name, value) {(const char *)#name, (const char *)#value},')
+            f.write(os.linesep  + os.linesep)
+            # write data
+            f.write('static Node g_paramDefCfgNodes[] = {' + os.linesep)
+            for name, value in  dict.items():
+                if (value.startswith("\"")):
+                    str = "    PARAM_MAP({0}, {1})".format(name, value)
+                    f.write(str + os.linesep)
+                else:
+                    str = "    PARAM_MAP({0}, \"{1}\")".format(name, value)
+                    f.write(str + os.linesep)
+            f.write('};' + os.linesep + os.linesep)
 
-        #end
-        f.write('#ifdef __cplusplus' + os.linesep)
-        f.write('#if __cplusplus' + os.linesep)
-        f.write('}' + os.linesep)
-        f.write('#endif' + os.linesep)
-        f.write('#endif' + os.linesep)
-        f.write('#endif // PARAM_LITE_DEF_CFG_' + os.linesep)
-        f.write(os.linesep)
-        f.truncate()
+            #end
+            f.write('#ifdef __cplusplus' + os.linesep)
+            f.write('#if __cplusplus' + os.linesep)
+            f.write('}' + os.linesep)
+            f.write('#endif' + os.linesep)
+            f.write('#endif' + os.linesep)
+            f.write('#endif // PARAM_LITE_DEF_CFG_' + os.linesep)
+            f.write(os.linesep)
+            f.truncate()
     except IOError:
         print("Error: open or write file %s fail"%{codeName})
-    else:
-        f.close()
     return 0
 
 def AddToCodeDict(codeDict, cfgDict, high = True):
@@ -142,14 +140,14 @@ def main():
     out_dir = args.dest_dir
     if not os.path.exists(out_dir):
         os.makedirs(out_dir, exist_ok=True)
-    print("out_dir " + out_dir)
+    print("out_dir {}".format(out_dir))
 
     for source in args.source:
-        print("source " + source)
+        print("source {}".format(out_dir))
         assert os.path.exists(source)
 
         srcDict = GetParamFromCfg(source)
-        dst = out_dir + "param_cfg.h"
+        dst = "".join([out_dir, "param_cfg.h"])
 
         if os.path.exists(dst):
             dstDict = GetParamFromCCode(dst)
