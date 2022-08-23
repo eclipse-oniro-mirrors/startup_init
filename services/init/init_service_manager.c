@@ -1091,3 +1091,11 @@ void LoadAccessTokenId(void)
 {
     GetAccessToken();
 }
+
+int GetKillServiceSig(const char *name)
+{
+    if (strcmp(name, "appspawn") == 0 || strcmp(name, "nwebspawn") == 0) {
+        return SIGTERM;
+    }
+    return SIGKILL;
+}

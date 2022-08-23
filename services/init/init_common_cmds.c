@@ -219,7 +219,7 @@ static void DoReset(const struct CmdArgs *ctx)
         return;
     }
     if (service->pid > 0) {
-        if (kill(service->pid, SIGKILL) != 0) {
+        if (kill(service->pid, GetKillServiceSig(ctx->argv[0])) != 0) {
             INIT_LOGE("stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
             return;
         }
