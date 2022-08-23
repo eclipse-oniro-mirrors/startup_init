@@ -33,8 +33,9 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
         printf("dump service bootevent info \n");
         size_t serviceNameLen = strlen(argv[1]) + strlen(argv[2]) + 2; // 2 is \0 and #
         char *serviceBootevent = (char *)calloc(1, serviceNameLen);
+        BEGET_ERROR_CHECK(serviceBootevent != NULL, return 0, "failed to allocate bootevent memory");
         BEGET_ERROR_CHECK(sprintf_s(serviceBootevent, serviceNameLen, "%s#%s", argv[1], argv[2]) >= 0,
-            return 0, "dumpservice arg create failed");
+            free(serviceBootevent); return 0, "dumpservice arg create failed");
         CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, serviceBootevent);
         free(serviceBootevent);
     } else {

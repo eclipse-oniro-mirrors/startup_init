@@ -316,7 +316,10 @@ static int GetSlotInfoFromMisc(off_t offset, off_t size)
     char miscDev[MAX_BUFFER_LEN] = {0};
     BEGET_ERROR_CHECK(GetBlockDevicePath("/misc", miscDev, MAX_BUFFER_LEN) == 0,
         return -1, "Failed to get misc device");
-    int fd = open(miscDev, O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    char *realPath = GetRealPath(miscDev);
+    BEGET_ERROR_CHECK(realPath != NULL, return -1, "Failed to get misc device real path");
+    int fd = open(realPath, O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    free(realPath);
     BEGET_ERROR_CHECK(fd >= 0, return -1, "Failed to open misc device, errno %d", errno);
     BEGET_ERROR_CHECK(lseek(fd, offset, SEEK_SET) >= 0, close(fd); return -1,
         "Failed to lseek misc device fd, errno %d", errno);
