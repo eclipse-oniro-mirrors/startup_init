@@ -271,6 +271,12 @@ public:
 #endif
 };
 
+/**
+ * @tc.name: TestSystemSycall
+ * @tc.desc: Verify the system seccomp policy.
+ * @tc.type: FUNC
+ * @tc.require: I5IUWJ
+ */
 HWTEST_F(SeccompUnitTest, TestSystemSycall, TestSize.Level1)
 {
     SeccompUnitTest test;
