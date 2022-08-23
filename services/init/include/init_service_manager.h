@@ -63,6 +63,7 @@ void LoadAccessTokenId(void);
 Service *AddService(const char *name);
 void DumpServiceHookExecute(const char *name, const char *info);
 void ProcessControlFd(uint16_t type, const char *serviceCmd, const void *context);
+int GetKillServiceSig(const char *name);
 #ifdef __cplusplus
 #if __cplusplus
 }
