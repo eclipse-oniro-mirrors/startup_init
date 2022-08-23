@@ -31,8 +31,6 @@
 #include <asm/unistd.h>
 #include <syscall.h>
 #include <climits>
-#include <sys/ipc.h>
-#include <sys/shm.h>
 
 #include "seccomp_policy.h"
 
@@ -138,10 +136,10 @@ public:
     }
 
 #if defined __aarch64__
-    static bool CheckShmget()
+    static bool CheckGetMempolicy()
     {
-        int fd = shmget(1, 4096, 0666);
-        if (fd < 0) {
+        int ret = syscall(__NR_get_mempolicy, NULL, NULL, 0, NULL, 0);
+        if (ret < 0) {
             return false;
         }
 
@@ -192,7 +190,7 @@ public:
     void TestSystemSycall()
     {
         // system blocklist
-        int ret = CheckSyscall(SYSTEM, CheckShmget, false);
+        int ret = CheckSyscall(SYSTEM, CheckGetMempolicy, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
@@ -277,11 +275,5 @@ HWTEST_F(SeccompUnitTest, TestSystemSycall, TestSize.Level1)
 {
     SeccompUnitTest test;
     test.TestSystemSycall();
-}
-
-HWTEST_F(SeccompUnitTest, TestSetUidGidFilter, TestSize.Level1)
-{
-    SeccompUnitTest test;
-    test.TestSetUidGidFilter();
 }
 }
