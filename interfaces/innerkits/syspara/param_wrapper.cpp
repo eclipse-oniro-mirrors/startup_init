@@ -163,7 +163,10 @@ std::string GetDeviceType(void)
         {"fitnessWatch", "liteWearable"},
     };
     static const char *productType = nullptr;
-    const char *type = GetProperty("const.build.characteristics", &productType);
+    const char *type = GetProperty("const.build.devicetype", &productType);
+    if (type == NULL) {
+        type = GetProperty("const.build.characteristics", &productType);
+    }
     if (deviceTypeMap.count(type) != 0) {
         return deviceTypeMap[type];
     }
