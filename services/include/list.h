@@ -169,7 +169,7 @@ ListNode *OH_ListFind(const ListNode *head, void *data, ListTraversalProc compar
  * @return return -1 for invalid input arguments.
  *         when TRAVERSE_STOP_WHEN_ERROR is specified, it will return errors from traversalProc
  */
-int OH_ListTraversal(ListNode *head, void *data, ListTraversalProc traversalProc, int flags);
+int OH_ListTraversal(ListNode *head, void *data, ListTraversalProc traversalProc, unsigned int flags);
 
 /**
  * @brief ListNode destroy function prototype

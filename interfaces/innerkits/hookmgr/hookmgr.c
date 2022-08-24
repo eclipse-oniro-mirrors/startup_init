@@ -262,7 +262,7 @@ static int hookExecutionProc(ListNode *node, void *cookie)
  */
 int HookMgrExecute(HOOK_MGR *hookMgr, int stage, void *executionContext, const HOOK_EXEC_OPTIONS *options)
 {
-    int flags;
+    unsigned int flags;
     HOOK_STAGE *stageItem;
     HOOK_EXECUTION_ARGS args;
 
@@ -276,7 +276,7 @@ int HookMgrExecute(HOOK_MGR *hookMgr, int stage, void *executionContext, const H
 
     flags = 0;
     if (options != NULL) {
-        flags = options->flags;
+        flags = (unsigned int)(options->flags);
     }
 
     args.executionContext = executionContext;
