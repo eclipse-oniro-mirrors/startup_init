@@ -69,18 +69,19 @@ static bool InstallSeccompPolicy(const struct sock_filter* filter, size_t filter
     return true;
 }
 
+#ifndef SECCOMP_PLUGIN
 bool SetSeccompPolicy(PolicyType policy)
 {
     bool ret = false;
     switch (policy) {
-        case SYSTEM:
-            ret = InstallSeccompPolicy(g_systemSeccompFilter, g_systemSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
-            break;
         case APPSPAWN:
             ret = InstallSeccompPolicy(g_appspawnSeccompFilter, g_appspawnSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
             break;
         case NWEBSPAWN:
             ret = InstallSeccompPolicy(g_nwebspawnSeccompFilter, g_nwebspawnSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
+            break;
+        case APP:
+            ret = InstallSeccompPolicy(g_appSeccompFilter, g_appSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
             break;
         default:
             ret = false;
@@ -88,12 +89,16 @@ bool SetSeccompPolicy(PolicyType policy)
 
     return ret;
 }
+#else
+static bool SetSystemSeccompPolicy(void)
+{
+    return InstallSeccompPolicy(g_systemSeccompFilter, g_systemSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
+}
 
-#ifdef SECCOMP_PLUGIN
 static int DoSetSeccompPolicyStart(void)
 {
     bool ret = false;
-    ret = SetSeccompPolicy(SYSTEM);
+    ret = SetSystemSeccompPolicy();
     PLUGIN_CHECK(ret == true, return -1, "SetSeccompPolicy failed");
 
     return 0;

@@ -34,6 +34,9 @@ extern const size_t g_systemSeccompFilterSize;
 extern const struct sock_filter g_nwebspawnSeccompFilter[];
 extern const size_t g_nwebspawnSeccompFilterSize;
 
+extern const struct sock_filter g_appSeccompFilter[];
+extern const size_t g_appSeccompFilterSize;
+
 #ifdef __cplusplus
 #if __cplusplus
 }

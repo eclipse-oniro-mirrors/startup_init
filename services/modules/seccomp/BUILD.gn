@@ -107,11 +107,7 @@ ohos_prebuilt_seccomp("appspawn_filter") {
   subsystem_name = "startup"
 
   install_enable = true
-  install_images = [
-    "system",
-    "ramdisk",
-    "updater",
-  ]
+  install_images = [ "system" ]
 }
 
 ohos_prebuilt_seccomp("nwebspawn_filter") {
@@ -127,11 +123,28 @@ ohos_prebuilt_seccomp("nwebspawn_filter") {
   subsystem_name = "startup"
 
   install_enable = true
-  install_images = [
-    "system",
-    "ramdisk",
-    "updater",
-  ]
+  install_images = [ "system" ]
+}
+
+ohos_prebuilt_seccomp("app_filter") {
+  sources = []
+  if (target_cpu == "arm") {
+    sources += [ "seccomp_policy/app_arm.seccomp.policy" ]
+  } else if (target_cpu == "arm64") {
+    sources += [
+      # 64-bit machine also need check use 32-bit syscall
+      "seccomp_policy/app_arm.seccomp.policy",
+      "seccomp_policy/app_arm64.seccomp.policy",
+    ]
+  }
+
+  filtername = "g_appSeccompFilter"
+  include_dirs = [ "." ]
+  part_name = INIT_PART
+  subsystem_name = "startup"
+
+  install_enable = true
+  install_images = [ "system" ]
 }
 
 ohos_shared_library("seccomp_module") {
@@ -145,15 +158,11 @@ ohos_shared_library("seccomp_module") {
   ]
 
   deps = [
-    ":appspawn_filter",
-    ":nwebspawn_filter",
     ":system_filter",
-    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
   ]
 
   cflags = [ "-DSECCOMP_PLUGIN" ]
-
-  external_deps = [ "init:libinit_module_engine" ]
 
   part_name = "init"
   if (target_cpu == "arm64") {
