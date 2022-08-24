@@ -218,7 +218,6 @@ if (defined(ohos_lite)) {
       ":system-sandbox.json",
       ":systemcapability.json",
       ":ueventd.cfg",
-      ":watchdog.cfg",
     ]
   }
 }
