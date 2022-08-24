@@ -432,7 +432,7 @@ int ServiceStop(Service *service)
     if (IsServiceWithTimerEnabled(service)) {
         ServiceStopTimer(service);
     }
-    INIT_ERROR_CHECK(kill(service->pid, SIGKILL) == 0, return SERVICE_FAILURE,
+    INIT_ERROR_CHECK(kill(service->pid, GetKillServiceSig(service->name)) == 0, return SERVICE_FAILURE,
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
     NotifyServiceChange(service, SERVICE_STOPPING);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
