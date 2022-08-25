@@ -265,6 +265,14 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerGetService, TestSize.Level1)
     ret = ParseOneService(serviceItem, service);
     EXPECT_NE(ret, 0);
 }
+
+/**
+* @tc.name: TestServiceBootEventHook
+* @tc.desc: test bootevent module exec correct
+* @tc.type: FUNC
+* @tc.require: issueI5NTX4
+* @tc.author:
+*/
 HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
 {
     Service *service = nullptr;
