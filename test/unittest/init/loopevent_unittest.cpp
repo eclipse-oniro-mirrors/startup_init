@@ -83,13 +83,6 @@ static void ProcessWatchEventTest(WatcherHandle taskHandle, int fd, uint32_t *ev
     UNUSED(context);
 }
 
-static void *RunLoopThread(void *arg)
-{
-    UNUSED(arg);
-    StartParamService();
-    return nullptr;
-}
-
 namespace init_ut {
 class LoopEventUnittest : public testing::Test {
 public:
@@ -303,25 +296,5 @@ HWTEST_F(LoopEventUnittest, ProcessWatcherTask, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
     loopevtest.ProcessWatcherTask();
-}
-HWTEST_F(LoopEventUnittest, RunLoopThread, TestSize.Level1)
-{
-    InitParamService();
-    pthread_t tid = 0;
-    int fd = eventfd(1, EFD_NONBLOCK | EFD_CLOEXEC);
-    struct epoll_event event = {};
-    event.events = EPOLLIN;
-    if (fd >= 0) {
-        epoll_ctl(((EventEpoll *)LE_GetDefaultLoop())->epollFd, EPOLL_CTL_ADD, fd, &event);
-    }
-    pthread_create(&tid, nullptr, RunLoopThread, nullptr);
-    event.events = EPOLLOUT;
-    epoll_ctl(((EventEpoll *)LE_GetDefaultLoop())->epollFd, EPOLL_CTL_ADD, fd, &event);
-    HashMapHandle taskMap = ((EventLoop *)LE_GetDefaultLoop())->taskMap;
-    ((EventLoop *)LE_GetDefaultLoop())->taskMap = nullptr;
-    StopParamService();
-    pthread_join(tid, nullptr);
-    InitParamService();
-    ((EventLoop *)LE_GetDefaultLoop())->taskMap = taskMap;
 }
 }  // namespace init_ut

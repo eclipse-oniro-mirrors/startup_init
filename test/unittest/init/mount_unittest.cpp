@@ -38,8 +38,10 @@ HWTEST_F(MountUnitTest, TestMountRequriedPartitions, TestSize.Level0)
     Fstab *fstab = NULL;
     fstab = ReadFstabFromFile(fstabFiles, false);
     if (fstab != NULL) {
+#ifdef __MUSL__
         int ret = MountRequriedPartitions(fstab);
         EXPECT_EQ(ret, -1);
+#endif
         ReleaseFstab(fstab);
     } else {
         Fstab fstab1;

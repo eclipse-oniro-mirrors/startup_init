@@ -245,6 +245,9 @@ ohos_unittest("init_unittest") {
   if (target_cpu == "arm64") {
     defines += [ "SUPPORT_64BIT" ]
   }
+  if (use_musl) {
+    defines += [ "__MUSL__" ]
+  }
 
   external_deps = [
     "c_utils:utils",
