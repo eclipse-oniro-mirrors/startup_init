@@ -236,3 +236,13 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
     }
     return ReadParamValue(handle, value, len);
 }
+
+void InitParameterClient(void)
+{
+    if (getpid() == 1) {
+        return;
+    }
+    PARAM_WORKSPACE_OPS ops = {0};
+    ops.updaterMode = 0;
+    InitParamWorkSpace(1, &ops);
+}
