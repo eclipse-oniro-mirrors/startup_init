@@ -14,6 +14,7 @@
  */
 
 #include "systemgetparameter_fuzzer.h"
+#include<string>
 
 #include "init_param.h"
 
@@ -23,7 +24,8 @@ namespace OHOS {
         bool result = false;
         char buffer[PARAM_CONST_VALUE_LEN_MAX] = {0};
         uint32_t len = PARAM_CONST_VALUE_LEN_MAX;
-        if (!SystemGetParameter(reinterpret_cast<const char*>(data), buffer, &len)) {
+        std::string str(reinterpret_cast<const char*>(data), size);
+        if (!SystemGetParameter(str.c_str(), buffer, &len)) {
             result = true;
         }
         return result;

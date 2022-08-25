@@ -14,13 +14,15 @@
  */
 
 #include "getcontrolsocket_fuzzer.h"
+#include <string>
 #include "init_socket.h"
 
 namespace OHOS {
     bool FuzzGetControlSocket(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (!GetControlSocket(reinterpret_cast<const char*>(data))) {
+        std::string str(reinterpret_cast<const char*>(data), size);
+        if (!GetControlSocket(str.c_str())) {
             result = true;
         }
         return result;
