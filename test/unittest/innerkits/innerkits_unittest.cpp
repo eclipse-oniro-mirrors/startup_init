@@ -32,6 +32,13 @@ public:
     void TearDown() {};
 };
 
+/**
+* @tc.name: ReadFstabFromFile_unitest
+* @tc.desc: read fstab from test file.
+* @tc.type: FUNC
+* @tc.require:
+* @tc.author:
+*/
 HWTEST_F(InnerkitsUnitTest, ReadFstabFromFile_unitest, TestSize.Level1)
 {
     Fstab *fstab = nullptr;
@@ -45,6 +52,13 @@ HWTEST_F(InnerkitsUnitTest, ReadFstabFromFile_unitest, TestSize.Level1)
     ReleaseFstab(fstab);
 }
 
+/**
+* @tc.name: FindFstabItemForPath_unitest
+* @tc.desc: read fstab from test file, then find item according to path.
+* @tc.type: FUNC
+* @tc.require:
+* @tc.author:
+*/
 HWTEST_F(InnerkitsUnitTest, FindFstabItemForPath_unitest, TestSize.Level1)
 {
     const std::string fstabFile1 = "/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable";
@@ -76,6 +90,13 @@ HWTEST_F(InnerkitsUnitTest, FindFstabItemForPath_unitest, TestSize.Level1)
     fstab = nullptr;
 }
 
+/**
+* @tc.name: FindFstabItemForMountPoint_unitest
+* @tc.desc: read fstab from test file, then find item that matches with the mount point.
+* @tc.type: FUNC
+* @tc.require:
+* @tc.author:
+*/
 HWTEST_F(InnerkitsUnitTest, FindFstabItemForMountPoint_unitest, TestSize.Level1)
 {
     const std::string fstabFile1 = "/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable";
@@ -98,6 +119,13 @@ HWTEST_F(InnerkitsUnitTest, FindFstabItemForMountPoint_unitest, TestSize.Level1)
     fstab = nullptr;
 }
 
+/**
+* @tc.name: GetMountFlags_unitest
+* @tc.desc: read fstab from test file, then find the item and get mount flags.
+* @tc.type: FUNC
+* @tc.require:
+* @tc.author:
+*/
 HWTEST_F(InnerkitsUnitTest, GetMountFlags_unitest, TestSize.Level1)
 {
     const std::string fstabFile1 = "/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable";
@@ -118,17 +146,38 @@ HWTEST_F(InnerkitsUnitTest, GetMountFlags_unitest, TestSize.Level1)
     fstab = nullptr;
 }
 
+/**
+* @tc.name: GetSlotInfo_unittest
+* @tc.desc: get the number of slots and get current slot.
+* @tc.type: FUNC
+* @tc.require:issueI5NTX2
+* @tc.author:
+*/
 HWTEST_F(InnerkitsUnitTest, GetSlotInfo_unittest, TestSize.Level1)
 {
     EXPECT_NE(GetBootSlots(), -1);
     EXPECT_NE(GetCurrentSlot(), -1);
 }
 
+/**
+* @tc.name: LoadFstabFromCommandLine_unittest
+* @tc.desc: get fstab from command line.
+* @tc.type: FUNC
+* @tc.require:issueI5NTX2
+* @tc.author:
+*/
 HWTEST_F(InnerkitsUnitTest, LoadFstabFromCommandLine_unittest, TestSize.Level1)
 {
     EXPECT_NE(LoadFstabFromCommandLine(), (Fstab *)NULL);
 }
 
+/**
+* @tc.name: GetBlockDevicePath_unittest
+* @tc.desc: get block device path according to valid or invalid partition.
+* @tc.type: FUNC
+* @tc.require:issueI5NTX2
+* @tc.author:
+*/
 HWTEST_F(InnerkitsUnitTest, GetBlockDevicePath_unittest, TestSize.Level1)
 {
     char devicePath[MAX_BUFFER_LEN] = {0};
@@ -137,12 +186,26 @@ HWTEST_F(InnerkitsUnitTest, GetBlockDevicePath_unittest, TestSize.Level1)
     EXPECT_EQ(GetBlockDevicePath("/invalid", devicePath, MAX_BUFFER_LEN), -1);
 }
 
+/**
+* @tc.name: DoFormat_unittest
+* @tc.desc: format file system, includes ext4 and f2fs type.
+* @tc.type: FUNC
+* @tc.require:
+* @tc.author:
+*/
 HWTEST_F(InnerkitsUnitTest, DoFormat_unittest, TestSize.Level1)
 {
     EXPECT_NE(DoFormat("/testpath", "ext4"), 1);
     EXPECT_NE(DoFormat("/testpath", "f2fs"), 1);
 }
 
+/**
+* @tc.name: MountAllWithFstabFile_unittest
+* @tc.desc: mount partitions according to fstab that read from file.
+* @tc.type: FUNC
+* @tc.require:issueI5NTX2
+* @tc.author:
+*/
 HWTEST_F(InnerkitsUnitTest, MountAllWithFstabFile_unittest, TestSize.Level1)
 {
     EXPECT_NE(MountAllWithFstabFile("/etc/fstab.required", 0), 1);
