@@ -461,7 +461,7 @@ public:
     {
         // service forbid
         ParamAuditData auditData = {};
-        auditData.name = "ohos.servicectrl.";
+        auditData.name = "ohos.servicectrl.reboot";
         auditData.dacData.gid = 202;  // 202 test dac gid
         auditData.dacData.uid = 202;  // 202 test dac uid
         auditData.dacData.mode = mode;
@@ -528,34 +528,58 @@ HWTEST_F(ParamServiceUnitTest, TestServiceCtrl, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     int ret = test.TestServiceCtrl("server1", 0770);
+#ifdef __MUSL__
     EXPECT_NE(ret, 0);
     // selinux forbid
     ret = test.TestServiceCtrl("server2", 0772);
     EXPECT_NE(ret, 0);
+#endif
+#ifdef PARAM_SUPPORT_SELINUX
+    // selinux forbid
+    ret = test.TestServiceCtrl("server2", 0772);
+    EXPECT_NE(ret, 0);
+#endif
+    ret = 0;
 }
 
 HWTEST_F(ParamServiceUnitTest, TestPowerCtrl, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     int ret = test.TestPowerCtrl("reboot,shutdown", 0770);
+#ifdef __MUSL__
     EXPECT_NE(ret, 0);
+#endif
+#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,shutdown", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestPowerCtrl("reboot,updater", 0770);
+#ifdef __MUSL__
     EXPECT_NE(ret, 0);
+#endif
+#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,updater", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestPowerCtrl("reboot,flash", 0770);
+#ifdef __MUSL__
     EXPECT_NE(ret, 0);
+#endif
+#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,flash", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
+#endif
     ret = test.TestPowerCtrl("reboot", 0770);
+#ifdef __MUSL__
     EXPECT_NE(ret, 0);
+#endif
+#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
+#endif
 }
 }  // namespace init_ut

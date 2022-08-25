@@ -124,7 +124,7 @@ HWTEST_F(DacUnitTest, TestDacCheckFilePermission, TestSize.Level0)
     DacUnitTest test;
     test.TestDacCheckFilePermission(STARTUP_INIT_UT_PATH "/trigger_test.cfg");
 }
-
+#ifdef __MUSL__
 HWTEST_F(DacUnitTest, TestDacCheckUserParaPermission, TestSize.Level0)
 {
     // 相同用户
@@ -247,7 +247,7 @@ HWTEST_F(DacUnitTest, TestDacCheckOtherParaPermission, TestSize.Level0)
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WATCH);
     EXPECT_EQ(ret, 0);
 }
-
+#endif
 HWTEST_F(DacUnitTest, TestClientDacCheckFilePermission, TestSize.Level0)
 {
     DacUnitTest test;
