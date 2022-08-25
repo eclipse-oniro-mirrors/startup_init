@@ -15,6 +15,7 @@
 
 #include <limits.h>
 #include <poll.h>
+#include <stdbool.h>
 #include "ueventd.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_socket.h"
@@ -22,16 +23,17 @@
 #include "init_log.h"
 #include "init_socket.h"
 
-static void PollUeventdSocketTimeout(int ueventSockFd)
+static void PollUeventdSocketTimeout(int ueventSockFd, bool ondemand)
 {
     struct pollfd pfd = {};
     pfd.events = POLLIN;
     pfd.fd = ueventSockFd;
+    int timeout = ondemand ? UEVENTD_POLL_TIME : -1;
     int ret = -1;
 
     while (1) {
         pfd.revents = 0;
-        ret = poll(&pfd, 1, UEVENTD_POLL_TIME);
+        ret = poll(&pfd, 1, timeout);
         if (ret == 0) {
             INIT_LOGI("poll ueventd socket timeout, ueventd exit");
             return;
@@ -54,10 +56,12 @@ int main(int argc, char **argv)
     while (ueventdConfigs[i] != NULL) {
         ParseUeventdConfigFile(ueventdConfigs[i++]);
     }
+    bool ondemand = true;
     int ueventSockFd = GetControlSocket("ueventd");
     if (ueventSockFd < 0) {
         INIT_LOGW("Failed to get uevent socket, try to create");
         ueventSockFd = UeventdSocketInit();
+        ondemand = false;
     }
     if (ueventSockFd < 0) {
         INIT_LOGE("Failed to create uevent socket!");
@@ -76,6 +80,6 @@ int main(int argc, char **argv)
         INIT_LOGI("ueventd start to process uevent message");
         ProcessUevent(ueventSockFd, NULL, 0); // Not require boot devices
     }
-    PollUeventdSocketTimeout(ueventSockFd);
+    PollUeventdSocketTimeout(ueventSockFd, ondemand);
     return 0;
 }
