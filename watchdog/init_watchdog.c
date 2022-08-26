@@ -37,6 +37,9 @@
 #define DEFAULT_GAP 3
 #define CONVERSION_BASE 1000000U
 
+#define PRETIMEOUT_GAP 5
+#define PRETIMEOUT_DIV 2
+
 static void WaitAtStartup(const char *source)
 {
     unsigned int count = 0;
@@ -83,6 +86,12 @@ int main(int argc, const char *argv[])
 #endif
     int timeoutSet = interval + gap;
     int timeoutGet = 0;
+
+#ifdef WDIOC_SETPRETIMEOUT
+    int preTimeout = 0;
+    int preTimeoutGet = 0;
+#endif
+
     int ret = ioctl(fd, WDIOC_SETTIMEOUT, &timeoutSet);
     if (ret) {
         INIT_LOGE("Failed to set timeout to %d\n", timeoutSet);
@@ -90,9 +99,30 @@ int main(int argc, const char *argv[])
     ret = ioctl(fd, WDIOC_GETTIMEOUT, &timeoutGet);
     if (ret) {
         INIT_LOGE("Failed to get timeout\n");
-    } else {
+    }
+
+    if (timeoutGet > 0) {
         interval = (timeoutGet > gap) ? (timeoutGet - gap) : 1;
     }
+
+#ifdef WDIOC_SETPRETIMEOUT
+    preTimeout = timeoutGet - PRETIMEOUT_GAP; // ensure pretimeout smaller then timeout
+    if (preTimeout > 0) {
+        ret = ioctl(fd, WDIOC_SETPRETIMEOUT, &preTimeout);
+        if (ret) {
+            INIT_LOGE("Failed to set pretimeout to %d\n", preTimeout);
+        }
+        ret = ioctl(fd, WDIOC_GETPRETIMEOUT, &preTimeoutGet);
+        if (ret) {
+            INIT_LOGE("Failed to get pretimeout\n");
+        }
+    }
+
+    if (preTimeoutGet > 0 && preTimeoutGet < interval) {
+        interval = preTimeoutGet / PRETIMEOUT_DIV;
+    }
+#endif
+
     while (1) {
         ioctl(fd, WDIOC_KEEPALIVE);
         sleep(interval);
