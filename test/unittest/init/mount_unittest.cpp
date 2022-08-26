@@ -47,7 +47,7 @@ HWTEST_F(MountUnitTest, TestMountRequriedPartitions, TestSize.Level0)
         int ret = MountRequriedPartitions(&fstab1);
         EXPECT_EQ(ret, -1);
     }
-    LoadRequiredFstab();
+    ReleaseFstab(LoadRequiredFstab());
 }
 HWTEST_F(MountUnitTest, TestGetBlockDevicePath, TestSize.Level1)
 {
