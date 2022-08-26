@@ -43,7 +43,7 @@ int ConnectServer(int fd, const char *servername)
 int FillParamMsgContent(const ParamMessage *request, uint32_t *start, int type, const char *value, uint32_t length)
 {
     PARAM_CHECK(request != NULL && start != NULL, return -1, "Invalid param");
-    PARAM_CHECK(value != NULL && length > 0, return -1, "Invalid value");
+    PARAM_CHECK(value != NULL && length > 0 && length < PARAM_BUFFER_MAX, return -1, "Invalid value");
     uint32_t bufferSize = request->msgSize - sizeof(ParamMessage);
     uint32_t offset = *start;
     PARAM_CHECK((offset + sizeof(ParamMsgContent) + length) <= bufferSize,
