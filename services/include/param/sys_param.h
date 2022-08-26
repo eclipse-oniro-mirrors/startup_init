@@ -29,6 +29,9 @@ typedef struct {
     int (*setfilecon)(const char *name, const char *content);
 } PARAM_WORKSPACE_OPS;
 
+/**
+ * parameter service初始化接口 仅供init调用
+ */
 int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *ops);
 
 /**
@@ -38,6 +41,10 @@ int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *ops);
  */
 int SystemReadParam(const char *name, char *value, uint32_t *len);
 
+/**
+ * parameter client初始化接口 供服务调用
+ */
+void InitParameterClient(void);
 #ifdef __cplusplus
 #if __cplusplus
 }

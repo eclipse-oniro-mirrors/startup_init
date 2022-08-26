@@ -94,7 +94,7 @@ misc:x:9998:
 app:x:10000:
 useriam:x:1088:
 backup:x:1089:
-storage_manager:1090:
+storage_manager:x:1090:
 net_manager:x:1099:
 edm:x:3057:
 account:x:3058:
@@ -113,3 +113,4 @@ uhdf_driver:x:3066:
 memmgr:x:1111:
 ispserver:x:3821:
 appspawn:x:4000:
+dfs_share:x:3822:
