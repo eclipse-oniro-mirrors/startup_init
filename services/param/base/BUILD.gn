@@ -85,7 +85,10 @@ if (defined(ohos_lite)) {
     deps = []
 
     if (use_musl) {
-      defines += [ "PARAM_BASE" ]
+      defines += [
+        "PARAM_BASE",
+        "__MUSL__",
+      ]
     } else {
       include_dirs += [ "//third_party/bounds_checking_function/include" ]
       sources += [ "//base/startup/init/services/log/init_commlog.c" ]
