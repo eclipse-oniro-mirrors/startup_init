@@ -40,7 +40,8 @@ operation = ['<', '<=', '!=', '==', '>', '>=', '&']
 ret_str_to_bpf = {
     'KILL_PROCESS': 'SECCOMP_RET_KILL_PROCESS',
     'KILL_THREAD': 'SECCOMP_RET_KILL_THREAD',
-    'LOG' : 'SECCOMP_RET_LOG'
+    'LOG' : 'SECCOMP_RET_LOG',
+    'ALLOW': 'SECCOMP_RET_ALLOW'
 }
 
 mode_str = {
@@ -201,6 +202,7 @@ class GenBpfPolicy:
         self.function_name_nr_table = {}
         self.gen_mode = 0
         self.flag = True
+        self.return_value = ''
         self.operate_func_table = {
             '<' : self.gen_bpf_lt,
             '<=': self.gen_bpf_le,
@@ -231,6 +233,13 @@ class GenBpfPolicy:
 
     def set_gen_mode(self, mode):
         self.gen_mode = mode_str.get(mode)
+
+    def set_return_value(self, return_value):
+        if return_value not in ret_str_to_bpf:
+            self.set_gen_mode(False)
+            return
+
+        self.return_value = return_value
 
     @staticmethod
     def gen_bpf_eq32(const_str, jt, jf):
@@ -306,9 +315,9 @@ class GenBpfPolicy:
         low = number & 0xffffffff
 
         if digit_flag and hight == 0:
-            bpf_policy.append(BPF_JGE.format('((unsigned long)'+const_str+') >> 32', jt + 2, 0))
+            bpf_policy.append(BPF_JGT.format('((unsigned long)'+const_str+') >> 32', jt + 2, 0))
         else:
-            bpf_policy.append(BPF_JGE.format('((unsigned long)'+const_str+') >> 32', jt + 3, 0))
+            bpf_policy.append(BPF_JGT.format('((unsigned long)'+const_str+') >> 32', jt + 3, 0))
             bpf_policy.append(BPF_JEQ.format('((unsigned long)'+const_str+') >> 32', 0, jf + 2))
         bpf_policy.append(BPF_LOAD_MEM.format(0))
         bpf_policy.append(BPF_JGE.format(const_str+' & 0xffffffff', jt, jf))
@@ -526,38 +535,52 @@ class GenBpfPolicy:
         bpf_policy = []
         for atom in reversed(atoms):
             bpf_policy = self.compile_atom(atom, len(bpf_policy)) + bpf_policy
-        bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_ALLOW'))
         return bpf_policy
 
     def parse_sub_group(self, group):
         bpf_policy = []
-        and_cond_groups = group.split('||')
+        group_info = group.split(';')
+        operation_part = group_info[0]
+        return_part = group_info[1]
+        if not return_part.startswith('return'):
+            self.set_gen_flag(False)
+            return bpf_policy
+        self.set_return_value(return_part[len('return'):])
+        and_cond_groups = operation_part.split('||')
         for and_condition_group in and_cond_groups:
             bpf_policy += self.parse_args_with_condition(and_condition_group)
         return bpf_policy
 
+    def parse_else_part(self, else_part):
+        return_value = else_part.split(';')[0][else_part.find('return') + len('return'):]
+        self.set_return_value(return_value)
+
     def parse_args(self, function_name, line, skip):
         bpf_policy = []
-
-        group = line.split('elif')
+        group_info  = line.split('else')
+        else_part = group_info[-1]
+        group = group_info[0].split('elif')
         for sub_group in group:
             bpf_policy += self.parse_sub_group(sub_group)
+            bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
+        self.parse_else_part(else_part)
+        bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
         syscall_nr = self.function_name_nr_table.get(function_name)
         #load syscall nr
         bpf_policy = self.gen_bpf_valid_syscall_nr(syscall_nr, len(bpf_policy) - skip)  + bpf_policy
         return bpf_policy
 
-    def gen_bpf_policy_with_args(self, allow_list_with_args, mode):
+    def gen_bpf_policy_with_args(self, allow_list_with_args, mode, return_value):
         self.set_gen_mode(mode)
         skip = 0
         for line in allow_list_with_args:
             if self.gen_mode == 1 and line == list(allow_list_with_args)[-1]:
-                skip = 1
+                skip = 2
             line = line.replace(' ', '')
             pos = line.find(':')
             function_name = line[:pos]
 
-            left_line = line[pos+1:]
+            left_line = line[pos + 1:]
             if not left_line.startswith('if'):
                 continue
 
@@ -674,7 +697,7 @@ class SeccompPolicyParser:
         self.bpf_generator.gen_bpf_policy(syscall_nr_priority)
         self.bpf_generator.gen_bpf_policy(syscall_nr_allow_list)
         self.bpf_generator.gen_bpf_policy_with_args(self.cur_policy_param.final_allow_list_with_args, \
-            self.cur_policy_param.mode)
+            self.cur_policy_param.mode, self.cur_policy_param.return_value)
 
         self.bpf_generator.add_return_value(self.cur_policy_param.return_value)
 
