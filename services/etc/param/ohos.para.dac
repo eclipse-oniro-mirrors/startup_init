@@ -23,6 +23,7 @@ persist.sys.usb.config  = root:root:0777
 ohos.servicectrl.   = system:servicectrl:0775
 ohos.startup.powerctrl. = system:powerctrl:0775
 ohos.boot. = system:bootctrl:0775
+ohos.dev. = ueventd:ueventd:0775
 
 #permission for system
 persist.window.boot. = root:system:0775
