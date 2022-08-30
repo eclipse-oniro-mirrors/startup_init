@@ -474,15 +474,15 @@ int CheckTrigger(TriggerWorkSpace *workSpace, int type,
 static void DumpJobTrigger_(const TriggerWorkSpace *workSpace, const TriggerNode *trigger)
 {
     const JobNode *node = (const JobNode *)trigger;
-    PARAM_DUMP("trigger 0x%08x \n", trigger->flags);
-    PARAM_DUMP("trigger name %s \n", node->name);
-    PARAM_DUMP("trigger condition %s \n", node->condition);
+    PARAM_DUMP("trigger     flags: 0x%08x \n", trigger->flags);
+    PARAM_DUMP("trigger      name: %s \n", node->name);
+    PARAM_DUMP("trigger condition: %s \n", node->condition);
     const int maxCmd = 1024;
     int count = 0;
     CommandNode *cmd = GetNextCmdNode(node, NULL);
     while (cmd != NULL && count < maxCmd) {
-        PARAM_DUMP("\t command name %s \n", GetCmdKey(cmd->cmdKeyIndex));
-        PARAM_DUMP("\t command args %s \n", cmd->content);
+        PARAM_DUMP("    command name: %s \n", GetCmdKey(cmd->cmdKeyIndex));
+        PARAM_DUMP("    command args: %s \n", cmd->content);
         cmd = GetNextCmdNode(node, cmd);
         count++;
     }
@@ -491,19 +491,19 @@ static void DumpJobTrigger_(const TriggerWorkSpace *workSpace, const TriggerNode
 static void DumpWatchTrigger_(const TriggerWorkSpace *workSpace, const TriggerNode *trigger)
 {
     const WatchNode *node = (const WatchNode *)trigger;
-    PARAM_DUMP("trigger 0x%08x \n", trigger->flags);
-    PARAM_DUMP("trigger condition %s \n", trigger->condition);
-    PARAM_DUMP("trigger watchId %d \n", node->watchId);
+    PARAM_DUMP("trigger     flags: 0x%08x \n", trigger->flags);
+    PARAM_DUMP("trigger condition: %s \n", trigger->condition);
+    PARAM_DUMP("trigger   watchId: %d \n", node->watchId);
 }
 
 static void DumpWaitTrigger_(const TriggerWorkSpace *workSpace, const TriggerNode *trigger)
 {
     const WaitNode *node = (const WaitNode *)trigger;
-    PARAM_DUMP("trigger 0x%08x \n", trigger->flags);
-    PARAM_DUMP("trigger name %s \n", GetTriggerName(trigger));
-    PARAM_DUMP("trigger condition %s \n", trigger->condition);
-    PARAM_DUMP("trigger waitId %d \n", node->waitId);
-    PARAM_DUMP("trigger timeout %d \n", node->timeout);
+    PARAM_DUMP("trigger     flags: 0x%08x \n", trigger->flags);
+    PARAM_DUMP("trigger      name: %s \n", GetTriggerName(trigger));
+    PARAM_DUMP("trigger condition: %s \n", trigger->condition);
+    PARAM_DUMP("trigger    waitId: %d \n", node->waitId);
+    PARAM_DUMP("trigger   timeout: %d \n", node->timeout);
 }
 
 static void DumpTrigger_(const TriggerWorkSpace *workSpace, int type)
@@ -522,7 +522,6 @@ void SystemDumpTriggers(int verbose)
 {
     TriggerWorkSpace *workSpace = GetTriggerWorkSpace();
     PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace ");
-    PARAM_DUMP("Ready to dump all trigger memory \n");
     PARAM_DUMP("workspace queue BOOT info:\n");
     DumpTrigger_(workSpace, TRIGGER_BOOT);
     PARAM_DUMP("workspace queue parameter info:\n");
@@ -540,7 +539,7 @@ void SystemDumpTriggers(int verbose)
     for (uint32_t index = workSpace->executeQueue.startIndex; index < workSpace->executeQueue.endIndex; index++) {
         TriggerNode *trigger = workSpace->executeQueue.executeQueue[index % workSpace->executeQueue.queueCount];
         if (trigger != 0) {
-            PARAM_DUMP("queue node trigger name: %s \n", GetTriggerName(trigger));
+            PARAM_DUMP("    queue node trigger name: %s \n", GetTriggerName(trigger));
         }
     }
 }

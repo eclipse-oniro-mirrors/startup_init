@@ -30,6 +30,7 @@ int AclGetDevUdid(char *udid, int size)
     if (udid == nullptr || size < UDID_LEN) {
         return -1;
     }
+    (void)memset_s(udid, size, 0, size);
 #ifdef PARAM_FEATURE_DEVICEINFO
     std::string result = {};
     OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();

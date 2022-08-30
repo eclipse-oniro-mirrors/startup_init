@@ -224,6 +224,6 @@ MODULE_CONSTRUCTOR(void)
         }
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
-        BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);
+        BShellEnvRegisterCmd(GetShellHandle(), &infos[i]);
     }
 }

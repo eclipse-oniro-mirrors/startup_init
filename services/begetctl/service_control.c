@@ -76,6 +76,6 @@ MODULE_CONSTRUCTOR(void)
         {"timer_stop", main_cmd, "stop service timer", "timer_stop servicename", ""},
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
-        BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);
+        BShellEnvRegisterCmd(GetShellHandle(), &infos[i]);
     }
 }
