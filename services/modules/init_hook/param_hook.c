@@ -34,7 +34,10 @@ const ParamCmdInfo *GetServiceCtl(size_t *size)
     static const ParamCmdInfo installParam[] = {
         {"ohos.servicectrl.install", "install", "install" },
         {"ohos.servicectrl.uninstall", "uninstall", "uninstall" },
-        {"ohos.servicectrl.clear", "clear", "clear" }
+        {"ohos.servicectrl.clear", "clear", "clear" },
+        {"ohos.servicectrl.save", "save.bootevent", "save.bootevent" },
+        {"ohos.servicectrl.bootchart", "bootchart", "bootchart" },
+        {"ohos.servicectrl.timer_start", "timer_start", "timer_start " },
     };
     *size = ARRAY_LENGTH(installParam);
     return installParam;

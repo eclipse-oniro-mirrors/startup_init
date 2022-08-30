@@ -1,0 +1,66 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/startup/init/begetd.gni")
+import("//build/ohos.gni")
+
+ohos_shared_library("selinuxadp") {
+  sources = [ "selinux_adp.c" ]
+  defines = [ "_GNU_SOURCE" ]
+  include_dirs = [
+    ".",
+    "..",
+    "../init_hook",
+    "//base/startup/init/services/include/param",
+    "//third_party/selinux/libselinux/include/",
+    "//base/security/selinux/interfaces/policycoreutils/include/",
+  ]
+  deps = [
+    "//base/security/selinux:libload_policy",
+    "//base/security/selinux:librestorecon",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/selinux:libselinux",
+  ]
+
+  external_deps = [ "init:libinit_module_engine" ]
+
+  part_name = "init"
+  if (target_cpu == "arm64") {
+    module_install_dir = "lib64/init"
+  } else {
+    module_install_dir = "lib/init"
+  }
+  install_images = [
+    "system",
+    "updater",
+  ]
+}
+
+config("selinux_static_config") {
+  include_dirs = [ "." ]
+}
+
+ohos_source_set("libselinuxadp_static") {
+  sources = [ "selinux_static.c" ]
+  defines = [ "_GNU_SOURCE" ]
+  include_dirs = [
+    ".",
+    "..",
+    "../init_hook",
+    "//base/startup/init/services/include/param",
+    "//third_party/selinux/libselinux/include/",
+    "//base/security/selinux/interfaces/policycoreutils/include/",
+  ]
+  public_configs = [ ":selinux_static_config" ]
+  public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
+}

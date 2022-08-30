@@ -36,9 +36,6 @@
 #include "init_cmdexecutor.h"
 #include "init_service_manager.h"
 #include "init_utils.h"
-#ifdef WITH_SELINUX
-#include "policycoreutils.h"
-#endif
 #include "securec.h"
 
 static char *AddOneArg(const char *param, size_t paramLen)
@@ -323,11 +320,7 @@ static void DoMkDir(const struct CmdArgs *ctx)
         return;
     }
 
-#ifdef WITH_SELINUX
-    if (RestoreconRecurse(ctx->argv[0])) {
-        INIT_LOGE("DoMkDir, Restorecon failed for '%s', err %d.", ctx->argv[0], errno);
-    }
-#endif
+    PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
 
     if (ctx->argc <= 1) {
         return;

@@ -22,6 +22,9 @@ group("static_modules") {
       deps += [ "seccomp:libseccomp_static" ]
     }
   }
+  if (build_selinux) {
+    deps += [ "selinux:libselinuxadp_static" ]
+  }
 }
 
 group("modulesgroup") {
@@ -30,5 +33,8 @@ group("modulesgroup") {
     if (build_seccomp) {
       deps += [ "seccomp:seccomp_module" ]
     }
+  }
+  if (build_selinux) {
+    deps += [ "selinux:selinuxadp" ]
   }
 }

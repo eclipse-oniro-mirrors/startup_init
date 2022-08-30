@@ -32,6 +32,7 @@
 #include "init.h"
 #include "init_adapter.h"
 #include "init_cmds.h"
+#include "init_cmdexecutor.h"
 #include "init_log.h"
 #include "init_cmdexecutor.h"
 #include "init_jobs_internal.h"
@@ -48,11 +49,6 @@
 #include "hookmgr.h"
 #include "bootstage.h"
 #endif
-
-#ifdef WITH_SELINUX
-#include "init_selinux_param.h"
-#include <selinux/selinux.h>
-#endif // WITH_SELINUX
 
 #ifdef WITH_SECCOMP
 #define APPSPAWN_NAME ("appspawn")
@@ -216,24 +212,6 @@ static int WritePid(const Service *service)
     return SERVICE_SUCCESS;
 }
 
-void SetSecon(Service *service)
-{
-#ifdef WITH_SELINUX
-    if (service->secon != NULL) {
-        if (setexeccon(service->secon) < 0) {
-            INIT_LOGE("failed to set service %s's secon (%s).", service->name, service->secon);
-            _exit(PROCESS_EXIT_CODE);
-        } else {
-            INIT_LOGI("service %s secon set to %s.", service->name, service->secon);
-        }
-    } else {
-        INIT_ERROR_CHECK(!(setexeccon("u:r:limit_domain:s0") < 0), _exit(PROCESS_EXIT_CODE),
-            "failed to set service %s's secon (%s).", service->name, "u:r:limit_domain:s0");
-        INIT_LOGE("Please set secon field in service %s's cfg file, limit_domain will be blocked", service->name);
-    }
-#endif // WITH_SELINUX
-}
-
 void CloseServiceFds(Service *service, bool needFree)
 {
     if (service == NULL) {
@@ -347,7 +325,7 @@ static int InitServicePropertys(Service *service)
     // write pid
     INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, return -1,
         "service %s exit! write pid failed!", service->name);
-    SetSecon(service);
+    PluginExecCmdByName("setServiceContent", service->name);
     return 0;
 }
 

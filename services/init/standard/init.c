@@ -44,10 +44,6 @@
 #include "fd_holder_internal.h"
 #include "sandbox.h"
 #include "sandbox_namespace.h"
-#ifdef WITH_SELINUX
-#include <policycoreutils.h>
-#include <selinux/selinux.h>
-#endif // WITH_SELINUX
 #include "bootstage.h"
 
 static bool g_enableSandbox;
@@ -233,21 +229,6 @@ void SystemPrepare(void)
     }
 }
 
-void SystemLoadSelinux(void)
-{
-#ifdef WITH_SELINUX
-    // load selinux policy and context
-    if (LoadPolicy() < 0) {
-        INIT_LOGE("main, load_policy failed.");
-    } else {
-        INIT_LOGI("main, load_policy success.");
-    }
-
-    setcon("u:r:init:s0");
-    (void)RestoreconRecurse("/dev");
-#endif // WITH_SELINUX
-}
-
 #define INIT_BOOTSTAGE_HOOK_NAME "bootstage"
 static HOOK_MGR *bootStageHookMgr = NULL;
 
@@ -363,7 +344,7 @@ void SystemConfig(void)
 
     // load SELinux context and policy
     // Do not move position!
-    SystemLoadSelinux();
+    PluginExecCmdByName("loadSelinuxPolicy", "");
 
     LoadSpecialParam();
 
