@@ -144,6 +144,16 @@ if (defined(ohos_lite)) {
     module_install_dir = "etc/param/ohos_const"
   }
 
+  ohos_prebuilt_para("ohos.para.size") {
+    source = "//base/startup/init/services/etc/param/ohos.para.size"
+    install_images = [
+      "system",
+      "updater",
+    ]
+    part_name = "init"
+    module_install_dir = "etc/param"
+  }
+
   ohos_prebuilt_etc("boot.group") {
     source = "//base/startup/init/services/etc/device.boot.group.cfg"
     part_name = "init"
@@ -211,6 +221,7 @@ if (defined(ohos_lite)) {
       ":misc.cfg",
       ":ohos.para",
       ":ohos.para.dac",
+      ":ohos.para.size",
       ":ohos_const.para",
       ":passwd",
       ":syscap.json",

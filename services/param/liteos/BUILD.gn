@@ -22,6 +22,7 @@ param_include_dirs = [
   "//base/startup/init/services/include",
   "//base/startup/init/services/init/include",
   "//base/startup/init/services/log",
+  "//base/startup/init/services/modules/init_hook",
   "//base/startup/init/services/loopevent/include",
   "//third_party/bounds_checking_function/include",
   "//third_party/cJSON",

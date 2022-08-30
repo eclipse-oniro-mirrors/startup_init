@@ -19,6 +19,7 @@
 
 #include "init_param.h"
 #include "param_base.h"
+#include "param_manager.h"
 #include "param_osadp.h"
 #include "param_utils.h"
 
@@ -34,6 +35,8 @@ static int InitWorkSpace_(WorkSpace *workSpace, uint32_t spaceSize, int readOnly
 {
     static uint32_t startIndex = 0;
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
+    PARAM_CHECK(sizeof(ParamTrieHeader) < spaceSize,
+        return PARAM_CODE_INVALID_PARAM, "Invalid spaceSize %u", spaceSize);
     PARAM_CHECK(workSpace->allocTrieNode != NULL,
         return PARAM_CODE_INVALID_PARAM, "Invalid allocTrieNode %s", workSpace->fileName);
     PARAM_CHECK(workSpace->compareTrieNode != NULL,
@@ -414,4 +417,16 @@ INIT_LOCAL_API uint32_t GetParamMaxLen(uint8_t type)
         return PARAM_VALUE_LEN_MAX;
     }
     return typeLengths[type];
+}
+
+INIT_LOCAL_API ParamNode *GetParamNode(const char *spaceName, const char *name)
+{
+    uint32_t labelIndex = 0;
+    WorkSpace *space = GetWorkSpace(spaceName);
+    PARAM_CHECK(space != NULL, return NULL, "Failed to get dac space %s", name);
+    ParamTrieNode *entry = FindTrieNode(space, name, strlen(name), &labelIndex);
+    if (entry == NULL || entry->dataIndex == 0) {
+        return NULL;
+    }
+    return (ParamNode *)GetTrieNode(space, entry->dataIndex);
 }

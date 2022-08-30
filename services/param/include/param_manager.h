@@ -111,6 +111,7 @@ INIT_LOCAL_API ParamSecurityLabel *GetParamSecurityLabel(void);
 
 INIT_LOCAL_API void LoadParamFromBuild(void);
 INIT_LOCAL_API int LoadParamFromCmdLine(void);
+INIT_LOCAL_API void LoadParamAreaSize(void);
 INIT_LOCAL_API int InitPersistParamWorkSpace(void);
 INIT_LOCAL_API void ClosePersistParamWorkSpace(void);
 INIT_LOCAL_API int WritePersistParam(const char *name, const char *value);

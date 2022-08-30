@@ -364,6 +364,19 @@ void PrepareCmdLineHasSn()
     CreateTestFile(BOOT_CMD_LINE, cmdLineHasntSn);
 }
 
+void PrepareAreaSizeFile()
+{
+    // for cmdline
+    const char *ohosParamSize = "default_param=1024"
+            "hilog_param=2048"
+            "const_product_param=2048"
+            "startup_param=20480"
+            "persist_param=2048"
+            "const_param=20480"
+            "persist_sys_param=2048";
+    CreateTestFile(PARAM_AREA_SIZE_CFG, ohosParamSize);
+}
+
 void PrepareInitUnitTestEnv(void)
 {
     static int evnOk = 0;
@@ -386,6 +399,7 @@ void PrepareInitUnitTestEnv(void)
     dacData += "test.permission.watcher. = root:root:0771\n";
     CreateTestFile(STARTUP_INIT_UT_PATH "/system/etc/param/ohos.para.dac", dacData.c_str());
     CreateTestFile(STARTUP_INIT_UT_PATH"/trigger_test.cfg", g_triggerData);
+    PrepareAreaSizeFile();
 #endif
     InitParamService();
 

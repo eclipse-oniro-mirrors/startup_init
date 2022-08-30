@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <errno.h>
 #include <dlfcn.h>
 #include <sys/socket.h>
 
@@ -129,6 +130,45 @@ static void SetSelinuxFileCon(const char *name, const char *context)
     }
 }
 
+static uint32_t GetWorkSpaceSize(const char *content)
+{
+    if (strcmp(content, WORKSPACE_NAME_DEF_SELINUX) == 0) {
+        return PARAM_WORKSPACE_MAX;
+    }
+    char name[PARAM_NAME_LEN_MAX] = {0};
+    size_t len = strlen(content);
+    int index = 0;
+    for (size_t i = strlen("u:object_r:"); i < len; i++) {
+        if (*(content + i) == ':') {
+            break;
+        }
+        name[index++] = *(content + i);
+    }
+    if (index == 0) {
+#ifdef STARTUP_INIT_TEST
+        return PARAM_WORKSPACE_DEF;
+#else
+        return PARAM_WORKSPACE_MIN;
+#endif
+    }
+    ParamNode *node = GetParamNode(WORKSPACE_NAME_DAC, name);
+    if (node == NULL) {
+#ifdef STARTUP_INIT_TEST
+        return PARAM_WORKSPACE_DEF;
+#else
+        return PARAM_WORKSPACE_MIN;
+#endif
+    }
+    int ret = ParamMemcpy(name, sizeof(name) - 1, node->data + node->keyLength + 1, node->valueLength);
+    if (ret == 0) {
+        name[node->valueLength] = '\0';
+        errno = 0;
+        uint32_t value = (uint32_t)strtoul(name, NULL, DECIMAL_BASE);
+        return (errno != 0) ? PARAM_WORKSPACE_MIN : value;
+    }
+    return PARAM_WORKSPACE_MIN;
+}
+
 static int SelinuxGetAllLabel(int readOnly)
 {
     SelinuxSpace *selinuxSpace = &GetParamWorkSpace()->selinuxSpace;
@@ -138,12 +178,12 @@ static int SelinuxGetAllLabel(int readOnly)
 
     int count = 0;
     while (node != NULL) {
-        PARAM_LOGV("GetParamSecurityLabel name %s content %s", node->info.paraName, node->info.paraContext);
+        PARAM_LOGV("SelinuxGetAllLabel name %s content %s", node->info.paraName, node->info.paraContext);
         if (node->info.paraContext == NULL || node->info.paraName == NULL) {
             node = node->next;
             continue;
         }
-        int ret = AddWorkSpace(node->info.paraContext, readOnly, PARAM_WORKSPACE_DEF);
+        int ret = AddWorkSpace(node->info.paraContext, readOnly, GetWorkSpaceSize(node->info.paraContext));
         if (ret != 0) {
             PARAM_LOGE("Forbid to add selinux workspace %s %s", node->info.paraName, node->info.paraContext);
             node = node->next;
@@ -159,7 +199,7 @@ static int SelinuxGetAllLabel(int readOnly)
         node = node->next;
     }
 
-    int ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, readOnly, PARAM_WORKSPACE_MAX);
+    int ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, readOnly, GetWorkSpaceSize(WORKSPACE_NAME_DEF_SELINUX));
     PARAM_CHECK(ret == 0, return -1,
         "Failed to add selinux workspace %s", WORKSPACE_NAME_DEF_SELINUX);
     if (readOnly == 0) {

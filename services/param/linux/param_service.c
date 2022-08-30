@@ -408,6 +408,8 @@ void InitParamService(void)
 
 void LoadSpecialParam(void)
 {
+    // read param area size from cfg and save to dac
+    LoadParamAreaSize();
     // read selinux label
     LoadSelinuxLabel();
     // from cmdline
