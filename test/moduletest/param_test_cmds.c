@@ -84,25 +84,17 @@ static void HandleParamChange(const char *key, const char *value, void *context)
     printf("Receive parameter commit %lld change %s %s \n", commit, key, value);
 }
 
-static void *CmdWatcher(void *args)
-{
-    char *name = (char *)args;
-    int ret = SystemWatchParameter(name, HandleParamChange, NULL);
-    if (ret != 0) {
-        return 0;
-    }
-    while (1) {
-        pause();
-    }
-    return NULL;
-}
-
 static int32_t BShellParamCmdWatch(BShellHandle shell, int32_t argc, char *argv[])
 {
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGV("BShellParamCmdWatch %s", argv[1]);
-    pthread_t thread;
-    pthread_create(&thread, NULL, CmdWatcher, argv[1]);
+    static int index = 0;
+    int ret = SystemWatchParameter(argv[1], HandleParamChange, (void *)index);
+    if (ret != 0) {
+        PLUGIN_LOGE("Failed to watch %s", argv[1]);
+        return 0;
+    }
+    index++;
     return 0;
 }
 

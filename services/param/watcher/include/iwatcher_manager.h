@@ -27,13 +27,15 @@ class IWatcherManager : public OHOS::IRemoteBroker {
 public:
     enum {
         ADD_WATCHER,
-        DEL_WATCHER
+        DEL_WATCHER,
+        REFRESH_WATCHER
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Startup.IWatcherManager");
 public:
     virtual uint32_t AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher) = 0;
     virtual int32_t DelWatcher(const std::string &keyPrefix, uint32_t watcherId) = 0;
+    virtual int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t watcherId) = 0;
 };
 } // namespace update_engine
 } // namespace OHOS

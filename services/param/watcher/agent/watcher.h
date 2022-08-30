@@ -24,9 +24,9 @@ namespace init_param {
 class Watcher : public WatcherStub {
 public:
     Watcher() = default;
-    ~Watcher() = default;
+    virtual ~Watcher() = default;
 
-    void OnParamerterChange(const std::string &name, const std::string &value) override;
+    void OnParameterChange(const std::string &name, const std::string &value) override;
 };
 } // namespace init_param
 } // namespace OHOS

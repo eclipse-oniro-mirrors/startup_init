@@ -43,6 +43,13 @@ int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
             reply.WriteInt32(ret);
             break;
         }
+        case REFRESH_WATCHER: {
+            std::string key = data.ReadString();
+            uint32_t watcherId = data.ReadUint32();
+            int ret = RefreshWatcher(key, watcherId);
+            reply.WriteInt32(ret);
+            break;
+        }
         default: {
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
         }

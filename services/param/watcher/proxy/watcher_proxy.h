@@ -27,7 +27,7 @@ public:
 
     virtual ~WatcherProxy() = default;
 
-    void OnParamerterChange(const std::string &name, const std::string &value) override;
+    void OnParameterChange(const std::string &name, const std::string &value) override;
 
 private:
     static inline BrokerDelegator<WatcherProxy> delegator_;

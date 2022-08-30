@@ -41,9 +41,9 @@ public:
     TestWatcher() {}
     ~TestWatcher() = default;
 
-    void OnParamerterChange(const std::string &name, const std::string &value) override
+    void OnParameterChange(const std::string &name, const std::string &value) override
     {
-        printf("TestWatcher::OnParamerterChange name %s %s \n", name.c_str(), value.c_str());
+        printf("TestWatcher::OnParameterChange name %s %s \n", name.c_str(), value.c_str());
     }
 };
 
@@ -124,7 +124,7 @@ public:
         EXPECT_NE(remoteObj, nullptr);
         WatcherProxy *watcher = new WatcherProxy(remoteObj);
         if (watcher != nullptr) {
-            watcher->OnParamerterChange(name, value);
+            watcher->OnParameterChange(name, value);
             delete watcher;
         }
         return 0;

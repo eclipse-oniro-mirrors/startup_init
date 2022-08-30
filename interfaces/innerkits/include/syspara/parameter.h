@@ -94,8 +94,8 @@ int WaitParameter(const char *key, const char *value, int timeout);
  *
  * You can use this function to watch system parameter values.\n
  *
- * @param keyprefix Indicates the key prefix for the parameter to be watched.
- * If keyprefix is not a full name, "A.B." for example, it means to watch for all parameter started with "A.B.".
+ * @param keyPrefix Indicates the key prefix for the parameter to be watched.
+ * If keyPrefix is not a full name, "A.B." for example, it means to watch for all parameter started with "A.B.".
  * @param callback Indicates value change callback.
  * If callback is NULL, it means to cancel the watch.
  * @return Returns <b>0</b> if the operation is successful;
@@ -104,7 +104,23 @@ int WaitParameter(const char *key, const char *value, int timeout);
  * @version 1.1
  */
 typedef void (*ParameterChgPtr)(const char *key, const char *value, void *context);
-int WatchParameter(const char *keyprefix, ParameterChgPtr callback, void *context);
+int WatchParameter(const char *keyPrefix, ParameterChgPtr callback, void *context);
+
+/**
+ * @brief Remove parameter watcher.
+ *
+ * You can use this function to remove system parameter watcher.\n
+ *
+ * @param keyPrefix Indicates the key prefix for the parameter to be watched.
+ * If keyPrefix is not a full name, "A.B." for example, it means to watch for all parameter started with "A.B.".
+ * @param callback Indicates value change callback.
+ * If callback is NULL, it means to cancel the watch.
+ * @return Returns <b>0</b> if the operation is successful;
+ * returns <b>-1</b> in other scenarios.
+ * @since 1.1
+ * @version 1.1
+ */
+int RemoveParameterWatcher(const char *keyPrefix, ParameterChgPtr callback, void *context);
 
 const char *GetSecurityPatchTag(void);
 const char *GetOSFullName(void);

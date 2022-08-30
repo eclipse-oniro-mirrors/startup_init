@@ -550,10 +550,10 @@ static int32_t CompareData_(const struct tagTriggerNode_ *trigger, const void *d
     PARAM_CHECK(trigger != NULL && data != NULL, return -1, "Invalid trigger");
     if (trigger->type == TRIGGER_PARAM_WAIT) {
         WaitNode *node = (WaitNode *)trigger;
-        return node->waitId == *(uint32_t *)data;
+        return node->waitId - *(uint32_t *)data;
     } else if (trigger->type == TRIGGER_PARAM_WATCH) {
         WatchNode *node = (WatchNode *)trigger;
-        return node->watchId == *(uint32_t *)data;
+        return node->watchId - *(uint32_t *)data;
     }
     return -1;
 }

@@ -27,6 +27,7 @@ public:
 
     uint32_t AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher) override;
     int32_t DelWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
+    int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
 private:
     static inline BrokerDelegator<WatcherManagerProxy> delegator_;
 };

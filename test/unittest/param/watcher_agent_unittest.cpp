@@ -20,6 +20,7 @@
 #include "iwatcher.h"
 #include "iwatcher_manager.h"
 #include "message_parcel.h"
+#include "parameter.h"
 #include "param_manager.h"
 #include "param_utils.h"
 #include "system_ability_definition.h"
@@ -53,10 +54,33 @@ public:
 
     int TestAddWatcher()
     {
-        int ret = SystemWatchParameter("test.permission.watcher.test1", TestParameterChange, nullptr);
+        size_t index = 1;
+        int ret = SystemWatchParameter("test.permission.watcher.test1", TestParameterChange, (void *)index);
         EXPECT_EQ(ret, 0);
-        ret = SystemWatchParameter("test.permission.watcher.test1*", TestParameterChange, nullptr);
+        ret = SystemWatchParameter("test.permission.watcher.test1*", TestParameterChange, (void *)index);
         EXPECT_EQ(ret, 0);
+        // repeat add, return fail
+        ret = SystemWatchParameter("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        EXPECT_NE(ret, 0);
+        index++;
+        ret = SystemWatchParameter("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        EXPECT_EQ(ret, 0);
+        index++;
+        ret = SystemWatchParameter("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        EXPECT_EQ(ret, 0);
+
+        // delete
+        ret = RemoveParameterWatcher("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        EXPECT_EQ(ret, 0);
+        index--;
+        ret = RemoveParameterWatcher("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        EXPECT_EQ(ret, 0);
+        index--;
+        ret = RemoveParameterWatcher("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        EXPECT_EQ(ret, 0);
+        ret = RemoveParameterWatcher("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        EXPECT_EQ(ret, 0);
+
         // 非法
         ret = SystemWatchParameter("test.permission.watcher.tes^^^^t1*", TestParameterChange, nullptr);
         EXPECT_NE(ret, 0);
@@ -98,7 +122,7 @@ public:
         if (watcher != nullptr) {
             watcher->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
             watcher->OnRemoteRequest(IWatcher::PARAM_CHANGE + 1, data, reply, option);
-            watcher->OnParamerterChange("testname", "testvalue");
+            watcher->OnParameterChange("testname", "testvalue");
         }
         return 0;
     }

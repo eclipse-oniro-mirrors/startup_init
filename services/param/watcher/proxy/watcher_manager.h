@@ -90,7 +90,7 @@ public:
         void ProcessParameterChange(const std::string &name, const std::string &value)
         {
 #ifndef STARTUP_INIT_TEST
-            watcher_->OnParamerterChange(name, value);
+            watcher_->OnParameterChange(name, value);
 #endif
         }
     private:
@@ -114,7 +114,7 @@ public:
         {
             return keyPrefix_;
         }
-        bool Emptry() const
+        bool Empty() const
         {
             return ListEmpty(watchers_);
         }
@@ -134,6 +134,7 @@ public:
 
     uint32_t AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher) override;
     int32_t DelWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
+    int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
     int32_t DelWatcher(WatcherGroupPtr group, ParamWatcherPtr watcher);
     ParamWatcherPtr GetWatcher(uint32_t watcherId);
     ParamWatcherPtr GetWatcher(const wptr<IRemoteObject> &remote);
@@ -160,6 +161,7 @@ private:
     int GetServerFd(bool retry);
     int GetWatcherId(uint32_t &watcherId);
     int GetGroupId(uint32_t &groupId);
+
 private:
     std::atomic<uint32_t> watcherId_ { 0 };
     std::atomic<uint32_t> groupId_ { 0 };
