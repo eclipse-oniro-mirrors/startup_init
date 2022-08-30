@@ -149,6 +149,12 @@ void ReleaseService(Service *service)
     FreeServiceSocket(service->socketCfg);
     FreeServiceFile(service->fileCfg);
 
+    for (size_t i = 0; i < JOB_ON_MAX; i++) {
+        if (service->serviceJobs.jobsName[i] != NULL) {
+            free(service->serviceJobs.jobsName[i]);
+        }
+        service->serviceJobs.jobsName[i] = NULL;
+    }
 #ifndef OHOS_LITE
     // clear ext data
     SERVICE_INFO_CTX ctx = {0};

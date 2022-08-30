@@ -43,6 +43,7 @@ typedef struct cmdLineInfo {
     int (*processor)(const char *name, const char *value, int);
 } cmdLineInfo;
 
+#define PARAM_BUFFER_MAX (0x01 << 16)
 #define FILENAME_LEN_MAX 255
 #define MS_UNIT 1000
 #ifndef UNUSED

@@ -26,6 +26,7 @@ const.product.              = root:root:0775
 persist.init.               = root:root:0775
 appspawn.                   = root:root:0750
 startup.uevent.             = root:root:0775
+ohos.dev.                   = ueventd:ueventd:0775
 
 #udid and sn, only read
 ohos.boot.sn                = root:deviceprivate:0750

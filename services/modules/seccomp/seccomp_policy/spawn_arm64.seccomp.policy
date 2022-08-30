@@ -23,5 +23,5 @@ ONLY_CHECK_ARGS
 "seccomp_filters.h"
 
 @allowListWithArgs
-setresuid: if arg0 >= 0 && arg1 >= 0 && arg2 >= 0
-setresgid: if arg0 >= 0 && arg1 >= 0 && arg2 >= 0
+setresuid: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return KILL_PROCESS;
+setresgid: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return KILL_PROCESS;

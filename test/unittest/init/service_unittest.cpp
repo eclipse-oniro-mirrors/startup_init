@@ -49,10 +49,7 @@ public:
     void SetUp() {};
     void TearDown() {};
 };
-HWTEST_F(ServiceUnitTest, TestDestoryHashMap, TestSize.Level1)
-{
-    OH_HashMapDestory(GetInitWorkspace()->hashMap[0]);
-}
+
 HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service\",\"path\":[\"/data/init_ut/test_service\"],"
@@ -168,7 +165,6 @@ HWTEST_F(ServiceUnitTest, TestServiceReap, TestSize.Level1)
     service->attribute |= SERVICE_ATTR_ONCE;
     ServiceReap(service);
     EXPECT_EQ(service->attribute, SERVICE_ATTR_ONCE);
-
     service->attribute = SERVICE_ATTR_CRITICAL;
     service->crashCount = 1;
     ServiceReap(service);

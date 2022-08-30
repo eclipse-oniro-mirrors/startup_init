@@ -61,7 +61,7 @@ public:
                 std::cout << "PR_SET_NO_NEW_PRIVS set fail " << std::endl;
                 exit(EXIT_FAILURE);
             }
-            if (!SetSeccompPolicy(type)) {
+            if (type != SYSTEM && !SetSeccompPolicy(type)) {
                 std::cout << "SetSeccompPolicy set fail type is " << type << std::endl;
                 exit(EXIT_FAILURE);
             }
@@ -187,6 +187,16 @@ public:
         return false;
     }
 
+    static bool CheckSetuid()
+    {
+        int uid = syscall(__NR_setuid, 1);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
     void TestSystemSycall()
     {
         // system blocklist
@@ -208,6 +218,17 @@ public:
         ret = CheckSyscall(APPSPAWN, CheckSetresuidArgsInRange, true);
         EXPECT_EQ(ret, 0);
     }
+
+    void TestAppSycall()
+    {
+        // app blocklist
+        int ret = CheckSyscall(APP, CheckSetuid, false);
+        EXPECT_EQ(ret, 0);
+
+        // app allowlist
+        ret = CheckSyscall(APP, CheckGetpid, true);
+        EXPECT_EQ(ret, 0);
+    }
 #elif defined __arm__
     static bool CheckGetuid32()
     {
@@ -224,6 +245,16 @@ public:
         if (uid >= 0) {
             return true;
         }
+        return false;
+    }
+
+    static bool CheckSetuid32()
+    {
+        int ret = syscall(__NR_setuid32, 1);
+        if (ret == 0) {
+            return true;
+        }
+
         return false;
     }
 
@@ -268,6 +299,17 @@ public:
         ret = CheckSyscall(APPSPAWN, CheckSetresuid32ArgsInRange, true);
         EXPECT_EQ(ret, 0);
     }
+
+    void TestAppSycall()
+    {
+        // app blocklist
+        int ret = CheckSyscall(APP, CheckSetuid32, false);
+        EXPECT_EQ(ret, 0);
+
+        // app allowlist
+        ret = CheckSyscall(APP, CheckGetuid32, true);
+        EXPECT_EQ(ret, 0);
+    }
 #endif
 };
 
@@ -275,11 +317,35 @@ public:
  * @tc.name: TestSystemSycall
  * @tc.desc: Verify the system seccomp policy.
  * @tc.type: FUNC
- * @tc.require: I5IUWJ
+ * @tc.require: issueI5IUWJ
  */
 HWTEST_F(SeccompUnitTest, TestSystemSycall, TestSize.Level1)
 {
     SeccompUnitTest test;
     test.TestSystemSycall();
+}
+
+/**
+ * @tc.name: TestSetUidGidFilter
+ * @tc.desc: Verify the system seccomp policy.
+ * @tc.type: FUNC
+ * @tc.require: issueI5IUWJ
+ */
+HWTEST_F(SeccompUnitTest, TestSetUidGidFilter, TestSize.Level1)
+{
+    SeccompUnitTest test;
+    test.TestSetUidGidFilter();
+}
+
+/**
+ * @tc.name: TestSystemSycall
+ * @tc.desc: Verify the system seccomp policy.
+ * @tc.type: FUNC
+ * @tc.require: issueI5MUXD
+ */
+HWTEST_F(SeccompUnitTest, TestAppSycall, TestSize.Level1)
+{
+    SeccompUnitTest test;
+    test.TestAppSycall();
 }
 }

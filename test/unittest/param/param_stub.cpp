@@ -354,7 +354,7 @@ void PrepareCmdLineHasSn()
     LoadParamFromCmdLine();
     const char *cmdLineHasntSn = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
         "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568 "
-        "BOOT_IMAGE=/kernel init=/init default_boot_device=fe310000.sdhci bootslots=2 "
+        "BOOT_IMAGE=/kernel init=/init default_boot_device=fe310000.sdhci bootslots=2 currentslot=1 "
         "ohos.required_mount.system="
         "/dev/block/platform/fe310000.sdhci/by-name/system@/usr@ext4@ro,barrier=1@wait,required "
         "ohos.required_mount.vendor="
