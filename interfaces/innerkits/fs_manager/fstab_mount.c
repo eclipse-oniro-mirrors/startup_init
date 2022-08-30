@@ -167,7 +167,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
     int ret = 0;
     if (size <= 0) {
         char *cmd[] = {
-            file, "-s", (char *)device, NULL
+            file, (char *)device, NULL
         };
         int argc = ARRAY_LENGTH(cmd);
         char **argv = (char **)cmd;
@@ -178,7 +178,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
         char sizeStr[RESIZE_BUFFER_SIZE] = {0};
         sprintf_s(sizeStr, RESIZE_BUFFER_SIZE, "%llu", realSize);
         char *cmd[] = {
-            file, "-s", "-t", sizeStr, (char *)device, NULL
+            file, "-t", sizeStr, (char *)device, NULL
         };
         int argc = ARRAY_LENGTH(cmd);
         char **argv = (char **)cmd;
