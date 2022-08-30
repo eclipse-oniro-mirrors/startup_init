@@ -122,7 +122,6 @@ int SystemWriteParam(const char *name, const char *value)
 
 static void ParamServiceTask(int *arg)
 {
-    char buffer[10] = {0};
     (void)arg;
     PARAM_LOGI("ParamServiceTask start");
     while (1) {
