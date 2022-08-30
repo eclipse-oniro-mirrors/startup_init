@@ -17,6 +17,7 @@ group("static_modules") {
       "bootchart:libbootchart_static",
       "bootevent:libbootevent_static",
       "init_hook:inithook",
+      "reboot:libreboot_static",
     ]
     if (build_seccomp) {
       deps += [ "seccomp:libseccomp_static" ]
@@ -26,7 +27,10 @@ group("static_modules") {
 
 group("modulesgroup") {
   if (!defined(ohos_lite)) {
-    deps = [ "bootchart:bootchart" ]
+    deps = [
+      "bootchart:bootchart",
+      "reboot:rebootmodule",
+    ]
     if (build_seccomp) {
       deps += [ "seccomp:seccomp_module" ]
     }

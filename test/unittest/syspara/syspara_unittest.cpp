@@ -284,8 +284,7 @@ HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)
     EXPECT_EQ(StringToULL("not vailed", &uout), -1);
     SystemSetParameter("ohos.boot.sn", "1");
     char udid[UDID_LEN] = {0};
-    ret = GetDevUdid(udid, UDID_LEN);
-    EXPECT_NE(ret, -1);
+    GetDevUdid(udid, UDID_LEN);
     EXPECT_NE(GetMajorVersion(), 0);
     GetSeniorVersion();
     GetFeatureVersion();

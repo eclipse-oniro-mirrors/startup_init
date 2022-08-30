@@ -16,5 +16,6 @@
     { "name": "InitModuleMgrUnInstall" },
     { "name": "StartupLog" },
     { "name": "DoJobNow" },
-    { "name": "GetServiceExtData" }
+    { "name": "GetServiceExtData" },
+    { "name": "UpdateMiscMessage" }
 ]

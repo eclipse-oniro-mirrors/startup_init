@@ -43,12 +43,12 @@ const ParamCmdInfo *GetServiceCtl(size_t *size)
 const ParamCmdInfo *GetStartupPowerCtl(size_t *size)
 {
     static const ParamCmdInfo powerCtrlArg[] = {
-        {"reboot,shutdown", "reboot.shutdown", "reboot "},
-        {"reboot,updater", "reboot.updater", "reboot "},
-        {"reboot,flashd", "reboot.flashd", "reboot "},
-        {"reboot,loader", "reboot.loader", "reboot "},
-        {"reboot,charge", "reboot.charge", "reboot "},
-        {"reboot", "reboot", "reboot "},
+        {"reboot,shutdown", "reboot.shutdown", "reboot.shutdown"},
+        {"reboot,updater", "reboot.updater", "reboot.updater"},
+        {"reboot,flashd", "reboot.flashd", "reboot.flashd"},
+        {"reboot,loader", "reboot.loader", "reboot.loader"},
+        {"reboot,charge", "reboot.charge", "reboot.charge"},
+        {"reboot", "reboot", "reboot"},
     };
     *size = ARRAY_LENGTH(powerCtrlArg);
     return powerCtrlArg;
