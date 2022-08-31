@@ -90,6 +90,7 @@ thermal:x:6669:
 sensor:x:6688:
 input:x:6696:
 msdp:x:6699:
+av_session:x:6700:
 misc:x:9998:
 app:x:10000:
 useriam:x:1088:
