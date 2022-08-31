@@ -93,6 +93,6 @@ MODULE_CONSTRUCTOR(void)
         {(char *)"dump", SysParaApiDumpCmd, (char *)"dump api", (char *)"dump api", (char *)"dump api"},
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
-        BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);
+        BShellEnvRegisterCmd(GetShellHandle(), &infos[i]);
     }
 }

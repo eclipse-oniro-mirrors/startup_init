@@ -436,7 +436,7 @@ int BShellEnvStart(BShellHandle handle)
         {"help", BShellCmdHelp, "help command", "help"}
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
-        BShellEnvRegitsterCmd(handle, &infos[i]);
+        BShellEnvRegisterCmd(handle, &infos[i]);
     }
     return 0;
 }
@@ -500,7 +500,7 @@ void BShellEnvDestory(BShellHandle handle)
     free(shell);
 }
 
-int32_t BShellEnvRegitsterCmd(BShellHandle handle, const CmdInfo *cmdInfo)
+int32_t BShellEnvRegisterCmd(BShellHandle handle, const CmdInfo *cmdInfo)
 {
     BSH_CHECK(handle != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
     BSH_CHECK(cmdInfo != NULL && cmdInfo->name != NULL, return BSH_INVALID_PARAM, "Invalid cmd name");
