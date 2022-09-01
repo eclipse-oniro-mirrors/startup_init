@@ -90,6 +90,7 @@ thermal:x:6669:
 sensor:x:6688:
 input:x:6696:
 msdp:x:6699:
+av_session:x:6700:
 misc:x:9998:
 app:x:10000:
 useriam:x:1088:
@@ -112,5 +113,5 @@ motion_host:x:3065:
 uhdf_driver:x:3066:
 memmgr:x:1111:
 ispserver:x:3821:
-appspawn:x:4000:
 dfs_share:x:3822:
+appspawn:x:4000:

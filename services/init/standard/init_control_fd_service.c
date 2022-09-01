@@ -25,6 +25,7 @@
 #include "init_utils.h"
 #include "init_log.h"
 #include "init_group_manager.h"
+#include "init_param.h"
 #include "hookmgr.h"
 #include "bootstage.h"
 
@@ -184,6 +185,12 @@ static void ProcessDumpServiceControlFd(uint16_t type, const char *serviceCmd)
             DumpAllExtData(cmd);
         } else {
             DumpAllServices();
+        }
+        return;
+    }
+    if (strcmp(serviceCmd, "parameter_service") == 0) {
+        if (cmd != NULL && strcmp(cmd, "trigger") == 0) {
+            SystemDumpTriggers(0);
         }
         return;
     }

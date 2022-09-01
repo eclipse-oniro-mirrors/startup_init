@@ -43,6 +43,7 @@ typedef struct cmdLineInfo {
     int (*processor)(const char *name, const char *value, int);
 } cmdLineInfo;
 
+#define PARAM_BUFFER_MAX (0x01 << 16)
 #define FILENAME_LEN_MAX 255
 #define MS_UNIT 1000
 #ifndef UNUSED
@@ -127,12 +128,7 @@ INIT_LOCAL_API void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, cons
         exper;                       \
     }
 
-#ifdef INIT_AGENT
 #define PARAM_DUMP printf
-#else
-#define PARAM_DUMP PARAM_LOGI
-#endif
-
 #define MAX_LABEL_LEN 256
 #define PARAM_BUFFER_SIZE 256
 

@@ -33,9 +33,9 @@ if (defined(build_seccomp) && build_seccomp) {
 
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
+      "//base/startup/init/services/modules/seccomp:app_filter",
       "//base/startup/init/services/modules/seccomp:appspawn_filter",
       "//base/startup/init/services/modules/seccomp:nwebspawn_filter",
-      "//base/startup/init/services/modules/seccomp:system_filter",
     ]
 
     license_file = "//base/startup/init/LICENSE"

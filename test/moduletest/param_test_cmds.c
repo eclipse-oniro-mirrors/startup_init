@@ -164,7 +164,7 @@ int32_t BShellCmdRegister(BShellHandle shell, int execMode)
             {"init", BShellParamCmdGroupTest, "init group test", "init group test [stage]", "init group test"},
         };
         for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
-            BShellEnvRegitsterCmd(shell, &infos[i]);
+            BShellEnvRegisterCmd(shell, &infos[i]);
         }
     } else {
         const CmdInfo infos[] = {
@@ -177,7 +177,7 @@ int32_t BShellCmdRegister(BShellHandle shell, int execMode)
             {"display", BShellParamCmdUdidGet, "display udid", "display udid", "display udid"},
         };
         for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
-            BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);
+            BShellEnvRegisterCmd(GetShellHandle(), &infos[i]);
         }
     }
     return 0;

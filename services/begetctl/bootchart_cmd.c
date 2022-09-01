@@ -74,6 +74,6 @@ MODULE_CONSTRUCTOR(void)
         {"bootchart", bootchartCmdStop, "bootchart stop", "bootchart stop", "bootchart stop"},
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
-        BShellEnvRegitsterCmd(GetShellHandle(), &infos[i]);
+        BShellEnvRegisterCmd(GetShellHandle(), &infos[i]);
     }
 }

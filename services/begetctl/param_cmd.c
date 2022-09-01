@@ -435,7 +435,7 @@ static int32_t BShellParamCmdRegForShell(BShellHandle shell)
         {"pwd", BShellParamCmdPwd, "display current parameter", "pwd", NULL},
     };
     for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {
-        BShellEnvRegitsterCmd(shell, &infos[i - 1]);
+        BShellEnvRegisterCmd(shell, &infos[i - 1]);
     }
     return 0;
 }
@@ -451,7 +451,7 @@ static int32_t BShellParamCmdRegForIndepent(BShellHandle shell)
         {"param", BShellParamCmdShell, "shell system parameter", "param shell [name]", "param shell"},
     };
     for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {
-        BShellEnvRegitsterCmd(shell, &infos[i - 1]);
+        BShellEnvRegisterCmd(shell, &infos[i - 1]);
     }
     return 0;
 }
