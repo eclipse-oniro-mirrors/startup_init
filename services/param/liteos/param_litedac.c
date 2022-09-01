@@ -34,6 +34,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
 
 static int FreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
 {
+    (void)srcLabel;
     return 0;
 }
 

@@ -117,6 +117,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 
 int WatchParamCheck(const char *keyprefix)
 {
+    (void)keyprefix;
     return PARAM_CODE_NOT_SUPPORT;
 }
 

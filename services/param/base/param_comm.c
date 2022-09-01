@@ -30,6 +30,7 @@ INIT_LOCAL_API int GenerateKeyHasCode(const char *buff, size_t len)
 
 INIT_LOCAL_API ParamHandle GetParamHandle(const WorkSpace *workSpace, uint32_t index, const char *name)
 {
+    (void)name;
     PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return -1, "Invalid param");
     uint32_t hashCode = (uint32_t)GenerateKeyHasCode(workSpace->fileName, strlen(workSpace->fileName));
     uint32_t handle = (hashCode % HASH_BUTT) << 24; // 24 left shift
@@ -168,6 +169,7 @@ INIT_LOCAL_API uint8_t GetParamValueType(const char *name)
 
 static int CheckParamValueType(const char *name, const char *value, uint8_t paramType)
 {
+    (void)name;
     if (paramType == PARAM_TYPE_INT) {
         long long int temp1 = 0;
         if (strlen(value) > 1 && value[0] == '-' && StringToLL(value, &temp1) != 0) {
