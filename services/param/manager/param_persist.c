@@ -87,7 +87,7 @@ static int SavePersistParam(const WorkSpace *workSpace, const ParamTrieNode *nod
     return ret;
 }
 
-static int BatchSavePersistParam()
+static int BatchSavePersistParam(void)
 {
     PARAM_LOGV("BatchSavePersistParam");
     if (g_persistWorkSpace.persistParamOps.batchSaveBegin == NULL ||
@@ -122,7 +122,7 @@ static int BatchSavePersistParam()
     return ret;
 }
 
-INIT_LOCAL_API int InitPersistParamWorkSpace()
+INIT_LOCAL_API int InitPersistParamWorkSpace(void)
 {
     if (PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
