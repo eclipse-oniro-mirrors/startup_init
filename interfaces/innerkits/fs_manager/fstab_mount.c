@@ -104,9 +104,15 @@ int DoFormat(const char *devPath, const char *fsType)
         char **argv = (char **)formatCmds;
         ret = ExecCommand(argc, argv);
     } else if (strcmp(fsType, "f2fs") == 0) {
+#ifdef __MUSL__
         char *formatCmds[] = {
             "/bin/mkfs.f2fs", (char *)devPath, NULL
         };
+#else
+        char *formatCmds[] = {
+            "/bin/make_f2fs", (char *)devPath, NULL
+        };
+#endif
         int argc = ARRAY_LENGTH(formatCmds);
         char **argv = (char **)formatCmds;
         ret = ExecCommand(argc, argv);
