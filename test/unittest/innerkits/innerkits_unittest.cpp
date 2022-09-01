@@ -195,8 +195,8 @@ HWTEST_F(InnerkitsUnitTest, GetBlockDevicePath_unittest, TestSize.Level1)
 */
 HWTEST_F(InnerkitsUnitTest, DoFormat_unittest, TestSize.Level1)
 {
-    EXPECT_NE(DoFormat("/testpath", "ext4"), 1);
-    EXPECT_NE(DoFormat("/testpath", "f2fs"), 1);
+    EXPECT_NE(DoFormat("/testpath", "ext4"), -1);
+    EXPECT_NE(DoFormat("/testpath", "f2fs"), -1);
 }
 
 /**
