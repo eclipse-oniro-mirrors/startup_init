@@ -35,10 +35,6 @@
 #include "init_param.h"
 #endif
 
-#ifdef WITH_SELINUX
-#   include "init_selinux_param.h"
-#endif // WITH_SELINUX
-
 #ifndef OHOS_LITE
 #include "hookmgr.h"
 #include "bootstage.h"
@@ -124,12 +120,6 @@ void ReleaseService(Service *service)
     if (service == NULL) {
         return;
     }
-#ifdef WITH_SELINUX
-    if (service->secon != NULL) {
-        free(service->secon);
-        service->secon = NULL;
-    }
-#endif
     FreeServiceArg(&service->pathArgs);
     FreeServiceArg(&service->writePidArgs);
     FreeServiceArg(&service->capsArgs);
@@ -807,16 +797,7 @@ static void ParseOneServiceArgs(const cJSON *curItem, Service *service)
 int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
-    int ret = 0;
-#ifdef WITH_SELINUX
-    size_t strLen = 0;
-    char *fieldStr = GetStringValue(curItem, SECON_STR_IN_CFG, &strLen);
-    if (fieldStr != NULL) {
-        service->secon = strdup(fieldStr);
-        INIT_ERROR_CHECK(service->secon != NULL, return -1, "Failed to get secon for service %s", service->name);
-    }
-#endif // WITH_SELINUX
-    ret = GetServiceArgs(curItem, "path", MAX_PATH_ARGS_CNT, &service->pathArgs);
+    int ret = GetServiceArgs(curItem, "path", MAX_PATH_ARGS_CNT, &service->pathArgs);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get path for service %s", service->name);
     if ((service->pathArgs.count > 0) && IsForbidden(service->pathArgs.argv[0])) {
         INIT_LOGE("Service %s is forbidden.", service->name);

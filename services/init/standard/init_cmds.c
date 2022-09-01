@@ -33,6 +33,7 @@
 
 #include "bootstage.h"
 #include "fs_manager/fs_manager.h"
+#include "init_cmdexecutor.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
 #include "init_param.h"
@@ -41,9 +42,6 @@
 #include "sandbox.h"
 #include "sandbox_namespace.h"
 #include "securec.h"
-#ifdef WITH_SELINUX
-#include <policycoreutils.h>
-#endif
 #include "fscrypt_utils.h"
 
 #define FSCRYPT_POLICY_BUF_SIZE (60)
@@ -306,16 +304,11 @@ static void DoUmountFstabFile(const struct CmdArgs *ctx)
 
 static void DoRestorecon(const struct CmdArgs *ctx)
 {
-#ifdef WITH_SELINUX
     if (ctx->argc != 1) {
         INIT_LOGE("DoRestorecon invalid arguments.");
         return;
     }
-
-    if (RestoreconRecurse(ctx->argv[0])) {
-        INIT_LOGE("DoRestorecon failed for '%s', err %d.", ctx->argv[0], errno);
-    }
-#endif
+    PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
     return;
 }
 

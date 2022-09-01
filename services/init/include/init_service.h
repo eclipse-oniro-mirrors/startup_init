@@ -24,9 +24,6 @@
 #include "init_cmds.h"
 #include "init_service_file.h"
 #include "init_service_socket.h"
-#ifdef WITH_SELINUX
-#   include "init_selinux_param.h"
-#endif // WITH_SELINUX
 #include "list.h"
 #include "loop_event.h"
 #ifdef __cplusplus
@@ -125,9 +122,6 @@ typedef struct {
 
 typedef struct Service_ {
     char *name;
-#ifdef WITH_SELINUX
-    char *secon;
-#endif // WITH_SELINUX
     int pid;
     int crashCnt;
     time_t firstCrashTime;

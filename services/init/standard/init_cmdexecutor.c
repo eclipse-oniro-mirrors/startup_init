@@ -29,7 +29,7 @@ static int g_cmdId = 0;
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd)
 {
     INIT_ERROR_CHECK(cmdName != NULL, return -1, "Invalid input param");
-    INIT_LOGI("AddCmdExecutor %s", cmdName);
+    INIT_LOGI("AddCmdExecutor '%s'", cmdName);
     PluginCmd *cmd = NULL;
     InitGroupNode *groupNode = GetGroupNode(NODE_TYPE_CMDS, cmdName);
     if (groupNode == NULL) {
