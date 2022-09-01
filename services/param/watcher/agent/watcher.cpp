@@ -17,7 +17,7 @@
 
 namespace OHOS {
 namespace init_param {
-void Watcher::OnParamerterChange(const std::string &name, const std::string &value)
+void Watcher::OnParameterChange(const std::string &name, const std::string &value)
 {
     UNUSED(name);
     UNUSED(value);

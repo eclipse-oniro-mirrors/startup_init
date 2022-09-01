@@ -64,17 +64,17 @@ uint32_t WatcherManager::AddWatcher(const std::string &keyPrefix, const sptr<IWa
         group = std::make_shared<WatcherGroup>(groupId, keyPrefix);
         WATCHER_CHECK(group != nullptr, return 0, "Failed to create group for %s", keyPrefix.c_str());
     } else {
-        newGroup = group->Emptry();
+        newGroup = group->Empty();
     }
-    ParamWatcherPtr paramWather = std::make_shared<ParamWatcher>(watcherId, watcher, group);
-    WATCHER_CHECK(paramWather != nullptr, return 0, "Failed to create watcher for %s", keyPrefix.c_str());
-    AddParamWatcher(keyPrefix, group, paramWather);
+    ParamWatcherPtr paramWatcher = std::make_shared<ParamWatcher>(watcherId, watcher, group);
+    WATCHER_CHECK(paramWatcher != nullptr, return 0, "Failed to create watcher for %s", keyPrefix.c_str());
+    AddParamWatcher(keyPrefix, group, paramWatcher);
     if (newGroup) {
         StartLoop();
         SendMessage(group, MSG_ADD_WATCHER);
     }
-    SendLocalChange(keyPrefix, paramWather);
-    WATCHER_LOGI("AddWatcher %s watcherId: %u success", keyPrefix.c_str(), watcherId);
+    SendLocalChange(keyPrefix, paramWatcher);
+    WATCHER_LOGI("AddWatcher %s watcherId: %u groupId %u success", keyPrefix.c_str(), watcherId, group->GetGroupId());
     return watcherId;
 }
 
@@ -83,7 +83,7 @@ int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t watche
     auto group = GetWatcherGroup(keyPrefix);
     WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
     auto paramWatcher = GetWatcher(watcherId);
-    WATCHER_CHECK(group != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), watcherId);
+    WATCHER_CHECK(paramWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), watcherId);
     WATCHER_LOGV("DelWatcher prefix %s watcherId %u", keyPrefix.c_str(), watcherId);
     return DelWatcher(group, paramWatcher);
 }
@@ -97,7 +97,7 @@ int32_t WatcherManager::DelWatcher(WatcherGroupPtr group, ParamWatcherPtr watche
     }
     WATCHER_LOGI("DelWatcher watcherId %u prefix %s", watcher->GetWatcherId(), group->GetKeyPrefix().c_str());
     DelParamWatcher(watcher);
-    if (group->Emptry()) {
+    if (group->Empty()) {
         SendMessage(group, MSG_DEL_WATCHER);
         DelWatcherGroup(group);
     }
@@ -112,7 +112,7 @@ int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
     request->id.watcherId = group->GetGroupId();
     request->msgSize = sizeof(ParamMessage);
 
-    WATCHER_LOGV("SendMessage %s", group->GetKeyPrefix().c_str());
+    WATCHER_LOGV("SendMessage %s groupId %d type %d", group->GetKeyPrefix().c_str(), group->GetGroupId(), type);
     int ret = PARAM_CODE_ERROR;
     int fd = GetServerFd(false);
     if (fd != INVALID_SOCKET) {
@@ -421,6 +421,17 @@ int WatcherManager::GetGroupId(uint32_t &groupId)
         WATCHER_CHECK(groupId_ == groupId, return -1, "No enough groupId %u", groupId);
     } while (1);
     groupId = groupId_;
+    return 0;
+}
+
+int32_t WatcherManager::RefreshWatcher(const std::string &keyPrefix, uint32_t watcherId)
+{
+    WATCHER_LOGV("RefreshWatcher %s watcherId: %u", keyPrefix.c_str(), watcherId);
+    auto group = GetWatcherGroup(keyPrefix);
+    WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
+    auto paramWatcher = GetWatcher(watcherId);
+    WATCHER_CHECK(paramWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), watcherId);
+    SendLocalChange(keyPrefix, paramWatcher);
     return 0;
 }
 } // namespace init_param

@@ -35,18 +35,43 @@ public:
 
     static WatcherManagerKits &GetInstance();
     int32_t AddWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context);
-    int32_t DelWatcher(const std::string &keyPrefix);
+    int32_t DelWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context);
     void ReAddWatcher();
 #ifndef STARTUP_INIT_TEST
 private:
 #endif
+    class ParameterChangeListener {
+    public:
+        ParameterChangeListener(ParameterChangePtr callback, void *context)
+            : callback_(callback), context_(context) {}
+        ~ParameterChangeListener() = default;
+
+        bool IsEqual(ParameterChangePtr callback, void *context)
+        {
+            return (callback == callback_ && context == context_);
+        }
+        void OnParameterChange(const std::string &name, const std::string &value);
+        bool CheckValueChange(const std::string &value)
+        {
+            bool ret = (value_ == value);
+            value_ = value;
+            return ret;
+        }
+    private:
+        std::string value_ {};
+        ParameterChangePtr callback_ { nullptr };
+        void *context_ { nullptr };
+    };
+
     class ParamWatcher final : public Watcher {
     public:
-        ParamWatcher(const std::string &key, ParameterChangePtr callback, void *context)
-            : keyPrefix_(key), callback_(callback), context_(context) {}
-        ~ParamWatcher() = default;
+        explicit ParamWatcher(const std::string &key) : keyPrefix_(key) {}
+        virtual ~ParamWatcher()
+        {
+            parameterChangeListeners.clear();
+        };
 
-        void OnParamerterChange(const std::string &name, const std::string &value) override;
+        void OnParameterChange(const std::string &name, const std::string &value) override;
 
         void SetWatcherId(uint32_t watcherId)
         {
@@ -56,12 +81,17 @@ private:
         {
             return watcherId_;
         }
-
+        int AddParameterListener(ParameterChangePtr callback, void *context);
+        int DelParameterListener(ParameterChangePtr callback, void *context);
     private:
+        ParameterChangeListener *GetParameterListener(uint32_t *idx);
+        void RemoveParameterListener(uint32_t idx);
         uint32_t watcherId_ { 0 };
         std::string keyPrefix_ {};
-        ParameterChangePtr callback_ { nullptr };
-        void *context_ { nullptr };
+
+        std::mutex mutex_;
+        uint32_t listenerId_ { 0 };
+        std::map<uint32_t, std::shared_ptr<ParameterChangeListener>> parameterChangeListeners;
     };
     using ParamWatcherKitPtr = sptr<WatcherManagerKits::ParamWatcher>;
     ParamWatcherKitPtr GetParamWatcher(const std::string &keyPrefix);
@@ -80,7 +110,6 @@ private:
     }
 
 private:
-    void SetParamWatcher(const std::string &keyPrefix, ParamWatcherKitPtr watcher);
     void ResetService(const wptr<IRemoteObject> &remote);
     sptr<IWatcherManager> GetService();
     std::mutex lock_;

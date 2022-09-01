@@ -52,5 +52,20 @@ int32_t WatcherManagerProxy::DelWatcher(const std::string &keyPrefix, uint32_t w
     WATCHER_CHECK(res == ERR_OK, return ERR_FLATTEN_OBJECT, "Transact error");
     return reply.ReadInt32();
 }
+int32_t WatcherManagerProxy::RefreshWatcher(const std::string &keyPrefix, uint32_t watcherId)
+{
+    auto remote = Remote();
+    WATCHER_CHECK(remote != nullptr, return ERR_FLATTEN_OBJECT, "Can not get remote");
+
+    MessageParcel data;
+    data.WriteInterfaceToken(WatcherManagerProxy::GetDescriptor());
+    data.WriteString(keyPrefix);
+    data.WriteUint32(watcherId);
+    MessageParcel reply;
+    MessageOption option { MessageOption::TF_SYNC };
+    int32_t res = remote->SendRequest(REFRESH_WATCHER, data, reply, option);
+    WATCHER_CHECK(res == ERR_OK, return ERR_FLATTEN_OBJECT, "Transact error");
+    return 0;
+}
 }
 } // namespace OHOS
