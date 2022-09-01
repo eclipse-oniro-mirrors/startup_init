@@ -80,6 +80,7 @@ typedef struct cmdLineInfo {
 #else
 #define DATA_PATH          STARTUP_INIT_UT_PATH"/data/service/el1/startup/parameters/"
 #endif
+#define PARAM_AREA_SIZE_CFG STARTUP_INIT_UT_PATH"/etc/param/ohos.para.size"
 
 #define CLIENT_PIPE_NAME "/dev/unix/socket/paramservice"
 #define PIPE_NAME STARTUP_INIT_UT_PATH "/dev/unix/socket/paramservice"

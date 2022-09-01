@@ -254,11 +254,13 @@ INIT_LOCAL_API int CheckParamName(const char *name, int info)
 static int AddParam(WorkSpace *workSpace, uint8_t type, const char *name, const char *value, uint32_t *dataIndex)
 {
     ParamTrieNode *node = AddTrieNode(workSpace, name, strlen(name));
-    PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "Failed to add node");
+    PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX,
+        "Failed to add node name %s space %s", name, workSpace->fileName);
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
     if (entry == NULL) {
         uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value));
-        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
+        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX,
+            "Failed to allocate name %s space %s", name, workSpace->fileName);
         SaveIndex(&node->dataIndex, offset);
         long long globalCommitId = ATOMIC_LOAD_EXPLICIT(&workSpace->area->commitId, memory_order_relaxed);
         ATOMIC_STORE_EXPLICIT(&workSpace->area->commitId, ++globalCommitId, memory_order_release);

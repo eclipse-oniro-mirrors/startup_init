@@ -11,27 +11,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# default forbid other user to start service
+ohos.servicectrl.           = system:servicectrl:0775
+ohos.servicectrl.reboot.    = system:powerctrl:0775
+ohos.boot.                  = system:bootctrl:0775
+bootevent.                  = root:root:0777
+startup.service.ctl.        = system:servicectrl:0775:int
+startup.device.             = system:powerctrl:0775
+
+const.debuggable            = root:root:0755
+const.build.                = root:root:0775
+const.SystemCapability.     = root:root:0775
+const.product.              = root:root:0775
+persist.init.               = root:root:0775
+appspawn.                   = root:root:0750
+startup.uevent.             = root:root:0775
+ohos.dev.                   = ueventd:ueventd:0775
+
+#udid and sn, only read
+ohos.boot.sn                = root:deviceprivate:0750
+
 const.actionable_compatible_property.enabled = root:root:0777
 const.postinstall.fstab.prefix = root:root:0777
 const.secure = root:root:0777
 security.perf_harden  = root:root:0777
 const.allow.mock.location   = root:root:0777
-const.debuggable  = root:root:0777
 persist.sys.usb.config  = root:root:0777
-
-# default forbid other user to start service
-ohos.servicectrl.   = system:servicectrl:0775
-ohos.startup.powerctrl. = system:powerctrl:0775
-ohos.boot. = system:bootctrl:0775
-ohos.dev. = ueventd:ueventd:0775
 
 #permission for system
 persist.window.boot. = root:system:0775
-
 #permission for log
 debug.bytrace.   = root:system:0775
-
 persist.distributed_hardware.device_manager. = system:system:0775
-bootevent. = samgr:samgr:0777
-hw_sc. = root:root:0777
-startup.service.ctl. = system:servicectrl:0775:int

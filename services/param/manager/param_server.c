@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <ctype.h>
+#include <errno.h>
 
 #include "param_manager.h"
 #include "param_trie.h"
@@ -160,13 +161,13 @@ static int LoadOneParam_(const uint32_t *context, const char *name, const char *
     return WriteParam(name, value, NULL, mode & LOAD_PARAM_ONLY_ADD);
 }
 
-static int LoadDefaultParam_(const char *fileName, uint32_t mode, const char *exclude[], uint32_t count)
+static int LoadDefaultParam_(const char *fileName, uint32_t mode,
+    const char *exclude[], uint32_t count, int (*loadOneParam)(const uint32_t *, const char *, const char *))
 {
     uint32_t paramNum = 0;
     FILE *fp = fopen(fileName, "r");
-    if (fp == NULL) {
-        return -1;
-    }
+    PARAM_CHECK(fp != NULL, return -1, "Failed to open file '%s' error:%d ", fileName, errno);
+
     const int buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
     char *buffer = malloc(buffSize);
     if (buffer == NULL) {
@@ -175,7 +176,7 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode, const char *ex
     }
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
-        int ret = SplitParamString(buffer, exclude, count, LoadOneParam_, &mode);
+        int ret = SplitParamString(buffer, exclude, count, loadOneParam, &mode);
         PARAM_CHECK(ret == 0, continue, "Failed to set param '%s' error:%d ", buffer, ret);
         paramNum++;
     }
@@ -189,7 +190,7 @@ static int ProcessParamFile(const char *fileName, void *context)
 {
     static const char *exclude[] = {"ctl.", "selinux.restorecon_recursive"};
     uint32_t mode = *(int *)context;
-    return LoadDefaultParam_(fileName, mode, exclude, ARRAY_LENGTH(exclude));
+    return LoadDefaultParam_(fileName, mode, exclude, ARRAY_LENGTH(exclude), LoadOneParam_);
 }
 
 int LoadParamsFile(const char *fileName, bool onlyAdd)
@@ -247,3 +248,29 @@ INIT_LOCAL_API void LoadParamFromBuild(void)
 #endif
 }
 
+static int LoadOneParamAreaSize_(const uint32_t *context, const char *name, const char *value)
+{
+    int ret = CheckParamName(name, 0);
+    if (ret != 0) {
+        return 0;
+    }
+    ret = CheckParamValue(NULL, name, value, PARAM_TYPE_INT);
+    PARAM_CHECK(ret == 0, return 0, "Invalid value %s for %s", value, name);
+    PARAM_LOGV("LoadOneParamAreaSize_ [%s] [%s]", name, value);
+
+    WorkSpace *workSpace = GetWorkSpace(WORKSPACE_NAME_DAC);
+    ParamTrieNode *node = AddTrieNode(workSpace, name, strlen(name));
+    PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "Failed to add node");
+    ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
+    if (entry == NULL) {
+        uint32_t offset = AddParamNode(workSpace, PARAM_TYPE_INT, name, strlen(name), value, strlen(value));
+        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
+        SaveIndex(&node->dataIndex, offset);
+    }
+    return 0;
+}
+
+INIT_LOCAL_API void LoadParamAreaSize(void)
+{
+    LoadDefaultParam_(PARAM_AREA_SIZE_CFG, 0, NULL, 0, LoadOneParamAreaSize_);
+}
