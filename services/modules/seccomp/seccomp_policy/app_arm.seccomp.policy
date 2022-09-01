@@ -33,10 +33,12 @@ write
 open
 close
 creat
+link
 unlink
 execve
 chdir
 chmod
+lchown
 lseek
 getpid
 getuid
@@ -46,6 +48,7 @@ sync
 kill
 rename
 mkdir
+rmdir
 dup
 pipe
 times
@@ -61,6 +64,8 @@ sigaction
 setrlimit
 getrusage
 gettimeofday
+symlink
+ftruncate
 readlink
 munmap
 truncate
@@ -70,6 +75,8 @@ setpriority
 setitimer
 getitimer
 stat
+lstat
+fstat
 wait4
 sysinfo
 fsync
@@ -115,6 +122,7 @@ rt_sigqueueinfo
 rt_sigsuspend
 pread64
 pwrite64
+chown
 getcwd
 capget
 capset
@@ -128,6 +136,7 @@ ftruncate64
 stat64
 lstat64
 fstat64
+lchown32
 getuid32
 getgid32
 geteuid32
@@ -139,6 +148,7 @@ setresuid32
 getresuid32
 setresgid32
 getresgid32
+chown32
 getdents64
 mincore
 madvise
