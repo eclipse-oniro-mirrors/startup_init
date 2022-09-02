@@ -29,6 +29,7 @@
 #include "device.h"
 #include "fd_holder_service.h"
 #include "fs_manager/fs_manager.h"
+#include "key_control.h"
 #include "init_control_fd_service.h"
 #include "init_log.h"
 #include "init_mount.h"
@@ -198,6 +199,9 @@ static void StartInitSecondStage(void)
 
     // It will panic if close stdio before execv("/bin/sh", NULL)
     CloseStdio();
+
+    // Set up a session keyring that all processes will have access to.
+    KeyCtrlGetKeyringId(KEY_SPEC_SESSION_KEYRING, 1);
 
 #ifndef DISABLE_INIT_TWO_STAGES
     SwitchRoot("/usr");
