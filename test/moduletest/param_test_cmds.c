@@ -88,7 +88,7 @@ static int32_t BShellParamCmdWatch(BShellHandle shell, int32_t argc, char *argv[
 {
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGV("BShellParamCmdWatch %s", argv[1]);
-    static int index = 0;
+    static size_t index = 0;
     int ret = SystemWatchParameter(argv[1], HandleParamChange, (void *)index);
     if (ret != 0) {
         PLUGIN_LOGE("Failed to watch %s", argv[1]);
