@@ -115,3 +115,4 @@ uhdf_driver:x:3066:
 memmgr:x:1111:
 ispserver:x:3821:
 dfs_share:x:3822:
+appspawn:x:4000:
