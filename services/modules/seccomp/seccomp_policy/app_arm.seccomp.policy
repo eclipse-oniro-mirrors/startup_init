@@ -299,6 +299,7 @@ pidfd_getfd
 process_madvise
 cacheflush
 set_tls
+set_robust_list
 
 @blockList
 mount

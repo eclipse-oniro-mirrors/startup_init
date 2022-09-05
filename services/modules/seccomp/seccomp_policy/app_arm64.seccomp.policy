@@ -243,6 +243,7 @@ pidfd_open
 close_range
 pidfd_getfd
 process_madvise
+set_robust_list
 
 @blockList
 umount2
