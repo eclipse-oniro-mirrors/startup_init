@@ -203,3 +203,9 @@ void *LE_GetUserData(TaskHandle handle)
     BaseTask *stream = (BaseTask *)handle;
     return (void *)(((char *)stream) + stream->userDataOffset);
 }
+
+int32_t LE_GetSendResult(const BufferHandle handle)
+{
+    LE_CHECK(handle != NULL, return 0, "Invalid handle");
+    return ((LE_Buffer *)handle)->result;
+}
