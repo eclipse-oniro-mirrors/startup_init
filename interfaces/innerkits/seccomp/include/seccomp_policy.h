@@ -25,14 +25,12 @@ extern "C" {
 #endif
 #endif
 
-typedef enum {
-    SYSTEM,
-    APPSPAWN,
-    APP,
-    NWEBSPAWN,
-} PolicyType;
+#define SYSTEM_NAME "system"
+#define APPSPAWN_NAME "appspawn"
+#define NWEBSPAWN_NAME "nwebspawn"
+#define APP_NAME "app"
 
-bool SetSeccompPolicy(PolicyType policy);
+bool SetSeccompPolicyWithName(const char *filterName);
 
 #ifdef __cplusplus
 #if __cplusplus

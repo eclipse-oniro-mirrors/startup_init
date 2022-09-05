@@ -36,7 +36,7 @@ group("modulesgroup") {
       "reboot:rebootmodule",
     ]
     if (build_seccomp) {
-      deps += [ "seccomp:seccomp_module" ]
+      deps += [ "seccomp:seccomp_filter" ]
     }
     if (build_selinux) {
       deps += [ "selinux:selinuxadp" ]
