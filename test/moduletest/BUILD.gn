@@ -13,6 +13,7 @@
 
 import("//base/startup/init/begetd.gni")
 import("//build/ohos.gni")
+import("//build/test.gni")
 
 ohos_shared_library("libparamtestmodule") {
   sources = [ "param_test_module.c" ]
@@ -39,6 +40,28 @@ ohos_shared_library("libparamtestmodule") {
 
   part_name = "init"
   module_install_dir = "lib/init"
+}
+
+ohos_moduletest("InitModuleTest") {
+  module_out_path = "startup/init"
+
+  sources = [
+    "hookmgr_moduletest.cpp",
+    "modulemgr_moduletest.cpp",
+  ]
+
+  include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/googletest:gtest_main",
+  ]
+}
+
+group("moduletest") {
+  testonly = true
+
+  deps = [ ":InitModuleTest" ]
 }
 
 group("paramtestmodule") {
