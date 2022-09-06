@@ -308,8 +308,12 @@ static int InitServicePropertys(Service *service)
     }
 
     CreateServiceFile(service->fileCfg);
-    if (service->attribute & SERVICE_ATTR_CONSOLE) {
-        OpenConsole();
+    if ((service->attribute & SERVICE_ATTR_CONSOLE)) {
+        if (strcmp(service->name, "console") != 0 || !IsOnDemandService(service)) {
+            OpenConsole();
+        } else {
+            setsid();
+        }
     }
 
     PublishHoldFds(service);
@@ -317,7 +321,7 @@ static int InitServicePropertys(Service *service)
         "binding core number failed for service %s", service->name);
 
     SetSystemSeccompPolicy(service);
-    
+
     // permissions
     INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, return -1,
         "service %s exit! set perms failed! err %d.", service->name, errno);
@@ -524,9 +528,15 @@ void ServiceReap(Service *service)
             return;
         }
     }
-    // service no need to restart which socket managed by init until socket message detected
+    // service no need to restart if it is an ondemand service.
     if (IsOnDemandService(service)) {
         CheckServiceSocket(service);
+        if (strcmp(service->name, "console") == 0) {
+            if (WatchConsoleDevice(service) < 0) {
+                INIT_LOGE("Failed to watch console service after it exit, mark console service invalid");
+                service->attribute |= SERVICE_ATTR_INVALID;
+            }
+        }
         return;
     }
 

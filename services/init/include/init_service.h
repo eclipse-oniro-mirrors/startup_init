@@ -67,6 +67,12 @@ extern "C" {
 #define IsOnDemandService(service) \
     (((service)->attribute & SERVICE_ATTR_ONDEMAND) == SERVICE_ATTR_ONDEMAND)
 
+#define MarkServiceAsOndemand(service) \
+    ((service)->attribute |= SERVICE_ATTR_ONDEMAND)
+
+#define UnMarkServiceAsOndemand(service) \
+    ((service)->attribute &= ~SERVICE_ATTR_ONDEMAND)
+
 #define IsServiceWithTimerEnabled(service) \
     (((service)->attribute & SERVICE_ATTR_TIMERSTART) == SERVICE_ATTR_TIMERSTART)
 

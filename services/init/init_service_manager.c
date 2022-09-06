@@ -20,7 +20,7 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
+#include <sys/ioctl.h>
 #include "cJSON.h"
 #include "init.h"
 #include "init_group_manager.h"
@@ -31,6 +31,7 @@
 #include "init_utils.h"
 #include "securec.h"
 #include "service_control.h"
+#include "sys_param.h"
 #ifdef ASAN_DETECTOR
 #include "init_param.h"
 #endif
@@ -872,6 +873,90 @@ static void ParseServiceHookExecute(const char *name, const cJSON *serviceNode)
 }
 #endif
 
+static void ProcessConsoleEvent(const WatcherHandle handler, int fd, uint32_t *events, const void *context)
+{
+    Service *service = (Service *)context;
+    LE_RemoveWatcher(LE_GetDefaultLoop(), (WatcherHandle)handler);
+    if (fd < 0 || service == NULL) {
+        INIT_LOGE("Process console event with invalid arguments");
+        return;
+    }
+
+    if (strcmp(service->name, "console") != 0) {
+        INIT_LOGE("Process console event with invalid service %s, only console service should do this", service->name);
+        return;
+    }
+
+    // Check if debuggable
+    char value[MAX_BUFFER_LEN] = {0};
+    unsigned int len = MAX_BUFFER_LEN;
+    if (SystemReadParam("const.debuggable", value, &len) != 0) {
+        INIT_LOGE("Failed to read parameter \'const.debuggable\', prevent console service starting");
+        CloseStdio();
+        return;
+    }
+
+    int isDebug = StringToInt(value, 0);
+    if (isDebug != 1) {
+        INIT_LOGI("Non-debuggable system, prevent console service starting");
+        CloseStdio();
+        return;
+    }
+    ioctl(fd, TIOCSCTTY, 0);
+    RedirectStdio(fd);
+    close(fd);
+    if (ServiceStart(service) != SERVICE_SUCCESS) {
+        INIT_LOGE("Start console service failed");
+    }
+    return;
+}
+
+static int AddFileDescriptorToWatcher(int fd, Service *service)
+{
+    if (fd < 0 || service == NULL) {
+        return -1;
+    }
+
+    WatcherHandle watcher = NULL;
+    LE_WatchInfo info = {};
+    info.fd = fd;
+    info.flags = 0; // WATCHER_ONCE;
+    info.events = Event_Read;
+    info.processEvent = ProcessConsoleEvent;
+    int ret = LE_StartWatcher(LE_GetDefaultLoop(), &watcher, &info, service);
+    if (ret != LE_SUCCESS) {
+        INIT_LOGE("Failed to watch console device for service \' %s \'", service->name);
+        return -1;
+    }
+    return 0;
+}
+
+int WatchConsoleDevice(Service *service)
+{
+    if (service == NULL) {
+        return -1;
+    }
+
+    int fd = open("/dev/console", O_RDWR);
+    if (fd < 0) {
+        if (errno == ENOENT) {
+            INIT_LOGW("/dev/console is not exist, wait for it...");
+            WaitForFile("/dev/console", WAIT_MAX_SECOND);
+            fd = open("/dev/console", O_RDWR);
+            if (fd < 0) {
+                INIT_LOGW("Failed to open /dev/console after try 1 time");
+                return -1;
+            }
+        }
+    }
+
+    if (AddFileDescriptorToWatcher(fd, service) < 0) {
+        close(fd);
+        return -1;
+    }
+    return 0;
+}
+
 void ParseAllServices(const cJSON *fileRoot)
 {
     int servArrSize = 0;
@@ -916,6 +1001,14 @@ void ParseAllServices(const cJSON *fileRoot)
             service->fileCfg = NULL;
         }
 
+        // Watch "/dev/console" node for starting console service ondemand.
+        if ((strcmp(service->name, "console") == 0) && IsOnDemandService(service)) {
+            if (WatchConsoleDevice(service) < 0) {
+                INIT_LOGW("Failed to watch \'/dev/console\' device");
+                INIT_LOGW("Remove service \' %s \' ondemand attribute", service->name);
+                UnMarkServiceAsOndemand(service);
+            }
+        }
 #ifndef OHOS_LITE
         /*
          * Execute service parsing hooks
