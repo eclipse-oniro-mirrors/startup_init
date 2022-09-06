@@ -42,6 +42,7 @@ typedef struct {
 #define WAIT_MAX_SECOND 5
 #define MAX_BUFFER_LEN 256
 #define CMDLINE_VALUE_LEN_MAX 512
+#define STDERR_HANDLE 2
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 
 #ifndef STARTUP_INIT_UT_PATH
@@ -83,7 +84,8 @@ char *TrimHead(char *str, char c);
 
 INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out);
 INIT_LOCAL_API int StringToLL(const char *str, long long int *out);
-
+void CloseStdio(void);
+void RedirectStdio(int fd);
 #ifdef __cplusplus
 #if __cplusplus
 }
