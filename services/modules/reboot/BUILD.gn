@@ -36,6 +36,10 @@ ohos_shared_library("rebootmodule") {
   } else {
     module_install_dir = "lib/init"
   }
+  install_images = [
+    "system",
+    "updater",
+  ]
 }
 
 ohos_source_set("libreboot_static") {

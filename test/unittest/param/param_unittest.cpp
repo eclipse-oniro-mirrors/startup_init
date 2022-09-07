@@ -298,7 +298,7 @@ public:
 
     int TestDumpParamMemory()
     {
-        SystemDumpParameters(1);
+        SystemDumpParameters(1, NULL);
         return 0;
     }
 };

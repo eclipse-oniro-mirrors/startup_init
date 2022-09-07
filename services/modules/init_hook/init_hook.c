@@ -21,6 +21,7 @@
 #include "securec.h"
 #include "init_module_engine.h"
 #include "init_group_manager.h"
+#include "init_param.h"
 #include "hookmgr.h"
 #include "bootstage.h"
 
@@ -127,7 +128,31 @@ static int ParamSetBootEventHook(const HOOK_INFO *hookInfo, void *cookie)
     return 0;
 }
 
+static int DumpTrigger(const char *fmt, ...)
+{
+    va_list vargs;
+    va_start(vargs, fmt);
+    InitLog(INIT_INFO, INIT_LOG_DOMAIN, INIT_LOG_TAG, fmt, vargs);
+    va_end(vargs);
+    return 0;
+}
+
+static int DumpServiceHook(const HOOK_INFO *info, void *cookie)
+{
+    // check and dump all jobs
+    char dump[8] = {0}; // 8 len
+    uint32_t len = sizeof(dump);
+    int ret = SystemReadParam("persist.init.debug.dump.trigger", dump, &len);
+    PLUGIN_LOGV("boot dump %s ret %d", dump, ret);
+    if (ret == 0 && strcmp(dump, "1") == 0) {
+        SystemDumpTriggers(1, DumpTrigger);
+    }
+    return 0;
+}
+
 MODULE_CONSTRUCTOR(void)
 {
     InitAddGlobalInitHook(0, ParamSetBootEventHook);
+    // Depends on parameter service
+    InitAddPostPersistParamLoadHook(0, DumpServiceHook);
 }
