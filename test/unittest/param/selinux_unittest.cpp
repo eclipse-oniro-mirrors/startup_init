@@ -22,9 +22,7 @@
 
 using namespace testing::ext;
 using namespace std;
-extern "C" {
-void OpenPermissionWorkSpace(void);
-}
+
 namespace init_ut {
 class SelinuxUnitTest : public ::testing::Test {
 public:
@@ -90,9 +88,6 @@ public:
     {
         int ret = RegisterSecuritySelinuxOps(&clientParamSercurityOps, 0);
         EXPECT_EQ(ret, 0);
-        if (clientParamSercurityOps.securityGetLabel != nullptr) {
-            EXPECT_EQ(1, 0);
-        }
         if (clientParamSercurityOps.securityCheckFilePermission == nullptr) {
             EXPECT_EQ(1, 0);
             return -1;
@@ -183,6 +178,5 @@ HWTEST_F(SelinuxUnitTest, TestClientDacCheckParaPermission, TestSize.Level0)
     SelinuxUnitTest test;
     test.TestClientSelinuxCheckParaPermissionWrite("aaa.bbb.bbb.ccc", "user:group1:r");
     test.TestClientSelinuxCheckParaPermissionRead("aaa.bbb.bbb.ccc", "user:group1:r");
-    OpenPermissionWorkSpace();
 }
 }

@@ -23,8 +23,6 @@
 #include "param_base.h"
 #ifdef PARAM_SUPPORT_SELINUX
 #include "selinux_parameter.h"
-#include <policycoreutils.h>
-#include <selinux/selinux.h>
 #endif
 
 #ifdef __aarch64__
@@ -78,7 +76,6 @@ static int InitSelinuxOpsForInit(SelinuxSpace *selinuxSpace)
     if (selinuxSpace->setSelinuxLogCallback != NULL) {
         selinuxSpace->setSelinuxLogCallback();
     }
-    PARAM_LOGI("Load selinux lib success.");
     return ret;
 }
 
@@ -106,7 +103,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         selinuxSpace->initParamSelinux();
     }
 #endif
-    PARAM_LOGV("Load selinux lib success.");
+    PARAM_LOGI("Load selinux lib success.");
     return 0;
 }
 
@@ -123,7 +120,7 @@ static void SetSelinuxFileCon(const char *name, const char *context)
     int len = ParamSprintf(buffer, sizeof(buffer), "%s/%s", PARAM_STORAGE_PATH, context);
     if (len > 0) {
         buffer[len] = '\0';
-        PARAM_LOGI("setfilecon name %s path: %s %s ", name, context, buffer);
+        PARAM_LOGV("setfilecon name %s path: %s %s ", name, context, buffer);
         if (GetParamWorkSpace()->ops.setfilecon(buffer, context) < 0) {
             PARAM_LOGE("Failed to setfilecon %s ", context);
         }
@@ -233,22 +230,31 @@ static const char *GetSelinuxContent(const char *name)
     }
 }
 
-static int SelinuxReadParamCheck(const char *name)
+static int CheckContentPermission(const char *name, const char *label)
 {
+    PARAM_CHECK(name != NULL && label != NULL, return DAC_RESULT_FORBIDED, "The label is null");
     int ret = DAC_RESULT_FORBIDED;
-    SelinuxSpace *selinuxSpace = &GetParamWorkSpace()->selinuxSpace;
-    if (selinuxSpace->readParamCheck != NULL) {
-        ret = selinuxSpace->readParamCheck(name);
-        PARAM_LOGI("SelinuxReadParamCheck name %s ret %d", name, ret);
-        return ret;
+    char buffer[FILENAME_LEN_MAX] = {0};
+    int size = ParamSprintf(buffer, sizeof(buffer), "%s/%s", PARAM_STORAGE_PATH, label);
+    PARAM_CHECK(size > 0, return -1, "Failed to format file name %s", label);
+    buffer[size] = '\0';
+    if (access(buffer, R_OK) == 0) {
+        ret = AddWorkSpace(label, 1, PARAM_WORKSPACE_MAX);
     }
-    PARAM_LOGW("SelinuxReadParamCheck name %s label %s", name, GetSelinuxContent(name));
-    WorkSpace *space = GetWorkSpace(name);
-    if (space == NULL) {
-        PARAM_LOGW("SelinuxReadParamCheck name %s label %s forbid", name, GetSelinuxContent(name));
+    if (ret != 0) {
+        PARAM_LOGE("SelinuxReadParamCheck name %s label %s ", name, label);
         return DAC_RESULT_FORBIDED;
     }
     return DAC_RESULT_PERMISSION;
+}
+
+static int SelinuxReadParamCheck(const char *name)
+{
+    const char *label = GetSelinuxContent(name);
+    if (label == NULL) {
+        return CheckContentPermission(name, WORKSPACE_NAME_DEF_SELINUX);
+    }
+    return CheckContentPermission(name, label);
 }
 
 static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
@@ -273,8 +279,8 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
 #endif
     }
     if (ret != 0) {
-        PARAM_LOGW("Selinux check name %s pid %d uid %d %d result %d", name, info.uc.pid,
-            info.uc.uid, info.uc.gid, ret);
+        PARAM_LOGW("Selinux check name %s in %s info [%d %d %d] result %d",
+            name, GetSelinuxContent(name), info.uc.pid, info.uc.uid, info.uc.gid, ret);
         ret = DAC_RESULT_FORBIDED;
     } else {
         ret = DAC_RESULT_PERMISSION;
@@ -285,6 +291,13 @@ static int SelinuxCheckParamPermission(const ParamSecurityLabel *srcLabel, const
 static int UpdaterCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
     return DAC_RESULT_PERMISSION;
+}
+
+static int OpenPermissionWorkSpace(const char *path)
+{
+    UNUSED(path);
+    // open workspace by readonly
+    return SelinuxGetAllLabel(1);
 }
 
 INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
@@ -303,12 +316,8 @@ INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
     ops->securityFreeLabel = FreeLocalSecurityLabel;
     if (isInit != 0) {
         ops->securityGetLabel = SelinuxGetParamSecurityLabel;
+    } else {
+        ops->securityGetLabel = OpenPermissionWorkSpace;
     }
     return ret;
-}
-
-INIT_LOCAL_API void OpenPermissionWorkSpace(void)
-{
-    // open workspace by readonly
-    SelinuxGetAllLabel(1);
 }

@@ -230,6 +230,11 @@ static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
 
 static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
+#ifndef STARTUP_INIT_TEST
+    if (srcLabel->cred.uid == 0) {
+        return DAC_RESULT_PERMISSION;
+    }
+#endif
     int ret = DAC_RESULT_FORBIDED;
     uint32_t labelIndex = 0;
     // get dac label
@@ -257,7 +262,7 @@ static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const cha
     }
     if (ret != DAC_RESULT_PERMISSION) {
         PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%o", name, srcLabel->cred.gid, srcLabel->cred.uid, localMode);
-        PARAM_LOGW("Cfg label %s gid:%d uid:%d mode 0%o ", node->data, node->gid, node->uid, node->mode);
+        PARAM_LOGW("Cfg label %d gid:%d uid:%d mode 0%o ", labelIndex, node->gid, node->uid, node->mode);
 #ifndef STARTUP_INIT_TEST
         ret = DAC_RESULT_PERMISSION;
 #endif
