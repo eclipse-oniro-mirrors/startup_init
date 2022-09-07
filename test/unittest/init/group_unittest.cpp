@@ -169,7 +169,6 @@ HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
         EXPECT_EQ(1, 0);
     } // test read cfgfile
     int ret = InitParseGroupCfg();
-    StartAllServices(GROUP_CHARGE);
     EXPECT_EQ(ret, 0);
 }
 

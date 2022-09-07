@@ -123,7 +123,9 @@ static TriggerNode *AddJobTrigger_(const TriggerWorkSpace *workSpace,
         return NULL, "Failed to add hash node");
     if (extInfo->type == TRIGGER_BOOT) {
         TRIGGER_SET_FLAG(node, TRIGGER_FLAGS_ONCE);
-        TRIGGER_SET_FLAG(node, TRIGGER_FLAGS_SUBTRIGGER);
+        if (strncmp("boot-service:", extInfo->info.name, strlen("boot-service:")) != 0) {
+            TRIGGER_SET_FLAG(node, TRIGGER_FLAGS_SUBTRIGGER);
+        }
     }
     return node;
 }

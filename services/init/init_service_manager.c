@@ -997,7 +997,7 @@ void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size))
 {
     Service *service = GetServiceByName("appspawn");
-    if (service != NULL && service->pid != -1) { // notify appspawn stop
+    if (service != NULL && service->pid > 0) { // notify appspawn stop
 #ifndef STARTUP_INIT_TEST
         kill(service->pid, SIGTERM);
         waitpid(service->pid, 0, 0);
@@ -1047,31 +1047,6 @@ Service *GetServiceByName(const char *servName)
         return groupNode->data.service;
     }
     return NULL;
-}
-
-void StartAllServices(int startMode)
-{
-    INIT_LOGI("StartAllServices %d", startMode);
-    InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
-    while (node != NULL) {
-        Service *service = node->data.service;
-        if (service == NULL || service->startMode != startMode) {
-            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
-            continue;
-        }
-        if (IsOnDemandService(service)) {
-            if (CreateServiceSocket(service) != 0) {
-                INIT_LOGE("service %s exit! create socket failed!", service->name);
-            }
-            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
-            continue;
-        }
-        if (ServiceStart(service) != SERVICE_SUCCESS) {
-            INIT_LOGE("Service %s start failed!", service->name);
-        }
-        node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
-    }
-    INIT_LOGI("StartAllServices %d finish", startMode);
 }
 
 void LoadAccessTokenId(void)
