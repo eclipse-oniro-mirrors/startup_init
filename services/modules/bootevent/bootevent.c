@@ -137,6 +137,9 @@ static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
     if (bootEvents == NULL) {
         return;
     }
+    SERVICE_INFO_CTX ctx = {0};
+    ctx.serviceName = serviceParseCtx->serviceName;
+    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)&ctx, NULL);
     // Single bootevent in config file
     if (!cJSON_IsArray(bootEvents)) {
         if (AddServiceBootEvent(serviceParseCtx->serviceName,

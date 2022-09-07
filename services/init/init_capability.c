@@ -88,8 +88,6 @@ int GetServiceCaps(const cJSON *curArrItem, Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "service is null ptr.");
     INIT_ERROR_CHECK(curArrItem != NULL, return SERVICE_FAILURE, "json is null ptr.");
-    service->servPerm.capsCnt = 0;
-    service->servPerm.caps = NULL;
     int capsCnt = 0;
     cJSON *filedJ = GetArrayItem(curArrItem, &capsCnt, "caps");
     if (filedJ == NULL) {
@@ -97,10 +95,14 @@ int GetServiceCaps(const cJSON *curArrItem, Service *service)
     }
     INIT_ERROR_CHECK(capsCnt <= MAX_CAPS_CNT_FOR_ONE_SERVICE, return SERVICE_FAILURE,
         "service=%s, too many caps[cnt %d] for one service", service->name, capsCnt);
+    service->servPerm.capsCnt = 0;
+    if (service->servPerm.caps != NULL) {
+        free(service->servPerm.caps);
+        service->servPerm.caps = NULL;
+    }
     service->servPerm.caps = (unsigned int *)calloc(1, sizeof(unsigned int) * capsCnt);
     INIT_ERROR_CHECK(service->servPerm.caps != NULL, return SERVICE_FAILURE,
         "Failed to malloc for service %s", service->name);
-    service->servPerm.capsCnt = 0;
     unsigned int caps = FULL_CAP;
     for (int i = 0; i < capsCnt; ++i) { // number form
         char *capStr = NULL;

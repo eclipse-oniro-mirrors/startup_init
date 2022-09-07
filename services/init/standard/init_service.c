@@ -107,8 +107,9 @@ void GetAccessToken(void)
             if (service->capsArgs.count == 0) {
                 service->capsArgs.argv = NULL;
             }
-            if (strlen(service->apl) == 0) {
-                (void)strncpy_s(service->apl, sizeof(service->apl), "system_basic", sizeof(service->apl) - 1);
+            const char *apl = "system_basic";
+            if (service->apl != NULL) {
+                apl = service->apl;
             }
             NativeTokenInfoParams nativeTokenInfoParams = {
                 service->capsArgs.count,
@@ -118,8 +119,9 @@ void GetAccessToken(void)
                 (const char **)service->permArgs.argv,
                 (const char **)service->permAclsArgs.argv,
                 service->name,
-                service->apl,
+                apl,
             };
+
             uint64_t tokenId = GetAccessTokenId(&nativeTokenInfoParams);
             INIT_CHECK_ONLY_ELOG(tokenId  != 0,
                 "Get totken id %lld of service \' %s \' failed", tokenId, service->name);

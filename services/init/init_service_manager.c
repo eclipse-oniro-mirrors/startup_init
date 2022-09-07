@@ -140,6 +140,10 @@ void ReleaseService(Service *service)
     FreeServiceSocket(service->socketCfg);
     FreeServiceFile(service->fileCfg);
 
+    if(service->apl != NULL) {
+        free(service->apl);
+        service->apl = NULL;
+    }
     for (size_t i = 0; i < JOB_ON_MAX; i++) {
         if (service->serviceJobs.jobsName[i] != NULL) {
             free(service->serviceJobs.jobsName[i]);
@@ -168,16 +172,6 @@ static char *GetStringValue(const cJSON *json, const char *name, size_t *strLen)
     return fieldStr;
 }
 
-static int GetStringItem(const cJSON *json, const char *name, char *buffer, int buffLen)
-{
-    INIT_ERROR_CHECK(json != NULL, return SERVICE_FAILURE, "Invalid json for %s", name);
-    size_t strLen = 0;
-    char *fieldStr = GetStringValue(json, name, &strLen);
-    INIT_CHECK((fieldStr != NULL) && (strLen != 0) && (strLen <= (size_t)buffLen),
-        return SERVICE_FAILURE);
-    return strcpy_s(buffer, buffLen, fieldStr);
-}
-
 cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrName)
 {
     cJSON *arrItem = cJSON_GetObjectItemCaseSensitive(fileRoot, arrName);
@@ -199,7 +193,9 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
     INIT_ERROR_CHECK(ret, return SERVICE_FAILURE, "Invalid type");
     int count = cJSON_GetArraySize(obj);
     INIT_ERROR_CHECK((count > 0) && (count < maxCount), return SERVICE_FAILURE, "Array size = %d is wrong", count);
-
+    if ((args->argv != NULL) && (args->count > 0)) {
+        FreeServiceArg(args);
+    }
     args->argv = (char **)malloc((count + 1) * sizeof(char *));
     INIT_ERROR_CHECK(args->argv != NULL, return SERVICE_FAILURE, "Failed to malloc for argv");
     for (int i = 0; i < count + 1; ++i) {
@@ -257,7 +253,6 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
     int gidCount;
     cJSON *arrItem = cJSON_GetObjectItemCaseSensitive(curArrItem, GID_STR_IN_CFG);
     if (!arrItem) {
-        curServ->servPerm.gIDCnt = 0;
         return SERVICE_SUCCESS;
     } else if (!cJSON_IsArray(arrItem)) {
         gidCount = 1;
@@ -266,6 +261,9 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
     }
     INIT_ERROR_CHECK((gidCount != 0) && (gidCount <= NGROUPS_MAX + 1), return SERVICE_FAILURE,
         "Invalid gid count %d", gidCount);
+    if (curServ->servPerm.gIDArray != NULL) {
+        free(curServ->servPerm.gIDArray);
+    }
     curServ->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t) * gidCount);
     INIT_ERROR_CHECK(curServ->servPerm.gIDArray != NULL, return SERVICE_FAILURE, "Failed to malloc");
     curServ->servPerm.gIDCnt = gidCount;
@@ -300,10 +298,9 @@ static int GetServiceAttr(const cJSON *curArrItem, Service *curServ, const char 
     }
     INIT_ERROR_CHECK(cJSON_IsNumber(filedJ), return SERVICE_FAILURE,
         "%s is null or is not a number, service name is %s", attrName, curServ->name);
-
+    curServ->attribute &= ~flag;
     int value = (int)cJSON_GetNumberValue(filedJ);
     if (processAttr == NULL) {
-        curServ->attribute &= ~flag;
         if (value == 1) {
             curServ->attribute |= flag;
         }
@@ -451,6 +448,9 @@ static int ParseServiceSocket(const cJSON *curArrItem, Service *curServ)
     int sockCnt = 0;
     cJSON *filedJ = GetArrayItem(curArrItem, &sockCnt, "socket");
     INIT_CHECK(filedJ != NULL && sockCnt > 0, return SERVICE_FAILURE);
+
+    CloseServiceSocket(curServ);
+    FreeServiceSocket(curServ->socketCfg);
     int ret = 0;
     curServ->socketCfg = NULL;
     for (int i = 0; i < sockCnt; ++i) {
@@ -524,6 +524,7 @@ static int ParseServiceFile(const cJSON *curArrItem, Service *curServ)
     int fileCnt = 0;
     cJSON *filedJ = GetArrayItem(curArrItem, &fileCnt, "file");
     INIT_CHECK(filedJ != NULL && fileCnt > 0, return SERVICE_FAILURE);
+    FreeServiceFile(curServ->fileCfg);
     int ret = 0;
     curServ->fileCfg = NULL;
     for (int i = 0; i < fileCnt; ++i) {
@@ -545,6 +546,8 @@ static int GetServiceOnDemand(const cJSON *curArrItem, Service *curServ)
 
     INIT_ERROR_CHECK(cJSON_IsBool(item), return SERVICE_FAILURE,
         "Service : %s ondemand value only support bool.", curServ->name);
+    curServ->attribute &= ~SERVICE_ATTR_ONDEMAND;
+
     INIT_INFO_CHECK(cJSON_IsTrue(item), return SERVICE_SUCCESS,
         "Service : %s ondemand value is false, it should be pulled up by init", curServ->name);
     if (curServ->attribute & SERVICE_ATTR_CRITICAL) {
@@ -605,6 +608,10 @@ static int GetServiceJobs(Service *service, cJSON *json)
     for (int i = 0; i < (int)ARRAY_LENGTH(jobTypes); i++) {
         char *jobName = cJSON_GetStringValue(cJSON_GetObjectItem(json, jobTypes[i]));
         if (jobName != NULL) {
+            if (service->serviceJobs.jobsName[i] != NULL) {
+                DelGroupNode(NODE_TYPE_JOBS, service->serviceJobs.jobsName[i]);
+                free(service->serviceJobs.jobsName[i]);
+            }
             service->serviceJobs.jobsName[i] = strdup(jobName);
             // save job name for group job check
             AddGroupNode(NODE_TYPE_JOBS, jobName);
@@ -695,7 +702,6 @@ static int GetCpuArgs(const cJSON *argJson, const char *name, Service *service)
 
 static int GetServiceSandbox(const cJSON *curItem, Service *service)
 {
-    MarkServiceWithSandbox(service);
     cJSON *item = cJSON_GetObjectItem(curItem, "sandbox");
     if (item == NULL) {
         return SERVICE_SUCCESS;
@@ -704,10 +710,10 @@ static int GetServiceSandbox(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(cJSON_IsNumber(item), return SERVICE_FAILURE,
         "Service : %s sandbox value only support number.", service->name);
     int isSandbox = (int)cJSON_GetNumberValue(item);
-    if (isSandbox == 1) {
-        MarkServiceWithSandbox(service);
+    if (isSandbox == 0) {
+        MarkServiceWithoutSandbox(service);
     } else {
-        UnMarkServiceWithSandbox(service);
+        MarkServiceWithSandbox(service);
     }
 
     return SERVICE_SUCCESS;
@@ -791,7 +797,15 @@ static void ParseOneServiceArgs(const cJSON *curItem, Service *service)
     (void)GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
     (void)GetServiceArgs(curItem, "permission", MAX_WRITEPID_FILES, &service->permArgs);
     (void)GetServiceArgs(curItem, "permission_acls", MAX_WRITEPID_FILES, &service->permAclsArgs);
-    (void)GetStringItem(curItem, APL_STR_IN_CFG, service->apl, MAX_APL_NAME);
+    size_t strLen = 0;
+    char *fieldStr = GetStringValue(curItem, APL_STR_IN_CFG, &strLen);
+    if (fieldStr != NULL) {
+        if (service->apl != NULL) {
+            free(service->apl);
+        }
+        service->apl = strdup(fieldStr);
+        INIT_CHECK(service->apl != NULL, return);
+    }
     (void)GetCpuArgs(curItem, CPU_CORE_STR_IN_CFG, service);
 }
 
@@ -967,26 +981,26 @@ void ParseAllServices(const cJSON *fileRoot)
         "Too many services[cnt %d] detected, should not exceed %d.",
         servArrSize, MAX_SERVICES_CNT_IN_FILE);
 
-    char serviceName[MAX_SERVICE_NAME] = {};
+    size_t strLen = 0;
     for (int i = 0; i < servArrSize; ++i) {
         cJSON *curItem = cJSON_GetArrayItem(serviceArr, i);
-        int ret = GetStringItem(curItem, "name", serviceName, MAX_SERVICE_NAME);
-        if (ret != 0) {
+        char *fieldStr = GetStringValue(curItem, "name", &strLen);
+        if (fieldStr == NULL) {
             INIT_LOGE("Failed to get service name");
             continue;
         }
-        Service *service = GetServiceByName(serviceName);
+        Service *service = GetServiceByName(fieldStr);
         if (service != NULL) {
-            INIT_LOGE("Service \' %s \' already exist", serviceName);
+            INIT_LOGE("Service \' %s \' already exist", fieldStr);
             continue;
         }
-        service = AddService(serviceName);
+        service = AddService(fieldStr);
         if (service == NULL) {
-            INIT_LOGE("Failed to create service name %s", serviceName);
+            INIT_LOGE("Failed to create service name %s", fieldStr);
             continue;
         }
-
-        ret = ParseOneService(curItem, service);
+        service->pid = -1;
+        int ret = ParseOneService(curItem, service);
         if (ret != SERVICE_SUCCESS) {
             ReleaseService(service);
             service = NULL;
@@ -1013,7 +1027,7 @@ void ParseAllServices(const cJSON *fileRoot)
         /*
          * Execute service parsing hooks
          */
-        ParseServiceHookExecute(serviceName, curItem);
+        ParseServiceHookExecute(fieldStr, curItem);
 #endif
 
         ret = GetCmdLinesFromJson(cJSON_GetObjectItem(curItem, "onrestart"), &service->restartArg);
@@ -1058,7 +1072,7 @@ static Service *GetServiceByExtServName(const char *fullServName)
 
 void StartServiceByName(const char *servName)
 {
-    INIT_LOGE("StartServiceByName Service %s", servName);
+    INIT_LOGI("StartServiceByName Service %s", servName);
     Service *service = GetServiceByName(servName);
     if (service == NULL) {
         service = GetServiceByExtServName(servName);
