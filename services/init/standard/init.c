@@ -374,7 +374,7 @@ void SetServiceEnterSandbox(const char *execPath, unsigned int attribute)
     if (g_enableSandbox == false) {
         return;
     }
-    if ((attribute & SERVICE_ATTR_SANDBOX) != SERVICE_ATTR_SANDBOX) {
+    if ((attribute & SERVICE_ATTR_WITHOUT_SANDBOX) == SERVICE_ATTR_WITHOUT_SANDBOX) {
         return;
     }
     INIT_ERROR_CHECK(execPath != NULL, return, "Service path is null.");

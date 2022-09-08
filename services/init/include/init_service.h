@@ -48,7 +48,7 @@ extern "C" {
 #define SERVICE_ATTR_ONDEMAND 0x100     // ondemand, manage socket by init
 #define SERVICE_ATTR_TIMERSTART 0x200   // Mark a service will be started by timer
 #define SERVICE_ATTR_NEEDWAIT 0x400     // service should execute waitpid while stopping
-#define SERVICE_ATTR_SANDBOX 0x800     // make service will enter sandbox
+#define SERVICE_ATTR_WITHOUT_SANDBOX 0x800     // make service not enter sandbox
 
 #define MAX_SERVICE_NAME 32
 #define MAX_APL_NAME 32
@@ -82,12 +82,13 @@ extern "C" {
 #define EnableServiceTimer(service) \
     ((service)->attribute |= SERVICE_ATTR_TIMERSTART)
 
+#define MarkServiceWithoutSandbox(service) \
+    ((service)->attribute |= SERVICE_ATTR_WITHOUT_SANDBOX)
+
 #define MarkServiceWithSandbox(service) \
-    ((service)->attribute |= SERVICE_ATTR_SANDBOX)
+    ((service)->attribute &= ~SERVICE_ATTR_WITHOUT_SANDBOX)
 
-#define UnMarkServiceWithSandbox(service) \
-    ((service)->attribute &= ~SERVICE_ATTR_SANDBOX)
-
+#pragma pack(4)
 typedef enum {
     START_MODE_CONDITION,
     START_MODE_BOOT,
@@ -139,7 +140,7 @@ typedef struct Service_ {
     int endMode : 4; // preFork/ fork / exec / ready
     int status : 4; // ServiceStatus
     uint64_t tokenId;
-    char apl[MAX_APL_NAME + 1];
+    char *apl;
     ServiceArgs capsArgs;
     ServiceArgs permArgs;
     ServiceArgs permAclsArgs;
@@ -157,6 +158,7 @@ typedef struct Service_ {
     cpu_set_t cpuSet;
     struct ListNode extDataNode;
 } Service;
+#pragma pack()
 
 Service *GetServiceByPid(pid_t pid);
 Service *GetServiceByName(const char *servName);

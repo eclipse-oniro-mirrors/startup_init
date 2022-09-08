@@ -21,6 +21,7 @@
 #include <linux/limits.h>
 
 #include "beget_ext.h"
+#include "config_policy_utils.h"
 #include "init_utils.h"
 #include "list.h"
 #include "securec.h"
@@ -225,15 +226,22 @@ MODULE_MGR *ModuleMgrScan(const char *modulePath)
     BEGET_CHECK(moduleMgr != NULL, return NULL);
 
     if (modulePath[0] == '/') {
-        BEGET_CHECK(!(snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s", modulePath) < 0), return NULL);
+        scanModules(moduleMgr, modulePath);
+    } else if (InUpdaterMode() == 1) {
+        BEGET_CHECK(snprintf_s(path, sizeof(path), sizeof(path) - 1,
+            "/%s/%s", MODULE_LIB_NAME, modulePath) > 0, return NULL);
+        scanModules(moduleMgr, path);
     } else {
-        const char *fmt = (InUpdaterMode() == 0) ? "/system/" MODULE_LIB_NAME : "/" MODULE_LIB_NAME;
-        BEGET_CHECK(!(snprintf_s(path, sizeof(path), sizeof(path) - 1,
-            "%s/%s", fmt, modulePath) < 0), return NULL);
+        BEGET_CHECK(snprintf_s(path, sizeof(path), sizeof(path) - 1,
+            "%s/%s", MODULE_LIB_NAME, modulePath) > 0, return NULL);
+        CfgFiles *files = GetCfgFiles(path);
+        for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; files && i >= 0; i--) {
+            if (files->paths[i]) {
+                scanModules(moduleMgr, files->paths[i]);
+            }
+        }
+        FreeCfgFiles(files);
     }
-
-    scanModules(moduleMgr, path);
-
     return moduleMgr;
 }
 

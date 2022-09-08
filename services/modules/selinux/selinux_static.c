@@ -25,16 +25,17 @@ static int SelinuxHook(const HOOK_INFO *hookInfo, void *cookie)
     return 0;
 }
 
-static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
+static void ServiceParseSelinuxHook(SERVICE_PARSE_CTX *serviceParseCtx)
 {
     char *fieldStr = cJSON_GetStringValue(cJSON_GetObjectItem(serviceParseCtx->serviceNode, SECON_STR_IN_CFG));
     PLUGIN_CHECK(fieldStr != NULL, return, "No secon item in %s", serviceParseCtx->serviceName);
     PLUGIN_LOGV("Cfg %s for %s", fieldStr, serviceParseCtx->serviceName);
+    DelServiceExtData(serviceParseCtx->serviceName, HOOK_ID_SELINUX);
     AddServiceExtData(serviceParseCtx->serviceName, HOOK_ID_SELINUX, fieldStr, strlen(fieldStr) + 1);
 }
 
 MODULE_CONSTRUCTOR(void)
 {
-    InitAddServiceParseHook(ServiceParseBootEventHook);
+    InitAddServiceParseHook(ServiceParseSelinuxHook);
     InitAddGlobalInitHook(0, SelinuxHook);
 }
