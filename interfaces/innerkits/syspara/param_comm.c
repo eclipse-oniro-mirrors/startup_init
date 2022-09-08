@@ -142,6 +142,9 @@ static int GetSha256Value(const char *input, char *udid, int udidSize)
 #else
 static int GetSha256Value(const char *input, char *udid, int udidSize)
 {
+    (void)input;
+    (void)udid;
+    (void)udidSize;
     return EC_FAILURE;
 }
 #endif
