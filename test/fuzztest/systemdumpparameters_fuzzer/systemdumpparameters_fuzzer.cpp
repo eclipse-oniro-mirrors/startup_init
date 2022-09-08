@@ -24,7 +24,7 @@ namespace OHOS {
         CloseStdout();
         std::string str(reinterpret_cast<const char*>(data), size);
         int verbose = atoi(str.c_str());
-        SystemDumpParameters(verbose);
+        SystemDumpParameters(verbose, nullptr);
         return true;
     }
 }

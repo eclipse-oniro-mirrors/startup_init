@@ -129,7 +129,8 @@ INIT_LOCAL_API void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, cons
         exper;                       \
     }
 
-#define PARAM_DUMP printf
+typedef int (*DUMP_PRINTF)(const char *fmt, ...);
+#define PARAM_DUMP g_printf
 #define MAX_LABEL_LEN 256
 #define PARAM_BUFFER_SIZE 256
 

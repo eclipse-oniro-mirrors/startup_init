@@ -429,7 +429,7 @@ public:
         char buffer[] = "testbuff";
         CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM_WATCH, buffer, strlen(buffer), TestTriggerExecute);
 #ifdef PARAM_SUPPORT_TRIGGER
-        SystemDumpTriggers(1);
+        SystemDumpTriggers(1, NULL);
 #endif
         AddWatch(MSG_DEL_WATCHER, name, value);
         return 0;

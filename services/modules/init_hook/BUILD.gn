@@ -37,7 +37,10 @@ if (defined(ohos_lite)) {
   }
 } else {
   ohos_source_set("inithook") {
-    defines = [ "_GNU_SOURCE" ]
+    defines = [
+      "_GNU_SOURCE",
+      "PARAM_SUPPORT_TRIGGER",
+    ]
     include_dirs = comm_include
     sources = [
       "init_hook.c",
