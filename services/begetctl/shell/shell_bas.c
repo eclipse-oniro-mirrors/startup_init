@@ -38,7 +38,10 @@ char *BShellEnvErrString(BShellHandle handle, int32_t err)
     }
     BSH_CHECK(handle != NULL, return "System unknow err", "Invalid shell env");
     BShellEnv *shell = (BShellEnv *)handle;
-    sprintf_s(shell->data, sizeof(shell->data) - 1, "System unknow err 0x%08x", err);
+    int len = sprintf_s(shell->data, sizeof(shell->data) - 1, "System unknow err 0x%08x", err);
+    if (len <= 0) {
+        BSH_LOGE("Write shell data size failed.");
+    }
     return shell->data;
 }
 

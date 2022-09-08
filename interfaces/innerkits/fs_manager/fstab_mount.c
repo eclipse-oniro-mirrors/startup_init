@@ -182,7 +182,10 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
         unsigned long long realSize = size *
             ((unsigned long long)RESIZE_BUFFER_SIZE * RESIZE_BUFFER_SIZE / FS_MANAGER_BUFFER_SIZE);
         char sizeStr[RESIZE_BUFFER_SIZE] = {0};
-        sprintf_s(sizeStr, RESIZE_BUFFER_SIZE, "%llu", realSize);
+        int len = sprintf_s(sizeStr, RESIZE_BUFFER_SIZE, "%llu", realSize);
+        if (len <= 0) {
+            BEGET_LOGE("Write buffer size failed.");
+        }
         char *cmd[] = {
             file, "-t", sizeStr, (char *)device, NULL
         };
@@ -229,7 +232,10 @@ static int DoResizeExt(const char* device, const unsigned long long size)
         ret = ExecCommand(argc, argv);
     } else {
         char sizeStr[RESIZE_BUFFER_SIZE] = {0};
-        sprintf_s(sizeStr, RESIZE_BUFFER_SIZE, "%lluM", size);
+        int len = sprintf_s(sizeStr, RESIZE_BUFFER_SIZE, "%lluM", size);
+        if (len <= 0) {
+            BEGET_LOGE("Write buffer size failed.");
+        }
         char *cmd[] = {
             file, "-f", (char *)device, sizeStr, NULL
         };
