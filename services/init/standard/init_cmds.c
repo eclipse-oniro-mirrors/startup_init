@@ -342,14 +342,18 @@ static void DoStopAllServices(const struct CmdArgs *ctx)
 static void DoUmount(const struct CmdArgs *ctx)
 {
     INIT_LOGI("DoUmount %s",  ctx->argv[0]);
-    int ret = GetMountStatusForMountPoint(ctx->argv[0]);
-    if (ret == 0) {
-        ret = umount(ctx->argv[0]);
+    MountStatus status = GetMountStatusForMountPoint(ctx->argv[0]);
+    if (status == MOUNT_MOUNTED) {
+        int ret = umount(ctx->argv[0]);
         if ((ret != 0) && (ctx->argc > 1) && (strcmp(ctx->argv[1], "MNT_FORCE") == 0)) {
             ret = umount2(ctx->argv[0], MNT_FORCE);
         }
+        INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to umount %s, errno %d", ctx->argv[0], errno);
+    } else if (status == MOUNT_UMOUNTED) {
+        INIT_LOGI("%s is already umounted", ctx->argv[0]);
+    } else {
+        INIT_LOGE("Failed to get %s mount status", ctx->argv[0]);
     }
-    INIT_ERROR_CHECK(ret == 0, return, "Failed to umount %s errno = %d.", ctx->argv[0], errno);
 }
 
 static void DoSync(const struct CmdArgs *ctx)
