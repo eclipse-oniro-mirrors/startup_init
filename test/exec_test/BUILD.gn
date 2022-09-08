@@ -83,13 +83,11 @@ ohos_executable("ondemandTest") {
 }
 
 group("exectest") {
-  if (control_test) {
-    deps = [
-      ":client",
-      ":fd_holder_test",
-      ":fd_holder_test.cfg",
-      ":ondemandTest",
-      ":server",
-    ]
-  }
+  deps = [
+    ":client",
+    ":fd_holder_test",
+    ":fd_holder_test.cfg",
+    ":ondemandTest",
+    ":server",
+  ]
 }
