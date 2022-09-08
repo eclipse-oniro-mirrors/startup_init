@@ -895,7 +895,9 @@ static void ProcessConsoleEvent(const WatcherHandle handler, int fd, uint32_t *e
         INIT_LOGE("Process console event with invalid arguments");
         return;
     }
-
+    // Since we've got event from console device
+    // the fd related to '/dev/console' does not need anymore, close it.
+    close(fd);
     if (strcmp(service->name, "console") != 0) {
         INIT_LOGE("Process console event with invalid service %s, only console service should do this", service->name);
         return;
@@ -906,19 +908,14 @@ static void ProcessConsoleEvent(const WatcherHandle handler, int fd, uint32_t *e
     unsigned int len = MAX_BUFFER_LEN;
     if (SystemReadParam("const.debuggable", value, &len) != 0) {
         INIT_LOGE("Failed to read parameter \'const.debuggable\', prevent console service starting");
-        CloseStdio();
         return;
     }
 
     int isDebug = StringToInt(value, 0);
     if (isDebug != 1) {
         INIT_LOGI("Non-debuggable system, prevent console service starting");
-        CloseStdio();
         return;
     }
-    ioctl(fd, TIOCSCTTY, 0);
-    RedirectStdio(fd);
-    close(fd);
     if (ServiceStart(service) != SERVICE_SUCCESS) {
         INIT_LOGE("Start console service failed");
     }
@@ -956,11 +953,14 @@ int WatchConsoleDevice(Service *service)
         if (errno == ENOENT) {
             INIT_LOGW("/dev/console is not exist, wait for it...");
             WaitForFile("/dev/console", WAIT_MAX_SECOND);
-            fd = open("/dev/console", O_RDWR);
-            if (fd < 0) {
-                INIT_LOGW("Failed to open /dev/console after try 1 time");
-                return -1;
-            }
+        } else {
+            INIT_LOGE("Failed to open /dev/console, err = %d", errno);
+            return -1;
+        }
+        fd = open("/dev/console", O_RDWR);
+        if (fd < 0) {
+            INIT_LOGW("Failed to open /dev/console after try 1 time, err = %d", errno);
+            return -1;
         }
     }
 
@@ -1019,8 +1019,6 @@ void ParseAllServices(const cJSON *fileRoot)
         if ((strcmp(service->name, "console") == 0) && IsOnDemandService(service)) {
             if (WatchConsoleDevice(service) < 0) {
                 INIT_LOGW("Failed to watch \'/dev/console\' device");
-                INIT_LOGW("Remove service \' %s \' ondemand attribute", service->name);
-                UnMarkServiceAsOndemand(service);
             }
         }
 #ifndef OHOS_LITE
