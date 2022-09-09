@@ -131,6 +131,7 @@ if (defined(ohos_lite)) {
     install_images = [ "system" ]
     install_enable = true
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_executable("paramshell") {
@@ -171,6 +172,7 @@ if (defined(ohos_lite)) {
     install_enable = true
 
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_executable("param") {
@@ -212,6 +214,7 @@ if (defined(ohos_lite)) {
     install_images = [ "system" ]
     install_enable = true
     part_name = "init"
+    subsystem_name = "startup"
   }
 }
 

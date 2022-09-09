@@ -200,6 +200,7 @@ if (defined(ohos_lite)) {
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
+    subsystem_name = "startup"
     install_images = [
       "system",
       "updater",
@@ -259,6 +260,7 @@ if (defined(ohos_lite)) {
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
+    subsystem_name = "startup"
     install_images = [ "system" ]
   }
 
@@ -294,6 +296,7 @@ if (defined(ohos_lite)) {
       "hilog_native:libhilog_base",
     ]
     part_name = "init"
+    subsystem_name = "startup"
   }
 }
 

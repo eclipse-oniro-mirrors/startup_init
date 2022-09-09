@@ -46,6 +46,7 @@ if (defined(ohos_lite)) {
     defines += [ "_GNU_SOURCE" ]
     install_enable = true
     part_name = "init"
+    subsystem_name = "startup"
   }
 }
 

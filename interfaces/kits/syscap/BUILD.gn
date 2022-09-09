@@ -18,6 +18,7 @@ ohos_shared_library("deviceinfo_ndk") {
   include_dirs = [ "./include" ]
   deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
   part_name = "init"
+  subsystem_name = "startup"
 }
 
 ohos_ndk_library("libdeviceinfo_ndk") {

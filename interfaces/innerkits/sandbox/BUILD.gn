@@ -35,4 +35,5 @@ ohos_static_library("sandbox") {
     defines = [ "SUPPORT_64BIT" ]
   }
   part_name = "init"
+  subsystem_name = "startup"
 }

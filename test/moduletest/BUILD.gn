@@ -38,6 +38,7 @@ ohos_shared_library("libparamtestmodule") {
   external_deps = [ "init:libinit_module_engine" ]
 
   part_name = "init"
+  subsystem_name = "startup"
   module_install_dir = "lib/init"
 }
 

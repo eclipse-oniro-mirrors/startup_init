@@ -43,5 +43,6 @@ if (defined(ohos_lite)) {
     ]
     defines = [ "_GNU_SOURCE" ]
     part_name = "init"
+    subsystem_name = "startup"
   }
 }

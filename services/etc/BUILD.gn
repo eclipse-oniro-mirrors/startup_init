@@ -61,30 +61,35 @@ if (defined(ohos_lite)) {
       source = "//base/startup/init/services/etc/init.cfg"
     }
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("misc.cfg") {
     source = "//base/startup/init/services/etc/misc.cfg"
     relative_install_dir = "init"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("watchdog.cfg") {
     source = "//base/startup/init/services/etc/watchdog.cfg"
     relative_install_dir = "init"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("console.cfg") {
     source = "//base/startup/init/services/etc/console.cfg"
     relative_install_dir = "init"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("ueventd.cfg") {
     source = "//base/startup/init/services/etc/ueventd.cfg"
     relative_install_dir = "init"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("passwd") {
@@ -94,6 +99,7 @@ if (defined(ohos_lite)) {
       "updater",
     ]
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("group") {
@@ -103,11 +109,13 @@ if (defined(ohos_lite)) {
       "updater",
     ]
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("init.usb.cfg") {
     source = "//base/startup/init/services/etc/init.usb.cfg"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_para("ohos.para") {
@@ -117,6 +125,7 @@ if (defined(ohos_lite)) {
       "updater",
     ]
     part_name = "init"
+    subsystem_name = "startup"
     if (target_cpu == "arm64") {
       extra_paras = [ "const.product.cpu.abilist=arm64-v8a" ]
     }
@@ -130,12 +139,14 @@ if (defined(ohos_lite)) {
       "updater",
     ]
     part_name = "init"
+    subsystem_name = "startup"
     module_install_dir = "etc/param"
   }
 
   ohos_prebuilt_para("ohos_const.para") {
     source = "//base/startup/init/services/etc/param/ohos_const/ohos.para"
     part_name = "init"
+    subsystem_name = "startup"
     module_install_dir = "etc/param/ohos_const"
   }
 
@@ -146,38 +157,45 @@ if (defined(ohos_lite)) {
       "updater",
     ]
     part_name = "init"
+    subsystem_name = "startup"
     module_install_dir = "etc/param"
   }
 
   ohos_prebuilt_etc("boot.group") {
     source = "//base/startup/init/services/etc/device.boot.group.cfg"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("charge.group") {
     source = "//base/startup/init/services/etc/device.charge.group.cfg"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("syscap.para") {
     source = "${preloader_output_dir}/system/etc/param/syscap.para"
     module_install_dir = "etc/param/"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("syscap.json") {
     source = "${preloader_output_dir}/system/etc/syscap.json"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("systemcapability.json") {
     source = "${preloader_output_dir}/system/etc/SystemCapability.json"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("features.json") {
     source = "${preloader_output_dir}/features.json"
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("system-sandbox.json") {
@@ -188,6 +206,7 @@ if (defined(ohos_lite)) {
           "//base/startup/init/interfaces/innerkits/sandbox/system-sandbox.json"
     }
     part_name = "init"
+    subsystem_name = "startup"
     module_install_dir = "etc/sandbox"
   }
 
@@ -198,12 +217,14 @@ if (defined(ohos_lite)) {
       source = "//base/startup/init/interfaces/innerkits/sandbox/chipset-sandbox.json"
     }
     part_name = "init"
+    subsystem_name = "startup"
     module_install_dir = "etc/sandbox"
   }
 
   ohos_prebuilt_etc("init.reboot") {
     source = "//base/startup/init/services/etc/init.reboot.cfg"
     part_name = "init"
+    subsystem_name = "startup"
     module_install_dir = "etc/init"
   }
 

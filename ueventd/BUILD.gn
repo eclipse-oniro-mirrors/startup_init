@@ -101,6 +101,7 @@ if (defined(ohos_lite)) {
 
     public_configs = [ ":libueventd_exported_config" ]
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_executable("ueventd") {
@@ -133,11 +134,13 @@ if (defined(ohos_lite)) {
     ]
     install_enable = true
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("ueventd.config") {
     source = "//base/startup/init/ueventd/etc/ueventd.config"
     part_name = "init"
+    subsystem_name = "startup"
     install_images = [
       "system",
       "updater",
