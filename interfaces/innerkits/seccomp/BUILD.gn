@@ -26,16 +26,14 @@ if (defined(build_seccomp) && build_seccomp) {
 
     include_dirs = [
       "//base/startup/init/interfaces/innerkits/include",
-      "//base/startup/init/services/modules/seccomp",
       "//base/startup/init/services/modules",
       "//base/startup/init/services/log",
+      "//third_party/bounds_checking_function/include",
     ]
 
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
-      "//base/startup/init/services/modules/seccomp:app_filter",
-      "//base/startup/init/services/modules/seccomp:appspawn_filter",
-      "//base/startup/init/services/modules/seccomp:nwebspawn_filter",
+      "//third_party/bounds_checking_function:libsec_shared",
     ]
 
     license_file = "//base/startup/init/LICENSE"
@@ -43,10 +41,7 @@ if (defined(build_seccomp) && build_seccomp) {
     part_name = "init"
 
     install_enable = true
-    install_images = [
-      "system",
-      "updater",
-    ]
+    install_images = [ "system" ]
   }
 } else {
   group("seccomp") {

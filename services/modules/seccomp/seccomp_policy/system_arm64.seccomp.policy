@@ -17,9 +17,6 @@ arm64
 @returnValue
 KILL_PROCESS
 
-@headFiles
-"seccomp_filters.h"
-
 @allowList
 io_setup
 io_destroy

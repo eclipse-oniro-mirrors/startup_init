@@ -17,9 +17,6 @@ arm
 @returnValue
 KILL_PROCESS
 
-@headFiles
-"seccomp_filters.h"
-
 @allowList
 restart_syscall
 exit

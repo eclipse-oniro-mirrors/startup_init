@@ -77,16 +77,11 @@ ohos_prebuilt_seccomp("system_filter") {
   }
 
   filtername = "g_systemSeccompFilter"
-  include_dirs = [ "." ]
   part_name = INIT_PART
   subsystem_name = "startup"
 
   install_enable = true
-  install_images = [
-    "system",
-    "ramdisk",
-    "updater",
-  ]
+  install_images = [ "system" ]
 }
 
 ohos_prebuilt_seccomp("appspawn_filter") {
@@ -102,7 +97,6 @@ ohos_prebuilt_seccomp("appspawn_filter") {
   }
 
   filtername = "g_appspawnSeccompFilter"
-  include_dirs = [ "." ]
   part_name = INIT_PART
   subsystem_name = "startup"
 
@@ -118,7 +112,6 @@ ohos_prebuilt_seccomp("nwebspawn_filter") {
   }
 
   filtername = "g_nwebspawnSeccompFilter"
-  include_dirs = [ "." ]
   part_name = INIT_PART
   subsystem_name = "startup"
 
@@ -139,7 +132,6 @@ ohos_prebuilt_seccomp("app_filter") {
   }
 
   filtername = "g_appSeccompFilter"
-  include_dirs = [ "." ]
   part_name = INIT_PART
   subsystem_name = "startup"
 
@@ -147,46 +139,30 @@ ohos_prebuilt_seccomp("app_filter") {
   install_images = [ "system" ]
 }
 
-ohos_shared_library("seccomp_module") {
-  sources = [ "seccomp_policy.c" ]
-
-  include_dirs = [
-    "//base/startup/init/services/modules",
-    "//base/startup/init/interfaces/innerkits/include",
-    "//base/startup/init/interfaces/innerkits/seccomp/include",
-    "//base/startup/init/services/modules/seccomp",
-  ]
-
-  deps = [
-    ":system_filter",
-    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
-  ]
-
-  cflags = [ "-DSECCOMP_PLUGIN" ]
-
-  part_name = "init"
-  if (target_cpu == "arm64") {
-    module_install_dir = "lib64/init"
-  } else {
-    module_install_dir = "lib/init"
-  }
-  install_images = [
-    "system",
-    "ramdisk",
-    "updater",
-  ]
-}
-
 config("libseccomp_static_config") {
   include_dirs = [
     "//base/startup/init/services/modules",
-    "//base/startup/init/services/modules/seccomp",
     "//base/startup/init/interfaces/innerkits/seccomp/include",
+    "//third_party/bounds_checking_function/include",
   ]
 }
 
 ohos_source_set("libseccomp_static") {
-  sources = [ "seccomp_policy_static.c" ]
-  public_configs = [ ":libseccomp_static_config" ]
-  public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
+  sources = [
+    "seccomp_policy.c",
+    "seccomp_policy_static.c",
+  ]
+  public_configs = [
+    ":libseccomp_static_config",
+    "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config",
+  ]
+}
+
+group("seccomp_filter") {
+  deps = [
+    ":app_filter",
+    ":appspawn_filter",
+    ":nwebspawn_filter",
+    ":system_filter",
+  ]
 }
