@@ -144,7 +144,8 @@ def main():
 
     for source in args.source:
         print("source {}".format(out_dir))
-        assert os.path.exists(source)
+        if not os.path.exists(source):
+            raise FileNotFoundError
 
         src_dict = get_param_from_cfg(source)
         dst = "".join([out_dir, "param_cfg.h"])

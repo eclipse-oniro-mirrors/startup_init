@@ -474,7 +474,7 @@ static void CheckServiceSocket(Service *service)
     return;
 }
 
-static void CheckOndemandService(service)
+static void CheckOndemandService(Service *service)
 {
     CheckServiceSocket(service);
     if (strcmp(service->name, "console") == 0) {
