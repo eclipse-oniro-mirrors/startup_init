@@ -38,7 +38,7 @@ HWTEST_F(BegetctlUnitTest, TestShellInit, TestSize.Level0)
     const char *args[] = {
         "param"
     };
-    BShellEnvDirectExecute(GetShellHandle(), 1, (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), 1, const_cast<char **>(args));
 }
 
 HWTEST_F(BegetctlUnitTest, TestShellLs, TestSize.Level1)
@@ -47,7 +47,7 @@ HWTEST_F(BegetctlUnitTest, TestShellLs, TestSize.Level1)
     const char *args[] = {
         "param", "ls"
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
 HWTEST_F(BegetctlUnitTest, TestShellLsWithR, TestSize.Level1)
@@ -56,7 +56,7 @@ HWTEST_F(BegetctlUnitTest, TestShellLsWithR, TestSize.Level1)
     const char *args[] = {
         "param", "ls", "-r"
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
 HWTEST_F(BegetctlUnitTest, TestShellLsGet, TestSize.Level1)
@@ -65,7 +65,7 @@ HWTEST_F(BegetctlUnitTest, TestShellLsGet, TestSize.Level1)
     const char *args[] = {
         "param", "get"
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
 HWTEST_F(BegetctlUnitTest, TestShellSet, TestSize.Level1)
@@ -74,7 +74,7 @@ HWTEST_F(BegetctlUnitTest, TestShellSet, TestSize.Level1)
     const char *args[] = {
         "param", "set", "aaaaa", "1234567"
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
 HWTEST_F(BegetctlUnitTest, TestShellGetWithKey, TestSize.Level1)
@@ -83,7 +83,7 @@ HWTEST_F(BegetctlUnitTest, TestShellGetWithKey, TestSize.Level1)
     const char *args[] = {
         "param", "get", "aaaaa"
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
 HWTEST_F(BegetctlUnitTest, TestShellWait, TestSize.Level1)
@@ -92,7 +92,7 @@ HWTEST_F(BegetctlUnitTest, TestShellWait, TestSize.Level1)
     const char *args[] = {
         "param", "wait", "aaaaa"
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 HWTEST_F(BegetctlUnitTest, TestShellWaitFalse, TestSize.Level1)
 {
@@ -100,7 +100,7 @@ HWTEST_F(BegetctlUnitTest, TestShellWaitFalse, TestSize.Level1)
     const char *args[] = {
         "param", "wait"
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
 HWTEST_F(BegetctlUnitTest, TestShellWaitWithKey, TestSize.Level1)
@@ -109,7 +109,7 @@ HWTEST_F(BegetctlUnitTest, TestShellWaitWithKey, TestSize.Level1)
     const char *args[] = {
         "param", "wait", "aaaaa", "12*", "30"
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 HWTEST_F(BegetctlUnitTest, TestShellParamShell, TestSize.Level1)
 {
@@ -117,7 +117,7 @@ HWTEST_F(BegetctlUnitTest, TestShellParamShell, TestSize.Level1)
     const char *args[] = {
         "param", "shell"
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 HWTEST_F(BegetctlUnitTest, TestShellLsWithvalue, TestSize.Level1)
 {
@@ -126,7 +126,7 @@ HWTEST_F(BegetctlUnitTest, TestShellLsWithvalue, TestSize.Level1)
     const char *args[] = {
         "param", "ls", PARAM_REVERESD_NAME_CURR_PARAMETER
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 HWTEST_F(BegetctlUnitTest, TestShellLsWithvalueExist, TestSize.Level1)
 {
@@ -135,6 +135,6 @@ HWTEST_F(BegetctlUnitTest, TestShellLsWithvalueExist, TestSize.Level1)
     const char *args[] = {
         "param", "ls", "-r", PARAM_REVERESD_NAME_CURR_PARAMETER
     };
-    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), (char **)args);
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 }  // namespace init_ut

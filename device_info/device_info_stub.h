@@ -39,8 +39,8 @@ public:
     {
     }
     ~DeviceInfoService() override {}
-    virtual int32_t GetUdid(std::string& result) override;
-    virtual int32_t GetSerialID(std::string& result) override;
+    int32_t GetUdid(std::string& result) override;
+    int32_t GetSerialID(std::string& result) override;
 #ifndef STARTUP_INIT_TEST
 protected:
 #endif

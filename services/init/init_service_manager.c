@@ -1018,8 +1018,7 @@ void ParseAllServices(const cJSON *fileRoot)
         // Watch "/dev/console" node for starting console service ondemand.
         if ((strcmp(service->name, "console") == 0) && IsOnDemandService(service)) {
             if (WatchConsoleDevice(service) < 0) {
-                INIT_LOGW("Failed to watch \'/dev/console\' device");
-                INIT_LOGW("Remove service \' %s \' ondemand attribute", service->name);
+                INIT_LOGW("Failed to watch console device, unset \' %s \' ondemand attribute", service->name);
                 UnMarkServiceAsOndemand(service);
             }
         }

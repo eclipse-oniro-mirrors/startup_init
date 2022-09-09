@@ -20,7 +20,7 @@ import argparse
 import os
 import sys
 
-def DecodeCfgLine(data):
+def decode_cfg_line(data):
     data.replace('\n', '').replace('\r', '')
     data = data.strip()
     if (len(data) == 0 or data[0] == '#'):
@@ -30,46 +30,46 @@ def DecodeCfgLine(data):
         return "", ""
     return strs[0].strip(), strs[1].strip()
 
-def GetParamFromCfg(cfgName):
+def get_param_from_cfg(cfg_name):
     dict = {}
-    with open(cfgName) as afile:
+    with open(cfg_name) as afile:
         data = afile.readline()
         while data:
-            name, value = DecodeCfgLine(data)
+            name, value = decode_cfg_line(data)
             if len(name) != 0 and len(value) != 0:
                 dict[name] = value
                 print("sample file name={%s %s}"%(name, value))
             data = afile.readline()
     return dict
 
-def DecodeCodeLine(data):
+def decode_code_line(data):
     data.replace('\n', '').replace('\r', '')
     data = data.strip()
     if (not data.startswith("PARAM_MAP")):
         return "", ""
-    dataLen = len(data)
-    data = data[len("PARAM_MAP") + 1 :  dataLen - 1]
+    data_len = len(data)
+    data = data[len("PARAM_MAP") + 1 :  data_len - 1]
     data = data.strip()
     strs = data.split(',')
     if len(strs) <= 1:
         return "", ""
     return strs[0].strip(), data[len(strs[0]) + 1: ].strip()
 
-def GetParamFromCCode(codeName):
+def get_param_from_c_code(code_name):
     dict = {}
-    with open(codeName, "r+") as afile:
+    with open(code_name, "r+") as afile:
         data = afile.readline()
         while data:
-            name, value = DecodeCodeLine(data)
+            name, value = decode_code_line(data)
             if len(name) != 0 and len(value) != 0:
                 dict[name] = value
             data = afile.readline()
         afile.truncate(0)
     return dict
 
-def WriteMapToCode(codeName, dict):
+def write_map_to_code(code_name, dict):
     try:
-        with open(codeName, "w") as f:
+        with open(code_name, "w") as f:
             # start with 0
             f.seek(0)
             # write file header
@@ -110,18 +110,18 @@ def WriteMapToCode(codeName, dict):
             f.write(os.linesep)
             f.truncate()
     except IOError:
-        print("Error: open or write file %s fail"%{codeName})
+        print("Error: open or write file %s fail"%{code_name})
     return 0
 
-def AddToCodeDict(codeDict, cfgDict, high = True):
-    for name, value in  cfgDict.items():
+def add_to_code_dict(code_dict, cfg_dict, high = True):
+    for name, value in  cfg_dict.items():
         # check if name exit
-        hasKey = name in codeDict #codeDict.has_key(name)
-        if hasKey and high:
-            codeDict[name] = value
-        elif not hasKey:
-            codeDict[name] = value
-    return codeDict
+        has_key = name in code_dict #code_dict.has_key(name)
+        if has_key and high:
+            code_dict[name] = value
+        elif not has_key:
+            code_dict[name] = value
+    return code_dict
 
 def main():
     parser = argparse.ArgumentParser(
@@ -146,16 +146,16 @@ def main():
         print("source {}".format(out_dir))
         assert os.path.exists(source)
 
-        srcDict = GetParamFromCfg(source)
+        src_dict = get_param_from_cfg(source)
         dst = "".join([out_dir, "param_cfg.h"])
 
         if os.path.exists(dst):
-            dstDict = GetParamFromCCode(dst)
+            dst_dict = get_param_from_c_code(dst)
         else:
-            dstDict = {}
+            dst_dict = {}
 
-        dstDict = AddToCodeDict(dstDict, srcDict, False)
-        WriteMapToCode(dst, dstDict)
+        dst_dict = add_to_code_dict(dst_dict, src_dict, False)
+        write_map_to_code(dst, dst_dict)
     return 0
 
 

@@ -236,7 +236,7 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, ParamWatcherP
             SystemGetParameterValue(handle, context->buffer + PARAM_NAME_LEN_MAX, &size);
             WATCHER_LOGV("SendLocalChange key %s value: %s ", context->buffer, context->buffer + PARAM_NAME_LEN_MAX);
             context->watcher->ProcessParameterChange(context->buffer, context->buffer + PARAM_NAME_LEN_MAX);
-        }, (void *)&context);
+        }, reinterpret_cast<void *>(&context));
 }
 
 void WatcherManager::RunLoop()
