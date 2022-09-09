@@ -53,7 +53,7 @@ public:
     {
     }
 
-    static pid_t StartChild(PolicyType type, SyscallFunc func)
+    static pid_t StartChild(const char *filterName, SyscallFunc func)
     {
         pid_t pid = fork();
         if (pid == 0) {
@@ -61,8 +61,8 @@ public:
                 std::cout << "PR_SET_NO_NEW_PRIVS set fail " << std::endl;
                 exit(EXIT_FAILURE);
             }
-            if (type != SYSTEM && !SetSeccompPolicy(type)) {
-                std::cout << "SetSeccompPolicy set fail type is " << type << std::endl;
+            if (!SetSeccompPolicyWithName(filterName)) {
+                std::cout << "SetSeccompPolicy set fail fiterName is " << filterName << std::endl;
                 exit(EXIT_FAILURE);
             }
 
@@ -78,7 +78,7 @@ public:
         return pid;
     }
 
-    static int CheckSyscall(PolicyType type, SyscallFunc func, bool isAllow)
+    static int CheckSyscall(const char *filterName, SyscallFunc func, bool isAllow)
     {
         sigset_t set;
         int status;
@@ -93,7 +93,7 @@ public:
             std::cout << "signal failed:" << strerror(errno) << std::endl;
         }
 
-        pid = StartChild(type, func);
+        pid = StartChild(filterName, func);
         if (pid == -1) {
             std::cout << "fork failed:" << strerror(errno) << std::endl;
             return -1;
@@ -200,33 +200,33 @@ public:
     void TestSystemSycall()
     {
         // system blocklist
-        int ret = CheckSyscall(SYSTEM, CheckGetMempolicy, false);
+        int ret = CheckSyscall(SYSTEM_NAME, CheckGetMempolicy, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
-        ret = CheckSyscall(SYSTEM, CheckGetpid, true);
+        ret = CheckSyscall(SYSTEM_NAME, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
     }
 
     void TestSetUidGidFilter()
     {
         // system blocklist
-        int ret = CheckSyscall(APPSPAWN, CheckSetresuidArgsOutOfRange, false);
+        int ret = CheckSyscall(APPSPAWN_NAME, CheckSetresuidArgsOutOfRange, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
-        ret = CheckSyscall(APPSPAWN, CheckSetresuidArgsInRange, true);
+        ret = CheckSyscall(APPSPAWN_NAME, CheckSetresuidArgsInRange, true);
         EXPECT_EQ(ret, 0);
     }
 
     void TestAppSycall()
     {
         // app blocklist
-        int ret = CheckSyscall(APP, CheckSetuid, false);
+        int ret = CheckSyscall(APP_NAME, CheckSetuid, false);
         EXPECT_EQ(ret, 0);
 
         // app allowlist
-        ret = CheckSyscall(APP, CheckGetpid, true);
+        ret = CheckSyscall(APP_NAME, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
     }
 #elif defined __arm__
@@ -281,33 +281,33 @@ public:
     void TestSystemSycall()
     {
         // system blocklist
-        int ret = CheckSyscall(SYSTEM, CheckGetuid, false);
+        int ret = CheckSyscall(SYSTEM_NAME, CheckGetuid, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
-        ret = CheckSyscall(SYSTEM, CheckGetuid32, true);
+        ret = CheckSyscall(SYSTEM_NAME, CheckGetuid32, true);
         EXPECT_EQ(ret, 0);
     }
 
     void TestSetUidGidFilter()
     {
         // system blocklist
-        int ret = CheckSyscall(APPSPAWN, CheckSetresuid32ArgsOutOfRange, false);
+        int ret = CheckSyscall(APPSPAWN_NAME, CheckSetresuid32ArgsOutOfRange, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
-        ret = CheckSyscall(APPSPAWN, CheckSetresuid32ArgsInRange, true);
+        ret = CheckSyscall(APPSPAWN_NAME, CheckSetresuid32ArgsInRange, true);
         EXPECT_EQ(ret, 0);
     }
 
     void TestAppSycall()
     {
         // app blocklist
-        int ret = CheckSyscall(APP, CheckSetuid32, false);
+        int ret = CheckSyscall(APP_NAME, CheckSetuid32, false);
         EXPECT_EQ(ret, 0);
 
         // app allowlist
-        ret = CheckSyscall(APP, CheckGetuid32, true);
+        ret = CheckSyscall(APP_NAME, CheckGetuid32, true);
         EXPECT_EQ(ret, 0);
     }
 #endif

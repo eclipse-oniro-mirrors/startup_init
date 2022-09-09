@@ -20,9 +20,6 @@ KILL_PROCESS
 @mode
 ONLY_CHECK_ARGS
 
-@headFiles
-"seccomp_filters.h"
-
 @allowListWithArgs
 setresuid32: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return KILL_PROCESS;
 setresgid32: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return KILL_PROCESS;

@@ -76,6 +76,7 @@ BufferHandle LE_CreateBuffer(const LoopHandle loopHandle, uint32_t bufferSize);
 void LE_FreeBuffer(const LoopHandle loopHandle, const TaskHandle taskHandle, const BufferHandle handle);
 uint8_t *LE_GetBufferInfo(const BufferHandle handle, uint32_t *dataSize, uint32_t *buffSize);
 void *LE_GetUserData(const TaskHandle handle);
+int32_t LE_GetSendResult(const BufferHandle handle);
 
 typedef void (*LE_Close)(const TaskHandle taskHandle);
 typedef struct {

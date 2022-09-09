@@ -309,11 +309,7 @@ static int InitServicePropertys(Service *service)
 
     CreateServiceFile(service->fileCfg);
     if ((service->attribute & SERVICE_ATTR_CONSOLE)) {
-        if (strcmp(service->name, "console") != 0 || !IsOnDemandService(service)) {
-            OpenConsole();
-        } else {
-            setsid();
-        }
+        OpenConsole();
     }
 
     PublishHoldFds(service);
