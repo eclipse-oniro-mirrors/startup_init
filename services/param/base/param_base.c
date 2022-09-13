@@ -100,7 +100,9 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
 {
     if (ops != NULL) {
         g_paramWorkSpace.ops.updaterMode = ops->updaterMode;
-        g_paramWorkSpace.ops.logFunc = ops->logFunc;
+        if (g_paramWorkSpace.ops.logFunc == NULL) {
+            g_paramWorkSpace.ops.logFunc = ops->logFunc;
+        }
 #ifdef PARAM_SUPPORT_SELINUX
         g_paramWorkSpace.ops.setfilecon = ops->setfilecon;
 #endif
@@ -175,10 +177,6 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
         auditData.dacData.paramType = PARAM_TYPE_STRING;
         ret = AddSecurityLabel(&auditData);
         PARAM_CHECK(ret == 0, return ret, "Failed to add default dac label");
-    } else {
-#ifdef PARAM_SUPPORT_SELINUX
-        OpenPermissionWorkSpace();
-#endif
     }
     return ret;
 }
@@ -245,4 +243,54 @@ void InitParameterClient(void)
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = 0;
     InitParamWorkSpace(1, &ops);
+}
+
+INIT_LOCAL_API int AddWorkSpace(const char *name, int onlyRead, uint32_t spaceSize)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid workspace");
+    int ret = 0;
+    // check exist
+#ifdef PARAM_SUPPORT_SELINUX
+    const char *realName = name;
+#else
+    const char *realName = WORKSPACE_NAME_NORMAL;
+#endif
+    WORKSPACE_RW_LOCK(*paramSpace);
+    HashNode *node = OH_HashMapGet(paramSpace->workSpaceHashHandle, (const void *)realName);
+    if (node != NULL) {
+        WORKSPACE_RW_UNLOCK(*paramSpace);
+        return 0;
+    }
+    if (onlyRead == 0) {
+        PARAM_LOGI("AddWorkSpace %s spaceSize: %u onlyRead %s", name, spaceSize, onlyRead ? "true" : "false");
+    }
+    WorkSpace *workSpace = NULL;
+    do {
+        ret = -1;
+        const size_t size = strlen(realName) + 1;
+        workSpace = (WorkSpace *)malloc(sizeof(WorkSpace) + size);
+        PARAM_CHECK(workSpace != NULL, break, "Failed to create workspace for %s", realName);
+        workSpace->flags = 0;
+        workSpace->area = NULL;
+        OH_ListInit(&workSpace->node);
+        ret = ParamStrCpy(workSpace->fileName, size, realName);
+        PARAM_CHECK(ret == 0, break, "Failed to copy file name %s", realName);
+        HASHMAPInitNode(&workSpace->hashNode);
+        ret = InitWorkSpace(workSpace, onlyRead, spaceSize);
+        PARAM_CHECK(ret == 0, break, "Failed to init workspace %s", realName);
+        ret = OH_HashMapAdd(paramSpace->workSpaceHashHandle, &workSpace->hashNode);
+        PARAM_CHECK(ret == 0, CloseWorkSpace(workSpace);
+            workSpace = NULL;
+            break, "Failed to add hash node");
+        OH_ListAddTail(&paramSpace->workSpaceList, &workSpace->node);
+        ret = 0;
+        workSpace = NULL;
+    } while (0);
+    if (workSpace != NULL) {
+        free(workSpace);
+    }
+    WORKSPACE_RW_UNLOCK(*paramSpace);
+    PARAM_LOGV("AddWorkSpace %s %s", name, ret == 0 ? "success" : "fail");
+    return ret;
 }

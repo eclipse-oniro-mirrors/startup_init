@@ -95,7 +95,7 @@ static int SendResponseMsg(ParamTaskPtr worker, const ParamMessage *msg, int res
     response->result = result;
     response->msg.msgSize = sizeof(ParamResponseMessage);
     ParamTaskSendMsg(worker, (ParamMessage *)response);
-    PARAM_LOGI("SendResponseMsg msgId %d", msg->id.msgId);
+    PARAM_LOGI("SendResponseMsg msgId %d result %d", msg->id.msgId, result);
     return 0;
 }
 
