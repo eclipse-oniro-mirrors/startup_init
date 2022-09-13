@@ -68,7 +68,7 @@ struct SandboxMountFlags {
     unsigned long value;
 };
 
-static const struct SandboxMountFlags g_flags[] = {
+static const struct SandboxMountFlags FLAGS[] = {
     {
         .flag = "bind",
         .value = MS_BIND,
@@ -99,7 +99,7 @@ struct SandboxMap {
     const char *configfile;
 };
 
-static const struct SandboxMap g_map[] = {
+static const struct SandboxMap MAP[] = {
     {
         .name = "system",
         .sandbox = &g_systemSandbox,
@@ -124,9 +124,9 @@ static unsigned long GetSandboxMountFlags(cJSON *item)
     BEGET_ERROR_CHECK(item != NULL, return 0, "Invalid parameter.");
     char *str = cJSON_GetStringValue(item);
     BEGET_CHECK(str != NULL, return 0);
-    for (size_t i = 0; i < ARRAY_LENGTH(g_flags); i++) {
-        if (strcmp(str, g_flags[i].flag) == 0) {
-            return g_flags[i].value;
+    for (size_t i = 0; i < ARRAY_LENGTH(FLAGS); i++) {
+        if (strcmp(str, FLAGS[i].flag) == 0) {
+            return FLAGS[i].value;
         }
     }
     return 0;
@@ -260,10 +260,10 @@ static int ParseSandboxConfig(cJSON *root, sandbox_t *sandbox)
 static const struct SandboxMap *GetSandboxMapByName(const char *name)
 {
     BEGET_ERROR_CHECK(name != NULL, return NULL, "Sandbox map name is NULL.");
-    int len = ARRAY_LENGTH(g_map);
+    int len = ARRAY_LENGTH(MAP);
     for (int i = 0; i < len; i++) {
-        if (strcmp(g_map[i].name, name) == 0) {
-            return &g_map[i];
+        if (strcmp(MAP[i].name, name) == 0) {
+            return &MAP[i];
         }
     }
     return NULL;

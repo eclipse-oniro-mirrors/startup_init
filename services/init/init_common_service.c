@@ -474,6 +474,17 @@ static void CheckServiceSocket(Service *service)
     return;
 }
 
+static void CheckOndemandService(Service *service)
+{
+    CheckServiceSocket(service);
+    if (strcmp(service->name, "console") == 0) {
+        if (WatchConsoleDevice(service) < 0) {
+            INIT_LOGE("Failed to watch console service after it exit, mark console service invalid");
+            service->attribute |= SERVICE_ATTR_INVALID;
+        }
+    }
+}
+
 void ServiceReap(Service *service)
 {
     INIT_CHECK(service != NULL, return);
@@ -526,13 +537,7 @@ void ServiceReap(Service *service)
     }
     // service no need to restart if it is an ondemand service.
     if (IsOnDemandService(service)) {
-        CheckServiceSocket(service);
-        if (strcmp(service->name, "console") == 0) {
-            if (WatchConsoleDevice(service) < 0) {
-                INIT_LOGE("Failed to watch console service after it exit, mark console service invalid");
-                service->attribute |= SERVICE_ATTR_INVALID;
-            }
-        }
+        CheckOndemandService(service);
         return;
     }
 
