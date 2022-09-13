@@ -1036,6 +1036,10 @@ void ParseAllServices(const cJSON *fileRoot)
 static Service *GetServiceByExtServName(const char *fullServName)
 {
     INIT_ERROR_CHECK(fullServName != NULL, return NULL, "Failed get parameters");
+    Service *service = GetServiceByName(fullServName);
+    if (service != NULL) { // none parameter in fullServName
+        return service;
+    }
     char *tmpServName = strdup(fullServName);
     char *dstPtr[MAX_PATH_ARGS_CNT] = {NULL};
     int returnCount = SplitString(tmpServName, "|", dstPtr, MAX_PATH_ARGS_CNT);
@@ -1043,7 +1047,7 @@ static Service *GetServiceByExtServName(const char *fullServName)
         free(tmpServName);
         return NULL;
     }
-    Service *service = GetServiceByName(dstPtr[0]);
+    service = GetServiceByName(dstPtr[0]);
     if (service == NULL) {
         free(tmpServName);
         return NULL;
@@ -1059,9 +1063,6 @@ static Service *GetServiceByExtServName(const char *fullServName)
     int extArgc;
     for (extArgc = 0; extArgc < (returnCount - 1); extArgc++) {
         service->extraArgs.argv[extArgc + argc] = strdup(dstPtr[extArgc + 1]);
-    }
-    for (int i = 0; i < service->extraArgs.count - 1; i++) {
-        INIT_LOGI("service->extraArgs.argv[%d] is %s", i, service->extraArgs.argv[i]);
     }
     service->extraArgs.argv[service->extraArgs.count] = NULL;
     free(tmpServName);
@@ -1102,7 +1103,7 @@ void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size))
 {
     Service *service = GetServiceByName("appspawn");
-    if (service != NULL && service->pid != -1) { // notify appspawn stop
+    if (service != NULL && service->pid > 0) { // notify appspawn stop
 #ifndef STARTUP_INIT_TEST
         kill(service->pid, SIGTERM);
         waitpid(service->pid, 0, 0);

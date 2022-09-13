@@ -89,11 +89,12 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
     return 0;
 }
 
-static int SyncExecCommand(int argc, char * const *argv)
+static void SyncExecCommand(int argc, char * const *argv)
 {
-    INIT_CHECK(!(argc == 0 || argv == NULL || argv[0] == NULL), return -1);
+    INIT_CHECK(!(argc == 0 || argv == NULL || argv[0] == NULL), return);
+    INIT_LOGI("sync exec: %s", argv[0]);
     pid_t pid = fork();
-    INIT_ERROR_CHECK(!(pid < 0), return -1, "Fork new process to format failed: %d", errno);
+    INIT_ERROR_CHECK(!(pid < 0), return, "Fork new process to format failed: %d", errno);
     if (pid == 0) {
         INIT_CHECK_ONLY_ELOG(execv(argv[0], argv) == 0, "execv %s failed! err %d.", argv[0], errno);
         exit(-1);
@@ -102,11 +103,10 @@ static int SyncExecCommand(int argc, char * const *argv)
     pid_t ret = waitpid(pid, &status, 0);
     if (ret != pid) {
         INIT_LOGE("Failed to wait pid %d, errno %d", pid, errno);
-        return ret;
+        return;
     }
-    INIT_CHECK_ONLY_ELOG(!(!WIFEXITED(status) || WEXITSTATUS(status) != 0),
-        "Command %s failed with status %d", argv[0], WEXITSTATUS(status));
-    return 0;
+    INIT_LOGI("sync exec: %s result %d %d", argv[0], WEXITSTATUS(status), WIFEXITED(status));
+    return;
 }
 
 static void DoIfup(const struct CmdArgs *ctx)
@@ -198,8 +198,7 @@ static void DoSyncExec(const struct CmdArgs *ctx)
     // format: syncexec /xxx/xxx/xxx xxx
     INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, return,
         "DoSyncExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
-    int ret = SyncExecCommand(ctx->argc, ctx->argv);
-    INIT_LOGI("DoSyncExec end with ret %d", ret);
+    SyncExecCommand(ctx->argc, ctx->argv);
     return;
 }
 
@@ -288,7 +287,8 @@ static void DoMakeDevice(const struct CmdArgs *ctx)
 static void DoMountFstabFile(const struct CmdArgs *ctx)
 {
     INIT_LOGI("Mount partitions from fstab file \" %s \"", ctx->argv[0]);
-    (void)MountAllWithFstabFile(ctx->argv[0], 0);
+    int ret = MountAllWithFstabFile(ctx->argv[0], 0);
+    INIT_LOGI("Mount partitions from fstab file \" %s \" finish ret %d", ctx->argv[0], ret);
 }
 
 static void DoUmountFstabFile(const struct CmdArgs *ctx)
@@ -424,7 +424,6 @@ static bool InitFscryptPolicy(void)
 
 static void DoInitGlobalKey(const struct CmdArgs *ctx)
 {
-    INIT_LOGI("DoInitGlobalKey: start");
     if (ctx == NULL || ctx->argc != 1) {
         INIT_LOGE("DoInitGlobalKey: para invalid");
         return;
@@ -446,13 +445,11 @@ static void DoInitGlobalKey(const struct CmdArgs *ctx)
         NULL
     };
     int argc = ARRAY_LENGTH(argv);
-    int ret = SyncExecCommand(argc, argv);
-    INIT_LOGI("DoInitGlobalKey: end, ret = %d", ret);
+    SyncExecCommand(argc, argv);
 }
 
 static void DoInitMainUser(const struct CmdArgs *ctx)
 {
-    INIT_LOGI("DoInitMainUser: start");
     if (ctx == NULL) {
         INIT_LOGE("DoInitMainUser: para invalid");
         return;
@@ -465,13 +462,11 @@ static void DoInitMainUser(const struct CmdArgs *ctx)
         NULL
     };
     int argc = ARRAY_LENGTH(argv);
-    int ret = SyncExecCommand(argc, argv);
-    INIT_LOGI("DoInitMainUser: end, ret = %d", ret);
+    SyncExecCommand(argc, argv);
 }
 
 static void DoMkswap(const struct CmdArgs *ctx)
 {
-    INIT_LOGI("DoMkswap: start");
     if (ctx == NULL) {
         INIT_LOGE("DoMkswap: para invalid");
         return;
@@ -482,13 +477,11 @@ static void DoMkswap(const struct CmdArgs *ctx)
         NULL
     };
     int argc = ARRAY_LENGTH(argv);
-    int ret = SyncExecCommand(argc, argv);
-    INIT_LOGI("DoMkswap: end, ret = %d", ret);
+    SyncExecCommand(argc, argv);
 }
 
 static void DoSwapon(const struct CmdArgs *ctx)
 {
-    INIT_LOGI("DoSwapon: start");
     if (ctx == NULL) {
         INIT_LOGE("DoSwapon: para invalid");
         return;
@@ -499,8 +492,7 @@ static void DoSwapon(const struct CmdArgs *ctx)
         NULL
     };
     int argc = ARRAY_LENGTH(argv);
-    int ret = SyncExecCommand(argc, argv);
-    INIT_LOGI("DoSwapon: end, ret = %d", ret);
+    SyncExecCommand(argc, argv);
 }
 
 static void DoMkSandbox(const struct CmdArgs *ctx)

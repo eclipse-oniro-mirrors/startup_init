@@ -199,5 +199,6 @@ int SwitchRoot(const char *newRoot)
         return -1;
     }
     FreeRootDir(oldRoot, oldRootStat.st_dev);
+    INIT_LOGI("SwitchRoot to %s finish", newRoot);
     return 0;
 }
