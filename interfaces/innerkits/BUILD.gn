@@ -254,7 +254,7 @@ if (defined(ohos_lite)) {
     external_deps = [
       "c_utils:utils",
       "hilog_native:libhilog_base",
-      "ipc:ipc_core",
+      "ipc:ipc_single",
       "samgr:samgr_proxy",
     ]
     public_configs = [ ":exported_header_files" ]
