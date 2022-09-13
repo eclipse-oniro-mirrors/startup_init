@@ -95,3 +95,15 @@ void GetAccessToken(void)
 {
     return;
 }
+
+void IsEnableSandbox(void)
+{
+    return;
+}
+
+void SetServiceEnterSandbox(const char *path, unsigned int attribute)
+{
+    UNUSED(path);
+    UNUSED(attribute);
+    return;
+}

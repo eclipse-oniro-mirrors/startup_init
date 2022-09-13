@@ -29,10 +29,14 @@
 #include "securec.h"
 #include "token_setproc.h"
 #include "nativetoken_kit.h"
+#include "sandbox.h"
+#include "sandbox_namespace.h"
 #include "service_control.h"
 
 #define MIN_IMPORTANT_LEVEL (-20)
 #define MAX_IMPORTANT_LEVEL 19
+
+static bool g_enableSandbox = false;
 
 void NotifyServiceChange(Service *service, int status)
 {
@@ -129,4 +133,36 @@ void GetAccessToken(void)
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
+}
+
+void IsEnableSandbox(void)
+{
+    char value[MAX_BUFFER_LEN] = {0};
+    unsigned int len = MAX_BUFFER_LEN;
+    if (SystemReadParam("const.sandbox", value, &len) == 0) {
+        if (strcmp(value, "enable") == 0) {
+            g_enableSandbox = true;
+        }
+    }
+}
+
+void SetServiceEnterSandbox(const char *execPath, unsigned int attribute)
+{
+    if (g_enableSandbox == false) {
+        return;
+    }
+    if ((attribute & SERVICE_ATTR_WITHOUT_SANDBOX) == SERVICE_ATTR_WITHOUT_SANDBOX) {
+        return;
+    }
+    INIT_ERROR_CHECK(execPath != NULL, return, "Service path is null.");
+    if (strncmp(execPath, "/system/bin/", strlen("/system/bin/")) == 0) {
+        INIT_INFO_CHECK(EnterSandbox("system") == 0, return,
+            "Service %s skip enter system sandbox.", execPath);
+    } else if (strncmp(execPath, "/vendor/bin/", strlen("/vendor/bin/")) == 0) {
+        INIT_INFO_CHECK(EnterSandbox("chipset") == 0, return,
+            "Service %s skip enter chipset sandbox.", execPath);
+    } else {
+        INIT_LOGI("Service %s does not enter sandbox", execPath);
+    }
+    return;
 }
