@@ -77,7 +77,6 @@ void FreeStringVector(char **vector, int count);
 int InUpdaterMode(void);
 int StringReplaceChr(char *strl, char oldChr, char newChr);
 
-uint32_t GetRandom(void);
 void OpenConsole(void);
 void TrimTail(char *str, char c);
 char *TrimHead(char *str, char c);
