@@ -43,11 +43,7 @@
 #include "ueventd.h"
 #include "ueventd_socket.h"
 #include "fd_holder_internal.h"
-#include "sandbox.h"
-#include "sandbox_namespace.h"
 #include "bootstage.h"
-
-static bool g_enableSandbox;
 
 static int FdHolderSockInit(void)
 {
@@ -263,24 +259,6 @@ static void BootStateChange(const char *content)
     }
 }
 
-static void IsEnableSandbox(void)
-{
-    const char *name = "const.sandbox";
-    char value[MAX_BUFFER_LEN] = {0};
-    unsigned int len = MAX_BUFFER_LEN;
-    if (SystemReadParam(name, value, &len) != 0) {
-        INIT_LOGE("Failed read param.");
-        g_enableSandbox = false;
-    }
-    if (strcmp(value, "enable") == 0) {
-        INIT_LOGI("Enable sandbox.");
-        g_enableSandbox = true;
-    } else {
-        INIT_LOGI("Disable sandbox.");
-        g_enableSandbox = false;
-    }
-}
-
 static void InitLoadParamFiles(void)
 {
     if (InUpdaterMode() != 0) {
@@ -371,32 +349,4 @@ void SystemConfig(void)
 void SystemRun(void)
 {
     StartParamService();
-}
-
-void SetServiceEnterSandbox(const char *execPath, unsigned int attribute)
-{
-    if (g_enableSandbox == false) {
-        return;
-    }
-    if ((attribute & SERVICE_ATTR_WITHOUT_SANDBOX) == SERVICE_ATTR_WITHOUT_SANDBOX) {
-        return;
-    }
-    INIT_ERROR_CHECK(execPath != NULL, return, "Service path is null.");
-    if (strncmp(execPath, "/system/bin/", strlen("/system/bin/")) == 0) {
-        if (strcmp(execPath, "/system/bin/appspawn") == 0) {
-            INIT_LOGI("Appspawn skip enter sandbox.");
-        } else if (strcmp(execPath, "/system/bin/hilogd") == 0) {
-            INIT_LOGI("Hilogd skip enter sandbox.");
-        } else {
-            INIT_INFO_CHECK(EnterSandbox("system") == 0, return,
-                "Service %s skip enter sandbox system.", execPath);
-        }
-    } else if (strncmp(execPath, "/vendor/bin/", strlen("/vendor/bin/")) == 0) {
-        // chipset sandbox will be implemented later.
-        INIT_INFO_CHECK(EnterSandbox("chipset") == 0, return,
-            "Service %s skip enter sandbox system.", execPath);
-    } else {
-        INIT_LOGI("Service %s does not enter sandbox", execPath);
-    }
-    return;
 }
