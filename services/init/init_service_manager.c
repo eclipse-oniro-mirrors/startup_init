@@ -140,7 +140,7 @@ void ReleaseService(Service *service)
     FreeServiceSocket(service->socketCfg);
     FreeServiceFile(service->fileCfg);
 
-    if(service->apl != NULL) {
+    if (service->apl != NULL) {
         free(service->apl);
         service->apl = NULL;
     }
