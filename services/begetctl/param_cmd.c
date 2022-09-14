@@ -359,9 +359,9 @@ static int32_t BShellParamCmdDump(BShellHandle shell, int32_t argc, char *argv[]
 {
     BSH_CHECK(shell != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
     if (argc >= 2 && strcmp(argv[1], "verbose") == 0) { // 2 min arg
-        SystemDumpParameters(1);
+        SystemDumpParameters(1, printf);
     } else {
-        SystemDumpParameters(0);
+        SystemDumpParameters(0, printf);
     }
     return 0;
 }

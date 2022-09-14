@@ -30,6 +30,7 @@
 #include "device.h"
 #include "fd_holder_service.h"
 #include "fs_manager/fs_manager.h"
+#include "key_control.h"
 #include "init_control_fd_service.h"
 #include "init_log.h"
 #include "init_mount.h"
@@ -43,11 +44,8 @@
 #include "ueventd.h"
 #include "ueventd_socket.h"
 #include "fd_holder_internal.h"
-#include "sandbox.h"
-#include "sandbox_namespace.h"
 #include "bootstage.h"
 
-static bool g_enableSandbox;
 typedef struct HOOK_TIMING_STAT {
     struct timespec startTime;
     struct timespec endTime;
@@ -204,6 +202,9 @@ static void StartInitSecondStage(void)
     // It will panic if close stdio before execv("/bin/sh", NULL)
     CloseStdio();
 
+    // Set up a session keyring that all processes will have access to.
+    KeyCtrlGetKeyringId(KEY_SPEC_SESSION_KEYRING, 1);
+
 #ifndef DISABLE_INIT_TWO_STAGES
     SwitchRoot("/usr");
     // Execute init second stage
@@ -258,7 +259,7 @@ static long long  InitDiffTime(HOOK_TIMING_STAT *stat)
     if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
         diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / 1000; // 1000 ms
     } else {
-        diff -= (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / 1000; // 1000 ms
+        diff -= (stat->startTime.tv_nsec - stat->endTime.tv_nsec) / 1000; // 1000 ms
     }
     return diff;
 }
@@ -272,24 +273,6 @@ static void BootStateChange(int start, const char *content)
         clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.endTime));
         long long diff = InitDiffTime(&g_bootJob);
         INIT_LOGI("boot job %s finish diff %lld us.", content, diff);
-    }
-}
-
-static void IsEnableSandbox(void)
-{
-    const char *name = "const.sandbox";
-    char value[MAX_BUFFER_LEN] = {0};
-    unsigned int len = MAX_BUFFER_LEN;
-    if (SystemReadParam(name, value, &len) != 0) {
-        INIT_LOGE("Failed read param.");
-        g_enableSandbox = false;
-    }
-    if (strcmp(value, "enable") == 0) {
-        INIT_LOGI("Enable sandbox.");
-        g_enableSandbox = true;
-    } else {
-        INIT_LOGI("Disable sandbox.");
-        g_enableSandbox = false;
     }
 }
 
@@ -413,32 +396,4 @@ void SystemConfig(void)
 void SystemRun(void)
 {
     StartParamService();
-}
-
-void SetServiceEnterSandbox(const char *execPath, unsigned int attribute)
-{
-    if (g_enableSandbox == false) {
-        return;
-    }
-    if ((attribute & SERVICE_ATTR_SANDBOX) != SERVICE_ATTR_SANDBOX) {
-        return;
-    }
-    INIT_ERROR_CHECK(execPath != NULL, return, "Service path is null.");
-    if (strncmp(execPath, "/system/bin/", strlen("/system/bin/")) == 0) {
-        if (strcmp(execPath, "/system/bin/appspawn") == 0) {
-            INIT_LOGI("Appspawn skip enter sandbox.");
-        } else if (strcmp(execPath, "/system/bin/hilogd") == 0) {
-            INIT_LOGI("Hilogd skip enter sandbox.");
-        } else {
-            INIT_INFO_CHECK(EnterSandbox("system") == 0, return,
-                "Service %s skip enter sandbox system.", execPath);
-        }
-    } else if (strncmp(execPath, "/vendor/bin/", strlen("/vendor/bin/")) == 0) {
-        // chipset sandbox will be implemented later.
-        INIT_INFO_CHECK(EnterSandbox("chipset") == 0, return,
-            "Service %s skip enter sandbox system.", execPath);
-    } else {
-        INIT_LOGI("Service %s does not enter sandbox", execPath);
-    }
-    return;
 }

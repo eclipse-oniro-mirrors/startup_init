@@ -160,6 +160,20 @@ char *ReadFileToBuf(const char *configFile)
     return buffer;
 }
 
+void CloseStdio(void)
+{
+#ifndef __LITEOS_M__
+    int fd = open("/dev/null", O_RDWR | O_CLOEXEC);
+    if (fd < 0) {
+        return;
+    }
+    dup2(fd, 0);
+    dup2(fd, 1);
+    dup2(fd, STDERR_HANDLE);
+    close(fd);
+#endif
+}
+
 char *ReadFileData(const char *fileName)
 {
     if (fileName == NULL) {
@@ -520,29 +534,25 @@ int StringReplaceChr(char *strl, char oldChr, char newChr)
     return 0;
 }
 
-uint32_t GetRandom()
+void RedirectStdio(int fd)
 {
-    uint32_t ulSeed = 0;
-    int fd = open("/dev/urandom", O_RDONLY);
-    if (fd > 0) {
-        read(fd, &ulSeed, sizeof(ulSeed));
-    }
-    close(fd);
-    return ulSeed;
+#ifndef __LITEOS_M__
+    const int stdError = 2;
+    dup2(fd, 0);
+    dup2(fd, 1);
+    dup2(fd, stdError); // Redirect fd to 0, 1, 2
+#endif
 }
 
 void OpenConsole(void)
 {
 #ifndef __LITEOS_M__
-    const int stdError = 2;
     setsid();
     WaitForFile("/dev/console", WAIT_MAX_SECOND);
     int fd = open("/dev/console", O_RDWR);
     if (fd >= 0) {
         ioctl(fd, TIOCSCTTY, 0);
-        dup2(fd, 0);
-        dup2(fd, 1);
-        dup2(fd, stdError); // Redirect fd to 0, 1, 2
+        RedirectStdio(fd);
         close(fd);
     } else {
         INIT_LOGE("Open /dev/console failed. err = %d", errno);

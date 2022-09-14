@@ -32,7 +32,7 @@ uiserver:x:1048:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr
 powerctrl:x:1051:root,shell,system,update,power_host
 bootctrl:x:1052:root,shell,system
-deviceprivate:1053:root,shell,system,samgr,hdf_devmgr, deviceinfo
+deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account
 hiview:x:1201:
 hidumper_service:x:1212:
 shell:x:2000:
@@ -83,6 +83,7 @@ deviceauth:x:3333:
 huks_server:x:3510:
 dms:x:5522:
 foundation:x:5523:
+quickfixserver:x:5524;
 samgr:x:5555:
 update:x:6666:
 charger:x:6667:
@@ -115,3 +116,4 @@ uhdf_driver:x:3066:
 memmgr:x:1111:
 ispserver:x:3821:
 dfs_share:x:3822:
+appspawn:x:4000:

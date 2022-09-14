@@ -70,7 +70,6 @@ HWTEST_F(UtilsUnitTest, TestUtilsApi, TestSize.Level0)
     float sec = ConvertMicrosecondToSecond(1000000); // 1000000 microseconds
     EXPECT_EQ(sec, 1);
     EXPECT_EQ(WriteAll(2, "test", strlen("test")), 4);
-    GetRandom();
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     CheckAndCreatFile("/data/init_ut/testcreatfile", mode);
     CheckAndCreatFile("/data/init_ut/nodir/testcreatfile", mode);

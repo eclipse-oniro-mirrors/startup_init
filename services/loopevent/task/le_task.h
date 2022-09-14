@@ -44,6 +44,7 @@ typedef struct {
     ListNode node;
     uint32_t buffSize;
     uint32_t dataSize;
+    int32_t result;
     uint8_t data[0];
 } LE_Buffer;
 

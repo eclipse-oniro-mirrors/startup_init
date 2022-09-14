@@ -25,19 +25,6 @@
 
 #define DEFAULT_RW_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 #define DEFAULT_NO_AUTHORITY_MODE (S_IWUSR | S_IRUSR)
-#define STDERR_HANDLE 2
-
-void CloseStdio(void)
-{
-    int fd = open("/dev/null", O_RDWR | O_CLOEXEC);
-    if (fd < 0) {
-        return;
-    }
-    dup2(fd, 0);
-    dup2(fd, 1);
-    dup2(fd, STDERR_HANDLE);
-    close(fd);
-}
 
 void MountBasicFs(void)
 {

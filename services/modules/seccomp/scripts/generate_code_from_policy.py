@@ -303,7 +303,7 @@ class GenBpfPolicy:
     @staticmethod
     def gen_bpf_ge32(const_str, jt, jf):
         bpf_policy = []
-        bpf_policy.append(BPF_JGE.format(const_str+' & 0xffffffff', jt, jf))
+        bpf_policy.append(BPF_JGE.format(const_str + ' & 0xffffffff', jt, jf))
         return bpf_policy
 
     @staticmethod
@@ -315,12 +315,12 @@ class GenBpfPolicy:
         low = number & 0xffffffff
 
         if digit_flag and hight == 0:
-            bpf_policy.append(BPF_JGT.format('((unsigned long)'+const_str+') >> 32', jt + 2, 0))
+            bpf_policy.append(BPF_JGT.format('((unsigned long)' + const_str + ') >> 32', jt + 2, 0))
         else:
-            bpf_policy.append(BPF_JGT.format('((unsigned long)'+const_str+') >> 32', jt + 3, 0))
-            bpf_policy.append(BPF_JEQ.format('((unsigned long)'+const_str+') >> 32', 0, jf + 2))
+            bpf_policy.append(BPF_JGT.format('((unsigned long)' + const_str + ') >> 32', jt + 3, 0))
+            bpf_policy.append(BPF_JEQ.format('((unsigned long)' + const_str + ') >> 32', 0, jf + 2))
         bpf_policy.append(BPF_LOAD_MEM.format(0))
-        bpf_policy.append(BPF_JGE.format(const_str+' & 0xffffffff', jt, jf))
+        bpf_policy.append(BPF_JGE.format(const_str + ' & 0xffffffff', jt, jf))
         return bpf_policy
 
     def gen_bpf_ge(self, const_str, jt, jf):
@@ -342,7 +342,7 @@ class GenBpfPolicy:
     @staticmethod
     def gen_bpf_set64(const_str, jt, jf):
         bpf_policy = []
-        bpf_policy.append(BPF_JSET.format('((unsigned long)' + const_str+') >> 32', jt + 2, 0))
+        bpf_policy.append(BPF_JSET.format('((unsigned long)' + const_str + ') >> 32', jt + 2, 0))
         bpf_policy.append(BPF_LOAD_MEM.format(0))
         bpf_policy.append(BPF_JSET.format(const_str + ' & 0xffffffff', jt, jf))
         return bpf_policy
@@ -747,7 +747,8 @@ class SeccompPolicyParser:
         with open(args.dstfile, 'w') as output_file:
             output_file.write(content)
 
-    def filter_syscalls_nr(self, name_to_nr):
+    @staticmethod
+    def filter_syscalls_nr(name_to_nr):
         syscalls = {}
         for syscall_name, nr in name_to_nr.items():
             if not syscall_name.startswith("__NR_") and not syscall_name.startswith("__ARM_NR_"):
@@ -776,7 +777,7 @@ class SeccompPolicyParser:
                     continue
                 try:
                     name = k.group(1)
-                    nr = eval(mark_pattern.sub(lambda x: str(name_to_nr[x.group(0)]),
+                    nr = eval(mark_pattern.sub(lambda x: str(name_to_nr.get(x.group(0))),
                                             k.group(2)))
 
                     name_to_nr[name] = nr

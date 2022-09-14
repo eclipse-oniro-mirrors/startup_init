@@ -190,7 +190,7 @@ static void ProcessDumpServiceControlFd(uint16_t type, const char *serviceCmd)
     }
     if (strcmp(serviceCmd, "parameter_service") == 0) {
         if (cmd != NULL && strcmp(cmd, "trigger") == 0) {
-            SystemDumpTriggers(0);
+            SystemDumpTriggers(0, printf);
         }
         return;
     }

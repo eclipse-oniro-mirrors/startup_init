@@ -82,7 +82,6 @@ ohos_executable("init") {
     "//base/startup/init/ueventd:libueventd_ramdisk_static",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
-    "//third_party/e2fsprogs:e2fsprogs",
   ]
 
   deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript" ]
@@ -94,7 +93,6 @@ ohos_executable("init") {
 
   if (use_musl) {
     deps += [
-      "//third_party/f2fs-tools:f2fs-tools",
       "//third_party/mksh:sh",
       "//third_party/toybox:toybox",
     ]

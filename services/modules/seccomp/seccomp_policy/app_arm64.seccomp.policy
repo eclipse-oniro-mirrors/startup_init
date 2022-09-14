@@ -17,9 +17,6 @@ arm64
 @returnValue
 KILL_PROCESS
 
-@headFiles
-"seccomp_filters.h"
-
 @priority
 ioctl
 futex
@@ -243,6 +240,7 @@ pidfd_open
 close_range
 pidfd_getfd
 process_madvise
+set_robust_list
 
 @blockList
 umount2

@@ -110,11 +110,6 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
-  ohos_prebuilt_etc("init.usb.configfs.cfg") {
-    source = "//base/startup/init/services/etc/init.usb.configfs.cfg"
-    part_name = "init"
-  }
-
   ohos_prebuilt_para("ohos.para") {
     source = "//base/startup/init/services/etc/param/ohos.para"
     install_images = [
@@ -223,7 +218,6 @@ if (defined(ohos_lite)) {
       ":init.cfg",
       ":init.reboot",
       ":init.usb.cfg",
-      ":init.usb.configfs.cfg",
       ":misc.cfg",
       ":ohos.para",
       ":ohos.para.dac",

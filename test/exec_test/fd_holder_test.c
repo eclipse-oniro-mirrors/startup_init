@@ -70,13 +70,13 @@ int main(int argc, char **argv)
         free(fds);
         outfdCount = 0;
         while (1) {
-            pause();
+           sleep(3);
         }
     }
     char *files[] = {"/data/test/1", "/data/test/2"};
     SaveFds("fd_holder_test", FD_COUNT, (char **)files);
     while (1) {
-        pause();
+        sleep(3);
     }
     return 0;
 }

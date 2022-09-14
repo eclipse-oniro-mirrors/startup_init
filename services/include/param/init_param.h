@@ -146,7 +146,7 @@ void RegisterBootStateChange(void (*bootStateChange)(int start, const char *));
  * dump 参数和trigger信息
  *
  */
-void SystemDumpTriggers(int verbose);
+void SystemDumpTriggers(int verbose, int (*dump)(const char *fmt, ...));
 #endif
 
 /**
@@ -217,7 +217,7 @@ int SystemWatchParameter(const char *keyprefix, ParameterChangePtr change, void 
 int SystemCheckParamExist(const char *name);
 long long GetSystemCommitId(void);
 
-void SystemDumpParameters(int verbose);
+void SystemDumpParameters(int verbose, int (*dump)(const char *fmt, ...));
 
 int WatchParamCheck(const char *keyprefix);
 

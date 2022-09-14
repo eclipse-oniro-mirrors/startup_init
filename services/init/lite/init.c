@@ -32,7 +32,7 @@
 void SystemInit(void)
 {
     SignalInit();
-    MakeDirRecursive("/dev/unix/socket", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    (void)MakeDirRecursive("/dev/unix/socket", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 }
 
 void LogInit(void)
@@ -56,11 +56,11 @@ void SystemConfig(void)
 #ifdef LITEOS_SUPPORT
     InitParamService();
     // parse parameters
-    LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
-    LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
-    LoadDefaultParams("/system/etc/param", LOAD_PARAM_ONLY_ADD);
+    (void)LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
+    (void)LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
+    (void)LoadDefaultParams("/system/etc/param", LOAD_PARAM_ONLY_ADD);
 
-    LoadPersistParams();
+    (void)LoadPersistParams();
 #endif
     // read config
     ReadConfig();
@@ -79,7 +79,7 @@ void SystemConfig(void)
     DoJob("post-init");
 #ifndef __LINUX__
     TriggerStage(EVENT3, EVENT3_WAITTIME, QS_STAGE3);
-    InitStageFinished();
+    (void)InitStageFinished();
 #endif
     ReleaseAllJobs();
 }
@@ -95,11 +95,4 @@ void SystemRun(void)
         (void)pause();
     }
 #endif
-}
-
-void SetServiceEnterSandbox(const char *path, unsigned int attribute)
-{
-    UNUSED(path);
-    UNUSED(attribute);
-    return;
 }

@@ -34,6 +34,7 @@ param_include_dirs = [
   "//base/startup/init/services/init/include",
   "//base/startup/init/services/log",
   "//base/startup/init/services/modules/init_hook",
+  "//base/startup/init/interfaces/innerkits/include/syspara",
   "//base/startup/init/interfaces/innerkits/init_module_engine/include",
   "//base/startup/init/services/loopevent/include",
   "//third_party/bounds_checking_function/include",
@@ -117,6 +118,21 @@ if (defined(ohos_lite)) {
 
     if (param_base_log) {
       defines += [ "PARAM_BASE_LOG" ]
+    }
+    if (defined(ohos_build_type)) {
+      defines += [ "BUILD_TYPE=\"${ohos_build_type}\"" ]
+    }
+    if (defined(ohos_version)) {
+      defines += [ "INCREMENTAL_VERSION=\"${ohos_version}\"" ]
+    }
+    if (defined(ohos_build_user)) {
+      defines += [ "BUILD_USER=\"${ohos_build_user}\"" ]
+    }
+    if (defined(ohos_build_time)) {
+      defines += [ "BUILD_TIME=\"${ohos_build_time}\"" ]
+    }
+    if (defined(ohos_build_host)) {
+      defines += [ "BUILD_HOST=\"${ohos_build_host}\"" ]
     }
 
     if (build_selinux) {
