@@ -224,7 +224,6 @@ int WatcherManagerKits::ParamWatcher::AddParameterListener(ParameterChangePtr ca
             continue;
         }
         if (it->second->IsEqual(callback, context)) {
-            WATCHER_LOGI("AddParameterListener callback %p context %p exist", callback, context);
             return -1;
         }
     }
@@ -244,7 +243,6 @@ int WatcherManagerKits::ParamWatcher::DelParameterListener(ParameterChangePtr ca
         if ((callback == nullptr && context == nullptr)) {
             RemoveParameterListener(index);
         } else if (listener->IsEqual(callback, context)) {
-            WATCHER_LOGI("DelParameterListener callback %p context %p", callback, context);
             RemoveParameterListener(index);
             break;
         }

@@ -112,7 +112,7 @@ static ModuleCmdInfo g_rebootCmdIds[] = {
 static void RebootAdpInit(void)
 {
     for (size_t i = 0; i < sizeof(g_rebootCmdIds)/sizeof(g_rebootCmdIds[0]); i++) {
-        g_rebootCmdIds[i].cmdId = AddCmdExecutor(g_rebootCmdIds[i].cmd, g_rebootCmdIds[i].executor);
+        g_rebootCmdIds[i].cmdId = (uint32_t)AddCmdExecutor(g_rebootCmdIds[i].cmd, g_rebootCmdIds[i].executor);
     }
 }
 
