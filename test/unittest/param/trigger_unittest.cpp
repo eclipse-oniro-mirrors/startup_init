@@ -34,7 +34,7 @@ static const int triggerBuffer = 512;
 static uint32_t g_execCmdId = 0;
 static int g_matchTrigger = 0;
 static char g_matchTriggerName[triggerBuffer] = { 0 };
-static void BootStateChange(const char *content)
+static void BootStateChange(int start, const char *content)
 {
     UNUSED(content);
     return;

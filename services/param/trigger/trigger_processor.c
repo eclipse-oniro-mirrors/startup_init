@@ -44,7 +44,7 @@ static int DoTriggerExecute_(const TriggerNode *trigger, const char *content, ui
     return 0;
 }
 
-static int DoTiggerCheckResult(TriggerNode *trigger, const char *content, uint32_t size)
+static int DoTriggerCheckResult(TriggerNode *trigger, const char *content, uint32_t size)
 {
     UNUSED(content);
     UNUSED(size);
@@ -58,10 +58,10 @@ static int DoTiggerCheckResult(TriggerNode *trigger, const char *content, uint32
     return 0;
 }
 
-static int ExecuteTiggerImmediately(TriggerNode *trigger, const char *content, uint32_t size)
+static int ExecuteTriggerImmediately(TriggerNode *trigger, const char *content, uint32_t size)
 {
     PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
-    PARAM_LOGV("ExecuteTiggerImmediately trigger %s", GetTriggerName(trigger));
+    PARAM_LOGV("ExecuteTriggerImmediately trigger %s", GetTriggerName(trigger));
     TriggerHeader *triggerHead = GetTriggerHeader(&g_triggerWorkSpace, trigger->type);
     if (triggerHead != NULL) {
         triggerHead->executeTrigger(trigger, content, size);
@@ -74,17 +74,17 @@ static int ExecuteTiggerImmediately(TriggerNode *trigger, const char *content, u
     return 0;
 }
 
-static void StartTiggerExecute_(TriggerNode *trigger, const char *content, uint32_t size)
+static void StartTriggerExecute_(TriggerNode *trigger, const char *content, uint32_t size)
 {
     TriggerHeader *triggerHead = GetTriggerHeader(&g_triggerWorkSpace, trigger->type);
     if (triggerHead != NULL) {
-        PARAM_LOGV("StartTiggerExecute_ trigger %s flags:0x%04x",
+        PARAM_LOGV("StartTriggerExecute_ trigger %s flags:0x%04x",
             GetTriggerName(trigger), trigger->flags);
         triggerHead->executeTrigger(trigger, content, size);
         TRIGGER_CLEAR_FLAG(trigger, TRIGGER_FLAGS_QUEUE);
         if (TRIGGER_TEST_FLAG(trigger, TRIGGER_FLAGS_SUBTRIGGER)) { // boot && xxx=xxx trigger
             const char *condition = triggerHead->getCondition(trigger);
-            CheckTrigger(&g_triggerWorkSpace, TRIGGER_UNKNOW, condition, strlen(condition), ExecuteTiggerImmediately);
+            CheckTrigger(&g_triggerWorkSpace, TRIGGER_UNKNOW, condition, strlen(condition), ExecuteTriggerImmediately);
         }
         if (TRIGGER_TEST_FLAG(trigger, TRIGGER_FLAGS_ONCE)) {
             FreeTrigger(&g_triggerWorkSpace, trigger);
@@ -97,7 +97,7 @@ static void ExecuteQueueWork(uint32_t maxCount)
     uint32_t executeCount = 0;
     TriggerNode *trigger = ExecuteQueuePop(&g_triggerWorkSpace);
     while (trigger != NULL) {
-        StartTiggerExecute_(trigger, NULL, 0);
+        StartTriggerExecute_(trigger, NULL, 0);
         executeCount++;
         if (executeCount > maxCount) {
             break;
@@ -113,27 +113,30 @@ PARAM_STATIC void ProcessBeforeEvent(const ParamTaskPtr stream,
     switch (eventId) {
         case EVENT_TRIGGER_PARAM: {
             CheckTrigger(&g_triggerWorkSpace, TRIGGER_PARAM,
-                (const char *)content, size, DoTiggerCheckResult);
+                (const char *)content, size, DoTriggerCheckResult);
             ExecuteQueueWork(MAX_TRIGGER_COUNT_RUN_ONCE);
             break;
         }
         case EVENT_TRIGGER_BOOT: {
+            if (g_triggerWorkSpace.bootStateChange != NULL) {
+                g_triggerWorkSpace.bootStateChange(0, (const char *)content);
+            }
             CheckTrigger(&g_triggerWorkSpace, TRIGGER_BOOT,
-                (const char *)content, size, DoTiggerCheckResult);
+                (const char *)content, size, DoTriggerCheckResult);
             ExecuteQueueWork(MAX_TRIGGER_COUNT_RUN_ONCE);
             if (g_triggerWorkSpace.bootStateChange != NULL) {
-                g_triggerWorkSpace.bootStateChange((const char *)content);
+                g_triggerWorkSpace.bootStateChange(1, (const char *)content);
             }
             break;
         }
         case EVENT_TRIGGER_PARAM_WAIT: {
             CheckTrigger(&g_triggerWorkSpace, TRIGGER_PARAM_WAIT,
-                (const char *)content, size, ExecuteTiggerImmediately);
+                (const char *)content, size, ExecuteTriggerImmediately);
             break;
         }
         case EVENT_TRIGGER_PARAM_WATCH: {
             CheckTrigger(&g_triggerWorkSpace, TRIGGER_PARAM_WATCH,
-                (const char *)content, size, ExecuteTiggerImmediately);
+                (const char *)content, size, ExecuteTriggerImmediately);
             break;
         }
         default:
@@ -173,6 +176,9 @@ static int GetTriggerType(const char *type)
 {
     if (strncmp("param:", type, strlen("param:")) == 0) {
         return TRIGGER_PARAM;
+    }
+    if (strncmp("boot-service:", type, strlen("boot-service:")) == 0) {
+        return TRIGGER_BOOT;
     }
     const char *triggerTypeStr[] = {
         "pre-init", "boot", "early-init", "init", "early-init", "late-init", "post-init",
@@ -375,14 +381,13 @@ void DoJobExecNow(const char *triggerName)
     PARAM_CHECK(triggerName != NULL, return, "Invalid param");
     JobNode *trigger = GetTriggerByName(&g_triggerWorkSpace, triggerName);
     if (trigger != NULL) {
-        StartTiggerExecute_((TriggerNode *)trigger, NULL, 0);
+        StartTriggerExecute_((TriggerNode *)trigger, NULL, 0);
     }
 }
 
 int AddCompleteJob(const char *name, const char *condition, const char *cmdContent)
 {
     PARAM_CHECK(name != NULL, return -1, "Invalid name");
-    PARAM_CHECK(condition != NULL, return -1, "Invalid condition");
     PARAM_CHECK(cmdContent != NULL, return -1, "Invalid cmdContent");
     int type = GetTriggerType(name);
     PARAM_CHECK(type <= TRIGGER_UNKNOW, return -1, "Failed to get trigger index");
@@ -402,7 +407,7 @@ int AddCompleteJob(const char *name, const char *condition, const char *cmdConte
     return 0;
 }
 
-void RegisterBootStateChange(void (*bootStateChange)(const char *))
+void RegisterBootStateChange(void (*bootStateChange)(int, const char *))
 {
     if (bootStateChange != NULL) {
         g_triggerWorkSpace.bootStateChange = bootStateChange;

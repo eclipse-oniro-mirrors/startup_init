@@ -1155,31 +1155,6 @@ Service *GetServiceByName(const char *servName)
     return NULL;
 }
 
-void StartAllServices(int startMode)
-{
-    INIT_LOGI("StartAllServices %d", startMode);
-    InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
-    while (node != NULL) {
-        Service *service = node->data.service;
-        if (service == NULL || service->startMode != startMode) {
-            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
-            continue;
-        }
-        if (IsOnDemandService(service)) {
-            if (CreateServiceSocket(service) != 0) {
-                INIT_LOGE("service %s exit! create socket failed!", service->name);
-            }
-            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
-            continue;
-        }
-        if (ServiceStart(service) != SERVICE_SUCCESS) {
-            INIT_LOGE("Service %s start failed!", service->name);
-        }
-        node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
-    }
-    INIT_LOGI("StartAllServices %d finish", startMode);
-}
-
 void LoadAccessTokenId(void)
 {
     GetAccessToken();
