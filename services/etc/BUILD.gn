@@ -63,12 +63,6 @@ if (defined(ohos_lite)) {
     part_name = "init"
   }
 
-  ohos_prebuilt_etc("misc.cfg") {
-    source = "//base/startup/init/services/etc/misc.cfg"
-    relative_install_dir = "init"
-    part_name = "init"
-  }
-
   ohos_prebuilt_etc("watchdog.cfg") {
     source = "//base/startup/init/services/etc/watchdog.cfg"
     relative_install_dir = "init"
@@ -218,7 +212,6 @@ if (defined(ohos_lite)) {
       ":init.cfg",
       ":init.reboot",
       ":init.usb.cfg",
-      ":misc.cfg",
       ":ohos.para",
       ":ohos.para.dac",
       ":ohos.para.size",
