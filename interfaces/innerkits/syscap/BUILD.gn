@@ -31,5 +31,6 @@ ohos_shared_library("syscap") {
 
   public_configs = [ ":syscap_config" ]
   part_name = "init"
+  subsystem_name = "startup"
   install_images = [ "system" ]
 }

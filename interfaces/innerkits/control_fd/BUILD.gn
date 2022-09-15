@@ -35,4 +35,5 @@ ohos_static_library("libcontrolfd") {
     "//base/startup/init/services/loopevent/include",
   ]
   part_name = "init"
+  subsystem_name = "startup"
 }

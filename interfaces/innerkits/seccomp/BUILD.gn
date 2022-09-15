@@ -39,6 +39,7 @@ if (defined(build_seccomp) && build_seccomp) {
     license_file = "//base/startup/init/LICENSE"
 
     part_name = "init"
+    subsystem_name = "startup"
 
     install_enable = true
     install_images = [ "system" ]

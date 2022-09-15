@@ -25,4 +25,5 @@ ohos_static_library("libfile") {
   ]
   public_configs = [ ":exported_header_files" ]
   part_name = "init"
+  subsystem_name = "startup"
 }

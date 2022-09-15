@@ -33,5 +33,6 @@ if (defined(ohos_lite)) {
     sources = service_socket_sources
     include_dirs = service_socket_include
     part_name = "init"
+    subsystem_name = "startup"
   }
 }

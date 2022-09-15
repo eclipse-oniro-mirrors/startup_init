@@ -60,5 +60,6 @@ if (defined(ohos_lite)) {
     include_dirs = [ "//third_party/bounds_checking_function/include" ]
     external_deps = [ "hilog_native:libhilog_base" ]
     part_name = "init"
+    subsystem_name = "startup"
   }
 }
