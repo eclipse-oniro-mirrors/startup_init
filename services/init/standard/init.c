@@ -251,13 +251,22 @@ HOOK_MGR *GetBootStageHookMgr()
 
 INIT_TIMING_STAT g_bootJob = {0};
 
+static void RecordInitBootEvent(const char *initBootEvent)
+{
+    const char *bootEventArgv[] = {"init", initBootEvent};
+    PluginExecCmd("bootevent", ARRAY_LENGTH(bootEventArgv), bootEventArgv);
+    return;
+}
+
 static void BootStateChange(int start, const char *content)
 {
     if (start == 0) {
         clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.startTime));
+        RecordInitBootEvent(content);
         INIT_LOGI("boot job %s start.", content);
     } else {
         clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.endTime));
+        RecordInitBootEvent(content);
         long long diff = InitDiffTime(&g_bootJob);
         INIT_LOGI("boot job %s finish diff %lld us.", content, diff);
     }
@@ -345,9 +354,9 @@ void SystemConfig(void)
     options.flags = 0;
     options.preHook = InitPreHook;
     options.postHook = InitPostHook;
-
     InitServiceSpace();
     HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, (void *)&timingStat, (void *)&options);
+    RecordInitBootEvent("init.prepare");
 
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, (void *)&timingStat, (void *)&options);
     InitParamService();
@@ -358,7 +367,9 @@ void SystemConfig(void)
     // load SELinux context and policy
     // Do not move position!
     PluginExecCmdByName("loadSelinuxPolicy", "");
+    RecordInitBootEvent("init.prepare");
 
+    RecordInitBootEvent("init.ParseCfg");
     LoadSpecialParam();
 
     // parse parameters
@@ -367,6 +378,7 @@ void SystemConfig(void)
     // read config
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
+    RecordInitBootEvent("init.ParseCfg");
     INIT_LOGI("boot parse config file done.");
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 
