@@ -38,6 +38,7 @@ const ParamCmdInfo *GetServiceCtl(size_t *size)
         {"ohos.servicectrl.save", "save.bootevent", "save.bootevent" },
         {"ohos.servicectrl.bootchart", "bootchart", "bootchart" },
         {"ohos.servicectrl.timer_start", "timer_start", "timer_start " },
+        {"ohos.servicectrl.timer_stop", "timer_stop", "timer_stop" },
     };
     *size = ARRAY_LENGTH(installParam);
     return installParam;

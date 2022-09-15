@@ -96,10 +96,3 @@ void SystemRun(void)
     }
 #endif
 }
-
-void SetServiceEnterSandbox(const char *path, unsigned int attribute)
-{
-    UNUSED(path);
-    UNUSED(attribute);
-    return;
-}

@@ -23,6 +23,7 @@
 #include "init_param.h"
 #include "ueventd.h"
 #include "ueventd_read_cfg.h"
+#include "securec.h"
 
 typedef struct {
     int inited;
@@ -63,6 +64,7 @@ static void *ThreadRun(void *data)
 {
     DeviceParameterCtrl *parameterCtrl = (DeviceParameterCtrl *)data;
     INIT_LOGV("[uevent] ThreadRun %d %d", parameterCtrl->empty, parameterCtrl->shutdown);
+    char paramName[PARAM_NAME_LEN_MAX] = {0};
     while (1) {
         pthread_mutex_lock(&(parameterCtrl->lock));
         while (parameterCtrl->empty) {
@@ -88,7 +90,8 @@ static void *ThreadRun(void *data)
         parameterCtrl->empty = 0;
         const char *paramValue = (config->action == ACTION_ADD) ? "added" : "removed";
         INIT_LOGI("[uevent] SystemSetParameter %s act %s", config->parameter, paramValue);
-        if (SystemSetParameter(config->parameter, paramValue) != 0) {
+        size_t len = sprintf_s(paramName, sizeof(paramName), "startup.uevent.%s", config->parameter);
+        if ((len <= 0) || (SystemSetParameter(paramName, paramValue) != 0)) {
             INIT_LOGE("[uevent] SystemSetParameter %s failed", config->parameter);
             pthread_mutex_lock(&(parameterCtrl->parameterLock));
             OH_ListAddTail(&parameterCtrl->parameterList, &config->paramNode);

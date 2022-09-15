@@ -74,10 +74,12 @@ static void TestForMultiThread()
         "thread.5555.1111.2222.3333.4444"
     };
     for (size_t i = 0; i < threadMaxNumer; i++) {
-        pthread_create(&tids[i], nullptr, TestSendParamSetMsg, (void *)names[i % ARRAY_LENGTH(names)]);
+        pthread_create(&tids[i], nullptr, TestSendParamSetMsg,
+            reinterpret_cast<void *>(const_cast<char *>(names[i % ARRAY_LENGTH(names)])));
     }
     for (size_t i = threadMaxNumer; i < threadMaxNumer + threadMaxNumer; i++) {
-        pthread_create(&tids[i], nullptr, TestSendParamWaitMsg, (void *)names[i % ARRAY_LENGTH(names)]);
+        pthread_create(&tids[i], nullptr, TestSendParamWaitMsg,
+            reinterpret_cast<void *>(const_cast<char *>(names[i % ARRAY_LENGTH(names)])));
     }
     for (size_t i = 0; i < threadMaxNumer + threadMaxNumer; i++) {
         pthread_join(tids[i], nullptr);

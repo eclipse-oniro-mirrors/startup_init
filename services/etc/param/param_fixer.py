@@ -18,7 +18,8 @@ import os
 import sys
 import json
 
-sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, os.pardir, os.pardir, os.pardir, "build"))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
+    os.pardir, os.pardir, os.pardir, os.pardir, "build"))
 from scripts.util import build_utils  # noqa: E402
 
 def parse_args(args):
@@ -39,7 +40,7 @@ def parse_params(line, contents):
     if pos <= 0:
         return
     name = line[:pos]
-    value = line[pos+1:]
+    value = line[pos + 1:]
     name = name.strip()
     value = value.strip()
     contents[name] = value

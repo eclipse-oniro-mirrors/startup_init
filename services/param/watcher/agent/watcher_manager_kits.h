@@ -66,7 +66,7 @@ private:
     class ParamWatcher final : public Watcher {
     public:
         explicit ParamWatcher(const std::string &key) : keyPrefix_(key) {}
-        virtual ~ParamWatcher()
+        ~ParamWatcher() override
         {
             parameterChangeListeners.clear();
         };

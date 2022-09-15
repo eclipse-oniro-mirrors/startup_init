@@ -348,7 +348,7 @@ int GetBlockDeviceByName(const char *deviceName, const Fstab *fstab, char* miscD
     return -1;
 }
 
-static const struct MountFlags mountFlags[] = {
+static const struct MountFlags MOUNT_FLAGS[] = {
     { "noatime", MS_NOATIME },
     { "noexec", MS_NOEXEC },
     { "nosuid", MS_NOSUID },
@@ -372,8 +372,8 @@ static bool IsDefaultMountFlags(const char *str)
     bool isDefault = false;
 
     if (str != NULL) {
-        for (size_t i = 0; i < ARRAY_LENGTH(mountFlags); i++) {
-            if (strcmp(str, mountFlags[i].name) == 0) {
+        for (size_t i = 0; i < ARRAY_LENGTH(MOUNT_FLAGS); i++) {
+            if (strcmp(str, MOUNT_FLAGS[i].name) == 0) {
                 isDefault = true;
             }
         }
@@ -386,9 +386,9 @@ static unsigned long ParseDefaultMountFlag(const char *str)
     unsigned long flags = 0;
 
     if (str != NULL) {
-        for (size_t i = 0; i < ARRAY_LENGTH(mountFlags); i++) {
-            if (strcmp(str, mountFlags[i].name) == 0) {
-                flags = mountFlags[i].flags;
+        for (size_t i = 0; i < ARRAY_LENGTH(MOUNT_FLAGS); i++) {
+            if (strcmp(str, MOUNT_FLAGS[i].name) == 0) {
+                flags = MOUNT_FLAGS[i].flags;
                 break;
             }
         }

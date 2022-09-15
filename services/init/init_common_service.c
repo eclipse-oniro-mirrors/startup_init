@@ -291,7 +291,7 @@ static void ClearEnvironment(Service *service)
     return;
 }
 
-static int InitServicePropertys(Service *service)
+static int InitServiceProperties(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
     SetServiceEnterSandbox(service->pathArgs.argv[0], service->attribute);
@@ -331,7 +331,7 @@ static int InitServicePropertys(Service *service)
 
 void EnterServiceSandbox(Service *service)
 {
-    INIT_ERROR_CHECK(InitServicePropertys(service) == 0, return, "Failed init service property");
+    INIT_ERROR_CHECK(InitServiceProperties(service) == 0, return, "Failed init service property");
     if (service->importance != 0) {
         if (setpriority(PRIO_PROCESS, 0, service->importance) != 0) {
             INIT_LOGE("setpriority failed for %s, importance = %d, err=%d",
@@ -374,7 +374,7 @@ int ServiceStart(Service *service)
     int pid = fork();
     if (pid == 0) {
         // fail must exit sub process
-        INIT_ERROR_CHECK(InitServicePropertys(service) == 0,
+        INIT_ERROR_CHECK(InitServiceProperties(service) == 0,
             _exit(PROCESS_EXIT_CODE), "Failed init service property");
         ServiceExec(service);
         _exit(PROCESS_EXIT_CODE);
@@ -474,6 +474,17 @@ static void CheckServiceSocket(Service *service)
     return;
 }
 
+static void CheckOndemandService(Service *service)
+{
+    CheckServiceSocket(service);
+    if (strcmp(service->name, "console") == 0) {
+        if (WatchConsoleDevice(service) < 0) {
+            INIT_LOGE("Failed to watch console service after it exit, mark console service invalid");
+            service->attribute |= SERVICE_ATTR_INVALID;
+        }
+    }
+}
+
 void ServiceReap(Service *service)
 {
     INIT_CHECK(service != NULL, return);
@@ -526,13 +537,7 @@ void ServiceReap(Service *service)
     }
     // service no need to restart if it is an ondemand service.
     if (IsOnDemandService(service)) {
-        CheckServiceSocket(service);
-        if (strcmp(service->name, "console") == 0) {
-            if (WatchConsoleDevice(service) < 0) {
-                INIT_LOGE("Failed to watch console service after it exit, mark console service invalid");
-                service->attribute |= SERVICE_ATTR_INVALID;
-            }
-        }
+        CheckOndemandService(service);
         return;
     }
 

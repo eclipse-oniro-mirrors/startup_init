@@ -85,8 +85,14 @@ int SystemTraversalParameter(const char *prefix, TraversalParamPtr traversalPara
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return -1, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
-
     PARAM_CHECK(traversalParameter != NULL, return -1, "The param is null");
+
+#ifdef PARAM_SUPPORT_SELINUX // load security label
+    ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
+    if (ops != NULL && ops->securityGetLabel != NULL) {
+        ops->securityGetLabel(NULL);
+    }
+#endif
     ParamTraversalContext context = {traversalParameter, cookie, "#"};
     if (!(prefix == NULL || strlen(prefix) == 0)) {
         ParamHandle handle = 0;
@@ -342,7 +348,7 @@ INIT_LOCAL_API int CheckParameterSet(const char *name,
         }
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
         // do hook cmd
-        PARAM_LOGI("CheckParameterSet realKey %s cmd: '%s' value: %s",
+        PARAM_LOGV("CheckParameterSet realKey %s cmd: '%s' value: %s",
             serviceInfo->realKey, serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
         DoCmdByName(serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
 #endif

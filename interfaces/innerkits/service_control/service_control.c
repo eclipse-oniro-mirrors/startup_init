@@ -265,7 +265,7 @@ int StopServiceTimer(const char *serviceName)
         return -1;
     }
 
-    if (SystemSetParameter("ohos.servicectrl", value) != 0) {
+    if (SystemSetParameter("ohos.servicectrl.timer_stop", value) != 0) {
         BEGET_LOGE("Failed to set parameter \' ohos.servicectrl.timer_stop \' with value \' %s \'", value);
         return -1;
     }

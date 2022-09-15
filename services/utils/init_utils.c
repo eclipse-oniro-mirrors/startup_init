@@ -534,17 +534,6 @@ int StringReplaceChr(char *strl, char oldChr, char newChr)
     return 0;
 }
 
-uint32_t GetRandom()
-{
-    uint32_t ulSeed = 0;
-    int fd = open("/dev/urandom", O_RDONLY);
-    if (fd > 0) {
-        read(fd, &ulSeed, sizeof(ulSeed));
-    }
-    close(fd);
-    return ulSeed;
-}
-
 void RedirectStdio(int fd)
 {
 #ifndef __LITEOS_M__

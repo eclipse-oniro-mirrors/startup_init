@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef _PLUGIN_SELINUX_ADP_H
-#define _PLUGIN_SELINUX_ADP_H
+#ifndef PLUGIN_SELINUX_ADP_H
+#define PLUGIN_SELINUX_ADP_H
 
 # define SECON_STR_IN_CFG      ("secon")
 // https://github.com/xelerance/Openswan/blob/86dff2b/include/pluto/state.h#L222
 # define MAX_SECON_LEN         (257)
 
-#endif /* _PLUGIN_SELINUX_ADP_H */
+#endif /* PLUGIN_SELINUX_ADP_H */

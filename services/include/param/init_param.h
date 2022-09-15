@@ -139,7 +139,7 @@ void DoJobExecNow(const char *triggerName);
  */
 int AddCompleteJob(const char *name, const char *condition, const char *cmdContent);
 
-void RegisterBootStateChange(void (*bootStateChange)(const char *));
+void RegisterBootStateChange(void (*bootStateChange)(int start, const char *));
 
 /**
  * 对外接口

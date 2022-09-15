@@ -58,7 +58,6 @@ void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size));
 void ParseAllServices(const cJSON *fileRoot);
 void ReleaseService(Service *service);
-void StartAllServices(int startMode);
 void LoadAccessTokenId(void);
 Service *AddService(const char *name);
 void DumpServiceHookExecute(const char *name, const char *info);

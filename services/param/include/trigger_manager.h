@@ -160,7 +160,7 @@ typedef struct TriggerWorkSpace_ {
     TriggerHeader triggerHead[TRIGGER_MAX];
     HashMapHandle hashMap;
     ParamTaskPtr eventHandle;
-    void (*bootStateChange)(const char *);
+    void (*bootStateChange)(int start, const char *);
     char cache[PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX];
 } TriggerWorkSpace;
 

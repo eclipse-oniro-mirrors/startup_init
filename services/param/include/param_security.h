@@ -118,7 +118,6 @@ INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
 INIT_LOCAL_API ParamSecurityOps *GetParamSecurityOps(int type);
 INIT_LOCAL_API void LoadGroupUser(void);
 INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit);
-INIT_LOCAL_API void OpenPermissionWorkSpace(void);
 INIT_LOCAL_API int RegisterSecurityOps(int onlyRead);
 
 #ifdef __cplusplus

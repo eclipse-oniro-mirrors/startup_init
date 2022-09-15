@@ -33,6 +33,10 @@ typedef enum {
     PARAM_CODE_ERROR_MAP_FILE,
 } PARAM_INNER_CODE;
 
+#ifndef PARAM_BUFFER_MAX
+#define PARAM_BUFFER_MAX (0x01 << 16)
+#endif
+
 struct CmdLineEntry {
     char *key;
     int set;
@@ -43,7 +47,6 @@ typedef struct cmdLineInfo {
     int (*processor)(const char *name, const char *value, int);
 } cmdLineInfo;
 
-#define PARAM_BUFFER_MAX (0x01 << 16)
 #define FILENAME_LEN_MAX 255
 #define MS_UNIT 1000
 #ifndef UNUSED
