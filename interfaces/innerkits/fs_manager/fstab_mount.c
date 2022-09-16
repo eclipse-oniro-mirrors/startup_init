@@ -316,7 +316,7 @@ static int GetSlotInfoFromCmdLine(const char *slotInfoName)
     char value[MAX_BUFFER_LEN] = {0};
     char *buffer = ReadFileData(BOOT_CMD_LINE);
     BEGET_ERROR_CHECK(buffer != NULL, return -1, "Failed to read cmdline");
-    BEGET_ERROR_CHECK(GetProcCmdlineValue(slotInfoName, buffer, value, MAX_BUFFER_LEN) == 0,
+    BEGET_INFO_CHECK(GetProcCmdlineValue(slotInfoName, buffer, value, MAX_BUFFER_LEN) == 0,
         free(buffer); buffer = NULL; return -1, "Failed to get %s value from cmdline", slotInfoName);
     free(buffer);
     buffer = NULL;
@@ -336,7 +336,7 @@ static int GetSlotInfoFromMisc(off_t offset, off_t size)
     BEGET_ERROR_CHECK(lseek(fd, offset, SEEK_SET) >= 0, close(fd); return -1,
         "Failed to lseek misc device fd, errno %d", errno);
     int slotInfo = 0;
-    BEGET_ERROR_CHECK(read(fd, &slotInfo, size) == size, close(fd); return -1,
+    BEGET_INFO_CHECK(read(fd, &slotInfo, size) == size, close(fd); return -1,
         "Failed to read current slot from misc, errno %d", errno);
     close(fd);
     return slotInfo;

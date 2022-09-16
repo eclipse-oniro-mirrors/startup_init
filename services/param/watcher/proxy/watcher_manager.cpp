@@ -24,6 +24,7 @@
 #include "param_message.h"
 #include "init_param.h"
 #include "system_ability_definition.h"
+#include "string_ex.h"
 #include "watcher_utils.h"
 
 namespace OHOS {
@@ -433,6 +434,80 @@ int32_t WatcherManager::RefreshWatcher(const std::string &keyPrefix, uint32_t wa
     auto paramWatcher = GetWatcher(watcherId);
     WATCHER_CHECK(paramWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), watcherId);
     SendLocalChange(keyPrefix, paramWatcher);
+    return 0;
+}
+
+WatcherManager::ParamWatcher *WatcherManager::WatcherGroup::GetNextWatcher(WatcherManager::ParamWatcher *watcher)
+{
+    if (watcher == nullptr) {
+        if (ListEmpty(watchers_)) {
+            return nullptr;
+        }
+        return reinterpret_cast<WatcherManager::ParamWatcher *>(GetWatchers()->next);
+    }
+    if (watcher->GetGroupNode() == nullptr) {
+        return nullptr;
+    }
+    if (watcher->GetGroupNode()->next != GetWatchers()) {
+        return reinterpret_cast<WatcherManager::ParamWatcher *>(watcher->GetGroupNode()->next);
+    }
+    return nullptr;
+}
+
+void WatcherManager::DumpWatcherGroup(int fd, const WatcherManager::WatcherGroupPtr &watchGroup)
+{
+    dprintf(fd, "Watch prefix   : %s \n", watchGroup->GetKeyPrefix().c_str());
+    dprintf(fd, "Watch group id : %d \n", watchGroup->GetGroupId());
+
+    // watcher id
+    WatcherManager::ParamWatcher *watcher = watchGroup->GetNextWatcher(nullptr);
+    if (watcher != nullptr) {
+        dprintf(fd, "Watch id list  : %d", watcher->GetWatcherId());
+    } else {
+        return;
+    }
+    watcher = watchGroup->GetNextWatcher(watcher);
+    while (watcher != nullptr) {
+        dprintf(fd, ", %d", watcher->GetWatcherId());
+        watcher = watchGroup->GetNextWatcher(watcher);
+    }
+    dprintf(fd, "\n");
+}
+
+int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)
+{
+    WATCHER_CHECK(fd >= 0, return -1, "Invalid fd for dump %d", fd);
+    std::vector<std::string> params;
+    for (auto& arg : args) {
+        params.emplace_back(Str16ToStr8(arg));
+    }
+    if (params.size() >= 1 && params[0] == "-h") {
+        std::string dumpInfo = {};
+        dumpInfo.append("Usage:\n")
+            .append(" -h                    ")
+            .append("|help text for the tool\n")
+            .append(" -k                    ")
+            .append("|dump watcher infomation for key prefix\n");
+        dprintf(fd, "%s\n", dumpInfo.c_str());
+        return 0;
+    }
+    if (params.size() > 1 && params[0] == "-k") {
+        auto group = GetWatcherGroup(params[1]);
+        if (group == NULL) {
+            dprintf(fd, "Prefix %s not found in watcher list\n", params[1].c_str());
+            return 0;
+        }
+        DumpWatcherGroup(fd, group);
+        return 0;
+    }
+    // all output
+    std::lock_guard<std::mutex> lock(watcherMutex_);
+    // dump all watcher
+    for (auto it = groupMap_.begin(); it != groupMap_.end(); it++) {
+        if (watcherGroups_.find(it->second) != watcherGroups_.end()) {
+            DumpWatcherGroup(fd, watcherGroups_[it->second]);
+        }
+    }
     return 0;
 }
 } // namespace init_param
