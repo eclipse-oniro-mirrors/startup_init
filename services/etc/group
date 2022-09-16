@@ -32,7 +32,7 @@ uiserver:x:1048:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr
 powerctrl:x:1051:root,shell,system,update,power_host
 bootctrl:x:1052:root,shell,system
-deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account
+deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,useriam
 hiview:x:1201:
 hidumper_service:x:1212:
 shell:x:2000:
