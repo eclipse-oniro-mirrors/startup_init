@@ -46,14 +46,14 @@ static int CommonDealFun(const char *name, const char *value, int res)
 {
     int ret = 0;
     if (res == 0) {
-        PARAM_LOGI("Add param from cmdline %s %s", name, value);
+        PARAM_LOGV("Add param from cmdline %s %s", name, value);
         ret = CheckParamName(name, 0);
-        PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
-        PARAM_LOGV("**** name %s, value %s", name, value);
+        PARAM_CHECK(ret == 0, return ret, "Invalid param name %s", name);
+        PARAM_LOGV("Param name %s, value %s", name, value);
         ret = WriteParam(name, value, NULL, 0);
         PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
     } else {
-        PARAM_LOGE("Can not find arrt %s", name);
+        PARAM_LOGE("Get %s parameter value is null.", name);
     }
     return ret;
 }
@@ -182,7 +182,7 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode,
     }
     (void)fclose(fp);
     free(buffer);
-    PARAM_LOGI("Load parameters success %s total %u", fileName, paramNum);
+    PARAM_LOGV("Load %u default parameters success from %s.", paramNum, fileName);
     return 0;
 }
 
@@ -201,7 +201,7 @@ int LoadParamsFile(const char *fileName, bool onlyAdd)
 int LoadDefaultParams(const char *fileName, uint32_t mode)
 {
     PARAM_CHECK(fileName != NULL, return -1, "Invalid filename for load");
-    PARAM_LOGI("load default parameters %s.", fileName);
+    PARAM_LOGI("Load default parameters from %s.", fileName);
     struct stat st;
     if ((stat(fileName, &st) == 0) && !S_ISDIR(st.st_mode)) {
         (void)ProcessParamFile(fileName, &mode);

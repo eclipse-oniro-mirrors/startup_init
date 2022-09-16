@@ -328,7 +328,7 @@ int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char 
     }
     FstabItem *item = FindFstabItemForMountPoint(*fstab, mountPoint);
     if (item == NULL) {
-        BEGET_LOGE("Failed to get fstab item from point \" %s \"", mountPoint);
+        BEGET_LOGE("Failed to get fstab item from mount point \" %s \"", mountPoint);
         return -1;
     }
     if (strncpy_s(deviceName, nameLen, item->deviceName, strlen(item->deviceName)) != 0) {
@@ -398,7 +398,6 @@ static unsigned long ParseDefaultMountFlag(const char *str)
 
 static bool IsFscryptOption(const char *option)
 {
-    BEGET_LOGI("IsFscryptOption start");
     if (!option) {
         return false;
     }
@@ -510,7 +509,7 @@ int GetBlockDevicePath(const char *partName, char *path, size_t size)
     BEGET_CHECK_RETURN_VALUE(fstab != NULL, -1);
     int ret = GetBlockDeviceByMountPoint(partName, fstab, path, size);
     BEGET_INFO_CHECK(ret == 0, ret = GetBlockDeviceByName(partName, fstab, path, size),
-        "mount point not found, try to get it by device name");
+        "Mount point not found, try to get path by device name.");
     ReleaseFstab(fstab);
     return ret;
 }

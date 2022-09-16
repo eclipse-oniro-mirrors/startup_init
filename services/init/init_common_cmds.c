@@ -316,7 +316,7 @@ static void DoMkDir(const struct CmdArgs *ctx)
     }
     mode_t mode = DEFAULT_DIR_MODE;
     if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
-        INIT_LOGE("DoMkDir, failed for '%s', err %d.", ctx->argv[0], errno);
+        INIT_LOGE("Create directory '%s' failed, err=%d.", ctx->argv[0], errno);
         return;
     }
 
@@ -338,7 +338,7 @@ static void DoMkDir(const struct CmdArgs *ctx)
     }
     ret = SetFileCryptPolicy(ctx->argv[0]);
     if (ret != 0) {
-        INIT_LOGW("failed to set file fscrypt");
+        INIT_LOGW("Failed to set file fscrypt");
     }
 
     return;
@@ -354,7 +354,7 @@ static void DoChmod(const struct CmdArgs *ctx)
     }
 
     if (chmod(ctx->argv[1], mode) != 0) {
-        INIT_LOGE("Failed to change mode \" %s \" mode to %04o, err = %d", ctx->argv[1], mode, errno);
+        INIT_LOGE("Failed to change mode \" %s \" to %04o, err=%d", ctx->argv[1], mode, errno);
     }
 }
 
@@ -525,21 +525,21 @@ static void DoSetrlimit(const struct CmdArgs *ctx)
         INIT_LOGE("DoSetrlimit failed, resources :%s not support.", ctx->argv[0]);
         return;
     }
-    INIT_CHECK_ONLY_ELOG(setrlimit(rcs, &limit) == 0, "DoSetrlimit failed : %d", errno);
+    INIT_CHECK_ONLY_ELOG(setrlimit(rcs, &limit) == 0, "Failed setrlimit err=%d", errno);
     return;
 }
 
 static void DoRm(const struct CmdArgs *ctx)
 {
     // format: rm /xxx/xxx/xxx
-    INIT_CHECK_ONLY_ELOG(unlink(ctx->argv[0]) != -1, "DoRm: unlink %s failed: %d.", ctx->argv[0], errno);
+    INIT_CHECK_ONLY_ELOG(unlink(ctx->argv[0]) != -1, "Failed unlink %s err=%d.", ctx->argv[0], errno);
     return;
 }
 
 static void DoExport(const struct CmdArgs *ctx)
 {
     // format: export xxx /xxx/xxx/xxx
-    INIT_CHECK_ONLY_ELOG(setenv(ctx->argv[0], ctx->argv[1], 1) == 0, "DoExport: set %s with %s failed: %d",
+    INIT_CHECK_ONLY_ELOG(setenv(ctx->argv[0], ctx->argv[1], 1) == 0, "Failed setenv %s with %s err=%d.",
         ctx->argv[0], ctx->argv[1], errno);
     return;
 }
@@ -693,17 +693,33 @@ int GetCmdLinesFromJson(const cJSON *root, CmdLines **cmdLines)
     return 0;
 }
 
+long long  InitDiffTime(INIT_TIMING_STAT *stat)
+{
+    long long diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000); // 1000000 1000ms
+    if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
+        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / 1000; // 1000 ms
+    } else {
+        diff -= (stat->startTime.tv_nsec - stat->endTime.tv_nsec) / 1000; // 1000 ms
+    }
+    return diff;
+}
+
 void DoCmdByName(const char *name, const char *cmdContent)
 {
     if (name == NULL || cmdContent == NULL) {
         return;
     }
+    INIT_TIMING_STAT cmdTimer;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
     const struct CmdTable *cmd = GetCmdByName(name);
     if (cmd != NULL) {
         ExecCmd(cmd, cmdContent);
-        return;
+    } else {
+        PluginExecCmdByName(name, cmdContent);
     }
-    PluginExecCmdByName(name, cmdContent);
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+    long long diff = InitDiffTime(&cmdTimer);
+    INIT_LOGV("Command %s execute time %lld", name, diff);
 }
 
 void DoCmdByIndex(int index, const char *cmdContent)
@@ -712,16 +728,23 @@ void DoCmdByIndex(int index, const char *cmdContent)
         return;
     }
     int cmdCnt = 0;
+    INIT_TIMING_STAT cmdTimer;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
     const struct CmdTable *commCmds = GetCommCmdTable(&cmdCnt);
     if (index < cmdCnt) {
         ExecCmd(&commCmds[index], cmdContent);
-        return;
+        INIT_LOGV("Command: %s content: %s", commCmds[index].name, cmdContent);
+    } else {
+        int number = 0;
+        const struct CmdTable *cmds = GetCmdTable(&number);
+        if (index < (cmdCnt + number)) {
+            ExecCmd(&cmds[index - cmdCnt], cmdContent);
+            INIT_LOGV("Command: %s content: %s", cmds[index - cmdCnt].name, cmdContent);
+        } else {
+            PluginExecCmdByCmdIndex(index, cmdContent);
+        }
     }
-    int number = 0;
-    const struct CmdTable *cmds = GetCmdTable(&number);
-    if (index < (cmdCnt + number)) {
-        ExecCmd(&cmds[index - cmdCnt], cmdContent);
-        return;
-    }
-    PluginExecCmdByCmdIndex(index, cmdContent);
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+    long long diff = InitDiffTime(&cmdTimer);
+    INIT_LOGV("Command execute time %lld", diff);
 }

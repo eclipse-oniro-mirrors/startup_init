@@ -134,7 +134,10 @@ static int StartRequest(int clientFd, ParamMessage *request, int timeout)
 {
     int ret = 0;
     ssize_t sendLen = send(clientFd, (char *)request, request->msgSize, 0);
-    PARAM_CHECK(sendLen >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to send message");
+    if (errno == EINVAL || errno == EACCES) {
+        return PARAM_CODE_INVALID_SOCKET;
+    }
+    PARAM_CHECK(sendLen >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to send message err: %d", errno);
     PARAM_LOGV("sendMessage sendLen fd %d %zd", clientFd, sendLen);
     ret = ReadMessage(clientFd, (char *)request, timeout);
     if (ret == 0) {

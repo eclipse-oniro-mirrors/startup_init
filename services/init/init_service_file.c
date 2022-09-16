@@ -39,7 +39,7 @@ static int CreateFile(ServiceFile *file)
         INIT_ERROR_CHECK(strncpy_s(path, strlen(file->fileName) + 1, file->fileName, strlen(file->fileName)) >= 0,
             return -1, "Failed strncpy_s err=%d", errno);
     }
-    INIT_LOGI("File path =%s . file flags =%d, file perm =%u ", path, file->flags, file->perm);
+    INIT_LOGV("File path =%s . file flags =%d, file perm =%u ", path, file->flags, file->perm);
     if (file->fd >= 0) {
         close(file->fd);
         file->fd = -1;
@@ -64,7 +64,6 @@ static int SetFileEnv(int fd, const char *pathName)
     char val[MAX_FILE_FD_LEN] = { 0 };
     INIT_ERROR_CHECK(snprintf_s(val, sizeof(val), sizeof(val) - 1, "%d", fd) >= 0, return -1,
         "Failed snprintf_s err=%d", errno);
-    INIT_LOGE("Set file env pubName =%s, val =%s.", pubName, val);
     int ret = setenv(pubName, val, 1);
     INIT_ERROR_CHECK(ret >= 0, return -1, "Failed setenv err=%d ", errno);
     fcntl(fd, F_SETFD, 0);
