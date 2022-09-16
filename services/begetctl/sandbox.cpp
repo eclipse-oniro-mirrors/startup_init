@@ -74,7 +74,7 @@ static void RunSandbox(const std::string &sandboxName)
 
 static void EnterShell()
 {
-    char *argv[] = { const_cast<char *>("sh"), NULL };
+    char *argv[] = { const_cast<char *>("sh"), nullptr };
     char *envp[] = { nullptr };
     if (execve("/system/bin/sh", argv, envp) != 0) {
         std::cout << "execve sh failed! err = "<< errno << std::endl;

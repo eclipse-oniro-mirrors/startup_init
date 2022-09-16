@@ -148,7 +148,7 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
         return;
     }
 
-    while (idx < sizeof(DYNAMIC_DEVICES)/sizeof(DYNAMIC_DEVICES[0])) {
+    while (idx < sizeof(DYNAMIC_DEVICES) / sizeof(DYNAMIC_DEVICES[0])) {
         if (strcmp(uevent->deviceName, DYNAMIC_DEVICES[idx].dev + DEV_NODE_PATH_PREFIX_LEN) != 0) {
             idx++;
             continue;
