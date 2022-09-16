@@ -115,7 +115,7 @@ static void SetDeviceLable(const char *path)
             continue;
         }
         if (gap < 0) { // end with '/'
-            break;
+            return;
         }
 
         if (memcpy_s(buffer, PATH_MAX, path, p - path - 1) != EOK) {
