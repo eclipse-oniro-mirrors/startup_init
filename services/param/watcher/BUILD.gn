@@ -16,6 +16,7 @@ ohos_prebuilt_etc("param_watcher.rc") {
   source = "etc/param_watcher.cfg"
   relative_install_dir = "init"
   part_name = "init"
+  subsystem_name = "startup"
 }
 
 ohos_shared_library("param_watcher") {
@@ -48,4 +49,5 @@ ohos_shared_library("param_watcher") {
   ]
   install_images = [ "system" ]
   part_name = "init"
+  subsystem_name = "startup"
 }

@@ -10,6 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//build/ohos.gni")
 
 group("static_modules") {
   if (!defined(ohos_lite)) {
@@ -22,9 +23,9 @@ group("static_modules") {
     if (build_seccomp) {
       deps += [ "seccomp:libseccomp_static" ]
     }
-  }
-  if (build_selinux) {
-    deps += [ "selinux:libselinuxadp_static" ]
+    if (build_selinux) {
+      deps += [ "selinux:libselinuxadp_static" ]
+    }
   }
 }
 
@@ -35,10 +36,10 @@ group("modulesgroup") {
       "reboot:rebootmodule",
     ]
     if (build_seccomp) {
-      deps += [ "seccomp:seccomp_module" ]
+      deps += [ "seccomp:seccomp_filter" ]
     }
-  }
-  if (build_selinux) {
-    deps += [ "selinux:selinuxadp" ]
+    if (build_selinux) {
+      deps += [ "selinux:selinuxadp" ]
+    }
   }
 }

@@ -133,9 +133,10 @@ typedef struct {
 #define DEV_NODE_PATH_PREFIX "/dev/"
 #define DEV_NODE_PATH_PREFIX_LEN 5
 
-static const DYNAMIC_DEVICE_NODE dynamicDevices[] = {
-    { DEV_NODE_PATH_PREFIX"tty",             S_IFCHR | DEFAULT_RW_MODE },
-    { DEV_NODE_PATH_PREFIX"binder",          S_IFCHR | DEFAULT_RW_MODE }
+static const DYNAMIC_DEVICE_NODE DYNAMIC_DEVICES[] = {
+    { DEV_NODE_PATH_PREFIX"tty",              S_IFCHR | DEFAULT_RW_MODE },
+    { DEV_NODE_PATH_PREFIX"binder",           S_IFCHR | DEFAULT_RW_MODE },
+    { DEV_NODE_PATH_PREFIX"console",          S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP }
 };
 
 static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
@@ -147,17 +148,17 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
         return;
     }
 
-    while (idx < sizeof(dynamicDevices)/sizeof(dynamicDevices[0])) {
-        if (strcmp(uevent->deviceName, dynamicDevices[idx].dev + DEV_NODE_PATH_PREFIX_LEN) != 0) {
+    while (idx < sizeof(DYNAMIC_DEVICES)/sizeof(DYNAMIC_DEVICES[0])) {
+        if (strcmp(uevent->deviceName, DYNAMIC_DEVICES[idx].dev + DEV_NODE_PATH_PREFIX_LEN) != 0) {
             idx++;
             continue;
         }
 
         // Matched
         mask = umask(0);
-        if (mknod(dynamicDevices[idx].dev, dynamicDevices[idx].mode,
+        if (mknod(DYNAMIC_DEVICES[idx].dev, DYNAMIC_DEVICES[idx].mode,
                     makedev(uevent->major, uevent->minor)) != 0) {
-            INIT_LOGE("Create device node %s failed. %s", dynamicDevices[idx].dev, strerror(errno));
+            INIT_LOGE("Create device node %s failed. %s", DYNAMIC_DEVICES[idx].dev, strerror(errno));
         }
         // Restore umask
         umask(mask);

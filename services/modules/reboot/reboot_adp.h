@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef _MODULE_REBOOT_ADP_H
-#define _MODULE_REBOOT_ADP_H
+#ifndef MODULE_REBOOT_ADP_H
+#define MODULE_REBOOT_ADP_H
 #include <stdio.h>
 
 int GetRebootReasonFromMisc(char *reason, size_t size);
 int UpdateMiscMessage(const char *valueData, const char *cmd, const char *cmdExt, const char *boot);
 
-#endif /* _MODULE_REBOOT_ADP_H */
+#endif /* MODULE_REBOOT_ADP_H */

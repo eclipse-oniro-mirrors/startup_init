@@ -56,6 +56,7 @@ if (defined(ohos_lite)) {
     output_extension = "so"
     stub_description_file = "./stub/libinit.stub.empty.json"
     part_name = "init"
+    subsystem_name = "startup"
     install_enable = true
     install_images = [
       "system",

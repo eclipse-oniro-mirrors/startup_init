@@ -206,7 +206,7 @@ static void WriteLogoToMisc(const std::string &logoPath)
 
 static int main_cmd(BShellHandle shell, int argc, char **argv)
 {
-    if (argc >= 2 && strcmp((char *)"--write_logo", argv[0]) == 0) { // 2 min arg
+    if (argc >= 2 && strcmp(const_cast<char *>("--write_logo"), argv[0]) == 0) { // 2 min arg
         WriteLogoToMisc(argv[1]);
     } else {
         char *helpArgs[] = {const_cast<char *>("misc_daemon"), nullptr};

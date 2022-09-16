@@ -425,5 +425,5 @@ init的关键配置文件init.cfg位于代码仓库base/startup/init/service/etc
 
 [startup\_bootstrap\_lite](https://gitee.com/openharmony/startup_bootstrap_lite/blob/master/README_zh.md)
 
-**[startup\_init\_lite]**
+startup\_init\_lite
 

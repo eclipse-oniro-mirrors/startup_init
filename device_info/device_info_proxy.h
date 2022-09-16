@@ -26,8 +26,8 @@ public:
     explicit DeviceInfoProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IDeviceInfo>(impl) {}
     virtual ~DeviceInfoProxy() {}
 
-    virtual int32_t GetUdid(std::string& result) override;
-    virtual int32_t GetSerialID(std::string& result) override;
+    int32_t GetUdid(std::string& result) override;
+    int32_t GetSerialID(std::string& result) override;
 private:
     static inline BrokerDelegator<DeviceInfoProxy> delegator_;
 };

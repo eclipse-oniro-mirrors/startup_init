@@ -24,6 +24,7 @@ ohos_static_library("libfuzz_utils") {
 
   deps = []
   part_name = "init"
+  subsystem_name = "startup"
 }
 
 ##############################fuzztest##########################################

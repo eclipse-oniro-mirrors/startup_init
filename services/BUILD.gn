@@ -32,7 +32,13 @@ group("startup_init") {
     deps = [
       "etc:etc_files",
       "init/standard:init",
+      "//third_party/e2fsprogs:e2fsprogs",
     ]
+
+    if (use_musl) {
+      deps += [ "//third_party/f2fs-tools:f2fs-tools" ]
+    }
+
     if (enable_ohos_startup_init_feature_watcher) {
       deps += [
         "//base/startup/init/services/param/watcher:param_watcher",

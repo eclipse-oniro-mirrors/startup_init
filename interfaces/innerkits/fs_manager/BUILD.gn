@@ -33,4 +33,5 @@ ohos_static_library("libfsmanager_static") {
   ]
   public_configs = [ ":libfsmanager_exported_configs" ]
   part_name = "init"
+  subsystem_name = "startup"
 }

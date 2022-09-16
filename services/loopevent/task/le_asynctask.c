@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "le_task.h"
-
+#include <time.h>
 #include <sys/eventfd.h>
 
 #include "le_loop.h"
@@ -21,19 +21,15 @@
 static void DoAsyncEvent_(const LoopHandle loopHandle, AsyncEventTask *asyncTask)
 {
     LE_CHECK(loopHandle != NULL && asyncTask != NULL, return, "Invalid parameters");
-    ListNode tmpHdr;
-    OH_ListInit(&tmpHdr);
+#ifdef LOOP_DEBUG
+    struct timespec startTime;
+    struct timespec endTime;
+    long long diff;
+    clock_gettime(CLOCK_MONOTONIC, &(startTime));
+#endif
     StreamTask *task = &asyncTask->stream;
-    LoopMutexLock(&task->mutex);
-    tmpHdr.next = task->buffHead.next;
-    tmpHdr.prev = task->buffHead.prev;
-    task->buffHead.next->prev = &tmpHdr;
-    task->buffHead.prev->next = &tmpHdr;
-    OH_ListInit(&task->buffHead);
-    LoopMutexUnlock(&task->mutex);
-
-    ListNode *node = tmpHdr.next;
-    while (node != &tmpHdr) {
+    ListNode *node = task->buffHead.next;
+    while (node != &task->buffHead) {
         LE_Buffer *buffer = ListEntry(node, LE_Buffer, node);
         uint64_t eventId = *(uint64_t*)(buffer->data);
         if (asyncTask->processAsyncEvent) {
@@ -42,13 +38,27 @@ static void DoAsyncEvent_(const LoopHandle loopHandle, AsyncEventTask *asyncTask
         }
         OH_ListRemove(&buffer->node);
         free(buffer);
-        node = tmpHdr.next;
+#ifdef LOOP_DEBUG
+        clock_gettime(CLOCK_MONOTONIC, &(endTime));
+        diff = (long long)((endTime.tv_sec - startTime.tv_sec) * 1000000);
+        if (endTime.tv_nsec > startTime.tv_nsec) {
+            diff += (endTime.tv_nsec - startTime.tv_nsec) / 1000; // 1000 ms
+        } else {
+            diff -= (endTime.tv_nsec - startTime.tv_nsec) / 1000; // 1000 ms
+        }
+        LE_LOGI("DoAsyncEvent_ diff %ld",  diff);
+#endif
+        break;
     }
 }
+
 #ifdef STARTUP_INIT_TEST
 void LE_DoAsyncEvent(const LoopHandle loopHandle, const TaskHandle taskHandle)
 {
-    DoAsyncEvent_(loopHandle, (AsyncEventTask *)taskHandle);
+    AsyncEventTask *asyncTask = (AsyncEventTask *)taskHandle;
+    while (!IsBufferEmpty(&asyncTask->stream)) {
+        DoAsyncEvent_(loopHandle, (AsyncEventTask *)taskHandle);
+    }
 }
 #endif
 static LE_STATUS HandleAsyncEvent_(const LoopHandle loopHandle, const TaskHandle taskHandle, uint32_t oper)
@@ -61,8 +71,8 @@ static LE_STATUS HandleAsyncEvent_(const LoopHandle loopHandle, const TaskHandle
         int ret = read(GetSocketFd(taskHandle), &eventId, sizeof(eventId));
         LE_LOGV("HandleAsyncEvent_ read fd:%d ret: %d eventId %llu", GetSocketFd(taskHandle), ret, eventId);
         DoAsyncEvent_(loopHandle, asyncTask);
-        if (IsBufferEmpty(&asyncTask->stream)) {
-            loop->modEvent(loop, (const BaseTask *)taskHandle, Event_Read);
+        if (!IsBufferEmpty(&asyncTask->stream)) {
+            loop->modEvent(loop, (const BaseTask *)taskHandle, Event_Write);
             return LE_SUCCESS;
         }
     } else {

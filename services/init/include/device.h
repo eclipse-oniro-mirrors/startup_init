@@ -29,7 +29,6 @@ extern "C" {
 
 void MountBasicFs(void);
 void CreateDeviceNode(void);
-void CloseStdio(void);
 
 #ifdef __cplusplus
 #if __cplusplus

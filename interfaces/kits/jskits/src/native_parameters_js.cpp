@@ -202,8 +202,7 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
 
     napi_value napiValue = nullptr;
     if (ret == 0) {
-        const char *value = getValue.c_str();
-        NAPI_CALL(env, napi_create_string_utf8(env, value, strlen(value), &napiValue));
+        NAPI_CALL(env, napi_create_string_utf8(env, getValue.c_str(), strlen(getValue.c_str()), &napiValue));
     }
     return napiValue;
 }

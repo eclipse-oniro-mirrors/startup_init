@@ -16,6 +16,7 @@
 
 #include <errno.h>
 #include <poll.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
@@ -29,6 +30,7 @@
 #include "device.h"
 #include "fd_holder_service.h"
 #include "fs_manager/fs_manager.h"
+#include "key_control.h"
 #include "init_control_fd_service.h"
 #include "init_log.h"
 #include "init_mount.h"
@@ -42,11 +44,12 @@
 #include "ueventd.h"
 #include "ueventd_socket.h"
 #include "fd_holder_internal.h"
-#include "sandbox.h"
-#include "sandbox_namespace.h"
 #include "bootstage.h"
 
-static bool g_enableSandbox;
+typedef struct HOOK_TIMING_STAT {
+    struct timespec startTime;
+    struct timespec endTime;
+} HOOK_TIMING_STAT;
 
 static int FdHolderSockInit(void)
 {
@@ -199,6 +202,9 @@ static void StartInitSecondStage(void)
     // It will panic if close stdio before execv("/bin/sh", NULL)
     CloseStdio();
 
+    // Set up a session keyring that all processes will have access to.
+    KeyCtrlGetKeyringId(KEY_SPEC_SESSION_KEYRING, 1);
+
 #ifndef DISABLE_INIT_TWO_STAGES
     SwitchRoot("/usr");
     // Execute init second stage
@@ -246,34 +252,27 @@ HOOK_MGR *GetBootStageHookMgr()
     return bootStageHookMgr;
 }
 
-static void BootStateChange(const char *content)
+HOOK_TIMING_STAT g_bootJob = {0};
+static long long  InitDiffTime(HOOK_TIMING_STAT *stat)
 {
-    INIT_LOGI("boot start %s finish.", content);
-    if (strcmp("init", content) == 0) {
-        StartAllServices(START_MODE_BOOT);
-        return;
+    long long diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000); // 1000000 1000ms
+    if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
+        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / 1000; // 1000 ms
+    } else {
+        diff -= (stat->startTime.tv_nsec - stat->endTime.tv_nsec) / 1000; // 1000 ms
     }
-    if (strcmp("post-init", content) == 0) {
-        StartAllServices(START_MODE_NORMAL);
-        return;
-    }
+    return diff;
 }
 
-static void IsEnableSandbox(void)
+static void BootStateChange(int start, const char *content)
 {
-    const char *name = "const.sandbox";
-    char value[MAX_BUFFER_LEN] = {0};
-    unsigned int len = MAX_BUFFER_LEN;
-    if (SystemReadParam(name, value, &len) != 0) {
-        INIT_LOGE("Failed read param.");
-        g_enableSandbox = false;
-    }
-    if (strcmp(value, "enable") == 0) {
-        INIT_LOGI("Enable sandbox.");
-        g_enableSandbox = true;
+    if (start == 0) {
+        clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.startTime));
+        INIT_LOGI("boot job %s start.", content);
     } else {
-        INIT_LOGI("Disable sandbox.");
-        g_enableSandbox = false;
+        clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.endTime));
+        long long diff = InitDiffTime(&g_bootJob);
+        INIT_LOGI("boot job %s finish diff %lld us.", content, diff);
     }
 }
 
@@ -296,11 +295,6 @@ static void InitLoadParamFiles(void)
     FreeCfgFiles(files);
 }
 
-typedef struct HOOK_TIMING_STAT {
-    struct timespec startTime;
-    struct timespec endTime;
-} HOOK_TIMING_STAT;
-
 static void InitPreHook(const HOOK_INFO *hookInfo, void *executionContext)
 {
     HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)executionContext;
@@ -309,20 +303,51 @@ static void InitPreHook(const HOOK_INFO *hookInfo, void *executionContext)
 
 static void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext, int executionRetVal)
 {
-    long long diff;
-    const long long baseTime = 1000;
     HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->endTime));
-
-    diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) / baseTime);
-    if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
-        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) * baseTime;
-    } else {
-        diff -= (stat->endTime.tv_nsec - stat->startTime.tv_nsec) * baseTime;
-    }
-
-    INIT_LOGV("Executing hook [%d:%d:%p] cost [%lld]ms, return %d.",
+    long long diff = InitDiffTime(stat);
+    INIT_LOGI("Executing hook [%d:%d:%p] cost [%lld]us, return %d.",
         hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, executionRetVal);
+}
+
+static void TriggerServices(int startMode)
+{
+    int index = 0;
+    int jobNum = 0;
+    char jobName[64] = {0}; // 64 job name
+    char cmd[64] = {0};  // 64 job name
+    const int maxServiceInJob = 4; // 4 service in job
+    InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
+    while (node != NULL) {
+        Service *service = node->data.service;
+        if (service == NULL || service->startMode != startMode) {
+            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
+            continue;
+        }
+        if (IsOnDemandService(service)) {
+            if (CreateServiceSocket(service) != 0) {
+                INIT_LOGE("service %s exit! create socket failed!", service->name);
+            }
+            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
+            continue;
+        }
+        if (index == 0) {
+            sprintf_s(jobName, sizeof(jobName), "boot-service:service-%d-%03d", startMode, jobNum);
+            jobNum++;
+        }
+        index++;
+        sprintf_s(cmd, sizeof(cmd), "start %s", service->name);
+        AddCompleteJob(jobName, NULL, cmd);
+        INIT_LOGV("Add %s to job %s", service->name, jobName);
+        if (index == maxServiceInJob) {
+            PostTrigger(EVENT_TRIGGER_BOOT, jobName, strlen(jobName));
+            index = 0;
+        }
+        node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
+    }
+    if (index > 0) {
+        PostTrigger(EVENT_TRIGGER_BOOT, jobName, strlen(jobName));
+    }
 }
 
 void SystemConfig(void)
@@ -342,6 +367,7 @@ void SystemConfig(void)
     InitParseGroupCfg();
     RegisterBootStateChange(BootStateChange);
 
+    INIT_LOGI("boot init finish.");
     // load SELinux context and policy
     // Do not move position!
     PluginExecCmdByName("loadSelinuxPolicy", "");
@@ -354,45 +380,20 @@ void SystemConfig(void)
     // read config
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
-    INIT_LOGI("Parse init config file done.");
+    INIT_LOGI("boot parse config file done.");
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 
     IsEnableSandbox();
     // execute init
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
+    TriggerServices(START_MODE_BOOT);
     PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
+    TriggerServices(START_MODE_NORMAL);
+    clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.startTime));
 }
 
 void SystemRun(void)
 {
     StartParamService();
-}
-
-void SetServiceEnterSandbox(const char *execPath, unsigned int attribute)
-{
-    if (g_enableSandbox == false) {
-        return;
-    }
-    if ((attribute & SERVICE_ATTR_SANDBOX) != SERVICE_ATTR_SANDBOX) {
-        return;
-    }
-    INIT_ERROR_CHECK(execPath != NULL, return, "Service path is null.");
-    if (strncmp(execPath, "/system/bin/", strlen("/system/bin/")) == 0) {
-        if (strcmp(execPath, "/system/bin/appspawn") == 0) {
-            INIT_LOGI("Appspawn skip enter sandbox.");
-        } else if (strcmp(execPath, "/system/bin/hilogd") == 0) {
-            INIT_LOGI("Hilogd skip enter sandbox.");
-        } else {
-            INIT_INFO_CHECK(EnterSandbox("system") == 0, return,
-                "Service %s skip enter sandbox system.", execPath);
-        }
-    } else if (strncmp(execPath, "/vendor/bin/", strlen("/vendor/bin/")) == 0) {
-        // chipset sandbox will be implemented later.
-        INIT_INFO_CHECK(EnterSandbox("chipset") == 0, return,
-            "Service %s skip enter sandbox system.", execPath);
-    } else {
-        INIT_LOGI("Service %s does not enter sandbox", execPath);
-    }
-    return;
 }

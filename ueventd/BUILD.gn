@@ -89,11 +89,6 @@ if (defined(ohos_lite)) {
     deps = service_ueventd_deps
     defines = [ "__RAMDISK__" ]
     cflags = []
-    if (use_musl == false) {
-      deps += [ "//base/startup/init/services/param/base:parameterbase" ]
-    } else {
-      deps += [ "//base/startup/init/services/param/base:parameterbase_ext" ]
-    }
     if (build_selinux) {
       external_deps = [ "selinux:librestorecon" ]
       cflags += [ "-DWITH_SELINUX" ]
@@ -101,6 +96,7 @@ if (defined(ohos_lite)) {
 
     public_configs = [ ":libueventd_exported_config" ]
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_executable("ueventd") {
@@ -133,11 +129,13 @@ if (defined(ohos_lite)) {
     ]
     install_enable = true
     part_name = "init"
+    subsystem_name = "startup"
   }
 
   ohos_prebuilt_etc("ueventd.config") {
     source = "//base/startup/init/ueventd/etc/ueventd.config"
     part_name = "init"
+    subsystem_name = "startup"
     install_images = [
       "system",
       "updater",

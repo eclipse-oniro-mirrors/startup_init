@@ -39,13 +39,14 @@ public:
     {
     }
     ~DeviceInfoService() override {}
-    virtual int32_t GetUdid(std::string& result) override;
-    virtual int32_t GetSerialID(std::string& result) override;
+    int32_t GetUdid(std::string& result) override;
+    int32_t GetSerialID(std::string& result) override;
 #ifndef STARTUP_INIT_TEST
 protected:
 #endif
-    void OnStart() override;
-    void OnStop() override;
+    void OnStart(void) override;
+    void OnStop(void) override;
+    int Dump(int fd, const std::vector<std::u16string>& args) override;
 };
 } // namespace device_info
 } // namespace OHOS

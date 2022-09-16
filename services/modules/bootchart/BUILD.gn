@@ -23,7 +23,6 @@ ohos_shared_library("bootchart") {
   ]
 
   deps = [
-    "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/cJSON:cjson_static",
   ]
@@ -31,6 +30,7 @@ ohos_shared_library("bootchart") {
   external_deps = [ "init:libinit_module_engine" ]
 
   part_name = "init"
+  subsystem_name = "startup"
   if (target_cpu == "arm64") {
     module_install_dir = "lib64/init"
   } else {

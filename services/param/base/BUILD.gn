@@ -164,5 +164,6 @@ if (defined(ohos_lite)) {
       defines += [ "PARAM_BASE_LOG" ]
     }
     part_name = "init"
+    subsystem_name = "startup"
   }
 }

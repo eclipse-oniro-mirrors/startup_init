@@ -15,7 +15,6 @@ declare_args() {
   enable_ohos_startup_init_feature_watcher = true
   enable_ohos_startup_init_feature_deviceinfo = true
   param_test = true
-  control_test = false
   param_base_log = false
   enable_ohos_startup_init_feature_ab_partition = false
 

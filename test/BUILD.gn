@@ -18,6 +18,7 @@ group("testgroup") {
     deps = [
       "exec_test:exectest",
       "fuzztest:fuzztest",
+      "moduletest:moduletest",
       "moduletest:paramtestmodule",
       "unittest:init_unittest",
     ]

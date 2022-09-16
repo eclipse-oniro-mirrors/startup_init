@@ -14,12 +14,10 @@
  */
 
 #include "seccomp_policy.h"
-#include "seccomp_filters.h"
 #include "plugin_adapter.h"
-#ifdef SECCOMP_PLUGIN
-#include "init_module_engine.h"
-#endif
+#include "securec.h"
 
+#include <dlfcn.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <ctype.h>
@@ -32,6 +30,14 @@
 #ifndef SECCOMP_SET_MODE_FILTER
 #define SECCOMP_SET_MODE_FILTER  (1)
 #endif
+
+#ifdef __aarch64__
+#define FILTER_LIB_PATH_FORMAT "/system/lib64/lib%s_filter.z.so"
+#else
+#define FILTER_LIB_PATH_FORMAT "/system/lib/lib%s_filter.z.so"
+#endif
+#define FILTER_NAME_FORMAT "g_%sSeccompFilter"
+#define FILTER_SIZE_STRING "Size"
 
 static bool IsSupportFilterFlag(unsigned int filterFlag)
 {
@@ -69,78 +75,41 @@ static bool InstallSeccompPolicy(const struct sock_filter* filter, size_t filter
     return true;
 }
 
-#ifndef SECCOMP_PLUGIN
-bool SetSeccompPolicy(PolicyType policy)
+bool SetSeccompPolicyWithName(const char *filterName)
 {
-    bool ret = false;
-    switch (policy) {
-        case APPSPAWN:
-            ret = InstallSeccompPolicy(g_appspawnSeccompFilter, g_appspawnSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
-            break;
-        case NWEBSPAWN:
-            ret = InstallSeccompPolicy(g_nwebspawnSeccompFilter, g_nwebspawnSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
-            break;
-        case APP:
-            ret = InstallSeccompPolicy(g_appSeccompFilter, g_appSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
-            break;
-        default:
-            ret = false;
-    }
+    char filterLibPath[512] = {0};
+    char filterVaribleName[512] = {0};
+    struct sock_filter *filterPtr = NULL;
+    size_t *filterSize = NULL;
+
+    int rc = snprintf_s(filterLibPath, sizeof(filterLibPath), \
+                        strlen(filterName) + strlen(FILTER_LIB_PATH_FORMAT) - strlen("%s"), \
+                        FILTER_LIB_PATH_FORMAT, filterName);
+    PLUGIN_CHECK(rc != -1, return false, "snprintf_s filterLibPath failed");
+
+    rc = snprintf_s(filterVaribleName, sizeof(filterVaribleName), \
+                    strlen(filterName) + strlen(FILTER_NAME_FORMAT) - strlen("%s"), \
+                    FILTER_NAME_FORMAT, filterName);
+    PLUGIN_CHECK(rc != -1, return false, "snprintf_s  faiVribleName failed");
+
+    void *handler = dlopen(filterLibPath, RTLD_LAZY);
+    PLUGIN_CHECK(handler != NULL, return false, "dlopen %s failed", filterLibPath);
+
+    filterPtr = (struct sock_filter *)dlsym(handler, filterVaribleName);
+    PLUGIN_CHECK(filterPtr != NULL, dlclose(handler);
+        return false, "dlsym %s failed", filterVaribleName);
+
+    rc = strcat_s(filterVaribleName, strlen(filterVaribleName) + strlen(FILTER_SIZE_STRING) + 1, FILTER_SIZE_STRING);
+    PLUGIN_CHECK(rc == 0, dlclose(handler);
+        return false, "strcat_s filterVaribleName failed");
+
+    filterSize = (size_t *)dlsym(handler, filterVaribleName);
+    PLUGIN_CHECK(filterSize != NULL, dlclose(handler);
+        return false, "dlsym %s failed", filterVaribleName);
+
+    bool ret = InstallSeccompPolicy(filterPtr, *filterSize, SECCOMP_FILTER_FLAG_LOG);
+
+    dlclose(handler);
 
     return ret;
 }
-#else
-static bool SetSystemSeccompPolicy(void)
-{
-    return InstallSeccompPolicy(g_systemSeccompFilter, g_systemSeccompFilterSize, SECCOMP_FILTER_FLAG_LOG);
-}
-
-static int DoSetSeccompPolicyStart(void)
-{
-    bool ret = false;
-    ret = SetSystemSeccompPolicy();
-    PLUGIN_CHECK(ret == true, return -1, "SetSeccompPolicy failed");
-
-    return 0;
-}
-
-static int DoSetSeccompPolicyCmd(int id, const char *name, int argc, const char **argv)
-{
-    PLUGIN_LOGI("DoBootchartCmd argc %d %s", argc, name);
-    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
-    if (strcmp(argv[0], "start") == 0) {
-        return DoSetSeccompPolicyStart();
-    }
-    return 0;
-}
-
-static int32_t g_executorId = -1;
-static int SetSeccompPolicyInit(void)
-{
-    if (g_executorId == -1) {
-        g_executorId = AddCmdExecutor("SetSeccompPolicy", DoSetSeccompPolicyCmd);
-        PLUGIN_LOGI("SetSeccompPolicy executorId %d", g_executorId);
-    }
-    return 0;
-}
-
-static void SetSeccompPolicyExit(void)
-{
-    PLUGIN_LOGI("SetSeccompPolicy executorId %d", g_executorId);
-    if (g_executorId != -1) {
-        RemoveCmdExecutor("SetSeccompPolicy", g_executorId);
-    }
-}
-
-MODULE_CONSTRUCTOR(void)
-{
-    PLUGIN_LOGI("DoSetSeccompPolicyStart now ...");
-    SetSeccompPolicyInit();
-}
-
-MODULE_DESTRUCTOR(void)
-{
-    PLUGIN_LOGI("DoSetSeccompPolicyStop now ...");
-    SetSeccompPolicyExit();
-}
-#endif

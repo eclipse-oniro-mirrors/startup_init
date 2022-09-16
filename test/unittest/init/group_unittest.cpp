@@ -43,14 +43,14 @@ static int TestHashNodeCompare(const HashNode *node1, const HashNode *node2)
 static int TestHashKeyCompare(const HashNode *node1, const void *key)
 {
     TestHashNode *testNode1 = HASHMAP_ENTRY(node1, TestHashNode, node);
-    return strcmp(testNode1->name, (char *)key);
+    return strcmp(testNode1->name, reinterpret_cast<char *>(const_cast<void *>(key)));
 }
 
 static int TestHashNodeFunction(const HashNode *node)
 {
     TestHashNode *testNode = HASHMAP_ENTRY(node, TestHashNode, node);
     int code = 0;
-    for (int i = 0; i < (int)strlen(testNode->name); i++) {
+    for (size_t i = 0; i < strlen(testNode->name); i++) {
         code += testNode->name[i] - 'A';
     }
     return code;
@@ -60,7 +60,7 @@ static int TestHashKeyFunction(const void *key)
 {
     int code = 0;
     char *buff = const_cast<char *>(static_cast<const char *>(key));
-    for (int i = 0; i < (int)strlen(buff); i++) {
+    for (size_t i = 0; i < strlen(buff); i++) {
         code += buff[i] - 'A';
     }
     return code;
@@ -169,7 +169,6 @@ HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
         EXPECT_EQ(1, 0);
     } // test read cfgfile
     int ret = InitParseGroupCfg();
-    StartAllServices(GROUP_CHARGE);
     EXPECT_EQ(ret, 0);
 }
 

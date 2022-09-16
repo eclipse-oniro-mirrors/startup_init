@@ -158,7 +158,7 @@ PARAM_STATIC void TimerCallbackForSave(const ParamTaskPtr timer, void *context)
     UNUSED(context);
     UNUSED(timer);
     PARAM_LOGV("TimerCallbackForSave ");
-    // for liteos-a，we must cycle check
+    // for liteos-a must cycle check
 #if (!defined(PARAM_SUPPORT_CYCLE_CHECK) || defined(PARAM_SUPPORT_REAL_CHECK))
     ParamTimerClose(g_persistWorkSpace.saveTimer);
     g_persistWorkSpace.saveTimer = NULL;

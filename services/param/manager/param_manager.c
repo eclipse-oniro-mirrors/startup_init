@@ -23,6 +23,7 @@
 #include "param_trie.h"
 #include "param_utils.h"
 #include "securec.h"
+static DUMP_PRINTF g_printf = printf;
 
 ParamNode *SystemCheckMatchParamWait(const char *name, const char *value)
 {
@@ -84,8 +85,14 @@ int SystemTraversalParameter(const char *prefix, TraversalParamPtr traversalPara
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return -1, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
-
     PARAM_CHECK(traversalParameter != NULL, return -1, "The param is null");
+
+#ifdef PARAM_SUPPORT_SELINUX // load security label
+    ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
+    if (ops != NULL && ops->securityGetLabel != NULL) {
+        ops->securityGetLabel(NULL);
+    }
+#endif
     ParamTraversalContext context = {traversalParameter, cookie, "#"};
     if (!(prefix == NULL || strlen(prefix) == 0)) {
         ParamHandle handle = 0;
@@ -162,8 +169,13 @@ static void HashNodeTraverseForDump(WorkSpace *workSpace, int verbose)
     PARAMSPACE_AREA_RW_UNLOCK(workSpace);
 }
 
-void SystemDumpParameters(int verbose)
+void SystemDumpParameters(int verbose, int (*dump)(const char *fmt, ...))
 {
+    if (dump != NULL) {
+        g_printf = dump;
+    } else {
+        g_printf = printf;
+    }
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return, "Invalid space");
@@ -173,10 +185,16 @@ void SystemDumpParameters(int verbose)
     if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
         PARAM_CHECK(ret == 0, return, "Forbid to dump parameters");
     }
+#ifdef PARAM_SUPPORT_SELINUX // load security label
+    ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
+    if (ops != NULL && ops->securityGetLabel != NULL) {
+        ops->securityGetLabel(NULL);
+    }
+#endif
     PARAM_DUMP("Dump all parameters begin ...\n");
     if (verbose) {
         PARAM_DUMP("Local sercurity information\n");
-        PARAM_DUMP("\t pid: %d uid: %u gid: %u \n",
+        PARAM_DUMP("pid: %d uid: %u gid: %u \n",
             paramSpace->securityLabel.cred.pid,
             paramSpace->securityLabel.cred.uid,
             paramSpace->securityLabel.cred.gid);
@@ -330,7 +348,7 @@ INIT_LOCAL_API int CheckParameterSet(const char *name,
         }
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
         // do hook cmd
-        PARAM_LOGI("CheckParameterSet realKey %s cmd: '%s' value: %s",
+        PARAM_LOGV("CheckParameterSet realKey %s cmd: '%s' value: %s",
             serviceInfo->realKey, serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
         DoCmdByName(serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
 #endif

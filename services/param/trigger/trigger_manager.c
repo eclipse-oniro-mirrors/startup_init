@@ -23,6 +23,8 @@
 #include "trigger_checker.h"
 #include "securec.h"
 
+static DUMP_PRINTF g_printf = printf;
+
 int AddCommand(JobNode *trigger, uint32_t cmdKeyIndex, const char *content)
 {
     PARAM_CHECK(trigger != NULL, return -1, "trigger is null");
@@ -41,7 +43,7 @@ int AddCommand(JobNode *trigger, uint32_t cmdKeyIndex, const char *content)
         PARAM_CHECK(ret == EOK, free(node);
             return 0, "Failed to copy command");
     }
-    // 插入队列
+
     if (trigger->firstCmd == NULL) {
         trigger->firstCmd = node;
         trigger->lastCmd = node;
@@ -123,7 +125,9 @@ static TriggerNode *AddJobTrigger_(const TriggerWorkSpace *workSpace,
         return NULL, "Failed to add hash node");
     if (extInfo->type == TRIGGER_BOOT) {
         TRIGGER_SET_FLAG(node, TRIGGER_FLAGS_ONCE);
-        TRIGGER_SET_FLAG(node, TRIGGER_FLAGS_SUBTRIGGER);
+        if (strncmp("boot-service:", extInfo->info.name, strlen("boot-service:")) != 0) {
+            TRIGGER_SET_FLAG(node, TRIGGER_FLAGS_SUBTRIGGER);
+        }
     }
     return node;
 }
@@ -518,8 +522,13 @@ static void DumpTrigger_(const TriggerWorkSpace *workSpace, int type)
     }
 }
 
-void SystemDumpTriggers(int verbose)
+void SystemDumpTriggers(int verbose, int (*dump)(const char *fmt, ...))
 {
+    if (dump != NULL) {
+        g_printf = dump;
+    } else {
+        g_printf = printf;
+    }
     TriggerWorkSpace *workSpace = GetTriggerWorkSpace();
     PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace ");
     PARAM_DUMP("workspace queue BOOT info:\n");

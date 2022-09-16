@@ -32,20 +32,19 @@ if (defined(ohos_lite)) {
 } else {
   import("//build/ohos.gni")
   ohos_executable("watchdog_service") {
-    sources = [ "init_watchdog.c" ]
+    sources = [
+      "//base/startup/init/services/log/init_commlog.c",
+      "init_watchdog.c",
+    ]
     deps = [
       "//base/startup/init/services/log:init_log",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
-    if (use_musl == false) {
-      deps += [ "//base/startup/init/services/param/base:parameterbase" ]
-    } else {
-      deps += [ "//base/startup/init/services/param/base:parameterbase_ext" ]
-    }
     defines = [ "LINUX_WATCHDOG" ]
     defines += [ "_GNU_SOURCE" ]
     install_enable = true
     part_name = "init"
+    subsystem_name = "startup"
   }
 }
 

@@ -31,11 +31,16 @@ ohos_shared_library("rebootmodule") {
     defines += [ "PRODUCT_RK" ]
   }
   part_name = "init"
+  subsystem_name = "startup"
   if (target_cpu == "arm64") {
     module_install_dir = "lib64/init"
   } else {
     module_install_dir = "lib/init"
   }
+  install_images = [
+    "system",
+    "updater",
+  ]
 }
 
 ohos_source_set("libreboot_static") {
