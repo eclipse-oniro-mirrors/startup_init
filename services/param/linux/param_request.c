@@ -117,7 +117,7 @@ static int GetClientSocket(int timeout)
     struct timeval time;
     time.tv_sec = timeout;
     time.tv_usec = 0;
-    int clientFd = socket(AF_UNIX, SOCK_STREAM, 0);
+    int clientFd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     PARAM_CHECK(clientFd >= 0, return -1, "Failed to create socket");
     int ret = ConnectServer(clientFd, CLIENT_PIPE_NAME);
     if (ret == 0) {
@@ -134,7 +134,10 @@ static int StartRequest(int clientFd, ParamMessage *request, int timeout)
 {
     int ret = 0;
     ssize_t sendLen = send(clientFd, (char *)request, request->msgSize, 0);
-    PARAM_CHECK(sendLen >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to send message");
+    if (errno == EINVAL || errno == EACCES) {
+        return PARAM_CODE_INVALID_SOCKET;
+    }
+    PARAM_CHECK(sendLen >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to send message err: %d", errno);
     PARAM_LOGV("sendMessage sendLen fd %d %zd", clientFd, sendLen);
     ret = ReadMessage(clientFd, (char *)request, timeout);
     if (ret == 0) {
@@ -164,15 +167,25 @@ int SystemSetParameter(const char *name, const char *value)
     request->id.msgId = atomic_fetch_add(&g_requestId, 1);
 
     PARAM_LOGI("SystemSetParameter name %s msgid:%d ", name, request->id.msgId);
-    int fd = INVALID_SOCKET;
     pthread_mutex_lock(&g_clientMutex);
-    if (g_clientFd == INVALID_SOCKET) {
-        g_clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
-    }
-    fd = g_clientFd;
-    ret = PARAM_CODE_INVALID_PARAM;
-    if (fd >= 0) {
-        ret = StartRequest(fd, request, DEFAULT_PARAM_SET_TIMEOUT);
+    int retryCount = 0;
+    while (retryCount < 2) { // max retry 2
+        if (g_clientFd == INVALID_SOCKET) {
+            g_clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
+        }
+        if (g_clientFd < 0) {
+            ret = PARAM_CODE_INVALID_PARAM;
+            break;
+        }
+        ret = StartRequest(g_clientFd, request, DEFAULT_PARAM_SET_TIMEOUT);
+        if (ret == PARAM_CODE_INVALID_SOCKET) {
+            close(g_clientFd);
+            g_clientFd = INVALID_SOCKET;
+            retryCount++;
+            ret = 0;
+        } else {
+            break;
+        }
     }
     PARAM_LOGI("SystemSetParameter name %s msgid:%d  ret: %d ", name, request->id.msgId, ret);
     pthread_mutex_unlock(&g_clientMutex);
