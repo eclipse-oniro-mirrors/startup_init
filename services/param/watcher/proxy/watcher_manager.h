@@ -126,6 +126,7 @@ public:
         {
             return &watchers_;
         }
+        ParamWatcher *GetNextWatcher(ParamWatcher *watcher);
     private:
         uint32_t groupId_;
         std::string keyPrefix_ { };
@@ -144,6 +145,7 @@ protected:
 #endif
     void OnStart() override;
     void OnStop() override;
+    int Dump(int fd, const std::vector<std::u16string>& args) override;
 #ifndef STARTUP_INIT_TEST
 private:
 #endif
@@ -161,7 +163,7 @@ private:
     int GetServerFd(bool retry);
     int GetWatcherId(uint32_t &watcherId);
     int GetGroupId(uint32_t &groupId);
-
+    void DumpWatcherGroup(int fd, const WatcherGroupPtr &group);
 private:
     std::atomic<uint32_t> watcherId_ { 0 };
     std::atomic<uint32_t> groupId_ { 0 };

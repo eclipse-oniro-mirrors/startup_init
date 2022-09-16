@@ -104,8 +104,17 @@ void DeviceInfoService::OnStart(void)
     }
     return;
 }
-void DeviceInfoService::OnStop()
+
+void DeviceInfoService::OnStop(void)
 {
+}
+
+int DeviceInfoService::Dump(int fd, const std::vector<std::u16string>& args)
+{
+    (void)args;
+    DINFO_LOGI("DeviceInfoService Dump");
+    DINFO_CHECK(fd >= 0, return -1, "Invalid fd for dump %d", fd);
+    return dprintf(fd, "%s\n", "No information to dump for this service");
 }
 } // namespace device_info
 } // namespace OHOS
