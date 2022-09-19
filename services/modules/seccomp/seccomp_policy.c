@@ -91,9 +91,11 @@ bool SetSeccompPolicyWithName(const char *filterName)
                     strlen(filterName) + strlen(FILTER_NAME_FORMAT) - strlen("%s"), \
                     FILTER_NAME_FORMAT, filterName);
     PLUGIN_CHECK(rc != -1, return false, "snprintf_s  faiVribleName failed");
+    const char *filterLibRealPath = realpath(filterLibPath, NULL);
+    PLUGIN_CHECK(filterLibRealPath != NULL, return false, "format filter lib real path failed");
 
-    void *handler = dlopen(filterLibPath, RTLD_LAZY);
-    PLUGIN_CHECK(handler != NULL, return false, "dlopen %s failed", filterLibPath);
+    void *handler = dlopen(filterLibRealPath, RTLD_LAZY);
+    PLUGIN_CHECK(handler != NULL, return false, "dlopen %s failed", filterLibRealPath);
 
     filterPtr = (struct sock_filter *)dlsym(handler, filterVaribleName);
     PLUGIN_CHECK(filterPtr != NULL, dlclose(handler);

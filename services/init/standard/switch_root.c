@@ -153,15 +153,9 @@ int SwitchRoot(const char *newRoot)
     }
 
     struct stat oldRootStat = {};
-    if (stat("/", &oldRootStat) != 0) {
-        INIT_LOGE("Failed to get old root \"/\" stat");
-        return -1;
-    }
+    INIT_ERROR_CHECK(stat("/", &oldRootStat) == 0, return -1, "Failed to get old root \"/\" stat");
     DIR *oldRoot = opendir("/");
-    if (oldRoot == NULL) {
-        INIT_LOGE("Failed to open root dir \"/\"");
-        return -1;
-    }
+    INIT_ERROR_CHECK(oldRoot != NULL, return -1, "Failed to open root dir \"/\"");
     struct stat newRootStat = {};
     if (stat(newRoot, &newRootStat) != 0) {
         INIT_LOGE("Failed to get new root \" %s \" stat", newRoot);
