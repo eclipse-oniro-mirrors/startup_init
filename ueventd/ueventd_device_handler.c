@@ -74,9 +74,7 @@ static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
         errno = 0;
         int rc = symlink(deviceNode, linkName);
         if (rc != 0) {
-            if (errno == EEXIST) {
-                INIT_LOGW("Link \" %s \" already linked to other target", linkName);
-            } else {
+            if (errno != EEXIST) {
                 INIT_LOGE("Failed to link \" %s \" to \" %s \", err = %d", deviceNode, linkName, errno);
             }
         }

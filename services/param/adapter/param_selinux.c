@@ -202,7 +202,7 @@ static int SelinuxGetAllLabel(int readOnly)
     if (readOnly == 0) {
         SetSelinuxFileCon(WORKSPACE_NAME_DEF_SELINUX, WORKSPACE_NAME_DEF_SELINUX);
     }
-    PARAM_LOGI("SelinuxGetAllLabel count %d", count);
+    PARAM_LOGV("Selinux get all label counts %d.", count);
     return 0;
 }
 

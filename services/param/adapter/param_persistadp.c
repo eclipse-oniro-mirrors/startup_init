@@ -42,7 +42,7 @@ static int LoadPersistParam()
     if (fp == NULL) {
         tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters";
         fp = fopen(tmpPath, "r");
-        PARAM_LOGI("LoadPersistParam open file %s", PARAM_PERSIST_SAVE_PATH);
+        PARAM_LOGI("Load persist param, from file %s", tmpPath);
     }
     PARAM_CHECK(fp != NULL, return -1, "No valid persist parameter file %s", PARAM_PERSIST_SAVE_PATH);
 

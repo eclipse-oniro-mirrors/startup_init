@@ -29,7 +29,7 @@ static int g_cmdId = 0;
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd)
 {
     INIT_ERROR_CHECK(cmdName != NULL, return -1, "Invalid input param");
-    INIT_LOGI("AddCmdExecutor '%s'", cmdName);
+    INIT_LOGV("Add command '%s' executor.", cmdName);
     PluginCmd *cmd = NULL;
     InitGroupNode *groupNode = GetGroupNode(NODE_TYPE_CMDS, cmdName);
     if (groupNode == NULL) {
@@ -158,6 +158,7 @@ void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
         return;
     }
     PluginCmd *cmd = groupNode->data.cmd;
+    INIT_LOGV("Command: %s cmdContent: %s", cmd->name, cmdContent);
     PluginExecCmd_(cmd, cmdContent);
 }
 
@@ -186,6 +187,5 @@ const char *PluginGetCmdIndex(const char *cmdStr, int *index)
     hashCode = (hashCode < 0) ? -hashCode : hashCode;
     hashCode = hashCode % GROUP_HASHMAP_BUCKET;
     *index = ((hashCode + 1) << 16) | cmd->cmdId; // 16 left shift
-    INIT_LOGI("PluginGetCmdIndex content: %s index %d", cmd->name, *index);
     return cmd->name;
 }

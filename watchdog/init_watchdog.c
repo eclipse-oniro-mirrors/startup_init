@@ -76,7 +76,7 @@ int main(int argc, const char *argv[])
     }
     gap = (gap > 0) ? gap : DEFAULT_GAP;
 
-    INIT_LOGI("watchdoge started (interval %d, margin %d), fd = %d\n", interval, gap, fd);
+    INIT_LOGI("Watchdog started (interval %d, margin %d), fd = %d\n", interval, gap, fd);
 #ifdef OHOS_LITE_WATCHDOG
 #ifndef LINUX_WATCHDOG
     if (setpriority(PRIO_PROCESS, 0, 14) != 0) { // 14 is process priority

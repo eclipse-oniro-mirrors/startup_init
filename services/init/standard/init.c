@@ -46,11 +46,6 @@
 #include "fd_holder_internal.h"
 #include "bootstage.h"
 
-typedef struct HOOK_TIMING_STAT {
-    struct timespec startTime;
-    struct timespec endTime;
-} HOOK_TIMING_STAT;
-
 static int FdHolderSockInit(void)
 {
     int sock = -1;
@@ -206,6 +201,7 @@ static void StartInitSecondStage(void)
     KeyCtrlGetKeyringId(KEY_SPEC_SESSION_KEYRING, 1);
 
 #ifndef DISABLE_INIT_TWO_STAGES
+    INIT_LOGI("Start init second stage.");
     SwitchRoot("/usr");
     // Execute init second stage
     char * const args[] = {
@@ -222,6 +218,7 @@ static void StartInitSecondStage(void)
 
 void SystemPrepare(void)
 {
+    INIT_LOGI("Start init first stage.");
     MountBasicFs();
     CreateDeviceNode();
     LogInit();
@@ -252,17 +249,7 @@ HOOK_MGR *GetBootStageHookMgr()
     return bootStageHookMgr;
 }
 
-HOOK_TIMING_STAT g_bootJob = {0};
-static long long  InitDiffTime(HOOK_TIMING_STAT *stat)
-{
-    long long diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000); // 1000000 1000ms
-    if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
-        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / 1000; // 1000 ms
-    } else {
-        diff -= (stat->startTime.tv_nsec - stat->endTime.tv_nsec) / 1000; // 1000 ms
-    }
-    return diff;
-}
+INIT_TIMING_STAT g_bootJob = {0};
 
 static void BootStateChange(int start, const char *content)
 {
@@ -297,13 +284,13 @@ static void InitLoadParamFiles(void)
 
 static void InitPreHook(const HOOK_INFO *hookInfo, void *executionContext)
 {
-    HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)executionContext;
+    INIT_TIMING_STAT *stat = (INIT_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->startTime));
 }
 
 static void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext, int executionRetVal)
 {
-    HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)executionContext;
+    INIT_TIMING_STAT *stat = (INIT_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->endTime));
     long long diff = InitDiffTime(stat);
     INIT_LOGI("Executing hook [%d:%d:%p] cost [%lld]us, return %d.",
@@ -352,7 +339,7 @@ static void TriggerServices(int startMode)
 
 void SystemConfig(void)
 {
-    HOOK_TIMING_STAT timingStat;
+    INIT_TIMING_STAT timingStat;
     HOOK_EXEC_OPTIONS options;
 
     options.flags = 0;

@@ -138,15 +138,15 @@ static int AddMountInfoToSandbox(sandbox_t *sandbox, cJSON *item, const char *ty
 {
     BEGET_CHECK(!(sandbox == NULL || item == NULL || type == NULL), return -1);
     char *srcPath = cJSON_GetStringValue(cJSON_GetObjectItem(item, SANDBOX_SOURCE));
-    BEGET_ERROR_CHECK(srcPath != NULL, return 0, "Get src-path is null");
+    BEGET_INFO_CHECK(srcPath != NULL, return 0, "Get src-path is null");
     char *dstPath = cJSON_GetStringValue(cJSON_GetObjectItem(item, SANDBOX_TARGET));
-    BEGET_ERROR_CHECK(dstPath != NULL, return 0, "Get sandbox-path is null");
+    BEGET_INFO_CHECK(dstPath != NULL, return 0, "Get sandbox-path is null");
     cJSON *obj = cJSON_GetObjectItem(item, SANDBOX_FLAGS);
-    BEGET_ERROR_CHECK(obj != NULL, return 0, "Get sandbox-flags is null");
+    BEGET_INFO_CHECK(obj != NULL, return 0, "Get sandbox-flags is null");
     int ret = cJSON_IsArray(obj);
-    BEGET_ERROR_CHECK(ret, return 0, "Sandbox-flags is not array");
+    BEGET_INFO_CHECK(ret, return 0, "Sandbox-flags is not array");
     int count = cJSON_GetArraySize(obj);
-    BEGET_ERROR_CHECK(count > 0, return 0, "Get sandbox-flags array size is zero");
+    BEGET_INFO_CHECK(count > 0, return 0, "Get sandbox-flags array size is zero");
     mountlist_t *tmpMount = (mountlist_t *)calloc(1, sizeof(mountlist_t));
     BEGET_ERROR_CHECK(tmpMount != NULL, return -1, "Failed calloc err=%d", errno);
     tmpMount->info = (mount_t *)calloc(1, sizeof(mount_t));
@@ -214,7 +214,7 @@ static int GetSandboxInfo(sandbox_t *sandbox, cJSON *root, const char *itemName)
     BEGET_ERROR_CHECK(cJSON_IsArray(obj), return 0, "%s with invalid type, should be array", itemName);
 
     int counts = cJSON_GetArraySize(obj);
-    BEGET_ERROR_CHECK(!(counts <= 0), return 0, "Item %s array size is zero.", itemName);
+    BEGET_ERROR_CHECK(counts > 0, return 0, "Item %s array size is zero.", itemName);
     AddInfoToSandboxCallback func = NULL;
     if (strcmp(itemName, SANDBOX_MOUNT_PATH_TAG) == 0) {
         func = AddMountInfoToSandbox;
@@ -339,12 +339,9 @@ static int BindMount(const char *source, const char *target, unsigned long flags
     }
 
     BEGET_WARNING_CHECK((tmpflags & MS_BIND) != 0, tmpflags |= MS_BIND,
-        "Not configure bind, must configure bind flag.");
-
-    if ((tmpflags & MS_REC) == 0) {
-        BEGET_LOGW("Not configure rec, must configure rec flag.");
-        tmpflags |= MS_REC;
-    }
+        "Not configure mount bind, must configure mount bind flag.");
+    BEGET_WARNING_CHECK((tmpflags & MS_REC) != 0, tmpflags |= MS_REC,
+        "Not configure mount rec, must configure mount rec flag.");
 
     // do mount
     if (mount(source, target, NULL, tmpflags, NULL) != 0) {

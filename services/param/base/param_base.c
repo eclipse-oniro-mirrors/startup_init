@@ -75,7 +75,7 @@ static int InitParamSecurity(ParamWorkSpace *workSpace,
     }
     ret = paramSecurityOps->securityCheckFilePermission(&workSpace->securityLabel, PARAM_STORAGE_PATH, op);
     PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "No permission to read file %s", PARAM_STORAGE_PATH);
-    PARAM_LOGI("InitParamSecurity %s success", paramSecurityOps->name);
+    PARAM_LOGI("Init parameter %s success", paramSecurityOps->name);
     return 0;
 }
 
@@ -107,7 +107,6 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
         g_paramWorkSpace.ops.setfilecon = ops->setfilecon;
 #endif
     }
-    PARAM_LOGI("InitParamWorkSpace %x", g_paramWorkSpace.flags);
     if (PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
@@ -225,7 +224,7 @@ INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void)
 
 int SystemReadParam(const char *name, char *value, uint32_t *len)
 {
-    PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Invalid space");
+    PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Param workspace has not init.");
     PARAM_CHECK(name != NULL && len != NULL && strlen(name) > 0, return -1, "The name or value is null");
     ParamHandle handle = 0;
     int ret = ReadParamWithCheck(name, DAC_READ, &handle);

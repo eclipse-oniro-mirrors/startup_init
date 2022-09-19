@@ -243,7 +243,7 @@ void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *ueven
         return;
     }
 
-    // reset parititon number, major and minor.
+    // reset partititon number, major and minor.
     uevent->partitionNum = -1;
     uevent->major = -1;
     uevent->minor = -1;

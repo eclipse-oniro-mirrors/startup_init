@@ -92,7 +92,7 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
 static void SyncExecCommand(int argc, char * const *argv)
 {
     INIT_CHECK(!(argc == 0 || argv == NULL || argv[0] == NULL), return);
-    INIT_LOGI("sync exec: %s", argv[0]);
+    INIT_LOGI("Sync exec: %s", argv[0]);
     pid_t pid = fork();
     INIT_ERROR_CHECK(!(pid < 0), return, "Fork new process to format failed: %d", errno);
     if (pid == 0) {
@@ -105,7 +105,7 @@ static void SyncExecCommand(int argc, char * const *argv)
         INIT_LOGE("Failed to wait pid %d, errno %d", pid, errno);
         return;
     }
-    INIT_LOGI("sync exec: %s result %d %d", argv[0], WEXITSTATUS(status), WIFEXITED(status));
+    INIT_LOGI("Sync exec: %s result %d %d", argv[0], WEXITSTATUS(status), WIFEXITED(status));
     return;
 }
 
@@ -424,17 +424,18 @@ static bool InitFscryptPolicy(void)
 
 static void DoInitGlobalKey(const struct CmdArgs *ctx)
 {
+    INIT_LOGV("Do init global key start");
     if (ctx == NULL || ctx->argc != 1) {
-        INIT_LOGE("DoInitGlobalKey: para invalid");
+        INIT_LOGE("Parameter is invalid");
         return;
     }
     const char *dataDir = "/data";
     if (strncmp(ctx->argv[0], dataDir, strlen(dataDir)) != 0) {
-        INIT_LOGE("DoInitGlobalKey: not data partitation");
+        INIT_LOGE("Not data partitation");
         return;
     }
     if (!InitFscryptPolicy()) {
-        INIT_LOGI("DoInitGlobalKey:init fscrypt failed,not enable fscrypt");
+        INIT_LOGW("Init fscrypt failed, not enable fscrypt");
         return;
     }
 
@@ -451,7 +452,7 @@ static void DoInitGlobalKey(const struct CmdArgs *ctx)
 static void DoInitMainUser(const struct CmdArgs *ctx)
 {
     if (ctx == NULL) {
-        INIT_LOGE("DoInitMainUser: para invalid");
+        INIT_LOGE("Do init main user: para invalid");
         return;
     }
 
@@ -468,7 +469,7 @@ static void DoInitMainUser(const struct CmdArgs *ctx)
 static void DoMkswap(const struct CmdArgs *ctx)
 {
     if (ctx == NULL) {
-        INIT_LOGE("DoMkswap: para invalid");
+        INIT_LOGE("Parameter is invalid");
         return;
     }
     char *const argv[] = {
@@ -483,7 +484,7 @@ static void DoMkswap(const struct CmdArgs *ctx)
 static void DoSwapon(const struct CmdArgs *ctx)
 {
     if (ctx == NULL) {
-        INIT_LOGE("DoSwapon: para invalid");
+        INIT_LOGE("Parameter is invalid");
         return;
     }
     char *const argv[] = {
@@ -497,7 +498,7 @@ static void DoSwapon(const struct CmdArgs *ctx)
 
 static void DoMkSandbox(const struct CmdArgs *ctx)
 {
-    INIT_LOGI("DoMkSandbox: start");
+    INIT_LOGV("Do make sandbox start");
     if ((ctx == NULL) || (ctx->argc != 1)) {
         INIT_LOGE("Call DoMkSandbox with invalid arguments");
         return;

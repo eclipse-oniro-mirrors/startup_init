@@ -213,7 +213,7 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
         INIT_ERROR_CHECK(curParam != NULL, return SERVICE_FAILURE, "Invalid arg %d", i);
         INIT_ERROR_CHECK(strlen(curParam) <= MAX_ONE_ARG_LEN, return SERVICE_FAILURE, "Arg %s is tool long", curParam);
         args->argv[i] = strdup(curParam);
-        INIT_ERROR_CHECK(args->argv[i] != NULL, return SERVICE_FAILURE, "Failed to dupstring %s", curParam);
+        INIT_ERROR_CHECK(args->argv[i] != NULL, return SERVICE_FAILURE, "Failed to duplicate argument %s", curParam);
     }
     return SERVICE_SUCCESS;
 }
@@ -265,13 +265,13 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
         free(curServ->servPerm.gIDArray);
     }
     curServ->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t) * gidCount);
-    INIT_ERROR_CHECK(curServ->servPerm.gIDArray != NULL, return SERVICE_FAILURE, "Failed to malloc");
+    INIT_ERROR_CHECK(curServ->servPerm.gIDArray != NULL, return SERVICE_FAILURE, "Failed to malloc err=%d", errno);
     curServ->servPerm.gIDCnt = gidCount;
 
     gid_t gid;
     if (!cJSON_IsArray(arrItem)) {
         int ret = GetGid(arrItem, &gid, curServ);
-        INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to gid");
+        INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Parse service %s gid failed.", curServ->name);
         curServ->servPerm.gIDArray[0] = gid;
         return SERVICE_SUCCESS;
     }
@@ -280,7 +280,7 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
         cJSON *item = cJSON_GetArrayItem(arrItem, i);
         int ret = GetGid(item, &gid, curServ);
         if (ret != 0) {
-            INIT_LOGE("parse service %s %d gid failed skip this", curServ->name, i);
+            INIT_LOGW("Parse service %s gid failed from item %s.", curServ->name, cJSON_Print(item));
             continue;
         }
         curServ->servPerm.gIDArray[gidArrayIndex++] = gid;
@@ -1071,7 +1071,7 @@ static Service *GetServiceByExtServName(const char *fullServName)
 
 void StartServiceByName(const char *servName)
 {
-    INIT_LOGI("StartServiceByName Service %s", servName);
+    INIT_LOGI("Start service %s", servName);
     Service *service = GetServiceByName(servName);
     if (service == NULL) {
         service = GetServiceByExtServName(servName);
@@ -1094,7 +1094,7 @@ void StopServiceByName(const char *servName)
     INIT_ERROR_CHECK(service != NULL, return, "Cannot find service %s.", servName);
 
     if (ServiceStop(service) != SERVICE_SUCCESS) {
-        INIT_LOGE("Service %s start failed!", servName);
+        INIT_LOGE("Service %s stop failed!", servName);
     }
     return;
 }

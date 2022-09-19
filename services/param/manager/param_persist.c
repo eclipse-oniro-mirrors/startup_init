@@ -185,7 +185,6 @@ INIT_LOCAL_API int WritePersistParam(const char *name, const char *value)
     // for linux, start timer after set persist parameter
     // for liteos-a, start timer in init to check and save parameter
 #ifdef PARAM_SUPPORT_REAL_CHECK
-    PARAM_LOGI("WritePersistParam start check ");
     if (!PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
         PARAM_LOGE("Can not save persist param before load %s ", name);
         return 0;

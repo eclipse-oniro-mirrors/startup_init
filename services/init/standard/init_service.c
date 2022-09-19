@@ -40,7 +40,7 @@ static bool g_enableSandbox = false;
 
 void NotifyServiceChange(Service *service, int status)
 {
-    INIT_LOGI("NotifyServiceChange %s %d to %d", service->name, service->status, status);
+    INIT_LOGV("Notify service %s change from %d to %d", service->name, service->status, status);
     service->status = status;
     INIT_CHECK(status != SERVICE_IDLE, return);
     char paramName[PARAM_NAME_LEN_MAX] = { 0 };
@@ -98,8 +98,11 @@ int SetAccessToken(const Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "service is null");
     int ret = SetSelfTokenID(service->tokenId);
-    INIT_LOGI("%s: token id %lld, set token id result %d", service->name, service->tokenId, ret);
-    return ret == 0 ? SERVICE_SUCCESS : SERVICE_FAILURE;
+    if (ret != 0) {
+        INIT_LOGV("Set service %s token id %lld failed.", service->name, service->tokenId);
+        return SERVICE_FAILURE;
+    }
+    return SERVICE_SUCCESS;
 }
 
 void GetAccessToken(void)
@@ -125,7 +128,6 @@ void GetAccessToken(void)
                 service->name,
                 apl,
             };
-
             uint64_t tokenId = GetAccessTokenId(&nativeTokenInfoParams);
             INIT_CHECK_ONLY_ELOG(tokenId  != 0,
                 "Get totken id %lld of service \' %s \' failed", tokenId, service->name);

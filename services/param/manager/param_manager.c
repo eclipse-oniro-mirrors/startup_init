@@ -348,7 +348,7 @@ INIT_LOCAL_API int CheckParameterSet(const char *name,
         }
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
         // do hook cmd
-        PARAM_LOGV("CheckParameterSet realKey %s cmd: '%s' value: %s",
+        PARAM_LOGV("Check parameter settings realKey %s cmd: '%s' value: %s",
             serviceInfo->realKey, serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
         DoCmdByName(serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
 #endif

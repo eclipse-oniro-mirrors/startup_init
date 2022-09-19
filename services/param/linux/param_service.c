@@ -95,7 +95,7 @@ static int SendResponseMsg(ParamTaskPtr worker, const ParamMessage *msg, int res
     response->result = result;
     response->msg.msgSize = sizeof(ParamResponseMessage);
     ParamTaskSendMsg(worker, (ParamMessage *)response);
-    PARAM_LOGI("SendResponseMsg msgId %d result %d", msg->id.msgId, result);
+    PARAM_LOGI("Send response msg msgId %d result %d", msg->id.msgId, result);
     return 0;
 }
 
@@ -172,7 +172,7 @@ static int HandleParamSet(const ParamTaskPtr worker, const ParamMessage *msg)
     srcLabel.cred.uid = cr.uid;
     srcLabel.cred.pid = cr.pid;
     srcLabel.cred.gid = cr.gid;
-    PARAM_LOGI("HandleParamSet msgId %d pid %d key: %s", msg->id.msgId, cr.pid, msg->key);
+    PARAM_LOGI("Handle set param msgId %d pid %d key: %s", msg->id.msgId, cr.pid, msg->key);
     int ret = SystemSetParam(msg->key, valueContent->content, &srcLabel);
     return SendResponseMsg(worker, msg, ret);
 }
@@ -364,7 +364,6 @@ static void LoadSelinuxLabel(void)
     // load security label
 #ifdef PARAM_SUPPORT_SELINUX
     ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
-    PARAM_LOGI("load selinux label %p", ops->securityGetLabel);
     if (ops != NULL && ops->securityGetLabel != NULL) {
         ops->securityGetLabel(NULL);
     }

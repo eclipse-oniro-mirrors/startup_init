@@ -511,8 +511,8 @@ int InUpdaterMode(void)
 #ifdef OHOS_LITE
     return 0;
 #else
-    const char * const updaterExecutabeFile = "/bin/updater";
-    if (access(updaterExecutabeFile, X_OK) == 0) {
+    const char * const updaterExecutableFile = "/bin/updater";
+    if (access(updaterExecutableFile, X_OK) == 0) {
         return 1;
     } else {
         return 0;

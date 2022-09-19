@@ -34,7 +34,7 @@ static void ParseInitCfgContents(const char *cfgName, const cJSON *root)
 int ParseInitCfg(const char *configFile, void *context)
 {
     UNUSED(context);
-    INIT_LOGI("ParseInitCfg %s", configFile);
+    INIT_LOGV("Parse init configs from %s", configFile);
     static const char *excludeCfg[] = {
         "/system/etc/init/weston.cfg"
     };

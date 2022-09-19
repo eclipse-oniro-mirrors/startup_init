@@ -128,12 +128,12 @@ static void RebootAdpExit(void)
 
 MODULE_CONSTRUCTOR(void)
 {
-    PLUGIN_LOGI("RebootAdp init now ...");
+    PLUGIN_LOGI("Reboot adapter plug-in init now ...");
     RebootAdpInit();
 }
 
 MODULE_DESTRUCTOR(void)
 {
-    PLUGIN_LOGI("RebootAdp exit now ...");
+    PLUGIN_LOGI("Reboot adapter plug-in exit now ...");
     RebootAdpExit();
 }

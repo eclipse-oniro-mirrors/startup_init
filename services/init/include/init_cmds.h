@@ -17,7 +17,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
+#include <time.h>
+
 #include "cJSON.h"
 #ifdef __cplusplus
 #if __cplusplus
@@ -68,6 +71,11 @@ struct CmdTable {
     void (*DoFuncion)(const struct CmdArgs *ctx);
 };
 
+typedef struct INIT_TIMING_STAT {
+    struct timespec startTime;
+    struct timespec endTime;
+} INIT_TIMING_STAT;
+
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen);
 const struct CmdArgs *GetCmdArg(const char *cmdContent, const char *delim, int argsCount);
 void FreeCmdArg(struct CmdArgs *cmd);
@@ -84,6 +92,7 @@ void ExecCmd(const struct CmdTable *cmd, const char *cmdContent);
 int SetFileCryptPolicy(const char *dir);
 
 void OpenHidebug(const char *name);
+long long InitDiffTime(INIT_TIMING_STAT *stat);
 #ifdef __cplusplus
 #if __cplusplus
 }
