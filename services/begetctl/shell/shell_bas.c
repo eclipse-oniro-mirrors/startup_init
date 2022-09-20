@@ -561,7 +561,7 @@ static const char *GetRealCmdName(const char *name)
         }
         i++;
     }
-    if ((last != 0) && (name + last != NULL)) {
+    if (last != 0) {
         return name + last + 1;
     } else {
         return name;

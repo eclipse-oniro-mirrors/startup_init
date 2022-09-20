@@ -139,7 +139,7 @@ static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrie
         ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, current->dataIndex);
         if (entry != NULL) {
             PARAM_DUMP("\tparameter length info [%u, %u] \n\t  param: %s \n",
-                entry->keyLength, entry->valueLength, (entry != NULL) ? entry->data : "null");
+                entry->keyLength, entry->valueLength, entry->data);
         }
     }
     if (current->labelIndex != 0 && verbose) {

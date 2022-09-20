@@ -71,7 +71,7 @@ public:
         }
         ~ParamWatcher() = default;
 
-        uint32_t GetWatcherId()
+        uint32_t GetWatcherId() const
         {
             return watcherId_;
         }
@@ -83,7 +83,7 @@ public:
         {
             return &groupNode_;
         }
-        sptr<IWatcher> GetRemoteWatcher()
+        sptr<IWatcher> GetRemoteWatcher() const
         {
             return watcher_;
         }
