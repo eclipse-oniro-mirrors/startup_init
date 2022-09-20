@@ -297,6 +297,22 @@ static void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext, int 
         hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, executionRetVal);
 }
 
+static void InitSysAdj(void)
+{
+    const char* path = "/proc/1/oom_score_adj";
+    const char* content = "-1000";
+    int fd = open(path, O_RDWR);
+    if (fd == -1) {
+        return;
+    }
+    if (write(fd, content, strlen(content)) < 0) {
+        close(fd);
+        return;
+    }
+    close(fd);
+    return;
+}
+
 static void TriggerServices(int startMode)
 {
     int index = 0;
@@ -340,6 +356,8 @@ static void TriggerServices(int startMode)
 void SystemConfig(void)
 {
     INIT_TIMING_STAT timingStat;
+    
+    InitSysAdj();
     HOOK_EXEC_OPTIONS options;
 
     options.flags = 0;
