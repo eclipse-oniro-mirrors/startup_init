@@ -90,7 +90,7 @@ static void *ThreadRun(void *data)
         parameterCtrl->empty = 0;
         const char *paramValue = (config->action == ACTION_ADD) ? "added" : "removed";
         INIT_LOGI("[uevent] SystemSetParameter %s act %s", config->parameter, paramValue);
-        size_t len = sprintf_s(paramName, sizeof(paramName), "startup.uevent.%s", config->parameter);
+        int len = sprintf_s(paramName, sizeof(paramName), "startup.uevent.%s", config->parameter);
         if ((len <= 0) || (SystemSetParameter(paramName, paramValue) != 0)) {
             INIT_LOGE("[uevent] SystemSetParameter %s failed", config->parameter);
             pthread_mutex_lock(&(parameterCtrl->parameterLock));
