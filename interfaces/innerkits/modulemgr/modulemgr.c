@@ -210,7 +210,7 @@ static void scanModules(MODULE_MGR *moduleMgr, const char *path)
             ret = ModuleMgrInstall(moduleMgr, file->d_name, 0, NULL);
         }
     }
-
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "module manager install error");
     closedir(dir);
 }
 

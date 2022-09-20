@@ -42,11 +42,10 @@ const off_t MISC_PARTITION_ACTIVE_SLOT_SIZE = 4;
 
 bool IsSupportedFilesystem(const char *fsType)
 {
-    static const char *supportedFilesystem[] = {"ext4", "f2fs", NULL};
-
     bool supported = false;
-    int index = 0;
     if (fsType != NULL) {
+        static const char *supportedFilesystem[] = {"ext4", "f2fs", NULL};
+        int index = 0;
         while (supportedFilesystem[index] != NULL) {
             if (strcmp(supportedFilesystem[index++], fsType) == 0) {
                 supported = true;
@@ -90,8 +89,8 @@ int DoFormat(const char *devPath, const char *fsType)
         return -1;
     }
     int ret = 0;
-    char blockSizeBuffer[BLOCK_SIZE_BUFFER] = {0};
     if (strcmp(fsType, "ext4") == 0) {
+        char blockSizeBuffer[BLOCK_SIZE_BUFFER] = {0};
         const unsigned int blockSize = 4096;
         if (snprintf_s(blockSizeBuffer, BLOCK_SIZE_BUFFER, BLOCK_SIZE_BUFFER - 1, "%u", blockSize) == -1) {
             BEGET_LOGE("Failed to build block size buffer");
@@ -171,7 +170,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
     }
 
     int ret = 0;
-    if (size <= 0) {
+    if (size == 0) {
         char *cmd[] = {
             file, (char *)device, NULL
         };
@@ -223,7 +222,7 @@ static int DoResizeExt(const char* device, const unsigned long long size)
     }
 
     int ret = 0;
-    if (size <= 0) {
+    if (size == 0) {
         char *cmd[] = {
             file, "-f", (char *)device, NULL
         };

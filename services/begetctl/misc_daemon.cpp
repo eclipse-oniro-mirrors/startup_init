@@ -64,7 +64,7 @@ static void ClearLogo(int fd)
 
 static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
 {
-    if (fd < 0 || logoPath.empty() || size <= 0) {
+    if (fd < 0 || logoPath.empty() || size == 0) {
         std::cout << "path is null or size illegal\n";
         return;
     }
