@@ -990,14 +990,14 @@ void ParseAllServices(const cJSON *fileRoot)
             continue;
         }
         Service *service = GetServiceByName(fieldStr);
-        if (service != NULL) {
-            INIT_LOGE("Service \' %s \' already exist", fieldStr);
-            continue;
-        }
-        service = AddService(fieldStr);
         if (service == NULL) {
-            INIT_LOGE("Failed to create service name %s", fieldStr);
-            continue;
+            service = AddService(fieldStr);
+            if (service == NULL) {
+                INIT_LOGE("Failed to add service name %s", fieldStr);
+                continue;
+            }
+        } else {
+            INIT_LOGI("Service %s already exists, updating.", fieldStr);
         }
         service->pid = -1;
         int ret = ParseOneService(curItem, service);
