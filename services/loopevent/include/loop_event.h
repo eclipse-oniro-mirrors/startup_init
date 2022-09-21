@@ -66,6 +66,7 @@ typedef void *BufferHandle;
 LoopHandle LE_GetDefaultLoop(void);
 LE_STATUS LE_CreateLoop(LoopHandle *loopHandle);
 void LE_RunLoop(const LoopHandle loopHandle);
+void LE_CloseLoop(const LoopHandle loopHandle);
 void LE_StopLoop(const LoopHandle loopHandle);
 void LE_CloseTask(const LoopHandle loopHandle, const TaskHandle taskHandle);
 

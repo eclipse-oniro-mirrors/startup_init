@@ -115,7 +115,6 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
             break;
         }
     }
-    CloseLoop((EventLoop *)loop);
     return LE_SUCCESS;
 }
 
