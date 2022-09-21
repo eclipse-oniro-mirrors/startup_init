@@ -81,6 +81,7 @@ vendor_mpp_driver:x:3061:
 device_manager:x:3062:
 deviceauth:x:3333:
 huks_server:x:3510:
+cert_manager_server:x:3515:
 dms:x:5522:
 foundation:x:5523:
 quickfixserver:x:5524;
