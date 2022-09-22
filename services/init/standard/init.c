@@ -218,15 +218,15 @@ static void StartInitSecondStage(void)
 
 void SystemPrepare(void)
 {
-    INIT_LOGI("Start init first stage.");
     MountBasicFs();
     CreateDeviceNode();
     LogInit();
     // Make sure init log always output to /dev/kmsg.
     EnableDevKmsg();
+    INIT_LOGI("Start init first stage.");
     // Only ohos normal system support
     // two stages of init.
-    // If we are in updater mode, only one stage of init,
+    // If we are in updater mode, only one stage of init.
     if (InUpdaterMode() == 0) {
         StartInitSecondStage();
     }
