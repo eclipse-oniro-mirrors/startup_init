@@ -28,7 +28,7 @@ static LE_STATUS SetTimer_(int tfd, uint64_t timeout)
     struct itimerspec timeValue;
     time_t sec = timeout / TIMEOUT_BASE;
     timeValue.it_interval.tv_sec = sec;
-    long nsec = (timeout % TIMEOUT_BASE) * TIMEOUT_BASE;
+    long nsec = (timeout % TIMEOUT_BASE) * TIMEOUT_BASE * TIMEOUT_BASE;
     timeValue.it_interval.tv_nsec = nsec;
     timeValue.it_value.tv_sec = sec;
     timeValue.it_value.tv_nsec = nsec;
