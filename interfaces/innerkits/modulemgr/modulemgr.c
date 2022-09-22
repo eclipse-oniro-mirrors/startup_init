@@ -81,7 +81,7 @@ typedef struct tagMODULE_ITEM {
     void *handle;
 } MODULE_ITEM;
 
-static void moduleDestroy(ListNode *node)
+static void ModuleDestroy(ListNode *node)
 {
     MODULE_ITEM *module;
 
@@ -95,7 +95,7 @@ static void moduleDestroy(ListNode *node)
 
 static MODULE_INSTALL_ARGS *currentInstallArgs = NULL;
 
-static void *moduleInstall(MODULE_ITEM *module, int argc, const char *argv[])
+static void *ModuleInstall(MODULE_ITEM *module, int argc, const char *argv[])
 {
     void *handle;
     char path[PATH_MAX];
@@ -115,12 +115,19 @@ static void *moduleInstall(MODULE_ITEM *module, int argc, const char *argv[])
             return NULL;
         }
     }
-    BEGET_LOGV("moduleInstall path %s", path);
+    BEGET_LOGV("Module install path %s", path);
     currentInstallArgs = &(module->moduleMgr->installArgs);
     handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
     currentInstallArgs = NULL;
-    BEGET_CHECK_ONLY_ELOG(handle != NULL, "moduleInstall path %s fail %d", path, errno);
+    BEGET_CHECK_ONLY_ELOG(handle != NULL, "ModuleInstall path %s fail %d", path, errno);
     return handle;
+}
+
+static int ModuleCompare(ListNode *node, void *data)
+{
+    MODULE_ITEM *module = (MODULE_ITEM *)node;
+
+    return strcmp(module->name, (char *)data);
 }
 
 /*
@@ -133,6 +140,10 @@ int ModuleMgrInstall(MODULE_MGR *moduleMgr, const char *moduleName,
     BEGET_LOGV("ModuleMgrInstall moduleName %s", moduleName);
     // Get module manager
     BEGET_CHECK(!(moduleMgr == NULL || moduleName == NULL), return -1);
+
+    module = (MODULE_ITEM *)OH_ListFind(&(moduleMgr->modules), (void *)moduleName, ModuleCompare);
+    BEGET_ERROR_CHECK(module == NULL, return 0, "%s module already exists", moduleName);
+
     // Create module item
     module = (MODULE_ITEM *)malloc(sizeof(MODULE_ITEM));
     BEGET_CHECK(module != NULL, return -1);
@@ -142,15 +153,15 @@ int ModuleMgrInstall(MODULE_MGR *moduleMgr, const char *moduleName,
 
     module->name = strdup(moduleName);
     if (module->name == NULL) {
-        moduleDestroy((ListNode *)module);
+        ModuleDestroy((ListNode *)module);
         return -1;
     }
 
     // Install
-    module->handle = moduleInstall(module, argc, argv);
+    module->handle = ModuleInstall(module, argc, argv);
     if (module->handle == NULL) {
         BEGET_LOGE("Failed to install module %s", moduleName);
-        moduleDestroy((ListNode *)module);
+        ModuleDestroy((ListNode *)module);
         return -1;
     }
 
@@ -165,7 +176,7 @@ const MODULE_INSTALL_ARGS *ModuleMgrGetArgs(void)
     return currentInstallArgs;
 }
 
-static int stringEndsWith(const char *srcStr, const char *endStr)
+static int StringEndsWith(const char *srcStr, const char *endStr)
 {
     int srcStrLen = strlen(srcStr);
     int endStrLen = strlen(endStr);
@@ -177,10 +188,9 @@ static int stringEndsWith(const char *srcStr, const char *endStr)
     return -1;
 }
 
-static void scanModules(MODULE_MGR *moduleMgr, const char *path)
+static void ScanModules(MODULE_MGR *moduleMgr, const char *path)
 {
     int end;
-    int ret;
     DIR *dir;
     struct dirent *file;
 
@@ -197,17 +207,17 @@ static void scanModules(MODULE_MGR *moduleMgr, const char *path)
         }
 
         // Must be ended with MODULE_SUFFIX_D
-        end = stringEndsWith(file->d_name, MODULE_SUFFIX_D);
+        end = StringEndsWith(file->d_name, MODULE_SUFFIX_D);
         if (end <= 0) {
             continue;
         }
 
         file->d_name[end] = '\0';
-        BEGET_LOGV("scanModules module %s", file->d_name);
+        BEGET_LOGV("Scan module with name %s", file->d_name);
         if (strncmp(file->d_name, "lib", strlen("lib")) == 0) {
-            ret = ModuleMgrInstall(moduleMgr, file->d_name + strlen("lib"), 0, NULL);
+            ModuleMgrInstall(moduleMgr, file->d_name + strlen("lib"), 0, NULL);
         } else {
-            ret = ModuleMgrInstall(moduleMgr, file->d_name, 0, NULL);
+            ModuleMgrInstall(moduleMgr, file->d_name, 0, NULL);
         }
     }
 
@@ -226,30 +236,23 @@ MODULE_MGR *ModuleMgrScan(const char *modulePath)
     BEGET_CHECK(moduleMgr != NULL, return NULL);
 
     if (modulePath[0] == '/') {
-        scanModules(moduleMgr, modulePath);
+        ScanModules(moduleMgr, modulePath);
     } else if (InUpdaterMode() == 1) {
         BEGET_CHECK(snprintf_s(path, sizeof(path), sizeof(path) - 1,
             "/%s/%s", MODULE_LIB_NAME, modulePath) > 0, return NULL);
-        scanModules(moduleMgr, path);
+        ScanModules(moduleMgr, path);
     } else {
         BEGET_CHECK(snprintf_s(path, sizeof(path), sizeof(path) - 1,
             "%s/%s", MODULE_LIB_NAME, modulePath) > 0, return NULL);
         CfgFiles *files = GetCfgFiles(path);
         for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; files && i >= 0; i--) {
             if (files->paths[i]) {
-                scanModules(moduleMgr, files->paths[i]);
+                ScanModules(moduleMgr, files->paths[i]);
             }
         }
         FreeCfgFiles(files);
     }
     return moduleMgr;
-}
-
-static int moduleCompare(ListNode *node, void *data)
-{
-    MODULE_ITEM *module = (MODULE_ITEM *)node;
-
-    return strcmp(module->name, (char *)data);
 }
 
 /*
@@ -261,18 +264,18 @@ void ModuleMgrUninstall(MODULE_MGR *moduleMgr, const char *name)
     BEGET_CHECK(moduleMgr != NULL, return);
     // Uninstall all modules if no name specified
     if (name == NULL) {
-        OH_ListRemoveAll(&(moduleMgr->modules), moduleDestroy);
+        OH_ListRemoveAll(&(moduleMgr->modules), ModuleDestroy);
         return;
     }
     BEGET_LOGV("ModuleMgrUninstall moduleName %s", name);
     // Find module by name
-    module = (MODULE_ITEM *)OH_ListFind(&(moduleMgr->modules), (void *)name, moduleCompare);
+    module = (MODULE_ITEM *)OH_ListFind(&(moduleMgr->modules), (void *)name, ModuleCompare);
     BEGET_ERROR_CHECK(module != NULL, return, "Can not find module %s", name);
 
     // Remove from the list
     OH_ListRemove((ListNode *)module);
     // Destroy the module
-    moduleDestroy((ListNode *)module);
+    ModuleDestroy((ListNode *)module);
 }
 
 int ModuleMgrGetCnt(const MODULE_MGR *moduleMgr)
@@ -286,7 +289,7 @@ typedef struct tagMODULE_TRAVERSAL_ARGS {
     OhosModuleTraversal traversal;
 } MODULE_TRAVERSAL_ARGS;
 
-static int moduleTraversalProc(ListNode *node, void *cookie)
+static int ModuleTraversalProc(ListNode *node, void *cookie)
 {
     MODULE_ITEM *module;
     MODULE_TRAVERSAL_ARGS *args;
@@ -321,5 +324,5 @@ void ModuleMgrTraversal(const MODULE_MGR *moduleMgr, void *cookie, OhosModuleTra
 
     args.cookie = cookie;
     args.traversal = traversal;
-    OH_ListTraversal((ListNode *)(&(moduleMgr->modules)), (void *)(&args), moduleTraversalProc, 0);
+    OH_ListTraversal((ListNode *)(&(moduleMgr->modules)), (void *)(&args), ModuleTraversalProc, 0);
 }
