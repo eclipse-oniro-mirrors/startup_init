@@ -60,6 +60,9 @@ static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const cha
     uid_t uid = getuid();
     return uid <= SYS_UID_INDEX ? DAC_RESULT_PERMISSION : DAC_RESULT_FORBIDED;
 #endif
+#if defined(__LITEOS_M__)
+    return DAC_RESULT_PERMISSION;
+#endif
     return DAC_RESULT_PERMISSION;
 }
 

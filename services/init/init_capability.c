@@ -111,7 +111,7 @@ int GetServiceCaps(const cJSON *curArrItem, Service *service)
             caps = (unsigned int)cJSON_GetNumberValue(capJson);
         } else if (cJSON_IsString(capJson)) {
             capStr = cJSON_GetStringValue(capJson);
-            if (capStr == NULL || strlen(capStr) == 0) { // check all errors
+            if (capStr == NULL || strlen(capStr) <= 0) { // check all errors
                 INIT_LOGE("service=%s, parse item[%d] as string, error.", service->name, i);
                 break;
             }

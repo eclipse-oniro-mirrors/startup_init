@@ -67,7 +67,7 @@ static void *ThreadRun(void *data)
     char paramName[PARAM_NAME_LEN_MAX] = {0};
     while (1) {
         pthread_mutex_lock(&(parameterCtrl->lock));
-        if (parameterCtrl->empty) {
+        while (parameterCtrl->empty) {
             struct timespec abstime = {};
             struct timeval now = {};
             const long timeout = 5000; // wait time 5000ms
@@ -76,6 +76,7 @@ static void *ThreadRun(void *data)
             abstime.tv_sec = now.tv_sec + nsec / 1000000000 + timeout / 1000; // 1000 unit 1000000000 unit nsec
             abstime.tv_nsec = nsec % 1000000000; // 1000000000 unit nsec
             pthread_cond_timedwait(&(parameterCtrl->hasData), &(parameterCtrl->lock), &abstime);
+            break;
         }
         if (parameterCtrl->shutdown) {
             break;

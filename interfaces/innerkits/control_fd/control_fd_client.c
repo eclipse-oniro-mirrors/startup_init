@@ -123,6 +123,7 @@ static int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd,
         BEGET_LOGE("[control_fd] Invalid parameter");
         return -1;
     }
+    int ret = 0;
     BufferHandle handle = NULL;
     uint32_t bufferSize = sizeof(CmdMessage) + strlen(cmd) + PTY_PATH_SIZE + 1;
     handle = LE_CreateBuffer(LE_GetDefaultLoop(), bufferSize);
@@ -131,7 +132,7 @@ static int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd,
     CmdMessage *message = (CmdMessage *)buff;
     message->msgSize = bufferSize;
     message->type = type;
-    int ret = strcpy_s(message->ptyName, PTY_PATH_SIZE - 1, ptyName);
+    ret = strcpy_s(message->ptyName, PTY_PATH_SIZE - 1, ptyName);
     BEGET_ERROR_CHECK(ret == 0, LE_FreeBuffer(LE_GetDefaultLoop(), agent->task, handle);
         return -1, "[control_fd] Failed to copy pty name %s", ptyName);
     ret = strcpy_s(message->cmd, bufferSize - sizeof(CmdMessage) - PTY_PATH_SIZE, cmd);

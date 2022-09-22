@@ -47,8 +47,16 @@ static int DoReboot_(const char *option)
     ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "reboot,%s", option);
     BEGET_ERROR_CHECK(ret >= 0, return -1, "Failed to copy boot option \" %s \"", option);
 
-    ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
+    if (strcmp(option, DEVICE_CMD_SUSPEND) == 0) {
+        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
+        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
+    } else if (strcmp(option, DEVICE_CMD_FREEZE) == 0) {
+        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
+        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
+    } else {
+        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
+        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
+    }
     ret = SystemSetParameter(DOREBOOT_PARAM, value);
     BEGET_ERROR_CHECK(ret == 0, return -1, "Set parameter to trigger reboot command \" %s \" failed", value);
     return 0;

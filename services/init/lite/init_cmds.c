@@ -74,6 +74,7 @@ static void DoLoadCfg(const struct CmdArgs *ctx)
 {
     char buf[LOADCFG_BUF_SIZE] = { 0 };
     size_t maxLoop = 0;
+    int len;
     if (!CheckValidCfg(ctx->argv[0])) {
         INIT_LOGE("CheckCfg file %s Failed", ctx->argv[0]);
         return;
@@ -89,7 +90,7 @@ static void DoLoadCfg(const struct CmdArgs *ctx)
 
     while (fgets(buf, LOADCFG_BUF_SIZE - 1, fp) != NULL && maxLoop < LOADCFG_MAX_LOOP) {
         maxLoop++;
-        int len = strlen(buf);
+        len = strlen(buf);
         if (len < 1) {
             continue;
         }

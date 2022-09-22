@@ -226,7 +226,7 @@ int LoadPersistParams(void)
     }
 #endif
     if (g_persistWorkSpace.persistParamOps.load != NULL) {
-        (void)g_persistWorkSpace.persistParamOps.load();
+        ret = g_persistWorkSpace.persistParamOps.load();
         PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED);
     }
     // save new persist param
