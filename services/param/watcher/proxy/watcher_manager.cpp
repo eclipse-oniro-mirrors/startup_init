@@ -203,10 +203,8 @@ void WatcherManager::WatcherGroup::ProcessParameterChange(const std::string &nam
     // walk watcher
     ListNode *node = nullptr;
     ForEachListEntry(&watchers_, node) {
-        if (node != nullptr) {
-            ParamWatcher *watcher = (ParamWatcher *)node;
-            watcher->ProcessParameterChange(name, value);
-        }
+        ParamWatcher *watcher = (ParamWatcher *)node;
+        watcher->ProcessParameterChange(name, value);
     }
 }
 
@@ -293,12 +291,14 @@ int WatcherManager::GetServerFd(bool retry)
     if (serverFd_ != INVALID_SOCKET) {
         return serverFd_;
     }
+    int ret = 0;
     int32_t retryCount = 0;
     do {
         serverFd_ = socket(PF_UNIX, SOCK_STREAM, 0);
         int flags = fcntl(serverFd_, F_GETFL, 0);
         (void)fcntl(serverFd_, F_SETFL, flags & ~O_NONBLOCK);
-        if (ConnectServer(serverFd_, CLIENT_PIPE_NAME) == 0) {
+        ret = ConnectServer(serverFd_, CLIENT_PIPE_NAME);
+        if (ret == 0) {
             break;
         }
         close(serverFd_);

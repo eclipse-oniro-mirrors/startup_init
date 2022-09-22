@@ -135,20 +135,23 @@ static void SendFdsInfo(int sock, Service *service)
 
 static void HandlerGetFds(int sock, Service *service)
 {
+    const char *errorInfo = NULL;
     if (sock < 0 || service == NULL) {
         INIT_LOGE("Get fd from init with invalid parameter");
-        SendErrorInfo(sock, "Invalid parameter", "");
-        return;
+        errorInfo = "Invalid parameter";
     }
 
     if (service->fds == NULL || service->fdCount == 0) {
         INIT_LOGE("Service \' %s \' does not have any held fds", service->name);
-        SendErrorInfo(sock, "Service without any fds", service->name);
-        return;
+        errorInfo = "Service without any fds";
     }
 
-    // Send fds back to service
-    SendFdsInfo(sock, service);
+    if (errorInfo != NULL) {
+        SendErrorInfo(sock, errorInfo, service->name);
+    } else {
+        // Send fds back to service
+        SendFdsInfo(sock, service);
+    }
 }
 
 static int CheckFdHolderPermission(Service *service, pid_t requestPid)

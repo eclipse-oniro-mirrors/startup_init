@@ -42,7 +42,7 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
 
     // parse msg to exec
     CmdMessage *msg = (CmdMessage *)buffer;
-    if ((msg->type >= ACTION_MAX) || (msg->cmd[0] == '\0') || (msg->ptyName[0] == '\0')) {
+    if ((msg->type < 0) || (msg->type >= ACTION_MAX) || (msg->cmd[0] == '\0') || (msg->ptyName[0] == '\0')) {
         BEGET_LOGE("[control_fd] Received msg is invaild");
         return;
     }
@@ -61,9 +61,7 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
         (void)dup2(fd, STDOUT_FILENO);
         (void)dup2(fd, STDERR_FILENO); // Redirect fd to 0, 1, 2
         (void)close(fd);
-        if (g_controlFdFunc != NULL) {
-            g_controlFdFunc(msg->type, msg->cmd, NULL);
-        }
+        g_controlFdFunc(msg->type, msg->cmd, NULL);
         exit(0);
     } else if (agent->pid < 0) {
         BEGET_LOGE("[control_fd] Failed fork service");

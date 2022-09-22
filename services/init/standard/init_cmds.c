@@ -196,7 +196,8 @@ static void DoLoadDefaultParams(const struct CmdArgs *ctx)
 static void DoSyncExec(const struct CmdArgs *ctx)
 {
     // format: syncexec /xxx/xxx/xxx xxx
-    INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, return, "DoSyncExec: invalid arguments");
+    INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, return,
+        "DoSyncExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
     SyncExecCommand(ctx->argc, ctx->argv);
     return;
 }
@@ -204,7 +205,8 @@ static void DoSyncExec(const struct CmdArgs *ctx)
 static void DoExec(const struct CmdArgs *ctx)
 {
     // format: exec /xxx/xxx/xxx xxx
-    INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, return, "DoExec: invalid arguments");
+    INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, return,
+        "DoExec: invalid arguments to exec \"%s\"", ctx->argv[0]);
     pid_t pid = fork();
     INIT_ERROR_CHECK(pid >= 0, return, "DoExec: failed to fork child process to exec \"%s\"", ctx->argv[0]);
 

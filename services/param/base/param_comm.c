@@ -371,7 +371,6 @@ INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData)
     } else {
 #ifdef STARTUP_INIT_TEST
         ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, node->labelIndex);
-        PARAM_CHECK(label != NULL, return -1, "Failed to get trie node");
         label->mode = auditData->dacData.mode;
         label->uid = auditData->dacData.uid;
         label->gid = auditData->dacData.gid;

@@ -20,8 +20,8 @@
 
 namespace OHOS {
 namespace system {
-int GetStringParameter(const std::string &key, std::string &value, const std::string def = "");
-int GetIntParameter(const std::string &key, int def);
+int GetStringParameter(const std::string key, std::string &value, const std::string def = "");
+int GetIntParameter(const std::string key, int def);
 }
 }
 

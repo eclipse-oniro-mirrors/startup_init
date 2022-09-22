@@ -432,7 +432,7 @@ int LoadFscryptPolicy(char *buf, size_t size)
         BEGET_LOGE("LoadFscryptPolicy:buf or fscrypt policy is empty");
         return -ENOMEM;
     }
-    if (size == 0) {
+    if (size <= 0) {
         BEGET_LOGE("LoadFscryptPloicy:size is invalid");
         return -EINVAL;
     }
@@ -532,8 +532,9 @@ static int ParseRequiredMountInfo(const char *item, Fstab *fstab)
     BEGET_CHECK(!(item == NULL || *item == '\0' || fstab == NULL), return -1);
 
     char *p = NULL;
+    const char *q = item;
     if ((p = strstr(item, "=")) != NULL) {
-        const char *q = item + strlen(OHOS_REQUIRED_MOUNT_PREFIX); // Get partition name
+        q = item + strlen(OHOS_REQUIRED_MOUNT_PREFIX); // Get partition name
         BEGET_CHECK(!(q == NULL || *q == '\0' || (p - q) <= 0), return -1);
         BEGET_ERROR_CHECK(strncpy_s(partName, NAME_SIZE -1, q, p - q) == EOK,
             return -1, "Failed to copy required partition name");
