@@ -152,6 +152,12 @@ void LE_RunLoop(const LoopHandle handle)
     loop->runLoop(loop);
 }
 
+void LE_CloseLoop(const LoopHandle loopHandle)
+{
+    LE_CHECK(loopHandle != NULL, return, "Invalid handle");
+    CloseLoop((EventLoop *)loopHandle);
+}
+
 void LE_StopLoop(const LoopHandle handle)
 {
     LE_CHECK(handle != NULL, return, "Invalid handle");

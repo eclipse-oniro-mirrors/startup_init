@@ -135,6 +135,7 @@ static int32_t BShellParamCmdGroupTest(BShellHandle shell, int32_t argc, char *a
         PLUGIN_LOGI("group-test-stage3: wait service %s", argv[2]);  // 2 service name index
         ServiceWatchForStatus(argv[2], ServiceStatusChangeTest);     // 2 service name index
         LE_RunLoop(LE_GetDefaultLoop());
+        LE_CloseLoop(LE_GetDefaultLoop());
     }
     return 0;
 }

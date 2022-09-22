@@ -198,5 +198,6 @@ void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd)
         return;
     }
     LE_RunLoop(LE_GetDefaultLoop());
+    LE_CloseLoop(LE_GetDefaultLoop());
     BEGET_LOGI("Cmd Client exit ");
 }
