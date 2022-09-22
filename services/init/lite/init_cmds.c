@@ -122,13 +122,21 @@ const struct CmdTable *GetCmdTable(int *number)
 void PluginExecCmdByName(const char *name, const char *cmdContent)
 {
 }
+
 void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
 {
 }
+
 const char *PluginGetCmdIndex(const char *cmdStr, int *index)
 {
     return NULL;
 }
+
+const char *GetPluginCmdNameByIndex(int index)
+{
+    return NULL;
+}
+
 int SetFileCryptPolicy(const char *dir)
 {
     return 0;

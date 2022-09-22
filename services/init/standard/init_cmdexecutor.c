@@ -144,20 +144,38 @@ static int CompareCmdId(const HashNode *node, const void *key)
     return cmd->cmdId - *(int *)key;
 }
 
-void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
+static PluginCmd *GetPluginCmdByIndex(int index)
 {
     int hashCode = ((index >> 16) & 0x0000ffff) - 1; // 16 left shift
     int cmdId = (index & 0x0000ffff);
     HashNode *node = OH_HashMapFind(GetGroupHashMap(NODE_TYPE_CMDS),
         hashCode, (const void *)&cmdId, CompareCmdId);
     if (node == NULL) {
-        return;
+        return NULL;
     }
     InitGroupNode *groupNode = HASHMAP_ENTRY(node, InitGroupNode, hashNode);
     if (groupNode == NULL || groupNode->data.cmd == NULL) {
+        return NULL;
+    }
+    return groupNode->data.cmd;
+}
+
+const char *GetPluginCmdNameByIndex(int index)
+{
+    PluginCmd *cmd = GetPluginCmdByIndex(index);
+    if (cmd == NULL) {
+        return NULL;
+    }
+    return cmd->name;
+}
+
+void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
+{
+    PluginCmd *cmd = GetPluginCmdByIndex(index);
+    if (cmd == NULL) {
+        INIT_LOGW("Cannot find plugin command with index %d", index);
         return;
     }
-    PluginCmd *cmd = groupNode->data.cmd;
     INIT_LOGV("Command: %s cmdContent: %s", cmd->name, cmdContent);
     PluginExecCmd_(cmd, cmdContent);
 }

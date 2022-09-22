@@ -42,6 +42,7 @@ void PluginExecCmdByName(const char *name, const char *cmdContent);
 void PluginExecCmdByCmdIndex(int index, const char *cmdContent);
 int PluginExecCmd(const char *name, int argc, const char **argv);
 const char *PluginGetCmdIndex(const char *cmdStr, int *index);
+const char *GetPluginCmdNameByIndex(int index);
 
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);
 
