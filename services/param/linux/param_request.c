@@ -41,7 +41,7 @@ __attribute__((constructor)) static void ParameterInit(void)
     if (getpid() == 1) {
         return;
     }
-    EnableInitLog(INIT_INFO);
+    EnableInitLog(INIT_ERROR);
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = 0;
 #ifdef PARAM_BASE_LOG
