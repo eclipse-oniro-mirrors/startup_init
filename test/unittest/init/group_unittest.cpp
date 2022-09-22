@@ -50,7 +50,8 @@ static int TestHashNodeFunction(const HashNode *node)
 {
     TestHashNode *testNode = HASHMAP_ENTRY(node, TestHashNode, node);
     int code = 0;
-    for (size_t i = 0; i < strlen(testNode->name); i++) {
+    size_t nameLen = strlen(testNode->name);
+    for (size_t i = 0; i < nameLen; i++) {
         code += testNode->name[i] - 'A';
     }
     return code;
@@ -60,7 +61,8 @@ static int TestHashKeyFunction(const void *key)
 {
     int code = 0;
     char *buff = const_cast<char *>(static_cast<const char *>(key));
-    for (size_t i = 0; i < strlen(buff); i++) {
+    size_t buffLen = strlen(buff);
+    for (size_t i = 0; i < buffLen; i++) {
         code += buff[i] - 'A';
     }
     return code;

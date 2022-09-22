@@ -364,8 +364,8 @@ static void LoadSelinuxLabel(void)
     // load security label
 #ifdef PARAM_SUPPORT_SELINUX
     ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
-    PARAM_LOGI("load selinux label %p", ops->securityGetLabel);
     if (ops != NULL && ops->securityGetLabel != NULL) {
+        PARAM_LOGI("load selinux label %p", ops->securityGetLabel);
         ops->securityGetLabel(NULL);
     }
 #endif

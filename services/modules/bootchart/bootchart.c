@@ -70,7 +70,7 @@ static void BootchartLogHeader(void)
     struct tm *now = localtime(&tm);
     PLUGIN_CHECK(now != NULL, return, "Failed to get local time");
     size_t size = strftime(date, sizeof(date), "%F %T", now);
-    PLUGIN_CHECK(size >= 0, return, "Failed to strftime");
+    PLUGIN_CHECK(size > 0, return, "Failed to strftime");
     struct utsname uts;
     if (uname(&uts) == -1) {
         return;
@@ -224,12 +224,11 @@ static int DoBootchartStart(void)
         PLUGIN_LOGI("bootcharting has been start");
         return 0;
     }
-    int ret = 0;
     g_bootchartCtrl = malloc(sizeof(BootchartCtrl));
     PLUGIN_CHECK(g_bootchartCtrl != NULL, return -1, "Failed to alloc mem for bootchart");
     g_bootchartCtrl->bufferSize = DEFAULT_BUFFER;
 
-    ret = pthread_mutex_init(&(g_bootchartCtrl->mutex), NULL);
+    int ret = pthread_mutex_init(&(g_bootchartCtrl->mutex), NULL);
     PLUGIN_CHECK(ret == 0, BootchartDestory();
         return -1, "Failed to init mutex");
     ret = pthread_cond_init(&(g_bootchartCtrl->cond), NULL);
