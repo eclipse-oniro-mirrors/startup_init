@@ -264,15 +264,15 @@ static void PublishHoldFds(Service *service)
 
 static int BindCpuCore(Service *service)
 {
-    if (service == NULL) {
+    if (service == NULL || service->cpuSet == NULL) {
         return SERVICE_SUCCESS;
     }
-    if (CPU_COUNT(&service->cpuSet) == 0) {
+    if (CPU_COUNT(service->cpuSet) == 0) {
         return SERVICE_SUCCESS;
     }
 #ifndef __LITEOS_A__
     int pid = getpid();
-    INIT_ERROR_CHECK(sched_setaffinity(pid, sizeof(service->cpuSet), &service->cpuSet) == 0,
+    INIT_ERROR_CHECK(sched_setaffinity(pid, sizeof(cpu_set_t), service->cpuSet) == 0,
         return SERVICE_FAILURE, "%s set affinity between process(pid=%d) with CPU's core failed", service->name, pid);
     INIT_LOGI("%s set affinity between process(pid=%d) with CPU's core successfully", service->name, pid);
 #endif
@@ -414,6 +414,8 @@ int ServiceStop(Service *service)
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
     NotifyServiceChange(service, SERVICE_STOPPING);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
+    service->pid = -1;
+    NotifyServiceChange(service, SERVICE_STOPPED);
     return SERVICE_SUCCESS;
 }
 

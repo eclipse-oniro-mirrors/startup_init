@@ -295,9 +295,15 @@ static int UpdaterCheckParamPermission(const ParamSecurityLabel *srcLabel, const
 
 static int OpenPermissionWorkSpace(const char *path)
 {
+    static int loadLabels = 0;
     UNUSED(path);
-    // open workspace by readonly
-    return SelinuxGetAllLabel(1);
+    int ret = 0;
+    if (loadLabels == 0) {
+        // open workspace by readonly
+        ret =  SelinuxGetAllLabel(1);
+    }
+    loadLabels = 1;
+    return ret;
 }
 
 INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
