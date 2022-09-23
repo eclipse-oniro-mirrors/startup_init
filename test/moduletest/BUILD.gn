@@ -49,11 +49,18 @@ ohos_moduletest("InitModuleTest") {
   sources = [
     "hookmgr_moduletest.cpp",
     "modulemgr_moduletest.cpp",
+    "service_watcher_moduleTest.cpp",
   ]
 
-  include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/syspara",
+    "//base/startup/init/interfaces/innerkits/syspara",
+    "//base/startup/init/services/include/param",
+  ]
 
   deps = [
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/googletest:gtest_main",
   ]
