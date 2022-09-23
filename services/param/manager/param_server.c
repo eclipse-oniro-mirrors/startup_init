@@ -78,7 +78,7 @@ static int ReadSnFromFile(const char *name, const char *file)
     PARAM_LOGV("**** name %s, value %s", name, data);
     int ret = WriteParam(name, data, NULL, 0);
     free(data);
-    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, data);
+    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s", name);
     return ret;
 }
 
@@ -113,7 +113,6 @@ static int SnDealFun(const char *name, const char *value, int res)
 
 INIT_LOCAL_API int LoadParamFromCmdLine(void)
 {
-    int ret;
     static const cmdLineInfo cmdLines[] = {
         {OHOS_BOOT"hardware", CommonDealFun
         },
@@ -133,6 +132,7 @@ INIT_LOCAL_API int LoadParamFromCmdLine(void)
         return -1, "Failed to read file %s", BOOT_CMD_LINE);
 
     for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
+        int ret = 0;
 #ifdef BOOT_EXTENDED_CMDLINE
         ret = GetParamValueFromBuffer(cmdLines[i].name, BOOT_EXTENDED_CMDLINE, value, PARAM_CONST_VALUE_LEN_MAX);
         if (ret != 0) {
