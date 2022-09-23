@@ -26,6 +26,7 @@
 #include "system_ability_definition.h"
 #include "watcher.h"
 #include "watcher_manager_kits.h"
+#include "service_watcher.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -35,6 +36,10 @@ using namespace OHOS::init_param;
 void TestParameterChange(const char *key, const char *value, void *context)
 {
     printf("TestParameterChange key:%s %s", key, value);
+}
+void TestWatcherCallBack(const char *key, ServiceStatus status)
+{
+    printf("TestWatcherCallBack key:%s %d", key, status);
 }
 
 class WatcherAgentUnitTest : public ::testing::Test {
@@ -167,4 +172,14 @@ HWTEST_F(WatcherAgentUnitTest, TestResetService, TestSize.Level0)
 {
     WatcherAgentUnitTest test;
     test.TestResetService();
+}
+
+HWTEST_F(WatcherAgentUnitTest, TestWatcherService, TestSize.Level0)
+{
+    const char *errstr = "111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
+    ServiceWatchForStatus("param_watcher", TestWatcherCallBack);
+    ServiceWaitForStatus("param_watcher", SERVICE_STARTED, 1);
+    EXPECT_EQ(ServiceWatchForStatus(errstr, TestWatcherCallBack), -1);
+    EXPECT_EQ(ServiceWatchForStatus(NULL, TestWatcherCallBack), -1);
+    WatchParameter("testParam", nullptr, nullptr);
 }

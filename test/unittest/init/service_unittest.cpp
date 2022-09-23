@@ -307,9 +307,12 @@ HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
     SystemWriteParam("bootevent.bootevent1", "true");
     SystemWriteParam("bootevent.bootevent1", "true");
     SystemWriteParam("bootevent.bootevent2", "true");
-    SystemSetParameter("ohos.servicectrl.save.bootevent", "save.bootevent");
+    const char *initBootevent[] = {"init", "test"};
+    PluginExecCmd("bootevent", ARRAY_LENGTH(initBootevent), initBootevent);
+    PluginExecCmd("save.bootevent", 0, nullptr);
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_DUMP, (void *)(&serviceInfoContext), NULL);
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)(&serviceInfoContext), NULL);
+    PluginExecCmd("clear", 0, nullptr);
     cJSON_Delete(fileRoot);
 }
 
@@ -330,6 +333,7 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
     caps[0] = FULL_CAP;
     service->servPerm.caps = caps;
     service->servPerm.capsCnt = 1;
+    IsEnableSandbox();
     EnterServiceSandbox(service);
     int ret = ServiceExec(service);
     EXPECT_EQ(ret, 0);
