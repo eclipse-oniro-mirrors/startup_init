@@ -647,7 +647,7 @@ void InitTriggerHead(const TriggerWorkSpace *workSpace)
     head->checkTriggerMatch = CheckParamMatch_;
     head->checkCondition = CheckParamCondition_;
     head->getCondition = GetTriggerCondition_;
-    // unknow trigger
+    // unknown trigger
     head = (TriggerHeader *)&workSpace->triggerHead[TRIGGER_UNKNOW];
     TriggerHeadSetDefault(head);
     head->checkTriggerMatch = CheckUnknowMatch_;
