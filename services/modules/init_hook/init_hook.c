@@ -122,9 +122,27 @@ static int CmdClear(int id, const char *name, int argc, const char **argv)
     return 0;
 }
 
-static int ParamSetBootEventHook(const HOOK_INFO *hookInfo, void *cookie)
+static int CmdSetLogLevel(int id, const char *name, int argc, const char **argv)
+{
+    UNUSED(id);
+    if ((name == NULL) || (argv == NULL) || (argc < 1)) {
+        PLUGIN_LOGE("Failed get log level from parameter.");
+        return -1;
+    }
+    char *value = strrchr(argv[0], '.');
+    PLUGIN_CHECK(value != NULL, return -1, "Failed get \'.\' from string %s", argv[0]);
+    unsigned int level;
+    int ret = StringToUint(value + 1, &level);
+    PLUGIN_CHECK(ret == 0, return -1, "Failed make string to unsigned int");
+    PLUGIN_LOGI("level is %d", level);
+    SetInitLogLevel(level);
+    return 0;
+}
+
+static int ParamSetInitCmdHook(const HOOK_INFO *hookInfo, void *cookie)
 {
     AddCmdExecutor("clear", CmdClear);
+    AddCmdExecutor("setinitloglevel", CmdSetLogLevel);
     return 0;
 }
 
@@ -137,7 +155,7 @@ static int DumpTrigger(const char *fmt, ...)
     return 0;
 }
 
-static int DumpServiceHook(const HOOK_INFO *info, void *cookie)
+static void DumpServiceHook(void)
 {
     // check and dump all jobs
     char dump[8] = {0}; // 8 len
@@ -147,12 +165,21 @@ static int DumpServiceHook(const HOOK_INFO *info, void *cookie)
     if (ret == 0 && strcmp(dump, "1") == 0) {
         SystemDumpTriggers(1, DumpTrigger);
     }
+    return;
+}
+
+static int InitDebugHook(const HOOK_INFO *info, void *cookie)
+{
+    UNUSED(info);
+    UNUSED(cookie);
+    EnableInitLog();
+    DumpServiceHook();
     return 0;
 }
 
 MODULE_CONSTRUCTOR(void)
 {
-    InitAddGlobalInitHook(0, ParamSetBootEventHook);
+    InitAddGlobalInitHook(0, ParamSetInitCmdHook);
     // Depends on parameter service
-    InitAddPostPersistParamLoadHook(0, DumpServiceHook);
+    InitAddPostPersistParamLoadHook(0, InitDebugHook);
 }

@@ -26,13 +26,13 @@ static int InitParamClient(void)
     if (PARAM_TEST_FLAG(g_flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
-    EnableInitLog(INIT_INFO);
     PARAM_LOGV("InitParamClient");
     int ret = InitParamWorkSpace(1, NULL);
     PARAM_CHECK(ret == 0, return -1, "Failed to init param workspace");
     PARAM_SET_FLAG(g_flags, WORKSPACE_FLAGS_INIT);
     // init persist to save
     InitPersistParamWorkSpace();
+    EnableInitLog();
     return 0;
 }
 
