@@ -77,7 +77,7 @@ static void TestHashNodeFree(const HashNode *node)
 
 static TestHashNode *TestCreateHashNode(const char *value)
 {
-    TestHashNode *node = (TestHashNode *)malloc(sizeof(TestHashNode) + strlen(value) + 1);
+    TestHashNode *node = reinterpret_cast<TestHashNode *>(malloc(sizeof(TestHashNode) + strlen(value) + 1));
     if (node == nullptr) {
         return nullptr;
     }
