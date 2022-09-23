@@ -82,15 +82,15 @@ static bool UnderBasicMountPoint(const char *path)
     }
 
     size_t pathSize = strlen(path);
-    if (strncmp(path, "/dev", strlen("/dev")) == 0 && pathSize > strlen("/dev")) {
+    if (strncmp(path, "/dev/", strlen("/dev/")) == 0 && pathSize > strlen("/dev/")) {
         return true;
     }
 
-    if (strncmp(path, "/sys", strlen("/sys")) == 0 && pathSize > strlen("/sys")) {
+    if (strncmp(path, "/sys/", strlen("/sys/")) == 0 && pathSize > strlen("/sys/")) {
         return true;
     }
 
-    if (strncmp(path, "/proc", strlen("/proc")) == 0 && pathSize > strlen("/proc")) {
+    if (strncmp(path, "/proc/", strlen("/proc/")) == 0 && pathSize > strlen("/proc/")) {
         return true;
     }
     return false;
