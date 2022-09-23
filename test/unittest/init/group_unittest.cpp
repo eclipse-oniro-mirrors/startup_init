@@ -302,7 +302,13 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService2, TestSize.Level1)
     ParseAllServices(fileRoot);
     cJSON_Delete(fileRoot);
     char cmdStr[] = "all#bootevent";
+    char cmdStr1[] = "parameter_service";
+    ProcessControlFd(ACTION_DUMP, "all", NULL);
     ProcessControlFd(ACTION_DUMP, cmdStr, NULL);
+    ProcessControlFd(ACTION_DUMP, cmdStr1, NULL);
+    ProcessControlFd(ACTION_SANDBOX, cmdStr, NULL);
+    ProcessControlFd(ACTION_MODULEMGR, cmdStr, NULL);
+    ProcessControlFd(ACTION_MAX, cmdStr, NULL);
     Service *service = GetServiceByName("test-service6");
     ASSERT_NE(service, nullptr);
     workspace->groupMode = GROUP_BOOT;

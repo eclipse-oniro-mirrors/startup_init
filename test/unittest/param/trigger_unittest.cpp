@@ -266,7 +266,8 @@ public:
         JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
         JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
-
+        DoJobNow(triggerName);
+        ClearTrigger(nullptr, 0);
         g_matchTrigger = 0;
         SystemWriteParam(param1, "1");
         ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param1, "1");
