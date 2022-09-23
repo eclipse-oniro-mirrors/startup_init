@@ -276,6 +276,7 @@ HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     GetParameter_(nullptr, nullptr, nullptr, 0);
     EXPECT_EQ(GetIntParameter(key1, 0), 0);
+    EXPECT_EQ(GetUintParameter(key1, 0), 0);
     EXPECT_EQ(IsValidParamValue(nullptr, 0), 0);
     EXPECT_EQ(IsValidParamValue("testvalue", strlen("testvalue") + 1), 1);
     EXPECT_EQ(StringToLL("0x11", &out), 0);
