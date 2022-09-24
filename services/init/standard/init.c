@@ -307,9 +307,27 @@ static void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext, int 
         hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, executionRetVal);
 }
 
+static void InitSysAdj(void)
+{
+    const char* path = "/proc/self/oom_score_adj";
+    const char* content = "-1000";
+    int fd = open(path, O_RDWR);
+    if (fd == -1) {
+        return;
+    }
+    if (write(fd, content, strlen(content)) < 0) {
+        close(fd);
+        return;
+    }
+    close(fd);
+    return;
+}
+
 void SystemConfig(void)
 {
     HOOK_TIMING_STAT timingStat;
+    
+    InitSysAdj();
     HOOK_EXEC_OPTIONS options;
 
     options.flags = 0;
