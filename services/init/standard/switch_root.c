@@ -38,7 +38,7 @@ static void FreeOldRoot(DIR *dir, dev_t dev)
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0) {
             continue;
         }
-
+        isDir = false;
         if (de->d_type == DT_DIR || de->d_type == DT_UNKNOWN) {
             struct stat st = {};
             if (fstatat(dfd, de->d_name, &st, AT_SYMLINK_NOFOLLOW) < 0) {
