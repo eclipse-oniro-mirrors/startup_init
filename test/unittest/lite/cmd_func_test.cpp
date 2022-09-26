@@ -124,7 +124,7 @@ public:
     }
     void SetUp()
     {
-        EnableInitLog(INIT_FATAL);
+        EnableInitLog();
     }
     void TearDown() {}
 };
