@@ -89,7 +89,6 @@ samgr:x:5555:
 update:x:6666:
 charger:x:6667:
 battery_stats:x:6668:
-thermal:x:6669:
 sensor:x:6688:
 input:x:6696:
 msdp:x:6699:
