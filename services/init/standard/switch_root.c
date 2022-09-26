@@ -25,6 +25,7 @@
 #include "init_log.h"
 #include "fs_manager/fs_manager.h"
 #include "securec.h"
+#include "init_utils.h"
 
 static void FreeOldRoot(DIR *dir, dev_t dev)
 {
@@ -77,21 +78,14 @@ static void FreeOldRoot(DIR *dir, dev_t dev)
 // all sub mount tree in the future.
 static bool UnderBasicMountPoint(const char *path)
 {
+    unsigned int i;
     if (path == NULL || *path == '\0') {
         return false;
     }
-
-    size_t pathSize = strlen(path);
-    if (strncmp(path, "/dev/", strlen("/dev/")) == 0 && pathSize > strlen("/dev/")) {
-        return true;
-    }
-
-    if (strncmp(path, "/sys/", strlen("/sys/")) == 0 && pathSize > strlen("/sys/")) {
-        return true;
-    }
-
-    if (strncmp(path, "/proc/", strlen("/proc/")) == 0 && pathSize > strlen("/proc/")) {
-        return true;
+    const char *basicMountPoint[] = {"/dev/", "/sys/", "/proc/"};
+    for (i = 0; i < ARRAY_LENGTH(basicMountPoint); i++) {
+        if (strncmp(path, basicMountPoint[i], strlen(basicMountPoint[i])) == 0)
+            return true;
     }
     return false;
 }
