@@ -85,7 +85,8 @@ int ParamServiceStart(void);
 
 int ParamTaskClose(const ParamTaskPtr stream);
 int ParamServerCreate(ParamTaskPtr *stream, const ParamStreamInfo *streamInfo);
-int ParamStreamCreate(ParamTaskPtr *stream, ParamTaskPtr server, const ParamStreamInfo *streamInfo, uint16_t userDataSize);
+int ParamStreamCreate(ParamTaskPtr *stream, ParamTaskPtr server,
+                      const ParamStreamInfo *streamInfo, uint16_t userDataSize);
 int ParamTaskSendMsg(const ParamTaskPtr stream, const ParamMessage *msg);
 
 int ParamEventTaskCreate(ParamTaskPtr *stream, LE_ProcessAsyncEvent eventProcess);
