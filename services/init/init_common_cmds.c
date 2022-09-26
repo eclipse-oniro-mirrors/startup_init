@@ -719,7 +719,7 @@ void DoCmdByName(const char *name, const char *cmdContent)
     }
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
     long long diff = InitDiffTime(&cmdTimer);
-    INIT_LOGV("Command %s execute time %lld", name, diff);
+    INIT_LOGV("Execute command \"%s %s\" took %lld ms", name, cmdContent, diff / 1000); // 1000 is convert us to ms
 }
 
 void DoCmdByIndex(int index, const char *cmdContent)
@@ -731,20 +731,25 @@ void DoCmdByIndex(int index, const char *cmdContent)
     INIT_TIMING_STAT cmdTimer;
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
     const struct CmdTable *commCmds = GetCommCmdTable(&cmdCnt);
+    const char *cmdName = NULL;
     if (index < cmdCnt) {
+        cmdName = commCmds[index].name;
         ExecCmd(&commCmds[index], cmdContent);
-        INIT_LOGV("Command: %s content: %s", commCmds[index].name, cmdContent);
     } else {
         int number = 0;
         const struct CmdTable *cmds = GetCmdTable(&number);
         if (index < (cmdCnt + number)) {
+            cmdName = cmds[index - cmdCnt].name;
             ExecCmd(&cmds[index - cmdCnt], cmdContent);
-            INIT_LOGV("Command: %s content: %s", cmds[index - cmdCnt].name, cmdContent);
         } else {
             PluginExecCmdByCmdIndex(index, cmdContent);
+            cmdName = GetPluginCmdNameByIndex(index);
+            if (cmdName == NULL) {
+                cmdName = "Unknown";
+            }
         }
     }
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
     long long diff = InitDiffTime(&cmdTimer);
-    INIT_LOGV("Command execute time %lld", diff);
+    INIT_LOGV("Execute command \"%s %s\" took %lld ms", cmdName, cmdContent, diff / 1000); // 1000 is convert us to ms
 }
