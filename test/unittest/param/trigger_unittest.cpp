@@ -68,7 +68,10 @@ public:
     TriggerUnitTest() {}
     virtual ~TriggerUnitTest() {}
 
-    void SetUp() {}
+    void SetUp()
+    {
+        SetTestPermissionResult(0);
+    }
     void TearDown() {}
     void TestBody() {}
 

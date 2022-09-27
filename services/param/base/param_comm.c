@@ -531,8 +531,8 @@ INIT_LOCAL_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, cons
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return DAC_RESULT_FORBIDED, "Invalid workspace");
     int ret = DAC_RESULT_PERMISSION;
-    PARAM_LOGV("CheckParamPermission mode 0x%x name: %s uid:%d pid:%d",
-        mode, name, (int)srcLabel->cred.uid,  (int)srcLabel->cred.pid);
+    PARAM_LOGV("CheckParamPermission mode 0x%x name: %s uid:%d gid:%d pid:%d",
+        mode, name, (int)srcLabel->cred.uid, (int)srcLabel->cred.gid, (int)srcLabel->cred.pid);
     // for root, all permission, but for appspawn must to check
     if (srcLabel->cred.uid == 0 && srcLabel->cred.pid == 1) {
         return DAC_RESULT_PERMISSION;

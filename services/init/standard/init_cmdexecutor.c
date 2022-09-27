@@ -123,7 +123,7 @@ int PluginExecCmd(const char *name, int argc, const char **argv)
         return -1;
     }
     PluginCmd *cmd = groupNode->data.cmd;
-    INIT_LOGI("PluginExecCmd index %s", cmd->name);
+    INIT_LOGV("PluginExecCmd index %s", cmd->name);
     int ret = 0;
     ListNode *node = cmd->cmdExecutor.next;
     while (node != &cmd->cmdExecutor) {

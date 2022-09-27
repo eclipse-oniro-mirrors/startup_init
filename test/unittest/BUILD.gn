@@ -241,6 +241,7 @@ ohos_unittest("init_unittest") {
     "_GNU_SOURCE",
     "PARAM_SUPPORT_TRIGGER",
     "USE_MBEDTLS",
+    "PARAM_DECODE_GROUPID_FROM_FILE",
   ]
   defines += [ "_GNU_SOURCE" ]
 

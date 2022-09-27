@@ -20,6 +20,7 @@
 #include "parameter.h"
 #include "sysparam_errno.h"
 #include "param_comm.h"
+#include "param_stub.h"
 #include "param_wrapper.h"
 #include "sysversion.h"
 
@@ -32,7 +33,10 @@ class SysparaUnitTest : public testing::Test {
 public:
     static void SetUpTestCase() {}
     static void TearDownTestCase() {}
-    void SetUp() {}
+    void SetUp()
+    {
+        SetTestPermissionResult(0);
+    }
     void TearDown() {}
 };
 

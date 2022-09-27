@@ -28,8 +28,11 @@
 #define USER_BUFFER_LEN 64
 #define MAX_BUF_SIZE  1024
 #define GROUP_FORMAT "const.group"
-
+#define INVALID_MODE 0550
+#define GROUP_FILE_PATH "/etc/group"
 #define OCT_BASE 8
+#define INVALID_UID(uid) ((uid) == (uid_t)-1)
+
 static void GetUserIdByName(uid_t *uid, const char *name, uint32_t nameLen)
 {
     *uid = -1;
@@ -210,7 +213,6 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
 
 static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
 {
-#ifdef __MUSL__
     char buffer[USER_BUFFER_LEN] = {0};
     uint32_t labelIndex = 0;
     int ret = ParamSprintf(buffer, sizeof(buffer), "%s.%d.%d", GROUP_FORMAT, groupId, uid);
@@ -218,14 +220,11 @@ static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
     (void)FindTrieNode(space, buffer, strlen(buffer), &labelIndex);
     ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
     PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %d", labelIndex);
-    PARAM_LOGV("CheckUserInGroup %s groupid %d uid %d", buffer, groupId, uid);
+    PARAM_LOGV("CheckUserInGroup %s groupid %d uid %d", buffer, node->gid, node->uid);
     if (node->gid == groupId && node->uid == uid) {
         return 0;
     }
     return -1;
-#else
-    return 0;
-#endif
 }
 
 static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
@@ -266,9 +265,6 @@ static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const cha
 #ifndef STARTUP_INIT_TEST
         ret = DAC_RESULT_PERMISSION;
 #endif
-#ifndef __MUSL__ // for wgr, return permission
-        ret = DAC_RESULT_PERMISSION;
-#endif
     }
     return ret;
 }
@@ -288,45 +284,136 @@ INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
     return ret;
 }
 
-static void AddGroupUser(unsigned int uid, unsigned int gid, int mode, const char *format)
+static void AddGroupUser(const char *userName, gid_t gid)
 {
+    if (userName == NULL || strlen(userName) == 0) {
+        return;
+    }
+    uid_t uid = 0;
+    GetUserIdByName(&uid, userName, strlen(userName));
+    PARAM_LOGV("Add group user '%s' gid %d uid %d", userName, gid, uid);
+    if (INVALID_UID(gid) || INVALID_UID(uid)) {
+        PARAM_LOGW("Invalid user for '%s' gid %d uid %d", userName, gid, uid);
+        return;
+    }
     ParamAuditData auditData = {0};
     char buffer[USER_BUFFER_LEN] = {0};
-    int ret = ParamSprintf(buffer, sizeof(buffer), "%s.%u.%u", format, gid, uid);
-    PARAM_CHECK(ret >= 0, return, "Failed to format name for %s.%d.%d", format, gid, uid);
+    int ret = ParamSprintf(buffer, sizeof(buffer), "%s.%u.%u", GROUP_FORMAT, gid, uid);
+    PARAM_CHECK(ret >= 0, return, "Failed to format name for %d.%d", gid, uid);
     auditData.name = buffer;
     auditData.dacData.uid = uid;
     auditData.dacData.gid = gid;
-    auditData.dacData.mode = mode;
+    auditData.dacData.mode = INVALID_MODE;
     AddSecurityLabel(&auditData);
 }
 
-INIT_LOCAL_API void LoadGroupUser(void)
+#ifdef PARAM_DECODE_GROUPID_FROM_FILE
+static char *UserNameTrim(char *str)
 {
-#ifndef __MUSL__
+    if (str == NULL) {
+        return NULL;
+    }
+    size_t len = strlen(str);
+    if (str == NULL || len == 0) {
+        return NULL;
+    }
+    char *end = str + len - 1;
+    while (end >= str && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r')) {
+        *end = '\0';
+        end--;
+    }
+    len = strlen(str);
+    char *head = str;
+    end = str + strlen(str);
+    while (head < end && (*head == ' ' || *head == '\t' || *head == '\n' || *head == '\r')) {
+        *head = '\0';
+        head++;
+    }
+    if (strlen(str) == 0) {
+        return NULL;
+    }
+    return head;
+}
+
+static void LoadGroupUser_(void)
+{
+    // decode group file
+    FILE *fp = fopen(GROUP_FILE_PATH, "r");
+    const uint32_t buffSize = 1024;  // 1024 max buffer for decode
+    char *buff = (char *)calloc(1, buffSize);
+    while (fp != NULL && buff != NULL && fgets(buff, buffSize, fp) != NULL) {
+        buff[buffSize - 1] = '\0';
+        // deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account
+        char *buffer = UserNameTrim(buff);
+        PARAM_CHECK(buffer != NULL, continue, "Invalid buffer %s", buff);
+
+        PARAM_LOGV("LoadGroupUser_ '%s'", buffer);
+        // group name
+        char *groupName = strtok(buffer, ":");
+        groupName = UserNameTrim(groupName);
+        PARAM_CHECK(groupName != NULL, continue, "Invalid group name %s", buff);
+
+        // skip x
+        (void)strtok(NULL, ":");
+        char *strGid = strtok(NULL, ":");
+        strGid = UserNameTrim(strGid);
+        PARAM_CHECK(strGid != NULL, continue, "Invalid gid %s", buff);
+
+        errno = 0;
+        gid_t gid = (gid_t)strtoul(strGid, 0, 10); // 10 base
+        PARAM_CHECK(errno == 0, continue, "Invalid gid %s", strGid);
+
+        char *userName = strGid + strlen(strGid) + 1;
+        userName = UserNameTrim(userName);
+        PARAM_LOGV("LoadGroupUser_ %s userName '%s'", groupName, userName);
+        if (userName == NULL) {
+            AddGroupUser(groupName, gid);
+            continue;
+        }
+        char *tmp = strtok(userName, ",");
+        while (tmp != NULL) {
+            PARAM_LOGV("LoadGroupUser_ %s userName '%s'", groupName, tmp);
+            AddGroupUser(UserNameTrim(tmp), gid);
+            userName = tmp + strlen(tmp) + 1;
+            tmp = strtok(NULL, ",");
+        }
+        // last username
+        if (userName != NULL) {
+            AddGroupUser(UserNameTrim(userName), gid);
+        }
+    }
+    if (fp != NULL) {
+        (void)fclose(fp);
+    }
+    if (buff != NULL) {
+        free(buff);
+    }
     return;
-#endif
-    PARAM_LOGV("LoadGroupUser ");
-    uid_t uid = 0;
+}
+#else
+static void LoadGroupUser_(void)
+{
     struct group *data = NULL;
     while ((data = getgrent()) != NULL) {
         if (data->gr_name == NULL || data->gr_mem == NULL) {
             continue;
         }
         if (data->gr_mem[0] == NULL) { // default user in group
-            GetUserIdByName(&uid, data->gr_name, strlen(data->gr_name));
-            PARAM_LOGV("LoadGroupUser %s gid %d uid %d", data->gr_name, data->gr_gid, uid);
-            AddGroupUser(uid, data->gr_gid, 0550, GROUP_FORMAT); // 0550 read and watch
+            AddGroupUser(data->gr_name, data->gr_gid);
             continue;
         }
         int index = 0;
         while (data->gr_mem[index]) { // user in this group
-            GetUserIdByName(&uid, data->gr_mem[index], strlen(data->gr_mem[index]));
-            PARAM_LOGV("LoadGroupUser %s gid %d uid %d user %s", data->gr_name, data->gr_gid, uid, data->gr_mem[index]);
-            AddGroupUser(uid, data->gr_gid, 0550, GROUP_FORMAT); // 0550 read and watch
+            AddGroupUser(data->gr_mem[index], data->gr_gid);
             index++;
         }
     }
-    PARAM_LOGV("LoadGroupUser getgrent fail errnor %d ", errno);
     endgrent();
+}
+#endif
+
+INIT_LOCAL_API void LoadGroupUser(void)
+{
+    PARAM_LOGV("LoadGroupUser ");
+    LoadGroupUser_();
 }
