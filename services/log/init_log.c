@@ -120,7 +120,7 @@ static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag
 
 INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs)
 {
-    if (g_logLevel > logLevel) {
+    if ((int)g_logLevel > logLevel) {
         return;
     }
     char tmpFmt[DEF_LOG_SIZE] = {0};
