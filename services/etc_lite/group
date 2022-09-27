@@ -3,3 +3,4 @@ bin:x:2:
 system:x:1000:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr
 shell:x:2000:
+faultloggerd:x:1202:
