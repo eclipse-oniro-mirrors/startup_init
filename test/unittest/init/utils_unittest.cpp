@@ -74,5 +74,7 @@ HWTEST_F(UtilsUnitTest, TestUtilsApi, TestSize.Level0)
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     CheckAndCreatFile("/data/init_ut/testcreatfile", mode);
     CheckAndCreatFile("/data/init_ut/nodir/testcreatfile", mode);
+    char testStr[] = ".trim";
+    EXPECT_STREQ(TrimHead(testStr, '.'), "trim");
 }
 } // namespace init_ut

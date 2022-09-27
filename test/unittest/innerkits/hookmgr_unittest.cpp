@@ -16,6 +16,7 @@
 #include <cinttypes>
 #include <gtest/gtest.h>
 #include "hookmgr.h"
+#include "bootstage.h"
 using namespace testing::ext;
 using namespace std;
 
@@ -298,5 +299,12 @@ HWTEST_F(HookMgrUnitTest, HookMgrExecute_unitest, TestSize.Level1)
     ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 1);
+}
+
+HWTEST_F(HookMgrUnitTest, HookMgrExecuteInit_unitest, TestSize.Level1)
+{
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, nullptr, nullptr);
+    InitAddClearServiceHook([](SERVICE_INFO_CTX *serviceCtx) {return;});
 }
 } // namespace init_ut
