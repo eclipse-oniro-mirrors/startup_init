@@ -33,11 +33,12 @@ using namespace std;
 using namespace OHOS;
 using namespace OHOS::init_param;
 
-void TestParameterChange(const char *key, const char *value, void *context)
+static void TestParameterChange(const char *key, const char *value, void *context)
 {
     printf("TestParameterChange key:%s %s", key, value);
 }
-void TestWatcherCallBack(const char *key, ServiceStatus status)
+
+static void TestWatcherCallBack(const char *key, ServiceStatus status)
 {
     printf("TestWatcherCallBack key:%s %d", key, status);
 }
