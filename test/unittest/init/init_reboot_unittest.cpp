@@ -21,6 +21,7 @@
 #include "init_utils.h"
 #include "trigger_manager.h"
 #include "init_group_manager.h"
+#include "init_cmdexecutor.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -33,6 +34,66 @@ public:
     void SetUp() {};
     void TearDown() {};
 };
+
+#ifndef OHOS_LITE
+static int g_result = 0;
+HWTEST_F(InitRebootUnitTest, TestAddRebootCmd, TestSize.Level1)
+{
+    int ret = AddRebootCmdExecutor("reboot_cmd1", [](int id, const char *name, int argc, const char **argv)-> int {
+        return 0;
+    });
+    EXPECT_EQ(ret, 0);
+    ret = AddRebootCmdExecutor("reboot_cmd2", [](int id, const char *name, int argc, const char **argv)-> int {
+        return 0;
+    });
+    EXPECT_EQ(ret, 0);
+    ret = AddRebootCmdExecutor("reboot_cmd3", [](int id, const char *name, int argc, const char **argv)-> int {
+        return 0;
+    });
+    EXPECT_EQ(ret, 0);
+    ret = AddRebootCmdExecutor("reboot_cmd4", [](int id, const char *name, int argc, const char **argv)-> int {
+        g_result = 4; // 4 test index
+        return 0;
+    });
+    EXPECT_EQ(ret, 0);
+    ret = AddRebootCmdExecutor("reboot_cmd5", [](int id, const char *name, int argc, const char **argv)-> int {
+        g_result = 5; // 5 test index
+        return 0;
+    });
+    EXPECT_EQ(ret, 0);
+    ret = AddRebootCmdExecutor("reboot_cmd6", [](int id, const char *name, int argc, const char **argv)-> int {
+        g_result = 6; // 6 test index
+        return 0;
+    });
+    EXPECT_EQ(ret, 0);
+    ret = AddRebootCmdExecutor("reboot_cmd7", [](int id, const char *name, int argc, const char **argv)-> int {
+        return 0;
+    });
+    EXPECT_EQ(ret, 0);
+    ret = AddRebootCmdExecutor("reboot_cmd7", [](int id, const char *name, int argc, const char **argv)-> int {
+        return 0;
+    });
+    EXPECT_NE(ret, 0);
+
+    TestSetParamCheckResult("ohos.servicectrl.reboot", 0777, 0);
+    // exec
+    SystemWriteParam("ohos.startup.powerctrl", "reboot,reboot_cmd4");
+    EXPECT_EQ(g_result, 4); // 4 test index
+    SystemWriteParam("ohos.startup.powerctrl", "reboot,reboot_cmd5");
+    EXPECT_EQ(g_result, 5); // 5 test index
+    SystemWriteParam("ohos.startup.powerctrl", "reboot,reboot_cmd6");
+    EXPECT_EQ(g_result, 6); // 6 test index
+
+    // invalid test
+    ret = AddRebootCmdExecutor(nullptr, [](int id, const char *name, int argc, const char **argv)-> int {
+        printf("reboot_cmd7 %s", name);
+        return 0;
+    });
+    EXPECT_NE(ret, 0);
+    ret = AddRebootCmdExecutor(nullptr, nullptr);
+    EXPECT_NE(ret, 0);
+}
+#endif
 
 HWTEST_F(InitRebootUnitTest, TestInitReboot, TestSize.Level1)
 {

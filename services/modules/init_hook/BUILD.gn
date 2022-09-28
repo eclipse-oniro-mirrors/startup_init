@@ -30,7 +30,10 @@ comm_include = [
 ]
 if (defined(ohos_lite)) {
   static_library("inithook") {
-    defines = [ "_GNU_SOURCE" ]
+    defines = [
+      "_GNU_SOURCE",
+      "OHOS_LITE",
+    ]
     include_dirs = comm_include
     sources = [ "param_hook.c" ]
     public_configs = [ ":inithook_config" ]

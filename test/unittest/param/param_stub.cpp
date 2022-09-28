@@ -147,6 +147,18 @@ void TestSetSelinuxOps(void)
     selinuxSpace->destroyParamList = TestDestroyParamList;
 #endif
 }
+
+void TestSetParamCheckResult(const char *prefix, uint16_t mode, int result)
+{
+    ParamAuditData auditData = {};
+    auditData.name = prefix;
+    auditData.dacData.gid = 202;  // 202 test dac gid
+    auditData.dacData.uid = 202;  // 202 test dac uid
+    auditData.dacData.mode = mode;
+    AddSecurityLabel(&auditData);
+    SetTestPermissionResult(result);
+}
+
 static void CreateTestFile(const char *fileName, const char *data)
 {
     CheckAndCreateDir(fileName);

@@ -279,24 +279,40 @@ static int CreateCtrlInfo(ServiceCtrlInfo **ctrlInfo, const char *cmd, uint32_t 
     return 0;
 }
 
+static int GetServiceCtrlInfoForPowerCtrl(const char *name, const char *value, ServiceCtrlInfo **ctrlInfo)
+{
+    size_t size = 0;
+    const ParamCmdInfo *powerCtrlArg = GetStartupPowerCtl(&size);
+    PARAM_CHECK(powerCtrlArg != NULL, return -1, "Invalid ctrlInfo for %s", name);
+    uint32_t valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen("reboot") + 1;
+    if (strcmp(value, "reboot") == 0) {
+        return CreateCtrlInfo(ctrlInfo, "reboot", valueOffset, 1,
+            "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, "reboot", value);
+    }
+    for (size_t i = 0; i < size; i++) {
+        PARAM_LOGV("Get power ctrl %s name %s value %s", powerCtrlArg[i].name, name, value);
+        if (strncmp(value, powerCtrlArg[i].name, strlen(powerCtrlArg[i].name)) == 0) {
+            valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen(powerCtrlArg[i].replace) + 1;
+            return CreateCtrlInfo(ctrlInfo, powerCtrlArg[i].cmd, valueOffset, 1,
+                "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, powerCtrlArg[i].replace, value);
+        }
+    }
+    // not found reboot, so reboot by normal
+    valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen("reboot") + 1;
+    return CreateCtrlInfo(ctrlInfo, "reboot", valueOffset, 1, "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, "reboot", value);
+}
+
 INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, ServiceCtrlInfo **ctrlInfo)
 {
     PARAM_CHECK(ctrlInfo != NULL, return -1, "Invalid ctrlInfo %s", name);
     *ctrlInfo = NULL;
     size_t size = 0;
     if (strcmp("ohos.startup.powerctrl", name) == 0) {
-        const ParamCmdInfo *powerCtrlArg = GetStartupPowerCtl(&size);
-        for (size_t i = 0; i < size; i++) {
-            if (strncmp(value, powerCtrlArg[i].name, strlen(powerCtrlArg[i].name)) == 0) {
-                uint32_t valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen(powerCtrlArg[i].replace) + 1;
-                return CreateCtrlInfo(ctrlInfo, powerCtrlArg[i].cmd, valueOffset, 1,
-                    "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, powerCtrlArg[i].replace, value);
-            }
-        }
-        return 0;
+        return GetServiceCtrlInfoForPowerCtrl(name, value, ctrlInfo);
     }
     if (strncmp("ohos.ctl.", name, strlen("ohos.ctl.")) == 0) {
         const ParamCmdInfo *ctrlParam = GetServiceStartCtrl(&size);
+        PARAM_CHECK(ctrlParam != NULL, return -1, "Invalid ctrlInfo for %s", name);
         for (size_t i = 0; i < size; i++) {
             if (strcmp(name, ctrlParam[i].name) == 0) {
                 uint32_t valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen(ctrlParam[i].replace) + 1;
@@ -307,6 +323,7 @@ INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, Servi
     }
     if (strncmp("ohos.servicectrl.", name, strlen("ohos.servicectrl.")) == 0) {
         const ParamCmdInfo *installParam = GetServiceCtl(&size);
+        PARAM_CHECK(installParam != NULL, return -1, "Invalid ctrlInfo for %s", name);
         for (size_t i = 0; i < size; i++) {
             if (strncmp(name, installParam[i].name, strlen(installParam[i].name)) == 0) {
                 return CreateCtrlInfo(ctrlInfo, installParam[i].cmd, strlen(name) + 1, 1, "%s.%s", name, value);

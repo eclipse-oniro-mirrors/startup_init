@@ -44,19 +44,20 @@ const ParamCmdInfo *GetServiceCtl(size_t *size)
     return installParam;
 }
 
+#ifdef OHOS_LITE
 const ParamCmdInfo *GetStartupPowerCtl(size_t *size)
 {
     static const ParamCmdInfo powerCtrlArg[] = {
         {"reboot,shutdown", "reboot.shutdown", "reboot.shutdown"},
         {"reboot,updater", "reboot.updater", "reboot.updater"},
         {"reboot,flashd", "reboot.flashd", "reboot.flashd"},
-        {"reboot,loader", "reboot.loader", "reboot.loader"},
         {"reboot,charge", "reboot.charge", "reboot.charge"},
         {"reboot", "reboot", "reboot"},
     };
     *size = ARRAY_LENGTH(powerCtrlArg);
     return powerCtrlArg;
 }
+#endif
 
 const ParamCmdInfo *GetOtherSpecial(size_t *size)
 {

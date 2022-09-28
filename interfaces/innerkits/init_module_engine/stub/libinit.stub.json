@@ -17,5 +17,6 @@
     { "name": "StartupLog" },
     { "name": "DoJobNow" },
     { "name": "GetServiceExtData" },
-    { "name": "UpdateMiscMessage" }
+    { "name": "UpdateMiscMessage" },
+    { "name": "AddRebootCmdExecutor" }
 ]
