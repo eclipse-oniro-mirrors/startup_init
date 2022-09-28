@@ -14,6 +14,7 @@
  */
 #include "param_osadp.h"
 #include "param_security.h"
+#include "securec.h"
 
 static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
 {

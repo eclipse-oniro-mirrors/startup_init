@@ -128,7 +128,7 @@ INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, 
         tmpFmt[sizeof(tmpFmt) - 2] = '\n'; // 2 add \n to tail
         tmpFmt[sizeof(tmpFmt) - 1] = '\0';
     }
-    PrintLog(logLevel, domain, tag, tmpFmt);
+    PrintLog((InitLogLevel)logLevel, domain, tag, tmpFmt);
 }
 
 INIT_PUBLIC_API void EnableInitLog(InitLogLevel level)
