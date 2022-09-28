@@ -20,7 +20,6 @@
 #include <sys/types.h>
 #include <thread>
 
-#include "param_message.h"
 #include "init_param.h"
 #include "system_ability_definition.h"
 #include "string_ex.h"
@@ -33,86 +32,114 @@ REGISTER_SYSTEM_ABILITY_BY_ID(WatcherManager, PARAM_WATCHER_DISTRIBUTED_SERVICE_
 const static int32_t INVALID_SOCKET = -1;
 WatcherManager::~WatcherManager()
 {
-    watchers_.clear();
-    watcherGroups_.clear();
-    groupMap_.clear();
+    Clear();
 }
 
-uint32_t WatcherManager::AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher)
+uint32_t WatcherManager::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher)
 {
-    WATCHER_CHECK(watcher != nullptr && deathRecipient_ != nullptr,
-        return 0, "Invalid remove watcher for %s", keyPrefix.c_str());
+    WATCHER_CHECK(watcher != nullptr && deathRecipient_ != nullptr, return 0, "Invalid remove watcher");
     sptr<IRemoteObject> object = watcher->AsObject();
     if ((object != nullptr) && (object->IsProxyObject())) {
-        WATCHER_CHECK(object->AddDeathRecipient(deathRecipient_),
-            return 0, "Failed to add death recipient %s", keyPrefix.c_str());
+        WATCHER_CHECK(object->AddDeathRecipient(deathRecipient_), return 0, "Failed to add death recipient %u", id);
     }
-
-    // check watcher id
-    uint32_t watcherId = 0;
-    int ret = GetWatcherId(watcherId);
-    WATCHER_CHECK(ret == 0, return 0, "Failed to get watcher id for %s", keyPrefix.c_str());
-
-    WATCHER_LOGV("AddWatcher prefix %s watcherId %u", keyPrefix.c_str(), watcherId);
-    bool newGroup = false;
-    WatcherGroupPtr group = GetWatcherGroup(keyPrefix);
-    if (group == nullptr) {
-        newGroup = true;
-        uint32_t groupId = 0;
-        ret = GetGroupId(groupId);
-        WATCHER_CHECK(ret == 0, return 0, "Failed to get group id for %s", keyPrefix.c_str());
-        group = std::make_shared<WatcherGroup>(groupId, keyPrefix);
-        WATCHER_CHECK(group != nullptr, return 0, "Failed to create group for %s", keyPrefix.c_str());
-    } else {
-        newGroup = group->Empty();
+    uint32_t remoteWatcherId = 0;
+    {
+        std::lock_guard<std::mutex> lock(watcherMutex_);
+        // check watcher id
+        int ret = GetRemoteWatcherId(remoteWatcherId);
+        WATCHER_CHECK(ret == 0, return 0, "Failed to get watcher id for %u", id);
+        // create remote watcher
+        RemoteWatcher *remoteWatcher = new RemoteWatcher(remoteWatcherId, watcher);
+        WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Failed to create watcher for %u", id);
+        remoteWatcher->SetAgentId(id);
+        AddRemoteWatcher(remoteWatcher);
     }
-    ParamWatcherPtr paramWatcher = std::make_shared<ParamWatcher>(watcherId, watcher, group);
-    WATCHER_CHECK(paramWatcher != nullptr, return 0, "Failed to create watcher for %s", keyPrefix.c_str());
-    AddParamWatcher(keyPrefix, group, paramWatcher);
-    if (newGroup) {
-        StartLoop();
-        SendMessage(group, MSG_ADD_WATCHER);
-    }
-    SendLocalChange(keyPrefix, paramWatcher);
-    WATCHER_LOGI("AddWatcher %s watcherId: %u groupId %u success", keyPrefix.c_str(), watcherId, group->GetGroupId());
-    return watcherId;
+    WATCHER_LOGI("Add remote watcher remoteWatcherId %u %u success", remoteWatcherId, id);
+    return remoteWatcherId;
 }
 
-int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t watcherId)
+int32_t WatcherManager::DelRemoteWatcher(uint32_t remoteWatcherId)
 {
-    auto group = GetWatcherGroup(keyPrefix);
-    WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
-    auto paramWatcher = GetWatcher(watcherId);
-    WATCHER_CHECK(paramWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), watcherId);
-    WATCHER_LOGV("DelWatcher prefix %s watcherId %u", keyPrefix.c_str(), watcherId);
-    return DelWatcher(group, paramWatcher);
-}
-
-int32_t WatcherManager::DelWatcher(WatcherGroupPtr group, ParamWatcherPtr watcher)
-{
-    WATCHER_CHECK(watcher != nullptr && group != nullptr, return 0, "Invalid watcher");
-    sptr<IRemoteObject> object = watcher->GetRemoteWatcher()->AsObject();
+    sptr<IWatcher> watcher = {0};
+    {
+        std::lock_guard<std::mutex> lock(watcherMutex_);
+        RemoteWatcher *remoteWatcher = GetRemoteWatcher(remoteWatcherId);
+        WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Can not find watcher %u", remoteWatcherId);
+        WATCHER_LOGI("Del remote watcher remoteWatcherId %u", remoteWatcherId);
+        watcher = remoteWatcher->GetWatcher();
+        DelRemoteWatcher(remoteWatcher);
+    }
+    sptr<IRemoteObject> object = watcher->AsObject();
     if (object != nullptr) {
         object->RemoveDeathRecipient(deathRecipient_);
     }
-    WATCHER_LOGI("DelWatcher watcherId %u prefix %s", watcher->GetWatcherId(), group->GetKeyPrefix().c_str());
-    DelParamWatcher(watcher);
-    if (group->Empty()) {
-        SendMessage(group, MSG_DEL_WATCHER);
-        DelWatcherGroup(group);
+    return 0;
+}
+
+int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
+{
+    // get remote watcher and group
+    auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
+    WATCHER_CHECK(remoteWatcher != nullptr, return -1, "Can not find remote watcher %d", remoteWatcherId);
+    auto group = AddWatcherGroup(keyPrefix);
+    WATCHER_CHECK(group != nullptr, return -1, "Failed to create group for %s", keyPrefix.c_str());
+    {
+        // add watcher to agent and group
+        std::lock_guard<std::mutex> lock(watcherMutex_);
+        bool newGroup = group->Empty();
+        AddParamWatcher(group, remoteWatcher);
+        if (newGroup) {
+            StartLoop();
+            SendMessage(group, MSG_ADD_WATCHER);
+        }
     }
+    SendLocalChange(keyPrefix, remoteWatcher);
+    WATCHER_LOGI("Add watcher %s remoteWatcherId: %u groupId %u success",
+        keyPrefix.c_str(), remoteWatcherId, group->GetGroupId());
+    return 0;
+}
+
+int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
+{
+    auto group = GetWatcherGroup(keyPrefix);
+    WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
+    auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
+    WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), remoteWatcherId);
+    WATCHER_LOGI("Delete watcher prefix %s remoteWatcherId %u", keyPrefix.c_str(), remoteWatcherId);
+    {
+        // remove watcher from agent and group
+        std::lock_guard<std::mutex> lock(watcherMutex_);
+        DelParamWatcher(group, remoteWatcher);
+        if (group->Empty()) { // no watcher, so delete it
+            SendMessage(group, MSG_DEL_WATCHER);
+            DelWatcherGroup(group);
+        }
+    }
+    return 0;
+}
+
+int32_t WatcherManager::RefreshWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
+{
+    WATCHER_LOGV("Refresh watcher %s remoteWatcherId: %u", keyPrefix.c_str(), remoteWatcherId);
+    auto group = GetWatcherGroup(keyPrefix);
+    WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
+    auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
+    WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), remoteWatcherId);
+    SendLocalChange(keyPrefix, remoteWatcher);
     return 0;
 }
 
 int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
 {
     ParamMessage *request = nullptr;
-    request = (ParamMessage *)CreateParamMessage(type, group->GetKeyPrefix().c_str(), sizeof(ParamMessage));
+    std::string key(group->GetKeyPrefix());
+    if (key.rfind("*") == key.length() - 1) {
+        key = key.substr(0, key.length() - 1);
+    }
+    request = (ParamMessage *)CreateParamMessage(type, key.c_str(), sizeof(ParamMessage));
     WATCHER_CHECK(request != NULL, return PARAM_CODE_ERROR, "Failed to malloc for watch");
     request->id.watcherId = group->GetGroupId();
     request->msgSize = sizeof(ParamMessage);
-
-    WATCHER_LOGV("SendMessage %s groupId %d type %d", group->GetKeyPrefix().c_str(), group->GetGroupId(), type);
     int ret = PARAM_CODE_ERROR;
     int fd = GetServerFd(false);
     if (fd != INVALID_SOCKET) {
@@ -124,89 +151,18 @@ int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
     return 0;
 }
 
-void WatcherManager::ProcessWatcherMessage(const std::vector<char> &buffer, uint32_t dataSize)
+void WatcherGroup::ProcessParameterChange(
+    WatcherManager *mananger, const std::string &name, const std::string &value)
 {
-    ParamMessage *msg = (ParamMessage *)buffer.data();
-    WATCHER_CHECK(msg != NULL, return, "Invalid msg");
-    WATCHER_LOGV("ProcessWatcherMessage %d", msg->type);
-    uint32_t offset = 0;
-    if (msg->type != MSG_NOTIFY_PARAM) {
-        return;
-    }
-    WATCHER_CHECK(msg->msgSize <= dataSize, return, "Invalid msg size %d", msg->msgSize);
-    ParamMsgContent *valueContent = GetNextContent((const ParamMessage *)msg, &offset);
-    WATCHER_CHECK(valueContent != NULL, return, "Invalid msg ");
-    WATCHER_LOGV("ProcessWatcherMessage name %s watcherId %u ", msg->key, msg->id.watcherId);
-    WatcherGroupPtr group = GetWatcherGroup(msg->id.watcherId);
-    if (group != nullptr) {
-        std::lock_guard<std::mutex> lock(watcherMutex_);
-        group->ProcessParameterChange(msg->key, valueContent->content);
-    }
-}
-
-WatcherManager::WatcherGroupPtr WatcherManager::GetWatcherGroup(uint32_t groupId)
-{
-    std::lock_guard<std::mutex> lock(watcherMutex_);
-    if (watcherGroups_.find(groupId) != watcherGroups_.end()) {
-        return watcherGroups_[groupId];
-    }
-    return nullptr;
-}
-
-WatcherManager::WatcherGroupPtr WatcherManager::GetWatcherGroup(const std::string &keyPrefix)
-{
-    std::lock_guard<std::mutex> lock(watcherMutex_);
-    if (groupMap_.find(keyPrefix) == groupMap_.end()) {
-        return nullptr;
-    }
-    uint32_t groupId = groupMap_[keyPrefix];
-    if (watcherGroups_.find(groupId) != watcherGroups_.end()) {
-        return watcherGroups_[groupId];
-    }
-    return nullptr;
-}
-
-void WatcherManager::AddParamWatcher(const std::string &keyPrefix, WatcherGroupPtr group, ParamWatcherPtr watcher)
-{
-    WATCHER_LOGV("AddParamWatcher prefix %s watcherId %u", keyPrefix.c_str(), watcher->GetWatcherId());
-    uint32_t groupId = group->GetGroupId();
-    std::lock_guard<std::mutex> lock(watcherMutex_);
-    groupMap_[keyPrefix] = groupId;
-    watchers_[watcher->GetWatcherId()] = watcher;
-    OH_ListAddTail(group->GetWatchers(), watcher->GetGroupNode());
-
-    if (watcherGroups_.find(groupId) != watcherGroups_.end()) {
-        return;
-    }
-    watcherGroups_[groupId] = group;
-}
-
-void WatcherManager::DelParamWatcher(ParamWatcherPtr watcher)
-{
-    std::lock_guard<std::mutex> lock(watcherMutex_);
-    OH_ListRemove(watcher->GetGroupNode());
-    OH_ListInit(watcher->GetGroupNode());
-    watchers_.erase(watcher->GetWatcherId());
-    WATCHER_LOGV("DelParamWatcher watcherId %u", watcher->GetWatcherId());
-}
-
-void WatcherManager::DelWatcherGroup(WatcherGroupPtr group)
-{
-    std::lock_guard<std::mutex> lock(watcherMutex_);
-    groupMap_.erase(group->GetKeyPrefix());
-    watcherGroups_.erase(group->GetGroupId());
-}
-
-void WatcherManager::WatcherGroup::ProcessParameterChange(const std::string &name, const std::string &value)
-{
+    WATCHER_LOGV("ProcessParameterChange key '%s' '%s'", GetKeyPrefix().c_str(), name.c_str());
     // walk watcher
-    ListNode *node = nullptr;
-    ForEachListEntry(&watchers_, node) {
-        if (node != nullptr) {
-            ParamWatcher *watcher = (ParamWatcher *)node;
-            watcher->ProcessParameterChange(name, value);
+    TraversalNode([this, mananger, name, value](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+        auto remoteWatcher = mananger->GetRemoteWatcher(node->GetNodeId());
+        if (remoteWatcher == nullptr) {
+            return;
         }
-    }
+        remoteWatcher->ProcessParameterChange(GetKeyPrefix(), name, value);
+    });
 }
 
 static int FilterParam(const char *name, const std::string &keyPrefix)
@@ -214,19 +170,42 @@ static int FilterParam(const char *name, const std::string &keyPrefix)
     if (keyPrefix.rfind("*") == keyPrefix.length() - 1) {
         return strncmp(name, keyPrefix.c_str(), keyPrefix.length() - 1) == 0;
     }
+    if (keyPrefix.rfind(".") == keyPrefix.length() - 1) {
+        return strncmp(name, keyPrefix.c_str(), keyPrefix.length() - 1) == 0;
+    }
     return strcmp(name, keyPrefix.c_str()) == 0;
 }
 
-void WatcherManager::SendLocalChange(const std::string &keyPrefix, ParamWatcherPtr watcher)
+void WatcherManager::ProcessWatcherMessage(const ParamMessage *msg)
+{
+    uint32_t offset = 0;
+    if (msg->type != MSG_NOTIFY_PARAM) {
+        return;
+    }
+    ParamMsgContent *valueContent = GetNextContent(msg, &offset);
+    WATCHER_CHECK(valueContent != NULL, return, "Invalid msg ");
+    WATCHER_LOGV("Process watcher message name '%s' group id %u ", msg->key, msg->id.watcherId);
+    {
+        std::lock_guard<std::mutex> lock(watcherMutex_);
+        WatcherGroupPtr group = GetWatcherGroup(msg->id.watcherId);
+        WATCHER_CHECK(group != NULL, return, "Can not find group for %u %s", msg->id.watcherId, msg->key);
+        if (!FilterParam(msg->key, group->GetKeyPrefix())) {
+            WATCHER_LOGV("Invalid message name '%s' group '%s' ", msg->key, group->GetKeyPrefix().c_str());
+            return;
+        }
+        group->ProcessParameterChange(this, msg->key, valueContent->content);
+    }
+}
+
+void WatcherManager::SendLocalChange(const std::string &keyPrefix, RemoteWatcherPtr &remoteWatcher)
 {
     struct Context {
         char *buffer;
-        ParamWatcherPtr watcher;
+        RemoteWatcherPtr remoteWatcher;
         std::string keyPrefix;
     };
-    WATCHER_LOGV("SendLocalChange key %s  ", keyPrefix.c_str());
     std::vector<char> buffer(PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX);
-    struct Context context = {buffer.data(), watcher, keyPrefix};
+    struct Context context = {buffer.data(), remoteWatcher, keyPrefix};
     // walk watcher
     SystemTraversalParameter("", [](ParamHandle handle, void *cookie) {
             struct Context *context = (struct Context *)(cookie);
@@ -236,8 +215,8 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, ParamWatcherP
             }
             uint32_t size = PARAM_CONST_VALUE_LEN_MAX;
             SystemGetParameterValue(handle, context->buffer + PARAM_NAME_LEN_MAX, &size);
-            WATCHER_LOGV("SendLocalChange key %s value: %s ", context->buffer, context->buffer + PARAM_NAME_LEN_MAX);
-            context->watcher->ProcessParameterChange(context->buffer, context->buffer + PARAM_NAME_LEN_MAX);
+            context->remoteWatcher->ProcessParameterChange(
+                context->keyPrefix, context->buffer, context->buffer + PARAM_NAME_LEN_MAX);
         }, reinterpret_cast<void *>(&context));
 }
 
@@ -261,8 +240,20 @@ void WatcherManager::RunLoop()
             }
             PARAM_LOGE("Failed to recv msg from server errno %d", errno);
             retry = true;  // re connect
-        } else if (recvLen >= (ssize_t)sizeof(ParamMessage)) {
-            ProcessWatcherMessage(buffer, recvLen);
+            continue;
+        }
+        uint32_t curr = 0;
+        uint32_t dataLen = static_cast<uint32_t>(recvLen);
+        while (curr < dataLen) {
+            if ((curr + sizeof(ParamMessage)) >= dataLen) {
+                break;
+            }
+            ParamMessage *msg = (ParamMessage *)(buffer.data() + curr);
+            if ((msg->msgSize > dataLen) || ((curr + msg->msgSize) > dataLen)) {
+                break;
+            }
+            ProcessWatcherMessage(msg);
+            curr += msg->msgSize;
         }
     }
     if (serverFd_ > 0) {
@@ -297,7 +288,8 @@ int WatcherManager::GetServerFd(bool retry)
         serverFd_ = socket(PF_UNIX, SOCK_STREAM, 0);
         int flags = fcntl(serverFd_, F_GETFL, 0);
         (void)fcntl(serverFd_, F_SETFL, flags & ~O_NONBLOCK);
-        if (ConnectServer(serverFd_, CLIENT_PIPE_NAME) == 0) {
+        int ret = ConnectServer(serverFd_, CLIENT_PIPE_NAME);
+        if (ret == 0) {
             break;
         }
         close(serverFd_);
@@ -311,7 +303,7 @@ int WatcherManager::GetServerFd(bool retry)
 
 void WatcherManager::OnStart()
 {
-    WATCHER_LOGI("WatcherManager OnStart");
+    WATCHER_LOGI("Watcher manager OnStart");
     bool res = Publish(this);
     if (!res) {
         WATCHER_LOGE("WatcherManager Publish failed");
@@ -325,7 +317,7 @@ void WatcherManager::OnStart()
 
 void WatcherManager::StopLoop()
 {
-    WATCHER_LOGV("WatcherManager StopLoop serverFd_ %d", serverFd_);
+    WATCHER_LOGI("Watcher manager StopLoop serverFd_ %d", serverFd_);
     stop_ = true;
     if (serverFd_ > 0) {
         shutdown(serverFd_, SHUT_RDWR);
@@ -341,82 +333,81 @@ void WatcherManager::StopLoop()
 
 void WatcherManager::OnStop()
 {
-    {
+    if (remoteWatchers_ != nullptr) {
         std::lock_guard<std::mutex> lock(watcherMutex_);
-        for (auto iter = watchers_.begin(); iter != watchers_.end(); ++iter) {
-            if (iter->second == nullptr) {
-                continue;
-            }
-            sptr<IRemoteObject> object = iter->second->GetRemoteWatcher()->AsObject();
-            if (object != nullptr) {
-                object->RemoveDeathRecipient(deathRecipient_);
-            }
-        }
+        remoteWatchers_->TraversalNodeSafe([this](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+            RemoteWatcherPtr remoteWatcher = ConvertTo<RemoteWatcher>(node);
+            OnRemoteDied(remoteWatcher);
+        });
     }
-    watchers_.clear();
-    watcherGroups_.clear();
-    groupMap_.clear();
+    Clear();
     StopLoop();
 }
 
-void WatcherManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
+void WatcherManager::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
     WATCHER_CHECK(remote != nullptr, return, "Invalid remote obj");
-    auto paramWatcher = manager_->GetWatcher(remote);
-    WATCHER_CHECK(paramWatcher != nullptr, return, "Failed to get remote watcher info ");
-    WATCHER_LOGV("OnRemoteDied watcherId %u", paramWatcher->GetWatcherId());
-    manager_->DelWatcher(paramWatcher->GetWatcherGroup(), paramWatcher);
-}
-
-WatcherManager::ParamWatcherPtr WatcherManager::GetWatcher(uint32_t watcherId)
-{
-    std::lock_guard<std::mutex> lock(watcherMutex_);
-    auto iter = watchers_.find(watcherId);
-    if (iter != watchers_.end()) {
-        return iter->second;
+    auto remoteWatcher = GetRemoteWatcher(remote);
+    WATCHER_CHECK(remoteWatcher != nullptr, return, "Failed to get remote watcher info ");
+    {
+        std::lock_guard<std::mutex> lock(watcherMutex_);
+        OnRemoteDied(remoteWatcher);
     }
-    return nullptr;
 }
 
-WatcherManager::ParamWatcherPtr WatcherManager::GetWatcher(const wptr<IRemoteObject> &remote)
+void WatcherManager::OnRemoteDied(RemoteWatcherPtr remoteWatcher)
+{
+    WATCHER_CHECK(remoteWatcher != nullptr, return, "Invalid remote obj");
+    WATCHER_LOGI("Agent died %u %u", remoteWatcher->GetRemoteWatcherId(), remoteWatcher->GetAgentId());
+    remoteWatcher->TraversalNodeSafe(
+        [this, remoteWatcher](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+            auto group = GetWatcherGroup(node->GetNodeId());
+            if (group == nullptr) {
+                return;
+            }
+            // delete node from group and remote
+            DelParamWatcher(group, remoteWatcher);
+            if (group->Empty()) { // no watcher, so delete it
+                SendMessage(group, MSG_DEL_WATCHER);
+                DelWatcherGroup(group);
+            }
+        });
+    DelRemoteWatcher(remoteWatcher);
+}
+
+RemoteWatcherPtr WatcherManager::GetRemoteWatcher(const wptr<IRemoteObject> &remote)
 {
     std::lock_guard<std::mutex> lock(watcherMutex_);
-    for (auto iter = watchers_.begin(); iter != watchers_.end(); ++iter) {
-        if (iter->second == nullptr) {
+    WatcherNodePtr node = remoteWatchers_->GetNextNode(nullptr);
+    while (node != nullptr) {
+        RemoteWatcherPtr remoteWatcher = ConvertTo<RemoteWatcher>(node);
+        if (remoteWatcher == nullptr) {
             continue;
         }
-        if (remote == iter->second->GetRemoteWatcher()->AsObject()) {
-            return iter->second;
+        if (remote == remoteWatcher->GetWatcher()->AsObject()) {
+            return remoteWatcher;
         }
+        node = remoteWatchers_->GetNextNode(node);
     }
     return nullptr;
 }
 
-int WatcherManager::GetWatcherId(uint32_t &watcherId)
+int WatcherManager::GetRemoteWatcherId(uint32_t &remoteWatcherId)
 {
-    std::lock_guard<std::mutex> lock(watcherMutex_);
-    watcherId = watcherId_;
-    do {
-        watcherId_++;
-        if (watcherId_ == 0) {
-            watcherId_++;
-        }
-        if (watchers_.find(watcherId_) == watchers_.end()) {
-            break;
-        }
-        WATCHER_CHECK(watcherId_ != watcherId, return -1, "No enough watcherId %u", watcherId);
-    } while (1);
-    watcherId = watcherId_;
+    remoteWatcherId_++;
+    if (remoteWatcherId_ == 0) {
+        remoteWatcherId_++;
+    }
+    remoteWatcherId = remoteWatcherId_;
     return 0;
 }
 
 int WatcherManager::GetGroupId(uint32_t &groupId)
 {
-    std::lock_guard<std::mutex> lock(watcherMutex_);
     groupId = groupId_;
     do {
         groupId_++;
-        if (watcherGroups_.find(groupId_) == watcherGroups_.end()) {
+        if (watcherGroups_->GetNode(groupId_) == nullptr) {
             break;
         }
         WATCHER_CHECK(groupId_ == groupId, return -1, "No enough groupId %u", groupId);
@@ -425,57 +416,35 @@ int WatcherManager::GetGroupId(uint32_t &groupId)
     return 0;
 }
 
-int32_t WatcherManager::RefreshWatcher(const std::string &keyPrefix, uint32_t watcherId)
+void WatcherManager::DumpAllGroup(int fd, ParamWatcherProcessor dumpHandle)
 {
-    WATCHER_LOGV("RefreshWatcher %s watcherId: %u", keyPrefix.c_str(), watcherId);
-    auto group = GetWatcherGroup(keyPrefix);
-    WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
-    auto paramWatcher = GetWatcher(watcherId);
-    WATCHER_CHECK(paramWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), watcherId);
-    SendLocalChange(keyPrefix, paramWatcher);
-    return 0;
-}
-
-WatcherManager::ParamWatcher *WatcherManager::WatcherGroup::GetNextWatcher(WatcherManager::ParamWatcher *watcher)
-{
-    if (watcher == nullptr) {
-        if (ListEmpty(watchers_)) {
-            return nullptr;
+    // all output
+    uint32_t count = 0;
+    std::lock_guard<std::mutex> lock(watcherMutex_);
+    for (auto it = groupMap_.begin(); it != groupMap_.end(); ++it) {
+        auto group = it->second;
+        if (group == nullptr) {
+            continue;
         }
-        return reinterpret_cast<WatcherManager::ParamWatcher *>(GetWatchers()->next);
+        dprintf(fd, "Watch prefix   : %s \n", group->GetKeyPrefix().c_str());
+        dprintf(fd, "Watch group id : %u \n", group->GetGroupId());
+        dprintf(fd, "Watch count    : %zu \n", group->GetNodeCount());
+        group->TraversalNode(dumpHandle);
+        count += group->GetNodeCount();
+        dprintf(fd, "\n");
     }
-    if (watcher->GetGroupNode() == nullptr) {
-        return nullptr;
-    }
-    if (watcher->GetGroupNode()->next != GetWatchers()) {
-        return reinterpret_cast<WatcherManager::ParamWatcher *>(watcher->GetGroupNode()->next);
-    }
-    return nullptr;
-}
 
-void WatcherManager::DumpWatcherGroup(int fd, const WatcherManager::WatcherGroupPtr &watchGroup)
-{
-    dprintf(fd, "Watch prefix   : %s \n", watchGroup->GetKeyPrefix().c_str());
-    dprintf(fd, "Watch group id : %d \n", watchGroup->GetGroupId());
-
-    // watcher id
-    WatcherManager::ParamWatcher *watcher = watchGroup->GetNextWatcher(nullptr);
-    if (watcher != nullptr) {
-        dprintf(fd, "Watch id list  : %d", watcher->GetWatcherId());
-    } else {
-        return;
-    }
-    watcher = watchGroup->GetNextWatcher(watcher);
-    while (watcher != nullptr) {
-        dprintf(fd, ", %d", watcher->GetWatcherId());
-        watcher = watchGroup->GetNextWatcher(watcher);
-    }
-    dprintf(fd, "\n");
+    dprintf(fd, "Watch prefix count : %zu [%zu  %zu  %zu]\n", watcherGroups_->GetNodeCount(),
+        sizeof(RemoteWatcher), sizeof(WatcherGroup), sizeof(WatcherNode));
+    dprintf(fd, "Watch agent  count : %zu \n", remoteWatchers_->GetNodeCount());
+    dprintf(fd, "Watch count        : %zu \n", count);
 }
 
 int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)
 {
     WATCHER_CHECK(fd >= 0, return -1, "Invalid fd for dump %d", fd);
+    WATCHER_CHECK(remoteWatchers_ != 0, return -1, "Invalid remote watcher");
+    WATCHER_CHECK(watcherGroups_ != 0, return -1, "Invalid watcher group");
     std::vector<std::string> params;
     for (auto& arg : args) {
         params.emplace_back(Str16ToStr8(arg));
@@ -490,24 +459,281 @@ int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)
         dprintf(fd, "%s\n", dumpInfo.c_str());
         return 0;
     }
+    auto DumpParamWatcher = [this, fd](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+        auto remoteWatcher = GetRemoteWatcher(node->GetNodeId());
+        if (remoteWatcher != nullptr) {
+            dprintf(fd, "%s%u(%u)", (index == 0) ? "Watch id list  : " : ", ",
+                node->GetNodeId(), remoteWatcher->GetAgentId());
+        } else {
+            dprintf(fd, "%s%u", (index == 0) ? "Watch id list  : " : ", ", node->GetNodeId());
+        }
+    };
+
     if (params.size() > 1 && params[0] == "-k") {
         auto group = GetWatcherGroup(params[1]);
         if (group == NULL) {
             dprintf(fd, "Prefix %s not found in watcher list\n", params[1].c_str());
             return 0;
         }
-        DumpWatcherGroup(fd, group);
+        {
+            std::lock_guard<std::mutex> lock(watcherMutex_);
+            group->TraversalNode(DumpParamWatcher);
+        }
         return 0;
     }
-    // all output
+    DumpAllGroup(fd, DumpParamWatcher);
+    return 0;
+}
+
+void WatcherManager::Clear(void)
+{
     std::lock_guard<std::mutex> lock(watcherMutex_);
-    // dump all watcher
-    for (auto it = groupMap_.begin(); it != groupMap_.end(); it++) {
-        if (watcherGroups_.find(it->second) != watcherGroups_.end()) {
-            DumpWatcherGroup(fd, watcherGroups_[it->second]);
-        }
+    remoteWatchers_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+        list->RemoveNode(node);
+        auto group = ConvertTo<WatcherGroup>(node);
+        delete group;
+    });
+    watcherGroups_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+        list->RemoveNode(node);
+        auto remoteWatcher = ConvertTo<RemoteWatcher>(node);
+        delete remoteWatcher;
+    });
+    delete remoteWatchers_;
+    remoteWatchers_ = nullptr;
+    delete watcherGroups_;
+    watcherGroups_ = nullptr;
+}
+
+int WatcherManager::AddRemoteWatcher(RemoteWatcherPtr remoteWatcher)
+{
+    if (remoteWatchers_ == nullptr) {
+        remoteWatchers_ = new ParamWatcherList();
+        WATCHER_CHECK(remoteWatchers_ != nullptr, return -1, "Failed to create watcher");
+    }
+    return remoteWatchers_->AddNode(ConvertTo<WatcherNode>(remoteWatcher));
+}
+
+RemoteWatcherPtr WatcherManager::GetRemoteWatcher(uint32_t remoteWatcherId)
+{
+    WATCHER_CHECK(remoteWatchers_ != nullptr, return nullptr, "Invalid remote watcher");
+    WatcherNodePtr node = remoteWatchers_->GetNode(remoteWatcherId);
+    if (node == nullptr) {
+        return nullptr;
+    }
+    return ConvertTo<RemoteWatcher>(node);
+}
+
+void WatcherManager::DelRemoteWatcher(RemoteWatcherPtr remoteWatcher)
+{
+    WATCHER_CHECK(remoteWatchers_ != nullptr, return, "Invalid remote watcher");
+    remoteWatchers_->RemoveNode(ConvertTo<WatcherNode>(remoteWatcher));
+    delete remoteWatcher;
+}
+
+int WatcherManager::AddParamWatcher(WatcherGroupPtr group, RemoteWatcherPtr remoteWatcher)
+{
+    WatcherNodePtr nodeGroup = new ParamWatcher(group->GetGroupId());
+    WATCHER_CHECK(nodeGroup != nullptr, return -1, "Failed to create watcher node for group");
+    WatcherNodePtr nodeRemote = new ParamWatcher(remoteWatcher->GetRemoteWatcherId());
+    WATCHER_CHECK(nodeRemote != nullptr, delete nodeGroup;
+        return -1, "Failed to create watcher node for remote watcher");
+    group->AddNode(nodeRemote);
+    remoteWatcher->AddNode(nodeGroup);
+    return 0;
+}
+
+int WatcherManager::DelParamWatcher(WatcherGroupPtr group, RemoteWatcherPtr remoteWatcher)
+{
+    WATCHER_LOGI("Delete param watcher remoteWatcherId %u group %u",
+        remoteWatcher->GetRemoteWatcherId(), group->GetGroupId());
+    WatcherNodePtr node = group->GetNode(remoteWatcher->GetRemoteWatcherId());
+    if (node != nullptr) {
+        group->RemoveNode(node);
+        delete node;
+    }
+    node = remoteWatcher->GetNode(group->GetGroupId());
+    if (node != nullptr) {
+        remoteWatcher->RemoveNode(node);
+        delete node;
     }
     return 0;
+}
+
+WatcherGroupPtr WatcherManager::AddWatcherGroup(const std::string &keyPrefix)
+{
+    std::lock_guard<std::mutex> lock(watcherMutex_);
+    if (watcherGroups_ == nullptr) {
+        watcherGroups_ = new ParamWatcherList();
+        WATCHER_CHECK(watcherGroups_ != nullptr, return nullptr, "Failed to create watcher");
+    }
+    // get group
+    auto it = groupMap_.find(keyPrefix);
+    if (it != groupMap_.end()) {
+        return it->second;
+    }
+    // create group
+    uint32_t groupId = 0;
+    int ret = GetGroupId(groupId);
+    WATCHER_CHECK(ret == 0, return nullptr, "Failed to get group id for %s", keyPrefix.c_str());
+    WatcherGroupPtr group = new WatcherGroup(groupId, keyPrefix);
+    WATCHER_CHECK(group != nullptr, return nullptr, "Failed to create group for %s", keyPrefix.c_str());
+    watcherGroups_->AddNode(ConvertTo<WatcherNode>(group));
+    groupMap_[keyPrefix] = group;
+    return group;
+}
+
+WatcherGroupPtr WatcherManager::GetWatcherGroup(uint32_t groupId)
+{
+    WATCHER_CHECK(watcherGroups_ != nullptr, return nullptr, "Invalid watcher groups");
+    WatcherNodePtr node = watcherGroups_->GetNode(groupId);
+    if (node == nullptr) {
+        return nullptr;
+    }
+    return ConvertTo<WatcherGroup>(node);
+}
+
+WatcherGroupPtr WatcherManager::GetWatcherGroup(const std::string &keyPrefix)
+{
+    std::lock_guard<std::mutex> lock(watcherMutex_);
+    // get group
+    auto it = groupMap_.find(keyPrefix);
+    if (it != groupMap_.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
+void WatcherManager::DelWatcherGroup(WatcherGroupPtr group)
+{
+    WATCHER_CHECK(watcherGroups_ != nullptr, return, "Invalid watcher groups");
+    WATCHER_LOGI("Delete watcher group %s %u", group->GetKeyPrefix().c_str(), group->GetGroupId());
+    watcherGroups_->RemoveNode(ConvertTo<WatcherNode>(group));
+    auto it = groupMap_.find(group->GetKeyPrefix());
+    if (it != groupMap_.end()) {
+        groupMap_.erase(it);
+    }
+    delete group;
+}
+
+int ParamWatcherList::AddNode(WatcherNodePtr node)
+{
+    WATCHER_CHECK(node, return -1, "Invalid input node");
+    node->AddToList(&nodeList_);
+    nodeCount_++;
+    return 0;
+}
+
+int ParamWatcherList::RemoveNode(WatcherNodePtr node)
+{
+    WATCHER_CHECK(node, return -1, "Invalid input node");
+    node->RemoveFromList(&nodeList_);
+    nodeCount_--;
+    return 0;
+}
+
+WatcherNodePtr ParamWatcherList::GetNode(uint32_t nodeId)
+{
+    return WatcherNode::GetFromList(&nodeList_, nodeId);
+}
+
+WatcherNodePtr ParamWatcherList::GetNextNodeSafe(WatcherNodePtr node)
+{
+    if (node == nullptr) { // get first
+        return WatcherNode::GetNextFromList(&nodeList_, 0);
+    }
+    return WatcherNode::GetNextFromList(&nodeList_, node->GetNodeId());
+}
+
+WatcherNodePtr ParamWatcherList::GetNextNode(WatcherNodePtr node)
+{
+    if (node == nullptr) { // get first
+        return WatcherNode::GetNextFromList(&nodeList_, 0);
+    }
+    return node->GetNext(&nodeList_);
+}
+
+void ParamWatcherList::TraversalNode(ParamWatcherProcessor handle)
+{
+    uint32_t index = 0;
+    // get first
+    WatcherNodePtr node = WatcherNode::GetNextFromList(&nodeList_, 0);
+    while (node != NULL) {
+        WatcherNodePtr next = node->GetNext(&nodeList_);
+        handle(this, node, index);
+        node = next;
+        index++;
+    }
+}
+
+void ParamWatcherList::TraversalNodeSafe(ParamWatcherProcessor processor)
+{
+    uint32_t index = 0;
+    // get first
+    WatcherNodePtr node = WatcherNode::GetNextFromList(&nodeList_, 0);
+    while (node != NULL) {
+        uint32_t nodeId = node->GetNodeId();
+        // notify free, must be free
+        processor(this, node, index);
+        node = WatcherNode::GetNextFromList(&nodeList_, nodeId);
+        index++;
+    }
+}
+
+void WatcherNode::AddToList(ListHead *list)
+{
+    OH_ListAddWithOrder(list, &node_, CompareNode);
+}
+
+void WatcherNode::RemoveFromList(ListHead *list)
+{
+    OH_ListRemove(&node_);
+}
+
+WatcherNodePtr WatcherNode::GetFromList(ListHead *list, uint32_t nodeId)
+{
+    ListNodePtr node = OH_ListFind(list, &nodeId, CompareData);
+    if (node == nullptr) {
+        return nullptr;
+    }
+    return WatcherNode::ConvertNodeToBase(node);
+}
+
+WatcherNodePtr WatcherNode::GetNextFromList(ListHead *list, uint32_t nodeId)
+{
+    ListNodePtr node = OH_ListFind(list, &nodeId, Greater);
+    if (node == nullptr) {
+        return nullptr;
+    }
+    return WatcherNode::ConvertNodeToBase(node);
+}
+
+WatcherNodePtr WatcherNode::GetNext(ListHead *list)
+{
+    if (node_.next == list) {
+        return nullptr;
+    }
+    return WatcherNode::ConvertNodeToBase(node_.next);
+}
+
+int WatcherNode::CompareNode(ListNodePtr node, ListNodePtr newNode)
+{
+    WatcherNodePtr watcher = WatcherNode::ConvertNodeToBase(node);
+    WatcherNodePtr newWatcher = WatcherNode::ConvertNodeToBase(node);
+    return watcher->nodeId_ - newWatcher->nodeId_;
+}
+
+int WatcherNode::CompareData(ListNodePtr node, void *data)
+{
+    WatcherNodePtr watcher =  WatcherNode::ConvertNodeToBase(node);
+    uint32_t id = *(uint32_t *)data;
+    return watcher->nodeId_ - id;
+}
+
+int WatcherNode::Greater(ListNodePtr node, void *data)
+{
+    WatcherNodePtr watcher =  WatcherNode::ConvertNodeToBase(node);
+    uint32_t id = *(uint32_t *)data;
+    return (watcher->nodeId_ > id) ? 0 : 1;
 }
 } // namespace init_param
 } // namespace OHOS

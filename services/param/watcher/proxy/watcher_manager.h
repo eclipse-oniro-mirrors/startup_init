@@ -27,13 +27,27 @@
 #include "message_parcel.h"
 #include "param_utils.h"
 #include "parcel.h"
+#include "param_message.h"
 #include "system_ability.h"
 #include "watcher_manager_stub.h"
 
 namespace OHOS {
 namespace init_param {
+class WatcherNode;
+class ParamWatcherList;
+class WatcherGroup;
+class RemoteWatcher;
+using WatcherGroupPtr = WatcherGroup *;
+using RemoteWatcherPtr = RemoteWatcher *;
+using WatcherNodePtr = WatcherNode *;
+using ListNodePtr = ListNode *;
+using ListHeadPtr = ListHead *;
+using ParamWatcherListPtr = ParamWatcherList *;
+using ParamWatcherProcessor = std::function<void(ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index)>;
+
 class WatcherManager : public SystemAbility, public WatcherManagerStub {
 public:
+    friend class WatcherGroup;
     DECLARE_SYSTEM_ABILITY(WatcherManager);
     DISALLOW_COPY_AND_MOVE(WatcherManager);
     explicit WatcherManager(int32_t systemAbilityId, bool runOnCreate = true)
@@ -42,104 +56,28 @@ public:
     }
     ~WatcherManager() override;
 
-    class ParamWatcher;
-    class WatcherGroup;
-    using ParamWatcherPtr = std::shared_ptr<WatcherManager::ParamWatcher>;
-    using WatcherGroupPtr = std::shared_ptr<WatcherManager::WatcherGroup>;
-
     // For death event procession
     class DeathRecipient final : public IRemoteObject::DeathRecipient {
     public:
         explicit DeathRecipient(WatcherManager *manager) : manager_(manager) {}
         ~DeathRecipient() final = default;
         DISALLOW_COPY_AND_MOVE(DeathRecipient);
-        void OnRemoteDied(const wptr<IRemoteObject> &remote) final;
+        void OnRemoteDied(const wptr<IRemoteObject> &remote) final
+        {
+            manager_->OnRemoteDied(remote);
+        }
     private:
         WatcherManager *manager_;
     };
-    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient()
+    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient(void)
     {
         return deathRecipient_;
     }
-
-    class ParamWatcher {
-    public:
-        ParamWatcher(uint32_t watcherId, const sptr<IWatcher> &watcher, const WatcherGroupPtr &group)
-            : watcherId_(watcherId), watcher_(watcher), group_(group)
-        {
-            OH_ListInit(&groupNode_);
-        }
-        ~ParamWatcher() = default;
-
-        uint32_t GetWatcherId() const
-        {
-            return watcherId_;
-        }
-        WatcherGroupPtr GetWatcherGroup()
-        {
-            return group_;
-        }
-        ListNode *GetGroupNode()
-        {
-            return &groupNode_;
-        }
-        sptr<IWatcher> GetRemoteWatcher() const
-        {
-            return watcher_;
-        }
-        void ProcessParameterChange(const std::string &name, const std::string &value)
-        {
-#ifndef STARTUP_INIT_TEST
-            watcher_->OnParameterChange(name, value);
-#endif
-        }
-    private:
-        ListNode groupNode_;
-        uint32_t watcherId_ = { 0 };
-        sptr<IWatcher> watcher_;
-        WatcherGroupPtr group_ { nullptr };
-    };
-
-    class WatcherGroup {
-    public:
-        WatcherGroup(uint32_t groupId, const std::string &key) : groupId_(groupId), keyPrefix_(key)
-        {
-            OH_ListInit(&watchers_);
-        }
-        ~WatcherGroup() = default;
-        void AddWatcher(const ParamWatcherPtr &watcher);
-        void ProcessParameterChange(const std::string &name, const std::string &value);
-
-        const std::string GetKeyPrefix() const
-        {
-            return keyPrefix_;
-        }
-        bool Empty() const
-        {
-            return ListEmpty(watchers_);
-        }
-        uint32_t GetGroupId() const
-        {
-            return groupId_;
-        }
-        ListNode *GetWatchers()
-        {
-            return &watchers_;
-        }
-        ParamWatcher *GetNextWatcher(ParamWatcher *watcher);
-    private:
-        uint32_t groupId_;
-        std::string keyPrefix_ { };
-        ListNode watchers_;
-    };
-
-    uint32_t AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher) override;
-    int32_t DelWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
-    int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
-    int32_t DelWatcher(WatcherGroupPtr group, ParamWatcherPtr watcher);
-    ParamWatcherPtr GetWatcher(uint32_t watcherId);
-    ParamWatcherPtr GetWatcher(const wptr<IRemoteObject> &remote);
-
+    uint32_t AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher) override;
+    int32_t DelRemoteWatcher(uint32_t remoteWatcherId) override;
+    int32_t AddWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
+    int32_t DelWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
+    int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
 #ifndef STARTUP_INIT_TEST
 protected:
 #endif
@@ -149,33 +87,169 @@ protected:
 #ifndef STARTUP_INIT_TEST
 private:
 #endif
-    void ProcessWatcherMessage(const std::vector<char> &buffer, uint32_t dataSize);
-    WatcherGroupPtr GetWatcherGroup(uint32_t groupId);
-    WatcherGroupPtr GetWatcherGroup(const std::string &keyPrefix);
-    void DelWatcherGroup(WatcherGroupPtr group);
-    void AddParamWatcher(const std::string &keyPrefix, WatcherGroupPtr group, ParamWatcherPtr watcher);
-    void DelParamWatcher(ParamWatcherPtr watcher);
     void RunLoop();
     void StartLoop();
     void StopLoop();
-    void SendLocalChange(const std::string &keyPrefix, ParamWatcherPtr watcher);
+    void SendLocalChange(const std::string &keyPrefix, RemoteWatcherPtr &remoteWatcher);
     int SendMessage(WatcherGroupPtr group, int type);
     int GetServerFd(bool retry);
-    int GetWatcherId(uint32_t &watcherId);
+    int GetRemoteWatcherId(uint32_t &remoteWatcherId);
     int GetGroupId(uint32_t &groupId);
-    void DumpWatcherGroup(int fd, const WatcherGroupPtr &group);
+    // for remote watcher
+    int AddRemoteWatcher(RemoteWatcherPtr remoteWatcher);
+    RemoteWatcherPtr GetRemoteWatcher(uint32_t remoteWatcherId);
+    RemoteWatcherPtr GetRemoteWatcher(const wptr<IRemoteObject> &remote);
+    void DelRemoteWatcher(RemoteWatcherPtr remoteWatcher);
+    // for group
+    WatcherGroupPtr AddWatcherGroup(const std::string &keyPrefix);
+    WatcherGroupPtr GetWatcherGroup(const std::string &keyPrefix);
+    WatcherGroupPtr GetWatcherGroup(uint32_t groupId);
+    void DelWatcherGroup(WatcherGroupPtr group);
+    // for param watcher
+    int AddParamWatcher(WatcherGroupPtr group, RemoteWatcherPtr remoteWatcher);
+    int DelParamWatcher(WatcherGroupPtr group, RemoteWatcherPtr remoteWatcher);
+    // for process message form init
+    void ProcessWatcherMessage(const ParamMessage *msg);
+    // for client died
+    void OnRemoteDied(const wptr<IRemoteObject> &remote);
+    void OnRemoteDied(RemoteWatcherPtr remoteWatcher);
+    // clear
+    void Clear(void);
+    // dump
+    void DumpAllGroup(int fd, ParamWatcherProcessor dumpHandle);
 private:
-    std::atomic<uint32_t> watcherId_ { 0 };
+    std::atomic<uint32_t> remoteWatcherId_ { 0 };
     std::atomic<uint32_t> groupId_ { 0 };
     std::mutex mutex_;
     std::mutex watcherMutex_;
     int serverFd_ { -1 };
     std::thread *pRecvThread_ { nullptr };
     std::atomic<bool> stop_ { false };
-    std::map<std::string, uint32_t> groupMap_ {};
-    std::map<uint32_t, WatcherGroupPtr> watcherGroups_ {};
-    std::map<uint32_t, ParamWatcherPtr> watchers_ {};
+    std::map<std::string, WatcherGroupPtr> groupMap_ {};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
+    ParamWatcherListPtr watcherGroups_ {};
+    ParamWatcherListPtr remoteWatchers_ {};
+};
+
+class WatcherNode {
+public:
+    WatcherNode(uint32_t nodeId) : nodeId_(nodeId)
+    {
+        OH_ListInit(&node_);
+    }
+    virtual ~WatcherNode(void) = default;
+    uint32_t GetNodeId(void) const { return nodeId_; }
+
+    void AddToList(ListHeadPtr list);
+    void RemoveFromList(ListHeadPtr list);
+    WatcherNodePtr GetNext(ListHeadPtr list);
+    static WatcherNodePtr GetFromList(ListHeadPtr list, uint32_t nodeId);
+    static WatcherNodePtr GetNextFromList(ListHeadPtr list, uint32_t nodeId);
+    static WatcherNodePtr ConvertNodeToBase(ListNodePtr node) {
+        WatcherNodePtr tmp = NULL;
+        return reinterpret_cast<WatcherNodePtr >((char *)node - (char *)tmp->GetListNode());
+    }
+    ListNodePtr GetListNode() { return &node_; }
+private:
+    static int CompareNode(ListNodePtr node, ListNodePtr newNode);
+    static int CompareData(ListNodePtr node, void *data);
+    static int Greater(ListNodePtr node, void *data);
+    ListNode node_;
+    uint32_t nodeId_;
+};
+
+template<typename T>
+inline T *ConvertTo(WatcherNodePtr node)
+{
+#ifdef PARAM_WATCHER_RTTI_ENABLE
+    // when -frtti is enabled, we use dynamic cast directly
+    // to achieve the correct base class side-to-side conversion.
+    T *obj = dynamic_cast<T *>(node);
+#else
+    // adjust pointer position when multiple inheritance.
+    void *tmp = reinterpret_cast<void *>(node);
+    // when -frtti is not enable, we use static cast.
+    // static cast is not safe enough, but we have checked before we get here.
+    T *obj = static_cast<T *>(tmp);
+#endif
+    return obj;
+}
+
+class ParamWatcher : public WatcherNode {
+public:
+    ParamWatcher(uint32_t watcherId) : WatcherNode(watcherId) {}
+    ~ParamWatcher(void) override  {}
+};
+
+class ParamWatcherList {
+public:
+    ParamWatcherList(void)
+    {
+        OH_ListInit(&nodeList_);
+    }
+    ~ParamWatcherList(void) = default;
+
+    bool Empty(void) const
+    {
+        return nodeList_.next == &nodeList_;
+    }
+    uint32_t GetNodeCount(void) const { return nodeCount_; }
+    int AddNode(WatcherNodePtr node);
+    int RemoveNode(WatcherNodePtr node);
+    WatcherNodePtr GetNode(uint32_t nodeId);
+    WatcherNodePtr GetNextNodeSafe(WatcherNodePtr node);
+    WatcherNodePtr GetNextNode(WatcherNodePtr node);
+    void TraversalNode(ParamWatcherProcessor handle);
+    void TraversalNodeSafe(ParamWatcherProcessor processor);
+public:
+    ListHead nodeList_ {};
+    uint32_t nodeCount_ = 0;
+};
+
+class RemoteWatcher : public WatcherNode, public ParamWatcherList {
+public:
+    RemoteWatcher(uint32_t watcherId, const sptr<IWatcher> &watcher)
+    : WatcherNode(watcherId), ParamWatcherList(), watcher_(watcher) {}
+    ~RemoteWatcher(void) override
+    {
+        watcher_ = nullptr;
+        TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+            list->RemoveNode(node);
+            ParamWatcher *watcher = ConvertTo<ParamWatcher>(node);
+            delete watcher;
+        });
+    }
+
+    uint32_t GetRemoteWatcherId(void) const { return GetNodeId(); }
+    uint32_t GetAgentId(void) const { return id_; }
+    void SetAgentId(uint32_t id) { id_ = id; }
+    void ProcessParameterChange(const std::string &prefix, const std::string &name, const std::string &value)
+    {
+        watcher_->OnParameterChange(prefix, name, value);
+    }
+    sptr<IWatcher> GetWatcher(void) { return watcher_; }
+private:
+    uint32_t id_ = { 0 };
+    sptr<IWatcher> watcher_ {};
+};
+
+class WatcherGroup : public WatcherNode, public ParamWatcherList {
+public:
+    WatcherGroup(uint32_t groupId, const std::string &key)
+    : WatcherNode(groupId), ParamWatcherList(), keyPrefix_(key) {}
+    ~WatcherGroup() override
+    {
+        TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+            list->RemoveNode(node);
+            ParamWatcher *watcher = ConvertTo<ParamWatcher>(node);
+            delete watcher;
+        });
+    }
+    void ProcessParameterChange(WatcherManager *mananger, const std::string &name, const std::string &value);
+    const std::string GetKeyPrefix() const { return keyPrefix_; }
+    uint32_t GetGroupId() const { return GetNodeId(); }
+private:
+    std::string keyPrefix_ { };
 };
 } // namespace init_param
 } // namespace OHOS
