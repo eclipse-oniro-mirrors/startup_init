@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+ 
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -40,34 +40,28 @@
 #define PRETIMEOUT_GAP 5
 #define PRETIMEOUT_DIV 2
 
-#define WATCHDOG_DEV "/dev/watchdog"
-
-static int WaitForWatchDogDevice(void)
+static void WaitAtStartup(const char *source)
 {
     unsigned int count = 0;
     struct stat sourceInfo;
     const unsigned int waitTime = 500000;
-    while ((stat(WATCHDOG_DEV, &sourceInfo) < 0) && (errno == ENOENT) && (count < WAIT_MAX_COUNT)) {
+    do {
         usleep(waitTime);
         count++;
-    }
-
+    } while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < WAIT_MAX_COUNT));
     if (count == WAIT_MAX_COUNT) {
-        INIT_LOGE("Wait for watchdog device failed after %u seconds", (WAIT_MAX_COUNT * waitTime) / CONVERSION_BASE);
-        return 0;
+        INIT_LOGE("wait for file:%s failed after %u seconds.", source, (WAIT_MAX_COUNT * waitTime) / CONVERSION_BASE);
     }
-    return 1;
+    return;
 }
 
 int main(int argc, const char *argv[])
 {
-    if (WaitForWatchDogDevice() == 0) {
-        return -1;
-    }
-    int fd = open(WATCHDOG_DEV, O_RDWR | O_CLOEXEC);
-    if (fd < 0) {
-        INIT_LOGE("Open watchdog device failed, err = %d", errno);
-        return -1;
+    WaitAtStartup("/dev/watchdog");
+    int fd = open("/dev/watchdog", O_RDWR);
+    if (fd == -1) {
+        INIT_LOGE("Can't open /dev/watchdog.");
+        return 1;
     }
 
     int interval = 0;
@@ -82,10 +76,11 @@ int main(int argc, const char *argv[])
     }
     gap = (gap > 0) ? gap : DEFAULT_GAP;
 
+    INIT_LOGI("Watchdog started (interval %d, margin %d), fd = %d\n", interval, gap, fd);
 #ifdef OHOS_LITE_WATCHDOG
 #ifndef LINUX_WATCHDOG
     if (setpriority(PRIO_PROCESS, 0, 14) != 0) { // 14 is process priority
-        INIT_LOGE("setpriority failed, err=%d", errno);
+        INIT_LOGE("setpriority failed err=%d\n", errno);
     }
 #endif
 #endif
@@ -98,16 +93,12 @@ int main(int argc, const char *argv[])
 #endif
 
     int ret = ioctl(fd, WDIOC_SETTIMEOUT, &timeoutSet);
-    if (ret < 0) {
-        INIT_LOGE("ioctl failed with command WDIOC_SETTIMEOUT, err = %d", errno);
-        close(fd);
-        return -1;
+    if (ret) {
+        INIT_LOGE("Failed to set timeout to %d\n", timeoutSet);
     }
     ret = ioctl(fd, WDIOC_GETTIMEOUT, &timeoutGet);
-    if (ret < 0) {
-        INIT_LOGE("ioctl failed with command WDIOC_GETTIMEOUT, err = %d", errno);
-        close(fd);
-        return -1;
+    if (ret) {
+        INIT_LOGE("Failed to get timeout\n");
     }
 
     if (timeoutGet > 0) {
@@ -115,19 +106,15 @@ int main(int argc, const char *argv[])
     }
 
 #ifdef WDIOC_SETPRETIMEOUT
-    preTimeout = timeoutGet - PRETIMEOUT_GAP; // ensure pre timeout smaller then timeout
+    preTimeout = timeoutGet - PRETIMEOUT_GAP; // ensure pretimeout smaller then timeout
     if (preTimeout > 0) {
         ret = ioctl(fd, WDIOC_SETPRETIMEOUT, &preTimeout);
-        if (ret < 0) {
-            INIT_LOGE("ioctl failed with command WDIOC_SETPRETIMEOUT, err = %d", errno);
-            close(fd);
-            return -1;
+        if (ret) {
+            INIT_LOGE("Failed to set pretimeout to %d\n", preTimeout);
         }
         ret = ioctl(fd, WDIOC_GETPRETIMEOUT, &preTimeoutGet);
-        if (ret < 0) {
-            INIT_LOGE("ioctl failed with command WDIOC_GETPRETIMEOUT, err = %d", errno);
-            close(fd);
-            return -1;
+        if (ret) {
+            INIT_LOGE("Failed to get pretimeout\n");
         }
     }
 
@@ -136,14 +123,8 @@ int main(int argc, const char *argv[])
     }
 #endif
 
-    INIT_LOGI("watchdog started (interval %d, margin %d)", interval, gap);
     while (1) {
-        ret = ioctl(fd, WDIOC_KEEPALIVE);
-        if (ret < 0) {
-            // Fed watchdog failed, we don't need to quit the process.
-            // Wait for kernel to trigger panic.
-            INIT_LOGE("ioctl failed with command WDIOC_KEEPALIVE, err = %d", errno);
-        }
+        ioctl(fd, WDIOC_KEEPALIVE);
         sleep(interval);
     }
     close(fd);
