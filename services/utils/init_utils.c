@@ -322,7 +322,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
 void WaitForFile(const char *source, unsigned int maxSecond)
 {
     INIT_ERROR_CHECK(maxSecond <= WAIT_MAX_SECOND, maxSecond = WAIT_MAX_SECOND, "WaitForFile max time is 5s");
-    struct stat sourceInfo = {};
+    struct stat sourceInfo = {0};
     unsigned int waitTime = 500000;
     /* 500ms interval, check maxSecond*2 times total */
     unsigned int maxCount = maxSecond * 2;
@@ -382,7 +382,7 @@ int MakeDir(const char *dir, mode_t mode)
 int MakeDirRecursive(const char *dir, mode_t mode)
 {
     int rc = -1;
-    char buffer[PATH_MAX] = {};
+    char buffer[PATH_MAX] = {0};
     const char *p = NULL;
     if (dir == NULL || *dir == '\0') {
         errno = EINVAL;
