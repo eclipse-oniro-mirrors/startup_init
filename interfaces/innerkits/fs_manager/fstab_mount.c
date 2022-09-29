@@ -37,7 +37,7 @@ extern "C" {
 #define FS_MANAGER_BUFFER_SIZE 512
 #define BLOCK_SIZE_BUFFER (64)
 #define RESIZE_BUFFER_SIZE 1024
-const off_t MISC_PARTITION_ACTIVE_SLOT_OFFSET = 1400;
+const off_t MISC_PARTITION_ACTIVE_SLOT_OFFSET = 4096;
 const off_t MISC_PARTITION_ACTIVE_SLOT_SIZE = 4;
 
 bool IsSupportedFilesystem(const char *fsType)
