@@ -19,7 +19,7 @@
 static int g_flags = 0;
 
 __attribute__((constructor)) static void ClientInit(void);
-__attribute__((destructor)) static void ClientDeinit(void);
+static void ClientDeinit(void);
 
 static int InitParamClient(void)
 {
