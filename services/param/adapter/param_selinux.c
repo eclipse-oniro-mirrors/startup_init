@@ -32,6 +32,7 @@
 #define CHECKER_LIB_NAME "/system/lib/libparaperm_checker.z.so"
 #define CHECKER_UPDATER_LIB_NAME "/lib/libparaperm_checker.z.so"
 #endif
+typedef int (*SelinuxSetParamCheck)(const char *paraName, const char *destContext, const SrcInfo *info);
 
 static int InitSelinuxOpsForInit(SelinuxSpace *selinuxSpace)
 {

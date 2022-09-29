@@ -22,12 +22,6 @@
 #include <sys/types.h>
 #ifdef PARAM_SUPPORT_SELINUX
 #include "selinux_parameter.h"
-#else
-typedef struct ParamContextsList_ {
-} ParamContextsList;
-
-typedef struct SrcInfo {
-} SrcInfo;
 #endif
 
 #include "beget_ext.h"
@@ -100,9 +94,9 @@ typedef struct {
 } ParamSecurityOps;
 
 typedef int (*RegisterSecurityOpsPtr)(ParamSecurityOps *ops, int isInit);
-typedef int (*SelinuxSetParamCheck)(const char *paraName, const char *destContext, const SrcInfo *info);
 typedef struct SelinuxSpace_ {
     void *selinuxHandle;
+#ifdef PARAM_SUPPORT_SELINUX
     void (*setSelinuxLogCallback)(void);
     int (*setParamCheck)(const char *paraName, const char *destContext, const SrcInfo *info);
     const char *(*getParamLabel)(const char *paraName);
@@ -110,6 +104,7 @@ typedef struct SelinuxSpace_ {
     int (*readParamCheck)(const char *paraName);
     ParamContextsList *(*getParamList)(void);
     void (*destroyParamList)(ParamContextsList **list);
+#endif
 } SelinuxSpace;
 #ifdef PARAM_SUPPORT_SELINUX
 INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit);
