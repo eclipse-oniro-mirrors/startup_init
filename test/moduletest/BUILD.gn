@@ -49,9 +49,14 @@ ohos_moduletest("InitModuleTest") {
   sources = [
     "hookmgr_moduletest.cpp",
     "modulemgr_moduletest.cpp",
+    "service_control_test.cpp",
+    "test_utils.cpp",
   ]
 
-  include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
+  include_dirs = [
+    ".",
+    "//base/startup/init/interfaces/innerkits/include",
+  ]
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
