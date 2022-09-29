@@ -45,6 +45,9 @@ static void ProcessSignal(const struct signalfd_siginfo *siginfo)
                         service == NULL ? "Unknown" : service->name, sigPID, WEXITSTATUS(procStat));
                 }
                 CmdServiceProcessDelClient(sigPID);
+                INIT_LOGI("SigHandler, SIGCHLD received, Service:%s pid:%d uid:%d status:%d.",
+                    service == NULL ? "Unknown" : service->name,
+                    sigPID, siginfo->ssi_uid, procStat);
                 CheckWaitPid(sigPID);
                 ServiceReap(service);
             }
