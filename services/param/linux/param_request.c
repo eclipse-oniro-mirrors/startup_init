@@ -41,7 +41,6 @@ __attribute__((constructor)) static void ParameterInit(void)
     if (getpid() == 1) {
         return;
     }
-    EnableInitLog(INIT_ERROR);
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = 0;
 #ifdef PARAM_BASE_LOG
@@ -51,6 +50,7 @@ __attribute__((constructor)) static void ParameterInit(void)
     ops.setfilecon = NULL;
 #endif
     InitParamWorkSpace(1, &ops);
+    EnableInitLog();
 }
 
 __attribute__((destructor)) static void ParameterDeinit(void)
@@ -132,14 +132,13 @@ static int GetClientSocket(int timeout)
 
 static int StartRequest(int clientFd, ParamMessage *request, int timeout)
 {
-    int ret = 0;
     ssize_t sendLen = send(clientFd, (char *)request, request->msgSize, 0);
     if (errno == EINVAL || errno == EACCES) {
         return PARAM_CODE_INVALID_SOCKET;
     }
     PARAM_CHECK(sendLen >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to send message err: %d", errno);
     PARAM_LOGV("sendMessage sendLen fd %d %zd", clientFd, sendLen);
-    ret = ReadMessage(clientFd, (char *)request, timeout);
+    int ret = ReadMessage(clientFd, (char *)request, timeout);
     if (ret == 0) {
         ret = ProcessRecvMsg(request);
     }

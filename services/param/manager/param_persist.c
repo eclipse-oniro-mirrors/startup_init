@@ -23,7 +23,7 @@
 #include "param_osadp.h"
 #include "securec.h"
 
-static ParamPersistWorkSpace g_persistWorkSpace = {0, 0, NULL, 0, {}};
+static ParamPersistWorkSpace g_persistWorkSpace = {0, 0, NULL, 0, {0}};
 static int IsNeedToSave(const char *name)
 {
 #if defined(__LITEOS_M__) || defined(__LITEOS_A__)
@@ -226,7 +226,7 @@ int LoadPersistParams(void)
     }
 #endif
     if (g_persistWorkSpace.persistParamOps.load != NULL) {
-        ret = g_persistWorkSpace.persistParamOps.load();
+        (void)g_persistWorkSpace.persistParamOps.load();
         PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED);
     }
     // save new persist param

@@ -94,7 +94,7 @@ int SetParameter(const char *key, const char *value)
 const char *GetDeviceType(void)
 {
     static const char *productType = NULL;
-    const char *deviceType = GetProperty("const.build.devicetype", &productType);
+    const char *deviceType = GetProperty("const.product.devicetype", &productType);
     if (deviceType != NULL) {
         return deviceType;
     }

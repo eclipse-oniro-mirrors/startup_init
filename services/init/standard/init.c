@@ -308,7 +308,7 @@ static void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext, int 
 
 static void InitSysAdj(void)
 {
-    const char* path = "/proc/1/oom_score_adj";
+    const char* path = "/proc/self/oom_score_adj";
     const char* content = "-1000";
     int fd = open(path, O_RDWR);
     if (fd == -1) {

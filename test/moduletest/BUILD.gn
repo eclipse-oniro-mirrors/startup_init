@@ -49,7 +49,9 @@ ohos_moduletest("InitModuleTest") {
   sources = [
     "hookmgr_moduletest.cpp",
     "modulemgr_moduletest.cpp",
+    "service_control_test.cpp",
     "service_watcher_moduleTest.cpp",
+    "test_utils.cpp",
   ]
 
   include_dirs = [
@@ -57,6 +59,7 @@ ohos_moduletest("InitModuleTest") {
     "//base/startup/init/interfaces/innerkits/include/syspara",
     "//base/startup/init/interfaces/innerkits/syspara",
     "//base/startup/init/services/include/param",
+    ".",
   ]
 
   deps = [

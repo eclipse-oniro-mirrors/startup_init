@@ -43,7 +43,7 @@ HWTEST_F(serviceWatcherModuleTest,serviceWatcher_test_001, TestSize.Level0)
     int ret = ServiceWatchForStatus(serviceName.c_str(), ServiceStatusChange);
     EXPECT_EQ(ret, 0); // No matter if service exist or not, ServiceWatchForStatus always success.
     auto status = GetServiceStatus(serviceName);
-    EXPECT_TRUE(status.empty());
+    EXPECT_TRUE(status == "idle");
     GTEST_LOG_(INFO) << "serviceWatcher_test_001 end";
 }
 

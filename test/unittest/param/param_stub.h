@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PARAM_TEST_STUB_
-#define PARAM_TEST_STUB_
+#ifndef PARAM_TEST_STUB
+#define PARAM_TEST_STUB
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

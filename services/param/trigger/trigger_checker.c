@@ -187,7 +187,7 @@ static int ComputeSubCondition(const LogicCalculator *calculator, LogicData *dat
     // check name
     if ((calculator->inputName != NULL) && (strcmp(calculator->conditionName, calculator->inputName) == 0)) {
         return CompareValue(calculator->conditionContent, calculator->inputContent);
-    } else if (calculator->conditionName != NULL && strlen(calculator->conditionName) > 0) {
+    } else if (strlen(calculator->conditionName) > 0) {
         uint32_t len = SUPPORT_DATA_BUFFER_MAX;
         ret = SystemReadParam(calculator->conditionName, calculator->readContent, &len);
         if (ret != 0) {

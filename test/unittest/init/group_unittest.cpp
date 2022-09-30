@@ -50,7 +50,8 @@ static int TestHashNodeFunction(const HashNode *node)
 {
     TestHashNode *testNode = HASHMAP_ENTRY(node, TestHashNode, node);
     int code = 0;
-    for (size_t i = 0; i < strlen(testNode->name); i++) {
+    size_t nameLen = strlen(testNode->name);
+    for (size_t i = 0; i < nameLen; i++) {
         code += testNode->name[i] - 'A';
     }
     return code;
@@ -60,7 +61,8 @@ static int TestHashKeyFunction(const void *key)
 {
     int code = 0;
     char *buff = const_cast<char *>(static_cast<const char *>(key));
-    for (size_t i = 0; i < strlen(buff); i++) {
+    size_t buffLen = strlen(buff);
+    for (size_t i = 0; i < buffLen; i++) {
         code += buff[i] - 'A';
     }
     return code;
@@ -75,7 +77,7 @@ static void TestHashNodeFree(const HashNode *node)
 
 static TestHashNode *TestCreateHashNode(const char *value)
 {
-    TestHashNode *node = (TestHashNode *)malloc(sizeof(TestHashNode) + strlen(value) + 1);
+    TestHashNode *node = reinterpret_cast<TestHashNode *>(malloc(sizeof(TestHashNode) + strlen(value) + 1));
     if (node == nullptr) {
         return nullptr;
     }
@@ -300,7 +302,13 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService2, TestSize.Level1)
     ParseAllServices(fileRoot);
     cJSON_Delete(fileRoot);
     char cmdStr[] = "all#bootevent";
+    char cmdStr1[] = "parameter_service";
+    ProcessControlFd(ACTION_DUMP, "all", NULL);
     ProcessControlFd(ACTION_DUMP, cmdStr, NULL);
+    ProcessControlFd(ACTION_DUMP, cmdStr1, NULL);
+    ProcessControlFd(ACTION_SANDBOX, cmdStr, NULL);
+    ProcessControlFd(ACTION_MODULEMGR, cmdStr, NULL);
+    ProcessControlFd(ACTION_MAX, cmdStr, NULL);
     Service *service = GetServiceByName("test-service6");
     ASSERT_NE(service, nullptr);
     workspace->groupMode = GROUP_BOOT;

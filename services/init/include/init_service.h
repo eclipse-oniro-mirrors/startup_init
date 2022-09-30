@@ -50,6 +50,8 @@ extern "C" {
 #define SERVICE_ATTR_NEEDWAIT 0x400     // service should execute waitpid while stopping
 #define SERVICE_ATTR_WITHOUT_SANDBOX 0x800     // make service not enter sandbox
 
+#define SERVICE_ATTR_NOTIFY_STATE 0x1000     // service notify state
+
 #define MAX_SERVICE_NAME 32
 #define MAX_APL_NAME 32
 #define MAX_ENV_NAME 64
@@ -155,7 +157,7 @@ typedef struct Service_ {
     size_t fdCount;
     TimerHandle timer;
     ServiceJobs serviceJobs;
-    cpu_set_t cpuSet;
+    cpu_set_t *cpuSet;
     struct ListNode extDataNode;
 } Service;
 #pragma pack()

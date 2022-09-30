@@ -95,7 +95,7 @@ Service *AddService(const char *name)
     node->data.service = service;
     service->name = node->name;
     service->status = SERVICE_IDLE;
-    CPU_ZERO(&service->cpuSet);
+    service->cpuSet = NULL;
     OH_ListInit(&service->extDataNode);
     g_serviceSpace.serviceCount++;
     INIT_LOGV("AddService %s", node->name);
@@ -149,6 +149,10 @@ void ReleaseService(Service *service)
             free(service->serviceJobs.jobsName[i]);
         }
         service->serviceJobs.jobsName[i] = NULL;
+    }
+    if (service->cpuSet != NULL) {
+        free(service->cpuSet);
+        service->cpuSet = NULL;
     }
 #ifndef OHOS_LITE
     // clear ext data
@@ -684,6 +688,11 @@ static int GetCpuArgs(const cJSON *argJson, const char *name, Service *service)
     int count = cJSON_GetArraySize(obj);
     int cpus = -1;
     int cpuNumMax = sysconf(_SC_NPROCESSORS_CONF);
+    if (count > 0 && service->cpuSet == NULL) {
+        service->cpuSet = malloc(sizeof(cpu_set_t));
+        INIT_ERROR_CHECK(service->cpuSet != NULL, return SERVICE_FAILURE, "Failed to malloc for cpuset");
+    }
+    CPU_ZERO(service->cpuSet);
     for (int i = 0; i < count; ++i) {
         cJSON *item = cJSON_GetArrayItem(obj, i);
         INIT_ERROR_CHECK(item != NULL, return SERVICE_FAILURE, "prase invalid");
@@ -692,10 +701,10 @@ static int GetCpuArgs(const cJSON *argJson, const char *name, Service *service)
             INIT_LOGW("%s core number %d of CPU cores does not exist", service->name, cpus);
             continue;
         }
-        if (CPU_ISSET(cpus, &service->cpuSet)) {
+        if (CPU_ISSET(cpus, service->cpuSet)) {
             continue;
         }
-        CPU_SET(cpus, &service->cpuSet);
+        CPU_SET(cpus, service->cpuSet);
     }
     return SERVICE_SUCCESS;
 }
@@ -836,6 +845,8 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get disabled flag for service %s", service->name);
     ret = GetServiceAttr(curItem, service, CONSOLE_STR_IN_CFG, SERVICE_ATTR_CONSOLE, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get console for service %s", service->name);
+    ret = GetServiceAttr(curItem, service, "notify-state", SERVICE_ATTR_NOTIFY_STATE, NULL);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get notify-state for service %s", service->name);
 
     ParseOneServiceArgs(curItem, service);
     ret = GetServiceSandbox(curItem, service);

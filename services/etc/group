@@ -17,8 +17,8 @@ vpn:x:1016:
 keystore:x:1017:
 usb:x:1018:
 drm:x:1019:
-gps:x:1020:
-location_host:x:1021:
+gps:x:1021:
+location_host:x:1022:
 media_rw:x:1023:
 dsoftbus:x:1024:
 nfc:x:1027:
@@ -88,8 +88,6 @@ quickfixserver:x:5524;
 samgr:x:5555:
 update:x:6666:
 charger:x:6667:
-battery_stats:x:6668:
-thermal:x:6669:
 sensor:x:6688:
 input:x:6696:
 msdp:x:6699:

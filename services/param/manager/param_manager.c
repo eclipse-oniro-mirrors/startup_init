@@ -139,7 +139,7 @@ static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrie
         ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, current->dataIndex);
         if (entry != NULL) {
             PARAM_DUMP("\tparameter length info [%u, %u] \n\t  param: %s \n",
-                entry->keyLength, entry->valueLength, (entry != NULL) ? entry->data : "null");
+                entry->keyLength, entry->valueLength, entry->data);
         }
     }
     if (current->labelIndex != 0 && verbose) {
@@ -300,7 +300,7 @@ INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, Servi
         for (size_t i = 0; i < size; i++) {
             if (strcmp(name, ctrlParam[i].name) == 0) {
                 uint32_t valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen(ctrlParam[i].replace) + 1;
-                return CreateCtrlInfo(ctrlInfo, ctrlParam[i].cmd, valueOffset,  1,
+                return CreateCtrlInfo(ctrlInfo, ctrlParam[i].cmd, valueOffset, 1,
                     "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, ctrlParam[i].replace, value);
             }
         }
@@ -309,14 +309,14 @@ INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, Servi
         const ParamCmdInfo *installParam = GetServiceCtl(&size);
         for (size_t i = 0; i < size; i++) {
             if (strncmp(name, installParam[i].name, strlen(installParam[i].name)) == 0) {
-                return CreateCtrlInfo(ctrlInfo, installParam[i].cmd, strlen(name) + 1,  1, "%s.%s", name, value);
+                return CreateCtrlInfo(ctrlInfo, installParam[i].cmd, strlen(name) + 1, 1, "%s.%s", name, value);
             }
         }
     }
     const ParamCmdInfo *other = GetOtherSpecial(&size);
     for (size_t i = 0; i < size; i++) {
         if (strncmp(name, other[i].name, strlen(other[i].name)) == 0) {
-            return CreateCtrlInfo(ctrlInfo, other[i].cmd, strlen(other[i].name),  0, "%s.%s", name, value);
+            return CreateCtrlInfo(ctrlInfo, other[i].cmd, strlen(other[i].name), 0, "%s.%s", name, value);
         }
     }
     return 0;

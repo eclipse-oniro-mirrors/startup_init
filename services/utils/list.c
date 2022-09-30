@@ -83,7 +83,6 @@ void OH_ListRemove(struct ListNode *item)
 void OH_ListAddWithOrder(struct ListNode *head, struct ListNode *item, ListCompareProc compareProc)
 {
     ListNode *match;
-    int ret;
 
     if (head == NULL || item == NULL || compareProc == NULL) {
         return;
@@ -91,8 +90,7 @@ void OH_ListAddWithOrder(struct ListNode *head, struct ListNode *item, ListCompa
 
     match = head->next;
     while ((match != NULL) && (match != head)) {
-        ret = compareProc(match, item);
-        if (ret > 0) {
+        if (compareProc(match, item) > 0) {
             break;
         }
         match = match->next;
@@ -153,7 +151,6 @@ ListNode *OH_ListFind(const ListNode *head, void *data, ListTraversalProc compar
  */
 int OH_ListTraversal(ListNode *head, void *data, ListTraversalProc traversalProc, unsigned int flags)
 {
-    int ret;
     ListNode *match;
     ListNode *next;
 
@@ -172,7 +169,7 @@ int OH_ListTraversal(ListNode *head, void *data, ListTraversalProc traversalProc
         } else {
             next = match->next;
         }
-        ret = traversalProc(match, data);
+        int ret = traversalProc(match, data);
         if ((ret != 0) && IS_STOP_WHEN_ERROR(flags)) {
             return ret;
         }

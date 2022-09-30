@@ -24,9 +24,11 @@
 #include "selinux_parameter.h"
 #else
 typedef struct ParamContextsList_ {
+    char unused;
 } ParamContextsList;
 
 typedef struct SrcInfo {
+    char unused;
 } SrcInfo;
 #endif
 

@@ -124,7 +124,7 @@ public:
     }
     void SetUp()
     {
-        EnableInitLog(INIT_FATAL);
+        EnableInitLog();
     }
     void TearDown() {}
 };
@@ -629,12 +629,12 @@ static void CheckService(const cJSON* curItem)
     }
 
     cJSON *filedJ = cJSON_GetObjectItem(curItem, "uid");
-    EXPECT_TRUE(cJSON_IsNumber(filedJ));
-    EXPECT_TRUE(cJSON_GetNumberValue(filedJ) >= 0.0);
+    EXPECT_TRUE(cJSON_IsNumber(filedJ) || cJSON_IsString(filedJ));
+    EXPECT_TRUE(cJSON_GetNumberValue(filedJ) >= 0.0 || cJSON_GetStringValue(filedJ));
 
     filedJ = cJSON_GetObjectItem(curItem, "gid");
-    EXPECT_TRUE(cJSON_IsNumber(filedJ));
-    EXPECT_TRUE(cJSON_GetNumberValue(filedJ) >= 0.0);
+    EXPECT_TRUE(cJSON_IsNumber(filedJ) || cJSON_IsArray(filedJ));
+    EXPECT_TRUE(cJSON_GetNumberValue(filedJ) >= 0.0 || cJSON_GetArraySize(filedJ) >= 0);
 
     filedJ = cJSON_GetObjectItem(curItem, "once");
     EXPECT_TRUE(cJSON_IsNumber(filedJ));
@@ -648,8 +648,8 @@ static void CheckService(const cJSON* curItem)
     EXPECT_TRUE(capsCnt <= MAX_CAPS_CNT_FOR_ONE_SERVICE);
     for (int i = 0; i < capsCnt; ++i) {
         cJSON *capJ = cJSON_GetArrayItem(filedJ, i);
-        EXPECT_TRUE(cJSON_IsNumber(capJ));
-        EXPECT_TRUE(cJSON_GetNumberValue(capJ) >= 0.0);
+        EXPECT_TRUE(cJSON_IsNumber(capJ) || cJSON_GetStringValue(capJ));
+        EXPECT_TRUE(cJSON_GetNumberValue(capJ) >= 0.0 || cJSON_GetStringValue(capJ));
     }
 }
 

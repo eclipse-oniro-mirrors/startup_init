@@ -108,7 +108,6 @@ static_library("param_init_lite") {
 static_library("param_client_lite") {
   sources = base_sources
   include_dirs = param_include_dirs
-  cflags = [ "-fPIC" ]
   defines = param_build_defines
   public_configs = [ ":exported_header_files" ]
 
