@@ -320,14 +320,14 @@ int32_t GetIntParameter(const char *key, int32_t def)
 {
     char value[MAX_INT_LEN] = {0};
     int ret = GetParameter(key, "0", value, sizeof(value));
-    if (ret != 0) {
+    if (ret < 0) {
         return def;
     }
     long long int result = 0;
     if (StringToLL(value, &result) != 0) {
         return def;
     }
-    if (result <= INT32_MIN && result >= INT32_MAX) {
+    if (result <= INT32_MIN || result >= INT32_MAX) {
         return def;
     }
     return (int32_t)result;
@@ -337,7 +337,7 @@ uint32_t GetUintParameter(const char *key, uint32_t def)
 {
     char value[MAX_INT_LEN] = {0};
     int ret = GetParameter(key, "0", value, sizeof(value));
-    if (ret != 0) {
+    if (ret < 0) {
         return def;
     }
     unsigned long long int result = 0;
