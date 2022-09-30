@@ -406,7 +406,12 @@ int MountOneItem(FstabItem *item)
 
     int rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
     if (rc != 0) {
-        BEGET_LOGE("Mount %s to %s failed %d", item->deviceName, item->mountPoint, errno);
+        if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
+            BEGET_LOGE("Mount no fail device %s to %s failed, err = %d", item->deviceName, item->mountPoint, errno);
+        } else {
+            BEGET_LOGW("Mount %s to %s failed, err = %d. Ignore failure", item->deviceName, item->mountPoint, errno);
+            rc = 0;
+        }
     } else {
         BEGET_LOGI("Mount %s to %s successful", item->deviceName, item->mountPoint);
     }
