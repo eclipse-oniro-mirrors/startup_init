@@ -123,10 +123,10 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
     ModuleMgrDestroy(moduleMgr);
 
     // Scan all modules
-    moduleMgr = ModuleMgrScan("init");
+    moduleMgr = ModuleMgrScan("init/autorun");
     ASSERT_NE(moduleMgr, nullptr);
     cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_NE(cnt, 0);
+    ASSERT_EQ(cnt, 0);
 
     ModuleMgrUninstall(moduleMgr, NULL);
     cnt = ModuleMgrGetCnt(moduleMgr);

@@ -326,6 +326,9 @@ void WaitForFile(const char *source, unsigned int maxSecond)
     unsigned int waitTime = 500000;
     /* 500ms interval, check maxSecond*2 times total */
     unsigned int maxCount = maxSecond * 2;
+#ifdef STARTUP_INIT_TEST
+    maxCount = 0;
+#endif
     unsigned int count = 0;
     while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount)) {
         usleep(waitTime);
