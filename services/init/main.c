@@ -30,7 +30,7 @@ int main(int argc, char * const argv[])
         INIT_LOGE("Process id error %d!", getpid());
         return 0;
     }
-    EnableInitLog();
+    EnableInitLog(INIT_INFO);
     if (isSecondStage == 0) {
         SystemPrepare();
     } else {
