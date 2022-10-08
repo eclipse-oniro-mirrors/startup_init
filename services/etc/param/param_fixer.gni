@@ -68,7 +68,6 @@ template("ohos_prebuilt_para") {
                              "license_file",
                              "license_as_sources",
                            ])
-    set_sources_assignment_filter([])
     sources = [ _fixed_param_file ]
     outputs = [ "${target_out_dir}/${target_name}/${_output_para_file}" ]
     module_type = "etc"
