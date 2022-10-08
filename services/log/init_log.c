@@ -22,7 +22,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "param/init_param.h"
 #include "securec.h"
 #ifdef OHOS_LITE
 #ifndef INIT_LOG_INIT
@@ -121,7 +120,7 @@ static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag
 
 INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs)
 {
-    if (g_logLevel > logLevel) {
+    if ((int)g_logLevel > logLevel) {
         return;
     }
     char tmpFmt[DEF_LOG_SIZE] = {0};
@@ -129,29 +128,11 @@ INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, 
         tmpFmt[sizeof(tmpFmt) - 2] = '\n'; // 2 add \n to tail
         tmpFmt[sizeof(tmpFmt) - 1] = '\0';
     }
-    PrintLog(logLevel, domain, tag, tmpFmt);
+    PrintLog((InitLogLevel)logLevel, domain, tag, tmpFmt);
 }
 
-INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level)
+INIT_PUBLIC_API void EnableInitLog(InitLogLevel level)
 {
-    if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
-        g_logLevel = level;
-    }
-    return;
-}
-
-INIT_PUBLIC_API void EnableInitLog(void)
-{
+    g_logLevel = level;
     SetInitCommLog(InitLog);
-    char logLevel[2] = {0}; // 2 is set param "persist.init.debug.loglevel" value length.
-    uint32_t len = sizeof(logLevel);
-    int ret = SystemReadParam("persist.init.debug.loglevel", logLevel, &len);
-    INIT_INFO_CHECK(ret == 0, return, "Can not get log level from param, keep the original loglevel.");
-    errno = 0;
-    unsigned int level = (unsigned int)strtoul(logLevel, 0, 10); // 10 is decimal
-    INIT_INFO_CHECK(errno == 0, return, "Failed strtoul %s, err=%d", logLevel, errno);
-    if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
-        g_logLevel = level;
-    }
-    return;
 }

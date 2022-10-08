@@ -20,7 +20,7 @@
 #include "param_manager.h"
 #include "param_trie.h"
 
-static ParamWorkSpace g_paramWorkSpace = {};
+static ParamWorkSpace g_paramWorkSpace = {0};
 PARAM_STATIC int WorkSpaceNodeCompare(const HashNode *node1, const HashNode *node2)
 {
     WorkSpace *workSpace1 = HASHMAP_ENTRY(node1, WorkSpace, hashNode);
@@ -168,7 +168,7 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
         // load user info for dac
         LoadGroupUser();
         // add default dac policy
-        ParamAuditData auditData = {};
+        ParamAuditData auditData = {0};
         auditData.name = "#";
         auditData.dacData.gid = DAC_DEFAULT_GROUP; // 2000 for shell
         auditData.dacData.uid = DAC_DEFAULT_USER; // for root

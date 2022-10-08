@@ -24,6 +24,7 @@
 #include <sys/shm.h>
 #else
 #include "los_task.h"
+#include "los_mux.h"
 #endif
 #include <sys/stat.h>
 #include <sys/time.h>

@@ -271,10 +271,6 @@ HWTEST_F(CmdsUnitTest, TestGetCmdLinesFromJson, TestSize.Level1)
 HWTEST_F(CmdsUnitTest, TestInitCmdFunc, TestSize.Level1)
 {
     int ret = GetBootModeFromMisc();
-#ifdef __MUSL__
     EXPECT_EQ(ret, 0);
-#else
-    EXPECT_NE(ret, 0);
-#endif
 }
 } // namespace init_ut

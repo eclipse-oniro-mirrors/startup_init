@@ -27,7 +27,7 @@
 #include "utils_file.h"
 
 // for linux, no mutex
-static ParamMutex g_saveMutex = {};
+static ParamMutex g_saveMutex = {0};
 #ifdef PARAM_SUPPORT_POSIX
 #define MODE_READ O_RDONLY
 #define MODE_APPEND (O_RDWR | O_CREAT | O_APPEND)

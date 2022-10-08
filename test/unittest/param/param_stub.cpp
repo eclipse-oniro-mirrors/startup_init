@@ -434,7 +434,7 @@ int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
 
 static __attribute__((constructor(101))) void ParamTestStubInit(void)
 {
-    EnableInitLog();
+    EnableInitLog(INIT_DEBUG);
     PARAM_LOGI("ParamTestStubInit");
     PrepareInitUnitTestEnv();
 }

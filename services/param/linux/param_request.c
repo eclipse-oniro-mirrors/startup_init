@@ -41,6 +41,7 @@ __attribute__((constructor)) static void ParameterInit(void)
     if (getpid() == 1) {
         return;
     }
+    EnableInitLog(INIT_ERROR);
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = 0;
 #ifdef PARAM_BASE_LOG
@@ -50,7 +51,6 @@ __attribute__((constructor)) static void ParameterInit(void)
     ops.setfilecon = NULL;
 #endif
     InitParamWorkSpace(1, &ops);
-    EnableInitLog();
 }
 
 __attribute__((destructor)) static void ParameterDeinit(void)

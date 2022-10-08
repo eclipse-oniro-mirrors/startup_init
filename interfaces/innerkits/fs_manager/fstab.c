@@ -50,6 +50,7 @@ static unsigned int ConvertFlags(char *flagBuffer)
         {"check", FS_MANAGER_CHECK},
         {"wait", FS_MANAGER_WAIT},
         {"required", FS_MANAGER_REQUIRED},
+        {"nofail", FS_MANAGER_NOFAIL},
     };
 
     BEGET_CHECK_RETURN_VALUE(flagBuffer != NULL && *flagBuffer != '\0', 0); // No valid flags.

@@ -37,7 +37,7 @@ extern "C" {
 #define FS_MANAGER_BUFFER_SIZE 512
 #define BLOCK_SIZE_BUFFER (64)
 #define RESIZE_BUFFER_SIZE 1024
-const off_t MISC_PARTITION_ACTIVE_SLOT_OFFSET = 1400;
+const off_t MISC_PARTITION_ACTIVE_SLOT_OFFSET = 4096;
 const off_t MISC_PARTITION_ACTIVE_SLOT_SIZE = 4;
 
 bool IsSupportedFilesystem(const char *fsType)
@@ -406,7 +406,12 @@ int MountOneItem(FstabItem *item)
 
     int rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
     if (rc != 0) {
-        BEGET_LOGE("Mount %s to %s failed %d", item->deviceName, item->mountPoint, errno);
+        if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
+            BEGET_LOGE("Mount no fail device %s to %s failed, err = %d", item->deviceName, item->mountPoint, errno);
+        } else {
+            BEGET_LOGW("Mount %s to %s failed, err = %d. Ignore failure", item->deviceName, item->mountPoint, errno);
+            rc = 0;
+        }
     } else {
         BEGET_LOGI("Mount %s to %s successful", item->deviceName, item->mountPoint);
     }

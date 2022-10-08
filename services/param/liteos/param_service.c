@@ -132,11 +132,11 @@ static void ParamServiceTask(int *arg)
 
 void LiteParamService(void)
 {
+    EnableInitLog(INIT_INFO);
     PARAM_LOGI("LiteParamService");
     InitParamService();
     // get persist param
     LoadPersistParams();
-    EnableInitLog();
     osThreadAttr_t attr;
     attr.name = "ParamServiceTask";
     attr.attr_bits = 0U;
