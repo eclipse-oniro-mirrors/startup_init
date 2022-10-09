@@ -82,15 +82,18 @@ HWTEST_F(ServiceUnitTest, case02, TestSize.Level1)
     cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
     ASSERT_NE(nullptr, serviceItem);
     Service *service = AddService("test_service8");
+    ASSERT_NE(nullptr, service);
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
 
     int *fds = (int *)malloc(sizeof(int) * 1); // ServiceStop will release fds
+    ASSERT_NE(nullptr, fds);
     UpdaterServiceFds(service, fds, 1);
     service->attribute = SERVICE_ATTR_ONDEMAND;
     ret = ServiceStart(service);
     EXPECT_EQ(ret, 0);
     CmdLines *cmdline = (CmdLines *)malloc(sizeof(CmdLines) + sizeof(CmdLine));
+    ASSERT_NE(nullptr, cmdline);
     cmdline->cmdNum = 1;
     cmdline->cmds[0].cmdIndex = 0;
     service->restartArg = cmdline;
@@ -213,20 +216,26 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerRelease, TestSize.Level1)
     service = AddService("test_service5");
     ASSERT_NE(nullptr, service);
     service->pathArgs.argv = (char **)malloc(sizeof(char *));
+    ASSERT_NE(nullptr, service->pathArgs.argv);
     service->pathArgs.count = 1;
     const char *path = "/data/init_ut/test_service_release";
     service->pathArgs.argv[0] = strdup(path);
 
     service->writePidArgs.argv = (char **)malloc(sizeof(char *));
+    ASSERT_NE(nullptr, service->writePidArgs.argv);
     service->writePidArgs.count = 1;
     service->writePidArgs.argv[0] = strdup(path);
 
     service->servPerm.caps = (unsigned int *)malloc(sizeof(unsigned int));
+    ASSERT_NE(nullptr, service->servPerm.caps);
     service->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t));
+    ASSERT_NE(nullptr, service->servPerm.gIDArray);
     service->socketCfg = (ServiceSocket *)malloc(sizeof(ServiceSocket));
+    ASSERT_NE(nullptr, service->socketCfg);
     service->socketCfg->sockFd = 0;
     service->socketCfg->next = nullptr;
     service->fileCfg = (ServiceFile *)malloc(sizeof(ServiceFile));
+    ASSERT_NE(nullptr, service->fileCfg);
     service->fileCfg->fd = 0;
     service->fileCfg->next = nullptr;
     ReleaseService(service);
@@ -330,6 +339,7 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
     service->servPerm.gIDCnt = -1;
     service->servPerm.uID = 0;
     unsigned int *caps = (unsigned int *)calloc(1, sizeof(unsigned int) * 1);
+    ASSERT_NE(nullptr, caps);
     caps[0] = FULL_CAP;
     service->servPerm.caps = caps;
     service->servPerm.capsCnt = 1;

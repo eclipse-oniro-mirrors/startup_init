@@ -405,7 +405,9 @@ HWTEST_F(ParamUnitTest, TestLinuxRWLock, TestSize.Level0)
     ParamRWMutexDelete(nullptr);
     ParamMutexDelete(nullptr);
     WorkSpace *workspace1 = (WorkSpace *)malloc(sizeof(WorkSpace) + strlen("testfilename1"));
+    ASSERT_NE(nullptr, workspace1);
     WorkSpace *workspace2 = (WorkSpace *)malloc(sizeof(WorkSpace) + strlen("testfilename1"));
+    ASSERT_NE(nullptr, workspace2);
     if (strcpy_s(workspace1->fileName, strlen("testfilename1"), "testfilename") != EOK) {
         EXPECT_EQ(0, 1);
     }
