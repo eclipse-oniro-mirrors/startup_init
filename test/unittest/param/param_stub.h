@@ -18,6 +18,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <gtest/gtest.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #include "param_manager.h"
 #include "param_security.h"
@@ -28,6 +30,23 @@
 #if __cplusplus
 extern "C" {
 #endif
+#endif
+
+#ifndef PARAM_SUPPORT_SELINUX
+typedef struct ParameterNode {
+    const char *paraName;
+    const char *paraContext;
+} ParameterNode;
+
+typedef struct ParamContextsList {
+    struct ParameterNode info;
+    struct ParamContextsList *next;
+} ParamContextsList;
+
+typedef struct SrcInfo {
+    int sockFd;
+    struct ucred uc;
+} SrcInfo;
 #endif
 
 void PrepareInitUnitTestEnv(void);
