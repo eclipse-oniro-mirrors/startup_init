@@ -218,7 +218,7 @@ HWTEST_F(InnerkitsUnitTest, DoFormat_unittest, TestSize.Level1)
 */
 HWTEST_F(InnerkitsUnitTest, MountAllWithFstabFile_unittest, TestSize.Level1)
 {
-    EXPECT_NE(MountAllWithFstabFile("/etc/fstab.required", 0), 1);
+    EXPECT_NE(MountAllWithFstabFile("/data/init_ut/etc/fstab.required", 0), 1);
 }
 
 HWTEST_F(InnerkitsUnitTest, others_unittest, TestSize.Level1)
