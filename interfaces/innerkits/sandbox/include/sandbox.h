@@ -21,33 +21,33 @@ extern "C" {
 #endif
 #include <stdbool.h>
 #include "init_utils.h"
+#include "list.h"
 
-typedef struct {
+typedef enum SandboxTag {
+    SANDBOX_TAG_MOUNT_PATH = 0,
+    SANDBOX_TAG_MOUNT_FILE,
+    SANDBOX_TAG_SYMLINK
+} SandboxTag;
+
+typedef struct MountList {
     char *source;  // source 目录，一般是全局的fs 目录
     char *target;  // 沙盒化后的目录
     unsigned long flags;
     bool ignoreErrors;
-} mount_t;
-
-typedef struct MountList {
-    mount_t *info;
-    struct MountList *next;
+    SandboxTag tag;
+    struct ListNode node;
 } mountlist_t;
 
-typedef struct {
+typedef struct LinkList {
     char *target;
     char *linkName;
-} linker_t;
-
-typedef struct LinkList {
-    linker_t *info;
-    struct LinkList *next;
+    struct ListNode node;
 } linklist_t;
 
 typedef struct {
-    mountlist_t *pathMounts;
-    mountlist_t *fileMounts;
-    linklist_t *links;
+    ListNode pathMountsHead;
+    ListNode fileMountsHead;
+    ListNode linksHead;
     char *rootPath; // /mnt/sandbox/system|vendor|xxx
     char name[MAX_BUFFER_LEN]; // name of sandbox. i.e system, chipset etc.
     bool isCreated; // sandbox already created or not
