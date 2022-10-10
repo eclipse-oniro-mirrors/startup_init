@@ -28,7 +28,8 @@
 int WaitParameter(const char *key, const char *value, int timeout)
 {
     BEGET_CHECK(!(key == NULL || value == NULL), return EC_INVALID);
-    return SystemWaitParameter(key, value, timeout);
+    int ret = SystemWaitParameter(key, value, timeout);
+    return GetSystemError(ret);
 }
 
 uint32_t FindParameter(const char *key)
@@ -56,7 +57,10 @@ int GetParameterName(uint32_t handle, char *name, uint32_t len)
         return EC_INVALID;
     }
     int ret = SystemGetParameterName(handle, name, len);
-    return (ret != 0) ? EC_FAILURE : strlen(name);
+    if (ret == 0) {
+        return strlen(name);
+    }
+    return GetSystemError(ret);
 }
 
 int GetParameterValue(uint32_t handle, char *value, uint32_t len)
@@ -66,7 +70,10 @@ int GetParameterValue(uint32_t handle, char *value, uint32_t len)
     }
     uint32_t size = len;
     int ret = SystemGetParameterValue(handle, value, &size);
-    return (ret != 0) ? EC_FAILURE : strlen(value);
+    if (ret == 0) {
+        return strlen(value);
+    }
+    return GetSystemError(ret);
 }
 
 int GetParameter(const char *key, const char *def, char *value, uint32_t len)
@@ -84,11 +91,7 @@ int SetParameter(const char *key, const char *value)
         return EC_INVALID;
     }
     int ret = SystemSetParameter(key, value);
-    if (ret == PARAM_CODE_INVALID_NAME || ret == DAC_RESULT_FORBIDED ||
-        ret == PARAM_CODE_INVALID_PARAM || ret == PARAM_CODE_INVALID_VALUE) {
-        return EC_INVALID;
-    }
-    return (ret == 0) ? EC_SUCCESS : EC_FAILURE;
+    return GetSystemError(ret);
 }
 
 const char *GetDeviceType(void)

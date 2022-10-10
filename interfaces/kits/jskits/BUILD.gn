@@ -49,3 +49,24 @@ ohos_shared_library("systemparameter") {
   subsystem_name = "startup"
   part_name = "init"
 }
+
+ohos_shared_library("systemparameterv9") {
+  include_dirs = [
+    "src",
+    "//third_party/libuv/include",
+  ]
+
+  sources = [
+    "src_v9/native_parameters_js.cpp",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+  ]
+
+  external_deps = [ "napi:ace_napi" ]
+  relative_install_dir = "module"
+  subsystem_name = "startup"
+  part_name = "init"
+}

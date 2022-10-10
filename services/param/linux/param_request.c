@@ -132,6 +132,7 @@ static int GetClientSocket(int timeout)
 
 static int StartRequest(int clientFd, ParamMessage *request, int timeout)
 {
+    errno = 0;
     ssize_t sendLen = send(clientFd, (char *)request, request->msgSize, 0);
     if (errno == EINVAL || errno == EACCES) {
         return PARAM_CODE_INVALID_SOCKET;

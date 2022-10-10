@@ -491,7 +491,7 @@ INIT_LOCAL_API int ReadParamValue(ParamHandle handle, char *value, uint32_t *len
     PARAM_CHECK(length != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
     if (entry == NULL) {
-        return -1;
+        return PARAM_CODE_NOT_FOUND;
     }
     if (value == NULL) {
         *length = entry->valueLength + 1;

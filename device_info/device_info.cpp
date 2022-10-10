@@ -18,6 +18,7 @@
 #endif
 #include "param_comm.h"
 #include "securec.h"
+#include "sysparam_errno.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -28,7 +29,7 @@ extern "C" {
 int AclGetDevUdid(char *udid, int size)
 {
     if (udid == nullptr || size < UDID_LEN) {
-        return -1;
+        return SYSPARAM_INVALID_INPUT;
     }
     (void)memset_s(udid, size, 0, size);
 #ifdef PARAM_FEATURE_DEVICEINFO
