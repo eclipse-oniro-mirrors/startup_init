@@ -365,7 +365,7 @@ int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId)
 
     ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
     if (entry == NULL) {
-        return -1;
+        return PARAM_CODE_NOT_FOUND;
     }
     *commitId = ReadCommitId(entry);
     return 0;

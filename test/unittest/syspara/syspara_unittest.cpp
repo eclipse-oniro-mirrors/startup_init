@@ -135,7 +135,7 @@ HWTEST_F(SysparaUnitTest, parameterTest005, TestSize.Level0)
     char value4[] = "rw.sys.version.version.version.version flash_offset = *(hi_u32 *)DT_SetGetU32(&g_Element[0], 0)a\
     size = *(hi_u32 *)DT_SetGetU32(&g_Element[1], 0)a";
     int ret = SetParameter(key4, value4);
-    EXPECT_EQ(ret, EC_INVALID);
+    EXPECT_EQ(ret, SYSPARAM_INVALID_VALUE);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest006, TestSize.Level0)
@@ -171,7 +171,7 @@ HWTEST_F(SysparaUnitTest, parameterTest009, TestSize.Level0)
     char value5[] = "rw.sys.version.version.version.version     \
     flash_offset = *(hi_u32 *)DT_SetGetU32(&g_Element[0], 0)";
     int ret = SetParameter(key5, value5);
-    EXPECT_EQ(ret, EC_INVALID);
+    EXPECT_EQ(ret, SYSPARAM_INVALID_VALUE);
     char valueGet[2] = {0};
     char defValue3[] = "value of key > 32 ...";
     ret = GetParameter(key5, defValue3, valueGet, 2);
@@ -235,7 +235,7 @@ HWTEST_F(SysparaUnitTest, parameterTest0011, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     char key2[] = "test.rw.sys.version.wait2";
     ret = WaitParameter(key2, "*", 1);
-    EXPECT_EQ(ret, 105);
+    EXPECT_EQ(ret, SYSPARAM_WAIT_TIMEOUT);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest0012, TestSize.Level0)
@@ -262,10 +262,11 @@ HWTEST_F(SysparaUnitTest, parameterTest0012, TestSize.Level0)
     handle = FindParameter(key2);
     EXPECT_EQ(handle, static_cast<unsigned int>(-1));
     ret = GetParameterValue(handle, valueGet1, 32);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, SYSPARAM_NOT_FOUND);
     ret = GetParameterName(handle, nameGet1, 32);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, SYSPARAM_SYSTEM_ERROR);
 }
+
 HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)
 {
     long long int out = 0;

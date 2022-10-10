@@ -61,7 +61,7 @@ typedef struct {
         uint32_t watcherId;
         uint32_t waitId;
     } id;
-    char key[PARAM_NAME_LEN_MAX];
+    char key[PARAM_NAME_LEN_MAX + 4];
     char data[0];
 } ParamMessage;
 
