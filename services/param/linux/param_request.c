@@ -174,7 +174,7 @@ int SystemSetParameter(const char *name, const char *value)
             g_clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
         }
         if (g_clientFd < 0) {
-            ret = PARAM_CODE_INVALID_PARAM;
+            ret = DAC_RESULT_FORBIDED;
             break;
         }
         ret = StartRequest(g_clientFd, request, DEFAULT_PARAM_SET_TIMEOUT);
@@ -182,7 +182,7 @@ int SystemSetParameter(const char *name, const char *value)
             close(g_clientFd);
             g_clientFd = INVALID_SOCKET;
             retryCount++;
-            ret = 0;
+            ret = DAC_RESULT_FORBIDED;
         } else {
             break;
         }

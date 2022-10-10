@@ -516,7 +516,7 @@ INIT_LOCAL_API int ReadParamName(ParamHandle handle, char *name, uint32_t length
     PARAM_CHECK(name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
     if (entry == NULL) {
-        return -1;
+        return PARAM_CODE_NOT_FOUND;
     }
     PARAM_CHECK(length > entry->keyLength, return -1, "Invalid param size %u %u", entry->keyLength, length);
     int ret = ParamMemcpy(name, length, entry->data, entry->keyLength);

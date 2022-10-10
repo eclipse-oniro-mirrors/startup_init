@@ -81,6 +81,15 @@ static napi_value BusinessErrorCreate(napi_env env, int status)
     return businessError;
 }
 
+#define PARAM_NAPI_ASSERT(env, assertion, result, info)         \
+    do {                                                        \
+        if (!(assertion)) {                                     \
+            napi_value d_err = BusinessErrorCreate(env, result);   \
+            napi_throw(env, d_err);                             \
+            return nullptr;                                     \
+        }                                                       \
+    } while (0)
+
 static int GetParamString(napi_env env, napi_value arg, char *buffer, size_t maxBuff, size_t *keySize)
 {
     (void)napi_get_value_string_utf8(env, arg, nullptr, maxBuff - 1, keySize);
@@ -141,7 +150,8 @@ static napi_value Set(napi_env env, napi_callback_info info)
     napi_value thisVar = nullptr;
     void *data = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &thisVar, &data);
-    NAPI_ASSERT(env, argc >= ARGC_NUMBER, "requires 2 parameter");
+
+    PARAM_NAPI_ASSERT(env, argc >= ARGC_NUMBER, SYSPARAM_INVALID_INPUT, "requires 2 parameter");
     StorageAsyncContextPtr asyncContext = new StorageAsyncContext();
     asyncContext->env = env;
     for (size_t i = 0; i < argc; i++) {
@@ -184,12 +194,13 @@ static napi_value SetSync(napi_env env, napi_callback_info info)
     size_t argc = ARGC_NUMBER;
     napi_value args[ARGC_NUMBER] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    NAPI_ASSERT(env, argc == ARGC_NUMBER, "Wrong number of arguments");
+    PARAM_NAPI_ASSERT(env, argc == ARGC_NUMBER, SYSPARAM_INVALID_INPUT, "Wrong number of arguments");
     napi_valuetype valuetype0 = napi_null;
     NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
     napi_valuetype valuetype1 = napi_null;
     NAPI_CALL(env, napi_typeof(env, args[1], &valuetype1));
-    NAPI_ASSERT(env, valuetype0 == napi_string && valuetype1 == napi_string, "Wrong argument type. string expected.");
+    PARAM_NAPI_ASSERT(env, valuetype0 == napi_string && valuetype1 == napi_string,
+        SYSPARAM_INVALID_INPUT, "Wrong argument type. string expected.");
 
     size_t keySize = 0;
     std::vector<char> keyBuf(MAX_NAME_LENGTH, 0);
@@ -224,14 +235,16 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
     size_t argc = ARGC_NUMBER;
     napi_value args[ARGC_NUMBER] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    NAPI_ASSERT(env, argc == 1 || argc == ARGC_NUMBER, "Wrong number of arguments");
+    PARAM_NAPI_ASSERT(env, argc == 1 || argc == ARGC_NUMBER, SYSPARAM_INVALID_INPUT, "Wrong number of arguments");
     napi_valuetype valuetype0 = napi_null;
     NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
-    NAPI_ASSERT(env, valuetype0 == napi_string, "Wrong argument type. Numbers expected.");
+    PARAM_NAPI_ASSERT(env, valuetype0 == napi_string,
+        SYSPARAM_INVALID_INPUT, "Wrong argument type. Numbers expected.");
     if (argc == ARGC_NUMBER) {
         napi_valuetype valuetype1 = napi_null;
         NAPI_CALL(env, napi_typeof(env, args[1], &valuetype1));
-        NAPI_ASSERT(env, valuetype1 == napi_string, "Wrong argument type. string expected.");
+        PARAM_NAPI_ASSERT(env, valuetype1 == napi_string,
+            SYSPARAM_INVALID_INPUT, "Wrong argument type. string expected.");
     }
 
     size_t keySize = 0;
@@ -320,7 +333,7 @@ static napi_value Get(napi_env env, napi_callback_info info)
     napi_value thisVar = nullptr;
     void *data = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &thisVar, &data);
-    NAPI_ASSERT(env, argc >= 1, "requires 1 parameter");
+    PARAM_NAPI_ASSERT(env, argc >= 1, SYSPARAM_INVALID_INPUT, "requires 1 parameter");
     StorageAsyncContextPtr asyncContext = new StorageAsyncContext();
     asyncContext->env = env;
     for (size_t i = 0; i < argc; i++) {

@@ -40,7 +40,7 @@ INIT_LOCAL_API int GetSystemError(int err)
         case PARAM_CODE_INVALID_PARAM:
         case PARAM_CODE_INVALID_NAME:
         case PARAM_CODE_READ_ONLY:
-            return SYSPARAM_INVALID_INPUT;
+            return EC_INVALID;
         case PARAM_CODE_INVALID_VALUE:
             return SYSPARAM_INVALID_VALUE;
         case PARAM_CODE_NOT_FOUND:
