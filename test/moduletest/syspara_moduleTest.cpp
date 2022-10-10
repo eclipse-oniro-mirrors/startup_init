@@ -180,17 +180,17 @@ HWTEST_F(SysparaModuleTest, Syspara_SetParameter_test_005, TestSize.Level0)
     char key1[] = "test.param.name.xxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxx";
     char value[] = "test.value.xxxx";
     int ret = SetParameter(key1, value);
-    EXPECT_EQ(ret, SYSPARAM_INVALID_INPUT);
+    EXPECT_EQ(ret, EC_INVALID);
     //check param name, Illegal param name
     char key2[] = ".test.param.name.xxxxx";
     ret = SetParameter(key2, value);
-    EXPECT_EQ(ret, SYSPARAM_INVALID_INPUT);
+    EXPECT_EQ(ret, EC_INVALID);
     char key3[] = "test..param.name.xxxxx";
     ret = SetParameter(key3, value);
-    EXPECT_EQ(ret, SYSPARAM_INVALID_INPUT);
+    EXPECT_EQ(ret, EC_INVALID);
     char key4[] = "test..param.   .name";
     ret = SetParameter(key4, value);
-    EXPECT_EQ(ret, SYSPARAM_INVALID_INPUT);
+    EXPECT_EQ(ret, EC_INVALID);
     //check param name, legal param name
     char key5[] = "test.param.name.--__.:::";
     ret = SetParameter(key5, value);
@@ -284,7 +284,7 @@ HWTEST_F(SysparaModuleTest, Syspara_SetParameter_test_007, TestSize.Level0)
     }
     string value2 = "test.param.value.002";
     ret = SetParameter(key1.c_str(), value2.c_str());
-    EXPECT_EQ(ret, SYSPARAM_INVALID_INPUT);
+    EXPECT_EQ(ret, EC_INVALID);
 
     string key2 = "ro.param.test";
     string value3 = "test.param.value.003";
@@ -298,7 +298,7 @@ HWTEST_F(SysparaModuleTest, Syspara_SetParameter_test_007, TestSize.Level0)
     }
     string value4 = "test.param.value.004";
     ret = SetParameter(key2.c_str(), value4.c_str());
-    EXPECT_EQ(ret, SYSPARAM_INVALID_INPUT);
+    EXPECT_EQ(ret, EC_INVALID);
     GTEST_LOG_(INFO) << "Syspara_SetParameter_test_007 end";
 }
 

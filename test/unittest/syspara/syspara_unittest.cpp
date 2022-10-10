@@ -264,7 +264,7 @@ HWTEST_F(SysparaUnitTest, parameterTest0012, TestSize.Level0)
     ret = GetParameterValue(handle, valueGet1, 32);
     EXPECT_EQ(ret, SYSPARAM_NOT_FOUND);
     ret = GetParameterName(handle, nameGet1, 32);
-    EXPECT_EQ(ret, SYSPARAM_SYSTEM_ERROR);
+    EXPECT_EQ(ret, SYSPARAM_NOT_FOUND);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)

@@ -56,9 +56,7 @@ ohos_shared_library("systemparameterv9") {
     "//third_party/libuv/include",
   ]
 
-  sources = [
-    "src_v9/native_parameters_js.cpp",
-  ]
+  sources = [ "src_v9/native_parameters_js.cpp" ]
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",

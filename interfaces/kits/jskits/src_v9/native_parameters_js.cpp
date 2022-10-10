@@ -150,7 +150,6 @@ static napi_value Set(napi_env env, napi_callback_info info)
     napi_value thisVar = nullptr;
     void *data = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &thisVar, &data);
-
     PARAM_NAPI_ASSERT(env, argc >= ARGC_NUMBER, SYSPARAM_INVALID_INPUT, "requires 2 parameter");
     StorageAsyncContextPtr asyncContext = new StorageAsyncContext();
     asyncContext->env = env;
