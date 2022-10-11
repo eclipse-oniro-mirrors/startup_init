@@ -32,6 +32,35 @@
 #include "securec.h"
 #include "beget_ext.h"
 
+INIT_LOCAL_API int GetSystemError(int err)
+{
+    switch(err) {
+        case 0:
+            return 0;
+        case PARAM_CODE_INVALID_PARAM:
+        case PARAM_CODE_INVALID_NAME:
+        case PARAM_CODE_READ_ONLY:
+            return EC_INVALID;
+        case PARAM_CODE_INVALID_VALUE:
+            return SYSPARAM_INVALID_VALUE;
+        case PARAM_CODE_NOT_FOUND:
+        case PARAM_CODE_NODE_EXIST:
+            return SYSPARAM_NOT_FOUND;
+        case DAC_RESULT_FORBIDED:
+            return SYSPARAM_PERMISSION_DENIED;
+        case PARAM_CODE_REACHED_MAX:
+        case PARAM_CODE_FAIL_CONNECT:
+        case PARAM_CODE_INVALID_SOCKET:
+        case PARAM_CODE_NOT_SUPPORT:
+            return SYSPARAM_SYSTEM_ERROR;
+        case PARAM_CODE_TIMEOUT:
+            return SYSPARAM_WAIT_TIMEOUT;
+        default:
+            return SYSPARAM_SYSTEM_ERROR;
+    }
+    return 0;
+}
+
 INIT_LOCAL_API int IsValidParamValue(const char *value, uint32_t len)
 {
     if ((value == NULL) || (strlen(value) + 1 > len)) {
@@ -48,7 +77,10 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
     uint32_t size = len;
     int ret = SystemGetParameter(key, NULL, &size);
     if (ret != 0) {
-        if (def == NULL || strlen(def) > len) {
+        if (def == NULL) {
+            return GetSystemError(ret);
+        }
+        if (strlen(def) > len) {
             return EC_INVALID;
         }
         ret = strcpy_s(value, len, def);
@@ -56,8 +88,10 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
     } else if (size > len) {
         return EC_INVALID;
     }
+
     size = len;
-    return (SystemGetParameter(key, value, &size) == 0) ? EC_SUCCESS : EC_FAILURE;
+    ret = SystemGetParameter(key, value, &size);
+    return GetSystemError(ret);
 }
 
 INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder)

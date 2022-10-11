@@ -51,6 +51,7 @@ ohos_moduletest("InitModuleTest") {
     "modulemgr_moduletest.cpp",
     "service_control_test.cpp",
     "service_watcher_moduleTest.cpp",
+    "syspara_moduleTest.cpp",
     "test_utils.cpp",
   ]
 
@@ -65,13 +66,13 @@ ohos_moduletest("InitModuleTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/googletest:gtest_main",
   ]
 }
 
 group("moduletest") {
   testonly = true
-
   deps = [ ":InitModuleTest" ]
 }
 

@@ -40,6 +40,7 @@ INIT_LOCAL_API int GetDevUdid_(char *udid, int size);
 INIT_LOCAL_API int IsValidParamValue(const char *value, uint32_t len);
 
 INIT_LOCAL_API const char *GetFullName_(void);
+INIT_LOCAL_API int GetSystemError(int err);
 #ifdef __cplusplus
 #if __cplusplus
 }
