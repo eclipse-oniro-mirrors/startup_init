@@ -106,11 +106,11 @@ int DoFormat(const char *devPath, const char *fsType)
     } else if (strcmp(fsType, "f2fs") == 0) {
 #ifdef __MUSL__
         char *formatCmds[] = {
-            "/bin/mkfs.f2fs", (char *)devPath, NULL
+            "/bin/mkfs.f2fs", "-d1", "-O", "encrypt", "-O", "quota", "-O", "verity", (char *)devPath, NULL
         };
 #else
         char *formatCmds[] = {
-            "/bin/make_f2fs", (char *)devPath, NULL
+            "/bin/make_f2fs", "-d1", "-O", "encrypt", "-O", "quota", "-O", "verity", (char *)devPath, NULL
         };
 #endif
         int argc = ARRAY_LENGTH(formatCmds);
