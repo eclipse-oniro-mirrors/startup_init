@@ -119,6 +119,8 @@ static int CmdClear(int id, const char *name, int argc, const char **argv)
         HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)&ctx, NULL);
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
+    ctx.reserved = "clearInitBootevent";
+    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)&ctx, NULL);
     return 0;
 }
 

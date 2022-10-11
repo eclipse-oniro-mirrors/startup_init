@@ -385,6 +385,12 @@ int ServiceStart(Service *service)
     INIT_LOGI("Service %s(pid %d) started", service->name, pid);
     service->pid = pid;
     NotifyServiceChange(service, SERVICE_STARTED);
+#ifndef OHOS_LITE
+    /*
+     * after service fork hooks
+     */
+    ServiceHookExecute(service->name, (const char *)&pid, INIT_SERVICE_FORK_AFTER);
+#endif
     return SERVICE_SUCCESS;
 }
 
