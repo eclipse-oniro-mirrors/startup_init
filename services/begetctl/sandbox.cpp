@@ -74,7 +74,7 @@ static void RunSandbox(const std::string &sandboxName)
 
 static void EnterShell()
 {
-    char *argv[] = { const_cast<char *>("sh"), NULL };
+    char *argv[] = { const_cast<char *>("sh"), nullptr };
     char *envp[] = { nullptr };
     if (execve("/system/bin/sh", argv, envp) != 0) {
         std::cout << "execve sh failed! err = "<< errno << std::endl;
@@ -94,14 +94,14 @@ static void EnterExec(const std::string &processName)
     const std::string sep = " ";
     OHOS::SplitStr(tmpName, sep, vtr, true, false);
 
-    if ((vtr.size() > MAX_PROCESS_ARGC) || (vtr.size() <= 0)) {
+    if ((vtr.size() > MAX_PROCESS_ARGC) || (vtr.size() == 0)) {
         std::cout << "Service parameters is error." << std::endl;
         return;
     }
     char *argv[MAX_PROCESS_ARGC] = {};
     std::vector<std::string>::iterator it;
     int i = 0;
-    for (it = vtr.begin(); it != vtr.end(); it++) {
+    for (it = vtr.begin(); it != vtr.end(); ++it) {
         argv[i] = (char *)(*it).c_str();
         std::cout << std::string(argv[i]) << std::endl;
         i++;

@@ -195,7 +195,7 @@ static int DacGetParamSecurityLabel(const char *path)
             ProcessParamFile(fileName, NULL);
         }
     }
-    PARAM_LOGI("DacGetParamSecurityLabel path %s %d", path, count);
+    PARAM_LOGV("Get parameter security label dac number is %d, from %s.", count, path);
     free(fileName);
     closedir(pDir);
     return 0;

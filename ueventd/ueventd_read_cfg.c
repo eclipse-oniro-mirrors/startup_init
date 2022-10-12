@@ -311,7 +311,7 @@ bool IsMatch(const char *target, const char *pattern)
         }
 
         if (*p == '\0') {
-            return !reMatch ? false : true;
+            return reMatch;
         }
 
         if (*p == '*') {
@@ -335,7 +335,7 @@ bool IsMatch(const char *target, const char *pattern)
     while (*p == '*') {
         p++;
     }
-    return (*p == '\0') ? true : false;
+    return (*p == '\0');
 }
 
 struct DeviceUdevConf *GetDeviceUdevConfByDevNode(const char *devNode)

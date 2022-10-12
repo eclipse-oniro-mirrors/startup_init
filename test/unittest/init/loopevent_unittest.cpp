@@ -297,4 +297,17 @@ HWTEST_F(LoopEventUnittest, ProcessWatcherTask, TestSize.Level1)
     LoopEventUnittest loopevtest = LoopEventUnittest();
     loopevtest.ProcessWatcherTask();
 }
+
+HWTEST_F(LoopEventUnittest, CloseTackUnittest, TestSize.Level1)
+{
+    LoopHandle loop = nullptr;
+    LE_GetSendResult(nullptr);
+    ASSERT_EQ(LE_CreateLoop(&loop), 0);
+    ((EventLoop *)loop)->runLoop(nullptr);
+    ((EventLoop *)loop)->runLoop = [](const struct EventLoop_ *loop)->LE_STATUS {return LE_SUCCESS;};
+    LE_RunLoop(loop);
+    LE_StopLoop(loop);
+    LE_CloseLoop(loop);
+}
+
 }  // namespace init_ut

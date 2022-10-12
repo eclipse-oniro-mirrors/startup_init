@@ -137,7 +137,6 @@ void LiteParamService(void)
     InitParamService();
     // get persist param
     LoadPersistParams();
-
     osThreadAttr_t attr;
     attr.name = "ParamServiceTask";
     attr.attr_bits = 0U;

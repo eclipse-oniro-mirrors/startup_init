@@ -35,15 +35,17 @@ static void ProcessSignal(const struct signalfd_siginfo *siginfo)
                 if (sigPID <= 0) {
                     break;
                 }
+                Service* service = GetServiceByPid(sigPID);
                 // check child process exit status
                 if (WIFSIGNALED(procStat)) {
-                    INIT_LOGE("Child process %d exit with signal: %d", sigPID, WTERMSIG(procStat));
+                    INIT_LOGE("Child process %s(pid %d) exit with code : %d",
+                        service == NULL ? "Unknown" : service->name, sigPID, sigPID, WTERMSIG(procStat));
                 }
                 if (WIFEXITED(procStat)) {
-                    INIT_LOGE("Child process %d exit with code : %d", sigPID, WEXITSTATUS(procStat));
+                    INIT_LOGE("Child process %s(pid %d) exit with code : %d",
+                        service == NULL ? "Unknown" : service->name, sigPID, WEXITSTATUS(procStat));
                 }
                 CmdServiceProcessDelClient(sigPID);
-                Service* service = GetServiceByPid(sigPID);
                 INIT_LOGI("SigHandler, SIGCHLD received, Service:%s pid:%d uid:%d status:%d.",
                     service == NULL ? "Unknown" : service->name,
                     sigPID, siginfo->ssi_uid, procStat);

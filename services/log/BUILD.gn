@@ -27,7 +27,6 @@ if (defined(ohos_lite)) {
       "_GNU_SOURCE",
       "OHOS_LITE",
     ]
-    cflags = [ "-fPIC" ]
     public_configs = [ ":exported_header_files" ]
 
     if (ohos_kernel_type == "linux") {

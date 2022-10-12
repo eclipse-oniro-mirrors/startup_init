@@ -21,7 +21,6 @@
 #include <thread>
 
 #include "param_message.h"
-#include "param_message.h"
 #include "init_param.h"
 #include "system_ability_definition.h"
 #include "string_ex.h"
@@ -203,8 +202,10 @@ void WatcherManager::WatcherGroup::ProcessParameterChange(const std::string &nam
     // walk watcher
     ListNode *node = nullptr;
     ForEachListEntry(&watchers_, node) {
-        ParamWatcher *watcher = (ParamWatcher *)node;
-        watcher->ProcessParameterChange(name, value);
+        if (node != nullptr) {
+            ParamWatcher *watcher = (ParamWatcher *)node;
+            watcher->ProcessParameterChange(name, value);
+        }
     }
 }
 
@@ -291,14 +292,12 @@ int WatcherManager::GetServerFd(bool retry)
     if (serverFd_ != INVALID_SOCKET) {
         return serverFd_;
     }
-    int ret = 0;
     int32_t retryCount = 0;
     do {
         serverFd_ = socket(PF_UNIX, SOCK_STREAM, 0);
         int flags = fcntl(serverFd_, F_GETFL, 0);
         (void)fcntl(serverFd_, F_SETFL, flags & ~O_NONBLOCK);
-        ret = ConnectServer(serverFd_, CLIENT_PIPE_NAME);
-        if (ret == 0) {
+        if (ConnectServer(serverFd_, CLIENT_PIPE_NAME) == 0) {
             break;
         }
         close(serverFd_);

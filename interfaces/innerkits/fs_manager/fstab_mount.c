@@ -42,11 +42,10 @@ const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 
 bool IsSupportedFilesystem(const char *fsType)
 {
-    static const char *supportedFilesystem[] = {"ext4", "f2fs", NULL};
-
     bool supported = false;
-    int index = 0;
     if (fsType != NULL) {
+        static const char *supportedFilesystem[] = {"ext4", "f2fs", NULL};
+        int index = 0;
         while (supportedFilesystem[index] != NULL) {
             if (strcmp(supportedFilesystem[index++], fsType) == 0) {
                 supported = true;
@@ -62,6 +61,7 @@ static int ExecCommand(int argc, char **argv)
     if (argc == 0 || argv == NULL || argv[0] == NULL) {
         return -1;
     }
+    BEGET_LOGI("Execute %s begin", argv[0]);
     pid_t pid = fork();
     if (pid < 0) {
         BEGET_LOGE("Fork new process to format failed: %d", errno);
@@ -76,6 +76,7 @@ static int ExecCommand(int argc, char **argv)
     if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
         BEGET_LOGE("Command %s failed with status %d", argv[0], WEXITSTATUS(status));
     }
+    BEGET_LOGI("Execute %s end", argv[0]);
     return WEXITSTATUS(status);
 }
 
@@ -90,8 +91,8 @@ int DoFormat(const char *devPath, const char *fsType)
         return -1;
     }
     int ret = 0;
-    char blockSizeBuffer[BLOCK_SIZE_BUFFER] = {0};
     if (strcmp(fsType, "ext4") == 0) {
+        char blockSizeBuffer[BLOCK_SIZE_BUFFER] = {0};
         const unsigned int blockSize = 4096;
         if (snprintf_s(blockSizeBuffer, BLOCK_SIZE_BUFFER, BLOCK_SIZE_BUFFER - 1, "%u", blockSize) == -1) {
             BEGET_LOGE("Failed to build block size buffer");
@@ -171,7 +172,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
     }
 
     int ret = 0;
-    if (size <= 0) {
+    if (size == 0) {
         char *cmd[] = {
             file, (char *)device, NULL
         };
@@ -193,7 +194,6 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
         char **argv = (char **)cmd;
         ret = ExecCommand(argc, argv);
     }
-    BEGET_LOGI("resize.f2fs is ending.");
     return ret;
 }
 
@@ -210,7 +210,6 @@ static int DoFsckF2fs(const char* device)
     };
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
-    BEGET_LOGI("fsck.f2fs is ending.");
     return ExecCommand(argc, argv);
 }
 
@@ -223,7 +222,7 @@ static int DoResizeExt(const char* device, const unsigned long long size)
     }
 
     int ret = 0;
-    if (size <= 0) {
+    if (size == 0) {
         char *cmd[] = {
             file, "-f", (char *)device, NULL
         };
@@ -243,7 +242,6 @@ static int DoResizeExt(const char* device, const unsigned long long size)
         char **argv = (char **)cmd;
         ret = ExecCommand(argc, argv);
     }
-    BEGET_LOGI("resize2fs is ending.");
     return ret;
 }
 
@@ -260,7 +258,6 @@ static int DoFsckExt(const char* device)
     };
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
-    BEGET_LOGI("e2fsck is ending.");
     return ExecCommand(argc, argv);
 }
 
@@ -288,15 +285,8 @@ static int Mount(const char *source, const char *target, const char *fsType,
         }
     }
     errno = 0;
-    while ((rc = mount(source, target, fsType, flags, data)) != 0) {
-        if (errno == EAGAIN) {
-            BEGET_LOGE("Mount %s to %s failed. try again", source, target);
-            continue;
-        }
-        if (errno == EBUSY) {
-            rc = 0;
-        }
-        break;
+    if ((rc = mount(source, target, fsType, flags, data)) != 0) {
+        BEGET_WARNING_CHECK(errno != EBUSY, rc = 0, "Mount %s to %s busy, ignore", source, target);
     }
     return rc;
 }
@@ -407,7 +397,12 @@ int MountOneItem(FstabItem *item)
 
     int rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
     if (rc != 0) {
-        BEGET_LOGE("Mount %s to %s failed %d", item->deviceName, item->mountPoint, errno);
+        if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
+            BEGET_LOGE("Mount no fail device %s to %s failed, err = %d", item->deviceName, item->mountPoint, errno);
+        } else {
+            BEGET_LOGW("Mount %s to %s failed, err = %d. Ignore failure", item->deviceName, item->mountPoint, errno);
+            rc = 0;
+        }
     } else {
         BEGET_LOGI("Mount %s to %s successful", item->deviceName, item->mountPoint);
     }

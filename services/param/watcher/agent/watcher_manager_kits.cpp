@@ -261,16 +261,20 @@ void WatcherManagerKits::ParameterChangeListener::OnParameterChange(const std::s
 } // namespace init_param
 } // namespace OHOS
 
+static int ParameterWatcherCheck(const char *keyPrefix)
+{
+    std::string key(keyPrefix);
+    if (key.rfind("*") == key.length() - 1) {
+        return WatchParamCheck(key.substr(0, key.length() - 1).c_str());
+    } else {
+        return WatchParamCheck(keyPrefix);
+    }
+}
+
 int SystemWatchParameter(const char *keyPrefix, ParameterChangePtr callback, void *context)
 {
     WATCHER_CHECK(keyPrefix != nullptr, return PARAM_CODE_INVALID_PARAM, "Invalid prefix");
-    int ret = 0;
-    std::string key(keyPrefix);
-    if (key.rfind("*") == key.length() - 1) {
-        ret = WatchParamCheck(key.substr(0, key.length() - 1).c_str());
-    } else {
-        ret = WatchParamCheck(keyPrefix);
-    }
+    int ret = ParameterWatcherCheck(keyPrefix);
     if (ret != 0) {
         return ret;
     }
@@ -286,13 +290,7 @@ int SystemWatchParameter(const char *keyPrefix, ParameterChangePtr callback, voi
 int RemoveParameterWatcher(const char *keyPrefix, ParameterChgPtr callback, void *context)
 {
     WATCHER_CHECK(keyPrefix != nullptr, return PARAM_CODE_INVALID_PARAM, "Invalid prefix");
-    int ret = 0;
-    std::string key(keyPrefix);
-    if (key.rfind("*") == key.length() - 1) {
-        ret = WatchParamCheck(key.substr(0, key.length() - 1).c_str());
-    } else {
-        ret = WatchParamCheck(keyPrefix);
-    }
+    int ret = ParameterWatcherCheck(keyPrefix);
     if (ret != 0) {
         return ret;
     }

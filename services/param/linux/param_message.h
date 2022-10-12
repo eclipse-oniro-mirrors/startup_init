@@ -61,7 +61,7 @@ typedef struct {
         uint32_t watcherId;
         uint32_t waitId;
     } id;
-    char key[PARAM_NAME_LEN_MAX];
+    char key[PARAM_NAME_LEN_MAX + 4];
     char data[0];
 } ParamMessage;
 
@@ -84,8 +84,9 @@ int ParamServiceStop(void);
 int ParamServiceStart(void);
 
 int ParamTaskClose(const ParamTaskPtr stream);
-int ParamServerCreate(ParamTaskPtr *server, const ParamStreamInfo *info);
-int ParamStreamCreate(ParamTaskPtr *client, ParamTaskPtr server, const ParamStreamInfo *info, uint16_t userDataSize);
+int ParamServerCreate(ParamTaskPtr *stream, const ParamStreamInfo *streamInfo);
+int ParamStreamCreate(ParamTaskPtr *stream, ParamTaskPtr server,
+                      const ParamStreamInfo *streamInfo, uint16_t userDataSize);
 int ParamTaskSendMsg(const ParamTaskPtr stream, const ParamMessage *msg);
 
 int ParamEventTaskCreate(ParamTaskPtr *stream, LE_ProcessAsyncEvent eventProcess);

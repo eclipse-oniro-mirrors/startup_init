@@ -50,6 +50,7 @@ static unsigned int ConvertFlags(char *flagBuffer)
         {"check", FS_MANAGER_CHECK},
         {"wait", FS_MANAGER_WAIT},
         {"required", FS_MANAGER_REQUIRED},
+        {"nofail", FS_MANAGER_NOFAIL},
     };
 
     BEGET_CHECK_RETURN_VALUE(flagBuffer != NULL && *flagBuffer != '\0', 0); // No valid flags.
@@ -328,7 +329,7 @@ int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char 
     }
     FstabItem *item = FindFstabItemForMountPoint(*fstab, mountPoint);
     if (item == NULL) {
-        BEGET_LOGE("Failed to get fstab item from point \" %s \"", mountPoint);
+        BEGET_LOGE("Failed to get fstab item from mount point \" %s \"", mountPoint);
         return -1;
     }
     if (strncpy_s(deviceName, nameLen, item->deviceName, strlen(item->deviceName)) != 0) {
@@ -398,7 +399,6 @@ static unsigned long ParseDefaultMountFlag(const char *str)
 
 static bool IsFscryptOption(const char *option)
 {
-    BEGET_LOGI("IsFscryptOption start");
     if (!option) {
         return false;
     }
@@ -433,7 +433,7 @@ int LoadFscryptPolicy(char *buf, size_t size)
         BEGET_LOGE("LoadFscryptPolicy:buf or fscrypt policy is empty");
         return -ENOMEM;
     }
-    if (size <= 0) {
+    if (size == 0) {
         BEGET_LOGE("LoadFscryptPloicy:size is invalid");
         return -EINVAL;
     }
@@ -510,7 +510,7 @@ int GetBlockDevicePath(const char *partName, char *path, size_t size)
     BEGET_CHECK_RETURN_VALUE(fstab != NULL, -1);
     int ret = GetBlockDeviceByMountPoint(partName, fstab, path, size);
     BEGET_INFO_CHECK(ret == 0, ret = GetBlockDeviceByName(partName, fstab, path, size),
-        "mount point not found, try to get it by device name");
+        "Mount point not found, try to get path by device name.");
     ReleaseFstab(fstab);
     return ret;
 }
@@ -533,9 +533,8 @@ static int ParseRequiredMountInfo(const char *item, Fstab *fstab)
     BEGET_CHECK(!(item == NULL || *item == '\0' || fstab == NULL), return -1);
 
     char *p = NULL;
-    const char *q = item;
     if ((p = strstr(item, "=")) != NULL) {
-        q = item + strlen(OHOS_REQUIRED_MOUNT_PREFIX); // Get partition name
+        const char *q = item + strlen(OHOS_REQUIRED_MOUNT_PREFIX); // Get partition name
         BEGET_CHECK(!(q == NULL || *q == '\0' || (p - q) <= 0), return -1);
         BEGET_ERROR_CHECK(strncpy_s(partName, NAME_SIZE -1, q, p - q) == EOK,
             return -1, "Failed to copy required partition name");

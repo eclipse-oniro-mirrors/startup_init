@@ -95,7 +95,7 @@ Service *AddService(const char *name)
     node->data.service = service;
     service->name = node->name;
     service->status = SERVICE_IDLE;
-    CPU_ZERO(&service->cpuSet);
+    service->cpuSet = NULL;
     OH_ListInit(&service->extDataNode);
     g_serviceSpace.serviceCount++;
     INIT_LOGV("AddService %s", node->name);
@@ -149,6 +149,10 @@ void ReleaseService(Service *service)
             free(service->serviceJobs.jobsName[i]);
         }
         service->serviceJobs.jobsName[i] = NULL;
+    }
+    if (service->cpuSet != NULL) {
+        free(service->cpuSet);
+        service->cpuSet = NULL;
     }
 #ifndef OHOS_LITE
     // clear ext data
@@ -213,7 +217,7 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
         INIT_ERROR_CHECK(curParam != NULL, return SERVICE_FAILURE, "Invalid arg %d", i);
         INIT_ERROR_CHECK(strlen(curParam) <= MAX_ONE_ARG_LEN, return SERVICE_FAILURE, "Arg %s is tool long", curParam);
         args->argv[i] = strdup(curParam);
-        INIT_ERROR_CHECK(args->argv[i] != NULL, return SERVICE_FAILURE, "Failed to dupstring %s", curParam);
+        INIT_ERROR_CHECK(args->argv[i] != NULL, return SERVICE_FAILURE, "Failed to duplicate argument %s", curParam);
     }
     return SERVICE_SUCCESS;
 }
@@ -265,13 +269,13 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
         free(curServ->servPerm.gIDArray);
     }
     curServ->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t) * gidCount);
-    INIT_ERROR_CHECK(curServ->servPerm.gIDArray != NULL, return SERVICE_FAILURE, "Failed to malloc");
+    INIT_ERROR_CHECK(curServ->servPerm.gIDArray != NULL, return SERVICE_FAILURE, "Failed to malloc err=%d", errno);
     curServ->servPerm.gIDCnt = gidCount;
 
     gid_t gid;
     if (!cJSON_IsArray(arrItem)) {
         int ret = GetGid(arrItem, &gid, curServ);
-        INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to gid");
+        INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Parse service %s gid failed.", curServ->name);
         curServ->servPerm.gIDArray[0] = gid;
         return SERVICE_SUCCESS;
     }
@@ -280,7 +284,7 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
         cJSON *item = cJSON_GetArrayItem(arrItem, i);
         int ret = GetGid(item, &gid, curServ);
         if (ret != 0) {
-            INIT_LOGE("parse service %s %d gid failed skip this", curServ->name, i);
+            INIT_LOGW("Parse service %s gid failed from item %s.", curServ->name, cJSON_Print(item));
             continue;
         }
         curServ->servPerm.gIDArray[gidArrayIndex++] = gid;
@@ -684,6 +688,11 @@ static int GetCpuArgs(const cJSON *argJson, const char *name, Service *service)
     int count = cJSON_GetArraySize(obj);
     int cpus = -1;
     int cpuNumMax = sysconf(_SC_NPROCESSORS_CONF);
+    if (count > 0 && service->cpuSet == NULL) {
+        service->cpuSet = malloc(sizeof(cpu_set_t));
+        INIT_ERROR_CHECK(service->cpuSet != NULL, return SERVICE_FAILURE, "Failed to malloc for cpuset");
+    }
+    CPU_ZERO(service->cpuSet);
     for (int i = 0; i < count; ++i) {
         cJSON *item = cJSON_GetArrayItem(obj, i);
         INIT_ERROR_CHECK(item != NULL, return SERVICE_FAILURE, "prase invalid");
@@ -692,10 +701,10 @@ static int GetCpuArgs(const cJSON *argJson, const char *name, Service *service)
             INIT_LOGW("%s core number %d of CPU cores does not exist", service->name, cpus);
             continue;
         }
-        if (CPU_ISSET(cpus, &service->cpuSet)) {
+        if (CPU_ISSET(cpus, service->cpuSet)) {
             continue;
         }
-        CPU_SET(cpus, &service->cpuSet);
+        CPU_SET(cpus, service->cpuSet);
     }
     return SERVICE_SUCCESS;
 }
@@ -836,6 +845,8 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get disabled flag for service %s", service->name);
     ret = GetServiceAttr(curItem, service, CONSOLE_STR_IN_CFG, SERVICE_ATTR_CONSOLE, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get console for service %s", service->name);
+    ret = GetServiceAttr(curItem, service, "notify-state", SERVICE_ATTR_NOTIFY_STATE, NULL);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get notify-state for service %s", service->name);
 
     ParseOneServiceArgs(curItem, service);
     ret = GetServiceSandbox(curItem, service);
@@ -990,14 +1001,14 @@ void ParseAllServices(const cJSON *fileRoot)
             continue;
         }
         Service *service = GetServiceByName(fieldStr);
-        if (service != NULL) {
-            INIT_LOGE("Service \' %s \' already exist", fieldStr);
-            continue;
-        }
-        service = AddService(fieldStr);
         if (service == NULL) {
-            INIT_LOGE("Failed to create service name %s", fieldStr);
-            continue;
+            service = AddService(fieldStr);
+            if (service == NULL) {
+                INIT_LOGE("Failed to add service name %s", fieldStr);
+                continue;
+            }
+        } else {
+            INIT_LOGI("Service %s already exists, updating.", fieldStr);
         }
         service->pid = -1;
         int ret = ParseOneService(curItem, service);
@@ -1071,7 +1082,7 @@ static Service *GetServiceByExtServName(const char *fullServName)
 
 void StartServiceByName(const char *servName)
 {
-    INIT_LOGI("StartServiceByName Service %s", servName);
+    INIT_LOGI("Start service %s", servName);
     Service *service = GetServiceByName(servName);
     if (service == NULL) {
         service = GetServiceByExtServName(servName);
@@ -1094,7 +1105,7 @@ void StopServiceByName(const char *servName)
     INIT_ERROR_CHECK(service != NULL, return, "Cannot find service %s.", servName);
 
     if (ServiceStop(service) != SERVICE_SUCCESS) {
-        INIT_LOGE("Service %s start failed!", servName);
+        INIT_LOGE("Service %s stop failed!", servName);
     }
     return;
 }

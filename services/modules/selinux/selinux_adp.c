@@ -52,7 +52,7 @@ static int SetServiceContent(int id, const char *name, int argc, const char **ar
             PLUGIN_LOGE("failed to set service %s's secon (%s).", argv[0], (char *)data->data);
             _exit(PROCESS_EXIT_CODE);
         } else {
-            PLUGIN_LOGI("Set content %s to %s.", (char *)data->data, argv[0]);
+            PLUGIN_LOGV("Set content %s to %s.", (char *)data->data, argv[0]);
         }
     } else {
         PLUGIN_CHECK(!(setexeccon("u:r:limit_domain:s0") < 0), _exit(PROCESS_EXIT_CODE),
@@ -95,12 +95,12 @@ static void SelinuxAdpExit(void)
 
 MODULE_CONSTRUCTOR(void)
 {
-    PLUGIN_LOGI("SelinuxAdp init now ...");
+    PLUGIN_LOGI("Selinux adapter plug-in init now ...");
     SelinuxAdpInit();
 }
 
 MODULE_DESTRUCTOR(void)
 {
-    PLUGIN_LOGI("SelinuxAdp exit now ...");
+    PLUGIN_LOGI("Selinux adapter plug-in exit now ...");
     SelinuxAdpExit();
 }

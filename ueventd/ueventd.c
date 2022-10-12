@@ -148,7 +148,7 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
         return;
     }
 
-    while (idx < sizeof(DYNAMIC_DEVICES)/sizeof(DYNAMIC_DEVICES[0])) {
+    while (idx < sizeof(DYNAMIC_DEVICES) / sizeof(DYNAMIC_DEVICES[0])) {
         if (strcmp(uevent->deviceName, DYNAMIC_DEVICES[idx].dev + DEV_NODE_PATH_PREFIX_LEN) != 0) {
             idx++;
             continue;
@@ -243,7 +243,7 @@ void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *ueven
         return;
     }
 
-    // reset parititon number, major and minor.
+    // reset partititon number, major and minor.
     uevent->partitionNum = -1;
     uevent->major = -1;
     uevent->minor = -1;

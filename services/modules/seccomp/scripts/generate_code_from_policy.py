@@ -21,7 +21,7 @@ import argparse
 import textwrap
 import re
 
-supported_parse_item = ['arch', 'labelName', 'priority', 'allowList', 'blockList', \
+supported_parse_item = ['arch', 'labelName', 'priority', 'allowList', 'blockList', 'priorityWithArgs',\
     'allowListWithArgs', 'headFiles', 'selfDefineSyscall', 'returnValue', 'mode']
 
 function_name_nr_table_dict = {}
@@ -30,9 +30,11 @@ BPF_JGE = 'BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, {}, {}, {}),'
 BPF_JGT = 'BPF_JUMP(BPF_JMP|BPF_JGT|BPF_K, {}, {}, {}),'
 BPF_JEQ = 'BPF_JUMP(BPF_JMP|BPF_JEQ|BPF_K, {}, {}, {}),'
 BPF_JSET = 'BPF_JUMP(BPF_JMP|BPF_JSET|BPF_K, {}, {}, {}),'
+BPF_JA = 'BPF_JUMP(BPF_JMP|BPF_JA, {}, 0, 0),'
 BPF_LOAD = 'BPF_STMT(BPF_LD|BPF_W|BPF_ABS, {}),'
 BPF_LOAD_MEM = 'BPF_STMT(BPF_LD|BPF_MEM, {}),'
 BPF_ST = 'BPF_STMT(BPF_ST, {}),'
+BPF_AND = 'BPF_STMT(BPF_ALU|BPF_AND|BPF_K, {}),'
 BPF_RET_VALUE = 'BPF_STMT(BPF_RET|BPF_K, {}),'
 
 operation = ['<', '<=', '!=', '==', '>', '>=', '&']
@@ -80,11 +82,13 @@ class SeccompPolicyParam:
         self.priority = set()
         self.allow_list = set()
         self.blocklist = set()
+        self.priority_with_args = set()
         self.allow_list_with_args = set()
         self.head_files = set()
         self.self_define_syscall = set()
         self.final_allow_list = set()
         self.final_priority = set()
+        self.final_priority_with_args = set()
         self.final_allow_list_with_args = set()
         self.return_value = ''
         self.mode = 'DEFAULT'
@@ -94,6 +98,7 @@ class SeccompPolicyParam:
             'allowList': self.update_allow_list,
             'blockList': self.update_blocklist,
             'allowListWithArgs': self.update_allow_list_with_args,
+            'priorityWithArgs': self.update_priority_with_args,
             'headFiles': self.update_head_files,
             'selfDefineSyscall': self.update_self_define_syscall,
             'returnValue': self.update_return_value,
@@ -105,6 +110,7 @@ class SeccompPolicyParam:
         self.allow_list.clear()
         self.blocklist.clear()
         self.allow_list_with_args.clear()
+        self.priority_with_args.clear()
         if self.mode == 'ONLY_CHECK_ARGS':
             self.final_allow_list.clear()
             self.final_priority.clear()
@@ -135,6 +141,14 @@ class SeccompPolicyParam:
     def update_blocklist(self, function_name):
         if self.is_function_name_exist(function_name):
             self.blocklist.add(function_name)
+            return True
+        return False
+
+    def update_priority_with_args(self, function_name_with_args):
+        function_name = function_name_with_args[:function_name_with_args.find(':')]
+        function_name = function_name.strip()
+        if self.is_function_name_exist(function_name):
+            self.priority_with_args.add(function_name_with_args)
             return True
         return False
 
@@ -182,12 +196,22 @@ class SeccompPolicyParam:
 
     def update_final_list(self):
         #remove duplicate function_name
-        self.allow_list_with_args = set(item for item in self.allow_list_with_args \
-            if item[:item.find(':')] not in self.blocklist)
+        self.priority_with_args = set(item
+                                      for item in self.priority_with_args
+                                      if item[:item.find(':')] not in self.blocklist)
+        priority_function_name_list_with_args = set(item[:item.find(':')] for item in self.priority_with_args)
+        self.allow_list_with_args = set(item
+                                        for item in self.allow_list_with_args
+                                        if item[:item.find(':')] not in self.blocklist and
+                                        item[:item.find(':')] not in priority_function_name_list_with_args)
         function_name_list_with_args = set(item[:item.find(':')] for item in self.allow_list_with_args)
-        self.final_allow_list |= self.allow_list - self.blocklist - self.priority - function_name_list_with_args
-        self.final_priority |= self.priority - self.blocklist - function_name_list_with_args
+
+        self.final_allow_list |= self.allow_list - self.blocklist - self.priority - function_name_list_with_args - \
+                                    priority_function_name_list_with_args
+        self.final_priority |= self.priority - self.blocklist - function_name_list_with_args - \
+                                priority_function_name_list_with_args
         self.final_allow_list_with_args |= self.allow_list_with_args
+        self.final_priority_with_args |= self.priority_with_args
         block_nr_list = self.function_name_to_nr(self.blocklist)
         self.self_define_syscall = self.self_define_syscall - block_nr_list
         self.clear_list()
@@ -499,33 +523,96 @@ class GenBpfPolicy:
             self.flag = False
             return bpf_policy
 
-        arg_str = atom[0:3]
-        if arg_str != 'arg':
-            print('[ERROR] format ERROR, {} not start with arg'.format(atom))
-            self.flag = False
-            return bpf_policy
+        if atom[0] == '(':
+            bpf_policy += self.compile_mask_equal_atom(atom, cur_size)
+        else:
+            bpf_policy += self.compile_single_operation_atom(atom, cur_size)
 
-        arg_id = int(atom[3])
+        return bpf_policy
+    
+    def check_arg_str(self, arg_atom):
+        arg_str = arg_atom[0:3]
+        if arg_str != 'arg':
+            print('[ERROR] format ERROR, {} is not equal to arg'.format(arg_atom))
+            self.flag = False
+            return -1, False
+
+        arg_id = int(arg_atom[3])
         if arg_id not in range(6):
             print('[ERROR] arg num out of the scope 0~5')
             self.flag = False
-            return bpf_policy
+            return -1, False
 
-        operation_str = atom[4:6]
+        return arg_id, True
+
+    def check_operation_str(self, operation_atom):
+        operation_str = operation_atom
         if operation_str not in operation:
-            operation_str = atom[4]
+            operation_str = operation_atom[0]
             if operation_str not in operation:
                 print('[ERROR] operation not in [<, <=, !=, ==, >, >=, &]')
                 self.flag = False
-                return bpf_policy
+                return '', False
+        return operation_str, True
 
-        const_str = atom[4 + len(operation_str):]
+    #gen bpf (argn & mask) == value
+    def gen_mask_equal_bpf(self, arg_id, mask, value, cur_size):
+        bpf_policy = []
+        #high 4 bytes
+        bpf_policy.append(BPF_LOAD.format(20 + arg_id * 8))
+        bpf_policy.append(BPF_AND.format('((uint64_t)' + mask + ') >> 32'))
+        bpf_policy.append(BPF_JEQ.format('((uint64_t)' + value + ') >> 32', 0, cur_size + 3))
+
+        #low 4 bytes
+        bpf_policy.append(BPF_LOAD.format(16 + arg_id * 8))
+        bpf_policy.append(BPF_AND.format(mask))
+        bpf_policy.append(BPF_JEQ.format(value, cur_size, cur_size + 1))
+
+        return bpf_policy
+
+    #parse (argn & mask) == value
+    def compile_mask_equal_atom(self, atom, cur_size):
+        bpf_policy = []
+        left_brace_pos = atom.find('(')
+        right_brace_pos = atom.rfind(')')
+        inside_brace_content = atom[left_brace_pos + 1: right_brace_pos]
+        outside_brace_content = atom[right_brace_pos + 1:]
+
+        arg_res = self.check_arg_str(inside_brace_content[0:4])
+        if not arg_res[1]:
+            return bpf_policy
+
+        operation_res_inside = self.check_operation_str(inside_brace_content[4:6])
+        if operation_res_inside[0] != '&' or not operation_res_inside[1]:
+            return bpf_policy
+
+        mask = inside_brace_content[4 + len(operation_res_inside[0]):]
+
+        operation_res_outside = self.check_operation_str(outside_brace_content[0:2])
+        if operation_res_outside[0] != '==' or not operation_res_outside[1]:
+            return bpf_policy
+
+        value = outside_brace_content[len(operation_res_outside[0]):]
+
+        return self.gen_mask_equal_bpf(arg_res[0], mask, value, cur_size)
+
+    def compile_single_operation_atom(self, atom, cur_size):
+        bpf_policy = []
+        arg_res = self.check_arg_str(atom[0:4])
+        if not arg_res[1]:
+            return bpf_policy
+
+        operation_res = self.check_operation_str(atom[4:6])
+        if not operation_res[1]:
+            return bpf_policy
+
+        const_str = atom[4 + len(operation_res[0]):]
 
         if not const_str:
             return bpf_policy
 
-        bpf_policy += self.load_arg(arg_id)
-        bpf_policy += self.operate_func_table.get(operation_str)(const_str, 0, cur_size + 1)
+        bpf_policy += self.load_arg(arg_res[0])
+        bpf_policy += self.operate_func_table.get(operation_res[0])(const_str, 0, cur_size + 1)
 
         return bpf_policy
 
@@ -549,6 +636,7 @@ class GenBpfPolicy:
         and_cond_groups = operation_part.split('||')
         for and_condition_group in and_cond_groups:
             bpf_policy += self.parse_args_with_condition(and_condition_group)
+            bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
         return bpf_policy
 
     def parse_else_part(self, else_part):
@@ -562,7 +650,6 @@ class GenBpfPolicy:
         group = group_info[0].split('elif')
         for sub_group in group:
             bpf_policy += self.parse_sub_group(sub_group)
-            bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
         self.parse_else_part(else_part)
         bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
         syscall_nr = self.function_name_nr_table.get(function_name)
@@ -599,8 +686,9 @@ class GenBpfPolicy:
         #load arch
         bpf_policy.append(BPF_LOAD.format(4))
         if len(arches) == 2:
-            bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_AARCH64', 2, 0))
-            bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_ARM', skip_step, 0))
+            bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_AARCH64', 3, 0))
+            bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_ARM', 0, 1))
+            bpf_policy.append(BPF_JA.format(skip_step))
             bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_KILL_PROCESS'))
         elif 'arm' in arches:
             bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_ARM', 1, 0))
@@ -695,6 +783,8 @@ class SeccompPolicyParser:
         if syscall_nr_allow_list or syscall_nr_priority:
             self.bpf_generator.add_load_syscall_nr()
         self.bpf_generator.gen_bpf_policy(syscall_nr_priority)
+        self.bpf_generator.gen_bpf_policy_with_args(self.cur_policy_param.final_priority_with_args, \
+            self.cur_policy_param.mode, self.cur_policy_param.return_value)
         self.bpf_generator.gen_bpf_policy(syscall_nr_allow_list)
         self.bpf_generator.gen_bpf_policy_with_args(self.cur_policy_param.final_allow_list_with_args, \
             self.cur_policy_param.mode, self.cur_policy_param.return_value)

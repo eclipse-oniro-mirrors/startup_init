@@ -322,10 +322,13 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
 void WaitForFile(const char *source, unsigned int maxSecond)
 {
     INIT_ERROR_CHECK(maxSecond <= WAIT_MAX_SECOND, maxSecond = WAIT_MAX_SECOND, "WaitForFile max time is 5s");
-    struct stat sourceInfo = {};
+    struct stat sourceInfo = {0};
     unsigned int waitTime = 500000;
     /* 500ms interval, check maxSecond*2 times total */
     unsigned int maxCount = maxSecond * 2;
+#ifdef STARTUP_INIT_TEST
+    maxCount = 0;
+#endif
     unsigned int count = 0;
     while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount)) {
         usleep(waitTime);
@@ -382,7 +385,7 @@ int MakeDir(const char *dir, mode_t mode)
 int MakeDirRecursive(const char *dir, mode_t mode)
 {
     int rc = -1;
-    char buffer[PATH_MAX] = {};
+    char buffer[PATH_MAX] = {0};
     const char *p = NULL;
     if (dir == NULL || *dir == '\0') {
         errno = EINVAL;
@@ -511,8 +514,8 @@ int InUpdaterMode(void)
 #ifdef OHOS_LITE
     return 0;
 #else
-    const char * const updaterExecutabeFile = "/bin/updater";
-    if (access(updaterExecutabeFile, X_OK) == 0) {
+    const char * const updaterExecutableFile = "/bin/updater";
+    if (access(updaterExecutableFile, X_OK) == 0) {
         return 1;
     } else {
         return 0;

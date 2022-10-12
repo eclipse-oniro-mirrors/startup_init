@@ -16,22 +16,51 @@
 #include <iostream>
 
 #include "begetctl.h"
+#include "hdi/idevmgr_hdi.h"
 #include "v1_0/ipartition_slot.h"
 
 using namespace OHOS::HDI::Partitionslot::V1_0;
+using OHOS::HDI::DeviceManager::V1_0::IDeviceManager;
 static const int32_t PARTITION_ARGC = 2;
+
+static int LoadDevice()
+{
+    auto devmgr = IDeviceManager::Get();
+    if (devmgr != nullptr) {
+        return devmgr->LoadDevice("partition_slot_service");
+    } else {
+        std::cout << "Get devmgr failed" << std::endl;
+        return -1;
+    }
+}
+
+static void UnloadDevice()
+{
+    auto devmgr = IDeviceManager::Get();
+    if (devmgr != nullptr) {
+        devmgr->UnloadDevice("partition_slot_service");
+    } else {
+        std::cout << "Get devmgr failed" << std::endl;
+    }
+}
 
 static int GetSlot(BShellHandle handle, int32_t argc, char *argv[])
 {
+    if (LoadDevice() != 0) {
+        std::cout << "Load partitionslot device failed" << std::endl;
+        return -1;
+    }
     std::cout << "Command: partitionslot getslot" << std::endl;
     sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
     int bootSlots = 0;
     int currentSlot = 0;
     if (partitionslot == nullptr) {
-        return 0;
+        std::cout << "Get partitionslot failed" << std::endl;
+        return -1;
     }
     partitionslot->GetCurrentSlot(currentSlot, bootSlots);
     std::cout << "The number of slots: " << bootSlots << "," <<  "current slot: " << currentSlot << std::endl;
+    UnloadDevice();
     return 0;
 }
 
@@ -39,17 +68,23 @@ static int GetSuffix(BShellHandle handle, int32_t argc, char *argv[])
 {
     if (argc != PARTITION_ARGC) {
         BShellCmdHelp(handle, argc, argv);
-        return 0;
+        return -1;
+    }
+    if (LoadDevice() != 0) {
+        std::cout << "Load partitionslot device failed" << std::endl;
+        return -1;
     }
     std::cout << "Command: partitionslot getsuffix" << std::endl;
     int slot = atoi(argv[1]);
     std::string suffix = "";
     sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
     if (partitionslot == nullptr) {
-        return 0;
+        std::cout << "Get partitionslot failed" << std::endl;
+        return -1;
     }
     partitionslot->GetSlotSuffix(slot, suffix);
     std::cout << "The slot " << slot << " matches with suffix: " << suffix << std::endl;
+    UnloadDevice();
     return 0;
 }
 
@@ -57,16 +92,22 @@ static int SetActiveSlot(BShellHandle handle, int32_t argc, char *argv[])
 {
     if (argc != PARTITION_ARGC) {
         BShellCmdHelp(handle, argc, argv);
-        return 0;
+        return -1;
+    }
+    if (LoadDevice() != 0) {
+        std::cout << "Load partitionslot device failed" << std::endl;
+        return -1;
     }
     std::cout << "Command: partitionslot setactive" << std::endl;
     int slot = atoi(argv[1]);
     sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
     if (partitionslot == nullptr) {
-        return 0;
+        std::cout << "Get partitionslot failed" << std::endl;
+        return -1;
     }
     partitionslot->SetActiveSlot(slot);
     std::cout << "Set active slot: " << slot << std::endl;
+    UnloadDevice();
     return 0;
 }
 
@@ -74,16 +115,22 @@ static int SetUnbootSlot(BShellHandle handle, int32_t argc, char *argv[])
 {
     if (argc != PARTITION_ARGC) {
         BShellCmdHelp(handle, argc, argv);
-        return 0;
+        return -1;
+    }
+    if (LoadDevice() != 0) {
+        std::cout << "Load partitionslot device failed" << std::endl;
+        return -1;
     }
     std::cout << "Command: partitionslot setunboot" << std::endl;
     int slot = atoi(argv[1]);
     sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
     if (partitionslot == nullptr) {
-        return 0;
+        std::cout << "Get partitionslot failed" << std::endl;
+        return -1;
     }
     partitionslot->SetSlotUnbootable(slot);
     std::cout << "Set unboot slot: " << slot << std::endl;
+    UnloadDevice();
     return 0;
 }
 

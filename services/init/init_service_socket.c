@@ -123,8 +123,8 @@ static int SetSocketOptionAndBind(ServiceSocket *sockopt)
 
 static int CreateSocket(ServiceSocket *sockopt)
 {
-    INIT_ERROR_CHECK(sockopt != NULL, return SERVICE_FAILURE, "Invalid socket opt");
-    INIT_LOGI("name: %s, family: %d, type: %u, protocol: %d, perm: %u, uid: %u, gid: %u, option: %u",
+    INIT_ERROR_CHECK(sockopt != NULL, return SERVICE_FAILURE, "Invalid socket options");
+    INIT_LOGV("Socket name: %s, family: %d, type: %u, protocol: %d, perm: %u, uid: %u, gid: %u, option: %u",
         sockopt->name, sockopt->family, sockopt->type, sockopt->protocol,
         sockopt->perm, sockopt->uid,    sockopt->gid,  sockopt->option);
     if (sockopt->sockFd >= 0) {
@@ -192,7 +192,7 @@ int SocketAddWatcher(ServiceWatcher *watcherHandle, Service *service, int fd)
     info.events = Event_Read;
     info.processEvent = ProcessWatchEvent_;
     int ret = LE_StartWatcher(LE_GetDefaultLoop(), &handle, &info, service);
-    INIT_LOGI("Start to monitor socket, fd:%d service name:%s", fd, service->name);
+    INIT_LOGI("Watcher socket fd %d for service %s", fd, service->name);
     *watcherHandle = (ServiceWatcher)handle;
     return ret;
 }

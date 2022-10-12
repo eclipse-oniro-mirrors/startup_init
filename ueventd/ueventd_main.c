@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         return -1;
     }
     if (access(UEVENTD_FLAG, F_OK)) {
-        INIT_LOGI("ueventd first start to trigger");
+        INIT_LOGI("Ueventd started, trigger uevent");
         RetriggerUevent(ueventSockFd, NULL, 0); // Not require boot devices
         int fd = open(UEVENTD_FLAG, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
         if (fd < 0) {

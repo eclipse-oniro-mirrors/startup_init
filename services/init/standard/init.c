@@ -46,11 +46,6 @@
 #include "fd_holder_internal.h"
 #include "bootstage.h"
 
-typedef struct HOOK_TIMING_STAT {
-    struct timespec startTime;
-    struct timespec endTime;
-} HOOK_TIMING_STAT;
-
 static int FdHolderSockInit(void)
 {
     int sock = -1;
@@ -206,6 +201,7 @@ static void StartInitSecondStage(void)
     KeyCtrlGetKeyringId(KEY_SPEC_SESSION_KEYRING, 1);
 
 #ifndef DISABLE_INIT_TWO_STAGES
+    INIT_LOGI("Start init second stage.");
     SwitchRoot("/usr");
     // Execute init second stage
     char * const args[] = {
@@ -227,9 +223,10 @@ void SystemPrepare(void)
     LogInit();
     // Make sure init log always output to /dev/kmsg.
     EnableDevKmsg();
+    INIT_LOGI("Start init first stage.");
     // Only ohos normal system support
     // two stages of init.
-    // If we are in updater mode, only one stage of init,
+    // If we are in updater mode, only one stage of init.
     if (InUpdaterMode() == 0) {
         StartInitSecondStage();
     }
@@ -252,25 +249,24 @@ HOOK_MGR *GetBootStageHookMgr()
     return bootStageHookMgr;
 }
 
-HOOK_TIMING_STAT g_bootJob = {0};
-static long long  InitDiffTime(HOOK_TIMING_STAT *stat)
+INIT_TIMING_STAT g_bootJob = {0};
+
+static void RecordInitBootEvent(const char *initBootEvent)
 {
-    long long diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000); // 1000000 1000ms
-    if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
-        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / 1000; // 1000 ms
-    } else {
-        diff -= (stat->startTime.tv_nsec - stat->endTime.tv_nsec) / 1000; // 1000 ms
-    }
-    return diff;
+    const char *bootEventArgv[] = {"init", initBootEvent};
+    PluginExecCmd("bootevent", ARRAY_LENGTH(bootEventArgv), bootEventArgv);
+    return;
 }
 
 static void BootStateChange(int start, const char *content)
 {
     if (start == 0) {
         clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.startTime));
+        RecordInitBootEvent(content);
         INIT_LOGI("boot job %s start.", content);
     } else {
         clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.endTime));
+        RecordInitBootEvent(content);
         long long diff = InitDiffTime(&g_bootJob);
         INIT_LOGI("boot job %s finish diff %lld us.", content, diff);
     }
@@ -297,17 +293,33 @@ static void InitLoadParamFiles(void)
 
 static void InitPreHook(const HOOK_INFO *hookInfo, void *executionContext)
 {
-    HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)executionContext;
+    INIT_TIMING_STAT *stat = (INIT_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->startTime));
 }
 
 static void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext, int executionRetVal)
 {
-    HOOK_TIMING_STAT *stat = (HOOK_TIMING_STAT *)executionContext;
+    INIT_TIMING_STAT *stat = (INIT_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->endTime));
     long long diff = InitDiffTime(stat);
     INIT_LOGI("Executing hook [%d:%d:%p] cost [%lld]us, return %d.",
         hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, executionRetVal);
+}
+
+static void InitSysAdj(void)
+{
+    const char* path = "/proc/self/oom_score_adj";
+    const char* content = "-1000";
+    int fd = open(path, O_RDWR);
+    if (fd == -1) {
+        return;
+    }
+    if (write(fd, content, strlen(content)) < 0) {
+        close(fd);
+        return;
+    }
+    close(fd);
+    return;
 }
 
 static void TriggerServices(int startMode)
@@ -352,15 +364,17 @@ static void TriggerServices(int startMode)
 
 void SystemConfig(void)
 {
-    HOOK_TIMING_STAT timingStat;
+    INIT_TIMING_STAT timingStat;
+    
+    InitSysAdj();
     HOOK_EXEC_OPTIONS options;
 
     options.flags = 0;
     options.preHook = InitPreHook;
     options.postHook = InitPostHook;
-
     InitServiceSpace();
     HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, (void *)&timingStat, (void *)&options);
+    RecordInitBootEvent("init.prepare");
 
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, (void *)&timingStat, (void *)&options);
     InitParamService();
@@ -371,7 +385,9 @@ void SystemConfig(void)
     // load SELinux context and policy
     // Do not move position!
     PluginExecCmdByName("loadSelinuxPolicy", "");
+    RecordInitBootEvent("init.prepare");
 
+    RecordInitBootEvent("init.ParseCfg");
     LoadSpecialParam();
 
     // parse parameters
@@ -380,6 +396,7 @@ void SystemConfig(void)
     // read config
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
+    RecordInitBootEvent("init.ParseCfg");
     INIT_LOGI("boot parse config file done.");
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 

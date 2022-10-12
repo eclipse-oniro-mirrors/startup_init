@@ -32,7 +32,7 @@ static TriggerWorkSpace g_triggerWorkSpace = {};
 static int DoTriggerExecute_(const TriggerNode *trigger, const char *content, uint32_t size)
 {
     PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
-    PARAM_LOGI("DoTriggerExecute_ trigger %s type: %d", GetTriggerName(trigger), trigger->type);
+    PARAM_LOGV("Do execute trigger %s type: %d", GetTriggerName(trigger), trigger->type);
     PARAM_CHECK(trigger->type <= TRIGGER_UNKNOW, return -1, "Invalid trigger type %d", trigger->type);
     CommandNode *cmd = GetNextCmdNode((JobNode *)trigger, NULL);
     while (cmd != NULL) {
@@ -53,7 +53,7 @@ static int DoTriggerCheckResult(TriggerNode *trigger, const char *content, uint3
         return 0;
     }
     TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_QUEUE);
-    PARAM_LOGI("Add trigger %s to execute queue", GetTriggerName(trigger));
+    PARAM_LOGV("Add trigger %s to execute queue", GetTriggerName(trigger));
     ExecuteQueuePush(&g_triggerWorkSpace, trigger);
     return 0;
 }
@@ -368,11 +368,11 @@ void DoTriggerExec(const char *triggerName)
     PARAM_CHECK(triggerName != NULL, return, "Invalid param");
     JobNode *trigger = GetTriggerByName(&g_triggerWorkSpace, triggerName);
     if (trigger != NULL && !TRIGGER_IN_QUEUE((TriggerNode *)trigger)) {
-        PARAM_LOGI("DoTriggerExec trigger %s", trigger->name);
+        PARAM_LOGV("Trigger job %s", trigger->name);
         TRIGGER_SET_FLAG((TriggerNode *)trigger, TRIGGER_FLAGS_QUEUE);
         ExecuteQueuePush(&g_triggerWorkSpace, (TriggerNode *)trigger);
     } else {
-        PARAM_LOGE("Can not find trigger %s", triggerName);
+        PARAM_LOGW("Can not find trigger %s", triggerName);
     }
 }
 

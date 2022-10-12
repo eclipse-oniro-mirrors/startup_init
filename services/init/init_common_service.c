@@ -264,15 +264,15 @@ static void PublishHoldFds(Service *service)
 
 static int BindCpuCore(Service *service)
 {
-    if (service == NULL) {
+    if (service == NULL || service->cpuSet == NULL) {
         return SERVICE_SUCCESS;
     }
-    if (CPU_COUNT(&service->cpuSet) == 0) {
+    if (CPU_COUNT(service->cpuSet) == 0) {
         return SERVICE_SUCCESS;
     }
 #ifndef __LITEOS_A__
     int pid = getpid();
-    INIT_ERROR_CHECK(sched_setaffinity(pid, sizeof(service->cpuSet), &service->cpuSet) == 0,
+    INIT_ERROR_CHECK(sched_setaffinity(pid, sizeof(cpu_set_t), service->cpuSet) == 0,
         return SERVICE_FAILURE, "%s set affinity between process(pid=%d) with CPU's core failed", service->name, pid);
     INIT_LOGI("%s set affinity between process(pid=%d) with CPU's core successfully", service->name, pid);
 #endif
@@ -295,13 +295,13 @@ static int InitServiceProperties(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
     SetServiceEnterSandbox(service->pathArgs.argv[0], service->attribute);
-    INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS, "access token failed %s", service->name);
+    INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS,
+        "Set service %s access token failed", service->name);
     // deal start job
     if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
     }
     ClearEnvironment(service);
-
     if (!IsOnDemandService(service)) {
         INIT_ERROR_CHECK(CreateServiceSocket(service) >= 0, return -1,
             "service %s exit! create socket failed!", service->name);
@@ -321,7 +321,7 @@ static int InitServiceProperties(Service *service)
     // permissions
     INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, return -1,
         "service %s exit! set perms failed! err %d.", service->name, errno);
-    
+
     // write pid
     INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, return -1,
         "service %s exit! write pid failed!", service->name);
@@ -350,7 +350,7 @@ void EnterServiceSandbox(Service *service)
 int ServiceStart(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
-    INIT_ERROR_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "service : %s had started already.", service->name);
+    INIT_ERROR_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "Service %s already started", service->name);
     INIT_ERROR_CHECK(service->pathArgs.count > 0,
         return SERVICE_FAILURE, "start service %s pathArgs is NULL.", service->name);
 
@@ -382,7 +382,7 @@ int ServiceStart(Service *service)
         INIT_LOGE("start service %s fork failed!", service->name);
         return SERVICE_FAILURE;
     }
-    INIT_LOGI("service %s starting pid %d", service->name, pid);
+    INIT_LOGI("Service %s(pid %d) started", service->name, pid);
     service->pid = pid;
     NotifyServiceChange(service, SERVICE_STARTED);
     return SERVICE_SUCCESS;

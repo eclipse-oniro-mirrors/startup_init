@@ -17,8 +17,6 @@ config("utest_config") {
   visibility = [ ":*" ]
 
   cflags = [
-    "-fprofile-arcs",
-    "-ftest-coverage",
     "-Wno-implicit-fallthrough",
     "-Wno-unused-function",
   ]
@@ -26,8 +24,6 @@ config("utest_config") {
     "-Wno-implicit-fallthrough",
     "-fexceptions",
   ]
-
-  ldflags = [ "--coverage" ]
 }
 
 FSCRYPT_PATH =
@@ -164,6 +160,10 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
     "//base/startup/init/interfaces/innerkits/init_module_engine/init_modulemgr.c",
     "//base/startup/init/interfaces/innerkits/modulemgr/modulemgr.c",
+    "//base/startup/init/interfaces/innerkits/service_control/service_control.c",
+    "//base/startup/init/interfaces/innerkits/service_watcher/service_watcher.c",
+    "//base/startup/init/interfaces/innerkits/syscap/init_syscap.c",
+    "//base/startup/init/interfaces/innerkits/syspara/param_wrapper.cpp",
     "innerkits/hookmgr_unittest.cpp",
     "innerkits/modulemgr_unittest.cpp",
   ]

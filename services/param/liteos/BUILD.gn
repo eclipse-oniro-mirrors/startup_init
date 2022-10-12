@@ -108,9 +108,12 @@ static_library("param_init_lite") {
 static_library("param_client_lite") {
   sources = base_sources
   include_dirs = param_include_dirs
-  cflags = [ "-fPIC" ]
   defines = param_build_defines
   public_configs = [ ":exported_header_files" ]
+
+  if (use_musl) {
+    defines += [ "PARAM_BASE" ]
+  }
 
   if (ohos_kernel_type == "liteos_a") {
     sources +=

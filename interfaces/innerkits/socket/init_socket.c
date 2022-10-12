@@ -28,14 +28,12 @@
 static int GetControlFromEnv(const char *path, int length)
 {
     BEGET_CHECK_RETURN_VALUE(path != NULL && length > 0, -1);
-    BEGET_LOGI("GetControlFromEnv path is %s ", path);
     const char *val = getenv(path);
-    BEGET_ERROR_CHECK(val != NULL, return -1, "GetControlFromEnv val is null %d", errno);
+    BEGET_ERROR_CHECK(val != NULL, return -1, "Get environment from %s failed", path);
     errno = 0;
     int fd = strtol(val, NULL, N_DEC);
-    BEGET_CHECK_RETURN_VALUE(errno == 0, -1);
-    BEGET_LOGI("GetControlFromEnv fd is %d ", fd);
-    BEGET_ERROR_CHECK(fcntl(fd, F_GETFD) >= 0, return -1, "GetControlFromEnv errno %d ", errno);
+    BEGET_ERROR_CHECK(errno == 0, return -1, "Failed strtol err=%d", errno);
+    BEGET_ERROR_CHECK(fcntl(fd, F_GETFD) >= 0, return -1, "Failed fcntl err=%d ", errno);
     return fd;
 }
 
@@ -45,26 +43,23 @@ int GetControlSocket(const char *name)
     char path[MAX_SOCKET_ENV_PREFIX_LEN] = {0};
     BEGET_CHECK_RETURN_VALUE(snprintf_s(path, sizeof(path), sizeof(path) - 1, OHOS_SOCKET_ENV_PREFIX"%s",
         name) != -1, -1);
-    BEGET_LOGI("GetControlSocket path is %s ", path);
     int fd = GetControlFromEnv(path, MAX_SOCKET_ENV_PREFIX_LEN);
-    BEGET_ERROR_CHECK(fd >= 0, return -1, "GetControlFromEnv fail ");
+    BEGET_ERROR_CHECK(fd >= 0, return -1, "Get control fd from environment failed");
     int addrFamily = 0;
     socklen_t afLen = sizeof(addrFamily);
     int ret = getsockopt(fd, SOL_SOCKET, SO_DOMAIN, &addrFamily, &afLen);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "get socket option fail, errno %d ", errno);
-    BEGET_LOGI("socket %s fd %d address family %d", name, fd, addrFamily);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Get socket option fail, err=%d ", errno);
     if (addrFamily != AF_UNIX) {
         return fd;
     }
     struct sockaddr_un addr;
     socklen_t addrlen = sizeof(addr);
     ret = getsockname(fd, (struct sockaddr*)&addr, &addrlen);
-    BEGET_ERROR_CHECK(ret >= 0, return -1, "GetControlSocket errno %d ", errno);
+    BEGET_ERROR_CHECK(ret >= 0, return -1, "Failed getsockname err=%d ", errno);
     char sockDir[MAX_SOCKET_DIR_LEN] = {0};
     BEGET_CHECK_RETURN_VALUE(snprintf_s(sockDir, sizeof(sockDir), sizeof(sockDir) - 1, OHOS_SOCKET_DIR"/%s",
         name) != -1, -1);
-    BEGET_LOGI("sockDir %s ", sockDir);
-    BEGET_LOGI("addr.sun_path %s ", addr.sun_path);
+    BEGET_LOGV("Compary sockDir %s and addr.sun_path %s", sockDir, addr.sun_path);
     if (strncmp(sockDir, addr.sun_path, strlen(sockDir)) == 0) {
         return fd;
     }
