@@ -116,3 +116,4 @@ memmgr:x:1111:
 ispserver:x:3821:
 dfs_share:x:3822:
 appspawn:x:4000:
+security_guard:x:3520:
