@@ -22,6 +22,7 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "init_utils.h"
 #include "securec.h"
 #ifdef OHOS_LITE
 #ifndef INIT_LOG_INIT
@@ -131,8 +132,43 @@ INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, 
     PrintLog((InitLogLevel)logLevel, domain, tag, tmpFmt);
 }
 
+INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level)
+{
+    if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
+        g_logLevel = level;
+    }
+    return;
+}
+
+INIT_PUBLIC_API  int GetInitLogLevel(void)
+{
+    return g_logLevel;
+}
+
 INIT_PUBLIC_API void EnableInitLog(InitLogLevel level)
 {
     g_logLevel = level;
     SetInitCommLog(InitLog);
+}
+
+INIT_PUBLIC_API void EnableInitLogFromCmdline(void)
+{
+    SetInitCommLog(InitLog);
+    char level[MAX_BUFFER_LEN] = {0};
+    char *buffer = ReadFileData("/proc/cmdline");
+    if (buffer == NULL) {
+        INIT_LOGE("Failed to read \"/proc/cmdline\"");
+        return;
+    }
+    int ret = GetProcCmdlineValue("initloglevel", buffer, level, MAX_BUFFER_LEN);
+    free(buffer);
+    if (ret != 0) {
+        INIT_LOGE("Failed get log level from cmdline");
+        return;
+    }
+    errno = 0;
+    unsigned int logLevel = (unsigned int)strtoul(level, 0, 10); // 10 is decimal
+    INIT_INFO_CHECK(errno == 0, return, "Failed strtoul %s, err=%d", level, errno);
+    SetInitLogLevel(logLevel);
+    return;
 }

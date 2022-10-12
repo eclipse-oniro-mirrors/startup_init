@@ -342,7 +342,6 @@ static void SetServiceBootEventFork(SERVICE_INFO_CTX *serviceCtx)
 
 MODULE_CONSTRUCTOR(void)
 {
-    EnableInitLog(INIT_DEBUG);
     InitAddServiceHook(SetServiceBootEventFork, INIT_SERVICE_FORK_BEFORE);
     InitAddServiceHook(ClearServiceBootEvent, INIT_SERVICE_CLEAR);
     InitAddServiceHook(DumpServiceBootEvent, INIT_SERVICE_DUMP);

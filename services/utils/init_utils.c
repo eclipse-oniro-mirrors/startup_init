@@ -183,7 +183,7 @@ char *ReadFileData(const char *fileName)
     int fd = -1;
     fd = open(fileName, O_RDONLY);
     INIT_ERROR_CHECK(fd >= 0, return NULL, "Failed to read file %s", fileName);
-    buffer = (char *)malloc(MAX_SMALL_BUFFER); // fsmanager not create, can not get fileStat st_size
+    buffer = (char *)calloc(1, MAX_SMALL_BUFFER); // fsmanager not create, can not get fileStat st_size
     INIT_ERROR_CHECK(buffer != NULL, close(fd);
         return NULL, "Failed to allocate memory for %s", fileName);
     ssize_t readLen = read(fd, buffer, MAX_SMALL_BUFFER - 1);
@@ -472,7 +472,7 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
     INIT_CHECK_RETURN_VALUE(dirPath != NULL && processFile != NULL, -1);
     DIR *pDir = opendir(dirPath);
     INIT_ERROR_CHECK(pDir != NULL, return -1, "Read dir :%s failed.%d", dirPath, errno);
-    char *fileName = malloc(MAX_BUF_SIZE);
+    char *fileName = calloc(1, MAX_BUF_SIZE);
     INIT_ERROR_CHECK(fileName != NULL, closedir(pDir);
         return -1, "Failed to malloc for %s", dirPath);
 

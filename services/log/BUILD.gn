@@ -17,6 +17,7 @@ config("exported_header_files") {
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/services/log",
+    "//base/startup/init/services/include",
   ]
 }
 
