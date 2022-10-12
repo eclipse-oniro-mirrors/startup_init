@@ -26,9 +26,8 @@
 #include "sysparam_errno.h"
 #ifdef USE_MBEDTLS
 #include "mbedtls/sha256.h"
-#elif !(defined OHOS_LITE)
-#include "openssl/sha.h"
 #endif
+
 #include "securec.h"
 #include "beget_ext.h"
 
@@ -152,27 +151,6 @@ static int GetSha256Value(const char *input, char *udid, int udidSize)
     }
     return EC_SUCCESS;
 }
-#elif !(defined OHOS_LITE)
-static int GetSha256Value(const char *input, char *udid, int udidSize)
-{
-    char buf[DEV_BUF_LENGTH] = { 0 };
-    unsigned char hash[SHA256_DIGEST_LENGTH] = { 0 };
-    SHA256_CTX sha256;
-    if ((SHA256_Init(&sha256) == 0) || (SHA256_Update(&sha256, input, strlen(input)) == 0) ||
-        (SHA256_Final(hash, &sha256) == 0)) {
-        return -1;
-    }
-
-    for (size_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        unsigned char value = hash[i];
-        (void)memset_s(buf, DEV_BUF_LENGTH, 0, DEV_BUF_LENGTH);
-        int len = sprintf_s(buf, sizeof(buf), "%02X", value);
-        if (len > 0 && strcat_s(udid, udidSize, buf) != 0) {
-            return -1;
-        }
-    }
-    return 0;
-}
 #else
 static int GetSha256Value(const char *input, char *udid, int udidSize)
 {
@@ -204,6 +182,11 @@ INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
     if (size < UDID_LEN || udid == NULL) {
         return EC_FAILURE;
     }
+
+    uint32_t len = size;
+    int ret = SystemGetParameter("const.product.udid", udid, &len);
+    BEGET_CHECK(ret != 0, return ret);
+
     const char *manufacture = GetManufacture_();
     const char *model = GetProductModel_();
     const char *sn = GetSerial_();
@@ -224,7 +207,7 @@ INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
         return -1;
     }
 
-    int ret = GetSha256Value(tmp, udid, size);
+    ret = GetSha256Value(tmp, udid, size);
     free(tmp);
     return ret;
 }
