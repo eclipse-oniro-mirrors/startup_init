@@ -491,7 +491,7 @@ INIT_LOCAL_API int ReadParamValue(ParamHandle handle, char *value, uint32_t *len
     PARAM_CHECK(length != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
     if (entry == NULL) {
-        return -1;
+        return PARAM_CODE_NOT_FOUND;
     }
     if (value == NULL) {
         *length = entry->valueLength + 1;
@@ -516,7 +516,7 @@ INIT_LOCAL_API int ReadParamName(ParamHandle handle, char *name, uint32_t length
     PARAM_CHECK(name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
     ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
     if (entry == NULL) {
-        return -1;
+        return PARAM_CODE_NOT_FOUND;
     }
     PARAM_CHECK(length > entry->keyLength, return -1, "Invalid param size %u %u", entry->keyLength, length);
     int ret = ParamMemcpy(name, length, entry->data, entry->keyLength);
@@ -531,8 +531,8 @@ INIT_LOCAL_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, cons
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return DAC_RESULT_FORBIDED, "Invalid workspace");
     int ret = DAC_RESULT_PERMISSION;
-    PARAM_LOGV("CheckParamPermission mode 0x%x name: %s uid:%d pid:%d",
-        mode, name, (int)srcLabel->cred.uid,  (int)srcLabel->cred.pid);
+    PARAM_LOGV("CheckParamPermission mode 0x%x name: %s uid:%d gid:%d pid:%d",
+        mode, name, (int)srcLabel->cred.uid, (int)srcLabel->cred.gid, (int)srcLabel->cred.pid);
     // for root, all permission, but for appspawn must to check
     if (srcLabel->cred.uid == 0 && srcLabel->cred.pid == 1) {
         return DAC_RESULT_PERMISSION;

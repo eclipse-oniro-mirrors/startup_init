@@ -51,9 +51,11 @@ typedef void (*InitCommLog)(int logLevel, uint32_t domain, const char *tag, cons
 #define FILE_NAME   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
 
 INIT_PUBLIC_API void StartupLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
-INIT_PUBLIC_API void EnableInitLog(void);
+INIT_PUBLIC_API void EnableInitLog(InitLogLevel level);
 INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level);
+INIT_PUBLIC_API int GetInitLogLevel(void);
 INIT_PUBLIC_API void SetInitCommLog(InitCommLog logFunc);
+INIT_PUBLIC_API void EnableInitLogFromCmdline(void);
 
 #define STARTUP_LOGV(domain, tag, fmt, ...) \
     StartupLog(INIT_DEBUG, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)

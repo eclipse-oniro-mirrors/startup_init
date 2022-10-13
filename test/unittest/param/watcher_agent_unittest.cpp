@@ -22,6 +22,7 @@
 #include "message_parcel.h"
 #include "parameter.h"
 #include "param_manager.h"
+#include "param_stub.h"
 #include "param_utils.h"
 #include "system_ability_definition.h"
 #include "watcher.h"
@@ -33,11 +34,12 @@ using namespace std;
 using namespace OHOS;
 using namespace OHOS::init_param;
 
-void TestParameterChange(const char *key, const char *value, void *context)
+static void TestParameterChange(const char *key, const char *value, void *context)
 {
     printf("TestParameterChange key:%s %s", key, value);
 }
-void TestWatcherCallBack(const char *key, ServiceStatus status)
+
+static void TestWatcherCallBack(const char *key, ServiceStatus status)
 {
     printf("TestWatcherCallBack key:%s %d", key, status);
 }
@@ -53,6 +55,7 @@ public:
             GetParamSecurityLabel()->cred.uid = 1000;  // 1000 test uid
             GetParamSecurityLabel()->cred.gid = 1000;  // 1000 test gid
         }
+        SetTestPermissionResult(0);
     }
     void TearDown() {}
     void TestBody() {}

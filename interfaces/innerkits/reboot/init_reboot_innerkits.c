@@ -57,7 +57,11 @@ static int DoReboot_(const char *option)
 int DoReboot(const char *option)
 {
     // check if param set ok
+#ifndef STARTUP_INIT_TEST
     const int maxCount = 10;
+#else
+    const int maxCount = 1;
+#endif
     int count = 0;
     DoReboot_(option);
     while (count < maxCount) {

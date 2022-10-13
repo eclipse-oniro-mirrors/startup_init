@@ -163,7 +163,7 @@ std::string GetDeviceType(void)
         {"fitnessWatch", "liteWearable"},
     };
     static const char *productType = nullptr;
-    const char *type = GetProperty("const.build.devicetype", &productType);
+    const char *type = GetProperty("const.product.devicetype", &productType);
     if (type == nullptr) {
         type = GetProperty("const.build.characteristics", &productType);
     }

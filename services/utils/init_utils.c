@@ -183,7 +183,7 @@ char *ReadFileData(const char *fileName)
     int fd = -1;
     fd = open(fileName, O_RDONLY);
     INIT_ERROR_CHECK(fd >= 0, return NULL, "Failed to read file %s", fileName);
-    buffer = (char *)malloc(MAX_SMALL_BUFFER); // fsmanager not create, can not get fileStat st_size
+    buffer = (char *)calloc(1, MAX_SMALL_BUFFER); // fsmanager not create, can not get fileStat st_size
     INIT_ERROR_CHECK(buffer != NULL, close(fd);
         return NULL, "Failed to allocate memory for %s", fileName);
     ssize_t readLen = read(fd, buffer, MAX_SMALL_BUFFER - 1);
@@ -322,10 +322,13 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
 void WaitForFile(const char *source, unsigned int maxSecond)
 {
     INIT_ERROR_CHECK(maxSecond <= WAIT_MAX_SECOND, maxSecond = WAIT_MAX_SECOND, "WaitForFile max time is 5s");
-    struct stat sourceInfo = {};
+    struct stat sourceInfo = {0};
     unsigned int waitTime = 500000;
     /* 500ms interval, check maxSecond*2 times total */
     unsigned int maxCount = maxSecond * 2;
+#ifdef STARTUP_INIT_TEST
+    maxCount = 0;
+#endif
     unsigned int count = 0;
     while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount)) {
         usleep(waitTime);
@@ -382,7 +385,7 @@ int MakeDir(const char *dir, mode_t mode)
 int MakeDirRecursive(const char *dir, mode_t mode)
 {
     int rc = -1;
-    char buffer[PATH_MAX] = {};
+    char buffer[PATH_MAX] = {0};
     const char *p = NULL;
     if (dir == NULL || *dir == '\0') {
         errno = EINVAL;
@@ -469,7 +472,7 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
     INIT_CHECK_RETURN_VALUE(dirPath != NULL && processFile != NULL, -1);
     DIR *pDir = opendir(dirPath);
     INIT_ERROR_CHECK(pDir != NULL, return -1, "Read dir :%s failed.%d", dirPath, errno);
-    char *fileName = malloc(MAX_BUF_SIZE);
+    char *fileName = calloc(1, MAX_BUF_SIZE);
     INIT_ERROR_CHECK(fileName != NULL, closedir(pDir);
         return -1, "Failed to malloc for %s", dirPath);
 

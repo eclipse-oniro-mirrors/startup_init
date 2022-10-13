@@ -34,7 +34,7 @@ public:
 
 HWTEST_F(MountUnitTest, TestMountRequriedPartitions, TestSize.Level0)
 {
-    const char *fstabFiles = "/etc/fstab.required";
+    const char *fstabFiles = "/data/init_ut/etc/fstab.required";
     Fstab *fstab = NULL;
     fstab = ReadFstabFromFile(fstabFiles, false);
     if (fstab != NULL) {

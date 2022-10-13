@@ -41,6 +41,7 @@ __attribute__((constructor)) static void ParameterInit(void)
     if (getpid() == 1) {
         return;
     }
+    EnableInitLog(INIT_ERROR);
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = 0;
 #ifdef PARAM_BASE_LOG
@@ -50,7 +51,6 @@ __attribute__((constructor)) static void ParameterInit(void)
     ops.setfilecon = NULL;
 #endif
     InitParamWorkSpace(1, &ops);
-    EnableInitLog();
 }
 
 __attribute__((destructor)) static void ParameterDeinit(void)
@@ -132,6 +132,7 @@ static int GetClientSocket(int timeout)
 
 static int StartRequest(int clientFd, ParamMessage *request, int timeout)
 {
+    errno = 0;
     ssize_t sendLen = send(clientFd, (char *)request, request->msgSize, 0);
     if (errno == EINVAL || errno == EACCES) {
         return PARAM_CODE_INVALID_SOCKET;
@@ -173,7 +174,7 @@ int SystemSetParameter(const char *name, const char *value)
             g_clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
         }
         if (g_clientFd < 0) {
-            ret = PARAM_CODE_INVALID_PARAM;
+            ret = DAC_RESULT_FORBIDED;
             break;
         }
         ret = StartRequest(g_clientFd, request, DEFAULT_PARAM_SET_TIMEOUT);
@@ -181,7 +182,7 @@ int SystemSetParameter(const char *name, const char *value)
             close(g_clientFd);
             g_clientFd = INVALID_SOCKET;
             retryCount++;
-            ret = 0;
+            ret = DAC_RESULT_FORBIDED;
         } else {
             break;
         }

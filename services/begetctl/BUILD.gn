@@ -71,6 +71,7 @@ if (defined(ohos_lite)) {
       "param_cmd.c",
       "sandbox.cpp",
       "service_control.c",
+      "setloglevel.c",
       "shell/shell_bas.c",
     ]
 
@@ -119,6 +120,8 @@ if (defined(ohos_lite)) {
       "service",
       "sandbox",
       "dump_service",
+      "setloglevel",
+      "getloglevel",
     ]
 
     if (enable_ohos_startup_init_feature_ab_partition) {

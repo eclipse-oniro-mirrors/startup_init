@@ -18,6 +18,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <gtest/gtest.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #include "param_manager.h"
 #include "param_security.h"
@@ -30,10 +32,27 @@ extern "C" {
 #endif
 #endif
 
+#ifndef PARAM_SUPPORT_SELINUX
+typedef struct ParameterNode {
+    const char *paraName;
+    const char *paraContext;
+} ParameterNode;
+
+typedef struct ParamContextsList {
+    struct ParameterNode info;
+    struct ParamContextsList *next;
+} ParamContextsList;
+
+typedef struct SrcInfo {
+    int sockFd;
+    struct ucred uc;
+} SrcInfo;
+#endif
+
 void PrepareInitUnitTestEnv(void);
 void TestSetSelinuxOps(void);
 void SetTestPermissionResult(int result);
-
+void TestSetParamCheckResult(const char *prefix, uint16_t mode, int result);
 int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
 int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel);
 

@@ -62,7 +62,7 @@ const ParamCmdInfo *GetOtherSpecial(size_t *size)
 {
     static const ParamCmdInfo other[] = {
         {"bootevent.", "bootevent.", "bootevent"},
-        {"persist.init.debug.", "persist.init.debug.", "setinitloglevel"}
+        {"persist.init.debug.", "persist.init.debug.", "setloglevel"},
     };
     *size = ARRAY_LENGTH(other);
     return other;

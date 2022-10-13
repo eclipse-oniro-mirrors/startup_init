@@ -16,7 +16,10 @@ import("//build/ohos.gni")
 
 config("exported_header_files") {
   visibility = [ ":*" ]
-  include_dirs = [ "//base/startup/init/interfaces/innerkits/sandbox/include" ]
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/sandbox/include",
+    "//base/customization/config_policy/interfaces/inner_api/include",
+  ]
 }
 
 ohos_static_library("sandbox") {

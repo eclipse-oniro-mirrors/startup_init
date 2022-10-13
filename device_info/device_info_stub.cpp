@@ -23,6 +23,7 @@
 #include "string_ex.h"
 #include "system_ability_definition.h"
 #include "param_comm.h"
+#include "sysparam_errno.h"
 
 using std::u16string;
 namespace OHOS {
@@ -35,15 +36,15 @@ REGISTER_SYSTEM_ABILITY_BY_ID(DeviceInfoService, SYSPARAM_DEVICE_SERVICE_ID, tru
 int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
     MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    std::u16string myDescripter = IDeviceInfo::GetDescriptor();
-    std::u16string remoteDescripter = data.ReadInterfaceToken();
-    DINFO_CHECK(myDescripter == remoteDescripter, return ERR_INVALD_DESC, "Invalid remoteDescripter");
+    std::u16string myDescriptor = IDeviceInfo::GetDescriptor();
+    std::u16string remoteDescriptor = data.ReadInterfaceToken();
+    DINFO_CHECK(myDescriptor == remoteDescriptor, return ERR_FAIL, "Invalid remoteDescriptor");
 
     int ret = ERR_FAIL;
     switch (code) {
         case COMMAND_GET_UDID: {
             if (!CheckPermission(data, PERMISSION_UDID)) {
-                return ERR_FAIL;
+                return SYSPARAM_PERMISSION_DENIED;
             }
             char localDeviceInfo[UDID_LEN] = {0};
             ret = GetDevUdid_(localDeviceInfo, UDID_LEN);
@@ -53,7 +54,7 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
         }
         case COMMAND_GET_SERIAL_ID: {
             if (!CheckPermission(data, PERMISSION_UDID)) {
-                return ERR_FAIL;
+                return SYSPARAM_PERMISSION_DENIED;
             }
             const char *serialNumber = GetSerial_();
             DINFO_CHECK(serialNumber != nullptr, break, "Failed to get serialNumber");

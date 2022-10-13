@@ -26,11 +26,39 @@
 #include "sysparam_errno.h"
 #ifdef USE_MBEDTLS
 #include "mbedtls/sha256.h"
-#elif !(defined OHOS_LITE)
-#include "openssl/sha.h"
 #endif
+
 #include "securec.h"
 #include "beget_ext.h"
+
+INIT_LOCAL_API int GetSystemError(int err)
+{
+    switch(err) {
+        case 0:
+            return 0;
+        case PARAM_CODE_INVALID_PARAM:
+        case PARAM_CODE_INVALID_NAME:
+        case PARAM_CODE_READ_ONLY:
+            return EC_INVALID;
+        case PARAM_CODE_INVALID_VALUE:
+            return SYSPARAM_INVALID_VALUE;
+        case PARAM_CODE_NOT_FOUND:
+        case PARAM_CODE_NODE_EXIST:
+            return SYSPARAM_NOT_FOUND;
+        case DAC_RESULT_FORBIDED:
+            return SYSPARAM_PERMISSION_DENIED;
+        case PARAM_CODE_REACHED_MAX:
+        case PARAM_CODE_FAIL_CONNECT:
+        case PARAM_CODE_INVALID_SOCKET:
+        case PARAM_CODE_NOT_SUPPORT:
+            return SYSPARAM_SYSTEM_ERROR;
+        case PARAM_CODE_TIMEOUT:
+            return SYSPARAM_WAIT_TIMEOUT;
+        default:
+            return SYSPARAM_SYSTEM_ERROR;
+    }
+    return 0;
+}
 
 INIT_LOCAL_API int IsValidParamValue(const char *value, uint32_t len)
 {
@@ -48,7 +76,10 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
     uint32_t size = len;
     int ret = SystemGetParameter(key, NULL, &size);
     if (ret != 0) {
-        if (def == NULL || strlen(def) > len) {
+        if (def == NULL) {
+            return GetSystemError(ret);
+        }
+        if (strlen(def) > len) {
             return EC_INVALID;
         }
         ret = strcpy_s(value, len, def);
@@ -56,8 +87,10 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
     } else if (size > len) {
         return EC_INVALID;
     }
+
     size = len;
-    return (SystemGetParameter(key, value, &size) == 0) ? EC_SUCCESS : EC_FAILURE;
+    ret = SystemGetParameter(key, value, &size);
+    return GetSystemError(ret);
 }
 
 INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder)
@@ -118,27 +151,6 @@ static int GetSha256Value(const char *input, char *udid, int udidSize)
     }
     return EC_SUCCESS;
 }
-#elif !(defined OHOS_LITE)
-static int GetSha256Value(const char *input, char *udid, int udidSize)
-{
-    char buf[DEV_BUF_LENGTH] = { 0 };
-    unsigned char hash[SHA256_DIGEST_LENGTH] = { 0 };
-    SHA256_CTX sha256;
-    if ((SHA256_Init(&sha256) == 0) || (SHA256_Update(&sha256, input, strlen(input)) == 0) ||
-        (SHA256_Final(hash, &sha256) == 0)) {
-        return -1;
-    }
-
-    for (size_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        unsigned char value = hash[i];
-        (void)memset_s(buf, DEV_BUF_LENGTH, 0, DEV_BUF_LENGTH);
-        int len = sprintf_s(buf, sizeof(buf), "%02X", value);
-        if (len > 0 && strcat_s(udid, udidSize, buf) != 0) {
-            return -1;
-        }
-    }
-    return 0;
-}
 #else
 static int GetSha256Value(const char *input, char *udid, int udidSize)
 {
@@ -170,6 +182,11 @@ INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
     if (size < UDID_LEN || udid == NULL) {
         return EC_FAILURE;
     }
+
+    uint32_t len = size;
+    int ret = SystemGetParameter("const.product.udid", udid, &len);
+    BEGET_CHECK(ret != 0, return ret);
+
     const char *manufacture = GetManufacture_();
     const char *model = GetProductModel_();
     const char *sn = GetSerial_();
@@ -190,7 +207,7 @@ INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
         return -1;
     }
 
-    int ret = GetSha256Value(tmp, udid, size);
+    ret = GetSha256Value(tmp, udid, size);
     free(tmp);
     return ret;
 }

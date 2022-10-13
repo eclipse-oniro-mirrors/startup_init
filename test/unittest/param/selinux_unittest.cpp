@@ -29,7 +29,10 @@ public:
     SelinuxUnitTest() {}
     virtual ~SelinuxUnitTest() {}
 
-    void SetUp() {}
+    void SetUp()
+    {
+        SetTestPermissionResult(0);
+    }
     void TearDown() {}
     void TestBody() {}
 

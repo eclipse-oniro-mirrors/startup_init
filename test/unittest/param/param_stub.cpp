@@ -55,7 +55,7 @@ static int TestGenHashCode(const char *buff)
 
 static void TestSetSelinuxLogCallback(void) {}
 
-static const char *forbitWriteParamName[] = {
+static const char *forbidWriteParamName[] = {
     "ohos.servicectrl.",
     "test.permission.read",
     "test.persmission.watch"
@@ -64,9 +64,9 @@ static const char *forbitWriteParamName[] = {
 static int TestSetParamCheck(const char *paraName, const char *context, const SrcInfo *info)
 {
     // forbid to read ohos.servicectrl.
-    for (size_t i = 0; i < ARRAY_LENGTH(forbitWriteParamName); i++) {
-        if (strncmp(paraName, forbitWriteParamName[i], strlen(forbitWriteParamName[i])) == 0) {
-            return 1;
+    for (size_t i = 0; i < ARRAY_LENGTH(forbidWriteParamName); i++) {
+        if (strncmp(paraName, forbidWriteParamName[i], strlen(forbidWriteParamName[i])) == 0) {
+            return g_testPermissionResult;
         }
     }
     return g_testPermissionResult;
@@ -147,6 +147,18 @@ void TestSetSelinuxOps(void)
     selinuxSpace->destroyParamList = TestDestroyParamList;
 #endif
 }
+
+void TestSetParamCheckResult(const char *prefix, uint16_t mode, int result)
+{
+    ParamAuditData auditData = {};
+    auditData.name = prefix;
+    auditData.dacData.gid = 202;  // 202 test dac gid
+    auditData.dacData.uid = 202;  // 202 test dac uid
+    auditData.dacData.mode = mode;
+    AddSecurityLabel(&auditData);
+    SetTestPermissionResult(result);
+}
+
 static void CreateTestFile(const char *fileName, const char *data)
 {
     CheckAndCreateDir(fileName);
@@ -207,14 +219,14 @@ static void PrepareInnerKitsCfg()
         "aa aa aa aa\n";
     const char *fstabRequired = "# fstab file.\n"
         "#<src> <mnt_point> <type> <mnt_flags and options> <fs_mgr_flags>\n"
-        "/dev/block/platform/fe310000.sdhci/by-name/testsystem /usr ext4 ro,barrier=1 wait,required\n"
+        "/dev/block/platform/fe310000.sdhci/by-name/testsystem /usr ext4 ro,barrier=1 wait,required,nofail\n"
         "/dev/block/platform/fe310000.sdhci/by-name/testvendor /vendor ext4 ro,barrier=1 wait,required\n"
         "/dev/block/platform/fe310000.sdhci/by-name/testuserdata1 /data f2fs noatime,nosuid,nodev wait,check,quota\n"
         "/dev/block/platform/fe310000.sdhci/by-name/testuserdata2 /data ext4 noatime,fscrypt=xxx wait,check,quota\n"
         "/dev/block/platform/fe310000.sdhci/by-name/testmisc /misc none none wait,required";
     mkdir("/data/init_ut/mount_unitest/", S_IRWXU | S_IRWXG | S_IRWXO);
     CreateTestFile("/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable", innerKitsCfg);
-    CreateTestFile("/etc/fstab.required", fstabRequired);
+    CreateTestFile("/data/init_ut/etc/fstab.required", fstabRequired);
 }
 static void PrepareGroupTestCfg()
 {
@@ -434,7 +446,7 @@ int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
 
 static __attribute__((constructor(101))) void ParamTestStubInit(void)
 {
-    EnableInitLog();
+    EnableInitLog(INIT_DEBUG);
     PARAM_LOGI("ParamTestStubInit");
     PrepareInitUnitTestEnv();
 }

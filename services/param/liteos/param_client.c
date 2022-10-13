@@ -19,20 +19,20 @@
 static int g_flags = 0;
 
 __attribute__((constructor)) static void ClientInit(void);
-__attribute__((destructor)) static void ClientDeinit(void);
+static void ClientDeinit(void);
 
 static int InitParamClient(void)
 {
     if (PARAM_TEST_FLAG(g_flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
+    EnableInitLog(INIT_INFO);
     PARAM_LOGV("InitParamClient");
     int ret = InitParamWorkSpace(1, NULL);
     PARAM_CHECK(ret == 0, return -1, "Failed to init param workspace");
     PARAM_SET_FLAG(g_flags, WORKSPACE_FLAGS_INIT);
     // init persist to save
     InitPersistParamWorkSpace();
-    EnableInitLog();
     return 0;
 }
 

@@ -23,7 +23,7 @@
 #include "param_osadp.h"
 #include "securec.h"
 
-static ParamPersistWorkSpace g_persistWorkSpace = {0, 0, NULL, 0, {}};
+static ParamPersistWorkSpace g_persistWorkSpace = {0, 0, NULL, 0, {0}};
 static int IsNeedToSave(const char *name)
 {
 #if defined(__LITEOS_M__) || defined(__LITEOS_A__)
