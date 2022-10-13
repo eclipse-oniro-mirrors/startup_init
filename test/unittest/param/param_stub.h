@@ -52,7 +52,7 @@ typedef struct SrcInfo {
 void PrepareInitUnitTestEnv(void);
 void TestSetSelinuxOps(void);
 void SetTestPermissionResult(int result);
-
+void TestSetParamCheckResult(const char *prefix, uint16_t mode, int result);
 int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
 int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel);
 

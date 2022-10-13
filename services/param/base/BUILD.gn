@@ -102,7 +102,10 @@ if (defined(ohos_lite)) {
     cflags = [ "-fPIC" ]
     include_dirs = base_include_dirs
     public_configs = [ ":exported_header_files" ]
-    defines = [ "_GNU_SOURCE" ]
+    defines = [
+      "_GNU_SOURCE",
+      "PARAM_DECODE_GROUPID_FROM_FILE",
+    ]
     deps = []
 
     if (use_musl) {

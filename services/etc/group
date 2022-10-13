@@ -84,7 +84,7 @@ huks_server:x:3510:
 cert_manager_server:x:3515:
 dms:x:5522:
 foundation:x:5523:
-quickfixserver:x:5524;
+quickfixserver:x:5524:
 samgr:x:5555:
 update:x:6666:
 charger:x:6667:

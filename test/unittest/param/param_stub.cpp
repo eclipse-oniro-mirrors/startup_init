@@ -55,7 +55,7 @@ static int TestGenHashCode(const char *buff)
 
 static void TestSetSelinuxLogCallback(void) {}
 
-static const char *forbitWriteParamName[] = {
+static const char *forbidWriteParamName[] = {
     "ohos.servicectrl.",
     "test.permission.read",
     "test.persmission.watch"
@@ -64,9 +64,9 @@ static const char *forbitWriteParamName[] = {
 static int TestSetParamCheck(const char *paraName, const char *context, const SrcInfo *info)
 {
     // forbid to read ohos.servicectrl.
-    for (size_t i = 0; i < ARRAY_LENGTH(forbitWriteParamName); i++) {
-        if (strncmp(paraName, forbitWriteParamName[i], strlen(forbitWriteParamName[i])) == 0) {
-            return 1;
+    for (size_t i = 0; i < ARRAY_LENGTH(forbidWriteParamName); i++) {
+        if (strncmp(paraName, forbidWriteParamName[i], strlen(forbidWriteParamName[i])) == 0) {
+            return g_testPermissionResult;
         }
     }
     return g_testPermissionResult;
@@ -147,6 +147,18 @@ void TestSetSelinuxOps(void)
     selinuxSpace->destroyParamList = TestDestroyParamList;
 #endif
 }
+
+void TestSetParamCheckResult(const char *prefix, uint16_t mode, int result)
+{
+    ParamAuditData auditData = {};
+    auditData.name = prefix;
+    auditData.dacData.gid = 202;  // 202 test dac gid
+    auditData.dacData.uid = 202;  // 202 test dac uid
+    auditData.dacData.mode = mode;
+    AddSecurityLabel(&auditData);
+    SetTestPermissionResult(result);
+}
+
 static void CreateTestFile(const char *fileName, const char *data)
 {
     CheckAndCreateDir(fileName);

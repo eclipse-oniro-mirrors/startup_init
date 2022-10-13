@@ -445,27 +445,17 @@ public:
         return 0;
     }
 
-    int TestServiceCtrl(const char *serviceName, int mode)
+    int TestServiceCtrl(const char *serviceName, uint16_t mode)
     {
         // service forbid
-        ParamAuditData auditData = {};
-        auditData.name = "ohos.servicectrl.";
-        auditData.dacData.gid = 202;  // 202 test dac gid
-        auditData.dacData.uid = 202;  // 202 test dac uid
-        auditData.dacData.mode = mode;
-        AddSecurityLabel(&auditData);
+        TestSetParamCheckResult("ohos.servicectrl.", mode, 1);
         return SystemWriteParam("ohos.ctl.start", serviceName);
     }
 
-    int TestPowerCtrl(const char *reboot, int mode)
+    int TestPowerCtrl(const char *reboot, uint16_t mode)
     {
         // service forbid
-        ParamAuditData auditData = {};
-        auditData.name = "ohos.servicectrl.reboot";
-        auditData.dacData.gid = 202;  // 202 test dac gid
-        auditData.dacData.uid = 202;  // 202 test dac uid
-        auditData.dacData.mode = mode;
-        AddSecurityLabel(&auditData);
+        TestSetParamCheckResult("ohos.servicectrl.reboot", mode, 1);
         return SystemWriteParam("ohos.startup.powerctrl", reboot);
     }
 };
@@ -528,9 +518,7 @@ HWTEST_F(ParamServiceUnitTest, TestServiceCtrl, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     int ret = test.TestServiceCtrl("server1", 0770);
-#ifdef __MUSL__
     EXPECT_NE(ret, 0);
-#endif
 #ifdef PARAM_SUPPORT_SELINUX
     // selinux forbid
     ret = test.TestServiceCtrl("server2", 0772);
@@ -543,36 +531,29 @@ HWTEST_F(ParamServiceUnitTest, TestPowerCtrl, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     int ret = test.TestPowerCtrl("reboot,shutdown", 0770);
-#ifdef __MUSL__
     EXPECT_NE(ret, 0);
-#endif
+
 #ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,shutdown", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
 #endif
     ret = test.TestPowerCtrl("reboot,updater", 0770);
-#ifdef __MUSL__
     EXPECT_NE(ret, 0);
-#endif
 #ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,updater", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
 #endif
-    ret = test.TestPowerCtrl("reboot,flash", 0770);
-#ifdef __MUSL__
+    ret = test.TestPowerCtrl("reboot,flashd", 0770);
     EXPECT_NE(ret, 0);
-#endif
 #ifdef PARAM_SUPPORT_SELINUX
-    ret = test.TestPowerCtrl("reboot,flash", 0772);
+    ret = test.TestPowerCtrl("reboot,flashd", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
 #endif
     ret = test.TestPowerCtrl("reboot", 0770);
-#ifdef __MUSL__
     EXPECT_NE(ret, 0);
-#endif
 #ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot", 0772);
     // selinux forbid

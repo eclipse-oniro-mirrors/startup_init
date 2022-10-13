@@ -22,6 +22,7 @@
 #include "message_parcel.h"
 #include "parameter.h"
 #include "param_manager.h"
+#include "param_stub.h"
 #include "param_utils.h"
 #include "system_ability_definition.h"
 #include "watcher.h"
@@ -54,6 +55,7 @@ public:
             GetParamSecurityLabel()->cred.uid = 1000;  // 1000 test uid
             GetParamSecurityLabel()->cred.gid = 1000;  // 1000 test gid
         }
+        SetTestPermissionResult(0);
     }
     void TearDown() {}
     void TestBody() {}
@@ -61,30 +63,39 @@ public:
     int TestAddWatcher()
     {
         size_t index = 1;
-        int ret = SystemWatchParameter("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        int ret = SystemWatchParameter("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
-        ret = SystemWatchParameter("test.permission.watcher.test1*", TestParameterChange, (void *)index);
+        ret = SystemWatchParameter("test.permission.watcher.test1*",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
         // repeat add, return fail
-        ret = SystemWatchParameter("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        ret = SystemWatchParameter("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_NE(ret, 0);
         index++;
-        ret = SystemWatchParameter("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        ret = SystemWatchParameter("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
         index++;
-        ret = SystemWatchParameter("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        ret = SystemWatchParameter("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
 
         // delete
-        ret = RemoveParameterWatcher("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        ret = RemoveParameterWatcher("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
         index--;
-        ret = RemoveParameterWatcher("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        ret = RemoveParameterWatcher("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
         index--;
-        ret = RemoveParameterWatcher("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        ret = RemoveParameterWatcher("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
-        ret = RemoveParameterWatcher("test.permission.watcher.test1", TestParameterChange, (void *)index);
+        ret = RemoveParameterWatcher("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
 
         // 非法
