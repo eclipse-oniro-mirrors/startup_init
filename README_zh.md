@@ -64,16 +64,27 @@ base/startup/init/
 详细使用说明参考开发指南：
 
 [启动恢复子系统概述](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/subsystems/subsys-boot-overview.md)
+
 [引导启动配置文件](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/subsystems/subsys-boot-init-cfg.md)
+
 [jobs管理](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/subsystems/subsys-boot-init-jobs.md)
+
 [插件](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/subsystems/subsys-boot-init-plugin.md)
+
 [沙盒管理](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/subsystems/subsys-boot-init-sandbox.md)
+
 [服务管理](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/subsystems/subsys-boot-init-service.md)
+
 [系统参数](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/subsystems/subsys-boot-init-sysparam.md)
+
 [日志管理](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/subsystems/subsys-boot-init-log.md)
+
 [组件化启动](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/subsystems/subsys-boot-init-sub-unit.md)
+
 ## 相关仓<a name="section641143415335"></a>
 
 **[startup\_init\_lite](https://gitee.com/openharmony/startup_init_lite)**
+
 [startup\_appspawn](https://gitee.com/openharmony/startup_appspawn)
+
 [startup\_bootstrap\_lite](https://gitee.com/openharmony/startup_bootstrap_lite)
