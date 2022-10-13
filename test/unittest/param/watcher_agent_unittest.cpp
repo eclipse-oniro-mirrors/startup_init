@@ -66,7 +66,7 @@ public:
             TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
         ret = SystemWatchParameter("test.permission.watcher.test1*",
-            TestParameterChange,reinterpret_cast<void *>(index));
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
         // repeat add, return fail
         ret = SystemWatchParameter("test.permission.watcher.test1",
