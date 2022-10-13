@@ -29,7 +29,7 @@ shared_relro:x:1037:
 audio:x:1041:
 cameraserver:x:1047:
 uiserver:x:1048:
-servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr
+servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr,foundation
 powerctrl:x:1051:root,shell,system,update,power_host
 bootctrl:x:1052:root,shell,system
 deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,useriam,access_token,device_manager,foundation,dbms,deviceauth,huks_server
