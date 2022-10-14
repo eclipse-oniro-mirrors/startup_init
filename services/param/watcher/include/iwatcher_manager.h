@@ -28,14 +28,18 @@ public:
     enum {
         ADD_WATCHER,
         DEL_WATCHER,
+        ADD_REMOTE_AGENT,
+        DEL_REMOTE_AGENT,
         REFRESH_WATCHER
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Startup.IWatcherManager");
 public:
-    virtual uint32_t AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher) = 0;
-    virtual int32_t DelWatcher(const std::string &keyPrefix, uint32_t watcherId) = 0;
-    virtual int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t watcherId) = 0;
+    virtual uint32_t AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher) = 0;
+    virtual int32_t DelRemoteWatcher(uint32_t remoteWatcherId) = 0;
+    virtual int32_t AddWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) = 0;
+    virtual int32_t DelWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) = 0;
+    virtual int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) = 0;
 };
 } // namespace update_engine
 } // namespace OHOS

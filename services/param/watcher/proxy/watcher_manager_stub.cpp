@@ -21,32 +21,42 @@ namespace init_param {
 int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
     MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    std::u16string myDescripter = IWatcherManager::GetDescriptor();
-    std::u16string remoteDescripter = data.ReadInterfaceToken();
-    WATCHER_CHECK(myDescripter == remoteDescripter, return -1, "Invalid remoteDescripter");
+    std::u16string myDescriptor = IWatcherManager::GetDescriptor();
+    std::u16string remoteDescriptor = data.ReadInterfaceToken();
+    WATCHER_CHECK(myDescriptor == remoteDescriptor, return -1, "Invalid remoteDescriptor");
 
+    WATCHER_LOGV("OnRemoteRequest code %u", code);
     switch (code) {
         case ADD_WATCHER: {
             std::string key = data.ReadString();
-            auto remote = data.ReadRemoteObject();
-            // 0 is invalid watcherId
-            WATCHER_CHECK(remote != nullptr, reply.WriteUint32(0);
-                return 0, "Failed to read remote watcher");
-            uint32_t watcherId = AddWatcher(key, iface_cast<IWatcher>(remote));
-            reply.WriteUint32(watcherId);
+            int ret = AddWatcher(key, data.ReadUint32());
+            reply.WriteInt32(ret);
             break;
         }
         case DEL_WATCHER: {
             std::string key = data.ReadString();
-            uint32_t watcherId = data.ReadUint32();
-            int ret = DelWatcher(key, watcherId);
+            int ret = DelWatcher(key, data.ReadUint32());
+            reply.WriteInt32(ret);
+            break;
+        }
+        case ADD_REMOTE_AGENT: {
+            auto remote = data.ReadRemoteObject();
+            // 0 is invalid watcherId
+            WATCHER_CHECK(remote != nullptr, reply.WriteUint32(0);
+                return 0, "Failed to read remote watcher");
+            uint32_t id = data.ReadUint32();
+            uint32_t remoteWatcherId = AddRemoteWatcher(id, iface_cast<IWatcher>(remote));
+            reply.WriteUint32(remoteWatcherId);
+            break;
+        }
+        case DEL_REMOTE_AGENT: {
+            int ret = DelRemoteWatcher(data.ReadUint32());
             reply.WriteInt32(ret);
             break;
         }
         case REFRESH_WATCHER: {
             std::string key = data.ReadString();
-            uint32_t watcherId = data.ReadUint32();
-            int ret = RefreshWatcher(key, watcherId);
+            int ret = RefreshWatcher(key, data.ReadUint32());
             reply.WriteInt32(ret);
             break;
         }

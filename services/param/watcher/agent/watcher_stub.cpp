@@ -22,15 +22,16 @@ namespace OHOS {
 namespace init_param {
 int32_t WatcherStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    std::u16string myDescripter = IWatcher::GetDescriptor();
-    std::u16string remoteDescripter = data.ReadInterfaceToken();
-    WATCHER_CHECK(myDescripter == remoteDescripter, return -1, "Invalid remoteDescripter");
+    std::u16string myDescriptor = IWatcher::GetDescriptor();
+    std::u16string remoteDescriptor = data.ReadInterfaceToken();
+    WATCHER_CHECK(myDescriptor == remoteDescriptor, return -1, "Invalid remoteDescriptor");
 
     switch (code) {
         case PARAM_CHANGE: {
+            std::string key = data.ReadString();
             std::string name = data.ReadString();
             std::string value = data.ReadString();
-            OnParameterChange(name, value);
+            OnParameterChange(key, name, value);
             break;
         }
         default: {

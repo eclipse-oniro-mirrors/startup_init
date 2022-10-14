@@ -31,7 +31,7 @@ public:
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Startup.IWatcher");
 public:
-    virtual void OnParameterChange(const std::string &name, const std::string &value) = 0;
+    virtual void OnParameterChange(const std::string &prefix, const std::string &name, const std::string &value) = 0;
 };
 } // namespace init_param
 } // namespace OHOS
