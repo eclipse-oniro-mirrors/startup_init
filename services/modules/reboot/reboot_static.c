@@ -68,7 +68,7 @@ static int CheckParamCmdExist(const char *cmd)
     char *cmdName = Dup2String(REBOOT_CMD_PREFIX, cmd);
     PLUGIN_CHECK(cmdName != NULL, return 0, "Failed to copy %s", cmd);
     for (int i = 0; i < g_rebootParamCmdValidNumber; i++) {
-        if (strcmp(g_rebootParamCmdInfos[i].cmd, cmdName) == 0){
+        if (strcmp(g_rebootParamCmdInfos[i].cmd, cmdName) == 0) {
             free(cmdName);
             return 1;
         }

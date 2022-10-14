@@ -224,7 +224,9 @@ static void ScanModules(MODULE_MGR *moduleMgr, const char *path)
             ModuleMgrInstall(moduleMgr, moduleName, 0, NULL);
         }
     }
-    free(moduleName);
+    if (moduleName != NULL) {
+        free(moduleName);
+    }
     closedir(dir);
 }
 

@@ -39,17 +39,14 @@ public:
 static int g_result = 0;
 HWTEST_F(InitRebootUnitTest, TestAddRebootCmd, TestSize.Level1)
 {
-    int ret = AddRebootCmdExecutor("reboot_cmd1", [](int id, const char *name, int argc, const char **argv)-> int {
+    auto rebootCallback = [](int id, const char *name, int argc, const char **argv) -> int {
         return 0;
-    });
+    }
+    int ret = AddRebootCmdExecutor("reboot_cmd1", rebootCallback);
     EXPECT_EQ(ret, 0);
-    ret = AddRebootCmdExecutor("reboot_cmd2", [](int id, const char *name, int argc, const char **argv)-> int {
-        return 0;
-    });
+    ret = AddRebootCmdExecutor("reboot_cmd2", rebootCallback);
     EXPECT_EQ(ret, 0);
-    ret = AddRebootCmdExecutor("reboot_cmd3", [](int id, const char *name, int argc, const char **argv)-> int {
-        return 0;
-    });
+    ret = AddRebootCmdExecutor("reboot_cmd3", rebootCallback);
     EXPECT_EQ(ret, 0);
     ret = AddRebootCmdExecutor("reboot_cmd4", [](int id, const char *name, int argc, const char **argv)-> int {
         g_result = 4; // 4 test index
@@ -66,13 +63,9 @@ HWTEST_F(InitRebootUnitTest, TestAddRebootCmd, TestSize.Level1)
         return 0;
     });
     EXPECT_EQ(ret, 0);
-    ret = AddRebootCmdExecutor("reboot_cmd7", [](int id, const char *name, int argc, const char **argv)-> int {
-        return 0;
-    });
+    ret = AddRebootCmdExecutor("reboot_cmd7", rebootCallback);
     EXPECT_EQ(ret, 0);
-    ret = AddRebootCmdExecutor("reboot_cmd7", [](int id, const char *name, int argc, const char **argv)-> int {
-        return 0;
-    });
+    ret = AddRebootCmdExecutor("reboot_cmd7", rebootCallback);
     EXPECT_NE(ret, 0);
 
     TestSetParamCheckResult("ohos.servicectrl.reboot", 0777, 0);
