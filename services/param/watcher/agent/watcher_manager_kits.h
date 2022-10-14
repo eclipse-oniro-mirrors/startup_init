@@ -46,7 +46,7 @@ private:
             : callback_(callback), context_(context) {}
         ~ParameterChangeListener() = default;
 
-        bool IsEqual(ParameterChangePtr callback, void *context) const
+        bool IsEqual(ParameterChangePtr callback, const void *context) const
         {
             return (callback == callback_ && context == context_);
         }

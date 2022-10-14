@@ -163,7 +163,7 @@ private:
     int GetServerFd(bool retry);
     int GetWatcherId(uint32_t &watcherId);
     int GetGroupId(uint32_t &groupId);
-    void DumpWatcherGroup(int fd, const WatcherGroupPtr &group);
+    void DumpWatcherGroup(int fd, const WatcherGroupPtr &watchGroup);
 private:
     std::atomic<uint32_t> watcherId_ { 0 };
     std::atomic<uint32_t> groupId_ { 0 };

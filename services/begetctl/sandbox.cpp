@@ -185,18 +185,18 @@ MODULE_CONSTRUCTOR(void)
 {
     const CmdInfo infos[] = {
         {
-            (char *)"sandbox", main_cmd, (char *)"enter service sandbox",
-            (char *)"sandbox -s service_name",
+            const_cast<char *>("sandbox"), main_cmd, const_cast<char *>("enter service sandbox"),
+            const_cast<char *>("sandbox -s service_name"),
             NULL
         },
         {
-            (char *)"sandbox", main_cmd, (char *)"enter namespace, system, chipset etc.",
-            (char *)"sandbox -n namespace_name [-p]",
+            const_cast<char *>("sandbox"), main_cmd, const_cast<char *>("enter namespace, system, chipset etc."),
+            const_cast<char *>("sandbox -n namespace_name [-p]"),
             NULL
         },
         {
-            (char *)"sandbox", main_cmd, (char *)"enter namespace and exec process",
-            (char *)"sandbox -p process_name",
+            const_cast<char *>("sandbox"), main_cmd, const_cast<char *>("enter namespace and exec process"),
+            const_cast<char *>("sandbox -p process_name"),
             NULL
         }
     };

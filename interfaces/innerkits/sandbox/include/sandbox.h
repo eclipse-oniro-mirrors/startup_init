@@ -16,12 +16,12 @@
 #ifndef BASE_STARTUP_INITLITE_SANDBOX_H
 #define BASE_STARTUP_INITLITE_SANDBOX_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <stdbool.h>
 #include "init_utils.h"
 #include "list.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum SandboxTag {
     SANDBOX_TAG_MOUNT_PATH = 0,

@@ -15,7 +15,7 @@
 
 #include <thread>
 #include <gtest/gtest.h>
-#include <stdint.h>
+#include <cstdint>
 #include "param_wrapper.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -75,12 +75,12 @@ static void SetParameterTestFunc(const char *key, const char *value)
     EXPECT_NE(handle, static_cast<unsigned int>(-1));
     uint32_t result = GetParameterCommitId(handle);
     EXPECT_NE(result, static_cast<unsigned int>(-1));
-    char nameGet[64] = {0};
-    int ret = GetParameterName(handle, nameGet, 64);
+    char nameGet[PARAM_NAME_LEN_MAX] = {0};
+    int ret = GetParameterName(handle, nameGet, PARAM_NAME_LEN_MAX);
     EXPECT_EQ(ret, strlen(nameGet));
     EXPECT_STREQ(key, nameGet);
-    char valueGet[64] = {0};
-    ret = GetParameterValue(handle, valueGet, 64);
+    char valueGet[PARAM_VALUE_LEN_MAX] = {0};
+    ret = GetParameterValue(handle, valueGet, PARAM_VALUE_LEN_MAX); 
     EXPECT_EQ(ret, strlen(valueGet));
     EXPECT_STREQ(value, valueGet);
     EXPECT_NE(GetSystemCommitId(), 0);
@@ -115,9 +115,9 @@ static void TestParameterChange(const char *key, const char *value, void *contex
 static void TestParameterWatchChange(void)
 {
     size_t index = 1;
-    int ret = WatchParameter("test.param.watcher.test1", TestParameterChange, (void *)index);
+    int ret = WatchParameter("test.param.watcher.test1", TestParameterChange, reinterpret_cast<void *>(index));
     EXPECT_EQ(ret, 0);
-     ret = RemoveParameterWatcher("test.param.watcher.test1", TestParameterChange, (void *)index);
+    ret = RemoveParameterWatcher("test.param.watcher.test1", TestParameterChange, reinterpret_cast<void *>(index));
     EXPECT_EQ(ret, 0);
 }
 
@@ -142,7 +142,7 @@ HWTEST_F(SysparaModuleTest, Syspara_SysVersion_test_001, TestSize.Level0)
 HWTEST_F(SysparaModuleTest, Syspara_GetParam_test_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "Syspara_GetParam_test_002 start";
-    for(int i = 0; i < THREAD_NUM; ++i) {
+    for (int i = 0; i < THREAD_NUM; ++i) {
         std::thread(GetAllParameterTestFunc).join();
     }
     GTEST_LOG_(INFO) << "Syspara_GetParam_test_002 end";
@@ -151,7 +151,7 @@ HWTEST_F(SysparaModuleTest, Syspara_GetParam_test_002, TestSize.Level0)
 HWTEST_F(SysparaModuleTest, Syspara_GetUdid_test_003, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "Syspara_GetUdid_test_003 start";
-    for(int i = 0; i < THREAD_NUM; ++i) {
+    for (int i = 0; i < THREAD_NUM; ++i) {
         char udid[UDID_LEN] = {0};
         std::thread(GetUdidTestFunc, udid, UDID_LEN).join();
     }
@@ -176,12 +176,12 @@ HWTEST_F(SysparaModuleTest, Syspara_SetParameter_test_004, TestSize.Level0)
 HWTEST_F(SysparaModuleTest, Syspara_SetParameter_test_005, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "Syspara_SetParameter_test_005 start";
-    //check param name length
+    // check param name length
     char key1[] = "test.param.name.xxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxx";
     char value[] = "test.value.xxxx";
     int ret = SetParameter(key1, value);
     EXPECT_EQ(ret, EC_INVALID);
-    //check param name, Illegal param name
+    // check param name, Illegal param name
     char key2[] = ".test.param.name.xxxxx";
     ret = SetParameter(key2, value);
     EXPECT_EQ(ret, EC_INVALID);
@@ -191,7 +191,7 @@ HWTEST_F(SysparaModuleTest, Syspara_SetParameter_test_005, TestSize.Level0)
     char key4[] = "test..param.   .name";
     ret = SetParameter(key4, value);
     EXPECT_EQ(ret, EC_INVALID);
-    //check param name, legal param name
+    // check param name, legal param name
     char key5[] = "test.param.name.--__.:::";
     ret = SetParameter(key5, value);
     EXPECT_EQ(ret, 0);
@@ -200,7 +200,7 @@ HWTEST_F(SysparaModuleTest, Syspara_SetParameter_test_005, TestSize.Level0)
     ret = SetParameter(key6, value);
     EXPECT_EQ(ret, 0);
     EXPECT_STREQ(value, "test.value.xxxx");
-    //not const param, check param value, bool 8, int 32, other 96
+    // not const param, check param value, bool 8, int 32, other 96
     char key7[] = "test.param.name.xxxx";
     char value1[] = "test.value.xxxxxxxxx.xxxxxxxxxxxxx.xxxxxxxxxxxx.xxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxx";
     ret = SetParameter(key7, value1);
@@ -221,12 +221,12 @@ HWTEST_F(SysparaModuleTest, Syspara_Getparameter_test_006, TestSize.Level0)
     EXPECT_TRUE(ret);
     string testValue = system::GetParameter(key, "");
     EXPECT_STREQ(testValue.c_str(), value.c_str());
-    //not read param value,the result is default
+    // not read param value,the result is default
     testValue = system::GetParameter("test.param.set.002", "aaa.aaa.aaa");
     EXPECT_STREQ(testValue.c_str(), "aaa.aaa.aaa");
     testValue = system::GetParameter("test.param.set.003", "");
     EXPECT_STREQ(testValue.c_str(), "");
-    //correct set value
+    // correct set value
     string key1 = "test.param.set.bool";
     ret = system::SetParameter(key1, "1");
     EXPECT_TRUE(ret);
@@ -258,7 +258,7 @@ HWTEST_F(SysparaModuleTest, Syspara_Getparameter_test_006, TestSize.Level0)
     ret = system::SetParameter(key1, "false");
     EXPECT_TRUE(ret);
     EXPECT_FALSE(system::GetBoolParameter(key1, true));
-    //set value type not bool,the result get form def
+    // set value type not bool,the result get form def
     ret = system::SetParameter(key1, "test");
     EXPECT_TRUE(ret);
     EXPECT_TRUE(system::GetBoolParameter(key1, true));
@@ -276,7 +276,7 @@ HWTEST_F(SysparaModuleTest, Syspara_SetParameter_test_007, TestSize.Level0)
     string vRet = "";
     uint32_t handle1 = FindParameter(key1.c_str());
     cout<<"handle1 is: "<<handle1<<std::endl;
-    if (handle1 == (uint32_t)-1) {
+    if (handle1 == static_cast<uint32_t>(-1)) {
         ret = SetParameter(key1.c_str(), value1.c_str());
         EXPECT_EQ(ret, 0);
         vRet = system::GetParameter(key1, "");
@@ -290,7 +290,7 @@ HWTEST_F(SysparaModuleTest, Syspara_SetParameter_test_007, TestSize.Level0)
     string value3 = "test.param.value.003";
     uint32_t handle2 = FindParameter(key2.c_str());
     cout<<"handle2 is: "<<handle2<<std::endl;
-    if (handle2 == (uint32_t)-1) {
+    if (handle2 == static_cast<uint32_t>(-1)) {
         ret = SetParameter(key2.c_str(), value3.c_str());
         EXPECT_EQ(ret, 0);
         vRet = system::GetParameter(key2, "");
@@ -310,10 +310,10 @@ HWTEST_F(SysparaModuleTest, Syspara_GetParameterReIntOrStr_test_008, TestSize.Le
     int ret = SetParameter(key.c_str(), value.c_str());
     EXPECT_EQ(ret, 0);
     char retValue[PARAM_VALUE_LEN_MAX] = {0};
-    for(int i = 0; i < THREAD_NUM; ++i) {
+    for (int i = 0; i < THREAD_NUM; ++i) {
         std::thread(GetParameterTestReInt, key.c_str(), "", retValue, PARAM_VALUE_LEN_MAX).join();
     }
-    for(int j = 0; j < THREAD_NUM; ++j) {
+    for (int j = 0; j < THREAD_NUM; ++j) {
         std::thread(GetParameterTestFuncReStr, key, "").join();
     }
     GTEST_LOG_(INFO) << "Syspara_GetParameterReIntOrStr_test_008 end";
@@ -322,7 +322,7 @@ HWTEST_F(SysparaModuleTest, Syspara_GetParameterReIntOrStr_test_008, TestSize.Le
 HWTEST_F(SysparaModuleTest, Syspara_WaitParameter_test_009, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "Syspara_WaitParameter_test_009 start";
-    //param already set succeed,waitParamter succeed.
+    // param already set succeed,waitParamter succeed.
     char key[] = "test1.param.wait";
     char value[] = "aaa.bbb.ccc";
     int ret = SetParameter(key, value);
@@ -349,7 +349,7 @@ HWTEST_F(SysparaModuleTest, Syspara_WaitParameter_test_009, TestSize.Level0)
 HWTEST_F(SysparaModuleTest, Syspara_watcherParameter_test_010, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "Syspara_watcherParameter_test_010 start";
-    for(int i = 0; i < THREAD_NUM; ++i) {
+    for (int i = 0; i < THREAD_NUM; ++i) {
         std::thread(TestParameterWatchChange).join();
     }
 
@@ -364,60 +364,43 @@ HWTEST_F(SysparaModuleTest, Syspara_GetParameter_test_011, TestSize.Level0)
 
     char key1[] = "test.param.int1";
     char value1[] = "0x111111";
-    int setRet = SetParameter(key1, value1);
-    EXPECT_EQ(setRet, 0);
-    int32_t getRet = GetIntParameter(key1, 0);
-    EXPECT_EQ(getRet, 1118481); //0x111111 decimalism result
-    uint32_t uRet = GetUintParameter(key1, 0);
-    EXPECT_EQ(uRet, 1118481);
+    EXPECT_EQ(SetParameter(key1, value1), 0);
+    EXPECT_EQ(GetIntParameter(key1, 0), 1118481); // 0x111111 decimalism result
+    EXPECT_EQ(GetUintParameter(key1, 0), 1118481);
 
     char key2[] = "test.param.int2";
     char value2[] = "-0x111111";
-    setRet = SetParameter(key2, value2);
-    EXPECT_EQ(setRet, 0);
-    getRet = GetIntParameter(key2, 0);
-    EXPECT_EQ(getRet, -1118481);  //0x111111 decimalism result
+    EXPECT_EQ(SetParameter(key2, value2), 0);
+    EXPECT_EQ(GetIntParameter(key2, 0), -1118481);  // 0x111111 decimalism result
 
-    uRet = GetUintParameter(key2, 0);
+    GetUintParameter(key2, 0);
 
     char key3[] = "test.param.int3";
     char value3[] = "9999999";
-    setRet = SetParameter(key3, value3);
-    EXPECT_EQ(setRet, 0);
-    getRet = GetIntParameter(key3, 0);
-    EXPECT_EQ(getRet, 9999999); //value3 int result
-    uRet = GetUintParameter(key3, 0);
-    EXPECT_EQ(uRet, 9999999); //value3 uint result
+    EXPECT_EQ(SetParameter(key3, value3), 0);
+    EXPECT_EQ(GetIntParameter(key3, 0), 9999999); // value3 int result
+    EXPECT_EQ(GetUintParameter(key3, 0), 9999999); // value3 uint result
 
     char key4[] = "test.param.int4";
     char value4[] = "-9999999";
-    setRet = SetParameter(key4, value4);
-    EXPECT_EQ(setRet, 0);
-    getRet = GetIntParameter(key4, 0);
-    EXPECT_EQ(getRet, -9999999); //value4 int result
-    uRet = GetUintParameter(key4, 0);
-    EXPECT_EQ(uRet, 0);
+    EXPECT_EQ(SetParameter(key4, value4), 0);
+    EXPECT_EQ(GetIntParameter(key4, 0), -9999999); // value4 int result
+    EXPECT_EQ(GetUintParameter(key4, 0), 0);
 
     char key5[] = "test.param.int5";
-    char value5[] = "-2147483648"; //INT32_MIN
-    setRet = SetParameter(key5, value5);
-    EXPECT_EQ(setRet, 0);
-    getRet = GetIntParameter(key5, 0);
-    EXPECT_EQ(getRet, 0);
+    char value5[] = "-2147483648"; // INT32_MIN
+    EXPECT_EQ(SetParameter(key5, value5), 0);
+    EXPECT_EQ(GetIntParameter(key5, 0), 0);
 
     char key6[] = "test.param.int6";
-    char value6[] = "2147483647"; //INT32_MAX
-    setRet = SetParameter(key6, value6);
-    EXPECT_EQ(setRet, 0);
-    getRet = GetIntParameter(key6, 0);
-    EXPECT_EQ(getRet, 0);
+    char value6[] = "2147483647"; // INT32_MAX
+    EXPECT_EQ(SetParameter(key6, value6), 0);
+    EXPECT_EQ(GetIntParameter(key6, 0), 0);
 
     char key7[] = "test.param.uint7";
-    char value7[] = "4294967295"; //UINT32_MAX
-    setRet = SetParameter(key7, value7);
-    EXPECT_EQ(setRet, 0);
-    uRet = GetUintParameter(key7, 0);
-    EXPECT_EQ(uRet, 0);
+    char value7[] = "4294967295"; // UINT32_MAX
+    EXPECT_EQ(SetParameter(key7, value7), 0);
+    EXPECT_EQ(GetUintParameter(key7, 0), 0);
 
     GTEST_LOG_(INFO) << "Syspara_GetParameter_test_011 end";
 }

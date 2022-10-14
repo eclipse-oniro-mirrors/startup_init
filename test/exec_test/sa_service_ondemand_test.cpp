@@ -42,7 +42,7 @@ void OnDemandLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
     cout << "OnLoadSystemAbilityFail systemAbilityId:" << systemAbilityId << endl;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char * const argv[])
 {
     std::map<string, int> saService = {
         {"updater_sa", UPDATE_DISTRIBUTED_SERVICE_ID},
@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
     int parameterNum = 2;
     if ((argc != parameterNum) || (argv[1] == nullptr)) {
         cout << "Invalid parameter" << endl;
+        return 0;
     }
     const string name = argv[1];
     int abilityId = 0;

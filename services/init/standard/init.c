@@ -302,8 +302,8 @@ static void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext, int 
     INIT_TIMING_STAT *stat = (INIT_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->endTime));
     long long diff = InitDiffTime(stat);
-    INIT_LOGI("Executing hook [%d:%d:%p] cost [%lld]us, return %d.",
-        hookInfo->stage, hookInfo->prio, hookInfo->hook, diff, executionRetVal);
+    INIT_LOGI("Executing hook [%d:%d] cost [%lld]us, return %d.",
+        hookInfo->stage, hookInfo->prio, diff, executionRetVal);
 }
 
 static void InitSysAdj(void)
@@ -344,11 +344,11 @@ static void TriggerServices(int startMode)
             continue;
         }
         if (index == 0) {
-            sprintf_s(jobName, sizeof(jobName), "boot-service:service-%d-%03d", startMode, jobNum);
+            (void)sprintf_s(jobName, sizeof(jobName), "boot-service:service-%d-%03d", startMode, jobNum);
             jobNum++;
         }
         index++;
-        sprintf_s(cmd, sizeof(cmd), "start %s", service->name);
+        (void)sprintf_s(cmd, sizeof(cmd), "start %s", service->name);
         AddCompleteJob(jobName, NULL, cmd);
         INIT_LOGV("Add %s to job %s", service->name, jobName);
         if (index == maxServiceInJob) {

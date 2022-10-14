@@ -91,7 +91,7 @@ static int GetParamValue(napi_env env, napi_value arg, napi_valuetype valueType,
     if (valueType == napi_string) {
         status = napi_get_value_string_utf8(env, arg, buffer, buffLen, &buffLen);
     } else if (valueType == napi_number) {
-        status = napi_get_value_int32(env, arg, (int *)buffer);
+        status = napi_get_value_int32(env, arg, reinterpret_cast<int *>(buffer));
     }
     return status;
 }
@@ -103,12 +103,12 @@ static void WaitCallbackWork(napi_env env, ParamAsyncContextPtr asyncContext)
     napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void *data) {
-            ParamAsyncContext *asyncContext = (ParamAsyncContext *)data;
+            ParamAsyncContext *asyncContext = reinterpret_cast<ParamAsyncContext *>(data);
             asyncContext->status = WaitParameter(asyncContext->key, asyncContext->value, asyncContext->timeout);
             PARAM_JS_LOGV("JSApp Wait status: %d, key: %s", asyncContext->status, asyncContext->key);
         },
         [](napi_env env, napi_status status, void *data) {
-            ParamAsyncContext *asyncContext = (ParamAsyncContext *)data;
+            ParamAsyncContext *asyncContext = reinterpret_cast<ParamAsyncContext *>(data);
             napi_value result[ARGC_NUMBER] = { 0 };
             napi_value message = nullptr;
             napi_create_object(env, &result[0]);
@@ -136,7 +136,7 @@ static void WaitCallbackWork(napi_env env, ParamAsyncContextPtr asyncContext)
             napi_delete_async_work(env, asyncContext->work);
             delete asyncContext;
         },
-        (void *)asyncContext, &asyncContext->work);
+        reinterpret_cast<void *>(asyncContext), &asyncContext->work);
     napi_queue_async_work(env, asyncContext->work);
 }
 
@@ -468,7 +468,7 @@ static void WatchCallbackWork(napi_env env, ParamWatcherPtr watcher)
     napi_create_string_utf8(env, "JSStartupWatch", NAPI_AUTO_LENGTH, &resource);
     napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void *data) {
-            ParamWatcherWork *worker = (ParamWatcherWork *)data;
+            ParamWatcherWork *worker = reinterpret_cast<ParamWatcherWork *>(data);
             PARAM_JS_CHECK(worker != nullptr && worker->watcher != nullptr, return, "Invalid worker ");
             int status = WatchParameter(worker->watcher->keyPrefix,
                 worker->startWatch ? ProcessParamChange : nullptr, worker->watcher);
@@ -476,13 +476,13 @@ static void WatchCallbackWork(napi_env env, ParamWatcherPtr watcher)
                 worker->startWatch ? "on" : "off", status, worker->watcher->keyPrefix);
         },
         [](napi_env env, napi_status status, void *data) {
-            ParamWatcherWork *worker = (ParamWatcherWork *)data;
+            ParamWatcherWork *worker = reinterpret_cast<ParamWatcherWork *>(data);
             PARAM_JS_LOGV("JSApp WatchCallbackWork delete %s key: %s",
                 worker->startWatch ? "on" : "off", worker->watcher->keyPrefix);
             napi_delete_async_work(env, worker->work);
             delete worker;
         },
-        (void *)worker, &worker->work);
+        reinterpret_cast<void *>(worker), &worker->work);
     napi_queue_async_work(env, worker->work);
 }
 
