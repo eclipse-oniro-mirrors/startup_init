@@ -41,7 +41,7 @@ HWTEST_F(InitRebootUnitTest, TestAddRebootCmd, TestSize.Level1)
 {
     auto rebootCallback = [](int id, const char *name, int argc, const char **argv) -> int {
         return 0;
-    }
+    };
     int ret = AddRebootCmdExecutor("reboot_cmd1", rebootCallback);
     EXPECT_EQ(ret, 0);
     ret = AddRebootCmdExecutor("reboot_cmd2", rebootCallback);
