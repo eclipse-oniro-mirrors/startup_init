@@ -55,20 +55,9 @@ static int TestGenHashCode(const char *buff)
 
 static void TestSetSelinuxLogCallback(void) {}
 
-static const char *forbidWriteParamName[] = {
-    "ohos.servicectrl.",
-    "test.permission.read",
-    "test.persmission.watch"
-};
-
 static int TestSetParamCheck(const char *paraName, const char *context, const SrcInfo *info)
 {
-    // forbid to read ohos.servicectrl.
-    for (size_t i = 0; i < ARRAY_LENGTH(forbidWriteParamName); i++) {
-        if (strncmp(paraName, forbidWriteParamName[i], strlen(forbidWriteParamName[i])) == 0) {
-            return g_testPermissionResult;
-        }
-    }
+    BEGET_LOGI("TestSetParamCheck %s result %d", paraName, g_testPermissionResult);
     return g_testPermissionResult;
 }
 
@@ -85,15 +74,15 @@ static const char *TestGetParamLabel(const char *paraName)
     return selinuxLabels[code][1];
 }
 
-static const char *forbitReadParamName[] = {
+static const char *forbidReadParamName[] = {
     "ohos.servicectrl.",
     // "test.permission.write",
 };
 static int TestReadParamCheck(const char *paraName)
 {
     // forbid to read ohos.servicectrl.
-    for (size_t i = 0; i < ARRAY_LENGTH(forbitReadParamName); i++) {
-        if (strncmp(paraName, forbitReadParamName[i], strlen(forbitReadParamName[i])) == 0) {
+    for (size_t i = 0; i < ARRAY_LENGTH(forbidReadParamName); i++) {
+        if (strncmp(paraName, forbidReadParamName[i], strlen(forbidReadParamName[i])) == 0) {
             return 1;
         }
     }
@@ -430,6 +419,13 @@ void PrepareInitUnitTestEnv(void)
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/vendor/etc/param", LOAD_PARAM_NORMAL);
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/system/etc/param", LOAD_PARAM_ONLY_ADD);
     LoadParamFromCfg();
+
+    // for test int get
+    SystemWriteParam("test.int.get", "-101");
+    SystemWriteParam("test.uint.get", "101");
+    SystemWriteParam("test.string.get", "101");
+    SystemWriteParam("test.bool.get.true", "true");
+    SystemWriteParam("test.bool.get.false", "false");
     evnOk = 1;
 }
 

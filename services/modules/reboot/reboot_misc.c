@@ -36,7 +36,7 @@ static int RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdate
 {
     char *realPath = GetRealPath(path);
     BEGET_CHECK_RETURN_VALUE(realPath != NULL, -1);
-    int ret = 0;
+    int ret = -1;
     FILE *fp = fopen(realPath, "rb+");
     free(realPath);
     realPath = NULL;
@@ -44,16 +44,14 @@ static int RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdate
         size_t writeLen = fwrite(boot, sizeof(struct RBMiscUpdateMessage), 1, fp);
         BEGET_ERROR_CHECK(writeLen == 1, ret = -1, "Failed to write misc for reboot");
         (void)fclose(fp);
-    } else {
-        ret = -1;
-        BEGET_LOGE("Failed to open %s", path);
+        ret = 0;
     }
     return ret;
 }
 
 static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage *boot)
 {
-    int ret = 0;
+    int ret = -1;
     FILE *fp = NULL;
     char *realPath = GetRealPath(path);
     if (realPath != NULL) {
@@ -67,9 +65,7 @@ static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage
         size_t readLen = fread(boot, 1, sizeof(struct RBMiscUpdateMessage), fp);
         (void)fclose(fp);
         BEGET_ERROR_CHECK(readLen > 0, ret = -1, "Failed to read misc for reboot");
-    } else {
-        ret = -1;
-        BEGET_LOGE("Failed to open %s errno %d", path, errno);
+        ret = 0;
     }
     return ret;
 }
@@ -89,7 +85,8 @@ int UpdateMiscMessage(const char *valueData, const char *cmd, const char *cmdExt
 {
     char miscFile[PATH_MAX] = {0};
     int ret = GetBlockDevicePath("/misc", miscFile, PATH_MAX);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to get misc path for %s.", valueData);
+    // no misc do not updater, so return ok
+    BEGET_ERROR_CHECK(ret == 0, return 0, "Failed to get misc path for %s.", valueData);
 
     // "updater" or "updater:"
     struct RBMiscUpdateMessage msg;
