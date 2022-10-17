@@ -18,6 +18,7 @@
 #include <functional>
 #include <map>
 #include <mutex>
+#include <thread>
 
 #include "iwatcher.h"
 #include "iwatcher_manager.h"
@@ -33,10 +34,11 @@ class WatcherManagerKits final : public DelayedRefSingleton<WatcherManagerKits> 
 public:
     DISALLOW_COPY_AND_MOVE(WatcherManagerKits);
 
-    static WatcherManagerKits &GetInstance();
+    static WatcherManagerKits &GetInstance(void);
     int32_t AddWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context);
     int32_t DelWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context);
-    void ReAddWatcher();
+    void ReAddWatcher(void);
+
 #ifndef STARTUP_INIT_TEST
 private:
 #endif
@@ -44,7 +46,7 @@ private:
     public:
         ParameterChangeListener(ParameterChangePtr callback, void *context)
             : callback_(callback), context_(context) {}
-        ~ParameterChangeListener() = default;
+        ~ParameterChangeListener(void) = default;
 
         bool IsEqual(ParameterChangePtr callback, const void *context) const
         {
@@ -63,61 +65,63 @@ private:
         void *context_ { nullptr };
     };
 
-    class ParamWatcher final : public Watcher {
+    class ParamWatcher {
     public:
         explicit ParamWatcher(const std::string &key) : keyPrefix_(key) {}
-        ~ParamWatcher() override
+        ~ParamWatcher(void)
         {
             parameterChangeListeners.clear();
         };
-
-        void OnParameterChange(const std::string &name, const std::string &value) override;
-
-        void SetWatcherId(uint32_t watcherId)
-        {
-            watcherId_ = watcherId;
-        }
-        uint32_t GetWatcherId()
-        {
-            return watcherId_;
-        }
+        void OnParameterChange(const std::string &name, const std::string &value);
         int AddParameterListener(ParameterChangePtr callback, void *context);
         int DelParameterListener(ParameterChangePtr callback, void *context);
     private:
         ParameterChangeListener *GetParameterListener(uint32_t *idx);
         void RemoveParameterListener(uint32_t idx);
-        uint32_t watcherId_ { 0 };
         std::string keyPrefix_ {};
-
         std::mutex mutex_;
         uint32_t listenerId_ { 0 };
         std::map<uint32_t, std::shared_ptr<ParameterChangeListener>> parameterChangeListeners;
     };
-    using ParamWatcherKitPtr = sptr<WatcherManagerKits::ParamWatcher>;
-    ParamWatcherKitPtr GetParamWatcher(const std::string &keyPrefix);
 
+    class RemoteWatcher final : public Watcher {
+    public:
+        RemoteWatcher(WatcherManagerKits *watcherManager) : watcherManager_(watcherManager) {}
+        ~RemoteWatcher(void) override {}
+
+        void OnParameterChange(const std::string &prefix, const std::string &name, const std::string &value) final;
+    private:
+        WatcherManagerKits *watcherManager_ = { nullptr };
+    };
+
+    using ParamWatcherKitPtr = std::shared_ptr<WatcherManagerKits::ParamWatcher>;
     // For death event procession
     class DeathRecipient final : public IRemoteObject::DeathRecipient {
     public:
-        DeathRecipient() = default;
-        ~DeathRecipient() final = default;
+        DeathRecipient(void) = default;
+        ~DeathRecipient(void) final = default;
         DISALLOW_COPY_AND_MOVE(DeathRecipient);
         void OnRemoteDied(const wptr<IRemoteObject> &remote) final;
     };
-    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient()
+    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient(void)
     {
         return deathRecipient_;
     }
 
-private:
+    uint32_t GetRemoteWatcher(void);
+    ParamWatcher *GetParamWatcher(const std::string &keyPrefix);
     void ResetService(const wptr<IRemoteObject> &remote);
-    sptr<IWatcherManager> GetService();
+    sptr<IWatcherManager> GetService(void);
     std::mutex lock_;
     sptr<IWatcherManager> watcherManager_ {};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
 
     std::mutex mutex_;
+    uint32_t remoteWatcherId_ = { 0 };
+    sptr<Watcher>  remoteWatcher_ = { nullptr };
     std::map<std::string, ParamWatcherKitPtr> watchers_;
+    std::atomic<bool> stop_ { false };
+    std::thread *threadForReWatch_ { nullptr };
 };
 } // namespace init_param
 } // namespace OHOS

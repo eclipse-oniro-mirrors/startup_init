@@ -308,20 +308,24 @@ HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
     serviceInfoContext.reserved = "bootevent";
     HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_DUMP, (void *)(&serviceInfoContext), NULL);
-
     cJSON *fileRoot = cJSON_Parse(serviceStr);
     ASSERT_NE(nullptr, fileRoot);
+    PluginExecCmd("clear", 0, nullptr);
     ParseAllServices(fileRoot);
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), NULL);
-    SystemWriteParam("bootevent.bootevent1", "true");
-    SystemWriteParam("bootevent.bootevent1", "true");
-    SystemWriteParam("bootevent.bootevent2", "true");
+    serviceInfoContext.reserved = NULL;
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), NULL);
     const char *initBootevent[] = {"init", "test"};
     PluginExecCmd("bootevent", ARRAY_LENGTH(initBootevent), initBootevent);
-    PluginExecCmd("save.bootevent", 0, nullptr);
-    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_DUMP, (void *)(&serviceInfoContext), NULL);
-    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)(&serviceInfoContext), NULL);
-    PluginExecCmd("clear", 0, nullptr);
+    const char *initBooteventDup[] = {"init", "test"};
+    PluginExecCmd("bootevent", ARRAY_LENGTH(initBooteventDup), initBooteventDup);
+    const char *initBooteventErr[] = {"init"};
+    PluginExecCmd("bootevent", ARRAY_LENGTH(initBooteventErr), initBooteventErr);
+    SystemWriteParam("bootevent.bootevent1", "true");
+    SystemWriteParam("bootevent.bootevent2", "true");
+    SystemWriteParam("bootevent.bootevent2", "true");
+    SystemWriteParam("persist.init.bootevent.enable", "false");
+    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, NULL, NULL);
     cJSON_Delete(fileRoot);
 }
 

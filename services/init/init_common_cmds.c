@@ -38,6 +38,25 @@
 #include "init_utils.h"
 #include "securec.h"
 
+#ifndef OHOS_LITE
+#include "hookmgr.h"
+#include "bootstage.h"
+
+/**
+ * init cmd hooking execute
+ */
+static void InitCmdHookExecute(const char *cmdName, const char *cmdContent, INIT_TIMING_STAT *cmdTimer)
+{
+    INIT_CMD_INFO context;
+
+    context.cmdName = cmdName;
+    context.cmdContent = cmdContent;
+    context.reserved = (const char *)cmdTimer;
+
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_CMD_RECORD, (void *)(&context), NULL);
+}
+#endif
+
 static char *AddOneArg(const char *param, size_t paramLen)
 {
     int valueCount = 1;
@@ -719,6 +738,9 @@ void DoCmdByName(const char *name, const char *cmdContent)
     }
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
     long long diff = InitDiffTime(&cmdTimer);
+#ifndef OHOS_LITE
+    InitCmdHookExecute(name, cmdContent, &cmdTimer);
+#endif
     INIT_LOGV("Execute command \"%s %s\" took %lld ms", name, cmdContent, diff / 1000); // 1000 is convert us to ms
 }
 
@@ -751,5 +773,8 @@ void DoCmdByIndex(int index, const char *cmdContent)
     }
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
     long long diff = InitDiffTime(&cmdTimer);
+#ifndef OHOS_LITE
+    InitCmdHookExecute(cmdName, cmdContent, &cmdTimer);
+#endif
     INIT_LOGV("Execute command \"%s %s\" took %lld ms", cmdName, cmdContent, diff / 1000); // 1000 is convert us to ms
 }

@@ -23,9 +23,9 @@
 
 namespace OHOS {
 namespace init_param {
-void WatcherProxy::OnParameterChange(const std::string &name, const std::string &value)
+void WatcherProxy::OnParameterChange(const std::string &prefix, const std::string &name, const std::string &value)
 {
-    WATCHER_LOGV("WatcherProxy::OnParameterChange %s %s", name.c_str(), value.c_str());
+    WATCHER_LOGV("WatcherProxy::OnParameterChange %s %s %s", prefix.c_str(), name.c_str(), value.c_str());
     MessageParcel data;
     MessageParcel reply;
     MessageOption option { MessageOption::TF_ASYNC };
@@ -33,10 +33,11 @@ void WatcherProxy::OnParameterChange(const std::string &name, const std::string 
     WATCHER_CHECK(remote != nullptr, return, "Can not get remote");
 
     data.WriteInterfaceToken(WatcherProxy::GetDescriptor());
+    data.WriteString(prefix);
     data.WriteString(name);
     data.WriteString(value);
     int ret = remote->SendRequest(PARAM_CHANGE, data, reply, option);
-    WATCHER_CHECK(ret == ERR_OK, return, "Can not SendRequest for name %s", name.c_str());
+    WATCHER_CHECK(ret == ERR_OK, return, "Can not SendRequest for name %s err:%d", name.c_str(), ret);
     return;
 }
 }

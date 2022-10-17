@@ -35,7 +35,6 @@ const ParamCmdInfo *GetServiceCtl(size_t *size)
         {"ohos.servicectrl.install", "install", "install" },
         {"ohos.servicectrl.uninstall", "uninstall", "uninstall" },
         {"ohos.servicectrl.clear", "clear", "clear" },
-        {"ohos.servicectrl.save", "save.bootevent", "save.bootevent" },
         {"ohos.servicectrl.bootchart", "bootchart", "bootchart" },
         {"ohos.servicectrl.timer_start", "timer_start", "timer_start " },
         {"ohos.servicectrl.timer_stop", "timer_stop", "timer_stop" },

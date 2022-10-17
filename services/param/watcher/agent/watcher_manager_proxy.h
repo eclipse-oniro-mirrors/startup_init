@@ -25,10 +25,13 @@ class WatcherManagerProxy : public IRemoteProxy<IWatcherManager> {
 public:
     explicit WatcherManagerProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IWatcherManager>(impl) {}
 
-    uint32_t AddWatcher(const std::string &keyPrefix, const sptr<IWatcher> &watcher) override;
-    int32_t DelWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
-    int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t watcherId) override;
+    uint32_t AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher) override;
+    int32_t DelRemoteWatcher(uint32_t remoteWatcherId) override;
+    int32_t AddWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
+    int32_t DelWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
+    int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
 private:
+    int32_t SendMsg(int op, const std::string &keyPrefix, uint32_t remoteWatcherId);
     static inline BrokerDelegator<WatcherManagerProxy> delegator_;
 };
 } // namespace init_param

@@ -28,6 +28,7 @@ startup.appspawn.           = root:root:0750
 startup.uevent.             = ueventd:ueventd:0775
 
 persist.init.debug.         = root:root:0775:int
+persist.init.bootevent.enable         = root:root:0775:bool
 persist.appspawn.           = root:root:0775
 
 #udid and sn, only read
