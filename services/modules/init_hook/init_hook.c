@@ -170,19 +170,6 @@ static void DumpServiceHook(void)
     return;
 }
 
-static void InitLogLevelFromPersist(void)
-{
-    char logLevel[2] = {0}; // 2 is set param "persist.init.debug.loglevel" value length.
-    uint32_t len = sizeof(logLevel);
-    int ret = SystemReadParam("persist.init.debug.loglevel", logLevel, &len);
-    INIT_INFO_CHECK(ret == 0, return, "Can not get log level from param, keep the original loglevel.");
-    errno = 0;
-    unsigned int level = (unsigned int)strtoul(logLevel, 0, 10); // 10 is decimal
-    INIT_INFO_CHECK(errno == 0, return, "Failed strtoul %s, err=%d", logLevel, errno);
-    SetInitLogLevel(level);
-    return;
-}
-
 static int InitDebugHook(const HOOK_INFO *info, void *cookie)
 {
     UNUSED(info);
