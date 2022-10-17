@@ -33,6 +33,7 @@
 #else
 #define MODULE_LIB_NAME "lib"
 #endif
+#define LIB_NAME_LEN 3
 
 struct tagMODULE_MGR {
     ListNode modules;
@@ -103,9 +104,9 @@ static void *ModuleInstall(MODULE_ITEM *module, int argc, const char *argv[])
     module->moduleMgr->installArgs.argc = argc;
     module->moduleMgr->installArgs.argv = argv;
 
-    if (module->moduleMgr->name[0] == '/') {
-        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s/%s" MODULE_SUFFIX_D,
-            module->moduleMgr->name, module->name) < 0) {
+    BEGET_LOGV("Module install name %s", module->name);
+    if (module->name[0] == '/') {
+        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s" MODULE_SUFFIX_D, module->name) < 0) {
             return NULL;
         }
     } else {
@@ -126,8 +127,14 @@ static void *ModuleInstall(MODULE_ITEM *module, int argc, const char *argv[])
 static int ModuleCompare(ListNode *node, void *data)
 {
     MODULE_ITEM *module = (MODULE_ITEM *)node;
-
-    return strcmp(module->name, (char *)data);
+    const char *name = module->name;
+    if (module->name[0] == '/') {
+        name = strrchr((name), '/') + 1;
+    }
+    if (strncmp(name, "lib", LIB_NAME_LEN) == 0) {
+        name = name + LIB_NAME_LEN;
+    }
+    return strcmp(name, (char *)data);
 }
 
 /*
@@ -160,7 +167,7 @@ int ModuleMgrInstall(MODULE_MGR *moduleMgr, const char *moduleName,
     // Install
     module->handle = ModuleInstall(module, argc, argv);
     if (module->handle == NULL) {
-        BEGET_LOGE("Failed to install module %s", moduleName);
+        BEGET_LOGE("Failed to install module %s", module->name);
         ModuleDestroy((ListNode *)module);
         return -1;
     }
@@ -190,15 +197,12 @@ static int StringEndsWith(const char *srcStr, const char *endStr)
 
 static void ScanModules(MODULE_MGR *moduleMgr, const char *path)
 {
-    int end;
-    DIR *dir;
-    struct dirent *file;
-
-    dir = opendir(path);
+    BEGET_LOGV("Scan module with name '%s'", path);
+    DIR *dir = opendir(path);
     BEGET_CHECK(dir != NULL, return);
-
-    while (1) {
-        file = readdir(dir);
+    char *moduleName = malloc(PATH_MAX);
+    while (moduleName != NULL) {
+        struct dirent *file = readdir(dir);
         if (file == NULL) {
             break;
         }
@@ -207,20 +211,22 @@ static void ScanModules(MODULE_MGR *moduleMgr, const char *path)
         }
 
         // Must be ended with MODULE_SUFFIX_D
-        end = StringEndsWith(file->d_name, MODULE_SUFFIX_D);
+        int end = StringEndsWith(file->d_name, MODULE_SUFFIX_D);
         if (end <= 0) {
             continue;
         }
 
         file->d_name[end] = '\0';
-        BEGET_LOGV("Scan module with name %s", file->d_name);
-        if (strncmp(file->d_name, "lib", strlen("lib")) == 0) {
-            ModuleMgrInstall(moduleMgr, file->d_name + strlen("lib"), 0, NULL);
-        } else {
-            ModuleMgrInstall(moduleMgr, file->d_name, 0, NULL);
+        int len = sprintf_s(moduleName, PATH_MAX - 1, "%s/%s", path, file->d_name);
+        if (len > 0) {
+            moduleName[len] = '\0';
+            BEGET_LOGI("Scan module with name '%s'", moduleName);
+            ModuleMgrInstall(moduleMgr, moduleName, 0, NULL);
         }
     }
-
+    if (moduleName != NULL) {
+        free(moduleName);
+    }
     closedir(dir);
 }
 

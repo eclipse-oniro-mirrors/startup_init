@@ -17,11 +17,16 @@
 #include "init_cmdexecutor.h"
 #include "init_log.h"
 #include "init_group_manager.h"
+#include "init_modulemgr.h"
 
 void ExecReboot(const char *value)
 {
     INIT_LOGI("ExecReboot %s", value);
+#ifndef STARTUP_INIT_TEST
+    // install module
+    InitModuleMgrInstall("rebootmodule");
     PluginExecCmdByName("reboot", value);
+#endif
     return;
 }
 
