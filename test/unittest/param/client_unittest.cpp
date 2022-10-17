@@ -110,6 +110,7 @@ static void TestPermission()
     int ret;
 
     ParamSecurityOps *paramSecurityOps = GetParamSecurityOps(0);
+    EXPECT_NE(paramSecurityOps, nullptr);
     paramSecurityOps->securityCheckParamPermission = TestCheckParamPermission;
     SetTestPermissionResult(DAC_RESULT_FORBIDED);
     if ((GetParamSecurityLabel() != nullptr)) {

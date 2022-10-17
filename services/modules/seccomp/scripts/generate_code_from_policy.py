@@ -570,7 +570,6 @@ class GenBpfPolicy:
 
         return bpf_policy
 
-    #parse (argn & mask) == value
     def compile_mask_equal_atom(self, atom, cur_size):
         bpf_policy = []
         left_brace_pos = atom.find('(')

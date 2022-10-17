@@ -40,7 +40,7 @@ namespace OHOS {
         CloseStdout();
         Cookie instance = {0, nullptr};
         Cookie *cookie = &instance;
-        if (size <= 0) {
+        if (size == 0) {
             return false;
         }
         if (size > PARAM_CONST_VALUE_LEN_MAX + PARAM_NAME_LEN_MAX) {
