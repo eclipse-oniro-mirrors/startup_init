@@ -20,12 +20,6 @@
 #include "plugin_adapter.h"
 #include "securec.h"
 
-typedef struct {
-    const char *cmd;
-    CmdExecutor executor;
-    uint32_t cmdId;
-} ModuleCmdInfo;
-
 static int DoRoot_(const char *jobName, int type)
 {
     // by job to stop service and unmount
@@ -34,11 +28,17 @@ static int DoRoot_(const char *jobName, int type)
     }
 #ifndef STARTUP_INIT_TEST
     return reboot(type);
+#else
+    return 0;
 #endif
 }
 
 static int DoReboot(int id, const char *name, int argc, const char **argv)
 {
+    UNUSED(id);
+    UNUSED(name);
+    UNUSED(argc);
+    UNUSED(argv);
     // clear misc
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
     return DoRoot_("reboot", RB_AUTOBOOT);
@@ -46,6 +46,10 @@ static int DoReboot(int id, const char *name, int argc, const char **argv)
 
 static int DoRebootShutdown(int id, const char *name, int argc, const char **argv)
 {
+    UNUSED(id);
+    UNUSED(name);
+    UNUSED(argc);
+    UNUSED(argv);
     // clear misc
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
     return DoRoot_("reboot", RB_POWER_OFF);
@@ -53,6 +57,7 @@ static int DoRebootShutdown(int id, const char *name, int argc, const char **arg
 
 static int DoRebootUpdater(int id, const char *name, int argc, const char **argv)
 {
+    UNUSED(id);
     PLUGIN_LOGI("DoRebootUpdater argc %d %s", argc, name);
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGI("DoRebootUpdater argv %s", argv[0]);
@@ -65,6 +70,7 @@ static int DoRebootUpdater(int id, const char *name, int argc, const char **argv
 
 static int DoRebootFlashed(int id, const char *name, int argc, const char **argv)
 {
+    UNUSED(id);
     PLUGIN_LOGI("DoRebootFlashed argc %d %s", argc, name);
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGI("DoRebootFlashd argv %s", argv[0]);
@@ -77,6 +83,10 @@ static int DoRebootFlashed(int id, const char *name, int argc, const char **argv
 
 static int DoRebootCharge(int id, const char *name, int argc, const char **argv)
 {
+    UNUSED(id);
+    UNUSED(name);
+    UNUSED(argc);
+    UNUSED(argv);
     int ret = UpdateMiscMessage(NULL, "charge", "charge:", "boot_charge");
     if (ret == 0) {
         return DoRoot_("reboot", RB_AUTOBOOT);
@@ -84,46 +94,25 @@ static int DoRebootCharge(int id, const char *name, int argc, const char **argv)
     return ret;
 }
 
-#ifdef PRODUCT_RK
-#include <sys/syscall.h>
-#define REBOOT_MAGIC1       0xfee1dead
-#define REBOOT_MAGIC2       672274793
-#define REBOOT_CMD_RESTART2 0xA1B2C3D4
-static int DoRebootLoader(int id, const char *name, int argc, const char **argv)
+static int DoRebootSuspend(int id, const char *name, int argc, const char **argv)
 {
-    // by job to stop service and unmount
-    DoJobNow("reboot");
-    syscall(__NR_reboot, REBOOT_MAGIC1, REBOOT_MAGIC2, REBOOT_CMD_RESTART2, "loader");
-    return 0;
+    UNUSED(id);
+    UNUSED(name);
+    UNUSED(argc);
+    UNUSED(argv);
+    return DoRoot_("suspend", RB_AUTOBOOT);
 }
-#endif
-
-static ModuleCmdInfo g_rebootCmdIds[] = {
-    {"reboot.shutdown", DoRebootShutdown, 0},
-    {"reboot.flashd", DoRebootFlashed, 0},
-    {"reboot.updater", DoRebootUpdater, 0},
-    {"reboot.charge", DoRebootCharge, 0},
-#ifdef PRODUCT_RK
-    {"reboot.loader", DoRebootLoader, 0},
-#endif
-    {"reboot", DoReboot, 0},
-};
 
 static void RebootAdpInit(void)
 {
-    for (size_t i = 0; i < sizeof(g_rebootCmdIds)/sizeof(g_rebootCmdIds[0]); i++) {
-        g_rebootCmdIds[i].cmdId = (uint32_t)AddCmdExecutor(g_rebootCmdIds[i].cmd, g_rebootCmdIds[i].executor);
-    }
-}
-
-static void RebootAdpExit(void)
-{
-    for (size_t i = 0; i < sizeof(g_rebootCmdIds)/sizeof(g_rebootCmdIds[0]); i++) {
-        if (g_rebootCmdIds[i].cmdId == 0) {
-            continue;
-        }
-        RemoveCmdExecutor(g_rebootCmdIds[i].cmd, g_rebootCmdIds[i].cmdId);
-    }
+    // sample {"reboot,shutdown", "reboot.shutdown", "reboot.shutdown"},
+    // add default reboot cmd
+    (void)AddCmdExecutor("reboot", DoReboot);
+    AddRebootCmdExecutor("shutdown", DoRebootShutdown);
+    AddRebootCmdExecutor("flashd", DoRebootFlashed);
+    AddRebootCmdExecutor("updater", DoRebootUpdater);
+    AddRebootCmdExecutor("charge", DoRebootCharge);
+    AddRebootCmdExecutor("suspend", DoRebootSuspend);
 }
 
 MODULE_CONSTRUCTOR(void)
@@ -135,5 +124,4 @@ MODULE_CONSTRUCTOR(void)
 MODULE_DESTRUCTOR(void)
 {
     PLUGIN_LOGI("Reboot adapter plug-in exit now ...");
-    RebootAdpExit();
 }
