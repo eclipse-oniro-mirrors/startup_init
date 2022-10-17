@@ -100,7 +100,7 @@ static void HandleParamChange2(const char *key, const char *value, void *context
         index = 5; // 5 add context
         ret = SystemWatchParameter(key, HandleParamChange2, (void *)index);
         if (ret != 0) {
-            printf("Add watcher %s fail %d \n", key, index);
+            printf("Add watcher %s fail %zu \n", key, index);
         }
         addWatcher = 1;
         return;
@@ -109,21 +109,21 @@ static void HandleParamChange2(const char *key, const char *value, void *context
         index = 3; // 3 delete context
         RemoveParameterWatcher(key, HandleParamChange2, (void *)index);
         if (ret != 0) {
-            printf("Remove watcher fail %d  \n", index);
+            printf("Remove watcher fail %zu  \n", index);
         }
         return;
     }
     if (index == 1) { // 1 when context == 1 delete 1
         RemoveParameterWatcher(key, HandleParamChange2, (void *)index);
         if (ret != 0) {
-            printf("Remove watcher fail %d  \n", index);
+            printf("Remove watcher fail %zu  \n", index);
         }
         return;
     }
     if ((index == 5) && (addWatcher == 1)) {  // 5 when context == 5 delete 5
         RemoveParameterWatcher(key, HandleParamChange2, (void *)index);
         if (ret != 0) {
-            printf("Remove watcher fail %d  \n", index);
+            printf("Remove watcher fail %zu  \n", index);
         }
         addWatcher = 0;
     }
@@ -143,18 +143,18 @@ static void *CmdThreadWatcher(void *args)
     for (size_t i = 1; i <= MAX_NUMBER; i++) {
         int ret = SystemWatchParameter(context->name, HandleParamChange2, (void *)i);
         if (ret != 0) {
-            printf("Add watcher %s fail %d \n", context->name, i);
+            printf("Add watcher %s fail %zu \n", context->name, i);
         }
         ret = SetParameter(context->name, context->name);
         if (ret != 0) {
-            printf("Set parameter %s fail %d \n", context->name, i);
+            printf("Set parameter %s fail %zu \n", context->name, i);
         }
     }
     sleep(1);
     for (size_t i = 1; i <= MAX_NUMBER; i++) {
         int ret = RemoveParameterWatcher(context->name, HandleParamChange2, (void *)i);
         if (ret != 0) {
-            printf("Remove watcher %s fail %d \n", context->name, i);
+            printf("Remove watcher %s fail %zu \n", context->name, i);
         }
     }
     free(context);
