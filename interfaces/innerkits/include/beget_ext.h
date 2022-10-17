@@ -25,6 +25,8 @@ extern "C" {
 #endif
 #endif
 
+#define INIT_DEBUG_LEVEL "persist.init.debug.loglevel"
+
 #ifndef INIT_LOG_PATH
 #define INIT_LOG_PATH "/data/init_agent/"
 #endif

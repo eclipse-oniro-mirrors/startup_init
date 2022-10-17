@@ -21,6 +21,7 @@
 #include <thread>
 
 #include "init_param.h"
+#include "parameter.h"
 #include "system_ability_definition.h"
 #include "string_ex.h"
 #include "watcher_utils.h"
@@ -37,7 +38,8 @@ WatcherManager::~WatcherManager()
 
 uint32_t WatcherManager::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher)
 {
-    WATCHER_CHECK(watcher != nullptr && deathRecipient_ != nullptr, return 0, "Invalid remove watcher");
+    WATCHER_CHECK(watcher != nullptr, return 0, "Invalid remote watcher");
+    WATCHER_CHECK(deathRecipient_ != nullptr, return 0, "Invalid deathRecipient_");
     sptr<IRemoteObject> object = watcher->AsObject();
     if ((object != nullptr) && (object->IsProxyObject())) {
         WATCHER_CHECK(object->AddDeathRecipient(deathRecipient_), return 0, "Failed to add death recipient %u", id);
@@ -303,15 +305,18 @@ int WatcherManager::GetServerFd(bool retry)
 
 void WatcherManager::OnStart()
 {
+    int level = GetIntParameter(INIT_DEBUG_LEVEL, (int)INIT_ERROR);
+    SetInitLogLevel((InitLogLevel)level);
+
     WATCHER_LOGI("Watcher manager OnStart");
     bool res = Publish(this);
     if (!res) {
         WATCHER_LOGE("WatcherManager Publish failed");
     }
-    SystemSetParameter("bootevent.param_watcher.started", "true");
     if (deathRecipient_ == nullptr) {
         deathRecipient_ = new DeathRecipient(this);
     }
+    SystemSetParameter("bootevent.param_watcher.started", "true");
     return;
 }
 
