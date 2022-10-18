@@ -92,7 +92,7 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
     ASSERT_EQ(cnt, 0);
 
     // Install one module
-    ret = ModuleMgrInstall(moduleMgr, "bootchart", 0, NULL);
+    ret = ModuleMgrInstall(moduleMgr, "/system/lib/init/libbootchart", 0, NULL);
     ASSERT_EQ(ret, 0);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 1);
@@ -126,12 +126,54 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
     moduleMgr = ModuleMgrScan("init/autorun");
     ASSERT_NE(moduleMgr, nullptr);
     cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_EQ(cnt, 0);
+    ASSERT_GE(cnt, 0);
 
     ModuleMgrUninstall(moduleMgr, NULL);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 0);
     ModuleMgrGetArgs();
+    ModuleMgrDestroy(moduleMgr);
+}
+
+static void TestModuleDump(const MODULE_INFO *moduleInfo)
+{
+    printf("%s\n", moduleInfo->name);
+}
+
+HWTEST_F(ModuleMgrUnitTest, ModuleTraversalTest, TestSize.Level1)
+{
+    // Create module manager
+    MODULE_MGR *moduleMgr = ModuleMgrCreate("init");
+    ASSERT_NE(moduleMgr, nullptr);
+    int cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 0);
+    // Install one module
+    int ret = ModuleMgrInstall(moduleMgr, "bootchart", 0, NULL);
+    ASSERT_EQ(ret, 0);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 1);
+    ModuleMgrTraversal(moduleMgr, NULL, TestModuleDump);
+    ModuleMgrDestroy(moduleMgr);
+}
+
+HWTEST_F(ModuleMgrUnitTest, ModuleScanTest, TestSize.Level1)
+{
+    // Scan all modules test init
+    MODULE_MGR *moduleMgr = ModuleMgrScan("init");
+    ASSERT_NE(moduleMgr, nullptr);
+    int cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_GE(cnt, 1);
+
+    ModuleMgrUninstall(moduleMgr, NULL);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 0);
+    ModuleMgrDestroy(moduleMgr);
+
+    // scan /lib/init/
+    moduleMgr = ModuleMgrScan("/lib/init");
+    ASSERT_NE(moduleMgr, nullptr);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_GE(cnt, 1);
     ModuleMgrDestroy(moduleMgr);
 }
 }  // namespace init_ut

@@ -298,16 +298,27 @@ HWTEST_F(LoopEventUnittest, ProcessWatcherTask, TestSize.Level1)
     loopevtest.ProcessWatcherTask();
 }
 
-HWTEST_F(LoopEventUnittest, CloseTackUnittest, TestSize.Level1)
+static LoopHandle g_loop = nullptr;
+static int g_timeCount = 0;
+static void Test_ProcessTimer(const TimerHandle taskHandle, void *context)
 {
-    LoopHandle loop = nullptr;
-    LE_GetSendResult(nullptr);
-    ASSERT_EQ(LE_CreateLoop(&loop), 0);
-    ((EventLoop *)loop)->runLoop(nullptr);
-    ((EventLoop *)loop)->runLoop = [](const struct EventLoop_ *loop)->LE_STATUS {return LE_SUCCESS;};
-    LE_RunLoop(loop);
-    LE_StopLoop(loop);
-    LE_CloseLoop(loop);
+    g_timeCount++;
+    printf("Test_ProcessTimer %d\n", g_timeCount);
+    if (g_timeCount > 1) {
+        LE_StopLoop(g_loop);
+    }
 }
 
+HWTEST_F(LoopEventUnittest, LoopRunTest, TestSize.Level1)
+{
+    ASSERT_EQ(LE_CreateLoop(&g_loop), 0);
+    TimerHandle timer = nullptr;
+    int ret = LE_CreateTimer(g_loop, &timer, Test_ProcessTimer, nullptr);
+    ASSERT_EQ(ret, 0);
+    ret = LE_StartTimer(g_loop, timer, 500, 2);
+    ASSERT_EQ(ret, 0);
+    LE_CloseLoop(g_loop);
+    LE_RunLoop(g_loop);
+    LE_CloseLoop(g_loop);
+}
 }  // namespace init_ut

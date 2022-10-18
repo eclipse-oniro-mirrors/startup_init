@@ -14,7 +14,6 @@
  */
 
 #include <cinttypes>
-#include <string>
 #include <sys/mount.h>
 #include "fs_manager/fs_manager.h"
 #include "init_log.h"
@@ -22,13 +21,6 @@
 #include "securec.h"
 #include "systemcapability.h"
 #include "service_control.h"
-#include "param_wrapper.h"
-#include "param_manager.h"
-#include "parameters.h"
-#include "param_persist.h"
-#include "sys_param.h"
-#include "init_module_engine.h"
-#include "init_control_fd_service.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -221,36 +213,16 @@ HWTEST_F(InnerkitsUnitTest, MountAllWithFstabFile_unittest, TestSize.Level1)
     EXPECT_NE(MountAllWithFstabFile("/data/init_ut/etc/fstab.required", 0), 1);
 }
 
-HWTEST_F(InnerkitsUnitTest, others_unittest, TestSize.Level1)
+// TestSysCap
+HWTEST_F(InnerkitsUnitTest, TestSysCap, TestSize.Level1)
 {
-    InitParameterClient();
-    CheckAndSavePersistParam();
-    ClosePersistParamWorkSpace();
-    InitModuleMgrInstall("testModule");
-    InitModuleMgrDump();
-    InitModuleMgrUnInstall("testModule");
-    EXPECT_EQ(HasSystemCapability("test.cap"), 0);
-    HasSystemCapability(nullptr);
-    EXPECT_EQ(ServiceSetReady("testservice"), 0);
-    EXPECT_EQ(StartServiceByTimer("testservice", 1), 0);
-    EXPECT_EQ(StartServiceByTimer("deviceinfoservice", 0), 0);
-    const char *extArgv[] = {"testarg"};
-    EXPECT_EQ(ServiceControlWithExtra("deviceinfoservice", START, extArgv, 1), 0);
-    EXPECT_EQ(ServiceControlWithExtra("deviceinfoservice", RESTART, extArgv, 1), 0);
-    EXPECT_EQ(ServiceControlWithExtra("deviceinfoservice", STOP, extArgv, 1), 0);
-    EXPECT_EQ(ServiceControlWithExtra("deviceinfoservice", RESTART, extArgv, 1), 0);
-    EXPECT_EQ(StopServiceTimer("testservice"), 0);
-    std::string value("10");
-    std::string param("test.param");
-    EXPECT_EQ(OHOS::system::SetParameter("test.param", value), true);
-    EXPECT_EQ(OHOS::system::GetStringParameter("test.param", value), 0);
-    EXPECT_EQ(OHOS::system::GetIntParameter(param, 0), 0);
-    OHOS::system::GetUintParameter(param, std::numeric_limits<uint8_t>::min(), std::numeric_limits<uint8_t>::max());
-    EXPECT_EQ(OHOS::system::GetParameter(param, ""), "");
-    EXPECT_EQ(OHOS::system::GetBoolParameter(param, false), false);
-    OHOS::system::GetDeviceType();
-
-    EXPECT_EQ(LoadParamsFile("/path/to/test", 0), 0);
-    UmountAllWithFstabFile("/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable");
+    bool ret = HasSystemCapability("test.cap");
+    EXPECT_EQ(ret, false);
+    ret = HasSystemCapability(nullptr);
+    EXPECT_EQ(ret, false);
+    ret = HasSystemCapability("ArkUI.ArkUI.Napi");
+    EXPECT_EQ(ret, true);
+    ret = HasSystemCapability("SystemCapability.ArkUI.ArkUI.Napi");
+    EXPECT_EQ(ret, true);
 }
 } // namespace init_ut

@@ -103,6 +103,25 @@ int InitAddClearServiceHook(ServiceHook hook)
     return HookMgrAddEx(GetBootStageHookMgr(), &info);
 }
 
+static int JobParseHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
+{
+    JOB_PARSE_CTX *jobParseContext = (JOB_PARSE_CTX *)executionContext;
+    JobParseHook realHook = (JobParseHook)hookInfo->hookCookie;
+    realHook(jobParseContext);
+    return 0;
+};
+
+int InitAddJobParseHook(JobParseHook hook)
+{
+    HOOK_INFO info;
+    info.stage = INIT_JOB_PARSE;
+    info.prio = 0;
+    info.hook = JobParseHookWrapper;
+    info.hookCookie = (void *)hook;
+
+    return HookMgrAddEx(GetBootStageHookMgr(), &info);
+}
+
 static int CmdClear(int id, const char *name, int argc, const char **argv)
 {
     SERVICE_INFO_CTX ctx = {0};

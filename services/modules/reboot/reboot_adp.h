@@ -17,7 +17,18 @@
 #define MODULE_REBOOT_ADP_H
 #include <stdio.h>
 
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+
 int GetRebootReasonFromMisc(char *reason, size_t size);
 int UpdateMiscMessage(const char *valueData, const char *cmd, const char *cmdExt, const char *boot);
 
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
 #endif /* MODULE_REBOOT_ADP_H */

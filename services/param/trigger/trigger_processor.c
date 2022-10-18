@@ -207,30 +207,6 @@ static int GetCommandInfo(const char *cmdLine, int *cmdKeyIndex, char **content)
     return 0;
 }
 
-/**
- * job Config File Parse Hooking
- */
-static int JobParseHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
-{
-    JOB_PARSE_CTX *jobParseContext = (JOB_PARSE_CTX *)executionContext;
-    JobParseHook realHook = (JobParseHook)hookInfo->hookCookie;
-
-    realHook(jobParseContext);
-    return 0;
-};
-
-int InitAddJobParseHook(JobParseHook hook)
-{
-    HOOK_INFO info;
-
-    info.stage = INIT_JOB_PARSE;
-    info.prio = 0;
-    info.hook = JobParseHookWrapper;
-    info.hookCookie = (void *)hook;
-
-    return HookMgrAddEx(GetBootStageHookMgr(), &info);
-}
-
 static void ParseJobHookExecute(const char *name, const cJSON *jobNode)
 {
     JOB_PARSE_CTX context;
