@@ -183,7 +183,7 @@ INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
         return EC_FAILURE;
     }
 
-    uint32_t len = size;
+    uint32_t len = (uint32_t)size;
     int ret = SystemGetParameter("const.product.udid", udid, &len);
     BEGET_CHECK(ret != 0, return ret);
 

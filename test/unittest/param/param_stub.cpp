@@ -55,7 +55,7 @@ static int TestGenHashCode(const char *buff)
 
 static void TestSetSelinuxLogCallback(void) {}
 
-static const char *forbidWriteParamName[] = {
+static const char *g_forbidWriteParamName[] = {
     "ohos.servicectrl.",
     "test.permission.read",
     "test.persmission.watch"
@@ -64,8 +64,8 @@ static const char *forbidWriteParamName[] = {
 static int TestSetParamCheck(const char *paraName, const char *context, const SrcInfo *info)
 {
     // forbid to read ohos.servicectrl.
-    for (size_t i = 0; i < ARRAY_LENGTH(forbidWriteParamName); i++) {
-        if (strncmp(paraName, forbidWriteParamName[i], strlen(forbidWriteParamName[i])) == 0) {
+    for (size_t i = 0; i < ARRAY_LENGTH(g_forbidWriteParamName); i++) {
+        if (strncmp(paraName, g_forbidWriteParamName[i], strlen(g_forbidWriteParamName[i])) == 0) {
             return g_testPermissionResult;
         }
     }

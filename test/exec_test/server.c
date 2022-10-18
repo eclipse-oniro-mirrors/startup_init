@@ -20,7 +20,6 @@
 
 int main(int argc, char* argv[])
 {
-    int ret = 0;
     int sockFd = GetControlSocket("serversock");
     if (sockFd < 0) {
         INIT_LOGE("Failed to get server socket");
@@ -28,8 +27,7 @@ int main(int argc, char* argv[])
     }
     char buffer[MAX_BUFFER_SIZE] = { 0 };
     while (1) {
-        ret = read(sockFd, buffer, sizeof(buffer) - 1);
-        if (ret > 0) {
+        if (read(sockFd, buffer, sizeof(buffer) - 1) > 0) {
             INIT_LOGI("Read message: %s", buffer);
             (void)memset_s(buffer, MAX_BUFFER_SIZE, 0, MAX_BUFFER_SIZE);
         }

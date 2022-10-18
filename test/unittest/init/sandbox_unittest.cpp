@@ -155,6 +155,7 @@ bool MakeFileByJson(cJSON * mJson, const char *sandboxFileName)
     int ret1 = write(fd, cjValue1, strlen(cjValue1));
     if (-1 == ret1) {
         std::cout << "Write file ERROR" << errno << "  fd is :" << fd << std::endl;
+        close(fd);
         return false;
     }
     free(cjValue1);
