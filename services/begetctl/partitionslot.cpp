@@ -138,20 +138,24 @@ MODULE_CONSTRUCTOR(void)
 {
     CmdInfo infos[] = {
         {
-            (char *)"partitionslot", GetSlot, (char *)"get the number of slots and current slot",
-            (char *)"partitionslot getslot", (char *)"partitionslot getslot"
+            const_cast<char *>("partitionslot"), GetSlot,
+            const_cast<char *>("get the number of slots and current slot"),
+            const_cast<char *>("partitionslot getslot"), const_cast<char *>("partitionslot getslot")
         },
         {
-            (char *)"partitionslot", GetSuffix, (char *)"get suffix that matches with the slot",
-            (char *)"partitionslot getsuffix [slot]", (char *)"partitionslot getsuffix"
+            const_cast<char *>("partitionslot"), GetSuffix,
+            const_cast<char *>("get suffix that matches with the slot"),
+            const_cast<char *>("partitionslot getsuffix [slot]"), const_cast<char *>("partitionslot getsuffix")
         },
         {
-            (char *)"partitionslot", SetActiveSlot, (char *)"set active slot",
-            (char *)"partitionslot setactive [slot]", (char *)"partitionslot setactive"
+            const_cast<char *>("partitionslot"), SetActiveSlot,
+            const_cast<char *>("set active slot"),
+            const_cast<char *>("partitionslot setactive [slot]"), const_cast<char *>("partitionslot setactive")
         },
         {
-            (char *)"partitionslot", SetUnbootSlot, (char *)"set unboot slot",
-            (char *)"partitionslot setunboot [slot]", (char *)"partitionslot setunboot"
+            const_cast<char *>("partitionslot"), SetUnbootSlot,
+            const_cast<char *>("set unboot slot"),
+            const_cast<char *>("partitionslot setunboot [slot]"), const_cast<char *>("partitionslot setunboot")
         }
     };
     for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {

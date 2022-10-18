@@ -141,7 +141,7 @@ public:
         uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + value.size();
         msgSize = PARAM_ALIGN(msgSize); // align
         std::vector<char> buffer(msgSize, 0);
-        ParamMessage *msg = (ParamMessage *)buffer.data();
+        ParamMessage *msg = reinterpret_cast<ParamMessage *>(buffer.data());
         WATCHER_CHECK(msg != nullptr, return -1, "Invalid msg");
         msg->type = MSG_NOTIFY_PARAM;
         msg->msgSize = msgSize;

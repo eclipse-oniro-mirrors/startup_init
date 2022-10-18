@@ -40,7 +40,7 @@ struct HookExecCtx {
     int retErr;
 };
 
-void HookExecFunc(int n) 
+void HookExecFunc(int n)
 {
     for (int i = 0; i < n; ++i) {
         HookMgrExecute(g_hookMgr, STAGE_TEST_ONE, nullptr, nullptr);

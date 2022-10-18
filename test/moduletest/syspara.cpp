@@ -59,38 +59,41 @@ static int32_t SysParaApiDumpCmd(BShellHandle shell, int32_t argc, char *argv[])
     int index = 0;
     int dumpInfoItemNum = (sizeof(SYSPARA_LIST) / sizeof(SYSPARA_LIST[0]));
     const char *temp = nullptr;
-    BShellEnvOutput(shell, (char *)"Begin dump syspara\r\n");
-    BShellEnvOutput(shell, (char *)"=======================\r\n");
+    BShellEnvOutput(shell, const_cast<char *>("Begin dump syspara\r\n"));
+    BShellEnvOutput(shell, const_cast<char *>("=======================\r\n"));
     while (index < dumpInfoItemNum) {
         temp = SYSPARA_LIST[index].getInfoValue();
-        BShellEnvOutput(shell, (char *)"%s:%s\r\n", SYSPARA_LIST[index].infoName, temp);
+        BShellEnvOutput(shell, const_cast<char *>("%s:%s\r\n"), SYSPARA_LIST[index].infoName, temp);
         index++;
     }
-    BShellEnvOutput(shell, (char *)"FirstApiVersion:%d\r\n", GetFirstApiVersion());
-    BShellEnvOutput(shell, (char *)"GetSerial:%s\r\n", GetSerial());
+    BShellEnvOutput(shell, const_cast<char *>("FirstApiVersion:%d\r\n"), GetFirstApiVersion());
+    BShellEnvOutput(shell, const_cast<char *>("GetSerial:%s\r\n"), GetSerial());
 #ifndef OHOS_LITE
-    BShellEnvOutput(shell, (char *)"acl serial:%s\r\n", AclGetSerial());
+    BShellEnvOutput(shell, const_cast<char *>("acl serial:%s\r\n"), AclGetSerial());
 #endif
     char udid[65] = {0};
     GetDevUdid(udid, sizeof(udid));
-    BShellEnvOutput(shell, (char *)"GetDevUdid:%s\r\n", udid);
+    BShellEnvOutput(shell, const_cast<char *>("GetDevUdid:%s\r\n"), udid);
 #ifndef OHOS_LITE
     AclGetDevUdid(udid, sizeof(udid));
-    BShellEnvOutput(shell, (char *)"Acl devUdid:%s\r\n", udid);
+    BShellEnvOutput(shell, const_cast<char *>("Acl devUdid:%s\r\n"), udid);
 #endif
-    BShellEnvOutput(shell, (char *)"Version:%d.%d.%d.%d\r\n",
+    BShellEnvOutput(shell, const_cast<char *>("Version:%d.%d.%d.%d\r\n"),
         GetMajorVersion(), GetSeniorVersion(), GetFeatureVersion(), GetBuildVersion());
-    BShellEnvOutput(shell, (char *)"GetSdkApiVersion:%d\r\n", GetSdkApiVersion());
-    BShellEnvOutput(shell, (char *)"GetSystemCommitId:%lld\r\n", GetSystemCommitId());
-    BShellEnvOutput(shell, (char *)"=======================\r\n");
-    BShellEnvOutput(shell, (char *)"End dump syspara\r\n");
+    BShellEnvOutput(shell, const_cast<char *>("GetSdkApiVersion:%d\r\n"), GetSdkApiVersion());
+    BShellEnvOutput(shell, const_cast<char *>("GetSystemCommitId:%lld\r\n"), GetSystemCommitId());
+    BShellEnvOutput(shell, const_cast<char *>("=======================\r\n"));
+    BShellEnvOutput(shell, const_cast<char *>("End dump syspara\r\n"));
     return 0;
 }
 
 MODULE_CONSTRUCTOR(void)
 {
     const CmdInfo infos[] = {
-        {(char *)"dump", SysParaApiDumpCmd, (char *)"dump api", (char *)"dump api", (char *)"dump api"},
+        {
+            const_cast<char *>("dump"), SysParaApiDumpCmd, const_cast<char *>("dump api"),
+            const_cast<char *>("dump api"), const_cast<char *>("dump api")
+        },
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
         BShellEnvRegisterCmd(GetShellHandle(), &infos[i]);

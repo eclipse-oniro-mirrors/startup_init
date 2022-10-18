@@ -117,10 +117,13 @@ static void *ModuleInstall(MODULE_ITEM *module, int argc, const char *argv[])
         }
     }
     BEGET_LOGV("Module install path %s", path);
+    char *realPath = GetRealPath(path);
+    BEGET_ERROR_CHECK(realPath != NULL, return NULL, "Failed to get real path");
     currentInstallArgs = &(module->moduleMgr->installArgs);
-    handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+    handle = dlopen(realPath, RTLD_LAZY | RTLD_GLOBAL);
     currentInstallArgs = NULL;
-    BEGET_CHECK_ONLY_ELOG(handle != NULL, "ModuleInstall path %s fail %d", path, errno);
+    BEGET_CHECK_ONLY_ELOG(handle != NULL, "ModuleInstall path %s fail %d", realPath, errno);
+    free(realPath);
     return handle;
 }
 

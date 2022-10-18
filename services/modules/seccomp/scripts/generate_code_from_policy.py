@@ -556,7 +556,8 @@ class GenBpfPolicy:
         return operation_str, True
 
     #gen bpf (argn & mask) == value
-    def gen_mask_equal_bpf(self, arg_id, mask, value, cur_size):
+    @staticmethod
+    def gen_mask_equal_bpf(arg_id, mask, value, cur_size):
         bpf_policy = []
         #high 4 bytes
         bpf_policy.append(BPF_LOAD.format(20 + arg_id * 8))

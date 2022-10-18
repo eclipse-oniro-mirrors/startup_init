@@ -23,7 +23,7 @@
 using namespace testing::ext;
 
 namespace initModuleTest {
-class serviceWatcherModuleTest : public testing::Test {
+class ServiceWatcherModuleTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) {};
@@ -36,7 +36,7 @@ static void ServiceStatusChange(const char *key, ServiceStatus status)
     std::cout<<"service Name is: "<<key<<", ServiceStatus is: "<<status<<std::endl;
 }
 
-HWTEST_F(serviceWatcherModuleTest,serviceWatcher_test_001, TestSize.Level0)
+HWTEST_F(ServiceWatcherModuleTest, serviceWatcher_test_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "serviceWatcher_test_001 start";
     string serviceName = "test.Service";
@@ -47,14 +47,14 @@ HWTEST_F(serviceWatcherModuleTest,serviceWatcher_test_001, TestSize.Level0)
     GTEST_LOG_(INFO) << "serviceWatcher_test_001 end";
 }
 
-HWTEST_F(serviceWatcherModuleTest,serviceWatcher_test_002, TestSize.Level0)
+HWTEST_F(ServiceWatcherModuleTest, serviceWatcher_test_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "serviceWatcher_test_002 start";
     string serviceName = "media_service";
     auto status = GetServiceStatus(serviceName);
     if (status == "running") {
         int ret = ServiceControl(serviceName.c_str(), STOP);
-        ASSERT_EQ(ret , 0);
+        ASSERT_EQ(ret, 0);
     } else if (status != "created" && status != "stopped") {
         std::cout << serviceName << " in invalid status " << status << std::endl;
         ASSERT_TRUE(0);

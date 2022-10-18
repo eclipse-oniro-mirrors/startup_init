@@ -18,6 +18,9 @@
 
 #include "le_loop.h"
 
+#define MILLION_MICROSECOND 1000000
+#define THOUSAND_MILLISECOND 1000
+
 static void DoAsyncEvent_(const LoopHandle loopHandle, AsyncEventTask *asyncTask)
 {
     LE_CHECK(loopHandle != NULL && asyncTask != NULL, return, "Invalid parameters");
@@ -29,7 +32,7 @@ static void DoAsyncEvent_(const LoopHandle loopHandle, AsyncEventTask *asyncTask
 #endif
     StreamTask *task = &asyncTask->stream;
     ListNode *node = task->buffHead.next;
-    while (node != &task->buffHead) {
+    if (node != &task->buffHead) {
         LE_Buffer *buffer = ListEntry(node, LE_Buffer, node);
         uint64_t eventId = *(uint64_t*)(buffer->data);
         if (asyncTask->processAsyncEvent) {
@@ -40,15 +43,14 @@ static void DoAsyncEvent_(const LoopHandle loopHandle, AsyncEventTask *asyncTask
         free(buffer);
 #ifdef LOOP_DEBUG
         clock_gettime(CLOCK_MONOTONIC, &(endTime));
-        diff = (long long)((endTime.tv_sec - startTime.tv_sec) * 1000000);
+        diff = (long long)((endTime.tv_sec - startTime.tv_sec) * MILLION_MICROSECOND);
         if (endTime.tv_nsec > startTime.tv_nsec) {
-            diff += (endTime.tv_nsec - startTime.tv_nsec) / 1000; // 1000 ms
+            diff += (endTime.tv_nsec - startTime.tv_nsec) / THOUSAND_MILLISECOND; // 1000 ms
         } else {
-            diff -= (endTime.tv_nsec - startTime.tv_nsec) / 1000; // 1000 ms
+            diff -= (endTime.tv_nsec - startTime.tv_nsec) / THOUSAND_MILLISECOND; // 1000 ms
         }
         LE_LOGI("DoAsyncEvent_ diff %ld",  diff);
 #endif
-        break;
     }
 }
 

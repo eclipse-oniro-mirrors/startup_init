@@ -84,8 +84,9 @@ static bool UnderBasicMountPoint(const char *path)
     }
     const char *basicMountPoint[] = {"/dev/", "/sys/", "/proc/"};
     for (i = 0; i < ARRAY_LENGTH(basicMountPoint); i++) {
-        if (strncmp(path, basicMountPoint[i], strlen(basicMountPoint[i])) == 0)
+        if (strncmp(path, basicMountPoint[i], strlen(basicMountPoint[i])) == 0) {
             return true;
+        }
     }
     return false;
 }

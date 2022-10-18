@@ -45,17 +45,17 @@ static int TestCmdExec(const TriggerNode *trigger, const char *content, uint32_t
     PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
     PARAM_LOGI("DoTriggerExecute_ trigger type: %d %s", trigger->type, GetTriggerName(trigger));
     PARAM_CHECK(trigger->type <= TRIGGER_UNKNOW, return -1, "Invalid trigger type %d", trigger->type);
-    CommandNode *cmd = GetNextCmdNode((JobNode *)trigger, NULL);
+    CommandNode *cmd = GetNextCmdNode(reinterpret_cast<const JobNode *>(trigger), NULL);
     while (cmd != NULL) {
         g_execCmdId = cmd->cmdKeyIndex;
-        cmd = GetNextCmdNode((JobNode *)trigger, cmd);
+        cmd = GetNextCmdNode(reinterpret_cast<const JobNode *>(trigger), cmd);
     }
     return 0;
 }
 
 static int TestTriggerExecute(TriggerNode *trigger, const char *content, uint32_t size)
 {
-    JobNode *node = (JobNode *)trigger;
+    JobNode *node = reinterpret_cast<JobNode *>(trigger);
     int ret = memcpy_s(g_matchTriggerName, (int)sizeof(g_matchTriggerName) - 1, node->name, strlen(node->name));
     EXPECT_EQ(ret, 0);
     g_matchTriggerName[strlen(node->name)] = '\0';
@@ -319,7 +319,7 @@ public:
     int TestComputeCondition(const char *condition)
     {
         u_int32_t size = strlen(condition) + CONDITION_EXTEND_LEN;
-        char *prefix = (char *)malloc(size);
+        char *prefix = reinterpret_cast<char *>(malloc(size));
         if (prefix == nullptr) {
             printf("prefix is null.\n");
             return -1;
@@ -428,7 +428,7 @@ public:
         SystemWriteParam(param, value);
 
         RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
-        FreeTrigger(GetTriggerWorkSpace(), (TriggerNode *)trigger);
+        FreeTrigger(GetTriggerWorkSpace(), reinterpret_cast<TriggerNode *>(trigger));
         LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         EXPECT_NE(g_execCmdId, cmdIndex);
         trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);

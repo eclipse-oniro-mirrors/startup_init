@@ -39,7 +39,7 @@ using StorageAsyncContextPtr = StorageAsyncContext *;
 
 static int GetErrorInfo(int status, std::string &errMsg)
 {
-    switch(status) {
+    switch (status) {
         case EC_FAILURE:
         case EC_SYSTEM_ERR:
         case SYSPARAM_SYSTEM_ERROR:
@@ -67,7 +67,6 @@ static int GetErrorInfo(int status, std::string &errMsg)
 
 static napi_value BusinessErrorCreate(napi_env env, int status)
 {
-
     std::string errMsg = "";
     int ret = GetErrorInfo(status, errMsg);
     PARAM_JS_LOGV("BusinessErrorCreate status %d err %d msg: %s", status, ret, errMsg.c_str());

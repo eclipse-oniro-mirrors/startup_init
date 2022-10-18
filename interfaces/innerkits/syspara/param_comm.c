@@ -33,7 +33,7 @@
 
 INIT_LOCAL_API int GetSystemError(int err)
 {
-    switch(err) {
+    switch (err) {
         case 0:
             return 0;
         case PARAM_CODE_INVALID_PARAM:
@@ -194,7 +194,7 @@ INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
         return -1;
     }
     int tmpSize = strlen(manufacture) + strlen(model) + strlen(sn) + 1;
-    if (tmpSize <= 0 || tmpSize > DEV_BUF_MAX_LENGTH) {
+    if (tmpSize <= 1 || tmpSize > DEV_BUF_MAX_LENGTH) {
         return -1;
     }
     char *tmp = NULL;

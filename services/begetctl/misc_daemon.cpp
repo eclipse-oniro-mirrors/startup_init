@@ -74,7 +74,7 @@ static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
         return;
     }
 
-    char *buffer = (char*)malloc(size);
+    char *buffer = reinterpret_cast<char *>(malloc(size));
     if (buffer == nullptr) {
         (void)fclose(rgbFile);
         return;
@@ -219,8 +219,8 @@ MODULE_CONSTRUCTOR(void)
 {
     const CmdInfo infos[] = {
         {
-            (char *)"misc_daemon", main_cmd, (char *)"write start logo",
-            (char *)"misc_daemon --write_logo xxx.rgb", (char *)"misc_daemon --write_logo"
+            const_cast<char *>("misc_daemon"), main_cmd, const_cast<char *>("write start logo"),
+            const_cast<char *>("misc_daemon --write_logo xxx.rgb"), const_cast<char *>("misc_daemon --write_logo")
         }
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {

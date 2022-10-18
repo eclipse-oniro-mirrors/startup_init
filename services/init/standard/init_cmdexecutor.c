@@ -146,8 +146,8 @@ static int CompareCmdId(const HashNode *node, const void *key)
 
 static PluginCmd *GetPluginCmdByIndex(int index)
 {
-    int hashCode = ((index >> 16) & 0x0000ffff) - 1; // 16 left shift
-    int cmdId = (index & 0x0000ffff);
+    int hashCode = (((unsigned int)index >> 16) & 0x0000ffff) - 1; // 16 left shift
+    int cmdId = ((unsigned int)index & 0x0000ffff);
     HashNode *node = OH_HashMapFind(GetGroupHashMap(NODE_TYPE_CMDS),
         hashCode, (const void *)&cmdId, CompareCmdId);
     if (node == NULL) {
