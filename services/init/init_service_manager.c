@@ -1003,13 +1003,14 @@ void ParseAllServices(const cJSON *fileRoot)
         Service *service = GetServiceByName(fieldStr);
         if (service == NULL) {
             service = AddService(fieldStr);
-            if (service == NULL) {
-                INIT_LOGE("Failed to add service name %s", fieldStr);
-                continue;
-            }
+            INIT_ERROR_CHECK(service != NULL, continue, "Failed to add service name %s", fieldStr);
         } else {
             INIT_LOGI("Service %s already exists, updating.", fieldStr);
+#ifndef __MUSL__
+            continue;
+#endif
         }
+
         service->pid = -1;
         int ret = ParseOneService(curItem, service);
         if (ret != SERVICE_SUCCESS) {
@@ -1017,15 +1018,10 @@ void ParseAllServices(const cJSON *fileRoot)
             service = NULL;
             continue;
         }
-        if (ParseServiceSocket(curItem, service) != SERVICE_SUCCESS) {
-            FreeServiceSocket(service->socketCfg);
-            service->socketCfg = NULL;
-        }
-        if (ParseServiceFile(curItem, service) != SERVICE_SUCCESS) {
-            FreeServiceFile(service->fileCfg);
-            service->fileCfg = NULL;
-        }
-
+        ret = ParseServiceSocket(curItem, service);
+        INIT_CHECK(ret == 0, FreeServiceSocket(service->socketCfg); service->socketCfg = NULL);
+        ret = ParseServiceFile(curItem, service);
+        INIT_CHECK(ret == 0, FreeServiceFile(service->fileCfg); service->fileCfg = NULL);
         // Watch "/dev/console" node for starting console service ondemand.
         if ((strcmp(service->name, "console") == 0) && IsOnDemandService(service)) {
             if (WatchConsoleDevice(service) < 0) {

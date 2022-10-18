@@ -146,6 +146,9 @@ ohos_executable("init") {
                        "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
                        "name") + stub_version_script_suffix
   defines += [ "_GNU_SOURCE" ]
+  if (use_musl) {
+    defines += [ "__MUSL__" ]
+  }
   install_images = [
     "system",
     "updater",
