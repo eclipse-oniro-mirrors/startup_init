@@ -1003,7 +1003,10 @@ void ParseAllServices(const cJSON *fileRoot)
         Service *service = GetServiceByName(fieldStr);
         if (service == NULL) {
             service = AddService(fieldStr);
-            INIT_ERROR_CHECK(service != NULL, continue, "Failed to add service name %s", fieldStr);
+            if (service == NULL) {
+                INIT_LOGE("Failed to add service name %s", fieldStr);
+                continue;
+            }    
         } else {
             INIT_LOGI("Service %s already exists, updating.", fieldStr);
 #ifndef __MUSL__
