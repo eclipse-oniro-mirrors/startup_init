@@ -116,7 +116,7 @@ static void *ModuleInstall(MODULE_ITEM *module, int argc, const char *argv[])
         }
     }
     BEGET_LOGV("Module install path %s", path);
-    const char *realPath = GetRealPath(path);
+    char *realPath = GetRealPath(path);
     BEGET_ERROR_CHECK(realPath != NULL, return NULL, "Failed to get real path");
     currentInstallArgs = &(module->moduleMgr->installArgs);
     handle = dlopen(realPath, RTLD_LAZY | RTLD_GLOBAL);
