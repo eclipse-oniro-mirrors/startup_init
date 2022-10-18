@@ -46,6 +46,8 @@ const char *GetPluginCmdNameByIndex(int index);
 
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);
 
+int AddRebootCmdExecutor(const char *cmd, CmdExecutor executor);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

@@ -198,8 +198,8 @@ public:
         LE_BaseInfo info = {TASK_EVENT, NULL};
         int testfd = 65535; // 65535 is not exist fd
         BaseTask *task = CreateTask(LE_GetDefaultLoop(), testfd, &info, sizeof(StreamClientTask));
-        task->handleEvent = TestHandleTaskEvent;
         if (task != nullptr) {
+            task->handleEvent = TestHandleTaskEvent;
             ProcessEvent((EventLoop *)LE_GetDefaultLoop(), testfd, Event_Read);
         }
         ((HashTab *)(((EventLoop *)LE_GetDefaultLoop())->taskMap))->nodeFree(&task->hashNode);
