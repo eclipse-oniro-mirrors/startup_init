@@ -53,14 +53,16 @@ private:
             return (callback == callback_ && context == context_);
         }
         void OnParameterChange(const std::string &name, const std::string &value);
-        bool CheckValueChange(const std::string &value)
+        bool CheckValueChange(const std::string &name, const std::string &value)
         {
-            bool ret = (value_ == value);
+            bool ret = (value_ == value && name_ == name);
             value_ = value;
+            name_ = name;
             return ret;
         }
     private:
         std::string value_ {};
+        std::string name_ {};
         ParameterChangePtr callback_ { nullptr };
         void *context_ { nullptr };
     };
