@@ -180,6 +180,8 @@ static void BootEventParaFireByName(const char *paramName)
     const char *clearBootEventArgv[] = {"bootevent"};
     // clear servie extra data
     PluginExecCmd("clear", ARRAY_LENGTH(clearBootEventArgv), clearBootEventArgv);
+
+    HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
     return;
 }
 

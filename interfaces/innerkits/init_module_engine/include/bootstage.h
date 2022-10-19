@@ -41,6 +41,7 @@ enum INIT_BOOTSTAGE {
     INIT_SERVICE_SET_PERMS = 59,
     INIT_SERVICE_FORK_AFTER = 60,
     INIT_JOB_PARSE         = 70,
+    INIT_BOOT_COMPLETE     = 100,
 };
 
 HOOK_MGR *GetBootStageHookMgr();

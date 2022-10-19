@@ -38,6 +38,8 @@
 #include "init_utils.h"
 #include "securec.h"
 
+#define BASE_MS_UNIT 1000
+
 #ifndef OHOS_LITE
 #include "hookmgr.h"
 #include "bootstage.h"
@@ -716,9 +718,9 @@ long long  InitDiffTime(INIT_TIMING_STAT *stat)
 {
     long long diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000); // 1000000 1000ms
     if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
-        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / 1000; // 1000 ms
+        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / BASE_MS_UNIT;
     } else {
-        diff -= (stat->startTime.tv_nsec - stat->endTime.tv_nsec) / 1000; // 1000 ms
+        diff -= (stat->startTime.tv_nsec - stat->endTime.tv_nsec) / BASE_MS_UNIT;
     }
     return diff;
 }
@@ -741,7 +743,11 @@ void DoCmdByName(const char *name, const char *cmdContent)
 #ifndef OHOS_LITE
     InitCmdHookExecute(name, cmdContent, &cmdTimer);
 #endif
-    INIT_LOGV("Execute command \"%s %s\" took %lld ms", name, cmdContent, diff / 1000); // 1000 is convert us to ms
+    if (diff > 200000) { // 200000 > 200ms
+        INIT_LOGI("Execute command \"%s %s\" took %lld ms", name, cmdContent, diff / BASE_MS_UNIT);
+    } else {
+        INIT_LOGV("Execute command \"%s %s\" took %lld ms", name, cmdContent, diff / BASE_MS_UNIT);
+    }
 }
 
 void DoCmdByIndex(int index, const char *cmdContent)
@@ -776,5 +782,9 @@ void DoCmdByIndex(int index, const char *cmdContent)
 #ifndef OHOS_LITE
     InitCmdHookExecute(cmdName, cmdContent, &cmdTimer);
 #endif
-    INIT_LOGV("Execute command \"%s %s\" took %lld ms", cmdName, cmdContent, diff / 1000); // 1000 is convert us to ms
+    if (diff > 200000) { // 200000 > 200ms
+        INIT_LOGI("Execute command \"%s %s\" took %lld ms", cmdName, cmdContent, diff / BASE_MS_UNIT);
+    } else {
+        INIT_LOGV("Execute command \"%s %s\" took %lld ms", cmdName, cmdContent, diff / BASE_MS_UNIT);
+    }
 }

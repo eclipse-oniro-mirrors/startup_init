@@ -143,20 +143,37 @@ static int CmdClear(int id, const char *name, int argc, const char **argv)
     return 0;
 }
 
+static void SetLogLevel_(const char *value)
+{
+    unsigned int level;
+    int ret = StringToUint(value, &level);
+    PLUGIN_CHECK(ret == 0, return, "Failed make %s to unsigned int", value);
+    PLUGIN_LOGI("Set log level is %d", level);
+    SetInitLogLevel(level);
+}
+
 static int CmdSetLogLevel(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
-    if ((name == NULL) || (argv == NULL) || (argc < 1)) {
-        PLUGIN_LOGE("Failed get log level from parameter.");
-        return -1;
-    }
-    char *value = strrchr(argv[0], '.');
+    UNUSED(name);
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid input args");
+    const char *value = strrchr(argv[0], '.');
     PLUGIN_CHECK(value != NULL, return -1, "Failed get \'.\' from string %s", argv[0]);
-    unsigned int level;
-    int ret = StringToUint(value + 1, &level);
-    PLUGIN_CHECK(ret == 0, return -1, "Failed make string to unsigned int");
-    PLUGIN_LOGI("level is %d", level);
-    SetInitLogLevel(level);
+    SetLogLevel_(value + 1);
+    return 0;
+}
+
+static int initCmd(int id, const char *name, int argc, const char **argv)
+{
+    UNUSED(id);
+    // process cmd by name
+    PLUGIN_LOGI("initCmd %s argc %d", name, argc);
+    for (int i = 0; i < argc; i++) {
+        PLUGIN_LOGI("initCmd %s", argv[i]);
+    }
+    if (argc > 1 && strcmp(argv[0], "setloglevel") == 0) {
+        SetLogLevel_(argv[1]);
+    }
     return 0;
 }
 
@@ -164,6 +181,7 @@ static int ParamSetInitCmdHook(const HOOK_INFO *hookInfo, void *cookie)
 {
     AddCmdExecutor("clear", CmdClear);
     AddCmdExecutor("setloglevel", CmdSetLogLevel);
+    AddCmdExecutor("initcmd", initCmd);
     return 0;
 }
 
@@ -193,12 +211,9 @@ static void InitLogLevelFromPersist(void)
 {
     char logLevel[2] = {0}; // 2 is set param "persist.init.debug.loglevel" value length.
     uint32_t len = sizeof(logLevel);
-    int ret = SystemReadParam("persist.init.debug.loglevel", logLevel, &len);
+    int ret = SystemReadParam(INIT_DEBUG_LEVEL, logLevel, &len);
     INIT_INFO_CHECK(ret == 0, return, "Can not get log level from param, keep the original loglevel.");
-    errno = 0;
-    unsigned int level = (unsigned int)strtoul(logLevel, 0, 10); // 10 is decimal
-    INIT_INFO_CHECK(errno == 0, return, "Failed strtoul %s, err=%d", logLevel, errno);
-    SetInitLogLevel(level);
+    SetLogLevel_(logLevel);
     return;
 }
 
@@ -211,8 +226,30 @@ static int InitDebugHook(const HOOK_INFO *info, void *cookie)
     return 0;
 }
 
+// clear extend memory
+static int BootCompleteCmd(const HOOK_INFO *hookInfo, void *executionContext)
+{
+    PLUGIN_LOGI("boot start complete");
+    UNUSED(hookInfo);
+    UNUSED(executionContext);
+
+    // clear hook
+    HookMgrDel(GetBootStageHookMgr(), INIT_GLOBAL_INIT, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_PRE_PARAM_LOAD, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_SERVICE_PARSE, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_JOB_PARSE, NULL);
+    // clear cmd
+    RemoveCmdExecutor("loadSelinuxPolicy", -1);
+    return 0;
+}
+
 MODULE_CONSTRUCTOR(void)
 {
+    HookMgrAdd(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, 0, BootCompleteCmd);
     InitAddGlobalInitHook(0, ParamSetInitCmdHook);
     // Depends on parameter service
     InitAddPostPersistParamLoadHook(0, InitDebugHook);

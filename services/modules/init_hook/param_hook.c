@@ -19,6 +19,35 @@
 #include "plugin_adapter.h"
 #include "securec.h"
 
+/**
+系统参数转化规则
+    1，ohos.ctl.start.{start|stop} = servicename
+        转化后系统参数，用来进行dac/mac校验
+            ohos.servicectrl.{servicename}
+        对应的处理命令
+            start
+    2，ohos.startup.powerctrl = reboot,[bootcharge | shutdown | flashd | updater]
+        转化后系统参数，用来进行dac/mac校验
+            ohos.servicectrl.reboot.[bootcharge | shutdown | flashd | updater]
+        对应的处理命令
+            reboot.[bootcharge | shutdown | flashd | updater]
+    3，ohos.servicectrl.{cmdName} = {arg}
+        转化后系统参数，用来进行dac/mac校验
+            ohos.servicectrl.{cmd}
+        对应的处理命令
+            cmd
+    4，普通系统参数，根据定义的ParamCmdInfo进行处理
+        {xxxx.xxxx.xxxx, xxxx.xxxx.xxxx, cmdname}
+        例如：
+            xxxx.xxxx.xxxx = {args}
+            转化后系统参数，用来进行dac/mac校验
+                xxxx.xxxx.xxxx.{args}
+            对应的处理命令
+                cmdname
+            命令输入参数(跳过replace部分的剩余值)
+                xxxx.xxxx.xxxx.{args} + strlen(name)
+*/
+
 const ParamCmdInfo *GetServiceStartCtrl(size_t *size)
 {
     static const ParamCmdInfo ctrlParam[] = {
@@ -38,6 +67,7 @@ const ParamCmdInfo *GetServiceCtl(size_t *size)
         {"ohos.servicectrl.bootchart", "bootchart", "bootchart" },
         {"ohos.servicectrl.timer_start", "timer_start", "timer_start " },
         {"ohos.servicectrl.timer_stop", "timer_stop", "timer_stop" },
+        {"ohos.servicectrl.cmd", "cmd", "initcmd"},
     };
     *size = ARRAY_LENGTH(installParam);
     return installParam;
