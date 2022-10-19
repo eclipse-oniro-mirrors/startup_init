@@ -34,9 +34,11 @@ using namespace std;
 using namespace OHOS;
 using namespace OHOS::init_param;
 
+int g_callbackCount = 0;
 static void TestParameterChange(const char *key, const char *value, void *context)
 {
-    printf("TestParameterChange key:%s %s", key, value);
+    printf("TestParameterChange key:%s %s \n", key, value);
+    g_callbackCount++;
 }
 
 static void TestWatcherCallBack(const char *key, ServiceStatus status)
@@ -140,6 +142,7 @@ public:
         data.WriteString(name);
         data.WriteString(name);
         data.WriteString("watcherId");
+        g_callbackCount = 0;
         int ret = SystemWatchParameter(name.c_str(), TestParameterChange, nullptr);
         EXPECT_EQ(ret, 0);
         WatcherManagerKits &instance = OHOS::init_param::WatcherManagerKits::GetInstance();
@@ -147,7 +150,13 @@ public:
             instance.remoteWatcher_->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
             instance.remoteWatcher_->OnRemoteRequest(IWatcher::PARAM_CHANGE + 1, data, reply, option);
             instance.remoteWatcher_->OnParameterChange(name.c_str(), "testname", "testvalue");
+            EXPECT_EQ(g_callbackCount, 2);
+            instance.remoteWatcher_->OnParameterChange(name.c_str(), "testname.2", "testvalue");
+            EXPECT_EQ(g_callbackCount, 3);
+            instance.remoteWatcher_->OnParameterChange(name.c_str(), "testname.2", "testvalue");
+            EXPECT_EQ(g_callbackCount, 3);
         }
+        EXPECT_EQ(g_callbackCount, 3);
         return 0;
     }
 

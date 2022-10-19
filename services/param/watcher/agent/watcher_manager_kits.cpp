@@ -297,7 +297,7 @@ void WatcherManagerKits::ParamWatcher::OnParameterChange(const std::string &name
     uint32_t index = 0;
     ParameterChangeListener *listener = GetParameterListener(&index);
     while (listener != nullptr) {
-        if (!listener->CheckValueChange(value)) {
+        if (!listener->CheckValueChange(name, value)) {
             listener->OnParameterChange(name, value);
         }
         index++;
