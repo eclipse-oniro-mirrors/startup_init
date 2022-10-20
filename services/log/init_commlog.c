@@ -16,7 +16,7 @@
 #include "init_log.h"
 
 static InitCommLog g_initCommLog = NULL;
-INIT_PUBLIC_API void SetInitCommLog(InitCommLog logFunc)
+INIT_LOCAL_API void SetInitCommLog(InitCommLog logFunc)
 {
     g_initCommLog = logFunc;
 }
