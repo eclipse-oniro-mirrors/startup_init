@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "init_log.h"
 #include "init_param.h"
 #include "init_utils.h"
 #include "param_manager.h"

@@ -21,9 +21,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#ifdef PARAM_BASE_LOG
 #include "init_log.h"
-#endif
 #include "init_utils.h"
 #include "param_base.h"
 #include "param_manager.h"
