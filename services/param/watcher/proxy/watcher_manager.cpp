@@ -459,7 +459,7 @@ int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)
         dprintf(fd, "%s\n", dumpInfo.c_str());
         return 0;
     }
-    auto DumpParamWatcher = [this, fd](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+    auto dumpParamWatcher = [this, fd](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
         auto remoteWatcher = GetRemoteWatcher(node->GetNodeId());
         if (remoteWatcher != nullptr) {
             dprintf(fd, "%s%u(%u)", (index == 0) ? "Watch id list  : " : ", ",
@@ -477,11 +477,11 @@ int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)
         }
         {
             std::lock_guard<std::mutex> lock(watcherMutex_);
-            group->TraversalNode(DumpParamWatcher);
+            group->TraversalNode(dumpParamWatcher);
         }
         return 0;
     }
-    DumpAllGroup(fd, DumpParamWatcher);
+    DumpAllGroup(fd, dumpParamWatcher);
     return 0;
 }
 
@@ -657,7 +657,7 @@ void ParamWatcherList::TraversalNode(ParamWatcherProcessor handle)
     uint32_t index = 0;
     // get first
     WatcherNodePtr node = WatcherNode::GetNextFromList(&nodeList_, 0);
-    while (node != NULL) {
+    while (node != nullptr) {
         WatcherNodePtr next = node->GetNext(&nodeList_);
         handle(this, node, index);
         node = next;
@@ -670,7 +670,7 @@ void ParamWatcherList::TraversalNodeSafe(ParamWatcherProcessor processor)
     uint32_t index = 0;
     // get first
     WatcherNodePtr node = WatcherNode::GetNextFromList(&nodeList_, 0);
-    while (node != NULL) {
+    while (node != nullptr) {
         uint32_t nodeId = node->GetNodeId();
         // notify free, must be free
         processor(this, node, index);

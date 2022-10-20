@@ -74,15 +74,15 @@ static const char *TestGetParamLabel(const char *paraName)
     return selinuxLabels[code][1];
 }
 
-static const char *forbidReadParamName[] = {
+static const char *g_forbidReadParamName[] = {
     "ohos.servicectrl.",
     // "test.permission.write",
 };
 static int TestReadParamCheck(const char *paraName)
 {
     // forbid to read ohos.servicectrl.
-    for (size_t i = 0; i < ARRAY_LENGTH(forbidReadParamName); i++) {
-        if (strncmp(paraName, forbidReadParamName[i], strlen(forbidReadParamName[i])) == 0) {
+    for (size_t i = 0; i < ARRAY_LENGTH(g_forbidReadParamName); i++) {
+        if (strncmp(paraName, g_forbidReadParamName[i], strlen(g_forbidReadParamName[i])) == 0) {
             return 1;
         }
     }
