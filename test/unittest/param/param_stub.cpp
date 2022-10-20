@@ -15,7 +15,7 @@
 
 #include "param_stub.h"
 #include <dirent.h>
-#include "beget_ext.h"
+#include "init_log.h"
 #include "init_param.h"
 #include "param_manager.h"
 #include "param_security.h"

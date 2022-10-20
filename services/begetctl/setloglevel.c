@@ -17,6 +17,7 @@
 #include <stdlib.h>
 
 #include "begetctl.h"
+#include "init_log.h"
 #include "init_utils.h"
 #include "init_param.h"
 #include "securec.h"
@@ -53,9 +54,9 @@ static int32_t GetInitLogLevelFromParam(BShellHandle shell, int argc, char **arg
     uint32_t len = sizeof(logLevel);
     int ret = SystemReadParam("persist.init.debug.loglevel", logLevel, &len);
     if (ret == 0) {
-        printf("Success to get init log level: %s from param \"persist.init.debug.loglevel\" \n", logLevel);
+        printf("Success to get init log level: %s from param \"persist.init.debug.loglevel\". \n", logLevel);
     } else {
-        printf("Failed to get init log level from param, keep the system origin log level: %d.\n", GetInitLogLevel());
+        printf("Failed to get init log level from param, keep the system origin log level. \n");
     }
     return 0;
 }

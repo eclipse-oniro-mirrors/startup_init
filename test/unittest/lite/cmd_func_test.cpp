@@ -21,10 +21,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "beget_ext.h"
 #include "cJSON.h"
 #include "init_cmds.h"
 #include "init_jobs_internal.h"
+#include "init_log.h"
 #include "init_service_manager.h"
 #include "param_stub.h"
 #include "securec.h"

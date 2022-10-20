@@ -140,18 +140,13 @@ INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level)
     return;
 }
 
-INIT_PUBLIC_API  int GetInitLogLevel(void)
-{
-    return g_logLevel;
-}
-
-INIT_PUBLIC_API void EnableInitLog(InitLogLevel level)
+INIT_LOCAL_API void EnableInitLog(InitLogLevel level)
 {
     g_logLevel = level;
     SetInitCommLog(InitLog);
 }
 
-INIT_PUBLIC_API void EnableInitLogFromCmdline(void)
+INIT_LOCAL_API void EnableInitLogFromCmdline(void)
 {
     SetInitCommLog(InitLog);
     char level[MAX_BUFFER_LEN] = {0};
