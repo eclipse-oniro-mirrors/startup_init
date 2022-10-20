@@ -192,6 +192,8 @@ if (defined(ohos_lite)) {
       source =
           "//base/startup/init/interfaces/innerkits/sandbox/system-sandbox.json"
     }
+    output =
+        "//base/startup/init/interfaces/innerkits/sandbox/system-sandbox.json"
     part_name = "init"
     subsystem_name = "startup"
     module_install_dir = "etc/sandbox"
@@ -203,6 +205,8 @@ if (defined(ohos_lite)) {
     } else {
       source = "//base/startup/init/interfaces/innerkits/sandbox/chipset-sandbox.json"
     }
+    output =
+        "//base/startup/init/interfaces/innerkits/sandbox/chipset-sandbox.json"
     part_name = "init"
     subsystem_name = "startup"
     module_install_dir = "etc/sandbox"
