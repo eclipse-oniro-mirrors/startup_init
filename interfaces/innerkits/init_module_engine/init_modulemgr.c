@@ -17,6 +17,7 @@
 #include "init_module_engine.h"
 
 static MODULE_MGR *defaultModuleMgr = NULL;
+static MODULE_MGR *autorunModuleMgr = NULL;
 
 int InitModuleMgrInstall(const char *moduleName)
 {
@@ -46,11 +47,13 @@ static void InitModuleDump(const MODULE_INFO *moduleInfo)
 
 void InitModuleMgrDump(void)
 {
-    if (defaultModuleMgr == NULL) {
-        return;
+    if (defaultModuleMgr != NULL) {
+        ModuleMgrTraversal(defaultModuleMgr, NULL, InitModuleDump);
     }
 
-    ModuleMgrTraversal(defaultModuleMgr, NULL, InitModuleDump);
+    if (autorunModuleMgr != NULL) {
+        ModuleMgrTraversal(autorunModuleMgr, NULL, InitModuleDump);
+    }
 }
 
 static int ModuleMgrCmdInstall(int id, const char *name, int argc, const char **argv)
@@ -83,8 +86,8 @@ static int moduleMgrCommandsInit(const HOOK_INFO *info, void *cookie)
 
 static int loadAutorunModules(const HOOK_INFO *info, void *cookie)
 {
-    MODULE_MGR *autorun = ModuleMgrScan("init/autorun");
-    INIT_LOGV("Load autorun modules return %p", autorun);
+    autorunModuleMgr = ModuleMgrScan("init/autorun");
+    INIT_LOGV("Load autorun modules return %p", autorunModuleMgr);
     return 0;
 }
 
