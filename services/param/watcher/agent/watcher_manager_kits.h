@@ -88,7 +88,7 @@ private:
 
     class RemoteWatcher final : public Watcher {
     public:
-        RemoteWatcher(WatcherManagerKits *watcherManager) : watcherManager_(watcherManager) {}
+        explicit RemoteWatcher(WatcherManagerKits *watcherManager) : watcherManager_(watcherManager) {}
         ~RemoteWatcher(void) override {}
 
         void OnParameterChange(const std::string &prefix, const std::string &name, const std::string &value) final;

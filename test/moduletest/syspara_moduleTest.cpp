@@ -80,7 +80,7 @@ static void SetParameterTestFunc(const char *key, const char *value)
     EXPECT_EQ(ret, strlen(nameGet));
     EXPECT_STREQ(key, nameGet);
     char valueGet[PARAM_VALUE_LEN_MAX] = {0};
-    ret = GetParameterValue(handle, valueGet, PARAM_VALUE_LEN_MAX); 
+    ret = GetParameterValue(handle, valueGet, PARAM_VALUE_LEN_MAX);
     EXPECT_EQ(ret, strlen(valueGet));
     EXPECT_STREQ(value, valueGet);
     EXPECT_NE(GetSystemCommitId(), 0);
