@@ -42,13 +42,8 @@
 #define SANDBOX_SYMLINK_TARGET "target-name"
 #define SANDBOX_SYMLINK_NAME "link-name"
 
-#ifndef SUPPORT_64BIT
 #define SANDBOX_SYSTEM_CONFIG_FILE "etc/sandbox/system-sandbox.json"
 #define SANDBOX_CHIPSET_CONFIG_FILE "etc/sandbox/chipset-sandbox.json"
-#else
-#define SANDBOX_SYSTEM_CONFIG_FILE "etc/sandbox/system-sandbox64.json"
-#define SANDBOX_CHIPSET_CONFIG_FILE "etc/sandbox/chipset-sandbox64.json"
-#endif
 
 #ifdef STARTUP_INIT_TEST
 #define SANDBOX_TEST_CONFIG_FILE "/data/init_ut/test-sandbox.json"
