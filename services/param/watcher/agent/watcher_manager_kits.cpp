@@ -281,7 +281,7 @@ int WatcherManagerKits::ParamWatcher::DelParameterListener(ParameterChangePtr ca
 }
 
 void WatcherManagerKits::RemoteWatcher::OnParameterChange(
-        const std::string &prefix, const std::string &name, const std::string &value)
+    const std::string &prefix, const std::string &name, const std::string &value)
 {
     // get param watcher
     WatcherManagerKits::ParamWatcher *watcher = watcherManager_->GetParamWatcher(prefix);
