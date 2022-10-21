@@ -152,7 +152,7 @@ def main():
     for source in args.source:
         print("source {}".format(out_dir))
         if not os.path.exists(source):
-            raise FileNotFoundError
+            continue
 
         src_dict = get_param_from_cfg(source)
         dst = "".join([out_dir, "param_cfg.h"])
