@@ -51,14 +51,13 @@ wifi_host:x:3026:
 audio_hdi_server_host:x:3027:
 camera_host:x:3028:
 input_user_host:x:3029:
-display_gralloc_host:x:3030:
 codec_host:x:3031:
 riladapter_host:x:3032:
 sensor_host:x:3033:
 vibrator_host:x:3034:
 light_host:x:3035:
-disp_gralloc_host:x:3037:
 dcamera_host:x:3038:
+display_composer_host:x:3039:
 daudio_host:x:3059:
 hwc_host:x:3039:
 gralloc_host:x:3040:
@@ -68,6 +67,7 @@ hdf_devmgr:x:3044:
 connected_tag_host:x:3045:
 dslm:x:3046:
 device_usage_stats:x:3048:
+allocator_host:x:3049:
 bgtask:x:3051:
 dcamera:x:3052:
 dinput:x:3053:
