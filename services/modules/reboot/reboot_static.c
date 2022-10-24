@@ -24,6 +24,7 @@
 #define REBOOT_NAME_PREFIX "reboot,"
 #define REBOOT_CMD_PREFIX "reboot."
 #define REBOOT_REPLACE_PREFIX "reboot."
+#define PARAM_CMD_MAX 100
 
 static int RebootHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
 {
@@ -111,6 +112,7 @@ static int SetParamCmdInfo(ParamCmdInfo *currInfo, CmdExecutor executor, const c
 
 static int AddRebootCmdExecutor_(const char *cmd, CmdExecutor executor)
 {
+    PLUGIN_CHECK(g_rebootParamCmdMaxNumber <= PARAM_CMD_MAX, return -1, "Param cmd max number exceed limit");
     if (g_rebootParamCmdMaxNumber == 0 || g_rebootParamCmdMaxNumber <= g_rebootParamCmdValidNumber) {
         g_rebootParamCmdMaxNumber += 5; // inc 5 once time
         ParamCmdInfo *cmdInfos = calloc(1, sizeof(ParamCmdInfo) * g_rebootParamCmdMaxNumber);
@@ -126,6 +128,7 @@ static int AddRebootCmdExecutor_(const char *cmd, CmdExecutor executor)
         }
         g_rebootParamCmdInfos = cmdInfos;
     }
+    PLUGIN_CHECK(g_rebootParamCmdValidNumber < g_rebootParamCmdMaxNumber, return -1, "Param cmd number exceed limit");
     return SetParamCmdInfo(&g_rebootParamCmdInfos[g_rebootParamCmdValidNumber], executor, cmd);
 }
 

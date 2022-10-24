@@ -201,8 +201,8 @@ public:
         if (task != nullptr) {
             task->handleEvent = TestHandleTaskEvent;
             ProcessEvent((EventLoop *)LE_GetDefaultLoop(), testfd, Event_Read);
+            ((HashTab *)(((EventLoop *)LE_GetDefaultLoop())->taskMap))->nodeFree(&task->hashNode);
         }
-        ((HashTab *)(((EventLoop *)LE_GetDefaultLoop())->taskMap))->nodeFree(&task->hashNode);
     }
     void ProcessasynEvent()
     {
