@@ -93,7 +93,7 @@ static void HandleParamChange2(const char *key, const char *value, void *context
     PLUGIN_CHECK(key != NULL && value != NULL, return, "Invalid parameter");
     long long commit = GetSystemCommitId();
     size_t index = (size_t)context;
-    printf("[%zu] Receive parameter %p commit %lld change %s %s \n", index, context, commit, key, value);
+    printf("[%zu] Receive parameter commit %lld change %s %s \n", index, commit, key, value);
     static int addWatcher = 0;
     int ret = 0;
     if ((index == 4) && !addWatcher) { // 4 when context == 4 add
@@ -202,14 +202,14 @@ static int32_t BShellParamCmdWatch(BShellHandle shell, int32_t argc, char *argv[
 
     int maxCount = StringToInt(argv[CMD_INDEX], -1); // 2 cmd index
     if (maxCount <= 0 || maxCount > 65535) { // 65535 max count
-        PLUGIN_LOGE("Invalid input %s", argv[2]);
+        PLUGIN_LOGE("Invalid input %s", argv[CMD_INDEX]);
         return 0;
     }
     uint32_t buffSize = 0;
     char *buffer = GetLocalBuffer(&buffSize);
     size_t count = 0;
     while (count < (size_t)maxCount) { // 100 max count
-        int len = sprintf_s(buffer, buffSize, "%s.%d", argv[1], count);
+        int len = sprintf_s(buffer, buffSize, "%s.%zu", argv[1], count);
         PLUGIN_CHECK(len > 0, return -1, "Invalid buffer");
         buffer[len] = '\0';
         StartWatcher(buffer);
@@ -298,11 +298,14 @@ static int32_t BShellParamCmdMemGet(BShellHandle shell, int32_t argc, char *argv
     int ret = sprintf_s(buff, buffSize - 1, "/proc/%s/smaps", argv[1]);
     PLUGIN_CHECK(ret > 0, return -1, "Failed to format path %s", argv[1]);
     buff[ret] = '\0';
+    char *realPath = GetRealPath(buff);
+    PLUGIN_CHECK(realPath != NULL, return -1, "Failed to get real path");
     int all = 0;
     if (argc > 2 && strcmp(argv[2], "all") == 0) {  // 2 2 max arg
         all = 1;
     }
-    FILE *fp = fopen(buff, "r");
+    FILE *fp = fopen(realPath, "r");
+    free(realPath);
     int value = 0;
     while (fp != NULL && buff != NULL && fgets(buff, buffSize, fp) != NULL) {
         buff[buffSize - 1] = '\0';
