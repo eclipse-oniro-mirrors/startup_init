@@ -37,8 +37,8 @@ extern "C" {
 #define FS_MANAGER_BUFFER_SIZE 512
 #define BLOCK_SIZE_BUFFER (64)
 #define RESIZE_BUFFER_SIZE 1024
-const off_t MISC_PARTITION_ACTIVE_SLOT_OFFSET = 4096;
-const off_t MISC_PARTITION_ACTIVE_SLOT_SIZE = 4;
+const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
+const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 
 bool IsSupportedFilesystem(const char *fsType)
 {
@@ -313,21 +313,21 @@ static int GetSlotInfoFromCmdLine(const char *slotInfoName)
     return atoi(value);
 }
 
-static int GetSlotInfoFromMisc(off_t offset, off_t size)
+static int GetSlotInfoFromBootctrl(off_t offset, off_t size)
 {
-    char miscDev[MAX_BUFFER_LEN] = {0};
-    BEGET_ERROR_CHECK(GetBlockDevicePath("/misc", miscDev, MAX_BUFFER_LEN) == 0,
-        return -1, "Failed to get misc device");
-    char *realPath = GetRealPath(miscDev);
-    BEGET_ERROR_CHECK(realPath != NULL, return -1, "Failed to get misc device real path");
+    char bootctrlDev[MAX_BUFFER_LEN] = {0};
+    BEGET_ERROR_CHECK(GetBlockDevicePath("/bootctrl", bootctrlDev, MAX_BUFFER_LEN) == 0,
+        return -1, "Failed to get bootctrl device");
+    char *realPath = GetRealPath(bootctrlDev);
+    BEGET_ERROR_CHECK(realPath != NULL, return -1, "Failed to get bootctrl device real path");
     int fd = open(realPath, O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     free(realPath);
-    BEGET_ERROR_CHECK(fd >= 0, return -1, "Failed to open misc device, errno %d", errno);
+    BEGET_ERROR_CHECK(fd >= 0, return -1, "Failed to open bootctrl device, errno %d", errno);
     BEGET_ERROR_CHECK(lseek(fd, offset, SEEK_SET) >= 0, close(fd); return -1,
-        "Failed to lseek misc device fd, errno %d", errno);
+        "Failed to lseek bootctrl device fd, errno %d", errno);
     int slotInfo = 0;
     BEGET_INFO_CHECK(read(fd, &slotInfo, size) == size, close(fd); return -1,
-        "Failed to read current slot from misc, errno %d", errno);
+        "Failed to read current slot from bootctrl, errno %d", errno);
     close(fd);
     return slotInfo;
 }
@@ -350,10 +350,10 @@ int GetCurrentSlot(void)
     // get current slot from cmdline
     currentSlot = GetSlotInfoFromCmdLine("currentslot");
     BEGET_CHECK_RETURN_VALUE(currentSlot <= 0, currentSlot);
-    BEGET_LOGI("No valid slot value found from cmdline, try to get it from misc");
+    BEGET_LOGI("No valid slot value found from cmdline, try to get it from bootctrl");
 
-    // get current slot from misc
-    return GetSlotInfoFromMisc(MISC_PARTITION_ACTIVE_SLOT_OFFSET, MISC_PARTITION_ACTIVE_SLOT_SIZE);
+    // get current slot from bootctrl
+    return GetSlotInfoFromBootctrl(PARTITION_ACTIVE_SLOT_OFFSET, PARTITION_ACTIVE_SLOT_SIZE);
 }
 
 int MountOneItem(FstabItem *item)
@@ -416,7 +416,6 @@ static void AdjustPartitionNameByPartitionSlot(FstabItem *item)
     char buffer[MAX_BUFFER_LEN] = {0};
     int slot = GetCurrentSlot();
     BEGET_ERROR_CHECK(slot > 0 && slot <= MAX_SLOT, slot = 1, "slot value %d is invalid, set default value", slot);
-    BEGET_INFO_CHECK(slot > 1, return, "default partition doesn't need to add suffix");
     BEGET_ERROR_CHECK(sprintf_s(buffer, sizeof(buffer), "%s_%c", item->deviceName, 'a' + slot - 1) > 0,
         return, "Failed to format partition name suffix, use default partition name");
     free(item->deviceName);
