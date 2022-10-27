@@ -295,6 +295,7 @@ static int32_t BShellParamCmdMemGet(BShellHandle shell, int32_t argc, char *argv
     PLUGIN_CHECK(argc > 1, return -1, "Invalid parameter");
     uint32_t buffSize = 0;  // 1024 max buffer for decode
     char *buff = GetLocalBuffer(&buffSize);
+    PLUGIN_CHECK(buff != NULL, return -1, "Failed to get local buffer");
     int ret = sprintf_s(buff, buffSize - 1, "/proc/%s/smaps", argv[1]);
     PLUGIN_CHECK(ret > 0, return -1, "Failed to format path %s", argv[1]);
     buff[ret] = '\0';
