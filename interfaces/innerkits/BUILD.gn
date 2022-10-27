@@ -27,7 +27,6 @@ config("exported_header_files") {
     "//base/startup/init/interfaces/innerkits/include/syspara",
     "//base/startup/init/interfaces/innerkits/include/fs_manager",
     "//base/startup/init/interfaces/innerkits/include/token",
-    "//base/startup/init/interfaces/innerkits/include/sandbox/include",
     "//base/startup/init/services/include",
   ]
 }
@@ -179,14 +178,12 @@ if (defined(ohos_lite)) {
       "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
       "//base/startup/init/interfaces/innerkits/file:libfile",
       "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
-      "//base/startup/init/interfaces/innerkits/sandbox:sandbox",
       "//base/startup/init/interfaces/innerkits/socket:libsocket",
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/loopevent:loopevent",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/cJSON:cjson",
       "//third_party/mbedtls:mbedtls_shared",
     ]
     if (use_musl == false) {

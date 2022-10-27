@@ -64,9 +64,9 @@ ohos_executable("init") {
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
     "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
-    "//base/startup/init/interfaces/innerkits/sandbox:sandbox",
     "//base/startup/init/services/loopevent:loopevent",
     "//base/startup/init/services/param/linux:param_init",
+    "//base/startup/init/services/sandbox:sandbox",
     "//base/startup/init/services/utils:libinit_utils",
   ]
   if (use_musl == false) {
