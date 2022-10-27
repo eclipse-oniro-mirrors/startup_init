@@ -50,7 +50,7 @@ usb_host:x:3023:
 usbfnMaster_host:x:3024:
 power_host:x:3025:
 wifi_host:x:3026:
-audio_hdi_server_host:x:3027:
+audio_host:x:3027:
 camera_host:x:3028:
 input_user_host:x:3029:
 display_gralloc_host:x:3030:
