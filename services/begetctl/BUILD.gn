@@ -25,7 +25,6 @@ common_include_dirs = [
   "//base/startup/init/services/init/include",
   "//base/startup/init/services/log",
   "//base/startup/init/interfaces/innerkits/include",
-  "//base/startup/init/interfaces/innerkits/sandbox/include",
   "//base/security/selinux/interfaces/policycoreutils/include",
   "//third_party/bounds_checking_function/include",
   "//third_party/selinux/libselinux/include",
@@ -85,6 +84,7 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
       "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
+      "//base/startup/init/services/sandbox:sandbox",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
     external_deps = [ "c_utils:utils" ]
