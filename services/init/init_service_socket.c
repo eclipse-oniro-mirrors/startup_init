@@ -209,7 +209,9 @@ int CreateServiceSocket(Service *service)
     int ret = 0;
     ServiceSocket *tmpSock = service->socketCfg;
     while (tmpSock != NULL) {
+        PluginExecCmdByName("setSockCreateCon", service->name);
         int fd = CreateSocket(tmpSock);
+        PluginExecCmdByName("setSockCreateCon", NULL);
         INIT_CHECK_RETURN_VALUE(fd >= 0, -1);
         if (IsOnDemandService(service)) {
             if (IsConnectionBasedSocket(tmpSock)) {
