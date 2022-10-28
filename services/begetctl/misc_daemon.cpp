@@ -35,15 +35,7 @@ constexpr int PARTITION_INFO_MAX_LENGTH = 256;
 constexpr int BLOCK_SZIE_1 = 512;
 constexpr uint64_t LOGO_MAGIC = 0XABCABCAB;
 
-static std::string GetMiscDevicePath()
-{
-    char miscDevice[PATH_MAX] = {0};
-    int ret = GetBlockDevicePath("/misc", miscDevice, PATH_MAX);
-    if (ret != 0) {
-        return std::string("");
-    }
-    return std::string(miscDevice);
-}
+#define MISC_DEVICE_NODE "/dev/block/by-name/misc"
 
 static void ClearLogo(int fd)
 {
@@ -162,28 +154,23 @@ static void WriteLogoToMisc(const std::string &logoPath)
         std::cout << "logo path is empty\n";
         return;
     }
-    std::string miscDev = GetMiscDevicePath();
-    if (miscDev.empty()) {
-        return;
-    }
-    BSH_LOGI("WriteLogoToMisc miscDev %s ", miscDev.c_str());
-    int fd = open(miscDev.c_str(), O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int fd = open(MISC_DEVICE_NODE, O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd < 0) {
-        BSH_LOGI("Failed to writeLogoToMisc miscDev %s errno %d ", miscDev.c_str(), errno);
+        BSH_LOGI("Failed to writeLogoToMisc errno %d ", errno);
         return;
     }
 
     if (WriteLogo(fd, logoPath) < 0) {
-        BSH_LOGI("Failed WriteLogo miscDev %s errno %d ", miscDev.c_str(), errno);
+        BSH_LOGI("Failed WriteLogo errno %d ", errno);
     }
     close(fd);
     int addrOffset = (PARTITION_INFO_POS + PARTITION_INFO_MAX_LENGTH + BLOCK_SZIE_1 - 1) / BLOCK_SZIE_1;
-    int fd1 = open(miscDev.c_str(), O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int fd1 = open(MISC_DEVICE_NODE, O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd1 < 0) {
         return;
     }
     if (lseek(fd1, addrOffset * BLOCK_SZIE_1, SEEK_SET) < 0) {
-        BSH_LOGI("Failed lseek miscDev %s errno %d ", miscDev.c_str(), errno);
+        BSH_LOGI("Failed lseek errno %d ", errno);
         close(fd1);
         return;
     }
@@ -191,12 +178,12 @@ static void WriteLogoToMisc(const std::string &logoPath)
     uint32_t magic = 0;
     uint32_t size = 0;
     if (read(fd1, &magic, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        BSH_LOGI("Failed read miscDev %s errno %d ", miscDev.c_str(), errno);
+        BSH_LOGI("Failed read errno %d ", errno);
         close(fd1);
         return;
     }
     if (read(fd1, &size, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        BSH_LOGI("Failed read migic miscDev %s errno %d ", miscDev.c_str(), errno);
+        BSH_LOGI("Failed read migic errno %d ", errno);
         close(fd1);
         return;
     }

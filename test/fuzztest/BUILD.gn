@@ -114,6 +114,7 @@ ohos_fuzztest("MountAllFstabFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
@@ -500,6 +501,7 @@ ohos_fuzztest("UmountAllFstabFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
