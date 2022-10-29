@@ -38,11 +38,9 @@ static int InitParamClient(void)
 
 void ClientInit(void)
 {
-    PARAM_LOGV("ClientInit");
-#ifdef __LITEOS_M__
-    InitParamService();
-#else
+#ifdef __LITEOS_A__
 #ifndef STARTUP_INIT_TEST
+    PARAM_LOGV("ClientInit");
     (void)InitParamClient();
 #endif
 #endif
