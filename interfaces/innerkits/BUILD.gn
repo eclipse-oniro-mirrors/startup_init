@@ -25,7 +25,6 @@ config("exported_header_files") {
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/include/syspara",
-    "//base/startup/init/interfaces/innerkits/include/fs_manager",
     "//base/startup/init/interfaces/innerkits/include/token",
     "//base/startup/init/services/include",
   ]
@@ -177,7 +176,6 @@ if (defined(ohos_lite)) {
       "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
       "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
       "//base/startup/init/interfaces/innerkits/file:libfile",
-      "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
       "//base/startup/init/interfaces/innerkits/socket:libsocket",
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/loopevent:loopevent",
