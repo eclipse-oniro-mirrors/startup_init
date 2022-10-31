@@ -43,6 +43,7 @@ readproc:x:3009:
 wakelock:x:3010:
 uhid:x:3011:
 ddms:x:3012:
+dlp_permission:x:3019:
 access_token:x:3020:
 blue_host:x:3021:
 sample_host:x:3022:
