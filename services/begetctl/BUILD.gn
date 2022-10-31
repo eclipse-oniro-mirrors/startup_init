@@ -86,6 +86,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
       "//base/startup/init/services/sandbox:sandbox",
       "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/cJSON:cjson",
     ]
     external_deps = [ "c_utils:utils" ]
 

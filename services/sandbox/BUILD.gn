@@ -30,10 +30,10 @@ ohos_static_library("sandbox") {
   public_configs = [ ":exported_header_files" ]
   include_dirs = [
     "//third_party/bounds_checking_function/include",
+    "//third_party/cJSON",
     "//base/startup/init/services/include",
     "//base/startup/init/interfaces/innerkits/include",
   ]
-  public_deps = [ "//third_party/cJSON:cjson" ]
   if (target_cpu == "arm64") {
     defines = [ "SUPPORT_64BIT" ]
   }
