@@ -33,7 +33,6 @@ public:
     static constexpr int COMMAND_GET_UDID = MIN_TRANSACTION_ID + 0;
     static constexpr int COMMAND_GET_SERIAL_ID = MIN_TRANSACTION_ID + 1;
     static constexpr int ERR_FAIL = -1;
-    const std::string PERMISSION_UDID = "ohos.permission.sec.ACCESS_UDID";
 };
 } // namespace device_info
 } // namespace OHOS

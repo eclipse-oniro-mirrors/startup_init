@@ -156,7 +156,9 @@ const ParamCmdInfo *GetStartupPowerCtl(size_t *size)
 
 static void InitRebootHook_(RebootHookCtx *ctx)
 {
+#ifndef STARTUP_INIT_TEST // do not install
     InitModuleMgrInstall("rebootmodule");
+#endif
     PLUGIN_LOGI("Install rebootmodule.");
 }
 

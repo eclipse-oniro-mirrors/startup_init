@@ -254,8 +254,9 @@ static void BootEventParaFireByName(const char *paramName)
     const char *clearBootEventArgv[] = {"bootevent"};
     // clear servie extra data
     PluginExecCmd("clear", ARRAY_LENGTH(clearBootEventArgv), clearBootEventArgv);
-
+#ifndef STARTUP_INIT_TEST
     HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
+#endif
     return;
 }
 
@@ -304,7 +305,7 @@ static void AddCmdBootEvent(int argc, const char **argv)
     if (argc < 4) { // 4 is min args cmd boot event required
         return;
     }
-    
+
     BOOT_EVENT_PARAM_ITEM *item = calloc(1, sizeof(BOOT_EVENT_PARAM_ITEM));
     if (item == NULL) {
         return;
@@ -431,7 +432,7 @@ MODULE_CONSTRUCTOR(void)
     HookMgrAddEx(GetBootStageHookMgr(), &info);
     InitAddServiceHook(SetServiceBootEventFork, INIT_SERVICE_FORK_BEFORE);
     InitAddServiceHook(SetServiceBootEventFork, INIT_SERVICE_FORK_AFTER);
-    InitAddServiceHook(ClearServiceBootEvent, INIT_SERVICE_CLEAR);
+    InitAddClearServiceHook(ClearServiceBootEvent);
     InitAddServiceParseHook(ServiceParseBootEventHook);
     InitAddGlobalInitHook(0, ParamSetBootEventHook);
     InitAddPostPersistParamLoadHook(0, GetBootEventFlag);

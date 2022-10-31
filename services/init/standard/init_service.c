@@ -83,13 +83,12 @@ int ServiceExec(const Service *service)
             "setpriority failed for %s, importance = %d, err=%d", service->name, service->importance, errno);
     }
     OpenHidebug(service->name);
-    // L2 Can not be reset env
     if (service->extraArgs.argv != NULL && service->extraArgs.count > 0) {
         INIT_CHECK_ONLY_ELOG(execv(service->extraArgs.argv[0], service->extraArgs.argv) == 0,
-            "service %s execve failed! err %d.", service->name, errno);
+            "service %s execv failed! err %d.", service->name, errno);
     } else {
         INIT_CHECK_ONLY_ELOG(execv(service->pathArgs.argv[0], service->pathArgs.argv) == 0,
-            "service %s execve failed! err %d.", service->name, errno);
+            "service %s execv failed! err %d.", service->name, errno);
     }
     return SERVICE_SUCCESS;
 }

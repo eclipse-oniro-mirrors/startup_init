@@ -21,30 +21,18 @@
 
 static int bootchartCmdEnable(BShellHandle shell, int argc, char **argv)
 {
-    if (argc < 1) {
-        char *helpArgs[] = {"bootchart", NULL};
-        BShellCmdHelp(shell, 1, helpArgs);
-    }
     SystemSetParameter("persist.init.bootchart.enabled", "1");
     return 0;
 }
 
 static int bootchartCmdDisable(BShellHandle shell, int argc, char **argv)
 {
-    if (argc < 1) {
-        char *helpArgs[] = {"bootchart", NULL};
-        BShellCmdHelp(shell, 1, helpArgs);
-    }
     SystemSetParameter("persist.init.bootchart.enabled", "0");
     return 0;
 }
 
 static int bootchartCmdStart(BShellHandle shell, int argc, char **argv)
 {
-    if (argc < 1) {
-        char *helpArgs[] = {"bootchart", NULL};
-        BShellCmdHelp(shell, 1, helpArgs);
-    }
     char enable[4] = {}; // 4 enable size
     uint32_t size = sizeof(enable);
     int ret = SystemGetParameter("persist.init.bootchart.enabled", enable, &size);
@@ -58,13 +46,10 @@ static int bootchartCmdStart(BShellHandle shell, int argc, char **argv)
 
 static int bootchartCmdStop(BShellHandle shell, int argc, char **argv)
 {
-    if (argc < 1) {
-        char *helpArgs[] = {"bootchart", NULL};
-        BShellCmdHelp(shell, 1, helpArgs);
-    }
     SystemSetParameter("ohos.servicectrl.bootchart", "stop");
     return 0;
 }
+
 MODULE_CONSTRUCTOR(void)
 {
     const CmdInfo infos[] = {

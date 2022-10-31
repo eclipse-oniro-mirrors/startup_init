@@ -19,6 +19,8 @@ config("utest_config") {
   cflags = [
     "-Wno-implicit-fallthrough",
     "-Wno-unused-function",
+    "-Dprivate=public",
+    "-Dprotected=public",
   ]
   cflags_cc = [
     "-Wno-implicit-fallthrough",

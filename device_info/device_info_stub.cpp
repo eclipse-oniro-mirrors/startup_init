@@ -25,7 +25,6 @@
 #include "param_comm.h"
 #include "sysparam_errno.h"
 
-using std::u16string;
 namespace OHOS {
 using namespace Security;
 using namespace Security::AccessToken;
@@ -43,7 +42,7 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
     int ret = ERR_FAIL;
     switch (code) {
         case COMMAND_GET_UDID: {
-            if (!CheckPermission(data, PERMISSION_UDID)) {
+            if (!CheckPermission(data, "ohos.permission.sec.ACCESS_UDID")) {
                 return SYSPARAM_PERMISSION_DENIED;
             }
             char localDeviceInfo[UDID_LEN] = {0};
@@ -53,7 +52,7 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
             break;
         }
         case COMMAND_GET_SERIAL_ID: {
-            if (!CheckPermission(data, PERMISSION_UDID)) {
+            if (!CheckPermission(data, "ohos.permission.sec.ACCESS_UDID")) {
                 return SYSPARAM_PERMISSION_DENIED;
             }
             const char *serialNumber = GetSerial_();
@@ -98,10 +97,10 @@ int32_t DeviceInfoService::GetSerialID(std::string& result)
 
 void DeviceInfoService::OnStart(void)
 {
-    DINFO_LOGI("WatcherManager OnStart");
+    DINFO_LOGI("DeviceInfoService OnStart");
     bool res = Publish(this);
     if (!res) {
-        DINFO_LOGE("WatcherManager Publish failed");
+        DINFO_LOGE("DeviceInfoService Publish failed");
     }
     return;
 }

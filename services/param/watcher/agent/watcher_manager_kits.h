@@ -26,10 +26,11 @@
 #include "init_param.h"
 #include "watcher.h"
 #include "watcher_utils.h"
+#include "beget_ext.h"
 
 namespace OHOS {
 namespace init_param {
-class WatcherManagerKits final : public DelayedRefSingleton<WatcherManagerKits> {
+class INIT_LOCAL_API WatcherManagerKits final : public DelayedRefSingleton<WatcherManagerKits> {
     DECLARE_DELAYED_REF_SINGLETON(WatcherManagerKits);
 public:
     DISALLOW_COPY_AND_MOVE(WatcherManagerKits);
@@ -38,10 +39,7 @@ public:
     int32_t AddWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context);
     int32_t DelWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context);
     void ReAddWatcher(void);
-
-#ifndef STARTUP_INIT_TEST
 private:
-#endif
     class ParameterChangeListener {
     public:
         ParameterChangeListener(ParameterChangePtr callback, void *context)

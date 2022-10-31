@@ -117,6 +117,9 @@ const struct CmdArgs *GetCmdArg(const char *cmdContent, const char *delim, int a
         while (isspace(*p)) {
             p++;
         }
+        if (end == p) { // empty cmd content
+            break;
+        }
         token = strstr(p, delim);
         if (token == NULL) {
             ctx->argv[ctx->argc] = AddOneArg(p, end - p);
@@ -151,7 +154,7 @@ void FreeCmdArg(struct CmdArgs *cmd)
 
 void ExecCmd(const struct CmdTable *cmd, const char *cmdContent)
 {
-    INIT_ERROR_CHECK(cmd != NULL, return, "Invalid cmd for %s", cmdContent);
+    INIT_ERROR_CHECK(cmd != NULL, return, "Invalid cmd.");
     const struct CmdArgs *ctx = GetCmdArg(cmdContent, " ", cmd->maxArg);
     if (ctx == NULL) {
         INIT_LOGE("Invalid arguments cmd: %s content: %s", cmd->name, cmdContent);
@@ -358,10 +361,7 @@ static void DoMkDir(const struct CmdArgs *ctx)
         INIT_LOGE("Failed to change owner %s, err %d.", ctx->argv[0], errno);
     }
     ret = SetFileCryptPolicy(ctx->argv[0]);
-    if (ret != 0) {
-        INIT_LOGW("Failed to set file fscrypt");
-    }
-
+    INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to set file fscrypt");
     return;
 }
 
@@ -578,7 +578,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "stop ", 1, 1, DoStop },
     { "reset ", 1, 1, DoReset },
     { "copy ", 2, 2, DoCopy },
-    { "reboot ", 1, 1, DoRebootCmd },
+    { "reboot ", 0, 1, DoRebootCmd },
     { "setrlimit ", 3, 3, DoSetrlimit },
     { "sleep ", 1, 1, DoSleep },
     { "wait ", 1, 2, DoWait },

@@ -137,11 +137,11 @@ LoopHandle LE_GetDefaultLoop(void)
     return (LoopHandle)g_defaultLoop;
 }
 
-LE_STATUS LE_CreateLoop(LoopHandle *handlle)
+LE_STATUS LE_CreateLoop(LoopHandle *handle)
 {
     EventLoop *loop = NULL;
     LE_STATUS ret = CreateLoop_(&loop, LOOP_MAX_SOCKET, DEFAULT_TIMEOUT);
-    *handlle = (LoopHandle)loop;
+    *handle = (LoopHandle)loop;
     return ret;
 }
 
@@ -156,6 +156,9 @@ void LE_CloseLoop(const LoopHandle loopHandle)
 {
     LE_CHECK(loopHandle != NULL, return, "Invalid handle");
     CloseLoop((EventLoop *)loopHandle);
+    if ((LoopHandle)g_defaultLoop == loopHandle) {
+        g_defaultLoop = NULL;
+    }
 }
 
 void LE_StopLoop(const LoopHandle handle)

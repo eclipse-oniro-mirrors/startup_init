@@ -42,7 +42,6 @@ int AclGetDevUdid(char *udid, int size)
 #else
     int ret = GetDevUdid_(udid, size);
 #endif
-    BEGET_LOGI("AclGetDevUdid %s", udid);
     return ret;
 }
 
@@ -64,7 +63,6 @@ const char *AclGetSerial(void)
         BEGET_ERROR_CHECK(ret == 0, return nullptr, "Failed to copy");
     }
 #endif
-    BEGET_LOGI("AclGetSerial %s", serialNumber);
     return serialNumber;
 }
 

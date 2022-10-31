@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
+#include <errno.h>
+
 #include "le_epoll.h"
 #include "le_utils.h"
 
 static int IsValid_(const EventEpoll *loop)
 {
-    return loop->epollFd > 0;
+    return loop->epollFd >= 0;
 }
 
 static void GetEpollEvent_(int fd, int op, struct epoll_event *event)
@@ -36,6 +38,7 @@ static LE_STATUS Close_(const EventLoop *loop)
 {
     LE_CHECK(loop != NULL, return LE_FAILURE, "Invalid loop");
     EventEpoll *epoll = (EventEpoll *)loop;
+    LE_LOGV("Close_ epollFd %d", epoll->epollFd);
     close(epoll->epollFd);
     free(epoll);
     return LE_SUCCESS;
@@ -124,7 +127,7 @@ LE_STATUS CreateEpollLoop(EventLoop **loop, uint32_t maxevents, uint32_t timeout
     EventEpoll *epoll = (EventEpoll *)malloc(sizeof(EventEpoll) + sizeof(struct epoll_event) * (maxevents));
     LE_CHECK(epoll != NULL, return LE_FAILURE, "Failed to alloc memory for epoll");
     epoll->epollFd = epoll_create(maxevents);
-    LE_CHECK(epoll->epollFd > 0, free(epoll);
+    LE_CHECK(epoll->epollFd >= 0, free(epoll);
         return LE_FAILURE, "Failed to create epoll");
 
     *loop = (EventLoop *)epoll;

@@ -199,9 +199,9 @@ static void DumpServiceHook(void)
     // check and dump all jobs
     char dump[8] = {0}; // 8 len
     uint32_t len = sizeof(dump);
-    int ret = SystemReadParam("persist.init.debug.dump.trigger", dump, &len);
-    PLUGIN_LOGV("boot dump %s ret %d", dump, ret);
-    if (ret == 0 && strcmp(dump, "1") == 0) {
+    (void)SystemReadParam("persist.init.debug.dump.trigger", dump, &len);
+    PLUGIN_LOGV("boot dump trigger %s", dump);
+    if (strcmp(dump, "1") == 0) {
         SystemDumpTriggers(1, DumpTrigger);
     }
     return;

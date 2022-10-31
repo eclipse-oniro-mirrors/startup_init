@@ -77,9 +77,6 @@ sptr<IWatcherManager> WatcherManagerKits::GetService(void)
         WATCHER_LOGE("Failed to add death recipient");
     }
     watcherManager_ = iface_cast<IWatcherManager>(object);
-    if (watcherManager_ == nullptr) {
-        WATCHER_LOGE("watcher manager iface_cast failed");
-    }
     return watcherManager_;
 }
 
@@ -110,12 +107,6 @@ void WatcherManagerKits::ReAddWatcher(void)
     WATCHER_CHECK(remoteWatcherId > 0, return, "Failed to get remote agent");
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto iter = watchers_.begin(); iter != watchers_.end(); iter++) {
-        if (stop_) {
-            return;
-        }
-        if (iter->second == nullptr) {
-            continue;
-        }
         WATCHER_LOGI("Add old watcher keyPrefix %s ", iter->first.c_str());
         int ret = watcherManager->AddWatcher(iter->first, remoteWatcherId);
         WATCHER_CHECK(ret == 0, continue, "Failed to add watcher for %s", iter->first.c_str());
@@ -283,6 +274,7 @@ int WatcherManagerKits::ParamWatcher::DelParameterListener(ParameterChangePtr ca
 void WatcherManagerKits::RemoteWatcher::OnParameterChange(
     const std::string &prefix, const std::string &name, const std::string &value)
 {
+    Watcher::OnParameterChange(prefix, name, value);
     // get param watcher
     WatcherManagerKits::ParamWatcher *watcher = watcherManager_->GetParamWatcher(prefix);
     WATCHER_CHECK(watcher != nullptr, return, "Failed to get watcher '%s'", prefix.c_str());

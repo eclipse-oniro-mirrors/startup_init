@@ -35,6 +35,12 @@ extern "C" {
 #define PTY_BUF_SIZE 4096
 #define PTY_PATH_SIZE 128
 
+#ifdef STARTUP_INIT_TEST
+#define CONTROL_FD_STATIC
+#else
+#define CONTROL_FD_STATIC static
+#endif
+
 typedef struct CmdService_ {
     TaskHandle serverTask;
     struct ListNode head;

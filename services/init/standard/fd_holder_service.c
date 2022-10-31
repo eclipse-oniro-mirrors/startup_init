@@ -34,11 +34,6 @@ static void FreeFds(int *fds)
 
 static int HandlerHoldFds(Service *service, int *fds, size_t fdCount, const char *pollStr)
 {
-    if (service == NULL) {
-        INIT_LOGE("Request hold fds with invalid service");
-        return -1;
-    }
-
     if (fds == NULL || fdCount == 0 || fdCount > MAX_HOLD_FDS) {
         INIT_LOGE("Service %s request hold fds with invalid fds", service->name);
         return -1;
@@ -93,64 +88,6 @@ static void SendErrorInfo(int sock, const char *errInfo, const char *serviceName
     }
 }
 
-static void SendFdsInfo(int sock, Service *service)
-{
-    // Sanity check
-    if (sock < 0 || service == NULL) {
-        INIT_LOGE("Try to send fd with invalid parameter");
-        return;
-    }
-    char sendBuffer[MAX_FD_HOLDER_BUFFER] = {};
-    if (strncpy_s(sendBuffer, MAX_FD_HOLDER_BUFFER, "send done", strlen("send done")) != 0) {
-        INIT_LOGE("Failed to copy, err = %d", errno);
-        return;
-    }
-    struct iovec iovec = {
-        .iov_base = sendBuffer,
-        .iov_len = strlen(sendBuffer),
-    };
-
-    struct msghdr msghdr = {
-        .msg_iov = &iovec,
-        .msg_iovlen = 1,
-    };
-
-    if (BuildControlMessage(&msghdr, service->fds, service->fdCount, false) < 0) {
-        SendErrorInfo(sock, "Failed to build send message", service->name);
-    } else {
-        if (TEMP_FAILURE_RETRY(sendmsg(sock, &msghdr, MSG_NOSIGNAL)) < 0) {
-            INIT_LOGE("Failed to send fd info to service \' %s \', err = %d", service->name, errno);
-        } else {
-            // Send fd to service OK, need to close fds in init.
-            CloseServiceFds(service, true);
-        }
-    }
-
-    if (msghdr.msg_control != NULL) {
-        free(msghdr.msg_control);
-        msghdr.msg_control = NULL;
-        msghdr.msg_controllen = 0;
-    }
-}
-
-static void HandlerGetFds(int sock, Service *service)
-{
-    if (sock < 0 || service == NULL) {
-        INIT_LOGE("Get fd from init with invalid parameter");
-        SendErrorInfo(sock, "Invalid parameter", "");
-        return;
-    }
-
-    if (service->fds == NULL || service->fdCount == 0) {
-        INIT_LOGE("Service \' %s \' does not have any held fds", service->name);
-        SendErrorInfo(sock, "Service without any fds", service->name);
-        return;
-    }
-
-    // Send fds back to service
-    SendFdsInfo(sock, service);
-}
-
 static int CheckFdHolderPermission(Service *service, pid_t requestPid)
 {
     if (service == NULL) {
@@ -202,6 +139,7 @@ static void HandlerFdHolder(int sock)
 
     Service *service = GetServiceByName(serviceName);
     if (CheckFdHolderPermission(service, requestPid) < 0) {
+        SendErrorInfo(sock, "Invalid service", serviceName);
         // Permission check failed.
         // But fds may already dup to init, so close them.
         CloseFds(fds, fdCount);
@@ -214,10 +152,6 @@ static void HandlerFdHolder(int sock)
         if (HandlerHoldFds(service, fds, fdCount, pollStr) < 0) {
             CloseFds(fds, fdCount);
         }
-    } else if (strcmp(action, ACTION_GET) == 0) {
-        // In this case, ignore fds, just close them if fd passed to init
-        CloseFds(fds, fdCount);
-        HandlerGetFds(sock, service);
     } else {
         INIT_LOGE("Unexpected action: %s", action);
         CloseFds(fds, fdCount);
@@ -226,7 +160,7 @@ static void HandlerFdHolder(int sock)
     FreeStringVector(msg, msgCount);
 }
 
-static void ProcessFdHoldEvent(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
+void ProcessFdHoldEvent(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
 {
     HandlerFdHolder(fd);
     *events = Event_Read;

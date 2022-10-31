@@ -16,15 +16,16 @@
 #include <sys/wait.h>
 
 #include "control_fd.h"
+#include "init.h"
 #include "init_adapter.h"
 #include "init_log.h"
 #include "init_param.h"
 #include "init_service_manager.h"
 #include "loop_event.h"
 
-SignalHandle g_sigHandle = NULL;
+static SignalHandle g_sigHandle = NULL;
 
-static void ProcessSignal(const struct signalfd_siginfo *siginfo)
+INIT_STATIC void ProcessSignal(const struct signalfd_siginfo *siginfo)
 {
     switch (siginfo->ssi_signo) {
         case SIGCHLD: {
@@ -38,7 +39,7 @@ static void ProcessSignal(const struct signalfd_siginfo *siginfo)
                 Service* service = GetServiceByPid(sigPID);
                 // check child process exit status
                 if (WIFSIGNALED(procStat)) {
-                    INIT_LOGE("Child process %s(pid %d) exit with signal : %d",
+                    INIT_LOGE("Child process %s(pid %d) exit with code : %d",
                         service == NULL ? "Unknown" : service->name, sigPID, WTERMSIG(procStat));
                 }
                 if (WIFEXITED(procStat)) {
@@ -69,14 +70,12 @@ static void ProcessSignal(const struct signalfd_siginfo *siginfo)
 
 void SignalInit(void)
 {
-    if (LE_CreateSignalTask(LE_GetDefaultLoop(), &g_sigHandle, ProcessSignal) != 0) {
-        INIT_LOGW("initialize signal handler failed");
-        return;
-    }
-    if (LE_AddSignal(LE_GetDefaultLoop(), g_sigHandle, SIGCHLD) != 0) {
-        INIT_LOGW("start SIGCHLD handler failed");
-    }
-    if (LE_AddSignal(LE_GetDefaultLoop(), g_sigHandle, SIGTERM) != 0) {
-        INIT_LOGW("start SIGTERM handler failed");
+    if (LE_CreateSignalTask(LE_GetDefaultLoop(), &g_sigHandle, ProcessSignal) == 0) {
+        if (LE_AddSignal(LE_GetDefaultLoop(), g_sigHandle, SIGCHLD) != 0) {
+            INIT_LOGW("start SIGCHLD handler failed");
+        }
+        if (LE_AddSignal(LE_GetDefaultLoop(), g_sigHandle, SIGTERM) != 0) {
+            INIT_LOGW("start SIGTERM handler failed");
+        }
     }
 }

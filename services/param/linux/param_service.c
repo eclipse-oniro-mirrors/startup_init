@@ -166,7 +166,9 @@ static int HandleParamSet(const ParamTaskPtr worker, const ParamMessage *msg)
     socklen_t crSize = sizeof(cr);
     if (getsockopt(LE_GetSocketFd(worker), SOL_SOCKET, SO_PEERCRED, &cr, &crSize) < 0) {
         PARAM_LOGE("Failed to get opt %d", errno);
+#ifndef STARTUP_INIT_TEST
         return SendResponseMsg(worker, msg, -1);
+#endif
     }
     srcLabel.sockFd = LE_GetSocketFd(worker);
     srcLabel.cred.uid = cr.uid;
@@ -337,6 +339,9 @@ PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *m
 PARAM_STATIC int OnIncomingConnect(LoopHandle loop, TaskHandle server)
 {
     ParamStreamInfo info = {};
+#ifdef STARTUP_INIT_TEST
+    info.flags = PARAM_TEST_FLAGS;
+#endif
     info.server = NULL;
     info.close = OnClose;
     info.recvMessage = ProcessMessage;

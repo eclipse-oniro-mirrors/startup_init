@@ -18,10 +18,11 @@
 
 #include "iremote_proxy.h"
 #include "idevice_info.h"
+#include "beget_ext.h"
 
 namespace OHOS {
 namespace device_info {
-class DeviceInfoProxy : public IRemoteProxy<IDeviceInfo> {
+class INIT_LOCAL_API DeviceInfoProxy : public IRemoteProxy<IDeviceInfo> {
 public:
     explicit DeviceInfoProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IDeviceInfo>(impl) {}
     virtual ~DeviceInfoProxy() {}
@@ -29,6 +30,8 @@ public:
     int32_t GetUdid(std::string& result) override;
     int32_t GetSerialID(std::string& result) override;
 private:
+    int32_t DeviceInfoSendRequest(uint32_t code,
+        MessageParcel &data, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<DeviceInfoProxy> delegator_;
 };
 } // namespace system

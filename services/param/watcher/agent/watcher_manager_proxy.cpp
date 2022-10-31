@@ -14,15 +14,13 @@
  */
 #include "watcher_manager_proxy.h"
 #include "watcher_utils.h"
+#include "sysparam_errno.h"
 
 namespace OHOS {
 namespace init_param {
 uint32_t WatcherManagerProxy::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher)
 {
     WATCHER_CHECK(watcher != nullptr, return ERR_INVALID_VALUE, "Invalid param");
-    auto remote = Remote();
-    WATCHER_CHECK(remote != nullptr, return 0, "Can not get remote");
-
     MessageParcel data;
     data.WriteInterfaceToken(WatcherManagerProxy::GetDescriptor());
     bool ret = data.WriteRemoteObject(watcher->AsObject());
@@ -31,38 +29,32 @@ uint32_t WatcherManagerProxy::AddRemoteWatcher(uint32_t id, const sptr<IWatcher>
 
     MessageParcel reply;
     MessageOption option { MessageOption::TF_SYNC };
-    int32_t res = remote->SendRequest(ADD_REMOTE_AGENT, data, reply, option);
+    int32_t res = SendWatcherMsg(ADD_REMOTE_AGENT, data, reply, option);
     WATCHER_CHECK(res == ERR_OK, return 0, "Transact error %d", res);
     return reply.ReadUint32();
 }
 
 int32_t WatcherManagerProxy::DelRemoteWatcher(uint32_t remoteWatcherId)
 {
-    auto remote = Remote();
-    WATCHER_CHECK(remote != nullptr, return ERR_FLATTEN_OBJECT, "Can not get remote");
-
     MessageParcel data;
     data.WriteInterfaceToken(WatcherManagerProxy::GetDescriptor());
     data.WriteUint32(remoteWatcherId);
     MessageParcel reply;
     MessageOption option { MessageOption::TF_SYNC };
-    int32_t res = remote->SendRequest(DEL_REMOTE_AGENT, data, reply, option);
+    int32_t res = SendWatcherMsg(DEL_REMOTE_AGENT, data, reply, option);
     WATCHER_CHECK(res == ERR_OK, return ERR_FLATTEN_OBJECT, "Transact error");
     return reply.ReadInt32();
 }
 
 int32_t WatcherManagerProxy::SendMsg(int op, const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
-    auto remote = Remote();
-    WATCHER_CHECK(remote != nullptr, return 0, "Can not get remote");
-
     MessageParcel data;
     data.WriteInterfaceToken(WatcherManagerProxy::GetDescriptor());
     data.WriteString(keyPrefix);
     data.WriteUint32(remoteWatcherId);
     MessageParcel reply;
     MessageOption option { MessageOption::TF_SYNC };
-    int32_t res = remote->SendRequest(op, data, reply, option);
+    int32_t res = SendWatcherMsg(op, data, reply, option);
     WATCHER_CHECK(res == ERR_OK, return 0, "Transact error");
     return reply.ReadInt32();
 }
@@ -80,6 +72,20 @@ int32_t WatcherManagerProxy::DelWatcher(const std::string &keyPrefix, uint32_t r
 int32_t WatcherManagerProxy::RefreshWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
     return SendMsg(REFRESH_WATCHER, keyPrefix, remoteWatcherId);
+}
+
+int32_t WatcherManagerProxy::SendWatcherMsg(uint32_t code,
+    MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    auto remote = Remote();
+    if (remote != nullptr) {
+        return remote->SendRequest(code, data, reply, option);
+    }
+#ifdef STARTUP_INIT_TEST
+    return 0;
+#else
+    return SYSPARAM_SYSTEM_ERROR;
+#endif
 }
 }
 } // namespace OHOS

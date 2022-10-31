@@ -215,6 +215,7 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, RemoteWatcher
             if (!FilterParam(context->buffer, context->keyPrefix)) {
                 return;
             }
+            WATCHER_LOGV("SendLocalChange name '%s' prefix '%s'", context->buffer, context->keyPrefix.c_str());
             uint32_t size = PARAM_CONST_VALUE_LEN_MAX;
             SystemGetParameterValue(handle, context->buffer + PARAM_NAME_LEN_MAX, &size);
             context->remoteWatcher->ProcessParameterChange(
@@ -230,11 +231,11 @@ void WatcherManager::RunLoop()
     ssize_t recvLen = 0;
     while (!stop_) {
         int fd = GetServerFd(retry);
-        if (fd >= 0) {
-            recvLen = recv(fd, buffer.data(), RECV_BUFFER_MAX, 0);
-        }
         if (stop_) {
             break;
+        }
+        if (fd >= 0) {
+            recvLen = recv(fd, buffer.data(), RECV_BUFFER_MAX, 0);
         }
         if (recvLen <= 0) {
             if (errno == EAGAIN) { // timeout
@@ -258,11 +259,11 @@ void WatcherManager::RunLoop()
             curr += msg->msgSize;
         }
     }
-    if (serverFd_ > 0) {
+    if (serverFd_ >= 0) {
         close(serverFd_);
         serverFd_ = INVALID_SOCKET;
     }
-    WATCHER_LOGV("Exit runLoop");
+    WATCHER_LOGV("Exit runLoop serverFd %d", serverFd_);
 }
 
 void WatcherManager::StartLoop()
@@ -298,6 +299,9 @@ int WatcherManager::GetServerFd(bool retry)
         serverFd_ = INVALID_SOCKET;
         usleep(sleepTime);
         retryCount++;
+        if (stop_) {
+            break;
+        }
     } while (retryCount < maxRetry);
     WATCHER_LOGV("GetServerFd serverFd_ %d retryCount %d ", serverFd_, retryCount);
     return serverFd_;
@@ -324,7 +328,7 @@ void WatcherManager::StopLoop()
 {
     WATCHER_LOGI("Watcher manager StopLoop serverFd_ %d", serverFd_);
     stop_ = true;
-    if (serverFd_ > 0) {
+    if (serverFd_ >= 0) {
         shutdown(serverFd_, SHUT_RDWR);
         close(serverFd_);
         serverFd_ = INVALID_SOCKET;
@@ -428,9 +432,6 @@ void WatcherManager::DumpAllGroup(int fd, ParamWatcherProcessor dumpHandle)
     std::lock_guard<std::mutex> lock(watcherMutex_);
     for (auto it = groupMap_.begin(); it != groupMap_.end(); ++it) {
         auto group = it->second;
-        if (group == nullptr) {
-            continue;
-        }
         dprintf(fd, "Watch prefix   : %s \n", group->GetKeyPrefix().c_str());
         dprintf(fd, "Watch group id : %u \n", group->GetGroupId());
         dprintf(fd, "Watch count    : %zu \n", group->GetNodeCount());
@@ -492,15 +493,18 @@ int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)
 
 void WatcherManager::Clear(void)
 {
+    WATCHER_LOGV("Clear");
     std::lock_guard<std::mutex> lock(watcherMutex_);
     remoteWatchers_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
         list->RemoveNode(node);
         auto group = ConvertTo<WatcherGroup>(node);
+        WATCHER_LOGV("Delete watcher group %u", group->GetGroupId());
         delete group;
     });
     watcherGroups_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
         list->RemoveNode(node);
         auto remoteWatcher = ConvertTo<RemoteWatcher>(node);
+        WATCHER_LOGV("Delete remote watcher %u", remoteWatcher->GetRemoteWatcherId());
         delete remoteWatcher;
     });
     delete remoteWatchers_;
@@ -739,6 +743,28 @@ int WatcherNode::Greater(ListNodePtr node, void *data)
     WatcherNodePtr watcher =  WatcherNode::ConvertNodeToBase(node);
     uint32_t id = *(uint32_t *)data;
     return (watcher->nodeId_ > id) ? 0 : 1;
+}
+
+WatcherGroup::~WatcherGroup(void)
+{
+    TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+        list->RemoveNode(node);
+        ParamWatcher *watcher = ConvertTo<ParamWatcher>(node);
+        WATCHER_LOGV("delete watcher group %u", watcher->GetNodeId());
+        delete watcher;
+    });
+}
+
+RemoteWatcher::~RemoteWatcher(void)
+{
+    watcher_ = nullptr;
+    WATCHER_LOGI("RemoteWatcher ");
+    TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+        list->RemoveNode(node);
+        ParamWatcher *watcher = ConvertTo<ParamWatcher>(node);
+        WATCHER_LOGV("delete remote watcher %u", watcher->GetNodeId());
+        delete watcher;
+    });
 }
 } // namespace init_param
 } // namespace OHOS

@@ -21,7 +21,9 @@
 static int SelinuxHook(const HOOK_INFO *hookInfo, void *cookie)
 {
     PLUGIN_LOGI("Install selinuxadp.");
+#ifndef STARTUP_INIT_TEST // do not install
     InitModuleMgrInstall("selinuxadp");
+#endif
     return 0;
 }
 

@@ -56,10 +56,6 @@ static void ClearLogo(int fd)
 
 static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
 {
-    if (fd < 0 || logoPath.empty() || size == 0) {
-        std::cout << "path is null or size illegal\n";
-        return;
-    }
     FILE *rgbFile = fopen(logoPath.c_str(), "rb");
     if (rgbFile == nullptr) {
         std::cout << "cannot find pic file\n";
@@ -83,20 +79,12 @@ static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
         free(buffer);
         return;
     }
-
-    if (buffer != nullptr) {
-        free(buffer);
-        buffer = nullptr;
-    }
+    free(buffer);
     (void)fclose(rgbFile);
 }
 
 static int WriteLogo(int fd, const std::string &logoPath)
 {
-    if (fd < 0 || logoPath.empty()) {
-        std::cout << "Invalid arguments\n";
-        return -1;
-    }
     int addrOffset = (PARTITION_INFO_POS + PARTITION_INFO_MAX_LENGTH + BLOCK_SZIE_1 - 1) / BLOCK_SZIE_1;
     if (lseek(fd, addrOffset * BLOCK_SZIE_1, SEEK_SET) < 0) {
         BSH_LOGI("Failed lseek logoPath %s errno %d ", logoPath.c_str(), errno);
@@ -108,11 +96,12 @@ static int WriteLogo(int fd, const std::string &logoPath)
         BSH_LOGI("Failed magic logoPath %s errno %d ", logoPath.c_str(), errno);
         return -1;
     }
-
+#ifndef STARTUP_INIT_TEST
     if (magic == LOGO_MAGIC) {
         BSH_LOGI("Get matched magic number, logo already written\n");
         return 0;
     }
+#endif
     struct stat st {};
     magic = LOGO_MAGIC;
     lseek(fd, addrOffset * BLOCK_SZIE_1, SEEK_SET);

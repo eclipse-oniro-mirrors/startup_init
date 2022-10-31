@@ -29,4 +29,10 @@ typedef struct {
     char buffer[DEFAULT_BUFFER];
 } BootchartCtrl;
 
+#ifdef STARTUP_INIT_TEST
+#define BOOTCHART_STATIC
+#else
+#define BOOTCHART_STATIC static
+#endif
+
 #endif /* _PLUGIN_BOOTCHART_H */

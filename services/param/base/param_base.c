@@ -52,6 +52,7 @@ static void WorkSpaceFree(const HashNode *node)
     WorkSpace *workSpace = HASHMAP_ENTRY(node, WorkSpace, hashNode);
     CloseWorkSpace(workSpace);
 }
+
 static int InitParamSecurity(ParamWorkSpace *workSpace,
     RegisterSecurityOpsPtr registerOps, ParamSecurityType type, int isInit, int op)
 {
@@ -100,7 +101,7 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
 {
     if (ops != NULL) {
         g_paramWorkSpace.ops.updaterMode = ops->updaterMode;
-        if (g_paramWorkSpace.ops.logFunc == NULL) {
+        if (g_paramWorkSpace.ops.logFunc == NULL && ops->logFunc != NULL) {
             g_paramWorkSpace.ops.logFunc = ops->logFunc;
         }
 #ifdef PARAM_SUPPORT_SELINUX
@@ -113,20 +114,12 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
     if (onlyRead == 0) {
         return 1;
     }
-#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
-    if (getpid() == 1) { // init process only for write
-        return 0;
-    }
+#ifdef STARTUP_INIT_TEST
     // for ut, do not init workspace
     char path[PATH_MAX] = { 0 };
     (void)readlink("/proc/self/exe", path, sizeof(path) - 1);
-    char *name = strrchr(path, '/');
+    char *name = strstr(path, "/init_unittest");
     if (name != NULL) {
-        name++;
-    } else {
-        name = path;
-    }
-    if (strcmp(name, "init_unittest") == 0) {
         PARAM_LOGW("Can not init client for init_test");
         return 0;
     }
@@ -182,7 +175,7 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
 
 INIT_LOCAL_API void CloseParamWorkSpace(void)
 {
-    PARAM_LOGI("CloseParamWorkSpace %p", &g_paramWorkSpace);
+    PARAM_LOGI("CloseParamWorkSpace %x", g_paramWorkSpace.flags);
     if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return;
     }
@@ -216,7 +209,7 @@ INIT_LOCAL_API void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, cons
 INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void)
 {
     if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
-        PARAM_LOGE("GetParamWorkSpace %p", &g_paramWorkSpace);
+        PARAM_LOGE("Invalid param workspace %x", g_paramWorkSpace.flags);
         return NULL;
     }
     return &g_paramWorkSpace;

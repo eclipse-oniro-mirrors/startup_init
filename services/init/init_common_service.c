@@ -181,11 +181,7 @@ static int SetPerms(const Service *service)
 
 static int WritePid(const Service *service)
 {
-    const int maxPidStrLen = 50;
-    char pidString[maxPidStrLen];
     pid_t childPid = getpid();
-    int len = snprintf_s(pidString, maxPidStrLen, maxPidStrLen - 1, "%d", childPid);
-    INIT_ERROR_CHECK(len > 0, return SERVICE_FAILURE, "Failed to format pid for service %s", service->name);
     for (int i = 0; i < service->writePidArgs.count; i++) {
         if (service->writePidArgs.argv[i] == NULL) {
             continue;
@@ -198,16 +194,16 @@ static int WritePid(const Service *service)
             fd = fopen(service->writePidArgs.argv[i], "wb");
         }
         if (fd != NULL) {
-            INIT_CHECK_ONLY_ELOG((int)fwrite(pidString, 1, len, fd) == len,
-                "Failed to write %s pid:%s", service->writePidArgs.argv[i], pidString);
+            INIT_CHECK_ONLY_ELOG((int)fprintf(fd, "%d", childPid) > 0,
+                "Failed to write %s pid:%d", service->writePidArgs.argv[i], childPid);
             (void)fclose(fd);
         } else {
-            INIT_LOGE("Failed to open %s.", service->writePidArgs.argv[i]);
+            INIT_LOGE("Failed to open realPath: %s  %s errno:%d.", realPath, service->writePidArgs.argv[i], errno);
         }
         if (realPath != NULL) {
             free(realPath);
         }
-        INIT_LOGV("ServiceStart writepid filename=%s, childPid=%s, ok", service->writePidArgs.argv[i], pidString);
+        INIT_LOGV("ServiceStart writepid filename=%s, childPid=%d, ok", service->writePidArgs.argv[i], childPid);
     }
     return SERVICE_SUCCESS;
 }

@@ -45,6 +45,8 @@
 #include "fscrypt_utils.h"
 
 #define FSCRYPT_POLICY_BUF_SIZE (60)
+#define DECIMAL 10
+#define OCTAL 8
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
@@ -91,7 +93,6 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
 
 static void SyncExecCommand(int argc, char * const *argv)
 {
-    INIT_CHECK(!(argc == 0 || argv == NULL || argv[0] == NULL), return);
     INIT_LOGI("Sync exec: %s", argv[0]);
     pid_t pid = fork();
     INIT_ERROR_CHECK(!(pid < 0), return, "Fork new process to format failed: %d", errno);
@@ -250,16 +251,14 @@ static void DoMakeNode(const struct CmdArgs *ctx)
     const int authorityPos = 2;
     const int majorDevicePos = 3;
     const int minorDevicePos = 4;
-    const int decimal = 10;
-    const int octal = 8;
     INIT_ERROR_CHECK(access(ctx->argv[1], F_OK), return, "DoMakeNode failed, path has sexisted");
     mode_t deviceMode = GetDeviceMode(ctx->argv[deviceTypePos]);
     errno = 0;
-    unsigned int major = strtoul(ctx->argv[majorDevicePos], NULL, decimal);
+    unsigned int major = strtoul(ctx->argv[majorDevicePos], NULL, DECIMAL);
     INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[majorDevicePos]);
-    unsigned int minor = strtoul(ctx->argv[minorDevicePos], NULL, decimal);
+    unsigned int minor = strtoul(ctx->argv[minorDevicePos], NULL, DECIMAL);
     INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[minorDevicePos]);
-    mode_t authority = strtoul(ctx->argv[authorityPos], NULL, octal);
+    mode_t authority = strtoul(ctx->argv[authorityPos], NULL, OCTAL);
     INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[authorityPos]);
     int ret = mknod(ctx->argv[0], deviceMode | authority, makedev(major, minor));
     if (ret != 0) {
@@ -270,11 +269,10 @@ static void DoMakeNode(const struct CmdArgs *ctx)
 static void DoMakeDevice(const struct CmdArgs *ctx)
 {
     // format: makedev major minor
-    const int decimal = 10;
     errno = 0;
-    unsigned int major = strtoul(ctx->argv[0], NULL, decimal);
+    unsigned int major = strtoul(ctx->argv[0], NULL, DECIMAL);
     INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[0]);
-    unsigned int minor = strtoul(ctx->argv[1], NULL, decimal);
+    unsigned int minor = strtoul(ctx->argv[1], NULL, DECIMAL);
     INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[1]);
     dev_t deviceId = makedev(major, minor);
     INIT_CHECK_ONLY_ELOG(deviceId >= 0, "DoMakedevice \" major:%s, minor:%s \" failed :%d ", ctx->argv[0],
@@ -302,10 +300,6 @@ static void DoUmountFstabFile(const struct CmdArgs *ctx)
 
 static void DoRestorecon(const struct CmdArgs *ctx)
 {
-    if (ctx->argc != 1) {
-        INIT_LOGE("DoRestorecon invalid arguments.");
-        return;
-    }
     PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
     return;
 }
@@ -411,11 +405,10 @@ static void DoTimerStop(const struct CmdArgs *ctx)
 static bool InitFscryptPolicy(void)
 {
     char policy[FSCRYPT_POLICY_BUF_SIZE];
-    if (LoadFscryptPolicy(policy, FSCRYPT_POLICY_BUF_SIZE) != 0) {
-        return false;
-    }
-    if (SetFscryptSysparam(policy) == 0) {
-        return true;
+    if (LoadFscryptPolicy(policy, FSCRYPT_POLICY_BUF_SIZE) == 0) {
+        if (SetFscryptSysparam(policy) == 0) {
+            return true;
+        }
     }
     return false;
 }
@@ -423,10 +416,6 @@ static bool InitFscryptPolicy(void)
 static void DoInitGlobalKey(const struct CmdArgs *ctx)
 {
     INIT_LOGV("Do init global key start");
-    if (ctx == NULL || ctx->argc != 1) {
-        INIT_LOGE("Parameter is invalid");
-        return;
-    }
     const char *dataDir = "/data";
     if (strncmp(ctx->argv[0], dataDir, strlen(dataDir)) != 0) {
         INIT_LOGE("Not data partitation");
@@ -449,11 +438,6 @@ static void DoInitGlobalKey(const struct CmdArgs *ctx)
 
 static void DoInitMainUser(const struct CmdArgs *ctx)
 {
-    if (ctx == NULL) {
-        INIT_LOGE("Do init main user: para invalid");
-        return;
-    }
-
     char * const argv[] = {
         "/system/bin/sdc",
         "filecrypt",
@@ -466,10 +450,6 @@ static void DoInitMainUser(const struct CmdArgs *ctx)
 
 static void DoMkswap(const struct CmdArgs *ctx)
 {
-    if (ctx == NULL) {
-        INIT_LOGE("Parameter is invalid");
-        return;
-    }
     char *const argv[] = {
         "/system/bin/mkswap",
         ctx->argv[0],
@@ -481,10 +461,6 @@ static void DoMkswap(const struct CmdArgs *ctx)
 
 static void DoSwapon(const struct CmdArgs *ctx)
 {
-    if (ctx == NULL) {
-        INIT_LOGE("Parameter is invalid");
-        return;
-    }
     char *const argv[] = {
         "/system/bin/swapon",
         ctx->argv[0],
@@ -497,16 +473,7 @@ static void DoSwapon(const struct CmdArgs *ctx)
 static void DoMkSandbox(const struct CmdArgs *ctx)
 {
     INIT_LOGV("Do make sandbox start");
-    if ((ctx == NULL) || (ctx->argc != 1)) {
-        INIT_LOGE("Call DoMkSandbox with invalid arguments");
-        return;
-    }
-
     const char *sandbox = ctx->argv[0];
-    if (sandbox == NULL) {
-        INIT_LOGE("Invalid sandbox name.");
-        return;
-    }
     InitDefaultNamespace();
     if (!InitSandboxWithName(sandbox)) {
         INIT_LOGE("Failed to init sandbox with name %s.", sandbox);
@@ -525,15 +492,15 @@ static void DoMkSandbox(const struct CmdArgs *ctx)
 static const struct CmdTable g_cmdTable[] = {
     { "syncexec ", 1, 10, DoSyncExec },
     { "exec ", 1, 10, DoExec },
-    { "mknode ", 1, 5, DoMakeNode },
+    { "mknode ", 5, 5, DoMakeNode },
     { "makedev ", 2, 2, DoMakeDevice },
     { "symlink ", 2, 2, DoSymlink },
-    { "trigger ", 1, 1, DoTriggerCmd },
+    { "trigger ", 0, 1, DoTriggerCmd },
     { "insmod ", 1, 10, DoInsmod },
     { "setparam ", 2, 2, DoSetParam },
-    { "load_persist_params ", 1, 1, DoLoadPersistParams },
+    { "load_persist_params ", 0, 1, DoLoadPersistParams },
     { "load_param ", 1, 2, DoLoadDefaultParams },
-    { "load_access_token_id ", 1, 1, DoLoadAccessTokenId },
+    { "load_access_token_id ", 0, 1, DoLoadAccessTokenId },
     { "ifup ", 1, 1, DoIfup },
     { "mount_fstab ", 1, 1, DoMountFstabFile },
     { "umount_fstab ", 1, 1, DoUmountFstabFile },

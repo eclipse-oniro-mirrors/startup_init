@@ -216,19 +216,19 @@ static int SelinuxGetParamSecurityLabel(const char *path)
 static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char *fileName, int flags)
 {
     UNUSED(flags);
-    PARAM_CHECK(localLabel != NULL && fileName != NULL, return -1, "Invalid param");
+    UNUSED(localLabel);
+    UNUSED(fileName);
     return 0;
 }
 
 static const char *GetSelinuxContent(const char *name)
 {
     SelinuxSpace *selinuxSpace = &GetParamWorkSpace()->selinuxSpace;
+    const char *content = WORKSPACE_NAME_DEF_SELINUX;
     if (selinuxSpace->getParamLabel != NULL) {
-        return selinuxSpace->getParamLabel(name);
-    } else {
-        PARAM_LOGE("Can not init selinux");
-        return WORKSPACE_NAME_DEF_SELINUX;
+        content = selinuxSpace->getParamLabel(name);
     }
+    return content;
 }
 
 static int CheckContentPermission(const char *name, const char *label)

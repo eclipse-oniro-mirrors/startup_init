@@ -28,9 +28,9 @@ int32_t WatcherStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Message
 
     switch (code) {
         case PARAM_CHANGE: {
-            std::string key = data.ReadString();
-            std::string name = data.ReadString();
-            std::string value = data.ReadString();
+            std::string key(data.ReadString());
+            std::string name(data.ReadString());
+            std::string value(data.ReadString());
             OnParameterChange(key, name, value);
             break;
         }
