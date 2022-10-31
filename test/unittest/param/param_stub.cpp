@@ -21,6 +21,7 @@
 #include "param_security.h"
 #include "param_utils.h"
 #include "init_group_manager.h"
+#include "beget_ext.h"
 #ifdef PARAM_LOAD_CFG_FROM_CODE
 #include "param_cfg.h"
 #endif
@@ -443,6 +444,7 @@ int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
 static __attribute__((constructor(101))) void ParamTestStubInit(void)
 {
     EnableInitLog(INIT_DEBUG);
+    SetInitLogLevel(INIT_DEBUG);
     PARAM_LOGI("ParamTestStubInit");
     PrepareInitUnitTestEnv();
 }

@@ -1,7 +1,6 @@
 [
     { "name": "SystemWriteParam" },
     { "name": "SystemReadParam" },
-    { "name": "LoadParamsFile" },
     { "name": "SplitString" },
     { "name": "AddCmdExecutor" },
     { "name": "RemoveCmdExecutor" },
