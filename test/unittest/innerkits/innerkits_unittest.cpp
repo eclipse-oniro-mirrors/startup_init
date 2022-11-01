@@ -225,4 +225,29 @@ HWTEST_F(InnerkitsUnitTest, TestSysCap, TestSize.Level1)
     ret = HasSystemCapability("SystemCapability.ArkUI.ArkUI.Napi");
     EXPECT_EQ(ret, true);
 }
+
+// TestControlService
+HWTEST_F(InnerkitsUnitTest, TestControlService, TestSize.Level1)
+{
+    ServiceControl("deviceinfoservice", START);
+    ServiceControl("deviceinfoservice", STOP);
+    ServiceControl("deviceinfoservice", RESTART);
+    ServiceControl("param_watcher", RESTART);
+    EXPECT_EQ(ServiceControl(nullptr, RESTART), -1);
+    const char *argv[] = {"testArg"};
+    ServiceControlWithExtra("deviceinfoservice", RESTART, argv, 1);
+    ServiceControlWithExtra(nullptr, RESTART, argv, 1);
+    ServiceControlWithExtra(nullptr, 3, argv, 1); // 3 is action
+    ServiceControlWithExtra("notservie", RESTART, argv, 1);
+    ServiceSetReady("deviceinfoservice");
+    ServiceSetReady(nullptr);
+    ServiceWaitForStatus("deviceinfoservice", SERVICE_READY, 1);
+    ServiceWaitForStatus("deviceinfoservice", SERVICE_READY, -1);
+    ServiceWaitForStatus(nullptr, SERVICE_READY, 1);
+    StartServiceByTimer("deviceinfoservice", 1);
+    StartServiceByTimer("deviceinfoservice", 0);
+    StartServiceByTimer(nullptr, 0);
+    StopServiceTimer("deviceinfoservice");
+}
+
 } // namespace init_ut
