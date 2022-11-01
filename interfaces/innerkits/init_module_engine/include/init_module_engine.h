@@ -34,8 +34,6 @@ int SystemWriteParam(const char *name, const char *value);
 
 int SystemReadParam(const char *name, char *value, unsigned int *len);
 
-int LoadParamsFile(const char *fileName, bool onlyAdd);
-
 typedef int (*CmdExecutor)(int id, const char *name, int argc, const char **argv);
 
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);
