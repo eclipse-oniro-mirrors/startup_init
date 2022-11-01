@@ -38,8 +38,8 @@ static void ProcessSignal(const struct signalfd_siginfo *siginfo)
                 Service* service = GetServiceByPid(sigPID);
                 // check child process exit status
                 if (WIFSIGNALED(procStat)) {
-                    INIT_LOGE("Child process %s(pid %d) exit with code : %d",
-                        service == NULL ? "Unknown" : service->name, sigPID, sigPID, WTERMSIG(procStat));
+                    INIT_LOGE("Child process %s(pid %d) exit with signal : %d",
+                        service == NULL ? "Unknown" : service->name, sigPID, WTERMSIG(procStat));
                 }
                 if (WIFEXITED(procStat)) {
                     INIT_LOGE("Child process %s(pid %d) exit with code : %d",
