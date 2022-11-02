@@ -164,6 +164,6 @@ INIT_LOCAL_API void EnableInitLogFromCmdline(void)
     errno = 0;
     unsigned int logLevel = (unsigned int)strtoul(level, 0, 10); // 10 is decimal
     INIT_INFO_CHECK(errno == 0, return, "Failed strtoul %s, err=%d", level, errno);
-    SetInitLogLevel(logLevel);
+    SetInitLogLevel((InitLogLevel)logLevel);
     return;
 }
