@@ -57,7 +57,7 @@ sensor_host:x:3033:
 vibrator_host:x:3034:
 light_host:x:3035:
 dcamera_host:x:3038:
-display_composer_host:x:3039:
+display_composer_host:x:3037:
 daudio_host:x:3059:
 hwc_host:x:3039:
 gralloc_host:x:3040:
