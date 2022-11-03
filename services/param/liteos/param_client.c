@@ -17,12 +17,10 @@
 #include "param_manager.h"
 
 #define MIN_SLEEP (100 * 1000)
+
+#ifdef __LITEOS_A__
 static int g_flags = 0;
-
-__attribute__((constructor)) static void ClientInit(void);
-static void ClientDeinit(void);
-
-static int InitParamClient(void)
+__attribute__((constructor)) static int ClientInit(void)
 {
     if (PARAM_TEST_FLAG(g_flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
@@ -37,23 +35,14 @@ static int InitParamClient(void)
     return 0;
 }
 
-void ClientInit(void)
-{
-#ifdef __LITEOS_A__
-#ifndef STARTUP_INIT_TEST
-    PARAM_LOGV("ClientInit");
-    (void)InitParamClient();
-#endif
-#endif
-}
-
-void ClientDeinit(void)
+__attribute__((destructor)) static void ClientDeinit(void)
 {
     if (PARAM_TEST_FLAG(g_flags, WORKSPACE_FLAGS_INIT)) {
         CloseParamWorkSpace();
     }
     PARAM_SET_FLAG(g_flags, 0);
 }
+#endif
 
 int SystemSetParameter(const char *name, const char *value)
 {

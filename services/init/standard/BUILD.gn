@@ -137,9 +137,6 @@ ohos_executable("init") {
     defines += [ "ASAN_DETECTOR" ]
   }
 
-  if (enable_ohos_startup_init_feature_loader) {
-    defines += [ "PRODUCT_RK" ]
-  }
   version_script = get_label_info(
                        "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
                        "target_gen_dir") + "/" + get_label_info(

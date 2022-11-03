@@ -76,10 +76,6 @@ if (defined(ohos_lite)) {
 
     defines = [ "_GNU_SOURCE" ]
 
-    if (enable_ohos_startup_init_feature_loader) {
-      defines += [ "PRODUCT_RK" ]
-    }
-
     include_dirs = common_include_dirs
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
