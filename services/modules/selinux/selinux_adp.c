@@ -71,7 +71,7 @@ static int SetServiceContent(int id, const char *name, int argc, const char **ar
 static int SetSockCreateCon(int id, const char *name, int argc, const char **argv)
 {
     PLUGIN_CHECK(name != NULL && argc >= 1 && argv != NULL, return -1, "Invalid parameter");
-    if (argv[0] == NULL) {
+    if (strcmp(argv[0], "") == 0) {
         setsockcreatecon(NULL);
         return 0;
     }
