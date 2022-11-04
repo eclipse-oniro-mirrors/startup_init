@@ -128,7 +128,8 @@ static int AddRebootCmdExecutor_(const char *cmd, CmdExecutor executor)
         }
         g_rebootParamCmdInfos = cmdInfos;
     }
-    PLUGIN_CHECK(g_rebootParamCmdValidNumber < g_rebootParamCmdMaxNumber, return -1, "Param cmd number exceed limit");
+    PLUGIN_CHECK(g_rebootParamCmdValidNumber >= 0 && g_rebootParamCmdValidNumber < g_rebootParamCmdMaxNumber,
+        return -1, "Param cmd number exceed limit");
     return SetParamCmdInfo(&g_rebootParamCmdInfos[g_rebootParamCmdValidNumber], executor, cmd);
 }
 
