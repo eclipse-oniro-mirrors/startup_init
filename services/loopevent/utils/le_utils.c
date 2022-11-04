@@ -22,11 +22,7 @@ void SetNoBlock(int fd)
     if (option < 0) {
         return;
     }
-
     option = option | O_NONBLOCK | FD_CLOEXEC;
-    option = fcntl(fd, F_SETFD, option);
-    if (option < 0) {
-        return;
-    }
+    (void)fcntl(fd, F_SETFD, option);
     return;
 }

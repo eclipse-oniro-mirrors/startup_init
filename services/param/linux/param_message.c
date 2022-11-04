@@ -44,7 +44,7 @@ int ConnectServer(int fd, const char *servername)
 int FillParamMsgContent(const ParamMessage *request, uint32_t *start, int type, const char *value, uint32_t length)
 {
     PARAM_CHECK(request != NULL && start != NULL, return -1, "Invalid param");
-    PARAM_CHECK(value != NULL && length > 0 && length < PARAM_BUFFER_MAX, return -1, "Invalid value");
+    PARAM_CHECK(value != NULL && length != 0, return -1, "Invalid value");
     uint32_t bufferSize = request->msgSize - sizeof(ParamMessage);
     uint32_t offset = *start;
     PARAM_CHECK((offset + sizeof(ParamMsgContent) + length) <= bufferSize,
@@ -63,6 +63,7 @@ int FillParamMsgContent(const ParamMessage *request, uint32_t *start, int type, 
 ParamMessage *CreateParamMessage(int type, const char *name, uint32_t msgSize)
 {
     PARAM_CHECK(name != NULL, return NULL, "Invalid name");
+    PARAM_CHECK(msgSize < PARAM_BUFFER_MAX, return NULL, "Invalid msg size %u", msgSize);
     uint32_t size = msgSize;
     if (msgSize < sizeof(ParamMessage)) {
         size = sizeof(ParamMessage);
@@ -78,12 +79,12 @@ ParamMessage *CreateParamMessage(int type, const char *name, uint32_t msgSize)
     return msg;
 }
 
-ParamMsgContent *GetNextContent(const ParamMessage *reqest, uint32_t *offset)
+ParamMsgContent *GetNextContent(const ParamMessage *request, uint32_t *offset)
 {
-    PARAM_CHECK(reqest != NULL, return NULL, "Invalid reqest");
+    PARAM_CHECK(request != NULL, return NULL, "Invalid request");
     PARAM_CHECK(offset != NULL, return NULL, "Invalid offset");
-    ParamMessage *msg = (ParamMessage *)reqest;
-    if ((msg == NULL) || ((*offset + sizeof(ParamMessage) + sizeof(ParamMsgContent)) >= msg->msgSize)) {
+    ParamMessage *msg = (ParamMessage *)request;
+    if ((*offset + sizeof(ParamMessage) + sizeof(ParamMsgContent)) >= msg->msgSize) {
         return NULL;
     }
     ParamMsgContent *content = (ParamMsgContent *)(msg->data + *offset);

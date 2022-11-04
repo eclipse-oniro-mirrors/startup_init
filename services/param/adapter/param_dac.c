@@ -29,7 +29,11 @@
 #define MAX_BUF_SIZE  1024
 #define GROUP_FORMAT "const.group"
 #define INVALID_MODE 0550
+#ifdef STARTUP_INIT_TEST
+#define GROUP_FILE_PATH STARTUP_INIT_UT_PATH "/etc/group"
+#else
 #define GROUP_FILE_PATH "/etc/group"
+#endif
 #define OCT_BASE 8
 #define INVALID_UID(uid) ((uid) == (uid_t)-1)
 

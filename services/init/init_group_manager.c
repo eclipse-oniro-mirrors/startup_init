@@ -251,7 +251,6 @@ InitGroupNode *GetGroupNode(int type, const char *name)
     if (type >= NODE_TYPE_GROUPS) {
         return NULL;
     }
-    INIT_LOGV("GetGroupNode type %d %p name %s", type, g_initWorkspace.hashMap[type], name);
     HashNode *node = OH_HashMapGet(g_initWorkspace.hashMap[type], name);
     if (node == NULL) {
         return NULL;

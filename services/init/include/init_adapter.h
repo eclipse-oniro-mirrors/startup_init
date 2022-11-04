@@ -40,7 +40,6 @@ extern "C" {
 #endif
 #endif
 
-void RebootSystem(void);
 int KeepCapability(void);
 int SetAmbientCapability(int cap);
 void ExecuteRcs(void);

@@ -150,20 +150,18 @@ INIT_LOCAL_API void EnableInitLogFromCmdline(void)
 {
     SetInitCommLog(InitLog);
     char level[MAX_BUFFER_LEN] = {0};
-    char *buffer = ReadFileData("/proc/cmdline");
+    char *buffer = ReadFileData(BOOT_CMD_LINE);
     if (buffer == NULL) {
         INIT_LOGE("Failed to read \"/proc/cmdline\"");
         return;
     }
     int ret = GetProcCmdlineValue("initloglevel", buffer, level, MAX_BUFFER_LEN);
     free(buffer);
-    if (ret != 0) {
-        INIT_LOGE("Failed get log level from cmdline");
-        return;
+    if (ret == 0) {
+        errno = 0;
+        unsigned int logLevel = (unsigned int)strtoul(level, 0, 10); // 10 is decimal
+        INIT_INFO_CHECK(errno == 0, return, "Failed strtoul %s, err=%d", level, errno);
+        SetInitLogLevel((InitLogLevel)logLevel);
     }
-    errno = 0;
-    unsigned int logLevel = (unsigned int)strtoul(level, 0, 10); // 10 is decimal
-    INIT_INFO_CHECK(errno == 0, return, "Failed strtoul %s, err=%d", level, errno);
-    SetInitLogLevel((InitLogLevel)logLevel);
     return;
 }

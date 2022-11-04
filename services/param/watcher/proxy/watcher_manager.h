@@ -78,15 +78,11 @@ public:
     int32_t AddWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
     int32_t DelWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
     int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
-#ifndef STARTUP_INIT_TEST
 protected:
-#endif
     void OnStart() override;
     void OnStop() override;
     int Dump(int fd, const std::vector<std::u16string>& args) override;
-#ifndef STARTUP_INIT_TEST
 private:
-#endif
     void RunLoop();
     void StartLoop();
     void StopLoop();
@@ -220,15 +216,7 @@ class RemoteWatcher : public WatcherNode, public ParamWatcherList {
 public:
     RemoteWatcher(uint32_t watcherId, const sptr<IWatcher> &watcher)
         : WatcherNode(watcherId), ParamWatcherList(), watcher_(watcher) {}
-    ~RemoteWatcher(void) override
-    {
-        watcher_ = nullptr;
-        TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
-            list->RemoveNode(node);
-            ParamWatcher *watcher = ConvertTo<ParamWatcher>(node);
-            delete watcher;
-        });
-    }
+    ~RemoteWatcher(void) override;
 
     uint32_t GetRemoteWatcherId(void) const
     {
@@ -259,14 +247,8 @@ class WatcherGroup : public WatcherNode, public ParamWatcherList {
 public:
     WatcherGroup(uint32_t groupId, const std::string &key)
         : WatcherNode(groupId), ParamWatcherList(), keyPrefix_(key) {}
-    ~WatcherGroup() override
-    {
-        TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
-            list->RemoveNode(node);
-            ParamWatcher *watcher = ConvertTo<ParamWatcher>(node);
-            delete watcher;
-        });
-    }
+    ~WatcherGroup(void) override;
+
     void ProcessParameterChange(WatcherManager *mananger, const std::string &name, const std::string &value);
     const std::string GetKeyPrefix() const
     {

@@ -56,7 +56,9 @@ static int SetServiceContent(int id, const char *name, int argc, const char **ar
     if (data != NULL) {
         if (setexeccon((char *)data->data) < 0) {
             PLUGIN_LOGE("failed to set service %s's secon (%s).", argv[0], (char *)data->data);
+#ifndef STARTUP_INIT_TEST
             _exit(PROCESS_EXIT_CODE);
+#endif
         } else {
             PLUGIN_LOGV("Set content %s to %s.", (char *)data->data, argv[0]);
         }
@@ -70,17 +72,19 @@ static int SetServiceContent(int id, const char *name, int argc, const char **ar
 
 static int SetSockCreateCon(int id, const char *name, int argc, const char **argv)
 {
-    PLUGIN_CHECK(name != NULL && argc >= 1 && argv != NULL, return -1, "Invalid parameter");
-    if (strcmp(argv[0], "") == 0) {
+    PLUGIN_CHECK(name != NULL, return -1, "Invalid parameter");
+    if (argc == 0) {
         setsockcreatecon(NULL);
         return 0;
     }
-
+    PLUGIN_CHECK(argc >= 1 && argv != NULL, return -1, "Invalid parameter");
     ServiceExtData *data = GetServiceExtData(argv[0], HOOK_ID_SELINUX);
     if (data != NULL) {
         if (setsockcreatecon((char *)data->data) < 0) {
             PLUGIN_LOGE("failed to set socket context %s's secon (%s).", argv[0], (char *)data->data);
+#ifndef STARTUP_INIT_TEST
             _exit(PROCESS_EXIT_CODE);
+#endif
         }
     }
 

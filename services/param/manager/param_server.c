@@ -170,10 +170,9 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode,
 
     const int buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
     char *buffer = malloc(buffSize);
-    if (buffer == NULL) {
-        (void)fclose(fp);
-        return -1;
-    }
+    PARAM_CHECK(buffer != NULL, (void)fclose(fp);
+        return -1, "Failed to alloc memory");
+
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
         int ret = SplitParamString(buffer, exclude, count, loadOneParam, &mode);

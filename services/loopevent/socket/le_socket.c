@@ -90,6 +90,7 @@ static LE_STATUS GetSockaddrFromServer_(const char *server, struct sockaddr_in *
     addr->sin_port = htons(port);
     ret = inet_pton(AF_INET, server, &addr->sin_addr);
     LE_CHECK(ret >= 0, return LE_FAILURE, "Failed to inet_pton addr %s", server);
+    LE_LOGV("CreateTcpSocket server: %s port: %d", server, port);
     return LE_SUCCESS;
 }
 
@@ -119,10 +120,9 @@ static int CreateTcpSocket_(const char *server)
 
     struct sockaddr_in serverAddr;
     GetSockaddrFromServer_(server, &serverAddr);
-    LE_LOGV("CreateTcpSocket connect: %s ", server);
     int ret = connect(fd, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
     LE_CHECK(ret >= 0, close(fd);
-        return ret, "Failed to connect socket");
+        return ret, "Failed to connect socket errno:%d", errno);
     return fd;
 }
 

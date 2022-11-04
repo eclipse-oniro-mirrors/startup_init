@@ -23,7 +23,7 @@ int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
 {
     std::u16string myDescriptor = IWatcherManager::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
-    WATCHER_CHECK(myDescriptor == remoteDescriptor, return -1, "Invalid remoteDescriptor");
+    WATCHER_CHECK(myDescriptor == remoteDescriptor, return -1, "Invalid remoteDescriptor %u", code);
 
     WATCHER_LOGV("OnRemoteRequest code %u", code);
     switch (code) {
@@ -42,8 +42,6 @@ int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
         case ADD_REMOTE_AGENT: {
             auto remote = data.ReadRemoteObject();
             // 0 is invalid watcherId
-            WATCHER_CHECK(remote != nullptr, reply.WriteUint32(0);
-                return 0, "Failed to read remote watcher");
             uint32_t id = data.ReadUint32();
             uint32_t remoteWatcherId = AddRemoteWatcher(id, iface_cast<IWatcher>(remote));
             reply.WriteUint32(remoteWatcherId);

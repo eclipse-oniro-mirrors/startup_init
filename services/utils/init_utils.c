@@ -162,6 +162,7 @@ char *ReadFileToBuf(const char *configFile)
 
 void CloseStdio(void)
 {
+#ifndef STARTUP_INIT_TEST
 #ifndef __LITEOS_M__
     int fd = open("/dev/null", O_RDWR | O_CLOEXEC);
     if (fd < 0) {
@@ -171,6 +172,7 @@ void CloseStdio(void)
     dup2(fd, 1);
     dup2(fd, STDERR_HANDLE);
     close(fd);
+#endif
 #endif
 }
 

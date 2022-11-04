@@ -96,6 +96,7 @@ static int RestartProcess(const char *serviceName, const char *extArgv[], int ex
         BEGET_LOGE("Get service status failed.\n");
         return -1;
     }
+    BEGET_LOGE("Process service %s status: %d ", serviceName, status);
     if (status == SERVICE_STARTED || status == SERVICE_READY) {
         if (StopProcess(serviceName) != 0) {
             BEGET_LOGE("Stop service %s failed", serviceName);
@@ -114,8 +115,6 @@ static int RestartProcess(const char *serviceName, const char *extArgv[], int ex
             BEGET_LOGE("Start service %s failed", serviceName);
             return -1;
         }
-    } else {
-        BEGET_LOGE("Current service status: %d is not support.", status);
     }
     return 0;
 }

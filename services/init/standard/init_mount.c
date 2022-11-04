@@ -38,11 +38,9 @@ Fstab* LoadRequiredFstab(void)
     fstab = LoadFstabFromCommandLine();
     if (fstab == NULL) {
         INIT_LOGI("Cannot load fstab from command line, try read from fstab.required");
-        const char *fstabFile = "/etc/fstab.required";
+        const char *fstabFile = STARTUP_INIT_UT_PATH"/etc/fstab.required";
         INIT_CHECK(access(fstabFile, F_OK) == 0, fstabFile = "/system/etc/fstab.required");
-#ifndef STARTUP_INIT_TEST
         INIT_ERROR_CHECK(access(fstabFile, F_OK) == 0, abort(), "Failed get fstab.required");
-#endif
         fstab = ReadFstabFromFile(fstabFile, false);
     }
     return fstab;

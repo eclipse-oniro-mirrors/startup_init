@@ -189,8 +189,10 @@ static void StartInitSecondStage(void)
             // Just abort
             INIT_LOGE("Mount required partitions failed; please check fstab file");
             // Execute sh for debugging
+#ifndef STARTUP_INIT_TEST
             execv("/bin/sh", NULL);
             abort();
+#endif
         }
     }
 
@@ -258,7 +260,7 @@ static void RecordInitBootEvent(const char *initBootEvent)
     return;
 }
 
-static void BootStateChange(int start, const char *content)
+INIT_STATIC void BootStateChange(int start, const char *content)
 {
     if (start == 0) {
         clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.startTime));
@@ -291,13 +293,13 @@ static void InitLoadParamFiles(void)
     FreeCfgFiles(files);
 }
 
-static void InitPreHook(const HOOK_INFO *hookInfo, void *executionContext)
+INIT_STATIC void InitPreHook(const HOOK_INFO *hookInfo, void *executionContext)
 {
     INIT_TIMING_STAT *stat = (INIT_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->startTime));
 }
 
-static void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext, int executionRetVal)
+INIT_STATIC void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext, int executionRetVal)
 {
     INIT_TIMING_STAT *stat = (INIT_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->endTime));
@@ -322,7 +324,7 @@ static void InitSysAdj(void)
     return;
 }
 
-static void TriggerServices(int startMode)
+INIT_STATIC void TriggerServices(int startMode)
 {
     int index = 0;
     int jobNum = 0;
@@ -371,7 +373,7 @@ static void TriggerServices(int startMode)
 void SystemConfig(void)
 {
     INIT_TIMING_STAT timingStat;
-    
+
     InitSysAdj();
     HOOK_EXEC_OPTIONS options;
 

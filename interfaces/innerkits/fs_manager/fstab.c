@@ -542,7 +542,7 @@ static int ParseRequiredMountInfo(const char *item, Fstab *fstab)
         BEGET_ERROR_CHECK(strncpy_s(mountOptions, MAX_BUFFER_LEN -1, p, strlen(p)) == EOK,
             return -1, "Failed to copy required mount info: %s", item);
     }
-    BEGET_LOGV("Mount option of partition %s is [%s]", partName, mountOptions);
+    BEGET_LOGV("Config mount option of partition %s is [%s]", partName, mountOptions);
     if (ParseFstabPerLine(mountOptions, fstab, false, "@") < 0) {
         BEGET_LOGE("Failed to parse mount options of partition \' %s \', options: %s", partName, mountOptions);
         return -1;
@@ -556,7 +556,7 @@ Fstab* LoadFstabFromCommandLine(void)
     char *cmdline = ReadFileData(BOOT_CMD_LINE);
     bool isDone = false;
 
-    BEGET_ERROR_CHECK(cmdline != NULL, return NULL, "Read from \'/proc/cmdline\' failed, err = %d", errno);
+    BEGET_ERROR_CHECK(cmdline != NULL, return NULL, "Read from \'%s\' failed, err = %d", BOOT_CMD_LINE, errno);
     TrimTail(cmdline, '\n');
     BEGET_ERROR_CHECK((fstab = (Fstab *)calloc(1, sizeof(Fstab))) != NULL, return NULL,
         "Allocate memory for FS table failed, err = %d", errno);

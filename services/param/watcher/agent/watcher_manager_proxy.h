@@ -18,10 +18,11 @@
 
 #include "iremote_proxy.h"
 #include "iwatcher_manager.h"
+#include "beget_ext.h"
 
 namespace OHOS {
 namespace init_param {
-class WatcherManagerProxy : public IRemoteProxy<IWatcherManager> {
+class INIT_LOCAL_API WatcherManagerProxy : public IRemoteProxy<IWatcherManager> {
 public:
     explicit WatcherManagerProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IWatcherManager>(impl) {}
 
@@ -32,6 +33,8 @@ public:
     int32_t RefreshWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
 private:
     int32_t SendMsg(int op, const std::string &keyPrefix, uint32_t remoteWatcherId);
+    int32_t SendWatcherMsg(uint32_t code,
+        MessageParcel &data, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<WatcherManagerProxy> delegator_;
 };
 } // namespace init_param

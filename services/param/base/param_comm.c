@@ -542,10 +542,7 @@ INIT_LOCAL_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, cons
             continue;
         }
         ParamSecurityOps *ops = GetParamSecurityOps(i);
-        if (ops == NULL) {
-            continue;
-        }
-        if (ops->securityCheckParamPermission == NULL) {
+        if (ops == NULL || ops->securityCheckParamPermission == NULL) {
             continue;
         }
         ret = ops->securityCheckParamPermission(srcLabel, name, mode);
