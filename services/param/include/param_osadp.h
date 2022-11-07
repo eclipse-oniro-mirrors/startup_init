@@ -45,7 +45,7 @@ extern "C" {
 #endif
 
 #define PARAM_WORKSPACE_INVALID ((uint32_t)-1)
-#define PARAM_WORKSPACE_MIN (4096)
+#define PARAM_WORKSPACE_MIN (512)
 #if (defined __LITEOS_A__ || defined __LITEOS_M__)
 #define DAC_DEFAULT_MODE 0777
 #ifdef STARTUP_INIT_TEST
