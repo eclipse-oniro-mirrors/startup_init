@@ -28,9 +28,6 @@ static int TestTriggerExecute(TriggerNode *trigger, const char *content, uint32_
     return 0;
 }
 
-extern "C" {
-void OnClose(ParamTaskPtr client);
-}
 static int CheckServerParamValue(const char *name, const char *expectValue)
 {
     char tmp[PARAM_BUFFER_SIZE] = {0};
@@ -210,6 +207,15 @@ public:
         ret = SystemWriteParam(buffer, "1111");
         EXPECT_NE(ret, 0);
 
+        ret = SystemWriteParam(" ", "1111");
+        EXPECT_NE(ret, 0);
+        ret = SystemWriteParam("__.__..", "1111");
+        EXPECT_NE(ret, 0);
+        ret = SystemWriteParam(".__..", "1111");
+        EXPECT_NE(ret, 0);
+        ret = SystemWriteParam("test.-@:_", "1111");
+        EXPECT_EQ(ret, 0);
+
         // 保存一个只读的属性，大于最大值
         TestBufferValue(buffer, PARAM_VALUE_LEN_MAX - 1);
         ret = SystemWriteParam("const.test_readonly.dddddddddddddddddd.fffffffffffffffffff", buffer);
@@ -270,13 +276,7 @@ public:
 
     int TestPersistParam()
     {
-        ParamAuditData auditData = {};
-        auditData.name = "persist.";
-        auditData.dacData.gid = 0;
-        auditData.dacData.uid = 0;
-        auditData.dacData.mode = 0777;  // 0777 test mode
-        AddSecurityLabel(&auditData);
-
+        RegisterPersistParamOps(nullptr);
         LoadPersistParams();
         SystemWriteParam("persist.111.ffff.bbbb.cccc.dddd.eeee", "1101");
         SystemWriteParam("persist.111.aaaa.bbbb.cccc.dddd.eeee", "1102");
@@ -287,11 +287,11 @@ public:
         CheckServerParamValue("persist.111.ffff.bbbb.cccc.dddd.eeee", "1101");
         SystemWriteParam("persist.111.ffff.bbbb.cccc.dddd.eeee", "1106");
         CheckServerParamValue("persist.111.ffff.bbbb.cccc.dddd.eeee", "1106");
-        sleep(1);
+
         SystemWriteParam("persist.111.bbbb.cccc.dddd.1107", "1107");
         SystemWriteParam("persist.111.bbbb.cccc.dddd.1108", "1108");
         SystemWriteParam("persist.111.bbbb.cccc.dddd.1109", "1108");
-        sleep(1);
+
         SystemWriteParam("persist.111.bbbb.cccc.dddd.1110", "1108");
         SystemWriteParam("persist.111.bbbb.cccc.dddd.1111", "1108");
         TimerCallbackForSave(nullptr, nullptr);
@@ -301,21 +301,8 @@ public:
 
     ParamTaskPtr CreateAndGetStreamTask()
     {
-        ParamStreamInfo info = {};
-        info.flags = PARAM_TEST_FLAGS;
-        info.server = NULL;
-        info.close = OnClose;
-        info.recvMessage = ProcessMessage;
-        info.incomingConnect = NULL;
-        ParamTaskPtr client = NULL;
-        int ret = ParamStreamCreate(&client, GetParamService()->serverTask, &info, sizeof(ParamWatcher));
-        PARAM_CHECK(ret == 0, return NULL, "Failed to create client");
-
-        ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
-        PARAM_CHECK(watcher != NULL, return NULL, "Failed to get watcher");
-        OH_ListInit(&watcher->triggerHead);
-        watcher->stream = client;
-        GetParamService()->watcherTask = client;
+        OnIncomingConnect(LE_GetDefaultLoop(), GetParamService()->serverTask);
+        EXPECT_NE(GetParamService()->watcherTask, nullptr);
         return GetParamService()->watcherTask;
     }
 
@@ -355,13 +342,22 @@ public:
         if (g_worker == nullptr) {
             return 0;
         }
-        uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + PARAM_ALIGN(strlen(value) + 1);
+        uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + sizeof(ParamMsgContent)
+            + PARAM_ALIGN(strlen(value) + 1) + sizeof(uint32_t);
         ParamMessage *request = (ParamMessage *)(ParamMessage *)CreateParamMessage(type, name, msgSize);
         PARAM_CHECK(request != nullptr, return -1, "Failed to malloc for connect");
         do {
             uint32_t offset = 0;
             int ret = FillParamMsgContent(request, &offset, PARAM_VALUE, value, strlen(value));
             PARAM_CHECK(ret == 0, break, "Failed to fill value");
+
+            ParamMsgContent *content = (ParamMsgContent *)(request->data + offset);
+            content->type = PARAM_WAIT_TIMEOUT;
+            content->contentSize = sizeof(uint32_t);
+            *((uint32_t *)(content->content)) = 100; // 100 is test value
+            offset += sizeof(ParamMsgContent) + sizeof(uint32_t);
+            request->msgSize = offset + sizeof(ParamMessage);
+
             ProcessMessage((const ParamTaskPtr)g_worker, (const ParamMessage *)request);
         } while (0);
         free(request);
@@ -375,6 +371,8 @@ public:
         const char *value = "wait1";
         AddWatch(MSG_WAIT_PARAM, name, value);
         SystemWriteParam(name, value);
+        // execute trigger
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         return 0;
     }
 
@@ -385,6 +383,8 @@ public:
         const char *value = "wait2";
         AddWatch(MSG_WAIT_PARAM, name, "*");
         SystemWriteParam(name, value);
+        // execute trigger
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         return 0;
     }
 
@@ -395,6 +395,8 @@ public:
         const char *value = "wait3";
         SystemWriteParam(name, value);
         AddWatch(MSG_WAIT_PARAM, name, value);
+        // execute trigger
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         return 0;
     }
 
@@ -406,6 +408,8 @@ public:
         std::string newName = name;
         newName += ".test.test.test";
         SystemWriteParam(newName.c_str(), value);
+        // execute trigger
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         return 0;
     }
 
@@ -415,6 +419,8 @@ public:
         const char *value = "watch2";
         AddWatch(MSG_ADD_WATCHER, name, "*");
         SystemWriteParam(name, value);
+        // execute trigger
+        LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         return 0;
     }
 
@@ -428,15 +434,15 @@ public:
         AddWatch(MSG_ADD_WATCHER, name, value);
         char buffer[] = "testbuff";
         CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM_WATCH, buffer, strlen(buffer), TestTriggerExecute);
-#ifdef PARAM_SUPPORT_TRIGGER
-        SystemDumpTriggers(1, NULL);
-#endif
         AddWatch(MSG_DEL_WATCHER, name, value);
         return 0;
     }
 
     int TestCloseTriggerWatch()
     {
+#ifdef PARAM_SUPPORT_TRIGGER
+        SystemDumpTriggers(1, NULL);
+#endif
         ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(g_worker);
         ClearWatchTrigger(watcher, TRIGGER_PARAM_WAIT);
         ParamTaskClose(g_worker);
@@ -459,6 +465,30 @@ public:
         return SystemWriteParam("ohos.startup.powerctrl", reboot);
     }
 };
+
+HWTEST_F(ParamServiceUnitTest, TestPersistParam, TestSize.Level0)
+{
+    ParamServiceUnitTest test;
+    test.TestPersistParam();
+}
+
+HWTEST_F(ParamServiceUnitTest, TestReadCmdline, TestSize.Level0)
+{
+    const char *snData = "222222222222222222222";
+    CreateTestFile(STARTUP_INIT_UT_PATH "/system/etc/sn", snData);
+    // for cmdline
+    std::string cmdLineForSn = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
+        "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568"
+        " BOOT_IMAGE=/kernel  init=/init";
+    std::string snWithPath = cmdLineForSn + "ohos.boot.sn=" + STARTUP_INIT_UT_PATH "/system/etc/sn";
+    CreateTestFile(BOOT_CMD_LINE, snWithPath.c_str());
+    LoadParamFromCmdLine();
+    std::string snWithSN = cmdLineForSn + "ohos.boot.sn=" + snData;
+    CreateTestFile(BOOT_CMD_LINE, snWithSN.c_str());
+    LoadParamFromCmdLine();
+    CreateTestFile(BOOT_CMD_LINE, cmdLineForSn.c_str());
+    LoadParamFromCmdLine();
+}
 
 HWTEST_F(ParamServiceUnitTest, TestServiceProcessMessage, TestSize.Level0)
 {
@@ -497,6 +527,7 @@ HWTEST_F(ParamServiceUnitTest, TestAddParamWatch2, TestSize.Level0)
     test.TestAddParamWatch2();
 }
 
+#ifndef OHOS_LITE
 HWTEST_F(ParamServiceUnitTest, TestAddParamWatch3, TestSize.Level0)
 {
     ParamServiceUnitTest test;
@@ -519,11 +550,9 @@ HWTEST_F(ParamServiceUnitTest, TestServiceCtrl, TestSize.Level0)
     ParamServiceUnitTest test;
     int ret = test.TestServiceCtrl("server1", 0770);
     EXPECT_NE(ret, 0);
-#ifdef PARAM_SUPPORT_SELINUX
     // selinux forbid
     ret = test.TestServiceCtrl("server2", 0772);
     EXPECT_NE(ret, 0);
-#endif
     ret = 0;
 }
 
@@ -532,32 +561,27 @@ HWTEST_F(ParamServiceUnitTest, TestPowerCtrl, TestSize.Level0)
     ParamServiceUnitTest test;
     int ret = test.TestPowerCtrl("reboot,shutdown", 0770);
     EXPECT_NE(ret, 0);
-
-#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,shutdown", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
-#endif
     ret = test.TestPowerCtrl("reboot,updater", 0770);
     EXPECT_NE(ret, 0);
-#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,updater", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
-#endif
     ret = test.TestPowerCtrl("reboot,flashd", 0770);
     EXPECT_NE(ret, 0);
-#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot,flashd", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
-#endif
+
     ret = test.TestPowerCtrl("reboot", 0770);
     EXPECT_NE(ret, 0);
-#ifdef PARAM_SUPPORT_SELINUX
     ret = test.TestPowerCtrl("reboot", 0772);
     // selinux forbid
     EXPECT_NE(ret, 0);
-#endif
+
+    ParamServiceStop();
 }
+#endif
 }  // namespace init_ut

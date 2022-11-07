@@ -54,6 +54,7 @@ HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service\",\"path\":[\"/data/init_ut/test_service\"],"
         "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"caps\":[\"TEST_ERR\"],"
         "\"gid\":[\"system\"], \"critical\":1}}";
     cJSON* jobItem = cJSON_Parse(jsonStr);
     ASSERT_NE(nullptr, jobItem);
@@ -76,7 +77,7 @@ HWTEST_F(ServiceUnitTest, case02, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service8\",\"path\":[\"/data/init_ut/test_service\"],"
         "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
-        "\"gid\":[\"system\"],\"caps\":[10, 4294967295, 10000],\"cpucore\":[1]}}";
+        "\"gid\":[\"system\", \"shell\", \"root\"],\"caps\":[10, 4294967295, 10000],\"cpucore\":[1]}}";
     cJSON* jobItem = cJSON_Parse(jsonStr);
     ASSERT_NE(nullptr, jobItem);
     cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
@@ -111,7 +112,7 @@ HWTEST_F(ServiceUnitTest, case02, TestSize.Level1)
     service->pid = 0xfffffff; // 0xfffffff is not exist pid
     service->attribute = SERVICE_ATTR_TIMERSTART;
     ret = ServiceStop(service);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ReleaseService(service);
 }
 
@@ -119,7 +120,7 @@ HWTEST_F(ServiceUnitTest, TestServiceStartAbnormal, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/data/init_ut/test_service\"],"
         "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
-        "\"gid\":[\"system\"]}}";
+        "\"gid\":[\"system\"],\"caps\":[\"\"]}}";
     cJSON* jobItem = cJSON_Parse(jsonStr);
     ASSERT_NE(nullptr, jobItem);
     cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
@@ -327,6 +328,20 @@ HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
     SystemWriteParam("persist.init.bootevent.enable", "false");
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, NULL, NULL);
     cJSON_Delete(fileRoot);
+}
+
+HWTEST_F(ServiceUnitTest, TestSetServiceContent, TestSize.Level1)
+{
+    (void)WatchConsoleDevice(NULL);
+    Service service;
+    (void)WatchConsoleDevice(&service);
+    int fd = open("/dev/console", O_RDWR);
+    if (fd >= 0) {
+        (void)write(fd, "0", 1);
+        (void)close(fd);
+    }
+    PluginExecCmdByName("setServiceContent", "netmanager");
+    StopServiceByName("netmanager");
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)

@@ -44,7 +44,7 @@ HWTEST_F(CmdsUnitTest, TestCmdExecByName, TestSize.Level1)
     DoCmdByName("insmod ",
         "libdemo.z.so anony=1 mmz_allocator=hisi mmz=anonymous,0,0xA8000000,384M || report_error");
     DoCmdByName("insmod ", "/vendor/modules/hi_irq.ko");
-    DoCmdByName("insmod ", "/data/init_ut/test_insmod");
+    DoCmdByName("insmod ", STARTUP_INIT_UT_PATH"/test_insmod");
 
     DoCmdByName("setparam ", "sys.usb.config ${persist.sys.usb.config}");
 
@@ -54,6 +54,7 @@ HWTEST_F(CmdsUnitTest, TestCmdExecByName, TestSize.Level1)
     DoCmdByName("hostname ", "localhost");
     DoCmdByName("sleep ", "1");
     DoCmdByName("setrlimit ", "RLIMIT_NICE 40 40");
+    DoCmdByName("setrlimit ", "RLIMIT_NICE unlimited unlimited");
     DoCmdByName("setrlimit ", "RLIMIT_NICE2 40 40");
     DoCmdByName("start ", "init_ut");
     DoCmdByName("stop ", "init_ut");
@@ -65,12 +66,13 @@ HWTEST_F(CmdsUnitTest, TestCmdExecByName, TestSize.Level1)
     DoCmdByName("mknode ", "/dev/null F 0666 1 3");
     DoCmdByName("mknode ", "/dev/null A 0666 1 3");
     DoCmdByName("makedev ", "999 999");
-    DoCmdByName("mount_fstab ", "");
-    DoCmdByName("umount_fstab ", "");
+    DoCmdByName("mount_fstab ", "/wwwwwww");
+    DoCmdByName("umount_fstab ", "/wwwwwww");
     DoCmdByName("mksandbox ", "system chipset");
     DoCmdByName("mksandbox ", "system");
     DoCmdByName("mksandbox ", "notsupport");
     DoCmdByName("mksandbox ", "");
+    DoCmdByName("mksandbox ", nullptr);
 }
 HWTEST_F(CmdsUnitTest, TestCmdExecByName1, TestSize.Level1)
 {
@@ -79,19 +81,20 @@ HWTEST_F(CmdsUnitTest, TestCmdExecByName1, TestSize.Level1)
     DoCmdByName("exec ", "media_service");
     DoCmdByName("syncexec ", "/system/bin/toybox");
     DoCmdByName("load_access_token_id ", "media_service");
+    DoCmdByName("load_access_token_id ", "");
     DoCmdByName("stopAllServices ", "true");
-    DoCmdByName("umount ", "");
-    DoCmdByName("mount ", "");
-    DoCmdByName("mount ", "ext4 /dev/block/platform/soc/10100000.himci.eMMC/by-name/vendor "
-        "/data wait filecrypt=555");
+    DoCmdByName("umount ", "/2222222");
+    DoCmdByName("mount ", "/2222222");
+    DoCmdByName("mount ", "ext4 /2222222 /data wait filecrypt=555");
     DoCmdByName("init_global_key ", "/data");
     DoCmdByName("init_global_key ", "arg0 arg1");
     DoCmdByName("init_main_user ", "testUser");
     DoCmdByName("init_main_user ", nullptr);
-    DoCmdByName("mkswap ", "");
-    DoCmdByName("swapon ", "");
+    DoCmdByName("mkswap ", "/data/init_ut");
+    DoCmdByName("swapon ", "/data/init_ut");
     DoCmdByName("sync ", "");
     DoCmdByName("restorecon ", "");
+    DoCmdByName("restorecon ", "/data  /data");
     DoCmdByName("suspend ", "");
     DoCmdByName("wait ", "1");
     DoCmdByName("wait ", "aaa 1");
@@ -169,6 +172,14 @@ HWTEST_F(CmdsUnitTest, TestCommonCopy, TestSize.Level1)
     DoCmdByName("copy ", "/data/init_ut/test_dir0/test_file_copy1 /data/init_ut/test_dir0/test_file_copy1");
     DoCmdByName("copy ", "/data/init_ut/test_dir0/test_file_copy11 /data/init_ut/test_dir0/test_file_copy1");
     DoCmdByName("copy ", "a");
+
+    DoCmdByName("chmod ", "111 /data/init_ut/test_dir0/test_file_copy1");
+    DoCmdByName("copy ", "/data/init_ut/test_dir0/test_file_copy1 /data/init_ut/test_dir0/test_file_copy2");
+
+    DoCmdByName("chmod ", "777 /data/init_ut/test_dir0/test_file_copy1");
+    DoCmdByName("chmod ", "111 /data/init_ut/test_dir0/test_file_copy2");
+    DoCmdByName("copy ", "/data/init_ut/test_dir0/test_file_copy1 /data/init_ut/test_dir0/test_file_copy2");
+    DoCmdByName("chmod ", "777 /data/init_ut/test_dir0/test_file_copy2");
 }
 
 HWTEST_F(CmdsUnitTest, TestCommonWrite, TestSize.Level1)
@@ -241,7 +252,7 @@ HWTEST_F(CmdsUnitTest, TestDoCmdByIndex, TestSize.Level1)
 
 HWTEST_F(CmdsUnitTest, TestGetCmdLinesFromJson, TestSize.Level1)
 {
-    const char *jsonStr = "{\"jobs\":[{\"name\":\"init\",\"cmds\":[\"sleep 1\"]}]}";
+    const char *jsonStr = "{\"jobs\":[{\"name\":\"init\",\"cmds\":[\"sleep 1\",100,\"test321 123\"]}]}";
     cJSON* jobItem = cJSON_Parse(jsonStr);
     ASSERT_NE(nullptr, jobItem);
     cJSON *cmdsItem = cJSON_GetObjectItem(jobItem, "jobs");
@@ -272,5 +283,39 @@ HWTEST_F(CmdsUnitTest, TestInitCmdFunc, TestSize.Level1)
 {
     int ret = GetBootModeFromMisc();
     EXPECT_EQ(ret, 0);
+    ret = SetFileCryptPolicy(nullptr);
+    EXPECT_NE(ret, 0);
+}
+
+HWTEST_F(CmdsUnitTest, TestBuildStringFromCmdArg, TestSize.Level1)
+{
+    int strNum = 3;
+    struct CmdArgs *ctx = (struct CmdArgs *)calloc(1, sizeof(struct CmdArgs) + sizeof(char *) * (strNum));
+    ctx->argc = strNum;
+    ctx->argv[0] = strdup("123456789012345678901234567890123456789012345678901234567890   \
+            1234567890123456789012345678901234567890123456789012345678901234567");
+    ctx->argv[1] = strdup("test");
+    ctx->argv[2] = nullptr;
+    char *options = BuildStringFromCmdArg(ctx, 0);
+    EXPECT_EQ(options[0], '\0');
+    free(options);
+
+    options = BuildStringFromCmdArg(ctx, 1);
+    EXPECT_STREQ(options, "test");
+    free(options);
+    FreeCmdArg(ctx);
+}
+
+HWTEST_F(CmdsUnitTest, TestInitDiffTime, TestSize.Level1)
+{
+    INIT_TIMING_STAT stat;
+    stat.startTime.tv_sec = 2; // 2 is test sec
+    stat.startTime.tv_nsec = 1000;  // 1000 is test nsec
+
+    stat.endTime.tv_sec = 3;  // 3 is test sec
+    stat.endTime.tv_nsec = 0;
+
+    long long diff = InitDiffTime(&stat);
+    EXPECT_TRUE(diff > 0);
 }
 } // namespace init_ut
