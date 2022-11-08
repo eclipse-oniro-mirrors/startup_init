@@ -384,7 +384,7 @@ HWTEST_F(LoopServerUnitTest, TestTimer2, TestSize.Level1)
 
 HWTEST_F(LoopServerUnitTest, TestWatcher, TestSize.Level1)
 {
-    int fd = open(WATCHER_FILE.c_str(), O_RDWR | O_CREAT);
+    int fd = open(WATCHER_FILE.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd >= 0) {
         write(fd, WATCHER_FILE.c_str(), WATCHER_FILE.size());
     }
