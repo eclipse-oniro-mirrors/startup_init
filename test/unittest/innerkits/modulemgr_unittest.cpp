@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "bootstage.h"
 #include "init_cmds.h"
 #include "init_group_manager.h"
 #include "init_hashmap.h"
@@ -62,6 +63,7 @@ HWTEST_F(ModuleMgrUnitTest, PluginAddCmd, TestSize.Level1)
     const char *cmdName = PluginGetCmdIndex(cmdContent, &cmdIndex);
     ASSERT_EQ(strcmp(cmdName, testName), 0);
     printf("TestCmdExecutor cmdIndex 0x%04x, name %s \n", cmdIndex, cmdName);
+    ASSERT_NE(GetPluginCmdNameByIndex(cmdIndex), nullptr);
 
     // exec
     g_cmdExecId = -1;
@@ -72,9 +74,10 @@ HWTEST_F(ModuleMgrUnitTest, PluginAddCmd, TestSize.Level1)
     g_cmdExecId = -1;
     PluginExecCmdByCmdIndex(cmdIndex, cmdContent);
     ASSERT_EQ(cmdExecId1, g_cmdExecId);
-    const char *argv[] = {"test"};
+    const char *argv[] = {"test.value"};
     PluginExecCmd("install", 1, argv);
     PluginExecCmd("uninstall", 1, argv);
+    PluginExecCmd("setloglevel", 1, argv);
 
     // del
     RemoveCmdExecutor("testCmd4", cmdExecId4);
@@ -86,6 +89,8 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
     int cnt;
 
     // Create module manager
+    ASSERT_EQ(ModuleMgrCreate(nullptr), nullptr);
+    ModuleMgrDestroy(nullptr);
     MODULE_MGR *moduleMgr = ModuleMgrCreate("init");
     ASSERT_NE(moduleMgr, nullptr);
     cnt = ModuleMgrGetCnt(moduleMgr);
@@ -99,6 +104,7 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
 
     // Uninstall the module
     ModuleMgrUninstall(moduleMgr, "bootchart");
+    InitModuleMgrUnInstall("bootchart");
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 0);
 
@@ -123,6 +129,15 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
     ModuleMgrDestroy(moduleMgr);
 
     // Scan all modules
+    ModuleMgrScan(nullptr);
+
+    // test updater mode
+    int fd = open("/bin/updater", O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,  S_IRWXU);
+    ASSERT_NE(fd, 0);
+    ModuleMgrScan("init/autorun");
+    unlink("/bin/updater");
+    close(fd);
+
     moduleMgr = ModuleMgrScan("init/autorun");
     ASSERT_NE(moduleMgr, nullptr);
     cnt = ModuleMgrGetCnt(moduleMgr);
@@ -152,7 +167,9 @@ HWTEST_F(ModuleMgrUnitTest, ModuleTraversalTest, TestSize.Level1)
     ASSERT_EQ(ret, 0);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 1);
+    ModuleMgrTraversal(nullptr, nullptr, nullptr);
     ModuleMgrTraversal(moduleMgr, NULL, TestModuleDump);
+    InitModuleMgrDump();
     ModuleMgrDestroy(moduleMgr);
 }
 
@@ -164,6 +181,7 @@ HWTEST_F(ModuleMgrUnitTest, ModuleScanTest, TestSize.Level1)
     int cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_GE(cnt, 1);
 
+    ModuleMgrUninstall(nullptr, nullptr);
     ModuleMgrUninstall(moduleMgr, NULL);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 0);
@@ -172,8 +190,10 @@ HWTEST_F(ModuleMgrUnitTest, ModuleScanTest, TestSize.Level1)
     // scan /lib/init/
     moduleMgr = ModuleMgrScan("/lib/init");
     ASSERT_NE(moduleMgr, nullptr);
+    ModuleMgrGetCnt(nullptr);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_GE(cnt, 1);
     ModuleMgrDestroy(moduleMgr);
+    EXPECT_EQ(InitModuleMgrInstall(nullptr), -1);
 }
 }  // namespace init_ut

@@ -73,7 +73,6 @@ if (defined(ohos_lite)) {
       "STARTUP_INIT_TEST",
       "PARAM_SUPPORT_DAC",
       "USE_MBEDTLS",
-      "STARTUP_INIT_UT_PATH =\"/userdata/init_ut\"",
     ]
     if (storage_type == "emmc") {
       defines += [ "USE_EMMC_STORAGE" ]
@@ -115,9 +114,15 @@ if (defined(ohos_lite)) {
     sources += param_common_sources
     sources += base_sources
     deps = [ "//third_party/bounds_checking_function:libsec_static" ]
+    if (enable_ohos_startup_init_feature_begetctl_liteos) {
+      defines += [ "LITEOS_SUPPORT" ]
+    }
 
     if (ohos_kernel_type == "liteos_a") {
-      defines += [ "__LITEOS_A__" ]
+      defines += [
+        "__LITEOS_A__",
+        "STARTUP_INIT_UT_PATH =\"/userdata/init_ut\"",
+      ]
       include_dirs += [
         "//kernel/liteos_a/syscall",
         "//base/startup/init/interfaces/kits/syscap",
@@ -168,7 +173,10 @@ if (defined(ohos_lite)) {
     }
 
     if (ohos_kernel_type == "liteos_m") {
-      defines += [ "__LITEOS_M__" ]
+      defines += [
+        "__LITEOS_M__",
+        "STARTUP_INIT_UT_PATH =\"/\"",
+      ]
       sources += [
         "//base/startup/init/services/param/liteos/param_client.c",
         "//base/startup/init/services/param/liteos/param_hal.c",
@@ -199,7 +207,10 @@ if (defined(ohos_lite)) {
       ]
     }
     if (ohos_kernel_type == "linux") {
-      defines += [ "__LINUX__" ]
+      defines += [
+        "__LINUX__",
+        "STARTUP_INIT_UT_PATH =\"/data/init_ut\"",
+      ]
 
       sources += init_common_sources
       sources += [

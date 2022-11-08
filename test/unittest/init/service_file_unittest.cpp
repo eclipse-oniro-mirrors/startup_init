@@ -62,7 +62,29 @@ HWTEST_F(ServiceFileUnitTest, TestServiceFile, TestSize.Level1)
     fileOpt->fd = 100; // 100 is fd
     CreateServiceFile(fileOpt);
     CloseServiceFile(fileOpt);
+    if (strncpy_s(fileOpt->fileName, strlen(fileName) + 1, "/dev/filetest", strlen("/dev/filetest")) != 0) {
+        free(fileOpt);
+        fileOpt = nullptr;
+        FAIL();
+    }
+    char *wrongName = (char *)malloc(PATH_MAX);
+    ASSERT_NE(wrongName, nullptr);
+    EXPECT_EQ(memset_s(wrongName, PATH_MAX, 1, PATH_MAX), 0);
+    ret = GetControlFile(wrongName);
+    EXPECT_NE(ret, 0);
+    GetControlFile("notExist");
+    GetControlFile(nullptr);
+    EXPECT_EQ(setenv("OHOS_FILE_ENV_PREFIX_testPath", "5", 0), 0);
+    GetControlFile("testPath");
+    EXPECT_EQ(setenv("OHOS_FILE_ENV_PREFIX_testPath1", "aaaaaaaa", 0), 0);
+    GetControlFile("testPath1");
+
+    fileOpt->fd = -1;
+    CreateServiceFile(fileOpt);
+    CloseServiceFile(fileOpt);
     free(fileOpt);
+    free(wrongName);
     fileOpt = nullptr;
+    wrongName = nullptr;
 }
 }

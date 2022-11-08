@@ -54,7 +54,14 @@ public:
     WatcherProxyUnitTest() {}
     virtual ~WatcherProxyUnitTest() {}
 
-    void SetUp() {}
+    void SetUp()
+    {
+        if (GetParamSecurityLabel() != nullptr) {
+            GetParamSecurityLabel()->cred.uid = 0;
+            GetParamSecurityLabel()->cred.gid = 0;
+        }
+        SetTestPermissionResult(0);
+    }
     void TearDown() {}
     void TestBody() {}
 
@@ -112,8 +119,24 @@ public:
         data.WriteString(keyPrefix);
         data.WriteUint32(watcherId);
         watcherManager->OnRemoteRequest(IWatcherManager::ADD_WATCHER, data, reply, option);
-        int ret = reply.ReadInt32();
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(reply.ReadInt32(), 0);
+        EXPECT_EQ(watcherManager->GetWatcherGroup(keyPrefix) != nullptr, 1);
+        return 0;
+    }
+
+    int TestRefreshWatcher(const std::string &keyPrefix, uint32_t watcherId)
+    {
+        WatcherManagerPtr watcherManager = GetWatcherManager();
+        WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to create manager");
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
+        data.WriteString(keyPrefix);
+        data.WriteUint32(watcherId);
+        watcherManager->OnRemoteRequest(IWatcherManager::REFRESH_WATCHER, data, reply, option);
+        EXPECT_EQ(reply.ReadInt32(), 0);
         EXPECT_EQ(watcherManager->GetWatcherGroup(keyPrefix) != nullptr, 1);
         return 0;
     }
@@ -205,7 +228,9 @@ public:
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
         data.WriteString(keyPrefix);
+        data.WriteUint32(0);
         watcherManager->OnRemoteRequest(IWatcherManager::REFRESH_WATCHER + 1, data, reply, option);
 
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
@@ -219,20 +244,21 @@ public:
         WatcherManagerPtr watcherManager = GetWatcherManager();
         WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to get manager");
         watcherManager->OnStop();
+        watcherManager->Clear();
         return 0;
     }
 
     WatcherManagerPtr GetWatcherManager()
     {
-        static WatcherManagerPtr watcherManager = nullptr;
-        if (watcherManager == nullptr) {
-            watcherManager = new WatcherManager(0, true);
-            if (watcherManager == nullptr) {
+        static WatcherManagerPtr watcherManager_ = nullptr;
+        if (watcherManager_ == nullptr) {
+            watcherManager_ = new WatcherManager(0, true);
+            if (watcherManager_ == nullptr) {
                 return nullptr;
             }
-            watcherManager->OnStart();
+            watcherManager_->OnStart();
         }
-        return watcherManager;
+        return watcherManager_;
     }
 };
 
@@ -242,6 +268,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher, TestSize.Level0)
     uint32_t watcherId = 0;
     test.TestAddRemoteWatcher(1000, watcherId); // 1000 test agent
     test.TestAddWatcher("test.permission.watcher.test1", watcherId);
+    test.TestRefreshWatcher("test.permission.watcher.test1", watcherId);
     test.TestProcessWatcherMessage("test.permission.watcher.test1", watcherId);
     test.TestWatchAgentDump("test.permission.watcher.test1");
 }
@@ -254,6 +281,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher2, TestSize.Level0)
     test.TestAddWatcher("test.permission.watcher.test2", watcherId);
     test.TestAddWatcher("test.permission.watcher.test2", watcherId);
     test.TestAddWatcher("test.permission.watcher.test2", watcherId);
+    test.TestRefreshWatcher("test.permission.watcher.test2", watcherId);
     test.TestWatchAgentDump("test.permission.watcher.test2");
 }
 
@@ -271,8 +299,8 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher4, TestSize.Level0)
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
     test.TestAddRemoteWatcher(1004, watcherId); // 1004 test agent
-    SystemSetParameter("test.watcher.test4", "1101");
-    SystemSetParameter("test.watcher.test4.test", "1102");
+    SystemWriteParam("test.watcher.test4", "1101");
+    SystemWriteParam("test.watcher.test4.test", "1102");
     test.TestAddWatcher("test.watcher.test4*", watcherId);
     test.TestWatchAgentDump("test.watcher.test4*");
 }
@@ -283,7 +311,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher5, TestSize.Level0)
     uint32_t watcherId = 0;
     test.TestAddRemoteWatcher(1005, watcherId); // 1005 test agent
     test.TestAddWatcher("test.permission.watcher.test5", watcherId);
-    SystemSetParameter("test.permission.watcher.test5", "1101");
+    SystemWriteParam("test.permission.watcher.test5", "1101");
     test.TestWatchAgentDump("test.permission.watcher.test5");
 }
 
@@ -309,6 +337,16 @@ HWTEST_F(WatcherProxyUnitTest, TestDiedWatcher, TestSize.Level0)
     test.TestWatchAgentDump("test.permission.watcher.testdied");
 }
 
+HWTEST_F(WatcherProxyUnitTest, TestSendLocalChange, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(2006, watcherId); // 2006 test agent
+    test.TestAddWatcher("test.watcher*", watcherId);
+    test.TestAddWatcher("test.watcher.", watcherId);
+    test.TestWatchAgentDump("test.watcher.");
+}
+
 HWTEST_F(WatcherProxyUnitTest, TestWatchProxy, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
@@ -324,5 +362,8 @@ HWTEST_F(WatcherProxyUnitTest, TestInvalid, TestSize.Level0)
 HWTEST_F(WatcherProxyUnitTest, TestStop, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(1007, watcherId); // 1005 test agent
+    test.TestAddWatcher("test.permission.watcher.stop", watcherId);
     test.TestStop();
 }
