@@ -21,6 +21,7 @@
 #include "param_security.h"
 #include "param_utils.h"
 #include "init_group_manager.h"
+#include "init_module_engine.h"
 #include "beget_ext.h"
 #ifdef PARAM_LOAD_CFG_FROM_CODE
 #include "param_cfg.h"
@@ -419,6 +420,7 @@ void PrepareInitUnitTestEnv(void)
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/vendor/etc/param", LOAD_PARAM_NORMAL);
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/system/etc/param", LOAD_PARAM_ONLY_ADD);
+    LoadParamsFile(STARTUP_INIT_UT_PATH "/system/etc/param", true);
     LoadParamFromCfg();
 
     // for test int get
