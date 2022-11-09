@@ -165,7 +165,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
 {
     InitServiceSpace();
     InitWorkspace *workspace = GetInitWorkspace();
-    EXPECT_EQ(workspace->groupMode, GROUP_CHARGE);
+    EXPECT_EQ(workspace->groupMode, GROUP_BOOT);
     workspace->groupMode = GROUP_BOOT;
     if (strcpy_s(workspace->groupModeStr, GROUP_NAME_MAX_LENGTH, "device.boot.group") != EOK) {
         EXPECT_EQ(1, 0);
@@ -338,10 +338,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestParseServiceCpucore, TestSize.Level1)
     }
     cJSON_Delete(jobItem);
 }
-HWTEST_F(InitGroupManagerUnitTest, TestNodeFree, TestSize.Level1)
-{
-    DoCmdByName("stopAllServices ", "");
-}
+
 HWTEST_F(InitGroupManagerUnitTest, TestUpdaterServiceFds, TestSize.Level1)
 {
     Service *service = AddService("test_service8");
@@ -369,5 +366,19 @@ HWTEST_F(InitGroupManagerUnitTest, TestProcessWatchEvent, TestSize.Level1)
     ASSERT_EQ(ret, 0);
     uint32_t event;
     ((WatcherTask *)watcher)->processEvent((WatcherHandle)watcher, 0, &event, service);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, TestCheckNodeValid, TestSize.Level1)
+{
+    int ret = CheckNodeValid(NODE_TYPE_MAX, "charger");
+    EXPECT_EQ(ret, -1);
+    ret = CheckNodeValid(NODE_TYPE_PLUGINS, "charger");
+    EXPECT_EQ(ret, -1);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, TestGetGroupHashMap, TestSize.Level1)
+{
+    HashMapHandle handle = GetGroupHashMap(NODE_TYPE_GROUPS);
+    EXPECT_TRUE(handle == nullptr);
 }
 }  // namespace init_ut

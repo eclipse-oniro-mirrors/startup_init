@@ -244,7 +244,9 @@ void CloseServiceSocket(Service *service)
             sockopt->sockFd = -1;
         }
         if (GetSocketAddr(&addr, sockopt->name) == 0) {
+#ifndef STARTUP_INIT_TEST
             unlink(addr.sun_path);
+#endif
         }
         sockopt = sockopt->next;
     }

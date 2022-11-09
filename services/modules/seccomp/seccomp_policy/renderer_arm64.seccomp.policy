@@ -131,6 +131,13 @@ getrandom
 statx
 prlimit64
 sched_setscheduler
+setitimer
+execve
+sched_getscheduler
+fstatfs
+setsid
+rt_tgsigqueueinfo
+ptrace
 
 @allowListWithArgs
 getrusage:if arg0 == RUSAGE_SELF || arg0 == RUSAGE_THREAD; return ALLOW; else return KILL_PROCESS;

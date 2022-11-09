@@ -29,10 +29,10 @@ shared_relro:x:1037:
 audio:x:1041:
 cameraserver:x:1047:
 uiserver:x:1048:
-servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr
+servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr,foundation
 powerctrl:x:1051:root,shell,system,update,power_host
 bootctrl:x:1052:root,shell,system
-deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,useriam,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,edm
+deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,useriam,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm
 hiview:x:1201:
 hidumper_service:x:1212:
 shell:x:2000:
@@ -120,3 +120,4 @@ ispserver:x:3821:
 dfs_share:x:3822:
 appspawn:x:4000:
 security_guard:x:3520:
+dsserver:x:3068:

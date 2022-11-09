@@ -38,7 +38,10 @@ public:
 
     int TestSelinuxInitLocalLabel()
     {
-        int ret = RegisterSecuritySelinuxOps(&initParamSercurityOps, LABEL_INIT_FOR_INIT);
+        int ret = RegisterSecuritySelinuxOps(nullptr, 0);
+        EXPECT_NE(ret, 0);
+
+        ret = RegisterSecuritySelinuxOps(&initParamSercurityOps, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
 
         if (initParamSercurityOps.securityInitLabel == nullptr || initParamSercurityOps.securityFreeLabel == nullptr) {
