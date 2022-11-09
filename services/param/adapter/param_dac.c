@@ -129,6 +129,9 @@ static int LoadOneParam_(const uint32_t *context, const char *name, const char *
     auditData.name = name;
     int ret = GetParamDacData(&auditData.dacData, value);
     PARAM_CHECK(ret == 0, return -1, "Failed to get param info %d %s", ret, name);
+    if (INVALID_UID(auditData.dacData.gid) || INVALID_UID(auditData.dacData.uid)) {
+        PARAM_LOGW("Invalid dac for '%s' gid %d uid %d", name, auditData.dacData.gid, auditData.dacData.uid);
+    }
     AddSecurityLabel(&auditData);
     return 0;
 }
@@ -266,6 +269,9 @@ static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const cha
     if (ret != DAC_RESULT_PERMISSION) {
         PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%o", name, srcLabel->cred.gid, srcLabel->cred.uid, localMode);
         PARAM_LOGW("Cfg label %d gid:%d uid:%d mode 0%o ", labelIndex, node->gid, node->uid, node->mode);
+#ifndef __MUSL__
+        ret = DAC_RESULT_PERMISSION;
+#endif
     }
     return ret;
 }
