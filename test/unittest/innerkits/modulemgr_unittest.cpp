@@ -97,7 +97,11 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
     ASSERT_EQ(cnt, 0);
 
     // Install one module
+#ifdef SUPPORT_64BIT
+    ret = ModuleMgrInstall(moduleMgr, "/system/lib64/init/libbootchart", 0, NULL);
+#else
     ret = ModuleMgrInstall(moduleMgr, "/system/lib/init/libbootchart", 0, NULL);
+#endif
     ASSERT_EQ(ret, 0);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 1);
@@ -128,26 +132,12 @@ HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
 
     ModuleMgrDestroy(moduleMgr);
 
-    // Scan all modules
-    ModuleMgrScan(nullptr);
-
     // test updater mode
     int fd = open("/bin/updater", O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,  S_IRWXU);
     ASSERT_NE(fd, 0);
     ModuleMgrScan("init/autorun");
     unlink("/bin/updater");
     close(fd);
-
-    moduleMgr = ModuleMgrScan("init/autorun");
-    ASSERT_NE(moduleMgr, nullptr);
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_GE(cnt, 0);
-
-    ModuleMgrUninstall(moduleMgr, NULL);
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_EQ(cnt, 0);
-    ModuleMgrGetArgs();
-    ModuleMgrDestroy(moduleMgr);
 }
 
 static void TestModuleDump(const MODULE_INFO *moduleInfo)
@@ -170,6 +160,20 @@ HWTEST_F(ModuleMgrUnitTest, ModuleTraversalTest, TestSize.Level1)
     ModuleMgrTraversal(nullptr, nullptr, nullptr);
     ModuleMgrTraversal(moduleMgr, NULL, TestModuleDump);
     InitModuleMgrDump();
+
+    // Scan all modules
+    ModuleMgrScan(nullptr);
+
+    moduleMgr = ModuleMgrScan("init/autorun");
+    ASSERT_NE(moduleMgr, nullptr);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_GE(cnt, 0);
+
+    ModuleMgrUninstall(moduleMgr, NULL);
+    cnt = ModuleMgrGetCnt(moduleMgr);
+    ASSERT_EQ(cnt, 0);
+
+    ModuleMgrGetArgs();
     ModuleMgrDestroy(moduleMgr);
 }
 
@@ -188,7 +192,11 @@ HWTEST_F(ModuleMgrUnitTest, ModuleScanTest, TestSize.Level1)
     ModuleMgrDestroy(moduleMgr);
 
     // scan /lib/init/
+#ifdef SUPPORT_64BIT
+    moduleMgr = ModuleMgrScan("/lib64/init");
+#else
     moduleMgr = ModuleMgrScan("/lib/init");
+#endif
     ASSERT_NE(moduleMgr, nullptr);
     ModuleMgrGetCnt(nullptr);
     cnt = ModuleMgrGetCnt(moduleMgr);
