@@ -138,6 +138,7 @@ fstatfs
 setsid
 rt_tgsigqueueinfo
 ptrace
+membarrier
 
 @allowListWithArgs
 getrusage:if arg0 == RUSAGE_SELF || arg0 == RUSAGE_THREAD; return ALLOW; else return KILL_PROCESS;
