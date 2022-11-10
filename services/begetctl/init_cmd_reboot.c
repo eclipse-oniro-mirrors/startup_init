@@ -26,22 +26,6 @@ static int main_cmd(BShellHandle shell, int argc, char* argv[])
         BShellCmdHelp(shell, argc, argv);
         return 0;
     }
-
-    if (argc == REBOOT_CMD_NUMBER && strcmp(argv[1], "shutdown") != 0 &&
-        strcmp(argv[1], "updater") != 0 &&
-        strcmp(argv[1], "suspend") != 0 &&
-        strcmp(argv[1], "flashd") != 0 &&
-#ifdef INIT_TEST
-        strcmp(argv[1], "charge") != 0 &&
-#endif
-#ifdef PRODUCT_RK
-        strcmp(argv[1], "loader") != 0 &&
-#endif
-        strncmp(argv[1], "updater:", strlen("updater:")) != 0 &&
-        strncmp(argv[1], "flashd:", strlen("flashd:")) != 0) {
-        BShellCmdHelp(shell, argc, argv);
-        return 0;
-    }
     int ret;
     if (argc == REBOOT_CMD_NUMBER) {
         ret = DoReboot(argv[1]);
@@ -53,9 +37,11 @@ static int main_cmd(BShellHandle shell, int argc, char* argv[])
     } else {
         printf("[reboot command] DoReboot Api return ok\n");
     }
+#ifndef STARTUP_INIT_TEST
     while (1) {
         pause();
     }
+#endif
     return 0;
 }
 
@@ -69,12 +55,7 @@ MODULE_CONSTRUCTOR(void)
         {"reboot", main_cmd, "reboot and boot into updater", "reboot updater[:options]", ""},
         {"reboot", main_cmd, "reboot and boot into flashd", "reboot flashd", ""},
         {"reboot", main_cmd, "reboot and boot into flashd", "reboot flashd[:options]", ""},
-#ifdef INIT_TEST
         {"reboot", main_cmd, "reboot and boot into charge", "reboot charge", ""},
-#endif
-#ifdef PRODUCT_RK
-        {"reboot", main_cmd, "reboot loader", "reboot loader", ""}
-#endif
     };
     for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {
         BShellEnvRegisterCmd(GetShellHandle(), &infos[i - 1]);

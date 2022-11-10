@@ -326,6 +326,7 @@ HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
     SystemWriteParam("bootevent.bootevent2", "true");
     SystemWriteParam("persist.init.bootevent.enable", "false");
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, NULL, NULL);
+    CloseTriggerWorkSpace();
     cJSON_Delete(fileRoot);
 }
 

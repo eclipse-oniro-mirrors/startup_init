@@ -50,8 +50,10 @@ int UeventdSocketInit(void)
 
     if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         INIT_LOGE("Bind socket failed, err = %d", errno);
+#ifndef STARTUP_INIT_TEST
         close(sockfd);
         return -1;
+#endif
     }
     return sockfd;
 }
