@@ -23,6 +23,8 @@ extern "C" {
 #endif
 #endif
 
+typedef uint32_t ParamHandle;
+
 typedef struct {
     uint8_t updaterMode;
     void (*logFunc)(int logLevel, uint32_t domain, const char *tag, const char *fmt, va_list vargs);
@@ -45,6 +47,31 @@ int SystemReadParam(const char *name, char *value, uint32_t *len);
  * parameter client初始化接口 供服务调用
  */
 void InitParameterClient(void);
+
+/**
+ * 对外接口
+ * 查询参数，主要用于其他进程使用，找到对应属性的handle。
+ *
+ */
+int SystemFindParameter(const char *name, ParamHandle *handle);
+
+/**
+ * 对外接口
+ * 根据handle获取对应数据的修改标识。
+ * commitId 获取计数变化
+ *
+ */
+int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId);
+
+/**
+ * 外部接口
+ * 获取参数值。
+ *
+ */
+int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len);
+
+long long GetSystemCommitId(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
