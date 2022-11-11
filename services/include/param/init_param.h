@@ -36,8 +36,6 @@ extern "C" {
 #define PARAM_NAME_LEN_MAX  96
 #endif
 
-typedef uint32_t ParamHandle;
-
 typedef enum {
     PARAM_CODE_ERROR = -1,
     PARAM_CODE_SUCCESS = 0,
@@ -167,21 +165,6 @@ int SystemSetParameter(const char *name, const char *value);
 #define SystemGetParameter SystemReadParam
 
 /**
- * 对外接口
- * 查询参数，主要用于其他进程使用，找到对应属性的handle。
- *
- */
-int SystemFindParameter(const char *name, ParamHandle *handle);
-
-/**
- * 对外接口
- * 根据handle获取对应数据的修改标识。
- * commitId 获取计数变化
- *
- */
-int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId);
-
-/**
  * 外部接口
  * 遍历参数。
  *
@@ -200,13 +183,6 @@ int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len);
 
 /**
  * 外部接口
- * 获取参数值。
- *
- */
-int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len);
-
-/**
- * 外部接口
  * 等待某个参数值被修改，阻塞直到参数值被修改或超时
  *
  */
@@ -216,7 +192,6 @@ typedef void (*ParameterChangePtr)(const char *key, const char *value, void *con
 int SystemWatchParameter(const char *keyprefix, ParameterChangePtr change, void *context);
 
 int SystemCheckParamExist(const char *name);
-long long GetSystemCommitId(void);
 
 void SystemDumpParameters(int verbose, int (*dump)(const char *fmt, ...));
 

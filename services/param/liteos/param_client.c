@@ -113,13 +113,3 @@ int SystemCheckParamExist(const char *name)
 {
     return SysCheckParamExist(name);
 }
-
-int SystemFindParameter(const char *name, ParamHandle *handle)
-{
-    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
-    int ret = ReadParamWithCheck(name, DAC_READ, handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
-    }
-    return ret;
-}
