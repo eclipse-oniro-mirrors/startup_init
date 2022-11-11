@@ -107,18 +107,8 @@ if (defined(ohos_lite)) {
     }
 
     symlink_target_name = [
-      "misc_daemon",
       "reboot",
-      "devctl",
-      "service",
       "service_control",
-      "start_service",
-      "stop_service",
-      "service",
-      "sandbox",
-      "dump_service",
-      "setloglevel",
-      "getloglevel",
     ]
 
     if (enable_ohos_startup_init_feature_ab_partition) {
@@ -128,7 +118,6 @@ if (defined(ohos_lite)) {
         "drivers_interface_partitionslot:libpartitionslot_proxy_1.0",
         "hdf_core:libhdi",
       ]
-      symlink_target_name += [ "partitionslot" ]
     }
 
     install_images = [ "system" ]
