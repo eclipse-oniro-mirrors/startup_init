@@ -33,7 +33,7 @@
 
 static BootchartCtrl *g_bootchartCtrl = NULL;
 
-static long long GetJiffies(void)
+BOOTCHART_STATIC long long GetJiffies(void)
 {
     struct timespec time1 = {0};
     clock_gettime(CLOCK_MONOTONIC, &time1);
@@ -63,7 +63,7 @@ char *ReadFileToBuffer(const char *fileName, char *buffer, uint32_t bufferSize)
     return (readLen > 0) ? buffer : NULL;
 }
 
-static void BootchartLogHeader(void)
+BOOTCHART_STATIC void BootchartLogHeader(void)
 {
     char date[32]; // 32 data size
     time_t tm = time(NULL);
@@ -97,7 +97,7 @@ static void BootchartLogHeader(void)
     (void)fclose(file);
 }
 
-static void BootchartLogFile(FILE *log, const char *procfile)
+BOOTCHART_STATIC void BootchartLogFile(FILE *log, const char *procfile)
 {
     (void)fprintf(log, "%lld\n", GetJiffies());
     char *data = ReadFileToBuffer(procfile, g_bootchartCtrl->buffer, g_bootchartCtrl->bufferSize);
@@ -106,7 +106,7 @@ static void BootchartLogFile(FILE *log, const char *procfile)
     }
 }
 
-static void BootchartLogProcessStat(FILE *log, pid_t pid)
+BOOTCHART_STATIC void BootchartLogProcessStat(FILE *log, pid_t pid)
 {
     static char path[255] = { }; // 255 path length
     static char nameBuffer[255] = { }; // 255 path length
@@ -143,7 +143,7 @@ static void BootchartLogProcessStat(FILE *log, pid_t pid)
     }
 }
 
-static void bootchartLogProcess(FILE *log)
+BOOTCHART_STATIC void bootchartLogProcess(FILE *log)
 {
     (void)fprintf(log, "%lld\n", GetJiffies());
     DIR *pDir = opendir("/proc");
@@ -160,7 +160,7 @@ static void bootchartLogProcess(FILE *log)
     (void)fputc('\n', log);
 }
 
-static void *BootchartThreadMain(void *data)
+BOOTCHART_STATIC void *BootchartThreadMain(void *data)
 {
     PLUGIN_LOGI("bootcharting start");
     FILE *statFile = fopen(BOOTCHART_OUTPUT_PATH"proc_stat.log", "w");
@@ -210,7 +210,7 @@ static void *BootchartThreadMain(void *data)
     return NULL;
 }
 
-static void BootchartDestory(void)
+BOOTCHART_STATIC void BootchartDestory(void)
 {
     pthread_mutex_destroy(&(g_bootchartCtrl->mutex));
     pthread_cond_destroy(&(g_bootchartCtrl->cond));
@@ -218,7 +218,7 @@ static void BootchartDestory(void)
     g_bootchartCtrl = NULL;
 }
 
-static int DoBootchartStart(void)
+BOOTCHART_STATIC int DoBootchartStart(void)
 {
     if (g_bootchartCtrl != NULL) {
         PLUGIN_LOGI("bootcharting has been start");
@@ -247,7 +247,7 @@ static int DoBootchartStart(void)
     return 0;
 }
 
-static int DoBootchartStop(void)
+BOOTCHART_STATIC int DoBootchartStop(void)
 {
     if (g_bootchartCtrl == NULL || !g_bootchartCtrl->start) {
         PLUGIN_LOGI("bootcharting not start");
@@ -263,7 +263,7 @@ static int DoBootchartStop(void)
     return 0;
 }
 
-static int DoBootchartCmd(int id, const char *name, int argc, const char **argv)
+BOOTCHART_STATIC int DoBootchartCmd(int id, const char *name, int argc, const char **argv)
 {
     PLUGIN_LOGI("DoBootchartCmd argc %d %s", argc, name);
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
@@ -276,7 +276,7 @@ static int DoBootchartCmd(int id, const char *name, int argc, const char **argv)
 }
 
 static int32_t g_executorId = -1;
-static int BootchartInit(void)
+BOOTCHART_STATIC int BootchartInit(void)
 {
     if (g_executorId == -1) {
         g_executorId = AddCmdExecutor("bootchart", DoBootchartCmd);
@@ -285,7 +285,7 @@ static int BootchartInit(void)
     return 0;
 }
 
-static void BootchartExit(void)
+BOOTCHART_STATIC void BootchartExit(void)
 {
     PLUGIN_LOGI("BootchartExit executorId %d", g_executorId);
     if (g_executorId != -1) {

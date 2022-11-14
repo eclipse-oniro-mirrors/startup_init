@@ -49,7 +49,7 @@ static int BuildClientSocket(void)
     return sockFd;
 }
 
-static int BuildSendData(char *buffer, size_t size, const char *serviceName, bool hold, bool poll)
+STATIC int BuildSendData(char *buffer, size_t size, const char *serviceName, bool hold, bool poll)
 {
     if (buffer == NULL || size == 0 || serviceName == 0) {
         return -1;

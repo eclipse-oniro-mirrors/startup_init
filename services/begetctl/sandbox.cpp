@@ -47,14 +47,13 @@ static void Usage()
     std::cout << "sandbox -n, --namespace_name=namespace name \"namespace name, system, chipset etc.\"" << std::endl;
     std::cout << "sandbox -p, --process=process name \"sh, hdcd, hdf_devhost, etc.\"" << std::endl;
     std::cout << "sandbox -h, --help \"Show help\"" << std::endl;
+#ifndef STARTUP_INIT_TEST
     exit(0);
+#endif
 }
 
 static void RunSandbox(const std::string &sandboxName)
 {
-    if (sandboxName.empty()) {
-        return;
-    }
     InitDefaultNamespace();
     if (!InitSandboxWithName(sandboxName.c_str())) {
         std::cout << "Init sandbox failed." << std::endl;
@@ -85,10 +84,6 @@ static void EnterShell()
 static const int MAX_PROCESS_ARGC = 8;
 static void EnterExec(const std::string &processName)
 {
-    if (processName.empty()) {
-        std::cout << "process name is nullptr." << std::endl;
-        return;
-    }
     std::string tmpName = processName;
     std::vector<std::string> vtr;
     const std::string sep = " ";

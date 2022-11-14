@@ -16,6 +16,11 @@
 #ifndef BASE_STARTUP_INITLITE_UEVENTD_H
 #define BASE_STARTUP_INITLITE_UEVENTD_H
 #include <unistd.h>
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
 
 // Refer to linux kernel kobject.h
 typedef enum ACTION {
@@ -71,4 +76,9 @@ void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *ueven
 void RetriggerUevent(int sockFd, char **devices, int num);
 void ProcessUevent(int sockFd, char **devices, int num);
 
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
 #endif // BASE_STARTUP_INITLITE_UEVENTD_H

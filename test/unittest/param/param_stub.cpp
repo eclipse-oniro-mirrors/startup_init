@@ -186,7 +186,7 @@ static void PrepareUeventdcfg(void)
         "[device]\n"
         "/dev/testbinder3 0666 1000 1000 const.dev.binder\n";
     mkdir("/data/ueventd_ut", S_IRWXU | S_IRWXG | S_IRWXO);
-    CreateTestFile("/data/ueventd_ut/valid.config", ueventdcfg);
+    CreateTestFile(STARTUP_INIT_UT_PATH"/ueventd_ut/valid.config", ueventdcfg);
 }
 static void PrepareModCfg(void)
 {

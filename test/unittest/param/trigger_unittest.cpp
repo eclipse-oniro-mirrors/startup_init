@@ -601,5 +601,4 @@ HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger6, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestDumpTrigger();
-    CloseTriggerWorkSpace();
 }

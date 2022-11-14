@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 #ifndef INIT_LOG_PATH
-#define INIT_LOG_PATH "/data/init_agent/"
+#define INIT_LOG_PATH STARTUP_INIT_UT_PATH"/data/init_agent/"
 #endif
 
 #if defined(__GNUC__) && (__GNUC__ >= 4)
@@ -47,7 +47,13 @@ typedef enum InitLogLevel {
     INIT_FATAL
 } InitLogLevel;
 
+#if (defined(STARTUP_INIT_TEST) || defined(APPSPAWN_TEST))
+#define FILE_NAME   (strrchr((__FILE__), '/')  + 1)
+#define STATIC
+#else
 #define FILE_NAME   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
+#define STATIC static
+#endif
 
 INIT_PUBLIC_API void StartupLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
 INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level);
