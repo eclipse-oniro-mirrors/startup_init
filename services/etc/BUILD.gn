@@ -238,7 +238,6 @@ if (defined(ohos_lite)) {
       ":syscap.para",
       ":system-sandbox.json",
       ":systemcapability.json",
-      ":ueventd.cfg",
     ]
   }
 }
