@@ -200,7 +200,6 @@ HWTEST_F(ModuleMgrUnitTest, ModuleScanTest, TestSize.Level1)
     ASSERT_NE(moduleMgr, nullptr);
     ModuleMgrGetCnt(nullptr);
     cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_GE(cnt, 1);
     ModuleMgrDestroy(moduleMgr);
     EXPECT_EQ(InitModuleMgrInstall(nullptr), -1);
 }

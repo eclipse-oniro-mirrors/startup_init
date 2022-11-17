@@ -475,8 +475,7 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
 
     char deviceNode[DEVICE_FILE_SIZE] = {};
     char sysPath[SYSPATH_SIZE] = {};
-    if ((uevent->syspath == NULL) ||
-        strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath)) != EOK) {
+    if (strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath)) != EOK) {
         INIT_LOGE("Failed to copy sys path");
         return;
     }
