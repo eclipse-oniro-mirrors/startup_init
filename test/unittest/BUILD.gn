@@ -17,8 +17,6 @@ config("utest_config") {
   visibility = [ ":*" ]
 
   cflags = [
-    "-fprofile-arcs",
-    "-ftest-coverage",
     "-Wno-implicit-fallthrough",
     "-Wno-unused-function",
   ]
@@ -26,7 +24,6 @@ config("utest_config") {
     "-Wno-implicit-fallthrough",
     "-fexceptions",
   ]
-  ldflags = [ "--coverage" ]
 }
 
 FSCRYPT_PATH =
