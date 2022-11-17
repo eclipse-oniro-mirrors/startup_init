@@ -142,10 +142,19 @@ if (defined(ohos_lite)) {
 
       # add cfg.h
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
+        PRODUCT_HAL_SYSPARAM_PATH =
+            rebase_path("//${ohos_product_adapter_dir}/utils/sys_param")
+        cmd = "if [ -f ${PRODUCT_HAL_SYSPARAM_PATH}/BUILD.gn ]; then echo true; else echo false; fi"
+        PRODUCT_HAL_SYSPARAM_EXISTS =
+            exec_script("//build/lite/run_shell_cmd.py", [ cmd ], "value")
+        if (PRODUCT_HAL_SYSPARAM_EXISTS) {
+          deps += [ "$ohos_product_adapter_dir/utils/sys_param:hal_sysparam" ]
+        }
         deps += [
-          "$ohos_product_adapter_dir/utils/sys_param:hal_sysparam",
-          "//base/startup/init/services/param/liteos:lite_ohos_param_to",
+          "//base/startup/init/interfaces/hals/utils/sys_param:hal_sys_param",
         ]
+        deps +=
+            [ "//base/startup/init/services/param/liteos:lite_ohos_param_to" ]
         include_dirs += [ "$root_out_dir/gen/init" ]
         defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
       }
