@@ -29,10 +29,10 @@ shared_relro:x:1037:
 audio:x:1041:
 cameraserver:x:1047:
 uiserver:x:1048:
-servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr
+servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr,foundation
 powerctrl:x:1051:root,shell,system,update,power_host,charger,foundation
 bootctrl:x:1052:root,shell,system
-deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,useriam,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,dsserver
+deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,useriam,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm
 hiview:x:1201:
 hidumper_service:x:1212:
 shell:x:2000:
@@ -43,7 +43,6 @@ readproc:x:3009:
 wakelock:x:3010:
 uhid:x:3011:
 ddms:x:3012:
-dlp_permission:x:3019:
 access_token:x:3020:
 blue_host:x:3021:
 sample_host:x:3022:
@@ -52,6 +51,7 @@ usbfnMaster_host:x:3024:
 power_host:x:3025:
 wifi_host:x:3026:
 audio_hdi_server_host:x:3027:
+audio_host:x:3127:
 camera_host:x:3028:
 input_user_host:x:3029:
 display_gralloc_host:x:3030:
@@ -84,6 +84,7 @@ deviceauth:x:3333:
 huks_server:x:3510:
 cert_manager_server:x:3515:
 dlp_credential:x:3553:
+dlp_permission:x:3019:
 dms:x:5522:
 foundation:x:5523:
 quickfixserver:x:5524:
