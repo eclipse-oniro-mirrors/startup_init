@@ -120,5 +120,5 @@ ispserver:x:3821:
 dfs_share:x:3822:
 appspawn:x:4000:
 security_guard:x:3520:
-dsserver:x:3068:
 tee:x:6668:
+dsserver:x:3068:
