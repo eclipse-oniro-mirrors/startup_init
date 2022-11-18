@@ -286,3 +286,40 @@ INIT_LOCAL_API int AddWorkSpace(const char *name, int onlyRead, uint32_t spaceSi
     PARAM_LOGV("AddWorkSpace %s %s", name, ret == 0 ? "success" : "fail");
     return ret;
 }
+
+int SystemFindParameter(const char *name, ParamHandle *handle)
+{
+    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
+    int ret = ReadParamWithCheck(name, DAC_READ, handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
+        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
+    }
+    return ret;
+}
+
+int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId)
+{
+    PARAM_CHECK(handle != 0 && commitId != NULL, return -1, "The handle is null");
+
+    ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
+    if (entry == NULL) {
+        return PARAM_CODE_NOT_FOUND;
+    }
+    *commitId = ReadCommitId(entry);
+    return 0;
+}
+
+long long GetSystemCommitId(void)
+{
+    WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
+    if (space == NULL || space->area == NULL) {
+        return 0;
+    }
+    return ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_acquire);
+}
+
+int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
+{
+    PARAM_CHECK(len != NULL && handle != 0, return -1, "The value is null");
+    return ReadParamValue(handle, value, len);
+}

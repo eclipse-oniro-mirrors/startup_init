@@ -32,6 +32,8 @@ extern "C" {
 #endif
 #endif
 
+#define DEFAULT_ERROR (-65535)
+
 #ifndef PARAM_SUPPORT_SELINUX
 typedef struct ParameterNode {
     const char *paraName;
@@ -49,6 +51,7 @@ typedef struct SrcInfo {
 } SrcInfo;
 #endif
 
+void CreateTestFile(const char *fileName, const char *data);
 void PrepareInitUnitTestEnv(void);
 void TestSetSelinuxOps(void);
 void SetTestPermissionResult(int result);
@@ -56,6 +59,14 @@ void TestSetParamCheckResult(const char *prefix, uint16_t mode, int result);
 int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
 int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel);
 
+typedef enum {
+    STUB_SPRINTF,
+    STUB_MOUNT,
+    STUB_MKNODE,
+    STUB_MAX
+} STUB_TYPE;
+void SetStubResult(STUB_TYPE type, int result);
+void PrepareCmdLineData();
 #ifdef __cplusplus
 #if __cplusplus
 }

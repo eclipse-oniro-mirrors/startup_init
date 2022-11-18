@@ -192,6 +192,11 @@ static int ProcessParamFile(const char *fileName, void *context)
     return LoadDefaultParam_(fileName, mode, exclude, ARRAY_LENGTH(exclude), LoadOneParam_);
 }
 
+int LoadParamsFile(const char *fileName, bool onlyAdd)
+{
+    return LoadDefaultParams(fileName, onlyAdd ? LOAD_PARAM_ONLY_ADD : LOAD_PARAM_NORMAL);
+}
+
 int LoadDefaultParams(const char *fileName, uint32_t mode)
 {
     PARAM_CHECK(fileName != NULL, return -1, "Invalid filename for load");

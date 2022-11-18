@@ -209,7 +209,6 @@ if (defined(ohos_lite)) {
       ":syscap.json",
       ":syscap.para",
       ":systemcapability.json",
-      ":ueventd.cfg",
     ]
   }
 }

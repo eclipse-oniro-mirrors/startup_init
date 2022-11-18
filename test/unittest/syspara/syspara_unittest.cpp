@@ -303,6 +303,7 @@ HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)
 HWTEST_F(SysparaUnitTest, parameterTest0014, TestSize.Level0)
 {
     const std::string key1 = "test.int.get";
+    OHOS::system::SetParameter(std::string("testKey"), std::string("testValue"));
     int v = OHOS::system::GetIntParameter(key1, 0);
     EXPECT_EQ(v, -TEST_VALUE);
     int8_t v1 = OHOS::system::GetIntParameter(key1, 0, -127, 128); // -127, 128 range

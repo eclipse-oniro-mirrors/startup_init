@@ -27,6 +27,7 @@
 #include "system_ability_definition.h"
 #include "watcher.h"
 #include "watcher_manager_kits.h"
+#include "watcher_manager_proxy.h"
 #include "service_watcher.h"
 
 using namespace testing::ext;
@@ -62,6 +63,31 @@ public:
     void TearDown() {}
     void TestBody() {}
 
+    int TestAddWatcher0(size_t index)
+    {
+        int ret = 0;
+        // has beed deleted
+        ret = RemoveParameterWatcher("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
+        EXPECT_NE(ret, 0);
+
+        // delete all
+        ret = SystemWatchParameter("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
+        EXPECT_EQ(ret, 0);
+        index++;
+        ret = SystemWatchParameter("test.permission.watcher.test1",
+            TestParameterChange, reinterpret_cast<void *>(index));
+        EXPECT_EQ(ret, 0);
+        ret = RemoveParameterWatcher("test.permission.watcher.test1", nullptr, nullptr);
+        EXPECT_EQ(ret, 0);
+        // 非法
+        ret = SystemWatchParameter("test.permission.watcher.tes^^^^t1*", TestParameterChange, nullptr);
+        EXPECT_NE(ret, 0);
+        ret = SystemWatchParameter("test.permission.read.test1*", TestParameterChange, nullptr);
+        EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
+        return ret;
+    }
     int TestAddWatcher()
     {
         size_t index = 1;
@@ -88,7 +114,6 @@ public:
         ret = RemoveParameterWatcher("test.permission.watcher.test1",
             TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
-        index--;
         ret = RemoveParameterWatcher("test.permission.watcher.test1",
             TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
@@ -96,17 +121,11 @@ public:
         ret = RemoveParameterWatcher("test.permission.watcher.test1",
             TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
-        // has beed deleted
+        index--;
         ret = RemoveParameterWatcher("test.permission.watcher.test1",
             TestParameterChange, reinterpret_cast<void *>(index));
-        EXPECT_NE(ret, 0);
-
-        // 非法
-        ret = SystemWatchParameter("test.permission.watcher.tes^^^^t1*", TestParameterChange, nullptr);
-        EXPECT_NE(ret, 0);
-        ret = SystemWatchParameter("test.permission.read.test1*", TestParameterChange, nullptr);
-        EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
-        return 0;
+        EXPECT_EQ(ret, 0);
+        return TestAddWatcher0(index);
     }
 
     int TestDelWatcher()
@@ -158,6 +177,9 @@ public:
             EXPECT_EQ(g_callbackCount, 3);
             instance.remoteWatcher_->OnParameterChange(name.c_str(), "testname.2", "testvalue");
             EXPECT_EQ(g_callbackCount, 3);
+
+            // prefix not exit
+            instance.remoteWatcher_->OnParameterChange("44444444444444444444", "testname.2", "testvalue");
         }
         EXPECT_EQ(g_callbackCount, 3);
         return 0;
@@ -174,6 +196,55 @@ public:
             instance.GetDeathRecipient()->OnRemoteDied(object);
         }
         return 0;
+    }
+
+    void TestWatcherProxy()
+    {
+        sptr<WatcherManagerProxy> watcherManager = new(std::nothrow) WatcherManagerProxy(nullptr);
+        ASSERT_NE(watcherManager, nullptr);
+
+        WatcherManagerKits &instance = OHOS::init_param::WatcherManagerKits::GetInstance();
+        sptr<Watcher> remoteWatcher = new OHOS::init_param::WatcherManagerKits::RemoteWatcher(&instance);
+        ASSERT_NE(remoteWatcher, nullptr);
+
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        data.WriteInterfaceToken(IWatcher::GetDescriptor());
+        data.WriteString("name");
+        data.WriteString("name");
+        data.WriteString("watcherId");
+        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
+
+        // invalid parameter
+        data.WriteInterfaceToken(IWatcher::GetDescriptor());
+        data.WriteString("name");
+        data.WriteString("watcherId");
+        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
+
+        data.WriteInterfaceToken(IWatcher::GetDescriptor());
+        data.WriteString("name");
+        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
+
+        data.WriteInterfaceToken(IWatcher::GetDescriptor());
+        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
+
+        data.WriteInterfaceToken(IWatcher::GetDescriptor());
+        data.WriteString("name");
+        data.WriteString("name");
+        data.WriteString("watcherId");
+        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE + 1, data, reply, option);
+        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE + 1, data, reply, option);
+
+        uint32_t watcherId = watcherManager->AddRemoteWatcher(1000, remoteWatcher);
+        // add watcher
+        int ret = watcherManager->AddWatcher("test.watcher.proxy", watcherId);
+        ASSERT_EQ(ret, 0);
+        ret = watcherManager->DelWatcher("test.watcher.proxy", watcherId);
+        ASSERT_EQ(ret, 0);
+        ret = watcherManager->RefreshWatcher("test.watcher.proxy", watcherId);
+        ASSERT_EQ(ret, 0);
+        watcherManager->DelRemoteWatcher(watcherId);
     }
 };
 
@@ -209,4 +280,19 @@ HWTEST_F(WatcherAgentUnitTest, TestWatcherService, TestSize.Level0)
     EXPECT_EQ(ServiceWatchForStatus(errstr, TestWatcherCallBack), -1);
     EXPECT_EQ(ServiceWatchForStatus(NULL, TestWatcherCallBack), -1);
     WatchParameter("testParam", nullptr, nullptr);
+    WatchParameter(nullptr, nullptr, nullptr);
+}
+
+HWTEST_F(WatcherAgentUnitTest, TestInvalidWatcher, TestSize.Level0)
+{
+    int ret = SystemWatchParameter(nullptr, TestParameterChange, nullptr);
+    ASSERT_NE(ret, 0);
+    ret = RemoveParameterWatcher(nullptr, nullptr, nullptr);
+    ASSERT_NE(ret, 0);
+}
+
+HWTEST_F(WatcherAgentUnitTest, TestWatcherProxy, TestSize.Level0)
+{
+    WatcherAgentUnitTest test;
+    test.TestWatcherProxy();
 }

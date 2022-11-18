@@ -22,6 +22,7 @@
 #include "trigger_manager.h"
 #include "init_group_manager.h"
 #include "init_cmdexecutor.h"
+#include "reboot_adp.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -37,7 +38,7 @@ public:
 
 #ifndef OHOS_LITE
 static int g_result = 0;
-HWTEST_F(InitRebootUnitTest, TestAddRebootCmd, TestSize.Level1)
+HWTEST_F(InitRebootUnitTest, TestAddRebootCmdExt, TestSize.Level1)
 {
     auto rebootCallback = [](int id, const char *name, int argc, const char **argv) -> int {
         return 0;
@@ -86,6 +87,18 @@ HWTEST_F(InitRebootUnitTest, TestAddRebootCmd, TestSize.Level1)
     ret = AddRebootCmdExecutor(nullptr, nullptr);
     EXPECT_NE(ret, 0);
 }
+
+HWTEST_F(InitRebootUnitTest, TestAddRebootCmdNormal, TestSize.Level1)
+{
+    SystemWriteParam("ohos.startup.powerctrl", "reboot");
+    SystemWriteParam("ohos.startup.powerctrl", "reboot,shutdown");
+    SystemWriteParam("ohos.startup.powerctrl", "reboot,suspend");
+    SystemWriteParam("ohos.startup.powerctrl", "reboot,charge");
+    SystemWriteParam("ohos.startup.powerctrl", "reboot,updater");
+    SystemWriteParam("ohos.startup.powerctrl", "reboot,updater:2222222");
+    SystemWriteParam("ohos.startup.powerctrl", "reboot,flashd");
+    SystemWriteParam("ohos.startup.powerctrl", "reboot,flashd:1000000");
+}
 #endif
 
 HWTEST_F(InitRebootUnitTest, TestInitReboot, TestSize.Level1)
@@ -107,6 +120,12 @@ HWTEST_F(InitRebootUnitTest, TestInitReboot, TestSize.Level1)
     EXPECT_EQ(ret, 0);
     ret = DoReboot(DEVICE_CMD_FREEZE);
     EXPECT_EQ(ret, 0);
-    clearMisc();
+
+    ret = UpdateMiscMessage("charge:wwwwwwwwwww", "charge", "charge:", "boot_charge");
+    if (ret == 0) {
+        ret = GetBootModeFromMisc();
+        EXPECT_EQ(ret, GROUP_CHARGE);
+        clearMisc();
+    }
 }
 } // namespace init_ut

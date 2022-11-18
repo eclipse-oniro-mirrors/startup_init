@@ -15,6 +15,8 @@
 #include <string>
 #include <iostream>
 #include <gtest/gtest.h>
+
+#include "accesstoken_kit.h"
 #include "parameter.h"
 #include "system_ability_definition.h"
 #include "if_system_ability_manager.h"
@@ -22,16 +24,36 @@
 #include "parcel.h"
 #include "string_ex.h"
 #include "device_info_kits.h"
+#include "device_info_load.h"
+#include "device_info_proxy.h"
 #include "idevice_info.h"
 #include "device_info_stub.h"
+#include "sysparam_errno.h"
+
 using namespace testing::ext;
 using namespace std;
 using namespace OHOS;
-using namespace OHOS::device_info;
+
+int g_tokenType = OHOS::Security::AccessToken::TOKEN_HAP;
+int g_tokenVerifyResult = 0;
+namespace OHOS {
+namespace Security {
+namespace AccessToken {
+ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
+{
+    return static_cast<ATokenTypeEnum>(g_tokenType);
+}
+int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& permissionName)
+{
+    return g_tokenVerifyResult;
+}
+} // namespace AccessToken
+} // namespace Security
+} // namespace OHOS
 
 const int UDID_LEN = 65;
 namespace init_ut {
-using DeviceInfoServicePtr = DeviceInfoService *;
+using DeviceInfoServicePtr = OHOS::device_info::DeviceInfoService *;
 class DeviceInfoUnittest : public testing::Test {
 public:
     DeviceInfoUnittest() {};
@@ -45,7 +67,7 @@ public:
     {
         static DeviceInfoServicePtr deviceInfoServicePtr = nullptr;
         if (deviceInfoServicePtr == nullptr) {
-            deviceInfoServicePtr = new DeviceInfoService(0, true);
+            deviceInfoServicePtr = new OHOS::device_info::DeviceInfoService(0, true);
             if (deviceInfoServicePtr == nullptr) {
                 return nullptr;
             }
@@ -55,19 +77,28 @@ public:
     }
 };
 
-HWTEST_F(DeviceInfoUnittest, GetDevUdidTest, TestSize.Level1)
+HWTEST_F(DeviceInfoUnittest, DevInfoAgentTest, TestSize.Level1)
 {
-    char localDeviceId[UDID_LEN] = {0};
-    AclGetDevUdid(localDeviceId, UDID_LEN);
-    const char *serialNumber = AclGetSerial();
-    EXPECT_NE(nullptr, serialNumber);
-
-    sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    ASSERT_NE(nullptr, samgr);
-    sptr<IRemoteObject> object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
-    ASSERT_NE(nullptr, samgr);
+    OHOS::device_info::DeviceInfoKits &kits = OHOS::device_info::DeviceInfoKits::GetInstance();
+    std::string serial = {};
+    int ret = kits.GetSerialID(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetUdid(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
 }
-HWTEST_F(DeviceInfoUnittest, StubTest, TestSize.Level1)
+
+HWTEST_F(DeviceInfoUnittest, DevInfoAgentFail, TestSize.Level1)
+{
+    sptr<OHOS::device_info::DeviceInfoLoad> deviceInfoLoad = new (std::nothrow) OHOS::device_info::DeviceInfoLoad();
+    ASSERT_NE(deviceInfoLoad, nullptr);
+    deviceInfoLoad->OnLoadSystemAbilityFail(SYSPARAM_DEVICE_SERVICE_ID);
+    deviceInfoLoad->OnLoadSystemAbilityFail(SYSPARAM_DEVICE_SERVICE_ID + 1);
+
+    OHOS::device_info::DeviceInfoKits &kits = OHOS::device_info::DeviceInfoKits::GetInstance();
+    kits.FinishStartSAFailed();
+}
+
+HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceInvalidTokenTest, TestSize.Level1)
 {
     string result;
     DeviceInfoServicePtr deviceInfoService = GetDeviceInfoService();
@@ -75,13 +106,98 @@ HWTEST_F(DeviceInfoUnittest, StubTest, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(DeviceInfoStub::GetDescriptor());
-    deviceInfoService->OnRemoteRequest(IDeviceInfo::COMMAND_GET_UDID, data, reply, option);
-    data.WriteInterfaceToken(DeviceInfoStub::GetDescriptor());
-    deviceInfoService->OnRemoteRequest(IDeviceInfo::COMMAND_GET_SERIAL_ID, data, reply, option);
+    g_tokenType = OHOS::Security::AccessToken::TOKEN_INVALID;
+    data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
+    deviceInfoService->OnRemoteRequest(OHOS::device_info::IDeviceInfo::COMMAND_GET_UDID, data, reply, option);
+}
+
+HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceFailTest, TestSize.Level1)
+{
+    string result;
+    DeviceInfoServicePtr deviceInfoService = GetDeviceInfoService();
+    ASSERT_NE(deviceInfoService, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    g_tokenType = OHOS::Security::AccessToken::TOKEN_HAP;
+    g_tokenVerifyResult = OHOS::Security::AccessToken::TypePermissionState::PERMISSION_DENIED;
+
+    // udid
+    data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
+    deviceInfoService->OnRemoteRequest(OHOS::device_info::IDeviceInfo::COMMAND_GET_UDID, data, reply, option);
+    // serial
+    data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
+    deviceInfoService->OnRemoteRequest(OHOS::device_info::IDeviceInfo::COMMAND_GET_SERIAL_ID, data, reply, option);
+}
+
+HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceTest, TestSize.Level1)
+{
+    string result;
+    DeviceInfoServicePtr deviceInfoService = GetDeviceInfoService();
+    ASSERT_NE(deviceInfoService, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    g_tokenType = OHOS::Security::AccessToken::TOKEN_HAP;
+    g_tokenVerifyResult = OHOS::Security::AccessToken::TypePermissionState::PERMISSION_GRANTED;
+    data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
+    deviceInfoService->OnRemoteRequest(OHOS::device_info::IDeviceInfo::COMMAND_GET_UDID, data, reply, option);
+    data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
+    deviceInfoService->OnRemoteRequest(OHOS::device_info::IDeviceInfo::COMMAND_GET_SERIAL_ID, data, reply, option);
+    data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
+    deviceInfoService->OnRemoteRequest(OHOS::device_info::IDeviceInfo::COMMAND_GET_SERIAL_ID + 1, data, reply, option);
+
+    deviceInfoService->OnRemoteRequest(OHOS::device_info::IDeviceInfo::COMMAND_GET_SERIAL_ID + 1, data, reply, option);
     deviceInfoService->GetUdid(result);
     deviceInfoService->GetSerialID(result);
     deviceInfoService->OnStop();
-    delete deviceInfoService;
+    std::vector<std::u16string> args = {};
+    deviceInfoService->Dump(STDOUT_FILENO, args);
+    deviceInfoService->Dump(-1, args);
+}
+
+HWTEST_F(DeviceInfoUnittest, TestInterface, TestSize.Level1)
+{
+    char localDeviceId[UDID_LEN] = {0};
+    int ret = AclGetDevUdid(nullptr, UDID_LEN);
+    ASSERT_NE(ret, 0);
+    ret = AclGetDevUdid(localDeviceId, 2); // 2 test
+    ASSERT_NE(ret, 0);
+
+    ret = AclGetDevUdid(localDeviceId, UDID_LEN);
+    const char *serialNumber = AclGetSerial();
+    EXPECT_NE(nullptr, serialNumber);
+}
+
+HWTEST_F(DeviceInfoUnittest, TestDeviceInfoProxy1, TestSize.Level1)
+{
+    auto remotePtr = device_info::DeviceInfoKits::GetInstance().GetService();
+    ASSERT_NE(remotePtr, nullptr);
+    auto remote = remotePtr->AsObject();
+    sptr<device_info::DeviceInfoProxy> proxy = new(std::nothrow) device_info::DeviceInfoProxy(remote);
+    ASSERT_NE(proxy, nullptr);
+
+    device_info::DeviceInfoKits::GetInstance().FinishStartSASuccess(proxy->AsObject());
+    std::string udid;
+    std::string serialId;
+    proxy->GetUdid(udid);
+    proxy->GetSerialID(serialId);
+
+    char localDeviceId[UDID_LEN] = {0};
+    int ret = AclGetDevUdid(localDeviceId, UDID_LEN);
+    ASSERT_NE(ret, 0);
+    const char *serialNumber = AclGetSerial();
+    EXPECT_NE(nullptr, serialNumber);
+}
+
+HWTEST_F(DeviceInfoUnittest, TestDeviceInfoProxy2, TestSize.Level1)
+{
+    sptr<device_info::DeviceInfoProxy> proxy = new(std::nothrow) device_info::DeviceInfoProxy(nullptr);
+    ASSERT_NE(proxy, nullptr);
+
+    std::string udid;
+    std::string serialId;
+    proxy->GetUdid(udid);
+    proxy->GetSerialID(serialId);
 }
 }  // namespace init_ut

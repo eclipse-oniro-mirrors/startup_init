@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -49,7 +49,6 @@ ohos_fuzztest("DoRebootFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "doreboot_fuzzer/doreboot_fuzzer.cpp" ]
-
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -74,7 +73,6 @@ ohos_fuzztest("GetControlFileFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "getcontrolfile_fuzzer/getcontrolfile_fuzzer.cpp" ]
-
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -100,13 +98,13 @@ ohos_fuzztest("GetControlSocketFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "getcontrolsocket_fuzzer/getcontrolsocket_fuzzer.cpp" ]
-
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("MountAllFstabFuzzTest") {
+ohos_fuzztest("MountAllWithFstabFileFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init/test/fuzztest/mountallfstab_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/MountAllWithFstabFile_fuzzer"
 
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
@@ -126,8 +124,7 @@ ohos_fuzztest("MountAllFstabFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "mountallfstab_fuzzer/mountallfstab_fuzzer.cpp" ]
-
+  sources = [ "MountAllWithFstabFile_fuzzer/MountAllWithFstabFile_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -153,7 +150,6 @@ ohos_fuzztest("ReadFileInDirFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "readfileindir_fuzzer/readfileindir_fuzzer.cpp" ]
-
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -176,7 +172,6 @@ ohos_fuzztest("ServiceControlStartFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "servicecontrolstart_fuzzer/servicecontrolstart_fuzzer.cpp" ]
-
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -199,7 +194,6 @@ ohos_fuzztest("ServiceControlStopFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "servicecontrolstop_fuzzer/servicecontrolstop_fuzzer.cpp" ]
-
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -227,14 +221,12 @@ ohos_fuzztest("SystemDumpParametersFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "systemdumpparameters_fuzzer/systemdumpparameters_fuzzer.cpp" ]
-
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemFindParameterFuzzTest") {
+ohos_fuzztest("FindParameterFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file =
-      "//base/startup/init/test/fuzztest/systemfindparameter_fuzzer"
+  fuzz_config_file = "//base/startup/init/test/fuzztest/FindParameter_fuzzer"
 
   include_dirs = [
     "//base/startup/init/services/include/param",
@@ -253,15 +245,13 @@ ohos_fuzztest("SystemFindParameterFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "systemfindparameter_fuzzer/systemfindparameter_fuzzer.cpp" ]
-
+  sources = [ "FindParameter_fuzzer/FindParameter_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemGetParameterFuzzTest") {
+ohos_fuzztest("GetParameterCFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file =
-      "//base/startup/init/test/fuzztest/systemgetparameter_fuzzer"
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetParameterC_fuzzer"
 
   include_dirs = [
     "//base/startup/init/services/include/param",
@@ -280,15 +270,14 @@ ohos_fuzztest("SystemGetParameterFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "systemgetparameter_fuzzer/systemgetparameter_fuzzer.cpp" ]
-
+  sources = [ "GetParameterC_fuzzer/GetParameterC_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemGetParameterCommitIdFuzzTest") {
+ohos_fuzztest("GetParameterCommitIdFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "//base/startup/init/test/fuzztest/systemgetparametercommitid_fuzzer"
+      "//base/startup/init/test/fuzztest/GetParameterCommitId_fuzzer"
 
   include_dirs = [
     "//base/startup/init/services/include/param",
@@ -307,17 +296,13 @@ ohos_fuzztest("SystemGetParameterCommitIdFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "systemgetparametercommitid_fuzzer/systemgetparametercommitid_fuzzer.cpp",
-  ]
-
+  sources = [ "GetParameterCommitId_fuzzer/GetParameterCommitId_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemGetParameterNameFuzzTest") {
+ohos_fuzztest("GetParameterNameFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file =
-      "//base/startup/init/test/fuzztest/systemgetparametername_fuzzer"
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetParameterName_fuzzer"
 
   include_dirs = [
     "//base/startup/init/services/include/param",
@@ -336,16 +321,15 @@ ohos_fuzztest("SystemGetParameterNameFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources =
-      [ "systemgetparametername_fuzzer/systemgetparametername_fuzzer.cpp" ]
+  sources = [ "GetParameterName_fuzzer/GetParameterName_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemGetParameterValueFuzzTest") {
+ohos_fuzztest("GetParameterValueFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "//base/startup/init/test/fuzztest/systemgetparametervalue_fuzzer"
+      "//base/startup/init/test/fuzztest/GetParameterValue_fuzzer"
 
   include_dirs = [
     "//base/startup/init/services/include/param",
@@ -364,16 +348,14 @@ ohos_fuzztest("SystemGetParameterValueFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources =
-      [ "systemgetparametervalue_fuzzer/systemgetparametervalue_fuzzer.cpp" ]
+  sources = [ "GetParameterValue_fuzzer/GetParameterValue_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemSetParameterFuzzTest") {
+ohos_fuzztest("SetParameterCFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file =
-      "//base/startup/init/test/fuzztest/systemsetparameter_fuzzer"
+  fuzz_config_file = "//base/startup/init/test/fuzztest/SetParameterC_fuzzer"
 
   include_dirs = [
     "//base/startup/init/services/include/param",
@@ -392,8 +374,7 @@ ohos_fuzztest("SystemSetParameterFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "systemsetparameter_fuzzer/systemsetparameter_fuzzer.cpp" ]
-
+  sources = [ "SetParameterC_fuzzer/SetParameterC_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -428,10 +409,9 @@ ohos_fuzztest("SystemTraversalParameterFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemWaitParameterFuzzTest") {
+ohos_fuzztest("WaitParameterFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file =
-      "//base/startup/init/test/fuzztest/systemwaitparameter_fuzzer"
+  fuzz_config_file = "//base/startup/init/test/fuzztest/WaitParameter_fuzzer"
 
   include_dirs = [
     "//base/startup/init/services/include/param",
@@ -450,17 +430,16 @@ ohos_fuzztest("SystemWaitParameterFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "systemwaitparameter_fuzzer/systemwaitparameter_fuzzer.cpp" ]
-
+  sources = [ "WaitParameter_fuzzer/WaitParameter_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemWatchParameterFuzzTest") {
+ohos_fuzztest("WatchParameterFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file =
-      "//base/startup/init/test/fuzztest/systemwatchparameter_fuzzer"
+  fuzz_config_file = "//base/startup/init/test/fuzztest/WatchParameter_fuzzer"
 
   include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include/syspara",
     "//base/startup/init/services/include/param",
     "//base/startup/init/services/init/include",
     "//base/startup/init/test/fuzztest/utils/include",
@@ -469,6 +448,7 @@ ohos_fuzztest("SystemWatchParameterFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
 
@@ -486,14 +466,14 @@ ohos_fuzztest("SystemWatchParameterFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "systemwatchparameter_fuzzer/systemwatchparameter_fuzzer.cpp" ]
-
+  sources = [ "WatchParameter_fuzzer/WatchParameter_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("UmountAllFstabFuzzTest") {
+ohos_fuzztest("UmountAllWithFstabFileFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init/test/fuzztest/umountallfstab_fuzzer"
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/UmountAllWithFstabFile_fuzzer"
 
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
@@ -513,35 +493,2465 @@ ohos_fuzztest("UmountAllFstabFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "umountallfstab_fuzzer/umountallfstab_fuzzer.cpp" ]
-
+  sources =
+      [ "UmountAllWithFstabFile_fuzzer/UmountAllWithFstabFile_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-###############################################################################
+ohos_fuzztest("CmdServiceProcessDelClientFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/CmdServiceProcessDelClient_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/control_fd",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/loopevent/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "CmdServiceProcessDelClient_fuzzer/CmdServiceProcessDelClient_fuzzer.cpp",
+  ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("CmdClientInitFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/CmdClientInit_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/control_fd",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/loopevent/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "CmdClientInit_fuzzer/CmdClientInit_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("CmdServiceInitFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/CmdServiceInit_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/control_fd",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/loopevent/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "CmdServiceInit_fuzzer/CmdServiceInit_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetIntParameterCFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetIntParameterC_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/include/param",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetIntParameterC_fuzzer/GetIntParameterC_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetUintParameterCFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetUintParameterC_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetUintParameterC_fuzzer/GetUintParameterC_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("RemoveParameterWatcherFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/RemoveParameterWatcher_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include/syspara",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "RemoveParameterWatcher_fuzzer/RemoveParameterWatcher_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("SetParameterCppFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/SetParameterCpp_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "SetParameterCpp_fuzzer/SetParameterCpp_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBoolParameterCppFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetBoolParameterCpp_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBoolParameterCpp_fuzzer/GetBoolParameterCpp_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetParameterCppFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetParameterCpp_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetParameterCpp_fuzzer/GetParameterCpp_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBlockDeviceByNameFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetBlockDeviceByName_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBlockDeviceByName_fuzzer/GetBlockDeviceByName_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBlockDeviceByMountPointFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetBlockDeviceByMountPoint_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "GetBlockDeviceByMountPoint_fuzzer/GetBlockDeviceByMountPoint_fuzzer.cpp",
+  ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("MountOneItemFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/MountOneItem_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "MountOneItem_fuzzer/MountOneItem_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetMountStatusForMountPointFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetMountStatusForMountPoint_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "GetMountStatusForMountPoint_fuzzer/GetMountStatusForMountPoint_fuzzer.cpp",
+  ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("MountAllWithFstabFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/MountAllWithFstab_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "MountAllWithFstab_fuzzer/MountAllWithFstab_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DoFormatFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/DoFormat_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "DoFormat_fuzzer/DoFormat_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("IsSupportedFilesystemFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/IsSupportedFilesystem_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "IsSupportedFilesystem_fuzzer/IsSupportedFilesystem_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ParseFstabPerLineFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/ParseFstabPerLine_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ParseFstabPerLine_fuzzer/ParseFstabPerLine_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("FindFstabItemForMountPointFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/FindFstabItemForMountPoint_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "FindFstabItemForMountPoint_fuzzer/FindFstabItemForMountPoint_fuzzer.cpp",
+  ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("FindFstabItemForPathFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/FindFstabItemForPath_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "FindFstabItemForPath_fuzzer/FindFstabItemForPath_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBlockDevicePathFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetBlockDevicePath_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBlockDevicePath_fuzzer/GetBlockDevicePath_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("LoadFscryptPolicyFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/LoadFscryptPolicy_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "LoadFscryptPolicy_fuzzer/LoadFscryptPolicy_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ReleaseFstabFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ReleaseFstab_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ReleaseFstab_fuzzer/ReleaseFstab_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ReadFstabFromFileFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/ReadFstabFromFile_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ReadFstabFromFile_fuzzer/ReadFstabFromFile_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetIntParameterCppFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetIntParameterCpp_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetIntParameterCpp_fuzzer/GetIntParameterCpp_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetStringParameterFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetStringParameter_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetStringParameter_fuzzer/GetStringParameter_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("HookMgrDelFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/HookMgrDel_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "HookMgrDel_fuzzer/HookMgrDel_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("HookMgrAddFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/HookMgrAdd_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "HookMgrAdd_fuzzer/HookMgrAdd_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("HookMgrExecuteFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/HookMgrExecute_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "HookMgrExecute_fuzzer/HookMgrExecute_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("HookMgrTraversalFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/HookMgrTraversal_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "HookMgrTraversal_fuzzer/HookMgrTraversal_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("HookMgrGetHooksCntFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/HookMgrGetHooksCnt_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "HookMgrGetHooksCnt_fuzzer/HookMgrGetHooksCnt_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("HookMgrGetStagesCntFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/HookMgrGetStagesCnt_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "HookMgrGetStagesCnt_fuzzer/HookMgrGetStagesCnt_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("HookMgrDestroyFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/HookMgrDestroy_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "HookMgrDestroy_fuzzer/HookMgrDestroy_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("HookMgrCreateFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/HookMgrCreate_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "HookMgrCreate_fuzzer/HookMgrCreate_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ModuleMgrTraversalFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/ModuleMgrTraversal_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ModuleMgrTraversal_fuzzer/ModuleMgrTraversal_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ModuleMgrGetCntFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ModuleMgrGetCnt_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ModuleMgrGetCnt_fuzzer/ModuleMgrGetCnt_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ModuleMgrUninstallFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/ModuleMgrUninstall_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ModuleMgrUninstall_fuzzer/ModuleMgrUninstall_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ModuleMgrScanFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ModuleMgrScan_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ModuleMgrScan_fuzzer/ModuleMgrScan_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ModuleMgrInstallFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ModuleMgrInstall_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ModuleMgrInstall_fuzzer/ModuleMgrInstall_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ModuleMgrDestroyFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ModuleMgrDestroy_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ModuleMgrDestroy_fuzzer/ModuleMgrDestroy_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ModuleMgrCreateFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ModuleMgrCreate_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ModuleMgrCreate_fuzzer/ModuleMgrCreate_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ServiceSaveFdFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ServiceSaveFd_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ServiceSaveFd_fuzzer/ServiceSaveFd_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ServiceSaveFdWithPollFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/ServiceSaveFdWithPoll_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ServiceSaveFdWithPoll_fuzzer/ServiceSaveFdWithPoll_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ServiceGetFdFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ServiceGetFd_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ServiceGetFd_fuzzer/ServiceGetFd_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ServiceControlWithExtraFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/ServiceControlWithExtra_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "ServiceControlWithExtra_fuzzer/ServiceControlWithExtra_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ServiceControlFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ServiceControl_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ServiceControl_fuzzer/ServiceControl_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ServiceWaitForStatusFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/ServiceWaitForStatus_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ServiceWaitForStatus_fuzzer/ServiceWaitForStatus_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ServiceSetReadyFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ServiceSetReady_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ServiceSetReady_fuzzer/ServiceSetReady_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("StartServiceByTimerFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/StartServiceByTimer_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "StartServiceByTimer_fuzzer/StartServiceByTimer_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("StopServiceTimerFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/StopServiceTimer_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "StopServiceTimer_fuzzer/StopServiceTimer_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ServiceWatchForStatusFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/ServiceWatchForStatus_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/include/param",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ServiceWatchForStatus_fuzzer/ServiceWatchForStatus_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("HasSystemCapabilityFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/HasSystemCapability_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "HasSystemCapability_fuzzer/HasSystemCapability_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("BuildControlMessageFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/BuildControlMessage_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "BuildControlMessage_fuzzer/BuildControlMessage_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ReceiveFdsFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ReceiveFds_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ReceiveFds_fuzzer/ReceiveFds_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("LoadFstabFromCommandLineFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/LoadFstabFromCommandLine_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "LoadFstabFromCommandLine_fuzzer/LoadFstabFromCommandLine_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBootSlotsFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetBootSlots_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBootSlots_fuzzer/GetBootSlots_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetCurrentSlotFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetCurrentSlot_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetCurrentSlot_fuzzer/GetCurrentSlot_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetSecurityPatchTagFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetSecurityPatchTag_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetSecurityPatchTag_fuzzer/GetSecurityPatchTag_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetOSFullNameFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetOSFullName_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetOSFullName_fuzzer/GetOSFullName_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetVersionIdFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetVersionId_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetVersionId_fuzzer/GetVersionId_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBuildRootHashFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetBuildRootHash_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBuildRootHash_fuzzer/GetBuildRootHash_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetOsReleaseTypeFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetOsReleaseType_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetOsReleaseType_fuzzer/GetOsReleaseType_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetSdkApiVersionFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetSdkApiVersion_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetSdkApiVersion_fuzzer/GetSdkApiVersion_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetDeviceTypeCFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetDeviceTypeC_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetDeviceTypeC_fuzzer/GetDeviceTypeC_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetProductModelFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetProductModel_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetProductModel_fuzzer/GetProductModel_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetManufactureFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetManufacture_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetManufacture_fuzzer/GetManufacture_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBrandFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetBrand_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBrand_fuzzer/GetBrand_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetMarketNameFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetMarketName_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetMarketName_fuzzer/GetMarketName_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetProductSeriesFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetProductSeries_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetProductSeries_fuzzer/GetProductSeries_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetSoftwareModelFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetSoftwareModel_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetSoftwareModel_fuzzer/GetSoftwareModel_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetHardwareModelFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetHardwareModel_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetHardwareModel_fuzzer/GetHardwareModel_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetHardwareProfileFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetHardwareProfile_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetHardwareProfile_fuzzer/GetHardwareProfile_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetSerialFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetSerial_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetSerial_fuzzer/GetSerial_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetAbiListFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetAbiList_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetAbiList_fuzzer/GetAbiList_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetDisplayVersionFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetDisplayVersion_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetDisplayVersion_fuzzer/GetDisplayVersion_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetIncrementalVersionFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetIncrementalVersion_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetIncrementalVersion_fuzzer/GetIncrementalVersion_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBootloaderVersionFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetBootloaderVersion_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBootloaderVersion_fuzzer/GetBootloaderVersion_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBuildTypeFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetBuildType_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBuildType_fuzzer/GetBuildType_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBuildUserFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetBuildUser_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBuildUser_fuzzer/GetBuildUser_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBuildHostFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetBuildHost_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBuildHost_fuzzer/GetBuildHost_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBuildTimeFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetBuildTime_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBuildTime_fuzzer/GetBuildTime_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetFirstApiVersionFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetFirstApiVersion_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetFirstApiVersion_fuzzer/GetFirstApiVersion_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("AclGetSerialFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/AclGetSerial_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "AclGetSerial_fuzzer/AclGetSerial_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetSystemCommitIdFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetSystemCommitId_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetSystemCommitId_fuzzer/GetSystemCommitId_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetDeviceTypeCppFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetDeviceTypeCpp_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetDeviceTypeCpp_fuzzer/GetDeviceTypeCpp_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetMajorVersionFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetMajorVersion_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetMajorVersion_fuzzer/GetMajorVersion_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetSeniorVersionFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetSeniorVersion_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetSeniorVersion_fuzzer/GetSeniorVersion_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetFeatureVersionFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/GetFeatureVersion_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetFeatureVersion_fuzzer/GetFeatureVersion_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetBuildVersionFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetBuildVersion_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetBuildVersion_fuzzer/GetBuildVersion_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("AclGetDevUdidFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/AclGetDevUdid_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "AclGetDevUdid_fuzzer/AclGetDevUdid_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetDevUdidFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/GetDevUdid_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "GetDevUdid_fuzzer/GetDevUdid_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+##############################################################################################
 group("fuzztest") {
   testonly = true
   deps = []
   deps += [
-    # deps file
-    ":DoRebootFuzzTest",
+    ":AclGetDevUdidFuzzTest",
+    ":AclGetSerialFuzzTest",
+    ":BuildControlMessageFuzzTest",
+    ":CmdClientInitFuzzTest",
+    ":CmdServiceProcessDelClientFuzzTest",
+    ":DoFormatFuzzTest",
+    ":FindFstabItemForMountPointFuzzTest",
+    ":FindFstabItemForPathFuzzTest",
+    ":FindParameterFuzzTest",
+    ":GetAbiListFuzzTest",
+    ":GetBlockDeviceByMountPointFuzzTest",
+    ":GetBlockDeviceByNameFuzzTest",
+    ":GetBlockDevicePathFuzzTest",
+    ":GetBoolParameterCppFuzzTest",
+    ":GetBootSlotsFuzzTest",
+    ":GetBootloaderVersionFuzzTest",
+    ":GetBrandFuzzTest",
+    ":GetBuildHostFuzzTest",
+    ":GetBuildRootHashFuzzTest",
+    ":GetBuildTimeFuzzTest",
+    ":GetBuildTypeFuzzTest",
+    ":GetBuildUserFuzzTest",
+    ":GetBuildVersionFuzzTest",
     ":GetControlFileFuzzTest",
     ":GetControlSocketFuzzTest",
-    ":MountAllFstabFuzzTest",
+    ":GetCurrentSlotFuzzTest",
+    ":GetDevUdidFuzzTest",
+    ":GetDeviceTypeCFuzzTest",
+    ":GetDeviceTypeCppFuzzTest",
+    ":GetDisplayVersionFuzzTest",
+    ":GetFeatureVersionFuzzTest",
+    ":GetFirstApiVersionFuzzTest",
+    ":GetHardwareModelFuzzTest",
+    ":GetHardwareProfileFuzzTest",
+    ":GetIncrementalVersionFuzzTest",
+    ":GetIntParameterCFuzzTest",
+    ":GetIntParameterCppFuzzTest",
+    ":GetMajorVersionFuzzTest",
+    ":GetManufactureFuzzTest",
+    ":GetMarketNameFuzzTest",
+    ":GetMountStatusForMountPointFuzzTest",
+    ":GetOSFullNameFuzzTest",
+    ":GetOsReleaseTypeFuzzTest",
+    ":GetParameterCFuzzTest",
+    ":GetParameterCommitIdFuzzTest",
+    ":GetParameterCppFuzzTest",
+    ":GetParameterNameFuzzTest",
+    ":GetParameterValueFuzzTest",
+    ":GetProductModelFuzzTest",
+    ":GetProductSeriesFuzzTest",
+    ":GetSdkApiVersionFuzzTest",
+    ":GetSecurityPatchTagFuzzTest",
+    ":GetSeniorVersionFuzzTest",
+    ":GetSerialFuzzTest",
+    ":GetSoftwareModelFuzzTest",
+    ":GetStringParameterFuzzTest",
+    ":GetSystemCommitIdFuzzTest",
+    ":GetUintParameterCFuzzTest",
+    ":GetVersionIdFuzzTest",
+    ":HasSystemCapabilityFuzzTest",
+    ":HookMgrAddFuzzTest",
+    ":HookMgrCreateFuzzTest",
+    ":HookMgrDelFuzzTest",
+    ":HookMgrDestroyFuzzTest",
+    ":HookMgrExecuteFuzzTest",
+    ":HookMgrGetHooksCntFuzzTest",
+    ":HookMgrGetStagesCntFuzzTest",
+    ":HookMgrTraversalFuzzTest",
+    ":IsSupportedFilesystemFuzzTest",
+    ":LoadFscryptPolicyFuzzTest",
+    ":LoadFstabFromCommandLineFuzzTest",
+    ":ModuleMgrCreateFuzzTest",
+    ":ModuleMgrDestroyFuzzTest",
+    ":ModuleMgrGetCntFuzzTest",
+    ":ModuleMgrInstallFuzzTest",
+    ":ModuleMgrScanFuzzTest",
+    ":ModuleMgrTraversalFuzzTest",
+    ":ModuleMgrUninstallFuzzTest",
+    ":MountAllWithFstabFileFuzzTest",
+    ":MountAllWithFstabFuzzTest",
+    ":MountOneItemFuzzTest",
+    ":ParseFstabPerLineFuzzTest",
     ":ReadFileInDirFuzzTest",
+    ":ReadFstabFromFileFuzzTest",
+    ":ReceiveFdsFuzzTest",
+    ":ReleaseFstabFuzzTest",
+    ":RemoveParameterWatcherFuzzTest",
+    ":ServiceControlFuzzTest",
     ":ServiceControlStartFuzzTest",
     ":ServiceControlStopFuzzTest",
+    ":ServiceControlWithExtraFuzzTest",
+    ":ServiceGetFdFuzzTest",
+    ":ServiceSaveFdFuzzTest",
+    ":ServiceSaveFdWithPollFuzzTest",
+    ":ServiceSetReadyFuzzTest",
+    ":ServiceWaitForStatusFuzzTest",
+    ":ServiceWatchForStatusFuzzTest",
+    ":SetParameterCFuzzTest",
+    ":SetParameterCppFuzzTest",
+    ":StartServiceByTimerFuzzTest",
+    ":StopServiceTimerFuzzTest",
     ":SystemDumpParametersFuzzTest",
-    ":SystemFindParameterFuzzTest",
-    ":SystemGetParameterCommitIdFuzzTest",
-    ":SystemGetParameterFuzzTest",
-    ":SystemGetParameterNameFuzzTest",
-    ":SystemGetParameterValueFuzzTest",
-    ":SystemSetParameterFuzzTest",
     ":SystemTraversalParameterFuzzTest",
-    ":SystemWaitParameterFuzzTest",
-    ":SystemWatchParameterFuzzTest",
-    ":UmountAllFstabFuzzTest",
+    ":UmountAllWithFstabFileFuzzTest",
+    ":WaitParameterFuzzTest",
+    ":WatchParameterFuzzTest",
   ]
 }
 ###############################################################################

@@ -299,7 +299,7 @@ static int GetServiceCtrlInfoForPowerCtrl(const char *name, const char *value, S
     }
     // not found reboot, so reboot by normal
     valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen("reboot") + 1;
-    return CreateCtrlInfo(ctrlInfo, "reboot", valueOffset, 1, "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, "reboot", value);
+    return CreateCtrlInfo(ctrlInfo, "reboot.other", valueOffset, 1, "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, "reboot", value);
 }
 
 INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, ServiceCtrlInfo **ctrlInfo)
@@ -376,35 +376,8 @@ INIT_LOCAL_API int CheckParameterSet(const char *name,
     return ret;
 }
 
-int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId)
-{
-    PARAM_CHECK(handle != 0 && commitId != NULL, return -1, "The handle is null");
-
-    ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
-    if (entry == NULL) {
-        return PARAM_CODE_NOT_FOUND;
-    }
-    *commitId = ReadCommitId(entry);
-    return 0;
-}
-
-long long GetSystemCommitId(void)
-{
-    WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
-    if (space == NULL || space->area == NULL) {
-        return 0;
-    }
-    return ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_acquire);
-}
-
 int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len)
 {
     PARAM_CHECK(name != NULL && handle != 0, return -1, "The name is null");
     return ReadParamName(handle, name, len);
-}
-
-int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
-{
-    PARAM_CHECK(len != NULL && handle != 0, return -1, "The value is null");
-    return ReadParamValue(handle, value, len);
 }
