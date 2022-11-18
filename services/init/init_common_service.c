@@ -470,7 +470,7 @@ static void CheckServiceSocket(Service *service)
             INIT_LOGE("Invalid socket %s for service", service->name);
             tmpSock = tmpSock->next;
         }
-        SocketAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
+        AddSocketWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
         tmpSock = tmpSock->next;
     }
     return;
