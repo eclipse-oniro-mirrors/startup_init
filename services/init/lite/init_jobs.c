@@ -52,7 +52,7 @@ static int GetJobName(const cJSON *jobItem, Job *resJob)
         return 0;
     }
 
-    if (memcpy_s(resJob->name, MAX_JOB_NAME_LEN, jobNameStr, strlen(jobNameStr)) != EOK) {
+    if (strcpy_s(resJob->name, MAX_JOB_NAME_LEN, jobNameStr, strlen(jobNameStr)) != EOK) {
         INIT_LOGE("Get job name \"%s\" failed", jobNameStr);
         return 0;
     }

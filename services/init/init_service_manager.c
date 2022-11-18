@@ -247,6 +247,9 @@ static int GetGid(cJSON *json, gid_t *gid, Service *curServ)
         *gid = DecodeGid(str);
     } else if (cJSON_IsNumber(json)) {
         *gid = (gid_t)cJSON_GetNumberValue(json);
+    } else {
+        INIT_LOGW("Service %s with invalid gid configuration", curServ->name);
+        *gid = -1; // Invalid gid, set as -1
     }
     INIT_ERROR_CHECK(*gid != (gid_t)(-1), return SERVICE_FAILURE, "Failed to get gid for %s", curServ->name);
     return SERVICE_SUCCESS;
@@ -320,7 +323,7 @@ static int ParseSocketFamily(cJSON *json, ServiceSocket *sockopt)
     char *stringValue = GetStringValue(json, "family", &strLen);
     INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), return SERVICE_FAILURE,
         "Failed to get string for family");
-    if (strncmp(stringValue, "AF_UNIX", strLen) == 0) {
+    if (strcmp(stringValue, "AF_UNIX") == 0) {
         sockopt->family = AF_UNIX;
     } else if (strncmp(stringValue, "AF_NETLINK", strLen) == 0) {
         sockopt->family = AF_NETLINK;
@@ -851,7 +854,7 @@ int ParseOneService(const cJSON *curItem, Service *service)
     ParseOneServiceArgs(curItem, service);
     ret = GetServiceSandbox(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get sandbox for service %s", service->name);
-    ret = GetServiceCaps(curItem, service);
+    ret = InitServiceCaps(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
     ret = GetServiceOnDemand(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get ondemand flag for service %s", service->name);

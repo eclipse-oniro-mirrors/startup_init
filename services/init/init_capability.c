@@ -84,7 +84,7 @@ static unsigned int GetCapByString(const char *capStr)
     return CAP_LAST_CAP + 1;
 }
 
-int GetServiceCaps(const cJSON *curArrItem, Service *service)
+int InitServiceCaps(const cJSON *curArrItem, Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "service is null ptr.");
     INIT_ERROR_CHECK(curArrItem != NULL, return SERVICE_FAILURE, "json is null ptr.");
@@ -116,6 +116,8 @@ int GetServiceCaps(const cJSON *curArrItem, Service *service)
                 break;
             }
             caps = GetCapByString(capStr);
+        } else {
+            caps = CAP_LAST_CAP + 1;
         }
         if ((caps > CAP_LAST_CAP) && (caps != (unsigned int)FULL_CAP)) {
             INIT_LOGE("service=%s not support caps = %s caps %d", service->name, capStr, caps);

@@ -68,7 +68,7 @@ static char *AddOneArg(const char *param, size_t paramLen)
         begin = strchr(begin + 1, '$');
     }
     size_t allocSize = paramLen + (PARAM_VALUE_LEN_MAX * valueCount) + 1;
-    char *arg = calloc(sizeof(char), allocSize);
+    char *arg = calloc(allocSize, sizeof(char));
     INIT_CHECK(arg != NULL, return NULL);
     int ret = GetParamValue(param, paramLen, arg, allocSize);
     INIT_ERROR_CHECK(ret == 0, free(arg);
@@ -104,6 +104,7 @@ char *BuildStringFromCmdArg(const struct CmdArgs *ctx, int startIndex)
 const struct CmdArgs *GetCmdArg(const char *cmdContent, const char *delim, int argsCount)
 {
     INIT_CHECK_RETURN_VALUE(cmdContent != NULL, NULL);
+    INIT_CHECK_RETURN_VALUE(delim != NULL, NULL);
     INIT_WARNING_CHECK(argsCount <= SPACES_CNT_IN_CMD_MAX, argsCount = SPACES_CNT_IN_CMD_MAX,
         "Too much arguments for command, max number is %d", SPACES_CNT_IN_CMD_MAX);
     struct CmdArgs *ctx = (struct CmdArgs *)calloc(1, sizeof(struct CmdArgs) + sizeof(char *) * (argsCount + 1));
@@ -427,7 +428,7 @@ static void DoMount(const struct CmdArgs *ctx)
     INIT_ERROR_CHECK(fileSysType != NULL, return, "Failed to get fileSysType.");
     index++;
 
-    char *source =  (ctx->argc > index) ? ctx->argv[index] : NULL;
+    char *source = (ctx->argc > index) ? ctx->argv[index] : NULL;
     INIT_ERROR_CHECK(source != NULL, return, "Failed to get source.");
     index++;
 
@@ -714,7 +715,7 @@ int GetCmdLinesFromJson(const cJSON *root, CmdLines **cmdLines)
     return 0;
 }
 
-long long  InitDiffTime(INIT_TIMING_STAT *stat)
+long long InitDiffTime(INIT_TIMING_STAT *stat)
 {
     long long diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000); // 1000000 1000ms
     if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {

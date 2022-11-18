@@ -556,8 +556,8 @@ void ServiceReap(Service *service)
 
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
 {
-    if (service == NULL) {
-        INIT_LOGE("Invalid service info");
+    if (service == NULL || fds == null) {
+        INIT_LOGE("Invalid service info or fds");
         return -1;
     }
 
