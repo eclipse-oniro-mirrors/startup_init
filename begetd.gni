@@ -25,5 +25,8 @@ declare_args() {
   enable_ohos_startup_init_feature_loader = false
   config_ohos_startup_init_lite_data_path = ""
 
+  # config memory size for liteos-m
+  config_ohos_startup_init_lite_memory_size = 5120
+
   # boot_kernel_extended_cmdline for extend cmdline
 }

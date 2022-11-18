@@ -139,6 +139,17 @@ if (defined(ohos_lite)) {
     module_install_dir = "etc/param/ohos_const"
   }
 
+  ohos_prebuilt_para("ohos.startup.para") {
+    source = "//base/startup/init/services/etc/param/ohos.startup.para"
+    install_images = [
+      "system",
+      "updater",
+    ]
+    part_name = "init"
+    subsystem_name = "startup"
+    module_install_dir = "etc/param"
+  }
+
   ohos_prebuilt_para("ohos.para.size") {
     source = "//base/startup/init/services/etc/param/ohos.para.size"
     install_images = [
@@ -226,6 +237,7 @@ if (defined(ohos_lite)) {
       ":ohos.para",
       ":ohos.para.dac",
       ":ohos.para.size",
+      ":ohos.startup.para",
       ":ohos_const.para",
       ":passwd",
       ":syscap.json",
