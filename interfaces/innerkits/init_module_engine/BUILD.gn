@@ -61,6 +61,7 @@ if (defined(ohos_lite)) {
     install_images = [
       "system",
       "updater",
+      "ramdisk",
     ]
     symlink_target_name = [ "libinit_module_engine.so" ]
   }
