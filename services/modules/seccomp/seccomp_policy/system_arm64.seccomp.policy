@@ -195,6 +195,10 @@ getegid
 gettid
 sysinfo
 semget
+shmget
+shmctl
+shmat
+shmdt
 socket
 socketpair
 bind
