@@ -214,6 +214,10 @@ getsockopt
 sendmsg
 recvmsg
 semget
+shmat
+shmdt
+shmget
+shmctl
 add_key
 keyctl
 inotify_add_watch
