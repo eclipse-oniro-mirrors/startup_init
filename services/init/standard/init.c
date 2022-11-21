@@ -370,6 +370,19 @@ INIT_STATIC void TriggerServices(int startMode)
     }
 }
 
+void ParseInitCfgByPriority(void)
+{
+    CfgFiles *files = GetCfgFiles("etc/init");
+    for (int i = 0; files && i < MAX_CFG_POLICY_DIRS_CNT; i++) {
+        if (files->paths[i]) {
+            if (ReadFileInDir(files->paths[i], ".cfg", ParseInitCfg, NULL) < 0) {
+                break;
+            }
+        }
+    }
+    FreeCfgFiles(files);
+}
+
 void SystemConfig(void)
 {
     INIT_TIMING_STAT timingStat;
