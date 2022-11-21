@@ -40,10 +40,12 @@ static void ProcessSignal(const struct signalfd_siginfo *siginfo)
                 if (WIFSIGNALED(procStat)) {
                     INIT_LOGE("Child process %s(pid %d) exit with signal : %d",
                         service == NULL ? "Unknown" : service->name, sigPID, WTERMSIG(procStat));
-                }
-                if (WIFEXITED(procStat)) {
+                } else if (WIFEXITED(procStat)) {
                     INIT_LOGE("Child process %s(pid %d) exit with code : %d",
                         service == NULL ? "Unknown" : service->name, sigPID, WEXITSTATUS(procStat));
+                } else {
+                    INIT_LOGE("Child process %s(pid %d) exit with invalid status : %d",
+                        service == NULL ? "Unknown" : service->name, sigPID, procStat);
                 }
                 CmdServiceProcessDelClient(sigPID);
                 INIT_LOGI("SigHandler, SIGCHLD received, Service:%s pid:%d uid:%d status:%d.",
