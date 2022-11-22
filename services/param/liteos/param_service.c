@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "init_log.h"
 #include "init_param.h"
 #include "init_utils.h"
 #include "param_manager.h"
@@ -137,7 +138,6 @@ void LiteParamService(void)
     InitParamService();
     // get persist param
     LoadPersistParams();
-
     osThreadAttr_t attr;
     attr.name = "ParamServiceTask";
     attr.attr_bits = 0U;

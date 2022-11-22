@@ -32,6 +32,7 @@
 #define CHECKER_LIB_NAME "/system/lib/libparaperm_checker.z.so"
 #define CHECKER_UPDATER_LIB_NAME "/lib/libparaperm_checker.z.so"
 #endif
+typedef int (*SelinuxSetParamCheck)(const char *paraName, const char *destContext, const SrcInfo *info);
 
 static int InitSelinuxOpsForInit(SelinuxSpace *selinuxSpace)
 {
@@ -202,7 +203,7 @@ static int SelinuxGetAllLabel(int readOnly)
     if (readOnly == 0) {
         SetSelinuxFileCon(WORKSPACE_NAME_DEF_SELINUX, WORKSPACE_NAME_DEF_SELINUX);
     }
-    PARAM_LOGI("SelinuxGetAllLabel count %d", count);
+    PARAM_LOGV("Selinux get all label counts %d.", count);
     return 0;
 }
 
@@ -215,19 +216,19 @@ static int SelinuxGetParamSecurityLabel(const char *path)
 static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char *fileName, int flags)
 {
     UNUSED(flags);
-    PARAM_CHECK(localLabel != NULL && fileName != NULL, return -1, "Invalid param");
+    UNUSED(localLabel);
+    UNUSED(fileName);
     return 0;
 }
 
 static const char *GetSelinuxContent(const char *name)
 {
     SelinuxSpace *selinuxSpace = &GetParamWorkSpace()->selinuxSpace;
+    const char *content = WORKSPACE_NAME_DEF_SELINUX;
     if (selinuxSpace->getParamLabel != NULL) {
-        return selinuxSpace->getParamLabel(name);
-    } else {
-        PARAM_LOGE("Can not init selinux");
-        return WORKSPACE_NAME_DEF_SELINUX;
+        content = selinuxSpace->getParamLabel(name);
     }
+    return content;
 }
 
 static int CheckContentPermission(const char *name, const char *label)
@@ -295,9 +296,15 @@ static int UpdaterCheckParamPermission(const ParamSecurityLabel *srcLabel, const
 
 static int OpenPermissionWorkSpace(const char *path)
 {
+    static int loadLabels = 0;
     UNUSED(path);
-    // open workspace by readonly
-    return SelinuxGetAllLabel(1);
+    int ret = 0;
+    if (loadLabels == 0) {
+        // open workspace by readonly
+        ret =  SelinuxGetAllLabel(1);
+    }
+    loadLabels = 1;
+    return ret;
 }
 
 INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)

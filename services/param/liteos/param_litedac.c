@@ -14,6 +14,7 @@
  */
 #include "param_osadp.h"
 #include "param_security.h"
+#include "securec.h"
 
 static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
 {
@@ -59,9 +60,6 @@ static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const cha
 #if defined(__LITEOS_A__)
     uid_t uid = getuid();
     return uid <= SYS_UID_INDEX ? DAC_RESULT_PERMISSION : DAC_RESULT_FORBIDED;
-#endif
-#if defined(__LITEOS_M__)
-    return DAC_RESULT_PERMISSION;
 #endif
     return DAC_RESULT_PERMISSION;
 }

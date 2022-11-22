@@ -27,7 +27,7 @@
 #include "utils_file.h"
 
 // for linux, no mutex
-static ParamMutex g_saveMutex = {};
+static ParamMutex g_saveMutex = {0};
 #ifdef PARAM_SUPPORT_POSIX
 #define MODE_READ O_RDONLY
 #define MODE_APPEND (O_RDWR | O_CREAT | O_APPEND)
@@ -138,7 +138,7 @@ static int LoadPersistParam(void)
         buffer = malloc(fileSize);
         PARAM_CHECK(buffer != NULL, break, "Failed to get file");
         ret = ParamFileRead(fd, buffer, fileSize);
-        PARAM_CHECK(ret == 0, break, "Failed to get read file %s", path);
+        PARAM_CHECK(ret >= 0, break, "Failed to read file %s", path);
 
         uint32_t currLen = 0;
         while (currLen < fileSize) {

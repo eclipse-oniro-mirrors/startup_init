@@ -27,10 +27,9 @@ static ParamMutex g_saveMutex = {};
 
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
+    UNUSED(context);
     uint32_t dataIndex = 0;
-    int ret = WriteParam(name, value, &dataIndex, 0);
-    PARAM_CHECK(ret == 0, return ret, "Failed to write param %d name:%s %s", ret, name, value);
-    return 0;
+    return WriteParam(name, value, &dataIndex, 0);
 }
 
 static int LoadPersistParam()
@@ -42,16 +41,15 @@ static int LoadPersistParam()
     if (fp == NULL) {
         tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters";
         fp = fopen(tmpPath, "r");
-        PARAM_LOGI("LoadPersistParam open file %s", PARAM_PERSIST_SAVE_PATH);
+        PARAM_LOGI("Load persist param, from file %s", tmpPath);
     }
     PARAM_CHECK(fp != NULL, return -1, "No valid persist parameter file %s", PARAM_PERSIST_SAVE_PATH);
 
     const int buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
     char *buffer = malloc(buffSize);
-    if (buffer == NULL) {
-        (void)fclose(fp);
-        return -1;
-    }
+    PARAM_CHECK(buffer != NULL, (void)fclose(fp);
+        return -1, "Failed to alloc");
+
     uint32_t paramNum = 0;
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
@@ -101,9 +99,8 @@ static int BatchSavePersistParam(PERSIST_SAVE_HANDLE handle, const char *name, c
 {
     FILE *fp = (FILE *)handle;
     int ret = fprintf(fp, "%s=%s\n", name, value);
-    PARAM_CHECK(ret > 0, return -1, "Failed to write param");
     PARAM_LOGV("BatchSavePersistParam %s=%s", name, value);
-    return 0;
+    return (ret > 0) ? 0 : -1;
 }
 
 static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle)

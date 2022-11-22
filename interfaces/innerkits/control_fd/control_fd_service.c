@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -32,7 +33,7 @@ static void OnClose(const TaskHandle task)
     OH_ListInit(&agent->item);
 }
 
-static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
+CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
 {
     if (buffer == NULL) {
         return;
@@ -42,11 +43,11 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
 
     // parse msg to exec
     CmdMessage *msg = (CmdMessage *)buffer;
-    if ((msg->type < 0) || (msg->type >= ACTION_MAX) || (msg->cmd[0] == '\0') || (msg->ptyName[0] == '\0')) {
+    if ((msg->type >= ACTION_MAX) || (msg->cmd[0] == '\0') || (msg->ptyName[0] == '\0')) {
         BEGET_LOGE("[control_fd] Received msg is invaild");
         return;
     }
-
+#ifndef STARTUP_INIT_TEST
     agent->pid = fork();
     if (agent->pid == 0) {
         OpenConsole();
@@ -61,15 +62,18 @@ static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint3
         (void)dup2(fd, STDOUT_FILENO);
         (void)dup2(fd, STDERR_FILENO); // Redirect fd to 0, 1, 2
         (void)close(fd);
-        g_controlFdFunc(msg->type, msg->cmd, NULL);
+        if (g_controlFdFunc != NULL) {
+            g_controlFdFunc(msg->type, msg->cmd, NULL);
+        }
         exit(0);
     } else if (agent->pid < 0) {
         BEGET_LOGE("[control_fd] Failed fork service");
     }
+#endif
     return;
 }
 
-static int SendMessage(LoopHandle loop, TaskHandle task, const char *message)
+CONTROL_FD_STATIC int SendMessage(LoopHandle loop, TaskHandle task, const char *message)
 {
     if (message == NULL) {
         BEGET_LOGE("[control_fd] Invalid parameter");
@@ -88,11 +92,15 @@ static int SendMessage(LoopHandle loop, TaskHandle task, const char *message)
     return 0;
 }
 
-static int CmdOnIncommingConnect(const LoopHandle loop, const TaskHandle server)
+CONTROL_FD_STATIC int CmdOnIncommingConnect(const LoopHandle loop, const TaskHandle server)
 {
     TaskHandle client = NULL;
     LE_StreamInfo info = {};
+#ifndef STARTUP_INIT_TEST
     info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_CONNECT;
+#else
+    info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_CONNECT | TASK_TEST;
+#endif
     info.baseInfo.close = OnClose;
     info.baseInfo.userDataSize = sizeof(CmdTask);
     info.disConnectComplete = NULL;

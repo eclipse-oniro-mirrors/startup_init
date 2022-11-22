@@ -22,6 +22,7 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "init_utils.h"
 #include "securec.h"
 #ifdef OHOS_LITE
 #ifndef INIT_LOG_INIT
@@ -120,7 +121,7 @@ static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag
 
 INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs)
 {
-    if (g_logLevel > logLevel) {
+    if ((int)g_logLevel > logLevel) {
         return;
     }
     char tmpFmt[DEF_LOG_SIZE] = {0};
@@ -128,11 +129,39 @@ INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, 
         tmpFmt[sizeof(tmpFmt) - 2] = '\n'; // 2 add \n to tail
         tmpFmt[sizeof(tmpFmt) - 1] = '\0';
     }
-    PrintLog(logLevel, domain, tag, tmpFmt);
+    PrintLog((InitLogLevel)logLevel, domain, tag, tmpFmt);
 }
 
-INIT_PUBLIC_API void EnableInitLog(InitLogLevel level)
+INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level)
+{
+    if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
+        g_logLevel = level;
+    }
+    return;
+}
+
+INIT_LOCAL_API void EnableInitLog(InitLogLevel level)
 {
     g_logLevel = level;
     SetInitCommLog(InitLog);
+}
+
+INIT_LOCAL_API void EnableInitLogFromCmdline(void)
+{
+    SetInitCommLog(InitLog);
+    char level[MAX_BUFFER_LEN] = {0};
+    char *buffer = ReadFileData(BOOT_CMD_LINE);
+    if (buffer == NULL) {
+        INIT_LOGE("Failed to read \"/proc/cmdline\"");
+        return;
+    }
+    int ret = GetProcCmdlineValue("initloglevel", buffer, level, MAX_BUFFER_LEN);
+    free(buffer);
+    if (ret == 0) {
+        errno = 0;
+        unsigned int logLevel = (unsigned int)strtoul(level, 0, 10); // 10 is decimal
+        INIT_INFO_CHECK(errno == 0, return, "Failed strtoul %s, err=%d", level, errno);
+        SetInitLogLevel((InitLogLevel)logLevel);
+    }
+    return;
 }

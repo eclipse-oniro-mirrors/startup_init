@@ -26,7 +26,7 @@ public:
     Watcher() = default;
     virtual ~Watcher() = default;
 
-    void OnParameterChange(const std::string &name, const std::string &value) override;
+    void OnParameterChange(const std::string &prefix, const std::string &name, const std::string &value) override;
 };
 } // namespace init_param
 } // namespace OHOS

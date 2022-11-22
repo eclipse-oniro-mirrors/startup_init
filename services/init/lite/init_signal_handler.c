@@ -12,11 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <errno.h>
 #include <signal.h>
+#include <sys/reboot.h>
 #include <sys/wait.h>
 
-#include "init_adapter.h"
+#include "init_log.h"
 #include "init_service_manager.h"
+
+static void RebootSystem(void)
+{
+#ifndef STARTUP_INIT_TEST
+    int ret = reboot(RB_AUTOBOOT);
+    if (ret != 0) {
+        INIT_LOGE("reboot failed! syscall ret %d, err %d.", ret, errno);
+    }
+#endif
+}
 
 void ReapService(Service *service)
 {

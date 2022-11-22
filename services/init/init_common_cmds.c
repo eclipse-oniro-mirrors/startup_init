@@ -38,6 +38,27 @@
 #include "init_utils.h"
 #include "securec.h"
 
+#define BASE_MS_UNIT 1000
+
+#ifndef OHOS_LITE
+#include "hookmgr.h"
+#include "bootstage.h"
+
+/**
+ * init cmd hooking execute
+ */
+static void InitCmdHookExecute(const char *cmdName, const char *cmdContent, INIT_TIMING_STAT *cmdTimer)
+{
+    INIT_CMD_INFO context;
+
+    context.cmdName = cmdName;
+    context.cmdContent = cmdContent;
+    context.reserved = (const char *)cmdTimer;
+
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_CMD_RECORD, (void *)(&context), NULL);
+}
+#endif
+
 static char *AddOneArg(const char *param, size_t paramLen)
 {
     int valueCount = 1;
@@ -96,6 +117,9 @@ const struct CmdArgs *GetCmdArg(const char *cmdContent, const char *delim, int a
         while (isspace(*p)) {
             p++;
         }
+        if (end == p) { // empty cmd content
+            break;
+        }
         token = strstr(p, delim);
         if (token == NULL) {
             ctx->argv[ctx->argc] = AddOneArg(p, end - p);
@@ -130,7 +154,7 @@ void FreeCmdArg(struct CmdArgs *cmd)
 
 void ExecCmd(const struct CmdTable *cmd, const char *cmdContent)
 {
-    INIT_ERROR_CHECK(cmd != NULL, return, "Invalid cmd for %s", cmdContent);
+    INIT_ERROR_CHECK(cmd != NULL, return, "Invalid cmd.");
     const struct CmdArgs *ctx = GetCmdArg(cmdContent, " ", cmd->maxArg);
     if (ctx == NULL) {
         INIT_LOGE("Invalid arguments cmd: %s content: %s", cmd->name, cmdContent);
@@ -316,7 +340,7 @@ static void DoMkDir(const struct CmdArgs *ctx)
     }
     mode_t mode = DEFAULT_DIR_MODE;
     if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
-        INIT_LOGE("DoMkDir, failed for '%s', err %d.", ctx->argv[0], errno);
+        INIT_LOGE("Create directory '%s' failed, err=%d.", ctx->argv[0], errno);
         return;
     }
 
@@ -337,10 +361,7 @@ static void DoMkDir(const struct CmdArgs *ctx)
         INIT_LOGE("Failed to change owner %s, err %d.", ctx->argv[0], errno);
     }
     ret = SetFileCryptPolicy(ctx->argv[0]);
-    if (ret != 0) {
-        INIT_LOGW("failed to set file fscrypt");
-    }
-
+    INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to set file fscrypt");
     return;
 }
 
@@ -354,7 +375,7 @@ static void DoChmod(const struct CmdArgs *ctx)
     }
 
     if (chmod(ctx->argv[1], mode) != 0) {
-        INIT_LOGE("Failed to change mode \" %s \" mode to %04o, err = %d", ctx->argv[1], mode, errno);
+        INIT_LOGE("Failed to change mode \" %s \" to %04o, err=%d", ctx->argv[1], mode, errno);
     }
 }
 
@@ -525,21 +546,21 @@ static void DoSetrlimit(const struct CmdArgs *ctx)
         INIT_LOGE("DoSetrlimit failed, resources :%s not support.", ctx->argv[0]);
         return;
     }
-    INIT_CHECK_ONLY_ELOG(setrlimit(rcs, &limit) == 0, "DoSetrlimit failed : %d", errno);
+    INIT_CHECK_ONLY_ELOG(setrlimit(rcs, &limit) == 0, "Failed setrlimit err=%d", errno);
     return;
 }
 
 static void DoRm(const struct CmdArgs *ctx)
 {
     // format: rm /xxx/xxx/xxx
-    INIT_CHECK_ONLY_ELOG(unlink(ctx->argv[0]) != -1, "DoRm: unlink %s failed: %d.", ctx->argv[0], errno);
+    INIT_CHECK_ONLY_ELOG(unlink(ctx->argv[0]) != -1, "Failed unlink %s err=%d.", ctx->argv[0], errno);
     return;
 }
 
 static void DoExport(const struct CmdArgs *ctx)
 {
     // format: export xxx /xxx/xxx/xxx
-    INIT_CHECK_ONLY_ELOG(setenv(ctx->argv[0], ctx->argv[1], 1) == 0, "DoExport: set %s with %s failed: %d",
+    INIT_CHECK_ONLY_ELOG(setenv(ctx->argv[0], ctx->argv[1], 1) == 0, "Failed setenv %s with %s err=%d.",
         ctx->argv[0], ctx->argv[1], errno);
     return;
 }
@@ -557,7 +578,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "stop ", 1, 1, DoStop },
     { "reset ", 1, 1, DoReset },
     { "copy ", 2, 2, DoCopy },
-    { "reboot ", 1, 1, DoRebootCmd },
+    { "reboot ", 0, 1, DoRebootCmd },
     { "setrlimit ", 3, 3, DoSetrlimit },
     { "sleep ", 1, 1, DoSleep },
     { "wait ", 1, 2, DoWait },
@@ -693,17 +714,40 @@ int GetCmdLinesFromJson(const cJSON *root, CmdLines **cmdLines)
     return 0;
 }
 
+long long  InitDiffTime(INIT_TIMING_STAT *stat)
+{
+    long long diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000); // 1000000 1000ms
+    if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
+        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / BASE_MS_UNIT;
+    } else {
+        diff -= (stat->startTime.tv_nsec - stat->endTime.tv_nsec) / BASE_MS_UNIT;
+    }
+    return diff;
+}
+
 void DoCmdByName(const char *name, const char *cmdContent)
 {
     if (name == NULL || cmdContent == NULL) {
         return;
     }
+    INIT_TIMING_STAT cmdTimer;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
     const struct CmdTable *cmd = GetCmdByName(name);
     if (cmd != NULL) {
         ExecCmd(cmd, cmdContent);
-        return;
+    } else {
+        PluginExecCmdByName(name, cmdContent);
     }
-    PluginExecCmdByName(name, cmdContent);
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+    long long diff = InitDiffTime(&cmdTimer);
+#ifndef OHOS_LITE
+    InitCmdHookExecute(name, cmdContent, &cmdTimer);
+#endif
+    if (diff > 200000) { // 200000 > 200ms
+        INIT_LOGI("Execute command \"%s %s\" took %lld ms", name, cmdContent, diff / BASE_MS_UNIT);
+    } else {
+        INIT_LOGV("Execute command \"%s %s\" took %lld ms", name, cmdContent, diff / BASE_MS_UNIT);
+    }
 }
 
 void DoCmdByIndex(int index, const char *cmdContent)
@@ -712,16 +756,35 @@ void DoCmdByIndex(int index, const char *cmdContent)
         return;
     }
     int cmdCnt = 0;
+    INIT_TIMING_STAT cmdTimer;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
     const struct CmdTable *commCmds = GetCommCmdTable(&cmdCnt);
+    const char *cmdName = NULL;
     if (index < cmdCnt) {
+        cmdName = commCmds[index].name;
         ExecCmd(&commCmds[index], cmdContent);
-        return;
+    } else {
+        int number = 0;
+        const struct CmdTable *cmds = GetCmdTable(&number);
+        if (index < (cmdCnt + number)) {
+            cmdName = cmds[index - cmdCnt].name;
+            ExecCmd(&cmds[index - cmdCnt], cmdContent);
+        } else {
+            PluginExecCmdByCmdIndex(index, cmdContent);
+            cmdName = GetPluginCmdNameByIndex(index);
+            if (cmdName == NULL) {
+                cmdName = "Unknown";
+            }
+        }
     }
-    int number = 0;
-    const struct CmdTable *cmds = GetCmdTable(&number);
-    if (index < (cmdCnt + number)) {
-        ExecCmd(&cmds[index - cmdCnt], cmdContent);
-        return;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+    long long diff = InitDiffTime(&cmdTimer);
+#ifndef OHOS_LITE
+    InitCmdHookExecute(cmdName, cmdContent, &cmdTimer);
+#endif
+    if (diff > 200000) { // 200000 > 200ms
+        INIT_LOGI("Execute command \"%s %s\" took %lld ms", cmdName, cmdContent, diff / BASE_MS_UNIT);
+    } else {
+        INIT_LOGV("Execute command \"%s %s\" took %lld ms", cmdName, cmdContent, diff / BASE_MS_UNIT);
     }
-    PluginExecCmdByCmdIndex(index, cmdContent);
 }

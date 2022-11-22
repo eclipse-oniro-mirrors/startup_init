@@ -23,6 +23,7 @@
 
 #define BUFFER_LENGTH 5
 #define FD_COUNT 2
+#define SLEEP_TIME 3
 #define ENV_FD_HOLD_PREFIX "OHOS_FD_HOLD_"
 
 static void SaveFds(const char *serviceName, int argc, char **argv)
@@ -70,13 +71,13 @@ int main(int argc, char **argv)
         free(fds);
         outfdCount = 0;
         while (1) {
-           sleep(3);
+            sleep(SLEEP_TIME);
         }
     }
     char *files[] = {"/data/test/1", "/data/test/2"};
     SaveFds("fd_holder_test", FD_COUNT, (char **)files);
     while (1) {
-        sleep(3);
+        sleep(SLEEP_TIME);
     }
     return 0;
 }

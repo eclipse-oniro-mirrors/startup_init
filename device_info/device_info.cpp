@@ -18,6 +18,7 @@
 #endif
 #include "param_comm.h"
 #include "securec.h"
+#include "sysparam_errno.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -28,7 +29,7 @@ extern "C" {
 int AclGetDevUdid(char *udid, int size)
 {
     if (udid == nullptr || size < UDID_LEN) {
-        return -1;
+        return SYSPARAM_INVALID_INPUT;
     }
     (void)memset_s(udid, size, 0, size);
 #ifdef PARAM_FEATURE_DEVICEINFO
@@ -41,7 +42,6 @@ int AclGetDevUdid(char *udid, int size)
 #else
     int ret = GetDevUdid_(udid, size);
 #endif
-    BEGET_LOGI("AclGetDevUdid %s", udid);
     return ret;
 }
 
@@ -63,7 +63,6 @@ const char *AclGetSerial(void)
         BEGET_ERROR_CHECK(ret == 0, return nullptr, "Failed to copy");
     }
 #endif
-    BEGET_LOGI("AclGetSerial %s", serialNumber);
     return serialNumber;
 }
 

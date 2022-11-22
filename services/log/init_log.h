@@ -36,8 +36,13 @@ extern "C" {
 #define INIT_LOG_DOMAIN (BASE_DOMAIN + 1)
 #endif
 
+typedef void (*InitCommLog)(int logLevel, uint32_t domain, const char *tag, const char *fmt, va_list vargs);
+
 INIT_LOCAL_API void OpenLogDevice(void);
 INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs);
+INIT_LOCAL_API void SetInitCommLog(InitCommLog logFunc);
+INIT_LOCAL_API void EnableInitLog(InitLogLevel level);
+INIT_LOCAL_API void EnableInitLogFromCmdline(void);
 
 #ifdef PARAM_BASE
 #define INIT_LOGV(fmt, ...)

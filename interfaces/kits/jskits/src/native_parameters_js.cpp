@@ -43,13 +43,13 @@ static void SetCallbackWork(napi_env env, StorageAsyncContextPtr asyncContext)
     napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void *data) {
-            StorageAsyncContext *asyncContext = (StorageAsyncContext *)data;
+            StorageAsyncContext *asyncContext = reinterpret_cast<StorageAsyncContext *>(data);
             asyncContext->status = SetParameter(asyncContext->key, asyncContext->value);
             PARAM_JS_LOGV("JSApp set::asyncContext-> status = %d, asyncContext->key = %s, asyncContext->value = %s.",
                 asyncContext->status, asyncContext->key, asyncContext->value);
         },
         [](napi_env env, napi_status status, void *data) {
-            StorageAsyncContext *asyncContext = (StorageAsyncContext *)data;
+            StorageAsyncContext *asyncContext = reinterpret_cast<StorageAsyncContext *>(data);
             napi_value result[ARGC_NUMBER] = { 0 };
             if (asyncContext->status == 0) {
                 napi_get_undefined(env, &result[0]);
@@ -78,7 +78,7 @@ static void SetCallbackWork(napi_env env, StorageAsyncContextPtr asyncContext)
             napi_delete_async_work(env, asyncContext->work);
             delete asyncContext;
         },
-        (void *)asyncContext, &asyncContext->work);
+        reinterpret_cast<void *>(asyncContext), &asyncContext->work);
     napi_queue_async_work(env, asyncContext->work);
 }
 
@@ -214,14 +214,14 @@ static void GetCallbackWork(napi_env env, StorageAsyncContextPtr asyncContext)
     napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void *data) {
-            StorageAsyncContext *asyncContext = (StorageAsyncContext *)data;
+            StorageAsyncContext *asyncContext = reinterpret_cast<StorageAsyncContext *>(data);
             asyncContext->status =
                 OHOS::system::GetStringParameter(asyncContext->key, asyncContext->getValue, asyncContext->value);
             PARAM_JS_LOGV("JSApp get status = %d, asyncContext->getValue = %s, asyncContext->key = %s, value = %s.",
                 asyncContext->status, asyncContext->getValue.c_str(), asyncContext->key, asyncContext->value);
         },
         [](napi_env env, napi_status status, void *data) {
-            StorageAsyncContext *asyncContext = (StorageAsyncContext *)data;
+            StorageAsyncContext *asyncContext = reinterpret_cast<StorageAsyncContext *>(data);
             napi_value result[ARGC_NUMBER] = { 0 };
             if (asyncContext->status == 0) {
                 napi_get_undefined(env, &result[0]);
@@ -251,7 +251,7 @@ static void GetCallbackWork(napi_env env, StorageAsyncContextPtr asyncContext)
             napi_delete_async_work(env, asyncContext->work);
             delete asyncContext;
         },
-        (void *)asyncContext, &asyncContext->work);
+        reinterpret_cast<void *>(asyncContext), &asyncContext->work);
     napi_queue_async_work(env, asyncContext->work);
 }
 

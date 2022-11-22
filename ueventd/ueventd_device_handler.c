@@ -74,9 +74,7 @@ static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
         errno = 0;
         int rc = symlink(deviceNode, linkName);
         if (rc != 0) {
-            if (errno == EEXIST) {
-                INIT_LOGW("Link \" %s \" already linked to other target", linkName);
-            } else {
+            if (errno != EEXIST) {
                 INIT_LOGE("Failed to link \" %s \" to \" %s \", err = %d", deviceNode, linkName, errno);
             }
         }
@@ -430,7 +428,7 @@ void HandleBlockDeviceEvent(const struct Uevent *uevent)
     }
 
     if (strcmp(uevent->subsystem, "block") != 0) {
-        INIT_LOGE("Unexpceted uevent subsystem \" %s \" received in block device handler", uevent->subsystem);
+        INIT_LOGE("Unexpected uevent subsystem \" %s \" received in block device handler", uevent->subsystem);
         return;
     }
 
@@ -477,7 +475,8 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
 
     char deviceNode[DEVICE_FILE_SIZE] = {};
     char sysPath[SYSPATH_SIZE] = {};
-    if (strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath) != EOK)) {
+    if ((uevent->syspath == NULL) ||
+        strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath)) != EOK) {
         INIT_LOGE("Failed to copy sys path");
         return;
     }

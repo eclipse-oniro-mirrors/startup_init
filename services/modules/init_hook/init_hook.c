@@ -103,6 +103,25 @@ int InitAddClearServiceHook(ServiceHook hook)
     return HookMgrAddEx(GetBootStageHookMgr(), &info);
 }
 
+static int JobParseHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
+{
+    JOB_PARSE_CTX *jobParseContext = (JOB_PARSE_CTX *)executionContext;
+    JobParseHook realHook = (JobParseHook)hookInfo->hookCookie;
+    realHook(jobParseContext);
+    return 0;
+};
+
+int InitAddJobParseHook(JobParseHook hook)
+{
+    HOOK_INFO info;
+    info.stage = INIT_JOB_PARSE;
+    info.prio = 0;
+    info.hook = JobParseHookWrapper;
+    info.hookCookie = (void *)hook;
+
+    return HookMgrAddEx(GetBootStageHookMgr(), &info);
+}
+
 static int CmdClear(int id, const char *name, int argc, const char **argv)
 {
     SERVICE_INFO_CTX ctx = {0};
@@ -119,12 +138,50 @@ static int CmdClear(int id, const char *name, int argc, const char **argv)
         HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)&ctx, NULL);
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
+    ctx.reserved = "clearInitBootevent";
+    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)&ctx, NULL);
     return 0;
 }
 
-static int ParamSetBootEventHook(const HOOK_INFO *hookInfo, void *cookie)
+static void SetLogLevel_(const char *value)
+{
+    unsigned int level;
+    int ret = StringToUint(value, &level);
+    PLUGIN_CHECK(ret == 0, return, "Failed make %s to unsigned int", value);
+    PLUGIN_LOGI("Set log level is %d", level);
+    SetInitLogLevel(level);
+}
+
+static int CmdSetLogLevel(int id, const char *name, int argc, const char **argv)
+{
+    UNUSED(id);
+    UNUSED(name);
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid input args");
+    const char *value = strrchr(argv[0], '.');
+    PLUGIN_CHECK(value != NULL, return -1, "Failed get \'.\' from string %s", argv[0]);
+    SetLogLevel_(value + 1);
+    return 0;
+}
+
+static int initCmd(int id, const char *name, int argc, const char **argv)
+{
+    UNUSED(id);
+    // process cmd by name
+    PLUGIN_LOGI("initCmd %s argc %d", name, argc);
+    for (int i = 0; i < argc; i++) {
+        PLUGIN_LOGI("initCmd %s", argv[i]);
+    }
+    if (argc > 1 && strcmp(argv[0], "setloglevel") == 0) {
+        SetLogLevel_(argv[1]);
+    }
+    return 0;
+}
+
+static int ParamSetInitCmdHook(const HOOK_INFO *hookInfo, void *cookie)
 {
     AddCmdExecutor("clear", CmdClear);
+    AddCmdExecutor("setloglevel", CmdSetLogLevel);
+    AddCmdExecutor("initcmd", initCmd);
     return 0;
 }
 
@@ -137,22 +194,63 @@ static int DumpTrigger(const char *fmt, ...)
     return 0;
 }
 
-static int DumpServiceHook(const HOOK_INFO *info, void *cookie)
+static void DumpServiceHook(void)
 {
     // check and dump all jobs
     char dump[8] = {0}; // 8 len
     uint32_t len = sizeof(dump);
-    int ret = SystemReadParam("persist.init.debug.dump.trigger", dump, &len);
-    PLUGIN_LOGV("boot dump %s ret %d", dump, ret);
-    if (ret == 0 && strcmp(dump, "1") == 0) {
+    (void)SystemReadParam("persist.init.debug.dump.trigger", dump, &len);
+    PLUGIN_LOGV("boot dump trigger %s", dump);
+    if (strcmp(dump, "1") == 0) {
         SystemDumpTriggers(1, DumpTrigger);
     }
+    return;
+}
+
+static void InitLogLevelFromPersist(void)
+{
+    char logLevel[2] = {0}; // 2 is set param "persist.init.debug.loglevel" value length.
+    uint32_t len = sizeof(logLevel);
+    int ret = SystemReadParam(INIT_DEBUG_LEVEL, logLevel, &len);
+    INIT_INFO_CHECK(ret == 0, return, "Can not get log level from param, keep the original loglevel.");
+    SetLogLevel_(logLevel);
+    return;
+}
+
+static int InitDebugHook(const HOOK_INFO *info, void *cookie)
+{
+    UNUSED(info);
+    UNUSED(cookie);
+    InitLogLevelFromPersist();
+    DumpServiceHook();
+    return 0;
+}
+
+// clear extend memory
+static int BootCompleteCmd(const HOOK_INFO *hookInfo, void *executionContext)
+{
+    PLUGIN_LOGI("boot start complete");
+    UNUSED(hookInfo);
+    UNUSED(executionContext);
+
+    // clear hook
+    HookMgrDel(GetBootStageHookMgr(), INIT_GLOBAL_INIT, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_PRE_PARAM_LOAD, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_SERVICE_PARSE, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_JOB_PARSE, NULL);
+    // clear cmd
+    RemoveCmdExecutor("loadSelinuxPolicy", -1);
     return 0;
 }
 
 MODULE_CONSTRUCTOR(void)
 {
-    InitAddGlobalInitHook(0, ParamSetBootEventHook);
+    HookMgrAdd(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, 0, BootCompleteCmd);
+    InitAddGlobalInitHook(0, ParamSetInitCmdHook);
     // Depends on parameter service
-    InitAddPostPersistParamLoadHook(0, DumpServiceHook);
+    InitAddPostPersistParamLoadHook(0, InitDebugHook);
 }

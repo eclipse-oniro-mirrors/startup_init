@@ -44,8 +44,16 @@ if (ohos_kernel_type == "liteos_m") {
       "//base/startup/init/interfaces/innerkits/token",
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite",
     ]
-
-    deps = [ "$ohos_product_adapter_dir/utils/token:hal_token_static" ]
+    PRODUCT_HAL_TOKEN_PATH =
+        rebase_path("//${ohos_product_adapter_dir}/utils/token")
+    cmd = "if [ -f ${PRODUCT_HAL_TOKEN_PATH}/BUILD.gn ]; then echo true; else echo false; fi"
+    PRODUCT_HAL_TOKEN_EXISTS =
+        exec_script("//build/lite/run_shell_cmd.py", [ cmd ], "value")
+    if (PRODUCT_HAL_TOKEN_EXISTS) {
+      deps += [ "$ohos_product_adapter_dir/utils/token:hal_token_static" ]
+    }
+    deps +=
+        [ "//base/startup/init/interfaces/hals/utils/token:static_hal_token" ]
   }
 }
 

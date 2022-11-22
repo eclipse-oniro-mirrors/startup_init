@@ -37,16 +37,15 @@ extern "C" {
 #define FS_MANAGER_BUFFER_SIZE 512
 #define BLOCK_SIZE_BUFFER (64)
 #define RESIZE_BUFFER_SIZE 1024
-const off_t MISC_PARTITION_ACTIVE_SLOT_OFFSET = 1400;
-const off_t MISC_PARTITION_ACTIVE_SLOT_SIZE = 4;
+const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
+const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 
 bool IsSupportedFilesystem(const char *fsType)
 {
-    static const char *supportedFilesystem[] = {"ext4", "f2fs", NULL};
-
     bool supported = false;
-    int index = 0;
     if (fsType != NULL) {
+        static const char *supportedFilesystem[] = {"ext4", "f2fs", NULL};
+        int index = 0;
         while (supportedFilesystem[index] != NULL) {
             if (strcmp(supportedFilesystem[index++], fsType) == 0) {
                 supported = true;
@@ -62,6 +61,7 @@ static int ExecCommand(int argc, char **argv)
     if (argc == 0 || argv == NULL || argv[0] == NULL) {
         return -1;
     }
+    BEGET_LOGI("Execute %s begin", argv[0]);
     pid_t pid = fork();
     if (pid < 0) {
         BEGET_LOGE("Fork new process to format failed: %d", errno);
@@ -76,6 +76,7 @@ static int ExecCommand(int argc, char **argv)
     if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
         BEGET_LOGE("Command %s failed with status %d", argv[0], WEXITSTATUS(status));
     }
+    BEGET_LOGI("Execute %s end", argv[0]);
     return WEXITSTATUS(status);
 }
 
@@ -90,8 +91,8 @@ int DoFormat(const char *devPath, const char *fsType)
         return -1;
     }
     int ret = 0;
-    char blockSizeBuffer[BLOCK_SIZE_BUFFER] = {0};
     if (strcmp(fsType, "ext4") == 0) {
+        char blockSizeBuffer[BLOCK_SIZE_BUFFER] = {0};
         const unsigned int blockSize = 4096;
         if (snprintf_s(blockSizeBuffer, BLOCK_SIZE_BUFFER, BLOCK_SIZE_BUFFER - 1, "%u", blockSize) == -1) {
             BEGET_LOGE("Failed to build block size buffer");
@@ -106,11 +107,11 @@ int DoFormat(const char *devPath, const char *fsType)
     } else if (strcmp(fsType, "f2fs") == 0) {
 #ifdef __MUSL__
         char *formatCmds[] = {
-            "/bin/mkfs.f2fs", (char *)devPath, NULL
+            "/bin/mkfs.f2fs", "-d1", "-O", "encrypt", "-O", "quota", "-O", "verity", (char *)devPath, NULL
         };
 #else
         char *formatCmds[] = {
-            "/bin/make_f2fs", (char *)devPath, NULL
+            "/bin/make_f2fs", "-d1", "-O", "encrypt", "-O", "quota", "-O", "verity", (char *)devPath, NULL
         };
 #endif
         int argc = ARRAY_LENGTH(formatCmds);
@@ -171,7 +172,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
     }
 
     int ret = 0;
-    if (size <= 0) {
+    if (size == 0) {
         char *cmd[] = {
             file, (char *)device, NULL
         };
@@ -193,7 +194,6 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
         char **argv = (char **)cmd;
         ret = ExecCommand(argc, argv);
     }
-    BEGET_LOGI("resize.f2fs is ending.");
     return ret;
 }
 
@@ -210,7 +210,6 @@ static int DoFsckF2fs(const char* device)
     };
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
-    BEGET_LOGI("fsck.f2fs is ending.");
     return ExecCommand(argc, argv);
 }
 
@@ -223,7 +222,7 @@ static int DoResizeExt(const char* device, const unsigned long long size)
     }
 
     int ret = 0;
-    if (size <= 0) {
+    if (size == 0) {
         char *cmd[] = {
             file, "-f", (char *)device, NULL
         };
@@ -243,7 +242,6 @@ static int DoResizeExt(const char* device, const unsigned long long size)
         char **argv = (char **)cmd;
         ret = ExecCommand(argc, argv);
     }
-    BEGET_LOGI("resize2fs is ending.");
     return ret;
 }
 
@@ -260,7 +258,6 @@ static int DoFsckExt(const char* device)
     };
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
-    BEGET_LOGI("e2fsck is ending.");
     return ExecCommand(argc, argv);
 }
 
@@ -288,15 +285,8 @@ static int Mount(const char *source, const char *target, const char *fsType,
         }
     }
     errno = 0;
-    while ((rc = mount(source, target, fsType, flags, data)) != 0) {
-        if (errno == EAGAIN) {
-            BEGET_LOGE("Mount %s to %s failed. try again", source, target);
-            continue;
-        }
-        if (errno == EBUSY) {
-            rc = 0;
-        }
-        break;
+    if ((rc = mount(source, target, fsType, flags, data)) != 0) {
+        BEGET_WARNING_CHECK(errno != EBUSY, rc = 0, "Mount %s to %s busy, ignore", source, target);
     }
     return rc;
 }
@@ -316,28 +306,28 @@ static int GetSlotInfoFromCmdLine(const char *slotInfoName)
     char value[MAX_BUFFER_LEN] = {0};
     char *buffer = ReadFileData(BOOT_CMD_LINE);
     BEGET_ERROR_CHECK(buffer != NULL, return -1, "Failed to read cmdline");
-    BEGET_ERROR_CHECK(GetProcCmdlineValue(slotInfoName, buffer, value, MAX_BUFFER_LEN) == 0,
+    BEGET_INFO_CHECK(GetProcCmdlineValue(slotInfoName, buffer, value, MAX_BUFFER_LEN) == 0,
         free(buffer); buffer = NULL; return -1, "Failed to get %s value from cmdline", slotInfoName);
     free(buffer);
     buffer = NULL;
     return atoi(value);
 }
 
-static int GetSlotInfoFromMisc(off_t offset, off_t size)
+static int GetSlotInfoFromBootctrl(off_t offset, off_t size)
 {
-    char miscDev[MAX_BUFFER_LEN] = {0};
-    BEGET_ERROR_CHECK(GetBlockDevicePath("/misc", miscDev, MAX_BUFFER_LEN) == 0,
-        return -1, "Failed to get misc device");
-    char *realPath = GetRealPath(miscDev);
-    BEGET_ERROR_CHECK(realPath != NULL, return -1, "Failed to get misc device real path");
+    char bootctrlDev[MAX_BUFFER_LEN] = {0};
+    BEGET_ERROR_CHECK(GetBlockDevicePath("/bootctrl", bootctrlDev, MAX_BUFFER_LEN) == 0,
+        return -1, "Failed to get bootctrl device");
+    char *realPath = GetRealPath(bootctrlDev);
+    BEGET_ERROR_CHECK(realPath != NULL, return -1, "Failed to get bootctrl device real path");
     int fd = open(realPath, O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     free(realPath);
-    BEGET_ERROR_CHECK(fd >= 0, return -1, "Failed to open misc device, errno %d", errno);
+    BEGET_ERROR_CHECK(fd >= 0, return -1, "Failed to open bootctrl device, errno %d", errno);
     BEGET_ERROR_CHECK(lseek(fd, offset, SEEK_SET) >= 0, close(fd); return -1,
-        "Failed to lseek misc device fd, errno %d", errno);
+        "Failed to lseek bootctrl device fd, errno %d", errno);
     int slotInfo = 0;
-    BEGET_ERROR_CHECK(read(fd, &slotInfo, size) == size, close(fd); return -1,
-        "Failed to read current slot from misc, errno %d", errno);
+    BEGET_INFO_CHECK(read(fd, &slotInfo, size) == size, close(fd); return -1,
+        "Failed to read current slot from bootctrl, errno %d", errno);
     close(fd);
     return slotInfo;
 }
@@ -360,10 +350,10 @@ int GetCurrentSlot(void)
     // get current slot from cmdline
     currentSlot = GetSlotInfoFromCmdLine("currentslot");
     BEGET_CHECK_RETURN_VALUE(currentSlot <= 0, currentSlot);
-    BEGET_LOGI("No valid slot value found from cmdline, try to get it from misc");
+    BEGET_LOGI("No valid slot value found from cmdline, try to get it from bootctrl");
 
-    // get current slot from misc
-    return GetSlotInfoFromMisc(MISC_PARTITION_ACTIVE_SLOT_OFFSET, MISC_PARTITION_ACTIVE_SLOT_SIZE);
+    // get current slot from bootctrl
+    return GetSlotInfoFromBootctrl(PARTITION_ACTIVE_SLOT_OFFSET, PARTITION_ACTIVE_SLOT_SIZE);
 }
 
 int MountOneItem(FstabItem *item)
@@ -407,7 +397,12 @@ int MountOneItem(FstabItem *item)
 
     int rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
     if (rc != 0) {
-        BEGET_LOGE("Mount %s to %s failed %d", item->deviceName, item->mountPoint, errno);
+        if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
+            BEGET_LOGE("Mount no fail device %s to %s failed, err = %d", item->deviceName, item->mountPoint, errno);
+        } else {
+            BEGET_LOGW("Mount %s to %s failed, err = %d. Ignore failure", item->deviceName, item->mountPoint, errno);
+            rc = 0;
+        }
     } else {
         BEGET_LOGI("Mount %s to %s successful", item->deviceName, item->mountPoint);
     }
@@ -421,7 +416,6 @@ static void AdjustPartitionNameByPartitionSlot(FstabItem *item)
     char buffer[MAX_BUFFER_LEN] = {0};
     int slot = GetCurrentSlot();
     BEGET_ERROR_CHECK(slot > 0 && slot <= MAX_SLOT, slot = 1, "slot value %d is invalid, set default value", slot);
-    BEGET_INFO_CHECK(slot > 1, return, "default partition doesn't need to add suffix");
     BEGET_ERROR_CHECK(sprintf_s(buffer, sizeof(buffer), "%s_%c", item->deviceName, 'a' + slot - 1) > 0,
         return, "Failed to format partition name suffix, use default partition name");
     free(item->deviceName);

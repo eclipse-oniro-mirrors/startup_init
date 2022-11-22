@@ -29,9 +29,10 @@ typedef struct {
 static uint32_t g_tableId = 0;
 int32_t OH_HashMapCreate(HashMapHandle *handle, const HashInfo *info)
 {
-    INIT_ERROR_CHECK(handle != NULL && info != NULL && info->maxBucket > 0, return -1, "Invalid param");
-    INIT_ERROR_CHECK(info->keyHash != NULL && info->nodeHash != NULL, return -1, "Invalid param");
-    INIT_ERROR_CHECK(info->nodeCompare != NULL && info->keyCompare != NULL, return -1, "Invalid param");
+    INIT_ERROR_CHECK(handle != NULL, return -1, "Invalid hash handle");
+    INIT_ERROR_CHECK(info != NULL && info->maxBucket > 0, return -1, "Invalid hash info");
+    INIT_ERROR_CHECK(info->keyHash != NULL && info->nodeHash != NULL, return -1, "Invalid hash key");
+    INIT_ERROR_CHECK(info->nodeCompare != NULL && info->keyCompare != NULL, return -1, "Invalid hash compare");
     HashTab *tab = (HashTab *)calloc(1, sizeof(HashTab) + sizeof(HashNode*) * info->maxBucket);
     INIT_ERROR_CHECK(tab != NULL, return -1, "Failed to create hash tab");
     tab->maxBucket = info->maxBucket;
@@ -74,7 +75,7 @@ static HashNode *GetHashNodeByKey(const HashTab *tab, const HashNode *root, cons
 
 int32_t OH_HashMapAdd(HashMapHandle handle, HashNode *node)
 {
-    INIT_ERROR_CHECK(handle != NULL, return -1, "Invalid param");
+    INIT_ERROR_CHECK(handle != NULL, return -1, "Invalid hash handle");
     INIT_ERROR_CHECK(node != NULL && node->next == NULL, return -1, "Invalid param");
     HashTab *tab = (HashTab *)handle;
     int hashCode = tab->nodeHash(node);
@@ -90,13 +91,12 @@ int32_t OH_HashMapAdd(HashMapHandle handle, HashNode *node)
     }
     node->next = tab->buckets[hashCode];
     tab->buckets[hashCode] = node;
-    INIT_LOGV("OH_HashMapAdd tableId %d hashCode %d node %p", tab->tableId, hashCode, node);
     return 0;
 }
 
 void OH_HashMapRemove(HashMapHandle handle, const void *key)
 {
-    INIT_ERROR_CHECK(handle != NULL && key != NULL, return, "Invalid param");
+    INIT_ERROR_CHECK(handle != NULL && key != NULL, return, "Invalid hash handle key:%s", key);
     HashTab *tab = (HashTab *)handle;
     int hashCode = tab->keyHash(key);
     hashCode = (hashCode < 0) ? -hashCode : hashCode;
@@ -122,7 +122,7 @@ void OH_HashMapRemove(HashMapHandle handle, const void *key)
 
 HashNode *OH_HashMapGet(HashMapHandle handle, const void *key)
 {
-    INIT_ERROR_CHECK(handle != NULL && key != NULL, return NULL, "Invalid param %s", key);
+    INIT_ERROR_CHECK(handle != NULL && key != NULL, return NULL, "Invalid hash handle key:%s", key);
     HashTab *tab = (HashTab *)handle;
     int hashCode = tab->keyHash(key);
     hashCode = (hashCode < 0) ? -hashCode : hashCode;
@@ -149,7 +149,7 @@ static void HashListFree(HashTab *tab, HashNode *root)
 
 void OH_HashMapDestory(HashMapHandle handle)
 {
-    INIT_ERROR_CHECK(handle != NULL, return, "Invalid param");
+    INIT_ERROR_CHECK(handle != NULL, return, "Invalid hash handle");
     HashTab *tab = (HashTab *)handle;
     for (int i = 0; i < tab->maxBucket; i++) {
         HashListFree(tab, tab->buckets[i]);
@@ -160,8 +160,8 @@ void OH_HashMapDestory(HashMapHandle handle)
 HashNode *OH_HashMapFind(HashMapHandle handle,
     int hashCode, const void *key, HashKeyCompare keyCompare)
 {
-    INIT_ERROR_CHECK(handle != NULL && key != NULL, return NULL, "Invalid param");
-    INIT_ERROR_CHECK(handle != NULL && keyCompare != NULL, return NULL, "Invalid param");
+    INIT_ERROR_CHECK(handle != NULL, return NULL, "Invalid hash handle");
+    INIT_ERROR_CHECK(key != NULL && keyCompare != NULL, return NULL, "Invalid hash key");
     HashTab *tab = (HashTab *)handle;
     INIT_ERROR_CHECK(hashCode < tab->maxBucket, return NULL,
         "Invalid hashcode %d %d", tab->maxBucket, hashCode);
@@ -171,7 +171,7 @@ HashNode *OH_HashMapFind(HashMapHandle handle,
 void OH_HashMapTraverse(HashMapHandle handle, void (*hashNodeTraverse)(const HashNode *node, const void *context),
     const void *context)
 {
-    INIT_ERROR_CHECK(handle != NULL && hashNodeTraverse != NULL, return, "Invalid param");
+    INIT_ERROR_CHECK(handle != NULL && hashNodeTraverse != NULL, return, "Invalid hash handle");
     HashTab *tab = (HashTab *)handle;
     for (int i = 0; i < tab->maxBucket; i++) {
         HashNode *node = tab->buckets[i];
@@ -185,7 +185,7 @@ void OH_HashMapTraverse(HashMapHandle handle, void (*hashNodeTraverse)(const Has
 
 int OH_HashMapIsEmpty(HashMapHandle handle)
 {
-    INIT_ERROR_CHECK(handle != NULL, return 1, "Invalid param");
+    INIT_ERROR_CHECK(handle != NULL, return 1, "Invalid hash handle");
     HashTab *tab = (HashTab *)handle;
     for (int i = 0; i < tab->maxBucket; i++) {
         HashNode *node = tab->buckets[i];

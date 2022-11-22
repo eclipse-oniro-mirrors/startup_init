@@ -68,7 +68,7 @@ ohos_prebuilt_seccomp("system_filter") {
   sources = []
   if (target_cpu == "arm") {
     sources += [ "seccomp_policy/system_arm.seccomp.policy" ]
-  } else if (target_cpu == "arm64") {
+  } else if (target_cpu == "arm64" || target_cpu == "x86_64") {
     sources += [
       # 64-bit machine also need check use 32-bit syscall
       "seccomp_policy/system_arm.seccomp.policy",
@@ -88,7 +88,7 @@ ohos_prebuilt_seccomp("appspawn_filter") {
   sources = []
   if (target_cpu == "arm") {
     sources += [ "seccomp_policy/spawn_arm.seccomp.policy" ]
-  } else if (target_cpu == "arm64") {
+  } else if (target_cpu == "arm64" || target_cpu == "x86_64") {
     sources += [
       # 64-bit machine also need check use 32-bit syscall
       "seccomp_policy/spawn_arm.seccomp.policy",
@@ -107,7 +107,7 @@ ohos_prebuilt_seccomp("appspawn_filter") {
 ohos_prebuilt_seccomp("nwebspawn_filter") {
   if (target_cpu == "arm") {
     sources = [ "seccomp_policy/renderer_arm.seccomp.policy" ]
-  } else if (target_cpu == "arm64") {
+  } else if (target_cpu == "arm64" || target_cpu == "x86_64") {
     sources = [ "seccomp_policy/renderer_arm64.seccomp.policy" ]
   }
 
@@ -123,7 +123,7 @@ ohos_prebuilt_seccomp("app_filter") {
   sources = []
   if (target_cpu == "arm") {
     sources += [ "seccomp_policy/app_arm.seccomp.policy" ]
-  } else if (target_cpu == "arm64") {
+  } else if (target_cpu == "arm64" || target_cpu == "x86_64") {
     sources += [
       # 64-bit machine also need check use 32-bit syscall
       "seccomp_policy/app_arm.seccomp.policy",

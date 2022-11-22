@@ -25,6 +25,7 @@
 #include "init_log.h"
 #include "fs_manager/fs_manager.h"
 #include "securec.h"
+#include "init_utils.h"
 
 static void FreeOldRoot(DIR *dir, dev_t dev)
 {
@@ -38,7 +39,7 @@ static void FreeOldRoot(DIR *dir, dev_t dev)
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0) {
             continue;
         }
-
+        isDir = false;
         if (de->d_type == DT_DIR || de->d_type == DT_UNKNOWN) {
             struct stat st = {};
             if (fstatat(dfd, de->d_name, &st, AT_SYMLINK_NOFOLLOW) < 0) {
@@ -77,21 +78,15 @@ static void FreeOldRoot(DIR *dir, dev_t dev)
 // all sub mount tree in the future.
 static bool UnderBasicMountPoint(const char *path)
 {
+    unsigned int i;
     if (path == NULL || *path == '\0') {
         return false;
     }
-
-    size_t pathSize = strlen(path);
-    if (strncmp(path, "/dev", strlen("/dev")) == 0 && pathSize > strlen("/dev")) {
-        return true;
-    }
-
-    if (strncmp(path, "/sys", strlen("/sys")) == 0 && pathSize > strlen("/sys")) {
-        return true;
-    }
-
-    if (strncmp(path, "/proc", strlen("/proc")) == 0 && pathSize > strlen("/proc")) {
-        return true;
+    const char *basicMountPoint[] = {"/dev/", "/sys/", "/proc/"};
+    for (i = 0; i < ARRAY_LENGTH(basicMountPoint); i++) {
+        if (strncmp(path, basicMountPoint[i], strlen(basicMountPoint[i])) == 0) {
+            return true;
+        }
     }
     return false;
 }
@@ -153,15 +148,9 @@ int SwitchRoot(const char *newRoot)
     }
 
     struct stat oldRootStat = {};
-    if (stat("/", &oldRootStat) != 0) {
-        INIT_LOGE("Failed to get old root \"/\" stat");
-        return -1;
-    }
+    INIT_ERROR_CHECK(stat("/", &oldRootStat) == 0, return -1, "Failed to get old root \"/\" stat");
     DIR *oldRoot = opendir("/");
-    if (oldRoot == NULL) {
-        INIT_LOGE("Failed to open root dir \"/\"");
-        return -1;
-    }
+    INIT_ERROR_CHECK(oldRoot != NULL, return -1, "Failed to open root dir \"/\"");
     struct stat newRootStat = {};
     if (stat(newRoot, &newRootStat) != 0) {
         INIT_LOGE("Failed to get new root \" %s \" stat", newRoot);

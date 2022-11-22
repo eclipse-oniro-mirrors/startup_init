@@ -59,7 +59,7 @@ int RestartSandbox(const char *sandbox)
     DumpSandboxByName(sandbox);
     std::cout << "dump sandbox" << std::endl;
     if (PrepareSandbox(sandbox) != 0) {
-        std::cout << "Failed to prepare sandbox %s" << sandbox << std::endl;
+        std::cout << "Failed to prepare sandbox " << sandbox << std::endl;
         DestroySandbox(sandbox);
         CloseDefaultNamespace();
         return 0;
@@ -155,6 +155,7 @@ bool MakeFileByJson(cJSON * mJson, const char *sandboxFileName)
     int ret1 = write(fd, cjValue1, strlen(cjValue1));
     if (-1 == ret1) {
         std::cout << "Write file ERROR" << errno << "  fd is :" << fd << std::endl;
+        close(fd);
         return false;
     }
     free(cjValue1);
@@ -178,7 +179,7 @@ HWTEST_F(SandboxUnitTest, TestCreateNormalSandbox, TestSize.Level1) {
     }
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     int ret = RestartSandbox(TEST_SANDBOX_NAME);
-    ASSERT_EQ(ret, 1);
+    ASSERT_EQ(ret, 0);
 }
 
 HWTEST_F(SandboxUnitTest, TestEnterErrorSandbox, TestSize.Level1) {
@@ -268,6 +269,7 @@ HWTEST_F(SandboxUnitTest, TestSetNamespace, TestSize.Level1) {
 
 HWTEST_F(SandboxUnitTest, TestGetNamespaceFd, TestSize.Level1) {
     int ret1 = GetNamespaceFd("");
+    GetNamespaceFd(nullptr);
     ASSERT_EQ(ret1, -1);
     const std::string  sandboxJsonPth = std::string("/mnt/sandbox/") + std::string(TEST_SANDBOX_NAME);
     const char* cSandboxJsonPth = sandboxJsonPth.c_str();

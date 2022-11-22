@@ -45,13 +45,21 @@ extern "C" {
 #endif
 
 #define PARAM_WORKSPACE_INVALID ((uint32_t)-1)
-#define PARAM_WORKSPACE_MIN (4096)
+#define PARAM_WORKSPACE_MIN (1024)
+/*
+    length for parameter = node size + data size
+    xxxx.xxxx.xxxx.xxxx
+    node size:
+    24 * (count(.) + 1) + strlen(xxxx.xxxx.xxxx.xxxx)
+    data size
+    strlen(xxxx.xxxx.xxxx.xxxx) + 96
+*/
 #if (defined __LITEOS_A__ || defined __LITEOS_M__)
 #define DAC_DEFAULT_MODE 0777
 #ifdef STARTUP_INIT_TEST
 #define PARAM_WORKSPACE_MAX (1024 * 50)
 #else
-#define PARAM_WORKSPACE_MAX (1024 * 30)
+#define PARAM_WORKSPACE_MAX (1024 * 4)
 #endif
 #define PARAM_WORKSPACE_SMALL PARAM_WORKSPACE_MAX
 #define PARAM_WORKSPACE_DEF PARAM_WORKSPACE_MAX
@@ -67,7 +75,7 @@ extern "C" {
 #define DAC_DEFAULT_MODE 0774
 #define PARAM_WORKSPACE_DEF (1024 * 30)
 #endif
-#define DAC_DEFAULT_GROUP 2000
+#define DAC_DEFAULT_GROUP 0
 #define DAC_DEFAULT_USER 0
 #endif
 
@@ -193,11 +201,13 @@ INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t d
 #define ATOMIC_LOAD_EXPLICIT(commitId, order) atomic_load_explicit((commitId), (order))
 #define ATOMIC_STORE_EXPLICIT(commitId, value, order) atomic_store_explicit((commitId), (value), (order))
 #endif
+
+INIT_LOCAL_API uint32_t Difftime(time_t curr, time_t base);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif
 
-INIT_LOCAL_API uint32_t Difftime(time_t curr, time_t base);
 #endif // BASE_STARTUP_PARAM_MESSAGE_H

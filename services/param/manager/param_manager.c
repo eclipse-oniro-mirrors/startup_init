@@ -139,7 +139,7 @@ static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrie
         ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, current->dataIndex);
         if (entry != NULL) {
             PARAM_DUMP("\tparameter length info [%u, %u] \n\t  param: %s \n",
-                entry->keyLength, entry->valueLength, (entry != NULL) ? entry->data : "null");
+                entry->keyLength, entry->valueLength, entry->data);
         }
     }
     if (current->labelIndex != 0 && verbose) {
@@ -279,44 +279,61 @@ static int CreateCtrlInfo(ServiceCtrlInfo **ctrlInfo, const char *cmd, uint32_t 
     return 0;
 }
 
+static int GetServiceCtrlInfoForPowerCtrl(const char *name, const char *value, ServiceCtrlInfo **ctrlInfo)
+{
+    size_t size = 0;
+    const ParamCmdInfo *powerCtrlArg = GetStartupPowerCtl(&size);
+    PARAM_CHECK(powerCtrlArg != NULL, return -1, "Invalid ctrlInfo for %s", name);
+    uint32_t valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen("reboot") + 1;
+    if (strcmp(value, "reboot") == 0) {
+        return CreateCtrlInfo(ctrlInfo, "reboot", valueOffset, 1,
+            "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, "reboot", value);
+    }
+    for (size_t i = 0; i < size; i++) {
+        PARAM_LOGV("Get power ctrl %s name %s value %s", powerCtrlArg[i].name, name, value);
+        if (strncmp(value, powerCtrlArg[i].name, strlen(powerCtrlArg[i].name)) == 0) {
+            valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen(powerCtrlArg[i].replace) + 1;
+            return CreateCtrlInfo(ctrlInfo, powerCtrlArg[i].cmd, valueOffset, 1,
+                "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, powerCtrlArg[i].replace, value);
+        }
+    }
+    // not found reboot, so reboot by normal
+    valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen("reboot") + 1;
+    return CreateCtrlInfo(ctrlInfo, "reboot.other", valueOffset, 1, "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, "reboot", value);
+}
+
 INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, ServiceCtrlInfo **ctrlInfo)
 {
     PARAM_CHECK(ctrlInfo != NULL, return -1, "Invalid ctrlInfo %s", name);
     *ctrlInfo = NULL;
     size_t size = 0;
     if (strcmp("ohos.startup.powerctrl", name) == 0) {
-        const ParamCmdInfo *powerCtrlArg = GetStartupPowerCtl(&size);
-        for (size_t i = 0; i < size; i++) {
-            if (strncmp(value, powerCtrlArg[i].name, strlen(powerCtrlArg[i].name)) == 0) {
-                uint32_t valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen(powerCtrlArg[i].replace) + 1;
-                return CreateCtrlInfo(ctrlInfo, powerCtrlArg[i].cmd, valueOffset, 1,
-                    "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, powerCtrlArg[i].replace, value);
-            }
-        }
-        return 0;
+        return GetServiceCtrlInfoForPowerCtrl(name, value, ctrlInfo);
     }
     if (strncmp("ohos.ctl.", name, strlen("ohos.ctl.")) == 0) {
         const ParamCmdInfo *ctrlParam = GetServiceStartCtrl(&size);
+        PARAM_CHECK(ctrlParam != NULL, return -1, "Invalid ctrlInfo for %s", name);
         for (size_t i = 0; i < size; i++) {
             if (strcmp(name, ctrlParam[i].name) == 0) {
                 uint32_t valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen(ctrlParam[i].replace) + 1;
-                return CreateCtrlInfo(ctrlInfo, ctrlParam[i].cmd, valueOffset,  1,
+                return CreateCtrlInfo(ctrlInfo, ctrlParam[i].cmd, valueOffset, 1,
                     "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, ctrlParam[i].replace, value);
             }
         }
     }
     if (strncmp("ohos.servicectrl.", name, strlen("ohos.servicectrl.")) == 0) {
         const ParamCmdInfo *installParam = GetServiceCtl(&size);
+        PARAM_CHECK(installParam != NULL, return -1, "Invalid ctrlInfo for %s", name);
         for (size_t i = 0; i < size; i++) {
             if (strncmp(name, installParam[i].name, strlen(installParam[i].name)) == 0) {
-                return CreateCtrlInfo(ctrlInfo, installParam[i].cmd, strlen(name) + 1,  1, "%s.%s", name, value);
+                return CreateCtrlInfo(ctrlInfo, installParam[i].cmd, strlen(name) + 1, 1, "%s.%s", name, value);
             }
         }
     }
     const ParamCmdInfo *other = GetOtherSpecial(&size);
     for (size_t i = 0; i < size; i++) {
         if (strncmp(name, other[i].name, strlen(other[i].name)) == 0) {
-            return CreateCtrlInfo(ctrlInfo, other[i].cmd, strlen(other[i].name),  0, "%s.%s", name, value);
+            return CreateCtrlInfo(ctrlInfo, other[i].cmd, strlen(other[i].name), 0, "%s.%s", name, value);
         }
     }
     return 0;
@@ -348,7 +365,7 @@ INIT_LOCAL_API int CheckParameterSet(const char *name,
         }
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__)
         // do hook cmd
-        PARAM_LOGV("CheckParameterSet realKey %s cmd: '%s' value: %s",
+        PARAM_LOGV("Check parameter settings realKey %s cmd: '%s' value: %s",
             serviceInfo->realKey, serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
         DoCmdByName(serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
 #endif
@@ -359,35 +376,8 @@ INIT_LOCAL_API int CheckParameterSet(const char *name,
     return ret;
 }
 
-int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId)
-{
-    PARAM_CHECK(handle != 0 && commitId != NULL, return -1, "The handle is null");
-
-    ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
-    if (entry == NULL) {
-        return -1;
-    }
-    *commitId = ReadCommitId(entry);
-    return 0;
-}
-
-long long GetSystemCommitId(void)
-{
-    WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
-    if (space == NULL || space->area == NULL) {
-        return 0;
-    }
-    return ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_acquire);
-}
-
 int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len)
 {
     PARAM_CHECK(name != NULL && handle != 0, return -1, "The name is null");
     return ReadParamName(handle, name, len);
-}
-
-int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
-{
-    PARAM_CHECK(len != NULL && handle != 0, return -1, "The value is null");
-    return ReadParamValue(handle, value, len);
 }

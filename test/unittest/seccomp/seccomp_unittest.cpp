@@ -35,6 +35,7 @@
 #include "seccomp_policy.h"
 
 using SyscallFunc = bool (*)(void);
+constexpr int SLEEP_TIME = 100000; // 100ms
 
 using namespace testing::ext;
 using namespace std;
@@ -92,6 +93,11 @@ public:
         if (signal(SIGCHLD, Handler) == nullptr) {
             std::cout << "signal failed:" << strerror(errno) << std::endl;
         }
+
+        /* Sleeping for avoiding influencing child proccess wait for other threads
+         * which were created by other unittests to release global rwlock. The global
+         * rwlock will be used by function dlopen in child process */
+        usleep(SLEEP_TIME);
 
         pid = StartChild(filterName, func);
         if (pid == -1) {

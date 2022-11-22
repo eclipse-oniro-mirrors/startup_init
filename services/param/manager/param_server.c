@@ -46,14 +46,14 @@ static int CommonDealFun(const char *name, const char *value, int res)
 {
     int ret = 0;
     if (res == 0) {
-        PARAM_LOGI("Add param from cmdline %s %s", name, value);
+        PARAM_LOGV("Add param from cmdline %s %s", name, value);
         ret = CheckParamName(name, 0);
-        PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
-        PARAM_LOGV("**** name %s, value %s", name, value);
+        PARAM_CHECK(ret == 0, return ret, "Invalid param name %s", name);
+        PARAM_LOGV("Param name %s, value %s", name, value);
         ret = WriteParam(name, value, NULL, 0);
         PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
     } else {
-        PARAM_LOGE("Can not find arrt %s", name);
+        PARAM_LOGE("Get %s parameter value is null.", name);
     }
     return ret;
 }
@@ -78,7 +78,7 @@ static int ReadSnFromFile(const char *name, const char *file)
     PARAM_LOGV("**** name %s, value %s", name, data);
     int ret = WriteParam(name, data, NULL, 0);
     free(data);
-    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, data);
+    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s", name);
     return ret;
 }
 
@@ -113,7 +113,6 @@ static int SnDealFun(const char *name, const char *value, int res)
 
 INIT_LOCAL_API int LoadParamFromCmdLine(void)
 {
-    int ret;
     static const cmdLineInfo cmdLines[] = {
         {OHOS_BOOT"hardware", CommonDealFun
         },
@@ -133,6 +132,7 @@ INIT_LOCAL_API int LoadParamFromCmdLine(void)
         return -1, "Failed to read file %s", BOOT_CMD_LINE);
 
     for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
+        int ret = 0;
 #ifdef BOOT_EXTENDED_CMDLINE
         ret = GetParamValueFromBuffer(cmdLines[i].name, BOOT_EXTENDED_CMDLINE, value, PARAM_CONST_VALUE_LEN_MAX);
         if (ret != 0) {
@@ -170,10 +170,9 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode,
 
     const int buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
     char *buffer = malloc(buffSize);
-    if (buffer == NULL) {
-        (void)fclose(fp);
-        return -1;
-    }
+    PARAM_CHECK(buffer != NULL, (void)fclose(fp);
+        return -1, "Failed to alloc memory");
+
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
         int ret = SplitParamString(buffer, exclude, count, loadOneParam, &mode);
@@ -182,7 +181,7 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode,
     }
     (void)fclose(fp);
     free(buffer);
-    PARAM_LOGI("Load parameters success %s total %u", fileName, paramNum);
+    PARAM_LOGV("Load %u default parameters success from %s.", paramNum, fileName);
     return 0;
 }
 
@@ -201,7 +200,7 @@ int LoadParamsFile(const char *fileName, bool onlyAdd)
 int LoadDefaultParams(const char *fileName, uint32_t mode)
 {
     PARAM_CHECK(fileName != NULL, return -1, "Invalid filename for load");
-    PARAM_LOGI("load default parameters %s.", fileName);
+    PARAM_LOGI("Load default parameters from %s.", fileName);
     struct stat st;
     if ((stat(fileName, &st) == 0) && !S_ISDIR(st.st_mode)) {
         (void)ProcessParamFile(fileName, &mode);

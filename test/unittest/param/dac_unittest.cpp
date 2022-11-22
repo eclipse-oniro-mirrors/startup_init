@@ -35,42 +35,56 @@ public:
 
     int TestDacInitLocalLabel()
     {
-        int ret = RegisterSecurityDacOps(&initParamSercurityOps, LABEL_INIT_FOR_INIT);
+        int ret = RegisterSecurityDacOps(nullptr, LABEL_INIT_FOR_INIT);
+        EXPECT_NE(ret, 0);
+        ret = RegisterSecurityDacOps(&initParamSecurityOps, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
 
-        if (initParamSercurityOps.securityInitLabel == nullptr || initParamSercurityOps.securityFreeLabel == nullptr) {
+        if (initParamSecurityOps.securityInitLabel == nullptr || initParamSecurityOps.securityFreeLabel == nullptr) {
             return -1;
         }
         ParamSecurityLabel label = {};
-        ret = initParamSercurityOps.securityInitLabel(&label, LABEL_INIT_FOR_INIT);
+        ret = initParamSecurityOps.securityInitLabel(&label, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
-        ret = initParamSercurityOps.securityFreeLabel(&label);
+        ret = initParamSecurityOps.securityFreeLabel(&label);
         EXPECT_EQ(ret, 0);
         return 0;
     }
 
+    int TestDacGetLabel()
+    {
+        int ret = RegisterSecurityDacOps(&initParamSecurityOps, LABEL_INIT_FOR_INIT);
+        EXPECT_EQ(ret, 0);
+        if (initParamSecurityOps.securityGetLabel == nullptr) {
+            return -1;
+        }
+        // get label from file
+        ret = initParamSecurityOps.securityGetLabel(STARTUP_INIT_UT_PATH "/system/etc/param/ohos.para.dac");
+        return ret;
+    }
+
     int TestDacCheckFilePermission(const char *fileName)
     {
-        int ret = RegisterSecurityDacOps(&initParamSercurityOps, LABEL_INIT_FOR_INIT);
+        int ret = RegisterSecurityDacOps(&initParamSecurityOps, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
-        if (initParamSercurityOps.securityCheckFilePermission == nullptr) {
+        if (initParamSecurityOps.securityCheckFilePermission == nullptr) {
             return -1;
         }
         ParamSecurityLabel label = {};
-        ret = initParamSercurityOps.securityInitLabel(&label, LABEL_INIT_FOR_INIT);
+        ret = initParamSecurityOps.securityInitLabel(&label, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
-        ret = initParamSercurityOps.securityCheckFilePermission(&label, fileName, DAC_WRITE);
+        ret = initParamSecurityOps.securityCheckFilePermission(&label, fileName, DAC_WRITE);
         EXPECT_EQ(ret, 0);
-        ret = initParamSercurityOps.securityFreeLabel(&label);
+        ret = initParamSecurityOps.securityFreeLabel(&label);
         EXPECT_EQ(ret, 0);
         return 0;
     }
 
     int TestDacCheckParaPermission(const char *name, ParamDacData *dacData, int mode)
     {
-        int ret = RegisterSecurityDacOps(&initParamSercurityOps, LABEL_INIT_FOR_INIT);
+        int ret = RegisterSecurityDacOps(&initParamSecurityOps, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
-        if (initParamSercurityOps.securityCheckFilePermission == nullptr) {
+        if (initParamSecurityOps.securityCheckFilePermission == nullptr) {
             return -1;
         }
         ParamAuditData auditData = {};
@@ -80,10 +94,10 @@ public:
         ret = AddSecurityLabel(&auditData);
         EXPECT_EQ(ret, 0);
         ParamSecurityLabel srclabel = {};
-        ret = initParamSercurityOps.securityInitLabel(&srclabel, LABEL_INIT_FOR_INIT);
+        ret = initParamSecurityOps.securityInitLabel(&srclabel, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
-        ret = initParamSercurityOps.securityCheckParamPermission(&srclabel, name, mode);
-        initParamSercurityOps.securityFreeLabel(&srclabel);
+        ret = initParamSecurityOps.securityCheckParamPermission(&srclabel, name, mode);
+        initParamSecurityOps.securityFreeLabel(&srclabel);
         return ret;
     }
 
@@ -109,7 +123,7 @@ public:
     }
 
 private:
-    ParamSecurityOps initParamSercurityOps {};
+    ParamSecurityOps initParamSecurityOps {};
     ParamSecurityOps clientParamSercurityOps {};
 };
 
@@ -124,7 +138,7 @@ HWTEST_F(DacUnitTest, TestDacCheckFilePermission, TestSize.Level0)
     DacUnitTest test;
     test.TestDacCheckFilePermission(STARTUP_INIT_UT_PATH "/trigger_test.cfg");
 }
-#ifdef __MUSL__
+
 HWTEST_F(DacUnitTest, TestDacCheckUserParaPermission, TestSize.Level0)
 {
     // 相同用户
@@ -247,7 +261,7 @@ HWTEST_F(DacUnitTest, TestDacCheckOtherParaPermission, TestSize.Level0)
     ret = test.TestDacCheckParaPermission("test.permission.watch.aaa", &dacData, DAC_WATCH);
     EXPECT_EQ(ret, 0);
 }
-#endif
+
 HWTEST_F(DacUnitTest, TestClientDacCheckFilePermission, TestSize.Level0)
 {
     DacUnitTest test;

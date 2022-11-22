@@ -47,8 +47,9 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
     } else if (strcmp(argv[0], "stop") == 0) {
         ServiceControlWithExtra(argv[1], 1, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
     } else if (strcmp(argv[0], "timer_start") == 0) {
-        if (argc < SERVICE_START_NUMBER) {
-            return -1;
+        if (argc <= SERVICE_START_NUMBER) {
+            ServiceControlUsage(shell, argc, argv);
+            return 0;
         }
         char *timeBuffer = argv[SERVICE_START_NUMBER];
         errno = 0;

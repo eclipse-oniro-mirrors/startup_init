@@ -12,16 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "init_log.h"
 #include "init_param.h"
 #include "param_manager.h"
 
 #define MIN_SLEEP (100 * 1000)
+
+#ifdef __LITEOS_A__
 static int g_flags = 0;
-
-__attribute__((constructor)) static void ClientInit(void);
-__attribute__((destructor)) static void ClientDeinit(void);
-
-static int InitParamClient(void)
+__attribute__((constructor)) static int ClientInit(void)
 {
     if (PARAM_TEST_FLAG(g_flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
@@ -36,25 +35,14 @@ static int InitParamClient(void)
     return 0;
 }
 
-void ClientInit(void)
-{
-    PARAM_LOGV("ClientInit");
-#ifdef __LITEOS_M__
-    InitParamService();
-#else
-#ifndef STARTUP_INIT_TEST
-    (void)InitParamClient();
-#endif
-#endif
-}
-
-void ClientDeinit(void)
+__attribute__((destructor)) static void ClientDeinit(void)
 {
     if (PARAM_TEST_FLAG(g_flags, WORKSPACE_FLAGS_INIT)) {
         CloseParamWorkSpace();
     }
     PARAM_SET_FLAG(g_flags, 0);
 }
+#endif
 
 int SystemSetParameter(const char *name, const char *value)
 {
@@ -124,14 +112,4 @@ int WatchParamCheck(const char *keyprefix)
 int SystemCheckParamExist(const char *name)
 {
     return SysCheckParamExist(name);
-}
-
-int SystemFindParameter(const char *name, ParamHandle *handle)
-{
-    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
-    int ret = ReadParamWithCheck(name, DAC_READ, handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
-    }
-    return ret;
 }

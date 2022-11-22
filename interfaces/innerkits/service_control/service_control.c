@@ -28,15 +28,13 @@
 
 static int StartProcess(const char *name, const char *extArgv[], int extArgc)
 {
-    if (name == NULL) {
-        BEGET_LOGE("Start ondemand service failed, service name is null.");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(name != NULL, return -1, "Service name is null.");
     int extraArg = 0;
     if ((extArgv != NULL) && (extArgc > 0)) {
         BEGET_LOGI("Start service by extra args");
         extraArg = 1;
     }
+    int ret = 0;
     if (extraArg == 1) {
         unsigned int len = 0;
         for (int i = 0; i < extArgc; i++) {
@@ -44,53 +42,37 @@ static int StartProcess(const char *name, const char *extArgv[], int extArgc)
         }
         len += strlen(name) + extArgc + 1;
         char *nameValue = (char *)calloc(len, sizeof(char));
-        if (nameValue == NULL) {
-            BEGET_LOGE("Failed calloc err=%d", errno);
-            return -1;
-        }
-        if (strncat_s(nameValue, len, name, strlen(name)) != 0) {
-            BEGET_LOGE("Failed strncat_s name err=%d", errno);
+        BEGET_ERROR_CHECK(nameValue != NULL, return -1, "Failed calloc err=%d", errno);
+
+        ret = strncat_s(nameValue, len, name, strlen(name));
+        if (ret != 0) {
             free(nameValue);
+            BEGET_LOGE("Failed to cat name");
             return -1;
         }
         for (int j = 0; j < extArgc; j++) {
-            if (strncat_s(nameValue, len, "|", 1) != 0) {
-                BEGET_LOGE("Failed strncat_s \"|\"err=%d", errno);
-                free(nameValue);
-                return -1;
+            ret = strncat_s(nameValue, len, "|", 1);
+            if (ret == 0) {
+                ret = strncat_s(nameValue, len, extArgv[j], strlen(extArgv[j]));
             }
-            if (strncat_s(nameValue, len, extArgv[j], strlen(extArgv[j])) != 0) {
-                BEGET_LOGE("Failed strncat_s err=%d", errno);
+            if (ret != 0) {
                 free(nameValue);
+                BEGET_LOGE("Failed to cat name");
                 return -1;
             }
         }
-        if (SystemSetParameter("ohos.ctl.start", nameValue) != 0) {
-            BEGET_LOGE("Set param for %s failed.\n", nameValue);
-            free(nameValue);
-            return -1;
-        }
+        ret = SystemSetParameter("ohos.ctl.start", nameValue);
         free(nameValue);
     } else {
-        if (SystemSetParameter("ohos.ctl.start", name) != 0) {
-            BEGET_LOGE("Set param for %s failed.\n", name);
-            return -1;
-        }
+        ret = SystemSetParameter("ohos.ctl.start", name);
     }
-    return 0;
+    return ret;
 }
 
 static int StopProcess(const char *serviceName)
 {
-    if (serviceName == NULL) {
-        BEGET_LOGE("Stop ondemand service failed, service is null.\n");
-        return -1;
-    }
-    if (SystemSetParameter("ohos.ctl.stop", serviceName) != 0) {
-        BEGET_LOGE("Set param for %s failed.\n", serviceName);
-        return -1;
-    }
-    return 0;
+    BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
+    return SystemSetParameter("ohos.ctl.stop", serviceName);
 }
 
 static int GetCurrentServiceStatus(const char *serviceName, ServiceStatus *status)
@@ -108,15 +90,13 @@ static int GetCurrentServiceStatus(const char *serviceName, ServiceStatus *statu
 
 static int RestartProcess(const char *serviceName, const char *extArgv[], int extArgc)
 {
-    if (serviceName == NULL) {
-        BEGET_LOGE("Restart ondemand service failed, service is null.\n");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
     ServiceStatus status = SERVICE_IDLE;
     if (GetCurrentServiceStatus(serviceName, &status) != 0) {
         BEGET_LOGE("Get service status failed.\n");
         return -1;
     }
+    BEGET_LOGE("Process service %s status: %d ", serviceName, status);
     if (status == SERVICE_STARTED || status == SERVICE_READY) {
         if (StopProcess(serviceName) != 0) {
             BEGET_LOGE("Stop service %s failed", serviceName);
@@ -135,18 +115,13 @@ static int RestartProcess(const char *serviceName, const char *extArgv[], int ex
             BEGET_LOGE("Start service %s failed", serviceName);
             return -1;
         }
-    } else {
-        BEGET_LOGE("Current service status: %d is not support.", status);
     }
     return 0;
 }
 
 int ServiceControlWithExtra(const char *serviceName, int action, const char *extArgv[], int extArgc)
 {
-    if (serviceName == NULL) {
-        BEGET_LOGE("Service wait failed, service is null.\n");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
     int ret = 0;
     switch (action) {
         case START:
@@ -168,71 +143,49 @@ int ServiceControlWithExtra(const char *serviceName, int action, const char *ext
 
 int ServiceControl(const char *serviceName, int action)
 {
-    if (serviceName == NULL) {
-        BEGET_LOGE("Service getctl failed, service is null.");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
     int ret = ServiceControlWithExtra(serviceName, action, NULL, 0);
     return ret;
 }
 
-int ServiceWaitForStatus(const char *serviceName, ServiceStatus status, int waitTimeout)
+static int GetProcessInfo(const char *serviceName, char *nameBuffer, char *valueBuffer, ServiceStatus status)
 {
-    if (serviceName == NULL || waitTimeout <= 0) {
-        BEGET_LOGE("Service wait failed, service name is null or status invalid %d", status);
-        return -1;
-    }
-    char paramName[PARAM_NAME_LEN_MAX] = {0};
-    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "%s.%s",
+    if (snprintf_s(nameBuffer, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "%s.%s",
         STARTUP_SERVICE_CTL, serviceName) == -1) {
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
-    char value[MAX_INT_LEN] = {0};
-    if (snprintf_s(value, sizeof(value), sizeof(value) - 1, "%d", (int)status) == -1) {
+    if (snprintf_s(valueBuffer, MAX_INT_LEN, MAX_INT_LEN - 1, "%d", (int)status) == -1) {
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return -1;
     }
-    if (SystemWaitParameter(paramName, value, waitTimeout) != 0) {
-        BEGET_LOGE("Wait param for %s failed.", paramName);
-        return -1;
-    }
-    BEGET_LOGI("Success wait");
     return 0;
+}
+
+int ServiceWaitForStatus(const char *serviceName, ServiceStatus status, int waitTimeout)
+{
+    BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
+    BEGET_ERROR_CHECK(waitTimeout >= 0, return -1, "Invalid timeout.");
+    char paramName[PARAM_NAME_LEN_MAX] = {0};
+    char value[MAX_INT_LEN] = {0};
+    int ret = GetProcessInfo(serviceName, paramName, value, status);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to get param info.");
+    return (SystemWaitParameter(paramName, value, waitTimeout) != 0) ? -1 : 0;
 }
 
 int ServiceSetReady(const char *serviceName)
 {
-    if (serviceName == NULL) {
-        BEGET_LOGE("Service wait failed, service is null.");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
     char paramName[PARAM_NAME_LEN_MAX] = {0};
-    if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "%s.%s",
-        STARTUP_SERVICE_CTL, serviceName) == -1) {
-        BEGET_LOGE("Failed snprintf_s err=%d", errno);
-        return -1;
-    }
     char value[MAX_INT_LEN] = {0};
-    if (snprintf_s(value, sizeof(value), sizeof(value) - 1, "%d", (int)SERVICE_READY) == -1) {
-        BEGET_LOGE("Failed snprintf_s err=%d", errno);
-        return -1;
-    }
-    if (SystemSetParameter(paramName, value) != 0) {
-        BEGET_LOGE("Set param for %s failed.", paramName);
-        return -1;
-    }
-    BEGET_LOGI("Success set %s read", serviceName);
-    return 0;
+    int ret = GetProcessInfo(serviceName, paramName, value, SERVICE_READY);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to get param info.");
+    return SystemSetParameter(paramName, value);
 }
 
 int StartServiceByTimer(const char *serviceName, uint64_t timeout)
 {
-    if (serviceName == NULL) {
-        BEGET_LOGE("Request start service by timer with invalid service name");
-        return -1;
-    }
-
+    BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
     if (timeout == 0) {
         // start service immediately.
         return ServiceControl(serviceName, START);
@@ -243,31 +196,11 @@ int StartServiceByTimer(const char *serviceName, uint64_t timeout)
         BEGET_LOGE("Failed to build parameter value");
         return -1;
     }
-
-    if (SystemSetParameter("ohos.servicectrl.timer_start", value) != 0) {
-        BEGET_LOGE("Failed to set parameter \' ohos.servicectrl.timer_start \' with value \' %s \'", value);
-        return -1;
-    }
-    return 0;
+    return SystemSetParameter("ohos.servicectrl.timer_start", value);
 }
 
 int StopServiceTimer(const char *serviceName)
 {
-    if (serviceName == NULL) {
-        BEGET_LOGE("Request stop service timer with invalid service name");
-        return -1;
-    }
-
-    char value[PARAM_VALUE_LEN_MAX] = {};
-    int ret = strncpy_s(value, PARAM_VALUE_LEN_MAX - 1, serviceName, strlen(serviceName));
-    if (ret < 0) {
-        BEGET_LOGE("Failed to copy service name to parameter");
-        return -1;
-    }
-
-    if (SystemSetParameter("ohos.servicectrl.timer_stop", value) != 0) {
-        BEGET_LOGE("Failed to set parameter \' ohos.servicectrl.timer_stop \' with value \' %s \'", value);
-        return -1;
-    }
-    return 0;
+    BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
+    return SystemSetParameter("ohos.servicectrl.timer_stop", serviceName);
 }

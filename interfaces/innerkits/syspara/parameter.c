@@ -28,7 +28,8 @@
 int WaitParameter(const char *key, const char *value, int timeout)
 {
     BEGET_CHECK(!(key == NULL || value == NULL), return EC_INVALID);
-    return SystemWaitParameter(key, value, timeout);
+    int ret = SystemWaitParameter(key, value, timeout);
+    return GetSystemError(ret);
 }
 
 uint32_t FindParameter(const char *key)
@@ -56,7 +57,10 @@ int GetParameterName(uint32_t handle, char *name, uint32_t len)
         return EC_INVALID;
     }
     int ret = SystemGetParameterName(handle, name, len);
-    return (ret != 0) ? EC_FAILURE : strlen(name);
+    if (ret == 0) {
+        return strlen(name);
+    }
+    return GetSystemError(ret);
 }
 
 int GetParameterValue(uint32_t handle, char *value, uint32_t len)
@@ -66,7 +70,10 @@ int GetParameterValue(uint32_t handle, char *value, uint32_t len)
     }
     uint32_t size = len;
     int ret = SystemGetParameterValue(handle, value, &size);
-    return (ret != 0) ? EC_FAILURE : strlen(value);
+    if (ret == 0) {
+        return strlen(value);
+    }
+    return GetSystemError(ret);
 }
 
 int GetParameter(const char *key, const char *def, char *value, uint32_t len)
@@ -84,17 +91,13 @@ int SetParameter(const char *key, const char *value)
         return EC_INVALID;
     }
     int ret = SystemSetParameter(key, value);
-    if (ret == PARAM_CODE_INVALID_NAME || ret == DAC_RESULT_FORBIDED ||
-        ret == PARAM_CODE_INVALID_PARAM || ret == PARAM_CODE_INVALID_VALUE) {
-        return EC_INVALID;
-    }
-    return (ret == 0) ? EC_SUCCESS : EC_FAILURE;
+    return GetSystemError(ret);
 }
 
 const char *GetDeviceType(void)
 {
     static const char *productType = NULL;
-    const char *deviceType = GetProperty("const.build.devicetype", &productType);
+    const char *deviceType = GetProperty("const.product.devicetype", &productType);
     if (deviceType != NULL) {
         return deviceType;
     }
@@ -319,15 +322,17 @@ const char *GetBuildRootHash(void)
 int32_t GetIntParameter(const char *key, int32_t def)
 {
     char value[MAX_INT_LEN] = {0};
-    int ret = GetParameter(key, "0", value, sizeof(value));
+    uint32_t size = sizeof(value);
+    int ret = SystemGetParameter(key, value, &size);
     if (ret != 0) {
         return def;
     }
+
     long long int result = 0;
     if (StringToLL(value, &result) != 0) {
         return def;
     }
-    if (result <= INT32_MIN && result >= INT32_MAX) {
+    if (result <= INT32_MIN || result >= INT32_MAX) {
         return def;
     }
     return (int32_t)result;
@@ -336,10 +341,12 @@ int32_t GetIntParameter(const char *key, int32_t def)
 uint32_t GetUintParameter(const char *key, uint32_t def)
 {
     char value[MAX_INT_LEN] = {0};
-    int ret = GetParameter(key, "0", value, sizeof(value));
+    uint32_t size = sizeof(value);
+    int ret = SystemGetParameter(key, value, &size);
     if (ret != 0) {
         return def;
     }
+
     unsigned long long int result = 0;
     if (StringToULL(value, &result) != 0) {
         return def;

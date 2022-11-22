@@ -47,14 +47,13 @@ static void Usage()
     std::cout << "sandbox -n, --namespace_name=namespace name \"namespace name, system, chipset etc.\"" << std::endl;
     std::cout << "sandbox -p, --process=process name \"sh, hdcd, hdf_devhost, etc.\"" << std::endl;
     std::cout << "sandbox -h, --help \"Show help\"" << std::endl;
+#ifndef STARTUP_INIT_TEST
     exit(0);
+#endif
 }
 
 static void RunSandbox(const std::string &sandboxName)
 {
-    if (sandboxName.empty()) {
-        return;
-    }
     InitDefaultNamespace();
     if (!InitSandboxWithName(sandboxName.c_str())) {
         std::cout << "Init sandbox failed." << std::endl;
@@ -74,7 +73,7 @@ static void RunSandbox(const std::string &sandboxName)
 
 static void EnterShell()
 {
-    char *argv[] = { const_cast<char *>("sh"), NULL };
+    char *argv[] = { const_cast<char *>("sh"), nullptr };
     char *envp[] = { nullptr };
     if (execve("/system/bin/sh", argv, envp) != 0) {
         std::cout << "execve sh failed! err = "<< errno << std::endl;
@@ -85,23 +84,19 @@ static void EnterShell()
 static const int MAX_PROCESS_ARGC = 8;
 static void EnterExec(const std::string &processName)
 {
-    if (processName.empty()) {
-        std::cout << "process name is nullptr." << std::endl;
-        return;
-    }
     std::string tmpName = processName;
     std::vector<std::string> vtr;
     const std::string sep = " ";
     OHOS::SplitStr(tmpName, sep, vtr, true, false);
 
-    if ((vtr.size() > MAX_PROCESS_ARGC) || (vtr.size() <= 0)) {
+    if ((vtr.size() > MAX_PROCESS_ARGC) || (vtr.size() == 0)) {
         std::cout << "Service parameters is error." << std::endl;
         return;
     }
     char *argv[MAX_PROCESS_ARGC] = {};
     std::vector<std::string>::iterator it;
     int i = 0;
-    for (it = vtr.begin(); it != vtr.end(); it++) {
+    for (it = vtr.begin(); it != vtr.end(); ++it) {
         argv[i] = (char *)(*it).c_str();
         std::cout << std::string(argv[i]) << std::endl;
         i++;
@@ -185,18 +180,18 @@ MODULE_CONSTRUCTOR(void)
 {
     const CmdInfo infos[] = {
         {
-            (char *)"sandbox", main_cmd, (char *)"enter service sandbox",
-            (char *)"sandbox -s service_name",
+            const_cast<char *>("sandbox"), main_cmd, const_cast<char *>("enter service sandbox"),
+            const_cast<char *>("sandbox -s service_name"),
             NULL
         },
         {
-            (char *)"sandbox", main_cmd, (char *)"enter namespace, system, chipset etc.",
-            (char *)"sandbox -n namespace_name [-p]",
+            const_cast<char *>("sandbox"), main_cmd, const_cast<char *>("enter namespace, system, chipset etc."),
+            const_cast<char *>("sandbox -n namespace_name [-p]"),
             NULL
         },
         {
-            (char *)"sandbox", main_cmd, (char *)"enter namespace and exec process",
-            (char *)"sandbox -p process_name",
+            const_cast<char *>("sandbox"), main_cmd, const_cast<char *>("enter namespace and exec process"),
+            const_cast<char *>("sandbox -p process_name"),
             NULL
         }
     };

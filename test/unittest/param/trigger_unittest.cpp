@@ -14,6 +14,7 @@
  */
 #include <gtest/gtest.h>
 
+#include "bootstage.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
 #include "init_param.h"
@@ -45,17 +46,17 @@ static int TestCmdExec(const TriggerNode *trigger, const char *content, uint32_t
     PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
     PARAM_LOGI("DoTriggerExecute_ trigger type: %d %s", trigger->type, GetTriggerName(trigger));
     PARAM_CHECK(trigger->type <= TRIGGER_UNKNOW, return -1, "Invalid trigger type %d", trigger->type);
-    CommandNode *cmd = GetNextCmdNode((JobNode *)trigger, NULL);
+    CommandNode *cmd = GetNextCmdNode(reinterpret_cast<const JobNode *>(trigger), NULL);
     while (cmd != NULL) {
         g_execCmdId = cmd->cmdKeyIndex;
-        cmd = GetNextCmdNode((JobNode *)trigger, cmd);
+        cmd = GetNextCmdNode(reinterpret_cast<const JobNode *>(trigger), cmd);
     }
     return 0;
 }
 
 static int TestTriggerExecute(TriggerNode *trigger, const char *content, uint32_t size)
 {
-    JobNode *node = (JobNode *)trigger;
+    JobNode *node = reinterpret_cast<JobNode *>(trigger);
     int ret = memcpy_s(g_matchTriggerName, (int)sizeof(g_matchTriggerName) - 1, node->name, strlen(node->name));
     EXPECT_EQ(ret, 0);
     g_matchTriggerName[strlen(node->name)] = '\0';
@@ -63,12 +64,20 @@ static int TestTriggerExecute(TriggerNode *trigger, const char *content, uint32_
     return 0;
 }
 
+static void Test_JobParseHook(JOB_PARSE_CTX *jobParseCtx)
+{
+    return;
+}
+
 class TriggerUnitTest : public ::testing::Test {
 public:
     TriggerUnitTest() {}
     virtual ~TriggerUnitTest() {}
 
-    void SetUp() {}
+    void SetUp()
+    {
+        SetTestPermissionResult(0);
+    }
     void TearDown() {}
     void TestBody() {}
 
@@ -87,6 +96,9 @@ public:
 
     int TestLoadTrigger()
     {
+        RegisterBootStateChange(BootStateChange);
+        InitAddJobParseHook(Test_JobParseHook);
+
         int cmdKeyIndex = 0;
         const char *matchCmd = GetMatchCmd("setparam aaaa aaaa", &cmdKeyIndex);
         printf("cmd %d \n", matchCmd != nullptr);
@@ -202,6 +214,14 @@ public:
         CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM, buffer, strlen(buffer), TestTriggerExecute);
         EXPECT_EQ(1, g_matchTrigger);
         EXPECT_EQ(0, strcmp(triggerName, g_matchTriggerName));
+
+        // check for bug
+        g_matchTrigger = 0;
+        ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", "2222", value);
+        EXPECT_GE(ret, 0);
+        CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM, buffer, strlen(buffer), TestTriggerExecute);
+        EXPECT_EQ(0, g_matchTrigger);
+
         CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM_WATCH, buffer, strlen(buffer), TestTriggerExecute);
         return 0;
     }
@@ -266,7 +286,8 @@ public:
         JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
         JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
-
+        DoJobNow(triggerName);
+        ClearTrigger(nullptr, 0);
         g_matchTrigger = 0;
         SystemWriteParam(param1, "1");
         ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param1, "1");
@@ -315,7 +336,7 @@ public:
     int TestComputeCondition(const char *condition)
     {
         u_int32_t size = strlen(condition) + CONDITION_EXTEND_LEN;
-        char *prefix = (char *)malloc(size);
+        char *prefix = reinterpret_cast<char *>(malloc(size));
         if (prefix == nullptr) {
             printf("prefix is null.\n");
             return -1;
@@ -424,7 +445,7 @@ public:
         SystemWriteParam(param, value);
 
         RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
-        FreeTrigger(GetTriggerWorkSpace(), (TriggerNode *)trigger);
+        FreeTrigger(GetTriggerWorkSpace(), reinterpret_cast<TriggerNode *>(trigger));
         LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         EXPECT_NE(g_execCmdId, cmdIndex);
         trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
@@ -468,8 +489,8 @@ public:
 
     int TestDumpTrigger()
     {
-        RegisterBootStateChange(BootStateChange);
         (void)AddCompleteJob("param:ohos.servicectrl.display", "ohos.servicectrl.display=*", "display system");
+        DoTriggerExec("param:ohos.servicectrl.display");
         return 0;
     }
 };
@@ -575,8 +596,10 @@ HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger5, TestSize.Level0)
     TriggerUnitTest test;
     test.TestExecuteParamTrigger5();
 }
+
 HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger6, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestDumpTrigger();
+    CloseTriggerWorkSpace();
 }

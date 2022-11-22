@@ -99,7 +99,7 @@ bool GetBoolParameter(const std::string& key, bool def)
     return def;
 }
 
-int GetStringParameter(const std::string key, std::string &value, const std::string def)
+int GetStringParameter(const std::string &key, std::string &value, const std::string def)
 {
     uint32_t size = 0;
     int ret = SystemReadParam(key.c_str(), NULL, &size);
@@ -163,7 +163,7 @@ std::string GetDeviceType(void)
         {"fitnessWatch", "liteWearable"},
     };
     static const char *productType = nullptr;
-    const char *type = GetProperty("const.build.devicetype", &productType);
+    const char *type = GetProperty("const.product.devicetype", &productType);
     if (type == nullptr) {
         type = GetProperty("const.build.characteristics", &productType);
     }
@@ -173,7 +173,7 @@ std::string GetDeviceType(void)
     return std::string(type);
 }
 
-int GetIntParameter(const std::string key, int def)
+int GetIntParameter(const std::string &key, int def)
 {
     return GetIntParameter(key, def, INT_MIN, INT_MAX);
 }

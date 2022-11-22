@@ -17,7 +17,6 @@
 #include <errno.h>
 #include <semaphore.h>
 #include <sys/prctl.h>
-#include <sys/reboot.h>
 #include <unistd.h>
 #if defined OHOS_LITE && !defined __LINUX__
 #include <sys/capability.h>
@@ -29,14 +28,6 @@
 #include <linux/securebits.h>
 #endif
 #include "init_log.h"
-
-void RebootSystem(void)
-{
-    int ret = reboot(RB_AUTOBOOT);
-    if (ret != 0) {
-        INIT_LOGE("reboot failed! syscall ret %d, err %d.", ret, errno);
-    }
-}
 
 int KeepCapability(void)
 {

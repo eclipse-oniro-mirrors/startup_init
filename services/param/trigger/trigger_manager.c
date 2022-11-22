@@ -448,8 +448,7 @@ int32_t CheckAndMarkTrigger_(const TriggerWorkSpace *workSpace, int type, const 
             trigger = head->nextTrigger(head, trigger);
             continue;
         }
-        const char *tmp = strstr(head->getCondition(trigger), name);
-        if (tmp != NULL && strncmp(tmp + strlen(name), "=", 1) == 0) {
+        if (CheckMatchSubCondition(head->getCondition(trigger), name, strlen(name)) == 1) {
             TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_RELATED);
             ret = 1;
         }
@@ -647,7 +646,7 @@ void InitTriggerHead(const TriggerWorkSpace *workSpace)
     head->checkTriggerMatch = CheckParamMatch_;
     head->checkCondition = CheckParamCondition_;
     head->getCondition = GetTriggerCondition_;
-    // unknow trigger
+    // unknown trigger
     head = (TriggerHeader *)&workSpace->triggerHead[TRIGGER_UNKNOW];
     TriggerHeadSetDefault(head);
     head->checkTriggerMatch = CheckUnknowMatch_;

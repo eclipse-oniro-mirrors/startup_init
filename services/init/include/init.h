@@ -34,6 +34,12 @@ extern "C" {
 
 #define UNUSED(x) (void)(x)
 
+#ifndef STARTUP_INIT_TEST
+#define INIT_STATIC static
+#else
+#define INIT_STATIC
+#endif
+
 void SystemInit(void);
 void LogInit(void);
 void SystemPrepare(void);

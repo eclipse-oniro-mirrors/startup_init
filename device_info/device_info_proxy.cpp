@@ -18,16 +18,33 @@
 #include "idevice_info.h"
 #include "parcel.h"
 #include "string_ex.h"
+#include "sysparam_errno.h"
 
 namespace OHOS {
 namespace device_info {
+int32_t DeviceInfoProxy::DeviceInfoSendRequest(uint32_t code,
+    MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+#ifdef STARTUP_INIT_TEST
+    int ret = 0;
+#else
+    int ret = SYSPARAM_SYSTEM_ERROR;
+#endif
+    auto remote = Remote();
+    if (remote != nullptr) {
+        ret = remote->SendRequest(code, data, reply, option);
+    }
+    return ret;
+}
+
 int32_t DeviceInfoProxy::GetUdid(std::string& result)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option { MessageOption::TF_SYNC };
     data.WriteInterfaceToken(DeviceInfoProxy::GetDescriptor());
-    int32_t ret = Remote()->SendRequest(COMMAND_GET_UDID, data, reply, option);
+    int32_t ret = DeviceInfoSendRequest(COMMAND_GET_UDID, data, reply, option);
+    DINFO_LOGI("DeviceInfoProxy::GetUdid: %d", ret);
     DINFO_CHECK(ret == ERR_NONE, return ret, "getUdid failed, error code is %d", ret);
     result = Str16ToStr8(reply.ReadString16());
     return ERR_OK;
@@ -40,7 +57,8 @@ int32_t DeviceInfoProxy::GetSerialID(std::string& result)
     MessageOption option { MessageOption::TF_SYNC };
 
     data.WriteInterfaceToken(DeviceInfoProxy::GetDescriptor());
-    int32_t ret = Remote()->SendRequest(COMMAND_GET_SERIAL_ID, data, reply, option);
+    int32_t ret = DeviceInfoSendRequest(COMMAND_GET_SERIAL_ID, data, reply, option);
+    DINFO_LOGI("DeviceInfoProxy::GetSerialID: %d", ret);
     DINFO_CHECK(ret == ERR_NONE, return ret, "GetSerial failed, error code is %d", ret);
     result = Str16ToStr8(reply.ReadString16());
     return ERR_OK;

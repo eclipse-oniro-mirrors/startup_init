@@ -181,11 +181,7 @@ static int SetPerms(const Service *service)
 
 static int WritePid(const Service *service)
 {
-    const int maxPidStrLen = 50;
-    char pidString[maxPidStrLen];
     pid_t childPid = getpid();
-    int len = snprintf_s(pidString, maxPidStrLen, maxPidStrLen - 1, "%d", childPid);
-    INIT_ERROR_CHECK(len > 0, return SERVICE_FAILURE, "Failed to format pid for service %s", service->name);
     for (int i = 0; i < service->writePidArgs.count; i++) {
         if (service->writePidArgs.argv[i] == NULL) {
             continue;
@@ -198,16 +194,16 @@ static int WritePid(const Service *service)
             fd = fopen(service->writePidArgs.argv[i], "wb");
         }
         if (fd != NULL) {
-            INIT_CHECK_ONLY_ELOG((int)fwrite(pidString, 1, len, fd) == len,
-                "Failed to write %s pid:%s", service->writePidArgs.argv[i], pidString);
+            INIT_CHECK_ONLY_ELOG((int)fprintf(fd, "%d", childPid) > 0,
+                "Failed to write %s pid:%d", service->writePidArgs.argv[i], childPid);
             (void)fclose(fd);
         } else {
-            INIT_LOGE("Failed to open %s.", service->writePidArgs.argv[i]);
+            INIT_LOGE("Failed to open realPath: %s  %s errno:%d.", realPath, service->writePidArgs.argv[i], errno);
         }
         if (realPath != NULL) {
             free(realPath);
         }
-        INIT_LOGV("ServiceStart writepid filename=%s, childPid=%s, ok", service->writePidArgs.argv[i], pidString);
+        INIT_LOGV("ServiceStart writepid filename=%s, childPid=%d, ok", service->writePidArgs.argv[i], childPid);
     }
     return SERVICE_SUCCESS;
 }
@@ -264,15 +260,15 @@ static void PublishHoldFds(Service *service)
 
 static int BindCpuCore(Service *service)
 {
-    if (service == NULL) {
+    if (service == NULL || service->cpuSet == NULL) {
         return SERVICE_SUCCESS;
     }
-    if (CPU_COUNT(&service->cpuSet) == 0) {
+    if (CPU_COUNT(service->cpuSet) == 0) {
         return SERVICE_SUCCESS;
     }
 #ifndef __LITEOS_A__
     int pid = getpid();
-    INIT_ERROR_CHECK(sched_setaffinity(pid, sizeof(service->cpuSet), &service->cpuSet) == 0,
+    INIT_ERROR_CHECK(sched_setaffinity(pid, sizeof(cpu_set_t), service->cpuSet) == 0,
         return SERVICE_FAILURE, "%s set affinity between process(pid=%d) with CPU's core failed", service->name, pid);
     INIT_LOGI("%s set affinity between process(pid=%d) with CPU's core successfully", service->name, pid);
 #endif
@@ -295,13 +291,13 @@ static int InitServiceProperties(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
     SetServiceEnterSandbox(service->pathArgs.argv[0], service->attribute);
-    INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS, "access token failed %s", service->name);
+    INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS,
+        "Set service %s access token failed", service->name);
     // deal start job
     if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
     }
     ClearEnvironment(service);
-
     if (!IsOnDemandService(service)) {
         INIT_ERROR_CHECK(CreateServiceSocket(service) >= 0, return -1,
             "service %s exit! create socket failed!", service->name);
@@ -321,7 +317,7 @@ static int InitServiceProperties(Service *service)
     // permissions
     INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, return -1,
         "service %s exit! set perms failed! err %d.", service->name, errno);
-    
+
     // write pid
     INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, return -1,
         "service %s exit! write pid failed!", service->name);
@@ -350,7 +346,7 @@ void EnterServiceSandbox(Service *service)
 int ServiceStart(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
-    INIT_ERROR_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "service : %s had started already.", service->name);
+    INIT_ERROR_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "Service %s already started", service->name);
     INIT_ERROR_CHECK(service->pathArgs.count > 0,
         return SERVICE_FAILURE, "start service %s pathArgs is NULL.", service->name);
 
@@ -382,9 +378,15 @@ int ServiceStart(Service *service)
         INIT_LOGE("start service %s fork failed!", service->name);
         return SERVICE_FAILURE;
     }
-    INIT_LOGI("service %s starting pid %d", service->name, pid);
+    INIT_LOGI("Service %s(pid %d) started", service->name, pid);
     service->pid = pid;
     NotifyServiceChange(service, SERVICE_STARTED);
+#ifndef OHOS_LITE
+    /*
+     * after service fork hooks
+     */
+    ServiceHookExecute(service->name, (const char *)&pid, INIT_SERVICE_FORK_AFTER);
+#endif
     return SERVICE_SUCCESS;
 }
 

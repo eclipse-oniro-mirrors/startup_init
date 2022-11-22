@@ -32,25 +32,6 @@ public:
     void TearDown() {};
 };
 
-HWTEST_F(MountUnitTest, TestMountRequriedPartitions, TestSize.Level0)
-{
-    const char *fstabFiles = "/etc/fstab.required";
-    Fstab *fstab = NULL;
-    fstab = ReadFstabFromFile(fstabFiles, false);
-    if (fstab != NULL) {
-#ifdef __MUSL__
-        int ret = MountRequriedPartitions(fstab);
-        EXPECT_EQ(ret, -1);
-#endif
-        ReleaseFstab(fstab);
-    } else {
-        Fstab fstab1;
-        fstab1.head = nullptr;
-        int ret = MountRequriedPartitions(&fstab1);
-        EXPECT_EQ(ret, -1);
-    }
-    ReleaseFstab(LoadRequiredFstab());
-}
 HWTEST_F(MountUnitTest, TestGetBlockDevicePath, TestSize.Level1)
 {
     char path[20] = {0}; // 20 is path length
@@ -75,5 +56,10 @@ HWTEST_F(MountUnitTest, TestGetBlockDevicePath, TestSize.Level1)
     EXPECT_EQ(ret, -1);
     ret = GetBlockDeviceByMountPoint("mountPoint", &fstab, devicename, sizeof(devicename));
     EXPECT_EQ(ret, 0);
+}
+HWTEST_F(MountUnitTest, TestInvalidParam, TestSize.Level1)
+{
+    int ret = MountRequriedPartitions(nullptr);
+    EXPECT_NE(ret, 0);
 }
 } // namespace init_ut

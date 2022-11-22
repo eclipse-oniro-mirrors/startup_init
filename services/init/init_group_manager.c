@@ -49,7 +49,6 @@ static int ParseGroupCfgItem(cJSON *root, int type, const char *itemName)
 {
     int itemNumber = 0;
     cJSON *json = GetArrayItem(root, &itemNumber, itemName);
-    INIT_LOGI("ParseGroupCfgItem %s itemNumber %d", itemName, itemNumber);
     if (json == NULL) {
         return 0;
     }
@@ -189,7 +188,7 @@ void InitServiceSpace(void)
         int ret = GetProcCmdlineValue(BOOT_GROUP_NAME, data,
             g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr));
         if (ret != 0) {
-            INIT_LOGE("%s", "Failed to get boot group");
+            INIT_LOGV("Failed to get boot group");
             if (GetBootModeFromMisc() == GROUP_CHARGE) {
                 strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), "device.charge.group");
             }
@@ -252,7 +251,6 @@ InitGroupNode *GetGroupNode(int type, const char *name)
     if (type >= NODE_TYPE_GROUPS) {
         return NULL;
     }
-    INIT_LOGV("GetGroupNode type %d %p name %s", type, g_initWorkspace.hashMap[type], name);
     HashNode *node = OH_HashMapGet(g_initWorkspace.hashMap[type], name);
     if (node == NULL) {
         return NULL;

@@ -28,9 +28,9 @@ extern "C" {
 
 #define SERVICE_CTL_CMD_INDEX 2
 typedef struct {
-    const char *name; // system parameter partial name
-    const char *replace; // replace content if filed name match system parameter
-    const char *cmd; // command name
+    char *name; // system parameter partial name
+    char *replace; // replace content if filed name match system parameter
+    char *cmd; // command name
 } ParamCmdInfo;
 
 const ParamCmdInfo *GetServiceStartCtrl(size_t *size);

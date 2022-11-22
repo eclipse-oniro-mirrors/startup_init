@@ -23,7 +23,7 @@
 #include "control_fd.h"
 #include "securec.h"
 
-static void ProcessPtyWrite(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
+CONTROL_FD_STATIC void ProcessPtyWrite(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
 {
     if ((fd < 0) || (events == NULL) || (context == NULL)) {
         BEGET_LOGE("[control_fd] Invalid fifo write parameter");
@@ -43,7 +43,7 @@ static void ProcessPtyWrite(const WatcherHandle taskHandle, int fd, uint32_t *ev
     *events = Event_Read;
 }
 
-static void ProcessPtyRead(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
+CONTROL_FD_STATIC void ProcessPtyRead(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
 {
     if ((fd < 0) || (events == NULL) || (context == NULL)) {
         BEGET_LOGE("[control_fd] Invalid fifo read parameter");
@@ -63,17 +63,17 @@ static void ProcessPtyRead(const WatcherHandle taskHandle, int fd, uint32_t *eve
     *events = Event_Read;
 }
 
-static void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
+CONTROL_FD_STATIC void CmdClientOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
 {
     BEGET_LOGI("[control_fd] CmdOnRecvMessage %s len %d.", (char *)buffer, buffLen);
 }
 
-static void CmdOnConnectComplete(const TaskHandle client)
+CONTROL_FD_STATIC void CmdOnConnectComplete(const TaskHandle client)
 {
     BEGET_LOGI("[control_fd] CmdOnConnectComplete");
 }
 
-static void CmdOnClose(const TaskHandle task)
+CONTROL_FD_STATIC void CmdOnClose(const TaskHandle task)
 {
     BEGET_LOGI("[control_fd] CmdOnClose");
     CmdAgent *agent = (CmdAgent *)LE_GetUserData(task);
@@ -83,17 +83,17 @@ static void CmdOnClose(const TaskHandle task)
     LE_StopLoop(LE_GetDefaultLoop());
 }
 
-static void CmdDisConnectComplete(const TaskHandle client)
+CONTROL_FD_STATIC void CmdDisConnectComplete(const TaskHandle client)
 {
     BEGET_LOGI("[control_fd] CmdDisConnectComplete");
 }
 
-static void CmdOnSendMessageComplete(const TaskHandle task, const BufferHandle handle)
+CONTROL_FD_STATIC void CmdOnSendMessageComplete(const TaskHandle task, const BufferHandle handle)
 {
     BEGET_LOGI("[control_fd] CmdOnSendMessageComplete");
 }
 
-static CmdAgent *CmdAgentCreate(const char *server)
+CONTROL_FD_STATIC CmdAgent *CmdAgentCreate(const char *server)
 {
     if (server == NULL) {
         BEGET_LOGE("[control_fd] Invalid parameter");
@@ -108,7 +108,7 @@ static CmdAgent *CmdAgentCreate(const char *server)
     info.disConnectComplete = CmdDisConnectComplete;
     info.connectComplete = CmdOnConnectComplete;
     info.sendMessageComplete = CmdOnSendMessageComplete;
-    info.recvMessage = CmdOnRecvMessage;
+    info.recvMessage = CmdClientOnRecvMessage;
     LE_STATUS status = LE_CreateStreamClient(LE_GetDefaultLoop(), &task, &info);
     BEGET_ERROR_CHECK(status == 0, return NULL, "[control_fd] Failed create client");
     CmdAgent *agent = (CmdAgent *)LE_GetUserData(task);
@@ -117,13 +117,12 @@ static CmdAgent *CmdAgentCreate(const char *server)
     return agent;
 }
 
-static int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd, const char *ptyName)
+CONTROL_FD_STATIC int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd, const char *ptyName)
 {
     if ((agent == NULL) || (cmd == NULL) || (ptyName == NULL)) {
         BEGET_LOGE("[control_fd] Invalid parameter");
         return -1;
     }
-    int ret = 0;
     BufferHandle handle = NULL;
     uint32_t bufferSize = sizeof(CmdMessage) + strlen(cmd) + PTY_PATH_SIZE + 1;
     handle = LE_CreateBuffer(LE_GetDefaultLoop(), bufferSize);
@@ -132,7 +131,7 @@ static int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd,
     CmdMessage *message = (CmdMessage *)buff;
     message->msgSize = bufferSize;
     message->type = type;
-    ret = strcpy_s(message->ptyName, PTY_PATH_SIZE - 1, ptyName);
+    int ret = strcpy_s(message->ptyName, PTY_PATH_SIZE - 1, ptyName);
     BEGET_ERROR_CHECK(ret == 0, LE_FreeBuffer(LE_GetDefaultLoop(), agent->task, handle);
         return -1, "[control_fd] Failed to copy pty name %s", ptyName);
     ret = strcpy_s(message->cmd, bufferSize - sizeof(CmdMessage) - PTY_PATH_SIZE, cmd);
@@ -144,11 +143,12 @@ static int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd,
     return 0;
 }
 
-static int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd)
+CONTROL_FD_STATIC int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd)
 {
     if ((cmd == NULL) || (agent == NULL)) {
         return -1;
     }
+#ifndef STARTUP_INIT_TEST
     // initialize terminal
     struct termios term;
     int ret = tcgetattr(STDIN_FILENO, &term);
@@ -182,6 +182,7 @@ static int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd)
         close(pfd); return -1, "[control_fd] Failed le_loop start watcher stdin read and write ptmx");
     ret = SendCmdMessage(agent, type, cmd, ptsbuffer);
     BEGET_ERROR_CHECK(ret == 0, close(pfd); return -1, "[control_fd] Failed send message");
+#endif
     return 0;
 }
 
@@ -193,10 +194,13 @@ void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd)
     BEGET_LOGI("[control_fd] CmdAgentInit");
     CmdAgent *agent = CmdAgentCreate(socketPath);
     BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] Failed to create agent");
+#ifndef STARTUP_INIT_TEST
     int ret = InitPtyInterface(agent, type, cmd);
     if (ret != 0) {
         return;
     }
     LE_RunLoop(LE_GetDefaultLoop());
+    LE_CloseLoop(LE_GetDefaultLoop());
+#endif
     BEGET_LOGI("Cmd Client exit ");
 }

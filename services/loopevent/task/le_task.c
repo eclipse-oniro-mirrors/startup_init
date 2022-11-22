@@ -38,7 +38,7 @@ BaseTask *CreateTask(const LoopHandle loopHandle, int fd, const LE_BaseInfo *inf
     if ((size >= LOOP_MAX_BUFFER) || ((size + info->userDataSize) >= LOOP_MAX_BUFFER)) {
         return NULL;
     }
-    BaseTask *task = (BaseTask *)malloc(size + info->userDataSize);
+    BaseTask *task = (BaseTask *)calloc(1, size + info->userDataSize);
     LE_CHECK(task != NULL, return NULL, "Failed to alloc for task");
     HASHMAPInitNode(&task->hashNode);
     // key id

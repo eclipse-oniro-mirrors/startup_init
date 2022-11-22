@@ -21,10 +21,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "beget_ext.h"
 #include "cJSON.h"
 #include "init_cmds.h"
 #include "init_jobs_internal.h"
+#include "init_log.h"
 #include "init_service_manager.h"
 #include "param_stub.h"
 #include "securec.h"
@@ -180,7 +180,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_001, TestSize.Level0)
 HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_002, TestSize.Level0)
 {
     TestCmdLine curCmdLine;
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     ParseCmdLine(nullptr, &curCmdLine);
     EXPECT_EQ(0, strlen(curCmdLine.name));
@@ -207,7 +207,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_002, TestSize.Level0)
 HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_003, TestSize.Level0)
 {
     TestCmdLine curCmdLine;
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     for (size_t i = 0; i < g_supportedCmds.size(); ++i) {
         ParseCmdLine(g_supportedCmds[i].c_str(), &curCmdLine);
@@ -224,10 +224,12 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_003, TestSize.Level0)
 HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_004, TestSize.Level0)
 {
     TestCmdLine curCmdLine;
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     char toLongContent[MAX_CMD_CONTENT_LEN + 10];
-    memset_s(toLongContent, MAX_CMD_CONTENT_LEN + 10, 'x', MAX_CMD_CONTENT_LEN + 9);
+    int ret = memset_s(toLongContent, MAX_CMD_CONTENT_LEN + 10, 'x', MAX_CMD_CONTENT_LEN + 9);
+    EXPECT_EQ(0, ret);
+
     toLongContent[MAX_CMD_CONTENT_LEN + 9] = '\0';
     for (size_t i = 0; i < g_supportedCmds.size(); ++i) {
         size_t curCmdLen = g_supportedCmds[i].length();
@@ -262,7 +264,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_004, TestSize.Level0)
 HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_005, TestSize.Level0)
 {
     TestCmdLine curCmdLine;
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     ParseCmdLine("start InitTestService", &curCmdLine);
     EXPECT_EQ(0, strcmp("start ", curCmdLine.name));
@@ -304,7 +306,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_001, TestSize.Level0)
 HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_002, TestSize.Level0)
 {
     TestCmdLine curCmdLine;
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     std::string cmdStr = "start ";
     std::string cmdContentStr = "NameNotExist";
@@ -323,7 +325,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_002, TestSize.Level0)
 HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level0)
 {
     TestCmdLine curCmdLine;
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     std::string cmdStr = "mkdir ";
     std::string cmdContentStr = "/DirNotExist/DirNotExist/DirNotExist";
@@ -368,7 +370,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_003, TestSize.Level0)
 HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_004, TestSize.Level0)
 {
     TestCmdLine curCmdLine;
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     std::string cmdStr = "chmod ";
     std::string cmdContentStr = "755 " + TEST_FILE;    // should be 0755, wrong format here
@@ -424,7 +426,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_004, TestSize.Level0)
 HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_005, TestSize.Level0)
 {
     TestCmdLine curCmdLine;
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     std::string cmdStr = "chown ";
     std::string cmdContentStr = "888 " + TEST_FILE;    // uid or gid missing, wrong format here
@@ -629,12 +631,12 @@ static void CheckService(const cJSON* curItem)
     }
 
     cJSON *filedJ = cJSON_GetObjectItem(curItem, "uid");
-    EXPECT_TRUE(cJSON_IsNumber(filedJ));
-    EXPECT_TRUE(cJSON_GetNumberValue(filedJ) >= 0.0);
+    EXPECT_TRUE(cJSON_IsNumber(filedJ) || cJSON_IsString(filedJ));
+    EXPECT_TRUE(cJSON_GetNumberValue(filedJ) >= 0.0 || cJSON_GetStringValue(filedJ));
 
     filedJ = cJSON_GetObjectItem(curItem, "gid");
-    EXPECT_TRUE(cJSON_IsNumber(filedJ));
-    EXPECT_TRUE(cJSON_GetNumberValue(filedJ) >= 0.0);
+    EXPECT_TRUE(cJSON_IsNumber(filedJ) || cJSON_IsArray(filedJ));
+    EXPECT_TRUE(cJSON_GetNumberValue(filedJ) >= 0.0 || cJSON_GetArraySize(filedJ) >= 0);
 
     filedJ = cJSON_GetObjectItem(curItem, "once");
     EXPECT_TRUE(cJSON_IsNumber(filedJ));
@@ -648,8 +650,8 @@ static void CheckService(const cJSON* curItem)
     EXPECT_TRUE(capsCnt <= MAX_CAPS_CNT_FOR_ONE_SERVICE);
     for (int i = 0; i < capsCnt; ++i) {
         cJSON *capJ = cJSON_GetArrayItem(filedJ, i);
-        EXPECT_TRUE(cJSON_IsNumber(capJ));
-        EXPECT_TRUE(cJSON_GetNumberValue(capJ) >= 0.0);
+        EXPECT_TRUE(cJSON_IsNumber(capJ) || cJSON_GetStringValue(capJ));
+        EXPECT_TRUE(cJSON_GetNumberValue(capJ) >= 0.0 || cJSON_GetStringValue(capJ));
     }
 }
 
@@ -829,7 +831,7 @@ static void CreateIllegalCfg()
 HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_001, TestSize.Level0)
 {
     TestCmdLine curCmdLine;
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
 
     ParseCmdLine("loadcfg /patch/fstab.cfg", &curCmdLine);
     EXPECT_EQ(0, strcmp("loadcfg ", curCmdLine.name));
@@ -848,7 +850,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level0)
     std::string cmdContentStr = "/patch/file_not_exist.cfg";
     struct stat testCfgStat = {0};
 
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
     std::string command = cmdStr + cmdContentStr;
     ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));
@@ -859,7 +861,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level0)
 
     cmdContentStr = TEST_CFG_ILLEGAL;
     CreateIllegalCfg();
-    memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
+    (void)memset_s(&curCmdLine, sizeof(curCmdLine), 0, sizeof(curCmdLine));
     command = cmdStr + cmdContentStr;
     ParseCmdLine(command.c_str(), &curCmdLine);
     EXPECT_EQ(0, strcmp(cmdStr.c_str(), curCmdLine.name));

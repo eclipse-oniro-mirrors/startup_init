@@ -64,9 +64,9 @@ ohos_executable("init") {
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
     "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
-    "//base/startup/init/interfaces/innerkits/sandbox:sandbox",
     "//base/startup/init/services/loopevent:loopevent",
     "//base/startup/init/services/param/linux:param_init",
+    "//base/startup/init/services/sandbox:sandbox",
     "//base/startup/init/services/utils:libinit_utils",
   ]
   if (use_musl == false) {
@@ -132,20 +132,21 @@ ohos_executable("init") {
   }
   if (support_jsapi) {
     defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
+    external_deps = [ "profiler:libhidebug_init" ]
   }
   if (asan_detector) {
     defines += [ "ASAN_DETECTOR" ]
   }
 
-  if (enable_ohos_startup_init_feature_loader) {
-    defines += [ "PRODUCT_RK" ]
-  }
   version_script = get_label_info(
                        "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
                        "target_gen_dir") + "/" + get_label_info(
                        "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
                        "name") + stub_version_script_suffix
   defines += [ "_GNU_SOURCE" ]
+  if (use_musl) {
+    defines += [ "__MUSL__" ]
+  }
   install_images = [
     "system",
     "updater",

@@ -29,7 +29,7 @@ static int g_cmdId = 0;
 int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd)
 {
     INIT_ERROR_CHECK(cmdName != NULL, return -1, "Invalid input param");
-    INIT_LOGI("AddCmdExecutor '%s'", cmdName);
+    INIT_LOGV("Add command '%s' executor.", cmdName);
     PluginCmd *cmd = NULL;
     InitGroupNode *groupNode = GetGroupNode(NODE_TYPE_CMDS, cmdName);
     if (groupNode == NULL) {
@@ -123,7 +123,7 @@ int PluginExecCmd(const char *name, int argc, const char **argv)
         return -1;
     }
     PluginCmd *cmd = groupNode->data.cmd;
-    INIT_LOGI("PluginExecCmd index %s", cmd->name);
+    INIT_LOGV("PluginExecCmd index %s", cmd->name);
     int ret = 0;
     ListNode *node = cmd->cmdExecutor.next;
     while (node != &cmd->cmdExecutor) {
@@ -144,20 +144,39 @@ static int CompareCmdId(const HashNode *node, const void *key)
     return cmd->cmdId - *(int *)key;
 }
 
-void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
+static PluginCmd *GetPluginCmdByIndex(int index)
 {
-    int hashCode = ((index >> 16) & 0x0000ffff) - 1; // 16 left shift
-    int cmdId = (index & 0x0000ffff);
+    int hashCode = (((unsigned int)index >> 16) & 0x0000ffff) - 1; // 16 left shift
+    int cmdId = ((unsigned int)index & 0x0000ffff);
     HashNode *node = OH_HashMapFind(GetGroupHashMap(NODE_TYPE_CMDS),
         hashCode, (const void *)&cmdId, CompareCmdId);
     if (node == NULL) {
-        return;
+        return NULL;
     }
     InitGroupNode *groupNode = HASHMAP_ENTRY(node, InitGroupNode, hashNode);
     if (groupNode == NULL || groupNode->data.cmd == NULL) {
+        return NULL;
+    }
+    return groupNode->data.cmd;
+}
+
+const char *GetPluginCmdNameByIndex(int index)
+{
+    PluginCmd *cmd = GetPluginCmdByIndex(index);
+    if (cmd == NULL) {
+        return NULL;
+    }
+    return cmd->name;
+}
+
+void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
+{
+    PluginCmd *cmd = GetPluginCmdByIndex(index);
+    if (cmd == NULL) {
+        INIT_LOGW("Cannot find plugin command with index %d", index);
         return;
     }
-    PluginCmd *cmd = groupNode->data.cmd;
+    INIT_LOGV("Command: %s cmdContent: %s", cmd->name, cmdContent);
     PluginExecCmd_(cmd, cmdContent);
 }
 
@@ -186,6 +205,5 @@ const char *PluginGetCmdIndex(const char *cmdStr, int *index)
     hashCode = (hashCode < 0) ? -hashCode : hashCode;
     hashCode = hashCode % GROUP_HASHMAP_BUCKET;
     *index = ((hashCode + 1) << 16) | cmd->cmdId; // 16 left shift
-    INIT_LOGI("PluginGetCmdIndex content: %s index %d", cmd->name, *index);
     return cmd->name;
 }

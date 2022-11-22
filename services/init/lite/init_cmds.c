@@ -74,7 +74,6 @@ static void DoLoadCfg(const struct CmdArgs *ctx)
 {
     char buf[LOADCFG_BUF_SIZE] = { 0 };
     size_t maxLoop = 0;
-    int len;
     if (!CheckValidCfg(ctx->argv[0])) {
         INIT_LOGE("CheckCfg file %s Failed", ctx->argv[0]);
         return;
@@ -90,7 +89,7 @@ static void DoLoadCfg(const struct CmdArgs *ctx)
 
     while (fgets(buf, LOADCFG_BUF_SIZE - 1, fp) != NULL && maxLoop < LOADCFG_MAX_LOOP) {
         maxLoop++;
-        len = strlen(buf);
+        int len = strlen(buf);
         if (len < 1) {
             continue;
         }
@@ -122,13 +121,21 @@ const struct CmdTable *GetCmdTable(int *number)
 void PluginExecCmdByName(const char *name, const char *cmdContent)
 {
 }
+
 void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
 {
 }
+
 const char *PluginGetCmdIndex(const char *cmdStr, int *index)
 {
     return NULL;
 }
+
+const char *GetPluginCmdNameByIndex(int index)
+{
+    return NULL;
+}
+
 int SetFileCryptPolicy(const char *dir)
 {
     return 0;

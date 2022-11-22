@@ -125,6 +125,17 @@ if (defined(ohos_lite)) {
     module_install_dir = "etc/param"
   }
 
+  ohos_prebuilt_para("ohos.startup.para") {
+    source = "//base/startup/init/services/etc/param/ohos.startup.para"
+    install_images = [
+      "system",
+      "updater",
+    ]
+    part_name = "init"
+    subsystem_name = "startup"
+    module_install_dir = "etc/param"
+  }
+
   ohos_prebuilt_para("ohos.para.dac") {
     source = "//base/startup/init/services/etc/param/ohos.para.dac"
     install_images = [
@@ -160,12 +171,6 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
   }
 
-  ohos_prebuilt_etc("charge.group") {
-    source = "//base/startup/init/services/etc/device.charge.group.cfg"
-    part_name = "init"
-    subsystem_name = "startup"
-  }
-
   ohos_prebuilt_etc("syscap.para") {
     source = "${preloader_output_dir}/system/etc/param/syscap.para"
     module_install_dir = "etc/param/"
@@ -191,29 +196,6 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
   }
 
-  ohos_prebuilt_etc("system-sandbox.json") {
-    if (target_cpu == "arm64") {
-      source = "//base/startup/init/interfaces/innerkits/sandbox/system-sandbox64.json"
-    } else {
-      source =
-          "//base/startup/init/interfaces/innerkits/sandbox/system-sandbox.json"
-    }
-    part_name = "init"
-    subsystem_name = "startup"
-    module_install_dir = "etc/sandbox"
-  }
-
-  ohos_prebuilt_etc("chipset-sandbox.json") {
-    if (target_cpu == "arm64") {
-      source = "//base/startup/init/interfaces/innerkits/sandbox/chipset-sandbox64.json"
-    } else {
-      source = "//base/startup/init/interfaces/innerkits/sandbox/chipset-sandbox.json"
-    }
-    part_name = "init"
-    subsystem_name = "startup"
-    module_install_dir = "etc/sandbox"
-  }
-
   ohos_prebuilt_etc("init.reboot") {
     source = "//base/startup/init/services/etc/init.reboot.cfg"
     part_name = "init"
@@ -224,8 +206,6 @@ if (defined(ohos_lite)) {
   group("etc_files") {
     deps = [
       ":boot.group",
-      ":charge.group",
-      ":chipset-sandbox.json",
       ":console.cfg",
       ":features.json",
       ":group",
@@ -235,13 +215,12 @@ if (defined(ohos_lite)) {
       ":ohos.para",
       ":ohos.para.dac",
       ":ohos.para.size",
+      ":ohos.startup.para",
       ":ohos_const.para",
       ":passwd",
       ":syscap.json",
       ":syscap.para",
-      ":system-sandbox.json",
       ":systemcapability.json",
-      ":ueventd.cfg",
     ]
   }
 }

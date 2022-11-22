@@ -27,9 +27,6 @@ ohos_shared_library("rebootmodule") {
 
   external_deps = [ "init:libinit_module_engine" ]
   defines = []
-  if (enable_ohos_startup_init_feature_loader) {
-    defines += [ "PRODUCT_RK" ]
-  }
   part_name = "init"
   subsystem_name = "startup"
   if (target_cpu == "arm64") {

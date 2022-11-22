@@ -28,6 +28,13 @@ enum OHOSStartUpSysParamErrorCode {
     EC_FAILURE = -1, /* Execution failed */
     EC_INVALID = -9, /* Invalid argument */
     EC_SYSTEM_ERR = -10, /* system error */
+
+    SYSPARAM_INVALID_INPUT = -401, /* Input parameter is missing or invalid */
+    SYSPARAM_NOT_FOUND = -14700101, /* System parameter can not be found. */
+    SYSPARAM_INVALID_VALUE = -14700102, /* System parameter value is invalid */
+    SYSPARAM_PERMISSION_DENIED = -14700103, /* System permission operation permission denied */
+    SYSPARAM_SYSTEM_ERROR = -14700104, /* System internal error including out of memory, deadlock etc. */
+    SYSPARAM_WAIT_TIMEOUT = -14700105, /* System wait parameter value change time out. */
 };
 
 #ifdef __cplusplus

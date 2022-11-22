@@ -187,7 +187,7 @@ static int ComputeSubCondition(const LogicCalculator *calculator, LogicData *dat
     // check name
     if ((calculator->inputName != NULL) && (strcmp(calculator->conditionName, calculator->inputName) == 0)) {
         return CompareValue(calculator->conditionContent, calculator->inputContent);
-    } else if (calculator->conditionName != NULL && strlen(calculator->conditionName) > 0) {
+    } else if (strlen(calculator->conditionName) > 0) {
         uint32_t len = SUPPORT_DATA_BUFFER_MAX;
         ret = SystemReadParam(calculator->conditionName, calculator->readContent, &len);
         if (ret != 0) {
@@ -328,8 +328,20 @@ int CheckMatchSubCondition(const char *condition, const char *input, int length)
 {
     PARAM_CHECK(condition != NULL, return 0, "Invalid condition");
     PARAM_CHECK(input != NULL, return 0, "Invalid input");
-    char *tmp = strstr(condition, input);
-    if ((tmp != NULL) && ((int)strlen(tmp) > length) && (tmp[length] == '=')) {
+    const char *tmp = strstr(condition, input);
+    if (tmp == NULL) {
+        return 0;
+    }
+    PARAM_LOGV("CheckMatchSubCondition Condition: '%s' content: '%s' length %d", condition, input, length);
+    if (((int)strlen(tmp) <= length) || (tmp[length] != '=')) {
+        return 0;
+    }
+    // for condition: parameter = 1
+    if (tmp == condition) {
+        return 1;
+    }
+    // for condition: parameter1 = 1 && parameter2 = 1
+    if (*(tmp - 1) == ' ') {
         return 1;
     }
     return 0;

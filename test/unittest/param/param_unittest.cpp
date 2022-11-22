@@ -26,12 +26,10 @@ using namespace testing::ext;
 using namespace std;
 
 extern "C" {
-int WorkSpaceNodeCompare(const HashNode *node1, const HashNode *node2);
-}
-
-static void OnClose(ParamTaskPtr client)
+void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
+static void OnClose(const TaskHandle taskHandle)
 {
-    UNUSED(client);
+}
 }
 
 static int CheckServerParamValue(const char *name, const char *expectValue)
@@ -396,6 +394,7 @@ HWTEST_F(ParamUnitTest, TestDumpParamMemory, TestSize.Level0)
     ParamUnitTest test;
     test.TestDumpParamMemory();
 }
+
 HWTEST_F(ParamUnitTest, TestLinuxRWLock, TestSize.Level0)
 {
     ParamRWMutexCreate(nullptr);
@@ -404,18 +403,95 @@ HWTEST_F(ParamUnitTest, TestLinuxRWLock, TestSize.Level0)
     ParamRWMutexUnlock(nullptr);
     ParamRWMutexDelete(nullptr);
     ParamMutexDelete(nullptr);
-    WorkSpace *workspace1 = (WorkSpace *)malloc(sizeof(WorkSpace) + strlen("testfilename1"));
-    WorkSpace *workspace2 = (WorkSpace *)malloc(sizeof(WorkSpace) + strlen("testfilename1"));
-    if (strcpy_s(workspace1->fileName, strlen("testfilename1"), "testfilename") != EOK) {
-        EXPECT_EQ(0, 1);
-    }
-    if (strcpy_s(workspace2->fileName, strlen("testfilename1"), "testfilename") != EOK) {
-        EXPECT_EQ(0, 1);
-    }
-    EXPECT_EQ(WorkSpaceNodeCompare(&(workspace1->hashNode), &(workspace2->hashNode)), 0);
-    free(workspace1);
-    free(workspace2);
 }
+
+HWTEST_F(ParamUnitTest, TestWorkSpace1, TestSize.Level0)
+{
+    int ret = AddWorkSpace("test.workspace.1", 0, PARAM_WORKSPACE_DEF);
+    EXPECT_EQ(ret, 0);
+    ret = AddWorkSpace("test.workspace.2", 0, PARAM_WORKSPACE_DEF);
+    EXPECT_EQ(ret, 0);
+    ret = AddWorkSpace("test.workspace.3", 0, PARAM_WORKSPACE_DEF);
+    EXPECT_EQ(ret, 0);
+    WorkSpace *space = GetWorkSpace("test.workspace.1");
+    EXPECT_NE(space, nullptr);
+    CloseWorkSpace(nullptr);
+}
+
+HWTEST_F(ParamUnitTest, TestWorkSpace2, TestSize.Level0)
+{
+    const char *spaceName = "test.workspace2";
+    const size_t size = strlen(spaceName) + 1;
+    WorkSpace *workSpace = (WorkSpace *)malloc(sizeof(WorkSpace) + size);
+    if (workSpace == nullptr) {
+        EXPECT_NE(workSpace, nullptr);
+        return;
+    }
+    workSpace->flags = 0;
+    workSpace->area = NULL;
+    OH_ListInit(&workSpace->node);
+    int ret = ParamStrCpy(workSpace->fileName, size, spaceName);
+    EXPECT_EQ(ret, 0);
+    HASHMAPInitNode(&workSpace->hashNode);
+    CloseWorkSpace(workSpace);
+}
+
+HWTEST_F(ParamUnitTest, TestWorkSpace3, TestSize.Level0)
+{
+    const char *spaceName = "test.workspace3";
+    int ret = AddWorkSpace(spaceName, 1, PARAM_WORKSPACE_DEF);
+#ifndef OHOS_LITE
+    EXPECT_NE(ret, 0);
+#else
+    EXPECT_EQ(ret, 0);
+#endif
+    HashNode *node = OH_HashMapGet(GetParamWorkSpace()->workSpaceHashHandle, (const void *)spaceName);
+    EXPECT_EQ(node, nullptr);
+}
+
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__) // can not support parameter type
+HWTEST_F(ParamUnitTest, TestParamValueType1, TestSize.Level0)
+{
+    int ret = SystemWriteParam("test.type.int.1000", "10000");
+    EXPECT_EQ(ret, 0);
+
+    ret = SystemWriteParam("test.type.int.1001", "-1111111144444444444441111111666666661");
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_VALUE);
+    ret = SystemWriteParam("test.type.int.1001", "1111111111444444444444411111166666666");
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_VALUE);
+}
+
+HWTEST_F(ParamUnitTest, TestParamValueType2, TestSize.Level0)
+{
+    int ret = SystemWriteParam("test.type.bool.1000", "10000");
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_VALUE);
+
+    ret = SystemWriteParam("test.type.bool.1001", "-1111111111111111");
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_VALUE);
+    ret = SystemWriteParam("test.type.bool.1001", "1111111111111111");
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_VALUE);
+    ret = SystemWriteParam("test.type.bool.1001", "true");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("test.type.bool.1001", "false");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("test.type.bool.1001", "1");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("test.type.bool.1001", "0");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("test.type.bool.1001", "on");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("test.type.bool.1001", "off");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("test.type.bool.1001", "yes");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("test.type.bool.1001", "no");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("test.type.bool.1001", "y");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("test.type.bool.1001", "n");
+    EXPECT_EQ(ret, 0);
+}
+#endif
 
 HWTEST_F(ParamUnitTest, TestGetServiceCtlName, TestSize.Level0)
 {
@@ -435,5 +511,127 @@ HWTEST_F(ParamUnitTest, TestGetServiceCtlName, TestSize.Level0)
         EXPECT_STREQ(serviceInfo->realKey, "ohos.servicectrl.stop.test");
         free(serviceInfo);
     }
+    ParamWorBaseLog(INIT_DEBUG, PARAN_DOMAIN, "PARAM", "%s", "ParamWorBaseLog");
 }
+
+HWTEST_F(ParamUnitTest, TestFindTrieNode, TestSize.Level0)
+{
+    int ret = AddWorkSpace("test.workspace.1", 0, PARAM_WORKSPACE_DEF);
+    EXPECT_EQ(ret, 0);
+    WorkSpace *space = GetWorkSpace("test.workspace.1");
+    ASSERT_NE(space, nullptr);
+    ParamTrieNode *node = FindTrieNode(nullptr, nullptr, 0, nullptr);
+    ASSERT_EQ(node, nullptr);
+    node = FindTrieNode(space, nullptr, 0, nullptr);
+    ASSERT_EQ(node, nullptr);
+    node = FindTrieNode(space, "111111", 0, nullptr);
+    ASSERT_EQ(node, nullptr);
+    node = FindTrieNode(space, "find.test.111111", strlen("find.test.111111"), nullptr);
+    ASSERT_EQ(node, nullptr);
+}
+
+#ifndef OHOS_LITE
+HWTEST_F(ParamUnitTest, TestConnectServer, TestSize.Level0)
+{
+    int ret = ConnectServer(-1, CLIENT_PIPE_NAME);
+    EXPECT_NE(ret, 0);
+    int fd = socket(PF_UNIX, SOCK_STREAM, 0);
+    ret = ConnectServer(fd, "");
+    EXPECT_NE(ret, 0);
+    ret = ConnectServer(fd, CLIENT_PIPE_NAME);
+    EXPECT_EQ(ret, 0);
+    close(fd);
+}
+
+HWTEST_F(ParamUnitTest, TestRequestMessage, TestSize.Level0)
+{
+    const int maxSize = 1024 * 64 + 10;
+    const int msgSize = sizeof(ParamMessage) + 128; // 128 TEST
+    ParamMessage *msg = CreateParamMessage(0, nullptr, msgSize);
+    EXPECT_EQ(msg, nullptr);
+    msg = CreateParamMessage(0, "nullptr", maxSize);
+    EXPECT_EQ(msg, nullptr);
+    msg = CreateParamMessage(0, "22222222222222222222222222222222222222222"
+        "333333333333333333333333333333333333333333333333333333333333333333333"
+        "555555555555555555555555555555555555555555555555555555555555555555555", msgSize);
+    EXPECT_EQ(msg, nullptr);
+
+    // success
+    msg = CreateParamMessage(0, "22222222222222222222222222222222222222222", msgSize);
+    EXPECT_NE(msg, nullptr);
+    uint32_t start = 0;
+    int ret = FillParamMsgContent(nullptr, &start, 0, nullptr, 0);
+    EXPECT_NE(ret, 0);
+    ret = FillParamMsgContent(msg, nullptr, 0, nullptr, 0);
+    EXPECT_NE(ret, 0);
+    ret = FillParamMsgContent(msg, &start, 0, nullptr, 0);
+    EXPECT_NE(ret, 0);
+    ret = FillParamMsgContent(msg, &start, 0, "22222", 0);
+    EXPECT_NE(ret, 0);
+    ret = FillParamMsgContent(msg, &start, 0, "22222", msgSize);
+    EXPECT_NE(ret, 0);
+    // fill success
+    ret = FillParamMsgContent(msg, &start, 0, "22222", strlen("22222"));
+    EXPECT_EQ(ret, 0);
+    msg->msgSize = start + sizeof(ParamMessage);
+
+    uint32_t offset = 0;
+    ParamMsgContent *content = GetNextContent(nullptr, &offset);
+    EXPECT_EQ(content, nullptr);
+    content = GetNextContent(msg, nullptr);
+    EXPECT_EQ(content, nullptr);
+    offset = 0;
+    content = GetNextContent(msg, &offset);
+    EXPECT_NE(content, nullptr);
+    content = GetNextContent(msg, &offset);
+    EXPECT_EQ(content, nullptr);
+    free(msg);
+}
+
+HWTEST_F(ParamUnitTest, TestServerTaskFail, TestSize.Level0)
+{
+    ParamTaskPtr serverTask = nullptr;
+    ParamStreamInfo info = {};
+    info.server = const_cast<char *>(PIPE_NAME);
+    info.close = nullptr;
+    info.recvMessage = nullptr;
+    info.incomingConnect = nullptr;
+    int ret = ParamServerCreate(nullptr, &info);
+    EXPECT_NE(ret, 0);
+    ret = ParamServerCreate(&serverTask, nullptr);
+    EXPECT_NE(ret, 0);
+    ret = ParamServerCreate(&serverTask, &info);
+    EXPECT_NE(ret, 0);
+}
+
+HWTEST_F(ParamUnitTest, TestStreamTaskFail, TestSize.Level0)
+{
+    ParamTaskPtr client = nullptr;
+    ParamStreamInfo info = {};
+    info.flags = PARAM_TEST_FLAGS;
+    info.server = NULL;
+    info.close = OnClose;
+    info.recvMessage = ProcessMessage;
+    info.incomingConnect = NULL;
+    int ret = ParamStreamCreate(&client, nullptr, &info, sizeof(ParamWatcher));
+    EXPECT_NE(ret, 0);
+    ret = ParamStreamCreate(&client, GetParamService()->serverTask, nullptr, sizeof(ParamWatcher));
+    EXPECT_NE(ret, 0);
+    info.close = nullptr;
+    ret = ParamStreamCreate(&client, GetParamService()->serverTask, &info, sizeof(ParamWatcher));
+    EXPECT_NE(ret, 0);
+    info.close = OnClose;
+    info.recvMessage = nullptr;
+    ret = ParamStreamCreate(&client, GetParamService()->serverTask, &info, sizeof(ParamWatcher));
+    EXPECT_NE(ret, 0);
+
+    void *data = ParamGetTaskUserData(client);
+    EXPECT_EQ(data, nullptr);
+
+    ret = ParamTaskSendMsg(nullptr, nullptr);
+    EXPECT_NE(ret, 0);
+    ret = ParamTaskSendMsg(GetParamService()->serverTask, nullptr);
+    EXPECT_NE(ret, 0);
+}
+#endif
 }

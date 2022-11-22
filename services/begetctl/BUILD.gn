@@ -25,7 +25,6 @@ common_include_dirs = [
   "//base/startup/init/services/init/include",
   "//base/startup/init/services/log",
   "//base/startup/init/interfaces/innerkits/include",
-  "//base/startup/init/interfaces/innerkits/sandbox/include",
   "//base/security/selinux/interfaces/policycoreutils/include",
   "//third_party/bounds_checking_function/include",
   "//third_party/selinux/libselinux/include",
@@ -71,20 +70,19 @@ if (defined(ohos_lite)) {
       "param_cmd.c",
       "sandbox.cpp",
       "service_control.c",
+      "setloglevel.c",
       "shell/shell_bas.c",
     ]
 
     defines = [ "_GNU_SOURCE" ]
 
-    if (enable_ohos_startup_init_feature_loader) {
-      defines += [ "PRODUCT_RK" ]
-    }
-
     include_dirs = common_include_dirs
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
       "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
+      "//base/startup/init/services/sandbox:sandbox",
       "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/cJSON:cjson",
     ]
     external_deps = [ "c_utils:utils" ]
 
@@ -109,23 +107,17 @@ if (defined(ohos_lite)) {
     }
 
     symlink_target_name = [
-      "misc_daemon",
       "reboot",
-      "devctl",
-      "service",
       "service_control",
-      "start_service",
-      "stop_service",
-      "service",
-      "sandbox",
-      "dump_service",
     ]
 
     if (enable_ohos_startup_init_feature_ab_partition) {
       sources += [ "partitionslot.cpp" ]
-      external_deps +=
-          [ "drivers_interface_partitionslot:libpartitionslot_proxy_1.0" ]
-      symlink_target_name += [ "partitionslot" ]
+      include_dirs += [ "//drivers/hdf_core/adapter/uhdf2/include" ]
+      external_deps += [
+        "drivers_interface_partitionslot:libpartitionslot_proxy_1.0",
+        "hdf_core:libhdi",
+      ]
     }
 
     install_images = [ "system" ]

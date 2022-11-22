@@ -21,9 +21,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#ifdef PARAM_BASE_LOG
 #include "init_log.h"
-#endif
 #include "init_utils.h"
 #include "param_base.h"
 #include "param_manager.h"
@@ -117,7 +115,7 @@ static int GetClientSocket(int timeout)
     struct timeval time;
     time.tv_sec = timeout;
     time.tv_usec = 0;
-    int clientFd = socket(AF_UNIX, SOCK_STREAM, 0);
+    int clientFd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     PARAM_CHECK(clientFd >= 0, return -1, "Failed to create socket");
     int ret = ConnectServer(clientFd, CLIENT_PIPE_NAME);
     if (ret == 0) {
@@ -132,11 +130,14 @@ static int GetClientSocket(int timeout)
 
 static int StartRequest(int clientFd, ParamMessage *request, int timeout)
 {
-    int ret = 0;
+    errno = 0;
     ssize_t sendLen = send(clientFd, (char *)request, request->msgSize, 0);
-    PARAM_CHECK(sendLen >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to send message");
+    if (errno == EINVAL || errno == EACCES) {
+        return PARAM_CODE_INVALID_SOCKET;
+    }
+    PARAM_CHECK(sendLen >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to send message err: %d", errno);
     PARAM_LOGV("sendMessage sendLen fd %d %zd", clientFd, sendLen);
-    ret = ReadMessage(clientFd, (char *)request, timeout);
+    int ret = ReadMessage(clientFd, (char *)request, timeout);
     if (ret == 0) {
         ret = ProcessRecvMsg(request);
     }
@@ -164,15 +165,25 @@ int SystemSetParameter(const char *name, const char *value)
     request->id.msgId = atomic_fetch_add(&g_requestId, 1);
 
     PARAM_LOGI("SystemSetParameter name %s msgid:%d ", name, request->id.msgId);
-    int fd = INVALID_SOCKET;
     pthread_mutex_lock(&g_clientMutex);
-    if (g_clientFd == INVALID_SOCKET) {
-        g_clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
-    }
-    fd = g_clientFd;
-    ret = PARAM_CODE_INVALID_PARAM;
-    if (fd >= 0) {
-        ret = StartRequest(fd, request, DEFAULT_PARAM_SET_TIMEOUT);
+    int retryCount = 0;
+    while (retryCount < 2) { // max retry 2
+        if (g_clientFd == INVALID_SOCKET) {
+            g_clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
+        }
+        if (g_clientFd < 0) {
+            ret = DAC_RESULT_FORBIDED;
+            break;
+        }
+        ret = StartRequest(g_clientFd, request, DEFAULT_PARAM_SET_TIMEOUT);
+        if (ret == PARAM_CODE_INVALID_SOCKET) {
+            close(g_clientFd);
+            g_clientFd = INVALID_SOCKET;
+            retryCount++;
+            ret = DAC_RESULT_FORBIDED;
+        } else {
+            break;
+        }
     }
     PARAM_LOGI("SystemSetParameter name %s msgid:%d  ret: %d ", name, request->id.msgId, ret);
     pthread_mutex_unlock(&g_clientMutex);
@@ -233,16 +244,6 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 int SystemCheckParamExist(const char *name)
 {
     return SysCheckParamExist(name);
-}
-
-int SystemFindParameter(const char *name, ParamHandle *handle)
-{
-    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
-    int ret = ReadParamWithCheck(name, DAC_READ, handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
-    }
-    return ret;
 }
 
 int WatchParamCheck(const char *keyprefix)

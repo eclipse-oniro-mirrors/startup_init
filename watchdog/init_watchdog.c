@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+ 
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -76,7 +76,7 @@ int main(int argc, const char *argv[])
     }
     gap = (gap > 0) ? gap : DEFAULT_GAP;
 
-    INIT_LOGI("watchdoge started (interval %d, margin %d), fd = %d\n", interval, gap, fd);
+    INIT_LOGI("Watchdog started (interval %d, margin %d), fd = %d\n", interval, gap, fd);
 #ifdef OHOS_LITE_WATCHDOG
 #ifndef LINUX_WATCHDOG
     if (setpriority(PRIO_PROCESS, 0, 14) != 0) { // 14 is process priority

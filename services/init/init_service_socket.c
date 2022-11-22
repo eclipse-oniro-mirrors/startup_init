@@ -123,8 +123,8 @@ static int SetSocketOptionAndBind(ServiceSocket *sockopt)
 
 static int CreateSocket(ServiceSocket *sockopt)
 {
-    INIT_ERROR_CHECK(sockopt != NULL, return SERVICE_FAILURE, "Invalid socket opt");
-    INIT_LOGI("name: %s, family: %d, type: %u, protocol: %d, perm: %u, uid: %u, gid: %u, option: %u",
+    INIT_ERROR_CHECK(sockopt != NULL, return SERVICE_FAILURE, "Invalid socket options");
+    INIT_LOGV("Socket name: %s, family: %d, type: %u, protocol: %d, perm: %u, uid: %u, gid: %u, option: %u",
         sockopt->name, sockopt->family, sockopt->type, sockopt->protocol,
         sockopt->perm, sockopt->uid,    sockopt->gid,  sockopt->option);
     if (sockopt->sockFd >= 0) {
@@ -192,7 +192,7 @@ int SocketAddWatcher(ServiceWatcher *watcherHandle, Service *service, int fd)
     info.events = Event_Read;
     info.processEvent = ProcessWatchEvent_;
     int ret = LE_StartWatcher(LE_GetDefaultLoop(), &handle, &info, service);
-    INIT_LOGI("Start to monitor socket, fd:%d service name:%s", fd, service->name);
+    INIT_LOGI("Watcher socket fd %d for service %s", fd, service->name);
     *watcherHandle = (ServiceWatcher)handle;
     return ret;
 }
@@ -209,7 +209,9 @@ int CreateServiceSocket(Service *service)
     int ret = 0;
     ServiceSocket *tmpSock = service->socketCfg;
     while (tmpSock != NULL) {
+        PluginExecCmdByName("setSockCreateCon", service->name);
         int fd = CreateSocket(tmpSock);
+        PluginExecCmdByName("setSockCreateCon", "");
         INIT_CHECK_RETURN_VALUE(fd >= 0, -1);
         if (IsOnDemandService(service)) {
             if (IsConnectionBasedSocket(tmpSock)) {
@@ -242,7 +244,9 @@ void CloseServiceSocket(Service *service)
             sockopt->sockFd = -1;
         }
         if (GetSocketAddr(&addr, sockopt->name) == 0) {
+#ifndef STARTUP_INIT_TEST
             unlink(addr.sun_path);
+#endif
         }
         sockopt = sockopt->next;
     }

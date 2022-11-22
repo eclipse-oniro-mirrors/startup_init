@@ -18,10 +18,11 @@
 #include <mutex>
 #include "idevice_info.h"
 #include "singleton.h"
+#include "beget_ext.h"
 
 namespace OHOS {
 namespace device_info {
-class DeviceInfoKits final : public DelayedRefSingleton<DeviceInfoKits> {
+class INIT_LOCAL_API DeviceInfoKits final : public DelayedRefSingleton<DeviceInfoKits> {
     DECLARE_DELAYED_REF_SINGLETON(DeviceInfoKits);
 public:
     DISALLOW_COPY_AND_MOVE(DeviceInfoKits);

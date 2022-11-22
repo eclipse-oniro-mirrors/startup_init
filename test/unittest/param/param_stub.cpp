@@ -15,12 +15,23 @@
 
 #include "param_stub.h"
 #include <dirent.h>
-#include "beget_ext.h"
+#include <sys/prctl.h>
+#include <unistd.h>
+
+#include "bootstage.h"
+#include "init.h"
+#include "init_log.h"
 #include "init_param.h"
+#ifndef OHOS_LITE
+#include "init_mount.h"
+#endif
+#include "hookmgr.h"
+#include "parameter.h"
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_utils.h"
 #include "init_group_manager.h"
+#include "init_module_engine.h"
 #ifdef PARAM_LOAD_CFG_FROM_CODE
 #include "param_cfg.h"
 #endif
@@ -30,7 +41,10 @@
 extern "C" {
 #endif
 #endif
-int LoadParamFromCmdLine(void);
+
+static int g_stubResult[STUB_MAX] = { 0 };
+static int g_testRandom = 2; // 2 is test random
+
 static int g_testPermissionResult = DAC_RESULT_PERMISSION;
 void SetTestPermissionResult(int result)
 {
@@ -38,9 +52,9 @@ void SetTestPermissionResult(int result)
 }
 
 static const char *selinuxLabels[][2] = {
-    {"test.permission.read", "test.persmission.read"},
-    {"test.permission.write", "test.persmission.write"},
-    {"test.permission.watch", "test.persmission.watch"}
+    {"test.permission.read", "u:object_r:test_read:s0"},
+    {"test.permission.write", "u:object_r:test_write:s0"},
+    {"test.permission.watch", "u:object_r:test_watch:s0"},
 };
 
 static int TestGenHashCode(const char *buff)
@@ -55,20 +69,9 @@ static int TestGenHashCode(const char *buff)
 
 static void TestSetSelinuxLogCallback(void) {}
 
-static const char *forbitWriteParamName[] = {
-    "ohos.servicectrl.",
-    "test.permission.read",
-    "test.persmission.watch"
-};
-
 static int TestSetParamCheck(const char *paraName, const char *context, const SrcInfo *info)
 {
-    // forbid to read ohos.servicectrl.
-    for (size_t i = 0; i < ARRAY_LENGTH(forbitWriteParamName); i++) {
-        if (strncmp(paraName, forbitWriteParamName[i], strlen(forbitWriteParamName[i])) == 0) {
-            return 1;
-        }
-    }
+    BEGET_LOGI("TestSetParamCheck %s result %d", paraName, g_testPermissionResult);
     return g_testPermissionResult;
 }
 
@@ -85,15 +88,15 @@ static const char *TestGetParamLabel(const char *paraName)
     return selinuxLabels[code][1];
 }
 
-static const char *forbitReadParamName[] = {
+static const char *g_forbidReadParamName[] = {
     "ohos.servicectrl.",
     // "test.permission.write",
 };
 static int TestReadParamCheck(const char *paraName)
 {
     // forbid to read ohos.servicectrl.
-    for (size_t i = 0; i < ARRAY_LENGTH(forbitReadParamName); i++) {
-        if (strncmp(paraName, forbitReadParamName[i], strlen(forbitReadParamName[i])) == 0) {
+    for (size_t i = 0; i < ARRAY_LENGTH(g_forbidReadParamName); i++) {
+        if (strncmp(paraName, g_forbidReadParamName[i], strlen(g_forbidReadParamName[i])) == 0) {
             return 1;
         }
     }
@@ -129,6 +132,32 @@ static ParamContextsList *TestGetParamList(void)
         node->next = head->next;
         head->next = node;
     }
+    // test error, no node paraName
+    ParamContextsList *node = (ParamContextsList *)malloc(sizeof(ParamContextsList));
+    BEGET_ERROR_CHECK(node != nullptr, TestDestroyParamList(&head);
+        return nullptr, "Failed to alloc ParamContextsList");
+    node->info.paraName = nullptr;
+    node->info.paraContext = strdup(selinuxLabels[0][1]);
+    node->next = head->next;
+    head->next = node;
+
+    // test error, no node paraContext
+    node = (ParamContextsList *)malloc(sizeof(ParamContextsList));
+    BEGET_ERROR_CHECK(node != nullptr, TestDestroyParamList(&head);
+        return nullptr, "Failed to alloc ParamContextsList");
+    node->info.paraName = strdup(selinuxLabels[0][0]);
+    node->info.paraContext = nullptr;
+    node->next = head->next;
+    head->next = node;
+
+    // test error, repeat
+    node = (ParamContextsList *)malloc(sizeof(ParamContextsList));
+    BEGET_ERROR_CHECK(node != nullptr, TestDestroyParamList(&head);
+        return nullptr, "Failed to alloc ParamContextsList");
+    node->info.paraName = strdup(selinuxLabels[0][0]);
+    node->info.paraContext = strdup(selinuxLabels[0][1]);
+    node->next = head->next;
+    head->next = node;
     return head;
 #else
     return nullptr;
@@ -147,7 +176,19 @@ void TestSetSelinuxOps(void)
     selinuxSpace->destroyParamList = TestDestroyParamList;
 #endif
 }
-static void CreateTestFile(const char *fileName, const char *data)
+
+void TestSetParamCheckResult(const char *prefix, uint16_t mode, int result)
+{
+    ParamAuditData auditData = {};
+    auditData.name = prefix;
+    auditData.dacData.gid = 202;  // 202 test dac gid
+    auditData.dacData.uid = 202;  // 202 test dac uid
+    auditData.dacData.mode = mode;
+    AddSecurityLabel(&auditData);
+    SetTestPermissionResult(result);
+}
+
+void CreateTestFile(const char *fileName, const char *data)
 {
     CheckAndCreateDir(fileName);
     PARAM_LOGV("PrepareParamTestData for %s", fileName);
@@ -183,12 +224,12 @@ static void PrepareUeventdcfg(void)
         "[device]\n"
         "/dev/testbinder3 0666 1000 1000 const.dev.binder\n";
     mkdir("/data/ueventd_ut", S_IRWXU | S_IRWXG | S_IRWXO);
-    CreateTestFile("/data/ueventd_ut/valid.config", ueventdcfg);
+    CreateTestFile(STARTUP_INIT_UT_PATH"/ueventd_ut/valid.config", ueventdcfg);
 }
 static void PrepareModCfg(void)
 {
     const char *modCfg = "testinsmod";
-    CreateTestFile("/data/init_ut/test_insmod", modCfg);
+    CreateTestFile(STARTUP_INIT_UT_PATH"/test_insmod", modCfg);
 }
 static void PrepareInnerKitsCfg()
 {
@@ -207,14 +248,15 @@ static void PrepareInnerKitsCfg()
         "aa aa aa aa\n";
     const char *fstabRequired = "# fstab file.\n"
         "#<src> <mnt_point> <type> <mnt_flags and options> <fs_mgr_flags>\n"
-        "/dev/block/platform/fe310000.sdhci/by-name/testsystem /usr ext4 ro,barrier=1 wait,required\n"
+        "/dev/block/platform/fe310000.sdhci/by-name/testsystem /usr ext4 ro,barrier=1 wait,required,nofail\n"
         "/dev/block/platform/fe310000.sdhci/by-name/testvendor /vendor ext4 ro,barrier=1 wait,required\n"
         "/dev/block/platform/fe310000.sdhci/by-name/testuserdata1 /data f2fs noatime,nosuid,nodev wait,check,quota\n"
         "/dev/block/platform/fe310000.sdhci/by-name/testuserdata2 /data ext4 noatime,fscrypt=xxx wait,check,quota\n"
         "/dev/block/platform/fe310000.sdhci/by-name/testmisc /misc none none wait,required";
     mkdir("/data/init_ut/mount_unitest/", S_IRWXU | S_IRWXG | S_IRWXO);
-    CreateTestFile("/data/init_ut/mount_unitest/ReadFstabFromFile1.fstable", innerKitsCfg);
-    CreateTestFile("/etc/fstab.required", fstabRequired);
+    CreateTestFile(STARTUP_INIT_UT_PATH"/mount_unitest/ReadFstabFromFile1.fstable", innerKitsCfg);
+    CreateTestFile(STARTUP_INIT_UT_PATH"/etc/fstab.required", fstabRequired);
+    CreateTestFile(STARTUP_INIT_UT_PATH"/system/etc/fstab.required", fstabRequired);
 }
 static void PrepareGroupTestCfg()
 {
@@ -289,7 +331,7 @@ static void LoadParamFromCfg(void)
     }
 #endif
 }
-#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+
 static const char *g_triggerData = "{"
         "\"jobs\" : [{"
         "        \"name\" : \"early-init\","
@@ -342,39 +384,86 @@ static const char *g_triggerData = "{"
         "    }"
         "]"
     "}";
-#endif
 
-void PrepareCmdLineHasSn()
+void PrepareCmdLineData()
 {
-    // for cmdline
-    const char *cmdLineHasSnroot = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
-        "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568"
-        " BOOT_IMAGE=/kernel ohos.boot.sn=/test init=/init";
-    CreateTestFile(BOOT_CMD_LINE, cmdLineHasSnroot);
-    LoadParamFromCmdLine();
-    const char *cmdLineHasntSn = "bootgroup=device.charge.group earlycon=uart8250,mmio32,0xfe660000 "
+    const char *cmdLine = "bootgroup=device.boot.group earlycon=uart8250,mmio32,0xfe660000 "
         "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568 "
-        "BOOT_IMAGE=/kernel init=/init default_boot_device=fe310000.sdhci bootslots=2 currentslot=1 "
+        "BOOT_IMAGE=/kernel init=/init default_boot_device=fe310000.sdhci bootslots=2 currentslot=1 initloglevel=2 "
         "ohos.required_mount.system="
         "/dev/block/platform/fe310000.sdhci/by-name/system@/usr@ext4@ro,barrier=1@wait,required "
         "ohos.required_mount.vendor="
         "/dev/block/platform/fe310000.sdhci/by-name/vendor@/vendor@ext4@ro,barrier=1@wait,required "
         "ohos.required_mount.misc="
-        "/dev/block/platform/fe310000.sdhci/by-name/misc@none@none@none@wait,required";
-    CreateTestFile(BOOT_CMD_LINE, cmdLineHasntSn);
+        "/dev/block/platform/fe310000.sdhci/by-name/misc@none@none@none@wait,required ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
 }
 
-void PrepareAreaSizeFile()
+static void PrepareAreaSizeFile(void)
 {
-    // for cmdline
-    const char *ohosParamSize = "default_param=1024"
-            "hilog_param=2048"
-            "const_product_param=2048"
-            "startup_param=20480"
-            "persist_param=2048"
-            "const_param=20480"
-            "persist_sys_param=2048";
+    const char *ohosParamSize = "default_param=1024\n"
+            "hilog_param=2048\n"
+            "const_product_param=2048\n"
+            "startup_param=20480\n"
+            "persist_param=2048\n"
+            "const_param=20480\n"
+            "test_watch=40960\n"
+            "test_read=40960\n"
+            "const_param***=20480\n"
+            "persist_sys_param=2048\n";
     CreateTestFile(PARAM_AREA_SIZE_CFG, ohosParamSize);
+}
+
+static void PrepareTestGroupFile(void)
+{
+    std::string groupData = "root:x:0:\n"
+        "bin:x:2:\n"
+        "system:x:1000:\n"
+        "log:x:1007:\n"
+        "deviceinfo:x:1102:\n"
+        "samgr:x:5555:\n"
+        "hdf_devmgr:x:3044:\n\n"
+        "power_host:x:3025:\n"
+        "servicectrl:x:1050:root,  shell,system,   samgr,   hdf_devmgr      \n"
+        "powerctrl:x:1051:root, shell,system,  update,power_host\r\n"
+        "bootctrl:x:1052:root,shell,system\n"
+        "deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,"
+        "dsoftbus,dms,account,useriam,access_token,device_manager,foundation,dbms,deviceauth,huks_server\n"
+        "hiview:x:1201:\n"
+        "hidumper_service:x:1212:\n"
+        "shell:x:2000:\n"
+        "cache:x:2001:\n"
+        "net_bw_stats:x:3006:\n";
+
+    CreateTestFile(STARTUP_INIT_UT_PATH "/etc/group", groupData.c_str());
+}
+
+static void PrepareDacData()
+{
+    // for dac
+    std::string dacData = "ohos.servicectrl.   = system:servicectrl:0775 \n";
+    dacData += "startup.service.ctl.        = system:servicectrl:0775:int\n";
+    dacData += "test.permission.       = root:root:0770\n";
+    dacData += "test.permission.read. =  root:root:0774\n";
+    dacData += "test.permission.write.=  root:root:0772\n";
+    dacData += "test.permission.watcher. = root:root:0771\n";
+    dacData += "test.test1. = system:test1:0771\n";
+    dacData += "test.test2.watcher. = test2:root:0771\n";
+    dacData += "test.type.int. = root:root:0777:int\n";
+    dacData += "test.type.bool. = root:root:0777:bool\n";
+    dacData += "test.type.string. = root:root:0777\n";
+    dacData += "test.invalid.int. = root:root:\n";
+    dacData += "test.invalid.int. = root::\n";
+    dacData += "test.invalid.int. = ::\n";
+    dacData += "test.invalid.int. = \n";
+    dacData += "test.invalid.int. \n";
+    CreateTestFile(STARTUP_INIT_UT_PATH "/system/etc/param/ohos.para.dac", dacData.c_str());
+    CreateTestFile(STARTUP_INIT_UT_PATH "/system/etc/param/ohos.para.dac_1", dacData.c_str());
+}
+
+static int TestHook(const HOOK_INFO *hookInfo, void *cookie)
+{
+    return 0;
 }
 
 void PrepareInitUnitTestEnv(void)
@@ -383,41 +472,45 @@ void PrepareInitUnitTestEnv(void)
     if (evnOk) {
         return;
     }
-    PARAM_LOGI("PrepareInitUnitTestEnv");
-    mkdir(STARTUP_INIT_UT_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
-    PrepareUeventdcfg();
-    PrepareInnerKitsCfg();
-    PrepareModCfg();
-    PrepareGroupTestCfg();
-
-#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
-    // for dac
-    std::string dacData = "ohos.servicectrl.   = system:servicectrl:0775 \n";
-    dacData += "test.permission.       = root:root:0770\n";
-    dacData += "test.permission.read. =  root:root:0774\n";
-    dacData += "test.permission.write.=  root:root:0772\n";
-    dacData += "test.permission.watcher. = root:root:0771\n";
-    CreateTestFile(STARTUP_INIT_UT_PATH "/system/etc/param/ohos.para.dac", dacData.c_str());
-    CreateTestFile(STARTUP_INIT_UT_PATH"/trigger_test.cfg", g_triggerData);
-    PrepareAreaSizeFile();
-#endif
-    InitParamService();
-
-#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
-    PrepareCmdLineHasSn();
-    TestSetSelinuxOps();
-    LoadSpecialParam();
+    printf("PrepareInitUnitTestEnv \n");
+#ifdef PARAM_SUPPORT_SELINUX
+    RegisterSecuritySelinuxOps(nullptr, 0);
 #endif
 
-    // read system parameters
+    int32_t loglevel = GetIntParameter("persist.init.debug.loglevel", INIT_ERROR);
+    SetInitLogLevel((InitLogLevel)loglevel);
+
+#ifndef OHOS_LITE
+    InitAddGlobalInitHook(0, TestHook);
+    InitAddPreParamServiceHook(0, TestHook);
+    InitAddPreParamLoadHook(0, TestHook);
+    InitAddPreCfgLoadHook(0, TestHook);
+    InitAddPostCfgLoadHook(0, TestHook);
+    InitAddPostPersistParamLoadHook(0, TestHook);
+    // ini system
+    SystemInit();
+    SystemPrepare();
+    SystemConfig();
+#else
+    // read default parameter from system
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
     LoadDefaultParams("/system/etc/param", LOAD_PARAM_ONLY_ADD);
+#endif
     // read ut parameters
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/vendor/etc/param", LOAD_PARAM_NORMAL);
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/system/etc/param", LOAD_PARAM_ONLY_ADD);
+    LoadParamsFile(STARTUP_INIT_UT_PATH "/system/etc/param", LOAD_PARAM_ONLY_ADD);
     LoadParamFromCfg();
+
+    // for test int get
+    SystemWriteParam("test.int.get", "-101");
+    SystemWriteParam("test.uint.get", "101");
+    SystemWriteParam("test.string.get", "101");
+    SystemWriteParam("test.bool.get.true", "true");
+    SystemWriteParam("test.bool.get.false", "false");
+
     evnOk = 1;
 }
 
@@ -432,11 +525,176 @@ int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
     return 0;
 }
 
+void SetStubResult(STUB_TYPE type, int result)
+{
+    g_stubResult[type] = result;
+}
+
+#ifndef OHOS_LITE
+static void TestBeforeInit(void)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    EXPECT_EQ(paramSpace, nullptr);
+    InitParamService();
+    CloseParamWorkSpace();
+    paramSpace = GetParamWorkSpace();
+    EXPECT_EQ(paramSpace, nullptr);
+    EnableInitLogFromCmdline();
+
+    // test read cmdline
+    Fstab *stab = LoadRequiredFstab();
+    ReleaseFstab(stab);
+}
+#endif
+
 static __attribute__((constructor(101))) void ParamTestStubInit(void)
 {
-    EnableInitLog(INIT_DEBUG);
-    PARAM_LOGI("ParamTestStubInit");
-    PrepareInitUnitTestEnv();
+    printf("Init unit test start \n");
+    EnableInitLog(INIT_ERROR);
+    // prepare data
+    mkdir(STARTUP_INIT_UT_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
+    PrepareUeventdcfg();
+    PrepareInnerKitsCfg();
+    PrepareModCfg();
+    PrepareGroupTestCfg();
+    PrepareDacData();
+    CreateTestFile(STARTUP_INIT_UT_PATH"/trigger_test.cfg", g_triggerData);
+    PrepareAreaSizeFile();
+    PrepareTestGroupFile();
+#ifndef OHOS_LITE
+    TestBeforeInit();
+#endif
+    PrepareCmdLineData();
+    // init service open
+    InitServiceSpace();
+    // param service open
+    InitParamService();
+    TestSetSelinuxOps();
+}
+
+__attribute__((destructor)) static void ParamTestStubExit(void)
+{
+    PARAM_LOGI("ParamTestStubExit");
+#ifndef OHOS_LITE
+    HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
+#endif
+    StopParamService();
+}
+
+#ifdef OHOS_LITE
+void __attribute__((weak))LE_DoAsyncEvent(const LoopHandle loopHandle, const TaskHandle taskHandle)
+{
+}
+
+const char* HalGetSerial(void)
+{
+    static const char *serial = "1234567890";
+    return serial;
+}
+#endif
+
+int __attribute__((weak))SprintfStub(char *buffer, size_t size, const char *fmt, ...)
+{
+    int len = -1;
+    va_list vargs;
+    va_start(vargs, fmt);
+    len = vsnprintf_s(buffer, size, size - 1, fmt, vargs);
+    va_end(vargs);
+    return len;
+}
+
+int __attribute__((weak))MountStub(const char* source, const char* target,
+    const char* filesystemtype, unsigned long mountflags, const void * data)
+{
+    return g_stubResult[STUB_MOUNT];
+}
+
+int __attribute__((weak))UmountStub(const char *target)
+{
+    return 0;
+}
+
+int __attribute__((weak))Umount2Stub(const char *target, int flags)
+{
+    return 0;
+}
+
+int __attribute__((weak))SymlinkStub(const char * oldpath, const char * newpath)
+{
+    return 0;
+}
+
+int PrctlStub(int option, ...)
+{
+    static int count = 0;
+    static int count1 = 0;
+    if (option == PR_SET_SECUREBITS) {
+        count++;
+        return (count % g_testRandom == 1) ? 0 : -1;
+    }
+    if (option == PR_CAP_AMBIENT) {
+        count1++;
+        return (count1 % g_testRandom == 1) ? 0 : -1;
+    }
+    return 0;
+}
+
+int ExecvStub(const char *pathname, char *const argv[])
+{
+    printf("ExecvStub %s \n", pathname);
+    return 0;
+}
+
+int LchownStub(const char *pathname, uid_t owner, gid_t group)
+{
+    return 0;
+}
+
+int KillStub(pid_t pid, int signal)
+{
+    return 0;
+}
+
+int ExecveStub(const char *pathname, char *const argv[], char *const envp[])
+{
+    printf("ExecveStub %s \n", pathname);
+    return 0;
+}
+
+int LoadPolicy()
+{
+    return 0;
+}
+
+static int g_selinuxOptResult = 0;
+int setcon(const char *name)
+{
+    g_selinuxOptResult++;
+    return g_selinuxOptResult % g_testRandom;
+}
+
+int RestoreconRecurse(const char *name)
+{
+    g_selinuxOptResult++;
+    return g_selinuxOptResult % g_testRandom;
+}
+
+int setexeccon(const char *name)
+{
+    g_selinuxOptResult++;
+    return g_selinuxOptResult % g_testRandom;
+}
+
+int setsockcreatecon(const char *name)
+{
+    g_selinuxOptResult++;
+    return g_selinuxOptResult % g_testRandom;
+}
+
+int setfilecon(const char *name, const char *content)
+{
+    g_selinuxOptResult++;
+    return g_selinuxOptResult % g_testRandom;
 }
 #ifdef __cplusplus
 #if __cplusplus

@@ -18,21 +18,27 @@
 #include "init_param.h"
 #include "init_utils.h"
 #include "parameter.h"
-#include "sysparam_errno.h"
 #include "param_comm.h"
+#include "param_stub.h"
+#ifndef OHOS_LITE
 #include "param_wrapper.h"
+#include "parameters.h"
+#endif
 #include "sysversion.h"
+#include "sysparam_errno.h"
 
 using namespace testing::ext;
-extern "C" {
-int GetIntParameter(const char *key, int def);
-}
+
 namespace OHOS {
+constexpr int TEST_VALUE = 101;
 class SysparaUnitTest : public testing::Test {
 public:
     static void SetUpTestCase() {}
     static void TearDownTestCase() {}
-    void SetUp() {}
+    void SetUp()
+    {
+        SetTestPermissionResult(0);
+    }
     void TearDown() {}
 };
 
@@ -135,7 +141,7 @@ HWTEST_F(SysparaUnitTest, parameterTest005, TestSize.Level0)
     char value4[] = "rw.sys.version.version.version.version flash_offset = *(hi_u32 *)DT_SetGetU32(&g_Element[0], 0)a\
     size = *(hi_u32 *)DT_SetGetU32(&g_Element[1], 0)a";
     int ret = SetParameter(key4, value4);
-    EXPECT_EQ(ret, EC_INVALID);
+    EXPECT_EQ(ret, SYSPARAM_INVALID_VALUE);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest006, TestSize.Level0)
@@ -171,7 +177,7 @@ HWTEST_F(SysparaUnitTest, parameterTest009, TestSize.Level0)
     char value5[] = "rw.sys.version.version.version.version     \
     flash_offset = *(hi_u32 *)DT_SetGetU32(&g_Element[0], 0)";
     int ret = SetParameter(key5, value5);
-    EXPECT_EQ(ret, EC_INVALID);
+    EXPECT_EQ(ret, SYSPARAM_INVALID_VALUE);
     char valueGet[2] = {0};
     char defValue3[] = "value of key > 32 ...";
     ret = GetParameter(key5, defValue3, valueGet, 2);
@@ -235,7 +241,7 @@ HWTEST_F(SysparaUnitTest, parameterTest0011, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     char key2[] = "test.rw.sys.version.wait2";
     ret = WaitParameter(key2, "*", 1);
-    EXPECT_EQ(ret, 105);
+    EXPECT_EQ(ret, SYSPARAM_WAIT_TIMEOUT);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest0012, TestSize.Level0)
@@ -262,27 +268,28 @@ HWTEST_F(SysparaUnitTest, parameterTest0012, TestSize.Level0)
     handle = FindParameter(key2);
     EXPECT_EQ(handle, static_cast<unsigned int>(-1));
     ret = GetParameterValue(handle, valueGet1, 32);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, SYSPARAM_NOT_FOUND);
     ret = GetParameterName(handle, nameGet1, 32);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, SYSPARAM_NOT_FOUND);
 }
+
 HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)
 {
     long long int out = 0;
     unsigned long long int uout = 0;
-    char key1[] = "test.int";
-    char value1[] = "101";
-    int ret = SetParameter(key1, value1);
-    EXPECT_EQ(ret, 0);
     GetParameter_(nullptr, nullptr, nullptr, 0);
-    EXPECT_EQ(GetIntParameter(key1, 0), 0);
+    EXPECT_EQ(GetIntParameter("test.int.get", 0) == -TEST_VALUE, 1);
+    EXPECT_EQ(GetUintParameter("test.int.get", 0), 0);
+    EXPECT_EQ(GetIntParameter("test.uint.get", 0), TEST_VALUE);
+    EXPECT_EQ(GetUintParameter("test.uint.get", 0), TEST_VALUE);
+    EXPECT_EQ(GetIntParameter("test.int.default", 10), 10); //key not find,value = default
+    EXPECT_EQ(GetUintParameter("test.uint.default", 10), 10); //key not find,value = default
     EXPECT_EQ(IsValidParamValue(nullptr, 0), 0);
     EXPECT_EQ(IsValidParamValue("testvalue", strlen("testvalue") + 1), 1);
     EXPECT_EQ(StringToLL("0x11", &out), 0);
     EXPECT_EQ(StringToULL("0x11", &uout), 0);
     EXPECT_EQ(StringToLL("not vailed", &out), -1);
     EXPECT_EQ(StringToULL("not vailed", &uout), -1);
-    SystemSetParameter("ohos.boot.sn", "1");
     char udid[UDID_LEN] = {0};
     GetDevUdid(udid, UDID_LEN);
     EXPECT_NE(GetMajorVersion(), 0);
@@ -290,4 +297,75 @@ HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)
     GetFeatureVersion();
     GetBuildVersion();
 }
+
+#ifndef OHOS_LITE
+// for test param_wrapper.cpp
+HWTEST_F(SysparaUnitTest, parameterTest0014, TestSize.Level0)
+{
+    const std::string key1 = "test.int.get";
+    OHOS::system::SetParameter(std::string("testKey"), std::string("testValue"));
+    int v = OHOS::system::GetIntParameter(key1, 0);
+    EXPECT_EQ(v, -TEST_VALUE);
+    int8_t v1 = OHOS::system::GetIntParameter(key1, 0, -127, 128); // -127, 128 range
+    EXPECT_EQ(v1, -TEST_VALUE);
+    int16_t v2 = OHOS::system::GetIntParameter(key1, 0, -127, 128); // -127, 128 range
+    EXPECT_EQ(v2, -TEST_VALUE);
+    int32_t v3 = OHOS::system::GetIntParameter(key1, 0, -127, 128); // -127, 128 range
+    EXPECT_EQ(v3, -TEST_VALUE);
+    int64_t v4 = OHOS::system::GetIntParameter(key1, 0, -127, 128); // -127, 128 range
+    EXPECT_EQ(v4, -TEST_VALUE);
+
+    int8_t v5 = OHOS::system::GetIntParameter(key1, 0, -10, 10); // -10, 10 range
+    EXPECT_EQ(v5, 0);
+
+    const std::string key2 = "test.uint.get";
+    uint8_t u1 = OHOS::system::GetUintParameter<uint8_t>(key2, 0, (uint8_t)255); // 255 max value
+    EXPECT_EQ(u1, TEST_VALUE);
+    uint16_t u2 = OHOS::system::GetUintParameter<uint16_t>(key2, 0,  (uint16_t)255); // 255 max value
+    EXPECT_EQ(u2, TEST_VALUE);
+    uint32_t u3 = OHOS::system::GetUintParameter<uint32_t>(key2, 0,  (uint32_t)255); // 255 max value
+    EXPECT_EQ(u3, TEST_VALUE);
+    uint64_t u4 = OHOS::system::GetUintParameter<uint64_t>(key2, 0,  (uint64_t)255); // 255 max value
+    EXPECT_EQ(u4 == TEST_VALUE, 1);
+    const std::string key3 = "test.uint.get3";
+    u1 = OHOS::system::GetUintParameter<uint8_t>(key3, 0, (uint8_t)255); // 255 max value
+    EXPECT_EQ(u1, 0);
+    u1 = OHOS::system::GetUintParameter<uint8_t>(key2, 0, (uint8_t)10); // 10 max value
+    EXPECT_EQ(u1, 0);
+}
+
+HWTEST_F(SysparaUnitTest, parameterTest0015, TestSize.Level0)
+{
+    std::string type = OHOS::system::GetDeviceType();
+    printf("device type %s \n", type.c_str());
+
+    const std::string key1 = "test.string.get";
+    std::string v1 = OHOS::system::GetParameter(key1, "");
+    EXPECT_EQ(strcmp(v1.c_str(), "101"), 0);
+
+    const std::string key2 = "test.string.get2";
+    v1 = OHOS::system::GetParameter(key2, "test2");
+    EXPECT_EQ(strcmp(v1.c_str(), "test2"), 0);
+
+    int ret = OHOS::system::GetStringParameter(key1, v1, "");
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(strcmp(v1.c_str(), "101"), 0);
+    ret = OHOS::system::GetStringParameter(key2, v1, "test2");
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(strcmp(v1.c_str(), "test2"), 0);
+}
+
+HWTEST_F(SysparaUnitTest, parameterTest0016, TestSize.Level0)
+{
+    const std::string key1 = "test.bool.get.true";
+    bool ret = OHOS::system::GetBoolParameter(key1, false);
+    EXPECT_EQ(ret, true);
+    const std::string key2 = "test.bool.get.false";
+    ret = OHOS::system::GetBoolParameter(key2, true);
+    EXPECT_EQ(ret, false);
+    const std::string key3 = "test.bool.get3";
+    ret = OHOS::system::GetBoolParameter(key3, false);
+    EXPECT_EQ(ret, false);
+}
+#endif
 }  // namespace OHOS

@@ -33,12 +33,15 @@ enum INIT_BOOTSTAGE {
     INIT_SERVICE_PARSE     = 35,
     INIT_POST_PERSIST_PARAM_LOAD   = 40,
     INIT_POST_CFG_LOAD     = 50,
+    INIT_CMD_RECORD     = 51,
     INIT_REBOOT            = 55,
     INIT_SERVICE_CLEAR     = 56,
     INIT_SERVICE_DUMP      = 57,
     INIT_SERVICE_FORK_BEFORE       = 58,
     INIT_SERVICE_SET_PERMS = 59,
+    INIT_SERVICE_FORK_AFTER = 60,
     INIT_JOB_PARSE         = 70,
+    INIT_BOOT_COMPLETE     = 100,
 };
 
 HOOK_MGR *GetBootStageHookMgr();
@@ -96,6 +99,15 @@ typedef struct tagSERVICE_INFO_CTX {
     const char *serviceName;    /* Service name */
     const char *reserved;       /* reserved info */
 } SERVICE_INFO_CTX;
+
+/**
+ * @brief init cmd info
+ */
+typedef struct InitCmdInfo {
+    const char *cmdName;    /* cmd name */
+    const char *cmdContent;    /* cmd content */
+    const char *reserved;       /* reserved info */
+} INIT_CMD_INFO;
 
 /**
  * @brief service config parse hook function prototype

@@ -20,7 +20,7 @@
 #include "param_manager.h"
 #include "param_trie.h"
 
-static ParamWorkSpace g_paramWorkSpace = {};
+static ParamWorkSpace g_paramWorkSpace = {0};
 PARAM_STATIC int WorkSpaceNodeCompare(const HashNode *node1, const HashNode *node2)
 {
     WorkSpace *workSpace1 = HASHMAP_ENTRY(node1, WorkSpace, hashNode);
@@ -52,6 +52,7 @@ static void WorkSpaceFree(const HashNode *node)
     WorkSpace *workSpace = HASHMAP_ENTRY(node, WorkSpace, hashNode);
     CloseWorkSpace(workSpace);
 }
+
 static int InitParamSecurity(ParamWorkSpace *workSpace,
     RegisterSecurityOpsPtr registerOps, ParamSecurityType type, int isInit, int op)
 {
@@ -75,7 +76,7 @@ static int InitParamSecurity(ParamWorkSpace *workSpace,
     }
     ret = paramSecurityOps->securityCheckFilePermission(&workSpace->securityLabel, PARAM_STORAGE_PATH, op);
     PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "No permission to read file %s", PARAM_STORAGE_PATH);
-    PARAM_LOGI("InitParamSecurity %s success", paramSecurityOps->name);
+    PARAM_LOGI("Init parameter %s success", paramSecurityOps->name);
     return 0;
 }
 
@@ -100,34 +101,25 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
 {
     if (ops != NULL) {
         g_paramWorkSpace.ops.updaterMode = ops->updaterMode;
-        if (g_paramWorkSpace.ops.logFunc == NULL) {
+        if (g_paramWorkSpace.ops.logFunc == NULL && ops->logFunc != NULL) {
             g_paramWorkSpace.ops.logFunc = ops->logFunc;
         }
 #ifdef PARAM_SUPPORT_SELINUX
         g_paramWorkSpace.ops.setfilecon = ops->setfilecon;
 #endif
     }
-    PARAM_LOGI("InitParamWorkSpace %x", g_paramWorkSpace.flags);
     if (PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
     if (onlyRead == 0) {
         return 1;
     }
-#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
-    if (getpid() == 1) { // init process only for write
-        return 0;
-    }
+#ifdef STARTUP_INIT_TEST
     // for ut, do not init workspace
     char path[PATH_MAX] = { 0 };
     (void)readlink("/proc/self/exe", path, sizeof(path) - 1);
-    char *name = strrchr(path, '/');
+    char *name = strstr(path, "/init_unittest");
     if (name != NULL) {
-        name++;
-    } else {
-        name = path;
-    }
-    if (strcmp(name, "init_unittest") == 0) {
         PARAM_LOGW("Can not init client for init_test");
         return 0;
     }
@@ -169,7 +161,7 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
         // load user info for dac
         LoadGroupUser();
         // add default dac policy
-        ParamAuditData auditData = {};
+        ParamAuditData auditData = {0};
         auditData.name = "#";
         auditData.dacData.gid = DAC_DEFAULT_GROUP; // 2000 for shell
         auditData.dacData.uid = DAC_DEFAULT_USER; // for root
@@ -183,7 +175,7 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
 
 INIT_LOCAL_API void CloseParamWorkSpace(void)
 {
-    PARAM_LOGI("CloseParamWorkSpace %p", &g_paramWorkSpace);
+    PARAM_LOGI("CloseParamWorkSpace %x", g_paramWorkSpace.flags);
     if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return;
     }
@@ -217,7 +209,7 @@ INIT_LOCAL_API void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, cons
 INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void)
 {
     if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
-        PARAM_LOGE("GetParamWorkSpace %p", &g_paramWorkSpace);
+        PARAM_LOGE("Invalid param workspace %x", g_paramWorkSpace.flags);
         return NULL;
     }
     return &g_paramWorkSpace;
@@ -225,7 +217,7 @@ INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void)
 
 int SystemReadParam(const char *name, char *value, uint32_t *len)
 {
-    PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Invalid space");
+    PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Param workspace has not init.");
     PARAM_CHECK(name != NULL && len != NULL && strlen(name) > 0, return -1, "The name or value is null");
     ParamHandle handle = 0;
     int ret = ReadParamWithCheck(name, DAC_READ, &handle);
@@ -293,4 +285,41 @@ INIT_LOCAL_API int AddWorkSpace(const char *name, int onlyRead, uint32_t spaceSi
     WORKSPACE_RW_UNLOCK(*paramSpace);
     PARAM_LOGV("AddWorkSpace %s %s", name, ret == 0 ? "success" : "fail");
     return ret;
+}
+
+int SystemFindParameter(const char *name, ParamHandle *handle)
+{
+    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
+    int ret = ReadParamWithCheck(name, DAC_READ, handle);
+    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
+        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
+    }
+    return ret;
+}
+
+int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId)
+{
+    PARAM_CHECK(handle != 0 && commitId != NULL, return -1, "The handle is null");
+
+    ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
+    if (entry == NULL) {
+        return PARAM_CODE_NOT_FOUND;
+    }
+    *commitId = ReadCommitId(entry);
+    return 0;
+}
+
+long long GetSystemCommitId(void)
+{
+    WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
+    if (space == NULL || space->area == NULL) {
+        return 0;
+    }
+    return ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_acquire);
+}
+
+int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
+{
+    PARAM_CHECK(len != NULL && handle != 0, return -1, "The value is null");
+    return ReadParamValue(handle, value, len);
 }
