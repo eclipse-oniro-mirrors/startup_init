@@ -428,16 +428,16 @@ void WatcherManager::DumpAllGroup(int fd, ParamWatcherProcessor dumpHandle)
         }
         dprintf(fd, "Watch prefix   : %s \n", group->GetKeyPrefix().c_str());
         dprintf(fd, "Watch group id : %u \n", group->GetGroupId());
-        dprintf(fd, "Watch count    : %zu \n", group->GetNodeCount());
+        dprintf(fd, "Watch count    : %u \n", group->GetNodeCount());
         group->TraversalNode(dumpHandle);
         count += group->GetNodeCount();
         dprintf(fd, "\n");
     }
 
-    dprintf(fd, "Watch prefix count : %zu [%zu  %zu  %zu]\n", watcherGroups_->GetNodeCount(),
+    dprintf(fd, "Watch prefix count : %u [%zu  %zu  %zu]\n", watcherGroups_->GetNodeCount(),
         sizeof(RemoteWatcher), sizeof(WatcherGroup), sizeof(WatcherNode));
-    dprintf(fd, "Watch agent  count : %zu \n", remoteWatchers_->GetNodeCount());
-    dprintf(fd, "Watch count        : %zu \n", count);
+    dprintf(fd, "Watch agent  count : %u \n", remoteWatchers_->GetNodeCount());
+    dprintf(fd, "Watch count        : %u \n", count);
 }
 
 int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)

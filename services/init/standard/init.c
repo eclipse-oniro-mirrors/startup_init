@@ -249,7 +249,7 @@ HOOK_MGR *GetBootStageHookMgr()
     return bootStageHookMgr;
 }
 
-INIT_TIMING_STAT g_bootJob = {0};
+INIT_TIMING_STAT g_bootJob = {{0}, {0}};
 
 static void RecordInitBootEvent(const char *initBootEvent)
 {
