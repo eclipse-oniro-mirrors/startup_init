@@ -132,6 +132,7 @@ ohos_executable("init") {
   }
   if (support_jsapi) {
     defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
+    external_deps = [ "profiler:libhidebug_init" ]
   }
   if (asan_detector) {
     defines += [ "ASAN_DETECTOR" ]

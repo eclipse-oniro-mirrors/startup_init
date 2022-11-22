@@ -44,6 +44,10 @@
 #include "securec.h"
 #include "fscrypt_utils.h"
 
+#ifdef SUPPORT_PROFILER_HIDEBUG
+#include <hidebug_base.h>
+#endif
+
 #define FSCRYPT_POLICY_BUF_SIZE (60)
 #define DECIMAL 10
 #define OCTAL 8
@@ -526,30 +530,7 @@ const struct CmdTable *GetCmdTable(int *number)
 void OpenHidebug(const char *name)
 {
 #ifdef SUPPORT_PROFILER_HIDEBUG
-#ifdef __aarch64__
-    const char *debugSoPath = "/system/lib64/libhidebug.so";
-#else
-    const char *debugSoPath = "/system/lib/libhidebug.so";
-#endif
-    do {
-        if (access(debugSoPath, F_OK) != 0) {
-            break;
-        }
-        void* handle = dlopen(debugSoPath, RTLD_LAZY);
-        if (handle == NULL) {
-            INIT_LOGE("Failed to dlopen libhidebug.so, %s\n", dlerror());
-            break;
-        }
-        bool (* initParam)();
-        initParam = (bool (*)())dlsym(handle, "InitEnvironmentParam");
-        if (initParam == NULL) {
-            INIT_LOGE("Failed to dlsym InitEnvironmentParam, %s\n", dlerror());
-            dlclose(handle);
-            break;
-        }
-        (*initParam)(name);
-        dlclose(handle);
-    } while (0);
+    InitEnvironmentParam(name);
 #endif
 }
 
