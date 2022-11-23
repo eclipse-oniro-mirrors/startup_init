@@ -12,7 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <unistd.h>
+#include <linux/reboot.h>
 #include <sys/reboot.h>
+#include <sys/syscall.h>
 
 #include "reboot_adp.h"
 #include "init_cmdexecutor.h"
@@ -103,11 +107,23 @@ static int DoRebootSuspend(int id, const char *name, int argc, const char **argv
     return DoRoot_("suspend", RB_AUTOBOOT);
 }
 
+static int DoRebootOther(int id, const char *name, int argc, const char **argv)
+{
+    UNUSED(id);
+    UNUSED(name);
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter argc %d", argc);
+    const char *cmd = strstr(argv[0], "reboot,");
+    PLUGIN_CHECK(cmd != NULL, return -1, "Invalid parameter argc %s", argv[0]);
+    PLUGIN_LOGI("DoRebootOther argv %s", argv[0]);
+    return syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, cmd + strlen("reboot,"));
+}
+
 static void RebootAdpInit(void)
 {
     // sample {"reboot,shutdown", "reboot.shutdown", "reboot.shutdown"},
     // add default reboot cmd
     (void)AddCmdExecutor("reboot", DoReboot);
+    (void)AddCmdExecutor("reboot.other", DoRebootOther);
     AddRebootCmdExecutor("shutdown", DoRebootShutdown);
     AddRebootCmdExecutor("flashd", DoRebootFlashed);
     AddRebootCmdExecutor("updater", DoRebootUpdater);
