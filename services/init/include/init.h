@@ -47,6 +47,8 @@ void SystemConfig(void);
 void SystemRun(void);
 void SystemExecuteRcs(void);
 
+void ParseInitCfgByPriority(void);
+int ParseInitCfg(const char *configFile, void *context);
 void ReadConfig(void);
 void SignalInit(void);
 

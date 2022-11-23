@@ -50,6 +50,12 @@ void SystemPrepare(void)
 {
 }
 
+void ParseInitCfgByPriority(void)
+{
+    ReadFileInDir(OTHER_CFG_PATH, ".cfg", ParseInitCfg, NULL);
+    ReadFileInDir("/vendor/etc/init", ".cfg", ParseInitCfg, NULL);
+}
+
 void SystemConfig(void)
 {
     InitServiceSpace();
