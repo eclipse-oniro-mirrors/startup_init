@@ -266,7 +266,7 @@ static int AddParam(WorkSpace *workSpace, uint8_t type, const char *name, const 
         ATOMIC_STORE_EXPLICIT(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
 #ifdef PARAM_SUPPORT_SELINUX
         WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
-        if (space != workSpace) { // dac commit is global commit
+        if (space != NULL && space != workSpace) { // dac commit is global commit
             globalCommitId = ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_relaxed);
             ATOMIC_STORE_EXPLICIT(&space->area->commitId, ++globalCommitId, memory_order_release);
         }
@@ -299,7 +299,7 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     ATOMIC_STORE_EXPLICIT(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
 #ifdef PARAM_SUPPORT_SELINUX
     WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
-    if (space != workSpace) { // dac commit is global commit
+    if (space != NULL && space != workSpace) { // dac commit is global commit
         globalCommitId = ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_relaxed);
         ATOMIC_STORE_EXPLICIT(&space->area->commitId, ++globalCommitId, memory_order_release);
     }

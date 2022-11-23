@@ -326,7 +326,7 @@ static int GetSlotInfoFromBootctrl(off_t offset, off_t size)
     BEGET_ERROR_CHECK(lseek(fd, offset, SEEK_SET) >= 0, close(fd); return -1,
         "Failed to lseek bootctrl device fd, errno %d", errno);
     int slotInfo = 0;
-    BEGET_INFO_CHECK(read(fd, &slotInfo, size) == size, close(fd); return -1,
+    BEGET_INFO_CHECK(read(fd, &slotInfo, sizeof(slotInfo)) == size, close(fd); return -1,
         "Failed to read current slot from bootctrl, errno %d", errno);
     close(fd);
     return slotInfo;
