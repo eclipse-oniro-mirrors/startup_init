@@ -83,7 +83,7 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
 
 STATIC int *GetFdsFromMsg(size_t *outFdCount, pid_t *requestPid, struct msghdr msghdr)
 {
-    if ((msghdr.msg_flags) & MSG_TRUNC) {
+    if ((unsigned int)(msghdr.msg_flags) & (unsigned int)MSG_TRUNC) {
         BEGET_LOGE("Message was truncated when receiving fds");
         return NULL;
     }
