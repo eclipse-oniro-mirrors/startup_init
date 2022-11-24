@@ -6,3 +6,4 @@ shell:x:2000:
 faultloggerd:x:1202:root,system
 watchdog:x:2001:root
 ueventd:x:2002:root
+device_manager:x:3062:
