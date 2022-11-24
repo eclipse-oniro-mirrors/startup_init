@@ -86,7 +86,7 @@ static bool InstallSeccompPolicy(const struct sock_filter* filter, size_t filter
 static char *GetFilterFileByName(const char *filterName)
 {
     size_t maxFilterNameLen = PATH_MAX - strlen(FILTER_LIB_PATH_FORMAT) + strlen("%s") - 1;
-    if (filterName == NULL && strlen(filterName) > maxFilterNameLen) {
+    if (filterName == NULL || strlen(filterName) > maxFilterNameLen) {
         return NULL;
     }
 
@@ -158,7 +158,7 @@ bool SetSeccompPolicyWithName(const char *filterName)
 {
     void *handler = NULL;
     char *filterLibRealPath = NULL;
-    struct sock_fprog prog = {0};
+    struct sock_fprog prog;
     bool ret = false;
 
     filterLibRealPath = GetFilterFileByName(filterName);
