@@ -1,0 +1,124 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/config/python.gni")
+import("//build/templates/common/copy.gni")
+
+# Append something (files or lines) to a file and install it.
+#
+# Variables:
+#  source: file to be appended (Required)
+#  deps: some targets deps on (Optional)
+#  output: the final install file name (Optional);
+#       If not set, it will install with the source file name
+#  files: files to be appended to the end of source file (Optional)
+#  lines: lines of strings to be appended to the end of souce file (Optional)
+#
+# Example:
+# ohos_file_appender("cust_passwd") {
+#   source = "//base/startup/init/services/etc/passwd"
+#   deps = [ "//base/startup/init/services/etc:passwd" ]
+#   files = [ "cust_passwd", "passwd2" ]
+#   lines = [ "tses::1222:1222:/bin/false", "tses2::1223:1223:/bin/false" ]
+#   output = "passwd"
+# }
+# It will append files and lines to source passwd file after deps targets
+#
+template("ohos_file_appender") {
+  assert(defined(invoker.source), "source full target name must be defined.")
+
+  _file_appender_target = "${target_name}_appended"
+
+  if (defined(invoker.output)) {
+    _final_install_name = get_path_info(invoker.output, "file")
+  } else {
+    _final_install_name = get_path_info(invoker.source, "file")
+  }
+
+  _appended_file =
+      target_gen_dir + "/${target_name}.appended/" + _final_install_name
+
+  action_with_pydeps(_file_appender_target) {
+    script = "//base/startup/init/services/etc/appender/file_appender.py"
+    depfile = "${target_gen_dir}/${target_name}.d"
+    if (defined(invoker.deps)) {
+      deps = invoker.deps
+    } else {
+      deps = []
+    }
+    args = [
+      "--output",
+      rebase_path(_appended_file, root_build_dir),
+      "--source-file",
+      rebase_path(invoker.source, root_build_dir),
+      "--depfile",
+      rebase_path(depfile, root_build_dir),
+    ]
+    if (defined(invoker.files)) {
+      foreach(file, invoker.files) {
+        args += [
+          "--append-file",
+          rebase_path(file, root_build_dir),
+        ]
+      }
+    }
+    if (defined(invoker.lines)) {
+      foreach(line, invoker.lines) {
+        args += [
+          "--append-line",
+          line,
+        ]
+      }
+    }
+    inputs = [ invoker.source ]
+    outputs = [ _appended_file ]
+  }
+
+  ohos_copy(target_name) {
+    forward_variables_from(invoker,
+                           [
+                             "testonly",
+                             "visibility",
+
+                             "deps",
+                             "public_configs",
+                             "subsystem_name",
+                             "part_name",
+
+                             # For generate_module_info
+                             "install_images",
+                             "module_install_dir",
+                             "relative_install_dir",
+                             "symlink_target_name",
+
+                             # Open source license related
+                             "license_file",
+                             "license_as_sources",
+                           ])
+    if (defined(deps)) {
+      deps += [ ":$_file_appender_target" ]
+    } else {
+      deps = [ ":$_file_appender_target" ]
+    }
+    set_sources_assignment_filter([])
+    sources = [ _appended_file ]
+    outputs = [ "${target_out_dir}/${target_name}/${_final_install_name}" ]
+    module_type = "etc"
+    install_enable = true
+    module_source_dir = "${target_out_dir}/${target_name}"
+    module_install_name = _final_install_name
+    if (defined(invoker.install_enable)) {
+      install_enable = invoker.install_enable
+    }
+  }
+}
