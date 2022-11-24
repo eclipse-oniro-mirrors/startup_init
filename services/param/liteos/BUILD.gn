@@ -103,6 +103,10 @@ static_library("param_init_lite") {
       "PARAM_SUPPORT_CYCLE_CHECK",
     ]
   }
+  if (defined(config_ohos_startup_init_lite_memory_size)) {
+    defines +=
+        [ "PARAM_WORKSPACE_MAX=${config_ohos_startup_init_lite_memory_size}" ]
+  }
 }
 
 static_library("param_client_lite") {
@@ -147,6 +151,11 @@ static_library("param_client_lite") {
       deps = [ ":lite_ohos_param_to" ]
       include_dirs += [ "$root_out_dir/gen/init" ]
       defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
+    }
+
+    if (defined(config_ohos_startup_init_lite_memory_size)) {
+      defines +=
+          [ "PARAM_WORKSPACE_MAX=${config_ohos_startup_init_lite_memory_size}" ]
     }
   }
 }
