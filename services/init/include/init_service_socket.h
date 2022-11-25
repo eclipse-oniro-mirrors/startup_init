@@ -73,8 +73,8 @@ typedef struct ServiceSocket_ {
 
 int CreateServiceSocket(struct Service_ *service);
 void CloseServiceSocket(struct Service_ *service);
-int SocketAddWatcher(ServiceWatcher *watcherHandle, struct Service_ *service, int fd);
-void SocketDelWatcher(ServiceWatcher watcherHandle);
+int AddSocketWatcher(ServiceWatcher *watcherHandle, struct Service_ *service, int fd);
+void RemoveSocketWatcher(ServiceWatcher watcherHandle);
 
 #ifdef __cplusplus
 #if __cplusplus

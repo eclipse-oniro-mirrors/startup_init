@@ -362,7 +362,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestProcessWatchEvent, TestSize.Level1)
     ServiceSocket servercfg = {.next = nullptr, .sockFd = 0};
     service->socketCfg = &servercfg;
     ServiceWatcher watcher;
-    int ret = SocketAddWatcher(&watcher, service, 0);
+    int ret = AddSocketWatcher(&watcher, service, 0);
     ASSERT_EQ(ret, 0);
     uint32_t event;
     ((WatcherTask *)watcher)->processEvent((WatcherHandle)watcher, 0, &event, service);
