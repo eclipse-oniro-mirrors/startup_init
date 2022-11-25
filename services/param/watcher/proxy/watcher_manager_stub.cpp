@@ -14,6 +14,7 @@
  */
 
 #include "watcher_manager_stub.h"
+#include "watcher_manager_proxy.h"
 #include "watcher_utils.h"
 
 namespace OHOS {
