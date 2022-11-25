@@ -61,6 +61,10 @@ static bool IsSupportFilterFlag(unsigned int filterFlag)
 
 static bool InstallSeccompPolicy(const struct sock_filter* filter, size_t filterSize, unsigned int filterFlag)
 {
+    if (filter == NULL) {
+        return false;
+    }
+
     unsigned int flag = 0;
     struct sock_fprog prog = {
         (unsigned short)filterSize,
@@ -105,6 +109,11 @@ static char *GetFilterFileByName(const char *filterName)
 static int GetSeccompPolicy(const char *filterName, int **handler,
                             char *filterLibRealPath, struct sock_fprog *prog)
 {
+    if (filterName == NULL || filterLibRealPath == NULL || \
+        handler == NULL || prog == NULL) {
+        return INPUT_ERROR;
+    }
+
     char filterVaribleName[PATH_MAX] = {0};
     struct sock_filter *filter = NULL;
     size_t *filterSize = NULL;
@@ -156,6 +165,10 @@ static int GetSeccompPolicy(const char *filterName, int **handler,
 
 bool SetSeccompPolicyWithName(const char *filterName)
 {
+    if (filterName == NULL) {
+        return false;
+    }
+
     void *handler = NULL;
     char *filterLibRealPath = NULL;
     struct sock_fprog prog;
