@@ -299,7 +299,8 @@ static int GetServiceCtrlInfoForPowerCtrl(const char *name, const char *value, S
     }
     // not found reboot, so reboot by normal
     valueOffset = strlen(OHOS_SERVICE_CTRL_PREFIX) + strlen("reboot") + 1;
-    return CreateCtrlInfo(ctrlInfo, "reboot.other", valueOffset, 1, "%s%s.%s", OHOS_SERVICE_CTRL_PREFIX, "reboot", value);
+    return CreateCtrlInfo(ctrlInfo, "reboot.other", valueOffset, 1, "%s%s.%s",
+        OHOS_SERVICE_CTRL_PREFIX, "reboot", value);
 }
 
 INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, ServiceCtrlInfo **ctrlInfo)
