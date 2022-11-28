@@ -21,7 +21,6 @@ ohos_prebuilt_etc("param_watcher.rc") {
 
 ohos_shared_library("param_watcher") {
   sources = [
-    "agent/watcher_manager_proxy.cpp",
     "proxy/watcher_manager.cpp",
     "proxy/watcher_manager_stub.cpp",
     "proxy/watcher_proxy.cpp",
@@ -31,7 +30,6 @@ ohos_shared_library("param_watcher") {
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include/",
     "//base/startup/init/services/param/include",
     "//base/startup/init/services/include/param",
-    "//base/startup/init/services/param/watcher/agent",
     "//base/startup/init/services/param/linux",
     "//base/startup/init/services/param/watcher/proxy",
     "//base/startup/init/services/param/watcher/include",
