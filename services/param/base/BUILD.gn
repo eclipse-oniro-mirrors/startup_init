@@ -69,6 +69,10 @@ if (defined(ohos_lite)) {
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
     }
+    if (defined(config_ohos_startup_init_lite_memory_size)) {
+      defines +=
+          [ "PARAM_WORKSPACE_MAX=${config_ohos_startup_init_lite_memory_size}" ]
+    }
   }
 } else {
   if (use_musl) {
