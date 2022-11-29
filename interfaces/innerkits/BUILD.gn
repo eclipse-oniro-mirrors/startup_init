@@ -220,6 +220,8 @@ if (defined(ohos_lite)) {
       "service_watcher/service_watcher.c",
     ]
 
+    version_script = "libbeget_proxy.versionscript"
+
     include_dirs = include_common
     deps = [
       ":libbegetutil",
