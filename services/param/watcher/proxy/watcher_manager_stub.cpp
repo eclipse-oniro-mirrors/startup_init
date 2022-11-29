@@ -46,7 +46,8 @@ int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
             WATCHER_CHECK(remote != nullptr, reply.WriteUint32(0);
                 return 0, "Failed to read remote watcher");
             uint32_t id = data.ReadUint32();
-            uint32_t remoteWatcherId = AddRemoteWatcher(id, iface_cast<IWatcher>(remote));
+            sptr<IWatcher> watcher = new WatcherProxy(remote);
+            uint32_t remoteWatcherId = AddRemoteWatcher(id, watcher);
             reply.WriteUint32(remoteWatcherId);
             break;
         }
