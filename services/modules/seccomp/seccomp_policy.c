@@ -34,8 +34,10 @@
 
 #ifdef __aarch64__
 #define FILTER_LIB_PATH_FORMAT "/system/lib64/lib%s_filter.z.so"
+#define FILTER_LIB_PATH_HEAD "/system/lib64/lib"
 #else
 #define FILTER_LIB_PATH_FORMAT "/system/lib/lib%s_filter.z.so"
+#define FILTER_LIB_PATH_HEAD "/system/lib/lib"
 #endif
 #define FILTER_NAME_FORMAT "g_%sSeccompFilter"
 #define FILTER_SIZE_STRING "Size"
@@ -111,6 +113,10 @@ static int GetSeccompPolicy(const char *filterName, int **handler,
 {
     if (filterName == NULL || filterLibRealPath == NULL || \
         handler == NULL || prog == NULL) {
+        return INPUT_ERROR;
+    }
+
+    if (strncmp(filterLibRealPath, FILTER_LIB_PATH_HEAD, strlen(FILTER_LIB_PATH_HEAD))) {
         return INPUT_ERROR;
     }
 
