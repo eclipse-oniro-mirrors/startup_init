@@ -35,15 +35,6 @@ int ParseInitCfg(const char *configFile, void *context)
 {
     UNUSED(context);
     INIT_LOGV("Parse init configs from %s", configFile);
-    static const char *excludeCfg[] = {
-        "/system/etc/init/weston.cfg"
-    };
-    for (int i = 0; i < (int)ARRAY_LENGTH(excludeCfg); i++) {
-        if (strcmp(configFile, excludeCfg[i]) == 0) {
-            INIT_LOGE("ParseInitCfg %s not support", configFile);
-            return 0;
-        }
-    }
     char *fileBuf = ReadFileToBuf(configFile);
     INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Failed to read file content %s", configFile);
 
