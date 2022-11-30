@@ -171,6 +171,11 @@ if (defined(ohos_lite)) {
     sources += [ "syspara/param_wrapper.cpp" ]
     sources += modulemgr_sources
 
+    innerapi_tags = [
+      "chipsetsdk",
+      "platformsdk",
+    ]
+
     defines = [
       "INIT_AGENT",
       "_GNU_SOURCE",
