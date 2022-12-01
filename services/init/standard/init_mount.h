@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 #endif
-Fstab* LoadRequiredFstab(void);
+Fstab *LoadRequiredFstab(void);
 int MountRequriedPartitions(const Fstab *fstab);
 #ifdef __cplusplus
 #if __cplusplus

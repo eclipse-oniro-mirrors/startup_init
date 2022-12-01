@@ -32,7 +32,7 @@ int MountRequriedPartitions(const Fstab *fstab)
     return rc;
 }
 
-Fstab* LoadRequiredFstab(void)
+Fstab *LoadRequiredFstab(void)
 {
     Fstab *fstab = NULL;
     fstab = LoadFstabFromCommandLine();
@@ -40,7 +40,7 @@ Fstab* LoadRequiredFstab(void)
         INIT_LOGI("Cannot load fstab from command line, try read from fstab.required");
         const char *fstabFile = STARTUP_INIT_UT_PATH"/etc/fstab.required";
         INIT_CHECK(access(fstabFile, F_OK) == 0, fstabFile = "/system/etc/fstab.required");
-        INIT_ERROR_CHECK(access(fstabFile, F_OK) == 0, abort(), "Failed get fstab.required");
+        INIT_ERROR_CHECK(access(fstabFile, F_OK) == 0, return NULL, "Failed get fstab.required");
         fstab = ReadFstabFromFile(fstabFile, false);
     }
     return fstab;
