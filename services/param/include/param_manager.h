@@ -34,6 +34,16 @@ extern "C" {
 #endif
 #endif
 
+#define PARAM_MAX_SELINUX_LABEL 256
+#ifdef PARAM_SUPPORT_SELINUX
+#define PARAM_DEF_SELINUX_LABEL 64
+#else
+#define PARAM_DEF_SELINUX_LABEL 1
+#endif
+
+#define WORKSPACE_INDEX_DAC 0
+#define WORKSPACE_INDEX_BASE 1
+
 #define WORKSPACE_NAME_DAC "param_sec_dac"
 #define WORKSPACE_NAME_DEF_SELINUX "u:object_r:default_param:s0"
 #ifndef PARAM_SUPPORT_SELINUX
@@ -55,15 +65,14 @@ typedef struct {
     uint32_t flags;
     ParamSecurityLabel securityLabel;
     ParamSecurityOps paramSecurityOps[PARAM_SECURITY_MAX];
-    HashMapHandle workSpaceHashHandle;
-    ListHead workSpaceList;
-#ifdef PARAMWORKSPACE_NEED_MUTEX
-    ParamRWMutex rwlock;
-#endif
     PARAM_WORKSPACE_OPS ops;
 #ifdef PARAM_SUPPORT_SELINUX
     SelinuxSpace selinuxSpace;
 #endif
+    int (*checkParamPermission)(const ParamLabelIndex *labelIndex,
+        const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
+    uint32_t maxLabelIndex;
+    WorkSpace **workSpace;
 } ParamWorkSpace;
 
 typedef struct {
@@ -94,12 +103,23 @@ typedef struct {
     char *prefix;
 } ParamTraversalContext;
 
-INIT_LOCAL_API int AddWorkSpace(const char *name, int onlyRead, uint32_t spacesize);
-INIT_LOCAL_API WorkSpace *GetFirstWorkSpace(void);
+#define  PARAM_HANDLE(workSpace, index) (ParamHandle)((workSpace)->spaceIndex << 24) | (index);
+#define  PARAM_GET_HANDLE_INFO(handle, label, index) \
+    do { \
+        (label) = (((handle) >> 24) & 0x000000ff);  \
+        (index) = (handle) & 0x00ffffff; \
+        if (((index) & 0x03) != 0) { \
+            (index) = 0; \
+        } \
+    } while (0)
+
+INIT_LOCAL_API int AddWorkSpace(const char *name, uint32_t labelIndex, int onlyRead, uint32_t spacesize);
+INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly);
+
 INIT_LOCAL_API WorkSpace *GetNextWorkSpace(WorkSpace *curr);
-INIT_LOCAL_API WorkSpace *GetWorkSpace(const char *name);
-INIT_LOCAL_API ParamTrieNode *GetTrieNodeByHandle(ParamHandle handle);
-INIT_LOCAL_API int ReadParamWithCheck(const char *name, uint32_t op, ParamHandle *handle);
+INIT_LOCAL_API WorkSpace *GetWorkSpace(uint32_t labelIndex);
+INIT_LOCAL_API uint32_t GetWorkSpaceIndex(const char *name);
+
 INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, const char *value, uint8_t paramType);
 INIT_LOCAL_API int CheckParamName(const char *name, int paramInfo);
 INIT_LOCAL_API uint8_t GetParamValueType(const char *name);
@@ -116,12 +136,9 @@ INIT_LOCAL_API int InitPersistParamWorkSpace(void);
 INIT_LOCAL_API void ClosePersistParamWorkSpace(void);
 INIT_LOCAL_API int WritePersistParam(const char *name, const char *value);
 
-INIT_LOCAL_API uint32_t ReadCommitId(ParamNode *entry);
-INIT_LOCAL_API int ReadParamName(ParamHandle handle, char *name, uint32_t length);
-INIT_LOCAL_API int ReadParamValue(ParamHandle handle, char *value, uint32_t *length);
 INIT_LOCAL_API int CheckParameterSet(const char *name, const char *value,
     const ParamSecurityLabel *srcLabel, int *ctrlService);
-INIT_LOCAL_API ParamHandle GetParamHandle(const WorkSpace *workSpace, uint32_t index, const char *name);
+
 INIT_LOCAL_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
 
 INIT_LOCAL_API int SysCheckParamExist(const char *name);

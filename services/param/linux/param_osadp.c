@@ -83,7 +83,7 @@ INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint3
     PARAM_CHECK(fileName != NULL, return NULL, "Invalid filename or handle");
     int mode = readOnly ? O_RDONLY : O_CREAT | O_RDWR | O_TRUNC;
     int fd = open(fileName, mode, S_IRWXU | S_IRWXG | S_IROTH);
-    PARAM_CHECK(fd >= 0, return NULL, "Open file %s mode %x fail error %d", fileName, mode, errno);
+    PARAM_ONLY_CHECK(fd >= 0, return NULL);
 
     int prot = PROT_READ;
     if (!readOnly) {

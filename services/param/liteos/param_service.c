@@ -121,20 +121,87 @@ int SystemWriteParam(const char *name, const char *value)
 #define OS_DELAY 1000 // * 30 // 30s
 #define STACK_SIZE 1024
 
+
+typedef struct SysParaInfoItem_ {
+    char *infoName;
+    const char *(*getInfoValue)(void);
+}SysParaInfoItem;
+
+static const SysParaInfoItem SYSPARA_LIST[] = {
+    {(char *)"DeviceType", GetDeviceType},
+    {(char *)"Manufacture", GetManufacture},
+    {(char *)"Brand", GetBrand},
+    {(char *)"MarketName", GetMarketName},
+    {(char *)"ProductSeries", GetProductSeries},
+    {(char *)"ProductModel", GetProductModel},
+    {(char *)"SoftwareModel", GetSoftwareModel},
+    {(char *)"HardwareModel", GetHardwareModel},
+    {(char *)"Serial", GetSerial},
+    {(char *)"OSFullName", GetOSFullName},
+    {(char *)"DisplayVersion", GetDisplayVersion},
+    {(char *)"BootloaderVersion", GetBootloaderVersion},
+    {(char *)"GetSecurityPatchTag", GetSecurityPatchTag},
+    {(char *)"AbiList", GetAbiList},
+    {(char *)"IncrementalVersion", GetIncrementalVersion},
+    {(char *)"VersionId", GetVersionId},
+    {(char *)"BuildType", GetBuildType},
+    {(char *)"BuildUser", GetBuildUser},
+    {(char *)"BuildHost", GetBuildHost},
+    {(char *)"BuildTime", GetBuildTime},
+    {(char *)"BuildRootHash", GetBuildRootHash},
+    {(char *)"GetOsReleaseType", GetOsReleaseType},
+    {(char *)"GetHardwareProfile", GetHardwareProfile},
+};
+
+int32_t SysParaApiDumpCmd()
+{
+    int index = 0;
+    int dumpInfoItemNum = (sizeof(SYSPARA_LIST) / sizeof(SYSPARA_LIST[0]));
+    const char *temp = NULL;
+    printf("Begin dump syspara\r\n");
+    printf("=======================\r\n");
+    while (index < dumpInfoItemNum) {
+        temp = SYSPARA_LIST[index].getInfoValue();
+        printf("%s:%s\r\n", SYSPARA_LIST[index].infoName, temp);
+        index++;
+    }
+    printf("FirstApiVersion:%d\r\n", GetFirstApiVersion());
+    printf("GetSerial:%s\r\n", GetSerial());
+    char udid[65] = {0};
+    GetDevUdid(udid, sizeof(udid));
+    printf("GetDevUdid:%s\r\n", udid);
+    printf("Version:%d.%d.%d.%d\r\n",
+        GetMajorVersion(), GetSeniorVersion(), GetFeatureVersion(), GetBuildVersion());
+    printf("GetSdkApiVersion:%d\r\n", GetSdkApiVersion());
+    printf("GetSystemCommitId:%lld\r\n", GetSystemCommitId());
+    printf("=======================\r\n");
+    printf("End dump syspara\r\n");
+    return 0;
+}
+
 static void ParamServiceTask(int *arg)
 {
     (void)arg;
     PARAM_LOGI("ParamServiceTask start");
+    SysParaApiDumpCmd();
     while (1) {
         CheckAndSavePersistParam();
+        PARAM_LOGI("CheckAndSavePersistParam");
+        printf("CheckAndSavePersistParam \n");
         osDelay(OS_DELAY);
     }
 }
 
 void LiteParamService(void)
 {
+    static init = 0;
+    if (init) {
+        printf("LiteParamService has been init \n");
+        return;
+    }
+    init = 1;
     EnableInitLog(INIT_INFO);
-    PARAM_LOGI("LiteParamService");
+    printf("LiteParamService \n");
     InitParamService();
     // get persist param
     LoadPersistParams();

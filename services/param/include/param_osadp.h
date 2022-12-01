@@ -44,6 +44,12 @@ extern "C" {
 #endif
 #endif
 
+#ifdef STARTUP_INIT_TEST
+#define STATIC_INLINE
+#else
+#define STATIC_INLINE static __attribute__((always_inline))
+#endif
+
 #define PARAM_WORKSPACE_INVALID ((uint32_t)-1)
 #define PARAM_WORKSPACE_MIN (1024)
 /*
@@ -69,7 +75,7 @@ extern "C" {
 #define DAC_DEFAULT_USER 0
 #else
 #define PARAM_WORKSPACE_MAX (80 * 1024)
-#define PARAM_WORKSPACE_SMALL (1024 * 20)
+#define PARAM_WORKSPACE_SMALL (1024 * 10)
 #ifdef STARTUP_INIT_TEST
 #define DAC_DEFAULT_MODE 0777
 #define PARAM_WORKSPACE_DEF (1024 * 50)
@@ -172,10 +178,10 @@ INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex);
 #endif
 
 #ifdef PARAMWORKSPACE_NEED_MUTEX
-#define WORKSPACE_INIT_LOCK(workspace) ParamRWMutexCreate(&(workspace).rwlock)
-#define WORKSPACE_RW_LOCK(workspace) ParamRWMutexWRLock(&(workspace).rwlock)
-#define WORKSPACE_RD_LOCK(workspace) ParamRWMutexRDLock(&(workspace).rwlock)
-#define WORKSPACE_RW_UNLOCK(workspace) ParamRWMutexUnlock(&(workspace).rwlock)
+#define WORKSPACE_INIT_LOCK(workspace) ParamRWMutexCreate(&((workspace)->rwSpaceLock))
+#define WORKSPACE_RW_LOCK(workspace) ParamRWMutexWRLock(&((workspace)->rwSpaceLock))
+#define WORKSPACE_RD_LOCK(workspace) ParamRWMutexRDLock(&((workspace)->rwSpaceLock))
+#define WORKSPACE_RW_UNLOCK(workspace) ParamRWMutexUnlock(&((workspace)->rwSpaceLock))
 #else
 #define WORKSPACE_INIT_LOCK(workspace) (void)(workspace)
 #define WORKSPACE_RW_LOCK(workspace) (void)(workspace)

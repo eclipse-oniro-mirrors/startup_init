@@ -68,11 +68,8 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value %s", name);
     long long globalCommit = 0;
     // first check permission
-    ParamHandle handle = 0;
-    int ret = ReadParamWithCheck(name, DAC_READ, &handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-        PARAM_CHECK(ret == 0, return ret, "Forbid to wait parameters %s", name);
-    }
+    int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
+    PARAM_CHECK(ret == 0, return ret, "Forbid to wait parameter %s", name);
     uint32_t diff = 0;
     time_t startTime;
     if (timeout <= 0) {

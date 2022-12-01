@@ -52,8 +52,10 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
     return 0;
 }
 
-static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
+INIT_LOCAL_API int DacCheckParamPermission(uint32_t index,
+    const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
+    UNUSED(index);
     UNUSED(srcLabel);
     UNUSED(name);
     UNUSED(mode);

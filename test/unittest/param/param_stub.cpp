@@ -78,6 +78,9 @@ static int TestSetParamCheck(const char *paraName, const char *context, const Sr
 static const char *TestGetParamLabel(const char *paraName)
 {
     BEGET_LOGI("TestGetParamLabel %s", paraName);
+    if (paraName == nullptr) {
+        return 0;
+    }
     for (size_t i = 0; i < ARRAY_LENGTH(selinuxLabels); i++) {
         if (strncmp(selinuxLabels[i][0], paraName, strlen(selinuxLabels[i][0])) == 0) {
             return selinuxLabels[i][1];
@@ -86,6 +89,18 @@ static const char *TestGetParamLabel(const char *paraName)
     int code = TestGenHashCode(paraName);
     code = code % (ARRAY_LENGTH(selinuxLabels));
     return selinuxLabels[code][1];
+}
+
+static int32_t TestGetSelinuxLabelIndex(const char *paraName)
+{
+    for (size_t i = 0; i < ARRAY_LENGTH(selinuxLabels); i++) {
+        if (strncmp(selinuxLabels[i][0], paraName, strlen(selinuxLabels[i][0])) == 0) {
+            return i + 1;
+        }
+    }
+    int code = TestGenHashCode(paraName);
+    code = code % (ARRAY_LENGTH(selinuxLabels));
+    return code + 1;
 }
 
 static const char *g_forbidReadParamName[] = {
@@ -174,6 +189,7 @@ void TestSetSelinuxOps(void)
     selinuxSpace->readParamCheck = TestReadParamCheck;
     selinuxSpace->getParamList = TestGetParamList;
     selinuxSpace->destroyParamList = TestDestroyParamList;
+    selinuxSpace->getParamLabelIndex = TestGetSelinuxLabelIndex;
 #endif
 }
 
@@ -514,7 +530,8 @@ void PrepareInitUnitTestEnv(void)
     evnOk = 1;
 }
 
-int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
+int TestCheckParamPermission(const ParamLabelIndex *labelIndex,
+    const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
     // DAC_RESULT_FORBIDED
     return g_testPermissionResult;
@@ -534,11 +551,11 @@ void SetStubResult(STUB_TYPE type, int result)
 static void TestBeforeInit(void)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
-    EXPECT_EQ(paramSpace, nullptr);
+    EXPECT_NE(paramSpace, nullptr);
     InitParamService();
     CloseParamWorkSpace();
     paramSpace = GetParamWorkSpace();
-    EXPECT_EQ(paramSpace, nullptr);
+    EXPECT_NE(paramSpace, nullptr);
     EnableInitLogFromCmdline();
 
     // test read cmdline
@@ -695,6 +712,24 @@ int setfilecon(const char *name, const char *content)
 {
     g_selinuxOptResult++;
     return g_selinuxOptResult % g_testRandom;
+}
+
+ParamLabelIndex *TestGetParamLabelIndex(const char *name)
+{
+    if (GetParamWorkSpace() == NULL && GetParamWorkSpace()->selinuxSpace.getParamLabelIndex == NULL) {
+        return NULL;
+    }
+    uint32_t index = (uint32_t)GetParamWorkSpace()->selinuxSpace.getParamLabelIndex(name);
+    if (index >= GetParamWorkSpace()->maxLabelIndex) {
+        return NULL;
+    }
+    static ParamLabelIndex labelIndex = {0};
+    WorkSpace *workspace = GetParamWorkSpace()->workSpace[index];
+    labelIndex.workspace = workspace;
+    PARAM_CHECK(labelIndex.workspace != NULL, return NULL, "Invalid workSpace");
+    labelIndex.selinuxLabelIndex = labelIndex.workspace->spaceIndex;
+    (void)FindTrieNode(labelIndex.workspace, name, strlen(name), &labelIndex.dacLabelIndex);
+    return &labelIndex;
 }
 #ifdef __cplusplus
 #if __cplusplus

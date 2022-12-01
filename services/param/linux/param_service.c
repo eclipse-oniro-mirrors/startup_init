@@ -61,7 +61,7 @@ static void TimerCallback(const ParamTaskPtr timer, void *context)
 
 static void CheckAndSendTrigger(uint32_t dataIndex, const char *name, const char *value)
 {
-    ParamNode *entry = (ParamNode *)GetTrieNode(GetWorkSpace(name), dataIndex);
+    ParamNode *entry = (ParamNode *)GetTrieNode(GetWorkSpace(GetWorkSpaceIndex(name)), dataIndex);
     PARAM_CHECK(entry != NULL, return, "Failed to get data %s ", name);
     uint32_t trigger = 1;
     if ((ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed) & PARAM_FLAGS_TRIGGED) != PARAM_FLAGS_TRIGGED) {
@@ -278,7 +278,6 @@ static int HandleParamWaitAdd(const ParamTaskPtr worker, const ParamMessage *msg
             ParamTaskClose(g_paramService.timer);
             g_paramService.timer = NULL;
             return 0, "Failed to set timer %s", msg->key);
-        PARAM_LOGI("Start timer %p", g_paramService.timer);
     }
     return 0;
 }
@@ -362,10 +361,6 @@ PARAM_STATIC int OnIncomingConnect(LoopHandle loop, TaskHandle server)
 
 static void LoadSelinuxLabel(void)
 {
-    ParamWorkSpace *paramSpace = GetParamWorkSpace();
-    PARAM_CHECK(paramSpace != NULL, return, "Invalid paramSpace");
-    PARAM_WORKSPACE_CHECK(paramSpace, return, "Invalid space");
-
     // load security label
 #ifdef PARAM_SUPPORT_SELINUX
     ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);

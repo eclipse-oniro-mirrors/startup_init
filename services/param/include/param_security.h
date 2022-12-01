@@ -48,6 +48,9 @@ extern "C" {
 
 #define DAC_RESULT_PERMISSION 0
 
+#define USER_BUFFER_LEN 64
+#define GROUP_FORMAT "const.%u_%u"
+
 typedef struct UserCred {
     pid_t pid;
     uid_t uid;
@@ -84,12 +87,20 @@ typedef struct {
 #endif
 } ParamAuditData;
 
+struct WorkSpace_;
+typedef struct ParamLabelIndex_ {
+    uint32_t selinuxLabelIndex;
+    uint32_t dacLabelIndex;
+    struct WorkSpace_ *workspace;
+} ParamLabelIndex;
+
 typedef struct {
     char name[10];
     int (*securityInitLabel)(ParamSecurityLabel *label, int isInit);
     int (*securityGetLabel)(const char *path);
     int (*securityCheckFilePermission)(const ParamSecurityLabel *label, const char *fileName, int flags);
-    int (*securityCheckParamPermission)(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
+    int (*securityCheckParamPermission)(const ParamLabelIndex *labelIndex,
+        const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
     int (*securityFreeLabel)(ParamSecurityLabel *srcLabel);
 } ParamSecurityOps;
 
@@ -104,8 +115,10 @@ typedef struct SelinuxSpace_ {
     int (*readParamCheck)(const char *paraName);
     ParamContextsList *(*getParamList)(void);
     void (*destroyParamList)(ParamContextsList **list);
+    int (*getParamLabelIndex)(const char *paraName);
 #endif
 } SelinuxSpace;
+
 #ifdef PARAM_SUPPORT_SELINUX
 INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit);
 #endif
@@ -115,6 +128,12 @@ INIT_LOCAL_API void LoadGroupUser(void);
 INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit);
 INIT_LOCAL_API int RegisterSecurityOps(int onlyRead);
 
+#ifdef STARTUP_INIT_TEST
+STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
+    const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
+STATIC_INLINE int SelinuxCheckParamPermission(const ParamLabelIndex *labelIndex,
+    const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 }

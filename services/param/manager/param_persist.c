@@ -38,8 +38,8 @@ static long long GetPersistCommitId(void)
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return 0, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return 0, "Invalid space");
-    WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
-    if (space == NULL || space->area == NULL) {
+    WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
+    if (space == NULL) {
         return 0;
     }
     PARAMSPACE_AREA_RD_LOCK(space);
@@ -53,8 +53,8 @@ static void UpdatePersistCommitId(void)
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return, "Invalid space");
-    WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
-    if (space == NULL || space->area == NULL) {
+    WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
+    if (space == NULL) {
         return;
     }
     PARAMSPACE_AREA_RW_LOCK(space);
@@ -105,7 +105,7 @@ static int BatchSavePersistParam(void)
     const char *prefix = PARAM_PERSIST_PREFIX;
 #endif
     // walk and save persist param
-    WorkSpace *workSpace = GetFirstWorkSpace();
+    WorkSpace *workSpace = GetNextWorkSpace(NULL);
     while (workSpace != NULL) {
         WorkSpace *next = GetNextWorkSpace(workSpace);
         ParamTrieNode *root = FindTrieNode(workSpace, prefix, strlen(prefix), NULL);

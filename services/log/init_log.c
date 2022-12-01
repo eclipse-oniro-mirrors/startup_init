@@ -119,17 +119,22 @@ static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag
 #endif
 }
 
-INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs)
+static void PrintLog_(int logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs)
 {
-    if ((int)g_logLevel > logLevel) {
-        return;
-    }
     char tmpFmt[DEF_LOG_SIZE] = {0};
     if (vsnprintf_s(tmpFmt, sizeof(tmpFmt), sizeof(tmpFmt) - 1, fmt, vargs) == -1) {
         tmpFmt[sizeof(tmpFmt) - 2] = '\n'; // 2 add \n to tail
         tmpFmt[sizeof(tmpFmt) - 1] = '\0';
     }
     PrintLog((InitLogLevel)logLevel, domain, tag, tmpFmt);
+}
+
+INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs)
+{
+    if ((int)g_logLevel > logLevel) {
+        return;
+    }
+    PrintLog_((InitLogLevel)logLevel, domain, tag, fmt, vargs);
 }
 
 INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level)

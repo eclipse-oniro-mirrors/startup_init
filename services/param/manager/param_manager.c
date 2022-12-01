@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,13 +25,15 @@
 #include "securec.h"
 static DUMP_PRINTF g_printf = printf;
 
+static int ReadParamName(ParamHandle handle, char *name, uint32_t length);
+
 ParamNode *SystemCheckMatchParamWait(const char *name, const char *value)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return NULL, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return NULL, "Invalid space");
 
-    WorkSpace *workspace = GetWorkSpace(name);
+    WorkSpace *workspace = GetWorkSpace(GetWorkSpaceIndex(name));
     PARAM_CHECK(workspace != NULL, return NULL, "Failed to get workspace %s", name);
     PARAM_LOGV("SystemCheckMatchParamWait name %s", name);
     uint32_t nameLength = strlen(name);
@@ -75,7 +77,7 @@ static int ProcessParamTraversal(const WorkSpace *workSpace, const ParamTrieNode
     if ((strcmp("#", context->prefix) != 0) && (strncmp(entry->data, context->prefix, strlen(context->prefix)) != 0)) {
         return 0;
     }
-    uint32_t index = GetParamHandle(workSpace, current->dataIndex, entry->data);
+    uint32_t index = PARAM_HANDLE(workSpace, current->dataIndex);
     context->traversalParamPtr(index, context->context);
     return 0;
 }
@@ -90,21 +92,17 @@ int SystemTraversalParameter(const char *prefix, TraversalParamPtr traversalPara
 #ifdef PARAM_SUPPORT_SELINUX // load security label
     ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
     if (ops != NULL && ops->securityGetLabel != NULL) {
-        ops->securityGetLabel(NULL);
+        ops->securityGetLabel("open");
     }
 #endif
     ParamTraversalContext context = {traversalParameter, cookie, "#"};
     if (!(prefix == NULL || strlen(prefix) == 0)) {
-        ParamHandle handle = 0;
-        // only check for valid parameter
-        int ret = ReadParamWithCheck(prefix, DAC_READ, &handle);
-        if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-            PARAM_CHECK(ret == 0, return ret, "Forbid to traversal parameters");
-        }
+        int ret = CheckParamPermission(GetParamSecurityLabel(), prefix, DAC_READ);
+        PARAM_CHECK(ret == 0, return ret, "Forbid to traversal parameters %s", prefix);
         context.prefix = (char *)prefix;
     }
 
-    WorkSpace *workSpace = GetFirstWorkSpace();
+    WorkSpace *workSpace = GetNextWorkSpace(NULL);
     if (workSpace != NULL && strcmp(workSpace->fileName, WORKSPACE_NAME_DAC) == 0) {
         workSpace = GetNextWorkSpace(workSpace);
     }
@@ -169,7 +167,7 @@ static void HashNodeTraverseForDump(WorkSpace *workSpace, int verbose)
     PARAMSPACE_AREA_RW_UNLOCK(workSpace);
 }
 
-void SystemDumpParameters(int verbose, int (*dump)(const char *fmt, ...))
+void SystemDumpParameters(int verbose, int index, int (*dump)(const char *fmt, ...))
 {
     if (dump != NULL) {
         g_printf = dump;
@@ -180,26 +178,30 @@ void SystemDumpParameters(int verbose, int (*dump)(const char *fmt, ...))
     PARAM_CHECK(paramSpace != NULL, return, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return, "Invalid space");
     // check default dac
-    ParamHandle handle = 0;
-    int ret = ReadParamWithCheck("#", DAC_READ, &handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-        PARAM_CHECK(ret == 0, return, "Forbid to dump parameters");
-    }
+    int ret = CheckParamPermission(GetParamSecurityLabel(), "#", DAC_READ);
+    PARAM_CHECK(ret == 0, return, "Forbid to dump parameters ");
 #ifdef PARAM_SUPPORT_SELINUX // load security label
     ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
     if (ops != NULL && ops->securityGetLabel != NULL) {
-        ops->securityGetLabel(NULL);
+        ops->securityGetLabel("open");
     }
 #endif
     PARAM_DUMP("Dump all parameters begin ...\n");
     if (verbose) {
-        PARAM_DUMP("Local sercurity information\n");
+        PARAM_DUMP("Local security information\n");
         PARAM_DUMP("pid: %d uid: %u gid: %u \n",
             paramSpace->securityLabel.cred.pid,
             paramSpace->securityLabel.cred.uid,
             paramSpace->securityLabel.cred.gid);
     }
-    WorkSpace *workSpace = GetFirstWorkSpace();
+    if (index > 0) {
+        WorkSpace *workSpace = GetWorkSpace(index);
+        if (workSpace != NULL) {
+            HashNodeTraverseForDump(workSpace, verbose);
+        }
+        return;
+    }
+    WorkSpace *workSpace = GetNextWorkSpace(NULL);
     while (workSpace != NULL) {
         WorkSpace *next = GetNextWorkSpace(workSpace);
         HashNodeTraverseForDump(workSpace, verbose);
@@ -215,7 +217,7 @@ INIT_LOCAL_API int SysCheckParamExist(const char *name)
     PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
     PARAM_CHECK(name != NULL, return -1, "The name or handle is null");
 
-    WorkSpace *workSpace = GetFirstWorkSpace();
+    WorkSpace *workSpace = GetNextWorkSpace(NULL);
     while (workSpace != NULL) {
         PARAM_LOGV("SysCheckParamExist name %s in space %s", name, workSpace->fileName);
         WorkSpace *next = GetNextWorkSpace(workSpace);
@@ -238,7 +240,7 @@ INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAu
     PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
     uint32_t labelIndex = 0;
     // get from dac
-    WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
+    WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
     PARAM_CHECK(space != NULL, return -1, "Invalid workSpace");
     FindTrieNode(space, name, strlen(name), &labelIndex);
     ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
@@ -381,4 +383,233 @@ int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len)
 {
     PARAM_CHECK(name != NULL && handle != 0, return -1, "The name is null");
     return ReadParamName(handle, name, len);
+}
+
+static int AddParam(WorkSpace *workSpace, uint8_t type, const char *name, const char *value, uint32_t *dataIndex)
+{
+    ParamTrieNode *node = AddTrieNode(workSpace, name, strlen(name));
+    PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX,
+        "Failed to add node name %s space %s", name, workSpace->fileName);
+    ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
+    if (entry == NULL) {
+        uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value));
+        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX,
+            "Failed to allocate name %s space %s", name, workSpace->fileName);
+        SaveIndex(&node->dataIndex, offset);
+        long long globalCommitId = ATOMIC_LOAD_EXPLICIT(&workSpace->area->commitId, memory_order_relaxed);
+        ATOMIC_STORE_EXPLICIT(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
+#ifdef PARAM_SUPPORT_SELINUX
+        WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
+        if (space != NULL && space != workSpace) { // dac commit is global commit
+            globalCommitId = ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_relaxed);
+            ATOMIC_STORE_EXPLICIT(&space->area->commitId, ++globalCommitId, memory_order_release);
+        }
+#endif
+    }
+    if (dataIndex != NULL) {
+        *dataIndex = node->dataIndex;
+    }
+    PARAM_LOGV("AddParam name %s value: %s", name, value);
+    return 0;
+}
+
+static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const char *name, const char *value)
+{
+    ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, *dataIndex);
+    PARAM_CHECK(entry != NULL, return PARAM_CODE_REACHED_MAX, "Failed to update param value %s %u", name, *dataIndex);
+    PARAM_CHECK(entry->keyLength == strlen(name), return PARAM_CODE_INVALID_NAME, "Failed to check name len %s", name);
+
+    uint32_t valueLen = strlen(value);
+    uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed);
+    ATOMIC_STORE_EXPLICIT(&entry->commitId, commitId | PARAM_FLAGS_MODIFY, memory_order_relaxed);
+    long long globalCommitId = ATOMIC_LOAD_EXPLICIT(&workSpace->area->commitId, memory_order_relaxed);
+    if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
+        int ret = ParamMemcpy(entry->data + entry->keyLength + 1, PARAM_VALUE_LEN_MAX, value, valueLen + 1);
+        PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
+        entry->valueLength = valueLen;
+    }
+    uint32_t flags = commitId & ~PARAM_FLAGS_COMMITID;
+    ATOMIC_STORE_EXPLICIT(&entry->commitId, (++commitId) | flags, memory_order_release);
+    ATOMIC_STORE_EXPLICIT(&workSpace->area->commitId, ++globalCommitId, memory_order_release);
+#ifdef PARAM_SUPPORT_SELINUX
+    WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
+    if (space != NULL && space != workSpace) { // dac commit is global commit
+        globalCommitId = ATOMIC_LOAD_EXPLICIT(&space->area->commitId, memory_order_relaxed);
+        ATOMIC_STORE_EXPLICIT(&space->area->commitId, ++globalCommitId, memory_order_release);
+    }
+#endif
+    PARAM_LOGV("UpdateParam name %s value: %s", name, value);
+    futex_wake(&entry->commitId, INT_MAX);
+    return 0;
+}
+
+INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dataIndex, int mode)
+{
+    PARAM_LOGV("WriteParam %s", name);
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid paramSpace");
+    PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
+    PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
+    WorkSpace *workSpace = GetWorkSpace(GetWorkSpaceIndex(name));
+    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
+    ParamTrieNode *node = FindTrieNode(workSpace, name, strlen(name), NULL);
+    int ret = 0;
+    if (node != NULL && node->dataIndex != 0) {
+        if (dataIndex != NULL) {
+            *dataIndex = node->dataIndex;
+        }
+        if ((mode & LOAD_PARAM_ONLY_ADD) == LOAD_PARAM_ONLY_ADD) {
+            return PARAM_CODE_READ_ONLY;
+        }
+        ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
+        PARAM_CHECK(entry != NULL, return PARAM_CODE_REACHED_MAX,
+            "Failed to update param value %s %u", name, node->dataIndex);
+        // use save type to check value
+        ret = CheckParamValue(node, name, value, entry->type);
+        PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
+        PARAMSPACE_AREA_RW_LOCK(workSpace);
+        ret = UpdateParam(workSpace, &node->dataIndex, name, value);
+        PARAMSPACE_AREA_RW_UNLOCK(workSpace);
+    } else {
+        uint8_t type = GetParamValueType(name);
+        ret = CheckParamValue(node, name, value, type);
+        PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
+        PARAMSPACE_AREA_RW_LOCK(workSpace);
+        ret = AddParam((WorkSpace *)workSpace, type, name, value, dataIndex);
+        PARAMSPACE_AREA_RW_UNLOCK(workSpace);
+    }
+    return ret;
+}
+
+INIT_LOCAL_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
+{
+    PARAM_CHECK(srcLabel != NULL, return DAC_RESULT_FORBIDED, "The srcLabel is null");
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_WORKSPACE_CHECK(paramSpace, return DAC_RESULT_FORBIDED, "Invalid workspace");
+    PARAM_CHECK(paramSpace->checkParamPermission != NULL, return DAC_RESULT_FORBIDED, "Invalid check permission");
+    ParamLabelIndex labelIndex = {0};
+    labelIndex.selinuxLabelIndex = GetWorkSpaceIndex(name);
+    if (labelIndex.selinuxLabelIndex < paramSpace->maxLabelIndex) {
+        labelIndex.workspace = paramSpace->workSpace[labelIndex.selinuxLabelIndex];
+    }
+    PARAM_CHECK(labelIndex.workspace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
+#ifndef PARAM_SUPPORT_SELINUX
+    (void)FindTrieNode(labelIndex.workspace, name, strlen(name), &labelIndex.dacLabelIndex);
+#endif
+    PARAM_LOGV("CheckParamPermission %s selinuxLabelIndex: %u %u",
+        labelIndex.workspace->fileName, labelIndex.selinuxLabelIndex, labelIndex.dacLabelIndex);
+    return paramSpace->checkParamPermission(&labelIndex, srcLabel, name, mode);
+}
+
+INIT_LOCAL_API WorkSpace *GetNextWorkSpace(WorkSpace *curr)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return NULL, "Invalid paramSpace");
+    uint32_t i = (curr == NULL) ? 0 : (curr->spaceIndex + 1);
+    WorkSpace *workSpace = NULL;
+    for (; i < paramSpace->maxLabelIndex; ++i) {
+        workSpace = GetWorkSpace(i);
+        if (workSpace != NULL) {
+            return workSpace;
+        }
+    }
+    return NULL;
+}
+
+INIT_LOCAL_API uint8_t GetParamValueType(const char *name)
+{
+    uint32_t labelIndex = 0;
+    WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
+    if (space == NULL) {
+        return PARAM_TYPE_STRING;
+    }
+    (void)FindTrieNode(space, name, strlen(name), &labelIndex);
+    ParamSecurityNode *securityNode = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
+    if (securityNode == NULL) {
+        return PARAM_TYPE_STRING;
+    }
+    return securityNode->type;
+}
+
+static int CheckParamValueType(const char *name, const char *value, uint8_t paramType)
+{
+    (void)name;
+    if (paramType == PARAM_TYPE_INT) {
+        long long int temp1 = 0;
+        if (strlen(value) > 1 && value[0] == '-' && StringToLL(value, &temp1) != 0) {
+            PARAM_LOGE("Illegal param value %s for int", value);
+            return PARAM_CODE_INVALID_VALUE;
+        }
+        unsigned long long int temp2 = 0;
+        if (StringToULL(value, &temp2) != 0) {
+            PARAM_LOGE("Illegal param value %s for int", value);
+            return PARAM_CODE_INVALID_VALUE;
+        }
+    } else if (paramType == PARAM_TYPE_BOOL) {
+        static const char *validValue[] = {
+            "1", "0", "true", "false", "y", "yes", "on", "off", "n", "no"
+        };
+        size_t i = 0;
+        for (; i < ARRAY_LENGTH(validValue); i++) {
+            if (strcasecmp(validValue[i], value) == 0) {
+                break;
+            }
+        }
+        if (i >= ARRAY_LENGTH(validValue)) {
+            PARAM_LOGE("Illegal param value %s for bool", value);
+            return PARAM_CODE_INVALID_VALUE;
+        }
+    }
+    return 0;
+}
+
+INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, const char *value, uint8_t paramType)
+{
+    if (IS_READY_ONLY(name)) {
+        PARAM_CHECK(strlen(value) < PARAM_CONST_VALUE_LEN_MAX,
+            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s", value);
+        if (node != NULL && node->dataIndex != 0) {
+            PARAM_LOGE("Read-only param was already set %s", name);
+            return PARAM_CODE_READ_ONLY;
+        }
+    } else {
+        PARAM_CHECK(strlen(value) < GetParamMaxLen(paramType),
+            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s length", value);
+    }
+    return CheckParamValueType(name, value, paramType);
+}
+
+static int ReadParamName(ParamHandle handle, char *name, uint32_t length)
+{
+    PARAM_CHECK(name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Param workspace has not init.");
+    PARAM_ONLY_CHECK(handle != (ParamHandle)-1, return PARAM_CODE_NOT_FOUND);
+    uint32_t labelIndex = 0;
+    uint32_t index = 0;
+    PARAM_GET_HANDLE_INFO(handle, labelIndex, index);
+    WorkSpace *workSpace = GetWorkSpace(labelIndex);
+    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_NOT_FOUND, "Invalid workSpace for handle %x", handle);
+    ParamNode *entry = NULL;
+    if (PARAM_IS_ALIGNED(index)) {
+        entry = (ParamNode *)GetTrieNode(workSpace, index);
+    }
+    if (entry == NULL) {
+        return PARAM_CODE_NOT_FOUND;
+    }
+    PARAM_CHECK(length > entry->keyLength, return -1, "Invalid param size %u %u", entry->keyLength, length);
+    int ret = ParamMemcpy(name, length, entry->data, entry->keyLength);
+    PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_PARAM, "Failed to copy name");
+    name[entry->keyLength] = '\0';
+    return 0;
+}
+
+void ResetParamSecurityLabel(void)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return, "Invalid paramSpace");
+    paramSpace->securityLabel.cred.pid = getpid();
+    paramSpace->securityLabel.cred.uid = geteuid();
+    paramSpace->securityLabel.cred.gid = getegid();
+    paramSpace->flags |= WORKSPACE_FLAGS_NEED_ACCESS;
 }

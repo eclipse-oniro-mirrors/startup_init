@@ -196,11 +196,8 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     PARAM_CHECK(name != NULL, return -1, "Invalid name");
     int ret = CheckParamName(name, 0);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
-    ParamHandle handle = 0;
-    ret = ReadParamWithCheck(name, DAC_READ, &handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-        PARAM_CHECK(ret == 0, return ret, "Forbid to wait parameter %s", name);
-    }
+    ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
+    PARAM_CHECK(ret == 0, return ret, "Forbid to wait parameter %s", name);
     if (timeout <= 0) {
         timeout = DEFAULT_PARAM_WAIT_TIMEOUT;
     }
@@ -251,10 +248,7 @@ int WatchParamCheck(const char *keyprefix)
     PARAM_CHECK(keyprefix != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid keyprefix");
     int ret = CheckParamName(keyprefix, 0);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", keyprefix);
-    ParamHandle handle = 0;
-    ret = ReadParamWithCheck(keyprefix, DAC_WATCH, &handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-        PARAM_CHECK(ret == 0, return ret, "Forbid to watch parameter %s", keyprefix);
-    }
+    ret = CheckParamPermission(GetParamSecurityLabel(), keyprefix, DAC_WATCH);
+    PARAM_CHECK(ret == 0, return ret, "Forbid to watcher parameter %s", keyprefix);
     return 0;
 }

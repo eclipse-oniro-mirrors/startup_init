@@ -96,7 +96,7 @@ public:
         ParamSecurityLabel srclabel = {};
         ret = initParamSecurityOps.securityInitLabel(&srclabel, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
-        ret = initParamSecurityOps.securityCheckParamPermission(&srclabel, name, mode);
+        ret = initParamSecurityOps.securityCheckParamPermission(TestGetParamLabelIndex(name), &srclabel, name, mode);
         initParamSecurityOps.securityFreeLabel(&srclabel);
         return ret;
     }

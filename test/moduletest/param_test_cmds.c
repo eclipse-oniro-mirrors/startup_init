@@ -41,7 +41,8 @@ static char *GetLocalBuffer(uint32_t *buffSize)
 }
 
 int g_stop = 0;
-static void *CmdReader(void *args)
+extern void TestReader();
+void *CmdReader(void *args)
 {
     (void)srand((unsigned)time(NULL));
     uint32_t buffSize = 0;
@@ -62,9 +63,11 @@ static void *CmdReader(void *args)
 
 static int32_t BShellParamCmdRead(BShellHandle shell, int32_t argc, char *argv[])
 {
+    TestReader();
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     static pthread_t thread = 0;
     PLUGIN_LOGV("BShellParamCmdWatch %s, threadId %d", argv[1], thread);
+#if 0
     if (strcmp(argv[1], "start") == 0) {
         if (thread != 0) {
             return 0;
@@ -80,6 +83,7 @@ static int32_t BShellParamCmdRead(BShellHandle shell, int32_t argc, char *argv[]
         pthread_join(thread, NULL);
         thread = 0;
     }
+#endif
     return 0;
 }
 

@@ -29,12 +29,6 @@ extern "C" {
 #endif
 #endif
 
-#ifdef PARAM_SUPPORT_SELINUX
-#define HASH_BUTT 32
-#else
-#define HASH_BUTT 1
-#endif
-
 typedef struct {
     uint32_t left;
     uint32_t right;
@@ -78,32 +72,34 @@ typedef struct {
     uint32_t trieNodeCount;
     uint32_t paramNodeCount;
     uint32_t securityNodeCount;
-    uint32_t startIndex;
     uint32_t currOffset;
     uint32_t firstNode;
     uint32_t dataSize;
     char data[0];
 } ParamTrieHeader;
 
-struct WorkSpace_;
 typedef struct WorkSpace_ {
     unsigned int flags;
-    HashNode hashNode;
-    ListNode node;
     uint32_t (*allocTrieNode)(struct WorkSpace_ *workSpace, const char *key, uint32_t keyLen);
     int (*compareTrieNode)(const ParamTrieNode *node, const char *key2, uint32_t key2Len);
     MemHandle memHandle;
     ParamTrieHeader *area;
-#ifdef WORKSPACE_AREA_NEED_MUTEX
     ParamRWMutex rwlock;
-#endif
+    ParamRWMutex rwSpaceLock;
+    uint32_t spaceSize;
+    uint32_t spaceIndex;
     char fileName[0];
 } WorkSpace;
 
 INIT_LOCAL_API int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t spaceSize);
 INIT_LOCAL_API void CloseWorkSpace(WorkSpace *workSpace);
 
-INIT_LOCAL_API ParamTrieNode *GetTrieNode(const WorkSpace *workSpace, uint32_t offset);
+#define GetTrieNode(workSpace, offset) \
+    (ParamTrieNode *)((offset == 0 || offset > (workSpace)->area->dataSize) ? NULL : (workSpace)->area->data + offset)
+
+#define GetTrieRoot(workSpace) \
+    (ParamTrieNode *)(((workSpace)->area == NULL) ? NULL : (workSpace)->area->data + (workSpace)->area->firstNode)
+
 INIT_LOCAL_API void SaveIndex(uint32_t *index, uint32_t offset);
 
 INIT_LOCAL_API ParamTrieNode *AddTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen);
@@ -119,7 +115,13 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     const char *key, uint32_t keyLen, const char *value, uint32_t valueLen);
 
 INIT_LOCAL_API uint32_t GetParamMaxLen(uint8_t type);
-INIT_LOCAL_API ParamNode *GetParamNode(const char *spaceName, const char *name);
+INIT_LOCAL_API ParamNode *GetParamNode(uint32_t index, const char *name);
+INIT_LOCAL_API int AddParamEntry(uint32_t index, uint8_t type, const char *name, const char *value);
+
+#ifdef STARTUP_INIT_TEST
+STATIC_INLINE ParamTrieNode *FindTrieNode_(
+    const WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel);
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 }

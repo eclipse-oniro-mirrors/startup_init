@@ -193,9 +193,11 @@ int SystemWatchParameter(const char *keyprefix, ParameterChangePtr change, void 
 
 int SystemCheckParamExist(const char *name);
 
-void SystemDumpParameters(int verbose, int (*dump)(const char *fmt, ...));
+void SystemDumpParameters(int verbose, int index, int (*dump)(const char *fmt, ...));
 
 int WatchParamCheck(const char *keyprefix);
+
+void ResetParamSecurityLabel(void);
 
 #ifdef __cplusplus
 #if __cplusplus
