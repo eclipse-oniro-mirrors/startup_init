@@ -107,7 +107,10 @@ gid_t DecodeGid(const char *name)
             return -1;
         }
     }
-    struct group *data = NULL;
+    struct group *data = getgrnam(name);
+    if (data != NULL) {
+        return data->gr_gid;
+    }
     while ((data = getgrent()) != NULL) {
         if ((data->gr_name != NULL) && (strcmp(data->gr_name, name) == 0)) {
             gid = data->gr_gid;
