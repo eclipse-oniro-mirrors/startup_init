@@ -13,7 +13,7 @@
 
 const.actionable_compatible_property.enabled=false
 const.postinstall.fstab.prefix=/system
-const.secure=1
+const.secure=0
 security.perf_harden=1
 const.allow.mock.location=0
 const.debuggable=1
