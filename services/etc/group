@@ -46,7 +46,7 @@ ddms:x:3012:
 access_token:x:3020:
 blue_host:x:3021:
 sample_host:x:3022:
-usb_host:x:3023:
+usb_host:x:3023:shell
 usbfnMaster_host:x:3024:
 power_host:x:3025:
 wifi_host:x:3026:
