@@ -32,23 +32,10 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
     return WriteParam(name, value, &dataIndex, 0);
 }
 
-static int LoadPersistParam()
+static void LoadPersistParam_(const char *fileName, char *buffer, uint32_t buffSize)
 {
-    CheckAndCreateDir(PARAM_PERSIST_SAVE_PATH);
-    int updaterMode = InUpdaterMode();
-    char *tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_TMP_PATH : "/param/tmp_persist_parameters";
-    FILE *fp = fopen(tmpPath, "r");
-    if (fp == NULL) {
-        tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters";
-        fp = fopen(tmpPath, "r");
-        PARAM_LOGI("Load persist param, from file %s", tmpPath);
-    }
-    PARAM_CHECK(fp != NULL, return -1, "No valid persist parameter file %s", PARAM_PERSIST_SAVE_PATH);
-
-    const int buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
-    char *buffer = malloc(buffSize);
-    PARAM_CHECK(buffer != NULL, (void)fclose(fp);
-        return -1, "Failed to alloc");
+    FILE *fp = fopen(fileName, "r");
+    PARAM_CHECK(fp != NULL, return, "No valid persist parameter file %s", fileName);
 
     uint32_t paramNum = 0;
     while (fgets(buffer, buffSize, fp) != NULL) {
@@ -58,8 +45,22 @@ static int LoadPersistParam()
         paramNum++;
     }
     (void)fclose(fp);
+    PARAM_LOGI("LoadPersistParam from file %s paramNum %d", fileName, paramNum);
+}
+
+static int LoadPersistParam(void)
+{
+    CheckAndCreateDir(PARAM_PERSIST_SAVE_PATH);
+    const uint32_t buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
+    char *buffer = malloc(buffSize);
+    PARAM_CHECK(buffer != NULL, return -1, "Failed to alloc");
+
+    int updaterMode = InUpdaterMode();
+    char *tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters";
+    LoadPersistParam_(tmpPath, buffer, buffSize);
+    tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_TMP_PATH : "/param/tmp_persist_parameters";
+    LoadPersistParam_(tmpPath, buffer, buffSize);
     free(buffer);
-    PARAM_LOGI("LoadPersistParam from file %s paramNum %d", tmpPath, paramNum);
     return 0;
 }
 
