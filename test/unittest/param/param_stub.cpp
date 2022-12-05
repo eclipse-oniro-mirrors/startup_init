@@ -487,16 +487,13 @@ void PrepareInitUnitTestEnv(void)
     InitAddPreCfgLoadHook(0, TestHook);
     InitAddPostCfgLoadHook(0, TestHook);
     InitAddPostPersistParamLoadHook(0, TestHook);
-    // ini system
-    SystemInit();
-    SystemPrepare();
-    SystemConfig();
-#else
+    LoadSpecialParam();
+#endif
     // read default parameter from system
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
     LoadDefaultParams("/system/etc/param", LOAD_PARAM_ONLY_ADD);
-#endif
+
     // read ut parameters
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/vendor/etc/param", LOAD_PARAM_NORMAL);

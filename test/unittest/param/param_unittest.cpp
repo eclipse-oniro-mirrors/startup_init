@@ -440,7 +440,7 @@ HWTEST_F(ParamUnitTest, TestWorkSpace3, TestSize.Level0)
 {
     const char *spaceName = "test.workspace3";
     int ret = AddWorkSpace(spaceName, 1, PARAM_WORKSPACE_DEF);
-#ifndef OHOS_LITE
+#ifdef PARAM_SUPPORT_SELINUX
     EXPECT_NE(ret, 0);
 #else
     EXPECT_EQ(ret, 0);
