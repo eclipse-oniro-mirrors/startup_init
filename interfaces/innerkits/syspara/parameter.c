@@ -322,8 +322,9 @@ const char *GetBuildRootHash(void)
 int32_t GetIntParameter(const char *key, int32_t def)
 {
     char value[MAX_INT_LEN] = {0};
-    int ret = GetParameter(key, "0", value, sizeof(value));
-    if (ret < 0) {
+    size_t size = sizeof(value);
+    int ret = SystemGetParameter(key, value, &size);
+    if (ret != 0) {
         return def;
     }
     long long int result = 0;
@@ -339,8 +340,9 @@ int32_t GetIntParameter(const char *key, int32_t def)
 uint32_t GetUintParameter(const char *key, uint32_t def)
 {
     char value[MAX_INT_LEN] = {0};
-    int ret = GetParameter(key, "0", value, sizeof(value));
-    if (ret < 0) {
+    size_t size = sizeof(value);
+    int ret = SystemGetParameter(key, value, &size);
+    if (ret != 0) {
         return def;
     }
     unsigned long long int result = 0;
