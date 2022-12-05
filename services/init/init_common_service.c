@@ -470,7 +470,7 @@ static void CheckServiceSocket(Service *service)
             INIT_LOGE("Invalid socket %s for service", service->name);
             tmpSock = tmpSock->next;
         }
-        SocketAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
+        AddSocketWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
         tmpSock = tmpSock->next;
     }
     return;
@@ -556,8 +556,8 @@ void ServiceReap(Service *service)
 
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
 {
-    if (service == NULL) {
-        INIT_LOGE("Invalid service info");
+    if (service == NULL || fds == NULL) {
+        INIT_LOGE("Invalid service info or fds");
         return -1;
     }
 

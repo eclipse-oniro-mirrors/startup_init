@@ -10,30 +10,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//base/startup/init/begetd.gni")
 
-group("parameter") {
-  deps = []
-
-  # parameter only support linux for l2 and l1
-  if (defined(ohos_lite)) {
-    if (ohos_kernel_type == "linux") {
-      deps += [
-        "base:param_base",
-        "linux:param_client",
-        "linux:param_init",
-      ]
-    } else if (ohos_kernel_type == "liteos_a") {
-      deps += [
-        "liteos:param_client_lite",
-        "liteos:param_init_lite",
-      ]
-    }
-  } else {
-    deps += [
-      "base:param_base",
-      "linux:param_client",
-      "linux:param_init",
-    ]
-  }
-}
+1.0 {
+  global:
+    AclGetDevUdid;
+    AclGetSerial;
+    ServiceWatchForStatus;
+    SystemWatchParameter;
+    WatchParameter;
+    RemoveParameterWatcher;
+  local:
+    *;
+};

@@ -49,9 +49,9 @@ static int GetSlot(BShellHandle handle, int32_t argc, char *argv[])
     }
     std::cout << "Command: partitionslot getslot" << std::endl;
     sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
-    int bootSlots = 0;
-    int currentSlot = 0;
     if (partitionslot != nullptr) {
+        int bootSlots = 0;
+        int currentSlot = 0;
         partitionslot->GetCurrentSlot(currentSlot, bootSlots);
         std::cout << "The number of slots: " << bootSlots << "," <<  "current slot: " << currentSlot << std::endl;
     }
@@ -70,9 +70,9 @@ static int GetSuffix(BShellHandle handle, int32_t argc, char *argv[])
     }
     std::cout << "Command: partitionslot getsuffix" << std::endl;
     int slot = atoi(argv[1]);
-    std::string suffix = "";
     sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
     if (partitionslot != nullptr) {
+        std::string suffix = "";
         partitionslot->GetSlotSuffix(slot, suffix);
         std::cout << "The slot " << slot << " matches with suffix: " << suffix << std::endl;
     }

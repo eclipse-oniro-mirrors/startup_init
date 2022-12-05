@@ -35,15 +35,6 @@ int ParseInitCfg(const char *configFile, void *context)
 {
     UNUSED(context);
     INIT_LOGV("Parse init configs from %s", configFile);
-    static const char *excludeCfg[] = {
-        "/system/etc/init/weston.cfg"
-    };
-    for (int i = 0; i < (int)ARRAY_LENGTH(excludeCfg); i++) {
-        if (strcmp(configFile, excludeCfg[i]) == 0) {
-            INIT_LOGE("ParseInitCfg %s not support", configFile);
-            return 0;
-        }
-    }
     char *fileBuf = ReadFileToBuf(configFile);
     INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Failed to read file content %s", configFile);
 
@@ -59,8 +50,8 @@ int ParseInitCfg(const char *configFile, void *context)
 
 static void ParseAllImports(const cJSON *root)
 {
-    char *tmpParamValue = calloc(sizeof(char), PARAM_VALUE_LEN_MAX + 1);
-    INIT_ERROR_CHECK(tmpParamValue != 0, return, "Failed to alloc memory for param");
+    char *tmpParamValue = calloc(PARAM_VALUE_LEN_MAX + 1, sizeof(char));
+    INIT_ERROR_CHECK(tmpParamValue != NULL, return, "Failed to alloc memory for param");
 
     cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "import");
     if (!cJSON_IsArray(importAttr)) {
@@ -103,8 +94,7 @@ void ReadConfig(void)
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (InUpdaterMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
-        ReadFileInDir(OTHER_CFG_PATH, ".cfg", ParseInitCfg, NULL);
-        ReadFileInDir("/vendor/etc/init", ".cfg", ParseInitCfg, NULL);
+        ParseInitCfgByPriority();
     } else {
         ReadFileInDir("/etc", ".cfg", ParseInitCfg, NULL);
     }

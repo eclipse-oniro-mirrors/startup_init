@@ -26,6 +26,7 @@
 #include <linux/audit.h>
 #include <linux/seccomp.h>
 #include <linux/filter.h>
+#include <limits.h>
 
 #ifndef SECCOMP_SET_MODE_FILTER
 #define SECCOMP_SET_MODE_FILTER  (1)
@@ -33,11 +34,20 @@
 
 #ifdef __aarch64__
 #define FILTER_LIB_PATH_FORMAT "/system/lib64/lib%s_filter.z.so"
+#define FILTER_LIB_PATH_HEAD "/system/lib64/lib"
 #else
 #define FILTER_LIB_PATH_FORMAT "/system/lib/lib%s_filter.z.so"
+#define FILTER_LIB_PATH_HEAD "/system/lib/lib"
 #endif
 #define FILTER_NAME_FORMAT "g_%sSeccompFilter"
 #define FILTER_SIZE_STRING "Size"
+
+typedef enum {
+    SECCOMP_SUCCESS,
+    INPUT_ERROR,
+    RETURN_NULL,
+    RETURN_ERROR
+} SeccompErrorCode;
 
 static bool IsSupportFilterFlag(unsigned int filterFlag)
 {
@@ -53,6 +63,10 @@ static bool IsSupportFilterFlag(unsigned int filterFlag)
 
 static bool InstallSeccompPolicy(const struct sock_filter* filter, size_t filterSize, unsigned int filterFlag)
 {
+    if (filter == NULL) {
+        return false;
+    }
+
     unsigned int flag = 0;
     struct sock_fprog prog = {
         (unsigned short)filterSize,
@@ -75,43 +89,114 @@ static bool InstallSeccompPolicy(const struct sock_filter* filter, size_t filter
     return true;
 }
 
-bool SetSeccompPolicyWithName(const char *filterName)
+static char *GetFilterFileByName(const char *filterName)
 {
-    char filterLibPath[512] = {0};
-    char filterVaribleName[512] = {0};
-    struct sock_filter *filterPtr = NULL;
-    size_t *filterSize = NULL;
+    size_t maxFilterNameLen = PATH_MAX - strlen(FILTER_LIB_PATH_FORMAT) + strlen("%s") - 1;
+    if (filterName == NULL || strlen(filterName) > maxFilterNameLen) {
+        return NULL;
+    }
+
+    char filterLibPath[PATH_MAX] = {0};
 
     int rc = snprintf_s(filterLibPath, sizeof(filterLibPath), \
-                        strlen(filterName) + strlen(FILTER_LIB_PATH_FORMAT) - strlen("%s"), \
-                        FILTER_LIB_PATH_FORMAT, filterName);
-    PLUGIN_CHECK(rc != -1, return false, "snprintf_s filterLibPath failed");
+                            strlen(filterName) + strlen(FILTER_LIB_PATH_FORMAT) - strlen("%s"), \
+                            FILTER_LIB_PATH_FORMAT, filterName);
+    if (rc == -1) {
+        return NULL;
+    }
 
-    rc = snprintf_s(filterVaribleName, sizeof(filterVaribleName), \
+    return realpath(filterLibPath, NULL);
+}
+
+static int GetSeccompPolicy(const char *filterName, int **handler,
+                            char *filterLibRealPath, struct sock_fprog *prog)
+{
+    if (filterName == NULL || filterLibRealPath == NULL || \
+        handler == NULL || prog == NULL) {
+        return INPUT_ERROR;
+    }
+
+    if (strncmp(filterLibRealPath, FILTER_LIB_PATH_HEAD, strlen(FILTER_LIB_PATH_HEAD))) {
+        return INPUT_ERROR;
+    }
+
+    char filterVaribleName[PATH_MAX] = {0};
+    struct sock_filter *filter = NULL;
+    size_t *filterSize = NULL;
+    void *policyHanlder = NULL;
+    int ret = SECCOMP_SUCCESS;
+    do {
+        int rc = snprintf_s(filterVaribleName, sizeof(filterVaribleName), \
                     strlen(filterName) + strlen(FILTER_NAME_FORMAT) - strlen("%s"), \
                     FILTER_NAME_FORMAT, filterName);
-    PLUGIN_CHECK(rc != -1, return false, "snprintf_s  faiVribleName failed");
-    const char *filterLibRealPath = realpath(filterLibPath, NULL);
-    PLUGIN_CHECK(filterLibRealPath != NULL, return false, "format filter lib real path failed");
+        if (rc == -1) {
+            ret = RETURN_ERROR;
+            break;
+        }
 
-    void *handler = dlopen(filterLibRealPath, RTLD_LAZY);
-    PLUGIN_CHECK(handler != NULL, return false, "dlopen %s failed", filterLibRealPath);
+        policyHanlder = dlopen(filterLibRealPath, RTLD_LAZY);
+        if (policyHanlder == NULL) {
+            ret = RETURN_NULL;
+            break;
+        }
 
-    filterPtr = (struct sock_filter *)dlsym(handler, filterVaribleName);
-    PLUGIN_CHECK(filterPtr != NULL, dlclose(handler);
-        return false, "dlsym %s failed", filterVaribleName);
+        filter = (struct sock_filter *)dlsym(policyHanlder, filterVaribleName);
+        if (filter == NULL) {
+            ret = RETURN_NULL;
+            break;
+        }
 
-    rc = strcat_s(filterVaribleName, strlen(filterVaribleName) + strlen(FILTER_SIZE_STRING) + 1, FILTER_SIZE_STRING);
-    PLUGIN_CHECK(rc == 0, dlclose(handler);
-        return false, "strcat_s filterVaribleName failed");
+        rc = strcat_s(filterVaribleName, strlen(filterVaribleName) + \
+                      strlen(FILTER_SIZE_STRING) + 1, FILTER_SIZE_STRING);
+        if (rc != 0) {
+            ret = RETURN_ERROR;
+            break;
+        }
 
-    filterSize = (size_t *)dlsym(handler, filterVaribleName);
-    PLUGIN_CHECK(filterSize != NULL, dlclose(handler);
-        return false, "dlsym %s failed", filterVaribleName);
+        filterSize = (size_t *)dlsym(policyHanlder, filterVaribleName);
+        if (filterSize == NULL) {
+            ret = RETURN_NULL;
+            break;
+        }
+    } while (0);
 
-    bool ret = InstallSeccompPolicy(filterPtr, *filterSize, SECCOMP_FILTER_FLAG_LOG);
+    *handler = (int *)policyHanlder;
+    prog->filter = filter;
+    if (filterSize != NULL) {
+        prog->len = (unsigned short)(*filterSize);
+    }
 
-    dlclose(handler);
+    return ret;
+}
+
+bool SetSeccompPolicyWithName(const char *filterName)
+{
+    if (filterName == NULL) {
+        return false;
+    }
+
+    void *handler = NULL;
+    char *filterLibRealPath = NULL;
+    struct sock_fprog prog;
+    bool ret = false;
+
+    filterLibRealPath = GetFilterFileByName(filterName);
+    PLUGIN_CHECK(filterLibRealPath != NULL, return false, "get filter file name faield");
+
+    int retCode = GetSeccompPolicy(filterName, (int **)&handler, filterLibRealPath, &prog);
+    if (retCode == SECCOMP_SUCCESS) {
+        ret = InstallSeccompPolicy(prog.filter, prog.len, SECCOMP_FILTER_FLAG_LOG);
+    } else {
+        PLUGIN_LOGE("GetSeccompPolicy failed return is %d", retCode);
+    }
+
+    if (handler != NULL) {
+        dlclose(handler);
+    }
+
+    if (filterLibRealPath != NULL) {
+        free(filterLibRealPath);
+    }
 
     return ret;
 }

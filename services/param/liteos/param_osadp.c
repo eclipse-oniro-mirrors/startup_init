@@ -215,13 +215,26 @@ INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex)
 #endif
 
 #ifdef __LITEOS_M__
+__attribute__((weak)) void* GetSysParamMem(uint32_t spaceSize)
+{
+    return malloc(spaceSize);
+}
+
+__attribute__((weak)) void FreeSysParamMem(void *mem)
+{
+    if (mem == NULL) {
+        return;
+    }
+    free(mem);
+}
+
 INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly)
 {
     PARAM_CHECK(spaceSize <= PARAM_WORKSPACE_MAX, return NULL, "Invalid spaceSize %u", spaceSize);
     UNUSED(fileName);
     UNUSED(handle);
     UNUSED(readOnly);
-    return (void *)malloc(spaceSize);
+    return GetSysParamMem(spaceSize);
 }
 
 INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize)
@@ -229,7 +242,7 @@ INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t d
     PARAM_CHECK(mem != NULL && handle != NULL, return, "Invalid mem or handle");
     UNUSED(handle);
     UNUSED(dataSize);
-    free(mem);
+    FreeSysParamMem(mem);
 }
 
 INIT_LOCAL_API void paramMutexEnvInit(void)

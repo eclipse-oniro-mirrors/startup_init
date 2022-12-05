@@ -19,6 +19,7 @@
 #include "init_hook.h"
 #include "init_module_engine.h"
 #include "plugin_adapter.h"
+#include "securec.h"
 
 #include <policycoreutils.h>
 #include <selinux/selinux.h>
@@ -30,8 +31,13 @@ enum {
     CMD_RESTORE_INDEX = 3,
 };
 
+extern char *__progname;
+
 static int LoadSelinuxPolicy(int id, const char *name, int argc, const char **argv)
 {
+    int ret;
+    char process_context[MAX_SECON_LEN];
+
     UNUSED(id);
     UNUSED(name);
     UNUSED(argc);
@@ -44,7 +50,12 @@ static int LoadSelinuxPolicy(int id, const char *name, int argc, const char **ar
         PLUGIN_LOGI("main, load_policy success.");
     }
 
-    setcon("u:r:init:s0");
+    ret = snprintf_s(process_context, sizeof(process_context), sizeof(process_context) - 1, "u:r:%s:s0", __progname);
+    if (ret == -1) {
+        setcon("u:r:init:s0");
+    } else {
+        setcon(process_context);
+    }
     (void)RestoreconRecurse("/dev");
     return 0;
 }

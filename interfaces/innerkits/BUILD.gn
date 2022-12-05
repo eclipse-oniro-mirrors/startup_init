@@ -85,7 +85,7 @@ if (defined(ohos_lite)) {
         defines += [ "__LINUX__" ]
         deps += [
           "//base/startup/init/services/loopevent:loopevent",
-          "//base/startup/init/services/param/base:parameterbase",
+          "//base/startup/init/services/param/base:param_base",
           "//base/startup/init/services/param/linux:param_client",
         ]
       }
@@ -171,6 +171,11 @@ if (defined(ohos_lite)) {
     sources += [ "syspara/param_wrapper.cpp" ]
     sources += modulemgr_sources
 
+    innerapi_tags = [
+      "chipsetsdk",
+      "platformsdk",
+    ]
+
     defines = [
       "INIT_AGENT",
       "_GNU_SOURCE",
@@ -194,11 +199,7 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/mbedtls:mbedtls_shared",
     ]
-    if (use_musl == false) {
-      deps += [ "//base/startup/init/services/param/base:parameterbase" ]
-    } else {
-      deps += [ "//base/startup/init/services/param/base:parameterbase_ext" ]
-    }
+    deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
       "c_utils:utils",
       "hilog_native:libhilog_base",
@@ -223,6 +224,8 @@ if (defined(ohos_lite)) {
       "//base/startup/init/device_info/device_info.cpp",
       "service_watcher/service_watcher.c",
     ]
+
+    version_script = "libbeget_proxy.versionscript"
 
     include_dirs = include_common
     deps = [
@@ -291,11 +294,7 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/mbedtls:mbedtls_shared",
     ]
-    if (use_musl == false) {
-      deps += [ "//base/startup/init/services/param/base:parameterbase" ]
-    } else {
-      deps += [ "//base/startup/init/services/param/base:parameterbase_ext" ]
-    }
+    deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
       "c_utils:utils",
       "hilog_native:libhilog_base",

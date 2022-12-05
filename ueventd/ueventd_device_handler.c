@@ -235,7 +235,7 @@ static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent
         INIT_LOGW("Too many links, ignore");
         return;
     }
-    links[linkNum] = calloc(sizeof(char), DEVICE_FILE_SIZE);
+    links[linkNum] = calloc(DEVICE_FILE_SIZE, sizeof(char));
     if (links[linkNum] == NULL) {
         INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
         return;
@@ -287,7 +287,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
         INIT_LOGE("Failed to build sys path for device %s", uevent->syspath);
         return NULL;
     }
-    char **links = calloc(sizeof(char *), BLOCKDEVICE_LINKS);
+    char **links = calloc(BLOCKDEVICE_LINKS, sizeof(char *));
     int linkNum = 0;
     if (links == NULL) {
         INIT_LOGE("Failed to allocate memory for links, err = %d", errno);
@@ -475,8 +475,7 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
 
     char deviceNode[DEVICE_FILE_SIZE] = {};
     char sysPath[SYSPATH_SIZE] = {};
-    if ((uevent->syspath == NULL) ||
-        strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath)) != EOK) {
+    if (strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath)) != EOK) {
         INIT_LOGE("Failed to copy sys path");
         return;
     }

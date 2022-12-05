@@ -177,13 +177,13 @@ static void ProcessWatchEvent_(const WatcherHandle watcherHandle, int fd, uint32
         return;
     }
     INIT_LOGI("Socket information detected, fd:%d service name:%s", fd, service->name);
-    SocketDelWatcher(watcherHandle);
+    RemoveSocketWatcher(watcherHandle);
     if (ServiceStart(service) != SERVICE_SUCCESS) {
         INIT_LOGE("Service %s start failed!", service->name);
     }
 }
 
-int SocketAddWatcher(ServiceWatcher *watcherHandle, Service *service, int fd)
+int AddSocketWatcher(ServiceWatcher *watcherHandle, Service *service, int fd)
 {
     WatcherHandle handle;
     LE_WatchInfo info = {};
@@ -197,7 +197,7 @@ int SocketAddWatcher(ServiceWatcher *watcherHandle, Service *service, int fd)
     return ret;
 }
 
-void SocketDelWatcher(ServiceWatcher watcherHandle)
+void RemoveSocketWatcher(ServiceWatcher watcherHandle)
 {
     LE_RemoveWatcher(LE_GetDefaultLoop(), (WatcherHandle)watcherHandle);
 }
@@ -219,7 +219,7 @@ int CreateServiceSocket(Service *service)
                 INIT_CHECK_RETURN_VALUE(ret == 0, -1);
             }
             if (strcmp(service->name, "ueventd") != 0) {
-                ret = SocketAddWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
+                ret = AddSocketWatcher(&tmpSock->watcher, service, tmpSock->sockFd);
                 INIT_CHECK_RETURN_VALUE(ret == 0, -1);
             }
         }
@@ -237,7 +237,7 @@ void CloseServiceSocket(Service *service)
     ServiceSocket *sockopt = service->socketCfg;
     while (sockopt != NULL) {
         if (sockopt->watcher != NULL) {
-            SocketDelWatcher(sockopt->watcher);
+            RemoveSocketWatcher(sockopt->watcher);
         }
         if (sockopt->sockFd >= 0) {
             close(sockopt->sockFd);

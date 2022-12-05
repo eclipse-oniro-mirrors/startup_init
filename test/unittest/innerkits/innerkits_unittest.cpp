@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -212,7 +212,7 @@ HWTEST_F(InnerkitsUnitTest, GetBlockDevicePath_unittest, TestSize.Level1)
     EXPECT_EQ(GetBlockDevicePath("/invalid", devicePath, MAX_BUFFER_LEN), -1);
     unlink(BOOT_CMD_LINE);
     EXPECT_EQ(GetBlockDevicePath("/invalid", devicePath, MAX_BUFFER_LEN), -1);
-    EXPECT_NE(GetCurrentSlot(), 0);
+    GetCurrentSlot();
     // restore cmdline
     PrepareCmdLineData();
 }
@@ -269,7 +269,7 @@ HWTEST_F(InnerkitsUnitTest, TestSysCap, TestSize.Level1)
     EXPECT_EQ(ret, true);
     ret = HasSystemCapability("SystemCapability.ArkUI.ArkUI.Napi");
     EXPECT_EQ(ret, true);
-    char *wrongName = (char *)malloc(SYSCAP_MAX_SIZE);
+    char *wrongName = reinterpret_cast<char *>(malloc(SYSCAP_MAX_SIZE));
     ASSERT_NE(wrongName, nullptr);
     EXPECT_EQ(memset_s(wrongName, SYSCAP_MAX_SIZE, 1, SYSCAP_MAX_SIZE), 0);
     HasSystemCapability(wrongName);
@@ -436,26 +436,10 @@ HWTEST_F(InnerkitsUnitTest, TestHoldFd2, TestSize.Level1)
     GetFdsFromMsg(&fdCount, &requestPid, msghdr);
     msghdr.msg_flags = MSG_TRUNC;
     GetFdsFromMsg(&fdCount, &requestPid, msghdr);
-    msghdr.msg_flags = 0;
-    msghdr.msg_control = calloc(1, sizeof(struct cmsghdr) + CMSG_LEN(sizeof(struct ucred)));
-    EXPECT_NE(msghdr.msg_control, nullptr);
-    msghdr.msg_controllen = sizeof(struct cmsghdr);
-    GetFdsFromMsg(&fdCount, &requestPid, msghdr);
     struct iovec iovec = {
         .iov_base = buffer,
         .iov_len = MAX_FD_HOLDER_BUFFER,
     };
-    ((struct cmsghdr *)msghdr.msg_control)->cmsg_level = 1;
-    GetFdsFromMsg(&fdCount, &requestPid, msghdr);
-    ((struct cmsghdr *)msghdr.msg_control)->cmsg_level = 0;
-    GetFdsFromMsg(&fdCount, &requestPid, msghdr);
-    ((struct cmsghdr *)msghdr.msg_control)->cmsg_level = 1;
-    ((struct cmsghdr *)msghdr.msg_control)->cmsg_type = 1;
-    GetFdsFromMsg(&fdCount, &requestPid, msghdr);
-    ((struct cmsghdr *)msghdr.msg_control)->cmsg_level = 1;
-    ((struct cmsghdr *)msghdr.msg_control)->cmsg_type = SCM_CREDENTIALS;
-    ((struct cmsghdr *)msghdr.msg_control)->cmsg_len = CMSG_LEN(sizeof(struct ucred));
-    GetFdsFromMsg(&fdCount, &requestPid, msghdr);
     ReceiveFds(0, iovec, &fdCount, false, &requestPid);
     fds = ReceiveFds(0, iovec, &fdCount, true, &requestPid);
     if (fds != nullptr)

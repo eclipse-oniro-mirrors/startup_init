@@ -94,6 +94,10 @@ static int FdHolderSockInit(void)
 void SystemInit(void)
 {
     SignalInit();
+
+    // Set up a session keyring that all processes will have access to.
+    KeyCtrlGetKeyringId(KEY_SPEC_SESSION_KEYRING, 1);
+
     // umask call always succeeds and return the previous mask value which is not needed here
     (void)umask(DEFAULT_UMASK_INIT);
     MakeDirRecursive("/dev/unix/socket", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
@@ -199,9 +203,6 @@ static void StartInitSecondStage(void)
     // It will panic if close stdio before execv("/bin/sh", NULL)
     CloseStdio();
 
-    // Set up a session keyring that all processes will have access to.
-    KeyCtrlGetKeyringId(KEY_SPEC_SESSION_KEYRING, 1);
-
 #ifndef DISABLE_INIT_TWO_STAGES
     INIT_LOGI("Start init second stage.");
     SwitchRoot("/usr");
@@ -251,7 +252,7 @@ HOOK_MGR *GetBootStageHookMgr()
     return bootStageHookMgr;
 }
 
-INIT_TIMING_STAT g_bootJob = {0};
+INIT_TIMING_STAT g_bootJob = {{0}, {0}};
 
 static void RecordInitBootEvent(const char *initBootEvent)
 {
@@ -368,6 +369,19 @@ INIT_STATIC void TriggerServices(int startMode)
     if (index > 0) {
         PostTrigger(EVENT_TRIGGER_BOOT, jobName, strlen(jobName));
     }
+}
+
+void ParseInitCfgByPriority(void)
+{
+    CfgFiles *files = GetCfgFiles("etc/init");
+    for (int i = 0; files && i < MAX_CFG_POLICY_DIRS_CNT; i++) {
+        if (files->paths[i]) {
+            if (ReadFileInDir(files->paths[i], ".cfg", ParseInitCfg, NULL) < 0) {
+                break;
+            }
+        }
+    }
+    FreeCfgFiles(files);
 }
 
 void SystemConfig(void)

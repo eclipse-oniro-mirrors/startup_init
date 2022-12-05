@@ -115,7 +115,8 @@ static int DoRebootOther(int id, const char *name, int argc, const char **argv)
     const char *cmd = strstr(argv[0], "reboot,");
     PLUGIN_CHECK(cmd != NULL, return -1, "Invalid parameter argc %s", argv[0]);
     PLUGIN_LOGI("DoRebootOther argv %s", argv[0]);
-    return syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, cmd + strlen("reboot,"));
+    return syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
+        LINUX_REBOOT_CMD_RESTART2, cmd + strlen("reboot,"));
 }
 
 static void RebootAdpInit(void)

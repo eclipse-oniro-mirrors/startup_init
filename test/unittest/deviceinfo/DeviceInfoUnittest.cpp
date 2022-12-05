@@ -154,7 +154,6 @@ HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceTest, TestSize.Level1)
     std::vector<std::u16string> args = {};
     deviceInfoService->Dump(STDOUT_FILENO, args);
     deviceInfoService->Dump(-1, args);
-    delete deviceInfoService;
 }
 
 HWTEST_F(DeviceInfoUnittest, TestInterface, TestSize.Level1)

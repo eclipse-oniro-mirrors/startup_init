@@ -172,7 +172,7 @@ void ReapService(Service *service);
 void NotifyServiceChange(Service *service, int status);
 int IsForbidden(const char *fieldStr);
 int SetImportantValue(Service *curServ, const char *attrName, int value, int flag);
-int GetServiceCaps(const cJSON *curArrItem, Service *curServ);
+int InitServiceCaps(const cJSON *curArrItem, Service *curServ);
 int ServiceExec(const Service *service);
 void CloseServiceFds(Service *service, bool needFree);
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount);
