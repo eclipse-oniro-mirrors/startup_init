@@ -15,6 +15,9 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <grp.h>
+#include <pwd.h>
+#include <dirent.h>
 
 #include "begetctl.h"
 #include "init_utils.h"
@@ -86,12 +89,64 @@ static int32_t GetInitLogLevelFromParam(BShellHandle shell, int argc, char **arg
     return 0;
 }
 
+static int32_t GetUidByName(BShellHandle shell, int argc, char **argv)
+{
+    if (argc != 2) { // 2 is dac get uid parameter number
+        char *helpArgs[] = {"dac", NULL};
+        BShellCmdHelp(shell, 1, helpArgs);
+        return 0;
+    }
+    struct passwd *data = getpwnam(argv[1]);
+    if (data == NULL) {
+        printf("getpwnam uid failed\n");
+    } else {
+        printf("getpwnam uid %s : %d\n", argv[1], data->pw_uid);
+    }
+
+    data = NULL;
+    while ((data = getpwent()) != NULL) {
+        if ((data->pw_name != NULL) && (strcmp(data->pw_name, argv[1]) == 0)) {
+            printf("getpwent uid %s : %d\n", argv[1], data->pw_uid);
+            break;
+        }
+    }
+    endpwent();
+    return 0;
+}
+
+static int32_t GetGidByName(BShellHandle shell, int argc, char **argv)
+{
+    if (argc != 2) { // 2 is dac get gid parameter number
+        char *helpArgs[] = {"dac", NULL};
+        BShellCmdHelp(shell, 1, helpArgs);
+        return 0;
+    }
+    struct group *data = getgrnam(argv[1]);
+    if (data == NULL) {
+        printf("getgrnam gid failed\n");
+    } else {
+        printf("getgrnam gid %s : %d\n", argv[1], data->gr_gid);
+    }
+
+    data = NULL;
+    while ((data = getgrent()) != NULL) {
+        if ((data->gr_name != NULL) && (strcmp(data->gr_name, argv[1]) == 0)) {
+            printf("getgrent gid %s : %d\n", argv[1], data->gr_gid);
+            break;
+        }
+    }
+    endgrent();
+    return 0;
+}
+
 MODULE_CONSTRUCTOR(void)
 {
     const CmdInfo infos[] = {
         {"set", SetInitLogLevelFromParam,
             "set init log level 0:debug, 1:info, 2:warning, 3:err, 4:fatal", "set log level", "set log level"},
         {"get", GetInitLogLevelFromParam, "get init log level", "get log level", "get log level"},
+        {"dac", GetGidByName, "get dac gid by group name", "dac gid groupname", "dac gid"},
+        {"dac", GetUidByName, "get dac uid by user name", "dac uid username", "dac uid"},
     };
     for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
         BShellEnvRegisterCmd(GetShellHandle(), &infos[i]);
