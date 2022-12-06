@@ -141,12 +141,17 @@ static int LoadPersistParam(void)
         PARAM_CHECK(ret >= 0, break, "Failed to read file %s", path);
 
         uint32_t currLen = 0;
+        char *tmp = buffer;
         while (currLen < fileSize) {
             if (buffer[currLen] == '\n') { // split line
                 buffer[currLen] = '\0';
-                ret = SplitParamString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
+                ret = SplitParamString(tmp, NULL, 0, LoadOnePersistParam_, NULL);
                 PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);
                 paramNum++;
+                if (currLen + 1 >= fileSize) {
+                    break;
+                }
+                tmp = buffer + currLen + 1;
             }
             currLen++;
         }
