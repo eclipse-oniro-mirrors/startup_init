@@ -307,7 +307,9 @@ void WatcherManager::OnStart()
     bool res = Publish(this);
     if (!res) {
         WATCHER_LOGE("WatcherManager Publish failed");
+#ifndef STARTUP_INIT_TEST
         return;
+#endif
     }
     if (deathRecipient_ == nullptr) {
         deathRecipient_ = new DeathRecipient(this);
