@@ -52,7 +52,7 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
     return 0;
 }
 
-INIT_LOCAL_API int DacCheckParamPermission(uint32_t index,
+static int LiteDacCheckParamPermission(uint32_t index,
     const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
     UNUSED(index);
@@ -74,7 +74,7 @@ INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
     ops->securityGetLabel = NULL;
     ops->securityInitLabel = InitLocalSecurityLabel;
     ops->securityCheckFilePermission = CheckFilePermission;
-    ops->securityCheckParamPermission = DacCheckParamPermission;
+    ops->securityCheckParamPermission = LiteDacCheckParamPermission;
     ops->securityFreeLabel = FreeLocalSecurityLabel;
     if (isInit) {
         ops->securityGetLabel = DacGetParamSecurityLabel;

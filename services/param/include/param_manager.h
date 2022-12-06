@@ -103,7 +103,7 @@ typedef struct {
     char *prefix;
 } ParamTraversalContext;
 
-#define  PARAM_HANDLE(workSpace, index) (ParamHandle)((workSpace)->spaceIndex << 24) | (index);
+#define  PARAM_HANDLE(workSpace, index) (ParamHandle)((workSpace)->spaceIndex << 24 | (index))
 #define  PARAM_GET_HANDLE_INFO(handle, label, index) \
     do { \
         (label) = (((handle) >> 24) & 0x000000ff);  \

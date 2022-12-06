@@ -95,7 +95,7 @@ INIT_LOCAL_API int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t sp
 INIT_LOCAL_API void CloseWorkSpace(WorkSpace *workSpace);
 
 #define GetTrieNode(workSpace, offset) \
-    (ParamTrieNode *)((offset == 0 || offset > (workSpace)->area->dataSize) ? NULL : (workSpace)->area->data + offset)
+    (ParamTrieNode *)(((offset) == 0 || (offset) > (workSpace)->area->dataSize) ? NULL : (workSpace)->area->data + (offset))
 
 #define GetTrieRoot(workSpace) \
     (ParamTrieNode *)(((workSpace)->area == NULL) ? NULL : (workSpace)->area->data + (workSpace)->area->firstNode)

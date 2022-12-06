@@ -38,28 +38,6 @@ STATIC_INLINE ParamTrieNode *BaseFindTrieNode(WorkSpace *workSpace,
     const char *key, uint32_t keyLen, uint32_t *matchLabel);
 STATIC_INLINE int ReadParamValue_(ParamNode *entry, uint32_t *commitId, char *value, uint32_t *length);
 
-STATIC_INLINE int IsWorkSpaceReady(WorkSpace *workSpace)
-{
-    if (workSpace == NULL) {
-        return -1;
-    }
-    int ret = -1;
-    WORKSPACE_RD_LOCK(workSpace);
-    if (workSpace->area != NULL) {
-        if ((g_paramWorkSpace.flags & WORKSPACE_FLAGS_NEED_ACCESS) == WORKSPACE_FLAGS_NEED_ACCESS) {
-            char buffer[FILENAME_LEN_MAX] = {0};
-            int size = ParamSprintf(buffer, sizeof(buffer), "%s/%s", PARAM_STORAGE_PATH, workSpace->fileName);
-            if (size > 0 && access(buffer, R_OK) == 0) {
-                ret = 0;
-            }
-        } else {
-            ret = 0;
-        }
-    }
-    WORKSPACE_RW_UNLOCK(workSpace);
-    return ret;
-}
-
 // return workspace no check valid
 STATIC_INLINE WorkSpace *GetWorkSpaceByName(const char *name)
 {
@@ -241,7 +219,6 @@ INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void)
 
 int SystemReadParam(const char *name, char *value, uint32_t *len)
 {
-    InitParameterClient();
     PARAM_WORKSPACE_CHECK(&g_paramWorkSpace, return -1, "Param workspace has not init.");
     PARAM_CHECK(name != NULL && len != NULL, return -1, "The name or value is null");
     ParamTrieNode *node = NULL;
@@ -410,7 +387,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
         workSpace = paramSpace->workSpace[index];
     }
     if (workSpace == NULL) {
-        return -1;
+        return 0;
     }
     int ret = 0;
     WORKSPACE_RW_LOCK(workSpace);
@@ -534,7 +511,8 @@ STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
         if ((node->mode & localMode) != 0) {
             ret = DAC_RESULT_PERMISSION;
         } else {
-            PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%o", name, srcLabel->cred.gid, srcLabel->cred.uid, localMode);
+            PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%o",
+                name, srcLabel->cred.gid, srcLabel->cred.uid, localMode);
             PARAM_LOGW("Cfg label %u gid:%d uid:%d mode 0%o ", index, node->gid, node->uid, node->mode);
 #ifndef __MUSL__
 #ifndef STARTUP_INIT_TEST
@@ -547,6 +525,28 @@ STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
 }
 
 #ifdef PARAM_SUPPORT_SELINUX
+STATIC_INLINE int IsWorkSpaceReady(WorkSpace *workSpace)
+{
+    if (workSpace == NULL) {
+        return -1;
+    }
+    int ret = -1;
+    WORKSPACE_RD_LOCK(workSpace);
+    if (workSpace->area != NULL) {
+        if ((g_paramWorkSpace.flags & WORKSPACE_FLAGS_NEED_ACCESS) == WORKSPACE_FLAGS_NEED_ACCESS) {
+            char buffer[FILENAME_LEN_MAX] = {0};
+            int size = ParamSprintf(buffer, sizeof(buffer), "%s/%s", PARAM_STORAGE_PATH, workSpace->fileName);
+            if (size > 0 && access(buffer, R_OK) == 0) {
+                ret = 0;
+            }
+        } else {
+            ret = 0;
+        }
+    }
+    WORKSPACE_RW_UNLOCK(workSpace);
+    return ret;
+}
+
 STATIC_INLINE const char *GetSelinuxContent(const char *name)
 {
     SelinuxSpace *selinuxSpace = &g_paramWorkSpace.selinuxSpace;
@@ -639,8 +639,7 @@ STATIC_INLINE ParamTrieNode *BaseFindTrieNode(WorkSpace *workSpace,
     PARAM_CHECK(key != NULL && keyLen > 0, return NULL, "Invalid key ");
 
     uint32_t tmpMatchLen = 0;
-    ParamTrieNode *node = NULL;
-    node = FindTrieNode_(workSpace, key, keyLen, &tmpMatchLen);
+    ParamTrieNode *node = FindTrieNode_(workSpace, key, keyLen, &tmpMatchLen);
     if (matchLabel != NULL) {
         *matchLabel = tmpMatchLen;
     }
@@ -672,7 +671,8 @@ CachedHandle CachedParameterCreate(const char *name, const char *defValue)
     int ret = ReadParamWithCheck(workspace, name, DAC_READ, &node);
     PARAM_CHECK(ret == 0, return NULL, "Forbid to access parameter %s", name);
 
-    CachedParameter *param = malloc(sizeof(CachedParameter) + PARAM_ALIGN(nameLen) + 1 + PARAM_VALUE_LEN_MAX);
+    CachedParameter *param = (CachedParameter *)malloc(
+        sizeof(CachedParameter) + PARAM_ALIGN(nameLen) + 1 + PARAM_VALUE_LEN_MAX);
     PARAM_CHECK(param != NULL, return NULL, "Failed to create CachedParameter for %s", name);
     ret = ParamStrCpy(param->data, nameLen + 1, name);
     PARAM_CHECK(ret == 0, free(param);
@@ -699,6 +699,7 @@ CachedHandle CachedParameterCreate(const char *name, const char *defValue)
             return NULL, "Failed to copy name %s", name);
     }
     param->spaceCommitId = ATOMIC_LOAD_EXPLICIT(&workspace->area->commitId, memory_order_acquire);
+    PARAM_LOGV("CachedParameterCreate %u %u %lld \n", param->dataIndex, param->dataCommitId, param->spaceCommitId);
     return (CachedHandle)param;
 }
 
@@ -747,215 +748,107 @@ void CachedParameterDestroy(CachedHandle handle)
     }
 }
 
-#if 1 // def PARAM_BASE
+#ifdef PARAM_TEST_PERFORMANCE
+#define MAX_TEST 10000
 STATIC_INLINE long long DiffLocalTime(struct timespec *startTime)
 {
     struct timespec endTime;
     clock_gettime(CLOCK_MONOTONIC, &(endTime));
     long long diff = (long long)((endTime.tv_sec - startTime->tv_sec) * 1000000); // 1000000 1000ms
     if (endTime.tv_nsec > startTime->tv_nsec) {
-        diff += (endTime.tv_nsec - startTime->tv_nsec) / 1000;
+        diff += (endTime.tv_nsec - startTime->tv_nsec) / 1000; // 1000 1ms
     } else {
-        diff -= (startTime->tv_nsec - endTime.tv_nsec) / 1000;
+        diff -= (startTime->tv_nsec - endTime.tv_nsec) / 1000; // 1000 1ms
     }
     return diff;
 }
 
-void TestReader()
+static void TestPermissionCheck(const char *testParamName)
 {
     struct timespec startTime;
-    const int max = 10000;
-    const char *testParamName = "startup.appspawn.randrom.read";
-    (void)srand((unsigned)time(NULL));
-    const uint32_t buffSize = 1024;
-    char buffer[1024] = {0};
-    uint32_t size = buffSize;
-    int ret = SystemGetParameter(testParamName, buffer, &size);
-    int count = 0;
-    uint32_t spaceIndex = 0;
     clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    printf("TestReader total time %lld us %s \n", DiffLocalTime(&startTime), __FILE__);
-    printf("TestReader total time %lld us %s \n", DiffLocalTime(&startTime), testParamName);
     ParamSecurityLabel *label = &(GetParamWorkSpace()->securityLabel);
-
-    count = 0;
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        size = buffSize;
-        ret = SystemReadParam(testParamName, buffer, &size);
-        count++;
-    }
-    printf("SystemReadParam total time %lld us \n", DiffLocalTime(&startTime));
-    printf("SystemReadParam total buffer %s \n", buffer);
-
-    count = 0;
-    WorkSpace *workspace = GetWorkSpaceByName(testParamName);
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        ParamTrieNode *entry = NULL;
-        ReadParamWithCheck(workspace, testParamName, DAC_READ, &entry);
-        count++;
-    }
-    printf("ReadParamWithCheck total time %lld us \n", DiffLocalTime(&startTime));
-
-    count = 0;
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        size = buffSize;
-        ret = SystemReadParam(testParamName, buffer, &size);
-        count++;
-    }
-    printf("SystemReadParam total time %lld us \n", DiffLocalTime(&startTime));
-    printf("SystemReadParam total buffer %s \n", buffer);
-
-    count = 0;
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        ParamTrieNode *entry = NULL;
-        ReadParamWithCheck(workspace, testParamName, DAC_READ, &entry);
-        count++;
-    }
-    printf("ReadParamWithCheck total time %lld us \n", DiffLocalTime(&startTime));
-
-    count = 0;
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        size = buffSize;
-        ret = SystemReadParam(testParamName, buffer, &size);
-        count++;
-    }
-    printf("SystemReadParam total time %lld us \n", DiffLocalTime(&startTime));
-    printf("SystemReadParam total buffer %s \n", buffer);
-
-    count = 0;
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        ParamTrieNode *entry = NULL;
-        ReadParamWithCheck(workspace, testParamName, DAC_READ, &entry);
-        count++;
-    }
-    printf("ReadParamWithCheck total time %lld us \n", DiffLocalTime(&startTime));
-
-    count = 0;
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        GetWorkSpaceByName(testParamName);
-        count++;
-    }
-    printf("GetWorkSpaceByName total time %lld us \n", DiffLocalTime(&startTime));
-
-    count = 0;
     ParamLabelIndex labelIndex = {0};
     labelIndex.workspace = GetWorkSpaceByName(testParamName);
     labelIndex.selinuxLabelIndex = labelIndex.workspace->spaceIndex;
     BaseFindTrieNode(labelIndex.workspace,
         testParamName, strlen(testParamName), &labelIndex.dacLabelIndex);
+
     clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
+    for (int i = 0; i < MAX_TEST; ++i) {
         CheckParamPermission_(&labelIndex, label, testParamName, DAC_READ);
-        count++;
     }
     printf("CheckParamPermission total time %lld us \n", DiffLocalTime(&startTime));
 
-    count = 0;
-    spaceIndex = labelIndex.selinuxLabelIndex;
-    label = &(GetParamWorkSpace()->securityLabel);
     clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
+    for (int i = 0; i < MAX_TEST; ++i) {
         DacCheckParamPermission(&labelIndex, label, testParamName, DAC_READ);
-        count++;
     }
     printf("DacCheckParamPermission DAC  total time %lld us \n", DiffLocalTime(&startTime));
 #ifdef PARAM_SUPPORT_SELINUX
-    count = 0;
-    spaceIndex = GetWorkSpaceIndex(testParamName);
     clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
+    for (int i = 0; i < MAX_TEST; ++i) {
         SelinuxCheckParamPermission(&labelIndex, label, testParamName, DAC_READ);
-        count++;
     }
     printf("CheckParamPermission selinux total time %lld us \n", DiffLocalTime(&startTime));
 #endif
 
-#if 1
-    count = 0;
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        GetWorkSpaceByName(testParamName);
-        count++;
-    }
-    printf("GetWorkSpaceByName total time %lld us \n", DiffLocalTime(&startTime));
-#endif
-
-#if 1
-    count = 0;
     ParamHandle handle = -1;
     uint32_t index = 0;
-    WorkSpace *space = labelIndex.workspace;
     clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        ParamTrieNode *node = BaseFindTrieNode(space, testParamName, strlen(testParamName), &index);
+    for (int i = 0; i < MAX_TEST; ++i) {
+        ParamTrieNode *node = BaseFindTrieNode(labelIndex.workspace, testParamName, strlen(testParamName), &index);
         if (node != NULL && node->dataIndex != 0) {
-            handle = PARAM_HANDLE(space, node->dataIndex);
+            handle = PARAM_HANDLE(labelIndex.workspace, node->dataIndex);
         }
-        count++;
     }
-    printf("BaseFindTrieNode total time %lld us spaceIndex %u %s\n", DiffLocalTime(&startTime), spaceIndex, space->fileName);
-    printf("BaseFindTrieNode handle %x \n", handle);
-#endif
+    printf("BaseFindTrieNode total time %lld us handle %x \n", DiffLocalTime(&startTime), handle);
 
-#if 1
-    count = 0;
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        index = 0;
-        // get dac label
-        space = g_paramWorkSpace.workSpace[0];
-        (void)BaseFindTrieNode(space, testParamName, strlen(testParamName), &index);
-        GetTrieNode(space, index);
-        count++;
-    }
-    printf("BaseFindTrieNode dac time %lld us \n", DiffLocalTime(&startTime));
-    printf("BaseFindTrieNode index %u \n", index);
-#endif
-
-    static CachedHandle cacheHandle = NULL;
-    if (cacheHandle == NULL) {
-        cacheHandle = CachedParameterCreate(testParamName, "true");
-    }
-    int result = 0;
-    count = 0;
-    clock_gettime(CLOCK_MONOTONIC, &(startTime));
-    while (count < max) {
-        CachedParameter *param = (CachedParameter *)cacheHandle;
-        if (param != NULL) {
-            long long spaceCommitId = ATOMIC_LOAD_EXPLICIT(&param->workspace->area->commitId, memory_order_acquire);
-            result = spaceCommitId == param->spaceCommitId;
-            if (param->dataIndex != 0) {
-                ParamNode *entry = (ParamNode *)GetTrieNode(param->workspace, param->dataIndex);
-                uint32_t dataCommitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_acquire);
-                dataCommitId &= PARAM_FLAGS_COMMITID;
-                result = param->dataCommitId == dataCommitId;
-            }
-        }
-        count++;
-    }
-    printf("CachedParameterGet time %lld us %d \n", DiffLocalTime(&startTime), result);
-
-    count = 0;
-    static CachedHandle cacheHandle2 = NULL;
-    if (cacheHandle2 == NULL) {
-        cacheHandle2 = CachedParameterCreate(testParamName, "true");
-    }
+    CachedHandle cacheHandle2 = CachedParameterCreate(testParamName, "true");
     clock_gettime(CLOCK_MONOTONIC, &(startTime));
     const char *value = NULL;
-    while (count < max) {
+    for (int i = 0; i < MAX_TEST; ++i) {
         value = CachedParameterGet(cacheHandle2);
-        count++;
     }
-    printf("CachedParameterGet time %lld us \n", DiffLocalTime(&startTime));
-    printf("CachedParameterGet index %s \n", value);
+    CachedParameterDestroy(cacheHandle2);
+    printf("CachedParameterGet time %lld us value %s \n", DiffLocalTime(&startTime), value);
+    return;
+}
+
+void TestParameterReaderPerformance(void)
+{
+    struct timespec startTime;
+    const char *testParamName = "persist.appspawn.randrom.read";
+    const uint32_t buffSize = 1024;
+    char buffer[1024] = {0};
+    uint32_t size = buffSize;
+    clock_gettime(CLOCK_MONOTONIC, &(startTime));
+    printf("TestReader total time %lld us %s \n", DiffLocalTime(&startTime), testParamName);
+    for (int j = 0; j < 5; ++j) { // retry 5
+        clock_gettime(CLOCK_MONOTONIC, &(startTime));
+        for (int i = 0; i < MAX_TEST; ++i) {
+            size = buffSize;
+            SystemReadParam(testParamName, buffer, &size);
+        }
+        printf("SystemReadParam total time %lld us \n", DiffLocalTime(&startTime));
+        printf("SystemReadParam result %s \n", buffer);
+
+        WorkSpace *workspace = GetWorkSpaceByName(testParamName);
+        clock_gettime(CLOCK_MONOTONIC, &(startTime));
+        for (int i = 0; i < MAX_TEST; ++i) {
+            ParamTrieNode *entry = NULL;
+            ReadParamWithCheck(workspace, testParamName, DAC_READ, &entry);
+        }
+        printf("ReadParamWithCheck total time %lld us \n", DiffLocalTime(&startTime));
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &(startTime));
+    for (int i = 0; i < MAX_TEST; ++i) {
+        GetWorkSpaceByName(testParamName);
+    }
+    printf("GetWorkSpaceByName total time %lld us \n", DiffLocalTime(&startTime));
+
+    TestPermissionCheck(testParamName);
     return;
 }
 #endif

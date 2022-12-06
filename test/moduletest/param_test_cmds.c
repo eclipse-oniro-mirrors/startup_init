@@ -25,6 +25,7 @@
 #include "plugin_test.h"
 #include "service_watcher.h"
 #include "parameter.h"
+#include "param_base.h"
 
 #define MAX_THREAD_NUMBER 100
 #define MAX_NUMBER 10
@@ -41,7 +42,6 @@ static char *GetLocalBuffer(uint32_t *buffSize)
 }
 
 int g_stop = 0;
-extern void TestReader();
 void *CmdReader(void *args)
 {
     (void)srand((unsigned)time(NULL));
@@ -63,11 +63,15 @@ void *CmdReader(void *args)
 
 static int32_t BShellParamCmdRead(BShellHandle shell, int32_t argc, char *argv[])
 {
-    TestReader();
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
+    if (argc == 1) {
+#ifdef PARAM_TEST_PERFORMANCE
+        TestParameterReaderPerformance();
+#endif
+        return 0;
+    }
     static pthread_t thread = 0;
     PLUGIN_LOGV("BShellParamCmdWatch %s, threadId %d", argv[1], thread);
-#if 0
     if (strcmp(argv[1], "start") == 0) {
         if (thread != 0) {
             return 0;
@@ -83,7 +87,6 @@ static int32_t BShellParamCmdRead(BShellHandle shell, int32_t argc, char *argv[]
         pthread_join(thread, NULL);
         thread = 0;
     }
-#endif
     return 0;
 }
 

@@ -48,7 +48,11 @@ static void GetUserIdByName(uid_t *uid, const char *name)
 static void GetGroupIdByName(gid_t *gid, const char *name)
 {
     *gid = -1;
-    struct group *data = NULL;
+    struct group *data = getgrnam(name);
+    if (data != NULL) {
+        *gid = data->gr_gid;
+        return;
+    }
     while ((data = getgrent()) != NULL) {
         if ((data->gr_name != NULL) && (strcmp(data->gr_name, name) == 0)) {
             *gid = data->gr_gid;

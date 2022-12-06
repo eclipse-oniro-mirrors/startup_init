@@ -79,7 +79,7 @@ static const char *TestGetParamLabel(const char *paraName)
 {
     BEGET_LOGI("TestGetParamLabel %s", paraName);
     if (paraName == nullptr) {
-        return 0;
+        return nullptr;
     }
     for (size_t i = 0; i < ARRAY_LENGTH(selinuxLabels); i++) {
         if (strncmp(selinuxLabels[i][0], paraName, strlen(selinuxLabels[i][0])) == 0) {
@@ -503,16 +503,13 @@ void PrepareInitUnitTestEnv(void)
     InitAddPreCfgLoadHook(0, TestHook);
     InitAddPostCfgLoadHook(0, TestHook);
     InitAddPostPersistParamLoadHook(0, TestHook);
-    // ini system
-    SystemInit();
-    SystemPrepare();
-    SystemConfig();
-#else
+    LoadSpecialParam();
+#endif
     // read default parameter from system
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
     LoadDefaultParams("/system/etc/param", LOAD_PARAM_ONLY_ADD);
-#endif
+
     // read ut parameters
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/vendor/etc/param", LOAD_PARAM_NORMAL);
@@ -716,15 +713,22 @@ int setfilecon(const char *name, const char *content)
 
 ParamLabelIndex *TestGetParamLabelIndex(const char *name)
 {
-    if (GetParamWorkSpace() == NULL && GetParamWorkSpace()->selinuxSpace.getParamLabelIndex == NULL) {
-        return NULL;
-    }
-    uint32_t index = (uint32_t)GetParamWorkSpace()->selinuxSpace.getParamLabelIndex(name);
-    if (index >= GetParamWorkSpace()->maxLabelIndex) {
-        return NULL;
-    }
     static ParamLabelIndex labelIndex = {0};
-    WorkSpace *workspace = GetParamWorkSpace()->workSpace[index];
+    uint32_t index = 0;
+    ParamWorkSpace *paramWorkspace = GetParamWorkSpace();
+    if (paramWorkspace == nullptr) {
+        return nullptr;
+    }
+#ifdef PARAM_SUPPORT_SELINUX
+    if (paramWorkspace->selinuxSpace.getParamLabelIndex == nullptr) {
+        return nullptr;
+    }
+    index = (uint32_t)paramWorkspace->selinuxSpace.getParamLabelIndex(name) + WORKSPACE_INDEX_BASE;
+    if (index >= paramWorkspace->maxLabelIndex) {
+        return nullptr;
+    }
+#endif
+    WorkSpace *workspace = paramWorkspace->workSpace[index];
     labelIndex.workspace = workspace;
     PARAM_CHECK(labelIndex.workspace != NULL, return NULL, "Invalid workSpace");
     labelIndex.selinuxLabelIndex = labelIndex.workspace->spaceIndex;

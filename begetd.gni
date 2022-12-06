@@ -33,9 +33,13 @@ declare_args() {
 
   # boot_kernel_extended_cmdline for extend cmdline
 
-  startup_init_feature_decode_group_file = true
+  startup_init_feature_decode_group_file = false
+
+  startup_init_test_performance = true
+
   startup_init_with_param_base = false
   if (!use_musl) {
     startup_init_with_param_base = true
+    startup_init_feature_decode_group_file = true
   }
 }

@@ -42,21 +42,27 @@ STATIC_INLINE int CompareParamTrieNode(const ParamTrieNode *node, const char *ke
     } else if (node->length < keyLen) {
         return 1;
     }
-    return strncmp(node->key, key, keyLen);
+    return memcmp(node->key, key, keyLen);
 }
 
 STATIC_INLINE ParamTrieNode *FindSubTrie(const WorkSpace *workSpace,
     ParamTrieNode *current, const char *key, uint32_t keyLen, uint32_t *matchLabel)
 {
     ParamTrieNode *subTrie = current;
+    int ret = 0;
     while (subTrie != NULL) {
-        int ret = CompareParamTrieNode(subTrie, key, keyLen);
-        if (ret == 0) {
-            if (subTrie->labelIndex != 0) {
-                *matchLabel = subTrie->labelIndex;
+        if (subTrie->length > keyLen) {
+            ret = -1;
+        } else if (subTrie->length < keyLen) {
+            ret = 1;
+        } else {
+            ret = memcmp(subTrie->key, key, keyLen);
+            if (ret == 0) {
+                *matchLabel = (subTrie->labelIndex != 0) ? subTrie->labelIndex : *matchLabel;
+                return subTrie;
             }
-            return subTrie;
         }
+
         uint32_t offset = 0;
         if (ret < 0) {
             offset = subTrie->left;

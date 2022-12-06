@@ -44,7 +44,9 @@ typedef struct CachedParameter_ {
     char *paramValue;
     char data[0];
 } CachedParameter;
-
+#ifdef PARAM_TEST_PERFORMANCE
+void TestParameterReaderPerformance(void);
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 }

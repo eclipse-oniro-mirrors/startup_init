@@ -286,7 +286,7 @@ INIT_LOCAL_API void SaveIndex(uint32_t *index, uint32_t offset)
 INIT_LOCAL_API ParamTrieNode *FindTrieNode(WorkSpace *workSpace,
     const char *key, uint32_t keyLen, uint32_t *matchLabel)
 {
-    PARAM_CHECK(key != NULL && keyLen > 0, return NULL, "Invalid key ");
+    PARAM_ONLY_CHECK(key != NULL && keyLen > 0, return NULL);
 
     uint32_t tmpMatchLen = 0;
     ParamTrieNode *node = NULL;

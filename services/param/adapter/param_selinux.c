@@ -251,7 +251,7 @@ static int OpenPermissionWorkSpace(const char *path)
         ret =  SelinuxGetAllLabel(1, HandleSelinuxLabel);
     } else if (strcmp(path, "open") == 0) {
         if (loadLabels == 0) {
-            ret =  SelinuxGetAllLabel(2, HandleSelinuxLabel);
+            ret =  SelinuxGetAllLabel(2, HandleSelinuxLabel); // 2 mean need to open workspace
         }
         loadLabels = 1;
     }

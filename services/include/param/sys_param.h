@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 typedef uint32_t ParamHandle;
-typedef void * CachedHandle;
+typedef void *CachedHandle;
 
 typedef struct {
     uint8_t updaterMode;

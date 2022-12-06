@@ -298,7 +298,7 @@ public:
 
     int TestDumpParamMemory()
     {
-        SystemDumpParameters(1, NULL);
+        SystemDumpParameters(1, -1, NULL);
         return 0;
     }
 };
@@ -646,6 +646,7 @@ HWTEST_F(ParamUnitTest, TestParamCache, TestSize.Level0)
     EXPECT_EQ(strcmp(value, "2222222"), 0);
     CachedParameterDestroy(cacheHandle3);
 }
+#ifdef PARAM_SUPPORT_SELINUX
 HWTEST_F(ParamUnitTest, TestInitParameterClient, TestSize.Level0)
 {
     InitParameterClient();
@@ -658,5 +659,6 @@ HWTEST_F(ParamUnitTest, TestInitParameterClient, TestSize.Level0)
     ret = IsWorkSpaceReady(workspace);
     EXPECT_EQ(ret, 0);
 }
+#endif
 #endif
 }
