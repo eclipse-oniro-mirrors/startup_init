@@ -175,9 +175,8 @@ static int StartUeventd(char **requiredDevices, int num)
 static void StartInitSecondStage(void)
 {
     int requiredNum = 0;
-    Fstab* fstab = LoadRequiredFstab();
-    INIT_ERROR_CHECK(fstab != NULL, abort(), "Failed to load required fstab");
-    char **devices = GetRequiredDevices(*fstab, &requiredNum);
+    Fstab *fstab = LoadRequiredFstab();
+    char **devices = (fstab != NULL) ? GetRequiredDevices(*fstab, &requiredNum) : NULL;
     if (devices != NULL && requiredNum > 0) {
         int ret = StartUeventd(devices, requiredNum);
         if (ret == 0) {
@@ -200,6 +199,10 @@ static void StartInitSecondStage(void)
         }
     }
 
+    if (fstab != NULL) {
+        ReleaseFstab(fstab);
+        fstab = NULL;
+    }
     // It will panic if close stdio before execv("/bin/sh", NULL)
     CloseStdio();
 
