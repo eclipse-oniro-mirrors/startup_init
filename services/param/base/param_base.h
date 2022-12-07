@@ -34,7 +34,6 @@ INIT_LOCAL_API int ParamMemcpy(void *dest, size_t destMax, const void *src, size
 INIT_LOCAL_API int ParamStrCpy(char *strDest, size_t destMax, const char *strSrc);
 
 typedef struct CachedParameter_ {
-    ATOMIC_UINT32 flags;
     struct WorkSpace_ *workspace;
     long long spaceCommitId;
     uint32_t dataCommitId;

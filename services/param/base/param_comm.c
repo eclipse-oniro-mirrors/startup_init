@@ -46,52 +46,17 @@ INIT_LOCAL_API WorkSpace *GetWorkSpace(uint32_t labelIndex)
     if (workSpace == NULL) {
         return NULL;
     }
-    WORKSPACE_RD_LOCK(workSpace);
+    uint32_t rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, memory_order_acquire);
+    if (rwSpaceLock == 1) {
+        return NULL;
+    }
     if (workSpace->area != NULL) {
-        WORKSPACE_RW_UNLOCK(workSpace);
         return workSpace;
     }
-    WORKSPACE_RW_UNLOCK(workSpace);
     return NULL;
 #else
     return paramSpace->workSpace[0];
 #endif
-}
-
-INIT_LOCAL_API int CheckParamName(const char *name, int info)
-{
-    PARAM_CHECK(name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
-    size_t nameLen = strlen(name);
-    if (nameLen >= PARAM_NAME_LEN_MAX) {
-        return PARAM_CODE_INVALID_NAME;
-    }
-    if (strcmp(name, "#") == 0) {
-        return 0;
-    }
-
-    if (nameLen < 1 || name[0] == '.' || (!info && name[nameLen - 1] == '.')) {
-        PARAM_LOGE("CheckParamName %s %d", name, info);
-        return PARAM_CODE_INVALID_NAME;
-    }
-
-    /* Only allow alphanumeric, plus '.', '-', '@', ':', or '_' */
-    /* Don't allow ".." to appear in a param name */
-    for (size_t i = 0; i < nameLen; i++) {
-        if (name[i] == '.') {
-            if (name[i - 1] == '.') {
-                return PARAM_CODE_INVALID_NAME;
-            }
-            continue;
-        }
-        if (name[i] == '_' || name[i] == '-' || name[i] == '@' || name[i] == ':') {
-            continue;
-        }
-        if (isalnum(name[i])) {
-            continue;
-        }
-        return PARAM_CODE_INVALID_NAME;
-    }
-    return 0;
 }
 
 INIT_LOCAL_API ParamSecurityOps *GetParamSecurityOps(int type)

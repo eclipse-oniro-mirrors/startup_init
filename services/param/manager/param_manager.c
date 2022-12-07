@@ -143,8 +143,8 @@ static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrie
     if (current->labelIndex != 0 && verbose) {
         ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, current->labelIndex);
         if (label != NULL) {
-            PARAM_DUMP("\tparameter label dac %u %u %o \n\t  label: %s \n",
-                label->uid, label->gid, label->mode, (label->length > 0) ? label->data : "null");
+            PARAM_DUMP("\tparameter label dac %u %u %o selinuxIndex %u \n",
+                label->uid, label->gid, label->mode, label->selinuxIndex);
         }
     }
     return 0;
@@ -488,17 +488,26 @@ INIT_LOCAL_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, cons
     PARAM_WORKSPACE_CHECK(paramSpace, return DAC_RESULT_FORBIDED, "Invalid workspace");
     PARAM_CHECK(paramSpace->checkParamPermission != NULL, return DAC_RESULT_FORBIDED, "Invalid check permission");
     ParamLabelIndex labelIndex = {0};
-    labelIndex.selinuxLabelIndex = GetWorkSpaceIndex(name);
+    // search node from dac space, and get selinux label index
+    WorkSpace *dacSpace = GetWorkSpace(WORKSPACE_INDEX_DAC);
+    (void)FindTrieNode(dacSpace, name, strlen(name), &labelIndex.dacLabelIndex);
+    ParamSecurityNode *securityNode = (ParamSecurityNode *)GetTrieNode(dacSpace, labelIndex.dacLabelIndex);
+    if ((securityNode == NULL) || (securityNode->selinuxIndex == 0) ||
+        (securityNode->selinuxIndex == INVALID_SELINUX_INDEX)) {
+        labelIndex.selinuxLabelIndex = GetWorkSpaceIndex(name);
+    } else {
+        labelIndex.selinuxLabelIndex = securityNode->selinuxIndex;
+    }
     if (labelIndex.selinuxLabelIndex < paramSpace->maxLabelIndex) {
         labelIndex.workspace = paramSpace->workSpace[labelIndex.selinuxLabelIndex];
     }
-    PARAM_CHECK(labelIndex.workspace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
-#ifndef PARAM_SUPPORT_SELINUX
-    (void)FindTrieNode(labelIndex.workspace, name, strlen(name), &labelIndex.dacLabelIndex);
-#endif
-    PARAM_LOGV("CheckParamPermission %s selinuxLabelIndex: %u %u",
-        labelIndex.workspace->fileName, labelIndex.selinuxLabelIndex, labelIndex.dacLabelIndex);
-    return paramSpace->checkParamPermission(&labelIndex, srcLabel, name, mode);
+    PARAM_CHECK(labelIndex.workspace != NULL, return PARAM_CODE_INVALID_PARAM,
+        "Invalid workSpace for %s %u", name, labelIndex.selinuxLabelIndex);
+    int ret = paramSpace->checkParamPermission(&labelIndex, srcLabel, name, mode);
+    if (ret != 0) {
+        PARAM_LOGW("Forbid to access %s label %u %u", name, labelIndex.dacLabelIndex, labelIndex.selinuxLabelIndex);
+    }
+    return ret;
 }
 
 INIT_LOCAL_API WorkSpace *GetNextWorkSpace(WorkSpace *curr)
@@ -601,6 +610,42 @@ static int ReadParamName(ParamHandle handle, char *name, uint32_t length)
     int ret = ParamMemcpy(name, length, entry->data, entry->keyLength);
     PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_PARAM, "Failed to copy name");
     name[entry->keyLength] = '\0';
+    return 0;
+}
+
+INIT_LOCAL_API int CheckParamName(const char *name, int info)
+{
+    PARAM_CHECK(name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
+    size_t nameLen = strlen(name);
+    if (nameLen >= PARAM_NAME_LEN_MAX) {
+        return PARAM_CODE_INVALID_NAME;
+    }
+    if (strcmp(name, "#") == 0) {
+        return 0;
+    }
+
+    if (nameLen < 1 || name[0] == '.' || (!info && name[nameLen - 1] == '.')) {
+        PARAM_LOGE("CheckParamName %s %d", name, info);
+        return PARAM_CODE_INVALID_NAME;
+    }
+
+    /* Only allow alphanumeric, plus '.', '-', '@', ':', or '_' */
+    /* Don't allow ".." to appear in a param name */
+    for (size_t i = 0; i < nameLen; i++) {
+        if (name[i] == '.') {
+            if (name[i - 1] == '.') {
+                return PARAM_CODE_INVALID_NAME;
+            }
+            continue;
+        }
+        if (name[i] == '_' || name[i] == '-' || name[i] == '@' || name[i] == ':') {
+            continue;
+        }
+        if (isalnum(name[i])) {
+            continue;
+        }
+        return PARAM_CODE_INVALID_NAME;
+    }
     return 0;
 }
 

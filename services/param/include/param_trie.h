@@ -60,10 +60,10 @@ typedef struct {
 typedef struct {
     uid_t uid;
     gid_t gid;
+    uint32_t selinuxIndex;
     uint16_t mode;
     uint8_t type;
     uint8_t length;
-    char data[0];
 } ParamSecurityNode;
 
 typedef struct {
@@ -80,12 +80,10 @@ typedef struct {
 
 typedef struct WorkSpace_ {
     unsigned int flags;
-    uint32_t (*allocTrieNode)(struct WorkSpace_ *workSpace, const char *key, uint32_t keyLen);
-    int (*compareTrieNode)(const ParamTrieNode *node, const char *key2, uint32_t key2Len);
     MemHandle memHandle;
     ParamTrieHeader *area;
     ParamRWMutex rwlock;
-    ParamRWMutex rwSpaceLock;
+    ATOMIC_UINT32 rwSpaceLock;
     uint32_t spaceSize;
     uint32_t spaceIndex;
     char fileName[0];
@@ -94,8 +92,8 @@ typedef struct WorkSpace_ {
 INIT_LOCAL_API int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t spaceSize);
 INIT_LOCAL_API void CloseWorkSpace(WorkSpace *workSpace);
 
-#define GetTrieNode(workSpace, offset) \
-    (ParamTrieNode *)(((offset) == 0 || (offset) > (workSpace)->area->dataSize) ? NULL : (workSpace)->area->data + (offset))
+#define GetTrieNode(workSpace, offset) (ParamTrieNode *)(((offset) == 0 || (offset) > (workSpace)->area->dataSize) ? \
+    NULL : (workSpace)->area->data + (offset))
 
 #define GetTrieRoot(workSpace) \
     (ParamTrieNode *)(((workSpace)->area == NULL) ? NULL : (workSpace)->area->data + (workSpace)->area->firstNode)

@@ -42,7 +42,7 @@ static char *GetLocalBuffer(uint32_t *buffSize)
 }
 
 int g_stop = 0;
-void *CmdReader(void *args)
+static void *CmdReader(void *args)
 {
     (void)srand((unsigned)time(NULL));
     uint32_t buffSize = 0;

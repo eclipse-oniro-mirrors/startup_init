@@ -92,7 +92,7 @@ INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint3
     }
     void *areaAddr = (void *)mmap(NULL, spaceSize, prot, MAP_SHARED, fd, 0);
     PARAM_CHECK(areaAddr != MAP_FAILED && areaAddr != NULL, close(fd);
-        return NULL, "Failed to map memory error %d spaceSize %d", errno, spaceSize);
+        return NULL, "Failed to map memory error %d fileName %s ", errno, fileName);
     close(fd);
     return areaAddr;
 }

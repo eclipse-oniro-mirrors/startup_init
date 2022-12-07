@@ -51,6 +51,8 @@ extern "C" {
 #define USER_BUFFER_LEN 64
 #define GROUP_FORMAT "const.%u_%u"
 
+#define INVALID_SELINUX_INDEX ((uint32_t)-1)
+
 typedef struct UserCred {
     pid_t pid;
     uid_t uid;
@@ -84,6 +86,7 @@ typedef struct {
     const char *name;
 #ifdef PARAM_SUPPORT_SELINUX
     char label[SELINUX_CONTENT_LEN];
+    uint32_t selinuxIndex;
 #endif
 } ParamAuditData;
 

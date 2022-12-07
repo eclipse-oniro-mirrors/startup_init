@@ -23,6 +23,7 @@
 #include "param_osadp.h"
 #include "param_utils.h"
 #include "param_include.h"
+static uint32_t AllocateParamTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen);
 
 static int GetRealFileName(WorkSpace *workSpace, char *buffer, uint32_t size)
 {
@@ -37,8 +38,6 @@ static int InitWorkSpace_(WorkSpace *workSpace, uint32_t spaceSize, int readOnly
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     PARAM_CHECK(sizeof(ParamTrieHeader) < spaceSize,
         return PARAM_CODE_INVALID_PARAM, "Invalid spaceSize %u", spaceSize);
-    PARAM_CHECK(workSpace->allocTrieNode != NULL,
-        return PARAM_CODE_INVALID_PARAM, "Invalid allocTrieNode %s", workSpace->fileName);
 
     char buffer[FILENAME_LEN_MAX] = {0};
     int ret = GetRealFileName(workSpace, buffer, sizeof(buffer));
@@ -54,7 +53,7 @@ static int InitWorkSpace_(WorkSpace *workSpace, uint32_t spaceSize, int readOnly
         workSpace->area->securityNodeCount = 0;
         workSpace->area->dataSize = spaceSize - sizeof(ParamTrieHeader);
         workSpace->area->currOffset = 0;
-        uint32_t offset = workSpace->allocTrieNode(workSpace, "#", 1);
+        uint32_t offset = AllocateParamTrieNode(workSpace, "#", 1);
         workSpace->area->firstNode = offset;
     } else {
         workSpace->area = (ParamTrieHeader *)areaAddr;
@@ -69,7 +68,8 @@ static uint32_t AllocateParamTrieNode(WorkSpace *workSpace, const char *key, uin
     uint32_t len = keyLen + sizeof(ParamTrieNode) + 1;
     len = PARAM_ALIGN(len);
     PARAM_CHECK((workSpace->area->currOffset + len) < workSpace->area->dataSize, return 0,
-        "Failed to allocate currOffset %d, dataSize %d", workSpace->area->currOffset, workSpace->area->dataSize);
+        "Failed to allocate currOffset %d, dataSize %d space %s",
+        workSpace->area->currOffset, workSpace->area->dataSize, workSpace->fileName);
     ParamTrieNode *node = (ParamTrieNode *)(workSpace->area->data + workSpace->area->currOffset);
     node->length = keyLen;
     int ret = ParamMemcpy(node->key, keyLen, key, keyLen);
@@ -92,11 +92,8 @@ INIT_LOCAL_API int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t sp
     if (PARAM_TEST_FLAG(workSpace->flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
-    workSpace->allocTrieNode = AllocateParamTrieNode;
-    workSpace->area = NULL;
     int ret = InitWorkSpace_(workSpace, spaceSize, onlyRead);
     PARAM_ONLY_CHECK(ret == 0, return ret);
-    PARAMSPACE_AREA_INIT_LOCK(workSpace);
     PARAM_SET_FLAG(workSpace->flags, WORKSPACE_FLAGS_INIT);
     PARAM_LOGV("InitWorkSpace %s for %s", workSpace->fileName, (onlyRead == 0) ? "init" : "other");
     return ret;
@@ -123,8 +120,17 @@ static int CheckWorkSpace(const WorkSpace *workSpace)
     if (!PARAM_TEST_FLAG(workSpace->flags, WORKSPACE_FLAGS_INIT)) {
         return -1;
     }
-    PARAM_CHECK(workSpace->allocTrieNode != NULL, return -1, "Invalid allocTrieNode");
     return 0;
+}
+
+static int CompareParamTrieNode(const ParamTrieNode *node, const char *key, uint32_t keyLen)
+{
+    if (node->length > keyLen) {
+        return -1;
+    } else if (node->length < keyLen) {
+        return 1;
+    }
+    return memcmp(node->key, key, keyLen);
 }
 
 static ParamTrieNode *AddToSubTrie(WorkSpace *workSpace, ParamTrieNode *current, const char *key, uint32_t keyLen)
@@ -140,7 +146,7 @@ static ParamTrieNode *AddToSubTrie(WorkSpace *workSpace, ParamTrieNode *current,
     if (ret < 0) {
         subTrie = GetTrieNode(workSpace, current->left);
         if (subTrie == NULL) {
-            uint32_t offset = workSpace->allocTrieNode(workSpace, key, keyLen);
+            uint32_t offset = AllocateParamTrieNode(workSpace, key, keyLen);
             PARAM_CHECK(offset != 0, return NULL,
                 "Failed to allocate key '%s' in space '%s'", key, workSpace->fileName);
             SaveIndex(&current->left, offset);
@@ -149,7 +155,7 @@ static ParamTrieNode *AddToSubTrie(WorkSpace *workSpace, ParamTrieNode *current,
     } else {
         subTrie = GetTrieNode(workSpace, current->right);
         if (subTrie == NULL) {
-            uint32_t offset = workSpace->allocTrieNode(workSpace, key, keyLen);
+            uint32_t offset = AllocateParamTrieNode(workSpace, key, keyLen);
             PARAM_CHECK(offset != 0, return NULL,
                 "Failed to allocate key '%s' in space '%s'", key, workSpace->fileName);
             SaveIndex(&current->right, offset);
@@ -177,7 +183,7 @@ ParamTrieNode *AddTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLe
             ParamTrieNode *next = GetTrieNode(workSpace, current->child);
             current = AddToSubTrie(workSpace, next, remainingKey, subKeyLen);
         } else {
-            uint32_t dataOffset = workSpace->allocTrieNode(workSpace, remainingKey, subKeyLen);
+            uint32_t dataOffset = AllocateParamTrieNode(workSpace, remainingKey, subKeyLen);
             PARAM_CHECK(dataOffset != 0, return NULL,
                 "Failed to allocate key '%s' in space '%s'", key, workSpace->fileName);
             SaveIndex(&current->child, dataOffset);
@@ -240,6 +246,11 @@ INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAu
     node->gid = auditData->dacData.gid;
     node->mode = auditData->dacData.mode;
     node->type = auditData->dacData.paramType & PARAM_TYPE_MASK;
+#ifdef PARAM_SUPPORT_SELINUX
+    node->selinuxIndex = auditData->selinuxIndex;
+#else
+    node->selinuxIndex = 0;
+#endif
     uint32_t offset = workSpace->area->currOffset;
     workSpace->area->currOffset += realLen;
     workSpace->area->securityNodeCount++;
@@ -347,9 +358,6 @@ INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData)
     PARAM_CHECK(auditData != NULL && auditData->name != NULL, return -1, "Invalid auditData");
     WorkSpace *workSpace = GetWorkSpace(WORKSPACE_INDEX_DAC);
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
-    int ret = CheckParamName(auditData->name, 1);
-    PARAM_CHECK(ret == 0, return ret, "Illegal param name \"%s\"", auditData->name);
-
     ParamTrieNode *node = GetTrieRoot(workSpace);
     if ((node == NULL) || (CompareParamTrieNode(node, auditData->name, strlen(auditData->name)) != 0)) {
         node = FindTrieNode(workSpace, auditData->name, strlen(auditData->name), NULL);
@@ -364,15 +372,22 @@ INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData)
         PARAM_CHECK(offset != 0, return PARAM_CODE_REACHED_MAX, "Failed to add label");
         SaveIndex(&node->labelIndex, offset);
     } else {
-#ifdef STARTUP_INIT_TEST
         ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, node->labelIndex);
         PARAM_CHECK(label != NULL, return -1, "Failed to get trie node");
-        label->mode = auditData->dacData.mode;
-        label->uid = auditData->dacData.uid;
-        label->gid = auditData->dacData.gid;
-        label->type = auditData->dacData.paramType & PARAM_TYPE_MASK;
+#ifdef PARAM_SUPPORT_SELINUX
+        if (auditData->selinuxIndex != 0) {
+            label->selinuxIndex = auditData->selinuxIndex;
+        } else
 #endif
-        PARAM_LOGE("Error, repeat to add label for name %s", auditData->name);
+        {
+#ifdef STARTUP_INIT_TEST
+            label->mode = auditData->dacData.mode;
+            label->uid = auditData->dacData.uid;
+            label->gid = auditData->dacData.gid;
+            label->type = auditData->dacData.paramType & PARAM_TYPE_MASK;
+#endif
+            PARAM_LOGV("Repeat to add label for name %s", auditData->name);
+        }
     }
     PARAM_LOGV("AddSecurityLabel label %d gid %d uid %d mode %o type:%d name: %s", offset,
         auditData->dacData.gid, auditData->dacData.uid, auditData->dacData.mode,

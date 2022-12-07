@@ -359,13 +359,13 @@ PARAM_STATIC int OnIncomingConnect(LoopHandle loop, TaskHandle server)
     return 0;
 }
 
-static void LoadSelinuxLabel(void)
+static void LoadSelinuxLabel(const char *op)
 {
     // load security label
 #ifdef PARAM_SUPPORT_SELINUX
     ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
     if (ops != NULL && ops->securityGetLabel != NULL) {
-        ops->securityGetLabel(NULL);
+        ops->securityGetLabel(op);
     }
 #endif
 }
@@ -410,7 +410,7 @@ void LoadSpecialParam(void)
     // read param area size from cfg and save to dac
     LoadParamAreaSize();
     // read selinux label
-    LoadSelinuxLabel();
+    LoadSelinuxLabel(NULL);
     // from cmdline
     LoadParamFromCmdLine();
     // from build
@@ -419,6 +419,8 @@ void LoadSpecialParam(void)
 
 int StartParamService(void)
 {
+    // read selinux label
+    LoadSelinuxLabel("permission");
     return ParamServiceStart();
 }
 

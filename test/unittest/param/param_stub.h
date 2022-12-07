@@ -38,6 +38,7 @@ extern "C" {
 typedef struct ParameterNode {
     const char *paraName;
     const char *paraContext;
+    int index;
 } ParameterNode;
 
 typedef struct ParamContextsList {

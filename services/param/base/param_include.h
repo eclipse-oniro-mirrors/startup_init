@@ -35,16 +35,6 @@ STATIC_INLINE void GetNextKey(const char **remainingKey, char **subKey, uint32_t
     }
 }
 
-STATIC_INLINE int CompareParamTrieNode(const ParamTrieNode *node, const char *key, uint32_t keyLen)
-{
-    if (node->length > keyLen) {
-        return -1;
-    } else if (node->length < keyLen) {
-        return 1;
-    }
-    return memcmp(node->key, key, keyLen);
-}
-
 STATIC_INLINE ParamTrieNode *FindSubTrie(const WorkSpace *workSpace,
     ParamTrieNode *current, const char *key, uint32_t keyLen, uint32_t *matchLabel)
 {
