@@ -118,7 +118,7 @@ uhdf_driver:x:3066:
 memmgr:x:1111:
 ispserver:x:3821:
 dfs_share:x:3822:
-appspawn:x:4000:
+appspawn:x:6005:
 print:x:3823:
 security_guard:x:3520:
 tee:x:6668:
