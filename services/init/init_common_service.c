@@ -487,6 +487,18 @@ static void CheckOndemandService(Service *service)
     }
 }
 
+static void DoCriticalServiceAbnormal(void) {
+    FILE *panic = fopen("/proc/sysrq-trigger", "wb");
+
+    if (panic == NULL) {
+        ExecReboot("reboot");
+        return;
+    }
+
+    fwrite((void *)"c", 1, 1, panic);
+    fclose(panic);
+}
+
 void ServiceReap(Service *service)
 {
     INIT_CHECK(service != NULL, return);
@@ -529,7 +541,7 @@ void ServiceReap(Service *service)
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("Critical service \" %s \" crashed %d times, rebooting system",
                 service->name, service->crashCount);
-            ExecReboot("reboot");
+            DoCriticalServiceAbnormal();
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
