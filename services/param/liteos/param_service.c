@@ -133,7 +133,7 @@ static void ParamServiceTask(int *arg)
 
 void LiteParamService(void)
 {
-    static init = 0;
+    static int init = 0;
     if (init) {
         printf("LiteParamService has been init \n");
         return;
