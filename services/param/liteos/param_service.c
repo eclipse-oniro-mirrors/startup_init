@@ -133,8 +133,14 @@ static void ParamServiceTask(int *arg)
 
 void LiteParamService(void)
 {
+    static init = 0;
+    if (init) {
+        printf("LiteParamService has been init \n");
+        return;
+    }
+    init = 1;
     EnableInitLog(INIT_INFO);
-    PARAM_LOGI("LiteParamService");
+    printf("LiteParamService \n");
     InitParamService();
     // get persist param
     LoadPersistParams();
