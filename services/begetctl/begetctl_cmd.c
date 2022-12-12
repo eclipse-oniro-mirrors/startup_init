@@ -114,6 +114,18 @@ static int32_t GetUidByName(BShellHandle shell, int argc, char **argv)
     return 0;
 }
 
+static void ShowUserInGroup(struct group *data)
+{
+    int index = 0;
+    printf("users in this group:");
+    while (data->gr_mem[index]) { // user in this group
+        printf(" %s", data->gr_mem[index]);
+        index++;
+    }
+    printf("\n");
+    return;
+}
+
 static int32_t GetGidByName(BShellHandle shell, int argc, char **argv)
 {
     if (argc != 2) { // 2 is dac get gid parameter number
@@ -126,12 +138,14 @@ static int32_t GetGidByName(BShellHandle shell, int argc, char **argv)
         printf("getgrnam gid failed\n");
     } else {
         printf("getgrnam gid %s : %d\n", argv[1], data->gr_gid);
+        ShowUserInGroup(data);
     }
 
     data = NULL;
     while ((data = getgrent()) != NULL) {
         if ((data->gr_name != NULL) && (strcmp(data->gr_name, argv[1]) == 0)) {
             printf("getgrent gid %s : %d\n", argv[1], data->gr_gid);
+            ShowUserInGroup(data);
             break;
         }
     }

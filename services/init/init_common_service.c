@@ -494,8 +494,9 @@ static void DoCriticalServiceAbnormal(void) {
         ExecReboot("reboot");
         return;
     }
-
+#ifndef STARTUP_INIT_TEST
     fwrite((void *)"c", 1, 1, panic);
+#endif
     fclose(panic);
 }
 
