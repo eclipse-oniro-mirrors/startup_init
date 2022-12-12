@@ -45,7 +45,7 @@ if (ohos_kernel_type == "liteos_m") {
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite",
     ]
     PRODUCT_HAL_TOKEN_PATH =
-        rebase_path("//${ohos_product_adapter_dir}/utils/token")
+        rebase_path("${ohos_product_adapter_dir}/utils/token")
     cmd = "if [ -f ${PRODUCT_HAL_TOKEN_PATH}/BUILD.gn ]; then echo true; else echo false; fi"
     PRODUCT_HAL_TOKEN_EXISTS =
         exec_script("//build/lite/run_shell_cmd.py", [ cmd ], "value")
