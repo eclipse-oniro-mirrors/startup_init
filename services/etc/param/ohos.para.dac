@@ -30,6 +30,7 @@ startup.uevent.             = ueventd:ueventd:0775
 persist.init.debug.         = root:root:0775:int
 persist.init.bootevent.enable         = root:root:0775:bool
 persist.appspawn.           = root:root:0775
+persist.xts.devattest.      = device_attest:device_attest:0775
 
 #udid and sn, only read
 ohos.boot.sn                = root:deviceprivate:0750

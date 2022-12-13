@@ -32,7 +32,7 @@ uiserver:x:1048:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr,foundation,update
 powerctrl:x:1051:root,shell,system,update,power_host,charger,foundation
 bootctrl:x:1052:root,shell,system
-deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,useriam,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm,update
+deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,useriam,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm,update,device_attest
 hiview:x:1201:
 hidumper_service:x:1212:
 shell:x:2000:
@@ -123,3 +123,4 @@ print:x:3823:
 security_guard:x:3520:
 tee:x:6668:
 dsserver:x:3068:
+device_attest:x:3049:
