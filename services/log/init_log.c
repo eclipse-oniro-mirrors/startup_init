@@ -134,7 +134,7 @@ INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, 
 
 INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level)
 {
-    if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
+    if (level <= INIT_FATAL) {
         g_logLevel = level;
     }
     return;
