@@ -256,10 +256,14 @@ static int LoadOneParamAreaSize_(const uint32_t *context, const char *name, cons
     ret = CheckParamValue(NULL, name, value, PARAM_TYPE_INT);
     PARAM_CHECK(ret == 0, return 0, "Invalid value %s for %s", value, name);
     PARAM_LOGV("LoadOneParamAreaSize_ [%s] [%s]", name, value);
-    return AddParamEntry(WORKSPACE_INDEX_BASE, PARAM_TYPE_INT, name, value);
+    char buffer[PARAM_NAME_LEN_MAX] = {0};
+    int len = sprintf_s(buffer, sizeof(buffer), "const.%s", name);
+    PARAM_CHECK(len > 0, return 0, "Failed to format value %s for %s", value, name);
+    return AddParamEntry(WORKSPACE_INDEX_BASE, PARAM_TYPE_INT, buffer, value);
 }
 
 INIT_LOCAL_API void LoadParamAreaSize(void)
 {
+    LoadDefaultParam_("/sys_prod/etc/param/ohos.para.size", 0, NULL, 0, LoadOneParamAreaSize_);
     LoadDefaultParam_(PARAM_AREA_SIZE_CFG, 0, NULL, 0, LoadOneParamAreaSize_);
 }
