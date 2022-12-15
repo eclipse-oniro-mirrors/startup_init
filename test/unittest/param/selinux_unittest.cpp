@@ -83,7 +83,8 @@ public:
         ret = initParamSercurityOps.securityInitLabel(&srclabel, LABEL_INIT_FOR_INIT);
         EXPECT_EQ(ret, 0);
 
-        ret = initParamSercurityOps.securityCheckParamPermission(&srclabel, name, DAC_WRITE);
+        ret = initParamSercurityOps.securityCheckParamPermission(
+            TestGetParamLabelIndex(name), &srclabel, name, DAC_WRITE);
         EXPECT_EQ(ret, 0);
         ret = initParamSercurityOps.securityFreeLabel(&srclabel);
         EXPECT_EQ(ret, 0);
@@ -119,7 +120,8 @@ public:
         ParamSecurityLabel srclabel = {};
         ret = clientParamSercurityOps.securityInitLabel(&srclabel, 0);
         EXPECT_EQ(ret, 0);
-        ret = clientParamSercurityOps.securityCheckParamPermission(&srclabel, name, DAC_WRITE);
+        ret = clientParamSercurityOps.securityCheckParamPermission(
+            TestGetParamLabelIndex(name), &srclabel, name, DAC_WRITE);
         EXPECT_EQ(ret, 0);
         ret = clientParamSercurityOps.securityFreeLabel(&srclabel);
         EXPECT_EQ(ret, 0);
@@ -136,17 +138,18 @@ public:
         ParamSecurityLabel srclabel = {};
         ret = clientParamSercurityOps.securityInitLabel(&srclabel, 0);
         EXPECT_EQ(ret, 0);
-        ret = clientParamSercurityOps.securityCheckParamPermission(&srclabel, name, DAC_READ);
+        ret = clientParamSercurityOps.securityCheckParamPermission(
+            TestGetParamLabelIndex(name), &srclabel, name, DAC_READ);
         EXPECT_EQ(ret, 0);
         ret = clientParamSercurityOps.securityFreeLabel(&srclabel);
         EXPECT_EQ(ret, 0);
-        uint8_t updataMode = GetParamWorkSpace()->ops.updaterMode;
+        uint8_t updateMode = GetParamWorkSpace()->ops.updaterMode;
         GetParamWorkSpace()->ops.updaterMode = 1; // 1 test updater mode
         RegisterSecuritySelinuxOps(&clientParamSercurityOps, 0);
         if (clientParamSercurityOps.securityCheckParamPermission != nullptr) {
-            clientParamSercurityOps.securityCheckParamPermission(nullptr, nullptr, 0);
+            clientParamSercurityOps.securityCheckParamPermission(TestGetParamLabelIndex(name), nullptr, nullptr, 0);
         }
-        GetParamWorkSpace()->ops.updaterMode = updataMode;
+        GetParamWorkSpace()->ops.updaterMode = updateMode;
         return 0;
     }
 

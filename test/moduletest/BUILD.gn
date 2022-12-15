@@ -25,6 +25,7 @@ ohos_shared_library("libparamtestmodule") {
     "//base/startup/init/services/log",
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/include",
     "//base/startup/init/ueventd/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",

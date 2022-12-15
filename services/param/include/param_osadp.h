@@ -44,6 +44,12 @@ extern "C" {
 #endif
 #endif
 
+#ifdef STARTUP_INIT_TEST
+#define STATIC_INLINE
+#else
+#define STATIC_INLINE static __attribute__((always_inline))
+#endif
+
 #define PARAM_WORKSPACE_INVALID ((uint32_t)-1)
 #define PARAM_WORKSPACE_MIN (1024)
 /*
@@ -54,32 +60,38 @@ extern "C" {
     data size
     strlen(xxxx.xxxx.xxxx.xxxx) + 96
 */
-#if (defined __LITEOS_A__ || defined __LITEOS_M__)
-#define DAC_DEFAULT_MODE 0777
+#define DAC_DEFAULT_GROUP 0
+#define DAC_DEFAULT_USER 0
+
 #ifdef STARTUP_INIT_TEST
-#define PARAM_WORKSPACE_MAX (1024 * 50)
+#define DAC_DEFAULT_MODE 0777
+#define PARAM_WORKSPACE_DEF (1024 * 80)
+#define PARAM_WORKSPACE_MAX (1024 * 80)
+#define PARAM_WORKSPACE_SMALL PARAM_WORKSPACE_DEF
 #else
+
+#ifdef __LITEOS_M__
+#define DAC_DEFAULT_MODE 0777
 #ifndef PARAM_WORKSPACE_MAX
 #define PARAM_WORKSPACE_MAX (1024 * 5)
 #endif
-#endif
 #define PARAM_WORKSPACE_SMALL PARAM_WORKSPACE_MAX
 #define PARAM_WORKSPACE_DEF PARAM_WORKSPACE_MAX
-#define DAC_DEFAULT_GROUP 0
-#define DAC_DEFAULT_USER 0
-#else
-#define PARAM_WORKSPACE_MAX (80 * 1024)
-#define PARAM_WORKSPACE_SMALL (1024 * 20)
-#ifdef STARTUP_INIT_TEST
+#else // __LITEOS_M__
+
+#ifdef __LITEOS_A__
 #define DAC_DEFAULT_MODE 0777
-#define PARAM_WORKSPACE_DEF (1024 * 50)
-#else
+#define PARAM_WORKSPACE_MAX (1024 * 10)
+#define PARAM_WORKSPACE_SMALL PARAM_WORKSPACE_MAX
+#define PARAM_WORKSPACE_DEF PARAM_WORKSPACE_MAX
+#else // __LITEOS_A__
 #define DAC_DEFAULT_MODE 0774
+#define PARAM_WORKSPACE_MAX (80 * 1024)
+#define PARAM_WORKSPACE_SMALL (1024 * 10)
 #define PARAM_WORKSPACE_DEF (1024 * 30)
-#endif
-#define DAC_DEFAULT_GROUP 0
-#define DAC_DEFAULT_USER 0
-#endif
+#endif // __LITEOS_A__
+#endif // __LITEOS_M__
+#endif // STARTUP_INIT_TEST
 
 // support futex
 #ifndef __NR_futex
@@ -169,18 +181,6 @@ INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex);
 #define PARAMSPACE_AREA_RW_LOCK(rwlock) (void)(rwlock)
 #define PARAMSPACE_AREA_RD_LOCK(rwlock) (void)(rwlock)
 #define PARAMSPACE_AREA_RW_UNLOCK(rwlock) (void)(rwlock)
-#endif
-
-#ifdef PARAMWORKSPACE_NEED_MUTEX
-#define WORKSPACE_INIT_LOCK(workspace) ParamRWMutexCreate(&(workspace).rwlock)
-#define WORKSPACE_RW_LOCK(workspace) ParamRWMutexWRLock(&(workspace).rwlock)
-#define WORKSPACE_RD_LOCK(workspace) ParamRWMutexRDLock(&(workspace).rwlock)
-#define WORKSPACE_RW_UNLOCK(workspace) ParamRWMutexUnlock(&(workspace).rwlock)
-#else
-#define WORKSPACE_INIT_LOCK(workspace) (void)(workspace)
-#define WORKSPACE_RW_LOCK(workspace) (void)(workspace)
-#define WORKSPACE_RD_LOCK(workspace) (void)(workspace)
-#define WORKSPACE_RW_UNLOCK(workspace) (void)(workspace)
 #endif
 
 typedef struct {

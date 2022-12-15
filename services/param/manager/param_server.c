@@ -53,7 +53,7 @@ static int CommonDealFun(const char *name, const char *value, int res)
         ret = WriteParam(name, value, NULL, 0);
         PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
     } else {
-        PARAM_LOGE("Get %s parameter value is null.", name);
+        PARAM_LOGW("Get %s parameter value is null.", name);
     }
     return ret;
 }
@@ -256,17 +256,7 @@ static int LoadOneParamAreaSize_(const uint32_t *context, const char *name, cons
     ret = CheckParamValue(NULL, name, value, PARAM_TYPE_INT);
     PARAM_CHECK(ret == 0, return 0, "Invalid value %s for %s", value, name);
     PARAM_LOGV("LoadOneParamAreaSize_ [%s] [%s]", name, value);
-
-    WorkSpace *workSpace = GetWorkSpace(WORKSPACE_NAME_DAC);
-    ParamTrieNode *node = AddTrieNode(workSpace, name, strlen(name));
-    PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "Failed to add node");
-    ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
-    if (entry == NULL) {
-        uint32_t offset = AddParamNode(workSpace, PARAM_TYPE_INT, name, strlen(name), value, strlen(value));
-        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
-        SaveIndex(&node->dataIndex, offset);
-    }
-    return 0;
+    return AddParamEntry(WORKSPACE_INDEX_BASE, PARAM_TYPE_INT, name, value);
 }
 
 INIT_LOCAL_API void LoadParamAreaSize(void)

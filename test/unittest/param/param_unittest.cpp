@@ -26,6 +26,7 @@ using namespace testing::ext;
 using namespace std;
 
 extern "C" {
+int IsWorkSpaceReady(WorkSpace *workSpace);
 void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
 static void OnClose(const TaskHandle taskHandle)
 {
@@ -84,7 +85,7 @@ public:
         uint32_t labelIndex = 0;
         SystemWriteParam(name, value);
         // get root
-        WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
+        WorkSpace *workspace = GetWorkSpace(WORKSPACE_INDEX_DAC);
         (void)FindTrieNode(workspace, name, strlen(name), &labelIndex);
         ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (node == nullptr) {
@@ -109,7 +110,7 @@ public:
         SystemWriteParam(name, value);
         uint32_t labelIndex = 0;
         AddSecurityLabel(&auditData);
-        WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
+        WorkSpace *workspace = GetWorkSpace(WORKSPACE_INDEX_DAC);
         (void)FindTrieNode(workspace, name, strlen(name), &labelIndex);
         ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (node == nullptr) {
@@ -142,7 +143,7 @@ public:
         AddSecurityLabel(&auditData);
 
         uint32_t labelIndex = 0;
-        WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
+        WorkSpace *workspace = GetWorkSpace(WORKSPACE_INDEX_DAC);
         ParamTrieNode *paramNode = FindTrieNode(workspace, name, strlen(name), &labelIndex);
         ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {
@@ -156,6 +157,7 @@ public:
     // 添加一个label，完全匹配
     int TestAddSecurityLabel4()
     {
+        ResetParamSecurityLabel();
         GetParamSecurityLabel()->cred.gid = 9999;  // 9999 test gid
         const char *name = "label4.test.aaa.bbb.ccc.dddd.eee";
         const char *value = "2001";
@@ -167,7 +169,7 @@ public:
         SystemWriteParam(name, value);
         uint32_t labelIndex = 0;
         AddSecurityLabel(&auditData);
-        WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
+        WorkSpace *workspace = GetWorkSpace(WORKSPACE_INDEX_DAC);
         ParamTrieNode *paramNode = FindTrieNode(workspace, name, strlen(name), &labelIndex);
         ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {
@@ -296,7 +298,7 @@ public:
 
     int TestDumpParamMemory()
     {
-        SystemDumpParameters(1, NULL);
+        SystemDumpParameters(1, -1, NULL);
         return 0;
     }
 };
@@ -407,13 +409,13 @@ HWTEST_F(ParamUnitTest, TestLinuxRWLock, TestSize.Level0)
 
 HWTEST_F(ParamUnitTest, TestWorkSpace1, TestSize.Level0)
 {
-    int ret = AddWorkSpace("test.workspace.1", 0, PARAM_WORKSPACE_DEF);
+    int ret = AddWorkSpace("test.workspace.1", GetWorkSpaceIndex("test.workspace.1"), 0, PARAM_WORKSPACE_DEF);
     EXPECT_EQ(ret, 0);
-    ret = AddWorkSpace("test.workspace.2", 0, PARAM_WORKSPACE_DEF);
+    ret = AddWorkSpace("test.workspace.2", GetWorkSpaceIndex("test.workspace.2"), 0, PARAM_WORKSPACE_DEF);
     EXPECT_EQ(ret, 0);
-    ret = AddWorkSpace("test.workspace.3", 0, PARAM_WORKSPACE_DEF);
+    ret = AddWorkSpace("test.workspace.3", GetWorkSpaceIndex("test.workspace.3"), 0, PARAM_WORKSPACE_DEF);
     EXPECT_EQ(ret, 0);
-    WorkSpace *space = GetWorkSpace("test.workspace.1");
+    WorkSpace *space = GetWorkSpace(GetWorkSpaceIndex("test.workspace.1"));
     EXPECT_NE(space, nullptr);
     CloseWorkSpace(nullptr);
 }
@@ -429,24 +431,9 @@ HWTEST_F(ParamUnitTest, TestWorkSpace2, TestSize.Level0)
     }
     workSpace->flags = 0;
     workSpace->area = NULL;
-    OH_ListInit(&workSpace->node);
     int ret = ParamStrCpy(workSpace->fileName, size, spaceName);
     EXPECT_EQ(ret, 0);
-    HASHMAPInitNode(&workSpace->hashNode);
     CloseWorkSpace(workSpace);
-}
-
-HWTEST_F(ParamUnitTest, TestWorkSpace3, TestSize.Level0)
-{
-    const char *spaceName = "test.workspace3";
-    int ret = AddWorkSpace(spaceName, 1, PARAM_WORKSPACE_DEF);
-#ifdef PARAM_SUPPORT_SELINUX
-    EXPECT_NE(ret, 0);
-#else
-    EXPECT_EQ(ret, 0);
-#endif
-    HashNode *node = OH_HashMapGet(GetParamWorkSpace()->workSpaceHashHandle, (const void *)spaceName);
-    EXPECT_EQ(node, nullptr);
 }
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__) // can not support parameter type
@@ -516,9 +503,9 @@ HWTEST_F(ParamUnitTest, TestGetServiceCtlName, TestSize.Level0)
 
 HWTEST_F(ParamUnitTest, TestFindTrieNode, TestSize.Level0)
 {
-    int ret = AddWorkSpace("test.workspace.1", 0, PARAM_WORKSPACE_DEF);
+    int ret = AddWorkSpace("test.workspace.1", GetWorkSpaceIndex("test.workspace.1"), 0, PARAM_WORKSPACE_DEF);
     EXPECT_EQ(ret, 0);
-    WorkSpace *space = GetWorkSpace("test.workspace.1");
+    WorkSpace *space = GetWorkSpace(GetWorkSpaceIndex("test.workspace.1"));
     ASSERT_NE(space, nullptr);
     ParamTrieNode *node = FindTrieNode(nullptr, nullptr, 0, nullptr);
     ASSERT_EQ(node, nullptr);
@@ -633,5 +620,45 @@ HWTEST_F(ParamUnitTest, TestStreamTaskFail, TestSize.Level0)
     ret = ParamTaskSendMsg(GetParamService()->serverTask, nullptr);
     EXPECT_NE(ret, 0);
 }
+
+HWTEST_F(ParamUnitTest, TestParamCache, TestSize.Level0)
+{
+    const char *name = "test.write.1111111.222222";
+    CachedHandle cacheHandle = CachedParameterCreate(name, "true");
+    EXPECT_NE(cacheHandle, nullptr);
+    const char *value = CachedParameterGet(cacheHandle);
+    EXPECT_EQ(strcmp(value, "true"), 0);
+    uint32_t dataIndex = 0;
+    int ret = WriteParam(name, "false", &dataIndex, 0);
+    EXPECT_EQ(ret, 0);
+    value = CachedParameterGet(cacheHandle);
+    EXPECT_EQ(strcmp(value, "false"), 0);
+    CachedParameterDestroy(cacheHandle);
+
+    // cache 2, for parameter exist
+    CachedHandle cacheHandle3 = CachedParameterCreate(name, "true");
+    EXPECT_NE(cacheHandle3, nullptr);
+    value = CachedParameterGet(cacheHandle3);
+    EXPECT_EQ(strcmp(value, "false"), 0);
+    ret = WriteParam(name, "2222222", &dataIndex, 0);
+    EXPECT_EQ(ret, 0);
+    value = CachedParameterGet(cacheHandle3);
+    EXPECT_EQ(strcmp(value, "2222222"), 0);
+    CachedParameterDestroy(cacheHandle3);
+}
+#ifdef PARAM_SUPPORT_SELINUX
+HWTEST_F(ParamUnitTest, TestInitParameterClient, TestSize.Level0)
+{
+    InitParameterClient();
+    WorkSpace *workspace = GetWorkSpace(0);
+    int ret = IsWorkSpaceReady(workspace);
+    EXPECT_EQ(ret, 0);
+    ret = IsWorkSpaceReady(NULL);
+    EXPECT_NE(ret, 0);
+    workspace = GetWorkSpace(1);
+    ret = IsWorkSpaceReady(workspace);
+    EXPECT_EQ(ret, 0);
+}
+#endif
 #endif
 }

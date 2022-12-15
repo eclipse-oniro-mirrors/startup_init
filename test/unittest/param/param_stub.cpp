@@ -78,6 +78,9 @@ static int TestSetParamCheck(const char *paraName, const char *context, const Sr
 static const char *TestGetParamLabel(const char *paraName)
 {
     BEGET_LOGI("TestGetParamLabel %s", paraName);
+    if (paraName == nullptr) {
+        return nullptr;
+    }
     for (size_t i = 0; i < ARRAY_LENGTH(selinuxLabels); i++) {
         if (strncmp(selinuxLabels[i][0], paraName, strlen(selinuxLabels[i][0])) == 0) {
             return selinuxLabels[i][1];
@@ -86,6 +89,18 @@ static const char *TestGetParamLabel(const char *paraName)
     int code = TestGenHashCode(paraName);
     code = code % (ARRAY_LENGTH(selinuxLabels));
     return selinuxLabels[code][1];
+}
+
+static int32_t TestGetSelinuxLabelIndex(const char *paraName)
+{
+    for (size_t i = 0; i < ARRAY_LENGTH(selinuxLabels); i++) {
+        if (strncmp(selinuxLabels[i][0], paraName, strlen(selinuxLabels[i][0])) == 0) {
+            return i;
+        }
+    }
+    int code = TestGenHashCode(paraName);
+    code = code % (ARRAY_LENGTH(selinuxLabels));
+    return code;
 }
 
 static const char *g_forbidReadParamName[] = {
@@ -122,6 +137,7 @@ static ParamContextsList *TestGetParamList(void)
     BEGET_ERROR_CHECK(head != nullptr, return nullptr, "Failed to alloc ParamContextsList");
     head->info.paraName = strdup(selinuxLabels[0][0]);
     head->info.paraContext = strdup(selinuxLabels[0][1]);
+    head->info.index = 0;
     head->next = nullptr;
     for (size_t i = 1; i < ARRAY_LENGTH(selinuxLabels); i++) {
         ParamContextsList *node = (ParamContextsList *)malloc(sizeof(ParamContextsList));
@@ -129,6 +145,7 @@ static ParamContextsList *TestGetParamList(void)
             return nullptr, "Failed to alloc ParamContextsList");
         node->info.paraName = strdup(selinuxLabels[i][0]);
         node->info.paraContext = strdup(selinuxLabels[i][1]);
+        node->info.index = i;
         node->next = head->next;
         head->next = node;
     }
@@ -156,6 +173,7 @@ static ParamContextsList *TestGetParamList(void)
         return nullptr, "Failed to alloc ParamContextsList");
     node->info.paraName = strdup(selinuxLabels[0][0]);
     node->info.paraContext = strdup(selinuxLabels[0][1]);
+    node->info.index = 0;
     node->next = head->next;
     head->next = node;
     return head;
@@ -174,6 +192,7 @@ void TestSetSelinuxOps(void)
     selinuxSpace->readParamCheck = TestReadParamCheck;
     selinuxSpace->getParamList = TestGetParamList;
     selinuxSpace->destroyParamList = TestDestroyParamList;
+    selinuxSpace->getParamLabelIndex = TestGetSelinuxLabelIndex;
 #endif
 }
 
@@ -511,7 +530,8 @@ void PrepareInitUnitTestEnv(void)
     evnOk = 1;
 }
 
-int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
+int TestCheckParamPermission(const ParamLabelIndex *labelIndex,
+    const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
     // DAC_RESULT_FORBIDED
     return g_testPermissionResult;
@@ -531,11 +551,11 @@ void SetStubResult(STUB_TYPE type, int result)
 static void TestBeforeInit(void)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
-    EXPECT_EQ(paramSpace, nullptr);
+    EXPECT_NE(paramSpace, nullptr);
     InitParamService();
     CloseParamWorkSpace();
     paramSpace = GetParamWorkSpace();
-    EXPECT_EQ(paramSpace, nullptr);
+    EXPECT_NE(paramSpace, nullptr);
     EnableInitLogFromCmdline();
 
     // test read cmdline
@@ -692,6 +712,31 @@ int setfilecon(const char *name, const char *content)
 {
     g_selinuxOptResult++;
     return g_selinuxOptResult % g_testRandom;
+}
+
+ParamLabelIndex *TestGetParamLabelIndex(const char *name)
+{
+    static ParamLabelIndex labelIndex = {0};
+    uint32_t index = 0;
+    ParamWorkSpace *paramWorkspace = GetParamWorkSpace();
+    if (paramWorkspace == nullptr) {
+        return &labelIndex;
+    }
+    labelIndex.workspace = paramWorkspace->workSpace[0];
+#ifdef PARAM_SUPPORT_SELINUX
+    if (paramWorkspace->selinuxSpace.getParamLabelIndex == nullptr) {
+        return &labelIndex;
+    }
+    index = (uint32_t)paramWorkspace->selinuxSpace.getParamLabelIndex(name) + WORKSPACE_INDEX_BASE;
+    if (index >= paramWorkspace->maxLabelIndex) {
+        return &labelIndex;
+    }
+#endif
+    labelIndex.workspace = paramWorkspace->workSpace[index];
+    PARAM_CHECK(labelIndex.workspace != NULL, return NULL, "Invalid workSpace");
+    labelIndex.selinuxLabelIndex = labelIndex.workspace->spaceIndex;
+    (void)FindTrieNode(paramWorkspace->workSpace[0], name, strlen(name), &labelIndex.dacLabelIndex);
+    return &labelIndex;
 }
 #ifdef __cplusplus
 #if __cplusplus

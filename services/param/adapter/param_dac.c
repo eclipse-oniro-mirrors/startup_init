@@ -25,9 +25,7 @@
 #include "param_utils.h"
 #include "param_base.h"
 
-#define USER_BUFFER_LEN 64
 #define MAX_BUF_SIZE  1024
-#define GROUP_FORMAT "const.group"
 #define INVALID_MODE 0550
 #ifdef STARTUP_INIT_TEST
 #define GROUP_FILE_PATH STARTUP_INIT_UT_PATH "/etc/group"
@@ -223,66 +221,6 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
     return 0;
 }
 
-static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
-{
-    char buffer[USER_BUFFER_LEN] = {0};
-    uint32_t labelIndex = 0;
-    int ret = ParamSprintf(buffer, sizeof(buffer), "%s.%d.%d", GROUP_FORMAT, groupId, uid);
-    PARAM_CHECK(ret >= 0, return -1, "Failed to format name for %s.%d.%d", GROUP_FORMAT, groupId, uid);
-    (void)FindTrieNode(space, buffer, strlen(buffer), &labelIndex);
-    ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
-    PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %d", labelIndex);
-    PARAM_LOGV("CheckUserInGroup %s groupid %d uid %d", buffer, node->gid, node->uid);
-    if (node->gid == groupId && node->uid == uid) {
-        return 0;
-    }
-    return -1;
-}
-
-static int DacCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
-{
-#ifndef STARTUP_INIT_TEST
-    if (srcLabel->cred.uid == 0) {
-        return DAC_RESULT_PERMISSION;
-    }
-#endif
-    int ret = DAC_RESULT_FORBIDED;
-    uint32_t labelIndex = 0;
-    // get dac label
-    WorkSpace *space = GetWorkSpace(WORKSPACE_NAME_DAC);
-    PARAM_CHECK(space != NULL, return DAC_RESULT_FORBIDED, "Failed to get dac space %s", name);
-    (void)FindTrieNode(space, name, strlen(name), &labelIndex);
-    ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
-    PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %d", labelIndex);
-    /**
-     * DAC group
-     * user:group:read|write|watch
-     */
-    uint32_t localMode;
-    if (srcLabel->cred.uid == node->uid) {
-        localMode = mode & (DAC_READ | DAC_WRITE | DAC_WATCH);
-    } else if (srcLabel->cred.gid == node->gid) {
-        localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
-    } else if (CheckUserInGroup(space, node->gid, srcLabel->cred.uid) == 0) {  // user in group
-        localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
-    } else {
-        localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_OTHER_START;
-    }
-    if ((node->mode & localMode) != 0) {
-        ret = DAC_RESULT_PERMISSION;
-    }
-    if (ret != DAC_RESULT_PERMISSION) {
-        PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%o", name, srcLabel->cred.gid, srcLabel->cred.uid, localMode);
-        PARAM_LOGW("Cfg label %d gid:%d uid:%d mode 0%o ", labelIndex, node->gid, node->uid, node->mode);
-#ifndef __MUSL__
-#ifndef STARTUP_INIT_TEST
-        ret = DAC_RESULT_PERMISSION;
-#endif
-#endif
-    }
-    return ret;
-}
-
 INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
 {
     PARAM_CHECK(ops != NULL, return -1, "Invalid param");
@@ -290,7 +228,9 @@ INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
     int ret = ParamStrCpy(ops->name, sizeof(ops->name), "dac");
     ops->securityInitLabel = InitLocalSecurityLabel;
     ops->securityCheckFilePermission = CheckFilePermission;
+#ifdef STARTUP_INIT_TEST
     ops->securityCheckParamPermission = DacCheckParamPermission;
+#endif
     ops->securityFreeLabel = FreeLocalSecurityLabel;
     if (isInit) {
         ops->securityGetLabel = DacGetParamSecurityLabel;
@@ -310,15 +250,10 @@ static void AddGroupUser(const char *userName, gid_t gid)
         PARAM_LOGW("Invalid user for '%s' gid %d uid %d", userName, gid, uid);
         return;
     }
-    ParamAuditData auditData = {0};
     char buffer[USER_BUFFER_LEN] = {0};
-    int ret = ParamSprintf(buffer, sizeof(buffer), "%s.%u.%u", GROUP_FORMAT, gid, uid);
+    int ret = ParamSprintf(buffer, sizeof(buffer), GROUP_FORMAT, gid, uid);
     PARAM_CHECK(ret >= 0, return, "Failed to format name for %d.%d", gid, uid);
-    auditData.name = buffer;
-    auditData.dacData.uid = uid;
-    auditData.dacData.gid = gid;
-    auditData.dacData.mode = INVALID_MODE;
-    AddSecurityLabel(&auditData);
+    (void)AddParamEntry(WORKSPACE_INDEX_BASE, PARAM_TYPE_STRING, buffer, "1");
 }
 
 #ifdef PARAM_DECODE_GROUPID_FROM_FILE

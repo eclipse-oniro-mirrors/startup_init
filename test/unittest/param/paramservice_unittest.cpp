@@ -87,7 +87,7 @@ public:
         uint32_t labelIndex = 0;
         SystemWriteParam(name, value);
         // 获取到跟属性
-        WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
+        WorkSpace *workspace = GetWorkSpace(WORKSPACE_INDEX_DAC);
         (void)FindTrieNode(workspace, name, strlen(name), &labelIndex);
         ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (node == nullptr) {
@@ -112,7 +112,7 @@ public:
         SystemWriteParam(name, value);
         uint32_t labelIndex = 0;
         AddSecurityLabel(&auditData);
-        WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
+        WorkSpace *workspace = GetWorkSpace(WORKSPACE_INDEX_DAC);
         (void)FindTrieNode(workspace, name, strlen(name), &labelIndex);
         ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (node == nullptr) {
@@ -145,7 +145,7 @@ public:
         AddSecurityLabel(&auditData);
 
         uint32_t labelIndex = 0;
-        WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
+        WorkSpace *workspace = GetWorkSpace(WORKSPACE_INDEX_DAC);
         ParamTrieNode *paramNode = FindTrieNode(workspace, name, strlen(name), &labelIndex);
         ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {
@@ -170,7 +170,7 @@ public:
         SystemWriteParam(name, value);
         uint32_t labelIndex = 0;
         AddSecurityLabel(&auditData);
-        WorkSpace *workspace = GetWorkSpace(WORKSPACE_NAME_DAC);
+        WorkSpace *workspace = GetWorkSpace(WORKSPACE_INDEX_DAC);
         ParamTrieNode *paramNode = FindTrieNode(workspace, name, strlen(name), &labelIndex);
         ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(workspace, labelIndex);
         if (paramNode == nullptr || node == nullptr) {

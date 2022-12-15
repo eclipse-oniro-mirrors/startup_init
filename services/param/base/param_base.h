@@ -16,6 +16,7 @@
 #ifndef BASE_STARTUP_PARAM_BASE_H
 #define BASE_STARTUP_PARAM_BASE_H
 #include "sys_param.h"
+#include "param_osadp.h"
 #include "beget_ext.h"
 #ifndef PARAM_BASE
 #include "securec.h"
@@ -32,6 +33,19 @@ INIT_LOCAL_API int ParamSprintf(char *buffer, size_t buffSize, const char *forma
 INIT_LOCAL_API int ParamMemcpy(void *dest, size_t destMax, const void *src, size_t count);
 INIT_LOCAL_API int ParamStrCpy(char *strDest, size_t destMax, const char *strSrc);
 
+typedef struct CachedParameter_ {
+    struct WorkSpace_ *workspace;
+    long long spaceCommitId;
+    uint32_t dataCommitId;
+    uint32_t dataIndex;
+    uint32_t bufferLen;
+    uint32_t nameLen;
+    char *paramValue;
+    char data[0];
+} CachedParameter;
+#ifdef PARAM_TEST_PERFORMANCE
+void TestParameterReaderPerformance(void);
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 }

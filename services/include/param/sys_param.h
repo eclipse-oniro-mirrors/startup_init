@@ -24,6 +24,7 @@ extern "C" {
 #endif
 
 typedef uint32_t ParamHandle;
+typedef void *CachedHandle;
 
 typedef struct {
     uint8_t updaterMode;
@@ -71,6 +72,27 @@ int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId);
 int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len);
 
 long long GetSystemCommitId(void);
+
+/**
+ * 外部接口
+ * 保存相关的parameter信息，包括workspace，和各层的commit。
+ *
+ */
+CachedHandle CachedParameterCreate(const char *name, const char *defValue);
+
+/**
+ * 外部接口
+ * 如果获取到value，返回对应的 paramValue的指针，否则返回上面定义的defValue
+ *
+ */
+const char *CachedParameterGet(CachedHandle handle);
+
+/**
+ * 外部接口
+ * 释放handle内存
+ *
+ */
+void CachedParameterDestroy(CachedHandle handle);
 
 #ifdef __cplusplus
 #if __cplusplus

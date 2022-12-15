@@ -140,7 +140,10 @@ if (defined(ohos_lite)) {
         "//third_party/selinux/libselinux/include/",
         "//base/security/selinux/interfaces/policycoreutils/include/",
       ]
-      defines += [ "PARAM_SUPPORT_SELINUX" ]
+      defines += [
+        "PARAM_SUPPORT_SELINUX",
+        "PARAMWORKSPACE_NEED_MUTEX",
+      ]
     }
     part_name = "init"
     subsystem_name = "startup"

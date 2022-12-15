@@ -212,7 +212,7 @@ HWTEST_F(ClientUnitTest, TestClient_03, TestSize.Level0)
 {
     // 3 Traversal test
     TestParamTraversal();
-    SystemDumpParameters(1, NULL);
+    SystemDumpParameters(1, -1, NULL);
 }
 
 HWTEST_F(ClientUnitTest, TestClient_04, TestSize.Level0)

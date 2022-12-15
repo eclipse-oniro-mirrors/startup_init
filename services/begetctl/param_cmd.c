@@ -358,11 +358,16 @@ static int32_t BShellParamCmdWait(BShellHandle shell, int32_t argc, char *argv[]
 static int32_t BShellParamCmdDump(BShellHandle shell, int32_t argc, char *argv[])
 {
     BSH_CHECK(shell != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
-    if (argc >= 2 && strcmp(argv[1], "verbose") == 0) { // 2 min arg
-        SystemDumpParameters(1, printf);
-    } else {
-        SystemDumpParameters(0, printf);
+    if (argc >= 2) { // 2 min parameter
+        if (strcmp(argv[1], "verbose") == 0) {
+            SystemDumpParameters(1, -1, printf);
+            return 0;
+        }
+        int index = StringToInt(argv[1], 0);
+        SystemDumpParameters(1, index, printf);
+        return 0;
     }
+    SystemDumpParameters(0, -1, printf);
     return 0;
 }
 

@@ -38,6 +38,7 @@ extern "C" {
 typedef struct ParameterNode {
     const char *paraName;
     const char *paraContext;
+    int index;
 } ParameterNode;
 
 typedef struct ParamContextsList {
@@ -56,7 +57,8 @@ void PrepareInitUnitTestEnv(void);
 void TestSetSelinuxOps(void);
 void SetTestPermissionResult(int result);
 void TestSetParamCheckResult(const char *prefix, uint16_t mode, int result);
-int TestCheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
+int TestCheckParamPermission(const ParamLabelIndex *labelIndex,
+    const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
 int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel);
 
 typedef enum {
@@ -67,6 +69,8 @@ typedef enum {
 } STUB_TYPE;
 void SetStubResult(STUB_TYPE type, int result);
 void PrepareCmdLineData();
+ParamLabelIndex *TestGetParamLabelIndex(const char *name);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
