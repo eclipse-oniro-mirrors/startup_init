@@ -44,10 +44,12 @@ extern "C" {
 #endif
 #endif
 
+#ifndef STATIC_INLINE
 #ifdef STARTUP_INIT_TEST
 #define STATIC_INLINE
 #else
 #define STATIC_INLINE static __attribute__((always_inline))
+#endif
 #endif
 
 #define PARAM_WORKSPACE_INVALID ((uint32_t)-1)
