@@ -52,10 +52,10 @@ static int CheckFilePermission(const ParamSecurityLabel *localLabel, const char 
     return 0;
 }
 
-static int LiteDacCheckParamPermission(uint32_t index,
+static int LiteDacCheckParamPermission(const ParamLabelIndex *labelIndex,
     const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
-    UNUSED(index);
+    UNUSED(labelIndex);
     UNUSED(srcLabel);
     UNUSED(name);
     UNUSED(mode);
