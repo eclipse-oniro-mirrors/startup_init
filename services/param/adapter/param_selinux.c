@@ -136,8 +136,9 @@ static uint32_t GetWorkSpaceSize(const char *content)
         return PARAM_WORKSPACE_MAX;
     }
     char name[PARAM_NAME_LEN_MAX] = {0};
+    int index = 6; // 6 strlen for const.
+    (void)ParamMemcpy(name, sizeof(name), "const.", index);
     size_t len = strlen(content);
-    int index = 0;
     for (size_t i = strlen("u:object_r:"); i < len; i++) {
         if (*(content + i) == ':') {
             break;
