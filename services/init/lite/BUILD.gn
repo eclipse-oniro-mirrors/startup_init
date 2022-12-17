@@ -49,6 +49,7 @@ executable("init") {
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/services/include/param",
     "//base/startup/init/services/init/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
@@ -61,7 +62,7 @@ executable("init") {
     "//base/startup/init/services/log:init_log",
     "//base/startup/init/services/loopevent:loopevent",
     "//base/startup/init/services/modules/init_hook:inithook",
-    "//base/startup/init/services/param/base:parameterbase",
+    "//base/startup/init/services/param/base:param_base",
     "//base/startup/init/services/utils:libinit_utils",
     "//build/lite/config/component/cJSON:cjson_static",
     "//third_party/bounds_checking_function:libsec_static",

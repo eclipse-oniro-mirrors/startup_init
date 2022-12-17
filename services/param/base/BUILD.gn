@@ -75,7 +75,7 @@ if (defined(ohos_lite)) {
     }
   }
 } else {
-  if (use_musl) {
+  if (!startup_init_with_param_base) {
     inherited_configs = [
       "//build/config/compiler:afdo",
       "//build/config/compiler:afdo_optimize_size",
@@ -113,13 +113,13 @@ if (defined(ohos_lite)) {
     deps = []
 
     if (use_musl) {
+      defines += [ "__MUSL__" ]
+    }
+    if (!startup_init_with_param_base) {
       ldflags = [ "-nostdlib" ]
       configs -= inherited_configs
       configs += [ "//build/config/compiler:compiler" ]
-      defines += [
-        "PARAM_BASE",
-        "__MUSL__",
-      ]
+      defines += [ "PARAM_BASE" ]
     } else {
       include_dirs += [ "//third_party/bounds_checking_function/include" ]
       sources += [ "//base/startup/init/services/log/init_commlog.c" ]
@@ -172,5 +172,17 @@ if (defined(ohos_lite)) {
     }
     part_name = "init"
     subsystem_name = "startup"
+  }
+}
+
+group("param_base") {
+  if (defined(ohos_lite)) {
+    deps = [ ":parameterbase" ]
+  } else {
+    if (startup_init_with_param_base) {
+      deps = [ ":parameterbase" ]
+    } else {
+      deps = [ ":parameterbase_ext" ]
+    }
   }
 }

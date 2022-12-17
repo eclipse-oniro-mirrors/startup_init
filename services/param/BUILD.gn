@@ -19,7 +19,7 @@ group("parameter") {
   if (defined(ohos_lite)) {
     if (ohos_kernel_type == "linux") {
       deps += [
-        "base:parameterbase",
+        "base:param_base",
         "linux:param_client",
         "linux:param_init",
       ]
@@ -31,7 +31,7 @@ group("parameter") {
     }
   } else {
     deps += [
-      "base:parameterbase",
+      "base:param_base",
       "linux:param_client",
       "linux:param_init",
     ]

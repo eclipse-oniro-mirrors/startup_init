@@ -86,7 +86,7 @@ if (defined(ohos_lite)) {
         defines += [ "__LINUX__" ]
         deps += [
           "//base/startup/init/services/loopevent:loopevent",
-          "//base/startup/init/services/param/base:parameterbase",
+          "//base/startup/init/services/param/base:param_base",
           "//base/startup/init/services/param/linux:param_client",
         ]
       }
@@ -197,11 +197,7 @@ if (defined(ohos_lite)) {
       "//third_party/cJSON:cjson",
       "//third_party/mbedtls:mbedtls_shared",
     ]
-    if (use_musl == false) {
-      deps += [ "//base/startup/init/services/param/base:parameterbase" ]
-    } else {
-      deps += [ "//base/startup/init/services/param/base:parameterbase_ext" ]
-    }
+    deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
       "c_utils:utils",
       "hilog_native:libhilog_base",
@@ -294,11 +290,7 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/mbedtls:mbedtls_shared",
     ]
-    if (use_musl == false) {
-      deps += [ "//base/startup/init/services/param/base:parameterbase" ]
-    } else {
-      deps += [ "//base/startup/init/services/param/base:parameterbase_ext" ]
-    }
+    deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
       "c_utils:utils",
       "hilog_native:libhilog_base",
