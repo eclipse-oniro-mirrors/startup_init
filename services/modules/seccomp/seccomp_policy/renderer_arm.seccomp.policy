@@ -132,6 +132,7 @@ fcntl
 fcntl64
 clone
 setsockopt
+tgkill
 
 setgroups
 setgroups32
