@@ -110,6 +110,7 @@ prctl
 fcntl
 clone
 setsockopt
+tgkill
 
 setgroups
 setresgid
