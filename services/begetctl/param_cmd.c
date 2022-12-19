@@ -380,32 +380,54 @@ static int32_t BShellParamCmdPwd(BShellHandle shell, int32_t argc, char *argv[])
     return 0;
 }
 
+void GetUserInfo(uid_t *uid, gid_t *gid, char **parameter, int32_t argc, char *argv[])
+{
+    int32_t i = 0;
+    *parameter = NULL;
+    while (i < argc) {
+        if (strcmp(argv[i], "-p") == 0 && ((i + 1) < argc)) {
+            *parameter = argv[i + 1];
+            ++i;
+        } else if (strcmp(argv[i], "-u") == 0 && ((i + 1) < argc)) {
+            *uid = DecodeUid(argv[i + 1]);
+            *uid = (*uid == -1) ? 0 : *uid;
+            ++i;
+        } else if (strcmp(argv[i], "-g") == 0 && ((i + 1) < argc)) {
+            *gid = DecodeGid(argv[i + 1]);
+            *gid = (*gid == -1) ? 0 : *gid;
+            ++i;
+        }
+        ++i;
+    }
+}
+
 static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[])
 {
 #ifndef STARTUP_INIT_TEST
     BSH_CHECK(shell != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
-    BSH_LOGV("BShellParamCmdShell %d %s", argc, argv[1]);
     int ret = 0;
-    if (argc > 1) {
-        ret = SystemCheckParamExist(argv[1]);
-        if (ret != 0) {
-            BShellEnvOutput(shell, "Error: parameter \'%s\' not found\r\n", argv[1]);
-            return -1;
-        }
-    }
     if (tcgetattr(0, &g_terminalState)) {
         return BSH_SYSTEM_ERR;
     }
     g_isSetTerminal = 1;
+    uid_t uid = 0;
+    gid_t gid = 0;
+    char *parameter = NULL;
+    GetUserInfo(&uid, &gid, &parameter, argc, argv);
+    BSH_LOGV("BShellParamCmdShell %s %d %d argc %d", parameter, uid, gid, argc);
+    if (parameter != NULL) {
+        ret = SystemCheckParamExist(parameter);
+        if (ret != 0) {
+            BShellEnvOutput(shell, "Error: parameter \'%s\' not found\r\n", parameter);
+            return -1;
+        }
+    }
     pid_t pid = fork();
     if (pid == 0) {
-        setuid(2000); // 2000 shell group
-        setgid(2000); // 2000 shell group
-#ifdef PARAM_SUPPORT_SELINUX
-        setcon("u:r:normal_hap_domain:s0");
-#endif
-        if (argc >= 2) { // 2 min argc
-            char *args[] = {SHELL_NAME, argv[1], NULL};
+        setuid(uid);
+        setgid(gid);
+        if (parameter != NULL) { // 2 min argc
+            char *args[] = {SHELL_NAME, parameter, NULL};
             ret = execv(CMD_PATH, args);
         } else {
             char *args[] = {SHELL_NAME, NULL};
@@ -453,7 +475,8 @@ static int32_t BShellParamCmdRegForIndepent(BShellHandle shell)
         {"param", BShellParamCmdSet, "set system parameter", "param set name value", "param set"},
         {"param", BShellParamCmdWait, "wait system parameter", "param wait name [value] [timeout]", "param wait"},
         {"param", BShellParamCmdDump, "dump system parameter", "param dump [verbose]", "param dump"},
-        {"param", BShellParamCmdShell, "shell system parameter", "param shell [name]", "param shell"},
+        {"param", BShellParamCmdShell, "shell system parameter",
+            "param shell [-p] [name] [-u] [username] [-g] [groupname]", "param shell"},
     };
     for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {
         BShellEnvRegisterCmd(shell, &infos[i - 1]);
@@ -461,8 +484,21 @@ static int32_t BShellParamCmdRegForIndepent(BShellHandle shell)
     return 0;
 }
 
+static void UpdateInitLogLevel(void)
+{
+    char level[2] = {0}; // 2 max length
+    uint32_t length = sizeof(level);
+    int ret = SystemGetParameter(INIT_DEBUG_LEVEL, level, &length);
+    if (ret == 0) {
+        errno = 0;
+        InitLogLevel value = (InitLogLevel)strtoul(level, NULL, DECIMAL_BASE);
+        SetInitLogLevel((errno != 0) ? INIT_WARN : value);
+    }
+}
+
 int32_t BShellParamCmdRegister(BShellHandle shell, int execMode)
 {
+    UpdateInitLogLevel();
     if (execMode) {
         BShellParamCmdRegForShell(shell);
     } else {
