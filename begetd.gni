@@ -29,4 +29,9 @@ declare_args() {
   config_ohos_startup_init_lite_memory_size = 5120
 
   # boot_kernel_extended_cmdline for extend cmdline
+
+  startup_init_with_param_base = false
+  if (!use_musl) {
+    startup_init_with_param_base = true
+  }
 }
