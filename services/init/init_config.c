@@ -103,8 +103,7 @@ void ReadConfig(void)
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (InUpdaterMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
-        ReadFileInDir(OTHER_CFG_PATH, ".cfg", ParseInitCfg, NULL);
-        ReadFileInDir("/vendor/etc/init", ".cfg", ParseInitCfg, NULL);
+        ParseInitCfgByPriority();
     } else {
         ReadFileInDir("/etc", ".cfg", ParseInitCfg, NULL);
     }
