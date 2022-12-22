@@ -110,6 +110,8 @@ prctl
 fcntl
 clone
 setsockopt
+kill
+tkill
 tgkill
 
 setgroups
