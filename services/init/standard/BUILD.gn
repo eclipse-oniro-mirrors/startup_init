@@ -123,9 +123,6 @@ ohos_executable("init") {
     defines += [ "SUPPORT_64BIT" ]
   }
 
-  if (!enable_ramdisk) {
-    defines += [ "DISABLE_INIT_TWO_STAGES" ]
-  }
   if (defined(global_parts_info.developtools_profiler)) {
     defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
     external_deps = [ "profiler:libhidebug_init" ]

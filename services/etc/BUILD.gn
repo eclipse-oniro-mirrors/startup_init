@@ -60,6 +60,7 @@ if (defined(ohos_lite)) {
     } else {
       source = "//base/startup/init/services/etc/init.cfg"
     }
+    output = "init.cfg"
     part_name = "init"
     subsystem_name = "startup"
   }

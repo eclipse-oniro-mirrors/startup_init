@@ -206,7 +206,6 @@ static void StartInitSecondStage(void)
     // It will panic if close stdio before execv("/bin/sh", NULL)
     CloseStdio();
 
-#ifndef DISABLE_INIT_TWO_STAGES
     INIT_LOGI("Start init second stage.");
     SwitchRoot("/usr");
     // Execute init second stage
@@ -219,7 +218,6 @@ static void StartInitSecondStage(void)
         INIT_LOGE("Failed to exec \"/bin/init\", err = %d", errno);
         exit(-1);
     }
-#endif
 }
 
 void SystemPrepare(void)

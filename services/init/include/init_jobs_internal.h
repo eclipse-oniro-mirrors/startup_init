@@ -38,11 +38,7 @@ void DumpAllJobs(void);
 
 int DoJobNow(const char *jobName);
 
-#ifndef DISABLE_INIT_TWO_STAGES
 #define INIT_CONFIGURATION_FILE "/etc/init.cfg"
-#else
-#define INIT_CONFIGURATION_FILE "/etc/init.without_two_stages.cfg"
-#endif
 #define OTHER_CFG_PATH "/system/etc/init"
 #define OTHER_CHARGE_PATH "/vendor/etc/charger"
 #define MAX_PATH_ARGS_CNT 20
