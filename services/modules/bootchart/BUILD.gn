@@ -24,7 +24,7 @@ ohos_shared_library("bootchart") {
 
   deps = [
     "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/cJSON:cjson_static",
+    "//third_party/cJSON:cjson",
   ]
 
   external_deps = [ "init:libinit_module_engine" ]
