@@ -653,8 +653,10 @@ void ResetParamSecurityLabel(void)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return, "Invalid paramSpace");
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     paramSpace->securityLabel.cred.pid = getpid();
     paramSpace->securityLabel.cred.uid = geteuid();
     paramSpace->securityLabel.cred.gid = getegid();
     paramSpace->flags |= WORKSPACE_FLAGS_NEED_ACCESS;
+#endif
 }
