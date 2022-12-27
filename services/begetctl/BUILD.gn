@@ -189,7 +189,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/loopevent:loopevent",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
-      "//third_party/bounds_checking_function:libsec_static",
+      "//third_party/bounds_checking_function:libsec_shared",
     ]
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [

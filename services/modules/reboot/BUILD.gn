@@ -23,7 +23,7 @@ ohos_shared_library("rebootmodule") {
     "../init_hook",
     "//base/startup/init/services/include/param",
   ]
-  deps = [ "//third_party/bounds_checking_function:libsec_static" ]
+  deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
 
   external_deps = [ "init:libinit_module_engine" ]
   defines = []
