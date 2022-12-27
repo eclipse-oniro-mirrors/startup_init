@@ -74,7 +74,7 @@ if (defined(ohos_lite)) {
     "//base/startup/init/interfaces/innerkits/socket:libsocket",
     "//base/startup/init/services/log:init_log",
     "//base/startup/init/services/utils:libinit_utils",
-    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 
   #
