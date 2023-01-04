@@ -48,6 +48,26 @@ static int DoReboot(int id, const char *name, int argc, const char **argv)
     return DoRoot_("reboot", RB_AUTOBOOT);
 }
 
+static int DoRebootPanic(int id, const char *name, int argc, const char **argv)
+{
+    UNUSED(id);
+    UNUSED(name);
+    UNUSED(argc);
+    UNUSED(argv);
+    // clear misc
+    (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
+    DoJobNow("reboot");
+#ifndef STARTUP_INIT_TEST
+    FILE *panic = fopen("/proc/sysrq-trigger", "wb");
+    if (panic == NULL) {
+        return reboot(RB_AUTOBOOT);
+    }
+    fwrite((void *)"c", 1, 1, panic);
+    fclose(panic);
+#endif
+    return 0;
+}
+
 static int DoRebootShutdown(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
@@ -130,6 +150,8 @@ static void RebootAdpInit(void)
     AddRebootCmdExecutor("updater", DoRebootUpdater);
     AddRebootCmdExecutor("charge", DoRebootCharge);
     AddRebootCmdExecutor("suspend", DoRebootSuspend);
+    AddRebootCmdExecutor("panic", DoRebootPanic);
+    (void)AddCmdExecutor("panic", DoRebootPanic);
 }
 
 MODULE_CONSTRUCTOR(void)
