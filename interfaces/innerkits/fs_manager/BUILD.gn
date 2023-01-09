@@ -31,6 +31,26 @@ ohos_static_library("libfsmanager_static") {
     "//base/startup/init/services/include",
     "//base/startup/init/services/param/include",
   ]
+  if (defined(global_parts_info.startup_hvb)) {
+    sources += [
+      "dm_verity/dm_verity.c",
+      "libfs_dm/fs_dm.c",
+      "libfs_hvb/fs_hvb.c",
+      "libfs_hvb/hvb_ops.c",
+    ]
+
+    include_dirs += [
+      "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+      "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/include",
+      "//base/startup/init/interfaces/innerkits/fs_manager/dm_verity/include",
+      "//base/startup/hvb/libhvb/include",
+      "//base/startup/init/ueventd/include",
+    ]
+
+    defines = [ "SUPPORT_HVB" ]
+
+    public_deps = [ "//base/startup/hvb/libhvb:libhvb_static" ]
+  }
   public_configs = [ ":libfsmanager_exported_configs" ]
   part_name = "init"
   subsystem_name = "startup"
