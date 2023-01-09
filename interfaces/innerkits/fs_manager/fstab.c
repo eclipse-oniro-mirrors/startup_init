@@ -51,6 +51,9 @@ static unsigned int ConvertFlags(char *flagBuffer)
         {"wait", FS_MANAGER_WAIT},
         {"required", FS_MANAGER_REQUIRED},
         {"nofail", FS_MANAGER_NOFAIL},
+#ifdef SUPPORT_HVB
+        {"hvb", FS_MANAGER_HVB},
+#endif
     };
 
     BEGET_CHECK_RETURN_VALUE(flagBuffer != NULL && *flagBuffer != '\0', 0); // No valid flags.
