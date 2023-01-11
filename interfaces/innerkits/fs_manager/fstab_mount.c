@@ -27,6 +27,9 @@
 #include "init_utils.h"
 #include "param/init_param.h"
 #include "securec.h"
+#ifdef SUPPORT_HVB
+#include "dm_verity.h"
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -39,6 +42,17 @@ extern "C" {
 #define RESIZE_BUFFER_SIZE 1024
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
+
+#ifdef SUPPORT_HVB
+__attribute__((weak)) int UeventdSocketInit(void)
+{
+    return 0;
+}
+
+__attribute__((weak)) void RetriggerUeventByPath(int sockFd, char *path)
+{
+}
+#endif
 
 bool IsSupportedFilesystem(const char *fsType)
 {
@@ -434,6 +448,13 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
             int bootSlots = GetBootSlots();
             BEGET_INFO_CHECK(bootSlots <= 1, AdjustPartitionNameByPartitionSlot(item),
                 "boot slots is %d, now adjust partition name according to current slot", bootSlots);
+        #ifdef SUPPORT_HVB
+            rc = HvbDmVeritySetUp(item);
+            if (rc != 0) {
+                BEGET_LOGE("set dm_verity err, ret = 0x%x", rc);
+            //  return rc;
+            }
+        #endif
             rc = MountOneItem(item);
         }
     } else { // Mount partition during second startup.
@@ -452,12 +473,28 @@ int MountAllWithFstab(const Fstab *fstab, bool required)
 
     FstabItem *item = NULL;
     int rc = -1;
+
+#ifdef SUPPORT_HVB
+    if (required) {
+        rc = HvbDmVerityinit(fstab);
+        if (rc != 0) {
+            BEGET_LOGE("set dm_verity init, ret = 0x%x", rc);
+            // return rc;
+        }
+    }
+#endif
     for (item = fstab->head; item != NULL; item = item->next) {
         rc = CheckRequiredAndMount(item, required);
         if (required && (rc < 0)) { // Init fail to mount in the first stage and exit directly.
             break;
         }
     }
+
+#ifdef SUPPORT_HVB
+    if (required)
+        HvbDmVerityFinal();
+#endif
+
     return rc;
 }
 

@@ -38,7 +38,8 @@
                 "hiviewdfx",
                 "access_token",
                 "common",
-                "dsoftbus"
+                "dsoftbus",
+                "hvb"
             ],
             "third_party": [
                 "cJSON",
