@@ -41,13 +41,16 @@ base_include_dirs = [
 
 if (defined(ohos_lite)) {
   static_library("parameterbase") {
+    cflags = [
+      "-fPIC",
+      "-fno-common",
+    ]
     sources = comm_sources
     sources += [
       "//base/startup/init/services/log/init_commlog.c",
       "//base/startup/init/services/param/base/param_base.c",
     ]
     include_dirs = base_include_dirs
-    cflags = [ "-fPIC" ]
     defines = [ "_GNU_SOURCE" ]
     public_configs = [ ":exported_header_files" ]
 

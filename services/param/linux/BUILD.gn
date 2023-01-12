@@ -77,6 +77,7 @@ if (defined(ohos_lite)) {
     if (defined(boot_kernel_extended_cmdline)) {
       defines += [ "BOOT_EXTENDED_CMDLINE=\"${boot_kernel_extended_cmdline}\"" ]
     }
+    cflags = [ "-fno-common" ]
     defines += [
       "_GNU_SOURCE",
       "__LINUX__",
@@ -94,8 +95,11 @@ if (defined(ohos_lite)) {
   static_library("param_client") {
     include_dirs = param_include_dirs
     sources = param_client_sources
-    cflags = [ "-fPIC" ]
     public_configs = [ ":exported_header_files" ]
+    cflags = [
+      "-fPIC",
+      "-fno-common",
+    ]
     defines = [
       "_GNU_SOURCE",
       "__LINUX__",
