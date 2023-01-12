@@ -32,6 +32,12 @@ declare_args() {
 
   startup_init_feature_decode_group_file = false
 
+  # for liteos-a
+  
+  if (defined(ohos_kernel_type) && ohos_kernel_type == "liteos_a") {
+    config_ohos_startup_init_lite_memory_size = 10240
+  }
+
   startup_init_with_param_base = false
   if (!use_musl) {
     startup_init_with_param_base = true
