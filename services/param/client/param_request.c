@@ -60,7 +60,6 @@ void ClientInit(void)
 
 void ClientDeinit(void)
 {
-    CloseParamWorkSpace(&g_clientSpace.paramSpace);
 }
 
 static ParamSecurityOps *GetClientParamSecurityOps(void)
