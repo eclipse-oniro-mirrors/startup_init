@@ -525,6 +525,11 @@ void ServiceReap(Service *service)
         // the service could be restart even if it is one-shot service
     }
 
+    // service no need to restart if it is an ondemand service.
+    if (IsOnDemandService(service)) {
+        CheckOndemandService(service);
+        return;
+    }
     if (service->attribute & SERVICE_ATTR_CRITICAL) { // critical
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("Critical service \" %s \" crashed %d times, rebooting system",
@@ -536,11 +541,6 @@ void ServiceReap(Service *service)
             INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, service->crashCount);
             return;
         }
-    }
-    // service no need to restart if it is an ondemand service.
-    if (IsOnDemandService(service)) {
-        CheckOndemandService(service);
-        return;
     }
 
     int ret = ExecRestartCmd(service);
