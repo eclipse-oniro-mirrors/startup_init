@@ -140,7 +140,7 @@ void LiteParamService(void)
     }
     init = 1;
     EnableInitLog(INIT_INFO);
-    printf("LiteParamService \n");;
+    printf("LiteParamService \n");
     InitParamService();
     // get persist param
     LoadPersistParams();
