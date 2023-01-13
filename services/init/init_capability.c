@@ -71,6 +71,9 @@ static unsigned int GetCapByString(const char *capStr)
         { "WAKE_ALARM", CAP_WAKE_ALARM },
         { "BLOCK_SUSPEND", CAP_BLOCK_SUSPEND },
         { "AUDIT_READ", CAP_AUDIT_READ },
+#if defined CAP_PERFMON
+        { "PERFMON", CAP_PERFMON },
+#endif
     };
     int mapSize = (int)ARRAY_LENGTH(capStrCapNum);
     int capLen = strlen("CAP_");
