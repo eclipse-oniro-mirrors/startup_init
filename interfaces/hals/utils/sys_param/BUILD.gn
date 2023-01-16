@@ -13,6 +13,7 @@
 # limitations under the License.
 
 static_library("hal_sys_param") {
+  cflags = [ "-fno-common" ]
   sources = [ "hal_sys_param.c" ]
   include_dirs = [ "//base/startup/init/interfaces/hals" ]
   defines = [

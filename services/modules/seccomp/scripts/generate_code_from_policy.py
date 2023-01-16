@@ -20,6 +20,8 @@ import sys
 import argparse
 import textwrap
 import re
+import os
+import stat
 
 supported_parse_item = ['arch', 'labelName', 'priority', 'allowList', 'blockList', 'priorityWithArgs',\
     'allowListWithArgs', 'headFiles', 'selfDefineSyscall', 'returnValue', 'mode']
@@ -834,7 +836,10 @@ class SeccompPolicyParser:
         content = header + '\n'.join(extra_header_list) + array_name + \
             '    ' + '\n    '.join(self.bpf_generator.bpf_policy) + footer
 
-        with open(args.dstfile, 'w') as output_file:
+        
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        modes = stat.S_IWUSR | stat.S_IRUSR | stat.S_IWGRP | stat.S_IRGRP
+        with os.fdopen(os.open(args.dstfile, flags, modes), 'w') as output_file:
             output_file.write(content)
 
     @staticmethod

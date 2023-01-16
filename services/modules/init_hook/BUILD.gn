@@ -34,6 +34,7 @@ if (defined(ohos_lite)) {
       "_GNU_SOURCE",
       "OHOS_LITE",
     ]
+    cflags = [ "-fno-common" ]
     include_dirs = comm_include
     sources = [ "param_hook.c" ]
     public_configs = [ ":inithook_config" ]
