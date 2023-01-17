@@ -53,6 +53,7 @@
 #ifdef WITH_SECCOMP
 #define APPSPAWN_NAME ("appspawn")
 #define NWEBSPAWN_NAME ("nwebspawn")
+#define SA_MAIN_PATH ("/system/bin/sa_main")
 #endif
 
 #ifndef TIOCSCTTY
@@ -73,7 +74,8 @@ static void SetSystemSeccompPolicy(const Service *service)
 {
 #ifdef WITH_SECCOMP
     if (strncmp(APPSPAWN_NAME, service->name, strlen(APPSPAWN_NAME)) \
-        && strncmp(NWEBSPAWN_NAME, service->name, strlen(NWEBSPAWN_NAME))) {
+        && strncmp(NWEBSPAWN_NAME, service->name, strlen(NWEBSPAWN_NAME))
+        && !strncmp(SA_MAIN_PATH, service->pathArgs.argv[0], strlen(SA_MAIN_PATH))) {
         PluginExecCmdByName("SetSeccompPolicy", "start");
     }
 #endif
