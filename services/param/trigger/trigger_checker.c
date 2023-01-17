@@ -329,8 +329,7 @@ int CheckMatchSubCondition(const char *condition, const char *input, int length)
     PARAM_CHECK(condition != NULL, return 0, "Invalid condition");
     PARAM_CHECK(input != NULL, return 0, "Invalid input");
     const char *tmp = strstr(condition, input);
-    while (tmp != NULL)
-    {
+    while (tmp != NULL) {
         PARAM_LOGV("CheckMatchSubCondition Condition: '%s' content: '%s' length %d", condition, input, length);
         if (((int)strlen(tmp) <= length) || (tmp[length] != '=')) {
             return 0;
