@@ -122,7 +122,6 @@ if (defined(ohos_lite)) {
         ]
         defines += [ "LITEOS_SUPPORT" ]
         sources += syspara_sources
-        cflags = [ "-fno-common" ]
       } else {
         sources += [ "syscap/init_syscap.c" ]
       }

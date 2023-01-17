@@ -41,10 +41,7 @@ base_include_dirs = [
 
 if (defined(ohos_lite)) {
   static_library("parameterbase") {
-    cflags = [
-      "-fPIC",
-      "-fno-common",
-    ]
+    cflags = [ "-fPIC" ]
     sources = comm_sources
     sources += [
       "//base/startup/init/services/log/init_commlog.c",
