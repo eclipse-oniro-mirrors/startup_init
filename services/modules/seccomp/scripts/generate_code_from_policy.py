@@ -837,7 +837,7 @@ class SeccompPolicyParser:
             '    ' + '\n    '.join(self.bpf_generator.bpf_policy) + footer
 
         
-        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        flags = os.O_WRONLY | os.O_CREAT
         modes = stat.S_IWUSR | stat.S_IRUSR | stat.S_IWGRP | stat.S_IRGRP
         with os.fdopen(os.open(args.dstfile, flags, modes), 'w') as output_file:
             output_file.write(content)
