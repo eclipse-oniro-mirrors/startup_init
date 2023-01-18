@@ -44,7 +44,7 @@ INIT_LOCAL_API void SetInitCommLog(InitCommLog logFunc);
 INIT_LOCAL_API void EnableInitLog(InitLogLevel level);
 INIT_LOCAL_API void EnableInitLogFromCmdline(void);
 
-#ifdef PARAM_BASE
+#if defined(INIT_NO_LOG) || defined(PARAM_BASE)
 #define INIT_LOGV(fmt, ...)
 #define INIT_LOGI(fmt, ...)
 #define INIT_LOGW(fmt, ...)
