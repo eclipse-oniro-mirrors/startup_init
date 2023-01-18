@@ -115,6 +115,10 @@ static_library("param_client_lite") {
   defines = param_build_defines
   public_configs = [ ":exported_header_files" ]
 
+  if (config_ohos_startup_init_lite_no_log) {
+    defines += [ "INIT_NO_LOG" ]
+  }
+
   if (ohos_kernel_type == "liteos_a") {
     sources +=
         [ "//base/startup/init/services/param/adapter/param_persistadp.c" ]
