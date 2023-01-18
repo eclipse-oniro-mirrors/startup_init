@@ -67,7 +67,7 @@ def fix_para_file(options):
     if options.extra:
         parse_extra_params(options.extra, contents)
 
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    flags = os.O_WRONLY | os.O_CREAT
     modes = stat.S_IWUSR | stat.S_IRUSR | stat.S_IWGRP | stat.S_IRGRP
     with os.fdopen(os.open(options.output, flags, modes), 'w') as f:
         for key in contents:
