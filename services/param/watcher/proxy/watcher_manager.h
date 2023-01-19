@@ -133,23 +133,29 @@ private:
 
 class WatcherNode {
 public:
-    WatcherNode(uint32_t nodeId) : nodeId_(nodeId)
+    explicit WatcherNode(uint32_t nodeId) : nodeId_(nodeId)
     {
         OH_ListInit(&node_);
     }
     virtual ~WatcherNode(void) = default;
-    uint32_t GetNodeId(void) const { return nodeId_; }
+    uint32_t GetNodeId(void) const
+    {
+        return nodeId_;
+    }
 
     void AddToList(ListHeadPtr list);
     void RemoveFromList(ListHeadPtr list);
     WatcherNodePtr GetNext(ListHeadPtr list);
     static WatcherNodePtr GetFromList(ListHeadPtr list, uint32_t nodeId);
     static WatcherNodePtr GetNextFromList(ListHeadPtr list, uint32_t nodeId);
-    static WatcherNodePtr ConvertNodeToBase(ListNodePtr node) {
-        WatcherNodePtr tmp = NULL;
-        return reinterpret_cast<WatcherNodePtr >((char *)node - (char *)tmp->GetListNode());
+    static WatcherNodePtr ConvertNodeToBase(ListNodePtr node)
+    {
+        return reinterpret_cast<WatcherNodePtr >((char *)node - (char *)(&(((WatcherNodePtr )0)->node_)));
     }
-    ListNodePtr GetListNode() { return &node_; }
+    ListNodePtr GetListNode()
+    {
+        return &node_;
+    }
 private:
     static int CompareNode(ListNodePtr node, ListNodePtr newNode);
     static int CompareData(ListNodePtr node, void *data);
@@ -177,7 +183,7 @@ inline T *ConvertTo(WatcherNodePtr node)
 
 class ParamWatcher : public WatcherNode {
 public:
-    ParamWatcher(uint32_t watcherId) : WatcherNode(watcherId) {}
+    explicit ParamWatcher(uint32_t watcherId) : WatcherNode(watcherId) {}
     ~ParamWatcher(void) override  {}
 };
 
@@ -193,7 +199,10 @@ public:
     {
         return nodeList_.next == &nodeList_;
     }
-    uint32_t GetNodeCount(void) const { return nodeCount_; }
+    uint32_t GetNodeCount(void) const
+    {
+        return nodeCount_;
+    }
     int AddNode(WatcherNodePtr node);
     int RemoveNode(WatcherNodePtr node);
     WatcherNodePtr GetNode(uint32_t nodeId);
@@ -209,7 +218,7 @@ public:
 class RemoteWatcher : public WatcherNode, public ParamWatcherList {
 public:
     RemoteWatcher(uint32_t watcherId, const sptr<IWatcher> &watcher)
-    : WatcherNode(watcherId), ParamWatcherList(), watcher_(watcher) {}
+        : WatcherNode(watcherId), ParamWatcherList(), watcher_(watcher) {}
     ~RemoteWatcher(void) override
     {
         watcher_ = nullptr;
@@ -220,14 +229,26 @@ public:
         });
     }
 
-    uint32_t GetRemoteWatcherId(void) const { return GetNodeId(); }
-    uint32_t GetAgentId(void) const { return id_; }
-    void SetAgentId(uint32_t id) { id_ = id; }
+    uint32_t GetRemoteWatcherId(void) const
+    {
+        return GetNodeId();
+    }
+    uint32_t GetAgentId(void) const
+    {
+        return id_;
+    }
+    void SetAgentId(uint32_t id)
+    {
+        id_ = id;
+    }
     void ProcessParameterChange(const std::string &prefix, const std::string &name, const std::string &value)
     {
         watcher_->OnParameterChange(prefix, name, value);
     }
-    sptr<IWatcher> GetWatcher(void) { return watcher_; }
+    sptr<IWatcher> GetWatcher(void)
+    {
+        return watcher_;
+    }
 private:
     uint32_t id_ = { 0 };
     sptr<IWatcher> watcher_ {};
@@ -236,7 +257,7 @@ private:
 class WatcherGroup : public WatcherNode, public ParamWatcherList {
 public:
     WatcherGroup(uint32_t groupId, const std::string &key)
-    : WatcherNode(groupId), ParamWatcherList(), keyPrefix_(key) {}
+        : WatcherNode(groupId), ParamWatcherList(), keyPrefix_(key) {}
     ~WatcherGroup() override
     {
         TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
@@ -246,8 +267,14 @@ public:
         });
     }
     void ProcessParameterChange(WatcherManager *mananger, const std::string &name, const std::string &value);
-    const std::string GetKeyPrefix() const { return keyPrefix_; }
-    uint32_t GetGroupId() const { return GetNodeId(); }
+    const std::string GetKeyPrefix() const
+    {
+        return keyPrefix_;
+    }
+    uint32_t GetGroupId() const
+    {
+        return GetNodeId();
+    }
 private:
     std::string keyPrefix_ { };
 };

@@ -47,4 +47,3 @@ int32_t BShellCmdRegister(BShellHandle shell, int execMode);
 #endif
 #endif
 #endif // INIT_UTILS_H
-

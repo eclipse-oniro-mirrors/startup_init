@@ -57,7 +57,6 @@ INIT_LOCAL_API int GetSystemError(int err)
         default:
             return SYSPARAM_SYSTEM_ERROR;
     }
-    return 0;
 }
 
 INIT_LOCAL_API int IsValidParamValue(const char *value, uint32_t len)

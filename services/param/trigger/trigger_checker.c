@@ -329,20 +329,20 @@ int CheckMatchSubCondition(const char *condition, const char *input, int length)
     PARAM_CHECK(condition != NULL, return 0, "Invalid condition");
     PARAM_CHECK(input != NULL, return 0, "Invalid input");
     const char *tmp = strstr(condition, input);
-    if (tmp == NULL) {
-        return 0;
-    }
-    PARAM_LOGV("CheckMatchSubCondition Condition: '%s' content: '%s' length %d", condition, input, length);
-    if (((int)strlen(tmp) <= length) || (tmp[length] != '=')) {
-        return 0;
-    }
-    // for condition: parameter = 1
-    if (tmp == condition) {
-        return 1;
-    }
-    // for condition: parameter1 = 1 && parameter2 = 1
-    if (*(tmp - 1) == ' ') {
-        return 1;
+    while (tmp != NULL) {
+        PARAM_LOGV("CheckMatchSubCondition Condition: '%s' content: '%s' length %d", condition, input, length);
+        if (((int)strlen(tmp) <= length) || (tmp[length] != '=')) {
+            return 0;
+        }
+        // for condition: parameter = 1
+        if (tmp == condition) {
+            return 1;
+        }
+        // for condition: parameter1 = 1 && parameter2 = 1
+        if (*(tmp - 1) == ' ') {
+            return 1;
+        }
+        tmp = strstr(tmp + 1, input);
     }
     return 0;
 }

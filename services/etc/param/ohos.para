@@ -13,15 +13,13 @@
 
 const.actionable_compatible_property.enabled=false
 const.postinstall.fstab.prefix=/system
-const.secure=1
+const.secure=0
 security.perf_harden=1
 const.allow.mock.location=0
 const.debuggable=1
 const.build.characteristics=default
 const.product.model=ohos
 const.product.name="OpenHarmony 3.2"
-persist.sys.usb.config=hdc
-persist.init.bootevent.enable=true
 const.sandbox=enable
 const.product.devicetype=default
 const.software.model=default
@@ -31,7 +29,7 @@ const.build.product=default
 const.product.hardwareversion=default
 const.product.bootloader.version=bootloader
 const.product.cpu.abilist=default
-const.product.software.version=OpenHarmony 3.2.8.2
+const.product.software.version=OpenHarmony 3.2.10.5
 const.product.incremental.version=default
 const.product.firstapiversion=1
 const.product.build.type=default

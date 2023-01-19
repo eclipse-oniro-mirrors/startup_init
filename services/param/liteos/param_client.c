@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "init_log.h"
 #include "init_param.h"
 #include "param_manager.h"
 
@@ -38,11 +39,9 @@ static int InitParamClient(void)
 
 void ClientInit(void)
 {
-    PARAM_LOGV("ClientInit");
-#ifdef __LITEOS_M__
-    InitParamService();
-#else
+#ifdef __LITEOS_A__
 #ifndef STARTUP_INIT_TEST
+    PARAM_LOGV("ClientInit");
     (void)InitParamClient();
 #endif
 #endif
@@ -124,14 +123,4 @@ int WatchParamCheck(const char *keyprefix)
 int SystemCheckParamExist(const char *name)
 {
     return SysCheckParamExist(name);
-}
-
-int SystemFindParameter(const char *name, ParamHandle *handle)
-{
-    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
-    int ret = ReadParamWithCheck(name, DAC_READ, handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
-    }
-    return ret;
 }

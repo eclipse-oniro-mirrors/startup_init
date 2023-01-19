@@ -17,6 +17,7 @@ import optparse
 import os
 import sys
 import json
+import stat
 
 sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
     os.pardir, os.pardir, os.pardir, os.pardir, "build"))
@@ -66,7 +67,9 @@ def fix_para_file(options):
     if options.extra:
         parse_extra_params(options.extra, contents)
 
-    with open(options.output, 'w') as f:
+    flags = os.O_WRONLY | os.O_CREAT
+    modes = stat.S_IWUSR | stat.S_IRUSR | stat.S_IWGRP | stat.S_IRGRP
+    with os.fdopen(os.open(options.output, flags, modes), 'w') as f:
         for key in contents:
             f.write("".join([key, "=", contents[key], '\n']))
 

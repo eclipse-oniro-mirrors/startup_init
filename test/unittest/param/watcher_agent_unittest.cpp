@@ -110,11 +110,14 @@ public:
     int TestDelWatcher()
     {
         size_t index = 1;
-        int ret = SystemWatchParameter("test.permission.watcher.test3.1", TestParameterChange, (void *)index);
+        int ret = SystemWatchParameter("test.permission.watcher.test3.1",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
-        ret = SystemWatchParameter("test.permission.watcher.test3.1*", TestParameterChange, (void *)index);
+        ret = SystemWatchParameter("test.permission.watcher.test3.1*",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
-        ret = SystemWatchParameter("test.permission.watcher.test3.2", TestParameterChange, (void *)index);
+        ret = SystemWatchParameter("test.permission.watcher.test3.2",
+            TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
         ret = SystemWatchParameter("test.permission.watcher.test3.1", nullptr, nullptr);
         EXPECT_EQ(ret, 0);

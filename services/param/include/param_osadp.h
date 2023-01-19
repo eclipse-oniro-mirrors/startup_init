@@ -45,13 +45,23 @@ extern "C" {
 #endif
 
 #define PARAM_WORKSPACE_INVALID ((uint32_t)-1)
-#define PARAM_WORKSPACE_MIN (4096)
+#define PARAM_WORKSPACE_MIN (1024)
+/*
+    length for parameter = node size + data size
+    xxxx.xxxx.xxxx.xxxx
+    node size:
+    24 * (count(.) + 1) + strlen(xxxx.xxxx.xxxx.xxxx)
+    data size
+    strlen(xxxx.xxxx.xxxx.xxxx) + 96
+*/
 #if (defined __LITEOS_A__ || defined __LITEOS_M__)
 #define DAC_DEFAULT_MODE 0777
 #ifdef STARTUP_INIT_TEST
 #define PARAM_WORKSPACE_MAX (1024 * 50)
 #else
-#define PARAM_WORKSPACE_MAX (1024 * 30)
+#ifndef PARAM_WORKSPACE_MAX
+#define PARAM_WORKSPACE_MAX (1024 * 5)
+#endif
 #endif
 #define PARAM_WORKSPACE_SMALL PARAM_WORKSPACE_MAX
 #define PARAM_WORKSPACE_DEF PARAM_WORKSPACE_MAX

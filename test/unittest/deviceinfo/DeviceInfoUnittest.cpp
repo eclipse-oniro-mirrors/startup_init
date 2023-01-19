@@ -82,6 +82,5 @@ HWTEST_F(DeviceInfoUnittest, StubTest, TestSize.Level1)
     deviceInfoService->GetUdid(result);
     deviceInfoService->GetSerialID(result);
     deviceInfoService->OnStop();
-    delete deviceInfoService;
 }
 }  // namespace init_ut

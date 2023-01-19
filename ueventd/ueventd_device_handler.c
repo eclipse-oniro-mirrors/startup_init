@@ -428,7 +428,7 @@ void HandleBlockDeviceEvent(const struct Uevent *uevent)
     }
 
     if (strcmp(uevent->subsystem, "block") != 0) {
-        INIT_LOGE("Unexpceted uevent subsystem \" %s \" received in block device handler", uevent->subsystem);
+        INIT_LOGE("Unexpected uevent subsystem \" %s \" received in block device handler", uevent->subsystem);
         return;
     }
 
@@ -475,7 +475,7 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
 
     char deviceNode[DEVICE_FILE_SIZE] = {};
     char sysPath[SYSPATH_SIZE] = {};
-    if (strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath) != EOK)) {
+    if (strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath)) != EOK) {
         INIT_LOGE("Failed to copy sys path");
         return;
     }

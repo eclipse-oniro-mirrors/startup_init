@@ -249,7 +249,7 @@ HOOK_MGR *GetBootStageHookMgr()
     return bootStageHookMgr;
 }
 
-INIT_TIMING_STAT g_bootJob = {0};
+INIT_TIMING_STAT g_bootJob = {{0}, {0}};
 
 static void RecordInitBootEvent(const char *initBootEvent)
 {
@@ -343,12 +343,18 @@ static void TriggerServices(int startMode)
             node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
             continue;
         }
+        if (sprintf_s(cmd, sizeof(cmd), "start %s", service->name) <= 0) {
+            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
+            continue;
+        }
         if (index == 0) {
-            (void)sprintf_s(jobName, sizeof(jobName), "boot-service:service-%d-%03d", startMode, jobNum);
+            if (sprintf_s(jobName, sizeof(jobName), "boot-service:service-%d-%03d", startMode, jobNum) <= 0) {
+                node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
+                continue;
+            }
             jobNum++;
         }
         index++;
-        (void)sprintf_s(cmd, sizeof(cmd), "start %s", service->name);
         AddCompleteJob(jobName, NULL, cmd);
         INIT_LOGV("Add %s to job %s", service->name, jobName);
         if (index == maxServiceInJob) {
@@ -360,6 +366,19 @@ static void TriggerServices(int startMode)
     if (index > 0) {
         PostTrigger(EVENT_TRIGGER_BOOT, jobName, strlen(jobName));
     }
+}
+
+void ParseInitCfgByPriority(void)
+{
+    CfgFiles *files = GetCfgFiles("etc/init");
+    for (int i = 0; files && i < MAX_CFG_POLICY_DIRS_CNT; i++) {
+        if (files->paths[i]) {
+            if (ReadFileInDir(files->paths[i], ".cfg", ParseInitCfg, NULL) < 0) {
+                break;
+            }
+        }
+    }
+    FreeCfgFiles(files);
 }
 
 void SystemConfig(void)

@@ -307,11 +307,14 @@ void WatcherManager::OnStart()
     bool res = Publish(this);
     if (!res) {
         WATCHER_LOGE("WatcherManager Publish failed");
+#ifndef STARTUP_INIT_TEST
+        return;
+#endif
     }
-    SystemSetParameter("bootevent.param_watcher.started", "true");
     if (deathRecipient_ == nullptr) {
         deathRecipient_ = new DeathRecipient(this);
     }
+    SystemSetParameter("bootevent.param_watcher.started", "true");
     return;
 }
 
@@ -428,16 +431,16 @@ void WatcherManager::DumpAllGroup(int fd, ParamWatcherProcessor dumpHandle)
         }
         dprintf(fd, "Watch prefix   : %s \n", group->GetKeyPrefix().c_str());
         dprintf(fd, "Watch group id : %u \n", group->GetGroupId());
-        dprintf(fd, "Watch count    : %zu \n", group->GetNodeCount());
+        dprintf(fd, "Watch count    : %u \n", group->GetNodeCount());
         group->TraversalNode(dumpHandle);
         count += group->GetNodeCount();
         dprintf(fd, "\n");
     }
 
-    dprintf(fd, "Watch prefix count : %zu [%zu  %zu  %zu]\n", watcherGroups_->GetNodeCount(),
+    dprintf(fd, "Watch prefix count : %u [%zu  %zu  %zu]\n", watcherGroups_->GetNodeCount(),
         sizeof(RemoteWatcher), sizeof(WatcherGroup), sizeof(WatcherNode));
-    dprintf(fd, "Watch agent  count : %zu \n", remoteWatchers_->GetNodeCount());
-    dprintf(fd, "Watch count        : %zu \n", count);
+    dprintf(fd, "Watch agent  count : %u \n", remoteWatchers_->GetNodeCount());
+    dprintf(fd, "Watch count        : %u \n", count);
 }
 
 int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)
@@ -459,7 +462,7 @@ int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)
         dprintf(fd, "%s\n", dumpInfo.c_str());
         return 0;
     }
-    auto DumpParamWatcher = [this, fd](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+    auto dumpParamWatcher = [this, fd](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
         auto remoteWatcher = GetRemoteWatcher(node->GetNodeId());
         if (remoteWatcher != nullptr) {
             dprintf(fd, "%s%u(%u)", (index == 0) ? "Watch id list  : " : ", ",
@@ -477,11 +480,11 @@ int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)
         }
         {
             std::lock_guard<std::mutex> lock(watcherMutex_);
-            group->TraversalNode(DumpParamWatcher);
+            group->TraversalNode(dumpParamWatcher);
         }
         return 0;
     }
-    DumpAllGroup(fd, DumpParamWatcher);
+    DumpAllGroup(fd, dumpParamWatcher);
     return 0;
 }
 
@@ -657,7 +660,7 @@ void ParamWatcherList::TraversalNode(ParamWatcherProcessor handle)
     uint32_t index = 0;
     // get first
     WatcherNodePtr node = WatcherNode::GetNextFromList(&nodeList_, 0);
-    while (node != NULL) {
+    while (node != nullptr) {
         WatcherNodePtr next = node->GetNext(&nodeList_);
         handle(this, node, index);
         node = next;
@@ -670,7 +673,7 @@ void ParamWatcherList::TraversalNodeSafe(ParamWatcherProcessor processor)
     uint32_t index = 0;
     // get first
     WatcherNodePtr node = WatcherNode::GetNextFromList(&nodeList_, 0);
-    while (node != NULL) {
+    while (node != nullptr) {
         uint32_t nodeId = node->GetNodeId();
         // notify free, must be free
         processor(this, node, index);

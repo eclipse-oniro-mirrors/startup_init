@@ -98,14 +98,8 @@ void LogToDmesg(InitLogLevel logLevel, const char *tag, const char *info)
 static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *logInfo)
 {
 #ifdef OHOS_LITE
-#ifdef __LITEOS_M__
-    (void)logLevel;
-    (void)domain;
-    printf("[%s]%s \n", tag, logInfo);
-#else
     static const LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
-    (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", logInfo);
-#endif
+    (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%s", logInfo);
 #endif
 #ifdef INIT_DMESG
     LogToDmesg(logLevel, tag, logInfo);
@@ -134,24 +128,19 @@ INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, 
 
 INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level)
 {
-    if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
+    if (level <= INIT_FATAL) {
         g_logLevel = level;
     }
     return;
 }
 
-INIT_PUBLIC_API  int GetInitLogLevel(void)
-{
-    return g_logLevel;
-}
-
-INIT_PUBLIC_API void EnableInitLog(InitLogLevel level)
+INIT_LOCAL_API void EnableInitLog(InitLogLevel level)
 {
     g_logLevel = level;
     SetInitCommLog(InitLog);
 }
 
-INIT_PUBLIC_API void EnableInitLogFromCmdline(void)
+INIT_LOCAL_API void EnableInitLogFromCmdline(void)
 {
     SetInitCommLog(InitLog);
     char level[MAX_BUFFER_LEN] = {0};
@@ -169,6 +158,6 @@ INIT_PUBLIC_API void EnableInitLogFromCmdline(void)
     errno = 0;
     unsigned int logLevel = (unsigned int)strtoul(level, 0, 10); // 10 is decimal
     INIT_INFO_CHECK(errno == 0, return, "Failed strtoul %s, err=%d", level, errno);
-    SetInitLogLevel(logLevel);
+    SetInitLogLevel((InitLogLevel)logLevel);
     return;
 }

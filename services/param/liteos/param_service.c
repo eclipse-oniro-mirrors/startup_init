@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "init_log.h"
 #include "init_param.h"
 #include "init_utils.h"
 #include "param_manager.h"
@@ -132,23 +133,15 @@ static void ParamServiceTask(int *arg)
 
 void LiteParamService(void)
 {
+    static int init = 0;
+    if (init) {
+        return;
+    }
+    init = 1;
     EnableInitLog(INIT_INFO);
-    PARAM_LOGI("LiteParamService");
     InitParamService();
     // get persist param
     LoadPersistParams();
-    osThreadAttr_t attr;
-    attr.name = "ParamServiceTask";
-    attr.attr_bits = 0U;
-    attr.cb_mem = NULL;
-    attr.cb_size = 0U;
-    attr.stack_mem = NULL;
-    attr.stack_size = 0;
-    attr.priority = osPriorityBelowNormal;
-
-    if (osThreadNew((osThreadFunc_t)ParamServiceTask, NULL, &attr) == NULL) {
-        PARAM_LOGE("Failed to create ParamServiceTask! %d", errno);
-    }
 }
 CORE_INIT(LiteParamService);
 #endif

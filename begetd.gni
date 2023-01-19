@@ -25,5 +25,25 @@ declare_args() {
   enable_ohos_startup_init_feature_loader = false
   config_ohos_startup_init_lite_data_path = ""
 
+  # config memory size for liteos-m
+  config_ohos_startup_init_lite_memory_size = 5120
+
   # boot_kernel_extended_cmdline for extend cmdline
+
+  startup_init_feature_decode_group_file = false
+
+  # for liteos-a
+
+  if (defined(ohos_kernel_type) && ohos_kernel_type == "liteos_a") {
+    config_ohos_startup_init_lite_memory_size = 10240
+  }
+
+  # log display control
+  config_ohos_startup_init_lite_no_log = false
+
+  startup_init_with_param_base = false
+  if (!use_musl) {
+    startup_init_with_param_base = true
+    startup_init_feature_decode_group_file = true
+  }
 }

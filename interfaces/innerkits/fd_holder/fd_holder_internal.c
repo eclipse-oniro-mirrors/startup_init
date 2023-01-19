@@ -81,6 +81,43 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
     return 0;
 }
 
+STATIC int *GetFdsFromMsg(size_t *outFdCount, pid_t *requestPid, struct msghdr msghdr)
+{
+    if ((unsigned int)(msghdr.msg_flags) & (unsigned int)MSG_TRUNC) {
+        BEGET_LOGE("Message was truncated when receiving fds");
+        return NULL;
+    }
+
+    struct cmsghdr *cmsg = NULL;
+    int *fds = NULL;
+    size_t fdCount = 0;
+    for (cmsg = CMSG_FIRSTHDR(&msghdr); cmsg != NULL; cmsg = CMSG_NXTHDR(&msghdr, cmsg)) {
+        if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS) {
+            fds = (int*)CMSG_DATA(cmsg);
+            fdCount = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+            BEGET_ERROR_CHECK(fdCount <= MAX_HOLD_FDS, return NULL, "Too many fds returned.");
+        }
+        if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_CREDENTIALS &&
+            cmsg->cmsg_len == CMSG_LEN(sizeof(struct ucred))) {
+            // Ignore credentials
+            if (requestPid != NULL) {
+                struct ucred *ucred = (struct ucred*)CMSG_DATA(cmsg);
+                *requestPid = ucred->pid;
+            }
+            continue;
+        }
+    }
+    int *outFds = NULL;
+    if (fds != NULL && fdCount > 0) {
+        outFds = calloc(fdCount + 1, sizeof(int));
+        BEGET_ERROR_CHECK(outFds != NULL, return NULL, "Failed to allocate memory for fds");
+        BEGET_ERROR_CHECK(memcpy_s(outFds, sizeof(int) * (fdCount + 1), fds, sizeof(int) * fdCount) == 0,
+            free(outFds); return NULL, "Failed to copy fds");
+    }
+    *outFdCount = fdCount;
+    return outFds;
+}
+
 // This function will allocate memory to store FDs
 // Remember to delete when not used anymore.
 int *ReceiveFds(int sock, struct iovec iovec, size_t *outFdCount, bool nonblock, pid_t *requestPid)
@@ -104,38 +141,5 @@ int *ReceiveFds(int sock, struct iovec iovec, size_t *outFdCount, bool nonblock,
     }
     ssize_t rc = TEMP_FAILURE_RETRY(recvmsg(sock, &msghdr, flags));
     BEGET_ERROR_CHECK(rc >= 0, return NULL, "Failed to get fds from remote, err = %d", errno);
-
-    if ((msghdr.msg_flags) & MSG_TRUNC) {
-        BEGET_LOGE("Message was truncated when receiving fds");
-        return NULL;
-    }
-
-    struct cmsghdr *cmsg = NULL;
-    int *fds = NULL;
-    size_t fdCount = 0;
-    for (cmsg = CMSG_FIRSTHDR(&msghdr); cmsg != NULL; cmsg = CMSG_NXTHDR(&msghdr, cmsg)) {
-        if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS) {
-            fds = (int*) CMSG_DATA(cmsg);
-            fdCount = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
-            BEGET_ERROR_CHECK(fdCount <= MAX_HOLD_FDS, return NULL, "Too many fds returned.");
-        }
-        if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_CREDENTIALS &&
-            cmsg->cmsg_len == CMSG_LEN(sizeof(struct ucred))) {
-            // Ignore credentials
-            if (requestPid != NULL) {
-                struct ucred *ucred = (struct ucred*)CMSG_DATA(cmsg);
-                *requestPid = ucred->pid;
-            }
-            continue;
-        }
-    }
-    int *outFds = NULL;
-    if (fds != NULL && fdCount > 0) {
-        outFds = calloc(fdCount + 1, sizeof(int));
-        BEGET_ERROR_CHECK(outFds != NULL, return NULL, "Failed to allocate memory for fds");
-        BEGET_ERROR_CHECK(memcpy_s(outFds, sizeof(int) * (fdCount + 1), fds, sizeof(int) * fdCount) == 0,
-            free(outFds); return NULL, "Failed to copy fds");
-    }
-    *outFdCount = fdCount;
-    return outFds;
+    return GetFdsFromMsg(outFdCount, requestPid, msghdr);
 }

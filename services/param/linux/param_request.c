@@ -21,9 +21,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#ifdef PARAM_BASE_LOG
 #include "init_log.h"
-#endif
 #include "init_utils.h"
 #include "param_base.h"
 #include "param_manager.h"
@@ -44,9 +42,7 @@ __attribute__((constructor)) static void ParameterInit(void)
     EnableInitLog(INIT_ERROR);
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = 0;
-#ifdef PARAM_BASE_LOG
     ops.logFunc = InitLog;
-#endif
 #ifdef PARAM_SUPPORT_SELINUX
     ops.setfilecon = NULL;
 #endif
@@ -246,16 +242,6 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 int SystemCheckParamExist(const char *name)
 {
     return SysCheckParamExist(name);
-}
-
-int SystemFindParameter(const char *name, ParamHandle *handle)
-{
-    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
-    int ret = ReadParamWithCheck(name, DAC_READ, handle);
-    if (ret != PARAM_CODE_NOT_FOUND && ret != 0 && ret != PARAM_CODE_NODE_EXIST) {
-        PARAM_CHECK(ret == 0, return ret, "Forbid to access parameter %s", name);
-    }
-    return ret;
 }
 
 int WatchParamCheck(const char *keyprefix)

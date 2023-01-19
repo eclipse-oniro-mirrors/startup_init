@@ -119,9 +119,38 @@ if (defined(ohos_lite)) {
     ]
     part_name = "init"
     subsystem_name = "startup"
+    extra_paras = []
     if (target_cpu == "arm64") {
-      extra_paras = [ "const.product.cpu.abilist=arm64-v8a" ]
+      extra_paras += [ "const.product.cpu.abilist=arm64-v8a" ]
     }
+    if (build_variant == "user") {
+      extra_paras += [
+        "const.secure=1",
+        "const.debuggable=0",
+      ]
+    } else if (build_variant == "root") {
+      extra_paras += [
+        "const.secure=0",
+        "const.debuggable=1",
+      ]
+    }
+    if (device_type != "default") {
+      extra_paras += [
+        "const.product.devicetype=${device_type}",
+        "const.build.characteristics=${device_type}",
+      ]
+    }
+    module_install_dir = "etc/param"
+  }
+
+  ohos_prebuilt_para("ohos.startup.para") {
+    source = "//base/startup/init/services/etc/param/ohos.startup.para"
+    install_images = [
+      "system",
+      "updater",
+    ]
+    part_name = "init"
+    subsystem_name = "startup"
     module_install_dir = "etc/param"
   }
 
@@ -192,6 +221,8 @@ if (defined(ohos_lite)) {
       source =
           "//base/startup/init/interfaces/innerkits/sandbox/system-sandbox.json"
     }
+    output =
+        "//base/startup/init/interfaces/innerkits/sandbox/system-sandbox.json"
     part_name = "init"
     subsystem_name = "startup"
     module_install_dir = "etc/sandbox"
@@ -203,6 +234,8 @@ if (defined(ohos_lite)) {
     } else {
       source = "//base/startup/init/interfaces/innerkits/sandbox/chipset-sandbox.json"
     }
+    output =
+        "//base/startup/init/interfaces/innerkits/sandbox/chipset-sandbox.json"
     part_name = "init"
     subsystem_name = "startup"
     module_install_dir = "etc/sandbox"
@@ -228,13 +261,13 @@ if (defined(ohos_lite)) {
       ":ohos.para",
       ":ohos.para.dac",
       ":ohos.para.size",
+      ":ohos.startup.para",
       ":ohos_const.para",
       ":passwd",
       ":syscap.json",
       ":syscap.para",
       ":system-sandbox.json",
       ":systemcapability.json",
-      ":ueventd.cfg",
     ]
   }
 }

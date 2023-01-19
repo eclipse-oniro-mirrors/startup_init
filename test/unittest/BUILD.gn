@@ -34,6 +34,10 @@ ohos_unittest("init_unittest") {
   sources = [
     "//base/startup/init/device_info/device_info.cpp",
     "//base/startup/init/device_info/device_info_stub.cpp",
+    "//base/startup/init/interfaces/innerkits/control_fd/control_fd_client.c",
+    "//base/startup/init/interfaces/innerkits/control_fd/control_fd_service.c",
+    "//base/startup/init/interfaces/innerkits/fd_holder/fd_holder.c",
+    "//base/startup/init/interfaces/innerkits/fd_holder/fd_holder_internal.c",
     "//base/startup/init/interfaces/innerkits/file/init_file.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
@@ -44,7 +48,15 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
     "//base/startup/init/interfaces/innerkits/syspara/parameter.c",
     "//base/startup/init/interfaces/innerkits/syspara/sysversion.c",
+    "//base/startup/init/services/begetctl/bootchart_cmd.c",
+    "//base/startup/init/services/begetctl/dump_service.c",
+    "//base/startup/init/services/begetctl/init_cmd_reboot.c",
+    "//base/startup/init/services/begetctl/misc_daemon.cpp",
+    "//base/startup/init/services/begetctl/modulectl.c",
     "//base/startup/init/services/begetctl/param_cmd.c",
+    "//base/startup/init/services/begetctl/sandbox.cpp",
+    "//base/startup/init/services/begetctl/service_control.c",
+    "//base/startup/init/services/begetctl/setloglevel.c",
     "//base/startup/init/services/begetctl/shell/shell_bas.c",
     "//base/startup/init/services/begetctl/shell/shell_main.c",
     "//base/startup/init/services/init/adapter/init_adapter.c",
@@ -78,6 +90,8 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/loopevent/task/le_watchtask.c",
     "//base/startup/init/services/loopevent/timer/le_timer.c",
     "//base/startup/init/services/loopevent/utils/le_utils.c",
+    "//base/startup/init/services/modules/bootchart/bootchart.c",
+    "//base/startup/init/services/modules/bootchart/bootchart_static.c",
     "//base/startup/init/services/modules/bootevent/bootevent.c",
     "//base/startup/init/services/modules/init_hook/init_hook.c",
     "//base/startup/init/services/modules/init_hook/param_hook.c",
@@ -147,6 +161,7 @@ ohos_unittest("init_unittest") {
     "init/service_socket_unittest.cpp",
     "init/utils_unittest.cpp",
     "innerkits/innerkits_unittest.cpp",
+    "modules/modules_unittest.cpp",
     "param/client_unittest.cpp",
     "param/dac_unittest.cpp",
     "param/param_shell_unittest.cpp",
@@ -156,6 +171,7 @@ ohos_unittest("init_unittest") {
     "param/trigger_unittest.cpp",
     "syspara/syspara_unittest.cpp",
     "ueventd/ueventd_config_unittest.cpp",
+    "ueventd/ueventd_event_unittest.cpp",
   ]
 
   sources += [
@@ -195,6 +211,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/loopevent/timer",
     "//base/startup/init/services/loopevent/utils",
     "//base/startup/init/services/modules",
+    "//base/startup/init/services/modules/bootchart",
     "//base/startup/init/services/modules/init_hook",
     "//base/startup/init/services/modules/selinux",
     "//base/startup/init/services/modules/reboot",
@@ -259,6 +276,15 @@ ohos_unittest("init_unittest") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libinit_module_engine",
   ]
+
+  if (enable_ohos_startup_init_feature_ab_partition) {
+    include_dirs += [ "//drivers/hdf_core/adapter/uhdf2/include" ]
+    sources += [ "//base/startup/init/services/begetctl/partitionslot.cpp" ]
+    external_deps += [
+      "drivers_interface_partitionslot:libpartitionslot_proxy_1.0",
+      "hdf_core:libhdi",
+    ]
+  }
 
   if (!defined(ohos_lite) && enable_ohos_startup_init_feature_watcher) {
     sources += [

@@ -15,12 +15,14 @@
 
 #include "param_stub.h"
 #include <dirent.h>
-#include "beget_ext.h"
+#include "init_log.h"
 #include "init_param.h"
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_utils.h"
 #include "init_group_manager.h"
+#include "init_module_engine.h"
+#include "beget_ext.h"
 #ifdef PARAM_LOAD_CFG_FROM_CODE
 #include "param_cfg.h"
 #endif
@@ -74,15 +76,15 @@ static const char *TestGetParamLabel(const char *paraName)
     return selinuxLabels[code][1];
 }
 
-static const char *forbidReadParamName[] = {
+static const char *g_forbidReadParamName[] = {
     "ohos.servicectrl.",
     // "test.permission.write",
 };
 static int TestReadParamCheck(const char *paraName)
 {
     // forbid to read ohos.servicectrl.
-    for (size_t i = 0; i < ARRAY_LENGTH(forbidReadParamName); i++) {
-        if (strncmp(paraName, forbidReadParamName[i], strlen(forbidReadParamName[i])) == 0) {
+    for (size_t i = 0; i < ARRAY_LENGTH(g_forbidReadParamName); i++) {
+        if (strncmp(paraName, g_forbidReadParamName[i], strlen(g_forbidReadParamName[i])) == 0) {
             return 1;
         }
     }
@@ -184,7 +186,7 @@ static void PrepareUeventdcfg(void)
         "[device]\n"
         "/dev/testbinder3 0666 1000 1000 const.dev.binder\n";
     mkdir("/data/ueventd_ut", S_IRWXU | S_IRWXG | S_IRWXO);
-    CreateTestFile("/data/ueventd_ut/valid.config", ueventdcfg);
+    CreateTestFile(STARTUP_INIT_UT_PATH"/ueventd_ut/valid.config", ueventdcfg);
 }
 static void PrepareModCfg(void)
 {
@@ -418,6 +420,7 @@ void PrepareInitUnitTestEnv(void)
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/vendor/etc/param", LOAD_PARAM_NORMAL);
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/system/etc/param", LOAD_PARAM_ONLY_ADD);
+    LoadParamsFile(STARTUP_INIT_UT_PATH "/system/etc/param", true);
     LoadParamFromCfg();
 
     // for test int get
@@ -443,6 +446,7 @@ int TestFreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
 static __attribute__((constructor(101))) void ParamTestStubInit(void)
 {
     EnableInitLog(INIT_DEBUG);
+    SetInitLogLevel(INIT_DEBUG);
     PARAM_LOGI("ParamTestStubInit");
     PrepareInitUnitTestEnv();
 }
