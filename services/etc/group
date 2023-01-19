@@ -120,5 +120,6 @@ ispserver:x:3821:
 dfs_share:x:3822:
 appspawn:x:4000:
 security_guard:x:3520:
+tee:x:6668:
 dsserver:x:3068:
 device_attest:x:3049:
