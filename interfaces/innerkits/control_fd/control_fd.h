@@ -77,9 +77,10 @@ typedef struct {
     char cmd[0];
 } CmdMessage;
 
-void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func);
+void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func, LoopHandle loop);
 void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd);
 void CmdServiceProcessDelClient(pid_t pid);
+void CmdServiceProcessDestroyClient(void);
 
 #ifdef __cplusplus
 #if __cplusplus

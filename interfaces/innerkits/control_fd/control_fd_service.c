@@ -22,6 +22,7 @@
 #include "securec.h"
 
 static CmdService g_cmdService;
+static LoopHandle g_controlFdLoop = NULL;
 
 CallbackControlFdProcess g_controlFdFunc = NULL;
 
@@ -52,12 +53,12 @@ CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *bu
     if (agent->pid == 0) {
         OpenConsole();
         char *realPath = GetRealPath(msg->ptyName);
-        BEGET_ERROR_CHECK(realPath != NULL, return, "Failed get realpath, err=%d", errno);
+        BEGET_ERROR_CHECK(realPath != NULL, _exit(1), "Failed get realpath, err=%d", errno);
         char *strl = strstr(realPath, "/dev/pts");
-        BEGET_ERROR_CHECK(strl != NULL, return, "pty slave path %s is invaild", realPath);
+        BEGET_ERROR_CHECK(strl != NULL, free(realPath); _exit(1), "pts path %s is invaild", realPath);
         int fd = open(realPath, O_RDWR);
         free(realPath);
-        BEGET_ERROR_CHECK(fd >= 0, return, "Failed open %s, err=%d", msg->ptyName, errno);
+        BEGET_ERROR_CHECK(fd >= 0, _exit(1), "Failed open %s, err=%d", msg->ptyName, errno);
         (void)dup2(fd, STDIN_FILENO);
         (void)dup2(fd, STDOUT_FILENO);
         (void)dup2(fd, STDERR_FILENO); // Redirect fd to 0, 1, 2
@@ -65,7 +66,7 @@ CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *bu
         if (g_controlFdFunc != NULL) {
             g_controlFdFunc(msg->type, msg->cmd, NULL);
         }
-        exit(0);
+        _exit(0);
     } else if (agent->pid < 0) {
         BEGET_LOGE("[control_fd] Failed fork service");
     }
@@ -85,7 +86,7 @@ CONTROL_FD_STATIC int SendMessage(LoopHandle loop, TaskHandle task, const char *
     char *buff = (char *)LE_GetBufferInfo(handle, NULL, &bufferSize);
     BEGET_ERROR_CHECK(buff != NULL, return -1, "[control_fd] Failed get buffer info");
     int ret = memcpy_s(buff, bufferSize, message, strlen(message) + 1);
-    BEGET_ERROR_CHECK(ret == 0, LE_FreeBuffer(LE_GetDefaultLoop(), task, handle);
+    BEGET_ERROR_CHECK(ret == 0, LE_FreeBuffer(g_controlFdLoop, task, handle);
         return -1, "[control_fd] Failed memcpy_s err=%d", errno);
     LE_STATUS status = LE_Send(loop, task, handle, strlen(message) + 1);
     BEGET_ERROR_CHECK(status == LE_SUCCESS, return -1, "[control_fd] Failed le send msg");
@@ -106,21 +107,21 @@ CONTROL_FD_STATIC int CmdOnIncommingConnect(const LoopHandle loop, const TaskHan
     info.disConnectComplete = NULL;
     info.sendMessageComplete = NULL;
     info.recvMessage = CmdOnRecvMessage;
-    int ret = LE_AcceptStreamClient(LE_GetDefaultLoop(), server, &client, &info);
+    int ret = LE_AcceptStreamClient(g_controlFdLoop, server, &client, &info);
     BEGET_ERROR_CHECK(ret == 0, return -1, "[control_fd] Failed accept stream")
     CmdTask *agent = (CmdTask *)LE_GetUserData(client);
     BEGET_ERROR_CHECK(agent != NULL, return -1, "[control_fd] Invalid agent");
     agent->task = client;
     OH_ListInit(&agent->item);
-    ret = SendMessage(LE_GetDefaultLoop(), agent->task, "connect success.");
+    ret = SendMessage(g_controlFdLoop, agent->task, "connect success.");
     BEGET_ERROR_CHECK(ret == 0, return -1, "[control_fd] Failed send msg");
     OH_ListAddTail(&g_cmdService.head, &agent->item);
     return 0;
 }
 
-void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func)
+void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func, LoopHandle loop)
 {
-    if ((socketPath == NULL) || (func == NULL)) {
+    if ((socketPath == NULL) || (func == NULL) || (loop == NULL)) {
         BEGET_LOGE("[control_fd] Invalid parameter");
         return;
     }
@@ -135,7 +136,10 @@ void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func)
     info.sendMessageComplete = NULL;
     info.recvMessage = NULL;
     g_controlFdFunc = func;
-    (void)LE_CreateStreamServer(LE_GetDefaultLoop(), &g_cmdService.serverTask, &info);
+    if (g_controlFdLoop == NULL) {
+        g_controlFdLoop = loop;
+    }
+    (void)LE_CreateStreamServer(g_controlFdLoop, &g_cmdService.serverTask, &info);
 }
 
 static int ClientTraversalProc(ListNode *node, void *data)
@@ -152,6 +156,23 @@ void CmdServiceProcessDelClient(pid_t pid)
         CmdTask *agent = ListEntry(node, CmdTask, item);
         OH_ListRemove(&agent->item);
         OH_ListInit(&agent->item);
-        LE_CloseTask(LE_GetDefaultLoop(), agent->task);
+        LE_CloseTask(g_controlFdLoop, agent->task);
     }
+}
+
+static void CmdServiceDestroyProc(ListNode *node)
+{
+    if (node == NULL) {
+        return;
+    }
+    CmdTask *agent = ListEntry(node, CmdTask, item);
+    OH_ListRemove(&agent->item);
+    OH_ListInit(&agent->item);
+    LE_CloseTask(g_controlFdLoop, agent->task);
+}
+
+void CmdServiceProcessDestroyClient(void)
+{
+    OH_ListRemoveAll(&g_cmdService.head, CmdServiceDestroyProc);
+    LE_StopLoop(g_controlFdLoop);
 }

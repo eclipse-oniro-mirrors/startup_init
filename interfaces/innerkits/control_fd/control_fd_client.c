@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -167,6 +168,8 @@ CONTROL_FD_STATIC int InitPtyInterface(CmdAgent *agent, uint16_t type, const cha
     ret = ptsname_r(pfd, ptsbuffer, sizeof(ptsbuffer));
     BEGET_ERROR_CHECK(ret >= 0, close(pfd); return -1, "Failed to get pts name err=%d", errno);
     BEGET_LOGI("ptsbuffer is %s", ptsbuffer);
+    BEGET_ERROR_CHECK(chmod(ptsbuffer, S_IRWXU | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) == 0,
+        close(pfd); return -1, "Failed to chmod %s, err=%d", ptsbuffer, errno);
     agent->ptyFd = pfd;
 
     LE_WatchInfo info = {};

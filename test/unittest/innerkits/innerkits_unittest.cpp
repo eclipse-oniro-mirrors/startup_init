@@ -354,12 +354,12 @@ HWTEST_F(InnerkitsUnitTest, TestControlFd, TestSize.Level1)
 
 HWTEST_F(InnerkitsUnitTest, TestControlFdServer, TestSize.Level1)
 {
-    CmdServiceInit(nullptr, nullptr);
+    CmdServiceInit(nullptr, nullptr, nullptr);
     CmdServiceInit("/data/testSock1", [](uint16_t type, const char *serviceCmd, const void *context) {
         UNUSED(type);
         UNUSED(serviceCmd);
         UNUSED(context);
-        });
+        }, LE_GetDefaultLoop());
 
     TaskHandle testServer;
     LE_StreamServerInfo info = {};
