@@ -108,6 +108,8 @@ static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle)
 {
     int ret;
     FILE *fp = (FILE *)handle;
+    (void)fflush(fp);
+    (void)fsync(fileno(fp));
     (void)fclose(fp);
     if (InUpdaterMode() == 0) {
         unlink(PARAM_PERSIST_SAVE_PATH);
