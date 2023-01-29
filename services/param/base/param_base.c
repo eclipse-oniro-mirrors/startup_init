@@ -20,6 +20,8 @@
 #include "param_manager.h"
 #include "param_trie.h"
 
+static int ReadParamValue(ParamHandle handle, char *value, uint32_t *length);
+
 static ParamWorkSpace g_paramWorkSpace = {0};
 PARAM_STATIC int WorkSpaceNodeCompare(const HashNode *node1, const HashNode *node2)
 {
@@ -329,4 +331,132 @@ int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
 {
     PARAM_CHECK(len != NULL && handle != 0, return -1, "The value is null");
     return ReadParamValue(handle, value, len);
+}
+
+static int ReadParamValue_(ParamNode *entry, uint32_t *commitId, char *value, uint32_t *length)
+{
+    uint32_t id = *commitId;
+    do {
+        *commitId = id;
+        int ret = ParamMemcpy(value, *length, entry->data + entry->keyLength + 1, entry->valueLength);
+        PARAM_CHECK(ret == 0, return -1, "Failed to copy value");
+        value[entry->valueLength] = '\0';
+        *length = entry->valueLength;
+        id = ReadCommitId(entry);
+    } while (*commitId != id); // if change,must read
+    return 0;
+}
+
+static int ReadParamValue(ParamHandle handle, char *value, uint32_t *length)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid workspace");
+    PARAM_CHECK(length != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
+    ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
+    if (entry == NULL) {
+        return PARAM_CODE_NOT_FOUND;
+    }
+    if (value == NULL) {
+        *length = entry->valueLength + 1;
+        return 0;
+    }
+    PARAM_CHECK(*length > entry->valueLength, return PARAM_CODE_INVALID_PARAM,
+        "Invalid value len %u %u", *length, entry->valueLength);
+    uint32_t commitId = ReadCommitId(entry);
+    return ReadParamValue_(entry, &commitId, value, length);
+}
+
+CachedHandle CachedParameterCreate(const char *name, const char *defValue)
+{
+    PARAM_CHECK(name != NULL && defValue != NULL, return NULL, "Invalid name or default value");
+    PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return NULL, "Invalid param workspace");
+    uint32_t nameLen = strlen(name);
+    PARAM_CHECK(nameLen < PARAM_NAME_LEN_MAX, return NULL, "Invalid name %s", name);
+    uint32_t valueLen = strlen(defValue);
+    if (IS_READY_ONLY(name)) {
+        PARAM_CHECK(valueLen < PARAM_CONST_VALUE_LEN_MAX, return NULL, "Illegal param value %s", defValue);
+    } else {
+        PARAM_CHECK(valueLen < PARAM_VALUE_LEN_MAX, return NULL, "Illegal param value %s length", defValue);
+    }
+
+    int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
+    PARAM_CHECK(ret == 0, return NULL, "Forbid to access parameter %s", name);
+    WorkSpace *workspace = GetWorkSpace(name);
+    PARAM_CHECK(workspace != NULL, return NULL, "Invalid workSpace");
+    ParamTrieNode *node = FindTrieNode(workspace, name, strlen(name), NULL);
+
+    CachedParameter *param = (CachedParameter *)malloc(
+        sizeof(CachedParameter) + PARAM_ALIGN(nameLen) + 1 + PARAM_VALUE_LEN_MAX);
+    PARAM_CHECK(param != NULL, return NULL, "Failed to create CachedParameter for %s", name);
+    ret = ParamStrCpy(param->data, nameLen + 1, name);
+    PARAM_CHECK(ret == 0, free(param);
+        return NULL, "Failed to copy name %s", name);
+    param->workspace = workspace;
+    param->nameLen = nameLen;
+    param->paramValue = &param->data[PARAM_ALIGN(nameLen) + 1];
+    param->bufferLen = PARAM_VALUE_LEN_MAX;
+    if (node != NULL && node->dataIndex != 0) {
+        param->dataIndex = node->dataIndex;
+        ParamNode *entry = (ParamNode *)GetTrieNode(workspace, node->dataIndex);
+        PARAM_CHECK(entry != NULL, free(param);
+            return NULL, "Failed to get trie node %s", name);
+        uint32_t length = param->bufferLen;
+        param->dataCommitId = ReadCommitId(entry);
+        ret = ReadParamValue_(entry, &param->dataCommitId, param->paramValue, &length);
+        PARAM_CHECK(ret == 0, free(param);
+            return NULL, "Failed to read parameter value %s", name);
+    } else {
+        param->dataIndex = 0;
+        ret = ParamStrCpy(param->paramValue, param->bufferLen, defValue);
+        PARAM_CHECK(ret == 0, free(param);
+            return NULL, "Failed to copy name %s", name);
+    }
+    param->spaceCommitId = ATOMIC_LOAD_EXPLICIT(&workspace->area->commitId, memory_order_acquire);
+    PARAM_LOGV("CachedParameterCreate %u %u %lld \n", param->dataIndex, param->dataCommitId, param->spaceCommitId);
+    return (CachedHandle)param;
+}
+
+static const char *CachedParameterCheck(CachedParameter *param)
+{
+    if (param->dataIndex == 0) {
+        // no change, do not to find
+        long long spaceCommitId = ATOMIC_LOAD_EXPLICIT(&param->workspace->area->commitId, memory_order_acquire);
+        if (param->spaceCommitId == spaceCommitId) {
+            return param->paramValue;
+        }
+        param->spaceCommitId = spaceCommitId;
+        ParamTrieNode *node = FindTrieNode(param->workspace, param->data, param->nameLen, NULL);
+        if (node != NULL) {
+            param->dataIndex = node->dataIndex;
+        } else {
+            return param->paramValue;
+        }
+    }
+    ParamNode *entry = (ParamNode *)GetTrieNode(param->workspace, param->dataIndex);
+    PARAM_CHECK(entry != NULL, return param->paramValue, "Failed to get trie node %s", param->data);
+    uint32_t dataCommitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_acquire);
+    dataCommitId &= PARAM_FLAGS_COMMITID;
+    if (param->dataCommitId == dataCommitId) {
+        return param->paramValue;
+    }
+    uint32_t length = param->bufferLen;
+    param->dataCommitId = dataCommitId;
+    int ret = ReadParamValue_(entry, &param->dataCommitId, param->paramValue, &length);
+    PARAM_CHECK(ret == 0, return NULL, "Failed to copy value %s", param->data);
+    PARAM_LOGI("CachedParameterCheck %u", param->dataCommitId);
+    return param->paramValue;
+}
+
+const char *CachedParameterGet(CachedHandle handle)
+{
+    CachedParameter *param = (CachedParameter *)handle;
+    PARAM_CHECK(param != NULL, return NULL, "Invalid handle %x", handle);
+    return CachedParameterCheck(param);
+}
+
+void CachedParameterDestroy(CachedHandle handle)
+{
+    if (handle != NULL) {
+        free(handle);
+    }
 }

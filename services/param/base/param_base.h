@@ -32,6 +32,17 @@ INIT_LOCAL_API int ParamSprintf(char *buffer, size_t buffSize, const char *forma
 INIT_LOCAL_API int ParamMemcpy(void *dest, size_t destMax, const void *src, size_t count);
 INIT_LOCAL_API int ParamStrCpy(char *strDest, size_t destMax, const char *strSrc);
 
+typedef struct CachedParameter_ {
+    struct WorkSpace_ *workspace;
+    long long spaceCommitId;
+    uint32_t dataCommitId;
+    uint32_t dataIndex;
+    uint32_t bufferLen;
+    uint32_t nameLen;
+    char *paramValue;
+    char data[0];
+} CachedParameter;
+
 #ifdef __cplusplus
 #if __cplusplus
 }

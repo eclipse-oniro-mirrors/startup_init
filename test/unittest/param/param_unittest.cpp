@@ -438,4 +438,30 @@ HWTEST_F(ParamUnitTest, TestGetServiceCtlName, TestSize.Level0)
         free(serviceInfo);
     }
 }
+
+HWTEST_F(ParamUnitTest, TestParamCache, TestSize.Level0)
+{
+    const char *name = "test.write.1111111.222222";
+    CachedHandle cacheHandle = CachedParameterCreate(name, "true");
+    EXPECT_NE(cacheHandle, nullptr);
+    const char *value = CachedParameterGet(cacheHandle);
+    EXPECT_EQ(strcmp(value, "true"), 0);
+    uint32_t dataIndex = 0;
+    int ret = WriteParam(name, "false", &dataIndex, 0);
+    EXPECT_EQ(ret, 0);
+    value = CachedParameterGet(cacheHandle);
+    EXPECT_EQ(strcmp(value, "false"), 0);
+    CachedParameterDestroy(cacheHandle);
+
+    // cache 2, for parameter exist
+    CachedHandle cacheHandle3 = CachedParameterCreate(name, "true");
+    EXPECT_NE(cacheHandle3, nullptr);
+    value = CachedParameterGet(cacheHandle3);
+    EXPECT_EQ(strcmp(value, "false"), 0);
+    ret = WriteParam(name, "2222222", &dataIndex, 0);
+    EXPECT_EQ(ret, 0);
+    value = CachedParameterGet(cacheHandle3);
+    EXPECT_EQ(strcmp(value, "2222222"), 0);
+    CachedParameterDestroy(cacheHandle3);
+}
 }

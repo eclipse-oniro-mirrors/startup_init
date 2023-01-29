@@ -333,6 +333,48 @@ static int32_t BShellParamCmdMemGet(BShellHandle shell, int32_t argc, char *argv
     return 0;
 }
 
+#define MAX_TEST 10000
+static long long DiffLocalTime(struct timespec *startTime)
+{
+    struct timespec endTime;
+    clock_gettime(CLOCK_MONOTONIC, &(endTime));
+    long long diff = (long long)((endTime.tv_sec - startTime->tv_sec) * 1000000); // 1000000 1000ms
+    if (endTime.tv_nsec > startTime->tv_nsec) {
+        diff += (endTime.tv_nsec - startTime->tv_nsec) / 1000; // 1000 1ms
+    } else {
+        diff -= (startTime->tv_nsec - endTime.tv_nsec) / 1000; // 1000 1ms
+    }
+    return diff;
+}
+
+static void TestPerformance(const char *testParamName)
+{
+    struct timespec startTime;
+    CachedHandle cacheHandle = CachedParameterCreate(testParamName, "true");
+    clock_gettime(CLOCK_MONOTONIC, &(startTime));
+    const char *value = NULL;
+    for (int i = 0; i < MAX_TEST; ++i) {
+        value = CachedParameterGet(cacheHandle);
+    }
+    CachedParameterDestroy(cacheHandle);
+    printf("CachedParameterGet time %lld us value %s \n", DiffLocalTime(&startTime), value);
+    return;
+}
+
+static int32_t BShellParamCmdPerformance(BShellHandle shell, int32_t argc, char *argv[])
+{
+    const char *name = "test.performance.read";
+    TestPerformance(name);
+    CachedHandle cacheHandle = CachedParameterCreate(name, "true");
+    int i = 0;
+    while (++i < MAX_TEST) {
+        const char *value = CachedParameterGet(cacheHandle);
+        printf("CachedParameterGet %s value %s \n", name, value);
+        usleep(100);
+    }
+    CachedParameterDestroy(cacheHandle);
+}
+
 int32_t BShellCmdRegister(BShellHandle shell, int execMode)
 {
     if (execMode == 0) {
@@ -353,6 +395,7 @@ int32_t BShellCmdRegister(BShellHandle shell, int execMode)
             {"group", BShellParamCmdGroupTest, "group test", "group test [stage]", "group test"},
             {"display", BShellParamCmdUdidGet, "display udid", "display udid", "display udid"},
             {"display", BShellParamCmdMemGet, "display memory pid", "display memory [pid]", "display memory"},
+            {"test", BShellParamCmdPerformance, "test performance", "test performance", "test performance"},
         };
         for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
             BShellEnvRegisterCmd(GetShellHandle(), &infos[i]);

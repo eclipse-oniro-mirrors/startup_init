@@ -484,31 +484,6 @@ INIT_LOCAL_API uint32_t ReadCommitId(ParamNode *entry)
     return commitId & PARAM_FLAGS_COMMITID;
 }
 
-INIT_LOCAL_API int ReadParamValue(ParamHandle handle, char *value, uint32_t *length)
-{
-    ParamWorkSpace *paramSpace = GetParamWorkSpace();
-    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid workspace");
-    PARAM_CHECK(length != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid param");
-    ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
-    if (entry == NULL) {
-        return PARAM_CODE_NOT_FOUND;
-    }
-    if (value == NULL) {
-        *length = entry->valueLength + 1;
-        return 0;
-    }
-    PARAM_CHECK(*length > entry->valueLength, return PARAM_CODE_INVALID_PARAM,
-        "Invalid value len %u %u", *length, entry->valueLength);
-    uint32_t commitId = ReadCommitId(entry);
-    do {
-        int ret = ParamMemcpy(value, *length, entry->data + entry->keyLength + 1, entry->valueLength);
-        PARAM_CHECK(ret == 0, return -1, "Failed to copy value");
-        value[entry->valueLength] = '\0';
-        *length = entry->valueLength;
-    } while (commitId != ReadCommitId(entry));
-    return 0;
-}
-
 INIT_LOCAL_API int ReadParamName(ParamHandle handle, char *name, uint32_t length)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
