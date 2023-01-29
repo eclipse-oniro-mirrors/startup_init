@@ -260,6 +260,6 @@ void ProcessControlFd(uint16_t type, const char *serviceCmd, const void *context
 
 void InitControlFd(void)
 {
-    CmdServiceInit(INIT_CONTROL_FD_SOCKET_PATH, ProcessControlFd);
+    CmdServiceInit(INIT_CONTROL_FD_SOCKET_PATH, ProcessControlFd, LE_GetDefaultLoop());
     return;
 }

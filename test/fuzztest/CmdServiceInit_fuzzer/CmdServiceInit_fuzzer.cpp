@@ -28,7 +28,7 @@ namespace OHOS {
     {
         std::string str(reinterpret_cast<const char*>(data), size);
         CloseStdout();
-        CmdServiceInit(str.c_str(), Func);
+        CmdServiceInit(str.c_str(), Func, LE_GetDefaultLoop());
         return true;
     }
 }
