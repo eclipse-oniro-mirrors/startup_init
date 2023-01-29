@@ -118,7 +118,6 @@ INIT_LOCAL_API int WritePersistParam(const char *name, const char *value);
 
 INIT_LOCAL_API uint32_t ReadCommitId(ParamNode *entry);
 INIT_LOCAL_API int ReadParamName(ParamHandle handle, char *name, uint32_t length);
-INIT_LOCAL_API int ReadParamValue(ParamHandle handle, char *value, uint32_t *length);
 INIT_LOCAL_API int CheckParameterSet(const char *name, const char *value,
     const ParamSecurityLabel *srcLabel, int *ctrlService);
 INIT_LOCAL_API ParamHandle GetParamHandle(const WorkSpace *workSpace, uint32_t index, const char *name);
