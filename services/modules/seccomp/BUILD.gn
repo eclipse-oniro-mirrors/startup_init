@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//base/startup/init/begetd.gni")
 import(
     "//base/startup/init/services/modules/seccomp/scripts/seccomp_policy_fixer.gni")
 import("//build/config/clang/clang.gni")
@@ -19,6 +18,12 @@ import("//build/ohos.gni")
 import("//build/ohos/kernel/kernel.gni")
 
 INIT_PART = "init"
+
+if (build_variant == "root") {
+  seccomp_enable_debug = true
+} else {
+  seccomp_enable_debug = false
+}
 
 action("syscall_to_nr_arm") {
   script = "${clang_base_path}/bin/clang"
@@ -145,6 +150,15 @@ config("libseccomp_static_config") {
     "//base/startup/init/interfaces/innerkits/seccomp/include",
     "//third_party/bounds_checking_function/include",
   ]
+
+  if (seccomp_enable_debug) {
+    include_dirs += [
+      "../../../services/include",
+      "../../../services/include/param",
+    ]
+
+    defines = [ "WITH_SECCOMP_DEBUG" ]
+  }
 }
 
 ohos_source_set("libseccomp_static") {

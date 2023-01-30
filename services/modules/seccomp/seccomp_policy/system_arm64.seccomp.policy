@@ -15,7 +15,7 @@
 arm64
 
 @returnValue
-KILL_PROCESS
+TRAP
 
 @allowList
 io_setup

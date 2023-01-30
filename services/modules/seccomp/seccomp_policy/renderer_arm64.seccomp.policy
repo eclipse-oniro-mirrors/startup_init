@@ -15,7 +15,7 @@
 arm64
 
 @returnValue
-KILL_PROCESS
+TRAP
 
 @headFiles
 "time.h"
@@ -144,9 +144,9 @@ ptrace
 membarrier
 
 @allowListWithArgs
-getrusage:if arg0 == RUSAGE_SELF || arg0 == RUSAGE_THREAD; return ALLOW; else return KILL_PROCESS;
-clock_getres:if arg0 >= CLOCK_REALTIME && arg0 <= CLOCK_BOOTTIME; return ALLOW; else return KILL_PROCESS;
-clock_gettime:if arg0 >= CLOCK_REALTIME && arg0 <= CLOCK_BOOTTIME; return ALLOW; else return KILL_PROCESS;
-clock_nanosleep:if arg0 >= CLOCK_REALTIME && arg0 <= CLOCK_BOOTTIME; return ALLOW; else return KILL_PROCESS;
-socketpair:if arg0 == AF_UNIX; return ALLOW; else return KILL_PROCESS;
-getsockopt:if arg1 == SOL_SOCKET || arg2 == SO_PEEK_OFF; return ALLOW; else return KILL_PROCESS;
+getrusage:if arg0 == RUSAGE_SELF || arg0 == RUSAGE_THREAD; return ALLOW; else return TRAP;
+clock_getres:if arg0 >= CLOCK_REALTIME && arg0 <= CLOCK_BOOTTIME; return ALLOW; else return TRAP;
+clock_gettime:if arg0 >= CLOCK_REALTIME && arg0 <= CLOCK_BOOTTIME; return ALLOW; else return TRAP;
+clock_nanosleep:if arg0 >= CLOCK_REALTIME && arg0 <= CLOCK_BOOTTIME; return ALLOW; else return TRAP;
+socketpair:if arg0 == AF_UNIX; return ALLOW; else return TRAP;
+getsockopt:if arg1 == SOL_SOCKET || arg2 == SO_PEEK_OFF; return ALLOW; else return TRAP;

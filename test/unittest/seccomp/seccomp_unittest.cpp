@@ -15,8 +15,6 @@
 
 #include <gtest/gtest.h>
 
-#include <gtest/gtest.h>
-
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -35,7 +33,8 @@
 #include "seccomp_policy.h"
 
 using SyscallFunc = bool (*)(void);
-constexpr int SLEEP_TIME = 100000; // 100ms
+constexpr int SLEEP_TIME_100MS = 100000; // 100ms
+constexpr int SLEEP_TIME_1S = 1;
 
 using namespace testing::ext;
 using namespace std;
@@ -47,9 +46,20 @@ public:
     virtual ~SeccompUnitTest() {};
     static void SetUpTestCase() {};
     static void TearDownTestCase() {};
-    void SetUp() {};
+
+    void SetUp()
+    {
+        /*
+         * Wait for 1 second to prevent the generated crash file
+         * from being overwritten because the crash interval is too short
+         * and the crash file's name is constructed by time stamp.
+         */
+        sleep(SLEEP_TIME_1S);
+    };
+
     void TearDown() {};
     void TestBody(void) {};
+
     static void Handler(int s)
     {
     }
@@ -62,6 +72,7 @@ public:
                 std::cout << "PR_SET_NO_NEW_PRIVS set fail " << std::endl;
                 exit(EXIT_FAILURE);
             }
+
             if (!SetSeccompPolicyWithName(filterName)) {
                 std::cout << "SetSeccompPolicy set fail fiterName is " << filterName << std::endl;
                 exit(EXIT_FAILURE);
@@ -97,7 +108,7 @@ public:
         /* Sleeping for avoiding influencing child proccess wait for other threads
          * which were created by other unittests to release global rwlock. The global
          * rwlock will be used by function dlopen in child process */
-        usleep(SLEEP_TIME);
+        usleep(SLEEP_TIME_100MS);
 
         pid = StartChild(filterName, func);
         if (pid == -1) {
@@ -333,7 +344,7 @@ HWTEST_F(SeccompUnitTest, TestSystemSycall, TestSize.Level1)
 
 /**
  * @tc.name: TestSetUidGidFilter
- * @tc.desc: Verify the system seccomp policy.
+ * @tc.desc: Verify the uid gid seccomp policy.
  * @tc.type: FUNC
  * @tc.require: issueI5IUWJ
  */
@@ -344,8 +355,8 @@ HWTEST_F(SeccompUnitTest, TestSetUidGidFilter, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestSystemSycall
- * @tc.desc: Verify the system seccomp policy.
+ * @tc.name: TestAppSycall
+ * @tc.desc: Verify the app seccomp policy.
  * @tc.type: FUNC
  * @tc.require: issueI5MUXD
  */
