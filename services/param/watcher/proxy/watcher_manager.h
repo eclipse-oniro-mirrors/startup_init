@@ -150,7 +150,7 @@ public:
     static WatcherNodePtr GetNextFromList(ListHeadPtr list, uint32_t nodeId);
     static WatcherNodePtr ConvertNodeToBase(ListNodePtr node)
     {
-        return reinterpret_cast<WatcherNodePtr >((char *)node - (char *)(&(((WatcherNodePtr )0)->node_)));
+        return reinterpret_cast<WatcherNodePtr>((char *)node - (char*)(&(((WatcherNodePtr)0)->node_)));
     }
     ListNodePtr GetListNode()
     {
