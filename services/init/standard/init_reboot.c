@@ -25,7 +25,11 @@ void ExecReboot(const char *value)
 #ifndef STARTUP_INIT_TEST
     // install module
     InitModuleMgrInstall("rebootmodule");
-    PluginExecCmdByName("reboot", value);
+    if (strstr(value, "reboot") != NULL) {
+        PluginExecCmdByName("reboot", value);
+    } else {
+        PluginExecCmdByName(value, value);
+    }
 #endif
     return;
 }

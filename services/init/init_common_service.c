@@ -535,7 +535,7 @@ void ServiceReap(Service *service)
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("Critical service \" %s \" crashed %d times, rebooting system",
                 service->name, service->crashCount);
-            ExecReboot("reboot");
+            ExecReboot("panic");
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
