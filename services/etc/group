@@ -124,3 +124,6 @@ security_guard:x:3520:
 tee:x:6668:
 dsserver:x:3068:
 device_attest:x:3049:
+dev_dma_heap:x:3070:
+dev_memory:x:3071:
+dev_lcd_backlight:x:3072:
