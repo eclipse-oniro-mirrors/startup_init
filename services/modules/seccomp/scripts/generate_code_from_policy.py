@@ -44,6 +44,7 @@ operation = ['<', '<=', '!=', '==', '>', '>=', '&']
 ret_str_to_bpf = {
     'KILL_PROCESS': 'SECCOMP_RET_KILL_PROCESS',
     'KILL_THREAD': 'SECCOMP_RET_KILL_THREAD',
+    'TRAP': 'SECCOMP_RET_TRAP',
     'LOG' : 'SECCOMP_RET_LOG',
     'ALLOW': 'SECCOMP_RET_ALLOW'
 }
@@ -691,13 +692,13 @@ class GenBpfPolicy:
             bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_AARCH64', 3, 0))
             bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_ARM', 0, 1))
             bpf_policy.append(BPF_JA.format(skip_step))
-            bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_KILL_PROCESS'))
+            bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_TRAP'))
         elif 'arm' in arches:
             bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_ARM', 1, 0))
-            bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_KILL_PROCESS'))
+            bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_TRAP'))
         elif 'arm64' in arches:
             bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_AARCH64', 1, 0))
-            bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_KILL_PROCESS'))
+            bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_TRAP'))
         else:
             self.bpf_policy = []
 

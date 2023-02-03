@@ -14,11 +14,11 @@
 arm64
 
 @returnValue
-KILL_PROCESS
+TRAP
 
 @mode
 ONLY_CHECK_ARGS
 
 @allowListWithArgs
-setresuid: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return KILL_PROCESS;
-setresgid: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return KILL_PROCESS;
+setresuid: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return TRAP;
+setresgid: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return TRAP;

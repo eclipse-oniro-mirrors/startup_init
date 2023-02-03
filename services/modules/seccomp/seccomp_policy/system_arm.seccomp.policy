@@ -15,7 +15,7 @@
 arm
 
 @returnValue
-KILL_PROCESS
+TRAP
 
 @allowList
 restart_syscall

@@ -17,6 +17,11 @@
 #include "plugin_adapter.h"
 #include "securec.h"
 
+#ifdef WITH_SECCOMP_DEBUG
+#include "init_utils.h"
+#include "sys_param.h"
+#endif
+
 #include <dlfcn.h>
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -169,11 +174,33 @@ static int GetSeccompPolicy(const char *filterName, int **handler,
     return ret;
 }
 
+#ifdef WITH_SECCOMP_DEBUG
+static bool IsEnableSeccomp(void)
+{
+    char value[MAX_BUFFER_LEN] = {0};
+    unsigned int len = MAX_BUFFER_LEN;
+    bool isEnableSeccompFlag = true;
+    if (SystemReadParam("persist.init.debug.seccomp.enable", value, &len) == 0) {
+        if (strncmp(value, "0", len) == 0) {
+            isEnableSeccompFlag = false;
+        }
+    }
+
+    return isEnableSeccompFlag;
+}
+#endif
+
 bool SetSeccompPolicyWithName(const char *filterName)
 {
     if (filterName == NULL) {
         return false;
     }
+
+#ifdef WITH_SECCOMP_DEBUG
+    if (!IsEnableSeccomp()) {
+        return true;
+    }
+#endif
 
     void *handler = NULL;
     char *filterLibRealPath = NULL;

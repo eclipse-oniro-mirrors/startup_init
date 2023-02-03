@@ -73,7 +73,7 @@ static int SetAllAmbientCapability(void)
 static void SetSystemSeccompPolicy(const Service *service)
 {
 #ifdef WITH_SECCOMP
-    if (strncmp(APPSPAWN_NAME, service->name, strlen(APPSPAWN_NAME)) \
+    if (strncmp(APPSPAWN_NAME, service->name, strlen(APPSPAWN_NAME))
         && strncmp(NWEBSPAWN_NAME, service->name, strlen(NWEBSPAWN_NAME))
         && !strncmp(SA_MAIN_PATH, service->pathArgs.argv[0], strlen(SA_MAIN_PATH))) {
         PluginExecCmdByName("SetSeccompPolicy", "start");
