@@ -202,6 +202,48 @@ char *ReadFileData(const char *fileName)
     return buffer;
 }
 
+int IterateNameValuePairs(const char *src, void (*iterator)(const NAME_VALUE_PAIR *nv, void *context), void *context)
+{
+    int cnt = 0;
+    const char *seperator;
+    NAME_VALUE_PAIR nv;
+    if ((src == NULL) || (iterator == NULL)) {
+        return -1;
+    }
+
+    do {
+        // Find space seperator
+        nv.name = src;
+        seperator = strchr(src, ' ');
+        if (seperator == NULL) {
+            // Last nv
+            nv.value_end = src + strlen(src);
+            src = NULL;
+        } else {
+            nv.value_end = seperator;
+            src = seperator + 1;
+        }
+
+        // Find equal seperator
+        seperator = strchr(nv.name, '=');
+        if (seperator == NULL) {
+            // Invalid name value pair
+            continue;
+        }
+        if (seperator > nv.value_end) {
+            // name without value, just ignore
+            continue;
+        }
+        nv.name_end = seperator;
+        nv.value = seperator + 1;
+
+        iterator(&nv, context);
+        cnt += 1;
+    } while (src != NULL);
+
+    return cnt;
+}
+
 int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int length)
 {
     INIT_ERROR_CHECK(name != NULL && buffer != NULL && value != NULL, return -1, "Failed get parameters");

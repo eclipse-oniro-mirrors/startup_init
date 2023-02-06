@@ -30,7 +30,10 @@ extern "C" {
 #define DEV_BUF_LENGTH 3
 #define DEV_BUF_MAX_LENGTH 1024
 
+typedef char * (*PropertyValueProcessor)(const char *key, char *value);
+
 INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder);
+INIT_LOCAL_API PropertyValueProcessor SetPropertyGetProcessor(PropertyValueProcessor processor);
 INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, uint32_t len);
 
 INIT_LOCAL_API const char *GetProductModel_(void);

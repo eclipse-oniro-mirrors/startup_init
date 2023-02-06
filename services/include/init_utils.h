@@ -60,6 +60,14 @@ char *ReadFileToBuf(const char *configFile);
 int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int length);
 char *ReadFileData(const char *fileName);
 
+typedef struct tagNAME_VALUE_PAIR{
+    const char *name;
+    const char *name_end;
+    const char *value;
+    const char *value_end;
+} NAME_VALUE_PAIR;
+int IterateNameValuePairs(const char *src, void (*iterator)(const NAME_VALUE_PAIR *nv, void *context), void *context);
+
 int SplitString(char *srcPtr, const char *del, char **dstPtr, int maxNum);
 void WaitForFile(const char *source, unsigned int maxSecond);
 size_t WriteAll(int fd, const char *buffer, size_t size);

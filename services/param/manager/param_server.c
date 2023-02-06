@@ -18,43 +18,38 @@
 #include "param_manager.h"
 #include "param_trie.h"
 
-static int LoadSecurityLabel(const char *fileName)
-{
-    ParamWorkSpace *paramSpace = GetParamWorkSpace();
-    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid paramSpace");
-    PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
-    PARAM_CHECK(fileName != NULL, return -1, "Invalid filename for load");
-#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
-    // load security label
-    ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_DAC);
-    if (ops != NULL && ops->securityGetLabel != NULL) {
-        ops->securityGetLabel(fileName);
-    }
-#endif
-    return 0;
-}
+/**
+ * Loading system parameter from /proc/cmdline by the following rules:
+ *   1) reserved cmdline with or without ohos.boot. prefix listed in CmdlineIterator
+        will be processed by the specified processor
+ *   2) cmdline not listed in CmdlineIterator but prefixed with ohos.boot will be add by default
+ *
+ *   Special cases for sn:
+ *     a) if sn value in cmdline is started with "/", it means a file to be read as parameter value
+ *     b) if sn or ohos.boot.sn are not specified, try to generate sn by GenerateSnByDefault
+ */
+#define OHOS_CMDLINE_PARA_PREFIX        "ohos.boot."
+#define OHOS_CMDLINE_PARA_PREFIX_LEN    10
 
-static int GetParamValueFromBuffer(const char *name, const char *buffer, char *value, int length)
-{
-    size_t bootLen = strlen(OHOS_BOOT);
-    const char *tmpName = name + bootLen;
-    int ret = GetProcCmdlineValue(tmpName, buffer, value, length);
-    return ret;
-}
+typedef struct cmdLineInfo {
+    const char *name;
+    int (*processor)(const char *name, const char *value);
+} cmdLineInfo;
 
-static int CommonDealFun(const char *name, const char *value, int res)
+typedef struct cmdLineIteratorCtx {
+    char *cmdline;
+    bool gotSn;
+} cmdLineIteratorCtx;
+
+static int CommonDealFun(const char *name, const char *value)
 {
     int ret = 0;
-    if (res == 0) {
-        PARAM_LOGV("Add param from cmdline %s %s", name, value);
-        ret = CheckParamName(name, 0);
-        PARAM_CHECK(ret == 0, return ret, "Invalid param name %s", name);
-        PARAM_LOGV("Param name %s, value %s", name, value);
-        ret = WriteParam(name, value, NULL, 0);
-        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
-    } else {
-        PARAM_LOGW("Get %s parameter value is null.", name);
-    }
+    PARAM_LOGV("Add param from cmdline %s %s", name, value);
+    ret = CheckParamName(name, 0);
+    PARAM_CHECK(ret == 0, return ret, "Invalid param name %s", name);
+    PARAM_LOGV("Param name %s, value %s", name, value);
+    ret = WriteParam(name, value, NULL, 0);
+    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
     return ret;
 }
 
@@ -82,71 +77,125 @@ static int ReadSnFromFile(const char *name, const char *file)
     return ret;
 }
 
-static int SnDealFun(const char *name, const char *value, int res)
+#define OHOS_SN_PARAM_NAME OHOS_CMDLINE_PARA_PREFIX"sn"
+
+static int SnDealFun(const char *name, const char *value)
 {
-    const char *snFileList [] = {
-        "/sys/block/mmcblk0/device/cid",
-        "/proc/bootdevice/cid"
-    };
     int ret = CheckParamName(name, 0);
     PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
-    if (value != NULL && res == 0 && value[0] != '/') {
+    if (value != NULL && value[0] != '/') {
         PARAM_LOGV("**** name %s, value %s", name, value);
-        ret = WriteParam(name, value, NULL, 0);
+        ret = WriteParam(OHOS_SN_PARAM_NAME, value, NULL, 0);
         PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
         return ret;
     }
     if (value != NULL && value[0] == '/') {
-        ret = ReadSnFromFile(name, value);
+        ret = ReadSnFromFile(OHOS_SN_PARAM_NAME, value);
         if (ret == 0) {
             return ret;
-        }
-    }
-    for (size_t i = 0; i < ARRAY_LENGTH(snFileList); i++) {
-        ret = ReadSnFromFile(name, snFileList[i]);
-        if (ret == 0) {
-            break;
         }
     }
     return ret;
 }
 
+static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
+{
+    const char *name;
+    char fullName[PARAM_NAME_LEN_MAX];
+    cmdLineIteratorCtx *ctx = (cmdLineIteratorCtx *)context;
+    char *data = (char *)ctx->cmdline;
+    static const cmdLineInfo cmdLines[] = {
+        { "hardware", CommonDealFun },
+        { "bootgroup", CommonDealFun },
+        { "reboot_reason", CommonDealFun },
+        { "bootslots", CommonDealFun },
+        { "sn", SnDealFun },
+        { "serialno", SnDealFun }
+    };
+
+    data[nv->name_end - data] = '\0';
+    data[nv->value_end - data] = '\0';
+    PARAM_LOGE("proc cmdline: name [%s], value [%s]", nv->name, nv->value);
+
+    // Get name without prefix
+    name = nv->name;
+    if (strncmp(name, OHOS_CMDLINE_PARA_PREFIX, OHOS_CMDLINE_PARA_PREFIX_LEN) == 0) {
+        name = name + OHOS_CMDLINE_PARA_PREFIX_LEN;
+    }
+
+    // Matching reserved cmdlines
+    for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
+        if (strcmp(name, cmdLines[i].name) == 0) {
+            snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1, OHOS_CMDLINE_PARA_PREFIX "%s", cmdLines[i].name);
+            PARAM_LOGE("proc cmdline %s matched.", fullName);
+            int ret = cmdLines[i].processor(fullName, nv->value);
+            if ((ret == 0) && (SnDealFun == cmdLines[i].processor)) {
+                ctx->gotSn = true;
+            }
+            return;
+        }
+    }
+
+    if (name == nv->name) {
+        return;
+    }
+
+    // cmdline with prefix but not matched, add to param by default
+    PARAM_LOGE("add proc cmdline param %s by default.", nv->name);
+    CommonDealFun(nv->name, nv->value);
+}
+
+static void GenerateSnByDefault() {
+    const char *snFileList [] = {
+        "/sys/block/mmcblk0/device/cid",
+        "/proc/bootdevice/cid"
+    };
+
+    for (size_t i = 0; i < ARRAY_LENGTH(snFileList); i++) {
+        int ret = ReadSnFromFile(OHOS_CMDLINE_PARA_PREFIX "sn", snFileList[i]);
+        if (ret == 0) {
+            break;
+        }
+    }
+}
+
 INIT_LOCAL_API int LoadParamFromCmdLine(void)
 {
-    static const cmdLineInfo cmdLines[] = {
-        {OHOS_BOOT"hardware", CommonDealFun
-        },
-        {OHOS_BOOT"bootgroup", CommonDealFun
-        },
-        {OHOS_BOOT"reboot_reason", CommonDealFun
-        },
-        {OHOS_BOOT"bootslots", CommonDealFun
-        },
-        {OHOS_BOOT"sn", SnDealFun
-        }
-    };
-    char *data = ReadFileData(BOOT_CMD_LINE);
-    PARAM_CHECK(data != NULL, return -1, "Failed to read file %s", BOOT_CMD_LINE);
-    char *value = calloc(1, PARAM_CONST_VALUE_LEN_MAX + 1);
-    PARAM_CHECK(value != NULL, free(data);
-        return -1, "Failed to read file %s", BOOT_CMD_LINE);
+    cmdLineIteratorCtx ctx;
 
-    for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
-        int ret = 0;
-#ifdef BOOT_EXTENDED_CMDLINE
-        ret = GetParamValueFromBuffer(cmdLines[i].name, BOOT_EXTENDED_CMDLINE, value, PARAM_CONST_VALUE_LEN_MAX);
-        if (ret != 0) {
-            ret = GetParamValueFromBuffer(cmdLines[i].name, data, value, PARAM_CONST_VALUE_LEN_MAX);
-        }
-#else
-        ret = GetParamValueFromBuffer(cmdLines[i].name, data, value, PARAM_CONST_VALUE_LEN_MAX);
-#endif
+    ctx.gotSn = false;
+    ctx.cmdline = ReadFileData(BOOT_CMD_LINE);
+    PARAM_CHECK(ctx.cmdline != NULL, return -1, "Failed to read file %s", BOOT_CMD_LINE);
 
-        cmdLines[i].processor(cmdLines[i].name, value, ret);
+    IterateNameValuePairs(ctx.cmdline, CmdlineIterator, (void *)(&ctx));
+
+    // sn is critical, it must be specified
+    if (!ctx.gotSn) {
+        PARAM_LOGE("Generate default sn now ...");
+        GenerateSnByDefault();
     }
-    PARAM_LOGV("Parse cmdline finish %s", BOOT_CMD_LINE);
-    free(data);
-    free(value);
+
+    free(ctx.cmdline);
+    return 0;
+}
+
+/*
+ * Load parameters from files
+ */
+
+static int LoadSecurityLabel(const char *fileName)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid paramSpace");
+    PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
+    PARAM_CHECK(fileName != NULL, return -1, "Invalid filename for load");
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+    // load security label
+    ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_DAC);
+    if (ops != NULL && ops->securityGetLabel != NULL) {
+        ops->securityGetLabel(fileName);
+    }
+#endif
     return 0;
 }
 
