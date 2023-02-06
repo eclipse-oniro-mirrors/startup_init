@@ -99,7 +99,7 @@ static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag
 {
 #ifdef OHOS_LITE
     static const LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
-    (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%{public}s", logInfo);
+    (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%s", logInfo);
 #endif
 #ifdef INIT_DMESG
     LogToDmesg(logLevel, tag, logInfo);
