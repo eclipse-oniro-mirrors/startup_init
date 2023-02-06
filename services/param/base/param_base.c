@@ -369,6 +369,7 @@ static int ReadParamValue(ParamHandle handle, char *value, uint32_t *length)
 CachedHandle CachedParameterCreate(const char *name, const char *defValue)
 {
     PARAM_CHECK(name != NULL && defValue != NULL, return NULL, "Invalid name or default value");
+    PARAM_CHECK(GetParamWorkSpace() != NULL, return NULL, "Invalid workspace");
     PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return NULL, "Invalid param workspace");
     uint32_t nameLen = strlen(name);
     PARAM_CHECK(nameLen < PARAM_NAME_LEN_MAX, return NULL, "Invalid name %s", name);
