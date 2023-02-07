@@ -688,6 +688,7 @@ CachedHandle CachedParameterCreate(const char *name, const char *defValue)
     param->nameLen = nameLen;
     param->paramValue = &param->data[PARAM_ALIGN(nameLen) + 1];
     param->bufferLen = PARAM_VALUE_LEN_MAX;
+    param->dataCommitId = (uint32_t)-1;
     if (node != NULL && node->dataIndex != 0) {
         param->dataIndex = node->dataIndex;
         ParamNode *entry = (ParamNode *)GetTrieNode(workspace, node->dataIndex);
@@ -743,7 +744,7 @@ STATIC_INLINE const char *CachedParameterCheck(CachedParameter *param)
 const char *CachedParameterGet(CachedHandle handle)
 {
     CachedParameter *param = (CachedParameter *)handle;
-    PARAM_CHECK(param != NULL, return NULL, "Invalid handle %x", handle);
+    PARAM_CHECK(param != NULL, return NULL, "Invalid handle %p", handle);
     return CachedParameterCheck(param);
 }
 
