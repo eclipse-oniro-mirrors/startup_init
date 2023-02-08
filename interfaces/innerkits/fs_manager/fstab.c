@@ -267,7 +267,7 @@ FstabItem *FindFstabItemForPath(Fstab fstab, const char *path)
 {
     FstabItem *item = NULL;
 
-    if (path == NULL || *path == '\0' || *path != '/') {
+    if (path == NULL || *path != '/') {
         return NULL;
     }
 
