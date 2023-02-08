@@ -62,8 +62,11 @@ static int DoRebootPanic(int id, const char *name, int argc, const char **argv)
     if (panic == NULL) {
         return reboot(RB_AUTOBOOT);
     }
-    fwrite((void *)"c", 1, 1, panic);
-    fclose(panic);
+    if (fwrite((void *)"c", 1, 1, panic) != 1) {
+        (void)fclose(panic);
+        PLUGIN_LOGI("fwrite to panic failed");
+    }
+    (void)fclose(panic);
 #endif
     return 0;
 }
