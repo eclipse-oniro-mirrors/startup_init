@@ -282,8 +282,8 @@ HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)
     EXPECT_EQ(GetUintParameter("test.int.get", 0), 0);
     EXPECT_EQ(GetIntParameter("test.uint.get", 0), TEST_VALUE);
     EXPECT_EQ(GetUintParameter("test.uint.get", 0), TEST_VALUE);
-    EXPECT_EQ(GetIntParameter("test.int.default", 10), 10); //key not find,value = default
-    EXPECT_EQ(GetUintParameter("test.uint.default", 10), 10); //key not find,value = default
+    EXPECT_EQ(GetIntParameter("test.int.default", 10), 10); // key not find,value = default
+    EXPECT_EQ(GetUintParameter("test.uint.default", 10), 10); // key not find,value = default
     EXPECT_EQ(IsValidParamValue(nullptr, 0), 0);
     EXPECT_EQ(IsValidParamValue("testvalue", strlen("testvalue") + 1), 1);
     EXPECT_EQ(StringToLL("0x11", &out), 0);
