@@ -65,6 +65,7 @@ static int DoRebootPanic(int id, const char *name, int argc, const char **argv)
     if (fwrite((void *)"c", 1, 1, panic) != 1) {
         (void)fclose(panic);
         PLUGIN_LOGI("fwrite to panic failed");
+        return -1;
     }
     (void)fclose(panic);
 #endif
