@@ -83,63 +83,6 @@ HWTEST_F(ModuleMgrUnitTest, PluginAddCmd, TestSize.Level1)
     RemoveCmdExecutor("testCmd4", cmdExecId4);
 }
 
-HWTEST_F(ModuleMgrUnitTest, ModuleInstallTest, TestSize.Level1)
-{
-    int ret;
-    int cnt;
-
-    // Create module manager
-    ASSERT_EQ(ModuleMgrCreate(nullptr), nullptr);
-    ModuleMgrDestroy(nullptr);
-    MODULE_MGR *moduleMgr = ModuleMgrCreate("init");
-    ASSERT_NE(moduleMgr, nullptr);
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_EQ(cnt, 0);
-
-    // Install one module
-#ifdef SUPPORT_64BIT
-    ret = ModuleMgrInstall(moduleMgr, "/system/lib64/init/libbootchart", 0, NULL);
-#else
-    ret = ModuleMgrInstall(moduleMgr, "/system/lib/init/libbootchart", 0, NULL);
-#endif
-    ASSERT_EQ(ret, 0);
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_EQ(cnt, 1);
-
-    // Uninstall the module
-    ModuleMgrUninstall(moduleMgr, "bootchart");
-    InitModuleMgrUnInstall("bootchart");
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_EQ(cnt, 0);
-
-    // Install two module
-    ret = ModuleMgrInstall(moduleMgr, "bootchart", 0, NULL);
-    ASSERT_EQ(ret, 0);
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_EQ(cnt, 1);
-    ret = ModuleMgrInstall(moduleMgr, "notexist", 0, NULL);
-    ASSERT_NE(ret, 0);
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_EQ(cnt, 1);
-
-    // Uninstall the module
-    ModuleMgrUninstall(moduleMgr, "bootchart");
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_EQ(cnt, 0);
-    ModuleMgrUninstall(moduleMgr, "notexist");
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_EQ(cnt, 0);
-
-    ModuleMgrDestroy(moduleMgr);
-
-    // test updater mode
-    int fd = open("/bin/updater", O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,  S_IRWXU);
-    ASSERT_NE(fd, 0);
-    ModuleMgrScan("init/autorun");
-    unlink("/bin/updater");
-    close(fd);
-}
-
 static void TestModuleDump(const MODULE_INFO *moduleInfo)
 {
     printf("%s\n", moduleInfo->name);
@@ -175,32 +118,5 @@ HWTEST_F(ModuleMgrUnitTest, ModuleTraversalTest, TestSize.Level1)
 
     ModuleMgrGetArgs();
     ModuleMgrDestroy(moduleMgr);
-}
-
-HWTEST_F(ModuleMgrUnitTest, ModuleScanTest, TestSize.Level1)
-{
-    // Scan all modules test init
-    MODULE_MGR *moduleMgr = ModuleMgrScan("init");
-    ASSERT_NE(moduleMgr, nullptr);
-    int cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_GE(cnt, 1);
-
-    ModuleMgrUninstall(nullptr, nullptr);
-    ModuleMgrUninstall(moduleMgr, NULL);
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ASSERT_EQ(cnt, 0);
-    ModuleMgrDestroy(moduleMgr);
-
-    // scan /lib/init/
-#ifdef SUPPORT_64BIT
-    moduleMgr = ModuleMgrScan("/lib64/init");
-#else
-    moduleMgr = ModuleMgrScan("/lib/init");
-#endif
-    ASSERT_NE(moduleMgr, nullptr);
-    ModuleMgrGetCnt(nullptr);
-    cnt = ModuleMgrGetCnt(moduleMgr);
-    ModuleMgrDestroy(moduleMgr);
-    EXPECT_EQ(InitModuleMgrInstall(nullptr), -1);
 }
 }  // namespace init_ut

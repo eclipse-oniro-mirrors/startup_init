@@ -246,7 +246,7 @@ HWTEST_F(InnerkitsUnitTest, MountAllWithFstabFile_unittest, TestSize.Level1)
     EXPECT_EQ(MountAllWithFstabFile("/testErrorFile", 0), -1);
     EXPECT_EQ(MountAllWithFstabFile(nullptr, 0), -1);
     EXPECT_EQ(GetMountStatusForMountPoint(nullptr), -1);
-    FstabItem fstabItem;
+    FstabItem fstabItem = {};
     fstabItem.fsType = strdup("notSupport");
     EXPECT_EQ(MountOneItem(nullptr), -1);
     EXPECT_EQ(MountOneItem(&fstabItem), 0);
@@ -349,7 +349,9 @@ HWTEST_F(InnerkitsUnitTest, TestControlFd, TestSize.Level1)
     ProcessPtyWrite(nullptr, STDERR_FILENO, &events, nullptr);
     close(fd);
 
-    CmdOnClose(agent->task);
+    if (agent) {
+        CmdOnClose(agent->task);
+    }
 }
 
 HWTEST_F(InnerkitsUnitTest, TestControlFdServer, TestSize.Level1)
@@ -361,7 +363,7 @@ HWTEST_F(InnerkitsUnitTest, TestControlFdServer, TestSize.Level1)
         UNUSED(context);
         }, LE_GetDefaultLoop());
 
-    TaskHandle testServer;
+    TaskHandle testServer = NULL;
     LE_StreamServerInfo info = {};
     info.baseInfo.flags = TASK_STREAM | TASK_SERVER | TASK_PIPE | TASK_TEST;
     info.server = (char *)"/data/testSock1";
@@ -432,7 +434,7 @@ HWTEST_F(InnerkitsUnitTest, TestHoldFd2, TestSize.Level1)
     int *fds = nullptr;
     char buffer[MAX_FD_HOLDER_BUFFER + 1] = {};
     pid_t requestPid = -1;
-    struct msghdr msghdr;
+    struct msghdr msghdr = {};
     GetFdsFromMsg(&fdCount, &requestPid, msghdr);
     msghdr.msg_flags = MSG_TRUNC;
     GetFdsFromMsg(&fdCount, &requestPid, msghdr);

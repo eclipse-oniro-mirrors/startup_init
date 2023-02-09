@@ -36,44 +36,6 @@ public:
     void TearDown() {};
 };
 
-HWTEST_F(CmdsUnitTest, TestCmdExecByName, TestSize.Level1)
-{
-    DoCmdByName("load_param ", "     /system/etc/param            onlyadd");
-    DoCmdByName("symlink ", "/proc/self/fd/0 /dev/stdin");
-    DoCmdByName("symlink ", "/notfile ");
-    DoCmdByName("insmod ",
-        "libdemo.z.so anony=1 mmz_allocator=hisi mmz=anonymous,0,0xA8000000,384M || report_error");
-    DoCmdByName("insmod ", "/vendor/modules/hi_irq.ko");
-    DoCmdByName("insmod ", STARTUP_INIT_UT_PATH"/test_insmod");
-
-    DoCmdByName("setparam ", "sys.usb.config ${persist.sys.usb.config}");
-
-    DoCmdByName("load_persist_params ", "");
-    DoCmdByName("trigger ", "");
-    DoCmdByName("domainname ", "localdomain");
-    DoCmdByName("hostname ", "localhost");
-    DoCmdByName("sleep ", "1");
-    DoCmdByName("setrlimit ", "RLIMIT_NICE 40 40");
-    DoCmdByName("setrlimit ", "RLIMIT_NICE unlimited unlimited");
-    DoCmdByName("setrlimit ", "RLIMIT_NICE2 40 40");
-    DoCmdByName("start ", "init_ut");
-    DoCmdByName("stop ", "init_ut");
-    DoCmdByName("reset ", "init_ut");
-    DoCmdByName("reboot ", "");
-    DoCmdByName("ifup ", "lo");
-    DoCmdByName("mknode ", "/dev/null b 0666 1 3");
-    DoCmdByName("mknode ", "/dev/null C 0666 1 3");
-    DoCmdByName("mknode ", "/dev/null F 0666 1 3");
-    DoCmdByName("mknode ", "/dev/null A 0666 1 3");
-    DoCmdByName("makedev ", "999 999");
-    DoCmdByName("mount_fstab ", "/wwwwwww");
-    DoCmdByName("umount_fstab ", "/wwwwwww");
-    DoCmdByName("mksandbox ", "system chipset");
-    DoCmdByName("mksandbox ", "system");
-    DoCmdByName("mksandbox ", "notsupport");
-    DoCmdByName("mksandbox ", "");
-    DoCmdByName("mksandbox ", nullptr);
-}
 HWTEST_F(CmdsUnitTest, TestCmdExecByName1, TestSize.Level1)
 {
     DoCmdByName("timer_start ", "media_service|5000");

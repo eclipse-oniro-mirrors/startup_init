@@ -67,8 +67,8 @@ HWTEST_F(ModulesUnitTest, TestBootchartLogFile, TestSize.Level1)
 {
     DoBootchartStart();
     FILE *log = fopen("/data/init_ut/ModulesTest.log", "w");
-    BootchartLogFile(log, "/proc/stat");
-    if (log != NULL) {
+    if (log) {
+        BootchartLogFile(log, "/proc/stat");
         (void)fflush(log);
         (void)fclose(log);
     }
@@ -78,8 +78,8 @@ HWTEST_F(ModulesUnitTest, TestBootchartLogProcessStat, TestSize.Level1)
 {
     FILE *log = fopen("/data/init_ut/ModulesTest.log", "w");
     pid_t selfPid = getpid();
-    BootchartLogProcessStat(log, selfPid);
     if (log != NULL) {
+        BootchartLogProcessStat(log, selfPid);
         (void)fflush(log);
         (void)fclose(log);
     }
@@ -88,8 +88,8 @@ HWTEST_F(ModulesUnitTest, TestBootchartLogProcessStat, TestSize.Level1)
 HWTEST_F(ModulesUnitTest, TestbootchartLogProcess, TestSize.Level1)
 {
     FILE *log = fopen("/data/init_ut/ModulesTest.log", "w");
-    bootchartLogProcess(log);
-    if (log != NULL) {
+    if (log) {
+        bootchartLogProcess(log);
         (void)fflush(log);
         (void)fclose(log);
     }
