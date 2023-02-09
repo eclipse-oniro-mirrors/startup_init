@@ -37,6 +37,10 @@ WatcherManager::~WatcherManager()
 
 uint32_t WatcherManager::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher)
 {
+    if (id == getpid()) {
+        WATCHER_LOGE("Failed to add remote watcher %d", id);
+        return 0;
+    }
     WATCHER_CHECK(watcher != nullptr && deathRecipient_ != nullptr, return 0, "Invalid remove watcher");
     sptr<IRemoteObject> object = watcher->AsObject();
     if ((object != nullptr) && (object->IsProxyObject())) {
