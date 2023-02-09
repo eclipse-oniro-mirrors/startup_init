@@ -343,7 +343,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestUpdaterServiceFds, TestSize.Level1)
 {
     Service *service = AddService("test_service8");
     ASSERT_NE(nullptr, service);
-    int *fds = (int *)malloc(sizeof(int) * 1); // ServiceStop will release fds
+    int fds[1] = { -1 }; // ServiceStop will release fds
     UpdaterServiceFds(nullptr, nullptr, 0);
     UpdaterServiceFds(service, fds, 1);
     UpdaterServiceFds(service, fds, 0);
