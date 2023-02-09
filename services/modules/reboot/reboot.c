@@ -144,7 +144,6 @@ static int DoRebootOther(int id, const char *name, int argc, const char **argv)
 
 static void RebootAdpInit(void)
 {
-    // sample {"reboot,shutdown", "reboot.shutdown", "reboot.shutdown"},
     // add default reboot cmd
     (void)AddCmdExecutor("reboot", DoReboot);
     (void)AddCmdExecutor("reboot.other", DoRebootOther);
