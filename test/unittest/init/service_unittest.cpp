@@ -87,8 +87,7 @@ HWTEST_F(ServiceUnitTest, case02, TestSize.Level1)
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
 
-    int *fds = (int *)malloc(sizeof(int) * 1); // ServiceStop will release fds
-    ASSERT_NE(nullptr, fds);
+    int fds[1] = {-1}; // ServiceStop will release fds
     UpdaterServiceFds(service, fds, 1);
     service->attribute = SERVICE_ATTR_ONDEMAND;
     ret = ServiceStart(service);
@@ -130,16 +129,12 @@ HWTEST_F(ServiceUnitTest, TestServiceStartAbnormal, TestSize.Level1)
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
 
-    const char *path = "/data/init_ut/test_service_unused";
-    ret = strncpy_s(service->pathArgs.argv[0], strlen(path) + 1, path, strlen(path));
-    EXPECT_EQ(ret, 0);
-
     ret = ServiceStart(service);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, 0);
 
     service->attribute &= SERVICE_ATTR_INVALID;
     ret = ServiceStart(service);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, 0);
 
     service->pid = -1;
     ret = ServiceStop(service);

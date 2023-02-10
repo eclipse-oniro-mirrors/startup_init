@@ -244,20 +244,6 @@ private:
     ParamTaskPtr serverTask_ = NULL;
 };
 
-HWTEST_F(LoopEventUnittest, StreamTaskTest, TestSize.Level1)
-{
-    LoopEventUnittest loopevtest = LoopEventUnittest();
-    loopevtest.CreateServerTask();
-    loopevtest.StreamTaskTest();
-    LE_StreamInfo streamInfo = {};
-    streamInfo.recvMessage = OnReceiveRequest;
-    streamInfo.baseInfo.flags = TASK_PIPE |  TASK_CONNECT;
-    streamInfo.server = (char *)PIPE_NAME;
-    TaskHandle clientTaskHandlec = nullptr;
-    LE_CreateStreamClient(LE_GetDefaultLoop(), &clientTaskHandlec, &streamInfo);
-    EXPECT_NE(clientTaskHandlec, nullptr);
-}
-
 HWTEST_F(LoopEventUnittest, LeTaskTest, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();

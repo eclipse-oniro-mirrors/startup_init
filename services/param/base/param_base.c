@@ -744,7 +744,7 @@ STATIC_INLINE const char *CachedParameterCheck(CachedParameter *param)
 const char *CachedParameterGet(CachedHandle handle)
 {
     CachedParameter *param = (CachedParameter *)handle;
-    PARAM_CHECK(param != NULL, return NULL, "Invalid handle %p", handle);
+    PARAM_CHECK(param != NULL, return NULL, "Invalid handle");
     return CachedParameterCheck(param);
 }
 
