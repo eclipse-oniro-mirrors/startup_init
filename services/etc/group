@@ -71,6 +71,7 @@ hdf_devmgr:x:3044:
 connected_tag_host:x:3045:
 dslm:x:3046:
 device_usage_stats:x:3048:
+security_component:x:3050:
 bgtask:x:3051:
 dcamera:x:3052:
 dinput:x:3053:
