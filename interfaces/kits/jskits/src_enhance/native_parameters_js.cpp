@@ -382,7 +382,7 @@ static napi_value Init(napi_env env, napi_value exports)
     /*
      * Attribute definition
      */
-    napi_property_descriptor desc[] = {
+    const napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("set", Set),
         DECLARE_NAPI_FUNCTION("setSync", SetSync),
         DECLARE_NAPI_FUNCTION("get", Get),
@@ -404,12 +404,22 @@ EXTERN_C_END
 /*
  * Module definition
  */
-static napi_module _module = {
+static napi_module _module_old = {
     .nm_version = 1,
     .nm_flags = 0,
     .nm_filename = NULL,
     .nm_register_func = Init,
     .nm_modname = "systemParameterV9",
+    .nm_priv = ((void *)0),
+    .reserved = { 0 }
+};
+
+static napi_module _module = {
+    .nm_version = 1,
+    .nm_flags = 0,
+    .nm_filename = NULL,
+    .nm_register_func = Init,
+    .nm_modname = "systemParameterEnhance",
     .nm_priv = ((void *)0),
     .reserved = { 0 }
 };
@@ -420,4 +430,5 @@ static napi_module _module = {
 extern "C" __attribute__((constructor)) void RegisterModule(void)
 {
     napi_module_register(&_module);
+    napi_module_register(&_module_old);
 }

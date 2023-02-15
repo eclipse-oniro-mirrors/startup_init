@@ -24,7 +24,7 @@ group("kitsgroup") {
       deps += [
         "jskits:deviceinfo",
         "jskits:systemparameter",
-        "jskits:systemparameterv9",
+        "jskits:systemparameterenhance",
       ]
     }
   }
