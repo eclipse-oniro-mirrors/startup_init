@@ -200,6 +200,10 @@ if (defined(ohos_lite)) {
       "//third_party/mbedtls:mbedtls_shared",
     ]
     deps += [ "//base/startup/init/services/param/base:param_base" ]
+    if (startup_begetutil_extra_modules != "") {
+      deps += [ startup_begetutil_extra_modules ]
+    }
+
     external_deps = [
       "c_utils:utils",
       "hilog_native:libhilog_base",

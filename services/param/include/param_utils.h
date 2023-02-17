@@ -37,16 +37,6 @@ typedef enum {
 #define PARAM_BUFFER_MAX (0x01 << 16)
 #endif
 
-struct CmdLineEntry {
-    char *key;
-    int set;
-};
-
-typedef struct cmdLineInfo {
-    const char *name;
-    int (*processor)(const char *name, const char *value, int);
-} cmdLineInfo;
-
 #define FILENAME_LEN_MAX 255
 #define MS_UNIT 1000
 #ifndef UNUSED
@@ -64,7 +54,6 @@ typedef struct cmdLineInfo {
 #define OHOS_CTRL_START "ohos.ctl.start="
 #define OHOS_CTRL_STOP "ohos.ctl.stop="
 #define OHOS_SERVICE_CTRL_PREFIX "ohos.servicectrl."
-#define OHOS_BOOT "ohos.boot."
 
 #ifdef STARTUP_INIT_TEST
 #define PARAM_STATIC
