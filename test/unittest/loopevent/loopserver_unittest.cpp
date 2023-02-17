@@ -253,11 +253,11 @@ public:
         ret = LE_CreateStreamServer(g_loopServer_, &pipeServer, &info);
         EXPECT_EQ(ret, 0);
 
-        printf("Run server pipeServer_ %p \n", pipeServer);
+        printf("Run server pipeServer_ \n");
         // run loop for server
         LE_RunLoop(g_loopServer_);
 
-        printf("Run server pipeServer_ %p \n", pipeServer);
+        printf("Run server pipeServer_ \n");
         LE_CloseStreamTask(g_loopServer_, pipeServer);
         pipeServer = nullptr;
         LE_CloseStreamTask(g_loopServer_, tcpServer);

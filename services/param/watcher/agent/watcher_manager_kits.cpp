@@ -233,8 +233,7 @@ void WatcherManagerKits::ParamWatcher::RemoveParameterListener(uint32_t idx)
 int WatcherManagerKits::ParamWatcher::AddParameterListener(ParameterChangePtr callback, void *context)
 {
     WATCHER_CHECK(callback != nullptr, return -1, "Invalid callback ");
-    WATCHER_LOGV("AddParameterListener %s listenerId_ %d callback %p context %p",
-        keyPrefix_.c_str(), listenerId_, callback, context);
+    WATCHER_LOGV("AddParameterListener %s listenerId_ %d", keyPrefix_.c_str(), listenerId_);
     for (auto it = parameterChangeListeners.begin(); it != parameterChangeListeners.end(); it++) {
         if (it->second == nullptr) {
             continue;
@@ -261,7 +260,7 @@ int WatcherManagerKits::ParamWatcher::DelParameterListener(ParameterChangePtr ca
     ParameterChangeListener *listener = GetParameterListener(&index);
     while (listener != nullptr) {
         if (listener->IsEqual(callback, context)) {
-            WATCHER_LOGV("DelParameterListener listenerId_ %d callback %p context %p", index, callback, context);
+            WATCHER_LOGV("DelParameterListener listenerId_ %d", index);
             RemoveParameterListener(index);
             break;
         }
