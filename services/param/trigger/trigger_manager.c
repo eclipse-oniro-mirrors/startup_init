@@ -212,6 +212,10 @@ static void DelWatchTrigger_(const TriggerWorkSpace *workSpace, TriggerNode *tri
     }
     PARAM_LOGV("DelWatchTrigger_ %s count %d", GetTriggerName(trigger), triggerHead->triggerCount);
     triggerHead->triggerCount--;
+    if (trigger->condition != NULL) {
+        free(trigger->condition);
+        trigger->condition = NULL;
+    }
     free(trigger);
 }
 
