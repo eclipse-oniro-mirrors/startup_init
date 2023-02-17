@@ -37,7 +37,7 @@ static ParamService g_paramService = {};
 
 PARAM_STATIC void OnClose(ParamTaskPtr client)
 {
-    PARAM_LOGV("OnClose %p", client);
+    PARAM_LOGV("OnClose client");
     ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
     if (client == g_paramService.watcherTask) {
         ClearWatchTrigger(watcher, TRIGGER_PARAM_WATCH);

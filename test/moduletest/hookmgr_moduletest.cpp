@@ -63,7 +63,7 @@ static int OhosTestHookMultiThreadAnother(const HOOK_INFO *hookInfo, void *execu
 
 static void OhosHookPrint(const HOOK_INFO *hookInfo, void *traversalCookie)
 {
-    printf("\tstage[%02d] prio[%02d] hook[%p].\n", hookInfo->stage, hookInfo->prio, hookInfo->hook);
+    printf("\tstage[%02d] prio[%02d].\n", hookInfo->stage, hookInfo->prio);
 }
 
 static void DumpAllHooks(HOOK_MGR *hookMgr)
