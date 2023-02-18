@@ -87,7 +87,7 @@ static int moduleMgrCommandsInit(const HOOK_INFO *info, void *cookie)
 static int loadAutorunModules(const HOOK_INFO *info, void *cookie)
 {
     autorunModuleMgr = ModuleMgrScan("init/autorun");
-    INIT_LOGV("Load autorun modules return %p", autorunModuleMgr);
+    INIT_LOGV("Load autorun modules return autorunModuleMgr");
     return 0;
 }
 
