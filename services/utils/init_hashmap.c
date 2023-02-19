@@ -90,7 +90,7 @@ int32_t OH_HashMapAdd(HashMapHandle handle, HashNode *node)
     }
     node->next = tab->buckets[hashCode];
     tab->buckets[hashCode] = node;
-    INIT_LOGV("OH_HashMapAdd tableId %d hashCode %d node %p", tab->tableId, hashCode, node);
+    INIT_LOGV("OH_HashMapAdd tableId %d hashCode %d", tab->tableId, hashCode);
     return 0;
 }
 

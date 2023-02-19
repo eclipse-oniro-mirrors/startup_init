@@ -55,7 +55,7 @@ BaseTask *CreateTask(const LoopHandle loopHandle, int fd, const LE_BaseInfo *inf
 
 void CloseTask(const LoopHandle loopHandle, BaseTask *task)
 {
-    LE_LOGV("CloseTask %p", task);
+    LE_LOGV("CloseTask");
     LE_CHECK(loopHandle != NULL && task != NULL, return, "Invalid parameters");
     if (CheckTaskFlags(task, TASK_STREAM | TASK_CONNECT) ||
         CheckTaskFlags(task, TASK_EVENT | TASK_ASYNC_EVENT)) {
@@ -189,7 +189,7 @@ LE_STATUS LE_Send(const LoopHandle loopHandle,
 void LE_CloseTask(const LoopHandle loopHandle, const TaskHandle taskHandle)
 {
     LE_CHECK(loopHandle != NULL && taskHandle != NULL, return, "Invalid parameters");
-    LE_LOGV("LE_CloseTask %d %p", GetSocketFd(taskHandle), taskHandle);
+    LE_LOGV("LE_CloseTask %d", GetSocketFd(taskHandle));
     BaseTask *task = (BaseTask *)taskHandle;
     if (task->innerClose != NULL) {
         task->innerClose(loopHandle, taskHandle);

@@ -184,7 +184,7 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
 
 INIT_LOCAL_API void CloseParamWorkSpace(void)
 {
-    PARAM_LOGI("CloseParamWorkSpace %p", &g_paramWorkSpace);
+    PARAM_LOGI("CloseParamWorkSpace");
     if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return;
     }

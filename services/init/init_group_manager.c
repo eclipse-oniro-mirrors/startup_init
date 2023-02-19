@@ -229,7 +229,7 @@ InitGroupNode *AddGroupNode(int type, const char *name)
     if (groupNode != NULL) {
         return groupNode;
     }
-    INIT_LOGV("AddGroupNode type %d %p name %s", type, g_initWorkspace.hashMap[type], name);
+    INIT_LOGV("AddGroupNode type %d name %s", type, name);
     uint32_t nameLen = (uint32_t)strlen(name);
     groupNode = (InitGroupNode *)calloc(1, sizeof(InitGroupNode) + nameLen + 1);
     INIT_ERROR_CHECK(groupNode != NULL, return NULL, "Failed to alloc for group %s", name);
@@ -251,7 +251,7 @@ InitGroupNode *GetGroupNode(int type, const char *name)
     if (type >= NODE_TYPE_GROUPS) {
         return NULL;
     }
-    INIT_LOGV("GetGroupNode type %d %p name %s", type, g_initWorkspace.hashMap[type], name);
+    INIT_LOGV("GetGroupNode type %d name %s", type, name);
     HashNode *node = OH_HashMapGet(g_initWorkspace.hashMap[type], name);
     if (node == NULL) {
         return NULL;
@@ -273,7 +273,7 @@ void DelGroupNode(int type, const char *name)
     if (type >= NODE_TYPE_GROUPS) {
         return;
     }
-    INIT_LOGV("DelGroupNode type %d %p name %s", type, g_initWorkspace.hashMap[type], name);
+    INIT_LOGV("DelGroupNode type %d name %s", type, name);
     OH_HashMapRemove(g_initWorkspace.hashMap[type], name);
     InitGroupNode *groupNode = g_initWorkspace.groupNodes[type];
     InitGroupNode *preNode = groupNode;

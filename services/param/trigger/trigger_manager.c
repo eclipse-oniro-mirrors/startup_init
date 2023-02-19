@@ -707,7 +707,7 @@ void ClearWatchTrigger(ParamWatcher *watcher, int type)
             PARAM_LOGE("ClearWatchTrigger %s error type %d", GetTriggerName(trigger), type);
             return;
         }
-        PARAM_LOGV("ClearWatchTrigger %p %s", trigger, GetTriggerName(trigger));
+        PARAM_LOGV("ClearWatchTrigger %s", GetTriggerName(trigger));
         ListNode *next = node->next;
         FreeTrigger(GetTriggerWorkSpace(), trigger);
         node = next;
