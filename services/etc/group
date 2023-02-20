@@ -123,3 +123,4 @@ security_guard:x:3520:
 tee:x:6668:
 dsserver:x:3068:
 device_attest:x:3049:
+dev_vibrator:x:3080:
