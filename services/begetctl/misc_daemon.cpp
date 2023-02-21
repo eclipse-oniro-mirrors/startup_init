@@ -62,6 +62,11 @@ static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
         return;
     }
 
+    if (size <= 0 || size > MAX_LOGO_SIZE) {
+        BSH_LOGE("Invalid logo file with size ");
+        return;
+    }
+
     char *buffer = reinterpret_cast<char *>(malloc(size));
     if (buffer == nullptr) {
         (void)fclose(rgbFile);
@@ -120,7 +125,7 @@ static int WriteLogo(int fd, const std::string &logoPath)
         return -1;
     }
 
-    if (st.st_size < 0 || st.st_size > MAX_LOGO_SIZE) {
+    if (st.st_size <= 0 || st.st_size > MAX_LOGO_SIZE) {
         BSH_LOGE("Invalid logo file with size ");
         ClearLogo(fd);
         return -1;
