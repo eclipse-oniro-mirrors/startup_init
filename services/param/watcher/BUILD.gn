@@ -47,6 +47,7 @@ ohos_shared_library("param_watcher") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
   ]
+  shlib_type = "sa"
   install_images = [ "system" ]
   part_name = "init"
   subsystem_name = "startup"
