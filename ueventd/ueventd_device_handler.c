@@ -512,6 +512,9 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
         // Other usb devies, do not handle it.
         return;
     } else {
+        if (strcmp(uevent->deviceName, "mapper/control") == 0) {
+            devName = "mapper/control";
+        }
         if (snprintf_s(deviceNode, DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1, "%s/%s", devPath, devName) == -1) {
             INIT_LOGE("Make device file for device [%d : %d]", uevent->major, uevent->minor);
             return;

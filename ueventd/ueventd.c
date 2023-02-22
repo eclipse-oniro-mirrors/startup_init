@@ -136,7 +136,8 @@ typedef struct {
 static const DYNAMIC_DEVICE_NODE DYNAMIC_DEVICES[] = {
     { DEV_NODE_PATH_PREFIX"tty",              S_IFCHR | DEFAULT_RW_MODE },
     { DEV_NODE_PATH_PREFIX"binder",           S_IFCHR | DEFAULT_RW_MODE },
-    { DEV_NODE_PATH_PREFIX"console",          S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP }
+    { DEV_NODE_PATH_PREFIX"console",          S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP },
+    { DEV_NODE_PATH_PREFIX"mapper/control",          S_IFCHR | DEFAULT_RW_MODE }
 };
 
 static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
@@ -152,6 +153,11 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
         if (strcmp(uevent->deviceName, DYNAMIC_DEVICES[idx].dev + DEV_NODE_PATH_PREFIX_LEN) != 0) {
             idx++;
             continue;
+        }
+
+        if (strcmp(uevent->deviceName, "mapper/control") == 0) {
+            HandleOtherDeviceEvent(uevent);
+            return;
         }
 
         // Matched
@@ -176,10 +182,17 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
                 return;
             }
         } else if (strstr(devices[i], uevent->partitionName) != NULL ||
-            strstr(uevent->partitionName, "vendor") != NULL || strstr(uevent->partitionName, "system") != NULL) {
+            strstr(uevent->partitionName, "vendor") != NULL ||
+            strstr(uevent->partitionName, "system") != NULL ||
+            strstr(uevent->partitionName, "boot") != NULL ||
+            strstr(uevent->partitionName, "ramdisk") != NULL ||
+            strstr(uevent->partitionName, "rvt") != NULL) {
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
             HandleBlockDeviceEvent(uevent);
             return;
+        } else {
+            INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
+            INIT_LOGE("Handle required device %s", devices[i]);
         }
     }
 }
@@ -338,6 +351,11 @@ static void Trigger(const char *path, int sockFd, char **devices, int num)
         }
     }
     closedir(dir);
+}
+
+void RetriggerUeventByPath(int sockFd, char *path)
+{
+    Trigger(path, sockFd, NULL, 0);
 }
 
 void RetriggerUevent(int sockFd, char **devices, int num)
