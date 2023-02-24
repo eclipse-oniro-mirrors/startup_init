@@ -41,8 +41,6 @@ extern "C" {
 #define FS_HVB_DEVPATH_MAX_LEN 128
 #define FS_HVB_RVT_PARTITION_NAME "rvt"
 #define FS_HVB_CMDLINE_PATH "/proc/cmdline"
-#define FS_HVB_CMDLINE_HASH_ALG "ohos.boot.hvb.hash_algo"
-#define FS_HVB_CMDLINE_CERT_DIGEST "ohos.boot.rvt.digest"
 #define FS_HVB_PARTITION_PREFIX "/dev/block/by-name/"
 
 #define FS_HVB_RETURN_ERR_IF_NULL(__ptr)             \
@@ -67,12 +65,12 @@ static char FsHvbHexCharToBin(char hex)
 
 static int FsHvbGetHashStr(char *str, size_t size)
 {
-    return FsHvbGetValueFromCmdLine(str, size, FS_HVB_CMDLINE_HASH_ALG);
+    return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_HASH_ALG);
 }
 
 static int FsHvbGetCertDigstStr(char *str, size_t size)
 {
-    return FsHvbGetValueFromCmdLine(str, size, FS_HVB_CMDLINE_CERT_DIGEST);
+    return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_CERT_DIGEST);
 }
 
 static int FsHvbComputeSha256(char *digest, size_t size, struct hvb_cert_data *certs, uint64_t num_certs)
