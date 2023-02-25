@@ -216,11 +216,11 @@ bool SetSeccompPolicyWithName(const char *filterName)
     } else {
         PLUGIN_LOGE("GetSeccompPolicy failed return is %d", retCode);
     }
-
+#ifndef COVERAGE_TEST
     if (handler != NULL) {
         dlclose(handler);
     }
-
+#endif
     if (filterLibRealPath != NULL) {
         free(filterLibRealPath);
     }

@@ -323,10 +323,20 @@ ohos_unittest("init_unittest") {
   }
 
   if (defined(build_seccomp) && build_seccomp) {
-    sources += [ "seccomp/seccomp_unittest.cpp" ]
+    sources += [
+      "../../services/modules/seccomp/seccomp_policy.c",
+      "seccomp/seccomp_unittest.cpp",
+    ]
     include_dirs +=
         [ "//base/startup/init/interfaces/innerkits/seccomp/include" ]
-    external_deps += [ "init:seccomp" ]
+
+    if (build_variant == "root") {
+      defines += [ "WITH_SECCOMP_DEBUG" ]
+    }
+
+    if (use_clang_coverage) {
+      defines += [ "COVERAGE_TEST" ]
+    }
   }
 
   if (defined(build_selinux) && build_selinux) {
