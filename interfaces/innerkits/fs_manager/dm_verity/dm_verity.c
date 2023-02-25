@@ -15,6 +15,7 @@
 
 #include "dm_verity.h"
 #include "fs_hvb.h"
+#include "hvb_cmdline.h"
 #include "securec.h"
 #include "beget_ext.h"
 #include <stdbool.h>
@@ -25,10 +26,9 @@ extern "C" {
 #endif
 #endif
 
-#define HVB_VERIFIEDBOOT_STATE_STR_MAX_LEN 32
-#define HVB_CMDLINE_VERIFIEDBOOT_STATE "ohos.boot.verifiedbootstate"
+#define HVB_VB_STATE_STR_MAX_LEN 32
 #define HVB_FORCE_ENABLE_STR_MAX_LEN 16
-#define HVB_CMDLINE_HVB_FORCE_ENABLE "ohos.boot.oem_swtype"
+#define HVB_CMDLINE_HVB_FORCE_ENABLE "ohos.boot.hvb.oem_swtype"
 
 #define DM_VERITY_RETURN_ERR_IF_NULL(__ptr)             \
     do {                                                \
@@ -42,20 +42,21 @@ static bool HvbDmVerityIsEnable()
 {
     int rc;
     char forceEnable[HVB_FORCE_ENABLE_STR_MAX_LEN] = {0};
-    char verifiedBootState[HVB_VERIFIEDBOOT_STATE_STR_MAX_LEN] = {0};
+    char vBState[HVB_VB_STATE_STR_MAX_LEN] = {0};
 
     rc = FsHvbGetValueFromCmdLine(&forceEnable[0], sizeof(forceEnable), HVB_CMDLINE_HVB_FORCE_ENABLE);
     if (rc == 0 && strcmp(&forceEnable[0], "factory") == 0) {
         return true;
     }
 
-    rc = FsHvbGetValueFromCmdLine(&verifiedBootState[0], sizeof(verifiedBootState), HVB_CMDLINE_VERIFIEDBOOT_STATE);
+    rc = FsHvbGetValueFromCmdLine(&vBState[0], sizeof(vBState), HVB_CMDLINE_VB_STATE);
+
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, get verifed boot state", rc);
         return false;
     }
 
-    if (strcmp(&verifiedBootState[0], "orange") == 0 || strcmp(&verifiedBootState[0], "ORANGE")) {
+    if (strcmp(&vBState[0], "false") == 0 || strcmp(&vBState[0], "FALSE") == 0) {
         return false;
     }
 
