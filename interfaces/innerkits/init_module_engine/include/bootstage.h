@@ -29,6 +29,7 @@ enum INIT_BOOTSTAGE {
     INIT_GLOBAL_INIT       = 0,
     INIT_PRE_PARAM_SERVICE = 10,
     INIT_PRE_PARAM_LOAD    = 20,
+    INIT_PARAM_LOAD_FILTER = 25,
     INIT_PRE_CFG_LOAD      = 30,
     INIT_SERVICE_PARSE     = 35,
     INIT_POST_PERSIST_PARAM_LOAD   = 40,
@@ -59,6 +60,29 @@ __attribute__((always_inline)) inline int InitAddPreParamServiceHook(int prio, O
 __attribute__((always_inline)) inline int InitAddPreParamLoadHook(int prio, OhosHook hook)
 {
     return HookMgrAdd(GetBootStageHookMgr(), INIT_PRE_PARAM_LOAD, prio, hook);
+}
+
+/**
+ * @brief Parameter load filter context
+ */
+typedef struct tagPARAM_LOAD_FILTER_CTX {
+    const char *name;    /* Parameter name */
+    const char *value;   /* Parameter value */
+    int ignored;         /* Ignore this parameter or not */
+} PARAM_LOAD_FILTER_CTX;
+
+/**
+ * @brief Parameter Load Hook function prototype
+ *
+ * @param hookInfo hook information
+ * @param filter filter information context
+ * @return return 0 if succeed; other values if failed.
+ */
+typedef int (*ParamLoadFilter)(const HOOK_INFO *hookInfo, PARAM_LOAD_FILTER_CTX *filter);
+
+__attribute__((always_inline)) inline int InitAddParamLoadFilterHook(int prio, ParamLoadFilter filter)
+{
+    return HookMgrAdd(GetBootStageHookMgr(), INIT_PARAM_LOAD_FILTER, prio, (OhosHook)filter);
 }
 
 __attribute__((always_inline)) inline int InitAddPreCfgLoadHook(int prio, OhosHook hook)
