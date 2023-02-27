@@ -69,13 +69,13 @@ static LE_STATUS HandleRecvMsg_(const LoopHandle loopHandle,
         }
     }
     if (status != LE_SUCCESS) {
-        FreeBuffer(loopHandle, (StreamTask *)taskHandle, buffer);
+        FreeBuffer(loopHandle, NULL, buffer);
         return status;
     }
     if (recvMessage) {
         recvMessage(taskHandle, buffer->data, readLen);
     }
-    FreeBuffer(loopHandle, (StreamTask *)taskHandle, buffer);
+    FreeBuffer(loopHandle, NULL, buffer);
     return status;
 }
 
