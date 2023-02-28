@@ -17,6 +17,9 @@
 
 #include "param_manager.h"
 #include "param_trie.h"
+#ifdef SUPPORT_PARAM_LOAD_HOOK
+#include "init_module_engine.h"
+#endif
 
 /**
  * Loading system parameter from /proc/cmdline by the following rules:
@@ -206,6 +209,22 @@ static int LoadOneParam_(const uint32_t *context, const char *name, const char *
     if (ret != 0) {
         return 0;
     }
+
+#ifdef SUPPORT_PARAM_LOAD_HOOK
+    PARAM_LOAD_FILTER_CTX filter;
+
+    // Filter by hook
+    filter.name = name;
+    filter.value = value;
+    filter.ignored = 0;
+    HookMgrExecute(GetBootStageHookMgr(), INIT_PARAM_LOAD_FILTER, (void *)&filter, NULL);
+
+    if (filter.ignored) {
+        PARAM_LOGV("Default parameter [%s] [%s] ignored", name, value);
+        return 0;
+    }
+#endif
+
     PARAM_LOGV("Add default parameter [%s] [%s]", name, value);
     return WriteParam(name, value, NULL, mode & LOAD_PARAM_ONLY_ADD);
 }

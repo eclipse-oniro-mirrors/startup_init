@@ -236,6 +236,7 @@ static int BootCompleteCmd(const HOOK_INFO *hookInfo, void *executionContext)
     // clear hook
     HookMgrDel(GetBootStageHookMgr(), INIT_GLOBAL_INIT, NULL);
     HookMgrDel(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, NULL);
+    HookMgrDel(GetBootStageHookMgr(), INIT_PARAM_LOAD_FILTER, NULL);
     HookMgrDel(GetBootStageHookMgr(), INIT_PRE_PARAM_LOAD, NULL);
     HookMgrDel(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, NULL);
     HookMgrDel(GetBootStageHookMgr(), INIT_SERVICE_PARSE, NULL);

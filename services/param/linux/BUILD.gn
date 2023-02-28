@@ -107,6 +107,7 @@ if (defined(ohos_lite)) {
     defines = [
       "_GNU_SOURCE",
       "PARAM_SUPPORT_REAL_CHECK",
+      "SUPPORT_PARAM_LOAD_HOOK",
     ]
 
     if (param_base_log) {
