@@ -55,18 +55,16 @@ static void ClearLogo(int fd)
 }
 
 static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
-{
+{   
+    if (size == 0 || size > MAX_LOGO_SIZE) {
+        BSH_LOGE("logo size is invalid!");
+        return;
+    }
     FILE *rgbFile = fopen(logoPath.c_str(), "rb");
     if (rgbFile == nullptr) {
         std::cout << "cannot find pic file\n";
         return;
     }
-
-    if (size <= 0 || size > MAX_LOGO_SIZE) {
-        BSH_LOGE("logo size is invalid!");
-        return;
-    }
-
     char *buffer = reinterpret_cast<char *>(malloc(size));
     if (buffer == nullptr) {
         (void)fclose(rgbFile);
