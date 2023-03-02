@@ -131,3 +131,4 @@ dev_lcd_backlight:x:3072:
 dev_vibrator:x:3080:
 vcodec:x:3073:
 dev_camera:x:3090:
+servicerouter:x:6001:
