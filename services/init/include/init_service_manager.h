@@ -37,6 +37,7 @@ extern "C" {
 #define D_CAPS_STR_IN_CFG "d-caps"
 #define APL_STR_IN_CFG "apl"
 #define CPU_CORE_STR_IN_CFG "cpucore"
+#define MODULE_UPDATE_STR_IN_CFG "module-update"
 
 #define MAX_SERVICES_CNT_IN_FILE 100
 

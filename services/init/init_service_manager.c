@@ -850,6 +850,8 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get console for service %s", service->name);
     ret = GetServiceAttr(curItem, service, "notify-state", SERVICE_ATTR_NOTIFY_STATE, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get notify-state for service %s", service->name);
+    ret = GetServiceAttr(curItem, service, MODULE_UPDATE_STR_IN_CFG, SERVICE_ATTR_MODULE_UPDATE, NULL);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get module-update for service %s", service->name);
 
     ParseOneServiceArgs(curItem, service);
     ret = GetServiceSandbox(curItem, service);
