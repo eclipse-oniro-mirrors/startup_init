@@ -163,10 +163,10 @@ static napi_value Set(napi_env env, napi_callback_info info)
         } else if (i == ARGC_NUMBER && valueType == napi_function) {
             napi_create_reference(env, argv[i], 1, &asyncContext->callbackRef);
         } else {
-            delete asyncContext;
             ret = SYSPARAM_INVALID_INPUT;
         }
         if (ret != 0) {
+            delete asyncContext;
             ret = (i == 1) ? SYSPARAM_INVALID_VALUE : ret;
             napi_value err = BusinessErrorCreate(env, ret);
             napi_throw(env, err);
@@ -349,10 +349,10 @@ static napi_value Get(napi_env env, napi_callback_info info)
         } else if (i == ARGC_NUMBER && valueType == napi_function) {
             napi_create_reference(env, argv[i], 1, &asyncContext->callbackRef);
         } else {
-            delete asyncContext;
             ret = SYSPARAM_INVALID_INPUT;
         }
         if (ret != 0) {
+            delete asyncContext;
             ret = (i == 1) ? SYSPARAM_INVALID_VALUE : ret;
             napi_value err = BusinessErrorCreate(env, ret);
             napi_throw(env, err);
