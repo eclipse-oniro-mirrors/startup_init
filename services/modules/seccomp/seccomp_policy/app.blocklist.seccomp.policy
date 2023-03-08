@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,15 +11,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@arch
-arm
+# For now, it supports architechture of ['arm', 'arm64'].
 
-@returnValue
-TRAP
-
-@mode
-ONLY_CHECK_ARGS
-
-@allowListWithArgs
-setresuid32: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return TRAP;
-setresgid32: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return TRAP;
+@blockList
+umount2;all
+mount;all
+chroot;all
+acct;all
+init_module;all
+delete_module;all
+clock_settime;all
+syslog;all
+reboot;all
+setregid;arm64
+setgid;arm64
+setreuid;arm64
+setuid;arm64
+setfsuid;all
+setfsgid;all
+sethostname;all
+setdomainname;all
+settimeofday;all
+adjtimex;all
+swapon;all
+swapoff;all
+clock_adjtime;all
+setreuid32;arm
+setregid32;arm
+setuid32;arm
+setgid32;arm
+setgroups;arm64
+setgroups32;arm
+setresgid;arm64
+setresgid32;arm

@@ -53,7 +53,6 @@
 #ifdef WITH_SECCOMP
 #define APPSPAWN_NAME ("appspawn")
 #define NWEBSPAWN_NAME ("nwebspawn")
-#define SA_MAIN_PATH ("/system/bin/sa_main")
 #endif
 
 #ifndef TIOCSCTTY
@@ -70,15 +69,28 @@ static int SetAllAmbientCapability(void)
     return SERVICE_SUCCESS;
 }
 
-static void SetSystemSeccompPolicy(const Service *service)
+static int SetSystemSeccompPolicy(const Service *service)
 {
 #ifdef WITH_SECCOMP
     if (strncmp(APPSPAWN_NAME, service->name, strlen(APPSPAWN_NAME))
-        && strncmp(NWEBSPAWN_NAME, service->name, strlen(NWEBSPAWN_NAME))
-        && !strncmp(SA_MAIN_PATH, service->pathArgs.argv[0], strlen(SA_MAIN_PATH))) {
-        PluginExecCmdByName("SetSeccompPolicy", "start");
+        && strncmp(NWEBSPAWN_NAME, service->name, strlen(NWEBSPAWN_NAME))) {
+        char cmdContent[MAX_CMD_CONTENT_LEN + 1] = {0};
+
+        int rc = snprintf_s(cmdContent, MAX_CMD_CONTENT_LEN + 1, strlen(service->name) + 1,
+                            "%s ", service->name);
+        if (rc == -1) {
+            return SERVICE_FAILURE;
+        }
+
+        rc = strcat_s(cmdContent, MAX_CMD_CONTENT_LEN + 1, service->pathArgs.argv[0]);
+        if (rc != 0) {
+            return SERVICE_FAILURE;
+        }
+
+        PluginExecCmdByName("SetSeccompPolicy", cmdContent);
     }
 #endif
+    return SERVICE_SUCCESS;
 }
 
 #ifndef OHOS_LITE
@@ -138,6 +150,11 @@ static int SetPerms(const Service *service)
             return SERVICE_FAILURE,
             "SetPerms, setgroups failed. errno = %d, gIDCnt=%d", errno, service->servPerm.gIDCnt);
     }
+
+    // set seccomp policy before setuid
+    INIT_ERROR_CHECK(SetSystemSeccompPolicy(service) == SERVICE_SUCCESS, return SERVICE_FAILURE,
+        "set seccomp policy failed for service %s", service->name);
+
     if (service->servPerm.uID != 0) {
         if (setuid(service->servPerm.uID) != 0) {
             INIT_LOGE("setuid of service: %s failed, uid = %d", service->name, service->servPerm.uID);
@@ -313,8 +330,6 @@ static int InitServiceProperties(Service *service)
     PublishHoldFds(service);
     INIT_CHECK_ONLY_ELOG(BindCpuCore(service) == SERVICE_SUCCESS,
         "binding core number failed for service %s", service->name);
-
-    SetSystemSeccompPolicy(service);
 
     // permissions
     INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, return -1,

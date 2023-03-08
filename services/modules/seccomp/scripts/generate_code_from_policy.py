@@ -23,10 +23,11 @@ import re
 import os
 import stat
 
-supported_parse_item = ['arch', 'labelName', 'priority', 'allowList', 'blockList', 'priorityWithArgs',\
-    'allowListWithArgs', 'headFiles', 'selfDefineSyscall', 'returnValue', 'mode']
+supported_parse_item = ['labelName', 'priority', 'allowList', 'blockList', 'priorityWithArgs', \
+                        'allowListWithArgs', 'headFiles', 'selfDefineSyscall', 'returnValue', \
+                        'mode', 'privilegedProcessName', 'allowBlockList']
 
-function_name_nr_table_dict = {}
+supported_architecture = ['arm', 'arm64']
 
 BPF_JGE = 'BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, {}, {}, {}),'
 BPF_JGT = 'BPF_JUMP(BPF_JMP|BPF_JGT|BPF_K, {}, {}, {}),'
@@ -54,6 +55,20 @@ mode_str = {
     'ONLY_CHECK_ARGS': 1
 }
 
+architecture_to_number = {
+    'arm': 'AUDIT_ARCH_ARM',
+    'arm64': 'AUDIT_ARCH_AARCH64'
+}
+
+
+class ValidateError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+def print_info(info):
+    print("[INFO] %s" % info)
+
 
 def is_hex_digit(s):
     try:
@@ -79,8 +94,68 @@ def str_convert_to_int(s):
     return number, digit_flag
 
 
+def is_function_name_exist(arch, function_name, func_name_nr_table):
+    if function_name in func_name_nr_table:
+        return True
+    else:
+        raise ValidateError('{} not exsit in {} function_name_nr_table Table'.format(function_name, arch))
+
+
+def function_name_to_nr(function_name_list, func_name_nr_table):
+    return set(func_name_nr_table[function_name] for function_name \
+    in function_name_list if function_name in func_name_nr_table)
+
+
+def filter_syscalls_nr(name_to_nr):
+    syscalls = {}
+    for syscall_name, nr in name_to_nr.items():
+        if not syscall_name.startswith("__NR_") and not syscall_name.startswith("__ARM_NR_"):
+            continue
+
+        if syscall_name.startswith("__NR_arm_"):
+            syscall_name = syscall_name[len("__NR_arm_"):]
+        elif syscall_name.startswith("__NR_"):
+            syscall_name = syscall_name[len("__NR_"):]
+        elif syscall_name.startswith("__ARM_NR_"):
+            syscall_name = syscall_name[len("__ARM_NR_"):]
+
+        syscalls[syscall_name] = nr
+
+    return syscalls
+
+
+def parse_syscall_file(file_name):
+    const_pattern = re.compile(
+        r'^\s*#define\s+([A-Za-z_][A-Za-z0-9_]+)\s+(.+)\s*$')
+    mark_pattern = re.compile(r'\b[A-Za-z_][A-Za-z0-9_]+\b')
+    name_to_nr = {}
+    with open(file_name) as f:
+        for line in f:
+            k = const_pattern.match(line)
+            if k is None:
+                continue
+            try:
+                name = k.group(1)
+                nr = eval(mark_pattern.sub(lambda x: str(name_to_nr.get(x.group(0))),
+                                        k.group(2)))
+
+                name_to_nr[name] = nr
+            except(KeyError, SyntaxError, NameError, TypeError):
+                continue
+
+    return filter_syscalls_nr(name_to_nr)
+
+
+def gen_syscall_nr_table(file_name, func_name_nr_table):
+    s = re.search(r"libsyscall_to_nr_([^/]+)", file_name)
+    func_name_nr_table[str(s.group(1))] = parse_syscall_file(file_name)
+    if str(s.group(1)) not in func_name_nr_table.keys():
+        raise ValidateError("parse syscall file failed")
+    return func_name_nr_table
+
+
 class SeccompPolicyParam:
-    def __init__(self, arch):
+    def __init__(self, arch, function_name_nr_table):
         self.arch = arch
         self.priority = set()
         self.allow_list = set()
@@ -95,7 +170,7 @@ class SeccompPolicyParam:
         self.final_allow_list_with_args = set()
         self.return_value = ''
         self.mode = 'DEFAULT'
-        self.function_name_nr_table = function_name_nr_table_dict.get(arch)
+        self.function_name_nr_table = function_name_nr_table
         self.value_function = {
             'priority': self.update_priority,
             'allowList': self.update_allow_list,
@@ -111,46 +186,31 @@ class SeccompPolicyParam:
     def clear_list(self):
         self.priority.clear()
         self.allow_list.clear()
-        self.blocklist.clear()
         self.allow_list_with_args.clear()
         self.priority_with_args.clear()
         if self.mode == 'ONLY_CHECK_ARGS':
             self.final_allow_list.clear()
             self.final_priority.clear()
 
-    def function_name_to_nr(self, function_name_list):
-        return set(self.function_name_nr_table[function_name] for function_name \
-        in function_name_list if function_name in self.function_name_nr_table)
-
-    def is_function_name_exist(self, function_name):
-        if function_name in self.function_name_nr_table:
+    def update_list(self, function_name, to_update_list):
+        if is_function_name_exist(self.arch, function_name, self.function_name_nr_table):
+            to_update_list.add(function_name)
             return True
-        else:
-            print('[ERROR] {} not exsit in {} function_name_nr_table Table'.format(function_name, self.arch))
-            return False
+        return False
 
     def update_priority(self, function_name):
-        if self.is_function_name_exist(function_name):
-            self.priority.add(function_name)
-            return True
-        return False
+        return self.update_list(function_name, self.priority)
 
     def update_allow_list(self, function_name):
-        if self.is_function_name_exist(function_name):
-            self.allow_list.add(function_name)
-            return True
-        return False
+        return self.update_list(function_name, self.allow_list)
 
     def update_blocklist(self, function_name):
-        if self.is_function_name_exist(function_name):
-            self.blocklist.add(function_name)
-            return True
-        return False
+        return self.update_list(function_name, self.blocklist)
 
     def update_priority_with_args(self, function_name_with_args):
         function_name = function_name_with_args[:function_name_with_args.find(':')]
         function_name = function_name.strip()
-        if self.is_function_name_exist(function_name):
+        if is_function_name_exist(self.arch, function_name, self.function_name_nr_table):
             self.priority_with_args.add(function_name_with_args)
             return True
         return False
@@ -158,7 +218,7 @@ class SeccompPolicyParam:
     def update_allow_list_with_args(self, function_name_with_args):
         function_name = function_name_with_args[:function_name_with_args.find(':')]
         function_name = function_name.strip()
-        if self.is_function_name_exist(function_name):
+        if is_function_name_exist(self.arch, function_name, self.function_name_nr_table):
             self.allow_list_with_args.add(function_name_with_args)
             return True
         return False
@@ -169,8 +229,7 @@ class SeccompPolicyParam:
             self.head_files.add(head_files)
             return True
 
-        print('[ERROR] {} is not legal by headFiles format'.format(head_files))
-        return False
+        raise ValidateError('{} is not legal by headFiles format'.format(head_files))
 
     def update_self_define_syscall(self, self_define_syscall):
         nr, digit_flag = str_convert_to_int(self_define_syscall)
@@ -178,45 +237,58 @@ class SeccompPolicyParam:
             self.self_define_syscall.add(nr)
             return True
 
-        print("[ERROR] {} is not a number or {} is already used by ohter \
-            syscall".format(self_define_syscall, self_define_syscall))
-        return False
+        raise ValidateError('{} is not a number or {} is already used by ohter \
+            syscall'.format(self_define_syscall, self_define_syscall))
 
     def update_return_value(self, return_str):
         if return_str in ret_str_to_bpf:
             self.return_value = return_str
             return True
 
-        print('[ERROR] {} not in [KILL_RPOCESS, KILL_THREAD, LOG]'.format(return_str))
-        return False
+        raise ValidateError('{} not in {}'.format(return_str, ret_str_to_bpf.keys()))
 
     def update_mode(self, mode):
         if mode in mode_str.keys():
             self.mode = mode
             return True
-        print('[ERROR] {} not in [DEFAULT, ONLY_CHECK_ARGS]'.format(mode_str))
-        return False
+        raise ValidateError('{} not in [DEFAULT, ONLY_CHECK_ARGS]'.format(mode_str))
+
+    def check_allow_list(self, allow_list):
+        for item in allow_list:
+            pos = item.find(':')
+            syscall = item
+            if pos != -1:
+                syscall = item[:pos]
+            if syscall in self.blocklist:
+                raise ValidateError('{} of allow list  is in block list'.format(syscall))
+        return True
+
+    def check_all_allow_list(self):
+        flag = self.check_allow_list(self.final_allow_list) \
+               and self.check_allow_list(self.final_priority) \
+               and self.check_allow_list(self.final_priority_with_args) \
+               and self.check_allow_list(self.final_allow_list_with_args)
+        block_nr_list = function_name_to_nr(self.blocklist, self.function_name_nr_table)
+        for nr in self.self_define_syscall:
+            if nr in block_nr_list:
+                return False
+        return flag
 
     def update_final_list(self):
         #remove duplicate function_name
-        self.priority_with_args = set(item
-                                      for item in self.priority_with_args
-                                      if item[:item.find(':')] not in self.blocklist)
+        self.priority_with_args = set(item for item in self.priority_with_args)
         priority_function_name_list_with_args = set(item[:item.find(':')] for item in self.priority_with_args)
         self.allow_list_with_args = set(item
                                         for item in self.allow_list_with_args
-                                        if item[:item.find(':')] not in self.blocklist and
-                                        item[:item.find(':')] not in priority_function_name_list_with_args)
+                                        if item[:item.find(':')] not in priority_function_name_list_with_args)
         function_name_list_with_args = set(item[:item.find(':')] for item in self.allow_list_with_args)
 
-        self.final_allow_list |= self.allow_list - self.blocklist - self.priority - function_name_list_with_args - \
+        self.final_allow_list |= self.allow_list - self.priority - function_name_list_with_args - \
                                     priority_function_name_list_with_args
-        self.final_priority |= self.priority - self.blocklist - function_name_list_with_args - \
+        self.final_priority |= self.priority - function_name_list_with_args - \
                                 priority_function_name_list_with_args
         self.final_allow_list_with_args |= self.allow_list_with_args
         self.final_priority_with_args |= self.priority_with_args
-        block_nr_list = self.function_name_to_nr(self.blocklist)
-        self.self_define_syscall = self.self_define_syscall - block_nr_list
         self.clear_list()
 
 
@@ -226,7 +298,7 @@ class GenBpfPolicy:
         self.syscall_nr_range = []
         self.bpf_policy = []
         self.syscall_nr_policy_list = []
-        self.function_name_nr_table = {}
+        self.function_name_nr_table_dict = {}
         self.gen_mode = 0
         self.flag = True
         self.return_value = ''
@@ -242,9 +314,11 @@ class GenBpfPolicy:
 
     def update_arch(self, arch):
         self.arch = arch
-        self.function_name_nr_table = function_name_nr_table_dict.get(arch)
         self.syscall_nr_range = []
         self.syscall_nr_policy_list = []
+
+    def update_function_name_nr_table(self, func_name_nr_table):
+        self.function_name_nr_table_dict = func_name_nr_table
 
     def clear_bpf_policy(self):
         self.bpf_policy.clear()
@@ -522,9 +596,7 @@ class GenBpfPolicy:
     def compile_atom(self, atom, cur_size):
         bpf_policy = []
         if len(atom) < 6:
-            print('[ERROR] {} format ERROR '.format(atom))
-            self.flag = False
-            return bpf_policy
+            raise ValidateError('{} format ERROR '.format(atom))
 
         if atom[0] == '(':
             bpf_policy += self.compile_mask_equal_atom(atom, cur_size)
@@ -532,30 +604,26 @@ class GenBpfPolicy:
             bpf_policy += self.compile_single_operation_atom(atom, cur_size)
 
         return bpf_policy
-    
-    def check_arg_str(self, arg_atom):
+
+    @staticmethod
+    def check_arg_str(arg_atom):
         arg_str = arg_atom[0:3]
         if arg_str != 'arg':
-            print('[ERROR] format ERROR, {} is not equal to arg'.format(arg_atom))
-            self.flag = False
-            return -1, False
+            raise ValidateError('format ERROR, {} is not equal to arg'.format(arg_atom))
 
         arg_id = int(arg_atom[3])
         if arg_id not in range(6):
-            print('[ERROR] arg num out of the scope 0~5')
-            self.flag = False
-            return -1, False
+            raise ValidateError('arg num out of the scope 0~5')
 
         return arg_id, True
 
-    def check_operation_str(self, operation_atom):
+    @staticmethod
+    def check_operation_str(operation_atom):
         operation_str = operation_atom
         if operation_str not in operation:
             operation_str = operation_atom[0]
             if operation_str not in operation:
-                print('[ERROR] operation not in [<, <=, !=, ==, >, >=, &]')
-                self.flag = False
-                return '', False
+                raise ValidateError('operation not in [<, <=, !=, ==, >, >=, &]')
         return operation_str, True
 
     #gen bpf (argn & mask) == value
@@ -633,8 +701,8 @@ class GenBpfPolicy:
         operation_part = group_info[0]
         return_part = group_info[1]
         if not return_part.startswith('return'):
-            self.set_gen_flag(False)
-            return bpf_policy
+            raise ValidateError('allow list with args do not have return part')
+
         self.set_return_value(return_part[len('return'):])
         and_cond_groups = operation_part.split('||')
         for and_condition_group in and_cond_groups:
@@ -655,7 +723,7 @@ class GenBpfPolicy:
             bpf_policy += self.parse_sub_group(sub_group)
         self.parse_else_part(else_part)
         bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
-        syscall_nr = self.function_name_nr_table.get(function_name)
+        syscall_nr = self.function_name_nr_table_dict.get(self.arch).get(function_name)
         #load syscall nr
         bpf_policy = self.gen_bpf_valid_syscall_nr(syscall_nr, len(bpf_policy) - skip)  + bpf_policy
         return bpf_policy
@@ -689,15 +757,12 @@ class GenBpfPolicy:
         #load arch
         bpf_policy.append(BPF_LOAD.format(4))
         if len(arches) == 2:
-            bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_AARCH64', 3, 0))
-            bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_ARM', 0, 1))
+            bpf_policy.append(BPF_JEQ.format(architecture_to_number.get(arches[0]), 3, 0))
+            bpf_policy.append(BPF_JEQ.format(architecture_to_number.get(arches[1]), 0, 1))
             bpf_policy.append(BPF_JA.format(skip_step))
             bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_TRAP'))
-        elif 'arm' in arches:
-            bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_ARM', 1, 0))
-            bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_TRAP'))
-        elif 'arm64' in arches:
-            bpf_policy.append(BPF_JEQ.format('AUDIT_ARCH_AARCH64', 1, 0))
+        elif len(arches) == 1:
+            bpf_policy.append(BPF_JEQ.format(architecture_to_number.get(arches[0]), 1, 0))
             bpf_policy.append(BPF_RET_VALUE.format('SECCOMP_RET_TRAP'))
         else:
             self.bpf_policy = []
@@ -705,51 +770,88 @@ class GenBpfPolicy:
         self.bpf_policy = bpf_policy + self.bpf_policy
 
 
+class AllowBlockList:
+    def __init__(self, filter_name, arch, function_name_nr_table):
+        self.is_valid = False
+        self.arch = arch
+        self.filter_name = filter_name
+        self.reduced_block_list = set()
+        self.function_name_nr_table = function_name_nr_table
+        self.value_function = {
+            'privilegedProcessName': self.update_flag,
+            'allowBlockList': self.update_reduced_block_list,
+        }
+
+    def update_flag(self, name):
+        if self.filter_name == name:
+            self.is_valid = True
+        else:
+            self.is_valid = False
+
+    def update_reduced_block_list(self, function_name):
+        if self.is_valid and is_function_name_exist(self.arch, function_name, self.function_name_nr_table):
+            self.reduced_block_list.add(function_name)
+            return True
+        return False
+
+
 class SeccompPolicyParser:
     def __init__(self):
         self.cur_parse_item = ''
-        self.cur_arch = ''
         self.arches = set()
         self.bpf_generator = GenBpfPolicy()
-        self.seccomp_policy_param_arm = None
-        self.seccomp_policy_param_arm64 = None
-        self.cur_policy_param = None
+        self.seccomp_policy_param = dict()
+        self.reduced_block_list_parm = dict()
+        self.key_process_flag = False
 
-    def update_arch(self, arch):
-        if arch in ['arm', 'arm64'] :
-            self.cur_arch = arch
-            print("[INFO] start deal with {} scope".format(self.cur_arch))
-            self.arches.add(arch)
-            if self.cur_arch == 'arm':
-                self.cur_policy_param = self.seccomp_policy_param_arm
-            elif self.cur_arch == 'arm64':
-                self.cur_policy_param = self.seccomp_policy_param_arm64
-        else:
-            print('[ERROR] {} not in [arm arm64]'.format(arch))
-            self.bpf_generator.set_gen_flag(False)
+    def update_arch(self, target_cpu):
+        if target_cpu == "arm":
+            self.arches.add(target_cpu)
+        elif target_cpu == "arm64":
+            self.arches.add("arm")
+            self.arches.add(target_cpu)
+
+    def update_block_list(self):
+        for arch in supported_architecture:
+            self.seccomp_policy_param.get(arch).blocklist -= self.reduced_block_list_parm.get(arch).reduced_block_list
 
     def update_parse_item(self, line):
         item = line[1:]
         if item in supported_parse_item:
             self.cur_parse_item = item
-            print('[INFO] start deal with {}'.format(self.cur_parse_item))
+            print_info('start deal with {}'.format(self.cur_parse_item))
+
+    def check_allow_list(self):
+        for arch in self.arches:
+            if not self.seccomp_policy_param.get(arch).check_all_allow_list():
+                self.bpf_generator.set_gen_flag(False)
 
     def clear_file_syscall_list(self):
-        self.seccomp_policy_param_arm.update_final_list()
-        self.seccomp_policy_param_arm64.update_final_list()
+        for arch in self.arches:
+            self.seccomp_policy_param.get(arch).update_final_list()
         self.cur_parse_item = ''
         self.cur_arch = ''
 
     def parse_line(self, line):
         if not self.cur_parse_item :
             return
-        if self.cur_parse_item == 'arch':
-            self.update_arch(line)
-        elif not self.cur_arch :
-            return
+        line = line.replace(' ', '')
+        pos = line.rfind(';')
+        if pos < 0:
+            for arch in self.arches:
+                if self.key_process_flag:
+                    self.reduced_block_list_parm.get(arch).value_function.get(self.cur_parse_item)(line)
+                else:
+                    self.seccomp_policy_param.get(arch).value_function.get(self.cur_parse_item)(line)
         else:
-            if not self.cur_policy_param.value_function.get(self.cur_parse_item)(line):
-                self.bpf_generator.set_gen_flag(False)
+            arches = line[pos + 1:].split(',')
+            if arches[0] == 'all':
+                arches = supported_architecture
+            for arch in arches:
+                if self.key_process_flag:
+                    self.reduced_block_list_parm.get(arch).value_function.get(self.cur_parse_item)(line[:pos])
+                else:
+                    self.seccomp_policy_param.get(arch).value_function.get(self.cur_parse_item)(line[:pos])
 
     def parse_open_file(self, fp):
         for line in fp:
@@ -761,55 +863,56 @@ class SeccompPolicyParser:
             if line[0] == '@':
                 self.update_parse_item(line)
                 continue
-            if line[0] != '@' and self.cur_arch == '' and self.cur_parse_item == '':
+            if line[0] != '@' and self.cur_parse_item == '':
                 continue
             self.parse_line(line)
         self.clear_file_syscall_list()
+        self.check_allow_list()
 
     def parse_file(self, file_path):
         with open(file_path) as fp:
             self.parse_open_file(fp)
 
-    def gen_seccomp_policy_of_arch(self):
-        if not self.cur_policy_param.return_value:
-            print('[ERROR] return value not defined')
-            self.bpf_generator.set_gen_flag(False)
-            return
+    def gen_seccomp_policy_of_arch(self, arch):
+        cur_policy_param = self.seccomp_policy_param.get(arch)
+
+        if not cur_policy_param.return_value:
+            raise ValidateError('return value not defined')
 
         #get final allow_list
-        syscall_nr_allow_list = self.cur_policy_param.function_name_to_nr(self.cur_policy_param.final_allow_list) | \
-            self.cur_policy_param.self_define_syscall
-        syscall_nr_priority = self.cur_policy_param.function_name_to_nr(self.cur_policy_param.final_priority)
-        self.bpf_generator.update_arch(self.cur_arch)
+        syscall_nr_allow_list = function_name_to_nr(cur_policy_param.final_allow_list, \
+                                                    cur_policy_param.function_name_nr_table) \
+                                                    | cur_policy_param.self_define_syscall
+        syscall_nr_priority = function_name_to_nr(cur_policy_param.final_priority, \
+                                                  cur_policy_param.function_name_nr_table)
+        self.bpf_generator.update_arch(arch)
 
         #load syscall nr
         if syscall_nr_allow_list or syscall_nr_priority:
             self.bpf_generator.add_load_syscall_nr()
         self.bpf_generator.gen_bpf_policy(syscall_nr_priority)
-        self.bpf_generator.gen_bpf_policy_with_args(self.cur_policy_param.final_priority_with_args, \
-            self.cur_policy_param.mode, self.cur_policy_param.return_value)
+        self.bpf_generator.gen_bpf_policy_with_args(sorted(list(cur_policy_param.final_priority_with_args)), \
+            cur_policy_param.mode, cur_policy_param.return_value)
         self.bpf_generator.gen_bpf_policy(syscall_nr_allow_list)
-        self.bpf_generator.gen_bpf_policy_with_args(self.cur_policy_param.final_allow_list_with_args, \
-            self.cur_policy_param.mode, self.cur_policy_param.return_value)
+        self.bpf_generator.gen_bpf_policy_with_args(sorted(list(cur_policy_param.final_allow_list_with_args)), \
+            cur_policy_param.mode, cur_policy_param.return_value)
 
-        self.bpf_generator.add_return_value(self.cur_policy_param.return_value)
+        self.bpf_generator.add_return_value(cur_policy_param.return_value)
 
     def gen_seccomp_policy(self):
-        if 'arm64' in self.arches:
-            self.update_arch('arm64')
-            self.gen_seccomp_policy_of_arch()
-
+        arches = list(self.arches)
+        if not arches:
+            return
+        self.gen_seccomp_policy_of_arch(arches[0])
         skip_step = len(self.bpf_generator.bpf_policy) + 1
+        if len(arches) == 2:
+            self.gen_seccomp_policy_of_arch(arches[1])
 
-        if 'arm' in self.arches:
-            self.update_arch('arm')
-            self.gen_seccomp_policy_of_arch()
-        self.bpf_generator.add_validate_arch(self.arches, skip_step)
+        self.bpf_generator.add_validate_arch(arches, skip_step)
 
     def gen_output_file(self, args):
         if not self.bpf_generator.bpf_policy:
-            print("[ERROR] bpf_policy is empty!")
-            return
+            raise ValidateError("bpf_policy is empty!")
 
         header = textwrap.dedent('''\
 
@@ -819,20 +922,22 @@ class SeccompPolicyParser:
             #include <linux/audit.h>
             ''')
         extra_header = set()
-        extra_header = self.seccomp_policy_param_arm.head_files | self.seccomp_policy_param_arm64.head_files
-        extra_header_list =  ['#include ' + i for i in extra_header]
+        for arch in self.arches:
+            extra_header |= self.seccomp_policy_param.get(arch).head_files
+        extra_header_list =  ['#include ' + i for i in sorted(list(extra_header))]
+        filter_name = 'g_' + args.filter_name + 'SeccompFilter'
 
         array_name = textwrap.dedent('''
 
             const struct sock_filter {}[] = {{
-            ''').format(args.bpfArrayName)
+            ''').format(filter_name)
 
         footer = textwrap.dedent('''\
 
             }};
 
             const size_t {} = sizeof({}) / sizeof(struct sock_filter);
-            ''').format(args.bpfArrayName + 'Size', args.bpfArrayName)
+            ''').format(filter_name + 'Size', filter_name)
 
         content = header + '\n'.join(extra_header_list) + array_name + \
             '    ' + '\n    '.join(self.bpf_generator.bpf_policy) + footer
@@ -840,68 +945,49 @@ class SeccompPolicyParser:
         
         flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
         modes = stat.S_IWUSR | stat.S_IRUSR | stat.S_IWGRP | stat.S_IRGRP
-        with os.fdopen(os.open(args.dstfile, flags, modes), 'w') as output_file:
+        with os.fdopen(os.open(args.dst_file, flags, modes), 'w') as output_file:
             output_file.write(content)
 
-    @staticmethod
-    def filter_syscalls_nr(name_to_nr):
-        syscalls = {}
-        for syscall_name, nr in name_to_nr.items():
-            if not syscall_name.startswith("__NR_") and not syscall_name.startswith("__ARM_NR_"):
-                continue
-
-            if syscall_name.startswith("__NR_arm_"):
-                syscall_name = syscall_name[len("__NR_arm_"):]
-            elif syscall_name.startswith("__NR_"):
-                syscall_name = syscall_name[len("__NR_"):]
-            elif syscall_name.startswith("__ARM_NR_"):
-                syscall_name = syscall_name[len("__ARM_NR_"):]
-
-            syscalls[syscall_name] = nr
-
-        return syscalls
-
-    def parse_syscall_file(self, file_name):
-        const_pattern = re.compile(
-            r'^\s*#define\s+([A-Za-z_][A-Za-z0-9_]+)\s+(.+)\s*$')
-        mark_pattern = re.compile(r'\b[A-Za-z_][A-Za-z0-9_]+\b')
-        name_to_nr = {}
-        with open(file_name) as f:
-            for line in f:
-                k = const_pattern.match(line)
-                if k is None:
-                    continue
-                try:
-                    name = k.group(1)
-                    nr = eval(mark_pattern.sub(lambda x: str(name_to_nr.get(x.group(0))),
-                                            k.group(2)))
-
-                    name_to_nr[name] = nr
-                except(KeyError, SyntaxError, NameError, TypeError):
-                    continue
-
-        return self.filter_syscalls_nr(name_to_nr)
-
-    def gen_syscall_nr_table(self, file_name):
-        s = re.search(r"libsyscall_to_nr_([^/]+)", file_name)
-        function_name_nr_table_dict[str(s.group(1))] = self.parse_syscall_file(file_name)
-        if str(s.group(1)) not in function_name_nr_table_dict.keys():
-            return False
-        return True
-
     def gen_seccomp_policy_code(self, args):
-        for file_name in args.srcfiles:
+        if args.target_cpu not in supported_architecture:
+            raise ValidateError('target cpu not supported')
+        function_name_nr_table_dict = {}
+        for file_name in args.src_files:
             file_name_tmp = file_name.split('/')[-1]
             if not file_name_tmp.lower().startswith('libsyscall_to_nr_'):
                 continue
-            if not self.gen_syscall_nr_table(file_name):
-                return
-        self.seccomp_policy_param_arm = SeccompPolicyParam('arm')
-        self.seccomp_policy_param_arm64 = SeccompPolicyParam('arm64')
-        for file_name in args.srcfiles:
+            function_name_nr_table_dict = gen_syscall_nr_table(file_name, function_name_nr_table_dict)
+
+
+        for arch in supported_architecture:
+            self.seccomp_policy_param.update(
+                {arch: SeccompPolicyParam(arch, function_name_nr_table_dict.get(arch))})
+            self.reduced_block_list_parm.update(
+                {arch: AllowBlockList(args.filter_name, arch, function_name_nr_table_dict.get(arch))})
+
+        self.bpf_generator.update_function_name_nr_table(function_name_nr_table_dict)
+
+        self.update_arch(args.target_cpu)
+
+        for file_name in args.blocklist_file:
+            if file_name.lower().endswith('blocklist.seccomp.policy'):
+                self.parse_file(file_name)
+
+        for file_name in args.keyprocess_file:
+            if file_name.lower().endswith('key_process.seccomp.policy'):
+                self.key_process_flag = True
+                self.parse_file(file_name)
+                self.key_process_flag = False
+
+        self.update_block_list()
+
+        for file_name in args.src_files:
             if file_name.lower().endswith('.policy'):
                 self.parse_file(file_name)
-        self.gen_seccomp_policy()
+
+        if self.bpf_generator.get_gen_flag():
+            self.gen_seccomp_policy()
+
         if self.bpf_generator.get_gen_flag():
             self.gen_output_file(args)
 
@@ -909,13 +995,23 @@ class SeccompPolicyParser:
 def main():
     parser = argparse.ArgumentParser(
       description='Generates a seccomp-bpf policy')
-    parser.add_argument('--srcfiles', type=str, action='append',
+    parser.add_argument('--src-files', type=str, action='append',
                         help=('The input files\n'))
-    parser.add_argument('--dstfile',
+
+    parser.add_argument('--blocklist-file', type=str, action='append',
+                        help=('input basic blocklist file(s)\n'))
+
+    parser.add_argument('--keyprocess-file', type=str, action='append',
+                        help=('input key process file(s)\n'))
+
+    parser.add_argument('--dst-file',
                         help='The output path for the policy files')
 
-    parser.add_argument('--bpfArrayName',  type=str,
+    parser.add_argument('--filter-name',  type=str,
                         help='Name of seccomp bpf array generated by this script')
+
+    parser.add_argument('--target-cpu', type=str,
+                        help=('please input target cpu arm or arm64\n'))
 
     args = parser.parse_args()
 

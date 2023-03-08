@@ -30,7 +30,14 @@ extern "C" {
 #define NWEBSPAWN_NAME "nwebspawn"
 #define APP_NAME "app"
 
-bool SetSeccompPolicyWithName(const char *filterName);
+typedef enum {
+    SYSTEM_SA,       // system service process
+    SYSTEM_OTHERS,   // HDF process and daemon process
+    APP,
+    INDIVIDUAL       // process which need enable individual policy
+} SeccompFilterType;
+
+bool SetSeccompPolicyWithName(SeccompFilterType type, const char *filterName);
 
 #ifdef __cplusplus
 #if __cplusplus

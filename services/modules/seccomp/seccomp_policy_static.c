@@ -17,13 +17,19 @@
 #include "plugin_adapter.h"
 #include "seccomp_policy.h"
 
+#define SA_MAIN_PATH ("/system/bin/sa_main")
+
 static int SetSystemSeccompPolicy(int id, const char *name, int argc, const char **argv)
 {
     PLUGIN_LOGI("SetSystemSeccompPolicy argc %d %s", argc, name);
-    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
-
-    bool ret = SetSeccompPolicyWithName(SYSTEM_NAME);
-    PLUGIN_CHECK(ret == true, return -1, "SetSystemSeccompPolicy failed");
+    PLUGIN_CHECK(argc == 2, return -1, "Invalid parameter");
+    SeccompFilterType type = SYSTEM_SA;
+    if (strncmp(SA_MAIN_PATH, argv[1], strlen(SA_MAIN_PATH)) != 0) {
+        type = SYSTEM_OTHERS;
+    }
+    bool ret = SetSeccompPolicyWithName(type, argv[0]);
+    PLUGIN_CHECK(ret == true, return -1;
+                 exit(PROCESS_EXIT_CODE), "Set system seccomp spolicy failed and exit");
 
     return 0;
 }
