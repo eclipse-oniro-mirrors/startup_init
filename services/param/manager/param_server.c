@@ -103,7 +103,9 @@ static int SnDealFun(const char *name, const char *value)
 
 static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
 {
+    int ret;
     const char *name;
+    const char *matched;
     char fullName[PARAM_NAME_LEN_MAX];
     cmdLineIteratorCtx *ctx = (cmdLineIteratorCtx *)context;
     char *data = (char *)ctx->cmdline;
@@ -118,7 +120,7 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
 
     data[nv->name_end - data] = '\0';
     data[nv->value_end - data] = '\0';
-    PARAM_LOGE("proc cmdline: name [%s], value [%s]", nv->name, nv->value);
+    PARAM_LOGV("proc cmdline: name [%s], value [%s]", nv->name, nv->value);
 
     // Get name without prefix
     name = nv->name;
@@ -128,15 +130,26 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
 
     // Matching reserved cmdlines
     for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
-        if (strcmp(name, cmdLines[i].name) == 0) {
-            snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1, OHOS_CMDLINE_PARA_PREFIX "%s", cmdLines[i].name);
-            PARAM_LOGE("proc cmdline %s matched.", fullName);
-            int ret = cmdLines[i].processor(fullName, nv->value);
-            if ((ret == 0) && (SnDealFun == cmdLines[i].processor)) {
-                ctx->gotSn = true;
+        // Check exact match
+        if (strcmp(name, cmdLines[i].name) != 0) {
+            // Check if contains ".xxx" for compatibility
+            ret = snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1, ".%s", cmdLines[i].name);
+            matched = strstr(name, fullName);
+            if (matched == NULL) {
+                continue;
             }
-            return;
+            // Check if it is ended with pattern
+            if (matched[ret] != '\0') {
+                continue;
+            }
         }
+        snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1, OHOS_CMDLINE_PARA_PREFIX "%s", cmdLines[i].name);
+        PARAM_LOGV("proc cmdline %s matched.", fullName);
+        ret = cmdLines[i].processor(fullName, nv->value);
+        if ((ret == 0) && (SnDealFun == cmdLines[i].processor)) {
+            ctx->gotSn = true;
+        }
+        return;
     }
 
     if (name == nv->name) {
