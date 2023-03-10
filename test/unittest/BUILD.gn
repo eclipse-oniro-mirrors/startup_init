@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -301,11 +301,11 @@ ohos_unittest("init_unittest") {
   ]
 
   if (enable_ohos_startup_init_feature_ab_partition) {
-    include_dirs += [ "//drivers/hdf_core/adapter/uhdf2/include" ]
     sources += [ "//base/startup/init/services/begetctl/partitionslot.cpp" ]
     external_deps += [
       "drivers_interface_partitionslot:libpartitionslot_proxy_1.0",
       "hdf_core:libhdi",
+      "hdf_core:libpub_utils",
     ]
   }
 
