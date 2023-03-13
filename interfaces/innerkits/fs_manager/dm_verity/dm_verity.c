@@ -38,7 +38,7 @@ extern "C" {
         }                                               \
     } while (0)
 
-static bool HvbDmVerityIsEnable()
+static bool HvbDmVerityIsEnable(void)
 {
     int rc;
     char forceEnable[HVB_FORCE_ENABLE_STR_MAX_LEN] = {0};
@@ -80,7 +80,7 @@ int HvbDmVerityinit(const Fstab *fstab)
 
     if (p == NULL) {
         BEGET_LOGI("no need init fs hvb");
-        // return 0;
+        return 0;
     }
 
     rc = FsHvbInit();
