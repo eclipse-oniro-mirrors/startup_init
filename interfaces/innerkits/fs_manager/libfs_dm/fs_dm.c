@@ -97,7 +97,8 @@ static int CreateDmDevice(int fd, const char *devName)
     return 0;
 }
 
-static int LoadDmDeviceTable(int fd, const char *devName, DmVerityTarget *target)
+static int LoadDmDeviceTable(int fd, const char *devName,
+                             DmVerityTarget *target)
 {
     int rc;
     errno_t err;
