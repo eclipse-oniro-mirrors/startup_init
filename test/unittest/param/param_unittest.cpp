@@ -642,8 +642,10 @@ HWTEST_F(ParamUnitTest, TestParamCache, TestSize.Level0)
     EXPECT_EQ(strcmp(value, "false"), 0);
     ret = WriteParam(name, "2222222", &dataIndex, 0);
     EXPECT_EQ(ret, 0);
-    value = CachedParameterGet(cacheHandle3);
+    int valueChange = 0;
+    value = CachedParameterGetChanged(cacheHandle3, &valueChange);
     EXPECT_EQ(strcmp(value, "2222222"), 0);
+    EXPECT_EQ(valueChange, 1);
     CachedParameterDestroy(cacheHandle3);
 }
 #ifdef PARAM_SUPPORT_SELINUX

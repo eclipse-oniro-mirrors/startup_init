@@ -86,6 +86,7 @@ CachedHandle CachedParameterCreate(const char *name, const char *defValue);
  *
  */
 const char *CachedParameterGet(CachedHandle handle);
+const char *CachedParameterGetChanged(CachedHandle handle, int *changed);
 
 /**
  * 外部接口
