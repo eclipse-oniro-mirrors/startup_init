@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "beget_ext.h"
 #include "fs_dm.h"
 #include "fs_hvb.h"
 #include "securec.h"
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <errno.h>
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -28,9 +29,9 @@ extern "C" {
 #endif
 #endif
 
-#define PARTITION_PATH_PREFIX  "/dev/block/by-name/"
+#define PARTITION_PATH_PREFIX "/dev/block/by-name/"
 
-static int64_t GetImageSizeForHVB(const int fd, const char *image)
+static int64_t GetImageSizeForHVB(const int fd, const char* image)
 {
     if (fd < 0) {
         BEGET_LOGE("param is error");
@@ -40,12 +41,14 @@ static int64_t GetImageSizeForHVB(const int fd, const char *image)
     return lseek64(fd, 0, SEEK_END);
 }
 
-static enum hvb_io_errno HvbReadFromPartition(
-                        struct hvb_ops *ops, const char *partition, int64_t offset, uint64_t numBytes, void *buf, uint64_t *outNumRead)
+static enum hvb_io_errno HvbReadFromPartition(struct hvb_ops* ops,
+                                              const char* partition,
+                                              int64_t offset, uint64_t numBytes,
+                                              void* buf, uint64_t* outNumRead)
 {
     int rc;
     int fd = -1;
-    char *path = NULL;
+    char* path = NULL;
     size_t pathLen = 0;
     enum hvb_io_errno ret = HVB_IO_ERROR_IO;
 
@@ -66,20 +69,23 @@ static enum hvb_io_errno HvbReadFromPartition(
         return HVB_IO_ERROR_OOM;
     }
 
-    rc = snprintf_s(path, pathLen + 1, pathLen, "%s%s", PARTITION_PATH_PREFIX, partition);
+    rc = snprintf_s(path, pathLen + 1, pathLen, "%s%s", PARTITION_PATH_PREFIX,
+                    partition);
     if (rc < 0) {
         BEGET_LOGE("error, snprintf_s fail, ret = %d", rc);
         ret = HVB_IO_ERROR_IO;
         goto exit;
     }
 
-    fd = open(path , O_RDONLY | O_CLOEXEC);
+    fd = open(path, O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
         BEGET_LOGE("error, Failed to open %s, errno = %d", path, errno);
         fd = open("/dev/block/by-name/rvt_system", O_RDONLY | O_CLOEXEC);
-        BEGET_LOGE("open %s, fd=%d errno = %d", "/dev/block/by-name/rvt_system", fd, errno);
-        if (fd >= 0)
+        BEGET_LOGE("open %s, fd=%d errno = %d", "/dev/block/by-name/rvt_system",
+                   fd, errno);
+        if (fd >= 0) {
             close(fd);
+        }
         ret = HVB_IO_ERROR_IO;
         goto exit;
     }
@@ -91,14 +97,15 @@ static enum hvb_io_errno HvbReadFromPartition(
             ret = HVB_IO_ERROR_IO;
             goto exit;
         }
-        offset = total_size + offset;  
+        offset = total_size + offset;
     }
 
     lseek64(fd, offset, SEEK_SET);
 
     ssize_t numRead = read(fd, buf, numBytes);
     if (numRead < 0 || (size_t)numRead != numBytes) {
-        BEGET_LOGE("Failed to read %lld bytes from %s offset %lld", numBytes, path, offset);
+        BEGET_LOGE("Failed to read %lld bytes from %s offset %lld", numBytes,
+                   path, offset);
         ret = HVB_IO_ERROR_IO;
         goto exit;
     }
@@ -111,23 +118,30 @@ static enum hvb_io_errno HvbReadFromPartition(
 
 exit:
 
-    if (path != NULL)
+    if (path != NULL) {
         free(path);
+    }
 
-    if (fd >= 0)
+    if (fd >= 0) {
         close(fd);
-
+    }
     return ret;
 }
 
-static enum hvb_io_errno HvbWriteToPartition(
-            struct hvb_ops *ops, const char *partition, int64_t offset, uint64_t numBytes, const void *buf)
+static enum hvb_io_errno HvbWriteToPartition(struct hvb_ops* ops,
+                                             const char* partition,
+                                             int64_t offset, uint64_t numBytes,
+                                             const void* buf)
 {
     return HVB_IO_OK;
 }
 
-static enum hvb_io_errno HvbInvaldateKey(struct hvb_ops *ops, const uint8_t *publicKeyData, uint64_t publicKeyLength,
-            const uint8_t *publicKeyMetadata, uint64_t publicKeyMetadataLength, bool *outIsTrusted)
+static enum hvb_io_errno HvbInvaldateKey(struct hvb_ops* ops,
+                                         const uint8_t* publicKeyData,
+                                         uint64_t publicKeyLength,
+                                         const uint8_t* publicKeyMetadata,
+                                         uint64_t publicKeyMetadataLength,
+                                         bool* outIsTrusted)
 {
     if (outIsTrusted == NULL) {
         return HVB_IO_ERROR_IO;
@@ -138,8 +152,9 @@ static enum hvb_io_errno HvbInvaldateKey(struct hvb_ops *ops, const uint8_t *pub
     return HVB_IO_OK;
 }
 
-static enum hvb_io_errno HvbReadRollbackIdx(
-            struct hvb_ops *ops, uint64_t rollBackIndexLocation, uint64_t *outRollbackIndex)
+static enum hvb_io_errno HvbReadRollbackIdx(struct hvb_ops* ops,
+                                            uint64_t rollBackIndexLocation,
+                                            uint64_t* outRollbackIndex)
 {
     if (outRollbackIndex == NULL) {
         return HVB_IO_ERROR_IO;
@@ -151,18 +166,22 @@ static enum hvb_io_errno HvbReadRollbackIdx(
     return HVB_IO_OK;
 }
 
-static enum hvb_io_errno HvbWriteRollbackIdx(
-            struct hvb_ops *ops, uint64_t rollBackIndexLocation, uint64_t rollbackIndex)
+static enum hvb_io_errno HvbWriteRollbackIdx(struct hvb_ops* ops,
+                                             uint64_t rollBackIndexLocation,
+                                             uint64_t rollbackIndex)
 {
     return HVB_IO_OK;
 }
 
-static enum hvb_io_errno HvbReadLockState(struct hvb_ops *ops, bool *lock_state)
+static enum hvb_io_errno HvbReadLockState(struct hvb_ops* ops,
+                                          bool* lock_state)
 {
     return HVB_IO_OK;
 }
 
-static enum hvb_io_errno HvbGetSizeOfPartition(struct hvb_ops *ops, const char *partition, uint64_t *size)
+static enum hvb_io_errno HvbGetSizeOfPartition(struct hvb_ops* ops,
+                                               const char* partition,
+                                               uint64_t* size)
 {
     if (size == NULL) {
         return HVB_IO_ERROR_IO;
@@ -186,7 +205,7 @@ static struct hvb_ops g_hvb_ops = {
     .get_partiton_size = HvbGetSizeOfPartition,
 };
 
-struct hvb_ops *FsHvbGetOps(void)
+struct hvb_ops* FsHvbGetOps(void)
 {
     return &g_hvb_ops;
 }

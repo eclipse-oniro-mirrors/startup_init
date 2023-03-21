@@ -453,7 +453,7 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
             rc = HvbDmVeritySetUp(item);
             if (rc != 0) {
                 BEGET_LOGE("set dm_verity err, ret = 0x%x", rc);
-            //  return rc;
+                return rc;
             }
         #endif
             rc = MountOneItem(item);
@@ -480,7 +480,7 @@ int MountAllWithFstab(const Fstab *fstab, bool required)
         rc = HvbDmVerityinit(fstab);
         if (rc != 0) {
             BEGET_LOGE("set dm_verity init, ret = 0x%x", rc);
-            // return rc;
+            return rc;
         }
     }
 #endif
