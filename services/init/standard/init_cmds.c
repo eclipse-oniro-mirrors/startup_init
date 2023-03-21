@@ -317,10 +317,10 @@ static int FilterService(const Service *service, const char **exclude, int size)
 {
     for (int i = 0; i < size; i++) {
         if (exclude[i] != NULL && strcmp(service->name, exclude[i]) == 0) {
-            return 0;
+            return 1;
         }
     }
-    return 1;
+    return 0;
 }
 
 static void DoStopAllServices(const struct CmdArgs *ctx)
