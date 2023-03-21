@@ -124,6 +124,7 @@ static void EnableDevKmsg(void)
 
 void LogInit(void)
 {
+    CloseStdio();
     int ret = mknod("/dev/kmsg", S_IFCHR | S_IWUSR | S_IRUSR,
         makedev(MEM_MAJOR, DEV_KMSG_MINOR));
     if (ret == 0) {
@@ -193,6 +194,7 @@ static void StartInitSecondStage(void)
             INIT_LOGE("Mount required partitions failed; please check fstab file");
             // Execute sh for debugging
 #ifndef STARTUP_INIT_TEST
+            OpenConsole();
             execv("/bin/sh", NULL);
             abort();
 #endif
@@ -203,8 +205,6 @@ static void StartInitSecondStage(void)
         ReleaseFstab(fstab);
         fstab = NULL;
     }
-    // It will panic if close stdio before execv("/bin/sh", NULL)
-    CloseStdio();
 
     INIT_LOGI("Start init second stage.");
     SwitchRoot("/usr");
