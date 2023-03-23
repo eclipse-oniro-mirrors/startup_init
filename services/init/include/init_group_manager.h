@@ -69,6 +69,7 @@ typedef struct {
 } InitWorkspace;
 
 void InitServiceSpace(void);
+void CloseServiceSpace(void);
 int InitParseGroupCfg(void);
 
 int GenerateHashCode(const char *key);
@@ -83,6 +84,7 @@ InitWorkspace *GetInitWorkspace(void);
 #endif
 int GetBootModeFromMisc(void);
 void clearMisc(void);
+void ReleaseCmd(PluginCmd *cmd);
 #ifdef __cplusplus
 #if __cplusplus
 }

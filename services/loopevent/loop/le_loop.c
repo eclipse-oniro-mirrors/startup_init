@@ -43,10 +43,11 @@ static int TaskGetKeyHasCode(const void *key)
     return taskId->taskId.fd;
 }
 
-static void TaskNodeFree(const HashNode *node)
+static void TaskNodeFree(const HashNode *node, void *context)
 {
     BaseTask *task = HASHMAP_ENTRY(node, BaseTask, hashNode);
-    CloseTask(LE_GetDefaultLoop(), task);
+    CloseTask((const LoopHandle)context, task);
+    free(task);
 }
 
 static LE_STATUS CreateLoop_(EventLoop **loop, uint32_t maxevents, uint32_t timeout)
@@ -76,7 +77,7 @@ LE_STATUS CloseLoop(EventLoop *loop)
     if (!loop->stop) {
         return LE_SUCCESS;
     }
-    OH_HashMapDestory(loop->taskMap);
+    OH_HashMapDestory(loop->taskMap, loop);
     if (loop->close) {
         loop->close(loop);
     }
@@ -100,9 +101,9 @@ LE_STATUS ProcessEvent(const EventLoop *loop, int fd, uint32_t oper)
 LE_STATUS AddTask(EventLoop *loop, BaseTask *task)
 {
     LoopMutexLock(&loop->mutex);
-    OH_HashMapAdd(loop->taskMap, &task->hashNode);
+    int ret = OH_HashMapAdd(loop->taskMap, &task->hashNode);
     LoopMutexUnlock(&loop->mutex);
-    return LE_SUCCESS;
+    return ret;
 }
 
 BaseTask *GetTaskByFd(EventLoop *loop, int fd)

@@ -57,8 +57,6 @@ public:
 
 HWTEST_F(InitUnitTest, TestSignalHandle, TestSize.Level1)
 {
-    SignalInit();
-
     struct signalfd_siginfo siginfo;
     siginfo.ssi_signo = SIGCHLD;
     ProcessSignal(&siginfo);
@@ -106,6 +104,7 @@ static void TestProcessTimer(const TimerHandle taskHandle, void *context)
         size_t fdCount = 0;
         int *fds = ServiceGetFd("param_watcher", &fdCount);
         EXPECT_TRUE(fds != nullptr);
+        free(fds);
 
         ServiceSaveFd("testservice", fds1, ARRAY_LENGTH(fds1));
         ServiceSaveFd("deviceinfoservice", fds1, ARRAY_LENGTH(fds1));
@@ -125,7 +124,6 @@ HWTEST_F(InitUnitTest, TestFdHoldService, TestSize.Level1)
     EXPECT_EQ(ret, 0);
     ret = LE_StartTimer(LE_GetDefaultLoop(), timer, 500, 2);
     EXPECT_EQ(ret, 0);
-    SystemRun();
 }
 
 HWTEST_F(InitUnitTest, TestInitLog, TestSize.Level1)

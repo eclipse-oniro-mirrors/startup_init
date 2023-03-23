@@ -76,7 +76,7 @@ void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *ueven
 void RetriggerUevent(int sockFd, char **devices, int num);
 void RetriggerUeventByPath(int sockFd, char *path);
 void ProcessUevent(int sockFd, char **devices, int num);
-
+void CloseUeventConfig(void);
 #ifdef __cplusplus
 #if __cplusplus
 }

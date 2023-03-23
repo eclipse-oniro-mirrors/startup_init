@@ -90,6 +90,7 @@ static void HandleAsyncTaskClose_(const LoopHandle loopHandle, const TaskHandle 
 {
     BaseTask *task = (BaseTask *)taskHandle;
     CloseTask(loopHandle, task);
+    DelTask((EventLoop *)loopHandle, task);
     close(task->taskId.fd);
 }
 

@@ -46,6 +46,7 @@ static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHand
 static void HandleWatcherTaskClose_(const LoopHandle loopHandle, const TaskHandle taskHandle)
 {
     CloseTask(loopHandle, (BaseTask *)taskHandle);
+    DelTask((EventLoop *)loopHandle, (BaseTask *)taskHandle);
 }
 
 LE_STATUS LE_StartWatcher(const LoopHandle loopHandle,

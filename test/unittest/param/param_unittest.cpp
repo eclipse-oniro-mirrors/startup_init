@@ -434,6 +434,7 @@ HWTEST_F(ParamUnitTest, TestWorkSpace2, TestSize.Level0)
     int ret = ParamStrCpy(workSpace->fileName, size, spaceName);
     EXPECT_EQ(ret, 0);
     CloseWorkSpace(workSpace);
+    free(workSpace);
 }
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__) // can not support parameter type

@@ -45,9 +45,6 @@ using HashTab = struct {
     HashNode *buckets[0];
 };
 
-extern "C" {
-void OnClose(ParamTaskPtr client);
-}
 static LE_STATUS TestHandleTaskEvent(const LoopHandle loop, const TaskHandle task, uint32_t oper)
 {
     return LE_SUCCESS;
@@ -140,7 +137,7 @@ public:
         LE_StreamServerInfo info = {};
         info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_SERVER | TASK_TEST;
         info.server = (char *)"/data/testpipe";
-        info.baseInfo.close = OnClose;
+        info.baseInfo.close = NULL;
         info.incommingConnect = IncomingConnect;
         LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask_, &info);
         if (serverTask_ == nullptr) {
@@ -152,7 +149,7 @@ public:
         ParamStreamInfo paramStreamInfo = {};
         paramStreamInfo.flags = PARAM_TEST_FLAGS;
         paramStreamInfo.server = NULL;
-        paramStreamInfo.close = OnClose;
+        paramStreamInfo.close = NULL;
         paramStreamInfo.recvMessage = ProcessMessage;
         paramStreamInfo.incomingConnect = NULL;
         ParamTaskPtr client = NULL;
@@ -174,7 +171,6 @@ public:
         ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
         PARAM_CHECK(watcher != nullptr, return, "Failed to get watcher");
         OH_ListInit(&watcher->triggerHead);
-        OnClose(client);
         LE_FreeBuffer(LE_GetDefaultLoop(), (TaskHandle)client, nullptr);
         return;
     }
@@ -188,7 +184,6 @@ public:
             task->handleEvent = TestHandleTaskEvent;
             ProcessEvent((EventLoop *)LE_GetDefaultLoop(), testfd, Event_Read);
         }
-        ((HashTab *)(((EventLoop *)LE_GetDefaultLoop())->taskMap))->nodeFree(&task->hashNode);
     }
     void ProcessasynEvent()
     {
@@ -217,6 +212,7 @@ public:
         ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, 0);
         ((WatcherTask *)handle)->base.flags = WATCHER_ONCE;
         ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, Event_Read);
+        LE_RemoveWatcher(LE_GetDefaultLoop(), handle);
     }
     void CreateSocketTest()
     {
@@ -224,7 +220,7 @@ public:
         LE_StreamServerInfo info = {};
         info.baseInfo.flags = TASK_PIPE | TASK_CONNECT | TASK_TEST;
         info.server = (char *)"/data/testpipe";
-        info.baseInfo.close = OnClose;
+        info.baseInfo.close = NULL;
         info.incommingConnect = IncomingConnect;
         info.socketId = 1111; // 1111 is test fd
         LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask, &info);

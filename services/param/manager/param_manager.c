@@ -485,11 +485,12 @@ INIT_LOCAL_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, cons
 {
     PARAM_CHECK(srcLabel != NULL, return DAC_RESULT_FORBIDED, "The srcLabel is null");
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return DAC_RESULT_FORBIDED, "Invalid param workspace");
+    WorkSpace *dacSpace = GetWorkSpace(WORKSPACE_INDEX_DAC);
     PARAM_WORKSPACE_CHECK(paramSpace, return DAC_RESULT_FORBIDED, "Invalid workspace");
     PARAM_CHECK(paramSpace->checkParamPermission != NULL, return DAC_RESULT_FORBIDED, "Invalid check permission");
     ParamLabelIndex labelIndex = {0};
     // search node from dac space, and get selinux label index
-    WorkSpace *dacSpace = GetWorkSpace(WORKSPACE_INDEX_DAC);
     (void)FindTrieNode(dacSpace, name, strlen(name), &labelIndex.dacLabelIndex);
     ParamSecurityNode *securityNode = (ParamSecurityNode *)GetTrieNode(dacSpace, labelIndex.dacLabelIndex);
     if ((securityNode == NULL) || (securityNode->selinuxIndex == 0) ||

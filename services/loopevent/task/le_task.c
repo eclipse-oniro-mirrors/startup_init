@@ -69,7 +69,6 @@ void CloseTask(const LoopHandle loopHandle, BaseTask *task)
     if (task->close != NULL) {
         task->close((TaskHandle)task);
     }
-    DelTask((EventLoop *)loopHandle, task);
 }
 
 LE_Buffer *CreateBuffer(uint32_t bufferSize)

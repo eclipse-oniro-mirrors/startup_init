@@ -69,13 +69,13 @@ static LE_STATUS HandleRecvMsg_(const LoopHandle loopHandle,
         }
     }
     if (status != LE_SUCCESS) {
-        FreeBuffer(loopHandle, (StreamTask *)taskHandle, buffer);
+        FreeBuffer(loopHandle, NULL, buffer);
         return status;
     }
     if (recvMessage) {
         recvMessage(taskHandle, buffer->data, readLen);
     }
-    FreeBuffer(loopHandle, (StreamTask *)taskHandle, buffer);
+    FreeBuffer(loopHandle, NULL, buffer);
     return status;
 }
 
@@ -130,6 +130,7 @@ static void HandleStreamTaskClose_(const LoopHandle loopHandle, const TaskHandle
 {
     BaseTask *task = (BaseTask *)taskHandle;
     CloseTask(loopHandle, task);
+    DelTask((EventLoop *)loopHandle, task);
     if (task->taskId.fd > 0) {
         close(task->taskId.fd);
     }

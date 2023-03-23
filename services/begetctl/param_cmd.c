@@ -422,6 +422,7 @@ static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[
             return -1;
         }
     }
+    SetInitLogLevel(INIT_INFO);
     pid_t pid = fork();
     if (pid == 0) {
         setuid(uid);

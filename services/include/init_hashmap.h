@@ -38,7 +38,7 @@ typedef int (*HashNodeCompare)(const HashNode *node1, const HashNode *node2);
 typedef int (*HashKeyCompare)(const HashNode *node1, const void *key);
 typedef int (*HashNodeFunction)(const HashNode *node);
 typedef int (*HashKeyFunction)(const void *key);
-typedef void (*HashNodeOnFree)(const HashNode *node);
+typedef void (*HashNodeOnFree)(const HashNode *node, void *context);
 
 typedef struct {
     HashNodeCompare nodeCompare;
@@ -53,7 +53,7 @@ typedef void *HashMapHandle;
 
 int OH_HashMapIsEmpty(HashMapHandle handle);
 int32_t OH_HashMapCreate(HashMapHandle *handle, const HashInfo *info);
-void OH_HashMapDestory(HashMapHandle handle);
+void OH_HashMapDestory(HashMapHandle handle, void *context);
 int32_t OH_HashMapAdd(HashMapHandle handle, HashNode *hashNode);
 void OH_HashMapRemove(HashMapHandle handle, const void *key);
 HashNode *OH_HashMapGet(HashMapHandle handle, const void *key);

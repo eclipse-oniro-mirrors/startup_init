@@ -622,7 +622,7 @@ static int JobNodeGetKeyHasCode(const void *key)
     return code;
 }
 
-static void JobNodeFree(const HashNode *node)
+static void JobNodeFree(const HashNode *node, void *context)
 {
     JobNode *jobNode = HASHMAP_ENTRY(node, JobNode, hashNode);
     FreeTrigger(GetTriggerWorkSpace(), (TriggerNode *)jobNode);

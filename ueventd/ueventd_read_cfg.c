@@ -412,3 +412,34 @@ void ChangeSysAttributePermissions(const char *sysPath)
         INIT_LOGE("[uevent][error] chmod for file %s failed, err = %d", sysAttr, errno);
     }
 }
+
+static void FreeDeviceConfig(ListNode *node)
+{
+    struct DeviceUdevConf *config = ListEntry(node, struct DeviceUdevConf, list);
+    free((void *)config->name);
+    free((void *)config->parameter);
+    OH_ListRemove(&config->paramNode);
+    free(config);
+}
+
+static void FreeSysUdevConf(ListNode *node)
+{
+    struct SysUdevConf *config = ListEntry(node, struct SysUdevConf, list);
+    free((void *)config->sysPath);
+    free((void *)config->attr);
+    free(config);
+}
+
+static void FreeFirmwareUdevConf(ListNode *node)
+{
+    struct FirmwareUdevConf *config = ListEntry(node, struct FirmwareUdevConf, list);
+    free((void *)config->fmPath);
+    free(config);
+}
+
+void CloseUeventConfig(void)
+{
+    OH_ListRemoveAll(&g_devices, FreeDeviceConfig);
+    OH_ListRemoveAll(&g_sysDevices, FreeSysUdevConf);
+    OH_ListRemoveAll(&g_firmwares, FreeFirmwareUdevConf);
+}
