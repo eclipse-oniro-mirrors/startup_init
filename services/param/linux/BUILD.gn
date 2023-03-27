@@ -148,6 +148,7 @@ if (defined(ohos_lite)) {
     include_dirs = param_include_dirs
     public_configs = [ ":exported_header_files" ]
     deps = []
+    cflags = [ "-Wno-deprecated-pragma" ]
     defines = [
       "_GNU_SOURCE",
       "INIT_AGENT",

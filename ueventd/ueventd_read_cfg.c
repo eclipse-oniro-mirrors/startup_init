@@ -33,18 +33,6 @@
 // default item count in config files
 #define DEFAULTITEMCOUNT (50)
 
-#define SYS_CONFIG_PATH_NUM 0
-#define SYS_CONFIG_ATTR_NUM 1
-#define SYS_CONFIG_MODE_NUM 2
-#define SYS_CONFIG_UID_NUM 3
-#define SYS_CONFIG_GID_NUM 4
-
-#define DEVICE_CONFIG_NAME_NUM 0
-#define DEVICE_CONFIG_MODE_NUM 1
-#define DEVICE_CONFIG_UID_NUM 2
-#define DEVICE_CONFIG_GID_NUM 3
-#define DEVICE_CONFIG_PARAM_NUM 4
-
 typedef enum SECTION {
     SECTION_INVALID = -1,
     SECTION_DEVICE = 0,
@@ -95,15 +83,15 @@ static int ParseDeviceConfig(char *p)
         FreeStringVector(items, count);
         return -1;
     }
-    config->name = strdup(items[DEVICE_CONFIG_NAME_NUM]); // device node
+    config->name = strdup(items[0]); // device node
     errno = 0;
-    config->mode = strtoul(items[DEVICE_CONFIG_MODE_NUM], NULL, OCTAL_BASE);
+    config->mode = strtoul(items[1], NULL, OCTAL_BASE); // mode
     INIT_ERROR_CHECK(errno == 0, config->mode = DEVMODE,
         "Invalid mode in config file for device node %s. use default mode", config->name);
-    config->uid = (uid_t)DecodeUid(items[DEVICE_CONFIG_UID_NUM]);
-    config->gid = (gid_t)DecodeGid(items[DEVICE_CONFIG_GID_NUM]);
+    config->uid = (uid_t)DecodeUid(items[2]); // uid
+    config->gid = (gid_t)DecodeGid(items[3]); // gid
     if (count == expectedCount) {
-        config->parameter = strdup(items[DEVICE_CONFIG_PARAM_NUM]); // device parameter
+        config->parameter = strdup(items[4]); // device parameter
     } else {
         config->parameter = NULL;
     }
@@ -134,14 +122,14 @@ static int ParseSysfsConfig(char *p)
         FreeStringVector(items, count);
         return -1;
     }
-    config->sysPath = strdup(items[SYS_CONFIG_PATH_NUM]); // sys path
-    config->attr = strdup(items[SYS_CONFIG_ATTR_NUM]);  // attribute
+    config->sysPath = strdup(items[0]); // sys path
+    config->attr = strdup(items[1]);  // attribute
     errno = 0;
-    config->mode = strtoul(items[SYS_CONFIG_MODE_NUM], NULL, OCTAL_BASE);
+    config->mode = strtoul(items[2], NULL, OCTAL_BASE); // mode
     INIT_ERROR_CHECK(errno == 0, config->mode = DEVMODE,
         "Invalid mode in config file for sys path %s. use default mode", config->sysPath);
-    config->uid = (uid_t)DecodeUid(items[SYS_CONFIG_UID_NUM]);
-    config->gid = (gid_t)DecodeGid(items[SYS_CONFIG_GID_NUM]);
+    config->uid = (uid_t)DecodeUid(items[3]); // uid
+    config->gid = (gid_t)DecodeGid(items[4]); // gid
     OH_ListAddTail(&g_sysDevices, &config->list);
     FreeStringVector(items, count);
     return 0;

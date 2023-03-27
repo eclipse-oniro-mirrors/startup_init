@@ -166,18 +166,18 @@ void ProcessFdHoldEvent(const WatcherHandle taskHandle, int fd, uint32_t *events
     *events = Event_Read;
 }
 
-void RegisterFdHoldWatcher(int sock)
-{
-    if (sock < 0) {
-        INIT_LOGE("Invalid fd holder socket");
-        return;
-    }
+// void RegisterFdHoldWatcher(int sock)
+// {
+//     if (sock < 0) {
+//         INIT_LOGE("Invalid fd holder socket");
+//         return;
+//     }
 
-    WatcherHandle watcher = NULL;
-    LE_WatchInfo info = {};
-    info.fd = sock;
-    info.flags = 0; // WATCHER_ONCE;
-    info.events = Event_Read;
-    info.processEvent = ProcessFdHoldEvent;
-    LE_StartWatcher(LE_GetDefaultLoop(), &watcher, &info, NULL);
-}
+//     WatcherHandle watcher = NULL;
+//     LE_WatchInfo info = {};
+//     info.fd = sock;
+//     info.flags = 0; // WATCHER_ONCE;
+//     info.events = Event_Read;
+//     info.processEvent = ProcessFdHoldEvent;
+//     LE_StartWatcher(LE_GetDefaultLoop(), &watcher, &info, NULL);
+// }

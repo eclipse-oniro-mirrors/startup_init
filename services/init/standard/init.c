@@ -46,50 +46,50 @@
 #include "fd_holder_internal.h"
 #include "bootstage.h"
 
-static int FdHolderSockInit(void)
-{
-    int sock = -1;
-    int on = 1;
-    int fdHolderBufferSize = FD_HOLDER_BUFFER_SIZE; // 4KiB
-    sock = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
-    if (sock < 0) {
-        INIT_LOGE("Failed to create fd holder socket, err = %d", errno);
-        return -1;
-    }
+// static int FdHolderSockInit(void)
+// {
+//     int sock = -1;
+//     int on = 1;
+//     int fdHolderBufferSize = FD_HOLDER_BUFFER_SIZE; // 4KiB
+//     sock = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
+//     if (sock < 0) {
+//         INIT_LOGE("Failed to create fd holder socket, err = %d", errno);
+//         return -1;
+//     }
 
-    setsockopt(sock, SOL_SOCKET, SO_RCVBUFFORCE, &fdHolderBufferSize, sizeof(fdHolderBufferSize));
-    setsockopt(sock, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
+//     setsockopt(sock, SOL_SOCKET, SO_RCVBUFFORCE, &fdHolderBufferSize, sizeof(fdHolderBufferSize));
+//     setsockopt(sock, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
 
-    if (access(INIT_HOLDER_SOCKET_PATH, F_OK) == 0) {
-        INIT_LOGI("%s exist, remove it", INIT_HOLDER_SOCKET_PATH);
-        unlink(INIT_HOLDER_SOCKET_PATH);
-    }
-    struct sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
-    if (strncpy_s(addr.sun_path, sizeof(addr.sun_path),
-        INIT_HOLDER_SOCKET_PATH, strlen(INIT_HOLDER_SOCKET_PATH)) != 0) {
-        INIT_LOGE("Failed to copy fd hoder socket path");
-        close(sock);
-        return -1;
-    }
-    socklen_t len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path) + 1);
-    if (bind(sock, (struct sockaddr *)&addr, len) < 0) {
-        INIT_LOGE("Failed to binder fd folder socket %d", errno);
-        close(sock);
-        return -1;
-    }
+//     if (access(INIT_HOLDER_SOCKET_PATH, F_OK) == 0) {
+//         INIT_LOGI("%s exist, remove it", INIT_HOLDER_SOCKET_PATH);
+//         unlink(INIT_HOLDER_SOCKET_PATH);
+//     }
+//     struct sockaddr_un addr;
+//     addr.sun_family = AF_UNIX;
+//     if (strncpy_s(addr.sun_path, sizeof(addr.sun_path),
+//         INIT_HOLDER_SOCKET_PATH, strlen(INIT_HOLDER_SOCKET_PATH)) != 0) {
+//         INIT_LOGE("Failed to copy fd hoder socket path");
+//         close(sock);
+//         return -1;
+//     }
+//     socklen_t len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path) + 1);
+//     if (bind(sock, (struct sockaddr *)&addr, len) < 0) {
+//         INIT_LOGE("Failed to binder fd folder socket %d", errno);
+//         close(sock);
+//         return -1;
+//     }
 
-    // Owned by root
-    if (lchown(addr.sun_path, 0, 0)) {
-        INIT_LOGW("Failed to change owner of fd holder socket, err = %d", errno);
-    }
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    if (fchmodat(AT_FDCWD, addr.sun_path, mode, AT_SYMLINK_NOFOLLOW)) {
-        INIT_LOGW("Failed to change mode of fd holder socket, err = %d", errno);
-    }
-    INIT_LOGI("Init fd holder socket done");
-    return sock;
-}
+//     // Owned by root
+//     if (lchown(addr.sun_path, 0, 0)) {
+//         INIT_LOGW("Failed to change owner of fd holder socket, err = %d", errno);
+//     }
+//     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+//     if (fchmodat(AT_FDCWD, addr.sun_path, mode, AT_SYMLINK_NOFOLLOW)) {
+//         INIT_LOGW("Failed to change mode of fd holder socket, err = %d", errno);
+//     }
+//     INIT_LOGI("Init fd holder socket done");
+//     return sock;
+// }
 
 void SystemInit(void)
 {
@@ -101,10 +101,10 @@ void SystemInit(void)
     // umask call always succeeds and return the previous mask value which is not needed here
     (void)umask(DEFAULT_UMASK_INIT);
     MakeDirRecursive("/dev/unix/socket", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    int sock = FdHolderSockInit();
-    if (sock >= 0) {
-        RegisterFdHoldWatcher(sock);
-    }
+    // int sock = FdHolderSockInit();
+    // if (sock >= 0) {
+    //     RegisterFdHoldWatcher(sock);
+    // }
     InitControlFd();
 }
 
@@ -124,6 +124,7 @@ static void EnableDevKmsg(void)
 
 void LogInit(void)
 {
+    CloseStdio();
     int ret = mknod("/dev/kmsg", S_IFCHR | S_IWUSR | S_IRUSR,
         makedev(MEM_MAJOR, DEV_KMSG_MINOR));
     if (ret == 0) {
@@ -193,6 +194,7 @@ static void StartInitSecondStage(void)
             INIT_LOGE("Mount required partitions failed; please check fstab file");
             // Execute sh for debugging
 #ifndef STARTUP_INIT_TEST
+            OpenConsole();
             execv("/bin/sh", NULL);
             abort();
 #endif
@@ -203,8 +205,6 @@ static void StartInitSecondStage(void)
         ReleaseFstab(fstab);
         fstab = NULL;
     }
-    // It will panic if close stdio before execv("/bin/sh", NULL)
-    CloseStdio();
 
     INIT_LOGI("Start init second stage.");
     SwitchRoot("/usr");
