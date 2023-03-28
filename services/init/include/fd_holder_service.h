@@ -17,7 +17,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-// void RegisterFdHoldWatcher(int sock);
+void RegisterFdHoldWatcher(int sock);
 #ifdef __cplusplus
 }
 #endif
