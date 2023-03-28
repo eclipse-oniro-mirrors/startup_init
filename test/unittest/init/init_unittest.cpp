@@ -117,16 +117,16 @@ static void TestProcessTimer(const TimerHandle taskHandle, void *context)
     count++;
 }
 
-// HWTEST_F(InitUnitTest, TestFdHoldService, TestSize.Level1)
-// {
-//     RegisterFdHoldWatcher(-1);
-//     TimerHandle timer = nullptr;
-//     int ret = LE_CreateTimer(LE_GetDefaultLoop(), &timer, TestProcessTimer, nullptr);
-//     EXPECT_EQ(ret, 0);
-//     ret = LE_StartTimer(LE_GetDefaultLoop(), timer, 500, 2);
-//     EXPECT_EQ(ret, 0);
-//     SystemRun();
-// }
+HWTEST_F(InitUnitTest, TestFdHoldService, TestSize.Level1)
+{
+    RegisterFdHoldWatcher(-1);
+    TimerHandle timer = nullptr;
+    int ret = LE_CreateTimer(LE_GetDefaultLoop(), &timer, TestProcessTimer, nullptr);
+    EXPECT_EQ(ret, 0);
+    ret = LE_StartTimer(LE_GetDefaultLoop(), timer, 500, 2);
+    EXPECT_EQ(ret, 0);
+    SystemRun();
+}
 
 HWTEST_F(InitUnitTest, TestInitLog, TestSize.Level1)
 {
