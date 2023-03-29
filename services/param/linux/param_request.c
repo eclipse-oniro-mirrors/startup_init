@@ -30,7 +30,7 @@
 
 #define INVALID_SOCKET (-1)
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
-static atomic_uint g_requestId = ATOMIC_VAR_INIT(1);
+static atomic_uint g_requestId;
 static int g_clientFd = INVALID_SOCKET;
 static pthread_mutex_t g_clientMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -39,6 +39,7 @@ __attribute__((constructor)) static void ParameterInit(void)
     if (getpid() == 1) {
         return;
     }
+    ATOMIC_INIT(&g_requestId, 1);
     EnableInitLog(INIT_WARN);
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = 0;
