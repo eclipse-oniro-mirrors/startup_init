@@ -40,7 +40,7 @@ int DoJobNow(const char *jobName);
 
 #define INIT_CONFIGURATION_FILE "/etc/init.cfg"
 #define OTHER_CFG_PATH "/system/etc/init"
-#define OTHER_CHARGE_PATH "/vendor/etc/charger"
+#define OTHER_CHARGE_PATH "/system/etc/charger"
 #define MAX_PATH_ARGS_CNT 20
 
 void ReadConfig(void);
