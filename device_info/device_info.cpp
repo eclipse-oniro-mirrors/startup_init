@@ -28,7 +28,6 @@ extern "C" {
 
 int AclGetDevUdid(char *udid, int size)
 {
-    const char* defaultVal = "1234567890";
     if (udid == nullptr || size < UDID_LEN) {
         return SYSPARAM_INVALID_INPUT;
     }
@@ -39,8 +38,6 @@ int AclGetDevUdid(char *udid, int size)
     int ret = instance.GetUdid(result);
     if (ret == 0) {
         ret = strcpy_s(udid, size, result.c_str());
-    } else {
-        ret = strcpy_s(udid, size, defaultVal);
     }
 #else
     int ret = GetDevUdid_(udid, size);
