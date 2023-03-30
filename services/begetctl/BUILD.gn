@@ -25,6 +25,7 @@ common_include_dirs = [
   "//base/startup/init/services/init/include",
   "//base/startup/init/services/log",
   "//base/startup/init/interfaces/innerkits/include",
+  "//base/startup/init/interfaces/innerkits/include/syspara",
   "//base/security/selinux/interfaces/policycoreutils/include",
   "//third_party/bounds_checking_function/include",
   "//third_party/selinux/libselinux/include",

@@ -130,6 +130,7 @@ static void HandleStreamTaskClose_(const LoopHandle loopHandle, const TaskHandle
 {
     BaseTask *task = (BaseTask *)taskHandle;
     CloseTask(loopHandle, task);
+    DelTask((EventLoop *)loopHandle, task);
     if (task->taskId.fd > 0) {
         close(task->taskId.fd);
     }

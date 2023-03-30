@@ -213,10 +213,7 @@ static int WritePid(const Service *service)
 
 void CloseServiceFds(Service *service, bool needFree)
 {
-    if (service == NULL) {
-        return;
-    }
-
+    INIT_ERROR_CHECK(service != NULL, return, "Service null");
     INIT_LOGI("Closing service \' %s \' fds", service->name);
     // fdCount > 0, There is no reason fds is NULL
     if (service->fdCount != 0) {
@@ -224,8 +221,10 @@ void CloseServiceFds(Service *service, bool needFree)
         int *fds = service->fds;
         for (size_t i = 0; i < fdCount; i++) {
             INIT_LOGV("Closing fd: %d", fds[i]);
-            close(fds[i]);
-            fds[i] = -1;
+            if (fds[i] != -1) {
+                close(fds[i]);
+                fds[i] = -1;
+            }
         }
     }
     service->fdCount = 0;

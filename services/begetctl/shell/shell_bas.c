@@ -645,6 +645,9 @@ static int32_t BShellParamSetValue(BShellParam *param, void *value)
         sizeof(uint8_t), sizeof(uint16_t), sizeof(uint32_t), sizeof(char *)
     };
     if (param->type == PARAM_STRING) {
+        if (param->value.string != NULL) {
+            free(param->value.string);
+        }
         param->value.string = strdup((char *)value);
         BSH_CHECK(param->value.string != NULL, return BSH_SYSTEM_ERR, "Failed to copy value for %s", param->name);
     } else if (param->type < PARAM_STRING) {

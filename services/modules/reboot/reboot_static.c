@@ -167,3 +167,20 @@ MODULE_CONSTRUCTOR(void)
     // 执行reboot时调用，安装reboot模块
     InitAddRebootHook(InitRebootHook_);
 }
+
+MODULE_DESTRUCTOR(void)
+{
+    for (int i = 0; i < g_rebootParamCmdValidNumber; i++) {
+        if (g_rebootParamCmdInfos[i].name != NULL) {
+            free(g_rebootParamCmdInfos[i].name);
+        }
+        if (g_rebootParamCmdInfos[i].replace != NULL) {
+            free(g_rebootParamCmdInfos[i].replace);
+        }
+        if (g_rebootParamCmdInfos[i].cmd != NULL) {
+            free(g_rebootParamCmdInfos[i].cmd);
+        }
+    }
+    free(g_rebootParamCmdInfos);
+    g_rebootParamCmdInfos = NULL;
+}

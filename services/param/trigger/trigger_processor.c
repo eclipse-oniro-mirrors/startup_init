@@ -319,6 +319,8 @@ void CloseTriggerWorkSpace(void)
     for (size_t i = 0; i < sizeof(g_triggerWorkSpace.triggerHead) / sizeof(g_triggerWorkSpace.triggerHead[0]); i++) {
         ClearTrigger(&g_triggerWorkSpace, i);
     }
+    OH_HashMapDestory(g_triggerWorkSpace.hashMap, NULL);
+    g_triggerWorkSpace.hashMap = NULL;
     free(g_triggerWorkSpace.executeQueue.executeQueue);
     g_triggerWorkSpace.executeQueue.executeQueue = NULL;
     ParamTaskClose(g_triggerWorkSpace.eventHandle);

@@ -43,6 +43,7 @@ static void HandleSignalTaskClose_(const LoopHandle loopHandle, const TaskHandle
 {
     BaseTask *task = (BaseTask *)signalHandle;
     CloseTask(loopHandle, task);
+    DelTask((EventLoop *)loopHandle, task);
     close(task->taskId.fd);
 }
 

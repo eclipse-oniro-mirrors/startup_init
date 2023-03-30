@@ -18,6 +18,7 @@
 #include <sys/prctl.h>
 #include <unistd.h>
 
+#include "begetctl.h"
 #include "bootstage.h"
 #include "init.h"
 #include "init_log.h"
@@ -35,6 +36,7 @@
 #ifdef PARAM_LOAD_CFG_FROM_CODE
 #include "param_cfg.h"
 #endif
+#include "ueventd.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -492,12 +494,10 @@ void PrepareInitUnitTestEnv(void)
         return;
     }
     printf("PrepareInitUnitTestEnv \n");
+    SignalInit();
 #ifdef PARAM_SUPPORT_SELINUX
     RegisterSecuritySelinuxOps(nullptr, 0);
 #endif
-
-    int32_t loglevel = GetIntParameter("persist.init.debug.loglevel", INIT_ERROR);
-    SetInitLogLevel((InitLogLevel)loglevel);
 
 #ifndef OHOS_LITE
     InitAddGlobalInitHook(0, TestHook);
@@ -519,6 +519,9 @@ void PrepareInitUnitTestEnv(void)
     LoadDefaultParams(STARTUP_INIT_UT_PATH "/system/etc/param", LOAD_PARAM_ONLY_ADD);
     LoadParamsFile(STARTUP_INIT_UT_PATH "/system/etc/param", LOAD_PARAM_ONLY_ADD);
     LoadParamFromCfg();
+
+    int32_t loglevel = GetIntParameter("persist.init.debug.loglevel", INIT_ERROR);
+    SetInitLogLevel((InitLogLevel)loglevel);
 
     // for test int get
     SystemWriteParam("test.int.get", "-101");
@@ -568,6 +571,7 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
 {
     printf("Init unit test start \n");
     EnableInitLog(INIT_ERROR);
+
     // prepare data
     mkdir(STARTUP_INIT_UT_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
     PrepareUeventdcfg();
@@ -593,9 +597,17 @@ __attribute__((destructor)) static void ParamTestStubExit(void)
 {
     PARAM_LOGI("ParamTestStubExit");
 #ifndef OHOS_LITE
-    HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
-#endif
     StopParamService();
+
+    HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
+    CloseUeventConfig();
+    const char *clearBootEventArgv[] = {"bootevent"};
+    PluginExecCmd("clear", ARRAY_LENGTH(clearBootEventArgv), clearBootEventArgv);
+    CloseServiceSpace();
+    demoExit();
+    LE_CloseLoop(LE_GetDefaultLoop());
+    HookMgrDestroy(GetBootStageHookMgr());
+#endif
 }
 
 #ifdef OHOS_LITE

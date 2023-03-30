@@ -81,5 +81,6 @@ int main(int argc, char **argv)
         ProcessUevent(ueventSockFd, NULL, 0); // Not require boot devices
     }
     PollUeventdSocketTimeout(ueventSockFd, ondemand);
+    CloseUeventConfig();
     return 0;
 }

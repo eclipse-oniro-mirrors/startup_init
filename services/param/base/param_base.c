@@ -194,6 +194,8 @@ INIT_LOCAL_API void CloseParamWorkSpace(void)
         }
         g_paramWorkSpace.workSpace[i] = NULL;
     }
+    free(g_paramWorkSpace.workSpace);
+    g_paramWorkSpace.workSpace = NULL;
     for (int i = 0; i < PARAM_SECURITY_MAX; i++) {
         if (g_paramWorkSpace.paramSecurityOps[i].securityFreeLabel != NULL) {
             g_paramWorkSpace.paramSecurityOps[i].securityFreeLabel(&g_paramWorkSpace.securityLabel);
