@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "fs_manager/fs_manager.h"
+#include "fs_manager.h"
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -20,7 +20,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <hvb.h>
-#include "fs_manager/fs_manager.h"
+#include <hvb_cert.h>
+#include "fs_dm.h"
+#include "fs_manager.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -33,6 +35,8 @@ int FsHvbSetupHashtree(FstabItem *fsItem);
 int FsHvbFinal(void);
 struct hvb_ops *FsHvbGetOps(void);
 int FsHvbGetValueFromCmdLine(char *val, size_t size, const char *key);
+int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, struct hvb_cert *cert);
+void FsHvbDestoryVerityTarget(DmVerityTarget *target);
 
 #ifdef __cplusplus
 #if __cplusplus
