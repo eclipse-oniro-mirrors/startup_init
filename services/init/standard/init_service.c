@@ -46,11 +46,20 @@ void NotifyServiceChange(Service *service, int status)
     char paramName[PARAM_NAME_LEN_MAX] = { 0 };
     int ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1,
         "%s.%s", STARTUP_SERVICE_CTL, service->name);
+    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service name %s.", service->name);
     char statusStr[MAX_INT_LEN] = {0};
-    int ret1 = snprintf_s(statusStr, sizeof(statusStr), sizeof(statusStr) - 1, "%d", status);
-    if (ret >= 0 && ret1 > 0) {
-        SystemWriteParam(paramName, statusStr);
-    }
+    ret = snprintf_s(statusStr, sizeof(statusStr), sizeof(statusStr) - 1, "%d", status);
+    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service status %s.", service->name);
+    SystemWriteParam(paramName, statusStr);
+
+    // write pid
+    ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1,
+        "%s.%s.pid", STARTUP_SERVICE_CTL, service->name);
+    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service pid name %s.", service->name);
+    ret = snprintf_s(statusStr, sizeof(statusStr), sizeof(statusStr) - 1,
+        "%u", (service->pid == -1) ? 0 : service->pid);
+    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service pid %s.", service->name);
+    SystemWriteParam(paramName, statusStr);
 }
 
 int IsForbidden(const char *fieldStr)

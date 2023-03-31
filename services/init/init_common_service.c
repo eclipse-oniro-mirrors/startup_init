@@ -414,6 +414,7 @@ int ServiceStart(Service *service)
 int ServiceStop(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "stop service failed! null ptr.");
+    NotifyServiceChange(service, SERVICE_STOPPING);
     if (service->serviceJobs.jobsName[JOB_ON_STOP] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_STOP]);
     }
@@ -435,7 +436,6 @@ int ServiceStop(Service *service)
     }
     INIT_ERROR_CHECK(kill(service->pid, GetKillServiceSig(service->name)) == 0, return SERVICE_FAILURE,
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
-    NotifyServiceChange(service, SERVICE_STOPPING);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
     service->pid = -1;
     NotifyServiceChange(service, SERVICE_STOPPED);

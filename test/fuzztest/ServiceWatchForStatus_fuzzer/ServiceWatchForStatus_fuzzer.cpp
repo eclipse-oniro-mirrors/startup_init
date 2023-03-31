@@ -18,9 +18,9 @@
 #include "service_watcher.h"
 #include "fuzz_utils.h"
 
-void callback(const char *key, ServiceStatus status)
+void callback(const char *key, const ServiceInfo *status)
 {
-    printf("key is: %s, ServiceStatus is: %d\n", key, status);
+    printf("key is: %s, ServiceStatus is: %d\n", key, status->status);
 }
 
 namespace OHOS {

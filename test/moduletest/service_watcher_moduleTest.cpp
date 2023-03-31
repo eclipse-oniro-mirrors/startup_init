@@ -16,6 +16,8 @@
 #include <thread>
 #include <string>
 #include <gtest/gtest.h>
+
+#include "parameter.h"
 #include "service_control.h"
 #include "service_watcher.h"
 #include "test_utils.h"
@@ -31,9 +33,11 @@ public:
     void TearDown(void) {};
 };
 
-static void ServiceStatusChange(const char *key, ServiceStatus status)
+static void ServiceStatusChange(const char *key, const ServiceInfo *status)
 {
-    std::cout<<"service Name is: "<<key<<", ServiceStatus is: "<<status<<std::endl;
+    std::cout <<"service Name is: " << key;
+    std::cout <<", ServiceStatus is: "<< status->status;
+    std::cout <<", pid is: "<< status->pid << std::endl;
 }
 
 HWTEST_F(ServiceWatcherModuleTest, serviceWatcher_test_001, TestSize.Level0)
@@ -64,5 +68,26 @@ HWTEST_F(ServiceWatcherModuleTest, serviceWatcher_test_002, TestSize.Level0)
     status = GetServiceStatus(serviceName);
     EXPECT_TRUE(status == "stopped");
     GTEST_LOG_(INFO) << "serviceWatcher_test_002 end";
+}
+
+HWTEST_F(ServiceWatcherModuleTest, serviceWatcher_test_003, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "serviceWatcher_test_003 start";
+    const std::string serviceName = "deviceinfoservice";
+    // watcher service status
+    int ret = ServiceWatchForStatus(serviceName.c_str(), ServiceStatusChange);
+    EXPECT_EQ(ret, 0); // No matter if service exist or not, ServiceWatchForStatus always success.
+    // start service
+    char udid[65] = {}; // 65 udid len
+    ret = AclGetDevUdid(udid, sizeof(udid));
+    EXPECT_EQ(ret, 0);
+    auto status1 = GetServiceStatus(serviceName);
+    EXPECT_TRUE(status1 == "running");
+    // wait service exit
+    std::this_thread::sleep_for(std::chrono::seconds(80)); // wait sa died 80s
+    auto status2 = GetServiceStatus(serviceName);
+    EXPECT_TRUE(status2 == "stopped");
+
+    GTEST_LOG_(INFO) << "serviceWatcher_test_003 end";
 }
 }

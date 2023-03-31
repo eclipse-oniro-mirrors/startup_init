@@ -246,10 +246,10 @@ static int32_t BShellParamCmdDisplay(BShellHandle shell, int32_t argc, char *arg
     return 0;
 }
 
-void ServiceStatusChangeTest(const char *key, ServiceStatus status)
+void ServiceStatusChangeTest(const char *key, const ServiceInfo *status)
 {
-    PLUGIN_LOGI("group-test-stage3: wait service %s status: %d", key, status);
-    if (status == SERVICE_READY || status == SERVICE_STARTED) {
+    PLUGIN_LOGI("group-test-stage3: wait service %s status: %d", key, status->status);
+    if (status->status == SERVICE_READY || status->status == SERVICE_STARTED) {
         PLUGIN_LOGI("Service %s start work", key);
     }
 }
@@ -340,6 +340,33 @@ static int32_t BShellParamCmdMemGet(BShellHandle shell, int32_t argc, char *argv
     return 0;
 }
 
+void CmdServiceStatusChange(const char *key, const ServiceInfo *status)
+{
+    static const char *serviceStatusMap[] = {
+        "idle",
+        "starting",
+        "running",
+        "ready",
+        "stopping",
+        "stopped",
+        "error",
+        "suspended",
+        "freezed",
+        "disabled",
+        "critical",
+    };
+    PLUGIN_CHECK(key != NULL && status != NULL, return, "Invalid parameter");
+    printf("Service %s status: %s pid %d \n", key,
+        ((status->status < ARRAY_LENGTH(serviceStatusMap)) ? serviceStatusMap[status->status] : "unknown"),
+        status->pid);
+}
+
+static int32_t BShellParamCmdWatchService(BShellHandle shell, int32_t argc, char *argv[])
+{
+    PLUGIN_CHECK(argc > 1, return -1, "Invalid parameter");
+    return ServiceWatchForStatus(argv[1], CmdServiceStatusChange);
+}
+
 int32_t BShellCmdRegister(BShellHandle shell, int execMode)
 {
     if (execMode == 0) {
@@ -354,12 +381,15 @@ int32_t BShellCmdRegister(BShellHandle shell, int execMode)
         const CmdInfo infos[] = {
             {"display", BShellParamCmdDisplay, "display system service", "display service", "display service"},
             {"read", BShellParamCmdRead, "read system parameter", "read [start | stop]", ""},
-            {"watcher", BShellParamCmdWatch, "watcher system parameter", "watcher [name]", ""},
+            {"watcher", BShellParamCmdWatch,
+                "watcher system parameter", "watcher parameter [name]", "watcher parameter"},
             {"install", BShellParamCmdInstall, "install plugin", "install [name]", ""},
             {"uninstall", BShellParamCmdInstall, "uninstall plugin", "uninstall [name]", ""},
             {"group", BShellParamCmdGroupTest, "group test", "group test [stage]", "group test"},
             {"display", BShellParamCmdUdidGet, "display udid", "display udid", "display udid"},
             {"display", BShellParamCmdMemGet, "display memory pid", "display memory [pid]", "display memory"},
+            {"watcher", BShellParamCmdWatchService,
+                "watcher service status", "watcher service [name]", "watcher service"},
         };
         for (size_t i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
             BShellEnvRegisterCmd(GetShellHandle(), &infos[i]);

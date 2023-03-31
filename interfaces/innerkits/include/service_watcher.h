@@ -16,6 +16,7 @@
 #ifndef SERVICE_WATCH_API_H
 #define SERVICE_WATCH_API_H
 
+#include <unistd.h>
 #include "init_param.h"
 #include "service_control.h"
 
@@ -25,7 +26,14 @@ extern "C" {
 #endif
 #endif
 
-typedef void (*ServiceStatusChangePtr)(const char *key, ServiceStatus status);
+#define INVALID_PID 0
+
+typedef struct serviceInfo {
+    ServiceStatus status;
+    pid_t pid;
+} ServiceInfo;
+
+typedef void (*ServiceStatusChangePtr)(const char *key, const ServiceInfo *serviceInfo);
 int ServiceWatchForStatus(const char *serviceName, ServiceStatusChangePtr changeCallback);
 
 #ifdef __cplusplus

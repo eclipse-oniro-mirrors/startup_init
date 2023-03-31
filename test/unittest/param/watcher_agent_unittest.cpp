@@ -42,9 +42,9 @@ static void TestParameterChange(const char *key, const char *value, void *contex
     g_callbackCount++;
 }
 
-static void TestWatcherCallBack(const char *key, ServiceStatus status)
+static void TestWatcherCallBack(const char *key, const ServiceInfo *status)
 {
-    printf("TestWatcherCallBack key:%s %d", key, status);
+    printf("TestWatcherCallBack key:%s %d", key, status->status);
 }
 
 class WatcherAgentUnitTest : public ::testing::Test {

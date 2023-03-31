@@ -35,6 +35,8 @@ INIT_LOCAL_API WorkSpace *GetWorkSpace(uint32_t labelIndex)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return NULL, "Invalid paramSpace");
+    PARAM_CHECK(paramSpace->workSpace != NULL, return NULL, "Invalid paramSpace->workSpace");
+    PARAM_WORKSPACE_CHECK(paramSpace, return NULL, "Invalid space");
 #ifdef PARAM_SUPPORT_SELINUX
     if (labelIndex == 0) {
         return paramSpace->workSpace[0];
