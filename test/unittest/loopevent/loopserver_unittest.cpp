@@ -268,7 +268,7 @@ public:
 
     void StartServer()
     {
-        serverThread_ = new (std::nothrow)std::thread(&LoopServerUnitTest::RunServer, this);
+        std::thread(&LoopServerUnitTest::RunServer, this).detach();
         sleep(1);
     }
 

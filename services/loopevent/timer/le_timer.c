@@ -67,6 +67,7 @@ static void HandleTimerClose_(const LoopHandle loopHandle, const TaskHandle task
 {
     BaseTask *task = (BaseTask *)taskHandle;
     CloseTask(loopHandle, task);
+    DelTask((EventLoop *)loopHandle, task);
     close(task->taskId.fd);
 }
 

@@ -71,6 +71,7 @@ HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
     EXPECT_EQ(ret, 0);
 
     ReleaseService(service);
+    cJSON_Delete(jobItem);
 }
 
 HWTEST_F(ServiceUnitTest, case02, TestSize.Level1)
@@ -113,6 +114,7 @@ HWTEST_F(ServiceUnitTest, case02, TestSize.Level1)
     ret = ServiceStop(service);
     EXPECT_EQ(ret, 0);
     ReleaseService(service);
+    cJSON_Delete(jobItem);
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceStartAbnormal, TestSize.Level1)
@@ -140,6 +142,7 @@ HWTEST_F(ServiceUnitTest, TestServiceStartAbnormal, TestSize.Level1)
     ret = ServiceStop(service);
     EXPECT_EQ(ret, 0);
     ReleaseService(service);
+    cJSON_Delete(jobItem);
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceReap, TestSize.Level1)
@@ -202,6 +205,7 @@ HWTEST_F(ServiceUnitTest, TestServiceReapOther, TestSize.Level1)
     ret = ServiceStop(service);
     EXPECT_EQ(ret, 0);
     ReleaseService(service);
+    cJSON_Delete(jobItem);
 }
 
 HWTEST_F(ServiceUnitTest, TestServiceManagerRelease, TestSize.Level1)
@@ -254,6 +258,7 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerGetService, TestSize.Level1)
     ASSERT_NE(nullptr, service);
     int ret = ParseOneService(serviceItem, service);
     EXPECT_NE(ret, 0);
+    cJSON_Delete(jobItem);
     const char *jsonStr1 = "{\"services\":{\"name\":\"test_service3\",\"path\":[\"/data/init_ut/test_service\"],"
         "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
         "\"gid\":[\"system\"], \"critical\":[\"on\"]}}";
@@ -265,6 +270,7 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerGetService, TestSize.Level1)
     ASSERT_NE(nullptr, service);
     ret = ParseOneService(serviceItem, service);
     EXPECT_NE(ret, 0);
+    cJSON_Delete(jobItem);
 }
 
 /**

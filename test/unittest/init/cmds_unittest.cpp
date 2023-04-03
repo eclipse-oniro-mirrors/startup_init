@@ -82,7 +82,7 @@ HWTEST_F(CmdsUnitTest, TestCommonChown, TestSize.Level1)
 {
     const char *testFile = "/data/init_ut/test_dir0";
     DoCmdByName("chown ", "system system /data/init_ut/test_dir0");
-    struct stat info;
+    struct stat info = {};
     stat(testFile, &info);
     const unsigned int systemUidGid = 1000;
     EXPECT_EQ(info.st_uid, systemUidGid);

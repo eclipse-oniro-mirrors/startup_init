@@ -30,7 +30,7 @@
 
 #define INVALID_SOCKET (-1)
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
-static atomic_uint g_requestId = ATOMIC_VAR_INIT(1);
+static atomic_uint g_requestId;
 static int g_clientFd = INVALID_SOCKET;
 static pthread_mutex_t g_clientMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -39,6 +39,7 @@ __attribute__((constructor)) static void ParameterInit(void)
     if (getpid() == 1) {
         return;
     }
+    ATOMIC_INIT(&g_requestId, 1);
     EnableInitLog(INIT_WARN);
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = 0;
@@ -135,6 +136,9 @@ static int StartRequest(int clientFd, ParamMessage *request, int timeout)
     }
     PARAM_CHECK(sendLen >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to send message err: %d", errno);
     PARAM_LOGV("sendMessage sendLen fd %d %zd", clientFd, sendLen);
+    if (timeout <= 0) {
+        return 0;
+    }
     int ret = ReadMessage(clientFd, (char *)request, timeout);
     if (ret == 0) {
         ret = ProcessRecvMsg(request);
@@ -142,7 +146,7 @@ static int StartRequest(int clientFd, ParamMessage *request, int timeout)
     return ret;
 }
 
-int SystemSetParameter(const char *name, const char *value)
+static int SystemSetParameter_(const char *name, const char *value, int timeout)
 {
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value");
     int ret = CheckParamName(name, 0);
@@ -173,7 +177,7 @@ int SystemSetParameter(const char *name, const char *value)
             ret = DAC_RESULT_FORBIDED;
             break;
         }
-        ret = StartRequest(g_clientFd, request, DEFAULT_PARAM_SET_TIMEOUT);
+        ret = StartRequest(g_clientFd, request, timeout);
         if (ret == PARAM_CODE_INVALID_SOCKET) {
             close(g_clientFd);
             g_clientFd = INVALID_SOCKET;
@@ -187,6 +191,16 @@ int SystemSetParameter(const char *name, const char *value)
     pthread_mutex_unlock(&g_clientMutex);
     free(request);
     return ret;
+}
+
+int SystemSetParameter(const char *name, const char *value)
+{
+    return SystemSetParameter_(name, value, DEFAULT_PARAM_SET_TIMEOUT);
+}
+
+int SystemSetParameterNoWait(const char *name, const char *value)
+{
+    return SystemSetParameter_(name, value, 0);
 }
 
 int SystemWaitParameter(const char *name, const char *value, int32_t timeout)

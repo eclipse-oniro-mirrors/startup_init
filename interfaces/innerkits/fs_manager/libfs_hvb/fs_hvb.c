@@ -284,9 +284,9 @@ static int FsHvbVerityTargetAppendOctets(char **p, char *end, char *octs, size_t
     }
 
     rc = FsHvbVerityTargetAppendString(p, end, str, str_len);
-    if (rc != 0)
+    if (rc != 0) {
         BEGET_LOGE("error 0x%x, append str fail", rc);
-    
+    }
     free(str);
 
     return rc;
@@ -380,7 +380,7 @@ static int FsHvbConstructVerityTarget(DmVerityTarget *target, char *devName, str
 
     if (snprintf_s(&devPath[0], sizeof(devPath), sizeof(devPath) - 1, "%s%s", FS_HVB_PARTITION_PREFIX, devName) == -1) {
         BEGET_LOGE("error, snprintf_s devPath");
-        return -1;               
+        return -1;
     }
 
     BEGET_LOGE("puck devPath=%s", &devPath[0]);

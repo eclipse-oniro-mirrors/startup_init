@@ -415,12 +415,23 @@ HWTEST_F(InnerkitsUnitTest, TestHoldFd, TestSize.Level1)
 
     fds = ServiceGetFd("testServiceName", &fdCount);
     EXPECT_NE(fds, nullptr);
-    struct msghdr msghdr;
+    struct msghdr msghdr = {};
     BuildControlMessage(nullptr, nullptr, 1, 0);
     BuildControlMessage(&msghdr, nullptr, 1, 0);
+    if (msghdr.msg_control != NULL) {
+        free(msghdr.msg_control);
+        msghdr.msg_control = NULL;
+    }
     BuildControlMessage(&msghdr, fds, -1, 0);
+    if (msghdr.msg_control != NULL) {
+        free(msghdr.msg_control);
+        msghdr.msg_control = NULL;
+    }
     BuildControlMessage(&msghdr, fds, -1, 1);
-
+    if (msghdr.msg_control != NULL) {
+        free(msghdr.msg_control);
+        msghdr.msg_control = NULL;
+    }
     if (fds != nullptr)
     {
         free(fds);

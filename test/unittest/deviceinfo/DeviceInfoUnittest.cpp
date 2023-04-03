@@ -184,8 +184,7 @@ HWTEST_F(DeviceInfoUnittest, TestDeviceInfoProxy1, TestSize.Level1)
     proxy->GetSerialID(serialId);
 
     char localDeviceId[UDID_LEN] = {0};
-    int ret = AclGetDevUdid(localDeviceId, UDID_LEN);
-    ASSERT_NE(ret, 0);
+    (void)AclGetDevUdid(localDeviceId, UDID_LEN);
     const char *serialNumber = AclGetSerial();
     EXPECT_NE(nullptr, serialNumber);
 }

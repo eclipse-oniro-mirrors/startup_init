@@ -194,6 +194,8 @@ INIT_LOCAL_API void CloseParamWorkSpace(void)
         }
         g_paramWorkSpace.workSpace[i] = NULL;
     }
+    free(g_paramWorkSpace.workSpace);
+    g_paramWorkSpace.workSpace = NULL;
     for (int i = 0; i < PARAM_SECURITY_MAX; i++) {
         if (g_paramWorkSpace.paramSecurityOps[i].securityFreeLabel != NULL) {
             g_paramWorkSpace.paramSecurityOps[i].securityFreeLabel(&g_paramWorkSpace.securityLabel);
@@ -710,7 +712,7 @@ CachedHandle CachedParameterCreate(const char *name, const char *defValue)
     return (CachedHandle)param;
 }
 
-STATIC_INLINE const char *CachedParameterCheck(CachedParameter *param)
+STATIC_INLINE const char *CachedParameterCheck(CachedParameter *param, int *changed)
 {
     if (param->dataIndex == 0) {
         // no change, do not to find
@@ -737,7 +739,8 @@ STATIC_INLINE const char *CachedParameterCheck(CachedParameter *param)
     param->dataCommitId = dataCommitId;
     int ret = ReadParamValue_(entry, &param->dataCommitId, param->paramValue, &length);
     PARAM_CHECK(ret == 0, return NULL, "Failed to copy value %s", param->data);
-    PARAM_LOGI("CachedParameterCheck %u", param->dataCommitId);
+    PARAM_LOGV("CachedParameterCheck %u", param->dataCommitId);
+    *changed = 1;
     return param->paramValue;
 }
 
@@ -745,7 +748,17 @@ const char *CachedParameterGet(CachedHandle handle)
 {
     CachedParameter *param = (CachedParameter *)handle;
     PARAM_CHECK(param != NULL, return NULL, "Invalid handle");
-    return CachedParameterCheck(param);
+    int changed = 0;
+    return CachedParameterCheck(param, &changed);
+}
+
+const char *CachedParameterGetChanged(CachedHandle handle, int *changed)
+{
+    CachedParameter *param = (CachedParameter *)handle;
+    PARAM_CHECK(param != NULL, return NULL, "Invalid handle");
+    PARAM_CHECK(changed != NULL, return NULL, "Invalid changed");
+    *changed = 0;
+    return CachedParameterCheck(param, changed);
 }
 
 void CachedParameterDestroy(CachedHandle handle)

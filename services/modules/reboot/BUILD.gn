@@ -30,9 +30,9 @@ ohos_shared_library("rebootmodule") {
   part_name = "init"
   subsystem_name = "startup"
   if (target_cpu == "arm64") {
-    module_install_dir = "lib64/init"
+    module_install_dir = "lib64/init/reboot"
   } else {
-    module_install_dir = "lib/init"
+    module_install_dir = "lib/init/reboot"
   }
   install_images = [
     "system",

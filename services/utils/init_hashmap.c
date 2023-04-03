@@ -132,7 +132,7 @@ HashNode *OH_HashMapGet(HashMapHandle handle, const void *key)
     return GetHashNodeByKey(tab, tab->buckets[hashCode], key, tab->keyCompare);
 }
 
-static void HashListFree(HashTab *tab, HashNode *root)
+static void HashListFree(HashTab *tab, HashNode *root, void *context)
 {
     if (root == NULL) {
         return;
@@ -141,18 +141,18 @@ static void HashListFree(HashTab *tab, HashNode *root)
     while (node != NULL) {
         HashNode *next = node->next;
         if (tab->nodeFree != NULL) {
-            tab->nodeFree(node);
+            tab->nodeFree(node, context);
         }
         node = next;
     }
 }
 
-void OH_HashMapDestory(HashMapHandle handle)
+void OH_HashMapDestory(HashMapHandle handle, void *context)
 {
     INIT_ERROR_CHECK(handle != NULL, return, "Invalid hash handle");
     HashTab *tab = (HashTab *)handle;
     for (int i = 0; i < tab->maxBucket; i++) {
-        HashListFree(tab, tab->buckets[i]);
+        HashListFree(tab, tab->buckets[i], context);
     }
     free(tab);
 }

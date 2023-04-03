@@ -106,7 +106,7 @@ static int RestoreContentRecurse(int id, const char *name, int argc, const char 
 {
     PLUGIN_CHECK(name != NULL && argc >= 1 && argv != NULL, return -1, "Invalid parameter");
     PLUGIN_LOGV("RestoreContentRecurse path %s", argv[0]);
-    if (RestoreconRecurse(argv[0])) {
+    if (RestoreconRecurse(argv[0]) && errno != 0) {
         PLUGIN_LOGE("restoreContentRecurse failed for '%s', err %d.", argv[0], errno);
     }
     return 0;

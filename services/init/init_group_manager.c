@@ -152,9 +152,16 @@ static int GroupNodeGetNodeHashCode(const HashNode *node)
     return GenerateHashCode((const char *)groupNode->name);
 }
 
-static void GroupNodeFree(const HashNode *node)
+static void GroupNodeFree(const HashNode *node, void *context)
 {
     InitGroupNode *groupNode = HASHMAP_ENTRY(node, InitGroupNode, hashNode);
+    if (groupNode->type == NODE_TYPE_SERVICES) {
+        ReleaseService(groupNode->data.service);
+        groupNode->data.service = NULL;
+    } else if (groupNode->type == NODE_TYPE_CMDS) {
+        ReleaseCmd(groupNode->data.cmd);
+        groupNode->data.cmd = NULL;
+    }
     free(groupNode);
 }
 
@@ -299,7 +306,7 @@ int CheckNodeValid(int type, const char *name)
     }
     HashNode *node = OH_HashMapGet(g_initWorkspace.hashMap[type], name);
     if (node != NULL) {
-        INIT_LOGI("Found %s in %s group", name, type == NODE_TYPE_JOBS ? "job" : "service");
+        INIT_LOGV("Found %s in %s group", name, type == NODE_TYPE_JOBS ? "job" : "service");
         return 0;
     }
     if (g_initWorkspace.groupMode == GROUP_BOOT) {
@@ -318,6 +325,36 @@ HashMapHandle GetGroupHashMap(int type)
         return NULL;
     }
     return g_initWorkspace.hashMap[type];
+}
+
+void CloseServiceSpace(void)
+{
+    if (g_initWorkspace.initFlags == 0) {
+        return;
+    }
+    for (size_t i = 0; i < ARRAY_LENGTH(g_initWorkspace.hashMap); i++) {
+        if (g_initWorkspace.hashMap[i] != NULL) {
+            HashMapHandle handle = g_initWorkspace.hashMap[i];
+            g_initWorkspace.hashMap[i] = NULL;
+            OH_HashMapDestory(handle, NULL);
+        }
+    }
+    g_initWorkspace.initFlags = 0;
+}
+
+void ReleaseCmd(PluginCmd *cmd)
+{
+    if (cmd == NULL) {
+        return;
+    }
+    ListNode *node = cmd->cmdExecutor.next;
+    while (node != &cmd->cmdExecutor) {
+        PluginCmdExecutor *cmdExec = ListEntry(node, PluginCmdExecutor, node);
+        OH_ListRemove(&cmdExec->node);
+        free(cmdExec);
+        node = cmd->cmdExecutor.next;
+    }
+    free(cmd);
 }
 
 #ifdef STARTUP_INIT_TEST

@@ -22,8 +22,9 @@ namespace OHOS {
     {
         bool result = false;
         std::string str(reinterpret_cast<const char*>(data), size);
-
-        if (ModuleMgrScan(str.c_str()) != nullptr) {
+        std::string basePath("/lib/init/autorun");
+        basePath += str;
+        if (ModuleMgrScan(basePath.c_str()) != nullptr) {
             result = true;
         };
         return result;

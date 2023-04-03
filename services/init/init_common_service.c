@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -212,10 +213,7 @@ static int WritePid(const Service *service)
 
 void CloseServiceFds(Service *service, bool needFree)
 {
-    if (service == NULL) {
-        return;
-    }
-
+    INIT_ERROR_CHECK(service != NULL, return, "Service null");
     INIT_LOGI("Closing service \' %s \' fds", service->name);
     // fdCount > 0, There is no reason fds is NULL
     if (service->fdCount != 0) {
@@ -223,8 +221,10 @@ void CloseServiceFds(Service *service, bool needFree)
         int *fds = service->fds;
         for (size_t i = 0; i < fdCount; i++) {
             INIT_LOGV("Closing fd: %d", fds[i]);
-            close(fds[i]);
-            fds[i] = -1;
+            if (fds[i] != -1) {
+                close(fds[i]);
+                fds[i] = -1;
+            }
         }
     }
     service->fdCount = 0;
@@ -345,6 +345,22 @@ void EnterServiceSandbox(Service *service)
 #endif
 }
 
+void CheckModuleUpdate(int argc, char **argv)
+{
+    INIT_LOGI("CheckModuleUpdate start");
+    void *handle = dlopen("libmodule_update.z.so", RTLD_NOW);
+    INIT_ERROR_CHECK(handle != NULL, return, "dlopen module update lib failed with error:%s", dlerror());
+    INIT_LOGI("dlopen success");
+    typedef void (*ExtFunc)(int, char **);
+    ExtFunc func = (ExtFunc)dlsym(handle, "CheckModuleUpdate");
+    if (func == NULL) {
+        INIT_LOGE("dlsym get func failed with error:%s", dlerror());
+    } else {
+        func(argc, argv);
+    }
+    INIT_LOGI("CheckModuleUpdate end");
+}
+
 int ServiceStart(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
@@ -371,6 +387,9 @@ int ServiceStart(Service *service)
 #endif
     int pid = fork();
     if (pid == 0) {
+        if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
+            CheckModuleUpdate(service->pathArgs.count, service->pathArgs.argv);
+        }
         // fail must exit sub process
         INIT_ERROR_CHECK(InitServiceProperties(service) == 0,
             _exit(PROCESS_EXIT_CODE), "Failed init service property");

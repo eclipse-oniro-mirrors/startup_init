@@ -68,7 +68,7 @@ static int TestHashKeyFunction(const void *key)
     return code;
 }
 
-static void TestHashNodeFree(const HashNode *node)
+static void TestHashNodeFree(const HashNode *node, void *context)
 {
     TestHashNode *testNode = HASHMAP_ENTRY(node, TestHashNode, node);
     printf("TestHashNodeFree %s\n", testNode->name);
@@ -108,7 +108,7 @@ HashInfo g_info = {
     2
 };
 
-HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
+HWTEST_F(InitGroupManagerUnitTest, TestHashMap001, TestSize.Level1)
 {
     HashMapHandle handle;
     OH_HashMapCreate(&handle, &g_info);
@@ -143,14 +143,24 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
         EXPECT_EQ(strcmp(tmp->name, str3), 0);
     }
+    OH_HashMapIsEmpty(handle);
+    OH_HashMapTraverse(handle, [](const HashNode *node, const void *context) {return;}, nullptr);
+    OH_HashMapDestory(handle, NULL);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, TestHashMap002, TestSize.Level1)
+{
+    HashMapHandle handle;
+    OH_HashMapCreate(&handle, &g_info);
     TestHashNode *node4 = TestCreateHashNode("pre-init");
     OH_HashMapAdd(handle, &node4->node);
+    OH_HashMapRemove(handle, "pre-init");
+    TestHashNodeFree(&node4->node, NULL);
 
     const char *act = "load_persist_props_action";
     TestHashNode *node5 = TestCreateHashNode(act);
     OH_HashMapAdd(handle, &node5->node);
-    OH_HashMapRemove(handle, "pre-init");
-    node = OH_HashMapGet(handle, (const void *)act);
+    HashNode *node = OH_HashMapGet(handle, (const void *)act);
     EXPECT_NE(node != nullptr, 0);
     if (node) {
         TestHashNode *tmp = HASHMAP_ENTRY(node, TestHashNode, node);
@@ -158,7 +168,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap, TestSize.Level1)
     }
     OH_HashMapIsEmpty(handle);
     OH_HashMapTraverse(handle, [](const HashNode *node, const void *context) {return;}, nullptr);
-    OH_HashMapDestory(handle);
+    OH_HashMapDestory(handle, NULL);
 }
 
 HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
@@ -366,6 +376,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestProcessWatchEvent, TestSize.Level1)
     ASSERT_EQ(ret, 0);
     uint32_t event;
     ((WatcherTask *)watcher)->processEvent((WatcherHandle)watcher, 0, &event, service);
+    service->socketCfg = NULL;
 }
 
 HWTEST_F(InitGroupManagerUnitTest, TestCheckNodeValid, TestSize.Level1)

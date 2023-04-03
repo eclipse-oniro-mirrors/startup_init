@@ -38,7 +38,7 @@ WatcherManager::~WatcherManager()
 
 uint32_t WatcherManager::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher)
 {
-    if (id == (uint32_t)getpid()) {
+    if (id == static_cast<uint32_t>(getpid())) {
         WATCHER_LOGE("Failed to add remote watcher %u", id);
         return 0;
     }

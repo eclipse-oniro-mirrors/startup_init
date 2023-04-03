@@ -90,6 +90,10 @@ Service *AddService(const char *name)
         INIT_LOGE("Failed to create service name %s", name);
         return NULL;
     }
+    if (node->data.service != NULL) {
+        ReleaseService(node->data.service);
+        node->data.service = NULL;
+    }
     Service *service = (Service *)calloc(1, sizeof(Service));
     INIT_ERROR_CHECK(service != NULL, return NULL, "Failed to malloc for service");
     node->data.service = service;
@@ -116,11 +120,19 @@ static void FreeServiceFile(ServiceFile *fileOpt)
     return;
 }
 
+static void ExecuteServiceClear(Service *service)
+{
+#ifndef OHOS_LITE
+    // clear ext data
+    SERVICE_INFO_CTX ctx = {0};
+    ctx.serviceName = service->name;
+    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)&ctx, NULL);
+#endif
+}
+
 void ReleaseService(Service *service)
 {
-    if (service == NULL) {
-        return;
-    }
+    INIT_CHECK(service != NULL, return);
     FreeServiceArg(&service->pathArgs);
     FreeServiceArg(&service->writePidArgs);
     FreeServiceArg(&service->capsArgs);
@@ -138,7 +150,9 @@ void ReleaseService(Service *service)
     }
     service->servPerm.gIDCnt = 0;
     FreeServiceSocket(service->socketCfg);
+    service->socketCfg = NULL;
     FreeServiceFile(service->fileCfg);
+    service->fileCfg = NULL;
 
     if (service->apl != NULL) {
         free(service->apl);
@@ -154,12 +168,12 @@ void ReleaseService(Service *service)
         free(service->cpuSet);
         service->cpuSet = NULL;
     }
-#ifndef OHOS_LITE
-    // clear ext data
-    SERVICE_INFO_CTX ctx = {0};
-    ctx.serviceName = service->name;
-    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)&ctx, NULL);
-#endif
+    if (service->restartArg != NULL) {
+        free(service->restartArg);
+        service->restartArg = NULL;
+    }
+    CloseServiceFds(service, true);
+    ExecuteServiceClear(service);
     g_serviceSpace.serviceCount--;
     InitGroupNode *groupNode = GetGroupNode(NODE_TYPE_SERVICES, service->name);
     if (groupNode != NULL) {
@@ -850,6 +864,8 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get console for service %s", service->name);
     ret = GetServiceAttr(curItem, service, "notify-state", SERVICE_ATTR_NOTIFY_STATE, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get notify-state for service %s", service->name);
+    ret = GetServiceAttr(curItem, service, MODULE_UPDATE_STR_IN_CFG, SERVICE_ATTR_MODULE_UPDATE, NULL);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get module-update for service %s", service->name);
 
     ParseOneServiceArgs(curItem, service);
     ret = GetServiceSandbox(curItem, service);
