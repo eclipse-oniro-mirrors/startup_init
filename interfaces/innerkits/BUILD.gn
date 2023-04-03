@@ -176,6 +176,8 @@ if (defined(ohos_lite)) {
       "platformsdk",
     ]
 
+    version_script = "libbegetutil.versionscript"
+
     defines = [
       "INIT_AGENT",
       "_GNU_SOURCE",
@@ -234,6 +236,7 @@ if (defined(ohos_lite)) {
     include_dirs = include_common
     deps = [
       ":libbegetutil",
+      "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
 
@@ -244,6 +247,7 @@ if (defined(ohos_lite)) {
         "//base/startup/init/services/param/watcher/agent/watcher_manager_proxy.cpp",
         "//base/startup/init/services/param/watcher/agent/watcher_stub.cpp",
       ]
+      deps += [ "//base/startup/init/services/param/linux:param_client" ]
       include_dirs += [
         "//base/startup/init/services/param/watcher/include",
         "//base/startup/init/services/log",

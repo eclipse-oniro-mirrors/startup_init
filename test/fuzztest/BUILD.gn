@@ -140,6 +140,7 @@ ohos_fuzztest("ReadFileInDirFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
 
@@ -209,6 +210,7 @@ ohos_fuzztest("SystemDumpParametersFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param/linux:param_init",
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
@@ -512,6 +514,7 @@ ohos_fuzztest("CmdServiceProcessDelClientFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -541,6 +544,7 @@ ohos_fuzztest("CmdClientInitFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -1601,6 +1605,8 @@ ohos_fuzztest("ServiceSaveFdWithPollFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
+    "//base/startup/init/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -1611,7 +1617,10 @@ ohos_fuzztest("ServiceSaveFdWithPollFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "ServiceSaveFdWithPoll_fuzzer/ServiceSaveFdWithPoll_fuzzer.cpp" ]
+  sources = [
+    "//base/startup/init/interfaces/innerkits/fd_holder/fd_holder.c",
+    "ServiceSaveFdWithPoll_fuzzer/ServiceSaveFdWithPoll_fuzzer.cpp",
+  ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -1861,6 +1870,7 @@ ohos_fuzztest("BuildControlMessageFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
     "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -1886,6 +1896,7 @@ ohos_fuzztest("ReceiveFdsFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]

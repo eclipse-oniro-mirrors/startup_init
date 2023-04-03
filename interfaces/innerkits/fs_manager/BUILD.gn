@@ -21,6 +21,7 @@ config("libfsmanager_exported_configs") {
 
 ohos_static_library("libfsmanager_static") {
   sources = [
+    "//base/startup/init/services/utils/init_utils.c",
     "fstab.c",
     "fstab_mount.c",
   ]
