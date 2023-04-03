@@ -715,6 +715,8 @@ static void CheckCmd(const TestCmdLine *resCmd)
         EXPECT_NE(' ', resCmd->cmdContent[0]);   // should not start with space
     } else if (strcmp("export ", resCmd->name) == 0) {
         EXPECT_NE(' ', resCmd->cmdContent[0]);   // should not start with space
+    }  else if (strcmp("exec ", resCmd->name) == 0) {
+        EXPECT_NE(' ', resCmd->cmdContent[0]);   // should not start with space
     } else {    // unknown cmd
         EXPECT_TRUE(false);
     }
