@@ -100,13 +100,13 @@ static int32_t GetUidByName(BShellHandle shell, int argc, char **argv)
     if (data == NULL) {
         printf("getpwnam uid failed\n");
     } else {
-        printf("getpwnam uid %s : %d\n", argv[1], data->pw_uid);
+        printf("getpwnam uid %s : %u\n", argv[1], data->pw_uid);
     }
 
     data = NULL;
     while ((data = getpwent()) != NULL) {
         if ((data->pw_name != NULL) && (strcmp(data->pw_name, argv[1]) == 0)) {
-            printf("getpwent uid %s : %d\n", argv[1], data->pw_uid);
+            printf("getpwent uid %s : %u\n", argv[1], data->pw_uid);
             break;
         }
     }
@@ -137,14 +137,14 @@ static int32_t GetGidByName(BShellHandle shell, int argc, char **argv)
     if (data == NULL) {
         printf("getgrnam gid failed\n");
     } else {
-        printf("getgrnam gid %s : %d\n", argv[1], data->gr_gid);
+        printf("getgrnam gid %s : %u\n", argv[1], data->gr_gid);
         ShowUserInGroup(data);
     }
 
     data = NULL;
     while ((data = getgrent()) != NULL) {
         if ((data->gr_name != NULL) && (strcmp(data->gr_name, argv[1]) == 0)) {
-            printf("getgrent gid %s : %d\n", argv[1], data->gr_gid);
+            printf("getgrent gid %s : %u\n", argv[1], data->gr_gid);
             ShowUserInGroup(data);
             break;
         }
