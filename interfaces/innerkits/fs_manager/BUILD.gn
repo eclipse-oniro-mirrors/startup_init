@@ -15,8 +15,11 @@ import("//build/ohos.gni")
 # For init only
 config("libfsmanager_exported_configs") {
   visibility = [ ":*" ]
-  include_dirs =
-      [ "//base/startup/init/interfaces/innerkits/include/fs_manager" ]
+  include_dirs = [
+    "./libfs_dm/include",
+    "./libfs_hvb/include",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+  ]
 }
 
 ohos_static_library("libfsmanager_static") {

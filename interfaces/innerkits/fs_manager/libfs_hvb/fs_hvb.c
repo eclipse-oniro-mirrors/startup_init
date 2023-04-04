@@ -363,7 +363,7 @@ static char *FsHvbGetHashAlgStr(unsigned int hash_algo)
        xxxxx
  */
 
-static int FsHvbConstructVerityTarget(DmVerityTarget *target, char *devName, struct hvb_cert *cert)
+int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, struct hvb_cert *cert)
 {
     char *p = NULL;
     char *end = NULL;
@@ -378,7 +378,8 @@ static int FsHvbConstructVerityTarget(DmVerityTarget *target, char *devName, str
         return -1;
     }
 
-    if (snprintf_s(&devPath[0], sizeof(devPath), sizeof(devPath) - 1, "%s%s", FS_HVB_PARTITION_PREFIX, devName) == -1) {
+    if (snprintf_s(&devPath[0], sizeof(devPath), sizeof(devPath) - 1, "%s%s",
+        ((strchr(devName "/") == NULL) ? FS_HVB_PARTITION_PREFIX : ""), devName) == -1) {
         BEGET_LOGE("error, snprintf_s devPath");
         return -1;
     }
