@@ -15,11 +15,32 @@
 
 #include "ueventd_firmware_handler.h"
 
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <limits.h>
 #include "ueventd.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
+#include "securec.h"
 
 void HandleFimwareDeviceEvent(const struct Uevent *uevent)
 {
-    INIT_LOGI("Firmware handler not implemented yet.");
+    char fwLoadingPath[PATH_MAX] = {};
+
+    if (snprintf_s(fwLoadingPath, PATH_MAX, PATH_MAX - 1, "/sys%s/loading", uevent->syspath) == -1) {
+        INIT_LOGE("Failed to build firmware loading path");
+        return;
+    }
+
+    int fd = open(fwLoadingPath, O_WRONLY | O_CLOEXEC);
+    if (fd < 0) {
+        INIT_LOGE("Failed to open %s, err = %d", fwLoadingPath, errno);
+        return;
+    }
+
+    char *endCode = "-1";
+    (void)write(fd, "-1", strlen(endCode));
+    close(fd);
+    fd = -1;
 }
