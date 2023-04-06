@@ -31,9 +31,17 @@ static void ServiceStateChange(const char *key, const char *value, void *context
     uint32_t v = 0;
     int ret = StringToUint(value, &v);
     BEGET_ERROR_CHECK(ret == 0, return, "Failed to get value from %s", value);
-    ServiceStatus status = (ServiceStatus)v;
+
+    // get pid
+    char paramName[PARAM_NAME_LEN_MAX] = { 0 };
+    ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1, "%s.pid", key);
+    BEGET_ERROR_CHECK(ret != -1, return, "Failed to get format pid ret %d for %s ", ret, key);
+
+    ServiceInfo info = {0};
+    info.status = (ServiceStatus)v;
+    info.pid = (pid_t)GetUintParameter(paramName, INVALID_PID);
     if (strlen(key) > strlen(STARTUP_SERVICE_CTL)) {
-        callback(key + strlen(STARTUP_SERVICE_CTL) + 1, status);
+        callback(key + strlen(STARTUP_SERVICE_CTL) + 1, &info);
     } else {
         BEGET_LOGE("Invalid service name %s %s", key, value);
     }
@@ -41,19 +49,23 @@ static void ServiceStateChange(const char *key, const char *value, void *context
 
 int ServiceWatchForStatus(const char *serviceName, ServiceStatusChangePtr changeCallback)
 {
-    if (serviceName == NULL) {
-        BEGET_LOGE("Service wait failed, service is null.");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(serviceName != NULL, return EC_INVALID, "Service watch failed, service is null.");
+    BEGET_ERROR_CHECK(changeCallback != NULL, return EC_INVALID, "Service watch failed, callback is null.");
+
     char paramName[PARAM_NAME_LEN_MAX] = {0};
+    BEGET_LOGI("Watcher service %s status", serviceName);
     if (snprintf_s(paramName, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1,
         "%s.%s", STARTUP_SERVICE_CTL, serviceName) == -1) {
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
-        return -1;
+        return EC_SYSTEM_ERR;
     }
-    if (SystemWatchParameter(paramName, ServiceStateChange, (void *)changeCallback) != 0) {
-        BEGET_LOGE("Wait param for %s failed.", paramName);
-        return -1;
+    int ret = SystemWatchParameter(paramName, ServiceStateChange, (void *)changeCallback);
+    if (ret != 0) {
+        BEGET_LOGE("Failed to watcher service %s ret %d.", serviceName, ret);
+        if (ret == DAC_RESULT_FORBIDED) {
+            return SYSPARAM_PERMISSION_DENIED;
+        }
+        return EC_SYSTEM_ERR;
     }
     return 0;
 }

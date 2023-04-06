@@ -404,4 +404,45 @@ HWTEST_F(SysparaModuleTest, Syspara_GetParameter_test_011, TestSize.Level0)
 
     GTEST_LOG_(INFO) << "Syspara_GetParameter_test_011 end";
 }
+
+HWTEST_F(SysparaModuleTest, Syspara_CacheParameter_test_001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "Syspara_CacheParameter_test_001 start";
+
+    const char *name = "test.write.1111111.222222";
+    CachedHandle cacheHandle = CachedParameterCreate(name, "true");
+    EXPECT_NE(cacheHandle, nullptr);
+    const char *value = CachedParameterGet(cacheHandle);
+    EXPECT_EQ(strcmp(value, "true"), 0);
+    int ret = SetParameter(name, "false");
+    EXPECT_EQ(ret, 0);
+
+    value = CachedParameterGet(cacheHandle);
+    EXPECT_EQ(strcmp(value, "false"), 0);
+    CachedParameterDestroy(cacheHandle);
+
+    GTEST_LOG_(INFO) << "Syspara_CacheParameter_test_001 end";
+}
+
+HWTEST_F(SysparaModuleTest, Syspara_CacheParameter_test_002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "Syspara_CacheParameter_test_002 start";
+
+    const char *name = "test.write.1111111.333333";
+    int ret = SetParameter(name, "3333");
+    EXPECT_EQ(ret, 0);
+    CachedHandle cacheHandle3 = CachedParameterCreate(name, "true");
+    EXPECT_NE(cacheHandle3, nullptr);
+    const char *value = CachedParameterGet(cacheHandle3);
+    EXPECT_EQ(strcmp(value, "3333"), 0);
+
+    ret = SetParameter(name, "2222222");
+    EXPECT_EQ(ret, 0);
+    int valueChange = 0;
+    value = CachedParameterGetChanged(cacheHandle3, &valueChange);
+    EXPECT_EQ(strcmp(value, "2222222"), 0);
+    EXPECT_EQ(valueChange, 1);
+    CachedParameterDestroy(cacheHandle3);
+    GTEST_LOG_(INFO) << "Syspara_CacheParameter_test_002 end";
+}
 }
