@@ -19,15 +19,8 @@
 #include <string.h>
 
 #include "init_param.h"
-#ifdef LITEOS_SUPPORT
-#include "hal_sys_param.h"
-#endif
 #include "parameter.h"
 #include "sysparam_errno.h"
-#ifdef USE_MBEDTLS
-#include "mbedtls/sha256.h"
-#endif
-
 #include "securec.h"
 #include "beget_ext.h"
 
@@ -135,92 +128,6 @@ INIT_LOCAL_API const char *GetManufacture_(void)
 {
     static const char *productManufacture = NULL;
     return GetProperty("const.product.manufacturer", &productManufacture);
-}
-
-#ifdef USE_MBEDTLS
-static int GetSha256Value(const char *input, char *udid, int udidSize)
-{
-    if (input == NULL) {
-        return EC_FAILURE;
-    }
-    char buf[DEV_BUF_LENGTH] = { 0 };
-    unsigned char hash[HASH_LENGTH] = { 0 };
-
-    mbedtls_sha256_context context;
-    mbedtls_sha256_init(&context);
-    mbedtls_sha256_starts(&context, 0);
-    mbedtls_sha256_update(&context, (const unsigned char *)input, strlen(input));
-    mbedtls_sha256_finish(&context, hash);
-
-    for (size_t i = 0; i < HASH_LENGTH; i++) {
-        unsigned char value = hash[i];
-        memset_s(buf, DEV_BUF_LENGTH, 0, DEV_BUF_LENGTH);
-        int len = sprintf_s(buf, sizeof(buf), "%02X", value);
-        if (len > 0 && strcat_s(udid, udidSize, buf) != 0) {
-            return EC_FAILURE;
-        }
-    }
-    return EC_SUCCESS;
-}
-#else
-static int GetSha256Value(const char *input, char *udid, int udidSize)
-{
-    (void)input;
-    (void)udid;
-    (void)udidSize;
-    return EC_FAILURE;
-}
-#endif
-
-INIT_LOCAL_API const char *GetSerial_(void)
-{
-#ifdef LITEOS_SUPPORT
-    return HalGetSerial();
-#else
-    static char *ohosSerial = NULL;
-    if (ohosSerial == NULL) {
-        BEGET_CHECK((ohosSerial = (char *)calloc(1, PARAM_VALUE_LEN_MAX)) != NULL, return NULL);
-    }
-    uint32_t len = PARAM_VALUE_LEN_MAX;
-    int ret = SystemGetParameter("ohos.boot.sn", ohosSerial, &len);
-    BEGET_CHECK(ret == 0, return NULL);
-    return ohosSerial;
-#endif
-}
-
-INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
-{
-    if (size < UDID_LEN || udid == NULL) {
-        return EC_FAILURE;
-    }
-
-    uint32_t len = (uint32_t)size;
-    int ret = SystemGetParameter("const.product.udid", udid, &len);
-    BEGET_CHECK(ret != 0, return ret);
-
-    const char *manufacture = GetManufacture_();
-    const char *model = GetProductModel_();
-    const char *sn = GetSerial_();
-    if (manufacture == NULL || model == NULL || sn == NULL) {
-        return -1;
-    }
-    int tmpSize = strlen(manufacture) + strlen(model) + strlen(sn) + 1;
-    if (tmpSize <= 1 || tmpSize > DEV_BUF_MAX_LENGTH) {
-        return -1;
-    }
-    char *tmp = NULL;
-    BEGET_CHECK((tmp = (char *)malloc(tmpSize)) != NULL, return -1);
-
-    (void)memset_s(tmp, tmpSize, 0, tmpSize);
-    if ((strcat_s(tmp, tmpSize, manufacture) != 0) || (strcat_s(tmp, tmpSize, model) != 0) ||
-        (strcat_s(tmp, tmpSize, sn) != 0)) {
-        free(tmp);
-        return -1;
-    }
-
-    ret = GetSha256Value(tmp, udid, size);
-    free(tmp);
-    return ret;
 }
 
 INIT_LOCAL_API const char *GetFullName_(void)

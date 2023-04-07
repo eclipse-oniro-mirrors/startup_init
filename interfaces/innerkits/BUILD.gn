@@ -54,7 +54,6 @@ if (defined(ohos_lite)) {
       defines = [
         "_GNU_SOURCE",
         "OHOS_LITE",
-        "USE_MBEDTLS",
       ]
       sources = []
       include_dirs = include_common
@@ -63,10 +62,10 @@ if (defined(ohos_lite)) {
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//base/startup/init/services/modules/init_hook:inithook",
         "//third_party/bounds_checking_function:libsec_shared",
-        "//third_party/mbedtls:mbedtls_shared",
       ]
       deps += [
         "//base/startup/init/services/log:init_log",
+        "//base/startup/init/services/modules/udid:libudidcomm",
         "//base/startup/init/services/utils:libinit_utils",
       ]
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
@@ -104,6 +103,7 @@ if (defined(ohos_lite)) {
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
         "//base/startup/init/services/modules/init_hook:inithook",
+        "//base/startup/init/services/modules/udid:libudidcomm",
         "//third_party/bounds_checking_function:libsec_static",
       ]
 
@@ -126,10 +126,6 @@ if (defined(ohos_lite)) {
         sources += [ "syscap/init_syscap.c" ]
       }
 
-      if (enable_ohos_startup_init_lite_use_thirdparty_mbedtls) {
-        deps += [ "//third_party/mbedtls:mbedtls" ]
-        defines += [ "USE_MBEDTLS" ]
-      }
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
         deps += [
           "//base/startup/init/services/log:init_log",
@@ -179,7 +175,6 @@ if (defined(ohos_lite)) {
     defines = [
       "INIT_AGENT",
       "_GNU_SOURCE",
-      "USE_MBEDTLS",
     ]
     if (target_cpu == "arm64") {
       defines += [ "SUPPORT_64BIT" ]
@@ -194,10 +189,10 @@ if (defined(ohos_lite)) {
       "//base/startup/init/interfaces/innerkits/socket:libsocket",
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/loopevent:loopevent",
+      "//base/startup/init/services/modules/udid:libudidcomm",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/mbedtls:mbedtls_shared",
     ]
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     if (startup_begetutil_extra_modules != "") {
@@ -222,7 +217,6 @@ if (defined(ohos_lite)) {
     defines = [
       "INIT_AGENT",
       "_GNU_SOURCE",
-      "USE_MBEDTLS",
     ]
     sources = [
       "//base/startup/init/device_info/device_info.cpp",
@@ -283,7 +277,6 @@ if (defined(ohos_lite)) {
     defines = [
       "INIT_AGENT",
       "_GNU_SOURCE",
-      "USE_MBEDTLS",
     ]
     if (target_cpu == "arm64") {
       defines += [ "SUPPORT_64BIT" ]
@@ -293,10 +286,10 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/loopevent:loopevent",
+      "//base/startup/init/services/modules/udid:libudidcomm",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/mbedtls:mbedtls_shared",
     ]
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
