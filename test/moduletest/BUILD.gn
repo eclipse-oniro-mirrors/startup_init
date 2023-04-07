@@ -27,6 +27,7 @@ ohos_shared_library("libparamtestmodule") {
     "//base/startup/init/services/loopevent/include",
     "//base/startup/init/services/param/include",
     "//base/startup/init/ueventd/include",
+    "//base/startup/init/device_info",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
   ]
@@ -56,11 +57,16 @@ ohos_moduletest("InitModuleTest") {
     "test_utils.cpp",
   ]
 
+  if (enable_ohos_startup_init_feature_deviceinfo) {
+    sources += [ "deviceinfo_moduleTest.cpp" ]
+  }
+
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/include/syspara",
     "//base/startup/init/interfaces/innerkits/syspara",
     "//base/startup/init/services/include/param",
+    "//base/startup/init/device_info",
     ".",
   ]
 
@@ -69,6 +75,13 @@ ohos_moduletest("InitModuleTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog_native:libhilog_base",
+    "ipc:ipc_single",
+    "samgr:samgr_proxy",
   ]
 }
 

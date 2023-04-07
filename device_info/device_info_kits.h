@@ -33,12 +33,27 @@ public:
 
     void FinishStartSASuccess(const sptr<IRemoteObject> &remoteObject);
     void FinishStartSAFailed();
+    void ResetService(const wptr<IRemoteObject> &remote);
 private:
+    // For death event procession
+    class DeathRecipient final : public IRemoteObject::DeathRecipient {
+    public:
+        DeathRecipient(void) = default;
+        ~DeathRecipient(void) final = default;
+        DISALLOW_COPY_AND_MOVE(DeathRecipient);
+        void OnRemoteDied(const wptr<IRemoteObject> &remote) final;
+    };
+    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient(void)
+    {
+        return deathRecipient_;
+    }
+
     static const int DEVICEINFO_LOAD_SA_TIMEOUT_MS = 60000;
     void LoadDeviceInfoSa();
     sptr<IDeviceInfo> GetService();
     std::mutex lock_;
     std::condition_variable deviceInfoLoadCon_;
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
     sptr<IDeviceInfo> deviceInfoService_ {};
 };
 } // namespace device_info

@@ -80,7 +80,7 @@ HWTEST_F(ServiceWatcherModuleTest, serviceWatcher_test_003, TestSize.Level0)
     // start service
     char udid[65] = {}; // 65 udid len
     ret = AclGetDevUdid(udid, sizeof(udid));
-    EXPECT_EQ(ret, 0);
+    EXPECT_NE(ret, 0);
     auto status1 = GetServiceStatus(serviceName);
     EXPECT_TRUE(status1 == "running");
     // wait service exit

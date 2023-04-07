@@ -41,9 +41,13 @@ public:
 #define DINFO_DOMAIN (BASE_DOMAIN + 8)
 #endif
 
-#define DINFO_LOGI(fmt, ...) STARTUP_LOGI(DINFO_DOMAIN, "DeviceInfoKits", fmt, ##__VA_ARGS__)
-#define DINFO_LOGE(fmt, ...) STARTUP_LOGE(DINFO_DOMAIN, "DeviceInfoKits", fmt, ##__VA_ARGS__)
-#define DINFO_LOGV(fmt, ...) STARTUP_LOGV(DINFO_DOMAIN, "DeviceInfoKits", fmt, ##__VA_ARGS__)
+#ifndef DINFO_TAG
+#define DINFO_TAG "DeviceInfoKits"
+#endif
+
+#define DINFO_LOGI(fmt, ...) STARTUP_LOGI(DINFO_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
+#define DINFO_LOGE(fmt, ...) STARTUP_LOGE(DINFO_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
+#define DINFO_LOGV(fmt, ...) STARTUP_LOGV(DINFO_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
 
 #define DINFO_CHECK(ret, exper, ...) \
     if (!(ret)) { \

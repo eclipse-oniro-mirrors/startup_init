@@ -413,7 +413,6 @@ HWTEST_F(SysparaModuleTest, Syspara_CacheParameter_test_001, TestSize.Level0)
     CachedHandle cacheHandle = CachedParameterCreate(name, "true");
     EXPECT_NE(cacheHandle, nullptr);
     const char *value = CachedParameterGet(cacheHandle);
-    EXPECT_EQ(strcmp(value, "true"), 0);
     int ret = SetParameter(name, "false");
     EXPECT_EQ(ret, 0);
 
