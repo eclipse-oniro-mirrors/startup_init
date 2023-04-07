@@ -139,6 +139,8 @@ if (defined(ohos_lite)) {
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
     }
+
+    deps = [ "//base/startup/init/services/param/base:param_base" ]
     part_name = "init"
     subsystem_name = "startup"
   }
@@ -147,7 +149,11 @@ if (defined(ohos_lite)) {
     sources = param_client_sources
     include_dirs = param_include_dirs
     public_configs = [ ":exported_header_files" ]
-    deps = []
+    deps = [
+      "//base/startup/init/services/log:agent_log",
+      "//base/startup/init/services/param/base:param_base",
+    ]
+
     cflags = [ "-Wno-deprecated-pragma" ]
     defines = [
       "_GNU_SOURCE",

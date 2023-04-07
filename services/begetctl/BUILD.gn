@@ -56,6 +56,12 @@ if (defined(ohos_lite)) {
       "//build/lite/config/component/cJSON:cjson_static",
       "//third_party/bounds_checking_function:libsec_static",
     ]
+
+    if (ohos_kernel_type == "linux") {
+      deps += [ "//base/startup/init/services/param/linux:param_client" ]
+    } else {
+      deps += [ "//base/startup/init/services/param/liteos:param_client_lite" ]
+    }
   }
 } else {
   import("//build/ohos.gni")
@@ -82,10 +88,15 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
       "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
+      "//base/startup/init/services/log:agent_log",
+      "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/sandbox:sandbox",
+      "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/cJSON:cjson",
     ]
+
+    deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [ "c_utils:utils" ]
 
     if (param_test) {
@@ -139,8 +150,13 @@ if (defined(ohos_lite)) {
     include_dirs = common_include_dirs
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
+      "//base/startup/init/services/log:agent_log",
+      "//base/startup/init/services/param/linux:param_client",
+      "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
+
+    deps += [ "//base/startup/init/services/param/base:param_base" ]
 
     if (build_selinux) {
       deps += [

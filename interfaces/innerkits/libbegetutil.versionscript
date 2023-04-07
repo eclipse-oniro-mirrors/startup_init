@@ -1,0 +1,139 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+1.0 {
+  global:
+    DecodeUid;
+    CheckAndCreateDir;
+    SetInitLogLevel;
+    StartupLog;
+    ServiceGetFd;
+    ServiceSaveFd;
+    HookMgrAdd;
+    HookMgrAddEx;
+    HookMgrCreate;
+    HookMgrDel;
+    HookMgrDestroy;
+    HookMgrExecute;
+    HookMgrGetHooksCnt;
+    HookMgrGetStagesCnt;
+    HookMgrTraversal;
+    GetControlFile;
+    OH_HashMapAdd;
+    OH_HashMapCreate;
+    OH_HashMapDestory;
+    OH_HashMapFind;
+    OH_HashMapGet;
+    OH_HashMapIsEmpty;
+    OH_HashMapRemove;
+    OH_HashMapTraverse;
+    SystemGetParameterName;
+    SystemTraversalParameter;
+    DoReboot;
+    GetControlSocket;
+    OH_ListAddTail;
+    OH_ListAddWithOrder;
+    OH_ListFind;
+    OH_ListGetCnt;
+    OH_ListInit;
+    OH_ListRemove;
+    OH_ListRemoveAll;
+    OH_ListTraversal;
+    LE_AcceptStreamClient;
+    LE_AddSignal;
+    LE_CloseLoop;
+    LE_CloseSignalTask;
+    LE_CloseStreamTask;
+    LE_CloseTask;
+    LE_CreateAsyncTask;
+    LE_CreateBuffer;
+    LE_CreateLoop;
+    LE_CreateSignalTask;
+    LE_CreateStreamClient;
+    LE_CreateStreamServer;
+    LE_CreateTimer;
+    LE_FreeBuffer;
+    LE_GetBufferInfo;
+    LE_GetDefaultLoop;
+    LE_GetSendResult;
+    LE_GetSocketFd;
+    LE_GetUserData;
+    LE_RemoveSignal;
+    LE_RemoveWatcher;
+    LE_RunLoop;
+    LE_Send;
+    LE_StartAsyncEvent;
+    LE_StartTimer;
+    LE_StartWatcher;
+    LE_StopAsyncTask;
+    LE_StopLoop;
+    LE_StopTimer;
+    ModuleMgrCreate;
+    ModuleMgrDestroy;
+    ModuleMgrGetArgs;
+    ModuleMgrGetCnt;
+    ModuleMgrInstall;
+    ModuleMgrScan;
+    ModuleMgrTraversal;
+    ModuleMgrUninstall;
+    *GetStringParameter*;
+    FindParameter;
+    GetAbiList;
+    GetBootloaderVersion;
+    GetBrand;
+    GetBuildHost;
+    GetBuildRootHash;
+    GetBuildTime;
+    GetBuildType;
+    GetBuildUser;
+    GetDevUdid;
+    GetDisplayVersion;
+    GetFirstApiVersion;
+    GetHardwareModel;
+    GetHardwareProfile;
+    GetIncrementalVersion;
+    GetManufacture;
+    GetMarketName;
+    GetOSFullName;
+    GetOsReleaseType;
+    GetParameterCommitId;
+    GetParameterName;
+    GetParameterValue;
+    GetProductModel;
+    GetProductSeries;
+    GetSdkApiVersion;
+    GetSecurityPatchTag;
+    GetSerial;
+    GetSoftwareModel;
+    GetVersionId;
+    WaitParameter;
+    *GetIntParameter*;
+    *GetDeviceType*;
+    *GetParameter*;
+    *GetUintParameter*;
+    *SetParameter*;
+    *GetBoolParameter*;
+    ServiceControl;
+    ServiceControlWithExtra;
+    ServiceSetReady;
+    ServiceWaitForStatus;
+    StartServiceByTimer;
+    StopServiceTimer;
+    HasSystemCapability;
+    GetBuildVersion;
+    GetFeatureVersion;
+    GetMajorVersion;
+    GetSeniorVersion;
+  local:
+    *;
+};

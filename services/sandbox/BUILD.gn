@@ -40,6 +40,8 @@ ohos_static_library("sandbox") {
   deps = [
     ":chipset-sandbox.json",
     ":system-sandbox.json",
+    "//base/customization/config_policy/frameworks/config_policy:configpolicy_util",
+    "//base/startup/init/services/utils:libinit_utils",
   ]
   part_name = "init"
   subsystem_name = "startup"

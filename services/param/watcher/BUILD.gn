@@ -21,6 +21,7 @@ ohos_prebuilt_etc("param_watcher.rc") {
 
 ohos_shared_library("param_watcher") {
   sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
     "proxy/watcher_manager.cpp",
     "proxy/watcher_manager_stub.cpp",
     "proxy/watcher_proxy.cpp",
