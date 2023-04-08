@@ -64,7 +64,7 @@ public:
     {
     }
 
-    static pid_t StartChild(const char *filterName, SyscallFunc func)
+    static pid_t StartChild(SeccompFilterType type, const char *filterName, SyscallFunc func)
     {
         pid_t pid = fork();
         if (pid == 0) {
@@ -73,7 +73,7 @@ public:
                 exit(EXIT_FAILURE);
             }
 
-            if (!SetSeccompPolicyWithName(filterName)) {
+            if (!SetSeccompPolicyWithName(type, filterName)) {
                 std::cout << "SetSeccompPolicy set fail fiterName is " << filterName << std::endl;
                 exit(EXIT_FAILURE);
             }
@@ -90,7 +90,7 @@ public:
         return pid;
     }
 
-    static int CheckSyscall(const char *filterName, SyscallFunc func, bool isAllow)
+    static int CheckSyscall(SeccompFilterType type, const char *filterName, SyscallFunc func, bool isAllow)
     {
         sigset_t set;
         int status;
@@ -110,7 +110,7 @@ public:
          * rwlock will be used by function dlopen in child process */
         usleep(SLEEP_TIME_100MS);
 
-        pid = StartChild(filterName, func);
+        pid = StartChild(type, filterName, func);
         if (pid == -1) {
             std::cout << "fork failed:" << strerror(errno) << std::endl;
             return -1;
@@ -217,33 +217,33 @@ public:
     void TestSystemSycall()
     {
         // system blocklist
-        int ret = CheckSyscall(SYSTEM_NAME, CheckGetMempolicy, false);
+        int ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetMempolicy, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
-        ret = CheckSyscall(SYSTEM_NAME, CheckGetpid, true);
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
     }
 
     void TestSetUidGidFilter()
     {
         // system blocklist
-        int ret = CheckSyscall(APPSPAWN_NAME, CheckSetresuidArgsOutOfRange, false);
+        int ret = CheckSyscall(INDIVIDUAL, APPSPAWN_NAME, CheckSetresuidArgsOutOfRange, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
-        ret = CheckSyscall(APPSPAWN_NAME, CheckSetresuidArgsInRange, true);
+        ret = CheckSyscall(INDIVIDUAL, APPSPAWN_NAME, CheckSetresuidArgsInRange, true);
         EXPECT_EQ(ret, 0);
     }
 
     void TestAppSycall()
     {
         // app blocklist
-        int ret = CheckSyscall(APP_NAME, CheckSetuid, false);
+        int ret = CheckSyscall(APP, APP_NAME, CheckSetuid, false);
         EXPECT_EQ(ret, 0);
 
         // app allowlist
-        ret = CheckSyscall(APP_NAME, CheckGetpid, true);
+        ret = CheckSyscall(APP, APP_NAME, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
     }
 #elif defined __arm__
@@ -298,33 +298,33 @@ public:
     void TestSystemSycall()
     {
         // system blocklist
-        int ret = CheckSyscall(SYSTEM_NAME, CheckGetuid, false);
+        int ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetuid, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
-        ret = CheckSyscall(SYSTEM_NAME, CheckGetuid32, true);
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetuid32, true);
         EXPECT_EQ(ret, 0);
     }
 
     void TestSetUidGidFilter()
     {
         // system blocklist
-        int ret = CheckSyscall(APPSPAWN_NAME, CheckSetresuid32ArgsOutOfRange, false);
+        int ret = CheckSyscall(INDIVIDUAL, APPSPAWN_NAME, CheckSetresuid32ArgsOutOfRange, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist
-        ret = CheckSyscall(APPSPAWN_NAME, CheckSetresuid32ArgsInRange, true);
+        ret = CheckSyscall(INDIVIDUAL, APPSPAWN_NAME, CheckSetresuid32ArgsInRange, true);
         EXPECT_EQ(ret, 0);
     }
 
     void TestAppSycall()
     {
         // app blocklist
-        int ret = CheckSyscall(APP_NAME, CheckSetuid32, false);
+        int ret = CheckSyscall(APP, APP_NAME, CheckSetuid32, false);
         EXPECT_EQ(ret, 0);
 
         // app allowlist
-        ret = CheckSyscall(APP_NAME, CheckGetuid32, true);
+        ret = CheckSyscall(APP, APP_NAME, CheckGetuid32, true);
         EXPECT_EQ(ret, 0);
     }
 #endif

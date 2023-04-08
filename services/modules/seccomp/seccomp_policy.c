@@ -16,6 +16,7 @@
 #include "seccomp_policy.h"
 #include "plugin_adapter.h"
 #include "securec.h"
+#include "config_policy_utils.h"
 
 #ifdef WITH_SECCOMP_DEBUG
 #include "init_utils.h"
@@ -38,11 +39,11 @@
 #endif
 
 #ifdef __aarch64__
-#define FILTER_LIB_PATH_FORMAT "/system/lib64/lib%s_filter.z.so"
-#define FILTER_LIB_PATH_HEAD "/system/lib64/lib"
+#define FILTER_LIB_PATH_FORMAT "lib64/seccomp/lib%s_filter.z.so"
+#define FILTER_LIB_PATH_PART "lib64/seccomp/lib"
 #else
-#define FILTER_LIB_PATH_FORMAT "/system/lib/lib%s_filter.z.so"
-#define FILTER_LIB_PATH_HEAD "/system/lib/lib"
+#define FILTER_LIB_PATH_FORMAT "lib/seccomp/lib%s_filter.z.so"
+#define FILTER_LIB_PATH_PART "lib/seccomp/lib"
 #endif
 #define FILTER_NAME_FORMAT "g_%sSeccompFilter"
 #define FILTER_SIZE_STRING "Size"
@@ -94,34 +95,51 @@ static bool InstallSeccompPolicy(const struct sock_filter* filter, size_t filter
     return true;
 }
 
-static char *GetFilterFileByName(const char *filterName)
+static bool GetFilterFileByName(const char *filterName, char *filterLibRealPath, unsigned int pathSize)
 {
     size_t maxFilterNameLen = PATH_MAX - strlen(FILTER_LIB_PATH_FORMAT) + strlen("%s") - 1;
     if (filterName == NULL || strlen(filterName) > maxFilterNameLen) {
-        return NULL;
+        return false;
     }
 
+    bool flag = false;
     char filterLibPath[PATH_MAX] = {0};
 
     int rc = snprintf_s(filterLibPath, sizeof(filterLibPath), \
                             strlen(filterName) + strlen(FILTER_LIB_PATH_FORMAT) - strlen("%s"), \
                             FILTER_LIB_PATH_FORMAT, filterName);
     if (rc == -1) {
-        return NULL;
+        return false;
     }
 
-    return realpath(filterLibPath, NULL);
+    int seccompPathNum = 0;
+    CfgFiles *files = GetCfgFiles(filterLibPath);
+    for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; files && i >= 0; i--) {
+        if (files->paths[i]) {
+            seccompPathNum++;
+        }
+    }
+
+    // allow only one path to a seccomp shared library to avoid shared library replaced
+    if (seccompPathNum == 1) {
+        if (memcpy_s(filterLibRealPath, pathSize, files->paths[0], strlen(files->paths[0]) + 1) == EOK) {
+            flag = true;
+        }
+    }
+    FreeCfgFiles(files);
+
+    return flag;
 }
 
 static int GetSeccompPolicy(const char *filterName, int **handler,
-                            char *filterLibRealPath, struct sock_fprog *prog)
+                            const char *filterLibRealPath, struct sock_fprog *prog)
 {
     if (filterName == NULL || filterLibRealPath == NULL || \
         handler == NULL || prog == NULL) {
         return INPUT_ERROR;
     }
 
-    if (strncmp(filterLibRealPath, FILTER_LIB_PATH_HEAD, strlen(FILTER_LIB_PATH_HEAD))) {
+    if (strstr(filterLibRealPath, FILTER_LIB_PATH_PART) == NULL) {
         return INPUT_ERROR;
     }
 
@@ -135,14 +153,12 @@ static int GetSeccompPolicy(const char *filterName, int **handler,
                     strlen(filterName) + strlen(FILTER_NAME_FORMAT) - strlen("%s"), \
                     FILTER_NAME_FORMAT, filterName);
         if (rc == -1) {
-            ret = RETURN_ERROR;
-            break;
+            return RETURN_ERROR;
         }
 
         policyHanlder = dlopen(filterLibRealPath, RTLD_LAZY);
         if (policyHanlder == NULL) {
-            ret = RETURN_NULL;
-            break;
+            return RETURN_NULL;
         }
 
         filter = (struct sock_filter *)dlsym(policyHanlder, filterVaribleName);
@@ -190,7 +206,7 @@ static bool IsEnableSeccomp(void)
 }
 #endif
 
-bool SetSeccompPolicyWithName(const char *filterName)
+bool SetSeccompPolicyWithName(SeccompFilterType type, const char *filterName)
 {
     if (filterName == NULL) {
         return false;
@@ -203,27 +219,35 @@ bool SetSeccompPolicyWithName(const char *filterName)
 #endif
 
     void *handler = NULL;
-    char *filterLibRealPath = NULL;
+    char filterLibRealPath[PATH_MAX] = {0};
     struct sock_fprog prog;
     bool ret = false;
+    const char *filterNamePtr = filterName;
 
-    filterLibRealPath = GetFilterFileByName(filterName);
-    PLUGIN_CHECK(filterLibRealPath != NULL, return false, "get filter file name faield");
+    bool flag = GetFilterFileByName(filterNamePtr, filterLibRealPath, sizeof(filterLibRealPath));
+    if (!flag) {
+        if (type == SYSTEM_SA) {
+            filterNamePtr = SYSTEM_NAME;
+            flag = GetFilterFileByName(filterNamePtr, filterLibRealPath, sizeof(filterLibRealPath));
+            PLUGIN_CHECK(flag == true, return ret, "get filter name failed");
+        } else if (type == SYSTEM_OTHERS) {
+            return true;
+        } else {
+            PLUGIN_LOGE("get filter name failed");
+            return ret;
+        }
+    }
 
-    int retCode = GetSeccompPolicy(filterName, (int **)&handler, filterLibRealPath, &prog);
+    int retCode = GetSeccompPolicy(filterNamePtr, (int **)&handler, filterLibRealPath, &prog);
     if (retCode == SECCOMP_SUCCESS) {
         ret = InstallSeccompPolicy(prog.filter, prog.len, SECCOMP_FILTER_FLAG_LOG);
     } else {
-        PLUGIN_LOGE("GetSeccompPolicy failed return is %d", retCode);
+        PLUGIN_LOGE("get seccomp policy failed return is %d and path is %s", retCode, filterLibRealPath);
     }
 #ifndef COVERAGE_TEST
     if (handler != NULL) {
         dlclose(handler);
     }
 #endif
-    if (filterLibRealPath != NULL) {
-        free(filterLibRealPath);
-    }
-
     return ret;
 }

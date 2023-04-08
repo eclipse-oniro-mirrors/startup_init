@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 
 config("seccomp_public_config") {
-  include_dirs = [ "//base/startup/init/interfaces/innerkits/seccomp/include" ]
+  include_dirs = [ "include" ]
 }
 
 if (defined(build_seccomp) && build_seccomp) {
@@ -25,16 +25,14 @@ if (defined(build_seccomp) && build_seccomp) {
   }
 
   ohos_shared_library("seccomp") {
-    sources =
-        [ "//base/startup/init/services/modules/seccomp/seccomp_policy.c" ]
+    sources = [ "../../../services/modules/seccomp/seccomp_policy.c" ]
 
     public_configs = [ ":seccomp_public_config" ]
 
     include_dirs = [
-      "//base/startup/init/interfaces/innerkits/include",
-      "//base/startup/init/services/modules",
-      "//base/startup/init/services/log",
-      "//third_party/bounds_checking_function/include",
+      "../include",
+      "../../../services/modules",
+      "../../../services/log",
     ]
 
     if (seccomp_enable_debug) {
@@ -46,9 +44,11 @@ if (defined(build_seccomp) && build_seccomp) {
       defines = [ "WITH_SECCOMP_DEBUG" ]
     }
 
-    deps = [
-      "//base/startup/init/interfaces/innerkits:libbegetutil",
-      "//third_party/bounds_checking_function:libsec_shared",
+    deps = [ "../../innerkits:libbegetutil" ]
+
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "config_policy:configpolicy_util",
     ]
 
     license_file = "//base/startup/init/LICENSE"

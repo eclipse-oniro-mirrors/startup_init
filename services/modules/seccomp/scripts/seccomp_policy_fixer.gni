@@ -18,44 +18,108 @@ template("ohos_prebuilt_seccomp") {
   assert(defined(invoker.sources), "source must be defined for ${target_name}.")
   assert(defined(invoker.filtername),
          "source must be defined for ${target_name}.")
+  assert(
+      defined(invoker.process_type) &&
+          (invoker.process_type == "app" || invoker.process_type == "system"),
+      "process_type must be defined for ${target_name}, and the type must be app or system")
 
   _seccomp_filter_target = "gen_${target_name}"
-  _seccomp_filter_file = target_gen_dir + "/${target_name}.c"
+  _output_name = "${invoker.filtername}_filter"
+  _seccomp_filter_file = target_gen_dir + "/${_output_name}.c"
+  _syscall_to_nr_arm_name = "${target_name}_syscall_to_nr_arm"
+  _syscall_to_nr_arm64_name = "${target_name}_syscall_to_nr_arm64"
+  _blocklist_file_name = "//base/startup/init/services/modules/seccomp/seccomp_policy/${invoker.process_type}.blocklist.seccomp.policy"
+  _key_process_file_name = "//base/startup/init/services/modules/seccomp/seccomp_policy/privileged_process.seccomp.policy"
+
+  action(_syscall_to_nr_arm_name) {
+    script = "${clang_base_path}/bin/clang"
+    output_dir =
+        target_gen_dir + "/${_seccomp_filter_target}/libsyscall_to_nr_arm"
+    args = [
+      "-I",
+      rebase_path(
+          "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include/asm-arm"),
+      "-I",
+      rebase_path(
+          "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include"),
+      "-dD",
+      "-E",
+      "-Wall",
+      "-nostdinc",
+      "-o",
+      rebase_path(output_dir),
+      rebase_path(
+          "//base/startup/init/services/modules/seccomp/gen_syscall_name_nrs.c"),
+    ]
+
+    outputs = [ output_dir ]
+  }
+
+  action(_syscall_to_nr_arm64_name) {
+    script = "${clang_base_path}/bin/clang"
+    output_dir =
+        target_gen_dir + "/${_seccomp_filter_target}/libsyscall_to_nr_arm64"
+    args = [
+      "-I",
+      rebase_path(
+          "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include/asm-arm64"),
+      "-I",
+      rebase_path(
+          "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include"),
+      "-dD",
+      "-E",
+      "-Wall",
+      "-nostdinc",
+      "-o",
+      rebase_path(output_dir),
+      rebase_path(
+          "//base/startup/init/services/modules/seccomp/gen_syscall_name_nrs.c"),
+    ]
+
+    outputs = [ output_dir ]
+  }
 
   action(_seccomp_filter_target) {
     script = "//base/startup/init/services/modules/seccomp/scripts/generate_code_from_policy.py"
 
     sources = invoker.sources
-    sources += get_target_outputs(
-            "//base/startup/init/services/modules/seccomp:syscall_to_nr_arm")
-    sources += get_target_outputs(
-            "//base/startup/init/services/modules/seccomp:syscall_to_nr_arm64")
+    sources += get_target_outputs(":${_syscall_to_nr_arm_name}")
+    sources += get_target_outputs(":${_syscall_to_nr_arm64_name}")
 
     deps = [
-      "//base/startup/init/services/modules/seccomp:syscall_to_nr_arm",
-      "//base/startup/init/services/modules/seccomp:syscall_to_nr_arm64",
+      ":${_syscall_to_nr_arm64_name}",
+      ":${_syscall_to_nr_arm_name}",
     ]
 
     args = []
     foreach(source, sources) {
       args += [
-        "--srcfiles",
+        "--src-files",
         rebase_path(source),
       ]
     }
     args += [
-      "--dstfile",
+      "--blocklist-file",
+      rebase_path(_blocklist_file_name),
+      "--dst-file",
       rebase_path(_seccomp_filter_file),
-      "--bpfArrayName",
+      "--filter-name",
       invoker.filtername,
+      "--target-cpu",
+      invoker.target_cpu,
+      "--keyprocess-file",
+      rebase_path(_key_process_file_name),
     ]
 
     outputs = [ _seccomp_filter_file ]
   }
 
   ohos_shared_library(target_name) {
+    output_name = _output_name
     deps = [ ":${_seccomp_filter_target}" ]
     sources = get_target_outputs(":${_seccomp_filter_target}")
+
+    relative_install_dir = "seccomp"
 
     if (defined(invoker.include_dirs)) {
       include_dirs = invoker.include_dirs

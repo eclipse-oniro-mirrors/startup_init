@@ -18,6 +18,14 @@ import("//build/ohos.gni")
 import("//build/ohos/kernel/kernel.gni")
 
 INIT_PART = "init"
+declare_args() {
+  appspawn_featrue = false
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.startup_appspawn)) {
+    appspawn_featrue = true
+  }
+}
 
 if (build_variant == "root") {
   seccomp_enable_debug = true
@@ -25,63 +33,12 @@ if (build_variant == "root") {
   seccomp_enable_debug = false
 }
 
-action("syscall_to_nr_arm") {
-  script = "${clang_base_path}/bin/clang"
-  output_dir = target_gen_dir + "/libsyscall_to_nr_arm"
-  args = [
-    "-I",
-    rebase_path(
-        "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include/asm-arm"),
-    "-I",
-    rebase_path(
-        "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include"),
-    "-dD",
-    "-E",
-    "-Wall",
-    "-nostdinc",
-    "-o",
-    rebase_path(output_dir),
-    rebase_path("gen_syscall_name_nrs.c"),
-  ]
-
-  outputs = [ output_dir ]
-}
-
-action("syscall_to_nr_arm64") {
-  script = "${clang_base_path}/bin/clang"
-  output_dir = target_gen_dir + "/libsyscall_to_nr_arm64"
-  args = [
-    "-I",
-    rebase_path(
-        "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include/asm-arm64"),
-    "-I",
-    rebase_path(
-        "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include"),
-    "-dD",
-    "-E",
-    "-Wall",
-    "-nostdinc",
-    "-o",
-    rebase_path(output_dir),
-    rebase_path("gen_syscall_name_nrs.c"),
-  ]
-
-  outputs = [ output_dir ]
-}
-
 ohos_prebuilt_seccomp("system_filter") {
-  sources = []
-  if (target_cpu == "arm") {
-    sources += [ "seccomp_policy/system_arm.seccomp.policy" ]
-  } else if (target_cpu == "arm64" || target_cpu == "x86_64") {
-    sources += [
-      # 64-bit machine also need check use 32-bit syscall
-      "seccomp_policy/system_arm.seccomp.policy",
-      "seccomp_policy/system_arm64.seccomp.policy",
-    ]
-  }
+  sources = [ "seccomp_policy/system.seccomp.policy" ]
 
-  filtername = "g_systemSeccompFilter"
+  filtername = "system"
+  process_type = "system"
+
   part_name = INIT_PART
   subsystem_name = "startup"
 
@@ -90,18 +47,11 @@ ohos_prebuilt_seccomp("system_filter") {
 }
 
 ohos_prebuilt_seccomp("appspawn_filter") {
-  sources = []
-  if (target_cpu == "arm") {
-    sources += [ "seccomp_policy/spawn_arm.seccomp.policy" ]
-  } else if (target_cpu == "arm64" || target_cpu == "x86_64") {
-    sources += [
-      # 64-bit machine also need check use 32-bit syscall
-      "seccomp_policy/spawn_arm.seccomp.policy",
-      "seccomp_policy/spawn_arm64.seccomp.policy",
-    ]
-  }
+  sources = [ "seccomp_policy/spawn.seccomp.policy" ]
 
-  filtername = "g_appspawnSeccompFilter"
+  filtername = "appspawn"
+  process_type = "system"
+
   part_name = INIT_PART
   subsystem_name = "startup"
 
@@ -110,13 +60,11 @@ ohos_prebuilt_seccomp("appspawn_filter") {
 }
 
 ohos_prebuilt_seccomp("nwebspawn_filter") {
-  if (target_cpu == "arm") {
-    sources = [ "seccomp_policy/renderer_arm.seccomp.policy" ]
-  } else if (target_cpu == "arm64" || target_cpu == "x86_64") {
-    sources = [ "seccomp_policy/renderer_arm64.seccomp.policy" ]
-  }
+  sources = [ "seccomp_policy/renderer.seccomp.policy" ]
 
-  filtername = "g_nwebspawnSeccompFilter"
+  filtername = "nwebspawn"
+  process_type = "app"
+
   part_name = INIT_PART
   subsystem_name = "startup"
 
@@ -125,18 +73,11 @@ ohos_prebuilt_seccomp("nwebspawn_filter") {
 }
 
 ohos_prebuilt_seccomp("app_filter") {
-  sources = []
-  if (target_cpu == "arm") {
-    sources += [ "seccomp_policy/app_arm.seccomp.policy" ]
-  } else if (target_cpu == "arm64" || target_cpu == "x86_64") {
-    sources += [
-      # 64-bit machine also need check use 32-bit syscall
-      "seccomp_policy/app_arm.seccomp.policy",
-      "seccomp_policy/app_arm64.seccomp.policy",
-    ]
-  }
+  sources = [ "seccomp_policy/app.seccomp.policy" ]
 
-  filtername = "g_appSeccompFilter"
+  filtername = "app"
+  process_type = "app"
+
   part_name = INIT_PART
   subsystem_name = "startup"
 
@@ -146,9 +87,8 @@ ohos_prebuilt_seccomp("app_filter") {
 
 config("libseccomp_static_config") {
   include_dirs = [
-    "//base/startup/init/services/modules",
-    "//base/startup/init/interfaces/innerkits/seccomp/include",
-    "//third_party/bounds_checking_function/include",
+    "..",
+    "../../../interfaces/innerkits/seccomp/include",
   ]
 
   if (seccomp_enable_debug) {
@@ -168,15 +108,24 @@ ohos_source_set("libseccomp_static") {
   ]
   public_configs = [
     ":libseccomp_static_config",
-    "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config",
+    "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config",
+  ]
+
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "config_policy:configpolicy_util",
   ]
 }
 
 group("seccomp_filter") {
   deps = [
     ":app_filter",
-    ":appspawn_filter",
-    ":nwebspawn_filter",
     ":system_filter",
   ]
+  if (appspawn_featrue) {
+    deps += [
+      ":appspawn_filter",
+      ":nwebspawn_filter",
+    ]
+  }
 }
