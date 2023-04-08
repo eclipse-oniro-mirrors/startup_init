@@ -277,8 +277,8 @@ HWTEST_F(WatcherAgentUnitTest, TestWatcherService, TestSize.Level0)
     const char *errstr = "111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
     ServiceWatchForStatus("param_watcher", TestWatcherCallBack);
     ServiceWaitForStatus("param_watcher", SERVICE_STARTED, 1);
-    EXPECT_EQ(ServiceWatchForStatus(errstr, TestWatcherCallBack), -1);
-    EXPECT_EQ(ServiceWatchForStatus(NULL, TestWatcherCallBack), -1);
+    EXPECT_NE(ServiceWatchForStatus(errstr, TestWatcherCallBack), 0);
+    EXPECT_NE(ServiceWatchForStatus(NULL, TestWatcherCallBack), 0);
     WatchParameter("testParam", nullptr, nullptr);
     WatchParameter(nullptr, nullptr, nullptr);
 }

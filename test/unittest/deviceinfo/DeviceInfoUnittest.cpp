@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <chrono>
+#include <thread>
 #include <string>
 #include <iostream>
 #include <gtest/gtest.h>
@@ -87,6 +89,21 @@ HWTEST_F(DeviceInfoUnittest, DevInfoAgentTest, TestSize.Level1)
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
 }
 
+HWTEST_F(DeviceInfoUnittest, DevInfoDiedTest, TestSize.Level1)
+{
+    sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    DINFO_CHECK(samgr != nullptr, return, "Get samgr failed");
+    sptr<IRemoteObject> object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
+    DINFO_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
+    OHOS::device_info::DeviceInfoKits &kits = OHOS::device_info::DeviceInfoKits::GetInstance();
+    if (kits.GetDeathRecipient() != nullptr) {
+        kits.GetDeathRecipient()->OnRemoteDied(object);
+    }
+    std::string serial = {};
+    int ret = kits.GetSerialID(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+}
+
 HWTEST_F(DeviceInfoUnittest, DevInfoAgentFail, TestSize.Level1)
 {
     sptr<OHOS::device_info::DeviceInfoLoad> deviceInfoLoad = new (std::nothrow) OHOS::device_info::DeviceInfoLoad();
@@ -148,6 +165,7 @@ HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceTest, TestSize.Level1)
     deviceInfoService->OnRemoteRequest(OHOS::device_info::IDeviceInfo::COMMAND_GET_SERIAL_ID + 1, data, reply, option);
 
     deviceInfoService->OnRemoteRequest(OHOS::device_info::IDeviceInfo::COMMAND_GET_SERIAL_ID + 1, data, reply, option);
+    std::this_thread::sleep_for(std::chrono::seconds(3)); // wait sa unload 3s
     deviceInfoService->GetUdid(result);
     deviceInfoService->GetSerialID(result);
     deviceInfoService->OnStop();

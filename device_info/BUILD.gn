@@ -48,6 +48,7 @@ if (!defined(ohos_lite)) {
       "INIT_AGENT",
       "_GNU_SOURCE",
       "USE_MBEDTLS",
+      "DINFO_TAG=\"DeviceInfoService\"",
     ]
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
@@ -60,6 +61,7 @@ if (!defined(ohos_lite)) {
       "c_utils:utils",
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
+      "samgr:samgr_proxy",
     ]
     install_images = [ "system" ]
     part_name = "init"

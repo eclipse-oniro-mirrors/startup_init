@@ -50,13 +50,23 @@ void DeviceInfoKits::LoadDeviceInfoSa()
     int32_t ret = sam->LoadSystemAbility(SYSPARAM_DEVICE_SERVICE_ID, deviceInfoLoad);
     DINFO_CHECK(ret == ERR_OK, return, "LoadSystemAbility deviceinfo sa failed");
 
+    if (deathRecipient_ == nullptr) {
+        deathRecipient_ = new DeathRecipient();
+    }
+
     // wait_for release lock and block until time out(60s) or match the condition with notice
     auto waitStatus = deviceInfoLoadCon_.wait_for(lock, std::chrono::milliseconds(DEVICEINFO_LOAD_SA_TIMEOUT_MS),
         [this]() { return deviceInfoService_ != nullptr; });
-    if (!waitStatus) {
+    if (!waitStatus || deviceInfoService_ == nullptr) {
         // time out or loadcallback fail
         DINFO_LOGE("tokensync load sa timeout");
         return;
+    }
+
+    // for dead
+    auto object = deviceInfoService_->AsObject();
+    if ((object->IsProxyObject()) && (!object->AddDeathRecipient(deathRecipient_))) {
+        DINFO_LOGE("Failed to add death recipient");
     }
 }
 
@@ -96,6 +106,24 @@ int32_t DeviceInfoKits::GetSerialID(std::string& result)
     auto deviceService = GetService();
     DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
     return deviceService->GetSerialID(result);
+}
+
+void DeviceInfoKits::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
+{
+    DelayedRefSingleton<DeviceInfoKits>::GetInstance().ResetService(remote);
+}
+
+void DeviceInfoKits::ResetService(const wptr<IRemoteObject> &remote)
+{
+    DINFO_LOGI("Remote is dead, reset service instance");
+    std::lock_guard<std::mutex> lock(lock_);
+    if (deviceInfoService_ != nullptr) {
+        sptr<IRemoteObject> object = deviceInfoService_->AsObject();
+        if ((object != nullptr) && (remote == object)) {
+            object->RemoveDeathRecipient(deathRecipient_);
+            deviceInfoService_ = nullptr;
+        }
+    }
 }
 } // namespace device_info
 } // namespace OHOS

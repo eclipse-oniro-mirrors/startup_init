@@ -15,14 +15,21 @@
 
 #include "device_info_stub.h"
 
+#include <chrono>
+#include <signal.h>
+#include <unistd.h>
+
 #include "beget_ext.h"
 #include "idevice_info.h"
 #include "ipc_skeleton.h"
 #include "accesstoken_kit.h"
 #include "parcel.h"
 #include "string_ex.h"
+#include "if_system_ability_manager.h"
+#include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "param_comm.h"
+#include "parameter.h"
 #include "sysparam_errno.h"
 
 namespace OHOS {
@@ -32,12 +39,42 @@ using namespace Security::AccessToken;
 namespace device_info {
 REGISTER_SYSTEM_ABILITY_BY_ID(DeviceInfoService, SYSPARAM_DEVICE_SERVICE_ID, true)
 
+static std::mutex g_lock;
+static time_t g_lastTime;
+#ifndef STARTUP_INIT_TEST
+static const int DEVICE_INFO_EXIT_TIMEOUT_MS = 60;
+#else
+static const int DEVICE_INFO_EXIT_TIMEOUT_MS = 2;
+#endif
+
+static void UnloadDeviceInfoSa(int signo)
+{
+    std::unique_lock<std::mutex> lock(g_lock);
+    time_t currTime;
+    (void)time(&currTime);
+    if (difftime(currTime, g_lastTime) < DEVICE_INFO_EXIT_TIMEOUT_MS) {
+        alarm(DEVICE_INFO_EXIT_TIMEOUT_MS / 2); // 2 half
+        return;
+    }
+    DINFO_LOGI("DeviceInfoService::UnloadDeviceInfoSa");
+    auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    DINFO_CHECK(sam != nullptr, return, "GetSystemAbilityManager return null");
+
+    int32_t ret = sam->UnloadSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
+    DINFO_CHECK(ret == ERR_OK, return, "UnLoadSystemAbility deviceinfo sa failed");
+}
+
 int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
     MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     std::u16string myDescriptor = IDeviceInfo::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     DINFO_CHECK(myDescriptor == remoteDescriptor, return ERR_FAIL, "Invalid remoteDescriptor");
+
+    {
+        std::unique_lock<std::mutex> lock(g_lock);
+        (void)time(&g_lastTime);
+    }
 
     int ret = ERR_FAIL;
     switch (code) {
@@ -97,16 +134,22 @@ int32_t DeviceInfoService::GetSerialID(std::string& result)
 
 void DeviceInfoService::OnStart(void)
 {
+    int level = GetIntParameter(INIT_DEBUG_LEVEL, (int)INIT_INFO);
+    SetInitLogLevel((InitLogLevel)level);
     DINFO_LOGI("DeviceInfoService OnStart");
     bool res = Publish(this);
     if (!res) {
         DINFO_LOGE("DeviceInfoService Publish failed");
     }
+    signal(SIGALRM, UnloadDeviceInfoSa);
+    alarm(DEVICE_INFO_EXIT_TIMEOUT_MS / 2); // 2 half
     return;
 }
 
 void DeviceInfoService::OnStop(void)
 {
+    signal(SIGALRM, nullptr);
+    DINFO_LOGI("DeviceInfoService OnStop");
 }
 
 int DeviceInfoService::Dump(int fd, const std::vector<std::u16string>& args)
