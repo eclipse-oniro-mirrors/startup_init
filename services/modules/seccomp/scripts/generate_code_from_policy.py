@@ -974,7 +974,7 @@ class SeccompPolicyParser:
                 self.parse_file(file_name)
 
         for file_name in args.keyprocess_file:
-            if file_name.lower().endswith('key_process.seccomp.policy'):
+            if file_name.lower().endswith('privileged_process.seccomp.policy'):
                 self.key_process_flag = True
                 self.parse_file(file_name)
                 self.key_process_flag = False
