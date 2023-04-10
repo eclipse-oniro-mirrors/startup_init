@@ -37,6 +37,8 @@ if (defined(ohos_lite)) {
   }
   param_common_sources = [
     "//base/startup/init/services/modules/init_hook/param_hook.c",
+    "//base/startup/init/services/modules/udid/udid_adp.c",
+    "//base/startup/init/services/modules/udid/udid_comm.c",
     "//base/startup/init/services/param/manager/param_manager.c",
     "//base/startup/init/services/param/manager/param_persist.c",
     "//base/startup/init/services/param/manager/param_server.c",
@@ -112,6 +114,7 @@ if (defined(ohos_lite)) {
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
       "//base/startup/init/interfaces/innerkits/fd_holder",
       "//base/startup/init/interfaces/hals",
+      "//base/startup/init/services/modules/udid",
     ]
 
     sources = sysparam_source
