@@ -19,6 +19,7 @@ group("static_modules") {
       "bootevent:libbootevent_static",
       "init_hook:inithook",
       "reboot:libreboot_static",
+      "udid:libudid_static",
     ]
     if (build_seccomp) {
       deps += [ "seccomp:libseccomp_static" ]
@@ -34,6 +35,7 @@ group("modulesgroup") {
     deps = [
       "bootchart:bootchart",
       "reboot:rebootmodule",
+      "udid:udidmodule",
     ]
     if (build_seccomp) {
       deps += [ "seccomp:seccomp_filter" ]

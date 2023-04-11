@@ -1,0 +1,121 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/startup/init/begetd.gni")
+import("//build/ohos.gni")
+
+comm_include = [
+  ".",
+  "..",
+  "../init_hook",
+  "../../include/param",
+  "../../../interfaces/innerkits/include",
+  "../../../interfaces/innerkits/include/syspara",
+  "../../../interfaces/innerkits/syspara",
+]
+
+if (defined(ohos_lite)) {
+  static_library("libudidcomm") {
+    defines = [
+      "_GNU_SOURCE",
+      "OHOS_LITE",
+    ]
+    include_dirs = comm_include
+    include_dirs += [
+      "../../../interfaces/innerkits/init_module_engine/include",
+      "../../../interfaces/hals",
+    ]
+    sources = [
+      "udid_adp.c",
+      "udid_comm.c",
+    ]
+
+    deps = []
+    if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
+      deps += [
+        "//third_party/bounds_checking_function:libsec_shared",
+        "//third_party/mbedtls:mbedtls_shared",
+      ]
+    } else if (ohos_kernel_type == "liteos_m") {
+      deps += [
+        "//third_party/bounds_checking_function:libsec_static",
+        "//third_party/mbedtls:mbedtls",
+      ]
+    }
+
+    #if product exit, use product
+    if (enable_ohos_startup_init_feature_begetctl_liteos) {
+      PRODUCT_HAL_SYSPARAM_PATH =
+          rebase_path("${ohos_product_adapter_dir}/utils/sys_param")
+      cmd = "if [ -f ${PRODUCT_HAL_SYSPARAM_PATH}/BUILD.gn ]; then echo true; else echo false; fi"
+      PRODUCT_HAL_SYSPARAM_EXISTS =
+          exec_script("//build/lite/run_shell_cmd.py", [ cmd ], "value")
+      if (PRODUCT_HAL_SYSPARAM_EXISTS) {
+        deps += [ "$ohos_product_adapter_dir/utils/sys_param:hal_sysparam" ]
+      }
+      deps += [ "../../../interfaces/hals/utils/sys_param:hal_sys_param" ]
+    }
+  }
+} else {
+  ohos_shared_library("udidmodule") {
+    sources = [
+      "udid_adp.c",
+      "udid_comm.c",
+    ]
+    defines = [ "_GNU_SOURCE" ]
+    include_dirs = comm_include
+    deps = [
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/mbedtls:mbedtls_shared",
+    ]
+
+    external_deps = [ "init:libinit_module_engine" ]
+
+    part_name = "init"
+    subsystem_name = "startup"
+    if (target_cpu == "arm64") {
+      module_install_dir = "lib64/init"
+    } else {
+      module_install_dir = "lib/init"
+    }
+    install_images = [
+      "system",
+      "updater",
+    ]
+  }
+
+  config("udid_static_config") {
+    include_dirs = [ "." ]
+  }
+
+  ohos_source_set("libudid_static") {
+    sources = [ "udid_static.c" ]
+    defines = [ "_GNU_SOURCE" ]
+    include_dirs = comm_include
+    public_configs = [ ":udid_static_config" ]
+    public_configs += [ "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
+  # for begetutil
+  ohos_static_library("libudidcomm") {
+    sources = [ "udid_comm.c" ]
+    defines = [ "_GNU_SOURCE" ]
+    include_dirs = comm_include
+    deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
+
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+}
