@@ -52,6 +52,7 @@ if (!defined(ohos_lite)) {
     ]
     deps = [
       "//base/startup/init/interfaces/innerkits:libbegetutil",
+      "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/modules/udid:libudidcomm",
       "//third_party/bounds_checking_function:libsec_shared",
     ]

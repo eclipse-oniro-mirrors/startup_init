@@ -35,6 +35,7 @@ persist.xts.devattest.      = device_attest:device_attest:0775
 #udid and sn, only read
 ohos.boot.sn                = root:deviceprivate:0750
 const.product.udid          = root:deviceprivate:0750
+const.product.devUdid       = root:deviceprivate:0750
 
 const.actionable_compatible_property.enabled = root:root:0777
 const.postinstall.fstab.prefix = root:root:0777

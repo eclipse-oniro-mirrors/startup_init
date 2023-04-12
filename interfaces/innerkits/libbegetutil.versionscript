@@ -14,8 +14,6 @@
 1.0 {
   global:
     DecodeUid;
-    CheckAndCreateDir;
-    SetInitLogLevel;
     StartupLog;
     ServiceGetFd;
     ServiceSaveFd;

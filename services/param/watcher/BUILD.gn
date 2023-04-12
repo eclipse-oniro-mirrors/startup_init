@@ -41,7 +41,10 @@ ohos_shared_library("param_watcher") {
     "//third_party/cJSON",
   ]
 
-  deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/log:agent_log",
+  ]
 
   external_deps = [
     "c_utils:utils",
