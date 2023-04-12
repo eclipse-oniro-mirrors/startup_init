@@ -19,6 +19,11 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <termios.h>
+#include <unistd.h>
+#include <signal.h>
+#undef _GNU_SOURCE
+#define _GNU_SOURCE
+#include <sched.h>
 
 #include "begetctl.h"
 #include "param_manager.h"
@@ -32,6 +37,14 @@
 #include "selinux_parameter.h"
 #endif // PARAM_SUPPORT_SELINUX
 
+typedef struct {
+    uid_t uid;
+    gid_t gid;
+    int cloneFlg;
+    char *parameter;
+} ParamShellExecArgs;
+
+#define STACK_SIZE (1024 * 1024 * 8)
 #define MASK_LENGTH_MAX 4
 pid_t g_shellPid = 0;
 static struct termios g_terminalState;
@@ -380,25 +393,58 @@ static int32_t BShellParamCmdPwd(BShellHandle shell, int32_t argc, char *argv[])
     return 0;
 }
 
-void GetUserInfo(uid_t *uid, gid_t *gid, char **parameter, int32_t argc, char *argv[])
+static void GetUserInfo(ParamShellExecArgs *execArg, int32_t argc, char *argv[])
 {
     int32_t i = 0;
-    *parameter = NULL;
+    execArg->parameter = NULL;
     while (i < argc) {
         if (strcmp(argv[i], "-p") == 0 && ((i + 1) < argc)) {
-            *parameter = argv[i + 1];
+            execArg->parameter = argv[i + 1];
             ++i;
         } else if (strcmp(argv[i], "-u") == 0 && ((i + 1) < argc)) {
-            *uid = DecodeUid(argv[i + 1]);
-            *uid = (*uid == -1) ? 0 : *uid;
+            execArg->uid = DecodeUid(argv[i + 1]);
+            execArg->uid = (execArg->uid == -1) ? 0 : execArg->uid;
             ++i;
         } else if (strcmp(argv[i], "-g") == 0 && ((i + 1) < argc)) {
-            *gid = DecodeGid(argv[i + 1]);
-            *gid = (*gid == -1) ? 0 : *gid;
+            execArg->gid = DecodeGid(argv[i + 1]);
+            execArg->gid = (execArg->gid == -1) ? 0 : execArg->gid;
             ++i;
+        } else if (strcmp(argv[i], "-c") == 0) {
+            execArg->cloneFlg = 1;
         }
         ++i;
     }
+}
+
+static int ExecFunc(void *arg)
+{
+    ParamShellExecArgs *execArg = (ParamShellExecArgs *)arg;
+    int ret = 0;
+    setuid(execArg->uid);
+    setgid(execArg->gid);
+    BSH_LOGI("Exec shell %s \n", SHELL_NAME);
+    if (execArg->parameter != NULL) { // 2 min argc
+        char *args[] = {SHELL_NAME, execArg->parameter, NULL};
+        ret = execv(CMD_PATH, args);
+    } else {
+        char *args[] = {SHELL_NAME, NULL};
+        ret = execv(CMD_PATH, args);
+    }
+    if (ret != 0) {
+        printf("error on exec %d \n", errno);
+        exit(0);
+    }
+    return ret;
+}
+
+static pid_t ForkChild(int (*childFunc)(void *arg), void *args)
+{
+    pid_t pid = fork();
+    if (pid == 0) {
+        childFunc(args);
+        exit(0);
+    }
+    return pid;
 }
 
 static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[])
@@ -410,36 +456,27 @@ static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[
         return BSH_SYSTEM_ERR;
     }
     g_isSetTerminal = 1;
-    uid_t uid = 0;
-    gid_t gid = 0;
-    char *parameter = NULL;
-    GetUserInfo(&uid, &gid, &parameter, argc, argv);
-    BSH_LOGV("BShellParamCmdShell %s %d %d argc %d", parameter, uid, gid, argc);
-    if (parameter != NULL) {
-        ret = SystemCheckParamExist(parameter);
+    ParamShellExecArgs args = {0, 0, 0, NULL};
+    GetUserInfo(&args, argc, argv);
+    BSH_LOGV("BShellParamCmdShell %s %d %d argc %d", args.parameter, args.uid, args.gid, argc);
+    if (args.parameter != NULL) {
+        ret = SystemCheckParamExist(args.parameter);
         if (ret != 0) {
-            BShellEnvOutput(shell, "Error: parameter \'%s\' not found\r\n", parameter);
+            BShellEnvOutput(shell, "Error: parameter \'%s\' not found\r\n", args.parameter);
             return -1;
         }
     }
     SetInitLogLevel(INIT_INFO);
-    pid_t pid = fork();
-    if (pid == 0) {
-        setuid(uid);
-        setgid(gid);
-        if (parameter != NULL) { // 2 min argc
-            char *args[] = {SHELL_NAME, parameter, NULL};
-            ret = execv(CMD_PATH, args);
-        } else {
-            char *args[] = {SHELL_NAME, NULL};
-            ret = execv(CMD_PATH, args);
-        }
-        if (ret < 0) {
-            printf("error on exec %d \n", errno);
-            exit(0);
-        }
-        exit(0);
-    } else if (pid > 0) {
+    pid_t pid = 0;
+    if (args.cloneFlg) {
+        char *childStack = (char *)malloc(STACK_SIZE);
+        BSH_CHECK(childStack != NULL, return -1, "malloc failed");
+        pid = clone(ExecFunc, childStack + STACK_SIZE, CLONE_NEWPID | CLONE_NEWNS | SIGCHLD, (void *)&args);
+        free(childStack);
+    } else {
+        pid = ForkChild(ExecFunc, (void *)&args);
+    }
+    if (pid > 0) {
         g_shellPid = pid;
         int status = 0;
         wait(&status);

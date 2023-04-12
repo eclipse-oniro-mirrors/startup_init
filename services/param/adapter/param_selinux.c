@@ -56,7 +56,7 @@ static int InitSelinuxOpsForInit(SelinuxSpace *selinuxSpace)
         PARAM_CHECK(selinuxSpace->getParamLabel != NULL, return -1, "Failed to dlsym getParamLabel %s", dlerror());
     }
     if (selinuxSpace->initParamSelinux == NULL) {
-        selinuxSpace->initParamSelinux = (int (*)())dlsym(handle, "InitParamSelinux");
+        selinuxSpace->initParamSelinux = (int (*)(int))dlsym(handle, "InitParamSelinux");
         PARAM_CHECK(selinuxSpace->initParamSelinux != NULL, return -1, "Failed to dlsym initParamSelinux ");
     }
     if (selinuxSpace->getParamLabelIndex == NULL) {
@@ -74,7 +74,7 @@ static int InitSelinuxOpsForInit(SelinuxSpace *selinuxSpace)
     }
 
     // init and open avc log
-    int ret = selinuxSpace->initParamSelinux();
+    int ret = selinuxSpace->initParamSelinux(1);
     if (selinuxSpace->setSelinuxLogCallback != NULL) {
         selinuxSpace->setSelinuxLogCallback();
     }
@@ -103,7 +103,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
         selinuxSpace->destroyParamList = DestroyParamList;
         selinuxSpace->getParamLabelIndex = GetParamLabelIndex;
         // init
-        selinuxSpace->initParamSelinux();
+        selinuxSpace->initParamSelinux(isInit);
     }
 #endif
     PARAM_LOGV("Load selinux lib success.");
