@@ -14,6 +14,7 @@
 1.0 {
   global:
     DecodeUid;
+    ResetParamSecurityLabel;
     StartupLog;
     ServiceGetFd;
     ServiceSaveFd;
@@ -36,7 +37,16 @@
     OH_HashMapRemove;
     OH_HashMapTraverse;
     SystemGetParameterName;
+    SystemReadParam;
     SystemTraversalParameter;
+    GetSystemCommitId;
+    SystemGetParameterValue;
+    SystemGetParameterCommitId;
+    SystemFindParameter;
+    CachedParameterCreate;
+    CachedParameterGet;
+    CachedParameterGetChanged;
+    CachedParameterDestroy;
     DoReboot;
     GetControlSocket;
     OH_ListAddTail;
