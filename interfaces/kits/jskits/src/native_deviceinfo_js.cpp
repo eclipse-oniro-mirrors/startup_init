@@ -27,6 +27,9 @@ static napi_value GetDeviceType(napi_env env, napi_callback_info info)
 {
     napi_value deviceType = nullptr;
     const char *value = GetDeviceType();
+    if (value == nullptr) {
+        value = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, value, strlen(value), &deviceType));
     return deviceType;
@@ -36,6 +39,9 @@ static napi_value GetManufacture(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *manfactureName = GetManufacture();
+    if (manfactureName == nullptr) {
+        manfactureName = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, manfactureName, strlen(manfactureName), &napiValue));
     return napiValue;
@@ -45,6 +51,9 @@ static napi_value GetBrand(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *productBrand = GetBrand();
+    if (productBrand == nullptr) {
+        productBrand = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, productBrand, strlen(productBrand), &napiValue));
     return napiValue;
@@ -54,6 +63,9 @@ static napi_value GetMarketName(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *marketName = GetMarketName();
+    if (marketName == nullptr) {
+        marketName = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, marketName, strlen(marketName), &napiValue));
     return napiValue;
@@ -63,6 +75,9 @@ static napi_value GetProductSeries(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *productSeries = GetProductSeries();
+    if (productSeries == nullptr) {
+        productSeries = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, productSeries, strlen(productSeries), &napiValue));
     return napiValue;
@@ -72,6 +87,9 @@ static napi_value GetProductModel(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *productModel = GetProductModel();
+    if (productModel == nullptr) {
+        productModel = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, productModel, strlen(productModel), &napiValue));
     return napiValue;
@@ -81,6 +99,9 @@ static napi_value GetSoftwareModel(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *softwareModel = GetSoftwareModel();
+    if (softwareModel == nullptr) {
+        softwareModel = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, softwareModel, strlen(softwareModel), &napiValue));
     return napiValue;
@@ -90,6 +111,9 @@ static napi_value GetHardwareModel(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *hardwareModel = GetHardwareModel();
+    if (hardwareModel == nullptr) {
+        hardwareModel = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, hardwareModel, strlen(hardwareModel), &napiValue));
     return napiValue;
@@ -99,6 +123,9 @@ static napi_value GetHardwareProfile(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *hardwareProfile = GetHardwareProfile();
+    if (hardwareProfile == nullptr) {
+        hardwareProfile = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, hardwareProfile, strlen(hardwareProfile), &napiValue));
     return napiValue;
@@ -108,6 +135,9 @@ static napi_value GetSerial(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *serialNumber = AclGetSerial();
+    if (serialNumber == nullptr) {
+        serialNumber = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, serialNumber, strlen(serialNumber), &napiValue));
     return napiValue;
@@ -117,6 +147,9 @@ static napi_value GetBootloaderVersion(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *bootloaderVersion = GetBootloaderVersion();
+    if (bootloaderVersion == nullptr) {
+        bootloaderVersion = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, bootloaderVersion, strlen(bootloaderVersion), &napiValue));
     return napiValue;
@@ -126,6 +159,9 @@ static napi_value GetAbiList(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *abiList = GetAbiList();
+    if (abiList == nullptr) {
+        abiList = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, abiList, strlen(abiList), &napiValue));
     return napiValue;
@@ -135,6 +171,9 @@ static napi_value GetSecurityPatchTag(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *securityPatchTag = GetSecurityPatchTag();
+    if (securityPatchTag == nullptr) {
+        securityPatchTag = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, securityPatchTag, strlen(securityPatchTag), &napiValue));
     return napiValue;
@@ -144,6 +183,9 @@ static napi_value GetDisplayVersion(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *productVersion = GetDisplayVersion();
+    if (productVersion == nullptr) {
+        productVersion = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, productVersion, strlen(productVersion), &napiValue));
     return napiValue;
@@ -153,6 +195,9 @@ static napi_value GetIncrementalVersion(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *incrementalVersion = GetIncrementalVersion();
+    if (incrementalVersion == nullptr) {
+        incrementalVersion = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, incrementalVersion, strlen(incrementalVersion), &napiValue));
     return napiValue;
@@ -162,6 +207,9 @@ static napi_value GetOsReleaseType(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *osReleaseType = GetOsReleaseType();
+    if (osReleaseType == nullptr) {
+        osReleaseType = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, osReleaseType, strlen(osReleaseType), &napiValue));
     return napiValue;
@@ -171,6 +219,9 @@ static napi_value GetOSFullName(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *osVersion = GetOSFullName();
+    if (osVersion == nullptr) {
+        osVersion = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, osVersion, strlen(osVersion), &napiValue));
     return napiValue;
@@ -234,6 +285,9 @@ static napi_value GetVersionId(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *versionId = GetVersionId();
+    if (versionId == nullptr) {
+        versionId = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, versionId, strlen(versionId), &napiValue));
     return napiValue;
@@ -243,6 +297,9 @@ static napi_value GetBuildType(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *buildType = GetBuildType();
+    if (buildType == nullptr) {
+        buildType = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, buildType, strlen(buildType), &napiValue));
     return napiValue;
@@ -252,6 +309,9 @@ static napi_value GetBuildUser(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *buildUser = GetBuildUser();
+    if (buildUser == nullptr) {
+        buildUser = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, buildUser, strlen(buildUser), &napiValue));
     return napiValue;
@@ -261,6 +321,9 @@ static napi_value GetBuildHost(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *buildHost = GetBuildHost();
+    if (buildHost == nullptr) {
+        buildHost = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, buildHost, strlen(buildHost), &napiValue));
     return napiValue;
@@ -270,6 +333,9 @@ static napi_value GetBuildTime(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *buildTime = GetBuildTime();
+    if (buildTime == nullptr) {
+        buildTime = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, buildTime, strlen(buildTime), &napiValue));
     return napiValue;
@@ -279,6 +345,9 @@ static napi_value GetBuildRootHash(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *buildRootHash = GetBuildRootHash();
+    if (buildRootHash == nullptr) {
+        buildRootHash = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, buildRootHash, strlen(buildRootHash), &napiValue));
     return napiValue;
