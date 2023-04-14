@@ -479,11 +479,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_006, TestSize.Level0)
         dirTmp = nullptr;
     }
 
-    // delete dir
-    if (remove(cmdContentStr.c_str()) != 0) {
-        EXPECT_EQ(0, 0);
-    }
-
+    remove(cmdContentStr.c_str());
     // chmod success
     cmdStr = "chmod ";
     cmdContentStr = "0440 " + TEST_FILE;
@@ -872,10 +868,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_002, TestSize.Level0)
     EXPECT_TRUE(testCfgStat.st_size > 0);
     DoCmd(&curCmdLine);
 
-    // remove tmp file
-    if (remove(TEST_CFG_ILLEGAL.c_str()) != 0) {
-        EXPECT_EQ(0, 0);
-    }
+    remove(TEST_CFG_ILLEGAL.c_str());
 }
 
 /*
