@@ -58,7 +58,7 @@ bool IsSupportedFilesystem(const char *fsType)
 {
     bool supported = false;
     if (fsType != NULL) {
-        static const char *supportedFilesystem[] = {"ext4", "f2fs", NULL};
+        static const char *supportedFilesystem[] = {"ext4", "f2fs", "overlay", NULL};
         int index = 0;
         while (supportedFilesystem[index] != NULL) {
             if (strcmp(supportedFilesystem[index++], fsType) == 0) {
