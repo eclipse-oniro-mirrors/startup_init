@@ -72,6 +72,7 @@ a2dp_host:x:3043:
 hdf_devmgr:x:3044:
 connected_tag_host:x:3045:
 dslm:x:3046:
+secure_element_host:x:3047:
 device_usage_stats:x:3048:
 security_component:x:3050:
 bgtask:x:3051:
