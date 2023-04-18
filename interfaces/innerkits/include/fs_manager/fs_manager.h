@@ -59,6 +59,7 @@ typedef struct FstabItem {
 
 typedef struct {
     struct FstabItem *head;
+    struct FstabItem *tail;
 } Fstab;
 
 typedef enum SlotFlag {
