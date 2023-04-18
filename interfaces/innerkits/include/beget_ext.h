@@ -60,6 +60,14 @@ typedef enum InitLogLevel {
 INIT_PUBLIC_API void StartupLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
 INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level);
 
+#if defined(INIT_NO_LOG)
+#define STARTUP_LOGV(domain, tag, fmt, ...)
+#define STARTUP_LOGI(domain, tag, fmt, ...)
+#define STARTUP_LOGW(domain, tag, fmt, ...)
+#define STARTUP_LOGE(domain, tag, fmt, ...)
+#define STARTUP_LOGF(domain, tag, fmt, ...)
+#else
+#ifndef __LITEOS_M__
 #define STARTUP_LOGV(domain, tag, fmt, ...) \
     StartupLog(INIT_DEBUG, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGI(domain, tag, fmt, ...) \
@@ -70,6 +78,19 @@ INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level);
     StartupLog(INIT_ERROR, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGF(domain, tag, fmt, ...) \
     StartupLog(INIT_FATAL, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+#else
+#define STARTUP_LOGV(domain, tag, fmt, ...) \
+    StartupLog(INIT_DEBUG, domain, tag, fmt, ##__VA_ARGS__)
+#define STARTUP_LOGI(domain, tag, fmt, ...) \
+    StartupLog(INIT_INFO, domain, tag, fmt, ##__VA_ARGS__)
+#define STARTUP_LOGW(domain, tag, fmt, ...) \
+    StartupLog(INIT_WARN, domain, tag, fmt, ##__VA_ARGS__)
+#define STARTUP_LOGE(domain, tag, fmt, ...) \
+    StartupLog(INIT_ERROR, domain, tag, fmt, ##__VA_ARGS__)
+#define STARTUP_LOGF(domain, tag, fmt, ...) \
+    StartupLog(INIT_FATAL, domain, tag, fmt, ##__VA_ARGS__)
+#endif
+#endif
 
 #define BASE_DOMAIN 0xD002C00
 #ifndef BEGET_DOMAIN
