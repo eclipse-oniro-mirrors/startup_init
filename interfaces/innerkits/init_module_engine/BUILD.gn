@@ -23,6 +23,7 @@ if (defined(ohos_lite)) {
   #
   config("init_module_engine_exported_config") {
     visibility = [ ":*" ]
+    visibility += [ "./../../../services/*" ]
     include_dirs = [
       "include/",
       "//base/startup/init/services/include",
