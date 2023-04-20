@@ -65,6 +65,7 @@ const ParamCmdInfo *GetServiceCtl(size_t *size)
         {"ohos.servicectrl.uninstall", "uninstall", "uninstall" },
         {"ohos.servicectrl.clear", "clear", "clear" },
         {"ohos.servicectrl.bootchart", "bootchart", "bootchart" },
+        {"ohos.servicectrl.init_trace", "init_trace", "init_trace" },
         {"ohos.servicectrl.timer_start", "timer_start", "timer_start " },
         {"ohos.servicectrl.timer_stop", "timer_stop", "timer_stop" },
         {"ohos.servicectrl.cmd", "cmd", "initcmd"},
@@ -93,6 +94,8 @@ const ParamCmdInfo *GetOtherSpecial(size_t *size)
     static const ParamCmdInfo other[] = {
         {"bootevent.", "bootevent.", "bootevent"},
         {"persist.init.debug.", "persist.init.debug.", "setloglevel"},
+        // for hitrace start, need interrupt init trace
+        {"debug.hitrace.enable.state", "debug.hitrace.enable.state.", "init_trace"},
     };
     *size = ARRAY_LENGTH(other);
     return other;

@@ -255,6 +255,7 @@ ohos_unittest("init_unittest") {
     "//utils/system/safwk/native/include",
     "//third_party/bounds_checking_function/include",
     "//third_party/cJSON",
+    "//third_party/zlib",
     "//base/security/access_token/interfaces/innerkits/token_setproc/include",
     "//base/security/access_token/interfaces/innerkits/nativetoken/include",
     "//base/startup/init/services/sandbox/include",
@@ -271,6 +272,7 @@ ohos_unittest("init_unittest") {
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest",
     "//third_party/mbedtls:mbedtls_shared",
+    "//third_party/zlib:libz",
   ]
 
   defines = [
@@ -371,5 +373,11 @@ ohos_unittest("init_unittest") {
 
     defines += [ "PARAM_FEATURE_DEVICEINFO" ]
   }
+
+  sources += [
+    "//base/startup/init/services/modules/trace/init_trace.c",
+    "//base/startup/init/services/modules/trace/init_trace_static.c",
+    "//base/startup/init/test/unittest/modules/trace_unittest.cpp",
+  ]
   cflags_cc = [ "-fexceptions" ]
 }

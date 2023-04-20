@@ -336,7 +336,7 @@ INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, Servi
     const ParamCmdInfo *other = GetOtherSpecial(&size);
     for (size_t i = 0; i < size; i++) {
         if (strncmp(name, other[i].name, strlen(other[i].name)) == 0) {
-            return CreateCtrlInfo(ctrlInfo, other[i].cmd, strlen(other[i].name), 0, "%s.%s", name, value);
+            return CreateCtrlInfo(ctrlInfo, other[i].cmd, strlen(other[i].replace), 0, "%s.%s", name, value);
         }
     }
     return 0;
