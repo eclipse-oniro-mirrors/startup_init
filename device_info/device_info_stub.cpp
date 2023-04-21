@@ -42,9 +42,9 @@ REGISTER_SYSTEM_ABILITY_BY_ID(DeviceInfoService, SYSPARAM_DEVICE_SERVICE_ID, tru
 static std::mutex g_lock;
 static time_t g_lastTime;
 #ifndef STARTUP_INIT_TEST
-static const int DEVICE_INFO_EXIT_TIMEOUT_MS = 60;
+static const int DEVICE_INFO_EXIT_TIMEOUT_MS = 15;
 #else
-static const int DEVICE_INFO_EXIT_TIMEOUT_MS = 2;
+static const int DEVICE_INFO_EXIT_TIMEOUT_MS = 3;
 #endif
 
 static void UnloadDeviceInfoSa(int signo)
@@ -53,7 +53,7 @@ static void UnloadDeviceInfoSa(int signo)
     time_t currTime;
     (void)time(&currTime);
     if (difftime(currTime, g_lastTime) < DEVICE_INFO_EXIT_TIMEOUT_MS) {
-        alarm(DEVICE_INFO_EXIT_TIMEOUT_MS / 2); // 2 half
+        alarm(DEVICE_INFO_EXIT_TIMEOUT_MS / 3); // 3 half
         return;
     }
     DINFO_LOGI("DeviceInfoService::UnloadDeviceInfoSa");
