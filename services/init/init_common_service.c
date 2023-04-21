@@ -37,6 +37,7 @@
 #include "init_log.h"
 #include "init_cmdexecutor.h"
 #include "init_jobs_internal.h"
+#include "init_param.h"
 #include "init_service.h"
 #include "init_service_manager.h"
 #include "init_service_socket.h"
@@ -376,6 +377,102 @@ void CheckModuleUpdate(int argc, char **argv)
     INIT_LOGI("CheckModuleUpdate end");
 }
 
+#ifdef IS_DEBUG_VERSION
+static bool ServiceNeedDebug(char *name)
+{
+    char nameValue[PARAM_VALUE_LEN_MAX] = {0};
+    unsigned int nameLen = PARAM_VALUE_LEN_MAX;
+    // specify process debugging: param set llvm.debug.service.name "service name"
+    if (SystemReadParam("llvm.debug.service.name", nameValue, &nameLen) == 0) {
+        if (strcmp(nameValue, name) == 0) {
+            return true;
+        }
+    }
+
+    char debugValue[PARAM_VALUE_LEN_MAX] = {0};
+    unsigned int debugLen = PARAM_VALUE_LEN_MAX;
+    // multi process debugging: param set llvm.debug.service.all 1
+    if (SystemReadParam("llvm.debug.service.all", debugValue, &debugLen) == 0) {
+        if (strcmp(debugValue, "1") == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool IsDebuggableVersion(void)
+{
+    char secureValue[PARAM_VALUE_LEN_MAX] = {0};
+    unsigned int secureLen = PARAM_VALUE_LEN_MAX;
+    char debugValue[PARAM_VALUE_LEN_MAX] = {0};
+    unsigned int debugLen = PARAM_VALUE_LEN_MAX;
+    // the image is debuggable only when secureValue is 0 and debugValue is 1
+    if (SystemReadParam("const.secure", secureValue, &secureLen) == 0 &&
+        SystemReadParam("const.debuggable", debugValue, &debugLen) == 0) {
+        if (strcmp(secureValue, "0") == 0 &&
+            strcmp(debugValue, "1") == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static int32_t CheckTraceStatus(void)
+{
+    int fd = open("/proc/self/status", O_RDONLY);
+    if (fd == -1) {
+        INIT_LOGE("lldb: open /proc/self/status error: %{public}d", errno);
+        return (-errno);
+    }
+
+    char data[1024];
+    ssize_t dataNum = read(fd, data, sizeof(data));
+    if (close(fd) < 0) {
+        INIT_LOGE("lldb: close fd error: %{public}d", errno);
+        return (-errno);
+    }
+
+    if (dataNum <= 0) {
+        INIT_LOGE("lldb: fail to read data");
+        return -1;
+    }
+
+    const char* tracerPid = "TracerPid:\t";
+    char *traceStr = strstr(data, tracerPid);
+    if (traceStr == NULL) {
+        INIT_LOGE("lldb: fail to find %{public}s", tracerPid);
+        return -1;
+    }
+    char *separator = strchr(traceStr, '\n');
+    if (separator == NULL) {
+        INIT_LOGE("lldb: fail to find line break");
+        return -1;
+    }
+
+    int len = separator - traceStr - strlen(tracerPid);
+    char pid = *(traceStr + strlen(tracerPid));
+    if (len > 1 || pid != '0') {
+        return 0;
+    }
+    return -1;
+}
+
+static int32_t WaitForDebugger(void)
+{
+    uint32_t count = 0;
+    while (CheckTraceStatus() != 0) {
+        usleep(1000 * 100); // sleep 1000 * 100 microsecond
+        count++;
+        // remind users to connect to the debugger every 60 * 10 times
+        if (count % (10 * 60) == 0) {
+            INIT_LOGI("lldb: wait for debugger, please attach the process");
+            count = 0;
+        }
+    }
+    return 0;
+}
+#endif
+
 int ServiceStart(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
@@ -405,6 +502,12 @@ int ServiceStart(Service *service)
         if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
             CheckModuleUpdate(service->pathArgs.count, service->pathArgs.argv);
         }
+#ifdef IS_DEBUG_VERSION
+        // only the image is debuggable and need debug, then wait for debugger
+        if (ServiceNeedDebug(service->name) && IsDebuggableVersion()) {
+            WaitForDebugger();
+        }
+#endif
         // fail must exit sub process
         INIT_ERROR_CHECK(InitServiceProperties(service) == 0,
             _exit(PROCESS_EXIT_CODE), "Failed init service property");

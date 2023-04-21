@@ -98,6 +98,10 @@ ohos_executable("init") {
     cflags += [ "-DWITH_SECCOMP" ]
   }
 
+  if (build_variant == "root") {
+    cflags += [ "-DIS_DEBUG_VERSION" ]
+  }
+
   if (build_selinux) {
     include_dirs += [
       "//third_party/selinux/libselinux/include/",
