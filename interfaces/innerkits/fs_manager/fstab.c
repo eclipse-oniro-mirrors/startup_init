@@ -78,11 +78,11 @@ static int AddToFstab(Fstab *fstab, FstabItem *item)
     if (fstab == NULL || item == NULL) {
         return -1;
     }
-    if (fstab->head != NULL) {
-        item->next = fstab->head->next;
-        fstab->head->next = item;
+    if (fstab->tail == NULL) {
+        fstab->head = fstab->tail = item;
     } else {
-        fstab->head = item;
+        fstab->tail->next = item;
+        fstab->tail = item;
     }
     return 0;
 }
@@ -123,6 +123,7 @@ void ReleaseFstab(Fstab *fstab)
             ReleaseFstabItem(item);
             item = tmp;
         }
+        fstab->head = fstab->tail = NULL;
         free(fstab);
         fstab = NULL;
     }
