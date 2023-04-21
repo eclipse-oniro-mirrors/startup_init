@@ -379,6 +379,7 @@ void InitParamService(void)
     ops.updaterMode = InUpdaterMode();
     // init open log
     ops.logFunc = InitLog;
+    ops.getServiceGroupIdByPid = GetServiceGroupIdByPid;
 #ifdef PARAM_SUPPORT_SELINUX
     ops.setfilecon = setfilecon;
 #endif

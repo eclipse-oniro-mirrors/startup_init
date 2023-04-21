@@ -17,6 +17,7 @@
 #define BASE_STARTUP_INIT_SYS_PARAM_H
 #include <stdarg.h>
 #include <stdint.h>
+#include <unistd.h>
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -30,6 +31,7 @@ typedef struct {
     uint8_t updaterMode;
     void (*logFunc)(int logLevel, uint32_t domain, const char *tag, const char *fmt, va_list vargs);
     int (*setfilecon)(const char *name, const char *content);
+    int (*getServiceGroupIdByPid)(pid_t pid, gid_t *gids, uint32_t gidSize);
 } PARAM_WORKSPACE_OPS;
 
 /**

@@ -93,6 +93,8 @@ INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out);
 INIT_LOCAL_API int StringToLL(const char *str, long long int *out);
 void CloseStdio(void);
 void RedirectStdio(int fd);
+
+int GetServiceGroupIdByPid(pid_t pid, gid_t *gids, uint32_t gidSize);
 #ifdef __cplusplus
 #if __cplusplus
 }
