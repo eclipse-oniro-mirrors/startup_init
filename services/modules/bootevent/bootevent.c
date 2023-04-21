@@ -189,7 +189,7 @@ static int BootEventTraversal(ListNode *node, void *root)
 
 static int SaveServiceBootEvent()
 {
-    if (g_bootEventEnable == 0) {
+    if (!GetBootEventEnable()) {
         return 0;
     }
     time_t nowTime = time(NULL);
@@ -408,13 +408,13 @@ static void SetServiceBootEventFork(SERVICE_INFO_CTX *serviceCtx)
     return;
 }
 
-static int GetBootEventFlag(const HOOK_INFO *info, void *cookie)
+int GetBootEventEnable(void)
 {
     char bootEventOpen[6] = ""; // 6 is length of bool value
     uint32_t len = sizeof(bootEventOpen);
     SystemReadParam("persist.init.bootevent.enable", bootEventOpen, &len);
-    if (strcmp(bootEventOpen, "true") != 0) {
-        g_bootEventEnable = 0;
+    if (strcmp(bootEventOpen, "true") == 0 || strcmp(bootEventOpen, "1") == 0) {
+        return 1;
     }
     return 0;
 }
@@ -435,5 +435,4 @@ MODULE_CONSTRUCTOR(void)
     InitAddClearServiceHook(ClearServiceBootEvent);
     InitAddServiceParseHook(ServiceParseBootEventHook);
     InitAddGlobalInitHook(0, ParamSetBootEventHook);
-    InitAddPostPersistParamLoadHook(0, GetBootEventFlag);
 }

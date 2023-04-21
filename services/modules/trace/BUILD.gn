@@ -1,0 +1,63 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//base/startup/init/begetd.gni")
+import("//build/ohos.gni")
+
+comm_include = [
+  ".",
+  "..",
+  "../../include",
+  "../../include/param",
+]
+
+ohos_shared_library("inittrace") {
+  sources = [ "init_trace.c" ]
+
+  include_dirs = comm_include
+  include_dirs += [ "//third_party/zlib" ]
+
+  deps = [
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson",
+    "//third_party/zlib:libz",
+  ]
+
+  external_deps = [ "init:libinit_module_engine" ]
+
+  part_name = "init"
+  subsystem_name = "startup"
+  if (target_cpu == "arm64") {
+    module_install_dir = "lib64/init"
+  } else {
+    module_install_dir = "lib/init"
+  }
+}
+
+config("inittrace_static_config") {
+  include_dirs = comm_include
+}
+
+ohos_prebuilt_etc("inittrace_cfg") {
+  source = "init_trace.cfg"
+  part_name = "init"
+  subsystem_name = "startup"
+}
+
+ohos_source_set("libinittrace_static") {
+  sources = [ "init_trace_static.c" ]
+  include_dirs = comm_include
+  public_configs = [ ":inittrace_static_config" ]
+  public_configs += [ "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
+  part_name = "init"
+  subsystem_name = "startup"
+}

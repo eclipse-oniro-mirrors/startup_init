@@ -245,6 +245,10 @@ static int BootCompleteCmd(const HOOK_INFO *hookInfo, void *executionContext)
     HookMgrDel(GetBootStageHookMgr(), INIT_JOB_PARSE, NULL);
     // clear cmd
     RemoveCmdExecutor("loadSelinuxPolicy", -1);
+
+    PluginExecCmdByName("init_trace", "stop");
+    // uninstall module of inittrace
+    InitModuleMgrUnInstall("inittrace");
     return 0;
 }
 
@@ -254,4 +258,10 @@ MODULE_CONSTRUCTOR(void)
     InitAddGlobalInitHook(0, ParamSetInitCmdHook);
     // Depends on parameter service
     InitAddPostPersistParamLoadHook(0, InitDebugHook);
+}
+
+MODULE_DESTRUCTOR(void)
+{
+    const char *clearBootEventArgv[] = {"bootevent"};
+    PluginExecCmd("clear", ARRAY_LENGTH(clearBootEventArgv), clearBootEventArgv);
 }
