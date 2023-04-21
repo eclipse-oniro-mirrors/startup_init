@@ -298,7 +298,7 @@ INIT_LOCAL_API ParamTrieNode *FindTrieNode(WorkSpace *workSpace,
     const char *key, uint32_t keyLen, uint32_t *matchLabel)
 {
     PARAM_ONLY_CHECK(key != NULL && keyLen > 0, return NULL);
-
+    PARAM_CHECK(workSpace != NULL, return NULL, "Invalid workspace for %s", key);
     uint32_t tmpMatchLen = 0;
     ParamTrieNode *node = NULL;
     PARAMSPACE_AREA_RD_LOCK(workSpace);
@@ -342,6 +342,7 @@ INIT_LOCAL_API ParamNode *GetParamNode(uint32_t index, const char *name)
 INIT_LOCAL_API int AddParamEntry(uint32_t index, uint8_t type, const char *name, const char *value)
 {
     WorkSpace *workSpace = GetWorkSpace(WORKSPACE_INDEX_BASE);
+    PARAM_CHECK(workSpace != NULL, return PARAM_CODE_ERROR, "Invalid workspace");
     ParamTrieNode *node = FindTrieNode(workSpace, name, strlen(name), NULL);
     if (node != NULL && node->dataIndex != 0) {
         return 0;

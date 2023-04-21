@@ -85,6 +85,7 @@ typedef enum {
 #define WORKSPACE_FLAGS_UPDATE 0x04
 #define WORKSPACE_FLAGS_LABEL_LOADED 0x08
 #define WORKSPACE_FLAGS_NEED_ACCESS 0x10
+#define WORKSPACE_FLAGS_FOR_INIT 0x20
 
 #define PARAM_SET_FLAG(node, flag) ((node) |= (flag))
 #define PARAM_CLEAR_FLAG(node, flag) ((node) &= ~(flag))

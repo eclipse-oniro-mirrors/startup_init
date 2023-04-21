@@ -36,9 +36,6 @@ static pthread_mutex_t g_clientMutex = PTHREAD_MUTEX_INITIALIZER;
 
 __attribute__((constructor)) static void ParameterInit(void)
 {
-    if (getpid() == 1) {
-        return;
-    }
     ATOMIC_INIT(&g_requestId, 1);
     EnableInitLog(INIT_WARN);
     PARAM_WORKSPACE_OPS ops = {0};

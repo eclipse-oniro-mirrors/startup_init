@@ -107,6 +107,14 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
 #endif
     }
     if (PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
+        PARAM_LOGV("Param workspace has been init");
+        if (PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_FOR_INIT)) {
+            return 0; // init has been init workspace, do not init
+        }
+        if (onlyRead == 0) { // init not init workspace, do init it
+            CloseParamWorkSpace();
+            return 1;
+        }
         return 0;
     }
     if (onlyRead == 0) {
@@ -132,8 +140,10 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
     }
     paramMutexEnvInit();
     g_paramWorkSpace.maxLabelIndex = PARAM_DEF_SELINUX_LABEL;
-    g_paramWorkSpace.workSpace = (WorkSpace **)calloc(g_paramWorkSpace.maxLabelIndex, sizeof(WorkSpace *));
-    PARAM_CHECK(g_paramWorkSpace.workSpace != NULL, return -1, "Failed to alloc memory for workSpace");
+    if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
+        g_paramWorkSpace.workSpace = (WorkSpace **)calloc(g_paramWorkSpace.maxLabelIndex, sizeof(WorkSpace *));
+        PARAM_CHECK(g_paramWorkSpace.workSpace != NULL, return -1, "Failed to alloc memory for workSpace");
+    }
     PARAM_SET_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT);
 
     int ret = RegisterSecurityOps(onlyRead);
@@ -166,6 +176,7 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
 #endif
         ret = AddSecurityLabel(&auditData);
         PARAM_CHECK(ret == 0, return ret, "Failed to add default dac label");
+        PARAM_SET_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_FOR_INIT);
     } else {
         ret = OpenWorkSpace(WORKSPACE_INDEX_DAC, onlyRead);
         PARAM_CHECK(ret == 0, return -1, "Failed to open dac workspace");
@@ -237,9 +248,6 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
 
 void InitParameterClient(void)
 {
-    if (getpid() == 1) {
-        return;
-    }
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = 0;
     InitParamWorkSpace(1, &ops);
@@ -257,28 +265,27 @@ INIT_LOCAL_API int AddWorkSpace(const char *name, uint32_t labelIndex, int onlyR
 #endif
     int ret = CheckAndExtendSpace(paramSpace, name, labelIndex);
     PARAM_CHECK(ret == 0, return -1, "Not enough memory for %s", realName);
-    if (paramSpace->workSpace[labelIndex] != NULL) {
-        return 0;
+    if (paramSpace->workSpace[labelIndex] == NULL) {
+        const size_t size = strlen(realName) + 1;
+        WorkSpace *workSpace = (WorkSpace *)malloc(sizeof(WorkSpace) + size);
+        PARAM_CHECK(workSpace != NULL, return -1, "Failed to create workspace for %s", realName);
+        workSpace->flags = 0;
+        workSpace->spaceSize = spaceSize;
+        workSpace->area = NULL;
+        workSpace->spaceIndex = labelIndex;
+        ATOMIC_INIT(&workSpace->rwSpaceLock, 0);
+        PARAMSPACE_AREA_INIT_LOCK(workSpace);
+        ret = ParamStrCpy(workSpace->fileName, size, realName);
+        PARAM_CHECK(ret == 0, free(workSpace);
+            return -1, "Failed to copy file name %s", realName);
+        paramSpace->workSpace[labelIndex] = workSpace;
     }
-
-    const size_t size = strlen(realName) + 1;
-    WorkSpace *workSpace = (WorkSpace *)malloc(sizeof(WorkSpace) + size);
-    PARAM_CHECK(workSpace != NULL, return -1, "Failed to create workspace for %s", realName);
-    workSpace->flags = 0;
-    workSpace->spaceSize = spaceSize;
-    workSpace->area = NULL;
-    workSpace->spaceIndex = labelIndex;
-    ATOMIC_INIT(&workSpace->rwSpaceLock, 0);
-    PARAMSPACE_AREA_INIT_LOCK(workSpace);
-    ret = ParamStrCpy(workSpace->fileName, size, realName);
-    PARAM_CHECK(ret == 0, free(workSpace);
-        return -1, "Failed to copy file name %s", realName);
-    paramSpace->workSpace[labelIndex] = workSpace;
     if (!onlyRead) {
         PARAM_LOGI("AddWorkSpace %s index %d spaceSize: %u onlyRead %s",
-            workSpace->fileName, workSpace->spaceIndex, workSpace->spaceSize, onlyRead ? "true" : "false");
+            paramSpace->workSpace[labelIndex]->fileName, paramSpace->workSpace[labelIndex]->spaceIndex,
+            paramSpace->workSpace[labelIndex]->spaceSize, onlyRead ? "true" : "false");
         ret = OpenWorkSpace(labelIndex, onlyRead);
-        PARAM_CHECK(ret == 0, free(workSpace);
+        PARAM_CHECK(ret == 0, free(paramSpace->workSpace[labelIndex]);
             paramSpace->workSpace[labelIndex] = NULL;
             return -1, "Failed to open workspace for name %s", realName);
     }
@@ -322,6 +329,7 @@ STATIC_INLINE ParamTrieNode *GetTrieNodeByHandle(ParamHandle handle)
 
 int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId)
 {
+    PARAM_ONLY_CHECK(handle != (ParamHandle)-1, return PARAM_CODE_NOT_FOUND);
     PARAM_CHECK(handle != 0 && commitId != NULL, return -1, "The handle is null");
     ParamNode *entry = (ParamNode *)GetTrieNodeByHandle(handle);
     if (entry == NULL) {
@@ -343,6 +351,7 @@ long long GetSystemCommitId(void)
 
 int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
 {
+    PARAM_ONLY_CHECK(handle != (ParamHandle)-1, return PARAM_CODE_NOT_FOUND);
     PARAM_CHECK(len != NULL && handle != 0, return -1, "The value is null");
     return ReadParamValue((ParamNode *)GetTrieNodeByHandle(handle), value, len);
 }
@@ -379,6 +388,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
         workSpace = paramSpace->workSpace[index];
     }
     if (workSpace == NULL) {
+        PARAM_LOGE("Invalid index %d", index);
         return 0;
     }
     int ret = 0;
@@ -448,11 +458,12 @@ static int GetParamLabelInfo(const char *name, ParamLabelIndex *labelIndex, Para
     if ((securityNode == NULL) || (securityNode->selinuxIndex == 0) ||
         (securityNode->selinuxIndex == INVALID_SELINUX_INDEX)) {
         labelIndex->workspace = GetWorkSpaceByName(name);
+        PARAM_CHECK(labelIndex->workspace != NULL, return DAC_RESULT_FORBIDED, "Invalid workSpace for %s", name);
     } else if (securityNode->selinuxIndex < g_paramWorkSpace.maxLabelIndex) {
         labelIndex->workspace = g_paramWorkSpace.workSpace[securityNode->selinuxIndex];
+        PARAM_CHECK(labelIndex->workspace != NULL, return DAC_RESULT_FORBIDED,
+            "Invalid workSpace for %s %d", name, securityNode->selinuxIndex);
     }
-    PARAM_CHECK(labelIndex->workspace != NULL, return DAC_RESULT_FORBIDED,
-        "Invalid workSpace for %s %d", name, securityNode->selinuxIndex);
     labelIndex->selinuxLabelIndex = labelIndex->workspace->spaceIndex;
     return 0;
 }
@@ -629,8 +640,9 @@ STATIC_INLINE int CheckParamPermission_(const ParamLabelIndex *labelIndex,
 STATIC_INLINE int CheckParamPermission_(const ParamLabelIndex *labelIndex,
     const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
-    // for root, all permission, but for appspawn must to check
-    if (srcLabel->cred.uid == 0 && srcLabel->cred.pid == 1) {
+    // only for root and write, all permission, but for appspawn must to check
+    // for clod start in new namespace, pid==1 and uid==root
+    if (srcLabel->cred.uid == 0 && srcLabel->cred.pid == 1 && mode == DAC_WRITE) {
         return DAC_RESULT_PERMISSION;
     }
     int ret = DacCheckParamPermission(labelIndex, srcLabel, name, mode);
@@ -679,6 +691,7 @@ CachedHandle CachedParameterCreate(const char *name, const char *defValue)
     WorkSpace *workspace = NULL;
     int ret = ReadParamWithCheck(&workspace, name, DAC_READ, &node);
     PARAM_CHECK(ret == 0, return NULL, "Forbid to access parameter %s", name);
+    PARAM_CHECK(workspace != NULL && workspace->area != NULL, return NULL, "Forbid to access parameter %s", name);
 
     CachedParameter *param = (CachedParameter *)malloc(
         sizeof(CachedParameter) + PARAM_ALIGN(nameLen) + 1 + PARAM_VALUE_LEN_MAX);
