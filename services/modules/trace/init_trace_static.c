@@ -20,9 +20,6 @@ static int InitTraceEarlyHook(const HOOK_INFO *info, void *cookie)
 {
     if (GetBootEventEnable()) {
         PLUGIN_LOGI("init trace enabled.");
-#ifndef STARTUP_INIT_TEST
-        InitModuleMgrInstall("inittrace");
-#endif
         return 0;
     }
     return 0;

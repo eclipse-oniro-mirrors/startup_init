@@ -50,7 +50,7 @@ HWTEST_F(DeviceInfoModuleTest, DeviceInfoGetUdid_001, TestSize.Level0)
     EXPECT_EQ(object != nullptr, 1);
     BEGET_ERROR_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
 
-    std::this_thread::sleep_for(std::chrono::seconds(80)); // wait sa died 80s
+    std::this_thread::sleep_for(std::chrono::seconds(20)); // wait sa died 20s
 
     object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
     EXPECT_EQ(object == nullptr, 1);
@@ -77,7 +77,7 @@ HWTEST_F(DeviceInfoModuleTest, DeviceInfoGetSerial_001, TestSize.Level0)
     EXPECT_EQ(object != nullptr, 1);
     BEGET_ERROR_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
 
-    std::this_thread::sleep_for(std::chrono::seconds(80)); // wait sa died 80s
+    std::this_thread::sleep_for(std::chrono::seconds(20)); // wait sa died 20s
 
     object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
     EXPECT_EQ(object == nullptr, 1);
