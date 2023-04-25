@@ -105,6 +105,7 @@ useriam:x:1088:
 backup:x:1089:
 storage_manager:x:1090:
 net_manager:x:1099:
+netsysnative:x:1098:
 edm:x:3057:
 account:x:3058:
 download:x:3815:
