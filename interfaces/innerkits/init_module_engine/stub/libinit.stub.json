@@ -18,5 +18,6 @@
     { "name": "DoJobNow" },
     { "name": "GetServiceExtData" },
     { "name": "UpdateMiscMessage" },
-    { "name": "AddRebootCmdExecutor" }
+    { "name": "AddRebootCmdExecutor" },
+    { "name": "GetBootEventList" }
 ]

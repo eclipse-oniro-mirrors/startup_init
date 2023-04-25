@@ -14,6 +14,7 @@
  */
 #include <string.h>
 #include "init_module_engine.h"
+#include "bootevent.h"
 #include "plugin_adapter.h"
 
 static int InitTraceEarlyHook(const HOOK_INFO *info, void *cookie)

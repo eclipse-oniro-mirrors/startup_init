@@ -16,6 +16,7 @@ import("//build/ohos.gni")
 comm_include = [
   ".",
   "..",
+  "../bootevent",
   "../../include",
   "../../include/param",
 ]
