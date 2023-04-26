@@ -121,7 +121,7 @@ static bool GetFilterFileByName(const char *filterName, char *filterLibRealPath,
     }
 
     // allow only one path to a seccomp shared library to avoid shared library replaced
-    if (seccompPathNum == 1) {
+    if (seccompPathNum == 1 && files && files->paths[0]) {
         if (memcpy_s(filterLibRealPath, pathSize, files->paths[0], strlen(files->paths[0]) + 1) == EOK) {
             flag = true;
         }
