@@ -63,8 +63,12 @@ static int CreatePipeSocket_(const char *server)
     LE_CHECK(fd > 0, return fd, "Failed to create socket");
     SetNoBlock(fd);
 
+    int on = 1;
+    int ret = setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
+    LE_CHECK(ret == 0, return ret, "Failed to set socket option");
+
     struct sockaddr_un serverAddr;
-    int ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
+    ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
     LE_CHECK(ret == 0, close(fd);
         return ret, "Failed to memset_s serverAddr");
     serverAddr.sun_family = AF_UNIX;
@@ -118,9 +122,13 @@ static int CreateTcpSocket_(const char *server)
     LE_CHECK(fd > 0, return fd, "Failed to create socket");
     SetNoBlock(fd);
 
+    int on = 1;
+    int ret = setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
+    LE_CHECK(ret == 0, return ret, "Failed to set socket option");
+
     struct sockaddr_in serverAddr;
     GetSockaddrFromServer_(server, &serverAddr);
-    int ret = connect(fd, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+    ret = connect(fd, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
     LE_CHECK(ret >= 0, close(fd);
         return ret, "Failed to connect socket errno:%d", errno);
     return fd;
