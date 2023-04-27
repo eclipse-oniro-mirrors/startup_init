@@ -236,44 +236,50 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
     PARAM_NAPI_ASSERT(env, argc == 1 || argc == ARGC_NUMBER, SYSPARAM_INVALID_INPUT, "Wrong number of arguments");
     napi_valuetype valuetype0 = napi_null;
     NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
-    PARAM_NAPI_ASSERT(env, valuetype0 == napi_string,
-        SYSPARAM_INVALID_INPUT, "Wrong argument type. Numbers expected.");
+    PARAM_NAPI_ASSERT(env, valuetype0 == napi_string, SYSPARAM_INVALID_INPUT, "Wrong argument type. Numbers expected.");
+
+    napi_valuetype valuetype1 = napi_null;
     if (argc == ARGC_NUMBER) {
-        napi_valuetype valuetype1 = napi_null;
         NAPI_CALL(env, napi_typeof(env, args[1], &valuetype1));
-        PARAM_NAPI_ASSERT(env, valuetype1 == napi_string,
-            SYSPARAM_INVALID_INPUT, "Wrong argument type. string expected.");
+        PARAM_NAPI_ASSERT(env, (valuetype1 == napi_string) || (valuetype1 == napi_undefined),
+        SYSPARAM_INVALID_INPUT, "Wrong argument type. string expected.");
     }
 
     size_t keySize = 0;
     std::vector<char> keyBuf(MAX_NAME_LENGTH, 0);
     int ret = GetParamString(env, args[0], keyBuf.data(), MAX_NAME_LENGTH, &keySize);
     if (ret != 0) {
-        napi_value err = BusinessErrorCreate(env, SYSPARAM_INVALID_INPUT);
-        napi_throw(env, err);
+        napi_throw(env, BusinessErrorCreate(env, SYSPARAM_INVALID_INPUT));
         return nullptr;
     }
     std::vector<char> defValue(MAX_VALUE_LENGTH, 0);
     size_t valueSize = 0;
     if (argc == ARGC_NUMBER) {
-        ret = GetParamString(env, args[1], defValue.data(), MAX_VALUE_LENGTH, &valueSize);
-        if (ret != 0) {
-            napi_value err = BusinessErrorCreate(env, SYSPARAM_INVALID_INPUT);
-            napi_throw(env, err);
-            return nullptr;
+        if (valuetype1 == napi_undefined) {
+            valueSize = 0;
+        } else {
+            ret = GetParamString(env, args[1], defValue.data(), MAX_VALUE_LENGTH, &valueSize);
+            if (ret != 0) {
+                napi_throw(env, BusinessErrorCreate(env, SYSPARAM_INVALID_INPUT));
+                return nullptr;
+            }
         }
     }
     std::vector<char> value(MAX_VALUE_LENGTH, 0);
     ret = GetParameter(keyBuf.data(), (valueSize == 0) ? nullptr : defValue.data(), value.data(), MAX_VALUE_LENGTH);
     PARAM_JS_LOGV("JSApp get status: %d, key: '%s', value: '%s', defValue: '%s'.",
         ret, keyBuf.data(), value.data(), defValue.data());
-    if (ret < 0) {
-        napi_value err = BusinessErrorCreate(env, ret);
-        napi_throw(env, err);
-        return nullptr;
-    }
+
     napi_value napiValue = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, value.data(), strlen(value.data()), &napiValue));
+    if (ret < 0) {
+        if (ret == SYSPARAM_NOT_FOUND) {
+            return napiValue;
+        }
+        napi_throw(env, BusinessErrorCreate(env, ret));
+        return nullptr;
+    }
+
     return napiValue;
 }
 
@@ -343,6 +349,8 @@ static napi_value Get(napi_env env, napi_callback_info info)
             ret = GetParamString(env, argv[i], asyncContext->key, MAX_NAME_LENGTH, &asyncContext->keyLen);
         } else if (i == 1 && valueType == napi_string) {
             ret = GetParamString(env, argv[i], asyncContext->value, MAX_VALUE_LENGTH, &asyncContext->valueLen);
+        } else if (i == 1 && valueType == napi_undefined) {
+            asyncContext->valueLen = 0;
         } else if (i == 1 && valueType == napi_function) {
             napi_create_reference(env, argv[i], 1, &asyncContext->callbackRef);
             break;

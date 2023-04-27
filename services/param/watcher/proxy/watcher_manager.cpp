@@ -164,7 +164,6 @@ void WatcherGroup::ProcessParameterChange(
     // walk watcher
     TraversalNode([this, mananger, name, value](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
         auto remoteWatcher = mananger->GetRemoteWatcher(node->GetNodeId());
-        WATCHER_LOGE("CJ mananger->GetRemoteWatcher remoteWatcher is:%p", static_cast<void*>(remoteWatcher));
         if (remoteWatcher == nullptr) {
             return;
         }
@@ -510,7 +509,6 @@ void WatcherManager::Clear(void)
         list->RemoveNode(node);
         auto remoteWatcher = ConvertTo<RemoteWatcher>(node);
         WATCHER_LOGV("Delete remote watcher %u", remoteWatcher->GetRemoteWatcherId());
-        WATCHER_LOGE("CJ WatcherManager::Clear remoteWatcher");
         delete remoteWatcher;
     });
     delete remoteWatchers_;

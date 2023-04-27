@@ -21,7 +21,6 @@ namespace init_param {
 uint32_t WatcherManagerProxy::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher)
 {
     WATCHER_CHECK(watcher != nullptr, return ERR_INVALID_VALUE, "Invalid param");
-    WATCHER_LOGE("CJ WatcherManagerProxy::AddRemoteWatcher watcher addr is:%p", static_cast<void*>(watcher));
     MessageParcel data;
     data.WriteInterfaceToken(WatcherManagerProxy::GetDescriptor());
     bool ret = data.WriteRemoteObject(watcher->AsObject());

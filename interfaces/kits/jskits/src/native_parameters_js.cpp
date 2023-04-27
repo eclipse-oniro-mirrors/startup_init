@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "native_parameters_js.h"
+#include "securec.h"
 
 static constexpr int MAX_LENGTH = 128;
 static constexpr int ARGC_NUMBER = 2;
@@ -172,10 +173,11 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
     napi_valuetype valuetype0 = napi_null;
     NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
     NAPI_ASSERT(env, valuetype0 == napi_string, "Wrong argument type. Numbers expected.");
+    napi_valuetype valuetype1 = napi_null;
     if (argc == ARGC_NUMBER) {
-        napi_valuetype valuetype1 = napi_null;
         NAPI_CALL(env, napi_typeof(env, args[1], &valuetype1));
-        NAPI_ASSERT(env, valuetype1 == napi_string, "Wrong argument type. string expected.");
+        NAPI_ASSERT(env, (valuetype1 == napi_string) || (valuetype1 == napi_undefined),
+            "Wrong argument type. string expected.");
     }
 
     char keyBuf[BUF_LENGTH] = { 0 };
@@ -191,11 +193,15 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
     if (argc == ARGC_NUMBER) {
         char valueBuf[BUF_LENGTH] = { 0 };
         size_t valueSize = 0;
-        NAPI_CALL(env, napi_get_value_string_utf8(env, args[1], valueBuf, BUF_LENGTH - 1, &valueSize));
-        if (valueSize >= MAX_LENGTH) {
-            return nullptr;
+        if (valuetype1 == napi_undefined) {
+            valueStr = "";
+        } else {
+            NAPI_CALL(env, napi_get_value_string_utf8(env, args[1], valueBuf, BUF_LENGTH - 1, &valueSize));
+            if (valueSize >= MAX_LENGTH) {
+                return nullptr;
+            }
+            valueStr = valueBuf;
         }
-        valueStr = valueBuf;
     }
     int ret = OHOS::system::GetStringParameter(keyStr, getValue, valueStr);
     PARAM_JS_LOGV("JSApp GetSync::getValue = %s, input keyStr = %s.", getValue.c_str(), keyBuf);
@@ -275,6 +281,8 @@ static napi_value Get(napi_env env, napi_callback_info info)
         } else if (i == 1 && valueType == napi_string) {
             napi_get_value_string_utf8(env, argv[i], asyncContext->value,
                 BUF_LENGTH - 1, &asyncContext->valueLen);
+        } else if (i == 1 && valueType == napi_undefined) {
+            strcpy_s(asyncContext->value, BUF_LENGTH, "\0");
         } else if (i == 1 && valueType == napi_function) {
             napi_create_reference(env, argv[i], 1, &asyncContext->callbackRef);
             break;

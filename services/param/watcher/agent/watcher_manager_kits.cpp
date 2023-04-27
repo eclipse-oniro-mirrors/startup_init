@@ -133,7 +133,6 @@ uint32_t WatcherManagerKits::GetRemoteWatcher(void)
     WATCHER_CHECK(watcherManager != nullptr, return 0, "Failed to get watcher manager");
     remoteWatcher_  = new RemoteWatcher(this);
     WATCHER_CHECK(remoteWatcher_ != nullptr, return 0, "Failed to create watcher");
-    WATCHER_LOGE("CJ WatcherManagerKits::GetRemoteWatcher remoteWatcher_ addr is:%p", static_cast<void*>(remoteWatcher_));
     remoteWatcherId_ = watcherManager->AddRemoteWatcher(getpid(), remoteWatcher_);
     WATCHER_CHECK(remoteWatcherId_ != 0, return 0, "Failed to add watcher");
     return remoteWatcherId_;
@@ -198,7 +197,6 @@ int32_t WatcherManagerKits::DelWatcher(const std::string &keyPrefix, ParameterCh
         if (watchers_.empty()) { // no watcher, so delete remote agent
             watcherManager->DelRemoteWatcher(remoteWatcherId_);
             remoteWatcherId_ = 0;
-            WATCHER_LOGE("CJ WatcherManagerKits::DelWatcher remoteWatcher_ addr is:%p", static_cast<void*>(remoteWatcher_));
             remoteWatcher_ = nullptr;
         }
     }
