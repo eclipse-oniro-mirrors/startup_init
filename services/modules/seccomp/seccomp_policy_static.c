@@ -53,5 +53,5 @@ static int SeccompHook(const HOOK_INFO *info, void *cookie)
 
 MODULE_CONSTRUCTOR(void)
 {
-    InitAddPostPersistParamLoadHook(0, SeccompHook);
+    InitAddPostCfgLoadHook(0, SeccompHook);
 }
