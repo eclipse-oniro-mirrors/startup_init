@@ -92,12 +92,18 @@ static void StartTriggerExecute_(TriggerNode *trigger, const char *content, uint
     }
 }
 
-static void ExecuteQueueWork(uint32_t maxCount)
+static void ExecuteQueueWork(uint32_t maxCount, void (*bootStateChange)(int start, const char *))
 {
     uint32_t executeCount = 0;
     TriggerNode *trigger = ExecuteQueuePop(&g_triggerWorkSpace);
     while (trigger != NULL) {
+        if (bootStateChange != NULL) {
+            bootStateChange(0, (const char *)GetTriggerName(trigger));
+        }
         StartTriggerExecute_(trigger, NULL, 0);
+        if (bootStateChange != NULL) {
+            bootStateChange(1, (const char *)GetTriggerName(trigger));
+        }
         executeCount++;
         if (executeCount > maxCount) {
             break;
@@ -114,7 +120,7 @@ PARAM_STATIC void ProcessBeforeEvent(const ParamTaskPtr stream,
         case EVENT_TRIGGER_PARAM: {
             CheckTrigger(&g_triggerWorkSpace, TRIGGER_PARAM,
                 (const char *)content, size, DoTriggerCheckResult);
-            ExecuteQueueWork(MAX_TRIGGER_COUNT_RUN_ONCE);
+            ExecuteQueueWork(MAX_TRIGGER_COUNT_RUN_ONCE, NULL);
             break;
         }
         case EVENT_TRIGGER_BOOT: {
@@ -123,10 +129,11 @@ PARAM_STATIC void ProcessBeforeEvent(const ParamTaskPtr stream,
             }
             CheckTrigger(&g_triggerWorkSpace, TRIGGER_BOOT,
                 (const char *)content, size, DoTriggerCheckResult);
-            ExecuteQueueWork(MAX_TRIGGER_COUNT_RUN_ONCE);
+            ExecuteQueueWork(1, NULL);
             if (g_triggerWorkSpace.bootStateChange != NULL) {
                 g_triggerWorkSpace.bootStateChange(1, (const char *)content);
             }
+            ExecuteQueueWork(MAX_TRIGGER_COUNT_RUN_ONCE, g_triggerWorkSpace.bootStateChange);
             break;
         }
         case EVENT_TRIGGER_PARAM_WAIT: {
