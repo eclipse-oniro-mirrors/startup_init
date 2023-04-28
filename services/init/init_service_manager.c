@@ -1196,3 +1196,15 @@ int GetKillServiceSig(const char *name)
     }
     return SIGKILL;
 }
+
+int GetServiceGroupIdByPid(pid_t pid, gid_t *gids, uint32_t gidSize)
+{
+    Service *service = GetServiceByPid(pid);
+    if (service != NULL) {
+        int ret = memcpy_s(gids, gidSize * sizeof(gid_t),
+            service->servPerm.gIDArray, service->servPerm.gIDCnt * sizeof(gid_t));
+        INIT_ERROR_CHECK(ret == 0, return 0, "Failed get copy gids");
+        return service->servPerm.gIDCnt;
+    }
+    return 0;
+}

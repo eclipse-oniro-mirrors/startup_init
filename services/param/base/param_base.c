@@ -99,8 +99,15 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
 {
     if (ops != NULL) {
         g_paramWorkSpace.ops.updaterMode = ops->updaterMode;
-        if (g_paramWorkSpace.ops.logFunc == NULL && ops->logFunc != NULL) {
-            g_paramWorkSpace.ops.logFunc = ops->logFunc;
+        if (ops->getServiceGroupIdByPid != NULL) {
+            g_paramWorkSpace.ops.getServiceGroupIdByPid = ops->getServiceGroupIdByPid;
+        }
+        if (ops->logFunc != NULL) {
+            if (onlyRead == 0) {
+                g_paramWorkSpace.ops.logFunc = ops->logFunc;
+            } else if (g_paramWorkSpace.ops.logFunc == NULL) {
+                g_paramWorkSpace.ops.logFunc = ops->logFunc;
+            }
         }
 #ifdef PARAM_SUPPORT_SELINUX
         g_paramWorkSpace.ops.setfilecon = ops->setfilecon;
@@ -495,6 +502,32 @@ static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
     return -1;
 }
 
+STATIC_INLINE int DacCheckGroupPermission(const ParamSecurityLabel *srcLabel, uint32_t mode, ParamSecurityNode *node)
+{
+    uint32_t localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
+    if (srcLabel->cred.gid == node->gid) {
+        if ((node->mode & localMode) != 0) {
+            return DAC_RESULT_PERMISSION;
+        }
+    }
+    if (mode != DAC_WRITE || g_paramWorkSpace.ops.getServiceGroupIdByPid == NULL) {
+        return DAC_RESULT_FORBIDED;
+    }
+    gid_t gids[64] = { 0 }; // max gid number
+    const uint32_t gidNumber = g_paramWorkSpace.ops.getServiceGroupIdByPid(
+        srcLabel->cred.pid, gids, sizeof(gids) / sizeof(gids[0]));
+    for (uint32_t index = 0; index < gidNumber; index++) {
+        PARAM_LOGV("DacCheckGroupPermission gid %u", gids[index]);
+        if (gids[index] != node->gid) {
+            continue;
+        }
+        if ((node->mode & localMode) != 0) {
+            return DAC_RESULT_PERMISSION;
+        }
+    }
+    return DAC_RESULT_FORBIDED;
+}
+
 STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
     const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
@@ -503,8 +536,6 @@ STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
         return DAC_RESULT_PERMISSION;
     }
 #endif
-
-    int ret = DAC_RESULT_FORBIDED;
     // get dac label
     WorkSpace *space = g_paramWorkSpace.workSpace[WORKSPACE_INDEX_DAC];
     ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex->dacLabelIndex);
@@ -517,30 +548,35 @@ STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
     uint32_t localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_OTHER_START;
     // 1, check other
     if ((node->mode & localMode) != 0) {
-        ret = DAC_RESULT_PERMISSION;
-    } else {
-        if (srcLabel->cred.uid == node->uid) { // 2, check uid
-            localMode = mode & (DAC_READ | DAC_WRITE | DAC_WATCH);
-        } else if (srcLabel->cred.gid == node->gid) { // 3, check gid
-            localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
-        } else if (CheckUserInGroup(space, node->gid, srcLabel->cred.uid) == 0) {  // 4, check user in group
-            localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
-        }
+        return DAC_RESULT_PERMISSION;
+    }
+    // 2, check uid
+    if (srcLabel->cred.uid == node->uid) {
+        localMode = mode & (DAC_READ | DAC_WRITE | DAC_WATCH);
         if ((node->mode & localMode) != 0) {
-            ret = DAC_RESULT_PERMISSION;
-        } else {
-            PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%o",
-                name, srcLabel->cred.gid, srcLabel->cred.uid, localMode);
-            PARAM_LOGW("Cfg label %u gid:%d uid:%d mode 0%o ",
-                labelIndex->dacLabelIndex, node->gid, node->uid, node->mode);
-#ifndef __MUSL__
-#ifndef STARTUP_INIT_TEST
-        ret = DAC_RESULT_PERMISSION;
-#endif
-#endif
+            return DAC_RESULT_PERMISSION;
         }
     }
-    return ret;
+    // 3, check gid
+    if (DacCheckGroupPermission(srcLabel, mode, node) == DAC_RESULT_PERMISSION) {
+        return DAC_RESULT_PERMISSION;
+    }
+    // 4, check user in group
+    if (CheckUserInGroup(space, node->gid, srcLabel->cred.uid) == 0) {
+        localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
+        if ((node->mode & localMode) != 0) {
+            return DAC_RESULT_PERMISSION;
+        }
+    }
+    // forbid
+    PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%x", name, srcLabel->cred.gid, srcLabel->cred.uid, mode);
+    PARAM_LOGW("Cfg label %u gid:%d uid:%d mode 0%x ", labelIndex->dacLabelIndex, node->gid, node->uid, node->mode);
+#ifndef __MUSL__
+#ifndef STARTUP_INIT_TEST
+    return DAC_RESULT_PERMISSION;
+#endif
+#endif
+    return DAC_RESULT_FORBIDED;
 }
 
 #ifdef PARAM_SUPPORT_SELINUX
