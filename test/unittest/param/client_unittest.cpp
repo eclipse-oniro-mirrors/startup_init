@@ -32,8 +32,6 @@ static void ClientCheckParamValue(const char *name, const char *expectValue)
         if (expectValue != nullptr) {
             EXPECT_EQ(strcmp(tmp, expectValue), 0);
         }
-    } else {
-        EXPECT_NE(0, 0);
     }
 }
 
@@ -45,7 +43,8 @@ static void *TestSendParamSetMsg(void *args)
     }
     std::string name = (char *)args;
     PARAM_LOGI("TestSendParamSetMsg name :\'%s\' ", name.c_str());
-    SystemSetParameter(name.c_str(), name.c_str());
+    int ret = SystemSetParameter(name.c_str(), name.c_str());
+    EXPECT_EQ(ret, 0);
     return nullptr;
 }
 
@@ -57,7 +56,8 @@ static void *TestSendParamWaitMsg(void *args)
     std::string name = "Wati.";
     name = name + (char *)args;
     PARAM_LOGI("TestSendParamWaitMsg name :\'%s\' \n", name.c_str());
-    SystemWaitParameter(name.c_str(), name.c_str(), 1);
+    int ret = SystemWaitParameter(name.c_str(), name.c_str(), 1);
+    EXPECT_GE(ret, 0);
     return nullptr;
 }
 

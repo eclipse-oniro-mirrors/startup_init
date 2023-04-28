@@ -26,6 +26,7 @@
 #include "init_log.h"
 #include "init_service.h"
 #include "init_unittest.h"
+#include "init_adapter.h"
 #include "init_utils.h"
 #include "loop_event.h"
 #include "param_stub.h"
@@ -83,6 +84,8 @@ HWTEST_F(InitUnitTest, TestSystemPrepare, TestSize.Level1)
 HWTEST_F(InitUnitTest, TestSystemExecRcs, TestSize.Level1)
 {
     SystemExecuteRcs();
+    int ret = KeepCapability();
+    EXPECT_EQ(ret, 0);
 }
 
 static void TestProcessTimer(const TimerHandle taskHandle, void *context)
