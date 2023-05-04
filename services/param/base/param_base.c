@@ -571,12 +571,14 @@ STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
     // forbid
     PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%x", name, srcLabel->cred.gid, srcLabel->cred.uid, mode);
     PARAM_LOGW("Cfg label %u gid:%d uid:%d mode 0%x ", labelIndex->dacLabelIndex, node->gid, node->uid, node->mode);
+
+    int ret = DAC_RESULT_FORBIDED;
 #ifndef __MUSL__
 #ifndef STARTUP_INIT_TEST
-    return DAC_RESULT_PERMISSION;
+    ret = DAC_RESULT_PERMISSION;
 #endif
 #endif
-    return DAC_RESULT_FORBIDED;
+    return ret;
 }
 
 #ifdef PARAM_SUPPORT_SELINUX
