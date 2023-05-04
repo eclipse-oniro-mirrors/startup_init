@@ -22,6 +22,9 @@
         ],
         "rom": "",
         "ram": "",
+        "hisysevent_config": [
+            "//base/startup/init/services/modules/sysevent/init_events.yaml"
+        ],
         "deps": {
             "components": [
                 "startup",

@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "bootevent.h"
 
 #include <stdbool.h>
 #include "init_module_engine.h"
@@ -26,34 +27,9 @@
 #include "init_utils.h"
 #include "init_cmds.h"
 
-#define BOOT_EVENT_PARA_PREFIX      "bootevent."
-#define BOOT_EVENT_PARA_PREFIX_LEN  10
-#define BOOT_EVENT_TIMESTAMP_MAX_LEN  50
-#define BOOT_EVENT_FILEPATH_MAX_LEN  60
-#define BOOT_EVENT_FINISH  2
-#define SECTOMSEC  1000000
-#define SECTONSEC  1000000000
-#define MSECTONSEC  1000
-#define SAVEINITBOOTEVENTMSEC  100000
-#define BOOTEVENT_OUTPUT_PATH "/data/service/el0/startup/init/"
 static int g_bootEventNum = 0;
-
 // check bootevent enable
 static int g_bootEventEnable = 1;
-
-enum {
-    BOOTEVENT_FORK,
-    BOOTEVENT_READY,
-    BOOTEVENT_MAX
-};
-
-typedef struct tagBOOT_EVENT_PARAM_ITEM {
-    ListNode    node;
-    char  *paramName;
-    int pid;
-    struct timespec timestamp[BOOTEVENT_MAX];
-} BOOT_EVENT_PARAM_ITEM;
-
 static ListNode bootEventList = {&bootEventList, &bootEventList};
 
 static int BootEventParaListCompareProc(ListNode *node, void *data)
@@ -106,6 +82,7 @@ static int AddServiceBootEvent(const char *serviceName, const char *paramName)
         INIT_LOGI("strdup failed");
         return -1;
     }
+    item->flags = BOOTEVENT_TYPE_SERVICE;
     OH_ListAddTail(&bootEventList, (ListNode *)&item->node);
     return 0;
 }
@@ -134,6 +111,7 @@ static void AddInitBootEvent(const char *bootEventName)
         free(item);
         return;
     }
+    item->flags = BOOTEVENT_TYPE_JOB;
     OH_ListAddTail(&bootEventList, (ListNode *)&item->node);
     return;
 }
@@ -223,6 +201,16 @@ static int SaveServiceBootEvent()
     return 0;
 }
 
+static void ReportSysEvent(void)
+{
+    if (!GetBootEventEnable()) {
+        return;
+    }
+    InitModuleMgrInstall("eventmodule");
+    InitModuleMgrUnInstall("eventmodule");
+    return;
+}
+
 static void BootEventParaFireByName(const char *paramName)
 {
     ListNode *found = NULL;
@@ -251,6 +239,8 @@ static void BootEventParaFireByName(const char *paramName)
     SystemWriteParam(BOOT_EVENT_BOOT_COMPLETED, "true");
     g_bootEventEnable = BOOT_EVENT_FINISH;
     SaveServiceBootEvent();
+    // report complete event
+    ReportSysEvent();
     const char *clearBootEventArgv[] = {"bootevent"};
     // clear servie extra data
     PluginExecCmd("clear", ARRAY_LENGTH(clearBootEventArgv), clearBootEventArgv);
@@ -322,6 +312,7 @@ static void AddCmdBootEvent(int argc, const char **argv)
     for (int i = 1; i < 3; i++) { // 3 cmd content end
         INIT_CHECK_ONLY_ELOG(strcat_s(item->paramName, cmdLen, argv[i]) >= 0, "combine cmd args failed");
     }
+    item->flags = BOOTEVENT_TYPE_CMD;
     OH_ListAddTail(&bootEventList, (ListNode *)&item->node);
     return;
 }
@@ -417,6 +408,11 @@ int GetBootEventEnable(void)
         return 1;
     }
     return 0;
+}
+
+ListNode *GetBootEventList(void)
+{
+    return &bootEventList;
 }
 
 static int RecordInitCmd(const HOOK_INFO *info, void *cookie)

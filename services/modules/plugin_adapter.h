@@ -55,5 +55,10 @@ enum HOOK_ID_ {
     HOOKID(BOOTEVENT_MAX) = HOOK_ID_BOOTEVENT + 10,
 };
 
-int GetBootEventEnable(void);
+#ifdef STARTUP_INIT_TEST
+#define PLUGIN_STATIC
+#else
+#define PLUGIN_STATIC static
+#endif
+
 #endif

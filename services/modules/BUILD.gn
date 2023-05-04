@@ -39,6 +39,7 @@ group("modulesgroup") {
     deps = [
       "bootchart:bootchart",
       "reboot:rebootmodule",
+      "sysevent:eventmodule",
       "trace:inittrace",
       "udid:udidmodule",
     ]
