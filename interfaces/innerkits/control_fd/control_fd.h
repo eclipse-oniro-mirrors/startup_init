@@ -65,7 +65,6 @@ typedef void (* CallbackControlFdProcess)(uint16_t type, const char *serviceCmd,
 typedef enum {
     ACTION_SANDBOX = 0,
     ACTION_DUMP,
-    ACTION_PARAM_SHELL,
     ACTION_MODULEMGR,
     ACTION_MAX
 } ActionType;
