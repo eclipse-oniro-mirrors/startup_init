@@ -81,8 +81,9 @@ class MergePolicy:
                     break
             if not flag:
                 content = '{}{};arm64\n'.format(content, func_name)
-
-        content = '{}{};arm\n'.format(content, ';arm\n'.join([func_name for func_name in syscall_name_dict.get('arm')]))
+        if (syscall_name_dict.get('arm')):
+            content = '{}{};arm\n'.format(content, ';arm\n'.join(
+                      [func_name for func_name, _ in syscall_name_dict.get('arm')]))
 
         return content
 
@@ -138,7 +139,7 @@ class MergePolicy:
         content += self.get_item_content(function_name_nr_table_dict, "@priorityWithArgs", dict_priority_with_args)
         content += self.get_item_content(function_name_nr_table_dict, "@allowListWithArgs", dict_allow_list_with_args)
         content += self.get_item_content(function_name_nr_table_dict, "@blockList", dict_blocklist)
-        audit_policy.gen_output_file(args.filter_name, content)(args.filter_name, content)
+        audit_policy.gen_output_file(args.filter_name, content)
 
 
 def main():
