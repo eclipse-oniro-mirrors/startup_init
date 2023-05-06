@@ -53,9 +53,9 @@ def create_needed_file(elf_path, locate_path, cmd, suffix):
 
 def generate_libc_asm(target_cpu, elf_path, locate_path):
     if target_cpu == 'arm':
-        cmd_obj_dump = 'arm-linux-musleabi-obj_dump_path'
+        cmd_obj_dump = 'arm-linux-musleabi-objdump'
     elif target_cpu == 'arm64':
-        cmd_obj_dump = get_obj_dump_path()
+        cmd_obj_dump = 'aarch64-linux-musl-objdump'
     else:
         raise ValueError("target cpu error")
 
@@ -268,6 +268,17 @@ def extract_libc_func(callee_und_func_name, libc_func_maps):
     return libc_func
 
 
+def get_function_name_nr_table(src_syscall_path):
+    function_name_nr_table_dict = {}
+    for file_name in src_syscall_path:
+        file_name_tmp = file_name.split('/')[-1]
+        if not file_name_tmp.lower().startswith('libsyscall_to_nr_'):
+            continue
+        gen_policy.gen_syscall_nr_table(file_name, function_name_nr_table_dict)
+
+    return function_name_nr_table_dict
+
+
 def collect_concrete_syscall(args):
     if args.target_cpu == 'arm64':
         arch_str = 'aarch64'
@@ -303,7 +314,8 @@ def collect_concrete_syscall(args):
     syscall_nr_list = collect_syscall(libc_func_used, libc_func_map)
 
     nr_to_func_dict = dict()
-    audit_policy.converse_fuction_name_nr(nr_to_func_dict, gen_libc.function_name_nr_table_dict)
+    function_name_nr_table_dict = get_function_name_nr_table(args.src_syscall_path)
+    audit_policy.converse_fuction_name_nr(nr_to_func_dict, function_name_nr_table_dict)
     content = get_item_content(args.target_cpu, syscall_nr_list, nr_to_func_dict)
 
     audit_policy.gen_output_file(args.filter_name, content)

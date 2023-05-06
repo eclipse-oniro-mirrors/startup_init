@@ -59,8 +59,9 @@ def get_item_content(name_nr_table, arch_nr_table):
             syscall_name_dict.get('arm').remove(func_name)
         else:
             content = '{}{};arm64\n'.format(content, func_name)
-
-    content = '{}{};arm\n'.format(content, ';arm\n'.join([func_name for func_name in syscall_name_dict.get('arm')]))
+    if not syscall_name_dict.get('arm'):
+        content = '{}{};arm\n'.format(content, ';arm\n'.join(
+                  [func_name for func_name in syscall_name_dict.get('arm')]))
 
     return content
 
@@ -72,9 +73,9 @@ def gen_output_file(filter_name, content):
         output_file.write(content)
 
 
-def parse_file(file_name):
+def parse_file(file_name, arch_nr):
     with open(file_name) as f:
-        parse_line(f)
+        parse_line(f, arch_nr)
 
 
 def converse_fuction_name_nr(dict_dst, dict_src):
