@@ -95,9 +95,9 @@ static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid
     }
 }
 
+#if defined(WITH_SELINUX) && !defined(__RAMDISK__)
 static void SetDeviceLable(const char *path)
 {
-#ifdef WITH_SELINUX
     int rc = 0;
     char buffer[PATH_MAX] = {};
     const char *p = NULL;
@@ -130,8 +130,8 @@ static void SetDeviceLable(const char *path)
     }
 
     return;
-#endif
 }
+#endif
 
 static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode, char **symLinks, bool isBlock)
 {
@@ -180,7 +180,9 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
     if (symLinks != NULL) {
         CreateSymbolLinks(deviceNode, symLinks);
     }
+#if defined(WITH_SELINUX) && !defined(__RAMDISK__)
     SetDeviceLable(deviceNode);
+#endif
     // No matter what result the symbol links returns,
     // as long as create device node done, just returns success.
     rc = 0;

@@ -674,3 +674,13 @@ char *TrimHead(char *str, char c)
     }
     return head;
 }
+
+int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen)
+{
+    char *buffer = ReadFileData(BOOT_CMD_LINE);
+    BEGET_ERROR_CHECK(buffer != NULL, return -1, "Failed to read /proc/cmdline");
+    int ret = GetProcCmdlineValue(paramName, buffer, value, valueLen);
+    free(buffer);
+    return ret;
+}
+

@@ -190,11 +190,9 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
             HandleBlockDeviceEvent(uevent);
             return;
-        } else {
-            INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
-            INIT_LOGE("Handle required device %s", devices[i]);
         }
     }
+    INIT_LOGW("Not found device for partitionName %s ", uevent->partitionName);
 }
 
 static void HandleUeventRequired(const struct Uevent *uevent, char **devices, int num)
@@ -360,13 +358,9 @@ void RetriggerUeventByPath(int sockFd, char *path)
 
 void RetriggerUevent(int sockFd, char **devices, int num)
 {
-    char *buffer = ReadFileData("/proc/cmdline");
-    int ret = GetProcCmdlineValue("default_boot_device", buffer, bootDevice, CMDLINE_VALUE_LEN_MAX);
+    int ret = GetParameterFromCmdLine("default_boot_device", bootDevice, CMDLINE_VALUE_LEN_MAX);
     INIT_CHECK_ONLY_ELOG(ret == 0, "Failed get default_boot_device value from cmdline");
     Trigger("/sys/block", sockFd, devices, num);
     Trigger("/sys/class", sockFd, devices, num);
     Trigger("/sys/devices", sockFd, devices, num);
-    if (buffer != NULL) {
-        free(buffer);
-    }
 }

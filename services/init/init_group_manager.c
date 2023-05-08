@@ -190,17 +190,13 @@ void InitServiceSpace(void)
     }
     // get boot mode, set default mode
     strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), BOOT_GROUP_DEFAULT);
-    char *data = ReadFileData(BOOT_CMD_LINE);
-    if (data != NULL) {
-        int ret = GetProcCmdlineValue(BOOT_GROUP_NAME, data,
-            g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr));
-        if (ret != 0) {
-            INIT_LOGV("Failed to get boot group");
-            if (GetBootModeFromMisc() == GROUP_CHARGE) {
-                strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), "device.charge.group");
-            }
+    int ret = GetParameterFromCmdLine(BOOT_GROUP_NAME,
+        g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr));
+    if (ret != 0) {
+        INIT_LOGV("Failed to get boot group");
+        if (GetBootModeFromMisc() == GROUP_CHARGE) {
+            strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), "device.charge.group");
         }
-        free(data);
     }
     INIT_LOGI("boot start %s", g_initWorkspace.groupModeStr);
     g_initWorkspace.groupMode = GetBootGroupMode();

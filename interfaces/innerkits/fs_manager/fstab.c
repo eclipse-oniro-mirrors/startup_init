@@ -306,13 +306,7 @@ static char *GetFstabFile(char *fileName, size_t size)
         }
     } else {
         char hardware[MAX_BUFFER_LEN] = {0};
-        char *buffer = ReadFileData("/proc/cmdline");
-        if (buffer == NULL) {
-            BEGET_LOGE("Failed to read \"/proc/cmdline\"");
-            return NULL;
-        }
-        int ret = GetProcCmdlineValue("hardware", buffer, hardware, MAX_BUFFER_LEN);
-        free(buffer);
+        int ret = GetParameterFromCmdLine("hardware", hardware, MAX_BUFFER_LEN);
         if (ret != 0) {
             BEGET_LOGE("Failed get hardware from cmdline");
             return NULL;
