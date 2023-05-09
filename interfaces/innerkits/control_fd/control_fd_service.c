@@ -15,6 +15,8 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include "beget_ext.h"
 #include "control_fd.h"
@@ -33,6 +35,23 @@ static void OnClose(const TaskHandle task)
     OH_ListInit(&agent->item);
 }
 
+CONTROL_FD_STATIC int CheckSocketPermission(const TaskHandle task)
+{
+    struct ucred uc = {-1, -1, -1};
+    socklen_t len = sizeof(uc);
+    if (getsockopt(LE_GetSocketFd(task), SOL_SOCKET, SO_PEERCRED, &uc, &len) < 0) {
+        BEGET_LOGE("Failed to get socket option. err = %d", errno);
+        return -1;
+    }
+    // Only root is permitted to use control fd of init.
+    if (uc.uid != 0) { // non-root user
+        errno = EPERM;
+        return -1;
+    }
+
+    return 0;
+}
+
 CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
 {
     if (buffer == NULL) {
@@ -47,14 +66,19 @@ CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *bu
         BEGET_LOGE("[control_fd] Received msg is invaild");
         return;
     }
+
+    if (CheckSocketPermission(task) < 0) {
+        BEGET_LOGE("Check socket permission failed, err = %d", errno);
+        return;
+    }
 #ifndef STARTUP_INIT_TEST
     agent->pid = fork();
     if (agent->pid == 0) {
         OpenConsole();
         char *realPath = GetRealPath(msg->ptyName);
         BEGET_ERROR_CHECK(realPath != NULL, return, "Failed get realpath, err=%d", errno);
-        char *strl = strstr(realPath, "/dev/pts");
-        BEGET_ERROR_CHECK(strl != NULL, return, "pty slave path %s is invaild", realPath);
+        int n = strncmp(realPath, "/dev/pts/", strlen("/dev/pts/"));
+        BEGET_ERROR_CHECK(n == 0, free(realPath); _exit(1), "pts path %s is invaild", realPath);
         int fd = open(realPath, O_RDWR);
         free(realPath);
         BEGET_ERROR_CHECK(fd >= 0, return, "Failed open %s, err=%d", msg->ptyName, errno);
@@ -67,7 +91,7 @@ CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *bu
         }
         exit(0);
     } else if (agent->pid < 0) {
-        BEGET_LOGE("[control_fd] Failed fork service");
+        BEGET_LOGE("[control_fd] Failed to fork child process, err = %d", errno);
     }
 #endif
     return;

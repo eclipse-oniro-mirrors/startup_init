@@ -218,22 +218,6 @@ static void ProcessModuleMgrControlFd(uint16_t type, const char *serviceCmd)
     }
 }
 
-static void ProcessParamShellControlFd(uint16_t type, const char *serviceCmd)
-{
-    if ((type != ACTION_PARAM_SHELL) || (serviceCmd == NULL)) {
-        return;
-    }
-    (void)setuid(2000); // 2000 shell group
-    (void)setgid(2000); // 2000 shell group
-    char *args[] = {(char *)serviceCmd, NULL};
-    int ret = execv(args[0], args);
-    if (ret < 0) {
-        INIT_LOGE("error on exec %d \n", errno);
-        exit(-1);
-    }
-    exit(0);
-}
-
 void ProcessControlFd(uint16_t type, const char *serviceCmd, const void *context)
 {
     if ((type >= ACTION_MAX) || (serviceCmd == NULL)) {
@@ -245,9 +229,6 @@ void ProcessControlFd(uint16_t type, const char *serviceCmd, const void *context
             break;
         case ACTION_DUMP :
             ProcessDumpServiceControlFd(type, serviceCmd);
-            break;
-        case ACTION_PARAM_SHELL :
-            ProcessParamShellControlFd(type, serviceCmd);
             break;
         case ACTION_MODULEMGR :
             ProcessModuleMgrControlFd(type, serviceCmd);
