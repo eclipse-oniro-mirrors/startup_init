@@ -99,7 +99,7 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
             SendMessage(group, MSG_ADD_WATCHER);
         }
     }
-    SendLocalChange(keyPrefix, remoteWatcher);
+    SendLocalChange(keyPrefix, remoteWatcherId);
     WATCHER_LOGI("Add watcher %s remoteWatcherId: %u groupId %u success",
         keyPrefix.c_str(), remoteWatcherId, group->GetGroupId());
     return 0;
@@ -129,9 +129,7 @@ int32_t WatcherManager::RefreshWatcher(const std::string &keyPrefix, uint32_t re
     WATCHER_LOGV("Refresh watcher %s remoteWatcherId: %u", keyPrefix.c_str(), remoteWatcherId);
     auto group = GetWatcherGroup(keyPrefix);
     WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
-    auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
-    WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), remoteWatcherId);
-    SendLocalChange(keyPrefix, remoteWatcher);
+    SendLocalChange(keyPrefix, remoteWatcherId);
     return 0;
 }
 
@@ -203,15 +201,16 @@ void WatcherManager::ProcessWatcherMessage(const ParamMessage *msg)
     }
 }
 
-void WatcherManager::SendLocalChange(const std::string &keyPrefix, RemoteWatcherPtr &remoteWatcher)
+void WatcherManager::SendLocalChange(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
     struct Context {
         char *buffer;
-        RemoteWatcherPtr remoteWatcher;
+        uint32_t remoteWatcherId;
         std::string keyPrefix;
+        WatcherManager *watcherManagerPtr;
     };
     std::vector<char> buffer(PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX);
-    struct Context context = {buffer.data(), remoteWatcher, keyPrefix};
+    struct Context context = {buffer.data(), remoteWatcherId, keyPrefix, this};
     // walk watcher
     SystemTraversalParameter("", [](ParamHandle handle, void *cookie) {
             struct Context *context = (struct Context *)(cookie);
@@ -222,7 +221,8 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, RemoteWatcher
             WATCHER_LOGV("SendLocalChange name '%s' prefix '%s'", context->buffer, context->keyPrefix.c_str());
             uint32_t size = PARAM_CONST_VALUE_LEN_MAX;
             SystemGetParameterValue(handle, context->buffer + PARAM_NAME_LEN_MAX, &size);
-            context->remoteWatcher->ProcessParameterChange(
+            auto remoteWatcher = context->watcherManagerPtr->GetRemoteWatcher(context->remoteWatcherId);
+            remoteWatcher->ProcessParameterChange(
                 context->keyPrefix, context->buffer, context->buffer + PARAM_NAME_LEN_MAX);
         }, reinterpret_cast<void *>(&context));
 }
