@@ -99,6 +99,10 @@ if (defined(ohos_lite)) {
         "__LITEOS_M__",
       ]
 
+      if (config_ohos_startup_init_lite_no_log) {
+        defines += [ "INIT_NO_LOG" ]
+      }
+
       include_dirs = include_common
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
