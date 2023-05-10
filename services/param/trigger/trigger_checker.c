@@ -130,7 +130,7 @@ static int PrefixAdd(char *prefix, uint32_t *prefixIndex, uint32_t prefixLen, ch
 
 static int HandleOperationOr(LogicCalculator *calculator, char *prefix, uint32_t *prefixIndex, uint32_t prefixLen)
 {
-    char e;
+    char e = 0;
     prefix[(*prefixIndex)++] = ' ';
     if (CalculatorLength(calculator) == 0) {
         CalculatorPushChar(calculator, '|');
