@@ -512,20 +512,10 @@ int FsHvbGetValueFromCmdLine(char *val, size_t size, const char *key)
 
     FS_HVB_RETURN_ERR_IF_NULL(val);
     FS_HVB_RETURN_ERR_IF_NULL(key);
-
-    char *buffer = ReadFileData(FS_HVB_CMDLINE_PATH);
-    if (buffer == NULL) {
-        BEGET_LOGE("error, read %s fail", FS_HVB_CMDLINE_PATH);
-        return -1;
-    }
-
-    ret = GetProcCmdlineValue(key, buffer, val, size);
+    ret = GetParameterFromCmdLine(key, val, size);
     if (ret != 0) {
         BEGET_LOGE("error 0x%x, get %s val from cmdline", ret, key);
     }
-
-    free(buffer);
-
     return ret;
 }
 

@@ -95,6 +95,7 @@ void CloseStdio(void);
 void RedirectStdio(int fd);
 
 int GetServiceGroupIdByPid(pid_t pid, gid_t *gids, uint32_t gidSize);
+int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen);
 #ifdef __cplusplus
 #if __cplusplus
 }

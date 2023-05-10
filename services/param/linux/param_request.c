@@ -45,6 +45,18 @@ __attribute__((constructor)) static void ParameterInit(void)
     ops.setfilecon = NULL;
 #endif
     InitParamWorkSpace(1, &ops);
+
+    // modify log level
+    char logLevel[2] = {0}; // 2 is set param "persist.init.debug.loglevel" value length.
+    uint32_t len = sizeof(logLevel);
+    int ret = SystemReadParam(INIT_DEBUG_LEVEL, logLevel, &len);
+    INIT_INFO_CHECK(ret == 0, return, "Can not get log level from param, keep the original loglevel.");
+    errno = 0;
+    int level = atoi(logLevel);
+    if (errno != 0) {
+        return;
+    }
+    SetInitLogLevel((InitLogLevel)level);
 }
 
 __attribute__((destructor)) static void ParameterDeinit(void)

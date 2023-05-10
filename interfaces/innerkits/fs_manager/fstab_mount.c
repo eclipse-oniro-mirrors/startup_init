@@ -318,12 +318,8 @@ static int GetSlotInfoFromParameter(const char *slotInfoName)
 static int GetSlotInfoFromCmdLine(const char *slotInfoName)
 {
     char value[MAX_BUFFER_LEN] = {0};
-    char *buffer = ReadFileData(BOOT_CMD_LINE);
-    BEGET_ERROR_CHECK(buffer != NULL, return -1, "Failed to read cmdline");
-    BEGET_INFO_CHECK(GetProcCmdlineValue(slotInfoName, buffer, value, MAX_BUFFER_LEN) == 0,
-        free(buffer); buffer = NULL; return -1, "Failed to get %s value from cmdline", slotInfoName);
-    free(buffer);
-    buffer = NULL;
+    BEGET_INFO_CHECK(GetParameterFromCmdLine(slotInfoName, value, MAX_BUFFER_LEN) == 0,
+        return -1, "Failed to get %s value from cmdline", slotInfoName);
     return atoi(value);
 }
 

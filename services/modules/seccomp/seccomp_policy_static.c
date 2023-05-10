@@ -21,7 +21,6 @@
 
 static int SetSystemSeccompPolicy(int id, const char *name, int argc, const char **argv)
 {
-    PLUGIN_LOGI("SetSystemSeccompPolicy argc %d %s", argc, name);
     PLUGIN_CHECK(argc == 2, return -1, "Invalid parameter");
     SeccompFilterType type = SYSTEM_SA;
     if (strncmp(SA_MAIN_PATH, argv[1], strlen(SA_MAIN_PATH)) != 0) {
@@ -39,7 +38,6 @@ static int SetSeccompPolicyInit(void)
 {
     if (g_executorId == -1) {
         g_executorId = AddCmdExecutor("SetSeccompPolicy", SetSystemSeccompPolicy);
-        PLUGIN_LOGI("SetSeccompPolicy executorId %d", g_executorId);
     }
     return 0;
 }
