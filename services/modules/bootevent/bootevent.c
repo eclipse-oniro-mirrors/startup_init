@@ -35,6 +35,9 @@ static ListNode bootEventList = {&bootEventList, &bootEventList};
 static int BootEventParaListCompareProc(ListNode *node, void *data)
 {
     BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)node;
+    if (strncmp(item->paramName, BOOT_EVENT_PARA_PREFIX, BOOT_EVENT_PARA_PREFIX_LEN) != 0) {
+        return -1;
+    }
     if (strcmp(item->paramName + BOOT_EVENT_PARA_PREFIX_LEN, (const char *)data) == 0) {
         return 0;
     }
