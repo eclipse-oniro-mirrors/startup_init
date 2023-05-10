@@ -86,7 +86,7 @@ private:
     void RunLoop();
     void StartLoop();
     void StopLoop();
-    void SendLocalChange(const std::string &keyPrefix, RemoteWatcherPtr &remoteWatcher);
+    void SendLocalChange(const std::string &keyPrefix, uint32_t remoteWatcherId);
     int SendMessage(WatcherGroupPtr group, int type);
     int GetServerFd(bool retry);
     int GetRemoteWatcherId(uint32_t &remoteWatcherId);
