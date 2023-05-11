@@ -41,16 +41,16 @@ typedef void (*InitCommLog)(int logLevel, uint32_t domain, const char *tag, cons
 INIT_LOCAL_API void OpenLogDevice(void);
 INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs);
 INIT_LOCAL_API void SetInitCommLog(InitCommLog logFunc);
-INIT_LOCAL_API void EnableInitLog(InitLogLevel level);
-INIT_LOCAL_API void EnableInitLogFromCmdline(void);
 
 #if defined(INIT_NO_LOG) || defined(PARAM_BASE)
+#define EnableInitLog(level) ((void)level)
 #define INIT_LOGV(fmt, ...)
 #define INIT_LOGI(fmt, ...)
 #define INIT_LOGW(fmt, ...)
 #define INIT_LOGE(fmt, ...)
 #define INIT_LOGF(fmt, ...)
 #else
+INIT_LOCAL_API void EnableInitLog(InitLogLevel level);
 #define INIT_LOGV(fmt, ...) \
     StartupLog(INIT_DEBUG, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGI(fmt, ...) \

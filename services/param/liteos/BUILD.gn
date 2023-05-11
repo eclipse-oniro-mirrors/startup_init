@@ -65,7 +65,6 @@ config("exported_header_files") {
 }
 
 base_sources = [
-  "//base/startup/init/services/log/init_commlog.c",
   "//base/startup/init/services/param/base/param_base.c",
   "//base/startup/init/services/param/base/param_comm.c",
   "//base/startup/init/services/param/base/param_trie.c",
@@ -117,6 +116,8 @@ static_library("param_client_lite") {
 
   if (config_ohos_startup_init_lite_no_log) {
     defines += [ "INIT_NO_LOG" ]
+  } else {
+    sources += [ "//base/startup/init/services/log/init_commlog.c" ]
   }
 
   if (ohos_kernel_type == "liteos_a") {

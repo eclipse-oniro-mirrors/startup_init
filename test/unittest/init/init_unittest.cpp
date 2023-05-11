@@ -132,7 +132,6 @@ HWTEST_F(InitUnitTest, TestFdHoldService, TestSize.Level1)
 
 HWTEST_F(InitUnitTest, TestInitLog, TestSize.Level1)
 {
-    EnableInitLogFromCmdline();
     // test log
     CheckAndCreateDir(INIT_LOG_PATH);
     SetInitLogLevel(INIT_DEBUG);

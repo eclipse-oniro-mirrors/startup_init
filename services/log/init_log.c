@@ -144,17 +144,3 @@ INIT_LOCAL_API void EnableInitLog(InitLogLevel level)
     g_logLevel = level;
     SetInitCommLog(InitLog);
 }
-
-INIT_LOCAL_API void EnableInitLogFromCmdline(void)
-{
-    SetInitCommLog(InitLog);
-    char level[MAX_BUFFER_LEN] = {0};
-    int ret = GetParameterFromCmdLine("initloglevel", level, MAX_BUFFER_LEN);
-    if (ret == 0) {
-        errno = 0;
-        unsigned int logLevel = (unsigned int)strtoul(level, 0, 10); // 10 is decimal
-        INIT_INFO_CHECK(errno == 0, return, "Failed strtoul %s, err=%d", level, errno);
-        SetInitLogLevel((InitLogLevel)logLevel);
-    }
-    return;
-}
