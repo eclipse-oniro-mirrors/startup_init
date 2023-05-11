@@ -184,6 +184,7 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
         } else if (strstr(devices[i], uevent->partitionName) != NULL ||
             strstr(uevent->partitionName, "vendor") != NULL ||
             strstr(uevent->partitionName, "system") != NULL ||
+            strstr(uevent->partitionName, "chipset") != NULL ||
             strstr(uevent->partitionName, "boot") != NULL ||
             strstr(uevent->partitionName, "ramdisk") != NULL ||
             strstr(uevent->partitionName, "rvt") != NULL) {

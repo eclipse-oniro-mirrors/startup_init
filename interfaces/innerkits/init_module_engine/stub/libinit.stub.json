@@ -19,5 +19,7 @@
     { "name": "GetServiceExtData" },
     { "name": "UpdateMiscMessage" },
     { "name": "AddRebootCmdExecutor" },
-    { "name": "GetBootEventList" }
+    { "name": "GetBootEventList" },
+    { "name": "WaitForFile" },
+    { "name": "DoCmdByName" }
 ]

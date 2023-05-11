@@ -368,7 +368,8 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
 
 void WaitForFile(const char *source, unsigned int maxSecond)
 {
-    INIT_ERROR_CHECK(maxSecond <= WAIT_MAX_SECOND, maxSecond = WAIT_MAX_SECOND, "WaitForFile max time is 5s");
+    INIT_ERROR_CHECK(maxSecond <= WAIT_MAX_SECOND, maxSecond = WAIT_MAX_SECOND,
+        "WaitForFile max time is %us", WAIT_MAX_SECOND);
     struct stat sourceInfo = {0};
     unsigned int waitTime = 500000;
     /* 500ms interval, check maxSecond*2 times total */
