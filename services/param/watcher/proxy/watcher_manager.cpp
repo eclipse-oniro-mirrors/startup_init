@@ -315,14 +315,13 @@ void WatcherManager::OnStart()
 {
     int level = GetIntParameter(INIT_DEBUG_LEVEL, (int)INIT_ERROR);
     SetInitLogLevel((InitLogLevel)level);
-
+    if (deathRecipient_ == nullptr) {
+        deathRecipient_ = new DeathRecipient(this);
+    }
     WATCHER_LOGI("Watcher manager OnStart");
     bool res = Publish(this);
     if (!res) {
         WATCHER_LOGE("WatcherManager Publish failed");
-    }
-    if (deathRecipient_ == nullptr) {
-        deathRecipient_ = new DeathRecipient(this);
     }
     SystemSetParameter("bootevent.param_watcher.started", "true");
     return;
