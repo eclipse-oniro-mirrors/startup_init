@@ -99,17 +99,18 @@ if (defined(ohos_lite)) {
         "__LITEOS_M__",
       ]
 
-      if (config_ohos_startup_init_lite_no_log) {
-        defines += [ "INIT_NO_LOG" ]
-      }
-
       include_dirs = include_common
       deps = [
-        "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
         "//base/startup/init/services/modules/init_hook:inithook",
         "//base/startup/init/services/modules/udid:libudidcomm",
         "//third_party/bounds_checking_function:libsec_static",
       ]
+      if (config_ohos_startup_init_lite_no_log) {
+        defines += [ "INIT_NO_LOG" ]
+      } else {
+        deps +=
+            [ "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static" ]
+      }
 
       sources = []
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
@@ -132,10 +133,12 @@ if (defined(ohos_lite)) {
 
       if (enable_ohos_startup_init_feature_begetctl_liteos) {
         deps += [
-          "//base/startup/init/services/log:init_log",
           "//base/startup/init/services/param/liteos:param_client_lite",
           "//base/startup/init/services/utils:libinit_utils",
         ]
+        if (!config_ohos_startup_init_lite_no_log) {
+          deps += [ "//base/startup/init/services/log:init_log" ]
+        }
       }
     }
   }

@@ -559,7 +559,6 @@ static void TestBeforeInit(void)
     CloseParamWorkSpace();
     paramSpace = GetParamWorkSpace();
     EXPECT_NE(paramSpace, nullptr);
-    EnableInitLogFromCmdline();
 
     // test read cmdline
     Fstab *stab = LoadRequiredFstab();
