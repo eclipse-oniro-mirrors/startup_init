@@ -73,7 +73,15 @@ if (defined(ohos_lite)) {
   }
 
   ohos_prebuilt_etc("console.cfg") {
-    source = "//base/startup/init/services/etc/console.cfg"
+    image_name = [ "system" ]
+    if (build_variant == "user") {
+      source = "//base/startup/init/services/etc/console.user.cfg"
+      image_name += [ "eng_system" ]
+    } else if (build_variant == "root") {
+      source = "//base/startup/init/services/etc/console.cfg"
+    }
+    install_images = image_name
+    output = "console.cfg"
     relative_install_dir = "init"
     part_name = "init"
     subsystem_name = "startup"
