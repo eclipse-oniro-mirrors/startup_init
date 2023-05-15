@@ -15,7 +15,8 @@
 ohos.servicectrl.           = system:servicectrl:0775
 ohos.servicectrl.reboot.    = system:powerctrl:0775
 ohos.boot.                  = system:bootctrl:0775
-bootevent.                  = root:root:0777
+bootevent.                  = root:root:0775
+bootevent.param_watcher.started                 = paramwatcher:paramwatcher:0775
 startup.service.ctl.        = system:servicectrl:0775:int
 startup.device.             = system:powerctrl:0775
 
@@ -37,12 +38,11 @@ ohos.boot.sn                = root:deviceprivate:0750
 const.product.udid          = root:deviceprivate:0750
 const.product.devUdid       = root:deviceprivate:0750
 
-const.actionable_compatible_property.enabled = root:root:0777
-const.postinstall.fstab.prefix = root:root:0777
-const.secure = root:root:0777
-security.perf_harden  = root:root:0777
-const.allow.mock.location   = root:root:0777
-persist.sys.usb.config  = root:root:0777
+const.actionable_compatible_property.enabled = root:root:0775
+const.postinstall.fstab.prefix = root:root:0775
+const.secure = root:root:0775
+const.allow.mock.location   = root:root:0775
+persist.sys.usb.config  = root:root:0775
 
 #permission for system
 persist.window.boot. = root:system:0775
