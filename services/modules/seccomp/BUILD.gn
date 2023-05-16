@@ -85,6 +85,19 @@ ohos_prebuilt_seccomp("app_filter") {
   install_images = [ "system" ]
 }
 
+ohos_prebuilt_seccomp("updater_filter") {
+  sources = [ "seccomp_policy/updater.seccomp.policy" ]
+
+  filtername = "updater"
+  process_type = "system"
+
+  part_name = INIT_PART
+  subsystem_name = "startup"
+
+  install_enable = true
+  install_images = [ "updater" ]
+}
+
 config("libseccomp_static_config") {
   include_dirs = [
     "..",
@@ -121,6 +134,7 @@ group("seccomp_filter") {
   deps = [
     ":app_filter",
     ":system_filter",
+    ":updater_filter",
   ]
   if (appspawn_featrue) {
     deps += [
