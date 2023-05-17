@@ -933,19 +933,6 @@ static void ProcessConsoleEvent(const WatcherHandle handler, int fd, uint32_t *e
         return;
     }
 
-    // Check if debuggable
-    char value[MAX_BUFFER_LEN] = {0};
-    unsigned int len = MAX_BUFFER_LEN;
-    if (SystemReadParam("const.debuggable", value, &len) != 0) {
-        INIT_LOGE("Failed to read parameter \'const.debuggable\', prevent console service starting");
-        return;
-    }
-
-    int isDebug = StringToInt(value, 0);
-    if (isDebug != 1) {
-        INIT_LOGI("Non-debuggable system, prevent console service starting");
-        return;
-    }
     if (ServiceStart(service) != SERVICE_SUCCESS) {
         INIT_LOGE("Start console service failed");
     }
