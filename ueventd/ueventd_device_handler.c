@@ -37,17 +37,6 @@
 #include <policycoreutils.h>
 #endif
 
-static bool IsBootDeviceLinkDir(const char *linkDir, const char *bootDevice)
-{
-    size_t pathLen = strlen("/dev/block/platform/");
-    INIT_CHECK_RETURN_VALUE(strncmp(linkDir, "/dev/block/platform/", pathLen) == 0, false);
-    const char *vernier = linkDir + pathLen;
-    INIT_CHECK_RETURN_VALUE(strncmp(vernier, bootDevice, strlen(bootDevice)) == 0, false);
-    vernier += strlen(bootDevice);
-    INIT_CHECK_RETURN_VALUE(strncmp(vernier, "/by-name", strlen("/by-name")) == 0, false);
-    return true;
-}
-
 static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
 {
     if (INVALIDSTRING(deviceNode) || symLinks == NULL) {
@@ -67,10 +56,7 @@ static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
             INIT_LOGE("[uevent] Failed to create dir \" %s \", err = %d", linkDir, errno);
             return;
         }
-        if (IsBootDeviceLinkDir(linkDir, bootDevice) && access("/dev/block/by-name", F_OK) != 0) {
-            INIT_CHECK_ONLY_ELOG(symlink(linkDir, "/dev/block/by-name") == 0,
-                "Failed to create by-name symlink, err %d", errno);
-        }
+
         errno = 0;
         int rc = symlink(deviceNode, linkName);
         if (rc != 0) {
@@ -230,32 +216,43 @@ static char *FindPlatformDeviceName(char *path)
     return NULL;
 }
 
-static void BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
+static int BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
     const char *partitionName, const char *deviceName)
 {
-    if (linkNum > BLOCKDEVICE_LINKS - 1) {
-        INIT_LOGW("Too many links, ignore");
-        return;
-    }
-    links[linkNum] = calloc(DEVICE_FILE_SIZE, sizeof(char));
-    if (links[linkNum] == NULL) {
+    int num = linkNum;
+    links[num] = calloc(DEVICE_FILE_SIZE, sizeof(char));
+    if (links[num] == NULL) {
         INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
-        return;
+        return num;
     }
 
     // If a block device without partition name.
     // For now, we will not create symbol link for it.
     if (!INVALIDSTRING(partitionName)) {
-        if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
+        if (snprintf_s(links[num], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
             "/dev/block/platform/%s/by-name/%s", parent, partitionName) == -1) {
             INIT_LOGE("Failed to build link");
         }
+        if (STRINGEQUAL(parent, bootDevice)) {
+            num = linkNum + 1;
+            links[num] = calloc(DEVICE_FILE_SIZE, sizeof(char));
+            if (links[num] == NULL) {
+                INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
+                return linkNum;
+            }
+            if (snprintf_s(links[num], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
+                "/dev/block/by-name/%s", partitionName) == -1) {
+                INIT_LOGE("Failed to build link");
+            }
+        }
     } else if (!INVALIDSTRING(deviceName)) {
-        if (snprintf_s(links[linkNum], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
+        if (snprintf_s(links[num], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
             "/dev/block/platform/%s/%s", parent, deviceName) == -1) {
             INIT_LOGE("Failed to build link");
         }
     }
+
+    return num;
 }
 
 static void FreeSymbolLinks(char **links, int length)
@@ -314,7 +311,9 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
             INIT_LOGV("Find a platform device: %s", parent);
             parent = FindPlatformDeviceName(parent);
             if (parent != NULL) {
-                BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
+                INIT_WARNING_CHECK(linkNum < BLOCKDEVICE_LINKS - 1, links[linkNum] = NULL;
+                    return links, "Too many links, ignore");
+                linkNum = BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
                 linkNum++;
             }
         }

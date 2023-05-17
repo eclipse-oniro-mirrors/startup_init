@@ -22,7 +22,7 @@
 
 #define DEVICE_FILE_SIZE 128U
 #define SYSPATH_SIZE 512U
-#define BLOCKDEVICE_LINKS 3
+#define BLOCKDEVICE_LINKS 4
 
 #define STARTSWITH(str, prefix) (strncmp((str), (prefix), strlen(prefix)) == 0)
 #define STRINGEQUAL(src, tgt) (strcmp((src), (tgt)) == 0)
