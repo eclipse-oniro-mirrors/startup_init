@@ -140,3 +140,4 @@ nwebspawn:x:3081:
 oaid_service:x:6101:
 push:x:6103:
 code_sign:x:3074:
+hdf_ext_devmgr:x:3085:
