@@ -145,6 +145,9 @@ MODULE_CONSTRUCTOR(void)
 
 MODULE_DESTRUCTOR(void)
 {
+    if (getpid() != 1) {
+        return;
+    }
     PLUGIN_LOGI("Selinux adapter plug-in exit now ...");
     SelinuxAdpExit();
 }

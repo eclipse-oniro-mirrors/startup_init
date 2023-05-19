@@ -48,6 +48,7 @@
     CachedParameterGetChanged;
     CachedParameterDestroy;
     DoReboot;
+    DoRebootExt;
     GetControlSocket;
     OH_ListAddTail;
     OH_ListAddWithOrder;

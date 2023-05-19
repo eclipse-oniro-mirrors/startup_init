@@ -29,7 +29,25 @@ extern "C" {
 #define DEVICE_CMD_FREEZE "freeze"
 #define DEVICE_CMD_RESTORE "restore"
 
+/**
+ * @brief reboot system
+ *
+ * @param option format is: mode[:info]
+ *  mode : command sub key, example: updater, shutdown ...
+ *  info : extend info
+ * @return int
+ */
 int DoReboot(const char *cmdContent);
+
+/**
+ * @brief reboot system
+ *
+ * @param mode command sub key, example: updater, shutdown ...
+ * @param option extend info
+ *
+ * @return int
+ */
+int DoRebootExt(const char *mode, const char *option);
 
 #ifdef __cplusplus
 #if __cplusplus
