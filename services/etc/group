@@ -121,6 +121,7 @@ ispserver:x:3821:
 dfs_share:x:3822:
 appspawn:x:6005:
 print:x:3823:
+cups:x:3824:
 security_guard:x:3520:
 tee:x:6668:
 dsserver:x:3068:
