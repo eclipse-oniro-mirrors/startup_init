@@ -27,10 +27,10 @@ namespace OHOS {
     bool FuzzHookMgrAdd(const uint8_t* data, size_t size)
     {
         bool result = false;
-        std::string str(reinterpret_cast<const char*>(data), size);
-        HOOK_MGR *hookMgr = HookMgrCreate(str.c_str());
+        int stage = *data;
+        int prio = *data;
 
-        if (!HookMgrAdd(hookMgr, 0, 0, TestHook)) {
+        if (!HookMgrAdd(NULL, stage, prio, TestHook)) {
             result = true;
         }
         return result;
