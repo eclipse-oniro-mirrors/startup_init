@@ -14,7 +14,7 @@
 import("//build/ohos/sa_profile/sa_profile.gni")
 
 ohos_sa_profile("param_watcher_profile") {
-  sources = [ "3901.xml" ]
+  sources = [ "param_watcher.json" ]
 
   part_name = "init"
 }
