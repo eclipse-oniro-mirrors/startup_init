@@ -1,5 +1,5 @@
 {
-    "name": "@ohos/startup_init",
+    "name": "@ohos/init",
     "description": "ohos init process",
     "homePage": "https://gitee.com/openharmony",
     "version": "3.1",
@@ -20,8 +20,8 @@
         "adapted_system_type": [
             "standard"
         ],
-        "rom": "",
-        "ram": "",
+        "rom": "3.9MB",
+        "ram": "8356KB",
         "hisysevent_config": [
             "//base/startup/init/services/modules/sysevent/init_events.yaml"
         ],
