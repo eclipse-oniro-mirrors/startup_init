@@ -295,8 +295,6 @@ static void GetCallbackWork(napi_env env, StorageAsyncContextPtr asyncContext)
             asyncContext->status = GetParameter(asyncContext->key,
                 (asyncContext->valueLen == 0) ? nullptr : asyncContext->value, value.data(), MAX_VALUE_LENGTH);
             asyncContext->getValue = std::string(value.begin(), value.end());
-            PARAM_JS_LOGV("JSApp get asyncContext status: %d, key: '%s', value: '%s', defValue: '%s'.",
-                asyncContext->status, asyncContext->key, asyncContext->getValue.c_str(), asyncContext->value);
         },
         [](napi_env env, napi_status status, void *data) {
             StorageAsyncContext *asyncContext = reinterpret_cast<StorageAsyncContext *>(data);
@@ -306,15 +304,25 @@ static void GetCallbackWork(napi_env env, StorageAsyncContextPtr asyncContext)
                 napi_create_string_utf8(env,
                     asyncContext->getValue.c_str(), strlen(asyncContext->getValue.c_str()), &result[1]);
             } else {
-                result[0] = BusinessErrorCreate(env, asyncContext->status);
-                napi_get_undefined(env, &result[1]);
+                if (asyncContext->status == SYSPARAM_NOT_FOUND) {
+                    napi_get_undefined(env, &result[0]);
+                    napi_create_string_utf8(env,
+                        asyncContext->getValue.c_str(), strlen(asyncContext->getValue.c_str()), &result[1]);
+                } else {
+                    result[0] = BusinessErrorCreate(env, asyncContext->status);
+                    napi_get_undefined(env, &result[1]);
+                }
             }
 
             if (asyncContext->deferred) {
                 if (asyncContext->status > 0) {
                     napi_resolve_deferred(env, asyncContext->deferred, result[1]);
                 } else {
-                    napi_reject_deferred(env, asyncContext->deferred, result[0]);
+                    if (asyncContext->status == SYSPARAM_NOT_FOUND) {
+                        napi_resolve_deferred(env, asyncContext->deferred, result[1]);
+                    } else {
+                        napi_reject_deferred(env, asyncContext->deferred, result[0]);
+                    }
                 }
             } else {
                 napi_value callback = nullptr;
