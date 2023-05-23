@@ -165,7 +165,7 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
     ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, WORKSPACE_INDEX_BASE, onlyRead, PARAM_WORKSPACE_DEF);
     PARAM_CHECK(ret == 0, return -1, "Failed to add default workspace");
     // add dac workspace
-    ret = AddWorkSpace(WORKSPACE_NAME_DAC, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_SMALL);
+    ret = AddWorkSpace(WORKSPACE_NAME_DAC, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_DAC);
     PARAM_CHECK(ret == 0, return -1, "Failed to add dac workspace");
 #endif
     if (onlyRead == 0) {
@@ -187,9 +187,9 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
     } else {
         ret = OpenWorkSpace(WORKSPACE_INDEX_DAC, onlyRead);
         PARAM_CHECK(ret == 0, return -1, "Failed to open dac workspace");
+#ifdef PARAM_SUPPORT_SELINUX // load security label and create workspace
         ret = OpenWorkSpace(WORKSPACE_INDEX_BASE, onlyRead);
         PARAM_CHECK(ret == 0, return -1, "Failed to open default workspace");
-#ifdef PARAM_SUPPORT_SELINUX // load security label and create workspace
         ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
         if (ops != NULL && ops->securityGetLabel != NULL) {
             ops->securityGetLabel(NULL);
@@ -461,16 +461,9 @@ static int GetParamLabelInfo(const char *name, ParamLabelIndex *labelIndex, Para
     PARAM_CHECK(dacSpace != NULL && dacSpace->area != NULL,
         return DAC_RESULT_FORBIDED, "Invalid workSpace for %s", name);
     *node = BaseFindTrieNode(dacSpace, name, strlen(name), &labelIndex->dacLabelIndex);
-    ParamSecurityNode *securityNode = (ParamSecurityNode *)GetTrieNode(dacSpace, labelIndex->dacLabelIndex);
-    if ((securityNode == NULL) || (securityNode->selinuxIndex == 0) ||
-        (securityNode->selinuxIndex == INVALID_SELINUX_INDEX)) {
-        labelIndex->workspace = GetWorkSpaceByName(name);
-        PARAM_CHECK(labelIndex->workspace != NULL, return DAC_RESULT_FORBIDED, "Invalid workSpace for %s", name);
-    } else if (securityNode->selinuxIndex < g_paramWorkSpace.maxLabelIndex) {
-        labelIndex->workspace = g_paramWorkSpace.workSpace[securityNode->selinuxIndex];
-        PARAM_CHECK(labelIndex->workspace != NULL, return DAC_RESULT_FORBIDED,
-            "Invalid workSpace for %s %d", name, securityNode->selinuxIndex);
-    }
+    labelIndex->workspace = GetWorkSpaceByName(name);
+    PARAM_CHECK(labelIndex->workspace != NULL, return DAC_RESULT_FORBIDED, "Invalid workSpace for %s", name);
+
     labelIndex->selinuxLabelIndex = labelIndex->workspace->spaceIndex;
     return 0;
 }

@@ -91,9 +91,14 @@ extern "C" {
 #define PARAM_WORKSPACE_MAX (80 * 1024)
 #define PARAM_WORKSPACE_SMALL (1024 * 10)
 #define PARAM_WORKSPACE_DEF (1024 * 30)
+#define PARAM_WORKSPACE_DAC (1024 * 20)
 #endif // __LITEOS_A__
 #endif // __LITEOS_M__
 #endif // STARTUP_INIT_TEST
+
+#ifndef PARAM_WORKSPACE_DAC
+#define PARAM_WORKSPACE_DAC PARAM_WORKSPACE_SMALL
+#endif
 
 // support futex
 #ifndef __NR_futex
