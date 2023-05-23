@@ -4,7 +4,7 @@
     "homePage": "https://gitee.com/openharmony",
     "version": "3.1",
     "license": "Apache License 2.0",
-    "repository": "https://gitee.com/openharmony/startup_init_lite",
+    "repository": "https://gitee.com/openharmony/startup_init",
     "publishAs": "code-segment",
     "segment": {
         "destPath": "base/startup/init"
