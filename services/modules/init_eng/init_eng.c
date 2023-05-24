@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "init_eng.h"
+
 #include <dirent.h>
 #include <limits.h>
 #include <sys/mount.h>
@@ -23,19 +25,10 @@
 #include "init_module_engine.h"
 #include "securec.h"
 
-#define MOUNT_CMD_MAX_LEN 128U
-
 #define ENG_SYSTEM_DEVICE_PATH "/dev/block/by-name/eng_system"
 #define ENG_CHIPSET_DEVICE_PATH "/dev/block/by-name/eng_chipset"
 
-typedef enum {
-    TYPE_DIR = 0,
-    TYPE_REG,
-    TYPE_LINK,
-    TYPE_ANY
-} FileType;
-
-static bool IsFileExistWithType(const char *file, FileType type)
+ENG_STATIC bool IsFileExistWithType(const char *file, FileType type)
 {
     bool isExist = false;
     struct stat st = {};
@@ -75,7 +68,7 @@ static bool IsExistFile(const char *file)
     return file == NULL ? false : IsFileExistWithType(file, TYPE_ANY);
 }
 
-static void BuildMountCmd(char *buffer, size_t len, const char *mp, const char *dev, const char *fstype)
+ENG_STATIC void BuildMountCmd(char *buffer, size_t len, const char *mp, const char *dev, const char *fstype)
 {
     int ret = snprintf_s(buffer, len, len - 1, "%s %s %s ro barrier=1",
         fstype, dev, mp);
@@ -85,7 +78,7 @@ static void BuildMountCmd(char *buffer, size_t len, const char *mp, const char *
     }
 }
 
-static void MountEngPartitions(void)
+ENG_STATIC void MountEngPartitions(void)
 {
     char mountCmd[MOUNT_CMD_MAX_LEN] = {};
 
@@ -102,7 +95,7 @@ static void MountEngPartitions(void)
     DoCmdByName("mount ", mountCmd);
 }
 
-static void BindMountFile(const char *source, const char *target)
+ENG_STATIC void BindMountFile(const char *source, const char *target)
 {
     char targetFullPath[PATH_MAX] = {};
     const char *p = source;
@@ -148,7 +141,7 @@ static void BindMountFile(const char *source, const char *target)
     }
 }
 
-static void DebugFilesOverlay(const char *source, const char *target)
+ENG_STATIC void DebugFilesOverlay(const char *source, const char *target)
 {
     DIR *dir = NULL;
     struct dirent *de = NULL;
@@ -185,7 +178,7 @@ static void DebugFilesOverlay(const char *source, const char *target)
     dir = NULL;
 }
 
-static void EngineerOverlay(void)
+ENG_STATIC void EngineerOverlay(void)
 {
     PLUGIN_LOGI("system overlay...");
     DebugFilesOverlay("/eng_system", "/");
