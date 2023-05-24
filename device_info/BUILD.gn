@@ -16,7 +16,7 @@ if (!defined(ohos_lite)) {
   import("//build/ohos/sa_profile/sa_profile.gni")
 
   ohos_sa_profile("device_info_profile") {
-    sources = [ "etc/3902.xml" ]
+    sources = [ "etc/3902.json" ]
     part_name = "init"
   }
 
