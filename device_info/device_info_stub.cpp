@@ -49,12 +49,14 @@ static const int DEVICE_INFO_EXIT_TIMEOUT_MS = 3;
 
 static void UnloadDeviceInfoSa(int signo)
 {
-    std::unique_lock<std::mutex> lock(g_lock);
-    time_t currTime;
-    (void)time(&currTime);
-    if (difftime(currTime, g_lastTime) < DEVICE_INFO_EXIT_TIMEOUT_MS) {
-        alarm(DEVICE_INFO_EXIT_TIMEOUT_MS / 3); // 3 half
-        return;
+    {
+        std::unique_lock<std::mutex> lock(g_lock);
+        time_t currTime;
+        (void)time(&currTime);
+        if (difftime(currTime, g_lastTime) < DEVICE_INFO_EXIT_TIMEOUT_MS) {
+            alarm(DEVICE_INFO_EXIT_TIMEOUT_MS / 3); // 3 half
+            return;
+        }
     }
     DINFO_LOGI("DeviceInfoService::UnloadDeviceInfoSa");
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
