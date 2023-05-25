@@ -173,6 +173,7 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
     napi_valuetype valuetype0 = napi_null;
     NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
     NAPI_ASSERT(env, valuetype0 == napi_string, "Wrong argument type. Numbers expected.");
+
     napi_valuetype valuetype1 = napi_null;
     if (argc == ARGC_NUMBER) {
         NAPI_CALL(env, napi_typeof(env, args[1], &valuetype1));

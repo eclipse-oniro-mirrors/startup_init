@@ -270,16 +270,13 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
     PARAM_JS_LOGV("JSApp get status: %d, key: '%s', value: '%s', defValue: '%s'.",
         ret, keyBuf.data(), value.data(), defValue.data());
 
-    napi_value napiValue = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, value.data(), strlen(value.data()), &napiValue));
     if (ret < 0) {
-        if (ret == SYSPARAM_NOT_FOUND) {
-            return napiValue;
-        }
         napi_throw(env, BusinessErrorCreate(env, ret));
         return nullptr;
     }
 
+    napi_value napiValue = nullptr;
+    NAPI_CALL(env, napi_create_string_utf8(env, value.data(), strlen(value.data()), &napiValue));
     return napiValue;
 }
 
@@ -294,35 +291,29 @@ static void GetCallbackWork(napi_env env, StorageAsyncContextPtr asyncContext)
             std::vector<char> value(MAX_VALUE_LENGTH, 0);
             asyncContext->status = GetParameter(asyncContext->key,
                 (asyncContext->valueLen == 0) ? nullptr : asyncContext->value, value.data(), MAX_VALUE_LENGTH);
-            asyncContext->getValue = std::string(value.begin(), value.end());
+            if (asyncContext->status == 0) {
+                asyncContext->getValue = "";
+            } else if (asyncContext->status > 0) {
+                asyncContext->getValue = std::string(value.begin(), value.end());
+            }
         },
         [](napi_env env, napi_status status, void *data) {
             StorageAsyncContext *asyncContext = reinterpret_cast<StorageAsyncContext *>(data);
             napi_value result[ARGC_NUMBER] = { 0 };
-            if (asyncContext->status > 0) {
+            if (asyncContext->status >= 0) {
                 napi_get_undefined(env, &result[0]);
                 napi_create_string_utf8(env,
                     asyncContext->getValue.c_str(), strlen(asyncContext->getValue.c_str()), &result[1]);
             } else {
-                if (asyncContext->status == SYSPARAM_NOT_FOUND) {
-                    napi_get_undefined(env, &result[0]);
-                    napi_create_string_utf8(env,
-                        asyncContext->getValue.c_str(), strlen(asyncContext->getValue.c_str()), &result[1]);
-                } else {
-                    result[0] = BusinessErrorCreate(env, asyncContext->status);
-                    napi_get_undefined(env, &result[1]);
-                }
+                result[0] = BusinessErrorCreate(env, asyncContext->status);
+                napi_get_undefined(env, &result[1]);
             }
 
             if (asyncContext->deferred) {
                 if (asyncContext->status > 0) {
                     napi_resolve_deferred(env, asyncContext->deferred, result[1]);
                 } else {
-                    if (asyncContext->status == SYSPARAM_NOT_FOUND) {
-                        napi_resolve_deferred(env, asyncContext->deferred, result[1]);
-                    } else {
-                        napi_reject_deferred(env, asyncContext->deferred, result[0]);
-                    }
+                    napi_reject_deferred(env, asyncContext->deferred, result[0]);
                 }
             } else {
                 napi_value callback = nullptr;
