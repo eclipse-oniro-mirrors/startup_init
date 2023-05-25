@@ -67,7 +67,7 @@ def get_lib_path(elf_path, elf_name, cmd_extra):
     grep_unstrip = ' | grep unstripped | grep -v _x64 {}'.format(cmd_extra)
 
     if elf_name == 'libc++.so':
-        grep_unstrip = ''
+        grep_unstrip = '| grep aarch64-linux'
     cmd = 'find {} -name {}{}'.format(elf_path, elf_name, grep_unstrip) 
     result_list = os.popen(cmd).read().split('\n')
     result = result_list[0].strip()
@@ -281,9 +281,9 @@ def get_function_name_nr_table(src_syscall_path):
 
 def collect_concrete_syscall(args):
     if args.target_cpu == 'arm64':
-        arch_str = 'aarch64'
+        arch_str = 'aarch64-linux'
     elif args.target_cpu == 'arm':
-        arch_str = 'arm'
+        arch_str = 'arm-linux'
     libc_path = get_lib_path(args.src_elf_path, 'libc.so', ' | grep ' + arch_str)
     libc_asm_path = generate_libc_asm(args.target_cpu, libc_path, '.')
 

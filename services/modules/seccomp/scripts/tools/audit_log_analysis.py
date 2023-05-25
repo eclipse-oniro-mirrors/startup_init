@@ -59,7 +59,7 @@ def get_item_content(name_nr_table, arch_nr_table):
             syscall_name_dict.get('arm').remove(func_name)
         else:
             content = '{}{};arm64\n'.format(content, func_name)
-    if not syscall_name_dict.get('arm'):
+    if syscall_name_dict.get('arm'):
         content = '{}{};arm\n'.format(content, ';arm\n'.join(
                   [func_name for func_name in syscall_name_dict.get('arm')]))
 
