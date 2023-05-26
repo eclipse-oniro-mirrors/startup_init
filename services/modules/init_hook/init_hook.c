@@ -143,7 +143,7 @@ static int CmdClear(int id, const char *name, int argc, const char **argv)
     return 0;
 }
 
-static void SetLogLevel_(const char *value)
+static void SetLogLevelFunc(const char *value)
 {
     unsigned int level;
     int ret = StringToUint(value, &level);
@@ -159,20 +159,20 @@ static int CmdSetLogLevel(int id, const char *name, int argc, const char **argv)
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid input args");
     const char *value = strrchr(argv[0], '.');
     PLUGIN_CHECK(value != NULL, return -1, "Failed get \'.\' from string %s", argv[0]);
-    SetLogLevel_(value + 1);
+    SetLogLevelFunc(value + 1);
     return 0;
 }
 
-static int initCmd(int id, const char *name, int argc, const char **argv)
+static int InitCmd(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
     // process cmd by name
-    PLUGIN_LOGI("initCmd %s argc %d", name, argc);
+    PLUGIN_LOGI("InitCmd %s argc %d", name, argc);
     for (int i = 0; i < argc; i++) {
-        PLUGIN_LOGI("initCmd %s", argv[i]);
+        PLUGIN_LOGI("InitCmd %s", argv[i]);
     }
     if (argc > 1 && strcmp(argv[0], "setloglevel") == 0) {
-        SetLogLevel_(argv[1]);
+        SetLogLevelFunc(argv[1]);
     }
     return 0;
 }
@@ -181,7 +181,7 @@ static int ParamSetInitCmdHook(const HOOK_INFO *hookInfo, void *cookie)
 {
     AddCmdExecutor("clear", CmdClear);
     AddCmdExecutor("setloglevel", CmdSetLogLevel);
-    AddCmdExecutor("initcmd", initCmd);
+    AddCmdExecutor("initcmd", InitCmd);
     return 0;
 }
 
@@ -213,7 +213,7 @@ static void InitLogLevelFromPersist(void)
     uint32_t len = sizeof(logLevel);
     int ret = SystemReadParam(INIT_DEBUG_LEVEL, logLevel, &len);
     INIT_INFO_CHECK(ret == 0, return, "Can not get log level from param, keep the original loglevel.");
-    SetLogLevel_(logLevel);
+    SetLogLevelFunc(logLevel);
     return;
 }
 

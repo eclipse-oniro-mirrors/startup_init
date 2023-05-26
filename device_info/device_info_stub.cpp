@@ -16,7 +16,7 @@
 #include "device_info_stub.h"
 
 #include <chrono>
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
 
 #include "beget_ext.h"

@@ -28,7 +28,7 @@ extern "C" {
 
 #define INVALID_PID 0
 
-typedef struct serviceInfo {
+typedef struct serviceInfo_ {
     ServiceStatus status;
     pid_t pid;
 } ServiceInfo;
