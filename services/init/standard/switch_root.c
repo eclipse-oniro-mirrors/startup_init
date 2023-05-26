@@ -154,6 +154,7 @@ int SwitchRoot(const char *newRoot)
     struct stat newRootStat = {};
     if (stat(newRoot, &newRootStat) != 0) {
         INIT_LOGE("Failed to get new root \" %s \" stat", newRoot);
+        FreeRootDir(oldRoot, oldRootStat.st_dev);
         return -1;
     }
 

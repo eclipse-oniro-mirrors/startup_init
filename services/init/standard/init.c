@@ -118,7 +118,6 @@ static void EnableDevKmsg(void)
     char *kmsgStatus = "on";
     write(fd, kmsgStatus, strlen(kmsgStatus) + 1);
     close(fd);
-    fd = -1;
     return;
 }
 
@@ -140,6 +139,9 @@ static char **GetRequiredDevices(Fstab fstab, int *requiredNum)
             num++;
         }
         item = item->next;
+    }
+    if (num == 0) {
+        return NULL;
     }
     char **devices = (char **)calloc(num, sizeof(char *));
     INIT_ERROR_CHECK(devices != NULL, return NULL, "Failed calloc err=%d", errno);

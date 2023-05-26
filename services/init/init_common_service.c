@@ -425,7 +425,7 @@ static int32_t CheckTraceStatus(void)
         return (-errno);
     }
 
-    char data[1024];
+    char data[1024] = { 0 };
     ssize_t dataNum = read(fd, data, sizeof(data));
     if (close(fd) < 0) {
         INIT_LOGE("lldb: close fd error: %{public}d", errno);

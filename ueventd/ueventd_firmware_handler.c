@@ -42,5 +42,4 @@ void HandleFimwareDeviceEvent(const struct Uevent *uevent)
     char *endCode = "-1";
     (void)write(fd, "-1", strlen(endCode));
     close(fd);
-    fd = -1;
 }

@@ -130,7 +130,6 @@ static void DoIfup(const struct CmdArgs *ctx)
             "DoIfup failed to do ioctl with command \"SIOCSIFFLAGS\", err = %d", errno);
     }
     close(fd);
-    fd = -1;
 }
 
 // format insmod <ko name> [-f] [options]
