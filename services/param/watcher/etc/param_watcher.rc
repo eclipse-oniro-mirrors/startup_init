@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-service param_watcher /system/bin/sa_main /system/profile/param_watcher.xml
+service param_watcher /system/bin/sa_main /system/profile/param_watcher.json
 class z_core
 user system
 group system shell
