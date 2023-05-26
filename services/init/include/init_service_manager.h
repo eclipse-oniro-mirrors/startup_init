@@ -17,6 +17,7 @@
 
 #include "init_service.h"
 #include "cJSON.h"
+#include "init_cmds.h"
 #include "list.h"
 
 #ifdef __cplusplus
@@ -57,7 +58,7 @@ void StartServiceByName(const char *serviceName);
 void StopServiceByName(const char *serviceName);
 void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size));
-void ParseAllServices(const cJSON *fileRoot);
+void ParseAllServices(const cJSON *fileRoot, const ConfigContext *context);
 void ReleaseService(Service *service);
 void LoadAccessTokenId(void);
 Service *AddService(const char *name);

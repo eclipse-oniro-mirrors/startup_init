@@ -108,8 +108,8 @@ static void DoLoadCfg(const struct CmdArgs *ctx)
 }
 
 static const struct CmdTable g_cmdTable[] = {
-    { "exec ", 1, 10, DoExec },
-    { "loadcfg ", 1, 1, DoLoadCfg },
+    { "exec ", 1, 10, 0, DoExec },
+    { "loadcfg ", 1, 1, 0, DoLoadCfg },
 };
 
 const struct CmdTable *GetCmdTable(int *number)
@@ -122,7 +122,7 @@ void PluginExecCmdByName(const char *name, const char *cmdContent)
 {
 }
 
-void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
+void PluginExecCmdByCmdIndex(int index, const char *cmdContent, const ConfigContext *context)
 {
 }
 
@@ -137,6 +137,11 @@ const char *GetPluginCmdNameByIndex(int index)
 }
 
 int SetFileCryptPolicy(const char *dir)
+{
+    return 0;
+}
+
+int SetSubInitContext(const ConfigContext *context, const char *service)
 {
     return 0;
 }

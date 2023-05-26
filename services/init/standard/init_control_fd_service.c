@@ -92,6 +92,7 @@ static void DumpOneService(const Service *service)
 
     printf("\tservice name: [%s] \n", service->name);
     printf("\tservice pid: [%d] \n", service->pid);
+    printf("\tservice context : [%s] \n", (service->context.type == INIT_CONTEXT_CHIPSET) ? "vendor" : "system");
     printf("\tservice crashCnt: [%d] \n", service->crashCnt);
     printf("\tservice attribute: [%u] \n", service->attribute);
     printf("\tservice importance: [%d] \n", service->importance);

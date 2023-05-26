@@ -100,6 +100,8 @@ Service *AddService(const char *name)
     service->name = node->name;
     service->status = SERVICE_IDLE;
     service->cpuSet = NULL;
+    service->pid = -1;
+    service->context.type = INIT_CONTEXT_MAIN;
     OH_ListInit(&service->extDataNode);
     g_serviceSpace.serviceCount++;
     INIT_LOGV("AddService %s", node->name);
@@ -988,15 +990,11 @@ int WatchConsoleDevice(Service *service)
     return 0;
 }
 
-void ParseAllServices(const cJSON *fileRoot)
+void ParseAllServices(const cJSON *fileRoot, const ConfigContext *context)
 {
     int servArrSize = 0;
     cJSON *serviceArr = GetArrayItem(fileRoot, &servArrSize, SERVICES_ARR_NAME_IN_JSON);
     INIT_CHECK(serviceArr != NULL, return);
-
-    INIT_ERROR_CHECK(servArrSize <= MAX_SERVICES_CNT_IN_FILE, return,
-        "Too many services[cnt %d] detected, should not exceed %d.",
-        servArrSize, MAX_SERVICES_CNT_IN_FILE);
 
     size_t strLen = 0;
     for (int i = 0; i < servArrSize; ++i) {
@@ -1020,11 +1018,12 @@ void ParseAllServices(const cJSON *fileRoot)
 #endif
         }
 
-        service->pid = -1;
+        if (context != NULL) {
+            service->context.type = context->type;
+        }
         int ret = ParseOneService(curItem, service);
         if (ret != SERVICE_SUCCESS) {
             ReleaseService(service);
-            service = NULL;
             continue;
         }
         ret = ParseServiceSocket(curItem, service);

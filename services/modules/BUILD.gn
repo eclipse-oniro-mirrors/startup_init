@@ -17,6 +17,7 @@ group("static_modules") {
     deps = [
       "bootchart:libbootchart_static",
       "bootevent:libbootevent_static",
+      "init_context:initcontext_static",
       "init_eng:libiniteng_static",
       "init_hook:inithook",
       "reboot:libreboot_static",
@@ -39,6 +40,7 @@ group("modulesgroup") {
   if (!defined(ohos_lite)) {
     deps = [
       "bootchart:bootchart",
+      "init_context:init_context",
       "init_eng:init_eng",
       "reboot:rebootmodule",
       "sysevent:eventmodule",

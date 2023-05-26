@@ -187,7 +187,7 @@ char *ReadFileData(const char *fileName)
     char *buffer = NULL;
     int fd = -1;
     fd = open(fileName, O_RDONLY);
-    INIT_ERROR_CHECK(fd >= 0, return NULL, "Failed to read file %s", fileName);
+    INIT_ERROR_CHECK(fd >= 0, return NULL, "Failed to read file %s errno:%d", fileName, errno);
     buffer = (char *)calloc(1, MAX_SMALL_BUFFER); // fsmanager not create, can not get fileStat st_size
     INIT_ERROR_CHECK(buffer != NULL, close(fd);
         return NULL, "Failed to allocate memory for %s", fileName);

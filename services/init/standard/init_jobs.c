@@ -23,9 +23,9 @@ static int CheckJobValid(const char *jobName)
     return CheckNodeValid(NODE_TYPE_JOBS, jobName);
 }
 
-void ParseAllJobs(const cJSON *fileRoot)
+void ParseAllJobs(const cJSON *fileRoot, const ConfigContext *context)
 {
-    ParseTriggerConfig(fileRoot, CheckJobValid);
+    ParseTriggerConfig(fileRoot, CheckJobValid, (void *)context);
 }
 
 int DoJobNow(const char *jobName)

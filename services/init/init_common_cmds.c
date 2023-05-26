@@ -310,9 +310,9 @@ static int SetOwner(const char *file, const char *ownerStr, const char *groupStr
     INIT_ERROR_CHECK(groupStr != NULL, return -1, "SetOwner invalid file.");
 
     uid_t owner = DecodeUid(ownerStr);
-    INIT_ERROR_CHECK(owner != (uid_t)-1, return -1, "SetOwner invalid uid :%s.", ownerStr);
+    INIT_ERROR_CHECK(owner != (uid_t)-1, return -1, "SetOwner invalid uid : %s.", ownerStr);
     gid_t group = DecodeGid(groupStr);
-    INIT_ERROR_CHECK(group != (gid_t)-1, return -1, "SetOwner invalid gid :%s.", groupStr);
+    INIT_ERROR_CHECK(group != (gid_t)-1, return -1, "SetOwner invalid gid : %s.", groupStr);
     return (chown(file, owner, group) != 0) ? -1 : 0;
 }
 
@@ -567,24 +567,24 @@ static void DoExport(const struct CmdArgs *ctx)
 }
 
 static const struct CmdTable g_cmdTable[] = {
-    { "start ", 0, 1, DoStart },
-    { "mkdir ", 1, 4, DoMkDir },
-    { "chmod ", 2, 2, DoChmod },
-    { "chown ", 3, 3, DoChown },
-    { "mount ", 1, 10, DoMount },
-    { "export ", 2, 2, DoExport },
-    { "rm ", 1, 1, DoRm },
-    { "rmdir ", 1, 1, DoRmdir },
-    { "write ", 2, 10, DoWrite },
-    { "stop ", 1, 1, DoStop },
-    { "reset ", 1, 1, DoReset },
-    { "copy ", 2, 2, DoCopy },
-    { "reboot ", 0, 1, DoRebootCmd },
-    { "setrlimit ", 3, 3, DoSetrlimit },
-    { "sleep ", 1, 1, DoSleep },
-    { "wait ", 1, 2, DoWait },
-    { "hostname ", 1, 1, DoSetHostname },
-    { "domainname ", 1, 1, DoSetDomainname }
+    { "start ", 0, 1, 0, DoStart },
+    { "mkdir ", 1, 4, 1, DoMkDir },
+    { "chmod ", 2, 2, 1, DoChmod },
+    { "chown ", 3, 3, 1, DoChown },
+    { "mount ", 1, 10, 0, DoMount },
+    { "export ", 2, 2, 0, DoExport },
+    { "rm ", 1, 1, 1, DoRm },
+    { "rmdir ", 1, 1, 1, DoRmdir },
+    { "write ", 2, 10, 1, DoWrite },
+    { "stop ", 1, 1, 0, DoStop },
+    { "reset ", 1, 1, 0, DoReset },
+    { "copy ", 2, 2, 1, DoCopy },
+    { "reboot ", 0, 1, 0, DoRebootCmd },
+    { "setrlimit ", 3, 3, 0, DoSetrlimit },
+    { "sleep ", 1, 1, 0, DoSleep },
+    { "wait ", 1, 2, 1, DoWait },
+    { "hostname ", 1, 1, 1, DoSetHostname },
+    { "domainname ", 1, 1, 1, DoSetDomainname }
 };
 
 static const struct CmdTable *GetCommCmdTable(int *number)
@@ -656,19 +656,30 @@ const char *GetMatchCmd(const char *cmdStr, int *index)
     return PluginGetCmdIndex(startCmd, index);
 }
 
-const char *GetCmdKey(int index)
+static const struct CmdTable *GetCmdTableByIndex(int index)
 {
     int cmdCnt = 0;
     const struct CmdTable *commCmds = GetCommCmdTable(&cmdCnt);
+    const struct CmdTable *cmdTable = NULL;
     if (index < cmdCnt) {
-        return commCmds[index].name;
+        cmdTable = &commCmds[index];
+    } else {
+        int number = 0;
+        const struct CmdTable *cmds = GetCmdTable(&number);
+        if (index < (cmdCnt + number)) {
+            cmdTable = &cmds[index - cmdCnt];
+        }
     }
-    int number = 0;
-    const struct CmdTable *cmds = GetCmdTable(&number);
-    if (index < (cmdCnt + number)) {
-        return cmds[index - cmdCnt].name;
+    return cmdTable;
+}
+
+const char *GetCmdKey(int index)
+{
+    const struct CmdTable *cmdTable = GetCmdTableByIndex(index);
+    if (cmdTable != NULL) {
+        return cmdTable->name;
     }
-    return NULL;
+    return GetPluginCmdNameByIndex(index);
 }
 
 int GetCmdLinesFromJson(const cJSON *root, CmdLines **cmdLines)
@@ -726,58 +737,31 @@ long long InitDiffTime(INIT_TIMING_STAT *stat)
     return diff;
 }
 
-void DoCmdByName(const char *name, const char *cmdContent)
-{
-    if (name == NULL || cmdContent == NULL) {
-        return;
-    }
-    INIT_TIMING_STAT cmdTimer;
-    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
-    const struct CmdTable *cmd = GetCmdByName(name);
-    if (cmd != NULL) {
-        ExecCmd(cmd, cmdContent);
-    } else {
-        PluginExecCmdByName(name, cmdContent);
-    }
-    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
-    long long diff = InitDiffTime(&cmdTimer);
-#ifndef OHOS_LITE
-    InitCmdHookExecute(name, cmdContent, &cmdTimer);
-#endif
-    if (diff > 200000) { // 200000 > 200ms
-        INIT_LOGI("Execute command \"%s %s\" took %lld ms", name, cmdContent, diff / BASE_MS_UNIT);
-    } else {
-        INIT_LOGV("Execute command \"%s %s\" took %lld ms", name, cmdContent, diff / BASE_MS_UNIT);
-    }
-}
-
-void DoCmdByIndex(int index, const char *cmdContent)
+void DoCmdByIndex(int index, const char *cmdContent, const ConfigContext *context)
 {
     if (cmdContent == NULL) {
         return;
     }
-    int cmdCnt = 0;
     INIT_TIMING_STAT cmdTimer;
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
-    const struct CmdTable *commCmds = GetCommCmdTable(&cmdCnt);
+
     const char *cmdName = NULL;
-    if (index < cmdCnt) {
-        cmdName = commCmds[index].name;
-        ExecCmd(&commCmds[index], cmdContent);
-    } else {
-        int number = 0;
-        const struct CmdTable *cmds = GetCmdTable(&number);
-        if (index < (cmdCnt + number)) {
-            cmdName = cmds[index - cmdCnt].name;
-            ExecCmd(&cmds[index - cmdCnt], cmdContent);
+    const struct CmdTable *cmdTable = GetCmdTableByIndex(index);
+    if (cmdTable != NULL) {
+        cmdName = cmdTable->name;
+        if (context == NULL || !cmdTable->careContext || context->type == INIT_CONTEXT_MAIN || getpid() != 1) {
+            ExecCmd(cmdTable, cmdContent);
         } else {
-            PluginExecCmdByCmdIndex(index, cmdContent);
-            cmdName = GetPluginCmdNameByIndex(index);
-            if (cmdName == NULL) {
-                cmdName = "Unknown";
-            }
+            ExecuteCmdInSubInit(context, cmdTable->name, cmdContent);
+        }
+    } else {
+        PluginExecCmdByCmdIndex(index, cmdContent, context);
+        cmdName = GetPluginCmdNameByIndex(index);
+        if (cmdName == NULL) {
+            cmdName = "Unknown";
         }
     }
+
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
     long long diff = InitDiffTime(&cmdTimer);
 #ifndef OHOS_LITE

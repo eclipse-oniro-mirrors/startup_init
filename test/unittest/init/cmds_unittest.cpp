@@ -24,6 +24,13 @@
 using namespace testing::ext;
 using namespace std;
 
+static void DoCmdByName(const char *name, const char *cmdContent)
+{
+    int cmdIndex = 0;
+    (void)GetMatchCmd(name, &cmdIndex);
+    DoCmdByIndex(cmdIndex, cmdContent, NULL);
+}
+
 namespace init_ut {
 class CmdsUnitTest : public testing::Test {
 public:
@@ -203,13 +210,13 @@ HWTEST_F(CmdsUnitTest, TestGetCmdKey, TestSize.Level1)
 
 HWTEST_F(CmdsUnitTest, TestDoCmdByIndex, TestSize.Level1)
 {
-    DoCmdByIndex(1, "/data/init_ut/test_cmd_dir0");
+    DoCmdByIndex(1, "/data/init_ut/test_cmd_dir0", nullptr);
     int ret = access("/data/init_ut/test_cmd_dir0", F_OK);
     EXPECT_EQ(ret, 0);
 
     const int execPos = 17;
-    DoCmdByIndex(execPos, "sleep 1");
-    DoCmdByIndex(23, "test"); // 23 is cmd index
+    DoCmdByIndex(execPos, "sleep 1", nullptr);
+    DoCmdByIndex(23, "test", nullptr); // 23 is cmd index
 }
 
 HWTEST_F(CmdsUnitTest, TestGetCmdLinesFromJson, TestSize.Level1)

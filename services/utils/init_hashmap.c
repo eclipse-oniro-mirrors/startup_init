@@ -163,8 +163,8 @@ HashNode *OH_HashMapFind(HashMapHandle handle,
     INIT_ERROR_CHECK(handle != NULL, return NULL, "Invalid hash handle");
     INIT_ERROR_CHECK(key != NULL && keyCompare != NULL, return NULL, "Invalid hash key");
     HashTab *tab = (HashTab *)handle;
-    INIT_ERROR_CHECK(hashCode < tab->maxBucket, return NULL,
-        "Invalid hashcode %d %d", tab->maxBucket, hashCode);
+    INIT_ERROR_CHECK((hashCode < tab->maxBucket) && (hashCode >= 0), return NULL,
+        "Invalid hash code %d %d", tab->maxBucket, hashCode);
     return GetHashNodeByKey(tab, tab->buckets[hashCode], key, keyCompare);
 }
 
