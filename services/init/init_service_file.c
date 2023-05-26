@@ -47,7 +47,6 @@ static int CreateFile(ServiceFile *file)
     int fd = open(path, file->flags | O_CREAT, file->perm);
     INIT_ERROR_CHECK(fd >= 0, return -1, "Failed open %s, err=%d ", path, errno);
     close(fd);
-    fd = -1;
     INIT_CHECK_ONLY_ELOG(chmod(path, file->perm) >= 0, "Failed chmod err=%d", errno);
     INIT_CHECK_ONLY_ELOG(chown(path, file->uid, file->gid) >= 0, "Failed chown err=%d", errno);
     file->fd = open(path, file->flags);

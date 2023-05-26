@@ -59,10 +59,10 @@ static int InitParamSecurity(ParamWorkSpace *workSpace,
     RegisterSecurityOpsPtr registerOps, ParamSecurityType type, int isInit, int op)
 {
     PARAM_CHECK(workSpace != NULL && type < PARAM_SECURITY_MAX, return -1, "Invalid param");
-    int ret = registerOps(&workSpace->paramSecurityOps[type], isInit);
+    registerOps(&workSpace->paramSecurityOps[type], isInit);
     PARAM_CHECK(workSpace->paramSecurityOps[type].securityInitLabel != NULL,
         return -1, "Invalid securityInitLabel");
-    ret = workSpace->paramSecurityOps[type].securityInitLabel(&workSpace->securityLabel, isInit);
+    int ret = workSpace->paramSecurityOps[type].securityInitLabel(&workSpace->securityLabel, isInit);
     PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Failed to init security");
 
     ParamSecurityOps *paramSecurityOps = GetParamSecurityOps(type);
@@ -514,7 +514,7 @@ STATIC_INLINE int DacCheckGroupPermission(const ParamSecurityLabel *srcLabel, ui
         return DAC_RESULT_FORBIDED;
     }
     gid_t gids[64] = { 0 }; // max gid number
-    const uint32_t gidNumber = g_paramWorkSpace.ops.getServiceGroupIdByPid(
+    const uint32_t gidNumber = (uint32_t)g_paramWorkSpace.ops.getServiceGroupIdByPid(
         srcLabel->cred.pid, gids, sizeof(gids) / sizeof(gids[0]));
     for (uint32_t index = 0; index < gidNumber; index++) {
         PARAM_LOGV("DacCheckGroupPermission gid %u", gids[index]);

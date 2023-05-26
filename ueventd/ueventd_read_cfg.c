@@ -242,7 +242,6 @@ void ParseUeventdConfigFile(const char *file)
     if (fstat(fd, &st) < 0) {
         INIT_LOGE("Failed to get file stat. err = %d", errno);
         close(fd);
-        fd = -1;
         return;
     }
 
@@ -252,7 +251,6 @@ void ParseUeventdConfigFile(const char *file)
     if (buffer == NULL) {
         INIT_LOGE("Failed to malloc memory. err = %d", errno);
         close(fd);
-        fd = -1;
         return;
     }
 
@@ -261,7 +259,6 @@ void ParseUeventdConfigFile(const char *file)
         free(buffer);
         buffer = NULL;
         close(fd);
-        fd = -1;
         return;
     }
 
@@ -270,7 +267,6 @@ void ParseUeventdConfigFile(const char *file)
     free(buffer);
     buffer = NULL;
     close(fd);
-    fd = -1;
 }
 
 // support '*' to match all characters

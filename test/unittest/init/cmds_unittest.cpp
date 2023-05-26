@@ -113,7 +113,6 @@ HWTEST_F(CmdsUnitTest, TestCommonChmod, TestSize.Level1)
     DoCmdByName("chmod ", "777 /data/init_ut/test_dir0/test_file001");
 
     close(fd);
-    fd = -1;
 }
 
 HWTEST_F(CmdsUnitTest, TestCommonCopy, TestSize.Level1)
@@ -129,7 +128,6 @@ HWTEST_F(CmdsUnitTest, TestCommonCopy, TestSize.Level1)
     int ret = access(testFile2, F_OK);
     EXPECT_EQ(ret, 0);
     close(fd);
-    fd = -1;
     // abnormal
     DoCmdByName("copy ", "/data/init_ut/test_dir0/test_file_copy1 /data/init_ut/test_dir0/test_file_copy1");
     DoCmdByName("copy ", "/data/init_ut/test_dir0/test_file_copy11 /data/init_ut/test_dir0/test_file_copy1");
@@ -156,7 +154,6 @@ HWTEST_F(CmdsUnitTest, TestCommonWrite, TestSize.Level1)
     int length = read(fd, buffer, bufLen - 1);
     EXPECT_EQ(length, strlen("aaa"));
     close(fd);
-    fd = -1;
     // abnormal
     DoCmdByName("write ", "/data/init_ut/test_dir0/test_file_write2 aaa 2");
 }

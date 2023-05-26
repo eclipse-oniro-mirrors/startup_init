@@ -57,7 +57,7 @@ void NotifyServiceChange(Service *service, int status)
         "%s.%s.pid", STARTUP_SERVICE_CTL, service->name);
     INIT_ERROR_CHECK(ret > 0, return, "Failed to format service pid name %s.", service->name);
     ret = snprintf_s(statusStr, sizeof(statusStr), sizeof(statusStr) - 1,
-        "%u", (service->pid == -1) ? 0 : service->pid);
+        "%d", (service->pid == -1) ? 0 : service->pid);
     INIT_ERROR_CHECK(ret > 0, return, "Failed to format service pid %s.", service->name);
     SystemWriteParam(paramName, statusStr);
 }
