@@ -81,13 +81,11 @@ ENG_STATIC void BuildMountCmd(char *buffer, size_t len, const char *mp, const ch
 ENG_STATIC void MountEngPartitions(void)
 {
     char mountCmd[MOUNT_CMD_MAX_LEN] = {};
-
    // Mount eng_system
     BuildMountCmd(mountCmd, MOUNT_CMD_MAX_LEN, "/eng_system",
         "/dev/block/by-name/eng_system", "ext4");
     WaitForFile(ENG_SYSTEM_DEVICE_PATH, WAIT_MAX_SECOND);
     DoCmdByName("mount ", mountCmd);
-
    // Mount eng_chipset
     BuildMountCmd(mountCmd, MOUNT_CMD_MAX_LEN, "/eng_chipset",
         "/dev/block/by-name/eng_chipset", "ext4");
@@ -156,7 +154,7 @@ ENG_STATIC void DebugFilesOverlay(const char *source, const char *target)
         if (de->d_name[0] == '.') {
             continue;
         }
-        if (snprintf_s(srcPath, PATH_MAX, PATH_MAX - 1, "%s/%s",source, de->d_name) == -1) {
+        if (snprintf_s(srcPath, PATH_MAX, PATH_MAX - 1, "%s/%s", source, de->d_name) == -1) {
             PLUGIN_LOGE("Failed to build path for overlaying");
             break;
         }

@@ -172,16 +172,16 @@ public:
             instance.remoteWatcher_->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
             instance.remoteWatcher_->OnRemoteRequest(IWatcher::PARAM_CHANGE + 1, data, reply, option);
             instance.remoteWatcher_->OnParameterChange(name.c_str(), "testname", "testvalue");
-            EXPECT_EQ(g_callbackCount, 2);
+            EXPECT_EQ(g_callbackCount, 2); // 2 is callback Count
             instance.remoteWatcher_->OnParameterChange(name.c_str(), "testname.2", "testvalue");
-            EXPECT_EQ(g_callbackCount, 3);
+            EXPECT_EQ(g_callbackCount, 3); // 3 is callback Count
             instance.remoteWatcher_->OnParameterChange(name.c_str(), "testname.2", "testvalue");
-            EXPECT_EQ(g_callbackCount, 3);
+            EXPECT_EQ(g_callbackCount, 3); // 3 is callback Count
 
             // prefix not exit
             instance.remoteWatcher_->OnParameterChange("44444444444444444444", "testname.2", "testvalue");
         }
-        EXPECT_EQ(g_callbackCount, 3);
+        EXPECT_EQ(g_callbackCount, 3); // 3 is callback Count
         return 0;
     }
 

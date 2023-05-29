@@ -18,7 +18,7 @@
 #include "service_watcher.h"
 #include "fuzz_utils.h"
 
-void callback(const char *key, const ServiceInfo *status)
+static void callback(const char *key, const ServiceInfo *status)
 {
     printf("key is: %s, ServiceStatus is: %d\n", key, status->status);
 }

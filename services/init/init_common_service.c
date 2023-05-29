@@ -134,10 +134,8 @@ static void ServiceHookExecute(const char *serviceName, const char *info, int st
 }
 #endif
 
-static int SetPerms(const Service *service)
+static int ServiceCheck(const Service *service)
 {
-    INIT_CHECK_RETURN_VALUE(KeepCapability() == 0, SERVICE_FAILURE);
-
     if (service->servPerm.gIDCnt == 0) {
         // use uid as gid
         INIT_ERROR_CHECK(setgid(service->servPerm.uID) == 0, return SERVICE_FAILURE,
@@ -152,6 +150,16 @@ static int SetPerms(const Service *service)
             return SERVICE_FAILURE,
             "SetPerms, setgroups failed. errno = %d, gIDCnt=%d", errno, service->servPerm.gIDCnt);
     }
+
+    return SERVICE_SUCCESS;
+}
+
+static int SetPerms(const Service *service)
+{
+    INIT_CHECK_RETURN_VALUE(KeepCapability() == 0, SERVICE_FAILURE);
+
+    INIT_ERROR_CHECK(ServiceCheck(service) == SERVICE_SUCCESS, return SERVICE_FAILURE,
+        "set seccomp policy failed for service %s", service->name);
 
     // set seccomp policy before setuid
     INIT_ERROR_CHECK(SetSystemSeccompPolicy(service) == SERVICE_SUCCESS, return SERVICE_FAILURE,
