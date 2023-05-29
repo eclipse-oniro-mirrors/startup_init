@@ -78,8 +78,22 @@ static int DoRebootShutdown(int id, const char *name, int argc, const char **arg
     UNUSED(name);
     UNUSED(argc);
     UNUSED(argv);
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     // clear misc
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
+    const size_t len = strlen("reboot,");
+    const char *cmd = strstr(argv[0], "reboot,");
+    if (cmd != NULL && strlen(cmd) > len) {
+        PLUGIN_LOGI("DoRebootShutdown argv %s", cmd + len);
+        // by job to stop service and unmount
+        DoJobNow("reboot");
+#ifndef STARTUP_INIT_TEST
+        return syscall(__NR_reboot,
+            LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_POWER_OFF, cmd + len);
+#else
+        return 0;
+#endif
+    }
     return DoRoot_("reboot", RB_POWER_OFF);
 }
 
@@ -139,8 +153,12 @@ static int DoRebootOther(int id, const char *name, int argc, const char **argv)
     const char *cmd = strstr(argv[0], "reboot,");
     PLUGIN_CHECK(cmd != NULL, return -1, "Invalid parameter argc %s", argv[0]);
     PLUGIN_LOGI("DoRebootOther argv %s", argv[0]);
+#ifndef STARTUP_INIT_TEST
     return syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
         LINUX_REBOOT_CMD_RESTART2, cmd + strlen("reboot,"));
+#else
+    return 0;
+#endif
 }
 
 static void RebootAdpInit(void)

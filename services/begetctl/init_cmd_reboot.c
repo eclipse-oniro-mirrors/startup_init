@@ -49,7 +49,7 @@ MODULE_CONSTRUCTOR(void)
 {
     CmdInfo infos[] = {
         {"reboot", main_cmd, "reboot system", "reboot", ""},
-        {"reboot", main_cmd, "shutdown system", "reboot shutdown", ""},
+        {"reboot", main_cmd, "shutdown system", "reboot shutdown[:options]", ""},
         {"reboot", main_cmd, "suspend system", "reboot suspend", ""},
         {"reboot", main_cmd, "reboot and boot into updater", "reboot updater", ""},
         {"reboot", main_cmd, "reboot and boot into updater", "reboot updater[:options]", ""},

@@ -99,6 +99,28 @@ HWTEST_F(InitRebootUnitTest, TestAddRebootCmdNormal, TestSize.Level1)
     SystemWriteParam("ohos.startup.powerctrl", "reboot,flashd");
     SystemWriteParam("ohos.startup.powerctrl", "reboot,flashd:1000000");
 }
+
+HWTEST_F(InitRebootUnitTest, TestRebootCmdExec, TestSize.Level1)
+{
+    PARAM_LOGE("TestRebootCmdExec");
+    PluginExecCmdByName("reboot", "reboot");
+    PluginExecCmdByName("reboot.shutdown", "reboot,shutdown");
+    PluginExecCmdByName("reboot.shutdown", "reboot,shutdown:333333333333");
+    PluginExecCmdByName("reboot.suspend", "reboot,suspend");
+    PluginExecCmdByName("reboot.charge", "reboot,charge");
+    PluginExecCmdByName("reboot.updater", "reboot,updater");
+    PluginExecCmdByName("reboot.updater", "reboot,updater:2222222");
+    PluginExecCmdByName("reboot.flashd", "reboot,flashd");
+    PluginExecCmdByName("reboot.flashd", "reboot,flashd:1000000");
+    PluginExecCmdByName("reboot.other", "reboot,other");
+    PARAM_LOGE("TestRebootCmdExec end");
+    int ret = UpdateMiscMessage("charge:wwwwwwwwwww", "charge", "charge:", "boot_charge");
+    if (ret == 0) {
+        ret = GetBootModeFromMisc();
+        EXPECT_EQ(ret, GROUP_CHARGE);
+        clearMisc();
+    }
+}
 #endif
 
 HWTEST_F(InitRebootUnitTest, TestInitReboot, TestSize.Level1)
@@ -121,11 +143,7 @@ HWTEST_F(InitRebootUnitTest, TestInitReboot, TestSize.Level1)
     ret = DoReboot(DEVICE_CMD_FREEZE);
     EXPECT_EQ(ret, 0);
 
-    ret = UpdateMiscMessage("charge:wwwwwwwwwww", "charge", "charge:", "boot_charge");
-    if (ret == 0) {
-        ret = GetBootModeFromMisc();
-        EXPECT_EQ(ret, GROUP_CHARGE);
-        clearMisc();
-    }
+    ret = DoRebootExt("shutdown", DEVICE_CMD_FREEZE);
+    EXPECT_EQ(ret, 0);
 }
 } // namespace init_ut

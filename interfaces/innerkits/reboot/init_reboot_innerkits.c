@@ -30,23 +30,25 @@
 #define DOREBOOT_PARAM "reboot.ut"
 #endif
 
-static int DoReboot_(const char *option)
+static int DoReboot_(const char *mode, const char *option)
 {
     char value[MAX_REBOOT_OPTION_SIZE];
     int ret = 0;
-    if (option == NULL || strlen(option) == 0) {
-        ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
-        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
-        ret = SystemSetParameter(DOREBOOT_PARAM, "reboot");
-        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set reboot param");
-        return 0;
+    if (mode != NULL) {
+        if ((option != NULL) && (strlen(option) >= 0)) {
+            ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "reboot,%s:%s", mode, option);
+        } else {
+            ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "reboot,%s", mode);
+        }
+    } else {
+        if ((option != NULL) && (strlen(option) >= 0)) {
+            ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "reboot,%s", option);
+        } else {
+            ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "%s", "reboot");
+        }
     }
-    int length = strlen(option);
-    BEGET_ERROR_CHECK(length <= MAX_REBOOT_OPTION_SIZE, return -1,
-        "Reboot option \" %s \" is too large, overflow", option);
-    ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "reboot,%s", option);
-    BEGET_ERROR_CHECK(ret >= 0, return -1, "Failed to copy boot option \" %s \"", option);
-
+    BEGET_ERROR_CHECK(ret >= 0, return -1, "Failed to format boot mode ");
+    BEGET_LOGV("Reboot cmd %s", value);
     ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
     BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
     ret = SystemSetParameter(DOREBOOT_PARAM, value);
@@ -54,7 +56,7 @@ static int DoReboot_(const char *option)
     return 0;
 }
 
-int DoReboot(const char *option)
+static int ExecReboot_(const char *mode, const char *option)
 {
     // check if param set ok
 #ifndef STARTUP_INIT_TEST
@@ -63,7 +65,7 @@ int DoReboot(const char *option)
     const int maxCount = 1;
 #endif
     int count = 0;
-    DoReboot_(option);
+    DoReboot_(mode, option);
     while (count < maxCount) {
         usleep(100 * 1000); // 100 * 1000 wait 100ms
         char result[10] = {0}; // 10 stop len
@@ -74,8 +76,18 @@ int DoReboot(const char *option)
             return 0;
         }
         count++;
-        DoReboot_(option);
+        DoReboot_(mode, option);
     }
     BEGET_LOGE("Failed to reboot system");
     return 0;
+}
+
+int DoReboot(const char *option)
+{
+    return ExecReboot_(NULL, option);
+}
+
+int DoRebootExt(const char *mode, const char *option)
+{
+    return ExecReboot_(mode, option);
 }

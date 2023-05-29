@@ -52,6 +52,30 @@ ohos_fuzztest("DoRebootFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("DoRebootExtFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/DoRebootExt_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "DoRebootExt_fuzzer/DoRebootExt_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ohos_fuzztest("GetControlFileFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file = "//base/startup/init/test/fuzztest/getcontrolfile_fuzzer"
