@@ -213,6 +213,9 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, uint32_t remo
     struct Context context = {buffer.data(), remoteWatcherId, keyPrefix, this};
     // walk watcher
     SystemTraversalParameter("", [](ParamHandle handle, void *cookie) {
+            if (cookie == nullptr) {
+                return;
+            }
             struct Context *context = (struct Context *)(cookie);
             SystemGetParameterName(handle, context->buffer, PARAM_NAME_LEN_MAX);
             if (!FilterParam(context->buffer, context->keyPrefix)) {
@@ -222,6 +225,9 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, uint32_t remo
             uint32_t size = PARAM_CONST_VALUE_LEN_MAX;
             SystemGetParameterValue(handle, context->buffer + PARAM_NAME_LEN_MAX, &size);
             auto remoteWatcher = context->watcherManagerPtr->GetRemoteWatcher(context->remoteWatcherId);
+            if (remoteWatcher == nullptr) {
+                return;
+            }
             remoteWatcher->ProcessParameterChange(
                 context->keyPrefix, context->buffer, context->buffer + PARAM_NAME_LEN_MAX);
         }, reinterpret_cast<void *>(&context));

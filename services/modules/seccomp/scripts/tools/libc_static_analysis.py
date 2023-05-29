@@ -61,6 +61,8 @@ def remove_head_zero(addr):
 
 def line_find_syscall_nr(line, nr_set, nr_last):
     nr = nr_last
+    is_find_nr = False
+    is_find_svc = True
     if ';' in line:
         nr_tmp, is_digit = gen_policy.str_convert_to_int(line[line.find('0x'):])
     else:

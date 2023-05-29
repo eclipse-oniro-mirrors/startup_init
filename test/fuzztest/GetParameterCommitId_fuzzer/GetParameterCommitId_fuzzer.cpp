@@ -26,7 +26,7 @@ namespace OHOS {
         char *rest = nullptr;
         std::string str(reinterpret_cast<const char*>(data), size);
         ParamHandle handle = (ParamHandle)strtoul(str.c_str(), &rest, BASE);
-        if (!GetParameterCommitId(handle)) {
+        if ((handle < BASE) && (!GetParameterCommitId(handle))) {
             result = true;
         }
         return result;

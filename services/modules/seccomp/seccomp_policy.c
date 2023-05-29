@@ -134,8 +134,7 @@ static bool GetFilterFileByName(const char *filterName, char *filterLibRealPath,
 static int GetSeccompPolicy(const char *filterName, int **handler,
                             const char *filterLibRealPath, struct sock_fprog *prog)
 {
-    if (filterName == NULL || filterLibRealPath == NULL || \
-        handler == NULL || prog == NULL) {
+    if (filterName == NULL || filterLibRealPath == NULL || handler == NULL || prog == NULL) {
         return INPUT_ERROR;
     }
 
@@ -155,8 +154,9 @@ static int GetSeccompPolicy(const char *filterName, int **handler,
         if (rc == -1) {
             return RETURN_ERROR;
         }
-
-        policyHanlder = dlopen(filterLibRealPath, RTLD_LAZY);
+        char realPath[PATH_MAX] = { 0 };
+        realpath(filterLibRealPath, realPath);
+        policyHanlder = dlopen(realPath, RTLD_LAZY);
         if (policyHanlder == NULL) {
             return RETURN_NULL;
         }

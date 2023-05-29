@@ -1,5 +1,5 @@
 {
-    "name": "@ohos/startup_init",
+    "name": "@ohos/init",
     "description": "ohos init process",
     "homePage": "https://gitee.com/openharmony",
     "version": "3.1",

@@ -654,13 +654,13 @@ int __attribute__((weak))SymlinkStub(const char * oldpath, const char * newpath)
 
 int PrctlStub(int option, ...)
 {
-    static int count = 0;
-    static int count1 = 0;
     if (option == PR_SET_SECUREBITS) {
+        static int count = 0;
         count++;
         return (count % g_testRandom == 1) ? 0 : -1;
     }
     if (option == PR_CAP_AMBIENT) {
+        static int count1 = 0;
         count1++;
         return (count1 % g_testRandom == 1) ? 0 : -1;
     }
@@ -733,7 +733,6 @@ ParamLabelIndex *TestGetParamLabelIndex(const char *name)
     if (paramWorkspace == nullptr) {
         return &labelIndex;
     }
-    labelIndex.workspace = paramWorkspace->workSpace[0];
 #ifdef PARAM_SUPPORT_SELINUX
     if (paramWorkspace->selinuxSpace.getParamLabelIndex == nullptr) {
         return &labelIndex;

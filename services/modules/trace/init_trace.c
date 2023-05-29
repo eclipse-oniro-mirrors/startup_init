@@ -215,7 +215,7 @@ static bool SetTraceTagsEnabled(uint64_t tags)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
     PLUGIN_CHECK(workspace != NULL, return false, "Failed to get trace workspace");
-    int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer), "%" PRId64 "", tags);
+    int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer), "%" PRIu64 "", tags);
     PLUGIN_CHECK(len > 0, return false, "Failed to format tags %" PRId64 "", tags);
     return SystemWriteParam(TRACE_TAG_PARAMETER, workspace->buffer) == 0;
 }
@@ -346,10 +346,11 @@ static void DumpCompressedTrace(int traceFd, int outFd)
         return, "Error: couldn't allocate buffers\n");
 
     z_stream zs = {};
-    int ret = deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED, MAX_WBITS + 16, 8, Z_DEFAULT_STRATEGY); // 16 8 bit
+    int ret = 0;
+    deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED, MAX_WBITS + 16, 8, Z_DEFAULT_STRATEGY); // 16 8 bit
     do {
         // read data
-        zs.avail_in = TEMP_FAILURE_RETRY(read(traceFd, inBuffer, CHUNK_SIZE));
+        zs.avail_in = (uInt)TEMP_FAILURE_RETRY(read(traceFd, inBuffer, CHUNK_SIZE));
         PLUGIN_CHECK(zs.avail_in >= 0, break, "Error: reading trace, errno: %d\n", errno);
         flush = zs.avail_in == 0 ? Z_FINISH : Z_NO_FLUSH;
         zs.next_in = inBuffer;
@@ -359,7 +360,7 @@ static void DumpCompressedTrace(int traceFd, int outFd)
             ret = deflate(&zs, flush);
             PLUGIN_CHECK(ret != Z_STREAM_ERROR, break, "Error: deflate trace, errno: %d\n", errno);
             size_t have = CHUNK_SIZE - zs.avail_out;
-            size_t bytesWritten = TEMP_FAILURE_RETRY(write(outFd, outBuffer, have));
+            size_t bytesWritten = (size_t)TEMP_FAILURE_RETRY(write(outFd, outBuffer, have));
             if (bytesWritten < have) {
                 PLUGIN_LOGE("Error: writing deflated trace, errno: %d\n", errno);
                 flush = Z_FINISH; // finish
@@ -426,9 +427,9 @@ static bool MarkOthersClockSync(void)
         int64_t realtime = (int64_t)((rts.tv_sec * nanoSeconds + rts.tv_nsec) / nanoToMill);
         float parentTs = (float)((((float)mts.tv_sec) * nanoSeconds + mts.tv_nsec) / nanoToSecond);
         int ret = fprintf(file, "trace_event_clock_sync: realtime_ts=%" PRId64 "\n", realtime);
-        PLUGIN_CHECK(len > 0, break, "Warning: writing clock sync marker, errno: %d", errno);
+        PLUGIN_CHECK(ret > 0, break, "Warning: writing clock sync marker, errno: %d", errno);
         ret = fprintf(file, "trace_event_clock_sync: parent_ts=%f\n", parentTs);
-        PLUGIN_CHECK(len > 0, break, "Warning: writing clock sync marker, errno: %d", errno);
+        PLUGIN_CHECK(ret > 0, break, "Warning: writing clock sync marker, errno: %d", errno);
     } while (0);
     (void)fclose(file);
     return true;
