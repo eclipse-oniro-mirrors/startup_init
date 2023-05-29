@@ -20,7 +20,6 @@
 
 static int InitEngEarlyHook(const HOOK_INFO *info, void *cookie)
 {
-
     char value[MAX_BUFFER_LEN] = {0};
     int ret = GetParameterFromCmdLine("eng_mode", value, MAX_BUFFER_LEN);
     if (ret == 0 && strcmp(value, "on") == 0) {

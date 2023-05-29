@@ -749,7 +749,7 @@ void DoCmdByIndex(int index, const char *cmdContent, const ConfigContext *contex
     const struct CmdTable *cmdTable = GetCmdTableByIndex(index);
     if (cmdTable != NULL) {
         cmdName = cmdTable->name;
-        if (context == NULL || !cmdTable->careContext || context->type == INIT_CONTEXT_MAIN || getpid() != 1) {
+        if (!cmdTable->careContext || !CheckExecuteInSubInit(context)) {
             ExecCmd(cmdTable, cmdContent);
         } else {
             ExecuteCmdInSubInit(context, cmdTable->name, cmdContent);

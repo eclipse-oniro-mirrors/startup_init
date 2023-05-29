@@ -492,7 +492,7 @@ static void DumpJobTrigger_(const TriggerWorkSpace *workSpace, const TriggerNode
     CommandNode *cmd = GetNextCmdNode(node, NULL);
     while (cmd != NULL && count < maxCmd) {
         PARAM_DUMP("    command name: %s (%s) \n", GetCmdKey(cmd->cmdKeyIndex),
-            (cmd->cfgContext.type == INIT_CONTEXT_CHIPSET) ? "vendor" : "system");
+            (cmd->cfgContext.type == INIT_CONTEXT_CHIPSET) ? "chipset" : "system");
         PARAM_DUMP("    command args    : %s \n", cmd->content);
         cmd = GetNextCmdNode(node, cmd);
         count++;

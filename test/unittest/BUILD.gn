@@ -399,8 +399,8 @@ ohos_unittest("init_unittest") {
 
   # test for init sub init_context
   sources += [
-    "//base/startup/init/services/modules/init_context/init_context_static.c",
     "//base/startup/init/services/modules/init_context/init_context.c",
+    "//base/startup/init/services/modules/init_context/init_context_static.c",
     "//base/startup/init/test/unittest/modules/context_unittest.cpp",
   ]
 

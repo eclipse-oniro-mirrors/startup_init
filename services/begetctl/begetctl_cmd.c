@@ -59,7 +59,6 @@ static int SetInitLogLevelFromParam(BShellHandle shell, int argc, char **argv)
         BShellCmdHelp(shell, 1, helpArgs);
         return 0;
     }
-    const char *LOG_LEVEL_STR[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
     errno = 0;
     unsigned int level = strtoul(argv[1], 0, 10); // 10 is decimal
     if (errno != 0) {
@@ -67,11 +66,12 @@ static int SetInitLogLevelFromParam(BShellHandle shell, int argc, char **argv)
         return -1;
     }
     if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
+        const char *logLevelStr[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
         int ret = HandleCmd(shell, "setloglevel", argc - 1, &argv[1]);
         if (ret != 0) {
-            printf("Failed to set log level %s. \n", LOG_LEVEL_STR[level]);
+            printf("Failed to set log level %s. \n", logLevelStr[level]);
         } else {
-            printf("Success to set log level %s. \n", LOG_LEVEL_STR[level]);
+            printf("Success to set log level %s. \n", logLevelStr[level]);
         }
     } else {
         printf("%s is invalid. \n", argv[1]);
@@ -81,10 +81,10 @@ static int SetInitLogLevelFromParam(BShellHandle shell, int argc, char **argv)
 
 static int32_t GetInitLogLevelFromParam(BShellHandle shell, int argc, char **argv)
 {
-    const char *LOG_LEVEL_STR[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
     int level = GetIntParameter(INIT_DEBUG_LEVEL, (int)INIT_ERROR);
     if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
-        printf("Init log level: %s \n", LOG_LEVEL_STR[level]);
+        const char *logLevelStr[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
+        printf("Init log level: %s \n", logLevelStr[level]);
     }
     return 0;
 }

@@ -55,6 +55,30 @@ static void WaitAtStartup(const char *source)
     return;
 }
 
+#ifdef WDIOC_SETPRETIMEOUT
+int GetWatcherDogCfg(int interval, int timeoutGet, int fd)
+{
+    int preTimeout = 0;
+    int preTimeoutGet = 0;
+    preTimeout = timeoutGet - PRETIMEOUT_GAP; // ensure pretimeout smaller then timeout
+    if (preTimeout > 0) {
+        int ret = ioctl(fd, WDIOC_SETPRETIMEOUT, &preTimeout);
+        if (ret) {
+            INIT_LOGE("Failed to set pretimeout to %d\n", preTimeout);
+        }
+        ret = ioctl(fd, WDIOC_GETPRETIMEOUT, &preTimeoutGet);
+        if (ret) {
+            INIT_LOGE("Failed to get pretimeout\n");
+        }
+    }
+
+    if (preTimeoutGet > 0 && preTimeoutGet < interval) {
+        interval = preTimeoutGet / PRETIMEOUT_DIV;
+    }
+    return interval;
+}
+#endif
+
 int main(int argc, const char *argv[])
 {
     WaitAtStartup("/dev/watchdog");
@@ -87,11 +111,6 @@ int main(int argc, const char *argv[])
     int timeoutSet = interval + gap;
     int timeoutGet = 0;
 
-#ifdef WDIOC_SETPRETIMEOUT
-    int preTimeout = 0;
-    int preTimeoutGet = 0;
-#endif
-
     int ret = ioctl(fd, WDIOC_SETTIMEOUT, &timeoutSet);
     if (ret) {
         INIT_LOGE("Failed to set timeout to %d\n", timeoutSet);
@@ -106,21 +125,7 @@ int main(int argc, const char *argv[])
     }
 
 #ifdef WDIOC_SETPRETIMEOUT
-    preTimeout = timeoutGet - PRETIMEOUT_GAP; // ensure pretimeout smaller then timeout
-    if (preTimeout > 0) {
-        ret = ioctl(fd, WDIOC_SETPRETIMEOUT, &preTimeout);
-        if (ret) {
-            INIT_LOGE("Failed to set pretimeout to %d\n", preTimeout);
-        }
-        ret = ioctl(fd, WDIOC_GETPRETIMEOUT, &preTimeoutGet);
-        if (ret) {
-            INIT_LOGE("Failed to get pretimeout\n");
-        }
-    }
-
-    if (preTimeoutGet > 0 && preTimeoutGet < interval) {
-        interval = preTimeoutGet / PRETIMEOUT_DIV;
-    }
+    interval = GetWatcherDogCfg(interval, timeoutGet, fd);
 #endif
 
     while (1) {
@@ -128,6 +133,5 @@ int main(int argc, const char *argv[])
         sleep(interval);
     }
     close(fd);
-    fd = -1;
     return -1;
 }

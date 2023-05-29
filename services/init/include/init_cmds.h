@@ -108,6 +108,7 @@ long long InitDiffTime(INIT_TIMING_STAT *stat);
 void StopSubInit(pid_t pid);
 int ExecuteCmdInSubInit(const ConfigContext *context, const char *name, const char *cmdContent);
 int SetSubInitContext(const ConfigContext *context, const char *service);
+int CheckExecuteInSubInit(const ConfigContext *context);
 
 // exec in context, if context == null, exec in current context
 void PluginExecCmdByCmdIndex(int index, const char *cmdContent, const ConfigContext *context);

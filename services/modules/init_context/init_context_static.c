@@ -18,7 +18,8 @@
 #include "plugin_adapter.h"
 #include "securec.h"
 
-static SubInitContext g_subInitContext[INIT_CONTEXT_MAIN] = {};
+static SubInitContext g_subInitContext[INIT_CONTEXT_MAIN] = { 0 };
+static ConfigContext g_currContext = { INIT_CONTEXT_MAIN };
 static int g_subInitRunning = 0;
 
 int InitSubInitContext(InitContextType type, const SubInitContext *context)
@@ -66,14 +67,21 @@ int ExecuteCmdInSubInit(const ConfigContext *context, const char *name, const ch
     return g_subInitContext[context->type].executeCmdInSubInit(context->type, name, cmdContent);
 }
 
-int SetSubInitContext(const ConfigContext*context, const char *service)
+int SetSubInitContext(const ConfigContext *context, const char *service)
 {
     PLUGIN_CHECK(context != NULL, return -1, "Invalid context");
-    if (context->type >=INIT_CONTEXT_MAIN) {
+    if (context->type >= INIT_CONTEXT_MAIN) {
+        g_currContext.type = INIT_CONTEXT_MAIN;
         return 0;
     }
+    g_currContext.type = context->type;
     PLUGIN_CHECK(g_subInitContext[context->type].setSubInitContext != NULL,
         return -1, "Invalid context %d", context->type);
     PLUGIN_LOGI("Set selinux context %d for %s", context->type, service);
     return g_subInitContext[context->type].setSubInitContext(context->type);
+}
+
+int CheckExecuteInSubInit(const ConfigContext *context)
+{
+    return !(context == NULL || context->type == INIT_CONTEXT_MAIN || g_currContext.type != INIT_CONTEXT_MAIN);
 }

@@ -145,3 +145,13 @@ int SetSubInitContext(const ConfigContext *context, const char *service)
 {
     return 0;
 }
+
+int ExecuteCmdInSubInit(const ConfigContext *context, const char *name, const char *cmdContent)
+{
+    return 0;
+}
+
+int CheckExecuteInSubInit(const ConfigContext *context)
+{
+    return 0;
+}

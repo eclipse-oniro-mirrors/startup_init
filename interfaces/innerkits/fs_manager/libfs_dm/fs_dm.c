@@ -145,7 +145,7 @@ static int LoadDmDeviceTable(int fd, const char *devName,
             break;
         }
 
-        err = strcpy_s(paras, target->paras_len + 1,target->paras);
+        err = strcpy_s(paras, target->paras_len + 1, target->paras);
         if (err != EOK) {
             rc = -1;
             BEGET_LOGE("error 0x%x, cp target paras", err);

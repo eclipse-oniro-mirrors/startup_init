@@ -188,7 +188,7 @@ void PluginExecCmdByCmdIndex(int index, const char *cmdContent, const ConfigCont
         return;
     }
     INIT_LOGV("Command: %s cmdContent: %s %d", cmd->name, cmdContent, cmd->careContext);
-    if (context == NULL || !cmd->careContext || context->type == INIT_CONTEXT_MAIN || getpid() != 1) {
+    if (!cmd->careContext || !CheckExecuteInSubInit(context)) {
         PluginExecCmd_(cmd, cmdContent);
     } else {
         ExecuteCmdInSubInit(context, cmd->name, cmdContent);

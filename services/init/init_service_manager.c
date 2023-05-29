@@ -429,32 +429,32 @@ static int AddServiceSocket(cJSON *json, Service *service)
     sockopt->watcher = NULL;
 
     ret = ParseSocketFamily(json, sockopt);
-    INIT_ERROR_CHECK(ret == 0, free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
-        "Failed to parse socket family");
+    INIT_ERROR_CHECK(ret == 0, free(sockopt);
+        return SERVICE_FAILURE, "Failed to parse socket family");
     ret = ParseSocketType(json, sockopt);
-    INIT_ERROR_CHECK(ret == 0, free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
-        "Failed to parse socket type");
+    INIT_ERROR_CHECK(ret == 0, free(sockopt);
+        return SERVICE_FAILURE, "Failed to parse socket type");
     ret = ParseSocketProtocol(json, sockopt);
-    INIT_ERROR_CHECK(ret == 0, free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
-        "Failed to parse socket protocol");
+    INIT_ERROR_CHECK(ret == 0, free(sockopt);
+        return SERVICE_FAILURE, "Failed to parse socket protocol");
 
     char *stringValue = GetStringValue(json, "permissions", &strLen);
-    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
-        "Failed to get string for permissions");
+    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt);
+        return SERVICE_FAILURE, "Failed to get string for permissions");
     sockopt->perm = strtoul(stringValue, 0, OCTAL_BASE);
     stringValue = GetStringValue(json, "uid", &strLen);
-    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
-        "Failed to get string for uid");
+    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt);
+        return SERVICE_FAILURE, "Failed to get string for uid");
     sockopt->uid = DecodeUid(stringValue);
     stringValue = GetStringValue(json, "gid", &strLen);
-    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
-        "Failed to get string for gid");
+    INIT_ERROR_CHECK((stringValue != NULL) && (strLen > 0), free(sockopt);
+        return SERVICE_FAILURE, "Failed to get string for gid");
     sockopt->gid = DecodeGid(stringValue);
-    INIT_ERROR_CHECK((sockopt->uid != (uid_t)-1) && (sockopt->gid != (uid_t)-1),
-        free(sockopt); sockopt = NULL; return SERVICE_FAILURE, "Invalid uid or gid");
+    INIT_ERROR_CHECK((sockopt->uid != (uid_t)-1) && (sockopt->gid != (uid_t)-1), free(sockopt);
+        return SERVICE_FAILURE, "Invalid uid or gid");
     ret = ParseSocketOption(json, sockopt);
-    INIT_ERROR_CHECK(ret == 0, free(sockopt); sockopt = NULL; return SERVICE_FAILURE,
-        "Failed to parse socket option");
+    INIT_ERROR_CHECK(ret == 0, free(sockopt);
+        return SERVICE_FAILURE, "Failed to parse socket option");
 
     sockopt->next = NULL;
     if (service->socketCfg == NULL) {

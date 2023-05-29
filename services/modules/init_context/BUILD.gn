@@ -29,11 +29,15 @@ ohos_shared_library("init_context") {
 
   include_dirs += [ "../../init/include" ]
 
-  external_deps = [
-    "init:libinit_module_engine",
-    "selinux:libload_policy",
-    "selinux:librestorecon",
-  ]
+  external_deps = [ "init:libinit_module_engine" ]
+
+  if (build_selinux) {
+    external_deps += [
+      "selinux:libload_policy",
+      "selinux:librestorecon",
+    ]
+    defines = [ "WITH_SELINUX" ]
+  }
 
   deps = [
     "//third_party/bounds_checking_function:libsec_shared",

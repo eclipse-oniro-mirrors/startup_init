@@ -15,8 +15,10 @@
 #include "init_context.h"
 
 #include <poll.h>
+#ifdef WITH_SELINUX
 #include <policycoreutils.h>
 #include <selinux/selinux.h>
+#endif
 #include <sys/prctl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -36,7 +38,7 @@
 
 static SubInitInfo g_subInitInfo[INIT_CONTEXT_MAIN] = {};
 static const char *g_subContext[INIT_CONTEXT_MAIN] = {
-    "u:r:vendor_init:s0"
+    "u:r:chipset_init:s0"
 };
 
 static void SubInitMain(InitContextType type, int readFd, int writeFd);
@@ -65,11 +67,9 @@ static int SubInitStart(InitContextType type)
     }
     if (pid == 0) {
         SubInitSetSelinuxContext(type);
-        int fd = dup(socket[1]);
         close(socket[0]);
+        SubInitMain(type, socket[1], socket[1]);
         close(socket[1]);
-        SubInitMain(type, fd, fd);
-        close(fd);
         _exit(PROCESS_EXIT_CODE);
     }
     close(socket[1]);
@@ -154,8 +154,27 @@ static int CreateSocketPair(int socket[2])
     return ret;
 }
 
+static int CheckSocketPermission(const SubInitInfo *subInfo)
+{
+    struct ucred uc = {-1, -1, -1};
+    socklen_t len = sizeof(uc);
+    if (getsockopt(subInfo->recvFd, SOL_SOCKET, SO_PEERCRED, &uc, &len) < 0) {
+        INIT_LOGE("Failed to get socket option. err = %d", errno);
+        return -1;
+    }
+    // Only root is permitted to use control fd of init.
+    if (uc.uid != 0) { // non-root user
+        errno = EPERM;
+        return -1;
+    }
+    return 0;
+}
+
 static int HandleRecvMessage_(SubInitInfo *subInfo, char *buffer, uint32_t size)
 {
+    if (CheckSocketPermission(subInfo) != 0) {
+        return -1;
+    }
     ssize_t rLen = TEMP_FAILURE_RETRY(read(subInfo->recvFd, buffer, size));
     while ((rLen < 0) && (errno == EAGAIN)) {
         rLen = TEMP_FAILURE_RETRY(read(subInfo->recvFd, buffer, size));
@@ -184,7 +203,7 @@ static void SubInitMain(InitContextType type, int readFd, int writeFd)
 {
     PLUGIN_LOGI("SubInitMain, sub init %s[%d] enter", g_subContext[type], getpid());
     char buffer[MAX_CMD_LEN] = {0};
-    (void)prctl(PR_SET_NAME, "vendor_init");
+    (void)prctl(PR_SET_NAME, "chipset_init");
     struct pollfd pfd = {};
     pfd.events = POLLIN;
     pfd.fd = readFd;
@@ -216,7 +235,9 @@ static void SubInitMain(InitContextType type, int readFd, int writeFd)
 static int SubInitSetSelinuxContext(InitContextType type)
 {
     PLUGIN_CHECK(type < INIT_CONTEXT_MAIN, return -1, "Invalid type %d", type);
+#ifdef WITH_SELINUX
     setcon(g_subContext[type]);
+#endif
     return 0;
 }
 
