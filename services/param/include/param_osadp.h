@@ -211,8 +211,6 @@ INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t d
 #define ATOMIC_STORE_EXPLICIT(commitId, value, order) atomic_store_explicit((commitId), (value), (order))
 #endif
 
-INIT_LOCAL_API uint32_t Difftime(time_t curr, time_t base);
-
 #ifdef __cplusplus
 #if __cplusplus
 }

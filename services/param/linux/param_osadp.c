@@ -102,8 +102,3 @@ INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t d
     PARAM_CHECK(mem != NULL && handle != NULL, return, "Invalid mem or handle");
     munmap((char *)mem, dataSize);
 }
-
-INIT_LOCAL_API uint32_t Difftime(time_t curr, time_t base)
-{
-    return (uint32_t)difftime(curr, base);
-}

@@ -564,15 +564,17 @@ static bool CalculateCrashTime(Service *service, int crashTimeLimit, int crashCo
 {
     INIT_ERROR_CHECK(service != NULL && crashTimeLimit > 0 && crashCountLimit > 0,
         return false, "input params error.");
-    time_t curTime = time(NULL);
+    struct timespec curTime = {};
+    (void)clock_gettime(CLOCK_MONOTONIC, &curTime);
+    struct timespec crashTime = {service->firstCrashTime, 0};
     if (service->crashCnt == 0) {
-        service->firstCrashTime = curTime;
+        service->firstCrashTime = curTime.tv_sec;
         ++service->crashCnt;
         if (service->crashCnt == crashCountLimit) {
             return false;
         }
-    } else if (difftime(curTime, service->firstCrashTime) > crashTimeLimit) {
-        service->firstCrashTime = curTime;
+    } else if (IntervalTime(&crashTime, &curTime) > crashTimeLimit) {
+        service->firstCrashTime = curTime.tv_sec;
         service->crashCnt = 1;
     } else {
         ++service->crashCnt;
