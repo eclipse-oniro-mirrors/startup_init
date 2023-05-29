@@ -310,7 +310,7 @@ static void GetCallbackWork(napi_env env, StorageAsyncContextPtr asyncContext)
             }
 
             if (asyncContext->deferred) {
-                if (asyncContext->status > 0) {
+                if (asyncContext->status >= 0) {
                     napi_resolve_deferred(env, asyncContext->deferred, result[1]);
                 } else {
                     napi_reject_deferred(env, asyncContext->deferred, result[0]);
