@@ -101,6 +101,11 @@ futex;all
 set_robust_list;all
 get_robust_list;all
 nanosleep;all
+timer_create;all
+timer_gettime;all
+timer_getoverrun;all
+timer_settime;all
+timer_delete;all
 clock_gettime;all
 clock_getres;all
 clock_nanosleep;all
