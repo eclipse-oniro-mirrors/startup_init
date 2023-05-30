@@ -1,10 +1,10 @@
 {
-    "name": "@ohos/startup_init_lite",
+    "name": "@ohos/init",
     "description": "ohos init process",
     "homePage": "https://gitee.com/openharmony",
     "version": "3.1",
     "license": "Apache License 2.0",
-    "repository": "https://gitee.com/openharmony/startup_init_lite",
+    "repository": "https://gitee.com/openharmony/startup_init",
     "publishAs": "code-segment",
     "segment": {
         "destPath": "base/startup/init"
@@ -20,8 +20,8 @@
         "adapted_system_type": [
             "standard"
         ],
-        "rom": "",
-        "ram": "",
+        "rom": "3.9M",
+        "ram": "8356KB",
         "hisysevent_config": [
             "//base/startup/init/services/modules/sysevent/init_events.yaml"
         ],
