@@ -91,6 +91,9 @@ int main(int argc, const char *argv[])
     int interval = 0;
     if (argc >= 2) { // Argument nums greater than or equal to 2.
         interval = atoi(argv[1]);
+        if (interval < 0 || interval > INT16_MAX) {
+            interval = DEFAULT_INTERVAL;
+        }
     }
     interval = (interval > 0) ? interval : DEFAULT_INTERVAL;
 

@@ -88,7 +88,9 @@ static char *ReadFile(const char *path)
         PLUGIN_LOGE("Invalid file %s or buffer %zu", path, fileStat.st_size);
         return NULL;
     }
-    FILE *fd = fopen(path, "r");
+    char realPath[PATH_MAX] = "";
+    realpath(path, realPath);
+    FILE *fd = fopen(realPath, "r");
     PLUGIN_CHECK(fd != NULL, return NULL, "Failed to fopen path %s", path);
     char *buffer = NULL;
     do {
@@ -171,7 +173,9 @@ static bool WriteStrToFile(const char *filename, const char *str)
     int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer),
         "%s%s", workspace->traceRootPath, filename);
     PLUGIN_CHECK(len > 0, return false, "Failed to format path %s", filename);
-    FILE *outfile = fopen(workspace->buffer, "w");
+    char realPath[PATH_MAX] = "";
+    realpath(workspace->buffer, realPath);
+    FILE *outfile = fopen(realPath, "w");
     PLUGIN_CHECK(outfile != NULL, return false, "Failed to open file %s.", workspace->buffer);
     (void)fprintf(outfile, "%s", str);
     (void)fflush(outfile);
@@ -328,8 +332,10 @@ static bool ClearTrace(void)
     int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer),
         "%s%s", workspace->traceRootPath, TRACE_PATH);
     PLUGIN_CHECK(len > 0, return false, "Failed to format path %s", TRACE_PATH);
+    char realPath[PATH_MAX] = "";
+    realpath(workspace->buffer, realPath);
     // clear old trace file
-    int fd = open(workspace->buffer, O_RDWR);
+    int fd = open(realPath, O_RDWR);
     PLUGIN_CHECK(fd >= 0, return false, "Failed to open file %s errno %d", workspace->buffer, errno);
     (void)ftruncate(fd, 0);
     close(fd);
@@ -379,7 +385,9 @@ static void DumpTrace(const TraceWorkspace *workspace, int outFd, const char *pa
 {
     int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer), "%s%s", workspace->traceRootPath, path);
     PLUGIN_CHECK(len > 0, return, "Failed to format path %s", path);
-    int traceFd = open(workspace->buffer, O_RDWR);
+    char realPath[PATH_MAX] = "";
+    realpath(workspace->buffer, realPath);
+    int traceFd = open(realPath, O_RDWR);
     PLUGIN_CHECK(traceFd >= 0, return, "Failed to open file %s errno %d", workspace->buffer, errno);
 
     ssize_t bytesWritten;
@@ -421,7 +429,9 @@ static bool MarkOthersClockSync(void)
     const float nanoToSecond = 1000000000.0f;     // consistent with the ftrace timestamp format
 
     PLUGIN_LOGE("MarkOthersClockSync %s", workspace->buffer);
-    FILE *file = fopen(workspace->buffer, "wt+");
+    char realPath[PATH_MAX] = { 0 };
+    realpath(workspace->buffer, realPath);
+    FILE *file = fopen(realPath, "wt+");
     PLUGIN_CHECK(file != NULL, return false, "Error: opening %s, errno: %d", TRACE_MARKER_PATH, errno);
     do {
         int64_t realtime = (int64_t)((rts.tv_sec * nanoSeconds + rts.tv_nsec) / nanoToMill);
