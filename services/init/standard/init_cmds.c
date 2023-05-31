@@ -82,6 +82,10 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
         // copy param name
         ret = strncpy_s(tmpName, PARAM_NAME_LEN_MAX, begin, left - begin);
         INIT_ERROR_CHECK(ret == EOK, return -1, "Invalid param name %s", symValue);
+        if (paramLen < curr) {
+            INIT_LOGE("Failed to get param value over max length");
+            return -1;
+        }
         uint32_t valueLen = paramLen - curr;
         ret = SystemReadParam(tmpName, paramValue + curr, &valueLen);
         INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get param %s", tmpName);

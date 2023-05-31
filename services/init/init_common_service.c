@@ -433,7 +433,7 @@ static int32_t CheckTraceStatus(void)
         return (-errno);
     }
 
-    char data[1024] = { 0 };
+    char data[1024] = { 0 };  // 1024 data len
     ssize_t dataNum = read(fd, data, sizeof(data));
     if (close(fd) < 0) {
         INIT_LOGE("lldb: close fd error: %{public}d", errno);
@@ -446,6 +446,7 @@ static int32_t CheckTraceStatus(void)
     }
 
     const char* tracerPid = "TracerPid:\t";
+    data[1023] = '\0'; // 1023 data last position
     char *traceStr = strstr(data, tracerPid);
     if (traceStr == NULL) {
         INIT_LOGE("lldb: fail to find %{public}s", tracerPid);
