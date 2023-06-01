@@ -168,9 +168,6 @@ static int InitCmd(int id, const char *name, int argc, const char **argv)
     UNUSED(id);
     // process cmd by name
     PLUGIN_LOGI("InitCmd %s argc %d", name, argc);
-    for (int i = 0; i < argc; i++) {
-        PLUGIN_LOGI("InitCmd %s", argv[i]);
-    }
     if (argc > 1 && strcmp(argv[0], "setloglevel") == 0) {
         SetLogLevelFunc(argv[1]);
     }
