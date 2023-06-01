@@ -59,6 +59,9 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
     int ret;
     uint32_t curr = 0;
     char *start = (char *)symValue;
+    if (symLen > strlen(symValue)) {
+        return -1;
+    }
     char *end = (char *)symValue + symLen;
     do {
         char *begin = strchr(start, '$');

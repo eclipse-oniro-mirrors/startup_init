@@ -14,6 +14,7 @@
  */
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 
 #include "param_manager.h"
 #include "param_trie.h"
@@ -144,7 +145,11 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
                 continue;
             }
         }
-        snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1, OHOS_CMDLINE_PARA_PREFIX "%s", cmdLines[i].name);
+        ret = snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1,
+            OHOS_CMDLINE_PARA_PREFIX "%s", cmdLines[i].name);
+        if (ret <= 0) {
+            continue;
+        }
         PARAM_LOGV("proc cmdline %s matched.", fullName);
         ret = cmdLines[i].processor(fullName, nv->value);
         if ((ret == 0) && (SnDealFun == cmdLines[i].processor)) {
@@ -247,8 +252,13 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode,
     const char *exclude[], uint32_t count, int (*loadOneParam)(const uint32_t *, const char *, const char *))
 {
     uint32_t paramNum = 0;
-    FILE *fp = fopen(fileName, "r");
-    PARAM_CHECK(fp != NULL, return -1, "Failed to open file '%s' error:%d ", fileName, errno);
+    char realPath[PATH_MAX] = "";
+    realpath(fileName, realPath);
+    FILE *fp = fopen(realPath, "r");
+    if (fp == NULL) {
+        PARAM_LOGE("Failed to open file '%s' error:%d ", fileName, errno);
+        return -1;
+    }
 
     const int buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
     char *buffer = malloc(buffSize);
