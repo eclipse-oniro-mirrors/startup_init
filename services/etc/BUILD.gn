@@ -118,7 +118,7 @@ if (defined(ohos_lite)) {
     source = "//base/startup/init/services/etc/init.usb.cfg"
     install_images = [
       "system",
-      "updater"
+      "updater",
     ]
     part_name = "init"
     subsystem_name = "startup"

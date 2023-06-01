@@ -222,7 +222,7 @@ if (defined(ohos_lite)) {
     }
     install_images = [
       "system",
-      "updater"
+      "updater",
     ]
     install_images = [ "system" ]
     install_enable = true
