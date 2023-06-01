@@ -220,6 +220,10 @@ if (defined(ohos_lite)) {
       ]
       defines += [ "PARAM_SUPPORT_SELINUX" ]
     }
+    install_images = [
+      "system",
+      "updater"
+    ]
     install_images = [ "system" ]
     install_enable = true
     part_name = "init"
