@@ -276,6 +276,10 @@ if (defined(ohos_lite)) {
       "samgr:samgr_proxy",
     ]
     public_configs = [ ":exported_header_files" ]
+    innerapi_tags = [
+      "chipsetsdk",
+      "platformsdk",
+    ]
     part_name = "init"
     subsystem_name = "startup"
     install_images = [ "system" ]
