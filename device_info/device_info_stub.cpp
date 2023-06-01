@@ -31,6 +31,7 @@
 #include "param_comm.h"
 #include "parameter.h"
 #include "sysparam_errno.h"
+#include "init_utils.h"
 
 namespace OHOS {
 using namespace Security;
@@ -40,21 +41,21 @@ namespace device_info {
 REGISTER_SYSTEM_ABILITY_BY_ID(DeviceInfoService, SYSPARAM_DEVICE_SERVICE_ID, true)
 
 static std::mutex g_lock;
-static time_t g_lastTime;
+static struct timespec g_lastTime;
 #ifndef STARTUP_INIT_TEST
-static const int DEVICE_INFO_EXIT_TIMEOUT_MS = 15;
+static const int DEVICE_INFO_EXIT_TIMEOUT_S = 15;
 #else
-static const int DEVICE_INFO_EXIT_TIMEOUT_MS = 3;
+static const int DEVICE_INFO_EXIT_TIMEOUT_S = 3;
 #endif
 
 static void UnloadDeviceInfoSa(int signo)
 {
     {
         std::unique_lock<std::mutex> lock(g_lock);
-        time_t currTime;
-        (void)time(&currTime);
-        if (difftime(currTime, g_lastTime) < DEVICE_INFO_EXIT_TIMEOUT_MS) {
-            alarm(DEVICE_INFO_EXIT_TIMEOUT_MS / 3); // 3 half
+        struct timespec currTimer = {};
+        (void)clock_gettime(CLOCK_MONOTONIC, &currTimer);
+        if (IntervalTime(&g_lastTime, &currTimer) < DEVICE_INFO_EXIT_TIMEOUT_S) {
+            alarm(DEVICE_INFO_EXIT_TIMEOUT_S / 3); // 3 half
             return;
         }
     }
@@ -75,7 +76,7 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
 
     {
         std::unique_lock<std::mutex> lock(g_lock);
-        (void)time(&g_lastTime);
+        (void)clock_gettime(CLOCK_MONOTONIC, &g_lastTime);
     }
 
     int ret = ERR_FAIL;
@@ -144,7 +145,7 @@ void DeviceInfoService::OnStart(void)
         DINFO_LOGE("DeviceInfoService Publish failed");
     }
     signal(SIGALRM, UnloadDeviceInfoSa);
-    alarm(DEVICE_INFO_EXIT_TIMEOUT_MS / 2); // 2 half
+    alarm(DEVICE_INFO_EXIT_TIMEOUT_S / 2); // 2 half
     return;
 }
 

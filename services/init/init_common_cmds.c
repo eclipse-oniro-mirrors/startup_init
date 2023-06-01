@@ -38,8 +38,6 @@
 #include "init_utils.h"
 #include "securec.h"
 
-#define BASE_MS_UNIT 1000
-
 #ifndef OHOS_LITE
 #include "hookmgr.h"
 #include "bootstage.h"

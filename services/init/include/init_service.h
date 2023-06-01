@@ -134,7 +134,7 @@ typedef struct Service_ {
     char *name;
     int pid;
     int crashCnt;
-    time_t firstCrashTime;
+    uint32_t firstCrashTime;
     int crashCount;
     int crashTime;
     unsigned int attribute;

@@ -38,6 +38,7 @@ if (!defined(ohos_lite)) {
     include_dirs = [
       "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include/",
       ".",
+      "//base/startup/init/services/include",
       "//base/startup/init/services/include/param",
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/interfaces/innerkits/include/syspara",
@@ -54,6 +55,7 @@ if (!defined(ohos_lite)) {
       "//base/startup/init/interfaces/innerkits:libbegetutil",
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/modules/udid:libudidcomm",
+      "//base/startup/init/services/utils:libinit_utils",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
 

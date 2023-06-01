@@ -685,3 +685,13 @@ int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen)
     return ret;
 }
 
+uint32_t IntervalTime(struct timespec *startTime, struct timespec *endTime)
+{
+    uint32_t diff = 0;
+    if (endTime->tv_sec > startTime->tv_sec) {
+        diff = (uint32_t)(endTime->tv_sec - startTime->tv_sec);
+    } else {
+        diff = (uint32_t)(startTime->tv_sec - endTime->tv_sec);
+    }
+    return diff;
+}

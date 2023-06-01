@@ -85,7 +85,7 @@ typedef struct {
     uint32_t flags;
     long long commitId;
     ParamTaskPtr saveTimer;
-    time_t lastSaveTimer;
+    struct timespec lastSaveTimer;
     PersistParamOps persistParamOps;
 } ParamPersistWorkSpace;
 

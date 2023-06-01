@@ -34,6 +34,7 @@ typedef struct {
     int value;
 } InitArgInfo;
 
+#define BASE_MS_UNIT 1000
 #define MAX_INT_LEN 20
 #define HEX_BASE 16
 #define BINARY_BASE 2
@@ -88,6 +89,8 @@ int StringReplaceChr(char *strl, char oldChr, char newChr);
 void OpenConsole(void);
 void TrimTail(char *str, char c);
 char *TrimHead(char *str, char c);
+
+INIT_LOCAL_API uint32_t IntervalTime(struct timespec *startTime, struct timespec *endTime);
 
 INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out);
 INIT_LOCAL_API int StringToLL(const char *str, long long int *out);

@@ -93,16 +93,16 @@ static int ReadMessage(int fd, char *buffer, uint32_t timeout)
 {
     int ret = 0;
     uint32_t diff = 0;
-    time_t startTime;
-    (void)time(&startTime);
+    struct timespec startTime = {};
+    (void)clock_gettime(CLOCK_MONOTONIC, &startTime);
     do {
         ssize_t recvLen = recv(fd, (char *)buffer, RECV_BUFFER_MAX, 0);
         if (recvLen > 0) {
             break;
         }
-        time_t finishTime;
-        (void)time(&finishTime);
-        diff = (uint32_t)difftime(finishTime, startTime);
+        struct timespec finishTime = {};
+        (void)clock_gettime(CLOCK_MONOTONIC, &finishTime);
+        diff = IntervalTime(&finishTime, &startTime);
         if (diff >= timeout) {
             ret = PARAM_CODE_TIMEOUT;
             break;

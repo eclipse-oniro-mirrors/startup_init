@@ -71,11 +71,11 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
     PARAM_CHECK(ret == 0, return ret, "Forbid to wait parameter %s", name);
     uint32_t diff = 0;
-    time_t startTime;
+    struct timespec startTime = {};
     if (timeout <= 0) {
         timeout = DEFAULT_PARAM_WAIT_TIMEOUT;
     }
-    (void)time(&startTime);
+    (void)clock_gettime(CLOCK_MONOTONIC, &startTime);
     do {
         long long commit = GetSystemCommitId();
         if (commit != globalCommit) {
@@ -88,9 +88,9 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
         globalCommit = commit;
 
         usleep(MIN_SLEEP);
-        time_t finishTime;
-        (void)time(&finishTime);
-        diff = (uint32_t)difftime(finishTime, startTime);
+        struct timespec finishTime = {};
+        (void)clock_gettime(CLOCK_MONOTONIC, &finishTime);
+        diff = IntervalTime(&finishTime, &startTime);
         if (diff >= timeout) {
             ret = PARAM_CODE_TIMEOUT;
             break;

@@ -23,7 +23,7 @@
 #include "param_osadp.h"
 #include "securec.h"
 
-static ParamPersistWorkSpace g_persistWorkSpace = {0, 0, NULL, 0, {0}};
+static ParamPersistWorkSpace g_persistWorkSpace = {0, 0, NULL, {}, {0}};
 static int IsNeedToSave(const char *name)
 {
 #if defined(__LITEOS_M__) || defined(__LITEOS_A__)
@@ -118,7 +118,7 @@ static int BatchSavePersistParam(void)
     PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Save persist param fail");
 
     PARAM_CLEAR_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_UPDATE);
-    (void)time(&g_persistWorkSpace.lastSaveTimer);
+    (void)clock_gettime(CLOCK_MONOTONIC, &g_persistWorkSpace.lastSaveTimer);
     return ret;
 }
 
@@ -127,7 +127,7 @@ INIT_LOCAL_API int InitPersistParamWorkSpace(void)
     if (PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         return 0;
     }
-    (void)time(&g_persistWorkSpace.lastSaveTimer);
+    (void)clock_gettime(CLOCK_MONOTONIC, &g_persistWorkSpace.lastSaveTimer);
     RegisterPersistParamOps(&g_persistWorkSpace.persistParamOps);
     PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_INIT);
     return 0;
@@ -194,9 +194,9 @@ INIT_LOCAL_API int WritePersistParam(const char *name, const char *value)
     }
 
     // check timer for save all
-    time_t currTimer;
-    (void)time(&currTimer);
-    uint32_t diff = Difftime(currTimer, g_persistWorkSpace.lastSaveTimer);
+    struct timespec currTimer = {};
+    (void)clock_gettime(CLOCK_MONOTONIC, &currTimer);
+    uint32_t diff = IntervalTime(&g_persistWorkSpace.lastSaveTimer, &currTimer);
     if (diff > PARAM_MUST_SAVE_PARAM_DIFF) {
         if (g_persistWorkSpace.saveTimer != NULL) {
             ParamTimerClose(g_persistWorkSpace.saveTimer);
