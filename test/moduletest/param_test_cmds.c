@@ -356,9 +356,14 @@ void CmdServiceStatusChange(const char *key, const ServiceInfo *status)
         "critical",
     };
     PLUGIN_CHECK(key != NULL && status != NULL, return, "Invalid parameter");
-    printf("Service %s status: %s pid %d \n", key,
-        ((status->status < ARRAY_LENGTH(serviceStatusMap)) ? serviceStatusMap[status->status] : "unknown"),
-        status->pid);
+    if (status->status == SERVICE_STARTED || status->status == SERVICE_READY) {
+        printf("Service %s status: %s pid %d \n", key,
+            ((status->status < ARRAY_LENGTH(serviceStatusMap)) ? serviceStatusMap[status->status] : "unknown"),
+            status->pid);
+    } else {
+        printf("Service %s status: %s \n", key,
+            (status->status < ARRAY_LENGTH(serviceStatusMap)) ? serviceStatusMap[status->status] : "unknown");
+    }
 }
 
 static int32_t BShellParamCmdWatchService(BShellHandle shell, int32_t argc, char *argv[])
