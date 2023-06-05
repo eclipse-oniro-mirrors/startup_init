@@ -102,11 +102,11 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
     return 0;
 }
 
-static void SyncExecCommand(int argc, char * const *argv)
+static int SyncExecCommand(int argc, char * const *argv)
 {
     INIT_LOGI("Sync exec: %s", argv[0]);
     pid_t pid = fork();
-    INIT_ERROR_CHECK(!(pid < 0), return, "Fork new process to format failed: %d", errno);
+    INIT_ERROR_CHECK(!(pid < 0), return -1, "Fork new process to format failed: %d", errno);
     if (pid == 0) {
         INIT_CHECK_ONLY_ELOG(execv(argv[0], argv) == 0, "execv %s failed! err %d.", argv[0], errno);
         exit(-1);
@@ -115,10 +115,10 @@ static void SyncExecCommand(int argc, char * const *argv)
     pid_t ret = waitpid(pid, &status, 0);
     if (ret != pid) {
         INIT_LOGE("Failed to wait pid %d, errno %d", pid, errno);
-        return;
+        return -1;
     }
     INIT_LOGI("Sync exec: %s result %d %d", argv[0], WEXITSTATUS(status), WIFEXITED(status));
-    return;
+    return WEXITSTATUS(status);
 }
 
 static void DoIfup(const struct CmdArgs *ctx)
@@ -443,7 +443,12 @@ static void DoInitGlobalKey(const struct CmdArgs *ctx)
         NULL
     };
     int argc = ARRAY_LENGTH(argv);
-    SyncExecCommand(argc, argv);
+    int ret = SyncExecCommand(argc, argv);
+    INIT_CMD_INFO cmdInfo;
+    cmdInfo.cmdName = "init_global_key";
+    cmdInfo.cmdContent = (const char *)&ret;
+    cmdInfo.reserved = NULL;
+    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_DATA_UNENCRYPT, (void*)(&cmdInfo), NULL);
 }
 
 static void DoInitMainUser(const struct CmdArgs *ctx)
@@ -455,7 +460,12 @@ static void DoInitMainUser(const struct CmdArgs *ctx)
         NULL
     };
     int argc = ARRAY_LENGTH(argv);
-    SyncExecCommand(argc, argv);
+    int ret = SyncExecCommand(argc, argv);
+    INIT_CMD_INFO cmdInfo;
+    cmdInfo.cmdName = "init_main_user";
+    cmdInfo.cmdContent = (const char *)&ret;
+    cmdInfo.reserved = NULL;
+    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_DATA_UNENCRYPT, (void*)(&cmdInfo), NULL);
 }
 
 static void DoMkswap(const struct CmdArgs *ctx)

@@ -637,6 +637,13 @@ static void CheckOndemandService(Service *service)
     }
 }
 
+static void ServiceReapHookExecute(Service *service)
+{
+#ifndef OHOS_LITE
+    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_REAP, (void*)service, NULL);
+#endif
+}
+
 void ServiceReap(Service *service)
 {
     INIT_CHECK(service != NULL, return);
@@ -675,6 +682,7 @@ void ServiceReap(Service *service)
         // the service could be restart even if it is one-shot service
     }
 
+    ServiceReapHookExecute(service);
     // service no need to restart if it is an ondemand service.
     if (IsOnDemandService(service)) {
         CheckOndemandService(service);

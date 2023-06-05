@@ -10,6 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//base/startup/init/begetd.gni")
 import("//build/ohos.gni")
 
 # For init only
@@ -34,6 +35,7 @@ ohos_static_library("libfsmanager_static") {
     "//base/startup/init/services/log",
     "//base/startup/init/services/include",
     "//base/startup/init/services/param/include",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/include",
   ]
   if (defined(global_parts_info.startup_hvb)) {
     sources += [
@@ -55,6 +57,12 @@ ohos_static_library("libfsmanager_static") {
 
     public_deps = [ "//base/startup/hvb/libhvb:libhvb_static" ]
   }
+
+  deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
+  if (startup_init_extra_static_modules != "") {
+    deps += [ startup_init_extra_static_modules ]
+  }
+
   public_configs = [ ":libfsmanager_exported_configs" ]
   part_name = "init"
   subsystem_name = "startup"

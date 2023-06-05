@@ -27,6 +27,8 @@ extern "C" {
 
 enum INIT_BOOTSTAGE {
     INIT_GLOBAL_INIT       = 0,
+    INIT_POST_MOUNT        = 3,
+    INIT_POST_DATA_UNENCRYPT       = 5,
     INIT_PRE_PARAM_SERVICE = 10,
     INIT_PRE_PARAM_LOAD    = 20,
     INIT_PARAM_LOAD_FILTER = 25,
@@ -41,6 +43,8 @@ enum INIT_BOOTSTAGE {
     INIT_SERVICE_FORK_BEFORE       = 58,
     INIT_SERVICE_SET_PERMS = 59,
     INIT_SERVICE_FORK_AFTER = 60,
+    INIT_SERVICE_BOOTEVENT = 61,
+    INIT_SERVICE_REAP      = 65,
     INIT_JOB_PARSE         = 70,
     INIT_BOOT_COMPLETE     = 100,
 };
@@ -124,6 +128,14 @@ typedef struct tagSERVICE_INFO_CTX {
     const char *reserved;       /* reserved info */
 } SERVICE_INFO_CTX;
 
+/**
+ * @brief service info
+ */
+typedef struct tagSERVICE_BOOTEVENT_CTX {
+    const char *serviceName;    /* Service name */
+    const char *reserved;       /* reserved info */
+    int state;                  /* bootevent state */
+} SERVICE_BOOTEVENT_CTX;
 /**
  * @brief init cmd info
  */

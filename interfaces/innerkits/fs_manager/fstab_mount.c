@@ -26,6 +26,7 @@
 #include "fs_manager/fs_manager.h"
 #include "init_utils.h"
 #include "param/init_param.h"
+#include "bootstage.h"
 #include "securec.h"
 #ifdef SUPPORT_HVB
 #include "dm_verity.h"
@@ -406,6 +407,8 @@ int MountOneItem(FstabItem *item)
     }
 
     int rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
+    char* reason[] = {item->mountPoint, (char*)&rc};
+    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_MOUNT, (void*)reason, NULL);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
             BEGET_LOGE("Mount no fail device %s to %s failed, err = %d", item->deviceName, item->mountPoint, errno);

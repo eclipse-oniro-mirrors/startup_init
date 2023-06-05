@@ -214,6 +214,15 @@ static void ReportSysEvent(void)
     return;
 }
 
+static void SetServiceBooteventHookMgr(const char *name, int state)
+{
+    SERVICE_BOOTEVENT_CTX context;
+    context.serviceName = name;
+    context.reserved = NULL;
+    context.state = state;
+    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_BOOTEVENT, (void*)(&context), NULL);
+}
+
 static void BootEventParaFireByName(const char *paramName)
 {
     ListNode *found = NULL;
@@ -233,6 +242,7 @@ static void BootEventParaFireByName(const char *paramName)
     INIT_CHECK_ONLY_RETURN(clock_gettime(CLOCK_MONOTONIC,
         &(((BOOT_EVENT_PARAM_ITEM *)found)->timestamp[BOOTEVENT_READY])) == 0);
     g_bootEventNum--;
+    SetServiceBooteventHookMgr(paramName, 2); // 2: bootevent service has ready
     // Check if all boot event params are fired
     if (g_bootEventNum > 0) {
         return;
@@ -277,6 +287,7 @@ static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
             return;
         }
         g_bootEventNum++;
+        SetServiceBooteventHookMgr(serviceParseCtx->serviceName, 1); // 1: bootevent service is starting
         return;
     }
 
@@ -290,6 +301,7 @@ static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
             continue;
         }
         g_bootEventNum++;
+        SetServiceBooteventHookMgr(serviceParseCtx->serviceName, 1); // 1: bootevent service is starting
     }
 }
 
