@@ -230,6 +230,7 @@ void SystemPrepare(void)
     // Make sure init log always output to /dev/kmsg.
     EnableDevKmsg();
     INIT_LOGI("Start init first stage.");
+    HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, NULL, NULL);
     // Only ohos normal system support
     // two stages of init.
     // If we are in updater mode, only one stage of init.

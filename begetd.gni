@@ -46,4 +46,5 @@ declare_args() {
 
   # begetutil extension module
   startup_begetutil_extra_modules = ""
+  startup_init_extra_static_modules = ""
 }

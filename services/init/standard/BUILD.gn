@@ -134,6 +134,9 @@ ohos_executable("init") {
   if (asan_detector) {
     defines += [ "ASAN_DETECTOR" ]
   }
+  if (startup_init_extra_static_modules != "") {
+    deps += [ startup_init_extra_static_modules ]
+  }
 
   version_script = get_label_info(
                        "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
