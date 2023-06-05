@@ -25,8 +25,8 @@ static void DoAsyncEvent_(const LoopHandle loopHandle, AsyncEventTask *asyncTask
 {
     LE_CHECK(loopHandle != NULL && asyncTask != NULL, return, "Invalid parameters");
 #ifdef LOOP_DEBUG
-    struct timespec startTime;
-    struct timespec endTime;
+    struct timespec startTime = {0};
+    struct timespec endTime = {0};
     long long diff;
     clock_gettime(CLOCK_MONOTONIC, &(startTime));
 #endif

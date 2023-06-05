@@ -573,7 +573,7 @@ static bool CalculateCrashTime(Service *service, int crashTimeLimit, int crashCo
 {
     INIT_ERROR_CHECK(service != NULL && crashTimeLimit > 0 && crashCountLimit > 0,
         return false, "input params error.");
-    struct timespec curTime = {};
+    struct timespec curTime = {0};
     (void)clock_gettime(CLOCK_MONOTONIC, &curTime);
     struct timespec crashTime = {service->firstCrashTime, 0};
     if (service->crashCnt == 0) {

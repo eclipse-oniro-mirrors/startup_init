@@ -52,7 +52,7 @@ static void UnloadDeviceInfoSa(int signo)
 {
     {
         std::unique_lock<std::mutex> lock(g_lock);
-        struct timespec currTimer = {};
+        struct timespec currTimer = {0};
         (void)clock_gettime(CLOCK_MONOTONIC, &currTimer);
         if (IntervalTime(&g_lastTime, &currTimer) < DEVICE_INFO_EXIT_TIMEOUT_S) {
             alarm(DEVICE_INFO_EXIT_TIMEOUT_S / 3); // 3 half

@@ -93,14 +93,14 @@ static int ReadMessage(int fd, char *buffer, uint32_t timeout)
 {
     int ret = 0;
     uint32_t diff = 0;
-    struct timespec startTime = {};
+    struct timespec startTime = {0};
     (void)clock_gettime(CLOCK_MONOTONIC, &startTime);
     do {
         ssize_t recvLen = recv(fd, (char *)buffer, RECV_BUFFER_MAX, 0);
         if (recvLen > 0) {
             break;
         }
-        struct timespec finishTime = {};
+        struct timespec finishTime = {0};
         (void)clock_gettime(CLOCK_MONOTONIC, &finishTime);
         diff = IntervalTime(&finishTime, &startTime);
         if (diff >= timeout) {
@@ -120,7 +120,7 @@ static int ReadMessage(int fd, char *buffer, uint32_t timeout)
 
 static int GetClientSocket(int timeout)
 {
-    struct timeval time;
+    struct timeval time = {0};
     time.tv_sec = timeout;
     time.tv_usec = 0;
     int clientFd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);

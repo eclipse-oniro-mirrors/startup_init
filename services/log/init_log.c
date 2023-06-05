@@ -41,7 +41,7 @@ static InitLogLevel g_logLevel = INIT_INFO;
 #ifdef INIT_FILE
 static void LogToFile(const char *logFile, const char *tag, const char *info)
 {
-    struct timespec curr;
+    struct timespec curr = {0};
     if (clock_gettime(CLOCK_REALTIME, &curr) != 0) {
         return;
     }

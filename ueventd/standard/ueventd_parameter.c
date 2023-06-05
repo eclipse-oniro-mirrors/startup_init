@@ -68,8 +68,8 @@ static void *ThreadRun(void *data)
     while (1) {
         pthread_mutex_lock(&(parameterCtrl->lock));
         if (parameterCtrl->empty) {
-            struct timespec abstime = {};
-            struct timeval now = {};
+            struct timespec abstime = {0};
+            struct timeval now = {0};
             const long timeout = 5000; // wait time 5000ms
             gettimeofday(&now, NULL);
             long nsec = now.tv_usec * 1000 + (timeout % 1000) * 1000000; // 1000 unit 1000000 unit nsec
