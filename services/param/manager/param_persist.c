@@ -23,7 +23,7 @@
 #include "param_osadp.h"
 #include "securec.h"
 
-static ParamPersistWorkSpace g_persistWorkSpace = {0, 0, NULL, {}, {0}};
+static ParamPersistWorkSpace g_persistWorkSpace = {0, 0, NULL, {0}, {0}};
 static int IsNeedToSave(const char *name)
 {
 #if defined(__LITEOS_M__) || defined(__LITEOS_A__)
@@ -194,7 +194,7 @@ INIT_LOCAL_API int WritePersistParam(const char *name, const char *value)
     }
 
     // check timer for save all
-    struct timespec currTimer = {};
+    struct timespec currTimer = {0};
     (void)clock_gettime(CLOCK_MONOTONIC, &currTimer);
     uint32_t diff = IntervalTime(&g_persistWorkSpace.lastSaveTimer, &currTimer);
     if (diff > PARAM_MUST_SAVE_PARAM_DIFF) {

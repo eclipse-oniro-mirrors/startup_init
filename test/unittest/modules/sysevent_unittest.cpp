@@ -95,7 +95,7 @@ HWTEST_F(SysEventUnitTest, SysEventTest_003, TestSize.Level1)
 
 HWTEST_F(SysEventUnitTest, SysEventTest_004, TestSize.Level1)
 {
-    struct timespec curr;
+    struct timespec curr = {0};
     if (clock_gettime(CLOCK_MONOTONIC, &curr) != 0) {
         return;
     }
@@ -112,7 +112,7 @@ HWTEST_F(SysEventUnitTest, SysEventTest_004, TestSize.Level1)
 
 HWTEST_F(SysEventUnitTest, SysEventTest_005, TestSize.Level1)
 {
-    struct timespec curr;
+    struct timespec curr = {0};
     if (clock_gettime(CLOCK_MONOTONIC, &curr) != 0) {
         return;
     }

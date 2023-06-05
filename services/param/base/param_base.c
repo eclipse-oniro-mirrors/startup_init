@@ -816,7 +816,7 @@ void CachedParameterDestroy(CachedHandle handle)
 #define MAX_TEST 10000
 STATIC_INLINE long long DiffLocalTime(struct timespec *startTime)
 {
-    struct timespec endTime;
+    struct timespec endTime = {0};
     clock_gettime(CLOCK_MONOTONIC, &(endTime));
     long long diff = (long long)((endTime.tv_sec - startTime->tv_sec) * 1000000); // 1000000 1000ms
     if (endTime.tv_nsec > startTime->tv_nsec) {
@@ -829,7 +829,7 @@ STATIC_INLINE long long DiffLocalTime(struct timespec *startTime)
 
 static void TestPermissionCheck(const char *testParamName)
 {
-    struct timespec startTime;
+    struct timespec startTime = {0};
     clock_gettime(CLOCK_MONOTONIC, &(startTime));
     ParamSecurityLabel *label = &(GetParamWorkSpace()->securityLabel);
     ParamLabelIndex labelIndex = {0};
@@ -879,7 +879,7 @@ static void TestPermissionCheck(const char *testParamName)
 
 void TestParameterReaderPerformance(void)
 {
-    struct timespec startTime;
+    struct timespec startTime = {0};
     const char *testParamName = "persist.appspawn.randrom.read";
     const uint32_t buffSize = PARAM_VALUE_LEN_MAX;
     char buffer[PARAM_VALUE_LEN_MAX] = {0};

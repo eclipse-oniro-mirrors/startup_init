@@ -73,7 +73,7 @@ static int TraversalEvent(ListNode *node, void *root)
 PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
 {
     PLUGIN_CHECK(events != NULL, return, "Invalid events");
-    struct timespec curr;
+    struct timespec curr = {0};
     if (clock_gettime(CLOCK_MONOTONIC, &curr) != 0) {
         return;
     }

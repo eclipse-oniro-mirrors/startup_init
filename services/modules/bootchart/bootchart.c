@@ -174,8 +174,8 @@ BOOTCHART_STATIC void *BootchartThreadMain(void *data)
         BootchartLogHeader();
         while (1) {
             pthread_mutex_lock(&(g_bootchartCtrl->mutex));
-            struct timespec abstime = {};
-            struct timeval now = {};
+            struct timespec abstime = {0};
+            struct timeval now = {0};
             const long timeout = 200; // wait time 200ms
             gettimeofday(&now, NULL);
             long nsec = now.tv_usec * 1000 + (timeout % 1000) * 1000000; // 1000 unit 1000000 unit nsec
