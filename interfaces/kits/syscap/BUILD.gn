@@ -14,7 +14,10 @@
 import("//build/ohos.gni")
 
 ohos_shared_library("deviceinfo_ndk") {
-  sources = [ "src/syscap_ndk.c" ]
+  sources = [
+    "src/deviceinfo.c",
+    "src/syscap_ndk.c",
+  ]
   include_dirs = [ "./include" ]
   deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
   part_name = "init"
@@ -29,5 +32,8 @@ ohos_ndk_library("libdeviceinfo_ndk") {
 
 ohos_ndk_headers("deviceinfo_header") {
   dest_dir = "$ndk_headers_out_dir/"
-  sources = [ "./include/syscap_ndk.h" ]
+  sources = [
+    "./include/deviceinfo.h",
+    "./include/syscap_ndk.h",
+  ]
 }

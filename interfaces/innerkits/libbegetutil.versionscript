@@ -144,6 +144,10 @@
     GetMajorVersion;
     GetSeniorVersion;
     OH_Ext*;
+    GetDistributionOSName;
+    GetDistributionOSVersion;
+    GetDistributionOSApiVersion;
+    GetDistributionOSReleaseType;
   local:
     *;
 };

@@ -356,3 +356,43 @@ uint32_t GetUintParameter(const char *key, uint32_t def)
     }
     return (uint32_t)result;
 }
+
+const char *GetDistributionOSName(void)
+{
+    static const char *distributionOsName = NULL;
+    GetProperty("const.product.os.dist.name", &distributionOsName);
+    if (distributionOsName == NULL) {
+        distributionOsName = EMPTY_STR;
+    }
+    return distributionOsName;
+}
+
+const char *GetDistributionOSVersion(void)
+{
+    static const char *distributionOsVersion = NULL;
+    GetProperty("const.product.os.dist.version", &distributionOsVersion);
+    if (distributionOsVersion == NULL) {
+        distributionOsVersion = GetOSFullName();
+    }
+    return distributionOsVersion;
+}
+
+int GetDistributionOSApiVersion(void)
+{
+    static const char *distributionOsApiVersion = NULL;
+    GetProperty("const.product.os.dist.apiversion", &distributionOsApiVersion);
+    if (distributionOsApiVersion == NULL) {
+        distributionOsApiVersion = GetSdkApiVersion_();
+    }
+    return atoi(distributionOsApiVersion);
+}
+
+const char *GetDistributionOSReleaseType(void)
+{
+    static const char *distributionOsReleaseType = NULL;
+    GetProperty("const.product.os.dist.releasetype", &distributionOsReleaseType);
+    if (distributionOsReleaseType == NULL) {
+        distributionOsReleaseType = GetOsReleaseType();
+    }
+    return distributionOsReleaseType;
+}

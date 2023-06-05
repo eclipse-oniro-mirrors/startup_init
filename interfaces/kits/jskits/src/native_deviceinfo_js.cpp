@@ -363,6 +363,42 @@ static napi_value GetDevUdid(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
+static napi_value NAPI_GetDistributionOSName(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    const char *val = GetDistributionOSName();
+
+    NAPI_CALL(env, napi_create_string_utf8(env, val, strlen(val), &napiValue));
+    return napiValue;
+}
+
+static napi_value NAPI_GetDistributionOSVersion(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    const char *val = GetDistributionOSVersion();
+
+    NAPI_CALL(env, napi_create_string_utf8(env, val, strlen(val), &napiValue));
+    return napiValue;
+}
+
+static napi_value NAPI_GetDistributionOSApiVersion(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    int sdkApiVersion = GetDistributionOSApiVersion();
+
+    NAPI_CALL(env, napi_create_int32(env, sdkApiVersion, &napiValue));
+    return napiValue;
+}
+
+static napi_value NAPI_GetDistributionOSReleaseType(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    const char *val = GetDistributionOSReleaseType();
+
+    NAPI_CALL(env, napi_create_string_utf8(env, val, strlen(val), &napiValue));
+    return napiValue;
+}
+
 EXTERN_C_START
 /*
  * Module init
@@ -403,6 +439,10 @@ static napi_value Init(napi_env env, napi_value exports)
         {"buildTime", nullptr, nullptr, GetBuildTime, nullptr, nullptr, napi_default, nullptr},
         {"buildRootHash", nullptr, nullptr, GetBuildRootHash, nullptr, nullptr, napi_default, nullptr},
         {"udid", nullptr, nullptr, GetDevUdid, nullptr, nullptr, napi_default, nullptr},
+        {"distributionOSName", nullptr, nullptr, NAPI_GetDistributionOSName, nullptr, nullptr, napi_default, nullptr},
+        {"distributionOSVersion", nullptr, nullptr, NAPI_GetDistributionOSVersion, nullptr, nullptr, napi_default, nullptr},
+        {"distributionOSApiVersion", nullptr, nullptr, NAPI_GetDistributionOSApiVersion, nullptr, nullptr, napi_default, nullptr},
+        {"distributionOSReleaseType", nullptr, nullptr, NAPI_GetDistributionOSReleaseType, nullptr, nullptr, napi_default, nullptr},
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
 
