@@ -1,5 +1,32 @@
 [
     {
-        "name": "canIUse"
+        "name": "canIUse",
+        "name": "OH_GetDeviceType",
+        "name": "OH_GetManufacture",
+        "name": "OH_GetBrand",
+        "name": "OH_GetMarketName",
+        "name": "OH_GetProductSeries",
+        "name": "OH_GetProductModel",
+        "name": "OH_GetSoftwareModel",
+        "name": "OH_GetHardwareModel",
+        "name": "OH_GetBootloaderVersion",
+        "name": "OH_GetAbiList",
+        "name": "OH_GetSecurityPatchTag",
+        "name": "OH_GetDisplayVersion",
+        "name": "OH_GetIncrementalVersion",
+        "name": "OH_GetOsReleaseType",
+        "name": "OH_GetOSFullName",
+        "name": "OH_GetSdkApiVersion",
+        "name": "OH_GetFirstApiVersion",
+        "name": "OH_GetVersionId",
+        "name": "OH_GetBuildType",
+        "name": "OH_GetBuildUser",
+        "name": "OH_GetBuildHost",
+        "name": "OH_GetBuildTime",
+        "name": "OH_GetBuildRootHash",
+        "name": "OH_GetDistributionOSName",
+        "name": "OH_GetDistributionOSVersion",
+        "name": "OH_GetDistributionOSApiVersion",
+        "name": "OH_GetDistributionOSReleaseType"
     }
 ]

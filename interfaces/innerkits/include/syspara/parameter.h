@@ -173,6 +173,11 @@ long long GetSystemCommitId(void);
 int32_t GetIntParameter(const char *key, int32_t def);
 uint32_t GetUintParameter(const char *key, uint32_t def);
 
+const char *GetDistributionOSName(void);
+const char *GetDistributionOSVersion(void);
+int GetDistributionOSApiVersion(void);
+const char *GetDistributionOSReleaseType(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
