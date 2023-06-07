@@ -57,7 +57,7 @@ static int TraversalEvent(ListNode *node, void *root)
     int len = GetServiceName(item->paramName, args->buffer + args->currLen, args->bufferLen - args->currLen);
     PLUGIN_CHECK(len > 0 && (((uint32_t)len + args->currLen) < args->bufferLen), return -1,
         "Failed to format service name %s", item->paramName);
-    args->currLen += len;
+    args->currLen += (uint32_t)len;
 
     len = sprintf_s(args->buffer + args->currLen, args->bufferLen - args->currLen, ",%u:%u,%u:%u;",
         (uint32_t)item->timestamp[BOOTEVENT_FORK].tv_sec,
