@@ -72,7 +72,7 @@ HWTEST_F(ModuleMgrUnitTest, PluginAddCmd, TestSize.Level1)
     PluginExecCmdByName(cmdName, nullptr);
     PluginExecCmdByName(cmdName, cmdContentNotValid);
     g_cmdExecId = -1;
-    PluginExecCmdByCmdIndex(cmdIndex, cmdContent);
+    PluginExecCmdByCmdIndex(cmdIndex, cmdContent, nullptr);
     ASSERT_EQ(cmdExecId1, g_cmdExecId);
     const char *argv[] = {"test.value"};
     PluginExecCmd("install", 1, argv);

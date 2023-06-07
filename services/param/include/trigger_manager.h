@@ -18,6 +18,7 @@
 #include <stdint.h>
 
 #include "cJSON.h"
+#include "init_cmds.h"
 #include "init_hashmap.h"
 #include "list.h"
 #include "param_message.h"
@@ -107,6 +108,7 @@ typedef struct TriggerHeader_ {
 
 typedef struct CommandNode_ {
     struct CommandNode_ *next;
+    ConfigContext cfgContext;
     uint32_t cmdKeyIndex;
     char content[0];
 } CommandNode;
@@ -183,7 +185,7 @@ JobNode *UpdateJobTrigger(const TriggerWorkSpace *workSpace,
 JobNode *GetTriggerByName(const TriggerWorkSpace *workSpace, const char *triggerName);
 void FreeTrigger(const TriggerWorkSpace *workSpace, TriggerNode *trigger);
 void ClearTrigger(const TriggerWorkSpace *workSpace, int8_t type);
-int AddCommand(JobNode *trigger, uint32_t cmdIndex, const char *content);
+int AddCommand(JobNode *trigger, uint32_t cmdIndex, const char *content, const ConfigContext *cfgContext);
 CommandNode *GetNextCmdNode(const JobNode *trigger, const CommandNode *curr);
 
 void PostParamTrigger(int type, const char *name, const char *value);

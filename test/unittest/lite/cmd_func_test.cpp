@@ -157,8 +157,9 @@ void DoCmd(const TestCmdLine *resCmd)
     if (resCmd == nullptr) {
         return;
     }
-
-    DoCmdByName(resCmd->name, resCmd->cmdContent);
+    int cmdIndex = 0;
+    (void)GetMatchCmd(resCmd->name, &cmdIndex);
+    DoCmdByIndex(cmdIndex, resCmd->cmdContent, NULL);
 }
 
 /*
@@ -927,7 +928,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_003, TestSize.Level0)
 HWTEST_F(StartupInitUTest, cmdJobTest_001, TestSize.Level0)
 {
     // functions do not crash
-    ParseAllJobs(nullptr);
+    ParseAllJobs(nullptr, nullptr);
     DoJob(nullptr);
     DoJob("job name does not exist");
     ReleaseAllJobs();
@@ -953,7 +954,8 @@ HWTEST_F(StartupInitUTest, cmdJobTest_002, TestSize.Level0)
     if (jobItem == nullptr) {
         return;
     }
-    ParseAllJobs(jobItem);
+    ConfigContext context = { INIT_CONTEXT_MAIN };
+    ParseAllJobs(jobItem, &context);
     DoJob("pre-init");
     DoJob("init");
     DoJob("post-init");

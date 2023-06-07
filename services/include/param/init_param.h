@@ -121,7 +121,7 @@ void PostTrigger(EventType type, const char *content, uint32_t contentLen);
  * 解析trigger文件。
  *
  */
-int ParseTriggerConfig(const cJSON *fileRoot, int (*checkJobValid)(const char *jobName));
+int ParseTriggerConfig(const cJSON *fileRoot, int (*checkJobValid)(const char *jobName), void *context);
 
 /**
  * 对外接口

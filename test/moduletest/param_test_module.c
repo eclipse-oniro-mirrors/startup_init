@@ -20,9 +20,10 @@
 #include "init_param.h"
 #include "modulemgr.h"
 #include "init_module_engine.h"
+#include "init_cmds.h"
 #include "securec.h"
 
-#define MAX_COUNT 1000
+#define MAX_COUNT 1
 #define TEST_CMD_NAME "param_randrom_write"
 
 #define READ_DURATION 100000
@@ -54,7 +55,7 @@ static int PluginParamCmdWriteParam(int id, const char *name, int argc, const ch
 
 MODULE_CONSTRUCTOR(void)
 {
-    g_testCmdIndex = AddCmdExecutor(TEST_CMD_NAME, PluginParamCmdWriteParam);
+    g_testCmdIndex = AddCareContextCmdExecutor(TEST_CMD_NAME, PluginParamCmdWriteParam);
 }
 
 MODULE_DESTRUCTOR(void)

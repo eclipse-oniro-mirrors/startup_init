@@ -26,7 +26,7 @@
 #define MAX_CMD_ARGC 10
 static int g_cmdExecutorId = 0;
 static int g_cmdId = 0;
-int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd)
+int AddCmdExecutor_(const char *cmdName, CmdExecutor execCmd, int careContext)
 {
     INIT_ERROR_CHECK(cmdName != NULL, return -1, "Invalid input param");
     INIT_LOGV("Add command '%s' executor.", cmdName);
@@ -43,6 +43,7 @@ int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd)
         groupNode->data.cmd = cmd;
         cmd->cmdId = g_cmdId++;
         cmd->name = groupNode->name;
+        cmd->careContext = careContext;
         OH_ListInit(&cmd->cmdExecutor);
     }
     if (execCmd == NULL) {
@@ -55,6 +56,16 @@ int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd)
     cmdExec->execCmd = execCmd;
     OH_ListAddTail(&cmd->cmdExecutor, &cmdExec->node);
     return cmdExec->id;
+}
+
+int AddCareContextCmdExecutor(const char *cmdName, CmdExecutor execCmd)
+{
+    return AddCmdExecutor_(cmdName, execCmd, 1);
+}
+
+int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd)
+{
+    return AddCmdExecutor_(cmdName, execCmd, 0);
 }
 
 void RemoveCmdExecutor(const char *cmdName, int id)
@@ -82,7 +93,7 @@ void RemoveCmdExecutor(const char *cmdName, int id)
     free(cmd);
 }
 
-void PluginExecCmd_(PluginCmd *cmd, const char *cmdContent)
+static void PluginExecCmd_(PluginCmd *cmd, const char *cmdContent)
 {
     const struct CmdArgs *ctx = GetCmdArg(cmdContent, " ", MAX_CMD_ARGC);
     if (ctx == NULL) {
@@ -169,15 +180,19 @@ const char *GetPluginCmdNameByIndex(int index)
     return cmd->name;
 }
 
-void PluginExecCmdByCmdIndex(int index, const char *cmdContent)
+void PluginExecCmdByCmdIndex(int index, const char *cmdContent, const ConfigContext *context)
 {
     PluginCmd *cmd = GetPluginCmdByIndex(index);
     if (cmd == NULL) {
         INIT_LOGW("Cannot find plugin command with index %d", index);
         return;
     }
-    INIT_LOGV("Command: %s cmdContent: %s", cmd->name, cmdContent);
-    PluginExecCmd_(cmd, cmdContent);
+    INIT_LOGV("Command: %s cmdContent: %s %d", cmd->name, cmdContent, cmd->careContext);
+    if (!cmd->careContext || !CheckExecuteInSubInit(context)) {
+        PluginExecCmd_(cmd, cmdContent);
+    } else {
+        ExecuteCmdInSubInit(context, cmd->name, cmdContent);
+    }
 }
 
 const char *PluginGetCmdIndex(const char *cmdStr, int *index)

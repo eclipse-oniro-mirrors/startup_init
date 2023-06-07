@@ -25,7 +25,7 @@
 
 static DUMP_PRINTF g_printf = printf;
 
-int AddCommand(JobNode *trigger, uint32_t cmdKeyIndex, const char *content)
+int AddCommand(JobNode *trigger, uint32_t cmdKeyIndex, const char *content, const ConfigContext *cfgContext)
 {
     PARAM_CHECK(trigger != NULL, return -1, "trigger is null");
     uint32_t size = sizeof(CommandNode);
@@ -43,7 +43,10 @@ int AddCommand(JobNode *trigger, uint32_t cmdKeyIndex, const char *content)
         PARAM_CHECK(ret == EOK, free(node);
             return 0, "Failed to copy command");
     }
-
+    node->cfgContext.type = INIT_CONTEXT_MAIN;
+    if (cfgContext != NULL) {
+        node->cfgContext.type = cfgContext->type;
+    }
     if (trigger->firstCmd == NULL) {
         trigger->firstCmd = node;
         trigger->lastCmd = node;
@@ -488,8 +491,9 @@ static void DumpJobTrigger_(const TriggerWorkSpace *workSpace, const TriggerNode
     int count = 0;
     CommandNode *cmd = GetNextCmdNode(node, NULL);
     while (cmd != NULL && count < maxCmd) {
-        PARAM_DUMP("    command name: %s \n", GetCmdKey(cmd->cmdKeyIndex));
-        PARAM_DUMP("    command args: %s \n", cmd->content);
+        PARAM_DUMP("    command name: %s (%s) \n", GetCmdKey(cmd->cmdKeyIndex),
+            (cmd->cfgContext.type == INIT_CONTEXT_CHIPSET) ? "chipset" : "system");
+        PARAM_DUMP("    command args    : %s \n", cmd->content);
         cmd = GetNextCmdNode(node, cmd);
         count++;
     }

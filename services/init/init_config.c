@@ -21,12 +21,29 @@
 
 static void ParseAllImports(const cJSON *root);
 
+InitContextType GetConfigContextType(const char *cfgName)
+{
+    static const char *vendorDir[] = {
+        "/vendor/etc/init/", "/chipset/etc/init/", "/chip_prod/etc/init/"
+    };
+
+    for (size_t j = 0; j < ARRAY_LENGTH(vendorDir); j++) {
+        if (strncmp(vendorDir[j], cfgName, strlen(vendorDir[j])) == 0) {
+            return INIT_CONTEXT_CHIPSET;
+        }
+    }
+    return INIT_CONTEXT_MAIN;
+}
+
 static void ParseInitCfgContents(const char *cfgName, const cJSON *root)
 {
     INIT_ERROR_CHECK(root != NULL, return, "Root is null");
-    ParseAllServices(root);
+    ConfigContext context = { INIT_CONTEXT_MAIN };
+    context.type = GetConfigContextType(cfgName);
+    INIT_LOGV("Parse %s configs in context %d", cfgName, context.type);
+    ParseAllServices(root, &context);
     // parse jobs
-    ParseAllJobs(root);
+    ParseAllJobs(root, &context);
     // parse imports
     ParseAllImports(root);
 }

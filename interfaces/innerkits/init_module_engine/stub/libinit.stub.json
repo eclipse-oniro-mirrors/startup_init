@@ -21,5 +21,8 @@
     { "name": "AddRebootCmdExecutor" },
     { "name": "GetBootEventList" },
     { "name": "WaitForFile" },
-    { "name": "DoCmdByName" }
+    { "name": "DoCmdByIndex" },
+    { "name": "GetMatchCmd" },
+    { "name": "AddCareContextCmdExecutor" },
+    { "name": "InitSubInitContext" }
 ]

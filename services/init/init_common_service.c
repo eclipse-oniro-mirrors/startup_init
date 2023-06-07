@@ -508,6 +508,11 @@ int ServiceStart(Service *service)
 #endif
     int pid = fork();
     if (pid == 0) {
+        // set selinux label by context
+        if (service->context.type != INIT_CONTEXT_MAIN) {
+            SetSubInitContext(&service->context, service->name);
+        }
+
         if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
             CheckModuleUpdate(service->pathArgs.count, service->pathArgs.argv);
         }
@@ -602,7 +607,7 @@ static int ExecRestartCmd(Service *service)
     }
     for (int i = 0; i < service->restartArg->cmdNum; i++) {
         INIT_LOGI("ExecRestartCmd cmdLine->cmdContent %s ", service->restartArg->cmds[i].cmdContent);
-        DoCmdByIndex(service->restartArg->cmds[i].cmdIndex, service->restartArg->cmds[i].cmdContent);
+        DoCmdByIndex(service->restartArg->cmds[i].cmdIndex, service->restartArg->cmds[i].cmdContent, NULL);
     }
     free(service->restartArg);
     service->restartArg = NULL;
@@ -752,6 +757,7 @@ int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
             // case 1
             CloseServiceFds(service, true);
         }
+        INIT_ERROR_CHECK(fdCount <= MAX_HOLD_FDS, return -1, "Invalid fdCount %d", fdCount);
         service->fds = calloc(fdCount + 1, sizeof(int));
         if (service->fds == NULL) {
             INIT_LOGE("Service \' %s \' failed to allocate memory for fds", service->name);
