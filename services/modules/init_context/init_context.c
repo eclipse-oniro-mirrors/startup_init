@@ -235,8 +235,10 @@ static void SubInitMain(InitContextType type, int readFd, int writeFd)
 static int SubInitSetSelinuxContext(InitContextType type)
 {
     PLUGIN_CHECK(type < INIT_CONTEXT_MAIN, return -1, "Invalid type %d", type);
+#ifdef INIT_SUPPORT_CHIPSET_INIT
 #ifdef WITH_SELINUX
     setcon(g_subContext[type]);
+#endif
 #endif
     return 0;
 }

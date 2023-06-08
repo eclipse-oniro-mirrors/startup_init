@@ -83,5 +83,9 @@ int SetSubInitContext(const ConfigContext *context, const char *service)
 
 int CheckExecuteInSubInit(const ConfigContext *context)
 {
+#ifdef INIT_SUPPORT_CHIPSET_INIT
     return !(context == NULL || context->type == INIT_CONTEXT_MAIN || g_currContext.type != INIT_CONTEXT_MAIN);
+#else
+    return 0;
+#endif
 }
