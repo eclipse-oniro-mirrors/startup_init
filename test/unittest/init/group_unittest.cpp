@@ -90,13 +90,6 @@ static TestHashNode *TestCreateHashNode(const char *value)
     return node;
 }
 
-static void DoCmdByName(const char *name, const char *cmdContent)
-{
-    int cmdIndex = 0;
-    (void)GetMatchCmd(name, &cmdIndex);
-    DoCmdByIndex(cmdIndex, cmdContent, NULL);
-}
-
 namespace init_ut {
 class InitGroupManagerUnitTest : public testing::Test {
 public:
@@ -224,8 +217,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService, TestSize.Level1)
 
     cJSON *fileRoot = cJSON_Parse(serviceStr);
     ASSERT_NE(nullptr, fileRoot);
-    ConfigContext context = { INIT_CONTEXT_MAIN };
-    ParseAllServices(fileRoot, &context);
+    ParseAllServices(fileRoot);
     cJSON_Delete(fileRoot);
 
     Service *service = GetServiceByName("test-service");
@@ -284,8 +276,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddServiceDeny, TestSize.Level1)
 
     cJSON *fileRoot = cJSON_Parse(serviceStr);
     ASSERT_NE(nullptr, fileRoot);
-    ConfigContext context = { INIT_CONTEXT_MAIN };
-    ParseAllServices(fileRoot, &context);
+    ParseAllServices(fileRoot);
     cJSON_Delete(fileRoot);
 
     Service *service = GetServiceByName("test-service5");
@@ -318,8 +309,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService2, TestSize.Level1)
 
     cJSON *fileRoot = cJSON_Parse(serviceStr);
     ASSERT_NE(nullptr, fileRoot);
-    ConfigContext context = { INIT_CONTEXT_MAIN };
-    ParseAllServices(fileRoot, &context);
+    ParseAllServices(fileRoot);
     cJSON_Delete(fileRoot);
     char cmdStr[] = "all#bootevent";
     char cmdStr1[] = "parameter_service";

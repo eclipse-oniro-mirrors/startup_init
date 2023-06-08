@@ -85,15 +85,12 @@ ENG_STATIC void MountEngPartitions(void)
     BuildMountCmd(mountCmd, MOUNT_CMD_MAX_LEN, "/eng_system",
         "/dev/block/by-name/eng_system", "ext4");
     WaitForFile(ENG_SYSTEM_DEVICE_PATH, WAIT_MAX_SECOND);
-    int cmdIndex = 0;
-    (void)GetMatchCmd("mount ", &cmdIndex);
-    DoCmdByIndex(cmdIndex, mountCmd, NULL);
-
+    DoCmdByName("mount ", mountCmd);
    // Mount eng_chipset
     BuildMountCmd(mountCmd, MOUNT_CMD_MAX_LEN, "/eng_chipset",
         "/dev/block/by-name/eng_chipset", "ext4");
     WaitForFile(ENG_CHIPSET_DEVICE_PATH, WAIT_MAX_SECOND);
-    DoCmdByIndex(cmdIndex, mountCmd, NULL);
+    DoCmdByName("mount ", mountCmd);
 }
 
 ENG_STATIC void BindMountFile(const char *source, const char *target)

@@ -37,7 +37,7 @@ static int DoTriggerExecute_(const TriggerNode *trigger, const char *content, ui
     CommandNode *cmd = GetNextCmdNode((JobNode *)trigger, NULL);
     while (cmd != NULL) {
 #ifndef STARTUP_INIT_TEST
-        DoCmdByIndex(cmd->cmdKeyIndex, cmd->content, &cmd->cfgContext);
+        DoCmdByIndex(cmd->cmdKeyIndex, cmd->content);
 #endif
         cmd = GetNextCmdNode((JobNode *)trigger, cmd);
     }
@@ -225,7 +225,7 @@ static void ParseJobHookExecute(const char *name, const cJSON *jobNode)
 }
 
 static int ParseTrigger_(const TriggerWorkSpace *workSpace,
-    const cJSON *triggerItem, int (*checkJobValid)(const char *jobName), const ConfigContext *cfgContext)
+    const cJSON *triggerItem, int (*checkJobValid)(const char *jobName))
 {
     PARAM_CHECK(triggerItem != NULL, return -1, "Invalid file");
     PARAM_CHECK(workSpace != NULL, return -1, "Failed to create trigger list");
@@ -260,17 +260,16 @@ static int ParseTrigger_(const TriggerWorkSpace *workSpace,
         char *content = NULL;
         ret = GetCommandInfo(cmdLineStr, &cmdKeyIndex, &content);
         PARAM_CHECK(ret == 0, continue, "Command not support %s", cmdLineStr);
-        ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, content, cfgContext);
+        ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, content);
         PARAM_CHECK(ret == 0, continue, "Failed to add command %s", cmdLineStr);
         header->cmdNodeCount++;
     }
     return 0;
 }
 
-int ParseTriggerConfig(const cJSON *fileRoot, int (*checkJobValid)(const char *jobName), void *context)
+int ParseTriggerConfig(const cJSON *fileRoot, int (*checkJobValid)(const char *jobName))
 {
     PARAM_CHECK(fileRoot != NULL, return -1, "Invalid file");
-    ConfigContext *cfgContext = (ConfigContext *)context;
     cJSON *triggers = cJSON_GetObjectItemCaseSensitive(fileRoot, TRIGGER_ARR_NAME_IN_JSON);
     if (triggers == NULL || !cJSON_IsArray(triggers)) {
         return 0;
@@ -280,7 +279,7 @@ int ParseTriggerConfig(const cJSON *fileRoot, int (*checkJobValid)(const char *j
 
     for (int i = 0; i < size && i < TRIGGER_MAX_CMD; ++i) {
         cJSON *item = cJSON_GetArrayItem(triggers, i);
-        ParseTrigger_(&g_triggerWorkSpace, item, checkJobValid, cfgContext);
+        ParseTrigger_(&g_triggerWorkSpace, item, checkJobValid);
         /*
          * execute job parsing hooks
          */
@@ -386,7 +385,7 @@ int AddCompleteJob(const char *name, const char *condition, const char *cmdConte
     int cmdKeyIndex = 0;
     int ret = GetCommandInfo(cmdContent, &cmdKeyIndex, &content);
     PARAM_CHECK(ret == 0, return -1, "Command not support %s", cmdContent);
-    ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, content, NULL); // use default context
+    ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, content);
     PARAM_CHECK(ret == 0, return -1, "Failed to add command %s", cmdContent);
     header->cmdNodeCount++;
     PARAM_LOGV("AddCompleteJob %s type %d count %d", name, type, header->triggerCount);

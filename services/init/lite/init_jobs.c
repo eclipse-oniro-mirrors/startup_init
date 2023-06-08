@@ -81,7 +81,7 @@ static void ParseJob(const cJSON *jobItem, Job *resJob)
     return;
 }
 
-void ParseAllJobs(const cJSON *fileRoot, const ConfigContext *context)
+void ParseAllJobs(const cJSON *fileRoot)
 {
     if (fileRoot == NULL) {
         INIT_LOGE("ParseAllJobs, input fileRoot is NULL!");
@@ -138,7 +138,7 @@ void DoJob(const char *jobName)
                 continue;
             }
             for (int j = 0; j < cmdLines->cmdNum; ++j) {
-                DoCmdByIndex(cmdLines->cmds[j].cmdIndex, cmdLines->cmds[j].cmdContent, NULL);
+                DoCmdByIndex(cmdLines->cmds[j].cmdIndex, cmdLines->cmds[j].cmdContent);
             }
         }
     }

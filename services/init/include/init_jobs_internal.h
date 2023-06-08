@@ -31,7 +31,7 @@ typedef struct {
     CmdLines *cmdLines;
 } Job;
 
-void ParseAllJobs(const cJSON *fileRoot, const ConfigContext *context);
+void ParseAllJobs(const cJSON *fileRoot);
 void DoJob(const char *jobName);
 void ReleaseAllJobs(void);
 void DumpAllJobs(void);

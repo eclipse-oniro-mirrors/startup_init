@@ -160,7 +160,6 @@ typedef struct Service_ {
     ServiceJobs serviceJobs;
     cpu_set_t *cpuSet;
     struct ListNode extDataNode;
-    ConfigContext context;
 } Service;
 #pragma pack()
 

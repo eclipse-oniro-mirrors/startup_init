@@ -22,7 +22,6 @@
 #include <time.h>
 
 #include "cJSON.h"
-#include "init_cmdexecutor.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -69,7 +68,6 @@ struct CmdTable {
     char name[MAX_CMD_NAME_LEN];
     unsigned char minArg;
     unsigned char maxArg;
-    unsigned char careContext;
     void (*DoFuncion)(const struct CmdArgs *ctx);
 };
 
@@ -78,20 +76,11 @@ typedef struct INIT_TIMING_STAT {
     struct timespec endTime;
 } INIT_TIMING_STAT;
 
-typedef enum _initContextType {
-    INIT_CONTEXT_CHIPSET,
-    INIT_CONTEXT_MAIN,
-} InitContextType;
-
-typedef struct {
-    InitContextType type;
-} ConfigContext;
-
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen);
 const struct CmdArgs *GetCmdArg(const char *cmdContent, const char *delim, int argsCount);
 void FreeCmdArg(struct CmdArgs *cmd);
-// exec in context, if context == null, exec in current context
-void DoCmdByIndex(int index, const char *cmdContent, const ConfigContext *context);
+void DoCmdByName(const char *name, const char *cmdContent);
+void DoCmdByIndex(int index, const char *cmdContent);
 const char *GetMatchCmd(const char *cmdStr, int *index);
 const char *GetCmdKey(int index);
 const struct CmdTable *GetCmdTable(int *number);
@@ -104,18 +93,6 @@ int SetFileCryptPolicy(const char *dir);
 
 void OpenHidebug(const char *name);
 long long InitDiffTime(INIT_TIMING_STAT *stat);
-
-void StopSubInit(pid_t pid);
-int ExecuteCmdInSubInit(const ConfigContext *context, const char *name, const char *cmdContent);
-int SetSubInitContext(const ConfigContext *context, const char *service);
-int CheckExecuteInSubInit(const ConfigContext *context);
-
-// exec in context, if context == null, exec in current context
-void PluginExecCmdByCmdIndex(int index, const char *cmdContent, const ConfigContext *context);
-const char *PluginGetCmdIndex(const char *cmdStr, int *index);
-const char *GetPluginCmdNameByIndex(int index);
-int AddCareContextCmdExecutor(const char *cmdName, CmdExecutor executor);
-
 #ifdef __cplusplus
 #if __cplusplus
 }

@@ -370,9 +370,7 @@ INIT_LOCAL_API int CheckParameterSet(const char *name,
         // do hook cmd
         PARAM_LOGV("Check parameter settings realKey %s cmd: '%s' value: %s",
             serviceInfo->realKey, serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
-        int cmdIndex = 0;
-        (void)GetMatchCmd(serviceInfo->cmdName, &cmdIndex);
-        DoCmdByIndex(cmdIndex, (char *)serviceInfo->realKey + serviceInfo->valueOffset, NULL);
+        DoCmdByName(serviceInfo->cmdName, (char *)serviceInfo->realKey + serviceInfo->valueOffset);
 #endif
     }
     if (serviceInfo != NULL) {

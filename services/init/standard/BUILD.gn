@@ -57,7 +57,6 @@ ohos_executable("init") {
   include_dirs = [
     "//base/startup/init/services/init/include",
     "//base/startup/init/services/modules/reboot",
-    "//base/startup/init/services/modules/init_context",
     "${FSCRYPT_PATH}/include/libfscrypt",
   ]
 

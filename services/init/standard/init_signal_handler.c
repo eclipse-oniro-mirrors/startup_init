@@ -20,7 +20,6 @@
 #include "init_adapter.h"
 #include "init_log.h"
 #include "init_param.h"
-#include "init_context.h"
 #include "init_service_manager.h"
 #include "loop_event.h"
 
@@ -50,7 +49,6 @@ INIT_STATIC void ProcessSignal(const struct signalfd_siginfo *siginfo)
                         service == NULL ? "Unknown" : service->name, sigPID, procStat);
                 }
                 CmdServiceProcessDelClient(sigPID);
-                StopSubInit(sigPID);
                 INIT_LOGI("SigHandler, SIGCHLD received, Service:%s pid:%d uid:%d status:%d.",
                     service == NULL ? "Unknown" : service->name,
                     sigPID, siginfo->ssi_uid, procStat);

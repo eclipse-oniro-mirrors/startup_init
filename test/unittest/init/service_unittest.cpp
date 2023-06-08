@@ -30,13 +30,6 @@
 #include "init_hook.h"
 #include "plugin_adapter.h"
 
-static void DoCmdByName(const char *name, const char *cmdContent)
-{
-    int cmdIndex = 0;
-    (void)GetMatchCmd(name, &cmdIndex);
-    DoCmdByIndex(cmdIndex, cmdContent, NULL);
-}
-
 using namespace testing::ext;
 using namespace std;
 namespace init_ut {
@@ -320,8 +313,7 @@ HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
     cJSON *fileRoot = cJSON_Parse(serviceStr);
     ASSERT_NE(nullptr, fileRoot);
     PluginExecCmd("clear", 0, nullptr);
-    ConfigContext context = { INIT_CONTEXT_MAIN };
-    ParseAllServices(fileRoot, &context);
+    ParseAllServices(fileRoot);
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), NULL);
     serviceInfoContext.reserved = NULL;
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), NULL);

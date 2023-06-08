@@ -139,10 +139,7 @@ HWTEST_F(TraceUnitTest, TraceTest_004, TestSize.Level1)
 {
     std::string cmdArgs = "/system/etc/init_trace.cfg  ";
     cmdArgs += STARTUP_INIT_UT_PATH"/system/etc/init_trace.cfg";
-    int cmdIndex = 0;
-    (void)GetMatchCmd("copy ", &cmdIndex);
-    DoCmdByIndex(cmdIndex, cmdArgs.c_str(), NULL);
-
+    DoCmdByName("copy ", cmdArgs.c_str());
     // start trace
     PluginExecCmdByName("init_trace", "start");
     // for run 1 s

@@ -87,7 +87,7 @@ public:
         INIT_ERROR_CHECK(fileBuf != nullptr, return -1, "Failed to read file content %s", configFile);
         cJSON *fileRoot = cJSON_Parse(fileBuf);
         INIT_ERROR_CHECK(fileRoot != nullptr, return -1, "Failed to parse json file %s", configFile);
-        ParseTriggerConfig(fileRoot, nullptr, nullptr);
+        ParseTriggerConfig(fileRoot, nullptr);
         cJSON_Delete(fileRoot);
         free(fileBuf);
         fileBuf = nullptr;
@@ -137,9 +137,9 @@ public:
         // add command
         int cmdIndex = 0;
         GetMatchCmd("reboot ", &cmdIndex);
-        int ret = AddCommand(trigger, cmdIndex, nullptr, nullptr);
+        int ret = AddCommand(trigger, cmdIndex, nullptr);
         EXPECT_EQ(ret, 0);
-        ret = AddCommand(trigger, cmdIndex, "update: aaaaaaa", nullptr);
+        ret = AddCommand(trigger, cmdIndex, "update: aaaaaaa");
         EXPECT_EQ(ret, 0);
         return 0;
     }
@@ -160,9 +160,9 @@ public:
         // add command
         int cmdIndex = 0;
         GetMatchCmd("reboot ", &cmdIndex);
-        int ret = AddCommand(trigger, cmdIndex, nullptr, nullptr);
+        int ret = AddCommand(trigger, cmdIndex, nullptr);
         EXPECT_EQ(ret, 0);
-        ret = AddCommand(trigger, cmdIndex, "update: aaaaaaa", nullptr);
+        ret = AddCommand(trigger, cmdIndex, "update: aaaaaaa");
         EXPECT_EQ(ret, 0);
         return 0;
     }
@@ -361,7 +361,7 @@ public:
         EXPECT_EQ(trigger, node);
 
         const uint32_t cmdIndex = 100;
-        ret = AddCommand(trigger, cmdIndex, value, nullptr);
+        ret = AddCommand(trigger, cmdIndex, value);
         EXPECT_EQ(ret, 0);
         // 修改命令为测试执行
         RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
@@ -383,7 +383,7 @@ public:
         JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
         const uint32_t cmdIndex = 102;
-        ret = AddCommand(trigger, cmdIndex, value, nullptr);
+        ret = AddCommand(trigger, cmdIndex, value);
         EXPECT_EQ(ret, 0);
         RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
         SystemWriteParam(param, value);
@@ -408,7 +408,7 @@ public:
             return -1;
         }
         const uint32_t cmdIndex = 103;
-        ret = AddCommand(trigger, cmdIndex, value, nullptr);
+        ret = AddCommand(trigger, cmdIndex, value);
         EXPECT_EQ(ret, 0);
         TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_ONCE);
         SystemWriteParam(param, value);
@@ -439,7 +439,7 @@ public:
             return -1;
         }
         const uint32_t cmdIndex = 105;
-        ret = AddCommand(trigger, cmdIndex, value, nullptr);
+        ret = AddCommand(trigger, cmdIndex, value);
         EXPECT_EQ(ret, 0);
         TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_ONCE);
         SystemWriteParam(param, value);
@@ -464,7 +464,7 @@ public:
         const char *value = "5555";
         JobNode *trigger = AddTrigger(TRIGGER_BOOT, boot, nullptr, 0);
         const int testCmdIndex = 1105;
-        int ret = AddCommand(trigger, testCmdIndex, value, nullptr);
+        int ret = AddCommand(trigger, testCmdIndex, value);
         EXPECT_EQ(ret, 0);
         if (trigger == nullptr) {
             return -1;
@@ -476,7 +476,7 @@ public:
         EXPECT_GE(ret, 0);
         trigger = AddTrigger(TRIGGER_UNKNOW, triggerName, buffer, 0);
         const int testCmdIndex2 = 105;
-        ret = AddCommand(trigger, testCmdIndex2, value, nullptr);
+        ret = AddCommand(trigger, testCmdIndex2, value);
 
         RegisterTriggerExec(TRIGGER_UNKNOW, TestCmdExec);
         SystemWriteParam(param, value);
