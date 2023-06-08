@@ -16,6 +16,8 @@
 #ifndef OHOS_SYSTEM_DEVICEIDSTUB_H
 #define OHOS_SYSTEM_DEVICEIDSTUB_H
 
+#include <atomic>
+#include <mutex>
 #include "iremote_stub.h"
 #include "idevice_info.h"
 #include "system_ability.h"
@@ -45,6 +47,8 @@ protected:
     void OnStart(void) override;
     void OnStop(void) override;
     int Dump(int fd, const std::vector<std::u16string>& args) override;
+    void ThreadForUnloadSa(void);
+    std::atomic_bool threadStarted_ { false };
 };
 } // namespace device_info
 } // namespace OHOS

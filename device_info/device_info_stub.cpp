@@ -16,8 +16,7 @@
 #include "device_info_stub.h"
 
 #include <chrono>
-#include <csignal>
-#include <unistd.h>
+#include <thread>
 
 #include "beget_ext.h"
 #include "idevice_info.h"
@@ -48,23 +47,23 @@ static const int DEVICE_INFO_EXIT_TIMEOUT_S = 15;
 static const int DEVICE_INFO_EXIT_TIMEOUT_S = 3;
 #endif
 
-static void UnloadDeviceInfoSa(int signo)
+static int UnloadDeviceInfoSa(void)
 {
     {
         std::unique_lock<std::mutex> lock(g_lock);
         struct timespec currTimer = {0};
         (void)clock_gettime(CLOCK_MONOTONIC, &currTimer);
         if (IntervalTime(&g_lastTime, &currTimer) < DEVICE_INFO_EXIT_TIMEOUT_S) {
-            alarm(DEVICE_INFO_EXIT_TIMEOUT_S / 3); // 3 half
-            return;
+            return 0;
         }
     }
     DINFO_LOGI("DeviceInfoService::UnloadDeviceInfoSa");
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    DINFO_CHECK(sam != nullptr, return, "GetSystemAbilityManager return null");
+    DINFO_CHECK(sam != nullptr, return 0, "GetSystemAbilityManager return null");
 
     int32_t ret = sam->UnloadSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
-    DINFO_CHECK(ret == ERR_OK, return, "UnLoadSystemAbility deviceinfo sa failed");
+    DINFO_CHECK(ret == ERR_OK, return 0, "UnLoadSystemAbility deviceinfo sa failed");
+    return 1;
 }
 
 int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
@@ -144,14 +143,14 @@ void DeviceInfoService::OnStart(void)
     if (!res) {
         DINFO_LOGE("DeviceInfoService Publish failed");
     }
-    signal(SIGALRM, UnloadDeviceInfoSa);
-    alarm(DEVICE_INFO_EXIT_TIMEOUT_S / 2); // 2 half
+    threadStarted_ = true;
+    std::thread(&DeviceInfoService::ThreadForUnloadSa, this).detach();
     return;
 }
 
 void DeviceInfoService::OnStop(void)
 {
-    signal(SIGALRM, nullptr);
+    threadStarted_ = false;
     DINFO_LOGI("DeviceInfoService OnStop");
 }
 
@@ -161,6 +160,19 @@ int DeviceInfoService::Dump(int fd, const std::vector<std::u16string>& args)
     DINFO_LOGI("DeviceInfoService Dump");
     DINFO_CHECK(fd >= 0, return -1, "Invalid fd for dump %d", fd);
     return dprintf(fd, "%s\n", "No information to dump for this service");
+}
+
+void DeviceInfoService::ThreadForUnloadSa(void)
+{
+    while (1) {
+        std::this_thread::sleep_for(std::chrono::seconds(DEVICE_INFO_EXIT_TIMEOUT_S / 3)); // 3 count
+        if (!threadStarted_) {
+            break;
+        }
+        if (UnloadDeviceInfoSa() == 1) {
+            break;
+        }
+    }
 }
 } // namespace device_info
 } // namespace OHOS
