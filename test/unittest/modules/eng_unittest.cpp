@@ -39,9 +39,9 @@ void BuildMountCmd(char *buffer, size_t len, const char *mp, const char *dev, co
 bool IsFileExistWithType(const char *file, FileType type);
 }
 
-static const std::string g_srcFilePath = STARTUP_INIT_UT_PATH"/eng/source/test.txt";
-static const std::string g_targetPath = STARTUP_INIT_UT_PATH"/eng/link_name";
-static const std::string g_engRootPath = STARTUP_INIT_UT_PATH"/eng/";
+static const std::string SRC_FILE_PATH = STARTUP_INIT_UT_PATH"/eng/source/test.txt";
+static const std::string TARGET_PATH = STARTUP_INIT_UT_PATH"/eng/link_name";
+static const std::string ENG_ROOT_PATH = STARTUP_INIT_UT_PATH"/eng/";
 
 static bool RemoveDir(const std::string &path)
 {
@@ -111,37 +111,37 @@ public:
 HWTEST_F(EngUnitTest, TestFilesOverlay, TestSize.Level1)
 {
     bool isDel = false;
-    bool isExist = IsDirExist(g_engRootPath.c_str());
+    bool isExist = IsDirExist(ENG_ROOT_PATH.c_str());
     if (isExist) {
-        isDel = RemoveDir(g_engRootPath.c_str());
+        isDel = RemoveDir(ENG_ROOT_PATH.c_str());
         EXPECT_EQ(isDel, true);
     }
-    isExist = IsDirExist(g_targetPath.c_str());
+    isExist = IsDirExist(TARGET_PATH.c_str());
     if (isExist) {
-        isDel = RemoveDir(g_targetPath.c_str());
+        isDel = RemoveDir(TARGET_PATH.c_str());
         EXPECT_EQ(isDel, true);
     }
-    DebugFilesOverlay(g_engRootPath.c_str(), g_targetPath.c_str());
+    DebugFilesOverlay(ENG_ROOT_PATH.c_str(), TARGET_PATH.c_str());
 
-    CreateTestFile(g_srcFilePath.c_str(), "test");
-    isExist = IsFileExist(g_srcFilePath.c_str());
+    CreateTestFile(SRC_FILE_PATH.c_str(), "test");
+    isExist = IsFileExist(SRC_FILE_PATH.c_str());
     EXPECT_EQ(isExist, true);
 
-    DebugFilesOverlay(g_srcFilePath.c_str(), g_targetPath.c_str());
-    isExist = IsFileExistWithType(g_srcFilePath.c_str(), TYPE_REG);
+    DebugFilesOverlay(SRC_FILE_PATH.c_str(), TARGET_PATH.c_str());
+    isExist = IsFileExistWithType(SRC_FILE_PATH.c_str(), TYPE_REG);
     EXPECT_EQ(isExist, true);
 
 
-    if (IsFileExistWithType(g_targetPath.c_str(), TYPE_LINK)) {
-        if (unlink(g_targetPath.c_str()) < 0) {
+    if (IsFileExistWithType(TARGET_PATH.c_str(), TYPE_LINK)) {
+        if (unlink(TARGET_PATH.c_str()) < 0) {
             EXPECT_TRUE(false);
         }
     }
-    int ret = symlink(g_engRootPath.c_str(), g_targetPath.c_str());
+    int ret = symlink(ENG_ROOT_PATH.c_str(), TARGET_PATH.c_str());
     EXPECT_EQ(ret, 0);
-    isExist = IsFileExistWithType(g_targetPath.c_str(), TYPE_LINK);
+    isExist = IsFileExistWithType(TARGET_PATH.c_str(), TYPE_LINK);
     EXPECT_EQ(isExist, true);
-    DebugFilesOverlay(g_targetPath.c_str(), g_engRootPath.c_str());
+    DebugFilesOverlay(TARGET_PATH.c_str(), ENG_ROOT_PATH.c_str());
     EXPECT_EQ(ret, 0);
 }
 
@@ -153,38 +153,38 @@ HWTEST_F(EngUnitTest, TestBindMountFile, TestSize.Level1)
     BindMountFile("/data/init_ut", "/");
 
     bool isExist = false;
-    if (!IsFileExist(g_srcFilePath.c_str())) {
-        CreateTestFile(g_srcFilePath.c_str(), "test reg file mount");
-        isExist = IsFileExist(g_srcFilePath.c_str());
+    if (!IsFileExist(SRC_FILE_PATH.c_str())) {
+        CreateTestFile(SRC_FILE_PATH.c_str(), "test reg file mount");
+        isExist = IsFileExist(SRC_FILE_PATH.c_str());
         EXPECT_EQ(isExist, true);
-        BindMountFile(g_srcFilePath.c_str(), "/");
+        BindMountFile(SRC_FILE_PATH.c_str(), "/");
     }
 
-    if (IsFileExist(g_srcFilePath.c_str())) {
+    if (IsFileExist(SRC_FILE_PATH.c_str())) {
         RemoveDir(STARTUP_INIT_UT_PATH"/eng/source");
-        isExist = IsFileExist(g_srcFilePath.c_str());
+        isExist = IsFileExist(SRC_FILE_PATH.c_str());
         EXPECT_EQ(isExist, false);
     }
-    if (IsFileExistWithType(g_targetPath.c_str(), TYPE_LINK)) {
-        if (unlink(g_targetPath.c_str()) < 0) {
+    if (IsFileExistWithType(TARGET_PATH.c_str(), TYPE_LINK)) {
+        if (unlink(TARGET_PATH.c_str()) < 0) {
             EXPECT_TRUE(false);
         }
     }
 
-    bool isLinkFile = IsFileExist(g_targetPath.c_str());
+    bool isLinkFile = IsFileExist(TARGET_PATH.c_str());
     EXPECT_EQ(isLinkFile, false);
-    BindMountFile(g_srcFilePath.c_str(), g_targetPath.c_str());
+    BindMountFile(SRC_FILE_PATH.c_str(), TARGET_PATH.c_str());
 
-    int ret = symlink(g_srcFilePath.c_str(), g_targetPath.c_str());
+    int ret = symlink(SRC_FILE_PATH.c_str(), TARGET_PATH.c_str());
     EXPECT_EQ(ret, 0);
-    isLinkFile = IsFileExistWithType(g_targetPath.c_str(), TYPE_LINK);
+    isLinkFile = IsFileExistWithType(TARGET_PATH.c_str(), TYPE_LINK);
     EXPECT_EQ(isLinkFile, true);
-    BindMountFile(g_srcFilePath.c_str(), g_targetPath.c_str());
+    BindMountFile(SRC_FILE_PATH.c_str(), TARGET_PATH.c_str());
 
-    if (!IsDirExist(g_engRootPath.c_str())) {
+    if (!IsDirExist(ENG_ROOT_PATH.c_str())) {
         CheckAndCreateDir(STARTUP_INIT_UT_PATH"/eng/");
     }
-    BindMountFile(g_engRootPath.c_str(), g_targetPath.c_str());
+    BindMountFile(ENG_ROOT_PATH.c_str(), TARGET_PATH.c_str());
 }
 
 HWTEST_F(EngUnitTest, TestMountCmd, TestSize.Level1)
@@ -200,14 +200,14 @@ HWTEST_F(EngUnitTest, TestFileType, TestSize.Level1)
     std::string linkName = "/data/init_ut/eng/link_name_test";
     bool isExist = false;
 
-    if (!IsFileExist(g_srcFilePath.c_str())) {
-        CreateTestFile(g_srcFilePath.c_str(), "test");
-        isExist = IsFileExist(g_srcFilePath.c_str());
+    if (!IsFileExist(SRC_FILE_PATH.c_str())) {
+        CreateTestFile(SRC_FILE_PATH.c_str(), "test");
+        isExist = IsFileExist(SRC_FILE_PATH.c_str());
         EXPECT_EQ(isExist, true);
     }
 
     EXPECT_EQ(IsFileExistWithType(STARTUP_INIT_UT_PATH"/eng", TYPE_DIR), true);
-    EXPECT_EQ(IsFileExistWithType(g_srcFilePath.c_str(), TYPE_REG), true);
+    EXPECT_EQ(IsFileExistWithType(SRC_FILE_PATH.c_str(), TYPE_REG), true);
 
     if (IsFileExist(targetFile)) {
         if (unlink(targetFile.c_str()) < 0) {

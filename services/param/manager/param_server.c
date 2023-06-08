@@ -110,7 +110,7 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
     char fullName[PARAM_NAME_LEN_MAX];
     cmdLineIteratorCtx *ctx = (cmdLineIteratorCtx *)context;
     char *data = (char *)ctx->cmdline;
-    static const cmdLineInfo cmdLines[] = {
+    static const cmdLineInfo CMDLINES[] = {
         { "hardware", CommonDealFun },
         { "bootgroup", CommonDealFun },
         { "reboot_reason", CommonDealFun },
@@ -131,11 +131,11 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
     }
 
     // Matching reserved cmdlines
-    for (size_t i = 0; i < ARRAY_LENGTH(cmdLines); i++) {
+    for (size_t i = 0; i < ARRAY_LENGTH(CMDLINES); i++) {
         // Check exact match
-        if (strcmp(name, cmdLines[i].name) != 0) {
+        if (strcmp(name, CMDLINES[i].name) != 0) {
             // Check if contains ".xxx" for compatibility
-            ret = snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1, ".%s", cmdLines[i].name);
+            ret = snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1, ".%s", CMDLINES[i].name);
             matched = strstr(name, fullName);
             if (matched == NULL) {
                 continue;
@@ -146,13 +146,13 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
             }
         }
         ret = snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1,
-            OHOS_CMDLINE_PARA_PREFIX "%s", cmdLines[i].name);
+            OHOS_CMDLINE_PARA_PREFIX "%s", CMDLINES[i].name);
         if (ret <= 0) {
             continue;
         }
         PARAM_LOGV("proc cmdline %s matched.", fullName);
-        ret = cmdLines[i].processor(fullName, nv->value);
-        if ((ret == 0) && (SnDealFun == cmdLines[i].processor)) {
+        ret = CMDLINES[i].processor(fullName, nv->value);
+        if ((ret == 0) && (SnDealFun == CMDLINES[i].processor)) {
             ctx->gotSn = true;
         }
         return;

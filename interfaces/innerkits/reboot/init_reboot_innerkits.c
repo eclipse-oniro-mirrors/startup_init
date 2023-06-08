@@ -30,7 +30,7 @@
 #define DOREBOOT_PARAM "reboot.ut"
 #endif
 
-static int DoReboot_(const char *mode, const char *option)
+static int DoRebootByInitPlugin(const char *mode, const char *option)
 {
     char value[MAX_REBOOT_OPTION_SIZE];
     int ret = 0;
@@ -56,7 +56,7 @@ static int DoReboot_(const char *mode, const char *option)
     return 0;
 }
 
-static int ExecReboot_(const char *mode, const char *option)
+static int ExecReboot(const char *mode, const char *option)
 {
     // check if param set ok
 #ifndef STARTUP_INIT_TEST
@@ -65,7 +65,7 @@ static int ExecReboot_(const char *mode, const char *option)
     const int maxCount = 1;
 #endif
     int count = 0;
-    DoReboot_(mode, option);
+    DoRebootByInitPlugin(mode, option);
     while (count < maxCount) {
         usleep(100 * 1000); // 100 * 1000 wait 100ms
         char result[10] = {0}; // 10 stop len
@@ -76,7 +76,7 @@ static int ExecReboot_(const char *mode, const char *option)
             return 0;
         }
         count++;
-        DoReboot_(mode, option);
+        DoRebootByInitPlugin(mode, option);
     }
     BEGET_LOGE("Failed to reboot system");
     return 0;
@@ -84,10 +84,10 @@ static int ExecReboot_(const char *mode, const char *option)
 
 int DoReboot(const char *option)
 {
-    return ExecReboot_(NULL, option);
+    return ExecReboot(NULL, option);
 }
 
 int DoRebootExt(const char *mode, const char *option)
 {
-    return ExecReboot_(mode, option);
+    return ExecReboot(mode, option);
 }
