@@ -34,6 +34,9 @@ void MountBasicFs(void)
     if (mount("tmpfs", "/mnt", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
         INIT_LOGE("Mount tmpfs failed. %s", strerror(errno));
     }
+    if (mount(NULL, "/mnt", NULL, MS_SHARED, NULL) != 0) {
+        INIT_LOGE("Mount tmpfs shared failed. %s", strerror(errno));
+    }
     if (mount("tmpfs", "/storage", "tmpfs", MS_NOEXEC | MS_NODEV| MS_NOSUID, "mode=0755") != 0) {
         INIT_LOGE("Mount storage failed. %s", strerror(errno));
     }
