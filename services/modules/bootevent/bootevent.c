@@ -260,6 +260,7 @@ static void BootEventParaFireByName(const char *paramName)
 #ifndef STARTUP_INIT_TEST
     HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
 #endif
+    AutorunModuleMgrUnInstall("init_bootDetector");
     return;
 }
 
