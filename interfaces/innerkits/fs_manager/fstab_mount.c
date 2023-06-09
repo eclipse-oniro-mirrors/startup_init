@@ -54,6 +54,10 @@ __attribute__((weak)) void RetriggerUeventByPath(int sockFd, char *path)
 }
 #endif
 
+__attribute__((weak)) void InitPostMount(const char *mountPoint, int rc)
+{
+}
+
 bool IsSupportedFilesystem(const char *fsType)
 {
     bool supported = false;
@@ -406,6 +410,7 @@ int MountOneItem(FstabItem *item)
     }
 
     int rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
+    InitPostMount(item->mountPoint, rc);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
             BEGET_LOGE("Mount no fail device %s to %s failed, err = %d", item->deviceName, item->mountPoint, errno);

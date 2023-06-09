@@ -40,6 +40,11 @@ void InitModuleMgrUnInstall(const char *moduleName)
     ModuleMgrUninstall(defaultModuleMgr, moduleName);
 }
 
+void AutorunModuleMgrUnInstall(const char *moduleName)
+{
+    ModuleMgrUninstall(autorunModuleMgr, moduleName);
+}
+
 static void InitModuleDump(const MODULE_INFO *moduleInfo)
 {
     printf("%s\n", moduleInfo->name);

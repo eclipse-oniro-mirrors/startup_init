@@ -27,7 +27,7 @@ extern "C" {
 
 enum INIT_BOOTSTAGE {
     INIT_GLOBAL_INIT       = 0,
-    INIT_POST_MOUNT        = 3,
+    INIT_FIRST_STAGE       = 1,
     INIT_POST_DATA_UNENCRYPT       = 5,
     INIT_PRE_PARAM_SERVICE = 10,
     INIT_PRE_PARAM_LOAD    = 20,
