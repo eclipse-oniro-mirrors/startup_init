@@ -31,12 +31,13 @@ ohos_shared_library("init_context") {
 
   external_deps = [ "init:libinit_module_engine" ]
 
+  defines = [ "INIT_SUPPORT_CHIPSET_INIT" ]
   if (build_selinux) {
     external_deps += [
       "selinux:libload_policy",
       "selinux:librestorecon",
     ]
-    defines = [ "WITH_SELINUX" ]
+    defines += [ "WITH_SELINUX" ]
   }
 
   deps = [
@@ -60,6 +61,7 @@ config("initcontext_static_config") {
 ohos_source_set("initcontext_static") {
   sources = [ "init_context_static.c" ]
   include_dirs = comm_include
+  defines = [ "INIT_SUPPORT_CHIPSET_INIT" ]
   public_configs = [ ":initcontext_static_config" ]
   public_configs += [ "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
   deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
