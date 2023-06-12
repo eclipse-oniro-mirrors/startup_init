@@ -178,9 +178,6 @@ if (defined(ohos_lite)) {
       ]
     }
 
-    if (startup_init_test_performance) {
-      defines += [ "PARAM_TEST_PERFORMANCE" ]
-    }
     install_images = [ "system" ]
     install_enable = true
 

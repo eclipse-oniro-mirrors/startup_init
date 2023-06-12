@@ -21,7 +21,7 @@
 
 #include "init_param.h"
 #include "list.h"
-#include "param_base.h"
+
 #include "param_osadp.h"
 #include "param_persist.h"
 #include "param_security.h"
@@ -118,7 +118,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly);
 
 INIT_LOCAL_API WorkSpace *GetNextWorkSpace(WorkSpace *curr);
 INIT_LOCAL_API WorkSpace *GetWorkSpace(uint32_t labelIndex);
-INIT_LOCAL_API uint32_t GetWorkSpaceIndex(const char *name);
+INIT_LOCAL_API WorkSpace *GetWorkSpaceByName(const char *name);
 
 INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, const char *value, uint8_t paramType);
 INIT_LOCAL_API int CheckParamName(const char *name, int paramInfo);
@@ -148,6 +148,8 @@ INIT_INNER_API ParamWorkSpace *GetParamWorkSpace(void);
 INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAuditData *auditData);
 INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, ServiceCtrlInfo **ctrlInfo);
 
+INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *ops);
+INIT_LOCAL_API void CloseParamWorkSpace(void);
 #ifdef STARTUP_INIT_TEST
 ParamService *GetParamService();
 #endif

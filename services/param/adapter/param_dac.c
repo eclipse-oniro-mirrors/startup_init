@@ -198,7 +198,7 @@ static int DacGetParamSecurityLabel(const char *path)
         if (strcmp(tmp, ".para.dac") != 0) {
             continue;
         }
-        int ret = ParamSprintf(fileName, MAX_BUF_SIZE, "%s/%s", path, dp->d_name);
+        int ret = PARAM_SPRINTF(fileName, MAX_BUF_SIZE, "%s/%s", path, dp->d_name);
         if (ret <= 0) {
             PARAM_LOGE("Failed to get file name for %s", dp->d_name);
             continue;
@@ -225,7 +225,7 @@ INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
 {
     PARAM_CHECK(ops != NULL, return -1, "Invalid param");
     PARAM_LOGV("RegisterSecurityDacOps %d", isInit);
-    int ret = ParamStrCpy(ops->name, sizeof(ops->name), "dac");
+    int ret = PARAM_STRCPY(ops->name, sizeof(ops->name), "dac");
     ops->securityInitLabel = InitLocalSecurityLabel;
     ops->securityCheckFilePermission = CheckFilePermission;
 #ifdef STARTUP_INIT_TEST
@@ -251,7 +251,7 @@ static void AddGroupUser(const char *userName, gid_t gid)
         return;
     }
     char buffer[USER_BUFFER_LEN] = {0};
-    int ret = ParamSprintf(buffer, sizeof(buffer), GROUP_FORMAT, gid, uid);
+    int ret = PARAM_SPRINTF(buffer, sizeof(buffer), GROUP_FORMAT, gid, uid);
     PARAM_CHECK(ret >= 0, return, "Failed to format name for %d.%d", gid, uid);
     (void)AddParamEntry(WORKSPACE_INDEX_BASE, PARAM_TYPE_STRING, buffer, "1");
 }

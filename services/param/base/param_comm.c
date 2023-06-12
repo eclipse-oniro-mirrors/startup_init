@@ -19,15 +19,21 @@
 #include "param_trie.h"
 #include "param_base.h"
 
-INIT_LOCAL_API uint32_t GetWorkSpaceIndex(const char *name)
+INIT_LOCAL_API WorkSpace *GetWorkSpaceByName(const char *name)
 {
-#ifdef PARAM_SUPPORT_SELINUX
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
-    PARAM_CHECK(paramSpace != NULL, return (uint32_t)-1, "Invalid paramSpace");
-    return (paramSpace->selinuxSpace.getParamLabelIndex != NULL) ?
-        paramSpace->selinuxSpace.getParamLabelIndex(name) + WORKSPACE_INDEX_BASE : (uint32_t)-1;
+    PARAM_CHECK(paramSpace != NULL, return NULL, "Invalid paramSpace");
+#ifdef PARAM_SUPPORT_SELINUX
+    if (paramSpace->selinuxSpace.getParamLabelIndex == NULL) {
+        return NULL;
+    }
+    uint32_t labelIndex = (uint32_t)paramSpace->selinuxSpace.getParamLabelIndex(name) + WORKSPACE_INDEX_BASE;
+    if (labelIndex < paramSpace->maxLabelIndex) {
+        return paramSpace->workSpace[labelIndex];
+    }
+    return NULL;
 #else
-    return 0;
+    return paramSpace->workSpace[WORKSPACE_INDEX_DAC];
 #endif
 }
 
@@ -48,7 +54,7 @@ INIT_LOCAL_API WorkSpace *GetWorkSpace(uint32_t labelIndex)
     if (workSpace == NULL) {
         return NULL;
     }
-    uint32_t rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, memory_order_acquire);
+    uint32_t rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, MEMORY_ORDER_ACQUIRE);
     if (rwSpaceLock == 1) {
         return NULL;
     }
@@ -141,50 +147,4 @@ INIT_LOCAL_API int SplitParamString(char *line, const char *exclude[], uint32_t 
         *pos = '\0';
     }
     return result(context, name, value);
-}
-
-INIT_LOCAL_API int ParamSprintf(char *buffer, size_t buffSize, const char *format, ...)
-{
-    int len = -1;
-    va_list vargs;
-    va_start(vargs, format);
-#ifdef PARAM_BASE
-    len = vsnprintf(buffer, buffSize - 1, format, vargs);
-#else
-    len = vsnprintf_s(buffer, buffSize, buffSize - 1, format, vargs);
-#endif
-    va_end(vargs);
-    return len;
-}
-
-INIT_LOCAL_API int ParamMemcpy(void *dest, size_t destMax, const void *src, size_t count)
-{
-    int ret = 0;
-#ifdef PARAM_BASE
-    memcpy(dest, src, count);
-#else
-    ret = memcpy_s(dest, destMax, src, count);
-#endif
-    return ret;
-}
-
-INIT_LOCAL_API int ParamStrCpy(char *strDest, size_t destMax, const char *strSrc)
-{
-    int ret = 0;
-#ifdef PARAM_BASE
-    if (strlen(strSrc) >= destMax) {
-        return -1;
-    }
-    size_t i = 0;
-    while ((i < destMax) && *strSrc != '\0') {
-        *strDest = *strSrc;
-        strDest++;
-        strSrc++;
-        i++;
-    }
-    *strDest = '\0';
-#else
-    ret = strcpy_s(strDest, destMax, strSrc);
-#endif
-    return ret;
 }

@@ -404,5 +404,8 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/test/unittest/modules/context_unittest.cpp",
   ]
 
+  # test atomic operation
+  sources += [ "//base/startup/init/test/unittest/param/atomic_unittest.cpp" ]
+
   cflags_cc = [ "-fexceptions" ]
 }

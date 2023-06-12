@@ -27,7 +27,7 @@ static uint32_t AllocateParamTrieNode(WorkSpace *workSpace, const char *key, uin
 
 static int GetRealFileName(WorkSpace *workSpace, char *buffer, uint32_t size)
 {
-    int ret = ParamSprintf(buffer, size, "%s/%s", PARAM_STORAGE_PATH, workSpace->fileName);
+    int ret = PARAM_SPRINTF(buffer, size, "%s/%s", PARAM_STORAGE_PATH, workSpace->fileName);
     PARAM_CHECK(ret > 0, return -1, "Failed to copy file name %s", workSpace->fileName);
     buffer[ret] = '\0';
     return 0;
@@ -46,8 +46,8 @@ static int InitWorkSpace_(WorkSpace *workSpace, uint32_t spaceSize, int readOnly
     PARAM_ONLY_CHECK(areaAddr != NULL, return PARAM_CODE_ERROR_MAP_FILE);
     if (!readOnly) {
         workSpace->area = (ParamTrieHeader *)areaAddr;
-        ATOMIC_INIT(&workSpace->area->commitId, 0);
-        ATOMIC_INIT(&workSpace->area->commitPersistId, 0);
+        ATOMIC_UINT64_INIT(&workSpace->area->commitId, 0);
+        ATOMIC_UINT64_INIT(&workSpace->area->commitPersistId, 0);
         workSpace->area->trieNodeCount = 0;
         workSpace->area->paramNodeCount = 0;
         workSpace->area->securityNodeCount = 0;
@@ -72,7 +72,7 @@ static uint32_t AllocateParamTrieNode(WorkSpace *workSpace, const char *key, uin
         workSpace->area->currOffset, workSpace->area->dataSize, workSpace->fileName);
     ParamTrieNode *node = (ParamTrieNode *)(workSpace->area->data + workSpace->area->currOffset);
     node->length = keyLen;
-    int ret = ParamMemcpy(node->key, keyLen, key, keyLen);
+    int ret = PARAM_MEMCPY(node->key, keyLen, key, keyLen);
     PARAM_CHECK(ret == 0, return 0, "Failed to copy key");
     node->key[keyLen] = '\0';
     node->left = 0;
@@ -281,7 +281,7 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     node->type = type;
     node->keyLength = keyLen;
     node->valueLength = valueLen;
-    int ret = ParamSprintf(node->data, realLen, "%s=%s", key, value);
+    int ret = PARAM_SPRINTF(node->data, realLen, "%s=%s", key, value);
     PARAM_CHECK(ret > 0, return 0, "Failed to sprint key and value");
     uint32_t offset = workSpace->area->currOffset;
     workSpace->area->currOffset += realLen;

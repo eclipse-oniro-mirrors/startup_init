@@ -20,7 +20,6 @@
 #ifdef PARAM_SUPPORT_TRIGGER
 #include "cJSON.h"
 #endif
-#include "sys_param.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -64,6 +63,8 @@ typedef enum {
 
 #define LOAD_PARAM_NORMAL 0x00
 #define LOAD_PARAM_ONLY_ADD 0x01
+
+typedef uint32_t ParamHandle;
 
 /**
  * Init 接口
@@ -154,6 +155,37 @@ void SystemDumpTriggers(int verbose, int (*dump)(const char *fmt, ...));
  *
  */
 int SystemSetParameter(const char *name, const char *value);
+
+/**
+ * Init 接口
+ * 查询参数。
+ *
+ */
+int SystemReadParam(const char *name, char *value, uint32_t *len);
+
+/**
+ * 对外接口
+ * 查询参数，主要用于其他进程使用，找到对应属性的handle。
+ *
+ */
+int SystemFindParameter(const char *name, ParamHandle *handle);
+
+/**
+ * 对外接口
+ * 根据handle获取对应数据的修改标识。
+ * commitId 获取计数变化
+ *
+ */
+int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId);
+
+/**
+ * 外部接口
+ * 获取参数值。
+ *
+ */
+int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len);
+
+long long GetSystemCommitId(void);
 
 /**
  * 对外接口

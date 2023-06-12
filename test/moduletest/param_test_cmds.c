@@ -63,13 +63,7 @@ static void *CmdReader(void *args)
 
 static int32_t BShellParamCmdRead(BShellHandle shell, int32_t argc, char *argv[])
 {
-    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
-    if (argc == 1) {
-#ifdef PARAM_TEST_PERFORMANCE
-        TestParameterReaderPerformance();
-#endif
-        return 0;
-    }
+    PLUGIN_CHECK(argc > 1, return -1, "Invalid parameter");
     static pthread_t thread = 0;
     PLUGIN_LOGV("BShellParamCmdWatch %s, threadId %d", argv[1], thread);
     if (strcmp(argv[1], "start") == 0) {
