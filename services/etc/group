@@ -107,6 +107,7 @@ backup:x:1089:
 storage_manager:x:1090:
 net_manager:x:1099:
 netsysnative:x:1098:
+netsys_socket:x:1097:
 edm:x:3057:
 account:x:3058:
 download:x:3815:
