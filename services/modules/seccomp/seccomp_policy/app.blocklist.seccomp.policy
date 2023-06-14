@@ -19,6 +19,7 @@ mount;all
 chroot;all
 acct;all
 init_module;all
+finit_module;all
 delete_module;all
 clock_settime;all
 syslog;all

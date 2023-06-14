@@ -63,7 +63,7 @@ pivot_root;arm64
 statfs;arm64
 fstatfs;arm64
 truncate;all
-ftruncate;all
+ftruncate;arm64
 fallocate;all
 faccessat;all
 chdir;all
@@ -95,7 +95,7 @@ splice;all
 tee;all
 readlinkat;all
 newfstatat;arm64
-fstat;all
+fstat;arm64
 sync;all
 fsync;all
 fdatasync;all
@@ -216,14 +216,12 @@ setns;all
 sendmmsg;all
 process_vm_readv;all
 process_vm_writev;all
-finit_module;all
 sched_setattr;all
 sched_getattr;all
 renameat2;all
 seccomp;all
 getrandom;all
 memfd_create;all
-bpf;all
 execveat;all
 userfaultfd;all
 membarrier;all
@@ -234,7 +232,6 @@ pwritev2;all
 statx;all
 pidfd_send_signal;all
 pidfd_open;all
-close_range;all
 pidfd_getfd;all
 process_madvise;all
 set_robust_list;all
@@ -244,7 +241,6 @@ creat;arm
 link;arm
 unlink;arm
 chmod;arm
-lchown;arm
 access;arm
 rename;arm
 mkdir;arm
@@ -254,14 +250,11 @@ dup2;arm
 sigaction;arm
 symlink;arm
 readlink;arm
-stat;arm
-lstat;arm
 sigreturn;arm
 _llseek;arm
 getdents;arm
 _newselect;arm
 poll;arm
-chown;arm
 vfork;arm
 ugetrlimit;arm
 mmap2;arm
