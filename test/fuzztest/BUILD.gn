@@ -2876,6 +2876,227 @@ ohos_fuzztest("GetDevUdidFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("AddRemoteWatcherFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/AddRemoteWatcher_fuzzer"
+
+  sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager_stub.cpp",
+    "//base/startup/init/services/param/watcher/proxy/watcher_proxy.cpp",
+  ]
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/watcher/agent",
+    "//base/startup/init/services/log",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/log:agent_log",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources += [ "AddRemoteWatcher_fuzzer/AddRemoteWatcher_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DelRemoteWatcherFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/DelRemoteWatcher_fuzzer"
+  sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager_stub.cpp",
+    "//base/startup/init/services/param/watcher/proxy/watcher_proxy.cpp",
+  ]
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/watcher/agent",
+    "//base/startup/init/services/log",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/log:agent_log",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources += [ "DelRemoteWatcher_fuzzer/DelRemoteWatcher_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("AddWatcherFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/AddWatcher_fuzzer"
+
+  sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager_stub.cpp",
+    "//base/startup/init/services/param/watcher/proxy/watcher_proxy.cpp",
+  ]
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/watcher/agent",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/log:agent_log",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources += [ "AddWatcher_fuzzer/AddWatcher_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DelWatcherFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/DelWatcher_fuzzer"
+  sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager_stub.cpp",
+    "//base/startup/init/services/param/watcher/proxy/watcher_proxy.cpp",
+  ]
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/watcher/agent",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/log:agent_log",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources += [ "DelWatcher_fuzzer/DelWatcher_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("RefreshWatcherFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/RefreshWatcher_fuzzer"
+  sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager_stub.cpp",
+    "//base/startup/init/services/param/watcher/proxy/watcher_proxy.cpp",
+  ]
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/watcher/agent",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/log:agent_log",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources += [ "RefreshWatcher_fuzzer/RefreshWatcher_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ##############################################################################################
 group("fuzztest") {
   testonly = true
@@ -2883,9 +3104,13 @@ group("fuzztest") {
   deps += [
     ":AclGetDevUdidFuzzTest",
     ":AclGetSerialFuzzTest",
+    ":AddRemoteWatcherFuzzTest",
+    ":AddWatcherFuzzTest",
     ":BuildControlMessageFuzzTest",
     ":CmdClientInitFuzzTest",
     ":CmdServiceProcessDelClientFuzzTest",
+    ":DelRemoteWatcherFuzzTest",
+    ":DelWatcherFuzzTest",
     ":DoFormatFuzzTest",
     ":FindFstabItemForMountPointFuzzTest",
     ":FindFstabItemForPathFuzzTest",
@@ -2966,6 +3191,7 @@ group("fuzztest") {
     ":ReadFileInDirFuzzTest",
     ":ReadFstabFromFileFuzzTest",
     ":ReceiveFdsFuzzTest",
+    ":RefreshWatcherFuzzTest",
     ":ReleaseFstabFuzzTest",
     ":RemoveParameterWatcherFuzzTest",
     ":ServiceControlFuzzTest",
