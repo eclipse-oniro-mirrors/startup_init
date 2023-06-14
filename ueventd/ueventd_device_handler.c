@@ -37,15 +37,38 @@
 #include <policycoreutils.h>
 #endif
 
+static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid, gid_t gid, mode_t mode)
+{
+    if (INVALIDSTRING(deviceNode)) {
+        return;
+    }
+    if (chown(deviceNode, uid, gid) != 0) {
+        INIT_LOGW("Failed to change \" %s \" owner, errno %d", deviceNode, errno);
+    }
+
+    if (chmod(deviceNode, mode) != 0) {
+        INIT_LOGW("Failed to change \" %s \" mode, errno %d", deviceNode, errno);
+    }
+}
+
 static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
 {
     if (INVALIDSTRING(deviceNode) || symLinks == NULL) {
         return;
     }
 
+    uid_t uid = 0;
+    gid_t gid = 0;
+    mode_t mode = DEVMODE;
+
     for (int i = 0; symLinks[i] != NULL; i++) {
         const char *linkName = symLinks[i];
         char linkBuf[DEVICE_FILE_SIZE] = {};
+
+        if (strstr(linkName, "/dev/block/by-name") != NULL) {
+            int res = GetDeviceNodePermissions(linkName, &uid, &gid, &mode);
+            INIT_CHECK(res != 0, AdjustDeviceNodePermissions(deviceNode, uid, gid, mode));
+        }
 
         if (strncpy_s(linkBuf, DEVICE_FILE_SIZE - 1, linkName, strlen(linkName)) != EOK) {
             INIT_LOGE("Failed to copy link name");
@@ -64,20 +87,6 @@ static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
                 INIT_LOGE("Failed to link \" %s \" to \" %s \", err = %d", deviceNode, linkName, errno);
             }
         }
-    }
-}
-
-static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid, gid_t gid, mode_t mode)
-{
-    if (INVALIDSTRING(deviceNode)) {
-        return;
-    }
-    if (chown(deviceNode, uid, gid) != 0) {
-        INIT_LOGW("Failed to change \" %s \" owner, errno %d", deviceNode, errno);
-    }
-
-    if (chmod(deviceNode, mode) != 0) {
-        INIT_LOGW("Failed to change \" %s \" mode, errno %d", deviceNode, errno);
     }
 }
 
@@ -151,7 +160,7 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
         return rc;
     }
 
-    GetDeviceNodePermissions(deviceNode, &uid, &gid, &mode);
+    (void)GetDeviceNodePermissions(deviceNode, &uid, &gid, &mode);
     mode |= isBlock ? S_IFBLK : S_IFCHR;
     dev_t dev = makedev(major, minor);
     setegid(0);

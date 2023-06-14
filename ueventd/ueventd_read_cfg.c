@@ -337,13 +337,14 @@ struct DeviceUdevConf *GetDeviceUdevConfByDevNode(const char *devNode)
             }
         }
     }
+
     return NULL;
 }
 
-void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_t *mode)
+int GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_t *mode)
 {
     if (INVALIDSTRING(devNode)) {
-        return;
+        return -1;
     }
 
     struct ListNode *node = NULL;
@@ -354,11 +355,11 @@ void GetDeviceNodePermissions(const char *devNode, uid_t *uid, gid_t *gid, mode_
                 *uid = config->uid;
                 *gid = config->gid;
                 *mode = config->mode;
-                break;
+                return 0;
             }
         }
     }
-    return;
+    return -1;
 }
 
 void ChangeSysAttributePermissions(const char *sysPath)
