@@ -14,6 +14,7 @@
 import("//build/ohos.gni")
 
 ohos_shared_library("deviceinfo_ndk") {
+  cflags = [ "-fstack-protector-all" ]
   sources = [
     "src/deviceinfo.c",
     "src/syscap_ndk.c",
@@ -25,6 +26,7 @@ ohos_shared_library("deviceinfo_ndk") {
 }
 
 ohos_ndk_library("libdeviceinfo_ndk") {
+  cflags = [ "-fstack-protector-all" ]
   output_name = "deviceinfo_ndk"
   ndk_description_file = "./libdeviceinfo.ndk.json"
   min_compact_version = "1"
