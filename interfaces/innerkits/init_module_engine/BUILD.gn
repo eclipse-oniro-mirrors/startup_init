@@ -37,6 +37,7 @@ if (defined(ohos_lite)) {
   # innerkits for module development
   #
   ohos_native_stub_library("libinit_module_engine") {
+    cflags = [ "-fstack-protector-all" ]
     output_extension = "so"
     public_configs = [ ":init_module_engine_exported_config" ]
     stub_description_file = "./stub/libinit.stub.json"
@@ -54,6 +55,7 @@ if (defined(ohos_lite)) {
   # Generate empty library with symlink name to satisfy init loading required libraries
   #
   ohos_native_stub_library("libinit_stub_empty") {
+    cflags = [ "-fstack-protector-all" ]
     output_extension = "so"
     stub_description_file = "./stub/libinit.stub.empty.json"
     part_name = "init"

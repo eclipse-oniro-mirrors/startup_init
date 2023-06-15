@@ -16,7 +16,7 @@ import("//build/ohos.gni")
 
 ohos_shared_library("rebootmodule") {
   sources = [ "reboot.c" ]
-
+  cflags = [ "-fstack-protector-all" ]
   include_dirs = [
     ".",
     "..",
@@ -45,6 +45,7 @@ ohos_source_set("libreboot_static") {
     "reboot_misc.c",
     "reboot_static.c",
   ]
+  cflags = [ "-fstack-protector-all" ]
   include_dirs = [
     ".",
     "..",
