@@ -128,9 +128,9 @@ ohos_executable("init") {
     defines += [ "SUPPORT_64BIT" ]
   }
 
-  if (defined(global_parts_info.developtools_profiler)) {
+  if (defined(global_parts_info.developtools_hiprofiler)) {
     defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
-    external_deps = [ "profiler:libhidebug_init" ]
+    external_deps = [ "hiprofiler:libhidebug_init" ]
   }
   if (asan_detector) {
     defines += [ "ASAN_DETECTOR" ]
