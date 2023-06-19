@@ -1,36 +1,26 @@
 {
     "sandbox-root" : "/mnt/sandbox/chipset",
-    "mount-bind-paths" : [{
+    "mount-bind-paths" : [
+        {
             "src-path" : "/system/bin",
             "sandbox-path" : "/system/bin",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
-            "src-path" : "/system/etc",
-            "sandbox-path" : "/system/etc",
+            "src-path" : "/system/etc/selinux",
+            "sandbox-path" : "/system/etc/selinux",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
-            "src-path" : "/system/lib",
-            "sandbox-path" : "/system/lib",
+            "src-path" : "/system/lib/chipset-pub-sdk",
+            "sandbox-path" : "/system/lib/chipset-pub-sdk",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
-            "src-path" : "/system/profile",
-            "sandbox-path" : "/system/profile",
+            "src-path" : "/system/lib/chipset-sdk",
+            "sandbox-path" : "/system/lib/chipset-sdk",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
-            "src-path" : "/system/app",
-            "sandbox-path" : "/system/app",
-            "sandbox-flags" : [ "bind", "rec", "private" ],
-            "ignore": 1
-        }, {
-            "src-path" : "/system/fonts",
-            "sandbox-path" : "/system/fonts",
-            "sandbox-flags" : [ "bind", "rec", "private" ],
-            "ignore": 1
-        }, {
-            "src-path" : "/system/usr",
-            "sandbox-path" : "/system/usr",
-            "sandbox-flags" : [ "bind", "rec", "private" ],
-            "ignore": 1
+            "src-path" : "/system/lib/ndk",
+            "sandbox-path" : "/system/lib/ndk",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
             "src-path" : "/vendor",
             "sandbox-path" : "/vendor",
@@ -73,17 +63,42 @@
             "sandbox-path" : "/storage",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
-            "src-path" : "/sys_prod",
-            "sandbox-path" : "/sys_prod",
-            "sandbox-flags" : [ "bind", "rec", "private" ]
-        }, {
             "src-path" : "/chip_prod",
             "sandbox-path" : "/chip_prod",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
-    "mount-bind-files" : [{
-    }],
+    "mount-bind-files" : [
+        {
+            "src-path" : "/system/etc/ld-musl-arm.path",
+            "sandbox-path" : "/system/etc/ld-musl-arm.path",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/system/etc/ld-musl-namespace-arm.ini",
+            "sandbox-path" : "/system/etc/ld-musl-namespace-arm.ini",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/system/lib/ld-musl-arm.so.1",
+            "sandbox-path" : "/system/lib/ld-musl-arm.so.1",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/system/lib/libc.so",
+            "sandbox-path" : "/system/lib/libc.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/system/lib/libc++.so",
+            "sandbox-path" : "/system/lib/libc++.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/system/lib/libdisplay_buffer_proxy_1.0.z.so",
+            "sandbox-path" : "/system/lib/libdisplay_buffer_proxy_1.0.z.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/system/lib/libclang_rt.ubsan_minimal.so",
+            "sandbox-path" : "/system/lib/libclang_rt.ubsan_minimal.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }
+    ],
     "symbol-links" : [{
             "target-name" : "/system/lib",
             "link-name" : "/lib"
