@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "init_hashmap.h"
 #include "init_param.h"
 #include "list.h"
+#include "param_common.h"
 #include "param_osadp.h"
 #include "param_security.h"
 
@@ -28,66 +29,6 @@
 extern "C" {
 #endif
 #endif
-
-typedef struct {
-    uint32_t left;
-    uint32_t right;
-    uint32_t child;
-    uint32_t labelIndex;
-    uint32_t dataIndex;
-    uint16_t length;
-    char key[0];
-} ParamTrieNode;
-
-#define PARAM_FLAGS_MODIFY 0x80000000
-#define PARAM_FLAGS_TRIGGED 0x40000000
-#define PARAM_FLAGS_WAITED 0x20000000
-#define PARAM_FLAGS_COMMITID 0x0000ffff
-
-#define PARAM_TYPE_MASK   0x0f
-#define PARAM_TYPE_STRING 0x00
-#define PARAM_TYPE_INT    0x01
-#define PARAM_TYPE_BOOL   0x02
-
-typedef struct {
-    ATOMIC_UINT32 commitId;
-    uint8_t type;
-    uint8_t keyLength;
-    uint16_t valueLength;
-    char data[0];
-} ParamNode;
-
-typedef struct {
-    uid_t uid;
-    gid_t gid;
-    uint32_t selinuxIndex;
-    uint16_t mode;
-    uint8_t type;
-    uint8_t length;
-} ParamSecurityNode;
-
-typedef struct {
-    ATOMIC_LLONG commitId;
-    ATOMIC_LLONG commitPersistId;
-    uint32_t trieNodeCount;
-    uint32_t paramNodeCount;
-    uint32_t securityNodeCount;
-    uint32_t currOffset;
-    uint32_t firstNode;
-    uint32_t dataSize;
-    char data[0];
-} ParamTrieHeader;
-
-typedef struct WorkSpace_ {
-    unsigned int flags;
-    MemHandle memHandle;
-    ParamTrieHeader *area;
-    ParamRWMutex rwlock;
-    ATOMIC_UINT32 rwSpaceLock;
-    uint32_t spaceSize;
-    uint32_t spaceIndex;
-    char fileName[0];
-} WorkSpace;
 
 INIT_LOCAL_API int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t spaceSize);
 INIT_LOCAL_API void CloseWorkSpace(WorkSpace *workSpace);

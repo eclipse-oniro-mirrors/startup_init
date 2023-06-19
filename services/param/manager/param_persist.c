@@ -43,7 +43,7 @@ static long long GetPersistCommitId(void)
         return 0;
     }
     PARAMSPACE_AREA_RD_LOCK(space);
-    long long globalCommitId =  ATOMIC_LOAD_EXPLICIT(&space->area->commitPersistId, memory_order_acquire);
+    long long globalCommitId =  ATOMIC_UINT64_LOAD_EXPLICIT(&space->area->commitPersistId, MEMORY_ORDER_ACQUIRE);
     PARAMSPACE_AREA_RW_UNLOCK(space);
     return globalCommitId;
 }
@@ -58,8 +58,7 @@ static void UpdatePersistCommitId(void)
         return;
     }
     PARAMSPACE_AREA_RW_LOCK(space);
-    long long globalCommitId = ATOMIC_LOAD_EXPLICIT(&space->area->commitPersistId, memory_order_relaxed);
-    ATOMIC_STORE_EXPLICIT(&space->area->commitPersistId, ++globalCommitId, memory_order_release);
+    ATOMIC_SYNC_ADD_AND_FETCH(&space->area->commitPersistId, 1, MEMORY_ORDER_RELEASE);
     PARAMSPACE_AREA_RW_UNLOCK(space);
 }
 

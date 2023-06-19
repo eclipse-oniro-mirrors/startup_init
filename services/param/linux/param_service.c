@@ -22,7 +22,6 @@
 #include "init_param.h"
 #include "init_utils.h"
 #include "loop_event.h"
-#include "param_base.h"
 #include "param_manager.h"
 #include "param_message.h"
 #include "trigger_manager.h"
@@ -60,26 +59,24 @@ static void TimerCallback(const ParamTaskPtr timer, void *context)
 
 static void CheckAndSendTrigger(uint32_t dataIndex, const char *name, const char *value)
 {
-    ParamNode *entry = (ParamNode *)GetTrieNode(GetWorkSpace(GetWorkSpaceIndex(name)), dataIndex);
+    ParamNode *entry = (ParamNode *)GetTrieNode(GetWorkSpaceByName(name), dataIndex);
     PARAM_CHECK(entry != NULL, return, "Failed to get data %s ", name);
     uint32_t trigger = 1;
-    if ((ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed) & PARAM_FLAGS_TRIGGED) != PARAM_FLAGS_TRIGGED) {
+    if ((ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_RELAXED) & PARAM_FLAGS_TRIGGED) != PARAM_FLAGS_TRIGGED) {
         trigger = (CheckAndMarkTrigger(TRIGGER_PARAM, name) != 0) ? 1 : 0;
     }
     if (trigger) {
-        ATOMIC_STORE_EXPLICIT(&entry->commitId,
-            ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed) | PARAM_FLAGS_TRIGGED, memory_order_release);
+        ATOMIC_SYNC_OR_AND_FETCH(&entry->commitId, PARAM_FLAGS_TRIGGED, MEMORY_ORDER_RELEASE);
         // notify event to process trigger
         PostParamTrigger(EVENT_TRIGGER_PARAM, name, value);
     }
 
     int wait = 1;
-    if ((ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed) & PARAM_FLAGS_WAITED) != PARAM_FLAGS_WAITED) {
+    if ((ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_RELAXED) & PARAM_FLAGS_WAITED) != PARAM_FLAGS_WAITED) {
         wait = (CheckAndMarkTrigger(TRIGGER_PARAM_WAIT, name) != 0) ? 1 : 0;
     }
     if (wait) {
-        ATOMIC_STORE_EXPLICIT(&entry->commitId,
-            ATOMIC_LOAD_EXPLICIT(&entry->commitId, memory_order_relaxed) | PARAM_FLAGS_WAITED, memory_order_release);
+        ATOMIC_SYNC_OR_AND_FETCH(&entry->commitId, PARAM_FLAGS_WAITED, MEMORY_ORDER_RELEASE);
         PostParamTrigger(EVENT_TRIGGER_PARAM_WAIT, name, value);
     }
     PostParamTrigger(EVENT_TRIGGER_PARAM_WATCH, name, value);

@@ -15,7 +15,6 @@
 #include "init_param.h"
 
 #include <errno.h>
-#include <stdatomic.h>
 #include <stddef.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -23,21 +22,22 @@
 
 #include "init_log.h"
 #include "init_utils.h"
-#include "param_base.h"
+#include "param_atomic.h"
 #include "param_manager.h"
 #include "param_message.h"
 #include "param_security.h"
 
 #define INVALID_SOCKET (-1)
 static const uint32_t RECV_BUFFER_MAX = 5 * 1024;
-static atomic_uint g_requestId;
+static ATOMIC_UINT32 g_requestId;
 static int g_clientFd = INVALID_SOCKET;
 static pthread_mutex_t g_clientMutex = PTHREAD_MUTEX_INITIALIZER;
 
 __attribute__((constructor)) static void ParameterInit(void)
 {
     ATOMIC_INIT(&g_requestId, 1);
-    EnableInitLog(INIT_WARN);
+    EnableInitLog(INIT_INFO);
+
     PARAM_WORKSPACE_OPS ops = {0};
     ops.updaterMode = 0;
     ops.logFunc = InitLog;
@@ -173,7 +173,7 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
     PARAM_CHECK(ret == 0, free(request);
         return -1, "Failed to fill value");
     request->msgSize = offset + sizeof(ParamMessage);
-    request->id.msgId = atomic_fetch_add(&g_requestId, 1);
+    request->id.msgId = ATOMIC_SYNC_ADD_AND_FETCH(&g_requestId, 1, MEMORY_ORDER_RELAXED);
 
     PARAM_LOGI("SystemSetParameter name %s msgid:%d ", name, request->id.msgId);
     pthread_mutex_lock(&g_clientMutex);
@@ -246,7 +246,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     offset += sizeof(ParamMsgContent) + sizeof(uint32_t);
 
     request->msgSize = offset + sizeof(ParamMessage);
-    request->id.waitId = atomic_fetch_add(&g_requestId, 1);
+    request->id.waitId = ATOMIC_SYNC_ADD_AND_FETCH(&g_requestId, 1, MEMORY_ORDER_RELAXED);
 #ifdef STARTUP_INIT_TEST
     timeout = 1;
 #endif

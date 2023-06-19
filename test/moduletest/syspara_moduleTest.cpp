@@ -23,6 +23,7 @@
 #include "param_comm.h"
 #include "init_param.h"
 #include "sysparam_errno.h"
+#include "sys_param.h"
 
 using namespace std;
 using namespace testing::ext;

@@ -120,7 +120,7 @@ static void SetSelinuxFileCon(const char *name, const char *context)
     PARAM_CHECK(GetParamWorkSpace() != NULL && GetParamWorkSpace()->ops.setfilecon != NULL,
         return, "Invalid workspace or setfilecon");
     static char buffer[FILENAME_LEN_MAX] = {0};
-    int len = ParamSprintf(buffer, sizeof(buffer), "%s/%s", PARAM_STORAGE_PATH, context);
+    int len = PARAM_SPRINTF(buffer, sizeof(buffer), "%s/%s", PARAM_STORAGE_PATH, context);
     if (len > 0) {
         buffer[len] = '\0';
         PARAM_LOGV("setfilecon name %s path: %s %s ", name, context, buffer);
@@ -137,7 +137,8 @@ static uint32_t GetWorkSpaceSize(const char *content)
     }
     char name[PARAM_NAME_LEN_MAX] = {0};
     int index = 6; // 6 strlen for const.
-    (void)ParamMemcpy(name, sizeof(name), "const.", index);
+    int ret = PARAM_MEMCPY(name, sizeof(name), "const.", index);
+    PARAM_CHECK(ret == 0, return PARAM_WORKSPACE_MIN, "Invalid name");
     size_t len = strlen(content);
     for (size_t i = strlen("u:object_r:"); i < len; i++) {
         if (*(content + i) == ':') {
@@ -160,7 +161,7 @@ static uint32_t GetWorkSpaceSize(const char *content)
         return PARAM_WORKSPACE_MIN;
 #endif
     }
-    int ret = ParamMemcpy(name, sizeof(name) - 1, node->data + node->keyLength + 1, node->valueLength);
+    ret = PARAM_MEMCPY(name, sizeof(name) - 1, node->data + node->keyLength + 1, node->valueLength);
     if (ret == 0) {
         name[node->valueLength] = '\0';
         errno = 0;
@@ -294,7 +295,7 @@ INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
 {
     PARAM_CHECK(GetParamWorkSpace() != NULL, return -1, "Invalid workspace");
     PARAM_CHECK(ops != NULL, return -1, "Invalid param");
-    int ret = ParamStrCpy(ops->name, sizeof(ops->name), "selinux");
+    int ret = PARAM_STRCPY(ops->name, sizeof(ops->name), "selinux");
     ops->securityGetLabel = NULL;
     ops->securityInitLabel = InitLocalSecurityLabel;
     ops->securityCheckFilePermission = CheckFilePermission;

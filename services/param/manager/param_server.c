@@ -21,6 +21,7 @@
 #ifdef SUPPORT_PARAM_LOAD_HOOK
 #include "init_module_engine.h"
 #endif
+#include "securec.h"
 
 /**
  * Loading system parameter from /proc/cmdline by the following rules:
@@ -167,7 +168,8 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
     CommonDealFun(nv->name, nv->value);
 }
 
-static void GenerateSnByDefault() {
+static void GenerateSnByDefault(void)
+{
     const char *snFileList [] = {
         "/sys/block/mmcblk0/device/cid",
         "/proc/bootdevice/cid"

@@ -31,7 +31,6 @@
 #include "init_utils.h"
 #include "securec.h"
 #include "service_control.h"
-#include "sys_param.h"
 #ifdef ASAN_DETECTOR
 #include "init_param.h"
 #endif

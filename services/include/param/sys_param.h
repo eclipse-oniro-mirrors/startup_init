@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,87 +15,72 @@
 
 #ifndef BASE_STARTUP_INIT_SYS_PARAM_H
 #define BASE_STARTUP_INIT_SYS_PARAM_H
-#include <stdarg.h>
-#include <stdint.h>
-#include <unistd.h>
+#include "param_common.h"
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
 
-typedef uint32_t ParamHandle;
-typedef void *CachedHandle;
-
-typedef struct {
-    uint8_t updaterMode;
-    void (*logFunc)(int logLevel, uint32_t domain, const char *tag, const char *fmt, va_list vargs);
-    int (*setfilecon)(const char *name, const char *content);
-    int (*getServiceGroupIdByPid)(pid_t pid, gid_t *gids, uint32_t gidSize);
-} PARAM_WORKSPACE_OPS;
-
 /**
- * parameter service初始化接口 仅供init调用
- */
-int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *ops);
-
-/**
- * Init 接口
- * 查询参数。
- *
- */
-int SystemReadParam(const char *name, char *value, uint32_t *len);
-
-/**
- * parameter client初始化接口 供服务调用
+ * parameter client init
  */
 void InitParameterClient(void);
 
 /**
- * 对外接口
- * 查询参数，主要用于其他进程使用，找到对应属性的handle。
- *
- */
-int SystemFindParameter(const char *name, ParamHandle *handle);
-
-/**
- * 对外接口
- * 根据handle获取对应数据的修改标识。
- * commitId 获取计数变化
- *
- */
-int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId);
-
-/**
- * 外部接口
- * 获取参数值。
- *
- */
-int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len);
-
-long long GetSystemCommitId(void);
-
-/**
- * 外部接口
- * 保存相关的parameter信息，包括workspace，和各层的commit。
+ * by name and default value，save parameter info in handle。
  *
  */
 CachedHandle CachedParameterCreate(const char *name, const char *defValue);
 
 /**
- * 外部接口
- * 如果获取到value，返回对应的 paramValue的指针，否则返回上面定义的defValue
- *
- */
-const char *CachedParameterGet(CachedHandle handle);
-const char *CachedParameterGetChanged(CachedHandle handle, int *changed);
-
-/**
- * 外部接口
- * 释放handle内存
+ * destroy handle
  *
  */
 void CachedParameterDestroy(CachedHandle handle);
+
+/**
+ * if name exist，return value else return default value
+ *
+ */
+static inline const char *CachedParameterGet(CachedHandle handle)
+{
+    struct CachedParameter_ *param = (struct CachedParameter_ *)handle;
+    if (param == NULL) {
+        return NULL;
+    }
+
+    // no change, do not to find
+    long long spaceCommitId = ATOMIC_UINT64_LOAD_EXPLICIT(&param->workspace->area->commitId, MEMORY_ORDER_ACQUIRE);
+    if (param->spaceCommitId == spaceCommitId) {
+        return param->paramValue;
+    }
+    param->spaceCommitId = spaceCommitId;
+    int changed = 0;
+    if (param->cachedParameterCheck == NULL) {
+        return param->paramValue;
+    }
+    return param->cachedParameterCheck(param, &changed);
+}
+
+static inline const char *CachedParameterGetChanged(CachedHandle handle, int *changed)
+{
+    struct CachedParameter_ *param = (struct CachedParameter_ *)handle;
+    if (param == NULL) {
+        return NULL;
+    }
+    // no change, do not to find
+    long long spaceCommitId = ATOMIC_UINT64_LOAD_EXPLICIT(&param->workspace->area->commitId, MEMORY_ORDER_ACQUIRE);
+    if (param->spaceCommitId == spaceCommitId) {
+        return param->paramValue;
+    }
+    param->spaceCommitId = spaceCommitId;
+    if ((changed == NULL) || (param->cachedParameterCheck == NULL)) {
+        return param->paramValue;
+    }
+    return param->cachedParameterCheck(param, changed);
+}
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -15,12 +15,14 @@
 #include <gtest/gtest.h>
 
 #include "init_param.h"
+#include "param_base.h"
 #include "param_message.h"
 #include "param_stub.h"
 #include "trigger_manager.h"
 #include "param_utils.h"
 #include "param_osadp.h"
 #include "param_manager.h"
+#include "sys_param.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -301,6 +303,18 @@ public:
         SystemDumpParameters(1, -1, NULL);
         return 0;
     }
+
+    uint32_t GetWorkSpaceIndex(const char *name)
+    {
+#ifdef PARAM_SUPPORT_SELINUX
+        ParamWorkSpace *paramSpace = GetParamWorkSpace();
+        PARAM_CHECK(paramSpace != NULL, return (uint32_t)-1, "Invalid paramSpace");
+        return (paramSpace->selinuxSpace.getParamLabelIndex != NULL) ?
+            paramSpace->selinuxSpace.getParamLabelIndex(name) + WORKSPACE_INDEX_BASE : (uint32_t)-1;
+#else
+        return 0;
+#endif
+    }
 };
 
 HWTEST_F(ParamUnitTest, TestPersistParam, TestSize.Level0)
@@ -431,7 +445,7 @@ HWTEST_F(ParamUnitTest, TestWorkSpace2, TestSize.Level0)
     }
     workSpace->flags = 0;
     workSpace->area = NULL;
-    int ret = ParamStrCpy(workSpace->fileName, size, spaceName);
+    int ret = PARAM_STRCPY(workSpace->fileName, size, spaceName);
     EXPECT_EQ(ret, 0);
     CloseWorkSpace(workSpace);
     free(workSpace);
@@ -506,7 +520,7 @@ HWTEST_F(ParamUnitTest, TestFindTrieNode, TestSize.Level0)
 {
     int ret = AddWorkSpace("test.workspace.1", GetWorkSpaceIndex("test.workspace.1"), 0, PARAM_WORKSPACE_DEF);
     EXPECT_EQ(ret, 0);
-    WorkSpace *space = GetWorkSpace(GetWorkSpaceIndex("test.workspace.1"));
+    WorkSpace *space = GetWorkSpaceByName("test.workspace.1");
     ASSERT_NE(space, nullptr);
     ParamTrieNode *node = FindTrieNode(nullptr, nullptr, 0, nullptr);
     ASSERT_EQ(node, nullptr);

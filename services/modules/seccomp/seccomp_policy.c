@@ -20,7 +20,7 @@
 
 #ifdef WITH_SECCOMP_DEBUG
 #include "init_utils.h"
-#include "sys_param.h"
+#include "init_param.h"
 #endif
 
 #include <dlfcn.h>

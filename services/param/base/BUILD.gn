@@ -21,6 +21,8 @@ config("exported_header_files") {
     "//base/startup/init/services/include",
     "//base/startup/init/services/loopevent/include",
     "//base/startup/init/services/log",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/param/base",
   ]
 }
 
@@ -36,6 +38,7 @@ base_include_dirs = [
   "//base/startup/init/services/param/adapter",
   "//base/startup/init/services/param/linux",
   "//base/startup/init/services/param/base",
+  "//base/startup/init/services/loopevent/include",
   "//third_party/bounds_checking_function/include",
 ]
 

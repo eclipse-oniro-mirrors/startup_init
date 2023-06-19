@@ -29,15 +29,9 @@
 
 #ifndef __LITEOS_M__
 #include <pthread.h>
-#include <stdatomic.h>
 #endif
-
-#if defined FUTEX_WAIT || defined FUTEX_WAKE
-#include <linux/futex.h>
-#endif
-
 #include "param_utils.h"
-
+#include "param_common.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -48,7 +42,7 @@ extern "C" {
 #ifdef STARTUP_INIT_TEST
 #define STATIC_INLINE
 #else
-#define STATIC_INLINE static __attribute__((always_inline))
+#define STATIC_INLINE static inline
 #endif
 #endif
 
@@ -61,6 +55,9 @@ extern "C" {
     24 * (count(.) + 1) + strlen(xxxx.xxxx.xxxx.xxxx)
     data size
     strlen(xxxx.xxxx.xxxx.xxxx) + 96
+
+    dac size
+     24 * (count(.) + 1)  + sizeof(ParamSecurityNode)
 */
 #define DAC_DEFAULT_GROUP 0
 #define DAC_DEFAULT_USER 0
@@ -88,7 +85,11 @@ extern "C" {
 #define PARAM_WORKSPACE_DEF PARAM_WORKSPACE_MAX
 #else // __LITEOS_A__
 #define DAC_DEFAULT_MODE 0774
+#ifdef PARAM_TEST_PERFORMANCE
+#define PARAM_WORKSPACE_MAX (1024 * 1024 * 10)
+#else
 #define PARAM_WORKSPACE_MAX (80 * 1024)
+#endif
 #define PARAM_WORKSPACE_SMALL (1024 * 10)
 #define PARAM_WORKSPACE_DEF (1024 * 30)
 #define PARAM_WORKSPACE_DAC (1024 * 20)
@@ -98,32 +99,6 @@ extern "C" {
 
 #ifndef PARAM_WORKSPACE_DAC
 #define PARAM_WORKSPACE_DAC PARAM_WORKSPACE_SMALL
-#endif
-
-// support futex
-#ifndef __NR_futex
-#define PARAM_NR_FUTEX 202 /* syscall number */
-#else
-#define PARAM_NR_FUTEX __NR_futex
-#endif
-
-#if !(defined FUTEX_WAIT || defined FUTEX_WAKE)
-#define FUTEX_WAIT 0
-#define FUTEX_WAKE 1
-
-#ifndef __LITEOS_M__
-#define PARAM_FUTEX(ftx, op, value, timeout, bitset)                         \
-    do {                                                                   \
-        struct timespec d_timeout = { 0, 1000 * 1000 * (timeout) };        \
-        syscall(PARAM_NR_FUTEX, ftx, op, value, &d_timeout, NULL, bitset); \
-    } while (0)
-
-#define futex_wake(ftx, count) PARAM_FUTEX(ftx, FUTEX_WAKE, count, 0, 0)
-#define futex_wait(ftx, value) PARAM_FUTEX(ftx, FUTEX_WAIT, value, 100, 0)
-#else
-#define futex_wake(ftx, count) (void)(ftx)
-#define futex_wait(ftx, value) (void)(ftx)
-#endif
 #endif
 
 // support timer
@@ -146,25 +121,6 @@ typedef void (*ProcessTimer)(const ParamTaskPtr taskHandle, void *context);
 int ParamTimerCreate(ParamTaskPtr *timer, ProcessTimer process, void *context);
 int ParamTimerStart(const ParamTaskPtr timer, uint64_t timeout, uint64_t repeat);
 void ParamTimerClose(ParamTaskPtr timer);
-
-// support mutex
-#ifndef __LITEOS_M__
-typedef struct {
-    pthread_rwlock_t rwlock;
-} ParamRWMutex;
-
-typedef struct {
-    pthread_mutex_t mutex;
-} ParamMutex;
-#else
-typedef struct {
-    uint32_t mutex;
-} ParamRWMutex;
-
-typedef struct {
-    uint32_t mutex;
-} ParamMutex;
-#endif
 
 INIT_LOCAL_API void  paramMutexEnvInit(void);
 INIT_LOCAL_API int ParamRWMutexCreate(ParamRWMutex *lock);
@@ -190,26 +146,8 @@ INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex);
 #define PARAMSPACE_AREA_RW_UNLOCK(rwlock) (void)(rwlock)
 #endif
 
-typedef struct {
-    int shmid;
-} MemHandle;
 INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly);
 INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize);
-
-// for atomic
-#ifdef __LITEOS_M__
-#define ATOMIC_UINT32 uint32_t
-#define ATOMIC_LLONG  long long
-#define ATOMIC_INIT(commitId, value) *(commitId) = (value)
-#define ATOMIC_LOAD_EXPLICIT(commitId, order) *(commitId)
-#define ATOMIC_STORE_EXPLICIT(commitId, value, order) *(commitId) = (value)
-#else
-#define ATOMIC_UINT32 atomic_uint
-#define ATOMIC_LLONG atomic_llong
-#define ATOMIC_INIT(commitId, value) atomic_init((commitId), (value))
-#define ATOMIC_LOAD_EXPLICIT(commitId, order) atomic_load_explicit((commitId), (order))
-#define ATOMIC_STORE_EXPLICIT(commitId, value, order) atomic_store_explicit((commitId), (value), (order))
-#endif
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -217,4 +155,4 @@ INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t d
 #endif
 #endif
 
-#endif // BASE_STARTUP_PARAM_MESSAGE_H
+#endif // BASE_STARTUP_PARAM_OS_ADAPTER_H
