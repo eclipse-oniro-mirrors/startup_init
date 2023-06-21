@@ -47,7 +47,10 @@ typedef enum {
 #define PARAM_ENTRY(ptr, type, member) (type *)((char *)(ptr)-offsetof(type, member))
 
 #define IS_READY_ONLY(name) \
-    ((strncmp((name), "const.", strlen("const.")) == 0) || (strncmp((name), "ro.", strlen("ro.")) == 0))
+    ((strncmp((name), "const.", strlen("const.")) == 0) ||  \
+    (strncmp((name), "ro.", strlen("ro.")) == 0) || \
+    (strncmp((name), "ohos.boot.", strlen("ohos.boot.")) == 0))
+
 #define PARAM_PERSIST_PREFIX "persist."
 
 #define SYS_POWER_CTRL "ohos.startup.powerctrl="

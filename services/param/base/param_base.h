@@ -29,6 +29,9 @@ extern "C" {
 #endif
 #endif
 
+#define WORKSPACE_STATUS_IN_PROCESS    0x01
+#define WORKSPACE_STATUS_VALID       0x02
+
 #ifndef PARAM_BASE
 #define PARAM_SPRINTF(buffer, buffSize, format, ...) \
     snprintf_s((buffer), (buffSize), (buffSize) - 1, (format), ##__VA_ARGS__)
