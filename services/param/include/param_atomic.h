@@ -44,8 +44,8 @@ extern "C" {
 #define ATOMIC_UINT64_INIT(commitId, value) *(commitId) = (value)
 #define ATOMIC_UINT64_LOAD_EXPLICIT(commitId, order) *(commitId)
 #define ATOMIC_UINT64_STORE_EXPLICIT(commitId, value, order) *(commitId) = (value)
-#define ATOMIC_SYNC_OR_AND_FETCH(commitId, value, order) *(commitId)
-#define ATOMIC_SYNC_ADD_AND_FETCH(commitId, value, order) *(commitId)
+#define ATOMIC_SYNC_OR_AND_FETCH(commitId, value, order) *(commitId) |= (value)
+#define ATOMIC_SYNC_ADD_AND_FETCH(commitId, value, order) *(commitId) += (value)
 
 #define futex_wake(ftx, count) (void)(ftx)
 #define futex_wait(ftx, value) (void)(ftx)

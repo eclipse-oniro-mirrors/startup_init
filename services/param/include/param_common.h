@@ -17,6 +17,7 @@
 #define BASE_STARTUP_PARAM_COMMON_H
 #include <stdio.h>
 #include <stdint.h>
+#include <stdarg.h>
 #ifndef __LITEOS_M__
 #include <pthread.h>
 #endif
