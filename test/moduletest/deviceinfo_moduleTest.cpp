@@ -47,20 +47,18 @@ HWTEST_F(DeviceInfoModuleTest, DeviceInfoGetUdid_001, TestSize.Level0)
     sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     BEGET_ERROR_CHECK(samgr != nullptr, return, "Get samgr failed");
     sptr<IRemoteObject> object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
-    EXPECT_EQ(object != nullptr, 1);
     BEGET_ERROR_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
 
     std::this_thread::sleep_for(std::chrono::seconds(20)); // wait sa died 20s
 
     object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
-    EXPECT_EQ(object == nullptr, 1);
     BEGET_ERROR_CHECK(object == nullptr, return, "Get deviceinfo manager object from samgr failed");
 
     ret = AclGetDevUdid(udid, sizeof(udid));
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
 
     object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
-    EXPECT_EQ(object != nullptr, 1);
+    BEGET_ERROR_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
 
     GTEST_LOG_(INFO) << "DeviceInfoGetUdid_001 end";
 }
@@ -74,20 +72,18 @@ HWTEST_F(DeviceInfoModuleTest, DeviceInfoGetSerial_001, TestSize.Level0)
     sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     BEGET_ERROR_CHECK(samgr != nullptr, return, "Get samgr failed");
     sptr<IRemoteObject> object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
-    EXPECT_EQ(object != nullptr, 1);
     BEGET_ERROR_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
 
     std::this_thread::sleep_for(std::chrono::seconds(20)); // wait sa died 20s
 
     object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
-    EXPECT_EQ(object == nullptr, 1);
     BEGET_ERROR_CHECK(object == nullptr, return, "Get deviceinfo manager object from samgr failed");
 
     serial = AclGetSerial();
     EXPECT_EQ(serial != nullptr, 1);
 
     object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
-    EXPECT_EQ(object != nullptr, 1);
+    BEGET_ERROR_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
 
     GTEST_LOG_(INFO) << "DeviceInfoGetSerial_001 end";
 }

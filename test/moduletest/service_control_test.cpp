@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "service_control.h"
+#include "beget_ext.h"
 #include "test_utils.h"
 
 using namespace testing::ext;
@@ -259,7 +260,7 @@ HWTEST_F(ServiceControlTest, WaitForServiceStatusTest, TestSize.Level1)
     // service is stopped now. try to wait a status which will not be set
     std::cout << "Wait for service " << serviceName << " status change to start\n";
     ret = ServiceWaitForStatus(serviceName.c_str(), SERVICE_STARTED, WAIT_SERVICE_STATUS_TIMEOUT);
-    EXPECT_EQ(ret, -1);
+    BEGET_ERROR_CHECK(ret == -1, return, "Get media_service status failed.");
 
     serviceName = "non-exist-service";
     std::cout << "Wait for service " << serviceName << " status change to stop\n";
