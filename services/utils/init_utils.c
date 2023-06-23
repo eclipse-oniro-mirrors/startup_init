@@ -32,7 +32,7 @@
 #include "service_control.h"
 
 #define MAX_BUF_SIZE  1024
-#define MAX_SMALL_BUFFER 3096
+#define MAX_SMALL_BUFFER 4096
 
 #define MAX_JSON_FILE_LEN 102400    // max init.cfg size 100KB
 #define CONVERT_MICROSEC_TO_SEC(x) ((x) / 1000 / 1000.0)
