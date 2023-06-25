@@ -95,6 +95,10 @@
             "src-path" : "/vendor/lib/libhuks_hdi_service_1.0.z.so",
             "sandbox-path" : "/vendor/lib/libhuks_hdi_service_1.0.z.so",
             "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/lib/libcodec_component_manager_service_1.0.z.so",
+            "sandbox-path" : "/vendor/lib/libcodec_component_manager_service_1.0.z.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
     "symbol-links" : [{
