@@ -32,12 +32,8 @@
             "sandbox-flags" : [ "bind", "rec", "private" ],
             "ignore": 1
         }, {
-            "src-path" : "/vendor/lib/chipsetsdk",
-            "sandbox-path" : "/vendor/lib/chipsetsdk",
-            "sandbox-flags" : [ "bind", "rec", "private" ]
-        }, {
-            "src-path" : "/vendor/lib/chipset-sdk",
-            "sandbox-path" : "/vendor/lib/chipset-sdk",
+            "src-path" : "/vendor",
+            "sandbox-path" : "/vendor",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
             "src-path" : "/dev",
@@ -78,21 +74,17 @@
             "sandbox-path" : "/sys_prod",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
-            "src-path" : "/vendor/etc",
-            "sandbox-path" : "/vendor/etc",
+            "src-path" : "/vendor",
+            "sandbox-path" : "/chipset",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/chip_prod",
+            "sandbox-path" : "/chip_prod",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
     "mount-bind-files" : [{
-            "src-path" : "/vendor/lib/libmapper_service_1.0.z.so",
-            "sandbox-path" : "/vendor/lib/libmapper_service_1.0.z.so",
-            "sandbox-flags" : [ "bind", "rec", "private" ]
-        }, {
-            "src-path" : "/vendor/lib/libinput_interfaces_service_1.0.z.so",
-            "sandbox-path" : "/vendor/lib/libinput_interfaces_service_1.0.z.so",
-            "sandbox-flags" : [ "bind", "rec", "private" ]
-        }
-    ],
+    }],
     "symbol-links" : [{
             "target-name" : "/system/lib",
             "link-name" : "/lib"
