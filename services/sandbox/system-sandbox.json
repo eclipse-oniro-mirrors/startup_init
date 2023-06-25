@@ -99,6 +99,30 @@
             "src-path" : "/vendor/lib/libcodec_component_manager_service_1.0.z.so",
             "sandbox-path" : "/vendor/lib/libcodec_component_manager_service_1.0.z.so",
             "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/lib/libOMX_Core.z.so",
+            "sandbox-path" : "/vendor/lib/libOMX_Core.z.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/lib/libomxvpu_dec.z.so",
+            "sandbox-path" : "/vendor/lib/libomxvpu_dec.z.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/lib/libomxvpu_enc.z.so",
+            "sandbox-path" : "/vendor/lib/libomxvpu_enc.z.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/lib/libOMX_Pluginhw.z.so",
+            "sandbox-path" : "/vendor/lib/libOMX_Pluginhw.z.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/lib/libRkOMX_Resourcemanager.z.so",
+            "sandbox-path" : "/vendor/lib/libRkOMX_Resourcemanager.z.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/lib/librockchip_vpu.z.so",
+            "sandbox-path" : "/vendor/lib/librockchip_vpu.z.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
     "symbol-links" : [{
