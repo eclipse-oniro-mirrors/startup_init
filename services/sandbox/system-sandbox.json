@@ -91,6 +91,10 @@
             "src-path" : "/vendor/lib/libinput_interfaces_service_1.0.z.so",
             "sandbox-path" : "/vendor/lib/libinput_interfaces_service_1.0.z.so",
             "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/lib/libhuks_hdi_service_1.0.z.so",
+            "sandbox-path" : "/vendor/lib/libhuks_hdi_service_1.0.z.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
     "symbol-links" : [{
