@@ -55,7 +55,7 @@ static void ClearLogo(int fd)
 }
 
 static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
-{   
+{
     if (size == 0 || size > MAX_LOGO_SIZE) {
         BSH_LOGE("logo size is invalid!");
         return;

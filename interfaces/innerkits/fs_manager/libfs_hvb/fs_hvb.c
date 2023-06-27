@@ -379,7 +379,7 @@ int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, stru
     }
 
     if (snprintf_s(&devPath[0], sizeof(devPath), sizeof(devPath) - 1, "%s%s",
-        ((strchr(devName "/") == NULL) ? FS_HVB_PARTITION_PREFIX : ""), devName) == -1) {
+        ((strchr(devName, '/') == NULL) ? FS_HVB_PARTITION_PREFIX : ""), devName) == -1) {
         BEGET_LOGE("error, snprintf_s devPath");
         return -1;
     }

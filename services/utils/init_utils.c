@@ -217,10 +217,10 @@ int IterateNameValuePairs(const char *src, void (*iterator)(const NAME_VALUE_PAI
         seperator = strchr(src, ' ');
         if (seperator == NULL) {
             // Last nv
-            nv.value_end = src + strlen(src);
+            nv.valueEnd = src + strlen(src);
             src = NULL;
         } else {
-            nv.value_end = seperator;
+            nv.valueEnd = seperator;
             src = seperator + 1;
         }
 
@@ -230,11 +230,11 @@ int IterateNameValuePairs(const char *src, void (*iterator)(const NAME_VALUE_PAI
             // Invalid name value pair
             continue;
         }
-        if (seperator > nv.value_end) {
+        if (seperator > nv.valueEnd) {
             // name without value, just ignore
             continue;
         }
-        nv.name_end = seperator;
+        nv.nameEnd = seperator;
         nv.value = seperator + 1;
 
         iterator(&nv, context);

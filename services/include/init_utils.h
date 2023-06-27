@@ -61,11 +61,11 @@ char *ReadFileToBuf(const char *configFile);
 int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int length);
 char *ReadFileData(const char *fileName);
 
-typedef struct tagNAME_VALUE_PAIR{
+typedef struct NameValuePair {
     const char *name;
-    const char *name_end;
+    const char *nameEnd;
     const char *value;
-    const char *value_end;
+    const char *valueEnd;
 } NAME_VALUE_PAIR;
 int IterateNameValuePairs(const char *src, void (*iterator)(const NAME_VALUE_PAIR *nv, void *context), void *context);
 
