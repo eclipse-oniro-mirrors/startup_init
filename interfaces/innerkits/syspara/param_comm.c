@@ -85,7 +85,7 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
     return GetSystemError(ret);
 }
 
-static PropertyValueProcessor propertyGetProcessor = NULL;
+static PropertyValueProcessor g_propertyGetProcessor = NULL;
 
 INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder)
 {
@@ -103,8 +103,8 @@ INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder
             free(res);
             return NULL;
         }
-        if (propertyGetProcessor != NULL) {
-            res = propertyGetProcessor(key, res);
+        if (g_propertyGetProcessor != NULL) {
+            res = g_propertyGetProcessor(key, res);
         }
         *paramHolder = res;
     }
@@ -113,8 +113,8 @@ INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder
 
 INIT_LOCAL_API PropertyValueProcessor SetPropertyGetProcessor(PropertyValueProcessor processor)
 {
-    PropertyValueProcessor prev = propertyGetProcessor;
-    propertyGetProcessor = processor;
+    PropertyValueProcessor prev = g_propertyGetProcessor;
+    g_propertyGetProcessor = processor;
     return prev;
 }
 

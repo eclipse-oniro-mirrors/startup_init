@@ -36,15 +36,15 @@
 #define OHOS_CMDLINE_PARA_PREFIX        "ohos.boot."
 #define OHOS_CMDLINE_PARA_PREFIX_LEN    10
 
-typedef struct cmdLineInfo {
+typedef struct CmdLineInfo {
     const char *name;
     int (*processor)(const char *name, const char *value);
-} cmdLineInfo;
+} CmdLineInfo;
 
-typedef struct cmdLineIteratorCtx {
+typedef struct CmdLineIteratorCtx {
     char *cmdline;
     bool gotSn;
-} cmdLineIteratorCtx;
+} CmdLineIteratorCtx;
 
 static int CommonDealFun(const char *name, const char *value)
 {
@@ -109,9 +109,9 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
     const char *name;
     const char *matched;
     char fullName[PARAM_NAME_LEN_MAX];
-    cmdLineIteratorCtx *ctx = (cmdLineIteratorCtx *)context;
+    CmdLineIteratorCtx *ctx = (CmdLineIteratorCtx *)context;
     char *data = (char *)ctx->cmdline;
-    static const cmdLineInfo CMDLINES[] = {
+    static const CmdLineInfo CMDLINES[] = {
         { "hardware", CommonDealFun },
         { "bootgroup", CommonDealFun },
         { "reboot_reason", CommonDealFun },
@@ -121,8 +121,8 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
         { "serialno", SnDealFun }
     };
 
-    data[nv->name_end - data] = '\0';
-    data[nv->value_end - data] = '\0';
+    data[nv->nameEnd - data] = '\0';
+    data[nv->valueEnd - data] = '\0';
     PARAM_LOGV("proc cmdline: name [%s], value [%s]", nv->name, nv->value);
 
     // Get name without prefix
@@ -185,7 +185,7 @@ static void GenerateSnByDefault(void)
 
 INIT_LOCAL_API int LoadParamFromCmdLine(void)
 {
-    cmdLineIteratorCtx ctx;
+    CmdLineIteratorCtx ctx;
 
     ctx.gotSn = false;
     ctx.cmdline = ReadFileData(BOOT_CMD_LINE);
