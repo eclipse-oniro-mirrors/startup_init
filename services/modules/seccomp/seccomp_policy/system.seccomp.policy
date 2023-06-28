@@ -64,6 +64,7 @@ truncate;all
 ftruncate;arm64
 fallocate;all
 faccessat;all
+faccessat2;all
 chdir;all
 fchdir;all
 chroot;all
