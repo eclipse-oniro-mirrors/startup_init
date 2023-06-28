@@ -333,3 +333,4 @@ futex_time64;arm
 sched_rr_get_interval_time64;arm
 cacheflush;arm
 set_tls;arm
+mbind;all

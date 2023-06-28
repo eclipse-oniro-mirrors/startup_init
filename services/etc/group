@@ -143,3 +143,4 @@ nwebspawn:x:3081:
 oaid_service:x:6101:
 code_sign:x:3074:
 hdf_ext_devmgr:x:3085:
+intell_voice_host:x:3100:
