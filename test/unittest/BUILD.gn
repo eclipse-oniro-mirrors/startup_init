@@ -268,8 +268,6 @@ ohos_unittest("init_unittest") {
 
   deps = [
     "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
-    "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
-    "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson",
     "//third_party/googletest:gmock",
@@ -304,6 +302,8 @@ ohos_unittest("init_unittest") {
   }
 
   external_deps = [
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
     "c_utils:utils",
     "hisysevent_native:libhisysevent",
     "hiviewdfx_hilog_native:libhilog",

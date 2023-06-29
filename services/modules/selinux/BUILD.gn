@@ -26,13 +26,15 @@ ohos_shared_library("selinuxadp") {
     "//base/security/selinux/interfaces/policycoreutils/include/",
   ]
   deps = [
-    "//base/security/selinux:libload_policy",
-    "//base/security/selinux:librestorecon",
+    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/selinux:libselinux",
   ]
 
-  external_deps = [ "init:libinit_module_engine" ]
+  external_deps = [
+    "selinux:libload_policy",
+    "selinux:librestorecon",
+  ]
 
   part_name = "init"
   subsystem_name = "startup"

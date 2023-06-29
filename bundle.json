@@ -18,6 +18,8 @@
             "SystemCapability.Startup.SystemInfo"
         ],
         "adapted_system_type": [
+            "mini",
+            "small",
             "standard"
         ],
         "rom": "3.9MB",
@@ -42,12 +44,20 @@
                 "access_token",
                 "common",
                 "dsoftbus",
-                "hvb"
+                "hvb",
+                "hisysevent_native",
+                "profiler",
+                "toybox",
+                "mksh"
             ],
             "third_party": [
-                "cJSON",
                 "bounds_checking_function",
-                "selinux"
+                "selinux",
+                "mbedtls",
+                "zlib",
+                "cjson",
+                "thirdparty_selinux",
+                "bounds_checking_function"
             ]
         },
         "build": {
