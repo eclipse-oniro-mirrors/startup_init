@@ -900,7 +900,7 @@ class SeccompPolicyParser:
         self.bpf_generator.add_return_value(cur_policy_param.return_value)
 
     def gen_seccomp_policy(self):
-        arches = list(self.arches)
+        arches = sorted(list(self.arches))
         if not arches:
             return
         self.gen_seccomp_policy_of_arch(arches[0])
@@ -942,7 +942,6 @@ class SeccompPolicyParser:
         content = header + '\n'.join(extra_header_list) + array_name + \
             '    ' + '\n    '.join(self.bpf_generator.bpf_policy) + footer
 
-        
         flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
         modes = stat.S_IWUSR | stat.S_IRUSR | stat.S_IWGRP | stat.S_IRGRP
         with os.fdopen(os.open(args.dst_file, flags, modes), 'w') as output_file:
