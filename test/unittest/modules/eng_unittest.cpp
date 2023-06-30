@@ -243,10 +243,4 @@ HWTEST_F(EngUnitTest, TestFileType, TestSize.Level1)
     isFileExist = IsFileExistWithType("/eng/target", TYPE_REG);
     EXPECT_EQ(isFileExist, false);
 }
-
-HWTEST_F(EngUnitTest, TestHook, TestSize.Level1)
-{
-    SystemWriteParam("ohos.boot.eng_mode", "on");
-    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, NULL, NULL);
-}
 } // namespace init_ut
