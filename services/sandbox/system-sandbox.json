@@ -81,6 +81,10 @@
             "src-path" : "/vendor/etc",
             "sandbox-path" : "/vendor/etc",
             "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/chipset/etc",
+            "sandbox-path" : "/chipset/etc",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
     "mount-bind-files" : [{
