@@ -28,12 +28,11 @@ ohos_shared_library("inittrace") {
   include_dirs += [ "//third_party/zlib" ]
 
   deps = [
+    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/cJSON:cjson",
     "//third_party/zlib:libz",
   ]
-
-  external_deps = [ "init:libinit_module_engine" ]
 
   part_name = "init"
   subsystem_name = "startup"

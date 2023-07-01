@@ -78,11 +78,10 @@ if (defined(ohos_lite)) {
     defines = [ "_GNU_SOURCE" ]
     include_dirs = comm_include
     deps = [
+      "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/mbedtls:mbedtls_shared",
     ]
-
-    external_deps = [ "init:libinit_module_engine" ]
 
     part_name = "init"
     subsystem_name = "startup"

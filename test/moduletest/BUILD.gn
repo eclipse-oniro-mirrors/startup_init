@@ -34,11 +34,10 @@ ohos_shared_library("libparamtestmodule") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
     "//base/startup/init/services/log:agent_log",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
-
-  external_deps = [ "init:libinit_module_engine" ]
 
   part_name = "init"
   subsystem_name = "startup"

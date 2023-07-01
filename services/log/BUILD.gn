@@ -49,7 +49,7 @@ if (defined(ohos_lite)) {
     public_configs = [ ":exported_header_files" ]
 
     include_dirs = [ "//third_party/bounds_checking_function/include" ]
-    part_name = "startup"
+    part_name = "init"
     subsystem_name = "startup"
   }
 

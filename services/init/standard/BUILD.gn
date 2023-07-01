@@ -62,6 +62,7 @@ ohos_executable("init") {
   ]
 
   deps = [
+    "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
     "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
@@ -73,9 +74,6 @@ ohos_executable("init") {
   deps += [ "//base/startup/init/services/param/base:param_base" ]
 
   deps += [
-    "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
-    "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
-    "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
     "//base/startup/init/ueventd:libueventd_ramdisk_static",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
@@ -85,7 +83,10 @@ ohos_executable("init") {
   deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_sources" ]
   deps += [ "//base/startup/init/services/modules:static_modules" ]
   deps += [ "${FSCRYPT_PATH}/libfscrypt:libfscryptutils_static" ]
-
+  external_deps = [
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+  ]
   cflags = []
 
   if (use_musl) {
@@ -108,10 +109,10 @@ ohos_executable("init") {
       "//third_party/selinux/libselinux/include/",
       "//base/security/selinux/interfaces/policycoreutils/include/",
     ]
-    deps += [
-      "//base/security/selinux:libload_policy",
-      "//base/security/selinux:librestorecon",
-      "//third_party/selinux:libselinux",
+    deps += [ "//third_party/selinux:libselinux" ]
+    external_deps += [
+      "selinux:libload_policy",
+      "selinux:librestorecon",
     ]
     cflags += [ "-DWITH_SELINUX" ]
   }
@@ -130,7 +131,7 @@ ohos_executable("init") {
 
   if (defined(global_parts_info.developtools_hiprofiler)) {
     defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
-    external_deps = [ "hiprofiler:libhidebug_init" ]
+    external_deps += [ "hiprofiler:libhidebug_init" ]
   }
   if (asan_detector) {
     defines += [ "ASAN_DETECTOR" ]

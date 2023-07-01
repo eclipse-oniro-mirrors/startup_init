@@ -156,8 +156,6 @@ if (defined(ohos_lite)) {
       "//third_party/bounds_checking_function:libsec_shared",
     ]
 
-    deps += [ "//base/startup/init/services/param/base:param_base" ]
-
     if (build_selinux) {
       deps += [
         "//base/security/selinux:libselinux_parameter_static",

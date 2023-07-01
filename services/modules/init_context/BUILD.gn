@@ -29,7 +29,7 @@ ohos_shared_library("init_context") {
 
   include_dirs += [ "../../init/include" ]
 
-  external_deps = [ "init:libinit_module_engine" ]
+  external_deps = []
 
   defines = [ "INIT_SUPPORT_CHIPSET_INIT" ]
   if (build_selinux) {
@@ -41,6 +41,7 @@ ohos_shared_library("init_context") {
   }
 
   deps = [
+    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/selinux:libselinux",
   ]
