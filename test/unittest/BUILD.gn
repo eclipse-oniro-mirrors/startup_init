@@ -352,7 +352,7 @@ ohos_unittest("init_unittest") {
     sources += [ "param/selinux_unittest.cpp" ]
     include_dirs += [
       "//third_party/selinux/libselinux/include/",
-      "//base/security/selinux/interfaces/policycoreutils/include/",
+      "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
     ]
     sources += [
       "//base/startup/init/services/modules/selinux/selinux_adp.c",

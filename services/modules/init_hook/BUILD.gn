@@ -52,7 +52,7 @@ if (defined(ohos_lite)) {
     if (build_selinux) {
       include_dirs += [
         "//third_party/selinux/libselinux/include/",
-        "//base/security/selinux/interfaces/policycoreutils/include/",
+        "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
       ]
       defines += [ "WITH_SELINUX" ]
     }

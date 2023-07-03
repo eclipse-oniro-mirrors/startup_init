@@ -91,7 +91,7 @@ if (defined(ohos_lite)) {
     defines = [ "__RAMDISK__" ]
     cflags = []
     if (build_selinux) {
-      external_deps = [ "selinux:librestorecon" ]
+      external_deps = [ "selinux_adapter:librestorecon" ]
       cflags += [ "-DWITH_SELINUX" ]
     }
 
@@ -116,7 +116,7 @@ if (defined(ohos_lite)) {
     cflags = []
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     if (build_selinux) {
-      external_deps = [ "selinux:librestorecon" ]
+      external_deps = [ "selinux_adapter:librestorecon" ]
       cflags += [ "-DWITH_SELINUX" ]
     }
 

@@ -39,7 +39,7 @@
                 "thirdparty_bounds_checking_function",
                 "samgr",
                 "hiviewdfx_hilog_native",
-                "selinux",
+                "selinux_adapter",
                 "hiviewdfx",
                 "access_token",
                 "common",

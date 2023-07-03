@@ -33,7 +33,7 @@ ohos_source_set("libbootevent_static") {
   if (build_selinux) {
     include_dirs += [
       "//third_party/selinux/libselinux/include/",
-      "//base/security/selinux/interfaces/policycoreutils/include/",
+      "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
       "//base/startup/init/services/include/param",
     ]
     defines = [ "WITH_SELINUX" ]

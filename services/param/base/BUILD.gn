@@ -134,7 +134,7 @@ if (defined(ohos_lite)) {
     if (build_selinux) {
       include_dirs += [
         "//third_party/selinux/libselinux/include/",
-        "//base/security/selinux/interfaces/policycoreutils/include/",
+        "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
       ]
       sources +=
           [ "//base/startup/init/services/param/adapter/param_selinux.c" ]
@@ -142,7 +142,7 @@ if (defined(ohos_lite)) {
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
-      deps += [ "//base/security/selinux:libselinux_parameter_static" ]
+      deps += [ "//base/security/selinux_adapter:libselinux_parameter_static" ]
     }
     if (param_base_log) {
       defines += [ "PARAM_BASE_LOG" ]
@@ -166,13 +166,13 @@ if (defined(ohos_lite)) {
     if (build_selinux) {
       include_dirs += [
         "//third_party/selinux/libselinux/include/",
-        "//base/security/selinux/interfaces/policycoreutils/include/",
+        "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
       ]
       defines += [
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
-      deps += [ "//base/security/selinux:libselinux_parameter_static" ]
+      deps += [ "//base/security/selinux_adapter:libselinux_parameter_static" ]
     }
     if (param_base_log) {
       defines += [ "PARAM_BASE_LOG" ]
