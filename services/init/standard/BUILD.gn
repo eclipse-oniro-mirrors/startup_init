@@ -107,12 +107,12 @@ ohos_executable("init") {
   if (build_selinux) {
     include_dirs += [
       "//third_party/selinux/libselinux/include/",
-      "//base/security/selinux/interfaces/policycoreutils/include/",
+      "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
     ]
     deps += [ "//third_party/selinux:libselinux" ]
     external_deps += [
-      "selinux:libload_policy",
-      "selinux:librestorecon",
+      "selinux_adapter:libload_policy",
+      "selinux_adapter:librestorecon",
     ]
     cflags += [ "-DWITH_SELINUX" ]
   }

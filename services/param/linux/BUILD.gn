@@ -40,7 +40,7 @@ param_include_dirs = [
   "//third_party/bounds_checking_function/include",
   "//third_party/cJSON",
   "//commonlibrary/utils_lite/include",
-  "//base/security/selinux/interfaces/policycoreutils/include",
+  "//base/security/selinux_adapter/interfaces/policycoreutils/include",
 ]
 
 param_service_sources = [
@@ -132,7 +132,7 @@ if (defined(ohos_lite)) {
     if (build_selinux) {
       include_dirs += [
         "//third_party/selinux/libselinux/include/",
-        "//base/security/selinux/interfaces/policycoreutils/include/",
+        "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
       ]
       defines += [
         "PARAM_SUPPORT_SELINUX",

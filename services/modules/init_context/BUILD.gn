@@ -34,8 +34,8 @@ ohos_shared_library("init_context") {
   defines = [ "INIT_SUPPORT_CHIPSET_INIT" ]
   if (build_selinux) {
     external_deps += [
-      "selinux:libload_policy",
-      "selinux:librestorecon",
+      "selinux_adapter:libload_policy",
+      "selinux_adapter:librestorecon",
     ]
     defines += [ "WITH_SELINUX" ]
   }
