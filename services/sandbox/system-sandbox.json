@@ -127,6 +127,10 @@
             "src-path" : "/vendor/lib/librga.z.so",
             "sandbox-path" : "/vendor/lib/librga.z.so",
             "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/lib/librockchip_mpp.z.so",
+            "sandbox-path" : "/vendor/lib/librockchip_mpp.z.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
     "symbol-links" : [{
