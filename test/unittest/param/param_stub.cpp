@@ -566,9 +566,11 @@ static void TestBeforeInit(void)
 }
 #endif
 
+static pid_t g_currPid = 0;
 static __attribute__((constructor(101))) void ParamTestStubInit(void)
 {
-    printf("Init unit test start \n");
+    g_currPid = getpid();
+    printf("Init unit test start %u \n", g_currPid);
     EnableInitLog(INIT_ERROR);
 
     // prepare data
@@ -594,7 +596,10 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
 
 __attribute__((destructor)) static void ParamTestStubExit(void)
 {
-    PARAM_LOGI("ParamTestStubExit");
+    PARAM_LOGI("ParamTestStubExit %u %u \n", g_currPid, getpid());
+    if (g_currPid != getpid()) {
+        return;
+    }
 #ifndef OHOS_LITE
     StopParamService();
 
