@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include "DoFormat_fuzzer.h"
-#include <iostream>
 #include <string>
 #include "fs_manager/fs_manager.h"
 

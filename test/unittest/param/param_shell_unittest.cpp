@@ -213,6 +213,5 @@ HWTEST_F(ParamShellUnitTest, TestParamShellcmd2, TestSize.Level1)
     BShellEnvLoop(nullptr);
     BShellEnvErrString(GetShellHandle(), 1);
     BShellEnvOutputResult(GetShellHandle(), 1);
-
 }
 }  // namespace init_ut
