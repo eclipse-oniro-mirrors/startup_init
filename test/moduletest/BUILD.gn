@@ -79,7 +79,7 @@ ohos_moduletest("InitModuleTest") {
 
   external_deps = [
     "c_utils:utils",
-    "hilog_native:libhilog_base",
+    "hilog:libhilog_base",
     "ipc:ipc_single",
     "samgr:samgr_proxy",
   ]

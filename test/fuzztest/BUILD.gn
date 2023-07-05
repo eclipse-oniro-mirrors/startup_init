@@ -188,7 +188,7 @@ ohos_fuzztest("ServiceControlStartFuzzTest") {
     "//base/startup/init/test/fuzztest/utils/include",
   ]
   deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -210,7 +210,7 @@ ohos_fuzztest("ServiceControlStopFuzzTest") {
     "//base/startup/init/test/fuzztest/utils/include",
   ]
   deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -238,7 +238,7 @@ ohos_fuzztest("SystemDumpParametersFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -263,7 +263,7 @@ ohos_fuzztest("FindParameterFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -288,7 +288,7 @@ ohos_fuzztest("GetParameterCFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -314,7 +314,7 @@ ohos_fuzztest("GetParameterCommitIdFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -339,7 +339,7 @@ ohos_fuzztest("GetParameterNameFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -366,7 +366,7 @@ ohos_fuzztest("GetParameterValueFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -392,7 +392,7 @@ ohos_fuzztest("SetParameterCFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -421,7 +421,7 @@ ohos_fuzztest("SystemTraversalParameterFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -448,7 +448,7 @@ ohos_fuzztest("WaitParameterFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -480,7 +480,7 @@ ohos_fuzztest("WatchParameterFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -541,7 +541,7 @@ ohos_fuzztest("CmdServiceProcessDelClientFuzzTest") {
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -571,7 +571,7 @@ ohos_fuzztest("CmdClientInitFuzzTest") {
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -600,7 +600,7 @@ ohos_fuzztest("CmdServiceInitFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -626,7 +626,7 @@ ohos_fuzztest("GetIntParameterCFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -652,7 +652,7 @@ ohos_fuzztest("GetUintParameterCFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -681,7 +681,7 @@ ohos_fuzztest("RemoveParameterWatcherFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -707,7 +707,7 @@ ohos_fuzztest("SetParameterCppFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -733,7 +733,7 @@ ohos_fuzztest("GetBoolParameterCppFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -758,7 +758,7 @@ ohos_fuzztest("GetParameterCppFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -786,7 +786,7 @@ ohos_fuzztest("GetBlockDeviceByNameFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -814,7 +814,7 @@ ohos_fuzztest("GetBlockDeviceByMountPointFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -843,7 +843,7 @@ ohos_fuzztest("MountOneItemFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -870,7 +870,7 @@ ohos_fuzztest("GetMountStatusForMountPointFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -900,7 +900,7 @@ ohos_fuzztest("MountAllWithFstabFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -927,7 +927,7 @@ ohos_fuzztest("DoFormatFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -954,7 +954,7 @@ ohos_fuzztest("IsSupportedFilesystemFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -982,7 +982,7 @@ ohos_fuzztest("ParseFstabPerLineFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1010,7 +1010,7 @@ ohos_fuzztest("FindFstabItemForMountPointFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1040,7 +1040,7 @@ ohos_fuzztest("FindFstabItemForPathFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1067,7 +1067,7 @@ ohos_fuzztest("GetBlockDevicePathFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1094,7 +1094,7 @@ ohos_fuzztest("LoadFscryptPolicyFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1121,7 +1121,7 @@ ohos_fuzztest("ReleaseFstabFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1149,7 +1149,7 @@ ohos_fuzztest("ReadFstabFromFileFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1175,7 +1175,7 @@ ohos_fuzztest("GetIntParameterCppFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1201,7 +1201,7 @@ ohos_fuzztest("GetStringParameterFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1226,7 +1226,7 @@ ohos_fuzztest("HookMgrDelFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1251,7 +1251,7 @@ ohos_fuzztest("HookMgrAddFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1276,7 +1276,7 @@ ohos_fuzztest("HookMgrExecuteFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1301,7 +1301,7 @@ ohos_fuzztest("HookMgrTraversalFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1327,7 +1327,7 @@ ohos_fuzztest("HookMgrGetHooksCntFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1353,7 +1353,7 @@ ohos_fuzztest("HookMgrGetStagesCntFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1378,7 +1378,7 @@ ohos_fuzztest("HookMgrDestroyFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1403,7 +1403,7 @@ ohos_fuzztest("HookMgrCreateFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1429,7 +1429,7 @@ ohos_fuzztest("ModuleMgrTraversalFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1454,7 +1454,7 @@ ohos_fuzztest("ModuleMgrGetCntFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1480,7 +1480,7 @@ ohos_fuzztest("ModuleMgrUninstallFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1505,7 +1505,7 @@ ohos_fuzztest("ModuleMgrScanFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1530,7 +1530,7 @@ ohos_fuzztest("ModuleMgrInstallFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1555,7 +1555,7 @@ ohos_fuzztest("ModuleMgrDestroyFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1580,7 +1580,7 @@ ohos_fuzztest("ModuleMgrCreateFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1605,7 +1605,7 @@ ohos_fuzztest("ServiceSaveFdFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1633,7 +1633,7 @@ ohos_fuzztest("ServiceSaveFdWithPollFuzzTest") {
     "//base/startup/init/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1661,7 +1661,7 @@ ohos_fuzztest("ServiceGetFdFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1687,7 +1687,7 @@ ohos_fuzztest("ServiceControlWithExtraFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1713,7 +1713,7 @@ ohos_fuzztest("ServiceControlFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1739,7 +1739,7 @@ ohos_fuzztest("ServiceWaitForStatusFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1764,7 +1764,7 @@ ohos_fuzztest("ServiceSetReadyFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1790,7 +1790,7 @@ ohos_fuzztest("StartServiceByTimerFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1815,7 +1815,7 @@ ohos_fuzztest("StopServiceTimerFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1844,7 +1844,7 @@ ohos_fuzztest("ServiceWatchForStatusFuzzTest") {
     "//base/startup/init/test/fuzztest:libfuzz_utils",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1870,7 +1870,7 @@ ohos_fuzztest("HasSystemCapabilityFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1897,7 +1897,7 @@ ohos_fuzztest("BuildControlMessageFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1924,7 +1924,7 @@ ohos_fuzztest("ReceiveFdsFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1951,7 +1951,7 @@ ohos_fuzztest("LoadFstabFromCommandLineFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -1978,7 +1978,7 @@ ohos_fuzztest("GetBootSlotsFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2004,7 +2004,7 @@ ohos_fuzztest("GetCurrentSlotFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2031,7 +2031,7 @@ ohos_fuzztest("GetSecurityPatchTagFuzzTest") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2056,7 +2056,7 @@ ohos_fuzztest("GetOSFullNameFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2081,7 +2081,7 @@ ohos_fuzztest("GetVersionIdFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2106,7 +2106,7 @@ ohos_fuzztest("GetBuildRootHashFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2131,7 +2131,7 @@ ohos_fuzztest("GetOsReleaseTypeFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2156,7 +2156,7 @@ ohos_fuzztest("GetSdkApiVersionFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2181,7 +2181,7 @@ ohos_fuzztest("GetDeviceTypeCFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2206,7 +2206,7 @@ ohos_fuzztest("GetProductModelFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2231,7 +2231,7 @@ ohos_fuzztest("GetManufactureFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2256,7 +2256,7 @@ ohos_fuzztest("GetBrandFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2281,7 +2281,7 @@ ohos_fuzztest("GetMarketNameFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2306,7 +2306,7 @@ ohos_fuzztest("GetProductSeriesFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2331,7 +2331,7 @@ ohos_fuzztest("GetSoftwareModelFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2356,7 +2356,7 @@ ohos_fuzztest("GetHardwareModelFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2382,7 +2382,7 @@ ohos_fuzztest("GetHardwareProfileFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2407,7 +2407,7 @@ ohos_fuzztest("GetSerialFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2432,7 +2432,7 @@ ohos_fuzztest("GetAbiListFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2458,7 +2458,7 @@ ohos_fuzztest("GetDisplayVersionFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2484,7 +2484,7 @@ ohos_fuzztest("GetIncrementalVersionFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2510,7 +2510,7 @@ ohos_fuzztest("GetBootloaderVersionFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2535,7 +2535,7 @@ ohos_fuzztest("GetBuildTypeFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2560,7 +2560,7 @@ ohos_fuzztest("GetBuildUserFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2585,7 +2585,7 @@ ohos_fuzztest("GetBuildHostFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2610,7 +2610,7 @@ ohos_fuzztest("GetBuildTimeFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2636,7 +2636,7 @@ ohos_fuzztest("GetFirstApiVersionFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2662,7 +2662,7 @@ ohos_fuzztest("AclGetSerialFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2688,7 +2688,7 @@ ohos_fuzztest("GetSystemCommitIdFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2713,7 +2713,7 @@ ohos_fuzztest("GetDeviceTypeCppFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2738,7 +2738,7 @@ ohos_fuzztest("GetMajorVersionFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2763,7 +2763,7 @@ ohos_fuzztest("GetSeniorVersionFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2789,7 +2789,7 @@ ohos_fuzztest("GetFeatureVersionFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2814,7 +2814,7 @@ ohos_fuzztest("GetBuildVersionFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2839,7 +2839,7 @@ ohos_fuzztest("AclGetDevUdidFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2864,7 +2864,7 @@ ohos_fuzztest("GetDevUdidFuzzTest") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   cflags = [
     "-g",
@@ -2907,7 +2907,7 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
   ]
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
   ]
@@ -2952,7 +2952,7 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
   ]
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
   ]
@@ -2996,7 +2996,7 @@ ohos_fuzztest("AddWatcherFuzzTest") {
   ]
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
   ]
@@ -3039,7 +3039,7 @@ ohos_fuzztest("DelWatcherFuzzTest") {
   ]
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
   ]
@@ -3082,7 +3082,7 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
   ]
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
   ]
