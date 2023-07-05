@@ -55,7 +55,7 @@ INIT_LOCAL_API WorkSpace *GetWorkSpace(uint32_t labelIndex)
         return NULL;
     }
     uint32_t rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, MEMORY_ORDER_ACQUIRE);
-    if (rwSpaceLock == 1) {
+    if (rwSpaceLock & WORKSPACE_STATUS_IN_PROCESS) {
         return NULL;
     }
     if (workSpace->area != NULL) {

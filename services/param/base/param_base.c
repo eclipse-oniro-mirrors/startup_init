@@ -300,18 +300,39 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
     }
     int ret = 0;
     uint32_t rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, MEMORY_ORDER_ACQUIRE);
-    if (rwSpaceLock == 1) {
+    if (rwSpaceLock & WORKSPACE_STATUS_IN_PROCESS) {
         PARAM_LOGW("Workspace %s in init", workSpace->fileName);
         return -1;
     }
-    ATOMIC_STORE_EXPLICIT(&workSpace->rwSpaceLock, 1, MEMORY_ORDER_RELEASE);
+    ATOMIC_STORE_EXPLICIT(&workSpace->rwSpaceLock, rwSpaceLock | WORKSPACE_STATUS_IN_PROCESS, MEMORY_ORDER_RELEASE);
     if (workSpace->area == NULL) {
         ret = InitWorkSpace(workSpace, readOnly, workSpace->spaceSize);
         if (ret != 0) {
             PARAM_LOGE("Forbid to open workspace for %s error %d", workSpace->fileName, errno);
         }
+#ifndef PARAM_SUPPORT_SELINUX
     }
-    ATOMIC_STORE_EXPLICIT(&workSpace->rwSpaceLock, 0, MEMORY_ORDER_RELEASE);
+    ATOMIC_STORE_EXPLICIT(&workSpace->rwSpaceLock, rwSpaceLock & ~WORKSPACE_STATUS_IN_PROCESS, MEMORY_ORDER_RELEASE);
+#else
+    } else if (readOnly) {
+        if ((rwSpaceLock & WORKSPACE_STATUS_VALID) == WORKSPACE_STATUS_VALID) {
+            ret = 0;
+        } else if ((paramSpace->flags & WORKSPACE_FLAGS_NEED_ACCESS) == WORKSPACE_FLAGS_NEED_ACCESS) {
+            char buffer[FILENAME_LEN_MAX] = {0};
+            int size = PARAM_SPRINTF(buffer, sizeof(buffer), "%s/%s", PARAM_STORAGE_PATH, workSpace->fileName);
+            if (size > 0 && access(buffer, R_OK) == 0) {
+                PARAM_LOGW("Open workspace %s access ok ", workSpace->fileName);
+                rwSpaceLock |= WORKSPACE_STATUS_VALID;
+                ret = 0;
+            } else {
+                ret = -1;
+                PARAM_LOGE("Forbid to open workspace for %s error %d", workSpace->fileName, errno);
+                rwSpaceLock &= ~WORKSPACE_STATUS_VALID;
+            }
+        }
+    }
+    ATOMIC_STORE_EXPLICIT(&workSpace->rwSpaceLock, rwSpaceLock & ~WORKSPACE_STATUS_IN_PROCESS, MEMORY_ORDER_RELEASE);
+#endif
     return ret;
 }
 
@@ -428,30 +449,6 @@ STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
 }
 
 #ifdef PARAM_SUPPORT_SELINUX
-STATIC_INLINE int IsWorkSpaceReady(WorkSpace *workSpace)
-{
-    if (workSpace == NULL) {
-        return -1;
-    }
-    int ret = -1;
-    uint32_t rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, MEMORY_ORDER_ACQUIRE);
-    if (rwSpaceLock == 1) {
-        return ret;
-    }
-    if (workSpace->area != NULL) {
-        if ((g_paramWorkSpace.flags & WORKSPACE_FLAGS_NEED_ACCESS) == WORKSPACE_FLAGS_NEED_ACCESS) {
-            char buffer[FILENAME_LEN_MAX] = {0};
-            int size = PARAM_SPRINTF(buffer, sizeof(buffer), "%s/%s", PARAM_STORAGE_PATH, workSpace->fileName);
-            if (size > 0 && access(buffer, R_OK) == 0) {
-                ret = 0;
-            }
-        } else {
-            ret = 0;
-        }
-    }
-    return ret;
-}
-
 STATIC_INLINE const char *GetSelinuxContent(const char *name)
 {
     SelinuxSpace *selinuxSpace = &g_paramWorkSpace.selinuxSpace;
@@ -481,9 +478,6 @@ STATIC_INLINE int SelinuxCheckParamPermission(const ParamLabelIndex *labelIndex,
 #ifdef STARTUP_INIT_TEST
         return selinuxSpace->readParamCheck(name);
 #endif
-        if (IsWorkSpaceReady(labelIndex->workspace) == 0) {
-            return DAC_RESULT_PERMISSION;
-        }
         ret = OpenWorkSpace(labelIndex->selinuxLabelIndex, 1);
     }
     if (ret != 0) {

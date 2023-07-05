@@ -28,7 +28,6 @@ using namespace testing::ext;
 using namespace std;
 
 extern "C" {
-int IsWorkSpaceReady(WorkSpace *workSpace);
 void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
 static void OnClose(const TaskHandle taskHandle)
 {
@@ -663,19 +662,5 @@ HWTEST_F(ParamUnitTest, TestParamCache, TestSize.Level0)
     EXPECT_EQ(valueChange, 1);
     CachedParameterDestroy(cacheHandle3);
 }
-#ifdef PARAM_SUPPORT_SELINUX
-HWTEST_F(ParamUnitTest, TestInitParameterClient, TestSize.Level0)
-{
-    InitParameterClient();
-    WorkSpace *workspace = GetWorkSpace(0);
-    int ret = IsWorkSpaceReady(workspace);
-    EXPECT_EQ(ret, 0);
-    ret = IsWorkSpaceReady(NULL);
-    EXPECT_NE(ret, 0);
-    workspace = GetWorkSpace(1);
-    ret = IsWorkSpaceReady(workspace);
-    EXPECT_EQ(ret, 0);
-}
-#endif
 #endif
 }
