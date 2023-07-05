@@ -216,11 +216,13 @@ static void ReportSysEvent(void)
 
 static void SetServiceBooteventHookMgr(const char *name, int state)
 {
+#ifndef STARTUP_INIT_TEST
     SERVICE_BOOTEVENT_CTX context;
     context.serviceName = name;
     context.reserved = NULL;
     context.state = state;
     HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_BOOTEVENT, (void*)(&context), NULL);
+#endif
 }
 
 static void BootEventParaFireByName(const char *paramName)
