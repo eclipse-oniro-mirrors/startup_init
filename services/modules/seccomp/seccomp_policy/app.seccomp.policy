@@ -233,6 +233,7 @@ statx;all
 pidfd_send_signal;all
 pidfd_open;all
 pidfd_getfd;all
+faccessat2;all
 process_madvise;all
 set_robust_list;all
 fork;arm
