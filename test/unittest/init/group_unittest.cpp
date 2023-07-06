@@ -94,7 +94,7 @@ static void DoCmdByName(const char *name, const char *cmdContent)
 {
     int cmdIndex = 0;
     (void)GetMatchCmd(name, &cmdIndex);
-    DoCmdByIndex(cmdIndex, cmdContent, NULL);
+    DoCmdByIndex(cmdIndex, cmdContent, nullptr);
 }
 
 namespace init_ut {
@@ -152,7 +152,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap001, TestSize.Level1)
     }
     OH_HashMapIsEmpty(handle);
     OH_HashMapTraverse(handle, [](const HashNode *node, const void *context) {return;}, nullptr);
-    OH_HashMapDestory(handle, NULL);
+    OH_HashMapDestory(handle, nullptr);
 }
 
 HWTEST_F(InitGroupManagerUnitTest, TestHashMap002, TestSize.Level1)
@@ -162,7 +162,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap002, TestSize.Level1)
     TestHashNode *node4 = TestCreateHashNode("pre-init");
     OH_HashMapAdd(handle, &node4->node);
     OH_HashMapRemove(handle, "pre-init");
-    TestHashNodeFree(&node4->node, NULL);
+    TestHashNodeFree(&node4->node, nullptr);
 
     const char *act = "load_persist_props_action";
     TestHashNode *node5 = TestCreateHashNode(act);
@@ -175,7 +175,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestHashMap002, TestSize.Level1)
     }
     OH_HashMapIsEmpty(handle);
     OH_HashMapTraverse(handle, [](const HashNode *node, const void *context) {return;}, nullptr);
-    OH_HashMapDestory(handle, NULL);
+    OH_HashMapDestory(handle, nullptr);
 }
 
 HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
@@ -186,7 +186,8 @@ HWTEST_F(InitGroupManagerUnitTest, TestInitGroupMgrInit, TestSize.Level1)
     workspace->groupMode = GROUP_BOOT;
     if (strcpy_s(workspace->groupModeStr, GROUP_NAME_MAX_LENGTH, "device.boot.group") != EOK) {
         EXPECT_EQ(1, 0);
-    } // test read cfgfile
+    }
+    // test read cfgfile
     int ret = InitParseGroupCfg();
     EXPECT_EQ(ret, 0);
 }
@@ -323,12 +324,12 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService2, TestSize.Level1)
     cJSON_Delete(fileRoot);
     char cmdStr[] = "all#bootevent";
     char cmdStr1[] = "parameter_service";
-    ProcessControlFd(ACTION_DUMP, "all", NULL);
-    ProcessControlFd(ACTION_DUMP, cmdStr, NULL);
-    ProcessControlFd(ACTION_DUMP, cmdStr1, NULL);
-    ProcessControlFd(ACTION_SANDBOX, cmdStr, NULL);
-    ProcessControlFd(ACTION_MODULEMGR, cmdStr, NULL);
-    ProcessControlFd(ACTION_MAX, cmdStr, NULL);
+    ProcessControlFd(ACTION_DUMP, "all", nullptr);
+    ProcessControlFd(ACTION_DUMP, cmdStr, nullptr);
+    ProcessControlFd(ACTION_DUMP, cmdStr1, nullptr);
+    ProcessControlFd(ACTION_SANDBOX, cmdStr, nullptr);
+    ProcessControlFd(ACTION_MODULEMGR, cmdStr, nullptr);
+    ProcessControlFd(ACTION_MAX, cmdStr, nullptr);
     Service *service = GetServiceByName("test-service6");
     ASSERT_NE(service, nullptr);
     workspace->groupMode = GROUP_BOOT;
@@ -386,7 +387,7 @@ HWTEST_F(InitGroupManagerUnitTest, TestProcessWatchEvent, TestSize.Level1)
     ASSERT_EQ(ret, 0);
     uint32_t event;
     ((WatcherTask *)watcher)->processEvent((WatcherHandle)watcher, 0, &event, service);
-    service->socketCfg = NULL;
+    service->socketCfg = nullptr;
 }
 
 HWTEST_F(InitGroupManagerUnitTest, TestCheckNodeValid, TestSize.Level1)

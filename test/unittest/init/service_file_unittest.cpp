@@ -40,7 +40,7 @@ HWTEST_F(ServiceFileUnitTest, TestServiceFile, TestSize.Level1)
     const char *fileName = "/data/filetest";
     ServiceFile *fileOpt = (ServiceFile *)calloc(1, sizeof(ServiceFile) + strlen(fileName) + 1);
     ASSERT_NE(fileOpt, nullptr);
-    fileOpt->next = NULL;
+    fileOpt->next = nullptr;
     fileOpt->flags = O_RDWR;
     fileOpt->uid = 1000;
     fileOpt->gid = 1000;

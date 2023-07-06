@@ -36,9 +36,7 @@ static int GetServiceName(const char *paramName, char *buffer, size_t buffSize)
     size_t len = strlen(paramName);
     size_t i = 0;
     for (size_t index = strlen("bootevent."); index < len; index++) {
-        if (i > buffSize) {
-            return -1;
-        }
+        PLUGIN_CHECK(i <= buffSize, return -1);
         if (*(paramName + index) == '.') {
             break;
         }
@@ -74,9 +72,9 @@ PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
 {
     PLUGIN_CHECK(events != NULL, return, "Invalid events");
     struct timespec curr = {0};
-    if (clock_gettime(CLOCK_MONOTONIC, &curr) != 0) {
-        return;
-    }
+    int ret = clock_gettime(CLOCK_MONOTONIC, &curr);
+    PLUGIN_CHECK(ret == 0, return);
+
     char *buffer = (char *)calloc(MAX_BUFFER_FOR_EVENT + PARAM_VALUE_LEN_MAX, 1);
     PLUGIN_CHECK(buffer != NULL, return, "Failed to get memory for sys event ");
     EventArgs args = { buffer, MAX_BUFFER_FOR_EVENT, 0 };
@@ -93,7 +91,7 @@ PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
     startupTime.detailTime = buffer;
     char *reason = buffer + MAX_BUFFER_FOR_EVENT;
     uint32_t size = PARAM_VALUE_LEN_MAX;
-    int ret = SystemReadParam("ohos.boot.bootreason", reason, &size);
+    ret = SystemReadParam("ohos.boot.bootreason", reason, &size);
     if (ret == 0) {
         startupTime.reason = reason;
         startupTime.firstStart = 1;

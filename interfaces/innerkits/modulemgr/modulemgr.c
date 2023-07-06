@@ -100,21 +100,20 @@ static void *ModuleInstall(MODULE_ITEM *module, int argc, const char *argv[])
 {
     void *handle;
     char path[PATH_MAX];
+    int rc;
 
     module->moduleMgr->installArgs.argc = argc;
     module->moduleMgr->installArgs.argv = argv;
 
     BEGET_LOGV("Module install name %s", module->name);
     if (module->name[0] == '/') {
-        if (snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s" MODULE_SUFFIX_D, module->name) < 0) {
-            return NULL;
-        }
+        rc = snprintf_s(path, sizeof(path), sizeof(path) - 1, STARTUP_INIT_UT_PATH"%s" MODULE_SUFFIX_D, module->name);
+        BEGET_CHECK(rc >= 0, return NULL);
     } else {
         const char *fmt = (InUpdaterMode() == 0) ? "/system/" MODULE_LIB_NAME : "/" MODULE_LIB_NAME;
-        if (snprintf_s(path, sizeof(path), sizeof(path) - 1,
-            "%s/%s/lib%s" MODULE_SUFFIX_D, fmt, module->moduleMgr->name, module->name) < 0) {
-            return NULL;
-        }
+        rc = snprintf_s(path, sizeof(path), sizeof(path) - 1,
+            STARTUP_INIT_UT_PATH"%s/%s/lib%s" MODULE_SUFFIX_D, fmt, module->moduleMgr->name, module->name);
+        BEGET_CHECK(rc >= 0, return NULL);
     }
     BEGET_LOGV("Module install path %s", path);
     char *realPath = GetRealPath(path);
@@ -162,19 +161,18 @@ int ModuleMgrInstall(MODULE_MGR *moduleMgr, const char *moduleName,
     module->moduleMgr = moduleMgr;
 
     module->name = strdup(moduleName);
-    if (module->name == NULL) {
-        ModuleDestroy((ListNode *)module);
-        return -1;
-    }
+    BEGET_CHECK(module->name != NULL, free(module);
+        return -1);
 
     // Install
     module->handle = ModuleInstall(module, argc, argv);
+#ifndef STARTUP_INIT_TEST
     if (module->handle == NULL) {
         BEGET_LOGE("Failed to install module %s", module->name);
         ModuleDestroy((ListNode *)module);
         return -1;
     }
-
+#endif
     // Add to list
     OH_ListAddTail(&(moduleMgr->modules), (ListNode *)module);
 
@@ -240,7 +238,7 @@ MODULE_MGR *ModuleMgrScan(const char *modulePath)
 {
     MODULE_MGR *moduleMgr;
     char path[PATH_MAX];
-
+    BEGET_LOGV("ModuleMgrScan moduleName %s", modulePath);
     moduleMgr = ModuleMgrCreate(modulePath);
     BEGET_CHECK(moduleMgr != NULL, return NULL);
 

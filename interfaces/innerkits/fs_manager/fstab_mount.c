@@ -76,15 +76,12 @@ bool IsSupportedFilesystem(const char *fsType)
 
 static int ExecCommand(int argc, char **argv)
 {
-    if (argc == 0 || argv == NULL || argv[0] == NULL) {
-        return -1;
-    }
+    BEGET_CHECK(!(argc == 0 || argv == NULL || argv[0] == NULL), return -1);
+
     BEGET_LOGI("Execute %s begin", argv[0]);
     pid_t pid = fork();
-    if (pid < 0) {
-        BEGET_LOGE("Fork new process to format failed: %d", errno);
-        return -1;
-    }
+    BEGET_ERROR_CHECK(pid >= 0, return -1, "Fork new process to format failed: %d", errno);
+
     if (pid == 0) {
         execv(argv[0], argv);
         exit(-1);
@@ -112,10 +109,9 @@ int DoFormat(const char *devPath, const char *fsType)
     if (strcmp(fsType, "ext4") == 0) {
         char blockSizeBuffer[BLOCK_SIZE_BUFFER] = {0};
         const unsigned int blockSize = 4096;
-        if (snprintf_s(blockSizeBuffer, BLOCK_SIZE_BUFFER, BLOCK_SIZE_BUFFER - 1, "%u", blockSize) == -1) {
-            BEGET_LOGE("Failed to build block size buffer");
-            return -1;
-        }
+        ret = snprintf_s(blockSizeBuffer, BLOCK_SIZE_BUFFER, BLOCK_SIZE_BUFFER - 1, "%u", blockSize);
+        BEGET_ERROR_CHECK(ret != -1, return -1, "Failed to build block size buffer");
+
         char *formatCmds[] = {
             "/bin/mke2fs", "-F", "-t", (char *)fsType, "-b", blockSizeBuffer, (char *)devPath, NULL
         };
@@ -152,9 +148,8 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
     bool found = false;
 
     FILE *fp = fopen("/proc/mounts", "r");
-    if (fp == NULL) {
-        return status;
-    }
+    BEGET_CHECK(fp != NULL, return status);
+
     while (fgets(buffer, sizeof(buffer) - 1, fp) != NULL) {
         size_t n = strlen(buffer);
         if (buffer[n - 1] == '\n') {
@@ -184,10 +179,7 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
 static int DoResizeF2fs(const char* device, const unsigned long long size)
 {
     char *file = "/system/bin/resize.f2fs";
-    if (access(file, F_OK) != 0) {
-        BEGET_LOGE("resize.f2fs is not exists.");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize.f2fs is not exists.");
 
     int ret = 0;
     if (size == 0) {
@@ -218,10 +210,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size)
 static int DoFsckF2fs(const char* device)
 {
     char *file = "/system/bin/fsck.f2fs";
-    if (access(file, F_OK) != 0) {
-        BEGET_LOGE("fsck.f2fs is not exists.");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "fsck.f2fs is not exists.");
 
     char *cmd[] = {
         file, "-a", (char *)device, NULL
@@ -234,10 +223,7 @@ static int DoFsckF2fs(const char* device)
 static int DoResizeExt(const char* device, const unsigned long long size)
 {
     char *file = "/system/bin/resize2fs";
-    if (access(file, F_OK) != 0) {
-        BEGET_LOGE("resize2fs is not exists.");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize2fs is not exists.");
 
     int ret = 0;
     if (size == 0) {
@@ -266,10 +252,7 @@ static int DoResizeExt(const char* device, const unsigned long long size)
 static int DoFsckExt(const char* device)
 {
     char *file = "/system/bin/e2fsck";
-    if (access(file, F_OK) != 0) {
-        BEGET_LOGE("e2fsck is not exists.");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "e2fsck is not exists.");
 
     char *cmd[] = {
         file, "-y", (char *)device, NULL
@@ -285,22 +268,16 @@ static int Mount(const char *source, const char *target, const char *fsType,
     struct stat st = {};
     int rc = -1;
 
-    if (source == NULL || target == NULL || fsType == NULL) {
-        BEGET_LOGE("Invalid argument for mount.");
-        return -1;
-    }
-    if (stat(target, &st) != 0 && errno != ENOENT) {
-        BEGET_LOGE("Cannot get stat of \" %s \", err = %d", target, errno);
-        return -1;
-    }
-    if ((st.st_mode & S_IFMT) == S_IFLNK) { // link, delete it.
-        unlink(target);
-    }
+    bool isTrue = source == NULL || target == NULL || fsType == NULL;
+    BEGET_ERROR_CHECK(!isTrue, return -1, "Invalid argument for mount.");
+
+    isTrue = stat(target, &st) != 0 && errno != ENOENT;
+    BEGET_ERROR_CHECK(!isTrue, return -1, "Cannot get stat of \" %s \", err = %d", target, errno);
+
+    BEGET_CHECK((st.st_mode & S_IFMT) != S_IFLNK, unlink(target)); // link, delete it.
+
     if (mkdir(target, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
-        if (errno != EEXIST) {
-            BEGET_LOGE("Failed to create dir \" %s \", err = %d", target, errno);
-            return -1;
-        }
+        BEGET_ERROR_CHECK(errno == EEXIST, return -1, "Failed to create dir \" %s \", err = %d", target, errno);
     }
     errno = 0;
     if ((rc = mount(source, target, fsType, flags, data)) != 0) {
@@ -468,9 +445,7 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
 
 int MountAllWithFstab(const Fstab *fstab, bool required)
 {
-    if (fstab == NULL) {
-        return -1;
-    }
+    BEGET_CHECK(fstab != NULL, return -1);
 
     FstabItem *item = NULL;
     int rc = -1;
@@ -501,9 +476,9 @@ int MountAllWithFstab(const Fstab *fstab, bool required)
 
 int MountAllWithFstabFile(const char *fstabFile, bool required)
 {
-    if (fstabFile == NULL || *fstabFile == '\0') {
-        return -1;
-    }
+    bool isFile = fstabFile == NULL || *fstabFile == '\0';
+    BEGET_CHECK(!isFile, return -1);
+
     Fstab *fstab = NULL;
     if ((fstab = ReadFstabFromFile(fstabFile, false)) == NULL) {
         BEGET_LOGE("[fs_manager][error] Read fstab file \" %s \" failed\n", fstabFile);
@@ -518,14 +493,12 @@ int MountAllWithFstabFile(const char *fstabFile, bool required)
 
 int UmountAllWithFstabFile(const char *fstabFile)
 {
-    if (fstabFile == NULL || *fstabFile == '\0') {
-        return -1;
-    }
+    bool isFile = fstabFile == NULL || *fstabFile == '\0';
+    BEGET_CHECK(!isFile, return -1);
+
     Fstab *fstab = NULL;
-    if ((fstab = ReadFstabFromFile(fstabFile, false)) == NULL) {
-        BEGET_LOGE("Read fstab file \" %s \" failed.", fstabFile);
-        return -1;
-    }
+    fstab = ReadFstabFromFile(fstabFile, false);
+    BEGET_ERROR_CHECK(fstab != NULL, return -1, "Read fstab file \" %s \" failed.", fstabFile);
 
     FstabItem *item = NULL;
     int rc = -1;

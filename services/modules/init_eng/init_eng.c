@@ -114,7 +114,7 @@ ENG_STATIC void BindMountFile(const char *source, const char *target)
         return;
     }
 
-    if (q == end - 1) {
+    if (*(end - 1) == '/') {
         PLUGIN_LOGI("path \' %s \' ends with slash, ignore it", source);
         return;
     }

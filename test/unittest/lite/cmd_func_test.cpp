@@ -159,7 +159,7 @@ void DoCmd(const TestCmdLine *resCmd)
     }
     int cmdIndex = 0;
     (void)GetMatchCmd(resCmd->name, &cmdIndex);
-    DoCmdByIndex(cmdIndex, resCmd->cmdContent, NULL);
+    DoCmdByIndex(cmdIndex, resCmd->cmdContent, nullptr);
 }
 
 /*

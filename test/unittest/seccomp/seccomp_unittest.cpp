@@ -100,6 +100,7 @@ public:
 
         sigemptyset(&set);
         sigaddset(&set, SIGCHLD);
+        sigaddset(&set, SIGSYS);
         sigprocmask(SIG_BLOCK, &set, nullptr);
         if (signal(SIGCHLD, Handler) == nullptr) {
             std::cout << "signal failed:" << strerror(errno) << std::endl;
@@ -155,7 +156,7 @@ public:
 #if defined __aarch64__
     static bool CheckGetMempolicy()
     {
-        int ret = syscall(__NR_get_mempolicy, NULL, NULL, 0, NULL, 0);
+        int ret = syscall(__NR_get_mempolicy, nullptr, nullptr, 0, nullptr, 0);
         if (ret < 0) {
             return false;
         }
@@ -222,6 +223,15 @@ public:
 
         // system allowlist
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetpid, true);
+        EXPECT_EQ(ret, 0);
+
+        // failed
+        ret = CheckSyscall(SYSTEM_SA, nullptr, CheckGetMempolicy, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = SystemWriteParam("persist.init.debug.seccomp.enable", "-1");
+        EXPECT_EQ(ret, 0);
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetMempolicy, false);
         EXPECT_EQ(ret, 0);
     }
 

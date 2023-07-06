@@ -57,6 +57,14 @@ typedef enum InitLogLevel {
 #define STATIC static
 #endif
 
+#ifndef STARTUP_INIT_UT_PATH
+#ifdef STARTUP_INIT_TEST // ut
+#define STARTUP_INIT_UT_PATH "/data/init_ut"
+#else
+#define STARTUP_INIT_UT_PATH ""
+#endif
+#endif
+
 INIT_PUBLIC_API void StartupLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
 INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level);
 

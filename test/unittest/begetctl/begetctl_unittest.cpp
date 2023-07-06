@@ -398,6 +398,11 @@ HWTEST_F(BegetctlUnitTest, TestModulectl_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
+HWTEST_F(BegetctlUnitTest, TestModulectl_6, TestSize.Level1)
+{
+    BShellEnvDirectExecute(GetShellHandle(), 0, nullptr);
+}
+
 HWTEST_F(BegetctlUnitTest, TestServiceControl_1, TestSize.Level1)
 {
     const char *args[] = {
@@ -510,6 +515,14 @@ HWTEST_F(BegetctlUnitTest, TestSetLogLevel_4, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
+HWTEST_F(BegetctlUnitTest, TestSetLogLevel_5, TestSize.Level1)
+{
+    const char *args[] = {
+        "setloglevel"
+    };
+    BShellEnvDirectExecute(GetShellHandle(), 0, const_cast<char **>(args));
+}
+
 HWTEST_F(BegetctlUnitTest, TestSandbox, TestSize.Level1)
 {
     const char *args[] = {
@@ -586,6 +599,38 @@ HWTEST_F(BegetctlUnitTest, TestReboot_9, TestSize.Level1)
 {
     const char *args[] = {
         "reboot", "222222222"
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
+}
+
+HWTEST_F(BegetctlUnitTest, TestGid_1, TestSize.Level1)
+{
+    const char *args[] = {
+        "dac", "gid", "logd"
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
+}
+
+HWTEST_F(BegetctlUnitTest, TestGid_2, TestSize.Level1)
+{
+    const char *args[] = {
+        "dac"
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
+}
+
+HWTEST_F(BegetctlUnitTest, TestUid_1, TestSize.Level1)
+{
+    const char *args[] = {
+        "dac", "uid", ""
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
+}
+
+HWTEST_F(BegetctlUnitTest, TestUid_2, TestSize.Level1)
+{
+    const char *args[] = {
+        "dac", "uid", ""
     };
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }

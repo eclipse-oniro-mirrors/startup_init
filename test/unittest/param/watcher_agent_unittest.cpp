@@ -278,7 +278,7 @@ HWTEST_F(WatcherAgentUnitTest, TestWatcherService, TestSize.Level0)
     ServiceWatchForStatus("param_watcher", TestWatcherCallBack);
     ServiceWaitForStatus("param_watcher", SERVICE_STARTED, 1);
     EXPECT_NE(ServiceWatchForStatus(errstr, TestWatcherCallBack), 0);
-    EXPECT_NE(ServiceWatchForStatus(NULL, TestWatcherCallBack), 0);
+    EXPECT_NE(ServiceWatchForStatus(nullptr, TestWatcherCallBack), 0);
     WatchParameter("testParam", nullptr, nullptr);
     WatchParameter(nullptr, nullptr, nullptr);
 }

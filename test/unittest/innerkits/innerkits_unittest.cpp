@@ -48,6 +48,7 @@ int SendCmdMessage(const CmdAgent *agent, uint16_t type, const char *cmd, const 
 int SendMessage(LoopHandle loop, TaskHandle task, const char *message);
 int *GetFdsFromMsg(size_t *outFdCount, pid_t *requestPid, struct msghdr msghdr);
 int BuildSendData(char *buffer, size_t size, const char *serviceName, bool hold, bool poll);
+int CheckSocketPermission(const TaskHandle task);
 }
 
 class InnerkitsUnitTest : public testing::Test {
@@ -194,7 +195,7 @@ HWTEST_F(InnerkitsUnitTest, GetSlotInfo_unittest, TestSize.Level1)
 */
 HWTEST_F(InnerkitsUnitTest, LoadFstabFromCommandLine_unittest, TestSize.Level1)
 {
-    EXPECT_NE(LoadFstabFromCommandLine(), (Fstab *)NULL);
+    EXPECT_NE(LoadFstabFromCommandLine(), (Fstab *)nullptr);
 }
 
 /**
@@ -363,16 +364,16 @@ HWTEST_F(InnerkitsUnitTest, TestControlFdServer, TestSize.Level1)
         UNUSED(context);
         }, LE_GetDefaultLoop());
 
-    TaskHandle testServer = NULL;
+    TaskHandle testServer = nullptr;
     LE_StreamServerInfo info = {};
     info.baseInfo.flags = TASK_STREAM | TASK_SERVER | TASK_PIPE | TASK_TEST;
     info.server = (char *)"/data/testSock1";
     info.socketId = -1;
-    info.baseInfo.close = NULL;
-    info.disConnectComplete = NULL;
+    info.baseInfo.close = nullptr;
+    info.disConnectComplete = nullptr;
     info.incommingConnect = TestIncommingConnect;
-    info.sendMessageComplete = NULL;
-    info.recvMessage = NULL;
+    info.sendMessageComplete = nullptr;
+    info.recvMessage = nullptr;
     (void)LE_CreateStreamServer(LE_GetDefaultLoop(), &testServer, &info);
     CmdOnIncommingConnect(LE_GetDefaultLoop(), testServer);
 
@@ -388,6 +389,12 @@ HWTEST_F(InnerkitsUnitTest, TestControlFdServer, TestSize.Level1)
     CmdServiceProcessDelClient(0);
     CmdServiceProcessDelClient(0);
     free(cmdMsg);
+}
+
+HWTEST_F(InnerkitsUnitTest, TestHoldFd_1, TestSize.Level1)
+{
+    CheckSocketPermission(nullptr);
+    CmdServiceProcessDestroyClient();
 }
 
 HWTEST_F(InnerkitsUnitTest, TestHoldFd, TestSize.Level1)
@@ -418,19 +425,19 @@ HWTEST_F(InnerkitsUnitTest, TestHoldFd, TestSize.Level1)
     struct msghdr msghdr = {};
     BuildControlMessage(nullptr, nullptr, 1, 0);
     BuildControlMessage(&msghdr, nullptr, 1, 0);
-    if (msghdr.msg_control != NULL) {
+    if (msghdr.msg_control != nullptr) {
         free(msghdr.msg_control);
-        msghdr.msg_control = NULL;
+        msghdr.msg_control = nullptr;
     }
     BuildControlMessage(&msghdr, fds, -1, 0);
-    if (msghdr.msg_control != NULL) {
+    if (msghdr.msg_control != nullptr) {
         free(msghdr.msg_control);
-        msghdr.msg_control = NULL;
+        msghdr.msg_control = nullptr;
     }
     BuildControlMessage(&msghdr, fds, -1, 1);
-    if (msghdr.msg_control != NULL) {
+    if (msghdr.msg_control != nullptr) {
         free(msghdr.msg_control);
-        msghdr.msg_control = NULL;
+        msghdr.msg_control = nullptr;
     }
     if (fds != nullptr)
     {

@@ -26,6 +26,7 @@ using namespace testing::ext;
 extern "C" {
 float ConvertMicrosecondToSecond(int x);
 }
+#define MAX_BUFFER_FOR_TEST 128
 
 namespace init_ut {
 class UtilsUnitTest : public testing::Test {
@@ -75,5 +76,46 @@ HWTEST_F(UtilsUnitTest, TestUtilsApi, TestSize.Level0)
     CheckAndCreatFile("/data/init_ut/nodir/testcreatfile", mode);
     char testStr[] = ".trim";
     EXPECT_STREQ(TrimHead(testStr, '.'), "trim");
+}
+
+void TestOpenConsole(void)
+{
+    // Save current stdin, stdout, stderr
+    int fd0 = dup(STDIN_FILENO);
+    EXPECT_GT(fd0, 0);
+    int fd1 = dup(STDOUT_FILENO);
+    EXPECT_GT(fd1, 0);
+    int fd2 = dup(STDERR_FILENO);
+    EXPECT_GT(fd2, 0);
+    // test start
+    OpenConsole();
+    char buffer[MAX_BUFFER_FOR_TEST];
+    ssize_t ret = readlink("/proc/self/fd/0", buffer, MAX_BUFFER_FOR_TEST - 1);
+    EXPECT_NE(ret, -1);
+    auto n = strcmp(buffer, "/dev/console");
+    EXPECT_EQ(n, 0);
+    (void)memset_s(buffer, sizeof(buffer), 0, MAX_BUFFER_FOR_TEST);
+    ret = readlink("/proc/self/fd/1", buffer, MAX_BUFFER_FOR_TEST - 1);
+    EXPECT_NE(ret, -1);
+    n = strcmp(buffer, "/dev/console");
+    EXPECT_EQ(n, 0);
+    (void)memset_s(buffer, sizeof(buffer), 0, MAX_BUFFER_FOR_TEST);
+    ret = readlink("/proc/self/fd/2", buffer, MAX_BUFFER_FOR_TEST - 1);
+    EXPECT_NE(ret, -1);
+    n = strcmp(buffer, "/dev/console");
+    EXPECT_EQ(n, 0);
+    // test done
+    // restore stdin, stdout, stderr
+    dup2(fd0, 0);
+    dup2(fd1, 1);
+    dup2(fd2, 2); // 2 stderr
+    close(fd0);
+    close(fd1);
+    close(fd2);
+}
+
+HWTEST_F(UtilsUnitTest, TestUtilsOpenConsole, TestSize.Level0)
+{
+    TestOpenConsole();
 }
 } // namespace init_ut

@@ -67,10 +67,7 @@ CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *bu
         return;
     }
 
-    if (CheckSocketPermission(task) < 0) {
-        BEGET_LOGE("Check socket permission failed, err = %d", errno);
-        return;
-    }
+    BEGET_ERROR_CHECK(CheckSocketPermission(task) >= 0, return, "Check socket permission failed, err = %d", errno);
 
 #ifndef STARTUP_INIT_TEST
     agent->pid = fork();

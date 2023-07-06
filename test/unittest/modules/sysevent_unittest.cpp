@@ -17,6 +17,7 @@
 #include <sys/time.h>
 
 #include "bootevent.h"
+#include "init_param.h"
 #include "init_utils.h"
 #include "list.h"
 #include "param_stub.h"
@@ -32,12 +33,12 @@ extern void ReportBootEventComplete(ListNode *events);
 static void AddBootEvent(ListNode *events, const char *name, int32_t type)
 {
     BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)calloc(1, sizeof(BOOT_EVENT_PARAM_ITEM));
-    if (item == NULL) {
+    if (item == nullptr) {
         return;
     }
     OH_ListInit(&item->node);
     item->paramName = strdup(name);
-    if (item->paramName == NULL) {
+    if (item->paramName == nullptr) {
         free(item);
         return;
     }
@@ -49,7 +50,7 @@ static void AddBootEvent(ListNode *events, const char *name, int32_t type)
 
 static void BootEventDestroyProc(ListNode *node)
 {
-    if (node == NULL) {
+    if (node == nullptr) {
         return;
     }
     BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)node;
@@ -89,6 +90,7 @@ HWTEST_F(SysEventUnitTest, SysEventTest_003, TestSize.Level1)
     AddBootEvent(&events, "bootevent.33333333333.xxxx", BOOTEVENT_TYPE_SERVICE);
     AddBootEvent(&events, "bootevent.44444444444444", BOOTEVENT_TYPE_SERVICE);
     AddBootEvent(&events, "bootevent.44444444444444.6666666666.777777", BOOTEVENT_TYPE_SERVICE);
+    SystemWriteParam("ohos.boot.bootreason", "-1");
     ReportBootEventComplete(&events);
     OH_ListRemoveAll(&events, BootEventDestroyProc);
 }
@@ -125,5 +127,10 @@ HWTEST_F(SysEventUnitTest, SysEventTest_005, TestSize.Level1)
     startupTime.reason = const_cast<char *>("");
     startupTime.firstStart = 1;
     ReportSysEvent(&startupTime.event);
+}
+
+HWTEST_F(SysEventUnitTest, SysEventTest_006, TestSize.Level1)
+{
+    ReportSysEvent(nullptr);
 }
 } // namespace init_ut

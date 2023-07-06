@@ -232,9 +232,7 @@ static bool RefreshServices()
 static cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrName)
 {
     cJSON *arrItem = cJSON_GetObjectItemCaseSensitive(fileRoot, arrName);
-    if (!cJSON_IsArray(arrItem)) {
-        return NULL;
-    }
+    PLUGIN_CHECK(cJSON_IsArray(arrItem), return NULL);
     *arrSize = cJSON_GetArraySize(arrItem);
     return *arrSize > 0 ? arrItem : NULL;
 }
@@ -282,9 +280,7 @@ static bool SetKernelTraceEnabled(const TraceWorkspace *workspace, bool enabled)
         PLUGIN_LOGV("Kernel tag name: %s sys-files %d", name, pathCount);
         for (int j = 0; j < pathCount; j++) {
             char *path = cJSON_GetStringValue(cJSON_GetArrayItem(paths, j));
-            if (path == NULL) {
-                continue;
-            }
+            PLUGIN_CHECK(path != NULL, continue);
             if (!IsWritableFile(path)) {
                 PLUGIN_LOGW("Path %s is not writable for %s", path, name);
                 continue;
@@ -367,11 +363,8 @@ static void DumpCompressedTrace(int traceFd, int outFd)
             PLUGIN_CHECK(ret != Z_STREAM_ERROR, break, "Error: deflate trace, errno: %d\n", errno);
             size_t have = CHUNK_SIZE - zs.avail_out;
             size_t bytesWritten = (size_t)TEMP_FAILURE_RETRY(write(outFd, outBuffer, have));
-            if (bytesWritten < have) {
-                PLUGIN_LOGE("Error: writing deflated trace, errno: %d\n", errno);
-                flush = Z_FINISH; // finish
-                break;
-            }
+            PLUGIN_CHECK(bytesWritten >= have, flush = Z_FINISH; break,
+                "Error: writing deflated trace, errno: %d\n", errno);
         } while (zs.avail_out == 0);
     } while (flush != Z_FINISH);
 
@@ -449,26 +442,18 @@ static int InitStartTrace(void)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
     PLUGIN_CHECK(workspace != NULL, return 0, "Failed to get trace workspace");
-    if (workspace->traceState != TRACE_STATE_IDLE) {
-        PLUGIN_LOGE("Invalid state for trace %d", workspace->traceState);
-        return 0;
-    }
+    PLUGIN_CHECK(workspace->traceState == TRACE_STATE_IDLE, return 0,
+        "Invalid state for trace %d", workspace->traceState);
+
     InitTraceWorkspace(workspace);
-    if (!IsTraceMounted(workspace)) {
-        return -1;
-    }
+    PLUGIN_CHECK(IsTraceMounted(workspace), return -1);
+
     PLUGIN_CHECK(workspace->traceRootPath != NULL && workspace->jsonRootNode != NULL,
         return -1, "No trace root path or config");
 
     // load json init_trace.cfg
-    if (!SetKernelSpaceSettings()) {
+    if (!SetKernelSpaceSettings() || !SetTraceEnabled(TRACING_ON_PATH, true)) {
         PLUGIN_LOGE("Failed to enable kernel space setting");
-        ClearKernelSpaceSettings();
-        return -1;
-    }
-
-    if (!SetTraceEnabled(TRACING_ON_PATH, true)) {
-        PLUGIN_LOGE("Failed to enable trace");
         ClearKernelSpaceSettings();
         return -1;
     }
@@ -489,10 +474,8 @@ static int InitStopTrace(void)
     PLUGIN_LOGI("Stop trace now ...");
     TraceWorkspace *workspace = GetTraceWorkspace();
     PLUGIN_CHECK(workspace != NULL, return 0, "Failed to get trace workspace");
-    if (workspace->traceState != TRACE_STATE_STARTED) {
-        PLUGIN_LOGE("Invalid state for trace %d", workspace->traceState);
-        return 0;
-    }
+    PLUGIN_CHECK(workspace->traceState == TRACE_STATE_STARTED, return 0, "Invalid state for trace %d",
+        workspace->traceState);
     workspace->traceState = TRACE_STATE_STOPED;
 
     MarkOthersClockSync();
@@ -524,10 +507,9 @@ static int InitInterruptTrace(void)
     PLUGIN_LOGI("Interrupt trace now ...");
     TraceWorkspace *workspace = GetTraceWorkspace();
     PLUGIN_CHECK(workspace != NULL, return 0, "Failed to get trace workspace");
-    if (workspace->traceState != TRACE_STATE_STARTED) {
-        PLUGIN_LOGE("Invalid state for trace %d", workspace->traceState);
-        return 0;
-    }
+    PLUGIN_CHECK(workspace->traceState == TRACE_STATE_STARTED, return 0,
+        "Invalid state for trace %d", workspace->traceState);
+
     workspace->traceState = TRACE_STATE_INTERRUPT;
     MarkOthersClockSync();
     // clear user tags first and sleep a little to let apps already be notified.

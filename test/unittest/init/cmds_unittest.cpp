@@ -28,7 +28,7 @@ static void DoCmdByName(const char *name, const char *cmdContent)
 {
     int cmdIndex = 0;
     (void)GetMatchCmd(name, &cmdIndex);
-    DoCmdByIndex(cmdIndex, cmdContent, NULL);
+    DoCmdByIndex(cmdIndex, cmdContent, nullptr);
 }
 
 namespace init_ut {
@@ -46,15 +46,18 @@ public:
 HWTEST_F(CmdsUnitTest, TestCmdExecByName1, TestSize.Level1)
 {
     DoCmdByName("timer_start ", "media_service|5000");
+    DoCmdByName("timer_start ", "|5000");
     DoCmdByName("timer_stop ", "media_service");
     DoCmdByName("exec ", "media_service");
     DoCmdByName("syncexec ", "/system/bin/toybox");
     DoCmdByName("load_access_token_id ", "media_service");
     DoCmdByName("load_access_token_id ", "");
+    DoCmdByName("stopAllServices ", "false");
     DoCmdByName("stopAllServices ", "true");
     DoCmdByName("umount ", "/2222222");
     DoCmdByName("mount ", "/2222222");
     DoCmdByName("mount ", "ext4 /2222222 /data wait filecrypt=555");
+    DoCmdByName("umount ", "/2222222");
     DoCmdByName("init_global_key ", "/data");
     DoCmdByName("init_global_key ", "arg0 arg1");
     DoCmdByName("init_main_user ", "testUser");
@@ -67,6 +70,19 @@ HWTEST_F(CmdsUnitTest, TestCmdExecByName1, TestSize.Level1)
     DoCmdByName("suspend ", "");
     DoCmdByName("wait ", "1");
     DoCmdByName("wait ", "aaa 1");
+    DoCmdByName("mksandbox", "/sandbox");
+    DoCmdByName("mount_fstab ", "/2222222");
+    DoCmdByName("umount_fstab ", "/2222222");
+    DoCmdByName("mknode  ", "node1 node1 node1 node1 node1");
+    DoCmdByName("makedev ", "/device1 device2");
+    DoCmdByName("symlink ", "/xxx/xxx/xxx1 /xxx/xxx/xxx2");
+    DoCmdByName("load_param ", "aaa onlyadd");
+    DoCmdByName("load_persist_params ", "");
+    DoCmdByName("load_param ", "");
+    DoCmdByName("setparam ", "bbb 0");
+    DoCmdByName("ifup ", "aaa, bbb");
+    DoCmdByName("insmod ", "a b");
+    DoCmdByName("insmod ", "/data /data");
 }
 
 HWTEST_F(CmdsUnitTest, TestCommonMkdir, TestSize.Level1)

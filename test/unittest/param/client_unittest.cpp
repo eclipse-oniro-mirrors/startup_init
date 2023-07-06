@@ -198,6 +198,10 @@ HWTEST_F(ClientUnitTest, TestClient_01, TestSize.Level0)
     // wait
     SystemWaitParameter(name.c_str(), value.c_str(), 1);
     SystemWaitParameter(name.c_str(), nullptr, 0);
+
+    // error
+    SystemWaitParameter(nullptr,  nullptr, 0);
+    SystemWaitParameter("@@@@", value.c_str(), 1);
 }
 
 HWTEST_F(ClientUnitTest, TestClient_02, TestSize.Level0)
@@ -212,7 +216,7 @@ HWTEST_F(ClientUnitTest, TestClient_03, TestSize.Level0)
 {
     // 3 Traversal test
     TestParamTraversal();
-    SystemDumpParameters(1, -1, NULL);
+    SystemDumpParameters(1, -1, nullptr);
 }
 
 HWTEST_F(ClientUnitTest, TestClient_04, TestSize.Level0)
@@ -224,6 +228,11 @@ HWTEST_F(ClientUnitTest, TestClient_04, TestSize.Level0)
 #endif
     ret = WatchParamCheck("&&&&&.test.tttt");
     EXPECT_NE(ret, 0);
+
+    ret = WatchParamCheck(nullptr);
+#ifndef OHOS_LITE
+    EXPECT_EQ(ret, 100);
+#endif
     // test permission
     TestPermission();
 }

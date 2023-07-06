@@ -94,10 +94,10 @@ static int FdHolderSockInit(void)
 void SystemInit(void)
 {
     SignalInit();
-
+#ifndef STARTUP_INIT_TEST
     // Set up a session keyring that all processes will have access to.
     KeyCtrlGetKeyringId(KEY_SPEC_SESSION_KEYRING, 1);
-
+#endif
     // umask call always succeeds and return the previous mask value which is not needed here
     (void)umask(DEFAULT_UMASK_INIT);
     MakeDirRecursive("/dev/unix/socket", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);

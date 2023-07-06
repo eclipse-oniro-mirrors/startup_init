@@ -45,14 +45,6 @@ typedef struct {
 #define CMDLINE_VALUE_LEN_MAX 512
 #define STDERR_HANDLE 2
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
-
-#ifndef STARTUP_INIT_UT_PATH
-#ifdef STARTUP_INIT_TEST // ut
-#define STARTUP_INIT_UT_PATH "/data/init_ut"
-#else
-#define STARTUP_INIT_UT_PATH ""
-#endif
-#endif
 #define BOOT_CMD_LINE STARTUP_INIT_UT_PATH"/proc/cmdline"
 
 uid_t DecodeUid(const char *name);

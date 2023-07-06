@@ -112,6 +112,8 @@ HWTEST_F(InitRebootUnitTest, TestRebootCmdExec, TestSize.Level1)
     PluginExecCmdByName("reboot.updater", "reboot,updater:2222222");
     PluginExecCmdByName("reboot.flashd", "reboot,flashd");
     PluginExecCmdByName("reboot.flashd", "reboot,flashd:1000000");
+    PluginExecCmdByName("reboot.panic", "reboot,panic");
+    PluginExecCmdByName("reboot.stop", "reboot,stop");
     PluginExecCmdByName("reboot.other", "reboot,other");
     PARAM_LOGE("TestRebootCmdExec end");
     int ret = UpdateMiscMessage("charge:wwwwwwwwwww", "charge", "charge:", "boot_charge");
@@ -145,5 +147,20 @@ HWTEST_F(InitRebootUnitTest, TestInitReboot, TestSize.Level1)
 
     ret = DoRebootExt("shutdown", DEVICE_CMD_FREEZE);
     EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(InitRebootUnitTest, TestAbnormalReboot, TestSize.Level1)
+{
+    int ret = DoRoot_(nullptr, 0);
+    EXPECT_EQ(ret, 0);
+
+    ret = DoRebootShutdown(0, nullptr, 0, nullptr);
+    EXPECT_EQ(ret, -1);
+
+    ret = DoRebootFlashed(0, nullptr, 0, nullptr);
+    EXPECT_EQ(ret, -1);
+
+    ret = DoRebootOther(0, nullptr, 0, nullptr);
+    EXPECT_EQ(ret, -1);
 }
 } // namespace init_ut

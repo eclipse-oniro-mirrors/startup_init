@@ -30,15 +30,6 @@ using namespace std;
 using namespace testing::ext;
 
 namespace init_ut {
-extern "C" {
-void EngineerOverlay(void);
-void DebugFilesOverlay(const char *source, const char *target);
-void BindMountFile(const char *source, const char *target);
-void MountEngPartitions(void);
-void BuildMountCmd(char *buffer, size_t len, const char *mp, const char *dev, const char *fstype);
-bool IsFileExistWithType(const char *file, FileType type);
-}
-
 static const std::string SRC_FILE_PATH = STARTUP_INIT_UT_PATH"/eng/source/test.txt";
 static const std::string TARGET_PATH = STARTUP_INIT_UT_PATH"/eng/link_name";
 static const std::string ENG_ROOT_PATH = STARTUP_INIT_UT_PATH"/eng/";
@@ -151,6 +142,8 @@ HWTEST_F(EngUnitTest, TestBindMountFile, TestSize.Level1)
     BindMountFile("data", "target");
     BindMountFile("/data/init_ut//", "/");
     BindMountFile("/data/init_ut", "/");
+    BindMountFile("/data", "/");
+    BindMountFile("/data/", "/");
 
     bool isExist = false;
     if (!IsFileExist(SRC_FILE_PATH.c_str())) {
@@ -159,6 +152,7 @@ HWTEST_F(EngUnitTest, TestBindMountFile, TestSize.Level1)
         EXPECT_EQ(isExist, true);
         BindMountFile(SRC_FILE_PATH.c_str(), "/");
     }
+    BindMountFile(SRC_FILE_PATH.c_str(), "/");
 
     if (IsFileExist(SRC_FILE_PATH.c_str())) {
         RemoveDir(STARTUP_INIT_UT_PATH"/eng/source");
@@ -180,11 +174,7 @@ HWTEST_F(EngUnitTest, TestBindMountFile, TestSize.Level1)
     isLinkFile = IsFileExistWithType(TARGET_PATH.c_str(), TYPE_LINK);
     EXPECT_EQ(isLinkFile, true);
     BindMountFile(SRC_FILE_PATH.c_str(), TARGET_PATH.c_str());
-
-    if (!IsDirExist(ENG_ROOT_PATH.c_str())) {
-        CheckAndCreateDir(STARTUP_INIT_UT_PATH"/eng/");
-    }
-    BindMountFile(ENG_ROOT_PATH.c_str(), TARGET_PATH.c_str());
+    BindMountFile(TARGET_PATH.c_str(), SRC_FILE_PATH.c_str());
 }
 
 HWTEST_F(EngUnitTest, TestMountCmd, TestSize.Level1)
@@ -192,6 +182,7 @@ HWTEST_F(EngUnitTest, TestMountCmd, TestSize.Level1)
     char mountCmd[MOUNT_CMD_MAX_LEN] = {};
     MountEngPartitions();
     BuildMountCmd(mountCmd, MOUNT_CMD_MAX_LEN, "/eng/source", "/eng/target", "ext4");
+    BuildMountCmd(mountCmd, 0, "/eng/source", "/eng/target", "ext4");
 }
 
 HWTEST_F(EngUnitTest, TestFileType, TestSize.Level1)
@@ -206,8 +197,13 @@ HWTEST_F(EngUnitTest, TestFileType, TestSize.Level1)
         EXPECT_EQ(isExist, true);
     }
 
-    EXPECT_EQ(IsFileExistWithType(STARTUP_INIT_UT_PATH"/eng", TYPE_DIR), true);
     EXPECT_EQ(IsFileExistWithType(SRC_FILE_PATH.c_str(), TYPE_REG), true);
+    EXPECT_EQ(IsFileExistWithType(STARTUP_INIT_UT_PATH"/eng", TYPE_DIR), true);
+
+    EXPECT_EQ(IsFileExistWithType(STARTUP_INIT_UT_PATH"/eng", TYPE_LINK), false);
+    EXPECT_EQ(IsFileExistWithType(STARTUP_INIT_UT_PATH"/eng", TYPE_REG), false);
+    EXPECT_EQ(IsFileExistWithType(STARTUP_INIT_UT_PATH"/eng", TYPE_ANY), true);
+    EXPECT_EQ(IsFileExistWithType(SRC_FILE_PATH.c_str(), TYPE_DIR), false);
 
     if (IsFileExist(targetFile)) {
         if (unlink(targetFile.c_str()) < 0) {
@@ -242,5 +238,15 @@ HWTEST_F(EngUnitTest, TestFileType, TestSize.Level1)
 
     isFileExist = IsFileExistWithType("/eng/target", TYPE_REG);
     EXPECT_EQ(isFileExist, false);
+}
+
+HWTEST_F(EngUnitTest, TestHook, TestSize.Level1)
+{
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    PrepareCmdLineData();
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    const char *cmdLine = "ohos.boot.eng_mode=off ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
 }
 } // namespace init_ut

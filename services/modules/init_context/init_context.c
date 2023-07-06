@@ -46,6 +46,33 @@ static void HandleRecvMessage(SubInitInfo *subInfo, char *buffer, uint32_t size)
 static int CreateSocketPair(int socket[2]);
 static int SubInitSetSelinuxContext(InitContextType type);
 
+static int SubInitRun(const SubInitForkArg *arg)
+{
+    PLUGIN_LOGW("SubInitRun %d ", arg->type);
+    SubInitSetSelinuxContext(arg->type);
+#ifndef STARTUP_INIT_TEST
+    close(arg->socket[0]);
+#endif
+    SubInitMain(arg->type, arg->socket[1], arg->socket[1]);
+    close(arg->socket[1]);
+#ifndef STARTUP_INIT_TEST
+    _exit(PROCESS_EXIT_CODE);
+#else
+    return 0;
+#endif
+}
+
+#ifndef STARTUP_INIT_TEST
+pid_t SubInitFork(int (*childFunc)(const SubInitForkArg *arg), const SubInitForkArg *args)
+{
+    pid_t pid = fork();
+    if (pid == 0) {
+        childFunc(args);
+    }
+    return pid;
+}
+#endif
+
 static int SubInitStart(InitContextType type)
 {
     PLUGIN_CHECK(type < INIT_CONTEXT_MAIN, return -1, "Invalid type %d", type);
@@ -53,28 +80,24 @@ static int SubInitStart(InitContextType type)
     if (subInfo->state != SUB_INIT_STATE_IDLE) {
         return 0;
     }
-    int socket[2] = {0};
-    int ret = CreateSocketPair(socket);
+    SubInitForkArg arg = { 0 };
+    arg.type = type;
+    int ret = CreateSocketPair(arg.socket);
     PLUGIN_CHECK(ret == 0, return -1, "Failed to create socket for %d", type);
 
     subInfo->state = SUB_INIT_STATE_STARTING;
-    pid_t pid = fork();
+    pid_t pid = SubInitFork(SubInitRun, &arg);
     if (pid < 0) {
-        close(socket[0]);
-        close(socket[1]);
+        close(arg.socket[0]);
+        close(arg.socket[1]);
         subInfo->state = SUB_INIT_STATE_IDLE;
         return -1;
     }
-    if (pid == 0) {
-        SubInitSetSelinuxContext(type);
-        close(socket[0]);
-        SubInitMain(type, socket[1], socket[1]);
-        close(socket[1]);
-        _exit(PROCESS_EXIT_CODE);
-    }
-    close(socket[1]);
-    subInfo->sendFd = socket[0];
-    subInfo->recvFd = socket[0];
+#ifndef STARTUP_INIT_TEST
+    close(arg.socket[1]);
+#endif
+    subInfo->sendFd = arg.socket[0];
+    subInfo->recvFd = arg.socket[0];
     subInfo->state = SUB_INIT_STATE_RUNNING;
     subInfo->subPid = pid;
     return 0;
@@ -85,7 +108,6 @@ static void SubInitStop(pid_t pid)
     for (size_t i = 0; i < ARRAY_LENGTH(g_subInitInfo); i++) {
         if (g_subInitInfo[i].subPid == pid) {
             close(g_subInitInfo[i].sendFd);
-            close(g_subInitInfo[i].recvFd);
             g_subInitInfo[i].subPid = 0;
             g_subInitInfo[i].state = SUB_INIT_STATE_IDLE;
         }
@@ -98,10 +120,8 @@ static int SubInitExecuteCmd(InitContextType type, const char *name, const char 
     PLUGIN_CHECK(type < INIT_CONTEXT_MAIN, return -1, "Invalid type %d", type);
     PLUGIN_CHECK(name != NULL, return -1, "Invalid cmd name");
     SubInitInfo *subInfo = &g_subInitInfo[type];
-    if (subInfo->state != SUB_INIT_STATE_RUNNING) {
-        PLUGIN_LOGW("Sub init %d is not running ", type);
-        return -1;
-    }
+    PLUGIN_CHECK(subInfo->state == SUB_INIT_STATE_RUNNING, return -1, "Sub init %d is not running ", type);
+
     int len = 0;
     if (cmdContent != NULL) {
         len = snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, "%s %s", name, cmdContent);
@@ -124,12 +144,7 @@ static int SubInitExecuteCmd(InitContextType type, const char *name, const char 
     // change to result
     buffer[rLen] = '\0';
     PLUGIN_LOGV("recv cmd result %s", buffer);
-    errno = 0;
-    ret = atoi(buffer);
-    if (errno != 0) {
-        return errno;
-    }
-    return ret;
+    return atoi(buffer);
 }
 
 static int CreateSocketPair(int socket[2])
@@ -158,12 +173,9 @@ static int CheckSocketPermission(const SubInitInfo *subInfo)
 {
     struct ucred uc = {-1, -1, -1};
     socklen_t len = sizeof(uc);
-    if (getsockopt(subInfo->recvFd, SOL_SOCKET, SO_PEERCRED, &uc, &len) < 0) {
-        INIT_LOGE("Failed to get socket option. err = %d", errno);
-        return -1;
-    }
     // Only root is permitted to use control fd of init.
-    if (uc.uid != 0) { // non-root user
+    if (getsockopt(subInfo->recvFd, SOL_SOCKET, SO_PEERCRED, &uc, &len) < 0 || uc.uid != 0) {
+        INIT_LOGE("Failed to get socket option. err = %d", errno);
         errno = EPERM;
         return -1;
     }
@@ -202,16 +214,16 @@ static void HandleRecvMessage(SubInitInfo *subInfo, char *buffer, uint32_t size)
 static void SubInitMain(InitContextType type, int readFd, int writeFd)
 {
     PLUGIN_LOGI("SubInitMain, sub init %s[%d] enter", g_subContext[type], getpid());
-    char buffer[MAX_CMD_LEN] = {0};
-    (void)prctl(PR_SET_NAME, "chipset_init");
-    struct pollfd pfd = {};
-    pfd.events = POLLIN;
-    pfd.fd = readFd;
 #ifndef STARTUP_INIT_TEST
+    (void)prctl(PR_SET_NAME, "chipset_init");
     const int timeout = 30000; // 30000 30s
 #else
     const int timeout = 1000; // 1000 1s
 #endif
+    char buffer[MAX_CMD_LEN] = {0};
+    struct pollfd pfd = {};
+    pfd.events = POLLIN;
+    pfd.fd = readFd;
     SubInitInfo subInfo = {};
     subInfo.type = type;
     subInfo.recvFd = readFd;
