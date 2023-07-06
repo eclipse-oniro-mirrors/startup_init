@@ -58,7 +58,7 @@ if (defined(ohos_lite)) {
     defines = [ "INIT_AGENT" ]
     public_configs = [ ":exported_header_files" ]
     include_dirs = [ "//third_party/bounds_checking_function/include" ]
-    external_deps = [ "hilog_native:libhilog_base" ]
+    external_deps = [ "hilog:libhilog_base" ]
     part_name = "init"
     subsystem_name = "startup"
   }

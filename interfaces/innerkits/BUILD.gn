@@ -212,7 +212,7 @@ if (defined(ohos_lite)) {
 
     external_deps = [
       "c_utils:utils",
-      "hilog_native:libhilog_base",
+      "hilog:libhilog_base",
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
@@ -273,7 +273,7 @@ if (defined(ohos_lite)) {
 
     external_deps = [
       "c_utils:utils",
-      "hilog_native:libhilog_base",
+      "hilog:libhilog_base",
       "ipc:ipc_single",
       "samgr:samgr_proxy",
     ]
@@ -311,7 +311,7 @@ if (defined(ohos_lite)) {
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
       "c_utils:utils",
-      "hilog_native:libhilog_base",
+      "hilog:libhilog_base",
     ]
     part_name = "init"
     subsystem_name = "startup"

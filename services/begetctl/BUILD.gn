@@ -206,7 +206,7 @@ if (defined(ohos_lite)) {
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
       "c_utils:utils",
-      "hilog_native:libhilog_base",
+      "hilog:libhilog_base",
     ]
     if (build_selinux) {
       deps += [
