@@ -16,7 +16,6 @@
 #include <errno.h>
 
 #include "le_epoll.h"
-#include "le_utils.h"
 
 static int IsValid_(const EventEpoll *loop)
 {

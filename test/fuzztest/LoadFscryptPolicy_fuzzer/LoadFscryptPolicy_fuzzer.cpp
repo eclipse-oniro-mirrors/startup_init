@@ -14,7 +14,6 @@
  */
 
 #include "LoadFscryptPolicy_fuzzer.h"
-#include <iostream>
 #include "fs_manager/fs_manager.h"
 
 namespace OHOS {
