@@ -41,7 +41,7 @@ net_bw_stats:x:3006:
 net_bw_acct:x:3007:
 readproc:x:3009:
 wakelock:x:3010:
-uhid:x:3011:
+uhid:x:3011:hdf_ext_devmgr
 ddms:x:3012:
 access_token:x:3020:
 blue_host:x:3021:
