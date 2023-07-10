@@ -31,6 +31,7 @@
 #include "parameter.h"
 #include "sysparam_errno.h"
 #include "init_utils.h"
+#include "deviceinfoservice_ipc_interface_code.h"
 
 namespace OHOS {
 using namespace Security;
@@ -80,7 +81,7 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
 
     int ret = ERR_FAIL;
     switch (code) {
-        case COMMAND_GET_UDID: {
+        case static_cast<uint32_t> (DeviceInfoInterfaceCode::COMMAND_GET_UDID): {
             if (!CheckPermission(data, "ohos.permission.sec.ACCESS_UDID")) {
                 return SYSPARAM_PERMISSION_DENIED;
             }
@@ -90,7 +91,7 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
             reply.WriteString16(Str8ToStr16(localDeviceInfo));
             break;
         }
-        case COMMAND_GET_SERIAL_ID: {
+        case static_cast<uint32_t> (DeviceInfoInterfaceCode::COMMAND_GET_SERIAL_ID): {
             if (!CheckPermission(data, "ohos.permission.sec.ACCESS_UDID")) {
                 return SYSPARAM_PERMISSION_DENIED;
             }

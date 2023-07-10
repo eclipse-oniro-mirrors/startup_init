@@ -20,19 +20,12 @@
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iwatcher.h"
+#include "param_watcher_ipc_interface_code.h"
 
 namespace OHOS {
 namespace init_param {
 class IWatcherManager : public OHOS::IRemoteBroker {
 public:
-    enum {
-        ADD_WATCHER,
-        DEL_WATCHER,
-        ADD_REMOTE_AGENT,
-        DEL_REMOTE_AGENT,
-        REFRESH_WATCHER
-    };
-
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Startup.IWatcherManager");
 public:
     virtual uint32_t AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher) = 0;

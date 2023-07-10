@@ -29,7 +29,7 @@ uint32_t WatcherManagerProxy::AddRemoteWatcher(uint32_t id, const sptr<IWatcher>
 
     MessageParcel reply;
     MessageOption option { MessageOption::TF_SYNC };
-    int32_t res = SendWatcherMsg(ADD_REMOTE_AGENT, data, reply, option);
+    int32_t res = SendWatcherMsg(static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_REMOTE_AGENT), data, reply, option);
     WATCHER_CHECK(res == ERR_OK, return 0, "Transact error %d", res);
     return reply.ReadUint32();
 }
@@ -41,7 +41,7 @@ int32_t WatcherManagerProxy::DelRemoteWatcher(uint32_t remoteWatcherId)
     data.WriteUint32(remoteWatcherId);
     MessageParcel reply;
     MessageOption option { MessageOption::TF_SYNC };
-    int32_t res = SendWatcherMsg(DEL_REMOTE_AGENT, data, reply, option);
+    int32_t res = SendWatcherMsg(static_cast<uint32_t>(ParamWatcherInterfaceCode::DEL_REMOTE_AGENT), data, reply, option);
     WATCHER_CHECK(res == ERR_OK, return ERR_FLATTEN_OBJECT, "Transact error");
     return reply.ReadInt32();
 }
@@ -61,17 +61,17 @@ int32_t WatcherManagerProxy::SendMsg(int op, const std::string &keyPrefix, uint3
 
 int32_t WatcherManagerProxy::AddWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
-    return SendMsg(ADD_WATCHER, keyPrefix, remoteWatcherId);
+    return SendMsg(static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_WATCHER), keyPrefix, remoteWatcherId);
 }
 
 int32_t WatcherManagerProxy::DelWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
-    return SendMsg(DEL_WATCHER, keyPrefix, remoteWatcherId);
+    return SendMsg(static_cast<uint32_t>(ParamWatcherInterfaceCode::DEL_WATCHER), keyPrefix, remoteWatcherId);
 }
 
 int32_t WatcherManagerProxy::RefreshWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
-    return SendMsg(REFRESH_WATCHER, keyPrefix, remoteWatcherId);
+    return SendMsg(static_cast<uint32_t>(ParamWatcherInterfaceCode::REFRESH_WATCHER), keyPrefix, remoteWatcherId);
 }
 
 int32_t WatcherManagerProxy::SendWatcherMsg(uint32_t code,
