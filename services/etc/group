@@ -27,6 +27,7 @@ package_info:x:1032:
 logd:x:1036:
 shared_relro:x:1037:
 audio:x:1041:
+intell_voice:x:1042:
 cameraserver:x:1047:
 uiserver:x:1048:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr,foundation,update
