@@ -30,8 +30,6 @@ public:
     virtual int32_t GetUdid(std::string& result) = 0;
     virtual int32_t GetSerialID(std::string& result) = 0;
 
-    static constexpr int COMMAND_GET_UDID = MIN_TRANSACTION_ID + 0;
-    static constexpr int COMMAND_GET_SERIAL_ID = MIN_TRANSACTION_ID + 1;
     static constexpr int ERR_FAIL = -1;
 };
 } // namespace device_info
