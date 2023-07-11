@@ -14,11 +14,26 @@
 @returnValue
 TRAP
 
+@headFiles
+"seccomp_policy_constants.h"
+
 @mode
 ONLY_CHECK_ARGS
 
 @allowListWithArgs
-setresuid: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return TRAP;arm64
-setresgid: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return TRAP;arm64
-setresuid32: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return TRAP;arm
-setresgid32: if arg0 >= 1000 && arg1 >= 1000 && arg2 >= 1000; return ALLOW; else return TRAP;arm
+setresuid: if arg0 >= APP_UID_START && arg1 >= APP_UID_START && arg2 >= APP_UID_START; return ALLOW; else return TRAP;arm64
+setresgid: if arg0 >= APP_UID_START && arg1 >= APP_UID_START && arg2 >= APP_UID_START; return ALLOW; else return TRAP;arm64
+setresuid32: if arg0 >= APP_UID_START && arg1 >= APP_UID_START && arg2 >= APP_UID_START; return ALLOW; else return TRAP;arm
+setresgid32: if arg0 >= APP_UID_START && arg1 >= APP_UID_START && arg2 >= APP_UID_START; return ALLOW; else return TRAP;arm
+setuid: if arg0 >= APP_UID_START; return ALLOW; else return TRAP;all
+setgid: if arg0 >= APP_UID_START; return ALLOW; else return TRAP;all
+setuid32: if arg0 >= APP_UID_START; return ALLOW; else return TRAP;arm
+setgid32: if arg0 >= APP_UID_START; return ALLOW; else return TRAP;arm
+setreuid: if arg0 >= APP_UID_START && arg1 >= APP_UID_START; return ALLOW; else return TRAP;all
+setregid: if arg0 >= APP_UID_START && arg1 >= APP_UID_START; return ALLOW; else return TRAP;all
+setreuid32: if arg0 >= APP_UID_START && arg1 >= APP_UID_START; return ALLOW; else return TRAP;arm
+setregid32: if arg0 >= APP_UID_START && arg1 >= APP_UID_START; return ALLOW; else return TRAP;arm
+setfsuid: if arg0 >= APP_UID_START; return ALLOW; else return TRAP;all
+setfsgid: if arg0 >= APP_UID_START; return ALLOW; else return TRAP;all
+setfsuid32: if arg0 >= APP_UID_START; return ALLOW; else return TRAP;arm
+setfsgid32: if arg0 >= APP_UID_START; return ALLOW; else return TRAP;arm

@@ -25,6 +25,8 @@ extern "C" {
 #define START_UID_FOR_RENDER_PROCESS (1000000)
 #define END_UID_FOR_RENDER_PROCESS (1099999)
 
+#define APP_UID_START (10000)
+
 #ifdef __cplusplus
 #if __cplusplus
 }
