@@ -606,7 +606,7 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
 
 __attribute__((destructor)) static void ParamTestStubExit(void)
 {
-    printf("ParamTestStubExit %u %u \n", g_currPid, getpid());
+    PARAM_LOGI("ParamTestStubExit %u %u \n", g_currPid, getpid());
     if (g_currPid != getpid()) {
         return;
     }

@@ -15,6 +15,7 @@
 #include "init_context.h"
 
 #include "init_module_engine.h"
+#include "init_utils.h"
 #include "plugin_adapter.h"
 #include "securec.h"
 
@@ -69,6 +70,9 @@ int ExecuteCmdInSubInit(const ConfigContext *context, const char *name, const ch
 
 int SetSubInitContext(const ConfigContext *context, const char *service)
 {
+    if (InUpdaterMode() == 1) { // not support sub init in update mode
+        return 0;
+    }
     PLUGIN_CHECK(context != NULL, return -1, "Invalid context");
     if (context->type >= INIT_CONTEXT_MAIN) {
         g_currContext.type = INIT_CONTEXT_MAIN;
@@ -83,6 +87,9 @@ int SetSubInitContext(const ConfigContext *context, const char *service)
 
 int CheckExecuteInSubInit(const ConfigContext *context)
 {
+    if (InUpdaterMode() == 1) { // not support sub init in update mode
+        return 0;
+    }
 #ifdef INIT_SUPPORT_CHIPSET_INIT
     return !(context == NULL || context->type == INIT_CONTEXT_MAIN || g_currContext.type != INIT_CONTEXT_MAIN);
 #else

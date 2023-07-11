@@ -72,7 +72,6 @@ ENG_STATIC void BuildMountCmd(char *buffer, size_t len, const char *mp, const ch
 {
     int ret = snprintf_s(buffer, len, len - 1, "%s %s %s ro barrier=1",
         fstype, dev, mp);
-
     if (ret == -1) {
         *buffer = '\0';
     }

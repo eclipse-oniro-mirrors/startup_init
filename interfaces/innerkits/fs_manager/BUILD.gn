@@ -52,7 +52,7 @@ ohos_static_library("libfsmanager_static") {
     ]
 
     defines = [ "SUPPORT_HVB" ]
-    external_deps = [ "hvb:hvb_static" ]
+    external_deps = [ "hvb:libhvb_static" ]
   }
   public_configs = [ ":libfsmanager_exported_configs" ]
   part_name = "init"

@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <thread>
 #include <sys/eventfd.h>
+#include <cstdarg>
 
 #include "begetctl.h"
 #include "cJSON.h"
@@ -62,7 +63,8 @@ static void DecodeMessage(const char *buffer, size_t nread, uint32_t &cmd)
     return;
 }
 
-static void SendMessage(const LoopHandle loopHandle, const TaskHandle taskHandle, const char *message, ...)
+template<typename... Args>
+static void SendMessage(const LoopHandle loopHandle, const TaskHandle taskHandle, const char *message, Args... args)
 {
     uint32_t bufferSize = 1024; // 1024 buffer size
     BufferHandle handle = LE_CreateBuffer(loopHandle, bufferSize);
@@ -96,21 +98,21 @@ static void TestOnReceiveRequest(const TaskHandle task, const uint8_t *buffer, u
     if (buffer == nullptr) {
         return;
     }
-    printf("Server receive message %s \n", reinterpret_cast<const char *>(buffer));
+    printf("Server receive message %s \n", static_cast<const char *>(buffer));
     uint32_t cmd = 0;
-    DecodeMessage(reinterpret_cast<const char *>(buffer), nread, cmd);
-    SendMessage(g_loopServer_, task, reinterpret_cast<const char *>(buffer));
+    DecodeMessage(static_cast<const char *>(buffer), nread, cmd);
+    SendMessage(g_loopServer_, task, static_cast<const char *>(buffer));
 }
 
 static void TestClientOnReceiveRequest(const TaskHandle task, const uint8_t *buffer, uint32_t nread)
 {
-    printf("Client receive message %s \n", reinterpret_cast<const char *>(buffer));
+    printf("Client receive message %s \n", static_cast<const char *>(buffer));
     EXPECT_NE(buffer, nullptr);
     if (buffer == nullptr) {
         return;
     }
     uint32_t cmd = 0;
-    DecodeMessage(reinterpret_cast<const char *>(buffer), nread, cmd);
+    DecodeMessage(static_cast<const char *>(buffer), nread, cmd);
     if (cmd == 5 || cmd == 2) { // 2 5 close server
         LE_StopLoop(g_loopClient_);
     }
@@ -130,7 +132,7 @@ static void TestSendMessageComplete(const TaskHandle taskHandle, BufferHandle ha
     uint32_t bufferSize = 1024; // 1024 buffer size
     char *buffer = (char *)LE_GetBufferInfo(handle, nullptr, &bufferSize);
     uint32_t cmd = 0;
-    DecodeMessage(reinterpret_cast<const char *>(buffer), bufferSize, cmd);
+    DecodeMessage(static_cast<const char *>(buffer), bufferSize, cmd);
     if (cmd == 5) { // 5 close server
         LE_StopLoop(g_loopServer_);
     }

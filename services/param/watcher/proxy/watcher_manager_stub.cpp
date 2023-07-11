@@ -28,19 +28,19 @@ int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
 
     WATCHER_LOGV("OnRemoteRequest code %u", code);
     switch (code) {
-        case ADD_WATCHER: {
+        case static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_WATCHER): {
             std::string key = data.ReadString();
             int ret = AddWatcher(key, data.ReadUint32());
             reply.WriteInt32(ret);
             break;
         }
-        case DEL_WATCHER: {
+        case static_cast<uint32_t>(ParamWatcherInterfaceCode::DEL_WATCHER): {
             std::string key = data.ReadString();
             int ret = DelWatcher(key, data.ReadUint32());
             reply.WriteInt32(ret);
             break;
         }
-        case ADD_REMOTE_AGENT: {
+        case static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_REMOTE_AGENT): {
             auto remote = data.ReadRemoteObject();
             // 0 is invalid watcherId
             uint32_t id = data.ReadUint32();
@@ -49,12 +49,12 @@ int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
             reply.WriteUint32(remoteWatcherId);
             break;
         }
-        case DEL_REMOTE_AGENT: {
+        case static_cast<uint32_t>(ParamWatcherInterfaceCode::DEL_REMOTE_AGENT): {
             int ret = DelRemoteWatcher(data.ReadUint32());
             reply.WriteInt32(ret);
             break;
         }
-        case REFRESH_WATCHER: {
+        case static_cast<uint32_t>(ParamWatcherInterfaceCode::REFRESH_WATCHER): {
             std::string key = data.ReadString();
             int ret = RefreshWatcher(key, data.ReadUint32());
             reply.WriteInt32(ret);

@@ -206,6 +206,7 @@ int IterateNameValuePairs(const char *src, void (*iterator)(const NAME_VALUE_PAI
 {
     int cnt = 0;
     const char *seperator;
+    const char *tmp = src;
     NAME_VALUE_PAIR nv;
     if ((src == NULL) || (iterator == NULL)) {
         return -1;
@@ -213,15 +214,15 @@ int IterateNameValuePairs(const char *src, void (*iterator)(const NAME_VALUE_PAI
 
     do {
         // Find space seperator
-        nv.name = src;
-        seperator = strchr(src, ' ');
+        nv.name = tmp;
+        seperator = strchr(tmp, ' ');
         if (seperator == NULL) {
             // Last nv
-            nv.valueEnd = src + strlen(src);
-            src = NULL;
+            nv.valueEnd = tmp + strlen(tmp);
+            tmp = NULL;
         } else {
             nv.valueEnd = seperator;
-            src = seperator + 1;
+            tmp = seperator + 1;
         }
 
         // Find equal seperator
@@ -239,7 +240,7 @@ int IterateNameValuePairs(const char *src, void (*iterator)(const NAME_VALUE_PAI
 
         iterator(&nv, context);
         cnt += 1;
-    } while (src != NULL);
+    } while (tmp != NULL);
 
     return cnt;
 }
