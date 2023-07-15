@@ -16,12 +16,12 @@
 #ifndef DEVICEINFOSERVICE_IPC_INTERFACE_CODE_H
 #define DEVICEINFOSERVICE_IPC_INTERFACE_CODE_H
  
-/*SAID: 3902 */
+/* SAID: 3902 */
 namespace OHOS {
 namespace device_info {
 enum class DeviceInfoInterfaceCode {
-	COMMAND_GET_UDID = 1,
-	COMMAND_GET_SERIAL_ID = 2,
+    COMMAND_GET_UDID = 1,
+    COMMAND_GET_SERIAL_ID = 2,
 };
 } // namespace device_info
 } // namespace OHOS
