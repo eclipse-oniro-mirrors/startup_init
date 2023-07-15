@@ -78,7 +78,8 @@ public:
         bool ret = data.WriteRemoteObject(watcher->AsObject());
         WATCHER_CHECK(ret, return 0, "Can not get remote");
         data.WriteUint32(agentId);
-        watcherManager->OnRemoteRequest(static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_REMOTE_AGENT), data, reply, option);
+        watcherManager->OnRemoteRequest(
+            static_cast<uint32_t> (ParamWatcherInterfaceCode::ADD_REMOTE_AGENT), data, reply, option);
         watcherId = reply.ReadUint32();
         EXPECT_NE(watcherId, 0);
 
@@ -101,7 +102,8 @@ public:
 
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
         data.WriteUint32(watcherId);
-        watcherManager->OnRemoteRequest(static_cast<uint32_t>(ParamWatcherInterfaceCode::DEL_REMOTE_AGENT), data, reply, option);
+        watcherManager->OnRemoteRequest(
+            static_cast<uint32_t> (ParamWatcherInterfaceCode::DEL_REMOTE_AGENT), data, reply, option);
         EXPECT_EQ(reply.ReadInt32(), 0);
         EXPECT_EQ(watcherManager->GetRemoteWatcher(watcherId) == nullptr, 1);
         return 0;
@@ -118,7 +120,8 @@ public:
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
         data.WriteString(keyPrefix);
         data.WriteUint32(watcherId);
-        watcherManager->OnRemoteRequest(static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_WATCHER), data, reply, option);
+        watcherManager->OnRemoteRequest(
+            static_cast<uint32_t> (ParamWatcherInterfaceCode::ADD_WATCHER), data, reply, option);
         EXPECT_EQ(reply.ReadInt32(), 0);
         EXPECT_EQ(watcherManager->GetWatcherGroup(keyPrefix) != nullptr, 1);
         return 0;
@@ -135,7 +138,8 @@ public:
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
         data.WriteString(keyPrefix);
         data.WriteUint32(watcherId);
-        watcherManager->OnRemoteRequest(static_cast<uint32_t>(ParamWatcherInterfaceCode::REFRESH_WATCHER), data, reply, option);
+        watcherManager->OnRemoteRequest(
+            static_cast<uint32_t> (ParamWatcherInterfaceCode::REFRESH_WATCHER), data, reply, option);
         EXPECT_EQ(reply.ReadInt32(), 0);
         EXPECT_EQ(watcherManager->GetWatcherGroup(keyPrefix) != nullptr, 1);
         return 0;
@@ -151,7 +155,8 @@ public:
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
         data.WriteString(keyPrefix);
         data.WriteUint32(watcherId);
-        watcherManager->OnRemoteRequest(static_cast<uint32_t>(ParamWatcherInterfaceCode::DEL_WATCHER), data, reply, option);
+        watcherManager->OnRemoteRequest(
+            static_cast<uint32_t> (ParamWatcherInterfaceCode::DEL_WATCHER), data, reply, option);
         EXPECT_EQ(reply.ReadInt32(), 0);
         return 0;
     }
@@ -231,11 +236,13 @@ public:
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
         data.WriteString(keyPrefix);
         data.WriteUint32(0);
-        watcherManager->OnRemoteRequest(static_cast<uint32_t>(ParamWatcherInterfaceCode::REFRESH_WATCHER) + 1, data, reply, option);
+        watcherManager->OnRemoteRequest(
+            static_cast<uint32_t> (ParamWatcherInterfaceCode::REFRESH_WATCHER) + 1, data, reply, option);
 
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
         data.WriteString(keyPrefix);
-        watcherManager->OnRemoteRequest(static_cast<uint32_t>(ParamWatcherInterfaceCode::REFRESH_WATCHER) + 1, data, reply, option);
+        watcherManager->OnRemoteRequest(
+            static_cast<uint32_t> (ParamWatcherInterfaceCode::REFRESH_WATCHER) + 1, data, reply, option);
         return 0;
     }
 

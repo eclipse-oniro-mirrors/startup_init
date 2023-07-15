@@ -16,15 +16,15 @@
 #ifndef PARAM_WATCHER_IPC_INTERFACE_CODE_H
 #define PARAM_WATCHER_IPC_INTERFACE_CODE_H
  
-/*SAID: 3901 */
+/* SAID: 3901 */
 namespace OHOS {
 namespace init_param {
 enum class ParamWatcherInterfaceCode {
-	ADD_WATCHER = 0,
-	DEL_WATCHER,
-	ADD_REMOTE_AGENT,
-	DEL_REMOTE_AGENT,
-	REFRESH_WATCHER
+    ADD_WATCHER = 0,
+    DEL_WATCHER,
+    ADD_REMOTE_AGENT,
+    DEL_REMOTE_AGENT,
+    REFRESH_WATCHER
 };
 } // namespace init_param
 } // namespace OHOS

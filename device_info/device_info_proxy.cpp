@@ -44,7 +44,8 @@ int32_t DeviceInfoProxy::GetUdid(std::string& result)
     MessageParcel reply;
     MessageOption option { MessageOption::TF_SYNC };
     data.WriteInterfaceToken(DeviceInfoProxy::GetDescriptor());
-    int32_t ret = DeviceInfoSendRequest(static_cast<uint32_t> (DeviceInfoInterfaceCode::COMMAND_GET_UDID), data, reply, option);
+    int32_t ret = DeviceInfoSendRequest(static_cast<uint32_t> (DeviceInfoInterfaceCode::COMMAND_GET_UDID),
+        data, reply, option);
     DINFO_LOGI("DeviceInfoProxy::GetUdid: %d", ret);
     DINFO_CHECK(ret == ERR_NONE, return ret, "getUdid failed, error code is %d", ret);
     result = Str16ToStr8(reply.ReadString16());
@@ -58,7 +59,8 @@ int32_t DeviceInfoProxy::GetSerialID(std::string& result)
     MessageOption option { MessageOption::TF_SYNC };
 
     data.WriteInterfaceToken(DeviceInfoProxy::GetDescriptor());
-    int32_t ret = DeviceInfoSendRequest(static_cast<uint32_t> (DeviceInfoInterfaceCode::COMMAND_GET_SERIAL_ID), data, reply, option);
+    int32_t ret = DeviceInfoSendRequest(static_cast<uint32_t> (DeviceInfoInterfaceCode::COMMAND_GET_SERIAL_ID),
+        data, reply, option);
     DINFO_LOGI("DeviceInfoProxy::GetSerialID: %d", ret);
     DINFO_CHECK(ret == ERR_NONE, return ret, "GetSerial failed, error code is %d", ret);
     result = Str16ToStr8(reply.ReadString16());

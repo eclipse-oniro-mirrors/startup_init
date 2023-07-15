@@ -29,7 +29,8 @@ uint32_t WatcherManagerProxy::AddRemoteWatcher(uint32_t id, const sptr<IWatcher>
 
     MessageParcel reply;
     MessageOption option { MessageOption::TF_SYNC };
-    int32_t res = SendWatcherMsg(static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_REMOTE_AGENT), data, reply, option);
+    int32_t res = SendWatcherMsg(static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_REMOTE_AGENT),
+        data, reply, option);
     WATCHER_CHECK(res == ERR_OK, return 0, "Transact error %d", res);
     return reply.ReadUint32();
 }
@@ -41,7 +42,8 @@ int32_t WatcherManagerProxy::DelRemoteWatcher(uint32_t remoteWatcherId)
     data.WriteUint32(remoteWatcherId);
     MessageParcel reply;
     MessageOption option { MessageOption::TF_SYNC };
-    int32_t res = SendWatcherMsg(static_cast<uint32_t>(ParamWatcherInterfaceCode::DEL_REMOTE_AGENT), data, reply, option);
+    int32_t res = SendWatcherMsg(static_cast<uint32_t>(ParamWatcherInterfaceCode::DEL_REMOTE_AGENT),
+        data, reply, option);
     WATCHER_CHECK(res == ERR_OK, return ERR_FLATTEN_OBJECT, "Transact error");
     return reply.ReadInt32();
 }
