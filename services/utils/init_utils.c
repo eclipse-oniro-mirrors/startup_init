@@ -696,3 +696,28 @@ uint32_t IntervalTime(struct timespec *startTime, struct timespec *endTime)
     }
     return diff;
 }
+
+int StrArrayGetIndex(const char *strArray[], const char *target, int ignoreCase)
+{
+    int i;
+
+    if ((target == NULL) || (target[0] == '\0')) {
+        return -1;
+    }
+
+    if (ignoreCase) {
+        for (i = 0; strArray[i] != NULL; i++) {
+            if (strcasecmp(strArray[i], target) == 0) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    for (i = 0; strArray[i] != NULL; i++) {
+        if (strcmp(strArray[i], target) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}

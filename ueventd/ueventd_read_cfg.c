@@ -42,7 +42,7 @@ typedef enum SECTION {
 
 typedef int (*ParseConfigFunc)(char *);
 typedef struct FunctionMapper {
-    char *name;
+    const char *name;
     ParseConfigFunc func;
 } FUNCTIONMAPPER;
 
@@ -166,7 +166,7 @@ static SECTION GetSection(const char *section)
     }
 }
 
-static FUNCTIONMAPPER funcMapper[3] = {
+static const FUNCTIONMAPPER funcMapper[3] = {
     {"device", ParseDeviceConfig},
     {"sysfs", ParseSysfsConfig},
     {"firmware", ParseFirmwareConfig}
