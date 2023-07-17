@@ -144,3 +144,8 @@ INIT_LOCAL_API void EnableInitLog(InitLogLevel level)
     g_logLevel = level;
     SetInitCommLog(InitLog);
 }
+
+INIT_PUBLIC_API InitLogLevel GetInitLogLevel()
+{
+    return g_logLevel;
+}
