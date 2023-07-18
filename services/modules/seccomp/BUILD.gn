@@ -55,6 +55,8 @@ ohos_prebuilt_seccomp("appspawn_filter") {
   part_name = INIT_PART
   subsystem_name = "startup"
 
+  include_dirs = [ "." ]
+
   install_enable = true
   install_images = [ "system" ]
 }
