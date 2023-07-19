@@ -369,18 +369,45 @@ void EnterServiceSandbox(Service *service)
 #endif
 }
 
-void CheckModuleUpdate(int argc, char **argv)
+static void AddUpdateList(ServiceArgs *args, char *updateList)
+{
+    char** argvOrig = args->argv;
+    const int paramCount = 2; // -u updatelist
+    args->argv = (char **)malloc((args->count + paramCount) * sizeof(char *));
+    INIT_ERROR_CHECK(args->argv != NULL, return, "Failed to malloc for argv");
+    int i = 0;
+    for (; i < args->count + 1; ++i) {
+        if (i == args->count - 1) {
+            args->argv[i] = "-u";
+            args->argv[++i] = updateList;
+            break;
+        } else {
+            args->argv[i] = argvOrig[i];
+        }
+    }
+    args->argv[++i] = NULL;
+    args->count += paramCount;
+    free(argvOrig);
+}
+
+void CheckModuleUpdate(ServiceArgs *args)
 {
     INIT_LOGI("CheckModuleUpdate start");
     void *handle = dlopen("libmodule_update.z.so", RTLD_NOW);
     INIT_ERROR_CHECK(handle != NULL, return, "dlopen module update lib failed with error:%s", dlerror());
     INIT_LOGI("dlopen success");
-    typedef void (*ExtFunc)(int, char **);
+    typedef char* (*ExtFunc)(int, char **);
     ExtFunc func = (ExtFunc)dlsym(handle, "CheckModuleUpdate");
     if (func == NULL) {
         INIT_LOGE("dlsym get func failed with error:%s", dlerror());
     } else {
-        func(argc, argv);
+        char *updateList = func(args->count, args->argv);
+        INIT_LOGI("update list: %s", updateList);
+        if (updateList != NULL) {
+            AddUpdateList(args, updateList);
+        } else {
+            INIT_LOGW("no update list");
+        }
     }
     INIT_LOGI("CheckModuleUpdate end");
 }
@@ -514,7 +541,13 @@ int ServiceStart(Service *service)
         }
 
         if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
-            CheckModuleUpdate(service->pathArgs.count, service->pathArgs.argv);
+            ServiceArgs* args = NULL;
+            if (service->extraArgs.argv != NULL && service->extraArgs.count > 0) {
+                args = &service->extraArgs;
+            } else {
+                args = &service->pathArgs;
+            }
+            CheckModuleUpdate(args);
         }
 #ifdef IS_DEBUG_VERSION
         // only the image is debuggable and need debug, then wait for debugger
