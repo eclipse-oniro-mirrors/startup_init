@@ -146,10 +146,10 @@ static int BootEventTraversal(ListNode *node, void *root)
 {
     static int start = 0;
     BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)node;
-    double forkTime = item->timestamp[BOOTEVENT_FORK].tv_sec * SECTOMSEC +
-        (double)item->timestamp[BOOTEVENT_FORK].tv_nsec / MSECTONSEC;
-    double readyTime = item->timestamp[BOOTEVENT_READY].tv_sec * SECTOMSEC +
-        (double)item->timestamp[BOOTEVENT_READY].tv_nsec / MSECTONSEC;
+    double forkTime = item->timestamp[BOOTEVENT_FORK].tv_sec * MSECTONSEC +
+        (double)item->timestamp[BOOTEVENT_FORK].tv_nsec / USTONSEC;
+    double readyTime = item->timestamp[BOOTEVENT_READY].tv_sec * MSECTONSEC +
+        (double)item->timestamp[BOOTEVENT_READY].tv_nsec / USTONSEC;
     double durTime = readyTime - forkTime;
     if (item->pid == 0) {
         if (durTime < SAVEINITBOOTEVENTMSEC) {
