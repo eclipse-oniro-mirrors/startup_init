@@ -44,7 +44,7 @@ typedef struct {
 int RegisterPersistParamOps(PersistParamOps *ops);
 
 #ifndef STARTUP_INIT_TEST
-#define PARAM_MUST_SAVE_PARAM_DIFF 10 // 10s
+#define PARAM_MUST_SAVE_PARAM_DIFF 1 // 1s
 #else
 #define PARAM_MUST_SAVE_PARAM_DIFF 1
 void TimerCallbackForSave(ParamTaskPtr timer, void *context);
