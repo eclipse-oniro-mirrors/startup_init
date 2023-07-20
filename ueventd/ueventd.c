@@ -315,7 +315,7 @@ static void DoTrigger(const char *ueventPath, int sockFd, char **devices, int nu
         return;
     }
 
-    INIT_LOGI("------------------------\n"
+    INIT_LOGV("------------------------\n"
               "\nTry to trigger \" %s \" now ...", ueventPath);
     int fd = open(ueventPath, O_WRONLY | O_CLOEXEC);
     if (fd < 0) {
