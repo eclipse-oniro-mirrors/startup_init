@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
         return UeventdDaemon(0);
     } else if (daemon == UEVENTD_MODE_RETRIGGER) {
         return UeventdRetrigger();
-    } else if (daemon == UEVENTD_MODE_RETRIGGER) {
+    } else if (daemon == UEVENTD_MODE_LISTEN) {
         return UeventdDaemon(1);
     } else {
         UeventdEarlyBoot();
