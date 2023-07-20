@@ -102,8 +102,8 @@ HWTEST_F(SysEventUnitTest, SysEventTest_004, TestSize.Level1)
     StartupTimeEvent startupTime = {};
     startupTime.event.type = STARTUP_TIME;
     startupTime.totalTime = curr.tv_sec;
-    startupTime.totalTime = startupTime.totalTime * SECTOMSEC;
-    startupTime.totalTime += curr.tv_nsec / MSECTONSEC;
+    startupTime.totalTime = startupTime.totalTime * MSECTONSEC;
+    startupTime.totalTime += curr.tv_nsec / USTONSEC;
     startupTime.detailTime = const_cast<char *>("buffer");
     startupTime.reason = const_cast<char *>("");
     startupTime.firstStart = 1;
@@ -119,8 +119,8 @@ HWTEST_F(SysEventUnitTest, SysEventTest_005, TestSize.Level1)
     StartupTimeEvent startupTime = {};
     startupTime.event.type = STARTUP_EVENT_MAX;
     startupTime.totalTime = curr.tv_sec;
-    startupTime.totalTime = startupTime.totalTime * SECTOMSEC;
-    startupTime.totalTime += curr.tv_nsec / MSECTONSEC;
+    startupTime.totalTime = startupTime.totalTime * MSECTONSEC;
+    startupTime.totalTime += curr.tv_nsec / USTONSEC;
     startupTime.detailTime = const_cast<char *>("buffer");
     startupTime.reason = const_cast<char *>("");
     startupTime.firstStart = 1;

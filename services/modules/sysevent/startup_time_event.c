@@ -61,9 +61,9 @@ static int TraversalEvent(ListNode *node, void *root)
 
     len = sprintf_s(args->buffer + args->currLen, args->bufferLen - args->currLen, ",%u:%u,%u:%u;",
         (uint32_t)item->timestamp[BOOTEVENT_FORK].tv_sec,
-        (uint32_t)(item->timestamp[BOOTEVENT_FORK].tv_nsec / MSECTONSEC),
+        (uint32_t)(item->timestamp[BOOTEVENT_FORK].tv_nsec / USTONSEC),
         (uint32_t)item->timestamp[BOOTEVENT_READY].tv_sec,
-        (uint32_t)(item->timestamp[BOOTEVENT_READY].tv_nsec / MSECTONSEC));
+        (uint32_t)(item->timestamp[BOOTEVENT_READY].tv_nsec / USTONSEC));
     PLUGIN_CHECK(len > 0 && (((uint32_t)len + args->currLen) < args->bufferLen), return -1,
         "Failed to format service time %s", item->paramName);
     args->currLen += (uint32_t)len;
@@ -88,8 +88,8 @@ PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
     StartupTimeEvent startupTime = {};
     startupTime.event.type = STARTUP_TIME;
     startupTime.totalTime = curr.tv_sec;
-    startupTime.totalTime = startupTime.totalTime * SECTOMSEC;
-    startupTime.totalTime += curr.tv_nsec / MSECTONSEC;
+    startupTime.totalTime = startupTime.totalTime * MSECTONSEC;
+    startupTime.totalTime += curr.tv_nsec / USTONSEC;
     startupTime.detailTime = buffer;
     char *reason = buffer + MAX_BUFFER_FOR_EVENT;
     uint32_t size = PARAM_VALUE_LEN_MAX;
@@ -102,7 +102,7 @@ PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
         startupTime.firstStart = 0;
     }
     PLUGIN_LOGI("SysEventInit %u.%u detailTime len %u '%s'",
-        (uint32_t)curr.tv_sec, (uint32_t)(curr.tv_nsec / MSECTONSEC), args.currLen, startupTime.detailTime);
+        (uint32_t)curr.tv_sec, (uint32_t)(curr.tv_nsec / USTONSEC), args.currLen, startupTime.detailTime);
     ReportSysEvent(&startupTime.event);
     free(buffer);
 }
