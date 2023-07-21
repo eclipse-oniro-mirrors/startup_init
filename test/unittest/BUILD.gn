@@ -181,6 +181,7 @@ ohos_unittest("init_unittest") {
     "init/utils_unittest.cpp",
     "innerkits/innerkits_unittest.cpp",
     "loopevent/loopevent_unittest.cpp",
+    "loopevent/loopserver_unittest.cpp",
     "loopevent/loopsignal_unittest.cpp",
     "modules/eng_unittest.cpp",
     "modules/modules_unittest.cpp",
