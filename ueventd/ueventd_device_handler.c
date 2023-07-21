@@ -81,6 +81,7 @@ static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
         }
 
         errno = 0;
+        INIT_LOGI("symlink %s->%s", deviceNode, linkName);
         int rc = symlink(deviceNode, linkName);
         if (rc != 0) {
             if (errno != EEXIST) {
@@ -199,10 +200,12 @@ static int RemoveDeviceNode(const char *deviceNode, char **symLinks)
                 continue;
             }
             if (STRINGEQUAL(deviceNode, realPath)) {
+                INIT_LOGI("unlink %s->%s", linkName);
                 unlink(linkName);
             }
         }
     }
+    INIT_LOGI("unlink %s->%s", deviceNode);
     return unlink(deviceNode);
 }
 

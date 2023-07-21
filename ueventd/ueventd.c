@@ -241,7 +241,23 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
     } else if (STARTSWITH(event, "DEVNUM=")) {
         uevent->devNum = StringToInt(event + strlen("DEVNUM="), -1);
     }
+
     // Ignore other events
+    INIT_LOGV("got uevent message:\n"
+              "subsystem: %s\n"
+              "parition: %s:%d\n"
+              "action: %s\n"
+              "devpath: %s\n"
+              "devname: %s\n"
+              "devnode: %d:%d\n"
+              "id: %d:%d",
+              uevent->subsystem,
+              uevent->partitionName, uevent->partitionNum,
+              uevent->action,
+              uevent->syspath,
+              uevent->deviceName,
+              uevent->major, uevent->minor,
+              uevent->ug.uid, uevent->ug.gid);
 }
 
 void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent)
@@ -295,21 +311,24 @@ static void DoTrigger(const char *ueventPath, int sockFd, char **devices, int nu
         return;
     }
 
+    INIT_LOGV("------------------------\n"
+              "\nTry to trigger \" %s \" now ...", ueventPath);
     int fd = open(ueventPath, O_WRONLY | O_CLOEXEC);
     if (fd < 0) {
         INIT_LOGE("Open \" %s \" failed, err = %d", ueventPath, errno);
-    } else {
-        ssize_t n = write(fd, "add\n", WRITE_SIZE);
-        if (n < 0) {
-            INIT_LOGE("Write \" %s \" failed, err = %d", ueventPath, errno);
-            close(fd);
-        } else {
-            close(fd);
-            // uevent triggered, now handle it.
-            if (sockFd >= 0) {
-                ProcessUevent(sockFd, devices, num);
-            }
-        }
+        return;
+    }
+
+    ssize_t n = write(fd, "add\n", WRITE_SIZE);
+    close(fd);
+    if (n < 0) {
+        INIT_LOGE("Write \" %s \" failed, err = %d", ueventPath, errno);
+        return;
+    }
+
+    // uevent triggered, now handle it.
+    if (sockFd >= 0) {
+        ProcessUevent(sockFd, devices, num);
     }
 }
 

@@ -67,6 +67,7 @@ typedef enum InitLogLevel {
 
 INIT_PUBLIC_API void StartupLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
 INIT_PUBLIC_API void SetInitLogLevel(InitLogLevel level);
+INIT_PUBLIC_API InitLogLevel GetInitLogLevel(void);
 
 #if defined(INIT_NO_LOG)
 #define STARTUP_LOGV(domain, tag, fmt, ...)

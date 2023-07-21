@@ -297,3 +297,4 @@ sync_file_range2;arm
 clock_gettime64;arm
 cacheflush;arm
 set_tls;arm
+setitimer;all

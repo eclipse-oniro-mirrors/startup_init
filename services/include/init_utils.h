@@ -91,6 +91,19 @@ void RedirectStdio(int fd);
 
 int GetServiceGroupIdByPid(pid_t pid, gid_t *gids, uint32_t gidSize);
 int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen);
+
+/**
+ * @brief Get string index from a string array
+ *
+ * @param strArray string array
+ *     Attension: last item in the array must be NULL, for example:
+ *     const char *strArray[] = { "val1", "val2", NULL }
+ * @param target string to be matched
+ * @param ignoreCase 0 means exact match, others mean ignore case
+ * @return return 0 if succeed; other values if failed.
+ */
+int StrArrayGetIndex(const char *strArray[], const char *target, int ignoreCase);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
