@@ -93,8 +93,6 @@ static int FdHolderSockInit(void)
 
 void SystemInit(void)
 {
-    SignalInit();
-
     // Set up a session keyring that all processes will have access to.
     KeyCtrlGetKeyringId(KEY_SPEC_SESSION_KEYRING, 1);
 
@@ -412,6 +410,9 @@ void SystemConfig(void)
     // Do not move position!
     PluginExecCmdByName("loadSelinuxPolicy", "");
     RecordInitBootEvent("init.prepare");
+
+    // after selinux loaded
+    SignalInit();
 
     RecordInitBootEvent("init.ParseCfg");
     LoadSpecialParam();
