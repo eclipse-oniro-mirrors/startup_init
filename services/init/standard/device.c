@@ -34,7 +34,16 @@ void MountBasicFs(void)
     if (mount("tmpfs", "/mnt", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
         INIT_LOGE("Mount tmpfs failed. %s", strerror(errno));
     }
-    if (mount(NULL, "/mnt", NULL, MS_SHARED, NULL) != 0) {
+    if (mount(NULL, "/mnt", NULL, MS_SLAVE, NULL) != 0) {
+        INIT_LOGE("Mount tmpfs slave failed. %s", strerror(errno));
+    }
+    if (mkdir("/mnt/data", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
+        INIT_LOGE("mkdir /mnt/data failed. %s", strerror(errno));
+    }
+    if (mount("tmpfs", "/mnt/data", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
+        INIT_LOGE("Mount tmpfs failed. %s", strerror(errno));
+    }
+    if (mount(NULL, "/mnt/data", NULL, MS_SHARED, NULL) != 0) {
         INIT_LOGE("Mount tmpfs shared failed. %s", strerror(errno));
     }
     if (mount("tmpfs", "/storage", "tmpfs", MS_NOEXEC | MS_NODEV| MS_NOSUID, "mode=0755") != 0) {
