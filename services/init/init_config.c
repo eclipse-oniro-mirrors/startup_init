@@ -104,9 +104,9 @@ void ReadConfig(void)
     // parse cfg
     char buffer[32] = {0}; // 32 reason max leb
     uint32_t len = sizeof(buffer);
-    SystemReadParam("ohos.boot.reboot_reason", buffer, &len);
-    INIT_LOGI("ohos.boot.reboot_reason %s", buffer);
-    if (strcmp(buffer, "poweroff_charge") == 0) {
+    SystemReadParam("ohos.boot.mode", buffer, &len);
+    INIT_LOGI("ohos.boot.mode %s", buffer);
+    if (strcmp(buffer, "charger") == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (InUpdaterMode() == 0) {
