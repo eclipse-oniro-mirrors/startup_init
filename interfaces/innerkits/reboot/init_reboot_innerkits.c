@@ -35,13 +35,13 @@ static int DoRebootByInitPlugin(const char *mode, const char *option)
     char value[MAX_REBOOT_OPTION_SIZE];
     int ret = 0;
     if (mode != NULL) {
-        if ((option != NULL) && (strlen(option) >= 0)) {
+        if (option != NULL) {
             ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "reboot,%s:%s", mode, option);
         } else {
             ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "reboot,%s", mode);
         }
     } else {
-        if ((option != NULL) && (strlen(option) >= 0)) {
+        if (option != NULL) {
             ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "reboot,%s", option);
         } else {
             ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "%s", "reboot");
