@@ -200,12 +200,12 @@ static int RemoveDeviceNode(const char *deviceNode, char **symLinks)
                 continue;
             }
             if (STRINGEQUAL(deviceNode, realPath)) {
-                INIT_LOGI("unlink %s->%s", linkName);
+                INIT_LOGI("unlink %s", linkName);
                 unlink(linkName);
             }
         }
     }
-    INIT_LOGI("unlink %s->%s", deviceNode);
+    INIT_LOGI("unlink %s", deviceNode);
     return unlink(deviceNode);
 }
 
