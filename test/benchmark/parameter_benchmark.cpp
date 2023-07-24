@@ -84,6 +84,9 @@ struct LocalParameterTestState {
         valid = true;
     }
 
+    LocalParameterTestState(const LocalParameterTestState&) = delete;
+    LocalParameterTestState & operator=(const LocalParameterTestState&) = delete;
+
     ~LocalParameterTestState() noexcept
     {
         for (int i = 0; i < nprops; i++) {
