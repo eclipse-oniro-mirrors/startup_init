@@ -16,7 +16,7 @@
 #ifndef TEST_FUZZTEST_SYSTEMTRAVERSALPARAMETER_FUZZER_H
 #define TEST_FUZZTEST_SYSTEMTRAVERSALPARAMETER_FUZZER_H
 #include "fuzz_utils.h"
-#define FUZZ_PROJECT_NAME "SystemTraversalParameter_fuzzer"
+#define FUZZ_PROJECT_NAME "systemtraversalparameter_fuzzer"
 
 typedef struct {
     size_t size;

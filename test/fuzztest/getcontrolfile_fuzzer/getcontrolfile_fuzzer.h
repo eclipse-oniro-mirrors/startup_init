@@ -16,5 +16,5 @@
 #ifndef TEST_FUZZTEST_GETCONTROLFILE_FUZZER_H
 #define TEST_FUZZTEST_GETCONTROLFILE_FUZZER_H
 #include "fuzz_utils.h"
-#define FUZZ_PROJECT_NAME "GetControlFile_fuzzer"
+#define FUZZ_PROJECT_NAME "getcontrolfile_fuzzer"
 #endif

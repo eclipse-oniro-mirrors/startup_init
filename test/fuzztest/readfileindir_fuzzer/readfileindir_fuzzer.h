@@ -16,5 +16,5 @@
 #ifndef TEST_FUZZTEST_READFILEINDIR_FUZZER_H
 #define TEST_FUZZTEST_READFILEINDIR_FUZZER_H
 #include "fuzz_utils.h"
-#define FUZZ_PROJECT_NAME "ReadFileInDir_fuzzer"
+#define FUZZ_PROJECT_NAME "readfileindir_fuzzer"
 #endif
