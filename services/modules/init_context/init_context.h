@@ -27,7 +27,6 @@ extern "C" {
 #endif
 
 #define MAX_CMD_LEN 512
-
 typedef enum {
     SUB_INIT_STATE_IDLE,
     SUB_INIT_STATE_STARTING,
@@ -55,6 +54,12 @@ int InitSubInitContext(InitContextType type, const SubInitContext *context);
 #ifdef STARTUP_INIT_TEST
 SubInitInfo *GetSubInitInfo(InitContextType type);
 #endif
+
+typedef struct {
+    int socket[2];
+    InitContextType type;
+} SubInitForkArg;
+pid_t SubInitFork(int (*childFunc)(const SubInitForkArg *arg), const SubInitForkArg *args);
 
 #ifdef __cplusplus
 #if __cplusplus

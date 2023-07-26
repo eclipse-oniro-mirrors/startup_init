@@ -21,6 +21,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#ifndef OHOS_LITE
+#include "init_eng.h"
+#include "init_context.h"
+#endif
 #include "param_manager.h"
 #include "param_security.h"
 #include "param_utils.h"
@@ -30,6 +34,12 @@
 #if __cplusplus
 extern "C" {
 #endif
+#endif
+
+#ifdef SUPPORT_64BIT
+#define MODULE_LIB_NAME "/system/lib64/init"
+#else
+#define MODULE_LIB_NAME "/system/lib/init"
 #endif
 
 #define DEFAULT_ERROR (-65535)
@@ -71,6 +81,24 @@ void SetStubResult(STUB_TYPE type, int result);
 void PrepareCmdLineData();
 ParamLabelIndex *TestGetParamLabelIndex(const char *name);
 
+// for test
+void HandleUevent(const struct Uevent *uevent);
+
+#ifndef OHOS_LITE
+void EngineerOverlay(void);
+void DebugFilesOverlay(const char *source, const char *target);
+void BindMountFile(const char *source, const char *target);
+void MountEngPartitions(void);
+void BuildMountCmd(char *buffer, size_t len, const char *mp, const char *dev, const char *fstype);
+bool IsFileExistWithType(const char *file, FileType type);
+
+int DoRoot_(const char *jobName, int type);
+int DoRebootShutdown(int id, const char *name, int argc, const char **argv);
+int DoRebootFlashed(int id, const char *name, int argc, const char **argv);
+int DoRebootOther(int id, const char *name, int argc, const char **argv);
+
+SubInitContext *GetSubInitContext(InitContextType type);
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 }

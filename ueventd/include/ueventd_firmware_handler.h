@@ -16,5 +16,17 @@
 #ifndef BASE_STARTUP_INITLITE_UEVENTD_FIRMWARE_HANDLER_H
 #define BASE_STARTUP_INITLITE_UEVENTD_FIRMWARE_HANDLER_H
 #include "ueventd.h"
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+
 void HandleFimwareDeviceEvent(const struct Uevent *uevent);
+
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif /* MODULE_REBOOT_ADP_H */
 #endif // BASE_STARTUP_INITLITE_UEVENTD_FIRMWARE_HANDLER_H

@@ -81,6 +81,8 @@ HWTEST_F(ModuleMgrUnitTest, PluginAddCmd, TestSize.Level1)
 
     // del
     RemoveCmdExecutor("testCmd4", cmdExecId4);
+    AddCareContextCmdExecutor("", nullptr);
+    RemoveCmdExecutor("testCmd4", -1);
 }
 
 static void TestModuleDump(const MODULE_INFO *moduleInfo)
@@ -96,27 +98,36 @@ HWTEST_F(ModuleMgrUnitTest, ModuleTraversalTest, TestSize.Level1)
     int cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 0);
     // Install one module
-    int ret = ModuleMgrInstall(moduleMgr, "bootchart", 0, NULL);
+    int ret = ModuleMgrInstall(moduleMgr, "libbootchart", 0, nullptr);
     ASSERT_EQ(ret, 0);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 1);
     ModuleMgrTraversal(nullptr, nullptr, nullptr);
-    ModuleMgrTraversal(moduleMgr, NULL, TestModuleDump);
+    ModuleMgrTraversal(moduleMgr, nullptr, TestModuleDump);
     InitModuleMgrDump();
+
+    InitModuleMgrInstall("/");
 
     // Scan all modules
     ModuleMgrScan(nullptr);
-
-    moduleMgr = ModuleMgrScan("init/autorun");
+    ModuleMgrScan("/");
+    moduleMgr = ModuleMgrScan("init");
+    moduleMgr = ModuleMgrScan(STARTUP_INIT_UT_PATH MODULE_LIB_NAME "/autorun");
     ASSERT_NE(moduleMgr, nullptr);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_GE(cnt, 0);
 
-    ModuleMgrUninstall(moduleMgr, NULL);
+    ModuleMgrUninstall(moduleMgr, nullptr);
     cnt = ModuleMgrGetCnt(moduleMgr);
     ASSERT_EQ(cnt, 0);
 
     ModuleMgrGetArgs();
     ModuleMgrDestroy(moduleMgr);
+}
+
+HWTEST_F(ModuleMgrUnitTest, ModuleAbnormalTest, TestSize.Level1)
+{
+    int ret = InitModuleMgrInstall(nullptr);
+    ASSERT_EQ(ret, -1);
 }
 }  // namespace init_ut

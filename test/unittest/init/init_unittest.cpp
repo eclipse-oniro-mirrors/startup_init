@@ -86,6 +86,8 @@ HWTEST_F(InitUnitTest, TestSystemExecRcs, TestSize.Level1)
     SystemExecuteRcs();
     int ret = KeepCapability();
     EXPECT_EQ(ret, 0);
+    ret = SetAmbientCapability(34); // CAP_SYSLOG
+    EXPECT_EQ(ret, 0);
 }
 
 static void TestProcessTimer(const TimerHandle taskHandle, void *context)
@@ -125,7 +127,7 @@ HWTEST_F(InitUnitTest, TestFdHoldService, TestSize.Level1)
     TimerHandle timer = nullptr;
     int ret = LE_CreateTimer(LE_GetDefaultLoop(), &timer, TestProcessTimer, nullptr);
     EXPECT_EQ(ret, 0);
-    ret = LE_StartTimer(LE_GetDefaultLoop(), timer, 500, 2);
+    ret = LE_StartTimer(LE_GetDefaultLoop(), timer, 500, 4);
     EXPECT_EQ(ret, 0);
     SystemRun();
 }

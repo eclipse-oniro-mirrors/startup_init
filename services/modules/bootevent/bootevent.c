@@ -70,9 +70,9 @@ static int AddServiceBootEvent(const char *serviceName, const char *paramName)
             break;
         }
     }
-    if (extData == NULL) {
-        return -1;
-    }
+
+    INIT_CHECK(extData != NULL, return -1);
+
     BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)extData->data;
     OH_ListInit(&item->node);
     for (int i = 0; i < BOOTEVENT_MAX; i++) {
@@ -95,25 +95,21 @@ static void AddInitBootEvent(const char *bootEventName)
     ListNode *found = NULL;
     found = OH_ListFind(&bootEventList, (void *)bootEventName, ParseBooteventCompareProc);
     if (found != NULL) {
-        INIT_CHECK_ONLY_RETURN(clock_gettime(CLOCK_MONOTONIC,
-            &(((BOOT_EVENT_PARAM_ITEM *)found)->timestamp[BOOTEVENT_READY])) == 0);
+        (void)clock_gettime(CLOCK_MONOTONIC, &(((BOOT_EVENT_PARAM_ITEM *)found)->timestamp[BOOTEVENT_READY]));
         return;
     }
 
     BOOT_EVENT_PARAM_ITEM *item = calloc(1, sizeof(BOOT_EVENT_PARAM_ITEM));
-    if (item == NULL) {
-        return;
-    }
+    INIT_CHECK(item != NULL, return);
+
     OH_ListInit(&item->node);
-    if (clock_gettime(CLOCK_MONOTONIC, &(item->timestamp[BOOTEVENT_FORK])) != 0) {
-        free(item);
-        return;
-    }
+
+    (void)clock_gettime(CLOCK_MONOTONIC, &(item->timestamp[BOOTEVENT_FORK]));
+
     item->paramName = strdup(bootEventName);
-    if (item->paramName == NULL) {
-        free(item);
-        return;
-    }
+    INIT_CHECK(item->paramName != NULL, free(item);
+        return);
+
     item->flags = BOOTEVENT_TYPE_JOB;
     OH_ListAddTail(&bootEventList, (ListNode *)&item->node);
     return;
@@ -170,9 +166,7 @@ static int BootEventTraversal(ListNode *node, void *root)
 
 static int SaveServiceBootEvent()
 {
-    if (!GetBootEventEnable()) {
-        return 0;
-    }
+    INIT_CHECK(GetBootEventEnable(), return 0);
     time_t nowTime = time(NULL);
     INIT_CHECK_RETURN_VALUE(nowTime > 0, -1);
     struct tm *p = localtime(&nowTime);
@@ -185,10 +179,9 @@ static int SaveServiceBootEvent()
     FILE *tmpFile = fopen(bootEventFileName, "wr");
     INIT_CHECK_RETURN_VALUE(tmpFile != NULL, -1);
     cJSON *root = cJSON_CreateArray();
-    if (root == NULL) {
-        (void)fclose(tmpFile);
-        return -1;
-    }
+    INIT_CHECK(root != NULL, (void)fclose(tmpFile);
+        return -1);
+
     OH_ListTraversal(&bootEventList, (void *)root, BootEventTraversal, 0);
     char *buff = cJSON_Print(root);
     if (buff == NULL) {
@@ -206,11 +199,11 @@ static int SaveServiceBootEvent()
 
 static void ReportSysEvent(void)
 {
-    if (!GetBootEventEnable()) {
-        return;
-    }
+    INIT_CHECK(GetBootEventEnable(), return);
+#ifndef STARTUP_INIT_TEST
     InitModuleMgrInstall("eventmodule");
     InitModuleMgrUnInstall("eventmodule");
+#endif
     return;
 }
 
@@ -229,18 +222,17 @@ static void BootEventParaFireByName(const char *paramName)
 {
     ListNode *found = NULL;
     char *bootEventValue = strrchr(paramName, '.');
-    if (bootEventValue == NULL) {
-        return;
-    }
+    INIT_CHECK(bootEventValue != NULL, return);
+
     bootEventValue[0] = '\0';
 
     found = OH_ListFind(&bootEventList, (void *)paramName, BootEventParaListCompareProc);
     if (found == NULL) {
         return;
     }
-    if (((BOOT_EVENT_PARAM_ITEM *)found)->timestamp[BOOTEVENT_READY].tv_sec != 0) {
-        return;
-    }
+    int ret = ((BOOT_EVENT_PARAM_ITEM *)found)->timestamp[BOOTEVENT_READY].tv_sec;
+    INIT_CHECK(ret == 0, return);
+
     INIT_CHECK_ONLY_RETURN(clock_gettime(CLOCK_MONOTONIC,
         &(((BOOT_EVENT_PARAM_ITEM *)found)->timestamp[BOOTEVENT_READY])) == 0);
     g_bootEventNum--;
@@ -269,9 +261,7 @@ static void BootEventParaFireByName(const char *paramName)
 #define BOOT_EVENT_FIELD_NAME "bootevents"
 static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
 {
-    if (g_bootEventEnable == 0) {
-        return;
-    }
+    INIT_CHECK(g_bootEventEnable != 0, return);
     int cnt;
     cJSON *bootEvents = cJSON_GetObjectItem(serviceParseCtx->serviceNode, BOOT_EVENT_FIELD_NAME);
 
@@ -315,9 +305,7 @@ static void AddCmdBootEvent(int argc, const char **argv)
     }
 
     BOOT_EVENT_PARAM_ITEM *item = calloc(1, sizeof(BOOT_EVENT_PARAM_ITEM));
-    if (item == NULL) {
-        return;
-    }
+    INIT_CHECK(item != NULL, return);
     OH_ListInit(&item->node);
     item->timestamp[BOOTEVENT_FORK] = ((INIT_TIMING_STAT *)argv[3])->startTime; // 3 args
     item->timestamp[BOOTEVENT_READY] = ((INIT_TIMING_STAT *)argv[3])->endTime; // 3 args
@@ -399,9 +387,7 @@ static void ClearServiceBootEvent(SERVICE_INFO_CTX *serviceCtx)
 
 static void SetServiceBootEventFork(SERVICE_INFO_CTX *serviceCtx)
 {
-    if (g_bootEventEnable == 0) {
-        return;
-    }
+    INIT_CHECK(g_bootEventEnable != 0, return);
     for (int i = HOOK_ID_BOOTEVENT; i < HOOK_ID_BOOTEVENT_MAX; i++) {
         ServiceExtData *extData = GetServiceExtData(serviceCtx->serviceName, i);
         if (extData == NULL) {

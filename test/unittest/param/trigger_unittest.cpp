@@ -43,11 +43,11 @@ static void BootStateChange(int start, const char *content)
 
 static int TestCmdExec(const TriggerNode *trigger, const char *content, uint32_t size)
 {
-    PARAM_CHECK(trigger != NULL, return -1, "Invalid trigger");
+    PARAM_CHECK(trigger != nullptr, return -1, "Invalid trigger");
     PARAM_LOGI("DoTriggerExecute_ trigger type: %d %s", trigger->type, GetTriggerName(trigger));
     PARAM_CHECK(trigger->type <= TRIGGER_UNKNOW, return -1, "Invalid trigger type %d", trigger->type);
-    CommandNode *cmd = GetNextCmdNode(reinterpret_cast<const JobNode *>(trigger), NULL);
-    while (cmd != NULL) {
+    CommandNode *cmd = GetNextCmdNode(reinterpret_cast<const JobNode *>(trigger), nullptr);
+    while (cmd != nullptr) {
         g_execCmdId = cmd->cmdKeyIndex;
         cmd = GetNextCmdNode(reinterpret_cast<const JobNode *>(trigger), cmd);
     }

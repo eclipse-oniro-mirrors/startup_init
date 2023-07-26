@@ -26,26 +26,21 @@ static int BuildClientSocket(void)
 {
     int sockFd;
     sockFd = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0);
-    if (sockFd < 0) {
-        BEGET_LOGE("Failed to build socket, err = %d", errno);
-        return -1;
-    }
+    BEGET_ERROR_CHECK(sockFd >= 0, return -1, "Failed to build socket, err = %d", errno);
 
     struct sockaddr_un addr;
     (void)memset_s(&addr, sizeof(addr), 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    if (strncpy_s(addr.sun_path, sizeof(addr.sun_path), INIT_HOLDER_SOCKET_PATH,
-        strlen(INIT_HOLDER_SOCKET_PATH)) != 0) {
-        BEGET_LOGE("Failed to build socket path");
-        close(sockFd);
-        return -1;
-    }
+    int ret = strncpy_s(addr.sun_path, sizeof(addr.sun_path), INIT_HOLDER_SOCKET_PATH,
+        strlen(INIT_HOLDER_SOCKET_PATH));
+    BEGET_ERROR_CHECK(ret == 0, close(sockFd);
+        return -1, "Failed to build socket path");
+
     socklen_t len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path) + 1);
-    if (connect(sockFd, (struct sockaddr *)&addr, len) < 0) {
-        BEGET_LOGE("Failed to connect to socket, err = %d", errno);
-        close(sockFd);
-        return -1;
-    }
+
+    ret = connect(sockFd, (struct sockaddr *)&addr, len);
+    BEGET_ERROR_CHECK(ret >= 0, close(sockFd);
+        return -1, "Failed to connect to socket, err = %d", errno);
     return sockFd;
 }
 
@@ -79,9 +74,8 @@ STATIC int BuildSendData(char *buffer, size_t size, const char *serviceName, boo
 static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool doPoll)
 {
     int sock = BuildClientSocket();
-    if (sock < 0) {
-        return -1;
-    }
+    BEGET_CHECK(sock >= 0, return -1);
+
     struct iovec iovec = {};
     struct msghdr msghdr = {
         .msg_iov = &iovec,
@@ -89,11 +83,9 @@ static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool d
     };
 
     char sendBuffer[MAX_FD_HOLDER_BUFFER] = {};
-    if (BuildSendData(sendBuffer, sizeof(sendBuffer), serviceName, true, doPoll) < 0) {
-        BEGET_LOGE("Failed to build send data");
-        close(sock);
-        return -1;
-    }
+    int ret = BuildSendData(sendBuffer, sizeof(sendBuffer), serviceName, true, doPoll);
+    BEGET_ERROR_CHECK(ret >= 0, close(sock);
+        return -1, "Failed to build send data");
 
     BEGET_LOGV("Send data: [%s]", sendBuffer);
     iovec.iov_base = sendBuffer;
@@ -171,28 +163,20 @@ int *ServiceGetFd(const char *serviceName, size_t *outfdCount)
     BEGET_LOGV("fds = %s", fdBuffer);
     int fdCount = 0;
     char **fdList = SplitStringExt(fdBuffer, " ", &fdCount, MAX_HOLD_FDS);
-    if (fdList == NULL) {
-        BEGET_LOGE("Cannot get fd list");
-        return NULL;
-    }
+    BEGET_ERROR_CHECK(fdList != NULL, return NULL, "Cannot get fd list");
 
     int *fds = calloc((size_t)fdCount, sizeof(int));
-    if (fds == NULL) {
-        BEGET_LOGE("Allocate memory for fd failed. err = %d", errno);
-        FreeStringVector(fdList, fdCount);
+    BEGET_ERROR_CHECK(fds != NULL, FreeStringVector(fdList, fdCount);
         *outfdCount = 0;
-        return NULL;
-    }
+        return NULL,
+        "Allocate memory for fd failed. err = %d", errno);
 
     bool encounterError = false;
     for (int i = 0; i < fdCount; i++) {
         errno = 0;
         fds[i] = (int)strtol(fdList[i], NULL, DECIMAL_BASE);
-        if (errno != 0) {
-            BEGET_LOGE("Failed to convert \' %s \' to fd number", fdList[i]);
-            encounterError = true;
-            break;
-        }
+        BEGET_ERROR_CHECK(errno == 0, encounterError = true;
+            break, "Failed to convert \' %s \' to fd number", fdList[i]);
     }
 
     if (encounterError) {

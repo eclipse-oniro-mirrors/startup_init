@@ -52,6 +52,14 @@ static const char *g_content =
         "\"sys-files\" : ["
             "\"events/mmc/enable\""
         "]"
+    "},"
+    "{"
+        "\"name\" : \"test\","
+        "\"description\" : \"test\","
+        "\"tag\" : 0,"
+        "\"type\" : \"KERNEL\","
+        "\"sys-files\" : ["
+        "]"
     "}"
     "],"
     "\"USER\" : ["
@@ -107,10 +115,10 @@ HWTEST_F(TraceUnitTest, TraceTest_001, TestSize.Level1)
     // open switch for trace
     uint32_t dataIndex = 0;
     WriteParam("persist.init.bootevent.enable", "true", &dataIndex, 0);
-    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, NULL, NULL);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, nullptr, nullptr);
     // close switch for trace
     WriteParam("persist.init.bootevent.enable", "false", &dataIndex, 0);
-    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, NULL, NULL);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, nullptr, nullptr);
 }
 
 HWTEST_F(TraceUnitTest, TraceTest_002, TestSize.Level1)
@@ -141,7 +149,7 @@ HWTEST_F(TraceUnitTest, TraceTest_004, TestSize.Level1)
     cmdArgs += STARTUP_INIT_UT_PATH"/system/etc/init_trace.cfg";
     int cmdIndex = 0;
     (void)GetMatchCmd("copy ", &cmdIndex);
-    DoCmdByIndex(cmdIndex, cmdArgs.c_str(), NULL);
+    DoCmdByIndex(cmdIndex, cmdArgs.c_str(), nullptr);
 
     // start trace
     PluginExecCmdByName("init_trace", "start");
@@ -159,5 +167,28 @@ HWTEST_F(TraceUnitTest, TraceTest_005, TestSize.Level1)
     sleep(1);
     // interrupt trace
     PluginExecCmdByName("init_trace", "1");
+}
+
+HWTEST_F(TraceUnitTest, TraceTest_006, TestSize.Level1)
+{
+    std::string cmdArgs = "/bin/test    ";
+    cmdArgs += STARTUP_INIT_UT_PATH"/bin/test";
+    int cmdIndex = 0;
+    (void)GetMatchCmd("copy ", &cmdIndex);
+    DoCmdByIndex(cmdIndex, cmdArgs.c_str(), nullptr);
+
+    // start trace
+    PluginExecCmdByName("init_trace", "start");
+    // for run 1 s
+    sleep(1);
+    // stop trace
+    PluginExecCmdByName("init_trace", "stop");
+}
+
+HWTEST_F(TraceUnitTest, TraceTest_007, TestSize.Level1)
+{
+    CreateInitTraceConfig(0);
+    // other case
+    PluginExecCmdByName("init_trace", "other");
 }
 } // namespace init_ut

@@ -96,3 +96,11 @@ int CheckExecuteInSubInit(const ConfigContext *context)
     return 0;
 #endif
 }
+
+#ifdef STARTUP_INIT_TEST
+SubInitContext *GetSubInitContext(InitContextType type)
+{
+    PLUGIN_CHECK(type < INIT_CONTEXT_MAIN, return NULL, "Invalid type %d", type);
+    return &g_subInitContext[type];
+}
+#endif

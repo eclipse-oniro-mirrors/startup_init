@@ -115,6 +115,8 @@ HWTEST_F(SysparaUnitTest, parameterTest002, TestSize.Level0)
     char value1[] = "set read only key";
     int ret = SetParameter(key1, value1);
     EXPECT_EQ(ret, EC_SUCCESS);
+    ret = SetParameter(nullptr, nullptr);
+    EXPECT_EQ(ret, EC_INVALID);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest003, TestSize.Level0)
@@ -271,6 +273,10 @@ HWTEST_F(SysparaUnitTest, parameterTest0012, TestSize.Level0)
     EXPECT_EQ(ret, SYSPARAM_NOT_FOUND);
     ret = GetParameterName(handle, nameGet1, 32);
     EXPECT_EQ(ret, SYSPARAM_NOT_FOUND);
+    ret = GetParameterValue(handle, nullptr, 32);
+    EXPECT_EQ(ret, EC_INVALID);
+    ret = GetParameterCommitId(handle);
+    EXPECT_EQ(ret, -1);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)
@@ -293,6 +299,8 @@ HWTEST_F(SysparaUnitTest, parameterTest0013, TestSize.Level0)
     char udid[UDID_LEN] = {0};
     GetDevUdid(udid, UDID_LEN);
     EXPECT_NE(GetMajorVersion(), 0);
+    int ret = GetDevUdid(nullptr, UDID_LEN);
+    EXPECT_EQ(ret, EC_FAILURE);
     GetSeniorVersion();
     GetFeatureVersion();
     GetBuildVersion();
@@ -366,6 +374,14 @@ HWTEST_F(SysparaUnitTest, parameterTest0016, TestSize.Level0)
     const std::string key3 = "test.bool.get3";
     ret = OHOS::system::GetBoolParameter(key3, false);
     EXPECT_EQ(ret, false);
+}
+
+HWTEST_F(SysparaUnitTest, parameterTest0017, TestSize.Level0)
+{
+    GetDistributionOSName();
+    GetDistributionOSVersion();
+    GetDistributionOSApiVersion();
+    GetDistributionOSReleaseType();
 }
 #endif
 }  // namespace OHOS

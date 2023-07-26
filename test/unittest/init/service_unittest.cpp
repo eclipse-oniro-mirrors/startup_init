@@ -34,7 +34,7 @@ static void DoCmdByName(const char *name, const char *cmdContent)
 {
     int cmdIndex = 0;
     (void)GetMatchCmd(name, &cmdIndex);
-    DoCmdByIndex(cmdIndex, cmdContent, NULL);
+    DoCmdByIndex(cmdIndex, cmdContent, nullptr);
 }
 
 using namespace testing::ext;
@@ -316,15 +316,15 @@ HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
     serviceInfoContext.serviceName = "test-service2";
     serviceInfoContext.reserved = "bootevent";
     HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
-    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_DUMP, (void *)(&serviceInfoContext), NULL);
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_DUMP, (void *)(&serviceInfoContext), nullptr);
     cJSON *fileRoot = cJSON_Parse(serviceStr);
     ASSERT_NE(nullptr, fileRoot);
     PluginExecCmd("clear", 0, nullptr);
     ConfigContext context = { INIT_CONTEXT_MAIN };
     ParseAllServices(fileRoot, &context);
-    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), NULL);
-    serviceInfoContext.reserved = NULL;
-    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), NULL);
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), nullptr);
+    serviceInfoContext.reserved = nullptr;
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), nullptr);
     const char *initBootevent[] = {"init", "test"};
     PluginExecCmd("bootevent", ARRAY_LENGTH(initBootevent), initBootevent);
     const char *initBooteventDup[] = {"init", "test"};
@@ -335,13 +335,13 @@ HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
     SystemWriteParam("bootevent.bootevent2", "true");
     SystemWriteParam("bootevent.bootevent2", "true");
     SystemWriteParam("persist.init.bootevent.enable", "false");
-    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, NULL, NULL);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, nullptr, nullptr);
     cJSON_Delete(fileRoot);
 }
 
 HWTEST_F(ServiceUnitTest, TestSetServiceContent, TestSize.Level1)
 {
-    (void)WatchConsoleDevice(NULL);
+    (void)WatchConsoleDevice(nullptr);
     Service service;
     (void)WatchConsoleDevice(&service);
     int fd = open("/dev/console", O_RDWR);

@@ -101,7 +101,7 @@ static ACTION GetUeventAction(const char *action)
     }
 }
 
-static void HandleUevent(const struct Uevent *uevent)
+STATIC void HandleUevent(const struct Uevent *uevent)
 {
     if (uevent->action == ACTION_ADD || uevent->action == ACTION_CHANGE || uevent->action == ACTION_ONLINE) {
         ChangeSysAttributePermissions(uevent->syspath);
@@ -214,10 +214,6 @@ static void HandleUeventRequired(const struct Uevent *uevent, char **devices, in
 
 static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
 {
-    if (uevent == NULL || event == NULL || len == 0) {
-        return;
-    }
-
     if (STARTSWITH(event, "DEVPATH=")) {
         uevent->syspath = event + strlen("DEVPATH=");
     } else if (STARTSWITH(event, "SUBSYSTEM=")) {

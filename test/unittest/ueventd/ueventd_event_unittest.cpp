@@ -22,11 +22,14 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
+
+#include "param_stub.h"
 #include "ueventd.h"
 #include "ueventd_device_handler.h"
 #include "ueventd_socket.h"
 
 using namespace testing::ext;
+
 namespace UeventdUt {
 namespace {
     std::string g_testRoot{"/data/ueventd"};
@@ -262,6 +265,7 @@ HWTEST_F(UeventdEventUnitTest, TestParseUeventdEvent, TestSize.Level1)
     EXPECT_STREQ(outEvent.syspath, "/block/mmc/test");
     EXPECT_EQ(outEvent.ug.gid, 0);
     EXPECT_EQ(outEvent.ug.uid, 0);
+    HandleUevent(&outEvent);
 }
 
 HWTEST_F(UeventdEventUnitTest, TestUeventActions, TestSize.Level1)
@@ -279,6 +283,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventActions, TestSize.Level1)
     struct Uevent outEvent;
     ParseUeventMessage(ueventBuffer.data(), ueventBuffer.length(), &outEvent);
     EXPECT_EQ(outEvent.action, ACTION_UNKNOWN);
+    HandleUevent(&outEvent);
 }
 
 HWTEST_F(UeventdEventUnitTest, TestUeventHandleBlockDevicesInvalidParameters, TestSize.Level1)
@@ -476,5 +481,170 @@ HWTEST_F(UeventdEventUnitTest, TestUeventHandleUsbDevicesWithBusNo, TestSize.Lev
     HandleOtherDeviceEvent(&uevent);
     auto exist = IsFileExist("/dev/bus/usb/003/004");
     EXPECT_TRUE(exist);
+}
+
+HWTEST_F(UeventdEventUnitTest, TestUeventHandle, TestSize.Level1)
+{
+    char path[] = {"/data/ueventd"};
+    RetriggerUeventByPath(g_oldRootFd, path);
+}
+
+HWTEST_F(UeventdEventUnitTest, TestFirmwareUevent, TestSize.Level1)
+{
+    struct Uevent uevent = {
+        .subsystem = "firmware",
+        .syspath = "/block/mmc/test",
+        .deviceName = "test",
+        .partitionName = "userdata",
+        .firmware = "",
+        .action = ACTION_ADD,
+        .partitionNum = 3,
+        .major = 1,
+        .minor = 2,
+        .ug = {
+            .uid = 0,
+            .gid = 0,
+        },
+        .busNum = 1,
+        .devNum = 2,
+    };
+
+    std::vector<std::string> extraData{};
+    auto ueventBuffer = GenerateUeventBuffer(uevent, extraData);
+    struct Uevent outEvent;
+    ParseUeventMessage(ueventBuffer.data(), ueventBuffer.length(), &outEvent);
+    EXPECT_EQ(outEvent.action, ACTION_ADD);
+    EXPECT_EQ(outEvent.busNum, 1);
+    EXPECT_STREQ(outEvent.subsystem, "firmware");
+    EXPECT_STREQ(outEvent.deviceName, "test");
+    EXPECT_EQ(outEvent.devNum, 2);
+    EXPECT_EQ(outEvent.major, 1);
+    EXPECT_EQ(outEvent.minor, 2);
+    EXPECT_EQ(outEvent.partitionNum, 3);
+    EXPECT_STREQ(outEvent.partitionName, "userdata");
+    EXPECT_STREQ(outEvent.syspath, "/block/mmc/test");
+    EXPECT_EQ(outEvent.ug.gid, 0);
+    EXPECT_EQ(outEvent.ug.uid, 0);
+    HandleUevent(&outEvent);
+}
+
+HWTEST_F(UeventdEventUnitTest, TestUeventPlatformEvent, TestSize.Level1)
+{
+    struct Uevent uevent = {
+        .subsystem = "platform",
+        .syspath = "/block/mmc/test",
+        .deviceName = "test",
+        .partitionName = "userdata",
+        .firmware = "",
+        .action = ACTION_ADD,
+        .partitionNum = 3,
+        .major = 1,
+        .minor = 2,
+        .ug = {
+            .uid = 0,
+            .gid = 0,
+        },
+        .busNum = 1,
+        .devNum = 2,
+    };
+
+    std::vector<std::string> extraData{};
+    auto ueventBuffer = GenerateUeventBuffer(uevent, extraData);
+    struct Uevent outEvent;
+    ParseUeventMessage(ueventBuffer.data(), ueventBuffer.length(), &outEvent);
+    EXPECT_EQ(outEvent.action, ACTION_ADD);
+    EXPECT_EQ(outEvent.busNum, 1);
+    EXPECT_STREQ(outEvent.subsystem, "platform");
+    EXPECT_STREQ(outEvent.deviceName, "test");
+    EXPECT_EQ(outEvent.devNum, 2);
+    EXPECT_EQ(outEvent.major, 1);
+    EXPECT_EQ(outEvent.minor, 2);
+    EXPECT_EQ(outEvent.partitionNum, 3);
+    EXPECT_STREQ(outEvent.partitionName, "userdata");
+    EXPECT_STREQ(outEvent.syspath, "/block/mmc/test");
+    EXPECT_EQ(outEvent.ug.gid, 0);
+    EXPECT_EQ(outEvent.ug.uid, 0);
+    HandleUevent(&outEvent);
+}
+
+HWTEST_F(UeventdEventUnitTest, TestUeventPlatformEventUsb, TestSize.Level1)
+{
+    struct Uevent uevent = {
+        .subsystem = "usb",
+        .syspath = "/block/mmc/test",
+        .deviceName = "test",
+        .partitionName = "userdata",
+        .firmware = "",
+        .action = ACTION_ADD,
+        .partitionNum = 3,
+        .major = 1,
+        .minor = 2,
+        .ug = {
+            .uid = 0,
+            .gid = 0,
+        },
+        .busNum = 1,
+        .devNum = 2,
+    };
+
+    std::vector<std::string> extraData{};
+    auto ueventBuffer = GenerateUeventBuffer(uevent, extraData);
+    struct Uevent outEvent;
+    ParseUeventMessage(ueventBuffer.data(), ueventBuffer.length(), &outEvent);
+    EXPECT_EQ(outEvent.action, ACTION_ADD);
+    EXPECT_EQ(outEvent.busNum, 1);
+    EXPECT_STREQ(outEvent.subsystem, "usb");
+    EXPECT_STREQ(outEvent.deviceName, "test");
+    EXPECT_EQ(outEvent.devNum, 2);
+    EXPECT_EQ(outEvent.major, 1);
+    EXPECT_EQ(outEvent.minor, 2);
+    EXPECT_EQ(outEvent.partitionNum, 3);
+    EXPECT_STREQ(outEvent.partitionName, "userdata");
+    EXPECT_STREQ(outEvent.syspath, "/block/mmc/test");
+    EXPECT_EQ(outEvent.ug.gid, 0);
+    EXPECT_EQ(outEvent.ug.uid, 0);
+    HandleUevent(&outEvent);
+}
+
+static void TestUeventAction(ACTION action)
+{
+    struct Uevent uevent = {
+        .subsystem = "block",
+        .syspath = "/block/mmc/test",
+        .deviceName = "test",
+        .partitionName = "userdata",
+        .firmware = "",
+        .action = action,
+        .partitionNum = 3,
+        .major = 1,
+        .minor = 2,
+        .ug = {
+            .uid = 0,
+            .gid = 0,
+        },
+        .busNum = 1,
+        .devNum = 2,
+    };
+
+    std::vector<std::string> extraData{};
+    auto ueventBuffer = GenerateUeventBuffer(uevent, extraData);
+    struct Uevent outEvent;
+    ParseUeventMessage(ueventBuffer.data(), ueventBuffer.length(), &outEvent);
+    EXPECT_EQ(outEvent.action, action);
+    HandleUevent(&outEvent);
+}
+
+HWTEST_F(UeventdEventUnitTest, TestUeventActionAdd, TestSize.Level1)
+{
+    TestUeventAction(ACTION_ADD);
+    TestUeventAction(ACTION_REMOVE);
+    TestUeventAction(ACTION_CHANGE);
+    TestUeventAction(ACTION_MOVE);
+    TestUeventAction(ACTION_ONLINE);
+
+    TestUeventAction(ACTION_OFFLINE);
+    TestUeventAction(ACTION_BIND);
+    TestUeventAction(ACTION_UNBIND);
+    TestUeventAction(ACTION_UNKNOWN);
 }
 } // UeventdUt

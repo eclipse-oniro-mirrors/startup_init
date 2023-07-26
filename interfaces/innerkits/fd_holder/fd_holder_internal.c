@@ -41,10 +41,7 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
     }
 
     msghdr->msg_control = calloc(1, ((msghdr->msg_controllen == 0) ? 1 : msghdr->msg_controllen));
-    if (msghdr->msg_control == NULL) {
-        BEGET_LOGE("Failed to build control message");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(msghdr->msg_control != NULL, return -1, "Failed to build control message");
 
     struct cmsghdr *cmsg = NULL;
     cmsg = CMSG_FIRSTHDR(msghdr);
@@ -54,21 +51,16 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
         cmsg->cmsg_type = SCM_RIGHTS;
         cmsg->cmsg_len = CMSG_LEN(sizeof(int) * fdCount);
         int ret = memcpy_s(CMSG_DATA(cmsg), cmsg->cmsg_len, fds, sizeof(int) * fdCount);
-        if (ret != 0) {
-            BEGET_LOGE("Control message is not valid");
-            free(msghdr->msg_control);
-            return -1;
-        }
+        BEGET_ERROR_CHECK(ret == 0, free(msghdr->msg_control);
+            return -1, "Control message is not valid");
         // build ucred info
         cmsg = CMSG_NXTHDR(msghdr, cmsg);
     }
 
     if (sendUcred) {
-        if (cmsg == NULL) {
-            BEGET_LOGE("Control message is not valid");
-            free(msghdr->msg_control);
-            return -1;
-        }
+        BEGET_ERROR_CHECK(cmsg != NULL, free(msghdr->msg_control);
+            return -1, "Control message is not valid");
+
         struct ucred *ucred;
         cmsg->cmsg_level = SOL_SOCKET;
         cmsg->cmsg_type = SCM_CREDENTIALS;

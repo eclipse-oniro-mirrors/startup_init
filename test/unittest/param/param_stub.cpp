@@ -416,7 +416,7 @@ void PrepareCmdLineData()
         "ohos.required_mount.vendor="
         "/dev/block/platform/fe310000.sdhci/by-name/vendor@/vendor@ext4@ro,barrier=1@wait,required "
         "ohos.required_mount.misc="
-        "/dev/block/platform/fe310000.sdhci/by-name/misc@none@none@none@wait,required ";
+        "/dev/block/platform/fe310000.sdhci/by-name/misc@none@none@none@wait,required ohos.boot.eng_mode=on ";
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
 }
 
@@ -575,6 +575,13 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
 
     // prepare data
     mkdir(STARTUP_INIT_UT_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
+    CheckAndCreateDir(STARTUP_INIT_UT_PATH MODULE_LIB_NAME "/autorun/");
+    int cmdIndex = 0;
+    (void)GetMatchCmd("copy ", &cmdIndex);
+    DoCmdByIndex(cmdIndex, MODULE_LIB_NAME"/libbootchart.z.so "
+        STARTUP_INIT_UT_PATH MODULE_LIB_NAME "/libbootchart.z.so", nullptr);
+    DoCmdByIndex(cmdIndex, MODULE_LIB_NAME"/libbootchart.z.so "
+        STARTUP_INIT_UT_PATH MODULE_LIB_NAME "/autorun/libbootchart.z.so", nullptr);
     PrepareUeventdcfg();
     PrepareInnerKitsCfg();
     PrepareModCfg();
@@ -583,10 +590,13 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
     CreateTestFile(STARTUP_INIT_UT_PATH"/trigger_test.cfg", g_triggerData);
     PrepareAreaSizeFile();
     PrepareTestGroupFile();
+    PrepareCmdLineData();
 #ifndef OHOS_LITE
     TestBeforeInit();
+    SystemPrepare();
+    SystemInit();
+    SystemConfig();
 #endif
-    PrepareCmdLineData();
     // init service open
     InitServiceSpace();
     // param service open
@@ -603,7 +613,7 @@ __attribute__((destructor)) static void ParamTestStubExit(void)
 #ifndef OHOS_LITE
     StopParamService();
 
-    HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, nullptr, nullptr);
     CloseUeventConfig();
     const char *clearBootEventArgv[] = {"bootevent"};
     PluginExecCmd("clear", ARRAY_LENGTH(clearBootEventArgv), clearBootEventArgv);
@@ -748,7 +758,7 @@ ParamLabelIndex *TestGetParamLabelIndex(const char *name)
     }
 #endif
     labelIndex.workspace = paramWorkspace->workSpace[index];
-    PARAM_CHECK(labelIndex.workspace != NULL, return NULL, "Invalid workSpace");
+    PARAM_CHECK(labelIndex.workspace != nullptr, return nullptr, "Invalid workSpace");
     labelIndex.selinuxLabelIndex = labelIndex.workspace->spaceIndex;
     (void)FindTrieNode(paramWorkspace->workSpace[0], name, strlen(name), &labelIndex.dacLabelIndex);
     return &labelIndex;

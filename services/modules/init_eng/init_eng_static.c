@@ -23,8 +23,10 @@ static int InitEngEarlyHook(const HOOK_INFO *info, void *cookie)
     char value[MAX_BUFFER_LEN] = {0};
     int ret = GetParameterFromCmdLine("ohos.boot.eng_mode", value, MAX_BUFFER_LEN);
     if (ret == 0 && strcmp(value, "on") == 0) {
+#ifndef STARTUP_INIT_TEST
         InitModuleMgrInstall("init_eng");
         InitModuleMgrUnInstall("init_eng");
+#endif
         PLUGIN_LOGI("eng_mode enable.");
     }
     return 0;

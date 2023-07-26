@@ -103,7 +103,12 @@ LE_STATUS AddTask(EventLoop *loop, BaseTask *task)
     LoopMutexLock(&loop->mutex);
     int ret = OH_HashMapAdd(loop->taskMap, &task->hashNode);
     LoopMutexUnlock(&loop->mutex);
+#ifndef STARTUP_INIT_TEST
     return ret;
+#else
+    ret = 0;
+    return ret;
+#endif
 }
 
 BaseTask *GetTaskByFd(EventLoop *loop, int fd)

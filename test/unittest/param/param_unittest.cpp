@@ -299,7 +299,7 @@ public:
 
     int TestDumpParamMemory()
     {
-        SystemDumpParameters(1, -1, NULL);
+        SystemDumpParameters(1, -1, nullptr);
         return 0;
     }
 
@@ -307,8 +307,8 @@ public:
     {
 #ifdef PARAM_SUPPORT_SELINUX
         ParamWorkSpace *paramSpace = GetParamWorkSpace();
-        PARAM_CHECK(paramSpace != NULL, return (uint32_t)-1, "Invalid paramSpace");
-        return (paramSpace->selinuxSpace.getParamLabelIndex != NULL) ?
+        PARAM_CHECK(paramSpace != nullptr, return (uint32_t)-1, "Invalid paramSpace");
+        return (paramSpace->selinuxSpace.getParamLabelIndex != nullptr) ?
             paramSpace->selinuxSpace.getParamLabelIndex(name) + WORKSPACE_INDEX_BASE : (uint32_t)-1;
 #else
         return 0;
@@ -443,7 +443,7 @@ HWTEST_F(ParamUnitTest, TestWorkSpace2, TestSize.Level0)
         return;
     }
     workSpace->flags = 0;
-    workSpace->area = NULL;
+    workSpace->area = nullptr;
     int ret = PARAM_STRCPY(workSpace->fileName, size, spaceName);
     EXPECT_EQ(ret, 0);
     CloseWorkSpace(workSpace);
@@ -496,19 +496,19 @@ HWTEST_F(ParamUnitTest, TestParamValueType2, TestSize.Level0)
 
 HWTEST_F(ParamUnitTest, TestGetServiceCtlName, TestSize.Level0)
 {
-    ServiceCtrlInfo *serviceInfo = NULL;
+    ServiceCtrlInfo *serviceInfo = nullptr;
     GetServiceCtrlInfo("ohos.startup.powerctrl", "reboot,updater", &serviceInfo);
-    if (serviceInfo != NULL) {
+    if (serviceInfo != nullptr) {
         EXPECT_STREQ(serviceInfo->realKey, "ohos.servicectrl.reboot.updater.reboot,updater");
         free(serviceInfo);
     }
     GetServiceCtrlInfo("ohos.ctl.stop", "test", &serviceInfo);
-    if (serviceInfo != NULL) {
+    if (serviceInfo != nullptr) {
         EXPECT_STREQ(serviceInfo->realKey, "ohos.servicectrl.stop.test");
         free(serviceInfo);
     }
     GetServiceCtrlInfo("ohos.servicectrl.stop", "test", &serviceInfo);
-    if (serviceInfo != NULL) {
+    if (serviceInfo != nullptr) {
         EXPECT_STREQ(serviceInfo->realKey, "ohos.servicectrl.stop.test");
         free(serviceInfo);
     }
@@ -610,10 +610,11 @@ HWTEST_F(ParamUnitTest, TestStreamTaskFail, TestSize.Level0)
     ParamTaskPtr client = nullptr;
     ParamStreamInfo info = {};
     info.flags = PARAM_TEST_FLAGS;
-    info.server = NULL;
+    info.server = nullptr;
     info.close = OnClose;
     info.recvMessage = ProcessMessage;
-    info.incomingConnect = NULL;
+    info.incomingConnect = nullptr;
+
     int ret = ParamStreamCreate(&client, nullptr, &info, sizeof(ParamWatcher));
     EXPECT_NE(ret, 0);
     ret = ParamStreamCreate(&client, GetParamService()->serverTask, nullptr, sizeof(ParamWatcher));
@@ -624,6 +625,8 @@ HWTEST_F(ParamUnitTest, TestStreamTaskFail, TestSize.Level0)
     info.close = OnClose;
     info.recvMessage = nullptr;
     ret = ParamStreamCreate(&client, GetParamService()->serverTask, &info, sizeof(ParamWatcher));
+    EXPECT_NE(ret, 0);
+    ret = ParamStreamCreate(&client, nullptr, nullptr, sizeof(ParamWatcher));
     EXPECT_NE(ret, 0);
 
     void *data = ParamGetTaskUserData(client);
@@ -637,10 +640,12 @@ HWTEST_F(ParamUnitTest, TestStreamTaskFail, TestSize.Level0)
 
 HWTEST_F(ParamUnitTest, TestParamCache, TestSize.Level0)
 {
+    const char *value = CachedParameterGet(nullptr);
+    EXPECT_EQ(value, nullptr);
     const char *name = "test.write.1111111.222222";
     CachedHandle cacheHandle = CachedParameterCreate(name, "true");
     EXPECT_NE(cacheHandle, nullptr);
-    const char *value = CachedParameterGet(cacheHandle);
+    value = CachedParameterGet(cacheHandle);
     EXPECT_EQ(strcmp(value, "true"), 0);
     uint32_t dataIndex = 0;
     int ret = WriteParam(name, "false", &dataIndex, 0);
@@ -660,6 +665,7 @@ HWTEST_F(ParamUnitTest, TestParamCache, TestSize.Level0)
     value = CachedParameterGetChanged(cacheHandle3, &valueChange);
     EXPECT_EQ(strcmp(value, "2222222"), 0);
     EXPECT_EQ(valueChange, 1);
+    CachedParameterGetChanged(cacheHandle3, nullptr);
     CachedParameterDestroy(cacheHandle3);
 }
 #endif

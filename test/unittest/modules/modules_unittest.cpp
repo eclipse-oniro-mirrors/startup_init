@@ -61,6 +61,9 @@ HWTEST_F(ModulesUnitTest, TestReadFileToBuffer, TestSize.Level1)
     const char *fileName = "ModulesTest";
     char buffer[MAX_BUFFER_LEN] = {0};
     EXPECT_EQ(ReadFileToBuffer(fileName, buffer, MAX_BUFFER_LEN), nullptr);
+    buffer[1] = 'a';
+    EXPECT_EQ(ReadFileToBuffer(nullptr, buffer, MAX_BUFFER_LEN), nullptr);
+    EXPECT_EQ(ReadFileToBuffer(nullptr, nullptr, MAX_BUFFER_LEN), nullptr);
 }
 
 HWTEST_F(ModulesUnitTest, TestBootchartLogFile, TestSize.Level1)
@@ -78,7 +81,7 @@ HWTEST_F(ModulesUnitTest, TestBootchartLogProcessStat, TestSize.Level1)
 {
     FILE *log = fopen("/data/init_ut/ModulesTest.log", "w");
     pid_t selfPid = getpid();
-    if (log != NULL) {
+    if (log != nullptr) {
         BootchartLogProcessStat(log, selfPid);
         (void)fflush(log);
         (void)fclose(log);
@@ -110,6 +113,6 @@ HWTEST_F(ModulesUnitTest, TestDoBootchartInsall, TestSize.Level1)
     SystemWriteParam("persist.init.debug.dump.trigger", "1");
     SystemWriteParam("persist.init.debug.loglevel", "6");
     SystemWriteParam("ohos.servicectrl.cmd", "setloglevel 10");
-    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, NULL, NULL);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, nullptr, nullptr);
 }
 } // namespace init_ut

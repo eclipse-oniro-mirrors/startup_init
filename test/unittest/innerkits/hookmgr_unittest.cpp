@@ -38,7 +38,7 @@ static int OhosHookTestCommon(void *executionContext, int result)
 {
     struct HookExecCtx *ctx;
 
-    if (executionContext == NULL) {
+    if (executionContext == nullptr) {
         return 0;
     }
 
@@ -73,7 +73,7 @@ static void OhosHookPrint(const HOOK_INFO *hookInfo, void *traversalCookie)
 static void dumpAllHooks(HOOK_MGR *hookMgr)
 {
     printf("----------All Hooks---------------\n");
-    HookMgrTraversal(hookMgr, NULL, OhosHookPrint);
+    HookMgrTraversal(hookMgr, nullptr, OhosHookPrint);
     printf("----------------------------------\n\n");
 }
 
@@ -84,101 +84,101 @@ HWTEST_F(HookMgrUnitTest, HookMgrAdd_one_stage_unitest, TestSize.Level1)
     int ret;
     int cnt;
 
-    cnt = HookMgrGetStagesCnt(NULL);
+    cnt = HookMgrGetStagesCnt(nullptr);
     EXPECT_EQ(cnt, 0);
 
     // Add the first hook
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 0, OhosTestHookRetOK);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 0, OhosTestHookRetOK);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 1);
-    cnt = HookMgrGetStagesCnt(NULL);
+    cnt = HookMgrGetStagesCnt(nullptr);
     EXPECT_EQ(cnt, 1);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // Add the same hook with the same priority again
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 0, OhosTestHookRetOK);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 0, OhosTestHookRetOK);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 1);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // Add the same hook with different priority
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 10, OhosTestHookRetOK);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 10, OhosTestHookRetOK);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 2);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // Add the another hook
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 10, OhosTestHookRetOKEx);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 10, OhosTestHookRetOKEx);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 3);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // Add the same hook with the same priority again
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 0, OhosTestHookRetOK);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 0, OhosTestHookRetOK);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 3);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // Add the same hook with the same priority again
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 10, OhosTestHookRetOK);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 10, OhosTestHookRetOK);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 3);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // Add the another hook
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 10, OhosTestHookRetOKEx);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 10, OhosTestHookRetOKEx);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 3);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // Insert to the end of already exist prio
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 0, OhosTestHookRetOKEx);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 0, OhosTestHookRetOKEx);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 4);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // Insert to the end of already exist prio
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 0, OhosTestHookRetOKEx2);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 0, OhosTestHookRetOKEx2);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 5);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // Insert a new prio hook
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 5, OhosTestHookRetOK);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 5, OhosTestHookRetOK);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 6);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // Insert a new prio hook to the beginning
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, -5, OhosTestHookRetOK);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, -5, OhosTestHookRetOK);
     EXPECT_EQ(ret, 0);
-    cnt = HookMgrGetHooksCnt(NULL, STAGE_TEST_ONE);
+    cnt = HookMgrGetHooksCnt(nullptr, STAGE_TEST_ONE);
     EXPECT_EQ(cnt, 7);
-    dumpAllHooks(NULL);
+    dumpAllHooks(nullptr);
 
     // All hooks are in the same stage
-    cnt = HookMgrGetStagesCnt(NULL);
+    cnt = HookMgrGetStagesCnt(nullptr);
     EXPECT_EQ(cnt, 1);
 
     // Delete all hooks in stage 0
-    HookMgrDel(NULL, STAGE_TEST_ONE, NULL);
-    cnt = HookMgrGetHooksCnt(NULL, 0);
+    HookMgrDel(nullptr, STAGE_TEST_ONE, nullptr);
+    cnt = HookMgrGetHooksCnt(nullptr, 0);
     EXPECT_EQ(cnt, 0);
-    cnt = HookMgrGetStagesCnt(NULL);
+    cnt = HookMgrGetStagesCnt(nullptr);
     EXPECT_EQ(cnt, 0);
 
-    dumpAllHooks(NULL);
-    HookMgrDestroy(NULL);
+    dumpAllHooks(nullptr);
+    HookMgrDestroy(nullptr);
 }
 
 HWTEST_F(HookMgrUnitTest, HookMgrDel_unitest, TestSize.Level1)
@@ -258,45 +258,45 @@ HWTEST_F(HookMgrUnitTest, HookMgrExecute_unitest, TestSize.Level1)
     ctx.retErr = 0;
 
     options.flags = 0;
-    options.preHook = NULL;
-    options.postHook = NULL;
+    options.preHook = nullptr;
+    options.postHook = nullptr;
 
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 0, OhosTestHookRetOK);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 0, OhosTestHookRetOK);
     EXPECT_EQ(ret, 0);
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
+    ret = HookMgrExecute(nullptr, STAGE_TEST_ONE, (void *)&ctx, nullptr);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 1);
 
     // Check ignore error
     ctx.retErr = 1;
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
+    ret = HookMgrExecute(nullptr, STAGE_TEST_ONE, (void *)&ctx, nullptr);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 1);
 
     // Do not ignore return errors
     ctx.retErr = 1;
     options.flags = HOOK_EXEC_EXIT_WHEN_ERROR;
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, &options);
+    ret = HookMgrExecute(nullptr, STAGE_TEST_ONE, (void *)&ctx, &options);
     ASSERT_NE(ret, 0);
     EXPECT_EQ(ctx.result, 1);
     options.flags = 0;
 
     // Add another hook with same priority
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, 0, OhosTestHookRetOKEx);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, 0, OhosTestHookRetOKEx);
     EXPECT_EQ(ret, 0);
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
+    ret = HookMgrExecute(nullptr, STAGE_TEST_ONE, (void *)&ctx, nullptr);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 2);
 
     // Add another hook with higher priority
-    ret = HookMgrAdd(NULL, STAGE_TEST_ONE, -1, OhosTestHookRetOKEx);
+    ret = HookMgrAdd(nullptr, STAGE_TEST_ONE, -1, OhosTestHookRetOKEx);
     EXPECT_EQ(ret, 0);
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
+    ret = HookMgrExecute(nullptr, STAGE_TEST_ONE, (void *)&ctx, nullptr);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 2);
 
-    HookMgrDel(NULL, STAGE_TEST_ONE, OhosTestHookRetOKEx);
-    ret = HookMgrExecute(NULL, STAGE_TEST_ONE, (void *)&ctx, NULL);
+    HookMgrDel(nullptr, STAGE_TEST_ONE, OhosTestHookRetOKEx);
+    ret = HookMgrExecute(nullptr, STAGE_TEST_ONE, (void *)&ctx, nullptr);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(ctx.result, 1);
 }

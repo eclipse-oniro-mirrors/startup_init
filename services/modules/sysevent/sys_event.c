@@ -56,9 +56,7 @@ static void ReportStartupTimeEvent(const StartupTimeEvent *startupTime)
     };
     int ret = OH_HiSysEvent_Write(STARTUP_DOMAIN, "STARTUP_TIME",
         HISYSEVENT_BEHAVIOR, params, sizeof(params) / sizeof(params[0]));
-    if (ret != 0) {
-        PLUGIN_LOGE("Failed to write event ret %d", ret);
-    }
+    PLUGIN_ONLY_LOG(ret == 0, "Failed to write event ret %d", ret);
 }
 
 void ReportSysEvent(const StartupEvent *event)

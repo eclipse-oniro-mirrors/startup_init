@@ -18,7 +18,13 @@
 
 #include "beget_ext.h"
 
-INIT_LOCAL_API int GetUdidFromParam(char *udid, uint32_t size);
-INIT_LOCAL_API int CalcDevUdid(char *udid, uint32_t size);
+#ifdef STARTUP_INIT_TEST
+#define INIT_UDID_LOCAL_API
+#else
+#define INIT_UDID_LOCAL_API INIT_LOCAL_API
+#endif
+
+INIT_UDID_LOCAL_API int GetUdidFromParam(char *udid, uint32_t size);
+INIT_UDID_LOCAL_API int CalcDevUdid(char *udid, uint32_t size);
 
 #endif /* PLUGIN_UDID_H */

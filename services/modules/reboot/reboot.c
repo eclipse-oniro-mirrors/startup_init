@@ -24,7 +24,7 @@
 #include "plugin_adapter.h"
 #include "securec.h"
 
-static int DoRoot_(const char *jobName, int type)
+PLUGIN_STATIC int DoRoot_(const char *jobName, int type)
 {
     // by job to stop service and unmount
     if (jobName != NULL) {
@@ -72,7 +72,7 @@ static int DoRebootPanic(int id, const char *name, int argc, const char **argv)
     return 0;
 }
 
-static int DoRebootShutdown(int id, const char *name, int argc, const char **argv)
+PLUGIN_STATIC int DoRebootShutdown(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
     UNUSED(name);
@@ -110,7 +110,7 @@ static int DoRebootUpdater(int id, const char *name, int argc, const char **argv
     return ret;
 }
 
-static int DoRebootFlashed(int id, const char *name, int argc, const char **argv)
+PLUGIN_STATIC int DoRebootFlashed(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
     PLUGIN_LOGI("DoRebootFlashed argc %d %s", argc, name);
@@ -123,7 +123,7 @@ static int DoRebootFlashed(int id, const char *name, int argc, const char **argv
     return ret;
 }
 
-static int DoRebootCharge(int id, const char *name, int argc, const char **argv)
+PLUGIN_STATIC int DoRebootCharge(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
     UNUSED(name);
@@ -145,7 +145,7 @@ static int DoRebootSuspend(int id, const char *name, int argc, const char **argv
     return DoRoot_("suspend", RB_AUTOBOOT);
 }
 
-static int DoRebootOther(int id, const char *name, int argc, const char **argv)
+PLUGIN_STATIC int DoRebootOther(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
     UNUSED(name);

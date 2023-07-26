@@ -95,8 +95,8 @@ public:
         CheckTaskFlags(nullptr, Event_Write);
         ParamStreamInfo info = {};
         info.server = const_cast<char *>(PIPE_NAME);
-        info.close = NULL;
-        info.recvMessage = NULL;
+        info.close = nullptr;
+        info.recvMessage = nullptr;
         info.incomingConnect = OnIncomingConnect;
         return ParamServerCreate(&serverTask_, &info);
     }
@@ -137,7 +137,7 @@ public:
         LE_StreamServerInfo info = {};
         info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_SERVER | TASK_TEST;
         info.server = (char *)"/data/testpipe";
-        info.baseInfo.close = NULL;
+        info.baseInfo.close = nullptr;
         info.incommingConnect = IncomingConnect;
         LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask_, &info);
         if (serverTask_ == nullptr) {
@@ -148,11 +148,11 @@ public:
         uint64_t eventId = 0;
         ParamStreamInfo paramStreamInfo = {};
         paramStreamInfo.flags = PARAM_TEST_FLAGS;
-        paramStreamInfo.server = NULL;
-        paramStreamInfo.close = NULL;
+        paramStreamInfo.server = nullptr;
+        paramStreamInfo.close = nullptr;
         paramStreamInfo.recvMessage = ProcessMessage;
-        paramStreamInfo.incomingConnect = NULL;
-        ParamTaskPtr client = NULL;
+        paramStreamInfo.incomingConnect = nullptr;
+        ParamTaskPtr client = nullptr;
         int ret = ParamStreamCreate(&client, serverTask_, &paramStreamInfo, sizeof(ParamWatcher));
         PARAM_CHECK(ret == 0, return, "Failed to create client");
 
@@ -177,7 +177,7 @@ public:
     void ProcessEventTest()
     {
         ProcessEvent((EventLoop *)LE_GetDefaultLoop(), 1, Event_Read);
-        LE_BaseInfo info = {TASK_EVENT, NULL};
+        LE_BaseInfo info = {TASK_EVENT, nullptr};
         int testfd = 65535; // 65535 is not exist fd
         BaseTask *task = CreateTask(LE_GetDefaultLoop(), testfd, &info, sizeof(StreamClientTask));
         if (task != nullptr) {
@@ -220,7 +220,7 @@ public:
         LE_StreamServerInfo info = {};
         info.baseInfo.flags = TASK_PIPE | TASK_CONNECT | TASK_TEST;
         info.server = (char *)"/data/testpipe";
-        info.baseInfo.close = NULL;
+        info.baseInfo.close = nullptr;
         info.incommingConnect = IncomingConnect;
         info.socketId = 1111; // 1111 is test fd
         LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask, &info);
@@ -237,7 +237,7 @@ public:
     }
 
 private:
-    ParamTaskPtr serverTask_ = NULL;
+    ParamTaskPtr serverTask_ = nullptr;
 };
 
 HWTEST_F(LoopEventUnittest, LeTaskTest, TestSize.Level1)
@@ -304,5 +304,17 @@ HWTEST_F(LoopEventUnittest, LoopRunTest, TestSize.Level1)
     LE_CloseLoop(g_loop);
     LE_RunLoop(g_loop);
     LE_CloseLoop(g_loop);
+}
+
+HWTEST_F(LoopEventUnittest, LoopAbnormalTest, TestSize.Level1)
+{
+    LE_StartWatcher(nullptr, nullptr, nullptr, nullptr);
+    LE_WatchInfo info = {};
+        info.fd = -1;
+        info.flags = WATCHER_ONCE;
+        info.events = Event_Read;
+        info.processEvent = nullptr;
+    LE_StartWatcher(LE_GetDefaultLoop(), nullptr, &info, nullptr);
+    LE_StartWatcher(LE_GetDefaultLoop(), nullptr, nullptr, nullptr);
 }
 }  // namespace init_ut

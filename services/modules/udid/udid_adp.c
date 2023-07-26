@@ -23,7 +23,7 @@
 
 #include "mbedtls/sha256.h"
 
-static int GetSha256Value(const char *input, char *udid, uint32_t udidSize)
+INIT_UDID_LOCAL_API int GetSha256Value(const char *input, char *udid, uint32_t udidSize)
 {
     if (input == NULL) {
         return EC_FAILURE;
@@ -48,7 +48,7 @@ static int GetSha256Value(const char *input, char *udid, uint32_t udidSize)
     return EC_SUCCESS;
 }
 
-INIT_LOCAL_API int CalcDevUdid(char *udid, uint32_t size)
+INIT_UDID_LOCAL_API int CalcDevUdid(char *udid, uint32_t size)
 {
     char *tmp = NULL;
     BEGET_ERROR_CHECK((tmp = (char *)calloc(1, DEV_BUF_MAX_LENGTH)) != NULL, return -1, "calloc memory failed!");
@@ -74,7 +74,7 @@ INIT_LOCAL_API int CalcDevUdid(char *udid, uint32_t size)
 }
 
 #ifndef OHOS_LITE
-static void SetDevUdid()
+INIT_UDID_LOCAL_API void SetDevUdid()
 {
     BEGET_LOGI("Begin calculate udid");
     char udid[UDID_LEN] = {0};

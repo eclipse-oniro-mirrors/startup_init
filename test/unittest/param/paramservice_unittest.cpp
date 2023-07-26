@@ -315,7 +315,7 @@ public:
             return 0;
         }
         ParamSecurityOps *paramSecurityOps = GetParamSecurityOps(0);
-        if (userLabel && paramSecurityOps != NULL) {
+        if (userLabel && paramSecurityOps != nullptr) {
             paramSecurityOps->securityFreeLabel = TestFreeLocalSecurityLabel;
             paramSecurityOps->securityCheckParamPermission = TestCheckParamPermission;
         }
@@ -441,12 +441,13 @@ public:
     int TestCloseTriggerWatch()
     {
 #ifdef PARAM_SUPPORT_TRIGGER
-        SystemDumpTriggers(1, NULL);
+        SystemDumpTriggers(1, nullptr);
 #endif
         ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(g_worker);
         ClearWatchTrigger(watcher, TRIGGER_PARAM_WAIT);
         ParamTaskClose(g_worker);
         g_worker = nullptr;
+        ParamTaskClose(g_worker);
         SystemWriteParam("init.svc.param_watcher", "stopped");
         return 0;
     }
