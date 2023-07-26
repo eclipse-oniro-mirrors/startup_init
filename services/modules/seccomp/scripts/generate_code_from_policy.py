@@ -155,7 +155,7 @@ def gen_syscall_nr_table(file_name, func_name_nr_table):
 
 
 class SeccompPolicyParam:
-    def __init__(self, arch, function_name_nr_table):
+    def __init__(self, arch, function_name_nr_table, is_debug):
         self.arch = arch
         self.priority = set()
         self.allow_list = set()
@@ -170,6 +170,7 @@ class SeccompPolicyParam:
         self.final_allow_list_with_args = set()
         self.return_value = ''
         self.mode = 'DEFAULT'
+        self.is_debug = is_debug
         self.function_name_nr_table = function_name_nr_table
         self.value_function = {
             'priority': self.update_priority,
@@ -242,6 +243,8 @@ class SeccompPolicyParam:
 
     def update_return_value(self, return_str):
         if return_str in ret_str_to_bpf:
+            if self.is_debug == 'false' and return_str == 'LOG':
+                raise ValidateError("LOG return value is not allowed in user mode")
             self.return_value = return_str
             return True
 
@@ -803,6 +806,13 @@ class SeccompPolicyParser:
         self.seccomp_policy_param = dict()
         self.reduced_block_list_parm = dict()
         self.key_process_flag = False
+        self.is_debug = False
+
+    def update_is_debug(self, is_debug):
+        if is_debug == 'false':
+            self.is_debug = False
+        else:
+            self.is_debug = True
 
     def update_arch(self, target_cpu):
         if target_cpu == "arm":
@@ -898,6 +908,9 @@ class SeccompPolicyParser:
             cur_policy_param.mode, cur_policy_param.return_value)
 
         self.bpf_generator.add_return_value(cur_policy_param.return_value)
+        for line in self.bpf_generator.bpf_policy:
+            if 'SECCOMP_RET_LOG' in line and self.is_debug == False:
+                raise ValidateError("LOG return value is not allowed in user mode")
 
     def gen_seccomp_policy(self):
         arches = sorted(list(self.arches))
@@ -960,13 +973,14 @@ class SeccompPolicyParser:
 
         for arch in supported_architecture:
             self.seccomp_policy_param.update(
-                {arch: SeccompPolicyParam(arch, function_name_nr_table_dict.get(arch))})
+                {arch: SeccompPolicyParam(arch, function_name_nr_table_dict.get(arch), args.is_debug)})
             self.reduced_block_list_parm.update(
                 {arch: AllowBlockList(args.filter_name, arch, function_name_nr_table_dict.get(arch))})
 
         self.bpf_generator.update_function_name_nr_table(function_name_nr_table_dict)
 
         self.update_arch(args.target_cpu)
+        self.update_is_debug(args.is_debug)
 
         for file_name in args.blocklist_file:
             if file_name.lower().endswith('blocklist.seccomp.policy'):
@@ -1011,6 +1025,9 @@ def main():
 
     parser.add_argument('--target-cpu', type=str,
                         help=('please input target cpu arm or arm64\n'))
+
+    parser.add_argument('--is-debug', type=str,
+                        help=('please input is_debug true or false\n'))
 
     args = parser.parse_args()
 
