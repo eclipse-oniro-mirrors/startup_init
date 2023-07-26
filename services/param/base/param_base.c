@@ -298,12 +298,17 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
         PARAM_LOGE("Invalid index %d", index);
         return 0;
     }
+
     int ret = 0;
-    uint32_t rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, MEMORY_ORDER_ACQUIRE);
-    if (rwSpaceLock & WORKSPACE_STATUS_IN_PROCESS) {
-        PARAM_LOGW("Workspace %s in init", workSpace->fileName);
-        return -1;
+    uint32_t rwSpaceLock = 0;
+    while (1) {
+        rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, MEMORY_ORDER_ACQUIRE);
+        if (!(rwSpaceLock & WORKSPACE_STATUS_IN_PROCESS)) {
+            break;
+        }
+        usleep(10 * 1000); // wait 10ms
     }
+
     ATOMIC_STORE_EXPLICIT(&workSpace->rwSpaceLock, rwSpaceLock | WORKSPACE_STATUS_IN_PROCESS, MEMORY_ORDER_RELEASE);
     if (workSpace->area == NULL) {
         ret = InitWorkSpace(workSpace, readOnly, workSpace->spaceSize);
