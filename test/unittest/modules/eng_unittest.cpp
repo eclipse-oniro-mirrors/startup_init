@@ -245,7 +245,7 @@ HWTEST_F(EngUnitTest, TestHook, TestSize.Level1)
     HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
     PrepareCmdLineData();
     HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
-    const char *cmdLine = "ohos.boot.eng_mode=off ";
+    const char *cmdLine = "ohos.boot.root_package=off ";
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
     HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
 }

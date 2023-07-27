@@ -117,7 +117,7 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
         { "reboot_reason", CommonDealFun },
         { "bootslots", CommonDealFun },
         { "sn", SnDealFun },
-        { "eng_mode", CommonDealFun },
+        { "root_package", CommonDealFun },
         { "serialno", SnDealFun }
     };
 
