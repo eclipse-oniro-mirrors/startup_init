@@ -16,5 +16,5 @@
 #ifndef TEST_FUZZTEST_DOREBOOT_FUZZER_H
 #define TEST_FUZZTEST_DOREBOOT_FUZZER_H
 #include "fuzz_utils.h"
-#define FUZZ_PROJECT_NAME "DoReboot_fuzzer"
+#define FUZZ_PROJECT_NAME "doreboot_fuzzer"
 #endif

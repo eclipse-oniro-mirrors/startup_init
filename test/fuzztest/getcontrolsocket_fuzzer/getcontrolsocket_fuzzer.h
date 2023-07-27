@@ -16,5 +16,5 @@
 #ifndef TEST_FUZZTEST_GETCONTROLSOCKET_FUZZER_H
 #define TEST_FUZZTEST_GETCONTROLSOCKET_FUZZER_H
 #include "fuzz_utils.h"
-#define FUZZ_PROJECT_NAME "GetControlSocket_fuzzer"
+#define FUZZ_PROJECT_NAME "getcontrolsocket_fuzzer"
 #endif
