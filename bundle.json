@@ -48,7 +48,9 @@
                 "hisysevent",
                 "profiler",
                 "toybox",
-                "mksh"
+                "mksh",
+                "cJSON",
+                "hiprofiler"
             ],
             "third_party": [
                 "bounds_checking_function",

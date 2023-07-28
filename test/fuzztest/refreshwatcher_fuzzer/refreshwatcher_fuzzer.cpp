@@ -24,9 +24,7 @@ namespace OHOS {
     {
         bool result = false;
         std::unique_ptr<WatcherManager> watcherManager = std::make_unique<WatcherManager>(0, true);
-        if (watcherManager == nullptr) {
-            return result;
-        }
+        
         std::string str(reinterpret_cast<const char*>(data), size);
 
         if (!watcherManager->RefreshWatcher(str, *data)) {
