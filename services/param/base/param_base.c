@@ -26,6 +26,8 @@
 #include "param_security.h"
 #include "param_trie.h"
 
+#define TIMEOUT 1000
+
 static ParamWorkSpace g_paramWorkSpace = {0};
 
 static int CheckParamPermission_(const ParamLabelIndex *labelIndex,
@@ -294,19 +296,19 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
     if (index < paramSpace->maxLabelIndex) {
         workSpace = paramSpace->workSpace[index];
     }
-    if (workSpace == NULL) {
-        PARAM_LOGE("Invalid index %d", index);
-        return 0;
-    }
+    PARAM_CHECK(workSpace != NULL, return 0, "Invalid index %d", index);
 
     int ret = 0;
     uint32_t rwSpaceLock = 0;
+    int count = 0;
     while (1) {
+        PARAM_CHECK(count < TIMEOUT, return -1, "Workspace %s in init,it occupancy time out!", workSpace->fileName);
         rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, MEMORY_ORDER_ACQUIRE);
         if (!(rwSpaceLock & WORKSPACE_STATUS_IN_PROCESS)) {
             break;
         }
         usleep(10 * 1000); // wait 10ms
+        count++;
     }
 
     ATOMIC_STORE_EXPLICIT(&workSpace->rwSpaceLock, rwSpaceLock | WORKSPACE_STATUS_IN_PROCESS, MEMORY_ORDER_RELEASE);
