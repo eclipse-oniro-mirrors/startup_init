@@ -91,6 +91,12 @@ template("ohos_prebuilt_seccomp") {
       ":${_syscall_to_nr_arm_name}",
     ]
 
+    if (build_variant == "root") {
+      seccomp_is_debug = "true"
+    } else {
+      seccomp_is_debug = "false"
+    }
+
     args = []
     foreach(source, sources) {
       args += [
@@ -109,6 +115,8 @@ template("ohos_prebuilt_seccomp") {
       invoker.target_cpu,
       "--keyprocess-file",
       rebase_path(_key_process_file_name),
+      "--is-debug",
+      seccomp_is_debug,
     ]
 
     outputs = [ _seccomp_filter_file ]
