@@ -107,6 +107,7 @@ ohos_prebuilt_seccomp("updater_filter") {
 
   filtername = "updater"
   process_type = "system"
+  uid_is_root = true
 
   part_name = INIT_PART
   subsystem_name = "startup"

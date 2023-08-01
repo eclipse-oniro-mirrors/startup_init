@@ -215,6 +215,166 @@ public:
         return false;
     }
 
+    static bool CheckSetuid64ForUidFilter1()
+    {
+        int uid = syscall(__NR_setuid, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetuid64ForUidFilter2()
+    {
+        int uid = syscall(__NR_setuid, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid64ForUidFilter1()
+    {
+        int uid = syscall(__NR_setreuid, 0, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid64ForUidFilter2()
+    {
+        int uid = syscall(__NR_setreuid, 2, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid64ForUidFilter3()
+    {
+        int uid = syscall(__NR_setreuid, 0, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid64ForUidFilter4()
+    {
+        int uid = syscall(__NR_setreuid, 2, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetfsuid64ForUidFilter1()
+    {
+        int uid = syscall(__NR_setfsuid, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetfsuid64ForUidFilter2()
+    {
+        int uid = syscall(__NR_setfsuid, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid64ForUidFilter1()
+    {
+        int uid = syscall(__NR_setresuid, 0, 0, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid64ForUidFilter2()
+    {
+        int uid = syscall(__NR_setresuid, 2, 0, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid64ForUidFilter3()
+    {
+        int uid = syscall(__NR_setresuid, 0, 2, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid64ForUidFilter4()
+    {
+        int uid = syscall(__NR_setresuid, 0, 0, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid64ForUidFilter5()
+    {
+        int uid = syscall(__NR_setresuid, 0, 2, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid64ForUidFilter6()
+    {
+        int uid = syscall(__NR_setresuid, 2, 0, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid64ForUidFilter7()
+    {
+        int uid = syscall(__NR_setresuid, 2, 2, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid64ForUidFilter8()
+    {
+        int uid = syscall(__NR_setresuid, 2, 2, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
     void TestSystemSycall()
     {
         // system blocklist
@@ -223,6 +383,55 @@ public:
 
         // system allowlist
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetpid, true);
+        EXPECT_EQ(ret, 0);
+
+        // system_uid_filter_test
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid64ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid64ForUidFilter2, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid64ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid64ForUidFilter2, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid64ForUidFilter3, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid64ForUidFilter4, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid64ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid64ForUidFilter2, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid64ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid64ForUidFilter2, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid64ForUidFilter3, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid64ForUidFilter4, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid64ForUidFilter5, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid64ForUidFilter6, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid64ForUidFilter7, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid64ForUidFilter8, true);
         EXPECT_EQ(ret, 0);
     }
 
@@ -296,6 +505,326 @@ public:
         return false;
     }
 
+    static bool CheckSetuid32ForUidFilter1()
+    {
+        int uid = syscall(__NR_setuid32, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetuid32ForUidFilter2()
+    {
+        int uid = syscall(__NR_setuid32, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetuid16ForUidFilter1()
+    {
+        int uid = syscall(__NR_setuid, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetuid16ForUidFilter2()
+    {
+        int uid = syscall(__NR_setuid, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid32ForUidFilter1()
+    {
+        int uid = syscall(__NR_setreuid32, 0, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid32ForUidFilter2()
+    {
+        int uid = syscall(__NR_setreuid32, 2, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid32ForUidFilter3()
+    {
+        int uid = syscall(__NR_setreuid32, 0, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid32ForUidFilter4()
+    {
+        int uid = syscall(__NR_setreuid32, 2, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid16ForUidFilter1()
+    {
+        int uid = syscall(__NR_setreuid, 0, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid16ForUidFilter2()
+    {
+        int uid = syscall(__NR_setreuid, 2, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid16ForUidFilter3()
+    {
+        int uid = syscall(__NR_setreuid, 0, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetreuid16ForUidFilter4()
+    {
+        int uid = syscall(__NR_setreuid, 2, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetfsuid32ForUidFilter1()
+    {
+        int uid = syscall(__NR_setfsuid32, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetfsuid32ForUidFilter2()
+    {
+        int uid = syscall(__NR_setfsuid32, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetfsuid16ForUidFilter1()
+    {
+        int uid = syscall(__NR_setfsuid, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetfsuid16ForUidFilter2()
+    {
+        int uid = syscall(__NR_setfsuid, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter1()
+    {
+        int uid = syscall(__NR_setresuid32, 0, 0, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter2()
+    {
+        int uid = syscall(__NR_setresuid32, 2, 0, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter3()
+    {
+        int uid = syscall(__NR_setresuid32, 0, 2, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter4()
+    {
+        int uid = syscall(__NR_setresuid32, 0, 0, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter5()
+    {
+        int uid = syscall(__NR_setresuid32, 0, 2, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter6()
+    {
+        int uid = syscall(__NR_setresuid32, 2, 0, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter7()
+    {
+        int uid = syscall(__NR_setresuid32, 2, 2, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter8()
+    {
+        int uid = syscall(__NR_setresuid32, 2, 2, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid16ForUidFilter1()
+    {
+        int uid = syscall(__NR_setresuid, 0, 0, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid16ForUidFilter2()
+    {
+        int uid = syscall(__NR_setresuid, 2, 0, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid16ForUidFilter3()
+    {
+        int uid = syscall(__NR_setresuid, 0, 2, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid16ForUidFilter4()
+    {
+        int uid = syscall(__NR_setresuid, 0, 0, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid16ForUidFilter5()
+    {
+        int uid = syscall(__NR_setresuid, 0, 2, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid16ForUidFilter6()
+    {
+        int uid = syscall(__NR_setresuid, 2, 0, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid16ForUidFilter7()
+    {
+        int uid = syscall(__NR_setresuid, 2, 2, 0);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool CheckSetresuid16ForUidFilter8()
+    {
+        int uid = syscall(__NR_setresuid, 2, 2, 2);
+        if (uid == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
     void TestSystemSycall()
     {
         // system blocklist
@@ -304,6 +833,103 @@ public:
 
         // system allowlist
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetuid32, true);
+        EXPECT_EQ(ret, 0);
+
+        // system_uid_filter_test
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid32ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid32ForUidFilter2, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid16ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid16ForUidFilter2, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid32ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid32ForUidFilter2, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid32ForUidFilter3, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid32ForUidFilter4, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter2, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter3, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter4, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid32ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid32ForUidFilter2, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid16ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid16ForUidFilter2, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid32ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid32ForUidFilter2, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid32ForUidFilter3, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid32ForUidFilter4, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid32ForUidFilter5, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid32ForUidFilter6, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid32ForUidFilter7, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid32ForUidFilter8, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid16ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid16ForUidFilter2, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid16ForUidFilter3, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid16ForUidFilter4, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid16ForUidFilter5, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid16ForUidFilter6, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid16ForUidFilter7, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid16ForUidFilter8, true);
         EXPECT_EQ(ret, 0);
     }
 

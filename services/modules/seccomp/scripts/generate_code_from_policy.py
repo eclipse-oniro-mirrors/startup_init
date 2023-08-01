@@ -101,6 +101,15 @@ def is_function_name_exist(arch, function_name, func_name_nr_table):
         raise ValidateError('{} not exsit in {} function_name_nr_table Table'.format(function_name, arch))
 
 
+def is_function_name_repeats(func_name, allow_list_with_args):
+    for line in allow_list_with_args:
+        pos = line.find(':')
+        function_name = line[:pos]
+        if func_name == function_name:
+            return True
+    return False
+
+
 def function_name_to_nr(function_name_list, func_name_nr_table):
     return set(func_name_nr_table[function_name] for function_name \
     in function_name_list if function_name in func_name_nr_table)
@@ -292,6 +301,9 @@ class SeccompPolicyParam:
                                 priority_function_name_list_with_args
         self.final_allow_list_with_args |= self.allow_list_with_args
         self.final_priority_with_args |= self.priority_with_args
+        for line in self.final_allow_list.copy():
+            if is_function_name_repeats(line, self.final_allow_list_with_args):
+                self.final_allow_list.remove(line)
         self.clear_list()
 
 
