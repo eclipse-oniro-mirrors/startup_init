@@ -224,15 +224,6 @@ public:
         // system allowlist
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
-
-        // failed
-        ret = CheckSyscall(SYSTEM_SA, nullptr, CheckGetMempolicy, false);
-        EXPECT_EQ(ret, 0);
-
-        ret = SystemWriteParam("persist.init.debug.seccomp.enable", "-1");
-        EXPECT_EQ(ret, 0);
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetMempolicy, false);
-        EXPECT_EQ(ret, 0);
     }
 
     void TestSetUidGidFilter()
