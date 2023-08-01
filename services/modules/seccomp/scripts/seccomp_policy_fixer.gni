@@ -86,6 +86,17 @@ template("ohos_prebuilt_seccomp") {
     sources += get_target_outputs(":${_syscall_to_nr_arm_name}")
     sources += get_target_outputs(":${_syscall_to_nr_arm64_name}")
 
+    uid_is_root = false
+    if (defined(invoker.uid_is_root)) {
+      uid_is_root = invoker.uid_is_root
+    } else {
+      uid_is_root = false
+    }
+    if (invoker.process_type == "system" && invoker.filtername != "appspawn" &&
+        invoker.filtername != "nwebspawn" && uid_is_root == false) {
+      sources += [ "//base/startup/init/services/modules/seccomp/seccomp_policy/system_uid_filter.seccomp.policy" ]
+    }
+
     deps = [
       ":${_syscall_to_nr_arm64_name}",
       ":${_syscall_to_nr_arm_name}",
