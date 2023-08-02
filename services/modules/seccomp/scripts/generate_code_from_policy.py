@@ -46,6 +46,9 @@ ret_str_to_bpf = {
     'KILL_PROCESS': 'SECCOMP_RET_KILL_PROCESS',
     'KILL_THREAD': 'SECCOMP_RET_KILL_THREAD',
     'TRAP': 'SECCOMP_RET_TRAP',
+    'ERRNO': 'SECCOMP_RET_ERRNO',
+    'USER_NOTIF': 'SECCOMP_RET_USER_NOTIF',
+    'TRACE': 'SECCOMP_RET_TRACE',
     'LOG' : 'SECCOMP_RET_LOG',
     'ALLOW': 'SECCOMP_RET_ALLOW'
 }
@@ -108,6 +111,24 @@ def is_function_name_repeats(func_name, allow_list_with_args):
         if func_name == function_name:
             return True
     return False
+
+
+def is_errno_in_valid_range(errno):
+    if int(errno) > 0 and int(errno) <= 255 and errno.isdigit():
+        return True
+    else:
+        raise ValidateError('{} not within the legal range of errno values.'.format(errno))
+
+
+def is_return_errno(return_str):
+    if return_str[0:len('ERRNO')] == 'ERRNO':
+        errno_no = return_str[return_str.find('(') + 1 : return_str.find(')')]
+        return_string = return_str[0:len('ERRNO')]
+        return_string += ' | '
+        if is_errno_in_valid_range(errno_no):
+            return_string += errno_no
+            return True, return_string
+    return False, 'not_return_errno'
 
 
 def function_name_to_nr(function_name_list, func_name_nr_table):
@@ -251,6 +272,10 @@ class SeccompPolicyParam:
             syscall'.format(self_define_syscall, self_define_syscall))
 
     def update_return_value(self, return_str):
+        is_ret_errno, return_string = is_return_errno(return_str)
+        if is_ret_errno == True:
+            self.return_value = return_string
+            return True
         if return_str in ret_str_to_bpf:
             if self.is_debug == 'false' and return_str == 'LOG':
                 raise ValidateError("LOG return value is not allowed in user mode")
@@ -351,6 +376,10 @@ class GenBpfPolicy:
         self.gen_mode = mode_str.get(mode)
 
     def set_return_value(self, return_value):
+        is_ret_errno, return_string = is_return_errno(return_value)
+        if is_ret_errno == True:
+            self.return_value = return_string
+            return
         if return_value not in ret_str_to_bpf:
             self.set_gen_mode(False)
             return
@@ -737,7 +766,10 @@ class GenBpfPolicy:
         for sub_group in group:
             bpf_policy += self.parse_sub_group(sub_group)
         self.parse_else_part(else_part)
-        bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
+        if self.return_value[0:len('ERRNO')] == 'ERRNO':
+            bpf_policy.append(BPF_RET_VALUE.format(self.return_value.replace('ERRNO', ret_str_to_bpf.get('ERRNO'))))
+        else:
+            bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
         syscall_nr = self.function_name_nr_table_dict.get(self.arch).get(function_name)
         #load syscall nr
         bpf_policy = self.gen_bpf_valid_syscall_nr(syscall_nr, len(bpf_policy) - skip)  + bpf_policy
@@ -763,7 +795,10 @@ class GenBpfPolicy:
         self.bpf_policy.append(BPF_LOAD.format(0))
 
     def add_return_value(self, return_value):
-        self.bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(return_value)))
+        if return_value[0:len('ERRNO')] == 'ERRNO':
+            self.bpf_policy.append(BPF_RET_VALUE.format(return_value.replace('ERRNO', ret_str_to_bpf.get('ERRNO'))))
+        else:
+            self.bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(return_value)))
 
     def add_validate_arch(self, arches, skip_step):
         if not self.bpf_policy or not self.flag:
