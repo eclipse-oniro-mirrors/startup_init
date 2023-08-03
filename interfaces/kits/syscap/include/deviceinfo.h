@@ -46,7 +46,7 @@ const char *OH_GetManufacture(void);
 const char *OH_GetBrand(void);
 
 /**
- * Obtains the external product series represented by a string.
+ * Obtains the product name speaded in the market
  * @syscap SystemCapability.Startup.SystemInfo
  * @since 10
  */
@@ -95,14 +95,14 @@ const char *OH_GetBootloaderVersion(void);
 const char *OH_GetAbiList(void);
 
 /**
- * Obtains the security patch level represented by a string.
+ * Obtains the security patch tag represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
  * @since 10
  */
 const char *OH_GetSecurityPatchTag(void);
 
 /**
- * Obtains the product version represented by a string.
+ * Obtains the product version displayed for customer represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
  * @since 10
  */
@@ -126,7 +126,7 @@ const char *OH_GetIncrementalVersion(void);
 const char *OH_GetOsReleaseType(void);
 
 /**
- * Obtains the OS version represented by a string.
+ * Obtains the OS full version name represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
  * @since 10
  */
@@ -154,35 +154,35 @@ int OH_GetFirstApiVersion(void);
 const char *OH_GetVersionId(void);
 
 /**
- * Obtains the build types of the same baseline code.
+ * Obtains the build type of the current running OS.
  * @syscap SystemCapability.Startup.SystemInfo
  * @since 10
  */
 const char *OH_GetBuildType(void);
 
 /**
- * Obtains the different build user of the same baseline code.
+ * Obtains the build user of the current running OS.
  * @syscap SystemCapability.Startup.SystemInfo
  * @since 10
  */
 const char *OH_GetBuildUser(void);
 
 /**
- * Obtains the different build host of the same baseline code.
+ * Obtains the build host of the current running OS.
  * @syscap SystemCapability.Startup.SystemInfo
  * @since 10
  */
 const char *OH_GetBuildHost(void);
 
 /**
- * Obtains the build time.
+ * Obtains the build time of the current running OS.
  * @syscap SystemCapability.Startup.SystemInfo
  * @since 10
  */
 const char *OH_GetBuildTime(void);
 
 /**
- * Obtains the version hash.
+ * Obtains the version hash of the current running OS.
  * @syscap SystemCapability.Startup.SystemInfo
  * @since 10
  */
