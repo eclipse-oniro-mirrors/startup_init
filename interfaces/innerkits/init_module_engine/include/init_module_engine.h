@@ -43,6 +43,8 @@ int AddCmdExecutor(const char *cmdName, CmdExecutor execCmd);
 void RemoveCmdExecutor(const char *cmdName, int id);
 
 int DoJobNow(const char *jobName);
+
+int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen);
 #ifdef __cplusplus
 #if __cplusplus
 }
