@@ -26,5 +26,6 @@
     { "name": "DoCmdByIndex" },
     { "name": "GetMatchCmd" },
     { "name": "AddCareContextCmdExecutor" },
+    { "name": "GetParameterFromCmdLine" },
     { "name": "InitSubInitContext" }
 ]
