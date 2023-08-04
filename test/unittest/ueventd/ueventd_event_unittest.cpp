@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <selinux/selinux.h>
 
 #include "param_stub.h"
 #include "ueventd.h"
