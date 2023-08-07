@@ -217,8 +217,8 @@ public:
 
     static bool CheckSetuid64ForUidFilter1()
     {
-        int uid = syscall(__NR_setuid, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setuid, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -227,8 +227,8 @@ public:
 
     static bool CheckSetuid64ForUidFilter2()
     {
-        int uid = syscall(__NR_setuid, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setuid, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -237,8 +237,8 @@ public:
 
     static bool CheckSetreuid64ForUidFilter1()
     {
-        int uid = syscall(__NR_setreuid, 0, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid, 0, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -247,8 +247,8 @@ public:
 
     static bool CheckSetreuid64ForUidFilter2()
     {
-        int uid = syscall(__NR_setreuid, 2, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid, 2, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -257,8 +257,8 @@ public:
 
     static bool CheckSetreuid64ForUidFilter3()
     {
-        int uid = syscall(__NR_setreuid, 0, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid, 0, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -267,8 +267,8 @@ public:
 
     static bool CheckSetreuid64ForUidFilter4()
     {
-        int uid = syscall(__NR_setreuid, 2, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid, 2, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -277,8 +277,8 @@ public:
 
     static bool CheckSetfsuid64ForUidFilter1()
     {
-        int uid = syscall(__NR_setfsuid, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setfsuid, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -287,8 +287,8 @@ public:
 
     static bool CheckSetfsuid64ForUidFilter2()
     {
-        int uid = syscall(__NR_setfsuid, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setfsuid, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -297,8 +297,8 @@ public:
 
     static bool CheckSetresuid64ForUidFilter1()
     {
-        int uid = syscall(__NR_setresuid, 0, 0, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 0, 0, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -307,8 +307,8 @@ public:
 
     static bool CheckSetresuid64ForUidFilter2()
     {
-        int uid = syscall(__NR_setresuid, 2, 0, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 2, 0, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -317,8 +317,8 @@ public:
 
     static bool CheckSetresuid64ForUidFilter3()
     {
-        int uid = syscall(__NR_setresuid, 0, 2, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 0, 2, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -327,8 +327,8 @@ public:
 
     static bool CheckSetresuid64ForUidFilter4()
     {
-        int uid = syscall(__NR_setresuid, 0, 0, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 0, 0, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -337,8 +337,8 @@ public:
 
     static bool CheckSetresuid64ForUidFilter5()
     {
-        int uid = syscall(__NR_setresuid, 0, 2, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 0, 2, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -347,8 +347,8 @@ public:
 
     static bool CheckSetresuid64ForUidFilter6()
     {
-        int uid = syscall(__NR_setresuid, 2, 0, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 2, 0, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -357,8 +357,8 @@ public:
 
     static bool CheckSetresuid64ForUidFilter7()
     {
-        int uid = syscall(__NR_setresuid, 2, 2, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 2, 2, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -367,8 +367,8 @@ public:
 
     static bool CheckSetresuid64ForUidFilter8()
     {
-        int uid = syscall(__NR_setresuid, 2, 2, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 2, 2, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -384,9 +384,12 @@ public:
         // system allowlist
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
+    }
 
-        // system_uid_filter_test
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid64ForUidFilter1, false);
+    void TestSystemSyscallForUidFilter()
+    {
+        // system_uid_filter_64bit_test
+        int ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid64ForUidFilter1, false);
         EXPECT_EQ(ret, 0);
 
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid64ForUidFilter2, true);
@@ -507,8 +510,8 @@ public:
 
     static bool CheckSetuid32ForUidFilter1()
     {
-        int uid = syscall(__NR_setuid32, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setuid32, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -517,8 +520,8 @@ public:
 
     static bool CheckSetuid32ForUidFilter2()
     {
-        int uid = syscall(__NR_setuid32, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setuid32, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -527,8 +530,8 @@ public:
 
     static bool CheckSetuid16ForUidFilter1()
     {
-        int uid = syscall(__NR_setuid, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setuid, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -537,8 +540,8 @@ public:
 
     static bool CheckSetuid16ForUidFilter2()
     {
-        int uid = syscall(__NR_setuid, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setuid, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -547,8 +550,8 @@ public:
 
     static bool CheckSetreuid32ForUidFilter1()
     {
-        int uid = syscall(__NR_setreuid32, 0, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid32, 0, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -557,8 +560,8 @@ public:
 
     static bool CheckSetreuid32ForUidFilter2()
     {
-        int uid = syscall(__NR_setreuid32, 2, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid32, 2, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -567,8 +570,8 @@ public:
 
     static bool CheckSetreuid32ForUidFilter3()
     {
-        int uid = syscall(__NR_setreuid32, 0, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid32, 0, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -577,8 +580,8 @@ public:
 
     static bool CheckSetreuid32ForUidFilter4()
     {
-        int uid = syscall(__NR_setreuid32, 2, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid32, 2, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -587,8 +590,8 @@ public:
 
     static bool CheckSetreuid16ForUidFilter1()
     {
-        int uid = syscall(__NR_setreuid, 0, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid, 0, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -597,8 +600,8 @@ public:
 
     static bool CheckSetreuid16ForUidFilter2()
     {
-        int uid = syscall(__NR_setreuid, 2, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid, 2, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -607,8 +610,8 @@ public:
 
     static bool CheckSetreuid16ForUidFilter3()
     {
-        int uid = syscall(__NR_setreuid, 0, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid, 0, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -617,8 +620,8 @@ public:
 
     static bool CheckSetreuid16ForUidFilter4()
     {
-        int uid = syscall(__NR_setreuid, 2, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setreuid, 2, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -627,8 +630,8 @@ public:
 
     static bool CheckSetfsuid32ForUidFilter1()
     {
-        int uid = syscall(__NR_setfsuid32, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setfsuid32, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -637,8 +640,8 @@ public:
 
     static bool CheckSetfsuid32ForUidFilter2()
     {
-        int uid = syscall(__NR_setfsuid32, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setfsuid32, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -647,8 +650,8 @@ public:
 
     static bool CheckSetfsuid16ForUidFilter1()
     {
-        int uid = syscall(__NR_setfsuid, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setfsuid, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -657,8 +660,8 @@ public:
 
     static bool CheckSetfsuid16ForUidFilter2()
     {
-        int uid = syscall(__NR_setfsuid, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setfsuid, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -667,8 +670,8 @@ public:
 
     static bool CheckSetresuid32ForUidFilter1()
     {
-        int uid = syscall(__NR_setresuid32, 0, 0, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid32, 0, 0, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -677,8 +680,8 @@ public:
 
     static bool CheckSetresuid32ForUidFilter2()
     {
-        int uid = syscall(__NR_setresuid32, 2, 0, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid32, 2, 0, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -687,8 +690,8 @@ public:
 
     static bool CheckSetresuid32ForUidFilter3()
     {
-        int uid = syscall(__NR_setresuid32, 0, 2, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid32, 0, 2, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -697,8 +700,8 @@ public:
 
     static bool CheckSetresuid32ForUidFilter4()
     {
-        int uid = syscall(__NR_setresuid32, 0, 0, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid32, 0, 0, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -707,8 +710,8 @@ public:
 
     static bool CheckSetresuid32ForUidFilter5()
     {
-        int uid = syscall(__NR_setresuid32, 0, 2, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid32, 0, 2, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -717,8 +720,8 @@ public:
 
     static bool CheckSetresuid32ForUidFilter6()
     {
-        int uid = syscall(__NR_setresuid32, 2, 0, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid32, 2, 0, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -727,8 +730,8 @@ public:
 
     static bool CheckSetresuid32ForUidFilter7()
     {
-        int uid = syscall(__NR_setresuid32, 2, 2, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid32, 2, 2, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -737,8 +740,8 @@ public:
 
     static bool CheckSetresuid32ForUidFilter8()
     {
-        int uid = syscall(__NR_setresuid32, 2, 2, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid32, 2, 2, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -747,8 +750,8 @@ public:
 
     static bool CheckSetresuid16ForUidFilter1()
     {
-        int uid = syscall(__NR_setresuid, 0, 0, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 0, 0, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -757,8 +760,8 @@ public:
 
     static bool CheckSetresuid16ForUidFilter2()
     {
-        int uid = syscall(__NR_setresuid, 2, 0, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 2, 0, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -767,8 +770,8 @@ public:
 
     static bool CheckSetresuid16ForUidFilter3()
     {
-        int uid = syscall(__NR_setresuid, 0, 2, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 0, 2, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -777,8 +780,8 @@ public:
 
     static bool CheckSetresuid16ForUidFilter4()
     {
-        int uid = syscall(__NR_setresuid, 0, 0, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 0, 0, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -787,8 +790,8 @@ public:
 
     static bool CheckSetresuid16ForUidFilter5()
     {
-        int uid = syscall(__NR_setresuid, 0, 2, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 0, 2, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -797,8 +800,8 @@ public:
 
     static bool CheckSetresuid16ForUidFilter6()
     {
-        int uid = syscall(__NR_setresuid, 2, 0, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 2, 0, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -807,8 +810,8 @@ public:
 
     static bool CheckSetresuid16ForUidFilter7()
     {
-        int uid = syscall(__NR_setresuid, 2, 2, 0);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 2, 2, 0);
+        if (ret == 0) {
             return true;
         }
 
@@ -817,8 +820,8 @@ public:
 
     static bool CheckSetresuid16ForUidFilter8()
     {
-        int uid = syscall(__NR_setresuid, 2, 2, 2);
-        if (uid == 0) {
+        int ret = syscall(__NR_setresuid, 2, 2, 2);
+        if (ret == 0) {
             return true;
         }
 
@@ -834,18 +837,15 @@ public:
         // system allowlist
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetuid32, true);
         EXPECT_EQ(ret, 0);
+    }
 
-        // system_uid_filter_test
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid32ForUidFilter1, false);
+    void TestSystemSyscallForUidFilter32Bit()
+    {
+        // system_uid_filter_32bit_test
+        int ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid32ForUidFilter1, false);
         EXPECT_EQ(ret, 0);
 
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid32ForUidFilter2, true);
-        EXPECT_EQ(ret, 0);
-
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid16ForUidFilter1, false);
-        EXPECT_EQ(ret, 0);
-
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid16ForUidFilter2, true);
         EXPECT_EQ(ret, 0);
 
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid32ForUidFilter1, false);
@@ -860,28 +860,10 @@ public:
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid32ForUidFilter4, true);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter1, false);
-        EXPECT_EQ(ret, 0);
-
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter2, false);
-        EXPECT_EQ(ret, 0);
-
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter3, false);
-        EXPECT_EQ(ret, 0);
-
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter4, true);
-        EXPECT_EQ(ret, 0);
-
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid32ForUidFilter1, false);
         EXPECT_EQ(ret, 0);
 
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid32ForUidFilter2, true);
-        EXPECT_EQ(ret, 0);
-
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid16ForUidFilter1, false);
-        EXPECT_EQ(ret, 0);
-
-        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid16ForUidFilter2, true);
         EXPECT_EQ(ret, 0);
 
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid32ForUidFilter1, false);
@@ -907,6 +889,34 @@ public:
 
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid32ForUidFilter8, true);
         EXPECT_EQ(ret, 0);
+    }
+
+    void TestSystemSyscallForUidFilter16Bit()
+    {
+        // system_uid_filter_16bit_test
+        int ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid16ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetuid16ForUidFilter2, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter2, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter3, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetreuid16ForUidFilter4, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid16ForUidFilter1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetfsuid16ForUidFilter2, true);
+        EXPECT_EQ(ret, 0);
 
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid16ForUidFilter1, false);
         EXPECT_EQ(ret, 0);
@@ -931,6 +941,12 @@ public:
 
         ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckSetresuid16ForUidFilter8, true);
         EXPECT_EQ(ret, 0);
+    }
+
+    void TestSystemSyscallForUidFilter()
+    {
+        TestSystemSyscallForUidFilter32Bit();
+        TestSystemSyscallForUidFilter16Bit();
     }
 
     void TestSetUidGidFilter()
@@ -991,5 +1007,17 @@ HWTEST_F(SeccompUnitTest, TestAppSycall, TestSize.Level1)
 {
     SeccompUnitTest test;
     test.TestAppSycall();
+}
+
+/**
+ * @tc.name: TestSystemSyscallForUidFilter
+ * @tc.desc: Verify the system seccomp policy.
+ * @tc.type: FUNC
+ * @tc.require: issueI7QET2
+ */
+HWTEST_F(SeccompUnitTest, TestSystemSyscallForUidFilter, TestSize.Level1)
+{
+    SeccompUnitTest test;
+    test.TestSystemSyscallForUidFilter();
 }
 }

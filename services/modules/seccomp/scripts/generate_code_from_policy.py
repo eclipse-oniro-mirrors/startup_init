@@ -104,15 +104,6 @@ def is_function_name_exist(arch, function_name, func_name_nr_table):
         raise ValidateError('{} not exsit in {} function_name_nr_table Table'.format(function_name, arch))
 
 
-def is_function_name_repeats(func_name, allow_list_with_args):
-    for line in allow_list_with_args:
-        pos = line.find(':')
-        function_name = line[:pos]
-        if func_name == function_name:
-            return True
-    return False
-
-
 def is_errno_in_valid_range(errno):
     if int(errno) > 0 and int(errno) <= 255 and errno.isdigit():
         return True
@@ -313,22 +304,16 @@ class SeccompPolicyParam:
 
     def update_final_list(self):
         #remove duplicate function_name
-        self.priority_with_args = set(item for item in self.priority_with_args)
-        priority_function_name_list_with_args = set(item[:item.find(':')] for item in self.priority_with_args)
-        self.allow_list_with_args = set(item
-                                        for item in self.allow_list_with_args
-                                        if item[:item.find(':')] not in priority_function_name_list_with_args)
-        function_name_list_with_args = set(item[:item.find(':')] for item in self.allow_list_with_args)
-
-        self.final_allow_list |= self.allow_list - self.priority - function_name_list_with_args - \
-                                    priority_function_name_list_with_args
-        self.final_priority |= self.priority - function_name_list_with_args - \
-                                priority_function_name_list_with_args
+        self.final_allow_list |= self.allow_list
+        self.final_priority |= self.priority
         self.final_allow_list_with_args |= self.allow_list_with_args
         self.final_priority_with_args |= self.priority_with_args
-        for line in self.final_allow_list.copy():
-            if is_function_name_repeats(line, self.final_allow_list_with_args):
-                self.final_allow_list.remove(line)
+        final_priority_function_name_list_with_args = set(item[:item.find(':')] for item in self.final_priority_with_args)
+        final_function_name_list_with_args = set(item[:item.find(':')] for item in self.final_allow_list_with_args)
+        self.final_allow_list |= self.final_allow_list - self.final_priority - \
+                                    final_priority_function_name_list_with_args - final_function_name_list_with_args
+        self.final_priority |= self.final_priority - final_priority_function_name_list_with_args - \
+                                final_function_name_list_with_args
         self.clear_list()
 
 
