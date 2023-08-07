@@ -68,7 +68,6 @@ if (defined(ohos_lite)) {
     "//base/startup/init/services/include",
     "//base/startup/init/services/utils",
     "//base/startup/init/ueventd/include",
-    "//third_party/selinux/libselinux/include/selinux",
   ]
 
   service_ueventd_deps = [
@@ -76,7 +75,6 @@ if (defined(ohos_lite)) {
     "//base/startup/init/services/log:init_log",
     "//base/startup/init/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
-    "//third_party/selinux:libselinux",
   ]
 
   #

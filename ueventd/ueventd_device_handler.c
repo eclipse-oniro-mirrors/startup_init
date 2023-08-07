@@ -34,7 +34,6 @@
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 #ifdef WITH_SELINUX
-#include <selinux/selinux.h>
 #include <policycoreutils.h>
 #endif
 
@@ -93,7 +92,7 @@ static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
 }
 
 #if defined(WITH_SELINUX) && !defined(__RAMDISK__)
-static void SetDeviceLable(const char *path, char **symLinks)
+static void SetDeviceLable(const char *path)
 {
     int rc = 0;
     char buffer[PATH_MAX] = {};
@@ -124,19 +123,6 @@ static void SetDeviceLable(const char *path, char **symLinks)
     rc += Restorecon(path);
     if (rc != 0) {
         INIT_LOGE("[uevent] Failed to Restorecon \" %s \"", path);
-    }
-
-    INIT_CHECK_ONLY_RETURN(symLinks != NULL);
-    char *context = NULL;
-    for (int i = 0; symLinks[i] != NULL; i++) {
-        const char *linkName = symLinks[i];
-        const char *byNamePath = "/dev/block/by-name";
-        if (strncmp(linkName, byNamePath, strlen(byNamePath)) == 0) {
-            (void)Restorecon(linkName);
-            lgetfilecon(linkName, &context);
-            setfilecon(path, context);
-            return;
-        }
     }
 
     return;
@@ -191,7 +177,7 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
         CreateSymbolLinks(deviceNode, symLinks);
     }
 #if defined(WITH_SELINUX) && !defined(__RAMDISK__)
-    SetDeviceLable(deviceNode, symLinks);
+    SetDeviceLable(deviceNode);
 #endif
     // No matter what result the symbol links returns,
     // as long as create device node done, just returns success.

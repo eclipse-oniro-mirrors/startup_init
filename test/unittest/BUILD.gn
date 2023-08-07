@@ -261,7 +261,6 @@ ohos_unittest("init_unittest") {
     "//third_party/bounds_checking_function/include",
     "//third_party/cJSON",
     "//third_party/zlib",
-    "//third_party/selinux/libselinux/include/selinux",
     "//base/security/access_token/interfaces/innerkits/token_setproc/include",
     "//base/security/access_token/interfaces/innerkits/nativetoken/include",
     "//base/startup/init/services/sandbox/include",
@@ -276,7 +275,6 @@ ohos_unittest("init_unittest") {
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest",
     "//third_party/mbedtls:mbedtls_shared",
-    "//third_party/selinux:libselinux",
     "//third_party/zlib:libz",
   ]
 
