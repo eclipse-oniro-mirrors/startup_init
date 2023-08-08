@@ -158,7 +158,9 @@ public:
     // 添加一个label，完全匹配
     int TestAddSecurityLabel4()
     {
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
         ResetParamSecurityLabel();
+#endif
         GetParamSecurityLabel()->cred.gid = 9999;  // 9999 test gid
         const char *name = "label4.test.aaa.bbb.ccc.dddd.eee";
         const char *value = "2001";
