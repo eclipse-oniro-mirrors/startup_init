@@ -27,6 +27,7 @@ comm_include = [
   "//base/startup/init/interfaces/innerkits/include",
   "//third_party/cJSON",
   "//third_party/bounds_checking_function/include",
+  "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
 ]
 if (defined(ohos_lite)) {
   static_library("inithook") {

@@ -13,6 +13,7 @@
 import("//base/startup/init/begetd.gni")
 
 param_include_dirs = [
+  "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
   "//base/startup/init/interfaces/innerkits/include/syspara",
   "//base/startup/init/services/modules/init_hook",
   "//base/startup/init/services/param/include",

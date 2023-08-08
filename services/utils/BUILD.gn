@@ -24,6 +24,7 @@ if (defined(ohos_lite)) {
     sources = [ "init_utils.c" ]
     public_configs = [ ":exported_header_files" ]
     include_dirs = [
+      "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
       "//base/startup/init/interfaces/innerkits/include",
       "//third_party/bounds_checking_function/include",
     ]

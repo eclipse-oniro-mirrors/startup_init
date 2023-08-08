@@ -97,7 +97,7 @@ void LogToDmesg(InitLogLevel logLevel, const char *tag, const char *info)
 
 static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *logInfo)
 {
-#ifdef OHOS_LITE
+#if defined(__LITEOS_A__) || defined(__LINUX__)
     static const LogLevel LOG_LEVEL[] = { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
     (void)HiLogPrint(INIT_LOG_INIT, LOG_LEVEL[logLevel], domain, tag, "%s", logInfo);
 #endif

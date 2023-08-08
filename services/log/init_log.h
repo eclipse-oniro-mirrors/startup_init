@@ -50,6 +50,18 @@ INIT_LOCAL_API void SetInitCommLog(InitCommLog logFunc);
 #define INIT_LOGE(fmt, ...)
 #define INIT_LOGF(fmt, ...)
 #else
+#ifdef __LITEOS_M__
+#define INIT_LOGV(fmt, ...) \
+    HILOG_DEBUG(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
+#define INIT_LOGI(fmt, ...) \
+    HILOG_INFO(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
+#define INIT_LOGW(fmt, ...) \
+    HILOG_WARN(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
+#define INIT_LOGE(fmt, ...) \
+    HILOG_ERROR(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
+#define INIT_LOGF(fmt, ...) \
+    HILOG_FATAL(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
+#else
 INIT_LOCAL_API void EnableInitLog(InitLogLevel level);
 #define INIT_LOGV(fmt, ...) \
     StartupLog(INIT_DEBUG, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
@@ -61,6 +73,7 @@ INIT_LOCAL_API void EnableInitLog(InitLogLevel level);
     StartupLog(INIT_ERROR, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGF(fmt, ...) \
     StartupLog(INIT_FATAL, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+#endif
 #endif
 
 #ifndef UNLIKELY
