@@ -93,6 +93,7 @@ static int FdHolderSockInit(void)
 
 void SystemInit(void)
 {
+    CloseStdio();
 #ifndef STARTUP_INIT_TEST
     // Set up a session keyring that all processes will have access to.
     KeyCtrlGetKeyringId(KEY_SPEC_SESSION_KEYRING, 1);
