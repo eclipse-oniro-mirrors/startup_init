@@ -273,3 +273,24 @@ int WatchParamCheck(const char *keyprefix)
     PARAM_CHECK(ret == 0, return ret, "Forbid to watcher parameter %s", keyprefix);
     return 0;
 }
+
+void ResetParamSecurityLabel(void)
+{
+#ifdef RESET_CHILD_FOR_VERIFY
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL, return, "Invalid paramSpace");
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+    paramSpace->securityLabel.cred.pid = getpid();
+    paramSpace->securityLabel.cred.uid = geteuid();
+    paramSpace->securityLabel.cred.gid = getegid();
+    paramSpace->flags |= WORKSPACE_FLAGS_NEED_ACCESS;
+#endif
+#endif
+    PARAM_LOGI("ResetParamSecurityLabel g_clientFd: %d ", g_clientFd);
+    pthread_mutex_lock(&g_clientMutex);
+    if (g_clientFd != INVALID_SOCKET) {
+        close(g_clientFd);
+        g_clientFd = INVALID_SOCKET;
+    }
+    pthread_mutex_unlock(&g_clientMutex);
+}

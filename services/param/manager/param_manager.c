@@ -623,18 +623,6 @@ INIT_LOCAL_API int CheckParamName(const char *name, int info)
     return 0;
 }
 
-void ResetParamSecurityLabel(void)
-{
-    ParamWorkSpace *paramSpace = GetParamWorkSpace();
-    PARAM_CHECK(paramSpace != NULL, return, "Invalid paramSpace");
-#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
-    paramSpace->securityLabel.cred.pid = getpid();
-    paramSpace->securityLabel.cred.uid = geteuid();
-    paramSpace->securityLabel.cred.gid = getegid();
-    paramSpace->flags |= WORKSPACE_FLAGS_NEED_ACCESS;
-#endif
-}
-
 static int CheckParamPermission_(WorkSpace **workspace, ParamTrieNode **node,
     const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
