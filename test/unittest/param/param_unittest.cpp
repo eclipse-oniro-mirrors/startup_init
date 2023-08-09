@@ -40,7 +40,7 @@ static int CheckServerParamValue(const char *name, const char *expectValue)
     u_int32_t len = sizeof(tmp);
     SystemReadParam(name, tmp, &len);
     printf("CheckParamValue name %s value: \'%s\' expectValue:\'%s\' \n", name, tmp, expectValue);
-    EXPECT_NE((int)strlen(tmp), 0);
+    EXPECT_GE((int)strlen(tmp), 0);
     if (expectValue != nullptr) {
         EXPECT_EQ(strcmp(tmp, expectValue), 0);
     }
@@ -366,6 +366,21 @@ HWTEST_F(ParamUnitTest, TestNameIsValid, TestSize.Level0)
     test.TestNameIsValid();
 }
 
+HWTEST_F(ParamUnitTest, TestParamValue, TestSize.Level0)
+{
+    // support empty string
+    const char *name = "test_readonly.dddddddddddddddddd.fffffffffffffffffff";
+    int ret = SystemWriteParam(name, "");
+    EXPECT_EQ(ret, 0);
+    CheckServerParamValue(name, "");
+    ret = SystemWriteParam(name, "111111111");
+    EXPECT_EQ(ret, 0);
+    CheckServerParamValue(name, "111111111");
+    ret = SystemWriteParam(name, "");
+    EXPECT_EQ(ret, 0);
+    CheckServerParamValue(name, "");
+}
+
 HWTEST_F(ParamUnitTest, TestAddSecurityLabel1, TestSize.Level0)
 {
     ParamUnitTest test;
@@ -570,7 +585,7 @@ HWTEST_F(ParamUnitTest, TestRequestMessage, TestSize.Level0)
     ret = FillParamMsgContent(msg, &start, 0, nullptr, 0);
     EXPECT_NE(ret, 0);
     ret = FillParamMsgContent(msg, &start, 0, "22222", 0);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     ret = FillParamMsgContent(msg, &start, 0, "22222", msgSize);
     EXPECT_NE(ret, 0);
     // fill success
@@ -587,7 +602,7 @@ HWTEST_F(ParamUnitTest, TestRequestMessage, TestSize.Level0)
     content = GetNextContent(msg, &offset);
     EXPECT_NE(content, nullptr);
     content = GetNextContent(msg, &offset);
-    EXPECT_EQ(content, nullptr);
+    EXPECT_NE(content, nullptr);
     free(msg);
 }
 
