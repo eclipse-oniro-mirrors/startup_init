@@ -204,6 +204,18 @@ HWTEST_F(ClientUnitTest, TestClient_01, TestSize.Level0)
     SystemWaitParameter("@@@@", value.c_str(), 1);
 }
 
+HWTEST_F(ClientUnitTest, TestParamValue, TestSize.Level0)
+{
+    // support empty string
+    const char *name = "test_readonly.dddddddddddddddddd.fffffffffffffffffff";
+    int ret = SystemSetParameter(name, "");
+    EXPECT_EQ(ret, 0);
+    ret = SystemSetParameter(name, "111111111");
+    EXPECT_EQ(ret, 0);
+    ret = SystemSetParameter(name, "");
+    EXPECT_EQ(ret, 0);
+}
+
 HWTEST_F(ClientUnitTest, TestClient_02, TestSize.Level0)
 {
     char testBuffer[PARAM_BUFFER_SIZE] = {0};
