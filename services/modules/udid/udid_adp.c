@@ -23,6 +23,9 @@
 
 #include "mbedtls/sha256.h"
 
+#define BUF_MAX_LEN 132
+#define PARAM_VALUE_MAX_LEN 36
+
 INIT_UDID_LOCAL_API int GetSha256Value(const char *input, char *udid, uint32_t udidSize)
 {
     if (input == NULL) {
@@ -50,26 +53,19 @@ INIT_UDID_LOCAL_API int GetSha256Value(const char *input, char *udid, uint32_t u
 
 INIT_UDID_LOCAL_API int CalcDevUdid(char *udid, uint32_t size)
 {
-    char *tmp = NULL;
-    BEGET_ERROR_CHECK((tmp = (char *)calloc(1, DEV_BUF_MAX_LENGTH)) != NULL, return -1, "calloc memory failed!");
-
-    uint32_t manufactureLen = PARAM_VALUE_LEN_MAX;
+    char tmp[BUF_MAX_LEN] = {0};
+    uint32_t manufactureLen = PARAM_VALUE_MAX_LEN;
     int ret = SystemReadParam("const.product.manufacturer", tmp, &manufactureLen);
-    BEGET_ERROR_CHECK(ret == 0, free(tmp);
-        return -1, "Read param const.product.manufacturer failed!");
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Read param const.product.manufacturer failed!");
 
-    uint32_t modelLen = PARAM_VALUE_LEN_MAX;
+    uint32_t modelLen = PARAM_VALUE_MAX_LEN;
     ret = SystemReadParam("const.product.model", tmp + manufactureLen, &modelLen);
-    BEGET_ERROR_CHECK(ret == 0, free(tmp);
-        return -1, "Read param const.product.model failed!");
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Read param const.product.model failed!");
     const char *serial = GetSerial_();
-    BEGET_ERROR_CHECK(serial != NULL, free(tmp);
-        return -1, "Read param serial failed!");
-    ret = strcat_s(tmp, DEV_BUF_MAX_LENGTH, serial);
-    BEGET_ERROR_CHECK(ret != -1, free(tmp);
-        return -1, "Cat serial failed!");
+    BEGET_ERROR_CHECK(serial != NULL, return -1, "Read param serial failed!");
+    ret = strcat_s(tmp, BUF_MAX_LEN, serial);
+    BEGET_ERROR_CHECK(ret != -1, return -1, "Cat serial failed!");
     ret = GetSha256Value(tmp, udid, size);
-    free(tmp);
     return ret;
 }
 

@@ -22,6 +22,7 @@ comm_include = [
   "../../../interfaces/innerkits/include",
   "../../../interfaces/innerkits/include/syspara",
   "../../../interfaces/innerkits/syspara",
+  "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
 ]
 
 if (defined(ohos_lite)) {

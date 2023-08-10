@@ -18,6 +18,9 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <string.h>
+#ifdef __LITEOS_M__
+#include "hilog_lite/hiview_log.h"
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -89,15 +92,15 @@ INIT_PUBLIC_API InitLogLevel GetInitLogLevel(void);
     StartupLog(INIT_FATAL, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #else
 #define STARTUP_LOGV(domain, tag, fmt, ...) \
-    StartupLog(INIT_DEBUG, domain, tag, fmt, ##__VA_ARGS__)
+    HILOG_DEBUG(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
 #define STARTUP_LOGI(domain, tag, fmt, ...) \
-    StartupLog(INIT_INFO, domain, tag, fmt, ##__VA_ARGS__)
+    HILOG_INFO(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
 #define STARTUP_LOGW(domain, tag, fmt, ...) \
-    StartupLog(INIT_WARN, domain, tag, fmt, ##__VA_ARGS__)
+    HILOG_WARN(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
 #define STARTUP_LOGE(domain, tag, fmt, ...) \
-    StartupLog(INIT_ERROR, domain, tag, fmt, ##__VA_ARGS__)
+    HILOG_ERROR(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
 #define STARTUP_LOGF(domain, tag, fmt, ...) \
-    StartupLog(INIT_FATAL, domain, tag, fmt, ##__VA_ARGS__)
+    HILOG_FATAL(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
 #endif
 #endif
 
