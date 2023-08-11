@@ -308,11 +308,13 @@ class SeccompPolicyParam:
         self.final_priority |= self.priority
         self.final_allow_list_with_args |= self.allow_list_with_args
         self.final_priority_with_args |= self.priority_with_args
-        final_priority_function_name_list_with_args = set(item[:item.find(':')] for item in self.final_priority_with_args)
-        final_function_name_list_with_args = set(item[:item.find(':')] for item in self.final_allow_list_with_args)
-        self.final_allow_list |= self.final_allow_list - self.final_priority - \
+        final_priority_function_name_list_with_args = set(item[:item.find(':')] 
+                                                            for item in self.final_priority_with_args)
+        final_function_name_list_with_args = set(item[:item.find(':')] 
+                                                    for item in self.final_allow_list_with_args)
+        self.final_allow_list = self.final_allow_list - self.final_priority - \
                                     final_priority_function_name_list_with_args - final_function_name_list_with_args
-        self.final_priority |= self.final_priority - final_priority_function_name_list_with_args - \
+        self.final_priority = self.final_priority - final_priority_function_name_list_with_args - \
                                 final_function_name_list_with_args
         self.clear_list()
 
