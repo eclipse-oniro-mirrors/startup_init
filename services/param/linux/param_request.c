@@ -50,13 +50,14 @@ __attribute__((constructor)) static void ParameterInit(void)
     char logLevel[2] = {0}; // 2 is set param "persist.init.debug.loglevel" value length.
     uint32_t len = sizeof(logLevel);
     int ret = SystemReadParam(INIT_DEBUG_LEVEL, logLevel, &len);
-    INIT_INFO_CHECK(ret == 0, return, "Can not get log level from param, keep the original loglevel.");
-    errno = 0;
-    int level = atoi(logLevel);
-    if (errno != 0) {
-        return;
+    if (ret == 0) {
+        errno = 0;
+        int level = atoi(logLevel);
+        if (errno != 0) {
+            return;
+        }
+        SetInitLogLevel((InitLogLevel)level);
     }
-    SetInitLogLevel((InitLogLevel)level);
 }
 
 __attribute__((destructor)) static void ParameterDeinit(void)
@@ -286,6 +287,7 @@ void ResetParamSecurityLabel(void)
     paramSpace->flags |= WORKSPACE_FLAGS_NEED_ACCESS;
 #endif
 #endif
+#ifdef SUPPORT_RESET_CLIENT_SOCKET
     PARAM_LOGI("ResetParamSecurityLabel g_clientFd: %d ", g_clientFd);
     pthread_mutex_lock(&g_clientMutex);
     if (g_clientFd != INVALID_SOCKET) {
@@ -293,4 +295,5 @@ void ResetParamSecurityLabel(void)
         g_clientFd = INVALID_SOCKET;
     }
     pthread_mutex_unlock(&g_clientMutex);
+#endif
 }
