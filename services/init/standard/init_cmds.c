@@ -295,6 +295,7 @@ static void DoMountFstabFile(const struct CmdArgs *ctx)
     INIT_LOGI("Mount partitions from fstab file \" %s \"", ctx->argv[0]);
     int ret = MountAllWithFstabFile(ctx->argv[0], 0);
     INIT_LOGI("Mount partitions from fstab file \" %s \" finish ret %d", ctx->argv[0], ret);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_MOUNT_STAGE, NULL, NULL);
 }
 
 static void DoUmountFstabFile(const struct CmdArgs *ctx)
@@ -310,6 +311,20 @@ static void DoUmountFstabFile(const struct CmdArgs *ctx)
 
 static void DoRestorecon(const struct CmdArgs *ctx)
 {
+    int ret;
+    INIT_CMD_INFO cmdInfo;
+    cmdInfo.cmdName = "restorecon";
+    cmdInfo.cmdContent = ctx->argv[0];
+    cmdInfo.reserved = NULL;
+
+    HOOK_EXEC_OPTIONS options;
+    options.flags = TRAVERSE_STOP_WHEN_ERROR;
+    options.preHook = NULL;
+    options.postHook = NULL;
+    ret = HookMgrExecute(GetBootStageHookMgr(), INIT_RESTORECON, (void*)(&cmdInfo), (void*)(&options));
+    if (ret == 0) {
+        return;
+    }
     PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
     return;
 }
