@@ -47,19 +47,18 @@
                 "hvb",
                 "hisysevent",
                 "profiler",
-                "toybox",
-                "mksh",
-                "cJSON",
-                "hiprofiler"
+                "hiprofiler",
+                "bounds_checking_function"
             ],
             "third_party": [
                 "bounds_checking_function",
                 "selinux",
                 "mbedtls",
                 "zlib",
-                "cjson",
+                "cJSON",
                 "thirdparty_selinux",
-                "bounds_checking_function"
+                "mksh",
+                "toybox"
             ]
         },
         "build": {
