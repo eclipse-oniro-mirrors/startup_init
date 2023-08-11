@@ -134,7 +134,9 @@ static void SetDeviceLable(const char *path, char **symLinks)
         if (strncmp(linkName, byNamePath, strlen(byNamePath)) == 0) {
             (void)Restorecon(linkName);
             lgetfilecon(linkName, &context);
-            setfilecon(path, context);
+            if (context != NULL) {
+                setfilecon(path, context);
+            }
             return;
         }
     }
