@@ -53,10 +53,7 @@ public:
     ParamUnitTest() {}
     virtual ~ParamUnitTest() {}
 
-    static void SetUpTestCase(void)
-    {
-        PrepareInitUnitTestEnv();
-    };
+    static void SetUpTestCase(void) {}
     void SetUp() {}
     void TearDown() {}
     void TestBody() {}

@@ -43,6 +43,7 @@ extern "C" {
 
 #define WORKSPACE_INDEX_DAC 0
 #define WORKSPACE_INDEX_BASE 1
+#define WORKSPACE_INDEX_SIZE WORKSPACE_INDEX_DAC
 
 #define WORKSPACE_NAME_DAC "param_sec_dac"
 #define WORKSPACE_NAME_DEF_SELINUX "u:object_r:default_param:s0"
@@ -71,6 +72,7 @@ typedef struct {
 #endif
     int (*checkParamPermission)(const ParamLabelIndex *labelIndex,
         const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
+    uint32_t maxSpaceCount;
     uint32_t maxLabelIndex;
     WorkSpace **workSpace;
 } ParamWorkSpace;

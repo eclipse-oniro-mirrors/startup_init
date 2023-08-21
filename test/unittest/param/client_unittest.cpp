@@ -170,11 +170,7 @@ class ClientUnitTest : public ::testing::Test {
 public:
     ClientUnitTest() {}
     virtual ~ClientUnitTest() {}
-    static void SetUpTestCase(void)
-    {
-        PrepareInitUnitTestEnv();
-    };
-
+    static void SetUpTestCase(void) {}
     void SetUp(void)
     {
         if (GetParamSecurityLabel() != nullptr) {

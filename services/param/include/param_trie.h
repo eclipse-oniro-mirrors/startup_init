@@ -61,6 +61,13 @@ INIT_LOCAL_API int AddParamEntry(uint32_t index, uint8_t type, const char *name,
 STATIC_INLINE ParamTrieNode *FindTrieNode_(
     const WorkSpace *workSpace, const char *key, uint32_t keyLen, uint32_t *matchLabel);
 #endif
+
+#define GetWorkSpaceSize(workSpace)     \
+    (workSpace == NULL || workSpace->area == NULL ||     \
+        workSpace->area->spaceSizeOffset == 0 ||    \
+        workSpace->area->spaceSizeOffset >= workSpace->area->dataSize) ? NULL : \
+        (WorkSpaceSize*)(workSpace->area->data + workSpace->area->spaceSizeOffset)
+
 #ifdef __cplusplus
 #if __cplusplus
 }

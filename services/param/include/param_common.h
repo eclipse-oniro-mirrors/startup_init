@@ -96,6 +96,7 @@ typedef struct {
     uint32_t paramNodeCount;
     uint32_t securityNodeCount;
     uint32_t currOffset;
+    uint32_t spaceSizeOffset;
     uint32_t firstNode;
     uint32_t dataSize;
     char data[0];
@@ -132,6 +133,12 @@ typedef struct CachedParameter_ {
 } CachedParameter;
 
 typedef void *CachedHandle;
+
+typedef struct _SpaceSize{
+    uint32_t maxLabelIndex;
+    uint32_t spaceSize[0];
+} WorkSpaceSize;
+
 #ifdef __cplusplus
 #if __cplusplus
 }

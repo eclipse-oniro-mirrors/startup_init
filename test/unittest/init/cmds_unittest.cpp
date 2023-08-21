@@ -34,10 +34,7 @@ static void DoCmdByName(const char *name, const char *cmdContent)
 namespace init_ut {
 class CmdsUnitTest : public testing::Test {
 public:
-    static void SetUpTestCase(void)
-    {
-        PrepareInitUnitTestEnv();
-    };
+    static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) {};
     void SetUp() {};
     void TearDown() {};

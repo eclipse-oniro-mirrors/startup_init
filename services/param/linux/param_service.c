@@ -407,7 +407,7 @@ void LoadSpecialParam(void)
     // read param area size from cfg and save to dac
     LoadParamAreaSize();
     // read selinux label
-    LoadSelinuxLabel(NULL);
+    LoadSelinuxLabel("init");
     // from cmdline
     LoadParamFromCmdLine();
     // from build
