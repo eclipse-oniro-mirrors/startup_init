@@ -98,21 +98,27 @@ static int ReadMessage(int fd, char *buffer, uint32_t timeout)
     (void)clock_gettime(CLOCK_MONOTONIC, &startTime);
     do {
         ssize_t recvLen = recv(fd, (char *)buffer, RECV_BUFFER_MAX, 0);
-        if (recvLen > 0) {
-            break;
+        if (recvLen <= 0) {
+            PARAM_LOGE("ReadMessage failed! errno %d", errno);
+            struct timespec finishTime = {0};
+            (void)clock_gettime(CLOCK_MONOTONIC, &finishTime);
+            diff = IntervalTime(&finishTime, &startTime);
+            if (diff >= timeout) {
+                ret = PARAM_CODE_TIMEOUT;
+                break;
+            }
+            if (errno == EAGAIN || errno == EINTR) {
+                usleep(10*1000); // 10*1000 wait 10ms
+                continue;
+            }
         }
-        struct timespec finishTime = {0};
-        (void)clock_gettime(CLOCK_MONOTONIC, &finishTime);
-        diff = IntervalTime(&finishTime, &startTime);
-        if (diff >= timeout) {
-            ret = PARAM_CODE_TIMEOUT;
+
+        if (recvLen > sizeof(ParamMessage)) {
+            PARAM_LOGI("recv message len is %d", recvLen);
             break;
-        }
-        if (errno == EAGAIN || errno == EINTR) {
-            usleep(10*1000); // 10*1000 wait 10ms
-            continue;
         }
     } while (1);
+
     if (ret != 0) {
         PARAM_LOGE("ReadMessage errno %d diff %u timeout %d ret %d", errno, diff, timeout, ret);
     }
