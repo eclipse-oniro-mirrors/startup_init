@@ -141,12 +141,20 @@ static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrie
                 entry->commitId, entry->keyLength, entry->valueLength, entry->data);
         }
     }
-    if (current->labelIndex != 0 && verbose) {
-        ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, current->labelIndex);
-        if (label != NULL) {
-            PARAM_DUMP("\tparameter label dac %u %u %o selinuxIndex %u \n",
-                label->uid, label->gid, label->mode, label->selinuxIndex);
-        }
+    if (current->labelIndex == 0) {
+        return 0;
+    }
+    ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, current->labelIndex);
+    if (label == NULL) {
+        return 0;
+    }
+    PARAM_DUMP("\tparameter label dac %u %u 0%o \n", label->uid, label->gid, label->mode);
+    PARAM_DUMP("\tparameter label dac member [%u] ", label->memberNum);
+    for (uint32_t i = 0; i < label->memberNum; i++) {
+        PARAM_DUMP(" %u", label->members[i]);
+    }
+    if (label->memberNum > 0) {
+        PARAM_DUMP("\n");
     }
     return 0;
 }

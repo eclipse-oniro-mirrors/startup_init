@@ -124,9 +124,8 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
 
 INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
 {
-    if (CheckNeedInit(onlyRead, ops) == 0) {
-        return 0;
-    }
+    PARAM_ONLY_CHECK(CheckNeedInit(onlyRead, ops) != 0, return 0);
+
     paramMutexEnvInit();
     g_paramWorkSpace.maxLabelIndex = PARAM_DEF_SELINUX_LABEL;
     if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
@@ -151,8 +150,6 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
     PARAM_CHECK(ret == 0, return -1, "Failed to add dac workspace");
 #endif
     if (onlyRead == 0) {
-        // load user info for dac
-        LoadGroupUser();
         // add default dac policy
         ParamAuditData auditData = {0};
         auditData.name = "#";
@@ -160,6 +157,8 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
         auditData.dacData.uid = DAC_DEFAULT_USER;
         auditData.dacData.mode = DAC_DEFAULT_MODE; // 0774 default mode
         auditData.dacData.paramType = PARAM_TYPE_STRING;
+        auditData.memberNum = 1;
+        auditData.members[0] = DAC_DEFAULT_GROUP;
 #ifdef PARAM_SUPPORT_SELINUX
         auditData.selinuxIndex = INVALID_SELINUX_INDEX;
 #endif
@@ -364,14 +363,12 @@ STATIC_INLINE int ReadParamWithCheck(WorkSpace **workspace, const char *name, ui
     return ret;
 }
 
-static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
+static int CheckUserInGroup(WorkSpace *space, const ParamSecurityNode *node, uid_t uid)
 {
-    char buffer[USER_BUFFER_LEN] = {0};
-    int ret = PARAM_SPRINTF(buffer, sizeof(buffer), GROUP_FORMAT, groupId, uid);
-    PARAM_CHECK(ret >= 0, return -1, "Failed to format name for "GROUP_FORMAT, groupId, uid);
-    ParamNode *node = GetParamNode(WORKSPACE_INDEX_BASE, buffer);
-    if (node != NULL) {
-        return 0;
+    for (uint32_t i = 0; i < node->memberNum; i++) {
+        if (node->members[i] == uid) {
+            return 0;
+        }
     }
     return -1;
 }
@@ -436,7 +433,7 @@ STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
         return DAC_RESULT_PERMISSION;
     }
     // 4, check user in group
-    if (CheckUserInGroup(space, node->gid, srcLabel->cred.uid) == 0) {
+    if (CheckUserInGroup(space, node, srcLabel->cred.uid) == 0) {
         localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
         if ((node->mode & localMode) != 0) {
             return DAC_RESULT_PERMISSION;

@@ -88,6 +88,8 @@ typedef struct {
     char label[SELINUX_CONTENT_LEN];
     uint32_t selinuxIndex;
 #endif
+    uint32_t memberNum;
+    uid_t members[1];
 } ParamAuditData;
 
 struct WorkSpace_;
@@ -127,7 +129,6 @@ INIT_LOCAL_API int RegisterSecuritySelinuxOps(ParamSecurityOps *ops, int isInit)
 #endif
 
 INIT_LOCAL_API ParamSecurityOps *GetParamSecurityOps(int type);
-INIT_LOCAL_API void LoadGroupUser(void);
 INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit);
 INIT_LOCAL_API int RegisterSecurityOps(int onlyRead);
 
