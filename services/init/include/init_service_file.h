@@ -41,9 +41,6 @@ typedef struct ServiceFile_ {
     char fileName[0];
 } ServiceFile;
 
-void CreateServiceFile(ServiceFile *fileOpt);
-void CloseServiceFile(ServiceFile *fileOpt);
-
 #ifdef __cplusplus
 #if __cplusplus
 }

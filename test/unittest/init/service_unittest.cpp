@@ -71,7 +71,7 @@ HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
 
-    ret = ServiceStart(service);
+    ret = ServiceStart(service, &service->pathArgs);
     EXPECT_EQ(ret, 0);
 
     ret = ServiceStop(service);
@@ -98,7 +98,7 @@ HWTEST_F(ServiceUnitTest, case02, TestSize.Level1)
     int fds[1] = {-1}; // ServiceStop will release fds
     UpdaterServiceFds(service, fds, 1);
     service->attribute = SERVICE_ATTR_ONDEMAND;
-    ret = ServiceStart(service);
+    ret = ServiceStart(service, &service->pathArgs);
     EXPECT_EQ(ret, 0);
     CmdLines *cmdline = (CmdLines *)malloc(sizeof(CmdLines) + sizeof(CmdLine));
     ASSERT_NE(nullptr, cmdline);
@@ -138,11 +138,11 @@ HWTEST_F(ServiceUnitTest, TestServiceStartAbnormal, TestSize.Level1)
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
 
-    ret = ServiceStart(service);
+    ret = ServiceStart(service, &service->pathArgs);
     EXPECT_EQ(ret, 0);
 
     service->attribute &= SERVICE_ATTR_INVALID;
-    ret = ServiceStart(service);
+    ret = ServiceStart(service, &service->pathArgs);
     EXPECT_EQ(ret, 0);
 
     service->pid = -1;
@@ -373,7 +373,7 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
     service->servPerm.capsCnt = 1;
     IsEnableSandbox();
     EnterServiceSandbox(service);
-    int ret = ServiceExec(service);
+    int ret = ServiceExec(service, &service->pathArgs);
     EXPECT_EQ(ret, 0);
 
     const int invalidImportantValue = 20;

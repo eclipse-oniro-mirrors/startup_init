@@ -62,11 +62,11 @@ int SetImportantValue(Service *service, const char *attrName, int value, int fla
     return SERVICE_SUCCESS;
 }
 
-int ServiceExec(const Service *service)
+int ServiceExec(Service *service, const ServiceArgs *pathArgs)
 {
-    INIT_ERROR_CHECK(service != NULL && service->pathArgs.count > 0,
+    INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
         return SERVICE_FAILURE, "Exec service failed! null ptr.");
-    if (execv(service->pathArgs.argv[0], service->pathArgs.argv) != 0) {
+    if (execv(pathArgs->argv[0], pathArgs->argv) != 0) {
         INIT_LOGE("Service %s execv failed! err=%d.", service->name, errno);
         return errno;
     }
@@ -88,9 +88,9 @@ void IsEnableSandbox(void)
     return;
 }
 
-void SetServiceEnterSandbox(const char *path, unsigned int attribute)
+int SetServiceEnterSandbox(const Service *service, const char *path)
 {
     UNUSED(path);
-    UNUSED(attribute);
-    return;
+    UNUSED(service);
+    return 0;
 }

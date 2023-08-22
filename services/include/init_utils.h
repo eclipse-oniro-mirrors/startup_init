@@ -78,7 +78,7 @@ void FreeStringVector(char **vector, int count);
 int InUpdaterMode(void);
 int StringReplaceChr(char *strl, char oldChr, char newChr);
 
-void OpenConsole(void);
+int OpenConsole(void);
 void TrimTail(char *str, char c);
 char *TrimHead(char *str, char c);
 
@@ -87,7 +87,6 @@ INIT_LOCAL_API uint32_t IntervalTime(struct timespec *startTime, struct timespec
 INIT_LOCAL_API int StringToULL(const char *str, unsigned long long int *out);
 INIT_LOCAL_API int StringToLL(const char *str, long long int *out);
 void CloseStdio(void);
-void RedirectStdio(int fd);
 
 int GetServiceGroupIdByPid(pid_t pid, gid_t *gids, uint32_t gidSize);
 int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen);

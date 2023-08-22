@@ -53,11 +53,11 @@ int ParseInitCfg(const char *configFile, void *context)
     UNUSED(context);
     INIT_LOGV("Parse init configs from %s", configFile);
     char *fileBuf = ReadFileToBuf(configFile);
-    INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Failed to read file content %s", configFile);
+    INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Cfg error, %s not found", configFile);
 
     cJSON *fileRoot = cJSON_Parse(fileBuf);
     INIT_ERROR_CHECK(fileRoot != NULL, free(fileBuf);
-        return -1, "Failed to parse json file %s", configFile);
+        return -1, "Cfg error, failed to parse json %s ", configFile);
 
     ParseInitCfgContents(configFile, fileRoot);
     cJSON_Delete(fileRoot);
