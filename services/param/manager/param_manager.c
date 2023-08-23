@@ -351,8 +351,8 @@ INIT_LOCAL_API int CheckParameterSet(const char *name,
     const char *value, const ParamSecurityLabel *srcLabel, int *ctrlService)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
-    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid paramSpace");
-    PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
+    PARAM_CHECK(paramSpace != NULL, return PARAM_WORKSPACE_NOT_INIT, "Invalid paramSpace");
+    PARAM_WORKSPACE_CHECK(paramSpace, return PARAM_WORKSPACE_NOT_INIT, "Invalid space");
     PARAM_LOGV("CheckParameterSet name %s value: %s", name, value);
     PARAM_CHECK(srcLabel != NULL && ctrlService != NULL, return -1, "Invalid param ");
     int ret = CheckParamName(name, 0);
@@ -450,8 +450,8 @@ INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dat
 {
     PARAM_LOGV("WriteParam %s", name);
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
-    PARAM_CHECK(paramSpace != NULL, return -1, "Invalid paramSpace");
-    PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
+    PARAM_CHECK(paramSpace != NULL, return PARAM_WORKSPACE_NOT_INIT, "Invalid paramSpace");
+    PARAM_WORKSPACE_CHECK(paramSpace, return PARAM_WORKSPACE_NOT_INIT, "Invalid space");
     PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
     WorkSpace *workSpace = GetWorkSpaceByName(name);
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
@@ -674,7 +674,7 @@ STATIC_INLINE int ReadParamValue(ParamNode *entry, char *value, uint32_t *length
         *length = entry->valueLength + 1;
         return 0;
     }
-    PARAM_CHECK(*length > entry->valueLength, return PARAM_CODE_INVALID_PARAM,
+    PARAM_CHECK(*length > entry->valueLength, return PARAM_CODE_INVALID_VALUE,
         "Invalid value len %u %u", *length, entry->valueLength);
     uint32_t commitId = ReadCommitId(entry);
     return ReadParamValue_(entry, &commitId, value, length);
@@ -682,12 +682,15 @@ STATIC_INLINE int ReadParamValue(ParamNode *entry, char *value, uint32_t *length
 
 int SystemReadParam(const char *name, char *value, uint32_t *len)
 {
-    PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return -1, "Param workspace has not init.");
-    PARAM_CHECK(name != NULL && len != NULL, return -1, "The name or value is null");
+    PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return PARAM_WORKSPACE_NOT_INIT,
+        "SystemReadParam failed! name is:%s, errNum is:%d!", name, PARAM_WORKSPACE_NOT_INIT);
+    PARAM_CHECK(name != NULL && len != NULL, return PARAM_CODE_ERROR,
+        "SystemReadParam failed! name is:%s, errNum is:%d!", name, PARAM_CODE_ERROR);
     ParamTrieNode *node = NULL;
     WorkSpace *workspace = NULL;
     int ret = CheckParamPermission_(&workspace, &node, GetParamSecurityLabel(), name, DAC_READ);
     if (ret != 0) {
+        PARAM_LOGE("SystemReadParam failed! name is:%s, errNum is:%d!", name, ret);
         return ret;
     }
 #ifdef PARAM_SUPPORT_SELINUX
@@ -697,12 +700,16 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
     if (node == NULL) {
         return PARAM_CODE_NOT_FOUND;
     }
-    return ReadParamValue((ParamNode *)GetTrieNode(workspace, node->dataIndex), value, len);
+    ret =  ReadParamValue((ParamNode *)GetTrieNode(workspace, node->dataIndex), value, len);
+    if (ret != 0) {
+        PARAM_LOGE("SystemReadParam failed! name is:%s, errNum is:%d!", name, ret);
+    }
+    return ret;
 }
 
 int SystemFindParameter(const char *name, ParamHandle *handle)
 {
-    PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return -1, "Param workspace has not init.");
+    PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return PARAM_WORKSPACE_NOT_INIT, "Param workspace has not init.");
     PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
     *handle = -1;
     ParamTrieNode *entry = NULL;

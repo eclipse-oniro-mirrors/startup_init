@@ -79,6 +79,8 @@ int WatchParameter(const char *keyprefix, ParameterChgPtr callback, void *contex
     printf("ParameterWatcher is disabled.");
     return EC_INVALID;
 #else
-    return SystemWatchParameter(keyprefix, callback, context);
+    int ret = SystemWatchParameter(keyprefix, callback, context);
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "WatchParameter failed! the errNum is %d", ret);
+    return ret;
 #endif
 }

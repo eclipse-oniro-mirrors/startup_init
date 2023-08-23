@@ -470,7 +470,7 @@ STATIC_INLINE int SelinuxCheckParamPermission(const ParamLabelIndex *labelIndex,
     const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode)
 {
     SelinuxSpace *selinuxSpace = &g_paramWorkSpace.selinuxSpace;
-    int ret = DAC_RESULT_FORBIDED;
+    int ret = SELINUX_RESULT_FORBIDED;
     if (mode == DAC_WRITE) {
         PARAM_CHECK(selinuxSpace->setParamCheck != NULL, return ret, "Invalid setParamCheck");
         // check
@@ -488,9 +488,9 @@ STATIC_INLINE int SelinuxCheckParamPermission(const ParamLabelIndex *labelIndex,
         ret = OpenWorkSpace(labelIndex->selinuxLabelIndex, 1);
     }
     if (ret != 0) {
-        PARAM_LOGE("Selinux check name %s in %s info [%d %d %d] result %d",
-            name, GetSelinuxContent(name), srcLabel->cred.pid, srcLabel->cred.uid, srcLabel->cred.gid, ret);
-        ret = DAC_RESULT_FORBIDED;
+        ret = SELINUX_RESULT_FORBIDED;
+        PARAM_LOGE("Selinux check name %s in %s info [%d %d %d] failed!",
+            name, GetSelinuxContent(name), srcLabel->cred.pid, srcLabel->cred.uid, srcLabel->cred.gid);
     }
     return ret;
 }

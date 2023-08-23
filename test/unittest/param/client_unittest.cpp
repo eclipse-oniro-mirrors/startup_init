@@ -253,4 +253,24 @@ HWTEST_F(ClientUnitTest, TestClient_05, TestSize.Level0)
 {
     TestForMultiThread();
 }
+
+HWTEST_F(ClientUnitTest, TestClient_06, TestSize.Level0)
+{
+    int ret = SystemSetParameter("test.type.string.xxx", "xxxxxxx");
+    EXPECT_EQ(ret, 0);
+    ret = SystemSetParameter("test.type.string...xxx", "xxxxxxx");
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
+    ret = SystemSetParameter("test.type.string*xxx", "xxxxxxx");
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+    ret = SystemSetParameter("test.type.bool.xxx", "xxxxxxxxxxxxxxxx");
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_VALUE);
+    char value[PARAM_VALUE_LEN_MAX] = {0};
+    u_int32_t len = sizeof(value);
+    ret = SystemGetParameter("test.permission.watcher.xxx", value, &len);
+    EXPECT_EQ(ret,  DAC_RESULT_FORBIDED);
+    ret = SystemGetParameter("test.type.xxx", value, &len);
+    EXPECT_EQ(ret, PARAM_CODE_NOT_FOUND);
+#endif
+}
 }  // namespace init_ut

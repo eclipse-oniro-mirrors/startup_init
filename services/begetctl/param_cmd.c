@@ -305,7 +305,7 @@ static int32_t BShellParamCmdGet(BShellHandle shell, int32_t argc, char *argv[])
     if (ret == 0) {
         BShellEnvOutput(shell, "%s \n", buffer);
     } else {
-        BShellEnvOutput(shell, "Get parameter \"%s\" fail\n", key);
+        BShellEnvOutput(shell, "Get parameter \"%s\" fail! errNum is:%d!\n", key, ret);
     }
     free(key);
     return 0;
@@ -330,7 +330,7 @@ static int32_t BShellParamCmdSet(BShellHandle shell, int32_t argc, char *argv[])
     if (ret == 0) {
         BShellEnvOutput(shell, "Set parameter %s %s success\n", realParameter, argv[2]); // 2 value param
     } else {
-        BShellEnvOutput(shell, "Set parameter %s %s fail\n", realParameter, argv[2]); // 2 value param
+        BShellEnvOutput(shell, "Set parameter %s %s fail! errNum is:%d!\n", realParameter, argv[2], ret); // 2 param
     }
     return 0;
 }
@@ -363,7 +363,7 @@ static int32_t BShellParamCmdWait(BShellHandle shell, int32_t argc, char *argv[]
     if (ret == 0) {
         BShellEnvOutput(shell, "Wait parameter %s success\n", argv[1]);
     } else {
-        BShellEnvOutput(shell, "Wait parameter %s fail\n", argv[1]);
+        BShellEnvOutput(shell, "Wait parameter %s fail! errNum is:%d!\n", argv[1], ret);
     }
     return 0;
 }

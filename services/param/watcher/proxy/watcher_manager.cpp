@@ -144,14 +144,18 @@ int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
     WATCHER_CHECK(request != NULL, return PARAM_CODE_ERROR, "Failed to malloc for watch");
     request->id.watcherId = group->GetGroupId();
     request->msgSize = sizeof(ParamMessage);
-    int ret = PARAM_CODE_ERROR;
+    int ret = PARAM_CODE_FAIL_CONNECT;
     int fd = GetServerFd(false);
-    if (fd != INVALID_SOCKET) {
-        ssize_t sendLen = send(serverFd_, (char *)request, request->msgSize, 0);
-        ret = (sendLen > 0) ? 0 : PARAM_CODE_ERROR;
+    if (fd < 0) {
+        WATCHER_LOGE("ParamWatcher get server fd failed!");
+        free(request);
+        return fd;
     }
+
+    ssize_t sendLen = send(serverFd_, (char *)request, request->msgSize, 0);
+    ret = (sendLen > 0) ? 0 : PARAM_CODE_IPC_ERROR;
     free(request);
-    WATCHER_CHECK(ret == 0, return ret, "SendMessage key: %s %d fail", group->GetKeyPrefix().c_str(), type);
+    WATCHER_CHECK(ret == 0, return ret, "SendMessage key: %s %d fail!", group->GetKeyPrefix().c_str(), type);
     return 0;
 }
 
@@ -306,7 +310,7 @@ int WatcherManager::GetServerFd(bool retry)
             break;
         }
         close(serverFd_);
-        serverFd_ = INVALID_SOCKET;
+        serverFd_ = PARAM_CODE_FAIL_CONNECT;
         usleep(sleepTime);
         retryCount++;
         if (stop_) {

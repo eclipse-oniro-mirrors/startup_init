@@ -65,11 +65,12 @@ int SystemSetParameter(const char *name, const char *value)
 
 int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 {
-    PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value %s", name);
+    PARAM_CHECK(name != NULL && value != NULL, return PARAM_CODE_INVALID_PARAM,
+        "SystemWaitParameter failed! name is: %s, errNum is: %d", name, PARAM_CODE_INVALID_PARAM);
     long long globalCommit = 0;
     // first check permission
     int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
-    PARAM_CHECK(ret == 0, return ret, "Forbid to wait parameter %s", name);
+    PARAM_CHECK(ret == 0, return ret, "SystemWaitParameter failed! name is: %s, errNum is: %d", name, ret);
     uint32_t diff = 0;
     struct timespec startTime = {0};
     if (timeout <= 0) {
@@ -97,6 +98,9 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
         }
     } while (1);
     PARAM_LOGI("SystemWaitParameter name %s value: %s diff %d timeout %d", name, value, diff, diff);
+    if (ret != 0) {
+        PARAM_LOGE("SystemWaitParameter failed! name is:%s, errNum is %d", name, ret);
+    }
     return ret;
 }
 
