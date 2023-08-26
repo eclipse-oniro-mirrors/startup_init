@@ -378,10 +378,14 @@ HWTEST_F(SysparaUnitTest, parameterTest0016, TestSize.Level0)
 
 HWTEST_F(SysparaUnitTest, parameterTest0017, TestSize.Level0)
 {
-    GetDistributionOSName();
-    GetDistributionOSVersion();
-    GetDistributionOSApiVersion();
-    GetDistributionOSReleaseType();
+    char ret = GetDistributionOSName();
+    EXPECT_EQ(ret, GetDistributionOSName());
+    ret = GetDistributionOSVersion();
+    EXPECT_EQ(ret, GetDistributionOSVersion());
+    int val = GetDistributionOSApiVersion();
+    EXPECT_EQ(val, GetDistributionOSApiVersion());
+    ret = GetDistributionOSReleaseType();
+    EXPECT_EQ(ret, GetDistributionOSReleaseType());
 }
 #endif
 }  // namespace OHOS
