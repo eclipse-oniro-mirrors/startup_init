@@ -362,6 +362,9 @@ static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
             return INIT_ECONSOLE,
             "Service error %d %s, failed to open console.", errno, service->name);
     }
+    if ((service->attribute & SERVICE_ATTR_KMSG)) {
+        OpenKmsg();
+    }
 
     INIT_ERROR_CHECK(PublishHoldFds(service) == 0,
         service->lastErrno = INIT_EHOLDER;

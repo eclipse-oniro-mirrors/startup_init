@@ -79,6 +79,7 @@ int InUpdaterMode(void);
 int StringReplaceChr(char *strl, char oldChr, char newChr);
 
 int OpenConsole(void);
+int OpenKmsg(void);
 void TrimTail(char *str, char c);
 char *TrimHead(char *str, char c);
 

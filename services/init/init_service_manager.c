@@ -841,6 +841,19 @@ static void ParseOneServiceArgs(const cJSON *curItem, Service *service)
     (void)GetCpuArgs(curItem, CPU_CORE_STR_IN_CFG, service);
 }
 
+static int SetConsoleValue(Service *service, const char *attrName, int value, int flag)
+{
+    UNUSED(attrName);
+    UNUSED(flag);
+    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Set service attr failed! null ptr.");
+    if (value == 1) {
+        service->attribute |= SERVICE_ATTR_CONSOLE;
+    } if (value == 2) {
+        service->attribute |= SERVICE_ATTR_KMSG;
+    }
+    return SERVICE_SUCCESS;
+}
+
 int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
@@ -866,7 +879,7 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get critical flag for service %s", service->name);
     ret = GetServiceAttr(curItem, service, DISABLED_STR_IN_CFG, SERVICE_ATTR_DISABLED, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get disabled flag for service %s", service->name);
-    ret = GetServiceAttr(curItem, service, CONSOLE_STR_IN_CFG, SERVICE_ATTR_CONSOLE, NULL);
+    ret = GetServiceAttr(curItem, service, CONSOLE_STR_IN_CFG, SERVICE_ATTR_CONSOLE, SetConsoleValue);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get console for service %s", service->name);
     ret = GetServiceAttr(curItem, service, "notify-state", SERVICE_ATTR_NOTIFY_STATE, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get notify-state for service %s", service->name);
