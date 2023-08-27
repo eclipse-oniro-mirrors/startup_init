@@ -378,14 +378,14 @@ HWTEST_F(SysparaUnitTest, parameterTest0016, TestSize.Level0)
 
 HWTEST_F(SysparaUnitTest, parameterTest0017, TestSize.Level0)
 {
-    char ret = GetDistributionOSName();
-    EXPECT_EQ(ret, GetDistributionOSName());
-    ret = GetDistributionOSVersion();
-    EXPECT_EQ(ret, GetDistributionOSVersion());
-    int val = GetDistributionOSApiVersion();
-    EXPECT_EQ(val, GetDistributionOSApiVersion());
-    ret = GetDistributionOSReleaseType();
-    EXPECT_EQ(ret, GetDistributionOSReleaseType());
+    printf("distributionOS name =%s\n", GetDistributionOSName());
+    EXPECT_STRNE(GetDistributionOSName(), nullptr);
+    printf("distributionOS version =%s\n", GetDistributionOSVersion());
+    EXPECT_STRNE(GetDistributionOSVersion(), nullptr);
+    printf("distributionOS api version =%d\n", GetDistributionOSApiVersion());
+    EXPECT_GT(GetDistributionOSApiVersion(), 0);
+    printf("distributionOS name =%s\n", GetDistributionOSReleaseType());
+    EXPECT_STRNE(GetDistributionOSReleaseType(), nullptr);
 }
 #endif
 }  // namespace OHOS
