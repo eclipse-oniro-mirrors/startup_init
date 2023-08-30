@@ -87,6 +87,8 @@ typedef struct {
     uint16_t mode;
     uint8_t type;
     uint8_t length;
+    uint32_t memberNum;
+    uid_t members[0];
 } ParamSecurityNode;
 
 typedef struct {
@@ -134,7 +136,7 @@ typedef struct CachedParameter_ {
 
 typedef void *CachedHandle;
 
-typedef struct _SpaceSize{
+typedef struct _SpaceSize {
     uint32_t maxLabelIndex;
     uint32_t spaceSize[0];
 } WorkSpaceSize;

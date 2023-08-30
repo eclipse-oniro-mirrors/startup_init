@@ -208,6 +208,8 @@ static void HandleSelinuxLabelForPermission(const ParameterNode *paramNode, int 
     auditData.dacData.paramType = node->type;
     auditData.selinuxIndex = labelIndex;
     auditData.name = paramNode->paraName;
+    auditData.memberNum = 1;
+    auditData.members[0] = node->gid;
     AddSecurityLabel(&auditData);
 }
 

@@ -61,6 +61,7 @@ static void DumpServiceSocket(const Service *service)
     printf("\tservice socket info \n");
     ServiceSocket *sockopt = service->socketCfg;
     while (sockopt != NULL) {
+        printf("\t\tsocket fd: %d \n", sockopt->sockFd);
         printf("\t\tsocket name: %s \n", sockopt->name);
         printf("\t\tsocket type: %u \n", sockopt->type);
         printf("\t\tsocket uid: %u \n", sockopt->uid);
@@ -79,6 +80,14 @@ void DumpServiceHookExecute(const char *name, const char *info)
 
 static void DumpOneService(const Service *service)
 {
+    static const struct InitErrMap initErrMaps[] = {
+        {INIT_OK, ""},
+#define XX(code, info) {INIT_ ## code, info},
+        INIT_ERRNO_MAP(XX)
+#undef XX
+        {INIT_OK, ""}
+    };
+
     const InitArgInfo startModeMap[] = {
         {"condition", START_MODE_CONDITION},
         {"boot", START_MODE_BOOT},
@@ -92,6 +101,11 @@ static void DumpOneService(const Service *service)
 
     printf("\tservice name: [%s] \n", service->name);
     printf("\tservice pid: [%d] \n", service->pid);
+    if (service->lastErrno < sizeof(initErrMaps)) {
+        printf("\tservice last error: %s(%d) \n", initErrMaps[service->lastErrno].info, service->lastErrno);
+    } else {
+        printf("\tservice last error: %d \n", service->lastErrno);
+    }
     printf("\tservice context : [%s] \n", (service->context.type == INIT_CONTEXT_CHIPSET) ? "chipset" : "system");
     printf("\tservice crashCnt: [%d] \n", service->crashCnt);
     printf("\tservice attribute: [%u] \n", service->attribute);
@@ -192,6 +206,8 @@ static void ProcessDumpServiceControlFd(uint16_t type, const char *serviceCmd)
     if (strcmp(serviceCmd, "parameter_service") == 0) {
         if (cmd != NULL && strcmp(cmd, "trigger") == 0) {
             SystemDumpTriggers(0, printf);
+        } else {
+            SystemDumpParameters(0, 0, printf);
         }
         return;
     }

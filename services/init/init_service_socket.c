@@ -178,7 +178,7 @@ static void ProcessWatchEvent_(const WatcherHandle watcherHandle, int fd, uint32
     }
     INIT_LOGI("Socket information detected, fd:%d service name:%s", fd, service->name);
     RemoveSocketWatcher(watcherHandle);
-    if (ServiceStart(service) != SERVICE_SUCCESS) {
+    if (ServiceStart(service, &service->pathArgs) != SERVICE_SUCCESS) {
         INIT_LOGE("Service %s start failed!", service->name);
     }
 }

@@ -351,7 +351,7 @@ static int LoadOneParamAreaSize_(const uint32_t *context, const char *name, cons
     WorkSpaceSize *spaceSize = GetWorkSpaceSize(GetWorkSpace(WORKSPACE_INDEX_SIZE));
     PARAM_CHECK(spaceSize != NULL, return PARAM_CODE_ERROR, "Failed to get workspace size");
     static char buffer[SELINUX_CONTENT_LEN] = {0};
-    int ret = snprintf(buffer, sizeof(buffer) - 1, "u:object_r:%s:s0", name);
+    int ret = snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, "u:object_r:%s:s0", name);
     PARAM_CHECK(ret > 0, return PARAM_CODE_ERROR, "Failed to snprintf workspace name");
 
     for (uint32_t i = WORKSPACE_INDEX_BASE + 1; i < spaceSize->maxLabelIndex; i++) {

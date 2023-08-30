@@ -83,34 +83,29 @@ int SetImportantValue(Service *service, const char *attrName, int value, int fla
     return SERVICE_SUCCESS;
 }
 
-int ServiceExec(const Service *service)
+int ServiceExec(Service *service, const ServiceArgs *pathArgs)
 {
-    INIT_ERROR_CHECK(service != NULL && service->pathArgs.count > 0,
+    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Exec service failed! null ptr.");
+    INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
         return SERVICE_FAILURE, "Exec service failed! null ptr.");
+
     if (service->importance != 0) {
-        INIT_ERROR_CHECK(setpriority(PRIO_PROCESS, 0, service->importance) == 0, _exit(0x7f),
-            "setpriority failed for %s, importance = %d, err=%d", service->name, service->importance, errno);
+        INIT_ERROR_CHECK(setpriority(PRIO_PROCESS, 0, service->importance) == 0,
+            service->lastErrno = INIT_EPRIORITY;
+            return SERVICE_FAILURE,
+            "Service error %d %s, failed to set priority %d.", errno, service->name, service->importance);
     }
     OpenHidebug(service->name);
-    if (service->extraArgs.argv != NULL && service->extraArgs.count > 0) {
-        INIT_CHECK_ONLY_ELOG(execv(service->extraArgs.argv[0], service->extraArgs.argv) == 0,
-            "service %s execv failed! err %d.", service->name, errno);
-    } else {
-        INIT_CHECK_ONLY_ELOG(execv(service->pathArgs.argv[0], service->pathArgs.argv) == 0,
-            "service %s execv failed! err %d.", service->name, errno);
-    }
+    INIT_ERROR_CHECK(execv(pathArgs->argv[0], pathArgs->argv) == 0,
+        service->lastErrno = INIT_EEXEC;
+        return errno, "Service error %d %s, failed to execv.", errno, service->name);
     return SERVICE_SUCCESS;
 }
 
 int SetAccessToken(const Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "service is null");
-    int ret = SetSelfTokenID(service->tokenId);
-    if (ret != 0) {
-        INIT_LOGV("Set service %s token id %lld failed.", service->name, service->tokenId);
-        return SERVICE_FAILURE;
-    }
-    return SERVICE_SUCCESS;
+    return SetSelfTokenID(service->tokenId);
 }
 
 void GetAccessToken(void)
@@ -156,23 +151,20 @@ void IsEnableSandbox(void)
     }
 }
 
-void SetServiceEnterSandbox(const char *execPath, unsigned int attribute)
+int SetServiceEnterSandbox(const Service *service, const char *execPath)
 {
+    if ((service->attribute & SERVICE_ATTR_WITHOUT_SANDBOX) == SERVICE_ATTR_WITHOUT_SANDBOX) {
+        return 0;
+    }
     if (g_enableSandbox == false) {
-        return;
+        return 0;
     }
-    if ((attribute & SERVICE_ATTR_WITHOUT_SANDBOX) == SERVICE_ATTR_WITHOUT_SANDBOX) {
-        return;
-    }
-    INIT_ERROR_CHECK(execPath != NULL, return, "Service path is null.");
+    INIT_ERROR_CHECK(execPath != NULL, return INIT_EPARAMETER, "Service path is null.");
+    int ret = 0;
     if (strncmp(execPath, "/system/bin/", strlen("/system/bin/")) == 0) {
-        INIT_INFO_CHECK(EnterSandbox("system") == 0, return,
-            "Service %s skip enter system sandbox.", execPath);
+        ret = EnterSandbox("system");
     } else if (strncmp(execPath, "/vendor/bin/", strlen("/vendor/bin/")) == 0) {
-        INIT_INFO_CHECK(EnterSandbox("chipset") == 0, return,
-            "Service %s skip enter chipset sandbox.", execPath);
-    } else {
-        INIT_LOGI("Service %s does not enter sandbox", execPath);
+        ret = EnterSandbox("chipset");
     }
-    return;
+    return ret;
 }

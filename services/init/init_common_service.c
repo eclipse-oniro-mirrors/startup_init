@@ -134,21 +134,21 @@ static void ServiceHookExecute(const char *serviceName, const char *info, int st
 }
 #endif
 
-static int ServiceCheck(const Service *service)
+static int ServiceSetGid(const Service *service)
 {
     if (service->servPerm.gIDCnt == 0) {
         // use uid as gid
         INIT_ERROR_CHECK(setgid(service->servPerm.uID) == 0, return SERVICE_FAILURE,
-            "SetPerms, setgid for %s failed. %d", service->name, errno);
+            "Service error %d %s, failed to set gid.", errno, service->name);
     }
     if (service->servPerm.gIDCnt > 0) {
         INIT_ERROR_CHECK(setgid(service->servPerm.gIDArray[0]) == 0, return SERVICE_FAILURE,
-            "SetPerms, setgid for %s failed. %d", service->name, errno);
+            "Service error %d %s, failed to set gid.", errno, service->name);
     }
     if (service->servPerm.gIDCnt > 1) {
         INIT_ERROR_CHECK(setgroups(service->servPerm.gIDCnt - 1, (const gid_t *)&service->servPerm.gIDArray[1]) == 0,
             return SERVICE_FAILURE,
-            "SetPerms, setgroups failed. errno = %d, gIDCnt=%d", errno, service->servPerm.gIDCnt);
+            "Service error %d %s, failed to set gid.", errno, service->name);
     }
 
     return SERVICE_SUCCESS;
@@ -156,20 +156,23 @@ static int ServiceCheck(const Service *service)
 
 static int SetPerms(const Service *service)
 {
-    INIT_CHECK_RETURN_VALUE(KeepCapability() == 0, SERVICE_FAILURE);
+    INIT_ERROR_CHECK(KeepCapability() == 0,
+        return INIT_EKEEPCAP,
+        "Service error %d %s, failed to set keep capability.", errno, service->name);
 
-    INIT_ERROR_CHECK(ServiceCheck(service) == SERVICE_SUCCESS, return SERVICE_FAILURE,
-        "set seccomp policy failed for service %s", service->name);
+    INIT_ERROR_CHECK(ServiceSetGid(service) == SERVICE_SUCCESS,
+        return INIT_EGIDSET,
+        "Service error %d %s, failed to set gid.", errno, service->name);
 
     // set seccomp policy before setuid
-    INIT_ERROR_CHECK(SetSystemSeccompPolicy(service) == SERVICE_SUCCESS, return SERVICE_FAILURE,
-        "set seccomp policy failed for service %s", service->name);
+    INIT_ERROR_CHECK(SetSystemSeccompPolicy(service) == SERVICE_SUCCESS,
+        return INIT_ESECCOMP,
+        "Service error %d %s, failed to set system seccomp policy.", errno, service->name);
 
     if (service->servPerm.uID != 0) {
-        if (setuid(service->servPerm.uID) != 0) {
-            INIT_LOGE("setuid of service: %s failed, uid = %d", service->name, service->servPerm.uID);
-            return SERVICE_FAILURE;
-        }
+        INIT_ERROR_CHECK(setuid(service->servPerm.uID) == 0,
+            return INIT_EUIDSET,
+            "Service error %d %s, failed to set uid.", errno, service->name);
     }
 
     struct __user_cap_header_struct capHeader;
@@ -194,10 +197,15 @@ static int SetPerms(const Service *service)
         "capset failed for service: %s, error: %d", service->name, errno);
     for (unsigned int i = 0; i < service->servPerm.capsCnt; ++i) {
         if (service->servPerm.caps[i] == FULL_CAP) {
-            return SetAllAmbientCapability();
+            int ret = SetAllAmbientCapability();
+            INIT_ERROR_CHECK(ret == 0,
+                return INIT_ECAP,
+                "Service error %d %s, failed to set ambient capability.", errno, service->name);
+            return 0;
         }
-        INIT_ERROR_CHECK(SetAmbientCapability(service->servPerm.caps[i]) == 0, return SERVICE_FAILURE,
-            "SetAmbientCapability failed for service: %s", service->name);
+        INIT_ERROR_CHECK(SetAmbientCapability(service->servPerm.caps[i]) == 0,
+            return INIT_ECAP,
+            "Service error %d %s, failed to set ambient capability.", errno, service->name);
     }
 #ifndef OHOS_LITE
     /*
@@ -260,30 +268,33 @@ void CloseServiceFds(Service *service, bool needFree)
     }
 }
 
-static void PublishHoldFds(Service *service)
+static int PublishHoldFds(Service *service)
 {
-    INIT_ERROR_CHECK(service != NULL, return, "Publish hold fds with invalid service");
-    char fdBuffer[MAX_FD_HOLDER_BUFFER] = {};
-    if (service->fdCount > 0 && service->fds != NULL) {
-        size_t pos = 0;
-        for (size_t i = 0; i < service->fdCount; i++) {
-            int fd = dup(service->fds[i]);
-            if (fd < 0) {
-                INIT_LOGE("Duplicate file descriptors of Service \' %s \' failed. err = %d", service->name, errno);
-                continue;
-            }
-            INIT_ERROR_CHECK(!(snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1,
-                "%d ", fd) < 0), return, "snprintf_s failed err=%d", errno);
-            pos = strlen(fdBuffer);
-        }
-        fdBuffer[pos - 1] = '\0'; // Remove last ' '
-        INIT_LOGI("fd buffer: [%s]", fdBuffer);
-        char envName[MAX_BUFFER_LEN] = {};
-        INIT_ERROR_CHECK(!(snprintf_s(envName, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, ENV_FD_HOLD_PREFIX"%s",
-            service->name) < 0), return, "snprintf_s failed err=%d", errno);
-        INIT_CHECK_ONLY_ELOG(!(setenv(envName, fdBuffer, 1) < 0), "Failed to set env %s", envName);
-        INIT_LOGI("File descriptors of Service \' %s \' published", service->name);
+    INIT_ERROR_CHECK(service != NULL, return INIT_EPARAMETER, "Publish hold fds with invalid service");
+    if (service->fdCount == 0 || service->fds == NULL) {
+        return 0;
     }
+    char fdBuffer[MAX_FD_HOLDER_BUFFER] = {};
+    char envName[MAX_BUFFER_LEN] = {};
+    int ret = snprintf_s(envName, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, ENV_FD_HOLD_PREFIX"%s", service->name);
+    INIT_ERROR_CHECK(ret >= 0, return INIT_EFORMAT,
+        "Service error %d %s, failed to format string for publish", ret, service->name);
+
+    size_t pos = 0;
+    for (size_t i = 0; i < service->fdCount; i++) {
+        int fd = dup(service->fds[i]);
+        if (fd < 0) {
+            INIT_LOGW("Service warning %d %s, failed to dup fd for publish", errno, service->name);
+            continue;
+        }
+        ret = snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1, "%d ", fd);
+        INIT_ERROR_CHECK(ret >= 0, return INIT_EFORMAT,
+            "Service error %d %s, failed to format fd for publish", ret, service->name);
+        pos += ret;
+    }
+    fdBuffer[pos - 1] = '\0'; // Remove last ' '
+    INIT_LOGI("Service %s publish fd [%s]", service->name, fdBuffer);
+    return setenv(envName, fdBuffer, 1);
 }
 
 static int BindCpuCore(Service *service)
@@ -315,45 +326,71 @@ static void ClearEnvironment(Service *service)
     return;
 }
 
-static int InitServiceProperties(Service *service)
+static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
 {
     INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
-    SetServiceEnterSandbox(service->pathArgs.argv[0], service->attribute);
-    INIT_CHECK_ONLY_ELOG(SetAccessToken(service) == SERVICE_SUCCESS,
-        "Set service %s access token failed", service->name);
+    int ret = SetServiceEnterSandbox(service, pathArgs->argv[0]);
+    if (ret != 0) {
+        INIT_LOGW("Service warning %d %s, failed to enter sandbox.", ret, service->name);
+        service->lastErrno = INIT_ESANDBOX;
+    }
+    ret = SetAccessToken(service);
+    if (ret != 0) {
+        INIT_LOGW("Service warning %d %s, failed to set access token.", ret, service->name);
+        service->lastErrno = INIT_EACCESSTOKEN;
+    }
+
     // deal start job
     if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
     }
     ClearEnvironment(service);
     if (!IsOnDemandService(service)) {
-        INIT_ERROR_CHECK(CreateServiceSocket(service) >= 0, return -1,
-            "service %s exit! create socket failed!", service->name);
+        INIT_ERROR_CHECK(CreateServiceSocket(service) == 0,
+            service->lastErrno = INIT_ESOCKET;
+            return INIT_ESOCKET,
+            "Service error %d %s, failed to create service socket.", errno, service->name);
     }
+    INIT_ERROR_CHECK(CreateServiceFile(service) == 0,
+        service->lastErrno = INIT_EFILE;
+        return INIT_EFILE,
+        "Service error %d %s, failed to create service file.", errno, service->name);
 
-    CreateServiceFile(service->fileCfg);
     if ((service->attribute & SERVICE_ATTR_CONSOLE)) {
-        OpenConsole();
+        INIT_ERROR_CHECK(OpenConsole() == 0,
+            service->lastErrno = INIT_ECONSOLE;
+            return INIT_ECONSOLE,
+            "Service error %d %s, failed to open console.", errno, service->name);
     }
 
-    PublishHoldFds(service);
+    INIT_ERROR_CHECK(PublishHoldFds(service) == 0,
+        service->lastErrno = INIT_EHOLDER;
+        return INIT_EHOLDER,
+        "Service error %d %s, failed to publish fd", errno, service->name);
+
     INIT_CHECK_ONLY_ELOG(BindCpuCore(service) == SERVICE_SUCCESS,
-        "binding core number failed for service %s", service->name);
+        "Service warning %d %s, failed to publish fd", errno, service->name);
 
     // permissions
-    INIT_ERROR_CHECK(SetPerms(service) == SERVICE_SUCCESS, return -1,
-        "service %s exit! set perms failed! err %d.", service->name, errno);
+    ret = SetPerms(service);
+    INIT_ERROR_CHECK(ret == SERVICE_SUCCESS,
+        service->lastErrno = ret;
+        return ret,
+        "Service error %d %s, failed to set permissions.", ret, service->name);
 
     // write pid
-    INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, return -1,
-        "service %s exit! write pid failed!", service->name);
+    INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS,
+        service->lastErrno = INIT_EWRITEPID;
+        return INIT_EWRITEPID,
+        "Service error %d %s, failed to write pid.", errno, service->name);
+
     PluginExecCmdByName("setServiceContent", service->name);
     return 0;
 }
 
 void EnterServiceSandbox(Service *service)
 {
-    INIT_ERROR_CHECK(InitServiceProperties(service) == 0, return, "Failed init service property");
+    INIT_ERROR_CHECK(InitServiceProperties(service, &service->pathArgs) == 0, return, "Failed init service property");
     if (service->importance != 0) {
         if (setpriority(PRIO_PROCESS, 0, service->importance) != 0) {
             INIT_LOGE("setpriority failed for %s, importance = %d, err=%d",
@@ -390,12 +427,11 @@ static void AddUpdateList(ServiceArgs *args, char *updateList)
     free(argvOrig);
 }
 
-void CheckModuleUpdate(ServiceArgs *args)
+static void CheckModuleUpdate(ServiceArgs *args)
 {
     INIT_LOGI("CheckModuleUpdate start");
     void *handle = dlopen("libmodule_update.z.so", RTLD_NOW);
     INIT_ERROR_CHECK(handle != NULL, return, "dlopen module update lib failed with error:%s", dlerror());
-    INIT_LOGI("dlopen success");
     typedef char* (*ExtFunc)(int, char **);
     ExtFunc func = (ExtFunc)dlsym(handle, "CheckModuleUpdate");
     if (func == NULL) {
@@ -509,21 +545,23 @@ static int32_t WaitForDebugger(void)
 }
 #endif
 
-int ServiceStart(Service *service)
+int ServiceStart(Service *service, ServiceArgs *pathArgs)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
-    INIT_ERROR_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "Service %s already started", service->name);
-    INIT_ERROR_CHECK(service->pathArgs.count > 0,
+    INIT_ERROR_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "Service info %s already started", service->name);
+    INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
         return SERVICE_FAILURE, "start service %s pathArgs is NULL.", service->name);
 
+    INIT_LOGI("Service info %s starting", service->name);
     if (service->attribute & SERVICE_ATTR_INVALID) {
         INIT_LOGE("start service %s invalid.", service->name);
         return SERVICE_FAILURE;
     }
     struct stat pathStat = { 0 };
     service->attribute &= (~(SERVICE_ATTR_NEED_RESTART | SERVICE_ATTR_NEED_STOP));
-    if (stat(service->pathArgs.argv[0], &pathStat) != 0) {
+    if (stat(pathArgs->argv[0], &pathStat) != 0) {
         service->attribute |= SERVICE_ATTR_INVALID;
+        service->lastErrno = INIT_EPATH;
         INIT_LOGE("start service %s invalid, please check %s.", service->name, service->pathArgs.argv[0]);
         return SERVICE_FAILURE;
     }
@@ -536,18 +574,12 @@ int ServiceStart(Service *service)
     int pid = fork();
     if (pid == 0) {
         // set selinux label by context
-        if (service->context.type != INIT_CONTEXT_MAIN) {
-            SetSubInitContext(&service->context, service->name);
+        if (service->context.type != INIT_CONTEXT_MAIN && SetSubInitContext(&service->context, service->name) != 0) {
+            service->lastErrno = INIT_ECONTENT;
         }
 
         if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
-            ServiceArgs* args = NULL;
-            if (service->extraArgs.argv != NULL && service->extraArgs.count > 0) {
-                args = &service->extraArgs;
-            } else {
-                args = &service->pathArgs;
-            }
-            CheckModuleUpdate(args);
+            CheckModuleUpdate(pathArgs);
         }
 #ifdef IS_DEBUG_VERSION
         // only the image is debuggable and need debug, then wait for debugger
@@ -556,15 +588,18 @@ int ServiceStart(Service *service)
         }
 #endif
         // fail must exit sub process
-        INIT_ERROR_CHECK(InitServiceProperties(service) == 0,
-            _exit(PROCESS_EXIT_CODE), "Failed init service property");
-        ServiceExec(service);
-        _exit(PROCESS_EXIT_CODE);
+        int ret = InitServiceProperties(service, pathArgs);
+        INIT_ERROR_CHECK(ret == 0,
+            _exit(service->lastErrno), "Service error %d %s, failed to set properties", ret, service->name);
+
+        (void)ServiceExec(service, pathArgs);
+        _exit(service->lastErrno);
     } else if (pid < 0) {
-        INIT_LOGE("start service %s fork failed!", service->name);
+        INIT_LOGE("Service error %d %s, failed to fork.", errno, service->name);
+        service->lastErrno = INIT_EFORK;
         return SERVICE_FAILURE;
     }
-    INIT_LOGI("Service %s(pid %d) started", service->name, pid);
+    INIT_LOGI("Service info %s(pid %d) started", service->name, pid);
     service->pid = pid;
     NotifyServiceChange(service, SERVICE_STARTED);
 #ifndef OHOS_LITE
@@ -685,12 +720,12 @@ static void ServiceReapHookExecute(Service *service)
 void ServiceReap(Service *service)
 {
     INIT_CHECK(service != NULL, return);
-    INIT_LOGI("Reap service %s, pid %d.", service->name, service->pid);
+    INIT_LOGI("Service info %s reap pid %d.", service->name, service->pid);
     service->pid = -1;
     NotifyServiceChange(service, SERVICE_STOPPED);
 
     if (service->attribute & SERVICE_ATTR_INVALID) {
-        INIT_LOGE("Reap service %s invalid.", service->name);
+        INIT_LOGE("Service error %s invalid service.", service->name);
         return;
     }
 
@@ -728,13 +763,12 @@ void ServiceReap(Service *service)
     }
     if (service->attribute & SERVICE_ATTR_CRITICAL) { // critical
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
-            INIT_LOGE("Critical service \" %s \" crashed %d times, rebooting system",
-                service->name, service->crashCount);
+            INIT_LOGE("Service error %s critical service crashed.", service->name, service->crashCount);
             ExecReboot("panic");
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
-            INIT_LOGE("Service name=%s, crash %d times, no more start.", service->name, service->crashCount);
+            INIT_LOGE("Service error %s crash %d times, no more start.", service->name, service->crashCount);
             return;
         }
     }
@@ -745,7 +779,7 @@ void ServiceReap(Service *service)
     if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_RESTART]);
     }
-    ret = ServiceStart(service);
+    ret = ServiceStart(service, &service->pathArgs);
     INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "reap service %s start failed!", service->name);
     service->attribute &= (~SERVICE_ATTR_NEED_RESTART);
 }
@@ -839,7 +873,7 @@ static void ServiceTimerStartProcess(const TimerHandle handler, void *context)
     // Before start the service, stop service timer.
     // make sure it will not enter timer handler next time.
     ServiceStopTimer(service);
-    int ret = ServiceStart(service);
+    int ret = ServiceStart(service, &service->pathArgs);
     if (ret != SERVICE_SUCCESS) {
         INIT_LOGE("Start service \' %s \' in timer failed", service->name);
     }

@@ -175,6 +175,8 @@ static int CreateWorkSpace(int onlyRead)
 #else
     ret = AddWorkSpace(WORKSPACE_NAME_NORMAL, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_MAX);
     PARAM_CHECK(ret == 0, return -1, "Failed to add dac workspace");
+    ret = OpenWorkSpace(WORKSPACE_INDEX_DAC, onlyRead);
+    PARAM_CHECK(ret == 0, return -1, "Failed to open dac workspace");
     paramSpace->maxLabelIndex = 1;
 #endif
     return ret;
@@ -182,9 +184,8 @@ static int CreateWorkSpace(int onlyRead)
 
 INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
 {
-    if (CheckNeedInit(onlyRead, ops) == 0) {
-        return 0;
-    }
+    PARAM_ONLY_CHECK(CheckNeedInit(onlyRead, ops) != 0, return 0);
+
     paramMutexEnvInit();
     if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         g_paramWorkSpace.maxSpaceCount = PARAM_DEF_SELINUX_LABEL;
@@ -205,8 +206,6 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
         ret = AllocSpaceMemory(g_paramWorkSpace.maxLabelIndex);
         PARAM_CHECK(ret == 0, return -1, "Failed to alloc space size");
 
-        // load user info for dac
-        LoadGroupUser();
         // add default dac policy
         ParamAuditData auditData = {0};
         auditData.name = "#";
@@ -214,6 +213,8 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
         auditData.dacData.uid = DAC_DEFAULT_USER;
         auditData.dacData.mode = DAC_DEFAULT_MODE; // 0774 default mode
         auditData.dacData.paramType = PARAM_TYPE_STRING;
+        auditData.memberNum = 1;
+        auditData.members[0] = DAC_DEFAULT_GROUP;
 #ifdef PARAM_SUPPORT_SELINUX
         auditData.selinuxIndex = INVALID_SELINUX_INDEX;
 #endif
@@ -337,12 +338,9 @@ STATIC_INLINE int CheckAndExtendSpace(ParamWorkSpace *paramSpace, const char *na
 INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
-    PARAM_CHECK(paramSpace != NULL && paramSpace->workSpace != NULL,
-        return -1, "Invalid workspace index %u", index);
+    PARAM_CHECK(paramSpace != NULL && paramSpace->workSpace != NULL, return -1, "Invalid workspace index %u", index);
     WorkSpace *workSpace = NULL;
-    if (index < paramSpace->maxSpaceCount) {
-        workSpace = paramSpace->workSpace[index];
-    }
+    PARAM_ONLY_CHECK(index >= paramSpace->maxSpaceCount, workSpace = paramSpace->workSpace[index]);
     PARAM_CHECK(workSpace != NULL, return 0, "Invalid index %d", index);
     int ret = 0;
     uint32_t rwSpaceLock = 0;
@@ -359,8 +357,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
 
     ATOMIC_STORE_EXPLICIT(&workSpace->rwSpaceLock, rwSpaceLock | WORKSPACE_STATUS_IN_PROCESS, MEMORY_ORDER_RELEASE);
     if (workSpace->area == NULL) {
-        PARAM_LOGI("OpenWorkSpace %s index %d spaceSize: %u onlyRead %s",
-            workSpace->fileName, workSpace->spaceIndex,
+        PARAM_LOGI("OpenWorkSpace %s index %d spaceSize: %u onlyRead %s", workSpace->fileName, workSpace->spaceIndex,
             workSpace->spaceSize, readOnly ? "true" : "false");
         ret = InitWorkSpace(workSpace, readOnly, workSpace->spaceSize);
         if (ret != 0) {
@@ -413,14 +410,12 @@ STATIC_INLINE int ReadParamWithCheck(WorkSpace **workspace, const char *name, ui
     return ret;
 }
 
-static int CheckUserInGroup(WorkSpace *space, gid_t groupId, uid_t uid)
+static int CheckUserInGroup(WorkSpace *space, const ParamSecurityNode *node, uid_t uid)
 {
-    char buffer[USER_BUFFER_LEN] = {0};
-    int ret = PARAM_SPRINTF(buffer, sizeof(buffer), GROUP_FORMAT, groupId, uid);
-    PARAM_CHECK(ret >= 0, return -1, "Failed to format name for "GROUP_FORMAT, groupId, uid);
-    ParamNode *node = GetParamNode(WORKSPACE_INDEX_BASE, buffer);
-    if (node != NULL) {
-        return 0;
+    for (uint32_t i = 0; i < node->memberNum; i++) {
+        if (node->members[i] == uid) {
+            return 0;
+        }
     }
     return -1;
 }
@@ -485,7 +480,7 @@ STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
         return DAC_RESULT_PERMISSION;
     }
     // 4, check user in group
-    if (CheckUserInGroup(space, node->gid, srcLabel->cred.uid) == 0) {
+    if (CheckUserInGroup(space, node, srcLabel->cred.uid) == 0) {
         localMode = (mode & (DAC_READ | DAC_WRITE | DAC_WATCH)) >> DAC_GROUP_START;
         if ((node->mode & localMode) != 0) {
             return DAC_RESULT_PERMISSION;

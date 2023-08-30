@@ -81,7 +81,3 @@ INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
     }
     return ret;
 }
-
-INIT_LOCAL_API void LoadGroupUser(void)
-{
-}

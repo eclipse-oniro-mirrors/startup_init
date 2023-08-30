@@ -16,6 +16,7 @@
 
 #include <errno.h>
 
+#include "init_error.h"
 #include "init_hook.h"
 #include "init_module_engine.h"
 #include "plugin_adapter.h"
@@ -64,19 +65,20 @@ static int SetServiceContent(int id, const char *name, int argc, const char **ar
 {
     PLUGIN_CHECK(name != NULL && argc >= 1 && argv != NULL, return -1, "Invalid parameter");
     ServiceExtData *data = GetServiceExtData(argv[0], HOOK_ID_SELINUX);
+    char *label = "u:r:limit_domain:s0";
     if (data != NULL) {
-        if (setexeccon((char *)data->data) < 0) {
-            PLUGIN_LOGE("failed to set service %s's secon (%s).", argv[0], (char *)data->data);
-#ifndef STARTUP_INIT_TEST
-            _exit(PROCESS_EXIT_CODE);
-#endif
-        } else {
-            PLUGIN_LOGV("Set content %s to %s.", (char *)data->data, argv[0]);
-        }
+        label = (char *)data->data;
     } else {
-        PLUGIN_CHECK(!(setexeccon("u:r:limit_domain:s0") < 0), _exit(PROCESS_EXIT_CODE),
-            "failed to set service %s's secon (%s).", argv[0], "u:r:limit_domain:s0");
         PLUGIN_LOGE("Please set secon field in service %s's cfg file, limit_domain will be blocked", argv[0]);
+    }
+
+    if (setexeccon(label) < 0) {
+        PLUGIN_LOGE("Service error %d %s, failed to set secon %s.", errno, argv[0], label);
+#ifndef STARTUP_INIT_TEST
+        _exit(INIT_EEXEC_CONTENT);
+#endif
+    } else {
+        PLUGIN_LOGV("Service info %s, set secon %s.", argv[0], label);
     }
     return 0;
 }

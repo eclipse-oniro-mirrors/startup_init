@@ -63,9 +63,9 @@ STATIC_INLINE ParamTrieNode *FindTrieNode_(
 #endif
 
 #define GetWorkSpaceSize(workSpace)     \
-    (workSpace == NULL || workSpace->area == NULL ||     \
-        workSpace->area->spaceSizeOffset == 0 ||    \
-        workSpace->area->spaceSizeOffset >= workSpace->area->dataSize) ? NULL : \
+    ((workSpace == NULL) || (workSpace->area == NULL) ||     \
+        (workSpace->area->spaceSizeOffset == 0) ||    \
+        (workSpace->area->spaceSizeOffset >= workSpace->area->dataSize)) ? NULL : \
         (WorkSpaceSize*)(workSpace->area->data + workSpace->area->spaceSizeOffset)
 
 #ifdef __cplusplus

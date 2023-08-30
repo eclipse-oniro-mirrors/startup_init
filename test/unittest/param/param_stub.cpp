@@ -595,11 +595,13 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
     PARAM_LOGI("TestSetSelinuxOps \n");
 #ifndef OHOS_LITE
     TestBeforeInit();
+#endif
     SystemPrepare();
+#ifndef __LITEOS_A__
     SystemInit();
+#endif
     PARAM_LOGI("SystemConfig \n");
     SystemConfig();
-#endif
     PrepareInitUnitTestEnv();
 }
 
