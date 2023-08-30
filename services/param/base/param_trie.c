@@ -237,7 +237,7 @@ INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAu
 {
     PARAM_CHECK(CheckWorkSpace(workSpace) == 0, return 0, "Invalid workSpace");
     PARAM_CHECK(auditData != NULL, return 0, "Invalid auditData");
-    uint32_t realLen = sizeof(ParamSecurityNode);
+    uint32_t realLen = sizeof(ParamSecurityNode) + sizeof(uid_t) * auditData->memberNum;
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize, return 0,
         "Failed to allocate currOffset %u, dataSize %u datalen %u",
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);
@@ -251,6 +251,13 @@ INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAu
 #else
     node->selinuxIndex = 0;
 #endif
+    if (auditData->memberNum > 0) {
+        // copy member
+        int ret = PARAM_MEMCPY(node->members,
+            realLen - sizeof(ParamSecurityNode), auditData->members, auditData->memberNum * sizeof(uid_t));
+        PARAM_CHECK(ret == 0, return 0, "Failed to copy members");
+    }
+    node->memberNum = auditData->memberNum;
     uint32_t offset = workSpace->area->currOffset;
     workSpace->area->currOffset += realLen;
     workSpace->area->securityNodeCount++;
