@@ -26,36 +26,40 @@
 
 static SignalHandle g_sigHandle = NULL;
 
+static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
+{
+    int procStat = 0;
+    pid_t sigPID = waitpid(-1, &procStat, WNOHANG);
+    if (sigPID <= 0) {
+        return sigPID;
+    }
+    Service* service = GetServiceByPid(sigPID);
+    const char *serviceName = (service == NULL) ? "Unknown" : service->name;
+
+    // check child process exit status
+    if (WIFSIGNALED(procStat)) {
+        INIT_LOGE("Child process %s(pid %d) exit with signal : %d", serviceName, sigPID, WTERMSIG(procStat));
+    } else if (WIFEXITED(procStat)) {
+        INIT_LOGE("Child process %s(pid %d) exit with code : %d", serviceName, sigPID, WEXITSTATUS(procStat));
+        if (service != NULL) {
+            service->lastErrno = WEXITSTATUS(procStat);
+        }
+    }
+    CmdServiceProcessDelClient(sigPID);
+    StopSubInit(sigPID);
+    INIT_LOGW("Service warning %s, SIGCHLD received, pid:%d uid:%d status:%d.",
+        serviceName, sigPID, siginfo->ssi_uid, procStat);
+    CheckWaitPid(sigPID);
+    ServiceReap(service);
+    return sigPID;
+}
+
 INIT_STATIC void ProcessSignal(const struct signalfd_siginfo *siginfo)
 {
     switch (siginfo->ssi_signo) {
         case SIGCHLD: {
-            pid_t sigPID;
-            int procStat = 0;
-            while (1) {
-                sigPID = waitpid(-1, &procStat, WNOHANG);
-                if (sigPID <= 0) {
-                    break;
-                }
-                Service* service = GetServiceByPid(sigPID);
-                // check child process exit status
-                if (WIFSIGNALED(procStat)) {
-                    INIT_LOGE("Child process %s(pid %d) exit with signal : %d",
-                        service == NULL ? "Unknown" : service->name, sigPID, WTERMSIG(procStat));
-                } else if (WIFEXITED(procStat)) {
-                    INIT_LOGE("Child process %s(pid %d) exit with code : %d",
-                        service == NULL ? "Unknown" : service->name, sigPID, WEXITSTATUS(procStat));
-                } else {
-                    INIT_LOGE("Child process %s(pid %d) exit with invalid status : %d",
-                        service == NULL ? "Unknown" : service->name, sigPID, procStat);
-                }
-                CmdServiceProcessDelClient(sigPID);
-                StopSubInit(sigPID);
-                INIT_LOGI("SigHandler, SIGCHLD received, Service:%s pid:%d uid:%d status:%d.",
-                    service == NULL ? "Unknown" : service->name,
-                    sigPID, siginfo->ssi_uid, procStat);
-                CheckWaitPid(sigPID);
-                ServiceReap(service);
+            while (HandleSigChild(siginfo) > 0) {
+                ;
             }
             break;
         }

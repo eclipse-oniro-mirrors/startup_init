@@ -19,7 +19,9 @@
 #include <sys/statvfs.h>
 
 #include "init_file.h"
+#include "init_service.h"
 #include "init_service_file.h"
+#include "init_service_manager.h"
 #include "param_stub.h"
 #include "securec.h"
 
@@ -46,27 +48,22 @@ HWTEST_F(ServiceFileUnitTest, TestServiceFile, TestSize.Level1)
     fileOpt->gid = 1000;
     fileOpt->fd = -1;
     fileOpt->perm = 0770;
-    if (strncpy_s(fileOpt->fileName, strlen(fileName) + 1, fileName, strlen(fileName)) != 0) {
-        free(fileOpt);
-        fileOpt = nullptr;
-        FAIL();
-    }
-    CreateServiceFile(fileOpt);
-    int ret = GetControlFile("/data/filetest");
+    int ret = strncpy_s(fileOpt->fileName, strlen(fileName) + 1, fileName, strlen(fileName));
+    EXPECT_EQ(ret, 0);
+    Service *service = AddService("test_service8");
+    ASSERT_NE(nullptr, service);
+
+    service->fileCfg = fileOpt;
+    CreateServiceFile(service);
+    ret = GetControlFile("/data/filetest");
     EXPECT_NE(ret, -1);
-    if (strncpy_s(fileOpt->fileName, strlen(fileName) + 1, "fileName", strlen("fileName")) != 0) {
-        free(fileOpt);
-        fileOpt = nullptr;
-        FAIL();
-    }
+    ret = strncpy_s(fileOpt->fileName, strlen(fileName) + 1, "fileName", strlen("fileName"));
+    EXPECT_EQ(ret, 0);
     fileOpt->fd = 100; // 100 is fd
-    CreateServiceFile(fileOpt);
+    CreateServiceFile(service);
     CloseServiceFile(fileOpt);
-    if (strncpy_s(fileOpt->fileName, strlen(fileName) + 1, "/dev/filetest", strlen("/dev/filetest")) != 0) {
-        free(fileOpt);
-        fileOpt = nullptr;
-        FAIL();
-    }
+    ret = strncpy_s(fileOpt->fileName, strlen(fileName) + 1, "/dev/filetest", strlen("/dev/filetest"));
+    EXPECT_EQ(ret, 0);
     char *wrongName = (char *)malloc(PATH_MAX);
     ASSERT_NE(wrongName, nullptr);
     EXPECT_EQ(memset_s(wrongName, PATH_MAX, 1, PATH_MAX), 0);
@@ -78,13 +75,13 @@ HWTEST_F(ServiceFileUnitTest, TestServiceFile, TestSize.Level1)
     GetControlFile("testPath");
     EXPECT_EQ(setenv("OHOS_FILE_ENV_PREFIX_testPath1", "aaaaaaaa", 0), 0);
     GetControlFile("testPath1");
+    free(wrongName);
 
     fileOpt->fd = -1;
-    CreateServiceFile(fileOpt);
+    CreateServiceFile(service);
     CloseServiceFile(fileOpt);
     free(fileOpt);
-    free(wrongName);
-    fileOpt = nullptr;
-    wrongName = nullptr;
+    service->fileCfg = nullptr;
+    ReleaseService(service);
 }
 }

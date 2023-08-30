@@ -95,7 +95,7 @@ int ParamEventSend(const ParamTaskPtr stream, uint64_t eventId, const char *cont
 void *ParamGetTaskUserData(const ParamTaskPtr stream);
 
 int FillParamMsgContent(const ParamMessage *request, uint32_t *start, int type, const char *value, uint32_t length);
-ParamMsgContent *GetNextContent(const ParamMessage *reqest, uint32_t *offset);
+ParamMsgContent *GetNextContent(const ParamMessage *request, uint32_t *offset);
 ParamMessage *CreateParamMessage(int type, const char *name, uint32_t msgSize);
 
 int ConnectServer(int fd, const char *servername);

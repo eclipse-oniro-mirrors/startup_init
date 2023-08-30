@@ -78,13 +78,11 @@ uid_t DecodeUid(const char *name)
         if (!StringToUint(name, &uid)) {
             return uid;
         } else {
-            INIT_LOGE("Failed to decode uid for %s", name);
             return -1;
         }
     }
     struct passwd *p = getpwnam(name);
     if (p == NULL) {
-        INIT_LOGE("Failed to decode uid for %s", name);
         return -1;
     }
     return p->pw_uid;
@@ -103,7 +101,6 @@ gid_t DecodeGid(const char *name)
         if (!StringToUint(name, &gid)) {
             return gid;
         } else {
-            INIT_LOGE("Failed to decode gid for %s", name);
             return -1;
         }
     }
@@ -134,7 +131,6 @@ char *ReadFileToBuf(const char *configFile)
     do {
         if (stat(configFile, &fileStat) != 0 ||
             fileStat.st_size <= 0 || fileStat.st_size > MAX_JSON_FILE_LEN) {
-            INIT_LOGE("Unexpected config file \" %s \", check if it exist. if exist, check file size", configFile);
             break;
         }
         fd = fopen(configFile, "r");
@@ -496,7 +492,6 @@ int CheckAndCreatFile(const char *file, mode_t mode)
                 BEGET_LOGE("Failed create %s, err=%d", file, errno);
                 return -1;
             } else {
-                BEGET_LOGI("Success create %s", file);
                 close(fd);
             }
         } else {
@@ -588,17 +583,17 @@ int StringReplaceChr(char *strl, char oldChr, char newChr)
     return 0;
 }
 
-void RedirectStdio(int fd)
-{
 #ifndef __LITEOS_M__
+static void RedirectStdio(int fd)
+{
     const int stdError = 2;
     dup2(fd, 0);
     dup2(fd, 1);
     dup2(fd, stdError); // Redirect fd to 0, 1, 2
-#endif
 }
+#endif
 
-void OpenConsole(void)
+int OpenConsole(void)
 {
 #ifndef __LITEOS_M__
     setsid();
@@ -609,9 +604,11 @@ void OpenConsole(void)
         RedirectStdio(fd);
         close(fd);
     } else {
-        INIT_LOGE("Open /dev/console failed. err = %d", errno);
+        return errno;
     }
-    return;
+    return 0;
+#else
+    return 0;
 #endif
 }
 

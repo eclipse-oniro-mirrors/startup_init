@@ -69,22 +69,26 @@ static int SetFileEnv(int fd, const char *pathName)
     return 0;
 }
 
-void CreateServiceFile(ServiceFile *fileOpt)
+int CreateServiceFile(Service *service)
 {
-    INIT_CHECK(fileOpt != NULL, return);
-    ServiceFile *tmpFile = fileOpt;
+    INIT_CHECK(service != NULL, return INIT_EPARAMETER);
+    ServiceFile *tmpFile = service->fileCfg;
+    int ret = 0;
     while (tmpFile != NULL) {
         int fd = CreateFile(tmpFile);
         if (fd < 0) {
-            INIT_LOGE("Failed Create File err=%d ", errno);
+            ret++;
+            INIT_LOGE("Service error %d %s, failed to create file", errno, service->name, tmpFile->fileName);
             tmpFile = tmpFile->next;
             continue;
         }
-        int ret = SetFileEnv(fd, tmpFile->fileName);
-        INIT_CHECK_ONLY_ELOG(ret >= 0, "Failed Set File Env");
+        if (SetFileEnv(fd, tmpFile->fileName) != 0) {
+            ret++;
+            INIT_LOGE("Service error %d %s, failed to set env for file", errno, service->name, tmpFile->fileName);
+        }
         tmpFile = tmpFile->next;
     }
-    return;
+    return ret > 0 ? INIT_EFILE : 0;
 }
 
 void CloseServiceFile(ServiceFile *fileOpt)

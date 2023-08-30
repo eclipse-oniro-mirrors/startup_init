@@ -25,6 +25,7 @@
 #include "param_utils.h"
 #include "param_base.h"
 
+#define MAX_MEMBER_IN_GROUP  128
 #define MAX_BUF_SIZE  1024
 #define INVALID_MODE 0550
 #ifdef STARTUP_INIT_TEST
@@ -124,30 +125,76 @@ static int FreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
     return 0;
 }
 
+static int DacGetGroupMember(gid_t gid, uid_t *member, uint32_t *memberSize)
+{
+    uint32_t inputLen = *memberSize;
+    *memberSize = 0;
+    struct group *data = getgrgid(gid);
+    if (data == NULL || data->gr_mem == NULL) {
+        return 0;
+    }
+    int i = 0;
+    int memIndex = 0;
+    while (data->gr_mem[i]) {
+        uid_t uid;
+        GetUserIdByName(&uid, data->gr_mem[i]);
+        if (INVALID_UID(uid)) {
+            i++;
+            continue;
+        }
+        if ((memIndex + 1) > inputLen) {
+            PARAM_LOGE("Not enough memory for uid member %u", gid);
+            break;
+        }
+        member[memIndex++] = uid;
+        i++;
+    }
+    uid_t uid = 0;
+    GetUserIdByName(&uid, data->gr_name);
+    if (!INVALID_UID(uid) && ((memIndex + 1) < inputLen)) {
+        member[memIndex++] = uid;
+    }
+    *memberSize = memIndex;
+    return 0;
+}
+
 static int LoadOneParam_(const uint32_t *context, const char *name, const char *value)
 {
-    ParamAuditData auditData = {0};
-    auditData.dacData.gid = -1;
-    auditData.dacData.uid = -1;
-    auditData.name = name;
-    int ret = GetParamDacData(&auditData.dacData, value);
+    ParamAuditData *auditData = (ParamAuditData *)context;
+    auditData->dacData.gid = -1;
+    auditData->dacData.uid = -1;
+    auditData->name = name;
+    int ret = GetParamDacData(&auditData->dacData, value);
     PARAM_CHECK(ret == 0, return -1, "Failed to get param info %d %s", ret, name);
-    if (INVALID_UID(auditData.dacData.gid) || INVALID_UID(auditData.dacData.uid)) {
-        PARAM_LOGW("Invalid dac for '%s' gid %d uid %d", name, auditData.dacData.gid, auditData.dacData.uid);
+    if (INVALID_UID(auditData->dacData.gid) || INVALID_UID(auditData->dacData.uid)) {
+        PARAM_LOGW("Invalid dac for '%s' gid %d uid %d", name, auditData->dacData.gid, auditData->dacData.uid);
     }
-    AddSecurityLabel(&auditData);
+    // get uid from group
+    auditData->memberNum = MAX_MEMBER_IN_GROUP;
+    ret = DacGetGroupMember(auditData->dacData.gid, auditData->members, &auditData->memberNum);
+    if (ret != 0) {
+        auditData->memberNum = 1;
+        auditData->members[0] = auditData->dacData.gid;
+    }
+    AddSecurityLabel(auditData);
     return 0;
 }
 
 static int LoadParamLabels(const char *fileName)
 {
+    ParamAuditData *auditData = (ParamAuditData *)calloc(1,
+        sizeof(ParamAuditData) + sizeof(uid_t) * MAX_MEMBER_IN_GROUP);
+    if (auditData == NULL) {
+        PARAM_LOGE("Failed to alloc memory %s", fileName);
+        return 0;
+    }
     uint32_t infoCount = 0;
     FILE *fp = fopen(fileName, "r");
     const uint32_t buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 size
     char *buff = (char *)calloc(1, buffSize);
     while (fp != NULL && buff != NULL && fgets(buff, buffSize, fp) != NULL) {
         buff[buffSize - 1] = '\0';
-        int ret = SplitParamString(buff, NULL, 0, LoadOneParam_, NULL);
+        int ret = SplitParamString(buff, NULL, 0, LoadOneParam_, (const uint32_t *)auditData);
         if (ret != 0) {
             PARAM_LOGE("Failed to split string %s fileName %s", buff, fileName);
             continue;
@@ -160,6 +207,9 @@ static int LoadParamLabels(const char *fileName)
     }
     if (buff != NULL) {
         free(buff);
+    }
+    if (auditData != NULL) {
+        free(auditData);
     }
     return 0;
 }
@@ -236,128 +286,4 @@ INIT_LOCAL_API int RegisterSecurityDacOps(ParamSecurityOps *ops, int isInit)
         ops->securityGetLabel = DacGetParamSecurityLabel;
     }
     return ret;
-}
-
-static void AddGroupUser(const char *userName, gid_t gid)
-{
-    if (userName == NULL || strlen(userName) == 0) {
-        return;
-    }
-    uid_t uid = 0;
-    GetUserIdByName(&uid, userName);
-    PARAM_LOGV("Add group user '%s' gid %d uid %d", userName, gid, uid);
-    if (INVALID_UID(gid) || INVALID_UID(uid)) {
-        PARAM_LOGW("Invalid user for '%s' gid %d uid %d", userName, gid, uid);
-        return;
-    }
-    char buffer[USER_BUFFER_LEN] = {0};
-    int ret = PARAM_SPRINTF(buffer, sizeof(buffer), GROUP_FORMAT, gid, uid);
-    PARAM_CHECK(ret >= 0, return, "Failed to format name for %d.%d", gid, uid);
-    (void)AddParamEntry(WORKSPACE_INDEX_BASE, PARAM_TYPE_STRING, buffer, "1");
-}
-
-#ifdef PARAM_DECODE_GROUPID_FROM_FILE
-static char *UserNameTrim(char *str)
-{
-    if (str == NULL) {
-        return NULL;
-    }
-    size_t len = strlen(str);
-    if (str == NULL || len == 0) {
-        return NULL;
-    }
-    char *end = str + len - 1;
-    while (end >= str && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r')) {
-        *end = '\0';
-        end--;
-    }
-    len = strlen(str);
-    char *head = str;
-    end = str + strlen(str);
-    while (head < end && (*head == ' ' || *head == '\t' || *head == '\n' || *head == '\r')) {
-        *head = '\0';
-        head++;
-    }
-    if (strlen(str) == 0) {
-        return NULL;
-    }
-    return head;
-}
-
-static void LoadGroupUser_(void)
-{
-    // decode group file
-    FILE *fp = fopen(GROUP_FILE_PATH, "r");
-    const uint32_t buffSize = 1024;  // 1024 max buffer for decode
-    char *buff = (char *)calloc(1, buffSize);
-    while (fp != NULL && buff != NULL && fgets(buff, buffSize, fp) != NULL) {
-        buff[buffSize - 1] = '\0';
-        // deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account
-        char *buffer = UserNameTrim(buff);
-        PARAM_CHECK(buffer != NULL, continue, "Invalid buffer %s", buff);
-
-        PARAM_LOGV("LoadGroupUser_ '%s'", buffer);
-        // group name
-        char *groupName = strtok(buffer, ":");
-        groupName = UserNameTrim(groupName);
-        PARAM_CHECK(groupName != NULL, continue, "Invalid group name %s", buff);
-        gid_t gid = -1;
-        GetGroupIdByName(&gid, groupName);
-
-        // skip x
-        (void)strtok(NULL, ":");
-        char *strGid = strtok(NULL, ":");
-        char *userName = strGid + strlen(strGid) + 1;
-        userName = UserNameTrim(userName);
-        PARAM_LOGV("LoadGroupUser_ %s userName '%s'", groupName, userName);
-        if (userName == NULL) {
-            AddGroupUser(groupName, gid);
-            continue;
-        }
-        char *tmp = strtok(userName, ",");
-        while (tmp != NULL) {
-            PARAM_LOGV("LoadGroupUser_ %s userName '%s'", groupName, tmp);
-            AddGroupUser(UserNameTrim(tmp), gid);
-            userName = tmp + strlen(tmp) + 1;
-            tmp = strtok(NULL, ",");
-        }
-        // last username
-        if (userName != NULL) {
-            AddGroupUser(UserNameTrim(userName), gid);
-        }
-    }
-    if (fp != NULL) {
-        (void)fclose(fp);
-    }
-    if (buff != NULL) {
-        free(buff);
-    }
-    return;
-}
-#else
-static void LoadGroupUser_(void)
-{
-    struct group *data = NULL;
-    while ((data = getgrent()) != NULL) {
-        if (data->gr_name == NULL || data->gr_mem == NULL) {
-            continue;
-        }
-        if (data->gr_mem[0] == NULL) { // default user in group
-            AddGroupUser(data->gr_name, data->gr_gid);
-            continue;
-        }
-        int index = 0;
-        while (data->gr_mem[index]) { // user in this group
-            AddGroupUser(data->gr_mem[index], data->gr_gid);
-            index++;
-        }
-    }
-    endgrent();
-}
-#endif
-
-INIT_LOCAL_API void LoadGroupUser(void)
-{
-    PARAM_LOGV("LoadGroupUser ");
-    LoadGroupUser_();
 }
