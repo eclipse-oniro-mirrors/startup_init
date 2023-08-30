@@ -101,6 +101,7 @@ Service *AddService(const char *name)
     service->cpuSet = NULL;
     service->pid = -1;
     service->context.type = INIT_CONTEXT_MAIN;
+    service->lastErrno = INIT_OK;
     OH_ListInit(&service->extDataNode);
     g_serviceSpace.serviceCount++;
     INIT_LOGV("AddService %s", node->name);
@@ -266,7 +267,7 @@ static int GetGid(cJSON *json, gid_t *gid, Service *curServ)
         INIT_LOGW("Service %s with invalid gid configuration", curServ->name);
         *gid = -1; // Invalid gid, set as -1
     }
-    INIT_ERROR_CHECK(*gid != (gid_t)(-1), return SERVICE_FAILURE, "Failed to get gid for %s", curServ->name);
+    INIT_CHECK_RETURN_VALUE(*gid != (gid_t)(-1), SERVICE_FAILURE);
     return SERVICE_SUCCESS;
 }
 
@@ -286,14 +287,15 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
     if (curServ->servPerm.gIDArray != NULL) {
         free(curServ->servPerm.gIDArray);
     }
-    curServ->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t) * gidCount);
+    curServ->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t) * (gidCount + 1));
     INIT_ERROR_CHECK(curServ->servPerm.gIDArray != NULL, return SERVICE_FAILURE, "Failed to malloc err=%d", errno);
     curServ->servPerm.gIDCnt = gidCount;
 
     gid_t gid;
     if (!cJSON_IsArray(arrItem)) {
         int ret = GetGid(arrItem, &gid, curServ);
-        INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Parse service %s gid failed.", curServ->name);
+        INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE,
+            "Service error %s, failed to get gid from %s.", curServ->name, cJSON_Print(arrItem));
         curServ->servPerm.gIDArray[0] = gid;
         return SERVICE_SUCCESS;
     }
@@ -302,10 +304,13 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
         cJSON *item = cJSON_GetArrayItem(arrItem, i);
         int ret = GetGid(item, &gid, curServ);
         if (ret != 0) {
-            INIT_LOGW("Parse service %s gid failed from item %s.", curServ->name, cJSON_Print(item));
+            INIT_LOGW("Service warning %s, failed to get gid from %s.", curServ->name, cJSON_Print(item));
             continue;
         }
         curServ->servPerm.gIDArray[gidArrayIndex++] = gid;
+    }
+    if (gidArrayIndex == 0) {
+        curServ->servPerm.gIDArray[gidArrayIndex++] = curServ->servPerm.uID;
     }
     curServ->servPerm.gIDCnt = gidArrayIndex;
     return SERVICE_SUCCESS;
@@ -319,7 +324,7 @@ static int GetServiceAttr(const cJSON *curArrItem, Service *curServ, const char 
         return SERVICE_SUCCESS;
     }
     INIT_ERROR_CHECK(cJSON_IsNumber(filedJ), return SERVICE_FAILURE,
-        "%s is null or is not a number, service name is %s", attrName, curServ->name);
+        "Service error %s is null or is not a number %s", curServ->name, attrName);
     curServ->attribute &= ~flag;
     int value = (int)cJSON_GetNumberValue(filedJ);
     if (processAttr == NULL) {
@@ -934,7 +939,7 @@ static void ProcessConsoleEvent(const WatcherHandle handler, int fd, uint32_t *e
         return;
     }
 
-    if (ServiceStart(service) != SERVICE_SUCCESS) {
+    if (ServiceStart(service, &service->pathArgs) != SERVICE_SUCCESS) {
         INIT_LOGE("Start console service failed");
     }
     return;
@@ -1022,7 +1027,8 @@ void ParseAllServices(const cJSON *fileRoot, const ConfigContext *context)
         }
         int ret = ParseOneService(curItem, service);
         if (ret != SERVICE_SUCCESS) {
-            ReleaseService(service);
+            INIT_LOGE("Service error %s parse config error.", service->name, cJSON_Print(curItem));
+            service->lastErrno = INIT_ECFG;
             continue;
         }
         ret = ParseServiceSocket(curItem, service);
@@ -1047,7 +1053,7 @@ void ParseAllServices(const cJSON *fileRoot, const ConfigContext *context)
     }
 }
 
-static Service *GetServiceByExtServName(const char *fullServName)
+static Service *GetServiceByExtServName(const char *fullServName, ServiceArgs *extraArgs)
 {
     INIT_ERROR_CHECK(fullServName != NULL, return NULL, "Failed get parameters");
     Service *service = GetServiceByName(fullServName);
@@ -1058,47 +1064,51 @@ static Service *GetServiceByExtServName(const char *fullServName)
     char *dstPtr[MAX_PATH_ARGS_CNT] = {NULL};
     int returnCount = SplitString(tmpServName, "|", dstPtr, MAX_PATH_ARGS_CNT);
     if (returnCount == 0) {
+        INIT_LOGE("Service error %s start service bt ext parameter .", fullServName);
         free(tmpServName);
         return NULL;
     }
+    INIT_LOGI("Service info %s start service bt ext parameter %s.", dstPtr[0], fullServName);
     service = GetServiceByName(dstPtr[0]);
     if (service == NULL) {
         free(tmpServName);
         return NULL;
     }
-    service->extraArgs.count = service->pathArgs.count + returnCount - 1;
-    service->extraArgs.argv = (char **)calloc(service->extraArgs.count + 1, sizeof(char *));
-    INIT_ERROR_CHECK(service->extraArgs.argv != NULL, free(tmpServName);
+    extraArgs->count = service->pathArgs.count + returnCount - 1;
+    extraArgs->argv = (char **)calloc(extraArgs->count + 1, sizeof(char *));
+    INIT_ERROR_CHECK(extraArgs->argv != NULL, free(tmpServName);
         return NULL, "Failed calloc err=%d", errno);
     int argc;
     for (argc = 0; argc < (service->pathArgs.count - 1); argc++) {
-        service->extraArgs.argv[argc] = strdup(service->pathArgs.argv[argc]);
+        extraArgs->argv[argc] = strdup(service->pathArgs.argv[argc]);
     }
     int extArgc;
     for (extArgc = 0; extArgc < (returnCount - 1); extArgc++) {
-        service->extraArgs.argv[extArgc + argc] = strdup(dstPtr[extArgc + 1]);
+        extraArgs->argv[extArgc + argc] = strdup(dstPtr[extArgc + 1]);
     }
-    service->extraArgs.argv[service->extraArgs.count] = NULL;
+    extraArgs->argv[extraArgs->count] = NULL;
     free(tmpServName);
     return service;
 }
 
 void StartServiceByName(const char *servName)
 {
-    INIT_LOGI("Start service %s", servName);
+    ServiceArgs extraArgs = { 0 };
     Service *service = GetServiceByName(servName);
     if (service == NULL) {
-        service = GetServiceByExtServName(servName);
+        service = GetServiceByExtServName(servName, &extraArgs);
     }
     INIT_ERROR_CHECK(service != NULL, return, "Cannot find service %s.", servName);
 
-    if (ServiceStart(service) != SERVICE_SUCCESS) {
+    ServiceArgs *pathArgs = &service->pathArgs;
+    if (extraArgs.count != 0) {
+        pathArgs = &extraArgs;
+    }
+    if (ServiceStart(service, pathArgs) != SERVICE_SUCCESS) {
         INIT_LOGE("Service %s start failed!", servName);
     }
     // After starting, clear the extra parameters.
-    FreeStringVector(service->extraArgs.argv, service->extraArgs.count);
-    service->extraArgs.argv = NULL;
-    service->extraArgs.count = 0;
+    FreeStringVector(extraArgs.argv, extraArgs.count);
     return;
 }
 

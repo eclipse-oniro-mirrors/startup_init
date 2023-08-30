@@ -21,6 +21,7 @@ ohos_shared_library("selinuxadp") {
     ".",
     "..",
     "../init_hook",
+    "//base/startup/init/services/include",
     "//base/startup/init/services/include/param",
     "//third_party/selinux/libselinux/include/",
     "//base/security/selinux_adapter/interfaces/policycoreutils/include/",

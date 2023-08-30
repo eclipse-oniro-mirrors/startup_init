@@ -309,7 +309,7 @@ INIT_STATIC void InitPostHook(const HOOK_INFO *hookInfo, void *executionContext,
     INIT_TIMING_STAT *stat = (INIT_TIMING_STAT *)executionContext;
     clock_gettime(CLOCK_MONOTONIC, &(stat->endTime));
     long long diff = InitDiffTime(stat);
-    INIT_LOGI("Executing hook [%d:%d] cost [%lld]us, return %d.",
+    INIT_LOGI("Executing hook [%d:%d] cost [%lld]us, result %d.",
         hookInfo->stage, hookInfo->prio, diff, executionRetVal);
 }
 
@@ -407,7 +407,7 @@ void SystemConfig(void)
     InitParseGroupCfg();
     RegisterBootStateChange(BootStateChange);
 
-    INIT_LOGI("boot init finish.");
+    INIT_LOGI("boot stage: init finish.");
     // load SELinux context and policy
     // Do not move position!
     PluginExecCmdByName("loadSelinuxPolicy", "");
@@ -426,7 +426,7 @@ void SystemConfig(void)
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
     RecordInitBootEvent("init.ParseCfg");
-    INIT_LOGI("boot parse config file done.");
+    INIT_LOGI("boot stage: parse config file finish.");
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 
     IsEnableSandbox();

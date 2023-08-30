@@ -22,6 +22,7 @@
 
 #include "cJSON.h"
 #include "init_cmds.h"
+#include "init_error.h"
 #include "init_service_file.h"
 #include "init_service_socket.h"
 #include "list.h"
@@ -149,7 +150,6 @@ typedef struct Service_ {
     ServiceArgs permAclsArgs;
     Perms servPerm;
     ServiceArgs pathArgs;
-    ServiceArgs extraArgs;
     ServiceArgs writePidArgs;
     CmdLines *restartArg;
     ServiceSocket *socketCfg;
@@ -161,12 +161,13 @@ typedef struct Service_ {
     cpu_set_t *cpuSet;
     struct ListNode extDataNode;
     ConfigContext context;
+    InitErrno lastErrno;
 } Service;
 #pragma pack()
 
 Service *GetServiceByPid(pid_t pid);
 Service *GetServiceByName(const char *servName);
-int ServiceStart(Service *service);
+int ServiceStart(Service *service, ServiceArgs *pathArgs);
 int ServiceStop(Service *service);
 void ServiceReap(Service *service);
 void ReapService(Service *service);
@@ -175,7 +176,7 @@ void NotifyServiceChange(Service *service, int status);
 int IsForbidden(const char *fieldStr);
 int SetImportantValue(Service *curServ, const char *attrName, int value, int flag);
 int InitServiceCaps(const cJSON *curArrItem, Service *curServ);
-int ServiceExec(const Service *service);
+int ServiceExec(Service *service, const ServiceArgs *pathArgs);
 void CloseServiceFds(Service *service, bool needFree);
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount);
 int SetAccessToken(const Service *service);
@@ -184,7 +185,10 @@ void ServiceStopTimer(Service *service);
 void ServiceStartTimer(Service *service, uint64_t timeout);
 void IsEnableSandbox(void);
 void EnterServiceSandbox(Service *service);
-void SetServiceEnterSandbox(const char *execPath, unsigned int attribute);
+int SetServiceEnterSandbox(const Service *service, const char *execPath);
+
+int CreateServiceFile(Service *service);
+void CloseServiceFile(ServiceFile *fileOpt);
 #ifdef __cplusplus
 #if __cplusplus
 }
