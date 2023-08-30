@@ -22,6 +22,7 @@
 #include "system_ability_definition.h"
 #include "watcher_utils.h"
 #include "parameter.h"
+#include "init_param.h"
 
 namespace OHOS {
 namespace init_param {
@@ -141,7 +142,7 @@ uint32_t WatcherManagerKits::GetRemoteWatcher(void)
 int32_t WatcherManagerKits::AddWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context)
 {
     auto watcherManager = GetService();
-    WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to get watcher manager");
+    WATCHER_CHECK(watcherManager != nullptr, return PARAM_WATCHER_GET_SERVICE_FAILED, "Failed to get watcher manager");
 
     // add or get remote agent
     uint32_t remoteWatcherId = GetRemoteWatcher();
@@ -155,14 +156,14 @@ int32_t WatcherManagerKits::AddWatcher(const std::string &keyPrefix, ParameterCh
             watcher = std::make_shared<ParamWatcher>(keyPrefix);
             WATCHER_CHECK(watcher != nullptr, return -1, "Failed to create watcher for %s", keyPrefix.c_str());
             int ret = watcher->AddParameterListener(callback, context);
-            WATCHER_CHECK(ret == 0, return -1, "Failed to add callback for %s ", keyPrefix.c_str());
+            WATCHER_CHECK(ret == 0, return ret, "Failed to add callback for %s ", keyPrefix.c_str());
             ret = watcherManager->AddWatcher(keyPrefix, remoteWatcherId);
             WATCHER_CHECK(ret == 0, return -1, "Failed to add watcher for %s", keyPrefix.c_str());
             watchers_[keyPrefix] = watcher;
         } else {
             watcher = watchers_[keyPrefix];
             int ret = watcher->AddParameterListener(callback, context);
-            WATCHER_CHECK(ret == 0, return -1, "Failed to add callback for %s ", keyPrefix.c_str());
+            WATCHER_CHECK(ret == 0, return ret, "Failed to add callback for %s ", keyPrefix.c_str());
             ret = watcherManager->RefreshWatcher(keyPrefix, remoteWatcherId);
             WATCHER_CHECK(ret == 0, return -1,
                 "Failed to refresh watcher for %s %d", keyPrefix.c_str(), remoteWatcherId);
@@ -239,7 +240,7 @@ int WatcherManagerKits::ParamWatcher::AddParameterListener(ParameterChangePtr ca
             continue;
         }
         if (it->second->IsEqual(callback, context)) {
-            return -1;
+            return PARAM_WATCHER_CALLBACK_EXIST;
         }
     }
     std::shared_ptr<ParameterChangeListener> changeNode =
@@ -338,6 +339,10 @@ int SystemWatchParameter(const char *keyPrefix, ParameterChangePtr callback, voi
     } else {
         ret = instance.DelWatcher(keyPrefix, nullptr, nullptr);
     }
+
+    if (ret != 0) {
+        WATCHER_LOGE("SystemWatchParameter is failed! keyPrefix is:%s, errNum is:%d", keyPrefix, ret);
+    }
     return ret;
 }
 
@@ -350,5 +355,9 @@ int RemoveParameterWatcher(const char *keyPrefix, ParameterChgPtr callback, void
         return ret;
     }
     OHOS::init_param::WatcherManagerKits &instance = OHOS::init_param::WatcherManagerKits::GetInstance();
-    return instance.DelWatcher(keyPrefix, (ParameterChangePtr)callback, context);
+    ret = instance.DelWatcher(keyPrefix, (ParameterChangePtr)callback, context);
+    if (ret != 0) {
+        WATCHER_LOGE("RemoveParameterWatcher is failed! keyPrefix is:%s, errNum is:%d", keyPrefix, ret);
+    }
+    return ret;
 }

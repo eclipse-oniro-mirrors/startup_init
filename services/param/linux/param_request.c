@@ -125,14 +125,14 @@ static int GetClientSocket(int timeout)
     time.tv_sec = timeout;
     time.tv_usec = 0;
     int clientFd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
-    PARAM_CHECK(clientFd >= 0, return -1, "Failed to create socket");
+    PARAM_CHECK(clientFd >= 0, return PARAM_CODE_CREATE_SOCKET_FAILED, "Failed to create socket");
     int ret = ConnectServer(clientFd, CLIENT_PIPE_NAME);
     if (ret == 0) {
         setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, (char *)&time, sizeof(struct timeval));
         setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO, (char *)&time, sizeof(struct timeval));
     } else {
         close(clientFd);
-        clientFd = INVALID_SOCKET;
+        clientFd = PARAM_CODE_FAIL_CONNECT;
     }
     return clientFd;
 }
@@ -142,9 +142,10 @@ static int StartRequest(int clientFd, ParamMessage *request, int timeout)
     errno = 0;
     ssize_t sendLen = send(clientFd, (char *)request, request->msgSize, 0);
     if (errno == EINVAL || errno == EACCES) {
-        return PARAM_CODE_INVALID_SOCKET;
+        PARAM_LOGE("send Message failed!");
+        return PARAM_CODE_IPC_ERROR;
     }
-    PARAM_CHECK(sendLen >= 0, return PARAM_CODE_FAIL_CONNECT, "Failed to send message err: %d", errno);
+    PARAM_CHECK(sendLen >= 0, return PARAM_CODE_IPC_ERROR, "Failed to send message err: %d", errno);
     PARAM_LOGV("sendMessage sendLen fd %d %zd", clientFd, sendLen);
     if (timeout <= 0) {
         return 0;
@@ -168,11 +169,11 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
     msgSize = (msgSize < RECV_BUFFER_MAX) ? RECV_BUFFER_MAX : msgSize;
 
     ParamMessage *request = (ParamMessage *)CreateParamMessage(MSG_SET_PARAM, name, msgSize);
-    PARAM_CHECK(request != NULL, return -1, "Failed to malloc for connect");
+    PARAM_CHECK(request != NULL, return PARAM_CODE_ERROR, "Failed to create Param Message");
     uint32_t offset = 0;
     ret = FillParamMsgContent(request, &offset, PARAM_VALUE, value, strlen(value));
     PARAM_CHECK(ret == 0, free(request);
-        return -1, "Failed to fill value");
+        return PARAM_CODE_ERROR, "Failed to fill value");
     request->msgSize = offset + sizeof(ParamMessage);
     request->id.msgId = ATOMIC_SYNC_ADD_AND_FETCH(&g_requestId, 1, MEMORY_ORDER_RELAXED);
 
@@ -183,16 +184,17 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
         if (g_clientFd == INVALID_SOCKET) {
             g_clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
         }
+
         if (g_clientFd < 0) {
-            ret = DAC_RESULT_FORBIDED;
+            ret = g_clientFd;
+            PARAM_LOGE("connect param server failed!");
             break;
         }
         ret = StartRequest(g_clientFd, request, timeout);
-        if (ret == PARAM_CODE_INVALID_SOCKET) {
+        if (ret == PARAM_CODE_IPC_ERROR) {
             close(g_clientFd);
             g_clientFd = INVALID_SOCKET;
             retryCount++;
-            ret = DAC_RESULT_FORBIDED;
         } else {
             break;
         }
@@ -205,21 +207,25 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
 
 int SystemSetParameter(const char *name, const char *value)
 {
-    return SystemSetParameter_(name, value, DEFAULT_PARAM_SET_TIMEOUT);
+    int ret = SystemSetParameter_(name, value, DEFAULT_PARAM_SET_TIMEOUT);
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemSetParameter failed! name is :%s, the errNum is:%d", name, ret);
+    return ret;
 }
 
 int SystemSetParameterNoWait(const char *name, const char *value)
 {
-    return SystemSetParameter_(name, value, 0);
+    int ret = SystemSetParameter_(name, value, 0);
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemSetParameterNoWait failed! name is:%s, the errNum is:%d", name, ret);
+    return ret;
 }
 
 int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 {
-    PARAM_CHECK(name != NULL, return -1, "Invalid name");
+    PARAM_CHECK(name != NULL, return -1, "SystemWaitParameter failed! name is:%s, the errNum is:-1", name);
     int ret = CheckParamName(name, 0);
-    PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
+    PARAM_CHECK(ret == 0, return ret, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
     ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
-    PARAM_CHECK(ret == 0, return ret, "Forbid to wait parameter %s", name);
+    PARAM_CHECK(ret == 0, return ret, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
     if (timeout <= 0) {
         timeout = DEFAULT_PARAM_WAIT_TIMEOUT;
     }
@@ -230,16 +236,16 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     if (value != NULL && strlen(value) > 0) {
         msgSize += PARAM_ALIGN(strlen(value) + 1);
         request = (ParamMessage *)CreateParamMessage(MSG_WAIT_PARAM, name, msgSize);
-        PARAM_CHECK(request != NULL, return -1, "Failed to malloc for wait");
+        PARAM_CHECK(request != NULL, return -1, "SystemWaitParameter failed! name is:%s, the errNum is:-1", name);
         ret = FillParamMsgContent(request, &offset, PARAM_VALUE, value, strlen(value));
     } else {
         msgSize += PARAM_ALIGN(1);
         request = (ParamMessage *)CreateParamMessage(MSG_WAIT_PARAM, name, msgSize);
-        PARAM_CHECK(request != NULL, return -1, "Failed to malloc for wait");
+        PARAM_CHECK(request != NULL, return -1, "SystemWaitParameter failed! name is:%s, the errNum is:-1", name);
         ret = FillParamMsgContent(request, &offset, PARAM_VALUE, "*", 1);
     }
     PARAM_CHECK(ret == 0, free(request);
-        return -1, "Failed to fill value");
+        return -1, "SystemWaitParameter failed! name is:%s, the errNum is:-1", name);
     ParamMsgContent *content = (ParamMsgContent *)(request->data + offset);
     content->type = PARAM_WAIT_TIMEOUT;
     content->contentSize = sizeof(uint32_t);
@@ -252,11 +258,12 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     timeout = 1;
 #endif
     int fd = GetClientSocket(timeout);
-    PARAM_CHECK(fd >= 0, return -1, "Failed to connect server for wait %s", name);
+    PARAM_CHECK(fd >= 0, return fd, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
     ret = StartRequest(fd, request, timeout);
     close(fd);
     free(request);
     PARAM_LOGI("SystemWaitParameter %s value %s result %d ", name, value, ret);
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
     return ret;
 }
 

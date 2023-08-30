@@ -83,7 +83,7 @@ public:
         EXPECT_EQ(ret, 0);
         // 非法
         ret = SystemWatchParameter("test.permission.watcher.tes^^^^t1*", TestParameterChange, nullptr);
-        EXPECT_NE(ret, 0);
+        EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
         ret = SystemWatchParameter("test.permission.read.test1*", TestParameterChange, nullptr);
         EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
         return ret;
@@ -140,6 +140,9 @@ public:
         ret = SystemWatchParameter("test.permission.watcher.test3.2",
             TestParameterChange, reinterpret_cast<void *>(index));
         EXPECT_EQ(ret, 0);
+        ret = SystemWatchParameter("test.permission.watcher.test3.2", TestParameterChange,
+            reinterpret_cast<void *>(index));
+        EXPECT_EQ(ret, PARAM_WATCHER_CALLBACK_EXIST);
         ret = SystemWatchParameter("test.permission.watcher.test3.1", nullptr, nullptr);
         EXPECT_EQ(ret, 0);
         ret = SystemWatchParameter("test.permission.watcher.test3.1*", nullptr, nullptr);
@@ -149,7 +152,7 @@ public:
 
         // 非法
         ret = SystemWatchParameter("test.permission.watcher.tes^^^^t1*", nullptr, nullptr);
-        EXPECT_NE(ret, 0);
+        EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
         ret = SystemWatchParameter("test.permission.read.test1*", nullptr, nullptr);
         EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
         return 0;

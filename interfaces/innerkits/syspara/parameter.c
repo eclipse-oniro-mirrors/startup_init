@@ -29,6 +29,7 @@ int WaitParameter(const char *key, const char *value, int timeout)
 {
     BEGET_CHECK(!(key == NULL || value == NULL), return EC_INVALID);
     int ret = SystemWaitParameter(key, value, timeout);
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "WaitParameter failed! the errNum is: %d", ret);
     return GetSystemError(ret);
 }
 
@@ -60,6 +61,7 @@ int GetParameterName(uint32_t handle, char *name, uint32_t len)
     if (ret == 0) {
         return strlen(name);
     }
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "GetParameterName failed! the errNum is: %d", ret);
     return GetSystemError(ret);
 }
 
@@ -73,6 +75,7 @@ int GetParameterValue(uint32_t handle, char *value, uint32_t len)
     if (ret == 0) {
         return strlen(value);
     }
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "GetParameterValue failed! the errNum is: %d", ret);
     return GetSystemError(ret);
 }
 
@@ -91,6 +94,7 @@ int SetParameter(const char *key, const char *value)
         return EC_INVALID;
     }
     int ret = SystemSetParameter(key, value);
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "SetParameter failed! the errNum is:%d", ret);
     return GetSystemError(ret);
 }
 

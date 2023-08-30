@@ -254,6 +254,7 @@ if (defined(ohos_lite)) {
       include_dirs += [
         "//base/startup/init/services/param/watcher/include",
         "//base/startup/init/services/log",
+        "//base/startup/init/services/include/param",
       ]
     } else {
       defines += [ "NO_PARAM_WATCHER" ]

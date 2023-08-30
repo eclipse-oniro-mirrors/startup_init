@@ -32,6 +32,9 @@ INIT_LOCAL_API int GetSystemError(int err)
         case PARAM_CODE_INVALID_PARAM:
         case PARAM_CODE_INVALID_NAME:
         case PARAM_CODE_READ_ONLY:
+        case PARAM_WORKSPACE_NOT_INIT:
+        case PARAM_WATCHER_CALLBACK_EXIST:
+        case PARAM_WATCHER_GET_SERVICE_FAILED:
             return EC_INVALID;
         case PARAM_CODE_INVALID_VALUE:
             return SYSPARAM_INVALID_VALUE;
@@ -39,11 +42,15 @@ INIT_LOCAL_API int GetSystemError(int err)
         case PARAM_CODE_NODE_EXIST:
             return SYSPARAM_NOT_FOUND;
         case DAC_RESULT_FORBIDED:
+        case SELINUX_RESULT_FORBIDED:
             return SYSPARAM_PERMISSION_DENIED;
         case PARAM_CODE_REACHED_MAX:
+        case PARAM_CODE_CREATE_SOCKET_FAILED:
         case PARAM_CODE_FAIL_CONNECT:
-        case PARAM_CODE_INVALID_SOCKET:
         case PARAM_CODE_NOT_SUPPORT:
+        case PARAM_CODE_IPC_ERROR:
+        case PARAM_CODE_MEMORY_MAP_FAILED:
+        case PARAM_CODE_MEMORY_NOT_ENOUGH:
             return SYSPARAM_SYSTEM_ERROR;
         case PARAM_CODE_TIMEOUT:
             return SYSPARAM_WAIT_TIMEOUT;
@@ -82,6 +89,7 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
 
     size = len;
     ret = SystemGetParameter(key, value, &size);
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "GetParameter_ failed! the errNum is: %d", ret);
     return GetSystemError(ret);
 }
 
