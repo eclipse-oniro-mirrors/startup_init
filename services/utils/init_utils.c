@@ -593,22 +593,36 @@ static void RedirectStdio(int fd)
 }
 #endif
 
-int OpenConsole(void)
-{
 #ifndef __LITEOS_M__
+static int OpenStdioDevice(const char *dev)
+{
     setsid();
-    WaitForFile("/dev/console", WAIT_MAX_SECOND);
-    int fd = open("/dev/console", O_RDWR);
+    WaitForFile(dev, WAIT_MAX_SECOND);
+    int fd = open(dev, O_RDWR);
     if (fd >= 0) {
         ioctl(fd, TIOCSCTTY, 0);
         RedirectStdio(fd);
-        close(fd);
+        if (fd > 2) {
+            close(fd);
+        }
     } else {
         return errno;
     }
     return 0;
-#else
-    return 0;
+}
+#endif
+
+int OpenConsole(void)
+{
+#ifndef __LITEOS_M__
+    return OpenStdioDevice("/dev/console");
+#endif
+}
+
+int OpenKmsg(void)
+{
+#ifndef __LITEOS_M__
+    return OpenStdioDevice("/dev/kmsg");
 #endif
 }
 

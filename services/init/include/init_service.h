@@ -53,6 +53,7 @@ extern "C" {
 
 #define SERVICE_ATTR_NOTIFY_STATE 0x1000     // service notify state
 #define SERVICE_ATTR_MODULE_UPDATE 0x2000     // module update
+#define SERVICE_ATTR_KMSG 0x4000      // kmsg
 
 #define MAX_SERVICE_NAME 32
 #define MAX_APL_NAME 32
