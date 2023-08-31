@@ -28,7 +28,6 @@ config("exported_header_files") {
     "//base/startup/init/interfaces/innerkits/include/token",
     "//base/startup/init/services/include",
     "//base/startup/init/services/include/param",
-    "//base/startup/init/services/param/include",
   ]
 }
 
