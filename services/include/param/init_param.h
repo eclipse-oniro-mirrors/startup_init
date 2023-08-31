@@ -78,7 +78,7 @@ typedef uint32_t ParamHandle;
  * 初始化参数服务
  *
  */
-void InitParamService(void);
+int InitParamService(void);
 void LoadSpecialParam(void);
 
 /**
