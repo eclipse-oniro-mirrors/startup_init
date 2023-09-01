@@ -125,14 +125,14 @@ static int GetClientSocket(int timeout)
     time.tv_sec = timeout;
     time.tv_usec = 0;
     int clientFd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
-    PARAM_CHECK(clientFd >= 0, return PARAM_CODE_CREATE_SOCKET_FAILED, "Failed to create socket");
+    PARAM_CHECK(clientFd >= 0, return INVALID_SOCKET, "Failed to create socket");
     int ret = ConnectServer(clientFd, CLIENT_PIPE_NAME);
     if (ret == 0) {
         setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, (char *)&time, sizeof(struct timeval));
         setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO, (char *)&time, sizeof(struct timeval));
     } else {
         close(clientFd);
-        clientFd = PARAM_CODE_FAIL_CONNECT;
+        clientFd = INVALID_SOCKET;
     }
     return clientFd;
 }
@@ -186,7 +186,7 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
         }
 
         if (g_clientFd < 0) {
-            ret = g_clientFd;
+            ret = PARAM_CODE_FAIL_CONNECT;
             PARAM_LOGE("connect param server failed!");
             break;
         }

@@ -45,7 +45,6 @@ INIT_LOCAL_API int GetSystemError(int err)
         case SELINUX_RESULT_FORBIDED:
             return SYSPARAM_PERMISSION_DENIED;
         case PARAM_CODE_REACHED_MAX:
-        case PARAM_CODE_CREATE_SOCKET_FAILED:
         case PARAM_CODE_FAIL_CONNECT:
         case PARAM_CODE_NOT_SUPPORT:
         case PARAM_CODE_IPC_ERROR:
