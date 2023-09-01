@@ -23,10 +23,7 @@ using namespace testing::ext;
 namespace init_ut {
 class BegetctlUnitTest : public testing::Test {
 public:
-    static void SetUpTestCase(void)
-    {
-        PrepareInitUnitTestEnv();
-    };
+    static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) {};
     void SetUp(void) {};
     void TearDown(void) {};

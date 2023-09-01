@@ -28,7 +28,7 @@ INIT_LOCAL_API WorkSpace *GetWorkSpaceByName(const char *name)
         return NULL;
     }
     uint32_t labelIndex = (uint32_t)paramSpace->selinuxSpace.getParamLabelIndex(name) + WORKSPACE_INDEX_BASE;
-    if (labelIndex < paramSpace->maxLabelIndex) {
+    if (labelIndex < paramSpace->maxSpaceCount) {
         return paramSpace->workSpace[labelIndex];
     }
     return NULL;
@@ -48,7 +48,7 @@ INIT_LOCAL_API WorkSpace *GetWorkSpace(uint32_t labelIndex)
         return paramSpace->workSpace[0];
     }
     WorkSpace *workSpace = NULL;
-    if (labelIndex < paramSpace->maxLabelIndex) {
+    if (labelIndex < paramSpace->maxSpaceCount) {
         workSpace = paramSpace->workSpace[labelIndex];
     }
     if (workSpace == NULL) {

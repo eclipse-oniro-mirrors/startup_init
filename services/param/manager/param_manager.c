@@ -162,6 +162,8 @@ static int DumpTrieDataNodeTraversal(const WorkSpace *workSpace, const ParamTrie
 static void HashNodeTraverseForDump(WorkSpace *workSpace, int verbose)
 {
     PARAM_DUMP("    map file: %s \n", workSpace->fileName);
+    PARAM_DUMP("    space index : %d \n", workSpace->spaceIndex);
+    PARAM_DUMP("    space size  : %d \n", workSpace->spaceSize);
     if (workSpace->area != NULL) {
         PARAM_DUMP("    total size: %u \n", workSpace->area->dataSize);
         PARAM_DUMP("    first offset: %u \n", workSpace->area->firstNode);
@@ -214,6 +216,18 @@ void SystemDumpParameters(int verbose, int index, int (*dump)(const char *fmt, .
         }
         return;
     }
+    // show workspace size
+    WorkSpaceSize *spaceSize = GetWorkSpaceSize(GetWorkSpace(WORKSPACE_INDEX_SIZE));
+    if (spaceSize != NULL) {
+        PARAM_DUMP("Max label index : %u\n", spaceSize->maxLabelIndex);
+        for (uint32_t i = 0; i < spaceSize->maxLabelIndex; i++) {
+            if (spaceSize->spaceSize[i] == PARAM_WORKSPACE_MIN) {
+                continue;
+            }
+            PARAM_DUMP("\t workspace %u size : %u\n", i, spaceSize->spaceSize[i]);
+        }
+    }
+
     WorkSpace *workSpace = GetNextWorkSpace(NULL);
     while (workSpace != NULL) {
         WorkSpace *next = GetNextWorkSpace(workSpace);

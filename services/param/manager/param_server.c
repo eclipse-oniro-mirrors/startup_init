@@ -343,17 +343,28 @@ INIT_LOCAL_API void LoadParamFromBuild(void)
 
 static int LoadOneParamAreaSize_(const uint32_t *context, const char *name, const char *value)
 {
-    int ret = CheckParamName(name, 0);
-    if (ret != 0) {
-        return 0;
-    }
-    ret = CheckParamValue(NULL, name, value, PARAM_TYPE_INT);
-    PARAM_CHECK(ret == 0, return 0, "Invalid value %s for %s", value, name);
+    uint32_t size = (uint32_t)strtoul(value, NULL, DECIMAL_BASE);
     PARAM_LOGV("LoadOneParamAreaSize_ [%s] [%s]", name, value);
-    char buffer[PARAM_NAME_LEN_MAX] = {0};
-    int len = sprintf_s(buffer, sizeof(buffer), "const.%s", name);
-    PARAM_CHECK(len > 0, return 0, "Failed to format value %s for %s", value, name);
-    return AddParamEntry(WORKSPACE_INDEX_BASE, PARAM_TYPE_INT, buffer, value);
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL && paramSpace->workSpace != NULL,
+        return -1, "Invalid workspace name %s", name);
+    WorkSpaceSize *spaceSize = GetWorkSpaceSize(GetWorkSpace(WORKSPACE_INDEX_SIZE));
+    PARAM_CHECK(spaceSize != NULL, return PARAM_CODE_ERROR, "Failed to get workspace size");
+    static char buffer[SELINUX_CONTENT_LEN] = {0};
+    int ret = snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, "u:object_r:%s:s0", name);
+    PARAM_CHECK(ret > 0, return PARAM_CODE_ERROR, "Failed to snprintf workspace name");
+
+    for (uint32_t i = WORKSPACE_INDEX_BASE + 1; i < spaceSize->maxLabelIndex; i++) {
+        if (paramSpace->workSpace[i] == NULL) {
+            continue;
+        }
+        if (strcmp(paramSpace->workSpace[i]->fileName, buffer) == 0) {
+            spaceSize->spaceSize[i] = size;
+            paramSpace->workSpace[i]->spaceSize = size;
+            break;
+        }
+    }
+    return 0;
 }
 
 INIT_LOCAL_API void LoadParamAreaSize(void)

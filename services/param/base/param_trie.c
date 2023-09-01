@@ -40,7 +40,7 @@ static int InitWorkSpace_(WorkSpace *workSpace, uint32_t spaceSize, int readOnly
 {
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
     PARAM_CHECK(sizeof(ParamTrieHeader) < spaceSize,
-        return PARAM_CODE_INVALID_PARAM, "Invalid spaceSize %u", spaceSize);
+        return PARAM_CODE_INVALID_PARAM, "Invalid spaceSize %u name %s", spaceSize, workSpace->fileName);
 
     char buffer[FILENAME_LEN_MAX] = {0};
     int ret = GetRealFileName(workSpace, buffer, sizeof(buffer));
@@ -55,6 +55,7 @@ static int InitWorkSpace_(WorkSpace *workSpace, uint32_t spaceSize, int readOnly
         workSpace->area->paramNodeCount = 0;
         workSpace->area->securityNodeCount = 0;
         workSpace->area->dataSize = spaceSize - sizeof(ParamTrieHeader);
+        workSpace->area->spaceSizeOffset = 0;
         workSpace->area->currOffset = 0;
         uint32_t offset = AllocateParamTrieNode(workSpace, "#", 1);
         workSpace->area->firstNode = offset;

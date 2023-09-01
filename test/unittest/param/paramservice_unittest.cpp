@@ -48,10 +48,8 @@ public:
     ParamServiceUnitTest() {}
     virtual ~ParamServiceUnitTest() {}
 
-    static void SetUpTestCase(void)
-    {
-        PrepareInitUnitTestEnv();
-    }
+    static void SetUpTestCase(void) {}
+
     void SetUp()
     {
         if (GetParamSecurityLabel() != nullptr) {

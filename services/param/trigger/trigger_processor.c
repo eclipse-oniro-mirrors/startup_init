@@ -269,6 +269,7 @@ static int ParseTrigger_(const TriggerWorkSpace *workSpace,
 
 int ParseTriggerConfig(const cJSON *fileRoot, int (*checkJobValid)(const char *jobName), void *context)
 {
+    PARAM_CHECK(g_triggerWorkSpace.eventHandle != NULL, return -1, "Invalid trigger data");
     PARAM_CHECK(fileRoot != NULL, return -1, "Invalid file");
     ConfigContext *cfgContext = (ConfigContext *)context;
     cJSON *triggers = cJSON_GetObjectItemCaseSensitive(fileRoot, TRIGGER_ARR_NAME_IN_JSON);
@@ -351,6 +352,7 @@ void RegisterTriggerExec(int type,
 
 void DoTriggerExec(const char *triggerName)
 {
+    PARAM_CHECK(g_triggerWorkSpace.eventHandle != NULL, return, "Invalid trigger data");
     PARAM_CHECK(triggerName != NULL, return, "Invalid param");
     JobNode *trigger = GetTriggerByName(&g_triggerWorkSpace, triggerName);
     if (trigger != NULL && !TRIGGER_IN_QUEUE((TriggerNode *)trigger)) {
@@ -364,6 +366,7 @@ void DoTriggerExec(const char *triggerName)
 
 void DoJobExecNow(const char *triggerName)
 {
+    PARAM_CHECK(g_triggerWorkSpace.eventHandle != NULL, return, "Invalid trigger data");
     PARAM_CHECK(triggerName != NULL, return, "Invalid param");
     JobNode *trigger = GetTriggerByName(&g_triggerWorkSpace, triggerName);
     if (trigger != NULL) {
@@ -373,6 +376,7 @@ void DoJobExecNow(const char *triggerName)
 
 int AddCompleteJob(const char *name, const char *condition, const char *cmdContent)
 {
+    PARAM_CHECK(g_triggerWorkSpace.eventHandle != NULL, return -1, "Invalid trigger data");
     PARAM_CHECK(name != NULL, return -1, "Invalid name");
     PARAM_CHECK(cmdContent != NULL, return -1, "Invalid cmdContent");
     int type = GetTriggerType(name);

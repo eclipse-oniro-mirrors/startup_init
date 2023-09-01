@@ -429,9 +429,10 @@ static void PrepareAreaSizeFile(void)
             "persist_param=2048\n"
             "const_param=20480\n"
             "test_watch=81920\n"
-            "test_read=81920\n"
+            "test_write=81920\n"
             "const_param***=20480\n"
-            "persist_sys_param=2048\n";
+            "persist_sys_param=2048\n"
+            "test_write=81920\n";
     CreateTestFile(PARAM_AREA_SIZE_CFG, ohosParamSize);
 }
 
@@ -494,7 +495,6 @@ void PrepareInitUnitTestEnv(void)
         return;
     }
     printf("PrepareInitUnitTestEnv \n");
-    SignalInit();
 #ifdef PARAM_SUPPORT_SELINUX
     RegisterSecuritySelinuxOps(nullptr, 0);
 #endif
@@ -506,7 +506,6 @@ void PrepareInitUnitTestEnv(void)
     InitAddPreCfgLoadHook(0, TestHook);
     InitAddPostCfgLoadHook(0, TestHook);
     InitAddPostPersistParamLoadHook(0, TestHook);
-    LoadSpecialParam();
 #endif
     // read default parameter from system
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
@@ -571,7 +570,7 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
 {
     g_currPid = getpid();
     printf("Init unit test start %u \n", g_currPid);
-    EnableInitLog(INIT_ERROR);
+    EnableInitLog(INIT_INFO);
 
     // prepare data
     mkdir(STARTUP_INIT_UT_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -591,17 +590,19 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
     PrepareAreaSizeFile();
     PrepareTestGroupFile();
     PrepareCmdLineData();
+    TestSetSelinuxOps();
+
+    PARAM_LOGI("TestSetSelinuxOps \n");
 #ifndef OHOS_LITE
     TestBeforeInit();
-    SystemPrepare();
-    SystemInit();
-    SystemConfig();
 #endif
-    // init service open
-    InitServiceSpace();
-    // param service open
-    InitParamService();
-    TestSetSelinuxOps();
+    SystemPrepare();
+#ifndef __LITEOS_A__
+    SystemInit();
+#endif
+    PARAM_LOGI("SystemConfig \n");
+    SystemConfig();
+    PrepareInitUnitTestEnv();
 }
 
 __attribute__((destructor)) static void ParamTestStubExit(void)
