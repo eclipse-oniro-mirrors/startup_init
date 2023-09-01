@@ -403,7 +403,9 @@ void SystemConfig(void)
     RecordInitBootEvent("init.prepare");
 
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, (void *)&timingStat, (void *)&options);
-    InitParamService();
+    if (InitParamService() != 0) {
+        ExecReboot("panic");
+    }
     InitParseGroupCfg();
     RegisterBootStateChange(BootStateChange);
 

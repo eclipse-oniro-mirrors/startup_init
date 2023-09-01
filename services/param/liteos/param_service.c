@@ -59,22 +59,22 @@ static const char *StringTrim(char *buffer, int size, const char *name)
 }
 #endif
 
-void InitParamService(void)
+int InitParamService(void)
 {
     PARAM_LOGI("InitParamService %s", DATA_PATH);
     CheckAndCreateDir(PARAM_STORAGE_PATH "/");
     CheckAndCreateDir(DATA_PATH);
     // param space
     int ret = InitParamWorkSpace(0, NULL);
-    PARAM_CHECK(ret == 0, return, "Init parameter workspace fail");
+    PARAM_CHECK(ret == 0, return ret, "Init parameter workspace fail");
     ret = InitPersistParamWorkSpace();
-    PARAM_CHECK(ret == 0, return, "Init persist parameter workspace fail");
+    PARAM_CHECK(ret == 0, return ret, "Init persist parameter workspace fail");
 
     // from build
     LoadParamFromBuild();
 #ifdef PARAM_LOAD_CFG_FROM_CODE
     char *buffer = calloc(1, PARAM_VALUE_LEN_MAX);
-    PARAM_CHECK(buffer != NULL, return, "Failed to malloc for buffer");
+    PARAM_CHECK(buffer != NULL, return ret, "Failed to malloc for buffer");
     for (size_t i = 0; i < ARRAY_LENGTH(g_paramDefCfgNodes); i++) {
         PARAM_LOGV("InitParamService name %s = %s", g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
         uint32_t dataIndex = 0;
@@ -85,6 +85,8 @@ void InitParamService(void)
     }
     free(buffer);
 #endif
+
+    return 0;
 }
 
 int StartParamService(void)

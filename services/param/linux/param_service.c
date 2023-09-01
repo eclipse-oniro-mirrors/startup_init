@@ -366,7 +366,7 @@ static void LoadSelinuxLabel(const char *op)
 #endif
 }
 
-void InitParamService(void)
+int InitParamService(void)
 {
     PARAM_LOGI("InitParamService pipe: %s.", PIPE_NAME);
     CheckAndCreateDir(PIPE_NAME);
@@ -381,9 +381,9 @@ void InitParamService(void)
     ops.setfilecon = setfilecon;
 #endif
     int ret = InitParamWorkSpace(0, &ops);
-    PARAM_CHECK(ret == 0, return, "Init parameter workspace fail");
+    PARAM_CHECK(ret == 0, return ret, "Init parameter workspace fail");
     ret = InitPersistParamWorkSpace();
-    PARAM_CHECK(ret == 0, return, "Init persist parameter workspace fail");
+    PARAM_CHECK(ret == 0, return ret, "Init persist parameter workspace fail");
     // param server
     if (g_paramService.serverTask == NULL) {
         ParamStreamInfo info = {};
@@ -392,14 +392,16 @@ void InitParamService(void)
         info.recvMessage = NULL;
         info.incomingConnect = OnIncomingConnect;
         ret = ParamServerCreate(&g_paramService.serverTask, &info);
-        PARAM_CHECK(ret == 0, return, "Failed to create server");
+        PARAM_CHECK(ret == 0, return ret, "Failed to create server");
     }
 
     // init trigger space
     ret = InitTriggerWorkSpace();
-    PARAM_CHECK(ret == 0, return, "Failed to init trigger");
+    PARAM_CHECK(ret == 0, return ret, "Failed to init trigger");
     RegisterTriggerExec(TRIGGER_PARAM_WAIT, ExecuteWatchTrigger_);
     RegisterTriggerExec(TRIGGER_PARAM_WATCH, ExecuteWatchTrigger_);
+
+    return 0;
 }
 
 void LoadSpecialParam(void)
