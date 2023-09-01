@@ -149,7 +149,7 @@ int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
     if (fd < 0) {
         WATCHER_LOGE("ParamWatcher get server fd failed!");
         free(request);
-        return fd;
+        return PARAM_CODE_FAIL_CONNECT;
     }
 
     ssize_t sendLen = send(serverFd_, (char *)request, request->msgSize, 0);
@@ -310,7 +310,7 @@ int WatcherManager::GetServerFd(bool retry)
             break;
         }
         close(serverFd_);
-        serverFd_ = PARAM_CODE_FAIL_CONNECT;
+        serverFd_ = INVALID_SOCKET;
         usleep(sleepTime);
         retryCount++;
         if (stop_) {

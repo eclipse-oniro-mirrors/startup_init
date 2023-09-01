@@ -23,6 +23,9 @@
 #include "param_osadp.h"
 #include "param_utils.h"
 #include "param_include.h"
+
+#define OFFSET_ERR 0
+
 static uint32_t AllocateParamTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen);
 
 static int GetRealFileName(WorkSpace *workSpace, char *buffer, uint32_t size)
@@ -235,11 +238,11 @@ INIT_LOCAL_API int TraversalTrieNode(const WorkSpace *workSpace,
 
 INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAuditData *auditData)
 {
-    PARAM_CHECK(CheckWorkSpace(workSpace) == 0, return PARAM_WORKSPACE_NOT_INIT, "Invalid workSpace");
-    PARAM_CHECK(auditData != NULL, return PARAM_CODE_ERROR, "Invalid auditData");
+    PARAM_CHECK(CheckWorkSpace(workSpace) == 0, return OFFSET_ERR, "Invalid workSpace");
+    PARAM_CHECK(auditData != NULL, return OFFSET_ERR, "Invalid auditData");
     uint32_t realLen = sizeof(ParamSecurityNode) + sizeof(uid_t) * auditData->memberNum;
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize,
-        return PARAM_CODE_MEMORY_NOT_ENOUGH, "Failed to allocate currOffset %u, dataSize %u datalen %u",
+        return OFFSET_ERR, "Failed to allocate currOffset %u, dataSize %u datalen %u",
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);
     ParamSecurityNode *node = (ParamSecurityNode *)(workSpace->area->data + workSpace->area->currOffset);
     node->uid = auditData->dacData.uid;
@@ -255,7 +258,7 @@ INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAu
         // copy member
         int ret = PARAM_MEMCPY(node->members,
             realLen - sizeof(ParamSecurityNode), auditData->members, auditData->memberNum * sizeof(uid_t));
-        PARAM_CHECK(ret == 0, return 0, "Failed to copy members");
+        PARAM_CHECK(ret == 0, return OFFSET_ERR, "Failed to copy members");
     }
     node->memberNum = auditData->memberNum;
     uint32_t offset = workSpace->area->currOffset;
@@ -267,8 +270,8 @@ INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAu
 INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     const char *key, uint32_t keyLen, const char *value, uint32_t valueLen)
 {
-    PARAM_CHECK(key != NULL && value != NULL, return PARAM_WORKSPACE_NOT_INIT, "Invalid param");
-    PARAM_CHECK(CheckWorkSpace(workSpace) == 0, return PARAM_CODE_ERROR, "Invalid workSpace %s", key);
+    PARAM_CHECK(key != NULL && value != NULL, return OFFSET_ERR, "Invalid param");
+    PARAM_CHECK(CheckWorkSpace(workSpace) == 0, return OFFSET_ERR, "Invalid workSpace %s", key);
 
     uint32_t realLen = sizeof(ParamNode) + 1 + 1;
     // for const parameter, alloc memory on demand
@@ -279,7 +282,7 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     }
     realLen = PARAM_ALIGN(realLen);
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize,
-        return PARAM_CODE_ERROR, "Failed to allocate currOffset %u, dataSize %u datalen %u",
+        return OFFSET_ERR, "Failed to allocate currOffset %u, dataSize %u datalen %u",
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);
 
     ParamNode *node = (ParamNode *)(workSpace->area->data + workSpace->area->currOffset);
@@ -289,7 +292,7 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     node->keyLength = keyLen;
     node->valueLength = valueLen;
     int ret = PARAM_SPRINTF(node->data, realLen, "%s=%s", key, value);
-    PARAM_CHECK(ret > 0, return PARAM_CODE_ERROR, "Failed to sprint key and value");
+    PARAM_CHECK(ret > 0, return OFFSET_ERR, "Failed to sprint key and value");
     uint32_t offset = workSpace->area->currOffset;
     workSpace->area->currOffset += realLen;
     workSpace->area->paramNodeCount++;
@@ -359,7 +362,7 @@ INIT_LOCAL_API int AddParamEntry(uint32_t index, uint8_t type, const char *name,
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
     if (entry == NULL) {
         uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value));
-        PARAM_CHECK(offset > 0, return offset, "Failed to allocate name %s", name);
+        PARAM_CHECK(offset != 0, return PARAM_CODE_MEMORY_NOT_ENOUGH, "Failed to allocate name %s", name);
         SaveIndex(&node->dataIndex, offset);
     }
     return 0;
@@ -381,7 +384,7 @@ INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData)
     uint32_t offset = node->labelIndex;
     if (node->labelIndex == 0) {  // can not support update for label
         offset = AddParamSecurityNode(workSpace, auditData);
-        PARAM_CHECK(offset > 0, return offset, "Failed to add label");
+        PARAM_CHECK(offset != 0, return PARAM_CODE_MEMORY_NOT_ENOUGH, "Failed to add label");
         SaveIndex(&node->labelIndex, offset);
     } else {
         ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, node->labelIndex);
