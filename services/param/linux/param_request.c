@@ -294,7 +294,6 @@ void ResetParamSecurityLabel(void)
     paramSpace->flags |= WORKSPACE_FLAGS_NEED_ACCESS;
 #endif
 #endif
-#ifdef SUPPORT_RESET_CLIENT_SOCKET
     PARAM_LOGI("ResetParamSecurityLabel g_clientFd: %d ", g_clientFd);
     pthread_mutex_lock(&g_clientMutex);
     if (g_clientFd != INVALID_SOCKET) {
@@ -302,5 +301,4 @@ void ResetParamSecurityLabel(void)
         g_clientFd = INVALID_SOCKET;
     }
     pthread_mutex_unlock(&g_clientMutex);
-#endif
 }
