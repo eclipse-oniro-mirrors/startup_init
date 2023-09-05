@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "beget_ext.h"
 
@@ -103,6 +104,8 @@ int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen)
  * @return return 0 if succeed; other values if failed.
  */
 int StrArrayGetIndex(const char *strArray[], const char *target, int ignoreCase);
+
+long long GetUptimeInMicroSeconds(const struct timespec *uptime);
 
 #ifdef __cplusplus
 #if __cplusplus

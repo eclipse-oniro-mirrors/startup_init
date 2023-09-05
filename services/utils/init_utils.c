@@ -26,6 +26,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "init_log.h"
 #include "securec.h"
@@ -733,4 +734,20 @@ int StrArrayGetIndex(const char *strArray[], const char *target, int ignoreCase)
         }
     }
     return -1;
+}
+
+long long GetUptimeInMicroSeconds(const struct timespec *uptime)
+{
+    struct timespec now;
+
+    if (uptime == NULL) {
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        uptime = &now;
+    }
+
+    #define SECOND_TO_MICRO_SECOND (1000000)
+    #define MICRO_SECOND_TO_NANOSECOND (1000)
+
+    return (long long)((uptime->tv_sec * SECOND_TO_MICRO_SECOND) +
+            (uptime->tv_nsec / MICRO_SECOND_TO_NANOSECOND));
 }

@@ -305,6 +305,5 @@ HWTEST_F(HookMgrUnitTest, HookMgrExecuteInit_unitest, TestSize.Level1)
 {
     HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, nullptr, nullptr);
-    InitAddClearServiceHook([](SERVICE_INFO_CTX *serviceCtx) {return;});
 }
 } // namespace init_ut

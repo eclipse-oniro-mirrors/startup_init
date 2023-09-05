@@ -52,12 +52,3 @@ ohos_prebuilt_etc("inittrace_cfg") {
   part_name = "init"
   subsystem_name = "startup"
 }
-
-ohos_source_set("libinittrace_static") {
-  sources = [ "init_trace_static.c" ]
-  include_dirs = comm_include
-  public_configs = [ ":inittrace_static_config" ]
-  public_configs += [ "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
-  part_name = "init"
-  subsystem_name = "startup"
-}

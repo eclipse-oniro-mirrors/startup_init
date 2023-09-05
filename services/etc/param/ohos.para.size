@@ -23,4 +23,4 @@ sys_param=4096
 bootevent_param=4096
 startup_init_param=40960
 hiviewdfx_profiler_param=2048
-ohos_boot_param = 4096
+ohos_boot_param = 8192

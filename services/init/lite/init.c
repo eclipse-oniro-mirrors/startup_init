@@ -46,7 +46,7 @@ void LogInit(void)
     return;
 }
 
-void SystemPrepare(void)
+void SystemPrepare(long long uptime)
 {
 }
 
@@ -56,7 +56,7 @@ void ParseInitCfgByPriority(void)
     ReadFileInDir("/vendor/etc/init", ".cfg", ParseInitCfg, NULL);
 }
 
-void SystemConfig(void)
+void SystemConfig(const char *uptime)
 {
     InitServiceSpace();
 #ifdef LITEOS_SUPPORT

@@ -319,7 +319,6 @@ HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_DUMP, (void *)(&serviceInfoContext), nullptr);
     cJSON *fileRoot = cJSON_Parse(serviceStr);
     ASSERT_NE(nullptr, fileRoot);
-    PluginExecCmd("clear", 0, nullptr);
     ConfigContext context = { INIT_CONTEXT_MAIN };
     ParseAllServices(fileRoot, &context);
     (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_FORK_BEFORE, (void *)(&serviceInfoContext), nullptr);

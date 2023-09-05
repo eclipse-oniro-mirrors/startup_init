@@ -596,12 +596,12 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
 #ifndef OHOS_LITE
     TestBeforeInit();
 #endif
-    SystemPrepare();
+    SystemPrepare(0);
 #ifndef __LITEOS_A__
     SystemInit();
 #endif
     PARAM_LOGI("SystemConfig \n");
-    SystemConfig();
+    SystemConfig(NULL);
     PrepareInitUnitTestEnv();
 }
 
@@ -616,8 +616,6 @@ __attribute__((destructor)) static void ParamTestStubExit(void)
 
     HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, nullptr, nullptr);
     CloseUeventConfig();
-    const char *clearBootEventArgv[] = {"bootevent"};
-    PluginExecCmd("clear", ARRAY_LENGTH(clearBootEventArgv), clearBootEventArgv);
     CloseServiceSpace();
     demoExit();
     LE_CloseLoop(LE_GetDefaultLoop());
