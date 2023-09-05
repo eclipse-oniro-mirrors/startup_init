@@ -54,6 +54,8 @@ static unsigned int ConvertFlags(char *flagBuffer)
 #ifdef SUPPORT_HVB
         {"hvb", FS_MANAGER_HVB},
 #endif
+        {"fsprojquota", FS_MANAGER_PROJQUOTA},
+        {"fscasefold", FS_MANAGER_CASEFOLD},
     };
 
     BEGET_CHECK_RETURN_VALUE(flagBuffer != NULL && *flagBuffer != '\0', 0); // No valid flags.
