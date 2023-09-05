@@ -178,35 +178,42 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
     return status;
 }
 
-static int DoResizeF2fs(const char* device, const unsigned long long size)
+#define MAX_RESIZE_PARAM_NUM 20
+static int DoResizeF2fs(const char* device, const unsigned long long size, const unsigned int fsManagerFlags)
 {
     char *file = "/system/bin/resize.f2fs";
+    char sizeStr[RESIZE_BUFFER_SIZE] = {0};
+    char *argv[MAX_RESIZE_PARAM_NUM] = {NULL};
+    int argc = 0;
+
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize.f2fs is not exists.");
 
-    int ret = 0;
-    if (size == 0) {
-        char *cmd[] = {
-            file, (char *)device, NULL
-        };
-        int argc = ARRAY_LENGTH(cmd);
-        char **argv = (char **)cmd;
-        ret = ExecCommand(argc, argv);
-    } else {
+    argv[argc++] = file;
+    if (fsManagerFlags & FS_MANAGER_PROJQUOTA) {
+        argv[argc++] = "-O";
+        argv[argc++] = "extra_attr,project_quota";
+    }
+    if (fsManagerFlags & FS_MANAGER_CASEFOLD) {
+        argv[argc++] = "-O";
+        argv[argc++] = "casefold";
+        argv[argc++] = "-C";
+        argv[argc++] = "utf8";
+    }
+
+    if (size != 0) {
         unsigned long long realSize = size *
             ((unsigned long long)RESIZE_BUFFER_SIZE * RESIZE_BUFFER_SIZE / FS_MANAGER_BUFFER_SIZE);
-        char sizeStr[RESIZE_BUFFER_SIZE] = {0};
         int len = sprintf_s(sizeStr, RESIZE_BUFFER_SIZE, "%llu", realSize);
         if (len <= 0) {
             BEGET_LOGE("Write buffer size failed.");
         }
-        char *cmd[] = {
-            file, "-t", sizeStr, (char *)device, NULL
-        };
-        int argc = ARRAY_LENGTH(cmd);
-        char **argv = (char **)cmd;
-        ret = ExecCommand(argc, argv);
+        argv[argc++] = "-t";
+        argv[argc++] = sizeStr;
     }
-    return ret;
+
+    argv[argc++] = (char*)device;
+    BEGET_ERROR_CHECK(argc <= MAX_RESIZE_PARAM_NUM, return -1, "argc: %d is too big.", argc);
+    return ExecCommand(argc, argv);
 }
 
 static int DoFsckF2fs(const char* device)
@@ -368,7 +375,7 @@ int MountOneItem(FstabItem *item)
     }
 
     if (strcmp(item->fsType, "f2fs") == 0 && strcmp(item->mountPoint, "/data") == 0) {
-        int ret = DoResizeF2fs(item->deviceName, 0);
+        int ret = DoResizeF2fs(item->deviceName, 0, item->fsManagerFlags);
         if (ret != 0) {
             BEGET_LOGE("Failed to resize.f2fs dir %s , ret = %d", item->deviceName, ret);
         }
