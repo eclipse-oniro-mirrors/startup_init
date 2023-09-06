@@ -163,9 +163,13 @@ LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,
         "Invalid parameters incommingConnect %s", info->server);
 
     int fd = info->socketId;
+    int ret = 0;
     if (info->socketId <= 0) {
         fd = CreateSocket(info->baseInfo.flags, info->server);
         LE_CHECK(fd > 0, return LE_FAILURE, "Failed to create socket %s", info->server);
+    } else {
+        ret = listenSocket(fd, info->baseInfo.flags, info->server);
+        LE_CHECK(ret == 0, return LE_FAILURE, "Failed to listen socket %s", info->server);
     }
 
     EventLoop *loop = (EventLoop *)loopHandle;
@@ -177,7 +181,7 @@ LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,
     task->base.innerClose = HandleStreamTaskClose_;
     task->incommingConnect = info->incommingConnect;
     loop->addEvent(loop, (const BaseTask *)task, Event_Read);
-    int ret = memcpy_s(task->server, strlen(info->server) + 1, info->server, strlen(info->server) + 1);
+    ret = memcpy_s(task->server, strlen(info->server) + 1, info->server, strlen(info->server) + 1);
     LE_CHECK(ret == 0, return LE_FAILURE, "Failed to copy server name %s", info->server);
     *taskHandle = (TaskHandle)task;
     return LE_SUCCESS;

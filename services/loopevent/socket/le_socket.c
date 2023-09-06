@@ -196,3 +196,26 @@ int AcceptSocket(int fd, int flags)
     SetNoBlock(clientFd);
     return clientFd;
 }
+
+INIT_LOCAL_API
+int listenSocket(int fd, int flags, const char *server)
+{
+    int type = flags & 0x0000ff00;
+    LE_LOGV("listenSocket flags %x type %x server %s", flags, type, server);
+    SetNoBlock(fd);
+    if (!LE_TEST_FLAGS(flags, TASK_SERVER)) {
+        return 0;
+    }
+    if (type == TASK_TCP) {
+        int ret = listen(fd, LOOP_MAX_CLIENT);
+        LE_CHECK(ret >= 0, close(fd);
+            return ret, "Failed to listen socket");
+    } else if (type == TASK_PIPE) {
+        int ret = listen(fd, LOOP_MAX_CLIENT);
+        LE_CHECK(ret >= 0, close(fd);
+            return ret, "Failed to listen socket error: %d", errno);
+        ret = chmod(server, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+        LE_CHECK(ret == 0, return -1, "Failed to chmod %s, err %d. ", server, errno);
+    }
+    return 0;
+}
