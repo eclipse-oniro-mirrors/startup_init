@@ -222,8 +222,6 @@ int InitAddJobParseHook(JobParseHook hook);
  */
 int InitAddServiceHook(ServiceHook hook, int hookState);
 
-int InitAddClearServiceHook(ServiceHook hook);
-
 #ifdef __cplusplus
 #if __cplusplus
 }

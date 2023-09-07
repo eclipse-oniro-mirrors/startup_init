@@ -15,16 +15,24 @@
 #include <signal.h>
 #include "init.h"
 #include "init_log.h"
+#include "init_utils.h"
 
 static const pid_t INIT_PROCESS_PID = 1;
 
 int main(int argc, char * const argv[])
 {
+    const char *uptime = NULL;
+    long long upTimeInMicroSecs = 0;
     int isSecondStage = 0;
     (void)signal(SIGPIPE, SIG_IGN);
     // Number of command line parameters is 2
-    if (argc == 2 && (strcmp(argv[1], "--second-stage") == 0)) {
+    if (argc > 1 && (strcmp(argv[1], "--second-stage") == 0)) {
         isSecondStage = 1;
+        if (argc > 2) {
+            uptime = argv[2];
+        }
+    } else {
+        upTimeInMicroSecs = GetUptimeInMicroSeconds(NULL);
     }
     if (getpid() != INIT_PROCESS_PID) {
         INIT_LOGE("Process id error %d!", getpid());
@@ -32,13 +40,13 @@ int main(int argc, char * const argv[])
     }
     EnableInitLog(INIT_INFO);
     if (isSecondStage == 0) {
-        SystemPrepare();
+        SystemPrepare(upTimeInMicroSecs);
     } else {
         LogInit();
     }
     SystemInit();
     SystemExecuteRcs();
-    SystemConfig();
+    SystemConfig(uptime);
     SystemRun();
     return 0;
 }

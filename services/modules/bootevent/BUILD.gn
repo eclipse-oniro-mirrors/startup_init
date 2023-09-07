@@ -22,6 +22,7 @@ config("bootevent_static_config") {
     "//base/startup/init/services/param/include",
     "//base/startup/init/services/include/param",
     "//third_party/bounds_checking_function/include/",
+    "//base/customization/config_policy/interfaces/inner_api/include",
   ]
 }
 

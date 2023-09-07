@@ -174,7 +174,7 @@ static int StartUeventd(char **requiredDevices, int num)
     return 0;
 }
 
-static void StartInitSecondStage(void)
+static void StartInitSecondStage(long long uptime)
 {
     int requiredNum = 0;
     Fstab *fstab = LoadRequiredFstab();
@@ -210,10 +210,13 @@ static void StartInitSecondStage(void)
 
     INIT_LOGI("Start init second stage.");
     SwitchRoot("/usr");
+    char buf[64];
+    snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%lld", uptime);
     // Execute init second stage
     char * const args[] = {
         "/bin/init",
         "--second-stage",
+        buf,
         NULL,
     };
     if (execv("/bin/init", args) != 0) {
@@ -222,7 +225,7 @@ static void StartInitSecondStage(void)
     }
 }
 
-void SystemPrepare(void)
+void SystemPrepare(long long uptime)
 {
     MountBasicFs();
     CreateDeviceNode();
@@ -235,7 +238,7 @@ void SystemPrepare(void)
     // two stages of init.
     // If we are in updater mode, only one stage of init.
     if (InUpdaterMode() == 0) {
-        StartInitSecondStage();
+        StartInitSecondStage(uptime);
     }
 }
 
@@ -388,7 +391,19 @@ void ParseInitCfgByPriority(void)
     FreeCfgFiles(files);
 }
 
-void SystemConfig(void)
+static void WriteUptimeSysParam(const char *param, const char *uptime)
+{
+    char buf[64];
+
+    if (uptime == NULL) {
+        snprintf_s(buf, sizeof(buf), sizeof(buf) - 1,
+                   "%lld", GetUptimeInMicroSeconds(NULL));
+        uptime = buf;
+    }
+    SystemWriteParam(param, uptime);
+}
+
+void SystemConfig(const char *uptime)
 {
     INIT_TIMING_STAT timingStat;
 
@@ -424,6 +439,10 @@ void SystemConfig(void)
     // parse parameters
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_PARAM_LOAD, (void *)&timingStat, (void *)&options);
     InitLoadParamFiles();
+
+    // Write kernel uptime into system parameter
+    WriteUptimeSysParam("ohos.boot.time.kernel", uptime);
+
     // read config
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
@@ -443,5 +462,6 @@ void SystemConfig(void)
 
 void SystemRun(void)
 {
+    WriteUptimeSysParam("ohos.boot.time.init", NULL);
     StartParamService();
 }

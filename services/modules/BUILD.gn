@@ -29,10 +29,7 @@ group("static_modules") {
     if (build_selinux) {
       deps += [ "selinux:libselinuxadp_static" ]
     }
-    deps += [
-      "trace:inittrace_cfg",
-      "trace:libinittrace_static",
-    ]
+    deps += [ "trace:inittrace_cfg" ]
   }
 }
 

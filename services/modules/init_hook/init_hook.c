@@ -85,24 +85,6 @@ ServiceExtData *GetServiceExtData(const char *serviceName, uint32_t id)
     return GetServiceExtData_(service, id);
 }
 
-static int ServiceClearHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
-{
-    SERVICE_INFO_CTX *ctx = (SERVICE_INFO_CTX *)executionContext;
-    ServiceHook realHook = (ServiceHook)hookInfo->hookCookie;
-    realHook(ctx);
-    return 0;
-};
-
-int InitAddClearServiceHook(ServiceHook hook)
-{
-    HOOK_INFO info;
-    info.stage = INIT_SERVICE_CLEAR;
-    info.prio = 0;
-    info.hook = ServiceClearHookWrapper;
-    info.hookCookie = (void *)hook;
-    return HookMgrAddEx(GetBootStageHookMgr(), &info);
-}
-
 static int JobParseHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
 {
     JOB_PARSE_CTX *jobParseContext = (JOB_PARSE_CTX *)executionContext;
@@ -120,27 +102,6 @@ int InitAddJobParseHook(JobParseHook hook)
     info.hookCookie = (void *)hook;
 
     return HookMgrAddEx(GetBootStageHookMgr(), &info);
-}
-
-static int CmdClear(int id, const char *name, int argc, const char **argv)
-{
-    SERVICE_INFO_CTX ctx = {0};
-    ctx.reserved = argc >= 1 ? argv[0] : NULL;
-    PLUGIN_LOGI("CmdClear %s cmd: %s", name, ctx.reserved);
-
-    InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
-    while (node != NULL) {
-        if (node->data.service == NULL) {
-            node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
-            continue;
-        }
-        ctx.serviceName = node->name;
-        HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)&ctx, NULL);
-        node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
-    }
-    ctx.reserved = "clearInitBootevent";
-    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_CLEAR, (void *)&ctx, NULL);
-    return 0;
 }
 
 static void SetLogLevelFunc(const char *value)
@@ -176,7 +137,6 @@ static int InitCmd(int id, const char *name, int argc, const char **argv)
 
 static int ParamSetInitCmdHook(const HOOK_INFO *hookInfo, void *cookie)
 {
-    AddCmdExecutor("clear", CmdClear);
     AddCmdExecutor("setloglevel", CmdSetLogLevel);
     AddCmdExecutor("initcmd", InitCmd);
     return 0;
@@ -255,10 +215,4 @@ MODULE_CONSTRUCTOR(void)
     InitAddGlobalInitHook(0, ParamSetInitCmdHook);
     // Depends on parameter service
     InitAddPostPersistParamLoadHook(0, InitDebugHook);
-}
-
-MODULE_DESTRUCTOR(void)
-{
-    const char *clearBootEventArgv[] = {"bootevent"};
-    PluginExecCmd("clear", ARRAY_LENGTH(clearBootEventArgv), clearBootEventArgv);
 }

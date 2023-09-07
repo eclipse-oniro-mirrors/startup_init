@@ -37,7 +37,7 @@ extern "C" {
 #define SECTONSEC  1000000000
 #define USTONSEC  1000
 #define SAVEINITBOOTEVENTMSEC  100000
-#define BOOTEVENT_OUTPUT_PATH "/data/service/el0/startup/init/"
+#define BOOTEVENT_OUTPUT_PATH "/data/log/startup/"
 
 enum {
     BOOTEVENT_FORK,
@@ -53,7 +53,6 @@ typedef struct tagBOOT_EVENT_PARAM_ITEM {
     int flags;
 } BOOT_EVENT_PARAM_ITEM;
 
-int GetBootEventEnable(void);
 ListNode *GetBootEventList(void);
 
 #ifdef __cplusplus
