@@ -95,6 +95,7 @@ typedef struct {
 #define TASK_SERVER (0x01 << 16)
 #define TASK_CONNECT (0x02 << 16)
 #define TASK_TEST (0x01 << 24)
+#define TASK_PUBLIC (0x01 << 25) // If the socket can be publicly connected
 typedef void (*LE_DisConnectComplete)(const TaskHandle client);
 typedef void (*LE_ConnectComplete)(const TaskHandle client);
 typedef void (*LE_SendMessageComplete)(const TaskHandle taskHandle, BufferHandle handle);

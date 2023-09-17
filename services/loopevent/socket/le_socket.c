@@ -28,7 +28,7 @@
 
 #include "le_utils.h"
 
-static int CreatePipeServerSocket_(const char *server, int maxClient)
+static int CreatePipeServerSocket_(const char *server, int maxClient, int public)
 {
     int listenfd = socket(PF_UNIX, SOCK_STREAM, 0);
     LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket errno %d", errno);
@@ -51,7 +51,11 @@ static int CreatePipeServerSocket_(const char *server, int maxClient)
     ret = listen(listenfd, maxClient);
     LE_CHECK(ret >= 0, close(listenfd);
         return ret, "Failed to listen socket  error: %d", errno);
-    ret = chmod(server, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+    if (public) {
+        mode |= S_IROTH | S_IWOTH;
+    }
+    ret = chmod(server, mode);
     LE_CHECK(ret == 0, return -1, "Failed to chmod %s, err %d. ", server, errno);
     LE_LOGV("CreatePipeSocket listen fd: %d server:%s ", listenfd, serverAddr.sun_path);
     return listenfd;
@@ -169,7 +173,8 @@ int CreateSocket(int flags, const char *server)
         }
     } else if (type == TASK_PIPE) {
         if (LE_TEST_FLAGS(flags, TASK_SERVER)) {
-            fd = CreatePipeServerSocket_(server, LOOP_MAX_CLIENT);
+            fd = CreatePipeServerSocket_(server, LOOP_MAX_CLIENT,
+                (int)LE_TEST_FLAGS(flags, TASK_PUBLIC));
         } else if (LE_TEST_FLAGS(flags, TASK_CONNECT)) {
             fd = CreatePipeSocket_(server);
         }
