@@ -49,7 +49,7 @@ int ParamServerCreate(ParamTaskPtr *stream, const ParamStreamInfo *streamInfo)
     PARAM_CHECK(stream != NULL && streamInfo != NULL, return -1, "Invalid param");
     PARAM_CHECK(streamInfo->incomingConnect != NULL, return -1, "Invalid incomingConnect");
     LE_StreamServerInfo info = {};
-    info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_SERVER;
+    info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_SERVER | TASK_PUBLIC;
     info.server = streamInfo->server;
     info.baseInfo.close = streamInfo->close;
     info.incommingConnect = streamInfo->incomingConnect;
