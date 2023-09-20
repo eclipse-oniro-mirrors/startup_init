@@ -72,13 +72,11 @@ HWTEST_F(InitUnitTest, TestSystemPrepare, TestSize.Level1)
 {
     SetStubResult(STUB_MOUNT, -1);
     SetStubResult(STUB_MKNODE, -1);
-    MountBasicFs();
-    CreateDeviceNode();
+    CreateFsAndDeviceNode();
 
     SetStubResult(STUB_MOUNT, 0);
     SetStubResult(STUB_MKNODE, 0);
-    MountBasicFs();
-    CreateDeviceNode();
+    CreateFsAndDeviceNode();
 }
 
 HWTEST_F(InitUnitTest, TestSystemExecRcs, TestSize.Level1)

@@ -42,7 +42,6 @@ extern "C" {
 
 void SystemInit(void);
 void LogInit(void);
-void SystemPrepare(long long uptime);
 void SystemConfig(const char *uptime);
 void SystemRun(void);
 void SystemExecuteRcs(void);

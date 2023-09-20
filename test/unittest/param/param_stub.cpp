@@ -596,7 +596,6 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
 #ifndef OHOS_LITE
     TestBeforeInit();
 #endif
-    SystemPrepare(0);
 #ifndef __LITEOS_A__
     SystemInit();
 #endif

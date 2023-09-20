@@ -46,14 +46,14 @@ void LogInit(void)
     return;
 }
 
-void SystemPrepare(long long uptime)
-{
-}
-
 void ParseInitCfgByPriority(void)
 {
     ReadFileInDir(OTHER_CFG_PATH, ".cfg", ParseInitCfg, NULL);
     ReadFileInDir("/vendor/etc/init", ".cfg", ParseInitCfg, NULL);
+}
+
+void CreateFsAndDeviceNode(void)
+{
 }
 
 void SystemConfig(const char *uptime)
