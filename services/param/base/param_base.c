@@ -27,6 +27,7 @@
 #include "param_trie.h"
 
 #define TIMEOUT 1000
+#define PUBLIC_APP_BEGIN_UID 10000
 
 static ParamWorkSpace g_paramWorkSpace = {0};
 
@@ -530,7 +531,10 @@ static int CheckParamPermission_(const ParamLabelIndex *labelIndex,
     if (srcLabel->cred.uid == 0 && srcLabel->cred.pid == 1 && mode == DAC_WRITE) {
         return DAC_RESULT_PERMISSION;
     }
-    int ret = DacCheckParamPermission(labelIndex, srcLabel, name, mode);
+    int ret = 0;
+    if (srcLabel->cred.uid < PUBLIC_APP_BEGIN_UID) {
+        ret = DacCheckParamPermission(labelIndex, srcLabel, name, mode);
+    }
 #ifdef PARAM_SUPPORT_SELINUX
     if (ret == DAC_RESULT_PERMISSION) {
         ret = SelinuxCheckParamPermission(labelIndex, srcLabel, name, mode);
