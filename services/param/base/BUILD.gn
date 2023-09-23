@@ -18,8 +18,7 @@ config("exported_header_files") {
   include_dirs = [
     "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
     "//base/startup/init/interfaces/innerkits/include",
-    "//base/startup/init/services/include/param",
-    "//base/startup/init/services/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/loopevent/include",
     "//base/startup/init/services/log",
     "//base/startup/init/services/param/include",

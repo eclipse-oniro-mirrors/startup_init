@@ -31,8 +31,8 @@ ohos_static_library("libfsmanager_static") {
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
     "//third_party/bounds_checking_function/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/log",
-    "//base/startup/init/services/include",
     "//base/startup/init/services/param/include",
   ]
   if (defined(global_parts_info.startup_hvb)) {

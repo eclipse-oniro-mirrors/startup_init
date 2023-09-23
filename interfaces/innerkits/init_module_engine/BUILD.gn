@@ -26,7 +26,6 @@ if (defined(ohos_lite)) {
     visibility += [ "./../../../services/*" ]
     include_dirs = [
       "include/",
-      "//base/startup/init/services/include",
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/services/log",
       "//third_party/cJSON",
@@ -73,7 +72,7 @@ if (defined(ohos_lite)) {
     include_dirs = [
       "//base/startup/init/interfaces/innerkits/init_module_engine/include",
       "//base/startup/init/interfaces/innerkits/include",
-      "//base/startup/init/services/include",
+      "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/services/log",
       "//third_party/cJSON",
     ]

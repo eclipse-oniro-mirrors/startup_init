@@ -20,7 +20,7 @@ ohos_static_library("libfile") {
   sources = [ "init_file.c" ]
   include_dirs = [
     "//base/startup/init/services/log",
-    "//base/startup/init/services/include",
+    "//base/startup/init/interfaces/innerkits/include",
     "//third_party/bounds_checking_function/include",
   ]
   public_configs = [ ":exported_header_files" ]

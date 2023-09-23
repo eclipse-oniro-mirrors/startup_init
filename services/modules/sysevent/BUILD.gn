@@ -24,7 +24,7 @@ ohos_shared_library("eventmodule") {
     "..",
     "../bootevent",
     "../init_hook",
-    "../../include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
   ]
 
   deps = [

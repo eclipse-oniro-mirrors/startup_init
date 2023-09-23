@@ -124,8 +124,8 @@ config("libseccomp_static_config") {
 
   if (seccomp_enable_debug) {
     include_dirs += [
-      "../../../services/include",
-      "../../../services/include/param",
+      "../../../interfaces/innerkits/include",
+      "../../../interfaces/innerkits/include/param",
     ]
 
     defines = [ "WITH_SECCOMP_DEBUG" ]

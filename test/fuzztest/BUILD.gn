@@ -158,7 +158,7 @@ ohos_fuzztest("ReadFileInDirFuzzTest") {
 
   include_dirs = [
     "//base/startup/init/services/init/include",
-    "//base/startup/init/services/include",
+    "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/test/fuzztest/utils/include",
   ]
 
@@ -228,7 +228,7 @@ ohos_fuzztest("SystemDumpParametersFuzzTest") {
       "//base/startup/init/test/fuzztest/systemdumpparameters_fuzzer"
 
   include_dirs = [
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/test/fuzztest/utils/include",
   ]
 
@@ -255,7 +255,7 @@ ohos_fuzztest("FindParameterFuzzTest") {
   fuzz_config_file = "//base/startup/init/test/fuzztest/findparameter_fuzzer"
 
   include_dirs = [
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/test/fuzztest/utils/include",
   ]
 
@@ -280,7 +280,7 @@ ohos_fuzztest("GetParameterCFuzzTest") {
   fuzz_config_file = "//base/startup/init/test/fuzztest/getparameterc_fuzzer"
 
   include_dirs = [
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/test/fuzztest/utils/include",
   ]
 
@@ -306,7 +306,7 @@ ohos_fuzztest("GetParameterCommitIdFuzzTest") {
       "//base/startup/init/test/fuzztest/getparametercommitid_fuzzer"
 
   include_dirs = [
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/test/fuzztest/utils/include",
   ]
 
@@ -331,7 +331,7 @@ ohos_fuzztest("GetParameterNameFuzzTest") {
   fuzz_config_file = "//base/startup/init/test/fuzztest/getparametername_fuzzer"
 
   include_dirs = [
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/test/fuzztest/utils/include",
   ]
 
@@ -358,7 +358,7 @@ ohos_fuzztest("GetParameterValueFuzzTest") {
       "//base/startup/init/test/fuzztest/getparametervalue_fuzzer"
 
   include_dirs = [
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/test/fuzztest/utils/include",
   ]
 
@@ -384,7 +384,7 @@ ohos_fuzztest("SetParameterCFuzzTest") {
   fuzz_config_file = "//base/startup/init/test/fuzztest/setparameterc_fuzzer"
 
   include_dirs = [
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/test/fuzztest/utils/include",
   ]
 
@@ -410,7 +410,7 @@ ohos_fuzztest("SystemTraversalParameterFuzzTest") {
       "//base/startup/init/test/fuzztest/systemtraversalparameter_fuzzer"
 
   include_dirs = [
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/init/include",
     "//base/startup/init/test/fuzztest/utils/include",
     "//third_party/bounds_checking_function/include",
@@ -440,7 +440,7 @@ ohos_fuzztest("WaitParameterFuzzTest") {
   fuzz_config_file = "//base/startup/init/test/fuzztest/waitparameter_fuzzer"
 
   include_dirs = [
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/test/fuzztest/utils/include",
   ]
 
@@ -466,7 +466,7 @@ ohos_fuzztest("WatchParameterFuzzTest") {
 
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include/syspara",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/init/include",
     "//base/startup/init/test/fuzztest/utils/include",
   ]
@@ -619,7 +619,7 @@ ohos_fuzztest("GetIntParameterCFuzzTest") {
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/test/fuzztest/utils/include",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
   ]
 
   deps = [
@@ -1835,7 +1835,7 @@ ohos_fuzztest("ServiceWatchForStatusFuzzTest") {
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/test/fuzztest/utils/include",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
   ]
 
   deps = [
@@ -2893,7 +2893,7 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
     "//base/startup/init/services/param/watcher/proxy",
     "//base/startup/init/services/param/watcher/include",
     "//base/startup/init/services/param/include",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/param/linux",
     "//base/startup/init/services/loopevent/include",
     "//base/startup/init/services/param/watcher/agent",
@@ -2938,7 +2938,7 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
     "//base/startup/init/services/param/watcher/proxy",
     "//base/startup/init/services/param/watcher/include",
     "//base/startup/init/services/param/include",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/param/linux",
     "//base/startup/init/services/loopevent/include",
     "//base/startup/init/services/param/watcher/agent",
@@ -2983,7 +2983,7 @@ ohos_fuzztest("AddWatcherFuzzTest") {
     "//base/startup/init/services/param/watcher/proxy",
     "//base/startup/init/services/param/watcher/include",
     "//base/startup/init/services/param/include",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/param/linux",
     "//base/startup/init/services/loopevent/include",
     "//base/startup/init/services/param/watcher/agent",
@@ -3026,7 +3026,7 @@ ohos_fuzztest("DelWatcherFuzzTest") {
     "//base/startup/init/services/param/watcher/proxy",
     "//base/startup/init/services/param/watcher/include",
     "//base/startup/init/services/param/include",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/param/linux",
     "//base/startup/init/services/loopevent/include",
     "//base/startup/init/services/param/watcher/agent",
@@ -3069,7 +3069,7 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
     "//base/startup/init/services/param/watcher/proxy",
     "//base/startup/init/services/param/watcher/include",
     "//base/startup/init/services/param/include",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/param/linux",
     "//base/startup/init/services/loopevent/include",
     "//base/startup/init/services/param/watcher/agent",

@@ -31,7 +31,7 @@ ohos_static_library("libcontrolfd") {
   include_dirs = [
     ".",
     "//third_party/bounds_checking_function/include",
-    "//base/startup/init/services/include",
+    "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/services/loopevent/include",
   ]
   part_name = "init"

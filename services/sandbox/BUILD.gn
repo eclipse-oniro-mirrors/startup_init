@@ -31,7 +31,7 @@ ohos_static_library("sandbox") {
   include_dirs = [
     "//third_party/bounds_checking_function/include",
     "//third_party/cJSON",
-    "//base/startup/init/services/include",
+    "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/include",
   ]
   if (target_cpu == "arm64") {

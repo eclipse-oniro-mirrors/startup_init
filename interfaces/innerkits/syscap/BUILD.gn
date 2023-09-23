@@ -22,7 +22,7 @@ ohos_shared_library("syscap") {
 
   include_dirs = [
     "../include",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
   ]
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",

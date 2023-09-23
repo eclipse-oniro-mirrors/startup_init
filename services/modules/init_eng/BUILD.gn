@@ -17,8 +17,8 @@ import("//build/ohos.gni")
 comm_include = [
   ".",
   "..",
-  "../../include",
-  "../../include/param",
+  "//base/startup/init/interfaces/innerkits/include",
+  "//base/startup/init/interfaces/innerkits/include/param",
 ]
 
 ohos_shared_library("init_eng") {
