@@ -711,29 +711,84 @@ uint32_t IntervalTime(struct timespec *startTime, struct timespec *endTime)
     return diff;
 }
 
-int StrArrayGetIndex(const char *strArray[], const char *target, int ignoreCase)
+typedef int (*str_compare)(const char *s1, const char *s2);
+int OH_ExtendableStrArrayGetIndex(const char *strArray[], const char *target, int ignoreCase, const char *extend[])
 {
     int i;
+    int idx;
+    str_compare cmp = strcmp;
 
-    if ((target == NULL) || (target[0] == '\0')) {
+    if ((strArray == NULL) || (target == NULL) || (target[0] == '\0')) {
         return -1;
     }
 
     if (ignoreCase) {
-        for (i = 0; strArray[i] != NULL; i++) {
-            if (strcasecmp(strArray[i], target) == 0) {
-                return i;
-            }
-        }
-        return -1;
+        cmp = strcasecmp;
     }
 
     for (i = 0; strArray[i] != NULL; i++) {
-        if (strcmp(strArray[i], target) == 0) {
+        if (cmp(strArray[i], target) == 0) {
             return i;
         }
     }
+    if (extend == NULL) {
+        return -1;
+    }
+    idx = 0;
+    while (extend[idx] != NULL) {
+        if (cmp(extend[idx], target) == 0) {
+            return i + idx;
+        }
+        idx++;
+    }
     return -1;
+}
+
+int OH_StrArrayGetIndex(const char *strArray[], const char *target, int ignoreCase)
+{
+    return OH_ExtendableStrArrayGetIndex(strArray, target, ignoreCase, NULL);
+}
+
+void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, int ignoreCase, void **extendStrDict)
+{
+    int i;
+    const char *pos;
+    str_compare cmp = strcmp;
+
+    if ((strDict == NULL) || (dictSize < sizeof(const char *)) || (target == NULL) || (target[0] == '\0')) {
+        return NULL;
+    }
+
+    if (ignoreCase) {
+        cmp = strcasecmp;
+    }
+
+    i = 0;
+    pos = (const char *)strDict;
+    while (*pos != '\0') {
+        if (cmp(*(const char **)pos, target) == 0) {
+            return (void *)pos;
+        }
+        i++;
+        pos = pos + dictSize;
+    }
+    if (extendStrDict == NULL) {
+        return NULL;
+    }
+    pos = (const char *)extendStrDict;
+    while (*pos != '\0') {
+        if (cmp(*(const char **)pos, target) == 0) {
+            return (void *)pos;
+        }
+        i++;
+        pos = pos + dictSize;
+    }
+    return NULL;
+}
+
+void *OH_StrDictGet(void **strDict, int dictSize, const char *target, int ignoreCase)
+{
+    return OH_ExtendableStrDictGet(strDict, dictSize, target, ignoreCase, NULL);
 }
 
 long long GetUptimeInMicroSeconds(const struct timespec *uptime)

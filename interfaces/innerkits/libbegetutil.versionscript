@@ -148,6 +148,10 @@
     GetDistributionOSApiVersion;
     GetDistributionOSReleaseType;
     SaveParameters;
+    OH_StrArrayGetIndex;
+    OH_ExtendableStrArrayGetIndex;
+    OH_StrDictGet;
+    OH_ExtendableStrDictGet;
   local:
     *;
 };

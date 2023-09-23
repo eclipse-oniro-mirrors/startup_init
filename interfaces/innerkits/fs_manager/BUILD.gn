@@ -33,6 +33,7 @@ ohos_static_library("libfsmanager_static") {
       "//base/startup/init/interfaces/innerkits/include",
       "//third_party/bounds_checking_function/include",
       "//base/startup/init/interfaces/innerkits/include/param",
+      "//base/startup/init/interfaces/innerkits/init_module_engine/include",
       "//base/startup/init/services/log",
       "//base/startup/init/services/param/include",
     ]
