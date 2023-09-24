@@ -16,6 +16,7 @@
 #include <errno.h>
 
 #include "le_epoll.h"
+#include "le_idle.h"
 
 static int IsValid_(const EventEpoll *loop)
 {
@@ -96,6 +97,8 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
         return LE_FAILURE;
     }
     while (1) {
+        LE_RunIdle((LoopHandle)&(epoll->loop));
+
         int number = epoll_wait(epoll->epollFd, epoll->waitEvents, loop->maxevents, -1);
         for (int index = 0; index < number; index++) {
             if ((epoll->waitEvents[index].events & EPOLLIN) == EPOLLIN) {

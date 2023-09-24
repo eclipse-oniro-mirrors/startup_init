@@ -184,6 +184,53 @@ LE_STATUS LE_StartWatcher(const LoopHandle loopHandle,
     WatcherHandle *watcherHandle, const LE_WatchInfo *info, const void *context);
 void LE_RemoveWatcher(const LoopHandle loopHandle, const WatcherHandle watcherHandle);
 
+/**
+ * Idle Processing：Idle handlers will be called for every loop
+ */
+
+/* Idle Handler */
+typedef void *IdleHandle;
+
+/**
+ * @brief Idle process function prototype
+ *
+ * @param taskHandle idle handler
+ * @param context idle function context
+ * @return None
+ */
+typedef void (*LE_ProcessIdle)(const IdleHandle taskHandle, void *context);
+
+/**
+ * @brief Add a new idle handler
+ *
+ * @param loopHandle the running loop this idle will be attached
+ * @param idle optional output parameter for the created idle handler
+ * @param processIdle the idle handler function
+ * @param context optional idle handler context
+ * @param repeat if the idle function will be repeated forevent (non zero) or once (zero)
+ * @return status code, 0 means succeed
+ */
+LE_STATUS LE_AddIdle(const LoopHandle loopHandle, IdleHandle *idle,
+    LE_ProcessIdle processIdle, void *context, int repeat);
+
+/**
+ * @brief Delete an idle handler
+ *
+ * @param idle idle handler
+ * @return None
+ */
+void LE_DelIdle(IdleHandle idle);
+
+/**
+ * @brief Execute an function once in the next loop
+ *
+ * @param loopHandle the running loop this idle will be attached
+ * @param idle the function to be executed
+ * @param context optional idle handler context
+ * @return status code, 0 means succeed
+ */
+int LE_DelayProc(const LoopHandle loopHandle, LE_ProcessIdle idle, void *context);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

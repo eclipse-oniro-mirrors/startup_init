@@ -87,6 +87,9 @@
     LE_StopAsyncTask;
     LE_StopLoop;
     LE_StopTimer;
+    LE_AddIdle;
+    LE_DelIdle;
+    LE_DelayProc;
     ModuleMgrCreate;
     ModuleMgrDestroy;
     ModuleMgrGetArgs;
