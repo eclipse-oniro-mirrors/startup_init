@@ -28,6 +28,7 @@
     { "name": "AddCareContextCmdExecutor" },
     { "name": "GetParameterFromCmdLine" },
     { "name": "InitSubInitContext" },
+    { "name": "ExecReboot" },
     { "name": "LE_AcceptStreamClient" },
     { "name": "LE_AddSignal" },
     { "name": "LE_CloseLoop" },

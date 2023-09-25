@@ -93,6 +93,11 @@ void LogToDmesg(InitLogLevel logLevel, const char *tag, const char *info)
     }
     return;
 }
+
+INIT_PUBLIC_API int GetKmsgFd()
+{
+    return g_fd;
+}
 #endif
 
 static void PrintLog(InitLogLevel logLevel, unsigned int domain, const char *tag, const char *logInfo)
