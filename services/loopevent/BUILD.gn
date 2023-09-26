@@ -12,6 +12,7 @@
 # limitations under the License.
 
 common_sources = [
+  "idle/le_idle.c",
   "loop/le_epoll.c",
   "loop/le_loop.c",
   "signal/le_signal.c",
@@ -36,6 +37,7 @@ common_include = [
   "timer",
   "utils",
   "signal",
+  "idle",
 ]
 
 config("exported_header_files") {

@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include "init_log.h"
 #include "init_module_engine.h"
+#include "loop_event.h"
 
 static MODULE_MGR *defaultModuleMgr = NULL;
 static MODULE_MGR *autorunModuleMgr = NULL;
@@ -40,9 +41,18 @@ void InitModuleMgrUnInstall(const char *moduleName)
     ModuleMgrUninstall(defaultModuleMgr, moduleName);
 }
 
+static void DelayedUninstall(const IdleHandle taskHandle, void *context)
+{
+    const char *moduleName = (const char *)context;
+    if (moduleName == NULL) {
+        return;
+    }
+    ModuleMgrUninstall(autorunModuleMgr, moduleName);
+}
+
 void AutorunModuleMgrUnInstall(const char *moduleName)
 {
-    ModuleMgrUninstall(autorunModuleMgr, moduleName);
+    LE_DelayProc(LE_GetDefaultLoop(), DelayedUninstall, (void *)strdup(moduleName));
 }
 
 static void InitModuleDump(const MODULE_INFO *moduleInfo)
