@@ -21,6 +21,7 @@
 #include <thread>
 
 #include "init_param.h"
+#include "param_init.h"
 #include "parameter.h"
 #include "system_ability_definition.h"
 #include "string_ex.h"

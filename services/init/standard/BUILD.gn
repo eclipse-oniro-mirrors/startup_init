@@ -30,6 +30,37 @@ FSCRYPT_PATH =
 import("//build/ohos.gni")
 import("//build/ohos/native_stub/native_stub.gni")
 
+ohos_executable("init_early") {
+  sources = [
+    "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "bootstagehooker.c",
+    "device.c",
+    "init_mount.c",
+    "main_early.c",
+    "switch_root.c",
+  ]
+  include_dirs = [
+    "//third_party/cJSON",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/include",
+  ]
+  configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
+  deps = [
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/services/log:init_log",
+    "//base/startup/init/ueventd:libueventd_ramdisk_static",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  if (startup_init_extra_static_modules != "") {
+    deps += [ startup_init_extra_static_modules ]
+  }
+  install_images = [ "ramdisk" ]
+  install_enable = true
+  part_name = "init"
+}
+
 ohos_executable("init") {
   sources = [
     "../adapter/init_adapter.c",
@@ -40,11 +71,10 @@ ohos_executable("init") {
     "../standard/init_cmds.c",
     "../standard/init_control_fd_service.c",
     "../standard/init_jobs.c",
-    "../standard/init_mount.c",
     "../standard/init_reboot.c",
     "../standard/init_service.c",
     "../standard/init_signal_handler.c",
-    "../standard/switch_root.c",
+    "bootstagehooker.c",
   ]
 
   modulemgr_sources = [
@@ -55,6 +85,7 @@ ohos_executable("init") {
   sources += init_common_sources
 
   include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/init/include",
     "//base/startup/init/services/modules/reboot",
     "//base/startup/init/services/modules/init_context",
@@ -66,6 +97,7 @@ ohos_executable("init") {
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
     "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/services/log:init_log",
     "//base/startup/init/services/loopevent:loopevent",
     "//base/startup/init/services/param/linux:param_init",
     "//base/startup/init/services/sandbox:sandbox",
@@ -74,7 +106,6 @@ ohos_executable("init") {
   deps += [ "//base/startup/init/services/param/base:param_base" ]
 
   deps += [
-    "//base/startup/init/ueventd:libueventd_ramdisk_static",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
   ]
@@ -152,7 +183,6 @@ ohos_executable("init") {
   install_images = [
     "system",
     "updater",
-    "ramdisk",
   ]
   install_enable = true
   part_name = "init"

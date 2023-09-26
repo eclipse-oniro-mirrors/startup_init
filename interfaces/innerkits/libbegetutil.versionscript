@@ -36,13 +36,9 @@
     OH_HashMapIsEmpty;
     OH_HashMapRemove;
     OH_HashMapTraverse;
-    SystemGetParameterName;
     SystemReadParam;
     SystemTraversalParameter;
     GetSystemCommitId;
-    SystemGetParameterValue;
-    SystemGetParameterCommitId;
-    SystemFindParameter;
     CachedParameterCreate;
     CachedParameterGet;
     CachedParameterGetChanged;
@@ -87,6 +83,9 @@
     LE_StopAsyncTask;
     LE_StopLoop;
     LE_StopTimer;
+    LE_AddIdle;
+    LE_DelIdle;
+    LE_DelayProc;
     ModuleMgrCreate;
     ModuleMgrDestroy;
     ModuleMgrGetArgs;

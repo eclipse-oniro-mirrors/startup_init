@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,26 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BASE_STARTUP_INITLITE_DEVICE_H
-#define BASE_STARTUP_INITLITE_DEVICE_H
-#include <sys/types.h>
+#include "bootstage.h"
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif
+#define INIT_BOOTSTAGE_HOOK_NAME "bootstage"
+static HOOK_MGR *bootStageHookMgr = NULL;
 
-#define DEV_KMSG_MINOR 11
-#define DEV_NULL_MINOR 3
-#define DEV_RANDOM_MINOR 8
-#define DEV_URANDOM_MINOR 9
+HOOK_MGR *GetBootStageHookMgr()
+{
+    if (bootStageHookMgr != NULL) {
+        return bootStageHookMgr;
+    }
 
-void CreateFsAndDeviceNode(void);
-
-#ifdef __cplusplus
-#if __cplusplus
+    /*
+     * Create bootstage hook manager for booting only.
+     * When boot completed, this manager will be destroyed.
+     */
+    bootStageHookMgr = HookMgrCreate(INIT_BOOTSTAGE_HOOK_NAME);
+    return bootStageHookMgr;
 }
-#endif
-#endif
-#endif // BASE_STARTUP_INITLITE_DEVICE_H

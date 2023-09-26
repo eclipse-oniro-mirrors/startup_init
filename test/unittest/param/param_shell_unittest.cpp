@@ -20,6 +20,7 @@
 #include "shell_utils.h"
 #include "shell_bas.h"
 #include "init_param.h"
+#include "param_init.h"
 
 using namespace std;
 using namespace testing::ext;

@@ -18,7 +18,6 @@
 #include <errno.h>
 #include <stdbool.h>
 #include "fs_manager/fs_manager.h"
-#include "init_cmds.h"
 #include "init_log.h"
 #include "init_utils.h"
 #include "securec.h"

@@ -28,6 +28,7 @@
 #include "begetctl.h"
 #include "param_manager.h"
 #include "param_security.h"
+#include "param_init.h"
 #include "shell_utils.h"
 #include "init_param.h"
 #include "beget_ext.h"

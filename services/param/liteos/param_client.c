@@ -14,6 +14,7 @@
  */
 #include "init_log.h"
 #include "init_param.h"
+#include "param_init.h"
 #include "param_manager.h"
 
 #define MIN_SLEEP (100 * 1000)

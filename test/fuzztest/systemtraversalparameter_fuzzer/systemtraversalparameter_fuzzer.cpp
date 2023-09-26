@@ -20,6 +20,7 @@
 #include "init.h"
 #include "securec.h"
 #include "init_param.h"
+#include "param_init.h"
 
 static void FakeShowParam(ParamHandle handle, void *cookie)
 {

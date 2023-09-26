@@ -413,6 +413,7 @@ ohos_fuzztest("SystemTraversalParameterFuzzTest") {
     "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/init/include",
     "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/include",
     "//third_party/bounds_checking_function/include",
   ]
 

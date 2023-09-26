@@ -139,6 +139,35 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
   }
 
+  ohos_executable("reboot") {
+    sources = [
+      "init_cmd_reboot.c",
+      "main.c",
+      "param_cmd.c",
+      "shell/shell_bas.c",
+    ]
+
+    defines = [ "_GNU_SOURCE" ]
+
+    include_dirs = common_include_dirs
+    deps = [
+      "//base/startup/init/interfaces/innerkits:libbegetutil",
+      "//base/startup/init/services/log:agent_log",
+      "//base/startup/init/services/param/linux:param_client",
+      "//base/startup/init/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/cJSON:cjson",
+    ]
+
+    deps += [ "//base/startup/init/services/param/base:param_base" ]
+    external_deps = [ "c_utils:utils" ]
+
+    install_images = [ "updater" ]
+    install_enable = true
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
   ohos_executable("paramshell") {
     sources = [
       "param_cmd.c",
@@ -236,6 +265,7 @@ group("begetctl_cmd") {
       ":begetctl",
       ":param",
       ":paramshell",
+      ":reboot",
     ]
   }
 }

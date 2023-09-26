@@ -61,6 +61,8 @@ static LE_STATUS CreateLoop_(EventLoop **loop, uint32_t maxevents, uint32_t time
     (*loop)->stop = 0;
     LoopMutexInit(&(*loop)->mutex);
 
+    OH_ListInit(&((*loop)->idleList));
+
     HashInfo info = {
         TaskNodeCompare,
         TaskKeyCompare,

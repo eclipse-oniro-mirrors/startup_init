@@ -19,6 +19,7 @@
 
 #include "le_task.h"
 #include "le_utils.h"
+#include "list.h"
 #include "init_hashmap.h"
 
 #ifdef __cplusplus
@@ -43,6 +44,8 @@ typedef struct EventLoop_ {
     char mutex;
 #endif
     HashMapHandle taskMap;
+
+    ListNode idleList;
 } EventLoop;
 
 LE_STATUS CloseLoop(EventLoop *loop);

@@ -16,13 +16,13 @@
 #include "init.h"
 #include "init_log.h"
 #include "init_utils.h"
+#include "device.h"
 
 static const pid_t INIT_PROCESS_PID = 1;
 
 int main(int argc, char * const argv[])
 {
     const char *uptime = NULL;
-    long long upTimeInMicroSecs = 0;
     int isSecondStage = 0;
     (void)signal(SIGPIPE, SIG_IGN);
     // Number of command line parameters is 2
@@ -31,19 +31,20 @@ int main(int argc, char * const argv[])
         if (argc > 2) {
             uptime = argv[2];
         }
-    } else {
-        upTimeInMicroSecs = GetUptimeInMicroSeconds(NULL);
     }
     if (getpid() != INIT_PROCESS_PID) {
         INIT_LOGE("Process id error %d!", getpid());
         return 0;
     }
     EnableInitLog(INIT_INFO);
+
+    // Updater mode
     if (isSecondStage == 0) {
-        SystemPrepare(upTimeInMicroSecs);
-    } else {
-        LogInit();
+        CreateFsAndDeviceNode();
     }
+
+    LogInit();
+
     SystemInit();
     SystemExecuteRcs();
     SystemConfig(uptime);

@@ -16,6 +16,7 @@
 #include <benchmark/benchmark.h>
 #include "benchmark_fwk.h"
 #include "init_param.h"
+#include "param_init.h"
 #include "parameter.h"
 #include "sys_param.h"
 
