@@ -146,6 +146,9 @@ ohos_source_set("libseccomp_static") {
     "bounds_checking_function:libsec_shared",
     "config_policy:configpolicy_util",
   ]
+
+  part_name = INIT_PART
+  subsystem_name = "startup"
 }
 
 group("seccomp_filter") {
