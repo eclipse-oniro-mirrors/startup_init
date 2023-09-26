@@ -295,16 +295,6 @@ static int Mount(const char *source, const char *target, const char *fsType,
     return rc;
 }
 
-static int GetSlotInfoFromParameter(const char *slotInfoName)
-{
-    char name[PARAM_NAME_LEN_MAX] = {0};
-    BEGET_ERROR_CHECK(sprintf_s(name, sizeof(name), "ohos.boot.%s", slotInfoName) > 0,
-        return -1, "Failed to format slot parameter name");
-    char value[PARAM_VALUE_LEN_MAX] = {0};
-    uint32_t valueLen = PARAM_VALUE_LEN_MAX;
-    return SystemGetParameter(name, value, &valueLen) == 0 ? atoi(value) : -1;
-}
-
 static int GetSlotInfoFromCmdLine(const char *slotInfoName)
 {
     char value[MAX_BUFFER_LEN] = {0};
@@ -334,21 +324,13 @@ static int GetSlotInfoFromBootctrl(off_t offset, off_t size)
 
 int GetBootSlots(void)
 {
-    int bootSlots = GetSlotInfoFromParameter("bootslots");
-    BEGET_CHECK_RETURN_VALUE(bootSlots <= 0, bootSlots);
-    BEGET_LOGI("No valid slot value found from parameter, try to get it from cmdline");
     return GetSlotInfoFromCmdLine("bootslots");
 }
 
 int GetCurrentSlot(void)
 {
-    // get current slot from parameter
-    int currentSlot = GetSlotInfoFromParameter("currentslot");
-    BEGET_CHECK_RETURN_VALUE(currentSlot <= 0, currentSlot);
-    BEGET_LOGI("No valid slot value found from parameter, try to get it from cmdline");
-
     // get current slot from cmdline
-    currentSlot = GetSlotInfoFromCmdLine("currentslot");
+    int currentSlot = GetSlotInfoFromCmdLine("currentslot");
     BEGET_CHECK_RETURN_VALUE(currentSlot <= 0, currentSlot);
     BEGET_LOGI("No valid slot value found from cmdline, try to get it from bootctrl");
 
@@ -468,6 +450,7 @@ int MountAllWithFstab(const Fstab *fstab, bool required)
         }
     }
 #endif
+
     for (item = fstab->head; item != NULL; item = item->next) {
         rc = CheckRequiredAndMount(item, required);
         if (required && (rc < 0)) { // Init fail to mount in the first stage and exit directly.

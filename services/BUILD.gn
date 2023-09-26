@@ -32,6 +32,7 @@ group("startup_init") {
     deps = [
       "etc:etc_files",
       "init/standard:init",
+      "init/standard:init_early",
       "//third_party/e2fsprogs:e2fsprogs",
     ]
 
