@@ -75,5 +75,6 @@
     { "name": "OH_HashMapGet" },
     { "name": "OH_HashMapIsEmpty" },
     { "name": "OH_HashMapRemove" },
-    { "name": "OH_HashMapTraverse" }
+    { "name": "OH_HashMapTraverse" },
+	{ "name": "InitAddServiceHook" }
 ]
