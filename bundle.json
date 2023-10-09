@@ -2,9 +2,10 @@
     "name": "@ohos/init",
     "description": "ohos init process",
     "homePage": "https://gitee.com/openharmony",
-    "version": "3.1",
+    "version": "4.0.2",
     "license": "Apache License 2.0",
     "repository": "https://gitee.com/openharmony/startup_init",
+    "supplier": "Organization: OpenHarmony",
     "publishAs": "code-segment",
     "segment": {
         "destPath": "base/startup/init"
@@ -30,25 +31,22 @@
         ],
         "deps": {
             "components": [
-                "startup",
                 "safwk",
                 "c_utils",
                 "napi",
                 "ipc",
                 "config_policy",
                 "hilog",
-                "thirdparty_bounds_checking_function",
+                "hilog_lite",
                 "samgr",
                 "selinux_adapter",
-                "hiviewdfx",
                 "access_token",
                 "common",
                 "dsoftbus",
                 "hvb",
                 "hisysevent",
-                "profiler",
-                "hiprofiler",
-                "bounds_checking_function"
+                "bounds_checking_function",
+                "hiprofiler"
             ],
             "third_party": [
                 "bounds_checking_function",
@@ -56,7 +54,6 @@
                 "mbedtls",
                 "zlib",
                 "cJSON",
-                "thirdparty_selinux",
                 "mksh",
                 "toybox"
             ]
