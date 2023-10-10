@@ -21,6 +21,7 @@ ohos_shared_library("deviceinfo") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
   external_deps = [ "napi:ace_napi" ]
   relative_install_dir = "module"
@@ -42,6 +43,7 @@ ohos_shared_library("systemparameter") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [ "napi:ace_napi" ]
@@ -61,6 +63,7 @@ ohos_shared_library("systemparameterenhance") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 
   symlink_target_name = [ "libsystemparameterv9.z.so" ]
