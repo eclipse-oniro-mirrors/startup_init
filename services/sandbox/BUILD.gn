@@ -34,7 +34,7 @@ ohos_static_library("sandbox") {
     "//base/startup/init/services/include",
     "//base/startup/init/interfaces/innerkits/include",
   ]
-  if (target_cpu == "arm64") {
+  if (target_cpu == "arm64" || target_cpu == "x86_64") {
     defines = [ "SUPPORT_64BIT" ]
   }
   deps = [
@@ -48,7 +48,7 @@ ohos_static_library("sandbox") {
 }
 
 ohos_prebuilt_etc("system-sandbox.json") {
-  if (target_cpu == "arm64") {
+  if (target_cpu == "arm64" || target_cpu == "x86_64") {
     source = "system-sandbox64.json"
   } else {
     source = "system-sandbox.json"
@@ -60,7 +60,7 @@ ohos_prebuilt_etc("system-sandbox.json") {
 }
 
 ohos_prebuilt_etc("chipset-sandbox.json") {
-  if (target_cpu == "arm64") {
+  if (target_cpu == "arm64" || target_cpu == "x86_64") {
     source = "chipset-sandbox64.json"
   } else {
     source = "chipset-sandbox.json"

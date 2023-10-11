@@ -129,7 +129,7 @@ if (defined(ohos_lite)) {
     part_name = "init"
     subsystem_name = "startup"
     extra_paras = []
-    if (target_cpu == "arm64") {
+    if (target_cpu == "arm64" || target_cpu == "x86_64") {
       extra_paras += [ "const.product.cpu.abilist=arm64-v8a" ]
     }
     if (build_variant == "user") {
