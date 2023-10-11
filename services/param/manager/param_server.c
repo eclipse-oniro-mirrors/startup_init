@@ -34,12 +34,18 @@
  *     b) if sn or ohos.boot.sn are not specified, try to generate sn by GenerateSnByDefault
  */
 #define OHOS_CMDLINE_PARA_PREFIX        "ohos.boot."
+#define OHOS_CMDLINE_CONST_PARA_PREFIX  "const.product."
 #define OHOS_CMDLINE_PARA_PREFIX_LEN    10
 
 typedef struct CmdLineInfo {
     const char *name;
     int (*processor)(const char *name, const char *value);
 } CmdLineInfo;
+
+typedef struct CmdLineInfoContainer {
+    const CmdLineInfo *cmdLineInfo;
+    size_t cmdLineInfoSize;
+} CmdLineInfoContainer;
 
 typedef struct CmdLineIteratorCtx {
     char *cmdline;
@@ -103,41 +109,41 @@ static int SnDealFun(const char *name, const char *value)
     return ret;
 }
 
-static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
+static int Common2ConstDealFun(const char *name, const char *value)
 {
-    int ret;
-    const char *name;
-    const char *matched;
-    char fullName[PARAM_NAME_LEN_MAX];
-    CmdLineIteratorCtx *ctx = (CmdLineIteratorCtx *)context;
-    char *data = (char *)ctx->cmdline;
-    static const CmdLineInfo CMDLINES[] = {
-        { "hardware", CommonDealFun },
-        { "bootgroup", CommonDealFun },
-        { "reboot_reason", CommonDealFun },
-        { "bootslots", CommonDealFun },
-        { "sn", SnDealFun },
-        { "root_package", CommonDealFun },
-        { "serialno", SnDealFun }
-    };
-
-    data[nv->nameEnd - data] = '\0';
-    data[nv->valueEnd - data] = '\0';
-    PARAM_LOGV("proc cmdline: name [%s], value [%s]", nv->name, nv->value);
-
-    // Get name without prefix
-    name = nv->name;
-    if (strncmp(name, OHOS_CMDLINE_PARA_PREFIX, OHOS_CMDLINE_PARA_PREFIX_LEN) == 0) {
-        name = name + OHOS_CMDLINE_PARA_PREFIX_LEN;
+    const char *tmpName;
+    tmpName = name;
+    if (strncmp(tmpName, OHOS_CMDLINE_PARA_PREFIX, OHOS_CMDLINE_PARA_PREFIX_LEN) == 0) {
+        tmpName = tmpName + OHOS_CMDLINE_PARA_PREFIX_LEN;
     }
+    char fullName[PARAM_NAME_LEN_MAX] = {};
+    int ret = snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1,
+                         OHOS_CMDLINE_CONST_PARA_PREFIX"%s", tmpName);
+    PARAM_CHECK(ret > 0, return ret, "snprinf_s failed");
+    ret = CheckParamName(fullName, 0);
+    PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
+    PARAM_LOGV("Param name %s, value %s", fullName, value);
+    ret = WriteParam(fullName, value, NULL, 0);
+    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", fullName, value);
+    return ret;
+}
+
+static int MatchReserverCmdline(const NAME_VALUE_PAIR* nv, CmdLineIteratorCtx *ctx, const char *name,
+                                CmdLineInfoContainer *container)
+{
+    const char* tmpName = name;
+    char fullName[PARAM_NAME_LEN_MAX];
+    int ret = 0;
+    const char* matched;
 
     // Matching reserved cmdlines
-    for (size_t i = 0; i < ARRAY_LENGTH(CMDLINES); i++) {
+    for (size_t i = 0; i < container->cmdLineInfoSize; i++) {
         // Check exact match
-        if (strcmp(name, CMDLINES[i].name) != 0) {
+        if (strcmp(tmpName, (container->cmdLineInfo + i)->name) != 0) {
             // Check if contains ".xxx" for compatibility
-            ret = snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1, ".%s", CMDLINES[i].name);
-            matched = strstr(name, fullName);
+            ret = snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1, ".%s",
+                            (container->cmdLineInfo + i)->name);
+            matched = strstr(tmpName, fullName);
             if (matched == NULL) {
                 continue;
             }
@@ -147,18 +153,52 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
             }
         }
         ret = snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1,
-            OHOS_CMDLINE_PARA_PREFIX "%s", CMDLINES[i].name);
+                         OHOS_CMDLINE_PARA_PREFIX "%s", (container->cmdLineInfo + i)->name);
         if (ret <= 0) {
             continue;
         }
         PARAM_LOGV("proc cmdline %s matched.", fullName);
-        ret = CMDLINES[i].processor(fullName, nv->value);
-        if ((ret == 0) && (SnDealFun == CMDLINES[i].processor)) {
+        ret = (container->cmdLineInfo + i)->processor(fullName, nv->value);
+        if ((ret == 0) && (SnDealFun == (container->cmdLineInfo + i)->processor)) {
             ctx->gotSn = true;
         }
-        return;
+        return PARAM_CODE_SUCCESS;
+    }
+    return PARAM_CODE_NOT_FOUND;
+}
+
+static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
+{
+    CmdLineIteratorCtx *ctx = (CmdLineIteratorCtx *)context;
+    char *data = (char *)ctx->cmdline;
+    static const CmdLineInfo CMDLINES[] = {
+        { "hardware", CommonDealFun },
+        { "bootgroup", CommonDealFun },
+        { "reboot_reason", CommonDealFun },
+        { "bootslots", CommonDealFun },
+        { "sn", SnDealFun },
+        { "root_package", CommonDealFun },
+        { "serialno", SnDealFun },
+        { "udid", Common2ConstDealFun }
+    };
+
+    data[nv->nameEnd - data] = '\0';
+    data[nv->valueEnd - data] = '\0';
+    PARAM_LOGV("proc cmdline: name [%s], value [%s]", nv->name, nv->value);
+
+    // Get name without prefix
+    const char *name = nv->name;
+    if (strncmp(name, OHOS_CMDLINE_PARA_PREFIX, OHOS_CMDLINE_PARA_PREFIX_LEN) == 0) {
+        name = name + OHOS_CMDLINE_PARA_PREFIX_LEN;
     }
 
+    CmdLineInfoContainer container = { 0 };
+    container.cmdLineInfo = CMDLINES;
+    container.cmdLineInfoSize = ARRAY_LENGTH(CMDLINES);
+    if (MatchReserverCmdline(nv, ctx, name, &container) == 0) {
+        PARAM_LOGV("match reserver cmd line success, name: %s, value: %s", nv->name, nv->value);
+        return;
+    }
     if (name == nv->name) {
         return;
     }
