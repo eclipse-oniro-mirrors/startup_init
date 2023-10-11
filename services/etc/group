@@ -31,7 +31,7 @@ intell_voice:x:1042:
 cameraserver:x:1047:
 uiserver:x:1048:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr,foundation,update
-powerctrl:x:1051:root,shell,system,update,power_host,charger,foundation
+powerctrl:x:1051:root,shell,system,update,power_host,charger,foundation,atcmdserver
 bootctrl:x:1052:root,shell,system
 deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,pin_auth_host,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm,update,device_attest,hiview
 hiview:x:1201:
@@ -145,3 +145,4 @@ oaid_service:x:6101:
 code_sign:x:3074:
 hdf_ext_devmgr:x:3085:
 intell_voice_host:x:3100:
+user_data_r:x:2008:
