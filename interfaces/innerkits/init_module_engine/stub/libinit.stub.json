@@ -76,5 +76,8 @@
     { "name": "OH_HashMapIsEmpty" },
     { "name": "OH_HashMapRemove" },
     { "name": "OH_HashMapTraverse" },
-    { "name": "InitAddServiceHook" }
+    { "name": "InitAddServiceHook" },
+    { "name": "InitAddRebootHook" },
+    { "name": "InitAddServiceParseHook" },
+    { "name": "InitAddJobParseHook" }
 ]
