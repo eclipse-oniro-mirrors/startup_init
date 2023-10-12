@@ -39,7 +39,7 @@ ohos_shared_library("selinuxadp") {
 
   part_name = "init"
   subsystem_name = "startup"
-  if (target_cpu == "arm64") {
+  if (target_cpu == "arm64" || target_cpu == "x86_64") {
     module_install_dir = "lib64/init"
   } else {
     module_install_dir = "lib/init"
