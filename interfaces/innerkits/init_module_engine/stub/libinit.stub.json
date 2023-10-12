@@ -79,5 +79,6 @@
     { "name": "InitAddServiceHook" },
     { "name": "InitAddRebootHook" },
     { "name": "InitAddServiceParseHook" },
-    { "name": "InitAddJobParseHook" }
+    { "name": "InitAddJobParseHook" },
+    { "name": "InitAddPostPersistParamLoadHook"}
 ]
