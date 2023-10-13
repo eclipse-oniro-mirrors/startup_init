@@ -144,6 +144,9 @@ static void InitLoadParamFiles(void)
         return;
     }
 
+    // Load developer mode param
+    LoadDefaultParams("/proc/dsmm/developer", LOAD_PARAM_NORMAL);
+
     // Load const params, these can't be override!
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     CfgFiles *files = GetCfgFiles("etc/param");
