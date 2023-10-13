@@ -78,6 +78,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/init/init_service_file.c",
     "//base/startup/init/services/init/init_service_manager.c",
     "//base/startup/init/services/init/init_service_socket.c",
+    "//base/startup/init/services/init/standard/bootstagehooker.c",
     "//base/startup/init/services/init/standard/device.c",
     "//base/startup/init/services/init/standard/fd_holder_service.c",
     "//base/startup/init/services/init/standard/init.c",
