@@ -116,7 +116,7 @@ static int Common2ConstDealFun(const char *name, const char *value)
     if (strncmp(tmpName, OHOS_CMDLINE_PARA_PREFIX, OHOS_CMDLINE_PARA_PREFIX_LEN) == 0) {
         tmpName = tmpName + OHOS_CMDLINE_PARA_PREFIX_LEN;
     }
-    char fullName[PARAM_NAME_LEN_MAX] = {};
+    char fullName[PARAM_NAME_LEN_MAX];
     int ret = snprintf_s(fullName, sizeof(fullName), sizeof(fullName) - 1,
                          OHOS_CMDLINE_CONST_PARA_PREFIX"%s", tmpName);
     PARAM_CHECK(ret > 0, return ret, "snprinf_s failed");
