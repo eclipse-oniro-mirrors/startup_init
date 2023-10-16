@@ -33,7 +33,7 @@ uiserver:x:1048:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr,foundation,update
 powerctrl:x:1051:root,shell,system,update,power_host,charger,foundation,atcmdserver
 bootctrl:x:1052:root,shell,system
-deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,pin_auth_host,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm,update,device_attest,hiview
+deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,pin_auth_host,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm,update,device_attest,hiview,device_cert_manager_server
 hiview:x:1201:
 hidumper_service:x:1212:
 shell:x:2000:hiview
@@ -85,6 +85,7 @@ se_service:x:3064:
 deviceauth:x:3333:
 huks_server:x:3510:
 cert_manager_server:x:3515:
+device_cert_manager_server:x:3562:
 dlp_credential:x:3553:
 dlp_permission:x:3019:
 dms:x:5522:
