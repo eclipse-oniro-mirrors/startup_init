@@ -54,6 +54,7 @@ mlock;all
 munlock;all
 munmap;all
 mmap;arm64
+msync;all
 sched_yield;all
 nanosleep;all
 epoll_pwait;all
