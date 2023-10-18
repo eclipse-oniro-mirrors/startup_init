@@ -38,9 +38,8 @@ if (!defined(ohos_lite)) {
     include_dirs = [
       "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include/",
       ".",
-      "//base/startup/init/services/include",
-      "//base/startup/init/services/include/param",
       "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/interfaces/innerkits/include/param",
       "//base/startup/init/interfaces/innerkits/include/syspara",
       "//base/startup/init/interfaces/innerkits/syspara",
       "//base/startup/init/interfaces/hals",

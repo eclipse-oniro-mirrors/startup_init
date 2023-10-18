@@ -18,6 +18,7 @@
 #include "param_base.h"
 #include "param_message.h"
 #include "param_stub.h"
+#include "param_init.h"
 #include "trigger_manager.h"
 #include "param_utils.h"
 #include "param_osadp.h"

@@ -49,7 +49,7 @@ executable("init") {
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/fd_holder",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/init/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",

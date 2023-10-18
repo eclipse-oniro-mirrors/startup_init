@@ -42,7 +42,7 @@ ohos_executable("init_early") {
   ]
   include_dirs = [
     "//third_party/cJSON",
-    "//base/startup/init/services/include",
+    "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/services/init/include",
     "//base/startup/init/interfaces/innerkits/init_module_engine/include",
   ]
@@ -85,6 +85,7 @@ ohos_executable("init") {
   sources += init_common_sources
 
   include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/init/include",
     "//base/startup/init/services/modules/reboot",
     "//base/startup/init/services/modules/init_context",

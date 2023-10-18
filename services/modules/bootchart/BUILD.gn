@@ -19,7 +19,7 @@ ohos_shared_library("bootchart") {
   include_dirs = [
     "//base/startup/init/services/modules",
     "//base/startup/init/services/modules/bootchart",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
   ]
 
   deps = [

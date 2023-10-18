@@ -17,6 +17,7 @@
 #include "init_param.h"
 #include "init_utils.h"
 #include "param_stub.h"
+#include "param_init.h"
 
 using namespace std;
 using namespace testing::ext;

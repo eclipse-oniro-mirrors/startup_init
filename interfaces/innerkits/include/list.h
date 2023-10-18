@@ -42,18 +42,18 @@ extern "C" {
  *       ListNode node;
  *       int value;
  *   } TEST_LIST_ITEM;
- * 
+ *
  * 2. Define a list and init list by OH_ListAddTail
  *   ListNode testList;
  *   c(&testList);
- * 
+ *
  * 3. Define a list item instance
  *   TEST_LIST_ITEM item;
  *   item.value = 0;
- * 
+ *
  * 4. Add list item to list
  *   OH_ListAddTail(&testList, (ListNode *)(&item));
- * 
+ *
  * 5. Advanced usage: add with order
  *   // Ordering compare function
  *   static int TestListItemCompareProc(ListNode *node, ListNode *newNode)

@@ -17,8 +17,8 @@ config("inithook_config") {
   include_dirs = [ "//base/startup/init/services/modules/init_hook" ]
 }
 comm_include = [
-  "//base/startup/init/services/include",
-  "//base/startup/init/services/include/param",
+  "//base/startup/init/interfaces/innerkits/include",
+  "//base/startup/init/interfaces/innerkits/include/param",
   "//base/startup/init/services/modules",
   "//base/startup/init/services/modules/init_hook",
   "//base/startup/init/services/init/include",

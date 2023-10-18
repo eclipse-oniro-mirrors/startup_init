@@ -26,8 +26,7 @@ config("exported_header_files") {
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/include/syspara",
     "//base/startup/init/interfaces/innerkits/include/token",
-    "//base/startup/init/services/include",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
   ]
 }
 
@@ -35,14 +34,13 @@ include_common = [
   "./include",
   "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
   "//third_party/bounds_checking_function/include",
-  "//base/startup/init/services/include",
-  "//base/startup/init/services/include/param",
-  "//base/startup/init/interfaces/innerkits/fd_holder",
-  "//base/startup/init/services/param/include",
   "//base/startup/init/interfaces/innerkits/include",
+  "//base/startup/init/interfaces/innerkits/include/param",
+  "//base/startup/init/interfaces/innerkits/fd_holder",
   "//base/startup/init/interfaces/innerkits/include/syspara",
   "//base/startup/init/interfaces/hals",
   "//base/startup/init/interfaces/innerkits/syspara",
+  "//base/startup/init/services/param/include",
 ]
 
 if (defined(ohos_lite)) {
@@ -253,7 +251,7 @@ if (defined(ohos_lite)) {
       include_dirs += [
         "//base/startup/init/services/param/watcher/include",
         "//base/startup/init/services/log",
-        "//base/startup/init/services/include/param",
+        "//base/startup/init/interfaces/innerkits/include/param",
       ]
     } else {
       defines += [ "NO_PARAM_WATCHER" ]

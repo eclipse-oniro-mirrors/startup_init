@@ -18,8 +18,8 @@ comm_include = [
   ".",
   "..",
   "../../init/include",
-  "../../include",
-  "../../include/param",
+  "//base/startup/init/interfaces/innerkits/include/param",
+  "//base/startup/init/interfaces/innerkits/include",
 ]
 
 ohos_shared_library("init_context") {

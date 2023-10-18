@@ -21,8 +21,8 @@ ohos_shared_library("selinuxadp") {
     ".",
     "..",
     "../init_hook",
-    "//base/startup/init/services/include",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//third_party/selinux/libselinux/include/",
     "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
   ]
@@ -61,7 +61,7 @@ ohos_source_set("libselinuxadp_static") {
     ".",
     "..",
     "../init_hook",
-    "//base/startup/init/services/include/param",
+    "//base/startup/init/interfaces/innerkits/include/param",
     "//third_party/selinux/libselinux/include/",
     "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
   ]

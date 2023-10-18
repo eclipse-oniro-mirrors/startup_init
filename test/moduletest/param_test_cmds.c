@@ -19,6 +19,7 @@
 
 #include "begetctl.h"
 #include "init_param.h"
+#include "param_init.h"
 #include "init_utils.h"
 #include "loop_event.h"
 #include "parameter.h"

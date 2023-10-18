@@ -17,6 +17,7 @@
 #include "init_param.h"
 #include "param_message.h"
 #include "param_stub.h"
+#include "param_init.h"
 #include "trigger_manager.h"
 #include "le_timer.h"
 

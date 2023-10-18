@@ -17,8 +17,8 @@ comm_include = [
   ".",
   "..",
   "../bootevent",
-  "../../include",
-  "../../include/param",
+  "//base/startup/init/interfaces/innerkits/include",
+  "//base/startup/init/interfaces/innerkits/include/param",
 ]
 
 ohos_shared_library("inittrace") {

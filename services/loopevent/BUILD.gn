@@ -28,7 +28,6 @@ common_sources = [
 common_include = [
   "//base/startup/init/services/log",
   "//base/startup/init/interfaces/innerkits/include",
-  "//base/startup/init/services/include",
   "//third_party/bounds_checking_function/include",
   "include",
   "loop",

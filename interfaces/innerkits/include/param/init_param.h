@@ -171,30 +171,6 @@ int SystemReadParam(const char *name, char *value, uint32_t *len);
 
 /**
  * 对外接口
- * 查询参数，主要用于其他进程使用，找到对应属性的handle。
- *
- */
-int SystemFindParameter(const char *name, ParamHandle *handle);
-
-/**
- * 对外接口
- * 根据handle获取对应数据的修改标识。
- * commitId 获取计数变化
- *
- */
-int SystemGetParameterCommitId(ParamHandle handle, uint32_t *commitId);
-
-/**
- * 外部接口
- * 获取参数值。
- *
- */
-int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len);
-
-long long GetSystemCommitId(void);
-
-/**
- * 对外接口
  * 查询参数，主要用于其他进程使用，需要给定足够的内存保存参数。
  * 如果 value == null，获取value的长度
  * 否则value的大小认为是len
@@ -202,22 +178,6 @@ long long GetSystemCommitId(void);
  */
 #define SystemGetParameter SystemReadParam
 
-/**
- * 外部接口
- * 遍历参数。
- *
- */
-int SystemTraversalParameter(const char *prefix,
-    void (*traversalParameter)(ParamHandle handle, void *cookie), void *cookie);
-
-/**
- * 外部接口
- * 查询参数，主要用于其他进程使用，需要给定足够的内存保存参数。
- * 如果 value == null，获取value的长度
- * 否则value的大小认为是len
- *
- */
-int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len);
 
 /**
  * 外部接口

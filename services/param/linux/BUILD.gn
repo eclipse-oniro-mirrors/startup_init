@@ -17,7 +17,7 @@ config("exported_header_files") {
   visibility = [ ":*" ]
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
-    "//base/startup/init/interfaces/service/include/param",
+    "//base/startup/init/interfaces/interfaces/innerkits/include/param",
     "//base/startup/init/interfaces/service/param/include",
     "//third_party/bounds_checking_function/include",
     "//third_party/selinux/libselinux/include",
@@ -29,8 +29,8 @@ param_include_dirs = [
   "//base/startup/init/services/param/adapter",
   "//base/startup/init/services/param/linux",
   "//base/startup/init/services/param/base",
-  "//base/startup/init/services/include/param",
-  "//base/startup/init/services/include",
+  "//base/startup/init/interfaces/innerkits/include/param",
+  "//base/startup/init/interfaces/innerkits/include",
   "//base/startup/init/services/init/include",
   "//base/startup/init/services/log",
   "//base/startup/init/services/modules/init_hook",
