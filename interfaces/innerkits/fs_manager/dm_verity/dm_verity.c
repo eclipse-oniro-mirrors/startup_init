@@ -60,6 +60,10 @@ static bool HvbDmVerityIsEnable(void)
         return false;
     }
 
+    if (strcmp(&vBState[0], "orange") == 0 || strcmp(&vBState[0], "ORANGE") == 0) {
+        return false;
+    }
+
     return true;
 }
 
