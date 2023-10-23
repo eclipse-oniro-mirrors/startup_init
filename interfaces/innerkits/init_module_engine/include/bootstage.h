@@ -47,6 +47,7 @@ enum INIT_BOOTSTAGE {
     INIT_SERVICE_FORK_AFTER = 60,
     INIT_SERVICE_BOOTEVENT = 61,
     INIT_SERVICE_REAP      = 65,
+    INIT_SERVICE_RESTART   = 71,
     INIT_JOB_PARSE         = 70,
     INIT_BOOT_COMPLETE     = 100,
 };
@@ -138,6 +139,15 @@ typedef struct tagSERVICE_BOOTEVENT_CTX {
     const char *reserved;       /* reserved info */
     int state;                  /* bootevent state */
 } SERVICE_BOOTEVENT_CTX;
+
+/**
+ * @brief service restart info
+ */
+typedef struct tagSERVICE_RESTART_CTX {
+    const char *serviceName;    /* Service name */
+    const char *serviceNode;    /* Service node */
+} SERVICE_RESTART_CTX;
+
 /**
  * @brief init cmd info
  */
@@ -170,6 +180,14 @@ typedef void (*JobParseHook)(JOB_PARSE_CTX *jobParseCtx);
  * @return None
  */
 typedef void (*ServiceHook)(SERVICE_INFO_CTX *serviceCtx);
+
+/**
+ * @brief service restart hook function prototype
+ *
+ * @param ServiceRestartHook service info
+ * @return None
+ */
+typedef void (*ServiceRestartHook) (SERVICE_RESTART_CTX *serviceRestartCtx);
 
 /**
  * @brief Register a hook for service config parsing
@@ -221,6 +239,15 @@ int InitAddJobParseHook(JobParseHook hook);
  * @return return 0 if succeed; other values if failed.
  */
 int InitAddServiceHook(ServiceHook hook, int hookState);
+
+/**
+ * @brief Register a hook for service restart
+ *
+ * @param hook service restart hook
+ *  in the hook, we can get service.
+ * @return return 0 if succeed; other values if failed.
+ */
+int InitServiceRestartHook(ServiceRestartHook hook, int hookState);
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -120,6 +120,27 @@ int InitAddServiceHook(ServiceHook hook, int hookState)
     return HookMgrAddEx(GetBootStageHookMgr(), &info);
 }
 
+static int ServiceRestartHookWrapper(const HOOK_INFO *hookInfo, void *executionContext)
+{
+    SERVICE_RESTART_CTX *serviceContext = (SERVICE_RESTART_CTX *)executionContext;
+    ServiceRestartHook realHook = (ServiceRestartHook)hookInfo->hookCookie;
+
+    realHook(serviceContext);
+    return 0;
+}
+
+int InitServiceRestartHook(ServiceRestartHook hook, int hookState)
+{
+    HOOK_INFO info;
+
+    info.stage = hookState;
+    info.prio = 0;
+    info.hook = ServiceRestartHookWrapper;
+    info.hookCookie = (void *)hook;
+
+    return HookMgrAddEx(GetBootStageHookMgr(), &info);
+}
+
 /**
  * service hooking execute
  */
