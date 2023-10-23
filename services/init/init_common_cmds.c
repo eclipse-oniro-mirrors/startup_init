@@ -239,6 +239,13 @@ static void DoReset(const struct CmdArgs *ctx)
         return;
     }
     if (service->pid > 0) {
+#ifndef OHOS_LITE
+        SERVICE_RESTART_CTX context;
+        int pid = service->pid;
+        context.serviceName = service->name;
+        context.serviceNode = (const char *)&pid;
+        (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_RESTART, (void *)(&context), NULL);
+#endif
         if (kill(service->pid, GetKillServiceSig(ctx->argv[0])) != 0) {
             INIT_LOGE("stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
             return;
