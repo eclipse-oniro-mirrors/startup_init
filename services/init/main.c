@@ -23,6 +23,7 @@ static const pid_t INIT_PROCESS_PID = 1;
 int main(int argc, char * const argv[])
 {
     const char *uptime = NULL;
+    long long upTimeInMicroSecs = 0;
     int isSecondStage = 0;
     (void)signal(SIGPIPE, SIG_IGN);
     // Number of command line parameters is 2
@@ -31,6 +32,8 @@ int main(int argc, char * const argv[])
         if (argc > 2) {
             uptime = argv[2];
         }
+    } else {
+        upTimeInMicroSecs = GetUptimeInMicroSeconds(NULL);
     }
     if (getpid() != INIT_PROCESS_PID) {
         INIT_LOGE("Process id error %d!", getpid());
@@ -40,10 +43,10 @@ int main(int argc, char * const argv[])
 
     // Updater mode
     if (isSecondStage == 0) {
-        CreateFsAndDeviceNode();
+        SystemPrepare(upTimeInMicroSecs);
+    } else {
+        LogInit();
     }
-
-    LogInit();
 
     SystemInit();
     SystemExecuteRcs();

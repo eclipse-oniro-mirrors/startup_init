@@ -36,6 +36,7 @@ ohos_executable("init_early") {
     "//base/startup/init/services/log/init_commlog.c",
     "bootstagehooker.c",
     "device.c",
+    "init_firststage.c",
     "init_mount.c",
     "main_early.c",
     "switch_root.c",
@@ -70,10 +71,13 @@ ohos_executable("init") {
     "../standard/init_cmdexecutor.c",
     "../standard/init_cmds.c",
     "../standard/init_control_fd_service.c",
+    "../standard/init_firststage.c",
     "../standard/init_jobs.c",
+    "../standard/init_mount.c",
     "../standard/init_reboot.c",
     "../standard/init_service.c",
     "../standard/init_signal_handler.c",
+    "../standard/switch_root.c",
     "bootstagehooker.c",
   ]
 
@@ -97,7 +101,6 @@ ohos_executable("init") {
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
     "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
-    "//base/startup/init/services/log:init_log",
     "//base/startup/init/services/loopevent:loopevent",
     "//base/startup/init/services/param/linux:param_init",
     "//base/startup/init/services/sandbox:sandbox",
@@ -106,6 +109,7 @@ ohos_executable("init") {
   deps += [ "//base/startup/init/services/param/base:param_base" ]
 
   deps += [
+    "//base/startup/init/ueventd:libueventd_ramdisk_static",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
   ]

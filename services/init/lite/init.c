@@ -46,6 +46,10 @@ void LogInit(void)
     return;
 }
 
+void SystemPrepare(long long uptime)
+{
+}
+
 void ParseInitCfgByPriority(void)
 {
     ReadFileInDir(OTHER_CFG_PATH, ".cfg", ParseInitCfg, NULL);
