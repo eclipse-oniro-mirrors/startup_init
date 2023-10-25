@@ -164,16 +164,16 @@ HWTEST_F(ServiceUnitTest, TestServiceReap, TestSize.Level1)
     service->restartArg = (CmdLines *)calloc(1, sizeof(CmdLines));
     ASSERT_NE(nullptr, service->restartArg);
     ServiceReap(service);
-    EXPECT_EQ(service->attribute, 0);
+    EXPECT_EQ(service->attribute, SERVICE_ATTR_TIMERSTART);
 
     const int crashCount = 241;
     service->crashCnt = crashCount;
     ServiceReap(service);
-    EXPECT_EQ(service->attribute, 0);
+    EXPECT_EQ(service->attribute, SERVICE_ATTR_TIMERSTART);
 
     service->attribute |= SERVICE_ATTR_ONCE;
     ServiceReap(service);
-    EXPECT_EQ(service->attribute, SERVICE_ATTR_ONCE);
+    EXPECT_EQ(service->attribute, (SERVICE_ATTR_ONCE | SERVICE_ATTR_TIMERSTART));
     service->attribute = SERVICE_ATTR_CRITICAL;
     service->crashCount = 1;
     ServiceReap(service);
