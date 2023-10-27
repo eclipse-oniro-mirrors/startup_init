@@ -358,7 +358,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
 
     ATOMIC_STORE_EXPLICIT(&workSpace->rwSpaceLock, rwSpaceLock | WORKSPACE_STATUS_IN_PROCESS, MEMORY_ORDER_RELEASE);
     if (workSpace->area == NULL) {
-        PARAM_LOGI("OpenWorkSpace %s index %d spaceSize: %u onlyRead %s", workSpace->fileName, workSpace->spaceIndex,
+        PARAM_LOGV("OpenWorkSpace %s index %d spaceSize: %u onlyRead %s", workSpace->fileName, workSpace->spaceIndex,
             workSpace->spaceSize, readOnly ? "true" : "false");
         ret = InitWorkSpace(workSpace, readOnly, workSpace->spaceSize);
         if (ret != 0) {
