@@ -595,6 +595,9 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
      */
     ServiceHookExecute(service->name, NULL, INIT_SERVICE_FORK_BEFORE);
 #endif
+    if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
+        CheckModuleUpdate(pathArgs);
+    }
     int pid = fork();
     if (pid == 0) {
         // set selinux label by context
@@ -602,9 +605,6 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
             service->lastErrno = INIT_ECONTENT;
         }
 
-        if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
-            CheckModuleUpdate(pathArgs);
-        }
 #ifdef IS_DEBUG_VERSION
         // only the image is debuggable and need debug, then wait for debugger
         if (ServiceNeedDebug(service->name) && IsDebuggableVersion()) {
