@@ -23,6 +23,7 @@
 #include "init_context.h"
 #include "init_service_manager.h"
 #include "loop_event.h"
+#include "crash_handler.h"
 
 static SignalHandle g_sigHandle = NULL;
 
@@ -86,4 +87,5 @@ void SignalInit(void)
             INIT_LOGW("start SIGTERM handler failed");
         }
     }
+    InstallLocalSignalHandler();
 }

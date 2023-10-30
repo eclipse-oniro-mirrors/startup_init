@@ -41,6 +41,7 @@ typedef void (*InitCommLog)(int logLevel, uint32_t domain, const char *tag, cons
 INIT_LOCAL_API void OpenLogDevice(void);
 INIT_LOCAL_API void InitLog(int logLevel, unsigned int domain, const char *tag, const char *fmt, va_list vargs);
 INIT_LOCAL_API void SetInitCommLog(InitCommLog logFunc);
+INIT_PUBLIC_API int GetKmsgFd();
 
 #if defined(INIT_NO_LOG) || defined(PARAM_BASE)
 #define EnableInitLog(level) ((void)level)

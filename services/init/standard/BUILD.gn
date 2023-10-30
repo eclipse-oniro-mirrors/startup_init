@@ -188,6 +188,9 @@ ohos_executable("init") {
     "system",
     "updater",
   ]
+
+  deps +=
+      [ "//base/startup/init/services/modules/crashhandler:libcrashhandler" ]
   install_enable = true
   part_name = "init"
   subsystem_name = "startup"

@@ -51,6 +51,7 @@
             "third_party": [
                 "bounds_checking_function",
                 "selinux",
+                "libunwind",
                 "mbedtls",
                 "zlib",
                 "cJSON",
