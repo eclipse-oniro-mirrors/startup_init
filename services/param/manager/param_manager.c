@@ -768,7 +768,7 @@ long long GetSystemCommitId(void)
 {
     PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return -1, "Param workspace has not init.");
     WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
-    if (space == NULL) {
+    if (space == NULL || space->area == NULL) {
         return 0;
     }
     return ATOMIC_UINT64_LOAD_EXPLICIT(&space->area->commitId, MEMORY_ORDER_ACQUIRE);
