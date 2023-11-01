@@ -19,8 +19,8 @@
 #include <stdlib.h>
 
 #include "param_comm.h"
-#include "param_init.h"
 #include "init_param.h"
+#include "param_init.h"
 #include "init_utils.h"
 #include "sysparam_errno.h"
 #include "securec.h"

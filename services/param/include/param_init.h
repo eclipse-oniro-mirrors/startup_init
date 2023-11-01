@@ -24,7 +24,9 @@ extern "C" {
 #endif
 #endif
 
+#ifndef BASE_STARTUP_INIT_PARAM_H
 typedef uint32_t ParamHandle;
+#endif
 
 /**
  * 外部接口
