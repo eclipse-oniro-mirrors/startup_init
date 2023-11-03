@@ -61,19 +61,6 @@ ohos_prebuilt_seccomp("appspawn_filter") {
   install_images = [ "system" ]
 }
 
-ohos_prebuilt_seccomp("renderer_filter") {
-  sources = [ "seccomp_policy/renderer.seccomp.policy" ]
-
-  filtername = "renderer"
-  process_type = "app"
-
-  part_name = INIT_PART
-  subsystem_name = "startup"
-
-  install_enable = true
-  install_images = [ "system" ]
-}
-
 ohos_prebuilt_seccomp("nwebspawn_filter") {
   sources = [ "seccomp_policy/nwebspawn.seccomp.policy" ]
 
@@ -161,7 +148,6 @@ group("seccomp_filter") {
     deps += [
       ":appspawn_filter",
       ":nwebspawn_filter",
-      ":renderer_filter",
     ]
   }
 }

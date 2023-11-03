@@ -39,6 +39,8 @@ typedef enum {
 
 bool SetSeccompPolicyWithName(SeccompFilterType type, const char *filterName);
 
+bool IsEnableSeccomp(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

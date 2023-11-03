@@ -190,21 +190,21 @@ static int GetSeccompPolicy(const char *filterName, int **handler,
     return ret;
 }
 
-#ifdef WITH_SECCOMP_DEBUG
-static bool IsEnableSeccomp(void)
+
+bool IsEnableSeccomp(void)
 {
+    bool isEnableSeccompFlag = true;
+#ifdef WITH_SECCOMP_DEBUG
     char value[MAX_BUFFER_LEN] = {0};
     unsigned int len = MAX_BUFFER_LEN;
-    bool isEnableSeccompFlag = true;
     if (SystemReadParam("persist.init.debug.seccomp.enable", value, &len) == 0) {
         if (strncmp(value, "0", len) == 0) {
             isEnableSeccompFlag = false;
         }
     }
-
+#endif
     return isEnableSeccompFlag;
 }
-#endif
 
 bool SetSeccompPolicyWithName(SeccompFilterType type, const char *filterName)
 {
