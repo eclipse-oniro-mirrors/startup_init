@@ -24,40 +24,42 @@ if (defined(build_seccomp) && build_seccomp) {
     seccomp_enable_debug = false
   }
 
-  ohos_shared_library("seccomp") {
-    sources = [ "../../../services/modules/seccomp/seccomp_policy.c" ]
+  if (!defined(ohos_lite)) {
+    ohos_shared_library("seccomp") {
+      sources = [ "../../../services/modules/seccomp/seccomp_policy.c" ]
 
-    public_configs = [ ":seccomp_public_config" ]
+      public_configs = [ ":seccomp_public_config" ]
 
-    include_dirs = [
-      "../include",
-      "../../../services/modules",
-      "../../../services/log",
-    ]
-
-    if (seccomp_enable_debug) {
-      include_dirs += [
-        "../../../interfaces/innerkits/include",
-        "../../../interfaces/innerkits/include/param",
+      include_dirs = [
+        "../include",
+        "../../../services/modules",
+        "../../../services/log",
       ]
 
-      defines = [ "WITH_SECCOMP_DEBUG" ]
+      if (seccomp_enable_debug) {
+        include_dirs += [
+          "../../../interfaces/innerkits/include",
+          "../../../interfaces/innerkits/include/param",
+        ]
+
+        defines = [ "WITH_SECCOMP_DEBUG" ]
+      }
+
+      deps = [ "../../innerkits:libbegetutil" ]
+
+      external_deps = [
+        "bounds_checking_function:libsec_shared",
+        "config_policy:configpolicy_util",
+      ]
+
+      license_file = "//base/startup/init/LICENSE"
+
+      part_name = "init"
+      subsystem_name = "startup"
+
+      install_enable = true
+      install_images = [ "system" ]
     }
-
-    deps = [ "../../innerkits:libbegetutil" ]
-
-    external_deps = [
-      "bounds_checking_function:libsec_shared",
-      "config_policy:configpolicy_util",
-    ]
-
-    license_file = "//base/startup/init/LICENSE"
-
-    part_name = "init"
-    subsystem_name = "startup"
-
-    install_enable = true
-    install_images = [ "system" ]
   }
 } else {
   group("seccomp") {

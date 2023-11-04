@@ -35,6 +35,8 @@ group("startup_init") {
       "init/standard:init_early",
       "//third_party/e2fsprogs:e2fsprogs",
     ]
+    deps += [ "//base/startup/init/services/etc:watchdog.cfg" ]
+    deps += [ "//base/startup/init/services/etc:ueventd.cfg" ]
 
     if (use_musl) {
       deps += [ "//third_party/f2fs-tools:f2fs-tools" ]
