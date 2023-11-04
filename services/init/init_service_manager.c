@@ -42,7 +42,7 @@
 
 // All service processes that init will fork+exec.
 static ServiceSpace g_serviceSpace = { 0 };
-static const int CRITICAL_DEFAULT_CRASH_TIME = 20;
+static const int CRITICAL_DEFAULT_CRASH_TIME = 240;
 // maximum number of crashes within time CRITICAL_DEFAULT_CRASH_TIME for one service
 static const int CRITICAL_DEFAULT_CRASH_COUNT =  4;
 static const int CRITICAL_CONFIG_ARRAY_LEN = 3;
