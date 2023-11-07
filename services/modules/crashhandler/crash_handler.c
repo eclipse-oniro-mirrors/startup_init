@@ -127,27 +127,30 @@ static void PrintfRegister(const unw_context_t *context, int fd)
         context->regs[ARM_LR], context->regs[ARM_PC]);
 #elif defined(__aarch64__)
     PrintLog(fd, "x0:%016lx x1:%016lx x2:%016lx x3:%016lx\n", \
-        context->regs[AARCH64_X0], context->regs[AARCH64_X1], context->regs[AARCH64_X2], context->regs[AARCH64_X3]);
+        context->uc_mcontext.regs[AARCH64_X0], context->uc_mcontext.regs[AARCH64_X1],
+        context->uc_mcontext.regs[AARCH64_X2], context->uc_mcontext.regs[AARCH64_X3]);
     PrintLog(fd, "x4:%016lx x5:%016lx x6:%016lx x7:%016lx\n", \
-        context->regs[AARCH64_X4], context->regs[AARCH64_X5], context->regs[AARCH64_X6], context->regs[AARCH64_X7]);
+        context->uc_mcontext.regs[AARCH64_X4], context->uc_mcontext.regs[AARCH64_X5],
+        context->uc_mcontext.regs[AARCH64_X6], context->uc_mcontext.regs[AARCH64_X7]);
     PrintLog(fd, "x8:%016lx x9:%016lx x10:%016lx x11:%016lx\n", \
-        context->regs[AARCH64_X8], context->regs[AARCH64_X9], context->regs[AARCH64_X10], context->regs[AARCH64_X11]);
+        context->uc_mcontext.regs[AARCH64_X8], context->uc_mcontext.regs[AARCH64_X9],
+        context->uc_mcontext.regs[AARCH64_X10], context->uc_mcontext.regs[AARCH64_X11]);
     PrintLog(fd, "x12:%016lx x13:%016lx x14:%016lx x15:%016lx\n", \
-        context->regs[AARCH64_X12], context->regs[AARCH64_X13],
-        context->regs[AARCH64_X14], context->regs[AARCH64_X15]);
+        context->uc_mcontext.regs[AARCH64_X12], context->uc_mcontext.regs[AARCH64_X13],
+        context->uc_mcontext.regs[AARCH64_X14], context->uc_mcontext.regs[AARCH64_X15]);
     PrintLog(fd, "x16:%016lx x17:%016lx x18:%016lx x19:%016lx\n", \
-        context->regs[AARCH64_X16], context->regs[AARCH64_X17],
-        context->regs[AARCH64_X18], context->regs[AARCH64_X19]);
+        context->uc_mcontext.regs[AARCH64_X16], context->uc_mcontext.regs[AARCH64_X17],
+        context->uc_mcontext.regs[AARCH64_X18], context->uc_mcontext.regs[AARCH64_X19]);
     PrintLog(fd, "x20:%016lx x21:%016lx x22:%016lx x23:%016lx\n", \
-        context->regs[AARCH64_X20], context->regs[AARCH64_X21],
-        context->regs[AARCH64_X22], context->regs[AARCH64_X23]);
+        context->uc_mcontext.regs[AARCH64_X20], context->uc_mcontext.regs[AARCH64_X21],
+        context->uc_mcontext.regs[AARCH64_X22], context->uc_mcontext.regs[AARCH64_X23]);
     PrintLog(fd, "x24:%016lx x25:%016lx x26:%016lx x27:%016lx\n", \
-        context->regs[AARCH64_X24], context->regs[AARCH64_X25],
-        context->regs[AARCH64_X26], context->regs[AARCH64_X27]);
+        context->uc_mcontext.regs[AARCH64_X24], context->uc_mcontext.regs[AARCH64_X25],
+        context->uc_mcontext.regs[AARCH64_X26], context->uc_mcontext.regs[AARCH64_X27]);
     PrintLog(fd, "x28:%016lx x29:%016lx\n", \
-        context->regs[AARCH64_X28], context->regs[AARCH64_X29]);
+        context->uc_mcontext.regs[AARCH64_X28], context->uc_mcontext.regs[AARCH64_X29]);
     PrintLog(fd, "lr:%016lx sp:%016lx pc:%016lx\n", \
-        context->regs[AARCH64_X30], context->regs[AARCH64_SP], context->regs[AARCH64_PC]);
+        context->uc_mcontext.regs[AARCH64_X30], context->uc_mcontext.sp, context->uc_mcontext.pc);
 #endif
 }
 
