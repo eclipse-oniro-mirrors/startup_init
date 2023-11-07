@@ -16,8 +16,7 @@
         "name": "init",
         "subsystem": "startup",
         "syscap": [
-            "SystemCapability.Startup.SystemInfo",
-            "SystemCapability.Startup.SystemInfo.Lite"
+            "SystemCapability.Startup.SystemInfo"
         ],
         "adapted_system_type": [
             "mini",
@@ -75,9 +74,7 @@
                 ],
                 "service_group": [
                     "//base/startup/init/watchdog:watchdog",
-                    "//base/startup/init/services/etc:watchdog.cfg",
-                    "//base/startup/init/ueventd:startup_ueventd",
-                    "//base/startup/init/services/etc:ueventd.cfg"
+                    "//base/startup/init/ueventd:startup_ueventd"
                 ]
               },
             "inner_kits": [
