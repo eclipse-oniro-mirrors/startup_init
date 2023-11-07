@@ -18,6 +18,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <grp.h>
 
 #include "init_param.h"
 #include "list.h"
@@ -152,6 +153,8 @@ INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, Servi
 
 INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *ops);
 INIT_LOCAL_API void CloseParamWorkSpace(void);
+INIT_LOCAL_API int CheckIfUidInGroup(const gid_t groupId, const char *groupCheckName);
+
 #ifdef STARTUP_INIT_TEST
 ParamService *GetParamService();
 #endif

@@ -336,6 +336,20 @@ static int32_t BShellParamCmdSet(BShellHandle shell, int32_t argc, char *argv[])
     return 0;
 }
 
+static int32_t BShellParamCmdSave(BShellHandle shell, int32_t argc, char *argv[])
+{
+    BSH_CHECK(shell != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
+    BSH_CHECK(argc == 1, return BSH_CMD_PARAM_INVALID, "Invalid shell env");
+
+    int ret = SystemSaveParameters();
+    if (ret == 0) {
+        BShellEnvOutput(shell, "Save persist parameters success\n");
+    } else {
+        BShellEnvOutput(shell, "Save persist parameters fail! errNum is:%d!\n", ret);
+    }
+    return 0;
+}
+
 static int32_t BShellParamCmdWait(BShellHandle shell, int32_t argc, char *argv[])
 {
     BSH_CHECK(shell != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
@@ -499,6 +513,7 @@ static int32_t BShellParamCmdRegForShell(BShellHandle shell)
         {"cd", BShellParamCmdCd, "change path of parameter", "cd name", NULL},
         {"cat", BShellParamCmdCat, "display value of parameter", "cat name", NULL},
         {"pwd", BShellParamCmdPwd, "display current parameter", "pwd", NULL},
+        {"save", BShellParamCmdSave, "save all persist parameters in workspace", "save", NULL},
     };
     for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {
         BShellEnvRegisterCmd(shell, &infos[i - 1]);
@@ -516,6 +531,7 @@ static int32_t BShellParamCmdRegForIndepent(BShellHandle shell)
         {"param", BShellParamCmdDump, "dump system parameter", "param dump [verbose]", "param dump"},
         {"param", BShellParamCmdShell, "shell system parameter",
             "param shell [-p] [name] [-u] [username] [-g] [groupname]", "param shell"},
+        {"param", BShellParamCmdSave, "save all persist parameters in workspace", "param save", "param save"},
     };
     for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {
         BShellEnvRegisterCmd(shell, &infos[i - 1]);

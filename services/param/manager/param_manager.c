@@ -781,3 +781,22 @@ int SystemGetParameterValue(ParamHandle handle, char *value, unsigned int *len)
     PARAM_CHECK(len != NULL && handle != 0, return -1, "The value is null");
     return ReadParamValue((ParamNode *)GetTrieNodeByHandle(handle), value, len);
 }
+
+INIT_LOCAL_API int CheckIfUidInGroup(const gid_t groupId, const char *groupCheckName)
+{
+    PARAM_CHECK(groupCheckName != NULL, return -1, "Invalid groupCheckName");
+    struct group *groupName = getgrnam(groupCheckName);
+    PARAM_CHECK(groupName != NULL, return -1, "Not find %s", groupName);
+    char  **gr_mem = groupName->gr_mem;
+    PARAM_CHECK(gr_mem != NULL, return -1, "No member in servicectrl");
+    for (int i = 0; gr_mem[i] != NULL; ++i) {
+        struct group *userGroup = getgrnam(gr_mem[i]);
+        if (userGroup != NULL) {
+            if (groupId == userGroup->gr_gid) {
+                return 0;
+            }
+        }
+    }
+    PARAM_LOGE("Forbid to access, groupId %u not in %s", groupId, groupCheckName);
+    return PARAM_CODE_PERMISSION_DENIED;
+}

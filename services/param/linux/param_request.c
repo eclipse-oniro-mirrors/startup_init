@@ -75,6 +75,7 @@ static int ProcessRecvMsg(const ParamMessage *recvMsg)
     int result = PARAM_CODE_INVALID_PARAM;
     switch (recvMsg->type) {
         case MSG_SET_PARAM:
+        case MSG_SAVE_PARAM:
             result = ((ParamResponseMessage *)recvMsg)->result;
             break;
         case MSG_NOTIFY_PARAM: {
@@ -222,6 +223,27 @@ int SystemSetParameterNoWait(const char *name, const char *value)
 {
     int ret = SystemSetParameter_(name, value, 0);
     BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemSetParameterNoWait failed! name is:%s, the errNum is:%d", name, ret);
+    return ret;
+}
+
+int SystemSaveParameters(void)
+{
+    const char *name = "persist.all";
+    size_t msgSize = RECV_BUFFER_MAX;
+    uint32_t offset = 0;
+    ParamMessage *request = (ParamMessage *)CreateParamMessage(MSG_SAVE_PARAM, name, msgSize);
+    PARAM_CHECK(request != NULL, return -1, "SystemSaveParameters failed! name is:%s, the errNum is:-1", name);
+    int ret = FillParamMsgContent(request, &offset, PARAM_VALUE, "*", 1);
+    PARAM_CHECK(ret == 0, free(request);
+        return -1, "SystemSaveParameters failed! the errNum is:-1");
+    int fd = GetClientSocket(DEFAULT_PARAM_WAIT_TIMEOUT);
+    PARAM_CHECK(fd >= 0, return fd, "SystemSaveParameters failed! the errNum is:%d", ret);
+    request->msgSize = offset + sizeof(ParamMessage);
+    request->id.msgId = ATOMIC_SYNC_ADD_AND_FETCH(&g_requestId, 1, MEMORY_ORDER_RELAXED);
+    ret = StartRequest(fd, request, DEFAULT_PARAM_WAIT_TIMEOUT);
+    close(fd);
+    free(request);
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemSaveParameters failed! the errNum is:%d", ret);
     return ret;
 }
 

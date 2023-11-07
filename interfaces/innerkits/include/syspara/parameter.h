@@ -122,6 +122,17 @@ int WatchParameter(const char *keyPrefix, ParameterChgPtr callback, void *contex
  */
 int RemoveParameterWatcher(const char *keyPrefix, ParameterChgPtr callback, void *context);
 
+/**
+ * @brief Synchronize saving persistent parameters.
+ * 
+ * You can use this function to save system parameter in shared memory immediately.\n
+ * 
+ * @return Returns <b>0</b> if the operation is successful;
+ * returns <b>-1</b> in other scenarios.
+ * @since 4.1
+ * @version 4.1
+*/
+int SaveParameters(void);
 const char *GetSecurityPatchTag(void);
 const char *GetOSFullName(void);
 const char *GetVersionId(void);

@@ -306,6 +306,25 @@ static int HandleParamWatcherDel(const ParamTaskPtr worker, const ParamMessage *
     return SendResponseMsg(worker, msg, 0);
 }
 
+static int HandleParamSave(const ParamTaskPtr worker, const ParamMessage *msg)
+{
+    PARAM_CHECK(msg != NULL, return -1, "Invalid message");
+    struct ucred cr = {-1, -1, -1};
+    socklen_t crSize = sizeof(cr);
+    if (getsockopt(LE_GetSocketFd(worker), SOL_SOCKET, SO_PEERCRED, &cr, &crSize) < 0) {
+        PARAM_LOGE("Failed to get opt %d", errno);
+#ifndef STARTUP_INIT_TEST
+        return SendResponseMsg(worker, msg, -1);
+#endif
+    }
+    PARAM_LOGI("process info:pid = %d, uid = %d, gid = %d", cr.pid, cr.uid, cr.gid);
+    PARAM_CHECK(cr.uid != -1, return -1, "Invalid uid");
+    int ret = CheckIfUidInGroup(cr.uid, "servicectrl");
+    PARAM_CHECK(ret == 0, return SendResponseMsg(worker, msg, -1), "Failed to process save parameters : ret %d", ret);
+    CheckAndSavePersistParam();
+    return SendResponseMsg(worker, msg, 0);
+}
+
 PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *msg)
 {
     PARAM_CHECK((msg != NULL) && (msg->msgSize >= sizeof(ParamMessage)), return -1, "Invalid msg");
@@ -323,6 +342,9 @@ PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *m
             break;
         case MSG_DEL_WATCHER:
             ret = HandleParamWatcherDel(worker, msg);
+            break;
+        case MSG_SAVE_PARAM:
+            ret = HandleParamSave(worker, msg);
             break;
         default:
             break;
