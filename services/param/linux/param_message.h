@@ -35,7 +35,8 @@ typedef enum {
     MSG_WAIT_PARAM,
     MSG_ADD_WATCHER,
     MSG_DEL_WATCHER,
-    MSG_NOTIFY_PARAM
+    MSG_NOTIFY_PARAM,
+    MSG_SAVE_PARAM
 } ParamMsgType;
 
 typedef enum ContentType {

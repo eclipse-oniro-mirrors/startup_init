@@ -54,6 +54,7 @@ typedef enum {
     PARAM_WORKSPACE_NOT_INIT,
     PARAM_CODE_FAIL_CONNECT,
     PARAM_CODE_MEMORY_NOT_ENOUGH,
+    PARAM_CODE_PERMISSION_DENIED,
     DAC_RESULT_INVALID_PARAM = 1000,
     DAC_RESULT_FORBIDED,
     SELINUX_RESULT_FORBIDED,
@@ -161,6 +162,13 @@ void SystemDumpTriggers(int verbose, int (*dump)(const char *fmt, ...));
  *
  */
 int SystemSetParameter(const char *name, const char *value);
+
+/**
+ * 对外接口
+ * 保存共享内存中的所有持久化参数
+ * 
+*/
+int SystemSaveParameters(void);
 
 /**
  * Init 接口

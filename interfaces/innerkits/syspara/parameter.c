@@ -98,6 +98,12 @@ int SetParameter(const char *key, const char *value)
     return GetSystemError(ret);
 }
 
+int SaveParameters(void)
+{
+    int ret = SystemSaveParameters();
+    return GetSystemError(ret);
+}
+
 const char *GetDeviceType(void)
 {
     static const char *productType = NULL;
