@@ -388,4 +388,18 @@ HWTEST_F(SysparaUnitTest, parameterTest0017, TestSize.Level0)
     EXPECT_STRNE(GetDistributionOSReleaseType(), nullptr);
 }
 #endif
+
+HWTEST_F(SysparaUnitTest, parameterTest0018, TestSize.Level0)
+{
+    char key1[] = "test.ro.sys.version";
+    char value1[] = "set read only key";
+    int ret = SetParameter(key1, value1);
+    EXPECT_EQ(ret, EC_SUCCESS);
+    char key2[] = "persist.test.ro.sys.version";
+    char value2[] = "set persist read only key";
+    ret = SetParameter(key2, value2);
+    EXPECT_EQ(ret, EC_SUCCESS);
+    ret = SaveParameters();
+    EXPECT_EQ(ret, 0);
+}
 }  // namespace OHOS

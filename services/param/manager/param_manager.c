@@ -786,9 +786,9 @@ INIT_LOCAL_API int CheckIfUidInGroup(const gid_t groupId, const char *groupCheck
 {
     PARAM_CHECK(groupCheckName != NULL, return -1, "Invalid groupCheckName");
     struct group *groupName = getgrnam(groupCheckName);
-    PARAM_CHECK(groupName != NULL, return -1, "Not find %s", groupName);
+    PARAM_CHECK(groupName != NULL, return -1, "Not find %s group", groupCheckName);
     char  **gr_mem = groupName->gr_mem;
-    PARAM_CHECK(gr_mem != NULL, return -1, "No member in servicectrl");
+    PARAM_CHECK(gr_mem != NULL, return -1, "No member in %s", groupCheckName);
     for (int i = 0; gr_mem[i] != NULL; ++i) {
         struct group *userGroup = getgrnam(gr_mem[i]);
         if (userGroup != NULL) {

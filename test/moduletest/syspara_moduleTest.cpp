@@ -445,4 +445,19 @@ HWTEST_F(SysparaModuleTest, Syspara_CacheParameter_test_002, TestSize.Level0)
     CachedParameterDestroy(cacheHandle3);
     GTEST_LOG_(INFO) << "Syspara_CacheParameter_test_002 end";
 }
+
+HWTEST_F(SysparaModuleTest, Syspara_SaveParameters_test_001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "Syspara_SaveParameters_test_001 start";
+
+    char key1[] = "test.param.int1";
+    char value1[] = "0x111111";
+    EXPECT_EQ(SetParameter(key1, value1), 0);
+    char key2[] = "persist.test.param.int2";
+    char value2[] = "-0x111111";
+    EXPECT_EQ(SetParameter(key2, value2), 0);
+    EXPECT_EQ(SaveParameters(), 0);
+
+    GTEST_LOG_(INFO) << "Syspara_SaveParameters_test_001 end";
+}
 }

@@ -3097,6 +3097,31 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("SaveParametersFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/saveparameters_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/services/include/param",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_static",
+  ]
+  external_deps = [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "saveparameters_fuzzer/saveparameters_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ##############################################################################################
 group("fuzztest") {
   testonly = true
