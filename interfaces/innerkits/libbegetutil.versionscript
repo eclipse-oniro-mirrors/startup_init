@@ -147,6 +147,7 @@
     GetDistributionOSVersion;
     GetDistributionOSApiVersion;
     GetDistributionOSReleaseType;
+    SaveParameters;
   local:
     *;
 };

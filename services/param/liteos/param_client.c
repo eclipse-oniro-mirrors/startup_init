@@ -107,11 +107,8 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 
 int SystemSaveParameters(void)
 {
-    uid_t processUid = getuid();
-    int ret = CheckIfUidInGroup(processUid, "servicectrl");
-    PARAM_CHECK(ret == 0, return ret, "Failed to process save parameters : ret %d", ret);
     CheckAndSavePersistParam();
-    return ret;
+    return PARAM_CODE_SUCCESS;
 }
 
 int WatchParamCheck(const char *keyprefix)
