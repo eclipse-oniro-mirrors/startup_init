@@ -26,3 +26,4 @@ hiviewdfx_profiler_param=2048
 ohos_boot_param = 8192
 bluetooth_param = 8192
 hiviewdfx_hiview_param = 2048
+telephony_param = 20480
