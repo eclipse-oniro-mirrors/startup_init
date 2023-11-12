@@ -41,6 +41,7 @@ static const char OHOS_OS_NAME[] = { "OpenHarmony" };
 static const int OHOS_SDK_API_VERSION = 6;
 static const char OHOS_SECURITY_PATCH_TAG[] = {"2021-09-01"};
 static const char OHOS_RELEASE_TYPE[] = { "Beta" };
+static const char OHOS_DEFAULT_VALUE[] = { "Default" };
 
 static const int MAJOR_VERSION = 1;
 static const int SENIOR_VERSION = 0;
@@ -313,4 +314,52 @@ const char *GetBuildRootHash(void)
 const char *GetOsReleaseType(void)
 {
     return OHOS_RELEASE_TYPE;
+}
+
+int GetMajorVersion(void)
+{
+    return 0;
+}
+
+int GetSeniorVersion(void)
+{
+    return 0;
+}
+
+int GetFeatureVersion(void)
+{
+    return 0;
+}
+
+int GetBuildVersion(void)
+{
+    return 0;
+}
+
+const char *GetDistributionOSName(void)
+{
+    return OHOS_DEFAULT_VALUE;
+}
+
+const char *GetDistributionOSVersion(void)
+{
+    return OHOS_DEFAULT_VALUE;
+}
+
+int GetDistributionOSApiVersion(void)
+{
+    return 0;
+}
+
+const char *GetDistributionOSReleaseType(void)
+{
+    return OHOS_DEFAULT_VALUE;
+}
+
+int GetDevUdid(char *udid, int size)
+{
+    if (udid == NULL || size < 0) {
+        return -1;
+    }
+    return 0;
 }
