@@ -18,6 +18,7 @@ import os
 import sys
 import stat
 import json
+import operator
 
 
 def parse_args(args):
@@ -36,7 +37,63 @@ def parse_args(args):
     return options
 
 
-def append_files(target_f, options):
+def load_group_file_as_dict(source_f):
+    source_dict = {}
+    for line in source_f:
+        arr = line.strip().split(":")
+        if arr:
+            key = arr[0]
+            value = [arr[1] + ":" + arr[2] + ":", arr[3]]
+            source_dict[key] = value
+    return source_dict
+
+
+def get_append_value(src, source_dict):
+    for line in src:
+        if line != "\n":
+            arr = line.strip().split(":")
+            key = arr[0]
+            if len(arr) > 3:
+                value = [arr[1] + ":" + arr[2] + ":", arr[3]]
+            else:
+                value = [arr[1] + ":" + arr[2] + ":", " "]
+            if key in source_dict.keys():
+                if source_dict[key][1] == " " and arr[3]:
+                    source_dict[key][0] = source_dict[key][0] + arr[3]
+                elif source_dict[key][1] and arr[3]:
+                    source_dict[key][1] = source_dict[key][1] + "," + arr[3]
+            else:
+                source_dict[key] = value
+
+
+def append_group_by_files(options, source_dict):
+    for append_f in options.files:
+        with open(append_f, 'r') as src:
+            get_append_value(src, source_dict)
+
+
+def append_group_files(target_f, options):
+    with open(options.source_file, 'r') as source_f:
+        source_dict = load_group_file_as_dict(source_f)
+    if options.files:
+        append_group_by_files(options, source_dict)
+    for item in source_dict:
+        source_dict[item] = source_dict[item][0] + source_dict[item][1]
+    if options.lines:
+        for line in options.lines:
+            arr = line.strip().split(":")
+            key = arr[0]
+            if key in source_dict.keys() and source_dict[key].endwith(":"):
+                source_dict[key] = source_dict[key] + arr[3]
+            elif key in source_dict.keys() and source_dict[key].__contains__(","):
+                source_dict[key] = source_dict[key] + "," + arr[3]
+            else:
+                source_dict[key] = arr[1] + ":" + arr[2] + ":" + arr[3]
+    for item in source_dict:
+        target_f.write(f"{item}:{source_dict[item]}\n")
+
+
+def append_passwd_files(target_f, options):
     # Read source file
     with open(options.source_file, 'r') as source_f:
         source_contents = source_f.read()
@@ -65,7 +122,10 @@ def main(args):
         depfile_deps = ([options.source_file])
 
     with os.fdopen(os.open(options.output, os.O_RDWR | os.O_CREAT, stat.S_IWUSR | stat.S_IRUSR), 'w') as target_f:
-        append_files(target_f, options)
+        if operator.contains(options.source_file, "group"):
+            append_group_files(target_f, options)           
+        else:
+            append_passwd_files(target_f, options)
 
     build_utils.write_depfile(options.depfile,
                 options.output, depfile_deps, add_pydeps=False)
