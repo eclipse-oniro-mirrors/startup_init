@@ -33,7 +33,7 @@ uiserver:x:1048:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr,foundation,update
 powerctrl:x:1051:root,shell,system,update,power_host,charger,foundation,atcmdserver,bms_animation,maintenance_service
 bootctrl:x:1052:root,shell,system
-deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,pin_auth_host,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm,update,device_attest,hiview,device_cert_manager_server
+deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,pin_auth_host,access_token,device_manager,foundation,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm,update,device_attest,hiview,device_cert_manager_server,huawei_id
 hiview:x:1201:
 hidumper_service:x:1212:
 shell:x:2000:hiview
@@ -147,3 +147,4 @@ code_sign:x:3074:
 hdf_ext_devmgr:x:3085:
 intell_voice_host:x:3100:
 user_data_r:x:2008:
+huawei_id:x:7008:
