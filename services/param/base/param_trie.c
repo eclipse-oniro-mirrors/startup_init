@@ -363,7 +363,7 @@ INIT_LOCAL_API int AddParamEntry(uint32_t index, uint8_t type, const char *name,
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
     if (entry == NULL) {
         uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value));
-        PARAM_CHECK(offset != 0, return PARAM_CODE_MEMORY_NOT_ENOUGH, "Failed to allocate name %s", name);
+        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
         SaveIndex(&node->dataIndex, offset);
     }
     return 0;
@@ -385,7 +385,7 @@ INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData)
     uint32_t offset = node->labelIndex;
     if (node->labelIndex == 0) {  // can not support update for label
         offset = AddParamSecurityNode(workSpace, auditData);
-        PARAM_CHECK(offset != 0, return PARAM_CODE_MEMORY_NOT_ENOUGH, "Failed to add label");
+        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to add label");
         SaveIndex(&node->labelIndex, offset);
     } else {
         ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, node->labelIndex);

@@ -176,17 +176,18 @@ static int LoadOneParam_(const uint32_t *context, const char *name, const char *
         auditData->memberNum = 1;
         auditData->members[0] = auditData->dacData.gid;
     }
-    AddSecurityLabel(auditData);
-    return 0;
+
+    return AddSecurityLabel(auditData);
 }
 
 static int LoadParamLabels(const char *fileName)
 {
+    int result = -1;
     ParamAuditData *auditData = (ParamAuditData *)calloc(1,
         sizeof(ParamAuditData) + sizeof(uid_t) * MAX_MEMBER_IN_GROUP);
     if (auditData == NULL) {
         PARAM_LOGE("Failed to alloc memory %s", fileName);
-        return 0;
+        return result;
     }
     uint32_t infoCount = 0;
     FILE *fp = fopen(fileName, "r");
@@ -194,14 +195,18 @@ static int LoadParamLabels(const char *fileName)
     char *buff = (char *)calloc(1, buffSize);
     while (fp != NULL && buff != NULL && fgets(buff, buffSize, fp) != NULL) {
         buff[buffSize - 1] = '\0';
-        int ret = SplitParamString(buff, NULL, 0, LoadOneParam_, (const uint32_t *)auditData);
-        if (ret != 0) {
-            PARAM_LOGE("Failed to split string %s fileName %s", buff, fileName);
-            continue;
+        result = SplitParamString(buff, NULL, 0, LoadOneParam_, (const uint32_t *)auditData);
+        if (result != 0) {
+            PARAM_LOGE("Failed to split string %s fileName %s, result is:%d", buff, fileName, result);
+            break;
         }
         infoCount++;
     }
-    PARAM_LOGI("Load parameter label total %u success %s", infoCount, fileName);
+
+    if (result == 0) {
+        PARAM_LOGI("Load parameter label total %u success %s", infoCount, fileName);
+    }
+
     if (fp != NULL) {
         (void)fclose(fp);
     }
@@ -211,7 +216,7 @@ static int LoadParamLabels(const char *fileName)
     if (auditData != NULL) {
         free(auditData);
     }
-    return 0;
+    return result;
 }
 
 static int ProcessParamFile(const char *fileName, void *context)
@@ -255,7 +260,10 @@ static int DacGetParamSecurityLabel(const char *path)
         }
         if ((stat(fileName, &st) == 0) && !S_ISDIR(st.st_mode)) {
             count++;
-            ProcessParamFile(fileName, NULL);
+            ret = ProcessParamFile(fileName, NULL);
+            if (ret != 0) {
+                return ret;
+            };
         }
     }
     PARAM_LOGV("Get parameter security label dac number is %d, from %s.", count, path);

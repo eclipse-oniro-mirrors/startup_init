@@ -119,9 +119,6 @@ if (defined(ohos_lite)) {
       defines += [ "__MUSL__" ]
     }
 
-    if (startup_init_test_performance) {
-      defines += [ "PARAM_TEST_PERFORMANCE" ]
-    }
     if (!startup_init_with_param_base) {
       ldflags = [ "-nostdlib" ]
       configs -= inherited_configs
@@ -162,7 +159,10 @@ if (defined(ohos_lite)) {
     defines = [ "_GNU_SOURCE" ]
     deps = []
 
-    include_dirs += [ "//third_party/bounds_checking_function/include" ]
+    include_dirs += [
+      "//base/startup/init/services/init/include",
+      "//third_party/bounds_checking_function/include",
+    ]
     if (build_selinux) {
       include_dirs += [
         "//third_party/selinux/libselinux/include/",

@@ -470,6 +470,7 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
 
 INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dataIndex, int mode)
 {
+    int flag = 0;
     PARAM_LOGV("WriteParam %s", name);
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return PARAM_WORKSPACE_NOT_INIT, "Invalid paramSpace");
@@ -477,6 +478,11 @@ INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dat
     PARAM_CHECK(value != NULL && name != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid name or value");
     WorkSpace *workSpace = GetWorkSpaceByName(name);
     PARAM_CHECK(workSpace != NULL, return PARAM_CODE_INVALID_PARAM, "Invalid workSpace");
+#ifdef PARAM_SUPPORT_SELINUX
+    if (strcmp(workSpace->fileName, WORKSPACE_NAME_DEF_SELINUX) == 0) {
+        flag = 1;
+    }
+#endif
     ParamTrieNode *node = FindTrieNode(workSpace, name, strlen(name), NULL);
     int ret = 0;
     if (node != NULL && node->dataIndex != 0) {
@@ -501,6 +507,11 @@ INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dat
         PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         PARAMSPACE_AREA_RW_LOCK(workSpace);
         ret = AddParam((WorkSpace *)workSpace, type, name, value, dataIndex);
+        if ((ret == PARAM_CODE_REACHED_MAX) && (flag == 1)) {
+            PARAM_LOGE("Add node %s to space %s failed! memory is not enough, system reboot!",
+                name, workSpace->fileName);
+            ExecReboot("panic");
+        }
         PARAMSPACE_AREA_RW_UNLOCK(workSpace);
     }
     return ret;
