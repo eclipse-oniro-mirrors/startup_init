@@ -176,6 +176,7 @@ if (defined(ohos_lite)) {
     innerapi_tags = [
       "chipsetsdk",
       "platformsdk",
+      "sasdk",
     ]
 
     version_script = "libbegetutil.versionscript"
