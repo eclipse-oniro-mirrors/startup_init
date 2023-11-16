@@ -43,9 +43,19 @@ def load_group_file_as_dict(source_f):
         arr = line.strip().split(":")
         if arr:
             key = arr[0]
-            value = [arr[1] + ":" + arr[2] + ":", arr[3]]
+            passwd_gid_value = [arr[1], arr[2]]
+            value = [':'.join(passwd_gid_value), arr[3]]
             source_dict[key] = value
     return source_dict
+
+
+def insert_append_user_value(key, arr, source_dict):
+    if source_dict[key][1] and arr[3]:
+        if arr[3] not in source_dict[key][1]:
+            user_value = [source_dict[key][1], arr[3]]
+            source_dict[key][1] = ','.join(user_value)
+    elif source_dict[key][1] == " " and arr[3]:
+        source_dict[key][1] = arr[3]
 
 
 def get_append_value(src, source_dict):
@@ -53,17 +63,30 @@ def get_append_value(src, source_dict):
         if line != "\n":
             arr = line.strip().split(":")
             key = arr[0]
+            passwd_gid_value = [arr[1], arr[2]]
             if len(arr) > 3:
-                value = [arr[1] + ":" + arr[2] + ":", arr[3]]
+                value = [':'.join(passwd_gid_value), arr[3]]
             else:
-                value = [arr[1] + ":" + arr[2] + ":", " "]
+                value = [':'.join(passwd_gid_value), " "]
             if key in source_dict.keys():
-                if source_dict[key][1] == " " and arr[3]:
-                    source_dict[key][0] = source_dict[key][0] + arr[3]
-                elif source_dict[key][1] and arr[3]:
-                    source_dict[key][1] = source_dict[key][1] + "," + arr[3]
+                insert_append_user_value(key, arr, source_dict)
             else:
                 source_dict[key] = value
+
+
+def append_group_by_lines(options, source_dict):
+    for line in options.lines:
+        arr = line.strip().split(":")
+        key = arr[0]
+        passwd_gid_value = [arr[1], arr[2]]
+        if len(arr) > 3:
+            value = [':'.join(passwd_gid_value), arr[3]]
+        else:
+            value = [':'.join(passwd_gid_value), " "]
+        if key in source_dict.keys():
+            insert_append_user_value(key, arr, source_dict)
+        else:
+            source_dict[key] = value
 
 
 def append_group_by_files(options, source_dict):
@@ -77,20 +100,10 @@ def append_group_files(target_f, options):
         source_dict = load_group_file_as_dict(source_f)
     if options.files:
         append_group_by_files(options, source_dict)
-    for item in source_dict:
-        source_dict[item] = source_dict[item][0] + source_dict[item][1]
     if options.lines:
-        for line in options.lines:
-            arr = line.strip().split(":")
-            key = arr[0]
-            if key in source_dict.keys() and source_dict[key].endwith(":"):
-                source_dict[key] = source_dict[key] + arr[3]
-            elif key in source_dict.keys() and source_dict[key].__contains__(","):
-                source_dict[key] = source_dict[key] + "," + arr[3]
-            else:
-                source_dict[key] = arr[1] + ":" + arr[2] + ":" + arr[3]
+        append_group_by_lines(options, source_dict)
     for item in source_dict:
-        target_f.write(f"{item}:{source_dict[item]}\n")
+        target_f.write(f"{item}:{':'.join(source_dict[item])}\n")
 
 
 def append_passwd_files(target_f, options):
