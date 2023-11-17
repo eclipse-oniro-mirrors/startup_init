@@ -24,6 +24,7 @@
 #include "init_param.h"
 #include "plugin_adapter.h"
 #include "securec.h"
+#include "init_utils.h"
 
 typedef struct {
     char *buffer;
@@ -68,6 +69,31 @@ static int TraversalEvent(ListNode *node, void *root)
     return 0;
 }
 
+static void InsertBootTimeParam(char *buffer, const char *name)
+{
+    char bufKernel[MAX_BUFFER_LEN] = {0};
+    char buf[MAX_BUFFER_LEN] = {0};
+    char bootName[MAX_BUFFER_LEN] = {0};
+    uint32_t bufLen = MAX_BUFFER_LEN;
+    uint32_t kernelLen = MAX_BUFFER_LEN;
+    int len = sprintf_s(bootName, MAX_BUFFER_LEN, "ohos.boot.time.%s", name);
+    PLUGIN_CHECK(len > 0 && ((uint32_t)len < MAX_BUFFER_LEN), return, "Failed to format boot name ");
+    int ret = SystemReadParam(bootName, buf, &bufLen);
+    PLUGIN_CHECK(ret == 0, return, "Failed to read boot time ");
+    char time[MAX_BUFFER_LEN] = {0};
+    if (strcmp(name, "kernel") == 0) {
+        len = sprintf_s(time, MAX_BUFFER_LEN, ";kernel,0,%s", buf);
+    } else {
+        int result = SystemReadParam("ohos.boot.time.kernel", bufKernel, &kernelLen);
+        if (result == 0) {
+            len = sprintf_s(time, MAX_BUFFER_LEN, ";init,%s,%s", bufKernel, buf);
+        }
+    }
+    PLUGIN_CHECK(len > 0 && ((uint32_t)len < MAX_BUFFER_LEN), return, "Failed to format boot time ");
+    ret = strcat_s(buffer, MAX_BUFFER_FOR_EVENT + PARAM_VALUE_LEN_MAX + MAX_BUFFER_LEN + 1, time);
+    PLUGIN_CHECK(ret == 0, return, "Failed to format boot time ");
+}
+
 PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
 {
     PLUGIN_CHECK(events != NULL, return, "Invalid events");
@@ -82,6 +108,8 @@ PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
     if ((args.currLen > 1) && (args.currLen < MAX_BUFFER_FOR_EVENT)) {
         buffer[args.currLen - 1] = '\0';
     }
+    InsertBootTimeParam(buffer, "kernel");
+    InsertBootTimeParam(buffer, "init");
 
     StartupTimeEvent startupTime = {};
     startupTime.event.type = STARTUP_TIME;
