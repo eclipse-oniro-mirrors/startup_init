@@ -150,3 +150,4 @@ user_data_r:x:2008:
 huawei_id:x:7008:
 drmserver:x:1077:
 clearplay_host:x:3078:
+wiseplat_host:x:3079:
