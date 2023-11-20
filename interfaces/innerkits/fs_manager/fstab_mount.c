@@ -222,7 +222,7 @@ static int DoFsckF2fs(const char* device)
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "fsck.f2fs is not exists.");
 
     char *cmd[] = {
-        file, "-a", (char *)device, NULL
+        file, "-p1", (char *)device, NULL
     };
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
