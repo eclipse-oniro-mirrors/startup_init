@@ -22,6 +22,8 @@
 #include "init_module_engine.h"
 #endif
 #include "securec.h"
+#include "init_cmds.h"
+#include "init_param.h"
 
 /**
  * Loading system parameter from /proc/cmdline by the following rules:
@@ -257,7 +259,10 @@ static int LoadSecurityLabel(const char *fileName)
     // load security label
     ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_DAC);
     if (ops != NULL && ops->securityGetLabel != NULL) {
-        ops->securityGetLabel(fileName);
+        if (ops->securityGetLabel(fileName) == PARAM_CODE_REACHED_MAX) {
+            PARAM_LOGE("Load Security Lable failed! system reboot!");
+            ExecReboot("panic");
+        };
     }
 #endif
     return 0;

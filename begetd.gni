@@ -33,8 +33,6 @@ declare_args() {
 
   startup_init_feature_decode_group_file = false
 
-  startup_init_test_performance = true
-
   # log display control
   config_ohos_startup_init_lite_no_log = false
 
