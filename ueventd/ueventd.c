@@ -187,7 +187,8 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
             strstr(uevent->partitionName, "chipset") != NULL ||
             strstr(uevent->partitionName, "boot") != NULL ||
             strstr(uevent->partitionName, "ramdisk") != NULL ||
-            strstr(uevent->partitionName, "rvt") != NULL) {
+            strstr(uevent->partitionName, "rvt") != NULL ||
+            strstr(uevent->partitionName, "dtbo") != NULL) {
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
             HandleBlockDeviceEvent(uevent);
             return;
