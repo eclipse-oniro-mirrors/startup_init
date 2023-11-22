@@ -30,6 +30,7 @@ enum {
     CMD_SET_SERVICE_CONTEXTS = 1,
     CMD_SET_SOCKET_CONTEXTS = 2,
     CMD_RESTORE_INDEX = 3,
+    CMD_RESTORE_INDEX_FORCE = 4,
 };
 
 extern char *__progname;
@@ -114,13 +115,25 @@ static int RestoreContentRecurse(int id, const char *name, int argc, const char 
     return 0;
 }
 
-static int32_t selinuxAdpCmdIds[CMD_RESTORE_INDEX + 1] = {0}; // 4 cmd count
+static int RestoreContentRecurseForce(int id, const char *name, int argc, const char **argv)
+{
+    PLUGIN_CHECK(name != NULL && argc >= 1 && argv != NULL, return -1, "Invalid parameter");
+    PLUGIN_LOGV("RestoreContentRecurseForce path %s", argv[0]);
+    if (RestoreconRecurseForce(argv[0]) && errno != 0) {
+        PLUGIN_LOGE("RestoreContentRecurseForce failed for '%s', err %d.", argv[0], errno);
+    }
+    return 0;
+}
+
+static int32_t selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE + 1] = {0}; // 5 cmd count
 static void SelinuxAdpInit(void)
 {
     selinuxAdpCmdIds[CMD_LOAD_POLICY] = AddCmdExecutor("loadSelinuxPolicy", LoadSelinuxPolicy);
     selinuxAdpCmdIds[CMD_SET_SERVICE_CONTEXTS] = AddCmdExecutor("setServiceContent", SetServiceContent);
     selinuxAdpCmdIds[CMD_SET_SOCKET_CONTEXTS] = AddCmdExecutor("setSockCreateCon", SetSockCreateCon);
     selinuxAdpCmdIds[CMD_RESTORE_INDEX] = AddCmdExecutor("restoreContentRecurse", RestoreContentRecurse);
+    selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE] =
+        AddCmdExecutor("restoreContentRecurseForce", RestoreContentRecurseForce);
 }
 
 static void SelinuxAdpExit(void)
@@ -136,6 +149,9 @@ static void SelinuxAdpExit(void)
     }
     if (selinuxAdpCmdIds[CMD_RESTORE_INDEX] != -1) {
         RemoveCmdExecutor("restoreContentRecurse", selinuxAdpCmdIds[CMD_RESTORE_INDEX]);
+    }
+    if (selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE] != -1) {
+        RemoveCmdExecutor("restoreContentRecurseForce", selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE]);
     }
 }
 
