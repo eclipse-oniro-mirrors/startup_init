@@ -106,7 +106,11 @@ void ReadConfig(void)
     uint32_t len = sizeof(buffer);
     SystemReadParam("ohos.boot.mode", buffer, &len);
     INIT_LOGI("ohos.boot.mode %s", buffer);
-    if (strcmp(buffer, "charger") == 0) {
+    if (strcmp(buffer, "charger_mode") == 0) {
+        ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
+        ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
+        ParseInitCfgByPriority();
+    } else if (strcmp(buffer, "charger") == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (InUpdaterMode() == 0) {
