@@ -316,6 +316,9 @@ static void DoRestorecon(const struct CmdArgs *ctx)
     cmdInfo.cmdName = "restorecon";
     cmdInfo.cmdContent = ctx->argv[0];
     cmdInfo.reserved = NULL;
+    if ((ctx->argc > 1) && strcmp(ctx->argv[0], "-F") == 0) {
+        cmdInfo.cmdContent = ctx->argv[1];
+    }
 
     HOOK_EXEC_OPTIONS options;
     options.flags = TRAVERSE_STOP_WHEN_ERROR;
@@ -325,7 +328,11 @@ static void DoRestorecon(const struct CmdArgs *ctx)
     if (ret == 0) {
         return;
     }
-    PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
+    if ((ctx->argc > 1) && strcmp(ctx->argv[0], "-F") == 0) {
+        PluginExecCmdByName("restoreContentRecurseForce", ctx->argv[1]);
+    } else {
+        PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
+    }
     return;
 }
 
@@ -539,7 +546,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "ifup ", 1, 1, 1, DoIfup },
     { "mount_fstab ", 1, 1, 0, DoMountFstabFile },
     { "umount_fstab ", 1, 1, 0, DoUmountFstabFile },
-    { "restorecon ", 1, 1, 1, DoRestorecon },
+    { "restorecon ", 1, 2, 1, DoRestorecon },
     { "stopAllServices ", 0, 10, 0, DoStopAllServices },
     { "umount ", 1, 1, 0, DoUmount },
     { "sync ", 0, 1, 0, DoSync },
