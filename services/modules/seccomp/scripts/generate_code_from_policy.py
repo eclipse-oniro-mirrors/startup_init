@@ -664,7 +664,7 @@ class GenBpfPolicy:
         #high 4 bytes
         bpf_policy.append(BPF_LOAD.format(20 + arg_id * 8))
         bpf_policy.append(BPF_AND.format('((uint64_t)' + mask + ') >> 32'))
-        bpf_policy.append(BPF_JEQ.format('((uint64_t)' + value + ') >> 32', 0, cur_size + 3))
+        bpf_policy.append(BPF_JEQ.format('((uint64_t)' + value + ') >> 32', 0, cur_size + 4))
 
         #low 4 bytes
         bpf_policy.append(BPF_LOAD.format(16 + arg_id * 8))
