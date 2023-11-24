@@ -45,6 +45,13 @@ ohos_shared_library("param_watcher") {
     "//base/startup/init/services/log:agent_log",
   ]
 
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   external_deps = [
     "c_utils:utils",
     "ipc:ipc_core",
