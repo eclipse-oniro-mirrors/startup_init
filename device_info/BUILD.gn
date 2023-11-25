@@ -33,6 +33,13 @@ if (!defined(ohos_lite)) {
       "device_info_stub.cpp",
     ]
 
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+
     shlib_type = "sa"
 
     include_dirs = [
