@@ -23,6 +23,7 @@
 #include "init_modulemgr.h"
 #include "init_cmdexecutor.h"
 #include "init_running_hooks.h"
+#include "init_filesystems.h"
 
 #ifdef __cplusplus
 #if __cplusplus

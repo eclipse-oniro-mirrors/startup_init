@@ -103,7 +103,69 @@ int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen)
  * @param ignoreCase 0 means exact match, others mean ignore case
  * @return return 0 if succeed; other values if failed.
  */
-int StrArrayGetIndex(const char *strArray[], const char *target, int ignoreCase);
+int OH_StrArrayGetIndex(const char *strArray[], const char *target, int ignoreCase);
+
+/**
+ * @brief Get string index from a string array with extended strings
+ *
+ * @param strArray string array
+ *     Attension: last item in the array must be NULL, for example:
+ *     const char *strArray[] = { "val1", "val2", NULL }
+ * @param target string to be matched
+ * @param ignoreCase 0 means exact match, others mean ignore case
+ * @param extend optional extended strings array, last string must be NULL
+ * @return return 0 if succeed; other values if failed.
+ */
+int OH_ExtendableStrArrayGetIndex(const char *strArray[], const char *target, int ignoreCase, const char *extend[]);
+
+/**
+ * @brief Get string dictionary from a string dictionary array
+ *
+ * @param strDict string dictionary array
+ *     Attension: last item in the array must be NULL, for example:
+ *     Each item must be a structure with "const char *" as the first element
+ *     For example:
+ *     typedef {
+ *         const char *key;   // First element must be "const char *"
+ *         const char *value; // Arbitrary elements
+ *         // Optionally add more elements
+ *     } STRING_DICT_ST;
+ * @param target string to be matched
+ * @param ignoreCase 0 means exact match, others mean ignore case
+ * @return return item pointer if succeed; NULL if failed
+ * @example
+ * // Define a name-value pair as dictionary item
+ * typedef struct {
+ *     const char *name;
+ *     const char *value;
+ * } NAME_VALUE_ST;
+
+ * // Fill the dictionary values
+ * NAME_VALUE_ST dict[] = { { "key1", "val1" }, { "key2", "val2" }};
+
+ * // Find by key name
+ * NAME_VALUE_ST *found = (NAME_VALUE_ST *)StrDictGetIndex((void **)dict, sizeof(NAME_VALUE_ST), "key1", FALSE);
+ */
+void *OH_StrDictGet(void **strDict, int dictSize, const char *target, int ignoreCase);
+
+/**
+ * @brief Get string dictionary from a string dictionary array and extended string dictionary
+ *
+ * @param strDict string dictionary array
+ *     Attension: last item in the array must be NULL, for example:
+ *     Each item must be a structure with "const char *" as the first element
+ *     For example:
+ *     typedef {
+ *         const char *key;   // First element must be "const char *"
+ *         const char *value; // Arbitrary elements
+ *         // Optionally add more elements
+ *     } STRING_DICT_ST;
+ * @param target string to be matched
+ * @param ignoreCase 0 means exact match, others mean ignore case
+ * @param extendStrDict optional extended strings dictionary array, last item must be NULL
+ * @return return item pointer if succeed; NULL if failed.
+ */
+void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, int ignoreCase, void **extendStrDict);
 
 long long GetUptimeInMicroSeconds(const struct timespec *uptime);
 

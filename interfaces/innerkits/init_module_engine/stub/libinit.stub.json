@@ -6,6 +6,7 @@
     { "name": "AddCmdExecutor" },
     { "name": "RemoveCmdExecutor" },
     { "name": "HookMgrAdd" },
+    { "name": "HookMgrAddEx" },
     { "name": "HookMgrDel" },
     { "name": "GetBootStageHookMgr"},
     { "name": "InitAddGlobalInitHook" },
@@ -15,6 +16,7 @@
     { "name": "InitAddPostCfgLoadHook" },
     { "name": "InitModuleMgrInstall" },
     { "name": "InitModuleMgrUnInstall" },
+    { "name": "InitSetExtendedFileSystems" },
     { "name": "AutorunModuleMgrUnInstall" },
     { "name": "StartupLog" },
     { "name": "DoJobNow" },
@@ -82,5 +84,10 @@
     { "name": "InitAddServiceParseHook" },
     { "name": "InitAddJobParseHook" },
     { "name": "InitAddPostPersistParamLoadHook"},
-    { "name": "InitServiceRestartHook" }
+    { "name": "InitServiceRestartHook" },
+    { "name": "OH_StrArrayGetIndex" },
+    { "name": "OH_ExtendableStrArrayGetIndex" },
+    { "name": "OH_StrDictGet" },
+    { "name": "OH_ExtendableStrDictGet" },
+    { "name": "GetUptimeInMicroSeconds" }
 ]

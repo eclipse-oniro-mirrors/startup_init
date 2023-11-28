@@ -30,6 +30,7 @@
 #ifdef SUPPORT_HVB
 #include "dm_verity.h"
 #endif
+#include "init_filesystems.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -58,20 +59,45 @@ __attribute__((weak)) void InitPostMount(const char *mountPoint, int rc)
 {
 }
 
+static const SUPPORTED_FILE_SYSTEM supportedFileSystems[] = {
+    { "ext4", 0 },
+    { "f2fs", 1 },
+    { "overlay", 0 },
+    { NULL, 0 }
+};
+
+static void **extendedFileSystems_ = NULL;
+
+void InitSetExtendedFileSystems(const SUPPORTED_FILE_SYSTEM *extendedFileSystems[])
+{
+    extendedFileSystems_ = (void **)extendedFileSystems;
+}
+
+static const SUPPORTED_FILE_SYSTEM *GetSupportedFileSystemInfo(const char *fsType)
+{
+    return (const SUPPORTED_FILE_SYSTEM *)OH_ExtendableStrDictGet((void **)supportedFileSystems,
+           sizeof(SUPPORTED_FILE_SYSTEM), fsType, 0, extendedFileSystems_);
+}
+
+static bool IsSupportedDataType(const char *fsType)
+{
+    const SUPPORTED_FILE_SYSTEM *item = GetSupportedFileSystemInfo(fsType);
+    if (item == NULL) {
+        return false;
+    }
+    if (item->for_userdata) {
+        return true;
+    }
+    return false;
+}
+
 bool IsSupportedFilesystem(const char *fsType)
 {
-    bool supported = false;
-    if (fsType != NULL) {
-        static const char *supportedFilesystem[] = {"ext4", "f2fs", "overlay", NULL};
-        int index = 0;
-        while (supportedFilesystem[index] != NULL) {
-            if (strcmp(supportedFilesystem[index++], fsType) == 0) {
-                supported = true;
-                break;
-            }
-        }
+    const SUPPORTED_FILE_SYSTEM *item = GetSupportedFileSystemInfo(fsType);
+    if (item == NULL) {
+        return false;
     }
-    return supported;
+    return true;
 }
 
 static int ExecCommand(int argc, char **argv)
@@ -118,7 +144,7 @@ int DoFormat(const char *devPath, const char *fsType)
         int argc = ARRAY_LENGTH(formatCmds);
         char **argv = (char **)formatCmds;
         ret = ExecCommand(argc, argv);
-    } else if (strcmp(fsType, "f2fs") == 0) {
+    } else if (IsSupportedDataType(fsType)) {
 #ifdef __MUSL__
         char *formatCmds[] = {
             "/bin/mkfs.f2fs", "-d1", "-O", "encrypt", "-O", "quota", "-O", "verity", "-O", "project_quota,extra_attr",
@@ -356,7 +382,7 @@ int MountOneItem(FstabItem *item)
         WaitForFile(item->deviceName, WAIT_MAX_SECOND);
     }
 
-    if (strcmp(item->fsType, "f2fs") == 0 && strcmp(item->mountPoint, "/data") == 0) {
+    if (strcmp(item->mountPoint, "/data") == 0 && IsSupportedDataType(item->fsType)) {
         int ret = DoResizeF2fs(item->deviceName, 0, item->fsManagerFlags);
         if (ret != 0) {
             BEGET_LOGE("Failed to resize.f2fs dir %s , ret = %d", item->deviceName, ret);
