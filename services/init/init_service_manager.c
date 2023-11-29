@@ -825,10 +825,13 @@ void SetServicePathWithAsan(Service *service)
 
 static void ParseOneServiceArgs(const cJSON *curItem, Service *service)
 {
-    (void)GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
-    (void)GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
-    (void)GetServiceArgs(curItem, "permission", MAX_WRITEPID_FILES, &service->permArgs);
-    (void)GetServiceArgs(curItem, "permission_acls", MAX_WRITEPID_FILES, &service->permAclsArgs);
+    int ret = GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
+    ret += GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
+    ret += GetServiceArgs(curItem, "permission", MAX_WRITEPID_FILES, &service->permArgs);
+    ret += GetServiceArgs(curItem, "permission_acls", MAX_WRITEPID_FILES, &service->permAclsArgs);
+    if (ret != 0) {
+        INIT_LOGW("ParseOneServiceArgs failed.");
+    }
     size_t strLen = 0;
     char *fieldStr = GetStringValue(curItem, APL_STR_IN_CFG, &strLen);
     if (fieldStr != NULL) {
