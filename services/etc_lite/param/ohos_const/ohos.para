@@ -13,5 +13,5 @@
 
 const.ohos.releasetype=Canary1
 const.ohos.apiversion=11
-const.ohos.version.security_patch=2023/11/01
-const.ohos.fullname=OpenHarmony-4.1.3.5
+const.ohos.version.security_patch=2023/12/01
+const.ohos.fullname=OpenHarmony-4.1.5.1
