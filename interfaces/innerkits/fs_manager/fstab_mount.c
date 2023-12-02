@@ -403,7 +403,15 @@ int MountOneItem(FstabItem *item)
         }
     }
 
-    int rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
+    int retry_count = 3;
+    int rc = 0;
+    while (retry_count-- > 0) {
+        rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
+        if (rc == 0) {
+            break;
+        }
+        BEGET_LOGE("Mount device %s to %s failed, err = %d, retry", item->deviceName, item->mountPoint, errno);
+    }
     InitPostMount(item->mountPoint, rc);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
