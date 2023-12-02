@@ -747,8 +747,9 @@ void ServiceReap(Service *service)
 {
     INIT_CHECK(service != NULL, return);
     INIT_LOGI("Service info %s reap pid %d.", service->name, service->pid);
-    service->pid = -1;
     NotifyServiceChange(service, SERVICE_STOPPED);
+    int tmp = service->pid;
+    service->pid = -1;
 
     if (service->attribute & SERVICE_ATTR_INVALID) {
         INIT_LOGE("Service error %s invalid service.", service->name);
@@ -781,7 +782,9 @@ void ServiceReap(Service *service)
         // the service could be restart even if it is one-shot service
     }
 
+    service->pid = tmp;
     ServiceReapHookExecute(service);
+    service->pid = -1;
     // service no need to restart if it is an ondemand service.
     if (IsOnDemandService(service)) {
         CheckOndemandService(service);
