@@ -298,3 +298,6 @@ clock_gettime64;arm
 cacheflush;arm
 set_tls;arm
 setitimer;all
+timerfd_create;all
+timerfd_gettime;all
+timerfd_settime;all
