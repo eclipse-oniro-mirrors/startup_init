@@ -115,7 +115,11 @@ int HvbDmVeritySetUp(FstabItem *fsItem)
     rc = FsHvbSetupHashtree(fsItem);
     if (rc != 0) {
         BEGET_LOGE("error, setup hashtree fail, ret=%d", rc);
-        return rc;
+        if (!FM_MANAGER_NOFAIL_ENABLED(fsItem->fsManagerFlags)) {
+            rc = 0;
+            BEGET_LOGW("DmVeritySetUp fail for %s, ignore mount", fsItem->deviceName);
+        }
+        BEGET_LOGE("DmVeritySetUp fail for no fail devices %s", fsItem->deviceName);
     }
 
     return rc;
