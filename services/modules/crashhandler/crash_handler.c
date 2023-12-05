@@ -71,6 +71,7 @@ __attribute__((noinline)) void PrintLog(int fd, const char *format, ...)
     int size = vsnprintf_s(buf, sizeof(buf), sizeof(buf) - 1, format, args);
     if (size == -1) {
         BEGET_LOGE("Failed to sprintf %s", format);
+        va_end(args);
         return;
     }
     va_end(args);
