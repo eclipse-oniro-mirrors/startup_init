@@ -28,7 +28,6 @@ ohos_shared_library("param_watcher") {
   ]
 
   include_dirs = [
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include/",
     "//base/startup/init/services/param/include",
     "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/param/linux",
@@ -56,6 +55,7 @@ ohos_shared_library("param_watcher") {
     "c_utils:utils",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
   shlib_type = "sa"
   install_images = [ "system" ]
