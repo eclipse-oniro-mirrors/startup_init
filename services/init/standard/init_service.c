@@ -38,6 +38,25 @@
 
 static bool g_enableSandbox = false;
 
+static void WriteOomScoreAdjToService(Service *service)
+{
+    if (IsOnDemandService(service)) {
+        char pidAdjPath[30];
+        const char* content = "-900";
+        sprintf_s(pidAdjPath, sizeof(pidAdjPath), "/proc/%d/oom_score_adj", service->pid);
+        int fd = open(pidAdjPath, O_RDWR);
+        if (fd < 0) {
+            INIT_LOGE("Service(%s): open path %s failed.", service->name, pidAdjPath);
+            return;
+        }
+        int ret = write(fd, content, strlen(content));
+        if (ret < 0) {
+            INIT_LOGE("Service(%s): write content(%s) to path(%s) failed.", service->name, content, pidAdjPath);
+        }
+        close(fd);
+    }
+}
+
 void NotifyServiceChange(Service *service, int status)
 {
     INIT_LOGV("Notify service %s change from %d to %d", service->name, service->status, status);
@@ -59,6 +78,9 @@ void NotifyServiceChange(Service *service, int status)
     ret = snprintf_s(statusStr, sizeof(statusStr), sizeof(statusStr) - 1,
         "%d", (service->pid == -1) ? 0 : service->pid);
     INIT_ERROR_CHECK(ret > 0, return, "Failed to format service pid %s.", service->name);
+    if (status == SERVICE_STARTED) {
+        WriteOomScoreAdjToService(service);
+    }
     SystemWriteParam(paramName, statusStr);
 }
 
