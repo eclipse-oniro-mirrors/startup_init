@@ -2911,6 +2911,7 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   cflags = [
@@ -2956,6 +2957,7 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   cflags = [
@@ -3000,6 +3002,7 @@ ohos_fuzztest("AddWatcherFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   cflags = [
@@ -3043,6 +3046,7 @@ ohos_fuzztest("DelWatcherFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   cflags = [
@@ -3086,6 +3090,7 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   cflags = [
