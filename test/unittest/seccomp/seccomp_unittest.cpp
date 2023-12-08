@@ -29,6 +29,7 @@
 #include <asm/unistd.h>
 #include <syscall.h>
 #include <climits>
+#include <sched.h>
 
 #include "seccomp_policy.h"
 
@@ -151,6 +152,86 @@ public:
             return isAllow ? 0 : -1;
         }
         return -1;
+    }
+
+    static bool CheckUnshare()
+    {
+        int ret = unshare(CLONE_NEWPID);
+        if (ret) {
+            return false;
+        }
+        return true;
+    }
+
+    static bool CheckSetns()
+    {
+        int fd = open("/proc/1/ns/mnt", O_RDONLY | O_CLOEXEC);
+        if (fd < 0) {
+            return false;
+        }
+
+        if (setns(fd, CLONE_NEWNS) !=0) {
+            return false;
+        }
+
+        close(fd);
+        return true;
+    }
+
+    static int ChildFunc(void *arg)
+    {
+        exit(0);
+    }
+
+    static bool CheckCloneNs(int flag)
+    {
+        const int stackSize = 65536;
+
+        char *stack = static_cast<char *>(malloc(stackSize));
+        if (stack == nullptr) {
+            return false;
+        }
+        char *stackTop = stack + stackSize;
+        pid_t pid = clone(ChildFunc, stackTop, flag | SIGCHLD, nullptr);
+        if (pid == -1) {
+            return false;
+        }
+        return true;
+    }
+
+    static bool CheckClonePidNs(void)
+    {
+        return CheckCloneNs(CLONE_NEWPID);
+    }
+
+    static bool CheckCloneMntNs(void)
+    {
+        return CheckCloneNs(CLONE_NEWNS);
+    }
+
+    static bool CheckCloneNetNs(void)
+    {
+        return CheckCloneNs(CLONE_NEWNET);
+    }
+
+    static bool CheckCloneCgroupNs(void)
+    {
+        return CheckCloneNs(CLONE_NEWCGROUP);
+    }
+
+    static bool CheckCloneUtsNs(void)
+    {
+        return CheckCloneNs(CLONE_NEWUTS);
+    }
+
+    static bool CheckCloneIpcNs(void)
+    {
+        return CheckCloneNs(CLONE_NEWIPC);
+    }
+
+    static bool CheckCloneUserNs(void)
+    {
+        return CheckCloneNs(CLONE_NEWUSER);
     }
 
 #if defined __aarch64__
@@ -971,6 +1052,35 @@ public:
         EXPECT_EQ(ret, 0);
     }
 #endif
+    void TestAppSycallNs()
+    {
+        int ret = CheckSyscall(APP, APP_NAME, CheckUnshare, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckSetns, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckClonePidNs, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckCloneMntNs, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckCloneCgroupNs, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckCloneIpcNs, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckCloneUserNs, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckCloneNetNs, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckCloneUtsNs, false);
+        EXPECT_EQ(ret, 0);
+    }
 };
 
 /**
@@ -1019,5 +1129,17 @@ HWTEST_F(SeccompUnitTest, TestSystemSyscallForUidFilter, TestSize.Level1)
 {
     SeccompUnitTest test;
     test.TestSystemSyscallForUidFilter();
+}
+
+/**
+ * @tc.name: TestAppSycallNs
+ * @tc.desc: Verify the app seccomp policy about namespace.
+ * @tc.type: FUNC
+ * @tc.require: issueI8LZTC
+ */
+HWTEST_F(SeccompUnitTest, TestAppSycallNs, TestSize.Level1)
+{
+    SeccompUnitTest test;
+    test.TestAppSycallNs();
 }
 }

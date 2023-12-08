@@ -16,6 +16,10 @@
 @returnValue
 TRAP
 
+@headFiles
+<linux/sched.h>
+<stdint.h>
+
 @priority
 ioctl;all
 futex;all
@@ -111,7 +115,6 @@ exit;all
 exit_group;all
 waitid;all
 set_tid_address;all
-unshare;all
 futex;all
 nanosleep;all
 getitimer;all
@@ -193,7 +196,6 @@ readahead;all
 brk;all
 munmap;all
 mremap;all
-clone;all
 execve;all
 mmap;arm64
 fadvise64;arm64
@@ -212,7 +214,6 @@ recvmmsg;all
 wait4;all
 prlimit64;all
 syncfs;all
-setns;all
 sendmmsg;all
 process_vm_readv;all
 process_vm_writev;all
@@ -306,3 +307,6 @@ futex_time64;arm
 sched_rr_get_interval_time64;arm
 cacheflush;arm
 set_tls;arm
+
+@allowListWithArgs
+clone: if (arg0 & (CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWNET | CLONE_NEWCGROUP | CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWUSER)) == 0 ; return ALLOW; else return TRAP;all
