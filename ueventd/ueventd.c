@@ -269,6 +269,7 @@ void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *ueven
     }
 
     // reset partition number, major and minor.
+    uevent->partitionName = NULL;
     uevent->partitionNum = -1;
     uevent->major = -1;
     uevent->minor = -1;
