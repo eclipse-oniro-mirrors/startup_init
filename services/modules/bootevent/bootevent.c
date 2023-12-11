@@ -92,6 +92,18 @@ static int AddBootEventItemByName(const char *paramName)
     return AddBootEventItem(item, paramName);
 }
 
+static void SetServiceBooteventHookMgr(const char *serviceName, const char *paramName, int state)
+{
+#ifndef STARTUP_INIT_TEST
+    SERVICE_BOOTEVENT_CTX context;
+    context.serviceName = serviceName;
+    context.reserved = paramName;
+    context.state = state;
+    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_BOOTEVENT, (void*)(&context), NULL);
+#endif
+}
+
+
 static int AddServiceBootEvent(const char *serviceName, const char *paramName)
 {
     ServiceExtData *extData = NULL;
@@ -120,6 +132,7 @@ static int AddServiceBootEvent(const char *serviceName, const char *paramName)
         return -1;
     }
 
+    SetServiceBooteventHookMgr(serviceName, paramName, 1);
     return 0;
 }
 
@@ -232,17 +245,6 @@ static void ReportSysEvent(void)
     return;
 }
 
-static void SetServiceBooteventHookMgr(const char *name, int state)
-{
-#ifndef STARTUP_INIT_TEST
-    SERVICE_BOOTEVENT_CTX context;
-    context.serviceName = name;
-    context.reserved = NULL;
-    context.state = state;
-    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_BOOTEVENT, (void*)(&context), NULL);
-#endif
-}
-
 static void BootCompleteClearAll(void)
 {
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
@@ -303,7 +305,7 @@ static int BootEventParaFireByName(const char *paramName)
         &(found->timestamp[BOOTEVENT_READY])) == 0, 0);
 
     g_bootEventNum--;
-    SetServiceBooteventHookMgr(paramName, 2); // 2: bootevent service has ready
+    SetServiceBooteventHookMgr(NULL, paramName, 2); // 2: bootevent service has ready
     // Check if all boot event params are fired
     if (g_bootEventNum > 0) {
         return 0;
@@ -318,7 +320,6 @@ static int BootEventParaFireByName(const char *paramName)
 #ifndef STARTUP_INIT_TEST
     HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
 #endif
-    AutorunModuleMgrUnInstall("init_bootDetector");
     RemoveCmdExecutor("bootevent", -1);
     return 1;
 }
@@ -343,7 +344,6 @@ static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
             INIT_LOGI("Add service bootEvent failed %s", serviceParseCtx->serviceName);
             return;
         }
-        SetServiceBooteventHookMgr(serviceParseCtx->serviceName, 1); // 1: bootevent service is starting
         return;
     }
 
@@ -356,7 +356,6 @@ static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
             INIT_LOGI("Add service bootEvent failed %s", serviceParseCtx->serviceName);
             continue;
         }
-        SetServiceBooteventHookMgr(serviceParseCtx->serviceName, 1); // 1: bootevent service is starting
     }
 }
 

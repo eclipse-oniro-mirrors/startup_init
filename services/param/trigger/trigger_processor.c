@@ -370,6 +370,9 @@ void DoJobExecNow(const char *triggerName)
     PARAM_CHECK(triggerName != NULL, return, "Invalid param");
     JobNode *trigger = GetTriggerByName(&g_triggerWorkSpace, triggerName);
     if (trigger != NULL) {
+        if (strncmp(triggerName, "reboot", strlen("reboot")) == 0) {
+            HookMgrExecute(GetBootStageHookMgr(), INIT_SHUT_DETECTOR, NULL, NULL);
+        }
         StartTriggerExecute_((TriggerNode *)trigger, NULL, 0);
     }
 }
