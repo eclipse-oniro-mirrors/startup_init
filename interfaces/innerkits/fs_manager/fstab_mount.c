@@ -403,9 +403,9 @@ int MountOneItem(FstabItem *item)
         }
     }
 
-    int retry_count = 3;
+    int retryCount = 3;
     int rc = 0;
-    while (retry_count-- > 0) {
+    while (retryCount-- > 0) {
         rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
         if (rc == 0) {
             break;

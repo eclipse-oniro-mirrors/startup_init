@@ -314,6 +314,7 @@ void SystemConfig(const char *uptime)
     TriggerServices(START_MODE_BOOT);
     PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
     TriggerServices(START_MODE_NORMAL);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_ENTER_LOOP, NULL, NULL);
     clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.startTime));
 }
 
