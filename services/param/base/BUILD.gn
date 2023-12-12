@@ -119,6 +119,9 @@ if (defined(ohos_lite)) {
       defines += [ "__MUSL__" ]
     }
 
+    if (startup_init_test_performance) {
+      defines += [ "PARAM_TEST_PERFORMANCE" ]
+    }
     if (!startup_init_with_param_base) {
       ldflags = [ "-nostdlib" ]
       configs -= inherited_configs
