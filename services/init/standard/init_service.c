@@ -40,10 +40,17 @@ static bool g_enableSandbox = false;
 
 static void WriteOomScoreAdjToService(Service *service)
 {
+    if (service == NULL) {
+        return;
+    }
     if (IsOnDemandService(service)) {
         char pidAdjPath[30];
         const char* content = "-900";
-        sprintf_s(pidAdjPath, sizeof(pidAdjPath), "/proc/%d/oom_score_adj", service->pid);
+        int len = sprintf_s(pidAdjPath, sizeof(pidAdjPath), "/proc/%d/oom_score_adj", service->pid);
+        if (len <= 0) {
+            INIT_LOGE("Service(%s): format pidAdjPath (pid:%d) failed.", service->name, service->pid);
+            return;
+        }
         int fd = open(pidAdjPath, O_RDWR);
         if (fd < 0) {
             INIT_LOGE("Service(%s): open path %s failed.", service->name, pidAdjPath);
