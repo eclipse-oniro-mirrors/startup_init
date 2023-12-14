@@ -262,6 +262,8 @@ static int DacGetParamSecurityLabel(const char *path)
             count++;
             ret = ProcessParamFile(fileName, NULL);
             if (ret != 0) {
+                free(fileName);
+                closedir(pDir);
                 return ret;
             };
         }
