@@ -298,12 +298,14 @@ void InstallLocalSignalHandler(void)
     sigemptyset(&set);
     struct sigaction action;
     memset_s(&action, sizeof(action), 0, sizeof(action));
-    sigfillset(&action.sa_mask);
     action.sa_sigaction = SignalHandler;
     action.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
 
     for (size_t i = 0; i < sizeof(g_platformSignals) / sizeof(g_platformSignals[0]); i++) {
         int32_t sig = g_platformSignals[i].sigNo;
+        sigemptyset(&action.sa_mask);
+        sigaddset(&action.sa_mask, sig);
+
         sigaddset(&set, sig);
         if (sigaction(sig, &action, NULL) != 0) {
             BEGET_LOGE("Failed to register signal(%d)", sig);
