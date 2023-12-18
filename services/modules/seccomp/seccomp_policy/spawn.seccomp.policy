@@ -23,6 +23,8 @@ ONLY_CHECK_ARGS
 @allowListWithArgs
 setresuid: if arg0 >= APP_UID_START && arg1 >= APP_UID_START && arg2 >= APP_UID_START; return ALLOW; else return TRAP;arm64
 setresgid: if arg0 >= APP_UID_START && arg1 >= APP_UID_START && arg2 >= APP_UID_START; return ALLOW; else return TRAP;arm64
+setresuid: if arg0 >= APP_UID_START && arg1 >= APP_UID_START && arg2 >= APP_UID_START; return ALLOW; else return TRAP;riscv64
+setresgid: if arg0 >= APP_UID_START && arg1 >= APP_UID_START && arg2 >= APP_UID_START; return ALLOW; else return TRAP;riscv64
 setresuid32: if arg0 >= APP_UID_START && arg1 >= APP_UID_START && arg2 >= APP_UID_START; return ALLOW; else return TRAP;arm
 setresgid32: if arg0 >= APP_UID_START && arg1 >= APP_UID_START && arg2 >= APP_UID_START; return ALLOW; else return TRAP;arm
 setuid: if arg0 >= APP_UID_START; return ALLOW; else return TRAP;all

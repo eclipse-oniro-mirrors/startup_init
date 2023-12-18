@@ -84,7 +84,9 @@ class MergePolicy:
         if (syscall_name_dict.get('arm')):
             content = '{}{};arm\n'.format(content, ';arm\n'.join(
                       [func_name for func_name, _ in syscall_name_dict.get('arm')]))
-
+        if (syscall_name_dict.get('riscv64')):
+            content = '{}{};riscv64\n'.format(content, ';riscv64\n'.join(
+                      [func_name for func_name, _ in syscall_name_dict.get('riscv64')]))
         return content
 
     def parse_open_file(self, fp):

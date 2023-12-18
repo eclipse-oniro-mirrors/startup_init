@@ -26,7 +26,8 @@ import generate_code_from_policy as gen_policy
 def parse_line(fp, arch_nr):
     arch_id_map = {
         '40000028': 'arm',
-        'c00000b7': 'arm64'
+        'c00000b7': 'arm64',
+        'c00000f3': 'riscv64'
     }
     for line in fp:
         line = line.strip()
@@ -43,9 +44,10 @@ def get_item_content(name_nr_table, arch_nr_table):
     content = '@allowList\n'
     syscall_name_dict = {
         'arm': list(),
-        'arm64': list()
+        'arm64': list(),
+        'riscv64': list()
     }
-    supported_architecture = ['arm64', 'arm']
+    supported_architecture = ['arm64', 'arm', 'riscv64']
     for arch in supported_architecture:
         for nr in sorted(list(arch_nr_table.get(arch))):
             syscall_name = name_nr_table.get(arch).get(nr)
@@ -62,6 +64,9 @@ def get_item_content(name_nr_table, arch_nr_table):
     if syscall_name_dict.get('arm'):
         content = '{}{};arm\n'.format(content, ';arm\n'.join(
                   [func_name for func_name in syscall_name_dict.get('arm')]))
+    if syscall_name_dict.get('riscv64'):
+        content = '{}{};riscv64\n'.format(content, ';riscv64\n'.join(
+                  [func_name for func_name in syscall_name_dict.get('riscv64')]))
 
     return content
 
@@ -94,7 +99,8 @@ def parse_audit_log_to_policy(args):
     function_name_nr_table_dict = {}
     arch_nr = {
         'arm': set(),
-        'arm64': set()
+        'arm64': set(),
+        'riscv64': set()
     }
     for file_name in file_list:
         file_name_tmp = file_name.split('/')[-1]

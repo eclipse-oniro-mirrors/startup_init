@@ -28,6 +28,7 @@ template("ohos_prebuilt_seccomp") {
   _seccomp_filter_file = target_gen_dir + "/${_output_name}.c"
   _syscall_to_nr_arm_name = "${target_name}_syscall_to_nr_arm"
   _syscall_to_nr_arm64_name = "${target_name}_syscall_to_nr_arm64"
+  _syscall_to_nr_riscv64_name = "${target_name}_syscall_to_nr_riscv64"
   _blocklist_file_name = "//base/startup/init/services/modules/seccomp/seccomp_policy/${invoker.process_type}.blocklist.seccomp.policy"
   _key_process_file_name = "//base/startup/init/services/modules/seccomp/seccomp_policy/privileged_process.seccomp.policy"
 
@@ -78,14 +79,35 @@ template("ohos_prebuilt_seccomp") {
 
     outputs = [ output_dir ]
   }
-
+  action(_syscall_to_nr_riscv64_name) {
+    script = "${clang_base_path}/bin/clang"
+    output_dir =
+        target_gen_dir + "/${_seccomp_filter_target}/libsyscall_to_nr_riscv64"
+    args = [
+      "-I",
+      rebase_path(
+          "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include/asm-riscv"),
+      "-I",
+      rebase_path(
+          "//kernel/linux/patches/${linux_kernel_version}/prebuilts/usr/include"),
+      "-dD",
+      "-E",
+      "-Wall",
+      "-nostdinc",
+      "-o",
+      rebase_path(output_dir),
+      rebase_path(
+          "//base/startup/init/services/modules/seccomp/gen_syscall_name_nrs.c"),
+    ]
+    outputs = [ output_dir ]
+  }
   action(_seccomp_filter_target) {
     script = "//base/startup/init/services/modules/seccomp/scripts/generate_code_from_policy.py"
 
     sources = invoker.sources
     sources += get_target_outputs(":${_syscall_to_nr_arm_name}")
     sources += get_target_outputs(":${_syscall_to_nr_arm64_name}")
-
+    sources += get_target_outputs(":${_syscall_to_nr_riscv64_name}")
     uid_is_root = false
     if (defined(invoker.uid_is_root)) {
       uid_is_root = invoker.uid_is_root
@@ -100,6 +122,7 @@ template("ohos_prebuilt_seccomp") {
     deps = [
       ":${_syscall_to_nr_arm64_name}",
       ":${_syscall_to_nr_arm_name}",
+      ":${_syscall_to_nr_riscv64_name}",
     ]
 
     if (build_variant == "root") {

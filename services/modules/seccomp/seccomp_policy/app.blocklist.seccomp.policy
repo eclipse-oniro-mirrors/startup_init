@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# For now, it supports architechture of ['arm', 'arm64'].
+# For now, it supports architechture of ['arm', 'arm64', 'riscv64'].
 
 @blockList
 umount2;all
@@ -25,9 +25,13 @@ clock_settime;all
 syslog;all
 reboot;all
 setregid;arm64
+setregid;riscv64
 setgid;arm64
+setgid;riscv64
 setreuid;arm64
+setreuid;riscv64
 setuid;arm64
+setuid;riscv64
 setfsuid;all
 setfsgid;all
 sethostname;all
@@ -42,6 +46,8 @@ setregid32;arm
 setuid32;arm
 setgid32;arm
 setgroups;arm64
+setgroups;riscv64
 setgroups32;arm
 setresgid;arm64
+setresgid;riscv64
 setresgid32;arm

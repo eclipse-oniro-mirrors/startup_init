@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# For now, it supports architechture of ['arm', 'arm64'].
+# For now, it supports architechture of ['arm', 'arm64', 'riscv64'].
 
 @returnValue
 TRAP
@@ -42,26 +42,33 @@ epoll_pwait;all
 dup;all
 dup3;all
 fcntl;arm64
+fcntl;riscv64
 inotify_init1;all
 inotify_add_watch;all
 inotify_rm_watch;all
 ioctl;all
 ioprio_set;arm64
+ioprio_set;riscv64
 ioprio_get;arm64
+ioprio_get;riscv64
 flock;all
 mknodat;all
 mkdirat;all
 unlinkat;all
 symlinkat;all
 linkat;all
-renameat;all
+renameat;arm
+renameat;arm64
 umount2;all
 mount;all
 pivot_root;all
 statfs;arm64
+statfs;riscv64
 fstatfs;arm64
+fstatfs;riscv64
 truncate;all
 ftruncate;arm64
+ftruncate;riscv64
 fallocate;all
 faccessat;all
 faccessat2;all
@@ -72,6 +79,7 @@ fchmod;all
 fchmodat;all
 fchownat;all
 fchown;arm64
+fchown;riscv64
 openat;all
 close;all
 pipe2;all
@@ -95,11 +103,14 @@ splice;all
 tee;all
 readlinkat;all
 newfstatat;arm64
+newfstatat;riscv64
 fstat;arm64
+fstat;riscv64
 sync;all
 fsync;all
 fdatasync;all
 sync_file_range;arm64
+sync_file_range;riscv64
 timerfd_create;all
 timerfd_settime;all
 timerfd_gettime;all
@@ -158,13 +169,21 @@ setpriority;all
 getpriority;all
 reboot;all
 setregid;arm64
+setregid;riscv64
 setgid;arm64
+setgid;riscv64
 setreuid;arm64
+setreuid;riscv64
 setuid;arm64
+setuid;riscv64
 setresuid;arm64
+setresuid;riscv64
 getresuid;arm64
+getresuid;riscv64
 setresgid;arm64
+setresgid;riscv64
 getresgid;arm64
+getresgid;riscv64
 setfsuid;all
 setfsgid;all
 times;all
@@ -173,11 +192,14 @@ getpgid;all
 getsid;all
 setsid;all
 getgroups;arm64
+getgroups;riscv64
 setgroups;arm64
+setgroups;riscv64
 uname;all
 sethostname;all
 setdomainname;all
 getrlimit;arm64
+getrlimit;riscv64
 setrlimit;all
 getrusage;all
 umask;all
@@ -189,9 +211,13 @@ adjtimex;all
 getpid;all
 getppid;all
 getuid;arm64
+getuid;riscv64
 geteuid;arm64
+geteuid;riscv64
 getgid;arm64
+getgid;riscv64
 getegid;arm64
+getegid;riscv64
 gettid;all
 sysinfo;all
 semget;all
@@ -223,7 +249,9 @@ keyctl;all
 clone;all
 execve;all
 mmap;arm64
+mmap;riscv64
 fadvise64;arm64
+fadvise64;riscv64
 mprotect;all
 msync;all
 mlock;all

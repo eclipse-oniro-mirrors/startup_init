@@ -97,7 +97,7 @@ def main():
     parser.add_argument('--src-path', action='append',
                         help='the path of directory which includes strace log and libsyscall_to_nr files')
     parser.add_argument('--target-cpu', type=str,
-                        help='input arm or arm64')
+                        help='input arm or arm64 or riscv64')
     parser.add_argument('--filter-name', type=str,
                         help=('consist of output file name\n'))
 

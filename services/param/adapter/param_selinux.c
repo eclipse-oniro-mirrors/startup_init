@@ -25,7 +25,7 @@
 #include "selinux_parameter.h"
 #endif
 
-#if defined (__aarch64__) || defined(__x86_64__)
+#if defined (__aarch64__) || defined(__x86_64__) || (defined(__riscv) && __riscv_xlen == 64)
 #define CHECKER_LIB_NAME "/system/lib64/libparaperm_checker.z.so"
 #define CHECKER_UPDATER_LIB "/lib64/libparaperm_checker.z.so"
 #else
