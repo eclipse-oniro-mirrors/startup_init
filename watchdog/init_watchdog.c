@@ -81,6 +81,7 @@ int GetWatcherDogCfg(int interval, int timeoutGet, int fd)
 
 int main(int argc, const char *argv[])
 {
+    EnableInitLog(INIT_INFO);
     WaitAtStartup("/dev/watchdog");
     int fd = open("/dev/watchdog", O_RDWR);
     if (fd == -1) {
