@@ -38,6 +38,7 @@
 #define OHOS_CMDLINE_PARA_PREFIX        "ohos.boot."
 #define OHOS_CMDLINE_CONST_PARA_PREFIX  "const.product."
 #define OHOS_CMDLINE_PARA_PREFIX_LEN    10
+#define IMPORT_PREFIX_LEN               7
 
 typedef struct CmdLineInfo {
     const char *name;
@@ -181,7 +182,8 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
         { "sn", SnDealFun },
         { "root_package", CommonDealFun },
         { "serialno", SnDealFun },
-        { "udid", Common2ConstDealFun }
+        { "udid", Common2ConstDealFun },
+        { "productid", Common2ConstDealFun }
     };
 
     data[nv->nameEnd - data] = '\0';
@@ -295,6 +297,78 @@ static int LoadOneParam_(const uint32_t *context, const char *name, const char *
     return WriteParam(name, value, NULL, mode & LOAD_PARAM_ONLY_ADD);
 }
 
+static int LoadFileFromImport(char *target, uint32_t mode)
+{
+    if (strstr(target, ".para.dac")) {
+        LoadSecurityLabel(target);
+    } else {
+        LoadDefaultParams(target, mode);
+    }
+    return 0;
+}
+
+// Content format of .import.para is "import /dir/param.para"
+// Use ${} to pass parameter like "import /dir/${const.product.productid}.para"
+static int LoadParamFromImport_(char *buffer, const int buffSize, uint32_t mode)
+{
+    int spaceCount = 0;
+    while (*(buffer + IMPORT_PREFIX_LEN + spaceCount) == ' ') {
+        spaceCount++;
+    }
+    char *target = calloc(PATH_MAX, 1);
+    PARAM_CHECK(target != NULL, return -1, "Failed to alloc memory");
+    if (strncpy_s(target, buffSize, buffer + IMPORT_PREFIX_LEN + spaceCount, buffSize) != 0) {
+        PARAM_LOGE("Failed to get value of import.");
+        free(target);
+        return -1;
+    }
+    char *tmp = NULL;
+    if ((tmp = strstr(target, "\n"))) {
+        *tmp = '\0';
+    }
+    char *tmpParamValue = calloc(PARAM_VALUE_LEN_MAX + 1, sizeof(char));
+    if (tmpParamValue == NULL) {
+        PARAM_LOGE("Failed to alloc memory");
+        free(target);
+        return -1;
+    }
+    int ret = GetParamValue(target, strlen(target), tmpParamValue, PARAM_VALUE_LEN_MAX);
+    if (ret == 0) {
+        LoadFileFromImport(tmpParamValue, mode);
+    }
+    PARAM_LOGI("Load params from import %s return %d.", tmpParamValue, ret);
+    free(tmpParamValue);
+    free(target);
+    return ret;
+}
+
+static int LoadParamFromImport(const char *fileName, void *context)
+{
+    char realPath[PATH_MAX] = "";
+    realpath(fileName, realPath);
+    FILE *fp = fopen(realPath, "r");
+    if (fp == NULL) {
+        PARAM_LOGE("Failed to open file '%s' error:%d ", fileName, errno);
+        return -1;
+    }
+
+    const int buffSize = PATH_MAX;
+    char *buffer = malloc(buffSize);
+    PARAM_CHECK(buffer != NULL, (void)fclose(fp);
+        return -1, "Failed to alloc memory");
+
+    uint32_t mode = *(int *)context;
+    while (fgets(buffer, buffSize, fp) != NULL) {
+        buffer[buffSize - 1] = '\0';
+        if (!strncmp(buffer, "import ", IMPORT_PREFIX_LEN)) {
+            (void)LoadParamFromImport_(buffer, buffSize, mode);
+        }
+    }
+    (void)fclose(fp);
+    free(buffer);
+    return 0;
+}
+
 static int LoadDefaultParam_(const char *fileName, uint32_t mode,
     const char *exclude[], uint32_t count, int (*loadOneParam)(const uint32_t *, const char *, const char *))
 {
@@ -345,6 +419,7 @@ int LoadDefaultParams(const char *fileName, uint32_t mode)
         (void)ProcessParamFile(fileName, &mode);
     } else {
         (void)ReadFileInDir(fileName, ".para", ProcessParamFile, &mode);
+        (void)ReadFileInDir(fileName, ".para.import", LoadParamFromImport, &mode);
     }
 
     // load security label
