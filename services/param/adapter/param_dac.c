@@ -182,7 +182,7 @@ static int LoadOneParam_(const uint32_t *context, const char *name, const char *
 
 static int LoadParamLabels(const char *fileName)
 {
-    int result = -1;
+    int result = 0;
     ParamAuditData *auditData = (ParamAuditData *)calloc(1,
         sizeof(ParamAuditData) + sizeof(uid_t) * MAX_MEMBER_IN_GROUP);
     if (auditData == NULL) {
