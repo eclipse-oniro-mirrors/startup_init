@@ -149,6 +149,7 @@ hdf_ext_devmgr:x:3085:
 intell_voice_host:x:3100:
 user_data_r:x:2008:
 huawei_id:x:7008:
+cast_engine_service:x:65546:
 drmserver:x:1077:
 clearplay_host:x:3078:
 wiseplay_host:x:3079:
