@@ -507,12 +507,11 @@ INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dat
         PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         PARAMSPACE_AREA_RW_LOCK(workSpace);
         ret = AddParam((WorkSpace *)workSpace, type, name, value, dataIndex);
-        if ((ret == PARAM_CODE_REACHED_MAX) && (flag == 1)) {
-            PARAM_LOGE("Add node %s to space %s failed! memory is not enough, system reboot!",
-                name, workSpace->fileName);
-            ExecReboot("panic");
-        }
         PARAMSPACE_AREA_RW_UNLOCK(workSpace);
+    }
+    if ((ret == PARAM_CODE_REACHED_MAX) && (flag == 1)) {
+        PARAM_LOGE("Add node %s to space %s failed! memory is not enough, system reboot!", name, workSpace->fileName);
+        return PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH;
     }
     return ret;
 }
