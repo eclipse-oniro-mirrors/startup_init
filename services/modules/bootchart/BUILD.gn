@@ -31,7 +31,7 @@ ohos_shared_library("bootchart") {
 
   part_name = "init"
   subsystem_name = "startup"
-  if (target_cpu == "arm64") {
+  if (target_cpu == "arm64" || target_cpu == "riscv64") {
     module_install_dir = "lib64/init"
   } else {
     module_install_dir = "lib/init"
