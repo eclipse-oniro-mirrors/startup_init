@@ -113,6 +113,18 @@ void LogInit(void)
     }
 }
 
+static void WriteUptimeSysParam(const char *param, const char *uptime)
+{
+    char buf[64];
+
+    if (uptime == NULL) {
+        snprintf_s(buf, sizeof(buf), sizeof(buf) - 1,
+                   "%lld", GetUptimeInMicroSeconds(NULL));
+        uptime = buf;
+    }
+    SystemWriteParam(param, uptime);
+}
+
 INIT_TIMING_STAT g_bootJob = {{0}, {0}};
 
 static void RecordInitBootEvent(const char *initBootEvent)
@@ -133,6 +145,9 @@ INIT_STATIC void BootStateChange(int start, const char *content)
         RecordInitBootEvent(content);
         long long diff = InitDiffTime(&g_bootJob);
         INIT_LOGI("boot job %s finish diff %lld us.", content, diff);
+        if (strcmp(content, "boot") == 0) {
+            WriteUptimeSysParam("ohos.boot.time.init", NULL);
+        }
     }
 }
 
@@ -248,18 +263,6 @@ void ParseInitCfgByPriority(void)
     FreeCfgFiles(files);
 }
 
-static void WriteUptimeSysParam(const char *param, const char *uptime)
-{
-    char buf[64];
-
-    if (uptime == NULL) {
-        snprintf_s(buf, sizeof(buf), sizeof(buf) - 1,
-                   "%lld", GetUptimeInMicroSeconds(NULL));
-        uptime = buf;
-    }
-    SystemWriteParam(param, uptime);
-}
-
 void SystemConfig(const char *uptime)
 {
     INIT_TIMING_STAT timingStat;
@@ -320,6 +323,5 @@ void SystemConfig(const char *uptime)
 
 void SystemRun(void)
 {
-    WriteUptimeSysParam("ohos.boot.time.init", NULL);
     StartParamService();
 }
