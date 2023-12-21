@@ -91,6 +91,7 @@ dlp_permission:x:3019:
 dms:x:5522:
 foundation:x:5523:
 quickfixserver:x:5524:
+cast_engine_service:x:5526:
 samgr:x:5555:
 update:x:6666:
 charger:x:6667:
@@ -153,4 +154,3 @@ drmserver:x:1077:
 clearplay_host:x:3078:
 wiseplay_host:x:3079:
 i18n:x:3013:
-cast_engine_service:x:65546:
