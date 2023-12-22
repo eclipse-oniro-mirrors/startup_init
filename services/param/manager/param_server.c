@@ -315,6 +315,7 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode,
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
         int ret = SplitParamString(buffer, exclude, count, loadOneParam, &mode);
+        PARAM_ONLY_CHECK(ret != PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH, return PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH);
         PARAM_CHECK(ret == 0, continue, "Failed to set param '%s' error:%d ", buffer, ret);
         paramNum++;
     }
@@ -328,7 +329,12 @@ static int ProcessParamFile(const char *fileName, void *context)
 {
     static const char *exclude[] = {"ctl.", "selinux.restorecon_recursive"};
     uint32_t mode = *(int *)context;
-    return LoadDefaultParam_(fileName, mode, exclude, ARRAY_LENGTH(exclude), LoadOneParam_);
+    int ret = LoadDefaultParam_(fileName, mode, exclude, ARRAY_LENGTH(exclude), LoadOneParam_);
+    if (ret == PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH) {
+        PARAM_LOGE("default_param memory is not enough, system reboot!");
+        ExecReboot("panic");
+    }
+    return ret;
 }
 
 int LoadParamsFile(const char *fileName, bool onlyAdd)
