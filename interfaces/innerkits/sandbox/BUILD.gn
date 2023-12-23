@@ -34,7 +34,7 @@ ohos_static_library("sandbox") {
     "//base/startup/init/interfaces/innerkits/include",
     "//third_party/cJSON",
   ]
-  if (target_cpu == "arm64") {
+  if (target_cpu == "arm64" || target_cpu == "riscv64") {
     defines = [ "SUPPORT_64BIT" ]
   }
   part_name = "init"

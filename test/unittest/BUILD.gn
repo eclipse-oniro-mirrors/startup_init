@@ -264,7 +264,7 @@ ohos_unittest("init_unittest") {
   ]
   defines += [ "_GNU_SOURCE" ]
 
-  if (target_cpu == "arm64") {
+  if (target_cpu == "arm64" || target_cpu == "riscv64") {
     defines += [ "SUPPORT_64BIT" ]
   }
   if (use_musl) {

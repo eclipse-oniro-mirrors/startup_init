@@ -119,7 +119,7 @@ ohos_executable("init") {
     ]
   }
 
-  if (target_cpu == "arm64") {
+  if (target_cpu == "arm64" || target_cpu == "riscv64") {
     defines += [ "SUPPORT_64BIT" ]
   }
 
