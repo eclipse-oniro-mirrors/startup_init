@@ -782,9 +782,6 @@ void ServiceReap(Service *service)
         // the service could be restart even if it is one-shot service
     }
 
-    service->pid = tmp;
-    ServiceReapHookExecute(service);
-    service->pid = -1;
     // service no need to restart if it is an ondemand service.
     if (IsOnDemandService(service)) {
         CheckOndemandService(service);
@@ -793,6 +790,9 @@ void ServiceReap(Service *service)
     if (service->attribute & SERVICE_ATTR_CRITICAL) { // critical
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("Service error %s critical service crashed.", service->name, service->crashCount);
+            service->pid = tmp;
+            ServiceReapHookExecute(service);
+            service->pid = -1;
             ExecReboot("panic");
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
