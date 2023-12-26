@@ -102,6 +102,12 @@ void SystemInit(void)
         RegisterFdHoldWatcher(sock);
     }
     InitControlFd();
+
+    // sysclktz 0
+    struct timezone tz = { 0 };
+    if (settimeofday(NULL, &tz) == -1) {
+        INIT_LOGE("Set time of day failed, err = %d", errno);
+    }
 }
 
 void LogInit(void)
