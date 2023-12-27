@@ -350,7 +350,13 @@ static void DoMkDir(const struct CmdArgs *ctx)
         return;
     }
 
-    PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
+    /*
+     * Skip restoring default SELinux security contexts if the the folder already
+     * existed and its under /dev. These files will be proceed by loadSelinuxPolicy.
+     */
+    if (errno != EEXIST || strncmp(ctx->argv[0], "/dev", strlen("/dev")) != 0) {
+        PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
+    }
 
     if (ctx->argc <= 1) {
         return;
