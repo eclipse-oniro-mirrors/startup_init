@@ -50,7 +50,6 @@ enum INIT_BOOTSTAGE {
     INIT_SHUT_DETECTOR     = 66,
     INIT_SERVICE_RESTART   = 71,
     INIT_JOB_PARSE         = 70,
-    INIT_ENTER_LOOP        = 80,
     INIT_BOOT_COMPLETE     = 100,
 };
 
