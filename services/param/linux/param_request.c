@@ -184,7 +184,6 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
     request->msgSize = offset + sizeof(ParamMessage);
     request->id.msgId = ATOMIC_SYNC_ADD_AND_FETCH(&g_requestId, 1, MEMORY_ORDER_RELAXED);
 
-    PARAM_LOGI("SystemSetParameter name %s msgid:%d ", name, request->id.msgId);
     pthread_mutex_lock(&g_clientMutex);
     int retryCount = 0;
     while (retryCount < 2) { // max retry 2
