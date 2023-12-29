@@ -123,7 +123,6 @@ bool DeviceInfoStub::CheckPermission(MessageParcel &data, const std::string &per
         DINFO_LOGE("AccessTokenID:%d, permission:%s denied!", callerToken, permission.c_str());
         return false;
     }
-    DINFO_LOGI("tokenType %d dAccessTokenID:%d, permission:%s matched!", tokenType, callerToken, permission.c_str());
     return true;
 }
 
