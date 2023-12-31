@@ -14,6 +14,7 @@
  */
 #include "device.h"
 
+#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mount.h>
@@ -28,8 +29,13 @@
 
 static void MountBasicFs(void)
 {
-    if (mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
-        INIT_LOGE("Mount tmpfs failed. %s", strerror(errno));
+    if (access("dev/null", F_OK) != 0) {
+        INIT_LOGI("mount dev tmpfs");
+        if (mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
+            INIT_LOGE("Mount tmpfs failed. %s", strerror(errno));
+        }
+    } else {
+        INIT_LOGI("dev already mounted");
     }
     if (mount("tmpfs", "/mnt", "tmpfs", MS_NOSUID, "mode=0755") != 0) {
         INIT_LOGE("Mount tmpfs failed. %s", strerror(errno));
