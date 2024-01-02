@@ -285,7 +285,7 @@ void WatcherManagerKits::RemoteWatcher::OnParameterChange(
 
 void WatcherManagerKits::ParamWatcher::OnParameterChange(const std::string &name, const std::string &value)
 {
-    WATCHER_LOGI("OnParameterChange name %s value %s", name.c_str(), value.c_str());
+    WATCHER_LOGV("OnParameterChange name %s value %s", name.c_str(), value.c_str());
     uint32_t index = 0;
     ParameterChangeListener *listener = GetParameterListener(&index);
     while (listener != nullptr) {

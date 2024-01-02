@@ -772,7 +772,6 @@ WatcherGroup::~WatcherGroup(void)
 RemoteWatcher::~RemoteWatcher(void)
 {
     watcher_ = nullptr;
-    WATCHER_LOGI("RemoteWatcher ");
     TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
         list->RemoveNode(node);
         ParamWatcher *watcher = ConvertTo<ParamWatcher>(node);
