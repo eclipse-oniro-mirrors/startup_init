@@ -135,6 +135,9 @@ if (defined(ohos_lite)) {
     if (target_cpu == "x86_64") {
       extra_paras += [ "const.product.cpu.abilist=x86_64" ]
     }
+    if (target_cpu == "riscv64") {
+      extra_paras += [ "const.product.cpu.abilist=riscv64" ]
+    }
     if (build_variant == "user") {
       extra_paras += [
         "const.secure=1",

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# For now, it supports architechture of ['arm', 'arm64'].
+# For now, it supports architechture of ['arm', 'arm64', 'riscv64'].
 
 @blockList
 swapon;all

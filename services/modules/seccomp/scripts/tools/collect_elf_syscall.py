@@ -56,6 +56,8 @@ def generate_libc_asm(target_cpu, elf_path, locate_path):
         cmd_obj_dump = 'arm-linux-musleabi-objdump'
     elif target_cpu == 'arm64':
         cmd_obj_dump = 'aarch64-linux-musl-objdump'
+    elif target_cpu == 'riscv64':
+        cmd_obj_dump = 'riscv64-linux-musl-objdump'
     else:
         raise ValueError("target cpu error")
 
@@ -284,6 +286,8 @@ def collect_concrete_syscall(args):
         arch_str = 'aarch64-linux'
     elif args.target_cpu == 'arm':
         arch_str = 'arm-linux'
+    elif args.target_cpu == 'riscv64':
+        arch_str = 'riscv64-linux'
     libc_path = get_lib_path(args.src_elf_path, 'libc.so', ' | grep ' + arch_str)
     libc_asm_path = generate_libc_asm(args.target_cpu, libc_path, '.')
 
@@ -332,7 +336,7 @@ def main():
     parser.add_argument('--src-syscall-path', type=str, action='append',
                         help=('path to syscall to nr files\n'))
     parser.add_argument('--target-cpu', type=str,
-                        help='input arm or arm64')
+                        help='input arm or arm64 or riscv64')
     parser.add_argument('--filter-name', type=str,
                         help=('consist of output file name\n'))
 

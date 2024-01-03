@@ -86,7 +86,8 @@ if (defined(ohos_lite)) {
 
     part_name = "init"
     subsystem_name = "startup"
-    if (target_cpu == "arm64" || target_cpu == "x86_64") {
+    if (target_cpu == "arm64" || target_cpu == "x86_64" ||
+        target_cpu == "riscv64") {
       module_install_dir = "lib64/init"
     } else {
       module_install_dir = "lib/init"

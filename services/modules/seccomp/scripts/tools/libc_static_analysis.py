@@ -99,6 +99,9 @@ def get_direct_use_syscall_of_svc(arch, lines, func_list):
     elif arch == 'arm64':
         svc_reg = 'x8,'
         svc_reg1 = 'w8,'
+    elif arch == 'riscv64':
+        svc_reg = 'x5,'
+        svc_reg1 = 'x5,'
     for line in reversed(lines):
         line = line.strip()
         if not line:
@@ -136,6 +139,9 @@ def get_direct_use_syscall_of_syscall(arch, lines, func_list):
     elif arch == 'arm64':
         syscall_reg = 'x0,'
         syscall_reg1 = 'w0,'
+    elif arch == 'riscv64':
+        syscall_reg = 'x17,'
+        syscall_reg1 = 'x17,'
 
     for line in reversed(lines):
         line = line.strip()
