@@ -134,11 +134,13 @@ static int FsHvbCheckCertChainDigest(struct hvb_cert_data *certs, uint64_t num_c
 
     ret = FsHvbGetHashStr(&hashAlg[0], sizeof(hashAlg));
     if (ret != 0) {
+        BEGET_LOGE("error 0x%x, get hash val from cmdline", ret);
         return ret;
     }
 
     ret = FsHvbGetCertDigstStr(&certDigestStr[0], sizeof(certDigestStr));
     if (ret != 0) {
+        BEGET_LOGE("error 0x%x, get digest val from cmdline", ret);
         return ret;
     }
 
@@ -508,15 +510,10 @@ int FsHvbFinal(void)
 
 int FsHvbGetValueFromCmdLine(char *val, size_t size, const char *key)
 {
-    int ret;
-
     FS_HVB_RETURN_ERR_IF_NULL(val);
     FS_HVB_RETURN_ERR_IF_NULL(key);
-    ret = GetParameterFromCmdLine(key, val, size);
-    if (ret != 0) {
-        BEGET_LOGE("error 0x%x, get %s val from cmdline", ret, key);
-    }
-    return ret;
+
+    return GetParameterFromCmdLine(key, val, size);
 }
 
 #ifdef __cplusplus
