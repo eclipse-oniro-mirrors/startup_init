@@ -1170,6 +1170,9 @@ void StopAllServices(int flags, const char **exclude, int size,
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
+
+    // sleep 200ms wait for stop service
+    usleep(200);
 }
 
 Service *GetServiceByPid(pid_t pid)
