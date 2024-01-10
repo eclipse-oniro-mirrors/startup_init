@@ -30,6 +30,8 @@ extern "C" {
 #endif
 #endif
 
+#define PARAM_TRIE_STACK_SIZE 25
+
 INIT_LOCAL_API int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t spaceSize);
 INIT_LOCAL_API void CloseWorkSpace(WorkSpace *workSpace);
 
