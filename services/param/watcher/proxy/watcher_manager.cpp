@@ -214,6 +214,7 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, uint32_t remo
         std::string keyPrefix;
         WatcherManager *watcherManagerPtr;
     };
+    WATCHER_LOGI("SendLocalChange start keyPrefix '%s' remoteWatcherId %d", keyPrefix.c_str(), remoteWatcherId);
     std::vector<char> buffer(PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX);
     struct Context context = {buffer.data(), remoteWatcherId, keyPrefix, this};
     // walk watcher
