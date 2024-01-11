@@ -21,6 +21,6 @@ persist_sys_param=4096
 devinfo_public_param=30720
 sys_param=4096
 bootevent_param=4096
-startup_init_param=40960
+startup_init_param=81920
 hiviewdfx_profiler_param=2048
 ohos_boot_param = 4096
