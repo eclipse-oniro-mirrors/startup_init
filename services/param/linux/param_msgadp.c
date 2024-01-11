@@ -34,9 +34,9 @@ static void OnReceiveRequest(const TaskHandle task, const uint8_t *buffer, uint3
     uint32_t curr = 0;
     while (curr < nread) {
         const ParamMessage *msg = (const ParamMessage *)(buffer + curr);
-        if (((msg->msgSize + curr) > nread)
-            || ((sizeof(ParamMessage) + curr) > nread)
-            || (msg->msgSize < sizeof(ParamMessage))) {
+        if ((nread - curr < msg->msgSize) ||
+            (nread - curr < sizeof(ParamMessage)) ||
+            (msg->msgSize < sizeof(ParamMessage))) {
             break;
         }
         curr += msg->msgSize;
