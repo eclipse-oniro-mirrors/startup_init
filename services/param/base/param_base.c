@@ -131,7 +131,7 @@ static int AllocSpaceMemory(uint32_t maxLabel)
     }
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return -1, "Invalid workspace");
-    uint32_t realLen = sizeof(WorkSpaceSize) + sizeof(uint32_t) * maxLabel;
+    uint32_t realLen = PARAM_ALIGN(sizeof(WorkSpaceSize) + sizeof(uint32_t) * maxLabel);
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize, return 0,
         "Failed to allocate currOffset %u, dataSize %u datalen %u",
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);

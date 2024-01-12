@@ -212,7 +212,10 @@ static int TraversalSubTrieNode(const WorkSpace *workSpace,
     }
     stackSize++;
     if (stackSize >= PARAM_TRIE_STACK_SIZE) {
-        PARAM_LOGI("TraversalSubTrieNode workSpace:%s with stackSize %d", workSpace->fileName, stackSize);
+        PARAM_LOGI("TraversalSubTrieNode %s, %d, %d, %d, %d", workSpace->fileName,
+            stackSize, current->left, current->right, current->child);
+        PARAM_LOGI("TraversalSubTrieNode %d, %d, %d, %d, %s", current->labelIndex,
+            current->dataIndex, current->selinuxLabel, current->length, current->key);
     }
 
     walkFunc(workSpace, (ParamTrieNode *)current, cookie);
@@ -247,7 +250,7 @@ INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAu
 {
     PARAM_CHECK(CheckWorkSpace(workSpace) == 0, return OFFSET_ERR, "Invalid workSpace");
     PARAM_CHECK(auditData != NULL, return OFFSET_ERR, "Invalid auditData");
-    uint32_t realLen = sizeof(ParamSecurityNode) + sizeof(uid_t) * auditData->memberNum;
+    uint32_t realLen = PARAM_ALIGN(sizeof(ParamSecurityNode) + sizeof(uid_t) * auditData->memberNum);
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize,
         return OFFSET_ERR, "Failed to allocate currOffset %u, dataSize %u datalen %u",
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);
