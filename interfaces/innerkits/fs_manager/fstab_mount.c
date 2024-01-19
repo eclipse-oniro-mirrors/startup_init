@@ -225,6 +225,14 @@ static int DoResizeF2fs(const char* device, const unsigned long long size, const
         argv[argc++] = "-C";
         argv[argc++] = "utf8";
     }
+    if (fsManagerFlags & FS_MANAGER_COMPRESSION) {
+        argv[argc++] = "-O";
+        argv[argc++] = "extra_attr,compression";
+    }
+    if (fsManagerFlags & FS_MANAGER_DEDUP) {
+        argv[argc++] = "-O";
+        argv[argc++] = "extra_attr,dedup";
+    }
 
     if (size != 0) {
         unsigned long long realSize = size *
