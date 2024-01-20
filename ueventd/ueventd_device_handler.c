@@ -272,6 +272,8 @@ static int BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
                 "/dev/block/by-name/%s", partitionName) == -1) {
                 INIT_LOGE("Failed to build link");
             }
+        } else {
+            INIT_LOGI("%s and %s is not match", parent, bootDevice);
         }
     } else if (!INVALIDSTRING(deviceName)) {
         if (snprintf_s(links[num], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
