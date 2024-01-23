@@ -59,6 +59,11 @@ ohos_prebuilt_etc("system-sandbox.json") {
   part_name = "init"
   subsystem_name = "startup"
   module_install_dir = "etc/sandbox"
+  install_enable = true;
+  install_images = [
+    "system",
+    "updater",
+  ]
 }
 
 ohos_prebuilt_etc("chipset-sandbox.json") {
@@ -72,4 +77,9 @@ ohos_prebuilt_etc("chipset-sandbox.json") {
   part_name = "init"
   subsystem_name = "startup"
   module_install_dir = "etc/sandbox"
+  install_enable = true;
+  install_images = [
+    "system",
+    "updater",
+  ]
 }

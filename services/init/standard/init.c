@@ -162,6 +162,7 @@ static void InitLoadParamFiles(void)
     if (InUpdaterMode() != 0) {
         LoadDefaultParams("/etc/param/ohos_const", LOAD_PARAM_NORMAL);
         LoadDefaultParams("/etc/param", LOAD_PARAM_ONLY_ADD);
+        LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_ONLY_ADD);
         return;
     }
 
