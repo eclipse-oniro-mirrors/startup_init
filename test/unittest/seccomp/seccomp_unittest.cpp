@@ -61,10 +61,6 @@ public:
     void TearDown() {};
     void TestBody(void) {};
 
-    static void Handler(int s)
-    {
-    }
-
     static pid_t StartChild(SeccompFilterType type, const char *filterName, SyscallFunc func)
     {
         pid_t pid = fork();
@@ -91,6 +87,25 @@ public:
         return pid;
     }
 
+    static int CheckStatus(int status, bool isAllow)
+    {
+        if (WEXITSTATUS(status) == EXIT_FAILURE) {
+            return -1;
+        }
+
+        if (WIFSIGNALED(status)) {
+            if (WTERMSIG(status) == SIGSYS) {
+                    std::cout << "child process exit with SIGSYS" << std::endl;
+                    return isAllow ? -1 : 0;
+            }
+        } else {
+            std::cout << "child process finished normally" << std::endl;
+            return isAllow ? 0 : -1;
+        }
+
+        return -1;
+    }
+
     static int CheckSyscall(SeccompFilterType type, const char *filterName, SyscallFunc func, bool isAllow)
     {
         sigset_t set;
@@ -101,9 +116,12 @@ public:
 
         sigemptyset(&set);
         sigaddset(&set, SIGCHLD);
-        sigaddset(&set, SIGSYS);
         sigprocmask(SIG_BLOCK, &set, nullptr);
-        if (signal(SIGCHLD, Handler) == nullptr) {
+        sigaddset(&set, SIGSYS);
+        if (signal(SIGCHLD, SIG_DFL) == nullptr) {
+            std::cout << "signal failed:" << strerror(errno) << std::endl;
+        }
+        if (signal(SIGSYS, SIG_DFL) == nullptr) {
             std::cout << "signal failed:" << strerror(errno) << std::endl;
         }
 
@@ -138,20 +156,7 @@ public:
             std::cout << "Child process time out" << std::endl;
         }
 
-        if (WEXITSTATUS(status) == EXIT_FAILURE) {
-            return -1;
-        }
-
-        if (WIFSIGNALED(status)) {
-            if (WTERMSIG(status) == SIGSYS) {
-                    std::cout << "child process exit with SIGSYS" << std::endl;
-                    return isAllow ? -1 : 0;
-            }
-        } else {
-            std::cout << "child process finished normally" << std::endl;
-            return isAllow ? 0 : -1;
-        }
-        return -1;
+        return CheckStatus(status, isAllow);
     }
 
     static bool CheckUnshare()
@@ -170,7 +175,7 @@ public:
             return false;
         }
 
-        if (setns(fd, CLONE_NEWNS) !=0) {
+        if (setns(fd, CLONE_NEWNS) != 0) {
             return false;
         }
 
@@ -235,9 +240,9 @@ public:
     }
 
 #if defined __aarch64__
-    static bool CheckGetMempolicy()
+    static bool CheckMqOpen()
     {
-        int ret = syscall(__NR_get_mempolicy, nullptr, nullptr, 0, nullptr, 0);
+        int ret = (int)syscall(__NR_mq_open, nullptr, 0);
         if (ret < 0) {
             return false;
         }
@@ -459,7 +464,7 @@ public:
     void TestSystemSycall()
     {
         // system blocklist
-        int ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckGetMempolicy, false);
+        int ret = CheckSyscall(SYSTEM_SA, SYSTEM_NAME, CheckMqOpen, false);
         EXPECT_EQ(ret, 0);
 
         // system allowlist

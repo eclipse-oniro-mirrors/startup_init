@@ -169,6 +169,26 @@ ohos_unittest("init_unittest") {
     ]
   }
 
+  include_dirs = []
+  defines = []
+
+  if (defined(build_seccomp) && build_seccomp) {
+    sources += [
+      "../../services/modules/seccomp/seccomp_policy.c",
+      "seccomp/seccomp_unittest.cpp",
+    ]
+    include_dirs +=
+        [ "//base/startup/init/interfaces/innerkits/seccomp/include" ]
+
+    if (build_variant == "root") {
+      defines += [ "WITH_SECCOMP_DEBUG" ]
+    }
+
+    if (use_clang_coverage) {
+      defines += [ "COVERAGE_TEST" ]
+    }
+  }
+
   sources += [
     "begetctl/begetctl_unittest.cpp",
     "deviceinfo/DeviceInfoUnittest.cpp",
@@ -216,7 +236,7 @@ ohos_unittest("init_unittest") {
 
   configs = [ "//base/startup/init/test/unittest:utest_config" ]
 
-  include_dirs = [
+  include_dirs += [
     "//base/customization/config_policy/interfaces/innerkits/include",
     "//base/startup/init/device_info",
     "//base/startup/init/services/init/standard",
@@ -287,7 +307,7 @@ ohos_unittest("init_unittest") {
     "//third_party/zlib:libz",
   ]
 
-  defines = [
+  defines += [
     "READ_CHECK",
     "INIT_AGENT",
     "INIT_DMESG",
@@ -342,23 +362,6 @@ ohos_unittest("init_unittest") {
       "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]
-  }
-
-  if (defined(build_seccomp) && build_seccomp) {
-    sources += [
-      "../../services/modules/seccomp/seccomp_policy.c",
-      "seccomp/seccomp_unittest.cpp",
-    ]
-    include_dirs +=
-        [ "//base/startup/init/interfaces/innerkits/seccomp/include" ]
-
-    if (build_variant == "root") {
-      defines += [ "WITH_SECCOMP_DEBUG" ]
-    }
-
-    if (use_clang_coverage) {
-      defines += [ "COVERAGE_TEST" ]
-    }
   }
 
   if (defined(build_selinux) && build_selinux) {
