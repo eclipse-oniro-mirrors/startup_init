@@ -29,7 +29,11 @@ void DeviceInfoLoad::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
 {
     DINFO_CHECK(systemAbilityId == SYSPARAM_DEVICE_SERVICE_ID, return,
         "start systemabilityId is not deviceinfo! %d", systemAbilityId);
-    DINFO_CHECK(remoteObject != nullptr, return, "remoteObject is null.");
+    if (remoteObject != nullptr) {
+        DINFO_LOGI("OnLoadSystemAbilitySuccess but remote is null %d", systemAbilityId);
+        DeviceInfoKits::GetInstance().FinishStartSAFailed();
+        return;
+    }
 
     DINFO_LOGI("OnLoadSystemAbilitySuccess start systemAbilityId: %d success!", systemAbilityId);
     DeviceInfoKits::GetInstance().FinishStartSASuccess(remoteObject);

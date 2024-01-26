@@ -43,10 +43,12 @@ REGISTER_SYSTEM_ABILITY_BY_ID(DeviceInfoService, SYSPARAM_DEVICE_SERVICE_ID, tru
 static std::mutex g_lock;
 static struct timespec g_lastTime;
 #ifndef STARTUP_INIT_TEST
-static const int DEVICE_INFO_EXIT_TIMEOUT_S = 15;
+static const int DEVICE_INFO_EXIT_TIMEOUT_S = 60;
 #else
 static const int DEVICE_INFO_EXIT_TIMEOUT_S = 3;
 #endif
+static const int DEVICE_INFO_EXIT_WAITTIMES = 12;
+
 
 static int UnloadDeviceInfoSa(void)
 {
@@ -166,7 +168,7 @@ int DeviceInfoService::Dump(int fd, const std::vector<std::u16string>& args)
 void DeviceInfoService::ThreadForUnloadSa(void)
 {
     while (1) {
-        std::this_thread::sleep_for(std::chrono::seconds(DEVICE_INFO_EXIT_TIMEOUT_S / 3)); // 3 count
+        std::this_thread::sleep_for(std::chrono::seconds(DEVICE_INFO_EXIT_TIMEOUT_S / DEVICE_INFO_EXIT_WAITTIMES));
         if (!threadStarted_) {
             break;
         }
