@@ -29,6 +29,10 @@
 #include "init_cmds.h"
 #include "config_policy_utils.h"
 
+#ifdef WITH_SELINUX
+#include <policycoreutils.h>
+#endif
+
 static int GetBootEventEnable(void)
 {
     char bootEventOpen[6] = ""; // 6 is length of bool value
@@ -213,7 +217,12 @@ static int BootEventTraversal(ListNode *node, void *root)
 static int SaveServiceBootEvent()
 {
     INIT_CHECK(GetBootEventEnable(), return 0);
+
     CheckAndCreatFile(BOOTEVENT_OUTPUT_PATH "bootup.trace", S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+#ifdef WITH_SELINUX
+    (void)RestoreconRecurse(BOOTEVENT_OUTPUT_PATH);
+#endif
+
     FILE *tmpFile = fopen(BOOTEVENT_OUTPUT_PATH "bootup.trace", "wr");
     INIT_CHECK_RETURN_VALUE(tmpFile != NULL, -1);
     cJSON *root = cJSON_CreateArray();
