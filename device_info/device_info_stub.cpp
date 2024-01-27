@@ -49,7 +49,6 @@ static const int DEVICE_INFO_EXIT_TIMEOUT_S = 3;
 #endif
 static const int DEVICE_INFO_EXIT_WAITTIMES = 12;
 
-
 static int UnloadDeviceInfoSa(void)
 {
     {
