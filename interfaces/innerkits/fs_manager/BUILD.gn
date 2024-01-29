@@ -25,7 +25,6 @@ config("libfsmanager_exported_configs") {
 ohos_static_library("libfsmanager_static") {
   if (!defined(ohos_lite)) {
     sources = [
-      "//base/startup/init/services/utils/init_utils.c",
       "fstab.c",
       "fstab_mount.c",
     ]
@@ -37,6 +36,7 @@ ohos_static_library("libfsmanager_static") {
       "//base/startup/init/services/log",
       "//base/startup/init/services/param/include",
     ]
+    deps = [ "//base/startup/init/services/utils:libinit_utils" ]
     if (defined(global_parts_info.startup_hvb)) {
       sources += [
         "dm_verity/dm_verity.c",
@@ -55,6 +55,7 @@ ohos_static_library("libfsmanager_static") {
 
       defines = [ "SUPPORT_HVB" ]
       external_deps = [ "hvb:libhvb_static" ]
+      deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static" ]
     }
   }
 
