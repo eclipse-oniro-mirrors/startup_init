@@ -44,17 +44,6 @@ extern "C" {
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 
-#ifdef SUPPORT_HVB
-__attribute__((weak)) int UeventdSocketInit(void)
-{
-    return 0;
-}
-
-__attribute__((weak)) void RetriggerUeventByPath(int sockFd, char *path)
-{
-}
-#endif
-
 __attribute__((weak)) void InitPostMount(const char *mountPoint, int rc)
 {
 }
