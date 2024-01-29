@@ -57,10 +57,6 @@ ohos_static_library("libfsmanager_static") {
       external_deps = [ "hvb:libhvb_static" ]
       deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static" ]
     }
-    deps = [
-      "//base/startup/init/services/utils:libinit_utils",
-      "//base/startup/init/ueventd:libueventd_ramdisk_static",
-    ]
   }
 
   public_configs = [ ":libfsmanager_exported_configs" ]
