@@ -484,7 +484,7 @@ int FsHvbSetupHashtree(FstabItem *fsItem)
         goto exit;
     }
 
-    rc = FsDmInitDmDev(dmDevPath);
+    rc = FsDmInitDmDev(dmDevPath, true);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, create init dm dev", rc);
         goto exit;
