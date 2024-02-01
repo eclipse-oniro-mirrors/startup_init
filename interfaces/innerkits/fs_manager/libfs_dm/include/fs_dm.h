@@ -34,7 +34,7 @@ typedef struct {
     uint64_t paras_len;
 } DmVerityTarget;
 
-int FsDmInitDmDev(char *devPath);
+int FsDmInitDmDev(char *devPath, bool useSocket);
 int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *target);
 
 #ifdef __cplusplus
