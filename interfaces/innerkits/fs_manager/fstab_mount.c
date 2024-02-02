@@ -48,6 +48,15 @@ __attribute__((weak)) void InitPostMount(const char *mountPoint, int rc)
 {
 }
 
+__attribute__((weak)) void InitSuspendTimer()
+{
+}
+
+__attribute__((weak)) void InitResumeTimer()
+{
+}
+
+
 static const SUPPORTED_FILE_SYSTEM supportedFileSystems[] = {
     { "ext4", 0 },
     { "f2fs", 1 },
@@ -249,7 +258,10 @@ static int DoFsckF2fs(const char* device)
     };
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
-    return ExecCommand(argc, argv);
+    InitSuspendTimer();
+    int ret = ExecCommand(argc, argv);
+    InitResumeTimer();
+    return ret;
 }
 
 static int DoResizeExt(const char* device, const unsigned long long size)
