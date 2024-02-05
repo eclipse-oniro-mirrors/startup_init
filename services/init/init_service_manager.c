@@ -1169,7 +1169,10 @@ void StopAllServices(int flags, const char **exclude, int size,
     }
 
     // sleep 200ms wait for stop service
-    usleep(200);
+    int waitTime = 200;
+    do {
+        waitTime = usleep(waitTime);
+    } while (waitTime > 0);
 }
 
 Service *GetServiceByPid(pid_t pid)
