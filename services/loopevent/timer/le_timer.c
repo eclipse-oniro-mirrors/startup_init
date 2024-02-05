@@ -71,6 +71,17 @@ static void HandleTimerClose_(const LoopHandle loopHandle, const TaskHandle task
     close(task->taskId.fd);
 }
 
+static void DumpTimerTaskInfo_(const TaskHandle task)
+{
+    INIT_CHECK(task != NULL, return);
+    BaseTask *baseTask = (BaseTask *)task;
+    TimerTask *timerTask = (TimerTask *)baseTask;
+    printf("\tfd: %d \n", timerTask->base.taskId.fd);
+    printf("\t  TaskType: %s \n", "TimerTask");
+    printf("\t    Service Timeout: %llu \n", timerTask->timeout);
+    printf("\t    Service Repeat: %llu \n", timerTask->repeat);
+}
+
 LE_STATUS LE_CreateTimer(const LoopHandle loopHandle,
     TimerHandle *timer, LE_ProcessTimer processTimer, void *context)
 {
@@ -88,6 +99,7 @@ LE_STATUS LE_CreateTimer(const LoopHandle loopHandle,
         return LE_NO_MEMORY, "Failed to create task");
     task->base.handleEvent = HandleTimerEvent_;
     task->base.innerClose = HandleTimerClose_;
+    task->base.dumpTaskInfo = DumpTimerTaskInfo_;
     task->processTimer = processTimer;
     *(uint64_t *)(task + 1) = (uint64_t)context;
     *timer = (TimerHandle)task;

@@ -64,6 +64,7 @@ static int BootEventDisable(BShellHandle shell, int argc, char **argv)
 MODULE_CONSTRUCTOR(void)
 {
     const CmdInfo infos[] = {
+        {"dump_service", main_cmd, "dump all loop info", "dump_service loop", NULL},
         {"dump_service", main_cmd, "dump one service info by serviceName", "dump_service serviceName", NULL},
         {"dump_service", main_cmd, "dump all services info", "dump_service all", NULL},
         {"dump_service", main_cmd, "dump parameter-service trigger",
