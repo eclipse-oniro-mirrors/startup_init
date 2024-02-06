@@ -46,6 +46,8 @@ static const int CRITICAL_DEFAULT_CRASH_TIME = 240;
 // maximum number of crashes within time CRITICAL_DEFAULT_CRASH_TIME for one service
 static const int CRITICAL_DEFAULT_CRASH_COUNT =  4;
 static const int CRITICAL_CONFIG_ARRAY_LEN = 3;
+static const int REBOOT_WAIT_TIME = 100000;
+static const int INTERVAL_PER_WAIT = 10;
 
 static void FreeServiceArg(ServiceArgs *arg)
 {
@@ -1168,8 +1170,19 @@ void StopAllServices(int flags, const char **exclude, int size,
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
 
-    // sleep 200ms wait for stop service
-    usleep(200);
+    INIT_TIMING_STAT cmdTimer;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
+    long long count = 1;
+    while (count > 0) {
+        usleep(INTERVAL_PER_WAIT);
+        count++;
+        (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+        long long diff = InitDiffTime(&cmdTimer);
+        if (diff > REBOOT_WAIT_TIME) {
+            count = 0;
+        }
+    }
+    INIT_LOGI("StopAllServices end");
 }
 
 Service *GetServiceByPid(pid_t pid)
