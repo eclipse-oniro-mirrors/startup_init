@@ -737,17 +737,6 @@ int GetCmdLinesFromJson(const cJSON *root, CmdLines **cmdLines)
     return 0;
 }
 
-long long InitDiffTime(INIT_TIMING_STAT *stat)
-{
-    long long diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000); // 1000000 1000ms
-    if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
-        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / BASE_MS_UNIT;
-    } else {
-        diff -= (stat->startTime.tv_nsec - stat->endTime.tv_nsec) / BASE_MS_UNIT;
-    }
-    return diff;
-}
-
 void DoCmdByIndex(int index, const char *cmdContent, const ConfigContext *context)
 {
     if (cmdContent == NULL) {

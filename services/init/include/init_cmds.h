@@ -73,11 +73,6 @@ struct CmdTable {
     void (*DoFuncion)(const struct CmdArgs *ctx);
 };
 
-typedef struct INIT_TIMING_STAT {
-    struct timespec startTime;
-    struct timespec endTime;
-} INIT_TIMING_STAT;
-
 typedef enum _initContextType {
     INIT_CONTEXT_CHIPSET,
     INIT_CONTEXT_MAIN,
@@ -103,7 +98,6 @@ void ExecCmd(const struct CmdTable *cmd, const char *cmdContent);
 int SetFileCryptPolicy(const char *dir);
 
 void OpenHidebug(const char *name);
-long long InitDiffTime(INIT_TIMING_STAT *stat);
 
 void StopSubInit(pid_t pid);
 int ExecuteCmdInSubInit(const ConfigContext *context, const char *name, const char *cmdContent);
