@@ -18,6 +18,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <sys/signalfd.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 #include "le_loop.h"
@@ -47,6 +48,32 @@ static void HandleSignalTaskClose_(const LoopHandle loopHandle, const TaskHandle
     close(task->taskId.fd);
 }
 
+static void PrintSigset(sigset_t mask)
+{
+    int cnt = 0;
+    for (int sig = 1; sig < NSIG; sig++) {
+        if (sigismember(&mask, sig)) {
+            cnt++;
+            printf("\t    %d(%s)\n", sig, strsignal(sig));
+        }
+    }
+    if (cnt == 0) {
+        printf("empty signal set\n");
+    }
+}
+
+static void DumpSignalTaskInfo_(const TaskHandle task)
+{
+    INIT_CHECK(task != NULL, return);
+    BaseTask *baseTask = (BaseTask *)task;
+    SignalTask *signalTask = (SignalTask *)baseTask;
+    printf("\tfd: %d \n", signalTask->base.taskId.fd);
+    printf("\t  TaskType: %s \n", "SignalTask");
+    printf("\t  sigNumber: %d \n", signalTask->sigNumber);
+    printf("\t  signal: \n");
+    PrintSigset(signalTask->mask);
+}
+
 LE_STATUS LE_CreateSignalTask(const LoopHandle loopHandle, SignalHandle *signalHandle, LE_ProcessSignal processSignal)
 {
     LE_CHECK(loopHandle != NULL && signalHandle != NULL, return LE_INVALID_PARAM, "Invalid parameters");
@@ -60,6 +87,7 @@ LE_STATUS LE_CreateSignalTask(const LoopHandle loopHandle, SignalHandle *signalH
     LE_CHECK(task != NULL, return LE_NO_MEMORY, "Failed to create task");
     task->base.handleEvent = HandleSignalEvent_;
     task->base.innerClose = HandleSignalTaskClose_;
+    task->base.dumpTaskInfo = DumpSignalTaskInfo_;
     task->sigNumber = 0;
     sigemptyset(&task->mask);
     task->processSignal = processSignal;

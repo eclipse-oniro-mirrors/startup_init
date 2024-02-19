@@ -94,6 +94,15 @@ static void HandleAsyncTaskClose_(const LoopHandle loopHandle, const TaskHandle 
     close(task->taskId.fd);
 }
 
+static void DumpEventTaskInfo_(const TaskHandle task)
+{
+    INIT_CHECK(task != NULL, return);
+    BaseTask *baseTask = (BaseTask *)task;
+    AsyncEventTask *eventTask = (AsyncEventTask *)baseTask;
+    printf("\tfd: %d \n", eventTask->stream.base.taskId.fd);
+    printf("\t  TaskType: %s\n", "EventTask");
+}
+
 LE_STATUS LE_CreateAsyncTask(const LoopHandle loopHandle,
     TaskHandle *taskHandle, LE_ProcessAsyncEvent processAsyncEvent)
 {
@@ -108,7 +117,7 @@ LE_STATUS LE_CreateAsyncTask(const LoopHandle loopHandle,
         return LE_NO_MEMORY, "Failed to create task");
     task->stream.base.handleEvent = HandleAsyncEvent_;
     task->stream.base.innerClose = HandleAsyncTaskClose_;
-
+    task->stream.base.dumpTaskInfo = DumpEventTaskInfo_;
     OH_ListInit(&task->stream.buffHead);
     LoopMutexInit(&task->stream.mutex);
     task->processAsyncEvent = processAsyncEvent;

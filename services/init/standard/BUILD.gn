@@ -94,6 +94,11 @@ ohos_executable("init") {
     "//base/startup/init/services/modules/reboot",
     "//base/startup/init/services/modules/init_context",
     "${FSCRYPT_PATH}/include/libfscrypt",
+    "//base/startup/init/services/loopevent/task",
+    "//base/startup/init/services/loopevent/loop",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/services/loopevent/utils",
   ]
 
   deps = [

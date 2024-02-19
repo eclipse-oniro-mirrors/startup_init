@@ -49,6 +49,16 @@ static void HandleWatcherTaskClose_(const LoopHandle loopHandle, const TaskHandl
     DelTask((EventLoop *)loopHandle, (BaseTask *)taskHandle);
 }
 
+static void DumpWatcherTaskInfo_(const TaskHandle task)
+{
+    INIT_CHECK(task != NULL, return);
+    BaseTask *baseTask = (BaseTask *)task;
+
+    WatcherTask *watcherTask = (WatcherTask *)baseTask;
+    printf("\tfd: %d \n", watcherTask->base.taskId.fd);
+    printf("\t  TaskType: %s \n", "WatcherTask");
+}
+
 LE_STATUS LE_StartWatcher(const LoopHandle loopHandle,
     WatcherHandle *watcherHandle, const LE_WatchInfo *info, const void *context)
 {
@@ -60,6 +70,7 @@ LE_STATUS LE_StartWatcher(const LoopHandle loopHandle,
     LE_CHECK(task != NULL, return LE_NO_MEMORY, "Failed to create task");
     task->base.handleEvent = HandleWatcherEvent_;
     task->base.innerClose = HandleWatcherTaskClose_;
+    task->base.dumpTaskInfo = DumpWatcherTaskInfo_;
     task->processEvent = info->processEvent;
     task->events = info->events;
     *(uint64_t *)(task + 1) = (uint64_t)context;
