@@ -108,7 +108,6 @@ int SystemTraversalParameter(const char *prefix, TraversalParamPtr traversalPara
         workSpace = GetNextWorkSpace(workSpace);
     }
     while (workSpace != NULL) {
-        PARAM_LOGV("SystemTraversalParameter prefix %s in space %s", context.prefix, workSpace->fileName);
         WorkSpace *next = GetNextWorkSpace(workSpace);
         ParamTrieNode *root = NULL;
         if (prefix != NULL && strlen(prefix) != 0) {

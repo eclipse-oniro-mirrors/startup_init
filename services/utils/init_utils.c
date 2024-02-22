@@ -366,23 +366,36 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
     return items;
 }
 
+long long InitDiffTime(INIT_TIMING_STAT *stat)
+{
+    long long diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000); // 1000000 1000ms
+    if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
+        diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / BASE_MS_UNIT;
+    } else {
+        diff -= (stat->startTime.tv_nsec - stat->endTime.tv_nsec) / BASE_MS_UNIT;
+    }
+    return diff;
+}
+
 void WaitForFile(const char *source, unsigned int maxSecond)
 {
     INIT_ERROR_CHECK(maxSecond <= WAIT_MAX_SECOND, maxSecond = WAIT_MAX_SECOND,
         "WaitForFile max time is %us", WAIT_MAX_SECOND);
     struct stat sourceInfo = {0};
-    unsigned int waitTime = 500000;
-    /* 500ms interval, check maxSecond*2 times total */
-    unsigned int maxCount = maxSecond * 2;
+    unsigned int waitTime = 10 * BASE_MS_UNIT; // 10ms
+    long long maxDuration = maxSecond * BASE_MS_UNIT * BASE_MS_UNIT; // 5s
 #ifdef STARTUP_INIT_TEST
-    maxCount = 0;
+    maxDuration = 0;
 #endif
-    unsigned int count = 0;
-    while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (count < maxCount)) {
+    long long duration = 0;
+    INIT_TIMING_STAT cmdTimer;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
+    while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (duration < maxDuration)) {
         usleep(waitTime);
-        count++;
+        (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+        duration = InitDiffTime(&cmdTimer);
     }
-    INIT_CHECK_ONLY_ELOG(count != maxCount, "wait for file:%s failed after %d second.", source, maxSecond);
+    INIT_CHECK_ONLY_ELOG(duration < maxDuration, "wait for file:%s failed after %d second.", source, maxSecond);
     return;
 }
 
