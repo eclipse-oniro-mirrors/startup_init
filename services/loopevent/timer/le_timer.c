@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <sys/timerfd.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 #include "le_loop.h"
 #include "le_task.h"
@@ -78,8 +79,8 @@ static void DumpTimerTaskInfo_(const TaskHandle task)
     TimerTask *timerTask = (TimerTask *)baseTask;
     printf("\tfd: %d \n", timerTask->base.taskId.fd);
     printf("\t  TaskType: %s \n", "TimerTask");
-    printf("\t    Service Timeout: %llu \n", timerTask->timeout);
-    printf("\t    Service Repeat: %llu \n", timerTask->repeat);
+    printf("\t    Service Timeout: %" PRIu64 "\n", timerTask->timeout);
+    printf("\t    Service Repeat: %" PRIu64 "\n", timerTask->repeat);
 }
 
 LE_STATUS LE_CreateTimer(const LoopHandle loopHandle,
