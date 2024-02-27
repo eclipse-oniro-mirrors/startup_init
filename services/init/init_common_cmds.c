@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2020-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -352,9 +352,11 @@ static void DoMkDir(const struct CmdArgs *ctx)
 
     /*
      * Skip restoring default SELinux security contexts if the the folder already
-     * existed and its under /dev. These files will be proceed by loadSelinuxPolicy.
+     * existed and its under /dev or /data/. These files will be proceed by loadSelinuxPolicy.
      */
-    if (errno != EEXIST || strncmp(ctx->argv[0], "/dev", strlen("/dev")) != 0) {
+    if ((errno != EEXIST) || ((strncmp(ctx->argv[0], "/dev", strlen("/dev")) != 0) &&
+        (strncmp(ctx->argv[0], "/data/", strlen("/data/")) != 0)) ||
+        (strncmp(ctx->argv[0], "/data/service/el1", strlen("/data/service/el1")) == 0)) {
         PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
     }
 
