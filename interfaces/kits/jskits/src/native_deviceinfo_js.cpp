@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,8 +20,36 @@
 #include "napi/native_node_api.h"
 #include "parameter.h"
 #include "sysversion.h"
+#include "bundlemgr/bundle_mgr_proxy.h"
+#include "iservice_registry.h"
+#include "if_system_ability_manager.h"
+#include "system_ability_definition.h"
+#include "beget_ext.h"
+#include "init_error.h"
+#include "securec.h"
+
+#ifndef DEVICEINFO_JS_DOMAIN
+#define DEVICEINFO_JS_DOMAIN (BASE_DOMAIN + 8)
+#endif
+
+#ifndef DINFO_TAG
+#define DINFO_TAG "DEVICEINFO_JS"
+#endif
+
+#define DEVINFO_LOGV(fmt, ...) STARTUP_LOGV(DEVICEINFO_JS_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
+#define DEVINFO_LOGI(fmt, ...) STARTUP_LOGI(DEVICEINFO_JS_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
+#define DEVINFO_LOGW(fmt, ...) STARTUP_LOGW(DEVICEINFO_JS_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
+#define DEVINFO_LOGE(fmt, ...) STARTUP_LOGE(DEVICEINFO_JS_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
 
 const int UDID_LEN = 65;
+const int ODID_LEN = 37;
+
+typedef enum {
+    DEV_INFO_OK,
+    DEV_INFO_ENULLPTR,
+    DEV_INFO_EGETODID,
+    DEV_INFO_ESTRCOPY
+} DevInfoError;
 
 static napi_value GetDeviceType(napi_env env, napi_callback_info info)
 {
@@ -399,6 +427,47 @@ static napi_value NAPI_GetDistributionOSReleaseType(napi_env env, napi_callback_
     return napiValue;
 }
 
+static DevInfoError AclGetDevOdid(char *odid, int size)
+{
+    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        return DEV_INFO_ENULLPTR;
+    }
+
+    auto remoteObject = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (!remoteObject) {
+        return DEV_INFO_ENULLPTR;
+    }
+
+    auto bundleMgrProxy = OHOS::iface_cast<OHOS::AppExecFwk::BundleMgrProxy>(remoteObject);
+    if (!bundleMgrProxy) {
+        return DEV_INFO_ENULLPTR;
+    }
+
+    std::string odidStr;
+    if (bundleMgrProxy->GetOdid(odidStr) != 0) {
+        return DEV_INFO_EGETODID;
+    }
+
+    if (strcpy_s(odid, size, odidStr.c_str()) != EOK) {
+        return DEV_INFO_ESTRCOPY;
+    }
+    return DEV_INFO_OK;
+}
+
+static napi_value GetDevOdid(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    char odid[ODID_LEN] = {0};
+    DevInfoError ret = AclGetDevOdid(odid, ODID_LEN);
+    if (ret != DEV_INFO_OK) {
+        DEVINFO_LOGE("GetDevOdid ret:%d", ret);
+    }
+
+    NAPI_CALL(env, napi_create_string_utf8(env, odid, strlen(odid), &napiValue));
+    return napiValue;
+}
+
 EXTERN_C_START
 /*
  * Module init
@@ -443,6 +512,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"distributionOSVersion", nullptr, nullptr, NAPI_GetDistributionOSVersion, nullptr, nullptr, napi_default, nullptr},
         {"distributionOSApiVersion", nullptr, nullptr, NAPI_GetDistributionOSApiVersion, nullptr, nullptr, napi_default, nullptr},
         {"distributionOSReleaseType", nullptr, nullptr, NAPI_GetDistributionOSReleaseType, nullptr, nullptr, napi_default, nullptr},
+        {"odid", nullptr, nullptr, GetDevOdid, nullptr, nullptr, napi_default, nullptr},
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
 
