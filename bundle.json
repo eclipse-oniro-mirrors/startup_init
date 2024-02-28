@@ -17,8 +17,7 @@
         "subsystem": "startup",
         "syscap": [
             "SystemCapability.Startup.SystemInfo",
-            "SystemCapability.Startup.SystemInfo.Lite",
-            "SystemCapability.Base"
+            "SystemCapability.Startup.SystemInfo.Lite"
         ],
         "adapted_system_type": [
             "mini",
@@ -47,6 +46,7 @@
                 "hvb",
                 "hisysevent",
                 "bounds_checking_function",
+                "bundle_framework",
                 "hiprofiler"
             ],
             "third_party": [
