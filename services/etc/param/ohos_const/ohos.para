@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-const.ohos.version.security_patch=2024/02/01
+const.ohos.version.security_patch=2024/03/01
 const.ohos.releasetype=Canary
 const.ohos.apiversion=12
-const.ohos.fullname=OpenHarmony-5.0.0.13
+const.ohos.fullname=OpenHarmony-5.0.0.14
