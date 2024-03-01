@@ -429,6 +429,9 @@ static napi_value NAPI_GetDistributionOSReleaseType(napi_env env, napi_callback_
 
 static DevInfoError AclGetDevOdid(char *odid, int size)
 {
+    if (odid[0] != '\0') {
+        return DEV_INFO_OK;
+    }
     auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
         return DEV_INFO_ENULLPTR;
@@ -458,7 +461,7 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
 static napi_value GetDevOdid(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
-    char odid[ODID_LEN] = {0};
+    static char odid[ODID_LEN] = {0};
     DevInfoError ret = AclGetDevOdid(odid, ODID_LEN);
     if (ret != DEV_INFO_OK) {
         DEVINFO_LOGE("GetDevOdid ret:%d", ret);
@@ -512,7 +515,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"distributionOSVersion", nullptr, nullptr, NAPI_GetDistributionOSVersion, nullptr, nullptr, napi_default, nullptr},
         {"distributionOSApiVersion", nullptr, nullptr, NAPI_GetDistributionOSApiVersion, nullptr, nullptr, napi_default, nullptr},
         {"distributionOSReleaseType", nullptr, nullptr, NAPI_GetDistributionOSReleaseType, nullptr, nullptr, napi_default, nullptr},
-        {"odid", nullptr, nullptr, GetDevOdid, nullptr, nullptr, napi_default, nullptr},
+        {"ODID", nullptr, nullptr, GetDevOdid, nullptr, nullptr, napi_default, nullptr},
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
 
