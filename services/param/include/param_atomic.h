@@ -49,6 +49,8 @@ extern "C" {
 
 #define futex_wake(ftx, count) (void)(ftx)
 #define futex_wait(ftx, value) (void)(ftx)
+#define futex_wake_private(ftx, count) (void)(ftx)
+#define futex_wait_private(ftx, value) (void)(ftx)
 #else
 
 // support futex
@@ -61,6 +63,10 @@ extern "C" {
 #if !(defined FUTEX_WAIT || defined FUTEX_WAKE)
 #define FUTEX_WAIT 0
 #define FUTEX_WAKE 1
+#define FUTEX_PRIVATE_FLAG 128
+#define FUTEX_WAIT_PRIVATE (FUTEX_WAIT | FUTEX_PRIVATE_FLAG)
+#define FUTEX_WAKE_PRIVATE (FUTEX_WAKE | FUTEX_PRIVATE_FLAG)
+
 #define PARAM_FUTEX(ftx, op, value, timeout, bitset)                       \
     do {                                                                   \
         struct timespec d_timeout = { 0, 1000 * 1000 * (timeout) };        \
@@ -69,6 +75,8 @@ extern "C" {
 
 #define futex_wake(ftx, count) PARAM_FUTEX(ftx, FUTEX_WAKE, count, 0, 0)
 #define futex_wait(ftx, value) PARAM_FUTEX(ftx, FUTEX_WAIT, value, 100, 0)
+#define futex_wake_private(ftx, count) PARAM_FUTEX(ftx, FUTEX_WAKE_PRIVATE, count, 0, 0)
+#define futex_wait_private(ftx, value) PARAM_FUTEX(ftx, FUTEX_WAIT_PRIVATE, value, 100, 0)
 #endif
 
 #if (defined(PARAM_SUPPORT_STDATOMIC) || defined(__LITEOS_A__))
