@@ -40,15 +40,19 @@
                 "hilog",
                 "hilog_lite",
                 "samgr",
-                "selinux_adapter",
                 "access_token",
                 "common",
                 "dsoftbus",
                 "hvb",
                 "hisysevent",
+                "hiprofiler",
                 "bounds_checking_function",
                 "bundle_framework",
-                "hiprofiler"
+                "selinux",
+                "selinux_adapter",
+                "storage_service",
+                "mbedtls",
+                "zlib"
             ],
             "third_party": [
                 "bounds_checking_function",
@@ -58,9 +62,22 @@
                 "zlib",
                 "cJSON",
                 "mksh",
-                "toybox"
+                "toybox",
+                "config_policy",
+                "e2fsprogs",
+                "f2fs-tools",
+                "selinux_adapter",
+                "storage_service"
             ]
         },
+        "data_deps" : [
+            "e2fsprogs:blkid",
+            "e2fsprogs:e2fsck",
+            "e2fsprogs:libext2_blkid",
+            "e2fsprogs:mke2fs",
+            "e2fsprogs:resize2fs",
+            "e2fsprogs:e2fsdroid"
+        ],
         "build": {
             "group_type": {
                 "base_group": [
@@ -138,6 +155,14 @@
                         ]
                     },
                     "name": "//base/startup/init/interfaces/innerkits/seccomp:seccomp"
+                },
+                {
+                    "header": {
+                        "header_base": "//base/startup/init/interfaces/innerkits/include/param",
+                        "header_files": [
+                        ]
+                    },
+                    "name": "//base/startup/init/interfaces/innerkits/zh_extral_dir:export_headers_lib"
                 }
             ],
             "test": [

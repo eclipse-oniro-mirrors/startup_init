@@ -23,10 +23,9 @@ ohos_shared_library("rebootmodule") {
     "../init_hook",
     "//base/startup/init/interfaces/innerkits/include/param",
   ]
-  deps = [
-    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
-    "//third_party/bounds_checking_function:libsec_shared",
-  ]
+  deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
+
+  external_deps = [ "bounds_checking_function:libsec_shared" ]
 
   defines = []
   part_name = "init"
@@ -54,7 +53,7 @@ ohos_source_set("libreboot_static") {
     "..",
     "../init_hook",
     "//base/startup/init/interfaces/innerkits/include/param",
-    "//third_party/bounds_checking_function/include",
   ]
+  public_external_deps = [ "bounds_checking_function:libsec_static" ]
   public_configs = [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
 }

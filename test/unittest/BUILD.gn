@@ -237,7 +237,6 @@ ohos_unittest("init_unittest") {
   configs = [ "//base/startup/init/test/unittest:utest_config" ]
 
   include_dirs += [
-    "//base/customization/config_policy/interfaces/innerkits/include",
     "//base/startup/init/device_info",
     "//base/startup/init/services/init/standard",
     "//base/startup/init/interfaces/innerkits/include",
@@ -283,10 +282,8 @@ ohos_unittest("init_unittest") {
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include",
     "//base/startup/init/ueventd/include",
     "//utils/system/safwk/native/include",
-    "//third_party/bounds_checking_function/include",
     "//third_party/cJSON",
     "//third_party/zlib",
-    "//third_party/selinux/libselinux/include/selinux",
     "//base/security/access_token/interfaces/innerkits/token_setproc/include",
     "//base/security/access_token/interfaces/innerkits/nativetoken/include",
     "//base/startup/init/services/sandbox/include",
@@ -296,15 +293,10 @@ ohos_unittest("init_unittest") {
   ]
 
   deps = [
-    "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
-    "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest",
     "//third_party/libunwind:libunwind",
-    "//third_party/mbedtls:mbedtls_shared",
-    "//third_party/selinux:libselinux",
-    "//third_party/zlib:libz",
   ]
 
   defines += [
@@ -337,10 +329,15 @@ ohos_unittest("init_unittest") {
   external_deps = [
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
   ]
 
   if (enable_ohos_startup_init_feature_ab_partition) {
@@ -366,13 +363,13 @@ ohos_unittest("init_unittest") {
 
   if (defined(build_selinux) && build_selinux) {
     sources += [ "param/selinux_unittest.cpp" ]
-    include_dirs += [
-      "//third_party/selinux/libselinux/include/",
-      "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
-    ]
     sources += [
       "//base/startup/init/services/modules/selinux/selinux_adp.c",
       "//base/startup/init/services/modules/selinux/selinux_static.c",
+    ]
+    external_deps += [
+      "selinux:libselinux",
+      "selinux_adapter:libselinux_parameter_static",
     ]
 
     defines += [
@@ -387,9 +384,9 @@ ohos_unittest("init_unittest") {
       "//base/startup/init/device_info/device_info_proxy.cpp",
     ]
     include_dirs += [
-      "//third_party/selinux/libselinux/include/",
       "//base/security/access_token/interfaces/innerkits/accesstoken/include",
     ]
+    external_deps += [ "selinux:libselinux" ]
 
     defines += [ "PARAM_FEATURE_DEVICEINFO" ]
   }
