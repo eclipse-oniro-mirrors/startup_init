@@ -26,9 +26,6 @@ common_include_dirs = [
   "//base/startup/init/services/log",
   "//base/startup/init/interfaces/innerkits/include",
   "//base/startup/init/interfaces/innerkits/include/syspara",
-  "//base/security/selinux_adapter/interfaces/policycoreutils/include",
-  "//third_party/bounds_checking_function/include",
-  "//third_party/selinux/libselinux/include",
 ]
 
 if (defined(ohos_lite)) {
@@ -49,6 +46,11 @@ if (defined(ohos_lite)) {
     }
 
     include_dirs = common_include_dirs
+    include_dirs += [
+      "//base/security/selinux_adapter/interfaces/policycoreutils/include",
+      "//third_party/bounds_checking_function/include",
+      "//third_party/selinux/libselinux/include",
+    ]
     deps = [
       "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
       "//base/startup/init/interfaces/innerkits:libbegetutil",
@@ -92,12 +94,16 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/sandbox:sandbox",
       "//base/startup/init/services/utils:libinit_utils",
-      "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/cJSON:cjson",
     ]
 
     deps += [ "//base/startup/init/services/param/base:param_base" ]
-    external_deps = [ "c_utils:utils" ]
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "c_utils:utils",
+      "selinux:libselinux",
+      "selinux_adapter:libselinux_parameter_static",
+    ]
 
     if (param_test) {
       sources += [
@@ -112,9 +118,9 @@ if (defined(ohos_lite)) {
     }
 
     if (build_selinux) {
-      deps += [
-        "//base/security/selinux_adapter:libselinux_parameter_static",
-        "//third_party/selinux:libselinux",
+      external_deps += [
+        "selinux:libselinux",
+        "selinux_adapter:libselinux_parameter_static",
       ]
       defines += [ "PARAM_SUPPORT_SELINUX" ]
     }
@@ -155,12 +161,16 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
-      "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/cJSON:cjson",
     ]
 
     deps += [ "//base/startup/init/services/param/base:param_base" ]
-    external_deps = [ "c_utils:utils" ]
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "c_utils:utils",
+      "selinux:libselinux",
+      "selinux_adapter:libselinux_parameter_static",
+    ]
 
     install_images = [ "updater" ]
     install_enable = true
@@ -182,13 +192,15 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
-      "//third_party/bounds_checking_function:libsec_shared",
     ]
+    external_deps = [ "bounds_checking_function:libsec_shared" ]
 
     if (build_selinux) {
-      deps += [
-        "//base/security/selinux_adapter:libselinux_parameter_static",
-        "//third_party/selinux:libselinux",
+      external_deps += [
+        "bounds_checking_function:libsec_shared",
+        "selinux:libselinux",
+        "selinux:libselinux",
+        "selinux_adapter:libselinux_parameter_static",
       ]
       defines += [ "PARAM_SUPPORT_SELINUX" ]
     }
@@ -230,19 +242,21 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/loopevent:loopevent",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
-      "//third_party/bounds_checking_function:libsec_shared",
     ]
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
+      "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "hilog:libhilog_base",
+      "selinux:libselinux",
+      "selinux_adapter:libselinux_parameter_static",
     ]
     if (build_selinux) {
-      deps += [
-        "//base/security/selinux_adapter:libselinux_parameter_static",
-        "//third_party/selinux:libselinux",
-      ]
       defines += [ "PARAM_SUPPORT_SELINUX" ]
+      external_deps += [
+        "selinux:libselinux",
+        "selinux_adapter:libselinux_parameter_static",
+      ]
     }
     install_images = [
       "system",

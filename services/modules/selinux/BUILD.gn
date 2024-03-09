@@ -26,13 +26,11 @@ ohos_shared_library("selinuxadp") {
     "//third_party/selinux/libselinux/include/",
     "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
   ]
-  deps = [
-    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
-    "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/selinux:libselinux",
-  ]
+  deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "selinux:libselinux",
     "selinux_adapter:libload_policy",
     "selinux_adapter:librestorecon",
   ]
@@ -63,8 +61,10 @@ ohos_source_set("libselinuxadp_static") {
     "..",
     "../init_hook",
     "//base/startup/init/interfaces/innerkits/include/param",
-    "//third_party/selinux/libselinux/include/",
-    "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
+  ]
+  public_external_deps = [
+    "selinux:libselinux",
+    "selinux_adapter:libselinux_parameter_static",
   ]
   public_configs = [ ":selinux_static_config" ]
   public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]

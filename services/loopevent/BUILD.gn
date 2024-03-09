@@ -59,6 +59,7 @@ if (defined(ohos_lite)) {
     sources = common_sources
     public_configs = [ ":exported_header_files" ]
     include_dirs = common_include
+    external_deps = [ "bounds_checking_function:libsec_static" ]
     defines = [ "_GNU_SOURCE" ]
     part_name = "init"
     subsystem_name = "startup"
