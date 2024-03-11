@@ -26,6 +26,7 @@ comm_include = [
   "//base/startup/init/services/log",
   "//base/startup/init/interfaces/innerkits/include",
   "//third_party/cJSON",
+  "//third_party/bounds_checking_function/include",
   "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
 ]
 if (defined(ohos_lite)) {
@@ -35,7 +36,6 @@ if (defined(ohos_lite)) {
       "OHOS_LITE",
     ]
     include_dirs = comm_include
-    include_dirs += [ "//third_party/bounds_checking_function/include" ]
     sources = [ "param_hook.c" ]
     public_configs = [ ":inithook_config" ]
   }
@@ -50,11 +50,10 @@ if (defined(ohos_lite)) {
       "init_hook.c",
       "param_hook.c",
     ]
-    public_external_deps = [ "bounds_checking_function:libsec_static" ]
     if (build_selinux) {
-      public_external_deps += [
-        "selinux:libselinux",
-        "selinux_adapter:libselinux_parameter_static",
+      include_dirs += [
+        "//third_party/selinux/libselinux/include/",
+        "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
       ]
       defines += [ "WITH_SELINUX" ]
     }

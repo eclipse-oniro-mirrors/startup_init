@@ -16,7 +16,10 @@ import("//build/ohos.gni")
 
 config("exported_header_files") {
   visibility = [ ":*" ]
-  include_dirs = [ "./include" ]
+  include_dirs = [
+    "./include",
+    "//base/customization/config_policy/interfaces/inner_api/include",
+  ]
 }
 
 ohos_static_library("sandbox") {
@@ -26,6 +29,7 @@ ohos_static_library("sandbox") {
   ]
   public_configs = [ ":exported_header_files" ]
   include_dirs = [
+    "//third_party/bounds_checking_function/include",
     "//third_party/cJSON",
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/include",
@@ -37,11 +41,8 @@ ohos_static_library("sandbox") {
   deps = [
     ":chipset-sandbox.json",
     ":system-sandbox.json",
+    "//base/customization/config_policy/frameworks/config_policy:configpolicy_util",
     "//base/startup/init/services/utils:libinit_utils",
-  ]
-  external_deps = [
-    "bounds_checking_function:libsec_static",
-    "config_policy:configpolicy_util",
   ]
   part_name = "init"
   subsystem_name = "startup"

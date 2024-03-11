@@ -33,6 +33,7 @@ config("sysparam_simulator_config") {
   ]
   include_dirs = [
     "../../../../commonlibrary/utils_lite/include",
+    "//third_party/bounds_checking_function/include",
     "./parameter/src",
     "../interfaces/innerkits/include/syspara",
   ]
@@ -45,7 +46,7 @@ ohos_static_library("sysparam_simulator") {
     "./parameter/src/param_impl_posix/param_impl_posix.c",
     "./parameter/src/parameter_common.c",
   ]
-  external_deps = [ "bounds_checking_function:libsec_static" ]
+  deps = [ "//third_party/bounds_checking_function:libsec_static" ]
   defines = [
     "INCREMENTAL_VERSION=\"\"",
     "BUILD_TYPE=\"\"",

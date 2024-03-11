@@ -68,6 +68,7 @@ if (defined(ohos_lite)) {
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/services/utils",
     "//base/startup/init/ueventd/include",
+    "//third_party/selinux/libselinux/include/selinux",
   ]
 
   service_ueventd_deps = [
@@ -75,6 +76,7 @@ if (defined(ohos_lite)) {
     "//base/startup/init/services/log:init_log",
     "//base/startup/init/services/utils:libinit_utils",
     "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/selinux:libselinux",
   ]
 
   #
@@ -89,13 +91,12 @@ if (defined(ohos_lite)) {
     include_dirs = service_ueventd_include
     deps = service_ueventd_deps
     defines = [ "__RAMDISK__" ]
-    external_deps = []
     cflags = []
     if (build_selinux) {
-      external_deps += [ "selinux_adapter:librestorecon" ]
+      external_deps = [ "selinux_adapter:librestorecon" ]
       cflags += [ "-DWITH_SELINUX" ]
     }
-    external_deps += [ "selinux:libselinux" ]
+
     public_configs = [ ":libueventd_exported_config" ]
     part_name = "init"
     subsystem_name = "startup"
@@ -114,11 +115,10 @@ if (defined(ohos_lite)) {
     ]
     deps = service_ueventd_deps
     deps += [ "//base/startup/init/services/param/linux:param_client" ]
-    external_deps = [ "selinux:libselinux" ]
     cflags = []
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     if (build_selinux) {
-      external_deps += [ "selinux_adapter:librestorecon" ]
+      external_deps = [ "selinux_adapter:librestorecon" ]
       cflags += [ "-DWITH_SELINUX" ]
     }
 

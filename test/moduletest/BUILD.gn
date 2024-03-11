@@ -28,14 +28,15 @@ ohos_shared_library("libparamtestmodule") {
     "//base/startup/init/ueventd/include",
     "//base/startup/init/device_info",
     "//third_party/cJSON",
+    "//third_party/bounds_checking_function/include",
   ]
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
     "//base/startup/init/services/log:agent_log",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
 
   part_name = "init"
   subsystem_name = "startup"
@@ -71,11 +72,11 @@ ohos_moduletest("InitModuleTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
-    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog_base",
     "ipc:ipc_single",

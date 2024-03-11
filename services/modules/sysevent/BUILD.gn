@@ -27,12 +27,12 @@ ohos_shared_library("eventmodule") {
     "//base/startup/init/interfaces/innerkits/include/param",
   ]
 
-  deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
-
-  external_deps = [
-    "bounds_checking_function:libsec_shared",
-    "hisysevent:libhisysevent",
+  deps = [
+    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
+
+  external_deps = [ "hisysevent:libhisysevent" ]
 
   part_name = "init"
   subsystem_name = "startup"

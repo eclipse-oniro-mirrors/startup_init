@@ -33,6 +33,7 @@ config("exported_header_files") {
 include_common = [
   "./include",
   "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
+  "//third_party/bounds_checking_function/include",
   "//base/startup/init/interfaces/innerkits/include",
   "//base/startup/init/interfaces/innerkits/include/param",
   "//base/startup/init/interfaces/innerkits/fd_holder",
@@ -55,7 +56,6 @@ if (defined(ohos_lite)) {
       ]
       sources = []
       include_dirs = include_common
-      include_dirs += [ "//third_party/bounds_checking_function/include" ]
       public_configs = [ ":exported_header_files" ]
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
@@ -192,6 +192,7 @@ if (defined(ohos_lite)) {
 
     include_dirs = include_common
     deps = [
+      "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
       "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
       "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
       "//base/startup/init/interfaces/innerkits/file:libfile",
@@ -201,6 +202,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/modules/udid:libudidcomm",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_shared",
     ]
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     if (startup_begetutil_extra_modules != "") {
@@ -208,9 +210,7 @@ if (defined(ohos_lite)) {
     }
 
     external_deps = [
-      "bounds_checking_function:libsec_shared",
       "c_utils:utils",
-      "config_policy:configpolicy_util_for_init_static",
       "hilog:libhilog_base",
     ]
     public_configs = [ ":exported_header_files" ]
@@ -239,6 +239,7 @@ if (defined(ohos_lite)) {
     deps = [
       ":libbegetutil",
       "//base/startup/init/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_shared",
     ]
 
     if (enable_ohos_startup_init_feature_watcher) {
@@ -271,7 +272,6 @@ if (defined(ohos_lite)) {
     }
 
     external_deps = [
-      "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "hilog:libhilog_base",
       "ipc:ipc_single",
@@ -307,10 +307,10 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/modules/udid:libudidcomm",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_shared",
     ]
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
-      "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "hilog:libhilog_base",
     ]

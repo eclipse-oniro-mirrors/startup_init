@@ -110,6 +110,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init/ueventd",
       "//base/startup/init/ueventd/include",
       "//third_party/cJSON",
+      "//third_party/bounds_checking_function/include",
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
       "//base/startup/init/interfaces/innerkits/fd_holder",
       "//base/startup/init/interfaces/hals",
@@ -119,9 +120,7 @@ if (defined(ohos_lite)) {
     sources = sysparam_source
     sources += param_common_sources
     sources += base_sources
-    deps = []
-    external_deps = [ "bounds_checking_function:libsec_static" ]
-
+    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
     if (enable_ohos_startup_init_feature_begetctl_liteos) {
       defines += [ "LITEOS_SUPPORT" ]
     }
