@@ -40,11 +40,10 @@ ohos_shared_library("init_context") {
     defines += [ "WITH_SELINUX" ]
   }
 
-  deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
-
-  external_deps += [
-    "bounds_checking_function:libsec_shared",
-    "selinux:libselinux",
+  deps = [
+    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/selinux:libselinux",
   ]
 
   part_name = "init"
@@ -67,7 +66,7 @@ ohos_source_set("initcontext_static") {
   defines = [ "INIT_SUPPORT_CHIPSET_INIT" ]
   public_configs = [ ":initcontext_static_config" ]
   public_configs += [ "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
+  deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
   part_name = "init"
   subsystem_name = "startup"
 }

@@ -21,8 +21,8 @@ ohos_static_library("libfile") {
   include_dirs = [
     "//base/startup/init/services/log",
     "//base/startup/init/interfaces/innerkits/include",
+    "//third_party/bounds_checking_function/include",
   ]
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
   public_configs = [ ":exported_header_files" ]
   part_name = "init"
   subsystem_name = "startup"

@@ -13,7 +13,10 @@
 
 import("//build/ohos.gni")
 
-common_include_dirs = [ "." ]
+common_include_dirs = [
+  ".",
+  "//third_party/bounds_checking_function/include",
+]
 
 ohos_executable("BMStartupTest") {
   sources = [
@@ -23,10 +26,9 @@ ohos_executable("BMStartupTest") {
 
   defines = [ "_GNU_SOURCE" ]
   include_dirs = common_include_dirs
-  deps = [ "../../interfaces/innerkits:libbegetutil" ]
-  external_deps = [
-    "benchmark:benchmark",
-    "bounds_checking_function:libsec_static",
+  deps = [
+    "../../interfaces/innerkits:libbegetutil",
+    "//third_party/benchmark:benchmark",
   ]
   install_images = [ "system" ]
   install_enable = true

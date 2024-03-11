@@ -62,11 +62,11 @@ if (!defined(ohos_lite)) {
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/modules/udid:libudidcomm",
       "//base/startup/init/services/utils:libinit_utils",
+      "//third_party/bounds_checking_function:libsec_shared",
     ]
 
     external_deps = [
       "access_token:libaccesstoken_sdk",
-      "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "ipc:ipc_core",
       "safwk:system_ability_fwk",

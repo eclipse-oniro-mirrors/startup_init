@@ -30,9 +30,7 @@ ohos_source_set("libbootevent_static") {
   sources = [ "bootevent.c" ]
   include_dirs = [ ".." ]
   public_configs = [ ":bootevent_static_config" ]
-  public_external_deps = [ "config_policy:configpolicy_util" ]
   public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
-  public_external_deps += [ "bounds_checking_function:libsec_static" ]
   if (build_selinux) {
     include_dirs += [
       "//third_party/selinux/libselinux/include/",

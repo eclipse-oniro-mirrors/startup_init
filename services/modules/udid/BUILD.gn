@@ -80,10 +80,9 @@ if (defined(ohos_lite)) {
     include_dirs = comm_include
     deps = [
       "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
+      "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/mbedtls:mbedtls_shared",
     ]
-
-    external_deps = [ "bounds_checking_function:libsec_shared" ]
 
     part_name = "init"
     subsystem_name = "startup"
@@ -118,7 +117,7 @@ if (defined(ohos_lite)) {
     sources = [ "udid_comm.c" ]
     defines = [ "_GNU_SOURCE" ]
     include_dirs = comm_include
-    external_deps = [ "bounds_checking_function:libsec_shared" ]
+    deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
 
     part_name = "init"
     subsystem_name = "startup"
