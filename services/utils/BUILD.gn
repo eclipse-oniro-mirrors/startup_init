@@ -41,8 +41,10 @@ if (defined(ohos_lite)) {
   ohos_static_library("libinit_utils") {
     sources = [ "init_utils.c" ]
     public_configs = [ ":exported_header_files" ]
-    include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
-    external_deps = [ "bounds_checking_function:libsec_static" ]
+    include_dirs = [
+      "//base/startup/init/interfaces/innerkits/include",
+      "//third_party/bounds_checking_function/include",
+    ]
     defines = [ "_GNU_SOURCE" ]
     part_name = "init"
     subsystem_name = "startup"

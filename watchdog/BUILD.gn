@@ -37,10 +37,10 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/log/init_commlog.c",
       "init_watchdog.c",
     ]
-    deps = [ "//base/startup/init/services/log:init_log" ]
-
-    external_deps = [ "bounds_checking_function:libsec_shared" ]
-
+    deps = [
+      "//base/startup/init/services/log:init_log",
+      "//third_party/bounds_checking_function:libsec_shared",
+    ]
     defines = [ "LINUX_WATCHDOG" ]
     defines += [ "_GNU_SOURCE" ]
     install_enable = true

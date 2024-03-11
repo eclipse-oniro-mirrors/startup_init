@@ -37,6 +37,7 @@ param_include_dirs = [
   "//base/startup/init/interfaces/innerkits/include/syspara",
   "//base/startup/init/interfaces/innerkits/init_module_engine/include",
   "//base/startup/init/services/loopevent/include",
+  "//third_party/bounds_checking_function/include",
   "//third_party/cJSON",
   "//commonlibrary/utils_lite/include",
   "//base/security/selinux_adapter/interfaces/policycoreutils/include",
@@ -71,7 +72,6 @@ if (defined(ohos_lite)) {
     sources = param_service_sources
     sources += param_trigger_sources
     include_dirs = param_include_dirs
-    include_dirs += [ "//third_party/bounds_checking_function/include" ]
     public_configs = [ ":exported_header_files" ]
 
     defines += [
@@ -109,12 +109,6 @@ if (defined(ohos_lite)) {
       "PARAM_SUPPORT_REAL_CHECK",
       "SUPPORT_PARAM_LOAD_HOOK",
     ]
-    external_deps = [
-      "bounds_checking_function:libsec_static",
-      "selinux:libselinux",
-      "selinux_adapter:libselinux_parameter_static",
-    ]
-    public_external_deps = [ "selinux:libselinux" ]
 
     if (param_base_log) {
       defines += [ "PARAM_BASE_LOG" ]
@@ -136,11 +130,14 @@ if (defined(ohos_lite)) {
     }
 
     if (build_selinux) {
+      include_dirs += [
+        "//third_party/selinux/libselinux/include/",
+        "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
+      ]
       defines += [
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
-      external_deps += [ "selinux_adapter:libselinux_parameter_static" ]
     }
 
     deps = [ "//base/startup/init/services/param/base:param_base" ]
@@ -155,11 +152,6 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/param/base:param_base",
-    ]
-    external_deps = [
-      "bounds_checking_function:libsec_static",
-      "selinux:libselinux",
-      "selinux_adapter:libselinux_parameter_static",
     ]
 
     cflags = [ "-Wno-deprecated-pragma" ]
