@@ -26,12 +26,14 @@
 #define LoopMutexInit(x) (void)(x)
 #define LoopMutexLock(x) (void)(x)
 #define LoopMutexUnlock(x) (void)(x)
+#define LoopMutexDestroy(x) (void)(x)
 #else
 #include <pthread.h>
 #define LoopMutex pthread_mutex_t
 #define LoopMutexInit(x) pthread_mutex_init(x, NULL)
 #define LoopMutexLock(x) pthread_mutex_lock(x)
 #define LoopMutexUnlock(x) pthread_mutex_unlock(x)
+#define LoopMutexDestroy(x) pthread_mutex_destroy(x)
 #endif
 
 #ifdef __cplusplus

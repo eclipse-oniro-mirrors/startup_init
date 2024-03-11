@@ -27,10 +27,10 @@ static void GetEpollEvent_(int fd, int op, struct epoll_event *event)
 {
     event->data.fd = fd;
     if (LE_TEST_FLAGS(op, Event_Read)) {
-        event->events = EPOLLIN;
+        event->events |= EPOLLIN;
     }
     if (LE_TEST_FLAGS(op, Event_Write)) {
-        event->events = EPOLLOUT;
+        event->events |= EPOLLOUT;
     }
 }
 
@@ -112,7 +112,7 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, Event_Error);
             }
             if ((epoll->waitEvents[index].events & EPOLLHUP) == EPOLLHUP) {
-                LE_LOGV("RunLoop_ error %d", epoll->waitEvents[index].data.fd);
+                LE_LOGV("RunLoop_ fd: %d error: %d \n", epoll->waitEvents[index].data.fd, errno);
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, Event_Error);
             }
         }

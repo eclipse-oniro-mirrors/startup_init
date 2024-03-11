@@ -221,6 +221,8 @@ int HookMgrGetHooksCnt(HOOK_MGR *hookMgr, int stage);
  */
 int HookMgrGetStagesCnt(HOOK_MGR *hookMgr);
 
+#define HOOK_OK = 0
+#define ERR_NO_HOOK_STAGE (-1000)
 #ifdef __cplusplus
 #if __cplusplus
 }

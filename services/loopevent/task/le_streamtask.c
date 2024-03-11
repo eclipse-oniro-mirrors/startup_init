@@ -93,7 +93,7 @@ static LE_STATUS HandleStreamEvent_(const LoopHandle loopHandle, const TaskHandl
     if (LE_TEST_FLAGS(oper, Event_Read)) {
         status = HandleRecvMsg_(loopHandle, handle, stream->recvMessage);
     }
-    if (status == LE_DIS_CONNECTED) {
+    if (status == LE_DIS_CONNECTED || LE_TEST_FLAGS(oper, Event_Error)) {
         loop->delEvent(loop, GetSocketFd(handle), Event_Read | Event_Write);
         if (stream->disConnectComplete) {
             stream->disConnectComplete(handle);
