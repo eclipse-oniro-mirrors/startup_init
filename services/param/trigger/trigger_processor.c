@@ -27,6 +27,7 @@
 #include "bootstage.h"
 
 #define MAX_TRIGGER_COUNT_RUN_ONCE 20
+#define MAX_TRIGGER_NAME_LENGTH 128
 static TriggerWorkSpace g_triggerWorkSpace = {};
 
 static int DoTriggerExecute_(const TriggerNode *trigger, const char *content, uint32_t size)
@@ -96,13 +97,17 @@ static void ExecuteQueueWork(uint32_t maxCount, void (*bootStateChange)(int star
 {
     uint32_t executeCount = 0;
     TriggerNode *trigger = ExecuteQueuePop(&g_triggerWorkSpace);
+    char triggerName[MAX_TRIGGER_NAME_LENGTH] = {0};
     while (trigger != NULL) {
+        int ret = strcpy_s(triggerName, sizeof(triggerName), GetTriggerName(trigger));
+        PARAM_CHECK(ret == 0, return, "strcpy triggerName failed!");
         if (bootStateChange != NULL) {
-            bootStateChange(0, (const char *)GetTriggerName(trigger));
+            bootStateChange(0, triggerName);
         }
+
         StartTriggerExecute_(trigger, NULL, 0);
         if (bootStateChange != NULL) {
-            bootStateChange(1, (const char *)GetTriggerName(trigger));
+            bootStateChange(1, triggerName);
         }
         executeCount++;
         if (executeCount > maxCount) {
