@@ -36,8 +36,12 @@
             "sandbox-flags" : [ "bind", "rec", "private" ],
             "ignore": 1
         }, {
-            "src-path" : "/vendor",
-            "sandbox-path" : "/vendor",
+            "src-path" : "/vendor/lib64/chipsetsdk",
+            "sandbox-path" : "/vendor/lib64/chipsetsdk",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/vendor/firmware",
+            "sandbox-path" : "/vendor/firmware",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
             "src-path" : "/dev",
