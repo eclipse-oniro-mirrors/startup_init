@@ -10,7 +10,6 @@
     "segment": {
         "destPath": "base/startup/init"
     },
-    
     "dirs": {},
     "scripts": {},
     "component": {
