@@ -272,7 +272,7 @@ int HookMgrExecute(HOOK_MGR *hookMgr, int stage, void *executionContext, const H
 
     // Get HOOK_STAGE list
     stageItem = getHookStage(hookMgr, stage, false);
-    BEGET_CHECK(stageItem != NULL, return -1);
+    BEGET_CHECK(stageItem != NULL, return ERR_NO_HOOK_STAGE);
 
     flags = 0;
     if (options != NULL) {

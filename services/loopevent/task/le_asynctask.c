@@ -135,7 +135,7 @@ LE_STATUS LE_StartAsyncEvent(const LoopHandle loopHandle,
     char *buff = (char *)LE_GetBufferInfo(handle, NULL, NULL);
     int ret = memcpy_s(buff, sizeof(eventId), &eventId, sizeof(eventId));
     LE_CHECK(ret == 0, return -1, "Failed to copy data");
-    if (data != NULL || buffLen == 0) {
+    if (data != NULL && buffLen > 0) {
         ret = memcpy_s(buff + sizeof(eventId), buffLen, data, buffLen);
         LE_CHECK(ret == 0, return -1, "Failed to copy data");
         buff[sizeof(eventId) + buffLen] = '\0';
