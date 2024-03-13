@@ -30,6 +30,7 @@
 #define SOCKET_BUFF_SIZE (256 * 1024)
 
 #define HOS_SOCKET_DIR "/dev/unix/socket"
+#define HOS_SOCKET_PATH 64
 #define HOS_SOCKET_ENV_PREFIX "OHOS_SOCKET_"
 #define MAX_SOCKET_ENV_PREFIX_LEN 64
 #define MAX_SOCKET_FD_LEN 16
@@ -141,7 +142,13 @@ static int CreateSocket(ServiceSocket *sockopt)
     }
     INIT_LOGI("CreateSocket %s success", sockopt->name);
 
-    PluginExecCmdByName("restoreContentRecurse", HOS_SOCKET_DIR);
+    char path[HOS_SOCKET_PATH] = { 0 };
+    if (snprintf_s(path, sizeof(path), sizeof(path) - 1, HOS_SOCKET_DIR"/%s", sockopt->name) < 0) {
+        close(sockopt->sockFd);
+        return -1;
+    }
+    PluginExecCmdByName("restoreContentRecurse", path);
+    INIT_LOGI("CreateSocket restoreContentRecurse %s success", path);
     return sockopt->sockFd;
 }
 

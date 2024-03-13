@@ -28,6 +28,27 @@
 #include "init_param.h"
 #include "hookmgr.h"
 #include "bootstage.h"
+#include "le_task.h"
+#include "loop_event.h"
+#include "init_hashmap.h"
+#include "le_loop.h"
+
+static void DumpLoopNodeInfo(const HashNode *node, const void *context)
+{
+    INIT_CHECK(node != NULL, return);
+    BaseTask *baseTask =  HASHMAP_ENTRY(node, BaseTask, hashNode);
+    INIT_CHECK(baseTask != NULL, return);
+    const TaskHandle task = (void*)baseTask;
+    if (baseTask->dumpTaskInfo != NULL) {
+        baseTask->dumpTaskInfo(task);
+    }
+}
+
+static void DumpLoop()
+{
+    printf("  Dump Loop Info:\n");
+    OH_HashMapTraverse(((EventLoop *)LE_GetDefaultLoop())->taskMap, DumpLoopNodeInfo, NULL);
+}
 
 static void DumpServiceArgs(const char *info, const ServiceArgs *args)
 {
@@ -114,6 +135,7 @@ static void DumpOneService(const Service *service)
     printf("\tservice startMode: [%s] \n", startModeMap[service->startMode].name);
     printf("\tservice status: [%s] \n", serviceStatusMap[service->status]);
     printf("\tservice perms uID [%u] \n", service->servPerm.uID);
+    printf("\tservice Timer ID [%u] \n", LE_GetSocketFd(service->timer));
     DumpServiceArgs("path arg", &service->pathArgs);
     DumpServiceArgs("writepid file", &service->writePidArgs);
     DumpServiceJobs(service);
@@ -210,6 +232,10 @@ static void ProcessDumpServiceControlFd(uint16_t type, const char *serviceCmd)
         } else {
             SystemDumpParameters(0, 0, printf);
         }
+        return;
+    }
+    if (strcmp(serviceCmd, "loop") == 0) {
+        DumpLoop();
         return;
     }
     Service *service  = GetServiceByName(serviceCmd);

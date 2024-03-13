@@ -94,6 +94,15 @@ static void HandleAsyncTaskClose_(const LoopHandle loopHandle, const TaskHandle 
     close(task->taskId.fd);
 }
 
+static void DumpEventTaskInfo_(const TaskHandle task)
+{
+    INIT_CHECK(task != NULL, return);
+    BaseTask *baseTask = (BaseTask *)task;
+    AsyncEventTask *eventTask = (AsyncEventTask *)baseTask;
+    printf("\tfd: %d \n", eventTask->stream.base.taskId.fd);
+    printf("\t  TaskType: %s\n", "EventTask");
+}
+
 LE_STATUS LE_CreateAsyncTask(const LoopHandle loopHandle,
     TaskHandle *taskHandle, LE_ProcessAsyncEvent processAsyncEvent)
 {
@@ -108,7 +117,7 @@ LE_STATUS LE_CreateAsyncTask(const LoopHandle loopHandle,
         return LE_NO_MEMORY, "Failed to create task");
     task->stream.base.handleEvent = HandleAsyncEvent_;
     task->stream.base.innerClose = HandleAsyncTaskClose_;
-
+    task->stream.base.dumpTaskInfo = DumpEventTaskInfo_;
     OH_ListInit(&task->stream.buffHead);
     LoopMutexInit(&task->stream.mutex);
     task->processAsyncEvent = processAsyncEvent;
@@ -126,7 +135,7 @@ LE_STATUS LE_StartAsyncEvent(const LoopHandle loopHandle,
     char *buff = (char *)LE_GetBufferInfo(handle, NULL, NULL);
     int ret = memcpy_s(buff, sizeof(eventId), &eventId, sizeof(eventId));
     LE_CHECK(ret == 0, return -1, "Failed to copy data");
-    if (data != NULL || buffLen == 0) {
+    if (data != NULL && buffLen > 0) {
         ret = memcpy_s(buff + sizeof(eventId), buffLen, data, buffLen);
         LE_CHECK(ret == 0, return -1, "Failed to copy data");
         buff[sizeof(eventId) + buffLen] = '\0';

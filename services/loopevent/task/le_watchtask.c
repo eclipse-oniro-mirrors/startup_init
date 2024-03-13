@@ -15,6 +15,13 @@
 #include "le_task.h"
 #include "le_loop.h"
 
+static void HandleWatcherTaskClose_(const LoopHandle loopHandle, const TaskHandle taskHandle)
+{
+    LE_LOGV("HandleWatcherTaskClose_ fd: %d ", GetSocketFd(taskHandle));
+    CloseTask(loopHandle, (BaseTask *)taskHandle);
+    DelTask((EventLoop *)loopHandle, (BaseTask *)taskHandle);
+}
+
 static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHandle taskHandle, uint32_t oper)
 {
     LE_LOGV("HandleWatcherEvent_ fd: %d oper 0x%x", GetSocketFd(taskHandle), oper);
@@ -29,11 +36,11 @@ static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHand
     watcher = (WatcherTask *)GetTaskByFd((EventLoop *)loopHandle, fd);
     LE_ONLY_CHECK(watcher != NULL, return 0);
     if (watcher->base.flags & WATCHER_ONCE) {
-        loop->delEvent(loop, fd, watcher->events);
+        HandleWatcherTaskClose_((LoopHandle)loop, (TaskHandle)watcher);
         return 0;
     }
     if (events == 0) {
-        loop->delEvent(loop, fd, watcher->events);
+        HandleWatcherTaskClose_((LoopHandle)loop, (TaskHandle)watcher);
         return 0;
     }
     if (events != watcher->events) {
@@ -43,10 +50,14 @@ static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHand
     return LE_SUCCESS;
 }
 
-static void HandleWatcherTaskClose_(const LoopHandle loopHandle, const TaskHandle taskHandle)
+static void DumpWatcherTaskInfo_(const TaskHandle task)
 {
-    CloseTask(loopHandle, (BaseTask *)taskHandle);
-    DelTask((EventLoop *)loopHandle, (BaseTask *)taskHandle);
+    INIT_CHECK(task != NULL, return);
+    BaseTask *baseTask = (BaseTask *)task;
+
+    WatcherTask *watcherTask = (WatcherTask *)baseTask;
+    printf("\tfd: %d \n", watcherTask->base.taskId.fd);
+    printf("\t  TaskType: %s \n", "WatcherTask");
 }
 
 LE_STATUS LE_StartWatcher(const LoopHandle loopHandle,
@@ -60,6 +71,7 @@ LE_STATUS LE_StartWatcher(const LoopHandle loopHandle,
     LE_CHECK(task != NULL, return LE_NO_MEMORY, "Failed to create task");
     task->base.handleEvent = HandleWatcherEvent_;
     task->base.innerClose = HandleWatcherTaskClose_;
+    task->base.dumpTaskInfo = DumpWatcherTaskInfo_;
     task->processEvent = info->processEvent;
     task->events = info->events;
     *(uint64_t *)(task + 1) = (uint64_t)context;

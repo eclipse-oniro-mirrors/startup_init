@@ -265,7 +265,7 @@ int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *targ
     return 0;
 }
 
-int FsDmInitDmDev(char *devPath)
+int FsDmInitDmDev(char *devPath, bool useSocket)
 {
     int rc;
     char dmDevPath[PATH_MAX] = {0};
@@ -284,10 +284,13 @@ int FsDmInitDmDev(char *devPath)
         return rc;
     }
 
-    int ueventSockFd = UeventdSocketInit();
-    if (ueventSockFd < 0) {
-        BEGET_LOGE("error, Failed to create uevent socket");
-        return -1;
+    int ueventSockFd = -1;
+    if (useSocket) {
+        ueventSockFd = UeventdSocketInit();
+        if (ueventSockFd < 0) {
+            BEGET_LOGE("error, Failed to create uevent socket");
+            return -1;
+        }
     }
 
     RetriggerUeventByPath(ueventSockFd, &dmDevPath[0]);

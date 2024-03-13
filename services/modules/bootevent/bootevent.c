@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,10 @@
 #include "init_utils.h"
 #include "init_cmds.h"
 #include "config_policy_utils.h"
+
+#ifdef WITH_SELINUX
+#include <policycoreutils.h>
+#endif
 
 static int GetBootEventEnable(void)
 {
@@ -213,7 +217,12 @@ static int BootEventTraversal(ListNode *node, void *root)
 static int SaveServiceBootEvent()
 {
     INIT_CHECK(GetBootEventEnable(), return 0);
+
     CheckAndCreatFile(BOOTEVENT_OUTPUT_PATH "bootup.trace", S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+#ifdef WITH_SELINUX
+    (void)RestoreconRecurse(BOOTEVENT_OUTPUT_PATH);
+#endif
+
     FILE *tmpFile = fopen(BOOTEVENT_OUTPUT_PATH "bootup.trace", "wr");
     INIT_CHECK_RETURN_VALUE(tmpFile != NULL, -1);
     cJSON *root = cJSON_CreateArray();
@@ -359,11 +368,10 @@ static void ServiceParseBootEventHook(SERVICE_PARSE_CTX *serviceParseCtx)
     }
 }
 
+static int g_finished = 0;
 static int DoBootEventCmd(int id, const char *name, int argc, const char **argv)
 {
-    static int finished = 0;
-
-    if (finished) {
+    if (g_finished) {
         return 0;
     }
 
@@ -375,7 +383,7 @@ static int DoBootEventCmd(int id, const char *name, int argc, const char **argv)
         AddInitBootEvent(argv[1]);
     } else {
         // argv[0] samgr.ready.true
-        finished = BootEventParaFireByName(argv[0]);
+        g_finished = BootEventParaFireByName(argv[0]);
     }
     return 0;
 }
@@ -415,10 +423,34 @@ static void AddReservedBootevents(void) {
     FreeCfgFiles(files);
 }
 
+static int DoUnsetBootEventCmd(int id, const char *name, int argc, const char **argv)
+{
+    if ((argc < 1) || (argv[0] == NULL) || (strlen(argv[0]) <= strlen(BOOT_EVENT_PARA_PREFIX)) ||
+        (strncmp(argv[0], BOOT_EVENT_PARA_PREFIX, strlen(BOOT_EVENT_PARA_PREFIX)) != 0)) {
+        return INIT_EPARAMETER;
+    }
+    const char *eventName = argv[0] + strlen(BOOT_EVENT_PARA_PREFIX);
+    BOOT_EVENT_PARAM_ITEM *item =
+        (BOOT_EVENT_PARAM_ITEM *)OH_ListFind(&bootEventList, (void *)eventName, BootEventParaListCompareProc);
+    PLUGIN_CHECK(item != NULL, return INIT_EPARAMETER, "item NULL");
+
+    SystemWriteParam(argv[0], "false");
+    if (g_finished != 0) {
+        SystemWriteParam(BOOT_EVENT_BOOT_COMPLETED, "false");
+        g_finished = 0;
+    }
+
+    item->timestamp[BOOTEVENT_READY].tv_sec = 0;
+    g_bootEventNum++;
+    INIT_LOGI("UnsetBootEvent %s g_bootEventNum:%d", argv[0], g_bootEventNum);
+    return INIT_OK;
+}
+
 static int ParamSetBootEventHook(const HOOK_INFO *hookInfo, void *cookie)
 {
     AddReservedBootevents();
     AddCmdExecutor("bootevent", DoBootEventCmd);
+    AddCmdExecutor("unset_bootevent", DoUnsetBootEventCmd);
     return 0;
 }
 

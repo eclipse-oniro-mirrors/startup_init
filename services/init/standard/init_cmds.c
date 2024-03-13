@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -316,8 +316,13 @@ static void DoRestorecon(const struct CmdArgs *ctx)
     cmdInfo.cmdName = "restorecon";
     cmdInfo.cmdContent = ctx->argv[0];
     cmdInfo.reserved = NULL;
-    if ((ctx->argc > 1) && strcmp(ctx->argv[0], "-F") == 0) {
-        cmdInfo.cmdContent = ctx->argv[1];
+    if (ctx->argc > 1) {
+        if (strcmp(ctx->argv[0], "-F") == 0) {
+            cmdInfo.cmdContent = ctx->argv[1];
+        }
+        if (strcmp(ctx->argv[ctx->argc - 1], "--skip-ELX") == 0) {
+            cmdInfo.reserved = ctx->argv[ctx->argc - 1];
+        }
     }
 
     HOOK_EXEC_OPTIONS options;
@@ -328,8 +333,12 @@ static void DoRestorecon(const struct CmdArgs *ctx)
     if (ret == 0) {
         return;
     }
-    if ((ctx->argc > 1) && strcmp(ctx->argv[0], "-F") == 0) {
-        PluginExecCmdByName("restoreContentRecurseForce", ctx->argv[1]);
+    if (ctx->argc > 1) {
+        if (strcmp(ctx->argv[0], "-F") == 0) {
+            PluginExecCmdByName("restoreContentRecurseForce", ctx->argv[1]);
+        } else if (strcmp(ctx->argv[ctx->argc - 1], "--skip-ELX") == 0) {
+            PluginExecCmdByName("restoreContentRecurseSkipElx", ctx->argv[0]);
+        }
     } else {
         PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
     }

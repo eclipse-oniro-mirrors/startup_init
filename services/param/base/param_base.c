@@ -345,7 +345,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
     int ret = 0;
     uint32_t rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, MEMORY_ORDER_ACQUIRE);
     while (rwSpaceLock & WORKSPACE_STATUS_IN_PROCESS) {
-        futex_wait(&workSpace->rwSpaceLock, rwSpaceLock);
+        futex_wait_private(&workSpace->rwSpaceLock, rwSpaceLock);
         rwSpaceLock = ATOMIC_LOAD_EXPLICIT(&workSpace->rwSpaceLock, MEMORY_ORDER_ACQUIRE);
     }
 
@@ -377,7 +377,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
         }
     }
     ATOMIC_STORE_EXPLICIT(&workSpace->rwSpaceLock, rwSpaceLock & ~WORKSPACE_STATUS_IN_PROCESS, MEMORY_ORDER_RELEASE);
-    futex_wake(&workSpace->rwSpaceLock, INT_MAX);
+    futex_wake_private(&workSpace->rwSpaceLock, INT_MAX);
 #endif
     return ret;
 }

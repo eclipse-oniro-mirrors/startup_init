@@ -24,9 +24,6 @@ init_common_sources = [
   "../main.c",
 ]
 
-FSCRYPT_PATH =
-    "//foundation/filemanagement/storage_service/services/storage_daemon"
-
 import("//build/ohos.gni")
 import("//build/ohos/native_stub/native_stub.gni")
 
@@ -52,7 +49,6 @@ ohos_executable("init_early") {
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//base/startup/init/services/log:init_log",
     "//base/startup/init/ueventd:libueventd_ramdisk_static",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   if (startup_init_extra_static_modules != "") {
     deps += [ startup_init_extra_static_modules ]
@@ -60,6 +56,7 @@ ohos_executable("init_early") {
   install_images = [ "ramdisk" ]
   install_enable = true
   part_name = "init"
+  subsystem_name = "startup"
 }
 
 ohos_executable("init") {
@@ -93,11 +90,14 @@ ohos_executable("init") {
     "//base/startup/init/services/init/include",
     "//base/startup/init/services/modules/reboot",
     "//base/startup/init/services/modules/init_context",
-    "${FSCRYPT_PATH}/include/libfscrypt",
+    "//base/startup/init/services/loopevent/task",
+    "//base/startup/init/services/loopevent/loop",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/services/loopevent/utils",
   ]
 
   deps = [
-    "//base/customization/config_policy/frameworks/config_policy:configpolicy_util_for_init_static",
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
     "//base/startup/init/interfaces/innerkits/fd_holder:fdholder",
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
@@ -107,20 +107,25 @@ ohos_executable("init") {
     "//base/startup/init/services/utils:libinit_utils",
   ]
   deps += [ "//base/startup/init/services/param/base:param_base" ]
+  external_deps = [
+    "config_policy:configpolicy_util_for_init_static",
+    "storage_service:libfscryptutils_static",
+  ]
 
   deps += [
     "//base/startup/init/ueventd:libueventd_ramdisk_static",
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
   ]
+  external_deps += [ "storage_service:libfscryptutils_static" ]
 
   deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript" ]
   deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_sources" ]
   deps += [ "//base/startup/init/services/modules:static_modules" ]
-  deps += [ "${FSCRYPT_PATH}/libfscrypt:libfscryptutils_static" ]
-  external_deps = [
+  external_deps += [
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "storage_service:libfscryptutils_static",
   ]
   cflags = []
 
@@ -140,11 +145,7 @@ ohos_executable("init") {
   }
 
   if (build_selinux) {
-    include_dirs += [
-      "//third_party/selinux/libselinux/include/",
-      "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
-    ]
-    deps += [ "//third_party/selinux:libselinux" ]
+    external_deps += [ "selinux:libselinux" ]
     external_deps += [
       "selinux_adapter:libload_policy",
       "selinux_adapter:librestorecon",

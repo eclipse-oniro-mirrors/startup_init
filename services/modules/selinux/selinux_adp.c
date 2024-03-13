@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,8 @@
 #include "securec.h"
 
 #include <policycoreutils.h>
-#include <selinux/selinux.h>
+#include <selinux/label.h>
+#include <selinux/restorecon.h>
 
 enum {
     CMD_LOAD_POLICY = 0,
@@ -31,6 +32,7 @@ enum {
     CMD_SET_SOCKET_CONTEXTS = 2,
     CMD_RESTORE_INDEX = 3,
     CMD_RESTORE_INDEX_FORCE = 4,
+    CMD_RESTORE_INDEX_SKIP = 5,
 };
 
 extern char *__progname;
@@ -125,33 +127,49 @@ static int RestoreContentRecurseForce(int id, const char *name, int argc, const 
     return 0;
 }
 
-static int32_t selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE + 1] = {0}; // 5 cmd count
+static int RestoreContentRecurseSkipElx(int id, const char *name, int argc, const char **argv)
+{
+    PLUGIN_CHECK(name != NULL && argc >= 1 && argv != NULL, return -1, "Invalid parameter");
+    PLUGIN_LOGV("RestoreContentRecurseSkipElx path %s", argv[0]);
+    if (RestoreconCommon(argv[0], SELINUX_RESTORECON_REALPATH |
+        SELINUX_RESTORECON_RECURSE | SELINUX_RESTORECON_SKIPELX, 1) && errno != 0) {
+        PLUGIN_LOGE("RestoreContentRecurseSkipElx failed for '%s', err %d.", argv[0], errno);
+    }
+    return 0;
+}
+
+static int32_t g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_SKIP + 1] = {0}; // 6 cmd count
 static void SelinuxAdpInit(void)
 {
-    selinuxAdpCmdIds[CMD_LOAD_POLICY] = AddCmdExecutor("loadSelinuxPolicy", LoadSelinuxPolicy);
-    selinuxAdpCmdIds[CMD_SET_SERVICE_CONTEXTS] = AddCmdExecutor("setServiceContent", SetServiceContent);
-    selinuxAdpCmdIds[CMD_SET_SOCKET_CONTEXTS] = AddCmdExecutor("setSockCreateCon", SetSockCreateCon);
-    selinuxAdpCmdIds[CMD_RESTORE_INDEX] = AddCmdExecutor("restoreContentRecurse", RestoreContentRecurse);
-    selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE] =
+    g_selinuxAdpCmdIds[CMD_LOAD_POLICY] = AddCmdExecutor("loadSelinuxPolicy", LoadSelinuxPolicy);
+    g_selinuxAdpCmdIds[CMD_SET_SERVICE_CONTEXTS] = AddCmdExecutor("setServiceContent", SetServiceContent);
+    g_selinuxAdpCmdIds[CMD_SET_SOCKET_CONTEXTS] = AddCmdExecutor("setSockCreateCon", SetSockCreateCon);
+    g_selinuxAdpCmdIds[CMD_RESTORE_INDEX] = AddCmdExecutor("restoreContentRecurse", RestoreContentRecurse);
+    g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE] =
         AddCmdExecutor("restoreContentRecurseForce", RestoreContentRecurseForce);
+    g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_SKIP] =
+        AddCmdExecutor("restoreContentRecurseSkipElx", RestoreContentRecurseSkipElx);
 }
 
 static void SelinuxAdpExit(void)
 {
-    if (selinuxAdpCmdIds[CMD_LOAD_POLICY] != -1) {
-        RemoveCmdExecutor("loadSelinuxPolicy", selinuxAdpCmdIds[CMD_LOAD_POLICY]);
+    if (g_selinuxAdpCmdIds[CMD_LOAD_POLICY] != -1) {
+        RemoveCmdExecutor("loadSelinuxPolicy", g_selinuxAdpCmdIds[CMD_LOAD_POLICY]);
     }
-    if (selinuxAdpCmdIds[CMD_SET_SERVICE_CONTEXTS] != -1) {
-        RemoveCmdExecutor("setServiceContent", selinuxAdpCmdIds[CMD_SET_SERVICE_CONTEXTS]);
+    if (g_selinuxAdpCmdIds[CMD_SET_SERVICE_CONTEXTS] != -1) {
+        RemoveCmdExecutor("setServiceContent", g_selinuxAdpCmdIds[CMD_SET_SERVICE_CONTEXTS]);
     }
-    if (selinuxAdpCmdIds[CMD_SET_SOCKET_CONTEXTS] != -1) {
-        RemoveCmdExecutor("setSockCreateCon", selinuxAdpCmdIds[CMD_SET_SOCKET_CONTEXTS]);
+    if (g_selinuxAdpCmdIds[CMD_SET_SOCKET_CONTEXTS] != -1) {
+        RemoveCmdExecutor("setSockCreateCon", g_selinuxAdpCmdIds[CMD_SET_SOCKET_CONTEXTS]);
     }
-    if (selinuxAdpCmdIds[CMD_RESTORE_INDEX] != -1) {
-        RemoveCmdExecutor("restoreContentRecurse", selinuxAdpCmdIds[CMD_RESTORE_INDEX]);
+    if (g_selinuxAdpCmdIds[CMD_RESTORE_INDEX] != -1) {
+        RemoveCmdExecutor("restoreContentRecurse", g_selinuxAdpCmdIds[CMD_RESTORE_INDEX]);
     }
-    if (selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE] != -1) {
-        RemoveCmdExecutor("restoreContentRecurseForce", selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE]);
+    if (g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE] != -1) {
+        RemoveCmdExecutor("restoreContentRecurseForce", g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_FORCE]);
+    }
+    if (g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_SKIP] != -1) {
+        RemoveCmdExecutor("restoreContentRecurseSkipElx", g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_SKIP]);
     }
 }
 

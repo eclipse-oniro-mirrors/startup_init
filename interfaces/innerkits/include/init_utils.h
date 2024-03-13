@@ -54,6 +54,11 @@ char *ReadFileToBuf(const char *configFile);
 int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int length);
 char *ReadFileData(const char *fileName);
 
+typedef struct INIT_TIMING_STAT {
+    struct timespec startTime;
+    struct timespec endTime;
+} INIT_TIMING_STAT;
+
 typedef struct NameValuePair {
     const char *name;
     const char *nameEnd;
@@ -63,6 +68,7 @@ typedef struct NameValuePair {
 int IterateNameValuePairs(const char *src, void (*iterator)(const NAME_VALUE_PAIR *nv, void *context), void *context);
 
 int SplitString(char *srcPtr, const char *del, char **dstPtr, int maxNum);
+long long InitDiffTime(INIT_TIMING_STAT *stat);
 void WaitForFile(const char *source, unsigned int maxSecond);
 size_t WriteAll(int fd, const char *buffer, size_t size);
 char *GetRealPath(const char *source);

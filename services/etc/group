@@ -84,6 +84,7 @@ device_manager:x:3062:
 se_service:x:3064:
 deviceauth:x:3333:
 huks_server:x:3510:
+asset_service:x:6226:
 cert_manager_server:x:3515:
 device_cert_manager_server:x:3562:
 dlp_credential:x:3553:

@@ -55,8 +55,8 @@ BaseTask *CreateTask(const LoopHandle loopHandle, int fd, const LE_BaseInfo *inf
 
 void CloseTask(const LoopHandle loopHandle, BaseTask *task)
 {
-    LE_LOGV("CloseTask");
     LE_CHECK(loopHandle != NULL && task != NULL, return, "Invalid parameters");
+    LE_LOGV("CloseTask %d", task->taskId.fd);
     if (CheckTaskFlags(task, TASK_STREAM | TASK_CONNECT) ||
         CheckTaskFlags(task, TASK_EVENT | TASK_ASYNC_EVENT)) {
         StreamTask *stream = (StreamTask *)task;

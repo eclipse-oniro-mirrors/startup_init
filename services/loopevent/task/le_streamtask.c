@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <sys/socket.h>
+#include "securec.h"
 
 #include "le_socket.h"
 #include "le_task.h"
@@ -92,7 +93,7 @@ static LE_STATUS HandleStreamEvent_(const LoopHandle loopHandle, const TaskHandl
     if (LE_TEST_FLAGS(oper, Event_Read)) {
         status = HandleRecvMsg_(loopHandle, handle, stream->recvMessage);
     }
-    if (status == LE_DIS_CONNECTED) {
+    if (status == LE_DIS_CONNECTED || LE_TEST_FLAGS(oper, Event_Error)) {
         loop->delEvent(loop, GetSocketFd(handle), Event_Read | Event_Write);
         if (stream->disConnectComplete) {
             stream->disConnectComplete(handle);
@@ -133,6 +134,42 @@ static void HandleStreamTaskClose_(const LoopHandle loopHandle, const TaskHandle
     DelTask((EventLoop *)loopHandle, task);
     if (task->taskId.fd > 0) {
         close(task->taskId.fd);
+    }
+}
+
+static void DumpStreamServerTaskInfo_(const TaskHandle task)
+{
+    INIT_CHECK(task != NULL, return);
+    BaseTask *baseTask = (BaseTask *)task;
+    StreamServerTask *serverTask = (StreamServerTask *)baseTask;
+    printf("\tfd: %d \n", serverTask->base.taskId.fd);
+    printf("\t  TaskType: %s \n", "ServerTask");
+    if (strlen(serverTask->server) > 0) {
+        printf("\t  Server socket:%s \n", serverTask->server);
+    } else {
+        printf("\t  Server socket:%s \n", "NULL");
+    }
+}
+
+static void DumpStreamConnectTaskInfo_(const TaskHandle task)
+{
+    INIT_CHECK(task != NULL, return);
+    BaseTask *baseTask = (BaseTask *)task;
+    StreamConnectTask *connectTask = (StreamConnectTask *)baseTask;
+    TaskHandle taskHandle = (TaskHandle)connectTask;
+    printf("\tfd: %d \n", connectTask->stream.base.taskId.fd);
+    printf("\t  TaskType: %s \n", "ConnectTask");
+    printf("\t  ServiceInfo: \n");
+    struct ucred cred = {-1, -1, -1};
+    socklen_t credSize  = sizeof(struct ucred);
+    if (getsockopt(LE_GetSocketFd(taskHandle), SOL_SOCKET, SO_PEERCRED, &cred, &credSize) == 0) {
+        printf("\t    Service Pid: %d \n", cred.pid);
+        printf("\t    Service Uid: %d \n", cred.uid);
+        printf("\t    Service Gid: %d \n", cred.gid);
+    } else {
+        printf("\t    Service Pid: %s \n", "NULL");
+        printf("\t    Service Uid: %s \n", "NULL");
+        printf("\t    Service Gid: %s \n", "NULL");
     }
 }
 
@@ -179,6 +216,7 @@ LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,
         return LE_NO_MEMORY, "Failed to create task");
     task->base.handleEvent = HandleServerEvent_;
     task->base.innerClose = HandleStreamTaskClose_;
+    task->base.dumpTaskInfo = DumpStreamServerTaskInfo_;
     task->incommingConnect = info->incommingConnect;
     loop->addEvent(loop, (const BaseTask *)task, Event_Read);
     ret = memcpy_s(task->server, strlen(info->server) + 1, info->server, strlen(info->server) + 1);
@@ -231,6 +269,7 @@ LE_STATUS LE_AcceptStreamClient(const LoopHandle loopHandle, const TaskHandle se
         return LE_NO_MEMORY, "Failed to create task");
     task->stream.base.handleEvent = HandleStreamEvent_;
     task->stream.base.innerClose = HandleStreamTaskClose_;
+    task->stream.base.dumpTaskInfo = DumpStreamConnectTaskInfo_;
     task->disConnectComplete = info->disConnectComplete;
     task->sendMessageComplete = info->sendMessageComplete;
     task->recvMessage = info->recvMessage;

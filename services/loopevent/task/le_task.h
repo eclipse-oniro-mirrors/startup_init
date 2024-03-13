@@ -26,12 +26,14 @@
 #define LoopMutexInit(x) (void)(x)
 #define LoopMutexLock(x) (void)(x)
 #define LoopMutexUnlock(x) (void)(x)
+#define LoopMutexDestroy(x) (void)(x)
 #else
 #include <pthread.h>
 #define LoopMutex pthread_mutex_t
 #define LoopMutexInit(x) pthread_mutex_init(x, NULL)
 #define LoopMutexLock(x) pthread_mutex_lock(x)
 #define LoopMutexUnlock(x) pthread_mutex_unlock(x)
+#define LoopMutexDestroy(x) pthread_mutex_destroy(x)
 #endif
 
 #ifdef __cplusplus
@@ -51,6 +53,7 @@ typedef struct {
 #define TASK_FLAGS_INVALID 0x80000000
 typedef LE_STATUS (*HandleTaskEvent)(const LoopHandle loop, const TaskHandle task, uint32_t oper);
 typedef void (*HandleTaskClose)(const LoopHandle loop, const TaskHandle task);
+typedef void (*DumpTaskInfo)(const TaskHandle task);
 #define TASKINFO \
     uint32_t flags; \
     union { \
@@ -65,6 +68,7 @@ typedef struct LiteTask_ {
     TASKINFO;
     HashNode hashNode;
     LE_Close close;
+    DumpTaskInfo dumpTaskInfo;
     HandleTaskEvent handleEvent;
     HandleTaskClose innerClose;
     uint16_t userDataOffset;

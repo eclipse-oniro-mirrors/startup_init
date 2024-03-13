@@ -44,18 +44,11 @@ extern "C" {
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 
-#ifdef SUPPORT_HVB
-__attribute__((weak)) int UeventdSocketInit(void)
-{
-    return 0;
-}
-
-__attribute__((weak)) void RetriggerUeventByPath(int sockFd, char *path)
-{
-}
-#endif
-
 __attribute__((weak)) void InitPostMount(const char *mountPoint, int rc)
+{
+}
+
+__attribute__((weak)) void InitTimerControl(bool isSuspend)
 {
 }
 
@@ -260,7 +253,10 @@ static int DoFsckF2fs(const char* device)
     };
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
-    return ExecCommand(argc, argv);
+    InitTimerControl(true);
+    int ret = ExecCommand(argc, argv);
+    InitTimerControl(false);
+    return ret;
 }
 
 static int DoResizeExt(const char* device, const unsigned long long size)

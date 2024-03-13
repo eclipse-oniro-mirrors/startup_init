@@ -32,14 +32,21 @@ group("startup_init") {
     deps = [
       "etc:etc_files",
       "init/standard:init",
-      "init/standard:init_early",
-      "//third_party/e2fsprogs:e2fsprogs",
     ]
+    data_deps = [ "init/standard:init_early" ]
     deps += [ "//base/startup/init/services/etc:watchdog.cfg" ]
     deps += [ "//base/startup/init/services/etc:ueventd.cfg" ]
+    external_deps = [
+      "e2fsprogs:libext2_com_err",
+      "e2fsprogs:libext2_e2p",
+      "e2fsprogs:libext2_misc",
+      "e2fsprogs:libext2_quota",
+      "e2fsprogs:libext2_uuid",
+      "e2fsprogs:libext2fs",
+    ]
 
     if (use_musl) {
-      deps += [ "//third_party/f2fs-tools:f2fs-tools" ]
+      external_deps += [ "f2fs-tools:libf2fs" ]
     }
 
     if (enable_ohos_startup_init_feature_watcher) {
