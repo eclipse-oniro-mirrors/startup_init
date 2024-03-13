@@ -46,7 +46,7 @@ group("startup_init") {
     ]
 
     if (use_musl) {
-      external_deps += [ "f2fs-tools:libf2fs" ]
+      deps += [ "//third_party/f2fs-tools:f2fs-tools" ]
     }
 
     if (enable_ohos_startup_init_feature_watcher) {
