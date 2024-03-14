@@ -66,6 +66,9 @@ static void DumpServiceJobs(const Service *service)
     if (service->serviceJobs.jobsName[JOB_ON_BOOT] != NULL) {
         printf("\t\tservice boot job %s \n", service->serviceJobs.jobsName[JOB_ON_BOOT]);
     }
+    if (service->serviceJobs.jobsName[JOB_PRE_START]!= NULL) {
+        printf("\t\tservice pre-start job %s \n", service->serviceJobs.jobsName[JOB_PRE_START]);
+    }
     if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
         printf("\t\tservice start job %s \n", service->serviceJobs.jobsName[JOB_ON_START]);
     }

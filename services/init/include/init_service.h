@@ -122,6 +122,7 @@ typedef struct {
 
 typedef enum {
     JOB_ON_BOOT,
+    JOB_PRE_START,
     JOB_ON_START,
     JOB_ON_STOP,
     JOB_ON_RESTART,

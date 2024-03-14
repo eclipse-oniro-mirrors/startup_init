@@ -632,7 +632,7 @@ static int GetServiceMode(Service *service, const cJSON *json)
 static int GetServiceJobs(Service *service, cJSON *json)
 {
     const char *jobTypes[] = {
-        "on-boot", "on-start", "on-stop", "on-restart"
+        "on-boot", "pre-start", "on-start", "on-stop", "on-restart"
     };
     for (int i = 0; i < (int)ARRAY_LENGTH(jobTypes); i++) {
         char *jobName = cJSON_GetStringValue(cJSON_GetObjectItem(json, jobTypes[i]));
