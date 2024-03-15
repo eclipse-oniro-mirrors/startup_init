@@ -258,11 +258,11 @@ void WatcherManager::RunLoop()
         uint32_t curr = 0;
         uint32_t dataLen = static_cast<uint32_t>(recvLen);
         while (curr < dataLen) {
-            if ((curr + sizeof(ParamMessage)) >= dataLen) {
+            if (sizeof(ParamMessage) >= dataLen - curr) {
                 break;
             }
             ParamMessage *msg = (ParamMessage *)(buffer.data() + curr);
-            if ((msg->msgSize > dataLen) || ((curr + msg->msgSize) > dataLen)) {
+            if (msg->msgSize == 0 || (msg->msgSize > dataLen - curr)) {
                 break;
             }
             ProcessWatcherMessage(msg);
