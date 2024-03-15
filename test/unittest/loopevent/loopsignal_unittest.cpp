@@ -56,7 +56,7 @@ HWTEST_F(LoopSignalUnitTest, SignalInitTestRmSig, TestSize.Level1)
     ASSERT_EQ(ret, 0);
     LE_RemoveSignal(loopClient, g_sigHandler, SIGUSR1);
     LE_RemoveSignal(loopClient, g_sigHandler, SIGUSR2);
-    ((BaseTask *)g_sigHandler)->handleEvent(loopClient, (TaskHandle)&g_sigHandler, Event_Write);
+    ((BaseTask *)g_sigHandler)->handleEvent(loopClient, (TaskHandle)&g_sigHandler, EVENT_WRITE);
     LE_CloseSignalTask(loopClient, g_sigHandler);
     ASSERT_EQ(ret, 0);
     LE_StopLoop(loopClient);

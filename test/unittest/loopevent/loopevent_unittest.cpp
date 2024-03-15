@@ -92,7 +92,7 @@ public:
     void TestBody(void) {};
     int CreateServerTask()
     {
-        CheckTaskFlags(nullptr, Event_Write);
+        CheckTaskFlags(nullptr, EVENT_WRITE);
         ParamStreamInfo info = {};
         info.server = const_cast<char *>(PIPE_NAME);
         info.close = nullptr;
@@ -115,7 +115,7 @@ public:
         ((StreamConnectTask *)clientTaskHandle)->stream.base.handleEvent(LE_GetDefaultLoop(),
             (TaskHandle)clientTaskHandle, 0);
         ((StreamConnectTask *)clientTaskHandle)->stream.base.handleEvent(LE_GetDefaultLoop(),
-            (TaskHandle)clientTaskHandle, Event_Read);
+            (TaskHandle)clientTaskHandle, EVENT_READ);
 
         TaskHandle clientTaskHandlec = nullptr;
         streamInfo.baseInfo.flags = TASK_STREAM | TASK_TCP | TASK_SERVER;
@@ -143,7 +143,7 @@ public:
         if (serverTask_ == nullptr) {
             return;
         }
-        ((StreamServerTask *)serverTask_)->base.handleEvent(LE_GetDefaultLoop(), serverTask_, Event_Read);
+        ((StreamServerTask *)serverTask_)->base.handleEvent(LE_GetDefaultLoop(), serverTask_, EVENT_READ);
 
         uint64_t eventId = 0;
         ParamStreamInfo paramStreamInfo = {};
@@ -159,7 +159,7 @@ public:
         BufferHandle handle = LE_CreateBuffer(LE_GetDefaultLoop(), 1 + sizeof(eventId));
         LE_Buffer *buffer = (LE_Buffer *)handle;
         AddBuffer((StreamTask *)client, buffer);
-        ((StreamConnectTask *)client)->stream.base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)(client), Event_Write);
+        ((StreamConnectTask *)client)->stream.base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)(client), EVENT_WRITE);
         EXPECT_NE(LE_GetSendResult(handle), 0);
 
         ParamMessage *request = (ParamMessage *)CreateParamMessage(MSG_SET_PARAM, "name", sizeof(ParamMessage));
@@ -176,13 +176,13 @@ public:
     }
     void ProcessEventTest()
     {
-        ProcessEvent((EventLoop *)LE_GetDefaultLoop(), 1, Event_Read);
+        ProcessEvent((EventLoop *)LE_GetDefaultLoop(), 1, EVENT_READ);
         LE_BaseInfo info = {TASK_EVENT, nullptr};
         int testfd = 65535; // 65535 is not exist fd
         BaseTask *task = CreateTask(LE_GetDefaultLoop(), testfd, &info, sizeof(StreamClientTask));
         if (task != nullptr) {
             task->handleEvent = TestHandleTaskEvent;
-            ProcessEvent((EventLoop *)LE_GetDefaultLoop(), testfd, Event_Read);
+            ProcessEvent((EventLoop *)LE_GetDefaultLoop(), testfd, EVENT_READ);
         }
     }
     void ProcessasynEvent()
@@ -192,8 +192,8 @@ public:
         if (asynHandle == nullptr) {
             return;
         }
-        ((AsyncEventTask *)asynHandle)->stream.base.handleEvent(LE_GetDefaultLoop(), asynHandle, Event_Read);
-        ((AsyncEventTask *)asynHandle)->stream.base.handleEvent(LE_GetDefaultLoop(), asynHandle, Event_Write);
+        ((AsyncEventTask *)asynHandle)->stream.base.handleEvent(LE_GetDefaultLoop(), asynHandle, EVENT_READ);
+        ((AsyncEventTask *)asynHandle)->stream.base.handleEvent(LE_GetDefaultLoop(), asynHandle, EVENT_WRITE);
         LE_StopAsyncTask(LE_GetDefaultLoop(), asynHandle);
     }
     void ProcessWatcherTask()
@@ -202,16 +202,16 @@ public:
         LE_WatchInfo info = {};
         info.fd = -1;
         info.flags = WATCHER_ONCE;
-        info.events = Event_Read;
+        info.events = EVENT_READ;
         info.processEvent = ProcessWatchEventTest;
         LE_StartWatcher(LE_GetDefaultLoop(), &handle, &info, nullptr);
         if (handle == nullptr) {
             return;
         }
-        ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, Event_Read);
+        ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, EVENT_READ);
         ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, 0);
         ((WatcherTask *)handle)->base.flags = WATCHER_ONCE;
-        ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, Event_Read);
+        ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, EVENT_READ);
         LE_RemoveWatcher(LE_GetDefaultLoop(), handle);
     }
     void CreateSocketTest()
@@ -312,7 +312,7 @@ HWTEST_F(LoopEventUnittest, LoopAbnormalTest, TestSize.Level1)
     LE_WatchInfo info = {};
         info.fd = -1;
         info.flags = WATCHER_ONCE;
-        info.events = Event_Read;
+        info.events = EVENT_READ;
         info.processEvent = nullptr;
     LE_StartWatcher(LE_GetDefaultLoop(), nullptr, &info, nullptr);
     LE_StartWatcher(LE_GetDefaultLoop(), nullptr, nullptr, nullptr);

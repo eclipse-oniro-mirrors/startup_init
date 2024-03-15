@@ -970,7 +970,7 @@ static int AddFileDescriptorToWatcher(int fd, Service *service)
     LE_WatchInfo info = {};
     info.fd = fd;
     info.flags = 0; // WATCHER_ONCE;
-    info.events = Event_Read;
+    info.events = EVENT_READ;
     info.processEvent = ProcessConsoleEvent;
     int ret = LE_StartWatcher(LE_GetDefaultLoop(), &watcher, &info, service);
     if (ret != LE_SUCCESS) {

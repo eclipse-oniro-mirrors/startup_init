@@ -41,7 +41,7 @@ CONTROL_FD_STATIC void ProcessPtyWrite(const WatcherHandle taskHandle, int fd, u
     }
     ret = fflush(stdout);
     BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed fflush err=%d", errno);
-    *events = Event_Read;
+    *events = EVENT_READ;
 }
 
 CONTROL_FD_STATIC void ProcessPtyRead(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
@@ -61,7 +61,7 @@ CONTROL_FD_STATIC void ProcessPtyRead(const WatcherHandle taskHandle, int fd, ui
     }
     int ret = fflush(stdout);
     BEGET_ERROR_CHECK(ret == 0, return, "[control_fd] Failed fflush err=%d", errno);
-    *events = Event_Read;
+    *events = EVENT_READ;
 }
 
 CONTROL_FD_STATIC void CmdClientOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
@@ -174,7 +174,7 @@ CONTROL_FD_STATIC int InitPtyInterface(CmdAgent *agent, uint16_t type, const cha
 
     LE_WatchInfo info = {};
     info.flags = 0;
-    info.events = Event_Read;
+    info.events = EVENT_READ;
     info.processEvent = ProcessPtyRead;
     info.fd = pfd; // read ptmx
     BEGET_ERROR_CHECK(LE_StartWatcher(LE_GetDefaultLoop(), &agent->reader, &info, agent) == LE_SUCCESS,
