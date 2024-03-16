@@ -181,7 +181,7 @@ LE_STATUS LE_Send(const LoopHandle loopHandle,
     } else if (CheckTaskFlags((BaseTask *)taskHandle, TASK_EVENT | TASK_ASYNC_EVENT)) {
         AddBuffer((StreamTask *)taskHandle, buffer);
     }
-    loop->modEvent(loop, (BaseTask *)taskHandle, Event_Write);
+    loop->modEvent(loop, (BaseTask *)taskHandle, EVENT_WRITE);
     return LE_SUCCESS;
 }
 

@@ -196,7 +196,7 @@ int AddSocketWatcher(ServiceWatcher *watcherHandle, Service *service, int fd)
     LE_WatchInfo info = {};
     info.fd = fd;
     info.flags = WATCHER_ONCE;
-    info.events = Event_Read;
+    info.events = EVENT_READ;
     info.processEvent = ProcessWatchEvent_;
     int ret = LE_StartWatcher(LE_GetDefaultLoop(), &handle, &info, service);
     INIT_LOGI("Watcher socket fd %d for service %s", fd, service->name);

@@ -68,19 +68,19 @@ static LE_STATUS HandleAsyncEvent_(const LoopHandle loopHandle, const TaskHandle
     LE_LOGV("HandleAsyncEvent_ fd: %d oper 0x%x", GetSocketFd(taskHandle), oper);
     EventLoop *loop = (EventLoop *)loopHandle;
     AsyncEventTask *asyncTask = (AsyncEventTask *)taskHandle;
-    if (LE_TEST_FLAGS(oper, Event_Read)) {
+    if (LE_TEST_FLAGS(oper, EVENT_READ)) {
         uint64_t eventId = 0;
         int ret = read(GetSocketFd(taskHandle), &eventId, sizeof(eventId));
         LE_LOGV("HandleAsyncEvent_ read fd:%d ret: %d eventId %llu", GetSocketFd(taskHandle), ret, eventId);
         DoAsyncEvent_(loopHandle, asyncTask);
         if (!IsBufferEmpty(&asyncTask->stream)) {
-            loop->modEvent(loop, (const BaseTask *)taskHandle, Event_Write);
+            loop->modEvent(loop, (const BaseTask *)taskHandle, EVENT_WRITE);
             return LE_SUCCESS;
         }
     } else {
         static uint64_t eventId = 0;
         (void)write(GetSocketFd(taskHandle), &eventId, sizeof(eventId));
-        loop->modEvent(loop, (const BaseTask *)taskHandle, Event_Read);
+        loop->modEvent(loop, (const BaseTask *)taskHandle, EVENT_READ);
         eventId++;
     }
     return LE_SUCCESS;
@@ -122,7 +122,7 @@ LE_STATUS LE_CreateAsyncTask(const LoopHandle loopHandle,
     LoopMutexInit(&task->stream.mutex);
     task->processAsyncEvent = processAsyncEvent;
     EventLoop *loop = (EventLoop *)loopHandle;
-    loop->addEvent(loop, (const BaseTask *)task, Event_Read);
+    loop->addEvent(loop, (const BaseTask *)task, EVENT_READ);
     *taskHandle = (TaskHandle)task;
     return LE_SUCCESS;
 }

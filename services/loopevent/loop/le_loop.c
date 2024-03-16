@@ -90,7 +90,7 @@ LE_STATUS ProcessEvent(const EventLoop *loop, int fd, uint32_t oper)
 {
     BaseTask *task = GetTaskByFd((EventLoop *)loop, fd);
     if (task != NULL) {
-        if (oper & Event_Error) {
+        if (oper & EVENT_ERROR) {
             task->flags |= TASK_FLAGS_INVALID;
         }
         task->handleEvent((LoopHandle)loop, (TaskHandle)task, oper);
@@ -129,7 +129,7 @@ BaseTask *GetTaskByFd(EventLoop *loop, int fd)
 void DelTask(EventLoop *loop, BaseTask *task)
 {
     loop->delEvent(loop, task->taskId.fd,
-        Event_Read | Event_Write | Event_Error | Event_Free | Event_Timeout | Event_Signal);
+        EVENT_READ | EVENT_WRITE | EVENT_ERROR | EVENT_FREE | EVENT_TIMEOUT | EVENT_SIGNAL);
     LoopMutexLock(&loop->mutex);
     OH_HashMapRemove(loop->taskMap, (TaskId *)task);
     LoopMutexUnlock(&loop->mutex);

@@ -35,12 +35,12 @@ extern "C" {
 #define DEFAULT_TIMEOUT 1000
 
 typedef enum {
-    Event_Read = (0x0001),
-    Event_Write = (0x0002),
-    Event_Error = (0x0004),
-    Event_Free = (0x0008),
-    Event_Timeout = (0x0010),
-    Event_Signal = (0x0020),
+    EVENT_READ = (0x0001),
+    EVENT_WRITE = (0x0002),
+    EVENT_ERROR = (0x0004),
+    EVENT_FREE = (0x0008),
+    EVENT_TIMEOUT = (0x0010),
+    EVENT_SIGNAL = (0x0020),
 } EventOper;
 
 typedef enum {
