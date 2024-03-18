@@ -41,7 +41,7 @@ static LE_STATUS SetTimer_(int tfd, uint64_t timeout)
 
 static LE_STATUS HandleTimerEvent_(const LoopHandle loop, const TaskHandle task, uint32_t oper)
 {
-    if (!LE_TEST_FLAGS(oper, Event_Read)) {
+    if (!LE_TEST_FLAGS(oper, EVENT_READ)) {
         return LE_FAILURE;
     }
     uint64_t repeat = 0;
@@ -117,7 +117,7 @@ LE_STATUS LE_StartTimer(const LoopHandle loopHandle,
     task->repeat = repeat;
     int ret = SetTimer_(GetSocketFd(timer), task->timeout);
     LE_CHECK(ret == 0, return LE_FAILURE, "Failed to set timer");
-    ret = loop->addEvent(loop, (const BaseTask *)task, Event_Read);
+    ret = loop->addEvent(loop, (const BaseTask *)task, EVENT_READ);
     LE_CHECK(ret == 0, return LE_FAILURE, "Failed to add event");
     return LE_SUCCESS;
 }

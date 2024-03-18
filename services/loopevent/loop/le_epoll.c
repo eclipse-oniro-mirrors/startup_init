@@ -26,11 +26,11 @@ static int IsValid_(const EventEpoll *loop)
 static void GetEpollEvent_(int fd, int op, struct epoll_event *event)
 {
     event->data.fd = fd;
-    if (LE_TEST_FLAGS(op, Event_Read)) {
-        event->events = EPOLLIN;
+    if (LE_TEST_FLAGS(op, EVENT_READ)) {
+        event->events |= EPOLLIN;
     }
-    if (LE_TEST_FLAGS(op, Event_Write)) {
-        event->events = EPOLLOUT;
+    if (LE_TEST_FLAGS(op, EVENT_WRITE)) {
+        event->events |= EPOLLOUT;
     }
 }
 
@@ -102,18 +102,18 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
         int number = epoll_wait(epoll->epollFd, epoll->waitEvents, loop->maxevents, -1);
         for (int index = 0; index < number; index++) {
             if ((epoll->waitEvents[index].events & EPOLLIN) == EPOLLIN) {
-                ProcessEvent(loop, epoll->waitEvents[index].data.fd, Event_Read);
+                ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_READ);
             }
             if ((epoll->waitEvents[index].events & EPOLLOUT) == EPOLLOUT) {
-                ProcessEvent(loop, epoll->waitEvents[index].data.fd, Event_Write);
+                ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_WRITE);
             }
             if ((epoll->waitEvents[index].events & EPOLLERR) == EPOLLERR) {
                 LE_LOGV("RunLoop_ error %d", epoll->waitEvents[index].data.fd);
-                ProcessEvent(loop, epoll->waitEvents[index].data.fd, Event_Error);
+                ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_ERROR);
             }
             if ((epoll->waitEvents[index].events & EPOLLHUP) == EPOLLHUP) {
-                LE_LOGV("RunLoop_ error %d", epoll->waitEvents[index].data.fd);
-                ProcessEvent(loop, epoll->waitEvents[index].data.fd, Event_Error);
+                LE_LOGV("RunLoop_ fd: %d error: %d \n", epoll->waitEvents[index].data.fd, errno);
+                ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_ERROR);
             }
         }
         if (loop->stop) {

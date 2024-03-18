@@ -40,7 +40,7 @@ static LE_STATUS HandleSendMsg_(const LoopHandle loopHandle,
     }
     if (IsBufferEmpty(stream)) {
         LE_LOGV("HandleSendMsg_ fd:%d empty wait read", GetSocketFd(taskHandle));
-        loop->modEvent(loop, (const BaseTask *)taskHandle, Event_Read);
+        loop->modEvent(loop, (const BaseTask *)taskHandle, EVENT_READ);
         return LE_SUCCESS;
     }
     return LE_SUCCESS;
@@ -87,14 +87,14 @@ static LE_STATUS HandleStreamEvent_(const LoopHandle loopHandle, const TaskHandl
     LE_LOGV("HandleStreamEvent_ fd:%d oper 0x%x", GetSocketFd(handle), oper);
 
     LE_STATUS status = LE_SUCCESS;
-    if (LE_TEST_FLAGS(oper, Event_Write)) {
+    if (LE_TEST_FLAGS(oper, EVENT_WRITE)) {
         status = HandleSendMsg_(loopHandle, handle, stream->sendMessageComplete);
     }
-    if (LE_TEST_FLAGS(oper, Event_Read)) {
+    if (LE_TEST_FLAGS(oper, EVENT_READ)) {
         status = HandleRecvMsg_(loopHandle, handle, stream->recvMessage);
     }
-    if (status == LE_DIS_CONNECTED) {
-        loop->delEvent(loop, GetSocketFd(handle), Event_Read | Event_Write);
+    if (status == LE_DIS_CONNECTED || LE_TEST_FLAGS(oper, EVENT_ERROR)) {
+        loop->delEvent(loop, GetSocketFd(handle), EVENT_READ | EVENT_WRITE);
         if (stream->disConnectComplete) {
             stream->disConnectComplete(handle);
         }
@@ -109,12 +109,12 @@ static LE_STATUS HandleClientEvent_(const LoopHandle loopHandle, const TaskHandl
     LE_LOGV("HandleClientEvent_ fd:%d oper 0x%x", GetSocketFd(handle), oper);
 
     LE_STATUS status = LE_SUCCESS;
-    if (LE_TEST_FLAGS(oper, Event_Write)) {
+    if (LE_TEST_FLAGS(oper, EVENT_WRITE)) {
         LE_ONLY_CHECK(!(client->connected == 0 && client->connectComplete), client->connectComplete(handle));
         client->connected = 1;
         status = HandleSendMsg_(loopHandle, handle, client->sendMessageComplete);
     }
-    if (LE_TEST_FLAGS(oper, Event_Read)) {
+    if (LE_TEST_FLAGS(oper, EVENT_READ)) {
         status = HandleRecvMsg_(loopHandle, handle, client->recvMessage);
     }
     if (status == LE_DIS_CONNECTED) {
@@ -176,7 +176,7 @@ static void DumpStreamConnectTaskInfo_(const TaskHandle task)
 static LE_STATUS HandleServerEvent_(const LoopHandle loopHandle, const TaskHandle serverTask, uint32_t oper)
 {
     LE_LOGV("HandleServerEvent_ fd %d oper 0x%x", GetSocketFd(serverTask), oper);
-    if (!LE_TEST_FLAGS(oper, Event_Read)) {
+    if (!LE_TEST_FLAGS(oper, EVENT_READ)) {
         return LE_FAILURE;
     }
     StreamServerTask *server = (StreamServerTask *)serverTask;
@@ -187,7 +187,7 @@ static LE_STATUS HandleServerEvent_(const LoopHandle loopHandle, const TaskHandl
         LE_LOGE("HandleServerEvent_ fd %d do not accept socket", GetSocketFd(serverTask));
     }
     EventLoop *loop = (EventLoop *)loopHandle;
-    loop->modEvent(loop, (const BaseTask *)serverTask, Event_Read);
+    loop->modEvent(loop, (const BaseTask *)serverTask, EVENT_READ);
     return LE_SUCCESS;
 }
 
@@ -218,7 +218,7 @@ LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,
     task->base.innerClose = HandleStreamTaskClose_;
     task->base.dumpTaskInfo = DumpStreamServerTaskInfo_;
     task->incommingConnect = info->incommingConnect;
-    loop->addEvent(loop, (const BaseTask *)task, Event_Read);
+    loop->addEvent(loop, (const BaseTask *)task, EVENT_READ);
     ret = memcpy_s(task->server, strlen(info->server) + 1, info->server, strlen(info->server) + 1);
     LE_CHECK(ret == 0, return LE_FAILURE, "Failed to copy server name %s", info->server);
     *taskHandle = (TaskHandle)task;
@@ -247,7 +247,7 @@ LE_STATUS LE_CreateStreamClient(const LoopHandle loopHandle,
     task->recvMessage = info->recvMessage;
     task->disConnectComplete = info->disConnectComplete;
     EventLoop *loop = (EventLoop *)loopHandle;
-    loop->addEvent(loop, (const BaseTask *)task, Event_Read);
+    loop->addEvent(loop, (const BaseTask *)task, EVENT_READ);
     *taskHandle = (TaskHandle)task;
     return LE_SUCCESS;
 }
@@ -278,7 +278,7 @@ LE_STATUS LE_AcceptStreamClient(const LoopHandle loopHandle, const TaskHandle se
     LoopMutexInit(&task->stream.mutex);
     if ((info->baseInfo.flags & TASK_TEST) != TASK_TEST) {
         EventLoop *loop = (EventLoop *)loopHandle;
-        loop->addEvent(loop, (const BaseTask *)task, Event_Read);
+        loop->addEvent(loop, (const BaseTask *)task, EVENT_READ);
     }
     *taskHandle = (TaskHandle)task;
     return 0;

@@ -1,0 +1,107 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/config/python.gni")
+import("//build/templates/common/copy.gni")
+
+# Append something (files or lines) to a file and install it.
+#
+# Variables:
+#  source: file to be appended (Required)
+#  deps: some targets deps on (Optional)
+#  output: the final install file name (Optional);
+#       If not set, it will install with the source file name
+#  ranges: uid/gid value range (Required)
+#
+# Example:
+# ohos_passwd_appender("passwd") {
+#   sources = ["//base/startup/init/services/etc/passwd",
+#             "//base/startup/init/services/etc/passwd1",
+#             "//base/startup/init/services/etc/passwd2"
+#            ]
+#   ranges = ["0-6999", "7000-8000", "8001-9000"]
+#   output = "//base/startup/init/services/etc/passwd"
+# }
+# It will append files to source passwd file after deps targets
+#
+template("ohos_passwd_appender") {
+  assert(defined(invoker.sources), "source must be defined.")
+  assert(defined(invoker.ranges), "ranges must be defined.")
+  assert(defined(invoker.output), "output must be defined.")
+
+  _passwd_appender_target = "${target_name}_passwd_fixed"
+  _final_install_name = get_path_info(invoker.output, "file")
+  tmp_install_file = target_gen_dir + "/${target_name}.tmp"
+
+  passwd_file_list = []
+  foreach(file, invoker.sources) {
+    passwd_file_list += [ rebase_path(file, root_build_dir) ]
+  }
+  input_passwd_files = string_join(":", passwd_file_list)
+  input_ranges = string_join(":", invoker.ranges)
+
+  action_with_pydeps(_passwd_appender_target) {
+    script =
+        "//base/startup/init/services/etc/passwd_appender/passwd_appender.py"
+    depfile = "${target_gen_dir}/${target_name}.d"
+    if (defined(invoker.deps)) {
+      deps = invoker.deps
+    } else {
+      deps = []
+    }
+    args = [
+      "--output",
+      rebase_path(tmp_install_file, root_build_dir),
+      "--source-file",
+      input_passwd_files,
+      "--input-ranges",
+      input_ranges,
+      "--depfile",
+      rebase_path(depfile, root_build_dir),
+    ]
+    outputs = [ tmp_install_file ]
+  }
+
+  ohos_copy(target_name) {
+    deps = [ ":$_passwd_appender_target" ]
+    forward_variables_from(invoker,
+                           [
+                             "testonly",
+                             "visibility",
+
+                             "deps",
+                             "public_configs",
+                             "subsystem_name",
+                             "part_name",
+
+                             # For generate_module_info
+                             "install_images",
+                             "module_install_dir",
+                             "relative_install_dir",
+                             "symlink_target_name",
+
+                             # Open source license related
+                             "license_file",
+                             "license_as_sources",
+                           ])
+    sources = [ tmp_install_file ]
+    outputs = [ "${target_out_dir}/${target_name}/${_final_install_name}" ]
+    module_type = "etc"
+    install_enable = true
+    module_source_dir = "${target_out_dir}/${target_name}"
+    module_install_name = _final_install_name
+    if (defined(invoker.install_enable)) {
+      install_enable = invoker.install_enable
+    }
+  }
+}

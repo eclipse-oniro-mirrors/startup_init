@@ -115,6 +115,7 @@ int SetImportantValue(Service *service, const char *attrName, int value, int fla
 int ServiceExec(Service *service, const ServiceArgs *pathArgs)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Exec service failed! null ptr.");
+    INIT_LOGI("ServiceExec %s", service->name);
     INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
         return SERVICE_FAILURE, "Exec service failed! null ptr.");
 

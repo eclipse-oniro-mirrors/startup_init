@@ -305,7 +305,7 @@ public:
         LE_WatchInfo info = {};
         info.fd = fd;
         info.flags = WATCHER_ONCE;
-        info.events = Event_Read | Event_Write;
+        info.events = EVENT_READ | EVENT_WRITE;
         info.processEvent = ProcessWatchEventTest;
         LE_STATUS status = LE_StartWatcher(g_loopClient_, &handle, &info, nullptr);
         EXPECT_EQ(status, 0);

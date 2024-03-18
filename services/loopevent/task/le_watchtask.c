@@ -15,6 +15,13 @@
 #include "le_task.h"
 #include "le_loop.h"
 
+static void HandleWatcherTaskClose_(const LoopHandle loopHandle, const TaskHandle taskHandle)
+{
+    LE_LOGV("HandleWatcherTaskClose_ fd: %d ", GetSocketFd(taskHandle));
+    CloseTask(loopHandle, (BaseTask *)taskHandle);
+    DelTask((EventLoop *)loopHandle, (BaseTask *)taskHandle);
+}
+
 static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHandle taskHandle, uint32_t oper)
 {
     LE_LOGV("HandleWatcherEvent_ fd: %d oper 0x%x", GetSocketFd(taskHandle), oper);
@@ -29,11 +36,11 @@ static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHand
     watcher = (WatcherTask *)GetTaskByFd((EventLoop *)loopHandle, fd);
     LE_ONLY_CHECK(watcher != NULL, return 0);
     if (watcher->base.flags & WATCHER_ONCE) {
-        loop->delEvent(loop, fd, watcher->events);
+        HandleWatcherTaskClose_((LoopHandle)loop, (TaskHandle)watcher);
         return 0;
     }
     if (events == 0) {
-        loop->delEvent(loop, fd, watcher->events);
+        HandleWatcherTaskClose_((LoopHandle)loop, (TaskHandle)watcher);
         return 0;
     }
     if (events != watcher->events) {
@@ -41,12 +48,6 @@ static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHand
         loop->modEvent(loop, (const BaseTask *)taskHandle, watcher->events);
     }
     return LE_SUCCESS;
-}
-
-static void HandleWatcherTaskClose_(const LoopHandle loopHandle, const TaskHandle taskHandle)
-{
-    CloseTask(loopHandle, (BaseTask *)taskHandle);
-    DelTask((EventLoop *)loopHandle, (BaseTask *)taskHandle);
 }
 
 static void DumpWatcherTaskInfo_(const TaskHandle task)

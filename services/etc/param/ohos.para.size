@@ -29,3 +29,4 @@ hiviewdfx_hiview_param = 2048
 telephony_param = 20480
 vendor_camera_param=6144
 edm_writable_param = 4096
+arkui_param = 2048
