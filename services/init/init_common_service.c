@@ -571,6 +571,31 @@ static int32_t WaitForDebugger(void)
 }
 #endif
 
+static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
+{
+    // set selinux label by context
+    if (service->context.type != INIT_CONTEXT_MAIN && SetSubInitContext(&service->context, service->name) != 0) {
+        service->lastErrno = INIT_ECONTENT;
+    }
+
+    if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
+        CheckModuleUpdate(pathArgs);
+    }
+#ifdef IS_DEBUG_VERSION
+    // only the image is debuggable and need debug, then wait for debugger
+    if (ServiceNeedDebug(service->name) && IsDebuggableVersion()) {
+        WaitForDebugger();
+    }
+#endif
+    // fail must exit sub process
+    int ret = InitServiceProperties(service, pathArgs);
+    INIT_ERROR_CHECK(ret == 0,
+        _exit(service->lastErrno), "Service error %d %s, failed to set properties", ret, service->name);
+
+    (void)ServiceExec(service, pathArgs);
+    _exit(service->lastErrno);
+}
+
 int ServiceStart(Service *service, ServiceArgs *pathArgs)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
@@ -592,34 +617,16 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
         return SERVICE_FAILURE;
     }
 #ifndef OHOS_LITE
-    /*
-     * before service fork hooks
-     */
+    // before service fork hooks
     ServiceHookExecute(service->name, NULL, INIT_SERVICE_FORK_BEFORE);
 #endif
+    // pre-start job
+    if (service->serviceJobs.jobsName[JOB_PRE_START] != NULL) {
+        DoJobNow(service->serviceJobs.jobsName[JOB_PRE_START]);
+    }
     int pid = fork();
     if (pid == 0) {
-        // set selinux label by context
-        if (service->context.type != INIT_CONTEXT_MAIN && SetSubInitContext(&service->context, service->name) != 0) {
-            service->lastErrno = INIT_ECONTENT;
-        }
-
-        if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
-            CheckModuleUpdate(pathArgs);
-        }
-#ifdef IS_DEBUG_VERSION
-        // only the image is debuggable and need debug, then wait for debugger
-        if (ServiceNeedDebug(service->name) && IsDebuggableVersion()) {
-            WaitForDebugger();
-        }
-#endif
-        // fail must exit sub process
-        int ret = InitServiceProperties(service, pathArgs);
-        INIT_ERROR_CHECK(ret == 0,
-            _exit(service->lastErrno), "Service error %d %s, failed to set properties", ret, service->name);
-
-        (void)ServiceExec(service, pathArgs);
-        _exit(service->lastErrno);
+        RunChildProcess(service, pathArgs);
     } else if (pid < 0) {
         INIT_LOGE("Service error %d %s, failed to fork.", errno, service->name);
         service->lastErrno = INIT_EFORK;
@@ -629,9 +636,7 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     service->pid = pid;
     NotifyServiceChange(service, SERVICE_STARTED);
 #ifndef OHOS_LITE
-    /*
-     * after service fork hooks
-     */
+    // after service fork hooks
     ServiceHookExecute(service->name, (const char *)&pid, INIT_SERVICE_FORK_AFTER);
 #endif
     return SERVICE_SUCCESS;
