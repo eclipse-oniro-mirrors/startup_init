@@ -42,7 +42,7 @@ static void PollUeventdSocketTimeout(int ueventSockFd, bool ondemand)
             INIT_LOGE("Failed to poll ueventd socket!");
             return;
         }
-        if (pfd.revents & POLLIN) {
+        if (pfd.revents & (POLLIN | POLLERR)) {
             ProcessUevent(ueventSockFd, NULL, 0); // Not require boot devices
         }
     }
