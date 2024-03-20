@@ -26,7 +26,6 @@ ohos_static_library("sandbox") {
   ]
   public_configs = [ ":exported_header_files" ]
   include_dirs = [
-    "//third_party/cJSON",
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/include",
   ]
@@ -41,6 +40,7 @@ ohos_static_library("sandbox") {
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
     "config_policy:configpolicy_util",
   ]
   part_name = "init"

@@ -94,15 +94,13 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/sandbox:sandbox",
       "//base/startup/init/services/utils:libinit_utils",
-      "//third_party/cJSON:cjson",
     ]
 
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
       "bounds_checking_function:libsec_shared",
+      "cJSON:cjson",
       "c_utils:utils",
-      "selinux:libselinux",
-      "selinux_adapter:libselinux_parameter_static",
     ]
 
     if (param_test) {
@@ -161,12 +159,12 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
-      "//third_party/cJSON:cjson",
     ]
 
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
       "bounds_checking_function:libsec_shared",
+      "cJSON:cjson",
       "c_utils:utils",
       "selinux:libselinux",
       "selinux_adapter:libselinux_parameter_static",
@@ -197,7 +195,6 @@ if (defined(ohos_lite)) {
 
     if (build_selinux) {
       external_deps += [
-        "bounds_checking_function:libsec_shared",
         "selinux:libselinux",
         "selinux_adapter:libselinux_parameter_static",
       ]
@@ -247,8 +244,6 @@ if (defined(ohos_lite)) {
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "hilog:libhilog_base",
-      "selinux:libselinux",
-      "selinux_adapter:libselinux_parameter_static",
     ]
     if (build_selinux) {
       defines += [ "PARAM_SUPPORT_SELINUX" ]

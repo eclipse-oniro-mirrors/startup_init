@@ -21,8 +21,6 @@ config("bootevent_static_config") {
     "//base/startup/init/services/modules/init_hook",
     "//base/startup/init/services/param/include",
     "//base/startup/init/interfaces/innerkits/include/param",
-    "//third_party/bounds_checking_function/include/",
-    "//base/customization/config_policy/interfaces/inner_api/include",
   ]
 }
 
@@ -34,10 +32,10 @@ ohos_source_set("libbootevent_static") {
   public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
   public_external_deps += [ "bounds_checking_function:libsec_static" ]
   if (build_selinux) {
-    include_dirs += [
-      "//third_party/selinux/libselinux/include/",
-      "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
-      "//base/startup/init/interfaces/innerkits/include/param",
+    include_dirs += [ "//base/startup/init/interfaces/innerkits/include/param" ]
+    external_deps = [
+      "selinux:libselinux",
+      "selinux_adapter:librestorecon",
     ]
     defines = [ "WITH_SELINUX" ]
   }

@@ -28,8 +28,13 @@ if (defined(ohos_lite)) {
       "include/",
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/services/log",
-      "//third_party/cJSON",
     ]
+    if (ohos_indep_compiler_enable) {
+      include_dirs +=
+          [ "//binarys/third_party/cJSON/innerapis/cjson_static/include" ]
+    } else {
+      include_dirs += [ "//third_party/cJSON" ]
+    }
   }
 
   #
@@ -74,13 +79,13 @@ if (defined(ohos_lite)) {
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/services/loopevent/include",
       "//base/startup/init/services/log",
-      "//third_party/cJSON",
     ]
   }
 
   ohos_source_set("init_module_engine_sources") {
     sources = [ "init_modulemgr.c" ]
     public_configs = [ ":init_module_engine_sources_config" ]
+    external_deps = [ "cJSON:cjson" ]
   }
 }
 

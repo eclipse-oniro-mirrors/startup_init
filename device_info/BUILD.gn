@@ -43,7 +43,6 @@ if (!defined(ohos_lite)) {
     shlib_type = "sa"
 
     include_dirs = [
-      "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include/",
       ".",
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/interfaces/innerkits/include/param",

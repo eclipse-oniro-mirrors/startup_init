@@ -23,8 +23,6 @@ ohos_shared_library("selinuxadp") {
     "../init_hook",
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/include/param",
-    "//third_party/selinux/libselinux/include/",
-    "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
   ]
   deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
 

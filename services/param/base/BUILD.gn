@@ -16,7 +16,6 @@ import("//build/ohos.gni")
 config("exported_header_files") {
   visibility = [ ":*" ]
   include_dirs = [
-    "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/loopevent/include",
@@ -24,6 +23,11 @@ config("exported_header_files") {
     "//base/startup/init/services/param/include",
     "//base/startup/init/services/param/base",
   ]
+}
+
+config("exported_header_files_for_lite") {
+  visibility = [ ":*" ]
+  include_dirs = [ "//base/hiviewdfx/hilog_lite/interfaces/native/kits" ]
 }
 
 comm_sources = [
@@ -39,7 +43,6 @@ base_include_dirs = [
   "//base/startup/init/services/param/linux",
   "//base/startup/init/services/param/base",
   "//base/startup/init/services/loopevent/include",
-  "//third_party/bounds_checking_function/include",
 ]
 
 if (defined(ohos_lite)) {
@@ -51,8 +54,10 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/param/base/param_base.c",
     ]
     include_dirs = base_include_dirs
+    include_dirs += [ "//third_party/bounds_checking_function/include" ]
     defines = [ "_GNU_SOURCE" ]
     public_configs = [ ":exported_header_files" ]
+    public_configs += [ ":exported_header_files_for_lite" ]
 
     if (ohos_kernel_type == "linux") {
       sources += [
@@ -111,6 +116,7 @@ if (defined(ohos_lite)) {
     public_configs = [ ":exported_header_files" ]
     defines = [ "_GNU_SOURCE" ]
     deps = []
+    external_deps = []
 
     if (startup_init_feature_decode_group_file) {
       defines += [ "PARAM_DECODE_GROUPID_FROM_FILE" ]
@@ -128,21 +134,17 @@ if (defined(ohos_lite)) {
       configs += [ "//build/config/compiler:compiler" ]
       defines += [ "PARAM_BASE" ]
     } else {
-      include_dirs += [ "//third_party/bounds_checking_function/include" ]
       sources += [ "//base/startup/init/services/log/init_commlog.c" ]
+      external_deps += [ "bounds_checking_function:libsec_shared" ]
     }
     if (build_selinux) {
-      include_dirs += [
-        "//third_party/selinux/libselinux/include/",
-        "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
-      ]
       sources +=
           [ "//base/startup/init/services/param/adapter/param_selinux.c" ]
       defines += [
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
-      deps += [ "//base/security/selinux_adapter:libselinux_parameter_static" ]
+      external_deps += [ "selinux_adapter:libselinux_parameter_static" ]
     }
     if (param_base_log) {
       defines += [ "PARAM_BASE_LOG" ]
@@ -162,20 +164,17 @@ if (defined(ohos_lite)) {
     defines = [ "_GNU_SOURCE" ]
     deps = []
 
-    include_dirs += [
-      "//base/startup/init/services/init/include",
-      "//third_party/bounds_checking_function/include",
-    ]
+    include_dirs += [ "//base/startup/init/services/init/include" ]
+    external_deps = [ "bounds_checking_function:libsec_shared" ]
     if (build_selinux) {
-      include_dirs += [
-        "//third_party/selinux/libselinux/include/",
-        "//base/security/selinux_adapter/interfaces/policycoreutils/include/",
-      ]
       defines += [
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
-      deps += [ "//base/security/selinux_adapter:libselinux_parameter_static" ]
+      external_deps += [
+        "selinux:libselinux",
+        "selinux_adapter:libselinux_parameter_static",
+      ]
     }
     if (param_base_log) {
       defines += [ "PARAM_BASE_LOG" ]
