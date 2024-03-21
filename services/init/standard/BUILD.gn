@@ -166,7 +166,8 @@ ohos_executable("init") {
     defines += [ "SUPPORT_64BIT" ]
   }
 
-  if (defined(global_parts_info) && defined(global_parts_info.developtools_hiprofiler)) {
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.developtools_hiprofiler)) {
     defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
     external_deps += [ "hiprofiler:libhidebug_init" ]
   }
