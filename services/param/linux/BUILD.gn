@@ -19,8 +19,14 @@ config("exported_header_files") {
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/interfaces/innerkits/include/param",
     "//base/startup/init/interfaces/service/param/include",
-    "//third_party/bounds_checking_function/include",
+  ]
+}
+
+config("exported_header_files_for_lite") {
+  visibility = [ ":*" ]
+  include_dirs = [
     "//third_party/selinux/libselinux/include",
+    "//third_party/bounds_checking_function/include",
   ]
 }
 
@@ -37,9 +43,6 @@ param_include_dirs = [
   "//base/startup/init/interfaces/innerkits/include/syspara",
   "//base/startup/init/interfaces/innerkits/init_module_engine/include",
   "//base/startup/init/services/loopevent/include",
-  "//third_party/cJSON",
-  "//commonlibrary/utils_lite/include",
-  "//base/security/selinux_adapter/interfaces/policycoreutils/include",
 ]
 
 param_service_sources = [
@@ -71,9 +74,13 @@ if (defined(ohos_lite)) {
     sources = param_service_sources
     sources += param_trigger_sources
     include_dirs = param_include_dirs
-    include_dirs += [ "//third_party/bounds_checking_function/include" ]
+    include_dirs += [
+      "//base/security/selinux_adapter/interfaces/policycoreutils/include",
+      "//commonlibrary/utils_lite/include",
+      "//third_party/cJSON",
+    ]
     public_configs = [ ":exported_header_files" ]
-
+    public_configs += [ ":exported_header_files_for_lite" ]
     defines += [
       "_GNU_SOURCE",
       "__LINUX__",
@@ -90,8 +97,14 @@ if (defined(ohos_lite)) {
 
   static_library("param_client") {
     include_dirs = param_include_dirs
+    include_dirs += [
+      "//base/security/selinux_adapter/interfaces/policycoreutils/include",
+      "//commonlibrary/utils_lite/include",
+      "//third_party/cJSON",
+    ]
     sources = param_client_sources
     public_configs = [ ":exported_header_files" ]
+    public_configs += [ ":exported_header_files_for_lite" ]
     cflags = [ "-fPIC" ]
     defines = [
       "_GNU_SOURCE",
@@ -111,8 +124,7 @@ if (defined(ohos_lite)) {
     ]
     external_deps = [
       "bounds_checking_function:libsec_static",
-      "selinux:libselinux",
-      "selinux_adapter:libselinux_parameter_static",
+      "cJSON:cjson",
     ]
     public_external_deps = [ "selinux:libselinux" ]
 
@@ -158,9 +170,11 @@ if (defined(ohos_lite)) {
     ]
     external_deps = [
       "bounds_checking_function:libsec_static",
-      "selinux:libselinux",
+      "cJSON:cjson",
       "selinux_adapter:libselinux_parameter_static",
     ]
+
+    public_external_deps = [ "selinux:libselinux" ]
 
     cflags = [ "-Wno-deprecated-pragma" ]
     defines = [

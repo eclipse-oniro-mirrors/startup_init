@@ -63,7 +63,6 @@ if (defined(ohos_lite)) {
   ]
 
   service_ueventd_include = [
-    "//third_party/bounds_checking_function/include",
     "//base/startup/init/services/log",
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/services/utils",
@@ -74,7 +73,6 @@ if (defined(ohos_lite)) {
     "//base/startup/init/interfaces/innerkits/socket:libsocket",
     "//base/startup/init/services/log:init_log",
     "//base/startup/init/services/utils:libinit_utils",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
 
   #
@@ -96,6 +94,7 @@ if (defined(ohos_lite)) {
       cflags += [ "-DWITH_SELINUX" ]
     }
     external_deps += [ "selinux:libselinux" ]
+    external_deps += [ "bounds_checking_function:libsec_static" ]
     public_configs = [ ":libueventd_exported_config" ]
     part_name = "init"
     subsystem_name = "startup"
@@ -115,6 +114,7 @@ if (defined(ohos_lite)) {
     deps = service_ueventd_deps
     deps += [ "//base/startup/init/services/param/linux:param_client" ]
     external_deps = [ "selinux:libselinux" ]
+    external_deps += [ "bounds_checking_function:libsec_static" ]
     cflags = []
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     if (build_selinux) {

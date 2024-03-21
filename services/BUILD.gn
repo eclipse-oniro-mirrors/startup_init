@@ -37,16 +37,26 @@ group("startup_init") {
     deps += [ "//base/startup/init/services/etc:watchdog.cfg" ]
     deps += [ "//base/startup/init/services/etc:ueventd.cfg" ]
     external_deps = [
+      "e2fsprogs:blkid",
+      "e2fsprogs:e2fsck",
+      "e2fsprogs:e2fsdroid",
+      "e2fsprogs:libext2_blkid",
       "e2fsprogs:libext2_com_err",
       "e2fsprogs:libext2_e2p",
       "e2fsprogs:libext2_misc",
       "e2fsprogs:libext2_quota",
       "e2fsprogs:libext2_uuid",
       "e2fsprogs:libext2fs",
+      "e2fsprogs:mke2fs",
+      "e2fsprogs:resize2fs",
     ]
 
     if (use_musl) {
-      deps += [ "//third_party/f2fs-tools:f2fs-tools" ]
+      external_deps += [
+        "f2fs-tools:fsck.f2fs",
+        "f2fs-tools:libf2fs",
+        "f2fs-tools:mkfs.f2fs",
+      ]
     }
 
     if (enable_ohos_startup_init_feature_watcher) {

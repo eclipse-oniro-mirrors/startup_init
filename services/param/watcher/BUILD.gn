@@ -36,7 +36,6 @@ ohos_shared_library("param_watcher") {
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/services/log",
     "//base/startup/init/services/loopevent/include",
-    "//third_party/cJSON",
   ]
 
   deps = [
@@ -52,6 +51,7 @@ ohos_shared_library("param_watcher") {
   }
 
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",

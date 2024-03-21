@@ -24,12 +24,10 @@ comm_include = [
 ohos_shared_library("inittrace") {
   sources = [ "init_trace.c" ]
   include_dirs = comm_include
-  deps = [
-    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
-    "//third_party/cJSON:cjson",
-  ]
+  deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
     "zlib:libz",
   ]
 

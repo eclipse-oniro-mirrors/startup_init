@@ -27,7 +27,6 @@ ohos_shared_library("libparamtestmodule") {
     "//base/startup/init/services/param/include",
     "//base/startup/init/ueventd/include",
     "//base/startup/init/device_info",
-    "//third_party/cJSON",
   ]
 
   deps = [
@@ -35,7 +34,10 @@ ohos_shared_library("libparamtestmodule") {
     "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
     "//base/startup/init/services/log:agent_log",
   ]
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
+  ]
 
   part_name = "init"
   subsystem_name = "startup"

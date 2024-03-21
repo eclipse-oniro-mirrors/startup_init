@@ -28,7 +28,6 @@ common_sources = [
 common_include = [
   "//base/startup/init/services/log",
   "//base/startup/init/interfaces/innerkits/include",
-  "//third_party/bounds_checking_function/include",
   "include",
   "loop",
   "socket",
@@ -49,6 +48,7 @@ if (defined(ohos_lite)) {
     sources = common_sources
     cflags = [ "-fPIC" ]
     include_dirs = common_include
+    include_dirs += [ "//third_party/bounds_checking_function/include" ]
     defines = [ "_GNU_SOURCE" ]
     public_configs = [ ":exported_header_files" ]
   }

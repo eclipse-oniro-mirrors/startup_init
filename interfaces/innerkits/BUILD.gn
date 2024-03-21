@@ -32,7 +32,6 @@ config("exported_header_files") {
 
 include_common = [
   "./include",
-  "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
   "//base/startup/init/interfaces/innerkits/include",
   "//base/startup/init/interfaces/innerkits/include/param",
   "//base/startup/init/interfaces/innerkits/fd_holder",
@@ -55,7 +54,10 @@ if (defined(ohos_lite)) {
       ]
       sources = []
       include_dirs = include_common
-      include_dirs += [ "//third_party/bounds_checking_function/include" ]
+      include_dirs += [
+        "//third_party/bounds_checking_function/include",
+        "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
+      ]
       public_configs = [ ":exported_header_files" ]
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
@@ -99,6 +101,7 @@ if (defined(ohos_lite)) {
       ]
 
       include_dirs = include_common
+      include_dirs += [ "//base/hiviewdfx/hilog_lite/interfaces/native/kits" ]
       deps = [
         "//base/startup/init/services/modules/init_hook:inithook",
         "//base/startup/init/services/modules/udid:libudidcomm",

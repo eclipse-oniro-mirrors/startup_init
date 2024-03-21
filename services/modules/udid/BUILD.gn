@@ -22,7 +22,6 @@ comm_include = [
   "//base/startup/init/interfaces/innerkits/include",
   "//base/startup/init/interfaces/innerkits/include/syspara",
   "//base/startup/init/interfaces/innerkits/syspara",
-  "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
 ]
 
 if (defined(ohos_lite)) {
@@ -38,6 +37,7 @@ if (defined(ohos_lite)) {
     include_dirs += [
       "../../../interfaces/innerkits/init_module_engine/include",
       "../../../interfaces/hals",
+      "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
     ]
     sources = [
       "udid_adp.c",
@@ -78,12 +78,12 @@ if (defined(ohos_lite)) {
     ]
     defines = [ "_GNU_SOURCE" ]
     include_dirs = comm_include
-    deps = [
-      "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
-      "//third_party/mbedtls:mbedtls_shared",
-    ]
+    deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
 
-    external_deps = [ "bounds_checking_function:libsec_shared" ]
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "mbedtls:mbedtls_shared",
+    ]
 
     part_name = "init"
     subsystem_name = "startup"

@@ -22,11 +22,11 @@ ohos_shared_library("bootchart") {
     "//base/startup/init/interfaces/innerkits/include/param",
   ]
 
-  deps = [
-    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
-    "//third_party/cJSON:cjson",
+  deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
   ]
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
 
   part_name = "init"
   subsystem_name = "startup"

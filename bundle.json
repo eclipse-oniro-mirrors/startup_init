@@ -52,7 +52,12 @@
                 "selinux_adapter",
                 "storage_service",
                 "mbedtls",
-                "zlib"
+                "zlib",
+                "libuv",
+                "cJSON",
+                "mksh",
+                "libunwind",
+                "toybox"
             ],
             "third_party": [
                 "bounds_checking_function",
@@ -70,14 +75,6 @@
                 "storage_service"
             ]
         },
-        "data_deps" : [
-            "e2fsprogs:blkid",
-            "e2fsprogs:e2fsck",
-            "e2fsprogs:libext2_blkid",
-            "e2fsprogs:mke2fs",
-            "e2fsprogs:resize2fs",
-            "e2fsprogs:e2fsdroid"
-        ],
         "build": {
             "group_type": {
                 "base_group": [

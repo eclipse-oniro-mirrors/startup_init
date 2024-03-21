@@ -26,12 +26,12 @@ ohos_source_set("libcrashhandler") {
     "../../init/include",
   ]
   public_configs = [ ":libcrashhandler_config" ]
-  deps = [
-    "../../log:init_log",
-    "//third_party/libunwind:libunwind",
-  ]
+  deps = [ "../../log:init_log" ]
 
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "libunwind:libunwind",
+  ]
 
   public_configs += [ "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
 
