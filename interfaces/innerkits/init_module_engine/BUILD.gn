@@ -31,7 +31,7 @@ if (defined(ohos_lite)) {
     ]
     if (ohos_indep_compiler_enable) {
       include_dirs +=
-          [ "//binarys/third_party/cJSON/innerapis/cjson_static/includes" ]
+          [ "//binarys/third_party/cJSON/innerapis/cjson_static/include" ]
     } else {
       include_dirs += [ "//third_party/cJSON" ]
     }
