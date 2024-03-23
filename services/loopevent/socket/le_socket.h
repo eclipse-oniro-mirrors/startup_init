@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 #endif
+
+#define SOCKET_TIMEOUT 3
+
 INIT_LOCAL_API
 int CreateSocket(int flags, const char *server);
 INIT_LOCAL_API
