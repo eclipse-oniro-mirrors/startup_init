@@ -92,7 +92,7 @@ static napi_value BusinessErrorCreate(napi_env env, int status)
 static int GetParamString(napi_env env, napi_value arg, char *buffer, size_t maxBuff, size_t *keySize)
 {
     (void)napi_get_value_string_utf8(env, arg, nullptr, maxBuff - 1, keySize);
-    if (*keySize >= maxBuff || *keySize == 0) {
+    if (*keySize >= maxBuff) {
         return SYSPARAM_INVALID_INPUT;
     }
     (void)napi_get_value_string_utf8(env, arg, buffer, maxBuff - 1, keySize);
