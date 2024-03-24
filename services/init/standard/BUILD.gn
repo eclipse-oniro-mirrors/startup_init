@@ -44,7 +44,10 @@ ohos_executable("init_early") {
     "//base/startup/init/interfaces/innerkits/init_module_engine/include",
   ]
   configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
-  external_deps = [ "cJSON:cjson_static" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "cJSON:cjson_static",
+  ]
   deps = [
     "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
     "//base/startup/init/services/log:init_log",
@@ -115,7 +118,7 @@ ohos_executable("init") {
   deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static" ]
   external_deps += [ "storage_service:libfscryptutils_static" ]
   external_deps += [
-    "bounds_checking_function:libsec_static",
+    "bounds_checking_function:libsec_shared",
     "cJSON:cjson_static",
   ]
 
