@@ -30,11 +30,57 @@
 #include "init_hook.h"
 #include "plugin_adapter.h"
 
+const char *SERVICE_INFO_JSONSTR = "{"
+    "\"services\":{"
+    "   \"name\":\"test_service\","
+    "   \"path\":[\"/data/init_ut/test_service\"],"
+    "   \"importance\":-20,"
+    "   \"uid\":\"system\","
+    "   \"writepid\":[\"/dev/test_service\"],"
+    "   \"console\":1,"
+    "   \"caps\":[\"TEST_ERR\"],"
+    "   \"gid\":[\"system\"], "
+    "   \"critical\":1,"
+    "   \"jobs\" : {"
+    "       \"pre-start\":\"test_service:pre-start\""
+    "   }"
+    "}"
+"}";
+const char *JOB_INFO_JSONSTR = "{"
+    "\"jobs\": ["
+    "   {"
+    "       \"name\" : \"test_service:pre-start\","
+    "       \"cmds\" : ["
+    "           \"setparam test.test.prestartKey 1\""
+    "       ]"
+    "   }"
+    "]"
+"}";
+const char *PRE_START_KEY = "test.test.prestartKey";
 static void DoCmdByName(const char *name, const char *cmdContent)
 {
     int cmdIndex = 0;
     (void)GetMatchCmd(name, &cmdIndex);
     DoCmdByIndex(cmdIndex, cmdContent, nullptr);
+}
+
+static void LoadJobs()
+{
+    cJSON *jobJson = cJSON_Parse(JOB_INFO_JSONSTR);
+    INIT_ERROR_CHECK(jobJson != NULL, return, "Failed to loadJobs");
+    ParseTriggerConfig(jobJson, nullptr, nullptr);
+    cJSON_Delete(jobJson);
+}
+
+static int ServiceTestTriggerExe(const TriggerNode *trigger, const char *content, uint32_t size)
+{
+    INIT_ERROR_CHECK(trigger != NULL, return -1, "ParamWriteTriggerExe trigger is NULL");
+    CommandNode *cmd = GetNextCmdNode((JobNode *)trigger, NULL);
+    while (cmd != NULL) {
+        DoCmdByIndex(cmd->cmdKeyIndex, cmd->content, &cmd->cfgContext);
+        cmd = GetNextCmdNode((JobNode *)trigger, cmd);
+    }
+    return 0;
 }
 
 using namespace testing::ext;
@@ -59,11 +105,7 @@ public:
 
 HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
 {
-    const char *jsonStr = "{\"services\":{\"name\":\"test_service\",\"path\":[\"/data/init_ut/test_service\"],"
-        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
-        "\"caps\":[\"TEST_ERR\"],"
-        "\"gid\":[\"system\"], \"critical\":1}}";
-    cJSON* jobItem = cJSON_Parse(jsonStr);
+    cJSON* jobItem = cJSON_Parse(SERVICE_INFO_JSONSTR);
     ASSERT_NE(nullptr, jobItem);
     cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
     ASSERT_NE(nullptr, serviceItem);
@@ -71,8 +113,17 @@ HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
 
+    LoadJobs();
+    RegisterTriggerExec(TRIGGER_UNKNOW, ServiceTestTriggerExe);
+
     ret = ServiceStart(service, &service->pathArgs);
     EXPECT_EQ(ret, 0);
+    
+    char value[PARAM_VALUE_LEN_MAX] = {0};
+    u_int32_t len = sizeof(value);
+    ret = SystemGetParameter(PRE_START_KEY, value, &len);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(0, strcmp("1", value));
 
     ret = ServiceStop(service);
     EXPECT_EQ(ret, 0);
