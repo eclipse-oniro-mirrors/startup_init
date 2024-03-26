@@ -22,20 +22,37 @@
 #include <stddef.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <unistd.h>
 
 #include "le_utils.h"
 
+static int SetSocketTimeout(int fd)
+{
+    struct timeval timeout;
+    timeout.tv_sec = SOCKET_TIMEOUT;
+    timeout.tv_usec = 0;
+    int ret = setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+    LE_CHECK(ret == 0, return ret, "Failed to set socket option");
+
+    ret = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    LE_CHECK(ret == 0, return ret, "Failed to set socket option");
+    return ret;
+}
+
 static int CreatePipeServerSocket_(const char *server, int maxClient, int public)
 {
     int listenfd = socket(PF_UNIX, SOCK_STREAM, 0);
     LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket errno %d", errno);
 
+    int ret = SetSocketTimeout(listenfd);
+    LE_CHECK(ret == 0, return ret, "Failed to set socket timeout");
+
     unlink(server);
     struct sockaddr_un serverAddr;
-    int ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
+    ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
     LE_CHECK(ret == 0, close(listenfd);
         return ret, "Failed to memory set. error: %d", errno);
     serverAddr.sun_family = AF_UNIX;
@@ -70,6 +87,9 @@ static int CreatePipeSocket_(const char *server)
     int on = 1;
     int ret = setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
     LE_CHECK(ret == 0, return ret, "Failed to set socket option");
+
+    ret = SetSocketTimeout(fd);
+    LE_CHECK(ret == 0, return ret, "Failed to set socket timeout");
 
     struct sockaddr_un serverAddr;
     ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
@@ -107,9 +127,12 @@ static int CreateTcpServerSocket_(const char *server, int maxClient)
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
     LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket");
 
+    int ret = SetSocketTimeout(listenfd);
+    LE_CHECK(ret == 0, return ret, "Failed to set socket timeout");
+
     struct sockaddr_in serverAddr;
     GetSockaddrFromServer_(server, &serverAddr);
-    int ret = bind(listenfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+    ret = bind(listenfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
     LE_CHECK(ret >= 0, close(listenfd);
         return ret, "Failed to bind socket");
     SetNoBlock(listenfd);
@@ -129,6 +152,9 @@ static int CreateTcpSocket_(const char *server)
     int on = 1;
     int ret = setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
     LE_CHECK(ret == 0, return ret, "Failed to set socket option");
+
+    ret = SetSocketTimeout(fd);
+    LE_CHECK(ret == 0, return ret, "Failed to set socket timeout");
 
     struct sockaddr_in serverAddr;
     GetSockaddrFromServer_(server, &serverAddr);
