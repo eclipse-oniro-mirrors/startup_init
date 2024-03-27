@@ -25,8 +25,11 @@ namespace OHOS {
 namespace init_param {
 class WatcherManagerStub : public IRemoteStub<IWatcherManager> {
 public:
+    WatcherManagerStub (bool serialInvokeFlag = true) 
+        : IRemoteStub(serialInvokeFlag), serialInvokeFlag_(serialInvokeFlag) {}
     int32_t OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
         MessageOption &option) override;
+    bool serialInvokeFlag_ = { true };
 };
 }
 }
