@@ -51,6 +51,7 @@ ohos_shared_library("param_watcher") {
   }
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "cJSON:cjson",
     "c_utils:utils",
     "ipc:ipc_core",
