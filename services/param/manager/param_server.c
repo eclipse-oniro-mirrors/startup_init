@@ -53,6 +53,7 @@ typedef struct CmdLineInfoContainer {
 typedef struct CmdLineIteratorCtx {
     char *cmdline;
     bool gotSn;
+    bool *matches;
 } CmdLineIteratorCtx;
 
 static int CommonDealFun(const char *name, const char *value)
@@ -160,31 +161,42 @@ static int MatchReserverCmdline(const NAME_VALUE_PAIR* nv, CmdLineIteratorCtx *c
         if (ret <= 0) {
             continue;
         }
+        if (ctx->matches[i]) {
+            return PARAM_CODE_SUCCESS;
+        }
+        bool isSnSet = ((container->cmdLineInfo + i)->processor == SnDealFun);
+        if (isSnSet && ctx->gotSn) {
+            return PARAM_CODE_SUCCESS;
+        }
         PARAM_LOGV("proc cmdline %s matched.", fullName);
         ret = (container->cmdLineInfo + i)->processor(fullName, nv->value);
-        if ((ret == 0) && (SnDealFun == (container->cmdLineInfo + i)->processor)) {
-            ctx->gotSn = true;
+        if (ret == 0) {
+            ctx->matches[i] = true;
+            if (isSnSet) {
+                ctx->gotSn = true;
+            }
         }
         return PARAM_CODE_SUCCESS;
     }
     return PARAM_CODE_NOT_FOUND;
 }
 
+static const CmdLineInfo CMDLINES[] = {
+    { "hardware", CommonDealFun },
+    { "bootgroup", CommonDealFun },
+    { "reboot_reason", CommonDealFun },
+    { "bootslots", CommonDealFun },
+    { "sn", SnDealFun },
+    { "root_package", CommonDealFun },
+    { "serialno", SnDealFun },
+    { "udid", Common2ConstDealFun },
+    { "productid", Common2ConstDealFun }
+};
+
 static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
 {
     CmdLineIteratorCtx *ctx = (CmdLineIteratorCtx *)context;
     char *data = (char *)ctx->cmdline;
-    static const CmdLineInfo CMDLINES[] = {
-        { "hardware", CommonDealFun },
-        { "bootgroup", CommonDealFun },
-        { "reboot_reason", CommonDealFun },
-        { "bootslots", CommonDealFun },
-        { "sn", SnDealFun },
-        { "root_package", CommonDealFun },
-        { "serialno", SnDealFun },
-        { "udid", Common2ConstDealFun },
-        { "productid", Common2ConstDealFun }
-    };
 
     data[nv->nameEnd - data] = '\0';
     data[nv->valueEnd - data] = '\0';
@@ -208,7 +220,7 @@ static void CmdlineIterator(const NAME_VALUE_PAIR *nv, void *context)
     }
 
     // cmdline with prefix but not matched, add to param by default
-    PARAM_LOGE("add proc cmdline param %s by default.", nv->name);
+    PARAM_LOGI("add proc cmdline param %s by default.", nv->name);
     CommonDealFun(nv->name, nv->value);
 }
 
@@ -234,7 +246,8 @@ INIT_LOCAL_API int LoadParamFromCmdLine(void)
     ctx.gotSn = false;
     ctx.cmdline = ReadFileData(BOOT_CMD_LINE);
     PARAM_CHECK(ctx.cmdline != NULL, return -1, "Failed to read file %s", BOOT_CMD_LINE);
-
+    bool matches[ARRAY_LENGTH(CMDLINES)] = {false};
+    ctx.matches = matches;
     IterateNameValuePairs(ctx.cmdline, CmdlineIterator, (void *)(&ctx));
 
     // sn is critical, it must be specified
@@ -377,7 +390,7 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode,
     realpath(fileName, realPath);
     FILE *fp = fopen(realPath, "r");
     if (fp == NULL) {
-        PARAM_LOGE("Failed to open file '%s' error:%d ", fileName, errno);
+        PARAM_LOGW("Failed to open file '%s' error:%d ", fileName, errno);
         return -1;
     }
 
@@ -422,14 +435,16 @@ int LoadDefaultParams(const char *fileName, uint32_t mode)
     PARAM_LOGI("Load default parameters from %s.", fileName);
     struct stat st;
     if ((stat(fileName, &st) == 0) && !S_ISDIR(st.st_mode)) {
-        (void)ProcessParamFile(fileName, &mode);
+        if (strstr(fileName, ".para.dac")) {
+            return LoadSecurityLabel(fileName);
+        } else {
+            return ProcessParamFile(fileName, &mode);
+        }
     } else {
         (void)ReadFileInDir(fileName, ".para", ProcessParamFile, &mode);
         (void)ReadFileInDir(fileName, ".para.import", LoadParamFromImport, &mode);
+        return LoadSecurityLabel(fileName);
     }
-
-    // load security label
-    return LoadSecurityLabel(fileName);
 }
 
 INIT_LOCAL_API void LoadParamFromBuild(void)

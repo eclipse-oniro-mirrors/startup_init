@@ -35,7 +35,7 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
 static void LoadPersistParam_(const char *fileName, char *buffer, uint32_t buffSize)
 {
     FILE *fp = fopen(fileName, "r");
-    PARAM_CHECK(fp != NULL, return, "No valid persist parameter file %s", fileName);
+    PARAM_WARNING_CHECK(fp != NULL, return, "No valid persist parameter file %s", fileName);
 
     uint32_t paramNum = 0;
     while (fgets(buffer, buffSize, fp) != NULL) {

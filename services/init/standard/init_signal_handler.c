@@ -43,9 +43,9 @@ static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
 
     // check child process exit status
     if (WIFSIGNALED(procStat)) {
-        INIT_LOGE("Child process %s(pid %d) exit with signal : %d", serviceName, sigPID, WTERMSIG(procStat));
+        INIT_LOGW("Child process %s(pid %d) exit with signal : %d", serviceName, sigPID, WTERMSIG(procStat));
     } else if (WIFEXITED(procStat)) {
-        INIT_LOGE("Child process %s(pid %d) exit with code : %d", serviceName, sigPID, WEXITSTATUS(procStat));
+        INIT_LOGW("Child process %s(pid %d) exit with code : %d", serviceName, sigPID, WEXITSTATUS(procStat));
         if (service != NULL) {
             service->lastErrno = WEXITSTATUS(procStat);
         }
