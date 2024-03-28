@@ -349,6 +349,17 @@ static void ClearEnvironment(Service *service)
     return;
 }
 
+static void SetServiceEnv(Service *service)
+{
+    INIT_CHECK(service->env != NULL, return);
+    for (int i = 0; i < service->envCnt; i++) {
+        if (strlen(service->env[i].name) > 0 && strlen(service->env[i].value) > 0) {
+            int ret = setenv(service->env[i].name, service->env[i].value, 1);
+            INIT_CHECK_ONLY_ELOG(ret != 0, "set service:%s env:%s failed!", service->name, service->env[i].name);
+        }
+    }
+}
+
 static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
 {
     INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
@@ -362,6 +373,8 @@ static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
         INIT_LOGW("Service warning %d %s, failed to set access token.", ret, service->name);
         service->lastErrno = INIT_EACCESSTOKEN;
     }
+
+    SetServiceEnv(service);
 
     // deal start job
     if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
@@ -765,7 +778,6 @@ void ServiceReap(Service *service)
     // which means the timer handler will start the service
     // Init should not start it automatically.
     INIT_CHECK(IsServiceWithTimerEnabled(service) == 0, return);
-
     if (!IsOnDemandService(service)) {
         CloseServiceSocket(service);
     }
@@ -787,11 +799,17 @@ void ServiceReap(Service *service)
         // the service could be restart even if it is one-shot service
     }
 
+    if (service->attribute & SERVICE_ATTR_PERIOD) { //period
+        ServiceStartTimer(service, service->period);
+        return;
+    }
+
     // service no need to restart if it is an ondemand service.
     if (IsOnDemandService(service)) {
         CheckOndemandService(service);
         return;
     }
+
     if (service->attribute & SERVICE_ATTR_CRITICAL) { // critical
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("Service error %s critical service crashed.", service->name, service->crashCount);
