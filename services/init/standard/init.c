@@ -292,6 +292,14 @@ void SystemConfig(const char *uptime)
     RegisterBootStateChange(BootStateChange);
 
     INIT_LOGI("boot stage: init finish.");
+
+    // The cgroupv1 hierarchy may be created asynchronously in the early stage,
+    // so make sure it has been done before loading SELinux.
+    struct stat sourceInfo = {0};
+    if (stat("/dev/cgroup", &sourceInfo) == 0) {
+        WaitForFile("/dev/memcg/procs", WAIT_MAX_SECOND);
+    }
+
     // load SELinux context and policy
     // Do not move position!
     PluginExecCmdByName("loadSelinuxPolicy", "");
