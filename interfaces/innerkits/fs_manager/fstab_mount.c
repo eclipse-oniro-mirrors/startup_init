@@ -379,7 +379,7 @@ int MountOneItem(FstabItem *item)
     mountFlags = GetMountFlags(item->mountOptions, fsSpecificData, sizeof(fsSpecificData),
         item->mountPoint);
     if (!IsSupportedFilesystem(item->fsType)) {
-        BEGET_LOGE("Unsupported file system \" %s \"", item->fsType);
+        BEGET_LOGW("Unsupported file system \" %s \"", item->fsType);
         return 0;
     }
     if (FM_MANAGER_WAIT_ENABLED(item->fsManagerFlags)) {

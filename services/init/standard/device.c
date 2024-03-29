@@ -55,11 +55,14 @@ static void MountBasicFs(void)
     if (mount("tmpfs", "/storage", "tmpfs", MS_NOEXEC | MS_NODEV| MS_NOSUID, "mode=0755") != 0) {
         INIT_LOGE("Mount storage failed. %s", strerror(errno));
     }
-    if (mkdir("/dev/pts", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
-        INIT_LOGE("mkdir /dev/pts failed. %s", strerror(errno));
-    }
-    if (mount("devpts", "/dev/pts", "devpts", 0, NULL) != 0) {
-        INIT_LOGE("Mount devpts failed. %s", strerror(errno));
+    struct stat st;
+    if (!(stat("/dev/pts", &st) == 0 && S_ISDIR(st.st_mode))) {
+        if (mkdir("/dev/pts", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
+            INIT_LOGE("mkdir /dev/pts failed. %s", strerror(errno));
+        }
+        if (mount("devpts", "/dev/pts", "devpts", 0, NULL) != 0) {
+            INIT_LOGE("Mount devpts failed. %s", strerror(errno));
+        }
     }
     if (mount("proc", "/proc", "proc", 0, "gid=3009,hidepid=2") != 0) {
         INIT_LOGE("Mount procfs failed. %s", strerror(errno));
@@ -74,15 +77,22 @@ static void MountBasicFs(void)
 
 static void CreateDeviceNode(void)
 {
-    if (mknod("/dev/null", S_IFCHR | DEFAULT_RW_MODE, makedev(MEM_MAJOR, DEV_NULL_MINOR)) != 0) {
-        INIT_LOGE("Create /dev/null device node failed. %s", strerror(errno));
-    }
-    if (mknod("/dev/random", S_IFCHR | DEFAULT_RW_MODE, makedev(MEM_MAJOR, DEV_RANDOM_MINOR)) != 0) {
-        INIT_LOGE("Create /dev/random device node failed. %s", strerror(errno));
+    if (access("/dev/null", F_OK) != 0) {
+        if (mknod("/dev/null", S_IFCHR | DEFAULT_RW_MODE, makedev(MEM_MAJOR, DEV_NULL_MINOR)) != 0) {
+            INIT_LOGE("Create /dev/null device node failed. %s", strerror(errno));
+        }
     }
 
-    if (mknod("/dev/urandom", S_IFCHR | DEFAULT_RW_MODE, makedev(MEM_MAJOR, DEV_URANDOM_MINOR)) != 0) {
-        INIT_LOGE("Create /dev/urandom device node failed. %s", strerror(errno));
+    if (access("/dev/random", F_OK) != 0) {
+        if (mknod("/dev/random", S_IFCHR | DEFAULT_RW_MODE, makedev(MEM_MAJOR, DEV_RANDOM_MINOR)) != 0) {
+            INIT_LOGE("Create /dev/random device node failed. %s", strerror(errno));
+        }
+    }
+
+    if (access("/dev/urandom", F_OK) != 0) {
+        if (mknod("/dev/urandom", S_IFCHR | DEFAULT_RW_MODE, makedev(MEM_MAJOR, DEV_URANDOM_MINOR)) != 0) {
+            INIT_LOGW("Create /dev/urandom device node failed. %s", strerror(errno));
+        }
     }
 }
 

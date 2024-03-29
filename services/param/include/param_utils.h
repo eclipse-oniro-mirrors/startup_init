@@ -76,7 +76,6 @@ typedef enum {
 #define DATA_PATH          STARTUP_INIT_UT_PATH"/data/service/el1/startup/parameters/"
 #endif
 #define PARAM_AREA_SIZE_CFG STARTUP_INIT_UT_PATH"/etc/param/ohos.para.size"
-
 #define CLIENT_PIPE_NAME "/dev/unix/socket/paramservice"
 #define PIPE_NAME STARTUP_INIT_UT_PATH "/dev/unix/socket/paramservice"
 #define PARAM_STORAGE_PATH STARTUP_INIT_UT_PATH "/dev/__parameters__"
@@ -118,6 +117,18 @@ INIT_LOCAL_API void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, cons
 #define PARAM_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                \
         PARAM_LOGE(__VA_ARGS__);     \
+        exper;                       \
+    }
+
+#define PARAM_INFO_CHECK(retCode, exper, ...) \
+    if (!(retCode)) {                \
+        PARAM_LOGI(__VA_ARGS__);     \
+        exper;                       \
+    }
+
+#define PARAM_WARNING_CHECK(retCode, exper, ...) \
+    if (!(retCode)) {                \
+        PARAM_LOGW(__VA_ARGS__);     \
         exper;                       \
     }
 

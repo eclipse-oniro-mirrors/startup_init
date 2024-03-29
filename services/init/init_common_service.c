@@ -599,7 +599,7 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
 int ServiceStart(Service *service, ServiceArgs *pathArgs)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
-    INIT_ERROR_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "Service info %s already started", service->name);
+    INIT_INFO_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "Service info %s already started", service->name);
     INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
         return SERVICE_FAILURE, "start service %s pathArgs is NULL.", service->name);
 
