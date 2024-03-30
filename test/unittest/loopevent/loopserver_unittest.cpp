@@ -422,7 +422,7 @@ HWTEST_F(LoopServerUnitTest, Init_LoopServerTest_ServerTimeout008, TestSize.Leve
 {
     int flag = TASK_STREAM | TASK_PIPE | TASK_SERVER | TASK_TEST;
     int serverSock = CreateSocket(flag, "/tmp/testpipe");
-    EXPECT_NE(serverSock, -1)
+    EXPECT_NE(serverSock, -1);
     int ret = AcceptSocket(serverSock, flag);
     EXPECT_EQ(ret, -1);
 }
