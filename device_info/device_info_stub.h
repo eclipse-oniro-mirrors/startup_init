@@ -26,7 +26,7 @@ namespace OHOS {
 namespace device_info {
 class DeviceInfoStub : public IRemoteStub<IDeviceInfo> {
 public:
-    DeviceInfoStub (bool serialInvokeFlag = true) 
+    explicit DeviceInfoStub(bool serialInvokeFlag = true)
         : IRemoteStub(serialInvokeFlag), serialInvokeFlag_(serialInvokeFlag) {}
     int32_t OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
         MessageOption &option) override;
