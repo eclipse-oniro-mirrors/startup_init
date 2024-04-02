@@ -205,24 +205,16 @@ ParamTrieNode *AddTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLe
 }
 
 static int TraversalSubTrieNode(const WorkSpace *workSpace,
-    const ParamTrieNode *current, TraversalTrieNodePtr walkFunc, const void *cookie, uint32_t stackSize)
+    const ParamTrieNode *current, TraversalTrieNodePtr walkFunc, const void *cookie)
 {
     if (current == NULL) {
         return 0;
     }
-    stackSize++;
-    if (stackSize >= PARAM_TRIE_STACK_SIZE) {
-        PARAM_LOGI("TraversalSubTrieNode %s, %d, %d, %d, %d", workSpace->fileName,
-            stackSize, current->left, current->right, current->child);
-        PARAM_LOGI("TraversalSubTrieNode %d, %d, %d, %d, %s", current->labelIndex,
-            current->dataIndex, current->selinuxLabel, current->length, current->key);
-    }
 
     walkFunc(workSpace, (ParamTrieNode *)current, cookie);
-    TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->child), walkFunc, cookie, stackSize);
-    TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->left), walkFunc, cookie, stackSize);
-    TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->right), walkFunc, cookie, stackSize);
-    stackSize--;
+    TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->child), walkFunc, cookie);
+    TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->left), walkFunc, cookie);
+    TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->right), walkFunc, cookie);
     return 0;
 }
 
@@ -236,12 +228,11 @@ INIT_LOCAL_API int TraversalTrieNode(const WorkSpace *workSpace,
         current = GetTrieRoot(workSpace);
     }
     PARAM_CHECK(current != NULL, return 0, "Invalid current node");
-    uint32_t stackSize = 0;
     walkFunc(workSpace, (ParamTrieNode *)current, cookie);
-    TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->child), walkFunc, cookie, stackSize);
+    TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->child), walkFunc, cookie);
     if (root == NULL) {
-        TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->left), walkFunc, cookie, stackSize);
-        TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->right), walkFunc, cookie, stackSize);
+        TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->left), walkFunc, cookie);
+        TraversalSubTrieNode(workSpace, GetTrieNode(workSpace, current->right), walkFunc, cookie);
     }
     return 0;
 }

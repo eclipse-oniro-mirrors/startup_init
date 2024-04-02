@@ -36,10 +36,6 @@ static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
     }
     Service* service = GetServiceByPid(sigPID);
     const char *serviceName = (service == NULL) ? "Unknown" : service->name;
-    if (strcmp(serviceName, "param_watcher") == 0) {
-        int ret = system("/system/bin/tar -zcf /data/log/startup/parameter.tar.gz /dev/__parameters__/*");
-        INIT_LOGI("parameter compress dump ret is %d", ret);
-    }
 
     // check child process exit status
     if (WIFSIGNALED(procStat)) {
