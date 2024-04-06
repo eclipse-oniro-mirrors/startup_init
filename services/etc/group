@@ -94,6 +94,7 @@ foundation:x:5523:
 quickfixserver:x:5524:
 cast_engine_service:x:5526:
 sharing_service:x:5527:
+powermgr:x:5528:
 samgr:x:5555:
 update:x:6666:
 charger:x:6667:
