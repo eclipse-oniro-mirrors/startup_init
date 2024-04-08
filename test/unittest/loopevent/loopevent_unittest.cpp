@@ -317,4 +317,11 @@ HWTEST_F(LoopEventUnittest, LoopAbnormalTest, TestSize.Level1)
     LE_StartWatcher(LE_GetDefaultLoop(), nullptr, &info, nullptr);
     LE_StartWatcher(LE_GetDefaultLoop(), nullptr, nullptr, nullptr);
 }
+
+HWTEST_F(LoopEventUnittest, LoopIdleTest, TestSize.Level1)
+{
+    int ret = LE_DelayProc(LE_GetDefaultLoop(), nullptr, nullptr);
+    ASSERT_NE(ret, 0);
+    LE_DelIdle(nullptr);
+}
 }  // namespace init_ut
