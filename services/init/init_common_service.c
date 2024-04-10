@@ -645,7 +645,7 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
         service->lastErrno = INIT_EFORK;
         return SERVICE_FAILURE;
     }
-    INIT_LOGI("Service info %s(pid %d) started", service->name, pid);
+    INIT_LOGI("Service info %s(pid %d uid %d) started", service->name, pid, service->servPerm.uID);
     service->pid = pid;
     NotifyServiceChange(service, SERVICE_STARTED);
 #ifndef OHOS_LITE
