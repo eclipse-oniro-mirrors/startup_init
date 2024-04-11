@@ -511,9 +511,7 @@ static int AddServiceFile(cJSON *json, Service *service)
         NULL,
     };
     int num = SplitString(fileStr, " ", opt, FILE_OPT_NUMS);
-    if (num != FILE_OPT_NUMS) {
-        return SERVICE_FAILURE;
-    }
+    INIT_CHECK_RETURN_VALUE(num == FILE_OPT_NUMS, SERVICE_FAILURE);
     if (opt[SERVICE_FILE_NAME] == NULL || opt[SERVICE_FILE_FLAGS] == NULL || opt[SERVICE_FILE_PERM] == NULL ||
         opt[SERVICE_FILE_UID] == NULL || opt[SERVICE_FILE_GID] == NULL) {
         INIT_LOGE("Invalid file opt");
@@ -532,6 +530,8 @@ static int AddServiceFile(cJSON *json, Service *service)
         fileOpt->flags = O_RDWR;
     } else {
         INIT_LOGE("Failed file flags %s", opt[SERVICE_FILE_FLAGS]);
+        free(fileOpt);
+        fileOpt = NULL;
         return SERVICE_FAILURE;
     }
     fileOpt->perm = strtoul(opt[SERVICE_FILE_PERM], 0, OCTAL_BASE);
