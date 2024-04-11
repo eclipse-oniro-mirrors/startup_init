@@ -210,10 +210,7 @@ Fstab *ReadFstabFromFile(const char *file, bool procMounts)
     } else {
         fp = fopen(file, "r"); // no file system, can not get real path
     }
-    if (fp == NULL) {
-        BEGET_LOGE("Open %s failed, err = %d", file, errno);
-        return NULL;
-    }
+    BEGET_ERROR_CHECK(fp != NULL, return NULL, "Open %s failed, err = %d", file, errno);
 
     if ((fstab = (Fstab *)calloc(1, sizeof(Fstab))) == NULL) {
         BEGET_LOGE("Allocate memory for FS table failed, err = %d", errno);
@@ -560,7 +557,8 @@ Fstab* LoadFstabFromCommandLine(void)
 
     BEGET_ERROR_CHECK(cmdline != NULL, return NULL, "Read from \'%s\' failed, err = %d", BOOT_CMD_LINE, errno);
     TrimTail(cmdline, '\n');
-    BEGET_ERROR_CHECK((fstab = (Fstab *)calloc(1, sizeof(Fstab))) != NULL, return NULL,
+    fstab = (Fstab *)calloc(1, sizeof(Fstab));
+    BEGET_ERROR_CHECK(fstab != NULL, free(cmdline); return NULL,
         "Allocate memory for FS table failed, err = %d", errno);
     char *start = cmdline;
     char *end = start + strlen(cmdline);
