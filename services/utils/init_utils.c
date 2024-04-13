@@ -778,7 +778,7 @@ void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, 
 
     i = 0;
     pos = (const char *)strDict;
-    while (*pos != '\0') {
+    while (*(const char **)pos != NULL) {
         if (cmp(*(const char **)pos, target) == 0) {
             return (void *)pos;
         }
@@ -789,7 +789,7 @@ void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, 
         return NULL;
     }
     pos = (const char *)extendStrDict;
-    while (*pos != '\0') {
+    while (*(const char **)pos != NULL) {
         if (cmp(*(const char **)pos, target) == 0) {
             return (void *)pos;
         }
