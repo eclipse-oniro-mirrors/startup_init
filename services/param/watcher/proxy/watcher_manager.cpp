@@ -85,6 +85,7 @@ int32_t WatcherManager::DelRemoteWatcher(uint32_t remoteWatcherId)
 
 int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
+    std::lock_guard<std::mutex> lock(watcherMutex_);
     // get remote watcher and group
     auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
     WATCHER_CHECK(remoteWatcher != nullptr, return -1, "Can not find remote watcher %d", remoteWatcherId);
@@ -92,7 +93,6 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
     WATCHER_CHECK(group != nullptr, return -1, "Failed to create group for %s", keyPrefix.c_str());
     {
         // add watcher to agent and group
-        std::lock_guard<std::mutex> lock(watcherMutex_);
         bool newGroup = group->Empty();
         AddParamWatcher(group, remoteWatcher);
         if (newGroup) {
@@ -108,6 +108,7 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
 
 int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
+    std::lock_guard<std::mutex> lock(watcherMutex_);
     auto group = GetWatcherGroup(keyPrefix);
     WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
     auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
@@ -115,7 +116,6 @@ int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t remote
     WATCHER_LOGI("Delete watcher prefix %s remoteWatcherId %u", keyPrefix.c_str(), remoteWatcherId);
     {
         // remove watcher from agent and group
-        std::lock_guard<std::mutex> lock(watcherMutex_);
         DelParamWatcher(group, remoteWatcher);
         if (group->Empty()) { // no watcher, so delete it
             SendMessage(group, MSG_DEL_WATCHER);
@@ -127,6 +127,7 @@ int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t remote
 
 int32_t WatcherManager::RefreshWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
+    std::lock_guard<std::mutex> lock(watcherMutex_);
     WATCHER_LOGV("Refresh watcher %s remoteWatcherId: %u", keyPrefix.c_str(), remoteWatcherId);
     auto group = GetWatcherGroup(keyPrefix);
     WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
@@ -370,11 +371,11 @@ void WatcherManager::OnStop()
 
 void WatcherManager::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
+    std::lock_guard<std::mutex> lock(watcherMutex_);
     WATCHER_CHECK(remote != nullptr, return, "Invalid remote obj");
     auto remoteWatcher = GetRemoteWatcher(remote);
     WATCHER_CHECK(remoteWatcher != nullptr, return, "Failed to get remote watcher info ");
     {
-        std::lock_guard<std::mutex> lock(watcherMutex_);
         OnRemoteDied(remoteWatcher);
     }
 }
@@ -401,7 +402,6 @@ void WatcherManager::OnRemoteDied(RemoteWatcherPtr remoteWatcher)
 
 RemoteWatcherPtr WatcherManager::GetRemoteWatcher(const wptr<IRemoteObject> &remote)
 {
-    std::lock_guard<std::mutex> lock(watcherMutex_);
     WatcherNodePtr node = remoteWatchers_->GetNextNode(nullptr);
     while (node != nullptr) {
         RemoteWatcherPtr remoteWatcher = ConvertTo<RemoteWatcher>(node);
@@ -491,13 +491,13 @@ int WatcherManager::Dump(int fd, const std::vector<std::u16string>& args)
     };
 
     if (params.size() > 1 && params[0] == "-k") {
+        std::lock_guard<std::mutex> lock(watcherMutex_);
         auto group = GetWatcherGroup(params[1]);
         if (group == NULL) {
             dprintf(fd, "Prefix %s not found in watcher list\n", params[1].c_str());
             return 0;
         }
         {
-            std::lock_guard<std::mutex> lock(watcherMutex_);
             group->TraversalNode(dumpParamWatcher);
         }
         return 0;
@@ -585,7 +585,6 @@ int WatcherManager::DelParamWatcher(WatcherGroupPtr group, RemoteWatcherPtr remo
 
 WatcherGroupPtr WatcherManager::AddWatcherGroup(const std::string &keyPrefix)
 {
-    std::lock_guard<std::mutex> lock(watcherMutex_);
     if (watcherGroups_ == nullptr) {
         watcherGroups_ = new ParamWatcherList();
         WATCHER_CHECK(watcherGroups_ != nullptr, return nullptr, "Failed to create watcher");
@@ -618,7 +617,6 @@ WatcherGroupPtr WatcherManager::GetWatcherGroup(uint32_t groupId)
 
 WatcherGroupPtr WatcherManager::GetWatcherGroup(const std::string &keyPrefix)
 {
-    std::lock_guard<std::mutex> lock(watcherMutex_);
     // get group
     auto it = groupMap_.find(keyPrefix);
     if (it != groupMap_.end()) {
