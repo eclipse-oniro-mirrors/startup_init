@@ -60,7 +60,7 @@ static int TestHashNodeFunction(const HashNode *node)
 static int TestHashKeyFunction(const void *key)
 {
     int code = 0;
-    char *buff = const_cast<char *>(static_cast<const char *>(key));
+    const char *buff = static_cast<const char *>(key);
     size_t buffLen = strlen(buff);
     for (size_t i = 0; i < buffLen; i++) {
         code += buff[i] - 'A';
