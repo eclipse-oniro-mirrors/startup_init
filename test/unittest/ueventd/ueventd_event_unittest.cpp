@@ -229,7 +229,7 @@ bool IsFileExist(const std::string &file)
     return true;
 }
 
-HWTEST_F(UeventdEventUnitTest, TestParseUeventdEvent, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_ParseUeventdEvent001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "block",
@@ -269,7 +269,7 @@ HWTEST_F(UeventdEventUnitTest, TestParseUeventdEvent, TestSize.Level1)
     HandleUevent(&outEvent);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventActions, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_Actions001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "block",
@@ -287,7 +287,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventActions, TestSize.Level1)
     HandleUevent(&outEvent);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventHandleBlockDevicesInvalidParameters, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleBlockDevicesInvalidParameters001, TestSize.Level1)
 {
     HandleBlockDeviceEvent(nullptr);
     // Not block device
@@ -312,7 +312,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventHandleBlockDevicesInvalidParameters, Te
     HandleBlockDeviceEvent(&invalidSysPathUevent);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventHandleBlockDevicesValidParameters, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleBlockDevicesValidParameters002, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "block",
@@ -342,7 +342,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventHandleBlockDevicesValidParameters, Test
     EXPECT_TRUE(isBlock);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventHandleBlockDevicesRemoved, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleBlockDevicesRemoved001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "block",
@@ -374,7 +374,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventHandleBlockDevicesRemoved, TestSize.Lev
     EXPECT_EQ(errno, ENOENT);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventHandleBlockDevicesChanged, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleBlockDevicesChanged001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "block",
@@ -396,7 +396,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventHandleBlockDevicesChanged, TestSize.Lev
     HandleBlockDeviceEvent(&uevent);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventHandleOtherDevicesInvalidParameters, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleOtherDevicesInvalidParameters001, TestSize.Level1)
 {
     HandleOtherDeviceEvent(nullptr);
     // Not Character device
@@ -424,7 +424,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventHandleOtherDevicesInvalidParameters, Te
     HandleOtherDeviceEvent(&invalidSubsystemUevent);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventHandleOtherDevicesValidParameters, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleOtherDevicesValidParameters001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "extcon3",
@@ -440,7 +440,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventHandleOtherDevicesValidParameters, Test
     EXPECT_FALSE(exist);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventHandleUsbDevicesWithDeviceName, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleUsbDevicesWithDeviceName001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "usb",
@@ -454,7 +454,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventHandleUsbDevicesWithDeviceName, TestSiz
     EXPECT_TRUE(exist);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventHandleInvalidUsbDevices, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleInvalidUsbDevices001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "usb",
@@ -469,7 +469,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventHandleInvalidUsbDevices, TestSize.Level
     EXPECT_FALSE(exist);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventHandleUsbDevicesWithBusNo, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleUsbDevicesWithBusNo001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "usb",
@@ -484,13 +484,13 @@ HWTEST_F(UeventdEventUnitTest, TestUeventHandleUsbDevicesWithBusNo, TestSize.Lev
     EXPECT_TRUE(exist);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventHandle, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_Handle001, TestSize.Level1)
 {
     char path[] = {"/data/ueventd"};
     RetriggerUeventByPath(g_oldRootFd, path);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestFirmwareUevent, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_FirmwareUevent001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "firmware",
@@ -529,7 +529,7 @@ HWTEST_F(UeventdEventUnitTest, TestFirmwareUevent, TestSize.Level1)
     HandleUevent(&outEvent);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventPlatformEvent, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventTest_PlatformEvent001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "platform",
@@ -568,7 +568,7 @@ HWTEST_F(UeventdEventUnitTest, TestUeventPlatformEvent, TestSize.Level1)
     HandleUevent(&outEvent);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventPlatformEventUsb, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_PlatformEventUsb001, TestSize.Level1)
 {
     struct Uevent uevent = {
         .subsystem = "usb",
@@ -635,7 +635,7 @@ static void TestUeventAction(ACTION action)
     HandleUevent(&outEvent);
 }
 
-HWTEST_F(UeventdEventUnitTest, TestUeventActionAdd, TestSize.Level1)
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_ActionAdd001, TestSize.Level1)
 {
     TestUeventAction(ACTION_ADD);
     TestUeventAction(ACTION_REMOVE);
