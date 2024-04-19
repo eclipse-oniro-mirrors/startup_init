@@ -66,12 +66,16 @@ typedef struct {
     InitGroupNode *groupNodes[NODE_TYPE_MAX];
     HashMapHandle hashMap[NODE_TYPE_GROUPS];
     char groupModeStr[GROUP_NAME_MAX_LENGTH];
+    ServiceSocket *serviceSocketNode;
 } InitWorkspace;
 
 void InitServiceSpace(void);
 void CloseServiceSpace(void);
 int InitParseGroupCfg(void);
 
+ServiceSocket *GetOnDemandSocketList(void);
+void AddOnDemandSocket(ServiceSocket *socketNode);
+void RemoveOnDemandSocket(ServiceSocket *sockopt);
 int GenerateHashCode(const char *key);
 InitGroupNode *AddGroupNode(int type, const char *name);
 InitGroupNode *GetGroupNode(int type, const char *name);

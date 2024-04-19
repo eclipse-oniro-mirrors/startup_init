@@ -27,6 +27,7 @@
 #include "init_service.h"
 #include "loop_event.h"
 #include "securec.h"
+#include "init_group_manager.h"
 #define SOCKET_BUFF_SIZE (256 * 1024)
 
 #define HOS_SOCKET_DIR "/dev/unix/socket"
@@ -152,20 +153,6 @@ static int CreateSocket(ServiceSocket *sockopt)
     return sockopt->sockFd;
 }
 
-static int SetSocketEnv(int fd, const char *name)
-{
-    INIT_ERROR_CHECK(name != NULL, return SERVICE_FAILURE, "Invalid name");
-    char pubName[MAX_SOCKET_ENV_PREFIX_LEN] = { 0 };
-    char val[MAX_SOCKET_FD_LEN] = { 0 };
-    INIT_CHECK_RETURN_VALUE(snprintf_s(pubName, sizeof(pubName), sizeof(pubName) - 1, HOS_SOCKET_ENV_PREFIX "%s",
-        name) >= 0, -1);
-    INIT_CHECK_RETURN_VALUE(snprintf_s(val, sizeof(val), sizeof(val) - 1, "%d", fd) >= 0, -1);
-    int ret = setenv(pubName, val, 1);
-    INIT_ERROR_CHECK(ret >= 0, return -1, "setenv fail %d ", errno);
-    fcntl(fd, F_SETFD, 0);
-    return 0;
-}
-
 static void ProcessWatchEvent_(const WatcherHandle watcherHandle, int fd, uint32_t *events, const void *context)
 {
     *events = 0;
@@ -209,12 +196,16 @@ void RemoveSocketWatcher(ServiceWatcher watcherHandle)
     LE_RemoveWatcher(LE_GetDefaultLoop(), (WatcherHandle)watcherHandle);
 }
 
-int CreateServiceSocket(Service *service)
+int CreateSocketForService(Service *service)
 {
     INIT_CHECK(service != NULL && service->socketCfg != NULL, return 0);
     INIT_CHECK(service->socketCfg->sockFd == -1, return 0);
     int ret = 0;
     ServiceSocket *tmpSock = service->socketCfg;
+    // insert OnDemand service socket head node to InitWorkspace socketNode head node
+    if (tmpSock != NULL && IsOnDemandService(service)) {
+        AddOnDemandSocket(tmpSock);
+    }
     while (tmpSock != NULL) {
         PluginExecCmdByName("setSockCreateCon", service->name);
         int fd = CreateSocket(tmpSock);
@@ -230,10 +221,31 @@ int CreateServiceSocket(Service *service)
                 INIT_CHECK_RETURN_VALUE(ret == 0, -1);
             }
         }
-        ret = SetSocketEnv(fd, tmpSock->name);
-        INIT_CHECK_RETURN_VALUE(ret >= 0, -1);
         tmpSock = tmpSock->next;
     }
+    return 0;
+}
+
+int SetSocketEnvForService(Service *service)
+{
+    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Invalid name");
+    char pubName[MAX_SOCKET_ENV_PREFIX_LEN] = { 0 };
+    char val[MAX_SOCKET_FD_LEN] = { 0 };
+
+    ServiceSocket *tmpSock = service->socketCfg;
+
+    while (tmpSock != NULL) {
+        INIT_CHECK_RETURN_VALUE(snprintf_s(pubName, sizeof(pubName), sizeof(pubName) - 1, HOS_SOCKET_ENV_PREFIX "%s",
+            tmpSock->name) >= 0, -1);
+        INIT_CHECK_RETURN_VALUE(snprintf_s(val, sizeof(val), sizeof(val) - 1, "%d", tmpSock->sockFd) >= 0, -1);
+
+        int ret = setenv(pubName, val, 1);
+        INIT_ERROR_CHECK(ret >= 0, continue, "setenv:%s fail %d ", tmpSock->name, errno);
+        fcntl(tmpSock->sockFd, F_SETFD, 0);
+
+        tmpSock = tmpSock->next;
+    }
+
     return 0;
 }
 
