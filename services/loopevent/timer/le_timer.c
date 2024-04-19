@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,95 +15,118 @@
 
 #include "le_timer.h"
 
-#include <stdio.h>
-#include <sys/timerfd.h>
-#include <unistd.h>
-#include <inttypes.h>
+#include <errno.h>
+#include <time.h>
 
 #include "le_loop.h"
 #include "le_task.h"
+#include "le_utils.h"
+#include "list.h"
 #include "loop_event.h"
 
-static LE_STATUS SetTimer_(int tfd, uint64_t timeout)
+#define TIMER_CANCELED 0x1000
+#define TIMER_PROCESSING 0x2000
+
+uint64_t GetCurrentTimespec(uint64_t timeout)
 {
-    struct itimerspec timeValue;
-    time_t sec = timeout / TIMEOUT_BASE;
-    timeValue.it_interval.tv_sec = sec;
-    long nsec = (timeout % TIMEOUT_BASE) * TIMEOUT_BASE * TIMEOUT_BASE;
-    timeValue.it_interval.tv_nsec = nsec;
-    timeValue.it_value.tv_sec = sec;
-    timeValue.it_value.tv_nsec = nsec;
-    LE_LOGV("SetTimer_ sec %llu tv_nsec %lu", sec, nsec);
-    int ret = timerfd_settime(tfd, 0, &timeValue, NULL);
-    LE_CHECK(ret == 0, return LE_FAILURE, "Failed to set timer %d", errno);
-    return 0;
+    struct timespec start;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    uint64_t ms = timeout;
+    ms += start.tv_sec * LE_SEC_TO_MSEC + start.tv_nsec / LE_MSEC_TO_NSEC;
+    return ms;
 }
 
-static LE_STATUS HandleTimerEvent_(const LoopHandle loop, const TaskHandle task, uint32_t oper)
+static int TimerNodeCompareProc(ListNode *node, ListNode *newNode)
 {
-    if (!LE_TEST_FLAGS(oper, EVENT_READ)) {
-        return LE_FAILURE;
+    TimerNode *timer1 = ListEntry(node, TimerNode, node);
+    TimerNode *timer2 = ListEntry(newNode, TimerNode, node);
+    if (timer1->endTime > timer2->endTime) {
+        return 1;
+    } else if (timer1->endTime == timer2->endTime) {
+        return 0;
     }
-    uint64_t repeat = 0;
-    (void)read(GetSocketFd(task), &repeat, sizeof(repeat));
-    TimerTask *timer = (TimerTask *)task;
-    int fd = GetSocketFd(task);
-    if (timer->processTimer) {
-        uint64_t userData = *(uint64_t *)LE_GetUserData(task);
-        timer->processTimer(task, (void *)userData);
-    }
-    timer = (TimerTask *)GetTaskByFd((EventLoop *)loop, fd);
-    if (timer == NULL) {
-        return LE_SUCCESS;
-    }
-    if (timer->repeat <= repeat) {
-        SetTimer_(fd, 0);
-        return LE_SUCCESS;
-    }
-    timer->repeat -= repeat;
-    return LE_SUCCESS;
+
+    return -1;
 }
 
-static void HandleTimerClose_(const LoopHandle loopHandle, const TaskHandle taskHandle)
+static void InsertTimerNode(EventLoop *loop, TimerNode *timer)
 {
-    BaseTask *task = (BaseTask *)taskHandle;
-    CloseTask(loopHandle, task);
-    DelTask((EventLoop *)loopHandle, task);
-    close(task->taskId.fd);
+    timer->endTime = GetCurrentTimespec(timer->timeout);
+    LoopMutexLock(&timer->mutex);
+    timer->flags &= ~TIMER_PROCESSING;
+    timer->repeat--;
+    OH_ListAddWithOrder(&loop->timerList, &timer->node, TimerNodeCompareProc);
+
+    LoopMutexUnlock(&timer->mutex);
 }
 
-static void DumpTimerTaskInfo_(const TaskHandle task)
+void CheckTimeoutOfTimer(EventLoop *loop, uint64_t currTime)
 {
-    INIT_CHECK(task != NULL, return);
-    BaseTask *baseTask = (BaseTask *)task;
-    TimerTask *timerTask = (TimerTask *)baseTask;
-    printf("\tfd: %d \n", timerTask->base.taskId.fd);
-    printf("\t  TaskType: %s \n", "TimerTask");
-    printf("\t    Service Timeout: %" PRIu64 "\n", timerTask->timeout);
-    printf("\t    Service Repeat: %" PRIu64 "\n", timerTask->repeat);
+    const uint64_t faultTime = 10; // 10ms
+    ListNode timeoutList;
+    OH_ListInit(&timeoutList);
+    ListNode *node = loop->timerList.next;
+    while (node != &loop->timerList) {
+        TimerNode *timer = ListEntry(node, TimerNode, node);
+        if (timer->endTime > (currTime + faultTime)) {
+            break;
+        }
+
+        LoopMutexLock(&timer->mutex);
+        OH_ListRemove(&timer->node);
+        OH_ListInit(&timer->node);
+        LoopMutexUnlock(&timer->mutex);
+
+        OH_ListAddTail(&timeoutList, &timer->node);
+        timer->flags |= TIMER_PROCESSING;
+
+        node = loop->timerList.next;;
+    }
+
+    node = timeoutList.next;
+    while (node != &timeoutList) {
+        TimerNode *timer = ListEntry(node, TimerNode, node);
+
+        OH_ListRemove(&timer->node);
+        OH_ListInit(&timer->node);
+        timer->process((TimerHandle)timer, timer->context);
+        if ((timer->repeat == 0) || ((timer->flags & TIMER_CANCELED) == TIMER_CANCELED)) {
+            free(timer);
+            node = timeoutList.next;
+            continue;
+        }
+
+        InsertTimerNode(loop, timer);
+        node = timeoutList.next;
+    }
+}
+
+static TimerNode *CreateTimer(void)
+{
+    TimerNode *timer = (TimerNode *)malloc(sizeof(TimerNode));
+    LE_CHECK(timer != NULL, return NULL, "Failed to create timer");
+    OH_ListInit(&timer->node);
+    LoopMutexInit(&timer->mutex);
+    timer->timeout = 0;
+    timer->repeat = 1;
+    timer->flags = TASK_TIME;
+
+    return timer;
 }
 
 LE_STATUS LE_CreateTimer(const LoopHandle loopHandle,
     TimerHandle *timer, LE_ProcessTimer processTimer, void *context)
 {
-    LE_CHECK(loopHandle != NULL && timer != NULL, return LE_INVALID_PARAM, "Invalid parameters");
+    LE_CHECK(loopHandle != NULL, return LE_INVALID_PARAM, "loopHandle iS NULL");
+    LE_CHECK(timer != NULL, return LE_INVALID_PARAM, "Invalid parameters");
     LE_CHECK(processTimer != NULL, return LE_FAILURE, "Invalid parameters processTimer");
-    LE_BaseInfo baseInfo = {};
-    baseInfo.flags = TASK_TIME;
-    baseInfo.userDataSize = sizeof(uint64_t);
-    baseInfo.close = NULL;
-    int fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-    LE_CHECK(fd >= 0, return LE_FAILURE, "Failed to create timer");
-    SetNoBlock(fd);
-    TimerTask *task = (TimerTask *)CreateTask(loopHandle, fd, &baseInfo, sizeof(TimerTask));
-    LE_CHECK(task != NULL, close(fd);
-        return LE_NO_MEMORY, "Failed to create task");
-    task->base.handleEvent = HandleTimerEvent_;
-    task->base.innerClose = HandleTimerClose_;
-    task->base.dumpTaskInfo = DumpTimerTaskInfo_;
-    task->processTimer = processTimer;
-    *(uint64_t *)(task + 1) = (uint64_t)context;
-    *timer = (TimerHandle)task;
+
+    TimerNode *timerNode = CreateTimer();
+    LE_CHECK(timerNode != NULL, return LE_FAILURE, "Failed to create timer");
+    timerNode->process = processTimer;
+    timerNode->context = context;
+    *timer = (TimerHandle)timerNode;
+
     return LE_SUCCESS;
 }
 
@@ -112,18 +135,56 @@ LE_STATUS LE_StartTimer(const LoopHandle loopHandle,
 {
     LE_CHECK(loopHandle != NULL && timer != NULL, return LE_INVALID_PARAM, "Invalid parameters");
     EventLoop *loop = (EventLoop *)loopHandle;
-    TimerTask *task = (TimerTask *)timer;
-    task->timeout = timeout;
-    task->repeat = repeat;
-    int ret = SetTimer_(GetSocketFd(timer), task->timeout);
-    LE_CHECK(ret == 0, return LE_FAILURE, "Failed to set timer");
-    ret = loop->addEvent(loop, (const BaseTask *)task, EVENT_READ);
-    LE_CHECK(ret == 0, return LE_FAILURE, "Failed to add event");
+
+    TimerNode *timerNode = (TimerNode *)timer;
+    timerNode->timeout = timeout;
+    timerNode->repeat = repeat > 0 ? repeat : 1;
+
+    InsertTimerNode(loop, timerNode);
     return LE_SUCCESS;
+}
+
+uint64_t GetMinTimeoutPeriod(const EventLoop *loop)
+{
+    LE_CHECK(loop != NULL , return 0, "Invalid loop");
+    LE_CHECK(loop->timerList.next != &(loop->timerList), return 0, "Invalid timeNode");
+    TimerNode *timerNode = ListEntry(loop->timerList.next, TimerNode, node);
+    LE_CHECK(timerNode != NULL , return 0, "Invalid timeNode");
+
+    return timerNode->endTime;
+}
+
+static void TimerNodeDestroyProc(ListNode *node)
+{
+    TimerNode *timer = ListEntry(node, TimerNode, node);
+    OH_ListRemove(&timer->node);
+    OH_ListInit(&timer->node);
+    LoopMutexDestroy(timer->mutex);
+    free(timer);
+}
+
+void DestroyTimerList(EventLoop *loop)
+{
+    OH_ListRemoveAll(&loop->timerList, TimerNodeDestroyProc);
+}
+
+void CancelTimer(TimerHandle timerHandle)
+{
+    TimerNode *timer = (TimerNode *)timerHandle;
+    LE_CHECK(timer != NULL, return, "Invalid timer");
+
+    if ((timer->flags & TIMER_PROCESSING) == TIMER_PROCESSING) {
+        timer->flags |= TIMER_CANCELED;
+        return;
+    }
+    LoopMutexLock(&timer->mutex);
+    OH_ListRemove(&timer->node);
+    OH_ListInit(&timer->node);
+    free(timer);
+    LoopMutexUnlock(&timer->mutex);
 }
 
 void LE_StopTimer(const LoopHandle loopHandle, const TimerHandle timer)
 {
-    LE_CHECK(loopHandle != NULL && timer != NULL, return, "Invalid parameters");
-    LE_CloseTask(loopHandle, timer);
+    CancelTimer(timer);
 }

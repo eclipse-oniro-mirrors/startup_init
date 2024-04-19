@@ -71,7 +71,10 @@ static LE_STATUS CreateLoop_(EventLoop **loop, uint32_t maxevents, uint32_t time
         TaskNodeFree,
         128
     };
-    return OH_HashMapCreate(&(*loop)->taskMap, &info);
+    ret = OH_HashMapCreate(&(*loop)->taskMap, &info);
+    LE_CHECK(ret == LE_SUCCESS, return ret, "failed to create hash map loop");
+    OH_ListInit(&((*loop)->timerList));
+    return ret;
 }
 
 LE_STATUS CloseLoop(EventLoop *loop)
@@ -92,10 +95,11 @@ LE_STATUS ProcessEvent(const EventLoop *loop, int fd, uint32_t oper)
     if (task != NULL) {
         if (oper & EVENT_ERROR) {
             task->flags |= TASK_FLAGS_INVALID;
+            loop->delEvent(loop, task->taskId.fd, EVENT_READ | EVENT_WRITE);
         }
         task->handleEvent((LoopHandle)loop, (TaskHandle)task, oper);
     } else {
-        loop->delEvent(loop, fd, oper);
+        loop->delEvent(loop, fd, EVENT_READ | EVENT_WRITE);
     }
     return LE_SUCCESS;
 }

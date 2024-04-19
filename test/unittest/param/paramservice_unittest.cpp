@@ -532,9 +532,6 @@ HWTEST_F(ParamServiceUnitTest, TestAddParamWatch3, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestAddParamWatch3();
-    if (GetParamService()->timer != nullptr) {
-        ((TimerTask *)GetParamService()->timer)->processTimer(nullptr, nullptr);
-    }
     int hashCode = CheckWatchTriggerTimeout();
     EXPECT_EQ(hashCode, 0);
 }

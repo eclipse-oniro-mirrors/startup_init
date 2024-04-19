@@ -188,6 +188,10 @@ LE_STATUS LE_Send(const LoopHandle loopHandle,
 void LE_CloseTask(const LoopHandle loopHandle, const TaskHandle taskHandle)
 {
     LE_CHECK(loopHandle != NULL && taskHandle != NULL, return, "Invalid parameters");
+    if (((LoopBase*)taskHandle)->flags & TASK_TIME) {
+        LE_StopTimer(loopHandle, taskHandle);
+        return;
+    }
     LE_LOGV("LE_CloseTask %d", GetSocketFd(taskHandle));
     BaseTask *task = (BaseTask *)taskHandle;
     if (task->innerClose != NULL) {

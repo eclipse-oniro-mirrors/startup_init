@@ -14,9 +14,10 @@
  */
 
 #include <errno.h>
-
+#include <stdio.h>
 #include "le_epoll.h"
 #include "le_idle.h"
+#include "le_timer.h"
 
 static int IsValid_(const EventEpoll *loop)
 {
@@ -92,14 +93,26 @@ static LE_STATUS DelEvent_(const EventLoop *loop, int fd, int op)
 static LE_STATUS RunLoop_(const EventLoop *loop)
 {
     LE_CHECK(loop != NULL, return LE_FAILURE, "Invalid loop");
+
     EventEpoll *epoll = (EventEpoll *)loop;
     if (!IsValid_(epoll)) {
         return LE_FAILURE;
     }
+
     while (1) {
         LE_RunIdle((LoopHandle)&(epoll->loop));
 
-        int number = epoll_wait(epoll->epollFd, epoll->waitEvents, loop->maxevents, -1);
+        uint64_t minTimePeriod = GetMinTimeoutPeriod(loop);
+        int timeout = 0;
+        if (minTimePeriod == 0) {
+            timeout = -1;
+        } else if (GetCurrentTimespec(0) >= minTimePeriod) {
+            timeout = 0;
+        } else {
+            timeout = minTimePeriod - GetCurrentTimespec(0);
+        }
+
+        int number = epoll_wait(epoll->epollFd, epoll->waitEvents, loop->maxevents, timeout);
         for (int index = 0; index < number; index++) {
             if ((epoll->waitEvents[index].events & EPOLLIN) == EPOLLIN) {
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_READ);
@@ -116,6 +129,11 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_ERROR);
             }
         }
+
+        if (number == 0) {
+            CheckTimeoutOfTimer((EventLoop *)loop, GetCurrentTimespec(0));
+        }
+
         if (loop->stop) {
             break;
         }

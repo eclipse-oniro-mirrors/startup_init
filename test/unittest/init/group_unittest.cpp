@@ -231,7 +231,6 @@ HWTEST_F(InitGroupManagerUnitTest, TestAddService, TestSize.Level1)
 
     Service *service = GetServiceByName("test-service");
     ServiceStartTimer(service, 1);
-    ((TimerTask *)service->timer)->base.handleEvent(LE_GetDefaultLoop(), (LoopBase *)service->timer, EVENT_READ);
     ServiceStopTimer(service);
     ASSERT_NE(service != nullptr, 0);
     EXPECT_EQ(service->startMode, START_MODE_CONDITION);
