@@ -571,7 +571,7 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
     g_currPid = getpid();
     printf("Init unit test start %u \n", g_currPid);
     EnableInitLog(INIT_INFO);
-
+    InitParseGroupCfg();
     // prepare data
     mkdir(STARTUP_INIT_UT_PATH, S_IRWXU | S_IRWXG | S_IRWXO);
     CheckAndCreateDir(STARTUP_INIT_UT_PATH MODULE_LIB_NAME "/autorun/");

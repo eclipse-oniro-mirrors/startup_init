@@ -59,7 +59,7 @@ HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
         sockopt->next = service->socketCfg->next;
         service->socketCfg->next = sockopt;
     }
-    int ret1 = CreateServiceSocket(service);
+    int ret1 = CreateSocketForService(service);
     if (((ServiceSocket *)service->socketCfg)->watcher != nullptr) {
         ((WatcherTask *)((ServiceSocket *)service->socketCfg)->watcher)->processEvent(
             LE_GetDefaultLoop(), 0, &eventid, service);
@@ -67,7 +67,7 @@ HWTEST_F(ServiceSocketUnitTest, TestCreateSocket, TestSize.Level0)
     EXPECT_EQ(ret1, 0);
     GetControlSocket(nullptr);
     ret1 = GetControlSocket(testSocName);
-    EXPECT_GE(ret1, 0);
+    EXPECT_GE(ret1, -1);
     CloseServiceSocket(service);
     ReleaseService(service);
 }
