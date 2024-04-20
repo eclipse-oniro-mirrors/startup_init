@@ -46,6 +46,7 @@ typedef struct EventLoop_ {
     HashMapHandle taskMap;
 
     ListNode idleList;
+    ListNode timerList;
 } EventLoop;
 
 LE_STATUS CloseLoop(EventLoop *loop);

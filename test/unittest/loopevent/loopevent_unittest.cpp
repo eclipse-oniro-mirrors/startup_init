@@ -277,35 +277,6 @@ static void Test_ProcessTimer(const TimerHandle taskHandle, void *context)
     }
 }
 
-HWTEST_F(LoopEventUnittest, LoopRunTest, TestSize.Level1)
-{
-    ASSERT_EQ(LE_CreateLoop(&g_loop), 0);
-    TimerHandle timer = nullptr;
-    int ret = LE_CreateTimer(g_loop, &timer, Test_ProcessTimer, nullptr);
-    ASSERT_EQ(ret, 0);
-    ret = LE_StartTimer(g_loop, timer, 500, 2);
-    ASSERT_EQ(ret, 0);
-
-    // test invalid
-    ret = LE_CreateTimer(nullptr, &timer, Test_ProcessTimer, nullptr);
-    ASSERT_NE(ret, 0);
-    ret = LE_CreateTimer(g_loop, nullptr, Test_ProcessTimer, nullptr);
-    ASSERT_NE(ret, 0);
-    ret = LE_CreateTimer(g_loop, &timer, nullptr, nullptr);
-    ASSERT_NE(ret, 0);
-    ret = LE_StartTimer(nullptr, timer, 500, 2);
-    ASSERT_NE(ret, 0);
-    ret = LE_StartTimer(g_loop, nullptr, 500, 2);
-    ASSERT_NE(ret, 0);
-
-    LE_StopTimer(nullptr, timer);
-    LE_StopTimer(g_loop, nullptr);
-
-    LE_CloseLoop(g_loop);
-    LE_RunLoop(g_loop);
-    LE_CloseLoop(g_loop);
-}
-
 HWTEST_F(LoopEventUnittest, LoopAbnormalTest, TestSize.Level1)
 {
     LE_StartWatcher(nullptr, nullptr, nullptr, nullptr);

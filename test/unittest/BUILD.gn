@@ -206,6 +206,7 @@ ohos_unittest("init_unittest") {
     "loopevent/loopevent_unittest.cpp",
     "loopevent/loopserver_unittest.cpp",
     "loopevent/loopsignal_unittest.cpp",
+    "loopevent/looptimer_unittest.cpp",
     "modules/eng_unittest.cpp",
     "modules/modules_unittest.cpp",
     "modules/udid_unittest.cpp",

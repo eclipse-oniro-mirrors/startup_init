@@ -129,7 +129,6 @@ HWTEST_F(InitUnitTest, TestFdHoldService, TestSize.Level1)
     EXPECT_EQ(ret, 0);
     ret = LE_StartTimer(LE_GetDefaultLoop(), timer, 500, 4);
     EXPECT_EQ(ret, 0);
-    SystemRun();
 }
 
 HWTEST_F(InitUnitTest, TestInitLog, TestSize.Level1)
