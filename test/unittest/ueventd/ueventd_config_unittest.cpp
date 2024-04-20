@@ -40,7 +40,7 @@ void SetUp() {};
 void TearDown() {};
 };
 
-HWTEST_F(UeventdConfigUnitTest, TestSectionConfigParse, TestSize.Level0)
+HWTEST_F(UeventdConfigUnitTest, Init_UeventdConfigTest_SectionConfigParse001, TestSize.Level0)
 {
     ParseUeventdConfigFile(STARTUP_INIT_UT_PATH"/ueventd_ut/valid.config");
     uid_t uid = 0;
@@ -69,7 +69,7 @@ HWTEST_F(UeventdConfigUnitTest, TestSectionConfigParse, TestSize.Level0)
     ChangeSysAttributePermissions("/dir/to/nothing");
 }
 
-HWTEST_F(UeventdConfigUnitTest, TestConfigEntry, TestSize.Level0)
+HWTEST_F(UeventdConfigUnitTest, Init_UeventdConfigTest_ConfigEntry001, TestSize.Level0)
 {
     string file = "[device";
     int rc = ParseUeventConfig(const_cast<char*>(file.c_str())); // Invalid section
@@ -82,7 +82,7 @@ HWTEST_F(UeventdConfigUnitTest, TestConfigEntry, TestSize.Level0)
     EXPECT_EQ(rc, 0);
 }
 
-HWTEST_F(UeventdConfigUnitTest, TestParameter, TestSize.Level0)
+HWTEST_F(UeventdConfigUnitTest, Init_UeventdConfigTest_Parameter001, TestSize.Level0)
 {
     ParseUeventdConfigFile(STARTUP_INIT_UT_PATH"/ueventd_ut/valid.config");
     SetUeventDeviceParameter("/dev/testbinder1", 0);

@@ -206,7 +206,6 @@ int32_t WatcherManagerKits::DelWatcher(const std::string &keyPrefix, ParameterCh
 
 WatcherManagerKits::ParameterChangeListener *WatcherManagerKits::ParamWatcher::GetParameterListener(uint32_t *idx)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     uint32_t index = *idx;
     if (parameterChangeListeners.empty()) {
         return nullptr;
@@ -224,7 +223,6 @@ WatcherManagerKits::ParameterChangeListener *WatcherManagerKits::ParamWatcher::G
 
 void WatcherManagerKits::ParamWatcher::RemoveParameterListener(uint32_t idx)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     auto it = parameterChangeListeners.find(idx);
     if (it != parameterChangeListeners.end()) {
         parameterChangeListeners.erase(it);
@@ -233,6 +231,7 @@ void WatcherManagerKits::ParamWatcher::RemoveParameterListener(uint32_t idx)
 
 int WatcherManagerKits::ParamWatcher::AddParameterListener(ParameterChangePtr callback, void *context)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     WATCHER_CHECK(callback != nullptr, return -1, "Invalid callback ");
     WATCHER_LOGV("AddParameterListener %s listenerId_ %d", keyPrefix_.c_str(), listenerId_);
     for (auto it = parameterChangeListeners.begin(); it != parameterChangeListeners.end(); it++) {
@@ -253,6 +252,7 @@ int WatcherManagerKits::ParamWatcher::AddParameterListener(ParameterChangePtr ca
 
 int WatcherManagerKits::ParamWatcher::DelParameterListener(ParameterChangePtr callback, void *context)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (callback == nullptr) {
         parameterChangeListeners.clear();
         return 0;
@@ -285,6 +285,7 @@ void WatcherManagerKits::RemoteWatcher::OnParameterChange(
 
 void WatcherManagerKits::ParamWatcher::OnParameterChange(const std::string &name, const std::string &value)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     WATCHER_LOGV("OnParameterChange name %s value %s", name.c_str(), value.c_str());
     uint32_t index = 0;
     ParameterChangeListener *listener = GetParameterListener(&index);

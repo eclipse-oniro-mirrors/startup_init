@@ -54,12 +54,14 @@ extern "C" {
 #define SERVICE_ATTR_NOTIFY_STATE 0x1000     // service notify state
 #define SERVICE_ATTR_MODULE_UPDATE 0x2000     // module update
 #define SERVICE_ATTR_KMSG 0x4000      // kmsg
+#define SERVICE_ATTR_PERIOD 0x8000 //service period
 
 #define MAX_SERVICE_NAME 32
 #define MAX_APL_NAME 32
 #define MAX_ENV_NAME 64
 #define MAX_JOB_NAME 128
 #define MAX_WRITEPID_FILES 100
+#define MAX_ENV_VALUE 128
 
 #define FULL_CAP 0xFFFFFFFF
 // init
@@ -133,6 +135,11 @@ typedef struct {
     char *jobsName[JOB_ON_MAX];
 } ServiceJobs;
 
+typedef struct {
+    char name[MAX_ENV_NAME];
+    char value[MAX_ENV_VALUE];
+} ServiceEnv;
+
 typedef struct Service_ {
     char *name;
     int pid;
@@ -147,6 +154,9 @@ typedef struct Service_ {
     int status : 4; // ServiceStatus
     uint64_t tokenId;
     char *apl;
+    uint64_t period;
+    ServiceEnv *env;
+    int envCnt;
     ServiceArgs capsArgs;
     ServiceArgs permArgs;
     ServiceArgs permAclsArgs;

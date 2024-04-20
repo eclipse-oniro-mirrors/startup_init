@@ -76,6 +76,7 @@ static void FreeServiceSocket(ServiceSocket *sockopt)
         sockopt = sockopt->next;
         free(tmp);
     }
+    sockopt = NULL;
     return;
 }
 
@@ -121,6 +122,7 @@ static void FreeServiceFile(ServiceFile *fileOpt)
         fileOpt = fileOpt->next;
         free(tmp);
     }
+    fileOpt = NULL;
     return;
 }
 
@@ -154,14 +156,18 @@ void ReleaseService(Service *service)
     }
     service->servPerm.gIDCnt = 0;
     FreeServiceSocket(service->socketCfg);
-    service->socketCfg = NULL;
     FreeServiceFile(service->fileCfg);
-    service->fileCfg = NULL;
 
     if (service->apl != NULL) {
         free(service->apl);
         service->apl = NULL;
     }
+
+    if (service->env != NULL) {
+        free(service->env);
+        service->env = NULL;
+    }
+
     for (size_t i = 0; i < JOB_ON_MAX; i++) {
         if (service->serviceJobs.jobsName[i] != NULL) {
             free(service->serviceJobs.jobsName[i]);
@@ -505,9 +511,7 @@ static int AddServiceFile(cJSON *json, Service *service)
         NULL,
     };
     int num = SplitString(fileStr, " ", opt, FILE_OPT_NUMS);
-    if (num != FILE_OPT_NUMS) {
-        return SERVICE_FAILURE;
-    }
+    INIT_CHECK_RETURN_VALUE(num == FILE_OPT_NUMS, SERVICE_FAILURE);
     if (opt[SERVICE_FILE_NAME] == NULL || opt[SERVICE_FILE_FLAGS] == NULL || opt[SERVICE_FILE_PERM] == NULL ||
         opt[SERVICE_FILE_UID] == NULL || opt[SERVICE_FILE_GID] == NULL) {
         INIT_LOGE("Invalid file opt");
@@ -526,6 +530,8 @@ static int AddServiceFile(cJSON *json, Service *service)
         fileOpt->flags = O_RDWR;
     } else {
         INIT_LOGE("Failed file flags %s", opt[SERVICE_FILE_FLAGS]);
+        free(fileOpt);
+        fileOpt = NULL;
         return SERVICE_FAILURE;
     }
     fileOpt->perm = strtoul(opt[SERVICE_FILE_PERM], 0, OCTAL_BASE);
@@ -856,6 +862,47 @@ static int SetConsoleValue(Service *service, const char *attrName, int value, in
     return SERVICE_SUCCESS;
 }
 
+static int GetServiceEnv(Service *service, const cJSON *json)
+{
+    int envCnt = 0;
+    cJSON *envArray = GetArrayItem(json, &envCnt, "env");
+    INIT_CHECK(envArray != NULL, return SERVICE_SUCCESS);
+    if (envCnt > 0) {
+        service->env = (ServiceEnv*)calloc(envCnt, sizeof(ServiceEnv));
+        INIT_ERROR_CHECK(service->env != NULL, return SERVICE_FAILURE, "calloc ServiceEnv memory failed!");
+    }
+    service->envCnt = envCnt;
+
+    for (int i = 0; i < envCnt; ++i) {
+        cJSON *envItem = cJSON_GetArrayItem(envArray, i);
+        size_t strLen = 0;
+        char *name = GetStringValue(envItem, "name", &strLen);
+        INIT_ERROR_CHECK(name != NULL && strLen > 0, return SERVICE_FAILURE, "Failed to get env name failed!");
+        int ret = strcpy_s(service->env[i].name, strLen + 1, name);
+        INIT_INFO_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to copy env name %s", name);
+
+        char *value = GetStringValue(envItem, "value", &strLen);
+        INIT_ERROR_CHECK(value != NULL && strLen > 0, return SERVICE_FAILURE, "Failed to get value failed!");
+        ret = strcpy_s(service->env[i].value, strLen + 1, value);
+        INIT_INFO_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to copy env value %s", value);
+    }
+    return SERVICE_SUCCESS;
+}
+
+static int GetServicePeriod(const cJSON *curArrItem, Service *curServ, const char *attrName, int flag)
+{
+    cJSON *arrItem = cJSON_GetObjectItem(curArrItem, attrName);
+    INIT_CHECK(arrItem != NULL, return SERVICE_SUCCESS);
+
+    curServ->attribute &= ~SERVICE_ATTR_PERIOD;
+    INIT_ERROR_CHECK(cJSON_IsNumber(arrItem), return SERVICE_FAILURE,
+        "Service error %s is null or is not a number", curServ->name);
+    curServ->attribute |= SERVICE_ATTR_PERIOD;
+    int value = (int)cJSON_GetNumberValue(arrItem);
+    curServ->period = value * BASE_MS_UNIT;
+    return SERVICE_SUCCESS;
+}
+
 int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
@@ -889,6 +936,10 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get module-update for service %s", service->name);
 
     ParseOneServiceArgs(curItem, service);
+    ret = GetServiceEnv(service, curItem);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get env for service %s", service->name);
+    ret = GetServicePeriod(curItem, service, PERIOD_STR_IN_CFG, SERVICE_ATTR_PERIOD);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get period for service %s", service->name);
     ret = GetServiceSandbox(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get sandbox for service %s", service->name);
     ret = InitServiceCaps(curItem, service);

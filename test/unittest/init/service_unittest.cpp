@@ -39,7 +39,12 @@ const char *SERVICE_INFO_JSONSTR = "{"
     "   \"writepid\":[\"/dev/test_service\"],"
     "   \"console\":1,"
     "   \"caps\":[\"TEST_ERR\"],"
-    "   \"gid\":[\"system\"], "
+    "   \"gid\":[\"system\"],"
+    "   \"period\":2,"
+    "   \"env\":[{ "
+    "      \"name\":\"test\","
+    "      \"value\":\"xxxx\""
+    "    }],"
     "   \"critical\":1,"
     "   \"jobs\" : {"
     "       \"pre-start\":\"test_service:pre-start\""
@@ -296,6 +301,12 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerRelease, TestSize.Level1)
     ASSERT_NE(nullptr, service->fileCfg);
     service->fileCfg->fd = 0;
     service->fileCfg->next = nullptr;
+    service->env = (ServiceEnv*)malloc(sizeof(ServiceEnv));
+    ASSERT_NE(nullptr, service->env);
+    int ret = strcpy_s(service->env->name, MAX_ENV_NAME, "test5");
+    EXPECT_EQ(ret, EOK);
+    ret = strcpy_s(service->env->value, MAX_ENV_VALUE, "xxxxx");
+    EXPECT_EQ(ret, EOK);
     ReleaseService(service);
     service = nullptr;
 }

@@ -32,7 +32,6 @@
 #include <linux/futex.h>
 
 #include <libunwind.h>
-#include <libunwind_i-ohos.h>
 
 #include "beget_ext.h"
 #include "securec.h"
@@ -40,6 +39,7 @@
 #include "init_log.h"
 #include "crash_handler.h"
 
+#define PATHSIZE_MAX 256
 #define BEGET_DFX_CHECK(fd, retCode, exper, fmt, ...) \
     if (!(retCode)) {                \
         PrintLog(fd, fmt, ##__VA_ARGS__);     \
@@ -47,7 +47,6 @@
         exper;                       \
     }
 
-static unw_addr_space_t g_addrSpace = NULL;
 static void *g_reservedChildStack = NULL;
 static ProcessDumpRequest g_request;
 static const SignalInfo g_platformSignals[] = {
@@ -173,16 +172,32 @@ const char *GetSignalName(const int32_t signal)
     return "Uncare Signal";
 }
 
+static void GetMaps(int fd)
+{
+    char path[PATHSIZE_MAX] = {};
+    FILE *fp = fopen("/proc/self/maps", "r");
+    if (fp == NULL) {
+        BEGET_LOGE("fopen /proc/self/maps failed");
+        return;
+    }
+    while (fgets(path, PATHSIZE_MAX, fp) != NULL) {
+        PrintLog(fd, "%s", path);
+    }
+    (void)fclose(fp);
+    return;
+}
+
 __attribute__((noinline)) void ExecLocalDumpUnwinding(int fd, unw_context_t *ctx, size_t skipFrameNum)
 {
     unw_cursor_t cursor;
-    unw_init_local_with_as(g_addrSpace, &cursor, ctx);
+    unw_init_local(&cursor, ctx);
 
     size_t index = 0;
     unw_word_t pc = 0;
     unw_word_t prevPc = 0;
     unw_word_t offset = 0;
     char symbol[SYMBOL_BUF_SIZE];
+    GetMaps(fd);
     do {
         // skip 0 stack, as this is dump catcher. Caller don't need it.
         if (index < skipFrameNum) {
@@ -195,23 +210,11 @@ __attribute__((noinline)) void ExecLocalDumpUnwinding(int fd, unw_context_t *ctx
         BEGET_DFX_CHECK(fd, !(curIndex > 1 && prevPc == pc), break, "Invalid pc %l %l, stop.", prevPc, pc);
         prevPc = pc;
 
-        unw_word_t relPc = unw_get_rel_pc(&cursor);
-        unw_word_t sz = unw_get_previous_instr_sz(&cursor);
-        if ((curIndex > 0) && (relPc > sz)) {
-            relPc -= sz;
-            pc -= sz;
-#if defined(__arm__)
-            unw_set_adjust_pc(&cursor, pc);
-#endif
-        }
-
-        struct map_info *map = unw_get_map(&cursor);
         (void)memset_s(&symbol, sizeof(symbol), 0, sizeof(symbol));
         if (unw_get_proc_name(&cursor, symbol, sizeof(symbol), (unw_word_t *)(&offset)) == 0) {
-            PrintLog(fd, "#%02d %016p %s(%s+%lu)\n",
-                curIndex, relPc, map == NULL ? "Unknown" : map->path, symbol, offset);
+            PrintLog(fd, "#%02d %016p (%s+%lu)\n", curIndex, pc, symbol, offset);
         } else {
-            PrintLog(fd, "#%02d %016p %s\n", curIndex, relPc, map == NULL ? "Unknown" : map->path);
+            PrintLog(fd, "#%02d %016p\n", curIndex, pc);
         }
         index++;
     } while ((unw_step(&cursor) > 0) && (index < BACK_STACK_MAX_STEPS));
@@ -287,13 +290,11 @@ static void SignalHandler(int sig, siginfo_t *si, void *context)
     }
 
     BEGET_LOGI("child thread(%d) exit.", childTid);
-    unw_destroy_local_address_space(g_addrSpace);
 }
 
 void InstallLocalSignalHandler(void)
 {
     ReserveChildThreadSignalStack();
-    unw_init_local_address_space(&g_addrSpace);
     sigset_t set;
     sigemptyset(&set);
     struct sigaction action;

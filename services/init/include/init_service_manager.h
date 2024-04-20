@@ -39,6 +39,7 @@ extern "C" {
 #define APL_STR_IN_CFG "apl"
 #define CPU_CORE_STR_IN_CFG "cpucore"
 #define MODULE_UPDATE_STR_IN_CFG "module-update"
+#define PERIOD_STR_IN_CFG "period"
 
 #define MAX_SERVICES_CNT_IN_FILE 100
 
