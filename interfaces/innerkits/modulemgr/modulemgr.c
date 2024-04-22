@@ -246,11 +246,11 @@ MODULE_MGR *ModuleMgrScan(const char *modulePath)
         ScanModules(moduleMgr, modulePath);
     } else if (InUpdaterMode() == 1) {
         BEGET_CHECK(snprintf_s(path, sizeof(path), sizeof(path) - 1,
-            "/%s/%s", MODULE_LIB_NAME, modulePath) > 0, return NULL);
+            "/%s/%s", MODULE_LIB_NAME, modulePath) > 0, free((void *)moduleMgr); return NULL);
         ScanModules(moduleMgr, path);
     } else {
         BEGET_CHECK(snprintf_s(path, sizeof(path), sizeof(path) - 1,
-            "%s/%s", MODULE_LIB_NAME, modulePath) > 0, return NULL);
+            "%s/%s", MODULE_LIB_NAME, modulePath) > 0, free((void *)moduleMgr); return NULL);
         CfgFiles *files = GetCfgFiles(path);
         for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; files && i >= 0; i--) {
             if (files->paths[i]) {

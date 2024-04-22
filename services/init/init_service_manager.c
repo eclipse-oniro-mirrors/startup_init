@@ -304,7 +304,7 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
     if (!cJSON_IsArray(arrItem)) {
         int ret = GetGid(arrItem, &gid, curServ);
         INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE,
-            "Service error %s, failed to get gid from %s.", curServ->name, cJSON_Print(arrItem));
+            "Service error %s, failed to get gid.", curServ->name);
         curServ->servPerm.gIDArray[0] = gid;
         return SERVICE_SUCCESS;
     }
@@ -313,7 +313,7 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
         cJSON *item = cJSON_GetArrayItem(arrItem, i);
         int ret = GetGid(item, &gid, curServ);
         if (ret != 0) {
-            INIT_LOGW("Service warning %s, failed to get gid from %s.", curServ->name, cJSON_Print(item));
+            INIT_LOGW("Service warning %s, failed to get gid.", curServ->name);
             continue;
         }
         curServ->servPerm.gIDArray[gidArrayIndex++] = gid;
