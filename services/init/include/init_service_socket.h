@@ -43,7 +43,8 @@ enum SockOptionTab {
     SERVICE_SOCK_SETOPT
 };
 typedef void *ServiceWatcher;
-typedef struct Service Service;
+struct Service_;
+
 // socket option
 #define SOCKET_OPTION_INVALID 0x001      // option invalid
 #define SOCKET_OPTION_PASSCRED 0x002     // SO_PASSCRED
@@ -56,10 +57,8 @@ typedef union {
     struct sockaddr_un addrun;
 } sockaddr_union;
 
-typedef struct ServiceSocket {
-    struct ServiceSocket *next;
-    struct ServiceSocket *nextNode;
-    Service *service;
+typedef struct ServiceSocket_ {
+    struct ServiceSocket_ *next;
     int family;          // socket family
     unsigned int type;   // socket type
     int protocol;        // socket protocol
@@ -72,10 +71,9 @@ typedef struct ServiceSocket {
     char name[0];        // service name
 } ServiceSocket;
 
-int SetSocketEnvForService(Service *service);
-int CreateSocketForService(Service *service);
-void CloseServiceSocket(Service *service);
-int AddSocketWatcher(ServiceWatcher *watcherHandle, Service *service, int fd);
+int CreateServiceSocket(struct Service_ *service);
+void CloseServiceSocket(struct Service_ *service);
+int AddSocketWatcher(ServiceWatcher *watcherHandle, struct Service_ *service, int fd);
 void RemoveSocketWatcher(ServiceWatcher watcherHandle);
 
 #ifdef __cplusplus

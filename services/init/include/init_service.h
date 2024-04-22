@@ -140,7 +140,7 @@ typedef struct {
     char value[MAX_ENV_VALUE];
 } ServiceEnv;
 
-typedef struct Service {
+typedef struct Service_ {
     char *name;
     int pid;
     int crashCnt;

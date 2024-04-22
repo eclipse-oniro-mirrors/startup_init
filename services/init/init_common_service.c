@@ -46,7 +46,6 @@
 #include "loop_event.h"
 #include "securec.h"
 #include "service_control.h"
-#include "init_group_manager.h"
 
 #ifndef OHOS_LITE
 #include "hookmgr.h"
@@ -383,12 +382,11 @@ static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
     }
     ClearEnvironment(service);
     if (!IsOnDemandService(service)) {
-        INIT_ERROR_CHECK(CreateSocketForService(service) == 0,
+        INIT_ERROR_CHECK(CreateServiceSocket(service) == 0,
             service->lastErrno = INIT_ESOCKET;
             return INIT_ESOCKET,
             "Service error %d %s, failed to create service socket.", errno, service->name);
     }
-    SetSocketEnvForService(service);
     INIT_ERROR_CHECK(CreateServiceFile(service) == 0,
         service->lastErrno = INIT_EFILE;
         return INIT_EFILE,
@@ -586,30 +584,12 @@ static int32_t WaitForDebugger(void)
 }
 #endif
 
-static void CloseOnDemandServiceFdForOtherService(Service *service)
-{
-    ServiceSocket *tmpSockNode = GetOnDemandSocketList();
-    while (tmpSockNode != NULL) {
-        if (tmpSockNode->service != service) {
-            ServiceSocket *tmpCloseSocket = tmpSockNode;
-            // If the service is not the OnDemand service itself, will close the OnDemand service socket fd
-            while (tmpCloseSocket != NULL) {
-                close(tmpCloseSocket->sockFd);
-                tmpCloseSocket = tmpCloseSocket->next;
-            }
-        }
-        tmpSockNode = tmpSockNode->nextNode;
-    }
-}
-
 static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
 {
     // set selinux label by context
     if (service->context.type != INIT_CONTEXT_MAIN && SetSubInitContext(&service->context, service->name) != 0) {
         service->lastErrno = INIT_ECONTENT;
     }
-
-    CloseOnDemandServiceFdForOtherService(service);
 
     if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
         CheckModuleUpdate(pathArgs);

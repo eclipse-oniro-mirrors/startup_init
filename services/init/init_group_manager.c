@@ -21,40 +21,6 @@
 #include "init_service_manager.h"
 
 static InitWorkspace g_initWorkspace = {0, 0, {0}, {0}, {0}};
-
-ServiceSocket* GetOnDemandSocketList(void)
-{
-    return g_initWorkspace.serviceSocketNode;
-}
-
-void AddOnDemandSocket(ServiceSocket *socketNode)
-{
-    INIT_ERROR_CHECK(socketNode != NULL, return, "socketNode is NULL!");
-    socketNode->nextNode = g_initWorkspace.serviceSocketNode;
-    g_initWorkspace.serviceSocketNode = socketNode;
-}
-
-void RemoveOnDemandSocket(ServiceSocket *sockopt)
-{
-    INIT_ERROR_CHECK(sockopt != NULL, return, "sockopt is NULL!");
-    ServiceSocket *tmp = g_initWorkspace.serviceSocketNode;
-    INIT_ERROR_CHECK(tmp != NULL, return, "tmp is NULL!");
-    if (tmp->service == sockopt->service) {
-        g_initWorkspace.serviceSocketNode = tmp->nextNode;
-        return;
-    }
-    ServiceSocket *prev = tmp;
-    while (tmp != NULL) {
-        if (tmp->service != sockopt->service) {
-            prev = tmp;
-            tmp = tmp->nextNode;
-            continue;
-        }
-        prev->nextNode = tmp->nextNode;
-        return;
-    }
-}
-
 int GenerateHashCode(const char *key)
 {
     int code = 0;
@@ -235,7 +201,6 @@ void InitServiceSpace(void)
     INIT_LOGI("boot start %s", g_initWorkspace.groupModeStr);
     g_initWorkspace.groupMode = GetBootGroupMode();
     g_initWorkspace.initFlags = 1;
-    g_initWorkspace.serviceSocketNode = NULL;
 }
 
 int InitParseGroupCfg(void)

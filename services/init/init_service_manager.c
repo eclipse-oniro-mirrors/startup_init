@@ -155,9 +155,6 @@ void ReleaseService(Service *service)
         service->servPerm.gIDArray = NULL;
     }
     service->servPerm.gIDCnt = 0;
-
-    // remove service socket list head node from OnDemand socket list before free OnDemand service socket
-    RemoveOnDemandSocket(service->socketCfg);
     FreeServiceSocket(service->socketCfg);
     FreeServiceFile(service->fileCfg);
 
@@ -189,7 +186,9 @@ void ReleaseService(Service *service)
     ExecuteServiceClear(service);
     g_serviceSpace.serviceCount--;
     InitGroupNode *groupNode = GetGroupNode(NODE_TYPE_SERVICES, service->name);
-    INIT_CHECK(groupNode == NULL, groupNode->data.service = NULL);
+    if (groupNode != NULL) {
+        groupNode->data.service = NULL;
+    }
     free(service);
 }
 
@@ -440,7 +439,6 @@ static int AddServiceSocket(cJSON *json, Service *service)
         "Failed to copy socket name %s", fieldStr);
     sockopt->sockFd = -1;
     sockopt->watcher = NULL;
-    sockopt->service = service;
 
     ret = ParseSocketFamily(json, sockopt);
     INIT_ERROR_CHECK(ret == 0, free(sockopt);
@@ -498,7 +496,7 @@ static int ParseServiceSocket(const cJSON *curArrItem, Service *curServ)
         }
     }
     if (IsOnDemandService(curServ)) {
-        ret = CreateSocketForService(curServ);
+        ret = CreateServiceSocket(curServ);
     }
     return ret;
 }

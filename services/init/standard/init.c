@@ -226,7 +226,7 @@ INIT_STATIC void TriggerServices(int startMode)
             continue;
         }
         if (IsOnDemandService(service)) {
-            if (CreateSocketForService(service) != 0) {
+            if (CreateServiceSocket(service) != 0) {
                 INIT_LOGE("service %s exit! create socket failed!", service->name);
             }
             node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
