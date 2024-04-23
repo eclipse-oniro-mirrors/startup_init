@@ -167,8 +167,7 @@ static int GetSeccompPolicy(const char *filterName, int **handler,
             break;
         }
 
-        rc = strcat_s(filterVaribleName, strlen(filterVaribleName) + \
-                      strlen(FILTER_SIZE_STRING) + 1, FILTER_SIZE_STRING);
+        rc = strcat_s(filterVaribleName, sizeof(filterVaribleName), FILTER_SIZE_STRING);
         if (rc != 0) {
             ret = RETURN_ERROR;
             break;
