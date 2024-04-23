@@ -237,7 +237,9 @@ static int AddMountInfoToSandbox(sandbox_t *sandbox, cJSON *item, const char *ty
     mountlist_t *tmpMount = (mountlist_t *)calloc(1, sizeof(mountlist_t));
     BEGET_ERROR_CHECK(tmpMount != NULL, return -1, "Failed calloc err=%d", errno);
     tmpMount->source = strdup(srcPath);
+    BEGET_ERROR_CHECK(tmpMount->source != NULL, free(tmpMount); return -1, "Failed to dup source");
     tmpMount->target = strdup(dstPath);
+    BEGET_ERROR_CHECK(tmpMount->target != NULL, free(tmpMount); return -1, "Failed to dup target");
     for (int i = 0; i < count; i++) {
         cJSON *item = cJSON_GetArrayItem(obj, i);
         tmpMount->flags |= GetSandboxMountFlags(item);
@@ -273,7 +275,9 @@ static int AddSymbolLinksToSandbox(sandbox_t *sandbox, cJSON *item, const char *
     linklist_t *tmpLink = (linklist_t *)calloc(1, sizeof(linklist_t));
     BEGET_ERROR_CHECK(tmpLink != NULL, return -1, "Failed calloc err=%d", errno);
     tmpLink->target = strdup(target);
+    BEGET_ERROR_CHECK(tmpLink->target != NULL, free(tmpLink); return -1, "Failed to dup target");
     tmpLink->linkName = strdup(name);
+    BEGET_ERROR_CHECK(tmpLink->linkName != NULL, free(tmpLink); return -1, "Failed to dup linkName");
     OH_ListInit(&tmpLink->node);
     RemoveOldSandboxLinkListNode(&sandbox->linksHead, tmpLink->linkName);
     OH_ListAddTail(&sandbox->linksHead, &tmpLink->node);

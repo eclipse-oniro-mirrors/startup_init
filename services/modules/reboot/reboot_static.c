@@ -50,7 +50,9 @@ static int g_rebootParamCmdValidNumber = 0;
 static char *Dup2String(const char *prefix, const char *str)
 {
     if (str == NULL) {
-        return strdup("reboot");
+        char *tmpstr = strdup("reboot");
+        PLUGIN_CHECK(tmpstr != NULL, return NULL, "Failed to get str");
+        return tmpstr;
     }
     size_t len = strlen(prefix) + strlen(str) + 1;
     char *tmp = calloc(1, len);

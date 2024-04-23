@@ -441,6 +441,10 @@ static void AdjustPartitionNameByPartitionSlot(FstabItem *item)
         return, "Failed to format partition name suffix, use default partition name");
     free(item->deviceName);
     item->deviceName = strdup(buffer);
+    if (item->deviceName == NULL) {
+        BEGET_LOGE("failed dup devicename");
+        return;
+    }
     BEGET_LOGI("partition name with slot suffix: %s", item->deviceName);
 }
 
