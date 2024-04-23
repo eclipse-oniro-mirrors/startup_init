@@ -635,7 +635,8 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     INIT_INFO_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "Service info %s already started", service->name);
     INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
         return SERVICE_FAILURE, "start service %s pathArgs is NULL.", service->name);
-
+    struct timespec startingTime;
+    clock_gettime(CLOCK_REALTIME, &startingTime);
     INIT_LOGI("Service info %s starting", service->name);
     if (service->attribute & SERVICE_ATTR_INVALID) {
         INIT_LOGE("start service %s invalid.", service->name);
@@ -657,6 +658,8 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     if (service->serviceJobs.jobsName[JOB_PRE_START] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_PRE_START]);
     }
+    struct timespec prefork;
+    clock_gettime(CLOCK_REALTIME, &prefork);
     int pid = fork();
     if (pid == 0) {
         RunChildProcess(service, pathArgs);
@@ -665,7 +668,12 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
         service->lastErrno = INIT_EFORK;
         return SERVICE_FAILURE;
     }
+    struct timespec startedTime;
+    clock_gettime(CLOCK_REALTIME, &startedTime);
     INIT_LOGI("Service info %s(pid %d uid %d) started", service->name, pid, service->servPerm.uID);
+    INIT_LOGI("starttime:%ld-%ld,preforktime:%ld-%ld,startedtime:%ld-%ld",
+              startingTime.tv_sec, startingTime.tv_nsec, prefork.tv_sec,
+              prefork.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
     service->pid = pid;
     NotifyServiceChange(service, SERVICE_STARTED);
 #ifndef OHOS_LITE
