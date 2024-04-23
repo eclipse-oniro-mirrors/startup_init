@@ -29,9 +29,7 @@ ServiceSocket* GetOnDemandSocketList(void)
 
 void AddOnDemandSocket(ServiceSocket *socketNode)
 {
-    INIT_ERROR_CHECK(socketNode != NULL, return, "socketNode is NULL!");
-    socketNode->nextNode = g_initWorkspace.serviceSocketNode;
-    g_initWorkspace.serviceSocketNode = socketNode;
+    return;
 }
 
 void RemoveOnDemandSocket(ServiceSocket *sockopt)
