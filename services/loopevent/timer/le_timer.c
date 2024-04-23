@@ -147,7 +147,7 @@ LE_STATUS LE_StartTimer(const LoopHandle loopHandle,
 uint64_t GetMinTimeoutPeriod(const EventLoop *loop)
 {
     LE_CHECK(loop != NULL , return 0, "Invalid loop");
-    LE_CHECK(loop->timerList.next != &(loop->timerList), return 0, "Invalid timeNode");
+    LE_ONLY_CHECK(loop->timerList.next != &(loop->timerList), return 0);
     TimerNode *timerNode = ListEntry(loop->timerList.next, TimerNode, node);
     LE_CHECK(timerNode != NULL , return 0, "Invalid timeNode");
 

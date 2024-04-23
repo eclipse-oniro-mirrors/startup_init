@@ -383,47 +383,35 @@ static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
     }
     ClearEnvironment(service);
     if (!IsOnDemandService(service)) {
-        INIT_ERROR_CHECK(CreateSocketForService(service) == 0,
-            service->lastErrno = INIT_ESOCKET;
-            return INIT_ESOCKET,
-            "Service error %d %s, failed to create service socket.", errno, service->name);
+        INIT_ERROR_CHECK(CreateSocketForService(service) == 0, service->lastErrno = INIT_ESOCKET;
+            return INIT_ESOCKET, "Service error %d %s, failed to create service socket.", errno, service->name);
     }
     SetSocketEnvForService(service);
-    INIT_ERROR_CHECK(CreateServiceFile(service) == 0,
-        service->lastErrno = INIT_EFILE;
-        return INIT_EFILE,
-        "Service error %d %s, failed to create service file.", errno, service->name);
+    INIT_ERROR_CHECK(CreateServiceFile(service) == 0, service->lastErrno = INIT_EFILE;
+        return INIT_EFILE, "Service error %d %s, failed to create service file.", errno, service->name);
 
     if ((service->attribute & SERVICE_ATTR_CONSOLE)) {
-        INIT_ERROR_CHECK(OpenConsole() == 0,
-            service->lastErrno = INIT_ECONSOLE;
-            return INIT_ECONSOLE,
-            "Service error %d %s, failed to open console.", errno, service->name);
+        INIT_ERROR_CHECK(OpenConsole() == 0, service->lastErrno = INIT_ECONSOLE;
+            return INIT_ECONSOLE, "Service error %d %s, failed to open console.", errno, service->name);
     }
     if ((service->attribute & SERVICE_ATTR_KMSG)) {
         OpenKmsg();
     }
 
-    INIT_ERROR_CHECK(PublishHoldFds(service) == 0,
-        service->lastErrno = INIT_EHOLDER;
-        return INIT_EHOLDER,
-        "Service error %d %s, failed to publish fd", errno, service->name);
+    INIT_ERROR_CHECK(PublishHoldFds(service) == 0, service->lastErrno = INIT_EHOLDER;
+        return INIT_EHOLDER, "Service error %d %s, failed to publish fd", errno, service->name);
 
     INIT_CHECK_ONLY_ELOG(BindCpuCore(service) == SERVICE_SUCCESS,
         "Service warning %d %s, failed to publish fd", errno, service->name);
 
     // permissions
     ret = SetPerms(service);
-    INIT_ERROR_CHECK(ret == SERVICE_SUCCESS,
-        service->lastErrno = ret;
-        return ret,
-        "Service error %d %s, failed to set permissions.", ret, service->name);
+    INIT_ERROR_CHECK(ret == SERVICE_SUCCESS, service->lastErrno = ret;
+        return ret, "Service error %d %s, failed to set permissions.", ret, service->name);
 
     // write pid
-    INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS,
-        service->lastErrno = INIT_EWRITEPID;
-        return INIT_EWRITEPID,
-        "Service error %d %s, failed to write pid.", errno, service->name);
+    INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, service->lastErrno = INIT_EWRITEPID;
+        return INIT_EWRITEPID, "Service error %d %s, failed to write pid.", errno, service->name);
 
     PluginExecCmdByName("setServiceContent", service->name);
     return 0;
