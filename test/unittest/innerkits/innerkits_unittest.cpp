@@ -66,7 +66,7 @@ public:
 * @tc.require:
 * @tc.author:
 */
-HWTEST_F(InnerkitsUnitTest, ReadFstabFromFile_unitest, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_ReadFstabFromFile001, TestSize.Level1)
 {
     Fstab *fstab = nullptr;
     const std::string fstabFile1 = "/data/fstab.updater1";
@@ -86,7 +86,7 @@ HWTEST_F(InnerkitsUnitTest, ReadFstabFromFile_unitest, TestSize.Level1)
 * @tc.require:
 * @tc.author:
 */
-HWTEST_F(InnerkitsUnitTest, FindFstabItemForPath_unitest, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_FindFstabItemForPath001, TestSize.Level1)
 {
     const std::string fstabFile1 = STARTUP_INIT_UT_PATH"/mount_unitest/ReadFstabFromFile1.fstable";
     Fstab *fstab = nullptr;
@@ -124,7 +124,7 @@ HWTEST_F(InnerkitsUnitTest, FindFstabItemForPath_unitest, TestSize.Level1)
 * @tc.require:
 * @tc.author:
 */
-HWTEST_F(InnerkitsUnitTest, FindFstabItemForMountPoint_unitest, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_FindFstabItemForMountPoint001, TestSize.Level1)
 {
     const std::string fstabFile1 = STARTUP_INIT_UT_PATH"/mount_unitest/ReadFstabFromFile1.fstable";
     Fstab *fstab = nullptr;
@@ -153,7 +153,7 @@ HWTEST_F(InnerkitsUnitTest, FindFstabItemForMountPoint_unitest, TestSize.Level1)
 * @tc.require:
 * @tc.author:
 */
-HWTEST_F(InnerkitsUnitTest, GetMountFlags_unitest, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_GetMountFlags001, TestSize.Level1)
 {
     const std::string fstabFile1 = STARTUP_INIT_UT_PATH"/mount_unitest/ReadFstabFromFile1.fstable";
     Fstab *fstab = nullptr;
@@ -180,7 +180,7 @@ HWTEST_F(InnerkitsUnitTest, GetMountFlags_unitest, TestSize.Level1)
 * @tc.require:issueI5NTX2
 * @tc.author:
 */
-HWTEST_F(InnerkitsUnitTest, GetSlotInfo_unittest, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_GetSlotInfo001, TestSize.Level1)
 {
     EXPECT_NE(GetBootSlots(), -1);
     EXPECT_NE(GetCurrentSlot(), -1);
@@ -193,7 +193,7 @@ HWTEST_F(InnerkitsUnitTest, GetSlotInfo_unittest, TestSize.Level1)
 * @tc.require:issueI5NTX2
 * @tc.author:
 */
-HWTEST_F(InnerkitsUnitTest, LoadFstabFromCommandLine_unittest, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_LoadFstabFromCommandLine001, TestSize.Level1)
 {
     EXPECT_NE(LoadFstabFromCommandLine(), (Fstab *)nullptr);
 }
@@ -205,7 +205,7 @@ HWTEST_F(InnerkitsUnitTest, LoadFstabFromCommandLine_unittest, TestSize.Level1)
 * @tc.require:issueI5NTX2
 * @tc.author:
 */
-HWTEST_F(InnerkitsUnitTest, GetBlockDevicePath_unittest, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_GetBlockDevicePath001, TestSize.Level1)
 {
     char devicePath[MAX_BUFFER_LEN] = {0};
     EXPECT_EQ(GetBlockDevicePath("/vendor", devicePath, MAX_BUFFER_LEN), 0);
@@ -225,7 +225,7 @@ HWTEST_F(InnerkitsUnitTest, GetBlockDevicePath_unittest, TestSize.Level1)
 * @tc.require:
 * @tc.author:
 */
-HWTEST_F(InnerkitsUnitTest, DoFormat_unittest, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_DoFormat001, TestSize.Level1)
 {
     EXPECT_NE(DoFormat("/testpath", "ext4"), -1);
     EXPECT_NE(DoFormat("/testpath", "f2fs"), -1);
@@ -240,7 +240,7 @@ HWTEST_F(InnerkitsUnitTest, DoFormat_unittest, TestSize.Level1)
 * @tc.require:issueI5NTX2
 * @tc.author:
 */
-HWTEST_F(InnerkitsUnitTest, MountAllWithFstabFile_unittest, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_MountAllWithFstabFile001, TestSize.Level1)
 {
     EXPECT_NE(MountAllWithFstabFile(STARTUP_INIT_UT_PATH"/etc/fstab.required", 0), 1);
     EXPECT_NE(UmountAllWithFstabFile(STARTUP_INIT_UT_PATH"/etc/fstab.required"), 1);
@@ -260,7 +260,7 @@ HWTEST_F(InnerkitsUnitTest, MountAllWithFstabFile_unittest, TestSize.Level1)
 #define SYSCAP_MAX_SIZE 100
 
 // TestSysCap
-HWTEST_F(InnerkitsUnitTest, TestSysCap, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_TestSysCap001, TestSize.Level1)
 {
     bool ret = HasSystemCapability("test.cap");
     EXPECT_EQ(ret, false);
@@ -278,7 +278,7 @@ HWTEST_F(InnerkitsUnitTest, TestSysCap, TestSize.Level1)
 }
 
 // TestControlService
-HWTEST_F(InnerkitsUnitTest, TestControlService, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_ControlService001, TestSize.Level1)
 {
     TestSetParamCheckResult("startup.service.ctl.", 0777, 0);
     ServiceControl("deviceinfoservice", START);
@@ -313,7 +313,7 @@ static int TestIncommingConnect(const LoopHandle loop, const TaskHandle server)
 }
 
 // TestControlFd
-HWTEST_F(InnerkitsUnitTest, TestControlFd, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_ControlFd001, TestSize.Level1)
 {
     CmdClientInit("/data/testSock1", ACTION_DUMP, "cmd");
     CmdClientInit("/data/testSock1", ACTION_DUMP, "cmd");
@@ -355,7 +355,7 @@ HWTEST_F(InnerkitsUnitTest, TestControlFd, TestSize.Level1)
     }
 }
 
-HWTEST_F(InnerkitsUnitTest, TestControlFdServer, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_ControlFdServer001, TestSize.Level1)
 {
     CmdServiceInit(nullptr, nullptr, nullptr);
     CmdServiceInit("/data/testSock1", [](uint16_t type, const char *serviceCmd, const void *context) {
@@ -391,13 +391,13 @@ HWTEST_F(InnerkitsUnitTest, TestControlFdServer, TestSize.Level1)
     free(cmdMsg);
 }
 
-HWTEST_F(InnerkitsUnitTest, TestHoldFd_1, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_HoldFd001, TestSize.Level1)
 {
     CheckSocketPermission(nullptr);
     CmdServiceProcessDestroyClient();
 }
 
-HWTEST_F(InnerkitsUnitTest, TestHoldFd, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_HoldFd002, TestSize.Level1)
 {
     int fds1[] = {1, 0};
     ServiceSaveFd("testServiceName", fds1, ARRAY_LENGTH(fds1));
@@ -446,7 +446,7 @@ HWTEST_F(InnerkitsUnitTest, TestHoldFd, TestSize.Level1)
     }
 }
 
-HWTEST_F(InnerkitsUnitTest, TestHoldFd2, TestSize.Level1)
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_HoldFd003, TestSize.Level1)
 {
     size_t fdCount = 0;
     int *fds = nullptr;
