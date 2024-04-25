@@ -92,7 +92,7 @@ extern "C" {
 #endif
 #define PARAM_WORKSPACE_SMALL (1024 * 10)
 #define PARAM_WORKSPACE_DEF (1024 * 30)
-#define PARAM_WORKSPACE_DAC (1024 * 30)
+#define PARAM_WORKSPACE_DAC (1024 * 60)
 #endif // __LITEOS_A__
 #endif // __LITEOS_M__
 #endif // STARTUP_INIT_TEST
