@@ -2,6 +2,7 @@
     { "name": "SystemWriteParam" },
     { "name": "SystemReadParam" },
     { "name": "LoadParamsFile" },
+    { "name": "LoadPersistParams" },
     { "name": "SplitString" },
     { "name": "AddCmdExecutor" },
     { "name": "RemoveCmdExecutor" },
