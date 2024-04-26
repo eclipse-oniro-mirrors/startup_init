@@ -32,6 +32,10 @@
             "sandbox-flags" : [ "bind", "rec", "private" ],
             "ignore": 1
         }, {
+	    "src-path" : "/system/resource",
+            "sandbox-path" : "/system/resource",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
             "src-path" : "/vendor/lib/chipsetsdk",
             "sandbox-path" : "/vendor/lib/chipsetsdk",
             "sandbox-flags" : [ "bind", "rec", "private" ]
