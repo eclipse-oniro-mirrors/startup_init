@@ -43,7 +43,7 @@ int TestCmdExecutor(int id, const char *name, int argc, const char **argv)
     return 0;
 }
 
-HWTEST_F(ModuleMgrUnitTest, PluginAddCmd, TestSize.Level1)
+HWTEST_F(ModuleMgrUnitTest, Init_ModuleMgrTest_PluginAddCmd001, TestSize.Level1)
 {
     InitServiceSpace();
     const char *testName = "testCmd1";
@@ -90,7 +90,7 @@ static void TestModuleDump(const MODULE_INFO *moduleInfo)
     printf("%s\n", moduleInfo->name);
 }
 
-HWTEST_F(ModuleMgrUnitTest, ModuleTraversalTest, TestSize.Level1)
+HWTEST_F(ModuleMgrUnitTest, Init_ModuleMgrTest_ModuleTraversal001, TestSize.Level1)
 {
     // Create module manager
     MODULE_MGR *moduleMgr = ModuleMgrCreate("init");
@@ -125,7 +125,7 @@ HWTEST_F(ModuleMgrUnitTest, ModuleTraversalTest, TestSize.Level1)
     ModuleMgrDestroy(moduleMgr);
 }
 
-HWTEST_F(ModuleMgrUnitTest, ModuleAbnormalTest, TestSize.Level1)
+HWTEST_F(ModuleMgrUnitTest, Init_ModuleMgrTest_ModuleAbnormal001, TestSize.Level1)
 {
     int ret = InitModuleMgrInstall(nullptr);
     ASSERT_EQ(ret, -1);
