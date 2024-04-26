@@ -144,6 +144,7 @@ static bool IsTraceMountedInner(TraceWorkspace *workspace, const char *fsPath)
     PLUGIN_CHECK(len > 0, return false, "Failed to format path %s", fsPath);
     if (access(workspace->buffer, F_OK) != -1) {
         workspace->traceRootPath = strdup(fsPath);
+        PLUGIN_CHECK(workspace->traceRootPath != NULL, return false, "Failed to dup fsPath");
         return true;
     }
     return false;

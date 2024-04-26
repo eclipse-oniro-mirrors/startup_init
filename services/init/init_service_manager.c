@@ -650,6 +650,9 @@ static int GetServiceJobs(Service *service, cJSON *json)
                 free(service->serviceJobs.jobsName[i]);
             }
             service->serviceJobs.jobsName[i] = strdup(jobName);
+            if (service->serviceJobs.jobsName[i] == NULL) {
+                return SERVICE_FAILURE;
+            }
             // save job name for group job check
             AddGroupNode(NODE_TYPE_JOBS, jobName);
         }
@@ -827,6 +830,7 @@ void SetServicePathWithAsan(Service *service)
     INIT_ERROR_CHECK(ret == 0, return, "Asan: failed to add asan path.");
     free(service->pathArgs.argv[0]);
     service->pathArgs.argv[0] = strdup(tmpPathName);
+    INIT_ERROR_CHECK(service->pathArgs.argv[0] != NULL, return, "Asan: failed dup path.");
     INIT_LOGI("Asan: replace module %s with %s successfully.", service->name, service->pathArgs.argv[0]);
 
     return;
@@ -1129,6 +1133,7 @@ static Service *GetServiceByExtServName(const char *fullServName, ServiceArgs *e
         return service;
     }
     char *tmpServName = strdup(fullServName);
+    INIT_ERROR_CHECK(tmpServName != NULL, return NULL, "Failed dup parameters");
     char *dstPtr[MAX_PATH_ARGS_CNT] = {NULL};
     int returnCount = SplitString(tmpServName, "|", dstPtr, MAX_PATH_ARGS_CNT);
     if (returnCount == 0) {
@@ -1149,10 +1154,12 @@ static Service *GetServiceByExtServName(const char *fullServName, ServiceArgs *e
     int argc;
     for (argc = 0; argc < (service->pathArgs.count - 1); argc++) {
         extraArgs->argv[argc] = strdup(service->pathArgs.argv[argc]);
+        INIT_ERROR_CHECK(extraArgs->argv[argc] != NULL, return NULL, "Failed dup path");
     }
     int extArgc;
     for (extArgc = 0; extArgc < (returnCount - 1); extArgc++) {
         extraArgs->argv[extArgc + argc] = strdup(dstPtr[extArgc + 1]);
+        INIT_ERROR_CHECK(extraArgs->argv[extArgc + argc] != NULL, return NULL, "Failed dup path");
     }
     extraArgs->argv[extraArgs->count] = NULL;
     free(tmpServName);

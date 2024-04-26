@@ -223,6 +223,7 @@ static int32_t BShellParamCmdLs(BShellHandle shell, int32_t argc, char *argv[])
     char *realParameter = GetRealParameter(shell, (input == NULL) ? "" : input, buffer, buffSize);
     BSH_CHECK(realParameter != NULL, return BSH_INVALID_PARAM, "Invalid shell env");
     char *prefix = strdup((strlen(realParameter) == 0) ? "#" : realParameter);
+    BSH_CHECK(prefix != NULL, return BSH_SYSTEM_ERR, "failed dup perfix");
     BSH_LOGV("BShellParamCmdLs prefix %s", prefix);
     int ret = 0;
     if (all != 0) {
@@ -302,6 +303,7 @@ static int32_t BShellParamCmdGet(BShellHandle shell, int32_t argc, char *argv[])
         return 0;
     }
     char *key = strdup(realParameter);
+    BSH_CHECK(key != NULL, return BSH_SYSTEM_ERR, "failed to fup key");
     ret = SystemGetParameter(key, buffer, &buffSize);
     if (ret == 0) {
         BShellEnvOutput(shell, "%s \n", buffer);
