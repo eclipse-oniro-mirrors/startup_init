@@ -31,4 +31,4 @@ vendor_camera_param=6144
 edm_writable_param = 4096
 arkui_param = 2048
 wireless_hid_accessory_manager_param = 4096
-
+debug_param = 4096
