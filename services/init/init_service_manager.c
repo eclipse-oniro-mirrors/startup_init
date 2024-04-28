@@ -67,6 +67,8 @@ static void FreeServiceArg(ServiceArgs *arg)
 
 static void FreeServiceSocket(ServiceSocket *sockopt)
 {
+    // remove service socket list head node from OnDemand socket list before free OnDemand service socket
+    RemoveOnDemandSocket(sockopt);
     while (sockopt != NULL) {
         ServiceSocket *tmp = sockopt;
         if (tmp->sockFd >= 0) {
@@ -156,8 +158,6 @@ void ReleaseService(Service *service)
     }
     service->servPerm.gIDCnt = 0;
 
-    // remove service socket list head node from OnDemand socket list before free OnDemand service socket
-    RemoveOnDemandSocket(service->socketCfg);
     FreeServiceSocket(service->socketCfg);
     FreeServiceFile(service->fileCfg);
 
