@@ -126,9 +126,10 @@ int ServiceExec(Service *service, const ServiceArgs *pathArgs)
             "Service error %d %s, failed to set priority %d.", errno, service->name, service->importance);
     }
     OpenHidebug(service->name);
+    int isCritical = (service->attribute & SERVICE_ATTR_CRITICAL);
     INIT_ERROR_CHECK(execv(pathArgs->argv[0], pathArgs->argv) == 0,
         service->lastErrno = INIT_EEXEC;
-        return errno, "Service error %d %s, failed to execv.", errno, service->name);
+        return errno, "[startup_failed]failed to execv %d %d %s", isCritical, errno, service->name);
     return SERVICE_SUCCESS;
 }
 

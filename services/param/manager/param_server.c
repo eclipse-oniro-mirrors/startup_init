@@ -275,7 +275,7 @@ static int LoadSecurityLabel(const char *fileName)
     ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_DAC);
     if (ops != NULL && ops->securityGetLabel != NULL) {
         if (ops->securityGetLabel(fileName) == PARAM_CODE_REACHED_MAX) {
-            PARAM_LOGE("Load Security Lable failed! system reboot!");
+            PARAM_LOGE("[startup_failed]Load Security Lable failed! system reboot! %d", SYS_PARAM_INIT_FAILED);
             ExecReboot("panic");
         };
     }
@@ -418,7 +418,7 @@ static int ProcessParamFile(const char *fileName, void *context)
     uint32_t mode = *(int *)context;
     int ret = LoadDefaultParam_(fileName, mode, exclude, ARRAY_LENGTH(exclude), LoadOneParam_);
     if (ret == PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH) {
-        PARAM_LOGE("default_param memory is not enough, system reboot!");
+        PARAM_LOGE("[startup_failed]default_param memory is not enough, system reboot! %d",SYS_PARAM_INIT_FAILED);
         ExecReboot("panic");
     }
     return ret;

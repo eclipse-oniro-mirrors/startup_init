@@ -95,7 +95,7 @@ static void MountRequiredPartitions(void)
             // If mount required partitions failure.
             // There is no necessary to continue.
             // Just abort
-            INIT_LOGE("Mount required partitions failed; please check fstab file");
+            INIT_LOGE("[startup_failed]Mount required partitions failed; please check fstab file %d", FSTAB_MOUNT_FAILED);
             // Execute sh for debugging
 #ifndef STARTUP_INIT_TEST
             execv("/bin/sh", NULL);

@@ -475,6 +475,9 @@ static void DoInitGlobalKey(const struct CmdArgs *ctx)
     };
     int argc = ARRAY_LENGTH(argv);
     int ret = SyncExecCommand(argc, argv);
+    if (ret != 0) {
+        INIT_LOGE("[startup_failed]Init global key failed %d", INIT_GOLBALY_KEY_FAILED);
+    }
     INIT_CMD_INFO cmdInfo;
     cmdInfo.cmdName = "init_global_key";
     cmdInfo.cmdContent = (const char *)&ret;

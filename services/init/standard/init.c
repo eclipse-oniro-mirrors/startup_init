@@ -286,6 +286,7 @@ void SystemConfig(const char *uptime)
 
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_PARAM_SERVICE, (void *)&timingStat, (void *)&options);
     if (InitParamService() != 0) {
+        INIT_LOGE("[startup_failed]Init param service failed %d", SYS_PARAM_INIT_FAILED);
         ExecReboot("panic");
     }
     InitParseGroupCfg();
