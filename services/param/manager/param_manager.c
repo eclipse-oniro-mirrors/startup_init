@@ -243,6 +243,12 @@ INIT_LOCAL_API int SysCheckParamExist(const char *name)
     PARAM_WORKSPACE_CHECK(paramSpace, return -1, "Invalid space");
     PARAM_CHECK(name != NULL, return -1, "The name or handle is null");
 
+#ifdef PARAM_SUPPORT_SELINUX // load security label
+    ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
+    if (ops != NULL && ops->securityGetLabel != NULL) {
+        ops->securityGetLabel("open");
+    }
+#endif
     WorkSpace *workSpace = GetNextWorkSpace(NULL);
     while (workSpace != NULL) {
         PARAM_LOGV("SysCheckParamExist name %s in space %s", name, workSpace->fileName);
