@@ -520,6 +520,9 @@ int MountAllWithFstabFile(const char *fstabFile, bool required)
     }
 
     int rc = MountAllWithFstab(fstab, required);
+    if (rc != 0) {
+        BEGET_LOGE("[startup_failed]MountAllWithFstab failed %s %d %d %d", fstabFile, FSTAB_MOUNT_FAILED, required, rc);
+    }
     ReleaseFstab(fstab);
     fstab = NULL;
     return rc;

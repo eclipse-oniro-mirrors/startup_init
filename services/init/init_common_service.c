@@ -619,15 +619,15 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
 
 int ServiceStart(Service *service, ServiceArgs *pathArgs)
 {
-    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "start service failed! null ptr.");
-    INIT_INFO_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "Service info %s already started", service->name);
+    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "ServiceStart failed! null ptr.");
+    INIT_INFO_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "ServiceStart already started:%s", service->name);
     INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
-        return SERVICE_FAILURE, "start service %s pathArgs is NULL.", service->name);
+        return SERVICE_FAILURE, "ServiceStart pathArgs is NULL:%s", service->name);
     struct timespec startingTime;
     clock_gettime(CLOCK_REALTIME, &startingTime);
-    INIT_LOGI("Service info %s starting", service->name);
+    INIT_LOGI("ServiceStart starting:%s", service->name);
     if (service->attribute & SERVICE_ATTR_INVALID) {
-        INIT_LOGE("start service %s invalid.", service->name);
+        INIT_LOGE("ServiceStart invalid:%s", service->name);
         return SERVICE_FAILURE;
     }
     struct stat pathStat = { 0 };
@@ -635,7 +635,7 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     if (stat(pathArgs->argv[0], &pathStat) != 0) {
         service->attribute |= SERVICE_ATTR_INVALID;
         service->lastErrno = INIT_EPATH;
-        INIT_LOGE("start service %s invalid, please check %s.", service->name, service->pathArgs.argv[0]);
+        INIT_LOGE("ServiceStart pathArgs invalid, please check %s,%s", service->name, service->pathArgs.argv[0]);
         return SERVICE_FAILURE;
     }
 #ifndef OHOS_LITE
@@ -652,13 +652,13 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     if (pid == 0) {
         RunChildProcess(service, pathArgs);
     } else if (pid < 0) {
-        INIT_LOGE("Service error %d %s, failed to fork.", errno, service->name);
+        INIT_LOGE("ServiceStart error failed to fork %d, %s", errno, service->name);
         service->lastErrno = INIT_EFORK;
         return SERVICE_FAILURE;
     }
     struct timespec startedTime;
     clock_gettime(CLOCK_REALTIME, &startedTime);
-    INIT_LOGI("Service info %s(pid %d uid %d) started", service->name, pid, service->servPerm.uID);
+    INIT_LOGI("ServiceStart started info %s(pid %d uid %d)", service->name, pid, service->servPerm.uID);
     INIT_LOGI("starttime:%ld-%ld,preforktime:%ld-%ld,startedtime:%ld-%ld",
               startingTime.tv_sec, startingTime.tv_nsec, prefork.tv_sec,
               prefork.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
@@ -780,13 +780,13 @@ static void ServiceReapHookExecute(Service *service)
 void ServiceReap(Service *service)
 {
     INIT_CHECK(service != NULL, return);
-    INIT_LOGI("Service info %s reap pid %d.", service->name, service->pid);
+    INIT_LOGI("ServiceReap info %s pid %d.", service->name, service->pid);
     NotifyServiceChange(service, SERVICE_STOPPED);
     int tmp = service->pid;
     service->pid = -1;
 
     if (service->attribute & SERVICE_ATTR_INVALID) {
-        INIT_LOGE("Service error %s invalid service.", service->name);
+        INIT_LOGE("ServiceReap error invalid service %s", service->name);
         return;
     }
 
@@ -828,7 +828,7 @@ void ServiceReap(Service *service)
 
     if (service->attribute & SERVICE_ATTR_CRITICAL) { // critical
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
-            INIT_LOGE("Service error %s critical service crashed.", service->name, service->crashCount);
+            INIT_LOGE("ServiceReap error critical service crashed %s %d", service->name, service->crashCount);
             service->pid = tmp;
             ServiceReapHookExecute(service);
             service->pid = -1;
@@ -836,7 +836,7 @@ void ServiceReap(Service *service)
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
-            INIT_LOGI("Service %s start failed! %d second later will reStart.", service->name, service->crashTime);
+            INIT_LOGI("ServiceReap start failed! will reStart %d second later", service->name, service->crashTime);
             service->crashCnt = 0;
             ServiceStartTimer(service, DEF_CRASH_TIME);
             return;
@@ -844,13 +844,13 @@ void ServiceReap(Service *service)
     }
 
     int ret = ExecRestartCmd(service);
-    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "Failed to exec restartArg for %s", service->name);
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "ServiceReap Failed to exec restartArg for %s", service->name);
 
     if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_RESTART]);
     }
     ret = ServiceStart(service, &service->pathArgs);
-    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "reap service %s start failed!", service->name);
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "ServiceReap ServiceStart failed %s", service->name);
     service->attribute &= (~SERVICE_ATTR_NEED_RESTART);
 }
 

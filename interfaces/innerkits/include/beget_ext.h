@@ -52,6 +52,13 @@ typedef enum InitLogLevel {
     INIT_FATAL
 } InitLogLevel;
 
+typedef enum {
+    FSTAB_MOUNT_FAILED = 0,
+    SYS_PARAM_INIT_FAILED,
+    INIT_GOLBALY_KEY_FAILED,
+    CORE_PROCESS_FAILED
+} StartupInitErrno;
+
 #if (defined(STARTUP_INIT_TEST) || defined(APPSPAWN_TEST))
 #define FILE_NAME   (strrchr((__FILE__), '/')  + 1)
 #define STATIC

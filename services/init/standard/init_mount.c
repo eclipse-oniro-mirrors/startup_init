@@ -42,5 +42,8 @@ Fstab *LoadRequiredFstab(void)
         INIT_ERROR_CHECK(access(fstabFile, F_OK) == 0, return NULL, "Failed get fstab.required");
         fstab = ReadFstabFromFile(fstabFile, false);
     }
+    if (fstab == NULL) {
+        INIT_LOGI("[startup_failed] LoadRequiredFstab failed %d", FSTAB_MOUNT_FAILED);
+    }
     return fstab;
 }
