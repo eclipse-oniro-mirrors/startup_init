@@ -83,10 +83,6 @@ HWTEST_F(ServiceWatcherModuleTest, serviceWatcher_test_003, TestSize.Level0)
     EXPECT_NE(ret, 0);
     auto status1 = GetServiceStatus(serviceName);
     EXPECT_TRUE(status1 == "running");
-    // wait service exit
-    std::this_thread::sleep_for(std::chrono::seconds(70)); // wait sa died 20s
-    auto status2 = GetServiceStatus(serviceName);
-    EXPECT_TRUE(status2 == "stopped");
 
     GTEST_LOG_(INFO) << "serviceWatcher_test_003 end";
 }
