@@ -23,6 +23,27 @@
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 #include "init_socket.h"
+#include "parameter.h"
+
+static bool IsComplete()
+{
+    static bool complete = false;
+    if (complete) {
+        return true;
+    }
+    char enable[8] = {0};
+    int ret = GetParameter("bootevent.boot.completed", "", enable, sizeof(enable));
+    if (ret != 0) {
+        INIT_LOGE("Failed to get param value");
+        return false;
+    }
+    if (strcmp(enable, "true") == 0) {
+        INIT_LOGI("boot completed");
+        complete = true;
+        return true;
+    }
+    return false;
+}
 
 static void PollUeventdSocketTimeout(int ueventSockFd, bool ondemand)
 {
@@ -36,8 +57,11 @@ static void PollUeventdSocketTimeout(int ueventSockFd, bool ondemand)
         pfd.revents = 0;
         ret = poll(&pfd, 1, timeout);
         if (ret == 0) {
-            INIT_LOGI("poll ueventd socket timeout, ueventd exit");
-            return;
+            if (IsComplete()) {
+                INIT_LOGI("poll ueventd socket timeout, ueventd exit");
+                return;
+            }
+            INIT_LOGI("poll ueventd socket timeout, but init not complete");
         } else if (ret < 0) {
             INIT_LOGE("Failed to poll ueventd socket!");
             return;

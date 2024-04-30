@@ -46,6 +46,7 @@ if (defined(ohos_lite)) {
 
       deps = service_ueventd_deps
       deps += [ "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared" ]
+      deps += [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
     }
     copy("ueventd.config") {
       sources = [ "etc/ueventd_l1.config" ]
@@ -117,6 +118,7 @@ if (defined(ohos_lite)) {
     external_deps += [ "bounds_checking_function:libsec_static" ]
     cflags = []
     deps += [ "//base/startup/init/services/param/base:param_base" ]
+    deps += [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
     if (build_selinux) {
       external_deps += [ "selinux_adapter:librestorecon" ]
       cflags += [ "-DWITH_SELINUX" ]
