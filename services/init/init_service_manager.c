@@ -221,7 +221,8 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
     int ret = cJSON_IsArray(obj);
     INIT_ERROR_CHECK(ret, return SERVICE_FAILURE, "Invalid type");
     int count = cJSON_GetArraySize(obj);
-    INIT_ERROR_CHECK((count > 0) && (count < maxCount), return SERVICE_FAILURE, "Array size = %d is wrong", count);
+    INIT_ERROR_CHECK((count > 0) && (count < maxCount), return SERVICE_FAILURE,
+        "Args size is wrong %s, %d", name, count);
     if ((args->argv != NULL) && (args->count > 0)) {
         FreeServiceArg(args);
     }
