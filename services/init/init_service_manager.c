@@ -1206,7 +1206,6 @@ void StopAllServices(int flags, const char **exclude, int size,
     if (service != NULL && service->pid > 0) { // notify appspawn stop
 #ifndef STARTUP_INIT_TEST
         kill(service->pid, SIGTERM);
-        waitpid(service->pid, 0, 0);
         service->pid = -1;
 #endif
     }
