@@ -273,7 +273,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
-    test.TestAddRemoteWatcher(1000, watcherId); // 1000 test agent
+    test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.permission.watcher.test1", watcherId);
     test.TestRefreshWatcher("test.permission.watcher.test1", watcherId);
     test.TestProcessWatcherMessage("test.permission.watcher.test1", watcherId);
@@ -284,7 +284,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher2, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
-    test.TestAddRemoteWatcher(1001, watcherId); // 1001 test agent
+    test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.permission.watcher.test2", watcherId);
     test.TestAddWatcher("test.permission.watcher.test2", watcherId);
     test.TestAddWatcher("test.permission.watcher.test2", watcherId);
@@ -296,7 +296,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher3, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
-    test.TestAddRemoteWatcher(1003, watcherId); // 1003 test agent
+    test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.permission.watcher.test3", watcherId);
     test.TestWatchAgentDump("test.permission.watcher.test3");
 }
@@ -305,7 +305,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher4, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
-    test.TestAddRemoteWatcher(1004, watcherId); // 1004 test agent
+    test.TestAddRemoteWatcher(getpid(), watcherId);
     SystemWriteParam("test.watcher.test4", "1101");
     SystemWriteParam("test.watcher.test4.test", "1102");
     test.TestAddWatcher("test.watcher.test4*", watcherId);
@@ -316,7 +316,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher5, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
-    test.TestAddRemoteWatcher(1005, watcherId); // 1005 test agent
+    test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.permission.watcher.test5", watcherId);
     SystemWriteParam("test.permission.watcher.test5", "1101");
     test.TestWatchAgentDump("test.permission.watcher.test5");
@@ -326,7 +326,7 @@ HWTEST_F(WatcherProxyUnitTest, TestDelWatcher, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
-    test.TestAddRemoteWatcher(1006, watcherId); // 1005 test agent
+    test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.permission.watcher.testDel", watcherId);
     test.TestDelWatcher("test.permission.watcher.testDel", watcherId);
     test.TestDelRemoteWatcher(watcherId);
@@ -337,7 +337,7 @@ HWTEST_F(WatcherProxyUnitTest, TestDiedWatcher, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
-    test.TestAddRemoteWatcher(1006, watcherId); // 1005 test agent
+    test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.permission.watcher.testdied", watcherId);
     test.TestDelWatcher("test.permission.watcher.testdied", watcherId);
     test.TestWatchAgentDied(watcherId);
@@ -348,7 +348,7 @@ HWTEST_F(WatcherProxyUnitTest, TestSendLocalChange, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
-    test.TestAddRemoteWatcher(2006, watcherId); // 2006 test agent
+    test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.watcher*", watcherId);
     test.TestAddWatcher("test.watcher.", watcherId);
     test.TestWatchAgentDump("test.watcher.");
@@ -370,7 +370,7 @@ HWTEST_F(WatcherProxyUnitTest, TestStop, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
-    test.TestAddRemoteWatcher(1007, watcherId); // 1005 test agent
+    test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.permission.watcher.stop", watcherId);
     test.TestStop();
 }

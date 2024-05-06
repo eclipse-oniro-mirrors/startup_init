@@ -39,10 +39,12 @@ WatcherManager::~WatcherManager()
 
 uint32_t WatcherManager::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher)
 {
+#ifndef STARTUP_INIT_TEST
     if (id == static_cast<uint32_t>(getpid())) {
         WATCHER_LOGE("Failed to add remote watcher %u", id);
         return 0;
     }
+#endif
     WATCHER_CHECK(watcher != nullptr, return 0, "Invalid remote watcher");
     WATCHER_CHECK(deathRecipient_ != nullptr, return 0, "Invalid deathRecipient_");
     sptr<IRemoteObject> object = watcher->AsObject();
@@ -58,7 +60,7 @@ uint32_t WatcherManager::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &wat
         // create remote watcher
         RemoteWatcher *remoteWatcher = new RemoteWatcher(remoteWatcherId, watcher);
         WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Failed to create watcher for %u", id);
-        remoteWatcher->SetAgentId(id);
+        remoteWatcher->SetAgentId(GetCallingPid());
         AddRemoteWatcher(remoteWatcher);
     }
     WATCHER_LOGI("Add remote watcher remoteWatcherId %u %u success", remoteWatcherId, id);
@@ -72,6 +74,8 @@ int32_t WatcherManager::DelRemoteWatcher(uint32_t remoteWatcherId)
         std::lock_guard<std::mutex> lock(watcherMutex_);
         RemoteWatcher *remoteWatcher = GetRemoteWatcher(remoteWatcherId);
         WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Can not find watcher %u", remoteWatcherId);
+        WATCHER_CHECK(remoteWatcher->CheckAgent(GetCallingPid()), return 0,
+            "Can not find watcher %u calling %u", remoteWatcher->GetAgentId(), static_cast<uint32_t>(GetCallingPid()));
         WATCHER_LOGI("Del remote watcher remoteWatcherId %u", remoteWatcherId);
         watcher = remoteWatcher->GetWatcher();
         DelRemoteWatcher(remoteWatcher);
@@ -89,6 +93,8 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
     // get remote watcher and group
     auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
     WATCHER_CHECK(remoteWatcher != nullptr, return -1, "Can not find remote watcher %d", remoteWatcherId);
+    WATCHER_CHECK(remoteWatcher->CheckAgent(GetCallingPid()), return 0,
+        "Can not find watcher %u calling %u", remoteWatcher->GetAgentId(), static_cast<uint32_t>(GetCallingPid()));
     auto group = AddWatcherGroup(keyPrefix);
     WATCHER_CHECK(group != nullptr, return -1, "Failed to create group for %s", keyPrefix.c_str());
     {
@@ -113,6 +119,8 @@ int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t remote
     WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
     auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
     WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), remoteWatcherId);
+    WATCHER_CHECK(remoteWatcher->CheckAgent(GetCallingPid()), return -1,
+        "Can not find watcher %u calling %u", remoteWatcher->GetAgentId(), static_cast<uint32_t>(GetCallingPid()));
     WATCHER_LOGI("Delete watcher prefix %s remoteWatcherId %u", keyPrefix.c_str(), remoteWatcherId);
     {
         // remove watcher from agent and group
@@ -129,6 +137,11 @@ int32_t WatcherManager::RefreshWatcher(const std::string &keyPrefix, uint32_t re
 {
     std::lock_guard<std::mutex> lock(watcherMutex_);
     WATCHER_LOGV("Refresh watcher %s remoteWatcherId: %u", keyPrefix.c_str(), remoteWatcherId);
+    auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
+    WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), remoteWatcherId);
+    WATCHER_CHECK(remoteWatcher->CheckAgent(GetCallingPid()), return 0,
+        "Can not find watcher %u calling %d", remoteWatcher->GetAgentId(), static_cast<uint32_t>(GetCallingPid()));
+
     auto group = GetWatcherGroup(keyPrefix);
     WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
     SendLocalChange(keyPrefix, remoteWatcherId);
