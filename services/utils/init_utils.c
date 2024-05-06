@@ -592,7 +592,6 @@ int InRescueMode(void)
     char value[MAX_BUFFER_LEN] = {0};
     int ret = GetParameterFromCmdLine("rescue_mode", value, MAX_BUFFER_LEN);
     if (ret == 0 && strcmp(value, "true") == 0) {
-        INIT_LOGI("enter rescue mode");
         return 0;
     }
     return 1;
