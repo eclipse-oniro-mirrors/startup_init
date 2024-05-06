@@ -375,7 +375,6 @@ int MountOneItem(FstabItem *item)
     }
     unsigned long mountFlags;
     char fsSpecificData[FS_MANAGER_BUFFER_SIZE] = {0};
-    bool isHmfsData = false;
 
     mountFlags = GetMountFlags(item->mountOptions, fsSpecificData, sizeof(fsSpecificData),
         item->mountPoint);
@@ -388,9 +387,6 @@ int MountOneItem(FstabItem *item)
     }
 
     if (strcmp(item->mountPoint, "/data") == 0 && IsSupportedDataType(item->fsType)) {
-        if (strcmp(item->fsType, "hmfs") == 0) {
-            isHmfsData = true;
-        }
         int ret = DoResizeF2fs(item->deviceName, 0, item->fsManagerFlags);
         if (ret != 0) {
             BEGET_LOGE("Failed to resize.f2fs dir %s , ret = %d", item->deviceName, ret);
@@ -430,9 +426,6 @@ int MountOneItem(FstabItem *item)
         }
     } else {
         BEGET_LOGI("Mount %s to %s successful", item->deviceName, item->mountPoint);
-        if (isHmfsData) {
-            ResizeHmfs(item->deviceName);
-        }
     }
     return rc;
 }
