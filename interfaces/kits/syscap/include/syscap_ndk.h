@@ -24,6 +24,11 @@ extern "C" {
 #endif
 #endif
 
+/**
+ * @brief Queries whether a device supports a specified SystemCapability.
+ * @return true - Supports the specified SystemCapability.
+ *         false - The specified SystemCapability is not supported.
+ */
 bool canIUse(const char *cap);
 
 #ifdef __cplusplus

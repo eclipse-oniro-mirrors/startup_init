@@ -27,6 +27,7 @@ extern "C" {
  * which can be {@code phone} (or {@code default} for phones), {@code wearable}, {@code liteWearable},
  * {@code tablet}, {@code tv}, {@code car}, or {@code smartVision}.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found device type, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetDeviceType(void);
@@ -34,6 +35,7 @@ const char *OH_GetDeviceType(void);
 /**
  * Obtains the device manufacturer represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found device manufacturer, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetManufacture(void);
@@ -41,6 +43,7 @@ const char *OH_GetManufacture(void);
 /**
  * Obtains the device brand represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found device brand, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetBrand(void);
@@ -48,6 +51,7 @@ const char *OH_GetBrand(void);
 /**
  * Obtains the product name speaded in the market
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found market name, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetMarketName(void);
@@ -55,6 +59,7 @@ const char *OH_GetMarketName(void);
 /**
  * Obtains the product series represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found product series, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetProductSeries(void);
@@ -62,6 +67,7 @@ const char *OH_GetProductSeries(void);
 /**
  * Obtains the product model represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found product model, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetProductModel(void);
@@ -69,6 +75,7 @@ const char *OH_GetProductModel(void);
 /**
  * Obtains the software model represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found software model, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetSoftwareModel(void);
@@ -76,6 +83,7 @@ const char *OH_GetSoftwareModel(void);
 /**
  * Obtains the hardware model represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found hardware model, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetHardwareModel(void);
@@ -83,6 +91,7 @@ const char *OH_GetHardwareModel(void);
 /**
  * Obtains the bootloader version number represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found bootloader version number, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetBootloaderVersion(void);
@@ -90,6 +99,7 @@ const char *OH_GetBootloaderVersion(void);
 /**
  * Obtains the application binary interface (Abi) list represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found Abi list, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetAbiList(void);
@@ -97,6 +107,7 @@ const char *OH_GetAbiList(void);
 /**
  * Obtains the security patch tag represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found security patch tag, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetSecurityPatchTag(void);
@@ -104,6 +115,7 @@ const char *OH_GetSecurityPatchTag(void);
 /**
  * Obtains the product version displayed for customer represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found the product version displayed, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetDisplayVersion(void);
@@ -111,6 +123,7 @@ const char *OH_GetDisplayVersion(void);
 /**
  * Obtains the incremental version represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found the incremental version, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetIncrementalVersion(void);
@@ -121,6 +134,7 @@ const char *OH_GetIncrementalVersion(void);
  * <p>The OS release category can be {@code Release}, {@code Beta}, or {@code Canary}.
  * The specific release type may be {@code Release}, {@code Beta1}, or others alike.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found the OS release type, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetOsReleaseType(void);
@@ -128,6 +142,7 @@ const char *OH_GetOsReleaseType(void);
 /**
  * Obtains the OS full version name represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found the OS full version name, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetOSFullName(void);
@@ -135,6 +150,7 @@ const char *OH_GetOSFullName(void);
 /**
  * Obtains the SDK API version number.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return 0 - Not found the SDK API version number, or failed to invoke the internal interface.
  * @since 10
  */
 int OH_GetSdkApiVersion(void);
@@ -142,6 +158,7 @@ int OH_GetSdkApiVersion(void);
 /**
  * Obtains the first API version number.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return 0 - Not found the first API version number, or failed to invoke the internal interface.
  * @since 10
  */
 int OH_GetFirstApiVersion(void);
@@ -149,6 +166,7 @@ int OH_GetFirstApiVersion(void);
 /**
  * Obtains the version ID by a string.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found version ID, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetVersionId(void);
@@ -156,6 +174,7 @@ const char *OH_GetVersionId(void);
 /**
  * Obtains the build type of the current running OS.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found build type, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetBuildType(void);
@@ -163,6 +182,7 @@ const char *OH_GetBuildType(void);
 /**
  * Obtains the build user of the current running OS.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found build user, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetBuildUser(void);
@@ -170,6 +190,7 @@ const char *OH_GetBuildUser(void);
 /**
  * Obtains the build host of the current running OS.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found build host, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetBuildHost(void);
@@ -177,6 +198,7 @@ const char *OH_GetBuildHost(void);
 /**
  * Obtains the build time of the current running OS.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found build time, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetBuildTime(void);
@@ -184,6 +206,7 @@ const char *OH_GetBuildTime(void);
 /**
  * Obtains the version hash of the current running OS.
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found version hash, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetBuildRootHash(void);
@@ -194,6 +217,7 @@ const char *OH_GetBuildRootHash(void);
  * <p>Independent Software Vendor (ISV) may distribute OHOS with their own OS name.
  * If ISV not specified, it will return an empty string
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found distribution OS name, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetDistributionOSName(void);
@@ -202,6 +226,7 @@ const char *OH_GetDistributionOSName(void);
  * Obtains the ISV distribution OS version represented by a string.
  * If ISV not specified, it will return the same value as OH_GetOSFullName
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found distribution OS version, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetDistributionOSVersion(void);
@@ -210,6 +235,7 @@ const char *OH_GetDistributionOSVersion(void);
  * Obtains the ISV distribution OS api version represented by a integer.
  * If ISV not specified, it will return the same value as OH_GetSdkApiVersion
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found distribution OS api version, or failed to invoke the internal interface.
  * @since 10
  */
 int OH_GetDistributionOSApiVersion(void);
@@ -218,6 +244,7 @@ int OH_GetDistributionOSApiVersion(void);
  * Obtains the ISV distribution OS release type represented by a string.
  * If ISV not specified, it will return the same value as OH_GetOsReleaseType
  * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found distribution OS release type, or failed to invoke the internal interface.
  * @since 10
  */
 const char *OH_GetDistributionOSReleaseType(void);
