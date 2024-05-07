@@ -102,7 +102,11 @@ if (defined(ohos_lite)) {
       "cJSON:cjson",
       "c_utils:utils",
     ]
-
+    if (enable_appspawn_client_module && defined(global_parts_info) &&
+        defined(global_parts_info.startup_appspawn)) {
+      defines += [ "ENABLE_ENTER_APPSPAWN_SANDBOX" ]
+      external_deps += [ "appspawn:appspawn_client" ]
+    }
     if (param_test) {
       sources += [
         "//base/startup/init/test/moduletest/param_test_cmds.c",

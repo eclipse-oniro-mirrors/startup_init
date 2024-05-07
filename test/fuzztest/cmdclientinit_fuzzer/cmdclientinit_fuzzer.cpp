@@ -21,7 +21,7 @@ namespace OHOS {
     bool FuzzCmdClientInit(const uint8_t* data, size_t size)
     {
         std::string str(reinterpret_cast<const char*>(data), size);
-        CmdClientInit(str.c_str(), 1, str.c_str());
+        CmdClientInit(str.c_str(), 1, str.c_str(), nullptr);
         return true;
     }
 }

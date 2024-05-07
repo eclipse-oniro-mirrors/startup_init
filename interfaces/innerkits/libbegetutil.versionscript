@@ -153,6 +153,7 @@
     OH_ExtendableStrArrayGetIndex;
     OH_StrDictGet;
     OH_ExtendableStrDictGet;
+    OpenConsole;
   local:
     *;
 };

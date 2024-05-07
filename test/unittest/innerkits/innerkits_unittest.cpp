@@ -38,7 +38,6 @@ void CmdOnSendMessageComplete(const TaskHandle task, const BufferHandle handle);
 void CmdOnClose(const TaskHandle task);
 void CmdOnConnectComplete(const TaskHandle client);
 void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen);
-int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd);
 void ProcessPtyRead(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context);
 void ProcessPtyWrite(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context);
 int CmdOnIncommingConnect(const LoopHandle loop, const TaskHandle server);
@@ -58,6 +57,11 @@ public:
     void SetUp() {};
     void TearDown() {};
 };
+
+static int CallbackSendMsgProcessTest(const CmdAgent *agent, uint16_t type, const char *cmd, const char *ptyName)
+{
+    return 0;
+}
 
 /**
 * @tc.name: ReadFstabFromFile_unitest
@@ -315,10 +319,11 @@ static int TestIncommingConnect(const LoopHandle loop, const TaskHandle server)
 // TestControlFd
 HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_ControlFd001, TestSize.Level1)
 {
-    CmdClientInit("/data/testSock1", ACTION_DUMP, "cmd");
-    CmdClientInit("/data/testSock1", ACTION_DUMP, "cmd");
-    CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, nullptr);
-    CmdClientInit(nullptr, ACTION_DUMP, "cmd");
+    CmdClientInit("/data/testSock1", ACTION_DUMP, "cmd", nullptr);
+    CmdClientInit("/data/testSock1", ACTION_DUMP, "cmd", CallbackSendMsgProcessTest);
+    CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, nullptr, nullptr);
+    CmdClientInit(nullptr, ACTION_DUMP, "cmd", nullptr);
+
     CmdDisConnectComplete(nullptr);
     CmdOnSendMessageComplete(nullptr, nullptr);
     CmdOnConnectComplete(nullptr);
@@ -330,9 +335,10 @@ HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_ControlFd001, TestSize.Level1)
     SendCmdMessage(agent, ACTION_DUMP, "cmd", nullptr);
     SendMessage(nullptr, nullptr, nullptr);
     uint32_t events = 0;
-    InitPtyInterface(agent, 0, "cmd");
-    InitPtyInterface(agent, 0, nullptr);
-    InitPtyInterface(nullptr, 0, nullptr);
+    InitPtyInterface(agent, 0, "cmd", nullptr);
+    InitPtyInterface(agent, 0, "cmd", CallbackSendMsgProcessTest);
+    InitPtyInterface(agent, 0, nullptr, nullptr);
+    InitPtyInterface(nullptr, 0, nullptr, nullptr);
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     CheckAndCreatFile("/data/init_ut/testInput", mode);
     int fd = open("/data/init_ut/testInput", O_RDWR);

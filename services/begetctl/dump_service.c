@@ -28,7 +28,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
 {
     if (argc == DUMP_SERVICE_INFO_CMD_ARGS) {
         printf("dump service info \n");
-        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, argv[1]);
+        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, argv[1], NULL);
     } else if (argc == DUMP_SERVICE_BOOTEVENT_CMD_ARGS) {
         if (strcmp(argv[1], "parameter_service") == 0) {
             printf("dump parameter service info \n");
@@ -38,7 +38,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
         BEGET_ERROR_CHECK(cmd != NULL, return 0, "failed to allocate cmd memory");
         BEGET_ERROR_CHECK(sprintf_s(cmd, serviceNameLen, "%s#%s", argv[1], argv[2]) >= 0, free(cmd);
             return 0, "dump service arg create failed");
-        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, cmd);
+        CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, cmd, NULL);
         free(cmd);
     } else {
         BShellCmdHelp(shell, argc, argv);

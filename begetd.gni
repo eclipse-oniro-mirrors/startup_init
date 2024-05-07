@@ -44,6 +44,9 @@ declare_args() {
     startup_init_feature_decode_group_file = true
   }
 
+  #deps appspawn_client
+  enable_appspawn_client_module = true
+
   # begetutil extension module
   startup_begetutil_extra_modules = ""
   startup_init_extra_static_modules = ""

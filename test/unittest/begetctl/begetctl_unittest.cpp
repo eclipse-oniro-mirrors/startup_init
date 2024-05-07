@@ -520,10 +520,18 @@ HWTEST_F(BegetctlUnitTest, TestSetLogLevel_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), 0, const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestSandbox, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, TestSandbox_1, TestSize.Level1)
 {
     const char *args[] = {
         "sandbox", "-s", "test", "-n", "test2", "-p", "test3", "-h", "?"
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
+}
+
+HWTEST_F(BegetctlUnitTest, TestSandbox_2, TestSize.Level1)
+{
+    const char *args[] = {
+        "sandbox", "-b", "1008"
     };
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
