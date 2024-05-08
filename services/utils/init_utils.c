@@ -583,6 +583,21 @@ int InUpdaterMode(void)
 #endif
 }
 
+// Check if in rescue mode.
+int InRescueMode(void)
+{
+#ifdef OHOS_LITE
+    return 1;
+#else
+    char value[MAX_BUFFER_LEN] = {0};
+    int ret = GetParameterFromCmdLine("rescue_mode", value, MAX_BUFFER_LEN);
+    if (ret == 0 && strcmp(value, "true") == 0) {
+        return 0;
+    }
+    return 1;
+#endif
+}
+
 int StringReplaceChr(char *strl, char oldChr, char newChr)
 {
     INIT_ERROR_CHECK(strl != NULL, return -1, "Invalid parament");

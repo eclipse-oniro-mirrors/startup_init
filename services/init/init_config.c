@@ -113,6 +113,9 @@ void ReadConfig(void)
     } else if (strcmp(buffer, "charger") == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
+    } else if (InRescueMode() == 0) {
+        ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
+        ReadFileInDir(INIT_RESCUE_MODE_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (InUpdaterMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ParseInitCfgByPriority();
