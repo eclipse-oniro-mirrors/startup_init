@@ -225,6 +225,10 @@ public:
     {
         return id_;
     }
+    bool CheckAgent(pid_t calling) const
+    {
+        return id_ == static_cast<uint32_t>(calling);
+    }
     void SetAgentId(uint32_t id)
     {
         id_ = id;
