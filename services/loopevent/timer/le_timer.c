@@ -180,8 +180,8 @@ void CancelTimer(TimerHandle timerHandle)
     LoopMutexLock(&timer->mutex);
     OH_ListRemove(&timer->node);
     OH_ListInit(&timer->node);
-    free(timer);
     LoopMutexUnlock(&timer->mutex);
+    free(timer);
 }
 
 void LE_StopTimer(const LoopHandle loopHandle, const TimerHandle timer)

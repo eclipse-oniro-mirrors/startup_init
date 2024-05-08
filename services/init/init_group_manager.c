@@ -36,7 +36,7 @@ void AddOnDemandSocket(ServiceSocket *socketNode)
 
 void RemoveOnDemandSocket(ServiceSocket *sockopt)
 {
-    INIT_ERROR_CHECK(sockopt != NULL, return, "sockopt is NULL!");
+    INIT_CHECK(sockopt != NULL, return);
     ServiceSocket *tmp = g_initWorkspace.serviceSocketNode;
     INIT_ERROR_CHECK(tmp != NULL, return, "tmp is NULL!");
     if (tmp->service == sockopt->service) {
