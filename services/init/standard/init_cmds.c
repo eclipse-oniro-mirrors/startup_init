@@ -389,6 +389,28 @@ static void DoUmount(const struct CmdArgs *ctx)
     }
 }
 
+static void DoRemoveDmDevice(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("DoRemoveDmDevice %s",  ctx->argv[0]);
+    int ret = FsManagerDmRemoveDevice(ctx->argv[0]);
+    if (ret < 0) {
+        INIT_LOGE("Failed to remove dm device %s", ctx->argv[0]);
+    } else {
+        INIT_LOGI("Successed to remove dm device %s", ctx->argv[0]);
+    }
+}
+
+static void DoMountOneFstabFile(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("Mount %s from fstab file \" %s \"",  ctx->argv[1], ctx->argv[0]);
+    int ret = MountOneWithFstabFile(ctx->argv[0], ctx->argv[1], 1);
+    if (ret < 0) {
+        INIT_LOGE("Failed to mount dm device %d", ret);
+    } else {
+        INIT_LOGI("Successed to mount dm device %d", ret);
+    }
+}
+
 static void DoSync(const struct CmdArgs *ctx)
 {
     sync();
@@ -558,6 +580,8 @@ static const struct CmdTable g_cmdTable[] = {
     { "ifup ", 1, 1, 1, DoIfup },
     { "mount_fstab ", 1, 1, 0, DoMountFstabFile },
     { "umount_fstab ", 1, 1, 0, DoUmountFstabFile },
+    { "remove_dm_device", 1, 1, 0, DoRemoveDmDevice },
+    { "mount_one_fstab", 2, 2, 0, DoMountOneFstabFile },
     { "restorecon ", 1, 2, 1, DoRestorecon },
     { "stopAllServices ", 0, 10, 0, DoStopAllServices },
     { "umount ", 1, 1, 0, DoUmount },

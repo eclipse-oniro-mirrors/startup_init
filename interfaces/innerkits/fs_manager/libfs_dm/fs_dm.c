@@ -160,7 +160,7 @@ static int LoadDmDeviceTable(int fd, const char *devName,
             break;
         }
     } while (0);
-    
+
     free(parasBuf);
 
     return rc;
@@ -297,6 +297,38 @@ int FsDmInitDmDev(char *devPath, bool useSocket)
 
     close(ueventSockFd);
 
+    return 0;
+}
+
+int FsDmRemoveDevice(const char *devName)
+{
+    int rc;
+    int fd = -1;
+    struct dm_ioctl io;
+
+    fd = open(DEVICE_MAPPER_PATH, O_RDWR | O_CLOEXEC);
+    if (fd < 0) {
+        BEGET_LOGE("error 0x%x, open %s", errno, DEVICE_MAPPER_PATH);
+        return -1;
+    }
+
+    rc = InitDmIo(&io, devName);
+    if (rc != 0) {
+        close(fd);
+        BEGET_LOGE("error 0x%x, init dm io", rc);
+        return -1;
+    }
+
+    io.flags |= DM_READONLY_FLAG;
+
+    rc = ioctl(fd, DM_DEV_REMOVE, &io);
+    if (rc != 0) {
+        close(fd);
+        BEGET_LOGE("error, DM_DEV_REMOVE failed for %s, ret=%d", devName, rc);
+        return -1;
+    }
+
+    close(fd);
     return 0;
 }
 

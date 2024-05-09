@@ -97,6 +97,8 @@ MountStatus GetMountStatusForMountPoint(const char *mp);
 int MountAllWithFstabFile(const char *fstabFile, bool required);
 int MountAllWithFstab(const Fstab *fstab, bool required);
 int UmountAllWithFstabFile(const char *file);
+int MountOneWithFstabFile(const char *fstabFile, const char *devName, bool required);
+int FsManagerDmRemoveDevice(const char *devName);
 unsigned long GetMountFlags(char *mountFlag, char *fsSpecificFlags, size_t fsSpecificFlagSize,
     const char *mountPoint);
 

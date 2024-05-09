@@ -36,6 +36,7 @@ typedef struct {
 
 int FsDmInitDmDev(char *devPath, bool useSocket);
 int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *target);
+int FsDmRemoveDevice(const char *devName);
 
 #ifdef __cplusplus
 #if __cplusplus
