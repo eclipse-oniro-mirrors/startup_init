@@ -32,6 +32,7 @@
         ],
         "deps": {
             "components": [
+                "appspawn",
                 "safwk",
                 "c_utils",
                 "napi",

@@ -24,6 +24,8 @@
 #include "control_fd.h"
 #include "securec.h"
 
+CallbackSendMsgProcess g_sendMsg = NULL;
+
 CONTROL_FD_STATIC void ProcessPtyWrite(const WatcherHandle taskHandle, int fd, uint32_t *events, const void *context)
 {
     if ((fd < 0) || (events == NULL) || (context == NULL)) {
@@ -52,11 +54,17 @@ CONTROL_FD_STATIC void ProcessPtyRead(const WatcherHandle taskHandle, int fd, ui
     }
     CmdAgent *agent = (CmdAgent *)context;
     char buf[PTY_BUF_SIZE] = {0};
-    long readlen = read(fd, buf, PTY_BUF_SIZE - 1);
+    ssize_t readlen = 0;
+    do {
+        readlen = read(fd, buf, PTY_BUF_SIZE - 1);
+    } while (readlen == -1 && errno == EINTR);
+
     if (readlen > 0) {
         fprintf(stdout, "%s", buf);
     } else {
         (void)close(agent->ptyFd);
+        LE_StopLoop(LE_GetDefaultLoop());
+        *events = 0;
         return;
     }
     int ret = fflush(stdout);
@@ -144,12 +152,13 @@ CONTROL_FD_STATIC int SendCmdMessage(const CmdAgent *agent, uint16_t type, const
     return 0;
 }
 
-CONTROL_FD_STATIC int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd)
+int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd, CallbackSendMsgProcess callback)
 {
     if ((cmd == NULL) || (agent == NULL)) {
         return -1;
     }
 #ifndef STARTUP_INIT_TEST
+    g_sendMsg = callback;
     // initialize terminal
     struct termios term;
     int ret = tcgetattr(STDIN_FILENO, &term);
@@ -183,13 +192,17 @@ CONTROL_FD_STATIC int InitPtyInterface(CmdAgent *agent, uint16_t type, const cha
     info.fd = STDIN_FILENO; // read stdin and write ptmx
     BEGET_ERROR_CHECK(LE_StartWatcher(LE_GetDefaultLoop(), &agent->input, &info, agent) == LE_SUCCESS,
         close(pfd); return -1, "[control_fd] Failed le_loop start watcher stdin read and write ptmx");
-    ret = SendCmdMessage(agent, type, cmd, ptsbuffer);
+    if (g_sendMsg == NULL) {
+        ret = SendCmdMessage(agent, type, cmd, ptsbuffer);
+    } else {
+        ret = g_sendMsg(agent, type, cmd, ptsbuffer);
+    }
     BEGET_ERROR_CHECK(ret == 0, close(pfd); return -1, "[control_fd] Failed send message");
 #endif
     return 0;
 }
 
-void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd)
+void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd, CallbackSendMsgProcess callback)
 {
     if ((socketPath == NULL) || (cmd == NULL)) {
         BEGET_LOGE("[control_fd] Invalid parameter");
@@ -198,7 +211,7 @@ void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd)
     CmdAgent *agent = CmdAgentCreate(socketPath);
     BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] Failed to create agent");
 #ifndef STARTUP_INIT_TEST
-    int ret = InitPtyInterface(agent, type, cmd);
+    int ret = InitPtyInterface(agent, type, cmd, callback);
     if (ret != 0) {
         return;
     }

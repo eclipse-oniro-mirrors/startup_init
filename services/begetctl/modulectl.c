@@ -44,7 +44,7 @@ static int ModuleDisplayCmd(BShellHandle shell, int argc, char **argv)
         BShellCmdHelp(shell, argc, argv);
         return 0;
     }
-    CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_MODULEMGR, argv[0]);
+    CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_MODULEMGR, argv[0], NULL);
     return 0;
 }
 

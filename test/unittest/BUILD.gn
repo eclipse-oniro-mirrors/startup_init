@@ -340,6 +340,11 @@ ohos_unittest("init_unittest") {
     "selinux:libselinux",
     "zlib:libz",
   ]
+  if (enable_appspawn_client_module && defined(global_parts_info) &&
+      defined(global_parts_info.startup_appspawn)) {
+    defines += [ "ENABLE_ENTER_APPSPAWN_SANDBOX" ]
+    external_deps += [ "appspawn:appspawn_client" ]
+  }
 
   if (enable_ohos_startup_init_feature_ab_partition) {
     sources += [ "//base/startup/init/services/begetctl/partitionslot.cpp" ]

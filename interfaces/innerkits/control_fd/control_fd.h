@@ -61,11 +61,13 @@ typedef struct CmdTask_ {
 } CmdTask;
 
 typedef void (* CallbackControlFdProcess)(uint16_t type, const char *serviceCmd, const void *context);
+typedef int (* CallbackSendMsgProcess)(const CmdAgent *agent, uint16_t type, const char *cmd, const char *ptyName);
 
 typedef enum {
     ACTION_SANDBOX = 0,
     ACTION_DUMP,
     ACTION_MODULEMGR,
+    ACTION_APP_ANDBOX,
     ACTION_MAX
 } ActionType;
 
@@ -77,9 +79,10 @@ typedef struct {
 } CmdMessage;
 
 void CmdServiceInit(const char *socketPath, CallbackControlFdProcess func, LoopHandle loop);
-void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd);
+void CmdClientInit(const char *socketPath, uint16_t type, const char *cmd, CallbackSendMsgProcess callback);
 void CmdServiceProcessDelClient(pid_t pid);
 void CmdServiceProcessDestroyClient(void);
+int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd, CallbackSendMsgProcess callback);
 
 #ifdef __cplusplus
 #if __cplusplus
