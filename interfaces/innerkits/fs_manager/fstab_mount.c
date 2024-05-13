@@ -28,6 +28,7 @@
 #include "param/init_param.h"
 #include "securec.h"
 #ifdef SUPPORT_HVB
+#include "fs_dm.h"
 #include "dm_verity.h"
 #endif
 #include "init_filesystems.h"
@@ -563,6 +564,55 @@ int UmountAllWithFstabFile(const char *fstabFile)
     fstab = NULL;
     return rc;
 }
+
+int FsManagerDmRemoveDevice(const char *devName)
+{
+#ifdef SUPPORT_HVB
+    return FsDmRemoveDevice(devName);
+#endif
+    return 0;
+}
+
+int MountOneWithFstabFile(const char *fstabFile, const char *devName, bool required)
+{
+    bool isFile = fstabFile == NULL || *fstabFile == '\0';
+    BEGET_CHECK(!isFile, return -1);
+
+    Fstab *fstab = NULL;
+    fstab = ReadFstabFromFile(fstabFile, false);
+    BEGET_ERROR_CHECK(fstab != NULL, return -1, "Read fstab file \" %s \" failed.", fstabFile);
+
+    FstabItem *item = NULL;
+    int rc = -1;
+
+#ifdef SUPPORT_HVB
+    if (required) {
+        rc = HvbDmVerityinit(fstab);
+        if (rc != 0) {
+            BEGET_LOGE("set dm_verity init, ret = 0x%x", rc);
+            return rc;
+        }
+    }
+#endif
+
+    for (item = fstab->head; item != NULL; item = item->next) {
+        if (strcmp(item->mountPoint, devName) == 0) {
+            rc = CheckRequiredAndMount(item, required);
+            break;
+        }
+    }
+
+#ifdef SUPPORT_HVB
+    if (required) {
+        HvbDmVerityFinal();
+    }
+#endif
+
+    ReleaseFstab(fstab);
+    fstab = NULL;
+    return rc;
+}
+
 #ifdef __cplusplus
 #if __cplusplus
 }
