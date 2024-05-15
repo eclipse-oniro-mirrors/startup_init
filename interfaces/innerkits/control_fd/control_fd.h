@@ -68,6 +68,7 @@ typedef enum {
     ACTION_DUMP,
     ACTION_MODULEMGR,
     ACTION_APP_ANDBOX,
+    ACTION_APP_APAWNTIME,
     ACTION_MAX
 } ActionType;
 

@@ -70,6 +70,7 @@ if (defined(ohos_lite)) {
 
   ohos_executable("begetctl") {
     sources = [
+      "appspawntime_cmd.c",
       "begetctl_cmd.c",
       "bootchart_cmd.c",
       "dump_service.c",
