@@ -101,7 +101,7 @@ static void *TestReadData(void *args)
     return nullptr;
 }
 
-HWTEST_F(AtomicUnitTest, AtomicUnitTest_001, TestSize.Level0)
+HWTEST_F(AtomicUnitTest, Init_AtomicUnitTest_001, TestSize.Level0)
 {
     printf("AtomicUnitTest_001 \n");
     pthread_t writeThread = 0;

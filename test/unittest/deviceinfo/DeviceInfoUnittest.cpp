@@ -80,7 +80,7 @@ public:
     }
 };
 
-HWTEST_F(DeviceInfoUnittest, DevInfoAgentTest, TestSize.Level1)
+HWTEST_F(DeviceInfoUnittest, Init_DevInfoAgentTest_001, TestSize.Level1)
 {
     OHOS::device_info::DeviceInfoKits &kits = OHOS::device_info::DeviceInfoKits::GetInstance();
     std::string serial = {};
@@ -90,7 +90,7 @@ HWTEST_F(DeviceInfoUnittest, DevInfoAgentTest, TestSize.Level1)
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
 }
 
-HWTEST_F(DeviceInfoUnittest, DevInfoDiedTest, TestSize.Level1)
+HWTEST_F(DeviceInfoUnittest, Init_DevInfoDiedTest_001, TestSize.Level1)
 {
     sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     DINFO_CHECK(samgr != nullptr, return, "Get samgr failed");
@@ -105,7 +105,7 @@ HWTEST_F(DeviceInfoUnittest, DevInfoDiedTest, TestSize.Level1)
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
 }
 
-HWTEST_F(DeviceInfoUnittest, DevInfoAgentFail, TestSize.Level1)
+HWTEST_F(DeviceInfoUnittest, Init_DevInfoAgentFail_001, TestSize.Level1)
 {
     sptr<OHOS::device_info::DeviceInfoLoad> deviceInfoLoad = new (std::nothrow) OHOS::device_info::DeviceInfoLoad();
     ASSERT_NE(deviceInfoLoad, nullptr);
@@ -116,7 +116,7 @@ HWTEST_F(DeviceInfoUnittest, DevInfoAgentFail, TestSize.Level1)
     kits.FinishStartSAFailed();
 }
 
-HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceInvalidTokenTest, TestSize.Level1)
+HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceInvalidTokenTest_001, TestSize.Level1)
 {
     string result;
     DeviceInfoServicePtr deviceInfoService = GetDeviceInfoService();
@@ -130,7 +130,7 @@ HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceInvalidTokenTest, TestSize.Level1)
         (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_UDID), data, reply, option);
 }
 
-HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceFailTest, TestSize.Level1)
+HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceFailTest_001, TestSize.Level1)
 {
     string result;
     DeviceInfoServicePtr deviceInfoService = GetDeviceInfoService();
@@ -153,7 +153,7 @@ HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceFailTest, TestSize.Level1)
         data, reply, option);
 }
 
-HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceTest, TestSize.Level1)
+HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceTest_001, TestSize.Level1)
 {
     string result;
     DeviceInfoServicePtr deviceInfoService = GetDeviceInfoService();
@@ -188,7 +188,7 @@ HWTEST_F(DeviceInfoUnittest, DeviceInfoServiceTest, TestSize.Level1)
     deviceInfoService->Dump(-1, args);
 }
 
-HWTEST_F(DeviceInfoUnittest, TestInterface, TestSize.Level1)
+HWTEST_F(DeviceInfoUnittest, Init_TestInterface_001, TestSize.Level1)
 {
     char localDeviceId[UDID_LEN] = {0};
     int ret = AclGetDevUdid(nullptr, UDID_LEN);
@@ -201,7 +201,7 @@ HWTEST_F(DeviceInfoUnittest, TestInterface, TestSize.Level1)
     EXPECT_NE(nullptr, serialNumber);
 }
 
-HWTEST_F(DeviceInfoUnittest, TestDeviceInfoProxy1, TestSize.Level1)
+HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_001, TestSize.Level1)
 {
     auto remotePtr = device_info::DeviceInfoKits::GetInstance().GetService();
     ASSERT_NE(remotePtr, nullptr);
@@ -221,7 +221,7 @@ HWTEST_F(DeviceInfoUnittest, TestDeviceInfoProxy1, TestSize.Level1)
     EXPECT_NE(nullptr, serialNumber);
 }
 
-HWTEST_F(DeviceInfoUnittest, TestDeviceInfoProxy2, TestSize.Level1)
+HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_002, TestSize.Level1)
 {
     sptr<device_info::DeviceInfoProxy> proxy = new(std::nothrow) device_info::DeviceInfoProxy(nullptr);
     ASSERT_NE(proxy, nullptr);

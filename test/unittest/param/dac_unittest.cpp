@@ -127,19 +127,19 @@ private:
     ParamSecurityOps clientParamSercurityOps {};
 };
 
-HWTEST_F(DacUnitTest, TestDacInitLocalLabel, TestSize.Level0)
+HWTEST_F(DacUnitTest, Init_TestDacInitLocalLabel_001, TestSize.Level0)
 {
     DacUnitTest test;
     test.TestDacInitLocalLabel();
 }
 
-HWTEST_F(DacUnitTest, TestDacCheckFilePermission, TestSize.Level0)
+HWTEST_F(DacUnitTest, Init_TestDacCheckFilePermission_001, TestSize.Level0)
 {
     DacUnitTest test;
     test.TestDacCheckFilePermission(STARTUP_INIT_UT_PATH "/trigger_test.cfg");
 }
 
-HWTEST_F(DacUnitTest, TestDacCheckUserParaPermission, TestSize.Level0)
+HWTEST_F(DacUnitTest, Init_TestDacCheckUserParaPermission_001, TestSize.Level0)
 {
     // 相同用户
     DacUnitTest test;
@@ -180,7 +180,7 @@ HWTEST_F(DacUnitTest, TestDacCheckUserParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(DacUnitTest, TestDacCheckGroupParaPermission, TestSize.Level0)
+HWTEST_F(DacUnitTest, Init_TestDacCheckGroupParaPermission_001, TestSize.Level0)
 {
     // 相同组
     DacUnitTest test;
@@ -221,7 +221,7 @@ HWTEST_F(DacUnitTest, TestDacCheckGroupParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(DacUnitTest, TestDacCheckOtherParaPermission, TestSize.Level0)
+HWTEST_F(DacUnitTest, Init_TestDacCheckOtherParaPermission_001, TestSize.Level0)
 {
     // 其他用户
     DacUnitTest test;
@@ -262,7 +262,7 @@ HWTEST_F(DacUnitTest, TestDacCheckOtherParaPermission, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(DacUnitTest, TestClientDacCheckFilePermission, TestSize.Level0)
+HWTEST_F(DacUnitTest, Init_TestClientDacCheckFilePermission_001, TestSize.Level0)
 {
     DacUnitTest test;
     test.TestClientDacCheckFilePermission(STARTUP_INIT_UT_PATH "/trigger_test.cfg");

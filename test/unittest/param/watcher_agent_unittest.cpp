@@ -251,31 +251,31 @@ public:
     }
 };
 
-HWTEST_F(WatcherAgentUnitTest, TestAddWatcher, TestSize.Level0)
+HWTEST_F(WatcherAgentUnitTest, Init_TestAddWatcher_001, TestSize.Level0)
 {
     WatcherAgentUnitTest test;
     test.TestAddWatcher();
 }
 
-HWTEST_F(WatcherAgentUnitTest, TestRecvMessage, TestSize.Level0)
+HWTEST_F(WatcherAgentUnitTest, Init_TestRecvMessage_001, TestSize.Level0)
 {
     WatcherAgentUnitTest test;
     test.TestRecvMessage("test.permission.watcher.agent.test1");
 }
 
-HWTEST_F(WatcherAgentUnitTest, TestDelWatcher, TestSize.Level0)
+HWTEST_F(WatcherAgentUnitTest, Init_TestDelWatcher_001, TestSize.Level0)
 {
     WatcherAgentUnitTest test;
     test.TestDelWatcher();
 }
 
-HWTEST_F(WatcherAgentUnitTest, TestResetService, TestSize.Level0)
+HWTEST_F(WatcherAgentUnitTest, Init_TestResetService_001, TestSize.Level0)
 {
     WatcherAgentUnitTest test;
     test.TestResetService();
 }
 
-HWTEST_F(WatcherAgentUnitTest, TestWatcherService, TestSize.Level0)
+HWTEST_F(WatcherAgentUnitTest, Init_TestWatcherService_001, TestSize.Level0)
 {
     const char *errstr = "111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
     ServiceWatchForStatus("param_watcher", TestWatcherCallBack);
@@ -286,7 +286,7 @@ HWTEST_F(WatcherAgentUnitTest, TestWatcherService, TestSize.Level0)
     WatchParameter(nullptr, nullptr, nullptr);
 }
 
-HWTEST_F(WatcherAgentUnitTest, TestInvalidWatcher, TestSize.Level0)
+HWTEST_F(WatcherAgentUnitTest, Init_TestInvalidWatcher_001, TestSize.Level0)
 {
     int ret = SystemWatchParameter(nullptr, TestParameterChange, nullptr);
     ASSERT_NE(ret, 0);
@@ -294,7 +294,7 @@ HWTEST_F(WatcherAgentUnitTest, TestInvalidWatcher, TestSize.Level0)
     ASSERT_NE(ret, 0);
 }
 
-HWTEST_F(WatcherAgentUnitTest, TestWatcherProxy, TestSize.Level0)
+HWTEST_F(WatcherAgentUnitTest, Init_TestWatcherProxy_001, TestSize.Level0)
 {
     WatcherAgentUnitTest test;
     test.TestWatcherProxy();

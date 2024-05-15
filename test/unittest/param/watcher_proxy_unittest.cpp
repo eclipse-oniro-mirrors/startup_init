@@ -269,7 +269,7 @@ public:
     }
 };
 
-HWTEST_F(WatcherProxyUnitTest, TestAddWatcher, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestAddWatcher_001, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
@@ -280,7 +280,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher, TestSize.Level0)
     test.TestWatchAgentDump("test.permission.watcher.test1");
 }
 
-HWTEST_F(WatcherProxyUnitTest, TestAddWatcher2, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestAddWatcher_002, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
@@ -292,7 +292,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher2, TestSize.Level0)
     test.TestWatchAgentDump("test.permission.watcher.test2");
 }
 
-HWTEST_F(WatcherProxyUnitTest, TestAddWatcher3, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestAddWatcher_003, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
@@ -301,7 +301,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher3, TestSize.Level0)
     test.TestWatchAgentDump("test.permission.watcher.test3");
 }
 
-HWTEST_F(WatcherProxyUnitTest, TestAddWatcher4, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestAddWatcher_004, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
@@ -312,7 +312,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher4, TestSize.Level0)
     test.TestWatchAgentDump("test.watcher.test4*");
 }
 
-HWTEST_F(WatcherProxyUnitTest, TestAddWatcher5, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestAddWatcher_005, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
@@ -322,7 +322,7 @@ HWTEST_F(WatcherProxyUnitTest, TestAddWatcher5, TestSize.Level0)
     test.TestWatchAgentDump("test.permission.watcher.test5");
 }
 
-HWTEST_F(WatcherProxyUnitTest, TestDelWatcher, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestDelWatcher_001, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
@@ -333,7 +333,7 @@ HWTEST_F(WatcherProxyUnitTest, TestDelWatcher, TestSize.Level0)
     test.TestWatchAgentDump("test.permission.watcher.testDel");
 }
 
-HWTEST_F(WatcherProxyUnitTest, TestDiedWatcher, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestDiedWatcher_001, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
@@ -344,7 +344,7 @@ HWTEST_F(WatcherProxyUnitTest, TestDiedWatcher, TestSize.Level0)
     test.TestWatchAgentDump("test.permission.watcher.testdied");
 }
 
-HWTEST_F(WatcherProxyUnitTest, TestSendLocalChange, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestSendLocalChange_001, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
@@ -354,19 +354,19 @@ HWTEST_F(WatcherProxyUnitTest, TestSendLocalChange, TestSize.Level0)
     test.TestWatchAgentDump("test.watcher.");
 }
 
-HWTEST_F(WatcherProxyUnitTest, TestWatchProxy, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestWatchProxy_001, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     test.TestWatchProxy("test.permission.watcher.test1", "watcherId");
 }
 
-HWTEST_F(WatcherProxyUnitTest, TestInvalid, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestInvalid_001, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     test.TestInvalid("test.permission.watcher.test1");
 }
 
-HWTEST_F(WatcherProxyUnitTest, TestStop, TestSize.Level0)
+HWTEST_F(WatcherProxyUnitTest, Init_TestStop_001, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;

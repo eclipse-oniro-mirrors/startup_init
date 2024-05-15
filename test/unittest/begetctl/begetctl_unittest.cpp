@@ -29,7 +29,7 @@ public:
     void TearDown(void) {};
 };
 
-HWTEST_F(BegetctlUnitTest, TestShellInit, TestSize.Level0)
+HWTEST_F(BegetctlUnitTest, Init_TestShellInit_001, TestSize.Level0)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
@@ -38,7 +38,7 @@ HWTEST_F(BegetctlUnitTest, TestShellInit, TestSize.Level0)
     BShellEnvDirectExecute(GetShellHandle(), 1, const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestShellLs, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellLs_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
@@ -47,7 +47,7 @@ HWTEST_F(BegetctlUnitTest, TestShellLs, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestShellLsWithR, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellLsWithR_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
@@ -56,7 +56,7 @@ HWTEST_F(BegetctlUnitTest, TestShellLsWithR, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestShellLsGet, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellLsGet_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
@@ -65,7 +65,7 @@ HWTEST_F(BegetctlUnitTest, TestShellLsGet, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestShellSet, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellSet_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
@@ -74,7 +74,7 @@ HWTEST_F(BegetctlUnitTest, TestShellSet, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestShellGetWithKey, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellGetWithKey_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
@@ -83,7 +83,7 @@ HWTEST_F(BegetctlUnitTest, TestShellGetWithKey, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestShellWait, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellWait_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
@@ -91,7 +91,7 @@ HWTEST_F(BegetctlUnitTest, TestShellWait, TestSize.Level1)
     };
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
-HWTEST_F(BegetctlUnitTest, TestShellWaitFalse, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellWaitFalse_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
@@ -100,7 +100,7 @@ HWTEST_F(BegetctlUnitTest, TestShellWaitFalse, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestShellWaitWithKey, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellWaitWithKey_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
@@ -108,7 +108,7 @@ HWTEST_F(BegetctlUnitTest, TestShellWaitWithKey, TestSize.Level1)
     };
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
-HWTEST_F(BegetctlUnitTest, TestShellParamShell, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellParamShell_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     const char *args[] = {
@@ -116,7 +116,7 @@ HWTEST_F(BegetctlUnitTest, TestShellParamShell, TestSize.Level1)
     };
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
-HWTEST_F(BegetctlUnitTest, TestShellLsWithvalue, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellLsWithvalue_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     BShellEnvSetParam(GetShellHandle(), PARAM_REVERESD_NAME_CURR_PARAMETER, "..a", PARAM_STRING, (void *)"..a");
@@ -125,7 +125,7 @@ HWTEST_F(BegetctlUnitTest, TestShellLsWithvalue, TestSize.Level1)
     };
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
-HWTEST_F(BegetctlUnitTest, TestShellLsWithvalueExist, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellLsWithvalueExist_001, TestSize.Level1)
 {
     BShellParamCmdRegister(GetShellHandle(), 0);
     BShellEnvSetParam(GetShellHandle(), PARAM_REVERESD_NAME_CURR_PARAMETER, "#", PARAM_STRING, (void *)"#");
@@ -135,7 +135,7 @@ HWTEST_F(BegetctlUnitTest, TestShellLsWithvalueExist, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestPartitionSlot_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestPartitionSlot_001, TestSize.Level1)
 {
     const char *args[] = {
         "partitionslot", "getslot"
@@ -143,7 +143,7 @@ HWTEST_F(BegetctlUnitTest, TestPartitionSlot_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestPartitionSlot_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestPartitionSlot_002, TestSize.Level1)
 {
     const char *args[] = {
         "partitionslot", "getsuffix", "1"
@@ -151,7 +151,7 @@ HWTEST_F(BegetctlUnitTest, TestPartitionSlot_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestPartitionSlot_3, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestPartitionSlot_003, TestSize.Level1)
 {
     const char *args[] = {
         "partitionslot", "setactive", "1"
@@ -159,7 +159,7 @@ HWTEST_F(BegetctlUnitTest, TestPartitionSlot_3, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestPartitionSlot_4, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestPartitionSlot_004, TestSize.Level1)
 {
     const char *args[] = {
         "partitionslot", "setunboot", "2"
@@ -167,7 +167,7 @@ HWTEST_F(BegetctlUnitTest, TestPartitionSlot_4, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestPartitionSlot_5, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestPartitionSlot_005, TestSize.Level1)
 {
     const char *args[] = {
         "partitionslot", "setactive"
@@ -175,7 +175,7 @@ HWTEST_F(BegetctlUnitTest, TestPartitionSlot_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestPartitionSlot_6, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestPartitionSlot_006, TestSize.Level1)
 {
     const char *args[] = {
         "partitionslot", "setunboot"
@@ -183,7 +183,7 @@ HWTEST_F(BegetctlUnitTest, TestPartitionSlot_6, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestPartitionSlot_7, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestPartitionSlot_007, TestSize.Level1)
 {
     const char *args[] = {
         "partitionslot", "getsuffix"
@@ -191,7 +191,7 @@ HWTEST_F(BegetctlUnitTest, TestPartitionSlot_7, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestBegetctl_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellLog_001, TestSize.Level1)
 {
     const char *args[] = {
         "set", "log", "level", "1"
@@ -199,7 +199,7 @@ HWTEST_F(BegetctlUnitTest, TestBegetctl_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestBegetctl_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellLog_002, TestSize.Level1)
 {
     const char *args[] = {
         "get", "log", "level"
@@ -207,7 +207,7 @@ HWTEST_F(BegetctlUnitTest, TestBegetctl_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestBegetctl_3, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellLog_003, TestSize.Level1)
 {
     const char *args[] = {
         "set", "log", "level"
@@ -215,7 +215,7 @@ HWTEST_F(BegetctlUnitTest, TestBegetctl_3, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestBegetctl_4, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellLog_004, TestSize.Level1)
 {
     const char *args[] = {
         "set", "log", "level", "1000"
@@ -223,7 +223,7 @@ HWTEST_F(BegetctlUnitTest, TestBegetctl_4, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestBegetctl_5, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestShellLog_005, TestSize.Level1)
 {
     const char *args[] = {
         "set", "log", "level", "a"
@@ -231,7 +231,7 @@ HWTEST_F(BegetctlUnitTest, TestBegetctl_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestBootChart_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestBootChart_001, TestSize.Level1)
 {
     const char *args[] = {
         "bootchart", "enable"
@@ -240,7 +240,7 @@ HWTEST_F(BegetctlUnitTest, TestBootChart_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestBootChart_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestBootChart_002, TestSize.Level1)
 {
     const char *args[] = {
         "bootchart", "start"
@@ -249,7 +249,7 @@ HWTEST_F(BegetctlUnitTest, TestBootChart_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestBootChart_3, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestBootChart_003, TestSize.Level1)
 {
     const char *args[] = {
         "bootchart", "stop"
@@ -257,7 +257,7 @@ HWTEST_F(BegetctlUnitTest, TestBootChart_3, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestBootChart_4, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestBootChart_004, TestSize.Level1)
 {
     const char *args[] = {
         "bootchart", "disable"
@@ -266,7 +266,7 @@ HWTEST_F(BegetctlUnitTest, TestBootChart_4, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestBootChart_5, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestBootChart_005, TestSize.Level1)
 {
     const char *args[] = {
         "bootchart"
@@ -274,7 +274,7 @@ HWTEST_F(BegetctlUnitTest, TestBootChart_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestDumpService_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestDumpService_001, TestSize.Level1)
 {
     const char *args[] = {
         "bootevent", "enable"
@@ -282,7 +282,7 @@ HWTEST_F(BegetctlUnitTest, TestDumpService_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestDumpService_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestDumpService_002, TestSize.Level1)
 {
     const char *args[] = {
         "bootevent", "disable"
@@ -290,7 +290,7 @@ HWTEST_F(BegetctlUnitTest, TestDumpService_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestDumpService_3, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestDumpService_003, TestSize.Level1)
 {
     const char *args[] = {
         "dump_service", "all"
@@ -298,7 +298,7 @@ HWTEST_F(BegetctlUnitTest, TestDumpService_3, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestDumpService_4, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestDumpService_004, TestSize.Level1)
 {
     const char *args[] = {
         "dump_service", "param_watcher"
@@ -306,7 +306,7 @@ HWTEST_F(BegetctlUnitTest, TestDumpService_4, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestDumpService_5, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestDumpService_005, TestSize.Level1)
 {
     const char *args[] = {
         "dump_service", "parameter-service", "trigger"
@@ -314,7 +314,7 @@ HWTEST_F(BegetctlUnitTest, TestDumpService_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestMiscDaemon, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestMiscDaemon_001, TestSize.Level1)
 {
     const char *args[] = {
         "misc_daemon", "--write_logo", BOOT_CMD_LINE
@@ -322,7 +322,7 @@ HWTEST_F(BegetctlUnitTest, TestMiscDaemon, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestMiscDaemon_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestMiscDaemon_002, TestSize.Level1)
 {
     const char *args[] = {
         "misc_daemon", "--write_logo1111", "test"
@@ -330,7 +330,7 @@ HWTEST_F(BegetctlUnitTest, TestMiscDaemon_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestMiscDaemon_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestMiscDaemon_003, TestSize.Level1)
 {
     const char *args[] = {
         "misc_daemon", "--write_logo", ""
@@ -338,7 +338,7 @@ HWTEST_F(BegetctlUnitTest, TestMiscDaemon_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestMiscDaemon_3, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestMiscDaemon_004, TestSize.Level1)
 {
     const char *args[] = {
         "misc_daemon", "--write_logo"
@@ -346,7 +346,7 @@ HWTEST_F(BegetctlUnitTest, TestMiscDaemon_3, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestMiscDaemon_4, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestMiscDaemon_005, TestSize.Level1)
 {
     // clear misc logo
     const char *args[] = {
@@ -355,7 +355,7 @@ HWTEST_F(BegetctlUnitTest, TestMiscDaemon_4, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestModulectl_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestModulectl_001, TestSize.Level1)
 {
     const char *args[] = {
         "modulectl", "install", "testModule"
@@ -363,7 +363,7 @@ HWTEST_F(BegetctlUnitTest, TestModulectl_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestModulectl_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestModulectl_002, TestSize.Level1)
 {
     const char *args[] = {
         "modulectl", "uninstall", "testModule"
@@ -371,7 +371,7 @@ HWTEST_F(BegetctlUnitTest, TestModulectl_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestModulectl_3, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestModulectl_003, TestSize.Level1)
 {
     const char *args[] = {
         "modulectl", "list", "testModule"
@@ -379,7 +379,7 @@ HWTEST_F(BegetctlUnitTest, TestModulectl_3, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestModulectl_4, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestModulectl_004, TestSize.Level1)
 {
     const char *args[] = {
         "modulectl", "install"
@@ -387,7 +387,7 @@ HWTEST_F(BegetctlUnitTest, TestModulectl_4, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestModulectl_5, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestModulectl_005, TestSize.Level1)
 {
     const char *args[] = {
         "modulectl", "list"
@@ -395,12 +395,12 @@ HWTEST_F(BegetctlUnitTest, TestModulectl_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestModulectl_6, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestModulectl_006, TestSize.Level1)
 {
     BShellEnvDirectExecute(GetShellHandle(), 0, nullptr);
 }
 
-HWTEST_F(BegetctlUnitTest, TestServiceControl_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControl_001, TestSize.Level1)
 {
     const char *args[] = {
         "service_control", "stop", "test"
@@ -408,7 +408,7 @@ HWTEST_F(BegetctlUnitTest, TestServiceControl_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestServiceControl_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControl_002, TestSize.Level1)
 {
     const char *args[] = {
         "service_control", "start", "test"
@@ -416,7 +416,7 @@ HWTEST_F(BegetctlUnitTest, TestServiceControl_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestServiceControl_3, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControl_003, TestSize.Level1)
 {
     const char *args[] = {
         "stop_service", "test"
@@ -424,7 +424,7 @@ HWTEST_F(BegetctlUnitTest, TestServiceControl_3, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestServiceControl_4, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControl_004, TestSize.Level1)
 {
     const char *args[] = {
         "start_service", "test"
@@ -432,7 +432,7 @@ HWTEST_F(BegetctlUnitTest, TestServiceControl_4, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestServiceControl_5, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControl_005, TestSize.Level1)
 {
     const char *args[] = {
         "timer_stop", "test"
@@ -440,7 +440,7 @@ HWTEST_F(BegetctlUnitTest, TestServiceControl_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestServiceControl_6, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControl_006, TestSize.Level1)
 {
     const char *args[] = {
         "timer_stop"
@@ -448,7 +448,7 @@ HWTEST_F(BegetctlUnitTest, TestServiceControl_6, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestServiceControl_7, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControl_007, TestSize.Level1)
 {
     const char *args[] = {
         "timer_start", "test-service", "10"
@@ -456,7 +456,7 @@ HWTEST_F(BegetctlUnitTest, TestServiceControl_7, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestServiceControl_8, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControl_008, TestSize.Level1)
 {
     const char *args[] = {
         "timer_start", "test-service",
@@ -464,7 +464,7 @@ HWTEST_F(BegetctlUnitTest, TestServiceControl_8, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestServiceControl_9, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControl_009, TestSize.Level1)
 {
     const char *args[] = {
         "timer_start", "test-service", "ww"
@@ -472,7 +472,7 @@ HWTEST_F(BegetctlUnitTest, TestServiceControl_9, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestServiceControl_10, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControl_010, TestSize.Level1)
 {
     const char *args[] = {
         "xxxxxxxxxxxxxx", "test-service", "ww"
@@ -480,7 +480,7 @@ HWTEST_F(BegetctlUnitTest, TestServiceControl_10, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestSetLogLevel_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestSetLogLevel_001, TestSize.Level1)
 {
     const char *args[] = {
         "setloglevel", "1"
@@ -488,7 +488,7 @@ HWTEST_F(BegetctlUnitTest, TestSetLogLevel_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestSetLogLevel_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestSetLogLevel_002, TestSize.Level1)
 {
     const char *args[] = {
         "getloglevel"
@@ -496,7 +496,7 @@ HWTEST_F(BegetctlUnitTest, TestSetLogLevel_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestSetLogLevel_3, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestSetLogLevel_003, TestSize.Level1)
 {
     const char *args[] = {
         "setloglevel", "a"
@@ -504,7 +504,7 @@ HWTEST_F(BegetctlUnitTest, TestSetLogLevel_3, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestSetLogLevel_4, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestSetLogLevel_004, TestSize.Level1)
 {
     const char *args[] = {
         "setloglevel"
@@ -512,7 +512,7 @@ HWTEST_F(BegetctlUnitTest, TestSetLogLevel_4, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestSetLogLevel_5, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestSetLogLevel_005, TestSize.Level1)
 {
     const char *args[] = {
         "setloglevel"
@@ -520,7 +520,7 @@ HWTEST_F(BegetctlUnitTest, TestSetLogLevel_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), 0, const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestSandbox_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestSandbox_001, TestSize.Level1)
 {
     const char *args[] = {
         "sandbox", "-s", "test", "-n", "test2", "-p", "test3", "-h", "?"
@@ -528,7 +528,7 @@ HWTEST_F(BegetctlUnitTest, TestSandbox_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestSandbox_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestSandbox_002, TestSize.Level1)
 {
     const char *args[] = {
         "sandbox", "-b", "1008"
@@ -536,7 +536,7 @@ HWTEST_F(BegetctlUnitTest, TestSandbox_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestReboot_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestReboot_001, TestSize.Level1)
 {
     const char *args[] = {
         "reboot"
@@ -544,7 +544,7 @@ HWTEST_F(BegetctlUnitTest, TestReboot_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestReboot_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestReboot_002, TestSize.Level1)
 {
     const char *args[] = {
         "reboot", "shutdown"
@@ -552,7 +552,7 @@ HWTEST_F(BegetctlUnitTest, TestReboot_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestReboot_3, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestReboot_003, TestSize.Level1)
 {
     const char *args[] = {
         "reboot", "charge"
@@ -560,7 +560,7 @@ HWTEST_F(BegetctlUnitTest, TestReboot_3, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestReboot_4, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestReboot_004, TestSize.Level1)
 {
     const char *args[] = {
         "reboot", "updater"
@@ -568,7 +568,7 @@ HWTEST_F(BegetctlUnitTest, TestReboot_4, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestReboot_5, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestReboot_005, TestSize.Level1)
 {
     const char *args[] = {
         "reboot", "updater:aaaaaaa"
@@ -576,7 +576,7 @@ HWTEST_F(BegetctlUnitTest, TestReboot_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestReboot_6, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestReboot_006, TestSize.Level1)
 {
     const char *args[] = {
         "reboot", "flashd:aaaaaaa"
@@ -584,7 +584,7 @@ HWTEST_F(BegetctlUnitTest, TestReboot_6, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestReboot_7, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestReboot_007, TestSize.Level1)
 {
     const char *args[] = {
         "reboot", "flashd"
@@ -592,7 +592,7 @@ HWTEST_F(BegetctlUnitTest, TestReboot_7, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestReboot_8, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestReboot_008, TestSize.Level1)
 {
     const char *args[] = {
         "reboot", "suspend"
@@ -600,7 +600,7 @@ HWTEST_F(BegetctlUnitTest, TestReboot_8, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestReboot_9, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestReboot_009, TestSize.Level1)
 {
     const char *args[] = {
         "reboot", "222222222"
@@ -608,7 +608,7 @@ HWTEST_F(BegetctlUnitTest, TestReboot_9, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestGid_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestGid_001, TestSize.Level1)
 {
     const char *args[] = {
         "dac", "gid", "logd"
@@ -616,7 +616,7 @@ HWTEST_F(BegetctlUnitTest, TestGid_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestGid_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestGid_002, TestSize.Level1)
 {
     const char *args[] = {
         "dac"
@@ -624,7 +624,7 @@ HWTEST_F(BegetctlUnitTest, TestGid_2, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestUid_1, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestUid_001, TestSize.Level1)
 {
     const char *args[] = {
         "dac", "uid", ""
@@ -632,7 +632,7 @@ HWTEST_F(BegetctlUnitTest, TestUid_1, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
-HWTEST_F(BegetctlUnitTest, TestUid_2, TestSize.Level1)
+HWTEST_F(BegetctlUnitTest, Init_TestUid_002, TestSize.Level1)
 {
     const char *args[] = {
         "dac", "uid", ""

@@ -495,13 +495,13 @@ public:
     }
 };
 
-HWTEST_F(TriggerUnitTest, TestLoadTrigger, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestLoadTrigger_001, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestLoadTrigger();
 }
 
-HWTEST_F(TriggerUnitTest, TestBootEvent, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestBootEvent_001, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestBootEvent("pre-init");
@@ -510,55 +510,55 @@ HWTEST_F(TriggerUnitTest, TestBootEvent, TestSize.Level0)
     test.TestBootEvent("early-init");
 }
 
-HWTEST_F(TriggerUnitTest, TestAddTriggerForBoot, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestAddTriggerForBoot_001, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestAddTriggerForBoot();
 }
 
-HWTEST_F(TriggerUnitTest, TestAddTriggerForParm, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestAddTriggerForParm_001, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestAddTriggerForParm();
 }
 
-HWTEST_F(TriggerUnitTest, TestCheckParamTrigger1, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestCheckParamTrigger_001, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestCheckParamTrigger1();
 }
 
-HWTEST_F(TriggerUnitTest, TestCheckParamTrigger2, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestCheckParamTrigger_002, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestCheckParamTrigger2();
 }
 
-HWTEST_F(TriggerUnitTest, TestCheckParamTrigger3, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestCheckParamTrigger_003, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestCheckParamTrigger3();
 }
 
-HWTEST_F(TriggerUnitTest, TestCheckParamTrigger4, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestCheckParamTrigger_004, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestCheckParamTrigger4();
 }
 
-HWTEST_F(TriggerUnitTest, TestCheckParamTrigger5, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestCheckParamTrigger_005, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestCheckParamTrigger5();
 }
 
-HWTEST_F(TriggerUnitTest, TestParamEvent, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestParamEvent_001, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestParamEvent();
 }
 
-HWTEST_F(TriggerUnitTest, ComputerCondition, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestComputerCondition_001, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestComputeCondition("aaa=111||aaa=222||aaa=333");
@@ -567,37 +567,37 @@ HWTEST_F(TriggerUnitTest, ComputerCondition, TestSize.Level0)
     test.TestComputeCondition("aaa=111||(aaa=222&&aaa=333)");
 }
 
-HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger1, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_001, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestExecuteParamTrigger1();
 }
 
-HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger2, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_002, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestExecuteParamTrigger2();
 }
 
-HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger3, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_003, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestExecuteParamTrigger3();
 }
 
-HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger4, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_004, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestExecuteParamTrigger4();
 }
 
-HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger5, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_005, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestExecuteParamTrigger5();
 }
 
-HWTEST_F(TriggerUnitTest, TestExecuteParamTrigger6, TestSize.Level0)
+HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_006, TestSize.Level0)
 {
     TriggerUnitTest test;
     test.TestDumpTrigger();

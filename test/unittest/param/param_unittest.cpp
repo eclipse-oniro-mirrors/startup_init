@@ -316,13 +316,13 @@ public:
     }
 };
 
-HWTEST_F(ParamUnitTest, TestPersistParam, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestPersistParam_001, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestPersistParam();
 }
 
-HWTEST_F(ParamUnitTest, TestSetParam_1, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestSetParam_001, TestSize.Level0)
 {
     ParamUnitTest test;
     const char *params[][2] = {{"111.2222", "1"},
@@ -333,7 +333,7 @@ HWTEST_F(ParamUnitTest, TestSetParam_1, TestSize.Level0)
     test.TestSetParams(params, 5);
 }
 
-HWTEST_F(ParamUnitTest, TestSetParam_2, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestSetParam_002, TestSize.Level0)
 {
     ParamUnitTest test;
     const char *params[][2] = {{"111.2222.xxxx.xxx.xxx", "1_1"},
@@ -358,13 +358,13 @@ HWTEST_F(ParamUnitTest, TestSetParam_2, TestSize.Level0)
     test.TestSetParams(sysParams, 5);
 }
 
-HWTEST_F(ParamUnitTest, TestNameIsValid, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestNameIsValid_001, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestNameIsValid();
 }
 
-HWTEST_F(ParamUnitTest, TestParamValue, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestParamValue_001, TestSize.Level0)
 {
     // support empty string
     const char *name = "test_readonly.dddddddddddddddddd.fffffffffffffffffff";
@@ -379,31 +379,31 @@ HWTEST_F(ParamUnitTest, TestParamValue, TestSize.Level0)
     CheckServerParamValue(name, "");
 }
 
-HWTEST_F(ParamUnitTest, TestAddSecurityLabel1, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestAddSecurityLabel_001, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestAddSecurityLabel1();
 }
 
-HWTEST_F(ParamUnitTest, TestAddSecurityLabel2, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestAddSecurityLabel_002, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestAddSecurityLabel2();
 }
 
-HWTEST_F(ParamUnitTest, TestAddSecurityLabel3, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestAddSecurityLabel_003, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestAddSecurityLabel3();
 }
 
-HWTEST_F(ParamUnitTest, TestAddSecurityLabel4, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestAddSecurityLabel_004, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestAddSecurityLabel4();
 }
 
-HWTEST_F(ParamUnitTest, TestUpdateParam, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestUpdateParam_001, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "100");
@@ -413,19 +413,19 @@ HWTEST_F(ParamUnitTest, TestUpdateParam, TestSize.Level0)
     test.TestUpdateParam("net.tcp.default_init_rwnd", "60");
 }
 
-HWTEST_F(ParamUnitTest, TestParamTraversal, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestParamTraversal_001, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestParamTraversal();
 }
 
-HWTEST_F(ParamUnitTest, TestDumpParamMemory, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestDumpParamMemory_001, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestDumpParamMemory();
 }
 
-HWTEST_F(ParamUnitTest, TestLinuxRWLock, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestLinuxRWLock_001, TestSize.Level0)
 {
     ParamRWMutexCreate(nullptr);
     ParamRWMutexWRLock(nullptr);
@@ -435,7 +435,7 @@ HWTEST_F(ParamUnitTest, TestLinuxRWLock, TestSize.Level0)
     ParamMutexDelete(nullptr);
 }
 
-HWTEST_F(ParamUnitTest, TestWorkSpace1, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestWorkSpace_001, TestSize.Level0)
 {
     int ret = AddWorkSpace("test.workspace.1", GetWorkSpaceIndex("test.workspace.1"), 0, PARAM_WORKSPACE_DEF);
     EXPECT_EQ(ret, 0);
@@ -448,7 +448,7 @@ HWTEST_F(ParamUnitTest, TestWorkSpace1, TestSize.Level0)
     CloseWorkSpace(nullptr);
 }
 
-HWTEST_F(ParamUnitTest, TestWorkSpace2, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestWorkSpace_002, TestSize.Level0)
 {
     const char *spaceName = "test.workspace2";
     const size_t size = strlen(spaceName) + 1;
@@ -466,7 +466,7 @@ HWTEST_F(ParamUnitTest, TestWorkSpace2, TestSize.Level0)
 }
 
 #if !(defined __LITEOS_A__ || defined __LITEOS_M__) // can not support parameter type
-HWTEST_F(ParamUnitTest, TestParamValueType1, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestParamValueType_001, TestSize.Level0)
 {
     int ret = SystemWriteParam("test.type.int.1000", "10000");
     EXPECT_EQ(ret, 0);
@@ -477,7 +477,7 @@ HWTEST_F(ParamUnitTest, TestParamValueType1, TestSize.Level0)
     EXPECT_EQ(ret, PARAM_CODE_INVALID_VALUE);
 }
 
-HWTEST_F(ParamUnitTest, TestParamValueType2, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestParamValueType_002, TestSize.Level0)
 {
     int ret = SystemWriteParam("test.type.bool.1000", "10000");
     EXPECT_EQ(ret, PARAM_CODE_INVALID_VALUE);
@@ -509,7 +509,7 @@ HWTEST_F(ParamUnitTest, TestParamValueType2, TestSize.Level0)
 }
 #endif
 
-HWTEST_F(ParamUnitTest, TestGetServiceCtlName, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestGetServiceCtlName_001, TestSize.Level0)
 {
     ServiceCtrlInfo *serviceInfo = nullptr;
     GetServiceCtrlInfo("ohos.startup.powerctrl", "reboot,updater", &serviceInfo);
@@ -530,7 +530,7 @@ HWTEST_F(ParamUnitTest, TestGetServiceCtlName, TestSize.Level0)
     ParamWorBaseLog(INIT_DEBUG, PARAN_DOMAIN, "PARAM", "%s", "ParamWorBaseLog");
 }
 
-HWTEST_F(ParamUnitTest, TestFindTrieNode, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestFindTrieNode_001, TestSize.Level0)
 {
     int ret = AddWorkSpace("test.workspace.1", GetWorkSpaceIndex("test.workspace.1"), 0, PARAM_WORKSPACE_DEF);
     EXPECT_EQ(ret, 0);
@@ -547,7 +547,7 @@ HWTEST_F(ParamUnitTest, TestFindTrieNode, TestSize.Level0)
 }
 
 #ifndef OHOS_LITE
-HWTEST_F(ParamUnitTest, TestConnectServer, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestConnectServer_001, TestSize.Level0)
 {
     int ret = ConnectServer(-1, CLIENT_PIPE_NAME);
     EXPECT_NE(ret, 0);
@@ -559,7 +559,7 @@ HWTEST_F(ParamUnitTest, TestConnectServer, TestSize.Level0)
     close(fd);
 }
 
-HWTEST_F(ParamUnitTest, TestRequestMessage, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestRequestMessage_001, TestSize.Level0)
 {
     const int maxSize = 1024 * 64 + 10;
     const int msgSize = sizeof(ParamMessage) + 128; // 128 TEST
@@ -604,7 +604,7 @@ HWTEST_F(ParamUnitTest, TestRequestMessage, TestSize.Level0)
     free(msg);
 }
 
-HWTEST_F(ParamUnitTest, TestServerTaskFail, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestServerTaskFail_001, TestSize.Level0)
 {
     ParamTaskPtr serverTask = nullptr;
     ParamStreamInfo info = {};
@@ -620,7 +620,7 @@ HWTEST_F(ParamUnitTest, TestServerTaskFail, TestSize.Level0)
     EXPECT_NE(ret, 0);
 }
 
-HWTEST_F(ParamUnitTest, TestStreamTaskFail, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestStreamTaskFail_001, TestSize.Level0)
 {
     ParamTaskPtr client = nullptr;
     ParamStreamInfo info = {};
@@ -653,7 +653,7 @@ HWTEST_F(ParamUnitTest, TestStreamTaskFail, TestSize.Level0)
     EXPECT_NE(ret, 0);
 }
 
-HWTEST_F(ParamUnitTest, TestParamCache, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestParamCache_001, TestSize.Level0)
 {
     const char *value = CachedParameterGet(nullptr);
     EXPECT_EQ(value, nullptr);
