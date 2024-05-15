@@ -503,6 +503,7 @@ int FsHvbFinal(void)
 {
     if (g_vd != NULL) {
         hvb_chain_verify_data_free(g_vd);
+        g_vd = NULL;
     }
 
     return 0;

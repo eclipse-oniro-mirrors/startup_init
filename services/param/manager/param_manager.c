@@ -307,6 +307,7 @@ static int CreateCtrlInfo(ServiceCtrlInfo **ctrlInfo, const char *cmd, uint32_t 
     (*ctrlInfo)->valueOffset = offset;
     if (ret != 0 || len <= 0) {
         free(*ctrlInfo);
+        *ctrlInfo = NULL;
         return -1;
     }
     (*ctrlInfo)->ctrlParam = ctrlParam;
