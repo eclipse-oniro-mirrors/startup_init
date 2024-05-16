@@ -33,3 +33,4 @@ arkui_param = 2048
 wireless_hid_accessory_manager_param = 4096
 debug_param = 4096
 sys_usb_param = 4096
+i18n_param = 4096
