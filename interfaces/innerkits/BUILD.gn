@@ -314,17 +314,17 @@ if (defined(ohos_lite)) {
 
     include_dirs = include_common
     deps = [
-      "//base/startup/init/services/log:agent_log_static",
+      "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/loopevent:loopevent",
       "//base/startup/init/services/modules/udid:libudidcomm_static",
-      "//base/startup/init/services/param/linux:param_client_static",
+      "//base/startup/init/services/param/linux:param_client",
       "//base/startup/init/services/utils:libinit_utils",
     ]
     deps += [ "//base/startup/init/services/param/base:param_base" ]
     external_deps = [
       "bounds_checking_function:libsec_static",
-      "c_utils:utilsbase_static",
-      "hilog:libhilog_base_static",
+      "c_utils:utilsbase",
+      "hilog:libhilog_base",
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
