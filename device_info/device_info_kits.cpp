@@ -22,6 +22,7 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "securec.h"
+#include "sysparam_errno.h"
 
 namespace OHOS {
 namespace device_info {
@@ -34,10 +35,9 @@ DeviceInfoKits &DeviceInfoKits::GetInstance()
     return DelayedRefSingleton<DeviceInfoKits>::GetInstance();
 }
 
-void DeviceInfoKits::LoadDeviceInfoSa()
+void DeviceInfoKits::LoadDeviceInfoSa(std::unique_lock<std::mutex> &lock)
 {
     DINFO_LOGV("deviceInfoService_ is %d", deviceInfoService_ == nullptr);
-    std::unique_lock<std::mutex> lock(lock_);
     if (deviceInfoService_ != nullptr) {
         return;
     }
@@ -70,9 +70,9 @@ void DeviceInfoKits::LoadDeviceInfoSa()
     }
 }
 
-sptr<IDeviceInfo> DeviceInfoKits::GetService()
+sptr<IDeviceInfo> DeviceInfoKits::GetService(std::unique_lock<std::mutex> &lock)
 {
-    LoadDeviceInfoSa();
+    LoadDeviceInfoSa(lock);
     return deviceInfoService_;
 }
 
@@ -96,16 +96,42 @@ void DeviceInfoKits::FinishStartSAFailed()
 
 int32_t DeviceInfoKits::GetUdid(std::string& result)
 {
-    auto deviceService = GetService();
+    std::unique_lock<std::mutex> lock(lock_);
+    static std::optional<std::pair<int32_t, std::string>> resultPair;
+    if (resultPair.has_value()) {
+        int32_t ret = resultPair->first;
+        result = resultPair->second;
+        DINFO_LOGV("GetUdid from resultPair ret = %d", ret);
+        return ret;
+    }
+    auto deviceService = GetService(lock);
     DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
-    return deviceService->GetUdid(result);
+    int ret = deviceService->GetUdid(result);
+    DINFO_LOGV("GetSerialID from remote ret = %d", ret);
+    if (ret == 0 || ret == SYSPARAM_PERMISSION_DENIED) {
+        resultPair = std::make_optional(std::make_pair(ret, result));
+    }
+    return ret;
 }
 
 int32_t DeviceInfoKits::GetSerialID(std::string& result)
 {
-    auto deviceService = GetService();
+    std::unique_lock<std::mutex> lock(lock_);
+    static std::optional<std::pair<int32_t, std::string>> resultPair;
+    if (resultPair.has_value()) {
+        int32_t ret = resultPair->first;
+        result = resultPair->second;
+        DINFO_LOGV("GetSerialID from resultPair ret = %d", ret);
+        return ret;
+    }
+    auto deviceService = GetService(lock);
     DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
-    return deviceService->GetSerialID(result);
+    int ret = deviceService->GetSerialID(result);
+    DINFO_LOGV("GetSerialID from remote ret = %d", ret);
+    if (ret == 0 || ret == SYSPARAM_PERMISSION_DENIED) {
+        resultPair = std::make_optional(std::make_pair(ret, result));
+    }
+    return ret;
 }
 
 void DeviceInfoKits::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)

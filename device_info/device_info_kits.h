@@ -49,8 +49,8 @@ private:
     }
 
     static const int DEVICEINFO_LOAD_SA_TIMEOUT_MS = 60000;
-    void LoadDeviceInfoSa();
-    sptr<IDeviceInfo> GetService();
+    void LoadDeviceInfoSa(std::unique_lock<std::mutex> &lock);
+    sptr<IDeviceInfo> GetService(std::unique_lock<std::mutex> &lock);
     std::mutex lock_;
     std::condition_variable deviceInfoLoadCon_;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
