@@ -76,6 +76,11 @@ if (defined(ohos_lite)) {
     "//base/startup/init/services/utils:libinit_utils",
   ]
 
+  service_ueventd_ramdisk_deps = [
+    "//base/startup/init/interfaces/innerkits/socket:libsocket",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+
   #
   # exported include directories
   #
@@ -95,6 +100,24 @@ if (defined(ohos_lite)) {
       cflags += [ "-DWITH_SELINUX" ]
     }
     external_deps += [ "selinux:libselinux" ]
+    external_deps += [ "bounds_checking_function:libsec_static" ]
+    public_configs = [ ":libueventd_exported_config" ]
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
+  ohos_static_library("libueventd_ramdisk_static_real") {
+    sources = service_ueventd_sources
+    include_dirs = service_ueventd_include
+    deps = service_ueventd_ramdisk_deps
+    defines = [ "__RAMDISK__" ]
+    external_deps = []
+    cflags = []
+    if (build_selinux) {
+      external_deps += [ "selinux_adapter:librestorecon_static" ]
+      cflags += [ "-DWITH_SELINUX" ]
+    }
+    external_deps += [ "selinux:libselinux_static" ]
     external_deps += [ "bounds_checking_function:libsec_static" ]
     public_configs = [ ":libueventd_exported_config" ]
     part_name = "init"

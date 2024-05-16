@@ -123,4 +123,14 @@ if (defined(ohos_lite)) {
     part_name = "init"
     subsystem_name = "startup"
   }
+
+  ohos_static_library("libudidcomm_static") {
+    sources = [ "udid_comm.c" ]
+    defines = [ "_GNU_SOURCE" ]
+    include_dirs = comm_include
+    external_deps = [ "bounds_checking_function:libsec_static" ]
+
+    part_name = "init"
+    subsystem_name = "startup"
+  }
 }

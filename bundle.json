@@ -120,12 +120,28 @@
                 },
                 {
                     "header": {
+                        "header_base": "//base/startup/init/interfaces/innerkits/include/",
+                        "header_files": []
+                    },
+                    "name": "//base/startup/init/interfaces/innerkits:libbegetutil_static",
+                    "visibility": [ "updater" ]
+                },
+                {
+                    "header": {
                         "header_base": "//base/startup/init/interfaces/innerkits/include/fs_manager/",
                         "header_files": [
                             "fs_manager.h"
                         ]
                     },
                     "name": "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static"
+                },
+                {
+                    "header": {
+                        "header_base": "//base/startup/init/interfaces/innerkits/include/fs_manager/",
+                        "header_files": []
+                    },
+                    "name": "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static_real",
+                    "visibility": [ "updater" ]
                 },
                 {
                     "header": {
