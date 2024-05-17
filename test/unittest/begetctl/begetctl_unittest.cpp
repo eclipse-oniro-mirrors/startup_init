@@ -314,6 +314,22 @@ HWTEST_F(BegetctlUnitTest, TestDumpService_5, TestSize.Level1)
     BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
 }
 
+HWTEST_F(BegetctlUnitTest, Init_TestDumpNwebSpawn_001, TestSize.Level1)
+{
+    const char *args[] = {
+        "dump_nwebspawn", ""
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestDumpAppspawn_001, TestSize.Level1)
+{
+    const char *args[] = {
+        "dump_appspawn", ""
+    };
+    BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]), const_cast<char **>(args));
+}
+
 HWTEST_F(BegetctlUnitTest, TestMiscDaemon, TestSize.Level1)
 {
     const char *args[] = {
