@@ -183,7 +183,7 @@ public:
     void TestBody(void) {}
 };
 
-HWTEST_F(ClientUnitTest, TestClient_01, TestSize.Level0)
+HWTEST_F(ClientUnitTest, Init_TestClient_001, TestSize.Level0)
 {
     const std::string name = "test.add.client.001.001";
     const std::string value = "test.add.client.value.001.001";
@@ -201,7 +201,7 @@ HWTEST_F(ClientUnitTest, TestClient_01, TestSize.Level0)
     SystemWaitParameter("@@@@", value.c_str(), 1);
 }
 
-HWTEST_F(ClientUnitTest, TestParamValue, TestSize.Level0)
+HWTEST_F(ClientUnitTest, Init_TestParamValue_001, TestSize.Level0)
 {
     // support empty string
     const char *name = "test_readonly.dddddddddddddddddd.fffffffffffffffffff";
@@ -213,7 +213,7 @@ HWTEST_F(ClientUnitTest, TestParamValue, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(ClientUnitTest, TestClient_02, TestSize.Level0)
+HWTEST_F(ClientUnitTest, Init_TestClient_002, TestSize.Level0)
 {
     char testBuffer[PARAM_BUFFER_SIZE] = {0};
     const std::string value = "test.add.client.value.001";
@@ -221,14 +221,14 @@ HWTEST_F(ClientUnitTest, TestClient_02, TestSize.Level0)
     TestClientApi(testBuffer, PARAM_BUFFER_SIZE, name.c_str(), value.c_str());
 }
 
-HWTEST_F(ClientUnitTest, TestClient_03, TestSize.Level0)
+HWTEST_F(ClientUnitTest, Init_TestClient_003, TestSize.Level0)
 {
     // 3 Traversal test
     TestParamTraversal();
     SystemDumpParameters(1, -1, nullptr);
 }
 
-HWTEST_F(ClientUnitTest, TestClient_04, TestSize.Level0)
+HWTEST_F(ClientUnitTest, Init_TestClient_004, TestSize.Level0)
 {
     const std::string name = "test.add.client.001.004";
     int ret = WatchParamCheck(name.c_str());
@@ -246,12 +246,12 @@ HWTEST_F(ClientUnitTest, TestClient_04, TestSize.Level0)
     TestPermission();
 }
 
-HWTEST_F(ClientUnitTest, TestClient_05, TestSize.Level0)
+HWTEST_F(ClientUnitTest, Init_TestClient_005, TestSize.Level0)
 {
     TestForMultiThread();
 }
 
-HWTEST_F(ClientUnitTest, TestClient_06, TestSize.Level0)
+HWTEST_F(ClientUnitTest, Init_TestClient_006, TestSize.Level0)
 {
     int ret = SystemSetParameter("test.type.string.xxx", "xxxxxxx");
     EXPECT_EQ(ret, 0);

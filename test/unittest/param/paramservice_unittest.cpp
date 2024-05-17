@@ -466,13 +466,13 @@ public:
     }
 };
 
-HWTEST_F(ParamServiceUnitTest, TestPersistParam, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestPersistParam_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestPersistParam();
 }
 
-HWTEST_F(ParamServiceUnitTest, TestReadCmdline, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestReadCmdline_001, TestSize.Level0)
 {
     const char *snData = "222222222222222222222";
     CreateTestFile(STARTUP_INIT_UT_PATH "/system/etc/sn", snData);
@@ -490,45 +490,45 @@ HWTEST_F(ParamServiceUnitTest, TestReadCmdline, TestSize.Level0)
     LoadParamFromCmdLine();
 }
 
-HWTEST_F(ParamServiceUnitTest, TestServiceProcessMessage, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestServiceProcessMessage_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestServiceProcessMessage("wertt.qqqq.wwww.rrrr", "wwww.eeeee", 1);
     test.TestServiceProcessMessage("wertt.2222.wwww.3333", "wwww.eeeee", 0);
 }
 
-HWTEST_F(ParamServiceUnitTest, TestAddParamWait1, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWait_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestAddParamWait1();
 }
 
-HWTEST_F(ParamServiceUnitTest, TestAddParamWait2, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWait_002, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestAddParamWait2();
 }
 
-HWTEST_F(ParamServiceUnitTest, TestAddParamWait3, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWait_003, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestAddParamWait3();
 }
 
-HWTEST_F(ParamServiceUnitTest, TestAddParamWatch1, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWatch_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestAddParamWatch1();
 }
 
-HWTEST_F(ParamServiceUnitTest, TestAddParamWatch2, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWatch_002, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestAddParamWatch2();
 }
 
 #ifndef OHOS_LITE
-HWTEST_F(ParamServiceUnitTest, TestAddParamWatch3, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWatch_003, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestAddParamWatch3();
@@ -536,13 +536,13 @@ HWTEST_F(ParamServiceUnitTest, TestAddParamWatch3, TestSize.Level0)
     EXPECT_EQ(hashCode, 0);
 }
 
-HWTEST_F(ParamServiceUnitTest, TestCloseTriggerWatch, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestCloseTriggerWatch_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     test.TestCloseTriggerWatch();
 }
 
-HWTEST_F(ParamServiceUnitTest, TestServiceCtrl, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestServiceCtrl_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     int ret = test.TestServiceCtrl("server1", 0770);
@@ -555,7 +555,7 @@ HWTEST_F(ParamServiceUnitTest, TestServiceCtrl, TestSize.Level0)
     ret = 0;
 }
 
-HWTEST_F(ParamServiceUnitTest, TestPowerCtrl, TestSize.Level0)
+HWTEST_F(ParamServiceUnitTest, Init_TestPowerCtrl_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
     int ret = test.TestPowerCtrl("reboot,shutdown", 0770);
