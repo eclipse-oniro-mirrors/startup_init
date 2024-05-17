@@ -52,6 +52,7 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
         cmsg->cmsg_len = CMSG_LEN(sizeof(int) * fdCount);
         int ret = memcpy_s(CMSG_DATA(cmsg), cmsg->cmsg_len, fds, sizeof(int) * fdCount);
         BEGET_ERROR_CHECK(ret == 0, free(msghdr->msg_control);
+            msghdr->msg_control = NULL;
             return -1, "Control message is not valid");
         // build ucred info
         cmsg = CMSG_NXTHDR(msghdr, cmsg);
@@ -59,6 +60,7 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
 
     if (sendUcred) {
         BEGET_ERROR_CHECK(cmsg != NULL, free(msghdr->msg_control);
+            msghdr->msg_control = NULL;
             return -1, "Control message is not valid");
 
         struct ucred *ucred;
