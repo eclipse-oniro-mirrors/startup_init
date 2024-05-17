@@ -41,7 +41,11 @@ static char **GetRequiredDevices(Fstab fstab, int *requiredNum)
         if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
             num++;
         }
-        item = item->next;
+        if (item->next != NULL && strcmp(item->deviceName, item->next->deviceName) == 0) {
+            item = item->next->next;
+        } else {
+            item = item->next;
+        }
     }
     if (num == 0) {
         return NULL;
@@ -58,7 +62,11 @@ static char **GetRequiredDevices(Fstab fstab, int *requiredNum)
                 "Failed strdup err=%d", errno);
             i++;
         }
-        item = item->next;
+        if (item->next != NULL && strcmp(item->deviceName, item->next->deviceName) == 0) {
+            item = item->next->next;
+        } else {
+            item = item->next;
+        }
     }
     *requiredNum = num;
     return devices;
