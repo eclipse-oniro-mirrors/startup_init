@@ -180,14 +180,14 @@ public:
     }
 };
 
-HWTEST_F(ParamShellUnitTest, TestInitParamShell, TestSize.Level1)
+HWTEST_F(ParamShellUnitTest, Init_TestInitParamShell_001, TestSize.Level1)
 {
     ParamShellUnitTest test;
     test.TestInitParamShell();
     test.TestParamShellCmd();
     test.TestParamShellCmd1();
 }
-HWTEST_F(ParamShellUnitTest, TestParamShellInput, TestSize.Level1)
+HWTEST_F(ParamShellUnitTest, Init_TestParamShellInput_001, TestSize.Level1)
 {
     BShellHandle bshd = GetShellHandle();
     BShellEnvProcessInput(bshd, '\n');
@@ -206,7 +206,7 @@ HWTEST_F(ParamShellUnitTest, TestParamShellInput, TestSize.Level1)
     int ret = BShellEnvRegisterKeyHandle(bshd, 'z', (BShellkeyHandle)(void*)0x409600); // 0x409600 construct address
     EXPECT_EQ(ret, 0);
 }
-HWTEST_F(ParamShellUnitTest, TestParamShellcmd2, TestSize.Level1)
+HWTEST_F(ParamShellUnitTest, Init_TestParamShellcmd_001, TestSize.Level1)
 {
     ParamShellUnitTest test;
     test.TestParamShellcmdEndkey();

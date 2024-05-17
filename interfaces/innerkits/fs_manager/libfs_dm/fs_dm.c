@@ -241,24 +241,28 @@ int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *targ
     rc = CreateDmDevice(fd, devName);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, create dm device fail", rc);
+        close(fd);
         return rc;
     }
 
     rc = LoadDmDeviceTable(fd, devName, target);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, load device table fail", rc);
+        close(fd);
         return rc;
     }
 
     rc = ActiveDmDevice(fd, devName);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, active device fail", rc);
+        close(fd);
         return rc;
     }
 
     rc = GetDmDevPath(fd, dmDevPath, devName);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, get dm dev fail", rc);
+        close(fd);
         return rc;
     }
 

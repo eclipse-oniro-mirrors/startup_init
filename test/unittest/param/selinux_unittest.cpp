@@ -158,31 +158,31 @@ private:
     ParamSecurityOps clientParamSercurityOps {};
 };
 
-HWTEST_F(SelinuxUnitTest, TestSelinuxInitLocalLabel, TestSize.Level0)
+HWTEST_F(SelinuxUnitTest, Init_TestSelinuxInitLocalLabel_001, TestSize.Level0)
 {
     SelinuxUnitTest test;
     test.TestSelinuxInitLocalLabel();
 }
 
-HWTEST_F(SelinuxUnitTest, TestSelinuxCheckFilePermission, TestSize.Level0)
+HWTEST_F(SelinuxUnitTest, Init_TestSelinuxCheckFilePermission_001, TestSize.Level0)
 {
     SelinuxUnitTest test;
     test.TestSelinuxCheckFilePermission(STARTUP_INIT_UT_PATH "/trigger_test.cfg");
 }
 
-HWTEST_F(SelinuxUnitTest, TestSelinuxCheckParaPermission, TestSize.Level0)
+HWTEST_F(SelinuxUnitTest, Init_TestSelinuxCheckParaPermission_001, TestSize.Level0)
 {
     SelinuxUnitTest test;
     test.TestSelinuxCheckParaPermission("aaa.bbb.bbb.ccc", "user:group1:r");
 }
 
-HWTEST_F(SelinuxUnitTest, TestClientDacCheckFilePermission, TestSize.Level0)
+HWTEST_F(SelinuxUnitTest, Init_TestClientDacCheckFilePermission_001, TestSize.Level0)
 {
     SelinuxUnitTest test;
     test.TestClientSelinuxCheckFilePermission(STARTUP_INIT_UT_PATH "/trigger_test.cfg");
 }
 
-HWTEST_F(SelinuxUnitTest, TestClientDacCheckParaPermission, TestSize.Level0)
+HWTEST_F(SelinuxUnitTest, Init_TestClientDacCheckParaPermission_001, TestSize.Level0)
 {
     SelinuxUnitTest test;
     test.TestClientSelinuxCheckParaPermissionWrite("aaa.bbb.bbb.ccc", "user:group1:r");

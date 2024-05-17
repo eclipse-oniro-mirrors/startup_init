@@ -118,6 +118,7 @@ static void StartSecondStageInit(long long uptime)
 
     SwitchRoot("/usr");
     char buf[64];
+    uptime = GetUptimeInMicroSeconds(NULL);
     snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%lld", uptime);
     // Execute init second stage
     char * const args[] = {

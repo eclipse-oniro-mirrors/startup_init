@@ -95,6 +95,7 @@ static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool d
         BEGET_LOGE("Failed to build control message");
         if (msghdr.msg_control != NULL) {
             free(msghdr.msg_control);
+            msghdr.msg_control = NULL;
         }
         msghdr.msg_controllen = 0;
         close(sock);
@@ -105,6 +106,7 @@ static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool d
         BEGET_LOGE("Failed to send fds to init, err = %d", errno);
         if (msghdr.msg_control != NULL) {
             free(msghdr.msg_control);
+            msghdr.msg_control = NULL;
         }
         msghdr.msg_controllen = 0;
         close(sock);
@@ -112,6 +114,7 @@ static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool d
     }
     if (msghdr.msg_control != NULL) {
         free(msghdr.msg_control);
+        msghdr.msg_control = NULL;
     }
     msghdr.msg_controllen = 0;
     BEGET_LOGI("Send fds done");
