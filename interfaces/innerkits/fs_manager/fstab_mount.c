@@ -408,7 +408,7 @@ static int MountItemByFsType(FstabItem *item)
     }
 
     if (strcmp(item->fsType, "erofs") != 0) {
-        return DoMountOneItem(item); 
+        return DoMountOneItem(item);
     }
 
     BEGET_LOGI("fsType is erofs system, device [%s] skip ext4 or hms mount process", item->deviceName);
@@ -502,26 +502,30 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
     if (item == NULL) {
         return -1;
     }
-    if (required) { // Mount partition during first startup.
-        if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
-            int bootSlots = GetBootSlots();
-            BEGET_INFO_CHECK(bootSlots <= 1, AdjustPartitionNameByPartitionSlot(item),
-                "boot slots is %d, now adjust partition name according to current slot", bootSlots);
-#ifdef SUPPORT_HVB
-            if (NeedDmVerity(item)) {
-                rc = HvbDmVeritySetUp(item);
-                if (rc != 0) {
-                    BEGET_LOGE("set dm_verity err, ret = 0x%x", rc);
-                    return rc;
-                }
-            }
-#endif
-            rc = MountOneItem(item);
-        }
-    } else { // Mount partition during second startup.
+
+    // Mount partition during second startup.
+    if (!required) {
         if (!FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
             rc = MountOneItem(item);
         }
+        return rc;
+    }
+
+    // Mount partition during second startup.
+    if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
+        int bootSlots = GetBootSlots();
+        BEGET_INFO_CHECK(bootSlots <= 1, AdjustPartitionNameByPartitionSlot(item),
+            "boot slots is %d, now adjust partition name according to current slot", bootSlots);
+#ifdef SUPPORT_HVB
+        if (NeedDmVerity(item)) {
+            rc = HvbDmVeritySetUp(item);
+            if (rc != 0) {
+                BEGET_LOGE("set dm_verity err, ret = 0x%x", rc);
+                return rc;
+            }
+        }
+#endif
+        rc = MountOneItem(item);
     }
     return rc;
 }
