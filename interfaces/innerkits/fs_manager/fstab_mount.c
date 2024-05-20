@@ -402,7 +402,7 @@ static int MountItemByFsType(FstabItem *item)
         if (strcmp(item->fsType, "erofs") == 0) {
             return DoMountOneItem(item);
         } else {
-            BEGET_LOGI("fsType not erofs system, skip erofs mount process");
+            BEGET_LOGI("fsType not erofs system, device [%s] skip erofs mount process", item->deviceName);
             return 0;
         }
     }
@@ -411,7 +411,7 @@ static int MountItemByFsType(FstabItem *item)
         return DoMountOneItem(item); 
     }
 
-    BEGET_LOGI("fsType is erofs system, skip ext4 or hms mount process");
+    BEGET_LOGI("fsType is erofs system, device [%s] skip ext4 or hms mount process", item->deviceName);
     return 0;
 }
 
