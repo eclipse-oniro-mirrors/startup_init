@@ -52,7 +52,8 @@ typedef enum {
     SECCOMP_SUCCESS,
     INPUT_ERROR,
     RETURN_NULL,
-    RETURN_ERROR
+    RETURN_ERROR,
+    RETURN_LENGTH_CHECK
 } SeccompErrorCode;
 
 static bool IsSupportFilterFlag(unsigned int filterFlag)
@@ -170,7 +171,7 @@ static int GetSeccompPolicy(const char *filterName, int **handler,
         size_t filterVaribleNameLen = strlen(filterVaribleName) + \
                       strlen(FILTER_SIZE_STRING) + 1;
         if (filterVaribleNameLen > sizeof(filterVaribleName)) {
-            ret = RETURN_ERROR;
+            ret = RETURN_LENGTH_CHECK;
             break;
         }
         rc = strcat_s(filterVaribleName, filterVaribleNameLen, FILTER_SIZE_STRING);
