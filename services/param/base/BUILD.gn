@@ -172,7 +172,7 @@ if (defined(ohos_lite)) {
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
       external_deps += [
-        "selinux:libselinux",
+        "selinux:libselinux_static",
         "selinux_adapter:libselinux_parameter_static",
       ]
     }
