@@ -203,14 +203,16 @@ HWTEST_F(DeviceInfoUnittest, Init_TestInterface_001, TestSize.Level1)
 
 HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_001, TestSize.Level1)
 {
-    OHOS::device_info::DeviceInfoKits &kits = device_info::DeviceInfoKits::GetInstance();
-    std::unique_lock<std::mutex> lock(kits.lock_);
-    auto remotePtr = device_info::DeviceInfoKits::GetInstance().GetService(lock);
-    ASSERT_NE(remotePtr, nullptr);
-    auto remote = remotePtr->AsObject();
-    sptr<device_info::DeviceInfoProxy> proxy = new(std::nothrow) device_info::DeviceInfoProxy(remote);
-    ASSERT_NE(proxy, nullptr);
-
+    sptr<device_info::DeviceInfoProxy> proxy;
+    {
+        OHOS::device_info::DeviceInfoKits &kits = device_info::DeviceInfoKits::GetInstance();
+        std::unique_lock<std::mutex> lock(kits.lock_);
+        auto remotePtr = device_info::DeviceInfoKits::GetInstance().GetService(lock);
+        ASSERT_NE(remotePtr, nullptr);
+        auto remote = remotePtr->AsObject();
+        sptr<device_info::DeviceInfoProxy> proxy = new(std::nothrow) device_info::DeviceInfoProxy(remote);
+        ASSERT_NE(proxy, nullptr);
+    }
     device_info::DeviceInfoKits::GetInstance().FinishStartSASuccess(proxy->AsObject());
     std::string udid;
     std::string serialId;
