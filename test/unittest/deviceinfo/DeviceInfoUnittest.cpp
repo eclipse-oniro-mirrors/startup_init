@@ -210,7 +210,7 @@ HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_001, TestSize.Level1)
         auto remotePtr = device_info::DeviceInfoKits::GetInstance().GetService(lock);
         ASSERT_NE(remotePtr, nullptr);
         auto remote = remotePtr->AsObject();
-        sptr<device_info::DeviceInfoProxy> proxy = new(std::nothrow) device_info::DeviceInfoProxy(remote);
+        proxy = new(std::nothrow) device_info::DeviceInfoProxy(remote);
         ASSERT_NE(proxy, nullptr);
     }
     device_info::DeviceInfoKits::GetInstance().FinishStartSASuccess(proxy->AsObject());
