@@ -41,7 +41,7 @@ public:
     void TearDown() {};
 };
 
-HWTEST_F(LoopSignalUnitTest, SignalInitTestRmSig, TestSize.Level1)
+HWTEST_F(LoopSignalUnitTest, Init_TestSignalInitTestRmSig_001, TestSize.Level1)
 {
     static LoopHandle loopClient = nullptr;
     LE_STATUS status = LE_CreateLoop(&loopClient);

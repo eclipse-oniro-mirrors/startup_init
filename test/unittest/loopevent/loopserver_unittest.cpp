@@ -329,13 +329,13 @@ private:
     std::thread *serverThread_ = nullptr;
 };
 
-HWTEST_F(LoopServerUnitTest, TestRunServer, TestSize.Level1)
+HWTEST_F(LoopServerUnitTest, Init_TestRunServer_001, TestSize.Level1)
 {
     LoopServerUnitTest test;
     test.StartServer();
 }
 
-HWTEST_F(LoopServerUnitTest, TestPipConnect, TestSize.Level1)
+HWTEST_F(LoopServerUnitTest, Init_TestPipConnect_001, TestSize.Level1)
 {
     g_cmd = 2; // 2 only close client
     LoopServerUnitTest test;
@@ -348,7 +348,7 @@ HWTEST_F(LoopServerUnitTest, TestPipConnect, TestSize.Level1)
     g_loopClient_ = nullptr;
 }
 
-HWTEST_F(LoopServerUnitTest, TestTcpConnect, TestSize.Level1)
+HWTEST_F(LoopServerUnitTest, Init_TestTcpConnect_001, TestSize.Level1)
 {
     g_cmd = 2; // 2 only close client
     LoopServerUnitTest test;
@@ -361,7 +361,7 @@ HWTEST_F(LoopServerUnitTest, TestTcpConnect, TestSize.Level1)
     g_loopClient_ = nullptr;
 }
 
-HWTEST_F(LoopServerUnitTest, TestTimer, TestSize.Level1)
+HWTEST_F(LoopServerUnitTest, Init_TestTimer_001, TestSize.Level1)
 {
     LoopServerUnitTest test;
     g_maxCount = 2; // 2 stop
@@ -372,7 +372,7 @@ HWTEST_F(LoopServerUnitTest, TestTimer, TestSize.Level1)
     g_loopClient_ = nullptr;
 }
 
-HWTEST_F(LoopServerUnitTest, TestTimer2, TestSize.Level1)
+HWTEST_F(LoopServerUnitTest, Init_TestTimer_002, TestSize.Level1)
 {
     LoopServerUnitTest test;
     g_maxCount = 3; // 3 stop timer
@@ -383,7 +383,7 @@ HWTEST_F(LoopServerUnitTest, TestTimer2, TestSize.Level1)
     g_loopClient_ = nullptr;
 }
 
-HWTEST_F(LoopServerUnitTest, TestWatcher, TestSize.Level1)
+HWTEST_F(LoopServerUnitTest, Init_TestWatcher_001, TestSize.Level1)
 {
     int fd = open(WATCHER_FILE.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd >= 0) {
@@ -405,7 +405,7 @@ HWTEST_F(LoopServerUnitTest, TestWatcher, TestSize.Level1)
     g_loopClient_ = nullptr;
 }
 
-HWTEST_F(LoopServerUnitTest, TestStopServer, TestSize.Level1)
+HWTEST_F(LoopServerUnitTest, Init_TestStopServer_001, TestSize.Level1)
 {
     g_cmd = 5; // 5 close server
     LoopServerUnitTest test;
@@ -418,7 +418,7 @@ HWTEST_F(LoopServerUnitTest, TestStopServer, TestSize.Level1)
     g_loopClient_ = nullptr;
 }
 
-HWTEST_F(LoopServerUnitTest, Init_LoopServerTest_ServerTimeout008, TestSize.Level1)
+HWTEST_F(LoopServerUnitTest, Init_TestServerTimeout_001, TestSize.Level1)
 {
     int flag = TASK_STREAM | TASK_PIPE | TASK_SERVER | TASK_TEST;
     int serverSock = CreateSocket(flag, "/data/test1pipe");

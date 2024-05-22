@@ -240,27 +240,27 @@ private:
     ParamTaskPtr serverTask_ = nullptr;
 };
 
-HWTEST_F(LoopEventUnittest, LeTaskTest, TestSize.Level1)
+HWTEST_F(LoopEventUnittest, Init_LeTaskTest_001, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
     loopevtest.LeTaskTest();
 }
-HWTEST_F(LoopEventUnittest, runServerTest, TestSize.Level1)
+HWTEST_F(LoopEventUnittest, Init_TestRunServer_001, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
     loopevtest.ProcessEventTest();
 }
-HWTEST_F(LoopEventUnittest, ProcessasynEvent, TestSize.Level1)
+HWTEST_F(LoopEventUnittest, Init_TestProcessasynEvent_001, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
     loopevtest.ProcessasynEvent();
 }
-HWTEST_F(LoopEventUnittest, CreateSocketTest, TestSize.Level1)
+HWTEST_F(LoopEventUnittest, Init_TestCreateSocketTest_001, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
     loopevtest.CreateSocketTest();
 }
-HWTEST_F(LoopEventUnittest, ProcessWatcherTask, TestSize.Level1)
+HWTEST_F(LoopEventUnittest, Init_TestProcessWatcherTask_001, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
     loopevtest.ProcessWatcherTask();
@@ -277,7 +277,7 @@ static void Test_ProcessTimer(const TimerHandle taskHandle, void *context)
     }
 }
 
-HWTEST_F(LoopEventUnittest, LoopAbnormalTest, TestSize.Level1)
+HWTEST_F(LoopEventUnittest, Init_TestLoopAbnormal_001, TestSize.Level1)
 {
     LE_StartWatcher(nullptr, nullptr, nullptr, nullptr);
     LE_WatchInfo info = {};
@@ -289,14 +289,14 @@ HWTEST_F(LoopEventUnittest, LoopAbnormalTest, TestSize.Level1)
     LE_StartWatcher(LE_GetDefaultLoop(), nullptr, nullptr, nullptr);
 }
 
-HWTEST_F(LoopEventUnittest, LoopIdleTest, TestSize.Level1)
+HWTEST_F(LoopEventUnittest, Init_TestLoopIdle_001, TestSize.Level1)
 {
     int ret = LE_DelayProc(LE_GetDefaultLoop(), nullptr, nullptr);
     ASSERT_NE(ret, 0);
     LE_DelIdle(nullptr);
 }
 
-HWTEST_F(LoopEventUnittest, LE_FreeBufferTest, TestSize.Level1)
+HWTEST_F(LoopEventUnittest, Init_TestLEFreeBuffer_001, TestSize.Level1)
 {
     uint64_t eventId = 0;
     BufferHandle handle = LE_CreateBuffer(LE_GetDefaultLoop(), 1 + sizeof(eventId));
