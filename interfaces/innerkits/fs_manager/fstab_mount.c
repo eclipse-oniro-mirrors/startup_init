@@ -396,6 +396,7 @@ static bool CheckIsErofs(const char *dev)
     return false;
 }
 
+#ifdef EROFS_OVERLAY
 static int MountItemByFsType(FstabItem *item)
 {
     if (CheckIsErofs(item->deviceName)) {
@@ -414,6 +415,7 @@ static int MountItemByFsType(FstabItem *item)
     BEGET_LOGI("fsType is erofs system, device [%s] skip ext4 or hms mount process", item->deviceName);
     return 0;
 }
+#endif
 
 int MountOneItem(FstabItem *item)
 {
@@ -447,7 +449,11 @@ int MountOneItem(FstabItem *item)
     }
 
     int rc = 0;
+#ifdef EROFS_OVERLAY
     rc = MountItemByFsType(item);
+#else
+    rc = DoMountOneItem(item);
+#endif
     InitPostMount(item->mountPoint, rc, item->fsType);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
@@ -462,7 +468,7 @@ int MountOneItem(FstabItem *item)
     return rc;
 }
 
-#ifdef SUPPORT_HVB
+#if defined EROFS_OVERLAY && defined SUPPORT_HVB
 static bool NeedDmVerity(FstabItem *item)
 {
     if (CheckIsErofs(item->deviceName)) {
@@ -517,7 +523,14 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
         BEGET_INFO_CHECK(bootSlots <= 1, AdjustPartitionNameByPartitionSlot(item),
             "boot slots is %d, now adjust partition name according to current slot", bootSlots);
 #ifdef SUPPORT_HVB
-        if (NeedDmVerity(item)) {
+#ifdef EROFS_OVERLAY
+            if (!NeedDmVerity(item)) {
+                BEGET_LOGI("not need dm verity, do mount item %s", item->deviceName);
+                return MountOneItem(item);
+            }
+
+            
+#endif
             rc = HvbDmVeritySetUp(item);
             if (rc != 0) {
                 BEGET_LOGE("set dm_verity err, ret = 0x%x", rc);

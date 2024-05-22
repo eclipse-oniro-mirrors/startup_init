@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/ohos.gni")
+import("//base/startup/init/begetd.gni")
 
 # For init only
 config("libfsmanager_exported_configs") {
@@ -35,6 +36,7 @@ ohos_static_library("libfsmanager_static") {
       "//base/startup/init/services/log",
       "//base/startup/init/services/param/include",
     ]
+    defines = []
     external_deps = [ "bounds_checking_function:libsec_static" ]
     deps = [ "//base/startup/init/services/utils:libinit_utils" ]
     if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
@@ -53,9 +55,12 @@ ohos_static_library("libfsmanager_static") {
         "//base/startup/init/ueventd/include",
       ]
 
-      defines = [ "SUPPORT_HVB" ]
+      defines += [ "SUPPORT_HVB" ]
       external_deps += [ "hvb:libhvb_static" ]
       deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static" ]
+    }
+    if (init_startup_feature_erofs_overlay) {
+      defines += [ "EROFS_OVERLAY" ]
     }
   }
 
