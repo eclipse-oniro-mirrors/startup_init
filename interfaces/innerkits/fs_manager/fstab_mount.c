@@ -527,9 +527,7 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
             if (!NeedDmVerity(item)) {
                 BEGET_LOGI("not need dm verity, do mount item %s", item->deviceName);
                 return MountOneItem(item);
-            }
-
-            
+            }        
 #endif
             rc = HvbDmVeritySetUp(item);
             if (rc != 0) {
