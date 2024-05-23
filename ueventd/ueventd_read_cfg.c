@@ -84,7 +84,8 @@ static int ParseDeviceConfig(char *p)
         return -1;
     }
     config->name = strdup(items[0]); // device node
-    INIT_ERROR_CHECK(config->name != NULL, FreeStringVector(items, count); return -1, "failed dup config name");
+    INIT_ERROR_CHECK(config->name != NULL, FreeStringVector(items, count);
+                     free(config); return -1, "failed dup config name");
     errno = 0;
     config->mode = strtoul(items[1], NULL, OCTAL_BASE); // mode
     INIT_ERROR_CHECK(errno == 0, config->mode = DEVMODE,
@@ -93,7 +94,8 @@ static int ParseDeviceConfig(char *p)
     config->gid = (gid_t)DecodeGid(items[3]); // gid
     if (count == expectedCount) {
         config->parameter = strdup(items[4]); // device parameter
-        INIT_ERROR_CHECK(config->parameter != NULL, FreeStringVector(items, count); return -1, "failed dup parameter");
+        INIT_ERROR_CHECK(config->parameter != NULL, FreeStringVector(items, count);
+                         free((void*)config->name); free(config); return -1, "failed dup parameter");
     } else {
         config->parameter = NULL;
     }
@@ -125,9 +127,11 @@ static int ParseSysfsConfig(char *p)
         return -1;
     }
     config->sysPath = strdup(items[0]); // sys path
-    INIT_ERROR_CHECK(config->sysPath != NULL, FreeStringVector(items, count); return -1, "failed to dup syspath");
+    INIT_ERROR_CHECK(config->sysPath != NULL, FreeStringVector(items, count);
+                     free(config); return -1, "failed to dup syspath");
     config->attr = strdup(items[1]);  // attribute
-    INIT_ERROR_CHECK(config->attr != NULL, FreeStringVector(items, count); return -1, "failed to dup attr");
+    INIT_ERROR_CHECK(config->attr != NULL, FreeStringVector(items, count);
+                     free((void*)config->sysPath); free(config); return -1, "failed to dup attr");
     errno = 0;
     config->mode = strtoul(items[2], NULL, OCTAL_BASE); // mode
     INIT_ERROR_CHECK(errno == 0, config->mode = DEVMODE,
