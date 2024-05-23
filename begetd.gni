@@ -52,4 +52,7 @@ declare_args() {
   # begetutil extension module
   startup_begetutil_extra_modules = ""
   startup_init_extra_static_modules = ""
+
+  # erofs overlay feature switch
+  init_startup_feature_erofs_overlay = false
 }

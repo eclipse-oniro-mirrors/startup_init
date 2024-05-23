@@ -187,6 +187,10 @@ ohos_executable("init") {
                        "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript",
                        "name") + stub_version_script_suffix
   defines += [ "_GNU_SOURCE" ]
+
+  if (init_startup_feature_erofs_overlay) {
+    defines += [ "EROFS_OVERLAY" ]
+  }
   if (use_musl) {
     defines += [ "__MUSL__" ]
   }
