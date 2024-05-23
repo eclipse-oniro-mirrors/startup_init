@@ -165,14 +165,14 @@ if (defined(ohos_lite)) {
     deps = []
 
     include_dirs += [ "//base/startup/init/services/init/include" ]
-    external_deps = [ "bounds_checking_function:libsec_static" ]
+    external_deps = [ "bounds_checking_function:libsec_shared" ]
     if (build_selinux) {
       defines += [
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
       external_deps += [
-        "selinux:libselinux_static",
+        "selinux:libselinux",
         "selinux_adapter:libselinux_parameter_static",
       ]
     }
