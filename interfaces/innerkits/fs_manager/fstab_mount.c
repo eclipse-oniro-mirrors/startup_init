@@ -390,13 +390,13 @@ static int DoMountOneItem(FstabItem *item)
     return rc;
 }
 
+#ifdef EROFS_OVERLAY
 static bool CheckIsErofs(const char *dev)
 {
     // todo
     return false;
 }
 
-#ifdef EROFS_OVERLAY
 static int MountItemByFsType(FstabItem *item)
 {
     if (CheckIsErofs(item->deviceName)) {
