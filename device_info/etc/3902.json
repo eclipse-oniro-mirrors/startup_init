@@ -6,8 +6,7 @@
             "libpath": "libdeviceinfoservice.z.so",
             "run-on-create": true,
             "distributed": false,
-            "dump_level": 1,
-            "recycle-strategy": "low-memory"
+            "dump_level": 1
         }
     ]
 }
