@@ -369,20 +369,60 @@ int GetCurrentSlot(void)
     return GetSlotInfoFromBootctrl(PARTITION_ACTIVE_SLOT_OFFSET, PARTITION_ACTIVE_SLOT_SIZE);
 }
 
-int MountOneItem(FstabItem *item)
+static int DoMountOneItem(FstabItem *item)
 {
-    if (item == NULL) {
-        return -1;
-    }
+    BEGET_LOGI("Mount device %s to %s", item->deviceName, item->mountPoint);
     unsigned long mountFlags;
     char fsSpecificData[FS_MANAGER_BUFFER_SIZE] = {0};
 
     mountFlags = GetMountFlags(item->mountOptions, fsSpecificData, sizeof(fsSpecificData),
         item->mountPoint);
-    if (!IsSupportedFilesystem(item->fsType)) {
-        BEGET_LOGW("Unsupported file system \" %s \"", item->fsType);
-        return 0;
+
+    int retryCount = 3;
+    int rc = 0;
+    while (retryCount-- > 0) {
+        rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
+        if (rc == 0) {
+            return rc;
+        }
+        BEGET_LOGE("Mount device %s to %s failed, err = %d, retry", item->deviceName, item->mountPoint, errno);
     }
+    return rc;
+}
+
+#ifdef EROFS_OVERLAY
+static bool CheckIsErofs(const char *dev)
+{
+    // todo
+    return false;
+}
+
+static int MountItemByFsType(FstabItem *item)
+{
+    if (CheckIsErofs(item->deviceName)) {
+        if (strcmp(item->fsType, "erofs") == 0) {
+            return DoMountOneItem(item);
+        } else {
+            BEGET_LOGI("fsType not erofs system, device [%s] skip erofs mount process", item->deviceName);
+            return 0;
+        }
+    }
+
+    if (strcmp(item->fsType, "erofs") != 0) {
+        return DoMountOneItem(item);
+    }
+
+    BEGET_LOGI("fsType is erofs system, device [%s] skip ext4 or hms mount process", item->deviceName);
+    return 0;
+}
+#endif
+
+int MountOneItem(FstabItem *item)
+{
+    if (item == NULL) {
+        return -1;
+    }
+
     if (FM_MANAGER_WAIT_ENABLED(item->fsManagerFlags)) {
         WaitForFile(item->deviceName, WAIT_MAX_SECOND);
     }
@@ -408,15 +448,12 @@ int MountOneItem(FstabItem *item)
         }
     }
 
-    int retryCount = 3;
     int rc = 0;
-    while (retryCount-- > 0) {
-        rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
-        if (rc == 0) {
-            break;
-        }
-        BEGET_LOGE("Mount device %s to %s failed, err = %d, retry", item->deviceName, item->mountPoint, errno);
-    }
+#ifdef EROFS_OVERLAY
+    rc = MountItemByFsType(item);
+#else
+    rc = DoMountOneItem(item);
+#endif
     InitPostMount(item->mountPoint, rc, item->fsType);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
@@ -430,6 +467,22 @@ int MountOneItem(FstabItem *item)
     }
     return rc;
 }
+
+#if defined EROFS_OVERLAY && defined SUPPORT_HVB
+static bool NeedDmVerity(FstabItem *item)
+{
+    if (CheckIsErofs(item->deviceName)) {
+        if (strcmp(item->fsType, "erofs") == 0) {
+            return true;
+        }
+    } else {
+        if (strcmp(item->fsType, "erofs") != 0) {
+            return true;
+        }
+    }
+    return false;
+}
+#endif
 
 static void AdjustPartitionNameByPartitionSlot(FstabItem *item)
 {
@@ -455,24 +508,35 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
     if (item == NULL) {
         return -1;
     }
-    if (required) { // Mount partition during first startup.
-        if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
-            int bootSlots = GetBootSlots();
-            BEGET_INFO_CHECK(bootSlots <= 1, AdjustPartitionNameByPartitionSlot(item),
-                "boot slots is %d, now adjust partition name according to current slot", bootSlots);
-        #ifdef SUPPORT_HVB
+
+    // Mount partition during second startup.
+    if (!required) {
+        if (!FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
+            rc = MountOneItem(item);
+        }
+        return rc;
+    }
+
+    // Mount partition during second startup.
+    if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
+        int bootSlots = GetBootSlots();
+        BEGET_INFO_CHECK(bootSlots <= 1, AdjustPartitionNameByPartitionSlot(item),
+            "boot slots is %d, now adjust partition name according to current slot", bootSlots);
+#ifdef SUPPORT_HVB
+#ifdef EROFS_OVERLAY
+            if (!NeedDmVerity(item)) {
+                BEGET_LOGI("not need dm verity, do mount item %s", item->deviceName);
+                return MountOneItem(item);
+            }
+#endif
             rc = HvbDmVeritySetUp(item);
             if (rc != 0) {
                 BEGET_LOGE("set dm_verity err, ret = 0x%x", rc);
                 return rc;
             }
-        #endif
-            rc = MountOneItem(item);
         }
-    } else { // Mount partition during second startup.
-        if (!FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
-            rc = MountOneItem(item);
-        }
+#endif
+        rc = MountOneItem(item);
     }
     return rc;
 }

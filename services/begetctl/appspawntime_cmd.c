@@ -61,7 +61,7 @@ static int main_cmd(BShellHandle shell, int argc, char* argv[])
         return 0;
     }
     CmdAgent agent;
-    int ret = InitPtyInterface(&agent, ACTION_APP_APAWNTIME, "init", (CallbackSendMsgProcess)SendAppspawnTimeMessage);
+    int ret = InitPtyInterface(&agent, ACTION_APP_SPAWNTIME, "init", (CallbackSendMsgProcess)SendAppspawnTimeMessage);
     if (ret != 0) {
         BEGET_LOGE("initptyinterface failed");
         return -1;

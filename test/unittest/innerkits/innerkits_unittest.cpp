@@ -253,11 +253,16 @@ HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_MountAllWithFstabFile001, TestSiz
     EXPECT_EQ(GetMountStatusForMountPoint(nullptr), -1);
     FstabItem fstabItem = {};
     fstabItem.fsType = strdup("notSupport");
+    fstabItem.mountPoint = strdup("");
     EXPECT_EQ(MountOneItem(nullptr), -1);
     EXPECT_EQ(MountOneItem(&fstabItem), 0);
     if (fstabItem.fsType != nullptr) {
         free(fstabItem.fsType);
         fstabItem.fsType = nullptr;
+    }
+    if (fstabItem.mountPoint != nullptr) {
+        free(fstabItem.mountPoint);
+        fstabItem.mountPoint = nullptr;
     }
 }
 

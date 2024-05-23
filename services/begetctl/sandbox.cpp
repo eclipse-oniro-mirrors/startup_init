@@ -156,7 +156,7 @@ static void CmdAppspawnClientInit(const char *cmd, CallbackSendMsgProcess sendMs
     }
 
     CmdAgent agent;
-    int ret = InitPtyInterface(&agent, ACTION_APP_ANDBOX, cmd, sendMsg);
+    int ret = InitPtyInterface(&agent, ACTION_APP_SANDBOX, cmd, sendMsg);
     if (ret != 0) {
         BEGET_LOGE("App with pid=%s does not support entering sandbox environment", cmd);
         return;

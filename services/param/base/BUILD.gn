@@ -48,11 +48,16 @@ base_include_dirs = [
 if (defined(ohos_lite)) {
   static_library("parameterbase") {
     cflags = [ "-fPIC" ]
-    sources = comm_sources
-    sources += [
-      "//base/startup/init/services/log/init_commlog.c",
-      "//base/startup/init/services/param/base/param_base.c",
-    ]
+    if (ohos_kernel_type == "liteos_m") {
+      sources = []
+      not_needed([ "comm_sources" ])
+    } else {
+      sources = comm_sources
+      sources += [
+        "//base/startup/init/services/log/init_commlog.c",
+        "//base/startup/init/services/param/base/param_base.c",
+      ]
+    }
     include_dirs = base_include_dirs
     include_dirs += [ "//third_party/bounds_checking_function/include" ]
     defines = [ "_GNU_SOURCE" ]
@@ -87,7 +92,6 @@ if (defined(ohos_lite)) {
     inherited_configs = [
       "//build/config/compiler:afdo",
       "//build/config/compiler:afdo_optimize_size",
-      "//build/config/compiler:compiler",
       "//build/config/compiler:compiler_arm_fpu",
       "//build/config/compiler:compiler_arm_thumb",
       "//build/config/compiler:chromium_code",
@@ -99,12 +103,11 @@ if (defined(ohos_lite)) {
       "//build/config/compiler:no_exceptions",
       "//build/config/compiler:no_rtti",
       "//build/config/compiler:runtime_library",
-      "//build/config/compiler:thin_archive",
       "//build/config/sanitizers:default_sanitizer_flags",
     ]
   }
 
-  source_set("parameterbase") {
+  ohos_static_library("parameterbase") {
     sources = comm_sources
     sources += [
       "//base/startup/init/services/param/adapter/param_dac.c",
@@ -130,8 +133,7 @@ if (defined(ohos_lite)) {
     }
     if (!startup_init_with_param_base) {
       ldflags = [ "-nostdlib" ]
-      configs -= inherited_configs
-      configs += [ "//build/config/compiler:compiler" ]
+      remove_configs = inherited_configs
       defines += [ "PARAM_BASE" ]
     } else {
       sources += [ "//base/startup/init/services/log/init_commlog.c" ]
@@ -149,6 +151,8 @@ if (defined(ohos_lite)) {
     if (param_base_log) {
       defines += [ "PARAM_BASE_LOG" ]
     }
+    part_name = "init"
+    subsystem_name = "startup"
   }
 
   # extend for base
@@ -165,14 +169,14 @@ if (defined(ohos_lite)) {
     deps = []
 
     include_dirs += [ "//base/startup/init/services/init/include" ]
-    external_deps = [ "bounds_checking_function:libsec_shared" ]
+    external_deps = [ "bounds_checking_function:libsec_static" ]
     if (build_selinux) {
       defines += [
         "PARAM_SUPPORT_SELINUX",
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
       external_deps += [
-        "selinux:libselinux",
+        "selinux:libselinux_static",
         "selinux_adapter:libselinux_parameter_static",
       ]
     }
