@@ -179,6 +179,14 @@
                         ]
                     },
                     "name": "//base/startup/init/interfaces/innerkits/zh_extral_dir:export_headers_lib"
+                },
+                {
+                    "header": {
+                        "header_base": "//base/startup/init/services/param/base",
+                        "header_files": []
+                    },
+                    "name": "//base/startup/init/services/param/base:parameterbase",
+                    "visibility": [ "musl" ]
                 }
             ],
             "test": [
