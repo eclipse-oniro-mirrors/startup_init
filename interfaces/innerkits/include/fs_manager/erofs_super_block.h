@@ -16,19 +16,21 @@
 #ifndef EROFS_H
 #define EROFS_H
 
+#include <stdint.h>
+
 #define EROFS_SUPER_MAGIC  0xE0F5E1E2
 #define EROFS_SUPER_BLOCK_START_POSITION 1024
 
-#define __le64 unit64_t
-#define __le32 unit32_t
-#define __le16 unit16_t
+#define __le64 uint64_t
+#define __le32 uint32_t
+#define __le16 uint16_t
 
-#define __u64 unit64_t
-#define __u32 unit32_t
-#define __u16 unit16_t
-#define __u8 unit8_t
+#define __u64 uint64_t
+#define __u32 uint32_t
+#define __u16 uint16_t
+#define __u8 uint8_t
 
-typedef struct __packed erofs_super_block {
+struct erofs_super_block {
     __le32 magic;
     __le32 checksum;
     __le32 feature_compat;
@@ -47,7 +49,7 @@ typedef struct __packed erofs_super_block {
     __u8 volume_name[16];
     __le32 feature_incompat;
     __u8 reserved2[44];
-} erofs_super_block;  /* 128 byte */
+} __attribute((packed));  /* 128 byte */
 
 #undef __le64
 #undef __le32
