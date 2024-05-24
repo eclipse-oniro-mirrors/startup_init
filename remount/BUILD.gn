@@ -14,8 +14,8 @@
 if (defined(ohos_lite)) {
   executable("remount") {
     sources = [
-      "//base/startup/init/services/log/init_commlog.c",
       "//base/startup/init/remount/remount.c",
+      "//base/startup/init/services/log/init_commlog.c",
     ]
     deps = [
       "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
@@ -35,8 +35,8 @@ if (defined(ohos_lite)) {
       "remount.c",
     ]
     deps = [
-      "//base/startup/init/services/log:init_log",
       "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+      "//base/startup/init/services/log:init_log",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
 
@@ -46,11 +46,10 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
 
     if (init_startup_feature_erofs_overlay) {
-      sources += ["remount_overlay.c"]
+      sources += [ "remount_overlay.c" ]
 
-      
-      include_dirs = ["//base/startup/init/remount/include",]
-      defines += ["EROFS_OVERLAY"]
+      include_dirs = [ "//base/startup/init/remount/include" ]
+      defines += [ "EROFS_OVERLAY" ]
     }
   }
 }
