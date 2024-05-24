@@ -17,6 +17,9 @@
 #include "init_log.h"
 #include "init_utils.h"
 #include "device.h"
+#ifdef EROFS_OVERLAY
+#include "erofs_remount_overlay.h"
+#endif
 
 static const pid_t INIT_PROCESS_PID = 1;
 
@@ -45,6 +48,11 @@ int main(int argc, char * const argv[])
     if (isSecondStage == 0) {
         SystemPrepare(upTimeInMicroSecs);
     } else {
+#ifdef EROFS_OVERLAY
+        if (IsOverlayEnable()) {
+            RemountOverlay();
+        }
+#endif
         LogInit();
     }
 

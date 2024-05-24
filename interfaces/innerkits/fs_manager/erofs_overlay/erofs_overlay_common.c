@@ -13,18 +13,34 @@
  * limitations under the License.
  */
 
-#include "erofs_overlay_common.h"
-
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include "securec.h"
 #include "init_utils.h"
 
-#include "fs_manager/ext4_super_block.h"
-#include "fs_manager/erofs_super_block.h"
+#include "erofs_overlay_common.h"
 
 bool IsOverlayEnable(void)
 {
+    char oemMode[MAX_BUFFER_LEN] = {0};
+    int ret = GetParameterFromCmdLine("oemMode", oemMode, MAX_BUFFER_LEN);
+    if (ret) {
+        BEGET_LOGE("Failed get oenmode from cmdline.");
+        return false;
+    }
+
+    char buildvariant[MAX_BUFFER_LEN] = {0};
+    ret = GetParameterFromCmdLine("buildvariant", buildvariant, MAX_BUFFER_LEN);
+    if (ret) {
+        BEGET_LOGE("Failed get buildvariant from cmdline.");
+        return false;
+    }
+
+    if (strcmp(oemMode, "user") == 0 || strcmp(buildvariant, "eng") != 0) {
+        BEGET_LOGI("not support overlay, oemMode:[%s] buildvariant:[%s]", oemMode, buildvariant);
+        return false;
+    }
+    BEGET_LOGI("overlay enable.");
     return true;
 }
 

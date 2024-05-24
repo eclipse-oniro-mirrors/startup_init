@@ -20,6 +20,8 @@ config("libfsmanager_exported_configs") {
     "./libfs_dm/include",
     "./libfs_hvb/include",
     "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
   ]
 }
 
@@ -60,6 +62,24 @@ ohos_static_library("libfsmanager_static") {
       deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static" ]
     }
     if (init_startup_feature_erofs_overlay) {
+      sources += [
+        "erofs_overlay/erofs_mount_overlay.c",
+        "erofs_overlay/erofs_overlay_common.c",
+        "erofs_overlay/erofs_remount_overlay.c",
+        "libfs_dm/fs_dm.c",
+      ]
+      deps += [
+        "//base/startup/init/ueventd:libueventd_ramdisk_static",
+        "//third_party/selinux:libselinux",
+      ]
+      include_dirs += [
+        "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+        "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
+        "//base/security/selinux_adapter/interfaces/policycoreutils/include",
+        "//third_party/selinux/libselinux/inlcude/selinux",
+        "//base/startup/init/ueventd/include",
+      ]
+
       defines += [ "EROFS_OVERLAY" ]
     }
   }
@@ -103,6 +123,27 @@ ohos_static_library("libfsmanager_static_real") {
       defines = [ "SUPPORT_HVB" ]
       external_deps += [ "hvb:libhvb_static" ]
       deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static_real" ]
+    }
+    if (init_startup_feature_erofs_overlay) {
+      sources += [
+        "erofs_overlay/erofs_mount_overlay.c",
+        "erofs_overlay/erofs_overlay_common.c",
+        "erofs_overlay/erofs_remount_overlay.c",
+        "libfs_dm/fs_dm.c",
+      ]
+      deps += [
+        "//base/startup/init/ueventd:libueventd_ramdisk_static",
+        "//third_party/selinux:libselinux",
+      ]
+      include_dirs += [
+        "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+        "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
+        "//base/security/selinux_adapter/interfaces/policycoreutils/include",
+        "//third_party/selinux/libselinux/inlcude/selinux",
+        "//base/startup/init/ueventd/include",
+      ]
+
+      defines += [ "EROFS_OVERLAY" ]
     }
   }
 
