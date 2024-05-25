@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,12 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef EROFS_OVERLAY_COMMON_H
-#define EROFS_OVERLAY_COMMON_H
+#ifndef EROFS_MOUNT_OVERLAY_H
+#define EROFS_MOUNT_OVERLAY_H
 
-#include <stdbool.h>
-#include "fs_manager/ext4_super_block.h"
-#include "fs_manager/erofs_super_block.h"
+#include "erofs_overlay_common.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -26,20 +24,9 @@ extern "C" {
 #endif
 #endif
 
-#define MODE_MKDIR 0755
-#define EXT4_SUPER_MAGIC 0xEF53
-#define EXT4_SUPER_OFFSET 0x400
-#define SECTOR_SIZE 512
-#define PREFIX_LOWER "/mnt/lower"
-#define PREFIX_OVERLAY "/mnt/overlay"
-#define PREFIX_UPPER "/upper"
-#define PREFIX_WORK "/work"
+int DoMountOverlayDevice(FstabItem *item);
 
-bool IsOverlayEnable(void);
-
-bool CheckIsExt4(const char *dev, uint64_t offset);
-
-bool CheckIsErofs(const char *dev);
+int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount);
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -47,4 +34,4 @@ bool CheckIsErofs(const char *dev);
 #endif
 #endif
 
-#endif
+#endif // EROFS_MOUNT_OVERLAY_H

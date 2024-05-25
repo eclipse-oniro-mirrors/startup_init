@@ -32,7 +32,9 @@
 #include "dm_verity.h"
 #endif
 #include "init_filesystems.h"
-
+#ifdef EROFS_OVERLAY
+#include "erofs_mount_overlay.h"
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -391,16 +393,13 @@ static int DoMountOneItem(FstabItem *item)
 }
 
 #ifdef EROFS_OVERLAY
-static bool CheckIsErofs(const char *dev)
-{
-    // todo
-    return false;
-}
-
 static int MountItemByFsType(FstabItem *item)
 {
     if (CheckIsErofs(item->deviceName)) {
         if (strcmp(item->fsType, "erofs") == 0) {
+            if (IsOverlayEnable() && strcmp(item->mountPoint, "/preload") == 0) {
+                return DoMountOverlayDevice(item);
+            }
             return DoMountOneItem(item);
         } else {
             BEGET_LOGI("fsType not erofs system, device [%s] skip erofs mount process", item->deviceName);

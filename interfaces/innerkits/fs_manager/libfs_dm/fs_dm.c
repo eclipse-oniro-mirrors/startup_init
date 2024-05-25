@@ -98,7 +98,7 @@ static int CreateDmDevice(int fd, const char *devName)
 }
 
 static int LoadDmDeviceTable(int fd, const char *devName,
-                             DmVerityTarget *target)
+                             DmVerityTarget *target, bool needDmVerity)
 {
     int rc;
     errno_t err;
@@ -137,8 +137,8 @@ static int LoadDmDeviceTable(int fd, const char *devName,
         ts->status = 0;
         ts->sector_start = target->start;
         ts->length = target->length;
-
-        err = strcpy_s(ts->target_type, sizeof(ts->target_type), "verity");
+        char *targetType = needDmVerity ? "verity" : "linear";
+        err = strcpy_s(ts->target_type, sizeof(ts->target_type), targetType);
         if (err != EOK) {
             rc = -1;
             BEGET_LOGE("error 0x%x, cp target type", err);
@@ -245,7 +245,7 @@ int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *targ
         return rc;
     }
 
-    rc = LoadDmDeviceTable(fd, devName, target);
+    rc = LoadDmDeviceTable(fd, devName, target, true);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, load device table fail", rc);
         close(fd);
@@ -333,6 +333,91 @@ int FsDmRemoveDevice(const char *devName)
     }
 
     close(fd);
+    return 0;
+}
+
+static int DmGetDeviceName(int fd, const char *devName, char *outDevName, const uint64_t outDevNameLen)
+{
+    int rc;
+    char *path = NULL;
+    size_t pathLen = strlen(DM_DEVICE_PATH_PREFIX) + 32;
+    struct dm_ioctl io;
+    rc = InitDmIo(&io, devName);
+    if (rc != 0) {
+        BEGET_LOGE("init dm io failed");
+        return rc;
+    }
+
+    rc = ioctl(fd, DM_DEV_STATUS, &io);
+    if (rc != 0) {
+        BEGET_LOGE("get  DM_DEV_STATUS failed");
+        return rc;
+    }
+
+    int devNum = (io.dev & 0xff) | ((io.dev >> 12) & 0xff00);
+    path = calloc(1, pathLen);
+    if (path == NULL) {
+        BEGET_LOGE("calloc path failed");
+        return rc;
+    }
+
+    rc = snprintf_s(path, pathLen, pathLen - 1, "%s%d", DM_DEVICE_PATH_PREFIX, devNum);
+    if (rc < 0) {
+        BEGET_LOGE("copy dm path failed");
+        free(path);
+        path = NULL;
+        return rc;
+    }
+
+    rc = memcpy_s(outDevName, outDevNameLen, path, pathLen);
+    if (rc < 0) {
+        BEGET_LOGE("copy dm path failed");
+    }
+    BEGET_LOGI("dm get device outDevName %s, devNum %d", path, devNum);
+    free(path);
+    path = NULL;
+    return rc;
+}
+
+int FsDmCreateLinearDevice(const char *devName, char *dmBlkName, uint64_t dmBlkNameLen, DmVerityTarget *target)
+{
+    int rc;
+    int fd = -1;
+    fd = open(DEVICE_MAPPER_PATH, O_RDWR | O_CLOEXEC);
+    if (fd < 0) {
+        BEGET_LOGE("open mapper path failed");
+        return -1;
+    }
+
+    rc = CreateDmDevice(fd, devName);
+    if (rc) {
+        BEGET_LOGE("create dm device failed");
+        close(fd);
+        return -1;
+    }
+
+    rc = DmGetDeviceName(fd, devName, dmBlkName, dmBlkNameLen);
+    if (rc) {
+        BEGET_LOGE("get dm device name failed");
+        close(fd);
+        return -1;
+    }
+
+    rc = LoadDmDeviceTable(fd, devName, target, false);
+    if (rc) {
+        BEGET_LOGE("load dm device name failed");
+        close(fd);
+        return -1;
+    }
+
+    rc = ActiveDmDevice(fd, devName);
+    if (rc) {
+        BEGET_LOGE("active dm device name failed");
+        close(fd);
+        return -1;
+    }
+    close(fd);
+    BEGET_LOGE("fs create rofs linear device success, dev is [%s]", devName);
     return 0;
 }
 
