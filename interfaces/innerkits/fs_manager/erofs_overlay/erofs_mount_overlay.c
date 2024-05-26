@@ -45,7 +45,7 @@ static void AllocDmName(const char *name, char *nameRofs, const uint64_t nameRof
         return;
     }
 
-    if (snprintf_s(nameExt4, nameExt4Len, nameExt4Len - 1, "%s_erofs", name) < 0) {
+    if (snprintf_s(nameExt4, nameExt4Len, nameExt4Len - 1, "%s_ext4", name) < 0) {
         BEGET_LOGE("Failed to copy nameExt4.");
         return;
     }
@@ -276,9 +276,10 @@ static int MountRofsDevice(const char *dev, const char *mnt)
             sleep(1);
             continue;
         }
+        break;
     }
 
-    return rc;
+    return 0;
 }
 
 int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount)

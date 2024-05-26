@@ -23,7 +23,7 @@
 bool IsOverlayEnable(void)
 {
     char oemMode[MAX_BUFFER_LEN] = {0};
-    int ret = GetParameterFromCmdLine("oemMode", oemMode, MAX_BUFFER_LEN);
+    int ret = GetParameterFromCmdLine("oemmode", oemMode, MAX_BUFFER_LEN);
     if (ret) {
         BEGET_LOGE("Failed get oenmode from cmdline.");
         return false;

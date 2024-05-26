@@ -277,23 +277,23 @@ int RootOverlaySetup(void)
 
     if (!DirectoryExists(rootOverlay)) {
         if (mkdir(rootOverlay, MODE_MKDIR) && (errno != EEXIST)) {
-            INIT_LOGE("make dir failed  %s", rootOverlay);
+            INIT_LOGE("make dir failed on %s", rootOverlay);
             return -1;
         }
 
-        if (mkdir(rootOverlay, MODE_MKDIR) && (errno != EEXIST)) {
-            INIT_LOGE("make dir failed  %s", rootOverlay);
+        if (mkdir(rootUpper, MODE_MKDIR) && (errno != EEXIST)) {
+            INIT_LOGE("make dir failed on %s", rootUpper);
             return -1;
         }
 
-        if (mkdir(rootOverlay, MODE_MKDIR) && (errno != EEXIST)) {
-            INIT_LOGE("make dir failed  %s", rootOverlay);
+        if (mkdir(rootWork, MODE_MKDIR) && (errno != EEXIST)) {
+            INIT_LOGE("make dir failed on %s", rootWork);
             return -1;
         }
     }
 
     if (mount("overlay", "/system", "overlay", 0, mntOpt)) {
-        INIT_LOGE("system mount overlay failed  %s", mntOpt);
+        INIT_LOGE("system mount overlay failed on %s", mntOpt);
         return -1;
     }
     INIT_LOGI("system mount overlay sucess");
@@ -345,6 +345,7 @@ bool RemountRofsOverlay()
 {
     bool result = false;
     int lastRemountResult = GetRemountResult();
+    INIT_LOGI("get last remount result is %d.", lastRemountResult);
     if (lastRemountResult != REMOUNT_NONE) {
         return (lastRemountResult == REMOUNT_SUCC) ? true : false;
     }
@@ -365,9 +366,10 @@ bool RemountRofsOverlay()
             DoSystemRemount(mentry, &result);
             continue;
         }
-
+        INIT_LOGE("do remount %s", mentry->mnt_dir);
         if (!DoRemount(mentry, &result)) {
             endmntent(fp);
+            INIT_LOGE("do remount failed on %s", mentry->mnt_dir);
             return false;
         }
     }
