@@ -126,7 +126,7 @@ static uint64_t GetTotalSize(const char *dev, uint64_t offset)
     close(fd);
 
     if (header.magic_number != EXTHDR_MAGIC) {
-        BEGET_LOGE("dev:[%s] is not have ext path, magic is 0x%x", dev, header.magic_number);
+        BEGET_LOGI("dev:[%s] is not have ext path, magic is 0x%x", dev, header.magic_number);
         return 0;
     }
 

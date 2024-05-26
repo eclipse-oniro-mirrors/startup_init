@@ -238,8 +238,8 @@ static bool DoRemount(struct mntent *mentry, bool *result)
         ret = MountExt4Device(devExt4, mnt, true);
         if (ret) {
             INIT_LOGE("Failed to mount devExt4 %s.", devExt4);
+            return false;
         }
-        return true;
     }
 
     if (strncmp(mentry->mnt_dir, "/mnt/lower", strlen("/mnt/lower")) == 0) {

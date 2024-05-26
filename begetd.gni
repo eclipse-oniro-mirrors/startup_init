@@ -54,5 +54,5 @@ declare_args() {
   startup_init_extra_static_modules = ""
 
   # erofs overlay feature switch
-  init_startup_feature_erofs_overlay = false
+  init_startup_feature_erofs_overlay = true
 }
