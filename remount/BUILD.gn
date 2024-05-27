@@ -37,7 +37,6 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
       "//base/startup/init/services/log:init_log",
-      "//third_party/bounds_checking_function:libsec_shared",
     ]
 
     defines = [ "_GNU_SOURCE" ]

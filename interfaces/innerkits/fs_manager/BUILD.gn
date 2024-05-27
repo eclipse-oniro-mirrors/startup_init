@@ -75,9 +75,7 @@ ohos_static_library("libfsmanager_static") {
         "erofs_overlay/erofs_overlay_common.c",
         "erofs_overlay/erofs_remount_overlay.c",
       ]
-      include_dirs += [
-        "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
-      ]
+      include_dirs += [ "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include" ]
 
       defines += [ "EROFS_OVERLAY" ]
     }
@@ -138,9 +136,7 @@ ohos_static_library("libfsmanager_static_real") {
         "erofs_overlay/erofs_overlay_common.c",
         "erofs_overlay/erofs_remount_overlay.c",
       ]
-      include_dirs += [
-        "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
-      ]
+      include_dirs += [ "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include" ]
 
       defines += [ "EROFS_OVERLAY" ]
     }
