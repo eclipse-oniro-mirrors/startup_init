@@ -36,4 +36,12 @@ if (defined(ohos_lite)) {
     part_name = "init"
     subsystem_name = "startup"
   }
+
+  ohos_static_library("libsocket_real") {
+    sources = service_socket_sources
+    include_dirs = service_socket_include
+    external_deps = [ "bounds_checking_function:libsec_static" ]
+    part_name = "init"
+    subsystem_name = "startup"
+  }
 }
