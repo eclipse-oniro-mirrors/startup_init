@@ -319,6 +319,7 @@ int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount)
             sleep(1);
             continue;
         }
+        break;
     }
 
     if (isFirstMount && mkdir(dirUpper, MODE_MKDIR) && (errno != EEXIST)) {

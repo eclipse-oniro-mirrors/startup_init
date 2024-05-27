@@ -16,9 +16,6 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#ifdef WITH_SELINUX
-#include <policycoreutils.h>
-#endif
 #include "securec.h"
 #include "init_utils.h"
 #include "fs_dm.h"
@@ -41,13 +38,6 @@ static int Modem2Exchange(const char *modemPath, const char *exchangePath)
     } else {
         BEGET_LOGI("mkdir %s succeed.", exchangePath);
     }
-
-#ifdef WITH_SELINUX
-    ret = Restorecon(exchangePath);
-    if (ret != 0) {
-        BEGET_LOGE("failed to restorecon %s.", exchangePath);
-    }
-#endif
 
     ret = mount(modemPath, exchangePath, NULL, MS_BIND | MS_RDONLY, NULL);
     if (ret) {

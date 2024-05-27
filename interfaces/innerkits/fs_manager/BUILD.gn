@@ -42,12 +42,15 @@ ohos_static_library("libfsmanager_static") {
     external_deps = [ "bounds_checking_function:libsec_static" ]
     deps = [ "//base/startup/init/services/utils:libinit_utils" ]
 
-    if ((defined(global_parts_info) && defined(global_parts_info.startup_hvb)) ||
-      init_startup_feature_erofs_overlay) {
+    if ((defined(global_parts_info) &&
+         defined(global_parts_info.startup_hvb)) ||
+        init_startup_feature_erofs_overlay) {
       sources += [ "libfs_dm/fs_dm.c" ]
       include_dirs += [
         "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+        "//base/startup/init/ueventd/include",
       ]
+      deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static" ]
     }
 
     if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
@@ -61,12 +64,10 @@ ohos_static_library("libfsmanager_static") {
         "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/include",
         "//base/startup/init/interfaces/innerkits/fs_manager/dm_verity/include",
         "//base/startup/hvb/libhvb/include",
-        "//base/startup/init/ueventd/include",
       ]
 
       defines += [ "SUPPORT_HVB" ]
       external_deps += [ "hvb:libhvb_static" ]
-      deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static" ]
     }
     if (init_startup_feature_erofs_overlay) {
       sources += [
@@ -74,15 +75,8 @@ ohos_static_library("libfsmanager_static") {
         "erofs_overlay/erofs_overlay_common.c",
         "erofs_overlay/erofs_remount_overlay.c",
       ]
-      deps += [
-        "//base/startup/init/ueventd:libueventd_ramdisk_static",
-        "//third_party/selinux:libselinux",
-      ]
       include_dirs += [
         "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
-        "//base/security/selinux_adapter/interfaces/policycoreutils/include",
-        "//third_party/selinux/libselinux/inlcude/selinux",
-        "//base/startup/init/ueventd/include",
       ]
 
       defines += [ "EROFS_OVERLAY" ]
@@ -111,12 +105,15 @@ ohos_static_library("libfsmanager_static_real") {
     external_deps = [ "bounds_checking_function:libsec_static" ]
     deps = [ "//base/startup/init/services/utils:libinit_utils" ]
 
-    if ((defined(global_parts_info) && defined(global_parts_info.startup_hvb)) ||
-      init_startup_feature_erofs_overlay) {
+    if ((defined(global_parts_info) &&
+         defined(global_parts_info.startup_hvb)) ||
+        init_startup_feature_erofs_overlay) {
       sources += [ "libfs_dm/fs_dm.c" ]
       include_dirs += [
         "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+        "//base/startup/init/ueventd/include",
       ]
+      deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static_real" ]
     }
 
     if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
@@ -130,12 +127,10 @@ ohos_static_library("libfsmanager_static_real") {
         "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/include",
         "//base/startup/init/interfaces/innerkits/fs_manager/dm_verity/include",
         "//base/startup/hvb/libhvb/include",
-        "//base/startup/init/ueventd/include",
       ]
 
       defines += [ "SUPPORT_HVB" ]
       external_deps += [ "hvb:libhvb_static" ]
-      deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static_real" ]
     }
     if (init_startup_feature_erofs_overlay) {
       sources += [
@@ -143,15 +138,8 @@ ohos_static_library("libfsmanager_static_real") {
         "erofs_overlay/erofs_overlay_common.c",
         "erofs_overlay/erofs_remount_overlay.c",
       ]
-      deps += [
-        "//base/startup/init/ueventd:libueventd_ramdisk_static",
-        "//third_party/selinux:libselinux",
-      ]
       include_dirs += [
         "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
-        "//base/security/selinux_adapter/interfaces/policycoreutils/include",
-        "//third_party/selinux/libselinux/inlcude/selinux",
-        "//base/startup/init/ueventd/include",
       ]
 
       defines += [ "EROFS_OVERLAY" ]
