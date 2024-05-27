@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
+#ifdef EROFS_OVERLAY
 #include "init_log.h"
 #include "erofs_remount_overlay.h"
 #include "remount_overlay.h"
+#endif
 
 int main(int argc, const char *argv[])
 {
