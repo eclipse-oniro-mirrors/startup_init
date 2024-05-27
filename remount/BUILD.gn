@@ -13,9 +13,7 @@
 
 if (defined(ohos_lite)) {
   executable("remount") {
-    sources = [
-      "//base/startup/init/remount/remount.c",
-    ]
+    sources = [ "//base/startup/init/remount/remount.c" ]
     defines = [ "_GNU_SOURCE" ]
     if (ohos_kernel_type == "linux") {
       defines += [ "LINUX_REMOUNT" ]
@@ -25,9 +23,7 @@ if (defined(ohos_lite)) {
   import("//base/startup/init/begetd.gni")
   import("//build/ohos.gni")
   ohos_executable("remount") {
-    sources = [
-      "remount.c",
-    ]
+    sources = [ "remount.c" ]
 
     defines = [ "_GNU_SOURCE" ]
     install_enable = true
@@ -36,8 +32,8 @@ if (defined(ohos_lite)) {
 
     if (init_startup_feature_erofs_overlay) {
       sources += [
-        "remount_overlay.c",
         "//base/startup/init/services/log/init_commlog.c",
+        "remount_overlay.c",
       ]
 
       include_dirs = [ "//base/startup/init/remount/include" ]
