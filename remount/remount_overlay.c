@@ -366,7 +366,7 @@ bool RemountRofsOverlay()
             DoSystemRemount(mentry, &result);
             continue;
         }
-        INIT_LOGE("do remount %s", mentry->mnt_dir);
+        INIT_LOGI("do remount %s", mentry->mnt_dir);
         if (!DoRemount(mentry, &result)) {
             endmntent(fp);
             INIT_LOGE("do remount failed on %s", mentry->mnt_dir);
