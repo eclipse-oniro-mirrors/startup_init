@@ -66,7 +66,6 @@ symlinkat;all
 linkat;all
 renameat;arm
 renameat;arm64
-pivot_root;arm64
 pivot_root;riscv64
 statfs;arm64
 statfs;riscv64
