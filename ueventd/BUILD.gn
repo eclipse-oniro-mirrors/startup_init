@@ -77,7 +77,7 @@ if (defined(ohos_lite)) {
   ]
 
   service_ueventd_ramdisk_deps = [
-    "//base/startup/init/interfaces/innerkits/socket:libsocket_real",
+    "//base/startup/init/interfaces/innerkits/socket:libsocket",
     "//base/startup/init/services/utils:libinit_utils",
   ]
 
