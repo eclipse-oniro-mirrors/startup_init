@@ -171,8 +171,10 @@ if (defined(ohos_lite)) {
     external_deps = [
       "bounds_checking_function:libsec_static",
       "cJSON:cjson_static",
-      "selinux_adapter:libselinux_parameter_static",
     ]
+    if (build_selinux) {
+      external_deps += [ "selinux_adapter:libselinux_parameter_static" ]
+    }
 
     cflags = [ "-Wno-deprecated-pragma" ]
     defines = [
