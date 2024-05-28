@@ -99,7 +99,6 @@ ohos_static_library("libfsmanager_static_real") {
       "//base/startup/init/services/log",
       "//base/startup/init/services/param/include",
     ]
-
     external_deps = [ "bounds_checking_function:libsec_static" ]
     deps = [ "//base/startup/init/services/utils:libinit_utils" ]
     if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
@@ -120,6 +119,7 @@ ohos_static_library("libfsmanager_static_real") {
 
       defines = [ "SUPPORT_HVB" ]
       external_deps += [ "hvb:libhvb_static" ]
+      deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static_real" ]
     }
   }
 
