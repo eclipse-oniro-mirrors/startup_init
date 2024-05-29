@@ -435,48 +435,6 @@ void EnterServiceSandbox(Service *service)
 #endif
 }
 
-static void AddUpdateList(ServiceArgs *args, char *updateList)
-{
-    char** argvOrig = args->argv;
-    const int paramCount = 2; // -u updatelist
-    args->argv = (char **)malloc((args->count + paramCount) * sizeof(char *));
-    INIT_ERROR_CHECK(args->argv != NULL, return, "Failed to malloc for argv");
-    int i = 0;
-    for (; i < args->count + 1; ++i) {
-        if (i == args->count - 1) {
-            args->argv[i] = "-u";
-            args->argv[++i] = updateList;
-            break;
-        } else {
-            args->argv[i] = argvOrig[i];
-        }
-    }
-    args->argv[++i] = NULL;
-    args->count += paramCount;
-    free(argvOrig);
-}
-
-static void CheckModuleUpdate(ServiceArgs *args)
-{
-    INIT_LOGI("CheckModuleUpdate start");
-    void *handle = dlopen("libmodule_update.z.so", RTLD_NOW);
-    INIT_ERROR_CHECK(handle != NULL, return, "dlopen module update lib failed with error:%s", dlerror());
-    typedef char* (*ExtFunc)(int, char **);
-    ExtFunc func = (ExtFunc)dlsym(handle, "CheckModuleUpdate");
-    if (func == NULL) {
-        INIT_LOGE("dlsym get func failed with error:%s", dlerror());
-    } else {
-        char *updateList = func(args->count, args->argv);
-        INIT_LOGI("update list: %s", updateList);
-        if (updateList != NULL) {
-            AddUpdateList(args, updateList);
-        } else {
-            INIT_LOGW("no update list");
-        }
-    }
-    INIT_LOGI("CheckModuleUpdate end");
-}
-
 #ifdef IS_DEBUG_VERSION
 static bool ServiceNeedDebug(char *name)
 {
@@ -599,9 +557,6 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
 
     CloseOnDemandServiceFdForOtherService(service);
 
-    if (service->attribute & SERVICE_ATTR_MODULE_UPDATE) {
-        CheckModuleUpdate(pathArgs);
-    }
 #ifdef IS_DEBUG_VERSION
     // only the image is debuggable and need debug, then wait for debugger
     if (ServiceNeedDebug(service->name) && IsDebuggableVersion()) {
