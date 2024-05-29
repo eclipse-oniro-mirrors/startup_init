@@ -13,14 +13,7 @@
 
 if (defined(ohos_lite)) {
   executable("remount") {
-    sources = [
-      "//base/startup/init/remount/remount.c",
-      "//base/startup/init/services/log/init_commlog.c",
-    ]
-    deps = [
-      "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
-      "//base/startup/init/services/log:init_log",
-    ]
+    sources = [ "//base/startup/init/remount/remount.c" ]
     defines = [ "_GNU_SOURCE" ]
     if (ohos_kernel_type == "linux") {
       defines += [ "LINUX_REMOUNT" ]
@@ -30,15 +23,7 @@ if (defined(ohos_lite)) {
   import("//base/startup/init/begetd.gni")
   import("//build/ohos.gni")
   ohos_executable("remount") {
-    sources = [
-      "//base/startup/init/services/log/init_commlog.c",
-      "remount.c",
-    ]
-    deps = [
-      "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
-      "//base/startup/init/services/log:init_log",
-      "//third_party/bounds_checking_function:libsec_shared",
-    ]
+    sources = [ "remount.c" ]
 
     defines = [ "_GNU_SOURCE" ]
     install_enable = true
@@ -46,9 +31,17 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
 
     if (init_startup_feature_erofs_overlay) {
-      sources += [ "remount_overlay.c" ]
+      sources += [
+        "//base/startup/init/services/log/init_commlog.c",
+        "remount_overlay.c",
+      ]
 
       include_dirs = [ "//base/startup/init/remount/include" ]
+
+      deps = [
+        "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+        "//base/startup/init/services/log:init_log",
+      ]
       defines += [ "EROFS_OVERLAY" ]
     }
   }

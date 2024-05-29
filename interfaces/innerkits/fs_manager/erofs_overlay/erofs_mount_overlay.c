@@ -45,7 +45,7 @@ static void AllocDmName(const char *name, char *nameRofs, const uint64_t nameRof
         return;
     }
 
-    if (snprintf_s(nameExt4, nameExt4Len, nameExt4Len - 1, "%s_erofs", name) < 0) {
+    if (snprintf_s(nameExt4, nameExt4Len, nameExt4Len - 1, "%s_ext4", name) < 0) {
         BEGET_LOGE("Failed to copy nameExt4.");
         return;
     }
@@ -126,7 +126,7 @@ static uint64_t GetTotalSize(const char *dev, uint64_t offset)
     close(fd);
 
     if (header.magic_number != EXTHDR_MAGIC) {
-        BEGET_LOGE("dev:[%s] is not have ext path, magic is 0x%x", dev, header.magic_number);
+        BEGET_LOGI("dev:[%s] is not have ext path, magic is 0x%x", dev, header.magic_number);
         return 0;
     }
 
@@ -276,9 +276,10 @@ static int MountRofsDevice(const char *dev, const char *mnt)
             sleep(1);
             continue;
         }
+        break;
     }
 
-    return rc;
+    return 0;
 }
 
 int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount)
@@ -318,6 +319,7 @@ int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount)
             sleep(1);
             continue;
         }
+        break;
     }
 
     if (isFirstMount && mkdir(dirUpper, MODE_MKDIR) && (errno != EEXIST)) {

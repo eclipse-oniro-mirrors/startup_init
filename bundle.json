@@ -92,6 +92,7 @@
                 ],
                 "service_group": [
                     "//base/startup/init/watchdog:watchdog",
+                    "//base/startup/init/remount:overlayremount",
                     "//base/startup/init/ueventd:startup_ueventd"
                 ]
               },
