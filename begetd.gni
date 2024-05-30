@@ -11,8 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-init_innerkits_path = "//base/startup/init/interfaces/innerkits"
-
 declare_args() {
   enable_ohos_startup_init_feature_watcher = true
   enable_ohos_startup_init_feature_deviceinfo = true
