@@ -43,23 +43,23 @@ static int GetErrorInfo(int status, std::string &errMsg)
         case EC_FAILURE:
         case EC_SYSTEM_ERR:
         case SYSPARAM_SYSTEM_ERROR:
-            errMsg = "System internal error including out of memory, deadlock etc";
+            errMsg = "System internal error such as out memory or deadlock";
             return -SYSPARAM_SYSTEM_ERROR;
         case EC_INVALID:
         case SYSPARAM_INVALID_INPUT:
             errMsg = "Input parameter is missing or invalid";
             return -SYSPARAM_INVALID_INPUT;
         case SYSPARAM_PERMISSION_DENIED:
-            errMsg = "System permission operation permission denied";
+            errMsg = "The operation on the system permission is denied";
             return -SYSPARAM_PERMISSION_DENIED;
         case SYSPARAM_NOT_FOUND:
-            errMsg = "System parameter can not be found";
+            errMsg = "System parameter not found";
             return -SYSPARAM_NOT_FOUND;
         case SYSPARAM_INVALID_VALUE:
-            errMsg = "System parameter value is invalid";
+            errMsg = "Invalid system parameter value";
             return -SYSPARAM_INVALID_VALUE;
         default:
-            errMsg = "System internal error including out of memory, deadlock etc";
+            errMsg = "System internal error such as out memory or deadlock";
             return -SYSPARAM_SYSTEM_ERROR;
     }
     return 0;
