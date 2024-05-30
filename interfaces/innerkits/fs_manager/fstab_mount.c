@@ -516,23 +516,22 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
         return rc;
     }
 
-    // Mount partition during second startup.
+    // Mount partition during one startup.
     if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
         int bootSlots = GetBootSlots();
         BEGET_INFO_CHECK(bootSlots <= 1, AdjustPartitionNameByPartitionSlot(item),
             "boot slots is %d, now adjust partition name according to current slot", bootSlots);
 #ifdef SUPPORT_HVB
 #ifdef EROFS_OVERLAY
-            if (!NeedDmVerity(item)) {
-                BEGET_LOGI("not need dm verity, do mount item %s", item->deviceName);
-                return MountOneItem(item);
-            }
+        if (!NeedDmVerity(item)) {
+            BEGET_LOGI("not need dm verity, do mount item %s", item->deviceName);
+            return MountOneItem(item);
+        }
 #endif
-            rc = HvbDmVeritySetUp(item);
-            if (rc != 0) {
-                BEGET_LOGE("set dm_verity err, ret = 0x%x", rc);
-                return rc;
-            }
+        rc = HvbDmVeritySetUp(item);
+        if (rc != 0) {
+            BEGET_LOGE("set dm_verity err, ret = 0x%x", rc);
+            return rc;
         }
 #endif
         rc = MountOneItem(item);

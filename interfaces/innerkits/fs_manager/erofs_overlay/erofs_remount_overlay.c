@@ -28,6 +28,64 @@
 #define MODEM_DRIVER_EXCHANGE_PATH "/mnt/driver_exchange"
 #define MODEM_VENDOR_EXCHANGE_PATH "/mnt/vendor_exchange"
 #define MODEM_FW_EXCHANGE_PATH "/mnt/fw_exchange"
+#define REMOUNT_RESULT_FLAG "/dev/remount/remount.result.done"
+
+int GetRemountResult(void)
+{
+    int ret;
+    int fd = open(REMOUNT_RESULT_FLAG, O_RDONLY);
+    if (fd >= 0) {
+        char buff[1];
+        ret = read(fd, buff, 1);
+        if (ret < 0) {
+            BEGET_LOGE("read remount.result.done failed errno %d", errno);
+            close(fd);
+            return REMOUNT_FAIL;
+        }
+        close(fd);
+        if (buff[0] == '0' + REMOUNT_SUCC) {
+            return REMOUNT_SUCC;
+        } else {
+            return REMOUNT_FAIL;
+        }
+    }
+    return REMOUNT_NONE;
+}
+
+void SetRemountResultFlag(bool result)
+{
+    struct stat st;
+    int ret;
+
+    int statRet = stat("/dev/remount/", &st);
+    if (statRet != 0) {
+        ret = mkdir("/dev/remount/", MODE_MKDIR);
+        if (ret < 0 && errno != EEXIST) {
+            BEGET_LOGE("mkdir /dev/remount failed errno %d", errno);
+            return;
+        }
+    }
+
+    int fd = open(REMOUNT_RESULT_FLAG, O_WRONLY | O_CREAT, 0644);
+    if (fd < 0) {
+        BEGET_LOGE("open /dev/remount/remount.result.done failed errno %d", errno);
+        return;
+    }
+
+    char buff[1];
+    if (result) {
+        buff[0] = '0' + REMOUNT_SUCC;
+    } else {
+        buff[0] = '0' + REMOUNT_FAIL;
+    }
+
+    ret = write(fd, buff, 1);
+    if (ret < 0) {
+        BEGET_LOGE("write buff failed errno %d", errno);
+    }
+    close(fd);
+    BEGET_LOGI("set remount result flag successfully");
+}
 
 static int Modem2Exchange(const char *modemPath, const char *exchangePath)
 {
@@ -182,6 +240,6 @@ int RemountOverlay(void)
             OverlayRemountVendorPost();
         }
     }
-
+    SetRemountResultFlag(true);
     return 0;
 }

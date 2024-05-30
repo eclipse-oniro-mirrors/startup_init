@@ -26,74 +26,13 @@
 #include "erofs_remount_overlay.h"
 #include "remount_overlay.h"
 
-#define REMOUNT_NONE 0
-#define REMOUNT_SUCC 1
-#define REMOUNT_FAIL 2
 #define MODE_MKDIR 0755
 #define BLOCK_SIZE_UNIT 4096
 
 #define PREFIX_LOWER "/mnt/lower"
 #define MNT_VENDOR "/vendor"
-#define REMOUNT_RESULT_FLAG "/dev/remount/remount.result.done"
 #define ROOT_MOUNT_DIR "/"
 #define SYSTEM_DIR "/usr"
-
-static int GetRemountResult(void)
-{
-    int ret;
-    int fd = open(REMOUNT_RESULT_FLAG, O_RDONLY);
-    if (fd >= 0) {
-        char buff[1];
-        ret = read(fd, buff, 1);
-        if (ret < 0) {
-            INIT_LOGE("read remount.result.done failed errno %d", errno);
-            close(fd);
-            return REMOUNT_FAIL;
-        }
-        close(fd);
-        if (buff[0] == '0' + REMOUNT_SUCC) {
-            return REMOUNT_SUCC;
-        } else {
-            return REMOUNT_FAIL;
-        }
-    }
-    return REMOUNT_NONE;
-}
-
-static void SetRemountResultFlag(bool result)
-{
-    struct stat st;
-    int ret;
-
-    int statRet = stat("/dev/remount/", &st);
-    if (statRet != 0) {
-        ret = mkdir("/dev/remount/", MODE_MKDIR);
-        if (ret < 0 && errno != EEXIST) {
-            INIT_LOGE("mkdir /dev/remount failed errno %d", errno);
-            return;
-        }
-    }
-
-    int fd = open(REMOUNT_RESULT_FLAG, O_WRONLY | O_CREAT, 0644);
-    if (fd < 0) {
-        INIT_LOGE("open  /dev/remount/remount.result.done failed errno %d", errno);
-        return;
-    }
-
-    char buff[1];
-    if (result) {
-        buff[0] = '0' + REMOUNT_SUCC;
-    } else {
-        buff[0] = '0' + REMOUNT_FAIL;
-    }
-
-    ret = write(fd, buff, 1);
-    if (ret < 0) {
-        INIT_LOGE("write buff failed errno %d", errno);
-    }
-    close(fd);
-    INIT_LOGI("set remount result flag successfully");
-}
 
 static bool IsSkipRemount(const struct mntent mentry)
 {

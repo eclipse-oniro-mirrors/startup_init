@@ -24,6 +24,14 @@ extern "C" {
 #endif
 #endif
 
+#define REMOUNT_NONE 0
+#define REMOUNT_SUCC 1
+#define REMOUNT_FAIL 2
+
+int GetRemountResult(void);
+
+void SetRemountResultFlag(bool result);
+
 int RemountOverlay(void);
 
 int MountOverlayOne(const char *mnt);
