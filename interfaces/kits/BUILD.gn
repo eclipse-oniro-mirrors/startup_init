@@ -22,7 +22,7 @@ group("kitsgroup") {
     deps += [ "syscap:deviceinfo_ndk" ]
     if (support_jsapi) {
       deps += [
-        "cj:cj_device_info",
+        "cj:cj_device_info_ffi",
         "cj:cj_system_parameter_enhance_ffi",
         "jskits:deviceinfo",
         "jskits:systemparameter",
