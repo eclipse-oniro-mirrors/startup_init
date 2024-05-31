@@ -461,7 +461,8 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
         entry->valueLength = valueLen;
     }
     uint32_t flags = commitId & ~PARAM_FLAGS_COMMITID;
-    ATOMIC_STORE_EXPLICIT(&entry->commitId, (++commitId) | flags, MEMORY_ORDER_RELEASE);
+    uint32_t commitIdCount = (++commitId) & PARAM_FLAGS_COMMITID;
+    ATOMIC_STORE_EXPLICIT(&entry->commitId, flags | commitIdCount, MEMORY_ORDER_RELEASE);
     ATOMIC_SYNC_ADD_AND_FETCH(&workSpace->area->commitId, 1, MEMORY_ORDER_RELEASE);
 #ifdef PARAM_SUPPORT_SELINUX
     WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
