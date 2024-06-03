@@ -188,6 +188,9 @@
                     },
                     "name": "//base/startup/init/services/param/base:parameterbase",
                     "visibility": [ "musl" ]
+                },
+                {
+                    "name": "//base/startup/init/interfaces/kits/syscap_ts:syscap_ts"
                 }
             ],
             "test": [
