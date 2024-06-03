@@ -39,6 +39,10 @@ static int SendAppspawnTimeMessage(const CmdAgent *agent, uint16_t type, const c
     BEGET_ERROR_CHECK(ret == 0, return -1, "AppSpawnClientInit error, errno = %d", errno);
     AppSpawnReqMsgHandle reqHandle;
     ret = AppSpawnReqMsgCreate(MSG_BEGET_SPAWNTIME, "init", &reqHandle);
+    if (ret != 0) {
+        AppSpawnClientDestroy(clientHandle);
+        return -1;
+    }
     AppSpawnResult result = {};
     ret = AppSpawnClientSendMsg(clientHandle, reqHandle, &result);
     if (ret != 0) {
