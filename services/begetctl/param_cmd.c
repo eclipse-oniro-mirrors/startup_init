@@ -523,6 +523,33 @@ static int32_t BShellParamCmdRegForShell(BShellHandle shell)
     return 0;
 }
 
+static bool IsUserMode()
+{
+    bool isUser = true;
+    char value[2] = {0};
+    uint32_t length = sizeof(value);
+    int ret = SystemGetParameter("const.debuggable", value, &length);
+    if (ret != 0) {
+        BSH_LOGI("Failed to get param");
+        return isUser;
+    }
+    if (strcmp(value, "1") == 0) {
+        isUser = false;
+    }
+    return isUser;
+}
+
+static bool IsDebugCmd(bool isUser, const CmdInfo *cmdInfo)
+{
+    if (!isUser) {
+        return true;
+    }
+    if (strcmp(cmdInfo->multikey, "param dump") == 0 || strcmp(cmdInfo->multikey, "param shell") == 0) {
+        return true;
+    }
+    return false;
+}
+
 static int32_t BShellParamCmdRegForIndepent(BShellHandle shell)
 {
     const CmdInfo infos[] = {
@@ -535,7 +562,11 @@ static int32_t BShellParamCmdRegForIndepent(BShellHandle shell)
             "param shell [-p] [name] [-u] [username] [-g] [groupname]", "param shell"},
         {"param", BShellParamCmdSave, "save all persist parameters in workspace", "param save", "param save"},
     };
+    bool isUser = IsUserMode();
     for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {
+        if (IsDebugCmd(isUser, &infos[i - 1])) {
+            continue;
+        }
         BShellEnvRegisterCmd(shell, &infos[i - 1]);
     }
     return 0;
