@@ -194,6 +194,11 @@ ohos_executable("init") {
   if (use_musl) {
     defines += [ "__MUSL__" ]
   }
+
+  if (init_use_encaps) {
+    defines += [ "USE_ENCAPS" ]
+  }
+
   install_images = [
     "system",
     "updater",

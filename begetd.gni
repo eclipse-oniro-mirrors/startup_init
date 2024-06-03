@@ -53,6 +53,8 @@ declare_args() {
   startup_begetutil_extra_modules = ""
   startup_init_extra_static_modules = ""
 
+  init_use_encaps = false
+
   # erofs overlay feature switch
   init_startup_feature_erofs_overlay = false
 }
