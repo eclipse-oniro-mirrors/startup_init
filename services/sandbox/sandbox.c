@@ -289,11 +289,11 @@ static int GetSandboxInfo(sandbox_t *sandbox, cJSON *root, const char *itemName)
     BEGET_ERROR_CHECK(!(sandbox == NULL || root == NULL || itemName == NULL), return -1,
         "Get sandbox mount info with invalid argument");
     cJSON *obj = cJSON_GetObjectItem(root, itemName);
-    BEGET_ERROR_CHECK(obj != NULL, return 0, "Cannot find item \' %s \' in sandbox config", itemName);
-    BEGET_ERROR_CHECK(cJSON_IsArray(obj), return 0, "ItemName %s with invalid type, should be array", itemName);
+    BEGET_WARNING_CHECK(obj != NULL, return 0, "Cannot find item \' %s \' in sandbox config", itemName);
+    BEGET_WARNING_CHECK(cJSON_IsArray(obj), return 0, "ItemName %s with invalid type, should be array", itemName);
 
     int counts = cJSON_GetArraySize(obj);
-    BEGET_ERROR_CHECK(counts > 0, return 0, "Item %s array size is zero.", itemName);
+    BEGET_WARNING_CHECK(counts > 0, return 0, "Item %s array size is zero.", itemName);
     AddInfoToSandboxCallback func = NULL;
     if (strcmp(itemName, SANDBOX_MOUNT_PATH_TAG) == 0) {
         func = AddMountInfoToSandbox;
