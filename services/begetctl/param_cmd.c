@@ -539,11 +539,8 @@ static bool IsUserMode()
     return isUser;
 }
 
-static bool IsDebugCmd(bool isUser, const CmdInfo *cmdInfo)
+static bool IsDebugCmd(const CmdInfo *cmdInfo)
 {
-    if (!isUser) {
-        return true;
-    }
     if (strcmp(cmdInfo->multikey, "param dump") == 0 || strcmp(cmdInfo->multikey, "param shell") == 0) {
         return true;
     }
@@ -562,9 +559,8 @@ static int32_t BShellParamCmdRegForIndepent(BShellHandle shell)
             "param shell [-p] [name] [-u] [username] [-g] [groupname]", "param shell"},
         {"param", BShellParamCmdSave, "save all persist parameters in workspace", "param save", "param save"},
     };
-    bool isUser = IsUserMode();
     for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {
-        if (IsDebugCmd(isUser, &infos[i - 1])) {
+        if (IsUserMode() && IsDebugCmd(&infos[i - 1])) {
             continue;
         }
         BShellEnvRegisterCmd(shell, &infos[i - 1]);
