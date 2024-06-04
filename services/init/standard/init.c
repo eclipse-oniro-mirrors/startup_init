@@ -79,7 +79,7 @@ static int FdHolderSockInit(void)
     if (lchown(addr.sun_path, 0, 0)) {
         INIT_LOGW("Failed to change owner of fd holder socket, err = %d", errno);
     }
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
     if (fchmodat(AT_FDCWD, addr.sun_path, mode, AT_SYMLINK_NOFOLLOW)) {
         INIT_LOGW("Failed to change mode of fd holder socket, err = %d", errno);
     }
