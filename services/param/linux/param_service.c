@@ -440,6 +440,9 @@ void LoadSpecialParam(void)
 
 int StartParamService(void)
 {
+#ifdef STARTUP_INIT_TEST
+    return 0;
+#endif
     // read selinux label
     LoadSelinuxLabel("permission");
     return ParamServiceStart();
