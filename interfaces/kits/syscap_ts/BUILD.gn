@@ -13,17 +13,21 @@
 
 import("//build/ohos.gni")
 
-config("syscap_ts_config"){
-    include_dirs = [ "include" ]
+config("syscap_ts_config") {
+  include_dirs = [ "include" ]
 }
 
 ohos_static_library("syscap_ts") {
-    sources = ["src/syscap_ts.cpp"]
+  sources = [ "src/syscap_ts.cpp" ]
+  include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
+  if (defined(global_parts_info) && defined(global_parts_info.arkui_napi)) {
+    external_deps = [ "napi:ace_napi" ]
+    defines = [ "NAPI_ENABLE" ]
+  }
 
-    external_deps = ["napi:ace_napi"]
-    deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
+  deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
 
-    public_configs = [":syscap_ts_config"]
-    part_name = "init"
-    subsystem_name = "startup"
+  public_configs = [ ":syscap_ts_config" ]
+  part_name = "init"
+  subsystem_name = "startup"
 }
