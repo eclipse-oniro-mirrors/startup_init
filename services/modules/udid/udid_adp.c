@@ -72,11 +72,12 @@ INIT_UDID_LOCAL_API int CalcDevUdid(char *udid, uint32_t size)
 #ifndef OHOS_LITE
 INIT_UDID_LOCAL_API void SetDevUdid()
 {
-    BEGET_LOGI("Begin calculate udid");
+    BEGET_LOGI("Begin set udid param");
     char udid[UDID_LEN] = {0};
     uint32_t size = (uint32_t)sizeof(udid);
     int ret = GetUdidFromParam(udid, size);
     if (ret != 0) {
+        BEGET_LOGI("Get udid from param failed, calculate udid from other param");
         ret = CalcDevUdid(udid, size);
         BEGET_ERROR_CHECK(ret == 0, return, "calculate udid is failed!")
     }
