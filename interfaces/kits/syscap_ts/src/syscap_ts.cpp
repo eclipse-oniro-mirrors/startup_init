@@ -14,6 +14,9 @@
  */
 #include "systemcapability.h"
 #include "syscap_ts.h"
+#include "beget_ext.h"
+
+#ifdef NAPI_ENABLE
 
 static constexpr int SYSCAP_MAX_SIZE = 100;
 
@@ -35,92 +38,18 @@ inline napi_value CreateJsUndefined(napi_env env)
     return result;
 }
 
-inline napi_value CreateJsNumber(napi_env env, int32_t value)
+inline napi_value CreateJsValue(napi_env env, const bool &value)
 {
-    napi_value result = nullptr;
-    napi_create_int32(env, value, &result);
-    return result;
-}
-
-inline napi_value CreateJsNumber(napi_env env, uint32_t value)
-{
-    napi_value result = nullptr;
-    napi_create_uint32(env, value, &result);
-    return result;
-}
-
-inline napi_value CreateJsNumber(napi_env env, int64_t value)
-{
-    napi_value result = nullptr;
-    napi_create_int64(env, value, &result);
-    return result;
-}
-
-inline napi_value CreateJsNumber(napi_env env, double value)
-{
-    napi_value result = nullptr;
-    napi_create_double(env, value, &result);
-    return result;
-}
-
-template<class T>
-napi_value CreateJsValueImpl(napi_env env, const T &value)
-{
-    // 默认实现，这里可以抛出异常或返回一个错误值
-    return nullptr;
-}
-
-// 特化版本，针对bool类型
-template<>
-napi_value CreateJsValueImpl<bool>(napi_env env, const bool &value)
-        {
     napi_value result;
     napi_get_boolean(env, value, &result);
     return result;
 }
 
-// 特化版本，针对算术类型
-template<typename T>
-napi_value CreateJsValueImpl(napi_env env, const std::enable_if_t <std::is_arithmetic_v<T>, T> &value)
-{
-    return CreateJsNumber(env, value);
-}
-
-// 特化版本，针对std::string
-template<>
-napi_value CreateJsValueImpl<std::string>(napi_env env, const std::string &value)
-{
-    napi_value result;
-    napi_create_string_utf8(env, value.c_str(), value.length(), &result);
-    return result;
-}
-
-// 特化版本，针对枚举类型
-template<typename T>
-napi_value CreateJsValueImpl(napi_env env, const std::enable_if_t <std::is_enum_v<T>, T> &value)
-{
-    using UnderlyingType = typename std::underlying_type<T>::type;
-    return CreateJsNumber(env, static_cast<UnderlyingType>(value));
-}
-
-// 特化版本，针对const char*
-napi_value CreateJsValueImpl(napi_env env, const char *value)
-{
-    napi_value result;
-    (value != nullptr) ? napi_create_string_utf8(env, value, strlen(value), &result) :
-    napi_get_undefined(env, &result);
-    return result;
-}
-
-template<class T>
-inline napi_value CreateJsValue(napi_env env, const T& value)
-{
-    return CreateJsValueImpl(env, value);
-}
 
 napi_value CanIUse(napi_env env, napi_callback_info info)
 {
     if (env == nullptr || info == nullptr) {
+        BEGET_LOGE("get syscap failed since env or callback info is nullptr.");
         return nullptr;
     }
     napi_value undefined = CreateJsUndefined(env);
@@ -129,12 +58,14 @@ napi_value CanIUse(napi_env env, napi_callback_info info)
     napi_value argv[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc != 1) {
+        BEGET_LOGE("get syscap failed with invalid parameter");
         return undefined;
     }
 
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[0], &valueType);
     if (valueType != napi_string) {
+        BEGET_LOGE("%{public}s called, Params is invalid.", __func__);
         return undefined;
     }
 
@@ -147,8 +78,14 @@ napi_value CanIUse(napi_env env, napi_callback_info info)
     return CreateJsValue(env, ret);
 }
 
-void InitSyscapModule(napi_env env, napi_value globalObject)
+#endif
+
+void InitSyscapModule(napi_env env)
 {
+    #ifdef NAPI_ENABLE
+    napi_value globalObject = nullptr;
+    napi_get_global(env, &globalObject);
     const char *moduleName = "JsRuntime";
     BindNativeFunction(env, globalObject, "canIUse", moduleName, CanIUse);
+    #endif
 }

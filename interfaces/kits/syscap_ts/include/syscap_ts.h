@@ -19,6 +19,6 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
-void InitSyscapModule(napi_env env, napi_value globalObject);
+void InitSyscapModule(napi_env env);
 
 #endif //STARTUP_INIT_SYSCAP_TS_H
