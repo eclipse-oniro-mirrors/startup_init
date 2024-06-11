@@ -32,11 +32,10 @@
 
 int GetRemountResult(void)
 {
-    int ret;
     int fd = open(REMOUNT_RESULT_FLAG, O_RDONLY);
     if (fd >= 0) {
         char buff[1];
-        ret = read(fd, buff, 1);
+        int ret = read(fd, buff, 1);
         if (ret < 0) {
             BEGET_LOGE("read remount.result.done failed errno %d", errno);
             close(fd);
