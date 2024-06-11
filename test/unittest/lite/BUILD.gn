@@ -123,7 +123,7 @@ if (defined(ohos_lite)) {
     deps = []
     external_deps = [ "bounds_checking_function:libsec_static" ]
 
-    if (enable_ohos_startup_init_feature_begetctl_liteos) {
+    if (init_feature_begetctl_liteos) {
       defines += [ "LITEOS_SUPPORT" ]
     }
 
@@ -155,7 +155,7 @@ if (defined(ohos_lite)) {
       ]
 
       # add cfg.h
-      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+      if (init_feature_begetctl_liteos) {
         PRODUCT_HAL_SYSPARAM_PATH =
             rebase_path("${ohos_product_adapter_dir}/utils/sys_param")
         cmd = "if [ -f ${PRODUCT_HAL_SYSPARAM_PATH}/BUILD.gn ]; then echo true; else echo false; fi"
@@ -193,7 +193,7 @@ if (defined(ohos_lite)) {
         "//base/startup/init/services/param/liteos/param_osadp.c",
         "//base/startup/init/services/param/liteos/param_service.c",
       ]
-      if (enable_ohos_startup_init_lite_use_posix_file_api) {
+      if (init_lite_use_posix_file_api) {
         defines += [ "PARAM_SUPPORT_POSIX" ]
       }
       sources += [
@@ -204,7 +204,7 @@ if (defined(ohos_lite)) {
       ]
 
       # add cfg.h
-      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+      if (init_feature_begetctl_liteos) {
         deps +=
             [ "//base/startup/init/services/param/liteos:lite_ohos_param_to" ]
         include_dirs += [ "$root_out_dir/gen/init" ]
@@ -242,7 +242,7 @@ if (defined(ohos_lite)) {
         "../param/paramservice_unittest.cpp",
         "cmd_func_test.cpp",
       ]
-      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+      if (init_feature_begetctl_liteos) {
         sources += [ "../syspara/syspara_unittest.cpp" ]
       }
       deps += [

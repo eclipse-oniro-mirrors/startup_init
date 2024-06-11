@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//base/startup/init/begetd.gni")
-if (!defined(ohos_lite) || enable_ohos_startup_init_feature_begetctl_liteos) {
+if (!defined(ohos_lite) || init_feature_begetctl_liteos) {
   syspara_sources = [
     "syscap/init_syscap.c",
     "syspara/param_comm.c",
@@ -69,7 +69,7 @@ if (defined(ohos_lite)) {
         "//base/startup/init/services/modules/udid:libudidcomm",
         "//base/startup/init/services/utils:libinit_utils",
       ]
-      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+      if (init_feature_begetctl_liteos) {
         sources += syspara_sources
         defines += [ "LITEOS_SUPPORT" ]
         deps += [ "$ohos_product_adapter_dir/utils/sys_param:hal_sysparam" ]
@@ -118,7 +118,7 @@ if (defined(ohos_lite)) {
       }
 
       sources = []
-      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+      if (init_feature_begetctl_liteos) {
         PRODUCT_HAL_SYSPARAM_PATH =
             rebase_path("${ohos_product_adapter_dir}/utils/sys_param")
         cmd = "if [ -f ${PRODUCT_HAL_SYSPARAM_PATH}/BUILD.gn ]; then echo true; else echo false; fi"
@@ -136,7 +136,7 @@ if (defined(ohos_lite)) {
         sources += [ "syscap/init_syscap.c" ]
       }
 
-      if (enable_ohos_startup_init_feature_begetctl_liteos) {
+      if (init_feature_begetctl_liteos) {
         deps += [
           "//base/startup/init/services/param/liteos:param_client_lite",
           "//base/startup/init/services/utils:libinit_utils",

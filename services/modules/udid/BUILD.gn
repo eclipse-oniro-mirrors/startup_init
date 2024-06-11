@@ -58,7 +58,7 @@ if (defined(ohos_lite)) {
     }
 
     #if product exit, use product
-    if (enable_ohos_startup_init_feature_begetctl_liteos) {
+    if (init_feature_begetctl_liteos) {
       PRODUCT_HAL_SYSPARAM_PATH =
           rebase_path("${ohos_product_adapter_dir}/utils/sys_param")
       cmd = "if [ -f ${PRODUCT_HAL_SYSPARAM_PATH}/BUILD.gn ]; then echo true; else echo false; fi"

@@ -20,6 +20,14 @@
             "SystemCapability.Startup.SystemInfo.Lite",
             "SystemCapability.Base"
         ],
+        "features": [
+            "init_feature_begetctl_liteos",
+            "init_lite_use_posix_file_api",
+            "init_feature_ab_partition",
+            "init_feature_loader",
+            "init_lite_use_thirdparty_mbedtls",
+            "init_appspawn_client_module"
+        ],
         "adapted_system_type": [
             "mini",
             "small",

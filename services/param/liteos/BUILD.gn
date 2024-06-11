@@ -137,7 +137,7 @@ static_library("param_client_lite") {
       "//base/startup/init/services/param/liteos/param_service.c",
       "//base/startup/init/services/param/manager/param_server.c",
     ]
-    if (enable_ohos_startup_init_lite_use_posix_file_api) {
+    if (init_lite_use_posix_file_api) {
       defines += [ "PARAM_SUPPORT_POSIX" ]
     }
     defines += [
@@ -149,7 +149,7 @@ static_library("param_client_lite") {
     if (config_ohos_startup_init_lite_data_path != "") {
       defines += [ "DATA_PATH=\"${config_ohos_startup_init_lite_data_path}\"" ]
     }
-    if (enable_ohos_startup_init_feature_begetctl_liteos) {
+    if (init_feature_begetctl_liteos) {
       deps = [ ":lite_ohos_param_to" ]
       include_dirs += [ "$root_out_dir/gen/init" ]
       defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
