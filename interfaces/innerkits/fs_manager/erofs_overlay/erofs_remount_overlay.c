@@ -174,9 +174,16 @@ int MountOverlayOne(const char *mnt)
     char dirWork[MAX_BUFFER_LEN] = {0};
     char mntOpt[MAX_BUFFER_LEN] = {0};
 
-    if (snprintf_s(dirLower, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s%s", PREFIX_LOWER, mnt) < 0) {
-        BEGET_LOGE("copy dirLower failed. errno %d", errno);
-        return -1;
+    if (strcmp(mnt, "/usr") == 0) {
+        if (snprintf_s(dirLower, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s", "/system") < 0) {
+            BEGET_LOGE("copy system dirLower failed. errno %d", errno);
+            return -1;
+        }
+    } else {
+        if (snprintf_s(dirLower, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s%s", PREFIX_LOWER, mnt) < 0) {
+            BEGET_LOGE("copy dirLower failed. errno %d", errno);
+            return -1;
+        }
     }
 
     if (snprintf_s(dirUpper, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s%s%s", PREFIX_OVERLAY, mnt, PREFIX_UPPER) < 0) {
@@ -206,14 +213,14 @@ int MountOverlayOne(const char *mnt)
             return -1;
         }
     }
-    BEGET_LOGE("mount overlay fs success on mnt:%s", mnt);
+    BEGET_LOGI("mount overlay fs success on mnt:%s", mnt);
     return 0;
 }
 
 int RemountOverlay(void)
 {
-    char *remountPath[] = {"/usr", "/vendor", "/sys_prod", "/chip_prod", "/preload"};
-
+    char *remountPath[] = { "/usr", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust" };
+    int skipCount = 0;
     for (size_t i = 0; i < ARRAY_LENGTH(remountPath); i++) {
         struct stat statInfo;
         char dirMnt[MAX_BUFFER_LEN] = {0};
@@ -223,7 +230,8 @@ int RemountOverlay(void)
         }
 
         if (lstat(dirMnt, &statInfo)) {
-            BEGET_LOGE("dirMnt [%s] not exist.", dirMnt);
+            BEGET_LOGW("dirMnt [%s] not exist.", dirMnt);
+            skipCount++;
             continue;
         }
 
@@ -240,6 +248,8 @@ int RemountOverlay(void)
             OverlayRemountVendorPost();
         }
     }
-    SetRemountResultFlag(true);
+    if (skipCount != ARRAY_LENGTH(remountPath)) {
+        SetRemountResultFlag(true);
+    }
     return 0;
 }

@@ -27,6 +27,7 @@
 #include "init_utils.h"
 #include "param/init_param.h"
 #include "securec.h"
+#include "switch_root.h"
 #ifdef SUPPORT_HVB
 #include "fs_dm.h"
 #include "dm_verity.h"
@@ -397,10 +398,14 @@ static int MountItemByFsType(FstabItem *item)
 {
     if (CheckIsErofs(item->deviceName)) {
         if (strcmp(item->fsType, "erofs") == 0) {
-            if (IsOverlayEnable() && strcmp(item->mountPoint, "/preload") == 0) {
+            if (IsOverlayEnable()) {
                 return DoMountOverlayDevice(item);
             }
-            return DoMountOneItem(item);
+            int rc = DoMountOneItem(item);
+            if (rc == 0 && strcmp(item->mountPoint, "/usr") == 0) {
+                SwitchRoot("/usr");
+            }
+            return rc;
         } else {
             BEGET_LOGI("fsType not erofs system, device [%s] skip erofs mount process", item->deviceName);
             return 0;
@@ -408,7 +413,11 @@ static int MountItemByFsType(FstabItem *item)
     }
 
     if (strcmp(item->fsType, "erofs") != 0) {
-        return DoMountOneItem(item);
+        int rc = DoMountOneItem(item);
+        if (rc == 0 && strcmp(item->mountPoint, "/usr") == 0) {
+            SwitchRoot("/usr");
+        }
+        return rc;
     }
 
     BEGET_LOGI("fsType is erofs system, device [%s] skip ext4 or hms mount process", item->deviceName);
@@ -452,6 +461,9 @@ int MountOneItem(FstabItem *item)
     rc = MountItemByFsType(item);
 #else
     rc = DoMountOneItem(item);
+    if (rc == 0 && (strcmp(item->mountPoint, "/usr") == 0)) {
+        SwitchRoot("/usr");
+    }
 #endif
     InitPostMount(item->mountPoint, rc, item->fsType);
     if (rc != 0) {

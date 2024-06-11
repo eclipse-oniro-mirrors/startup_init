@@ -52,6 +52,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/interfaces/innerkits/file/init_file.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/switch_root.c",
     "//base/startup/init/interfaces/innerkits/reboot/init_reboot_innerkits.c",
     "//base/startup/init/interfaces/innerkits/socket/init_socket.c",
     "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
@@ -169,7 +170,9 @@ ohos_unittest("init_unittest") {
     ]
   }
 
-  include_dirs = []
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
+  ]
   defines = []
 
   if (defined(build_seccomp) && build_seccomp) {

@@ -19,6 +19,7 @@
 #include "securec.h"
 #include "init_utils.h"
 #include "fs_dm.h"
+#include "switch_root.h"
 #include "fs_manager/fs_manager.h"
 
 #include "erofs_mount_overlay.h"
@@ -335,15 +336,19 @@ int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount)
     return ret;
 }
 
-static int MountPartitionDevice(FstabItem *item, const char *devRofs, const char *devExt4)
+static void UnlinkMountPoint(const char *mountPoint)
 {
     struct stat statInfo;
-    if (!lstat(item->mountPoint, &statInfo)) {
+    if (!lstat(mountPoint, &statInfo)) {
         if ((statInfo.st_mode & S_IFMT) == S_IFLNK) {
-            unlink(item->mountPoint);
+            unlink(mountPoint);
         }
     }
+}
 
+static int MountPartitionDevice(FstabItem *item, const char *devRofs, const char *devExt4)
+{
+    UnlinkMountPoint(item->mountPoint);
     if (mkdir(item->mountPoint, MODE_MKDIR) && (errno != EEXIST)) {
         BEGET_LOGE("mkdir mountPoint:%s failed.errno %d", item->mountPoint, errno);
         return -1;
@@ -351,6 +356,15 @@ static int MountPartitionDevice(FstabItem *item, const char *devRofs, const char
 
     WaitForFile(devRofs, WAIT_MAX_SECOND);
     WaitForFile(devExt4, WAIT_MAX_SECOND);
+
+    if (MountRofsDevice(devRofs, item->mountPoint)) {
+        BEGET_LOGE("mount erofs dev [%s] on mnt [%s] failed", devRofs, item->mountPoint);
+        return -1;
+    }
+
+    if (strcmp(item->mountPoint, "/usr") == 0) {
+        SwitchRoot("/usr");
+    }
 
     if (mkdir(PREFIX_LOWER, MODE_MKDIR) && (errno != EEXIST)) {
         BEGET_LOGE("mkdir /lower failed. errno: %d", errno);
@@ -370,11 +384,6 @@ static int MountPartitionDevice(FstabItem *item, const char *devRofs, const char
 
     if (mkdir(dirLower, MODE_MKDIR) && (errno != EEXIST)) {
         BEGET_LOGE("mkdir dirLower[%s] failed. errno: %d", dirLower, errno);
-        return -1;
-    }
-
-    if (MountRofsDevice(devRofs, item->mountPoint)) {
-        BEGET_LOGE("mount erofs dev [%s] on mnt [%s] failed", devRofs, item->mountPoint);
         return -1;
     }
 
