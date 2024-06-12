@@ -150,17 +150,14 @@ static int GetSeccompPolicy(const char *filterName, int **handler,
     int ret = SECCOMP_SUCCESS;
     do {
         int rc = snprintf_s(filterVaribleName, sizeof(filterVaribleName), \
-                    strlen(filterName) + strlen(FILTER_NAME_FORMAT) - strlen("%s"), \
-                    FILTER_NAME_FORMAT, filterName);
+                    strlen(filterName) + strlen(FILTER_NAME_FORMAT) - strlen("%s"), FILTER_NAME_FORMAT, filterName);
         if (rc == -1) {
             return RETURN_ERROR;
         }
         char realPath[PATH_MAX] = { 0 };
         realpath(filterLibRealPath, realPath);
         policyHanlder = dlopen(realPath, RTLD_LAZY);
-        if (policyHanlder == NULL) {
-            return RETURN_NULL;
-        }
+        PLUGIN_CHECK(policyHanlder != NULL, return RETURN_ERROR, "dlopen error policyHanlder:NULL");
 
         filter = (struct sock_filter *)dlsym(policyHanlder, filterVaribleName);
         if (filter == NULL) {
@@ -168,8 +165,7 @@ static int GetSeccompPolicy(const char *filterName, int **handler,
             break;
         }
 
-        size_t filterVaribleNameLen = strlen(filterVaribleName) + \
-                      strlen(FILTER_SIZE_STRING) + 1;
+        size_t filterVaribleNameLen = strlen(filterVaribleName) + strlen(FILTER_SIZE_STRING) + 1;
         if (filterVaribleNameLen > sizeof(filterVaribleName)) {
             ret = RETURN_LENGTH_CHECK;
             break;

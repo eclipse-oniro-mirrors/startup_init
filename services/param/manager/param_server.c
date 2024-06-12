@@ -422,7 +422,7 @@ static int ProcessParamFile(const char *fileName, void *context)
     uint32_t mode = *(int *)context;
     int ret = LoadDefaultParam_(fileName, mode, exclude, ARRAY_LENGTH(exclude), LoadOneParam_);
     if (ret == PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH) {
-        PARAM_LOGE("[startup_failed]default_param memory is not enough, system reboot! %d",SYS_PARAM_INIT_FAILED);
+        PARAM_LOGE("[startup_failed]default_param memory is not enough, system reboot! %d", SYS_PARAM_INIT_FAILED);
         ExecReboot("panic");
     }
     return ret;
