@@ -43,10 +43,6 @@ using namespace std;
 
 extern "C" {
 INIT_STATIC void ProcessSignal(const struct signalfd_siginfo *siginfo);
-int SwitchRoot(const char *newRoot)
-{
-    return 0;
-}
 }
 
 namespace init_ut {

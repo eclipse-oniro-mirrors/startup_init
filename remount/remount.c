@@ -29,8 +29,8 @@ int main(int argc, const char *argv[])
         printf("remount %s\n", ret ? "success" : "failed");
         return ret ? 0 : 1;
     }
-#endif
     printf("not need erofs overlay, remount success\n");
+#endif
     return 0;
 }
 

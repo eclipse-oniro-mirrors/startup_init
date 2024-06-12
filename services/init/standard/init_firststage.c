@@ -133,7 +133,6 @@ static void StartSecondStageInit(long long uptime)
     // It will panic if close stdio before execv("/bin/sh", NULL)
     CloseStdio();
 
-    SwitchRoot("/usr");
     char buf[64];
     uptime = GetUptimeInMicroSeconds(NULL);
     snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%lld", uptime);

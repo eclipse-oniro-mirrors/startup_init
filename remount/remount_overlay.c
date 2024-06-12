@@ -297,7 +297,7 @@ bool RemountRofsOverlay()
 
     while (NULL != (mentry = getmntent(fp))) {
         if (IsSkipRemount(*mentry)) {
-            INIT_LOGE("skip remount %s", mentry->mnt_dir);
+            INIT_LOGI("skip remount %s", mentry->mnt_dir);
             continue;
         }
 

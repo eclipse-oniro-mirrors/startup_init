@@ -36,7 +36,6 @@ ohos_executable("init_early") {
     "init_firststage.c",
     "init_mount.c",
     "main_early.c",
-    "switch_root.c",
   ]
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
@@ -77,7 +76,6 @@ ohos_executable("init") {
     "../standard/init_reboot.c",
     "../standard/init_service.c",
     "../standard/init_signal_handler.c",
-    "../standard/switch_root.c",
     "bootstagehooker.c",
   ]
 

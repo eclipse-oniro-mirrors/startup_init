@@ -48,17 +48,17 @@ int main(int argc, char * const argv[])
     if (isSecondStage == 0) {
         SystemPrepare(upTimeInMicroSecs);
     } else {
-#ifdef EROFS_OVERLAY
-        if (IsOverlayEnable()) {
-            RemountOverlay();
-        }
-#endif
         LogInit();
     }
 
     SystemInit();
     SystemExecuteRcs();
     SystemConfig(uptime);
+#ifdef EROFS_OVERLAY
+    if (IsOverlayEnable()) {
+        RemountOverlay();
+    }
+#endif
     SystemRun();
     return 0;
 }
