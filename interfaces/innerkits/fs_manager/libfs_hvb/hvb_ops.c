@@ -80,12 +80,6 @@ static enum hvb_io_errno HvbReadFromPartition(struct hvb_ops* ops,
     fd = open(path, O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
         BEGET_LOGE("error, Failed to open %s, errno = %d", path, errno);
-        fd = open("/dev/block/by-name/rvt_system", O_RDONLY | O_CLOEXEC);
-        BEGET_LOGE("open %s, fd=%d errno = %d", "/dev/block/by-name/rvt_system",
-                   fd, errno);
-        if (fd >= 0) {
-            close(fd);
-        }
         ret = HVB_IO_ERROR_IO;
         goto exit;
     }
