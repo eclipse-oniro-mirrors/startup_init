@@ -167,6 +167,9 @@ std::string GetDeviceType(void)
     if (type == nullptr) {
         type = GetProperty("const.build.characteristics", &productType);
     }
+    if (type == nullptr) {
+        return std::string("");
+    }
     if (deviceTypeMap.count(type) != 0) {
         return deviceTypeMap[type];
     }
