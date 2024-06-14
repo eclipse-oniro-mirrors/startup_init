@@ -26,6 +26,9 @@
 
 namespace OHOS {
 namespace device_info {
+
+static const int DEVINFO_SAID = 3902;
+
 DeviceInfoKits::DeviceInfoKits() {}
 
 DeviceInfoKits::~DeviceInfoKits() {}
@@ -44,6 +47,12 @@ void DeviceInfoKits::LoadDeviceInfoSa(std::unique_lock<std::mutex> &lock)
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     DINFO_CHECK(sam != nullptr, return, "GetSystemAbilityManager return null");
 
+    auto remoteObject = sam->CheckSystemAbility(DEVINFO_SAID);
+    if (remoteObject) {
+        DINFO_LOGV("deviceinfo sa is already loaded");
+        deviceInfoService_ = iface_cast<IDeviceInfo>(remoteObject);
+        return;
+    }
     sptr<DeviceInfoLoad> deviceInfoLoad = new (std::nothrow) DeviceInfoLoad();
     DINFO_CHECK(deviceInfoLoad != nullptr, return, "new deviceInfoLoad fail.");
 
