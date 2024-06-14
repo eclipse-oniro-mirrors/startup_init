@@ -265,7 +265,7 @@ int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *targ
         close(fd);
         return rc;
     }
-
+    close(fd);
     return 0;
 }
 
