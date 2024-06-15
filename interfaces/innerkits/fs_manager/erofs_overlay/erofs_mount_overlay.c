@@ -229,6 +229,14 @@ static void ConstructLinearTarget(DmVerityTarget *target, const char *dev, uint6
     BEGET_LOGI("dev [%s], linearparas [%s], length [%s]", dev, target->paras, target->paras_len);
 }
 
+static void DestoryLinearTarget(DmVerityTarget *target)
+{
+    if (target != NULL && target->paras != NULL) {
+        free(target->paras);
+        target->paras = NULL;
+    }
+}
+
 static int GetOverlayDevice(FstabItem *item, char *devRofs, const uint32_t devRofsLen,
     char *devExt4, const uint32_t devExt4Len)
 {
@@ -250,20 +258,26 @@ static int GetOverlayDevice(FstabItem *item, char *devRofs, const uint32_t devRo
     }
 
     DmVerityTarget dmRofsTarget = {0};
+    DmVerityTarget dmExt4Target = {0};
+
     ConstructLinearTarget(&dmRofsTarget, item->deviceName, 0, mapStart);
-    if (FsDmCreateLinearDevice(nameRofs, devRofs, devRofsLen, &dmRofsTarget)) {
+    int rc = FsDmCreateLinearDevice(nameRofs, devRofs, devRofsLen, &dmRofsTarget);
+    if (rc != 0) {
         BEGET_LOGE("fs create rofs linear device failed, dev is [%s]", item->deviceName);
-        return -1;
+        goto exit;
     }
 
-    DmVerityTarget dmExt4Target = {0};
     ConstructLinearTarget(&dmExt4Target, item->deviceName, mapStart, mapLength);
-    if (FsDmCreateLinearDevice(nameExt4, devExt4, devExt4Len, &dmExt4Target)) {
+    rc = FsDmCreateLinearDevice(nameExt4, devExt4, devExt4Len, &dmExt4Target);
+    if (rc != 0) {
         BEGET_LOGE("fs create ext4 linear device failed, dev is [%s]", item->deviceName);
-        return -1;
+        goto exit;
     }
     BEGET_LOGI("get overlay device success , dev is [%s]", item->deviceName);
-    return 0;
+exit:
+    DestoryLinearTarget(&dmRofsTarget);
+    DestoryLinearTarget(&dmExt4Target);
+    return rc;
 }
 
 static int MountRofsDevice(const char *dev, const char *mnt)
