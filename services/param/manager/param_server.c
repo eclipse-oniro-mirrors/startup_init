@@ -402,7 +402,8 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode,
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
         int ret = SplitParamString(buffer, exclude, count, loadOneParam, &mode);
-        PARAM_ONLY_CHECK(ret != PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH, return PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH);
+        PARAM_ONLY_CHECK(ret != PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH,
+                        (void)fclose(fp); free(buffer); return PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH);
         if (mode == LOAD_PARAM_ONLY_ADD && ret == PARAM_CODE_READ_ONLY) {
             PARAM_WARNING_CHECK(ret == 0, continue, "Set param '%s' error:%d with only add mode", buffer, ret);
         } else {
