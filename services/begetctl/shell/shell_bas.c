@@ -680,6 +680,7 @@ int32_t BShellEnvSetParam(BShellHandle handle, const char *name, const char *des
         BSH_CHECK(ret == 0, break, "Failed to copy name %s", name);
         if (desc != NULL) {
             param->desc = strdup(desc);
+            BSH_CHECK(param->desc != NULL, free(param); return BSH_SYSTEM_ERR, "Failed to set desc");
         }
         ret = BShellParamSetValue(param, value);
         BSH_CHECK(ret == 0, break, "Failed set value for %s", name);

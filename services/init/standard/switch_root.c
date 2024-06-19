@@ -160,26 +160,31 @@ int SwitchRoot(const char *newRoot)
 
     if (oldRootStat.st_dev == newRootStat.st_dev) {
         INIT_LOGW("Try to switch root in same device, skip switching root");
+        FreeRootDir(oldRoot, oldRootStat.st_dev);
         return 0;
     }
     if (MountToNewTarget(newRoot) < 0) {
         INIT_LOGE("Failed to move mount to new root \" %s \" stat", newRoot);
+        FreeRootDir(oldRoot, oldRootStat.st_dev);
         return -1;
     }
     // OK, we've done move mount.
     // Now mount new root.
     if (chdir(newRoot) < 0) {
         INIT_LOGE("Failed to change directory to %s, err = %d", newRoot, errno);
+        FreeRootDir(oldRoot, oldRootStat.st_dev);
         return -1;
     }
 
     if (mount(newRoot, "/", NULL, MS_MOVE, NULL) < 0) {
         INIT_LOGE("Failed to mount moving %s to %s, err = %d", newRoot, "/", errno);
+        FreeRootDir(oldRoot, oldRootStat.st_dev);
         return -1;
     }
 
     if (chroot(".") < 0) {
         INIT_LOGE("Failed to change root directory");
+        FreeRootDir(oldRoot, oldRootStat.st_dev);
         return -1;
     }
     FreeRootDir(oldRoot, oldRootStat.st_dev);
