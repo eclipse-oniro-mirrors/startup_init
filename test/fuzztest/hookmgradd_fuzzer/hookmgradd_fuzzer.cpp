@@ -27,8 +27,10 @@ namespace OHOS {
     bool FuzzHookMgrAdd(const uint8_t* data, size_t size)
     {
         bool result = false;
+        int offset = 0;
         int stage = *data;
-        int prio = *data;
+        offset += sizeof(int);
+        int prio = *(data + offset);
 
         if (!HookMgrAdd(NULL, stage, prio, TestHook)) {
             result = true;
