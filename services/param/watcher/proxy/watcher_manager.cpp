@@ -300,7 +300,7 @@ void WatcherManager::RunLoop()
 void WatcherManager::StartLoop()
 {
     if (pRecvThread_ == nullptr) {
-        pRecvThread_ = new (std::nothrow)std::thread(&WatcherManager::RunLoop, this);
+        pRecvThread_ = new (std::nothrow)std::thread([this] {this->RunLoop();});
         WATCHER_CHECK(pRecvThread_ != nullptr, return, "Failed to create thread");
     }
 }
