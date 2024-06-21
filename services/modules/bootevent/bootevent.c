@@ -78,6 +78,7 @@ static int AddBootEventItem(BOOT_EVENT_PARAM_ITEM *item, const char *paramName)
     }
     item->paramName = strdup(paramName);
     if (item->paramName == NULL) {
+        free(item);
         return -1;
     }
     item->flags = BOOTEVENT_TYPE_SERVICE;

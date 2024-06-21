@@ -45,10 +45,12 @@ int main(int argc, char* argv[])
         INIT_ERROR_CHECK(ret >= 0, return -1, "Failed to format addr");
         if (connect(sockFd, (struct sockaddr *)&addr, sizeof(addr))) {
             INIT_LOGE("Failed to connect socket: %d", errno);
+            close(sockFd);
             return -1;
         }
     } else {
         INIT_LOGE("input error, invalid server name");
+        close(sockFd);
         return -1;
     }
     ret = write(sockFd, argv[ARG_COUNT], strlen(argv[ARG_COUNT]));

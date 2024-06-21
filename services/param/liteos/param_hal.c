@@ -92,7 +92,7 @@ static int ParamFileStat(const char* path, unsigned int* fileSize)
     }
 	*fileSize = lseek(fd, 0, SEEK_END);
     lseek(fd, 0, SEEK_SET);
-    free(fd);
+    close(fd);
     return 0;
 #else
     return UtilsFileStat(path, fileSize);
