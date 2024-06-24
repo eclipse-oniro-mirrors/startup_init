@@ -147,7 +147,7 @@ void DeviceInfoService::OnStart(void)
         DINFO_LOGE("DeviceInfoService Publish failed");
     }
     threadStarted_ = true;
-    std::thread(&DeviceInfoService::ThreadForUnloadSa, this).detach();
+    std::thread([this] {this->ThreadForUnloadSa();});
     return;
 }
 

@@ -53,7 +53,7 @@ void WatcherManagerKits::ResetService(const wptr<IRemoteObject> &remote)
                 delete threadForReWatch_;
             }
             stop_ = false;
-            threadForReWatch_ = new (std::nothrow)std::thread(&WatcherManagerKits::ReAddWatcher, this);
+            threadForReWatch_ = new (std::nothrow)std::thread([this] {this->ReAddWatcher();});
             WATCHER_CHECK(threadForReWatch_ != nullptr, return, "Failed to create thread");
         }
     }
