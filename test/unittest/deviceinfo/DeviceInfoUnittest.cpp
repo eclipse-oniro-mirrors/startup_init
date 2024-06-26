@@ -128,7 +128,6 @@ HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceInvalidTokenTest_001, TestSiz
     data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
     deviceInfoService->OnRemoteRequest
         (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_UDID), data, reply, option);
-    delete deviceInfoService;
 }
 
 HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceFailTest_001, TestSize.Level1)
@@ -152,7 +151,6 @@ HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceFailTest_001, TestSize.Level1
     deviceInfoService->OnRemoteRequest
         (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_SERIAL_ID),
         data, reply, option);
-    delete deviceInfoService;
 }
 
 HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceTest_001, TestSize.Level1)
@@ -188,7 +186,6 @@ HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceTest_001, TestSize.Level1)
     std::vector<std::u16string> args = {};
     deviceInfoService->Dump(STDOUT_FILENO, args);
     deviceInfoService->Dump(-1, args);
-    delete deviceInfoService;
 }
 
 HWTEST_F(DeviceInfoUnittest, Init_TestInterface_001, TestSize.Level1)
