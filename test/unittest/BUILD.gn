@@ -288,8 +288,6 @@ ohos_unittest("init_unittest") {
     "//utils/system/safwk/native/include",
     "//third_party/cJSON",
     "//third_party/zlib",
-    "//base/security/access_token/interfaces/innerkits/token_setproc/include",
-    "//base/security/access_token/interfaces/innerkits/nativetoken/include",
     "//base/startup/init/services/sandbox/include",
     "//base/startup/init/interfaces/innerkits/hals",
     "//base/startup/init/interfaces/innerkits/include/param",
@@ -392,10 +390,10 @@ ohos_unittest("init_unittest") {
       "//base/startup/init/device_info/device_info_load.cpp",
       "//base/startup/init/device_info/device_info_proxy.cpp",
     ]
-    include_dirs += [
-      "//base/security/access_token/interfaces/innerkits/accesstoken/include",
+    external_deps += [
+      "access_token:libaccesstoken_sdk",
+      "selinux:libselinux",
     ]
-    external_deps += [ "selinux:libselinux" ]
 
     defines += [ "PARAM_FEATURE_DEVICEINFO" ]
   }
