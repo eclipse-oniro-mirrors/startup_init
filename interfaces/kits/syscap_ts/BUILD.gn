@@ -20,10 +20,8 @@ config("syscap_ts_config") {
 ohos_static_library("syscap_ts") {
   sources = [ "src/syscap_ts.cpp" ]
   include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
-  if (defined(global_parts_info) && defined(global_parts_info.arkui_napi)) {
-    external_deps = [ "napi:ace_napi" ]
-    defines = [ "NAPI_ENABLE" ]
-  }
+  external_deps = [ "napi:ace_napi" ]
+  defines = [ "NAPI_ENABLE" ]
 
   deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
 
