@@ -53,6 +53,7 @@ pid_t SubInitFork(int (*childFunc)(const SubInitForkArg *arg), const SubInitFork
         int ret = pthread_create(&g_thread, nullptr, ThreadFunc, forkArg);
         if (ret != 0) {
             printf("Failed to create thread %d \n", errno);
+            free(forkArg);
             return -1;
         }
         usleep(100); // 100 wait

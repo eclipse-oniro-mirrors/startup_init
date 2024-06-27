@@ -176,6 +176,7 @@ public:
         }
 
         if (setns(fd, CLONE_NEWNS) != 0) {
+            close(fd);
             return false;
         }
 
@@ -199,6 +200,7 @@ public:
         char *stackTop = stack + stackSize;
         pid_t pid = clone(ChildFunc, stackTop, flag | SIGCHLD, nullptr);
         if (pid == -1) {
+            free(stack);
             return false;
         }
         return true;
