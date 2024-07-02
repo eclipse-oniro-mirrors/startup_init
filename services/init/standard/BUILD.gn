@@ -124,8 +124,8 @@ ohos_executable("init") {
   deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_sources" ]
   deps += [ "//base/startup/init/services/modules:static_modules" ]
   external_deps += [
-    "access_token:libnativetoken_shared",
-    "access_token:libtokensetproc_shared",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
     "storage_service:libfscryptutils_static",
   ]
   cflags = []
