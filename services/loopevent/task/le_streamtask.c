@@ -55,9 +55,14 @@ static LE_STATUS HandleRecvMsg_(const LoopHandle loopHandle,
 {
     LE_STATUS status = LE_SUCCESS;
     LE_Buffer *buffer = CreateBuffer(LOOP_DEFAULT_BUFFER);
+    StreamConnectTask *stream = (StreamConnectTask *)taskHandle;
     int readLen = 0;
     while (1) {
-        readLen = recv(GetSocketFd(taskHandle), buffer->data, LOOP_DEFAULT_BUFFER, 0);
+        if (stream->handleRecvMsg != NULL) {
+            readLen = stream->handleRecvMsg(taskHandle, buffer->data, LOOP_DEFAULT_BUFFER, 0);
+        } else {
+            readLen = recv(GetSocketFd(taskHandle), buffer->data, LOOP_DEFAULT_BUFFER, 0);
+        }
         LE_LOGV("HandleRecvMsg fd:%d read msg len %d", GetSocketFd(taskHandle), readLen);
         if (readLen < 0) {
             if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -278,6 +283,7 @@ LE_STATUS LE_AcceptStreamClient(const LoopHandle loopHandle, const TaskHandle se
     task->sendMessageComplete = info->sendMessageComplete;
     task->recvMessage = info->recvMessage;
     task->serverTask = (StreamServerTask *)server;
+    task->handleRecvMsg = info->handleRecvMsg;
     OH_ListInit(&task->stream.buffHead);
     LoopMutexInit(&task->stream.mutex);
     if ((info->baseInfo.flags & TASK_TEST) != TASK_TEST) {
