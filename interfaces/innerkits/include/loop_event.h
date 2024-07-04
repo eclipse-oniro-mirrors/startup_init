@@ -101,6 +101,7 @@ typedef void (*LE_ConnectComplete)(const TaskHandle client);
 typedef void (*LE_SendMessageComplete)(const TaskHandle taskHandle, BufferHandle handle);
 typedef void (*LE_RecvMessage)(const TaskHandle taskHandle, const uint8_t *buffer, uint32_t buffLen);
 typedef int (*LE_IncommingConnect)(const LoopHandle loopHandle, const TaskHandle serverTask);
+typedef int (*LE_HandleRecvMsg)(const TaskHandle taskHandle, uint8_t* buffer, int bufferSize, int flags);
 typedef struct {
     LE_BaseInfo baseInfo;
     char *server;
@@ -118,6 +119,7 @@ typedef struct {
     LE_ConnectComplete connectComplete;
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;
+    LE_HandleRecvMsg handleRecvMsg;
 } LE_StreamInfo;
 
 LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,

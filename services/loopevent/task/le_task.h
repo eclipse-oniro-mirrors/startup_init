@@ -97,6 +97,7 @@ typedef struct {
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;
     LE_DisConnectComplete disConnectComplete;
+    LE_HandleRecvMsg handleRecvMsg;
 } StreamConnectTask;
 
 typedef struct {
