@@ -43,7 +43,7 @@ if (defined(ohos_lite)) {
         "//base/startup/init/services/log:init_log",
       ]
 
-      external_deps = [ "bound_checking_function:libsec_shared" ]
+      external_deps = [ "bounds_checking_function:libsec_shared" ]
       defines += [ "EROFS_OVERLAY" ]
     }
   }

@@ -28,7 +28,8 @@
 #define MODEM_DRIVER_EXCHANGE_PATH "/mnt/driver_exchange"
 #define MODEM_VENDOR_EXCHANGE_PATH "/mnt/vendor_exchange"
 #define MODEM_FW_EXCHANGE_PATH "/mnt/fw_exchange"
-#define REMOUNT_RESULT_FLAG "/dev/remount/remount.result.done"
+#define REMOUNT_RESULT_PATH "/data/service/el1/startup/remount/"
+#define REMOUNT_RESULT_FLAG "/data/service/el1/startup/remount/remount.result.done"
 
 int GetRemountResult(void)
 {
@@ -56,18 +57,18 @@ void SetRemountResultFlag(bool result)
     struct stat st;
     int ret;
 
-    int statRet = stat("/dev/remount/", &st);
+    int statRet = stat(REMOUNT_RESULT_PATH, &st);
     if (statRet != 0) {
-        ret = mkdir("/dev/remount/", MODE_MKDIR);
+        ret = mkdir(REMOUNT_RESULT_PATH, MODE_MKDIR);
         if (ret < 0 && errno != EEXIST) {
-            BEGET_LOGE("mkdir /dev/remount failed errno %d", errno);
+            BEGET_LOGE("mkdir remount path failed errno %d", errno);
             return;
         }
     }
 
     int fd = open(REMOUNT_RESULT_FLAG, O_WRONLY | O_CREAT, 0644);
     if (fd < 0) {
-        BEGET_LOGE("open /dev/remount/remount.result.done failed errno %d", errno);
+        BEGET_LOGE("open remount.result.done failed errno %d", errno);
         return;
     }
 
@@ -219,7 +220,6 @@ int MountOverlayOne(const char *mnt)
 int RemountOverlay(void)
 {
     char *remountPath[] = { "/usr", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust" };
-    int skipCount = 0;
     for (size_t i = 0; i < ARRAY_LENGTH(remountPath); i++) {
         struct stat statInfo;
         char dirMnt[MAX_BUFFER_LEN] = {0};
@@ -230,7 +230,6 @@ int RemountOverlay(void)
 
         if (lstat(dirMnt, &statInfo)) {
             BEGET_LOGW("dirMnt [%s] not exist.", dirMnt);
-            skipCount++;
             continue;
         }
 
@@ -246,9 +245,6 @@ int RemountOverlay(void)
         if (strcmp(remountPath[i], "/vendor") == 0) {
             OverlayRemountVendorPost();
         }
-    }
-    if (skipCount != ARRAY_LENGTH(remountPath)) {
-        SetRemountResultFlag(true);
     }
     return 0;
 }
