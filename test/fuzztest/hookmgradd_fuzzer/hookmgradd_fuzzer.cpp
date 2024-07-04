@@ -26,6 +26,9 @@ static int TestHook(const HOOK_INFO *hookInfo, void *executionContext)
 namespace OHOS {
     bool FuzzHookMgrAdd(const uint8_t* data, size_t size)
     {
+        if ((data == nullptr) || (size <= sizeof(int))) {
+            return false;
+        }
         bool result = false;
         int offset = 0;
         int stage = *data;
