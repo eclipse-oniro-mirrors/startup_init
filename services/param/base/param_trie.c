@@ -269,7 +269,7 @@ INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAu
 }
 
 INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
-    const char *key, uint32_t keyLen, const char *value, uint32_t valueLen)
+    const char *key, uint32_t keyLen, const char *value, uint32_t valueLen, int mode)
 {
     PARAM_CHECK(key != NULL && value != NULL, return OFFSET_ERR, "Invalid param");
     PARAM_CHECK(CheckWorkSpace(workSpace) == 0, return OFFSET_ERR, "Invalid workSpace %s", key);
@@ -294,6 +294,10 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     node->valueLength = valueLen;
     int ret = PARAM_SPRINTF(node->data, realLen, "%s=%s", key, value);
     PARAM_CHECK(ret > 0, return OFFSET_ERR, "Failed to sprint key and value");
+
+    if ((mode & LOAD_PARAM_PERSIST) != 0) {
+        node->commitId |= PARAM_FLAGS_PERSIST;
+    }
     uint32_t offset = workSpace->area->currOffset;
     workSpace->area->currOffset += realLen;
     workSpace->area->paramNodeCount++;
@@ -362,7 +366,7 @@ INIT_LOCAL_API int AddParamEntry(uint32_t index, uint8_t type, const char *name,
     PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "Failed to add node");
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
     if (entry == NULL) {
-        uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value));
+        uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value), 0);
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
         SaveIndex(&node->dataIndex, offset);
     }
