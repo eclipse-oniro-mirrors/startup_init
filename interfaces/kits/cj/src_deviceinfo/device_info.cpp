@@ -16,7 +16,6 @@
 #include "parameter.h"
 #include "sysversion.h"
 #include "device_info.h"
-#include "securec.h"
 
 #include <string>
 #include <memory>
