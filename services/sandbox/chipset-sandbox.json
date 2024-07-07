@@ -1,7 +1,6 @@
 {
     "sandbox-root" : "/mnt/sandbox/chipset",
-    "mount-bind-paths" : [
-        {
+    "mount-bind-paths" : [{
             "src-path" : "/system/bin",
             "sandbox-path" : "/system/bin",
             "sandbox-flags" : [ "bind", "rec", "private" ]
@@ -68,8 +67,11 @@
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
-    "mount-bind-files" : [
-        {
+    "mount-bind-files" : [{
+            "src-path" : "/data/service/el1/network/hosts_user/hosts",
+            "sandbox-path" : "/system/etc/hosts",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
             "src-path" : "/etc/passwd",
             "sandbox-path" : "/system/etc/passwd",
             "sandbox-flags" : [ "bind", "rec", "private" ]
