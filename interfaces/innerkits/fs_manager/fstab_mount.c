@@ -97,6 +97,99 @@ bool IsSupportedFilesystem(const char *fsType)
     return true;
 }
 
+/* 1024(stdout buffer size) - 256(log tag max size approximately) */
+#define LOG_LINE_SZ 768
+
+static void HandleChildPrint(int fd)
+{
+    char buffer[LOG_LINE_SZ] = {0};
+    int lineSize = LOG_LINE_SZ - 1;
+    int pos = 0;
+
+    do {
+        int ret = read(fd, buffer, lineSize);
+        if (ret < 0) {
+            BEGET_LOGE("Failed to read, errno: %d", errno);
+            break;
+        }
+        if (!ret) {
+            /* No more lines, just break */
+            break;
+        }
+        /* Make sure that each line terminates with '\0' */
+        buffer[lineSize] = '\0';
+        int posStart = 0;
+        for (pos = posStart; pos < lineSize; pos++) {
+            if (buffer[pos] == '\n') {
+                buffer[pos] = '\0';
+                BEGET_LOGI("%s", &buffer[posStart]);
+                posStart = pos + 1;
+            }
+        }
+        if ((posStart == 0 && pos == lineSize) || (posStart < pos)) {
+            BEGET_LOGI("%s", &buffer[posStart]);
+        }
+    } while (1);
+    (void)close(fd);
+}
+
+static void RedirectToStdFd(int fd)
+{
+    if (dup2(fd, STDOUT_FILENO) < 0) {
+        BEGET_LOGE("Failed to dup2 stdout, errno: %d", errno);
+        exit(-1);
+    }
+    if (dup2(fd, STDERR_FILENO) < 0) {
+        BEGET_LOGE("Failed to dup2 stderr, errno: %d", errno);
+        exit(-1);
+    }
+    (void)close(fd);
+}
+
+static int ForkWithLog(int argc, char **argv)
+{
+    if (argc < 1) {
+        BEGET_LOGE("Invalid argc: %d", argc);
+        return -1;
+    }
+    if (argv == NULL) {
+        BEGET_LOGE("Invalid null argv");
+        return -1;
+    }
+    if (argv[0] == NULL) {
+        BEGET_LOGE("Invalid null argv[0]");
+        return -1;
+    }
+
+    int pipeFds[2];
+    if (pipe2(pipeFds, O_CLOEXEC) < 0) {
+        BEGET_LOGE("Failed to create pipe, errno: %d", errno);
+        return -1;
+    }
+    BEGET_LOGI("Execute %s begin", argv[0]);
+    pid_t pid = fork();
+    BEGET_ERROR_CHECK(pid >= 0, return -1, "Fork new process to format failed: %d", errno);
+    if (pid == 0) {
+        (void)close(pipeFds[0]);
+        RedirectToStdFd(pipeFds[1]);
+
+        execv(argv[0], argv);
+        BEGET_LOGE("Failed to execv, errno: %d", errno);
+        exit(-1);
+    }
+    (void)close(pipeFds[1]);
+    HandleChildPrint(pipeFds[0]);
+
+    int status = 0;
+    waitpid(pid, &status, 0);
+    if (WIFEXITED(status)) {
+        BEGET_LOGI("Execute success, status: %d, command: %s", WEXITSTATUS(status), argv[0]);
+        return WEXITSTATUS(status);
+    }
+    BEGET_LOGE("Failed to execute %s", argv[0]);
+    return -1;
+}
+
 static int ExecCommand(int argc, char **argv)
 {
     BEGET_CHECK(!(argc == 0 || argv == NULL || argv[0] == NULL), return -1);
@@ -244,7 +337,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size, const
 
     argv[argc++] = (char*)device;
     BEGET_ERROR_CHECK(argc <= MAX_RESIZE_PARAM_NUM, return -1, "argc: %d is too big.", argc);
-    return ExecCommand(argc, argv);
+    return ForkWithLog(argc, argv);
 }
 
 static int DoFsckF2fs(const char* device)
@@ -258,7 +351,7 @@ static int DoFsckF2fs(const char* device)
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
     InitTimerControl(true);
-    int ret = ExecCommand(argc, argv);
+    int ret = ForkWithLog(argc, argv);
     InitTimerControl(false);
     return ret;
 }
