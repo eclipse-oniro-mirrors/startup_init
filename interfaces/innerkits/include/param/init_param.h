@@ -71,6 +71,7 @@ typedef enum {
 
 #define LOAD_PARAM_NORMAL 0x00
 #define LOAD_PARAM_ONLY_ADD 0x01
+#define LOAD_PARAM_PERSIST 0x02
 
 typedef uint32_t ParamHandle;
 

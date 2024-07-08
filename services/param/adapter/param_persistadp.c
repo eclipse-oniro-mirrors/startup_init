@@ -29,7 +29,9 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
 {
     UNUSED(context);
     uint32_t dataIndex = 0;
-    return WriteParam(name, value, &dataIndex, 0);
+    int mode = 0;
+    mode |= LOAD_PARAM_PERSIST;
+    return WriteParam(name, value, &dataIndex, mode);
 }
 
 static void LoadPersistParam_(const char *fileName, char *buffer, uint32_t buffSize)

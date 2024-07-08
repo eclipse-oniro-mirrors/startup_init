@@ -141,9 +141,13 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
     int ret = CheckParameterSet(name, value, srcLabel, &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
 
+    int mode = 0;
+    if (strncmp(name, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) == 0) {
+        mode |= LOAD_PARAM_PERSIST;
+    }
     if ((ctrlService & PARAM_CTRL_SERVICE) != PARAM_CTRL_SERVICE) { // ctrl param
         uint32_t dataIndex = 0;
-        ret = WriteParam(name, value, &dataIndex, 0);
+        ret = WriteParam(name, value, &dataIndex, mode);
         PARAM_CHECK(ret == 0, return ret, "Failed to set param %d name %s %s", ret, name, value);
         ret = WritePersistParam(name, value);
         PARAM_CHECK(ret == 0, return ret, "Failed to set persist param name %s", name);

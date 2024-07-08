@@ -76,6 +76,10 @@ static int SavePersistParam(const WorkSpace *workSpace, const ParamTrieNode *nod
     if (!IsNeedToSave(entry->data)) {
         return 0;
     }
+
+    if ((entry->commitId & PARAM_FLAGS_PERSIST) == 0) {
+        return 0;
+    }
     static char name[PARAM_NAME_LEN_MAX] = {0};
     int ret = memcpy_s(name, PARAM_NAME_LEN_MAX - 1, entry->data, entry->keyLength);
     PARAM_CHECK(ret == EOK, return -1, "Failed to read param name %s", entry->data);

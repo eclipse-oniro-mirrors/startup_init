@@ -420,14 +420,14 @@ int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len)
     return ReadParamName(handle, name, len);
 }
 
-static int AddParam(WorkSpace *workSpace, uint8_t type, const char *name, const char *value, uint32_t *dataIndex)
+static int AddParam(WorkSpace *workSpace, uint8_t type, const char *name, const char *value, uint32_t *dataIndex, int mode)
 {
     ParamTrieNode *node = AddTrieNode(workSpace, name, strlen(name));
     PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX,
         "Failed to add node name %s space %s", name, workSpace->fileName);
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
     if (entry == NULL) {
-        uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value));
+        uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value), mode);
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX,
             "Failed to allocate name %s space %s", name, workSpace->fileName);
         SaveIndex(&node->dataIndex, offset);
@@ -446,7 +446,7 @@ static int AddParam(WorkSpace *workSpace, uint8_t type, const char *name, const 
     return 0;
 }
 
-static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const char *name, const char *value)
+static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const char *name, const char *value, int mode)
 {
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, *dataIndex);
     PARAM_CHECK(entry != NULL, return PARAM_CODE_REACHED_MAX, "Failed to update param value %s %u", name, *dataIndex);
@@ -460,6 +460,7 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
         PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
         entry->valueLength = valueLen;
     }
+
     uint32_t flags = commitId & ~PARAM_FLAGS_COMMITID;
     uint32_t commitIdCount = (++commitId) & PARAM_FLAGS_COMMITID;
     ATOMIC_STORE_EXPLICIT(&entry->commitId, flags | commitIdCount, MEMORY_ORDER_RELEASE);
@@ -471,6 +472,10 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     }
 #endif
     PARAM_LOGV("UpdateParam name %s value: %s", name, value);
+
+    if ((mode & LOAD_PARAM_PERSIST) != 0) {
+        entry->commitId |= PARAM_FLAGS_PERSIST;
+    }
     futex_wake(&entry->commitId, INT_MAX);
     return 0;
 }
@@ -506,14 +511,14 @@ INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dat
         ret = CheckParamValue(node, name, value, entry->type);
         PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         PARAMSPACE_AREA_RW_LOCK(workSpace);
-        ret = UpdateParam(workSpace, &node->dataIndex, name, value);
+        ret = UpdateParam(workSpace, &node->dataIndex, name, value, mode);
         PARAMSPACE_AREA_RW_UNLOCK(workSpace);
     } else {
         uint8_t type = GetParamValueType(name);
         ret = CheckParamValue(node, name, value, type);
         PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         PARAMSPACE_AREA_RW_LOCK(workSpace);
-        ret = AddParam((WorkSpace *)workSpace, type, name, value, dataIndex);
+        ret = AddParam((WorkSpace *)workSpace, type, name, value, dataIndex, mode);
         PARAMSPACE_AREA_RW_UNLOCK(workSpace);
     }
     if ((ret == PARAM_CODE_REACHED_MAX) && (flag == 1)) {
