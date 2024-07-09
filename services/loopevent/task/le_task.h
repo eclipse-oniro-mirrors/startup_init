@@ -106,6 +106,7 @@ typedef struct {
     LE_ConnectComplete connectComplete;
     LE_SendMessageComplete sendMessageComplete;
     LE_RecvMessage recvMessage;
+    LE_HandleRecvMsg handleRecvMsg;
     uint32_t connected : 1;
     char server[0];
 } StreamClientTask;

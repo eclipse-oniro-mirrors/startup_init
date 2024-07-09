@@ -51,15 +51,14 @@ static LE_STATUS HandleSendMsg_(const LoopHandle loopHandle,
 }
 
 static LE_STATUS HandleRecvMsg_(const LoopHandle loopHandle,
-    const TaskHandle taskHandle, const LE_RecvMessage recvMessage)
+    const TaskHandle taskHandle, const LE_RecvMessage recvMessage, const LE_HandleRecvMsg handleRecvMsg)
 {
     LE_STATUS status = LE_SUCCESS;
     LE_Buffer *buffer = CreateBuffer(LOOP_DEFAULT_BUFFER);
-    StreamConnectTask *stream = (StreamConnectTask *)taskHandle;
     int readLen = 0;
     while (1) {
-        if (stream->handleRecvMsg != NULL) {
-            readLen = stream->handleRecvMsg(taskHandle, buffer->data, LOOP_DEFAULT_BUFFER, 0);
+        if (handleRecvMsg != NULL) {
+            readLen = handleRecvMsg(taskHandle, buffer->data, LOOP_DEFAULT_BUFFER, 0);
         } else {
             readLen = recv(GetSocketFd(taskHandle), buffer->data, LOOP_DEFAULT_BUFFER, 0);
         }
@@ -100,7 +99,7 @@ static LE_STATUS HandleStreamEvent_(const LoopHandle loopHandle, const TaskHandl
         status = HandleSendMsg_(loopHandle, handle, stream->sendMessageComplete);
     }
     if (LE_TEST_FLAGS(oper, EVENT_READ)) {
-        status = HandleRecvMsg_(loopHandle, handle, stream->recvMessage);
+        status = HandleRecvMsg_(loopHandle, handle, stream->recvMessage, stream->handleRecvMsg);
     }
     if (status == LE_DIS_CONNECTED || LE_TEST_FLAGS(oper, EVENT_ERROR)) {
         loop->delEvent(loop, GetSocketFd(handle), EVENT_READ | EVENT_WRITE);
@@ -124,7 +123,7 @@ static LE_STATUS HandleClientEvent_(const LoopHandle loopHandle, const TaskHandl
         status = HandleSendMsg_(loopHandle, handle, client->sendMessageComplete);
     }
     if (LE_TEST_FLAGS(oper, EVENT_READ)) {
-        status = HandleRecvMsg_(loopHandle, handle, client->recvMessage);
+        status = HandleRecvMsg_(loopHandle, handle, client->recvMessage, stream->handleRecvMsg);
     }
     if (status == LE_DIS_CONNECTED) {
         if (client->disConnectComplete) {
@@ -255,6 +254,7 @@ LE_STATUS LE_CreateStreamClient(const LoopHandle loopHandle,
     task->sendMessageComplete = info->sendMessageComplete;
     task->recvMessage = info->recvMessage;
     task->disConnectComplete = info->disConnectComplete;
+    task->handleRecvMsg = info->handleRecvMsg;
     EventLoop *loop = (EventLoop *)loopHandle;
     loop->addEvent(loop, (const BaseTask *)task, EVENT_READ);
     *taskHandle = (TaskHandle)task;
