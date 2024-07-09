@@ -123,7 +123,7 @@ static LE_STATUS HandleClientEvent_(const LoopHandle loopHandle, const TaskHandl
         status = HandleSendMsg_(loopHandle, handle, client->sendMessageComplete);
     }
     if (LE_TEST_FLAGS(oper, EVENT_READ)) {
-        status = HandleRecvMsg_(loopHandle, handle, client->recvMessage, stream->handleRecvMsg);
+        status = HandleRecvMsg_(loopHandle, handle, client->recvMessage, client->handleRecvMsg);
     }
     if (status == LE_DIS_CONNECTED) {
         if (client->disConnectComplete) {
