@@ -16,6 +16,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "beget_ext.h"
 #include "param_comm.h"
@@ -53,9 +54,19 @@ static void GetVersions(void)
     }
     const char *tmp = strstr(fullName, "-");
     if (tmp == NULL) {
-        return;
+        tmp = fullName;
+        while (*tmp) {
+            if (isdigit(*tmp)) {
+                break;
+            }
+            tmp++;
+        }
+        if (*tmp == 0) {
+            return;
+        }
+    } else {
+        tmp++; // skip "-"
     }
-    tmp++; // skip "-"
     int ret = sscanf_s(tmp, "%d.%d.%d.%d", &g_majorVersion, &g_seniorVersion, &g_featureVersion, &g_buildVersion);
     BEGET_LOGV("fullName %s %d.%d.%d.%d ret %d",
         fullName, g_majorVersion, g_seniorVersion, g_featureVersion, g_buildVersion, ret);
