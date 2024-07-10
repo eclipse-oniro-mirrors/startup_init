@@ -22,7 +22,6 @@
 #ifdef __MUSL__
 #include <stropts.h>
 #endif
-#include <sys/prctl.h>
 #include <sys/capability.h>
 #include <sys/ioctl.h>
 #include <sys/param.h>
@@ -179,65 +178,25 @@ static int ServiceSetGid(const Service *service)
     return SERVICE_SUCCESS;
 }
 
-static void GetInvalidCaps(const Service *service, unsigned int *caps)
-{
-    int index = 0;
-    bool flags = false;
-    for (unsigned int cap = 0; cap <= CAP_LAST_CAP; cap++) {
-        for (unsigned int i = 0; i < service->servPerm.capsCnt; ++i) {
-            if (cap == service->servPerm.caps[i]) {
-                flags = true;
-                break;
-            }
-            flags = false;
-        }
-        if (!flags) {
-            caps[index] = cap;
-            index++;
-        }
-    }
-}
-
-static void DropCapability(const Service *service)
-{
-#if ((defined __LINUX__) || (!defined OHOS_LITE))
-    int invalidCnt = CAP_LAST_CAP - service->servPerm.capsCnt + 1;
-    unsigned int *caps = (unsigned int *)malloc(sizeof(unsigned int) * invalidCnt);
-    INIT_ERROR_CHECK(caps != NULL, return, "malloc caps failed! error:%d", errno);
-
-    GetInvalidCaps(service, caps);
-    for (int i = 0; i < invalidCnt; i++) {
-        if (prctl(PR_CAPBSET_DROP, caps[i])) {
-            INIT_LOGE("prctl PR_SET_SECUREBITS failed: %d", errno);
-            free(caps);
-            return;
-        }
-    }
-    free(caps);
-#else
-    return;
-#endif
-}
-
 static int SetPerms(const Service *service)
 {
-    INIT_ERROR_CHECK(KeepCapability() == 0, return INIT_EKEEPCAP,
+    INIT_ERROR_CHECK(KeepCapability() == 0,
+        return INIT_EKEEPCAP,
         "Service error %d %s, failed to set keep capability.", errno, service->name);
 
-    INIT_ERROR_CHECK(ServiceSetGid(service) == SERVICE_SUCCESS, return INIT_EGIDSET,
+    INIT_ERROR_CHECK(ServiceSetGid(service) == SERVICE_SUCCESS,
+        return INIT_EGIDSET,
         "Service error %d %s, failed to set gid.", errno, service->name);
 
     // set seccomp policy before setuid
-    INIT_ERROR_CHECK(SetSystemSeccompPolicy(service) == SERVICE_SUCCESS, return INIT_ESECCOMP,
+    INIT_ERROR_CHECK(SetSystemSeccompPolicy(service) == SERVICE_SUCCESS,
+        return INIT_ESECCOMP,
         "Service error %d %s, failed to set system seccomp policy.", errno, service->name);
 
     if (service->servPerm.uID != 0) {
-        INIT_ERROR_CHECK(setuid(service->servPerm.uID) == 0, return INIT_EUIDSET,
+        INIT_ERROR_CHECK(setuid(service->servPerm.uID) == 0,
+            return INIT_EUIDSET,
             "Service error %d %s, failed to set uid.", errno, service->name);
-    } else {
-        if (service->servPerm.capsCnt != 0) {
-            DropCapability(service);
-        }
     }
 
     struct __user_cap_header_struct capHeader;
@@ -263,11 +222,13 @@ static int SetPerms(const Service *service)
     for (unsigned int i = 0; i < service->servPerm.capsCnt; ++i) {
         if (service->servPerm.caps[i] == FULL_CAP) {
             int ret = SetAllAmbientCapability();
-            INIT_ERROR_CHECK(ret == 0, return INIT_ECAP,
+            INIT_ERROR_CHECK(ret == 0,
+                return INIT_ECAP,
                 "Service error %d %s, failed to set ambient capability.", errno, service->name);
             return 0;
         }
-        INIT_ERROR_CHECK(SetAmbientCapability(service->servPerm.caps[i]) == 0, return INIT_ECAP,
+        INIT_ERROR_CHECK(SetAmbientCapability(service->servPerm.caps[i]) == 0,
+            return INIT_ECAP,
             "Service error %d %s, failed to set ambient capability.", errno, service->name);
     }
 #ifndef OHOS_LITE
