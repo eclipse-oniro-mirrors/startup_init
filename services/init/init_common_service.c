@@ -200,7 +200,7 @@ static void GetInvalidCaps(const Service *service, unsigned int *caps)
 
 static void DropCapability(const Service *service)
 {
-#if ((defined __LINUX__) || (!defined OHOS_LITE))
+#ifndef OHOS_LITE
     int invalidCnt = CAP_LAST_CAP - service->servPerm.capsCnt + 1;
     unsigned int *caps = (unsigned int *)malloc(sizeof(unsigned int) * invalidCnt);
     INIT_ERROR_CHECK(caps != NULL, return, "malloc caps failed! error:%d", errno);
