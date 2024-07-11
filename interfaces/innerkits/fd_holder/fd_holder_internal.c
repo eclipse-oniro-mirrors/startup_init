@@ -45,6 +45,7 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
 
     struct cmsghdr *cmsg = NULL;
     cmsg = CMSG_FIRSTHDR(msghdr);
+    BEGET_ERROR_CHECK(cmsg != NULL, return -1, "Failed to build cmsg");
 
     if (fdCount > 0) {
         cmsg->cmsg_level = SOL_SOCKET;
