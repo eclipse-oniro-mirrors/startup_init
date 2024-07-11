@@ -27,7 +27,7 @@ supported_parse_item = ['labelName', 'priority', 'allowList', 'blockList', 'prio
                         'allowListWithArgs', 'headFiles', 'selfDefineSyscall', 'returnValue', \
                         'mode', 'privilegedProcessName', 'allowBlockList']
 
-supported_architecture = ['arm', 'arm64','riscv64']
+supported_architecture = ['arm', 'arm64', 'riscv64']
 
 BPF_JGE = 'BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, {}, {}, {}),'
 BPF_JGT = 'BPF_JUMP(BPF_JMP|BPF_JGT|BPF_K, {}, {}, {}),'
@@ -343,6 +343,89 @@ class GenBpfPolicy:
             '&' : self.gen_bpf_set,
         }
 
+    @staticmethod
+    def gen_bpf_eq32(const_str, jt, jf):
+        bpf_policy = []
+        bpf_policy.append(BPF_JEQ.format(const_str + ' & 0xffffffff', jt, jf))
+        return bpf_policy
+
+    @staticmethod
+    def gen_bpf_eq64(const_str, jt, jf):
+        bpf_policy = []
+        bpf_policy.append(BPF_JEQ.format('((unsigned long)' + const_str + ') >> 32', 0, jf + 2))
+        bpf_policy.append(BPF_LOAD_MEM.format(0))
+        bpf_policy.append(BPF_JEQ.format(const_str + ' & 0xffffffff', jt, jf))
+        return bpf_policy
+
+    @staticmethod
+    def gen_bpf_gt32(const_str, jt, jf):
+        bpf_policy = []
+        bpf_policy.append(BPF_JGT.format(const_str + ' & 0xffffffff', jt, jf))
+        return bpf_policy
+
+    @staticmethod
+    def gen_bpf_gt64(const_str, jt, jf):
+        bpf_policy = []
+        number, digit_flag = str_convert_to_int(const_str)
+
+        hight = int(number / (2**32))
+        low = number & 0xffffffff
+
+        if digit_flag and hight == 0:
+            bpf_policy.append(BPF_JGT.format('((unsigned long)' + const_str + ') >> 32', jt + 2, 0))
+        else:
+            bpf_policy.append(BPF_JGT.format('((unsigned long)' + const_str + ') >> 32', jt + 3, 0))
+            bpf_policy.append(BPF_JEQ.format('((unsigned long)' + const_str + ') >> 32', 0, jf + 2))
+
+        bpf_policy.append(BPF_LOAD_MEM.format(0))
+        bpf_policy.append(BPF_JGT.format(const_str + ' & 0xffffffff', jt, jf))
+
+        return bpf_policy
+
+    @staticmethod
+    def gen_bpf_ge32(const_str, jt, jf):
+        bpf_policy = []
+        bpf_policy.append(BPF_JGE.format(const_str + ' & 0xffffffff', jt, jf))
+        return bpf_policy
+
+    @staticmethod
+    def gen_bpf_ge64(const_str, jt, jf):
+        bpf_policy = []
+        number, digit_flag = str_convert_to_int(const_str)
+
+        hight = int(number / (2**32))
+        low = number & 0xffffffff
+
+        if digit_flag and hight == 0:
+            bpf_policy.append(BPF_JGT.format('((unsigned long)' + const_str + ') >> 32', jt + 2, 0))
+        else:
+            bpf_policy.append(BPF_JGT.format('((unsigned long)' + const_str + ') >> 32', jt + 3, 0))
+            bpf_policy.append(BPF_JEQ.format('((unsigned long)' + const_str + ') >> 32', 0, jf + 2))
+        bpf_policy.append(BPF_LOAD_MEM.format(0))
+        bpf_policy.append(BPF_JGE.format(const_str + ' & 0xffffffff', jt, jf))
+        return bpf_policy
+
+    @staticmethod
+    def gen_bpf_set32(const_str, jt, jf):
+        bpf_policy = []
+        bpf_policy.append(BPF_JSET.format(const_str + ' & 0xffffffff', jt, jf))
+        return bpf_policy
+
+    @staticmethod
+    def gen_bpf_set64(const_str, jt, jf):
+        bpf_policy = []
+        bpf_policy.append(BPF_JSET.format('((unsigned long)' + const_str + ') >> 32', jt + 2, 0))
+        bpf_policy.append(BPF_LOAD_MEM.format(0))
+        bpf_policy.append(BPF_JSET.format(const_str + ' & 0xffffffff', jt, jf))
+        return bpf_policy
+
+    @staticmethod
+    def gen_bpf_valid_syscall_nr(syscall_nr, cur_size):
+        bpf_policy = []
+        bpf_policy.append(BPF_LOAD.format(0))
+        bpf_policy.append(BPF_JEQ.format(syscall_nr, 0, cur_size))
+        return bpf_policy
+
     def update_arch(self, arch):
         self.arch = arch
         self.syscall_nr_range = []
@@ -377,20 +460,6 @@ class GenBpfPolicy:
 
         self.return_value = return_value
 
-    @staticmethod
-    def gen_bpf_eq32(const_str, jt, jf):
-        bpf_policy = []
-        bpf_policy.append(BPF_JEQ.format(const_str + ' & 0xffffffff', jt, jf))
-        return bpf_policy
-
-    @staticmethod
-    def gen_bpf_eq64(const_str, jt, jf):
-        bpf_policy = []
-        bpf_policy.append(BPF_JEQ.format('((unsigned long)' + const_str + ') >> 32', 0, jf + 2))
-        bpf_policy.append(BPF_LOAD_MEM.format(0))
-        bpf_policy.append(BPF_JEQ.format(const_str + ' & 0xffffffff', jt, jf))
-        return bpf_policy
-
     def gen_bpf_eq(self, const_str, jt, jf):
         if self.arch == 'arm':
             return self.gen_bpf_eq32(const_str, jt, jf)
@@ -400,31 +469,6 @@ class GenBpfPolicy:
 
     def gen_bpf_ne(self, const_str, jt, jf):
         return self.gen_bpf_eq(const_str, jf, jt)
-
-    @staticmethod
-    def gen_bpf_gt32(const_str, jt, jf):
-        bpf_policy = []
-        bpf_policy.append(BPF_JGT.format(const_str + ' & 0xffffffff', jt, jf))
-        return bpf_policy
-
-    @staticmethod
-    def gen_bpf_gt64(const_str, jt, jf):
-        bpf_policy = []
-        number, digit_flag = str_convert_to_int(const_str)
-
-        hight = int(number / (2**32))
-        low = number & 0xffffffff
-
-        if digit_flag and hight == 0:
-            bpf_policy.append(BPF_JGT.format('((unsigned long)' + const_str + ') >> 32', jt + 2, 0))
-        else:
-            bpf_policy.append(BPF_JGT.format('((unsigned long)' + const_str + ') >> 32', jt + 3, 0))
-            bpf_policy.append(BPF_JEQ.format('((unsigned long)' + const_str + ') >> 32', 0, jf + 2))
-
-        bpf_policy.append(BPF_LOAD_MEM.format(0))
-        bpf_policy.append(BPF_JGT.format(const_str + ' & 0xffffffff', jt, jf))
-
-        return bpf_policy
 
     def gen_bpf_gt(self, const_str, jt, jf):
         if self.arch == 'arm':
@@ -436,29 +480,6 @@ class GenBpfPolicy:
     def gen_bpf_le(self, const_str, jt, jf):
         return self.gen_bpf_gt(const_str, jf, jt)
 
-    @staticmethod
-    def gen_bpf_ge32(const_str, jt, jf):
-        bpf_policy = []
-        bpf_policy.append(BPF_JGE.format(const_str + ' & 0xffffffff', jt, jf))
-        return bpf_policy
-
-    @staticmethod
-    def gen_bpf_ge64(const_str, jt, jf):
-        bpf_policy = []
-        number, digit_flag = str_convert_to_int(const_str)
-
-        hight = int(number / (2**32))
-        low = number & 0xffffffff
-
-        if digit_flag and hight == 0:
-            bpf_policy.append(BPF_JGT.format('((unsigned long)' + const_str + ') >> 32', jt + 2, 0))
-        else:
-            bpf_policy.append(BPF_JGT.format('((unsigned long)' + const_str + ') >> 32', jt + 3, 0))
-            bpf_policy.append(BPF_JEQ.format('((unsigned long)' + const_str + ') >> 32', 0, jf + 2))
-        bpf_policy.append(BPF_LOAD_MEM.format(0))
-        bpf_policy.append(BPF_JGE.format(const_str + ' & 0xffffffff', jt, jf))
-        return bpf_policy
-
     def gen_bpf_ge(self, const_str, jt, jf):
         if self.arch == 'arm':
             return self.gen_bpf_ge32(const_str, jt, jf)
@@ -469,33 +490,12 @@ class GenBpfPolicy:
     def gen_bpf_lt(self, const_str, jt, jf):
         return self.gen_bpf_ge(const_str, jf, jt)
 
-    @staticmethod
-    def gen_bpf_set32(const_str, jt, jf):
-        bpf_policy = []
-        bpf_policy.append(BPF_JSET.format(const_str + ' & 0xffffffff', jt, jf))
-        return bpf_policy
-
-    @staticmethod
-    def gen_bpf_set64(const_str, jt, jf):
-        bpf_policy = []
-        bpf_policy.append(BPF_JSET.format('((unsigned long)' + const_str + ') >> 32', jt + 2, 0))
-        bpf_policy.append(BPF_LOAD_MEM.format(0))
-        bpf_policy.append(BPF_JSET.format(const_str + ' & 0xffffffff', jt, jf))
-        return bpf_policy
-
     def gen_bpf_set(self, const_str, jt, jf):
         if self.arch == 'arm':
             return self.gen_bpf_set32(const_str, jt, jf)
         elif self.arch == 'arm64' or self.arch == 'riscv64':
             return self.gen_bpf_set64(const_str, jt, jf)
         return []
-
-    @staticmethod
-    def gen_bpf_valid_syscall_nr(syscall_nr, cur_size):
-        bpf_policy = []
-        bpf_policy.append(BPF_LOAD.format(0))
-        bpf_policy.append(BPF_JEQ.format(syscall_nr, 0, cur_size))
-        return bpf_policy
 
     def gen_range_list(self, syscall_nr_list):
         if len(syscall_nr_list) == 0:
@@ -542,7 +542,7 @@ class GenBpfPolicy:
 
     def nr_range_to_bpf_policy(self, cur_syscall_nr_range):
         self.gen_policy_syscall_nr_list(cur_syscall_nr_range)
-        syscall_list_len  = len(self.syscall_nr_policy_list)
+        syscall_list_len = len(self.syscall_nr_policy_list)
 
         if syscall_list_len == 0:
             return
@@ -751,7 +751,7 @@ class GenBpfPolicy:
 
     def parse_args(self, function_name, line, skip):
         bpf_policy = []
-        group_info  = line.split('else')
+        group_info = line.split('else')
         else_part = group_info[-1]
         group = group_info[0].split('elif')
         for sub_group in group:
@@ -763,7 +763,7 @@ class GenBpfPolicy:
             bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
         syscall_nr = self.function_name_nr_table_dict.get(self.arch).get(function_name)
         #load syscall nr
-        bpf_policy = self.gen_bpf_valid_syscall_nr(syscall_nr, len(bpf_policy) - skip)  + bpf_policy
+        bpf_policy = self.gen_bpf_valid_syscall_nr(syscall_nr, len(bpf_policy) - skip) + bpf_policy
         return bpf_policy
 
     def gen_bpf_policy_with_args(self, allow_list_with_args, mode, return_value):
@@ -977,7 +977,7 @@ class SeccompPolicyParser:
         extra_header = set()
         for arch in self.arches:
             extra_header |= self.seccomp_policy_param.get(arch).head_files
-        extra_header_list =  ['#include ' + i for i in sorted(list(extra_header))]
+        extra_header_list = ['#include ' + i for i in sorted(list(extra_header))]
         filter_name = 'g_' + args.filter_name + 'SeccompFilter'
 
         array_name = textwrap.dedent('''
@@ -1060,7 +1060,7 @@ def main():
     parser.add_argument('--dst-file',
                         help='The output path for the policy files')
 
-    parser.add_argument('--filter-name',  type=str,
+    parser.add_argument('--filter-name', type=str,
                         help='Name of seccomp bpf array generated by this script')
 
     parser.add_argument('--target-cpu', type=str,

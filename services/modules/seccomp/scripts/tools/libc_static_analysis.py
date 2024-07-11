@@ -31,7 +31,7 @@ class LibcFuncUnit:
         self.use_function = set()
         self.arch = arch
 
-    def merge_nr(self,  nr):
+    def merge_nr(self, nr):
         self.nr |= nr
 
     def update_func_name(self, func_name):
@@ -114,11 +114,11 @@ def get_direct_use_syscall_of_svc(arch, lines, func_list):
             is_find_svc = True
             continue
 
-        if  is_find_svc and 'mov' in line and (svc_reg in line or svc_reg1 in line):
+        if is_find_svc and 'mov' in line and (svc_reg in line or svc_reg1 in line):
             nr, is_find_nr, is_find_svc = line_find_syscall_nr(line, nr_set, nr)
             continue
 
-        if is_find_nr  and line[-1] == ':':
+        if is_find_nr and line[-1] == ':':
             addr = line[:line.find(' ')]
             addr = remove_head_zero(addr)
             func_name = line[line.find('<') + 1: line.rfind('>')]
@@ -166,7 +166,7 @@ def get_direct_use_syscall_of_syscall(arch, lines, func_list):
                 is_find_syscall = False
             continue
 
-        if is_find_syscall_nr  and line[-1] == ':':
+        if is_find_syscall_nr and line[-1] == ':':
             addr = line[:line.find(' ')]
             addr = remove_head_zero(addr)
             func_name = line[line.find('<') + 1: line.rfind('>')]
