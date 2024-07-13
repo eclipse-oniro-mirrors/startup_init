@@ -966,6 +966,35 @@ ohos_fuzztest("ParseFstabPerLineFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("ParseUeventdConfigFileFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/parseueventdconfigfile_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//base/startup/init/ueventd:libueventd_ramdisk_static",
+  ]
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "parseueventdconfigfile_fuzzer/parseueventdconfigfile_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ohos_fuzztest("FindFstabItemForMountPointFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
@@ -3072,6 +3101,7 @@ group("fuzztest") {
     ":MountAllWithFstabFuzzTest",
     ":MountOneItemFuzzTest",
     ":ParseFstabPerLineFuzzTest",
+    ":ParseUeventdConfigFileFuzzTest",
     ":ReadFileInDirFuzzTest",
     ":ReadFstabFromFileFuzzTest",
     ":ReceiveFdsFuzzTest",
