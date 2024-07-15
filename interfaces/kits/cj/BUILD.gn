@@ -86,7 +86,10 @@ ohos_shared_library("cj_system_parameter_enhance_ffi") {
       "../../innerkits:libbegetutil",
     ]
 
-    external_deps = [ "napi:cj_bind_ffi" ]
+    external_deps = [
+      "c_utils:utils",
+      "napi:cj_bind_ffi",
+    ]
   } else {
     defines += [ "PREVIEWER" ]
     sources = [ "src_enhance/system_parameter_mock.cpp" ]
