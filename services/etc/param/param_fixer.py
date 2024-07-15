@@ -23,6 +23,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
     os.pardir, os.pardir, os.pardir, os.pardir, "build"))
 from scripts.util import build_utils  # noqa: E402
 
+
 def parse_args(args):
     args = build_utils.expand_file_args(args)
 
@@ -35,6 +36,7 @@ def parse_args(args):
     options, _ = parser.parse_args(args)
     return options
 
+
 def parse_params(line, contents):
     line = line.strip()
     pos = line.find('=')
@@ -46,10 +48,12 @@ def parse_params(line, contents):
     value = value.strip()
     contents[name] = value
 
+
 def parse_extra_params(extras, contents):
     for extra in extras:
         extra = extra.strip()
         parse_params(extra, contents)
+
 
 def fix_para_file(options):
     contents = {}
@@ -72,6 +76,7 @@ def fix_para_file(options):
     with os.fdopen(os.open(options.output, flags, modes), 'w') as f:
         for key in contents:
             f.write("".join([key, "=", contents[key], '\n']))
+
 
 def main(args):
     options = parse_args(args)

@@ -91,12 +91,12 @@ def write_map_to_code(code_name, data_dict):
             f.write('typedef struct Node_ {' + os.linesep)
             f.write('    const char *name;' + os.linesep)
             f.write('    const char *value;' + os.linesep)
-            f.write('} Node;' + os.linesep  + os.linesep)
+            f.write('} Node;' + os.linesep + os.linesep)
             f.write('#define PARAM_MAP(name, value) {(const char *)#name, (const char *)#value},')
-            f.write(os.linesep  + os.linesep)
+            f.write(os.linesep + os.linesep)
             # write data
             f.write('static Node g_paramDefCfgNodes[] = {' + os.linesep)
-            for name, value in  data_dict.items():
+            for name, value in data_dict.items():
                 if (value.startswith("\"")):
                     tmp_str = "    PARAM_MAP({0}, {1})".format(name, value)
                     f.write(tmp_str + os.linesep)
@@ -120,7 +120,7 @@ def write_map_to_code(code_name, data_dict):
 
 
 def add_to_code_dict(code_dict, cfg_dict, high=True):
-    for name, value in  cfg_dict.items():
+    for name, value in cfg_dict.items():
         # check if name exit
         has_key = name in code_dict
         if has_key and high:

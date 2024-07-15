@@ -106,72 +106,80 @@ def append_group_files(target_f, options):
     for item in source_dict:
         target_f.write(f"{item}:{':'.join(source_dict[item])}\n")
 
-def handle_passwd_info(passwdInfo, limits):
-    isPassed = True
-    name = passwdInfo[0].strip()
-    gid = int(passwdInfo[3], 10)
-    uid = int(passwdInfo[2], 10)
+
+def handle_passwd_info(passwd_info, limits):
+    is_passed = True
+    name = passwd_info[0].strip()
+    gid = int(passwd_info[3], 10)
+    uid = int(passwd_info[2], 10)
     if gid >= int(limits[0]) and gid <= int(limits[1]):
         pass
     else:
-        isPassed = False
+        is_passed = False
         log_str = "error: name={} gid={} is not in range {}".format(name, gid, limits)
         print(log_str)
     
     if uid >= int(limits[0]) and uid <= int(limits[1]):
         pass
     else:
-        isPassed = False
+        is_passed = False
         log_str = "error: name={} uid={} is not in range {}".format(name, gid, limits)
         print(log_str)
-    return isPassed
+    return is_passed
+
 
 def check_passwd_file(file_name, limits):
-    isPassed = True
+    is_passed = True
     with open(file_name, encoding='utf-8') as fp:
         line = fp.readline()
         while line :
             if line.startswith("#") or len(line) < 3:
                 line = fp.readline()
                 continue
-            passwdInfo = line.strip("\n").split(":")
-            if len (passwdInfo) < 4:
+            passwd_info = line.strip("\n").split(":")
+            if len(passwd_info) < 4:
                 line = fp.readline()
                 continue
-            if not handle_passwd_info(passwdInfo, limits):
-                isPassed = False
+            if not handle_passwd_info(passwd_info, limits):
+                is_passed = False
             line = fp.readline()
-    return isPassed
+    return is_passed
+
 
 def load_file(file_name, limit):
 
     if not os.path.exists(file_name):
         print("error: %s is not exit", file_name)
         return False
-    isPassed = True
+    is_passed = True
     limits = limit.split("-")
     try:
-        isPassed = check_passwd_file(file_name, limits)
+        is_passed = check_passwd_file(file_name, limits)
     except:
         raise Exception("Exception in reading passwd, file name:", file_name)
-    return isPassed
+    return is_passed
+
 
 def append_passwd_files(target_f, options):
     # Read source file
     file_list = options.source_file.split(":")
     range_list = options.input_ranges.split(":")
 
-    for i in range(len(file_list)):
-        if not load_file(file_list[i], range_list[i]):
-            # check gid/uid Exception log: raise Exception("Exception, check passwd file error, ", file_list[i])
-            print("error: heck passwd file error, file path: ", file_list[i])
+    for i, file in enumerate(file_list):
+        if i >= len(range_list):
+            print("error: %s is error", file)
+            return
+        if not load_file(file, range_list[i]):
+            # check gid/uid Exception log: raise Exception("Exception, check passwd file error, ", file)
+            print("error: heck passwd file error, file path: ", file)
             pass
         try:
-            with open(file_list[i], 'r') as source_f:
+            with open(file, 'r') as source_f:
                 source_contents = source_f.read()
             target_f.write(source_contents)
         except:
-            raise Exception("Exception in appending passwd, file name:", file_list[i])
+            raise Exception("Exception in appending passwd, file name:", file)
+
 
 def main(args):
     sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
