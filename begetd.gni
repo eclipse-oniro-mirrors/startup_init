@@ -20,14 +20,14 @@ declare_args() {
   # only for test
   param_test = true
   param_base_log = false
-  enable_ohos_startup_init_feature_ab_partition = false
+  init_feature_ab_partition = false
 
   # init begetctl support liteos
-  enable_ohos_startup_init_feature_begetctl_liteos = false
+  init_feature_begetctl_liteos = false
 
   # only support mbedtls for hash
-  enable_ohos_startup_init_lite_use_thirdparty_mbedtls = true
-  enable_ohos_startup_init_lite_use_posix_file_api = false
+  init_lite_use_thirdparty_mbedtls = true
+  init_lite_use_posix_file_api = false
   config_ohos_startup_init_lite_data_path = "/"
 
   # config memory size for liteos-m
@@ -47,7 +47,7 @@ declare_args() {
   }
 
   #deps appspawn_client
-  enable_appspawn_client_module = true
+  init_appspawn_client_module = true
 
   # begetutil extension module
   startup_begetutil_extra_modules = ""

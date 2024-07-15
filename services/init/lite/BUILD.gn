@@ -32,7 +32,7 @@ executable("init") {
     "OHOS_LITE",
     "__MUSL__",
   ]
-  if (enable_ohos_startup_init_feature_begetctl_liteos) {
+  if (init_feature_begetctl_liteos) {
     defines += [ "LITEOS_SUPPORT" ]
   }
   sources = [
