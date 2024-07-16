@@ -132,6 +132,12 @@ static int SubInitExecuteCmd(InitContextType type, const char *name, const char 
     buffer[len] = '\0';
     PLUGIN_LOGV("send cmd '%s'", buffer);
     int ret = send(subInfo->sendFd, buffer, len, 0);
+    if (ret < 0 && errno == EPIPE) {
+        PLUGIN_LOGI("Failed to send cmd %s to %d, need fork new chip init process", name, subInfo->type);
+        SubInitStop(subInfo->subPid);
+        SubInitStart(type);
+        ret = send(subInfo->sendFd, buffer, len, 0);
+    }
     PLUGIN_CHECK(ret > 0, return errno, "Failed to send cmd %s to %d errno %d", name, subInfo->type, errno);
 
     // block and wait result
