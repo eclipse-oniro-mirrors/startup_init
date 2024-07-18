@@ -149,6 +149,10 @@ static uint64_t GetFsSize(int fd)
             return 0;
         }
     } else if (S_ISREG(st.st_mode)) {
+        if (st.st_size < 0) {
+            BEGET_LOGE("st_size is not right. st_size: %lld", st.st_size);
+            return 0;
+        }
         size = (uint64_t)st.st_size;
     } else {
         BEGET_LOGE("unspported type st_mode:[%llu]", st.st_mode);

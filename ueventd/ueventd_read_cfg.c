@@ -32,6 +32,7 @@
 
 // default item count in config files
 #define DEFAULTITEMCOUNT (50)
+#define MAX_CONFIGURE_SIZE (1024 * 1024 * 16)
 
 typedef enum SECTION {
     SECTION_INVALID = -1,
@@ -255,6 +256,11 @@ void ParseUeventdConfigFile(const char *file)
     }
 
     // st_size should never be less than 0
+    if (st.st_size < 0 || st.st_size > MAX_CONFIGURE_SIZE) {
+        INIT_LOGE("Invalid configure file with size");
+        close(fd);
+        return;
+    }
     size_t size = (size_t)st.st_size;
     char *buffer = malloc(size + 1);
     if (buffer == NULL) {
