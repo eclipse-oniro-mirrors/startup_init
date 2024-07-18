@@ -13,16 +13,19 @@
  * limitations under the License.
  */
 
-#include "parseueventdconfigfile_fuzzer.h"
+#include "getdeviceudevconfbydevnode_fuzzer.h"
 #include <string>
 #include "ueventd_read_cfg.h"
 
 namespace OHOS {
-    bool FuzzParseUeventdConfigFile(const uint8_t* data, size_t size)
+    bool FuzzGetDeviceUdevConfByDevNode(const uint8_t* data, size_t size)
     {
-        const char *file = reinterpret_cast<const char*>(data);
-        ParseUeventdConfigFile(file);
-        return true;
+        bool result = false;
+        const char *devNode = reinterpret_cast<const char*>(data);
+        if (GetDeviceUdevConfByDevNode(devNode) == NULL) {
+            result = true;
+        }
+        return false;
     }
 }
 
@@ -30,6 +33,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzParseUeventdConfigFile(data, size);
+    OHOS::FuzzGetDeviceUdevConfByDevNode(data, size);
     return 0;
 }

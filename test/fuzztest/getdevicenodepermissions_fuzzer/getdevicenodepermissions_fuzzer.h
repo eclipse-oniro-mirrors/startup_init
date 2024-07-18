@@ -13,23 +13,8 @@
  * limitations under the License.
  */
 
-#include "parseueventdconfigfile_fuzzer.h"
-#include <string>
-#include "ueventd_read_cfg.h"
-
-namespace OHOS {
-    bool FuzzParseUeventdConfigFile(const uint8_t* data, size_t size)
-    {
-        const char *file = reinterpret_cast<const char*>(data);
-        ParseUeventdConfigFile(file);
-        return true;
-    }
-}
-
-/* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
-{
-    /* Run your code on data */
-    OHOS::FuzzParseUeventdConfigFile(data, size);
-    return 0;
-}
+#ifndef TEST_FUZZTEST_GET_DEVICE_NODE_PERMISSIONS_FUZZER_H
+#define TEST_FUZZTEST_GET_DEVICE_NODE_PERMISSIONS_FUZZER_H
+#include "fuzz_utils.h"
+#define FUZZ_PROJECT_NAME "getdevicenodepermissions_fuzzer"
+#endif

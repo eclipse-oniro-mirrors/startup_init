@@ -966,6 +966,34 @@ ohos_fuzztest("ParseFstabPerLineFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("ParseUeventConfigFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/parseueventconfig_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//base/startup/init/ueventd:libueventd_ramdisk_static",
+  ]
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "parseueventconfig_fuzzer/parseueventconfig_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ohos_fuzztest("ParseUeventdConfigFileFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
@@ -1807,6 +1835,63 @@ ohos_fuzztest("ServiceWatchForStatusFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("HandleOtherDeviceEventFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/handleotherdeviceevent_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//base/startup/init/ueventd:libueventd_ramdisk_static",
+  ]
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "handleotherdeviceevent_fuzzer/handleotherdeviceevent_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+ohos_fuzztest("HandleBlockDeviceEventFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/handleblockdeviceevent_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//base/startup/init/ueventd:libueventd_ramdisk_static",
+  ]
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "handleblockdeviceevent_fuzzer/handleblockdeviceevent_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ohos_fuzztest("HasSystemCapabilityFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
@@ -1855,6 +1940,34 @@ ohos_fuzztest("BuildControlMessageFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "buildcontrolmessage_fuzzer/buildcontrolmessage_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ChangeSysAttributePermissionsFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/changesysattributepermissions_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//base/startup/init/ueventd:libueventd_ramdisk_static",
+  ]
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "changesysattributepermissions_fuzzer/changesysattributepermissions_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -2127,6 +2240,65 @@ ohos_fuzztest("GetDeviceTypeCFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "getdevicetypec_fuzzer/getdevicetypec_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetDeviceNodePermissionsFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/getdevicenodepermissions_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//base/startup/init/ueventd:libueventd_ramdisk_static",
+  ]
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "getdevicenodepermissions_fuzzer/getdevicenodepermissions_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetDeviceUdevConfByDevNodeFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/getdeviceudevconfbydevnode_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+    "//base/startup/init/ueventd:libueventd_ramdisk_static",
+  ]
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "getdeviceudevconfbydevnode_fuzzer/getdeviceudevconfbydevnode_fuzzer.cpp",
+  ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -3020,6 +3192,7 @@ group("fuzztest") {
     ":AddRemoteWatcherFuzzTest",
     ":AddWatcherFuzzTest",
     ":BuildControlMessageFuzzTest",
+    ":ChangeSysAttributePermissionsFuzzTest",
     ":CmdClientInitFuzzTest",
     ":CmdServiceProcessDelClientFuzzTest",
     ":DelRemoteWatcherFuzzTest",
@@ -3046,8 +3219,10 @@ group("fuzztest") {
     ":GetControlSocketFuzzTest",
     ":GetCurrentSlotFuzzTest",
     ":GetDevUdidFuzzTest",
+    ":GetDeviceNodePermissionsFuzzTest",
     ":GetDeviceTypeCFuzzTest",
     ":GetDeviceTypeCppFuzzTest",
+    ":GetDeviceUdevConfByDevNodeFuzzTest",
     ":GetDisplayVersionFuzzTest",
     ":GetFeatureVersionFuzzTest",
     ":GetFirstApiVersionFuzzTest",
@@ -3078,6 +3253,8 @@ group("fuzztest") {
     ":GetSystemCommitIdFuzzTest",
     ":GetUintParameterCFuzzTest",
     ":GetVersionIdFuzzTest",
+    ":HandleBlockDeviceEventFuzzTest",
+    ":HandleOtherDeviceEventFuzzTest",
     ":HasSystemCapabilityFuzzTest",
     ":HookMgrAddFuzzTest",
     ":HookMgrCreateFuzzTest",
@@ -3101,6 +3278,7 @@ group("fuzztest") {
     ":MountAllWithFstabFuzzTest",
     ":MountOneItemFuzzTest",
     ":ParseFstabPerLineFuzzTest",
+    ":ParseUeventConfigFuzzTest",
     ":ParseUeventdConfigFileFuzzTest",
     ":ReadFileInDirFuzzTest",
     ":ReadFstabFromFileFuzzTest",

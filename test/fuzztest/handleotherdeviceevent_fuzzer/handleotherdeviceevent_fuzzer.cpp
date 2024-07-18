@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
-#include "parseueventdconfigfile_fuzzer.h"
+#include "handleotherdeviceevent_fuzzer.h"
 #include <string>
-#include "ueventd_read_cfg.h"
+#include "ueventd_device_handler.h"
 
 namespace OHOS {
-    bool FuzzParseUeventdConfigFile(const uint8_t* data, size_t size)
+    bool FuzzHandleOtherDeviceEvent(const uint8_t* data, size_t size)
     {
-        const char *file = reinterpret_cast<const char*>(data);
-        ParseUeventdConfigFile(file);
+        struct Uevent uevent = {
+            .subsystem = reinterpret_cast<const char*>(data),
+        };
+        HandleOtherDeviceEvent(&uevent);
         return true;
     }
 }
@@ -30,6 +32,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzParseUeventdConfigFile(data, size);
+    OHOS::FuzzHandleOtherDeviceEvent(data, size);
     return 0;
 }
