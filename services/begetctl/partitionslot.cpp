@@ -93,7 +93,9 @@ static int SetActiveSlot(BShellHandle handle, int32_t argc, char *argv[])
     int slot = atoi(argv[1]);
     sptr<IPartitionSlot> partitionslot = IPartitionSlot::Get();
     if (partitionslot != nullptr) {
+#ifndef STARTUP_INIT_TEST
         partitionslot->SetActiveSlot(slot);
+#endif
         std::cout << "Set active slot: " << slot << std::endl;
     }
     UnloadDevice();
