@@ -27,6 +27,7 @@ ohos_boot_param = 8192
 bluetooth_param = 8192
 hiviewdfx_hiview_param = 8192
 telephony_param = 20480
+const_telephony_param = 4096
 vendor_camera_param=6144
 edm_writable_param = 4096
 arkui_param = 2048
