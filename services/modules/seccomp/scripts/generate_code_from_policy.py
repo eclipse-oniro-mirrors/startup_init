@@ -426,6 +426,43 @@ class GenBpfPolicy:
         bpf_policy.append(BPF_JEQ.format(syscall_nr, 0, cur_size))
         return bpf_policy
 
+    @staticmethod
+    def check_arg_str(arg_atom):
+        arg_str = arg_atom[0:3]
+        if arg_str != 'arg':
+            raise ValidateError('format ERROR, {} is not equal to arg'.format(arg_atom))
+
+        arg_id = int(arg_atom[3])
+        if arg_id not in range(6):
+            raise ValidateError('arg num out of the scope 0~5')
+
+        return arg_id, True
+
+    @staticmethod
+    def check_operation_str(operation_atom):
+        operation_str = operation_atom
+        if operation_str not in operation:
+            operation_str = operation_atom[0]
+            if operation_str not in operation:
+                raise ValidateError('operation not in [<, <=, !=, ==, >, >=, &]')
+        return operation_str, True
+
+    #gen bpf (argn & mask) == value
+    @staticmethod
+    def gen_mask_equal_bpf(arg_id, mask, value, cur_size):
+        bpf_policy = []
+        #high 4 bytes
+        bpf_policy.append(BPF_LOAD.format(20 + arg_id * 8))
+        bpf_policy.append(BPF_AND.format('((uint64_t)' + mask + ') >> 32'))
+        bpf_policy.append(BPF_JEQ.format('((uint64_t)' + value + ') >> 32', 0, cur_size + 4))
+
+        #low 4 bytes
+        bpf_policy.append(BPF_LOAD.format(16 + arg_id * 8))
+        bpf_policy.append(BPF_AND.format(mask))
+        bpf_policy.append(BPF_JEQ.format(value, cur_size, cur_size + 1))
+
+        return bpf_policy
+
     def update_arch(self, arch):
         self.arch = arch
         self.syscall_nr_range = []
@@ -637,43 +674,6 @@ class GenBpfPolicy:
             bpf_policy += self.compile_mask_equal_atom(atom, cur_size)
         else:
             bpf_policy += self.compile_single_operation_atom(atom, cur_size)
-
-        return bpf_policy
-
-    @staticmethod
-    def check_arg_str(arg_atom):
-        arg_str = arg_atom[0:3]
-        if arg_str != 'arg':
-            raise ValidateError('format ERROR, {} is not equal to arg'.format(arg_atom))
-
-        arg_id = int(arg_atom[3])
-        if arg_id not in range(6):
-            raise ValidateError('arg num out of the scope 0~5')
-
-        return arg_id, True
-
-    @staticmethod
-    def check_operation_str(operation_atom):
-        operation_str = operation_atom
-        if operation_str not in operation:
-            operation_str = operation_atom[0]
-            if operation_str not in operation:
-                raise ValidateError('operation not in [<, <=, !=, ==, >, >=, &]')
-        return operation_str, True
-
-    #gen bpf (argn & mask) == value
-    @staticmethod
-    def gen_mask_equal_bpf(arg_id, mask, value, cur_size):
-        bpf_policy = []
-        #high 4 bytes
-        bpf_policy.append(BPF_LOAD.format(20 + arg_id * 8))
-        bpf_policy.append(BPF_AND.format('((uint64_t)' + mask + ') >> 32'))
-        bpf_policy.append(BPF_JEQ.format('((uint64_t)' + value + ') >> 32', 0, cur_size + 4))
-
-        #low 4 bytes
-        bpf_policy.append(BPF_LOAD.format(16 + arg_id * 8))
-        bpf_policy.append(BPF_AND.format(mask))
-        bpf_policy.append(BPF_JEQ.format(value, cur_size, cur_size + 1))
 
         return bpf_policy
 
