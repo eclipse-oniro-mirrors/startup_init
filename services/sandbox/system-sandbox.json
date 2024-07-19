@@ -97,6 +97,10 @@
             "src-path" : "/chip_prod/etc",
             "sandbox-path" : "/chip_prod/etc",
             "sandbox-flags" : [ "bind", "rec", "private" ]
+        }, {
+            "src-path" : "/module_update",
+            "sandbox-path" : "/module_update",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
         }
     ],
     "mount-bind-files" : [{
