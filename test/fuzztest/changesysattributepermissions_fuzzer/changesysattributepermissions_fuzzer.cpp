@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-#include "parseueventdconfigfile_fuzzer.h"
+#include "changesysattributepermissions_fuzzer.h"
 #include <string>
 #include "ueventd_read_cfg.h"
 
 namespace OHOS {
-    bool FuzzParseUeventdConfigFile(const uint8_t* data, size_t size)
+    bool FuzzChangeSysAttributePermissions(const uint8_t* data, size_t size)
     {
-        const char *file = reinterpret_cast<const char*>(data);
-        ParseUeventdConfigFile(file);
+        const char *sysPath = reinterpret_cast<const char*>(data);
+        ChangeSysAttributePermissions(sysPath);
         return true;
     }
 }
@@ -30,6 +30,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzParseUeventdConfigFile(data, size);
+    OHOS::FuzzChangeSysAttributePermissions(data, size);
     return 0;
 }
