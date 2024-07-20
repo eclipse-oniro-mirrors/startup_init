@@ -126,6 +126,7 @@ ohos_executable("init") {
   external_deps += [
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "hilog:libhilog",
     "storage_service:libfscryptutils_static",
   ]
   cflags = []
