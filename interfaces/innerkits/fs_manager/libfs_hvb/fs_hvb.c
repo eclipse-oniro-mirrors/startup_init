@@ -396,6 +396,11 @@ int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, stru
     RETURN_ERR_IF_APPEND_STRING_ERR(&p, end, &devPath[0], strlen(devPath));
     // append <hash_dev>
     RETURN_ERR_IF_APPEND_STRING_ERR(&p, end, &devPath[0], strlen(devPath));
+
+    if (cert->data_block_size == 0 || cert->hash_block_size == 0) {
+        BEGET_LOGE("error, block size is zero");
+        return -1;
+    }
     // append <data_block_size>
     RETURN_ERR_IF_APPEND_DIGIT_ERR(&p, end, cert->data_block_size);
     // append <hash_block_size>

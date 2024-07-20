@@ -52,13 +52,9 @@ static enum hvb_io_errno HvbReadFromPartition(struct hvb_ops* ops,
     size_t pathLen = 0;
     enum hvb_io_errno ret = HVB_IO_ERROR_IO;
 
-    if (partition == NULL) {
-        BEGET_LOGE("error, partition is NULL");
-        return HVB_IO_ERROR_IO;
-    }
-
-    if (buf == NULL) {
-        BEGET_LOGE("error, buf is NULL");
+    if (ops == NULL || partition == NULL ||
+        buf == NULL || outNumRead == NULL) {
+        BEGET_LOGE("error, invalid parameter");
         return HVB_IO_ERROR_IO;
     }
 
@@ -104,9 +100,7 @@ static enum hvb_io_errno HvbReadFromPartition(struct hvb_ops* ops,
         goto exit;
     }
 
-    if (outNumRead != NULL) {
-        *outNumRead = numRead;
-    }
+    *outNumRead = numRead;
 
     ret = HVB_IO_OK;
 
