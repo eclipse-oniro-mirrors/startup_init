@@ -27,7 +27,7 @@
 #include "bootstage.h"
 
 #define MAX_TRIGGER_COUNT_RUN_ONCE 20
-#define MAX_TRIGGER_NAME_LENGTH 128
+#define MAX_TRIGGER_NAME_LENGTH 256
 static TriggerWorkSpace g_triggerWorkSpace = {};
 
 static int DoTriggerExecute_(const TriggerNode *trigger, const char *content, uint32_t size)
