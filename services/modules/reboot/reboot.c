@@ -24,6 +24,8 @@
 #include "plugin_adapter.h"
 #include "securec.h"
 
+#define BUFF_SIZE 256
+
 PLUGIN_STATIC int DoRoot_(const char *jobName, int type)
 {
     // by job to stop service and unmount
@@ -51,9 +53,24 @@ static int DoReboot(int id, const char *name, int argc, const char **argv)
 static int DoRebootPanic(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
-    UNUSED(name);
-    UNUSED(argc);
-    UNUSED(argv);
+    char str[BUFF_SIZE] = {0};
+    int ret = sprintf_s(str, sizeof(str) - 1, "panic caused by %s:", name);
+    if (ret <= 0) {
+        PLUGIN_LOGW("DoRebootPanic sprintf_s name %s failed!", name);
+    }
+
+    int len = ret > 0 ? (sizeof(str) - ret) : sizeof(str);
+    char *tmp = str + (sizeof(str) - len);
+    for (int i = 0; i < argc; ++i) {
+        ret = sprintf_s(tmp, len - 1, " %s", argv[i]);
+        if (ret <= 0) {
+            PLUGIN_LOGW("DoRebootPanic sprintf_s arg %s failed!", argv[i]);
+        } else {
+            len -= ret;
+            tmp += ret;
+        }
+    }
+    PLUGIN_LOGI("DoRebootPanic %s", str);
     // clear misc
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
     DoJobNow("reboot");
