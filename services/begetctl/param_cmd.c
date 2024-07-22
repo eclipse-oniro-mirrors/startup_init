@@ -26,11 +26,11 @@
 #include <sched.h>
 
 #include "begetctl.h"
-#include "init_param.h"
 #include "param_manager.h"
 #include "param_security.h"
-#include "param_init.h"
+#include "init_param.h"
 #include "shell_utils.h"
+#include "param_init.h"
 #include "beget_ext.h"
 #ifdef PARAM_SUPPORT_SELINUX
 #include <policycoreutils.h>

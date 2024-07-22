@@ -219,7 +219,7 @@ int MountOverlayOne(const char *mnt)
 
 int RemountOverlay(void)
 {
-    char *remountPath[] = { "/usr", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust" };
+    char *remountPath[] = { "/usr", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust", "/version" };
     for (size_t i = 0; i < ARRAY_LENGTH(remountPath); i++) {
         struct stat statInfo;
         char dirMnt[MAX_BUFFER_LEN] = {0};

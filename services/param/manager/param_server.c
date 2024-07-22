@@ -330,7 +330,7 @@ static int LoadParamFromImport_(char *buffer, const int buffSize, uint32_t mode)
     }
     char *target = calloc(PATH_MAX, 1);
     PARAM_CHECK(target != NULL, return -1, "Failed to alloc memory");
-    if (strncpy_s(target, buffSize, buffer + IMPORT_PREFIX_LEN + spaceCount, buffSize) != 0) {
+    if (strncpy_s(target, PATH_MAX, buffer + IMPORT_PREFIX_LEN + spaceCount, buffSize) != 0) {
         PARAM_LOGE("Failed to get value of import.");
         free(target);
         return -1;

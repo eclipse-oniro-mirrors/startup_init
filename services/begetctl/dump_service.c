@@ -49,7 +49,8 @@ static int SendAppspawnCmdMessage(const CmdAgent *agent, uint16_t type, const ch
     BEGET_ERROR_CHECK(ret == 0, return -1, "AppSpawnClientInit error, errno = %d", errno);
     AppSpawnReqMsgHandle reqHandle;
     ret = AppSpawnReqMsgCreate(MSG_DUMP, ptyName, &reqHandle);
-    BEGET_ERROR_CHECK(ret == 0, AppSpawnClientDestroy(clientHandle); return -1, "AppSpawnReqMsgCreate error");
+    BEGET_ERROR_CHECK(ret == 0, AppSpawnClientDestroy(clientHandle);
+        return -1, "AppSpawnReqMsgCreate error");
     ret = AppSpawnReqMsgAddStringInfo(reqHandle, "pty-name", ptyName);
     BEGET_ERROR_CHECK(ret == 0, AppSpawnClientDestroy(clientHandle);
         return -1, "add %s request message error", ptyName);

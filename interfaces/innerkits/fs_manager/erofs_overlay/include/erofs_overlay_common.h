@@ -17,6 +17,7 @@
 #define EROFS_OVERLAY_COMMON_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "fs_manager/ext4_super_block.h"
 #include "fs_manager/erofs_super_block.h"
 
