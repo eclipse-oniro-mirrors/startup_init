@@ -645,6 +645,8 @@ int OpenConsole(void)
 {
 #ifndef __LITEOS_M__
     return OpenStdioDevice("/dev/console", 1);
+#else
+    return 0;
 #endif
 }
 

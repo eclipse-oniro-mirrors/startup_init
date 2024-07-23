@@ -124,7 +124,7 @@ static int FormatExt4(const char *fsBlkDev, const char *fsMntPoint)
     if (ret) {
         INIT_LOGE("e2fsdroid failed returned %d", ret);
     }
-    return ret;
+    return 0;
 }
 
 static void OverlayRemountPre(const char *mnt)
