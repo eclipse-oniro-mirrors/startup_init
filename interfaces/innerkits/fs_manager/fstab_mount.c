@@ -284,7 +284,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size, const
     int argc = 0;
 
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize.f2fs is not exists.");
-    BEGET_ERROR_CHECK(!NeedDoResizeByKdump(), return -1, "no need do resize, bucause kdump has done");
+    BEGET_ERROR_CHECK(NeedDoResizeByKdump(), return -1, "no need do resize, bucause kdump has done");
 
     argv[argc++] = file;
     if (fsManagerFlags & FS_MANAGER_PROJQUOTA) {
@@ -540,7 +540,7 @@ int MountOneItem(FstabItem *item)
         SwitchRoot("/usr");
     }
 #endif
-    InitPostMount(item->mountPoint, rc, item->fsType);
+    InitPostMount(item->mountPoint, rc);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
             BEGET_LOGE("Mount no fail device %s to %s failed, err = %d", item->deviceName, item->mountPoint, errno);
