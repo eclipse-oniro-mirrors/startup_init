@@ -197,7 +197,8 @@ static int HandleRecvMessage_(SubInitInfo *subInfo, char *buffer, uint32_t size)
     while ((rLen < 0) && (errno == EAGAIN)) {
         rLen = TEMP_FAILURE_RETRY(read(subInfo->recvFd, buffer, size));
     }
-    PLUGIN_CHECK(rLen >= 0, return errno, "Read message for %d fail errno %d", subInfo->type, errno);
+    PLUGIN_CHECK(rLen >= 0 && rLen < size, return errno,
+        "Read message for %d fail errno %d rLen %d", subInfo->type, errno, rLen);
     buffer[rLen] = '\0';
     PLUGIN_LOGI("Exec cmd '%s' in sub init %s", buffer, g_subContext[subInfo->type]);
     int index = 0;
