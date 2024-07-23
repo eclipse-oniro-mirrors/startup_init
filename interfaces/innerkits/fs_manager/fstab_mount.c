@@ -48,12 +48,17 @@ extern "C" {
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 
-__attribute__((weak)) void InitPostMount(const char *mountPoint, int rc, const char *fsType)
+__attribute__((weak)) void InitPostMount(const char *mountPoint, int rc)
 {
 }
 
 __attribute__((weak)) void InitTimerControl(bool isSuspend)
 {
+}
+
+__attribute__((weak)) bool NeedDoResizeByKdump(void)
+{
+    return true;
 }
 
 static const SUPPORTED_FILE_SYSTEM supportedFileSystems[] = {
@@ -279,6 +284,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size, const
     int argc = 0;
 
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize.f2fs is not exists.");
+    BEGET_ERROR_CHECK(!NeedDoResizeByKdump(), return -1, "no need do resize, bucause kdump has done");
 
     argv[argc++] = file;
     if (fsManagerFlags & FS_MANAGER_PROJQUOTA) {
