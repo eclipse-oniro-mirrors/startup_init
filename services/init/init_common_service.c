@@ -221,6 +221,13 @@ static void DropCapability(const Service *service)
 
 static int SetPerms(const Service *service)
 {
+#ifndef OHOS_LITE
+    /*
+     * service before setting Perms hooks
+     */
+    ServiceHookExecute(service->name, (const char *)service->pathArgs.argv[0], INIT_SERVICE_SET_PERMS_BEFORE);
+#endif
+
     INIT_ERROR_CHECK(KeepCapability() == 0, return INIT_EKEEPCAP,
         "Service error %d %s, failed to set keep capability.", errno, service->name);
 

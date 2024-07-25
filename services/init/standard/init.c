@@ -270,44 +270,11 @@ void ParseInitCfgByPriority(void)
     FreeCfgFiles(files);
 }
 
-#ifdef USE_ENCAPS
-#include <sys/ioctl.h>
-
-#define OH_ENCAPS_PROC_TYPE_BASE 0x18
-#define OH_ENCAPS_MAGIC 'E'
-#define OH_PROC_SYS 3
-#define SET_PROC_TYPE_CMD _IOW(OH_ENCAPS_MAGIC, OH_ENCAPS_PROC_TYPE_BASE, uint32_t)
-
-static void SetEncapsFlag(uint32_t flag)
-{
-    int fd = 0;
-    int ret = 0;
-
-    fd = open("/dev/encaps", O_RDWR);
-    if (fd < 0) {
-        INIT_LOGE("AppSpawnChild SetEncapsFlag open failed");
-        return;
-    }
-
-    ret = ioctl(fd, SET_PROC_TYPE_CMD, &flag);
-    if (ret != 0) {
-        close(fd);
-        INIT_LOGE("AppSpawnChild SetEncapsFlag ioctl failed");
-        return;
-    }
-
-    close(fd);
-}
-#endif
-
 void SystemConfig(const char *uptime)
 {
     INIT_TIMING_STAT timingStat;
 
     InitSysAdj();
-#ifdef USE_ENCAPS
-    SetEncapsFlag(OH_PROC_SYS);
-#endif
 
     HOOK_EXEC_OPTIONS options;
 
