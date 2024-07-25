@@ -20,40 +20,40 @@
 #include <cstdint>
 
 extern "C" {
-    const char* FfiOHOSDeviceInfoGetHardwareProfile();
-    const char* FfiOHOSDeviceInfoDeviceType();
-    const char* FfiOHOSDeviceInfoOsFullName();
-    const char* FfiOHOSDeviceInfoProductModel();
-    const char* FfiOHOSDeviceInfoBrand();
-    const char* FfiOHOSDeviceInfoUdid();
-    const char* FfiOHOSDeviceInfoBuildRootHash();
-    const char* FfiOHOSDeviceInfoBuildTime();
-    const char* FfiOHOSDeviceInfoBuildHost();
-    const char* FfiOHOSDeviceInfoBuildUser();
-    const char* FfiOHOSDeviceInfoBuildType();
-    const char* FfiOHOSDeviceInfoVersionId();
-    int64_t FfiOHOSDeviceInfoFirstApiVersion();
-    int64_t FfiOHOSDeviceInfoSdkApiVersion();
-    int64_t FfiOHOSDeviceInfoBuildVersion();
-    int64_t FfiOHOSDeviceInfoFeatureVersion();
-    int64_t FfiOHOSDeviceInfoSeniorVersion();
-    int64_t FfiOHOSDeviceInfoMajorVersion();
-    const char* FfiOHOSDeviceInfoDisplayVersion();
-    const char* FfiOHOSDeviceInfoSerial();
-    const char* FfiOHOSDeviceInfoOsReleaseType();
-    const char* FfiOHOSDeviceInfoIncrementalVersion();
-    const char* FfiOHOSDeviceInfoSecurityPatchTag();
-    const char* FfiOHOSDeviceInfoAbiList();
-    const char* FfiOHOSDeviceInfoBootloaderVersion();
-    const char* FfiOHOSDeviceInfoHardwareModel();
-    const char* FfiOHOSDeviceInfoSoftwareModel();
-    const char* FfiOHOSDeviceInfoProductSeries();
-    const char* FfiOHOSDeviceInfoMarketName();
-    const char* FfiOHOSDeviceInfoManufacture();
-    const char* FfiOHOSDeviceInfoDistributionOSName();
-    const char* FfiOHOSDeviceInfoDistributionOSVersion();
-    int64_t FfiOHOSDeviceInfoDistributionOSApiVersion();
-    const char* FfiOHOSDeviceInfoDistributionOSReleaseType();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoGetHardwareProfile();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoDeviceType();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoOsFullName();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoProductModel();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoBrand();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoUdid();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoBuildRootHash();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoBuildTime();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoBuildHost();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoBuildUser();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoBuildType();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoVersionId();
+    FFI_EXPORT int64_t FfiOHOSDeviceInfoFirstApiVersion();
+    FFI_EXPORT int64_t FfiOHOSDeviceInfoSdkApiVersion();
+    FFI_EXPORT int64_t FfiOHOSDeviceInfoBuildVersion();
+    FFI_EXPORT int64_t FfiOHOSDeviceInfoFeatureVersion();
+    FFI_EXPORT int64_t FfiOHOSDeviceInfoSeniorVersion();
+    FFI_EXPORT int64_t FfiOHOSDeviceInfoMajorVersion();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoDisplayVersion();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoSerial();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoOsReleaseType();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoIncrementalVersion();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoSecurityPatchTag();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoAbiList();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoBootloaderVersion();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoHardwareModel();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoSoftwareModel();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoProductSeries();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoMarketName();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoManufacture();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoDistributionOSName();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoDistributionOSVersion();
+    FFI_EXPORT int64_t FfiOHOSDeviceInfoDistributionOSApiVersion();
+    FFI_EXPORT const char* FfiOHOSDeviceInfoDistributionOSReleaseType();
 }
 
 #endif // OHOS_DEVICE_INFO_FFI_H
