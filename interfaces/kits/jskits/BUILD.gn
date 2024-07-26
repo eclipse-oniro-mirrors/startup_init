@@ -31,6 +31,14 @@ ohos_shared_library("deviceinfo") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
+
+  defines = []
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.bundlemanager_bundle_framework)) {
+    external_deps += [ "bundle_framework:appexecfwk_base" ]
+    defines += [ "DEPENDENT_APPEXECFWK_BASE" ]
+  }
+
   relative_install_dir = "module"
   subsystem_name = "startup"
   part_name = "init"
