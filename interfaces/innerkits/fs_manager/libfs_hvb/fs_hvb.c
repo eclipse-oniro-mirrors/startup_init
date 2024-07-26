@@ -424,7 +424,6 @@ int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, stru
         return -1;
     }
 
-    BEGET_LOGE("puck devPath=%s", &devPath[0]);
     p = target->paras;
     end = p + FS_HVB_VERITY_TARGET_MAX;
 
@@ -462,11 +461,9 @@ int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, stru
     // append <salt>
     RETURN_ERR_IF_APPEND_OCTETS_ERR(&p, end, (char *)cert->hash_payload.salt, cert->salt_size);
 
-    // apend <fec_data>
     if (cert->fec_size > 0) {
-        ret = FsHvbVerityTargetAddFecArgs(cert, devPath, &p, end);
-        if (ret != 0) {
-            return ret;
+        if (FsHvbVerityTargetAddFecArgs(cert, devPath, &p, end) != 0) {
+            return -1;
         }
     }
 
