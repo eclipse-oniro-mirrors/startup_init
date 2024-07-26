@@ -380,6 +380,7 @@ static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
     // deal start job
     if (service->serviceJobs.jobsName[JOB_ON_START] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_START]);
+        INIT_LOGI("Deal service %s job end", service->name);
     }
     ClearEnvironment(service);
     if (!IsOnDemandService(service)) {
