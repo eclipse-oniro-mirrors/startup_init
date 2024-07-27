@@ -356,11 +356,45 @@ static char *FsHvbGetHashAlgStr(unsigned int hash_algo)
 }
 
 /*
+ * add optional fec data if supported, format as below;
+ * <use_fec_from_device> <fec_roots><fec_blocks><fec_start>
+ */
+static int FsHvbVerityTargetAddFecArgs(struct hvb_cert *cert, char *devPath, char **str, char *end)
+{
+    FS_HVB_RETURN_ERR_IF_NULL(cert);
+    FS_HVB_RETURN_ERR_IF_NULL(devPath);
+    FS_HVB_RETURN_ERR_IF_NULL(str);
+    FS_HVB_RETURN_ERR_IF_NULL(end);
+
+    // append <device>
+    RETURN_ERR_IF_APPEND_STRING_ERR(str, end, USE_FEC_FROM_DEVICE, strlen(USE_FEC_FROM_DEVICE));
+    RETURN_ERR_IF_APPEND_STRING_ERR(str, end, &devPath[0], strlen(devPath));
+ 
+    // append <fec_roots>
+    RETURN_ERR_IF_APPEND_STRING_ERR(str, end, FEC_ROOTS, strlen(FEC_ROOTS));
+    RETURN_ERR_IF_APPEND_DIGIT_ERR(str, end, cert->fec_num_roots);
+
+    if (cert->data_block_size == 0 || cert->hash_block_size == 0) {
+        BEGET_LOGE("error, block size is zero");
+        return -1;
+    }
+    // append <fec_blocks>
+    RETURN_ERR_IF_APPEND_STRING_ERR(str, end, FEC_BLOCKS, strlen(FEC_BLOCKS));
+    RETURN_ERR_IF_APPEND_DIGIT_ERR(str, end, cert->fec_offset / cert->hash_block_size);
+ 
+    // append <fec_start>
+    RETURN_ERR_IF_APPEND_STRING_ERR(str, end, FEC_START, strlen(FEC_START));
+    RETURN_ERR_IF_APPEND_DIGIT_ERR(str, end, cert->fec_offset / cert->data_block_size);
+ 
+    return 0;
+}
+
+/*
  * target->paras is verity table target, format as below;
  * <version> <dev><hash_dev><data_block_size><hash_block_size>
  * <num_data_blocks><hash_start_block><algorithm><digest><salt>
- *[<#opt_params><opt_params>]
- *exp: 1 /dev/sda1 /dev/sda1 4096 4096 262144 262144 sha256 \
+ * [<#opt_params><opt_params>]
+ * exp: 1 /dev/sda1 /dev/sda1 4096 4096 262144 262144 sha256 \
        xxxxx
        xxxxx
  */
@@ -371,6 +405,10 @@ int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, stru
     char *end = NULL;
     char *hashALgo = NULL;
     char devPath[FS_HVB_DEVPATH_MAX_LEN] = {0};
+
+    FS_HVB_RETURN_ERR_IF_NULL(target);
+    FS_HVB_RETURN_ERR_IF_NULL(devName);
+    FS_HVB_RETURN_ERR_IF_NULL(cert);
 
     target->start = 0;
     target->length = cert->image_len / FS_HVB_SECTOR_BYTES;
@@ -386,7 +424,6 @@ int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, stru
         return -1;
     }
 
-    BEGET_LOGE("puck devPath=%s", &devPath[0]);
     p = target->paras;
     end = p + FS_HVB_VERITY_TARGET_MAX;
 
@@ -424,7 +461,13 @@ int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, stru
     // append <salt>
     RETURN_ERR_IF_APPEND_OCTETS_ERR(&p, end, (char *)cert->hash_payload.salt, cert->salt_size);
 
-    //remove last blank
+    if (cert->fec_size > 0) {
+        if (FsHvbVerityTargetAddFecArgs(cert, devPath, &p, end) != 0) {
+            return -1;
+        }
+    }
+
+    // remove last blank
     *(p - 1) = '\0';
 
     target->paras_len = strlen(target->paras);

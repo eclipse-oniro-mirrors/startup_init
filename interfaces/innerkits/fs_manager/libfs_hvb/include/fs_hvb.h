@@ -30,6 +30,11 @@ extern "C" {
 #endif
 #endif
 
+#define USE_FEC_FROM_DEVICE "use_fec_from_device"
+#define FEC_ROOTS "fec_roots"
+#define FEC_BLOCKS "fec_blocks"
+#define FEC_START "fec_start"
+
 int FsHvbInit(void);
 int FsHvbSetupHashtree(FstabItem *fsItem);
 int FsHvbFinal(void);
