@@ -57,4 +57,7 @@ declare_args() {
 
   # erofs overlay feature switch
   init_startup_feature_erofs_overlay = false
+
+  # system call wrap switch
+  init_startup_feature_system_call_switch = false
 }

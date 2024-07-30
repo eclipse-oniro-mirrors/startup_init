@@ -55,6 +55,8 @@ typedef struct tagBOOT_EVENT_PARAM_ITEM {
 
 ListNode *GetBootEventList(void);
 
+bool IsBootCompleted(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
