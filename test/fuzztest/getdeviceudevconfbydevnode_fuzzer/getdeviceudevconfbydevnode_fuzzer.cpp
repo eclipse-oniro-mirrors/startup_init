@@ -25,7 +25,7 @@ namespace OHOS {
         if (GetDeviceUdevConfByDevNode(devNode) == NULL) {
             result = true;
         }
-        return false;
+        return result;
     }
 }
 
