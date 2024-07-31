@@ -14,7 +14,7 @@
  */
 
 #include "getboolparametercpp_fuzzer.h"
-#include<string>
+#include <string>
 #include "parameters.h"
 
 namespace OHOS {
