@@ -79,6 +79,9 @@ ohos_executable("init") {
     "bootstagehooker.c",
   ]
 
+  if (init_startup_feature_system_call_switch) {
+    sources += [ "../standard/system_call_wrap.c" ]
+  }
   modulemgr_sources = [
     "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
     "//base/startup/init/interfaces/innerkits/modulemgr/modulemgr.c",
@@ -130,7 +133,21 @@ ohos_executable("init") {
     "storage_service:libfscryptutils_static",
   ]
   cflags = []
+  if (init_startup_feature_system_call_switch) {
+    ldflags = [
+      "-Wl,--wrap=getuid",
+      "-Wl,--wrap=mkdir",
+      "-Wl,--wrap=rmdir",
+      "-Wl,--wrap=fork",
+      "-Wl,--wrap=mount",
+      "-Wl,--wrap=chown",
+      "-Wl,--wrap=chmod",
+      "-Wl,--wrap=kill",
+      "-Wl,--wrap=fopen",
+    ]
 
+    include_dirs += [ "//base/startup/init/services/modules/bootevent" ]
+  }
   if (use_musl) {
     external_deps += [
       "mksh:sh",
