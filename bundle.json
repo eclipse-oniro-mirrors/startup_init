@@ -50,7 +50,6 @@
                 "hilog_lite",
                 "samgr",
                 "access_token",
-                "common",
                 "dsoftbus",
                 "hvb",
                 "hisysevent",
@@ -69,8 +68,6 @@
                 "toybox"
             ],
             "third_party": [
-                "bounds_checking_function",
-                "selinux",
                 "libunwind",
                 "mbedtls",
                 "zlib",
