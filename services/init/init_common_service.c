@@ -451,14 +451,14 @@ static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
     INIT_CHECK_ONLY_ELOG(BindCpuCore(service) == SERVICE_SUCCESS,
         "Service warning %d %s, failed to publish fd", errno, service->name);
 
+    // write pid
+    INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, service->lastErrno = INIT_EWRITEPID;
+        return INIT_EWRITEPID, "Service error %d %s, failed to write pid.", errno, service->name);
+
     // permissions
     ret = SetPerms(service);
     INIT_ERROR_CHECK(ret == SERVICE_SUCCESS, service->lastErrno = ret;
         return ret, "Service error %d %s, failed to set permissions.", ret, service->name);
-
-    // write pid
-    INIT_ERROR_CHECK(WritePid(service) == SERVICE_SUCCESS, service->lastErrno = INIT_EWRITEPID;
-        return INIT_EWRITEPID, "Service error %d %s, failed to write pid.", errno, service->name);
 
     PluginExecCmdByName("setServiceContent", service->name);
     return 0;
