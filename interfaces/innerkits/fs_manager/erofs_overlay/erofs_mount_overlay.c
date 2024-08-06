@@ -215,22 +215,27 @@ static int GetMapperAddr(const char *dev, uint64_t *start, uint64_t *length)
     return 0;
 }
 
-static void ConstructLinearTarget(DmVerityTarget *target, const char *dev, uint64_t mapStart, uint64_t mapLength)
+static int ConstructLinearTarget(DmVerityTarget *target, const char *dev, uint64_t mapStart, uint64_t mapLength)
 {
     if (target == NULL || dev == NULL) {
-        return;
+        return -1;
     }
 
     target->start = 0;
     target->length = mapLength / SECTOR_SIZE;
     target->paras = calloc(1, MAX_BUFFER_LEN);
+    if (target->paras == NULL) {
+        BEGET_LOGE("Failed to calloc target paras");
+        return -1;
+    }
 
     if (snprintf_s(target->paras, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s %lld", dev, mapStart / SECTOR_SIZE) < 0) {
-        BEGET_LOGE("Failed to  copy target paras.");
-        return;
+        BEGET_LOGE("Failed to copy target paras.");
+        return -1;
     }
     target->paras_len = strlen(target->paras);
     BEGET_LOGI("dev [%s], linearparas [%s], length [%s]", dev, target->paras, target->paras_len);
+    return 0;
 }
 
 static void DestoryLinearTarget(DmVerityTarget *target)
@@ -264,14 +269,22 @@ static int GetOverlayDevice(FstabItem *item, char *devRofs, const uint32_t devRo
     DmVerityTarget dmRofsTarget = {0};
     DmVerityTarget dmExt4Target = {0};
 
-    ConstructLinearTarget(&dmRofsTarget, item->deviceName, 0, mapStart);
-    int rc = FsDmCreateLinearDevice(nameRofs, devRofs, devRofsLen, &dmRofsTarget);
+    int rc = ConstructLinearTarget(&dmRofsTarget, item->deviceName, 0, mapStart);
     if (rc != 0) {
-        BEGET_LOGE("fs create rofs linear device failed, dev is [%s]", item->deviceName);
+        BEGET_LOGE("fs construct erofs linear target failed, dev is [%s]", item->deviceName);
+        goto exit;
+    }
+    rc = FsDmCreateLinearDevice(nameRofs, devRofs, devRofsLen, &dmRofsTarget);
+    if (rc != 0) {
+        BEGET_LOGE("fs create erofs linear device failed, dev is [%s]", item->deviceName);
         goto exit;
     }
 
-    ConstructLinearTarget(&dmExt4Target, item->deviceName, mapStart, mapLength);
+    rc = ConstructLinearTarget(&dmExt4Target, item->deviceName, mapStart, mapLength);
+    if (rc != 0) {
+        BEGET_LOGE("fs construct ext4 linear target failed, dev is [%s]", item->deviceName);
+        goto exit;
+    }
     rc = FsDmCreateLinearDevice(nameExt4, devExt4, devExt4Len, &dmExt4Target);
     if (rc != 0) {
         BEGET_LOGE("fs create ext4 linear device failed, dev is [%s]", item->deviceName);
