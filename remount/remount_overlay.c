@@ -34,12 +34,25 @@
 #define ROOT_MOUNT_DIR "/"
 #define SYSTEM_DIR "/usr"
 
+static bool MntNeedRemount(const char *mnt)
+{
+    char *remountPath[] = { "/", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust", "/version" };
+    for (int i = 0; i < ARRAY_LENGTH(remountPath); i++) {
+        if (strcmp(remountPath[i], mnt) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static bool IsSkipRemount(const struct mntent mentry)
 {
     if (mentry.mnt_type == NULL || mentry.mnt_dir == NULL) {
         return true;
     }
-
+    if (!MntNeedRemount(mentry.mnt_dir)) {
+        return true;
+    }
     if (strncmp(mentry.mnt_type, "erofs", strlen("erofs")) != 0) {
         return true;
     }

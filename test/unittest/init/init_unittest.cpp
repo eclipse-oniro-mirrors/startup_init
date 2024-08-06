@@ -13,12 +13,9 @@
  * limitations under the License.
  */
 
-#include "init_unittest.h"
-
 #include <cerrno>
 #include <cstdio>
 #include <ctime>
-
 #include <sys/types.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
@@ -28,6 +25,7 @@
 #include "init_cmds.h"
 #include "init_log.h"
 #include "init_service.h"
+#include "init_unittest.h"
 #include "init_adapter.h"
 #include "init_utils.h"
 #include "loop_event.h"

@@ -654,6 +654,8 @@ int OpenKmsg(void)
 {
 #ifndef __LITEOS_M__
     return OpenStdioDevice("/dev/kmsg", 0);
+#else
+    return 0;
 #endif
 }
 

@@ -65,6 +65,7 @@ static int DoRebootPanic(int id, const char *name, int argc, const char **argv)
         ret = sprintf_s(tmp, len - 1, " %s", argv[i]);
         if (ret <= 0) {
             PLUGIN_LOGW("DoRebootPanic sprintf_s arg %s failed!", argv[i]);
+            break;
         } else {
             len -= ret;
             tmp += ret;
