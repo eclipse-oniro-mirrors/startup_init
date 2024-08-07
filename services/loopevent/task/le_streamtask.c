@@ -55,6 +55,7 @@ static LE_STATUS HandleRecvMsg_(const LoopHandle loopHandle,
 {
     LE_STATUS status = LE_SUCCESS;
     LE_Buffer *buffer = CreateBuffer(LOOP_DEFAULT_BUFFER);
+    LE_CHECK(buffer != NULL, return LE_NO_MEMORY, "Failed to create buffer");
     int readLen = 0;
     while (1) {
         if (handleRecvMsg != NULL) {
