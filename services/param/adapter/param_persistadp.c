@@ -27,10 +27,10 @@ static ParamMutex g_saveMutex = {};
 
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
-    bool clearFactoryPersistParams = *(bool*)context;
     uint32_t dataIndex = 0;
     int mode = 0;
-
+#ifndef OHOS_LITE
+    bool clearFactoryPersistParams = *(bool*)context;
     if (!clearFactoryPersistParams) {
         mode |= LOAD_PARAM_PERSIST;
         return WriteParam(name, value, &dataIndex, mode);
@@ -44,10 +44,14 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
         return WriteParam(name, value, &dataIndex, mode);
     }
 
-    if ((strcmp(persetValue, value) != 0)) {
+    if (strcmp(persetValue, value) != 0) {
         PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
     }
-
+#else
+    UNUSED(context);
+    mode |= LOAD_PARAM_PERSIST;
+    return WriteParam(name, value, &dataIndex, mode);
+#endif
     return 0;
 }
 
@@ -91,9 +95,7 @@ static int LoadPersistParam(void)
     free(buffer);
     if (clearFactoryPersistParams && access(PARAM_PERSIST_SAVE_PATH, F_OK) == 0) {
         FILE *fp = fopen(PERSIST_PARAM_FIXED_FLAGS, "w");
-        if (fp == NULL) {
-            PARAM_LOGE("create file %s fail error %d", PERSIST_PARAM_FIXED_FLAGS, errno);
-        }
+        PARAM_CHECK(fp != NULL, return -1, "create file %s fail error %d", PERSIST_PARAM_FIXED_FLAGS, errno);
         (void)fclose(fp);
     }
     return 0;
