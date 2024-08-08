@@ -107,6 +107,9 @@ static int CheckFdHolderPermission(Service *service, pid_t requestPid)
 
 static inline void CloseFds(int *fds, size_t fdCount)
 {
+    if (fds == NULL) {
+        return;
+    }
     for (size_t i = 0; i < fdCount; i++) {
         close(fds[i]);
     }
