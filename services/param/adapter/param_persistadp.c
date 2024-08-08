@@ -44,9 +44,12 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
         return WriteParam(name, value, &dataIndex, mode);
     }
 
-    if (strcmp(persetValue, value) != 0) {
+    if ((strcmp(persetValue, value) != 0)) {
         PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
+        mode |= LOAD_PARAM_PERSIST;
+        return WriteParam(name, value, &dataIndex, mode);
     }
+
     return 0;
 }
 
