@@ -27,32 +27,14 @@ static ParamMutex g_saveMutex = {};
 
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
-    bool clearFactoryPersistParams = *(bool*)context;
+    UNUSED(context);
     uint32_t dataIndex = 0;
     int mode = 0;
-
-    if (!clearFactoryPersistParams) {
-        mode |= LOAD_PARAM_PERSIST;
-        return WriteParam(name, value, &dataIndex, mode);
-    }
-
-    char persetValue[PARAM_VALUE_LEN_MAX] = {0};
-    uint32_t len = PARAM_VALUE_LEN_MAX;
-    int ret = SystemReadParam(name, persetValue, &len);
-    if (ret != 0) {
-        mode |= LOAD_PARAM_PERSIST;
-        return WriteParam(name, value, &dataIndex, mode);
-    }
-
-    if ((strcmp(persetValue, value) != 0)) {
-        PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
-    }
-
-    return 0;
+    mode |= LOAD_PARAM_PERSIST;
+    return WriteParam(name, value, &dataIndex, mode);
 }
 
-static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *fileName,
-    char *buffer, uint32_t buffSize)
+static void LoadPersistParam_(const char *fileName, char *buffer, uint32_t buffSize)
 {
     FILE *fp = fopen(fileName, "r");
     PARAM_WARNING_CHECK(fp != NULL, return, "No valid persist parameter file %s", fileName);
@@ -60,7 +42,7 @@ static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *
     uint32_t paramNum = 0;
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
-        int ret = SplitParamString(buffer, NULL, 0, LoadOnePersistParam_, (uint32_t*)&clearFactoryPersistParams);
+        int ret = SplitParamString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
         PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);
         paramNum++;
     }
@@ -71,31 +53,16 @@ static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *
 static int LoadPersistParam(void)
 {
     CheckAndCreateDir(PARAM_PERSIST_SAVE_PATH);
-    bool clearFactoryPersistParams = false;
-    char value[PARAM_VALUE_LEN_MAX] = {0};
-    uint32_t len = PARAM_VALUE_LEN_MAX;
-    int ret = SystemReadParam("const.startup.param.version", value, &len);
-    if ((ret != 0 || strcmp(value, "1") != 0) &&
-        (access(PERSIST_PARAM_FIXED_FLAGS, F_OK) != 0)) {
-        clearFactoryPersistParams = true;
-    }
     const uint32_t buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
     char *buffer = malloc(buffSize);
     PARAM_CHECK(buffer != NULL, return -1, "Failed to alloc");
 
     int updaterMode = InUpdaterMode();
     char *tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters";
-    LoadPersistParam_(clearFactoryPersistParams, tmpPath, buffer, buffSize);
+    LoadPersistParam_(tmpPath, buffer, buffSize);
     tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_TMP_PATH : "/param/tmp_persist_parameters";
-    LoadPersistParam_(clearFactoryPersistParams, tmpPath, buffer, buffSize);
+    LoadPersistParam_(tmpPath, buffer, buffSize);
     free(buffer);
-    if (clearFactoryPersistParams && access(PARAM_PERSIST_SAVE_PATH, F_OK) == 0) {
-        FILE *fp = fopen(PERSIST_PARAM_FIXED_FLAGS, "w");
-        if (fp == NULL) {
-            PARAM_LOGE("create file %s fail error %d", PERSIST_PARAM_FIXED_FLAGS, errno);
-        }
-        (void)fclose(fp);
-    }
     return 0;
 }
 
