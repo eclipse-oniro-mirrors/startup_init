@@ -27,10 +27,10 @@ static ParamMutex g_saveMutex = {};
 
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
+    bool clearFactoryPersistParams = *(bool*)context;
     uint32_t dataIndex = 0;
     int mode = 0;
-#ifndef OHOS_LITE
-    bool clearFactoryPersistParams = *(bool*)context;
+
     if (!clearFactoryPersistParams) {
         mode |= LOAD_PARAM_PERSIST;
         return WriteParam(name, value, &dataIndex, mode);
@@ -47,11 +47,6 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
     if (strcmp(persetValue, value) != 0) {
         PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
     }
-#else
-    UNUSED(context);
-    mode |= LOAD_PARAM_PERSIST;
-    return WriteParam(name, value, &dataIndex, mode);
-#endif
     return 0;
 }
 

@@ -56,7 +56,11 @@ extern "C" {
 
 #define PARAM_NEED_CHECK_IN_SERVICE 0x2
 #define PARAM_CTRL_SERVICE 0x1
+#ifndef 
 #define PERSIST_PARAM_FIXED_FLAGS "/data/service/el1/startup/persist_param_fixed"
+#else
+#define PERSIST_PARAM_FIXED_FLAGS "/storage/data/system/param/persist_param_fixed"
+#endif
 
 #define PARAM_WORKSPACE_CHECK(space, exper, ...) \
     if (((*space).flags & WORKSPACE_FLAGS_INIT) != WORKSPACE_FLAGS_INIT) { \
