@@ -625,6 +625,12 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
         rc = HvbDmVeritySetUp(item);
         if (rc != 0) {
             BEGET_LOGE("set dm_verity err, ret = 0x%x", rc);
+            if (!FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
+                rc = 0;
+                BEGET_LOGW("DmVeritySetUp fail for %s, ignore error and do not mount", item->deviceName);
+            } else {
+                BEGET_LOGE("DmVeritySetUp fail for no fail devices %s, error!", item->deviceName);
+            }
             return rc;
         }
 #endif
