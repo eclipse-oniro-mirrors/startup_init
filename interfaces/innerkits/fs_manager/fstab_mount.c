@@ -56,7 +56,7 @@ __attribute__((weak)) void InitTimerControl(bool isSuspend)
 {
 }
 
-__attribute__((weak)) bool NeedDoResizeByKdump(void)
+__attribute__((weak)) bool NeedDoAllResize(void)
 {
     return true;
 }
@@ -283,8 +283,8 @@ static int DoResizeF2fs(const char* device, const unsigned long long size, const
     char *argv[MAX_RESIZE_PARAM_NUM] = {NULL};
     int argc = 0;
 
+    BEGET_ERROR_CHECK(NeedDoAllResize(), return -1, "no need do resize, bucause kdump has done");
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize.f2fs is not exists.");
-    BEGET_ERROR_CHECK(NeedDoResizeByKdump(), return -1, "no need do resize, bucause kdump has done");
 
     argv[argc++] = file;
     if (fsManagerFlags & FS_MANAGER_PROJQUOTA) {
