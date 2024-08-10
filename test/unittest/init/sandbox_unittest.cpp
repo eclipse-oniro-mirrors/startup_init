@@ -178,6 +178,7 @@ HWTEST_F(SandboxUnitTest, TestCreateNormalSandbox, TestSize.Level1) {
         return;
     }
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
+    cJSON_Delete(mJson);
     int ret = RestartSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, 0);
 }
@@ -217,6 +218,7 @@ HWTEST_F(SandboxUnitTest, TestCreateErrorSandbox2, TestSize.Level1) {
         return;
     }
     bool ret1 = MakeFileByJson(mJson, SANDBOX_JSON_NAME);
+    cJSON_Delete(mJson);
     ASSERT_TRUE(ret1);
     InitSandboxWithName(TEST_SANDBOX_NAME);
     int ret = PrepareSandbox(TEST_SANDBOX_NAME);
@@ -238,6 +240,7 @@ HWTEST_F(SandboxUnitTest, TestCreateSandboxMountFlagsError, TestSize.Level1) {
         return;
     }
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
+    cJSON_Delete(mJson);
     int ret = PrepareSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);
 }
@@ -249,6 +252,7 @@ HWTEST_F(SandboxUnitTest, TestCreateSandboxMountNULLError, TestSize.Level1) {
         return;
     }
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
+    cJSON_Delete(mJson);
     int ret = PrepareSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);
     InitSandboxWithName(TEST_SANDBOX_NAME);
