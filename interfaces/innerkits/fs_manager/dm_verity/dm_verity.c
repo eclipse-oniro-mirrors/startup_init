@@ -113,8 +113,9 @@ int HvbDmVeritySetUp(FstabItem *fsItem)
     }
 
     rc = FsHvbSetupHashtree(fsItem);
-    if (rc != 0)
+    if (rc != 0) {
         BEGET_LOGE("error, setup hashtree fail, ret=%d", rc);
+    }
 
     return rc;
 }
