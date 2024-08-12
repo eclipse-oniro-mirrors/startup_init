@@ -448,8 +448,6 @@ static int BindMount(const char *source, const char *target, unsigned long flags
 
     BEGET_WARNING_CHECK((tmpflags & MS_BIND) != 0, tmpflags |= MS_BIND,
         "Not configure mount bind, must configure mount bind flag.");
-    BEGET_WARNING_CHECK((tmpflags & MS_REC) != 0, tmpflags |= MS_REC,
-        "Not configure mount rec, must configure mount rec flag.");
 
     // do mount
     if (mount(source, target, NULL, tmpflags, NULL) != 0) {
