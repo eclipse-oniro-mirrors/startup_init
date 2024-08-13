@@ -3182,6 +3182,148 @@ ohos_fuzztest("SaveParametersFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("SystemCheckMatchParamWaitFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/systemcheckmatchparamwait_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "systemcheckmatchparamwait_fuzzer/systemcheckmatchparamwait_fuzzer.cpp",
+  ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("SysCheckParamExistFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/syscheckparamexist_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "syscheckparamexist_fuzzer/syscheckparamexist_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetServiceCtrlInfoFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/getservicectrlinfo_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/include",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/modules/init_hook",
+    "//base/startup/init/services/modules",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param/linux:param_init",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "//base/startup/init/services/init/standard/bootstagehooker.c",
+    "//base/startup/init/services/modules/init_hook/param_hook.c",
+    "//base/startup/init/services/modules/reboot/reboot_static.c",
+    "getservicectrlinfo_fuzzer/getservicectrlinfo_fuzzer.cpp",
+  ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetParamSecurityAuditDataFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/getparamsecurityauditdata_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "//base/startup/init/services/param/base/param_comm.c",
+    "getparamsecurityauditdata_fuzzer/getparamsecurityauditdata_fuzzer.cpp",
+  ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ##############################################################################################
 group("fuzztest") {
   testonly = true
@@ -3237,6 +3379,7 @@ group("fuzztest") {
     ":GetMountStatusForMountPointFuzzTest",
     ":GetOSFullNameFuzzTest",
     ":GetOsReleaseTypeFuzzTest",
+    ":GetParamSecurityAuditDataFuzzTest",
     ":GetParameterCFuzzTest",
     ":GetParameterCommitIdFuzzTest",
     ":GetParameterCppFuzzTest",
@@ -3248,6 +3391,7 @@ group("fuzztest") {
     ":GetSecurityPatchTagFuzzTest",
     ":GetSeniorVersionFuzzTest",
     ":GetSerialFuzzTest",
+    ":GetServiceCtrlInfoFuzzTest",
     ":GetSoftwareModelFuzzTest",
     ":GetStringParameterFuzzTest",
     ":GetSystemCommitIdFuzzTest",
@@ -3300,6 +3444,8 @@ group("fuzztest") {
     ":SetParameterCppFuzzTest",
     ":StartServiceByTimerFuzzTest",
     ":StopServiceTimerFuzzTest",
+    ":SysCheckParamExistFuzzTest",
+    ":SystemCheckMatchParamWaitFuzzTest",
     ":SystemDumpParametersFuzzTest",
     ":SystemTraversalParameterFuzzTest",
     ":UmountAllWithFstabFileFuzzTest",
