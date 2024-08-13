@@ -48,12 +48,17 @@ extern "C" {
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 
-__attribute__((weak)) void InitPostMount(const char *mountPoint, int rc, const char *fsType)
+__attribute__((weak)) void InitPostMount(const char *mountPoint, int rc)
 {
 }
 
 __attribute__((weak)) void InitTimerControl(bool isSuspend)
 {
+}
+
+__attribute__((weak)) bool NeedDoAllResize(void)
+{
+    return true;
 }
 
 static const SUPPORTED_FILE_SYSTEM supportedFileSystems[] = {
@@ -278,6 +283,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size, const
     char *argv[MAX_RESIZE_PARAM_NUM] = {NULL};
     int argc = 0;
 
+    BEGET_ERROR_CHECK(NeedDoAllResize(), return -1, "no need do resize, bucause kdump has done");
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize.f2fs is not exists.");
 
     argv[argc++] = file;
@@ -547,7 +553,7 @@ int MountOneItem(FstabItem *item)
         SwitchRoot("/usr");
     }
 #endif
-    InitPostMount(item->mountPoint, rc, item->fsType);
+    InitPostMount(item->mountPoint, rc);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
             BEGET_LOGE("Mount no fail device %s to %s failed, err = %d", item->deviceName, item->mountPoint, errno);
