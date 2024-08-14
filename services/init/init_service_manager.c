@@ -1174,7 +1174,8 @@ void StartServiceByName(const char *servName)
     if (service == NULL) {
         service = GetServiceByExtServName(servName, &extraArgs);
     }
-    INIT_ERROR_CHECK(service != NULL, return, "Cannot find service %s.", servName);
+    INIT_ERROR_CHECK(service != NULL, FreeStringVector(extraArgs.argv, extraArgs.count);
+        return, "Cannot find service %s.", servName);
 
     ServiceArgs *pathArgs = &service->pathArgs;
     if (extraArgs.count != 0) {
