@@ -16,11 +16,14 @@
 #include "fs_hvb.h"
 #include "fs_dm.h"
 #include "securec.h"
+#include "fs_manager/ext4_super_block.h"
+#include "fs_manager/erofs_super_block.h"
 #include <stdint.h>
 #include "beget_ext.h"
 #include "init_utils.h"
 #include <libhvb.h>
 #include <libgen.h>
+
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -563,6 +566,74 @@ int FsHvbGetValueFromCmdLine(char *val, size_t size, const char *key)
     FS_HVB_RETURN_ERR_IF_NULL(key);
 
     return GetParameterFromCmdLine(key, val, size);
+}
+
+bool CheckAndGetExt4Size(const char *headerBuf, uint64_t *imageSize, const char* image)
+{
+    ext4_super_block *superBlock = (ext4_super_block *)headerBuf;
+ 
+    if (headerBuf == NULL || imageSize == NULL || image == NULL) {
+        BEGET_LOGE("param is error");
+        return false;
+    }
+ 
+    if (superBlock->s_magic == EXT4_SUPER_MAGIC) {
+        *imageSize = (uint64_t)superBlock->s_blocks_count_lo * BLOCK_SIZE_UNIT;
+        BEGET_LOGE("%s is ext4:[block cout]: %d, [size]: 0x%lx", image,
+            superBlock->s_blocks_count_lo, *imageSize);
+        return true;
+    }
+    return false;
+}
+ 
+bool CheckAndGetErofsSize(const char *headerBuf, uint64_t *imageSize, const char* image)
+{
+    struct erofs_super_block *superBlock = (struct erofs_super_block *)headerBuf;
+ 
+    if (headerBuf == NULL || imageSize == NULL || image == NULL) {
+        BEGET_LOGE("param is error");
+        return false;
+    }
+ 
+    if (superBlock->magic == EROFS_SUPER_MAGIC) {
+        *imageSize = (uint64_t)superBlock->blocks * BLOCK_SIZE_UINT;
+        BEGET_LOGE("%s is erofs:[block cout]: %d, [size]: 0x%lx", image,
+            superBlock->blocks, *imageSize);
+        return true;
+    }
+    return false;
+}
+ 
+bool CheckAndGetExtheaderSize(const int fd, uint64_t offset,
+                              uint64_t *imageSize, const char* image)
+{
+    struct extheader_v1 header;
+    ssize_t nbytes;
+    if (fd < 0 || imageSize == NULL || image == NULL) {
+        BEGET_LOGE("param is error");
+        return false;
+    }
+ 
+    BEGET_LOGE("extheader offset is 0x%lx", offset);
+ 
+    if (lseek(fd, offset, SEEK_SET) < 0) {
+        BEGET_LOGE("lseek %s failed for offset 0x%lx", image, offset);
+        return false;
+    }
+ 
+    nbytes = read(fd, &header, sizeof(header));
+    if (nbytes != sizeof(header)) {
+        BEGET_LOGE("read %s failed.", image);
+        return false;
+    }
+ 
+    if (header.magic_number != EXTHDR_MAGIC) {
+        BEGET_LOGE("%s extheader doesnt match, magic is 0x%lx", image, header.magic_number);
+        return false;
+    }
+ 
+    *imageSize = header.part_size;
+    return true;
 }
 
 #ifdef __cplusplus
