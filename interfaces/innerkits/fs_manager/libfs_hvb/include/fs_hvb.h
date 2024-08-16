@@ -46,12 +46,12 @@ extern "C" {
 #define SZ_2KB (2 * SZ_1KB)
 #define SZ_4KB (4 * SZ_1KB)
  
-struct extheader_v1 {
-    uint32_t magic_number;
-    uint16_t exthdr_size;
+typedef struct {
+    uint32_t magicNumber;
+    uint16_t exthdrSize;
     uint16_t bcc16;
-    uint64_t part_size;
-};
+    uint64_t partSize;
+} ExtheaderV1;
 
 int FsHvbInit(void);
 int FsHvbSetupHashtree(FstabItem *fsItem);

@@ -607,7 +607,7 @@ bool CheckAndGetErofsSize(const char *headerBuf, uint64_t *imageSize, const char
 bool CheckAndGetExtheaderSize(const int fd, uint64_t offset,
                               uint64_t *imageSize, const char* image)
 {
-    struct extheader_v1 header;
+    ExtheaderV1 header;
     ssize_t nbytes;
     if (fd < 0 || imageSize == NULL || image == NULL) {
         BEGET_LOGE("param is error");
@@ -627,12 +627,12 @@ bool CheckAndGetExtheaderSize(const int fd, uint64_t offset,
         return false;
     }
  
-    if (header.magic_number != EXTHDR_MAGIC) {
-        BEGET_LOGE("%s extheader doesnt match, magic is 0x%lx", image, header.magic_number);
+    if (header.magicNumber != EXTHDR_MAGIC) {
+        BEGET_LOGE("%s extheader doesnt match, magic is 0x%lx", image, header.magicNumber);
         return false;
     }
  
-    *imageSize = header.part_size;
+    *imageSize = header.partSize;
     return true;
 }
 
