@@ -49,17 +49,17 @@ static int64_t GetImageSizeForHVB(const int fd, const char* image)
         BEGET_LOGE("read file system header fail");
         return -1;
     }
- 
+
     if (CheckAndGetErofsSize(&headerBuf[SZ_1KB], &fileSysSize, image) &&
         CheckAndGetExtheaderSize(fd, fileSysSize, &realFileSize, image)) {
-        BEGET_LOGE("get %s size from erofs and extheader, size=0x%lx", image, realFileSize);
+        BEGET_LOGI("get %s size from erofs and extheader, size=0x%lx", image, realFileSize);
         return realFileSize;
     } else if (CheckAndGetExt4Size(&headerBuf[SZ_1KB], &fileSysSize, image) &&
         CheckAndGetExtheaderSize(fd, fileSysSize, &realFileSize, image)) {
-        BEGET_LOGE("get %s size from ext4 and extheader, size=0x%lx", image, realFileSize);
+        BEGET_LOGI("get %s size from ext4 and extheader, size=0x%lx", image, realFileSize);
         return realFileSize;
     } else {
-        BEGET_LOGE("read %s file extheader fail, use the actual img size", image);
+        BEGET_LOGI("read %s file extheader fail, use the actual img size", image);
     }
 
     return lseek64(fd, 0, SEEK_END);
