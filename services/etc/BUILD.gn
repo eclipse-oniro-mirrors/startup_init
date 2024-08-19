@@ -52,7 +52,7 @@ if (defined(ohos_lite)) {
     }
   }
 } else {
-  import("//base/startup/init/services/etc/param/param_fixer.gni")
+  import("//build/config/components/init/param/param_fixer.gni")
   import("//build/ohos.gni")
 
   # init etc files group
