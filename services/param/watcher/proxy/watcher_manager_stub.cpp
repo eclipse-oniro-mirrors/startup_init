@@ -16,6 +16,10 @@
 #include "watcher_manager_stub.h"
 #include "watcher_proxy.h"
 #include "watcher_utils.h"
+#ifdef HICOLLIE_ENABLE
+#include "xcollie/xcollie.h"
+#include "xcollie/xcollie_define.h"
+#endif
 
 namespace OHOS {
 namespace init_param {
@@ -30,7 +34,15 @@ int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
     switch (code) {
         case static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_WATCHER): {
             std::string key = data.ReadString();
+#ifdef HICOLLIE_ENABLE
+            const int dfxDelayS = 20;
+            int id = HiviewDFX::XCollie::GetInstance().SetTimer("ParamWatcher_AddWatcher",
+                dfxDelayS, nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_LOG);
+#endif
             int ret = AddWatcher(key, data.ReadUint32());
+#ifdef HICOLLIE_ENABLE
+            HiviewDFX::XCollie::GetInstance().CancelTimer(id);
+#endif
             reply.WriteInt32(ret);
             break;
         }
