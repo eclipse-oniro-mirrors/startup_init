@@ -3324,6 +3324,134 @@ ohos_fuzztest("GetParamSecurityAuditDataFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("DecodeGidFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/decodegid_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "decodegid_fuzzer/decodegid_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DecodeUidFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/decodeuid_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "decodeuid_fuzzer/decodeuid_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ReadFileToBufFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/readfiletobuf_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "//base/startup/init/services/log/init_commlog.c",
+    "readfiletobuf_fuzzer/readfiletobuf_fuzzer.cpp",
+  ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("LoadParamFromCmdLineFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/loadparamfromcmdline_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "//base/startup/init/services/log/init_commlog.c",
+    "loadparamfromcmdline_fuzzer/loadparamfromcmdline_fuzzer.cpp",
+  ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ##############################################################################################
 group("fuzztest") {
   testonly = true
@@ -3337,6 +3465,8 @@ group("fuzztest") {
     ":ChangeSysAttributePermissionsFuzzTest",
     ":CmdClientInitFuzzTest",
     ":CmdServiceProcessDelClientFuzzTest",
+    ":DecodeGidFuzzTest",
+    ":DecodeUidFuzzTest",
     ":DelRemoteWatcherFuzzTest",
     ":DelWatcherFuzzTest",
     ":DoFormatFuzzTest",
@@ -3411,6 +3541,7 @@ group("fuzztest") {
     ":IsSupportedFilesystemFuzzTest",
     ":LoadFscryptPolicyFuzzTest",
     ":LoadFstabFromCommandLineFuzzTest",
+    ":LoadParamFromCmdLineFuzzTest",
     ":ModuleMgrCreateFuzzTest",
     ":ModuleMgrDestroyFuzzTest",
     ":ModuleMgrGetCntFuzzTest",
@@ -3425,6 +3556,7 @@ group("fuzztest") {
     ":ParseUeventConfigFuzzTest",
     ":ParseUeventdConfigFileFuzzTest",
     ":ReadFileInDirFuzzTest",
+    ":ReadFileToBufFuzzTest",
     ":ReadFstabFromFileFuzzTest",
     ":ReceiveFdsFuzzTest",
     ":RefreshWatcherFuzzTest",
