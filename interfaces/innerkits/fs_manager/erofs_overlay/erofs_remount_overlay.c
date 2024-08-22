@@ -22,15 +22,6 @@
 #include "fs_manager/fs_manager.h"
 #include "erofs_remount_overlay.h"
 
-#define MODEM_DRIVER_MNT_PATH "/vendor/modem/modem_driver"
-#define MODEM_VENDOR_MNT_PATH "/vendor/modem/modem_vendor"
-#define MODEM_FW_MNT_PATH "/vendor/modem/modem_fw"
-#define MODEM_DRIVER_EXCHANGE_PATH "/mnt/driver_exchange"
-#define MODEM_VENDOR_EXCHANGE_PATH "/mnt/vendor_exchange"
-#define MODEM_FW_EXCHANGE_PATH "/mnt/fw_exchange"
-#define REMOUNT_RESULT_PATH "/data/service/el1/startup/remount/"
-#define REMOUNT_RESULT_FLAG "/data/service/el1/startup/remount/remount.result.done"
-
 int GetRemountResult(void)
 {
     int fd = open(REMOUNT_RESULT_FLAG, O_RDONLY);
@@ -87,7 +78,7 @@ void SetRemountResultFlag(bool result)
     BEGET_LOGI("set remount result flag successfully");
 }
 
-static int Modem2Exchange(const char *modemPath, const char *exchangePath)
+INIT_STATIC int Modem2Exchange(const char *modemPath, const char *exchangePath)
 {
     int ret;
     ret = mkdir(exchangePath, MODE_MKDIR);
@@ -107,7 +98,7 @@ static int Modem2Exchange(const char *modemPath, const char *exchangePath)
     return ret;
 }
 
-static int Exchange2Modem(const char *modemPath, const char *exchangePath)
+INIT_STATIC int Exchange2Modem(const char *modemPath, const char *exchangePath)
 {
     int ret;
     struct stat statInfo;

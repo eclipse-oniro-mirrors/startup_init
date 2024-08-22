@@ -50,6 +50,9 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/interfaces/innerkits/fd_holder/fd_holder.c",
     "//base/startup/init/interfaces/innerkits/fd_holder/fd_holder_internal.c",
     "//base/startup/init/interfaces/innerkits/file/init_file.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_mount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_overlay_common.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_remount_overlay.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/switch_root.c",
@@ -58,6 +61,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
     "//base/startup/init/interfaces/innerkits/syspara/parameter.c",
     "//base/startup/init/interfaces/innerkits/syspara/sysversion.c",
+    "//base/startup/init/remount/remount_overlay.c",
     "//base/startup/init/services/begetctl/begetctl_cmd.c",
     "//base/startup/init/services/begetctl/bootchart_cmd.c",
     "//base/startup/init/services/begetctl/dump_service.c",
@@ -172,6 +176,10 @@ ohos_unittest("init_unittest") {
 
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//base/startup/init/remount/include",
   ]
   defines = []
 
@@ -195,6 +203,9 @@ ohos_unittest("init_unittest") {
   sources += [
     "begetctl/begetctl_unittest.cpp",
     "deviceinfo/DeviceInfoUnittest.cpp",
+    "fs_manager/erofs/erofs_common_unittest.cpp",
+    "fs_manager/erofs/erofs_mount_unittest.cpp",
+    "fs_manager/erofs/erofs_remount_unittest.cpp",
     "init/cmds_unittest.cpp",
     "init/group_unittest.cpp",
     "init/init_reboot_unittest.cpp",
@@ -220,6 +231,7 @@ ohos_unittest("init_unittest") {
     "param/param_unittest.cpp",
     "param/paramservice_unittest.cpp",
     "param/trigger_unittest.cpp",
+    "remount/remount_overlay_unittest.cpp",
     "syspara/syspara_unittest.cpp",
     "ueventd/ueventd_config_unittest.cpp",
     "ueventd/ueventd_event_unittest.cpp",

@@ -16,6 +16,7 @@
 #ifndef EROFS_MOUNT_OVERLAY_H
 #define EROFS_MOUNT_OVERLAY_H
 
+#include "fs_manager/fs_manager.h"
 #include "erofs_overlay_common.h"
 
 #ifdef __cplusplus

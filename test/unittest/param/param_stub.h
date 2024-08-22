@@ -75,6 +75,8 @@ typedef enum {
     STUB_SPRINTF,
     STUB_MOUNT,
     STUB_MKNODE,
+    STUB_EXECV,
+    STUB_UMOUNT,
     STUB_MAX
 } STUB_TYPE;
 void SetStubResult(STUB_TYPE type, int result);
@@ -97,7 +99,26 @@ int DoRebootShutdown(int id, const char *name, int argc, const char **argv);
 int DoRebootFlashed(int id, const char *name, int argc, const char **argv);
 int DoRebootOther(int id, const char *name, int argc, const char **argv);
 
+//remount_overlay
+bool MntNeedRemount(const char *mnt);
+bool IsSkipRemount(const struct mntent mentry);
+int ExecCommand(int argc, char **argv);
+int GetDevSize(const char *fsBlkDev, uint64_t *devSize);
+int FormatExt4(const char *fsBlkDev, const char *fsMntPoint);
+void OverlayRemountPre(const char *mnt);
+void OverlayRemountPost(const char *mnt);
+bool DoRemount(struct mntent *mentry, bool *result);
+bool DirectoryExists(const char *path);
+bool DoSystemRemount(struct mntent *mentry, bool *result);
+
+//remount
+int Modem2Exchange(const char *modemPath, const char *exchangePath);
+int Exchange2Modem(const char *modemPath, const char *exchangePath);
+
 SubInitContext *GetSubInitContext(InitContextType type);
+uint64_t LookupErofsEnd(const char *dev);
+void AllocDmName(const char *name, char *nameRofs, const uint64_t nameRofsLen,
+    char *nameExt4, const uint64_t nameExt4Len);
 #endif
 #ifdef __cplusplus
 #if __cplusplus

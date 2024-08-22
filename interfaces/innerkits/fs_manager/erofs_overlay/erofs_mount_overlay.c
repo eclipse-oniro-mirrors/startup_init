@@ -38,7 +38,7 @@ struct extheader_v1 {
     uint64_t part_size;
 };
 
-static void AllocDmName(const char *name, char *nameRofs, const uint64_t nameRofsLen,
+INIT_STATIC void AllocDmName(const char *name, char *nameRofs, const uint64_t nameRofsLen,
     char *nameExt4, const uint64_t nameExt4Len)
 {
     if (snprintf_s(nameRofs, nameRofsLen, nameRofsLen - 1, "%s_erofs", name) < 0) {
@@ -69,7 +69,7 @@ static void AllocDmName(const char *name, char *nameRofs, const uint64_t nameRof
     BEGET_LOGI("alloc dm namerofs:[%s], nameext4:[%s]", nameRofs, nameExt4);
 }
 
-static uint64_t LookupErofsEnd(const char *dev)
+INIT_STATIC uint64_t LookupErofsEnd(const char *dev)
 {
     int fd = -1;
     fd = open(dev, O_RDONLY | O_LARGEFILE);
@@ -102,7 +102,7 @@ static uint64_t LookupErofsEnd(const char *dev)
     return erofsSize;
 }
 
-static uint64_t GetImgSize(const char *dev, uint64_t offset)
+INIT_STATIC uint64_t GetImgSize(const char *dev, uint64_t offset)
 {
     int fd = -1;
     fd = open(dev, O_RDONLY | O_LARGEFILE);
@@ -134,7 +134,7 @@ static uint64_t GetImgSize(const char *dev, uint64_t offset)
     return header.part_size;
 }
 
-static uint64_t GetFsSize(int fd)
+INIT_STATIC uint64_t GetFsSize(int fd)
 {
     struct stat st;
     if (fstat(fd, &st) == -1) {
@@ -164,7 +164,7 @@ static uint64_t GetFsSize(int fd)
     return size;
 }
 
-static uint64_t GetBlockSize(const char *dev)
+INIT_STATIC uint64_t GetBlockSize(const char *dev)
 {
     int fd = -1;
     fd = open(dev, O_RDONLY | O_LARGEFILE);
@@ -179,7 +179,7 @@ static uint64_t GetBlockSize(const char *dev)
 }
 
 /* 字节对齐函数，基于alignment进行字节对齐 */
-static uint64_t AlignTo(uint64_t base, uint64_t alignment)
+INIT_STATIC uint64_t AlignTo(uint64_t base, uint64_t alignment)
 {
     if (alignment == 0) {
         return base;
@@ -187,7 +187,7 @@ static uint64_t AlignTo(uint64_t base, uint64_t alignment)
     return (((base - 1) / alignment + 1) * alignment);
 }
 
-static int GetMapperAddr(const char *dev, uint64_t *start, uint64_t *length)
+INIT_STATIC int GetMapperAddr(const char *dev, uint64_t *start, uint64_t *length)
 {
     /* 获取EROFS文件系统大小 */
     *start = LookupErofsEnd(dev);
@@ -230,7 +230,7 @@ static int GetMapperAddr(const char *dev, uint64_t *start, uint64_t *length)
     return 0;
 }
 
-static int ConstructLinearTarget(DmVerityTarget *target, const char *dev, uint64_t mapStart, uint64_t mapLength)
+INIT_STATIC int ConstructLinearTarget(DmVerityTarget *target, const char *dev, uint64_t mapStart, uint64_t mapLength)
 {
     if (target == NULL || dev == NULL) {
         return -1;
@@ -253,7 +253,7 @@ static int ConstructLinearTarget(DmVerityTarget *target, const char *dev, uint64
     return 0;
 }
 
-static void DestoryLinearTarget(DmVerityTarget *target)
+INIT_STATIC void DestoryLinearTarget(DmVerityTarget *target)
 {
     if (target != NULL && target->paras != NULL) {
         free(target->paras);
@@ -261,7 +261,7 @@ static void DestoryLinearTarget(DmVerityTarget *target)
     }
 }
 
-static int GetOverlayDevice(FstabItem *item, char *devRofs, const uint32_t devRofsLen,
+INIT_STATIC int GetOverlayDevice(FstabItem *item, char *devRofs, const uint32_t devRofsLen,
     char *devExt4, const uint32_t devExt4Len)
 {
     uint64_t mapStart;
@@ -312,7 +312,7 @@ exit:
     return rc;
 }
 
-static int MountRofsDevice(const char *dev, const char *mnt)
+INIT_STATIC int MountRofsDevice(const char *dev, const char *mnt)
 {
     int rc = 0;
     int retryCount = 3;
@@ -382,7 +382,7 @@ int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount)
     return ret;
 }
 
-static void UnlinkMountPoint(const char *mountPoint)
+INIT_STATIC void UnlinkMountPoint(const char *mountPoint)
 {
     struct stat statInfo;
     if (!lstat(mountPoint, &statInfo)) {
@@ -392,7 +392,7 @@ static void UnlinkMountPoint(const char *mountPoint)
     }
 }
 
-static int MountPartitionDevice(FstabItem *item, const char *devRofs, const char *devExt4)
+INIT_STATIC int MountPartitionDevice(FstabItem *item, const char *devRofs, const char *devExt4)
 {
     UnlinkMountPoint(item->mountPoint);
     if (mkdir(item->mountPoint, MODE_MKDIR) && (errno != EEXIST)) {

@@ -24,6 +24,16 @@
 
 #include "beget_ext.h"
 
+#ifndef STARTUP_INIT_TEST
+#ifndef INIT_STATIC
+#define INIT_STATIC static
+#endif
+#else
+#ifndef INIT_STATIC
+#define INIT_STATIC
+#endif
+#endif
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
