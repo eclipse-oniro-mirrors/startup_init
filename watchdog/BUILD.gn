@@ -20,8 +20,8 @@ if (defined(ohos_lite)) {
     deps = [
       "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
       "//base/startup/init/services/log:init_log",
+      "//third_party/bounds_checking_function:libsec_static",
     ]
-    external_deps = [ "bounds_checking_function:libsec_static" ]
     defines = [
       "_GNU_SOURCE",
       "OHOS_LITE_WATCHDOG",

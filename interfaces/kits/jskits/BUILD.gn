@@ -59,6 +59,7 @@ ohos_shared_library("systemparameter") {
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "libuv:uv",
     "napi:ace_napi",
   ]
   relative_install_dir = "module"
@@ -79,6 +80,7 @@ ohos_shared_library("systemparameterenhance") {
   symlink_target_name = [ "libsystemparameterv9.z.so" ]
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "libuv:uv",
     "napi:ace_napi",
   ]
   relative_install_dir = "module"

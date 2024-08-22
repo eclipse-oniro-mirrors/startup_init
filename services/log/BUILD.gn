@@ -36,8 +36,10 @@ if (defined(ohos_lite)) {
     if (ohos_kernel_type == "liteos_m") {
       defines += [ "__LITEOS_M__" ]
     }
-    include_dirs = [ "//base/hiviewdfx/hilog_lite/interfaces/native/kits" ]
-    external_deps = [ "bounds_checking_function:libsec_shared" ]
+    include_dirs = [
+      "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
+      "//third_party/bounds_checking_function/include",
+    ]
   }
 } else {
   import("//build/ohos.gni")

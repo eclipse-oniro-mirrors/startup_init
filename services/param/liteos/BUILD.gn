@@ -25,6 +25,7 @@ param_include_dirs = [
   "//base/startup/init/services/log",
   "//base/startup/init/services/modules/init_hook",
   "//base/startup/init/services/loopevent/include",
+  "//third_party/bounds_checking_function/include",
   "//third_party/cJSON",
   "//commonlibrary/utils_lite/include",
 ]
@@ -87,7 +88,6 @@ static_library("param_init_lite") {
   include_dirs = param_include_dirs
   defines += param_build_defines
   public_configs = [ ":exported_header_files" ]
-  external_deps = [ "bounds_checking_function:libsec_static" ]
 
   if (ohos_kernel_type == "liteos_a") {
     sources += [
@@ -114,7 +114,6 @@ static_library("param_client_lite") {
   include_dirs = param_include_dirs
   defines = param_build_defines
   public_configs = [ ":exported_header_files" ]
-  external_deps = [ "bounds_checking_function:libsec_static" ]
 
   if (config_ohos_startup_init_lite_no_log) {
     defines += [ "INIT_NO_LOG" ]

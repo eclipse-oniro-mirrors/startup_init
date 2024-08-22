@@ -177,8 +177,8 @@ if (defined(ohos_lite)) {
         "//base/startup/init/initsync:initsync",
         "//base/startup/init/services/loopevent:loopevent",
         "//build/lite/config/component/cJSON:cjson_static",
+        "//third_party/mbedtls:mbedtls",
       ]
-      external_deps += [ "mbedtls:mbedtls_static" ]
     }
 
     if (ohos_kernel_type == "liteos_m") {
@@ -210,8 +210,10 @@ if (defined(ohos_lite)) {
         include_dirs += [ "$root_out_dir/gen/init" ]
         defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
       }
-      deps += [ "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static" ]
-      external_deps += [ "mbedtls:mbedtls_static" ]
+      deps += [
+        "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
+        "//third_party/mbedtls:mbedtls",
+      ]
     }
     if (ohos_kernel_type == "linux") {
       defines += [
@@ -247,8 +249,8 @@ if (defined(ohos_lite)) {
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//base/startup/init/services/loopevent:loopevent",
         "//build/lite/config/component/cJSON:cjson_static",
+        "//third_party/mbedtls:mbedtls",
       ]
-      external_deps += [ "mbedtls:mbedtls_static" ]
     }
   }
 }

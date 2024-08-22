@@ -54,18 +54,21 @@ if (defined(ohos_lite)) {
       ]
       sources = []
       include_dirs = include_common
-      include_dirs += [ "//base/hiviewdfx/hilog_lite/interfaces/native/kits" ]
+      include_dirs += [
+        "//third_party/bounds_checking_function/include",
+        "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
+      ]
       public_configs = [ ":exported_header_files" ]
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//base/startup/init/services/modules/init_hook:inithook",
+        "//third_party/bounds_checking_function:libsec_shared",
       ]
       deps += [
         "//base/startup/init/services/log:init_log",
         "//base/startup/init/services/modules/udid:libudidcomm",
         "//base/startup/init/services/utils:libinit_utils",
       ]
-      external_deps = [ "bounds_checking_function:libsec_shared" ]
       if (init_feature_begetctl_liteos) {
         sources += syspara_sources
         defines += [ "LITEOS_SUPPORT" ]
@@ -105,8 +108,8 @@ if (defined(ohos_lite)) {
       deps = [
         "//base/startup/init/services/modules/init_hook:inithook",
         "//base/startup/init/services/modules/udid:libudidcomm",
+        "//third_party/bounds_checking_function:libsec_static",
       ]
-      external_deps = [ "bounds_checking_function:libsec_static" ]
       if (config_ohos_startup_init_lite_no_log) {
         defines += [ "INIT_NO_LOG" ]
       } else {

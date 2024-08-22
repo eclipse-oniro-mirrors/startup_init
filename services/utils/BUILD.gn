@@ -26,12 +26,12 @@ if (defined(ohos_lite)) {
     include_dirs = [
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
       "//base/startup/init/interfaces/innerkits/include",
+      "//third_party/bounds_checking_function/include",
     ]
     defines = [
       "_GNU_SOURCE",
       "OHOS_LITE",
     ]
-    external_deps = [ "bounds_checking_function:libsec_static" ]
     if (config_ohos_startup_init_lite_no_log) {
       defines += [ "INIT_NO_LOG" ]
     }

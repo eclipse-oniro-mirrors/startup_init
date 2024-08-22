@@ -50,6 +50,7 @@
                 "hilog_lite",
                 "samgr",
                 "access_token",
+                "dsoftbus",
                 "hvb",
                 "hisysevent",
                 "hiprofiler",
@@ -60,15 +61,24 @@
                 "storage_service",
                 "mbedtls",
                 "zlib",
+                "libuv",
                 "cJSON",
                 "mksh",
                 "libunwind",
                 "toybox"
             ],
             "third_party": [
+                "libunwind",
+                "mbedtls",
+                "zlib",
+                "cJSON",
                 "mksh",
+                "toybox",
+                "config_policy",
                 "e2fsprogs",
-                "f2fs-tools"
+                "f2fs-tools",
+                "selinux_adapter",
+                "storage_service"
             ]
         },
         "build": {

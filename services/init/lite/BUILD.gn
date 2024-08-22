@@ -52,6 +52,7 @@ executable("init") {
     "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/init/include",
     "//third_party/cJSON",
+    "//third_party/bounds_checking_function/include",
     "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
   ]
 
@@ -64,8 +65,8 @@ executable("init") {
     "//base/startup/init/services/param/base:param_base",
     "//base/startup/init/services/utils:libinit_utils",
     "//build/lite/config/component/cJSON:cjson_static",
+    "//third_party/bounds_checking_function:libsec_static",
   ]
-  external_deps = [ "bounds_checking_function:libsec_static" ]
 
   if (ohos_kernel_type == "liteos_a") {
     defines += [ "__LITEOS_A__" ]
@@ -89,7 +90,10 @@ executable("init") {
       "-lm",
       "-lpthread",
     ]
-    deps += [ "//base/startup/init/services/param/linux:param_init" ]
-    external_deps += [ "toybox:toybox" ]
+    deps += [
+      "//base/startup/init/services/param/linux:param_init",
+      "//third_party/mksh",
+      "//third_party/toybox",
+    ]
   }
 }

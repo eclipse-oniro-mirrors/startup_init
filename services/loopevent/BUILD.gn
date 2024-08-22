@@ -48,7 +48,7 @@ if (defined(ohos_lite)) {
     sources = common_sources
     cflags = [ "-fPIC" ]
     include_dirs = common_include
-    external_deps = [ "bounds_checking_function:libsec_shared" ]
+    include_dirs += [ "//third_party/bounds_checking_function/include" ]
     defines = [ "_GNU_SOURCE" ]
     public_configs = [ ":exported_header_files" ]
   }

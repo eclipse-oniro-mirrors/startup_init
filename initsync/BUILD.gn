@@ -25,7 +25,10 @@ shared_library("libinitsync_shared") {
     "//base/startup/init/services/log",
     "//base/startup/init/interfaces/innerkits/include",
   ]
-  public_deps = [ "//base/startup/init/services/log:init_log" ]
+  public_deps = [
+    "//base/startup/init/services/log:init_log",
+    "//third_party/bounds_checking_function:libsec_shared",
+  ]
 
   public_external_deps = [ "bounds_checking_function:libsec_shared" ]
 }
@@ -37,5 +40,5 @@ static_library("libinitsync_static") {
     "//base/startup/init/services/log",
     "//base/startup/init/interfaces/innerkits/include",
   ]
-  external_deps = [ "bounds_checking_function:libsec_static" ]
+  public_deps = [ "//third_party/bounds_checking_function:libsec_static" ]
 }
