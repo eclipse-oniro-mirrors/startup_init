@@ -60,4 +60,11 @@ declare_args() {
 
   # system call wrap switch
   init_startup_feature_system_call_switch = false
+
+  #deps param_watcher xcollie
+  paramwatcher_hicollie_enable = true
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.hiviewdfx_hicollie)) {
+    paramwatcher_hicollie_enable = false
+  }
 }
