@@ -59,7 +59,7 @@ if (defined(ohos_lite)) {
       ]
     }
     include_dirs = base_include_dirs
-    include_dirs += [ "//third_party/bounds_checking_function/include" ]
+    external_deps = [ "bounds_checking_function:libsec_static" ]
     defines = [ "_GNU_SOURCE" ]
     public_configs = [ ":exported_header_files" ]
     public_configs += [ ":exported_header_files_for_lite" ]

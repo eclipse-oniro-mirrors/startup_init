@@ -519,10 +519,12 @@ ohos_fuzztest("CmdServiceProcessDelClientFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
 
   cflags = [
     "-g",
@@ -550,7 +552,6 @@ ohos_fuzztest("CmdClientInitFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "bounds_checking_function:libsec_static" ]
   external_deps += [ "hilog:libhilog" ]
@@ -2960,9 +2961,9 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -3006,9 +3007,9 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -3051,9 +3052,9 @@ ohos_fuzztest("AddWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -3095,9 +3096,9 @@ ohos_fuzztest("DelWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -3139,9 +3140,9 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",

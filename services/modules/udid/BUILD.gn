@@ -45,15 +45,16 @@ if (defined(ohos_lite)) {
     ]
 
     deps = []
+    external_deps = []
     if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
-      deps += [
-        "//third_party/bounds_checking_function:libsec_shared",
-        "//third_party/mbedtls:mbedtls_shared",
+      external_deps += [
+        "bounds_checking_function:libsec_shared",
+        "mbedtls:mbedtls_shared",
       ]
     } else if (ohos_kernel_type == "liteos_m") {
-      deps += [
-        "//third_party/bounds_checking_function:libsec_static",
-        "//third_party/mbedtls:mbedtls",
+      external_deps += [
+        "bounds_checking_function:libsec_static",
+        "mbedtls:mbedtls_static",
       ]
     }
 
