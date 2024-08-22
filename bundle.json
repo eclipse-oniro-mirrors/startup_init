@@ -64,7 +64,8 @@
                 "mksh",
                 "libunwind",
                 "toybox",
-                "hicollie"
+                "hicollie",
+                "drivers_interface_partitionslot"
             ],
             "third_party": [
                 "mksh",
