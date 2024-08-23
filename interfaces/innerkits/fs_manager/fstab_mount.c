@@ -470,6 +470,19 @@ static int DoMountOneItem(FstabItem *item)
         if (rc == 0) {
             return rc;
         }
+
+        if (FM_MANAGER_FORMATTABLE_ENABLED(item->fsManagerFlags)) {
+            BEGET_LOGI("Device is formattable");
+            int ret = DoFormat(item->deviceName, item->fsType);
+            BEGET_LOGI("End format image ret %d", ret);
+            if (ret != 0) {
+                continue;
+            }
+            rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
+            if (rc == 0) {
+                return rc;
+            }
+        }
         BEGET_LOGE("Mount device %s to %s failed, err = %d, retry", item->deviceName, item->mountPoint, errno);
     }
     return rc;
