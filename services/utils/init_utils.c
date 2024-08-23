@@ -191,7 +191,7 @@ char *ReadFileData(const char *fileName)
     INIT_ERROR_CHECK(buffer != NULL, close(fd);
         return NULL, "Failed to allocate memory for %s", fileName);
     ssize_t readLen = read(fd, buffer, MAX_SMALL_BUFFER - 1);
-    INIT_ERROR_CHECK((readLen > 0) && (readLen < (MAX_SMALL_BUFFER - 1)), close(fd);
+    INIT_ERROR_CHECK((readLen > 0) && (readLen <= (MAX_SMALL_BUFFER - 1)), close(fd);
         free(buffer);
         return NULL, "Failed to read data for %s", fileName);
     buffer[readLen] = '\0';
