@@ -20,6 +20,8 @@ group("testgroup") {
       "fuzztest:fuzztest",
       "moduletest:moduletest",
       "moduletest:paramtestmodule",
+      "unittest:init_dmverify_unittest",
+      "unittest:init_fshvb_unittest",
       "unittest:init_unittest",
     ]
   } else {
