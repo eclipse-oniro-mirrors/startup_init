@@ -22,8 +22,12 @@ ohos_shared_library("rebootmodule") {
     "..",
     "../init_hook",
     "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/interfaces/innerkits/include",
   ]
-  deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
+  deps = [
+    "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
 
   external_deps = [ "bounds_checking_function:libsec_shared" ]
 
