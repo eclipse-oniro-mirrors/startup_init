@@ -60,10 +60,10 @@ typedef enum {
 } StartupInitErrno;
 
 #if (defined(STARTUP_INIT_TEST) || defined(APPSPAWN_TEST))
-#define FILE_NAME   (strrchr((__FILE__), '/')  + 1)
+#define FILE_NAME   (strrchr((__FILE_NAME__), '/')  + 1)
 #define STATIC
 #else
-#define FILE_NAME   (strrchr((__FILE__), '/') ? strrchr((__FILE__), '/') + 1 : (__FILE__))
+#define FILE_NAME   (strrchr((__FILE_NAME__), '/') ? strrchr((__FILE_NAME__), '/') + 1 : (__FILE_NAME__))
 #define STATIC static
 #endif
 
