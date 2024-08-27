@@ -39,3 +39,4 @@ media_library_param = 4096
 samgr_perf_param = 4096
 samgr_writable_param = 10240
 ffrt_param = 4096
+developtools_hdc_auth_param = 4096 
