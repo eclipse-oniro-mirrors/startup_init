@@ -60,10 +60,10 @@ typedef enum {
 } StartupInitErrno;
 
 #if (defined(STARTUP_INIT_TEST) || defined(APPSPAWN_TEST))
-#define FILE_NAME   (strrchr((__FILE_NAME__), '/')  + 1)
+#define STARTUP_FILE_NAME   (__FILE_NAME__)
 #define STATIC
 #else
-#define FILE_NAME   (strrchr((__FILE_NAME__), '/') ? strrchr((__FILE_NAME__), '/') + 1 : (__FILE_NAME__))
+#define STARTUP_FILE_NAME   (strrchr((__FILE_NAME__), '/') ? strrchr((__FILE_NAME__), '/') + 1 : (__FILE_NAME__))
 #define STATIC static
 #endif
 
@@ -88,15 +88,15 @@ INIT_PUBLIC_API InitLogLevel GetInitLogLevel(void);
 #else
 #ifndef __LITEOS_M__
 #define STARTUP_LOGV(domain, tag, fmt, ...) \
-    StartupLog(INIT_DEBUG, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_DEBUG, domain, tag, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGI(domain, tag, fmt, ...) \
-    StartupLog(INIT_INFO, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_INFO, domain, tag, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGW(domain, tag, fmt, ...) \
-    StartupLog(INIT_WARN, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_WARN, domain, tag, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGE(domain, tag, fmt, ...) \
-    StartupLog(INIT_ERROR, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_ERROR, domain, tag, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGF(domain, tag, fmt, ...) \
-    StartupLog(INIT_FATAL, domain, tag, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_FATAL, domain, tag, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #else
 #define STARTUP_LOGV(domain, tag, fmt, ...) \
     HILOG_DEBUG(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)

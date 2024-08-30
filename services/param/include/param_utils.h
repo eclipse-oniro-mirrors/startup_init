@@ -100,13 +100,17 @@ typedef enum {
 #ifdef PARAM_BASE
 INIT_LOCAL_API void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, const char *tag, const char *fmt, ...);
 #define PARAM_LOGV(fmt, ...) \
-    ParamWorBaseLog(INIT_DEBUG, PARAN_DOMAIN, PARAN_LABEL, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    ParamWorBaseLog(INIT_DEBUG, PARAN_DOMAIN, PARAN_LABEL, "[%s:%d]" fmt, \
+        (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define PARAM_LOGI(fmt, ...) \
-    ParamWorBaseLog(INIT_INFO, PARAN_DOMAIN, PARAN_LABEL, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    ParamWorBaseLog(INIT_INFO, PARAN_DOMAIN, PARAN_LABEL, "[%s:%d]" fmt, \
+        (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define PARAM_LOGW(fmt, ...) \
-    ParamWorBaseLog(INIT_WARN, PARAN_DOMAIN, PARAN_LABEL, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    ParamWorBaseLog(INIT_WARN, PARAN_DOMAIN, PARAN_LABEL, "[%s:%d]" fmt, \
+        (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define PARAM_LOGE(fmt, ...) \
-    ParamWorBaseLog(INIT_ERROR, PARAN_DOMAIN, PARAN_LABEL, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    ParamWorBaseLog(INIT_ERROR, PARAN_DOMAIN, PARAN_LABEL, "[%s:%d]" fmt, \
+        (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #else
 #define PARAM_LOGI(fmt, ...) STARTUP_LOGI(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGE(fmt, ...) STARTUP_LOGE(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
