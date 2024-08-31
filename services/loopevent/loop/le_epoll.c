@@ -82,11 +82,13 @@ static LE_STATUS DelEvent_(const EventLoop *loop, int fd, int op)
     LE_CHECK(loop != NULL, return LE_FAILURE, "Invalid loop");
     EventEpoll *epoll = (EventEpoll *)loop;
 
+    int ret = LE_FAILURE;
     struct epoll_event event = {};
     GetEpollEvent_(fd, op, &event);
     if (IsValid_(epoll) && fd >= 0) {
-        (void)epoll_ctl(epoll->epollFd, EPOLL_CTL_DEL, fd, &event);
+        ret = epoll_ctl(epoll->epollFd, EPOLL_CTL_DEL, fd, &event);
     }
+    LE_CHECK(ret == 0, return LE_FAILURE, "Failed to del epoll_ctl %d ret %d", fd, errno);
     return LE_SUCCESS;
 }
 
