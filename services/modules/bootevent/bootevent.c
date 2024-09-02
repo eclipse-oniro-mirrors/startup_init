@@ -217,15 +217,36 @@ static int BootEventTraversal(ListNode *node, void *root)
     return 0;
 }
 
+static int CreateBootEventFile(const char *file, mode_t mode)
+{
+    if (access(file, F_OK) == 0) {
+        INIT_LOGW("File %s already exist", file);
+        return 0;
+    }
+    if (errno != ENOENT) {
+        INIT_LOGW("Failed to access %s, err = %d", file, errno);
+        return -1;
+    }
+    CheckAndCreateDir(file);
+    int fd = open(file, O_CREAT, mode);
+    if (fd < 0) {
+        INIT_LOGE("Failed create %s, err=%d", file, errno);
+        return -1;
+    }
+    close(fd);
+#ifdef WITH_SELINUX
+    INIT_LOGI("start to restorecon selinux");
+    (void)RestoreconRecurse(BOOTEVENT_OUTPUT_PATH);
+#endif
+    return 0;
+}
+
 static int SaveServiceBootEvent()
 {
     INIT_CHECK(GetBootEventEnable(), return 0);
 
-    CheckAndCreatFile(BOOTEVENT_OUTPUT_PATH "bootup.trace", S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-#ifdef WITH_SELINUX
-    (void)RestoreconRecurse(BOOTEVENT_OUTPUT_PATH);
-#endif
-
+    int ret = CreateBootEventFile(BOOTEVENT_OUTPUT_PATH "bootup.trace", S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    INIT_CHECK_RETURN_VALUE(ret == 0, -1);
     FILE *tmpFile = fopen(BOOTEVENT_OUTPUT_PATH "bootup.trace", "wr");
     INIT_CHECK_RETURN_VALUE(tmpFile != NULL, -1);
     cJSON *root = cJSON_CreateArray();

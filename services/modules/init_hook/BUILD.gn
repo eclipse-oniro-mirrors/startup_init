@@ -34,10 +34,10 @@ if (defined(ohos_lite)) {
     ]
     include_dirs = comm_include
     include_dirs += [
-      "//third_party/bounds_checking_function/include",
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
       "//third_party/cJSON",
     ]
+    external_deps = [ "bounds_checking_function:libsec_static" ]
     sources = [ "param_hook.c" ]
     public_configs = [ ":inithook_config" ]
   }

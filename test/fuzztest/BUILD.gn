@@ -14,6 +14,7 @@
 module_output_path = "init/init"
 
 #####################hydra-fuzz###################
+import("//base/startup/init/begetd.gni")
 import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
@@ -519,10 +520,12 @@ ohos_fuzztest("CmdServiceProcessDelClientFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
 
   cflags = [
     "-g",
@@ -550,7 +553,6 @@ ohos_fuzztest("CmdClientInitFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/interfaces/innerkits/control_fd:libcontrolfd",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [ "bounds_checking_function:libsec_static" ]
   external_deps += [ "hilog:libhilog" ]
@@ -2960,15 +2962,19 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
 
   cflags = [
     "-g",
@@ -2978,6 +2984,9 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
   ]
   sources += [ "addremotewatcher_fuzzer/addremotewatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+  if (paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 }
 
 ohos_fuzztest("DelRemoteWatcherFuzzTest") {
@@ -3006,15 +3015,18 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
 
   cflags = [
     "-g",
@@ -3024,6 +3036,9 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
   ]
   sources += [ "delremotewatcher_fuzzer/delremotewatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+  if (paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 }
 
 ohos_fuzztest("AddWatcherFuzzTest") {
@@ -3051,15 +3066,18 @@ ohos_fuzztest("AddWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
 
   cflags = [
     "-g",
@@ -3069,6 +3087,9 @@ ohos_fuzztest("AddWatcherFuzzTest") {
   ]
   sources += [ "addwatcher_fuzzer/addwatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+  if (paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 }
 
 ohos_fuzztest("DelWatcherFuzzTest") {
@@ -3095,15 +3116,18 @@ ohos_fuzztest("DelWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
 
   cflags = [
     "-g",
@@ -3113,6 +3137,9 @@ ohos_fuzztest("DelWatcherFuzzTest") {
   ]
   sources += [ "delwatcher_fuzzer/delwatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+  if (paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 }
 
 ohos_fuzztest("RefreshWatcherFuzzTest") {
@@ -3139,15 +3166,18 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
-    "//third_party/bounds_checking_function:libsec_static",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
 
   cflags = [
     "-g",
@@ -3157,6 +3187,9 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
   ]
   sources += [ "refreshwatcher_fuzzer/refreshwatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+  if (paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 }
 
 ohos_fuzztest("SaveParametersFuzzTest") {
@@ -3324,6 +3357,134 @@ ohos_fuzztest("GetParamSecurityAuditDataFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("DecodeGidFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/decodegid_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "decodegid_fuzzer/decodegid_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DecodeUidFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/decodeuid_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "decodeuid_fuzzer/decodeuid_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ReadFileToBufFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/readfiletobuf_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "//base/startup/init/services/log/init_commlog.c",
+    "readfiletobuf_fuzzer/readfiletobuf_fuzzer.cpp",
+  ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("LoadParamFromCmdLineFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/loadparamfromcmdline_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "//base/startup/init/services/log/init_commlog.c",
+    "loadparamfromcmdline_fuzzer/loadparamfromcmdline_fuzzer.cpp",
+  ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ##############################################################################################
 group("fuzztest") {
   testonly = true
@@ -3337,6 +3498,8 @@ group("fuzztest") {
     ":ChangeSysAttributePermissionsFuzzTest",
     ":CmdClientInitFuzzTest",
     ":CmdServiceProcessDelClientFuzzTest",
+    ":DecodeGidFuzzTest",
+    ":DecodeUidFuzzTest",
     ":DelRemoteWatcherFuzzTest",
     ":DelWatcherFuzzTest",
     ":DoFormatFuzzTest",
@@ -3411,6 +3574,7 @@ group("fuzztest") {
     ":IsSupportedFilesystemFuzzTest",
     ":LoadFscryptPolicyFuzzTest",
     ":LoadFstabFromCommandLineFuzzTest",
+    ":LoadParamFromCmdLineFuzzTest",
     ":ModuleMgrCreateFuzzTest",
     ":ModuleMgrDestroyFuzzTest",
     ":ModuleMgrGetCntFuzzTest",
@@ -3425,6 +3589,7 @@ group("fuzztest") {
     ":ParseUeventConfigFuzzTest",
     ":ParseUeventdConfigFileFuzzTest",
     ":ReadFileInDirFuzzTest",
+    ":ReadFileToBufFuzzTest",
     ":ReadFstabFromFileFuzzTest",
     ":ReceiveFdsFuzzTest",
     ":RefreshWatcherFuzzTest",

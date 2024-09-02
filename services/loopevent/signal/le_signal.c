@@ -43,8 +43,8 @@ static LE_STATUS HandleSignalEvent_(const LoopHandle loop, const TaskHandle task
 static void HandleSignalTaskClose_(const LoopHandle loopHandle, const TaskHandle signalHandle)
 {
     BaseTask *task = (BaseTask *)signalHandle;
-    CloseTask(loopHandle, task);
     DelTask((EventLoop *)loopHandle, task);
+    CloseTask(loopHandle, task);
     close(task->taskId.fd);
 }
 

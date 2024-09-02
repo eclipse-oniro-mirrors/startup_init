@@ -428,3 +428,78 @@ ohos_unittest("init_unittest") {
 
   cflags_cc = [ "-fexceptions" ]
 }
+
+ohos_unittest("init_dmverify_unittest") {
+  module_out_path = "startup/init"
+  sources = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/dm_verity/dm_verity.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/log/init_log.c",
+    "//base/startup/init/test/mock/init/interfaces/innerkits/fs_manager/libfs_hvb/fs_hvb.c",
+    "//base/startup/init/test/unittest/fs_manager/dm_verify/dm_verify_unittest.cpp",
+  ]
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/dm_verity/include",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/hvb/libhvb/include",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//third_party/bounds_checking_function/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+    "//base/startup/init/services/log",
+  ]
+
+  configs = [ "//base/startup/init/test/unittest:utest_config" ]
+
+  deps = [ "//third_party/googletest:gtest" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  cflags_cc = [ "-fexceptions" ]
+}
+
+ohos_unittest("init_fshvb_unittest") {
+  module_out_path = "startup/init"
+  sources = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/fs_hvb.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/hvb_ops.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/utils/init_utils.c",
+    "//base/startup/init/test/mock/hvb/libhvb/auth/hvb.c",
+    "//base/startup/init/test/mock/hvb/libhvb/cert/hvb_cert.c",
+    "//base/startup/init/test/mock/hvb/libhvb/crypto/hvb_hash_sha256.c",
+    "//base/startup/init/test/mock/init/ueventd/ueventd.c",
+    "//base/startup/init/test/mock/init/ueventd/ueventd_socket.c",
+    "//base/startup/init/test/unittest/fs_manager/libfs_hvb_unittest.cpp",
+  ]
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/include",
+    "//base/startup/hvb/libhvb/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/ueventd/include",
+    "//base/startup/hvb/libhvb/src/crypto",
+    "//base/startup/init/interfaces/innerkits/include/param",
+  ]
+
+  defines = [ "STARTUP_INIT_UT_PATH =\"/data/init_ut\"" ]
+
+  configs = []
+
+  deps = [ "//third_party/googletest:gtest" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  cflags_cc = [ "-fexceptions" ]
+}

@@ -28,7 +28,7 @@
 #define ALIGN_BLOCK_SIZE (16 * BYTE_UNIT)
 #define MIN_DM_SIZE (8 * BYTE_UNIT * BYTE_UNIT)
 #define BLOCK_SIZE_UINT 4096
-#define EXTHDR_MAGIC 0xE0F5E1E2
+#define EXTHDR_MAGIC 0xFEEDBEEF
 #define EXTHDR_BLKSIZE 4096
 
 struct extheader_v1 {
@@ -102,7 +102,7 @@ static uint64_t LookupErofsEnd(const char *dev)
     return erofsSize;
 }
 
-static uint64_t GetTotalSize(const char *dev, uint64_t offset)
+static uint64_t GetImgSize(const char *dev, uint64_t offset)
 {
     int fd = -1;
     fd = open(dev, O_RDONLY | O_LARGEFILE);
@@ -130,7 +130,7 @@ static uint64_t GetTotalSize(const char *dev, uint64_t offset)
         BEGET_LOGI("dev:[%s] is not have ext path, magic is 0x%x", dev, header.magic_number);
         return 0;
     }
-
+    BEGET_LOGI("get img size [%llu]", header.part_size);
     return header.part_size;
 }
 
@@ -178,24 +178,39 @@ static uint64_t GetBlockSize(const char *dev)
     return blockSize;
 }
 
+/* 字节对齐函数，基于alignment进行字节对齐 */
+static uint64_t AlignTo(uint64_t base, uint64_t alignment)
+{
+    if (alignment == 0) {
+        return base;
+    }
+    return (((base - 1) / alignment + 1) * alignment);
+}
+
 static int GetMapperAddr(const char *dev, uint64_t *start, uint64_t *length)
 {
-    uint64_t totalSize;
+    /* 获取EROFS文件系统大小 */
     *start = LookupErofsEnd(dev);
     if (*start == 0) {
         BEGET_LOGE("get erofs end failed.");
         return -1;
     }
 
-    totalSize = GetTotalSize(dev, *start);
-    if (totalSize > 0) {
-        *start += EXTHDR_BLKSIZE;
-    } else {
-        totalSize = GetBlockSize(dev);
-        if (totalSize == 0) {
-            BEGET_LOGE("get block size failed.");
-            return -1;
-        }
+    /*
+     * 获取镜像大小 当前镜像布局有2种
+     * 老布局：EROFS文件系统 + 全0数据填充 + HVB数据  老布局不存在EXTHEADER，获取到的镜像大小为0。直接基于文件系统切分
+     * 新布局：EROFS文件系统 + EXTHEADER + HVB数据   新布局存在EXTHEADER，基于EXTHEADER获取镜像大小后进行分区切分
+     */
+    uint64_t imgSize = GetImgSize(dev, *start);
+    if (imgSize > 0) {
+        *start = AlignTo(imgSize, ALIGN_BLOCK_SIZE);
+    }
+
+    /* 获取分区大小，老分区布局：分区大小 = 镜像大小  新分区布局：分区大小 = 镜像大小 + 无镜像填充的分区空位 */
+    uint64_t totalSize = GetBlockSize(dev);
+    if (totalSize == 0) {
+        BEGET_LOGE("get block size failed.");
+        return -1;
     }
 
     BEGET_LOGI("total size:[%llu], used size: [%llu], empty size:[%llu] on dev: [%s]",

@@ -89,8 +89,8 @@ static LE_STATUS HandleAsyncEvent_(const LoopHandle loopHandle, const TaskHandle
 static void HandleAsyncTaskClose_(const LoopHandle loopHandle, const TaskHandle taskHandle)
 {
     BaseTask *task = (BaseTask *)taskHandle;
-    CloseTask(loopHandle, task);
     DelTask((EventLoop *)loopHandle, task);
+    CloseTask(loopHandle, task);
     close(task->taskId.fd);
 }
 
