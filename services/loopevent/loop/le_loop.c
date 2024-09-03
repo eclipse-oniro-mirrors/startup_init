@@ -93,10 +93,6 @@ LE_STATUS ProcessEvent(const EventLoop *loop, int fd, uint32_t oper)
 {
     BaseTask *task = GetTaskByFd((EventLoop *)loop, fd);
     if (task != NULL) {
-        if (oper & EVENT_ERROR) {
-            task->flags |= TASK_FLAGS_INVALID;
-            loop->delEvent(loop, task->taskId.fd, EVENT_READ | EVENT_WRITE);
-        }
         task->handleEvent((LoopHandle)loop, (TaskHandle)task, oper);
     } else {
         loop->delEvent(loop, fd, EVENT_READ | EVENT_WRITE);

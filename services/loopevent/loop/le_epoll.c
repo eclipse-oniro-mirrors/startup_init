@@ -47,10 +47,10 @@ static LE_STATUS Close_(const EventLoop *loop)
 
 static LE_STATUS AddEvent_(const EventLoop *loop, const BaseTask *task, int op)
 {
-    int ret = LE_FAILURE;
     LE_CHECK(loop != NULL, return LE_FAILURE, "Invalid loop");
     EventEpoll *epoll = (EventEpoll *)loop;
 
+    int ret = LE_FAILURE;
     struct epoll_event event = {};
     int fd = GetSocketFd((const TaskHandle)task);
     GetEpollEvent_(fd, op, &event);
@@ -63,10 +63,10 @@ static LE_STATUS AddEvent_(const EventLoop *loop, const BaseTask *task, int op)
 
 static LE_STATUS ModEvent_(const EventLoop *loop, const BaseTask *task, int op)
 {
-    int ret = LE_FAILURE;
     LE_CHECK(loop != NULL, return LE_FAILURE, "Invalid loop");
     EventEpoll *epoll = (EventEpoll *)loop;
 
+    int ret = LE_FAILURE;
     struct epoll_event event = {};
     int fd = GetSocketFd((const TaskHandle)task);
     GetEpollEvent_(fd, op, &event);
@@ -122,12 +122,8 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
             if ((epoll->waitEvents[index].events & EPOLLOUT) == EPOLLOUT) {
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_WRITE);
             }
-            if ((epoll->waitEvents[index].events & EPOLLERR) == EPOLLERR) {
-                LE_LOGV("RunLoop_ error %d", epoll->waitEvents[index].data.fd);
-                ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_ERROR);
-            }
-            if ((epoll->waitEvents[index].events & EPOLLHUP) == EPOLLHUP) {
-                LE_LOGV("RunLoop_ fd: %d error: %d \n", epoll->waitEvents[index].data.fd, errno);
+            if (epoll->waitEvents[index].events & (EPOLLERR | EPOLLHUP)) {
+                LE_LOGV("RunLoop_ fd:%d, error:%d", epoll->waitEvents[index].data.fd, errno);
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_ERROR);
             }
         }

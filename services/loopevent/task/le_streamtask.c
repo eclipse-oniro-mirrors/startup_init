@@ -91,7 +91,6 @@ static LE_STATUS HandleRecvMsg_(const LoopHandle loopHandle,
 
 static LE_STATUS HandleStreamEvent_(const LoopHandle loopHandle, const TaskHandle handle, uint32_t oper)
 {
-    EventLoop *loop = (EventLoop *)loopHandle;
     StreamConnectTask *stream = (StreamConnectTask *)handle;
     LE_LOGV("HandleStreamEvent_ fd:%d oper 0x%x", GetSocketFd(handle), oper);
 
@@ -102,8 +101,7 @@ static LE_STATUS HandleStreamEvent_(const LoopHandle loopHandle, const TaskHandl
     if (LE_TEST_FLAGS(oper, EVENT_READ)) {
         status = HandleRecvMsg_(loopHandle, handle, stream->recvMessage, stream->handleRecvMsg);
     }
-    if (status == LE_DIS_CONNECTED || LE_TEST_FLAGS(oper, EVENT_ERROR)) {
-        loop->delEvent(loop, GetSocketFd(handle), EVENT_READ | EVENT_WRITE);
+    if (LE_TEST_FLAGS(oper, EVENT_ERROR)) {
         if (stream->disConnectComplete) {
             stream->disConnectComplete(handle);
         }
