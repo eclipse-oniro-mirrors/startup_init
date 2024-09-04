@@ -73,12 +73,12 @@ ohos_moduletest("InitModuleTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
+    "googletest:gtest_main",
     "hilog:libhilog_base",
     "ipc:ipc_single",
     "samgr:samgr_proxy",
