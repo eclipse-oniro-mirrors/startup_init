@@ -14,6 +14,7 @@
 module_output_path = "init/init"
 
 #####################hydra-fuzz###################
+import("//base/startup/init/begetd.gni")
 import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
@@ -2970,6 +2971,10 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
+
   cflags = [
     "-g",
     "-O0",
@@ -2978,6 +2983,9 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
   ]
   sources += [ "addremotewatcher_fuzzer/addremotewatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
 }
 
 ohos_fuzztest("DelRemoteWatcherFuzzTest") {
@@ -3015,7 +3023,9 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
   cflags = [
     "-g",
     "-O0",
@@ -3024,6 +3034,9 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
   ]
   sources += [ "delremotewatcher_fuzzer/delremotewatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+  if (paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 }
 
 ohos_fuzztest("AddWatcherFuzzTest") {
@@ -3061,6 +3074,10 @@ ohos_fuzztest("AddWatcherFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
+
   cflags = [
     "-g",
     "-O0",
@@ -3069,6 +3086,9 @@ ohos_fuzztest("AddWatcherFuzzTest") {
   ]
   sources += [ "addwatcher_fuzzer/addwatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+  if (paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 }
 
 ohos_fuzztest("DelWatcherFuzzTest") {
@@ -3105,6 +3125,10 @@ ohos_fuzztest("DelWatcherFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
+
   cflags = [
     "-g",
     "-O0",
@@ -3113,6 +3137,9 @@ ohos_fuzztest("DelWatcherFuzzTest") {
   ]
   sources += [ "delwatcher_fuzzer/delwatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+  if (paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 }
 
 ohos_fuzztest("RefreshWatcherFuzzTest") {
@@ -3149,6 +3176,10 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
+  if (paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
+
   cflags = [
     "-g",
     "-O0",
@@ -3157,6 +3188,9 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
   ]
   sources += [ "refreshwatcher_fuzzer/refreshwatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+  if (paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 }
 
 ohos_fuzztest("SaveParametersFuzzTest") {
