@@ -279,26 +279,11 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/param/watcher/proxy",
     "//base/startup/init/test/unittest",
     "//base/startup/init/test/unittest/param",
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include",
-    "//foundation/systemabilitymgr/safwk/services/safwk/include",
-    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk",
-    "//foundation/systemabilitymgr/samgr/adapter/interfaces/innerkits/include",
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include",
     "//base/startup/init/ueventd/include",
-    "//utils/system/safwk/native/include",
-    "//third_party/cJSON",
-    "//third_party/zlib",
     "//base/startup/init/services/sandbox/include",
     "//base/startup/init/interfaces/innerkits/hals",
     "//base/startup/init/interfaces/innerkits/include/param",
     "${FSCRYPT_PATH}/include/libfscrypt",
-  ]
-
-  deps = [
-    "//third_party/cJSON:cjson",
-    "//third_party/googletest:gmock",
-    "//third_party/googletest:gtest",
-    "//third_party/libunwind:libunwind",
   ]
 
   defines += [
@@ -332,11 +317,15 @@ ohos_unittest("init_unittest") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
     "c_utils:utils",
     "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libinit_module_engine",
+    "libunwind:libunwind",
     "mbedtls:mbedtls_shared",
     "selinux:libselinux",
     "zlib:libz",
@@ -452,10 +441,9 @@ ohos_unittest("init_dmverify_unittest") {
 
   configs = [ "//base/startup/init/test/unittest:utest_config" ]
 
-  deps = [ "//third_party/googletest:gtest" ]
-
   external_deps = [
     "c_utils:utils",
+    "googletest:gtest",
     "hilog:libhilog",
   ]
 
@@ -494,10 +482,9 @@ ohos_unittest("init_fshvb_unittest") {
 
   configs = []
 
-  deps = [ "//third_party/googletest:gtest" ]
-
   external_deps = [
     "c_utils:utils",
+    "googletest:gtest",
     "hilog:libhilog",
   ]
 

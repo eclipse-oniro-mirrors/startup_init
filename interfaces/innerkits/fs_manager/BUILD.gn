@@ -66,7 +66,6 @@ ohos_static_library("libfsmanager_static") {
       include_dirs += [
         "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/include",
         "//base/startup/init/interfaces/innerkits/fs_manager/dm_verity/include",
-        "//base/startup/hvb/libhvb/include",
       ]
 
       defines += [ "SUPPORT_HVB" ]
@@ -118,7 +117,6 @@ ohos_static_library("libfsmanager_static_real") {
         "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
         "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/include",
         "//base/startup/init/interfaces/innerkits/fs_manager/dm_verity/include",
-        "//base/startup/hvb/libhvb/include",
         "//base/startup/init/ueventd/include",
       ]
 
