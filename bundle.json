@@ -65,7 +65,8 @@
                 "cJSON",
                 "mksh",
                 "libunwind",
-                "toybox"
+                "toybox",
+                "hicollie"
             ],
             "third_party": [
                 "libunwind",
