@@ -176,6 +176,8 @@ PLUGIN_STATIC int DoRebootOther(int id, const char *name, int argc, const char *
     const char *cmd = strstr(argv[0], "reboot,");
     PLUGIN_CHECK(cmd != NULL, return -1, "Invalid parameter argc %s", argv[0]);
     PLUGIN_LOGI("DoRebootOther argv %s", argv[0]);
+    // clear misc
+    (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
     DoJobNow("reboot");
 #ifndef STARTUP_INIT_TEST
     return syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
