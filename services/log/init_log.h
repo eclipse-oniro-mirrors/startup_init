@@ -65,15 +65,15 @@ INIT_PUBLIC_API int GetKmsgFd();
 #else
 INIT_LOCAL_API void EnableInitLog(InitLogLevel level);
 #define INIT_LOGV(fmt, ...) \
-    StartupLog(INIT_DEBUG, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_DEBUG, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGI(fmt, ...) \
-    StartupLog(INIT_INFO, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_INFO, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGW(fmt, ...) \
-    StartupLog(INIT_WARN, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_WARN, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGE(fmt, ...) \
-    StartupLog(INIT_ERROR, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_ERROR, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define INIT_LOGF(fmt, ...) \
-    StartupLog(INIT_FATAL, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (FILE_NAME), (__LINE__), ##__VA_ARGS__)
+    StartupLog(INIT_FATAL, INIT_LOG_DOMAIN, INIT_LOG_TAG, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #endif
 #endif
 
