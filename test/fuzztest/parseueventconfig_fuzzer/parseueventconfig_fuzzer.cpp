@@ -22,13 +22,14 @@ namespace OHOS {
     bool FuzzParseUeventConfig(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (size <= 0 && size > MAX_ALLOW_SIZE) {
+        if (size == 0 && size > MAX_ALLOW_SIZE) {
             return false;
         }
         std::string str(reinterpret_cast<const char*>(data), size);
-        char *buffer = new char[size];
-        int ret = strcpy_s(buffer, size, str.c_str());
+        char *buffer = new char[size+1];
+        int ret = strcpy_s(buffer, size+1, str.c_str());
         if (ret != 0) {
+            delete[] buffer;
             return false;
         }
         if (ParseUeventConfig(buffer) != 0) {
