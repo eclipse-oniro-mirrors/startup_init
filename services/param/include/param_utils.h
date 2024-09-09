@@ -73,7 +73,7 @@ typedef enum {
 #elif defined __LINUX__
 #define DATA_PATH          STARTUP_INIT_UT_PATH"/storage/data/system/param/"
 #else
-#define DATA_PATH          STARTUP_INIT_UT_PATH"/data/service/el1/startup/parameters/"
+#define DATA_PATH          STARTUP_INIT_UT_PATH"/data/service/el1/public/startup/parameters/"
 #endif
 #define PARAM_AREA_SIZE_CFG STARTUP_INIT_UT_PATH"/etc/param/ohos.para.size"
 #define CLIENT_PIPE_NAME "/dev/unix/socket/paramservice"
@@ -81,6 +81,7 @@ typedef enum {
 #define PARAM_STORAGE_PATH STARTUP_INIT_UT_PATH "/dev/__parameters__"
 #define PARAM_PERSIST_SAVE_PATH DATA_PATH "persist_parameters"
 #define PARAM_PERSIST_SAVE_TMP_PATH DATA_PATH "tmp_persist_parameters"
+#define PARAM_OLD_PERSIST_PATH "data/service/el1/startup/parameters/persist_parameters"
 
 #define WORKSPACE_FLAGS_INIT 0x01
 #define WORKSPACE_FLAGS_LOADED 0x02

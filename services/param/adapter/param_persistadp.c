@@ -67,12 +67,23 @@ static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *
         paramNum++;
     }
     (void)fclose(fp);
+    if (access(PARAM_OLD_PERSIST_PATH, F_OK) == 0) {
+        CheckAndCreateDir(PARAM_PERSIST_SAVE_PATH);
+        int ret = unlink(fileName);
+        PARAM_CHECK(ret == 0, return, "failed to delete file %s", fileName);
+    }
     PARAM_LOGI("LoadPersistParam from file %s paramNum %d", fileName, paramNum);
 }
 
 static int LoadPersistParam(void)
 {
-    CheckAndCreateDir(PARAM_PERSIST_SAVE_PATH);
+    char *path = PARAM_PERSIST_SAVE_PATH;
+    if (access(PARAM_OLD_PERSIST_PATH, F_OK) == 0 && access(PARAM_PERSIST_SAVE_PATH, F_OK) != 0) {
+        path = PARAM_OLD_PERSIST_PATH;
+    } else {
+        CheckAndCreateDir(PARAM_PERSIST_SAVE_PATH);
+    }
+
     bool clearFactoryPersistParams = false;
     char value[PARAM_VALUE_LEN_MAX] = {0};
     uint32_t len = PARAM_VALUE_LEN_MAX;
@@ -86,12 +97,12 @@ static int LoadPersistParam(void)
     PARAM_CHECK(buffer != NULL, return -1, "Failed to alloc");
 
     int updaterMode = InUpdaterMode();
-    char *tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters";
+    char *tmpPath = (updaterMode == 0) ? path : "/param/persist_parameters";
     LoadPersistParam_(clearFactoryPersistParams, tmpPath, buffer, buffSize);
     tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_TMP_PATH : "/param/tmp_persist_parameters";
     LoadPersistParam_(clearFactoryPersistParams, tmpPath, buffer, buffSize);
     free(buffer);
-    if (clearFactoryPersistParams && access(PARAM_PERSIST_SAVE_PATH, F_OK) == 0) {
+    if (clearFactoryPersistParams && access(path, F_OK) == 0) {
         FILE *fp = fopen(PERSIST_PARAM_FIXED_FLAGS, "w");
         PARAM_CHECK(fp != NULL, return -1, "create file %s fail error %d", PERSIST_PARAM_FIXED_FLAGS, errno);
         (void)fclose(fp);
