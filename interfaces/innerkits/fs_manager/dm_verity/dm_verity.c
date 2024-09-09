@@ -52,8 +52,8 @@ static bool HvbDmVerityIsEnable(void)
     rc = FsHvbGetValueFromCmdLine(&vBState[0], sizeof(vBState), HVB_CMDLINE_VB_STATE);
 
     if (rc != 0) {
-        BEGET_LOGE("error 0x%x, get verifed boot state", rc);
-        return false;
+        BEGET_LOGE("error 0x%x, get verifed boot state, force enable dm-verity", rc);
+        return true;
     }
 
     if (strcmp(&vBState[0], "false") == 0 || strcmp(&vBState[0], "FALSE") == 0) {
