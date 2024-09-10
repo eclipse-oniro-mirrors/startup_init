@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_SYSTEM_CHECK_MATCH_PARAM_WAIT_FUZZER_H
-#define TEST_FUZZTEST_SYSTEM_CHECK_MATCH_PARAM_WAIT_FUZZER_H
+#ifndef TEST_FUZZTEST_SYSTEM_WAIT_PARAMETER_FUZZER_H
+#define TEST_FUZZTEST_SYSTEM_WAIT_PARAMETER_FUZZER_H
 #include "fuzz_utils.h"
-#define FUZZ_PROJECT_NAME "systemcheckmatchparamwait_fuzzer"
+#define FUZZ_PROJECT_NAME "systemwaitparameter_fuzzer"
 #endif

@@ -3215,10 +3215,10 @@ ohos_fuzztest("SaveParametersFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("SystemCheckMatchParamWaitFuzzTest") {
+ohos_fuzztest("SystemWaitParameterFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "//base/startup/init/test/fuzztest/systemcheckmatchparamwait_fuzzer"
+      "//base/startup/init/test/fuzztest/systemwaitparameter_fuzzer"
 
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include/param",
@@ -3229,6 +3229,7 @@ ohos_fuzztest("SystemCheckMatchParamWaitFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
@@ -3241,9 +3242,7 @@ ohos_fuzztest("SystemCheckMatchParamWaitFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [
-    "systemcheckmatchparamwait_fuzzer/systemcheckmatchparamwait_fuzzer.cpp",
-  ]
+  sources = [ "systemwaitparameter_fuzzer/systemwaitparameter_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -3610,9 +3609,9 @@ group("fuzztest") {
     ":StartServiceByTimerFuzzTest",
     ":StopServiceTimerFuzzTest",
     ":SysCheckParamExistFuzzTest",
-    ":SystemCheckMatchParamWaitFuzzTest",
     ":SystemDumpParametersFuzzTest",
     ":SystemTraversalParameterFuzzTest",
+    ":SystemWaitParameterFuzzTest",
     ":UmountAllWithFstabFileFuzzTest",
     ":WaitParameterFuzzTest",
     ":WatchParameterFuzzTest",
