@@ -13,27 +13,25 @@
  * limitations under the License.
  */
 
-#include "systemcheckmatchparamwait_fuzzer.h"
+#include "systemwaitparameter_fuzzer.h"
 #include <string>
-#include "param_manager.h"
+#include "init_param.h"
 
 #define NAME_LEN_MAX 96
 
 namespace OHOS {
-    bool FuzzSystemCheckMatchParamWait(const uint8_t* data, size_t size)
+    bool FuzzSystemWaitParameter(const uint8_t* data, size_t size)
     {
         if (size >= NAME_LEN_MAX) {
             return false;
         }
-        bool result = false;
-        
-        std::string name(reinterpret_cast<const char*>(data), size);
 
-        ParamNode *param = SystemCheckMatchParamWait(name.c_str(), "test");
-        if (param != nullptr) {
-            result = true;
+        std::string name(reinterpret_cast<const char*>(data), size);
+        int ret = SystemWaitParameter(name.c_str(), "test", 1);
+        if (!ret) {
+            return true;
         };
-        return result;
+        return false;
     }
 }
 
@@ -41,6 +39,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzSystemCheckMatchParamWait(data, size);
+    OHOS::FuzzSystemWaitParameter(data, size);
     return 0;
 }
