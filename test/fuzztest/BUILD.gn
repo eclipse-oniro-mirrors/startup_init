@@ -462,7 +462,7 @@ ohos_fuzztest("WatchParameterFuzzTest") {
     "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -2967,7 +2967,7 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
     "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -3020,7 +3020,7 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
     "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -3071,7 +3071,7 @@ ohos_fuzztest("AddWatcherFuzzTest") {
     "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -3121,7 +3121,7 @@ ohos_fuzztest("DelWatcherFuzzTest") {
     "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -3171,7 +3171,7 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
     "bounds_checking_function:libsec_static",
     "c_utils:utils",
     "hilog:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

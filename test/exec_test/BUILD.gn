@@ -70,7 +70,7 @@ ohos_executable("ondemandTest") {
 
   external_deps = [
     "c_utils:utils",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
