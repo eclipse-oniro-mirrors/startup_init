@@ -58,6 +58,7 @@ static unsigned int ConvertFlags(char *flagBuffer)
         {"fscasefold", FS_MANAGER_CASEFOLD},
         {"fscompression", FS_MANAGER_COMPRESSION},
         {"fsdedup", FS_MANAGER_DEDUP},
+        {"formattable", FS_MANAGER_FORMATTABLE},
     };
 
     BEGET_CHECK_RETURN_VALUE(flagBuffer != NULL && *flagBuffer != '\0', 0); // No valid flags.
