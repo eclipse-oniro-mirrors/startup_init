@@ -67,7 +67,7 @@ if (!defined(ohos_lite)) {
       "access_token:libaccesstoken_sdk",
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
-      "ipc:ipc_core",
+      "ipc:ipc_single",
       "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]

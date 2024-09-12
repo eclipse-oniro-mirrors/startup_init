@@ -351,7 +351,7 @@ ohos_unittest("init_unittest") {
       "param/watcher_proxy_unittest.cpp",
     ]
     external_deps += [
-      "ipc:ipc_core",
+      "ipc:ipc_single",
       "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]
