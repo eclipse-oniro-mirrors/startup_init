@@ -322,31 +322,19 @@ static int DoResizeF2fs(const char* device, const unsigned long long size, const
     return ExecCommand(argc, argv);
 }
 
-#define MAX_CMD_PARAM_NUM 10
-#define MAX_BUFFER_LENGTH 20
-static int DoFsckF2fs(const char* device, char* fsType)
+static int DoFsckF2fs(const char* device)
 {
     char *file = "/system/bin/fsck.f2fs";
-    char *cmd[MAX_CMD_PARAM_NUM] = {NULL};
-    char buf[MAX_BUFFER_LENGTH];
-    int idx = 0;
-    int ret = 0;
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "fsck.f2fs is not exists.");
 
-    cmd[idx++] = file;
-    cmd[idx++] = "-p1";
-    if (strcmp(fsType, "f2fs") != 0) {
-        ret = snprintf_s(buf, MAX_BUFFER_LENGTH, MAX_BUFFER_LENGTH - 1, "--convert=%s", fsType);
-        BEGET_ERROR_CHECK(ret != -1, return -1, "Failed to build fstype");
-        cmd[idx++] = buf;
-    }
-    cmd[idx++] = (char *)device;
-    cmd[idx++] = NULL;
+    char *cmd[] = {
+        file, "-p1", (char *)device, NULL
+    };
 
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
     InitTimerControl(true);
-    ret = ExecCommand(argc, argv);
+    int ret = ExecCommand(argc, argv);
     InitTimerControl(false);
     return ret;
 }
@@ -542,7 +530,7 @@ int MountOneItem(FstabItem *item)
             BEGET_LOGE("Failed to resize.f2fs dir %s , ret = %d", item->deviceName, ret);
         }
 
-        ret = DoFsckF2fs(item->deviceName, item->fsType);
+        ret = DoFsckF2fs(item->deviceName);
         if (ret != 0) {
             BEGET_LOGE("Failed to fsck.f2fs dir %s , ret = %d", item->deviceName, ret);
         }
