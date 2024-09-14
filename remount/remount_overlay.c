@@ -18,6 +18,7 @@
 #include <sys/mount.h>
 #include <sys/wait.h>
 #include <mntent.h>
+#include <dirent.h>
 #include "securec.h"
 #include "init_log.h"
 #include "init_utils.h"
@@ -28,7 +29,7 @@
 
 #define MODE_MKDIR 0755
 #define BLOCK_SIZE_UNIT 4096
-
+#define PATH_MAX 256
 #define PREFIX_LOWER "/mnt/lower"
 #define MNT_VENDOR "/vendor"
 #define ROOT_MOUNT_DIR "/"
@@ -295,6 +296,100 @@ static bool DoSystemRemount(struct mntent *mentry, bool *result)
     return true;
 }
 
+static bool IsRegularFile(const char *file)
+{
+    struct stat st = {0};
+    if (lstat(file, &st) == 0) {
+        if (S_ISREG(st.st_mode)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void MountBindEngFile(const char *source, const char *target)
+{
+    char targetFullPath[PATH_MAX] = {0};
+    const char *p = source;
+    char *q = NULL;
+    const char *end = source + strlen(source);
+
+    if (*p != '/') { // source must start with '/'
+        return;
+    }
+
+    // Get next '/'
+    q = strchr(p + 1, '/');
+    if (q == NULL) {
+        INIT_LOGI("path \' %s \' without extra slash, ignore it", source);
+        return;
+    }
+
+    if (*(end - 1) == '/') {
+        INIT_LOGI("path \' %s \' ends with slash, ignore it", source);
+        return;
+    }
+    // OK, now get sub dir and combine it with target
+    int ret = snprintf_s(targetFullPath, PATH_MAX, PATH_MAX - 1, "%s%s", strcmp(target, "/") == 0 ? "" : target, q);
+    if (ret == -1) {
+        INIT_LOGE("Failed to build target path");
+        return;
+    }
+    INIT_LOGI("target full path is %s", targetFullPath);
+    if (access(targetFullPath, F_OK) != 0) {  // file not exist, symlink targetFullPath
+        if (symlink(source, targetFullPath) < 0) {
+            INIT_LOGE("Failed to link %s to %s, err = %d", source, targetFullPath, errno);
+        }
+        return;
+    }
+    if (IsRegularFile(targetFullPath)) {  // file exist, moung bind targetFullPath
+        if (mount(source, targetFullPath, NULL, MS_BIND, NULL) != 0) {
+            INIT_LOGE("Failed to bind mount %s to %s, err = %d", source, targetFullPath, errno);
+        } else {
+            INIT_LOGI("Bind mount %s to %s done", source, targetFullPath);
+        }
+        return;
+    }
+    INIT_LOGW("%s without expected type, skip overlay", targetFullPath);
+}
+
+static void EngFilesOverlay(const char *source, const char *target)
+{
+    DIR *dir = NULL;
+    struct dirent *de = NULL;
+
+    if ((dir = opendir(source)) == NULL) {
+        INIT_LOGE("Open path \' %s \' failed. err = %d", source, errno);
+        return;
+    }
+    int dfd = dirfd(dir);
+    char srcPath[PATH_MAX] = {};
+    while ((de = readdir(dir)) != NULL) {
+        if (de->d_name[0] == '.') {
+            continue;
+        }
+        if (snprintf_s(srcPath, PATH_MAX, PATH_MAX - 1, "%s/%s", source, de->d_name) == -1) {
+            INIT_LOGE("Failed to build path for overlaying");
+            break;
+        }
+
+        // Determine file type
+        struct stat st = {};
+        if (fstatat(dfd, de->d_name, &st, AT_SYMLINK_NOFOLLOW) < 0) {
+            continue;
+        }
+        if (S_ISDIR(st.st_mode)) {
+            EngFilesOverlay(srcPath, target);
+        } else if (S_ISREG(st.st_mode)) {
+            MountBindEngFile(srcPath, target);
+        } else { // Ignore any other file types
+            INIT_LOGI("Ignore %s while overlaying", srcPath);
+        }
+    }
+    closedir(dir);
+    dir = NULL;
+}
+
 bool RemountRofsOverlay()
 {
     bool result = false;
@@ -330,5 +425,10 @@ bool RemountRofsOverlay()
 
     endmntent(fp);
     SetRemountResultFlag(result);
+
+    INIT_LOGI("remount system overlay...");
+    EngFilesOverlay("/eng_system", "/");
+    INIT_LOGI("remount chipset overlay...");
+    EngFilesOverlay("/eng_chipset", "/chipset");
     return true;
 }
