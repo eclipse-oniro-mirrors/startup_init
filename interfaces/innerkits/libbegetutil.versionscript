@@ -147,6 +147,7 @@
     GetDistributionOSName;
     GetDistributionOSVersion;
     GetDistributionOSApiVersion;
+    GetDistributionOSApiName;
     GetDistributionOSReleaseType;
     SaveParameters;
     OH_StrArrayGetIndex;

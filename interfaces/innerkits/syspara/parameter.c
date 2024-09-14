@@ -397,6 +397,15 @@ int GetDistributionOSApiVersion(void)
     }
     return atoi(distributionOsApiVersion);
 }
+const char *GetDistributionOSApiName(void)
+{
+    static const char *distributionOsApiName = NULL;
+    GetProperty("const.product.os.dist.apiversion", &distributionOsApiName);
+    if (distributionOsApiName == NULL) {
+        distributionOsApiName = EMPTY_STR;
+    }
+    return distributionOsApiName;
+}
 
 const char *GetDistributionOSReleaseType(void)
 {
