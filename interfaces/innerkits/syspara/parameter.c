@@ -400,7 +400,7 @@ int GetDistributionOSApiVersion(void)
 const char *GetDistributionOSApiName(void)
 {
     static const char *distributionOsApiName = NULL;
-    GetProperty("const.product.os.dist.apiversion", &distributionOsApiName);
+    GetProperty("const.product.os.dist.apiname", &distributionOsApiName);
     if (distributionOsApiName == NULL) {
         distributionOsApiName = EMPTY_STR;
     }
