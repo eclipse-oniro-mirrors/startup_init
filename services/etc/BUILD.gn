@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import("//base/startup/init/begetd.gni")
 import("//base/startup/init/services/etc/passwd_appender/passwd_appender.gni")
 
 if (defined(ohos_lite)) {
@@ -104,6 +104,9 @@ if (defined(ohos_lite)) {
       "system",
       "updater",
     ]
+    if (startup_init_extra_static_modules != "") {
+      install_enable = false
+    }
     part_name = "init"
     subsystem_name = "startup"
   }
@@ -114,6 +117,9 @@ if (defined(ohos_lite)) {
       "system",
       "updater",
     ]
+    if (startup_init_extra_static_modules != "") {
+      install_enable = false
+    }
     part_name = "init"
     subsystem_name = "startup"
   }
