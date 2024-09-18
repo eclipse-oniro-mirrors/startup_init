@@ -428,7 +428,7 @@ static void PrepareAreaSizeFile(void)
             "startup_param=20480\n"
             "persist_param=2048\n"
             "const_param=20480\n"
-            "test_watch=81920\n"
+            "test_watch=102400\n"
             "test_write=102400\n"
             "const_param***=20480\n"
             "persist_sys_param=2048\n"
