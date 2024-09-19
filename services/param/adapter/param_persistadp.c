@@ -21,6 +21,9 @@
 #include "param_manager.h"
 #include "param_persist.h"
 #include "param_utils.h"
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+#include "trigger_manager.h"
+#endif
 
 // for linux, no mutex
 static ParamMutex g_saveMutex = {};
@@ -30,27 +33,35 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
     bool clearFactoryPersistParams = *(bool*)context;
     uint32_t dataIndex = 0;
     int mode = 0;
+    int result = 0;
+    do {
+        if (!clearFactoryPersistParams) {
+            mode |= LOAD_PARAM_PERSIST;
+            result = WriteParam(name, value, &dataIndex, mode);
+            break;
+        }
 
-    if (!clearFactoryPersistParams) {
-        mode |= LOAD_PARAM_PERSIST;
-        return WriteParam(name, value, &dataIndex, mode);
+        char persetValue[PARAM_VALUE_LEN_MAX] = {0};
+        uint32_t len = PARAM_VALUE_LEN_MAX;
+        int ret = SystemReadParam(name, persetValue, &len);
+        if (ret != 0) {
+            mode |= LOAD_PARAM_PERSIST;
+            result = WriteParam(name, value, &dataIndex, mode);
+            break;
+        }
+
+        if ((strcmp(persetValue, value) != 0)) {
+            PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
+            mode |= LOAD_PARAM_PERSIST;
+            result = WriteParam(name, value, &dataIndex, mode);
+        }
+    } while (0);
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
+    if (result == 0) {
+        PostParamTrigger(EVENT_TRIGGER_PARAM_WATCH, name, value);
     }
-
-    char persetValue[PARAM_VALUE_LEN_MAX] = {0};
-    uint32_t len = PARAM_VALUE_LEN_MAX;
-    int ret = SystemReadParam(name, persetValue, &len);
-    if (ret != 0) {
-        mode |= LOAD_PARAM_PERSIST;
-        return WriteParam(name, value, &dataIndex, mode);
-    }
-
-    if ((strcmp(persetValue, value) != 0)) {
-        PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
-        mode |= LOAD_PARAM_PERSIST;
-        return WriteParam(name, value, &dataIndex, mode);
-    }
-
-    return 0;
+#endif
+    return result;
 }
 
 static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *fileName,
