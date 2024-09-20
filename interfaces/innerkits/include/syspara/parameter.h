@@ -187,6 +187,7 @@ uint32_t GetUintParameter(const char *key, uint32_t def);
 const char *GetDistributionOSName(void);
 const char *GetDistributionOSVersion(void);
 int GetDistributionOSApiVersion(void);
+const char *GetDistributionOSApiName(void);
 const char *GetDistributionOSReleaseType(void);
 
 #ifdef __cplusplus

@@ -420,6 +420,15 @@ static napi_value NAPI_GetDistributionOSApiVersion(napi_env env, napi_callback_i
     return napiValue;
 }
 
+static napi_value NAPI_GetDistributionOSApiName(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    const char *val = GetDistributionOSApiName();
+
+    NAPI_CALL(env, napi_create_string_utf8(env, val, strlen(val), &napiValue));
+    return napiValue;
+}
+
 static napi_value NAPI_GetDistributionOSReleaseType(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
@@ -523,6 +532,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"distributionOSName", nullptr, nullptr, NAPI_GetDistributionOSName, nullptr, nullptr, napi_default, nullptr},
         {"distributionOSVersion", nullptr, nullptr, NAPI_GetDistributionOSVersion, nullptr, nullptr, napi_default, nullptr},
         {"distributionOSApiVersion", nullptr, nullptr, NAPI_GetDistributionOSApiVersion, nullptr, nullptr, napi_default, nullptr},
+        {"distributionOSApiName", nullptr, nullptr, NAPI_GetDistributionOSApiName, nullptr, nullptr, napi_default, nullptr},
         {"distributionOSReleaseType", nullptr, nullptr, NAPI_GetDistributionOSReleaseType, nullptr, nullptr, napi_default, nullptr},
         {"ODID", nullptr, nullptr, GetDevOdid, nullptr, nullptr, napi_default, nullptr},
     };
