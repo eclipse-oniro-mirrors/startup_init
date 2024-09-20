@@ -30,7 +30,7 @@ if (defined(ohos_lite)) {
       "_GNU_SOURCE",
       "OHOS_LITE",
     ]
-    if (config_ohos_startup_init_lite_no_log) {
+    if (init_lite_no_log) {
       defines += [ "INIT_NO_LOG" ]
     }
     include_dirs = comm_include

@@ -52,8 +52,8 @@ ohos_executable("init_early") {
     "//base/startup/init/services/log:init_log",
     "//base/startup/init/ueventd:libueventd_ramdisk_static",
   ]
-  if (startup_init_extra_static_modules != "") {
-    deps += [ startup_init_extra_static_modules ]
+  if (init_extra_static_modules != "") {
+    deps += [ init_extra_static_modules ]
   }
   install_images = [ "ramdisk" ]
   install_enable = true
@@ -193,8 +193,8 @@ ohos_executable("init") {
   if (asan_detector) {
     defines += [ "ASAN_DETECTOR" ]
   }
-  if (startup_init_extra_static_modules != "") {
-    deps += [ startup_init_extra_static_modules ]
+  if (init_extra_static_modules != "") {
+    deps += [ init_extra_static_modules ]
   }
 
   version_script = get_label_info(

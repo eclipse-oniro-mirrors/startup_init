@@ -31,14 +31,14 @@ declare_args() {
   config_ohos_startup_init_lite_data_path = "/"
 
   # config memory size for liteos-m
-  config_ohos_startup_init_lite_memory_size = 5120
+  init_lite_memory_size = 5120
 
   startup_init_feature_decode_group_file = false
 
   startup_init_test_performance = true
 
   # log display control
-  config_ohos_startup_init_lite_no_log = false
+  init_lite_no_log = false
 
   startup_init_with_param_base = false
   if (!use_musl) {
@@ -50,8 +50,8 @@ declare_args() {
   init_appspawn_client_module = true
 
   # begetutil extension module
-  startup_begetutil_extra_modules = ""
-  startup_init_extra_static_modules = ""
+  init_begetutil_extra_modules = ""
+  init_extra_static_modules = ""
 
   init_use_encaps = false
 
