@@ -104,7 +104,7 @@ if (defined(ohos_lite)) {
       "system",
       "updater",
     ]
-    if (startup_init_extra_static_modules != "") {
+    if (init_extra_static_modules != "") {
       install_enable = false
     }
     part_name = "init"
@@ -117,7 +117,7 @@ if (defined(ohos_lite)) {
       "system",
       "updater",
     ]
-    if (startup_init_extra_static_modules != "") {
+    if (init_extra_static_modules != "") {
       install_enable = false
     }
     part_name = "init"

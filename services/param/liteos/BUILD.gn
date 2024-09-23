@@ -103,9 +103,8 @@ static_library("param_init_lite") {
       "PARAM_SUPPORT_CYCLE_CHECK",
     ]
   }
-  if (defined(config_ohos_startup_init_lite_memory_size)) {
-    defines +=
-        [ "PARAM_WORKSPACE_MAX=${config_ohos_startup_init_lite_memory_size}" ]
+  if (defined(init_lite_memory_size)) {
+    defines += [ "PARAM_WORKSPACE_MAX=${init_lite_memory_size}" ]
   }
 }
 
@@ -116,7 +115,7 @@ static_library("param_client_lite") {
   public_configs = [ ":exported_header_files" ]
   external_deps = [ "bounds_checking_function:libsec_static" ]
 
-  if (config_ohos_startup_init_lite_no_log) {
+  if (init_lite_no_log) {
     defines += [ "INIT_NO_LOG" ]
   } else {
     sources += [ "//base/startup/init/services/log/init_commlog.c" ]
@@ -156,9 +155,8 @@ static_library("param_client_lite") {
       defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
     }
 
-    if (defined(config_ohos_startup_init_lite_memory_size)) {
-      defines +=
-          [ "PARAM_WORKSPACE_MAX=${config_ohos_startup_init_lite_memory_size}" ]
+    if (defined(init_lite_memory_size)) {
+      defines += [ "PARAM_WORKSPACE_MAX=${init_lite_memory_size}" ]
     }
   }
 }

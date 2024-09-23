@@ -107,7 +107,7 @@ if (defined(ohos_lite)) {
         "//base/startup/init/services/modules/udid:libudidcomm",
       ]
       external_deps = [ "bounds_checking_function:libsec_static" ]
-      if (config_ohos_startup_init_lite_no_log) {
+      if (init_lite_no_log) {
         defines += [ "INIT_NO_LOG" ]
       } else {
         deps +=
@@ -138,7 +138,7 @@ if (defined(ohos_lite)) {
           "//base/startup/init/services/param/liteos:param_client_lite",
           "//base/startup/init/services/utils:libinit_utils",
         ]
-        if (!config_ohos_startup_init_lite_no_log) {
+        if (!init_lite_no_log) {
           deps += [ "//base/startup/init/services/log:init_log" ]
         }
       }
@@ -209,8 +209,8 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/utils:libinit_utils",
     ]
     deps += [ "//base/startup/init/services/param/base:param_base" ]
-    if (startup_begetutil_extra_modules != "") {
-      deps += [ startup_begetutil_extra_modules ]
+    if (init_begetutil_extra_modules != "") {
+      deps += [ init_begetutil_extra_modules ]
     }
 
     external_deps = [
