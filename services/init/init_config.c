@@ -18,6 +18,7 @@
 #include "init_service_manager.h"
 #include "init_utils.h"
 #include "init_param.h"
+#include "init_group_manager.h"
 
 static void ParseAllImports(const cJSON *root);
 
@@ -106,7 +107,7 @@ void ReadConfig(void)
     uint32_t len = sizeof(buffer);
     SystemReadParam("ohos.boot.mode", buffer, &len);
     INIT_LOGI("ohos.boot.mode %s", buffer);
-    if (strcmp(buffer, "charger_mode") == 0) {
+    if ((strcmp(buffer, "charger_mode") == 0) || (GetBootModeFromMisc() == GROUP_CHARGE)) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
         ParseInitCfgByPriority();
