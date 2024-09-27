@@ -35,7 +35,7 @@
 #define ROOT_MOUNT_DIR "/"
 #define SYSTEM_DIR "/usr"
 
-static bool MntNeedRemount(const char *mnt)
+INIT_STATIC bool MntNeedRemount(const char *mnt)
 {
     char *remountPath[] = {
         "/", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust", "/version", "/patch_hw"
@@ -48,7 +48,7 @@ static bool MntNeedRemount(const char *mnt)
     return false;
 }
 
-static bool IsSkipRemount(const struct mntent mentry)
+INIT_STATIC bool IsSkipRemount(const struct mntent mentry)
 {
     if (mentry.mnt_type == NULL || mentry.mnt_dir == NULL) {
         return true;
@@ -66,7 +66,7 @@ static bool IsSkipRemount(const struct mntent mentry)
     return false;
 }
 
-static int ExecCommand(int argc, char **argv)
+INIT_STATIC int ExecCommand(int argc, char **argv)
 {
     INIT_CHECK(!(argc == 0 || argv == NULL || argv[0] == NULL), return -1);
 
@@ -87,7 +87,7 @@ static int ExecCommand(int argc, char **argv)
     return WEXITSTATUS(status);
 }
 
-static int GetDevSize(const char *fsBlkDev, uint64_t *devSize)
+INIT_STATIC int GetDevSize(const char *fsBlkDev, uint64_t *devSize)
 {
     int fd = -1;
     fd = open(fsBlkDev, O_RDONLY);
@@ -106,7 +106,7 @@ static int GetDevSize(const char *fsBlkDev, uint64_t *devSize)
     return 0;
 }
 
-static int FormatExt4(const char *fsBlkDev, const char *fsMntPoint)
+INIT_STATIC int FormatExt4(const char *fsBlkDev, const char *fsMntPoint)
 {
     uint64_t devSize;
     int ret = GetDevSize(fsBlkDev, &devSize);
@@ -143,21 +143,21 @@ static int FormatExt4(const char *fsBlkDev, const char *fsMntPoint)
     return 0;
 }
 
-static void OverlayRemountPre(const char *mnt)
+INIT_STATIC void OverlayRemountPre(const char *mnt)
 {
     if (strcmp(mnt, MNT_VENDOR) == 0) {
         OverlayRemountVendorPre();
     }
 }
 
-static void OverlayRemountPost(const char *mnt)
+INIT_STATIC void OverlayRemountPost(const char *mnt)
 {
     if (strcmp(mnt, MNT_VENDOR) == 0) {
         OverlayRemountVendorPost();
     }
 }
 
-static bool DoRemount(struct mntent *mentry, bool *result)
+INIT_STATIC bool DoRemount(struct mntent *mentry, bool *result)
 {
     int devNum = 0;
     char *mnt = NULL;
@@ -211,7 +211,7 @@ static bool DoRemount(struct mntent *mentry, bool *result)
     return true;
 }
 
-static bool DirectoryExists(const char *path)
+INIT_STATIC bool DirectoryExists(const char *path)
 {
     struct stat sb;
     return stat(path, &sb) != -1 && S_ISDIR(sb.st_mode);
@@ -255,7 +255,7 @@ int RootOverlaySetup(void)
     return 0;
 }
 
-static bool DoSystemRemount(struct mntent *mentry, bool *result)
+INIT_STATIC bool DoSystemRemount(struct mntent *mentry, bool *result)
 {
     int devNum = 0;
     int ret = 0;
