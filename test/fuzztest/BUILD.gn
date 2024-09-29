@@ -3484,6 +3484,94 @@ ohos_fuzztest("LoadParamFromCmdLineFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("CheckAndCreatFileFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/checkandcreatfile_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "checkandcreatfile_fuzzer/checkandcreatfile_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("WriteAllFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/writeall_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "writeall_fuzzer/writeall_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("SplitStringFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/splitstring_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "splitstring_fuzzer/splitstring_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ##############################################################################################
 group("fuzztest") {
   testonly = true
@@ -3495,6 +3583,7 @@ group("fuzztest") {
     ":AddWatcherFuzzTest",
     ":BuildControlMessageFuzzTest",
     ":ChangeSysAttributePermissionsFuzzTest",
+    ":CheckAndCreatFileFuzzTest",
     ":CmdClientInitFuzzTest",
     ":CmdServiceProcessDelClientFuzzTest",
     ":DecodeGidFuzzTest",
@@ -3606,6 +3695,7 @@ group("fuzztest") {
     ":ServiceWatchForStatusFuzzTest",
     ":SetParameterCFuzzTest",
     ":SetParameterCppFuzzTest",
+    ":SplitStringFuzzTest",
     ":StartServiceByTimerFuzzTest",
     ":StopServiceTimerFuzzTest",
     ":SysCheckParamExistFuzzTest",
@@ -3615,6 +3705,7 @@ group("fuzztest") {
     ":UmountAllWithFstabFileFuzzTest",
     ":WaitParameterFuzzTest",
     ":WatchParameterFuzzTest",
+    ":WriteAllFuzzTest",
   ]
 }
 ###############################################################################
