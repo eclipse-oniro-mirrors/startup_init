@@ -24,10 +24,29 @@
 #include "le_task.h"
 #include "list.h"
 
+#define SLEEP_DURATION 3000 // us
+#define EXIT_TIMEOUT 1000000 // us
+#define APP_STATE_IDLE 1
+#define APP_STATE_SPAWNING 2
+#define APP_MAX_TIME 3000000
+
+typedef void (* CallbackControlProcess)(uint16_t type, const char *serviceCmd, const void *context);
+
+static Message *g_message = NULL;
+CallbackControlProcess g_controlFunc = NULL;
+
 typedef struct {
     uint16_t tlvLen;
     uint16_t tlvType;
 } Tlv;
+
+typedef enum {
+    ACTION_SANDBOX = 0,
+    ACTION_DUMP,
+    ACTION_MODULEMGR,
+    ACTION_SPAWNTIME,
+    ACTION_MAX
+} ActionType;
 
 typedef struct {
     uint16_t tlvLen;  // 对齐后的长度
@@ -69,6 +88,7 @@ typedef struct MsgNode_ {
 } MsgNode;
 
 static MyService g_service = NULL;
+static AppMgr *g_appMgr = NULL;
 
 int MakeDirRec(const char *path, mode_t mode, int lastPath)
 {
@@ -172,14 +192,39 @@ static int CreateTcpServer(TaskHandle *server, const char *name)
     return ret;
 }
 
+void DeleteMsg(MsgNode *msgNode)
+{
+    if (msgNode == NULL) {
+        return;
+    }
+    if (msgNode->buffer) {
+        free(msgNode->buffer);
+        msgNode->buffer = NULL;
+    }
+    if (msgNode->tlvOffset) {
+        free(msgNode->tlvOffset);
+        msgNode->tlvOffset = NULL;
+    }
+    free(msgNode);
+}
+
+static void WaitMsgCompleteTimeOut(const TimerHandle taskHandle, void *context)
+{
+    MyTask *task = (MyTask *)context;
+    printf("Long time no msg complete so close connectionId: %u \n", connection->connectionId);
+    DeleteMsg(connection->receiverCtx.incompleteMsg);
+    connection->receiverCtx.incompleteMsg = NULL;
+    LE_CloseStreamTask(LE_GetDefaultLoop(), connection->stream);
+}
+
 static inline int StartTimerForCheckMsg(MyTask *task)
 {
-    if (connection->receiverCtx.timer != NULL) {
+    if (task->receiverCtx.timer != NULL) {
         return 0;
     }
-    int ret = LE_CreateTimer(LE_GetDefaultLoop(), &connection->receiverCtx.timer, WaitMsgCompleteTimeOut, connection);
+    int ret = LE_CreateTimer(LE_GetDefaultLoop(), &task->receiverCtx.timer, WaitMsgCompleteTimeOut, task);
     if (ret == 0) {
-        ret = LE_StartTimer(LE_GetDefaultLoop(), connection->receiverCtx.timer, MAX_WAIT_MSG_COMPLETE, 1);
+        ret = LE_StartTimer(LE_GetDefaultLoop(), task->receiverCtx.timer, MAX_WAIT_MSG_COMPLETE, 1);
     }
     return ret;
 }
@@ -337,6 +382,45 @@ static int MsgRebuild(MsgNode *message, const Message *msg)
     return 0;
 }
 
+AppMgr *CreateMessage()
+{
+    if (g_appMgr != NULL) {
+        return g_appMgr;
+    }
+    AppMgr *appMgr = (AppMgr *)calloc(1, sizeof(AppMgr));
+    if (appMgr == NULL) {
+        printf("Failed to alloc memory \n");
+        return NULL;
+    }
+
+    appMgr->content.longProcName = NULL;
+    appMgr->content.longProcNameLen = 0;
+    appMgr->content.mode = mode;
+    appMgr->content.sandboxNsFlags = 0;
+    appMgr->content.wdgOpened = 0;
+    appMgr->servicePid = getpid();
+    appMgr->server = NULL;
+    appMgr->sigHandler = NULL;
+    OH_ListInit(&appMgr->appQueue);
+    OH_ListInit(&appMgr->diedQueue);
+    appMgr->diedAppCount = 0;
+    OH_ListInit(&appMgr->extData);
+    g_appMgr = appMgr;
+    g_appMgr->spawnTime.minTime = APP_MAX_TIME;
+    g_appMgr->spawnTime.maxTime = 0;
+    return appMgr;
+}
+
+AppMgr *GetAppMgr(void)
+{
+    return g_appMgr;
+}
+
+MgrContent *GetMgrContent(void)
+{
+    return g_appMgr == NULL ? NULL : &g_appMgr->content;
+}
+
 int GetMsgFromBuffer(const uint8_t *buffer, uint32_t bufferLen,
     Message **outMsg, uint32_t *msgRecvLen, uint32_t *reminder)
 {
@@ -401,14 +485,29 @@ int DecodeMsg(Message * message)
     return 0;
 }
 
+inline int IsNWebMode(const AppMgr *content)
+{
+    return (content != NULL) &&
+        (content->content.mode == MODE_FOR_NWEB_SPAWN || content->content.mode == MODE_FOR_NWEB_COLD_RUN);
+}
+
 int ProcessTerminationStatusMsg(const MsgNode *message, Result *result)
 {
     if (message == NULL || result == NULL) {
         return -1;
     }
-
+    if (!IsNWebMode(g_appMgr)) {
+        return -1;
+    }
     result->result = -1;
     result->pid = 0;
+    pid_t *pid = (pid_t *)GetMsgInfo(message, TLV_RENDER_TERMINATION_INFO);
+    if (pid == NULL) {
+        return -1;
+    }
+    // get render process termination status, only nwebspawn need this logic.
+    result->pid = *pid;
+    result->result = GetProcessTerminationStatus(*pid);
     return 0;
 }
 
@@ -521,6 +620,19 @@ void *GetMsgExtInfo(const MsgNode *message, const char *name, uint32_t *len)
         return data + sizeof(TlvExt);
     }
     return NULL;
+}
+
+MsgNode *CreateMsg(void)
+{
+    MsgNode *message = (MsgNode *)calloc(1, sizeof(MsgNode));
+    if (message == NULL) {
+        printf("Failed to create message \n");
+        return NULL;
+    }
+
+    message->buffer = NULL;
+    message->tlvOffset = NULL;
+    return message;
 }
 
 MsgNode *RebuildMsgNode(MsgNode *message, Process *info)
@@ -719,6 +831,98 @@ static void OnReceiveRequest(const TaskHandle taskHandle, const uint8_t *buffer,
     }
 }
 
+void ServiceInit(const char *socketPath, CallbackControlProcess func, LoopHandle loop)
+{
+    if ((socketPath == NULL) || (func == NULL) || (loop == NULL)) {
+        BEGET_LOGE("[control_fd] Invalid parameter");
+        return;
+    }
+    OH_ListInit(&g_cmdService.head);
+    LE_StreamServerInfo info = {};
+    info.baseInfo.flags = TASK_STREAM | TASK_SERVER | TASK_PIPE;
+    info.server = (char *)socketPath;
+    info.socketId = -1;
+    info.baseInfo.close = NULL;
+    info.disConnectComplete = NULL;
+    info.incommingConnect = CmdOnIncommingConnect;
+    info.sendMessageComplete = NULL;
+    info.recvMessage = NULL;
+    g_controlFunc = func;
+    if (g_controlFdLoop == NULL) {
+        g_controlFdLoop = loop;
+    }
+    (void)LE_CreateStreamServer(g_controlFdLoop, &g_cmdService.serverTask, &info);
+}
+
+void ProcessControl(uint16_t type, const char *serviceCmd, const void *context)
+{
+    if ((type >= ACTION_MAX) || (serviceCmd == NULL)) {
+        return;
+    }
+    switch (type) {
+        case ACTION_SANDBOX :
+            ProcessSandboxControlFd(type, serviceCmd);
+            break;
+        case ACTION_DUMP :
+            ProcessDumpServiceControlFd(type, serviceCmd);
+            break;
+        case ACTION_MODULEMGR :
+            ProcessModuleMgrControlFd(type, serviceCmd);
+            break;
+        default :
+            printf("Unknown control fd type. \n")
+            break;
+    }
+}
+
+void Init(const char *socketPath)
+{
+    ServiceInit(socketPath, ProcessControl, LE_GetDefaultLoop());
+    return;
+}
+
+void TestApp()
+{
+    int testNum = 0;
+    int ret = scanf_s("%d", &testNum);
+    if (ret <= 0) {
+        printf("input error \n");
+        return;
+    }
+
+    char name[128];
+    char context[128];
+    for (int i = 0; i < testNum; ++i) {
+        printf("请输入要测试的应用名称：(sandbox, dump, moudlemgr) \n");
+        ret = scanf_s("%s", name, sizeof(name));
+        if (ret <= 0) {
+            printf("input error \n");
+            return;
+        }
+
+        int app = -1;
+        if (strcmp(name, "sandbox") == 0) {
+            app = ACTION_SANDBOX;
+        } else if (strcmp(name, "dump") == 0) {
+            app = ACTION_DUMP;
+        } else if (strcmp(name, "modulemgr") == 0) {
+            app = ACTION_MODULEMGR;
+        } else {
+            printf("input error \n");
+            return;
+        }
+
+        printf("请输入对应的应用输入参数：\n");
+        ret = scanf_s("%s", context, sizeof(context));
+        if (ret <= 0) {
+            printf("input error \n");
+            return;
+        }
+
+        g_controlFunc(app, context, NULL);
+    }
+}
+
 int main(int argc, char *const argv[])
 {
     printf("main argc: %d \n", argc);
@@ -748,5 +952,8 @@ int main(int argc, char *const argv[])
         return 0;
     }
 
+    Init(INIT_CONTROL_SOCKET_PATH);
+    TestApp();
+    
     return 0;
 }
