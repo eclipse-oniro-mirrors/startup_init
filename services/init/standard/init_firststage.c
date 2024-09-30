@@ -135,7 +135,8 @@ static void StartSecondStageInit(long long uptime)
 
     char buf[64];
     uptime = GetUptimeInMicroSeconds(NULL);
-    snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%lld", uptime);
+    INIT_CHECK_ONLY_ELOG(snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%lld", uptime) >= 0,
+                         "snprintf_s uptime to buf failed");
     // Execute init second stage
     char * const args[] = {
         "/bin/init",

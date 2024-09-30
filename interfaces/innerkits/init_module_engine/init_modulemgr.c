@@ -52,7 +52,11 @@ static void DelayedUninstall(const IdleHandle taskHandle, void *context)
 
 void AutorunModuleMgrUnInstall(const char *moduleName)
 {
-    LE_DelayProc(LE_GetDefaultLoop(), DelayedUninstall, (void *)strdup(moduleName));
+    void *context = (void *)strdup(moduleName);
+    if (context == NULL) {
+        return;
+    }
+    LE_DelayProc(LE_GetDefaultLoop(), DelayedUninstall, context);
 }
 
 static void InitModuleDump(const MODULE_INFO *moduleInfo)

@@ -106,7 +106,7 @@ const struct CmdArgs *GetCmdArg(const char *cmdContent, const char *delim, int a
     INIT_WARNING_CHECK(argsCount <= SPACES_CNT_IN_CMD_MAX, argsCount = SPACES_CNT_IN_CMD_MAX,
         "Too much arguments for command, max number is %d", SPACES_CNT_IN_CMD_MAX);
     struct CmdArgs *ctx = (struct CmdArgs *)calloc(1, sizeof(struct CmdArgs) + sizeof(char *) * (argsCount + 1));
-    INIT_ERROR_CHECK(ctx != NULL, return NULL, "Failed to malloc memory for arg");
+    INIT_ERROR_CHECK(ctx != NULL, return NULL, "Failed to calloc memory for arg");
     ctx->argc = 0;
     const char *p = cmdContent;
     const char *end = cmdContent + strlen(cmdContent);
