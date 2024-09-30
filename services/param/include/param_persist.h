@@ -19,6 +19,8 @@
 #include <sys/types.h>
 
 #include "param_osadp.h"
+#define PUBLIC_PERSIST_FILE 0
+#define PRIVATE_PERSIST_FILE 1
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -34,11 +36,18 @@ typedef struct {
 } PersistAdpContext;
 
 typedef struct {
+#if defined(__LITEOS_M__) || defined(__LITEOS_A__) || defined(__LINUX__)
     int (*load)(void);
-    int (*save)(const char *name, const char *value);
     int (*batchSaveBegin)(PERSIST_SAVE_HANDLE *handle);
     int (*batchSave)(PERSIST_SAVE_HANDLE handle, const char *name, const char *value);
     void (*batchSaveEnd)(PERSIST_SAVE_HANDLE handle);
+#else
+    int (*load)(int fileType);
+    int (*batchSaveBegin)(PERSIST_SAVE_HANDLE *handle);
+    int (*batchSave)(PERSIST_SAVE_HANDLE handle[], const char *name, const char *value);
+    void (*batchSaveEnd)(PERSIST_SAVE_HANDLE handle[]);
+#endif
+    int (*save)(const char *name, const char *value);
 } PersistParamOps;
 
 int RegisterPersistParamOps(PersistParamOps *ops);

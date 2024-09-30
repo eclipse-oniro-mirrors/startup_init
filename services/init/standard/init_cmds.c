@@ -185,6 +185,12 @@ static void DoLoadPersistParams(const struct CmdArgs *ctx)
 {
     INIT_LOGV("LoadPersistParams");
     LoadPersistParams();
+}
+
+static void DoLoadPrivatePersistParams(const struct CmdArgs *ctx)
+{
+    INIT_LOGV("LoadPersistParams");
+    LoadPrivatePersistParams();
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, NULL, NULL);
 }
 
@@ -575,6 +581,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "insmod ", 1, 10, 1, DoInsmod },
     { "setparam ", 2, 2, 0, DoSetParam },
     { "load_persist_params ", 0, 1, 0, DoLoadPersistParams },
+    { "load_private_persist_params ", 0, 1, 0, DoLoadPrivatePersistParams },
     { "load_param ", 1, 2, 0, DoLoadDefaultParams },
     { "load_access_token_id ", 0, 1, 0, DoLoadAccessTokenId },
     { "ifup ", 1, 1, 1, DoIfup },
