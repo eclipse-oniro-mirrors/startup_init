@@ -236,7 +236,7 @@ static int DacGetParamSecurityLabel(const char *path)
     PARAM_LOGV("DacGetParamSecurityLabel %s ", path);
     DIR *pDir = opendir(path);
     PARAM_CHECK(pDir != NULL, return -1, "Read dir :%s failed.%d", path, errno);
-    char *fileName = malloc(MAX_BUF_SIZE);
+    char *fileName = calloc(1, MAX_BUF_SIZE);
     PARAM_CHECK(fileName != NULL, closedir(pDir);
         return -1, "Failed to malloc for %s", path);
 

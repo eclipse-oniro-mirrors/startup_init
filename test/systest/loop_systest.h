@@ -16,8 +16,8 @@
 #ifndef LOOP_SYSTEST_H
 #define LOOP_SYSTEST_H
 
-#include <cstdlib>
-#include <cstring>
+#include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 
 #include "loop_event.h"
@@ -30,7 +30,6 @@
 #endif
 
 #define SOCKET_NAME "looptest"
-#define INIT_CONTROL_SOCKET_PATH "/dev/unix/socket/init_control_fd"
 #if defined(__MUSL__)
     #define SOCKET_DIR BASEDIR "/dev/unix/socket"
 #else
@@ -137,51 +136,5 @@ typedef struct {
     Message *msg;
     struct ListNode msgBlocks;  // 保存实际的消息数据
 } ReqMsgNode;
-
-typedef struct SpawnTime {
-    int minTime;
-    int maxTime;
-} SpawnTime;
-
-typedef enum {
-    MODE_FOR_APP_SPAWN,
-    MODE_FOR_NWEB_SPAWN,
-    MODE_FOR_APP_COLD_RUN,
-    MODE_FOR_NWEB_COLD_RUN,
-    MODE_FOR_NATIVE_SPAWN,
-    MODE_FOR_CJAPP_SPAWN,
-    MODE_INVALID
-} RunMode;
-
-typedef struct {
-    char *longProcName;
-    uint32_t longProcNameLen;
-    uint32_t sandboxNsFlags;
-    int wdgOpened;
-    RunMode mode;
-#ifndef OHOS_LITE
-    int32_t preforkFd[2];
-    int32_t parentToChildFd[2];
-    char *propertyBuffer;
-    int isPrefork;
-    pid_t reservedPid;
-    int enablePerfork;
-#endif
-} MgrContent;
-
-typedef struct {
-    MgrContent content;
-    TaskHandle server;
-    SignalHandle sigHandler;
-    pid_t servicePid;
-    struct ListNode appQueue;  // save app pid and name
-    uint32_t diedAppCount;
-    uint32_t flags;
-    struct ListNode diedQueue;      // save app pid and name
-    struct timespec perLoadStart;
-    struct timespec perLoadEnd;
-    struct ListNode extData;
-    struct SpawnTime spawnTime;
-} AppMgr;
 
 #endif

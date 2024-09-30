@@ -139,7 +139,7 @@ char *ReadFileToBuf(const char *configFile)
             INIT_LOGE("Open %s failed. err = %d", configFile, errno);
             break;
         }
-        buffer = (char*)malloc((size_t)(fileStat.st_size + 1));
+        buffer = (char*)calloc((size_t)(fileStat.st_size + 1), sizeof(char));
         if (buffer == NULL) {
             INIT_LOGE("Failed to allocate memory for config file, err = %d", errno);
             break;
@@ -350,7 +350,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
             items = expand;
         }
         size_t len = strlen(p);
-        items[count] = (char *)malloc(len + 1);
+        items[count] = (char *)calloc(len + 1, sizeof(char));
         INIT_CHECK(items[count] != NULL, FreeStringVector(items, count);
             return NULL);
         if (strncpy_s(items[count], len + 1, p, len) != EOK) {
@@ -358,7 +358,6 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
             FreeStringVector(items, count);
             return NULL;
         }
-        items[count][len] = '\0';
         count++;
         p = strtok_r(NULL, del, &rest);
     }
@@ -368,7 +367,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
 
 long long InitDiffTime(INIT_TIMING_STAT *stat)
 {
-    long long diff = (long long)((stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000); // 1000000 1000ms
+    long long diff = (long long)(stat->endTime.tv_sec - stat->startTime.tv_sec) * 1000000; // 1000000 1000ms
     if (stat->endTime.tv_nsec > stat->startTime.tv_nsec) {
         diff += (stat->endTime.tv_nsec - stat->startTime.tv_nsec) / BASE_MS_UNIT;
     } else {
@@ -835,6 +834,6 @@ long long GetUptimeInMicroSeconds(const struct timespec *uptime)
     #define SECOND_TO_MICRO_SECOND (1000000)
     #define MICRO_SECOND_TO_NANOSECOND (1000)
 
-    return (long long)((uptime->tv_sec * SECOND_TO_MICRO_SECOND) +
-            (uptime->tv_nsec / MICRO_SECOND_TO_NANOSECOND));
+    return ((long long)uptime->tv_sec * SECOND_TO_MICRO_SECOND) +
+            (uptime->tv_nsec / MICRO_SECOND_TO_NANOSECOND);
 }

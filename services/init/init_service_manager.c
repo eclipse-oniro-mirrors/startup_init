@@ -40,6 +40,9 @@
 #include "bootstage.h"
 #endif
 
+#define VALUE_ATTR_CONSOLE 1
+#define VALUE_ATTR_KMSG 2
+
 // All service processes that init will fork+exec.
 static ServiceSpace g_serviceSpace = { 0 };
 static const int CRITICAL_DEFAULT_CRASH_TIME = 240;
@@ -861,9 +864,9 @@ static int SetConsoleValue(Service *service, const char *attrName, int value, in
     UNUSED(attrName);
     UNUSED(flag);
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Set service attr failed! null ptr.");
-    if (value == 1) {
+    if (value == VALUE_ATTR_CONSOLE) {
         service->attribute |= SERVICE_ATTR_CONSOLE;
-    } if (value == 2) {
+    } else if (value == VALUE_ATTR_KMSG) {
         service->attribute |= SERVICE_ATTR_KMSG;
     }
     return SERVICE_SUCCESS;
