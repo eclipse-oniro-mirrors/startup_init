@@ -243,7 +243,7 @@ static int BatchSavePersistParam(PERSIST_SAVE_HANDLE handle[], const char *name,
             PARAM_CHECK(ret > 0, return -1, "Batchsavepersistparam fail, error %d", errno);
         }
     }
-    return ret;
+    return (ret > 0) ? 0 : -1;
 }
 
 static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle[])
