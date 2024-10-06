@@ -91,7 +91,7 @@ static_library("param_init_lite") {
 
   if (ohos_kernel_type == "liteos_a") {
     sources += [
-      "//base/startup/init/services/param/adapter/param_persistadp.c",
+      "//base/startup/init/services/param/liteos/param_persistadp.c",
       "//base/startup/init/services/param/liteos/param_service.c",
       "//base/startup/init/services/param/manager/param_persist.c",
     ]
@@ -123,7 +123,7 @@ static_library("param_client_lite") {
 
   if (ohos_kernel_type == "liteos_a") {
     sources +=
-        [ "//base/startup/init/services/param/adapter/param_persistadp.c" ]
+        [ "//base/startup/init/services/param/liteos/param_persistadp.c" ]
     defines += [
       "__LITEOS_A__",
       "WORKSPACE_AREA_NEED_MUTEX",

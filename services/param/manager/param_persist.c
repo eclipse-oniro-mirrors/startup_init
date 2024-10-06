@@ -98,15 +98,20 @@ static int BatchSavePersistParam(void)
         g_persistWorkSpace.persistParamOps.batchSaveEnd == NULL) {
         return 0;
     }
-
+#if defined(__LITEOS_M__) || defined(__LITEOS_A__) || defined(__LINUX__)
     PERSIST_SAVE_HANDLE handle;
     int ret = g_persistWorkSpace.persistParamOps.batchSaveBegin(&handle);
-    PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Failed to save persist");
 #if defined(__LITEOS_M__) || defined(__LITEOS_A__)
     const char *prefix = "";
 #else
     const char *prefix = PARAM_PERSIST_PREFIX;
 #endif
+#else
+    PERSIST_SAVE_HANDLE handle[2] = { 0 };
+    int ret = g_persistWorkSpace.persistParamOps.batchSaveBegin(handle);
+    const char *prefix = PARAM_PERSIST_PREFIX;
+#endif
+    PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Failed to save persist");
     // walk and save persist param
     WorkSpace *workSpace = GetNextWorkSpace(NULL);
     while (workSpace != NULL) {
@@ -228,6 +233,7 @@ int LoadPersistParams(void)
         return 0;
     }
 #endif
+#if defined(__LITEOS_M__) || defined(__LITEOS_A__) || defined(__LINUX__)
     if (g_persistWorkSpace.persistParamOps.load != NULL) {
         (void)g_persistWorkSpace.persistParamOps.load();
         PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED);
@@ -242,6 +248,39 @@ int LoadPersistParams(void)
         ParamTimerCreate(&g_persistWorkSpace.saveTimer, TimerCallbackForSave, NULL);
         ParamTimerStart(g_persistWorkSpace.saveTimer, PARAM_MUST_SAVE_PARAM_DIFF * MS_UNIT, MS_UNIT);
     }
+#endif
+#else
+    if (g_persistWorkSpace.persistParamOps.load != NULL) {
+        (void)g_persistWorkSpace.persistParamOps.load(PUBLIC_PERSIST_FILE);
+    }
+#endif
+    return 0;
+}
+
+int LoadPrivatePersistParams(void)
+{
+#if !(defined(__LITEOS_M__) || defined(__LITEOS_A__) || defined(__LINUX__))
+#ifndef STARTUP_INIT_TEST
+    if (PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
+        PARAM_LOGE("Persist param has been loaded");
+        return 0;
+    }
+#endif
+    if (g_persistWorkSpace.persistParamOps.load != NULL) {
+        (void)g_persistWorkSpace.persistParamOps.load(PRIVATE_PERSIST_FILE);
+        PARAM_SET_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED);
+    }
+    // save new persist param
+    int ret = BatchSavePersistParam();
+    PARAM_CHECK(ret == 0, return ret, "Failed to load persist param");
+    // for liteos-a, start time to check in init
+#ifdef PARAM_SUPPORT_CYCLE_CHECK
+    PARAM_LOGV("LoadPersistParams start check time ");
+    if (g_persistWorkSpace.saveTimer == NULL) {
+        ParamTimerCreate(&g_persistWorkSpace.saveTimer, TimerCallbackForSave, NULL);
+        ParamTimerStart(g_persistWorkSpace.saveTimer, PARAM_MUST_SAVE_PARAM_DIFF * MS_UNIT, MS_UNIT);
+    }
+#endif
 #endif
     return 0;
 }

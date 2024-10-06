@@ -81,6 +81,13 @@ typedef enum {
 #define PARAM_STORAGE_PATH STARTUP_INIT_UT_PATH "/dev/__parameters__"
 #define PARAM_PERSIST_SAVE_PATH DATA_PATH "persist_parameters"
 #define PARAM_PERSIST_SAVE_TMP_PATH DATA_PATH "tmp_persist_parameters"
+#define PRIVATE_DATA_PATH STARTUP_INIT_UT_PATH "/data/service/el1/public/startup/parameters/"
+#define PARAM_OLD_PERSIST_SAVE_PATH PRIVATE_DATA_PATH "persist_parameters"
+#define PARAM_PUBLIC_PERSIST_SAVE_PATH DATA_PATH "public_persist_parameters"
+#define PARAM_PUBLIC_PERSIST_SAVE_TMP_PATH DATA_PATH "tmp_public_persist_parameters"
+#define PARAM_PRIVATE_PERSIST_SAVE_PATH PRIVATE_DATA_PATH "private_persist_parameters"
+#define PARAM_PRIVATE_PERSIST_SAVE_TMP_PATH PRIVATE_DATA_PATH "tmp_private_persist_parameters"
+#define PERSIST_HANDLE_MAX 2
 
 #define WORKSPACE_FLAGS_INIT 0x01
 #define WORKSPACE_FLAGS_LOADED 0x02
