@@ -33,11 +33,11 @@
 #include <policycoreutils.h>
 #endif
 
-static int GetBootEventEnable(void)
+static int GetBootSwitchEnable(const char *paramName)
 {
     char bootEventOpen[6] = ""; // 6 is length of bool value
     uint32_t len = sizeof(bootEventOpen);
-    SystemReadParam("persist.init.bootevent.enable", bootEventOpen, &len);
+    SystemReadParam(paramName, bootEventOpen, &len);
     if (strcmp(bootEventOpen, "true") == 0 || strcmp(bootEventOpen, "1") == 0) {
         return 1;
     }
@@ -243,7 +243,7 @@ static int CreateBootEventFile(const char *file, mode_t mode)
 
 static int SaveServiceBootEvent()
 {
-    INIT_CHECK(GetBootEventEnable(), return 0);
+    INIT_CHECK(GetBootSwitchEnable("persist.init.bootuptrace.enable"), return 0);
 
     int ret = CreateBootEventFile(BOOTEVENT_OUTPUT_PATH "bootup.trace", S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     INIT_CHECK_RETURN_VALUE(ret == 0, -1);
@@ -270,7 +270,7 @@ static int SaveServiceBootEvent()
 
 static void ReportSysEvent(void)
 {
-    INIT_CHECK(GetBootEventEnable(), return);
+    INIT_CHECK(GetBootSwitchEnable("persist.init.bootevent.enable"), return);
 #ifndef STARTUP_INIT_TEST
     InitModuleMgrInstall("eventmodule");
     InitModuleMgrUnInstall("eventmodule");
