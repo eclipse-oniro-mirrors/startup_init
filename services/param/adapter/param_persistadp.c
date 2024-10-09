@@ -21,6 +21,9 @@
 #include "param_manager.h"
 #include "param_persist.h"
 #include "param_utils.h"
+#if !(defined __LITEOFS_A__ || defined __LITEOS_M__)
+#include "trigger_manager.h"
+#endif
 
 // for linux, no mutex
 static ParamMutex g_saveMutex = {};
@@ -30,27 +33,35 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
     bool clearFactoryPersistParams = *(bool*)context;
     uint32_t dataIndex = 0;
     int mode = 0;
-    
-    if (!clearFactoryPersistParams) {
-        mode |= LOAD_PARAM_PERSIST;
-        return WriteParam(name, value, &dataIndex, mode);
-    }
+    int result = 0;
+    do {
+        if (!clearFactoryPersistParams) {
+            mode |= LOAD_PARAM_PERSIST;
+            result = WriteParam(name, value, &dataIndex, mode);
+            break;
+        }
 
-    char persetValue[PARAM_VALUE_LEN_MAX] = {0};
-    uint32_t len = PARAM_VALUE_LEN_MAX;
-    int ret = SystemReadParam(name, persetValue, &len);
-    if (ret != 0) {
-        mode |= LOAD_PARAM_PERSIST;
-        return WriteParam(name, value, &dataIndex, mode);
-    }
+        char persetValue[PARAM_VALUE_LEN_MAX] = {0};
+        uint32_t len = PARAM_VALUE_LEN_MAX;
+        int ret = SystemReadParam(name, persetValue, &len);
+        if (ret != 0) {
+            mode |= LOAD_PARAM_PERSIST;
+            result = WriteParam(name, value, &dataIndex, mode);
+            break;
+        }
 
-    if ((strcmp(persetValue, value) != 0)) {
-        PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
-        mode |= LOAD_PARAM_PERSIST;
-        return WriteParam(name, value, &dataIndex, mode);
+        if ((strcmp(persetValue, value) != 0)) {
+            PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
+            mode |= LOAD_PARAM_PERSIST;
+            result = WriteParam(name, value, &dataIndex, mode);
+        }
+    } while (0);
+#if !(defined __LITEOFS_A__ || defined __LITEOS_M__)
+    if (result == 0) {
+        PostParamTrigger(EVENT_TRIGGER_PARAM_WATCH, name, value);
     }
-
-    return 0;
+#endif
+    return result;
 }
 
 static bool IsPrivateParam(const char *param)
@@ -87,23 +98,18 @@ static int LoadOnePublicPersistParam_(const uint32_t *context, const char *name,
 }
 
 static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *fileName,
-    char *buffer, uint32_t buffSize)
+    char *buffer, uint32_t buffSize, bool isFullLoad)
 {
     FILE *fp = fopen(fileName, "r");
     PARAM_WARNING_CHECK(fp != NULL, return, "No valid persist parameter file %s", fileName);
-    bool isPublic = false;
-    if (strcmp(fileName, PARAM_PUBLIC_PERSIST_SAVE_PATH) == 0 ||
-        strcmp(fileName, PARAM_PUBLIC_PERSIST_SAVE_TMP_PATH) == 0) {
-        isPublic = true;
-    }
     int ret = 0;
     uint32_t paramNum = 0;
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
-        if (isPublic) {
-            ret = SplitParamString(buffer, NULL, 0, LoadOnePublicPersistParam_, (uint32_t*)&clearFactoryPersistParams);
-        } else {
+        if (isFullLoad) {
             ret = SplitParamString(buffer, NULL, 0, LoadOnePersistParam_, (uint32_t*)&clearFactoryPersistParams);
+        } else {
+            ret = SplitParamString(buffer, NULL, 0, LoadOnePublicPersistParam_, (uint32_t*)&clearFactoryPersistParams);
         }
         PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);
         paramNum++;
@@ -112,12 +118,13 @@ static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *
     PARAM_LOGI("LoadPersistParam from file %s paramNum %d", fileName, paramNum);
 }
 
-static void GetPersistFilePath(char **path, char **tmpPath, int fileType)
+static bool GetPersistFilePath(char **path, char **tmpPath, int fileType)
 {
+    bool isFullLoad = true;
     if (InUpdaterMode() == 1) {
         *path = "/param/persist_parameters";
         *tmpPath = "/param/tmp_persist_paramters";
-        return;
+        return isFullLoad;
     }
     if (fileType == PUBLIC_PERSIST_FILE) {
         if (access(PARAM_PERSIST_SAVE_PATH, F_OK) == 0 && access(PARAM_PUBLIC_PERSIST_SAVE_PATH, F_OK) != 0) {
@@ -127,26 +134,27 @@ static void GetPersistFilePath(char **path, char **tmpPath, int fileType)
             }
         } else {
             CheckAndCreateDir(PARAM_PUBLIC_PERSIST_SAVE_PATH);
+            isFullLoad = false;
         }
         *path = PARAM_PUBLIC_PERSIST_SAVE_PATH;
         *tmpPath = PARAM_PUBLIC_PERSIST_SAVE_TMP_PATH;
-    } else {
-        if (access(PARAM_OLD_PERSIST_SAVE_PATH, F_OK) == 0 && access(PARAM_PRIVATE_PERSIST_SAVE_PATH, F_OK) != 0) {
-            int ret = rename(PARAM_OLD_PERSIST_SAVE_PATH, PARAM_PRIVATE_PERSIST_SAVE_PATH);
-            if (ret != 0) {
-                PARAM_LOGE("rename failed %s", PARAM_OLD_PERSIST_SAVE_PATH);
-            }
-        } else {
-            CheckAndCreateDir(PARAM_PRIVATE_PERSIST_SAVE_PATH);
-        }
-        *path = PARAM_PRIVATE_PERSIST_SAVE_PATH;
-        *tmpPath = PARAM_PRIVATE_PERSIST_SAVE_TMP_PATH;
+        return isFullLoad;
     }
+    if (access(PARAM_OLD_PERSIST_SAVE_PATH, F_OK) == 0 && access(PARAM_PRIVATE_PERSIST_SAVE_PATH, F_OK) != 0) {
+        int ret = rename(PARAM_OLD_PERSIST_SAVE_PATH, PARAM_PRIVATE_PERSIST_SAVE_PATH);
+        if (ret != 0) {
+            PARAM_LOGE("rename failed %s", PARAM_OLD_PERSIST_SAVE_PATH);
+        }
+    } else {
+        CheckAndCreateDir(PARAM_PRIVATE_PERSIST_SAVE_PATH);
+    }
+    *path = PARAM_PRIVATE_PERSIST_SAVE_PATH;
+    *tmpPath = PARAM_PRIVATE_PERSIST_SAVE_TMP_PATH;
+    return isFullLoad;
 }
 
 static int LoadPersistParam(int fileType)
 {
-    CheckAndCreateDir(PARAM_PERSIST_SAVE_PATH);
     bool clearFactoryPersistParams = false;
     char value[PARAM_VALUE_LEN_MAX] = {0};
     uint32_t len = PARAM_VALUE_LEN_MAX;
@@ -161,11 +169,11 @@ static int LoadPersistParam(int fileType)
 
     char *tmpPath = "";
     char *path = "";
-    (void)GetPersistFilePath(&path, &tmpPath, fileType);
-    LoadPersistParam_(clearFactoryPersistParams, path, buffer, buffSize);
-    LoadPersistParam_(clearFactoryPersistParams, tmpPath, buffer, buffSize);
+    bool isFullLoad = GetPersistFilePath(&path, &tmpPath, fileType);
+    LoadPersistParam_(clearFactoryPersistParams, path, buffer, buffSize, isFullLoad);
+    LoadPersistParam_(clearFactoryPersistParams, tmpPath, buffer, buffSize, isFullLoad);
     free(buffer);
-    if (clearFactoryPersistParams && access(PARAM_PERSIST_SAVE_PATH, F_OK) == 0) {
+    if (clearFactoryPersistParams) {
         FILE *fp = fopen(PERSIST_PARAM_FIXED_FLAGS, "w");
         PARAM_CHECK(fp != NULL, return -1, "create file %s fail error %d", PERSIST_PARAM_FIXED_FLAGS, errno);
         (void)fclose(fp);
