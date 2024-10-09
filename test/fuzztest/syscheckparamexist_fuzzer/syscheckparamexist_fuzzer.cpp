@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,18 +13,24 @@
  * limitations under the License.
  */
 
-#include "handleotherdeviceevent_fuzzer.h"
+#include "syscheckparamexist_fuzzer.h"
 #include <string>
-#include "ueventd_device_handler.h"
+#include "param_manager.h"
+
+#define NAME_LEN_MAX 96
 
 namespace OHOS {
-    bool FuzzHandleOtherDeviceEvent(const uint8_t* data, size_t size)
+    bool FuzzSysCheckParamExist(const uint8_t* data, size_t size)
     {
-        std::string str(reinterpret_cast<const char*>(data), size);
-        struct Uevent uevent = {
-            .subsystem = str.c_str(),
+        if (size >= NAME_LEN_MAX) {
+            return false;
+        }
+        
+        std::string name(reinterpret_cast<const char*>(data), size);
+        int ret = SysCheckParamExist(name.c_str());
+        if (ret == 0) {
+            return false;
         };
-        HandleOtherDeviceEvent(&uevent);
         return true;
     }
 }
@@ -33,6 +39,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzHandleOtherDeviceEvent(data, size);
+    OHOS::FuzzSysCheckParamExist(data, size);
     return 0;
 }

@@ -2971,7 +2971,7 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
   }
 
@@ -2983,7 +2983,7 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
   ]
   sources += [ "addremotewatcher_fuzzer/addremotewatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
   }
 }
@@ -3023,7 +3023,7 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
   }
   cflags = [
@@ -3034,7 +3034,7 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
   ]
   sources += [ "delremotewatcher_fuzzer/delremotewatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 }
@@ -3074,7 +3074,7 @@ ohos_fuzztest("AddWatcherFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
   }
 
@@ -3086,7 +3086,7 @@ ohos_fuzztest("AddWatcherFuzzTest") {
   ]
   sources += [ "addwatcher_fuzzer/addwatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 }
@@ -3125,7 +3125,7 @@ ohos_fuzztest("DelWatcherFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
   }
 
@@ -3137,7 +3137,7 @@ ohos_fuzztest("DelWatcherFuzzTest") {
   ]
   sources += [ "delwatcher_fuzzer/delwatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 }
@@ -3176,7 +3176,7 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
   }
 
@@ -3188,7 +3188,7 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
   ]
   sources += [ "refreshwatcher_fuzzer/refreshwatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 }
@@ -3213,6 +3213,148 @@ ohos_fuzztest("SaveParametersFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "saveparameters_fuzzer/saveparameters_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("SystemCheckMatchParamWaitFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/systemcheckmatchparamwait_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "systemcheckmatchparamwait_fuzzer/systemcheckmatchparamwait_fuzzer.cpp",
+  ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("SysCheckParamExistFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/syscheckparamexist_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "syscheckparamexist_fuzzer/syscheckparamexist_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetServiceCtrlInfoFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/getservicectrlinfo_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/include",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/modules/init_hook",
+    "//base/startup/init/services/modules",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param/linux:param_init",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "//base/startup/init/services/init/standard/bootstagehooker.c",
+    "//base/startup/init/services/modules/init_hook/param_hook.c",
+    "//base/startup/init/services/modules/reboot/reboot_static.c",
+    "getservicectrlinfo_fuzzer/getservicectrlinfo_fuzzer.cpp",
+  ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetParamSecurityAuditDataFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/getparamsecurityauditdata_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/test/fuzztest:libfuzz_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "//base/startup/init/services/param/base/param_comm.c",
+    "getparamsecurityauditdata_fuzzer/getparamsecurityauditdata_fuzzer.cpp",
+  ]
+
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -3271,6 +3413,7 @@ group("fuzztest") {
     ":GetMountStatusForMountPointFuzzTest",
     ":GetOSFullNameFuzzTest",
     ":GetOsReleaseTypeFuzzTest",
+    ":GetParamSecurityAuditDataFuzzTest",
     ":GetParameterCFuzzTest",
     ":GetParameterCommitIdFuzzTest",
     ":GetParameterCppFuzzTest",
@@ -3282,6 +3425,7 @@ group("fuzztest") {
     ":GetSecurityPatchTagFuzzTest",
     ":GetSeniorVersionFuzzTest",
     ":GetSerialFuzzTest",
+    ":GetServiceCtrlInfoFuzzTest",
     ":GetSoftwareModelFuzzTest",
     ":GetStringParameterFuzzTest",
     ":GetSystemCommitIdFuzzTest",
@@ -3334,6 +3478,8 @@ group("fuzztest") {
     ":SetParameterCppFuzzTest",
     ":StartServiceByTimerFuzzTest",
     ":StopServiceTimerFuzzTest",
+    ":SysCheckParamExistFuzzTest",
+    ":SystemCheckMatchParamWaitFuzzTest",
     ":SystemDumpParametersFuzzTest",
     ":SystemTraversalParameterFuzzTest",
     ":UmountAllWithFstabFileFuzzTest",

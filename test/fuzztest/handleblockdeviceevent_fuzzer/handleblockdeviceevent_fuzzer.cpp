@@ -20,8 +20,9 @@
 namespace OHOS {
     bool FuzzHandleBlockDeviceEvent(const uint8_t* data, size_t size)
     {
+        std::string str(reinterpret_cast<const char*>(data), size);
         struct Uevent uevent = {
-            .subsystem = reinterpret_cast<const char*>(data),
+            .subsystem = str.c_str(),
         };
         HandleBlockDeviceEvent(&uevent);
         return true;

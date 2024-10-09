@@ -16,15 +16,26 @@
 #include "parseueventconfig_fuzzer.h"
 #include <string>
 #include "ueventd_read_cfg.h"
-
+#include "securec.h"
+#define MAX_ALLOW_SIZE 100
 namespace OHOS {
     bool FuzzParseUeventConfig(const uint8_t* data, size_t size)
     {
         bool result = false;
-        char buffer = *reinterpret_cast<const char*>(data);
-        if (ParseUeventConfig(&buffer) != 0) {
+        if (size == 0 && size > MAX_ALLOW_SIZE) {
+            return false;
+        }
+        std::string str(reinterpret_cast<const char*>(data), size);
+        char *buffer = new char[size+1];
+        int ret = strcpy_s(buffer, size+1, str.c_str());
+        if (ret != 0) {
+            delete[] buffer;
+            return false;
+        }
+        if (ParseUeventConfig(buffer) != 0) {
             result = true;
-        };
+        }
+        delete[] buffer;
         return result;
     }
 }
