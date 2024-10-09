@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//base/startup/init/begetd.gni")
 import(
     "//base/startup/init/services/modules/seccomp/scripts/seccomp_policy_fixer.gni")
 import("//build/config/clang/clang.gni")
@@ -89,6 +90,20 @@ ohos_prebuilt_seccomp("app_filter") {
   install_images = [ "system" ]
 }
 
+ohos_prebuilt_seccomp("app_privilege_filter") {
+  sources = [ "seccomp_policy/app_privilege.seccomp.policy" ]
+
+  filtername = "app_privilege"
+  process_type = "system"
+  uid_is_root = true
+
+  part_name = INIT_PART
+  subsystem_name = "startup"
+
+  install_enable = true
+  install_images = [ "system" ]
+}
+
 ohos_prebuilt_seccomp("updater_filter") {
   sources = [ "seccomp_policy/updater.seccomp.policy" ]
 
@@ -149,5 +164,8 @@ group("seccomp_filter") {
       ":appspawn_filter",
       ":nwebspawn_filter",
     ]
+    if (init_feature_seccomp_privilege) {
+      deps += [ ":app_privilege_filter" ]
+    }
   }
 }

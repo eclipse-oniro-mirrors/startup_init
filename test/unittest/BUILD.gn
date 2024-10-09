@@ -198,6 +198,10 @@ ohos_unittest("init_unittest") {
     if (use_clang_coverage) {
       defines += [ "COVERAGE_TEST" ]
     }
+
+    if (init_feature_seccomp_privilege) {
+      defines += [ "SECCOMP_PRIVILEGE" ]
+    }
   }
 
   sources += [
