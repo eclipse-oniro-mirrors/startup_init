@@ -28,6 +28,7 @@ namespace OHOS {
 namespace device_info {
 
 static const int DEVINFO_SAID = 3902;
+static const int DEVICEINFO_LOAD_SA_TIMEOUT_MS = 5000;
 
 DeviceInfoKits::DeviceInfoKits() {}
 
