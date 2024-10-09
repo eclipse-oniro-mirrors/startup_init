@@ -20,8 +20,8 @@
 namespace OHOS {
     bool FuzzParseUeventdConfigFile(const uint8_t* data, size_t size)
     {
-        const char *file = reinterpret_cast<const char*>(data);
-        ParseUeventdConfigFile(file);
+        std::string str(reinterpret_cast<const char*>(data), size);
+        ParseUeventdConfigFile(str.c_str());
         return true;
     }
 }

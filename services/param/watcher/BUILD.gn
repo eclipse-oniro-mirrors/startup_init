@@ -60,7 +60,7 @@ ohos_shared_library("param_watcher") {
     "samgr:samgr_proxy",
   ]
 
-  if (paramwatcher_hicollie_enable) {
+  if (init_paramwatcher_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines = [ "HICOLLIE_ENABLE" ]
   }
