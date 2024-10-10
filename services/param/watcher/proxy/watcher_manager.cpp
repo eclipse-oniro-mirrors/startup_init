@@ -91,6 +91,7 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
 {
     std::lock_guard<std::mutex> lock(watcherMutex_);
     // get remote watcher and group
+    WATCHER_CHECK(keyPrefix.size() < PARAM_NAME_LEN_MAX, return -1, "Failed to verify keyPrefix.");
     auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
     WATCHER_CHECK(remoteWatcher != nullptr, return -1, "Can not find remote watcher %d", remoteWatcherId);
     WATCHER_CHECK(remoteWatcher->CheckAgent(GetCallingPid()), return 0,
@@ -115,6 +116,7 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
 int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
     std::lock_guard<std::mutex> lock(watcherMutex_);
+    WATCHER_CHECK(keyPrefix.size() < PARAM_NAME_LEN_MAX, return -1, "Failed to verify keyPrefix.");
     auto group = GetWatcherGroup(keyPrefix);
     WATCHER_CHECK(group != nullptr, return 0, "Can not find group %s", keyPrefix.c_str());
     auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
@@ -136,6 +138,7 @@ int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t remote
 int32_t WatcherManager::RefreshWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
     std::lock_guard<std::mutex> lock(watcherMutex_);
+    WATCHER_CHECK(keyPrefix.size() < PARAM_NAME_LEN_MAX, return -1, "Failed to verify keyPrefix.");
     WATCHER_LOGV("Refresh watcher %s remoteWatcherId: %u", keyPrefix.c_str(), remoteWatcherId);
     auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
     WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), remoteWatcherId);
