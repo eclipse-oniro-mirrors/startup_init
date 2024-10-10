@@ -111,7 +111,7 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
         } else if (GetCurrentTimespec(0) >= minTimePeriod) {
             timeout = 0;
         } else {
-            timeout = minTimePeriod - GetCurrentTimespec(0);
+            timeout = (int)(minTimePeriod - GetCurrentTimespec(0));
         }
 
         int number = epoll_wait(epoll->epollFd, epoll->waitEvents, loop->maxevents, timeout);

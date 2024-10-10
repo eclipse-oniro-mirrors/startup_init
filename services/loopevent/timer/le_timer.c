@@ -32,7 +32,7 @@ uint64_t GetCurrentTimespec(uint64_t timeout)
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
     uint64_t ms = timeout;
-    ms += start.tv_sec * LE_SEC_TO_MSEC + start.tv_nsec / LE_MSEC_TO_NSEC;
+    ms += (uint64_t)start.tv_sec * LE_SEC_TO_MSEC + (uint64_t)start.tv_nsec / LE_MSEC_TO_NSEC;
     return ms;
 }
 
