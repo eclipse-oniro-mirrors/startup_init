@@ -169,6 +169,8 @@ uint8_t *LE_GetBufferInfo(const BufferHandle handle, uint32_t *dataSize, uint32_
 LE_STATUS LE_Send(const LoopHandle loopHandle,
     const TaskHandle taskHandle, const BufferHandle buffHandle, uint32_t buffLen)
 {
+    LE_CHECK(loopHandle != NULL, return LE_INVALID_PARAM, "Loop is NULL");
+    LE_CHECK(taskHandle != NULL && buffHandle != NULL, return LE_INVALID_TASK, "Invalid parameters");
     EventLoop *loop = (EventLoop *)loopHandle;
     if (((BaseTask *)taskHandle)->flags & TASK_FLAGS_INVALID) {
         LE_FreeBuffer(loopHandle, taskHandle, buffHandle);

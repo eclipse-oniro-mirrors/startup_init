@@ -31,7 +31,7 @@ int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, in
     if (needCondition) {
         dataSize += MAX_DATA_BUFFER_MAX;
     }
-    calculator->data = (char *)malloc(dataSize);
+    calculator->data = (char *)calloc(1, dataSize);
     PARAM_CHECK(calculator->data != NULL, return -1, "Failed to malloc for calculator");
     calculator->dataNumber = dataNumber;
     calculator->endIndex = 0;

@@ -65,7 +65,7 @@ static void WriteLogoContent(int fd, const std::string &logoPath, uint32_t size)
         std::cout << "cannot find pic file\n";
         return;
     }
-    char *buffer = reinterpret_cast<char *>(malloc(size));
+    char *buffer = reinterpret_cast<char *>(calloc(1, size));
     if (buffer == nullptr) {
         (void)fclose(rgbFile);
         return;

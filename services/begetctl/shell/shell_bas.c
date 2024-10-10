@@ -132,6 +132,7 @@ int32_t BShellEnvOutputPrompt(BShellHandle handle, const char *prompt)
         }
     } else {
         shell->prompt = strdup(prompt);
+        BSH_CHECK(shell->prompt != NULL, return BSH_INVALID_PARAM, "strdup prompt failed.");
     }
     return 0;
 }
@@ -418,6 +419,7 @@ int32_t BShellEnvInit(BShellHandle *handle, const BShellInfo *info)
     shell->shellState = BSH_IN_NORMAL;
     shell->input = info->input;
     shell->prompt = strdup(info->prompt);
+    BSH_CHECK(shell->prompt != NULL, return BSH_INVALID_PARAM, "Failed to strdup prompt");
     shell->command = NULL;
     shell->param = NULL;
     shell->keyHandle = NULL;

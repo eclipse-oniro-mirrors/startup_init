@@ -54,7 +54,7 @@ static void LogToFile(const char *logFile, const char *tag, const char *info)
     }
     (void)fprintf(outfile, "[%s.%ld][pid=%d %d][%s]%s \n", dateTime, curr.tv_nsec, getpid(), gettid(), tag, info);
     (void)fflush(outfile);
-    fclose(outfile);
+    (void)fclose(outfile);
     return;
 }
 #endif
