@@ -150,6 +150,9 @@ static int UeventdEarlyBoot(void)
 
 static void usage(const char *name)
 {
+    if (name == NULL || strlen(name) > PROCESS_NAME_MAX_LENGTH) {
+        return ;
+    }
     printf("Usage: %s [OPTION]\n"
            "Listening kernel uevent to create device node.\n"
            "It will read configs from {/,/system,/chipset}/etc/ueventd.config.\n\n"

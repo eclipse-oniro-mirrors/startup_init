@@ -360,7 +360,7 @@ static int PublishHoldFds(Service *service)
         ret = snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1, "%d ", fd);
         INIT_ERROR_CHECK(ret >= 0, return INIT_EFORMAT,
             "Service error %d %s, failed to format fd for publish", ret, service->name);
-        pos += ret;
+        pos += (size_t)ret;
     }
     fdBuffer[pos - 1] = '\0'; // Remove last ' '
     INIT_LOGI("Service %s publish fd [%s]", service->name, fdBuffer);
@@ -712,13 +712,13 @@ static bool CalculateCrashTime(Service *service, int crashTimeLimit, int crashCo
     (void)clock_gettime(CLOCK_MONOTONIC, &curTime);
     struct timespec crashTime = {service->firstCrashTime, 0};
     if (service->crashCnt == 0) {
-        service->firstCrashTime = curTime.tv_sec;
+        service->firstCrashTime = (uint32_t)curTime.tv_sec;
         ++service->crashCnt;
         if (service->crashCnt == crashCountLimit) {
             return false;
         }
-    } else if (IntervalTime(&crashTime, &curTime) > crashTimeLimit) {
-        service->firstCrashTime = curTime.tv_sec;
+    } else if (IntervalTime(&crashTime, &curTime) > (uint32_t)crashTimeLimit) {
+        service->firstCrashTime = (uint32_t)curTime.tv_sec;
         service->crashCnt = 1;
     } else {
         ++service->crashCnt;

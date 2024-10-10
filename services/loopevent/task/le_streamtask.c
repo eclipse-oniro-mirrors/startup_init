@@ -30,7 +30,7 @@ static LE_STATUS HandleSendMsg_(const LoopHandle loopHandle,
     LE_Buffer *buffer = GetFirstBuffer(stream);
     while (buffer) {
         int ret = write(GetSocketFd(taskHandle), buffer->data, buffer->dataSize);
-        if (ret < buffer->dataSize) {
+        if (ret < 0 || (size_t)ret < buffer->dataSize) {
             LE_LOGE("HandleSendMsg_ fd:%d send data size %d %d, err:%d", GetSocketFd(taskHandle),
                     buffer->dataSize, ret, errno);
         }
