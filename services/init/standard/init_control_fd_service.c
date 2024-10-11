@@ -138,7 +138,7 @@ static void DumpOneService(const Service *service)
     printf("\tservice startMode: [%s] \n", startModeMap[service->startMode].name);
     printf("\tservice status: [%s] \n", serviceStatusMap[service->status]);
     printf("\tservice perms uID [%u] \n", service->servPerm.uID);
-    printf("\tservice Timer ID [%u] \n", LE_GetSocketFd(service->timer));
+    printf("\tservice Timer ID [%d] \n", LE_GetSocketFd(service->timer));
     DumpServiceArgs("path arg", &service->pathArgs);
     DumpServiceArgs("writepid file", &service->writePidArgs);
     DumpServiceJobs(service);

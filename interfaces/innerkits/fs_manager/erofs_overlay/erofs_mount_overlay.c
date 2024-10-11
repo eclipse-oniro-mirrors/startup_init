@@ -244,7 +244,7 @@ INIT_STATIC int ConstructLinearTarget(DmVerityTarget *target, const char *dev, u
         return -1;
     }
 
-    if (snprintf_s(target->paras, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s %lld", dev, mapStart / SECTOR_SIZE) < 0) {
+    if (snprintf_s(target->paras, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s %llu", dev, mapStart / SECTOR_SIZE) < 0) {
         BEGET_LOGE("Failed to copy target paras.");
         return -1;
     }

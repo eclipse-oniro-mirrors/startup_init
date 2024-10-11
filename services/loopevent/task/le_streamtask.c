@@ -171,8 +171,8 @@ static void DumpStreamConnectTaskInfo_(const TaskHandle task)
     socklen_t credSize  = sizeof(struct ucred);
     if (getsockopt(LE_GetSocketFd(taskHandle), SOL_SOCKET, SO_PEERCRED, &cred, &credSize) == 0) {
         printf("\t    Service Pid: %d \n", cred.pid);
-        printf("\t    Service Uid: %d \n", cred.uid);
-        printf("\t    Service Gid: %d \n", cred.gid);
+        printf("\t    Service Uid: %u \n", cred.uid);
+        printf("\t    Service Gid: %u \n", cred.gid);
     } else {
         printf("\t    Service Pid: %s \n", "NULL");
         printf("\t    Service Uid: %s \n", "NULL");
