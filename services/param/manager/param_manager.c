@@ -474,7 +474,7 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
 #endif
     PARAM_LOGV("UpdateParam name %s value: %s", name, value);
 
-    if ((mode & LOAD_PARAM_PERSIST) != 0) {
+    if (((unsigned int)mode & LOAD_PARAM_PERSIST) != 0) {
         entry->commitId |= PARAM_FLAGS_PERSIST;
     }
     futex_wake(&entry->commitId, INT_MAX);

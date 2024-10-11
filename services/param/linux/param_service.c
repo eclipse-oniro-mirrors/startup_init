@@ -143,7 +143,7 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
     int ret = CheckParameterSet(name, value, srcLabel, &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
 
-    int mode = 0;
+    unsigned int mode = 0;
     if (strncmp(name, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) == 0) {
         mode |= LOAD_PARAM_PERSIST;
     }

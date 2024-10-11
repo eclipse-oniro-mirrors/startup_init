@@ -179,7 +179,7 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
 
     (void)GetDeviceNodePermissions(deviceNode, &uid, &gid, &mode);
     mode |= isBlock ? S_IFBLK : S_IFCHR;
-    dev_t dev = makedev(major, minor);
+    dev_t dev = makedev((unsigned int)major, (unsigned int)minor);
     setegid(0);
     rc = mknod(deviceNode, mode, dev);
     if (rc < 0) {
