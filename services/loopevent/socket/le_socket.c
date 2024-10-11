@@ -231,10 +231,10 @@ int AcceptSocket(int fd, int flags)
 INIT_LOCAL_API
 int listenSocket(int fd, int flags, const char *server)
 {
-    int type = flags & 0x0000ff00;
+    unsigned int type = (unsigned int)flags & 0x0000ff00;
     LE_LOGV("listenSocket flags %x type %x server %s", flags, type, server);
     SetNoBlock(fd);
-    if (!LE_TEST_FLAGS(flags, TASK_SERVER)) {
+    if (!LE_TEST_FLAGS((unsigned int)flags, TASK_SERVER)) {
         return 0;
     }
     if (type == TASK_TCP) {
