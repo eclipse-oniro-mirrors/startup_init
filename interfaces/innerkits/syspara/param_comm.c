@@ -103,7 +103,7 @@ INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder
     uint32_t len = 0;
     int ret = SystemGetParameter(key, NULL, &len);
     if (ret == 0 && len > 0) {
-        char *res = (char *)malloc(len + 1);
+        char *res = (char *)calloc(1, len + 1);
         BEGET_CHECK(res != NULL, return NULL);
         ret = SystemGetParameter(key, res, &len);
         if (ret != 0) {

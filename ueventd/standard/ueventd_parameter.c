@@ -72,7 +72,7 @@ static void *ThreadRun(void *data)
             struct timeval now = {0};
             const long timeout = 5000; // wait time 5000ms
             gettimeofday(&now, NULL);
-            long nsec = now.tv_usec * 1000 + (timeout % 1000) * 1000000; // 1000 unit 1000000 unit nsec
+            long long nsec = (long long)now.tv_usec * 1000 + (timeout % 1000) * 1000000; // 1000 unit 1000000 unit nsec
             abstime.tv_sec = now.tv_sec + nsec / 1000000000 + timeout / 1000; // 1000 unit 1000000000 unit nsec
             abstime.tv_nsec = nsec % 1000000000; // 1000000000 unit nsec
             pthread_cond_timedwait(&(parameterCtrl->hasData), &(parameterCtrl->lock), &abstime);

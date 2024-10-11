@@ -33,11 +33,11 @@
 #include <policycoreutils.h>
 #endif
 
-static int GetBootEventEnable(void)
+static int GetBootSwitchEnable(const char *paramName)
 {
     char bootEventOpen[6] = ""; // 6 is length of bool value
     uint32_t len = sizeof(bootEventOpen);
-    SystemReadParam("persist.init.bootevent.enable", bootEventOpen, &len);
+    SystemReadParam(paramName, bootEventOpen, &len);
     if (strcmp(bootEventOpen, "true") == 0 || strcmp(bootEventOpen, "1") == 0) {
         return 1;
     }
@@ -195,9 +195,9 @@ static int BootEventTraversal(ListNode *node, void *root)
 {
     static int start = 0;
     BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)node;
-    double forkTime = item->timestamp[BOOTEVENT_FORK].tv_sec * MSECTONSEC +
+    double forkTime = (double)item->timestamp[BOOTEVENT_FORK].tv_sec * MSECTONSEC +
         (double)item->timestamp[BOOTEVENT_FORK].tv_nsec / USTONSEC;
-    double readyTime = item->timestamp[BOOTEVENT_READY].tv_sec * MSECTONSEC +
+    double readyTime = (double)item->timestamp[BOOTEVENT_READY].tv_sec * MSECTONSEC +
         (double)item->timestamp[BOOTEVENT_READY].tv_nsec / USTONSEC;
     double durTime = readyTime - forkTime;
     if (item->pid == 0) {
@@ -243,7 +243,7 @@ static int CreateBootEventFile(const char *file, mode_t mode)
 
 static int SaveServiceBootEvent()
 {
-    INIT_CHECK(GetBootEventEnable(), return 0);
+    INIT_CHECK(GetBootSwitchEnable("persist.init.bootuptrace.enable"), return 0);
 
     int ret = CreateBootEventFile(BOOTEVENT_OUTPUT_PATH "bootup.trace", S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     INIT_CHECK_RETURN_VALUE(ret == 0, -1);
@@ -270,7 +270,7 @@ static int SaveServiceBootEvent()
 
 static void ReportSysEvent(void)
 {
-    INIT_CHECK(GetBootEventEnable(), return);
+    INIT_CHECK(GetBootSwitchEnable("persist.init.bootevent.enable"), return);
 #ifndef STARTUP_INIT_TEST
     InitModuleMgrInstall("eventmodule");
     InitModuleMgrUnInstall("eventmodule");
@@ -310,8 +310,10 @@ static void WriteBooteventSysParam(const char *paramName)
 
     uptime = GetUptimeInMicroSeconds(NULL);
 
-    snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%lld", uptime);
-    snprintf_s(name, sizeof(name), sizeof(name) - 1, "ohos.boot.time.%s", paramName);
+    INIT_CHECK_ONLY_ELOG(snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%lld", uptime) >= 0,
+                         "snprintf_s buf failed");
+    INIT_CHECK_ONLY_ELOG(snprintf_s(name, sizeof(name), sizeof(name) - 1, "ohos.boot.time.%s", paramName) >= 0,
+                         "snprintf_s name failed");
     SystemWriteParam(name, buf);
 }
 
@@ -435,10 +437,11 @@ static void AddReservedBooteventsByFile(const char *name)
         INIT_LOGI("Got priv-app bootevent: %s", buf);
         AddBootEventItemByName(buf);
     }
-    fclose(file);
+    (void)fclose(file);
 }
 
-static void AddReservedBootevents(void) {
+static void AddReservedBootevents(void)
+{
     CfgFiles *files = GetCfgFiles("etc/init/priv_app.bootevents");
     for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; files && i >= 0; i--) {
         if (files->paths[i]) {

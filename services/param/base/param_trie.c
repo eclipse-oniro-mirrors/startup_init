@@ -306,6 +306,7 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
 
 INIT_LOCAL_API void SaveIndex(uint32_t *index, uint32_t offset)
 {
+    PARAM_ONLY_CHECK(index != NULL, return);
     *index = offset;
 }
 

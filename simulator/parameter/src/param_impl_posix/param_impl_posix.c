@@ -69,7 +69,7 @@ int GetSysParam(const char* key, char* value, unsigned int len)
     if (!IsValidKey(key) || (value == NULL) || (len > MAX_GET_VALUE_LEN)) {
         return EC_INVALID;
     }
-    char* keyPath = (char *)malloc(MAX_KEY_PATH + 1);
+    char* keyPath = (char *)calloc(1, MAX_KEY_PATH + 1);
     if (keyPath == NULL) {
         return EC_FAILURE;
     }
@@ -108,7 +108,7 @@ int SetSysParam(const char* key, const char* value)
     if (!IsValidKey(key) || !IsValidValue(value, MAX_VALUE_LEN)) {
         return EC_INVALID;
     }
-    char* keyPath = (char *)malloc(MAX_KEY_PATH + 1);
+    char* keyPath = (char *)calloc(1, MAX_KEY_PATH + 1);
     if (keyPath == NULL) {
         return EC_FAILURE;
     }

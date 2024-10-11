@@ -201,7 +201,7 @@ static void ScanModules(MODULE_MGR *moduleMgr, const char *path)
     BEGET_LOGV("Scan module with name '%s'", path);
     DIR *dir = opendir(path);
     BEGET_CHECK(dir != NULL, return);
-    char *moduleName = malloc(PATH_MAX);
+    char *moduleName = calloc(PATH_MAX, sizeof(char));
     while (moduleName != NULL) {
         struct dirent *file = readdir(dir);
         if (file == NULL) {

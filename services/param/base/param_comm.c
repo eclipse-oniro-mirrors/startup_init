@@ -85,6 +85,7 @@ INIT_LOCAL_API ParamSecurityLabel *GetParamSecurityLabel()
 INIT_LOCAL_API int SplitParamString(char *line, const char *exclude[], uint32_t count,
     int (*result)(const uint32_t *context, const char *name, const char *value), const uint32_t *context)
 {
+    PARAM_CHECK(line != NULL, return 0, "Empty line");
     // Skip spaces
     char *name = line;
     while (isspace(*name) && (*name != '\0')) {

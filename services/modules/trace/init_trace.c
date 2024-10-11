@@ -94,7 +94,7 @@ static char *ReadFile(const char *path)
     PLUGIN_CHECK(fd != NULL, return NULL, "Failed to fopen path %s", path);
     char *buffer = NULL;
     do {
-        buffer = (char*)malloc((size_t)(fileStat.st_size + 1));
+        buffer = (char*)calloc((size_t)(fileStat.st_size + 1), sizeof(char));
         PLUGIN_CHECK(buffer != NULL, break, "Failed to alloc memory for path %s", path);
         if (fread(buffer, fileStat.st_size, 1, fd) != 1) {
             PLUGIN_LOGE("Failed to read file %s errno:%d", path, errno);
@@ -342,7 +342,7 @@ static bool ClearTrace(void)
 static void DumpCompressedTrace(int traceFd, int outFd)
 {
     int flush = Z_NO_FLUSH;
-    uint8_t *inBuffer = malloc(CHUNK_SIZE);
+    uint8_t *inBuffer = calloc(1, CHUNK_SIZE);
     PLUGIN_CHECK(inBuffer != NULL, return, "Error: couldn't allocate buffers\n");
     uint8_t *outBuffer = malloc(CHUNK_SIZE);
     PLUGIN_CHECK(outBuffer != NULL, free(inBuffer);
@@ -428,7 +428,7 @@ static bool MarkOthersClockSync(void)
     FILE *file = fopen(realPath, "wt+");
     PLUGIN_CHECK(file != NULL, return false, "Error: opening %s, errno: %d", TRACE_MARKER_PATH, errno);
     do {
-        int64_t realtime = (int64_t)((rts.tv_sec * nanoSeconds + rts.tv_nsec) / nanoToMill);
+        int64_t realtime = ((int64_t)rts.tv_sec * nanoSeconds + rts.tv_nsec) / nanoToMill;
         float parentTs = (float)((((float)mts.tv_sec) * nanoSeconds + mts.tv_nsec) / nanoToSecond);
         int ret = fprintf(file, "trace_event_clock_sync: realtime_ts=%" PRId64 "\n", realtime);
         PLUGIN_CHECK(ret > 0, break, "Warning: writing clock sync marker, errno: %d", errno);

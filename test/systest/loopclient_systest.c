@@ -36,23 +36,8 @@
 #include "le_task.h"
 #include "list.h"
 
-#define MAX_MSG_LEN 128
 #define RETRY_TIME (200 * 1000)     // 200 * 1000 wait 200ms CONNECT_RETRY_DELAY = 200 * 1000
 #define MAX_RETRY_SEND_COUNT 2      // 2 max retry count CONNECT_RETRY_MAX_TIMES = 2;
-
-typedef struct Message_ {
-    uint32_t magic;
-    uint32_t msgType;
-    uint32_t msgLen;
-    uint32_t msgId;
-    uint32_t tlvCount;
-    char buffer[MAX_MSG_LEN];
-} Message;
-
-typedef struct {
-    Message msgHdr;
-    Result result;
-} ResponseMsg;
 
 typedef Agent_ {
     TaskHandle task;

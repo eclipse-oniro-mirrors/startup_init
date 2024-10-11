@@ -140,11 +140,7 @@ int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts, const char *sepa
     char *rest = NULL;
     FstabItem *item = NULL;
     char *p = NULL;
-
-    if (separator == NULL || *separator == '\0') {
-        BEGET_LOGE("Invalid separator for parsing fstab");
-        return -1;
-    }
+    BEGET_ERROR_CHECK(separator != NULL && *separator != '\0', return -1, "Invalid separator for parsing fstab");
 
     if ((item = (FstabItem *)calloc(1, sizeof(FstabItem))) == NULL) {
         errno = ENOMEM;
@@ -153,29 +149,21 @@ int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts, const char *sepa
     }
 
     do {
-        if ((p = strtok_r(str, separator, &rest)) == NULL) {
-            BEGET_LOGE("Failed to parse block device.");
-            break;
-        }
+        BEGET_ERROR_CHECK((p = strtok_r(str, separator, &rest)) != NULL, break, "Failed to parse block device.");
         item->deviceName = strdup(p);
+        BEGET_ERROR_CHECK(item->deviceName != NULL, break, "strdup deviceName failed.");
 
-        if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            BEGET_LOGE("Failed to parse mount point.");
-            break;
-        }
+        BEGET_ERROR_CHECK((p = strtok_r(NULL, separator, &rest)) != NULL, break, "Failed to parse mount point.");
         item->mountPoint = strdup(p);
+        BEGET_ERROR_CHECK(item->mountPoint != NULL, break, "strdup mountPoint failed.");
 
-        if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            BEGET_LOGE("Failed to parse fs type.");
-            break;
-        }
+        BEGET_ERROR_CHECK((p = strtok_r(NULL, separator, &rest)) != NULL, break, "Failed to parse fs type.");
         item->fsType = strdup(p);
+        BEGET_ERROR_CHECK(item->fsType != NULL, break, "strdup fsType failed.");
 
-        if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            BEGET_LOGE("Failed to parse mount options.");
-            break;
-        }
+        BEGET_ERROR_CHECK((p = strtok_r(NULL, separator, &rest)) != NULL, break, "Failed to parse mount options.");
         item->mountOptions = strdup(p);
+        BEGET_ERROR_CHECK(item->mountOptions != NULL, break, "strdup mountOptions failed.");
 
         if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
             BEGET_LOGE("Failed to parse fs manager flags.");
