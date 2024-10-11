@@ -547,6 +547,14 @@ public:
         ret = CheckSyscall(APP, APP_NAME, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
     }
+#ifdef SECCOMP_PRIVILEGE
+    void TestSeccompPrivilegeSyscall()
+    {
+        int ret = CheckSyscall(APP, APP_PRIVILEGE, CheckSetuid64ForUidFilter1, true);
+        EXPECT_EQ(ret, 0);
+    }
+#endif
+
 #elif defined __arm__
     static bool CheckGetuid32()
     {
@@ -1058,6 +1066,14 @@ public:
         ret = CheckSyscall(APP, APP_NAME, CheckGetuid32, true);
         EXPECT_EQ(ret, 0);
     }
+
+#ifdef SECCOMP_PRIVILEGE
+    void TestSeccompPrivilegeSyscall()
+    {
+        int ret = CheckSyscall(APP, APP_PRIVILEGE, CheckSetuid32ForUidFilter1, true);
+        EXPECT_EQ(ret, 0);
+    }
+#endif
 #endif
     void TestAppSycallNs()
     {
@@ -1149,4 +1165,17 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycallNs001, TestSize.Level1)
     SeccompUnitTest test;
     test.TestAppSycallNs();
 }
+#ifdef SECCOMP_PRIVILEGE
+/**
+ * @tc.name: TestSeccompPrivilegeSyscall
+ * @tc.desc: Verify the privilege syscall of app and appspawn.
+ * @tc.type: FUNC
+ * @tc.require: issueIAVQ2P
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompPrivilegeSycall001, TestSize.Level1)
+{
+    SeccompUnitTest test;
+    test.TestSeccompPrivilegeSyscall();
+}
+#endif
 }

@@ -30,6 +30,7 @@ extern "C" {
 #define NWEBSPAWN_NAME "nwebspawn"
 #define APP_NAME "app"
 #define IMF_EXTENTOIN_NAME "imf_secure_mode"
+#define APP_PRIVILEGE "app_privilege"
 
 typedef enum {
     SYSTEM_SA,       // system service process

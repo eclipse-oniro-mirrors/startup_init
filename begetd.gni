@@ -67,4 +67,7 @@ declare_args() {
       !defined(global_parts_info.hiviewdfx_hicollie)) {
     paramwatcher_hicollie_enable = false
   }
+
+  # seccomp privilege
+  init_feature_seccomp_privilege = false
 }
