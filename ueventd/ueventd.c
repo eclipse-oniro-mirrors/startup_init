@@ -163,7 +163,7 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
         // Matched
         mask = umask(0);
         if (mknod(DYNAMIC_DEVICES[idx].dev, DYNAMIC_DEVICES[idx].mode,
-                makedev((unsigned int)uevent->major, (unsigned int)uevent->minor)) != 0) {
+            makedev((unsigned int)uevent->major, (unsigned int)uevent->minor)) != 0) {
             INIT_LOGE("Create device node %s failed. %s", DYNAMIC_DEVICES[idx].dev, strerror(errno));
         }
         // Restore umask
