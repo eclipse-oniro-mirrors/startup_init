@@ -908,7 +908,7 @@ static int GetServicePeriod(const cJSON *curArrItem, Service *curServ, const cha
     INIT_ERROR_CHECK(cJSON_IsNumber(arrItem), return SERVICE_FAILURE,
         "Service error %s is null or is not a number", curServ->name);
     curServ->attribute |= SERVICE_ATTR_PERIOD;
-    int value = (int)cJSON_GetNumberValue(arrItem);
+    uint64_t value = (uint64_t)cJSON_GetNumberValue(arrItem);
     curServ->period = value * BASE_MS_UNIT;
     return SERVICE_SUCCESS;
 }
