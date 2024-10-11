@@ -666,7 +666,7 @@ INIT_LOCAL_API int StringToLL(const char *str, long long int *out)
         s++;
     }
 
-    size_t len = strlen(str);
+    size_t len = strlen(s);
     int positiveHex = (len > 1 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X'));
     int negativeHex = (len > 2 && s[0] == '-' && s[1] == '0' && (s[2] == 'x' || s[2] == 'X')); // 2: shorttest
     int base = (positiveHex || negativeHex) ? HEX_BASE : DECIMAL_BASE;
