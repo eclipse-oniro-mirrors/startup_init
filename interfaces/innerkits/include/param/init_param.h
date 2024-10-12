@@ -113,6 +113,13 @@ int LoadPersistParams(void);
 
 /**
  * Init 接口
+ * 加载加密目录下持久化参数。
+ *
+ */
+int LoadPrivatePersistParams(void);
+
+/**
+ * Init 接口
  * 设置参数，主要用于其他进程使用，通过管道修改参数
  *
  */
