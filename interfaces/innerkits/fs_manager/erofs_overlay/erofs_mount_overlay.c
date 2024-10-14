@@ -225,7 +225,7 @@ static void ConstructLinearTarget(DmVerityTarget *target, const char *dev, uint6
     target->length = mapLength / SECTOR_SIZE;
     target->paras = calloc(1, MAX_BUFFER_LEN);
 
-    if (snprintf_s(target->paras, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s %lld", dev, mapStart / SECTOR_SIZE) < 0) {
+    if (snprintf_s(target->paras, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s %llu", dev, mapStart / SECTOR_SIZE) < 0) {
         BEGET_LOGE("Failed to  copy target paras.");
         return;
     }

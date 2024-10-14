@@ -1155,12 +1155,14 @@ static Service *GetServiceByExtServName(const char *fullServName, ServiceArgs *e
     int argc;
     for (argc = 0; argc < (service->pathArgs.count - 1); argc++) {
         extraArgs->argv[argc] = strdup(service->pathArgs.argv[argc]);
-        INIT_ERROR_CHECK(extraArgs->argv[argc] != NULL, return NULL, "Failed dup path");
+        INIT_ERROR_CHECK(extraArgs->argv[argc] != NULL, free(tmpServName);
+            return NULL, "Failed dup path");
     }
     int extArgc;
     for (extArgc = 0; extArgc < (returnCount - 1); extArgc++) {
         extraArgs->argv[extArgc + argc] = strdup(dstPtr[extArgc + 1]);
-        INIT_ERROR_CHECK(extraArgs->argv[extArgc + argc] != NULL, return NULL, "Failed dup path");
+        INIT_ERROR_CHECK(extraArgs->argv[extArgc + argc] != NULL, free(tmpServName);
+            return NULL, "Failed dup path");
     }
     extraArgs->argv[extraArgs->count] = NULL;
     free(tmpServName);
