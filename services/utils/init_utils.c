@@ -257,6 +257,9 @@ int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int l
         while (tmp < endData && *tmp == ' ') {
             tmp++;
         }
+        if (tmp >= endData) {
+            return -1;
+        }
         if (*tmp == '=') {
             break;
         }
@@ -269,11 +272,7 @@ int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int l
         tmp++;
     }
     for (; i < (size_t)length; tmp++) {
-        if (tmp >= endData) {
-            endIndex = i;
-            break;
-        }
-        if (*tmp == ' ' || *tmp == '\n' || *tmp == '\r' || *tmp == '\t') {
+        if (tmp >= endData || *tmp == ' ' || *tmp == '\n' || *tmp == '\r' || *tmp == '\t') {
             endIndex = i;
             break;
         }
