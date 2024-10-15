@@ -785,7 +785,8 @@ void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, 
     const char *pos;
     str_compare cmp = strcmp;
 
-    if ((strDict == NULL) || (dictSize < sizeof(const char *)) || (target == NULL) || (target[0] == '\0')) {
+    if ((strDict == NULL) || dictSize < 0 || ((size_t)dictSize < sizeof(const char *)) ||
+        (target == NULL) || (target[0] == '\0')) {
         return NULL;
     }
 
