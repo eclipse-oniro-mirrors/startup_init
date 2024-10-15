@@ -167,7 +167,7 @@ static void usage(const char *name)
 
 static void UeventdLogPrint(int logLevel, uint32_t domain, const char *tag, const char *fmt, va_list vargs)
 {
-    if (logLevel < GetInitLogLevel()) {
+    if (logLevel < (int)GetInitLogLevel()) {
         return;
     }
     vprintf(fmt, vargs);
@@ -177,7 +177,6 @@ static void UeventdLogPrint(int logLevel, uint32_t domain, const char *tag, cons
 int main(int argc, char *argv[])
 {
     int opt;
-    const char *config;
     int daemon = UEVENTD_MODE_DEAMON;
 
     while ((opt = getopt(argc, argv, "drblv:h")) != -1) {
@@ -211,11 +210,6 @@ int main(int argc, char *argv[])
                         argv[0]);
                 exit(EXIT_FAILURE);
         }
-    }
-
-    config = NULL;
-    if (optind >= argc) {
-        config = argv[optind];
     }
 
     if (daemon == UEVENTD_MODE_DEAMON) {

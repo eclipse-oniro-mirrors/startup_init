@@ -114,7 +114,7 @@ static int ReadMessage(int fd, char *buffer, uint32_t timeout)
             }
         }
 
-        if (recvLen > sizeof(ParamMessage)) {
+        if ((size_t)recvLen > sizeof(ParamMessage)) {
             PARAM_LOGV("recv message len is %d", recvLen);
             break;
         }
