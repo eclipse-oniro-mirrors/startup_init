@@ -126,7 +126,7 @@ static void DumpOneService(const Service *service)
     printf("\tservice name: [%s] \n", service->name);
     printf("\tservice pid: [%d] \n", service->pid);
     int tmpCount = sizeof(initErrMaps) / sizeof(initErrMaps[0]);
-    if (service->lastErrno < tmpCount) {
+    if ((int)service->lastErrno < tmpCount) {
         printf("\tservice last error: %s(%d) \n", initErrMaps[service->lastErrno].info, service->lastErrno);
     } else {
         printf("\tservice last error: %d \n", service->lastErrno);
