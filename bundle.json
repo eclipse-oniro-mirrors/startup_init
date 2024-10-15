@@ -24,9 +24,13 @@
             "init_feature_begetctl_liteos",
             "init_lite_use_posix_file_api",
             "init_feature_ab_partition",
-            "init_feature_loader",
             "init_lite_use_thirdparty_mbedtls",
-            "init_appspawn_client_module"
+            "init_appspawn_client_module",
+            "init_extra_static_modules",
+            "init_begetutil_extra_modules",
+            "init_lite_no_log",
+            "init_lite_memory_size",
+            "init_use_encaps"
         ],
         "adapted_system_type": [
             "mini",

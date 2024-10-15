@@ -19,7 +19,6 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/log:init_log",
       "//base/startup/init/services/param/base:param_base",
       "//base/startup/init/services/utils:libinit_utils",
-      "//third_party/bounds_checking_function:libsec_static",
     ]
 
     executable("ueventd_linux") {
@@ -47,6 +46,7 @@ if (defined(ohos_lite)) {
       deps = service_ueventd_deps
       deps += [ "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared" ]
       deps += [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
+      external_deps = [ "bounds_checking_function:libsec_static" ]
     }
     copy("ueventd.config") {
       sources = [ "etc/ueventd_l1.config" ]
