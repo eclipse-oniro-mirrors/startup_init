@@ -78,6 +78,8 @@ static bool IsPrivateParam(const char *param)
         "persist.kernel.bundle_name.clouddrive",
         "persist.kernel.bundle_name.photos",
         "persist.kernel.bundle_name.filemanager",
+        "persist.hdc.mode",
+        "persist.hdc.mode.usb"
     };
     int size = sizeof(privatePersistParams) / sizeof(char*);
     for (int i = 0; i < size; i++) {
@@ -132,6 +134,7 @@ static bool GetPersistFilePath(char **path, char **tmpPath, int fileType)
             if (ret != 0) {
                 PARAM_LOGE("rename failed %s", PARAM_PERSIST_SAVE_PATH);
             }
+            isFullLoad = false;
         } else {
             CheckAndCreateDir(PARAM_PUBLIC_PERSIST_SAVE_PATH);
             isFullLoad = false;
