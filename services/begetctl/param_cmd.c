@@ -53,13 +53,11 @@ char g_isSetTerminal = 0;
 
 void demoExit(void)
 {
-    BShellEnvDestory(GetShellHandle());
     if (g_shellPid != 0) {
 #ifndef STARTUP_INIT_TEST
         kill(g_shellPid, SIGKILL);
 #endif
     }
-    BEGET_CHECK(g_isSetTerminal == 0, tcsetattr(0, TCSAFLUSH, &g_terminalState));
 }
 
 #define CMD_PATH "/system/bin/paramshell"
