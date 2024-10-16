@@ -25,7 +25,6 @@ static BShellHandle g_handle = NULL;
 struct termios terminalState;
 static void signalHandler(int signal)
 {
-    tcsetattr(0, TCSAFLUSH, &terminalState);
     demoExit();
     exit(0);
 }
