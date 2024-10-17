@@ -429,10 +429,10 @@ static void PrepareAreaSizeFile(void)
             "persist_param=2048\n"
             "const_param=20480\n"
             "test_watch=81920\n"
-            "test_write=81920\n"
+            "test_write=102400\n"
             "const_param***=20480\n"
             "persist_sys_param=2048\n"
-            "test_write=81920\n";
+            "test_write=102400\n";
     CreateTestFile(PARAM_AREA_SIZE_CFG, ohosParamSize);
 }
 

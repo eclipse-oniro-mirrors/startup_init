@@ -49,16 +49,16 @@ int main(int argc, char * const argv[])
         SystemPrepare(upTimeInMicroSecs);
     } else {
         LogInit();
-    }
-
-    SystemInit();
-    SystemExecuteRcs();
-    SystemConfig(uptime);
 #ifdef EROFS_OVERLAY
     if (IsOverlayEnable()) {
         RemountOverlay();
     }
 #endif
+    }
+
+    SystemInit();
+    SystemExecuteRcs();
+    SystemConfig(uptime);
     SystemRun();
     return 0;
 }

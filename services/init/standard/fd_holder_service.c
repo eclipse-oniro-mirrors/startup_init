@@ -107,6 +107,9 @@ static int CheckFdHolderPermission(Service *service, pid_t requestPid)
 
 static inline void CloseFds(int *fds, size_t fdCount)
 {
+    if (fds == NULL) {
+        return;
+    }
     for (size_t i = 0; i < fdCount; i++) {
         close(fds[i]);
     }
@@ -114,7 +117,7 @@ static inline void CloseFds(int *fds, size_t fdCount)
 
 static void HandlerFdHolder(int sock)
 {
-    char buffer[MAX_FD_HOLDER_BUFFER + 1] = {};
+    char buffer[MAX_FD_HOLDER_BUFFER + 1] = {0};
     size_t fdCount = 0;
     pid_t requestPid = -1;
     struct iovec iovec = {

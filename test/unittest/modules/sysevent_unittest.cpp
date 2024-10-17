@@ -23,6 +23,7 @@
 #include "param_stub.h"
 #include "securec.h"
 #include "sys_event.h"
+#include "init_cmdexecutor.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -132,5 +133,12 @@ HWTEST_F(SysEventUnitTest, SysEventTest_005, TestSize.Level1)
 HWTEST_F(SysEventUnitTest, SysEventTest_006, TestSize.Level1)
 {
     ReportSysEvent(nullptr);
+}
+
+HWTEST_F(SysEventUnitTest, SysEventTest_007, TestSize.Level1)
+{
+    const char *appfwkReady[] = {"bootevent.appfwk.ready"};
+    int ret = PluginExecCmd("unset_bootevent", 1, appfwkReady);
+    printf("SysEventTest_007:%d\n", ret);
 }
 } // namespace init_ut
