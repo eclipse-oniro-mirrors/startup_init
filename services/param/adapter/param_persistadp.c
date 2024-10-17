@@ -64,26 +64,36 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
     return result;
 }
 
-static bool IsPrivateParam(const char *param)
+static bool IsPublicParam(const char *param)
 {
-    const char *privatePersistParams[] = {
-        "persist.sys.data.dataextpath",
-        "persist.sys.radio.vendorlib.path",
-        "persist.sys.default_ime",
-        "persist.sys.usb.config",
-        "persist.hdc.daemon.cancel",
-        "persist.hdc.daemon.auth_result",
-        "persist.hdc.client.hostname",
-        "persist.hdc.client.pubkey_sha256",
-        "persist.kernel.bundle_name.clouddrive",
-        "persist.kernel.bundle_name.photos",
-        "persist.kernel.bundle_name.filemanager",
-        "persist.hdc.mode",
-        "persist.hdc.mode.usb"
+    const char *publicPersistParams[] = {
+        "persist.arkui.libace.og", "persist.ddgr.opinctype",
+        "persist.dfx.leak.threshold", "persist.rosen.animationtrace.enabled",
+        "persist.rosen.ddgr.opinctype.debugtype", "persist.sys.graphic.blurEnabled",
+        "persist.sys.graphic.drawing.test", "persist.sys.graphic.filterCacheEnabled",
+        "persist.sys.graphic.foregroundFilterEnabled", "persist.sys.graphic.GpuApitype",
+        "persist.sys.graphic.hmsymbolcfg.enable", "persist.sys.graphic.hmsymboltxt.enable",
+        "persist.sys.graphic.HpsBlurEnable", "persist.sys.graphic.kawaseEnable",
+        "persist.sys.graphic.openDebugTrace", "persist.sys.graphic.subSurface",
+        "persist.sys.text.autospacing.enable", "persist.sys.hilog.binary.forhota.on",
+        "persist.sys.hilog.fuse.on", "persist.sys.xlog.debug",
+        "persist.sys.hiview.testtype", "persist.security.jitfort.disabled",
+        "persist.sys.prefork.enable", "persist.time.timezone",
+        "persist.global.tz_override", "persist.dupdate_engine.update_type",
+        "persist.update.hmos_to_next_flag", "persist.hiview.leak_detector",
+        "persist.hiviewdfx.debugenv", "persist.swing.switch_enable",
+        "persist.hiviewdfx.priv.diagnosis.time.deadline", "persist.hmos_fusion_mgr.ctl.support_hmos",
+        "persist.init.debug.dump.trigger", "persist.init.bootchart.enabled",
+        "persist.init.debug.loglevel", "persist.samgr.cache.sa",
+        "persist.sys.hilog.binary.on", "persist.sys.hilog.debug.on",
+        "persist.bluetooth.collaboration_service", "persist.bluetooth.switch_enable",
+        "persist.edc.proxy_ap_startup", "persist.edm.edm_enable",
+        "persist.moduleupdate.bms.scan", "persist.nearlink.switch_enable",
+        "persist.parentcontrol.enable", "persist.samgr.moduleupdate.start",
     };
-    int size = sizeof(privatePersistParams) / sizeof(char*);
+    int size = sizeof(publicPersistParams) / sizeof(char*);
     for (int i = 0; i < size; i++) {
-        if (strcmp(param, privatePersistParams[i]) == 0) {
+        if (strncmp(param, publicPersistParams[i], strlen(publicPersistParams[i])) == 0) {
             return true;
         }
     }
@@ -92,11 +102,11 @@ static bool IsPrivateParam(const char *param)
 
 static int LoadOnePublicPersistParam_(const uint32_t *context, const char *name, const char *value)
 {
-    if (IsPrivateParam(name)) {
-        PARAM_LOGI("%s is private, ignore", name);
-        return 0;
+    if (IsPublicParam(name)) {
+        return LoadOnePersistParam_(context, name, value);
     }
-    return LoadOnePersistParam_(context, name, value);
+    PARAM_LOGI("%s is private, ignore", name);
+    return 0;
 }
 
 static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *fileName,
@@ -129,15 +139,14 @@ static bool GetPersistFilePath(char **path, char **tmpPath, int fileType)
         return isFullLoad;
     }
     if (fileType == PUBLIC_PERSIST_FILE) {
+        isFullLoad = false;
         if (access(PARAM_PERSIST_SAVE_PATH, F_OK) == 0 && access(PARAM_PUBLIC_PERSIST_SAVE_PATH, F_OK) != 0) {
             int ret = rename(PARAM_PERSIST_SAVE_PATH, PARAM_PUBLIC_PERSIST_SAVE_PATH);
             if (ret != 0) {
                 PARAM_LOGE("rename failed %s", PARAM_PERSIST_SAVE_PATH);
             }
-            isFullLoad = false;
         } else {
             CheckAndCreateDir(PARAM_PUBLIC_PERSIST_SAVE_PATH);
-            isFullLoad = false;
         }
         *path = PARAM_PUBLIC_PERSIST_SAVE_PATH;
         *tmpPath = PARAM_PUBLIC_PERSIST_SAVE_TMP_PATH;
