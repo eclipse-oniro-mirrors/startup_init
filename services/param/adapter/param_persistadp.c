@@ -30,6 +30,10 @@ static ParamMutex g_saveMutex = {};
 
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
+    if (strncmp(name, "persist", strlen("persist")) != 0) {
+        PARAM_LOGE("%s is not persist param, do not load", name);
+        return 0;
+    }
     bool clearFactoryPersistParams = *(bool*)context;
     uint32_t dataIndex = 0;
     unsigned int mode = 0;
