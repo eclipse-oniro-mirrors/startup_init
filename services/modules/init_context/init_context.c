@@ -145,7 +145,7 @@ static int SubInitExecuteCmd(InitContextType type, const char *name, const char 
     while ((rLen < 0) && (errno == EAGAIN)) {
         rLen = TEMP_FAILURE_RETRY(read(subInfo->recvFd, buffer, sizeof(buffer)));
     }
-    PLUGIN_CHECK(rLen >= 0 && rLen < sizeof(buffer), return errno,
+    PLUGIN_CHECK(rLen >= 0 && (size_t)rLen < sizeof(buffer), return errno,
         "Failed to read result from %d for cmd %s errno %d", subInfo->type, name, errno);
     // change to result
     buffer[rLen] = '\0';
