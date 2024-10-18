@@ -202,7 +202,7 @@ static TriggerNode *AddWatchTrigger_(const TriggerWorkSpace *workSpace,
 
 static void DelWatchTrigger_(const TriggerWorkSpace *workSpace, TriggerNode *trigger)
 {
-    PARAM_CHECK(workSpace != NULL, return, "Param is null");
+    PARAM_CHECK(workSpace != NULL && trigger != NULL, return, "Param is null");
     TriggerHeader *triggerHead = GetTriggerHeader(workSpace, trigger->type);
     PARAM_CHECK(triggerHead != NULL, return, "Failed to get header %d", trigger->type);
     OH_ListRemove(&trigger->node);
@@ -501,6 +501,7 @@ static void DumpJobTrigger_(const TriggerWorkSpace *workSpace, const TriggerNode
 
 static void DumpWatchTrigger_(const TriggerWorkSpace *workSpace, const TriggerNode *trigger)
 {
+    PARAM_CHECK(trigger != NULL, return, "Empty trigger");
     const WatchNode *node = (const WatchNode *)trigger;
     PARAM_DUMP("trigger     flags: 0x%08x \n", trigger->flags);
     PARAM_DUMP("trigger condition: %s \n", trigger->condition);
@@ -509,6 +510,7 @@ static void DumpWatchTrigger_(const TriggerWorkSpace *workSpace, const TriggerNo
 
 static void DumpWaitTrigger_(const TriggerWorkSpace *workSpace, const TriggerNode *trigger)
 {
+    PARAM_CHECK(trigger != NULL, return, "Empty trigger");
     const WaitNode *node = (const WaitNode *)trigger;
     PARAM_DUMP("trigger     flags: 0x%08x \n", trigger->flags);
     PARAM_DUMP("trigger      name: %s \n", GetTriggerName(trigger));

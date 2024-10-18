@@ -48,6 +48,7 @@ STATIC_INLINE ParamTrieNode *FindSubTrie(const WorkSpace *workSpace,
         } else {
             ret = memcmp(subTrie->key, key, keyLen);
             if (ret == 0) {
+                PARAM_CHECK(matchLabel != NULL, return NULL, "Invalid matchLabel");
                 *matchLabel = (subTrie->labelIndex != 0) ? subTrie->labelIndex : *matchLabel;
                 return subTrie;
             }

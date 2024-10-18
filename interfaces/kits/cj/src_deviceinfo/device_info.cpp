@@ -53,7 +53,7 @@ const char* DeviceInfo::CjGetDeviceType()
 
 const char* DeviceInfo::CjGetUdid()
 {
-    char* udid = static_cast<char*>(malloc(UDID_LEN));
+    char* udid = static_cast<char*>(calloc(1, UDID_LEN));
     if (udid == nullptr) {
         return nullptr;
     }

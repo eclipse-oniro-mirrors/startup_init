@@ -190,7 +190,7 @@ static args_vector GetArgs(const std::vector<int> &sizes)
 {
     args_vector args;
     for (int size : sizes) {
-        args.push_back( {size} );
+        args.push_back({size});
     }
     return args;
 }
@@ -199,7 +199,7 @@ static args_vector GetArgs(const std::vector<int> &sizes, int value)
 {
     args_vector args;
     for (int size : sizes) {
-        args.push_back( {size, value} );
+        args.push_back({size, value});
     }
     return args;
 }
@@ -208,7 +208,7 @@ static args_vector GetArgs(const std::vector<int> &sizes, int value1, int value2
 {
     args_vector args;
     for (int size : sizes) {
-        args.push_back( {size, value1, value2} );
+        args.push_back({size, value1, value2});
     }
     return args;
 }
@@ -218,7 +218,7 @@ static args_vector GetArgs(const std::vector<int> &sizes, const std::vector<int>
     args_vector args;
     for (int size : sizes) {
         for (int limit : limits) {
-            args.push_back( {size, limit, value} );
+            args.push_back({size, limit, value});
         }
     }
     return args;

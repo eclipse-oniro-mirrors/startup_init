@@ -43,7 +43,7 @@ static void DoAsyncEvent_(const LoopHandle loopHandle, AsyncEventTask *asyncTask
         free(buffer);
 #ifdef LOOP_DEBUG
         clock_gettime(CLOCK_MONOTONIC, &(endTime));
-        diff = (long long)((endTime.tv_sec - startTime.tv_sec) * MILLION_MICROSECOND);
+        diff = (long long)(endTime.tv_sec - startTime.tv_sec) * MILLION_MICROSECOND;
         if (endTime.tv_nsec > startTime.tv_nsec) {
             diff += (endTime.tv_nsec - startTime.tv_nsec) / THOUSAND_MILLISECOND; // 1000 ms
         } else {
@@ -63,8 +63,10 @@ void LE_DoAsyncEvent(const LoopHandle loopHandle, const TaskHandle taskHandle)
     }
 }
 #endif
+
 static LE_STATUS HandleAsyncEvent_(const LoopHandle loopHandle, const TaskHandle taskHandle, uint32_t oper)
 {
+    LE_CHECK(loopHandle != NULL && taskHandle != NULL, return LE_INVALID_PARAM, "Invalid parameters");
     LE_LOGV("HandleAsyncEvent_ fd: %d oper 0x%x", GetSocketFd(taskHandle), oper);
     EventLoop *loop = (EventLoop *)loopHandle;
     AsyncEventTask *asyncTask = (AsyncEventTask *)taskHandle;

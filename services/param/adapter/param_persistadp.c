@@ -154,7 +154,7 @@ static int LoadPersistParam(int fileType)
         clearFactoryPersistParams = true;
     }
     const uint32_t buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
-    char *buffer = malloc(buffSize);
+    char *buffer = calloc(1, buffSize);
     PARAM_CHECK(buffer != NULL, return -1, "Failed to alloc");
 
     char *tmpPath = "";

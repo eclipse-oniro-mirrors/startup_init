@@ -195,9 +195,9 @@ static int BootEventTraversal(ListNode *node, void *root)
 {
     static int start = 0;
     BOOT_EVENT_PARAM_ITEM *item = (BOOT_EVENT_PARAM_ITEM *)node;
-    double forkTime = item->timestamp[BOOTEVENT_FORK].tv_sec * MSECTONSEC +
+    double forkTime = (double)item->timestamp[BOOTEVENT_FORK].tv_sec * MSECTONSEC +
         (double)item->timestamp[BOOTEVENT_FORK].tv_nsec / USTONSEC;
-    double readyTime = item->timestamp[BOOTEVENT_READY].tv_sec * MSECTONSEC +
+    double readyTime = (double)item->timestamp[BOOTEVENT_READY].tv_sec * MSECTONSEC +
         (double)item->timestamp[BOOTEVENT_READY].tv_nsec / USTONSEC;
     double durTime = readyTime - forkTime;
     if (item->pid == 0) {
@@ -289,8 +289,10 @@ static void WriteBooteventSysParam(const char *paramName)
 
     uptime = GetUptimeInMicroSeconds(NULL);
 
-    snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%lld", uptime);
-    snprintf_s(name, sizeof(name), sizeof(name) - 1, "ohos.boot.time.%s", paramName);
+    INIT_CHECK_ONLY_ELOG(snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%lld", uptime) >= 0,
+                         "snprintf_s buf failed");
+    INIT_CHECK_ONLY_ELOG(snprintf_s(name, sizeof(name), sizeof(name) - 1, "ohos.boot.time.%s", paramName) >= 0,
+                         "snprintf_s name failed");
     SystemWriteParam(name, buf);
 }
 
@@ -414,10 +416,11 @@ static void AddReservedBooteventsByFile(const char *name)
         INIT_LOGI("Got priv-app bootevent: %s", buf);
         AddBootEventItemByName(buf);
     }
-    fclose(file);
+    (void)fclose(file);
 }
 
-static void AddReservedBootevents(void) {
+static void AddReservedBootevents(void)
+{
     CfgFiles *files = GetCfgFiles("etc/init/priv_app.bootevents");
     for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; files && i >= 0; i--) {
         if (files->paths[i]) {
