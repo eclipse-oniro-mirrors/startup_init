@@ -295,7 +295,7 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     int ret = PARAM_SPRINTF(node->data, realLen, "%s=%s", key, value);
     PARAM_CHECK(ret > 0, return OFFSET_ERR, "Failed to sprint key and value");
 
-    if ((mode & LOAD_PARAM_PERSIST) != 0) {
+    if (((unsigned int)mode & LOAD_PARAM_PERSIST) != 0) {
         node->commitId |= PARAM_FLAGS_PERSIST;
     }
     uint32_t offset = workSpace->area->currOffset;
@@ -306,6 +306,7 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
 
 INIT_LOCAL_API void SaveIndex(uint32_t *index, uint32_t offset)
 {
+    PARAM_ONLY_CHECK(index != NULL, return);
     *index = offset;
 }
 

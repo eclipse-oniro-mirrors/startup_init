@@ -114,7 +114,7 @@ static int ReadMessage(int fd, char *buffer, uint32_t timeout)
             }
         }
 
-        if (recvLen > sizeof(ParamMessage)) {
+        if ((size_t)recvLen > sizeof(ParamMessage)) {
             PARAM_LOGV("recv message len is %d", recvLen);
             break;
         }
@@ -285,7 +285,8 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     timeout = 1;
 #endif
     int fd = GetClientSocket(timeout);
-    PARAM_CHECK(fd >= 0, return fd, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
+    PARAM_CHECK(fd >= 0, free(request);
+        return fd, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
     ret = StartRequest(fd, request, timeout);
     close(fd);
     free(request);

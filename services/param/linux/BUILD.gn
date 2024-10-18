@@ -46,7 +46,6 @@ param_include_dirs = [
 ]
 
 param_service_sources = [
-  "//base/startup/init/services/param/adapter/param_persistadp.c",
   "//base/startup/init/services/param/linux/param_message.c",
   "//base/startup/init/services/param/linux/param_msgadp.c",
   "//base/startup/init/services/param/linux/param_service.c",
@@ -73,6 +72,8 @@ if (defined(ohos_lite)) {
     defines = []
     sources = param_service_sources
     sources += param_trigger_sources
+    sources +=
+        [ "//base/startup/init/services/param/liteos/param_persistadp.c" ]
     include_dirs = param_include_dirs
     include_dirs += [
       "//base/security/selinux_adapter/interfaces/policycoreutils/include",
@@ -115,6 +116,8 @@ if (defined(ohos_lite)) {
   ohos_static_library("param_init") {
     sources = param_service_sources
     sources += param_trigger_sources
+    sources +=
+        [ "//base/startup/init/services/param/adapter/param_persistadp.c" ]
     include_dirs = param_include_dirs
     public_configs = [ ":exported_header_files" ]
     defines = [

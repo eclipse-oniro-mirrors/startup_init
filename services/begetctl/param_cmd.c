@@ -486,8 +486,8 @@ static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[
     SetInitLogLevel(INIT_INFO);
     pid_t pid = 0;
     if (args.cloneFlg) {
-        char *childStack = (char *)malloc(STACK_SIZE);
-        BSH_CHECK(childStack != NULL, return -1, "malloc failed");
+        char *childStack = (char *)calloc(1, STACK_SIZE);
+        BSH_CHECK(childStack != NULL, return -1, "calloc failed");
         pid = clone(ExecFunc, childStack + STACK_SIZE, CLONE_NEWPID | CLONE_NEWNS | SIGCHLD, (void *)&args);
         free(childStack);
     } else {

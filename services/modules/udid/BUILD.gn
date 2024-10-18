@@ -20,8 +20,8 @@ comm_include = [
   "../init_hook",
   "//base/startup/init/interfaces/innerkits/include/param",
   "//base/startup/init/interfaces/innerkits/include",
-  "//base/startup/init/interfaces/innerkits/include/syspara",
-  "//base/startup/init/interfaces/innerkits/syspara",
+  "../../../interfaces/innerkits/include/syspara",
+  "../../../interfaces/innerkits/syspara",
 ]
 
 if (defined(ohos_lite)) {
@@ -30,7 +30,7 @@ if (defined(ohos_lite)) {
       "_GNU_SOURCE",
       "OHOS_LITE",
     ]
-    if (config_ohos_startup_init_lite_no_log) {
+    if (init_lite_no_log) {
       defines += [ "INIT_NO_LOG" ]
     }
     include_dirs = comm_include
@@ -45,16 +45,13 @@ if (defined(ohos_lite)) {
     ]
 
     deps = []
+    external_deps = []
     if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
-      deps += [
-        "//third_party/bounds_checking_function:libsec_shared",
-        "//third_party/mbedtls:mbedtls_shared",
-      ]
+      deps += [ "//third_party/mbedtls:mbedtls_shared" ]
+      external_deps += [ "bounds_checking_function:libsec_shared" ]
     } else if (ohos_kernel_type == "liteos_m") {
-      deps += [
-        "//third_party/bounds_checking_function:libsec_static",
-        "//third_party/mbedtls:mbedtls",
-      ]
+      deps += [ "//third_party/mbedtls:mbedtls" ]
+      external_deps += [ "bounds_checking_function:libsec_static" ]
     }
 
     #if product exit, use product
@@ -78,7 +75,10 @@ if (defined(ohos_lite)) {
     ]
     defines = [ "_GNU_SOURCE" ]
     include_dirs = comm_include
-    deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
+    deps = [
+      "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
+      "//third_party/mbedtls:mbedtls_shared",
+    ]
 
     external_deps = [
       "bounds_checking_function:libsec_shared",

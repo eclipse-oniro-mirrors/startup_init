@@ -136,7 +136,7 @@ static int LoadPersistParam(void)
         uint32_t fileSize = 0;
         int ret = ParamFileStat(path, &fileSize);
         PARAM_CHECK(ret == 0, break, "Failed to get file state %s", path);
-        buffer = malloc(fileSize);
+        buffer = calloc(fileSize, sizeof(char));
         PARAM_CHECK(buffer != NULL, break, "Failed to get file");
         ret = ParamFileRead(fd, buffer, fileSize);
         PARAM_CHECK(ret >= 0, break, "Failed to read file %s", path);

@@ -47,7 +47,7 @@ namespace OHOS {
         if (size > PARAM_CONST_VALUE_LEN_MAX + PARAM_NAME_LEN_MAX) {
             return true;
         }
-        cookie->data = static_cast<char *>(malloc(size));
+        cookie->data = static_cast<char *>(calloc(1, size));
         if (cookie->data == nullptr) {
             return true;
         }

@@ -169,7 +169,7 @@ void PostParamTrigger(int type, const char *name, const char *value)
     uint32_t bufferSize = strlen(name) + strlen(value) + 1 + 1 + 1;
     PARAM_CHECK(bufferSize < (PARAM_CONST_VALUE_LEN_MAX + PARAM_NAME_LEN_MAX + 1 + 1 + 1),
         return, "bufferSize is longest %d", bufferSize);
-    char *buffer = (char *)malloc(bufferSize);
+    char *buffer = (char *)calloc(1, bufferSize);
     PARAM_CHECK(buffer != NULL, return, "Failed to alloc memory for  param %s", name);
     int ret = sprintf_s(buffer, bufferSize - 1, "%s=%s", name, value);
     PARAM_CHECK(ret > EOK, free(buffer);

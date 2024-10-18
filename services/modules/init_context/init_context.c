@@ -145,7 +145,7 @@ static int SubInitExecuteCmd(InitContextType type, const char *name, const char 
     while ((rLen < 0) && (errno == EAGAIN)) {
         rLen = TEMP_FAILURE_RETRY(read(subInfo->recvFd, buffer, sizeof(buffer)));
     }
-    PLUGIN_CHECK(rLen >= 0 && rLen < sizeof(buffer), return errno,
+    PLUGIN_CHECK(rLen >= 0 && (size_t)rLen < sizeof(buffer), return errno,
         "Failed to read result from %d for cmd %s errno %d", subInfo->type, name, errno);
     // change to result
     buffer[rLen] = '\0';
@@ -245,7 +245,7 @@ static void SubInitMain(InitContextType type, int readFd, int writeFd)
             PLUGIN_LOGE("Failed to poll sub init socket!");
             return;
         }
-        if (pfd.revents & POLLIN) {
+        if ((unsigned int)pfd.revents & POLLIN) {
             HandleRecvMessage(&subInfo, buffer, sizeof(buffer));
         }
     }

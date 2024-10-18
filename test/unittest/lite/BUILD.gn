@@ -139,10 +139,10 @@ if (defined(ohos_lite)) {
       ]
       sources += init_common_sources
       sources += [
-        "//base/startup/init/services/param/adapter/param_persistadp.c",
         "//base/startup/init/services/param/liteos/param_client.c",
         "//base/startup/init/services/param/liteos/param_litedac.c",
         "//base/startup/init/services/param/liteos/param_osadp.c",
+        "//base/startup/init/services/param/liteos/param_persistadp.c",
         "//base/startup/init/services/param/liteos/param_service.c",
       ]
 
@@ -224,12 +224,12 @@ if (defined(ohos_lite)) {
       sources += init_common_sources
       sources += [
         "//base/startup/init/services/param/adapter/param_dac.c",
-        "//base/startup/init/services/param/adapter/param_persistadp.c",
         "//base/startup/init/services/param/linux/param_message.c",
         "//base/startup/init/services/param/linux/param_msgadp.c",
         "//base/startup/init/services/param/linux/param_osadp.c",
         "//base/startup/init/services/param/linux/param_request.c",
         "//base/startup/init/services/param/linux/param_service.c",
+        "//base/startup/init/services/param/liteos/param_persistadp.c",
         "//base/startup/init/services/param/trigger/trigger_checker.c",
         "//base/startup/init/services/param/trigger/trigger_manager.c",
         "//base/startup/init/services/param/trigger/trigger_processor.c",

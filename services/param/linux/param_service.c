@@ -141,7 +141,7 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
     int ret = CheckParameterSet(name, value, srcLabel, &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
 
-    int mode = 0;
+    unsigned int mode = 0;
     if (strncmp(name, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) == 0) {
         mode |= LOAD_PARAM_PERSIST;
     }
@@ -322,7 +322,6 @@ static int HandleParamSave(const ParamTaskPtr worker, const ParamMessage *msg)
 #endif
     }
     PARAM_LOGI("process info:pid = %d, uid = %d, gid = %d", cr.pid, cr.uid, cr.gid);
-    PARAM_CHECK(cr.uid != -1, return -1, "Invalid uid");
     int ret = CheckIfUidInGroup(cr.uid, "servicectrl");
     PARAM_CHECK(ret == 0, return SendResponseMsg(worker, msg, -1), "Failed to process save parameters : ret %d", ret);
     CheckAndSavePersistParam();

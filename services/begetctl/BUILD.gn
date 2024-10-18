@@ -46,18 +46,15 @@ if (defined(ohos_lite)) {
     }
 
     include_dirs = common_include_dirs
-    include_dirs += [
-      "//base/security/selinux_adapter/interfaces/policycoreutils/include",
-      "//third_party/bounds_checking_function/include",
-      "//third_party/selinux/libselinux/include",
-    ]
+    include_dirs +=
+        [ "//base/security/selinux_adapter/interfaces/policycoreutils/include" ]
     deps = [
       "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
       "//base/startup/init/interfaces/innerkits:libbegetutil",
       "//base/startup/init/services/utils:libinit_utils",
       "//build/lite/config/component/cJSON:cjson_static",
-      "//third_party/bounds_checking_function:libsec_static",
     ]
+    external_deps = [ "bounds_checking_function:libsec_static" ]
 
     if (ohos_kernel_type == "linux") {
       deps += [ "//base/startup/init/services/param/linux:param_client" ]
