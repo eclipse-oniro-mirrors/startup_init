@@ -74,7 +74,8 @@ static void PollUeventdSocketTimeout(int ueventSockFd, bool ondemand)
 
 static int UeventdRetrigger(void)
 {
-    const char *ueventdConfigs[] = {"/etc/ueventd.config", "/vendor/etc/ueventd.config", NULL};
+    const char *ueventdConfigs[] = {"/etc/ueventd.config", "/vendor/etc/ueventd.config",
+        "/vendor/etc/ueventd_factory.config", NULL};
     int i = 0;
     while (ueventdConfigs[i] != NULL) {
         ParseUeventdConfigFile(ueventdConfigs[i++]);
@@ -92,7 +93,8 @@ static int UeventdDaemon(int listen_only)
 {
     // start log
     EnableInitLog(INIT_INFO);
-    const char *ueventdConfigs[] = {"/etc/ueventd.config", "/vendor/etc/ueventd.config", NULL};
+    const char *ueventdConfigs[] = {"/etc/ueventd.config", "/vendor/etc/ueventd.config",
+        "/vendor/etc/ueventd_factory.config", NULL};
     int i = 0;
     while (ueventdConfigs[i] != NULL) {
         ParseUeventdConfigFile(ueventdConfigs[i++]);
@@ -167,7 +169,7 @@ static void usage(const char *name)
 
 static void UeventdLogPrint(int logLevel, uint32_t domain, const char *tag, const char *fmt, va_list vargs)
 {
-    if (logLevel < GetInitLogLevel()) {
+    if (logLevel < (int)GetInitLogLevel()) {
         return;
     }
     vprintf(fmt, vargs);
