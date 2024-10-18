@@ -245,7 +245,7 @@ static void SubInitMain(InitContextType type, int readFd, int writeFd)
             PLUGIN_LOGE("Failed to poll sub init socket!");
             return;
         }
-        if (pfd.revents & POLLIN) {
+        if ((unsigned int)pfd.revents & POLLIN) {
             HandleRecvMessage(&subInfo, buffer, sizeof(buffer));
         }
     }

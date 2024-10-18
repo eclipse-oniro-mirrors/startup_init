@@ -29,7 +29,7 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
 {
     bool clearFactoryPersistParams = *(bool*)context;
     uint32_t dataIndex = 0;
-    int mode = 0;
+    unsigned int mode = 0;
 
     if (!clearFactoryPersistParams) {
         mode |= LOAD_PARAM_PERSIST;
