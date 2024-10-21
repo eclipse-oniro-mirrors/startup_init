@@ -32,6 +32,9 @@ extern "C" {
 #endif
 #endif
 
+#define CMDLINE_LABEL_FSCRYPT_DISABLE  "ohos.init.fscrypt.disable"
+#define CMDLINE_VALUE_FSCRYPT_DISABLE  "disabled"
+#define CMDLINE_VALUE_LEN              (sizeof(CMDLINE_VALUE_FSCRYPT_DISABLE) - 1)
 struct FsManagerFlags {
     char *name;
     unsigned int flags;
@@ -402,6 +405,15 @@ static void StoreFscryptPolicy(const char *option)
     if (option == NULL) {
         return;
     }
+
+    char fscryptDisable[CMDLINE_VALUE_LEN_MAX] = {0};
+    int ret = GetParameterFromCmdLine(CMDLINE_LABEL_FSCRYPT_DISABLE, fscryptDisable, sizeof(fscryptDisable));
+    if (ret == 0 && strncmp(fscryptDisable,
+                            CMDLINE_VALUE_FSCRYPT_DISABLE, CMDLINE_VALUE_LEN) == 0) {
+        BEGET_LOGE("fscrypt policy is disabled by cmdline");
+        return;
+    }
+
     if (g_fscryptPolicy != NULL) {
         BEGET_LOGW("StoreFscryptPolicy:inited policy is not empty");
         free(g_fscryptPolicy);
