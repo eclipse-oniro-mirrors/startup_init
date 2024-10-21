@@ -236,7 +236,8 @@ int SystemSaveParameters(void)
     PARAM_CHECK(ret == 0, free(request);
         return -1, "SystemSaveParameters failed! the errNum is:-1");
     int fd = GetClientSocket(DEFAULT_PARAM_WAIT_TIMEOUT);
-    PARAM_CHECK(fd >= 0, return fd, "SystemSaveParameters failed! the errNum is:%d", ret);
+    PARAM_CHECK(fd >= 0, free(request);
+        return fd, "SystemSaveParameters failed! the errNum is:%d", ret);
     request->msgSize = offset + sizeof(ParamMessage);
     request->id.msgId = ATOMIC_SYNC_ADD_AND_FETCH(&g_requestId, 1, MEMORY_ORDER_RELAXED);
     ret = StartRequest(fd, request, DEFAULT_PARAM_WAIT_TIMEOUT);

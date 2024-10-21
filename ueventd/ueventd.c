@@ -145,7 +145,7 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
     mode_t mask;
     size_t idx = 0;
 
-    if (uevent->deviceName == NULL) {
+    if (uevent->deviceName == NULL || uevent->major < 0 || uevent->minor < 0) {
         return;
     }
 

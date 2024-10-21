@@ -257,6 +257,9 @@ int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int l
         while (tmp < endData && *tmp == ' ') {
             tmp++;
         }
+        if (tmp >= endData) {
+            return -1;
+        }
         if (*tmp == '=') {
             break;
         }
@@ -269,11 +272,7 @@ int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int l
         tmp++;
     }
     for (; i < (size_t)length; tmp++) {
-        if (tmp >= endData) {
-            endIndex = i;
-            break;
-        }
-        if (*tmp == ' ' || *tmp == '\n' || *tmp == '\r' || *tmp == '\t') {
+        if (tmp >= endData || *tmp == ' ' || *tmp == '\n' || *tmp == '\r' || *tmp == '\t') {
             endIndex = i;
             break;
         }
@@ -654,6 +653,7 @@ int OpenKmsg(void)
 #ifndef __LITEOS_M__
     return OpenStdioDevice("/dev/kmsg", 0);
 #endif
+    return 0;
 }
 
 INIT_LOCAL_API int StringToLL(const char *str, long long int *out)
@@ -784,7 +784,7 @@ void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, 
     const char *pos;
     str_compare cmp = strcmp;
 
-    if ((strDict == NULL) || dictSize < 0 || ((size_t)dictSize < sizeof(const char *)) ||
+    if ((strDict == NULL) || dictSize < 0 || ((size_t)dictSize < sizeof(const char*)) ||
         (target == NULL) || (target[0] == '\0')) {
         return NULL;
     }

@@ -54,7 +54,6 @@ int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
         }
         case static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_REMOTE_AGENT): {
             auto remote = data.ReadRemoteObject();
-            // 0 is invalid watcherId
             sptr<IWatcher> watcher = new WatcherProxy(remote);
             uint32_t remoteWatcherId = AddRemoteWatcher(data.ReadUint32(), watcher);
             reply.WriteUint32(remoteWatcherId);
