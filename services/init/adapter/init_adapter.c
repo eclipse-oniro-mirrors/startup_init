@@ -31,7 +31,14 @@
 
 int KeepCapability(const Service *service)
 {
-#if ((defined __LINUX__) || (!defined OHOS_LITE))
+#ifdef __LINUX__
+    if (prctl(PR_SET_SECUREBITS, SECBIT_NO_SETUID_FIXUP | SECBIT_NO_SETUID_FIXUP_LOCKED)) {
+            INIT_LOGE("prctl PR_SET_SECUREBITS failed: %d", errno);
+            return -1;
+        }
+        return 0;
+#else
+#ifndef OHOS_LITE
     if (service->attribute & SERVICE_ATTR_SETUID) {
         if (prctl(PR_SET_SECUREBITS, SECBIT_NO_SETUID_FIXUP | SECBIT_NO_SETUID_FIXUP_LOCKED)) {
             INIT_LOGE("prctl PR_SET_SECUREBITS failed: %d", errno);
@@ -43,6 +50,7 @@ int KeepCapability(const Service *service)
         INIT_LOGE("prctl PR_SET_SECUREBITS failed: %d", errno);
         return -1;
     }
+#endif
 #endif
     return 0;
 }
