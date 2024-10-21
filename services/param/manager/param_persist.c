@@ -107,7 +107,7 @@ static int BatchSavePersistParam(void)
     const char *prefix = PARAM_PERSIST_PREFIX;
 #endif
 #else
-    PERSIST_SAVE_HANDLE handle[2] = { 0 };
+    PERSIST_SAVE_HANDLE handle[PERSIST_HANDLE_MAX] = { NULL, NULL };
     int ret = g_persistWorkSpace.persistParamOps.batchSaveBegin(handle);
     const char *prefix = PARAM_PERSIST_PREFIX;
 #endif
