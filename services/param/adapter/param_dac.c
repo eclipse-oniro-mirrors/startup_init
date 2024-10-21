@@ -127,7 +127,7 @@ static int FreeLocalSecurityLabel(ParamSecurityLabel *srcLabel)
 
 static int DacGetGroupMember(gid_t gid, uid_t *member, uint32_t *memberSize)
 {
-    uint32_t inputLen = *memberSize;
+    int32_t inputLen = (int32_t)*memberSize;
     *memberSize = 0;
     struct group *data = getgrgid(gid);
     if (data == NULL || data->gr_mem == NULL) {

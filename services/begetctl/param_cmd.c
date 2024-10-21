@@ -180,7 +180,7 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
             user->pw_name,
             GetPermissionString(auditData.dacData.mode, 0, permissionStr[0], MASK_LENGTH_MAX),
             group->gr_name,
-            GetPermissionString(auditData.dacData.mode,DAC_GROUP_START, permissionStr[1], MASK_LENGTH_MAX),
+            GetPermissionString(auditData.dacData.mode, DAC_GROUP_START, permissionStr[1], MASK_LENGTH_MAX),
              // 2 other
             GetPermissionString(auditData.dacData.mode, DAC_OTHER_START, permissionStr[2], MASK_LENGTH_MAX));
     }
