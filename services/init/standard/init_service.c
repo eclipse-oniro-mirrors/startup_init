@@ -164,7 +164,7 @@ void GetAccessToken(void)
             };
             uint64_t tokenId = GetAccessTokenId(&nativeTokenInfoParams);
             INIT_CHECK_ONLY_ELOG(tokenId  != 0,
-                "Get totken id %lld of service \' %s \' failed", tokenId, service->name);
+                "gettotkenid failed, service \' %s \'", service->name);
             service->tokenId = tokenId;
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);

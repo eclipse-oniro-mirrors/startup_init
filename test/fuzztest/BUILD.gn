@@ -2985,7 +2985,7 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
   sources += [ "addremotewatcher_fuzzer/addremotewatcher_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
   if (init_paramwatcher_hicollie_enable) {
-    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
   }
 }
 

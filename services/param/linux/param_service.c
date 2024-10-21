@@ -59,7 +59,9 @@ static void TimerCallback(const ParamTaskPtr timer, void *context)
 
 static void CheckAndSendTrigger(uint32_t dataIndex, const char *name, const char *value)
 {
-    ParamNode *entry = (ParamNode *)GetTrieNode(GetWorkSpaceByName(name), dataIndex);
+    WorkSpace *workspace = GetWorkSpaceByName(name);
+    PARAM_CHECK(workspace != NULL, return, "Failed to get workspace %s ", name);
+    ParamNode *entry = (ParamNode *)GetTrieNode(workspace, dataIndex);
     PARAM_CHECK(entry != NULL, return, "Failed to get data %s ", name);
     uint32_t trigger = 1;
     if ((ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_RELAXED) & PARAM_FLAGS_TRIGGED) != PARAM_FLAGS_TRIGGED) {

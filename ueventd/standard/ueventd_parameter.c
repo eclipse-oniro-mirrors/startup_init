@@ -111,7 +111,7 @@ static void AddParameter(DeviceParameterCtrl *parameterCtrl, struct DeviceUdevCo
     if (parameterCtrl->threadId == 0) {
         (void)pthread_create(&(parameterCtrl->threadId), NULL, ThreadRun, (void *)parameterCtrl);
     }
-    pthread_mutex_unlock(&(parameterCtrl->lock));
+    pthread_mutex_lock(&(parameterCtrl->lock));
     parameterCtrl->empty = 0;
     pthread_cond_signal(&(parameterCtrl->hasData));
     pthread_mutex_unlock(&(parameterCtrl->lock));
