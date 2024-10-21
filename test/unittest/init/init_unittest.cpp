@@ -78,8 +78,7 @@ HWTEST_F(InitUnitTest, TestSystemPrepare, TestSize.Level1)
 HWTEST_F(InitUnitTest, TestSystemExecRcs, TestSize.Level1)
 {
     SystemExecuteRcs();
-    Service *service = GetServiceByName("param_watcher");
-    int ret = KeepCapability(service);
+    int ret = KeepCapability();
     EXPECT_EQ(ret, 0);
     ret = SetAmbientCapability(34); // CAP_SYSLOG
     EXPECT_EQ(ret, 0);

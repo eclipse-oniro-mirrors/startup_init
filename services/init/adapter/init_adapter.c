@@ -29,17 +29,10 @@
 #endif
 #include "init_log.h"
 
-int KeepCapability(const Service *service)
+int KeepCapability(void)
 {
 #if ((defined __LINUX__) || (!defined OHOS_LITE))
-    if (service->attribute & SERVICE_ATTR_SETUID) {
-        if (prctl(PR_SET_SECUREBITS, SECBIT_NO_SETUID_FIXUP | SECBIT_NO_SETUID_FIXUP_LOCKED)) {
-            INIT_LOGE("prctl PR_SET_SECUREBITS failed: %d", errno);
-            return -1;
-        }
-        return 0;
-    }
-    if (prctl(PR_SET_SECUREBITS, SECBIT_KEEP_CAPS | SECBIT_KEEP_CAPS_LOCKED)) {
+    if (prctl(PR_SET_SECUREBITS, SECBIT_NO_SETUID_FIXUP | SECBIT_NO_SETUID_FIXUP_LOCKED)) {
         INIT_LOGE("prctl PR_SET_SECUREBITS failed: %d", errno);
         return -1;
     }

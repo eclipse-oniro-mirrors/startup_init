@@ -228,7 +228,7 @@ static int SetPerms(const Service *service)
     ServiceHookExecute(service->name, (const char *)service->pathArgs.argv[0], INIT_SERVICE_SET_PERMS_BEFORE);
 #endif
 
-    INIT_ERROR_CHECK(KeepCapability(service) == 0, return INIT_EKEEPCAP,
+    INIT_ERROR_CHECK(KeepCapability() == 0, return INIT_EKEEPCAP,
         "Service error %d %s, failed to set keep capability.", errno, service->name);
 
     INIT_ERROR_CHECK(ServiceSetGid(service) == SERVICE_SUCCESS, return INIT_EGIDSET,

@@ -15,7 +15,6 @@
 #ifndef BASE_STARTUP_INITLITE_ADAPTER_H
 #define BASE_STARTUP_INITLITE_ADAPTER_H
 #include <sys/types.h>
-#include "init_service.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -41,7 +40,7 @@ extern "C" {
 #endif
 #endif
 
-int KeepCapability(const Service *service);
+int KeepCapability(void);
 int SetAmbientCapability(int cap);
 void ExecuteRcs(void);
 void CheckWaitPid(pid_t sigPID);

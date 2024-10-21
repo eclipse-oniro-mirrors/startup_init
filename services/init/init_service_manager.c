@@ -600,24 +600,6 @@ static int GetServiceOnDemand(const cJSON *curArrItem, Service *curServ)
     return SERVICE_SUCCESS;
 }
 
-static int GetServiceSetuid(const cJSON *curArrItem, Service *curServ)
-{
-    cJSON *item = cJSON_GetObjectItem(curArrItem, "setuid");
-    if (item == NULL) {
-        return SERVICE_SUCCESS;
-    }
-
-    INIT_ERROR_CHECK(cJSON_IsBool(item), return SERVICE_FAILURE,
-        "Service : %s setuid value only support bool.", curServ->name);
-    curServ->attribute &= ~SERVICE_ATTR_SETUID;
-
-    INIT_INFO_CHECK(cJSON_IsTrue(item), return SERVICE_SUCCESS,
-        "Service : %s setuid value is false, it should be pulled up by init", curServ->name);
-
-    curServ->attribute |= SERVICE_ATTR_SETUID;
-    return SERVICE_SUCCESS;
-}
-
 static int GetMapValue(const char *name, const InitArgInfo *infos, int argNum, int defValue)
 {
     if ((argNum == 0) || (infos == NULL) || (name == NULL)) {
@@ -974,8 +956,6 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
     ret = GetServiceOnDemand(curItem, service);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get ondemand flag for service %s", service->name);
-    ret = GetServiceSetuid(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get setuid flag for service %s", service->name);
     ret = GetServiceMode(service, curItem);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get start/end mode for service %s", service->name);
     ret = GetServiceJobs(service, cJSON_GetObjectItem(curItem, "jobs"));
