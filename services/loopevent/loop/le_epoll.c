@@ -113,6 +113,9 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
         } else {
             timeout = (int)(minTimePeriod - GetCurrentTimespec(0));
         }
+        if (timeout < 0 || timeout > 1000) { //1000ms
+            LE_LOGW("timeout:%d", timeout);
+        }
 
         int number = epoll_wait(epoll->epollFd, epoll->waitEvents, loop->maxevents, timeout);
         for (int index = 0; index < number; index++) {
