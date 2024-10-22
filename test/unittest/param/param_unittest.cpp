@@ -297,6 +297,19 @@ public:
         return 0;
     }
 
+    int TestPrivatePersistParam()
+    {
+        LoadPrivatePersistParams();
+        SystemWriteParam("persist.test.111.aaa.bbb.ccc", "111");
+        SystemWriteParam("persist.test.222.aaa.bbb.ccc", "222");
+        SystemWriteParam("persist.test.333.aaa.bbb.ccc", "333");
+        CheckServerParamValue("persist.test.333.aaa.bbb.ccc", "333");
+        sleep(1);
+        TimerCallbackForSave(nullptr, nullptr);
+        LoadPrivatePersistParams();
+        return 0;
+    }
+
     int TestDumpParamMemory()
     {
         SystemDumpParameters(1, -1, nullptr);
@@ -320,6 +333,12 @@ HWTEST_F(ParamUnitTest, Init_TestPersistParam_001, TestSize.Level0)
 {
     ParamUnitTest test;
     test.TestPersistParam();
+}
+
+HWTEST_F(ParamUnitTest, Init_TestPersistParam_002, TestSize.Level0)
+{
+    ParamUnitTest test;
+    test.TestPrivatePersistParam();
 }
 
 HWTEST_F(ParamUnitTest, Init_TestSetParam_001, TestSize.Level0)
