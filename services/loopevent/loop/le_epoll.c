@@ -113,7 +113,7 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
         } else {
             timeout = (int)(minTimePeriod - GetCurrentTimespec(0));
         }
-        if (timeout < 0 || timeout > 1000) { //1000ms
+        if (timeout < 0 || timeout > 20 * 1000) { // set max timeout 20s
             LE_LOGW("timeout:%d", timeout);
         }
 
