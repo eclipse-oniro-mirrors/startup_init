@@ -417,7 +417,7 @@ int FsDmCreateLinearDevice(const char *devName, char *dmBlkName, uint64_t dmBlkN
         return -1;
     }
     close(fd);
-    BEGET_LOGE("fs create rofs linear device success, dev is [%s]", devName);
+    BEGET_LOGI("fs create rofs linear device success, dev is [%s]", devName);
     return 0;
 }
 

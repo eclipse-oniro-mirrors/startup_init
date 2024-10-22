@@ -34,6 +34,7 @@
 #define LE_LOGI(fmt, ...) STARTUP_LOGI(LE_DOMAIN, LE_LABEL, fmt, ##__VA_ARGS__)
 #define LE_LOGE(fmt, ...) STARTUP_LOGE(LE_DOMAIN, LE_LABEL, fmt, ##__VA_ARGS__)
 #define LE_LOGV(fmt, ...) STARTUP_LOGV(LE_DOMAIN, LE_LABEL, fmt, ##__VA_ARGS__)
+#define LE_LOGW(fmt, ...) STARTUP_LOGW(LE_DOMAIN, LE_LABEL, fmt, ##__VA_ARGS__)
 
 #define LE_CHECK(ret, exper, ...)                                                                                      \
     if (!(ret)) {                                                                                                      \
