@@ -27,10 +27,12 @@
 
 #define BUFF_SIZE 256
 #define POWEROFF_REASON_DEV_PATH    "/proc/poweroff_reason"
+#define HISI_HISTORY_LOG_PATH       "/data/hisi_logs/history.log"
 
 static int WritePowerOffReason(const char* reason)
 {
     PLUGIN_CHECK(reason != NULL, return -1, "WritePowerOffReason: reason is NULL\n");
+    PLUGIN_CHECK(access(HISI_HISTORY_LOG_PATH, F_OK) == 0, return -1, "WritePowerOffReason: history.log not exist\n");
     PLUGIN_CHECK(access(POWEROFF_REASON_DEV_PATH, F_OK) == 0, return -1,
                 "WritePowerOffReason: access %s failed, errno = %d, %s\n",
                 POWEROFF_REASON_DEV_PATH, errno, strerror(errno));
@@ -50,7 +52,11 @@ static void ParseRebootReason(const char *name, int argc, const char **argv)
     char *tmp = str;
     int ret;
     for (int i = 0; i < argc; i++) {
-        ret = sprintf_s(tmp, len - 1, "%s ", argv[i]);
+        if (i != argc - 1) {
+            ret = sprintf_s(tmp, len - 1, "%s ", argv[i]);
+        } else {
+            ret = sprintf_s(tmp, len - 1, "%s", argv[i]);
+        }
         if (ret <= 0) {
             PLUGIN_LOGW("ParseRebootReason: sprintf_s arg %s failed!", argv[i]);
             break;
