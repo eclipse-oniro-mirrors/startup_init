@@ -115,7 +115,7 @@ static int AddServiceBootEvent(const char *serviceName, const char *paramName)
 {
     ServiceExtData *extData = NULL;
     ListNode *found = NULL;
-    if (strncmp(paramName, BOOT_EVENT_PARA_PREFIX, BOOT_EVENT_PARA_PREFIX_LEN) != 0) {
+    if ((paramName == NULL) || (strncmp(paramName, BOOT_EVENT_PARA_PREFIX, BOOT_EVENT_PARA_PREFIX_LEN) != 0)) {
         return -1;
     }
     found = OH_ListFind(&bootEventList, (void *)paramName, ParseBooteventCompareProc);
