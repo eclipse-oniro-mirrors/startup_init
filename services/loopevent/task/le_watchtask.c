@@ -18,8 +18,8 @@
 static void HandleWatcherTaskClose_(const LoopHandle loopHandle, const TaskHandle taskHandle)
 {
     LE_LOGV("HandleWatcherTaskClose_ fd: %d ", GetSocketFd(taskHandle));
-    CloseTask(loopHandle, (BaseTask *)taskHandle);
     DelTask((EventLoop *)loopHandle, (BaseTask *)taskHandle);
+    CloseTask(loopHandle, (BaseTask *)taskHandle);
 }
 
 static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHandle taskHandle, uint32_t oper)

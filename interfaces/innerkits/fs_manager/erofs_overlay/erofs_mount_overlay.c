@@ -17,6 +17,9 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include "securec.h"
+#ifdef WITH_SELINUX
+#include <selinux/selinux.h>
+#endif
 #include "init_utils.h"
 #include "fs_dm.h"
 #include "switch_root.h"
@@ -28,7 +31,7 @@
 #define ALIGN_BLOCK_SIZE (16 * BYTE_UNIT)
 #define MIN_DM_SIZE (8 * BYTE_UNIT * BYTE_UNIT)
 #define BLOCK_SIZE_UINT 4096
-#define EXTHDR_MAGIC 0xE0F5E1E2
+#define EXTHDR_MAGIC 0xFEEDBEEF
 #define EXTHDR_BLKSIZE 4096
 
 struct extheader_v1 {
@@ -102,7 +105,7 @@ static uint64_t LookupErofsEnd(const char *dev)
     return erofsSize;
 }
 
-static uint64_t GetTotalSize(const char *dev, uint64_t offset)
+static uint64_t GetImgSize(const char *dev, uint64_t offset)
 {
     int fd = -1;
     fd = open(dev, O_RDONLY | O_LARGEFILE);
@@ -130,7 +133,7 @@ static uint64_t GetTotalSize(const char *dev, uint64_t offset)
         BEGET_LOGI("dev:[%s] is not have ext path, magic is 0x%x", dev, header.magic_number);
         return 0;
     }
-
+    BEGET_LOGI("get img size [%llu]", header.part_size);
     return header.part_size;
 }
 
@@ -178,24 +181,39 @@ static uint64_t GetBlockSize(const char *dev)
     return blockSize;
 }
 
+/* 字节对齐函数，基于alignment进行字节对齐 */
+static uint64_t AlignTo(uint64_t base, uint64_t alignment)
+{
+    if (alignment == 0) {
+        return base;
+    }
+    return (((base - 1) / alignment + 1) * alignment);
+}
+
 static int GetMapperAddr(const char *dev, uint64_t *start, uint64_t *length)
 {
-    uint64_t totalSize;
+    /* 获取EROFS文件系统大小 */
     *start = LookupErofsEnd(dev);
     if (*start == 0) {
         BEGET_LOGE("get erofs end failed.");
         return -1;
     }
 
-    totalSize = GetTotalSize(dev, *start);
-    if (totalSize > 0) {
-        *start += EXTHDR_BLKSIZE;
-    } else {
-        totalSize = GetBlockSize(dev);
-        if (totalSize == 0) {
-            BEGET_LOGE("get block size failed.");
-            return -1;
-        }
+    /*
+     * 获取镜像大小 当前镜像布局有2种
+     * 老布局：EROFS文件系统 + 全0数据填充 + HVB数据  老布局不存在EXTHEADER，获取到的镜像大小为0。直接基于文件系统切分
+     * 新布局：EROFS文件系统 + EXTHEADER + HVB数据   新布局存在EXTHEADER，基于EXTHEADER获取镜像大小后进行分区切分
+     */
+    uint64_t imgSize = GetImgSize(dev, *start);
+    if (imgSize > 0) {
+        *start = AlignTo(imgSize, ALIGN_BLOCK_SIZE);
+    }
+
+    /* 获取分区大小，老分区布局：分区大小 = 镜像大小  新分区布局：分区大小 = 镜像大小 + 无镜像填充的分区空位 */
+    uint64_t totalSize = GetBlockSize(dev);
+    if (totalSize == 0) {
+        BEGET_LOGE("get block size failed.");
+        return -1;
     }
 
     BEGET_LOGI("total size:[%llu], used size: [%llu], empty size:[%llu] on dev: [%s]",
@@ -215,22 +233,26 @@ static int GetMapperAddr(const char *dev, uint64_t *start, uint64_t *length)
     return 0;
 }
 
-static void ConstructLinearTarget(DmVerityTarget *target, const char *dev, uint64_t mapStart, uint64_t mapLength)
+static int ConstructLinearTarget(DmVerityTarget *target, const char *dev, uint64_t mapStart, uint64_t mapLength)
 {
     if (target == NULL || dev == NULL) {
-        return;
+        return -1;
     }
 
     target->start = 0;
     target->length = mapLength / SECTOR_SIZE;
     target->paras = calloc(1, MAX_BUFFER_LEN);
+    if (target->paras == NULL) {
+        BEGET_LOGE("Failed to calloc target paras");
+        return -1;
+    }
 
     if (snprintf_s(target->paras, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s %llu", dev, mapStart / SECTOR_SIZE) < 0) {
-        BEGET_LOGE("Failed to  copy target paras.");
-        return;
+        BEGET_LOGE("Failed to copy target paras.");
+        return -1;
     }
     target->paras_len = strlen(target->paras);
-    BEGET_LOGI("dev [%s], linearparas [%s], length [%s]", dev, target->paras, target->paras_len);
+    return 0;
 }
 
 static void DestoryLinearTarget(DmVerityTarget *target)
@@ -264,14 +286,22 @@ static int GetOverlayDevice(FstabItem *item, char *devRofs, const uint32_t devRo
     DmVerityTarget dmRofsTarget = {0};
     DmVerityTarget dmExt4Target = {0};
 
-    ConstructLinearTarget(&dmRofsTarget, item->deviceName, 0, mapStart);
-    int rc = FsDmCreateLinearDevice(nameRofs, devRofs, devRofsLen, &dmRofsTarget);
+    int rc = ConstructLinearTarget(&dmRofsTarget, item->deviceName, 0, mapStart);
     if (rc != 0) {
-        BEGET_LOGE("fs create rofs linear device failed, dev is [%s]", item->deviceName);
+        BEGET_LOGE("fs construct erofs linear target failed, dev is [%s]", item->deviceName);
+        goto exit;
+    }
+    rc = FsDmCreateLinearDevice(nameRofs, devRofs, devRofsLen, &dmRofsTarget);
+    if (rc != 0) {
+        BEGET_LOGE("fs create erofs linear device failed, dev is [%s]", item->deviceName);
         goto exit;
     }
 
-    ConstructLinearTarget(&dmExt4Target, item->deviceName, mapStart, mapLength);
+    rc = ConstructLinearTarget(&dmExt4Target, item->deviceName, mapStart, mapLength);
+    if (rc != 0) {
+        BEGET_LOGE("fs construct ext4 linear target failed, dev is [%s]", item->deviceName);
+        goto exit;
+    }
     rc = FsDmCreateLinearDevice(nameExt4, devExt4, devExt4Len, &dmExt4Target);
     if (rc != 0) {
         BEGET_LOGE("fs create ext4 linear device failed, dev is [%s]", item->deviceName);
@@ -307,27 +337,42 @@ int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount)
     char dirExt4[MAX_BUFFER_LEN] = {0};
     char dirUpper[MAX_BUFFER_LEN] = {0};
     char dirWork[MAX_BUFFER_LEN] = {0};
+
+#ifdef WITH_SELINUX
+    if (isFirstMount) {
+        const char* fsFileContext = "u:object_r:system_file:s0";
+        const char* vendorFileContext = "u:object_r:vendor_file:s0";
+        BEGET_LOGI("start to set selinux. mnt:%s", mnt);
+        if (strcmp(mnt, "/vendor") == 0) {
+            setfscreatecon(vendorFileContext);
+        } else {
+            setfscreatecon(fsFileContext);
+        }
+    }
+#endif
+
     ret = snprintf_s(dirExt4, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, PREFIX_OVERLAY"%s", mnt);
     if (ret < 0) {
         BEGET_LOGE("dirExt4 copy failed errno %d.", errno);
-        return -1;
+        goto exit;
     }
 
     ret = snprintf_s(dirUpper, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, PREFIX_OVERLAY"%s"PREFIX_UPPER, mnt);
     if (ret < 0) {
         BEGET_LOGE("dirUpper copy failed errno %d.", errno);
-        return -1;
+        goto exit;
     }
 
     ret = snprintf_s(dirWork, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, PREFIX_OVERLAY"%s"PREFIX_WORK, mnt);
     if (ret < 0) {
         BEGET_LOGE("dirWork copy failed errno %d.", errno);
-        return -1;
+        goto exit;
     }
 
     if (mkdir(dirExt4, MODE_MKDIR) && (errno != EEXIST)) {
         BEGET_LOGE("mkdir %s failed.", dirExt4);
-        return -1;
+        ret = -1;
+        goto exit;
     }
 
     int retryCount = 3;
@@ -343,14 +388,23 @@ int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount)
 
     if (isFirstMount && mkdir(dirUpper, MODE_MKDIR) && (errno != EEXIST)) {
         BEGET_LOGE("mkdir dirUpper:%s failed.", dirUpper);
-        return -1;
+        ret = -1;
+        goto exit;
     }
 
     if (isFirstMount && mkdir(dirWork, MODE_MKDIR) && (errno != EEXIST)) {
         BEGET_LOGE("mkdir dirWork:%s failed.", dirWork);
-        return -1;
+        ret = -1;
+        goto exit;
     }
 
+    ret = 0;
+exit:
+#ifdef WITH_SELINUX
+    if (isFirstMount) {
+        setfscreatecon(NULL);
+    }
+#endif
     return ret;
 }
 
@@ -452,5 +506,6 @@ int DoMountOverlayDevice(FstabItem *item)
         BEGET_LOGE("init ext4 dm dev failed");
         return -1;
     }
+    BEGET_LOGI("mount overlay device %s on %s success", item->deviceName, item->mountPoint);
     return rc;
 }
