@@ -21,7 +21,7 @@
 #include "param_manager.h"
 #include "param_persist.h"
 #include "param_utils.h"
-#if !(defined __LITEOFS_A__ || defined __LITEOS_M__)
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
 #include "trigger_manager.h"
 #endif
 
@@ -30,6 +30,10 @@ static ParamMutex g_saveMutex = {};
 
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
+    if (strncmp(name, "persist", strlen("persist")) != 0) {
+        PARAM_LOGE("%s is not persist param, do not load", name);
+        return 0;
+    }
     bool clearFactoryPersistParams = *(bool*)context;
     uint32_t dataIndex = 0;
     unsigned int mode = 0;
@@ -56,7 +60,7 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
             result = WriteParam(name, value, &dataIndex, mode);
         }
     } while (0);
-#if !(defined __LITEOFS_A__ || defined __LITEOS_M__)
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     if (result == 0) {
         PostParamTrigger(EVENT_TRIGGER_PARAM_WATCH, name, value);
     }
@@ -70,7 +74,6 @@ static bool IsPrivateParam(const char *param)
         "persist.sys.data.dataextpath",
         "persist.sys.radio.vendorlib.path",
         "persist.sys.default_ime",
-        "persist.sys.usb.config",
         "persist.hdc.daemon.cancel",
         "persist.hdc.daemon.auth_result",
         "persist.hdc.client.hostname",
@@ -132,6 +135,7 @@ static bool GetPersistFilePath(char **path, char **tmpPath, int fileType)
             if (ret != 0) {
                 PARAM_LOGE("rename failed %s", PARAM_PERSIST_SAVE_PATH);
             }
+            isFullLoad = false;
         } else {
             CheckAndCreateDir(PARAM_PUBLIC_PERSIST_SAVE_PATH);
             isFullLoad = false;
