@@ -49,7 +49,6 @@ static const int DEVICE_INFO_EXIT_TIMEOUT_S = 3;
 #endif
 static const int DEVICE_INFO_EXIT_WAITTIMES = 12;
 
-
 static int UnloadDeviceInfoSa(void)
 {
     {
@@ -122,7 +121,7 @@ bool DeviceInfoStub::CheckPermission(MessageParcel &data, const std::string &per
         result = AccessTokenKit::VerifyAccessToken(callerToken, permission);
     }
     if (result == TypePermissionState::PERMISSION_DENIED) {
-        DINFO_LOGE("AccessTokenID:%d, permission:%s denied!", callerToken, permission.c_str());
+        DINFO_LOGE("permission:%s denied!", permission.c_str());
         return false;
     }
     return true;
