@@ -200,7 +200,7 @@ static void GetInvalidCaps(const Service *service, unsigned int *caps)
 
 static void DropCapability(const Service *service)
 {
-#if ((defined _LINUX_) || (!defined OHOS_LITE))
+#if ((defined __LINUX__) || (!defined OHOS_LITE))
     int invalidCnt = CAP_LAST_CAP - service->servPerm.capsCnt + 1;
     unsigned int *caps = (unsigned int *)calloc(invalidCnt, sizeof(unsigned int));
     INIT_ERROR_CHECK(caps != NULL, return, "calloc caps failed! error:%d", errno);
@@ -662,9 +662,9 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     clock_gettime(CLOCK_REALTIME, &startedTime);
 
     INIT_LOGI("ServiceStart started info %s(pid %d uid %d)", service->name, pid, service->servPerm.uID);
-    INIT_LOGI("starttime:%ld-%ld,prefork:%ld-%ld,startedtime:%ld-%ld",
-              startingTime.tv_sec, startingTime.tv_nsec, preforkTime.tv_sec,
-              preforkTime.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
+    INIT_LOGI("starttime:%ld-%ld, prefork:%ld-%ld, startedtime:%ld-%ld",
+        startingTime.tv_sec, startingTime.tv_nsec, preforkTime.tv_sec,
+        preforkTime.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
     service->pid = pid;
     NotifyServiceChange(service, SERVICE_STARTED);
 #ifndef OHOS_LITE
