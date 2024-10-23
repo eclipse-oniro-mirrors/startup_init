@@ -23,7 +23,7 @@ if (defined(ohos_lite)) {
     static_library("libsocket") {
       sources = service_socket_sources
       include_dirs = service_socket_include
-      include_dirs += [ "//third_party/bounds_checking_function/include" ]
+      external_deps = [ "bounds_checking_function:libsec_static" ]
     }
   }
 } else {
@@ -32,7 +32,7 @@ if (defined(ohos_lite)) {
   ohos_static_library("libsocket") {
     sources = service_socket_sources
     include_dirs = service_socket_include
-    external_deps = [ "bounds_checking_function:libsec_shared" ]
+    external_deps = [ "bounds_checking_function:libsec_static" ]
     part_name = "init"
     subsystem_name = "startup"
   }

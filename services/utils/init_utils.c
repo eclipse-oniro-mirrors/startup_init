@@ -652,8 +652,9 @@ int OpenKmsg(void)
 {
 #ifndef __LITEOS_M__
     return OpenStdioDevice("/dev/kmsg", 0);
-#endif
+#else
     return 0;
+#endif
 }
 
 INIT_LOCAL_API int StringToLL(const char *str, long long int *out)
@@ -784,7 +785,7 @@ void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, 
     const char *pos;
     str_compare cmp = strcmp;
 
-    if ((strDict == NULL) || dictSize < 0 || ((size_t)dictSize < sizeof(const char*)) ||
+    if ((strDict == NULL) || (dictSize < 0) || ((size_t)dictSize < sizeof(const char *)) ||
         (target == NULL) || (target[0] == '\0')) {
         return NULL;
     }
