@@ -20,9 +20,7 @@
 #include "napi/native_node_api.h"
 #include "parameter.h"
 #include "sysversion.h"
-#ifdef DEPENDENT_APPEXECFWK_BASE
 #include "bundlemgr/bundle_mgr_proxy.h"
-#endif
 #include "iservice_registry.h"
 #include "if_system_ability_manager.h"
 #include "system_ability_definition.h"
@@ -440,7 +438,6 @@ static napi_value NAPI_GetDistributionOSReleaseType(napi_env env, napi_callback_
 
 static DevInfoError AclGetDevOdid(char *odid, int size)
 {
-    DevInfoError ret = DEV_INFO_OK;
     if (odid[0] != '\0') {
         return DEV_INFO_OK;
     }
@@ -454,7 +451,6 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
         return DEV_INFO_ENULLPTR;
     }
 
-#ifdef DEPENDENT_APPEXECFWK_BASE
     auto bundleMgrProxy = OHOS::iface_cast<OHOS::AppExecFwk::BundleMgrProxy>(remoteObject);
     if (!bundleMgrProxy) {
         return DEV_INFO_ENULLPTR;
@@ -468,12 +464,7 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
     if (strcpy_s(odid, size, odidStr.c_str()) != EOK) {
         return DEV_INFO_ESTRCOPY;
     }
-#else
-    DEVINFO_LOGE("DEPENDENT_APPEXECFWK_BASE does not exist, The ODID could not be obtained");
-    ret = DEV_INFO_EGETODID;
-#endif
-
-    return ret;
+    return DEV_INFO_OK;
 }
 
 static napi_value GetDevOdid(napi_env env, napi_callback_info info)
