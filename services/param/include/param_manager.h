@@ -111,13 +111,6 @@ typedef struct {
     char *prefix;
 } ParamTraversalContext;
 
-typedef struct {
-    uint8_t type;
-    uint8_t mode;
-    const char *name;
-    const char *value;
-} ParamInfos;
-
 #define  PARAM_HANDLE(workSpace, index) (ParamHandle)((workSpace)->spaceIndex << 24 | (index))
 #define  PARAM_GET_HANDLE_INFO(handle, label, index) \
     do { \

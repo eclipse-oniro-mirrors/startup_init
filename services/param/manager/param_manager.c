@@ -420,17 +420,16 @@ int SystemGetParameterName(ParamHandle handle, char *name, unsigned int len)
     return ReadParamName(handle, name, len);
 }
 
-static int AddParam(WorkSpace *workSpace, ParamInfos paramInfos, uint32_t *dataIndex)
+static int AddParam(WorkSpace *workSpace, uint8_t type, const char *name, const char *value, uint32_t *dataIndex, int mode)
 {
-    ParamTrieNode *node = AddTrieNode(workSpace, paramInfos.name, strlen(paramInfos.name));
+    ParamTrieNode *node = AddTrieNode(workSpace, name, strlen(name));
     PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX,
-        "Failed to add node name %s space %s", paramInfos.name, workSpace->fileName);
+        "Failed to add node name %s space %s", name, workSpace->fileName);
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
     if (entry == NULL) {
-        uint32_t offset = AddParamNode(workSpace, paramInfos.type, paramInfos.name,
-            strlen(paramInfos.name), paramInfos.value, strlen(paramInfos.value), paramInfos.mode);
+        uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value), mode);
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX,
-            "Failed to allocate name %s space %s", paramInfos.name, workSpace->fileName);
+            "Failed to allocate name %s space %s", name, workSpace->fileName);
         SaveIndex(&node->dataIndex, offset);
         ATOMIC_SYNC_ADD_AND_FETCH(&workSpace->area->commitId, 1, MEMORY_ORDER_RELEASE);
 #ifdef PARAM_SUPPORT_SELINUX
@@ -443,7 +442,7 @@ static int AddParam(WorkSpace *workSpace, ParamInfos paramInfos, uint32_t *dataI
     if (dataIndex != NULL) {
         *dataIndex = node->dataIndex;
     }
-    PARAM_LOGV("AddParam name %s value: %s", paramInfos.name, paramInfos.value);
+    PARAM_LOGV("AddParam name %s value: %s", name, value);
     return 0;
 }
 
@@ -519,8 +518,7 @@ INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dat
         ret = CheckParamValue(node, name, value, type);
         PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         PARAMSPACE_AREA_RW_LOCK(workSpace);
-        ParamInfos paramInfos = {type, mode, name, value};
-        ret = AddParam((WorkSpace *)workSpace, paramInfos, dataIndex);
+        ret = AddParam((WorkSpace *)workSpace, type, name, value, dataIndex, mode);
         PARAMSPACE_AREA_RW_UNLOCK(workSpace);
     }
     if ((ret == PARAM_CODE_REACHED_MAX) && (flag == 1)) {

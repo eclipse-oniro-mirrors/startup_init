@@ -32,13 +32,6 @@ ohos_shared_library("deviceinfo") {
     "samgr:samgr_proxy",
   ]
 
-  defines = []
-  if (defined(global_parts_info) &&
-      defined(global_parts_info.bundlemanager_bundle_framework)) {
-    external_deps += [ "bundle_framework:appexecfwk_base" ]
-    defines += [ "DEPENDENT_APPEXECFWK_BASE" ]
-  }
-
   relative_install_dir = "module"
   subsystem_name = "startup"
   part_name = "init"
@@ -59,7 +52,6 @@ ohos_shared_library("systemparameter") {
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
-    "libuv:uv",
     "napi:ace_napi",
   ]
   relative_install_dir = "module"
@@ -80,7 +72,6 @@ ohos_shared_library("systemparameterenhance") {
   symlink_target_name = [ "libsystemparameterv9.z.so" ]
   external_deps = [
     "bounds_checking_function:libsec_shared",
-    "libuv:uv",
     "napi:ace_napi",
   ]
   relative_install_dir = "module"
