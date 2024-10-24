@@ -19,6 +19,8 @@
 #include "le_idle.h"
 #include "le_timer.h"
 
+#define MAX_TIMEOUT_MILLISECONDS 20 * 1000 // 20s
+
 static int IsValid_(const EventEpoll *loop)
 {
     return loop->epollFd >= 0;
@@ -113,7 +115,7 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
         } else {
             timeout = (int)(minTimePeriod - GetCurrentTimespec(0));
         }
-        if (timeout < 0 || timeout > 20 * 1000) { // set max timeout 20s
+        if (timeout < 0 || timeout > MAX_TIMEOUT_MILLISECONDS) {
             LE_LOGW("timeout:%d", timeout);
         }
 
@@ -131,9 +133,7 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
             }
         }
 
-        if (number == 0) {
-            CheckTimeoutOfTimer((EventLoop *)loop, GetCurrentTimespec(0));
-        }
+        CheckTimeoutOfTimer((EventLoop *)loop, GetCurrentTimespec(0));
 
         if (loop->stop) {
             break;
