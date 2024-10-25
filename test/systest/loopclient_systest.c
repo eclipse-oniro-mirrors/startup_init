@@ -36,8 +36,19 @@
 #include "le_task.h"
 #include "list.h"
 
-#define RETRY_TIME (200 * 1000)     // 200 * 1000 wait 200ms CONNECT_RETRY_DELAY = 200 * 1000
-#define MAX_RETRY_SEND_COUNT 2      // 2 max retry count CONNECT_RETRY_MAX_TIMES = 2;
+#define RETRY_TIME (200 * 1000)     // 200 * 1000 wait 200ms
+#define MAX_RETRY_SEND_COUNT 2      // 2 max retry count
+#define MAX_MSG_SIZE 128
+typedef void *MsgHandle;
+typedef void *ClientHandle;
+
+typedef struct {
+    uint32_t uid;       // the UNIX uid that the child process setuid() after fork()
+    uint32_t gid;       // the UNIX gid that the child process setgid() after fork()
+    uint32_t gidCount;  // the size of gidTable
+    uint32_t gidTable[APP_MAX_GIDS];
+    char userName[APP_USER_NAME];
+} DacInfo;
 
 typedef Agent_ {
     TaskHandle task;
@@ -197,7 +208,6 @@ static int CreateClientSocket(uint32_t timeout)
             printf("Set opt SO_RCVTIMEO name: %s error: %d \n", socketName, errno);
             break;
         }
-        ret = _SYSTEM_ERROR;
         struct sockaddr_un addr;
         socklen_t pathSize = sizeof(addr.sun_path);
         int pathLen = snprintf_s(addr.sun_path, pathSize, (pathSize - 1), "%s%s", _SOCKET_DIR, socketName);
@@ -367,6 +377,91 @@ static int ClientSendMsg(ReqMsgMgr *reqMgr, ReqMsgNode *reqNode, Result *result)
     return TIMEOUT;
 }
 
+int ReqMsgCreate(const char *processName, MsgHandle *reqHandle)
+{
+    MsgNode *reqNode = CreateMsg(processName);
+    *reqHandle = (AppSpawnReqMsgHandle)(reqNode);
+    return 0;
+}
+
+static void ReqMsgFree(ReqMsgNode *reqNode)
+{
+    if (reqNode == NULL) {
+        return;
+    }
+    printf("DeleteReqMsg reqId: %u \n", reqNode->reqId);
+
+    reqNode->msgFlags = NULL;
+    reqNode->permissionFlags = NULL;
+    reqNode->msg = NULL;
+    OH_ListRemoveAll(&reqNode->msgBlocks, FreeMsgBlock);
+    free(reqNode);
+}
+
+static MsgHandle CreateMsg(ClientHandle handle, const char *bundleName)
+{
+    MsgHandle msgHandle = 0;
+    int ret = ReqMsgCreate(bundleName, &msgHandle);
+    if (ret != 0) {
+        printf("Failed to create req %s \n", bundleName);
+        return NULL;
+    }
+
+    do {
+        ret = MsgSetBundleInfo(msgHandle, 0, bundleName);
+        if (ret != 0) {
+            printf("Failed to create req %s \n", bundleName);
+            break;
+        }
+
+        DacInfo dacInfo = {};
+        dacInfo.uid = 20241029;              // 20241029 test data
+        dacInfo.gid = 20241029;              // 20241029 test data
+        dacInfo.gidCount = 2;                // 2 count
+        dacInfo.gidTable[0] = 20241029;      // 20241029 test data
+        dacInfo.gidTable[1] = 20241029 + 1;  // 20241029 test data
+        (void)strcpy_s(dacInfo.userName, sizeof(dacInfo.userName), "test-process");
+        
+        return msgHandle;
+    } while (0);
+    ReqMsgFree(msgHandle);
+    return NULL;
+}
+
+void ClientInit(ClientHandle client)
+{
+    /*
+        初始化client句柄
+    */
+}
+
+void SendLoop()
+{
+    ClientHandle clientHandle = NULL;
+    ClientInit(clientHandle);
+    char msg[MAX_MSG_SIZE];
+    int maxTestNum = 10000;
+    while (maxTestNum--) {
+        printf("请输入要发送的消息，输入EXIT退出程序 \n");
+        int ret = scanf_s("%s", msg, sizeof(msg));
+        if (ret <= 0) {
+            printf("input error \n");
+            return;
+        }
+        if (strcmp(msg, "EXIT") == 0) {
+            return;
+        }
+        MsgHandle msgHandle = CreateMessage(clientHandle, msg)
+        Result result = {};
+        int ret = ClientSendMsg(clientHandle, msgHandle, result);
+        if (ret == 0) {
+            printf("Send success. \n");
+        } else {
+            printf("Send failed. \n");
+        }
+    }
+}
+
 int main(int argc, char *const argv[])
 {
     printf("main argc: %d \n", argc);
@@ -375,7 +470,7 @@ int main(int argc, char *const argv[])
     }
     
     printf("请输入创建socket的类型：(pipe, tcp)\n");
-    char type[128];
+    char type[MAX_MSG_SIZE];
     int ret = scanf_s("%s", type, sizeof(type));
     if (ret <= 0) {
         printf("input error \n");
