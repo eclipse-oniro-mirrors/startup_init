@@ -64,8 +64,9 @@ static int ExecReboot(const char *mode, const char *option)
 #else
     const int maxCount = 1;
 #endif
+    int status = DoRebootByInitPlugin(mode, option);
+
     int count = 0;
-    DoRebootByInitPlugin(mode, option);
     while (count < maxCount) {
         usleep(100 * 1000); // 100 * 1000 wait 100ms
         char result[10] = {0}; // 10 stop len
@@ -76,10 +77,10 @@ static int ExecReboot(const char *mode, const char *option)
             return 0;
         }
         count++;
-        DoRebootByInitPlugin(mode, option);
+        status = DoRebootByInitPlugin(mode, option);
     }
     BEGET_LOGE("Failed to reboot system");
-    return 0;
+    return status;
 }
 
 int DoReboot(const char *option)
