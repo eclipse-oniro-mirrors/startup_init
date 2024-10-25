@@ -19,7 +19,7 @@
 #include "le_idle.h"
 #include "le_timer.h"
 
-#define MAX_TIMEOUT_MILLISECONDS 20 * 1000 // 20s
+#define MAX_TIMEOUT_MILLISECONDS (20 * 1000) // 20s
 
 static int IsValid_(const EventEpoll *loop)
 {
