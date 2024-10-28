@@ -840,7 +840,7 @@ void ServiceReap(Service *service)
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGI("ServiceReap start failed! will reStart %d second later", service->name, service->crashTime);
             service->crashCnt = 0;
-            ServiceStartTimer(service, DEF_CRASH_TIME);
+            ServiceReStartTimer(service, DEF_CRASH_TIME);
             return;
         }
     }
@@ -951,6 +951,30 @@ static void ServiceTimerStartProcess(const TimerHandle handler, void *context)
     }
 }
 
+static void ServiceTimerReStartProcess(const TimerHandle handler, void *context)
+{
+    UNUSED(handler);
+    Service *service = (Service *)context;
+
+    if (service == NULL) {
+        INIT_LOGE("Service timer process with invalid service");
+        return;
+    }
+
+    // OK, service is ready to start.
+    // Before start the service, stop service timer.
+    // make sure it will not enter timer handler next time.
+    ServiceStopTimer(service);
+
+    if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
+        DoJobNow(service->serviceJobs.jobsName[JOB_ON_RESTART]);
+    }
+    int ret = ServiceStart(service, &service->pathArgs);
+    if (ret != SERVICE_SUCCESS) {
+        INIT_LOGE("Start service \' %s \' in timer failed", service->name);
+    }
+}
+
 void ServiceStartTimer(Service *service, uint64_t timeout)
 {
     bool oldTimerClean = false;
@@ -962,6 +986,31 @@ void ServiceStartTimer(Service *service, uint64_t timeout)
         oldTimerClean = true;
     }
     LE_STATUS status = LE_CreateTimer(LE_GetDefaultLoop(), &service->timer, ServiceTimerStartProcess,
+        (void *)service);
+    if (status != LE_SUCCESS) {
+        INIT_LOGE("Create service timer for service \' %s \' failed, status = %d", service->name, status);
+        if (oldTimerClean) {
+            INIT_LOGE("previous timer is cleared");
+        }
+        return;
+    }
+    status = LE_StartTimer(LE_GetDefaultLoop(), service->timer, timeout, 1);
+    INIT_ERROR_CHECK(status == LE_SUCCESS, return,
+        "Start service timer for service \' %s \' failed, status = %d", service->name, status);
+    EnableServiceTimer(service);
+}
+
+void ServiceReStartTimer(Service *service, uint64_t timeout)
+{
+    bool oldTimerClean = false;
+    INIT_ERROR_CHECK(service != NULL, return, "Start timer with invalid service");
+    // If the service already set a timer.
+    // And a new request coming. close it and create a new one.
+    if (IsServiceWithTimerEnabled(service)) {
+        ServiceStopTimer(service);
+        oldTimerClean = true;
+    }
+    LE_STATUS status = LE_CreateTimer(LE_GetDefaultLoop(), &service->timer, ServiceTimerReStartProcess,
         (void *)service);
     if (status != LE_SUCCESS) {
         INIT_LOGE("Create service timer for service \' %s \' failed, status = %d", service->name, status);
