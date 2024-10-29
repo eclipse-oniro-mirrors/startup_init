@@ -32,6 +32,7 @@ HWTEST_F(ErofsMountUnitTest, Init_AllocDmName_001, TestSize.Level0)
     char nameRofs[MAX_BUFFER_LEN] = {0};
     const char *devName = STARTUP_INIT_UT_PATH"/data/erofs/mount/rofs";
     AllocDmName(devName, nameRofs, MAX_BUFFER_LEN, nameExt4, MAX_BUFFER_LEN);
+    EXPECT_STRNE(nameExt4, nameRofs);
 }
 HWTEST_F(ErofsMountUnitTest, Init_LookupErofsEnd_001, TestSize.Level0)
 {
