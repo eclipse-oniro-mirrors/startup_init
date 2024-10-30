@@ -21,19 +21,29 @@
 #include "param_comm.h"
 #include "securec.h"
 #include "sysparam_errno.h"
+#include <stdatomic.h>
 
 INIT_LOCAL_API const char *GetSerial_(void)
 {
 #ifdef OHOS_LITE
     return HalGetSerial();
 #else
-    static char *ohosSerial = NULL;
-    if (ohosSerial == NULL) {
-        BEGET_CHECK((ohosSerial = (char *)calloc(1, PARAM_VALUE_LEN_MAX)) != NULL, return NULL);
+    static _Atomic (char *)ohosSerial = NULL;
+    if (ohosSerial != NULL) {
+        return ohosSerial;
     }
+
+    char *value;
+    BEGET_CHECK((value = (char *)calloc(1, PARAM_VALUE_LEN_MAX)) != NULL, return NULL);
     uint32_t len = PARAM_VALUE_LEN_MAX;
-    int ret = SystemGetParameter("ohos.boot.sn", ohosSerial, &len);
-    BEGET_CHECK(ret == 0, return NULL);
+    int ret = SystemGetParameter("ohos.boot.sn", value, &len);
+    BEGET_CHECK(ret == 0, free(value);
+        return NULL);
+    if (ohosSerial != NULL) {
+        free(value);
+        return ohosSerial;
+    }
+    atomic_store_explicit(&ohosSerial, value, memory_order_release);
     return ohosSerial;
 #endif
 }
