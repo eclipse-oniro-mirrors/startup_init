@@ -24,7 +24,7 @@ extern "C" {
 #endif
 #endif
 
-bool RemountRofsOverlay();
+int RemountRofsOverlay(void);
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -45,14 +45,12 @@ int GetRemountResult(void)
         close(fd);
         if (buff[0] == '0' + REMOUNT_SUCC) {
             return REMOUNT_SUCC;
-        } else {
-            return REMOUNT_FAIL;
         }
     }
-    return REMOUNT_NONE;
+    return REMOUNT_FAIL;
 }
 
-void SetRemountResultFlag(bool result)
+void SetRemountResultFlag(void)
 {
     struct stat st;
     int ret;
@@ -73,11 +71,7 @@ void SetRemountResultFlag(bool result)
     }
 
     char buff[1];
-    if (result) {
-        buff[0] = '0' + REMOUNT_SUCC;
-    } else {
-        buff[0] = '0' + REMOUNT_FAIL;
-    }
+    buff[0] = '0' + REMOUNT_SUCC;
 
     ret = write(fd, buff, 1);
     if (ret < 0) {
