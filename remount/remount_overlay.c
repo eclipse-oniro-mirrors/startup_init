@@ -157,7 +157,7 @@ INIT_STATIC void OverlayRemountPost(const char *mnt)
     }
 }
 
-INIT_STATIC bool DoRemount(struct mntent *mentry, bool *result)
+INIT_STATIC bool DoRemount(struct mntent *mentry)
 {
     int devNum = 0;
     char *mnt = NULL;
@@ -207,7 +207,6 @@ INIT_STATIC bool DoRemount(struct mntent *mentry, bool *result)
         return false;
     }
     OverlayRemountPost(mnt);
-    *result = true;
     return true;
 }
 
@@ -255,7 +254,7 @@ int RootOverlaySetup(void)
     return 0;
 }
 
-INIT_STATIC bool DoSystemRemount(struct mntent *mentry, bool *result)
+INIT_STATIC bool DoSystemRemount(struct mntent *mentry)
 {
     int devNum = 0;
     int ret = 0;
@@ -292,7 +291,6 @@ INIT_STATIC bool DoSystemRemount(struct mntent *mentry, bool *result)
         return false;
     }
 
-    *result = true;
     return true;
 }
 
@@ -390,19 +388,18 @@ static void EngFilesOverlay(const char *source, const char *target)
     dir = NULL;
 }
 
-bool RemountRofsOverlay()
+int RemountRofsOverlay()
 {
-    bool result = false;
     int lastRemountResult = GetRemountResult();
     INIT_LOGI("get last remount result is %d.", lastRemountResult);
-    if (lastRemountResult != REMOUNT_NONE) {
-        return (lastRemountResult == REMOUNT_SUCC) ? true : false;
+    if (lastRemountResult == REMOUNT_SUCC) {
+        return REMOUNT_SUCC;
     }
     FILE *fp;
     struct mntent *mentry = NULL;
     if ((fp = setmntent("/proc/mounts", "r")) == NULL) {
         INIT_LOGE("Failed to open /proc/mounts.");
-        return false;
+        return REMOUNT_FAIL;
     }
 
     while (NULL != (mentry = getmntent(fp))) {
@@ -412,23 +409,27 @@ bool RemountRofsOverlay()
         }
 
         if (strcmp(mentry->mnt_dir, ROOT_MOUNT_DIR) == 0) {
-            DoSystemRemount(mentry, &result);
+            if (!DoSystemRemount(mentry)) {
+                endmntent(fp);
+                INIT_LOGE("do system remount failed on %s", mentry->mnt_dir);
+                return REMOUNT_FAIL;
+            }
             continue;
         }
         INIT_LOGI("do remount %s", mentry->mnt_dir);
-        if (!DoRemount(mentry, &result)) {
+        if (!DoRemount(mentry)) {
             endmntent(fp);
             INIT_LOGE("do remount failed on %s", mentry->mnt_dir);
-            return false;
+            return REMOUNT_FAIL;
         }
     }
 
     endmntent(fp);
-    SetRemountResultFlag(result);
+    SetRemountResultFlag();
 
     INIT_LOGI("remount system overlay...");
     EngFilesOverlay("/eng_system", "/");
     INIT_LOGI("remount chipset overlay...");
     EngFilesOverlay("/eng_chipset", "/chipset");
-    return true;
+    return REMOUNT_SUCC;
 }

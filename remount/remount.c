@@ -25,9 +25,9 @@ int main(int argc, const char *argv[])
 #ifdef EROFS_OVERLAY
     EnableInitLog(INIT_INFO);
     if (getuid() == 0 && IsOverlayEnable()) {
-        bool ret = RemountRofsOverlay();
-        printf("remount %s\n", ret ? "success" : "failed");
-        return ret ? 0 : 1;
+        int ret = RemountRofsOverlay();
+        printf("remount %s\n", ret == REMOUNT_SUCC ? "success" : "failed");
+        return ret;
     }
     printf("not need erofs overlay, remount success\n");
 #endif
