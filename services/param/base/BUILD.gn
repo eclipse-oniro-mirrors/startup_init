@@ -45,115 +45,148 @@ base_include_dirs = [
   "//base/startup/init/services/loopevent/include",
 ]
 
-if (defined(ohos_lite)) {
-  static_library("parameterbase") {
-    cflags = [ "-fPIC" ]
-    if (ohos_kernel_type == "liteos_m") {
-      sources = []
-      not_needed([ "comm_sources" ])
-    } else {
-      sources = comm_sources
-      sources += [
-        "//base/startup/init/services/log/init_commlog.c",
-        "//base/startup/init/services/param/base/param_base.c",
-      ]
-    }
-    include_dirs = base_include_dirs
-    external_deps = [ "bounds_checking_function:libsec_static" ]
-    defines = [ "_GNU_SOURCE" ]
-    public_configs = [ ":exported_header_files" ]
-    public_configs += [ ":exported_header_files_for_lite" ]
+declare_args() {
+  parameterbase_use_flto = false
+}
 
-    if (ohos_kernel_type == "linux") {
-      sources += [
-        "//base/startup/init/services/param/adapter/param_dac.c",
-        "//base/startup/init/services/param/linux/param_osadp.c",
-      ]
-      defines += [ "__LINUX__" ]
-    } else if (ohos_kernel_type == "liteos_a") {
-      sources += [
-        "//base/startup/init/services/param/liteos/param_litedac.c",
-        "//base/startup/init/services/param/liteos/param_osadp.c",
-      ]
-      defines += [
-        "__LITEOS_A__",
-        "WORKSPACE_AREA_NEED_MUTEX",
-        "PARAM_PERSIST_SAVE_MUTEX",
-        "PARAMWORKSPACE_NEED_MUTEX",
-      ]
-    }
-    if (defined(init_lite_memory_size)) {
-      defines += [ "PARAM_WORKSPACE_MAX=${init_lite_memory_size}" ]
-    }
-  }
-} else {
-  if (!startup_init_with_param_base) {
-    inherited_configs = [
-      "//build/config/compiler:afdo",
-      "//build/config/compiler:afdo_optimize_size",
-      "//build/config/compiler:compiler_arm_fpu",
-      "//build/config/compiler:compiler_arm_thumb",
-      "//build/config/compiler:chromium_code",
-      "//build/config/compiler:default_include_dirs",
-      "//build/config/compiler:default_optimization",
-      "//build/config/compiler:default_stack_frames",
-      "//build/config/compiler:default_symbols",
-      "//build/config/compiler:export_dynamic",
-      "//build/config/compiler:no_exceptions",
-      "//build/config/compiler:no_rtti",
-      "//build/config/compiler:runtime_library",
-      "//build/config/sanitizers:default_sanitizer_flags",
-    ]
-  }
+template("lib_parameterbase_template") {
+  __use_flto = invoker.parameterbase_use_flto
+  if (defined(ohos_lite)) {
+    static_library(target_name) {
+      cflags = [ "-fPIC" ]
+      if (!__use_flto) {
+        cflags_c = [ "-fno-lto" ]
+      }
+      if (ohos_kernel_type == "liteos_m") {
+        sources = []
+        not_needed([ "comm_sources" ])
+      } else {
+        sources = comm_sources
+        sources += [
+          "//base/startup/init/services/log/init_commlog.c",
+          "//base/startup/init/services/param/base/param_base.c",
+        ]
+      }
+      include_dirs = base_include_dirs
+      external_deps = [ "bounds_checking_function:libsec_static" ]
+      defines = [ "_GNU_SOURCE" ]
+      public_configs = [ ":exported_header_files" ]
+      public_configs += [ ":exported_header_files_for_lite" ]
 
-  ohos_static_library("parameterbase") {
-    sources = comm_sources
-    sources += [
-      "//base/startup/init/services/param/adapter/param_dac.c",
-      "//base/startup/init/services/param/base/param_base.c",
-      "//base/startup/init/services/param/linux/param_osadp.c",
-    ]
-    cflags = [ "-fPIC" ]
-    include_dirs = base_include_dirs
-    public_configs = [ ":exported_header_files" ]
-    defines = [ "_GNU_SOURCE" ]
-    deps = []
-    external_deps = []
-
-    if (startup_init_feature_decode_group_file) {
-      defines += [ "PARAM_DECODE_GROUPID_FROM_FILE" ]
+      if (ohos_kernel_type == "linux") {
+        sources += [
+          "//base/startup/init/services/param/adapter/param_dac.c",
+          "//base/startup/init/services/param/linux/param_osadp.c",
+        ]
+        defines += [ "__LINUX__" ]
+      } else if (ohos_kernel_type == "liteos_a") {
+        sources += [
+          "//base/startup/init/services/param/liteos/param_litedac.c",
+          "//base/startup/init/services/param/liteos/param_osadp.c",
+        ]
+        defines += [
+          "__LITEOS_A__",
+          "WORKSPACE_AREA_NEED_MUTEX",
+          "PARAM_PERSIST_SAVE_MUTEX",
+          "PARAMWORKSPACE_NEED_MUTEX",
+        ]
+      }
+      if (defined(init_lite_memory_size)) {
+        defines += [ "PARAM_WORKSPACE_MAX=${init_lite_memory_size}" ]
+      }
     }
-    if (use_musl) {
-      defines += [ "__MUSL__" ]
-    }
-
-    if (startup_init_test_performance) {
-      defines += [ "PARAM_TEST_PERFORMANCE" ]
-    }
+  } else {
     if (!startup_init_with_param_base) {
-      ldflags = [ "-nostdlib" ]
-      remove_configs = inherited_configs
-      defines += [ "PARAM_BASE" ]
-    } else {
-      sources += [ "//base/startup/init/services/log/init_commlog.c" ]
-      external_deps += [ "bounds_checking_function:libsec_shared" ]
+      inherited_configs = [
+        "//build/config/compiler:afdo",
+        "//build/config/compiler:afdo_optimize_size",
+        "//build/config/compiler:compiler_arm_fpu",
+        "//build/config/compiler:compiler_arm_thumb",
+        "//build/config/compiler:chromium_code",
+        "//build/config/compiler:default_include_dirs",
+        "//build/config/compiler:default_optimization",
+        "//build/config/compiler:default_stack_frames",
+        "//build/config/compiler:default_symbols",
+        "//build/config/compiler:export_dynamic",
+        "//build/config/compiler:no_exceptions",
+        "//build/config/compiler:no_rtti",
+        "//build/config/compiler:runtime_library",
+        "//build/config/sanitizers:default_sanitizer_flags",
+      ]
     }
     if (build_selinux) {
-      sources +=
-          [ "//base/startup/init/services/param/adapter/param_selinux.c" ]
-      defines += [
-        "PARAM_SUPPORT_SELINUX",
-        "PARAMWORKSPACE_NEED_MUTEX",
-      ]
-      external_deps += [ "selinux_adapter:libselinux_parameter_static" ]
+      if (target_name == "") {
+        selinux_parameter_external_deps =
+            [ "selinux_adapter:libselinux_parameter_static" ]
+      } else {
+        selinux_parameter_external_deps =
+            [ "selinux_adapter:libselinux_parameter_static_noflto" ]
+      }
     }
-    if (param_base_log) {
-      defines += [ "PARAM_BASE_LOG" ]
-    }
-    part_name = "init"
-    subsystem_name = "startup"
-  }
 
+    ohos_static_library(target_name) {
+      sources = comm_sources
+      sources += [
+        "//base/startup/init/services/param/adapter/param_dac.c",
+        "//base/startup/init/services/param/base/param_base.c",
+        "//base/startup/init/services/param/linux/param_osadp.c",
+      ]
+      cflags = [ "-fPIC" ]
+      if (!__use_flto) {
+        cflags_c = [ "-fno-lto" ]
+      }
+
+      include_dirs = base_include_dirs
+      public_configs = [ ":exported_header_files" ]
+      defines = [ "_GNU_SOURCE" ]
+      deps = []
+      external_deps = []
+
+      if (startup_init_feature_decode_group_file) {
+        defines += [ "PARAM_DECODE_GROUPID_FROM_FILE" ]
+      }
+      if (use_musl) {
+        defines += [ "__MUSL__" ]
+      }
+
+      if (startup_init_test_performance) {
+        defines += [ "PARAM_TEST_PERFORMANCE" ]
+      }
+      if (!startup_init_with_param_base) {
+        ldflags = [ "-nostdlib" ]
+        remove_configs = inherited_configs
+        defines += [ "PARAM_BASE" ]
+      } else {
+        sources += [ "//base/startup/init/services/log/init_commlog.c" ]
+        external_deps += [ "bounds_checking_function:libsec_shared" ]
+      }
+      if (build_selinux) {
+        sources +=
+            [ "//base/startup/init/services/param/adapter/param_selinux.c" ]
+        defines += [
+          "PARAM_SUPPORT_SELINUX",
+          "PARAMWORKSPACE_NEED_MUTEX",
+        ]
+        external_deps += selinux_parameter_external_deps
+      }
+      if (param_base_log) {
+        defines += [ "PARAM_BASE_LOG" ]
+      }
+      part_name = "init"
+      subsystem_name = "startup"
+    }
+  }
+}
+
+lib_parameterbase_template("parameterbase") {
+  parameterbase_use_flto = true
+}
+
+lib_parameterbase_template("parameterbase_noflto") {
+  parameterbase_use_flto = false
+}
+
+if (!defined(ohos_lite)) {
   # extend for base
   ohos_static_library("parameterbase_ext") {
     sources = comm_sources
