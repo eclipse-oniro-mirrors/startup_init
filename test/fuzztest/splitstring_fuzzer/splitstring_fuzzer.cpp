@@ -13,19 +13,17 @@
  * limitations under the License.
  */
 
-#include "init_utils.h"
 #include <string>
+#include "init_utils.h"
 #include "splitstring_fuzzer.h"
-
-#define MAX_STR_NUMS 20
 
 namespace OHOS {
     bool FuzzSplitString(const uint8_t* data, size_t size)
     {
         std::string str(reinterpret_cast<const char*>(data), size);
-        char *opt[MAX_STR_NUMS] = {NULL};
+        char *opt[20] = {nullptr};
         char *srcPtr = strdup(str.c_str());
-        int ret = SplitString(srcPtr, " ", opt, MAX_STR_NUMS);
+        int ret = SplitString(srcPtr, " ", opt, 20);
         if (ret != 0) {
             free(srcPtr);
             return false;

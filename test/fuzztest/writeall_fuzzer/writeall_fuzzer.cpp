@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "init_utils.h"
 #include <string>
+#include "init_utils.h"
 #include "writeall_fuzzer.h"
 
 namespace OHOS {
