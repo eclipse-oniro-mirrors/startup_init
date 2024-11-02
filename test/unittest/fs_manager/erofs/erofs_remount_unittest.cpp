@@ -32,11 +32,10 @@ HWTEST_F(ErofsRemountUnitTest, Init_GetRemountResult_001, TestSize.Level0)
 {
     const char *cmdLine;
     rmdir(REMOUNT_RESULT_PATH);
-    SetRemountResultFlag(true);
+    SetRemountResultFlag();
 
     CheckAndCreateDir(REMOUNT_RESULT_FLAG);
-    SetRemountResultFlag(false);
-    SetRemountResultFlag(true);
+    SetRemountResultFlag();
     rmdir(REMOUNT_RESULT_PATH);
 }
 

@@ -107,9 +107,9 @@ int GetDevSize(const char *fsBlkDev, uint64_t *devSize);
 int FormatExt4(const char *fsBlkDev, const char *fsMntPoint);
 void OverlayRemountPre(const char *mnt);
 void OverlayRemountPost(const char *mnt);
-bool DoRemount(struct mntent *mentry, bool *result);
+bool DoRemount(struct mntent *mentry);
 bool DirectoryExists(const char *path);
-bool DoSystemRemount(struct mntent *mentry, bool *result);
+bool DoSystemRemount(struct mntent *mentry);
 
 //remount
 int Modem2Exchange(const char *modemPath, const char *exchangePath);

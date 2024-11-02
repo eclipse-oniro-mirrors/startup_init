@@ -33,13 +33,12 @@ extern "C" {
 #define REMOUNT_RESULT_PATH STARTUP_INIT_UT_PATH"/data/service/el1/startup/remount/"
 #define REMOUNT_RESULT_FLAG STARTUP_INIT_UT_PATH"/data/service/el1/startup/remount/remount.result.done"
 
-#define REMOUNT_NONE 0
-#define REMOUNT_SUCC 1
-#define REMOUNT_FAIL 2
+#define REMOUNT_SUCC 0
+#define REMOUNT_FAIL 1
 
 int GetRemountResult(void);
 
-void SetRemountResultFlag(bool result);
+void SetRemountResultFlag();
 
 int RemountOverlay(void);
 

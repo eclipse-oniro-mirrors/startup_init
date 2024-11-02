@@ -66,7 +66,7 @@ bool CheckIsExt4(const char *dev, uint64_t offset)
     }
 
     if (superBlock.s_magic == EXT4_SUPER_MAGIC) {
-        BEGET_LOGE("this [dev] %s  is ext4:[block cout]: %d, [size]: %d", dev,
+        BEGET_LOGI("this [dev] %s  is ext4:[block cout]: %d, [size]: %d", dev,
             superBlock.s_blocks_count_lo, (superBlock.s_blocks_count_lo * BLOCK_SIZE_UNIT));
         close(fd);
         return true;
