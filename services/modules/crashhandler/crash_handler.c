@@ -56,7 +56,10 @@ static void SignalHandler(int sig, siginfo_t *si, void *context)
 {
     int32_t pid = getpid();
     if (pid == 1) {
+        sleep(1);
         ExecReboot("panic");
+    } else {
+        exit(-1);
     }
 }
 
