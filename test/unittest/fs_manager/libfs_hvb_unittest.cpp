@@ -186,6 +186,7 @@ HWTEST_F(FsHvbUnitTest, Init_FsHvbDestoryVerityTarget_001, TestSize.Level0)
     DmVerityTarget target;
 
     target.paras = (char *)calloc(1, 10);
+    EXPECT_NE(target.paras, NULL);
     FsHvbDestoryVerityTarget(&target);
 }
 }
