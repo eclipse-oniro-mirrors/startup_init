@@ -42,6 +42,7 @@ static void GetAllParameterTestFunc(void)
     GetSdkApiVersion();
     EXPECT_STRNE(GetDeviceType(), nullptr);
     EXPECT_STRNE(GetProductModel(), nullptr);
+    EXPECT_STRNE(GetProductModelAlias(), nullptr);
     EXPECT_STRNE(GetManufacture(), nullptr);
     EXPECT_STRNE(GetBrand(), nullptr);
     EXPECT_STRNE(GetMarketName(), nullptr);

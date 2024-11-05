@@ -73,6 +73,14 @@ const char *OH_GetProductSeries(void);
 const char *OH_GetProductModel(void);
 
 /**
+ * Obtains the product model alias represented by a string.
+ * @syscap SystemCapability.Startup.SystemInfo
+ * @return NULL - Not found product model, or failed to invoke the internal interface.
+ * @since 14
+ */
+const char *OH_GetProductModelAlias(void);
+
+/**
  * Obtains the software model represented by a string.
  * @syscap SystemCapability.Startup.SystemInfo
  * @return NULL - Not found software model, or failed to invoke the internal interface.

@@ -142,6 +142,7 @@ int GetSdkApiVersion(void);
 
 const char *GetDeviceType(void);
 const char *GetProductModel(void);
+const char *GetProductModelAlias(void);
 const char *GetManufacture(void);
 const char *GetBrand(void);
 const char *GetMarketName(void);
