@@ -564,7 +564,7 @@ int FsHvbGetValueFromCmdLine(char *val, size_t size, const char *key)
     FS_HVB_RETURN_ERR_IF_NULL(val);
     FS_HVB_RETURN_ERR_IF_NULL(key);
 
-    return GetParameterFromCmdLine(key, val, size);
+    return GetExactParameterFromCmdLine(key, val, size, EMPTY_VALUE);
 }
 
 bool CheckAndGetExt4Size(const char *headerBuf, uint64_t *imageSize, const char* image)

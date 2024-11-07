@@ -58,6 +58,10 @@ typedef struct {
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 #define BOOT_CMD_LINE STARTUP_INIT_UT_PATH"/proc/cmdline"
 
+#define FIRST_VALUE "First_Value" // 取第一个匹配值
+#define LAST_VALUE "Last_Value" // 取最后一个匹配值
+#define EMPTY_VALUE "EMPTY_VALUE" // 不取任何一个
+
 uid_t DecodeUid(const char *name);
 gid_t DecodeGid(const char *name);
 char *ReadFileToBuf(const char *configFile);
@@ -109,6 +113,21 @@ void CloseStdio(void);
 
 int GetServiceGroupIdByPid(pid_t pid, gid_t *gids, uint32_t gidSize);
 int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen);
+
+/**
+ * @brief Get param value from /proc/cmdline by exact match
+ *
+ * @param paramName the name of param
+ * @param value the array to receive the value of paramName
+ * @param valueLen the length of value
+ * @param conflictStrategy the strategy of conflicts, here are some options available
+ *     FIRST_VALUE: select the first value
+ *     LAST_VALUE: select the last value
+ *     EMPTY_VALUE: return empty value
+ *     "A<B...<C": assign priorities
+ * @return return 0 if succeed; return -1 if not found; return 1 if conflicted.
+ */
+int GetExactParameterFromCmdLine(const char *paramName, char *value, size_t valueLen, const char *conflictStrategy);
 
 /**
  * @brief Get string index from a string array
