@@ -125,6 +125,18 @@ static napi_value GetProductModel(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
+static napi_value GetProductModelAlias(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    const char *productModel = GetProductModelAlias();
+    if (productModel == nullptr) {
+        productModel = "";
+    }
+
+    NAPI_CALL(env, napi_create_string_utf8(env, productModel, strlen(productModel), &napiValue));
+    return napiValue;
+}
+
 static napi_value GetSoftwareModel(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
@@ -535,6 +547,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"distributionOSApiName", nullptr, nullptr, NAPI_GetDistributionOSApiName, nullptr, nullptr, napi_default, nullptr},
         {"distributionOSReleaseType", nullptr, nullptr, NAPI_GetDistributionOSReleaseType, nullptr, nullptr, napi_default, nullptr},
         {"ODID", nullptr, nullptr, GetDevOdid, nullptr, nullptr, napi_default, nullptr},
+        {"productModelAlias", nullptr, nullptr, GetProductModelAlias, nullptr, nullptr, napi_default, nullptr},
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
 

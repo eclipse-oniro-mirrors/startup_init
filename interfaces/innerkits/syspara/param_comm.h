@@ -37,6 +37,7 @@ INIT_LOCAL_API PropertyValueProcessor SetPropertyGetProcessor(PropertyValueProce
 INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, uint32_t len);
 
 INIT_LOCAL_API const char *GetProductModel_(void);
+INIT_LOCAL_API const char *GetProductModelAlias_(void);
 INIT_LOCAL_API const char *GetManufacture_(void);
 INIT_LOCAL_API const char *GetSerial_(void);
 INIT_LOCAL_API int GetDevUdid_(char *udid, int size);

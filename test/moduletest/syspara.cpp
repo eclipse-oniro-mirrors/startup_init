@@ -35,6 +35,7 @@ static const SysParaInfoItem SYSPARA_LIST[] = {
     {(char *)"MarketName", GetMarketName},
     {(char *)"ProductSeries", GetProductSeries},
     {(char *)"ProductModel", GetProductModel},
+    {(char *)"ProductModelAlias", GetProductModel},
     {(char *)"SoftwareModel", GetSoftwareModel},
     {(char *)"HardwareModel", GetHardwareModel},
     {(char *)"Serial", GetSerial},
