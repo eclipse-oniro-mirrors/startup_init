@@ -56,6 +56,8 @@ extern "C" {
 #define SERVICE_ATTR_KMSG 0x4000      // kmsg
 #define SERVICE_ATTR_PERIOD 0x8000 //service period
 
+#define SERVICE_ATTR_SETUID 0x10000 //service can setuid with no fixup
+
 #define MAX_SERVICE_NAME 32
 #define MAX_APL_NAME 32
 #define MAX_ENV_NAME 64
