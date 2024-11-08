@@ -5,6 +5,7 @@
     { "name": "LoadPersistParams" },
     { "name": "SplitString" },
     { "name": "AddCmdExecutor" },
+    { "name": "GetServiceByName"},
     { "name": "RemoveCmdExecutor" },
     { "name": "HookMgrAdd" },
     { "name": "HookMgrAddEx" },
