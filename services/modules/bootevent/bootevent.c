@@ -462,6 +462,11 @@ static int DoUnsetBootEventCmd(int id, const char *name, int argc, const char **
         (BOOT_EVENT_PARAM_ITEM *)OH_ListFind(&bootEventList, (void *)eventName, BootEventParaListCompareProc);
     PLUGIN_CHECK(item != NULL, return INIT_EPARAMETER, "item NULL");
 
+    if (item->timestamp[BOOTEVENT_READY].tv_sec == 0) {
+        INIT_LOGW("%s not set", argv[0]);
+        return INIT_OK;
+    }
+
     SystemWriteParam(argv[0], "false");
     if (g_finished != 0) {
         SystemWriteParam(BOOT_EVENT_BOOT_COMPLETED, "false");

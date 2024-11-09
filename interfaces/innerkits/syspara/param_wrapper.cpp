@@ -17,7 +17,6 @@
 
 #include <unordered_map>
 #include <vector>
-#include <climits>
 
 #include "beget_ext.h"
 #include "param_comm.h"
