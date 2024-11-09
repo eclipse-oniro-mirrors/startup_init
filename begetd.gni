@@ -62,10 +62,10 @@ declare_args() {
   init_startup_feature_system_call_switch = false
 
   #deps param_watcher xcollie
-  paramwatcher_hicollie_enable = true
+  init_paramwatcher_hicollie_enable = true
   if (defined(global_parts_info) &&
       !defined(global_parts_info.hiviewdfx_hicollie)) {
-    paramwatcher_hicollie_enable = false
+    init_paramwatcher_hicollie_enable = false
   }
 
   # seccomp privilege

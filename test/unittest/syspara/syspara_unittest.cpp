@@ -50,7 +50,7 @@ HWTEST_F(SysparaUnitTest, parameterTest001, TestSize.Level0)
     printf("MarketName =%s\n", GetMarketName());
     printf("ProductSeries =%s\n", GetProductSeries());
     printf("ProductModel =%s\n", GetProductModel());
-    printf("ProductModel =%s\n", GetProductModelAlias());
+    printf("ProductModelAlias =%s\n", GetProductModelAlias());
     printf("SoftwareModel =%s\n", GetSoftwareModel());
     printf("HardwareModel =%s\n", GetHardwareModel());
     printf("Software profile =%s\n", GetHardwareProfile());
