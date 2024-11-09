@@ -197,6 +197,7 @@ int SetAccessToken(const Service *service);
 void GetAccessToken(void);
 void ServiceStopTimer(Service *service);
 void ServiceStartTimer(Service *service, uint64_t timeout);
+void ServiceReStartTimer(Service *service, uint64_t timeout);
 void IsEnableSandbox(void);
 void EnterServiceSandbox(Service *service);
 int SetServiceEnterSandbox(const Service *service, const char *execPath);
