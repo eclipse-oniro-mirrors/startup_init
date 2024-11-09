@@ -37,8 +37,8 @@ using namespace testing::ext;
 using namespace std;
 using namespace OHOS;
 
-static int g_tokenType = OHOS::Security::AccessToken::TOKEN_HAP;
-static int g_tokenVerifyResult = 0;
+int g_tokenType = OHOS::Security::AccessToken::TOKEN_HAP;
+int g_tokenVerifyResult = 0;
 namespace OHOS {
 namespace Security {
 namespace AccessToken {

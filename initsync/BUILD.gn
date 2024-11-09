@@ -27,8 +27,9 @@ shared_library("libinitsync_shared") {
   ]
   public_deps = [ "//base/startup/init/services/log:init_log" ]
 
-  public_external_deps = [ "bounds_checking_function:libsec_shared" ]
+  external_deps = [ "bounds_checking_function:libsec_shared" ]
 }
+
 static_library("libinitsync_static") {
   sources = [ "src/init_sync.c" ]
   include_dirs = [
