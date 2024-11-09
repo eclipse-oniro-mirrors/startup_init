@@ -16,20 +16,11 @@
 #ifndef EXT4_H
 #define EXT4_H
 
-#include <stdint.h>
+#include <linux/types.h>
 
 #define EXT4_SUPER_MAGIC 0xEF53
 #define EXT4_SUPER_BLOCK_START_POSITION 0x400
 #define BLOCK_SIZE_UNIT 4096
-
-#define __le64 uint64_t
-#define __le32 uint32_t
-#define __le16 uint16_t
-
-#define __u64 uint64_t
-#define __u32 uint32_t
-#define __u16 uint16_t
-#define __u8 uint8_t
 
 typedef struct ext4_super_block {
 __le32	s_inodes_count;
@@ -129,12 +120,4 @@ __le32	s_reserved[98];
 __le32	s_checksum;
 } ext4_super_block;  /* 1024 byte */
 
-#undef __le64
-#undef __le32
-#undef __le16
-
-#undef __u64
-#undef __u32
-#undef __u16
-#undef __u8
 #endif
