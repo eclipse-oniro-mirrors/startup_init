@@ -324,7 +324,6 @@ static int DoFsckF2fs(const char* device)
     char *cmd[] = {
         file, "-p1", (char *)device, NULL
     };
-
     int argc = ARRAY_LENGTH(cmd);
     char **argv = (char **)cmd;
     InitTimerControl(true);
@@ -685,7 +684,8 @@ int MountAllWithFstabFile(const char *fstabFile, bool required)
 
     int rc = MountAllWithFstab(fstab, required);
     if (rc != 0) {
-        BEGET_LOGE("[startup_failed]MountAllWithFstab failed %s %d %d %d", fstabFile, FSTAB_MOUNT_FAILED, required, rc);
+        BEGET_LOGE("[startup_failed]MountAllWithFstab failed %s %d %d %d", fstabFile,
+            FSTAB_MOUNT_FAILED, required, rc);
     }
     ReleaseFstab(fstab);
     fstab = NULL;
