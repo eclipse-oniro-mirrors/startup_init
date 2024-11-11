@@ -24,13 +24,12 @@ extern "C" {
 #endif
 #endif
 
-#define REMOUNT_NONE 0
-#define REMOUNT_SUCC 1
-#define REMOUNT_FAIL 2
+#define REMOUNT_SUCC 0
+#define REMOUNT_FAIL 1
 
 int GetRemountResult(void);
 
-void SetRemountResultFlag(bool result);
+void SetRemountResultFlag(void);
 
 int RemountOverlay(void);
 

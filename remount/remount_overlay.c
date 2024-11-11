@@ -18,6 +18,7 @@
 #include <sys/mount.h>
 #include <sys/wait.h>
 #include <mntent.h>
+#include <dirent.h>
 #include "securec.h"
 #include "init_log.h"
 #include "init_utils.h"
@@ -28,18 +29,31 @@
 
 #define MODE_MKDIR 0755
 #define BLOCK_SIZE_UNIT 4096
-
+#define PATH_MAX 256
 #define PREFIX_LOWER "/mnt/lower"
 #define MNT_VENDOR "/vendor"
 #define ROOT_MOUNT_DIR "/"
 #define SYSTEM_DIR "/usr"
+
+static bool MntNeedRemount(const char *mnt)
+{
+    char *remountPath[] = { "/", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust", "/version" };
+    for (size_t i = 0; i < ARRAY_LENGTH(remountPath); i++) {
+        if (strcmp(remountPath[i], mnt) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 static bool IsSkipRemount(const struct mntent mentry)
 {
     if (mentry.mnt_type == NULL || mentry.mnt_dir == NULL) {
         return true;
     }
-
+    if (!MntNeedRemount(mentry.mnt_dir)) {
+        return true;
+    }
     if (strncmp(mentry.mnt_type, "erofs", strlen("erofs")) != 0) {
         return true;
     }
@@ -141,7 +155,7 @@ static void OverlayRemountPost(const char *mnt)
     }
 }
 
-static bool DoRemount(struct mntent *mentry, bool *result)
+static bool DoRemount(struct mntent *mentry)
 {
     int devNum = 0;
     char *mnt = NULL;
@@ -191,7 +205,6 @@ static bool DoRemount(struct mntent *mentry, bool *result)
         return false;
     }
     OverlayRemountPost(mnt);
-    *result = true;
     return true;
 }
 
@@ -239,7 +252,7 @@ int RootOverlaySetup(void)
     return 0;
 }
 
-static bool DoSystemRemount(struct mntent *mentry, bool *result)
+static bool DoSystemRemount(struct mntent *mentry)
 {
     int devNum = 0;
     int ret = 0;
@@ -276,23 +289,115 @@ static bool DoSystemRemount(struct mntent *mentry, bool *result)
         return false;
     }
 
-    *result = true;
     return true;
 }
 
-bool RemountRofsOverlay()
+static bool IsRegularFile(const char *file)
 {
-    bool result = false;
+    struct stat st = {0};
+    if (lstat(file, &st) == 0) {
+        if (S_ISREG(st.st_mode)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void MountBindEngFile(const char *source, const char *target)
+{
+    char targetFullPath[PATH_MAX] = {0};
+    const char *p = source;
+    char *q = NULL;
+    const char *end = source + strlen(source);
+
+    if (*p != '/') { // source must start with '/'
+        return;
+    }
+
+    // Get next '/'
+    q = strchr(p + 1, '/');
+    if (q == NULL) {
+        INIT_LOGI("path \' %s \' without extra slash, ignore it", source);
+        return;
+    }
+
+    if (*(end - 1) == '/') {
+        INIT_LOGI("path \' %s \' ends with slash, ignore it", source);
+        return;
+    }
+    // OK, now get sub dir and combine it with target
+    int ret = snprintf_s(targetFullPath, PATH_MAX, PATH_MAX - 1, "%s%s", strcmp(target, "/") == 0 ? "" : target, q);
+    if (ret == -1) {
+        INIT_LOGE("Failed to build target path");
+        return;
+    }
+    INIT_LOGI("target full path is %s", targetFullPath);
+    if (access(targetFullPath, F_OK) != 0) {  // file not exist, symlink targetFullPath
+        if (symlink(source, targetFullPath) < 0) {
+            INIT_LOGE("Failed to link %s to %s, err = %d", source, targetFullPath, errno);
+        }
+        return;
+    }
+    if (IsRegularFile(targetFullPath)) {  // file exist, moung bind targetFullPath
+        if (mount(source, targetFullPath, NULL, MS_BIND, NULL) != 0) {
+            INIT_LOGE("Failed to bind mount %s to %s, err = %d", source, targetFullPath, errno);
+        } else {
+            INIT_LOGI("Bind mount %s to %s done", source, targetFullPath);
+        }
+        return;
+    }
+    INIT_LOGW("%s without expected type, skip overlay", targetFullPath);
+}
+
+static void EngFilesOverlay(const char *source, const char *target)
+{
+    DIR *dir = NULL;
+    struct dirent *de = NULL;
+
+    if ((dir = opendir(source)) == NULL) {
+        INIT_LOGE("Open path \' %s \' failed. err = %d", source, errno);
+        return;
+    }
+    int dfd = dirfd(dir);
+    char srcPath[PATH_MAX] = {};
+    while ((de = readdir(dir)) != NULL) {
+        if (de->d_name[0] == '.') {
+            continue;
+        }
+        if (snprintf_s(srcPath, PATH_MAX, PATH_MAX - 1, "%s/%s", source, de->d_name) == -1) {
+            INIT_LOGE("Failed to build path for overlaying");
+            break;
+        }
+
+        // Determine file type
+        struct stat st = {};
+        if (fstatat(dfd, de->d_name, &st, AT_SYMLINK_NOFOLLOW) < 0) {
+            continue;
+        }
+        if (S_ISDIR(st.st_mode)) {
+            EngFilesOverlay(srcPath, target);
+        } else if (S_ISREG(st.st_mode)) {
+            MountBindEngFile(srcPath, target);
+        } else { // Ignore any other file types
+            INIT_LOGI("Ignore %s while overlaying", srcPath);
+        }
+    }
+    closedir(dir);
+    dir = NULL;
+}
+
+int RemountRofsOverlay(void)
+{
     int lastRemountResult = GetRemountResult();
     INIT_LOGI("get last remount result is %d.", lastRemountResult);
-    if (lastRemountResult != REMOUNT_NONE) {
-        return (lastRemountResult == REMOUNT_SUCC) ? true : false;
+    if (lastRemountResult == REMOUNT_SUCC) {
+        return REMOUNT_SUCC;
     }
     FILE *fp;
     struct mntent *mentry = NULL;
     if ((fp = setmntent("/proc/mounts", "r")) == NULL) {
         INIT_LOGE("Failed to open /proc/mounts.");
-        return false;
+        return REMOUNT_FAIL;
     }
 
     while (NULL != (mentry = getmntent(fp))) {
@@ -302,18 +407,27 @@ bool RemountRofsOverlay()
         }
 
         if (strcmp(mentry->mnt_dir, ROOT_MOUNT_DIR) == 0) {
-            DoSystemRemount(mentry, &result);
+            if (!DoSystemRemount(mentry)) {
+                endmntent(fp);
+                INIT_LOGE("do system remount failed on %s", mentry->mnt_dir);
+                return REMOUNT_FAIL;
+            }
             continue;
         }
         INIT_LOGI("do remount %s", mentry->mnt_dir);
-        if (!DoRemount(mentry, &result)) {
+        if (!DoRemount(mentry)) {
             endmntent(fp);
             INIT_LOGE("do remount failed on %s", mentry->mnt_dir);
-            return false;
+            return REMOUNT_FAIL;
         }
     }
 
     endmntent(fp);
-    SetRemountResultFlag(result);
-    return true;
+    SetRemountResultFlag();
+
+    INIT_LOGI("remount system overlay...");
+    EngFilesOverlay("/eng_system", "/");
+    INIT_LOGI("remount chipset overlay...");
+    EngFilesOverlay("/eng_chipset", "/chipset");
+    return REMOUNT_SUCC;
 }
