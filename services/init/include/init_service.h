@@ -54,7 +54,7 @@ extern "C" {
 #define SERVICE_ATTR_NOTIFY_STATE 0x1000     // service notify state
 #define SERVICE_ATTR_MODULE_UPDATE 0x2000     // module update
 #define SERVICE_ATTR_KMSG 0x4000      // kmsg
-#define SERVICE_ATTR_PERIOD 0x8000 //service period
+#define SERVICE_ATTR_PERIOD 0x8000    //service period
 
 #define SERVICE_ATTR_SETUID 0x10000 //service can setuid with no fixup
 
