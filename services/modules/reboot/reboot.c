@@ -21,6 +21,7 @@
 #include "reboot_adp.h"
 #include "init_cmdexecutor.h"
 #include "init_module_engine.h"
+#include "init_utils.h"
 #include "plugin_adapter.h"
 #include "securec.h"
 
@@ -72,6 +73,10 @@ static int DoRebootPanic(int id, const char *name, int argc, const char **argv)
         }
     }
     PLUGIN_LOGI("DoRebootPanic %s", str);
+    if (InRescueMode() == 0) {
+        PLUGIN_LOGI("Don't panic in resuce mode!");
+        return 0;
+    }
     // clear misc
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
     DoJobNow("reboot");
