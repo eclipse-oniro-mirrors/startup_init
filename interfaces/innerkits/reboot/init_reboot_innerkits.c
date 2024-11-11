@@ -48,7 +48,7 @@ static int DoRebootByInitPlugin(const char *mode, const char *option)
         }
     }
     BEGET_ERROR_CHECK(ret >= 0, return -1, "Failed to format boot mode ");
-    BEGET_LOGV("Reboot cmd %s", value);
+    BEGET_LOGI("Reboot cmd %s", value);
     ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
     BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
     ret = SystemSetParameter(DOREBOOT_PARAM, value);
@@ -64,23 +64,17 @@ static int ExecReboot(const char *mode, const char *option)
 #else
     const int maxCount = 1;
 #endif
-    int status = DoRebootByInitPlugin(mode, option);
-
     int count = 0;
-    while (count < maxCount) {
-        usleep(100 * 1000); // 100 * 1000 wait 100ms
-        char result[10] = {0}; // 10 stop len
-        uint32_t len = sizeof(result);
-        int ret = SystemGetParameter(STARTUP_DEVICE_CTL, result, &len);
-        if (ret == 0 && strcmp(result, DEVICE_CMD_STOP) == 0) {
-            BEGET_LOGE("Success to reboot system");
-            return 0;
-        }
+    while (count <= maxCount) {
+        int status = DoRebootByInitPlugin(mode, option);
+        BEGET_ERROR_CHECK(status != 0, return 0, "reboot success(%s)", option);
         count++;
-        status = DoRebootByInitPlugin(mode, option);
+        if (count < maxCount) {
+            usleep(100 * 1000); // 100 * 1000 wait 100ms
+        }
     }
     BEGET_LOGE("Failed to reboot system");
-    return status;
+    return -1;
 }
 
 int DoReboot(const char *option)
