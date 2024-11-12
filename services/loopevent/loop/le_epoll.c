@@ -128,7 +128,7 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_WRITE);
             }
             if (epoll->waitEvents[index].events & (EPOLLERR | EPOLLHUP)) {
-                LE_LOGV("RunLoop_ fd:%d, error:%d", epoll->waitEvents[index].data.fd, errno);
+                LE_LOGW("RunLoop_ fd:%d, error:%d", epoll->waitEvents[index].data.fd, errno);
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_ERROR);
             }
         }

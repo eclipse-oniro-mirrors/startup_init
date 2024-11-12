@@ -113,7 +113,7 @@ static LE_STATUS HandleStreamEvent_(const LoopHandle loopHandle, const TaskHandl
 static LE_STATUS HandleClientEvent_(const LoopHandle loopHandle, const TaskHandle handle, uint32_t oper)
 {
     StreamClientTask *client = (StreamClientTask *)handle;
-    LE_LOGV("HandleClientEvent_ fd:%d oper 0x%x", GetSocketFd(handle), oper);
+    LE_LOGI("HandleClientEvent_ fd:%d oper 0x%x", GetSocketFd(handle), oper);
 
     LE_STATUS status = LE_SUCCESS;
     if (LE_TEST_FLAGS(oper, EVENT_WRITE)) {
