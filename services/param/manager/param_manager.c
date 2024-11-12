@@ -605,6 +605,8 @@ INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, 
         PARAM_CHECK(strlen(value) < GetParamMaxLen(paramType),
             return PARAM_CODE_INVALID_VALUE, "Illegal param value %s length", value);
     }
+    PARAM_CHECK(strstr(value, "\n") == NULL,
+        return PARAM_CODE_INVALID_VALUE, "Illegal param value %s for \\n", value);
     return CheckParamValueType(name, value, paramType);
 }
 
