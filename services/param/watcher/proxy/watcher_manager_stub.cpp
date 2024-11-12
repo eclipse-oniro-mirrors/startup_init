@@ -35,7 +35,7 @@ int32_t WatcherManagerStub::OnRemoteRequest(uint32_t code,
         case static_cast<uint32_t>(ParamWatcherInterfaceCode::ADD_WATCHER): {
             std::string key = data.ReadString();
 #ifdef HICOLLIE_ENABLE
-            const int dfxDelayS = 20;
+            const int dfxDelayS = 10;
             int id = HiviewDFX::XCollie::GetInstance().SetTimer("ParamWatcher_AddWatcher",
                 dfxDelayS, nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_LOG);
 #endif
