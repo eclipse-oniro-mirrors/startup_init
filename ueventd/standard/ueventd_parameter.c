@@ -47,7 +47,7 @@ static DeviceParameterCtrl g_parameterCtrl = {
     .threadId = 0
 };
 
-static struct DeviceUdevConf *GetFristParameter(DeviceParameterCtrl *parameterCtrl)
+static struct DeviceUdevConf *GetFirstParameter(DeviceParameterCtrl *parameterCtrl)
 {
     struct DeviceUdevConf *conf = NULL;
     pthread_mutex_lock(&(parameterCtrl->parameterLock));
@@ -81,7 +81,7 @@ static void *ThreadRun(void *data)
             break;
         }
         pthread_mutex_unlock(&(parameterCtrl->lock));
-        struct DeviceUdevConf *config = GetFristParameter(parameterCtrl);
+        struct DeviceUdevConf *config = GetFirstParameter(parameterCtrl);
         if (config == NULL) {
             parameterCtrl->empty = 1;
             continue;
@@ -109,7 +109,8 @@ static void AddParameter(DeviceParameterCtrl *parameterCtrl, struct DeviceUdevCo
     }
     pthread_mutex_unlock(&(parameterCtrl->parameterLock));
     if (parameterCtrl->threadId == 0) {
-        (void)pthread_create(&(parameterCtrl->threadId), NULL, ThreadRun, (void *)parameterCtrl);
+        int ret = pthread_create(&(parameterCtrl->threadId), NULL, ThreadRun, (void *)parameterCtrl);
+        INIT_ERROR_CHECK(ret == 0, return, "[uevent] pthread_create failed, ret:%d", ret);
     }
     pthread_mutex_lock(&(parameterCtrl->lock));
     parameterCtrl->empty = 0;

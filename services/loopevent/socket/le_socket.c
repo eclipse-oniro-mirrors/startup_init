@@ -246,7 +246,8 @@ int listenSocket(int fd, int flags, const char *server)
         LE_CHECK(ret >= 0, close(fd);
             return ret, "Failed to listen socket error: %d", errno);
         ret = chmod(server, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-        LE_CHECK(ret == 0, return -1, "Failed to chmod %s, err %d. ", server, errno);
+        LE_CHECK(ret == 0, close(fd);
+            return -1, "Failed to chmod %s, err %d. ", server, errno);
     }
     return 0;
 }

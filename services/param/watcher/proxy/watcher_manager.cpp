@@ -178,12 +178,12 @@ int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
 }
 
 void WatcherGroup::ProcessParameterChange(
-    WatcherManager *mananger, const std::string &name, const std::string &value)
+    WatcherManager *manager, const std::string &name, const std::string &value)
 {
     WATCHER_LOGV("ProcessParameterChange key '%s' '%s'", GetKeyPrefix().c_str(), name.c_str());
     // walk watcher
-    TraversalNode([this, mananger, name, value](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
-        auto remoteWatcher = mananger->GetRemoteWatcher(node->GetNodeId());
+    TraversalNode([this, manager, name, value](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+        auto remoteWatcher = manager->GetRemoteWatcher(node->GetNodeId());
         if (remoteWatcher == nullptr) {
             return;
         }

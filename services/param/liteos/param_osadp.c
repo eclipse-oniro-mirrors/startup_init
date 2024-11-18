@@ -105,7 +105,10 @@ void ParamTimerClose(ParamTaskPtr timer)
 {
     PARAM_CHECK(timer != NULL, return, "Invalid timer");
     ParamTimer *paramTimer = (ParamTimer *)timer;
-    timer_delete(paramTimer->timerId);
+    int32_t ret = timer_delete(paramTimer->timerId);
+    if (ret < 0) {
+        PARAM_LOGE("Failed to delete timer, errno:%d", errno);
+    }
     free(paramTimer);
 }
 

@@ -47,7 +47,7 @@ static int DoRebootByInitPlugin(const char *mode, const char *option)
             ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "%s", "reboot");
         }
     }
-    BEGET_ERROR_CHECK(ret >= 0, return -1, "Failed to format boot mode ");
+    BEGET_ERROR_CHECK(ret >= 0, return -1, "Failed to format boot mode");
     BEGET_LOGI("Reboot cmd %s", value);
     ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
     BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");

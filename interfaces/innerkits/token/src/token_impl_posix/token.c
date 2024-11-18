@@ -30,7 +30,7 @@ static int UidVerify(void)
 
     uid = getuid();
     if (uid >= KIT_FRAMEWORK_UID_MAX) {
-        HILOG_ERROR(HILOG_MODULE_HIVIEW, "uid verify failed, get uid:%d", uid);
+        HILOG_ERROR(HILOG_MODULE_HIVIEW, "uid verify failed, get uid:%u", uid);
         return EC_FAILURE;
     }
 
