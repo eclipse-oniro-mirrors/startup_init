@@ -684,5 +684,6 @@ void CachedParameterDestroy(CachedHandle handle)
 {
     if (handle != NULL) {
         free(handle);
+        handle = NULL;
     }
 }

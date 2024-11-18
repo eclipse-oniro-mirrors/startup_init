@@ -268,6 +268,7 @@ static void ProcessModuleMgrControlFd(uint16_t type, const char *serviceCmd)
 void ProcessControlFd(uint16_t type, const char *serviceCmd, const void *context)
 {
     if ((type >= ACTION_MAX) || (serviceCmd == NULL)) {
+        INIT_LOGE("Invalid parameter:%s", serviceCmd == NULL ? "serviceCmd" : "type");
         return;
     }
     switch (type) {

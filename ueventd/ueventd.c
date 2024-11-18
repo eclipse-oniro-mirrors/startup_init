@@ -22,7 +22,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
-#include <fcntl.h>
 #include <unistd.h>
 
 #include "ueventd_device_handler.h"

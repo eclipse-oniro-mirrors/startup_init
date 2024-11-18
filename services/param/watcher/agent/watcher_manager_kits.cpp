@@ -22,7 +22,6 @@
 #include "system_ability_definition.h"
 #include "watcher_utils.h"
 #include "parameter.h"
-#include "init_param.h"
 
 namespace OHOS {
 namespace init_param {

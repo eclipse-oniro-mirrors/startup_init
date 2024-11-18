@@ -41,12 +41,11 @@
 #define DT_DIR 4
 #endif
 
-#define THOUSAND_UNIT_INT 1000
 #define THOUSAND_UNIT_FLOAT 1000.0
 
 float ConvertMicrosecondToSecond(int x)
 {
-    return ((x / THOUSAND_UNIT_INT) / THOUSAND_UNIT_FLOAT);
+    return ((x / THOUSAND_UNIT_FLOAT) / THOUSAND_UNIT_FLOAT);
 }
 
 #ifndef __LITEOS_M__
