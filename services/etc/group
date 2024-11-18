@@ -41,6 +41,7 @@ hiview:x:1201:
 hidumper_service:x:1212:
 shell:x:2000:hiview
 cache:x:2001:
+app_install:x:2002:
 net_bw_stats:x:3006:
 net_bw_acct:x:3007:
 readproc:x:3009:
