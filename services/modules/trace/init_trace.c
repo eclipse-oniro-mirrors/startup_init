@@ -353,8 +353,9 @@ static void DumpCompressedTrace(int traceFd, int outFd)
     deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED, MAX_WBITS + 16, 8, Z_DEFAULT_STRATEGY); // 16 8 bit
     do {
         // read data
-        zs.avail_in = (uInt)TEMP_FAILURE_RETRY(read(traceFd, inBuffer, CHUNK_SIZE));
-        PLUGIN_CHECK(zs.avail_in >= 0, break, "Error: reading trace, errno: %d\n", errno);
+        ssize_t bytesRead = TEMP_FAILURE_RETRY(read(traceFd, inBuffer, CHUNK_SIZE));
+        PLUGIN_CHECK(bytesRead >= 0, break, "Error: reading trace, errno: %d\n", errno);
+        zs.avail_in = (uInt)bytesRead;
         flush = zs.avail_in == 0 ? Z_FINISH : Z_NO_FLUSH;
         zs.next_in = inBuffer;
         do {
