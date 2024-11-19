@@ -104,6 +104,8 @@ private:
     // for param watcher
     int AddParamWatcher(WatcherGroupPtr group, RemoteWatcherPtr remoteWatcher);
     int DelParamWatcher(WatcherGroupPtr group, RemoteWatcherPtr remoteWatcher);
+    // for app param watcher permission
+    int32_t CheckAppWatchPermission(const std::string &keyPrefix);
     // for process message form init
     void ProcessWatcherMessage(const ParamMessage *msg);
     // for client died
