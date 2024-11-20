@@ -206,7 +206,6 @@ ohos_unittest("init_unittest") {
 
   sources += [
     "begetctl/begetctl_unittest.cpp",
-    "deviceinfo/DeviceInfoUnittest.cpp",
     "fs_manager/erofs/erofs_common_unittest.cpp",
     "fs_manager/erofs/erofs_mount_unittest.cpp",
     "fs_manager/erofs/erofs_remount_unittest.cpp",
@@ -330,8 +329,6 @@ ohos_unittest("init_unittest") {
   }
 
   external_deps = [
-    "access_token:libnativetoken",
-    "access_token:libtoken_setproc",
     "bounds_checking_function:libsec_static",
     "cJSON:cjson",
     "c_utils:utils",
@@ -346,6 +343,14 @@ ohos_unittest("init_unittest") {
     "selinux:libselinux",
     "zlib:libz",
   ]
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.security_access_token)) {
+    external_deps += [
+      "access_token:libnativetoken",
+      "access_token:libtoken_setproc",
+    ]
+    defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
+  }
   if (init_appspawn_client_module && defined(global_parts_info) &&
       defined(global_parts_info.startup_appspawn)) {
     defines += [ "ENABLE_ENTER_APPSPAWN_SANDBOX" ]
@@ -381,7 +386,7 @@ ohos_unittest("init_unittest") {
     ]
     external_deps += [
       "selinux:libselinux",
-      "selinux_adapter:libselinux_parameter_static",
+      "selinux_adapter:librestorecon",
     ]
 
     defines += [
@@ -395,10 +400,15 @@ ohos_unittest("init_unittest") {
       "//base/startup/init/device_info/device_info_load.cpp",
       "//base/startup/init/device_info/device_info_proxy.cpp",
     ]
-    external_deps += [
-      "access_token:libaccesstoken_sdk",
-      "selinux:libselinux",
-    ]
+    if (defined(global_parts_info) &&
+        defined(global_parts_info.security_access_token)) {
+      external_deps += [ "access_token:libaccesstoken_sdk" ]
+      defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
+      sources += [ "deviceinfo/DeviceInfoUnittest.cpp" ]
+    }
+    if (is_standard_system) {
+      external_deps += [ "selinux:libselinux" ]
+    }
 
     defines += [ "PARAM_FEATURE_DEVICEINFO" ]
   }
