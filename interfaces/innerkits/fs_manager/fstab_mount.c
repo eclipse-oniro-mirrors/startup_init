@@ -56,6 +56,12 @@ __attribute__((weak)) void InitTimerControl(bool isSuspend)
 {
 }
 
+__attribute__((weak)) bool NeedDoAllResize(void)
+{
+    BEGET_LOGE("kdump: static\n");
+    return true;
+}
+
 static const SUPPORTED_FILE_SYSTEM supportedFileSystems[] = {
     { "ext4", 0 },
     { "f2fs", 1 },
@@ -278,6 +284,7 @@ static int DoResizeF2fs(const char* device, const unsigned long long size, const
     char *argv[MAX_RESIZE_PARAM_NUM] = {NULL};
     int argc = 0;
 
+    BEGET_ERROR_CHECK(NeedDoAllResize(), return -1, "no need do resize, bucause kdump has done");
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize.f2fs is not exists.");
 
     argv[argc++] = file;
