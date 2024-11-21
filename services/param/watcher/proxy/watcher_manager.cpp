@@ -32,6 +32,7 @@ namespace init_param {
 REGISTER_SYSTEM_ABILITY_BY_ID(WatcherManager, PARAM_WATCHER_DISTRIBUTED_SERVICE_ID, true)
 
 const static int32_t INVALID_SOCKET = -1;
+const static int32_t PUBLIC_APP_BEGIN_UID = 10000;
 WatcherManager::~WatcherManager()
 {
     Clear();
@@ -87,11 +88,55 @@ int32_t WatcherManager::DelRemoteWatcher(uint32_t remoteWatcherId)
     return 0;
 }
 
+int32_t WatcherManager::CheckAppWatchPermission(const std::string &keyPrefix)
+{
+    if (keyPrefix.find("*") != std::string::npos) {
+        WATCHER_LOGE("param key has *, not need deal");
+        return false;
+    }
+    static const std::vector<std::string> whitelist = {
+        "persist.ace.debug.statemgr.enabled",
+        "persist.ace.debug.boundary.enabled",
+        "persist.ace.trace.layout.enabled",
+        "persist.ace.trace.inputevent.enabled",
+        "persist.ace.performance.monitor.enabled",
+        "persist.sys.graphic.animationscale",
+        "persist.sys.arkui.animationscale",
+        "persist.hdc.jdwp",
+        "persist.location.switch_mode",
+        "persist.super_privacy.mode",
+        "persist.global.locale",
+        "const.security.developermode.state",
+        "debug.graphic.frame",
+        "debug.graphic.debug_layer",
+        "debug.graphic.overdraw",
+        "debug.graphic.colors_overdraw",
+        "accessibility.config.ready",
+        "sys.hiview.chr.fluchcache",
+        "web.render.dump",
+        "web.debug.trace"
+    };
+
+    if (std::find(whitelist.begin(), whitelist.end(), keyPrefix) != whitelist.end()) {
+        return true;
+    }
+    return false;
+}
+
 int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId)
 {
     std::lock_guard<std::mutex> lock(watcherMutex_);
     // get remote watcher and group
-    WATCHER_CHECK(keyPrefix.size() < PARAM_NAME_LEN_MAX, return -1, "Failed to verify keyPrefix.");
+    WATCHER_CHECK((keyPrefix != "*") && (keyPrefix.size() < PARAM_NAME_LEN_MAX),
+        return -1, "Failed to verify keyPrefix.");
+
+    // check calling uid, app not have watch permission
+    int uid = GetCallingUid();
+    if (uid >= PUBLIC_APP_BEGIN_UID && !CheckAppWatchPermission(keyPrefix)) {
+        WATCHER_LOGE("app not have permission watch param:%s uid:%d pid:%d", keyPrefix.c_str(), uid, GetCallingPid());
+        return -1;
+    }
+
     auto remoteWatcher = GetRemoteWatcher(remoteWatcherId);
     WATCHER_CHECK(remoteWatcher != nullptr, return -1, "Can not find remote watcher %d", remoteWatcherId);
     WATCHER_CHECK(remoteWatcher->CheckAgent(GetCallingPid()), return 0,
