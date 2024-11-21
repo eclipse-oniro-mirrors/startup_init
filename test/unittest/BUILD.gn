@@ -41,7 +41,7 @@ FSCRYPT_PATH =
     "//foundation/filemanagement/storage_service/services/storage_daemon"
 
 ohos_unittest("init_unittest") {
-  module_out_path = "startup/init"
+  module_out_path = "init/init"
   sources = [
     "//base/startup/init/device_info/device_info.cpp",
     "//base/startup/init/device_info/device_info_stub.cpp",
@@ -445,7 +445,7 @@ ohos_unittest("init_unittest") {
 }
 
 ohos_unittest("init_dmverify_unittest") {
-  module_out_path = "startup/init"
+  module_out_path = "init/init"
   sources = [
     "//base/startup/init/interfaces/innerkits/fs_manager/dm_verity/dm_verity.c",
     "//base/startup/init/services/log/init_commlog.c",
@@ -477,7 +477,7 @@ ohos_unittest("init_dmverify_unittest") {
 }
 
 ohos_unittest("init_fshvb_unittest") {
-  module_out_path = "startup/init"
+  module_out_path = "init/init"
   sources = [
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/fs_hvb.c",
