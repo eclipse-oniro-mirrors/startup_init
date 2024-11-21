@@ -14,12 +14,15 @@
  */
 
 #include "modulemgrdestroy_fuzzer.h"
+#include <string>
 #include "modulemgr.h"
 
 namespace OHOS {
     bool FuzzModuleMgrDestroy(const uint8_t* data, size_t size)
     {
-        ModuleMgrDestroy(nullptr);
+        std::string name(reinterpret_cast<const char*>(data), size);
+        MODULE_MGR *moduleMgr = ModuleMgrCreate(name.c_str());
+        ModuleMgrDestroy(moduleMgr);
         return true;
     }
 }

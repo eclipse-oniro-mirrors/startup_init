@@ -15,15 +15,42 @@
 
 #include "buildcontrolmessage_fuzzer.h"
 #include <string>
+#include "securec.h"
 #include "fd_holder_internal.h"
 
 
 namespace OHOS {
+    const uint8_t* BASE_DATA = nullptr;
+    size_t g_baseSize = 0;
+    size_t g_basePos;
+
+    template <class T> T GetData()
+    {
+        T object{};
+        size_t objectSize = sizeof(object);
+        if ((BASE_DATA == nullptr) || (objectSize > g_baseSize - g_basePos)) {
+            return object;
+        }
+        errno_t ret = memcpy_s(&object, objectSize, BASE_DATA + g_basePos, objectSize);
+        if (ret != EOK) {
+            return {};
+        }
+        g_basePos += objectSize;
+        return object;
+    }
+
     bool FuzzBuildControlMessage(const uint8_t* data, size_t size)
     {
         bool result = false;
-        if (!BuildControlMessage(nullptr, nullptr, 1, false)) {
-            result = true;
+        BASE_DATA = data;
+        g_baseSize = size;
+        g_basePos = 0;
+        if (size > sizeof(struct msghdr) + sizeof(int)) {
+            struct msghdr msghdr = GetData<struct msghdr>();
+            int fd = GetData<int>();
+            if (!BuildControlMessage(&msghdr, &fd, 1, false)) {
+                result = true;
+            }
         }
         return result;
     }
