@@ -21,7 +21,9 @@
 #include "beget_ext.h"
 #include "idevice_info.h"
 #include "ipc_skeleton.h"
+#ifdef INIT_SUPPORT_ACCESS_TOKEN
 #include "accesstoken_kit.h"
+#endif
 #include "parcel.h"
 #include "string_ex.h"
 #include "if_system_ability_manager.h"
@@ -34,8 +36,10 @@
 #include "deviceinfoservice_ipc_interface_code.h"
 
 namespace OHOS {
+#ifdef INIT_SUPPORT_ACCESS_TOKEN
 using namespace Security;
 using namespace Security::AccessToken;
+#endif
 
 namespace device_info {
 REGISTER_SYSTEM_ABILITY_BY_ID(DeviceInfoService, SYSPARAM_DEVICE_SERVICE_ID, true)
@@ -48,7 +52,6 @@ static const int DEVICE_INFO_EXIT_TIMEOUT_S = 60;
 static const int DEVICE_INFO_EXIT_TIMEOUT_S = 3;
 #endif
 static const int DEVICE_INFO_EXIT_WAITTIMES = 12;
-
 
 static int UnloadDeviceInfoSa(void)
 {
@@ -112,6 +115,7 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
 
 bool DeviceInfoStub::CheckPermission(MessageParcel &data, const std::string &permission)
 {
+#ifdef INIT_SUPPORT_ACCESS_TOKEN
     AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     int32_t result = TypePermissionState::PERMISSION_GRANTED;
     int32_t tokenType = AccessTokenKit::GetTokenTypeFlag(callerToken);
@@ -126,6 +130,10 @@ bool DeviceInfoStub::CheckPermission(MessageParcel &data, const std::string &per
         return false;
     }
     return true;
+#else
+    DINFO_LOGE("CheckPermission is not supported");
+    return false;
+#endif
 }
 
 int32_t DeviceInfoService::GetUdid(std::string& result)

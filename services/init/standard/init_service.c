@@ -27,8 +27,10 @@
 #include "init_param.h"
 #include "init_utils.h"
 #include "securec.h"
+#ifdef INIT_SUPPORT_ACCESS_TOKEN
 #include "token_setproc.h"
 #include "nativetoken_kit.h"
+#endif
 #include "sandbox.h"
 #include "sandbox_namespace.h"
 #include "service_control.h"
@@ -135,8 +137,13 @@ int ServiceExec(Service *service, const ServiceArgs *pathArgs)
 
 int SetAccessToken(const Service *service)
 {
+#ifdef INIT_SUPPORT_ACCESS_TOKEN
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "service is null");
     return SetSelfTokenID(service->tokenId);
+#else
+    INIT_LOGE("SetAccessToken is not supported");
+    return SERVICE_FAILURE;
+#endif
 }
 
 void GetAccessToken(void)
@@ -148,6 +155,7 @@ void GetAccessToken(void)
             if (service->capsArgs.count == 0) {
                 service->capsArgs.argv = NULL;
             }
+#ifdef INIT_SUPPORT_ACCESS_TOKEN
             const char *apl = "system_basic";
             if (service->apl != NULL) {
                 apl = service->apl;
@@ -166,6 +174,9 @@ void GetAccessToken(void)
             INIT_CHECK_ONLY_ELOG(tokenId  != 0,
                 "gettotkenid failed, service \' %s \'", service->name);
             service->tokenId = tokenId;
+#else
+            INIT_LOGE("gettotkenid is not supported");
+#endif
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }

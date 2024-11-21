@@ -127,11 +127,18 @@ ohos_executable("init") {
   deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_sources" ]
   deps += [ "//base/startup/init/services/modules:static_modules" ]
   external_deps += [
-    "access_token:libnativetoken",
-    "access_token:libtoken_setproc",
     "hilog:libhilog",
     "storage_service:libfscryptutils_static",
   ]
+  defines = []
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.security_access_token)) {
+    external_deps += [
+      "access_token:libnativetoken",
+      "access_token:libtoken_setproc",
+    ]
+    defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
+  }
   cflags = []
   if (init_startup_feature_system_call_switch) {
     ldflags = [
@@ -172,7 +179,7 @@ ohos_executable("init") {
     cflags += [ "-DWITH_SELINUX" ]
   }
 
-  defines = [ "PARAM_SUPPORT_TRIGGER" ]
+  defines += [ "PARAM_SUPPORT_TRIGGER" ]
   if (param_test) {
     defines += [
       "OHOS_SERVICE_DUMP",
