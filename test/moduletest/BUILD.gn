@@ -45,7 +45,7 @@ ohos_shared_library("libparamtestmodule") {
 }
 
 ohos_moduletest("InitModuleTest") {
-  module_out_path = "startup/init"
+  module_out_path = "init/init"
 
   sources = [
     "hookmgr_moduletest.cpp",
