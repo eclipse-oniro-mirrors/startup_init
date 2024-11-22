@@ -125,6 +125,10 @@ if (defined(ohos_lite)) {
       defines += [ "PARAM_SUPPORT_SELINUX" ]
     }
 
+    if (init_extra_static_modules == "") {
+      defines += [ "SUPPORT_REBOOT_CHARGE" ]
+    }
+
     symlink_target_name = [
       "reboot",
       "service_control",
@@ -171,6 +175,10 @@ if (defined(ohos_lite)) {
       "selinux:libselinux",
       "selinux_adapter:libselinux_parameter_static",
     ]
+
+    if (init_extra_static_modules == "") {
+      defines += [ "SUPPORT_REBOOT_CHARGE" ]
+    }
 
     install_images = [ "updater" ]
     install_enable = true
