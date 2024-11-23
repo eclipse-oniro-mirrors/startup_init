@@ -15,12 +15,38 @@
 
 #include "cmdserviceprocessdelclient_fuzzer.h"
 #include <string>
+#include "securec.h"
 #include "control_fd.h"
 
 namespace OHOS {
+    const uint8_t *BASE_DATA = nullptr;
+    size_t g_baseSize = 0;
+    size_t g_basePos;
+
+    template <class T> T GetData()
+    {
+        T object{};
+        size_t objectSize = sizeof(object);
+        if ((BASE_DATA == nullptr) || (objectSize > g_baseSize - g_basePos)) {
+            return object;
+        }
+        errno_t ret = memcpy_s(&object, objectSize, BASE_DATA + g_basePos, objectSize);
+        if (ret != EOK) {
+            return {};
+        }
+        g_basePos += objectSize;
+        return object;
+    }
+
     bool FuzzCmdServiceProcessDelClient(const uint8_t* data, size_t size)
     {
-        CmdServiceProcessDelClient(1);
+        BASE_DATA = data;
+        g_baseSize = size;
+        g_basePos = 0;
+        if (size > sizeof(pid_t)) {
+            pid_t pid = GetData<pid_t>();
+            CmdServiceProcessDelClient(pid);
+        }
         return true;
     }
 }
