@@ -41,7 +41,7 @@ bool HasSystemCapability(const char *cap)
 
     if (strncmp(SYSCAP_PREFIX_NAME, cap, sizeof(SYSCAP_PREFIX_NAME) - 1) == 0) {
         rc = snprintf_s(capName, SYSCAP_MAX_SIZE, SYSCAP_MAX_SIZE - 1, "const.%s", cap);
-        BEGET_ERROR_CHECK(rc != 0, return false, "Failed snprintf_s err=%d", errno);
+        BEGET_ERROR_CHECK(rc >= 0, return false, "Failed snprintf_s err=%d", errno);
     } else if (snprintf_s(capName, SYSCAP_MAX_SIZE, SYSCAP_MAX_SIZE - 1, CONST_SYSCAP_PREFIX_NAME".%s", cap) == -1) {
         BEGET_LOGE("Failed snprintf_s err=%d", errno);
         return false;
