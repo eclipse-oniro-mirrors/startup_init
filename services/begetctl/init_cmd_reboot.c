@@ -28,7 +28,15 @@ static int main_cmd(BShellHandle shell, int argc, char* argv[])
     }
     int ret;
     if (argc == REBOOT_CMD_NUMBER) {
+#ifndef SUPPORT_REBOOT_CHARGE
+        if (strncmp(argv[1], "charge", strlen("charge")) == 0) {
+            ret = DoReboot(NULL);
+        } else {
+            ret = DoReboot(argv[1]);
+        }
+#else
         ret = DoReboot(argv[1]);
+#endif
     } else {
         ret = DoReboot(NULL);
     }
@@ -55,7 +63,9 @@ MODULE_CONSTRUCTOR(void)
         {"reboot", main_cmd, "reboot and boot into updater", "reboot updater[:options]", ""},
         {"reboot", main_cmd, "reboot and boot into flashd", "reboot flashd", ""},
         {"reboot", main_cmd, "reboot and boot into flashd", "reboot flashd[:options]", ""},
+#ifdef SUPPORT_REBOOT_CHARGE
         {"reboot", main_cmd, "reboot and boot into charge", "reboot charge", ""},
+#endif
     };
     for (size_t i = sizeof(infos) / sizeof(infos[0]); i > 0; i--) {
         BShellEnvRegisterCmd(GetShellHandle(), &infos[i - 1]);
