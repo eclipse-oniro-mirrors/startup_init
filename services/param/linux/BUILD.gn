@@ -123,6 +123,9 @@ if (defined(ohos_lite)) {
       "PARAM_SUPPORT_REAL_CHECK",
       "SUPPORT_PARAM_LOAD_HOOK",
     ]
+    if (is_asan) {
+      defines += [ "INIT_ASAN" ]
+    }
     external_deps = [
       "bounds_checking_function:libsec_static",
       "cJSON:cjson",

@@ -610,6 +610,9 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
         WaitForDebugger();
     }
 #endif
+#ifdef INIT_ASAN
+    CloseStdio();
+#endif
     // fail must exit sub process
     int ret = InitServiceProperties(service, pathArgs);
     INIT_ERROR_CHECK(ret == 0,

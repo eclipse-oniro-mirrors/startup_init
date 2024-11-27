@@ -125,6 +125,38 @@ static void MountRequiredPartitions(void)
     }
 }
 
+#ifdef ASAN_DETECTOR
+static void ChekcAndRunAsanInit(char * const args[])
+{
+    const char* asanInitPath = "/system/asan/bin/init";
+    char rebootReason[MAX_BUFFER_LEN] = {0};
+    INIT_LOGI("ChekcAndRunAsan Begin");
+    int ret = GetParameterFromCmdLine("reboot_reason", rebootReason, MAX_BUFFER_LEN);
+    if (ret) {
+        INIT_LOGE("Failed get reboot_reason from cmdline.");
+        return;
+    }
+    if (strcmp(rebootReason, "COLDBOOT") != 0) {
+        INIT_LOGE("rebootReason is not COLDBOOT, skip.");
+        return;
+    }
+    if (access(asanInitPath, X_OK) != 0) {
+        INIT_LOGE("%s not exit, skip.\n", asanInitPath);
+        return;
+    }
+    INIT_LOGI("redirect stdio to /dev/kmsg");
+    OpenKmsg();
+
+    setenv("ASAN_OPTIONS", "include=/system/etc/asan.options", 1);
+    setenv("TSAN_OPTIONS", "include=/system/etc/asan.options", 1);
+    setenv("UBSAN_OPTIONS", "include=/system/etc/asan.options", 1);
+    setenv("HWASAN_OPTIONS", "include=/system/etc/asan.options", 1);
+    INIT_LOGI("Execute %s, process id %d.\n", asanInitPath, getpid());
+    if (execv(asanInitPath, args) != 0) {
+        INIT_LOGE("Execute %s, execle failed! err %d.\n", asanInitPath, errno);
+    }
+}
+#endif
 static void StartSecondStageInit(long long uptime)
 {
     INIT_LOGI("Start init second stage.");
@@ -142,6 +174,9 @@ static void StartSecondStageInit(long long uptime)
         buf,
         NULL,
     };
+#ifdef ASAN_DETECTOR
+    ChekcAndRunAsanInit(args);
+#endif
     if (execv("/bin/init", args) != 0) {
         INIT_LOGE("Failed to exec \"/bin/init\", err = %d", errno);
         exit(-1);

@@ -395,6 +395,14 @@ static void LoadSelinuxLabel(const char *op)
 
 int InitParamService(void)
 {
+#ifdef INIT_ASAN
+    // Because the old paramWorkSpace' memory is malloced in libc.so's construction function,
+    // which is before the asan enabled, some error will happen if the memory free after with asan detection.
+    // So, we just reset the flag of the old paramWorkSpace to drop it.
+    PARAM_LOGI("INIT_ASAN is defined, begin to reset global paramWorkSpace");
+    ParamWorkSpace *paramWorkSpace = GetParamWorkSpace();
+    paramWorkSpace->flags = 0;
+#endif
     PARAM_LOGI("InitParamService pipe: %s.", PIPE_NAME);
     CheckAndCreateDir(PIPE_NAME);
     CheckAndCreateDir(PARAM_STORAGE_PATH"/");
