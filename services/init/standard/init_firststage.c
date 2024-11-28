@@ -141,7 +141,7 @@ static void ChekcAndRunAsanInit(char * const args[])
         return;
     }
     if (access(asanInitPath, X_OK) != 0) {
-        INIT_LOGE("%s not exit, skip.\n", asanInitPath);
+        INIT_LOGE("%s not exit, skip.", asanInitPath);
         return;
     }
     INIT_LOGI("redirect stdio to /dev/kmsg");
@@ -151,9 +151,9 @@ static void ChekcAndRunAsanInit(char * const args[])
     setenv("TSAN_OPTIONS", "include=/system/etc/asan.options", 1);
     setenv("UBSAN_OPTIONS", "include=/system/etc/asan.options", 1);
     setenv("HWASAN_OPTIONS", "include=/system/etc/asan.options", 1);
-    INIT_LOGI("Execute %s, process id %d.\n", asanInitPath, getpid());
+    INIT_LOGI("Execute %s, process id %d.", asanInitPath, getpid());
     if (execv(asanInitPath, args) != 0) {
-        INIT_LOGE("Execute %s, execle failed! err %d.\n", asanInitPath, errno);
+        INIT_LOGE("Execute %s, execle failed! err %d.", asanInitPath, errno);
     }
 }
 #endif
