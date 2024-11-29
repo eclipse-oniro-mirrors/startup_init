@@ -98,7 +98,7 @@ INIT_STATIC uint64_t LookupErofsEnd(const char *dev)
         return 0;
     }
 
-    uint64_t erofsSize = sb.blocks * BLOCK_SIZE_UINT;
+    uint64_t erofsSize = (uint64_t)sb.blocks * BLOCK_SIZE_UINT;
     return erofsSize;
 }
 
