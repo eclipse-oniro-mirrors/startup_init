@@ -55,6 +55,13 @@ ohos_executable("init_early") {
   if (init_extra_static_modules != "") {
     deps += [ init_extra_static_modules ]
   }
+  defines = []
+  if (is_asan) {
+    defines += [ "INIT_ASAN" ]
+  }
+  if (asan_detector) {
+    defines += [ "ASAN_DETECTOR" ]
+  }
   install_images = [ "ramdisk" ]
   install_enable = true
   part_name = "init"
@@ -196,6 +203,9 @@ ohos_executable("init") {
       defined(global_parts_info.developtools_hiprofiler)) {
     defines += [ "SUPPORT_PROFILER_HIDEBUG" ]
     external_deps += [ "hiprofiler:libhidebug_init" ]
+  }
+  if (is_asan) {
+    defines += [ "INIT_ASAN" ]
   }
   if (asan_detector) {
     defines += [ "ASAN_DETECTOR" ]
