@@ -178,6 +178,15 @@ INIT_STATIC uint64_t GetBlockSize(const char *dev)
     return blockSize;
 }
 
+/* 字节对齐函数，基于alignment进行字节对齐 */
+INIT_STATIC uint64_t AlignTo(uint64_t base, uint64_t alignment)
+{
+    if (alignment == 0) {
+        return base;
+    }
+    return (((base - 1) / alignment + 1) * alignment);
+}
+
 INIT_STATIC int GetMapperAddr(const char *dev, uint64_t *start, uint64_t *length)
 {
     /* 获取EROFS文件系统大小 */
@@ -194,7 +203,7 @@ INIT_STATIC int GetMapperAddr(const char *dev, uint64_t *start, uint64_t *length
      */
     uint64_t imgSize = GetImgSize(dev, *start);
     if (imgSize > 0) {
-        *start += EXTHDR_BLKSIZE;
+        *start = AlignTo(imgSize, ALIGN_BLOCK_SIZE);
     }
 
     /* 获取分区大小，老分区布局：分区大小 = 镜像大小  新分区布局：分区大小 = 镜像大小 + 无镜像填充的分区空位 */
