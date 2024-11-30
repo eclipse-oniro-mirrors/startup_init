@@ -74,12 +74,9 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
   }
 
-  ohos_prebuilt_etc("console.cfg") {
-    if (build_variant == "root") {
-      image_name = [ "system" ]
+  if (build_variant == "root") {
+    ohos_prebuilt_etc("console.cfg") {
       source = "//base/startup/init/services/etc/console.cfg"
-      install_images = image_name
-      output = "console.cfg"
       relative_install_dir = "init"
       part_name = "init"
       subsystem_name = "startup"
@@ -246,7 +243,6 @@ if (defined(ohos_lite)) {
   group("etc_files") {
     deps = [
       ":boot.group",
-      ":console.cfg",
       ":features.json",
       ":group",
       ":init.cfg",
@@ -262,5 +258,8 @@ if (defined(ohos_lite)) {
       ":syscap.para",
       ":systemcapability.json",
     ]
+    if (build_variant == "root") {
+      deps += [ ":console.cfg" ]
+    }
   }
 }
