@@ -44,7 +44,7 @@
 #define VALUE_ATTR_KMSG 2
 
 // All service processes that init will fork+exec.
-static ServiceSpace g_serviceSpace = { 0 };
+ServiceSpace g_serviceSpace = { 0 };
 static const int CRITICAL_DEFAULT_CRASH_TIME = 240;
 // maximum number of crashes within time CRITICAL_DEFAULT_CRASH_TIME for one service
 static const int CRITICAL_DEFAULT_CRASH_COUNT =  4;
