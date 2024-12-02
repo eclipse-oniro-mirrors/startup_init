@@ -324,7 +324,7 @@ void SystemConfig(const char *uptime)
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
     RecordInitBootEvent("init.ParseCfg");
-    INIT_LOGI("boot stage: parse config file finish.");
+    INIT_LOGI("boot stage: parse config file finish.cfg count %d", g_serviceSpace.serviceCount);
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 
     IsEnableSandbox();
