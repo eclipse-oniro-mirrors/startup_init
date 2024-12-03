@@ -58,7 +58,7 @@ __attribute__((weak)) void InitTimerControl(bool isSuspend)
 
 __attribute__((weak)) bool NeedDoAllResize(const unsigned int fsManagerFlags)
 {
-    BEGET_LOGW("kdump: static\n");
+    BEGET_LOGW("kdump: static");
     return true;
 }
 
