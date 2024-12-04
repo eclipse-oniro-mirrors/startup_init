@@ -254,7 +254,7 @@ public:
         : WatcherNode(groupId), ParamWatcherList(), keyPrefix_(key) {}
     ~WatcherGroup(void) override;
 
-    void ProcessParameterChange(WatcherManager *mananger, const std::string &name, const std::string &value);
+    void ProcessParameterChange(WatcherManager *manager, const std::string &name, const std::string &value);
     const std::string GetKeyPrefix() const
     {
         return keyPrefix_;
