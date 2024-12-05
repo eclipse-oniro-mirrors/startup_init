@@ -23,6 +23,8 @@
 #include "init_utils.h"
 #include <libhvb.h>
 #include <libgen.h>
+#include "hvb_sm2.h"
+#include "hvb_sm3.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -38,12 +40,20 @@ extern "C" {
 
 #define FS_HVB_DIGEST_SHA256_BYTES 32
 #define FS_HVB_DIGEST_SHA512_BYTES 64
+#define FS_HVB_DIGEST_SM3_BYTES 32
 #define FS_HVB_DIGEST_MAX_BYTES FS_HVB_DIGEST_SHA512_BYTES
 #define FS_HVB_DIGEST_STR_MAX_BYTES 128
 #define FS_HVB_DEVPATH_MAX_LEN 128
 #define FS_HVB_RVT_PARTITION_NAME "rvt"
 #define FS_HVB_CMDLINE_PATH "/proc/cmdline"
 #define FS_HVB_PARTITION_PREFIX "/dev/block/by-name/"
+
+#define HASH_ALGO_SHA256 0
+#define HASH_ALGO_SHA256_STR "sha256"
+#define HASH_ALGO_SHA512 2
+#define HASH_ALGO_SHA512_STR "sha512"
+#define HASH_ALGO_SM3 3
+#define HASH_ALGO_SM3_STR "sm3"
 
 #define FS_HVB_RETURN_ERR_IF_NULL(__ptr)             \
     do {                                                \
@@ -75,7 +85,7 @@ static int FsHvbGetCertDigstStr(char *str, size_t size)
     return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_CERT_DIGEST);
 }
 
-static int FsHvbComputeSha256(char *digest, size_t size, struct hvb_cert_data *certs, uint64_t num_certs)
+static int FsHvbComputeSha256(char *digest, uint32_t size, struct hvb_cert_data *certs, uint64_t num_certs)
 {
     int ret;
     uint64_t n;
@@ -109,6 +119,41 @@ static int FsHvbComputeSha256(char *digest, size_t size, struct hvb_cert_data *c
     return 0;
 }
 
+static int FsHvbComputeSM3Hash(char *digest, uint32_t *size, struct hvb_cert_data *certs, uint64_t num_certs)
+{
+    BEGET_CHECK(digest != NULL && certs != NULL && size != NULL, return -1);
+    int ret;
+    uint64_t n;
+    struct sm3_ctx_t ctx = {0};
+
+    if (*size < FS_HVB_DIGEST_SM3_BYTES) {
+        BEGET_LOGE("error, size=%zu", *size);
+        return -1;
+    }
+
+    ret = hvb_sm3_init(&ctx);
+    if (ret != SM3_OK) {
+        BEGET_LOGE("error 0x%x, sm3 init", ret);
+        return -1;
+    }
+
+    for (n = 0; n < num_certs; n++) {
+        ret = hvb_sm3_update(&ctx, certs[n].data.addr, certs[n].data.size);
+        if (ret != SM3_OK) {
+            BEGET_LOGE("error 0x%x, sm3 update", ret);
+            return -1;
+        }
+    }
+
+    ret = hvb_sm3_final(&ctx, (uint8_t *)digest, size);
+    if (ret != SM3_OK) {
+        BEGET_LOGE("error 0x%x, sha256 final", ret);
+        return -1;
+    }
+
+    return 0;
+}
+
 static int FsHvbHexStrToBin(char *bin, size_t bin_size, char *str, size_t str_size)
 {
     size_t i;
@@ -133,6 +178,7 @@ static int FsHvbCheckCertChainDigest(struct hvb_cert_data *certs, uint64_t num_c
     char certDigest[FS_HVB_DIGEST_MAX_BYTES] = {0};
     char computeDigest[FS_HVB_DIGEST_MAX_BYTES] = {0};
     char certDigestStr[FS_HVB_DIGEST_STR_MAX_BYTES + 1] = {0};
+    uint32_t computeDigestLen = FS_HVB_DIGEST_MAX_BYTES;
 
     ret = FsHvbGetHashStr(&hashAlg[0], sizeof(hashAlg));
     if (ret != 0) {
@@ -153,7 +199,10 @@ static int FsHvbCheckCertChainDigest(struct hvb_cert_data *certs, uint64_t num_c
 
     if (strcmp(&hashAlg[0], "sha256") == 0) {
         digest_len = FS_HVB_DIGEST_SHA256_BYTES;
-        ret = FsHvbComputeSha256(computeDigest, sizeof(computeDigest), certs, num_certs);
+        ret = FsHvbComputeSha256(computeDigest, computeDigestLen, certs, num_certs);
+    } else if (strcmp(&hashAlg[0], "sm3") == 0) {
+        digest_len = FS_HVB_DIGEST_SM3_BYTES;
+        ret = FsHvbComputeSM3Hash(computeDigest, &computeDigestLen, certs, num_certs);
     } else {
         BEGET_LOGE("error, not support alg %s", &hashAlg[0]);
         return -1;
@@ -203,6 +252,8 @@ int FsHvbInit(void)
         g_vd = NULL;
         return rc;
     }
+
+    BEGET_LOGE("hvb verify succ in init");
 
     return 0;
 }
@@ -341,12 +392,16 @@ static char *FsHvbGetHashAlgStr(unsigned int hash_algo)
     char *alg = NULL;
 
     switch (hash_algo) {
-        case 0:
-            alg = "sha256";
+        case HASH_ALGO_SHA256:
+            alg = HASH_ALGO_SHA256_STR;
             break;
 
-        case 1:
-            alg = "sha512";
+        case HASH_ALGO_SHA512:
+            alg = HASH_ALGO_SHA512_STR;
+            break;
+        
+        case HASH_ALGO_SM3:
+            alg = HASH_ALGO_SM3_STR;
             break;
 
         default:
