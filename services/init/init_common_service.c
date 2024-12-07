@@ -768,6 +768,12 @@ static void CheckOndemandService(Service *service)
 {
     CheckServiceSocket(service);
     if (strcmp(service->name, "console") == 0) {
+#ifdef IS_DEBUG_VERSION
+        if (!IsDebuggableVersion()) {
+            INIT_LOGI("not debug version, do not watch console service");
+            return;
+        }
+#endif
         if (WatchConsoleDevice(service) < 0) {
             INIT_LOGE("Failed to watch console service after it exit, mark console service invalid");
             service->attribute |= SERVICE_ATTR_INVALID;
