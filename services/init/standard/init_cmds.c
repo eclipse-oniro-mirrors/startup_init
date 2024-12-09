@@ -51,6 +51,9 @@
 #define FSCRYPT_POLICY_BUF_SIZE (60)
 #define DECIMAL 10
 #define OCTAL 8
+#define BOOT_DETECTOR_IOCTL_BASE 'B'
+#define SET_SHUT_STAGE _IOW(BOOT_DETECTOR_IOCTL_BASE, 106, int)
+#define SHUT_STAGE_FRAMEWORK_START 1
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
@@ -571,6 +574,23 @@ static void DoMkSandbox(const struct CmdArgs *ctx)
     CloseDefaultNamespace();
 }
 
+static void DoStopFeedHighdog(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("stop feed highdog");
+    int fd = open("/dev/bbox", O_WRONLY);
+    if (fd < 0) {
+        INIT_LOGE("open /dev/bbox failed");
+        return;
+    }
+    int stage = SHUT_STAGE_FRAMEWORK_START;
+    int ret = ioctl(fd, SET_SHUT_STAGE, &stage);
+    if (ret < 0) {
+        INIT_LOGE("set shut stage failed");
+    }
+    close(fd);
+    return;
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "syncexec ", 1, 10, 0, DoSyncExec },
     { "exec ", 1, 10, 0, DoExec },
@@ -600,6 +620,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "mkswap", 1, 1, 0, DoMkswap},
     { "swapon", 1, 1, 0, DoSwapon},
     { "mksandbox", 1, 1, 0, DoMkSandbox},
+    { "stop_feed_highdog", 0, 1, 0, DoStopFeedHighdog},
 };
 
 const struct CmdTable *GetCmdTable(int *number)
