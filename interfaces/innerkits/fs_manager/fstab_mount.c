@@ -48,7 +48,7 @@ extern "C" {
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 
-__attribute__((weak)) void InitPostMount(const char *mountPoint, int rc)
+__attribute__((weak)) void InitPostMount(int rc, struct FstabItem *fstabItem)
 {
 }
 
@@ -554,7 +554,7 @@ int MountOneItem(FstabItem *item)
         SwitchRoot("/usr");
     }
 #endif
-    InitPostMount(item->mountPoint, rc);
+    InitPostMount(rc, item);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
             BEGET_LOGE("Mount no fail device %s to %s failed, err = %d", item->deviceName, item->mountPoint, errno);
