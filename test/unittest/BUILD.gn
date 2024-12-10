@@ -487,6 +487,7 @@ ohos_unittest("init_fshvb_unittest") {
     "//base/startup/init/test/mock/hvb/libhvb/auth/hvb.c",
     "//base/startup/init/test/mock/hvb/libhvb/cert/hvb_cert.c",
     "//base/startup/init/test/mock/hvb/libhvb/crypto/hvb_hash_sha256.c",
+    "//base/startup/init/test/mock/hvb/libhvb/crypto/hvb_sm3.c",
     "//base/startup/init/test/mock/init/ueventd/ueventd.c",
     "//base/startup/init/test/mock/init/ueventd/ueventd_socket.c",
     "//base/startup/init/test/unittest/fs_manager/libfs_hvb_unittest.cpp",
