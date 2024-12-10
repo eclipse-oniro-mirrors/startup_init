@@ -120,6 +120,11 @@ const char *GetProductModel(void)
     return GetProductModel_();
 }
 
+const char *GetProductModelAlias(void)
+{
+    return GetProductModelAlias_();
+}
+
 const char *GetManufacture(void)
 {
     return GetManufacture_();

@@ -119,6 +119,7 @@
     GetParameterName;
     GetParameterValue;
     GetProductModel;
+    GetProductModelAlias;
     GetProductSeries;
     GetSdkApiVersion;
     GetSecurityPatchTag;

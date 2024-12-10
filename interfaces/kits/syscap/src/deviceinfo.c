@@ -44,6 +44,11 @@ const char *OH_GetProductModel(void)
     return GetProductModel();
 }
 
+const char *OH_GetProductModelAlias(void)
+{
+    return GetProductModelAlias();
+}
+
 const char *OH_GetSoftwareModel(void)
 {
     return GetSoftwareModel();

@@ -131,6 +131,16 @@ INIT_LOCAL_API const char *GetProductModel_(void)
     return GetProperty("const.product.model", &productModel);
 }
 
+INIT_LOCAL_API const char *GetProductModelAlias_(void)
+{
+    static const char *productModelAlias = NULL;
+    const char *result = GetProperty("const.product.model_alias", &productModelAlias);
+    if (result == NULL) {
+        return GetProperty("const.product.model", &productModelAlias);
+    }
+    return result;
+}
+
 INIT_LOCAL_API const char *GetManufacture_(void)
 {
     static const char *productManufacture = NULL;

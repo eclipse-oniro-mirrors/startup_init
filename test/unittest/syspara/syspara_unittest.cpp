@@ -50,6 +50,7 @@ HWTEST_F(SysparaUnitTest, parameterTest001, TestSize.Level0)
     printf("MarketName =%s\n", GetMarketName());
     printf("ProductSeries =%s\n", GetProductSeries());
     printf("ProductModel =%s\n", GetProductModel());
+    printf("ProductModel =%s\n", GetProductModelAlias());
     printf("SoftwareModel =%s\n", GetSoftwareModel());
     printf("HardwareModel =%s\n", GetHardwareModel());
     printf("Software profile =%s\n", GetHardwareProfile());
@@ -84,6 +85,7 @@ HWTEST_F(SysparaUnitTest, parameterTest001_2, TestSize.Level0)
     EXPECT_STRNE(GetMarketName(), nullptr);
     EXPECT_STRNE(GetProductSeries(), nullptr);
     EXPECT_STRNE(GetProductModel(), nullptr);
+    EXPECT_STRNE(GetProductModelAlias(), nullptr);
     EXPECT_STRNE(GetSoftwareModel(), nullptr);
     EXPECT_STRNE(GetHardwareModel(), nullptr);
     EXPECT_STRNE(GetHardwareProfile(), nullptr);
