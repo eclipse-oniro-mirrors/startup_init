@@ -37,6 +37,9 @@
 #include "securec.h"
 #include "init_cmds.h"
 #include "init_log.h"
+#include "init_service.h"
+#include "hookmgr.h"
+#include "bootstage.h"
 #include "crash_handler.h"
 
 static const SignalInfo g_platformSignals[] = {
@@ -52,11 +55,26 @@ static const SignalInfo g_platformSignals[] = {
     { SIGTRAP, "SIGTRAP" },
 };
 
+static void DoCriticalInit(void)
+{
+#ifndef OHOS_LITE
+    Service service = {
+        .pid = 1,
+        .name = "init",
+    };
+
+    BEGET_LOGI("ServiceReap init begin");
+    HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_REAP, (void *)&service, NULL);
+    BEGET_LOGI("ServiceReap init end!");
+#endif
+}
+
 static void SignalHandler(int sig, siginfo_t *si, void *context)
 {
     int32_t pid = getpid();
     if (pid == 1) {
         sleep(2);
+        DoCriticalInit();
         ExecReboot("panic");
     } else {
         exit(-1);
