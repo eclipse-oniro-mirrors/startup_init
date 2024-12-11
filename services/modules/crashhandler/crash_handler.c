@@ -63,9 +63,9 @@ static void DoCriticalInit(void)
         .name = "init",
     };
 
-    BEGET_LOGI("ServiceReap init begin\n");
+    BEGET_LOGI("ServiceReap init begin");
     HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_REAP, (void *)&service, NULL);
-    BEGET_LOGI("ServiceReap init end!\n");
+    BEGET_LOGI("ServiceReap init end!");
 #endif
 }
 
