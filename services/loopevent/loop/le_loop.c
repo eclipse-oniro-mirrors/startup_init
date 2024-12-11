@@ -95,6 +95,7 @@ LE_STATUS ProcessEvent(const EventLoop *loop, int fd, uint32_t oper)
     if (task != NULL) {
         task->handleEvent((LoopHandle)loop, (TaskHandle)task, oper);
     } else {
+        LE_LOGE("ProcessEvent with invalid fd %d", fd);
         loop->delEvent(loop, fd, EVENT_READ | EVENT_WRITE);
     }
     return LE_SUCCESS;
