@@ -764,16 +764,28 @@ static void CheckServiceSocket(Service *service)
     return;
 }
 
+static bool IsDebugMode()
+{
+    char secureValue[PARAM_VALUE_LEN_MAX] = {0};
+    unsigned int secureLen = PARAM_VALUE_LEN_MAX;
+    char debugValue[PARAM_VALUE_LEN_MAX] = {0};
+    unsigned int debugLen = PARAM_VALUE_LEN_MAX;
+    // the image is debuggable only when secureValue is 0 and debugValue is 1
+    if (SystemReadParam("const.secure", secureValue, &secureLen) == 0 &&
+        SystemReadParam("const.debuggable", debugValue, &debugLen) == 0) {
+        if (strcmp(secureValue, "0") == 0 &&
+            strcmp(debugValue, "1") == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void CheckOndemandService(Service *service)
 {
     CheckServiceSocket(service);
-    if (strcmp(service->name, "console") == 0) {
-#ifdef IS_DEBUG_VERSION
-        if (!IsDebuggableVersion()) {
-            INIT_LOGI("not debug version, do not watch console service");
-            return;
-        }
-#endif
+    if (strcmp(service->name, "console") == 0 && IsDebugMode()) {
+        INIT_LOGI("Watch console service in debug mode");
         if (WatchConsoleDevice(service) < 0) {
             INIT_LOGE("Failed to watch console service after it exit, mark console service invalid");
             service->attribute |= SERVICE_ATTR_INVALID;
