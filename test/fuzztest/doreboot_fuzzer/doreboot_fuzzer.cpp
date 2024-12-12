@@ -14,7 +14,7 @@
  */
 
 #include "doreboot_fuzzer.h"
-#include<string>
+#include <string>
 #include "init_reboot.h"
 
 namespace OHOS {

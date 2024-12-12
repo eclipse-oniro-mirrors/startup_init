@@ -14,7 +14,7 @@
  */
 
 #include "getstringparameter_fuzzer.h"
-#include<string>
+#include <string>
 #include "param_wrapper.h"
 
 namespace OHOS {
