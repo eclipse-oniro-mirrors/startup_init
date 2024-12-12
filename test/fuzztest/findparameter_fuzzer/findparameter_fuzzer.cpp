@@ -14,7 +14,7 @@
  */
 
 #include "findparameter_fuzzer.h"
-#include<string>
+#include <string>
 #include "parameter.h"
 
 namespace OHOS {

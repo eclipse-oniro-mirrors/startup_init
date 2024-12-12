@@ -14,7 +14,7 @@
  */
 
 #include "servicecontrolstart_fuzzer.h"
-#include<string>
+#include <string>
 #include "service_control.h"
 
 namespace OHOS {
