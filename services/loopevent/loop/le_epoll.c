@@ -120,6 +120,9 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
         }
 
         int number = epoll_wait(epoll->epollFd, epoll->waitEvents, loop->maxevents, timeout);
+        if (number > 1) {
+            LE_LOGI("RunLoop_ epoll_wait with number %d", number);
+        }
         for (int index = 0; index < number; index++) {
             if ((epoll->waitEvents[index].events & EPOLLIN) == EPOLLIN) {
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_READ);
@@ -132,7 +135,9 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_ERROR);
             }
         }
-
+        if (number > 1) {
+            LE_LOGI("RunLoop_ epoll_wait finish");
+        }
         CheckTimeoutOfTimer((EventLoop *)loop, GetCurrentTimespec(0));
 
         if (loop->stop) {
