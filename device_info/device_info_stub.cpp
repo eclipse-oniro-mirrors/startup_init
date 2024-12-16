@@ -86,7 +86,7 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
 
     int ret = ERR_FAIL;
     switch (code) {
-        case static_cast<uint32_t> (DeviceInfoInterfaceCode::COMMAND_GET_UDID): {
+        case static_cast<uint32_t>(DeviceInfoInterfaceCode::COMMAND_GET_UDID): {
             if (!CheckPermission(data, "ohos.permission.sec.ACCESS_UDID")) {
                 return SYSPARAM_PERMISSION_DENIED;
             }
@@ -96,7 +96,7 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
             reply.WriteString16(Str8ToStr16(localDeviceInfo));
             break;
         }
-        case static_cast<uint32_t> (DeviceInfoInterfaceCode::COMMAND_GET_SERIAL_ID): {
+        case static_cast<uint32_t>(DeviceInfoInterfaceCode::COMMAND_GET_SERIAL_ID): {
             if (!CheckPermission(data, "ohos.permission.sec.ACCESS_UDID")) {
                 return SYSPARAM_PERMISSION_DENIED;
             }
