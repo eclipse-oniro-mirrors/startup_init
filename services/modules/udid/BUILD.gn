@@ -38,6 +38,7 @@ if (defined(ohos_lite)) {
       "../../../interfaces/innerkits/init_module_engine/include",
       "../../../interfaces/hals",
       "//base/hiviewdfx/hilog_lite/interfaces/native/kits",
+      "mbedtls/include",
     ]
     sources = [
       "udid_adp.c",
@@ -52,10 +53,10 @@ if (defined(ohos_lite)) {
         "mbedtls:mbedtls_shared",
       ]
     } else if (ohos_kernel_type == "liteos_m") {
-      external_deps += [
-        "bounds_checking_function:libsec_static",
-        "mbedtls:mbedtls_static",
-      ]
+      external_deps += [ "bounds_checking_function:libsec_static" ]
+      if (init_lite_use_thirdparty_mbedtls) {
+        external_deps += [ "mbedtls:mbedtls_static" ]
+      }
     }
 
     #if product exit, use product

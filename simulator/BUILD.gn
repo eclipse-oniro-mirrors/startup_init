@@ -21,16 +21,31 @@ config("sysparam_simulator_public_config") {
 }
 
 config("sysparam_simulator_config") {
-  cflags = [
-    "-Wno-error",
-    "-D_INC_STDIO_S",
-    "-D_INC_STDLIB_S",
-    "-D_INC_MEMORY_S",
-    "-D_INC_STRING_S",
-    "-D_INC_WCHAR_S",
-    "-D_SECTMP=//",
-    "-D_STDIO_S_DEFINED",
-  ]
+  if (product_name != "ohos-sdk") {
+    if (board_toolchain_type != "iccarm") {
+      cflags = [
+        "-Wno-error",
+        "-D_INC_STDIO_S",
+        "-D_INC_STDLIB_S",
+        "-D_INC_MEMORY_S",
+        "-D_INC_STRING_S",
+        "-D_INC_WCHAR_S",
+        "-D_SECTMP=//",
+        "-D_STDIO_S_DEFINED",
+      ]
+    }
+  } else {
+    cflags = [
+      "-Wno-error",
+      "-D_INC_STDIO_S",
+      "-D_INC_STDLIB_S",
+      "-D_INC_MEMORY_S",
+      "-D_INC_STRING_S",
+      "-D_INC_WCHAR_S",
+      "-D_SECTMP=//",
+      "-D_STDIO_S_DEFINED",
+    ]
+  }
   include_dirs = [
     "../../../../commonlibrary/utils_lite/include",
     "./parameter/src",
