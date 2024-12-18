@@ -1270,6 +1270,9 @@ void StopAllServices(int flags, const char **exclude, int size,
         }
     }
     INIT_LOGI("StopAllServices end");
+#ifndef OHOS_LITE
+    HookMgrExecute(GetBootStageHookMgr(), INIT_ALL_SERVICES_REAP, NULL, NULL);
+#endif
 }
 
 Service *GetServiceByPid(pid_t pid)
