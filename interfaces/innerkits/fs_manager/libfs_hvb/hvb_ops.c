@@ -30,6 +30,14 @@ extern "C" {
 #endif
 
 #define PARTITION_PATH_PREFIX "/dev/block/by-name/"
+#define MAX_EXT_HVB_PARTITION_NUM 1
+
+static const ExtHvbVerifiedDev g_extVerifiedDev[] = {
+    {
+        .partitionName = "module_update",
+        .pathName = "/data/module_update/active/ModuleUpdateTrain/module.img"
+    },
+};
 
 static int64_t GetImageSizeForHVB(const int fd, const char* image)
 {
@@ -65,15 +73,91 @@ static int64_t GetImageSizeForHVB(const int fd, const char* image)
     return lseek64(fd, 0, SEEK_END);
 }
 
+static bool IsExtHvbVerifiedPtn(const char *ptn, size_t ptnLen, size_t *outIndex)
+{
+    int index;
+    if (ptn == NULL || outIndex == NULL) {
+        BEGET_LOGE("error, invalid ptn");
+        return false;
+    }
+
+    for (index = 0; index < MAX_EXT_HVB_PARTITION_NUM; index++) {
+        if (strncmp(g_extVerifiedDev[index].partitionName, ptn, ptnLen) == 0) {
+            *outIndex = index;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static char *GetExtHvbVerifiedPath(size_t index)
+{
+    char *tmpPath = NULL;
+
+    if (index >= MAX_EXT_HVB_PARTITION_NUM) {
+        BEGET_LOGE("error, invalid index");
+        return NULL;
+    }
+
+    size_t pathLen = strnlen(g_extVerifiedDev[index].pathName, FS_HVB_MAX_PATH_LEN);
+    if (pathLen >= FS_HVB_MAX_PATH_LEN) {
+        BEGET_LOGE("error, invalid path");
+        return tmpPath;
+    }
+    tmpPath = malloc(pathLen + 1);
+    if (tmpPath == NULL) {
+        BEGET_LOGE("error, fail to malloc");
+        return NULL;
+    }
+
+    (void)memset_s(tmpPath, pathLen + 1, 0, pathLen + 1);
+    if (memcpy_s(tmpPath, pathLen + 1, g_extVerifiedDev[index].pathName, pathLen) != 0) {
+        free(tmpPath);
+        BEGET_LOGE("error, fail to copy");
+        return NULL;
+    }
+    return tmpPath;
+}
+
+static char *HvbGetPartitionPath(const char *partition)
+{
+    int rc;
+    size_t pathLen;
+    char *path = NULL;
+    size_t index;
+    size_t ptnLen = strnlen(partition, HVB_MAX_PARTITION_NAME_LEN);
+    if (ptnLen >= HVB_MAX_PARTITION_NAME_LEN) {
+        BEGET_LOGE("error, invalid ptn name");
+        return NULL;
+    }
+    if (IsExtHvbVerifiedPtn(partition, ptnLen, &index)) {
+        return GetExtHvbVerifiedPath(index);
+    }
+
+    pathLen = strlen(PARTITION_PATH_PREFIX) + ptnLen;
+    path = calloc(1, pathLen + 1);
+    if (path == NULL) {
+        BEGET_LOGE("error, calloc fail");
+        return NULL;
+    }
+    rc = snprintf_s(path, pathLen + 1, pathLen, "%s%s", PARTITION_PATH_PREFIX,
+                    partition);
+    if (rc < 0) {
+        BEGET_LOGE("error, snprintf_s fail, ret = %d", rc);
+        free(path);
+        return NULL;
+    }
+    return path;
+}
+
 static enum hvb_io_errno HvbReadFromPartition(struct hvb_ops* ops,
                                               const char* partition,
                                               int64_t offset, uint64_t numBytes,
                                               void* buf, uint64_t* outNumRead)
 {
-    int rc;
     int fd = -1;
-    char* path = NULL;
-    size_t pathLen = 0;
+    char *path = NULL;
     enum hvb_io_errno ret = HVB_IO_ERROR_IO;
 
     if (ops == NULL || partition == NULL ||
@@ -82,18 +166,11 @@ static enum hvb_io_errno HvbReadFromPartition(struct hvb_ops* ops,
         return HVB_IO_ERROR_IO;
     }
 
-    pathLen = strlen(PARTITION_PATH_PREFIX) + strlen(partition);
-    path = calloc(1, pathLen + 1);
+    /* get and malloc img path */
+    path = HvbGetPartitionPath(partition);
     if (path == NULL) {
-        BEGET_LOGE("error, calloc fail");
-        return HVB_IO_ERROR_OOM;
-    }
-
-    rc = snprintf_s(path, pathLen + 1, pathLen, "%s%s", PARTITION_PATH_PREFIX,
-                    partition);
-    if (rc < 0) {
-        BEGET_LOGE("error, snprintf_s fail, ret = %d", rc);
-        ret = HVB_IO_ERROR_IO;
+        BEGET_LOGE("error, get partition path");
+        ret = HVB_IO_ERROR_OOM;
         goto exit;
     }
 

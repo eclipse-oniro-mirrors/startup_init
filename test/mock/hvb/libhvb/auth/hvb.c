@@ -18,7 +18,16 @@
 #include <string.h>
 #include "hvb.h"
 
-static struct hvb_cert_data g_testCert[1] = { 0 };
+static struct hvb_cert_data g_testCert[1] = {
+    {
+        .partition_name = "boot",
+        .data = {
+            .addr = NULL,
+            .size = 0,
+        },
+        .verify_result = HVB_OK,
+    },
+};
 
 static struct hvb_verified_data g_testVd = {
     .num_loaded_certs = 1,

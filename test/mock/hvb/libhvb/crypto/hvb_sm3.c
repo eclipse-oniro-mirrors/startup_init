@@ -17,26 +17,47 @@
 #define __HVB_SM3_H__
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "hvb_sm3.h"
 
 int hvb_sm3_init(struct sm3_ctx_t *hash_ctx)
 {
+    char *hashValue = getenv("HASH_VALUE");
+
     printf("[Replace]:hvb_sm3_init in\n");
+
+    if ((hashValue == NULL) || (strcmp(hashValue, "InitFail") == 0)) {
+        return -1;
+    }
 
     return SM3_OK;
 }
 
 int hvb_sm3_update(struct sm3_ctx_t *hash_ctx, const void *msg, uint32_t msg_len)
 {
+    char *hashValue = getenv("HASH_VALUE");
+
     printf("[Replace]:hvb_sm3_update in\n");
+
+    if ((hashValue == NULL) || (strcmp(hashValue, "UpdateFail") == 0)) {
+        return -1;
+    }
 
     return SM3_OK;
 }
 
 int hvb_sm3_final(struct sm3_ctx_t *hash_ctx, uint8_t *out, uint32_t *out_len)
 {
+    char *hashValue = getenv("HASH_VALUE");
+
     printf("[Replace]:hvb_sm3_final in\n");
 
+    if ((hashValue == NULL) || (strcmp(hashValue, "FinalFail") == 0)) {
+        return -1;
+    }
+
+    out[0] = 1;
     return SM3_OK;
 }
 
