@@ -23,6 +23,12 @@
 #include "init_service_manager.h"
 #include "securec.h"
 
+#ifdef ENABLE_PROCESS_PRIORITY
+#include <sys/resource.h>
+#define MIN_IMPORTANT_LEVEL (-20)
+#define MAX_IMPORTANT_LEVEL (19)
+#endif
+
 void NotifyServiceChange(Service *service, int status)
 {
     UNUSED(service);
@@ -56,20 +62,41 @@ int SetImportantValue(Service *service, const char *attrName, int value, int fla
     UNUSED(attrName);
     UNUSED(flag);
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Set service attr failed! null ptr.");
+#ifdef ENABLE_PROCESS_PRIORITY
+    if (value >= MIN_IMPORTANT_LEVEL && value <= MAX_IMPORTANT_LEVEL) { // -20~19
+        service->attribute |= SERVICE_ATTR_IMPORTANT;
+        service->importance = value;
+    } else {
+        INIT_LOGE("Importance level = %d, is not between -20 and 19, error", value);
+        return SERVICE_FAILURE;
+    }
+#else
     if (value != 0) {
         service->attribute |= SERVICE_ATTR_IMPORTANT;
     }
+#endif
     return SERVICE_SUCCESS;
 }
 
 int ServiceExec(Service *service, const ServiceArgs *pathArgs)
 {
+    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Exec service failed! null ptr.");
+    INIT_LOGI("ServiceExec %s", service->name);
     INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
         return SERVICE_FAILURE, "Exec service failed! null ptr.");
-    if (execv(pathArgs->argv[0], pathArgs->argv) != 0) {
-        INIT_LOGE("Service %s execv failed! err=%d.", service->name, errno);
-        return errno;
+
+#ifdef ENABLE_PROCESS_PRIORITY
+    if (service->importance != 0) {
+        INIT_ERROR_CHECK(setpriority(PRIO_PROCESS, 0, service->importance) == 0,
+            service->lastErrno = INIT_EPRIORITY;
+            return SERVICE_FAILURE,
+            "Service error %d %s, failed to set priority %d.", errno, service->name, service->importance);
     }
+#endif
+    int isCritical = (service->attribute & SERVICE_ATTR_CRITICAL);
+    INIT_ERROR_CHECK(execv(pathArgs->argv[0], pathArgs->argv) == 0,
+        service->lastErrno = INIT_EEXEC;
+        return errno, "[startup_failed]failed to execv %d %d %s", isCritical, errno, service->name);
     return SERVICE_SUCCESS;
 }
 
