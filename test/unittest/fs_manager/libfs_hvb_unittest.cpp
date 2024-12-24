@@ -100,13 +100,18 @@ HWTEST_F(FsHvbUnitTest, Init_FsHvbInit_001, TestSize.Level0)
     remove(BOOT_CMD_LINE);
     ret = FsHvbFinal(MAIN_HVB); //clear vd
     EXPECT_EQ(ret, 0);
+}
 
+HWTEST_F(FsHvbUnitTest, Init_FsHvbInit_002, TestSize.Level0)
+{
+    const char *cmdLine;
+    setenv("VERIFY_VALUE", "Succeed", 1);
     setenv("HASH_VALUE", "InitFail", 1); // sm3
     cmdLine = "ohos.boot.hvb.hash_algo=sm3 ";
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
     cmdLine = "ohos.boot.hvb.digest=01 ";
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
-    ret = FsHvbInit(MAIN_HVB);
+    int ret = FsHvbInit(MAIN_HVB);
     EXPECT_EQ(ret, -1);
 
     setenv("HASH_VALUE", "UpdateFail", 1);
@@ -322,9 +327,10 @@ HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_001, TestSize.Level0)
 HWTEST_F(FsHvbUnitTest, Init_HvbWriteToPartition_001, TestSize.Level0)
 {
     struct hvb_ops *ops = FsHvbGetOps();
-    char buf[] = "buf";
-    int ret = ops->write_partition(ops, "boot", 0, 1, (const void *)buf);
+    void *buf = malloc(1);
+    int ret = ops->write_partition(ops, "boot", 0, 1, buf);
     EXPECT_EQ(ret, HVB_IO_OK);
+    free(buf);
 }
 
 HWTEST_F(FsHvbUnitTest, Init_HvbInvaldateKey_001, TestSize.Level0)
@@ -359,7 +365,6 @@ HWTEST_F(FsHvbUnitTest, Init_HvbReadLockState_001, TestSize.Level0)
     struct hvb_ops *ops = FsHvbGetOps();
     int ret = ops->read_lock_state(ops, nullptr);
     EXPECT_EQ(ret, HVB_IO_OK);
-
 }
 
 HWTEST_F(FsHvbUnitTest, Init_HvbGetSizeOfPartition_001, TestSize.Level0)
