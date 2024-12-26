@@ -276,33 +276,34 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
     return status;
 }
 
+static int DoMountOneItem(FstabItem *item);
 #define MAX_RESIZE_PARAM_NUM 20
-static int DoResizeF2fs(const char* device, const unsigned long long size, const unsigned int fsManagerFlags)
+static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
 {
     char *file = "/system/bin/resize.f2fs";
     char sizeStr[RESIZE_BUFFER_SIZE] = {0};
     char *argv[MAX_RESIZE_PARAM_NUM] = {NULL};
     int argc = 0;
 
-    BEGET_ERROR_CHECK(NeedDoAllResize(fsManagerFlags), return -1, "no need do resize, bucause kdump has done");
+    BEGET_ERROR_CHECK(NeedDoAllResize(item->fsManagerFlags), return -1, "no need do resize, bucause kdump has done");
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize.f2fs is not exists.");
 
     argv[argc++] = file;
-    if (fsManagerFlags & FS_MANAGER_PROJQUOTA) {
+    if (item->fsManagerFlags & FS_MANAGER_PROJQUOTA) {
         argv[argc++] = "-O";
         argv[argc++] = "extra_attr,project_quota";
     }
-    if (fsManagerFlags & FS_MANAGER_CASEFOLD) {
+    if (item->fsManagerFlags & FS_MANAGER_CASEFOLD) {
         argv[argc++] = "-O";
         argv[argc++] = "casefold";
         argv[argc++] = "-C";
         argv[argc++] = "utf8";
     }
-    if (fsManagerFlags & FS_MANAGER_COMPRESSION) {
+    if (item->fsManagerFlags & FS_MANAGER_COMPRESSION) {
         argv[argc++] = "-O";
         argv[argc++] = "extra_attr,compression";
     }
-    if (fsManagerFlags & FS_MANAGER_DEDUP) {
+    if (item->fsManagerFlags & FS_MANAGER_DEDUP) {
         argv[argc++] = "-O";
         argv[argc++] = "extra_attr,dedup";
     }
@@ -318,8 +319,16 @@ static int DoResizeF2fs(const char* device, const unsigned long long size, const
         argv[argc++] = sizeStr;
     }
 
-    argv[argc++] = (char*)device;
+    argv[argc++] = (char*)(item->deviceName);
     BEGET_ERROR_CHECK(argc <= MAX_RESIZE_PARAM_NUM, return -1, "argc: %d is too big.", argc);
+    int ret = ExecCommand(argc, argv);
+    if (ret == 0) {
+        BEGET_LOGI("resize success.");
+        return ret;
+    }
+    DoMountOneItem(item);
+    umount(item->mountPoint);
+    BEGET_LOGE("remount and resize again.");
     return ExecCommand(argc, argv);
 }
 
@@ -525,14 +534,13 @@ int MountOneItem(FstabItem *item)
     }
 
     if (strcmp(item->mountPoint, "/data") == 0 && IsSupportedDataType(item->fsType)) {
-        int ret = DoResizeF2fs(item->deviceName, 0, item->fsManagerFlags);
-        if (ret != 0) {
-            BEGET_LOGE("Failed to resize.f2fs dir %s , ret = %d", item->deviceName, ret);
-        }
-
-        ret = DoFsckF2fs(item->deviceName);
+        int ret = DoFsckF2fs(item->deviceName);
         if (ret != 0) {
             BEGET_LOGE("Failed to fsck.f2fs dir %s , ret = %d", item->deviceName, ret);
+        }
+        ret = DoResizeF2fs(item, 0);
+        if (ret != 0) {
+            BEGET_LOGE("Failed to resize.f2fs dir %s , ret = %d", item->deviceName, ret);
         }
     } else if (strcmp(item->fsType, "ext4") == 0 && strcmp(item->mountPoint, "/data") == 0) {
         int ret = DoResizeExt(item->deviceName, 0);
