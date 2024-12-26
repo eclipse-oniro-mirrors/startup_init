@@ -70,4 +70,7 @@ declare_args() {
 
   # seccomp privilege
   init_feature_seccomp_privilege = false
+
+  # group_type support system
+  init_feature_group_type = true
 }
