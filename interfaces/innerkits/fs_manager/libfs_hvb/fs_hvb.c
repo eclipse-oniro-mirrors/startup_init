@@ -100,28 +100,32 @@ static int FsHvbGetHashStr(char *str, size_t size, InitHvbType hvbType)
 {
     if (hvbType == MAIN_HVB) {
         return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_HASH_ALG);
-    } else if (hvbType == EXT_HVB) {
+    }
+
+    if (hvbType == EXT_HVB) {
         if (memcpy_s(str, size, HASH_ALGO_SHA256_STR, strlen(HASH_ALGO_SHA256_STR)) != 0) {
             BEGET_LOGE("fail to copy hvb hash str");
             return -1;
         }
         return 0;
-    } else {
-        BEGET_LOGE("error, invalid hvbType");
-        return -1;
     }
+
+    BEGET_LOGE("error, invalid hvbType");
+    return -1;
 }
 
 static int FsHvbGetCertDigstStr(char *str, size_t size, InitHvbType hvbType)
 {
     if (hvbType == MAIN_HVB) {
         return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_CERT_DIGEST);
-    } else if (hvbType == EXT_HVB) {
-        return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_EXT_CERT_DIGEST);
-    } else {
-        BEGET_LOGE("error, invalid hvbType");
-        return -1;
     }
+
+    if (hvbType == EXT_HVB) {
+        return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_EXT_CERT_DIGEST);
+    }
+
+    BEGET_LOGE("error, invalid hvbType");
+    return -1;
 }
 
 static int FsHvbComputeSha256(char *digest, uint32_t size, struct hvb_cert_data *certs, uint64_t num_certs)
