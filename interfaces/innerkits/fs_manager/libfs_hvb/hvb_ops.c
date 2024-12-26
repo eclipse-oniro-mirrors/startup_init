@@ -35,7 +35,7 @@ extern "C" {
 static const ExtHvbVerifiedDev g_extVerifiedDev[] = {
     {
         .partitionName = "module_update",
-        .pathName = "/data/module_update/active/ModuleUpdateTrain/module.img"
+        .pathName = "/data/module_update/active/ModuleTrain/module.img"
     },
 };
 
