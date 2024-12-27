@@ -35,6 +35,9 @@ executable("init") {
   if (init_feature_begetctl_liteos) {
     defines += [ "LITEOS_SUPPORT" ]
   }
+  if (init_feature_enable_lite_process_priority) {
+    defines += [ "ENABLE_PROCESS_PRIORITY" ]
+  }
   sources = [
     "../adapter/init_adapter.c",
     "../lite/init.c",

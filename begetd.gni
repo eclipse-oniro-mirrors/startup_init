@@ -30,6 +30,9 @@ declare_args() {
   init_lite_use_posix_file_api = false
   config_ohos_startup_init_lite_data_path = "/"
 
+  # enable process_priority for ohos_lite
+  init_feature_enable_lite_process_priority = false
+
   # config memory size for liteos-m
   init_lite_memory_size = 5120
 
