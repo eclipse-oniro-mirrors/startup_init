@@ -87,7 +87,7 @@ int HvbDmVerityinit(const Fstab *fstab)
         return 0;
     }
 
-    rc = FsHvbInit();
+    rc = FsHvbInit(MAIN_HVB);
     if (rc != 0) {
         BEGET_LOGE("init fs hvb error, ret=%d", rc);
         return rc;
@@ -129,7 +129,7 @@ void HvbDmVerityFinal(void)
         return;
     }
 
-    rc = FsHvbFinal();
+    rc = FsHvbFinal(MAIN_HVB);
     if (rc != 0) {
         BEGET_LOGE("final fs hvb error, ret=%d", rc);
         return;

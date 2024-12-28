@@ -55,7 +55,7 @@ int FsHvbGetValueFromCmdLine(char *val, size_t size, const char *key)
     return 0;
 }
 
-int FsHvbInit(void)
+int FsHvbInit(InitHvbType hvbType)
 {
     char *initValue = getenv("INIT_VALUE");
     printf("[Replace]:FsHvbInit in\n");
@@ -67,7 +67,7 @@ int FsHvbInit(void)
     return 0;
 }
 
-int FsHvbFinal(void)
+int FsHvbFinal(InitHvbType hvbType)
 {
     char *finalValue = getenv("FINAL_VALUE");
     printf("[Replace]:FsHvbFinal in\n");

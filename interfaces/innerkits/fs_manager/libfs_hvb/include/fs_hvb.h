@@ -45,6 +45,7 @@ extern "C" {
  
 #define SZ_2KB (2 * SZ_1KB)
 #define SZ_4KB (4 * SZ_1KB)
+#define FS_HVB_MAX_PATH_LEN 128
  
 typedef struct {
     uint32_t magicNumber;
@@ -53,13 +54,24 @@ typedef struct {
     uint64_t partSize;
 } ExtheaderV1;
 
-int FsHvbInit(void);
+typedef enum InitHvbType {
+    MAIN_HVB = 0,
+    EXT_HVB
+} InitHvbType;
+ 
+typedef struct {
+    char *partitionName;
+    char *pathName;
+} ExtHvbVerifiedDev;
+
+int FsHvbInit(InitHvbType hvbType);
 int FsHvbSetupHashtree(FstabItem *fsItem);
-int FsHvbFinal(void);
+int FsHvbFinal(InitHvbType hvbType);
 struct hvb_ops *FsHvbGetOps(void);
 int FsHvbGetValueFromCmdLine(char *val, size_t size, const char *key);
 int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, struct hvb_cert *cert);
 void FsHvbDestoryVerityTarget(DmVerityTarget *target);
+int VerifyExtHvbImage(const char *dev_path, const char *partition, char **out_path);
 
 bool CheckAndGetExt4Size(const char *headerBuf, uint64_t *imageSize, const char* image);
 bool CheckAndGetErofsSize(const char *headerBuf, uint64_t *imageSize, const char* image);

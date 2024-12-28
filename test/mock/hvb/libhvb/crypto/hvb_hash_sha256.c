@@ -54,5 +54,6 @@ int hash_calc_do_final(struct hash_ctx_t *hash_ctx, const void *msg, uint32_t ms
         return -1;
     }
 
+    out[0] = 1;
     return 0;
 }

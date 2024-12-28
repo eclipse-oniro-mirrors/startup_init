@@ -45,8 +45,10 @@ extern "C" {
 #define FS_HVB_DIGEST_STR_MAX_BYTES 128
 #define FS_HVB_DEVPATH_MAX_LEN 128
 #define FS_HVB_RVT_PARTITION_NAME "rvt"
+#define FS_HVB_EXT_RVT_PARTITION_NAME "ext_rvt"
 #define FS_HVB_CMDLINE_PATH "/proc/cmdline"
 #define FS_HVB_PARTITION_PREFIX "/dev/block/by-name/"
+#define HVB_CMDLINE_EXT_CERT_DIGEST "ohos.boot.hvb.ext_rvt"
 
 #define HASH_ALGO_SHA256 0
 #define HASH_ALGO_SHA256_STR "sha256"
@@ -64,6 +66,25 @@ extern "C" {
     } while (0)
 
 static struct hvb_verified_data *g_vd = NULL;
+static struct hvb_verified_data *g_extVd = NULL;
+
+static enum hvb_errno GetCurrVerifiedData(InitHvbType hvbType, struct hvb_verified_data ***currVd)
+{
+    if (currVd == NULL) {
+        BEGET_LOGE("error, invalid input");
+        return HVB_ERROR_INVALID_ARGUMENT;
+    }
+    if (hvbType == MAIN_HVB) {
+        *currVd = &g_vd;
+    } else if (hvbType == EXT_HVB) {
+        *currVd = &g_extVd;
+    } else {
+        BEGET_LOGE("error, invalid hvb type");
+        return HVB_ERROR_INVALID_ARGUMENT;
+    }
+
+    return HVB_OK;
+}
 
 static char FsHvbBinToHexChar(char octet)
 {
@@ -75,14 +96,36 @@ static char FsHvbHexCharToBin(char hex)
     return '0' <= hex && hex <= '9' ? hex - '0' : 10 + (hex - 'a');
 }
 
-static int FsHvbGetHashStr(char *str, size_t size)
+static int FsHvbGetHashStr(char *str, size_t size, InitHvbType hvbType)
 {
-    return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_HASH_ALG);
+    if (hvbType == MAIN_HVB) {
+        return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_HASH_ALG);
+    }
+
+    if (hvbType == EXT_HVB) {
+        if (memcpy_s(str, size, HASH_ALGO_SHA256_STR, strlen(HASH_ALGO_SHA256_STR)) != 0) {
+            BEGET_LOGE("fail to copy hvb hash str");
+            return -1;
+        }
+        return 0;
+    }
+
+    BEGET_LOGE("error, invalid hvbType");
+    return -1;
 }
 
-static int FsHvbGetCertDigstStr(char *str, size_t size)
+static int FsHvbGetCertDigstStr(char *str, size_t size, InitHvbType hvbType)
 {
-    return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_CERT_DIGEST);
+    if (hvbType == MAIN_HVB) {
+        return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_CERT_DIGEST);
+    }
+
+    if (hvbType == EXT_HVB) {
+        return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_EXT_CERT_DIGEST);
+    }
+
+    BEGET_LOGE("error, invalid hvbType");
+    return -1;
 }
 
 static int FsHvbComputeSha256(char *digest, uint32_t size, struct hvb_cert_data *certs, uint64_t num_certs)
@@ -170,7 +213,7 @@ static int FsHvbHexStrToBin(char *bin, size_t bin_size, char *str, size_t str_si
     return 0;
 }
 
-static int FsHvbCheckCertChainDigest(struct hvb_cert_data *certs, uint64_t num_certs)
+static int FsHvbCheckCertChainDigest(struct hvb_cert_data *certs, uint64_t num_certs, InitHvbType hvbType)
 {
     int ret;
     size_t digest_len = 0;
@@ -180,13 +223,13 @@ static int FsHvbCheckCertChainDigest(struct hvb_cert_data *certs, uint64_t num_c
     char certDigestStr[FS_HVB_DIGEST_STR_MAX_BYTES + 1] = {0};
     uint32_t computeDigestLen = FS_HVB_DIGEST_MAX_BYTES;
 
-    ret = FsHvbGetHashStr(&hashAlg[0], sizeof(hashAlg));
+    ret = FsHvbGetHashStr(&hashAlg[0], sizeof(hashAlg), hvbType);
     if (ret != 0) {
         BEGET_LOGE("error 0x%x, get hash val from cmdline", ret);
         return ret;
     }
 
-    ret = FsHvbGetCertDigstStr(&certDigestStr[0], sizeof(certDigestStr));
+    ret = FsHvbGetCertDigstStr(&certDigestStr[0], sizeof(certDigestStr), hvbType);
     if (ret != 0) {
         BEGET_LOGE("error 0x%x, get digest val from cmdline", ret);
         return ret;
@@ -222,43 +265,56 @@ static int FsHvbCheckCertChainDigest(struct hvb_cert_data *certs, uint64_t num_c
     return 0;
 }
 
-int FsHvbInit(void)
+int FsHvbInit(InitHvbType hvbType)
 {
     enum hvb_errno rc;
+    struct hvb_verified_data **currVd = NULL;
+    char *rootPartitionName = NULL;
+    rc = GetCurrVerifiedData(hvbType, &currVd);
+    if (rc != HVB_OK) {
+        BEGET_LOGE("error 0x%x, GetCurrVerifiedData", rc);
+        return rc;
+    }
 
     // return ok if the hvb is already initialized
-    if (g_vd != NULL) {
+    if (*currVd != NULL) {
         BEGET_LOGI("Hvb has already been inited");
         return 0;
     }
 
-    rc = hvb_chain_verify(FsHvbGetOps(), FS_HVB_RVT_PARTITION_NAME, NULL, &g_vd);
-    if (g_vd == NULL) {
+    if (hvbType == MAIN_HVB) {
+        rootPartitionName = FS_HVB_RVT_PARTITION_NAME;
+    } else {
+        rootPartitionName = FS_HVB_EXT_RVT_PARTITION_NAME;
+    }
+
+    rc = hvb_chain_verify(FsHvbGetOps(), rootPartitionName, NULL, currVd);
+    if (*currVd == NULL) {
         BEGET_LOGE("error 0x%x, hvb chain verify, vd is NULL", rc);
         return rc;
     }
 
     if (rc != HVB_OK) {
         BEGET_LOGE("error 0x%x, hvb chain verify", rc);
-        hvb_chain_verify_data_free(g_vd);
-        g_vd = NULL;
+        hvb_chain_verify_data_free(*currVd);
+        *currVd = NULL;
         return rc;
     }
 
-    rc = FsHvbCheckCertChainDigest(g_vd->certs, g_vd->num_loaded_certs);
+    rc = FsHvbCheckCertChainDigest((*currVd)->certs, (*currVd)->num_loaded_certs, hvbType);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, cert chain hash", rc);
-        hvb_chain_verify_data_free(g_vd);
-        g_vd = NULL;
+        hvb_chain_verify_data_free(*currVd);
+        *currVd = NULL;
         return rc;
     }
 
-    BEGET_LOGE("hvb verify succ in init");
+    BEGET_LOGI("hvb type %d verify succ in init", hvbType);
 
     return 0;
 }
 
-static int FsHvbGetCert(struct hvb_cert *cert, char *devName, struct hvb_verified_data *vd)
+static int FsHvbGetCert(struct hvb_cert *cert, const char *devName, struct hvb_verified_data *vd)
 {
     enum hvb_errno hr;
     size_t devNameLen = strlen(devName);
@@ -315,7 +371,7 @@ static int FsHvbVerityTargetAppendString(char **p, char *end, char *str, size_t 
     **p = FS_HVB_BLANK_SPACE_ASCII;
     *p += 1;
 
-    BEGET_LOGE("append string %s", str);
+    BEGET_LOGI("append string %s", str);
 
     return 0;
 }
@@ -426,7 +482,7 @@ static int FsHvbVerityTargetAddFecArgs(struct hvb_cert *cert, char *devPath, cha
     // append <device>
     RETURN_ERR_IF_APPEND_STRING_ERR(str, end, USE_FEC_FROM_DEVICE, strlen(USE_FEC_FROM_DEVICE));
     RETURN_ERR_IF_APPEND_STRING_ERR(str, end, &devPath[0], strlen(devPath));
- 
+
     // append <fec_roots>
     RETURN_ERR_IF_APPEND_STRING_ERR(str, end, FEC_ROOTS, strlen(FEC_ROOTS));
     RETURN_ERR_IF_APPEND_DIGIT_ERR(str, end, cert->fec_num_roots);
@@ -438,11 +494,11 @@ static int FsHvbVerityTargetAddFecArgs(struct hvb_cert *cert, char *devPath, cha
     // append <fec_blocks>
     RETURN_ERR_IF_APPEND_STRING_ERR(str, end, FEC_BLOCKS, strlen(FEC_BLOCKS));
     RETURN_ERR_IF_APPEND_DIGIT_ERR(str, end, cert->fec_offset / cert->hash_block_size);
- 
+
     // append <fec_start>
     RETURN_ERR_IF_APPEND_STRING_ERR(str, end, FEC_START, strlen(FEC_START));
     RETURN_ERR_IF_APPEND_DIGIT_ERR(str, end, cert->fec_offset / cert->data_block_size);
- 
+
     return 0;
 }
 
@@ -551,6 +607,26 @@ static int FsHvbCreateVerityTarget(DmVerityTarget *target, char *devName, struct
     return rc;
 }
 
+static int FsExtHvbCreateVerityTarget(DmVerityTarget *target, const char *devName,
+                                      const char *partition, struct hvb_verified_data *vd)
+{
+    int rc;
+    struct hvb_cert cert = {0};
+
+    rc = FsHvbGetCert(&cert, partition, vd);
+    if (rc != 0) {
+        return rc;
+    }
+
+    rc = FsHvbConstructVerityTarget(target, devName, &cert);
+    if (rc != 0) {
+        BEGET_LOGE("error 0x%x, can't construct verity target", rc);
+        return rc;
+    }
+
+    return rc;
+}
+
 void FsHvbDestoryVerityTarget(DmVerityTarget *target)
 {
     if (target != NULL && target->paras != NULL) {
@@ -604,11 +680,71 @@ exit:
     return rc;
 }
 
-int FsHvbFinal(void)
+static int FsExtHvbSetupHashtree(const char *devName, const char *partition, char **outPath)
 {
-    if (g_vd != NULL) {
-        hvb_chain_verify_data_free(g_vd);
-        g_vd = NULL;
+    int rc;
+    DmVerityTarget target = {0};
+    char *tmpDevName = NULL;
+    char *dmDevPath = NULL;
+    size_t devLen;
+
+    FS_HVB_RETURN_ERR_IF_NULL(g_extVd);
+
+    devLen = strnlen(devName, FS_HVB_MAX_PATH_LEN);
+    if (devLen >= FS_HVB_MAX_PATH_LEN) {
+        BEGET_LOGE("error, invalid devName");
+        return -1;
+    }
+    tmpDevName = malloc(devLen + 1);
+    if (tmpDevName == NULL) {
+        BEGET_LOGE("error, fail to malloc");
+        return -1;
+    }
+
+    (void)memset_s(tmpDevName, devLen + 1, 0, devLen + 1);
+    if (memcpy_s(tmpDevName, devLen + 1, devName, devLen) != 0) {
+        free(tmpDevName);
+        BEGET_LOGE("error, fail to copy");
+        return -1;
+    }
+
+    rc = FsExtHvbCreateVerityTarget(&target, tmpDevName, partition, g_extVd);
+    if (rc != 0) {
+        BEGET_LOGE("error 0x%x, create verity-table", rc);
+        goto exit;
+    }
+
+    rc = FsDmCreateDevice(&dmDevPath, basename(tmpDevName), &target);
+    if (rc != 0) {
+        BEGET_LOGE("error 0x%x, create dm-verity", rc);
+        goto exit;
+    }
+
+    rc = FsDmInitDmDev(dmDevPath, true);
+    if (rc != 0) {
+        BEGET_LOGE("error 0x%x, create init dm dev", rc);
+        goto exit;
+    }
+
+    *outPath = dmDevPath;
+
+exit:
+    FsHvbDestoryVerityTarget(&target);
+    free(tmpDevName);
+    return rc;
+}
+
+int FsHvbFinal(InitHvbType hvbType)
+{
+    struct hvb_verified_data **currVd = NULL;
+
+    if (GetCurrVerifiedData(hvbType, &currVd) != HVB_OK) {
+        BEGET_LOGE("error GetCurrVerifiedData");
+        return -1;
+    }
+    if (*currVd != NULL) {
+        hvb_chain_verify_data_free(*currVd);
+        *currVd = NULL;
     }
 
     return 0;
@@ -620,6 +756,32 @@ int FsHvbGetValueFromCmdLine(char *val, size_t size, const char *key)
     FS_HVB_RETURN_ERR_IF_NULL(key);
 
     return GetExactParameterFromCmdLine(key, val, size, EMPTY_VALUE);
+}
+
+int VerifyExtHvbImage(const char *devPath, const char *partition, char **outPath)
+{
+    int rc;
+    FS_HVB_RETURN_ERR_IF_NULL(devPath);
+    FS_HVB_RETURN_ERR_IF_NULL(partition);
+    FS_HVB_RETURN_ERR_IF_NULL(outPath);
+
+    rc = FsHvbInit(EXT_HVB);
+    if (rc != 0) {
+        BEGET_LOGE("ext hvb error, ret=%d", rc);
+        goto exit;
+    }
+
+    rc = FsExtHvbSetupHashtree(devPath, partition, outPath);
+    if (rc != 0) {
+        BEGET_LOGE("error, setup hashtree fail, ret=%d", rc);
+    }
+
+exit:
+    if (FsHvbFinal(EXT_HVB) != 0) {
+        BEGET_LOGE("final ext hvb error, ret=%d", rc);
+        return -1;
+    }
+    return rc;
 }
 
 bool CheckAndGetExt4Size(const char *headerBuf, uint64_t *imageSize, const char* image)
@@ -639,7 +801,7 @@ bool CheckAndGetExt4Size(const char *headerBuf, uint64_t *imageSize, const char*
     }
     return false;
 }
- 
+
 bool CheckAndGetErofsSize(const char *headerBuf, uint64_t *imageSize, const char* image)
 {
     struct erofs_super_block *superBlock = (struct erofs_super_block *)headerBuf;
@@ -657,7 +819,7 @@ bool CheckAndGetErofsSize(const char *headerBuf, uint64_t *imageSize, const char
     }
     return false;
 }
- 
+
 bool CheckAndGetExtheaderSize(const int fd, uint64_t offset,
                               uint64_t *imageSize, const char* image)
 {
