@@ -1,0 +1,15 @@
+{
+  "description": "Config for OpenHarmony devicetest test cases",
+  "environment": [
+    {
+      "type": "device",
+      "label": "phone"
+    }
+  ],
+  "driver": {
+    "type": "DeviceTest",
+    "py_file": [
+      "SUB_STARTUP_INIT_BASE/Sub_Starup_Init_Base_1700.py"
+    ]
+  }
+}
