@@ -1,0 +1,14 @@
+{
+  "description": "Config for OpenHarmony devicetest test cases",
+  "environment": [
+    {
+     "type": "device"
+    }
+  ],
+  "driver": {
+    "type": "DeviceTest",
+    "py_file": [
+      "SubStartupInitAbilityUp/sub_startup_init_ability_up_1000.py"
+    ]
+  }
+}
