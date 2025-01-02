@@ -387,13 +387,24 @@ void WaitForFile(const char *source, unsigned int maxSecond)
     long long duration = 0;
     INIT_TIMING_STAT cmdTimer;
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
-    while ((stat(source, &sourceInfo) < 0) && (errno == ENOENT) && (duration < maxDuration)) {
+    while (1) {
+        if (stat(source, &sourceInfo) >= 0) {
+            break;
+        }
+        if (errno != ENOENT) {
+            INIT_LOGE("stat file err: %d", errno);
+            break;
+        }
+       
         usleep(waitTime);
         (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
         duration = InitDiffTime(&cmdTimer);
+        
+        if (duration >= maxDuration) {
+            INIT_LOGE("wait for file:%s failed after %d second.", source, maxSecond);
+            break;
+        }
     }
-    INIT_CHECK_ONLY_ELOG(duration < maxDuration, "wait for file:%s failed after %d second.", source, maxSecond);
-    return;
 }
 
 size_t WriteAll(int fd, const char *buffer, size_t size)
