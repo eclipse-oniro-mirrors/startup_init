@@ -43,6 +43,7 @@ group("modulesgroup") {
       "bootchart:bootchart",
       "init_context:init_context",
       "init_eng:init_eng",
+      "module_update:module_update_init",
       "reboot:rebootmodule",
       "sysevent:eventmodule",
       "trace:inittrace",
