@@ -75,6 +75,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/begetctl/shell/shell_bas.c",
     "//base/startup/init/services/begetctl/shell/shell_main.c",
     "//base/startup/init/services/init/adapter/init_adapter.c",
+    "//base/startup/init/services/init/bootstagehooker.c",
     "//base/startup/init/services/init/init_capability.c",
     "//base/startup/init/services/init/init_common_cmds.c",
     "//base/startup/init/services/init/init_common_service.c",
@@ -83,7 +84,6 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/init/init_service_file.c",
     "//base/startup/init/services/init/init_service_manager.c",
     "//base/startup/init/services/init/init_service_socket.c",
-    "//base/startup/init/services/init/standard/bootstagehooker.c",
     "//base/startup/init/services/init/standard/device.c",
     "//base/startup/init/services/init/standard/fd_holder_service.c",
     "//base/startup/init/services/init/standard/init.c",
@@ -324,6 +324,11 @@ ohos_unittest("init_unittest") {
       target_cpu == "riscv64") {
     defines += [ "SUPPORT_64BIT" ]
   }
+
+  if (init_feature_use_hook_mgr) {
+    defines += [ "ENABLE_HOOK_MGR" ]
+  }
+
   if (use_musl) {
     defines += [ "__MUSL__" ]
   }

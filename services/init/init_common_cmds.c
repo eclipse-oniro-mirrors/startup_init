@@ -38,7 +38,7 @@
 #include "init_utils.h"
 #include "securec.h"
 
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
 #include "hookmgr.h"
 #include "bootstage.h"
 
@@ -239,7 +239,7 @@ static void DoReset(const struct CmdArgs *ctx)
         return;
     }
     if (service->pid > 0) {
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
         SERVICE_RESTART_CTX context;
         int pid = service->pid;
         context.serviceName = service->name;
@@ -766,7 +766,7 @@ void DoCmdByIndex(int index, const char *cmdContent, const ConfigContext *contex
 
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
     long long diff = InitDiffTime(&cmdTimer);
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
     InitCmdHookExecute(cmdName, cmdContent, &cmdTimer);
 #endif
     if (diff > 200000) { // 200000 > 200ms

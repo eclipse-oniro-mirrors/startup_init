@@ -35,7 +35,7 @@
 #include "init_param.h"
 #endif
 
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
 #include "hookmgr.h"
 #include "bootstage.h"
 #endif
@@ -133,7 +133,7 @@ static void FreeServiceFile(ServiceFile *fileOpt)
 
 static void ExecuteServiceClear(Service *service)
 {
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
     // clear ext data
     SERVICE_INFO_CTX ctx = {0};
     ctx.serviceName = service->name;
@@ -983,7 +983,7 @@ int ParseOneService(const cJSON *curItem, Service *service)
     return ret;
 }
 
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
 /**
  * Service Config File Parse Hooking
  */
@@ -1137,7 +1137,7 @@ void ParseAllServices(const cJSON *fileRoot, const ConfigContext *context)
                 INIT_LOGW("Failed to watch \'/dev/console\' device");
             }
         }
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
         /*
          * Execute service parsing hooks
          */
@@ -1270,7 +1270,7 @@ void StopAllServices(int flags, const char **exclude, int size,
         }
     }
     INIT_LOGI("StopAllServices end");
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
     HookMgrExecute(GetBootStageHookMgr(), INIT_ALL_SERVICES_REAP, NULL, NULL);
 #endif
 }

@@ -3313,7 +3313,7 @@ ohos_fuzztest("GetServiceCtrlInfoFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [
-    "//base/startup/init/services/init/standard/bootstagehooker.c",
+    "//base/startup/init/services/init/bootstagehooker.c",
     "//base/startup/init/services/modules/init_hook/param_hook.c",
     "//base/startup/init/services/modules/reboot/reboot_static.c",
     "getservicectrlinfo_fuzzer/getservicectrlinfo_fuzzer.cpp",

@@ -49,7 +49,7 @@
 #include "service_control.h"
 #include "init_group_manager.h"
 
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
 #include "hookmgr.h"
 #include "bootstage.h"
 #endif
@@ -99,7 +99,7 @@ static int SetSystemSeccompPolicy(const Service *service)
     return SERVICE_SUCCESS;
 }
 
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
 /**
  * service Hooking
  */
@@ -200,7 +200,7 @@ static void GetInvalidCaps(const Service *service, unsigned int *caps)
 
 static void DropCapability(const Service *service)
 {
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
     int invalidCnt = CAP_LAST_CAP - service->servPerm.capsCnt + 1;
     unsigned int *caps = (unsigned int *)calloc(invalidCnt, sizeof(unsigned int));
     INIT_ERROR_CHECK(caps != NULL, return, "calloc caps failed! error:%d", errno);
@@ -221,7 +221,7 @@ static void DropCapability(const Service *service)
 
 static int SetPerms(const Service *service)
 {
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
     /*
      * service before setting Perms hooks
      */
@@ -277,7 +277,7 @@ static int SetPerms(const Service *service)
         INIT_ERROR_CHECK(SetAmbientCapability(service->servPerm.caps[i]) == 0, return INIT_ECAP,
             "Service error %d %s, failed to set ambient capability.", errno, service->name);
     }
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
     /*
      * service set Perms hooks
      */
@@ -643,7 +643,7 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
         INIT_LOGE("ServiceStart pathArgs invalid, please check %s,%s", service->name, service->pathArgs.argv[0]);
         return SERVICE_FAILURE;
     }
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
     // before service fork hooks
     ServiceHookExecute(service->name, NULL, INIT_SERVICE_FORK_BEFORE);
 #endif
@@ -669,7 +669,7 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
               prefork.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
     service->pid = pid;
     NotifyServiceChange(service, SERVICE_STARTED);
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
     // after service fork hooks
     ServiceHookExecute(service->name, (const char *)&pid, INIT_SERVICE_FORK_AFTER);
 #endif
@@ -795,7 +795,7 @@ static void CheckOndemandService(Service *service)
 
 static void ServiceReapHookExecute(Service *service)
 {
-#ifndef OHOS_LITE
+#if defined(ENABLE_HOOK_MGR)
     HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_REAP, (void*)service, NULL);
 #endif
 }

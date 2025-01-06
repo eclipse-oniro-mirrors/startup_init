@@ -33,6 +33,12 @@ declare_args() {
   # enable process_priority for ohos_lite
   init_feature_enable_lite_process_priority = false
 
+  # enable hook_mgr for ohos_lite
+  init_feature_use_hook_mgr = false
+  if (!defined(ohos_lite)) {
+    init_feature_use_hook_mgr = true
+  }
+
   # config memory size for liteos-m
   init_lite_memory_size = 5120
 
