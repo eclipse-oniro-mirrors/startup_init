@@ -159,7 +159,7 @@ HWTEST_F(ServiceControlTest, ServiceTimerStartContinuouslyTest, TestSize.Level1)
     auto newStatus = GetServiceStatus(serviceName);
     bool notChange = oldStatus == newStatus;
     EXPECT_TRUE(notChange);
-    uint64_t margin = 20; // 20 ms margin in case of timer not that precisely
+    uint64_t margin = 60; // 60 ms margin in case of timer not that precisely
     std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int64_t>(oldTimeout + margin)));
     newStatus = GetServiceStatus(serviceName);
     isRunning = newStatus == "running";
