@@ -29,9 +29,9 @@ import("//build/ohos/native_stub/native_stub.gni")
 
 ohos_executable("init_early") {
   sources = [
+    "../bootstagehooker.c",
     "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
     "//base/startup/init/services/log/init_commlog.c",
-    "bootstagehooker.c",
     "device.c",
     "init_firststage.c",
     "init_mount.c",
@@ -71,6 +71,7 @@ ohos_executable("init_early") {
 ohos_executable("init") {
   sources = [
     "../adapter/init_adapter.c",
+    "../bootstagehooker.c",
     "../standard/device.c",
     "../standard/fd_holder_service.c",
     "../standard/init.c",
@@ -83,7 +84,6 @@ ohos_executable("init") {
     "../standard/init_reboot.c",
     "../standard/init_service.c",
     "../standard/init_signal_handler.c",
-    "bootstagehooker.c",
   ]
 
   if (init_startup_feature_system_call_switch) {
@@ -197,6 +197,10 @@ ohos_executable("init") {
   if (target_cpu == "arm64" || target_cpu == "x86_64" ||
       target_cpu == "riscv64") {
     defines += [ "SUPPORT_64BIT" ]
+  }
+
+  if (init_feature_use_hook_mgr) {
+    defines += [ "ENABLE_HOOK_MGR" ]
   }
 
   if (defined(global_parts_info) &&

@@ -98,4 +98,19 @@ executable("init") {
     ]
     external_deps += [ "toybox:toybox" ]
   }
+
+  if (init_feature_use_hook_mgr) {
+    defines += [ "ENABLE_HOOK_MGR" ]
+    sources += [
+      "../bootstagehooker.c",
+      "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
+    ]
+    include_dirs += [
+      "//base/startup/init/interfaces/innerkits/init_module_engine/include",
+    ]
+  }
+
+  if (init_extra_static_modules != "") {
+    deps += [ init_extra_static_modules ]
+  }
 }
