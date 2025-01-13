@@ -13,20 +13,22 @@
 import("//base/startup/init/begetd.gni")
 
 group("testgroup") {
-  testonly = true
-  if (!defined(ohos_lite)) {
-    deps = [
-      "exec_test:exectest",
-      "fuzztest:fuzztest",
-      "moduletest:moduletest",
-      "moduletest:paramtestmodule",
-      "unittest:init_dmverify_unittest",
-      "unittest:init_fshvb_unittest",
-      "unittest:init_unittest",
-    ]
-  } else {
-    if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
-      deps = [ "unittest/lite:init_test" ]
+  if (init_feature_group_type) {
+    testonly = true
+    if (!defined(ohos_lite)) {
+      deps = [
+        "exec_test:exectest",
+        "fuzztest:fuzztest",
+        "moduletest:moduletest",
+        "moduletest:paramtestmodule",
+        "unittest:init_dmverify_unittest",
+        "unittest:init_fshvb_unittest",
+        "unittest:init_unittest",
+      ]
+    } else {
+      if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
+        deps = [ "unittest/lite:init_test" ]
+      }
     }
   }
 }
