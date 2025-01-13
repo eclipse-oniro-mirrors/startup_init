@@ -64,17 +64,23 @@ static int ExecReboot(const char *mode, const char *option)
 #else
     const int maxCount = 1;
 #endif
+    int status = DoRebootByInitPlugin(mode, option);
+
     int count = 0;
-    while (count <= maxCount) {
-        int status = DoRebootByInitPlugin(mode, option);
-        BEGET_ERROR_CHECK(status != 0, return 0, "reboot success(%s)", option);
-        count++;
-        if (count < maxCount) {
-            usleep(100 * 1000); // 100 * 1000 wait 100ms
+    while (count < maxCount) {
+        usleep(100 * 1000); // 100 * 1000 wait 100ms
+        char result[10] = {0};
+        uint32_t len = sizeof(result);
+        int ret = SystemGetParameter(STARTUP_DEVICE_CTL, result, &len);
+        if (ret == 0 && strcmp(result, DEVICE_CMD_STOP) == 0) {
+            BEGET_LOGE("Success to reboot system");
+            return 0;
         }
+        count++;
+        status = DoRebootByInitPlugin(mode, option);
     }
     BEGET_LOGE("Failed to reboot system");
-    return -1;
+    return status;
 }
 
 int DoReboot(const char *option)
