@@ -14,4 +14,4 @@
 const.ohos.releasetype=Canary1
 const.ohos.apiversion=14
 const.ohos.version.security_patch=2025/01/01
-const.ohos.fullname=OpenHarmonyTec-1.0.1.3
+const.ohos.fullname=OpenHarmonyTec-1.0.1.5
