@@ -469,7 +469,8 @@ public:
 HWTEST_F(ParamServiceUnitTest, Init_TestPersistParam_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
-    test.TestPersistParam();
+    int ret = test.TestPersistParam();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, Init_TestReadCmdline_001, TestSize.Level0)
@@ -482,49 +483,59 @@ HWTEST_F(ParamServiceUnitTest, Init_TestReadCmdline_001, TestSize.Level0)
         " BOOT_IMAGE=/kernel  init=/init";
     std::string snWithPath = cmdLineForSn + "ohos.boot.sn=" + STARTUP_INIT_UT_PATH "/system/etc/sn";
     CreateTestFile(BOOT_CMD_LINE, snWithPath.c_str());
-    LoadParamFromCmdLine();
+    int ret = LoadParamFromCmdLine();
+    EXPECT_EQ(ret, 0);
     std::string snWithSN = cmdLineForSn + "ohos.boot.sn=" + snData;
     CreateTestFile(BOOT_CMD_LINE, snWithSN.c_str());
-    LoadParamFromCmdLine();
+    ret = LoadParamFromCmdLine();
+    EXPECT_EQ(ret, 0);
     CreateTestFile(BOOT_CMD_LINE, cmdLineForSn.c_str());
-    LoadParamFromCmdLine();
+    ret = LoadParamFromCmdLine();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, Init_TestServiceProcessMessage_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
-    test.TestServiceProcessMessage("wertt.qqqq.wwww.rrrr", "wwww.eeeee", 1);
-    test.TestServiceProcessMessage("wertt.2222.wwww.3333", "wwww.eeeee", 0);
+    int ret = test.TestServiceProcessMessage("wertt.qqqq.wwww.rrrr", "wwww.eeeee", 1);
+    EXPECT_EQ(ret, 0);
+    ret = test.TestServiceProcessMessage("wertt.2222.wwww.3333", "wwww.eeeee", 0);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWait_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
-    test.TestAddParamWait1();
+    int ret = test.TestAddParamWait1();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWait_002, TestSize.Level0)
 {
     ParamServiceUnitTest test;
-    test.TestAddParamWait2();
+    int ret = test.TestAddParamWait2();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWait_003, TestSize.Level0)
 {
     ParamServiceUnitTest test;
-    test.TestAddParamWait3();
+    int ret = test.TestAddParamWait3();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWatch_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
-    test.TestAddParamWatch1();
+    int ret = test.TestAddParamWatch1();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWatch_002, TestSize.Level0)
 {
     ParamServiceUnitTest test;
-    test.TestAddParamWatch2();
+    int ret = test.TestAddParamWatch2();
+    EXPECT_EQ(ret, 0);
 }
 
 #ifndef OHOS_LITE
@@ -539,7 +550,8 @@ HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWatch_003, TestSize.Level0)
 HWTEST_F(ParamServiceUnitTest, Init_TestCloseTriggerWatch_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
-    test.TestCloseTriggerWatch();
+    int ret = test.TestCloseTriggerWatch();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, Init_TestServiceCtrl_001, TestSize.Level0)

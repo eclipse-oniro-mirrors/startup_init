@@ -90,14 +90,22 @@ HWTEST_F(InitRebootUnitTest, TestAddRebootCmdExt, TestSize.Level1)
 
 HWTEST_F(InitRebootUnitTest, TestAddRebootCmdNormal, TestSize.Level1)
 {
-    SystemWriteParam("ohos.startup.powerctrl", "reboot");
-    SystemWriteParam("ohos.startup.powerctrl", "reboot,shutdown");
-    SystemWriteParam("ohos.startup.powerctrl", "reboot,suspend");
-    SystemWriteParam("ohos.startup.powerctrl", "reboot,charge");
-    SystemWriteParam("ohos.startup.powerctrl", "reboot,updater");
-    SystemWriteParam("ohos.startup.powerctrl", "reboot,updater:2222222");
-    SystemWriteParam("ohos.startup.powerctrl", "reboot,flashd");
-    SystemWriteParam("ohos.startup.powerctrl", "reboot,flashd:1000000");
+    int ret = SystemWriteParam("ohos.startup.powerctrl", "reboot");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("ohos.startup.powerctrl", "reboot,shutdown");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("ohos.startup.powerctrl", "reboot,suspend");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("ohos.startup.powerctrl", "reboot,charge");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("ohos.startup.powerctrl", "reboot,updater");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("ohos.startup.powerctrl", "reboot,updater:2222222");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("ohos.startup.powerctrl", "reboot,flashd");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("ohos.startup.powerctrl", "reboot,flashd:1000000");
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(InitRebootUnitTest, TestRebootCmdExec, TestSize.Level1)

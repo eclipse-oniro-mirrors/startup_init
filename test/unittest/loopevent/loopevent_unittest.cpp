@@ -132,7 +132,7 @@ public:
             return;
         }
     }
-    void LeTaskTest()
+    int LeTaskTest()
     {
         LE_StreamServerInfo info = {};
         info.baseInfo.flags = TASK_STREAM | TASK_PIPE | TASK_SERVER | TASK_TEST;
@@ -141,7 +141,7 @@ public:
         info.incommingConnect = IncomingConnect;
         LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask_, &info);
         if (serverTask_ == nullptr) {
-            return;
+            return -1;
         }
         ((StreamServerTask *)serverTask_)->base.handleEvent(LE_GetDefaultLoop(), serverTask_, EVENT_READ);
 
@@ -154,7 +154,7 @@ public:
         paramStreamInfo.incomingConnect = nullptr;
         ParamTaskPtr client = nullptr;
         int ret = ParamStreamCreate(&client, serverTask_, &paramStreamInfo, sizeof(ParamWatcher));
-        PARAM_CHECK(ret == 0, return, "Failed to create client");
+        PARAM_CHECK(ret == 0, return -1, "Failed to create client");
 
         BufferHandle handle = LE_CreateBuffer(LE_GetDefaultLoop(), 1 + sizeof(eventId));
         LE_Buffer *buffer = (LE_Buffer *)handle;
@@ -169,12 +169,12 @@ public:
         LE_Buffer *next = nullptr;
         EXPECT_EQ(GetNextBuffer((StreamTask *)client, next), nullptr);
         ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
-        PARAM_CHECK(watcher != nullptr, return, "Failed to get watcher");
+        PARAM_CHECK(watcher != nullptr, return -1, "Failed to get watcher");
         OH_ListInit(&watcher->triggerHead);
         LE_FreeBuffer(LE_GetDefaultLoop(), (TaskHandle)client, nullptr);
-        return;
+        return 0;
     }
-    void ProcessEventTest()
+    int ProcessEventTest()
     {
         ProcessEvent((EventLoop *)LE_GetDefaultLoop(), 1, EVENT_READ);
         LE_BaseInfo info = {TASK_EVENT, nullptr};
@@ -184,19 +184,21 @@ public:
             task->handleEvent = TestHandleTaskEvent;
             ProcessEvent((EventLoop *)LE_GetDefaultLoop(), testfd, EVENT_READ);
         }
+        return 0;
     }
-    void ProcessasynEvent()
+    int ProcessasynEvent()
     {
         TaskHandle asynHandle = nullptr;
         LE_CreateAsyncTask(LE_GetDefaultLoop(), &asynHandle, ProcessAsyncEvent);
         if (asynHandle == nullptr) {
-            return;
+            return -1;
         }
         ((AsyncEventTask *)asynHandle)->stream.base.handleEvent(LE_GetDefaultLoop(), asynHandle, EVENT_READ);
         ((AsyncEventTask *)asynHandle)->stream.base.handleEvent(LE_GetDefaultLoop(), asynHandle, EVENT_WRITE);
         LE_StopAsyncTask(LE_GetDefaultLoop(), asynHandle);
+        return 0;
     }
-    void ProcessWatcherTask()
+    int ProcessWatcherTask()
     {
         WatcherHandle handle = nullptr;
         LE_WatchInfo info = {};
@@ -206,15 +208,16 @@ public:
         info.processEvent = ProcessWatchEventTest;
         LE_StartWatcher(LE_GetDefaultLoop(), &handle, &info, nullptr);
         if (handle == nullptr) {
-            return;
+            return -1;
         }
         ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, EVENT_READ);
         ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, 0);
         ((WatcherTask *)handle)->base.flags = WATCHER_ONCE;
         ((WatcherTask *)handle)->base.handleEvent(LE_GetDefaultLoop(), (TaskHandle)handle, EVENT_READ);
         LE_RemoveWatcher(LE_GetDefaultLoop(), handle);
+        return 0;
     }
-    void CreateSocketTest()
+    int CreateSocketTest()
     {
         ParamTaskPtr serverTask = nullptr;
         LE_StreamServerInfo info = {};
@@ -226,7 +229,7 @@ public:
         LE_CreateStreamServer(LE_GetDefaultLoop(), &serverTask, &info);
         EXPECT_NE(serverTask, nullptr);
         if (serverTask == nullptr) {
-            return;
+            return -1;
         }
         ((StreamServerTask *)serverTask)->base.taskId.fd = -1;
         OnIncomingConnect(LE_GetDefaultLoop(), serverTask);
@@ -234,6 +237,7 @@ public:
         AcceptSocket(-1, TASK_PIPE);
         AcceptSocket(-1, TASK_TCP);
         AcceptSocket(-1, TASK_TEST);
+        return 0;
     }
 
 private:
@@ -243,27 +247,32 @@ private:
 HWTEST_F(LoopEventUnittest, Init_LeTaskTest_001, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
-    loopevtest.LeTaskTest();
+    int ret = loopevtest.LeTaskTest();
+    EXPECT_EQ(ret, -1);
 }
 HWTEST_F(LoopEventUnittest, Init_TestRunServer_001, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
-    loopevtest.ProcessEventTest();
+    int ret = loopevtest.ProcessEventTest();
+    EXPECT_EQ(ret, 0);
 }
 HWTEST_F(LoopEventUnittest, Init_TestProcessasynEvent_001, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
-    loopevtest.ProcessasynEvent();
+    int ret = loopevtest.ProcessasynEvent();
+    EXPECT_EQ(ret, 0);
 }
 HWTEST_F(LoopEventUnittest, Init_TestCreateSocketTest_001, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
-    loopevtest.CreateSocketTest();
+    int ret = loopevtest.CreateSocketTest();
+    EXPECT_EQ(ret, 0);
 }
 HWTEST_F(LoopEventUnittest, Init_TestProcessWatcherTask_001, TestSize.Level1)
 {
     LoopEventUnittest loopevtest = LoopEventUnittest();
-    loopevtest.ProcessWatcherTask();
+    int ret = loopevtest.ProcessWatcherTask();
+    EXPECT_EQ(ret, 0);
 }
 
 static LoopHandle g_loop = nullptr;
@@ -279,14 +288,17 @@ static void Test_ProcessTimer(const TimerHandle taskHandle, void *context)
 
 HWTEST_F(LoopEventUnittest, Init_TestLoopAbnormal_001, TestSize.Level1)
 {
-    LE_StartWatcher(nullptr, nullptr, nullptr, nullptr);
+    int ret = LE_StartWatcher(nullptr, nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, LE_INVALID_PARAM);
     LE_WatchInfo info = {};
         info.fd = -1;
         info.flags = WATCHER_ONCE;
         info.events = EVENT_READ;
         info.processEvent = nullptr;
-    LE_StartWatcher(LE_GetDefaultLoop(), nullptr, &info, nullptr);
-    LE_StartWatcher(LE_GetDefaultLoop(), nullptr, nullptr, nullptr);
+    ret = LE_StartWatcher(LE_GetDefaultLoop(), nullptr, &info, nullptr);
+    EXPECT_EQ(ret, LE_INVALID_PARAM);
+    ret = LE_StartWatcher(LE_GetDefaultLoop(), nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, LE_INVALID_PARAM);
 }
 
 HWTEST_F(LoopEventUnittest, Init_TestLoopIdle_001, TestSize.Level1)

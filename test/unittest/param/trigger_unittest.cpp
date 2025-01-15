@@ -498,108 +498,130 @@ public:
 HWTEST_F(TriggerUnitTest, Init_TestLoadTrigger_001, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestLoadTrigger();
+    int ret = test.TestLoadTrigger();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestBootEvent_001, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestBootEvent("pre-init");
-    test.TestBootEvent("init");
-    test.TestBootEvent("post-init");
-    test.TestBootEvent("early-init");
+    int ret = test.TestBootEvent("pre-init");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestBootEvent("init");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestBootEvent("post-init");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestBootEvent("early-init");
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestAddTriggerForBoot_001, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestAddTriggerForBoot();
+    int ret = test.TestAddTriggerForBoot();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestAddTriggerForParm_001, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestAddTriggerForParm();
+    int ret = test.TestAddTriggerForParm();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestCheckParamTrigger_001, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestCheckParamTrigger1();
+    int ret = test.TestCheckParamTrigger1();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestCheckParamTrigger_002, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestCheckParamTrigger2();
+    int ret = test.TestCheckParamTrigger2();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestCheckParamTrigger_003, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestCheckParamTrigger3();
+    int ret = test.TestCheckParamTrigger3();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestCheckParamTrigger_004, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestCheckParamTrigger4();
+    int ret = test.TestCheckParamTrigger4();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestCheckParamTrigger_005, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestCheckParamTrigger5();
+    int ret = test.TestCheckParamTrigger5();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestParamEvent_001, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestParamEvent();
+    int ret = test.TestParamEvent();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestComputerCondition_001, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestComputeCondition("aaa=111||aaa=222||aaa=333");
-    test.TestComputeCondition("aaa=111||aaa=222&&aaa=333");
-    test.TestComputeCondition("(aaa=111||aaa=222)&&aaa=333");
-    test.TestComputeCondition("aaa=111||(aaa=222&&aaa=333)");
+    int ret = test.TestComputeCondition("aaa=111||aaa=222||aaa=333");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestComputeCondition("aaa=111||aaa=222&&aaa=333");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestComputeCondition("(aaa=111||aaa=222)&&aaa=333");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestComputeCondition("aaa=111||(aaa=222&&aaa=333)");
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_001, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestExecuteParamTrigger1();
+    int ret = test.TestExecuteParamTrigger1();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_002, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestExecuteParamTrigger2();
+    int ret = test.TestExecuteParamTrigger2();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_003, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestExecuteParamTrigger3();
+    int ret = test.TestExecuteParamTrigger3();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_004, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestExecuteParamTrigger4();
+    int ret = test.TestExecuteParamTrigger4();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_005, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestExecuteParamTrigger5();
+    int ret = test.TestExecuteParamTrigger5();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_006, TestSize.Level0)
 {
     TriggerUnitTest test;
-    test.TestDumpTrigger();
-
+    int ret = test.TestDumpTrigger();
+    EXPECT_EQ(ret, 0);
 }

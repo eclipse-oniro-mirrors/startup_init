@@ -303,7 +303,9 @@ HWTEST_F(HookMgrUnitTest, HookMgrExecute_unitest, TestSize.Level1)
 
 HWTEST_F(HookMgrUnitTest, HookMgrExecuteInit_unitest, TestSize.Level1)
 {
-    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
-    HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, nullptr, nullptr);
+    int ret = HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    EXPECT_NE(ret, -1);
+    ret = HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, nullptr, nullptr);
+    EXPECT_NE(ret, -1);
 }
 } // namespace init_ut

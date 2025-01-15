@@ -69,11 +69,15 @@ HWTEST_F(InitUnitTest, TestSignalHandle, TestSize.Level1)
 HWTEST_F(InitUnitTest, TestSystemPrepare, TestSize.Level1)
 {
     SetStubResult(STUB_MOUNT, -1);
+    EXPECT_EQ(GetStubResult(STUB_MOUNT), -1);
     SetStubResult(STUB_MKNODE, -1);
+    EXPECT_EQ(GetStubResult(STUB_MKNODE), -1);
     CreateFsAndDeviceNode();
 
     SetStubResult(STUB_MOUNT, 0);
+    EXPECT_EQ(GetStubResult(STUB_MOUNT), 0);
     SetStubResult(STUB_MKNODE, 0);
+    EXPECT_EQ(GetStubResult(STUB_MKNODE), 0);
     CreateFsAndDeviceNode();
 }
 
@@ -134,13 +138,16 @@ HWTEST_F(InitUnitTest, TestInitLog, TestSize.Level1)
     // test log
     CheckAndCreateDir(INIT_LOG_PATH);
     SetInitLogLevel(INIT_DEBUG);
+    int ret = GetInitLogLevel();
+    EXPECT_EQ(ret, INIT_DEBUG);
     INIT_LOGI("TestInitLog");
     INIT_LOGV("TestInitLog");
     INIT_LOGE("TestInitLog");
     INIT_LOGW("TestInitLog");
     INIT_LOGF("TestInitLog");
     // restore log level
-    int32_t loglevel = GetIntParameter("persist.init.debug.loglevel", INIT_ERROR);
-    SetInitLogLevel((InitLogLevel)loglevel);
+    SetInitLogLevel(INIT_INFO);
+    ret = GetInitLogLevel();
+    EXPECT_EQ(ret, INIT_INFO);
 }
 }

@@ -63,6 +63,12 @@ static int CallbackSendMsgProcessTest(const CmdAgent *agent, uint16_t type, cons
     return 0;
 }
 
+static int TestCmdServiceProcessDelClient(pid_t pid)
+{
+    CmdServiceProcessDelClient(pid);
+    return 0;
+}
+
 /**
 * @tc.name: ReadFstabFromFile_unitest
 * @tc.desc: read fstab from test file.
@@ -397,14 +403,17 @@ HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_ControlFdServer001, TestSize.Leve
     cmdMsg->cmd[0] = 'a';
     cmdMsg->ptyName[0] = 'a';
     CmdOnRecvMessage(testServer, (uint8_t *)(&cmdMsg), 0);
-    CmdServiceProcessDelClient(0);
-    CmdServiceProcessDelClient(0);
+    int ret = TestCmdServiceProcessDelClient(0);
+    EXPECT_EQ(ret, 0);
+    ret = TestCmdServiceProcessDelClient(0);
+    EXPECT_EQ(ret, 0);
     free(cmdMsg);
 }
 
 HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_HoldFd001, TestSize.Level1)
 {
-    CheckSocketPermission(nullptr);
+    int ret = CheckSocketPermission(nullptr);
+    EXPECT_EQ(ret, -1);
     CmdServiceProcessDestroyClient();
 }
 
@@ -466,7 +475,9 @@ HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_HoldFd003, TestSize.Level1)
     struct msghdr msghdr = {};
     GetFdsFromMsg(&fdCount, &requestPid, msghdr);
     msghdr.msg_flags = MSG_TRUNC;
-    GetFdsFromMsg(&fdCount, &requestPid, msghdr);
+    int *ret = nullptr;
+    ret = GetFdsFromMsg(&fdCount, &requestPid, msghdr);
+    EXPECT_EQ(ret, nullptr);
     struct iovec iovec = {
         .iov_base = buffer,
         .iov_len = MAX_FD_HOLDER_BUFFER,

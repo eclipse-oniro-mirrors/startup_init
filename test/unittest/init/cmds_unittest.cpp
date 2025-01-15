@@ -24,11 +24,12 @@
 using namespace testing::ext;
 using namespace std;
 
-static void DoCmdByName(const char *name, const char *cmdContent)
+static int DoCmdByName(const char *name, const char *cmdContent)
 {
     int cmdIndex = 0;
     (void)GetMatchCmd(name, &cmdIndex);
     DoCmdByIndex(cmdIndex, cmdContent, nullptr);
+    return 0;
 }
 
 namespace init_ut {
@@ -42,44 +43,83 @@ public:
 
 HWTEST_F(CmdsUnitTest, TestCmdExecByName1, TestSize.Level1)
 {
-    DoCmdByName("timer_start ", "media_service|5000");
-    DoCmdByName("timer_start ", "|5000");
-    DoCmdByName("timer_stop ", "media_service");
-    DoCmdByName("exec ", "media_service");
-    DoCmdByName("syncexec ", "/system/bin/toybox");
-    DoCmdByName("load_access_token_id ", "media_service");
-    DoCmdByName("load_access_token_id ", "");
-    DoCmdByName("stopAllServices ", "false");
-    DoCmdByName("stopAllServices ", "true");
-    DoCmdByName("umount ", "/2222222");
-    DoCmdByName("mount ", "/2222222");
-    DoCmdByName("mount ", "ext4 /2222222 /data wait filecrypt=555");
-    DoCmdByName("umount ", "/2222222");
-    DoCmdByName("init_global_key ", "/data");
-    DoCmdByName("init_global_key ", "arg0 arg1");
-    DoCmdByName("init_main_user ", "testUser");
-    DoCmdByName("init_main_user ", nullptr);
-    DoCmdByName("mkswap ", "/data/init_ut");
-    DoCmdByName("swapon ", "/data/init_ut");
-    DoCmdByName("sync ", "");
-    DoCmdByName("restorecon ", "");
-    DoCmdByName("restorecon ", "/data  /data");
-    DoCmdByName("suspend ", "");
-    DoCmdByName("wait ", "1");
-    DoCmdByName("wait ", "aaa 1");
-    DoCmdByName("mksandbox", "/sandbox");
-    DoCmdByName("mount_fstab ", "/2222222");
-    DoCmdByName("umount_fstab ", "/2222222");
-    DoCmdByName("mknode  ", "node1 node1 node1 node1 node1");
-    DoCmdByName("makedev ", "/device1 device2");
-    DoCmdByName("symlink ", "/xxx/xxx/xxx1 /xxx/xxx/xxx2");
-    DoCmdByName("load_param ", "aaa onlyadd");
-    DoCmdByName("load_persist_params ", "");
-    DoCmdByName("load_param ", "");
-    DoCmdByName("setparam ", "bbb 0");
-    DoCmdByName("ifup ", "aaa, bbb");
-    DoCmdByName("insmod ", "a b");
-    DoCmdByName("insmod ", "/data /data");
+    int ret = DoCmdByName("timer_start ", "media_service|5000");
+    ret = DoCmdByName("timer_start ", "|5000");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("timer_stop ", "media_service");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("exec ", "media_service");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("syncexec ", "/system/bin/toybox");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("load_access_token_id ", "media_service");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("load_access_token_id ", "");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("stopAllServices ", "false");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("stopAllServices ", "true");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("umount ", "/2222222");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("mount ", "/2222222");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("mount ", "ext4 /2222222 /data wait filecrypt=555");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("umount ", "/2222222");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("init_global_key ", "/data");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("init_global_key ", "arg0 arg1");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("init_main_user ", "testUser");
+    EXPECT_EQ(ret, 0);
+}
+HWTEST_F(CmdsUnitTest, TestCmdExecByName2, TestSize.Level1)
+{
+    int ret = DoCmdByName("init_main_user ", nullptr);
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("mkswap ", "/data/init_ut");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("swapon ", "/data/init_ut");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("sync ", "");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("restorecon ", "");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("restorecon ", "/data  /data");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("suspend ", "");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("wait ", "1");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("wait ", "aaa 1");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("mksandbox", "/sandbox");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("mount_fstab ", "/2222222");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("umount_fstab ", "/2222222");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("mknode  ", "node1 node1 node1 node1 node1");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("makedev ", "/device1 device2");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("symlink ", "/xxx/xxx/xxx1 /xxx/xxx/xxx2");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("load_param ", "aaa onlyadd");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("load_persist_params ", "");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("load_param ", "");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("setparam ", "bbb 0");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("ifup ", "aaa, bbb");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("insmod ", "a b");
+    EXPECT_EQ(ret, 0);
+    ret = DoCmdByName("insmod ", "/data /data");
 }
 
 HWTEST_F(CmdsUnitTest, TestCommonMkdir, TestSize.Level1)

@@ -102,6 +102,12 @@ void CreateInitTraceConfig(int compress)
     CreateTestFile(STARTUP_INIT_UT_PATH"/system/etc/init_trace.cfg", config.c_str());
 }
 
+static int TestPluginExecCmdByName(const char *name, const char *cmdContent)
+{
+    PluginExecCmdByName(name, cmdContent);
+    return 0;
+}
+
 class TraceUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
@@ -114,10 +120,12 @@ HWTEST_F(TraceUnitTest, TraceTest_001, TestSize.Level1)
 {
     // open switch for trace
     uint32_t dataIndex = 0;
-    WriteParam("persist.init.bootevent.enable", "true", &dataIndex, 0);
+    int ret = WriteParam("persist.init.bootevent.enable", "true", &dataIndex, 0);
+    EXPECT_EQ(ret, 0);
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, nullptr, nullptr);
     // close switch for trace
-    WriteParam("persist.init.bootevent.enable", "false", &dataIndex, 0);
+    ret = WriteParam("persist.init.bootevent.enable", "false", &dataIndex, 0);
+    EXPECT_EQ(ret, 0);
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, nullptr, nullptr);
 }
 
@@ -125,22 +133,25 @@ HWTEST_F(TraceUnitTest, TraceTest_002, TestSize.Level1)
 {
     CreateInitTraceConfig(1);
     // start trace
-    PluginExecCmdByName("init_trace", "start");
+    int ret = TestPluginExecCmdByName("init_trace", "start");
+    EXPECT_EQ(ret, 0);
     // for run 1 s
     sleep(1);
     // stop trace
-    PluginExecCmdByName("init_trace", "stop");
+    ret = TestPluginExecCmdByName("init_trace", "stop");
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TraceUnitTest, TraceTest_003, TestSize.Level1)
 {
     CreateInitTraceConfig(0);
     // start trace
-    PluginExecCmdByName("init_trace", "start");
+    int ret = TestPluginExecCmdByName("init_trace", "start");
     // for run 1 s
     sleep(1);
     // stop trace
-    PluginExecCmdByName("init_trace", "stop");
+    ret = TestPluginExecCmdByName("init_trace", "stop");
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TraceUnitTest, TraceTest_004, TestSize.Level1)
@@ -152,21 +163,25 @@ HWTEST_F(TraceUnitTest, TraceTest_004, TestSize.Level1)
     DoCmdByIndex(cmdIndex, cmdArgs.c_str(), nullptr);
 
     // start trace
-    PluginExecCmdByName("init_trace", "start");
+    int ret = TestPluginExecCmdByName("init_trace", "start");
+    EXPECT_EQ(ret, 0);
     // for run 1 s
     sleep(1);
     // stop trace
-    PluginExecCmdByName("init_trace", "stop");
+    ret = TestPluginExecCmdByName("init_trace", "stop");
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TraceUnitTest, TraceTest_005, TestSize.Level1)
 {
     // start trace
-    PluginExecCmdByName("init_trace", "start");
+    int ret = TestPluginExecCmdByName("init_trace", "start");
+    EXPECT_EQ(ret, 0);
     // for run 1 s
     sleep(1);
     // interrupt trace
-    PluginExecCmdByName("init_trace", "1");
+    ret = TestPluginExecCmdByName("init_trace", "1");
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TraceUnitTest, TraceTest_006, TestSize.Level1)
@@ -178,17 +193,20 @@ HWTEST_F(TraceUnitTest, TraceTest_006, TestSize.Level1)
     DoCmdByIndex(cmdIndex, cmdArgs.c_str(), nullptr);
 
     // start trace
-    PluginExecCmdByName("init_trace", "start");
+    int ret = TestPluginExecCmdByName("init_trace", "start");
+    EXPECT_EQ(ret, 0);
     // for run 1 s
     sleep(1);
     // stop trace
-    PluginExecCmdByName("init_trace", "stop");
+    ret = TestPluginExecCmdByName("init_trace", "stop");
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(TraceUnitTest, TraceTest_007, TestSize.Level1)
 {
     CreateInitTraceConfig(0);
     // other case
-    PluginExecCmdByName("init_trace", "other");
+    int ret = TestPluginExecCmdByName("init_trace", "other");
+    EXPECT_EQ(ret, 0);
 }
 } // namespace init_ut

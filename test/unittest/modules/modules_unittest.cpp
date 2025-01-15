@@ -47,6 +47,41 @@ public:
     void TearDown() {};
 };
 
+static int BootchartLogFileTest(void)
+{
+    DoBootchartStart();
+    FILE *log = fopen("/data/init_ut/ModulesTest.log", "w");
+    if (log) {
+        BootchartLogFile(log, "/proc/stat");
+        (void)fflush(log);
+        (void)fclose(log);
+    }
+    return 0;
+}
+
+static int BootchartLogProcessStatTest(void)
+{
+    FILE *log = fopen("/data/init_ut/ModulesTest.log", "w");
+    pid_t selfPid = getpid();
+    if (log != nullptr) {
+        BootchartLogProcessStat(log, selfPid);
+        (void)fflush(log);
+        (void)fclose(log);
+    }
+    return 0;
+}
+
+static int BootchartLogProcessTest(void)
+{
+    FILE *log = fopen("/data/init_ut/ModulesTest.log", "w");
+    if (log) {
+        bootchartLogProcess(log);
+        (void)fflush(log);
+        (void)fclose(log);
+    }
+    return 0;
+}
+
 HWTEST_F(ModulesUnitTest, TestBootchartInit, TestSize.Level1)
 {
     EXPECT_EQ(BootchartInit(), 0);
@@ -68,34 +103,17 @@ HWTEST_F(ModulesUnitTest, TestReadFileToBuffer, TestSize.Level1)
 
 HWTEST_F(ModulesUnitTest, TestBootchartLogFile, TestSize.Level1)
 {
-    DoBootchartStart();
-    FILE *log = fopen("/data/init_ut/ModulesTest.log", "w");
-    if (log) {
-        BootchartLogFile(log, "/proc/stat");
-        (void)fflush(log);
-        (void)fclose(log);
-    }
+    EXPECT_EQ(BootchartLogFileTest(), 0);
 }
 
 HWTEST_F(ModulesUnitTest, TestBootchartLogProcessStat, TestSize.Level1)
 {
-    FILE *log = fopen("/data/init_ut/ModulesTest.log", "w");
-    pid_t selfPid = getpid();
-    if (log != nullptr) {
-        BootchartLogProcessStat(log, selfPid);
-        (void)fflush(log);
-        (void)fclose(log);
-    }
+    EXPECT_EQ(BootchartLogProcessStatTest(), 0);
 }
 
 HWTEST_F(ModulesUnitTest, TestbootchartLogProcess, TestSize.Level1)
 {
-    FILE *log = fopen("/data/init_ut/ModulesTest.log", "w");
-    if (log) {
-        bootchartLogProcess(log);
-        (void)fflush(log);
-        (void)fclose(log);
-    }
+    EXPECT_EQ(BootchartLogProcessTest(), 0);
 }
 
 HWTEST_F(ModulesUnitTest, TestDoBootchartCmd, TestSize.Level1)
@@ -109,10 +127,14 @@ HWTEST_F(ModulesUnitTest, TestDoBootchartCmd, TestSize.Level1)
 HWTEST_F(ModulesUnitTest, TestDoBootchartInsall, TestSize.Level1)
 {
     TestSetParamCheckResult("ohos.servicectrl.", 0777, 0);
-    SystemWriteParam("persist.init.bootchart.enabled", "1");
-    SystemWriteParam("persist.init.debug.dump.trigger", "1");
-    SystemWriteParam("persist.init.debug.loglevel", "6");
-    SystemWriteParam("ohos.servicectrl.cmd", "setloglevel 10");
+    int ret = SystemWriteParam("persist.init.bootchart.enabled", "1");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("persist.init.debug.dump.trigger", "1");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("persist.init.debug.loglevel", "6");
+    EXPECT_EQ(ret, 0);
+    ret = SystemWriteParam("ohos.servicectrl.cmd", "setloglevel 10");
+    EXPECT_EQ(ret, 0);
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, nullptr, nullptr);
 }
 } // namespace init_ut

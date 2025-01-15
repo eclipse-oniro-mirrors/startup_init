@@ -28,6 +28,12 @@ public:
     void TearDown(void) {};
 };
 
+static int TestHvbDmVerityFinal(void)
+{
+    HvbDmVerityFinal();
+    return 0;
+}
+
 HWTEST_F(DmVerifyUnitTest, HvbDmVerityinit_001, TestSize.Level0)
 {
     int ret;
@@ -120,13 +126,16 @@ HWTEST_F(DmVerifyUnitTest, HvbDmVeritySetUp_001, TestSize.Level0)
 
 HWTEST_F(DmVerifyUnitTest, HvbDmVerityFinal_001, TestSize.Level0)
 {
-    HvbDmVerityFinal();
+    int ret = TestHvbDmVerityFinal();
+    EXPECT_EQ(ret, 0);
 
     setenv("SWTYPE_VALUE", "factory", 1);
-    HvbDmVerityFinal();
+    ret = TestHvbDmVerityFinal();
+    EXPECT_EQ(ret, 0);
 
     setenv("FINAL_VALUE", "on", 1);
-    HvbDmVerityFinal();
+    ret = TestHvbDmVerityFinal();
+    EXPECT_EQ(ret, 0);
 
     unsetenv("SWTYPE_VALUE");
     unsetenv("FINAL_VALUE");

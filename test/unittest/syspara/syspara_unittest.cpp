@@ -44,37 +44,91 @@ public:
 
 HWTEST_F(SysparaUnitTest, parameterTest001, TestSize.Level0)
 {
-    printf("Device type =%s\n", GetDeviceType());
-    printf("Manufacture =%s\n", GetManufacture());
-    printf("GetBrand =%s\n", GetBrand());
-    printf("MarketName =%s\n", GetMarketName());
-    printf("ProductSeries =%s\n", GetProductSeries());
+    const char *deviceType = GetDeviceType();
+    printf("Device type =%s\n", deviceType);
+    EXPECT_STRNE(deviceType, nullptr);
+    const char *manufacture = GetManufacture();
+    printf("Manufacture =%s\n", manufacture);
+    EXPECT_STRNE(manufacture, nullptr);
+    const char *brand = GetBrand();
+    printf("GetBrand =%s\n", brand);
+    EXPECT_STRNE(brand, nullptr);
+    const char *marketName = GetMarketName();
+    printf("MarketName =%s\n", marketName);
+    EXPECT_STRNE(marketName, nullptr);
+    const char *productSeries = GetProductSeries();
+    printf("ProductSeries =%s\n", productSeries);
+    EXPECT_STRNE(productSeries, nullptr);
+    const char *productModel = GetProductModel();
     printf("ProductModel =%s\n", GetProductModel());
-    printf("ProductModelAlias =%s\n", GetProductModelAlias());
-    printf("SoftwareModel =%s\n", GetSoftwareModel());
-    printf("HardwareModel =%s\n", GetHardwareModel());
-    printf("Software profile =%s\n", GetHardwareProfile());
-    printf("Serial =%s\n", GetSerial());
-    printf("OS full name =%s\n", GetOSFullName());
-    printf("OS Release type =%s\n", GetOsReleaseType());
-    printf("Display version =%s\n", GetDisplayVersion());
-    printf("bootloader version =%s\n", GetBootloaderVersion());
-    printf("secure patch level =%s\n", GetSecurityPatchTag());
+    EXPECT_STRNE(productModel, nullptr);
+    const char *roductModelAlias = GetProductModelAlias();
+    printf("ProductModelAlias =%s\n", roductModelAlias);
+    EXPECT_STRNE(roductModelAlias, nullptr);
+    const char *softwareModel = GetSoftwareModel();
+    printf("SoftwareModel =%s\n", softwareModel);
+    EXPECT_STRNE(softwareModel, nullptr);
+    const char *hardwareModel = GetHardwareModel();
+    printf("HardwareModel =%s\n", hardwareModel);
+    EXPECT_STRNE(hardwareModel, nullptr);
+    const char *softwareProfile = GetHardwareProfile();
+    printf("Software profile =%s\n", softwareProfile);
+    EXPECT_STRNE(softwareProfile, nullptr);
+    const char *serial = GetSerial();
+    printf("Serial =%s\n", serial);
+    EXPECT_STRNE(serial, nullptr);
+    const char *osFullName = GetOSFullName();
+    printf("OS full name =%s\n", osFullName);
+    EXPECT_STRNE(osFullName, nullptr);
+    const char *osReleaseType = GetOsReleaseType();
+    printf("OS Release type =%s\n", osReleaseType);
+    EXPECT_STRNE(osReleaseType, nullptr);
+    const char *displayVersion = GetDisplayVersion();
+    printf("Display version =%s\n", displayVersion);
+    EXPECT_STRNE(displayVersion, nullptr);
+    const char *bootloaderVersion = GetBootloaderVersion();
+    printf("bootloader version =%s\n", bootloaderVersion);
+    EXPECT_STRNE(bootloaderVersion, nullptr);
+    const char *securePatchLevel = GetSecurityPatchTag();
+    printf("secure patch level =%s\n", securePatchLevel);
+    EXPECT_STRNE(securePatchLevel, nullptr);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest001_1, TestSize.Level0)
 {
-    printf("secure patch level =%s\n", GetSecurityPatchTag());
-    printf("abi list =%s\n", GetAbiList());
-    printf("first api version =%d\n", GetFirstApiVersion());
-    printf("SDK api version =%d\n", GetSdkApiVersion());
-    printf("Incremental version = %s\n", GetIncrementalVersion());
-    printf("formal id =%s\n", GetVersionId());
-    printf("build type =%s\n", GetBuildType());
-    printf("build user =%s\n", GetBuildUser());
-    printf("Build host = %s\n", GetBuildHost());
-    printf("build time =%s\n", GetBuildTime());
-    printf("build root later..., %s\n", GetBuildRootHash());
+    const char *securePatchLevel = GetSecurityPatchTag();
+    printf("secure patch level =%s\n", securePatchLevel);
+    EXPECT_STRNE(securePatchLevel, nullptr);
+    const char *abiList = GetAbiList();
+    printf("abi list =%s\n", abiList);
+    EXPECT_STRNE(abiList, nullptr);
+    int firstApiVersion = GetFirstApiVersion();
+    printf("first api version =%d\n", firstApiVersion);
+    EXPECT_NE(firstApiVersion, -1);
+    int sdkApiVersion = GetSdkApiVersion();
+    printf("SDK api version =%d\n", sdkApiVersion);
+    EXPECT_NE(sdkApiVersion, -1);
+    const char *incrementalVersion = GetIncrementalVersion();
+    printf("Incremental version = %s\n", incrementalVersion);
+    EXPECT_STRNE(incrementalVersion, nullptr);
+    const char *formalId = GetVersionId();
+    printf("formal id =%s\n", formalId);
+    EXPECT_STRNE(formalId, nullptr);
+    const char *buildType = GetBuildType();
+    printf("build type =%s\n", buildType);
+    EXPECT_STRNE(buildType, nullptr);
+    const char *buildUser = GetBuildUser();
+    printf("build user =%s\n", buildUser);
+    EXPECT_STRNE(buildUser, nullptr);
+    const char *buildHost = GetBuildHost();
+    printf("Build host = %s\n", buildHost);
+    EXPECT_STRNE(buildHost, nullptr);
+    const char *buildTime = GetBuildTime();
+    printf("build time =%s\n", buildTime);
+    EXPECT_STRNE(buildTime, nullptr);
+    const char *buildRootLater = GetBuildRootHash();
+    printf("build root later..., %s\n", buildRootLater);
+    EXPECT_STRNE(buildRootLater, nullptr);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest001_2, TestSize.Level0)
