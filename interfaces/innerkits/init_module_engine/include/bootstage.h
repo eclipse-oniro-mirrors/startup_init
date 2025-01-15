@@ -55,7 +55,7 @@ enum INIT_BOOTSTAGE {
     INIT_BOOT_COMPLETE     = 100,
 };
 
-HOOK_MGR *GetBootStageHookMgr();
+HOOK_MGR *GetBootStageHookMgr(void);
 
 __attribute__((always_inline)) inline int InitAddGlobalInitHook(int prio, OhosHook hook)
 {
