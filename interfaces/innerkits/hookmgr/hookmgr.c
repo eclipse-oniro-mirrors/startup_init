@@ -203,6 +203,7 @@ static int hookTraversalDelProc(ListNode *node, void *cookie)
     OH_ListRemove(node);
     // Destroy myself
     free((void *)node);
+    node = NULL;
 
     return 0;
 }
