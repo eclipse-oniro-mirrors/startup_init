@@ -402,7 +402,8 @@ HWTEST_F(ServiceUnitTest, TestServiceBootEventHook, TestSize.Level1)
 
 HWTEST_F(ServiceUnitTest, TestSetServiceContent, TestSize.Level1)
 {
-    (void)WatchConsoleDevice(nullptr);
+    int ret = WatchConsoleDevice(nullptr);
+    EXPECT_EQ(ret, -1);
     Service service;
     (void)WatchConsoleDevice(&service);
     int fd = open("/dev/console", O_RDWR);

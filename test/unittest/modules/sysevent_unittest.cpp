@@ -61,6 +61,18 @@ static void BootEventDestroyProc(ListNode *node)
     free(item);
 }
 
+static int TestReportBootEventComplete(ListNode *events)
+{
+    ReportBootEventComplete(events);
+    return 0;
+}
+
+static int TestReportSysEvent(const StartupEvent *event)
+{
+    ReportSysEvent(event);
+    return 0;
+}
+
 namespace init_ut {
 class SysEventUnitTest : public testing::Test {
 public:
@@ -72,14 +84,14 @@ public:
 
 HWTEST_F(SysEventUnitTest, SysEventTest_001, TestSize.Level1)
 {
-    ReportBootEventComplete(nullptr);
+    EXPECT_EQ(TestReportBootEventComplete(nullptr), 0);
 }
 
 HWTEST_F(SysEventUnitTest, SysEventTest_002, TestSize.Level1)
 {
     ListNode events = { &events, &events };
     // empty event
-    ReportBootEventComplete(&events);
+    EXPECT_EQ(TestReportBootEventComplete(&events), 0);
 }
 
 HWTEST_F(SysEventUnitTest, SysEventTest_003, TestSize.Level1)
@@ -92,7 +104,7 @@ HWTEST_F(SysEventUnitTest, SysEventTest_003, TestSize.Level1)
     AddBootEvent(&events, "bootevent.44444444444444", BOOTEVENT_TYPE_SERVICE);
     AddBootEvent(&events, "bootevent.44444444444444.6666666666.777777", BOOTEVENT_TYPE_SERVICE);
     SystemWriteParam("ohos.boot.bootreason", "-1");
-    ReportBootEventComplete(&events);
+    EXPECT_EQ(TestReportBootEventComplete(&events), 0);
     OH_ListRemoveAll(&events, BootEventDestroyProc);
 }
 
@@ -110,7 +122,7 @@ HWTEST_F(SysEventUnitTest, SysEventTest_004, TestSize.Level1)
     startupTime.detailTime = const_cast<char *>("buffer");
     startupTime.reason = const_cast<char *>("");
     startupTime.firstStart = 1;
-    ReportSysEvent(&startupTime.event);
+    EXPECT_EQ(TestReportSysEvent(&startupTime.event), 0);
 }
 
 HWTEST_F(SysEventUnitTest, SysEventTest_005, TestSize.Level1)
@@ -127,18 +139,19 @@ HWTEST_F(SysEventUnitTest, SysEventTest_005, TestSize.Level1)
     startupTime.detailTime = const_cast<char *>("buffer");
     startupTime.reason = const_cast<char *>("");
     startupTime.firstStart = 1;
-    ReportSysEvent(&startupTime.event);
+    EXPECT_EQ(TestReportSysEvent(&startupTime.event), 0);
 }
 
 HWTEST_F(SysEventUnitTest, SysEventTest_006, TestSize.Level1)
 {
-    ReportSysEvent(nullptr);
+    TestReportSysEvent(nullptr);
 }
 
 HWTEST_F(SysEventUnitTest, SysEventTest_007, TestSize.Level1)
 {
     const char *appfwkReady[] = {"bootevent.appfwk.ready"};
     int ret = PluginExecCmd("unset_bootevent", 1, appfwkReady);
+    EXPECT_EQ(ret, 0);
     printf("SysEventTest_007:%d\n", ret);
 }
 } // namespace init_ut

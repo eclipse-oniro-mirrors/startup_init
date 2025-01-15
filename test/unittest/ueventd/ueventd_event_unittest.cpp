@@ -229,6 +229,24 @@ bool IsFileExist(const std::string &file)
     return true;
 }
 
+static int TestHandleBlockDeviceEvent(const struct Uevent *uevent)
+{
+    HandleBlockDeviceEvent(uevent);
+    return 0;
+}
+
+static int TestHandleOtherDeviceEvent(const struct Uevent *uevent)
+{
+    HandleOtherDeviceEvent(uevent);
+    return 0;
+}
+
+static int TestRetriggerUeventByPath(int sockFd, char *path)
+{
+    RetriggerUeventByPath(sockFd, path);
+    return 0;
+}
+
 HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_ParseUeventdEvent001, TestSize.Level1)
 {
     struct Uevent uevent = {
@@ -289,19 +307,22 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_Actions001, TestSize.Le
 
 HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleBlockDevicesInvalidParameters001, TestSize.Level1)
 {
-    HandleBlockDeviceEvent(nullptr);
+    int ret = TestHandleBlockDeviceEvent(nullptr);
+    EXPECT_EQ(ret, 0);
     // Not block device
     struct Uevent noBlockUevent = {
         .subsystem = "char",
     };
-    HandleBlockDeviceEvent(&noBlockUevent);
+    ret = TestHandleBlockDeviceEvent(&noBlockUevent);
+    EXPECT_EQ(ret, 0);
 
     struct Uevent invalidDevNoUevent = {
         .subsystem = "block",
         .major = -1,
         .minor = -1,
     };
-    HandleBlockDeviceEvent(&invalidDevNoUevent);
+    ret = TestHandleBlockDeviceEvent(&invalidDevNoUevent);
+    EXPECT_EQ(ret, 0);
 
     struct Uevent invalidSysPathUevent = {
         .subsystem = "block",
@@ -309,7 +330,8 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleBlockDevicesInval
         .major = 1,
         .minor = 1,
     };
-    HandleBlockDeviceEvent(&invalidSysPathUevent);
+    ret = TestHandleBlockDeviceEvent(&invalidSysPathUevent);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleBlockDevicesValidParameters002, TestSize.Level1)
@@ -393,19 +415,22 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleBlockDevicesChang
         .busNum = 1,
         .devNum = 2,
     };
-    HandleBlockDeviceEvent(&uevent);
+    int ret = TestHandleBlockDeviceEvent(&uevent);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleOtherDevicesInvalidParameters001, TestSize.Level1)
 {
-    HandleOtherDeviceEvent(nullptr);
+    int ret = TestHandleOtherDeviceEvent(nullptr);
+    EXPECT_EQ(ret, 0);
     // Not Character device
     struct Uevent invalidDevNoUevent = {
         .subsystem = "test",
         .major = -1,
         .minor = -1,
     };
-    HandleOtherDeviceEvent(&invalidDevNoUevent);
+    ret = TestHandleOtherDeviceEvent(&invalidDevNoUevent);
+    EXPECT_EQ(ret, 0);
 
     struct Uevent invalidSysPathUevent = {
         .subsystem = "test",
@@ -413,7 +438,8 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleOtherDevicesInval
         .major = 5,
         .minor = 9,
     };
-    HandleOtherDeviceEvent(&invalidSysPathUevent);
+    ret = TestHandleOtherDeviceEvent(&invalidSysPathUevent);
+    EXPECT_EQ(ret, 0);
 
     struct Uevent invalidSubsystemUevent = {
         .subsystem = "",
@@ -421,7 +447,8 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleOtherDevicesInval
         .major = 5,
         .minor = 9,
     };
-    HandleOtherDeviceEvent(&invalidSubsystemUevent);
+    ret = TestHandleOtherDeviceEvent(&invalidSubsystemUevent);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleOtherDevicesValidParameters001, TestSize.Level1)
@@ -487,7 +514,8 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleUsbDevicesWithBus
 HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_Handle001, TestSize.Level1)
 {
     char path[] = {"/data/ueventd"};
-    RetriggerUeventByPath(g_oldRootFd, path);
+    int ret = TestRetriggerUeventByPath(g_oldRootFd, path);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_FirmwareUevent001, TestSize.Level1)

@@ -91,6 +91,12 @@ static bool IsDirExist(const std::string &path)
     return false;
 }
 
+static int TestBuildMountCmd(char *buffer, size_t len, const char *mp, const char *dev, const char *fstype)
+{
+    BuildMountCmd(buffer, len, mp, dev, fstype);
+    return 0;
+}
+
 class EngUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
@@ -181,8 +187,10 @@ HWTEST_F(EngUnitTest, TestMountCmd, TestSize.Level1)
 {
     char mountCmd[MOUNT_CMD_MAX_LEN] = {};
     MountEngPartitions();
-    BuildMountCmd(mountCmd, MOUNT_CMD_MAX_LEN, "/eng/source", "/eng/target", "ext4");
-    BuildMountCmd(mountCmd, 0, "/eng/source", "/eng/target", "ext4");
+    int ret = TestBuildMountCmd(mountCmd, MOUNT_CMD_MAX_LEN, "/eng/source", "/eng/target", "ext4");
+    EXPECT_EQ(ret, 0);
+    ret = TestBuildMountCmd(mountCmd, 0, "/eng/source", "/eng/target", "ext4");
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(EngUnitTest, TestFileType, TestSize.Level1)
@@ -242,11 +250,14 @@ HWTEST_F(EngUnitTest, TestFileType, TestSize.Level1)
 
 HWTEST_F(EngUnitTest, TestHook, TestSize.Level1)
 {
-    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    int ret = HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    EXPECT_NE(ret, -1);
     PrepareCmdLineData();
-    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    ret = HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    EXPECT_NE(ret, -1);
     const char *cmdLine = "ohos.boot.root_package=off ";
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
-    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    ret = HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    EXPECT_NE(ret, -1);
 }
 } // namespace init_ut

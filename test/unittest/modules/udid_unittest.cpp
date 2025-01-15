@@ -41,15 +41,11 @@ public:
 HWTEST_F(UdidUnitTest, TestUDID_001, TestSize.Level1)
 {
     SetDevUdid();
-}
-
-HWTEST_F(UdidUnitTest, TestUDID_002, TestSize.Level1)
-{
     int ret = GetSha256Value(nullptr, nullptr, 0);
     EXPECT_EQ(ret, EC_FAILURE);
 }
 
-HWTEST_F(UdidUnitTest, TestUDID_003, TestSize.Level1)
+HWTEST_F(UdidUnitTest, TestUDID_002, TestSize.Level1)
 {
     char udid[66] = {0};
     int ret = CalcDevUdid(udid, 6);

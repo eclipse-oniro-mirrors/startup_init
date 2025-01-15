@@ -80,6 +80,7 @@ typedef enum {
     STUB_MAX
 } STUB_TYPE;
 void SetStubResult(STUB_TYPE type, int result);
+int GetStubResult(STUB_TYPE type);
 void PrepareCmdLineData();
 ParamLabelIndex *TestGetParamLabelIndex(const char *name);
 

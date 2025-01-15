@@ -332,13 +332,15 @@ public:
 HWTEST_F(ParamUnitTest, Init_TestPersistParam_001, TestSize.Level0)
 {
     ParamUnitTest test;
-    test.TestPersistParam();
+    int ret = test.TestPersistParam();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestPersistParam_002, TestSize.Level0)
 {
     ParamUnitTest test;
-    test.TestPrivatePersistParam();
+    int ret = test.TestPrivatePersistParam();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestSetParam_001, TestSize.Level0)
@@ -349,7 +351,8 @@ HWTEST_F(ParamUnitTest, Init_TestSetParam_001, TestSize.Level0)
                                {"111.2222.3333.4444", "3"},
                                {"111.2222.3333.4444.666", "4"},
                                {"111.2222.3333.4444.666.777", "5"}};
-    test.TestSetParams(params, 5);
+    int ret = test.TestSetParams(params, 5);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestSetParam_002, TestSize.Level0)
@@ -360,27 +363,31 @@ HWTEST_F(ParamUnitTest, Init_TestSetParam_002, TestSize.Level0)
                                {"111.2222.xxxx.3333.4444", "1_3"},
                                {"111.2222.3333.xxxx.4444.666", "1_4"},
                                {"111.2222.3333.4444.666.xxxxx.777", "1_5"}};
-    test.TestSetParams(params, 5);
+    int ret = test.TestSetParams(params, 5);
+    EXPECT_EQ(ret, 0);
 
     const char *ctrlParams[][2] = {{"ctl.start.111.2222.xxxx.xxx.xxx", "2_1"},
                                    {"ctl.start.111.2222.3333.xxx", "2_2"},
                                    {"ctl.start.111.2222.xxxx.3333.4444", "2_3"},
                                    {"ctl.start.111.2222.3333.xxxx.4444.666", "2_4"},
                                    {"ctl.start.111.2222.3333.4444.666.xxxxx.777", "2_5"}};
-    test.TestSetParams(ctrlParams, 5);
+    ret = test.TestSetParams(ctrlParams, 5);
+    EXPECT_EQ(ret, 0);
 
     const char *sysParams[][2] = {{"ohos.startup.powerctrl.111.2222.xxxx.xxx.xxx", "3_1"},
                                   {"ohos.startup.powerctrl.111.2222.3333.xxx", "3_2"},
                                   {"ohos.startup.powerctrl.111.2222.xxxx.3333.4444", "3_3"},
                                   {"ohos.startup.powerctrl.111.2222.3333.xxxx.4444.666", "3_4"},
                                   {"ohos.startup.powerctrl.111.2222.3333.4444.666.xxxxx.777", "3_5"}};
-    test.TestSetParams(sysParams, 5);
+    ret = test.TestSetParams(sysParams, 5);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestNameIsValid_001, TestSize.Level0)
 {
     ParamUnitTest test;
-    test.TestNameIsValid();
+    int ret = test.TestNameIsValid();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestParamValue_001, TestSize.Level0)
@@ -401,57 +408,74 @@ HWTEST_F(ParamUnitTest, Init_TestParamValue_001, TestSize.Level0)
 HWTEST_F(ParamUnitTest, Init_TestAddSecurityLabel_001, TestSize.Level0)
 {
     ParamUnitTest test;
-    test.TestAddSecurityLabel1();
+    int ret = test.TestAddSecurityLabel1();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestAddSecurityLabel_002, TestSize.Level0)
 {
     ParamUnitTest test;
-    test.TestAddSecurityLabel2();
+    int ret = test.TestAddSecurityLabel2();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestAddSecurityLabel_003, TestSize.Level0)
 {
     ParamUnitTest test;
-    test.TestAddSecurityLabel3();
+    int ret = test.TestAddSecurityLabel3();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestAddSecurityLabel_004, TestSize.Level0)
 {
     ParamUnitTest test;
-    test.TestAddSecurityLabel4();
+    int ret = test.TestAddSecurityLabel4();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestUpdateParam_001, TestSize.Level0)
 {
     ParamUnitTest test;
-    test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "100");
-    test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "101");
-    test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "102");
-    test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "103");
-    test.TestUpdateParam("net.tcp.default_init_rwnd", "60");
+    int ret = test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "100");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "101");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "102");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestUpdateParam("test.aaa.bbb.ccc.ddd", "103");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestUpdateParam("net.tcp.default_init_rwnd", "60");
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestParamTraversal_001, TestSize.Level0)
 {
     ParamUnitTest test;
-    test.TestParamTraversal();
+    int ret = test.TestParamTraversal();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestDumpParamMemory_001, TestSize.Level0)
 {
     ParamUnitTest test;
-    test.TestDumpParamMemory();
+    int ret = test.TestDumpParamMemory();
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestLinuxRWLock_001, TestSize.Level0)
 {
-    ParamRWMutexCreate(nullptr);
-    ParamRWMutexWRLock(nullptr);
-    ParamRWMutexRDLock(nullptr);
-    ParamRWMutexUnlock(nullptr);
-    ParamRWMutexDelete(nullptr);
-    ParamMutexDelete(nullptr);
+    int ret = ParamRWMutexCreate(nullptr);
+    EXPECT_EQ(ret, -1);
+    ret = ParamRWMutexWRLock(nullptr);
+    EXPECT_EQ(ret, -1);
+    ret = ParamRWMutexRDLock(nullptr);
+    EXPECT_EQ(ret, -1);
+    ret = ParamRWMutexUnlock(nullptr);
+    EXPECT_EQ(ret, -1);
+    ret = ParamRWMutexDelete(nullptr);
+    EXPECT_EQ(ret, -1);
+    ret = ParamMutexDelete(nullptr);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(ParamUnitTest, Init_TestWorkSpace_001, TestSize.Level0)

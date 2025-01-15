@@ -549,6 +549,11 @@ void SetStubResult(STUB_TYPE type, int result)
     g_stubResult[type] = result;
 }
 
+int GetStubResult(STUB_TYPE type)
+{
+    return g_stubResult[type];
+}
+
 #ifndef OHOS_LITE
 static void TestBeforeInit(void)
 {

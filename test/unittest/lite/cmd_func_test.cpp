@@ -162,6 +162,18 @@ void DoCmd(const TestCmdLine *resCmd)
     DoCmdByIndex(cmdIndex, resCmd->cmdContent, nullptr);
 }
 
+static int TestParseCmdLineNullptr(void)
+{
+    ParseCmdLine(nullptr, nullptr);
+    return 0;
+}
+
+static int TestDoCmdNullptr(void)
+{
+    DoCmd(nullptr);
+    return 0;
+}
+
 /*
  * @tc.name: cmdFuncParseCmdTest_001
  * @tc.desc: parse function, nullptr test
@@ -170,7 +182,7 @@ void DoCmd(const TestCmdLine *resCmd)
 HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_001, TestSize.Level0)
 {
     // do not crash
-    ParseCmdLine(nullptr, nullptr);
+    EXPECT_EQ(TestParseCmdLineNullptr(), 0);
 };
 
 /*
@@ -296,7 +308,7 @@ HWTEST_F(StartupInitUTest, cmdFuncParseCmdTest_005, TestSize.Level0)
 HWTEST_F(StartupInitUTest, cmdFuncDoCmdTest_001, TestSize.Level0)
 {
     // do not crash here
-    DoCmd(nullptr);
+    EXPECT_EQ(TestDoCmdNullptr(), 0);
 }
 
 /*
