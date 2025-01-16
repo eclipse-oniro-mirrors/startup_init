@@ -144,7 +144,8 @@ HWTEST_F(SysEventUnitTest, SysEventTest_005, TestSize.Level1)
 
 HWTEST_F(SysEventUnitTest, SysEventTest_006, TestSize.Level1)
 {
-    TestReportSysEvent(nullptr);
+    int ret = TestReportSysEvent(nullptr);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(SysEventUnitTest, SysEventTest_007, TestSize.Level1)
