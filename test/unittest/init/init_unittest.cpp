@@ -54,16 +54,22 @@ public:
     void TearDown() {};
 };
 
+static int TestProcessSignal(struct signalfd_siginfo *siginfo)
+{
+    siginfo->ssi_signo = SIGCHLD;
+    ProcessSignal(siginfo);
+    siginfo->ssi_signo = SIGTERM;
+    ProcessSignal(siginfo);
+    siginfo->ssi_signo = SIGUSR1;
+    ProcessSignal(siginfo);
+    return 0;
+}
+
 HWTEST_F(InitUnitTest, TestSignalHandle, TestSize.Level1)
 {
     struct signalfd_siginfo siginfo;
-    siginfo.ssi_signo = SIGCHLD;
-    ProcessSignal(&siginfo);
-    siginfo.ssi_signo = SIGTERM;
-    ProcessSignal(&siginfo);
-    siginfo.ssi_signo = SIGUSR1;
-    ProcessSignal(&siginfo);
-    SUCCEED();
+    int ret = TestProcessSignal(&siginfo);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(InitUnitTest, TestSystemPrepare, TestSize.Level1)
