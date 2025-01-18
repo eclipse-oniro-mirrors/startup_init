@@ -1,0 +1,14 @@
+{
+  "description": "Config for OpenHarmony devicetest test cases",
+  "environment": [
+    {
+     "type": "device"
+    }
+  ],
+  "driver": {
+    "type": "DeviceTest",
+    "py_file": [
+      "SUB_STARTUP_INIT_BEGETCTL/Sub_Startup_Init_Begetctl1500.py"
+    ]
+  }
+}
