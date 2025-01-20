@@ -54,6 +54,10 @@ static int HandleCmd(BShellHandle shell, const char *cmdName, int argc, char **a
 
 static int SetInitLogLevelFromParam(BShellHandle shell, int argc, char **argv)
 {
+    if (argv == NULL) {
+        BSH_LOGE("SetInitLogLevelFromParam Failed, argv is NULL");
+        return -1;
+    }
     if (argc != 2) { // 2 is set log level parameter number
         char *helpArgs[] = {"set", NULL};
         BShellCmdHelp(shell, 1, helpArgs);
