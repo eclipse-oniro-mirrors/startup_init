@@ -62,6 +62,11 @@ typedef struct {
 #define LAST_VALUE "Last_Value" // 取最后一个匹配值
 #define EMPTY_VALUE "EMPTY_VALUE" // 不取任何一个
 
+#ifndef OHOS_LITE
+void SetBootCompleted(bool isBootCompleted);
+bool IsBootCompleted(void);
+#endif
+
 uid_t DecodeUid(const char *name);
 gid_t DecodeGid(const char *name);
 char *ReadFileToBuf(const char *configFile);

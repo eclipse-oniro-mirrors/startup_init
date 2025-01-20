@@ -48,6 +48,9 @@
 #include "securec.h"
 #include "service_control.h"
 #include "init_group_manager.h"
+#ifndef OHOS_LITE
+#include "init_hisysevent.h"
+#endif
 
 #if defined(ENABLE_HOOK_MGR)
 #include "hookmgr.h"
@@ -622,15 +625,8 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
     _exit(service->lastErrno);
 }
 
-int ServiceStart(Service *service, ServiceArgs *pathArgs)
+static int IsServiceInvalid(Service *service, ServiceArgs *pathArgs)
 {
-    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "ServiceStart failed! null ptr.");
-    INIT_INFO_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "ServiceStart already started:%s", service->name);
-    INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
-        return SERVICE_FAILURE, "ServiceStart pathArgs is NULL:%s", service->name);
-    struct timespec startingTime;
-    clock_gettime(CLOCK_REALTIME, &startingTime);
-    INIT_LOGI("ServiceStart starting:%s", service->name);
     if (service->attribute & SERVICE_ATTR_INVALID) {
         INIT_LOGE("ServiceStart invalid:%s", service->name);
         return SERVICE_FAILURE;
@@ -641,6 +637,22 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
         service->attribute |= SERVICE_ATTR_INVALID;
         service->lastErrno = INIT_EPATH;
         INIT_LOGE("ServiceStart pathArgs invalid, please check %s,%s", service->name, service->pathArgs.argv[0]);
+        return SERVICE_FAILURE;
+    }
+    return SERVICE_SUCCESS;
+}
+
+int ServiceStart(Service *service, ServiceArgs *pathArgs)
+{
+    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "ServiceStart failed! null ptr.");
+    INIT_INFO_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "ServiceStart already started:%s", service->name);
+    INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
+        return SERVICE_FAILURE, "ServiceStart pathArgs is NULL:%s", service->name);
+    struct timespec startingTime;
+    clock_gettime(CLOCK_REALTIME, &startingTime);
+    INIT_LOGI("ServiceStart starting:%s", service->name);
+    if (IsServiceInvalid(service, pathArgs) != 0) {
+        INIT_LOGE("IsServiceInvalid falied: %s", service->name);
         return SERVICE_FAILURE;
     }
 #if defined(ENABLE_HOOK_MGR)
@@ -667,6 +679,11 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     INIT_LOGI("starttime:%ld-%ld,preforktime:%ld-%ld,startedtime:%ld-%ld",
               startingTime.tv_sec, startingTime.tv_nsec, prefork.tv_sec,
               prefork.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
+#ifndef OHOS_LITE
+    if (!IsOnDemandService(service)) {
+        ReportServiceStart(service->name, pid);
+    }
+#endif
     service->pid = pid;
     NotifyServiceChange(service, SERVICE_STARTED);
 #if defined(ENABLE_HOOK_MGR)
