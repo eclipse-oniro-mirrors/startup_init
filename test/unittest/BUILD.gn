@@ -301,6 +301,10 @@ ohos_unittest("init_unittest") {
     "${FSCRYPT_PATH}/include/libfscrypt",
   ]
 
+  include_dirs += [ "//base/startup/init/services/modules/sysevent" ]
+  sources +=
+      [ "//base/startup/init/services/modules/sysevent/init_hisysevent.c" ]
+
   defines += [
     "READ_CHECK",
     "INIT_AGENT",

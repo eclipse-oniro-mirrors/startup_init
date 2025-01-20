@@ -24,6 +24,7 @@
 #include "init_service_manager.h"
 #include "loop_event.h"
 #include "crash_handler.h"
+#include "init_hisysevent.h"
 
 static SignalHandle g_sigHandle = NULL;
 
@@ -40,6 +41,7 @@ static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
     // check child process exit status
     if (WIFSIGNALED(procStat)) {
         INIT_LOGW("Child process %s(pid %d) exit with signal : %d", serviceName, sigPID, WTERMSIG(procStat));
+        ReportChildProcessExit(serviceName, sigPID, WTERMSIG(procStat));
     } else if (WIFEXITED(procStat)) {
         INIT_LOGW("Child process %s(pid %d) exit with code : %d", serviceName, sigPID, WEXITSTATUS(procStat));
         if (service != NULL) {
