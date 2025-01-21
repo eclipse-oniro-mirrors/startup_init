@@ -273,7 +273,7 @@ static enum hvb_io_errno HvbReadLockState(struct hvb_ops *ops,
                                           bool *locked)
 {
     char lockState[FS_HVB_LOCK_STATE_STR_MAX] = {0};
-    int ret;
+    int ret = -1;
     if (ops == NULL || locked == NULL) {
         BEGET_LOGE("Invalid lock state parameter");
         return HVB_IO_ERROR_IO;
