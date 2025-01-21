@@ -436,23 +436,21 @@ static void ProcessParamChange(const char *key, const char *value, void *context
     PARAM_JS_CHECK(watcher != nullptr && watcher->env != nullptr, return, "Invalid param");
     PARAM_JS_CHECK(watcher->callbackReferences.size() > 0, return, "No callback for watcher");
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(watcher->env, &loop);
-    PARAM_JS_CHECK(loop != nullptr, return, "Failed to get loop for %s", watcher->keyPrefix);
     ParamChangeValue *change = new (std::nothrow) ParamChangeValue;
     PARAM_JS_CHECK(change != nullptr, return, "Failed to get change for %s", watcher->keyPrefix);
-    change->work.data = reinterpret_cast<void *>(change);
     change->watcher = watcher;
     change->key = std::string(key);
     change->value = std::string(value);
-    int ret = uv_queue_work(loop, &change->work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int result) {
-        ParamChangeValue *change = reinterpret_cast<ParamChangeValue *>(work->data);
+    auto callback = [&change] () {
         HandleParameterChange(change->watcher, change->key.c_str(), change->value.c_str());
         delete change;
         change = nullptr;
-    });
-    PARAM_JS_CHECK(ret == 0, delete change;
-        return, "Failed to start work for %s", watcher->keyPrefix);
+    };
+    if (napi_send_event(watcher->env, callback, napi_eprio_high) != napi_status::napi_ok) {
+        delete change;
+        change = nullptr;
+        PARAM_JS_LOGE("Failed to start work for %s", watcher->keyPrefix);
+    }
 }
 
 static void WatchCallbackWork(napi_env env, ParamWatcherPtr watcher)
