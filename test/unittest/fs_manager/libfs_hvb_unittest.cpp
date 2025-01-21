@@ -363,8 +363,30 @@ HWTEST_F(FsHvbUnitTest, Init_HvbWriteRollbackIdx_001, TestSize.Level0)
 HWTEST_F(FsHvbUnitTest, Init_HvbReadLockState_001, TestSize.Level0)
 {
     struct hvb_ops *ops = FsHvbGetOps();
-    int ret = ops->read_lock_state(ops, nullptr);
+    bool locked;
+    const char *cmdLine;
+    int ret = ops->read_lock_state(ops, &locked);
+    EXPECT_EQ(ret, HVB_IO_ERROR_NO_SUCH_VALUE);
+
+    cmdLine = "ohos.boot.hvb.device_state=locked ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    ret = ops->read_lock_state(ops, &locked);
     EXPECT_EQ(ret, HVB_IO_OK);
+    EXPECT_EQ(locked, true);
+    remove(BOOT_CMD_LINE);
+
+    cmdLine = "ohos.boot.hvb.device_state=unlocked ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    ret = ops->read_lock_state(ops, &locked);
+    EXPECT_EQ(ret, HVB_IO_OK);
+    EXPECT_EQ(locked, false);
+    remove(BOOT_CMD_LINE);
+
+    cmdLine = "ohos.boot.hvb.device_state=undefined ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    ret = ops->read_lock_state(ops, &locked);
+    EXPECT_EQ(ret, HVB_IO_ERROR_NO_SUCH_VALUE);
+    remove(BOOT_CMD_LINE);
 }
 
 HWTEST_F(FsHvbUnitTest, Init_HvbGetSizeOfPartition_001, TestSize.Level0)

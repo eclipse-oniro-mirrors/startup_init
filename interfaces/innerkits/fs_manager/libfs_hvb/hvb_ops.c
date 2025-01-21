@@ -15,6 +15,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <hvb_cmdline.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -31,6 +32,7 @@ extern "C" {
 
 #define PARTITION_PATH_PREFIX "/dev/block/by-name/"
 #define MAX_EXT_HVB_PARTITION_NUM 1
+#define FS_HVB_LOCK_STATE_STR_MAX 32
 
 static const ExtHvbVerifiedDev g_extVerifiedDev[] = {
     {
@@ -262,9 +264,35 @@ static enum hvb_io_errno HvbWriteRollbackIdx(struct hvb_ops* ops,
     return HVB_IO_OK;
 }
 
-static enum hvb_io_errno HvbReadLockState(struct hvb_ops* ops,
-                                          bool* lock_state)
+static int FsHvbGetLockStateStr(char *str, size_t size)
 {
+    return FsHvbGetValueFromCmdLine(str, size, HVB_CMDLINE_DEV_STATE);
+}
+
+static enum hvb_io_errno HvbReadLockState(struct hvb_ops *ops,
+                                          bool *locked)
+{
+    char lockState[FS_HVB_LOCK_STATE_STR_MAX] = {0};
+    if (ops == NULL || locked == NULL) {
+        BEGET_LOGE("Invalid lock state parameter");
+        return HVB_IO_ERROR_IO;
+    }
+
+    int ret = FsHvbGetLockStateStr(&lockState[0], sizeof(lockState));
+    if (ret != 0) {
+        BEGET_LOGE("error 0x%x, get lock state from cmdline", ret);
+        return HVB_IO_ERROR_NO_SUCH_VALUE;
+    }
+
+    if (strncmp(&lockState[0], "locked", FS_HVB_LOCK_STATE_STR_MAX) == 0) {
+        *locked = true;
+    } else if (strncmp(&lockState[0], "unlocked", FS_HVB_LOCK_STATE_STR_MAX) == 0) {
+        *locked = false;
+    } else {
+        BEGET_LOGE("Invalid lock state");
+        return HVB_IO_ERROR_NO_SUCH_VALUE;
+    }
+
     return HVB_IO_OK;
 }
 
