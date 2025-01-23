@@ -13,5 +13,5 @@
 
 const.ohos.releasetype=Beta1
 const.ohos.apiversion=16
-const.ohos.version.security_patch=2025/01/01
-const.ohos.fullname=OpenHarmony-5.1.0.49
+const.ohos.version.security_patch=2025/02/01
+const.ohos.fullname=OpenHarmony-5.1.0.50
