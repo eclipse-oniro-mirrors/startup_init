@@ -26,8 +26,8 @@ extern "C" {
 #endif
 #endif
 
-#define HVB_VB_STATE_STR_MAX_LEN 32
 #define HVB_FORCE_ENABLE_STR_MAX_LEN 16
+#define HVB_BUILDVARIANT_STR_MAX_LEN 8
 #define HVB_CMDLINE_HVB_FORCE_ENABLE "ohos.boot.hvb.oem_swtype"
 
 #define DM_VERITY_RETURN_ERR_IF_NULL(__ptr)             \
@@ -42,25 +42,21 @@ static bool HvbDmVerityIsEnable(void)
 {
     int rc;
     char forceEnable[HVB_FORCE_ENABLE_STR_MAX_LEN] = {0};
-    char vBState[HVB_VB_STATE_STR_MAX_LEN] = {0};
 
     rc = FsHvbGetValueFromCmdLine(&forceEnable[0], sizeof(forceEnable), HVB_CMDLINE_HVB_FORCE_ENABLE);
     if (rc == 0 && strcmp(&forceEnable[0], "factory") == 0) {
         return true;
     }
 
-    rc = FsHvbGetValueFromCmdLine(&vBState[0], sizeof(vBState), HVB_CMDLINE_VB_STATE);
-
+    char buildVariant[HVB_BUILDVARIANT_STR_MAX_LEN] = {0};
+    rc = FsHvbGetValueFromCmdLine(&buildVariant[0], sizeof(buildVariant), "buildvariant");
     if (rc != 0) {
-        BEGET_LOGE("error 0x%x, get verifed boot state, force enable dm-verity", rc);
+        BEGET_LOGE("Failed to get buildvariant from cmdline.");
         return true;
     }
 
-    if (strcmp(&vBState[0], "false") == 0 || strcmp(&vBState[0], "FALSE") == 0) {
-        return false;
-    }
-
-    if (strcmp(&vBState[0], "orange") == 0 || strcmp(&vBState[0], "ORANGE") == 0) {
+    if (strcmp(buildVariant, "eng") == 0) {
+        BEGET_LOGI("Skip dm-verity, buildvariant:[%s]", buildVariant);
         return false;
     }
 
