@@ -21,6 +21,7 @@
 
 #include "init_log.h"
 #include "bootevent.h"
+#include "init_utils.h"
 
 uid_t __real_getuid();
 uid_t __wrap_getuid()

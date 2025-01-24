@@ -19,3 +19,22 @@ STARTUP_TIME:
   DETAILED_TIME: {type: STRING, desc: Time required by each phase}
   REASON : {type: STRING, desc: Startup Reason}
   ISFRIST: {type: STRING, desc: use time}
+
+STARTUP_INIT_REPORT:
+  __BASE: {type: STATISTIC, level: CRITICAL, desc: Startup Init Report}
+  NUMBER_CFG: {type: INT64, desc: Number Of Cfg}
+
+PROCESS_START:
+  __BASE: {type: BEHAVIOR, level: CRITICAL, desc: Process Start}
+  SERVICE_NAME: {type: STRING, desc: Service Name}
+  SERVICE_PID: {type: INT64, desc: Service Pid}
+
+STARTUP_REBOOT:
+  __BASE: {type: BEHAVIOR, level: CRITICAL, desc: Startup Reboot}
+  REBOOT_MODE: {type: STRING, desc: Reboot Mode}
+
+CHILD_PROCESS_EXIT:
+  __BASE: {type: BEHAVIOR, level: CRITICAL, desc: Child Process Exit}
+  PROCESS_NAME: {type: STRING, desc: Process Name}
+  PID: {type: INT64, desc: Process ID}
+  EXIT_CODE: {type: INT64, desc: Process Exit Code}

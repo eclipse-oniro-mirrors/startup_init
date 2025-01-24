@@ -44,6 +44,20 @@
 #define THOUSAND_UNIT_INT 1000
 #define THOUSAND_UNIT_FLOAT 1000.0
 
+#ifndef OHOS_LITE
+bool g_isBootCompleted = false;
+
+bool IsBootCompleted(void)
+{
+    return g_isBootCompleted;
+}
+
+void SetBootCompleted(bool isBootCompleted)
+{
+    g_isBootCompleted = isBootCompleted;
+}
+#endif
+
 float ConvertMicrosecondToSecond(int x)
 {
     return ((x / THOUSAND_UNIT_INT) / THOUSAND_UNIT_FLOAT);

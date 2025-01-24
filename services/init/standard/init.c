@@ -41,6 +41,7 @@
 #include "securec.h"
 #include "fd_holder_internal.h"
 #include "bootstage.h"
+#include "init_hisysevent.h"
 
 static int FdHolderSockInit(void)
 {
@@ -153,6 +154,7 @@ INIT_STATIC void BootStateChange(int start, const char *content)
         INIT_LOGI("boot job %s finish diff %lld us.", content, diff);
         if (strcmp(content, "boot") == 0) {
             WriteUptimeSysParam("ohos.boot.time.init", NULL);
+            ReportStartupInitReport(g_serviceSpace.serviceCount);
         }
     }
 }
@@ -324,7 +326,7 @@ void SystemConfig(const char *uptime)
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
     RecordInitBootEvent("init.ParseCfg");
-    INIT_LOGI("boot stage: parse config file finish.");
+    INIT_LOGI("boot stage: parse config file finish.cfg count %d", g_serviceSpace.serviceCount);
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 
     IsEnableSandbox();
