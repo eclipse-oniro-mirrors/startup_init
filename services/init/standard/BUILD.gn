@@ -116,6 +116,16 @@ ohos_executable("init") {
     "storage_service:libfscryptutils_static",
   ]
 
+  if (!defined(ohos_lite)) {
+    include_dirs += [
+      "//base/startup/init/services/modules",
+      "//base/startup/init/services/modules/sysevent",
+    ]
+    sources +=
+        [ "//base/startup/init/services/modules/sysevent/init_hisysevent.c" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
+  }
+
   deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static" ]
   external_deps += [ "storage_service:libfscryptutils_static" ]
   external_deps += [

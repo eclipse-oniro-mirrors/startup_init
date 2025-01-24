@@ -24,6 +24,9 @@
 #include "init_utils.h"
 #include "plugin_adapter.h"
 #include "securec.h"
+#ifndef OHOS_LITE
+#include "init_hisysevent.h"
+#endif
 
 #define BUFF_SIZE 256
 
@@ -46,6 +49,9 @@ static int DoReboot(int id, const char *name, int argc, const char **argv)
     UNUSED(name);
     UNUSED(argc);
     UNUSED(argv);
+#ifndef OHOS_LITE
+    ReportStartupReboot(argv[0]);
+#endif
     // clear misc
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
     return DoRoot_("reboot", RB_AUTOBOOT);
@@ -54,6 +60,9 @@ static int DoReboot(int id, const char *name, int argc, const char **argv)
 static int DoRebootPanic(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
+#ifndef OHOS_LITE
+    ReportStartupReboot(argv[0]);
+#endif
     char str[BUFF_SIZE] = {0};
     int ret = sprintf_s(str, sizeof(str) - 1, "panic caused by %s:", name);
     if (ret <= 0) {
@@ -101,6 +110,9 @@ PLUGIN_STATIC int DoRebootShutdown(int id, const char *name, int argc, const cha
     UNUSED(name);
     UNUSED(argc);
     UNUSED(argv);
+#ifndef OHOS_LITE
+    ReportStartupReboot(argv[0]);
+#endif
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     // clear misc
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
@@ -126,6 +138,9 @@ static int DoRebootUpdater(int id, const char *name, int argc, const char **argv
     PLUGIN_LOGI("DoRebootUpdater argc %d %s", argc, name);
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGI("DoRebootUpdater argv %s", argv[0]);
+#ifndef OHOS_LITE
+    ReportStartupReboot(argv[0]);
+#endif
     int ret = UpdateMiscMessage(argv[0], "updater", "updater:", "boot_updater");
     if (ret == 0) {
         return DoRoot_("reboot", RB_AUTOBOOT);
@@ -139,6 +154,9 @@ PLUGIN_STATIC int DoRebootFlashed(int id, const char *name, int argc, const char
     PLUGIN_LOGI("DoRebootFlashed argc %d %s", argc, name);
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGI("DoRebootFlashd argv %s", argv[0]);
+#ifndef OHOS_LITE
+    ReportStartupReboot(argv[0]);
+#endif
     int ret = UpdateMiscMessage(argv[0], "flash", "flash:", "boot_flash");
     if (ret == 0) {
         return DoRoot_("reboot", RB_AUTOBOOT);
@@ -152,6 +170,9 @@ PLUGIN_STATIC int DoRebootCharge(int id, const char *name, int argc, const char 
     UNUSED(name);
     UNUSED(argc);
     UNUSED(argv);
+#ifndef OHOS_LITE
+    ReportStartupReboot(argv[0]);
+#endif
     int ret = UpdateMiscMessage(NULL, "charge", "charge:", "boot_charge");
     if (ret == 0) {
         return DoRoot_("reboot", RB_AUTOBOOT);
@@ -165,6 +186,9 @@ static int DoRebootSuspend(int id, const char *name, int argc, const char **argv
     UNUSED(name);
     UNUSED(argc);
     UNUSED(argv);
+#ifndef OHOS_LITE
+    ReportStartupReboot(argv[0]);
+#endif
     return DoRoot_("suspend", RB_AUTOBOOT);
 }
 
@@ -173,6 +197,9 @@ PLUGIN_STATIC int DoRebootOther(int id, const char *name, int argc, const char *
     UNUSED(id);
     UNUSED(name);
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter argc %d", argc);
+#ifndef OHOS_LITE
+    ReportStartupReboot(argv[0]);
+#endif
     const char *cmd = strstr(argv[0], "reboot,");
     PLUGIN_CHECK(cmd != NULL, return -1, "Invalid parameter argc %s", argv[0]);
     PLUGIN_LOGI("DoRebootOther argv %s", argv[0]);

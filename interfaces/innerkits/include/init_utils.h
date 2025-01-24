@@ -48,6 +48,11 @@ typedef struct {
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 #define BOOT_CMD_LINE STARTUP_INIT_UT_PATH"/proc/cmdline"
 
+#ifndef OHOS_LITE
+void SetBootCompleted(bool isBootCompleted);
+bool IsBootCompleted(void);
+#endif
+
 uid_t DecodeUid(const char *name);
 gid_t DecodeGid(const char *name);
 char *ReadFileToBuf(const char *configFile);

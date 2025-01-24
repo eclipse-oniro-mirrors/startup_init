@@ -30,6 +30,12 @@ ohos_shared_library("rebootmodule") {
   ]
 
   external_deps = [ "bounds_checking_function:libsec_shared" ]
+  if (!defined(ohos_lite)) {
+    include_dirs += [ "//base/startup/init/services/modules/sysevent" ]
+    sources +=
+        [ "//base/startup/init/services/modules/sysevent/init_hisysevent.c" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
+  }
 
   defines = []
   part_name = "init"

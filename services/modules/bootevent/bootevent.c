@@ -46,8 +46,6 @@ static int GetBootSwitchEnable(const char *paramName)
 
 static int g_bootEventNum = 0;
 
-static bool g_isBootCompleted = false;
-
 static ListNode bootEventList = {&bootEventList, &bootEventList};
 
 static int BootEventParaListCompareProc(ListNode *node, void *data)
@@ -348,7 +346,7 @@ static int BootEventParaFireByName(const char *paramName)
     // All parameters are fired, set boot completed now ...
     INIT_LOGI("All boot events are fired, boot complete now ...");
     SystemWriteParam(BOOT_EVENT_BOOT_COMPLETED, "true");
-    g_isBootCompleted = true;
+    SetBootCompleted(true);
     SaveServiceBootEvent();
     // report complete event
     ReportSysEvent();
@@ -470,7 +468,7 @@ static int DoUnsetBootEventCmd(int id, const char *name, int argc, const char **
     SystemWriteParam(argv[0], "false");
     if (g_finished != 0) {
         SystemWriteParam(BOOT_EVENT_BOOT_COMPLETED, "false");
-        g_isBootCompleted = false;
+        SetBootCompleted(false);
         g_finished = 0;
     }
 
@@ -508,11 +506,6 @@ static void SetServiceBootEventFork(SERVICE_INFO_CTX *serviceCtx)
 ListNode *GetBootEventList(void)
 {
     return &bootEventList;
-}
-
-bool IsBootCompleted(void)
-{
-    return g_isBootCompleted;
 }
 
 static void AddCmdBootEvent(INIT_CMD_INFO *cmdCtx)
