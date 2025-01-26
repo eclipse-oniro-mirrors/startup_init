@@ -405,7 +405,8 @@ static void SetServiceEnv(Service *service)
     for (int i = 0; i < service->envCnt; i++) {
         if (strlen(service->env[i].name) > 0 && strlen(service->env[i].value) > 0) {
             int ret = setenv(service->env[i].name, service->env[i].value, 1);
-            INIT_CHECK_ONLY_ELOG(ret != 0, "set service:%s env:%s failed!", service->name, service->env[i].name);
+            INIT_CHECK_ONLY_ELOG(ret != 0, "set service:%s env:%s failed! err=%d",
+                service->name, service->env[i].name, errno);
         }
     }
 }
