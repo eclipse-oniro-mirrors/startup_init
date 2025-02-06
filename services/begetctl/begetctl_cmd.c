@@ -54,10 +54,6 @@ static int HandleCmd(BShellHandle shell, const char *cmdName, int argc, char **a
 
 static int SetInitLogLevelFromParam(BShellHandle shell, int argc, char **argv)
 {
-    if (argv == NULL) {
-        BSH_LOGE("SetInitLogLevelFromParam Failed, argv is NULL");
-        return -1;
-    }
     if (argc != 2) { // 2 is set log level parameter number
         char *helpArgs[] = {"set", NULL};
         BShellCmdHelp(shell, 1, helpArgs);
@@ -66,7 +62,7 @@ static int SetInitLogLevelFromParam(BShellHandle shell, int argc, char **argv)
     errno = 0;
     unsigned int level = strtoul(argv[1], 0, 10); // 10 is decimal
     if (errno != 0) {
-        printf("Failed to transform %s to unsigned int. \n", argv[1]);
+        printf("Failed to transform string to unsigned int.");
         return -1;
     }
     if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
