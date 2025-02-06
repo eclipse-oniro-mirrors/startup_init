@@ -82,4 +82,7 @@ declare_args() {
 
   # group_type support system
   init_feature_group_type = true
+
+  # only the pc can obtain the device serial number
+  init_get_disk_sn = false
 }

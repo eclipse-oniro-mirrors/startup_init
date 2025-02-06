@@ -144,6 +144,26 @@ int32_t DeviceInfoKits::GetSerialID(std::string& result)
     return ret;
 }
 
+int32_t DeviceInfoKits::GetDiskSN(std::string& result)
+{
+    std::unique_lock<std::mutex> lock(lock_);
+    static std::optional<std::pair<int32_t, std::string>> resultPair;
+    if (resultPair.has_value()) {
+        int32_t ret = resultPair->first;
+        result = resultPair->second;
+        DINFO_LOGV("GetDiskSN from resultPair ret = %d", ret);
+        return ret;
+    }
+    auto deviceService = GetService(lock);
+    DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
+    int ret = deviceService->GetDiskSN(result);
+    DINFO_LOGV("GetDiskSN from remote ret = %d", ret);
+    if (ret == 0 || ret == SYSPARAM_PERMISSION_DENIED) {
+        resultPair = std::make_optional(std::make_pair(ret, result));
+    }
+    return ret;
+}
+
 void DeviceInfoKits::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
     DelayedRefSingleton<DeviceInfoKits>::GetInstance().ResetService(remote);

@@ -29,6 +29,7 @@ public:
 
     virtual int32_t GetUdid(std::string& result) = 0;
     virtual int32_t GetSerialID(std::string& result) = 0;
+    virtual int32_t GetDiskSN(std::string& result) { return 0; }
 
     static constexpr int ERR_FAIL = -1;
 };
