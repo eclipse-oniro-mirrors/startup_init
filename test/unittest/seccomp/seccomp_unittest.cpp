@@ -241,6 +241,162 @@ public:
         return CheckCloneNs(CLONE_NEWUSER);
     }
 
+    static bool CheckIoctlFlag1()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x4000);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag2()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5003);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag3()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5006);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag4()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5007);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag5()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5090);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag6()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5100);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag7()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5104);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag8()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5105);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag9()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5107);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag10()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x510a);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag11()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5110);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag12()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5300);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag13()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5310);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag14()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5400);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag15()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5480);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag16()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5482);
+        return true;
+    }
+ 
+    static bool CheckIoctlFlag17()
+    {
+        (void)syscall(__NR_ioctl, 0, 0x5500);
+        return true;
+    }
+ 
+    void TestAppAtomicSyscallForIoctl()
+    {
+        int ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag1, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag2, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag3, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag4, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag5, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag6, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag7, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag8, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag9, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag10, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag11, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag12, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag13, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag14, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag15, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag16, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(APP, APP_ATOMIC, CheckIoctlFlag17, true);
+        EXPECT_EQ(ret, 0);
+    }
+
 #if defined __aarch64__
     static bool CheckMqOpen()
     {
@@ -1140,6 +1296,18 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall001, TestSize.Level1)
 {
     SeccompUnitTest test;
     test.TestAppSycall();
+}
+
+/**
+ * @tc.name: TestAppAtomicSycall
+ * @tc.desc: Verify the atomic app seccomp policy.
+ * @tc.type: FUNC
+ * @tc.require: issueI5MUXD
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall002, TestSize.Level1)
+{
+    SeccompUnitTest test;
+    test.TestAppAtomicSyscallForIoctl();
 }
 
 /**
