@@ -34,5 +34,6 @@ static int InitEngEarlyHook(const HOOK_INFO *info, void *cookie)
 
 MODULE_CONSTRUCTOR(void)
 {
-    InitAddGlobalInitHook(0, InitEngEarlyHook);
+    const int subPriority = 2;
+    InitAddGlobalInitHook(subPriority, InitEngEarlyHook);
 }
