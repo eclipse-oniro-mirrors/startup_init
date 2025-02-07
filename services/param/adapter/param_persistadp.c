@@ -68,23 +68,39 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
     return result;
 }
 
-static bool IsPrivateParam(const char *param)
+static bool IsPublicParam(const char *param)
 {
-    const char *privatePersistParams[] = {
-        "persist.sys.data.dataextpath",
-        "persist.sys.radio.vendorlib.path",
-        "persist.sys.default_ime",
-        "persist.hdc.daemon.cancel",
-        "persist.hdc.daemon.auth_result",
-        "persist.hdc.client.hostname",
-        "persist.hdc.client.pubkey_sha256",
-        "persist.kernel.bundle_name.clouddrive",
-        "persist.kernel.bundle_name.photos",
-        "persist.kernel.bundle_name.filemanager",
+    const char *publicPersistParams[] = {
+        "persist.accessory", "persist.account.login_name_max",
+        "persist.ace", "persist.arkui.libace.og",
+        "persist.bluetooth", "persist.bootster",
+        "persist.cota.update.opkey.version.enable", "persist.ddgr.opinctype",
+        "persist.dfx.leak.threshold", "persist.dupdate_engine.update_type",
+        "persist.edc", "persist.edm",
+        "persist.ffrt", "persist.filemanagement.param_watcher.on",
+        "persist.global", "persist.graphic.profiler",
+        "persist.hdc.jdwp", "persist.hiview",
+        "persist.init", "persist.hmos_fusion_mgr.ctl.support_hmos",
+        "persist.kernel", "persist.location.locationhub_state",
+        "persist.mmitest.isrunning", "persist.moduleupdate.bms",
+        "persist.multimedia", "persist.nearlink.switch_enable",
+        "persist.odm", "persist.parentcontrol.enable",
+        "persist.radio", "persist.resourceschedule.memmgr.purgeable.enable",
+        "persist.ril", "persist.rosen",
+        "persist.samgr", "persist.security.jitfort.disabled",
+        "persist.super_privacy.mode", "persist.swing",
+        "persist.sys.beta.dump.shader", "persist.sys.font",
+        "persist.sys.graphic", "persist.sys.hilog",
+        "persist.sys.hiview", "persist.sys.nfc.rom.version",
+        "persist.sys.prefork.enable", "persist.sys.text.autospacing.enable",
+        "persist.sys.usb.config", "persist.sys.xlog.debug",
+        "persist.telephony", "persist.time",
+        "persist.uiAppearance.first_initialization", "persist.update",
+        "persist.wifi",
     };
-    int size = sizeof(privatePersistParams) / sizeof(char*);
+    int size = sizeof(publicPersistParams) / sizeof(char*);
     for (int i = 0; i < size; i++) {
-        if (strcmp(param, privatePersistParams[i]) == 0) {
+        if (strncmp(param, publicPersistParams[i], strlen(publicPersistParams[i])) == 0) {
             return true;
         }
     }
@@ -93,11 +109,11 @@ static bool IsPrivateParam(const char *param)
 
 static int LoadOnePublicPersistParam_(const uint32_t *context, const char *name, const char *value)
 {
-    if (IsPrivateParam(name)) {
-        PARAM_LOGI("%s is private, ignore", name);
-        return 0;
+    if (IsPublicParam(name)) {
+        return LoadOnePersistParam_(context, name, value);
     }
-    return LoadOnePersistParam_(context, name, value);
+    PARAM_LOGI("%s is private, ignore", name);
+    return 0;
 }
 
 static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *fileName,
@@ -130,15 +146,14 @@ static bool GetPersistFilePath(char **path, char **tmpPath, int fileType)
         return isFullLoad;
     }
     if (fileType == PUBLIC_PERSIST_FILE) {
+        isFullLoad = false;
         if (access(PARAM_PERSIST_SAVE_PATH, F_OK) == 0 && access(PARAM_PUBLIC_PERSIST_SAVE_PATH, F_OK) != 0) {
             int ret = rename(PARAM_PERSIST_SAVE_PATH, PARAM_PUBLIC_PERSIST_SAVE_PATH);
             if (ret != 0) {
                 PARAM_LOGE("rename failed %s", PARAM_PERSIST_SAVE_PATH);
             }
-            isFullLoad = false;
         } else {
             CheckAndCreateDir(PARAM_PUBLIC_PERSIST_SAVE_PATH);
-            isFullLoad = false;
         }
         *path = PARAM_PUBLIC_PERSIST_SAVE_PATH;
         *tmpPath = PARAM_PUBLIC_PERSIST_SAVE_TMP_PATH;
