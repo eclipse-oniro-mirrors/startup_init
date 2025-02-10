@@ -29,6 +29,7 @@ public:
 
     int32_t GetUdid(std::string& result) override;
     int32_t GetSerialID(std::string& result) override;
+    int32_t GetDiskSN(std::string& result) override;
 private:
     int32_t DeviceInfoSendRequest(uint32_t code,
         MessageParcel &data, MessageParcel &reply, MessageOption &option);

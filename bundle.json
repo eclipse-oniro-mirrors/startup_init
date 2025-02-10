@@ -29,7 +29,8 @@
             "init_appspawn_client_module",
             "init_feature_seccomp_privilege",
             "init_feature_enable_lite_process_priority",
-            "init_feature_use_hook_mgr"
+            "init_feature_use_hook_mgr",
+            "init_get_disk_sn"
         ],
         "adapted_system_type": [
             "mini",

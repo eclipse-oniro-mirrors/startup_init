@@ -74,3 +74,26 @@ INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
 #endif
     return ret;
 }
+
+INIT_LOCAL_API int GetDiskSN_(char *diskSN, int size)
+{
+    if (size < DISK_SN_LEN || diskSN == NULL) {
+        return EC_FAILURE;
+    }
+    FILE *file = fopen("/sys/block/nvme0n1/device/serial", "r");
+    if (file == NULL) {
+        BEGET_LOGE("GetDiskSN_ open file failed");
+        return EC_FAILURE;
+    }
+    if (fscanf_s(file, "%s", diskSN, size) <= 0) {
+        BEGET_LOGE("GetDiskSN_ read file failed");
+        if (fclose(file) != 0) {
+            BEGET_LOGE("GetDiskSN_ close file failed");
+        }
+        return EC_FAILURE;
+    }
+    if (fclose(file) != 0) {
+        BEGET_LOGE("GetDiskSN_ close file failed");
+    }
+    return 0;
+}

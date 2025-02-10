@@ -26,6 +26,7 @@ extern "C" {
 
 #define UDID_LEN 65
 #define MAX_SERIAL_LEN 65
+#define DISK_SN_LEN 65
 #define HASH_LENGTH 32
 #define DEV_BUF_LENGTH 3
 #define DEV_BUF_MAX_LENGTH 1024
@@ -41,6 +42,7 @@ INIT_LOCAL_API const char *GetProductModelAlias_(void);
 INIT_LOCAL_API const char *GetManufacture_(void);
 INIT_LOCAL_API const char *GetSerial_(void);
 INIT_LOCAL_API int GetDevUdid_(char *udid, int size);
+INIT_LOCAL_API int GetDiskSN_(char *diskSN, int size);
 INIT_LOCAL_API int IsValidParamValue(const char *value, uint32_t len);
 
 INIT_LOCAL_API const char *GetFullName_(void);

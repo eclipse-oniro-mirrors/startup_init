@@ -420,6 +420,9 @@ ohos_unittest("init_unittest") {
     }
 
     defines += [ "PARAM_FEATURE_DEVICEINFO" ]
+    if (init_get_disk_sn) {
+      defines += [ "PARAM_FEATURE_GET_DEVICE_SN" ]
+    }
   }
 
   sources += [

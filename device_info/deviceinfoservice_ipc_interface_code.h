@@ -22,6 +22,7 @@ namespace device_info {
 enum class DeviceInfoInterfaceCode {
     COMMAND_GET_UDID = 1,
     COMMAND_GET_SERIAL_ID = 2,
+    COMMAND_GET_DISK_SN = 3,
 };
 } // namespace device_info
 } // namespace OHOS
