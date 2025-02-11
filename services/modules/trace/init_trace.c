@@ -26,6 +26,7 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 
 #include "cJSON.h"
 #include "init_module_engine.h"
@@ -299,6 +300,24 @@ static bool DisableAllTraceEvents(void)
     return SetKernelTraceEnabled(workspace, false);
 }
 
+static void CheckKernelType(bool *isLinux)
+{
+    struct utsname uts;
+    if (uname(&uts) == -1) {
+        PLUGIN_LOGE("Kernel type get failed,errno:%{public}d", errno);
+        return;
+    }
+
+    if (strcmp(uts.sysname, "Linux") == 0) {
+        PLUGIN_LOGE("Kernel type is linux");
+        *isLinux = true;
+        return;
+    }
+
+    *isLinux = false;
+    return;
+}
+
 static bool SetKernelSpaceSettings(void)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
@@ -307,10 +326,14 @@ static bool SetKernelSpaceSettings(void)
     PLUGIN_CHECK(ret, return false, "Failed to set buffer");
     ret = SetClock(TRACE_DEF_CLOCK);
     PLUGIN_CHECK(ret, return false, "Failed to set clock");
-    ret = SetOverWriteEnable(true);
-    PLUGIN_CHECK(ret, return false, "Failed to set write enable");
-    ret = SetTgidEnable(true);
-    PLUGIN_CHECK(ret, return false, "Failed to set tgid enable");
+    bool isLinux = false;
+    CheckKernelType(&isLinux);
+    if (isLinux) {
+        ret = SetOverWriteEnable(true);
+        PLUGIN_CHECK(ret, return false, "Failed to set write enable");
+        ret = SetTgidEnable(true);
+        PLUGIN_CHECK(ret, return false, "Failed to set tgid enable");
+    }
     ret = SetKernelTraceEnabled(workspace, false);
     PLUGIN_CHECK(ret, return false, "Pre-clear kernel tracers failed");
     return SetKernelTraceEnabled(workspace, true);
@@ -526,8 +549,23 @@ static int InitInterruptTrace(void)
     return 0;
 }
 
+static bool IsTraceModeOpen(void)
+{
+    char enabled[PARAM_VALUE_LEN_MAX] = {0};
+    uint32_t len = PARAM_VALUE_LEN_MAX;
+    int ret = SystemReadParam("persist.init.trace.enabled", enabled, &len);
+    PLUGIN_LOGI("SystemReadParam persist.init.trace.enabled:%s, ret:%d", enabled, ret);
+    if (ret == 0) {
+        if (strcmp(enabled, "1") == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static int DoInitTraceCmd(int id, const char *name, int argc, const char **argv)
 {
+    PLUGIN_CHECK(IsTraceModeOpen(), return -1, "init trace disabled");
     PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     PLUGIN_LOGI("DoInitTraceCmd argc %d cmd %s", argc, argv[0]);
     if (strcmp(argv[0], "start") == 0) {
