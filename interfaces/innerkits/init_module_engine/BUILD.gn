@@ -27,6 +27,7 @@ if (defined(ohos_lite)) {
     include_dirs = [
       "include/",
       "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/services/init/include",
       "//base/startup/init/services/log",
     ]
     if (ohos_indep_compiler_enable) {
