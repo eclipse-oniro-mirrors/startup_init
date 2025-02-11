@@ -90,7 +90,7 @@ void WatcherManagerKits::ReAddWatcher(void)
     WATCHER_LOGV("ReAddWatcher");
     int count = 0;
     const int maxRetryCount = 100;
-    const int sleepTime = 100;
+    const int sleepTime = 10000;
     auto watcherManager = GetService();
     while (watcherManager == nullptr && count < maxRetryCount) {
         if (stop_) {
