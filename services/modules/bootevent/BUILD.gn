@@ -27,6 +27,11 @@ config("bootevent_static_config") {
 ohos_source_set("libbootevent_static") {
   sources = [ "bootevent.c" ]
   include_dirs = [ ".." ]
+  include_dirs += [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/services/log",
+  ]
+  sources += [ "//base/startup/init/services/utils/init_utils.c" ]
   public_configs = [ ":bootevent_static_config" ]
   public_external_deps = [ "config_policy:configpolicy_util" ]
   public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
