@@ -52,6 +52,7 @@ typedef struct {
     int serviceCount;
 } ServiceSpace;
 
+extern ServiceSpace g_serviceSpace;
 cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrName);
 int ParseOneService(const cJSON *curItem, Service *service);
 
