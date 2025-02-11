@@ -226,7 +226,7 @@ int InitParseGroupCfg(void)
 
 InitGroupNode *AddGroupNode(int type, const char *name)
 {
-    INIT_ERROR_CHECK(type <= NODE_TYPE_MAX, return NULL, "Invalid type");
+    INIT_ERROR_CHECK(type < NODE_TYPE_MAX, return NULL, "Invalid type");
     INIT_ERROR_CHECK(name != NULL, return NULL, "Invalid name");
     InitGroupNode *groupNode = GetGroupNode(type, name);
     if (groupNode != NULL) {
@@ -263,7 +263,7 @@ InitGroupNode *GetGroupNode(int type, const char *name)
 
 InitGroupNode *GetNextGroupNode(int type, const InitGroupNode *curr)
 {
-    INIT_ERROR_CHECK(type <= NODE_TYPE_MAX, return NULL, "Invalid type");
+    INIT_ERROR_CHECK(type < NODE_TYPE_MAX, return NULL, "Invalid type");
     if (curr == NULL) {
         return g_initWorkspace.groupNodes[type];
     }
