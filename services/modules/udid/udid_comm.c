@@ -80,7 +80,13 @@ INIT_LOCAL_API int GetDiskSN_(char *diskSN, int size)
     if (size < DISK_SN_LEN || diskSN == NULL) {
         return EC_FAILURE;
     }
-    FILE *file = fopen("/sys/block/nvme0n1/device/serial", "r");
+    char diskSNPath[DISK_SN_PATH_LEN] = {0};
+    uint32_t diskSNPathLen = DISK_SN_PATH_LEN;
+    if (SystemGetParameter("const.disk.sn.filepath", diskSNPath, &diskSNPathLen) != 0) {
+        BEGET_LOGE("const.disk.sn.filepath read failed");
+        return EC_FAILURE;
+    }
+    FILE *file = fopen(diskSNPath, "r");
     if (file == NULL) {
         BEGET_LOGE("GetDiskSN_ open file failed");
         return EC_FAILURE;
