@@ -110,10 +110,10 @@ PLUGIN_STATIC int DoRebootShutdown(int id, const char *name, int argc, const cha
     UNUSED(name);
     UNUSED(argc);
     UNUSED(argv);
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
 #ifndef OHOS_LITE
     ReportStartupReboot(argv[0]);
 #endif
-    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
     // clear misc
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
     const size_t len = strlen("reboot,");
