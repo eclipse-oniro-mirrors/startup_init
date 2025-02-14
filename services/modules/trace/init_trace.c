@@ -315,7 +315,6 @@ static void CheckKernelType(bool *isLinux)
     }
 
     *isLinux = false;
-    return;
 }
 
 static bool SetKernelSpaceSettings(void)
