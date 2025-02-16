@@ -55,6 +55,7 @@ int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& 
 } // namespace OHOS
 
 const int UDID_LEN = 65;
+constexpr int DISK_SN_LEN = 65;
 namespace init_ut {
 using DeviceInfoServicePtr = OHOS::device_info::DeviceInfoService *;
 class DeviceInfoUnittest : public testing::Test {
@@ -87,6 +88,8 @@ HWTEST_F(DeviceInfoUnittest, Init_DevInfoAgentTest_001, TestSize.Level1)
     int ret = kits.GetSerialID(serial);
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
     ret = kits.GetUdid(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetDiskSN(serial);
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
 }
 
@@ -173,15 +176,20 @@ HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceTest_001, TestSize.Level1)
         data, reply, option);
     data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
     deviceInfoService->OnRemoteRequest
-        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_SERIAL_ID) + 1,
+        (static_cast<uint32_t>(OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_DISK_SN),
+        data, reply, option);
+    data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
+    deviceInfoService->OnRemoteRequest
+        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_DISK_SN) + 1,
         data, reply, option);
 
     deviceInfoService->OnRemoteRequest
-        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_SERIAL_ID) + 1,
+        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_DISK_SN) + 1,
         data, reply, option);
     std::this_thread::sleep_for(std::chrono::seconds(3)); // wait sa unload 3s
     deviceInfoService->GetUdid(result);
     deviceInfoService->GetSerialID(result);
+    deviceInfoService->GetDiskSN(result);
     deviceInfoService->OnStop();
     std::vector<std::u16string> args = {};
     deviceInfoService->Dump(STDOUT_FILENO, args);
@@ -201,6 +209,15 @@ HWTEST_F(DeviceInfoUnittest, Init_TestInterface_001, TestSize.Level1)
     EXPECT_NE(nullptr, serialNumber);
 }
 
+HWTEST_F(DeviceInfoUnittest, Init_TestInterface_002, TestSize.Level1)
+{
+    char diskSN[DISK_SN_LEN] = {0};
+    int ret = AclGetDiskSN(nullptr, DISK_SN_LEN);
+    ASSERT_NE(ret, 0);
+    ret = AclGetDiskSN(diskSN, 2); // 2 test
+    ASSERT_NE(ret, 0);
+}
+
 HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_001, TestSize.Level1)
 {
     sptr<device_info::DeviceInfoProxy> proxy;
@@ -218,11 +235,15 @@ HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_001, TestSize.Level1)
     std::string serialId;
     proxy->GetUdid(udid);
     proxy->GetSerialID(serialId);
+    std::string diskSNResult;
+    proxy->GetDiskSN(diskSNResult);
 
     char localDeviceId[UDID_LEN] = {0};
     (void)AclGetDevUdid(localDeviceId, UDID_LEN);
     const char *serialNumber = AclGetSerial();
     EXPECT_NE(nullptr, serialNumber);
+    char diskSN[DISK_SN_LEN] = {0};
+    AclGetDevUdid(diskSN, DISK_SN_LEN);
 }
 
 HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_002, TestSize.Level1)
@@ -234,5 +255,7 @@ HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_002, TestSize.Level1)
     std::string serialId;
     proxy->GetUdid(udid);
     proxy->GetSerialID(serialId);
+    std::string diskSN;
+    proxy->GetDiskSN(diskSN);
 }
 }  // namespace init_ut

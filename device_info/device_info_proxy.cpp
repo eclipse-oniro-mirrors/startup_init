@@ -72,7 +72,7 @@ int32_t DeviceInfoProxy::GetDiskSN(std::string& result)
     MessageOption option { MessageOption::TF_SYNC };
 
     data.WriteInterfaceToken(DeviceInfoProxy::GetDescriptor());
-    int32_t ret = DeviceInfoSendRequest(static_cast<uint32_t> (DeviceInfoInterfaceCode::COMMAND_GET_DISK_SN),
+    int32_t ret = DeviceInfoSendRequest(static_cast<uint32_t>(DeviceInfoInterfaceCode::COMMAND_GET_DISK_SN),
         data, reply, option);
     DINFO_CHECK(ret == ERR_NONE, return ret, "GetDiskSN failed, error code is %d", ret);
     result = Str16ToStr8(reply.ReadString16());
