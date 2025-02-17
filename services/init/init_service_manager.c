@@ -931,6 +931,20 @@ static int GetServicePeriod(const cJSON *curArrItem, Service *curServ, const cha
     return SERVICE_SUCCESS;
 }
 
+static int GetServiceCgroup(const cJSON *curArrItem, Service *service)
+{
+    cJSON *item = cJSON_GetObjectItem(curArrItem, "cgroup");
+    service->isCgroupEnabled = false;
+    INIT_CHECK(item != NULL, return SERVICE_SUCCESS);
+
+    INIT_ERROR_CHECK(cJSON_IsBool(item), return SERVICE_FAILURE,
+        "Service : %s cgroup value only support bool.", service->name);
+    INIT_INFO_CHECK(cJSON_IsTrue(item), return SERVICE_SUCCESS,
+        "Service : %s cgroup value is false", service->name);
+    service->isCgroupEnabled = true;
+    return SERVICE_SUCCESS;
+}
+
 int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
@@ -980,6 +994,8 @@ int ParseOneService(const cJSON *curItem, Service *service)
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get start/end mode for service %s", service->name);
     ret = GetServiceJobs(service, cJSON_GetObjectItem(curItem, "jobs"));
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get jobs for service %s", service->name);
+    ret = GetServiceCgroup(curItem, service);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get cgroup for service %s", service->name);
     return ret;
 }
 

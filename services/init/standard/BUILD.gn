@@ -14,6 +14,7 @@ import("//base/startup/init/begetd.gni")
 
 init_common_sources = [
   "../init_capability.c",
+  "../init_cgroup.c",
   "../init_common_cmds.c",
   "../init_common_service.c",
   "../init_config.c",

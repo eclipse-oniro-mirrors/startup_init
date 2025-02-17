@@ -686,6 +686,11 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     }
 #endif
     service->pid = pid;
+#ifndef OHOS_LITE
+    if (service->isCgroupEnabled) {
+        (void)ProcessServiceAdd(service);
+    }
+#endif
     NotifyServiceChange(service, SERVICE_STARTED);
 #if defined(ENABLE_HOOK_MGR)
     // after service fork hooks
