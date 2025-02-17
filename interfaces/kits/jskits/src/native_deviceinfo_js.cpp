@@ -45,7 +45,7 @@
 
 const int UDID_LEN = 65;
 const int ODID_LEN = 37;
-constexpr int DISK_SN_LEN = 65;
+constexpr int DISK_SN_LEN = 20;
 
 typedef enum {
     DEV_INFO_OK,

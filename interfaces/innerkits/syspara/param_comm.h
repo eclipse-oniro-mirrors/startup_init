@@ -26,7 +26,7 @@ extern "C" {
 
 #define UDID_LEN 65
 #define MAX_SERIAL_LEN 65
-#define DISK_SN_LEN 65
+#define DISK_SN_LEN 20
 #define DISK_SN_PATH_LEN 65
 #define HASH_LENGTH 32
 #define DEV_BUF_LENGTH 3
