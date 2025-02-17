@@ -23,7 +23,15 @@ static int InitTraceEarlyHook(const HOOK_INFO *info, void *cookie)
     return 0;
 }
 
+static int InitTraceCompleteHook(const HOOK_INFO *info, void *cookie)
+{
+    PLUGIN_LOGI("Uninstall inittrace.");
+    InitModuleMgrUnInstall("inittrace");
+    return 0;
+}
+
 MODULE_CONSTRUCTOR(void)
 {
     InitAddPostCfgLoadHook(0, InitTraceEarlyHook);
+    InitAddBootCompleteHook(0, InitTraceCompleteHook);
 }

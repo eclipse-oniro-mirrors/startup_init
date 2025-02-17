@@ -603,5 +603,6 @@ MODULE_CONSTRUCTOR(void)
 
 MODULE_DESTRUCTOR(void)
 {
+    InitStopTrace();
     InitTraceExit();
 }
