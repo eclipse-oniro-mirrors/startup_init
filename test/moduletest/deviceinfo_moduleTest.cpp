@@ -92,7 +92,7 @@ HWTEST_F(DeviceInfoModuleTest, DeviceInfoGetSerial_001, TestSize.Level0)
 HWTEST_F(DeviceInfoModuleTest, DeviceInfoGetDiskSN_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DeviceInfoGetDiskSN_001 start";
-    char diskSN[65] = {}; // 65 diskSN len
+    char diskSN[20] = {}; // 20 diskSN len
     int ret = AclGetDiskSN(diskSN, sizeof(diskSN));
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
 

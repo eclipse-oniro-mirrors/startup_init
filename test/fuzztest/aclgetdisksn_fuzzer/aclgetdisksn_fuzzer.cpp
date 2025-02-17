@@ -21,7 +21,7 @@ namespace OHOS {
     bool FuzzAclGetDiskSN(const uint8_t* data, size_t size)
     {
         bool result = false;
-        char diskSN[65] = {0};
+        char diskSN[20] = {0};
         int len = sizeof(diskSN);
         if (AclGetDiskSN(diskSN, len) == 0) {
             result = true;

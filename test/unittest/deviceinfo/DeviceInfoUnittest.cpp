@@ -55,7 +55,7 @@ int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& 
 } // namespace OHOS
 
 const int UDID_LEN = 65;
-constexpr int DISK_SN_LEN = 65;
+constexpr int DISK_SN_LEN = 20;
 namespace init_ut {
 using DeviceInfoServicePtr = OHOS::device_info::DeviceInfoService *;
 class DeviceInfoUnittest : public testing::Test {
