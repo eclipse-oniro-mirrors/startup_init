@@ -274,6 +274,9 @@ if (defined(ohos_lite)) {
         "//base/startup/init/device_info/device_info_proxy.cpp",
       ]
       defines += [ "PARAM_FEATURE_DEVICEINFO" ]
+      if (init_get_disk_sn) {
+        defines += [ "PARAM_FEATURE_GET_DEVICE_SN" ]
+      }
     } else {
       sources +=
           [ "//base/startup/init/interfaces/innerkits/syspara/param_comm.c" ]

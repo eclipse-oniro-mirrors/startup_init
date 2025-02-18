@@ -30,7 +30,8 @@
             "init_begetutil_extra_modules",
             "init_lite_no_log",
             "init_lite_memory_size",
-            "init_use_encaps"
+            "init_use_encaps",
+            "init_get_disk_sn"
         ],
         "adapted_system_type": [
             "mini",

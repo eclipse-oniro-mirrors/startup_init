@@ -67,4 +67,7 @@ declare_args() {
       !defined(global_parts_info.hiviewdfx_hicollie)) {
     init_paramwatcher_hicollie_enable = false
   }
+
+  # only the pc can obtain the device serial number
+  init_get_disk_sn = false
 }

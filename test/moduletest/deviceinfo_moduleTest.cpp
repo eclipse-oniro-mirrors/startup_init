@@ -87,4 +87,32 @@ HWTEST_F(DeviceInfoModuleTest, DeviceInfoGetSerial_001, TestSize.Level0)
 
     GTEST_LOG_(INFO) << "DeviceInfoGetSerial_001 end";
 }
+
+#ifdef PARAM_FEATURE_GET_DEVICE_SN
+HWTEST_F(DeviceInfoModuleTest, DeviceInfoGetDiskSN_001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoGetDiskSN_001 start";
+    char diskSN[20] = {}; // 20 diskSN len
+    int ret = AclGetDiskSN(diskSN, sizeof(diskSN));
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+
+    sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    BEGET_ERROR_CHECK(samgr != nullptr, return, "Get samgr failed");
+    sptr<IRemoteObject> object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
+    BEGET_ERROR_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
+
+    std::this_thread::sleep_for(std::chrono::seconds(20)); // wait sa died 20s
+
+    object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
+    BEGET_ERROR_CHECK(object == nullptr, return, "Get deviceinfo manager object from samgr failed");
+
+    ret = AclGetDiskSN(diskSN, sizeof(diskSN));
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+
+    object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
+    BEGET_ERROR_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
+
+    GTEST_LOG_(INFO) << "DeviceInfoGetDiskSN_001 end";
+}
+#endif
 }

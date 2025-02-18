@@ -55,9 +55,14 @@ ohos_moduletest("InitModuleTest") {
     "syspara_moduleTest.cpp",
     "test_utils.cpp",
   ]
+  defines = []
 
   if (enable_ohos_startup_init_feature_deviceinfo) {
     sources += [ "deviceinfo_moduleTest.cpp" ]
+
+    if (init_get_disk_sn) {
+      defines += [ "PARAM_FEATURE_GET_DEVICE_SN" ]
+    }
   }
 
   include_dirs = [
