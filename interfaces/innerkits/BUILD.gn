@@ -268,8 +268,8 @@ if (defined(ohos_lite)) {
       sources += [
         "//base/startup/init/device_info/device_info_kits.cpp",
         "//base/startup/init/device_info/device_info_load.cpp",
-        "//base/startup/init/device_info/device_info_proxy.cpp",
       ]
+      deps += [ "//base/startup/init/device_info:deviceinfo_proxy" ]
       defines += [ "PARAM_FEATURE_DEVICEINFO" ]
       if (init_get_disk_sn) {
         defines += [ "PARAM_FEATURE_GET_DEVICE_SN" ]
@@ -282,6 +282,7 @@ if (defined(ohos_lite)) {
     external_deps = [
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
+      "hilog:libhilog",
       "hilog:libhilog_base",
       "ipc:ipc_single",
       "samgr:samgr_proxy",

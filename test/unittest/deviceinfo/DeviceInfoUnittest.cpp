@@ -30,8 +30,8 @@
 #include "device_info_proxy.h"
 #include "idevice_info.h"
 #include "device_info_stub.h"
+#include "device_info_service.h"
 #include "sysparam_errno.h"
-#include "deviceinfoservice_ipc_interface_code.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -130,7 +130,7 @@ HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceInvalidTokenTest_001, TestSiz
     g_tokenType = OHOS::Security::AccessToken::TOKEN_INVALID;
     data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
     deviceInfoService->OnRemoteRequest
-        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_UDID), data, reply, option);
+        (static_cast<uint32_t> (OHOS::device_info::IDeviceInfoIpcCode::COMMAND_GET_UDID), data, reply, option);
 }
 
 HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceFailTest_001, TestSize.Level1)
@@ -147,12 +147,12 @@ HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceFailTest_001, TestSize.Level1
     // udid
     data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
     deviceInfoService->OnRemoteRequest
-        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_UDID),
+        (static_cast<uint32_t> (OHOS::device_info::IDeviceInfoIpcCode::COMMAND_GET_UDID),
         data, reply, option);
     // serial
     data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
     deviceInfoService->OnRemoteRequest
-        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_SERIAL_ID),
+        (static_cast<uint32_t> (OHOS::device_info::IDeviceInfoIpcCode::COMMAND_GET_SERIAL_I_D),
         data, reply, option);
 }
 
@@ -168,23 +168,23 @@ HWTEST_F(DeviceInfoUnittest, Init_DeviceInfoServiceTest_001, TestSize.Level1)
     g_tokenVerifyResult = OHOS::Security::AccessToken::TypePermissionState::PERMISSION_GRANTED;
     data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
     deviceInfoService->OnRemoteRequest
-        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_UDID),
+        (static_cast<uint32_t> (OHOS::device_info::IDeviceInfoIpcCode::COMMAND_GET_UDID),
         data, reply, option);
     data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
     deviceInfoService->OnRemoteRequest
-        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_SERIAL_ID),
+        (static_cast<uint32_t> (OHOS::device_info::IDeviceInfoIpcCode::COMMAND_GET_SERIAL_I_D),
         data, reply, option);
     data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
     deviceInfoService->OnRemoteRequest
-        (static_cast<uint32_t>(OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_DISK_SN),
+        (static_cast<uint32_t>(OHOS::device_info::IDeviceInfoIpcCode::COMMAND_GET_DISK_S_N),
         data, reply, option);
     data.WriteInterfaceToken(OHOS::device_info::DeviceInfoStub::GetDescriptor());
     deviceInfoService->OnRemoteRequest
-        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_DISK_SN) + 1,
+        (static_cast<uint32_t> (OHOS::device_info::IDeviceInfoIpcCode::COMMAND_GET_DISK_S_N) + 1,
         data, reply, option);
 
     deviceInfoService->OnRemoteRequest
-        (static_cast<uint32_t> (OHOS::device_info::DeviceInfoInterfaceCode::COMMAND_GET_DISK_SN) + 1,
+        (static_cast<uint32_t> (OHOS::device_info::IDeviceInfoIpcCode::COMMAND_GET_DISK_S_N) + 1,
         data, reply, option);
     std::this_thread::sleep_for(std::chrono::seconds(3)); // wait sa unload 3s
     deviceInfoService->GetUdid(result);

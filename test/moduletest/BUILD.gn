@@ -26,7 +26,6 @@ ohos_shared_library("libparamtestmodule") {
     "//base/startup/init/services/loopevent/include",
     "//base/startup/init/services/param/include",
     "//base/startup/init/ueventd/include",
-    "//base/startup/init/device_info",
   ]
 
   deps = [
@@ -71,11 +70,11 @@ ohos_moduletest("InitModuleTest") {
     "//base/startup/init/interfaces/innerkits/syspara",
     "//base/startup/init/interfaces/innerkits/include/param",
     "//base/startup/init/services/param/include",
-    "//base/startup/init/device_info",
     ".",
   ]
 
   deps = [
+    "//base/startup/init/device_info:deviceinfo_proxy",
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
   ]

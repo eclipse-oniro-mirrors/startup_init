@@ -58,4 +58,27 @@ private:
 };
 } // namespace device_info
 } // namespace OHOS
+
+#ifndef DINFO_DOMAIN
+#define DINFO_DOMAIN (BASE_DOMAIN + 8)
+#endif
+
+#ifndef DINFO_TAG
+#define DINFO_TAG "DeviceInfoKits"
+#endif
+
+#define DINFO_LOGI(fmt, ...) STARTUP_LOGI(DINFO_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
+#define DINFO_LOGE(fmt, ...) STARTUP_LOGE(DINFO_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
+#define DINFO_LOGV(fmt, ...) STARTUP_LOGV(DINFO_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
+
+#define DINFO_CHECK(ret, exper, ...) \
+    if (!(ret)) { \
+        DINFO_LOGE(__VA_ARGS__); \
+        exper; \
+    }
+#define DINFO_ONLY_CHECK(ret, exper, ...) \
+    if (!(ret)) { \
+        exper; \
+    }
+
 #endif // OHOS_SYSTEM_DEVICE_ID_KITS_S

@@ -44,7 +44,7 @@ ohos_unittest("init_unittest") {
   module_out_path = "init/init"
   sources = [
     "//base/startup/init/device_info/device_info.cpp",
-    "//base/startup/init/device_info/device_info_stub.cpp",
+    "//base/startup/init/device_info/device_info_service.cpp",
     "//base/startup/init/interfaces/innerkits/control_fd/control_fd_client.c",
     "//base/startup/init/interfaces/innerkits/control_fd/control_fd_service.c",
     "//base/startup/init/interfaces/innerkits/fd_holder/fd_holder.c",
@@ -150,6 +150,8 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/ueventd/ueventd_read_cfg.c",
     "//base/startup/init/ueventd/ueventd_socket.c",
   ]
+
+  deps = [ "//base/startup/init/device_info:deviceinfo_stub" ]
 
   sources += [
     "${FSCRYPT_PATH}/libfscrypt/src/fscrypt_control.c",
@@ -407,8 +409,8 @@ ohos_unittest("init_unittest") {
     sources += [
       "//base/startup/init/device_info/device_info_kits.cpp",
       "//base/startup/init/device_info/device_info_load.cpp",
-      "//base/startup/init/device_info/device_info_proxy.cpp",
     ]
+    deps += [ "//base/startup/init/device_info:deviceinfo_proxy" ]
     if (defined(global_parts_info) &&
         defined(global_parts_info.security_access_token)) {
       external_deps += [ "access_token:libaccesstoken_sdk" ]
