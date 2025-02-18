@@ -298,7 +298,7 @@ InitGroupNode *GetGroupNode(int type, const char *name)
 
 InitGroupNode *GetNextGroupNode(int type, const InitGroupNode *curr)
 {
-    INIT_ERROR_CHECK(type < NODE_TYPE_MAX, return NULL, "Invalid type");
+    INIT_ERROR_CHECK(type < NODE_TYPE_MAX && type >= 0, return NULL, "Invalid type");
     if (curr == NULL) {
         return g_initWorkspace.groupNodes[type];
     }
@@ -307,7 +307,7 @@ InitGroupNode *GetNextGroupNode(int type, const InitGroupNode *curr)
 
 void DelGroupNode(int type, const char *name)
 {
-    if (type >= NODE_TYPE_GROUPS) {
+    if (type >= NODE_TYPE_GROUPS || type < 0) {
         return;
     }
     INIT_LOGV("DelGroupNode type %d name %s", type, name);
@@ -332,7 +332,7 @@ void DelGroupNode(int type, const char *name)
 
 int CheckNodeValid(int type, const char *name)
 {
-    if (type >= NODE_TYPE_GROUPS) {
+    if (type >= NODE_TYPE_GROUPS || type < 0) {
         return -1;
     }
     HashNode *node = OH_HashMapGet(g_initWorkspace.hashMap[type], name);
@@ -352,7 +352,7 @@ int CheckNodeValid(int type, const char *name)
 
 HashMapHandle GetGroupHashMap(int type)
 {
-    if (type >= NODE_TYPE_GROUPS) {
+    if (type >= NODE_TYPE_GROUPS || type < 0) {
         return NULL;
     }
     return g_initWorkspace.hashMap[type];
