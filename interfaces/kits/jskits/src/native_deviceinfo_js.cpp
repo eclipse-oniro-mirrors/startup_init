@@ -43,6 +43,7 @@
 
 const int UDID_LEN = 65;
 const int ODID_LEN = 37;
+constexpr int DISK_SN_LEN = 20;
 
 typedef enum {
     DEV_INFO_OK,
@@ -492,6 +493,16 @@ static napi_value GetDevOdid(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
+static napi_value GetDiskSN(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    static char diskSN[DISK_SN_LEN] = {0};
+    AclGetDiskSN(diskSN, DISK_SN_LEN);
+
+    NAPI_CALL(env, napi_create_string_utf8(env, diskSN, strlen(diskSN), &napiValue));
+    return napiValue;
+}
+
 EXTERN_C_START
 /*
  * Module init
@@ -539,6 +550,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"distributionOSReleaseType", nullptr, nullptr, NAPI_GetDistributionOSReleaseType, nullptr, nullptr, napi_default, nullptr},
         {"ODID", nullptr, nullptr, GetDevOdid, nullptr, nullptr, napi_default, nullptr},
         {"productModelAlias", nullptr, nullptr, GetProductModelAlias, nullptr, nullptr, napi_default, nullptr},
+        {"diskSN", nullptr, nullptr, GetDiskSN, nullptr, nullptr, napi_default, nullptr},
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
 

@@ -73,3 +73,32 @@ INIT_LOCAL_API int GetDevUdid_(char *udid, int size)
 #endif
     return ret;
 }
+
+INIT_LOCAL_API int GetDiskSN_(char *diskSN, int size)
+{
+    if (size < DISK_SN_LEN || diskSN == NULL) {
+        return EC_FAILURE;
+    }
+    char diskSNPath[DISK_SN_PATH_LEN] = {0};
+    uint32_t diskSNPathLen = DISK_SN_PATH_LEN;
+    if (SystemGetParameter("const.disk.sn.filepath", diskSNPath, &diskSNPathLen) != 0) {
+        BEGET_LOGE("const.disk.sn.filepath read failed");
+        return EC_FAILURE;
+    }
+    FILE *file = fopen(diskSNPath, "r");
+    if (file == NULL) {
+        BEGET_LOGE("GetDiskSN_ open file failed");
+        return EC_FAILURE;
+    }
+    if (fscanf_s(file, "%s", diskSN, size) <= 0) {
+        BEGET_LOGE("GetDiskSN_ read file failed");
+        if (fclose(file) != 0) {
+            BEGET_LOGE("GetDiskSN_ close file failed");
+        }
+        return EC_FAILURE;
+    }
+    if (fclose(file) != 0) {
+        BEGET_LOGE("GetDiskSN_ close file failed");
+    }
+    return 0;
+}

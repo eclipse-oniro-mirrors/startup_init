@@ -30,6 +30,7 @@ public:
     static DeviceInfoKits &GetInstance();
     int32_t GetUdid(std::string& result);
     int32_t GetSerialID(std::string& result);
+    int32_t GetDiskSN(std::string& result);
 
     void FinishStartSASuccess(const sptr<IRemoteObject> &remoteObject);
     void FinishStartSAFailed();

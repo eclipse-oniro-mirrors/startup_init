@@ -66,6 +66,24 @@ const char *AclGetSerial(void)
     return serialNumber;
 }
 
+int AclGetDiskSN(char *diskSN, int size)
+{
+    if (diskSN == nullptr || size < DISK_SN_LEN) {
+        return SYSPARAM_INVALID_INPUT;
+    }
+    (void)memset_s(diskSN, size, 0, size);
+    int ret = 0;
+#ifdef PARAM_FEATURE_GET_DEVICE_SN
+    std::string result = {};
+    OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
+    ret = instance.GetDiskSN(result);
+    if (ret == 0) {
+        ret = strcpy_s(diskSN, size, result.c_str());
+    }
+#endif
+    return ret;
+}
+
 #ifdef __cplusplus
 #if __cplusplus
 }

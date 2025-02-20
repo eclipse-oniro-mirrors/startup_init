@@ -102,6 +102,16 @@ int32_t DeviceInfoStub::OnRemoteRequest(uint32_t code,
             ret = ERR_NONE;
             break;
         }
+        case static_cast<uint32_t>(DeviceInfoInterfaceCode::COMMAND_GET_DISK_SN): {
+            if (!CheckPermission(data, "ohos.permission.ACCESS_DISK_PHY_INFO")) {
+                return SYSPARAM_PERMISSION_DENIED;
+            }
+            char diskSN[DISK_SN_LEN] = {0};
+            ret = GetDiskSN_(diskSN, DISK_SN_LEN);
+            DINFO_CHECK(ret == 0, break, "Failed to get disk SN");
+            reply.WriteString16(Str8ToStr16(diskSN));
+            break;
+        }
         default: {
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
         }
