@@ -13,27 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_SYSTEM_DEVICEIDSTUB_H
-#define OHOS_SYSTEM_DEVICEIDSTUB_H
+#ifndef DEVICE_INFO_SERVICE_H
+#define DEVICE_INFO_SERVICE_H
 
 #include <atomic>
 #include <mutex>
+#include "beget_ext.h"
 #include "iremote_stub.h"
-#include "idevice_info.h"
 #include "system_ability.h"
+#include "device_info_stub.h"
 
 namespace OHOS {
 namespace device_info {
-class DeviceInfoStub : public IRemoteStub<IDeviceInfo> {
-public:
-    explicit DeviceInfoStub(bool serialInvokeFlag = true)
-        : IRemoteStub(serialInvokeFlag), serialInvokeFlag_(serialInvokeFlag) {}
-    int32_t OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
-        MessageOption &option) override;
-    bool serialInvokeFlag_ = { true };
-private:
-    bool CheckPermission(MessageParcel &data, const std::string &permission);
-};
 
 class DeviceInfoService : public SystemAbility, public DeviceInfoStub {
 public:
@@ -44,15 +35,23 @@ public:
     {
     }
     ~DeviceInfoService() override {}
+
     int32_t GetUdid(std::string& result) override;
     int32_t GetSerialID(std::string& result) override;
+    int32_t GetDiskSN(std::string& result) override;
+    int32_t CallbackEnter(uint32_t code) override;
+    int32_t CallbackExit(uint32_t code, int32_t result) override;
+
+    static constexpr int ERR_FAIL = -1;
 protected:
+    bool CheckPermission(const std::string &permission);
     void OnStart(void) override;
     void OnStop(void) override;
     int Dump(int fd, const std::vector<std::u16string>& args) override;
     void ThreadForUnloadSa(void);
     std::atomic_bool threadStarted_ { false };
 };
+
 } // namespace device_info
 } // namespace OHOS
-#endif // OHOS_SYSTEM_DEVICEIDSTUB_H
+#endif // DEVICE_INFO_SERVICE_H

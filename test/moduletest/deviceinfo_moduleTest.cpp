@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <cstdint>
 
+#include "beget_ext.h"
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
 #include "idevice_info.h"
