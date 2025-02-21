@@ -116,6 +116,12 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
   }
 
+  ohos_prebuilt_etc("profile") {
+    source = "//base/startup/init/services/etc/profile"
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
   ohos_prebuilt_etc("init.usb.cfg") {
     source = "//base/startup/init/services/etc/init.usb.cfg"
     part_name = "init"
@@ -253,6 +259,7 @@ if (defined(ohos_lite)) {
       ":ohos.startup.para",
       ":ohos_const.para",
       ":passwd",
+      ":profile",
       ":syscap.json",
       ":syscap.para",
       ":systemcapability.json",
