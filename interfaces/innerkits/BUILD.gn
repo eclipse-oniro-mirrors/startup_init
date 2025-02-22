@@ -251,10 +251,11 @@ if (defined(ohos_lite)) {
       sources += [
         "//base/startup/init/services/param/watcher/agent/watcher.cpp",
         "//base/startup/init/services/param/watcher/agent/watcher_manager_kits.cpp",
-        "//base/startup/init/services/param/watcher/agent/watcher_manager_proxy.cpp",
-        "//base/startup/init/services/param/watcher/agent/watcher_stub.cpp",
       ]
-      deps += [ "//base/startup/init/services/param/linux:param_client" ]
+      deps += [
+        "//base/startup/init/services/param/linux:param_client",
+        "//base/startup/init/services/param/watcher:param_watcher_proxy",
+      ]
       include_dirs += [
         "//base/startup/init/services/param/watcher/include",
         "//base/startup/init/services/log",

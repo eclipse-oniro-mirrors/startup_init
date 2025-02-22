@@ -172,8 +172,10 @@ public:
         EXPECT_EQ(ret, 0);
         WatcherManagerKits &instance = OHOS::init_param::WatcherManagerKits::GetInstance();
         if (instance.remoteWatcher_ != nullptr) {
-            instance.remoteWatcher_->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
-            instance.remoteWatcher_->OnRemoteRequest(IWatcher::PARAM_CHANGE + 1, data, reply, option);
+            instance.remoteWatcher_->OnRemoteRequest(static_cast<uint32_t>
+                (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE), data, reply, option);
+            instance.remoteWatcher_->OnRemoteRequest(static_cast<uint32_t>
+                (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE) + 1, data, reply, option);
             instance.remoteWatcher_->OnParameterChange(name.c_str(), "testname", "testvalue");
             EXPECT_EQ(g_callbackCount, 2); // 2 is callback Count
             instance.remoteWatcher_->OnParameterChange(name.c_str(), "testname.2", "testvalue");
@@ -217,29 +219,35 @@ public:
         data.WriteString("name");
         data.WriteString("name");
         data.WriteString("watcherId");
-        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
+        remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
+            (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE), data, reply, option);
 
         // invalid parameter
         data.WriteInterfaceToken(IWatcher::GetDescriptor());
         data.WriteString("name");
         data.WriteString("watcherId");
-        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
+        remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
+            (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE), data, reply, option);
 
         data.WriteInterfaceToken(IWatcher::GetDescriptor());
         data.WriteString("name");
-        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
+        remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
+            (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE), data, reply, option);
 
         data.WriteInterfaceToken(IWatcher::GetDescriptor());
-        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE, data, reply, option);
+        remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
+            (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE), data, reply, option);
 
         data.WriteInterfaceToken(IWatcher::GetDescriptor());
         data.WriteString("name");
         data.WriteString("name");
         data.WriteString("watcherId");
-        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE + 1, data, reply, option);
-        remoteWatcher->OnRemoteRequest(IWatcher::PARAM_CHANGE + 1, data, reply, option);
+        remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
+            (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE) + 1, data, reply, option);
+        remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
+            (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE) + 1, data, reply, option);
 
-        uint32_t watcherId = watcherManager->AddRemoteWatcher(1000, remoteWatcher);
+        int32_t watcherId = watcherManager->AddRemoteWatcher(1000, remoteWatcher);
         // add watcher
         int ret = watcherManager->AddWatcher("test.watcher.proxy", watcherId);
         ASSERT_EQ(ret, 0);

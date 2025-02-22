@@ -270,16 +270,17 @@ int WatcherManagerKits::ParamWatcher::DelParameterListener(ParameterChangePtr ca
     return static_cast<int>(parameterChangeListeners.size());
 }
 
-void WatcherManagerKits::RemoteWatcher::OnParameterChange(
+int32_t WatcherManagerKits::RemoteWatcher::OnParameterChange(
     const std::string &prefix, const std::string &name, const std::string &value)
 {
     Watcher::OnParameterChange(prefix, name, value);
     // get param watcher
     WatcherManagerKits::ParamWatcher *watcher = watcherManager_->GetParamWatcher(prefix);
-    WATCHER_CHECK(watcher != nullptr, return, "Failed to get watcher '%s'", prefix.c_str());
+    WATCHER_CHECK(watcher != nullptr, return -1, "Failed to get watcher '%s'", prefix.c_str());
     if (watcher != nullptr) {
         watcher->OnParameterChange(name, value);
     }
+    return 0;
 }
 
 void WatcherManagerKits::ParamWatcher::OnParameterChange(const std::string &name, const std::string &value)
