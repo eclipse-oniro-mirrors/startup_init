@@ -37,6 +37,9 @@ static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
     }
     Service* service = GetServiceByPid(sigPID);
     const char *serviceName = (service == NULL) ? "Unknown" : service->name;
+    if (service != NULL && service->isCgroupEnabled) {
+        (void)ProcessServiceDied(service);
+    }
 
     // check child process exit status
     if (WIFSIGNALED(procStat)) {

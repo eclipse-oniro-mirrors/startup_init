@@ -159,6 +159,7 @@ typedef struct Service {
     uint64_t period;
     ServiceEnv *env;
     int envCnt;
+    bool isCgroupEnabled;
     ServiceArgs capsArgs;
     ServiceArgs permArgs;
     ServiceArgs permAclsArgs;
@@ -204,6 +205,10 @@ int SetServiceEnterSandbox(const Service *service, const char *execPath);
 
 int CreateServiceFile(Service *service);
 void CloseServiceFile(ServiceFile *fileOpt);
+#ifndef OHOS_LITE
+int ProcessServiceDied(Service *service);
+int ProcessServiceAdd(Service *service);
+#endif
 #ifdef __cplusplus
 #if __cplusplus
 }
