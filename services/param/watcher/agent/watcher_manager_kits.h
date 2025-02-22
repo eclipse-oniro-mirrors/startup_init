@@ -89,7 +89,7 @@ private:
         explicit RemoteWatcher(WatcherManagerKits *watcherManager) : watcherManager_(watcherManager) {}
         ~RemoteWatcher(void) override {}
 
-        void OnParameterChange(const std::string &prefix, const std::string &name, const std::string &value) final;
+        int32_t OnParameterChange(const std::string &prefix, const std::string &name, const std::string &value) final;
     private:
         WatcherManagerKits *watcherManager_ = { nullptr };
     };

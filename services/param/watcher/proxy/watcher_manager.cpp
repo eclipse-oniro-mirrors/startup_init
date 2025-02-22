@@ -38,7 +38,7 @@ WatcherManager::~WatcherManager()
     Clear();
 }
 
-uint32_t WatcherManager::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher)
+int32_t WatcherManager::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher)
 {
 #ifndef STARTUP_INIT_TEST
     if (id == static_cast<uint32_t>(getpid())) {

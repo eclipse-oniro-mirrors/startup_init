@@ -73,7 +73,7 @@ public:
     {
         return deathRecipient_;
     }
-    uint32_t AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher) override;
+    int32_t AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher) override;
     int32_t DelRemoteWatcher(uint32_t remoteWatcherId) override;
     int32_t AddWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;
     int32_t DelWatcher(const std::string &keyPrefix, uint32_t remoteWatcherId) override;

@@ -2965,8 +2965,6 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
   sources = [
     "//base/startup/init/services/param/linux/param_message.c",
     "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
-    "//base/startup/init/services/param/watcher/proxy/watcher_manager_stub.cpp",
-    "//base/startup/init/services/param/watcher/proxy/watcher_proxy.cpp",
   ]
 
   include_dirs = [
@@ -2985,6 +2983,7 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
+    "//base/startup/init/services/param/watcher:param_watcher_stub",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
@@ -3018,8 +3017,6 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
   sources = [
     "//base/startup/init/services/param/linux/param_message.c",
     "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
-    "//base/startup/init/services/param/watcher/proxy/watcher_manager_stub.cpp",
-    "//base/startup/init/services/param/watcher/proxy/watcher_proxy.cpp",
   ]
 
   include_dirs = [
@@ -3038,6 +3035,7 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
+    "//base/startup/init/services/param/watcher:param_watcher_stub",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
@@ -3071,8 +3069,6 @@ ohos_fuzztest("AddWatcherFuzzTest") {
   sources = [
     "//base/startup/init/services/param/linux/param_message.c",
     "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
-    "//base/startup/init/services/param/watcher/proxy/watcher_manager_stub.cpp",
-    "//base/startup/init/services/param/watcher/proxy/watcher_proxy.cpp",
   ]
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
@@ -3089,6 +3085,7 @@ ohos_fuzztest("AddWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
+    "//base/startup/init/services/param/watcher:param_watcher_stub",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
@@ -3121,8 +3118,6 @@ ohos_fuzztest("DelWatcherFuzzTest") {
   sources = [
     "//base/startup/init/services/param/linux/param_message.c",
     "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
-    "//base/startup/init/services/param/watcher/proxy/watcher_manager_stub.cpp",
-    "//base/startup/init/services/param/watcher/proxy/watcher_proxy.cpp",
   ]
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
@@ -3139,6 +3134,7 @@ ohos_fuzztest("DelWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
+    "//base/startup/init/services/param/watcher:param_watcher_stub",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
@@ -3171,8 +3167,6 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
   sources = [
     "//base/startup/init/services/param/linux/param_message.c",
     "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
-    "//base/startup/init/services/param/watcher/proxy/watcher_manager_stub.cpp",
-    "//base/startup/init/services/param/watcher/proxy/watcher_proxy.cpp",
   ]
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/include",
@@ -3189,6 +3183,7 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//base/startup/init/services/log:agent_log",
+    "//base/startup/init/services/param/watcher:param_watcher_stub",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",

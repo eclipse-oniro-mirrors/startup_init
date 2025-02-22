@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,21 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef START_WATCHER_H
-#define START_WATCHER_H
+import IWatcher;
 
-#include <iostream>
-#include "watcher_stub.h"
-
-namespace OHOS {
-namespace init_param {
-class Watcher : public WatcherStub {
-public:
-    Watcher() = default;
-    virtual ~Watcher() = default;
-
-    int32_t OnParameterChange(const std::string &prefix, const std::string &name, const std::string &value) override;
-};
-} // namespace init_param
-} // namespace OHOS
-#endif // START_WATCHER_H
+interface OHOS.init_param.IWatcherManager {
+    void AddWatcher([in] String keyPrefix, [in] unsigned int remoteWatcherId);
+    void DelWatcher([in] String keyPrefix, [in] unsigned int remoteWatcherId);
+    void AddRemoteWatcher([in] unsigned int id, [in] IWatcher watcher);
+    void DelRemoteWatcher([in] unsigned int remoteWatcherId);
+    void RefreshWatcher([in] String keyPrefix, [in] unsigned int remoteWatcherId);
+}
