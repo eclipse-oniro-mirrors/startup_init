@@ -36,6 +36,10 @@ namespace OHOS {
         (void)fclose(pFile);
         CloseStdout();
         Fstab *fstab = ReadFstabFromFile("fstab.test", false);
+        if (fstab == nullptr) {
+            std::cout << "[fuzz] read file fstab.test failed";
+            return false;
+        }
 
         std::string str(reinterpret_cast<const char*>(data), size);
         if (FindFstabItemForMountPoint(*fstab, str.c_str()) != nullptr) {

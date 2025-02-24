@@ -44,6 +44,7 @@ public:
         }
         const char *args[] = {"paramshell", "\n"};
         const ParamInfo *param = BShellEnvGetReservedParam(bshd, PARAM_REVERESD_NAME_CURR_PARAMETER);
+        EXPECT_EQ(param, nullptr);
         int ret = BShellEnvSetParam(bshd, PARAM_REVERESD_NAME_CURR_PARAMETER, "..a", PARAM_STRING, (void *)"..a");
         EXPECT_EQ(ret, 0);
         SetParamShellPrompt(bshd, args[1]);

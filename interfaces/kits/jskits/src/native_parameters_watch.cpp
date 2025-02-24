@@ -24,7 +24,7 @@ static constexpr int BUF_LENGTH = 128;
 
 static napi_ref g_paramWatchRef;
 
-using ParamAsyncContext = struct ParamAsyncContext {
+typedef struct ParamAsyncContext {
     napi_env env = nullptr;
     napi_async_work work = nullptr;
 
@@ -38,9 +38,9 @@ using ParamAsyncContext = struct ParamAsyncContext {
 
     int status = -1;
     std::string getValue;
-};
+} ParamAsyncContext;
 
-using ParamWatcher = struct ParamWatcher {
+typedef struct ParamWatcher {
     napi_env env = nullptr;
     napi_ref thisVarRef = nullptr;
     char keyPrefix[BUF_LENGTH] = { 0 };
@@ -50,20 +50,20 @@ using ParamWatcher = struct ParamWatcher {
     std::mutex mutex {};
     napi_ref currCallbackRef = nullptr;
     std::map<uint32_t, napi_ref> callbackReferences {};
-};
+} ParamWatcher;
 
-using ParamWatcherWork = struct ParamWatcherWork {
+typedef struct ParamWatcherWork {
     napi_async_work work = nullptr;
     ParamWatcher *watcher = nullptr;
     bool startWatch = false;
-};
+} ParamWatcherWork;
 
-using ParamChangeValue = struct ParamChangeValue {
+typedef struct ParamChangeValue {
     uv_work_t work;
     ParamWatcher *watcher;
     std::string key;
     std::string value;
-};
+} ParamChangeValue;
 
 using ParamAsyncContextPtr = ParamAsyncContext *;
 using ParamWatcherPtr = ParamWatcher *;
