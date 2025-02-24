@@ -1,0 +1,12 @@
+{
+    "description": "Config for OpenHarmony devicetest test cases",
+    "environment": [
+        {
+            "type": "device"
+        }
+    ],
+    "driver": {
+        "type": "DeviceTest",
+        "py_file": ["SUB_STARTUP_TOYBOX_TOUCHTEST/SUB_STARTUP_TOYBOX_TOUCHTEST_0900.py"]
+    }
+}
