@@ -36,7 +36,7 @@ static int SendCmd(int cmd, unsigned long arg)
         close(fd);
         return ret;
     }
-    INIT_LOGI("[Init] [INFO] send cmd[%d] success!", fd);
+    INIT_LOGE("[Init] [ERR] %d!", errno);
     return fd;
 }
 
