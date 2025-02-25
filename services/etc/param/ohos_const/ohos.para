@@ -12,5 +12,5 @@
 # limitations under the License.
 const.ohos.version.security_patch=2025/02/01
 const.ohos.releasetype=Canary1
-const.ohos.apiversion=17
-const.ohos.fullname=OpenHarmonyTec-1.0.3.1
+const.ohos.apiversion=14
+const.ohos.fullname=OpenHarmonyTec-1.0.2.5
