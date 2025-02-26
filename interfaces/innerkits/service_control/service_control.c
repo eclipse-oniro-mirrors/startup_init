@@ -38,7 +38,6 @@ static int StartProcess(const char *name, const char *extArgv[], int extArgc)
     if (extraArg == 1) {
         unsigned int len = 0;
         for (int i = 0; i < extArgc; i++) {
-            BEGET_ERROR_CHECK(extArgv[i] != NULL, return -1, "extArgv[%d] is null", i);
             len += strlen(extArgv[i]);
         }
         len += strlen(name) + extArgc + 1;
