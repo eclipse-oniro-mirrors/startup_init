@@ -132,6 +132,19 @@ ohos_prebuilt_seccomp("updater_filter") {
   install_images = [ "updater" ]
 }
 
+ohos_prebuilt_seccomp("app_custom_filter") {
+  sources = [ "seccomp_policy/app_custom.seccomp.policy" ]
+
+  filtername = "app_custom"
+  process_type = "app"
+
+  part_name = INIT_PART
+  subsystem_name = "startup"
+
+  install_enable = true
+  install_images = [ "system" ]
+}
+
 config("libseccomp_static_config") {
   include_dirs = [
     "..",
@@ -179,6 +192,9 @@ group("seccomp_filter") {
       ":appspawn_filter",
       ":nwebspawn_filter",
     ]
+    if (init_feature_custom_sandbox) {
+      deps += [ ":app_custom_filter" ]
+    }
     if (init_feature_seccomp_privilege) {
       deps += [ ":app_privilege_filter" ]
     }

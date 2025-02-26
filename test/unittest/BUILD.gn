@@ -205,6 +205,10 @@ ohos_unittest("init_unittest") {
     if (init_feature_seccomp_privilege) {
       defines += [ "SECCOMP_PRIVILEGE" ]
     }
+
+    if (init_feature_custom_sandbox) {
+      defines += [ "CUSTOM_SANDBOX" ]
+    }
   }
 
   sources += [

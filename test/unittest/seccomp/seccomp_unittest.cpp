@@ -703,10 +703,24 @@ public:
         ret = CheckSyscall(APP, APP_NAME, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
     }
+
 #ifdef SECCOMP_PRIVILEGE
     void TestSeccompPrivilegeSyscall()
     {
         int ret = CheckSyscall(APP, APP_PRIVILEGE, CheckSetuid64ForUidFilter1, true);
+        EXPECT_EQ(ret, 0);
+    }
+#endif
+
+#ifdef CUSTOM_SANDBOX
+    void TestSeccompCustomSyscall()
+    {
+        // app custom allowlist
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckGetpid, true);
+        EXPECT_EQ(ret, 0);
+
+        // app custom blocklist
+        int ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuid, false);
         EXPECT_EQ(ret, 0);
     }
 #endif
@@ -1344,6 +1358,20 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompPrivilegeSycall001, TestSize.Level
 {
     SeccompUnitTest test;
     test.TestSeccompPrivilegeSyscall();
+}
+#endif
+
+#ifdef CUSTOM_SANDBOX
+/**
+ * @tc.name: TestSeccompCustomSyscall
+ * @tc.desc: Verify the custom syscall of app and appspawn.
+ * @tc.type: FUNC
+ * @tc.require: issueIBP64F
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomSycall001, TestSize.Level1)
+{
+    SeccompUnitTest test;
+    test.TestSeccompCustomSyscall();
 }
 #endif
 }
