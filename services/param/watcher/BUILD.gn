@@ -10,88 +10,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import("//base/startup/init/begetd.gni")
-import("//build/config/components/idl_tool/idl.gni")
 import("//build/ohos.gni")
-
-idl_gen_interface("param_watcher_interface") {
-  sources = [ "IWatcherManager.idl" ]
-
-  sources_callback = [ "IWatcher.idl" ]
-
-  log_domainid = "0xD001720"
-  log_tag = "watcher"
-
-  part_name = "init"
-  subsystem_name = "startup"
-}
-
-config("param_watcher_config") {
-  include_dirs = [
-    "${target_gen_dir}",
-    "//base/startup/init/services/param/include",
-    "//base/startup/init/interfaces/innerkits/include/param",
-    "//base/startup/init/services/param/linux",
-    "//base/startup/init/services/param/watcher/proxy",
-    "//base/startup/init/services/param/watcher/include",
-    "//base/startup/init/interfaces/innerkits/include",
-    "//base/startup/init/services/log",
-    "//base/startup/init/services/loopevent/include",
-  ]
-}
 
 ohos_prebuilt_etc("param_watcher.rc") {
   source = "etc/param_watcher.cfg"
   relative_install_dir = "init"
-  part_name = "init"
-  subsystem_name = "startup"
-}
-
-ohos_source_set("param_watcher_proxy") {
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-  output_values = get_target_outputs(":param_watcher_interface")
-  sources = filter_include(output_values,
-                           [
-                             "*_manager_proxy.cpp",
-                             "*watcher_stub.cpp",
-                           ])
-  public_configs = [ ":param_watcher_config" ]
-  deps = [ ":param_watcher_interface" ]
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-    "samgr:samgr_proxy",
-  ]
-  part_name = "init"
-  subsystem_name = "startup"
-}
-
-ohos_source_set("param_watcher_stub") {
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-  output_values = get_target_outputs(":param_watcher_interface")
-  sources = filter_include(output_values,
-                           [
-                             "*_manager_stub.cpp",
-                             "*watcher_proxy.cpp",
-                           ])
-  public_configs = [ ":param_watcher_config" ]
-  deps = [ ":param_watcher_interface" ]
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-    "samgr:samgr_proxy",
-  ]
   part_name = "init"
   subsystem_name = "startup"
 }
@@ -102,11 +26,20 @@ ohos_shared_library("param_watcher") {
     "proxy/watcher_manager.cpp",
   ]
 
-  public_configs = [ ":param_watcher_config" ]
+  include_dirs = [
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/loopevent/include",
+  ]
 
   deps = [
-    ":param_watcher_stub",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
     "//base/startup/init/services/log:agent_log",
   ]
 

@@ -163,7 +163,117 @@ if (defined(ohos_lite)) {
   group("libbeget_proxy") {
   }
 } else {
+  import("//build/config/components/idl_tool/idl.gni")
   import("//build/ohos.gni")
+
+  config("init_idl_config") {
+    include_dirs = [ "${target_gen_dir}" ]
+  }
+
+  idl_gen_interface("deviceinfo_interface") {
+    sources = [ "IDeviceInfo.idl" ]
+    log_domainid = "0xD001718"
+    log_tag = "deviceinfo"
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
+  ohos_source_set("deviceinfo_proxy") {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+    output_values = get_target_outputs(":deviceinfo_interface")
+    sources = filter_include(output_values, [ "*_info_proxy.cpp" ])
+    public_configs = [ ":init_idl_config" ]
+    deps = [ ":deviceinfo_interface" ]
+    external_deps = [
+      "c_utils:utils",
+      "hilog:libhilog",
+      "ipc:ipc_single",
+      "samgr:samgr_proxy",
+    ]
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
+  ohos_source_set("deviceinfo_stub") {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+    output_values = get_target_outputs(":deviceinfo_interface")
+    sources = filter_include(output_values, [ "*_info_stub.cpp" ])
+    public_configs = [ ":init_idl_config" ]
+    deps = [ ":deviceinfo_interface" ]
+    external_deps = [
+      "c_utils:utils",
+      "hilog:libhilog",
+      "ipc:ipc_single",
+    ]
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
+  idl_gen_interface("param_watcher_interface") {
+    sources = [ "../../services/param/watcher/IWatcherManager.idl" ]
+    sources_callback = [ "IWatcher.idl" ]
+    log_domainid = "0xD001720"
+    log_tag = "watcher"
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
+  ohos_source_set("param_watcher_proxy") {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+    output_values = get_target_outputs(":param_watcher_interface")
+    sources = filter_include(output_values,
+                             [
+                               "*_manager_proxy.cpp",
+                               "*watcher_stub.cpp",
+                             ])
+    public_configs = [ ":init_idl_config" ]
+    deps = [ ":param_watcher_interface" ]
+    external_deps = [
+      "c_utils:utils",
+      "hilog:libhilog",
+      "ipc:ipc_single",
+      "samgr:samgr_proxy",
+    ]
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
+  ohos_source_set("param_watcher_stub") {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+    output_values = get_target_outputs(":param_watcher_interface")
+    sources = filter_include(output_values,
+                             [
+                               "*_manager_stub.cpp",
+                               "*watcher_proxy.cpp",
+                             ])
+    public_configs = [ ":init_idl_config" ]
+    deps = [ ":param_watcher_interface" ]
+    external_deps = [
+      "c_utils:utils",
+      "hilog:libhilog",
+      "ipc:ipc_single",
+      "samgr:samgr_proxy",
+    ]
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
   modulemgr_sources = [
     "hookmgr/hookmgr.c",
     "modulemgr/modulemgr.c",
@@ -253,8 +363,8 @@ if (defined(ohos_lite)) {
         "//base/startup/init/services/param/watcher/agent/watcher_manager_kits.cpp",
       ]
       deps += [
+        ":param_watcher_proxy",
         "//base/startup/init/services/param/linux:param_client",
-        "//base/startup/init/services/param/watcher:param_watcher_proxy",
       ]
       include_dirs += [
         "//base/startup/init/services/param/watcher/include",
@@ -270,7 +380,7 @@ if (defined(ohos_lite)) {
         "//base/startup/init/device_info/device_info_kits.cpp",
         "//base/startup/init/device_info/device_info_load.cpp",
       ]
-      deps += [ "//base/startup/init/device_info:deviceinfo_proxy" ]
+      deps += [ ":deviceinfo_proxy" ]
       defines += [ "PARAM_FEATURE_DEVICEINFO" ]
       if (init_get_disk_sn) {
         defines += [ "PARAM_FEATURE_GET_DEVICE_SN" ]

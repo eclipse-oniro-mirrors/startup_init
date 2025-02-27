@@ -2982,8 +2982,8 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
     "//base/startup/init/services/log:agent_log",
-    "//base/startup/init/services/param/watcher:param_watcher_stub",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
@@ -3034,8 +3034,8 @@ ohos_fuzztest("DelRemoteWatcherFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
     "//base/startup/init/services/log:agent_log",
-    "//base/startup/init/services/param/watcher:param_watcher_stub",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
@@ -3084,8 +3084,8 @@ ohos_fuzztest("AddWatcherFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
     "//base/startup/init/services/log:agent_log",
-    "//base/startup/init/services/param/watcher:param_watcher_stub",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
@@ -3133,8 +3133,8 @@ ohos_fuzztest("DelWatcherFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
     "//base/startup/init/services/log:agent_log",
-    "//base/startup/init/services/param/watcher:param_watcher_stub",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
@@ -3182,8 +3182,8 @@ ohos_fuzztest("RefreshWatcherFuzzTest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
     "//base/startup/init/services/log:agent_log",
-    "//base/startup/init/services/param/watcher:param_watcher_stub",
   ]
   external_deps = [
     "bounds_checking_function:libsec_static",
