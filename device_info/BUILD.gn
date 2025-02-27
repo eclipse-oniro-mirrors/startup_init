@@ -10,32 +10,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import("//base/startup/init/begetd.gni")
-import("//build/config/components/idl_tool/idl.gni")
-
 if (!defined(ohos_lite)) {
   import("//build/ohos.gni")
   import("//build/ohos/sa_profile/sa_profile.gni")
-
-  idl_gen_interface("deviceinfo_interface") {
-    sources = [ "IDeviceInfo.idl" ]
-
-    log_domainid = "0xD001718"
-    log_tag = "deviceinfo"
-  }
-
-  config("deviceinfo_config") {
-    include_dirs = [
-      "${target_gen_dir}",
-      ".",
-      "//base/startup/init/interfaces/innerkits/include",
-      "//base/startup/init/interfaces/innerkits/include/param",
-      "//base/startup/init/interfaces/innerkits/include/syspara",
-      "//base/startup/init/interfaces/innerkits/syspara",
-      "//base/startup/init/interfaces/hals",
-    ]
-  }
 
   ohos_sa_profile("device_info_profile") {
     sources = [ "etc/3902.json" ]
@@ -49,60 +27,29 @@ if (!defined(ohos_lite)) {
     subsystem_name = "startup"
   }
 
-  ohos_source_set("deviceinfo_proxy") {
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-    }
-    output_values = get_target_outputs(":deviceinfo_interface")
-    sources = filter_include(output_values, [ "*_proxy.cpp" ])
-    public_configs = [ ":deviceinfo_config" ]
-    deps = [ ":deviceinfo_interface" ]
-    external_deps = [
-      "c_utils:utils",
-      "hilog:libhilog",
-      "ipc:ipc_single",
-      "samgr:samgr_proxy",
-    ]
-    part_name = "init"
-    subsystem_name = "startup"
-  }
-
-  ohos_source_set("deviceinfo_stub") {
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-    }
-    output_values = get_target_outputs(":deviceinfo_interface")
-    sources = filter_include(output_values, [ "*_stub.cpp" ])
-    public_configs = [ ":deviceinfo_config" ]
-    deps = [ ":deviceinfo_interface" ]
-    external_deps = [
-      "c_utils:utils",
-      "hilog:libhilog",
-      "ipc:ipc_single",
-    ]
-    part_name = "init"
-    subsystem_name = "startup"
-  }
-
   ohos_shared_library("deviceinfoservice") {
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-    }
     sources = [
       "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
       "device_info_service.cpp",
     ]
-    public_configs = [ ":deviceinfo_config" ]
+
     branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
 
     shlib_type = "sa"
 
+    include_dirs = [
+      ".",
+      "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/interfaces/innerkits/include/param",
+      "//base/startup/init/interfaces/innerkits/include/syspara",
+      "//base/startup/init/interfaces/innerkits/syspara",
+      "//base/startup/init/interfaces/hals",
+    ]
     defines = [
       "INIT_AGENT",
       "_GNU_SOURCE",
@@ -110,7 +57,7 @@ if (!defined(ohos_lite)) {
       "DINFO_TAG=\"DeviceInfoService\"",
     ]
     deps = [
-      ":deviceinfo_stub",
+      "//base/startup/init/interfaces/innerkits:deviceinfo_stub",
       "//base/startup/init/interfaces/innerkits:libbegetutil",
       "//base/startup/init/services/log:agent_log",
       "//base/startup/init/services/modules/udid:libudidcomm",

@@ -74,7 +74,7 @@ ohos_moduletest("InitModuleTest") {
   ]
 
   deps = [
-    "//base/startup/init/device_info:deviceinfo_proxy",
+    "//base/startup/init/interfaces/innerkits:deviceinfo_proxy",
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
   ]
