@@ -20,7 +20,7 @@ static constexpr int ARGC_NUMBER = 2;
 static constexpr int ARGC_THREE_NUMBER = 3;
 static constexpr int BUF_LENGTH = 256;
 
-using StorageAsyncContext = struct StorageAsyncContext {
+typedef struct StorageAsyncContext {
     napi_env env = nullptr;
     napi_async_work work = nullptr;
 
@@ -33,7 +33,7 @@ using StorageAsyncContext = struct StorageAsyncContext {
 
     int status = -1;
     std::string getValue;
-};
+} StorageAsyncContext;
 
 using StorageAsyncContextPtr = StorageAsyncContext *;
 

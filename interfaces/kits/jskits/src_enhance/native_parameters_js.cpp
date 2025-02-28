@@ -20,7 +20,7 @@ static constexpr int ARGC_THREE_NUMBER = 3;
 static constexpr int MAX_NAME_LENGTH = 128;
 static constexpr int MAX_VALUE_LENGTH = PARAM_CONST_VALUE_LEN_MAX;
 
-using StorageAsyncContext = struct StorageAsyncContext {
+typedef struct StorageAsyncContext {
     napi_env env = nullptr;
     napi_async_work work = nullptr;
 
@@ -33,7 +33,7 @@ using StorageAsyncContext = struct StorageAsyncContext {
 
     int status = -1;
     std::string getValue;
-};
+} StorageAsyncContext;
 
 using StorageAsyncContextPtr = StorageAsyncContext *;
 

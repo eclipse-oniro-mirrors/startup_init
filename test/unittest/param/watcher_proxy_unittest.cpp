@@ -201,6 +201,7 @@ public:
     int TestWatchAgentDump(const std::string &keyPrefix)
     {
         WatcherManagerPtr watcherManager = GetWatcherManager();
+        EXPECT_NE(watcherManager, nullptr);
         // dump watcher
         std::vector<std::u16string> args = {};
         watcherManager->Dump(STDOUT_FILENO, args);
