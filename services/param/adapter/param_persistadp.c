@@ -96,7 +96,7 @@ static bool IsPublicParam(const char *param)
         "persist.sys.usb.config", "persist.sys.xlog.debug",
         "persist.telephony", "persist.time",
         "persist.uiAppearance.first_initialization", "persist.update",
-        "persist.wifi",
+        "persist.wifi", "persist.init.trace.enabled",
     };
     int size = sizeof(publicPersistParams) / sizeof(char*);
     for (int i = 0; i < size; i++) {

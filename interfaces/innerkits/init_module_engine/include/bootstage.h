@@ -110,6 +110,11 @@ __attribute__((always_inline)) inline int InitAddPostPersistParamLoadHook(int pr
     return HookMgrAdd(GetBootStageHookMgr(), INIT_POST_PERSIST_PARAM_LOAD, prio, hook);
 }
 
+__attribute__((always_inline)) inline int InitAddBootCompleteHook(int prio, OhosHook hook)
+{
+    return HookMgrAdd(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, prio, hook);
+}
+
 /**
  * @brief service config parsing context information
  */

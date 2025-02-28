@@ -22,6 +22,7 @@ group("static_modules") {
       "init_eng:libiniteng_static",
       "init_hook:inithook",
       "reboot:libreboot_static",
+      "trace:inittrace_static",
       "udid:libudid_static",
     ]
     if (build_seccomp) {
