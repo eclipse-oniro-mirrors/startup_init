@@ -422,6 +422,7 @@ static void DoMountOneFstabFile(const struct CmdArgs *ctx)
 
 static void DoSync(const struct CmdArgs *ctx)
 {
+    INIT_LOGI("start sync");
     sync();
 }
 

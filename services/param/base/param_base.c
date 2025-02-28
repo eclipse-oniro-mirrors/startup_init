@@ -583,7 +583,7 @@ static int CheckParamPermission_(const ParamLabelIndex *labelIndex,
 STATIC_INLINE ParamTrieNode *BaseFindTrieNode(WorkSpace *workSpace,
     const char *key, uint32_t keyLen, uint32_t *matchLabel)
 {
-    PARAM_CHECK(key != NULL && keyLen > 0, return NULL, "Invalid key ");
+    PARAM_ONLY_CHECK(key != NULL && keyLen > 0, return NULL);
     uint32_t tmpMatchLen = 0;
     ParamTrieNode *node = FindTrieNode_(workSpace, key, keyLen, &tmpMatchLen);
     if (matchLabel != NULL) {
@@ -665,7 +665,7 @@ STATIC_INLINE const char *CachedParameterCheck(CachedParameter *param, int *chan
         }
     }
     ParamNode *entry = (ParamNode *)GetTrieNode(param->workspace, param->dataIndex);
-    PARAM_CHECK(entry != NULL, return param->paramValue, "Failed to get trie node %s", param->data);
+    PARAM_ONLY_CHECK(entry != NULL, return param->paramValue);
     uint32_t dataCommitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_ACQUIRE);
     dataCommitId &= PARAM_FLAGS_COMMITID;
     if (param->dataCommitId == dataCommitId) {
@@ -674,7 +674,7 @@ STATIC_INLINE const char *CachedParameterCheck(CachedParameter *param, int *chan
     uint32_t length = param->bufferLen;
     param->dataCommitId = dataCommitId;
     int ret = ReadParamValue_(entry, &param->dataCommitId, param->paramValue, &length);
-    PARAM_CHECK(ret == 0, return NULL, "Failed to copy value %s", param->data);
+    PARAM_ONLY_CHECK(ret == 0, return NULL);
     PARAM_LOGV("CachedParameterCheck %u", param->dataCommitId);
     *changed = 1;
     return param->paramValue;
