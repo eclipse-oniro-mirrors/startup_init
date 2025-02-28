@@ -746,7 +746,7 @@ int CheckWatchTriggerTimeout(void)
 
 TriggerHeader *GetTriggerHeader(const TriggerWorkSpace *workSpace, int type)
 {
-    if (workSpace == NULL || type >= TRIGGER_MAX) {
+    if (workSpace == NULL || type >= TRIGGER_MAX || type < 0) {
         return NULL;
     }
     return (TriggerHeader *)&workSpace->triggerHead[type];

@@ -24,6 +24,7 @@ static void HandleWatcherTaskClose_(const LoopHandle loopHandle, const TaskHandl
 
 static LE_STATUS HandleWatcherEvent_(const LoopHandle loopHandle, const TaskHandle taskHandle, uint32_t oper)
 {
+    LE_CHECK(taskHandle != NULL, return 0, "TaskHandle is NULL");
     LE_LOGV("HandleWatcherEvent_ fd: %d oper 0x%x", GetSocketFd(taskHandle), oper);
     EventLoop *loop = (EventLoop *)loopHandle;
     WatcherTask *watcher = (WatcherTask *)taskHandle;

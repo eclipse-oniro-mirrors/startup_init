@@ -22,6 +22,7 @@
 #include "securec.h"
 #include "sysparam_errno.h"
 #include <stdatomic.h>
+#include <limits.h>
 
 INIT_LOCAL_API const char *GetSerial_(void)
 {
@@ -86,7 +87,12 @@ INIT_LOCAL_API int GetDiskSN_(char *diskSN, int size)
         BEGET_LOGE("const.disk.sn.filepath read failed");
         return EC_FAILURE;
     }
-    FILE *file = fopen(diskSNPath, "r");
+    char realDiskSNPath[PATH_MAX] = {0};
+    if (realpath(diskSNPath, realDiskSNPath) == NULL) {
+        BEGET_LOGE("GetDiskSN_ path file failed");
+        return EC_FAILURE;
+    }
+    FILE *file = fopen(realDiskSNPath, "r");
     if (file == NULL) {
         BEGET_LOGE("GetDiskSN_ open file failed");
         return EC_FAILURE;
