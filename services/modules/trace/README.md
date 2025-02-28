@@ -19,5 +19,5 @@ hdc file recv /data/service/el0/startup/init/init_trace.log D:\xxxxxx
 ## trace文件的分析
 
 获取trace文件后，可以使用华为开发者联盟提供的工具进行打开与分析。具体使用方法可以参考以下链接：
-[trace分析工具使用总结](https://developer.huawei.com/consumer/cn/forum/topic/0204148078868994171)。
+[trace分析工具使用总结](https://tinyurl.com/fb7hbasw)。
 通过分析trace文件，开发者可以深入了解init进程的运行情况，从而进行性能优化和问题排查。
