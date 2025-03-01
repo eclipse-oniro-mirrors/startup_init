@@ -25,7 +25,8 @@ namespace OHOS {
         bool result = false;
         std::unique_ptr<WatcherManager> watcherManager = std::make_unique<WatcherManager>(0, true);
         uint32_t id = static_cast<const uint32_t>(*data);
-        if (!watcherManager->AddRemoteWatcher(id, nullptr)) {
+        uint32_t watcherId = 0;
+        if (!watcherManager->AddRemoteWatcher(id, watcherId, nullptr)) {
             result = true;
         };
         return result;

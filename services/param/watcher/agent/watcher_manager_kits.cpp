@@ -133,7 +133,7 @@ uint32_t WatcherManagerKits::GetRemoteWatcher(void)
     WATCHER_CHECK(watcherManager != nullptr, return 0, "Failed to get watcher manager");
     remoteWatcher_  = new RemoteWatcher(this);
     WATCHER_CHECK(remoteWatcher_ != nullptr, return 0, "Failed to create watcher");
-    remoteWatcherId_ = watcherManager->AddRemoteWatcher(getpid(), remoteWatcher_);
+    watcherManager->AddRemoteWatcher(getpid(), remoteWatcherId_, remoteWatcher_);
     WATCHER_CHECK(remoteWatcherId_ != 0, return 0, "Failed to add watcher");
     return remoteWatcherId_;
 }

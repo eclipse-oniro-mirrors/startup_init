@@ -75,12 +75,13 @@ public:
         MessageOption option;
 
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
+        data.WriteUint32(agentId);
         sptr<IWatcher> watcher = new TestWatcher();
         bool ret = data.WriteRemoteObject(watcher->AsObject());
         WATCHER_CHECK(ret, return 0, "Can not get remote");
-        data.WriteUint32(agentId);
         watcherManager->OnRemoteRequest(
             static_cast<uint32_t> (IWatcherManagerIpcCode::COMMAND_ADD_REMOTE_WATCHER), data, reply, option);
+        reply.ReadInt32();
         watcherId = reply.ReadUint32();
         EXPECT_NE(watcherId, 0);
 
@@ -119,7 +120,7 @@ public:
         MessageOption option;
 
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
-        data.WriteString(keyPrefix);
+        data.WriteString16(Str8ToStr16(keyPrefix));
         data.WriteUint32(watcherId);
         watcherManager->OnRemoteRequest(
             static_cast<uint32_t> (IWatcherManagerIpcCode::COMMAND_ADD_WATCHER), data, reply, option);
@@ -137,7 +138,7 @@ public:
         MessageOption option;
 
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
-        data.WriteString(keyPrefix);
+        data.WriteString16(Str8ToStr16(keyPrefix));
         data.WriteUint32(watcherId);
         watcherManager->OnRemoteRequest(
             static_cast<uint32_t> (IWatcherManagerIpcCode::COMMAND_REFRESH_WATCHER), data, reply, option);
@@ -154,7 +155,7 @@ public:
         MessageParcel reply;
         MessageOption option;
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
-        data.WriteString(keyPrefix);
+        data.WriteString16(Str8ToStr16(keyPrefix));
         data.WriteUint32(watcherId);
         watcherManager->OnRemoteRequest(
             static_cast<uint32_t> (IWatcherManagerIpcCode::COMMAND_DEL_WATCHER), data, reply, option);
@@ -236,13 +237,13 @@ public:
         MessageParcel reply;
         MessageOption option;
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
-        data.WriteString(keyPrefix);
+        data.WriteString16(Str8ToStr16(keyPrefix));
         data.WriteUint32(0);
         watcherManager->OnRemoteRequest(
             static_cast<uint32_t> (IWatcherManagerIpcCode::COMMAND_REFRESH_WATCHER) + 1, data, reply, option);
 
         data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
-        data.WriteString(keyPrefix);
+        data.WriteString16(Str8ToStr16(keyPrefix));
         watcherManager->OnRemoteRequest(
             static_cast<uint32_t> (IWatcherManagerIpcCode::COMMAND_REFRESH_WATCHER) + 1, data, reply, option);
         return 0;

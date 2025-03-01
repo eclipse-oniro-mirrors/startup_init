@@ -18,7 +18,7 @@ import IWatcher;
 interface OHOS.init_param.IWatcherManager {
     void AddWatcher([in] String keyPrefix, [in] unsigned int remoteWatcherId);
     void DelWatcher([in] String keyPrefix, [in] unsigned int remoteWatcherId);
-    void AddRemoteWatcher([in] unsigned int id, [in] IWatcher watcher);
+    void AddRemoteWatcher([in] unsigned int id, [out] unsigned int watcherId, [in] IWatcher watcher);
     void DelRemoteWatcher([in] unsigned int remoteWatcherId);
     void RefreshWatcher([in] String keyPrefix, [in] unsigned int remoteWatcherId);
 }
