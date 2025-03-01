@@ -745,84 +745,7 @@ static const char *GetCmdlineValueByName(const char *name, const char *buffer, c
     return NULL;
 }
 
-static int GetValuePriority(const char *str, const char *value)
-{
-    if (str == NULL || value == NULL || *value == '\0') {
-        return -1;
-    }
-    const char *endData = str + strlen(str);
-    const char *start = str;
-    const char *tmp = str;
-    int len = strlen(value);
-    while (tmp < endData) {
-        tmp = strstr(start, "<");
-        if (tmp == NULL) {
-            tmp = endData;
-        }
-        if (tmp - start == len && strncmp(start, value, len) == 0) {
-            return tmp - str;
-        }
-        start = tmp + 1;
-    }
-    return -1;
-}
-
-static int CopyCmdlineValue(const char *tmp, const char *endData, char *value, int length, int defaultValue)
-{
-    int i = 0;
-    while (i < length && tmp < endData && *tmp != ' ') {
-        value[i++] = *tmp;
-        tmp++;
-    }
-
-    if (i >= length) {
-        BEGET_LOGE("value is too long");
-        for (int j = 0; j < length; ++j) {
-            value[j] = '\0';
-        }
-        return defaultValue ? defaultValue : -1;
-    }
-    value[i] = '\0';
-    return defaultValue;
-}
-
-static int DealConflictPriority(const char *name, const char *tmp, char *value, int length, const char *str)
-{
-    if (length <= 0 || length > CMDLINE_VALUE_LEN_MAX) {
-        BEGET_LOGE("length is invalid");
-        return 1;
-    }
-    const char *endData = tmp + strlen(tmp);
-    char *valueTmp = (char *)calloc(length, sizeof(char));
-    INIT_ERROR_CHECK(valueTmp != NULL, return 1, "Failed to calloc valueTmp");
-    while (CopyCmdlineValue(tmp, endData, valueTmp, length, 0) == 0) {
-        if (GetValuePriority(str, valueTmp) <= GetValuePriority(str, value)) {
-            tmp = GetCmdlineValueByName(name, tmp, endData);
-            if (tmp == NULL) {
-                free(valueTmp);
-                return 1;
-            }
-            continue;
-        }
-        int i = 0;
-        while (*(valueTmp + i) != '\0') {
-            value[i] = *(valueTmp + i);
-            i++;
-        }
-        for (int j = i; j < length; ++j) {
-            value[j] = '\0';
-        }
-        tmp = GetCmdlineValueByName(name, tmp, endData);
-        if (tmp == NULL) {
-            free(valueTmp);
-            return 1;
-        }
-    }
-    free(valueTmp);
-    return 1;
-}
-
-static int GetExactProcCmdlineValue(const char *name, const char *buffer, char *value, int length, const char *strategy)
+static int GetExactProcCmdlineValue(const char *name, const char *buffer, char *value, int length)
 {
     INIT_ERROR_CHECK(name != NULL && buffer != NULL && value != NULL, return -1, "Failed get parameters");
     const char *endData = buffer + strlen(buffer);
@@ -833,28 +756,31 @@ static int GetExactProcCmdlineValue(const char *name, const char *buffer, char *
 
     const char *temp = GetCmdlineValueByName(name, tmp, endData);
     if (temp == NULL) { // 无冲突
-        return CopyCmdlineValue(tmp, endData, value, length, 0);
-    } else if (strcmp(strategy, FIRST_VALUE) == 0) { // 取第一个值
-        return CopyCmdlineValue(tmp, endData, value, length, 1);
-    } else if (strcmp(strategy, LAST_VALUE) == 0) { // 取最后一个值
-        do {
-            tmp = temp;
-            temp = GetCmdlineValueByName(name, tmp, endData);
-        } while (temp != NULL);
-        return CopyCmdlineValue(tmp, endData, value, length, 1);
-    } else if (strcmp(strategy, EMPTY_VALUE) == 0) { // 不取任何一个值
-        return 1;
-    } else { // 处理自定义优先级
-        return DealConflictPriority(name, tmp, value, length, strategy);
+        int i = 0;
+        while (i < length && tmp < endData && *tmp != ' ') {
+            value[i++] = *tmp;
+            tmp++;
+        }
+        if (i >= length) {
+            BEGET_LOGE("value is too long");
+            for (int j = 0; j < length; ++j) {
+                value[j] = '\0';
+            }
+            return -1;
+        }
+        value[i] = '\0';
+        return 0;
     }
-    return 0;
+    // 有冲突直接返回1， 不取任何一个值
+    return 1;
 }
 
-int GetExactParameterFromCmdLine(const char *paramName, char *value, size_t valueLen, const char *conflictStrategy)
+int GetExactParameterFromCmdLine(const char *paramName, char *value, size_t valueLen)
 {
     char *buffer = ReadFileData(BOOT_CMD_LINE);
     BEGET_ERROR_CHECK(buffer != NULL, return -1, "Failed to read /proc/cmdline");
-    int ret = GetExactProcCmdlineValue(paramName, buffer, value, valueLen, conflictStrategy);
+    int ret = GetExactProcCmdlineValue(paramName, buffer, value, valueLen);
+    BEGET_LOGI("GetExactParameterFromCmdLine: ret=%d,paramName=%s,value=%s", ret, paramName, value);
     free(buffer);
     return ret;
 }
@@ -864,6 +790,7 @@ int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen)
     char *buffer = ReadFileData(BOOT_CMD_LINE);
     BEGET_ERROR_CHECK(buffer != NULL, return -1, "Failed to read /proc/cmdline");
     int ret = GetProcCmdlineValue(paramName, buffer, value, valueLen);
+    BEGET_LOGI("GetParameterFromCmdLine: ret=%d,paramName=%s,value=%s", ret, paramName, value);
     free(buffer);
     return ret;
 }
