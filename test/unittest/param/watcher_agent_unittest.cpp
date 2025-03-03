@@ -26,6 +26,7 @@
 #include "param_utils.h"
 #include "system_ability_definition.h"
 #include "watcher.h"
+#include "watcher_manager.h"
 #include "watcher_manager_kits.h"
 #include "watcher_manager_proxy.h"
 #include "service_watcher.h"
@@ -47,6 +48,7 @@ static void TestWatcherCallBack(const char *key, const ServiceInfo *status)
     printf("TestWatcherCallBack key:%s %d", key, status->status);
 }
 
+using WatcherManagerPtr = WatcherManager *;
 class WatcherAgentUnitTest : public ::testing::Test {
 public:
     WatcherAgentUnitTest() {}
@@ -164,9 +166,9 @@ public:
         MessageParcel reply;
         MessageOption option;
         data.WriteInterfaceToken(IWatcher::GetDescriptor());
-        data.WriteString(name);
-        data.WriteString(name);
-        data.WriteString("watcherId");
+        data.WriteString16(Str8ToStr16(name));
+        data.WriteString16(Str8ToStr16(name));
+        data.WriteString16(Str8ToStr16("watcherId"));
         g_callbackCount = 0;
         int ret = SystemWatchParameter(name.c_str(), TestParameterChange, nullptr);
         EXPECT_EQ(ret, 0);
@@ -203,9 +205,22 @@ public:
         return 0;
     }
 
+    WatcherManagerPtr GetWatcherManager()
+    {
+        static WatcherManagerPtr watcherManager_ = nullptr;
+        if (watcherManager_ == nullptr) {
+            watcherManager_ = new WatcherManager(0, true);
+            if (watcherManager_ == nullptr) {
+                return nullptr;
+            }
+            watcherManager_->OnStart();
+        }
+        return watcherManager_;
+    }
+
     void TestWatcherProxy()
     {
-        sptr<WatcherManagerProxy> watcherManager = new(std::nothrow) WatcherManagerProxy(nullptr);
+        WatcherManagerPtr watcherManager = GetWatcherManager();
         ASSERT_NE(watcherManager, nullptr);
 
         WatcherManagerKits &instance = OHOS::init_param::WatcherManagerKits::GetInstance();
@@ -216,21 +231,21 @@ public:
         MessageParcel reply;
         MessageOption option;
         data.WriteInterfaceToken(IWatcher::GetDescriptor());
-        data.WriteString("name");
-        data.WriteString("name");
-        data.WriteString("watcherId");
+        data.WriteString16(Str8ToStr16("name"));
+        data.WriteString16(Str8ToStr16("name"));
+        data.WriteString16(Str8ToStr16("watcherId"));
         remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
             (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE), data, reply, option);
 
         // invalid parameter
         data.WriteInterfaceToken(IWatcher::GetDescriptor());
-        data.WriteString("name");
-        data.WriteString("watcherId");
+        data.WriteString16(Str8ToStr16("name"));
+        data.WriteString16(Str8ToStr16("watcherId"));
         remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
             (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE), data, reply, option);
 
         data.WriteInterfaceToken(IWatcher::GetDescriptor());
-        data.WriteString("name");
+        data.WriteString16(Str8ToStr16("name"));
         remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
             (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE), data, reply, option);
 
@@ -239,17 +254,18 @@ public:
             (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE), data, reply, option);
 
         data.WriteInterfaceToken(IWatcher::GetDescriptor());
-        data.WriteString("name");
-        data.WriteString("name");
-        data.WriteString("watcherId");
+        data.WriteString16(Str8ToStr16("name"));
+        data.WriteString16(Str8ToStr16("name"));
+        data.WriteString16(Str8ToStr16("watcherId"));
         remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
             (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE) + 1, data, reply, option);
         remoteWatcher->OnRemoteRequest(static_cast<uint32_t>
             (OHOS::init_param::IWatcherIpcCode::COMMAND_ON_PARAMETER_CHANGE) + 1, data, reply, option);
 
-        int32_t watcherId = watcherManager->AddRemoteWatcher(1000, remoteWatcher);
+        uint32_t watcherId = 0;
+        int32_t ret = watcherManager->AddRemoteWatcher(1000, watcherId, remoteWatcher);
         // add watcher
-        int ret = watcherManager->AddWatcher("test.watcher.proxy", watcherId);
+        ret = watcherManager->AddWatcher("test.watcher.proxy", watcherId);
         ASSERT_EQ(ret, 0);
         ret = watcherManager->DelWatcher("test.watcher.proxy", watcherId);
         ASSERT_EQ(ret, 0);

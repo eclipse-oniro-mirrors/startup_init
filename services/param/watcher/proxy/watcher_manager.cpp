@@ -32,40 +32,43 @@ namespace init_param {
 REGISTER_SYSTEM_ABILITY_BY_ID(WatcherManager, PARAM_WATCHER_DISTRIBUTED_SERVICE_ID, true)
 
 const static int32_t INVALID_SOCKET = -1;
+const static int32_t ERR_FAIL = -1;
 const static int32_t PUBLIC_APP_BEGIN_UID = 10000;
 WatcherManager::~WatcherManager()
 {
     Clear();
 }
 
-int32_t WatcherManager::AddRemoteWatcher(uint32_t id, const sptr<IWatcher> &watcher)
+int32_t WatcherManager::AddRemoteWatcher(uint32_t id, uint32_t &watcherId, const sptr<IWatcher> &watcher)
 {
 #ifndef STARTUP_INIT_TEST
     if (id == static_cast<uint32_t>(getpid())) {
         WATCHER_LOGE("Failed to add remote watcher %u", id);
-        return 0;
+        return ERR_FAIL;
     }
 #endif
-    WATCHER_CHECK(watcher != nullptr, return 0, "Invalid remote watcher");
-    WATCHER_CHECK(deathRecipient_ != nullptr, return 0, "Invalid deathRecipient_");
+    WATCHER_CHECK(watcher != nullptr, return ERR_FAIL, "Invalid remote watcher");
+    WATCHER_CHECK(deathRecipient_ != nullptr, return ERR_FAIL, "Invalid deathRecipient_");
     sptr<IRemoteObject> object = watcher->AsObject();
     if ((object != nullptr) && (object->IsProxyObject())) {
-        WATCHER_CHECK(object->AddDeathRecipient(deathRecipient_), return 0, "Failed to add death recipient %u", id);
+        WATCHER_CHECK(object->AddDeathRecipient(deathRecipient_),
+            return ERR_FAIL, "Failed to add death recipient %u", id);
     }
     uint32_t remoteWatcherId = 0;
     {
         std::lock_guard<std::mutex> lock(watcherMutex_);
         // check watcher id
         int ret = GetRemoteWatcherId(remoteWatcherId);
-        WATCHER_CHECK(ret == 0, return 0, "Failed to get watcher id for %u", id);
+        WATCHER_CHECK(ret == 0, return ERR_FAIL, "Failed to get watcher id for %u", id);
         // create remote watcher
         RemoteWatcher *remoteWatcher = new RemoteWatcher(remoteWatcherId, watcher);
-        WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Failed to create watcher for %u", id);
+        WATCHER_CHECK(remoteWatcher != nullptr, return ERR_FAIL, "Failed to create watcher for %u", id);
         remoteWatcher->SetAgentId(GetCallingPid());
         AddRemoteWatcher(remoteWatcher);
     }
     WATCHER_LOGI("Add remote watcher remoteWatcherId %u %u success", remoteWatcherId, id);
-    return remoteWatcherId;
+    watcherId = remoteWatcherId;
+    return 0;
 }
 
 int32_t WatcherManager::DelRemoteWatcher(uint32_t remoteWatcherId)
