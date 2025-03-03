@@ -1,0 +1,106 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/startup/init/begetd.gni")
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+
+group("init_ani") {
+  if (!defined(ohos_lite)) {
+    deps = [
+      ":deviceinfo",
+      ":deviceinfo_ani",
+      ":systemparameter",
+      ":systemparameter_ani",
+    ]
+  }
+}
+
+if (!defined(ohos_lite)) {
+  ohos_shared_library("systemparameter_ani") {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+    sources = [ "./systemparameter/systemparameter_ani.cpp" ]
+    part_name = "init"
+    subsystem_name = "startup"
+    output_extension = "so"
+    deps = [
+      "${init_innerkits_path}:libbeget_proxy",
+      "${init_innerkits_path}:libbegetutil",
+    ]
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "runtime_core:ani",
+    ]
+  }
+
+  ohos_shared_library("deviceinfo_ani") {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+    sources = [ "./deviceinfo/deviceinfo_ani.cpp" ]
+    part_name = "init"
+    subsystem_name = "startup"
+    output_extension = "so"
+    deps = [
+      "${init_innerkits_path}:libbeget_proxy",
+      "${init_innerkits_path}:libbegetutil",
+    ]
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "bundle_framework:appexecfwk_core",
+      "c_utils:utils",
+      "hilog:libhilog_base",
+      "ipc:ipc_single",
+      "runtime_core:ani",
+      "samgr:samgr_proxy",
+    ]
+  }
+
+  generate_static_abc("deviceinfo") {
+    arktsconfig = "./deviceinfo/arktsconfig.json"
+    dst_file = "$target_out_dir/deviceinfo.abc"
+    out_puts = [ "$target_out_dir/deviceinfo.abc" ]
+    is_boot_abc = "True"
+    device_dst_file = "system/framework/deviceinfo.abc"
+  }
+
+  ohos_prebuilt_etc("deviceinfo_etc") {
+    source = "$target_out_dir/deviceinfo.abc"
+    module_install_dir = "framework"
+    subsystem_name = "startup"
+    part_name = "init"
+    deps = [ ":deviceinfo" ]
+  }
+
+  generate_static_abc("systemparameter") {
+    arktsconfig = "./systemparameter/arktsconfig.json"
+    dst_file = "$target_out_dir/systemparameter.abc"
+    out_puts = [ "$target_out_dir/systemparameter.abc" ]
+    is_boot_abc = "True"
+    device_dst_file = "system/framework/systemparameter.abc"
+  }
+
+  ohos_prebuilt_etc("systemparameter_etc") {
+    source = "$target_out_dir/systemparameter.abc"
+    module_install_dir = "framework"
+    subsystem_name = "startup"
+    part_name = "init"
+    deps = [ ":systemparameter" ]
+  }
+}

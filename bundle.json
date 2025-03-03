@@ -56,6 +56,7 @@
                 "hiprofiler",
                 "bounds_checking_function",
                 "bundle_framework",
+                "runtime_core",
                 "selinux",
                 "selinux_adapter",
                 "storage_service",
@@ -79,6 +80,7 @@
                 "base_group": [
                 ],
                 "fwk_group": [
+                    "//base/startup/init/ani_interface:init_ani",
                     "//base/startup/init/services:startup_init",
                     "//base/startup/init/services/begetctl:begetctl_cmd",
                     "//base/startup/init/services/loopevent:loopeventgroup",
@@ -93,7 +95,7 @@
                     "//base/startup/init/remount:overlayremount",
                     "//base/startup/init/ueventd:startup_ueventd"
                 ]
-              },
+            },
             "inner_kits": [
                 {
                     "header": {
