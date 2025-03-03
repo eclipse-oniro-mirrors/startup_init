@@ -152,6 +152,7 @@ vcodec:x:3073:
 dev_camera:x:3090:
 servicerouter:x:6066:
 nwebspawn:x:3081:
+shader_cache:x:3099:
 oaid_service:x:6101:
 code_sign:x:3074:
 el5_filekey_manager:x:3077:
