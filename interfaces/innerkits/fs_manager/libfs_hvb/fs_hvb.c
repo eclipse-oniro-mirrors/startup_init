@@ -755,7 +755,7 @@ int FsHvbGetValueFromCmdLine(char *val, size_t size, const char *key)
     FS_HVB_RETURN_ERR_IF_NULL(val);
     FS_HVB_RETURN_ERR_IF_NULL(key);
 
-    return GetExactParameterFromCmdLine(key, val, size, EMPTY_VALUE);
+    return GetExactParameterFromCmdLine(key, val, size);
 }
 
 int VerifyExtHvbImage(const char *devPath, const char *partition, char **outPath)

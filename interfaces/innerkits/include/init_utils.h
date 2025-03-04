@@ -125,14 +125,9 @@ int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen)
  * @param paramName the name of param
  * @param value the array to receive the value of paramName
  * @param valueLen the length of value
- * @param conflictStrategy the strategy of conflicts, here are some options available
- *     FIRST_VALUE: select the first value
- *     LAST_VALUE: select the last value
- *     EMPTY_VALUE: return empty value
- *     "A<B...<C": assign priorities
  * @return return 0 if succeed; return -1 if not found; return 1 if conflicted.
  */
-int GetExactParameterFromCmdLine(const char *paramName, char *value, size_t valueLen, const char *conflictStrategy);
+int GetExactParameterFromCmdLine(const char *paramName, char *value, size_t valueLen);
 
 /**
  * @brief Get string index from a string array

@@ -23,14 +23,14 @@
 bool IsOverlayEnable(void)
 {
     char oemMode[MAX_BUFFER_LEN] = {0};
-    int ret = GetExactParameterFromCmdLine("oemmode", oemMode, MAX_BUFFER_LEN, EMPTY_VALUE);
+    int ret = GetExactParameterFromCmdLine("oemmode", oemMode, MAX_BUFFER_LEN);
     if (ret) {
         BEGET_LOGE("Failed get oenmode from cmdline.");
         return false;
     }
 
     char buildvariant[MAX_BUFFER_LEN] = {0};
-    ret = GetExactParameterFromCmdLine("buildvariant", buildvariant, MAX_BUFFER_LEN, EMPTY_VALUE);
+    ret = GetExactParameterFromCmdLine("buildvariant", buildvariant, MAX_BUFFER_LEN);
     if (ret) {
         BEGET_LOGE("Failed get buildvariant from cmdline.");
         return false;
