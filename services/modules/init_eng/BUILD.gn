@@ -28,7 +28,10 @@ ohos_shared_library("init_eng") {
 
   include_dirs += [ "../../init/include" ]
 
-  deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
+  deps = [
+    "${init_innerkits_path}/fs_manager:libfsmanager_static",
+    "${init_innerkits_path}/init_module_engine:libinit_module_engine",
+  ]
 
   external_deps = [ "bounds_checking_function:libsec_shared" ]
 

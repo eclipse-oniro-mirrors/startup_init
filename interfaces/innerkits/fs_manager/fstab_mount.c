@@ -47,6 +47,8 @@ extern "C" {
 #define RESIZE_BUFFER_SIZE 1024
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
+int g_bootSlots = -1;
+int g_currentSlot = -1;
 
 __attribute__((weak)) void InitPostMount(const char *mountPoint, int rc)
 {
@@ -443,11 +445,18 @@ static int GetSlotInfoFromBootctrl(off_t offset, off_t size)
 
 int GetBootSlots(void)
 {
-    return GetSlotInfoFromCmdLine("bootslots");
+    if (g_bootSlots != -1) {
+        return g_bootSlots;
+    }
+    g_bootSlots = GetSlotInfoFromCmdLine("bootslots");
+    return g_bootSlots;
 }
 
 int GetCurrentSlot(void)
 {
+    if (g_currentSlot != -1) {
+        return g_currentSlot;
+    }
     // get current slot from cmdline
     int currentSlot = GetSlotInfoFromCmdLine("currentslot");
     BEGET_CHECK_RETURN_VALUE(currentSlot <= 0, currentSlot);
@@ -594,13 +603,16 @@ static bool NeedDmVerity(FstabItem *item)
 
 static void AdjustPartitionNameByPartitionSlot(FstabItem *item)
 {
-    BEGET_CHECK_ONLY_RETURN(strstr(item->deviceName, "/system") != NULL ||
-        strstr(item->deviceName, "/vendor") != NULL);
     char buffer[MAX_BUFFER_LEN] = {0};
-    int slot = GetCurrentSlot();
-    BEGET_ERROR_CHECK(slot > 0 && slot <= MAX_SLOT, slot = 1, "slot value %d is invalid, set default value", slot);
-    BEGET_ERROR_CHECK(sprintf_s(buffer, sizeof(buffer), "%s_%c", item->deviceName, 'a' + slot - 1) > 0,
+    g_currentSlot = GetCurrentSlot();
+    BEGET_ERROR_CHECK(g_currentSlot > 0 && g_currentSlot <= MAX_SLOT, g_currentSlot = 1,
+        "slot value %d is invalid, set default value", g_currentSlot);
+    BEGET_ERROR_CHECK(sprintf_s(buffer, sizeof(buffer), "%s_%c", item->deviceName, 'a' + g_currentSlot - 1) > 0,
         return, "Failed to format partition name suffix, use default partition name");
+    if (access(buffer, F_OK) != 0) {
+        BEGET_LOGW("not support AB partition: %s", item->deviceName);
+        return;
+    }
     free(item->deviceName);
     item->deviceName = strdup(buffer);
     if (item->deviceName == NULL) {
@@ -620,6 +632,8 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
     // Mount partition during second startup.
     if (!required) {
         if (!FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
+            BEGET_INFO_CHECK(GetBootSlots() <= 1, AdjustPartitionNameByPartitionSlot(item),
+                "boot slots is %d, now adjust partition name according to current slot", GetBootSlots());
             rc = MountOneItem(item);
         }
         return rc;
@@ -627,9 +641,8 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
 
     // Mount partition during one startup.
     if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
-        int bootSlots = GetBootSlots();
-        BEGET_INFO_CHECK(bootSlots <= 1, AdjustPartitionNameByPartitionSlot(item),
-            "boot slots is %d, now adjust partition name according to current slot", bootSlots);
+        BEGET_INFO_CHECK(GetBootSlots() <= 1, AdjustPartitionNameByPartitionSlot(item),
+            "boot slots is %d, now adjust partition name according to current slot", GetBootSlots());
 #ifdef SUPPORT_HVB
 #ifdef EROFS_OVERLAY
         if (!NeedDmVerity(item)) {

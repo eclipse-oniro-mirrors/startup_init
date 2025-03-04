@@ -23,10 +23,12 @@
 #include "init_cmds.h"
 #include "init_utils.h"
 #include "init_module_engine.h"
+#include "fs_manager/fs_manager.h"
 #include "securec.h"
 
 #define ENG_SYSTEM_DEVICE_PATH "/dev/block/by-name/eng_system"
 #define ENG_CHIPSET_DEVICE_PATH "/dev/block/by-name/eng_chipset"
+#define DEV_NAME_MAX_LEN 64
 
 ENG_STATIC bool IsFileExistWithType(const char *file, FileType type)
 {
@@ -77,22 +79,58 @@ ENG_STATIC void BuildMountCmd(char *buffer, size_t len, const char *mp, const ch
     }
 }
 
-ENG_STATIC void MountEngPartitions(void)
+ENG_STATIC void MountOneEngPartition(const char *partition, const char *devName)
 {
     char mountCmd[MOUNT_CMD_MAX_LEN] = {};
-   // Mount eng_system
-    BuildMountCmd(mountCmd, MOUNT_CMD_MAX_LEN, "/eng_system",
-        "/dev/block/by-name/eng_system", "ext4");
-    WaitForFile(ENG_SYSTEM_DEVICE_PATH, WAIT_MAX_SECOND);
+    BuildMountCmd(mountCmd, MOUNT_CMD_MAX_LEN, partition, devName, "ext4");
+    WaitForFile(devName, WAIT_MAX_SECOND);
+
     int cmdIndex = 0;
     (void)GetMatchCmd("mount ", &cmdIndex);
     DoCmdByIndex(cmdIndex, mountCmd, NULL);
+}
 
-   // Mount eng_chipset
-    BuildMountCmd(mountCmd, MOUNT_CMD_MAX_LEN, "/eng_chipset",
-        "/dev/block/by-name/eng_chipset", "ext4");
-    WaitForFile(ENG_CHIPSET_DEVICE_PATH, WAIT_MAX_SECOND);
-    DoCmdByIndex(cmdIndex, mountCmd, NULL);
+ENG_STATIC void MountEngPartitions(void)
+{
+    if (GetBootSlots() <= 1) {
+        MountOneEngPartition("/eng_system", "/dev/block/by-name/eng_system");
+        MountOneEngPartition("/eng_chipset", "/dev/block/by-name/eng_chipset");
+        return;
+    }
+    // mount AB partition
+    int currentSlot = GetCurrentSlot();
+    if (currentSlot > 0 && currentSlot <= MAX_SLOT) {
+        char slotChar = 'a' + currentSlot - 1;
+        char systemDevName[DEV_NAME_MAX_LEN] = {0};
+        int ret = snprintf_s(systemDevName, DEV_NAME_MAX_LEN, DEV_NAME_MAX_LEN - 1, "%s_%c",
+            "/dev/block/by-name/eng_system", slotChar);
+        if (ret <= 0) {
+            PLUGIN_LOGE("snprintf_s systemDevName failed");
+            return;
+        }
+        if (access(systemDevName, F_OK) != 0) {
+            MountOneEngPartition("/eng_system", "/dev/block/by-name/eng_system");
+        } else {
+            MountOneEngPartition("/eng_system", systemDevName);
+        }
+
+        char chipsetDevName[DEV_NAME_MAX_LEN] = {0};
+        ret = snprintf_s(chipsetDevName, DEV_NAME_MAX_LEN, DEV_NAME_MAX_LEN - 1, "%s_%c",
+            "/dev/block/by-name/eng_chipset", slotChar);
+        if (ret <= 0) {
+            PLUGIN_LOGE("snprintf_s chipsetDevName failed");
+            return;
+        }
+        if (access(chipsetDevName, F_OK) != 0) {
+            MountOneEngPartition("/eng_chipset", "/dev/block/by-name/eng_chipset");
+        } else {
+            MountOneEngPartition("/eng_chipset", chipsetDevName);
+        }
+        return;
+    }
+
+    MountOneEngPartition("/eng_system", "/dev/block/by-name/eng_system");
+    MountOneEngPartition("/eng_chipset", "/dev/block/by-name/eng_chipset");
 }
 
 ENG_STATIC void BindMountFile(const char *source, const char *target)
