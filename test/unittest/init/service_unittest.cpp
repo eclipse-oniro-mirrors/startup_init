@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <cstdlib>
+#include "init.h"
 #include "init_cmds.h"
 #include "init_service.h"
 #include "init_service_manager.h"
@@ -90,6 +91,11 @@ static int ServiceTestTriggerExe(const TriggerNode *trigger, const char *content
 
 using namespace testing::ext;
 using namespace std;
+
+extern "C" {
+    INIT_STATIC int GetCgroupPath(Service *service, char *buffer, uint32_t buffLen);
+}
+
 namespace init_ut {
 class ServiceUnitTest : public testing::Test {
 public:
@@ -442,5 +448,72 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
     ret = SetImportantValue(service, "", invalidImportantValue, 1);
     EXPECT_EQ(ret, -1);
     ReleaseService(service);
+}
+
+HWTEST_F(ServiceUnitTest, TestServiceCGroup1, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/data/init_ut/test_service\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"]}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    const char serviceName[] = "test_service1";
+    Service *service = AddService(serviceName);
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(service->isCgroupEnabled, false);
+    EXPECT_EQ(ret, 0);
+
+    char path[PATH_MAX] = {};
+    ret = GetCgroupPath(service, path, sizeof(path));
+    ASSERT_EQ(ret, 0);
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
+HWTEST_F(ServiceUnitTest, TestServiceCGroup2, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/data/init_ut/test_service\"],"
+    "\"importance\":-20,\"uid\":\"system\",\"cgroup\":true,\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+    "\"gid\":[\"system\"],\"caps\":[\"\"]}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    const char serviceName[] = "test_service1";
+    Service *service = AddService(serviceName);
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(service->isCgroupEnabled, true);
+    EXPECT_EQ(ret, 0);
+
+    ret = ServiceStart(service, &service->pathArgs);
+    EXPECT_EQ(ret, 0);
+
+    char path[PATH_MAX] = {};
+    ret = GetCgroupPath(service, path, sizeof(path));
+    ASSERT_EQ(ret, 0);
+    ret = strcat_s(path, sizeof(path), "cgroup.procs");
+    EXPECT_EQ(ret, 0);
+
+    FILE *file = nullptr;
+    file = fopen(path, "r");
+    ASSERT_NE(file, nullptr);
+    pid_t pid = 0;
+    ret = -1;
+    while (fscanf_s(file, "%d\n", &pid) == 1 && pid > 0) {
+        if (pid == service->pid) {
+            ret = 0;
+            break;
+        }
+    }
+    fclose(file);
+    EXPECT_EQ(ret, 0);
+    ret = ServiceStop(service);
+    EXPECT_EQ(ret, 0);
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
 }
 } // namespace init_ut

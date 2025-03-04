@@ -24,7 +24,7 @@
 #include "init_utils.h"
 #include "init_service.h"
 
-static int GetCgroupPath(Service *service, char *buffer, uint32_t buffLen)
+INIT_STATIC int GetCgroupPath(Service *service, char *buffer, uint32_t buffLen)
 {
     int ret = snprintf_s(buffer, buffLen, buffLen - 1, "/dev/pids/native/%s/pid_%d/", service->name, service->pid);
     INIT_ERROR_CHECK(ret > 0, return ret, "Failed to snprintf_s in GetCgroupPath, errno: %d", errno);
@@ -120,6 +120,7 @@ static void RmdirTimer(Service *service, uint64_t timeout)
 int ProcessServiceDied(Service *service)
 {
     INIT_CHECK_RETURN_VALUE(service != NULL, -1);
+    INIT_CHECK_RETURN_VALUE(service->isCgroupEnabled, -1);
     char path[PATH_MAX] = {};
     INIT_LOGV("ProcessServiceDied %d to cgroup ", service->pid);
     int ret = GetCgroupPath(service, path, sizeof(path));
@@ -134,6 +135,7 @@ int ProcessServiceDied(Service *service)
 int ProcessServiceAdd(Service *service)
 {
     INIT_CHECK_RETURN_VALUE(service != NULL, -1);
+    INIT_CHECK_RETURN_VALUE(service->isCgroupEnabled, -1);
     char path[PATH_MAX] = {};
     INIT_LOGV("ProcessServiceAdd %d to cgroup ", service->pid);
     int ret = GetCgroupPath(service, path, sizeof(path));
