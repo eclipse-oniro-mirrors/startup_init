@@ -375,7 +375,7 @@ static void DoMkDir(const struct CmdArgs *ctx)
         INIT_LOGE("Failed to change owner %s, err %d.", ctx->argv[0], errno);
     }
     ret = SetFileCryptPolicy(ctx->argv[0]);
-    INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to set file fscrypt");
+    INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to set file fscrypt, directory: %s", ctx->argv[0]);
     return;
 }
 
