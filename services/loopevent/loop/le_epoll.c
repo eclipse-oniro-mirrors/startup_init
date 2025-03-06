@@ -15,6 +15,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include "le_epoll.h"
 #include "le_idle.h"
 #include "le_timer.h"
@@ -155,7 +156,9 @@ LE_STATUS CreateEpollLoop(EventLoop **loop, uint32_t maxevents, uint32_t timeout
     epoll->epollFd = epoll_create(maxevents);
     LE_CHECK(epoll->epollFd >= 0, free(epoll);
         return LE_FAILURE, "Failed to create epoll");
-
+    if (fcntl(epoll->epollFd, F_SETFD, FD_CLOEXEC) == -1) {
+        LE_LOGE("fcntl setfd close_on_exec failed, errno: %d", errno);
+    }
     *loop = (EventLoop *)epoll;
     epoll->loop.maxevents = maxevents;
     epoll->loop.timeout = timeout;
