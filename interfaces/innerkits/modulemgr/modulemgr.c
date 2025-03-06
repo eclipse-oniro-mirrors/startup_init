@@ -121,7 +121,7 @@ static void *ModuleInstall(MODULE_ITEM *module, int argc, const char *argv[])
     currentInstallArgs = &(module->moduleMgr->installArgs);
     handle = dlopen(realPath, RTLD_LAZY | RTLD_GLOBAL);
     currentInstallArgs = NULL;
-    BEGET_CHECK_ONLY_ELOG(handle != NULL, "ModuleInstall path %s fail %d", realPath, errno);
+    BEGET_CHECK_ONLY_ELOG(handle != NULL, "ModuleInstall path %s fail %s", realPath, dlerror());
     free(realPath);
     return handle;
 }
