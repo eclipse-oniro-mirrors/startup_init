@@ -421,3 +421,13 @@ const char *GetDistributionOSReleaseType(void)
     }
     return distributionOsReleaseType;
 }
+
+int GetPerformanceClass(void)
+{
+    static const char *performanceClass = NULL;
+    GetProperty("const.ohos.performance_class", &performanceClass);
+    if (performanceClass == NULL) {
+        performanceClass = 0;
+    }
+    return performanceClass;
+}

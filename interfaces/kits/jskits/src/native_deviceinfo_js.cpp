@@ -512,6 +512,15 @@ static napi_value GetDiskSN(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
+static napi_value GetPerformanceClass(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    int performanceClass = GetPerformanceClass();
+
+    NAPI_CALL(env, napi_create_int32(env, performanceClass, &napiValue));
+    return napiValue;
+}
+
 EXTERN_C_START
 /*
  * Module init
@@ -564,6 +573,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"ODID", nullptr, nullptr, GetDevOdid, nullptr, nullptr, napi_default, nullptr},
         {"productModelAlias", nullptr, nullptr, GetProductModelAlias, nullptr, nullptr, napi_default, nullptr},
         {"diskSN", nullptr, nullptr, GetDiskSN, nullptr, nullptr, napi_default, nullptr},
+        {"performanceClass", nullptr, nullptr, GetPerformanceClass, nullptr, nullptr, napi_default, nullptr},
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
 

@@ -166,6 +166,8 @@ const char *AclGetSerial(void);
 int AclGetDevUdid(char *udid, int size);
 int AclGetDiskSN(char *diskSN, int size);
 
+int GetPerformanceClass(void);
+
 /**
  * @brief Obtains a system parameter matching the specified <b>key</b>.
  *
