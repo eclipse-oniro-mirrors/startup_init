@@ -85,4 +85,7 @@ declare_args() {
 
   # only the pc can obtain the device serial number
   init_get_disk_sn = false
+
+  # seccomp custom
+  init_feature_custom_sandbox = false
 }

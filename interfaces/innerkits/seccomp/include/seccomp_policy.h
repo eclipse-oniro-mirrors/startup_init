@@ -32,6 +32,7 @@ extern "C" {
 #define IMF_EXTENTOIN_NAME "imf_secure_mode"
 #define APP_PRIVILEGE "app_privilege"
 #define APP_ATOMIC "app_atomic"
+#define APP_CUSTOM "app_custom"
 
 typedef enum {
     SYSTEM_SA,       // system service process
