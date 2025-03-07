@@ -649,7 +649,7 @@ static int OpenStdioDevice(const char *dev, int flag)
 {
     setsid();
     WaitForFile(dev, WAIT_MAX_SECOND);
-    int fd = open(dev, O_RDWR | O_NOCTTY);
+    int fd = open(dev, O_RDWR | O_NOCTTY | O_CLOEXEC);
     if (fd >= 0) {
         ioctl(fd, TIOCSCTTY, flag);
         RedirectStdio(fd);
