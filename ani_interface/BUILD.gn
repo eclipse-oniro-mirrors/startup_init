@@ -18,10 +18,10 @@ import("//build/ohos.gni")
 group("init_ani") {
   if (!defined(ohos_lite)) {
     deps = [
-      ":deviceinfo",
       ":deviceinfo_ani",
-      ":systemparameter",
+      ":deviceinfo_etc",
       ":systemparameter_ani",
+      ":systemparameter_etc",
     ]
   }
 }
@@ -77,7 +77,7 @@ if (!defined(ohos_lite)) {
     dst_file = "$target_out_dir/deviceinfo.abc"
     out_puts = [ "$target_out_dir/deviceinfo.abc" ]
     is_boot_abc = "True"
-    device_dst_file = "system/framework/deviceinfo.abc"
+    device_dst_file = "/system/framework/deviceinfo.abc"
   }
 
   ohos_prebuilt_etc("deviceinfo_etc") {
@@ -93,7 +93,7 @@ if (!defined(ohos_lite)) {
     dst_file = "$target_out_dir/systemparameter.abc"
     out_puts = [ "$target_out_dir/systemparameter.abc" ]
     is_boot_abc = "True"
-    device_dst_file = "system/framework/systemparameter.abc"
+    device_dst_file = "/system/framework/systemparameter.abc"
   }
 
   ohos_prebuilt_etc("systemparameter_etc") {
