@@ -57,6 +57,7 @@ static ani_string getSync([[maybe_unused]] ani_env *env, [[maybe_unused]] ani_ob
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
+    PARAM_JS_LOGE("Enter systemparameterenhance ANI_Constructor");
     ani_env *env;
     if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
         PARAM_JS_LOGE("Unsupported ANI_VERSION_1");
@@ -64,7 +65,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     }
 
     ani_class ns;
-    static const char *className = "L@ohos.systemParameterEnhance/systemparameterenhance/systemParameterEnhance;";
+    static const char *className = "L@ohos/systemParameterEnhance/systemParameterEnhance;";
     if (ANI_OK != env->FindClass(className, &ns)) {
         PARAM_JS_LOGE("not found class %s", className);
         return ANI_ERROR;

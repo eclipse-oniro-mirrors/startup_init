@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-      "package": "@ohos.systemParameterEnhance",
+      "package": "",
       "baseUrl": "./",
       "paths": {
         "std": [

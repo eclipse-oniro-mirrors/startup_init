@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-      "package": "@ohos.deviceinfo",
+      "package": "",
       "baseUrl": "./",
       "paths": {
         "std": [
