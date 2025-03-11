@@ -17,4 +17,9 @@ loadLibrary("systemparameter_ani")
 
 namespace systemParameterEnhance {
     export native function getSync(key: string, def?: string): string;
+    export function get(key: string, def?: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            resolve(getSync(key, def));
+        });
+    }
 }
