@@ -13,15 +13,18 @@
  * limitations under the License.
  */
 
-loadLibrary("deviceinfo_ani")
-
 class deviceInfo {
+    static { loadLibrary("deviceinfo_ani") }
+    brand: string = "";
     deviceType: string = "";
     productSeries: string = "";
     productModel: string = "";
     ODID: string = "";
     sdkApiVersion: int;
 
+    static get brand():string {
+        return deviceInfo.GetBrand();
+    }
     static get deviceType():string {
         return deviceInfo.GetDeviceType();
     }
@@ -38,9 +41,11 @@ class deviceInfo {
         return deviceInfo.GetSdkApiVersion();
     }
 
+    static native GetBrand(): string;
     static native GetDeviceType(): string;
     static native GetProductSeries(): string;
     static native GetProductModel(): string;
     static native GetOdid(): string;
     static native GetSdkApiVersion(): int;
 }
+export default deviceInfo;

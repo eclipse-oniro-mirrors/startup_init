@@ -48,6 +48,17 @@ typedef enum {
     DEV_INFO_ESTRCOPY
 } DevInfoError;
 
+static ani_string getBrand([[maybe_unused]] ani_env *env, [[maybe_unused]] ani_object object)
+{
+    ani_string brand = nullptr;
+    const char *value = GetBrand();
+    if (value == nullptr) {
+        value = "";
+    }
+    env->String_NewUTF8(value, strlen(value), &brand);
+    return brand;
+}
+
 static ani_string getDeviceType([[maybe_unused]] ani_env *env, [[maybe_unused]] ani_object object)
 {
     ani_string devicetype = nullptr;
@@ -139,19 +150,21 @@ static ani_int getSdkApiVersion([[maybe_unused]] ani_env *env, [[maybe_unused]] 
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
+    DEVINFO_LOGI("Enter deviceinfo ANI_Constructor");
     ani_env *env;
     if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
         DEVINFO_LOGE("Unsupported ANI_VERSION_1");
         return ANI_ERROR;
     }
     ani_class ns;
-    static const char *className = "L@ohos/deviceinfo/deviceinfo/deviceInfo;";
+    static const char *className = "L@ohos/deviceinfo/deviceInfo;";
     if (ANI_OK != env->FindClass(className, &ns)) {
         DEVINFO_LOGE("not found class");
         return ANI_ERROR;
     }
 
     std::array methods = {
+        ani_native_function {"GetBrand", ":Lstd/core/String;", reinterpret_cast<void *>(getBrand)},
         ani_native_function {"GetDeviceType", ":Lstd/core/String;", reinterpret_cast<void *>(getDeviceType)},
         ani_native_function {"GetProductSeries", ":Lstd/core/String;", reinterpret_cast<void *>(getProductSeries)},
         ani_native_function {"GetProductModel", ":Lstd/core/String;", reinterpret_cast<void *>(getProductModel)},
