@@ -57,7 +57,7 @@ static ani_string getSync([[maybe_unused]] ani_env *env, [[maybe_unused]] ani_ob
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
-    PARAM_JS_LOGE("Enter systemparameterenhance ANI_Constructor");
+    PARAM_JS_LOGI("Enter systemparameter ANI_Constructor");
     ani_env *env;
     if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
         PARAM_JS_LOGE("Unsupported ANI_VERSION_1");

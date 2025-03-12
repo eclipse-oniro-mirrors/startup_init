@@ -80,7 +80,7 @@
                 "base_group": [
                 ],
                 "fwk_group": [
-                    "//base/startup/init/ani_interface:init_ani",
+                    "//base/startup/init/interfaces/ani:ani_group",
                     "//base/startup/init/services:startup_init",
                     "//base/startup/init/services/begetctl:begetctl_cmd",
                     "//base/startup/init/services/loopevent:loopeventgroup",
