@@ -184,6 +184,7 @@ Service *GetServiceByPid(pid_t pid);
 Service *GetServiceByName(const char *servName);
 int ServiceStart(Service *service, ServiceArgs *pathArgs);
 int ServiceStop(Service *service);
+int ServiceTerm(Service *service);
 void ServiceReap(Service *service);
 void ReapService(Service *service);
 

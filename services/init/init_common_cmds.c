@@ -230,6 +230,13 @@ static void DoStop(const struct CmdArgs *ctx)
     return;
 }
 
+static void DoTermService(const struct CmdArgs *ctx)
+{
+    INIT_LOGV("DoTermService %s", ctx->argv[0]);
+    TermServiceByName(ctx->argv[0]);
+    return;
+}
+
 static void DoReset(const struct CmdArgs *ctx)
 {
     INIT_LOGV("DoReset %s", ctx->argv[0]);
@@ -590,6 +597,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "rmdir ", 1, 1, 1, DoRmdir },
     { "write ", 2, 10, 1, DoWrite },
     { "stop ", 1, 1, 0, DoStop },
+    { "termservice ", 1, 1, 0, DoTermService },
     { "reset ", 1, 1, 0, DoReset },
     { "copy ", 2, 2, 1, DoCopy },
     { "reboot ", 0, 1, 0, DoRebootCmd },

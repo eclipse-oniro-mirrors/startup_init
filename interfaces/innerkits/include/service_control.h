@@ -44,6 +44,8 @@ enum ServiceAction {
     START = 0,
     STOP = 1,
     RESTART = 2,
+    TERM = 3,
+    SERVICE_ACTION_MAX,
 };
 
 int ServiceControlWithExtra(const char *serviceName, int action, const char *extArgv[], int extArgc);
