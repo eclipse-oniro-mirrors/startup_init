@@ -83,7 +83,7 @@ int main(int argc, const char *argv[])
 {
     EnableInitLog(INIT_INFO);
     WaitAtStartup("/dev/watchdog");
-    int fd = open("/dev/watchdog", O_RDWR);
+    int fd = open("/dev/watchdog", O_RDWR | O_CLOEXEC);
     if (fd == -1) {
         INIT_LOGE("Can't open /dev/watchdog.");
         return 1;

@@ -27,7 +27,7 @@
 
 static int SendCmd(int cmd, unsigned long arg)
 {
-    int fd = open(QUICKSTART_NODE, O_RDONLY);
+    int fd = open(QUICKSTART_NODE, O_RDONLY | O_CLOEXEC);
     if (fd != -1) {
         int ret = ioctl(fd, cmd, arg);
         if (ret == -1) {
