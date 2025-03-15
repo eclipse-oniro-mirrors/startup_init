@@ -56,6 +56,7 @@ extern ServiceSpace g_serviceSpace;
 cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrName);
 int ParseOneService(const cJSON *curItem, Service *service);
 
+void TermServiceByName(const char *serviceName);
 void StartServiceByName(const char *serviceName);
 void StopServiceByName(const char *serviceName);
 void StopAllServices(int flags, const char **exclude, int size,

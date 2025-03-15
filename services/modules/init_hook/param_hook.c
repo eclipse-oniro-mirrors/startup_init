@@ -53,6 +53,7 @@ const ParamCmdInfo *GetServiceStartCtrl(size_t *size)
     static const ParamCmdInfo ctrlParam[] = {
         {"ohos.ctl.start", "start", "start "},
         {"ohos.ctl.stop", "stop", "stop "},
+        {"ohos.ctl.term", "term", "termservice "},
     };
     *size = ARRAY_LENGTH(ctrlParam);
     return ctrlParam;

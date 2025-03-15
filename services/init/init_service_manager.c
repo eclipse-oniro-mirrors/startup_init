@@ -1241,6 +1241,16 @@ void StopServiceByName(const char *servName)
     return;
 }
 
+void TermServiceByName(const char *servName)
+{
+    Service *service = GetServiceByName(servName);
+    INIT_ERROR_CHECK(service != NULL, return, "Cannot find service %s.", servName);
+    if (ServiceTerm(service) != SERVICE_SUCCESS) {
+        INIT_LOGE("Service %s term failed!", servName);
+    }
+    return;
+}
+
 void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size))
 {

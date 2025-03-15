@@ -306,9 +306,9 @@ HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_ControlService001, TestSize.Level
     const char *argv[] = {"testArg"};
     ServiceControlWithExtra("deviceinfoservice", RESTART, argv, 1);
     ServiceControlWithExtra(nullptr, RESTART, argv, 1);
-    ServiceControlWithExtra(nullptr, 3, argv, 1); // 3 is action
+    ServiceControlWithExtra(nullptr, SERVICE_ACTION_MAX, argv, 1); // 3 is action
     ServiceControlWithExtra("notservie", RESTART, argv, 1);
-    ServiceControlWithExtra("deviceinfoservice", 3, argv, 1); // 3 is action
+    ServiceControlWithExtra("deviceinfoservice", SERVICE_ACTION_MAX, argv, 1); // 3 is action
     ServiceSetReady("deviceinfoservice");
     ServiceSetReady(nullptr);
     ServiceWaitForStatus("deviceinfoservice", SERVICE_READY, 1);
@@ -318,6 +318,7 @@ HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_ControlService001, TestSize.Level
     StartServiceByTimer("deviceinfoservice", 0);
     StartServiceByTimer(nullptr, 0);
     StopServiceTimer("deviceinfoservice");
+    ServiceControlWithExtra("deviceinfoservice", TERM, argv, 1);
 }
 
 static int TestIncommingConnect(const LoopHandle loop, const TaskHandle server)

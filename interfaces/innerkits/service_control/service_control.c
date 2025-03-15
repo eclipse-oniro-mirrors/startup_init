@@ -75,6 +75,12 @@ static int StopProcess(const char *serviceName)
     return SystemSetParameter("ohos.ctl.stop", serviceName);
 }
 
+static int TermProcess(const char *serviceName)
+{
+    BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
+    return SystemSetParameter("ohos.ctl.term", serviceName);
+}
+
 static int GetCurrentServiceStatus(const char *serviceName, ServiceStatus *status)
 {
     char paramName[PARAM_NAME_LEN_MAX] = {0};
@@ -132,6 +138,9 @@ int ServiceControlWithExtra(const char *serviceName, int action, const char *ext
             break;
         case RESTART:
             ret = RestartProcess(serviceName, extArgv, extArgc);
+            break;
+        case TERM:
+            ret = TermProcess(serviceName);
             break;
         default:
             BEGET_LOGE("Set service %s action %d error", serviceName, action);
