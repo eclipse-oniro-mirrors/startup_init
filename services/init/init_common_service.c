@@ -697,7 +697,7 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     return SERVICE_SUCCESS;
 }
 
-static int PreKillService(Service *service)
+int ServiceStop(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "stop service failed! null ptr.");
     NotifyServiceChange(service, SERVICE_STOPPING);
@@ -720,12 +720,7 @@ static int PreKillService(Service *service)
     if (IsServiceWithTimerEnabled(service)) {
         ServiceStopTimer(service);
     }
-    return SERVICE_SUCCESS;
-}
-
-static int KillService(Service *service, int signal)
-{
-    INIT_ERROR_CHECK(kill(service->pid, signal) == 0, return SERVICE_FAILURE,
+    INIT_ERROR_CHECK(kill(service->pid, GetKillServiceSig(service->name)) == 0, return SERVICE_FAILURE,
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
     service->pid = -1;
@@ -733,20 +728,35 @@ static int KillService(Service *service, int signal)
     return SERVICE_SUCCESS;
 }
 
-int ServiceStop(Service *service)
-{
-    if (PreKillService(service) != SERVICE_SUCCESS) {
-        return SERVICE_FAILURE;
-    }
-    return KillService(service, GetKillServiceSig(service->name));
-}
-
 int ServiceTerm(Service *service)
 {
-    if (PreKillService(service) != SERVICE_SUCCESS) {
-        return SERVICE_FAILURE;
+    INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "stop service failed! null ptr.");
+    NotifyServiceChange(service, SERVICE_STOPPING);
+    if (service->serviceJobs.jobsName[JOB_ON_STOP] != NULL) {
+        DoJobNow(service->serviceJobs.jobsName[JOB_ON_STOP]);
     }
-    return KillService(service, SIGTERM);
+    service->attribute &= ~SERVICE_ATTR_NEED_RESTART;
+    service->attribute |= SERVICE_ATTR_NEED_STOP;
+    if (service->pid <= 0) {
+        return SERVICE_SUCCESS;
+    }
+    CloseServiceSocket(service);
+    CloseServiceFile(service->fileCfg);
+    // Service stop means service is killed by init or command(i.e stop_service) or system is rebooting
+    // There is no reason still to hold fds
+    if (service->fdCount != 0) {
+        CloseServiceFds(service, true);
+    }
+ 	 
+    if (IsServiceWithTimerEnabled(service)) {
+        ServiceStopTimer(service);
+    }
+    INIT_ERROR_CHECK(kill(service->pid, SIGTERM) == 0, return SERVICE_FAILURE,
+        "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
+    INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
+    service->pid = -1;
+    NotifyServiceChange(service, SERVICE_STOPPED);
+    return SERVICE_SUCCESS;
 }
 
 static bool CalculateCrashTime(Service *service, int crashTimeLimit, int crashCountLimit)
