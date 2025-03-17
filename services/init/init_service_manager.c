@@ -1083,7 +1083,7 @@ int WatchConsoleDevice(Service *service)
         return -1;
     }
 
-    int fd = open("/dev/console", O_RDWR | O_NOCTTY);
+    int fd = open("/dev/console", O_RDWR | O_NOCTTY | O_CLOEXEC);
     if (fd < 0) {
         if (errno == ENOENT) {
             INIT_LOGW("/dev/console is not exist, wait for it...");
@@ -1092,7 +1092,7 @@ int WatchConsoleDevice(Service *service)
             INIT_LOGE("Failed to open /dev/console, err = %d", errno);
             return -1;
         }
-        fd = open("/dev/console", O_RDWR | O_NOCTTY);
+        fd = open("/dev/console", O_RDWR | O_NOCTTY | O_CLOEXEC);
         if (fd < 0) {
             INIT_LOGW("Failed to open /dev/console after try 1 time, err = %d", errno);
             return -1;
