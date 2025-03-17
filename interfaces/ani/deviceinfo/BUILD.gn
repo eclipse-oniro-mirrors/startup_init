@@ -46,7 +46,7 @@ ohos_shared_library("deviceinfo_ani") {
 
 generate_static_abc("deviceinfo") {
   base_url = "./ets"
-  files = [ "./ets/@ohos.deviceinfo.ets" ]
+  files = [ "./ets/@ohos.deviceInfo.ets" ]
   is_boot_abc = "True"
   device_dst_file = "/system/framework/deviceinfo.abc"
 }
