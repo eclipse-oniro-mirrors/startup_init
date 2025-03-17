@@ -157,7 +157,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     }
     ani_class ns;
-    static const char *className = "L@ohos/deviceinfo/deviceInfo;";
+    static const char *className = "L@ohos/deviceInfo/deviceInfo;";
     if (ANI_OK != env->FindClass(className, &ns)) {
         DEVINFO_LOGE("not found class");
         return ANI_ERROR;
