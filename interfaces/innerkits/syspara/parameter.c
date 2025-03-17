@@ -427,7 +427,7 @@ int GetPerformanceClass(void)
     static const char *performanceClass = NULL;
     GetProperty("const.sys.performance_class", &performanceClass);
     if (performanceClass == NULL) {
-        performanceClass = 0;
+        return 0;
     }
-    return performanceClass;
+    return atoi(performanceClass);
 }
