@@ -77,9 +77,11 @@ INIT_STATIC uint64_t LookupErofsEnd(const char *dev)
         BEGET_LOGE("open dev:[%s] failed.", dev);
         return 0;
     }
+    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     if (lseek(fd, EROFS_SUPER_BLOCK_START_POSITION, SEEK_SET) < 0) {
         BEGET_LOGE("lseek dev:[%s] failed.", dev);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return 0;
     }
@@ -88,9 +90,11 @@ INIT_STATIC uint64_t LookupErofsEnd(const char *dev)
     ssize_t nbytes = read(fd, &sb, sizeof(sb));
     if (nbytes != sizeof(sb)) {
         BEGET_LOGE("read dev:[%s] failed.", dev);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return 0;
     }
+    fdsan_close_with_tag(fd, BASE_DOMAIN);
     close(fd);
 
     if (sb.magic != EROFS_SUPER_MAGIC) {
@@ -110,9 +114,11 @@ INIT_STATIC uint64_t GetImgSize(const char *dev, uint64_t offset)
         BEGET_LOGE("open dev:[%s] failed.", dev);
         return 0;
     }
+    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     if (lseek(fd, offset, SEEK_SET) < 0) {
         BEGET_LOGE("lseek dev:[%s] failed, offset is %llu", dev, offset);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return 0;
     }
@@ -121,9 +127,11 @@ INIT_STATIC uint64_t GetImgSize(const char *dev, uint64_t offset)
     ssize_t nbytes = read(fd, &header, sizeof(header));
     if (nbytes != sizeof(header)) {
         BEGET_LOGE("read dev:[%s] failed.", dev);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return 0;
     }
+    fdsan_close_with_tag(fd, BASE_DOMAIN);
     close(fd);
 
     if (header.magic_number != EXTHDR_MAGIC) {
@@ -172,8 +180,10 @@ INIT_STATIC uint64_t GetBlockSize(const char *dev)
         BEGET_LOGE("open dev:[%s] failed.", dev);
         return 0;
     }
+    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     uint64_t blockSize = GetFsSize(fd);
+    fdsan_close_with_tag(fd, BASE_DOMAIN);
     close(fd);
     return blockSize;
 }

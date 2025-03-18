@@ -51,9 +51,11 @@ bool CheckIsExt4(const char *dev, uint64_t offset)
         BEGET_LOGE("cannot open [dev]:%s", dev);
         return false;
     }
+    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     if (lseek(fd, offset + EXT4_SUPER_BLOCK_START_POSITION, SEEK_SET) < 0) {
         BEGET_LOGE("cannot seek [dev]:%s", dev);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return false;
     }
@@ -61,6 +63,7 @@ bool CheckIsExt4(const char *dev, uint64_t offset)
     ssize_t nbytes = read(fd, &superBlock, sizeof(superBlock));
     if (nbytes != sizeof(superBlock)) {
         BEGET_LOGE("read ext4 super block fail");
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return false;
     }
@@ -68,9 +71,11 @@ bool CheckIsExt4(const char *dev, uint64_t offset)
     if (superBlock.s_magic == EXT4_SUPER_MAGIC) {
         BEGET_LOGI("this [dev] %s  is ext4:[block cout]: %d, [size]: %d", dev,
             superBlock.s_blocks_count_lo, (superBlock.s_blocks_count_lo * BLOCK_SIZE_UNIT));
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return true;
     }
+    fdsan_close_with_tag(fd, BASE_DOMAIN);
     close(fd);
     return false;
 }
@@ -82,9 +87,11 @@ bool CheckIsErofs(const char *dev)
         BEGET_LOGE("cannot open [dev]:%s", dev);
         return false;
     }
+    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     if (lseek(fd, EROFS_SUPER_BLOCK_START_POSITION, SEEK_SET) < 0) {
         BEGET_LOGE("cannot seek [dev]:%s", dev);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return false;
     }
@@ -92,6 +99,7 @@ bool CheckIsErofs(const char *dev)
     ssize_t nbytes = read(fd, &superBlock, sizeof(superBlock));
     if (nbytes != sizeof(superBlock)) {
         BEGET_LOGE("read erofs super block fail");
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return false;
     }
@@ -99,9 +107,11 @@ bool CheckIsErofs(const char *dev)
     BEGET_LOGI("the [dev] %s magic [%u]", dev, superBlock.magic);
     if (superBlock.magic == EROFS_SUPER_MAGIC) {
         BEGET_LOGI("this [dev] %s is erofs", dev);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return true;
     }
+    fdsan_close_with_tag(fd, BASE_DOMAIN);
     close(fd);
     return false;
 }

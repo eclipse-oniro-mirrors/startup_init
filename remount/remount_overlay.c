@@ -95,13 +95,16 @@ INIT_STATIC int GetDevSize(const char *fsBlkDev, uint64_t *devSize)
         INIT_LOGE("open %s failed errno %d", fsBlkDev, errno);
         return -1;
     }
+    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     if (ioctl(fd, BLKGETSIZE64, devSize) < 0) {
         INIT_LOGE("get block device [%s] size failed, errno %d", fsBlkDev, errno);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return -1;
     }
 
+    fdsan_close_with_tag(fd, BASE_DOMAIN);
     close(fd);
     return 0;
 }

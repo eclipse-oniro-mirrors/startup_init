@@ -237,10 +237,12 @@ int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *targ
         BEGET_LOGE("error 0x%x, open %s", errno, DEVICE_MAPPER_PATH);
         return -1;
     }
+    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     rc = CreateDmDevice(fd, devName);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, create dm device fail", rc);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return rc;
     }
@@ -248,6 +250,7 @@ int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *targ
     rc = LoadDmDeviceTable(fd, devName, target, true);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, load device table fail", rc);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return rc;
     }
@@ -255,6 +258,7 @@ int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *targ
     rc = ActiveDmDevice(fd, devName);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, active device fail", rc);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return rc;
     }
@@ -262,9 +266,11 @@ int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *targ
     rc = GetDmDevPath(fd, dmDevPath, devName);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, get dm dev fail", rc);
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return rc;
     }
+    fdsan_close_with_tag(fd, BASE_DOMAIN);
     close(fd);
     return 0;
 }
@@ -315,9 +321,11 @@ int FsDmRemoveDevice(const char *devName)
         BEGET_LOGE("error 0x%x, open %s", errno, DEVICE_MAPPER_PATH);
         return -1;
     }
+    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     rc = InitDmIo(&io, devName);
     if (rc != 0) {
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         BEGET_LOGE("error 0x%x, init dm io", rc);
         return -1;
@@ -327,11 +335,13 @@ int FsDmRemoveDevice(const char *devName)
 
     rc = ioctl(fd, DM_DEV_REMOVE, &io);
     if (rc != 0) {
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         BEGET_LOGE("error, DM_DEV_REMOVE failed for %s, ret=%d", devName, rc);
         return -1;
     }
 
+    fdsan_close_with_tag(fd, BASE_DOMAIN);
     close(fd);
     return 0;
 }
@@ -388,10 +398,12 @@ int FsDmCreateLinearDevice(const char *devName, char *dmBlkName, uint64_t dmBlkN
         BEGET_LOGE("open mapper path failed");
         return -1;
     }
+    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     rc = CreateDmDevice(fd, devName);
     if (rc) {
         BEGET_LOGE("create dm device failed");
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return -1;
     }
@@ -399,6 +411,7 @@ int FsDmCreateLinearDevice(const char *devName, char *dmBlkName, uint64_t dmBlkN
     rc = DmGetDeviceName(fd, devName, dmBlkName, dmBlkNameLen);
     if (rc) {
         BEGET_LOGE("get dm device name failed");
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return -1;
     }
@@ -406,6 +419,7 @@ int FsDmCreateLinearDevice(const char *devName, char *dmBlkName, uint64_t dmBlkN
     rc = LoadDmDeviceTable(fd, devName, target, false);
     if (rc) {
         BEGET_LOGE("load dm device name failed");
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return -1;
     }
@@ -413,9 +427,11 @@ int FsDmCreateLinearDevice(const char *devName, char *dmBlkName, uint64_t dmBlkN
     rc = ActiveDmDevice(fd, devName);
     if (rc) {
         BEGET_LOGE("active dm device name failed");
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         return -1;
     }
+    fdsan_close_with_tag(fd, BASE_DOMAIN);
     close(fd);
     BEGET_LOGI("fs create rofs linear device success, dev is [%s]", devName);
     return 0;
