@@ -29,10 +29,16 @@ static int SendCmd(int cmd, unsigned long arg)
 {
     int fd = open(QUICKSTART_NODE, O_RDONLY | O_CLOEXEC);
     if (fd != -1) {
+#ifndef __LITEOS__
+        fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
+#endif
         int ret = ioctl(fd, cmd, arg);
         if (ret == -1) {
             INIT_LOGE("[Init] [ERR] %d!", errno);
         }
+#ifndef __LITEOS__
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
+#endif
         close(fd);
         return ret;
     }

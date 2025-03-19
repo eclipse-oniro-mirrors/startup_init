@@ -182,6 +182,7 @@ static enum hvb_io_errno HvbReadFromPartition(struct hvb_ops* ops,
         ret = HVB_IO_ERROR_IO;
         goto exit;
     }
+    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     if (offset < 0) {
         int64_t total_size = GetImageSizeForHVB(fd, partition);
@@ -214,6 +215,7 @@ exit:
     }
 
     if (fd >= 0) {
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
     }
     return ret;
