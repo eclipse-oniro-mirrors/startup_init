@@ -296,8 +296,22 @@ int FsDmInitDmDev(char *devPath, bool useSocket)
             return -1;
         }
     }
+    char **devices = (char **)calloc(1, sizeof(char *));
+    if (devices == NULL) {
+        BEGET_LOGE("Failed calloc err=%d", errno);
+        return -1;
+    }
 
-    RetriggerUeventByPath(ueventSockFd, &dmDevPath[0]);
+    devices[0] = strdup(devPath);
+    if (devices[0] == NULL) {
+        BEGET_LOGE("Failed to strdup devPath");
+        free(devices);
+        return -1;
+    }
+    BEGET_LOGI("FsDmInitDmDev dmDevPath %s devices %s", &dmDevPath[0], devices[0]);
+    RetriggerDmUeventByPath(ueventSockFd, &dmDevPath[0], devices, 1);
+    free(devices[0]);
+    free(devices);
 
     close(ueventSockFd);
 

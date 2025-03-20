@@ -248,7 +248,7 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
     INIT_LOGV("got uevent message:\n"
               "subsystem: %s\n"
               "parition: %s:%d\n"
-              "action: %s\n"
+              "action: %d\n"
               "devpath: %s\n"
               "devname: %s\n"
               "devnode: %d:%d\n"
@@ -373,6 +373,11 @@ static void Trigger(const char *path, int sockFd, char **devices, int num)
 void RetriggerUeventByPath(int sockFd, char *path)
 {
     Trigger(path, sockFd, NULL, 0);
+}
+
+void RetriggerDmUeventByPath(int sockFd, char *path, char **devices, int num)
+{
+    Trigger(path, sockFd, devices, num);
 }
 
 void RetriggerUevent(int sockFd, char **devices, int num)
