@@ -512,6 +512,44 @@ static napi_value GetDiskSN(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
+static napi_value EnumLevelClassConstructor(napi_env env, napi_callback_info info)
+{
+    napi_value thisArg = nullptr;
+    void* data = nullptr;
+
+    napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, &data);
+
+    napi_value global = nullptr;
+    napi_get_global(env, &global);
+
+    return thisArg;
+}
+
+static napi_value CreateEnumLevelState(napi_env env, napi_value exports)
+{
+    napi_value high = nullptr;
+    napi_value medium = nullptr;
+    napi_value low = nullptr;
+
+    napi_create_int32(env, (int32_t)PerformanceClassLevel::CLASS_LEVEL_HIGH, &high);
+    napi_create_int32(env, (int32_t)PerformanceClassLevel::CLASS_LEVEL_MEDIUM, &medium);
+    napi_create_int32(env, (int32_t)PerformanceClassLevel::CLASS_LEVEL_LOW, &low);
+
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("CLASS_LEVEL_HIGH", high),
+        DECLARE_NAPI_STATIC_PROPERTY("CLASS_LEVEL_MEDIUM", medium),
+        DECLARE_NAPI_STATIC_PROPERTY("CLASS_LEVEL_LOW", low),
+    };
+
+    napi_value result = nullptr;
+    napi_define_class(env, "PerformanceClassLevel", NAPI_AUTO_LENGTH, EnumPluggedClassConstructor, nullptr,
+        sizeof(desc) / sizeof(*desc), desc, &result);
+
+    napi_set_named_property(env, exports, "PerformanceClassLevel", result);
+
+    return exports;
+}
+
 static napi_value GetPerformanceClass(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
@@ -576,6 +614,8 @@ static napi_value Init(napi_env env, napi_value exports)
         {"performanceClass", nullptr, nullptr, GetPerformanceClass, nullptr, nullptr, napi_default, nullptr},
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
+
+    CreateEnumLevelState(env, exports);
 
     return exports;
 }
