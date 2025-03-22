@@ -427,7 +427,11 @@ int GetPerformanceClass(void)
     static const char *performanceClass = NULL;
     GetProperty("const.sys.performance_class", &performanceClass);
     if (performanceClass == NULL) {
-        return 0;
+        return PERFORMANCE_CLASS_MIN_LEVEL;
     }
-    return atoi(performanceClass);
+    int performanceClassValue = atoi(performanceClass);
+    if (performanceClassValue < PERFORMANCE_CLASS_MIN_LEVEL || performanceClassValue > PERFORMANCE_CLASS_MAX_LEVEL) {
+        return PERFORMANCE_CLASS_MIN_LEVEL;
+    }
+    return performanceClassValue;
 }
