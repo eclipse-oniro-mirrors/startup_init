@@ -28,6 +28,8 @@ extern "C" {
 #define OS_FULL_NAME_LEN 128
 #define VERSION_ID_MAX_LEN 256
 #define PARAM_BUFFER_MAX (0x01 << 16)
+#define PERFORMANCE_CLASS_MIN_LEVEL 0
+#define PERFORMANCE_CLASS_MAX_LEVEL 2
 
 static const char EMPTY_STR[] = { "" };
 
