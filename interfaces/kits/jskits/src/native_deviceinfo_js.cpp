@@ -18,6 +18,7 @@
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "napi/native_common.h"
 #include "parameter.h"
 #include "sysversion.h"
 #ifdef DEPENDENT_APPEXECFWK_BASE
@@ -53,6 +54,12 @@ typedef enum {
     DEV_INFO_EGETODID,
     DEV_INFO_ESTRCOPY
 } DevInfoError;
+
+typedef enum {
+    CLASS_LEVEL_HIGH,
+    CLASS_LEVEL_MEDIUM,
+    CLASS_LEVEL_LOW
+} PerformanceClassLevel;
 
 static napi_value GetDeviceType(napi_env env, napi_callback_info info)
 {
