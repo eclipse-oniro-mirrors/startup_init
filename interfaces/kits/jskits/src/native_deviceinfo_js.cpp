@@ -549,7 +549,7 @@ static napi_value CreateEnumLevelState(napi_env env, napi_value exports)
     };
 
     napi_value result = nullptr;
-    napi_define_class(env, "PerformanceClassLevel", NAPI_AUTO_LENGTH, EnumPluggedClassConstructor, nullptr,
+    napi_define_class(env, "PerformanceClassLevel", NAPI_AUTO_LENGTH, EnumLevelClassConstructor, nullptr,
         sizeof(desc) / sizeof(*desc), desc, &result);
 
     napi_set_named_property(env, exports, "PerformanceClassLevel", result);
