@@ -153,6 +153,9 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
         if (newGroup) {
             StartLoop();
             SendMessage(group, MSG_ADD_WATCHER);
+        } else if (groupRealMap_.find(keyPrefix) == groupRealMap_.end()) {
+            SendMessage(group, MSG_ADD_WATCHER);
+            WATCHER_LOGI("Add watcher %s groupId %u again", keyPrefix.c_str(), group->GetGroupId());
         }
     }
     SendLocalChange(keyPrefix, remoteWatcherId);
@@ -251,9 +254,36 @@ static int FilterParam(const char *name, const std::string &keyPrefix)
     return strcmp(name, keyPrefix.c_str()) == 0;
 }
 
+void WatcherManager::AddRealWatcherGroup(const std::string &keyPrefix, int type)
+{
+    std::string key;
+    if (!keyPrefix.empty() && keyPrefix.back() == '.') {
+        key = keyPrefix + '*';
+    } else {
+        key = keyPrefix;
+    }
+    if (groupMap_.find(key) == groupMap_.end() && type != MSG_DEL_WATCHER) {
+        return;
+    }
+
+    if (type == MSG_ADD_WATCHER) {
+        groupRealMap_[key] = groupMap_[key]->GetGroupId();
+        WATCHER_LOGI("add key %s groupId %u success", key.c_str(), groupMap_[key]->GetGroupId());
+    } else if (type == MSG_DEL_WATCHER && groupRealMap_.find(key) != groupRealMap_.end()) {
+        groupRealMap_.erase(key);
+        WATCHER_LOGI("del key %s", key.c_str());
+    }
+}
+
 void WatcherManager::ProcessWatcherMessage(const ParamMessage *msg)
 {
     uint32_t offset = 0;
+    if (msg->type == MSG_ADD_WATCHER || msg->type == MSG_DEL_WATCHER) {
+        std::lock_guard<std::mutex> lock(watcherMutex_);
+        WATCHER_LOGV("ProcessWatcherMessage key %s, type %d", msg->key, msg->type);
+        AddRealWatcherGroup(msg->key, msg->type);
+        return;
+    }
     if (msg->type != MSG_NOTIFY_PARAM) {
         return;
     }
