@@ -300,7 +300,7 @@ static int HandleParamWatcherAdd(const ParamTaskPtr worker, const ParamMessage *
         PARAM_LOGE("Failed to add trigger for %s", msg->key);
         return SendResponseMsg(worker, msg, -1);
     }
-    PARAM_LOGV("HandleParamWatcherAdd name %s watcher: %d", msg->key, msg->id.watcherId);
+    PARAM_LOGI("HandleParamWatcherAdd name %s watcher: %d", msg->key, msg->id.watcherId);
     return SendResponseMsg(worker, msg, 0);
 }
 
