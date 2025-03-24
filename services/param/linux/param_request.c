@@ -205,7 +205,7 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
             break;
         }
     }
-    PARAM_LOGI("SystemSetParameter name %s msgid:%d  ret: %d ", name, request->id.msgId, ret);
+    PARAM_LOGI("SystemSetParameter name %s id:%d ret:%d ", name, request->id.msgId, ret);
     pthread_mutex_unlock(&g_clientMutex);
     free(request);
     return ret;
@@ -291,7 +291,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     ret = StartRequest(fd, request, timeout);
     close(fd);
     free(request);
-    PARAM_LOGI("SystemWaitParameter %s value %s result %d ", name, value, ret);
+    PARAM_LOGI("SystemWaitParameter %s v %s ret %d", name, value, ret);
     BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
     return ret;
 }
@@ -323,7 +323,7 @@ void ResetParamSecurityLabel(void)
     paramSpace->flags |= WORKSPACE_FLAGS_NEED_ACCESS;
 #endif
 #endif
-    PARAM_LOGI("ResetParamSecurityLabel g_clientFd: %d ", g_clientFd);
+    PARAM_LOGI("ResetParamSecurityLabel Fd:%d ", g_clientFd);
     pthread_mutex_lock(&g_clientMutex);
     if (g_clientFd != INVALID_SOCKET) {
         close(g_clientFd);
