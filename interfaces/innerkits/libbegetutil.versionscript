@@ -150,6 +150,7 @@
     GetDistributionOSApiVersion;
     GetDistributionOSApiName;
     GetDistributionOSReleaseType;
+    GetPerformanceClass;
     SaveParameters;
     OH_StrArrayGetIndex;
     OH_ExtendableStrArrayGetIndex;
