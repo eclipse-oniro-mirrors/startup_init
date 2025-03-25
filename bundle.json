@@ -197,6 +197,12 @@
                 },
                 {
                     "name": "//base/startup/init/interfaces/kits/syscap_ts:syscap_ts"
+                },
+                {
+                    "name": "//base/startup/init/interfaces/kits/cj:cj_device_info_ffi"
+                },
+                {
+                    "name": "//base/startup/init/interfaces/kits/cj:cj_system_parameter_enhance_ffi"
                 }
             ],
             "test": [
