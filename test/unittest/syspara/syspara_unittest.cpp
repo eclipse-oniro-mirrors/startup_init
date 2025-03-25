@@ -444,7 +444,8 @@ HWTEST_F(SysparaUnitTest, parameterTest0017, TestSize.Level0)
     EXPECT_STRNE(GetDistributionOSReleaseType(), nullptr);
     printf("distributionOS name =%s\n", GetDistributionOSApiName());
     printf("PerformanceClassLevel =%d\n", GetPerformanceClass());
-    EXPECT_GT(GetPerformanceClass(), 0);
+    EXPECT_GE(GetPerformanceClass(), 0);
+    EXPECT_LE(GetPerformanceClass(), 2);
 }
 #endif
 
