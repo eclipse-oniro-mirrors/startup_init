@@ -28,8 +28,27 @@ static ParamMutex g_saveMutex = {};
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
     UNUSED(context);
+    if (strncmp(name, "persist", strlen("persist")) != 0) {
+        PARAM_LOGE("%s is not persist param, do not load", name);
+        return 0;
+    }
     uint32_t dataIndex = 0;
-    return WriteParam(name, value, &dataIndex, 0);
+    unsigned int mode = 0;
+    int result = 0;
+    char persetValue[PARAM_VALUE_LEN_MAX] = {0};
+    uint32_t len = PARAM_VALUE_LEN_MAX;
+    int ret = SystemReadParam(name, persetValue, &len);
+    if (ret != 0) {
+        mode |= LOAD_PARAM_PERSIST;
+        return WriteParam(name, value, &dataIndex, mode);
+    }
+
+    if ((strcmp(persetValue, value) != 0)) {
+        PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
+        mode |= LOAD_PARAM_PERSIST;
+        return WriteParam(name, value, &dataIndex, mode);
+    }
+    return 0;
 }
 
 static void LoadPersistParam_(const char *fileName, char *buffer, uint32_t buffSize)
