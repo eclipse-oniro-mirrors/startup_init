@@ -116,6 +116,9 @@ void ReadConfig(void)
     } else if (InRescueMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(INIT_RESCUE_MODE_PATH, ".cfg", ParseInitCfg, NULL);
+    } else if (InRepairMode()) {
+        ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
+        ReadFileInDir(INIT_REPAIR_MODE_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (InUpdaterMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ParseInitCfgByPriority();

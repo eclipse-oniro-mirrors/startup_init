@@ -42,6 +42,7 @@ int DoJobNow(const char *jobName);
 #define OTHER_CFG_PATH "/system/etc/init"
 #define OTHER_CHARGE_PATH "/system/etc/charger"
 #define INIT_RESCUE_MODE_PATH "/system/etc/rescue"
+#define INIT_REPAIR_MODE_PATH "/system/etc/repair"
 #define MAX_PATH_ARGS_CNT 20
 
 void ReadConfig(void);

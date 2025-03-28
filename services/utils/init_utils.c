@@ -620,6 +620,21 @@ int InRescueMode(void)
 #endif
 }
 
+// Check if in repair mode
+bool InRepairMode(void)
+{
+    char repair[REPAIR_MODE_LEN] = {0};
+    int ret = GetExactParameterFromCmdLine("repair_mode", repair, REPAIR_MODE_LEN);
+    if (ret != 0) {
+        return false;
+    }
+
+    if (strcmp(repair, MAINTENANCE_MODE) == 0 || strcmp(repair, DATA_REPAIR_MODE) == 0) {
+        return true;
+    }
+    return false;
+}
+
 int StringReplaceChr(char *strl, char oldChr, char newChr)
 {
     INIT_ERROR_CHECK(strl != NULL, return -1, "Invalid parament");
