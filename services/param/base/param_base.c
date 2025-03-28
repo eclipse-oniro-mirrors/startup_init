@@ -353,7 +353,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
     if (workSpace->area == NULL) {
         ret = InitWorkSpace(workSpace, readOnly, workSpace->spaceSize);
         if (ret != 0) {
-            PARAM_LOGE("Forbid to open workspace for %s error %d", workSpace->fileName, errno);
+            PARAM_LOGE("open WS %s err %d", workSpace->fileName, errno);
         }
 #ifndef PARAM_SUPPORT_SELINUX
     }
@@ -371,7 +371,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
                 ret = 0;
             } else {
                 ret = -1;
-                PARAM_LOGE("Forbid to open workspace for %s error %d", workSpace->fileName, errno);
+                PARAM_LOGE("open WS %s err %d", workSpace->fileName, errno);
                 rwSpaceLock &= ~WORKSPACE_STATUS_VALID;
             }
         }
@@ -526,7 +526,7 @@ STATIC_INLINE int SelinuxCheckParamPermission(const ParamLabelIndex *labelIndex,
     }
     if (ret != 0) {
         ret = SELINUX_RESULT_FORBIDED;
-        PARAM_LOGE("Selinux check name %s in %s info [%d %d %d] failed!",
+        PARAM_LOGE("Selinux check name %s in %s [%d %d %d] failed",
             name, GetSelinuxContent(name), srcLabel->cred.pid, srcLabel->cred.uid, srcLabel->cred.gid);
     }
     return ret;
