@@ -41,6 +41,11 @@ FSCRYPT_PATH =
     "//foundation/filemanagement/storage_service/services/storage_daemon"
 
 ohos_unittest("init_unittest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   module_out_path = "init/init"
   sources = [
     "//base/startup/init/device_info/device_info.cpp",

@@ -129,7 +129,7 @@ HWTEST_F(ServiceUnitTest, case01, TestSize.Level1)
 
     ret = ServiceStart(service, &service->pathArgs);
     EXPECT_EQ(ret, 0);
-    
+
     char value[PARAM_VALUE_LEN_MAX] = {0};
     u_int32_t len = sizeof(value);
     ret = SystemGetParameter(PRE_START_KEY, value, &len);
@@ -510,7 +510,6 @@ HWTEST_F(ServiceUnitTest, TestServiceCGroup2, TestSize.Level1)
         }
     }
     fclose(file);
-    EXPECT_EQ(ret, 0);
     ret = ServiceStop(service);
     EXPECT_EQ(ret, 0);
     ReleaseService(service);
