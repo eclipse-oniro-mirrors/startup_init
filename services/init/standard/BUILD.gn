@@ -49,9 +49,9 @@ ohos_executable("init_early") {
     "cJSON:cjson_static",
   ]
   deps = [
-    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static_real",
     "//base/startup/init/services/log:init_log",
-    "//base/startup/init/ueventd:libueventd_ramdisk_static",
+    "//base/startup/init/ueventd:libueventd_ramdisk_static_real",
   ]
   if (init_extra_static_modules != "") {
     deps += [ init_extra_static_modules ]

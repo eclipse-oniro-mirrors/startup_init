@@ -33,6 +33,8 @@
 #include "ueventd_socket.h"
 #include "bootstage.h"
 
+#define SUPPORT_AB_PARTITION_UPDATE 2
+
 static char **GetRequiredDevices(Fstab fstab, int *requiredNum)
 {
     int num = 0;
@@ -101,6 +103,11 @@ static void MountRequiredPartitions(void)
     if (devices != NULL && requiredNum > 0) {
         int ret = StartUeventd(devices, requiredNum);
         if (ret == 0) {
+            if (GetBootSlots() >= SUPPORT_AB_PARTITION_UPDATE) {
+                int snapshotRet = HookMgrExecute(GetBootStageHookMgr(), INIT_SNAPSHOT_ACTIVE,
+                                                 (void *)(fstab), NULL);
+                INIT_LOGI("active sanpshot ret = %d", snapshotRet);
+            }
             ret = MountRequriedPartitions(fstab);
         }
         FreeStringVector(devices, requiredNum);

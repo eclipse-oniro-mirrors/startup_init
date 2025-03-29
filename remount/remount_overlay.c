@@ -122,7 +122,7 @@ INIT_STATIC int FormatExt4(const char *fsBlkDev, const char *fsMntPoint)
     }
 
     const char *mke2fsArgs[] = {
-        "/system/bin/mke2fs", "-t", "ext4", "-b", "4096", fsBlkDev, blockSizeBuffer, NULL
+        "/system/bin/mke2fs", "-t", "ext4", "-b", "4096", "-E", "nodiscard", fsBlkDev, blockSizeBuffer, NULL
     };
     int mke2fsArgsLen = ARRAY_LENGTH(mke2fsArgs);
     ret = ExecCommand(mke2fsArgsLen, (char **)mke2fsArgs);
