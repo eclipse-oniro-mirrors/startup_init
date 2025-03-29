@@ -98,6 +98,7 @@ private:
     void DelRemoteWatcher(RemoteWatcherPtr remoteWatcher);
     // for group
     WatcherGroupPtr AddWatcherGroup(const std::string &keyPrefix);
+    void AddRealWatcherGroup(const std::string &keyPrefix, int type);
     WatcherGroupPtr GetWatcherGroup(const std::string &keyPrefix);
     WatcherGroupPtr GetWatcherGroup(uint32_t groupId);
     void DelWatcherGroup(WatcherGroupPtr group);
@@ -124,6 +125,7 @@ private:
     std::thread *pRecvThread_ { nullptr };
     std::atomic<bool> stop_ { false };
     std::map<std::string, WatcherGroupPtr> groupMap_ {};
+    std::map<std::string, uint32_t> groupRealMap_ {};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
     ParamWatcherListPtr watcherGroups_ {};
     ParamWatcherListPtr remoteWatchers_ {};
