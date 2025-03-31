@@ -152,8 +152,13 @@ CONTROL_FD_STATIC int SendCmdMessage(const CmdAgent *agent, uint16_t type, const
     return 0;
 }
 
-static int OpenMasterPty(void)
+int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd, CallbackSendMsgProcess callback)
 {
+    if ((cmd == NULL) || (agent == NULL)) {
+        return -1;
+    }
+#ifndef STARTUP_INIT_TEST
+    g_sendMsg = callback;
     // initialize terminal
     struct termios term;
     int ret = tcgetattr(STDIN_FILENO, &term);
@@ -166,36 +171,14 @@ static int OpenMasterPty(void)
     // open master pty and get slave pty
     int pfd = open("/dev/ptmx", O_RDWR | O_CLOEXEC);
     BEGET_ERROR_CHECK(pfd >= 0, return -1, "Failed open pty err=%d", errno);
-    fdsan_exchange_owner_tag(pfd, 0, BASE_DOMAIN);
-    BEGET_ERROR_CHECK(grantpt(pfd) >= 0, fdsan_close_with_tag(pfd, BASE_DOMAIN);
-        close(pfd);
-        return -1, "Failed to call grantpt");
-    BEGET_ERROR_CHECK(unlockpt(pfd) >= 0, fdsan_close_with_tag(pfd, BASE_DOMAIN);
-        close(pfd);
-        return -1, "Failed to call unlockpt");
-    return pfd;
-}
-
-int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd, CallbackSendMsgProcess callback)
-{
-    if ((cmd == NULL) || (agent == NULL)) {
-        return -1;
-    }
-#ifndef STARTUP_INIT_TEST
-    g_sendMsg = callback;
-    int pfd = OpenMasterPty();
-    BEGET_ERROR_CHECK(pfd >= 0, return -1, "Failed open pty err=%d", errno);
+    BEGET_ERROR_CHECK(grantpt(pfd) >= 0, close(pfd); return -1, "Failed to call grantpt");
+    BEGET_ERROR_CHECK(unlockpt(pfd) >= 0, close(pfd); return -1, "Failed to call unlockpt");
     char ptsbuffer[PTY_PATH_SIZE] = {0};
-    int ret = ptsname_r(pfd, ptsbuffer, sizeof(ptsbuffer));
-    BEGET_ERROR_CHECK(ret >= 0, fdsan_close_with_tag(pfd, BASE_DOMAIN);
-        close(pfd);
-        return -1, "Failed to get pts name err=%d", errno);
+    ret = ptsname_r(pfd, ptsbuffer, sizeof(ptsbuffer));
+    BEGET_ERROR_CHECK(ret >= 0, close(pfd); return -1, "Failed to get pts name err=%d", errno);
     BEGET_LOGI("ptsbuffer is %s", ptsbuffer);
     BEGET_ERROR_CHECK(chmod(ptsbuffer, S_IRWXU | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) == 0,
-        fdsan_close_with_tag(pfd, BASE_DOMAIN);
-        close(pfd);
-        pfd = -1;
-        return -1, "Failed to chmod %s, err=%d", ptsbuffer, errno);
+        close(pfd); return -1, "Failed to chmod %s, err=%d", ptsbuffer, errno);
     agent->ptyFd = pfd;
 
     LE_WatchInfo info = {};
@@ -204,23 +187,17 @@ int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd, CallbackSe
     info.processEvent = ProcessPtyRead;
     info.fd = pfd; // read ptmx
     BEGET_ERROR_CHECK(LE_StartWatcher(LE_GetDefaultLoop(), &agent->reader, &info, agent) == LE_SUCCESS,
-        fdsan_close_with_tag(pfd, BASE_DOMAIN);
-        close(pfd);
-        return -1, "[control_fd] Failed le_loop start watcher ptmx read");
+        close(pfd); return -1, "[control_fd] Failed le_loop start watcher ptmx read");
     info.processEvent = ProcessPtyWrite;
     info.fd = STDIN_FILENO; // read stdin and write ptmx
     BEGET_ERROR_CHECK(LE_StartWatcher(LE_GetDefaultLoop(), &agent->input, &info, agent) == LE_SUCCESS,
-        fdsan_close_with_tag(pfd, BASE_DOMAIN);
-        close(pfd);
-        return -1, "[control_fd] Failed le_loop start watcher stdin read and write ptmx");
+        close(pfd); return -1, "[control_fd] Failed le_loop start watcher stdin read and write ptmx");
     if (g_sendMsg == NULL) {
         ret = SendCmdMessage(agent, type, cmd, ptsbuffer);
     } else {
         ret = g_sendMsg(agent, type, cmd, ptsbuffer);
     }
-    BEGET_ERROR_CHECK(ret == 0, fdsan_close_with_tag(pfd, BASE_DOMAIN);
-        close(pfd);
-        return -1, "[control_fd] Failed send message");
+    BEGET_ERROR_CHECK(ret == 0, close(pfd); return -1, "[control_fd] Failed send message");
 #endif
     return 0;
 }

@@ -27,15 +27,12 @@ int GetRemountResult(void)
     int fd = open(REMOUNT_RESULT_FLAG, O_RDONLY);
     if (fd >= 0) {
         char buff[1];
-        fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
         int ret = read(fd, buff, 1);
         if (ret < 0) {
             BEGET_LOGE("read remount.result.done failed errno %d", errno);
-            fdsan_close_with_tag(fd, BASE_DOMAIN);
             close(fd);
             return REMOUNT_FAIL;
         }
-        fdsan_close_with_tag(fd, BASE_DOMAIN);
         close(fd);
         if (buff[0] == '0' + REMOUNT_SUCC) {
             return REMOUNT_SUCC;
@@ -63,7 +60,6 @@ void SetRemountResultFlag()
         BEGET_LOGE("open remount.result.done failed errno %d", errno);
         return;
     }
-    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
 
     char buff[1];
     buff[0] = '0' + REMOUNT_SUCC;
@@ -72,7 +68,6 @@ void SetRemountResultFlag()
     if (ret < 0) {
         BEGET_LOGE("write buff failed errno %d", errno);
     }
-    fdsan_close_with_tag(fd, BASE_DOMAIN);
     close(fd);
     BEGET_LOGI("set remount result flag successfully");
 }

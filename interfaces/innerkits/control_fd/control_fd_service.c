@@ -80,11 +80,9 @@ CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *bu
         int fd = open(realPath, O_RDWR);
         free(realPath);
         BEGET_ERROR_CHECK(fd >= 0, _exit(1), "Failed open %s, err=%d", msg->ptyName, errno);
-        fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
         (void)dup2(fd, STDIN_FILENO);
         (void)dup2(fd, STDOUT_FILENO);
         (void)dup2(fd, STDERR_FILENO); // Redirect fd to 0, 1, 2
-        fdsan_close_with_tag(fd, BASE_DOMAIN);
         (void)close(fd);
         if (g_controlFdFunc != NULL) {
             g_controlFdFunc(msg->type, msg->cmd, NULL);
