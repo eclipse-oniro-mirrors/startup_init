@@ -434,16 +434,11 @@ static int GetSlotInfoFromBootctrl(off_t offset, off_t size)
     int fd = open(realPath, O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     free(realPath);
     BEGET_ERROR_CHECK(fd >= 0, return -1, "Failed to open bootctrl device, errno %d", errno);
-    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
-    BEGET_ERROR_CHECK(lseek(fd, offset, SEEK_SET) >= 0, fdsan_close_with_tag(fd, BASE_DOMAIN);
-        close(fd);
-        return -1, "Failed to lseek bootctrl device fd, errno %d", errno);
+    BEGET_ERROR_CHECK(lseek(fd, offset, SEEK_SET) >= 0, close(fd); return -1,
+        "Failed to lseek bootctrl device fd, errno %d", errno);
     int slotInfo = 0;
-    BEGET_INFO_CHECK(read(fd, &slotInfo, sizeof(slotInfo)) == size, fdsan_close_with_tag(fd, BASE_DOMAIN);
-        close(fd);
-        fd = -1;
-        return -1, "Failed to read current slot from bootctrl, errno %d", errno);
-    fdsan_close_with_tag(fd, BASE_DOMAIN);
+    BEGET_INFO_CHECK(read(fd, &slotInfo, sizeof(slotInfo)) == size, close(fd); return -1,
+        "Failed to read current slot from bootctrl, errno %d", errno);
     close(fd);
     return slotInfo;
 }
