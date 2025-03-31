@@ -23,7 +23,10 @@
 #include <unistd.h>
 #include <linux/limits.h>
 #include "beget_ext.h"
+#include "bootstage.h"
 #include "fs_manager/fs_manager.h"
+#include "hookmgr.h"
+#include "list.h"
 #include "init_utils.h"
 #include "param/init_param.h"
 #include "securec.h"
@@ -532,6 +535,12 @@ static int MountItemByFsType(FstabItem *item)
 }
 #endif
 
+static int ExecCheckpointHook(FstabItem *item)
+{
+    int ret = HookMgrExecute(GetBootStageHookMgr(), INIT_DISABLE_CHECKPOINT, (void*)item, NULL);
+    BEGET_LOGI("ExecCheckpointHook ret %d", ret);
+    return ret;
+}
 int MountOneItem(FstabItem *item)
 {
     if (item == NULL) {
@@ -542,6 +551,7 @@ int MountOneItem(FstabItem *item)
         WaitForFile(item->deviceName, WAIT_MAX_SECOND);
     }
 
+    int disableCheckpointRet = -1;
     if (strcmp(item->mountPoint, "/data") == 0 && IsSupportedDataType(item->fsType)) {
         int ret = DoFsckF2fs(item->deviceName);
         if (ret != 0) {
@@ -551,6 +561,7 @@ int MountOneItem(FstabItem *item)
         if (ret != 0) {
             BEGET_LOGE("Failed to resize.f2fs dir %s , ret = %d", item->deviceName, ret);
         }
+        disableCheckpointRet = ExecCheckpointHook(item);
     } else if (strcmp(item->fsType, "ext4") == 0 && strcmp(item->mountPoint, "/data") == 0) {
         int ret = DoResizeExt(item->deviceName, 0);
         if (ret != 0) {
@@ -571,6 +582,10 @@ int MountOneItem(FstabItem *item)
         SwitchRoot("/usr");
     }
 #endif
+    if (disableCheckpointRet == 0 && rc == 0) {
+        BEGET_LOGI("start health check process");
+        HookMgrExecute(GetBootStageHookMgr(), INIT_HEALTH_CHECK_ACTIVE, NULL, NULL);
+    }
     InitPostMount(item->mountPoint, rc);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {

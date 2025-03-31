@@ -29,6 +29,8 @@ config("libfsmanager_exported_configs") {
 ohos_static_library("libfsmanager_static") {
   if (!defined(ohos_lite)) {
     sources = [
+      "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
+      "//base/startup/init/services/init/bootstagehooker.c",
       "fstab.c",
       "fstab_mount.c",
       "switch_root/switch_root.c",
@@ -42,7 +44,10 @@ ohos_static_library("libfsmanager_static") {
       "//base/startup/init/services/param/include",
     ]
     defines = []
-    external_deps = [ "bounds_checking_function:libsec_static" ]
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "cJSON:cjson",
+    ]
     deps = [ "//base/startup/init/services/utils:libinit_utils" ]
 
     if ((defined(global_parts_info) &&
@@ -91,6 +96,8 @@ ohos_static_library("libfsmanager_static") {
 ohos_static_library("libfsmanager_static_real") {
   if (!defined(ohos_lite)) {
     sources = [
+      "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
+      "//base/startup/init/services/init/bootstagehooker.c",
       "fstab.c",
       "fstab_mount.c",
       "switch_root/switch_root.c",
@@ -103,7 +110,10 @@ ohos_static_library("libfsmanager_static_real") {
       "//base/startup/init/services/log",
       "//base/startup/init/services/param/include",
     ]
-    external_deps = [ "bounds_checking_function:libsec_static" ]
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "cJSON:cjson",
+    ]
     deps = [ "//base/startup/init/services/utils:libinit_utils" ]
     if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
       sources += [
