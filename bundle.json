@@ -65,6 +65,7 @@
                 "hiprofiler",
                 "bounds_checking_function",
                 "bundle_framework",
+                "runtime_core",
                 "selinux",
                 "selinux_adapter",
                 "storage_service",
