@@ -13,6 +13,7 @@ wifi:x:1010:
 wifi_group:x:1011:wifi,wifi_host
 media:x:1013:
 dhcp:x:1014:
+font_manager:x:1015:
 vpn:x:1016:
 keystore:x:1017:
 usb:x:1018:
