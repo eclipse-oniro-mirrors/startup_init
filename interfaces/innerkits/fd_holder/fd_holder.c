@@ -27,19 +27,20 @@ static int BuildClientSocket(void)
     int sockFd;
     sockFd = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0);
     BEGET_ERROR_CHECK(sockFd >= 0, return -1, "Failed to build socket, err = %d", errno);
+    fdsan_exchange_owner_tag(sockFd, 0, BASE_DOMAIN);
 
     struct sockaddr_un addr;
     (void)memset_s(&addr, sizeof(addr), 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     int ret = strncpy_s(addr.sun_path, sizeof(addr.sun_path), INIT_HOLDER_SOCKET_PATH,
         strlen(INIT_HOLDER_SOCKET_PATH));
-    BEGET_ERROR_CHECK(ret == 0, close(sockFd);
+    BEGET_ERROR_CHECK(ret == 0, fdsan_close_with_tag(sockFd, BASE_DOMAIN);
         return -1, "Failed to build socket path");
 
     socklen_t len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path) + 1);
 
     ret = connect(sockFd, (struct sockaddr *)&addr, len);
-    BEGET_ERROR_CHECK(ret >= 0, close(sockFd);
+    BEGET_ERROR_CHECK(ret >= 0, fdsan_close_with_tag(sockFd, BASE_DOMAIN);
         return -1, "Failed to connect to socket, err = %d", errno);
     return sockFd;
 }
@@ -84,7 +85,7 @@ static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool d
 
     char sendBuffer[MAX_FD_HOLDER_BUFFER] = {};
     int ret = BuildSendData(sendBuffer, sizeof(sendBuffer), serviceName, true, doPoll);
-    BEGET_ERROR_CHECK(ret >= 0, close(sock);
+    BEGET_ERROR_CHECK(ret >= 0, fdsan_close_with_tag(sock, BASE_DOMAIN);
         return -1, "Failed to build send data");
 
     BEGET_LOGV("Send data: [%s]", sendBuffer);
@@ -98,7 +99,7 @@ static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool d
             msghdr.msg_control = NULL;
         }
         msghdr.msg_controllen = 0;
-        close(sock);
+        fdsan_close_with_tag(sock, BASE_DOMAIN);
         return -1;
     }
 
@@ -109,7 +110,7 @@ static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool d
             msghdr.msg_control = NULL;
         }
         msghdr.msg_controllen = 0;
-        close(sock);
+        fdsan_close_with_tag(sock, BASE_DOMAIN);
         return -1;
     }
     if (msghdr.msg_control != NULL) {
@@ -118,7 +119,7 @@ static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool d
     }
     msghdr.msg_controllen = 0;
     BEGET_LOGI("Send fds done");
-    close(sock);
+    fdsan_close_with_tag(sock, BASE_DOMAIN);
     return 0;
 }
 

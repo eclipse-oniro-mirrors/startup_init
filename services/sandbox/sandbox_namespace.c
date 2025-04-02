@@ -18,6 +18,7 @@
 #include <sched.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 #include "beget_ext.h"
 
 static int g_defaultNs;
@@ -29,6 +30,8 @@ int GetNamespaceFd(const char *nsPath)
     if (ns < 0) {
         BEGET_LOGE("Open default namespace failed, err=%d", errno);
         return -1;
+    } else {
+        fdsan_exchange_owner_tag(ns, 0, BASE_DOMAIN);
     }
     return ns;
 }
@@ -63,7 +66,7 @@ int SetNamespace(int nsFd, int nsType)
 
 void InitDefaultNamespace(void)
 {
-    BEGET_CHECK(!(g_defaultNs > 0), (void)close(g_defaultNs));
+    BEGET_CHECK(!(g_defaultNs > 0), (void)fdsan_close_with_tag(g_defaultNs, BASE_DOMAIN));
     g_defaultNs = GetNamespaceFd("/proc/self/ns/mnt");
     return;
 }
@@ -77,7 +80,7 @@ int EnterDefaultNamespace(void)
 void CloseDefaultNamespace(void)
 {
     if (g_defaultNs > 0) {
-        (void)close(g_defaultNs);
+        (void)fdsan_close_with_tag(g_defaultNs, BASE_DOMAIN);
         g_defaultNs = -1;
     }
     return;

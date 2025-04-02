@@ -103,6 +103,10 @@ static int UeventdDaemon(int listen_only)
         INIT_LOGW("Failed to get uevent socket, try to create");
         ueventSockFd = UeventdSocketInit();
         ondemand = false;
+#ifndef __LITEOS__
+    } else {
+        fdsan_exchange_owner_tag(ueventSockFd, 0, BASE_DOMAIN);
+#endif
     }
     if (ueventSockFd < 0) {
         INIT_LOGE("Failed to create uevent socket!");
@@ -139,7 +143,11 @@ static int UeventdEarlyBoot(void)
     };
 
     RetriggerUevent(ueventSockFd, devices, 2);
+#ifndef __LITEOS__
+    fdsan_close_with_tag(ueventSockFd, BASE_DOMAIN);
+#else
     close(ueventSockFd);
+#endif
     return 0;
 }
 

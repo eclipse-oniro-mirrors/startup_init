@@ -29,6 +29,21 @@
 
 #include "le_utils.h"
 
+#define OPEN_TAG 1
+#define CLOSE_TAG 0
+static void FdsanDetection(int fd, int mode)
+{
+    if (!mode) {
+#ifndef __LITEOS__
+        fdsan_close_with_tag(fd, BASE_DOMAIN);
+    } else {
+        fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
+#else
+        close(fd);
+#endif
+    }
+}
+
 static int SetSocketTimeout(int fd)
 {
     struct timeval timeout;
@@ -46,6 +61,7 @@ static int CreatePipeServerSocket_(const char *server, int maxClient, int public
 {
     int listenfd = socket(PF_UNIX, SOCK_STREAM, 0);
     LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket errno %d", errno);
+    FdsanDetection(listenfd, OPEN_TAG);
 
     int ret = SetSocketTimeout(listenfd);
     LE_CHECK(ret == 0, return ret, "Failed to set socket timeout");
@@ -53,20 +69,20 @@ static int CreatePipeServerSocket_(const char *server, int maxClient, int public
     unlink(server);
     struct sockaddr_un serverAddr;
     ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
-    LE_CHECK(ret == 0, close(listenfd);
+    LE_CHECK(ret == 0, FdsanDetection(listenfd, CLOSE_TAG);
         return ret, "Failed to memory set. error: %d", errno);
     serverAddr.sun_family = AF_UNIX;
     ret = strcpy_s(serverAddr.sun_path, sizeof(serverAddr.sun_path), server);
-    LE_CHECK(ret == 0, close(listenfd);
+    LE_CHECK(ret == 0, FdsanDetection(listenfd, CLOSE_TAG);
         return ret, "Failed to copy.  error: %d", errno);
     uint32_t size = offsetof(struct sockaddr_un, sun_path) + strlen(server);
     ret = bind(listenfd, (struct sockaddr *)&serverAddr, size);
-    LE_CHECK(ret >= 0, close(listenfd);
+    LE_CHECK(ret >= 0, FdsanDetection(listenfd, CLOSE_TAG);
         return ret, "Failed to bind socket.  error: %d", errno);
 
     SetNoBlock(listenfd);
     ret = listen(listenfd, maxClient);
-    LE_CHECK(ret >= 0, close(listenfd);
+    LE_CHECK(ret >= 0, FdsanDetection(listenfd, CLOSE_TAG);
         return ret, "Failed to listen socket  error: %d", errno);
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
     if (public) {
@@ -82,6 +98,7 @@ static int CreatePipeSocket_(const char *server)
 {
     int fd = socket(PF_UNIX, SOCK_STREAM, 0);
     LE_CHECK(fd > 0, return fd, "Failed to create socket");
+    FdsanDetection(fd, OPEN_TAG);
     SetNoBlock(fd);
 
     int on = 1;
@@ -93,15 +110,15 @@ static int CreatePipeSocket_(const char *server)
 
     struct sockaddr_un serverAddr;
     ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
-    LE_CHECK(ret == 0, close(fd);
+    LE_CHECK(ret == 0, FdsanDetection(fd, CLOSE_TAG);
         return ret, "Failed to memset_s serverAddr");
     serverAddr.sun_family = AF_UNIX;
     ret = strcpy_s(serverAddr.sun_path, sizeof(serverAddr.sun_path), server);
-    LE_CHECK(ret == 0, close(fd);
+    LE_CHECK(ret == 0, FdsanDetection(fd, CLOSE_TAG);
         return ret, "Failed to strcpy_s sun_path");
     uint32_t size = offsetof(struct sockaddr_un, sun_path) + strlen(serverAddr.sun_path);
     ret = connect(fd, (struct sockaddr *)&serverAddr, size);
-    LE_CHECK(ret >= 0, close(fd);
+    LE_CHECK(ret >= 0, FdsanDetection(fd, CLOSE_TAG);
         return ret, "Failed to connect socket");
     LE_LOGV("CreatePipeSocket connect fd: %d server: %s ", fd, serverAddr.sun_path);
     return fd;
@@ -126,6 +143,7 @@ static int CreateTcpServerSocket_(const char *server, int maxClient)
 {
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
     LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket");
+    FdsanDetection(listenfd, OPEN_TAG);
 
     int ret = SetSocketTimeout(listenfd);
     LE_CHECK(ret == 0, return ret, "Failed to set socket timeout");
@@ -133,12 +151,12 @@ static int CreateTcpServerSocket_(const char *server, int maxClient)
     struct sockaddr_in serverAddr;
     GetSockaddrFromServer_(server, &serverAddr);
     ret = bind(listenfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
-    LE_CHECK(ret >= 0, close(listenfd);
+    LE_CHECK(ret >= 0, FdsanDetection(listenfd, CLOSE_TAG);
         return ret, "Failed to bind socket");
     SetNoBlock(listenfd);
 
     ret = listen(listenfd, maxClient);
-    LE_CHECK(ret >= 0, close(listenfd);
+    LE_CHECK(ret >= 0, FdsanDetection(listenfd, CLOSE_TAG);
         return ret, "Failed to listen socket");
     return listenfd;
 }
@@ -147,6 +165,7 @@ static int CreateTcpSocket_(const char *server)
 {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     LE_CHECK(fd > 0, return fd, "Failed to create socket");
+    FdsanDetection(fd, OPEN_TAG);
     SetNoBlock(fd);
 
     int on = 1;
@@ -159,7 +178,7 @@ static int CreateTcpSocket_(const char *server)
     struct sockaddr_in serverAddr;
     GetSockaddrFromServer_(server, &serverAddr);
     ret = connect(fd, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
-    LE_CHECK(ret >= 0, close(fd);
+    LE_CHECK(ret >= 0, FdsanDetection(fd, CLOSE_TAG);
         return ret, "Failed to connect socket errno:%d", errno);
     return fd;
 }
@@ -182,6 +201,7 @@ static int AcceptTcpSocket_(int serverFd)
     bzero(&clientAddr, addrlen);
     int fd = accept(serverFd, (struct sockaddr *)&clientAddr, &addrlen);
     LE_CHECK(fd >= 0, return fd, "Failed to accept socket");
+    FdsanDetection(fd, OPEN_TAG);
     LE_LOGV("AcceptTcpSocket_ client: %s ", inet_ntoa(clientAddr.sin_addr));
     return fd;
 }
@@ -239,14 +259,14 @@ int listenSocket(int fd, int flags, const char *server)
     }
     if (type == TASK_TCP) {
         int ret = listen(fd, LOOP_MAX_CLIENT);
-        LE_CHECK(ret >= 0, close(fd);
+        LE_CHECK(ret >= 0, FdsanDetection(fd, CLOSE_TAG);
             return ret, "Failed to listen socket");
     } else if (type == TASK_PIPE) {
         int ret = listen(fd, LOOP_MAX_CLIENT);
-        LE_CHECK(ret >= 0, close(fd);
+        LE_CHECK(ret >= 0, FdsanDetection(fd, CLOSE_TAG);
             return ret, "Failed to listen socket error: %d", errno);
         ret = chmod(server, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-        LE_CHECK(ret == 0, close(fd);
+        LE_CHECK(ret == 0, FdsanDetection(fd, CLOSE_TAG);
             return -1, "Failed to chmod %s, err %d. ", server, errno);
     }
     return 0;

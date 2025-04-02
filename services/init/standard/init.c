@@ -53,6 +53,7 @@ static int FdHolderSockInit(void)
         INIT_LOGE("Failed to create fd holder socket, err = %d", errno);
         return -1;
     }
+    fdsan_exchange_owner_tag(sock, 0, BASE_DOMAIN);
 
     setsockopt(sock, SOL_SOCKET, SO_RCVBUFFORCE, &fdHolderBufferSize, sizeof(fdHolderBufferSize));
     setsockopt(sock, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
@@ -66,13 +67,13 @@ static int FdHolderSockInit(void)
     if (strncpy_s(addr.sun_path, sizeof(addr.sun_path),
         INIT_HOLDER_SOCKET_PATH, strlen(INIT_HOLDER_SOCKET_PATH)) != 0) {
         INIT_LOGE("Failed to copy fd hoder socket path");
-        close(sock);
+        fdsan_close_with_tag(sock, BASE_DOMAIN);
         return -1;
     }
     socklen_t len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path) + 1);
     if (bind(sock, (struct sockaddr *)&addr, len) < 0) {
         INIT_LOGE("Failed to binder fd folder socket %d", errno);
-        close(sock);
+        fdsan_close_with_tag(sock, BASE_DOMAIN);
         return -1;
     }
 
