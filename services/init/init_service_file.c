@@ -41,7 +41,11 @@ static int CreateFile(ServiceFile *file)
     }
     INIT_LOGV("File path =%s . file flags =%d, file perm =%u ", path, file->flags, file->perm);
     if (file->fd >= 0) {
+#ifndef __LITEOS__
+        fdsan_close_with_tag(file->fd, BASE_DOMAIN);
+#else
         close(file->fd);
+#endif
         file->fd = -1;
     }
     int fd = open(path, file->flags | O_CREAT, file->perm);
@@ -81,6 +85,10 @@ int CreateServiceFile(Service *service)
             INIT_LOGE("Service error %d %s, failed to create file", errno, service->name, tmpFile->fileName);
             tmpFile = tmpFile->next;
             continue;
+#ifndef __LITEOS__
+        } else {
+            fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
+#endif
         }
         if (SetFileEnv(fd, tmpFile->fileName) != 0) {
             ret++;
@@ -98,7 +106,11 @@ void CloseServiceFile(ServiceFile *fileOpt)
     while (tmpFileOpt != NULL) {
         ServiceFile *tmp = tmpFileOpt;
         if (tmp->fd >= 0) {
+#ifndef __LITEOS__
+            fdsan_close_with_tag(tmp->fd, BASE_DOMAIN);
+#else
             close(tmp->fd);
+#endif
             tmp->fd = -1;
         }
         tmpFileOpt = tmpFileOpt->next;

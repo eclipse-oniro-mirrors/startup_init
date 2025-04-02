@@ -130,7 +130,11 @@ static int CreateSocket(ServiceSocket *sockopt)
         sockopt->name, sockopt->family, sockopt->type, sockopt->protocol,
         sockopt->perm, sockopt->uid,    sockopt->gid,  sockopt->option);
     if (sockopt->sockFd >= 0) {
+#ifndef __LITEOS__
+        fdsan_close_with_tag(sockopt->sockFd, BASE_DOMAIN);
+#else
         close(sockopt->sockFd);
+#endif
         sockopt->sockFd = -1;
     }
     sockopt->sockFd = socket(sockopt->family, sockopt->type, sockopt->protocol);
@@ -138,14 +142,22 @@ static int CreateSocket(ServiceSocket *sockopt)
 
     int ret = SetSocketOptionAndBind(sockopt);
     if (ret != 0) {
+#ifndef __LITEOS__
+        fdsan_close_with_tag(sockopt->sockFd, BASE_DOMAIN);
+#else
         close(sockopt->sockFd);
+#endif
         return -1;
     }
     INIT_LOGI("CreateSocket %s success", sockopt->name);
 
     char path[HOS_SOCKET_PATH] = { 0 };
     if (snprintf_s(path, sizeof(path), sizeof(path) - 1, HOS_SOCKET_DIR"/%s", sockopt->name) < 0) {
+#ifndef __LITEOS__
+        fdsan_close_with_tag(sockopt->sockFd, BASE_DOMAIN);
+#else
         close(sockopt->sockFd);
+#endif
         return -1;
     }
     PluginExecCmdByName("restoreContentRecurse", path);

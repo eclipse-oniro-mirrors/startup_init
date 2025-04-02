@@ -372,7 +372,7 @@ void WatcherManager::RunLoop()
         }
     }
     if (serverFd_ >= 0) {
-        close(serverFd_);
+        fdsan_close_with_tag(serverFd_, BASE_DOMAIN);
         serverFd_ = INVALID_SOCKET;
     }
     WATCHER_LOGV("Exit runLoop serverFd %d", serverFd_);
@@ -392,7 +392,7 @@ int WatcherManager::GetServerFd(bool retry)
     const int32_t maxRetry = 10;
     std::lock_guard<std::mutex> lock(mutex_);
     if (retry && serverFd_ != INVALID_SOCKET) {
-        close(serverFd_);
+        fdsan_close_with_tag(serverFd_, BASE_DOMAIN);
         serverFd_ = INVALID_SOCKET;
     }
     if (serverFd_ != INVALID_SOCKET) {
@@ -407,7 +407,7 @@ int WatcherManager::GetServerFd(bool retry)
         if (ret == 0) {
             break;
         }
-        close(serverFd_);
+        fdsan_close_with_tag(serverFd_, BASE_DOMAIN);
         serverFd_ = INVALID_SOCKET;
         usleep(sleepTime);
         retryCount++;
@@ -441,7 +441,7 @@ void WatcherManager::StopLoop()
     stop_ = true;
     if (serverFd_ >= 0) {
         shutdown(serverFd_, SHUT_RDWR);
-        close(serverFd_);
+        fdsan_close_with_tag(serverFd_, BASE_DOMAIN);
         serverFd_ = INVALID_SOCKET;
     }
     if (pRecvThread_ != nullptr) {

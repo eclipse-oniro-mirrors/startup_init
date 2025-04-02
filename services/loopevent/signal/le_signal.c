@@ -45,7 +45,11 @@ static void HandleSignalTaskClose_(const LoopHandle loopHandle, const TaskHandle
     BaseTask *task = (BaseTask *)signalHandle;
     DelTask((EventLoop *)loopHandle, task);
     CloseTask(loopHandle, task);
+#ifndef __LITEOS__
+    fdsan_close_with_tag(task->taskId.fd, BASE_DOMAIN);
+#else
     close(task->taskId.fd);
+#endif
 }
 
 static void PrintSigset(sigset_t mask)
@@ -82,6 +86,9 @@ LE_STATUS LE_CreateSignalTask(const LoopHandle loopHandle, SignalHandle *signalH
     sigemptyset(&mask);
     int sfd = signalfd(-1, &mask, SFD_NONBLOCK | SFD_CLOEXEC);
     LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
+#ifndef __LITEOS__
+    fdsan_exchange_owner_tag(sfd, 0, BASE_DOMAIN);
+#endif
     LE_BaseInfo info = {TASK_SIGNAL, NULL};
     SignalTask *task = (SignalTask *)CreateTask(loopHandle, sfd, &info, sizeof(SignalTask));
     LE_CHECK(task != NULL, return LE_NO_MEMORY, "Failed to create task");

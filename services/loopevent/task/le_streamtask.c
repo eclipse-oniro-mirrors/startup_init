@@ -140,7 +140,11 @@ static void HandleStreamTaskClose_(const LoopHandle loopHandle, const TaskHandle
     DelTask((EventLoop *)loopHandle, task);
     CloseTask(loopHandle, task);
     if (task->taskId.fd > 0) {
+#ifndef __LITEOS__
+        fdsan_close_with_tag(task->taskId.fd, BASE_DOMAIN);
+#else
         close(task->taskId.fd);
+#endif
     }
 }
 
@@ -219,8 +223,13 @@ LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,
     EventLoop *loop = (EventLoop *)loopHandle;
     StreamServerTask *task = (StreamServerTask *)CreateTask(loopHandle, fd, &info->baseInfo,
         sizeof(StreamServerTask) + strlen(info->server) + 1);
+#ifndef __LITEOS__
+    LE_CHECK(task != NULL, fdsan_close_with_tag(fd, BASE_DOMAIN);
+        return LE_NO_MEMORY, "Failed to create task");
+#else
     LE_CHECK(task != NULL, close(fd);
         return LE_NO_MEMORY, "Failed to create task");
+#endif
     task->base.handleEvent = HandleServerEvent_;
     task->base.innerClose = HandleStreamTaskClose_;
     task->base.dumpTaskInfo = DumpStreamServerTaskInfo_;
@@ -242,8 +251,13 @@ LE_STATUS LE_CreateStreamClient(const LoopHandle loopHandle,
     LE_CHECK(fd > 0, return LE_FAILURE, "Failed to create socket %s", info->server);
 
     StreamClientTask *task = (StreamClientTask *)CreateTask(loopHandle, fd, &info->baseInfo, sizeof(StreamClientTask));
+#ifndef __LITEOS__
+    LE_CHECK(task != NULL, fdsan_close_with_tag(fd, BASE_DOMAIN);
+        return LE_NO_MEMORY, "Failed to create task");
+#else
     LE_CHECK(task != NULL, close(fd);
         return LE_NO_MEMORY, "Failed to create task");
+#endif
     task->stream.base.handleEvent = HandleClientEvent_;
     task->stream.base.innerClose = HandleStreamTaskClose_;
     OH_ListInit(&task->stream.buffHead);
@@ -273,8 +287,13 @@ LE_STATUS LE_AcceptStreamClient(const LoopHandle loopHandle, const TaskHandle se
     }
     StreamConnectTask *task = (StreamConnectTask *)CreateTask(
         loopHandle, fd, &info->baseInfo, sizeof(StreamConnectTask));
+#ifndef __LITEOS__
+    LE_CHECK(task != NULL, fdsan_close_with_tag(fd, BASE_DOMAIN);
+        return LE_NO_MEMORY, "Failed to create task");
+#else
     LE_CHECK(task != NULL, close(fd);
         return LE_NO_MEMORY, "Failed to create task");
+#endif
     task->stream.base.handleEvent = HandleStreamEvent_;
     task->stream.base.innerClose = HandleStreamTaskClose_;
     task->stream.base.dumpTaskInfo = DumpStreamConnectTaskInfo_;
