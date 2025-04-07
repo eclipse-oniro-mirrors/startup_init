@@ -12,3 +12,16 @@
 # limitations under the License.
 
 # For now, it supports architechture of ['arm', 'arm64', 'riscv64'].
+
+@privilegedProcessName
+app_custom
+
+@allowBlockList
+setuid;arm64
+setuid32;arm
+setgid;arm64
+setgid32;arm
+setgroups;arm64
+setgroups32;arm
+setresgid;arm64
+setresgid32;arm
