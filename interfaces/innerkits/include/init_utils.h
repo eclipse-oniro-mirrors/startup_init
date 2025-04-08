@@ -54,8 +54,12 @@ typedef struct {
 #define WAIT_MAX_SECOND 5
 #define MAX_BUFFER_LEN 256
 #define REPAIR_MODE_LEN 256
-#define MAINTENANCE_MODE "1"
-#define DATA_REPAIR_MODE "2"
+#define MAINTENANCE_NORMAL "1"
+#define MAINTENANCE_NORMAL_TYPE 1
+#define MAINTENANCE_RECOVERY "2"
+#define MAINTENANCE_RECOVERY_TYPE 2
+#define MAINTENANCE_RECOVERY_COMPLETE "3"
+#define MAINTENANCE_RECOVERY_COMPLETE_TYPE 3
 #define CMDLINE_VALUE_LEN_MAX 512
 #define STDERR_HANDLE 2
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
@@ -106,7 +110,7 @@ char **SplitStringExt(char *buffer, const char *del, int *returnCount, int maxIt
 void FreeStringVector(char **vector, int count);
 int InUpdaterMode(void);
 int InRescueMode(void);
-bool InRepairMode(void);
+int InRepairMode(void);
 int StringReplaceChr(char *strl, char oldChr, char newChr);
 
 int OpenConsole(void);

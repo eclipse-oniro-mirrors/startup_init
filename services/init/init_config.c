@@ -107,6 +107,7 @@ void ReadConfig(void)
     uint32_t len = sizeof(buffer);
     SystemReadParam("ohos.boot.mode", buffer, &len);
     INIT_LOGI("ohos.boot.mode %s", buffer);
+    int maintenance = InRepairMode();
     if ((strcmp(buffer, "charger_mode") == 0) || (GetBootModeFromMisc() == GROUP_CHARGE)) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
@@ -116,9 +117,11 @@ void ReadConfig(void)
     } else if (InRescueMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(INIT_RESCUE_MODE_PATH, ".cfg", ParseInitCfg, NULL);
-    } else if (InRepairMode()) {
+    } else if (maintenance == MAINTENANCE_NORMAL_TYPE) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
-        ReadFileInDir(INIT_REPAIR_MODE_PATH, ".cfg", ParseInitCfg, NULL);
+        ReadFileInDir(MAINTENANCE_NORMAL_PATH, ".cfg", ParseInitCfg, NULL);
+    } else if (maintenance == MAINTENANCE_RECOVERY_TYPE || maintenance == MAINTENANCE_RECOVERY_COMPLETE_TYPE) {
+        ReadFileInDir(MAINTENANCE_RECOVERY_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (InUpdaterMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ParseInitCfgByPriority();
