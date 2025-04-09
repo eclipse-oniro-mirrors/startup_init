@@ -41,8 +41,7 @@ static std::string ani2std(ani_env *env, const ani_string str)
     return std::string(buffer);
 }
 
-static ani_string getSync([[maybe_unused]] ani_env *env, [[maybe_unused]] ani_object object,
-                          ani_string param, ani_string def)
+static ani_string getSync([[maybe_unused]] ani_env *env, ani_string param, ani_string def)
 {
     std::string key = ani2std(env, param);
     std::string defValue = "";
@@ -64,10 +63,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     }
 
-    ani_class ns;
-    static const char *className = "L@ohos/systemParameterEnhance/systemParameterEnhance;";
-    if (ANI_OK != env->FindClass(className, &ns)) {
-        PARAM_JS_LOGE("not found class %s", className);
+    ani_namespace ns;
+    static const char *namespaceName = "L@ohos/systemParameterEnhance/systemParameterEnhance;";
+    if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
+        PARAM_JS_LOGE("not found namespace %s", namespaceName);
         return ANI_ERROR;
     }
 
@@ -76,8 +75,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
                              reinterpret_cast<void *>(getSync)},
     };
 
-    if (ANI_OK != env->Class_BindNativeMethods(ns, methods.data(), methods.size())) {
-        PARAM_JS_LOGE("Cannot bind native methods to %s", className);
+    if (ANI_OK != env->Namespace_BindNativeFunctions(ns, methods.data(), methods.size())) {
+        PARAM_JS_LOGE("Cannot bind native methods to %s", namespaceName);
         return ANI_ERROR;
     };
 
