@@ -621,18 +621,26 @@ int InRescueMode(void)
 }
 
 // Check if in repair mode
-bool InRepairMode(void)
+int InRepairMode(void)
 {
     char repair[REPAIR_MODE_LEN] = {0};
     int ret = GetExactParameterFromCmdLine("repair_mode", repair, REPAIR_MODE_LEN);
     if (ret != 0) {
-        return false;
+        return -1;
     }
 
-    if (strcmp(repair, MAINTENANCE_MODE) == 0 || strcmp(repair, DATA_REPAIR_MODE) == 0) {
-        return true;
+    if (strcmp(repair, MAINTENANCE_NORMAL) == 0) {
+        return MAINTENANCE_NORMAL_TYPE;
     }
-    return false;
+	
+    if (strcmp(repair, MAINTENANCE_RECOVERY) == 0) {
+        return MAINTENANCE_RECOVERY_TYPE;
+    }
+	
+    if (strcmp(repair, MAINTENANCE_RECOVERY_COMPLETE) == 0) {
+        return MAINTENANCE_RECOVERY_COMPLETE_TYPE;
+    }
+    return -1;
 }
 
 int StringReplaceChr(char *strl, char oldChr, char newChr)
