@@ -60,7 +60,7 @@ ohos_executable("init_early") {
   if (is_asan) {
     defines += [ "INIT_ASAN" ]
   }
-  if (asan_detector) {
+  if (asan_detector && init_feature_support_asan) {
     defines += [ "ASAN_DETECTOR" ]
   }
   install_images = [ "ramdisk" ]
