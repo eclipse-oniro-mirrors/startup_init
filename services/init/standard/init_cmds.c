@@ -299,6 +299,26 @@ static void DoMakeDevice(const struct CmdArgs *ctx)
     return;
 }
 
+static void DoMountFstabFileSp(const struct CmdArgs *ctx)
+{
+    INIT_LOGI("Mount partitions from fstab file \" %s \"", ctx->argv[0]);
+    INIT_TIMING_STAT cmdTimer;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
+    int ret = MountAllWithFstabFile(ctx->argv[0], 0);
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+    long long diff = InitDiffTime(&cmdTimer);
+    INIT_LOGI("Mount partitions from fstab file \" %s \" finish ret %d", ctx->argv[0], ret);
+    HookMgrExecute(GetBootStageHookMgr(), INIT_MOUNT_STAGE, NULL, NULL);
+    char buffer[PARAM_VALUE_LEN_MAX] = {0};
+    ret = sprintf_s(buffer, PARAM_VALUE_LEN_MAX, "%lld", diff);
+    if (ret <= 0) {
+        INIT_LOGE("Failed to sprintf_s");
+        return;
+    }
+    ret = SystemWriteParam("boot.time.fstab", buffer);
+    INIT_ERROR_CHECK(ret == 0, return, "write param boot.time.fstab failed");
+}
+
 static void DoMountFstabFile(const struct CmdArgs *ctx)
 {
     INIT_LOGI("Mount partitions from fstab file \" %s \"", ctx->argv[0]);
@@ -622,10 +642,11 @@ static const struct CmdTable g_cmdTable[] = {
     { "timer_stop", 1, 1, 0, DoTimerStop },
     { "init_global_key ", 1, 1, 0, DoInitGlobalKey },
     { "init_main_user ", 0, 1, 0, DoInitMainUser },
-    { "mkswap", 1, 1, 0, DoMkswap},
-    { "swapon", 1, 1, 0, DoSwapon},
-    { "mksandbox", 1, 1, 0, DoMkSandbox},
-    { "stop_feed_highdog", 0, 1, 0, DoStopFeedHighdog},
+    { "mkswap", 1, 1, 0, DoMkswap },
+    { "swapon", 1, 1, 0, DoSwapon },
+    { "mksandbox", 1, 1, 0, DoMkSandbox },
+    { "stop_feed_highdog", 0, 1, 0, DoStopFeedHighdog },
+    { "mount_fstab_sp ", 1, 1, 0, DoMountFstabFileSp },
 };
 
 const struct CmdTable *GetCmdTable(int *number)

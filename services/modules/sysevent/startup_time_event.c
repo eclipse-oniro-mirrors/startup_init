@@ -110,6 +110,18 @@ PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
     }
     InsertBootTimeParam(buffer, "kernel");
     InsertBootTimeParam(buffer, "init");
+    char fdtabTime[MAX_BUFFER_FOR_EVENT] = {0};
+    char fdtabBuffer[PARAM_VALUE_LEN_MAX] = {0};
+    uint32_t fstabLen = PARAM_VALUE_LEN_MAX;
+    ret = SystemReadParam("boot.time.fstab", fdtabBuffer, &fstabLen);
+    if (ret == 0) {
+        ret = sprintf_s(fdtabTime, MAX_BUFFER_FOR_EVENT, ";fstab,0,%s", fdtabBuffer);
+        PLUGIN_CHECK((ret > 0) && (ret < MAX_BUFFER_FOR_EVENT), return, "Failed to sprintf_s");
+        ret = strcat_s(buffer, MAX_BUFFER_FOR_EVENT + PARAM_VALUE_LEN_MAX, fdtabTime);
+        PLUGIN_CHECK(ret == 0, return, "Failed to format boot time");
+    } else {
+        PLUGIN_LOGE("Failed to read boot.time.fstab");
+    }
 
     StartupTimeEvent startupTime = {};
     startupTime.event.type = STARTUP_TIME;
