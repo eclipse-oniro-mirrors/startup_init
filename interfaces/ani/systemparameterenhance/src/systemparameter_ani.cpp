@@ -18,7 +18,9 @@
 #include <iostream>
 
 #include "beget_ext.h"
-#include "parameters.h"
+#include "parameter.h"
+
+static constexpr int MAX_VALUE_LENGTH = PARAM_CONST_VALUE_LEN_MAX;
 
 #define PARAM_JS_DOMAIN (BASE_DOMAIN + 0xc)
 #define PARAM_JS_LOGI(fmt, ...) STARTUP_LOGI(PARAM_JS_DOMAIN, "PARAM_JS", fmt, ##__VA_ARGS__)
@@ -41,6 +43,28 @@ static std::string ani2std(ani_env *env, const ani_string str)
     return std::string(buffer);
 }
 
+static void ThrowParameterErr(ani_env *env, int errCode)
+{
+    static const char *errorClsName = "L@ohos/systemParameterEnhance/ParameterError;";
+    ani_class cls {};
+    if (env->FindClass(errorClsName, &cls) != ANI_OK) {
+        PARAM_JS_LOGE("find class ParameterError failed");
+        return;
+    }
+    ani_method ctor;
+    if (env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor) != ANI_OK) {
+        PARAM_JS_LOGE("find method ParameterError.constructor failed");
+        return;
+    }
+    ani_object errorObject;
+    if (env->Object_New(cls, ctor, &errorObject, errCode) != ANI_OK) {
+        PARAM_JS_LOGE("create AccessibilityError object failed");
+        return;
+    }
+    env->ThrowError(static_cast<ani_error>(errorObject));
+    return;
+}
+
 static ani_string getSync([[maybe_unused]] ani_env *env, ani_string param, ani_string def)
 {
     std::string key = ani2std(env, param);
@@ -48,9 +72,15 @@ static ani_string getSync([[maybe_unused]] ani_env *env, ani_string param, ani_s
     if (def != nullptr) {
         defValue = ani2std(env, def);
     }
-    std::string value = OHOS::system::GetParameter(key, defValue);
+    std::vector<char> value(MAX_VALUE_LENGTH, 0);
+    int result = GetParameter(key.c_str(), defValue.c_str(), value.data(), MAX_VALUE_LENGTH);
+    if (result < 0) {
+        PARAM_JS_LOGI("getSync faile, key:%s, ret:%d", key.c_str(), result);
+        ThrowParameterErr(env, result);
+        return nullptr;
+    }
     ani_string ret;
-    env->String_NewUTF8(value.c_str(), value.size(), &ret);
+    env->String_NewUTF8(value.data(), strlen(value.data()), &ret);
     return ret;
 }
 
