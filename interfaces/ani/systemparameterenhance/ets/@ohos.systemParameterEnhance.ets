@@ -13,6 +13,13 @@
  * limitations under the License.
  */
 
+export class ParameterError extends Error {
+    constructor(code: int) {
+        this.code = code;
+    }
+    code: int;
+}
+
 namespace systemParameterEnhance {
     loadLibrary("systemparameterenhance_ani.z")
     export native function getSync(key: string, def?: string): string;
