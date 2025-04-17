@@ -11,6 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 const.ohos.version.security_patch=2025/04/01
-const.ohos.releasetype=Beta1
-const.ohos.apiversion=18
-const.ohos.fullname=OpenHarmonyTec-1.0.5.2
+const.ohos.releasetype=Canary1
+const.ohos.apiversion=20
+const.ohos.fullname=OpenHarmonyTec-6.0.0.28
