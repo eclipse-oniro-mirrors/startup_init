@@ -63,11 +63,7 @@ __attribute__((constructor)) static void ParameterInit(void)
 __attribute__((destructor)) static void ParameterDeinit(void)
 {
     if (g_clientFd != INVALID_SOCKET) {
-#ifndef __LITEOS__
-        fdsan_close_with_tag(g_clientFd, BASE_DOMAIN);
-#else
         close(g_clientFd);
-#endif
         g_clientFd = INVALID_SOCKET;
     }
     pthread_mutex_destroy(&g_clientMutex);
@@ -137,19 +133,12 @@ static int GetClientSocket(int timeout)
     time.tv_usec = 0;
     int clientFd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     PARAM_CHECK(clientFd >= 0, return INVALID_SOCKET, "Failed to create socket");
-#ifndef __LITEOS__
-    fdsan_exchange_owner_tag(clientFd, 0, BASE_DOMAIN);
-#endif
     int ret = ConnectServer(clientFd, CLIENT_PIPE_NAME);
     if (ret == 0) {
         setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, (char *)&time, sizeof(struct timeval));
         setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO, (char *)&time, sizeof(struct timeval));
     } else {
-#ifndef __LITEOS__
-        fdsan_close_with_tag(clientFd, BASE_DOMAIN);
-#else
         close(clientFd);
-#endif
         clientFd = INVALID_SOCKET;
     }
     return clientFd;
@@ -209,11 +198,7 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
         }
         ret = StartRequest(g_clientFd, request, timeout);
         if (ret == PARAM_CODE_IPC_ERROR) {
-#ifndef __LITEOS__
-            fdsan_close_with_tag(g_clientFd, BASE_DOMAIN);
-#else
             close(g_clientFd);
-#endif
             g_clientFd = INVALID_SOCKET;
             retryCount++;
         } else {
@@ -256,11 +241,7 @@ int SystemSaveParameters(void)
     request->msgSize = offset + sizeof(ParamMessage);
     request->id.msgId = ATOMIC_SYNC_ADD_AND_FETCH(&g_requestId, 1, MEMORY_ORDER_RELAXED);
     ret = StartRequest(fd, request, DEFAULT_PARAM_WAIT_TIMEOUT);
-#ifndef __LITEOS__
-    fdsan_close_with_tag(fd, BASE_DOMAIN);
-#else
     close(fd);
-#endif
     free(request);
     BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemSaveParameters failed! the errNum is:%d", ret);
     return ret;
@@ -308,11 +289,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     PARAM_CHECK(fd >= 0, free(request);
         return fd, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
     ret = StartRequest(fd, request, timeout);
-#ifndef __LITEOS__
-    fdsan_close_with_tag(fd, BASE_DOMAIN);
-#else
     close(fd);
-#endif
     free(request);
     PARAM_LOGI("SystemWaitParameter %s v %s ret %d", name, value, ret);
     BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
@@ -349,11 +326,7 @@ void ResetParamSecurityLabel(void)
     PARAM_LOGI("ResetParamSecurityLabel Fd:%d ", g_clientFd);
     pthread_mutex_lock(&g_clientMutex);
     if (g_clientFd != INVALID_SOCKET) {
-#ifndef __LITEOS__
-        fdsan_close_with_tag(g_clientFd, BASE_DOMAIN);
-#else
         close(g_clientFd);
-#endif
         g_clientFd = INVALID_SOCKET;
     }
     pthread_mutex_unlock(&g_clientMutex);

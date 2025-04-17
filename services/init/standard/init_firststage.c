@@ -91,7 +91,7 @@ static int StartUeventd(char **requiredDevices, int num)
         return -1;
     }
     RetriggerUevent(ueventSockFd, requiredDevices, num);
-    fdsan_close_with_tag(ueventSockFd, BASE_DOMAIN);
+    close(ueventSockFd);
     return 0;
 }
 

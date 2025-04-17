@@ -93,11 +93,7 @@ static void HandleAsyncTaskClose_(const LoopHandle loopHandle, const TaskHandle 
     BaseTask *task = (BaseTask *)taskHandle;
     DelTask((EventLoop *)loopHandle, task);
     CloseTask(loopHandle, task);
-#ifndef __LITEOS__
-    fdsan_close_with_tag(task->taskId.fd, BASE_DOMAIN);
-#else
     close(task->taskId.fd);
-#endif
 }
 
 static void DumpEventTaskInfo_(const TaskHandle task)
@@ -117,18 +113,10 @@ LE_STATUS LE_CreateAsyncTask(const LoopHandle loopHandle,
 
     int fd = eventfd(1, EFD_NONBLOCK | EFD_CLOEXEC);
     LE_CHECK(fd > 0, return LE_FAILURE, "Failed to event fd ");
-#ifndef __LITEOS__
-    fdsan_exchange_owner_tag(fd, 0, BASE_DOMAIN);
-#endif
     LE_BaseInfo baseInfo = {TASK_EVENT | TASK_ASYNC_EVENT, NULL};
     AsyncEventTask *task = (AsyncEventTask *)CreateTask(loopHandle, fd, &baseInfo, sizeof(AsyncEventTask));
-#ifndef __LITEOS__
-    LE_CHECK(task != NULL, fdsan_close_with_tag(fd, BASE_DOMAIN);
-        return LE_NO_MEMORY, "Failed to create task");
-#else
     LE_CHECK(task != NULL, close(fd);
         return LE_NO_MEMORY, "Failed to create task");
-#endif
     task->stream.base.handleEvent = HandleAsyncEvent_;
     task->stream.base.innerClose = HandleAsyncTaskClose_;
     task->stream.base.dumpTaskInfo = DumpEventTaskInfo_;
