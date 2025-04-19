@@ -44,7 +44,8 @@ ohos_unittest("init_unittest") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    debug = true
+    debug = false
+    blocklist = "./init_unittest_blocklist.txt"
   }
   module_out_path = "init/init"
   sources = [
