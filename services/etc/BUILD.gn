@@ -116,8 +116,15 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
   }
 
+  ohos_prebuilt_etc("initProfile") {
+    source = "//base/startup/init/services/etc/initProfile"
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
   ohos_prebuilt_etc("profile") {
     source = "//base/startup/init/services/etc/profile"
+    symlink_path = "../../data/service/el1/public/startup/profile"
     part_name = "init"
     subsystem_name = "startup"
   }
@@ -253,6 +260,7 @@ if (defined(ohos_lite)) {
       ":init.cfg",
       ":init.reboot",
       ":init.usb.cfg",
+      ":initProfile",
       ":ohos.para",
       ":ohos.para.dac",
       ":ohos.para.size",
