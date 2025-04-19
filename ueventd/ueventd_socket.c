@@ -44,9 +44,6 @@ int UeventdSocketInit(void)
         INIT_LOGE("Create socket failed, err = %d", errno);
         return -1;
     }
-#ifndef __LITEOS__
-    fdsan_exchange_owner_tag(sockfd, 0, BASE_DOMAIN);
-#endif
 
     setsockopt(sockfd, SOL_SOCKET, SO_RCVBUFFORCE, &buffSize, sizeof(buffSize));
     setsockopt(sockfd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
@@ -54,11 +51,7 @@ int UeventdSocketInit(void)
     if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         INIT_LOGE("Bind socket failed, err = %d", errno);
 #ifndef STARTUP_INIT_TEST
-#ifndef __LITEOS__
-        fdsan_close_with_tag(sockfd, BASE_DOMAIN);
-#else
         close(sockfd);
-#endif
         return -1;
 #endif
     }

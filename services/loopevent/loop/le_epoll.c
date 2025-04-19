@@ -43,11 +43,7 @@ static LE_STATUS Close_(const EventLoop *loop)
     LE_CHECK(loop != NULL, return LE_FAILURE, "Invalid loop");
     EventEpoll *epoll = (EventEpoll *)loop;
     LE_LOGV("Close_ epollFd %d", epoll->epollFd);
-#ifndef __LITEOS__
-    fdsan_close_with_tag(epoll->epollFd, BASE_DOMAIN);
-#else
     close(epoll->epollFd);
-#endif
     free(epoll);
     return LE_SUCCESS;
 }
@@ -163,9 +159,6 @@ LE_STATUS CreateEpollLoop(EventLoop **loop, uint32_t maxevents, uint32_t timeout
     if (fcntl(epoll->epollFd, F_SETFD, FD_CLOEXEC) == -1) {
         LE_LOGE("fcntl setfd close_on_exec failed, errno: %d", errno);
     }
-#ifndef __LITEOS__
-    fdsan_exchange_owner_tag(epoll->epollFd, 0, BASE_DOMAIN);
-#endif
     *loop = (EventLoop *)epoll;
     epoll->loop.maxevents = maxevents;
     epoll->loop.timeout = timeout;

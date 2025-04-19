@@ -610,7 +610,7 @@ void DestroySandbox(const char *name)
     OH_ListRemoveAll(&sandbox->pathMountsHead, FreeSandboxMountInfo);
 
     if (sandbox->ns > 0) {
-        (void)fdsan_close_with_tag(sandbox->ns, BASE_DOMAIN);
+        (void)close(sandbox->ns);
     }
     sandbox->isCreated = false;
     return;

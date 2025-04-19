@@ -313,7 +313,7 @@ int FsDmInitDmDev(char *devPath, bool useSocket)
     free(devices[0]);
     free(devices);
 
-    fdsan_close_with_tag(ueventSockFd, BASE_DOMAIN);
+    close(ueventSockFd);
 
     return 0;
 }
