@@ -39,6 +39,7 @@
 #include "init_log.h"
 #include "crash_handler.h"
 
+#define SLEEP_DURATION  2
 static const SignalInfo g_platformSignals[] = {
     { SIGABRT, "SIGABRT" },
     { SIGBUS, "SIGBUS" },
@@ -56,7 +57,7 @@ static void SignalHandler(int sig, siginfo_t *si, void *context)
 {
     int32_t pid = getpid();
     if (pid == 1) {
-        sleep(2);
+        sleep(SLEEP_DURATION);
         ExecReboot("panic");
     } else {
         exit(-1);
