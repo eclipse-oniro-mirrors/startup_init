@@ -72,6 +72,11 @@ static int ParseDeviceConfig(char *p)
 
     INIT_CHECK_ONLY_ELOG(!INVALIDSTRING(p), "Invalid argument");
     items = SplitStringExt(p, " ", &count, expectedCount);
+    if (items == NULL) {
+        INIT_LOGE("item is NULL");
+        FreeStringVector(items, count);
+        return 0;
+    }
     if ((count != expectedCount) && (count != expectedCount - 1)) {
         INIT_LOGE("Ignore invalid item: %s", p);
         FreeStringVector(items, count);
@@ -116,6 +121,11 @@ static int ParseSysfsConfig(char *p)
 
     INIT_CHECK_ONLY_ELOG(!INVALIDSTRING(p), "Invalid argument");
     items = SplitStringExt(p, " ", &count, expectedCount);
+    if (items == NULL) {
+        INIT_LOGE("item is NULL");
+        FreeStringVector(items, count);
+        return 0;
+    }
     if (count != expectedCount) {
         INIT_LOGE("Ignore invalid item: %s", p);
         FreeStringVector(items, count);
@@ -218,6 +228,10 @@ static void DoUeventConfigParse(char *buffer, size_t length)
     const int maxItemCount = DEFAULTITEMCOUNT;
 
     items = SplitStringExt(buffer, "\n", &count, maxItemCount);
+    if (items == NULL) {
+        INIT_LOGE("item is NULL");
+        FreeStringVector(items, count);
+    }
     INIT_LOGV("Dump items count = %d", count);
     for (int i = 0; i < count; i++) {
         char *p = items[i];
