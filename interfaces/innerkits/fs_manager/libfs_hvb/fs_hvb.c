@@ -669,6 +669,9 @@ int FsHvbSetupHashtree(FstabItem *fsItem)
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, create init dm dev", rc);
         goto exit;
+        if (dmDevPath != NULL) {
+            free(dmDevPath);
+        }
     }
 
     free(fsItem->deviceName);
@@ -724,6 +727,9 @@ static int FsExtHvbSetupHashtree(const char *devName, const char *partition, cha
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, create init dm dev", rc);
         goto exit;
+        if (dmDevPath != NULL) {
+            free(dmDevPath);
+        }
     }
 
     *outPath = dmDevPath;
