@@ -110,10 +110,29 @@ static void ParamFileSync(int ft)
 
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
-    (void)context;
+    UNUSED(context);
+    PARAM_CHECK(name != NULL, return -1, "param is invalid");
+    PARAM_CHECK(value != NULL, return -1, "value is invalid");
+    if (strncmp(name, "persist", strlen("persist")) != 0) {
+        PARAM_LOGE("%s is not persist param, do not load", name);
+        return 0;
+    }
     uint32_t dataIndex = 0;
-    int ret = WriteParam(name, value, &dataIndex, 0);
-    PARAM_CHECK(ret == 0, return ret, "Failed to write param %d name:%s %s", ret, name, value);
+    unsigned int mode = 0;
+    int result = 0;
+    char persetValue[PARAM_VALUE_LEN_MAX] = {0};
+    uint32_t len = PARAM_VALUE_LEN_MAX;
+    int ret = SystemReadParam(name, persetValue, &len);
+    if (ret != 0) {
+        mode |= LOAD_PARAM_PERSIST;
+        return WriteParam(name, value, &dataIndex, mode);
+    }
+
+    if (strcmp(persetValue, value) != 0) {
+        PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
+        mode |= LOAD_PARAM_PERSIST;
+        return WriteParam(name, value, &dataIndex, mode);
+    }
     return 0;
 }
 
