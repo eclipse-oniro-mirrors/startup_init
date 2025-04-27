@@ -12,21 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-export class ParameterError extends Error {
-    constructor(code: int) {
-        this.code = code;
+#include "ohos.systemParameterEnhance.systemParameterEnhance.ani.hpp"
+ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
+{
+    ani_env *env;
+    if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
+        return ANI_ERROR;
     }
-    code: int;
-}
-
-namespace systemParameterEnhance {
-    loadLibrary("systemparameterenhance_ani.z")
-    export native function getSync(key: string, def?: string): string;
-    export function get(key: string, def?: string): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            resolve(getSync(key, def));
-        });
+    if (ANI_OK != ohos::systemParameterEnhance::systemParameterEnhance::ANIRegister(env)) {
+        std::cerr << "Error from ohos::systemParameterEnhance::systemParameterEnhance::ANIRegister" << std::endl;
+        return ANI_ERROR;
     }
+    *result = ANI_VERSION_1;
+    return ANI_OK;
 }
-export default systemParameterEnhance;
