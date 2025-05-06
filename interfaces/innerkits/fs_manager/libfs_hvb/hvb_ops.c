@@ -126,6 +126,7 @@ static char *GetExtHvbVerifiedPath(size_t index)
 static char *HvbGetABPartitionPath(const size_t pathLen, const char *partition)
 {
     /* Check if there are multiple partitions */
+    char *path = NULL;
     int bootSlots = GetBootSlots();
     if (bootSlots <= 1) {
         BEGET_LOGE("invalid bootSlots: %d", bootSlots);
@@ -142,7 +143,6 @@ static char *HvbGetABPartitionPath(const size_t pathLen, const char *partition)
     }
 
     size_t abPathLen = pathLen + FS_HVB_AB_SUFFIX_LEN;
-    char *path = NULL;
     path = calloc(1, abPathLen + 1);
     if (path == NULL) {
         BEGET_LOGE("error, calloc fail");
