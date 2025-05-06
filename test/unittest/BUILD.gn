@@ -504,6 +504,8 @@ ohos_unittest("init_dmverify_unittest") {
 ohos_unittest("init_fshvb_unittest") {
   module_out_path = "init/init"
   sources = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/fs_hvb.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/hvb_ops.c",
     "//base/startup/init/services/log/init_commlog.c",
@@ -522,6 +524,8 @@ ohos_unittest("init_fshvb_unittest") {
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/include",
     "//base/startup/hvb/libhvb/include",
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/include",
     "//base/startup/init/interfaces/innerkits/include/fs_manager",
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/services/log",
@@ -535,6 +539,7 @@ ohos_unittest("init_fshvb_unittest") {
   configs = []
 
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "googletest:gtest",
     "hilog:libhilog",
