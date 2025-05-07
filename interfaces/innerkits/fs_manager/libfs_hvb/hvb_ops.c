@@ -23,6 +23,7 @@
 #include "fs_dm.h"
 #include "fs_hvb.h"
 #include "securec.h"
+#include "init_utils.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -122,6 +123,56 @@ static char *GetExtHvbVerifiedPath(size_t index)
     return tmpPath;
 }
 
+static char *HvbGetABPartitionPath(const size_t pathLen, const char *partition)
+{
+    /* Check if there are multiple partitions */
+    char *path = NULL;
+    int bootSlots = GetBootSlots();
+    if (bootSlots <= 1) {
+        BEGET_LOGE("invalid bootSlots: %d", bootSlots);
+        goto err;
+    }
+
+    /* Confirm partition information */
+    /* slot = 1 is partition a */
+    /* slot = 2 is partition b */
+    int slot = GetCurrentSlot();
+    if (slot <= 0 || slot > MAX_SLOT) {
+        BEGET_LOGW("invalid slot [%d], defaulting to 1", slot);
+        slot = 1;
+    }
+
+    size_t abPathLen = pathLen + FS_HVB_AB_SUFFIX_LEN;
+    path = calloc(1, abPathLen + 1);
+    if (path == NULL) {
+        BEGET_LOGE("error, calloc fail");
+        goto err;
+    }
+
+    /* Concatenate partition names */
+    const char suffix = 'a' + slot - 1;
+    int rc = snprintf_s(path, abPathLen + 1, abPathLen, "%s%s_%c",
+                        PARTITION_PATH_PREFIX, partition, suffix);
+    if (rc < 0) {
+        BEGET_LOGE("snprintf_s fail, ret = %d", rc);
+        goto err;
+    }
+    if (access(path, F_OK) != 0) {
+        BEGET_LOGE("still can not access %s, abort verify", path);
+        goto err;
+    }
+
+    BEGET_LOGW("AB path generated: %s", path);
+    return path;
+
+err:
+    if (path != NULL) {
+        free(path);
+    }
+
+    return NULL;
+}
+
 static char *HvbGetPartitionPath(const char *partition)
 {
     int rc;
@@ -150,6 +201,13 @@ static char *HvbGetPartitionPath(const char *partition)
         free(path);
         return NULL;
     }
+
+    if (access(path, F_OK) != 0) {
+        BEGET_LOGW("Adapting to AB partition");
+        free(path);
+        return HvbGetABPartitionPath(pathLen, partition);
+    }
+
     return path;
 }
 

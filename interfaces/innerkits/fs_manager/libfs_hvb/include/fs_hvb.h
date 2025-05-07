@@ -42,11 +42,12 @@ extern "C" {
 #define SZ_1KB (0x1 << 10)
 #define SZ_1MB (0x1 << 20)
 #define SZ_1GB (0x1 << 30)
- 
+
 #define SZ_2KB (2 * SZ_1KB)
 #define SZ_4KB (4 * SZ_1KB)
 #define FS_HVB_MAX_PATH_LEN 128
- 
+#define FS_HVB_AB_SUFFIX_LEN 2
+
 typedef struct {
     uint32_t magicNumber;
     uint16_t exthdrSize;
@@ -58,7 +59,7 @@ typedef enum InitHvbType {
     MAIN_HVB = 0,
     EXT_HVB
 } InitHvbType;
- 
+
 typedef struct {
     char *partitionName;
     char *pathName;

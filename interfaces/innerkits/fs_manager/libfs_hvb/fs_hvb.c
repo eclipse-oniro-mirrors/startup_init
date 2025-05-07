@@ -321,6 +321,19 @@ static int FsHvbGetCert(struct hvb_cert *cert, const char *devName, struct hvb_v
     struct hvb_cert_data *p = vd->certs;
     struct hvb_cert_data *end = p + vd->num_loaded_certs;
 
+    int bootSlots = GetBootSlots();
+    if (bootSlots > 1) {
+        if (devNameLen <= FS_HVB_AB_SUFFIX_LEN) {
+            BEGET_LOGE("error, devname (%s) is invlaid, devnamelen = %u", devName, devNameLen);
+            return -1;
+        }
+        if (memcmp(devName + devNameLen - FS_HVB_AB_SUFFIX_LEN, "_a", FS_HVB_AB_SUFFIX_LEN) == 0 ||
+            memcmp(devName + devNameLen - FS_HVB_AB_SUFFIX_LEN, "_b", FS_HVB_AB_SUFFIX_LEN) == 0) {
+            BEGET_LOGI("remove ab suffix in %s to match in hvb certs", devName);
+            devNameLen -= FS_HVB_AB_SUFFIX_LEN;
+        }
+    }
+
     for (; p < end; p++) {
         if (devNameLen != strlen(p->partition_name)) {
             continue;
