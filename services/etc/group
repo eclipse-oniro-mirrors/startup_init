@@ -24,6 +24,7 @@ media_rw:x:1023:
 dsoftbus:x:1024:
 nfc:x:1027:
 sdcard_r:x:1028:
+nfc_tag:x:1029:
 package_info:x:1032:
 logd:x:1036:
 shared_relro:x:1037:
