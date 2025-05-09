@@ -605,6 +605,21 @@ int InUpdaterMode(void)
 #endif
 }
 
+// Check if in penglai mode.
+bool IsPenglaiMode(void)
+{
+#ifdef OHOS_LITE
+    return false;
+#else
+    if (access("/bin/penglaitest", F_OK) == 0) {
+        INIT_LOGI("get bin/penglaitest success");
+        return true;
+    }
+    return false;
+#endif
+}
+
+
 // Check if in rescue mode.
 int InRescueMode(void)
 {
