@@ -397,6 +397,45 @@ public:
         EXPECT_EQ(ret, 0);
     }
 
+    static bool CheckIoUringFlag1()
+    {
+        (void)syscall(SYS_io_uring_setup, 0, nullptr);
+        return true;
+    }
+
+    static bool CheckIoUringFlag2()
+    {
+        (void)syscall(SYS_io_uring_enter, 0, nullptr, 0, 0, nullptr);
+        return true;
+    }
+
+    static bool CheckIoUringFlag3()
+    {
+        (void)syscall(SYS_io_uring_register, 0, "example", 0);
+        return true;
+    }
+
+    void TestAppAllowIoUringSyscall()
+    {
+        int ret = CheckSyscall(APP, APP_ALLOW_IOURING, CheckIoUringFlag1, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckIoUringFlag1, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_ALLOW_IOURING, CheckIoUringFlag2, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckIoUringFlag2, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_ALLOW_IOURING, CheckIoUringFlag3, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_NAME, CheckIoUringFlag3, false);
+        EXPECT_EQ(ret, 0);
+    }
+
 #if defined __aarch64__
     static bool CheckMqOpen()
     {
@@ -1322,6 +1361,18 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall002, TestSize.Level1)
 {
     SeccompUnitTest test;
     test.TestAppAtomicSyscallForIoctl();
+}
+
+/**
+ * @tc.name: TestAppIoUringSycall
+ * @tc.desc: Verify the app seccomp policy with io uring.
+ * @tc.type: FUNC
+ * @tc.require: issueI5MUXD
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall003, TestSize.Level1)
+{
+    SeccompUnitTest test;
+    test.TestAppAllowIoUringSyscall();
 }
 
 /**

@@ -104,6 +104,20 @@ ohos_prebuilt_seccomp("app_atomic_filter") {
   install_images = [ "system" ]
 }
 
+ohos_prebuilt_seccomp("app_allow_iouring_filter") {
+  sources = [ "seccomp_policy/app_allow_iouring.seccomp.policy" ]
+
+  filtername = "app_allow_iouring"
+  process_type = "app"
+  uid_is_root = true
+
+  part_name = INIT_PART
+  subsystem_name = "startup"
+
+  install_enable = true
+  install_images = [ "system" ]
+}
+
 ohos_prebuilt_seccomp("app_privilege_filter") {
   sources = [ "seccomp_policy/app_privilege.seccomp.policy" ]
 
@@ -182,6 +196,7 @@ ohos_source_set("libseccomp_static") {
 
 group("seccomp_filter") {
   deps = [
+    ":app_allow_iouring_filter",
     ":app_atomic_filter",
     ":app_filter",
     ":system_filter",
