@@ -113,6 +113,10 @@ void ReadConfig(void)
         ParseInitCfgByPriority();
     } else if (strcmp(buffer, "charger") == 0) {
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
+    } else if (IsPenglaiMode()) {
+        INIT_LOGI("enter penglai mode");
+        ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
+        ParseInitCfgByPriority();
     } else if (InRescueMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(INIT_RESCUE_MODE_PATH, ".cfg", ParseInitCfg, NULL);

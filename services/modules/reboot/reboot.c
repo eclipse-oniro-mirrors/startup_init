@@ -185,6 +185,23 @@ static int DoRebootUpdater(int id, const char *name, int argc, const char **argv
     return ret;
 }
 
+static int DoRebootPenglai(int id, const char *name, int argc, const char **argv)
+{
+    UNUSED(id);
+    PLUGIN_LOGI("DoRebootPenglai argc %d %s", argc, name);
+    PLUGIN_CHECK(argc >= 1, return -1, "Invalid parameter");
+    PLUGIN_LOGI("DoRebootPenglai argv %s", argv[0]);
+#ifndef OHOS_LITE
+    ReportStartupReboot(argv[0]);
+#endif
+    ParseRebootReason(name, argc, argv);
+    int ret = UpdateMiscMessage(argv[0], "penglai", "penglai:", "boot_penglai");
+    if (ret == 0) {
+        return DoRoot_("reboot", RB_AUTOBOOT);
+    }
+    return ret;
+}
+
 PLUGIN_STATIC int DoRebootFlashed(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
@@ -259,6 +276,7 @@ static void RebootAdpInit(void)
     AddRebootCmdExecutor("charge", DoRebootCharge);
     AddRebootCmdExecutor("suspend", DoRebootSuspend);
     AddRebootCmdExecutor("panic", DoRebootPanic);
+    AddRebootCmdExecutor("penglai", DoRebootPenglai);
     (void)AddCmdExecutor("panic", DoRebootPanic);
 }
 
