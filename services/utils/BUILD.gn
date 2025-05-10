@@ -21,6 +21,9 @@ config("exported_header_files") {
 
 if (defined(ohos_lite)) {
   static_library("libinit_utils") {
+    if (board_toolchain_type == "clang") {
+      cflags = [ "-Wno-error=unused-but-set-variable" ]
+    }
     sources = [ "init_utils.c" ]
     public_configs = [ ":exported_header_files" ]
     include_dirs = [

@@ -109,6 +109,13 @@ static_library("param_init_lite") {
 }
 
 static_library("param_client_lite") {
+  if (board_toolchain_type == "clang") {
+    cflags = [
+      "-Wno-error=unused-but-set-variable",
+      "-Wno-error=macro-redefined",
+      "-Wno-error=unused-function",
+    ]
+  }
   sources = base_sources
   include_dirs = param_include_dirs
   defines = param_build_defines

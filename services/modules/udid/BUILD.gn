@@ -26,6 +26,12 @@ comm_include = [
 
 if (defined(ohos_lite)) {
   static_library("libudidcomm") {
+    if (board_toolchain_type == "clang") {
+      cflags = [
+        "-Wno-error=macro-redefined",
+        "-Wno-error=unknown-warning-option",
+      ]
+    }
     defines = [
       "_GNU_SOURCE",
       "OHOS_LITE",
