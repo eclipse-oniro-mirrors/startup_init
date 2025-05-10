@@ -581,7 +581,7 @@ static napi_value CreateDeviceTypes(napi_env env, napi_value exports)
 
     napi_create_string_utf8(env, "default", NAPI_AUTO_LENGTH, &typeDefault);
     napi_create_string_utf8(env, "phone", NAPI_AUTO_LENGTH, &typePhone);
-    napi_create_string_utf8(env, "table", NAPI_AUTO_LENGTH, &typeTablet);
+    napi_create_string_utf8(env, "tablet", NAPI_AUTO_LENGTH, &typeTablet);
     napi_create_string_utf8(env, "2in1", NAPI_AUTO_LENGTH, &type2in1);
     napi_create_string_utf8(env, "tv", NAPI_AUTO_LENGTH, &typeTv);
     napi_create_string_utf8(env, "wearable", NAPI_AUTO_LENGTH, &typeWearable);
