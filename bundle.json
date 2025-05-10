@@ -56,6 +56,7 @@
                 "napi",
                 "ipc",
                 "config_policy",
+                "hdf_core",
                 "hilog",
                 "hilog_lite",
                 "samgr",
