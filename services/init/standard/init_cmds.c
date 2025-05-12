@@ -54,6 +54,8 @@
 #define BOOT_DETECTOR_IOCTL_BASE 'B'
 #define SET_SHUT_STAGE _IOW(BOOT_DETECTOR_IOCTL_BASE, 106, int)
 #define SHUT_STAGE_FRAMEWORK_START 1
+#define SETPOLICY_RETRY_MAX 5
+#define SETPOLICY_RETRY_SLEEP 10000
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
@@ -668,5 +670,18 @@ int SetFileCryptPolicy(const char *dir)
         INIT_LOGE("SetFileCryptPolicy:dir is null");
         return -EINVAL;
     }
-    return FscryptPolicyEnable(dir);
+    int ret = 0;
+    int count = 0;
+    while (count < SETPOLICY_RETRY_MAX) {
+        count++;
+        ret = FscryptPolicyEnable(dir);
+        if (ret == 0) {
+            return 0;
+        }
+        INIT_LOGE("setpolicy %s retry %d failed, err:%d", dir, count, ret);
+        usleep(SETPOLICY_RETRY_SLEEP);
+    }
+    INIT_LOGE("setpolicy %s retry %d failed, do panic", dir, count);
+    ExecReboot("panic");
+    return ret;
 }
