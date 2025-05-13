@@ -254,6 +254,7 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
     }
     std::vector<char> defValue(MAX_VALUE_LENGTH, 0);
     size_t valueSize = 0;
+    int flag = 0;
     if (argc == ARGC_NUMBER) {
         if (valuetype1 == napi_undefined) {
             valueSize = 0;
@@ -263,10 +264,11 @@ static napi_value GetSync(napi_env env, napi_callback_info info)
                 napi_throw(env, BusinessErrorCreate(env, SYSPARAM_INVALID_INPUT));
                 return nullptr;
             }
+            flag = 1;
         }
     }
     std::vector<char> value(MAX_VALUE_LENGTH, 0);
-    ret = GetParameter(keyBuf.data(), (valueSize == 0) ? nullptr : defValue.data(), value.data(), MAX_VALUE_LENGTH);
+    ret = GetParameter(keyBuf.data(), (flag == 0) ? nullptr : defValue.data(), value.data(), MAX_VALUE_LENGTH);
     PARAM_JS_LOGV("JSApp get status: %d, key: '%s', value: '%s', defValue: '%s'.",
         ret, keyBuf.data(), value.data(), defValue.data());
 
