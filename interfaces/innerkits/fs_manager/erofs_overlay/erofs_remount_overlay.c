@@ -22,6 +22,9 @@
 #include "fs_manager/fs_manager.h"
 #include "erofs_remount_overlay.h"
 
+#define DPA_MNT_PATH "/vendor/communication/dpa"
+#define DPA_EXCHANGE_PATH "/mnt/dpa_exchange"
+
 int GetRemountResult(void)
 {
     int fd = open(REMOUNT_RESULT_FLAG, O_RDONLY);
@@ -140,6 +143,10 @@ void OverlayRemountVendorPre(void)
     if (!stat(MODEM_FW_MNT_PATH, &statInfo)) {
         Modem2Exchange(MODEM_FW_MNT_PATH, MODEM_FW_EXCHANGE_PATH);
     }
+
+    if (!stat(DPA_MNT_PATH, &statInfo)) {
+        Modem2Exchange(DPA_MNT_PATH, DPA_EXCHANGE_PATH);
+    }
 }
 
 void OverlayRemountVendorPost()
@@ -147,6 +154,7 @@ void OverlayRemountVendorPost()
     Exchange2Modem(MODEM_DRIVER_MNT_PATH, MODEM_DRIVER_EXCHANGE_PATH);
     Exchange2Modem(MODEM_VENDOR_MNT_PATH, MODEM_VENDOR_EXCHANGE_PATH);
     Exchange2Modem(MODEM_FW_MNT_PATH, MODEM_FW_EXCHANGE_PATH);
+    Exchange2Modem(DPA_MNT_PATH, DPA_EXCHANGE_PATH);
 }
 
 int MountOverlayOne(const char *mnt)
