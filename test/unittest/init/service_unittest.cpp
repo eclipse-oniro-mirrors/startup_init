@@ -516,4 +516,146 @@ HWTEST_F(ServiceUnitTest, TestServiceCGroup2, TestSize.Level1)
     ReleaseService(service);
     cJSON_Delete(jobItem);
 }
+
+HWTEST_F(ServiceUnitTest, TestKernelPermAllRight, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/system/bin/sa_main\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"],\"kernel_permission\":{\"ohos.filesystem.dfs\":345,"
+        "\"ohos.permission.kernel.ALLOW_WRITABLE_CODE_MEMORY\":true}}}";
+    const char *kernelPermStr = "{\"encaps\":{\"ohos.encaps.count\":2,\"ohos.filesystem.dfs\":345,"
+                            "\"ohos.permission.kernel.ALLOW_WRITABLE_CODE_MEMORY\":true}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    const char serviceName[] = "test_service1";
+    Service *service = AddService(serviceName);
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    ret = strcmp(service->kernelPerms, kernelPermStr);
+    EXPECT_EQ(ret, 0);
+
+    SERVICE_INFO_CTX context;
+    context.serviceName = service->name;
+    context.reserved = (const char*)service->pathArgs.argv[0];
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_SET_PERMS_BEFORE, (void *)(&context), NULL);
+
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
+HWTEST_F(ServiceUnitTest, TestKernelPermValueNotSupport, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/system/bin/sa_main\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"],\"kernel_permission\":{\"ohos.filesystem.dfs\":[345,678],"
+        "\"ohos.permission.kernel.ALLOW_WRITABLE_CODE_MEMORY\":true}}}";
+
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    const char serviceName[] = "test_service1";
+    Service *service = AddService(serviceName);
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(service->kernelPerms == nullptr);
+
+    SERVICE_INFO_CTX context;
+    context.serviceName = service->name;
+    context.reserved = (const char*)service->pathArgs.argv[0];
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_SET_PERMS_BEFORE, (void *)(&context), NULL);
+
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
+HWTEST_F(ServiceUnitTest, TestKernelPermNotSa, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/system/bin\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"],\"kernel_permission\":{\"ohos.filesystem.dfs\":[345,678],"
+        "\"ohos.permission.kernel.ALLOW_WRITABLE_CODE_MEMORY\":true}}}";
+
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    const char serviceName[] = "test_service1";
+    Service *service = AddService(serviceName);
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(service->kernelPerms == nullptr);
+
+    SERVICE_INFO_CTX context;
+    context.serviceName = service->name;
+    context.reserved = (const char*)service->pathArgs.argv[0];
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_SET_PERMS_BEFORE, (void *)(&context), NULL);
+
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
+HWTEST_F(ServiceUnitTest, TestKernelPermPermissionError, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/system/bin/sa_main\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"],\"kernel_permission\":{\"ohos.filesystem.dfsxxx\":1,"
+        "\"ohos.permission.kernel.ALLOW_WRITABLE_CODE_MEMORY\":true}}}";
+
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    const char serviceName[] = "test_service1";
+    Service *service = AddService(serviceName);
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(service->kernelPerms == nullptr);
+
+    SERVICE_INFO_CTX context;
+    context.serviceName = service->name;
+    context.reserved = (const char*)service->pathArgs.argv[0];
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_SET_PERMS_BEFORE, (void *)(&context), NULL);
+
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
+HWTEST_F(ServiceUnitTest, TestKernelPermServiceNameError, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/system/bin/sa_main\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"],\"kernel_permission\":{\"ohos.filesystem.dfs\":1,"
+        "\"ohos.permission.kernel.ALLOW_WRITABLE_CODE_MEMORY\":true}}}";
+
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    const char serviceName[] = "test_service1";
+    Service *service = AddService(serviceName);
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(service->kernelPerms == nullptr);
+
+    SERVICE_INFO_CTX context;
+    context.serviceName = "wrongServiceName";
+    context.reserved = (const char*)service->pathArgs.argv[0];
+    HookMgrExecute(GetBootStageHookMgr(), INIT_GLOBAL_INIT, nullptr, nullptr);
+    (void)HookMgrExecute(GetBootStageHookMgr(), INIT_SERVICE_SET_PERMS_BEFORE, (void *)(&context), NULL);
+
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
 } // namespace init_ut

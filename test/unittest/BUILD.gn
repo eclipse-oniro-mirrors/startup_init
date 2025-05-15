@@ -129,6 +129,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/modules/udid/udid_adp.c",
     "//base/startup/init/services/modules/udid/udid_comm.c",
     "//base/startup/init/services/modules/udid/udid_static.c",
+    "//base/startup/init/services/modules/encaps/encaps_static.c",
     "//base/startup/init/services/param/adapter/param_dac.c",
     "//base/startup/init/services/param/adapter/param_persistadp.c",
     "//base/startup/init/services/param/base/param_base.c",
