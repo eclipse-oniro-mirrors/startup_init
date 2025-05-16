@@ -22,8 +22,10 @@
 #include "beget_ext.h"
 #include "securec.h"
 #include "systemcapability.h"
+#include "parameter.h"
 
 #define SYSCAP_MAX_SIZE 100
+#define API_VERSION_MAX 999
 #define SYSCAP_PREFIX_NAME "SystemCapability"
 #define CONST_SYSCAP_PREFIX_NAME "const.SystemCapability"
 
@@ -53,4 +55,29 @@ bool HasSystemCapability(const char *cap)
     }
     
     return true;
+}
+
+bool CheckApiVersionGreaterOrEqual(int majorVersion, int minorVersion, int patchVersion)
+{
+    if (majorVersion > API_VERSION_MAX || majorVersion < 1) {
+        return false;
+    }
+    if (minorVersion > API_VERSION_MAX || majorVersion < 0) {
+        return false;
+    }
+    if (patchVersion > API_VERSION_MAX || majorVersion < 0) {
+        return false;
+    }
+
+    const int currentMajor = GetSdkApiVersion();
+    if (majorVersion != currentMajor) {
+        return majorVersion > currentMajor;
+    }
+    
+    const int currentMinor = GetSdkMinorApiVersion();
+    if (minorVersion != currentMinor) {
+        return minorVersion > currentMinor;
+    }
+    
+    return patchVersion >= GetSdkPatchApiVersion();
 }

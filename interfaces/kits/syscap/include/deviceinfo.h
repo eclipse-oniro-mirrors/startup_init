@@ -156,12 +156,26 @@ const char *OH_GetOsReleaseType(void);
 const char *OH_GetOSFullName(void);
 
 /**
- * Obtains the SDK API version number.
+ * Obtains the SDK API major version number.
  * @syscap SystemCapability.Startup.SystemInfo
  * @return 0 - Not found the SDK API version number, or failed to invoke the internal interface.
  * @since 10
  */
 int OH_GetSdkApiVersion(void);
+
+/**
+ * Obtains the SDK Minor API version number.
+ * @syscap SystemCapability.Startup.SystemInfo
+ * @since 19
+ */
+int OH_GetSdkMinorApiVersion(void);
+
+/**
+ * Obtains the SDK Patch API version number.
+ * @syscap SystemCapability.Startup.SystemInfo
+ * @since 19
+ */
+int OH_GetSdkPatchApiVersion(void);
 
 /**
  * Obtains the first API version number.

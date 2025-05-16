@@ -99,6 +99,16 @@ int OH_GetSdkApiVersion(void)
     return GetSdkApiVersion();
 }
 
+int OH_GetSdkMinorApiVersion(void)
+{
+    return GetSdkMinorApiVersion();
+}
+
+int OH_GetSdkPatchApiVersion(void)
+{
+    return GetSdkPatchApiVersion();
+}
+
 int OH_GetFirstApiVersion(void)
 {
     return GetFirstApiVersion();
