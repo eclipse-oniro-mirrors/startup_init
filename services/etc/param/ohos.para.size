@@ -47,3 +47,4 @@ useriam_fwkready_param = 2048
 custom_param = 2048
 persist_audio_param = 4096
 update_updater_param = 4096
+bms_param = 2048
