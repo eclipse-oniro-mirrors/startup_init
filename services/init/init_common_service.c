@@ -626,6 +626,8 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
     _exit(service->lastErrno);
 }
 
+#define PATH_MAY_BE_NOT_EXISTS  "/data/"
+
 static int IsServiceInvalid(Service *service, ServiceArgs *pathArgs)
 {
     if (service->attribute & SERVICE_ATTR_INVALID) {
@@ -635,7 +637,9 @@ static int IsServiceInvalid(Service *service, ServiceArgs *pathArgs)
     struct stat pathStat = { 0 };
     service->attribute &= (~(SERVICE_ATTR_NEED_RESTART | SERVICE_ATTR_NEED_STOP));
     if (stat(pathArgs->argv[0], &pathStat) != 0) {
-        service->attribute |= SERVICE_ATTR_INVALID;
+        if (strncmp(pathArgs->argv[0], PATH_MAY_BE_NOT_EXISTS, sizeof(PATH_MAY_BE_NOT_EXISTS) - 1) != 0) {
+            service->attribute |= SERVICE_ATTR_INVALID;
+        }
         service->lastErrno = INIT_EPATH;
         INIT_LOGE("ServiceStart pathArgs invalid, please check %s,%s", service->name, service->pathArgs.argv[0]);
         return SERVICE_FAILURE;
