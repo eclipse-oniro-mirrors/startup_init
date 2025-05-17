@@ -141,6 +141,8 @@ const char *GetVersionId(void);
 const char *GetBuildRootHash(void);
 const char *GetOsReleaseType(void);
 int GetSdkApiVersion(void);
+int GetSdkMinorApiVersion(void);
+int GetSdkPatchApiVersion(void);
 
 const char *GetDeviceType(void);
 const char *GetProductModel(void);

@@ -321,6 +321,22 @@ static napi_value GetSdkApiVersion(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_int32(env, sdkApiVersion, &napiValue));
     return napiValue;
 }
+static napi_value GetSdkMinorApiVersion(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    int sdkMinorApiVersion = GetSdkMinorApiVersion();
+
+    NAPI_CALL(env, napi_create_int32(env, sdkMinorApiVersion, &napiValue));
+    return napiValue;
+}
+static napi_value GetSdkPatchApiVersion(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    int sdkPatchApiVersion = GetSdkPatchApiVersion();
+
+    NAPI_CALL(env, napi_create_int32(env, sdkPatchApiVersion, &napiValue));
+    return napiValue;
+}
 
 static napi_value GetFirstApiVersion(napi_env env, napi_callback_info info)
 {
@@ -598,6 +614,8 @@ static napi_value Init(napi_env env, napi_value exports)
         {"featureVersion", nullptr, nullptr, GetFeatureVersion, nullptr, nullptr, napi_default, nullptr},
         {"buildVersion", nullptr, nullptr, GetBuildVersion, nullptr, nullptr, napi_default, nullptr},
         {"sdkApiVersion", nullptr, nullptr, GetSdkApiVersion, nullptr, nullptr, napi_default, nullptr},
+        {"sdkMinorApiVersion", nullptr, nullptr, GetSdkMinorApiVersion, nullptr, nullptr, napi_default, nullptr},
+        {"sdkPatchApiVersion", nullptr, nullptr, GetSdkPatchApiVersion, nullptr, nullptr, napi_default, nullptr},
         {"firstApiVersion", nullptr, nullptr, GetFirstApiVersion, nullptr, nullptr, napi_default, nullptr},
         {"versionId", nullptr, nullptr, GetVersionId, nullptr, nullptr, napi_default, nullptr},
         {"buildType", nullptr, nullptr, GetBuildType, nullptr, nullptr, napi_default, nullptr},

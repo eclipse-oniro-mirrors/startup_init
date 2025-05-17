@@ -21,3 +21,9 @@ bool canIUse(const char *cap)
 {
     return HasSystemCapability(cap);
 }
+
+bool OH_IsApiVersionGreaterOrEqual(int majorVersion, int minorVersion, int patchVersion)
+{
+    return CheckApiVersionGreaterOrEqual(majorVersion, minorVersion, patchVersion);
+}
+

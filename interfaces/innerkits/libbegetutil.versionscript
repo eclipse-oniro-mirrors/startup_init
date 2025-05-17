@@ -121,7 +121,9 @@
     GetProductModel;
     GetProductModelAlias;
     GetProductSeries;
-    GetSdkApiVersion;
+    GetSdkApiVersion;    
+    GetSdkMinorApiVersion;
+    GetSdkPatchApiVersion;
     GetSecurityPatchTag;
     GetSerial;
     GetSoftwareModel;
@@ -140,6 +142,7 @@
     StartServiceByTimer;
     StopServiceTimer;
     HasSystemCapability;
+    CheckApiVersionGreaterOrEqual;
     GetBuildVersion;
     GetFeatureVersion;
     GetMajorVersion;
