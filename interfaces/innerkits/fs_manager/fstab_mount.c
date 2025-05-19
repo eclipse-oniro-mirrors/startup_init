@@ -796,6 +796,8 @@ int MountOneWithFstabFile(const char *fstabFile, const char *devName, bool requi
         rc = HvbDmVerityinit(fstab);
         if (rc != 0) {
             BEGET_LOGE("set dm_verity init, ret = 0x%x", rc);
+			ReleaseFstab(fstab);
+			fstab = NULL;
             return rc;
         }
     }
