@@ -53,7 +53,7 @@ HWTEST_F(ErofsCommonOverlayUnitTest, Init_IsOverlayEnable_001, TestSize.Level0)
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
     ret = IsOverlayEnable();
     EXPECT_EQ(ret, true);
-    int ret2 = remove(BOOT_CMD_LINE);
+    ret = remove(BOOT_CMD_LINE);
     PrepareCmdLineData();
 }
 

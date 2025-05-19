@@ -30,7 +30,6 @@ ohos_source_set("libcrashhandler") {
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
-    "libunwind:libunwind",
   ]
 
   public_configs += [ "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]

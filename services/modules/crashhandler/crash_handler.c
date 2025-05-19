@@ -31,8 +31,6 @@
 #include <sys/wait.h>
 #include <linux/futex.h>
 
-#include <libunwind.h>
-
 #include "beget_ext.h"
 #include "securec.h"
 #include "init_cmds.h"

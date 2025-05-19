@@ -160,13 +160,6 @@ ohos_unittest("init_unittest") {
 
   deps = [ "//base/startup/init/interfaces/innerkits:deviceinfo_stub" ]
 
-  sources += [
-    "${FSCRYPT_PATH}/libfscrypt/src/fscrypt_control.c",
-    "${FSCRYPT_PATH}/libfscrypt/src/fscrypt_utils.c",
-    "${FSCRYPT_PATH}/libfscrypt/src/key_control.c",
-    "${FSCRYPT_PATH}/libfscrypt/src/sysparam_static.c",
-  ]
-
   if (defined(build_selinux) && build_selinux) {
     sources += [ "//base/startup/init/services/param/adapter/param_selinux.c" ]
   }
@@ -360,7 +353,6 @@ ohos_unittest("init_unittest") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libinit_module_engine",
-    "libunwind:libunwind",
     "mbedtls:mbedtls_shared",
     "selinux:libselinux",
     "zlib:libz",
