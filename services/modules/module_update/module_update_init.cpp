@@ -14,12 +14,19 @@
  */
 
 #include <cerrno>
+#include <sys/mount.h>
 #include "bootstage.h"
 #include "init_log.h"
 #include "init_module_engine.h"
 
 static void HandleModuleUpdate(void)
 {
+    if (mount("tmpfs", "/module_update", "tmpfs", MS_NOEXEC | MS_NODEV | MS_NOSUID, "mode=0755") != 0) {
+        INIT_LOGE("mount module_update tmpfs fail, %s", strerror(errno));
+    }
+    if (mount(nullptr, "/module_update", nullptr, MS_SHARED, nullptr) != 0) {
+        INIT_LOGE("mount module_update shared fail, %s", strerror(errno));
+    }
     pid_t pid = fork();
     if (pid < 0) {
         INIT_LOGE("HandleModuleUpdate, fork fail.");
