@@ -727,6 +727,9 @@ int ServiceStop(Service *service)
     INIT_ERROR_CHECK(kill(service->pid, GetKillServiceSig(service->name)) == 0, return SERVICE_FAILURE,
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
+#ifndef OHOS_LITE
+    (void)ProcessServiceDied(service);
+#endif
     service->pid = -1;
     NotifyServiceChange(service, SERVICE_STOPPED);
     return SERVICE_SUCCESS;
@@ -758,6 +761,9 @@ int ServiceTerm(Service *service)
     INIT_ERROR_CHECK(kill(service->pid, SIGTERM) == 0, return SERVICE_FAILURE,
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
+#ifndef OHOS_LITE
+    (void)ProcessServiceDied(service);
+#endif
     service->pid = -1;
     NotifyServiceChange(service, SERVICE_STOPPED);
     return SERVICE_SUCCESS;
