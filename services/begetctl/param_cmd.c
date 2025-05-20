@@ -48,7 +48,9 @@ typedef struct {
 #define STACK_SIZE (1024 * 1024 * 8)
 #define MASK_LENGTH_MAX 4
 pid_t g_shellPid = 0;
+#ifndef STARTUP_INIT_TEST
 static struct termios g_terminalState;
+#endif
 char g_isSetTerminal = 0;
 
 void demoExit(void)

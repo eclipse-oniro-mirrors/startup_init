@@ -30,11 +30,11 @@ public:
 
 HWTEST_F(RemountOverlayUnitTest, Init_MntNeedRemountTest_001, TestSize.Level0)
 {
-    char *path = "/test";
+    const char *path = "/test";
     bool ret = MntNeedRemount(path);
     EXPECT_EQ(ret, false);
 
-    char *path2 = "/";
+    const char *path2 = "/";
     ret = MntNeedRemount(path2);
     EXPECT_EQ(ret, true);
 }
@@ -45,25 +45,25 @@ HWTEST_F(RemountOverlayUnitTest, Init_IsSkipRemountTest_001, TestSize.Level0)
     bool ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    mentry.mnt_type = "ufs";
-    mentry.mnt_dir = "test";
+    strcpy(mentry.mnt_type, "ufs");
+    strcpy(mentry.mnt_dir, "test");
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    mentry.mnt_dir = "/";
+    strcpy(mentry.mnt_dir, "/");
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    mentry.mnt_type = "er11ofs";
+    strcpy(mentry.mnt_type, "er11ofs");
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    mentry.mnt_type = "erofs";
-    mentry.mnt_fsname = "/dev/block/ndm-";
+    strcpy(mentry.mnt_type, "erofs");
+    strcpy(mentry.mnt_fsname, "/dev/block/ndm-");
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    mentry.mnt_fsname = "/dev/block/dm-1";
+    strcpy(mentry.mnt_fsname, "/dev/block/dm-1");
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, false);
 }
@@ -74,12 +74,14 @@ HWTEST_F(RemountOverlayUnitTest, Init_ExecCommand_001, TestSize.Level0)
     int result = ExecCommand(0, nullArgv);
     EXPECT_NE(result, 0);  // Expect success
 
-    char *validArgv[] = {"/bin/ls", NULL};  // A valid command
+    char *validArgv[] = {new char[strlen("/bin/ls") + 1], NULL};  // A valid command
     result = ExecCommand(1, validArgv);
     EXPECT_NE(result, 0);  // Expect success
 
-    char *invalidArgv[] = {"/notexit/ls", NULL};  // A valid command
+    char *invalidArgv[] = {new char[strlen("/notexit/ls") + 1], NULL};  // A valid command
     result = ExecCommand(1, invalidArgv);
+    delete[] validArgv[0];
+    delete[] invalidArgv[0];
     EXPECT_NE(result, 0);  // Expect success
 }
 

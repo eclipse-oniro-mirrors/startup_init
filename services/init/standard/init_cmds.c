@@ -505,9 +505,11 @@ static bool InitFscryptPolicy(void)
 {
     char policy[FSCRYPT_POLICY_BUF_SIZE];
     if (LoadFscryptPolicy(policy, FSCRYPT_POLICY_BUF_SIZE) == 0) {
+#ifndef STARTUP_INIT_TEST
         if (SetFscryptSysparam(policy) == 0) {
             return true;
         }
+#endif
     }
     return false;
 }
@@ -674,7 +676,9 @@ int SetFileCryptPolicy(const char *dir)
     int count = 0;
     while (count < SETPOLICY_RETRY_MAX) {
         count++;
+#ifndef STARTUP_INIT_TEST
         ret = FscryptPolicyEnable(dir);
+#endif
         if (ret == 0) {
             return 0;
         }
