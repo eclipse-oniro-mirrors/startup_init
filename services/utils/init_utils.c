@@ -605,6 +605,21 @@ int InUpdaterMode(void)
 #endif
 }
 
+// Check if in penglai mode.
+bool IsPenglaiMode(void)
+{
+#ifdef OHOS_LITE
+    return false;
+#else
+    char value[MAX_BUFFER_LEN] = {0};
+    int ret = GetParameterFromCmdLine("ohos.boot.minisys.mode", value, MAX_BUFFER_LEN);
+    if (ret == 0 && strcmp(value, "penglai") == 0) {
+        return true;
+    }
+    return false;
+#endif
+}
+
 // Check if in rescue mode.
 int InRescueMode(void)
 {
