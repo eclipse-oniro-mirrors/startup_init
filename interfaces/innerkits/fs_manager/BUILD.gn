@@ -112,7 +112,7 @@ ohos_static_library("libfsmanager_static_real") {
     ]
     external_deps = [
       "bounds_checking_function:libsec_static",
-      "cJSON:cjson",
+      "cJSON:cjson_static",
     ]
     deps = [ "//base/startup/init/services/utils:libinit_utils" ]
     if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
