@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ohos.systemParameterEnhance.systemParameterEnhance.proj.hpp"
-#include "ohos.systemParameterEnhance.systemParameterEnhance.impl.hpp"
+#include "ohos.systemParameterEnhance.proj.hpp"
+#include "ohos.systemParameterEnhance.impl.hpp"
 #include "taihe/runtime.hpp"
 #include "stdexcept"
 
