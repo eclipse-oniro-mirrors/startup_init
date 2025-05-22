@@ -111,6 +111,7 @@ void FreeStringVector(char **vector, int count);
 int InUpdaterMode(void);
 int InRescueMode(void);
 int InRepairMode(void);
+bool IsPenglaiMode(void);
 int StringReplaceChr(char *strl, char oldChr, char newChr);
 
 int OpenConsole(void);
