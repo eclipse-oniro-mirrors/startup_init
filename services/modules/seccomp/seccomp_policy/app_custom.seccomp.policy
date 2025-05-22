@@ -257,6 +257,7 @@ pidfd_getfd;all
 faccessat2;all
 process_madvise;all
 set_robust_list;all
+mbind;all
 fork;arm
 open;arm
 creat;arm
