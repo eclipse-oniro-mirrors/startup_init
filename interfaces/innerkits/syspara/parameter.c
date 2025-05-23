@@ -328,7 +328,7 @@ int GetSdkMinorApiVersion(void)
     static const char *sdkApiMinorVersion = NULL;
     GetProperty("const.ohos.apiminorversion", &sdkApiMinorVersion);
     if (sdkApiMinorVersion == NULL) {
-        return 0;
+        return -1;
     }
     return atoi(sdkApiMinorVersion);
 }
@@ -338,7 +338,7 @@ int GetSdkPatchApiVersion(void)
     static const char *sdkApiPatchVersion = NULL;
     GetProperty("const.ohos.apipatchversion", &sdkApiPatchVersion);
     if (sdkApiPatchVersion == NULL) {
-        return 0;
+        return -1;
     }
     return atoi(sdkApiPatchVersion);
 }
