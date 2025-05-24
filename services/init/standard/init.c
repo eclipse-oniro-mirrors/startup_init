@@ -306,6 +306,7 @@ void SystemConfig(const char *uptime)
 
     // load SELinux context and policy
     // Do not move position!
+    PluginExecCmdByName("preLoadSelinuxPolicy", "");
     PluginExecCmdByName("loadSelinuxPolicy", "");
     RecordInitBootEvent("init.prepare");
 
