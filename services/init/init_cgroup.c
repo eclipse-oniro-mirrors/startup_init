@@ -120,7 +120,8 @@ static void RmdirTimer(Service *service, uint64_t timeout)
 int ProcessServiceDied(Service *service)
 {
     INIT_CHECK_RETURN_VALUE(service != NULL, -1);
-    INIT_CHECK_RETURN_VALUE(service->isCgroupEnabled, -1);
+    INIT_CHECK_RETURN_VALUE(service->pid != -1, 0);
+    INIT_CHECK_RETURN_VALUE(service->isCgroupEnabled, 0);
     char path[PATH_MAX] = {};
     INIT_LOGV("ProcessServiceDied %d to cgroup ", service->pid);
     int ret = GetCgroupPath(service, path, sizeof(path));
@@ -135,7 +136,7 @@ int ProcessServiceDied(Service *service)
 int ProcessServiceAdd(Service *service)
 {
     INIT_CHECK_RETURN_VALUE(service != NULL, -1);
-    INIT_CHECK_RETURN_VALUE(service->isCgroupEnabled, -1);
+    INIT_CHECK_RETURN_VALUE(service->isCgroupEnabled, 0);
     char path[PATH_MAX] = {};
     INIT_LOGV("ProcessServiceAdd %d to cgroup ", service->pid);
     int ret = GetCgroupPath(service, path, sizeof(path));
