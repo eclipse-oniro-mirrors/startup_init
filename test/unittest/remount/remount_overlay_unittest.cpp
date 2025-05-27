@@ -45,25 +45,32 @@ HWTEST_F(RemountOverlayUnitTest, Init_IsSkipRemountTest_001, TestSize.Level0)
     bool ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    strcpy(mentry.mnt_type, "ufs");
-    strcpy(mentry.mnt_dir, "test");
+    char str1[] = "ufs";
+    char str2[] = "test";
+    mentry.mnt_type = str1;
+    mentry.mnt_dir = str2;
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    strcpy(mentry.mnt_dir, "/");
+    char str3[] = "/";
+    mentry.mnt_dir = str3;
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    strcpy(mentry.mnt_type, "er11ofs");
+    char str4[] = "er11ofs";
+    mentry.mnt_type = str4;
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    strcpy(mentry.mnt_type, "erofs");
-    strcpy(mentry.mnt_fsname, "/dev/block/ndm-");
+    char str5[] = "erofs";
+    char str6[] = "/dev/block/ndm-";
+    mentry.mnt_type = str5;
+    mentry.mnt_fsname = str6;
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    strcpy(mentry.mnt_fsname, "/dev/block/dm-1");
+    char str7[] = "/dev/block/dm-1";
+    mentry.mnt_fsname = str7;
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, false);
 }
