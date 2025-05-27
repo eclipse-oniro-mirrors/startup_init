@@ -908,7 +908,7 @@ int OH_StrArrayGetIndex(const char *strArray[], const char *target, int ignoreCa
 
 void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, int ignoreCase, void **extendStrDict)
 {
-    int i;
+    __attribute__((unused)) int i;
     const char *pos;
     str_compare cmp = strcmp;
 

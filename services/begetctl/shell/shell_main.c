@@ -23,7 +23,7 @@
 
 static BShellHandle g_handle = NULL;
 struct termios terminalState;
-static void signalHandler(int signal)
+__attribute__((unused)) static void signalHandler(int signal)
 {
     demoExit();
     exit(0);

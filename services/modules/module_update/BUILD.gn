@@ -22,7 +22,10 @@ ohos_shared_library("module_update_init") {
   }
   sources = [ "module_update_init.cpp" ]
   deps = [ "${init_innerkits_path}/init_module_engine:libinit_module_engine" ]
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
+  ]
   relative_install_dir = "init/autorun"
   part_name = "init"
   subsystem_name = "startup"

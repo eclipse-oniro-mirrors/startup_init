@@ -45,7 +45,7 @@ static void Test_ProcessTimer(const TimerHandle taskHandle, void *context)
     printf("WaitTimeout count %d\n", g_maxCount);
 }
 
-static void TimeoutCancel(const TimerHandle taskHandle, void *context)
+__attribute__((unused)) static void TimeoutCancel(const TimerHandle taskHandle, void *context)
 {
     printf("TimeoutCancel count %d", g_maxCount);
     LE_StopTimer(LE_GetDefaultLoop(), taskHandle);

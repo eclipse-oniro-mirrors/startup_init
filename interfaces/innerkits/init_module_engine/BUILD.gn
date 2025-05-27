@@ -30,12 +30,6 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/init/include",
       "//base/startup/init/services/log",
     ]
-    if (ohos_indep_compiler_enable) {
-      include_dirs +=
-          [ "//binarys/third_party/cJSON/innerapis/cjson_static/includes" ]
-    } else {
-      include_dirs += [ "//third_party/cJSON" ]
-    }
   }
 
   #

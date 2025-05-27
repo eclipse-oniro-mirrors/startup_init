@@ -86,7 +86,8 @@ static void TestOnClose(const TaskHandle taskHandle)
 {
 }
 
-static LE_STATUS TestHandleTaskEvent(const LoopHandle loop, const TaskHandle task, uint32_t oper)
+__attribute__((unused)) static LE_STATUS TestHandleTaskEvent(const LoopHandle loop, const TaskHandle task,
+                                                             uint32_t oper)
 {
     return LE_SUCCESS;
 }
@@ -117,7 +118,8 @@ static void TestClientOnReceiveRequest(const TaskHandle task, const uint8_t *buf
     }
 }
 
-static void ProcessAsyncEvent(const TaskHandle taskHandle, uint64_t eventId, const uint8_t *buffer, uint32_t buffLen)
+__attribute__((unused)) static void ProcessAsyncEvent(const TaskHandle taskHandle, uint64_t eventId,
+                                                      const uint8_t *buffer, uint32_t buffLen)
 {
     UNUSED(taskHandle);
     UNUSED(eventId);

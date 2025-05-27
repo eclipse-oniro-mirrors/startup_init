@@ -44,6 +44,7 @@ ohos_shared_library("init_context") {
 
   external_deps += [
     "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
     "selinux:libselinux",
   ]
 
@@ -67,7 +68,10 @@ ohos_source_set("initcontext_static") {
   defines = [ "INIT_SUPPORT_CHIPSET_INIT" ]
   public_configs = [ ":initcontext_static_config" ]
   public_configs += [ "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
+  ]
   part_name = "init"
   subsystem_name = "startup"
 }

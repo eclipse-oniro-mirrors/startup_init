@@ -277,7 +277,7 @@ HWTEST_F(LoopEventUnittest, Init_TestProcessWatcherTask_001, TestSize.Level1)
 
 static LoopHandle g_loop = nullptr;
 static int g_timeCount = 0;
-static void Test_ProcessTimer(const TimerHandle taskHandle, void *context)
+__attribute__((unused)) static void Test_ProcessTimer(const TimerHandle taskHandle, void *context)
 {
     g_timeCount++;
     printf("Test_ProcessTimer %d\n", g_timeCount);

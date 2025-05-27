@@ -316,7 +316,7 @@ static bool IsDir(const std::string &path)
     }
     return S_ISDIR(st.st_mode);
 }
-static bool DeleteDir(const std::string &path)
+__attribute__((unused)) static bool DeleteDir(const std::string &path)
 {
     auto pDir = std::unique_ptr<DIR, decltype(&closedir)>(opendir(path.c_str()), closedir);
     if (pDir == nullptr) {
