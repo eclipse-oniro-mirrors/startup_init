@@ -33,23 +33,9 @@ extern "C" {
 #endif
 #endif
 
-#define DM_VERSION0 (4)
-#define DM_VERSION1 (0)
-#define DM_VERSION2 (0)
-#define DM_ALIGN_MASK (7)
-#define DM_ALIGN(x) (((x) + DM_ALIGN_MASK) & ~DM_ALIGN_MASK)
-#define DEVICE_MAPPER_PATH  "/dev/mapper/control"
-#define DM_DEVICE_PATH_PREFIX  "/dev/block/dm-"
+const char g_dmType[MAXNUMTYPE][MAX_WORDS_LEN] = {"verity", "linear", "snapshot", "snapshot-merge"};
 
-#define FS_DM_RETURN_ERR_IF_NULL(__ptr)                 \
-    do {                                                \
-        if ((__ptr) == NULL) {                          \
-            BEGET_LOGE("error, %s is NULL\n", #__ptr); \
-            return -1;                                  \
-        }                                               \
-    } while (0)
-
-static int InitDmIo(struct dm_ioctl *io, const char *devName)
+int InitDmIo(struct dm_ioctl *io, const char *devName)
 {
     errno_t err;
 
@@ -78,7 +64,7 @@ static int InitDmIo(struct dm_ioctl *io, const char *devName)
     return 0;
 }
 
-static int CreateDmDevice(int fd, const char *devName)
+int CreateDmDev(int fd, const char *devName)
 {
     int rc;
     struct dm_ioctl io;
@@ -97,8 +83,7 @@ static int CreateDmDevice(int fd, const char *devName)
     return 0;
 }
 
-static int LoadDmDeviceTable(int fd, const char *devName,
-                             DmVerityTarget *target, bool needDmVerity)
+int LoadDmDeviceTable(int fd, const char *devName, DmVerityTarget *target, int dmTypeIdx)
 {
     int rc;
     errno_t err;
@@ -110,6 +95,10 @@ static int LoadDmDeviceTable(int fd, const char *devName,
 
     FS_DM_RETURN_ERR_IF_NULL(target);
     FS_DM_RETURN_ERR_IF_NULL(target->paras);
+    if (dmTypeIdx >= MAXNUMTYPE || dmTypeIdx < 0) {
+        BEGET_LOGE("dmTypeIdx error dmTypeIdx %d", dmTypeIdx);
+        return -1;
+    }
 
     parasTotalSize = DM_ALIGN(sizeof(*io) + sizeof(*ts) + target->paras_len + 1);
     parasBuf = calloc(1, parasTotalSize);
@@ -132,19 +121,20 @@ static int LoadDmDeviceTable(int fd, const char *devName,
         io->data_size = parasTotalSize;
         io->data_start = sizeof(*io);
         io->target_count = 1;
-        io->flags |= DM_READONLY_FLAG;
+        if (dmTypeIdx != SNAPSHOT) {
+            io->flags |= DM_READONLY_FLAG;
+        }
 
         ts->status = 0;
         ts->sector_start = target->start;
         ts->length = target->length;
-        char *targetType = needDmVerity ? "verity" : "linear";
-        err = strcpy_s(ts->target_type, sizeof(ts->target_type), targetType);
+        err = strcpy_s(ts->target_type, sizeof(ts->target_type), g_dmType[dmTypeIdx]);
         if (err != EOK) {
             rc = -1;
             BEGET_LOGE("error 0x%x, cp target type", err);
             break;
         }
-
+        BEGET_LOGI("get target type is %s", ts->target_type);
         err = strcpy_s(paras, target->paras_len + 1, target->paras);
         if (err != EOK) {
             rc = -1;
@@ -166,7 +156,7 @@ static int LoadDmDeviceTable(int fd, const char *devName,
     return rc;
 }
 
-static int ActiveDmDevice(int fd, const char *devName)
+int ActiveDmDevice(int fd, const char *devName)
 {
     int rc;
     struct dm_ioctl io;
@@ -238,14 +228,14 @@ int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *targ
         return -1;
     }
 
-    rc = CreateDmDevice(fd, devName);
+    rc = CreateDmDev(fd, devName);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, create dm device fail", rc);
         close(fd);
         return rc;
     }
 
-    rc = LoadDmDeviceTable(fd, devName, target, true);
+    rc = LoadDmDeviceTable(fd, devName, target, VERIFY);
     if (rc != 0) {
         BEGET_LOGE("error 0x%x, load device table fail", rc);
         close(fd);
@@ -350,7 +340,7 @@ int FsDmRemoveDevice(const char *devName)
     return 0;
 }
 
-static int DmGetDeviceName(int fd, const char *devName, char *outDevName, const uint64_t outDevNameLen)
+int DmGetDeviceName(int fd, const char *devName, char *outDevName, const uint64_t outDevNameLen)
 {
     int rc;
     char *path = NULL;
@@ -403,7 +393,7 @@ int FsDmCreateLinearDevice(const char *devName, char *dmBlkName, uint64_t dmBlkN
         return -1;
     }
 
-    rc = CreateDmDevice(fd, devName);
+    rc = CreateDmDev(fd, devName);
     if (rc) {
         BEGET_LOGE("create dm device failed");
         close(fd);
@@ -417,7 +407,7 @@ int FsDmCreateLinearDevice(const char *devName, char *dmBlkName, uint64_t dmBlkN
         return -1;
     }
 
-    rc = LoadDmDeviceTable(fd, devName, target, false);
+    rc = LoadDmDeviceTable(fd, devName, target, LINEAR);
     if (rc) {
         BEGET_LOGE("load dm device name failed");
         close(fd);
@@ -434,6 +424,28 @@ int FsDmCreateLinearDevice(const char *devName, char *dmBlkName, uint64_t dmBlkN
     BEGET_LOGI("fs create rofs linear device success, dev is [%s]", devName);
     return 0;
 }
+
+bool GetDmStatusInfo(const char *name, struct dm_ioctl *io)
+{
+    int fd = open(DEVICE_MAPPER_PATH, O_RDWR | O_CLOEXEC);
+    if (fd < 0) {
+        BEGET_LOGE("error 0x%x, open %s", errno, DEVICE_MAPPER_PATH);
+        return false;
+    }
+    int rc = InitDmIo(io, name);
+    if (rc != 0) {
+        close(fd);
+        return false;
+    }
+    if (ioctl(fd, DM_DEV_STATUS, io) != 0) {
+        BEGET_LOGE("DM_DEV_STATUS failed for %s\n", name);
+        close(fd);
+        return false;
+    }
+    close(fd);
+    return true;
+}
+
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -53,7 +53,11 @@ ohos_static_library("libfsmanager_static") {
     if ((defined(global_parts_info) &&
          defined(global_parts_info.startup_hvb)) ||
         init_startup_feature_erofs_overlay) {
-      sources += [ "libfs_dm/fs_dm.c" ]
+      sources += [ 
+        "libfs_dm/fs_dm.c",
+        "libfs_dm/fs_dm_linear.c",
+        "libfs_dm/fs_dm_snapshot.c",
+         ]
       include_dirs += [
         "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
         "//base/startup/init/ueventd/include",
@@ -119,6 +123,8 @@ ohos_static_library("libfsmanager_static_real") {
       sources += [
         "dm_verity/dm_verity.c",
         "libfs_dm/fs_dm.c",
+        "libfs_dm/fs_dm_linear.c",
+        "libfs_dm/fs_dm_snapshot.c",
         "libfs_hvb/fs_hvb.c",
         "libfs_hvb/hvb_ops.c",
       ]
