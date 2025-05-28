@@ -75,7 +75,8 @@
                 "mksh",
                 "toybox",
                 "hicollie",
-                "drivers_interface_partitionslot"
+                "drivers_interface_partitionslot",
+                "code_signature"
             ],
             "third_party": [
                 "mksh",
