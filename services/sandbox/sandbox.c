@@ -368,7 +368,8 @@ static int ParseInitSandboxConfigFile(sandbox_t *sandbox, const char *sandboxCon
     return 0;
 }
 
-static void ParseInitSandboxConfigPath(sandbox_t *sandbox, const char *sandboxConfig, const char *name)
+__attribute__((unused)) static void ParseInitSandboxConfigPath(sandbox_t *sandbox, const char *sandboxConfig,
+                                                               const char *name)
 {
     CfgFiles *files = GetCfgFiles(sandboxConfig);
     for (int i = 0; files && i < MAX_CFG_POLICY_DIRS_CNT; i++) {

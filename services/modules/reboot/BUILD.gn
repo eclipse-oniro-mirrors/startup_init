@@ -29,7 +29,10 @@ ohos_shared_library("rebootmodule") {
     "//base/startup/init/services/utils:libinit_utils",
   ]
 
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
+  ]
   if (!defined(ohos_lite)) {
     include_dirs += [ "//base/startup/init/services/modules/sysevent" ]
     sources +=
@@ -64,6 +67,7 @@ ohos_source_set("libreboot_static") {
     "../init_hook",
     "//base/startup/init/interfaces/innerkits/include/param",
   ]
+  external_deps = [ "cJSON:cjson" ]
   public_external_deps = [ "bounds_checking_function:libsec_static" ]
   public_configs = [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
 }

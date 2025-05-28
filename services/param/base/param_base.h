@@ -46,7 +46,7 @@ extern "C" {
 static inline uint32_t ReadCommitId(ParamNode *entry)
 {
     uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_ACQUIRE);
-    uint32_t retryTimes = 0;
+    __attribute__((unused)) uint32_t retryTimes = 0;
     while (commitId & PARAM_FLAGS_MODIFY) {
         futex_wait(&entry->commitId, commitId);
         commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_ACQUIRE);

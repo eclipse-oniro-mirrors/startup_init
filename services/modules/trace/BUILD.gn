@@ -55,4 +55,5 @@ ohos_source_set("inittrace_static") {
   sources = [ "init_trace_static.c" ]
   public_configs = [ ":inittrace_static_config" ]
   public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
+  external_deps = [ "cJSON:cjson" ]
 }

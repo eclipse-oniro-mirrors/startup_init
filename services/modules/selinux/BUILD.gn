@@ -28,6 +28,7 @@ ohos_shared_library("selinuxadp") {
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
     "selinux:libselinux",
     "selinux_adapter:libload_policy",
     "selinux_adapter:librestorecon",
@@ -60,6 +61,7 @@ ohos_source_set("libselinuxadp_static") {
     "../init_hook",
     "//base/startup/init/interfaces/innerkits/include/param",
   ]
+  external_deps = [ "cJSON:cjson" ]
   public_external_deps = [
     "selinux:libselinux",
     "selinux_adapter:libselinux_parameter_static",

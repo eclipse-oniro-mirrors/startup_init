@@ -275,7 +275,7 @@ static int BatchSavePersistParam(PERSIST_SAVE_HANDLE handle[], const char *name,
 
 static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle[])
 {
-    int ret = 0;
+    __attribute__((unused)) int ret = 0;
     if (InUpdaterMode() == 1) {
         FILE *fp = (FILE *)handle[0];
         (void)fflush(fp);
