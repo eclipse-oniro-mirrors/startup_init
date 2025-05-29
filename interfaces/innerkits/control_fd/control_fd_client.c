@@ -206,7 +206,7 @@ int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd, CallbackSe
         LE_RemoveWatcher(LE_GetDefaultLoop(), agent->reader);
         LE_RemoveWatcher(LE_GetDefaultLoop(), agent->input);
         close(pfd);
-        return -1,
+        return -1;
     }
 #endif
     return 0;
