@@ -20,6 +20,7 @@
 #include "init_param.h"
 #include "param_stub.h"
 #include "securec.h"
+#include "parameter.h"
 #include "systemcapability.h"
 #include "service_control.h"
 #include "control_fd.h"
@@ -290,6 +291,74 @@ HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_TestSysCap001, TestSize.Level1)
     EXPECT_EQ(memset_s(wrongName, SYSCAP_MAX_SIZE, 1, SYSCAP_MAX_SIZE), 0);
     HasSystemCapability(wrongName);
     free(wrongName);
+}
+
+#define API_VERSION_MAX 999
+// TestIsApiVersionGreaterOrEqual
+HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_TestIsApiVersionGreaterOrEqual001, TestSize.Level1)
+{
+    // 验证非法版本
+    bool ret = CheckApiVersionGreaterOrEqual(0, 0, 0);
+    EXPECT_EQ(ret, false);
+    ret = CheckApiVersionGreaterOrEqual(API_VERSION_MAX + 1, 0, 0);
+    EXPECT_EQ(ret, false);
+    ret = CheckApiVersionGreaterOrEqual(1, -1, 0);
+    EXPECT_EQ(ret, false);
+    ret = CheckApiVersionGreaterOrEqual(1, API_VERSION_MAX + 1, 0);
+    EXPECT_EQ(ret, false);
+    ret = CheckApiVersionGreaterOrEqual(1, 0, -1);
+    EXPECT_EQ(ret, false);
+    ret = CheckApiVersionGreaterOrEqual(1, 0, API_VERSION_MAX + 1);
+    EXPECT_EQ(ret, false);
+
+    // 获取设备api版本号
+    int majorApiVersion = GetSdkApiVersion();
+    int minorApiVersion = GetSdkMinorApiVersion();
+    int patchApiVersion = GetSdkPatchApiVersion();
+    printf("IsApiVersionGreaterOrEqual, major:%d, minor:%d, patch:%d\n", majorApiVersion,
+        minorApiVersion, patchApiVersion);
+    // 设备版本号异常校验
+    if (majorApiVersion < 1 || majorApiVersion > API_VERSION_MAX ||
+        minorApiVersion < -1 || minorApiVersion > API_VERSION_MAX ||
+        patchApiVersion < -1 || minorApiVersion > API_VERSION_MAX) {
+        EXPECT_EQ(ret, true);
+    } else {
+        // 验证传参等于系统版本时返回true
+        ret = CheckApiVersionGreaterOrEqual(majorApiVersion, minorApiVersion, patchApiVersion);
+        EXPECT_EQ(ret, true);
+        majorApiVersion += 1;
+        ret = CheckApiVersionGreaterOrEqual(majorApiVersion, minorApiVersion, patchApiVersion);
+        EXPECT_EQ(ret, false);
+        majorApiVersion -= 2;
+        ret = CheckApiVersionGreaterOrEqual(majorApiVersion, minorApiVersion, patchApiVersion);
+        if (majorApiVersion > API_VERSION_MAX || majorApiVersion < 1) {
+            EXPECT_EQ(ret, false);
+        } else {
+            EXPECT_EQ(ret, true);
+        }
+        majorApiVersion += 1;
+        minorApiVersion += 1;
+        ret = CheckApiVersionGreaterOrEqual(majorApiVersion, minorApiVersion, patchApiVersion);
+        EXPECT_EQ(ret, false);
+        minorApiVersion -= 2;
+        ret = CheckApiVersionGreaterOrEqual(majorApiVersion, minorApiVersion, patchApiVersion);
+        if (minorApiVersion > API_VERSION_MAX || minorApiVersion < 0) {
+            EXPECT_EQ(ret, false);
+        } else {
+            EXPECT_EQ(ret, true);
+        }
+        minorApiVersion += 1;
+        patchApiVersion += 1;
+        ret = CheckApiVersionGreaterOrEqual(majorApiVersion, minorApiVersion, patchApiVersion);
+        EXPECT_EQ(ret, false);
+        patchApiVersion -= 2;
+        ret = CheckApiVersionGreaterOrEqual(majorApiVersion, minorApiVersion, patchApiVersion);
+        if (patchApiVersion > API_VERSION_MAX || patchApiVersion < 0) {
+            EXPECT_EQ(ret, false);
+        } else {
+            EXPECT_EQ(ret, true);
+        }
+    }
 }
 
 // TestControlService
