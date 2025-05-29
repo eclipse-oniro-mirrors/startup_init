@@ -29,6 +29,7 @@ int FsDmCreateSnapshotDevice(const char *devName, char *dmDevPath, uint64_t dmDe
                              DmSnapshotTarget *target);
 int FsDmSwitchToSnapshotMerge(const char *devName, DmSnapshotTarget *target);
 bool GetDmMergeProcess(const char *name, StatusInfo *processInfo);
+bool GetDmSnapshotStatus(const char *name, const char *targetType, StatusInfo *processInfo);
 
 #ifdef __cplusplus
 #if __cplusplus
