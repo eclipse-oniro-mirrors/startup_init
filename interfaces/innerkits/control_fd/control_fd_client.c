@@ -189,7 +189,8 @@ int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd, CallbackSe
         close(pfd); return -1, "[control_fd] Failed le_loop start watcher ptmx read");
     info.processEvent = ProcessPtyWrite;
     info.fd = STDIN_FILENO; // read stdin and write ptmx
-    if (LE_StartWatcher(LE_GetDefaultLoop(), &agent->input, &info, agent) != LE_SUCCESS) {
+    ret = LE_StartWatcher(LE_GetDefaultLoop(), &agent->input, &info, agent);
+    if (ret != LE_SUCCESS) {
         BEGET_LOGE("[control_fd] Failed le_loop start watcher stdin read and write ptmx");
         LE_RemoveWatcher(LE_GetDefaultLoop(), agent->reader);
         close(pfd);
