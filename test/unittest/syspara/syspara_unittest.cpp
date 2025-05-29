@@ -108,6 +108,12 @@ HWTEST_F(SysparaUnitTest, parameterTest001_1, TestSize.Level0)
     int sdkApiVersion = GetSdkApiVersion();
     printf("SDK api version =%d\n", sdkApiVersion);
     EXPECT_NE(sdkApiVersion, -1);
+    int sdkMinorApiVersion = GetSdkMinorApiVersion();
+    printf("SDK MinorApi version =%d\n", sdkMinorApiVersion);
+    EXPECT_EQ((sdkMinorApiVersion >= -1), true);
+    int sdkPatchApiVersion = GetSdkPatchApiVersion();
+    printf("SDK PatchApi version =%d\n", sdkPatchApiVersion);
+    EXPECT_EQ((sdkPatchApiVersion >= -1), true);
     const char *incrementalVersion = GetIncrementalVersion();
     printf("Incremental version = %s\n", incrementalVersion);
     EXPECT_STRNE(incrementalVersion, nullptr);
