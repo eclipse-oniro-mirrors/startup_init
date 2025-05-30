@@ -48,7 +48,8 @@ static int CreatePipeServerSocket_(const char *server, int maxClient, int public
     LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket errno %d", errno);
 
     int ret = SetSocketTimeout(listenfd);
-    LE_CHECK(ret == 0, return ret, "Failed to set socket timeout");
+    LE_CHECK(ret == 0, close(listenfd);
+        return ret, "Failed to set socket timeout");
 
     unlink(server);
     struct sockaddr_un serverAddr;
@@ -89,7 +90,8 @@ static int CreatePipeSocket_(const char *server)
     LE_CHECK(ret == 0, return ret, "Failed to set socket option");
 
     ret = SetSocketTimeout(fd);
-    LE_CHECK(ret == 0, return ret, "Failed to set socket timeout");
+    LE_CHECK(ret == 0, close(fd);
+        return ret, "Failed to set socket timeout");
 
     struct sockaddr_un serverAddr;
     ret = memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr));
