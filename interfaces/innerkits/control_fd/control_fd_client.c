@@ -189,25 +189,15 @@ int InitPtyInterface(CmdAgent *agent, uint16_t type, const char *cmd, CallbackSe
         close(pfd); return -1, "[control_fd] Failed le_loop start watcher ptmx read");
     info.processEvent = ProcessPtyWrite;
     info.fd = STDIN_FILENO; // read stdin and write ptmx
-    ret = LE_StartWatcher(LE_GetDefaultLoop(), &agent->input, &info, agent);
-    if (ret != LE_SUCCESS) {
-        BEGET_LOGE("[control_fd] Failed le_loop start watcher stdin read and write ptmx");
+    BEGET_ERROR_CHECK(LE_StartWatcher(LE_GetDefaultLoop(), &agent->input, &info, agent) == LE_SUCCESS,
         LE_RemoveWatcher(LE_GetDefaultLoop(), agent->reader);
-        close(pfd);
-        return -1;
-    }
-    if (g_sendMsg == NULL) {
-        ret = SendCmdMessage(agent, type, cmd, ptsbuffer);
-    } else {
-        ret = g_sendMsg(agent, type, cmd, ptsbuffer);
-    }
-    if (ret != 0) {
-        BEGET_LOGE("[control_fd] Failed send message");
-        LE_RemoveWatcher(LE_GetDefaultLoop(), agent->reader);
+            close(pfd);
+                return -1, "[control_fd] Failed le_loop start watcher stdin read and write ptmx");
+    ret = g_sendMsg == NULL ? SendCmdMessage(agent, type, cmd, ptsbuffer) : g_sendMsg(agent, type, cmd, ptsbuffer);
+    BEGET_ERROR_CHECK(ret == 0, LE_RemoveWatcher(LE_GetDefaultLoop(), agent->reader);
         LE_RemoveWatcher(LE_GetDefaultLoop(), agent->input);
-        close(pfd);
-        return -1;
-    }
+            close(pfd);
+                return -1, "[control_fd] Failed send message");
 #endif
     return 0;
 }
