@@ -456,7 +456,12 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     uint32_t valueLen = strlen(value);
     uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_RELAXED);
     ATOMIC_STORE_EXPLICIT(&entry->commitId, commitId | PARAM_FLAGS_MODIFY, MEMORY_ORDER_RELAXED);
-    if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
+    if ((((mode & LOAD_PARAM_UPDATE_CONST) == LOAD_PARAM_UPDATE_CONST) &&
+        (entry->valueLength < PARAM_CONST_VALUE_LEN_MAX && valueLen < PARAM_CONST_VALUE_LEN_MAX))) {
+        int ret = PARAM_MEMCPY(entry->data + entry->keyLength + 1, PARAM_CONST_VALUE_LEN_MAX, value, valueLen + 1);
+        PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
+        entry->valueLength = valueLen;
+    } else if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
         int ret = PARAM_MEMCPY(entry->data + entry->keyLength + 1, PARAM_VALUE_LEN_MAX, value, valueLen + 1);
         PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
         entry->valueLength = valueLen;
@@ -508,13 +513,16 @@ INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dat
         ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
         PARAM_CHECK(entry != NULL, return PARAM_CODE_REACHED_MAX,
             "Failed to update param value %s %u", name, node->dataIndex);
-        // use save type to check value
-        ret = CheckParamValue(node, name, value, entry->type);
+        ret = CheckParamValue((mode & LOAD_PARAM_UPDATE_CONST) == LOAD_PARAM_UPDATE_CONST ? NULL : node,
+            name, value, entry->type);
         PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);
         PARAMSPACE_AREA_RW_LOCK(workSpace);
         ret = UpdateParam(workSpace, &node->dataIndex, name, value, mode);
         PARAMSPACE_AREA_RW_UNLOCK(workSpace);
     } else {
+        if ((mode & LOAD_PARAM_UPDATE_CONST) == LOAD_PARAM_UPDATE_CONST) {
+            return PARAM_CODE_INVALID_NAME;
+        }
         uint8_t type = GetParamValueType(name);
         ret = CheckParamValue(node, name, value, type);
         PARAM_CHECK(ret == 0, return ret, "Invalid param value param: %s=%s", name, value);

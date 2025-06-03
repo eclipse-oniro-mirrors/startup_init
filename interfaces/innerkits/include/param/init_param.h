@@ -72,6 +72,7 @@ typedef enum {
 #define LOAD_PARAM_NORMAL 0x00
 #define LOAD_PARAM_ONLY_ADD 0x01
 #define LOAD_PARAM_PERSIST 0x02
+#define LOAD_PARAM_UPDATE_CONST 0x04
 
 typedef uint32_t ParamHandle;
 
@@ -171,6 +172,15 @@ void SystemDumpTriggers(int verbose, int (*dump)(const char *fmt, ...));
  *
  */
 int SystemSetParameter(const char *name, const char *value);
+
+#ifndef OHOS_LITE
+/**
+ * 对外接口
+ * 更新只读参数，主要用于其他进程使用，通过管道更新只读参数。
+ * 
+ */
+int SystemUpdateConstParameter(const char *name, const char *value);
+#endif
 
 /**
  * 对外接口

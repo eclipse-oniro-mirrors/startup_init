@@ -333,6 +333,30 @@ public:
         return 0;
     }
 
+#ifndef OHOS_LITE
+    int TestServiceUpdateProcessMessage(const char *name, const char *value)
+    {
+        if (g_worker == nullptr) {
+            g_worker = CreateAndGetStreamTask();
+        }
+        if (g_worker == nullptr) {
+            return 0;
+        }
+        uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + PARAM_ALIGN(strlen(value) + 1);
+        ParamMessage *request = (ParamMessage *)CreateParamMessage(MSG_UPDATE_CONST_PARAM, name, msgSize);
+        PARAM_CHECK(request != nullptr, return -1, "Failed to malloc for connect");
+        do {
+            request->type = MSG_UPDATE_CONST_PARAM;
+            uint32_t offset = 0;
+            int ret = FillParamMsgContent(request, &offset, PARAM_VALUE, value, strlen(value));
+            PARAM_CHECK(ret == 0, break, "Failed to fill value");
+            ProcessMessage((const ParamTaskPtr)g_worker, (const ParamMessage *)request);
+        } while (0);
+        free(request);
+        return 0;
+    }
+#endif
+
     int AddWatch(int type, const char *name, const char *value)
     {
         if (g_worker == nullptr) {
@@ -502,6 +526,23 @@ HWTEST_F(ParamServiceUnitTest, Init_TestServiceProcessMessage_001, TestSize.Leve
     ret = test.TestServiceProcessMessage("wertt.2222.wwww.3333", "wwww.eeeee", 0);
     EXPECT_EQ(ret, 0);
 }
+
+#ifndef OHOS_LITE
+HWTEST_F(ParamServiceUnitTest, Init_TestServiceUpdateProcessMessage_001, TestSize.Level0)
+{
+    ParamServiceUnitTest test;
+    int ret = test.TestServiceUpdateProcessMessage("wertt.qqqq.wwww.rrrr", "wwww.eeeee");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestServiceUpdateProcessMessage("const.test.for_update_test", "test");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestServiceUpdateProcessMessage("const.test.for_update_test", "testUpdate");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestServiceUpdateProcessMessage("const.global.region", "US");
+    EXPECT_EQ(ret, 0);
+    ret = test.TestServiceUpdateProcessMessage("const.global.region", "CN");
+    EXPECT_EQ(ret, 0);
+}
+#endif
 
 HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWait_001, TestSize.Level0)
 {

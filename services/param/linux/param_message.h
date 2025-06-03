@@ -36,6 +36,7 @@ typedef enum {
     MSG_ADD_WATCHER,
     MSG_DEL_WATCHER,
     MSG_NOTIFY_PARAM,
+    MSG_UPDATE_CONST_PARAM,
     MSG_SAVE_PARAM
 } ParamMsgType;
 
