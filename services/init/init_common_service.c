@@ -62,6 +62,10 @@
 #define NWEBSPAWN_NAME ("nwebspawn")
 #endif
 
+#ifdef CODE_SIGNATURE_ENABLE
+#include "code_sign_attr_utils.h"
+#endif
+
 #ifndef TIOCSCTTY
 #define TIOCSCTTY 0x540E
 #endif
@@ -222,34 +226,8 @@ static void DropCapability(const Service *service)
 #endif
 }
 
-static int SetPerms(const Service *service)
+static int SetCapabilities(const Service *service)
 {
-#if defined(ENABLE_HOOK_MGR)
-    /*
-     * service before setting Perms hooks
-     */
-    ServiceHookExecute(service->name, (const char *)service->pathArgs.argv[0], INIT_SERVICE_SET_PERMS_BEFORE);
-#endif
-
-    INIT_ERROR_CHECK(KeepCapability(service) == 0, return INIT_EKEEPCAP,
-        "Service error %d %s, failed to set keep capability.", errno, service->name);
-
-    INIT_ERROR_CHECK(ServiceSetGid(service) == SERVICE_SUCCESS, return INIT_EGIDSET,
-        "Service error %d %s, failed to set gid.", errno, service->name);
-
-    // set seccomp policy before setuid
-    INIT_ERROR_CHECK(SetSystemSeccompPolicy(service) == SERVICE_SUCCESS, return INIT_ESECCOMP,
-        "Service error %d %s, failed to set system seccomp policy.", errno, service->name);
-
-    if (service->servPerm.uID != 0) {
-        INIT_ERROR_CHECK(setuid(service->servPerm.uID) == 0, return INIT_EUIDSET,
-            "Service error %d %s, failed to set uid.", errno, service->name);
-    } else {
-        if (service->servPerm.capsCnt != 0) {
-            DropCapability(service);
-        }
-    }
-
     struct __user_cap_header_struct capHeader;
     capHeader.version = _LINUX_CAPABILITY_VERSION_3;
     capHeader.pid = 0;
@@ -280,6 +258,46 @@ static int SetPerms(const Service *service)
         INIT_ERROR_CHECK(SetAmbientCapability(service->servPerm.caps[i]) == 0, return INIT_ECAP,
             "Service error %d %s, failed to set ambient capability.", errno, service->name);
     }
+    return 0;
+}
+static int SetPerms(const Service *service)
+{
+#if defined(ENABLE_HOOK_MGR)
+    /*
+     * service before setting Perms hooks
+     */
+    ServiceHookExecute(service->name, (const char *)service->pathArgs.argv[0], INIT_SERVICE_SET_PERMS_BEFORE);
+#endif
+#ifdef CODE_SIGNATURE_ENABLE
+    if (strcmp(service->name, "nwebspawn") == 0) {
+        INIT_LOGV("Set NWebspawn OwnerId");
+        // set nwebspawn OwnerId
+        (void)SetXpmOwnerId(PROCESS_OWNERID_NWEB, NULL);
+    }
+#endif
+
+    INIT_ERROR_CHECK(KeepCapability(service) == 0, return INIT_EKEEPCAP,
+        "Service error %d %s, failed to set keep capability.", errno, service->name);
+
+    INIT_ERROR_CHECK(ServiceSetGid(service) == SERVICE_SUCCESS, return INIT_EGIDSET,
+        "Service error %d %s, failed to set gid.", errno, service->name);
+
+    // set seccomp policy before setuid
+    INIT_ERROR_CHECK(SetSystemSeccompPolicy(service) == SERVICE_SUCCESS, return INIT_ESECCOMP,
+        "Service error %d %s, failed to set system seccomp policy.", errno, service->name);
+
+    if (service->servPerm.uID != 0) {
+        INIT_ERROR_CHECK(setuid(service->servPerm.uID) == 0, return INIT_EUIDSET,
+            "Service error %d %s, failed to set uid.", errno, service->name);
+    } else {
+        if (service->servPerm.capsCnt != 0) {
+            DropCapability(service);
+        }
+    }
+    int ret = SetCapabilities(service);
+    INIT_ERROR_CHECK(ret == 0, return ret,
+        "Service error %d %s, failed to set capabilities.", errno, service->name);
+
 #if defined(ENABLE_HOOK_MGR)
     /*
      * service set Perms hooks
