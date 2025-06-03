@@ -259,9 +259,17 @@ INIT_STATIC void TriggerServices(int startMode)
     }
 }
 
-void ParseInitCfgByPriority(void)
+int ParseCfgByPriority(const char *filePath)
 {
-    CfgFiles *files = GetCfgFiles("etc/init");
+    if (filePath == NULL) {
+        INIT_LOGE("cfg path is null");
+        return -1;
+    }
+    CfgFiles *files = GetCfgFiles(filePath);
+    if (files == NULL) {
+        INIT_LOGE("get etc/init cfg failed");
+        return -1;
+    }
     for (int i = 0; files && i < MAX_CFG_POLICY_DIRS_CNT; i++) {
         if (files->paths[i]) {
             if (ReadFileInDir(files->paths[i], ".cfg", ParseInitCfg, NULL) < 0) {
@@ -270,6 +278,7 @@ void ParseInitCfgByPriority(void)
         }
     }
     FreeCfgFiles(files);
+    return 0;
 }
 
 void SystemConfig(const char *uptime)

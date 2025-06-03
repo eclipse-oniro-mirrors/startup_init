@@ -38,13 +38,14 @@ void DumpAllJobs(void);
 
 int DoJobNow(const char *jobName);
 
+#define INIT_CFG_FIEL_PATH "etc/init"
+#define PENGLAI_CFG_FILE_PATH "etc/penglai"
 #define INIT_CONFIGURATION_FILE "/etc/init.cfg"
 #define OTHER_CFG_PATH "/system/etc/init"
 #define OTHER_CHARGE_PATH "/system/etc/charger"
 #define INIT_RESCUE_MODE_PATH "/system/etc/rescue"
 #define MAINTENANCE_RECOVERY_PATH "/system/etc/maintenance_recovery"
 #define MAINTENANCE_NORMAL_PATH "/system/etc/maintenance_normal"
-#define INIT_PENGLAI_MODE_PATH "/system/etc/penglai"
 #define MAX_PATH_ARGS_CNT 20
 
 void ReadConfig(void);

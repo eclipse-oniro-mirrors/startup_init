@@ -111,12 +111,12 @@ void ReadConfig(void)
     if ((strcmp(buffer, "charger_mode") == 0) || (GetBootModeFromMisc() == GROUP_CHARGE)) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
-        ParseInitCfgByPriority();
+        ParseCfgByPriority(INIT_CFG_FIEL_PATH);
     } else if (strcmp(buffer, "charger") == 0) {
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (IsPenglaiMode()) {
         INIT_LOGI("enter penglai mode");
-        ReadFileInDir(INIT_PENGLAI_MODE_PATH, ".cfg", ParseInitCfg, NULL);
+        ParseCfgByPriority(PENGLAI_CFG_FILE_PATH);
     } else if (InRescueMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(INIT_RESCUE_MODE_PATH, ".cfg", ParseInitCfg, NULL);
@@ -127,7 +127,7 @@ void ReadConfig(void)
         ReadFileInDir(MAINTENANCE_RECOVERY_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (InUpdaterMode() == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
-        ParseInitCfgByPriority();
+        ParseCfgByPriority(INIT_CFG_FIEL_PATH);
     } else {
         ReadFileInDir("/etc", ".cfg", ParseInitCfg, NULL);
     }

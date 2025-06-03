@@ -156,4 +156,15 @@ HWTEST_F(InitUnitTest, TestInitLog, TestSize.Level1)
     ret = GetInitLogLevel();
     EXPECT_EQ(ret, INIT_INFO);
 }
+
+HWTEST_F(InitUnitTest, TestParseCfgByPriority, TestSize.Level1)
+{
+    int ret = 0;
+    ret = ParseCfgByPriority(NULL);
+    EXPECT_EQ(ret, -1);
+    ret = ParseCfgByPriority("etc/abcdtest");
+    EXPECT_EQ(ret, -1);
+    ret = ParseCfgByPriority("etc/init");
+    EXPECT_EQ(ret, 0);
+}
 }

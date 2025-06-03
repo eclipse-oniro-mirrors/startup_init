@@ -51,7 +51,7 @@ void SystemConfig(const char *uptime);
 void SystemRun(void);
 void SystemExecuteRcs(void);
 
-void ParseInitCfgByPriority(void);
+int ParseCfgByPriority(const char *filePath);
 int ParseInitCfg(const char *configFile, void *context);
 void ReadConfig(void);
 void SignalInit(void);
