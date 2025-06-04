@@ -50,8 +50,9 @@ void SystemPrepare(long long uptime)
 {
 }
 
-void ParseInitCfgByPriority(void)
+int ParseCfgByPriority(const char *filePath)
 {
+    UNUSED(filePath);
     ReadFileInDir(OTHER_CFG_PATH, ".cfg", ParseInitCfg, NULL);
     ReadFileInDir("/vendor/etc/init", ".cfg", ParseInitCfg, NULL);
 }
