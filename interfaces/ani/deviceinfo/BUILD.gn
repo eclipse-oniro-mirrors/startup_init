@@ -1,0 +1,60 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/startup/init/begetd.gni")
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+
+ohos_shared_library("deviceinfo_ani") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  sources = [ "./src/deviceinfo_ani.cpp" ]
+  deps = [
+    "${init_innerkits_path}:libbeget_proxy",
+    "${init_innerkits_path}:libbegetutil",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hilog:libhilog_base",
+    "ipc:ipc_single",
+    "runtime_core:ani",
+    "samgr:samgr_proxy",
+  ]
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.bundlemanager_bundle_framework)) {
+    external_deps += [ "bundle_framework:appexecfwk_base" ]
+    defines = [ "DEPENDENT_APPEXECFWK_BASE" ]
+  }
+  part_name = "init"
+  subsystem_name = "startup"
+}
+
+generate_static_abc("deviceinfo") {
+  base_url = "./ets"
+  files = [ "./ets/@ohos.deviceInfo.ets" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/deviceinfo.abc"
+}
+
+ohos_prebuilt_etc("deviceinfo_etc") {
+  source = "$target_out_dir/deviceinfo.abc"
+  module_install_dir = "framework"
+  subsystem_name = "startup"
+  part_name = "init"
+  deps = [ ":deviceinfo" ]
+}
