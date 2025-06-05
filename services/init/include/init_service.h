@@ -163,6 +163,7 @@ typedef struct Service {
     ServiceArgs capsArgs;
     ServiceArgs permArgs;
     ServiceArgs permAclsArgs;
+    char *kernelPerms;
     Perms servPerm;
     ServiceArgs pathArgs;
     ServiceArgs writePidArgs;

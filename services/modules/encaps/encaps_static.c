@@ -19,47 +19,62 @@
 #include "bootstage.h"
 #include "init_log.h"
 #include "init_module_engine.h"
+#include "init_service.h"
 
 #define SA_MAIN_PATH ("/system/bin/sa_main")
 
 #define OH_ENCAPS_PROC_TYPE_BASE 0x18
+#define OH_ENCAPS_PERMISSION_TYPE_BASE 0x1A
 #define OH_ENCAPS_MAGIC 'E'
 #define OH_PROC_SYS 3
 #define SET_PROC_TYPE_CMD _IOW(OH_ENCAPS_MAGIC, OH_ENCAPS_PROC_TYPE_BASE, uint32_t)
+#define SET_KERNEL_PERM_TYPE_CMD _IOW(OH_ENCAPS_MAGIC, OH_ENCAPS_PERMISSION_TYPE_BASE, char *)
 
-static void SetEncapsFlag(uint32_t flag)
+static void SetKernelPerm(SERVICE_INFO_CTX *serviceCtx)
 {
     int fd = 0;
     int ret = 0;
+    int procType = OH_PROC_SYS;
 
     fd = open("/dev/encaps", O_RDWR);
     if (fd < 0) {
-        INIT_LOGI("SetEncapsFlag open failed, maybe this device is not supported");
+        INIT_LOGI("SetKernelPerm open failed, maybe this device is not supported");
         return;
     }
 
-    ret = ioctl(fd, SET_PROC_TYPE_CMD, &flag);
+    ret = ioctl(fd, SET_PROC_TYPE_CMD, &procType);
     if (ret != 0) {
         close(fd);
-        INIT_LOGE("SetEncapsFlag ioctl failed");
+        INIT_LOGE("SetKernelPerm set flag failed %d", ret);
         return;
     }
-
+    Service *service = GetServiceByName(serviceCtx->serviceName);
+    if (service == NULL) {
+        close(fd);
+        INIT_LOGE("SetKernelPerm get service failed");
+        return;
+    }
+    if (service->kernelPerms != NULL) {
+        ret = ioctl(fd, SET_KERNEL_PERM_TYPE_CMD, service->kernelPerms);
+        if (ret != 0) {
+            INIT_LOGE("SetKernelPerm set encaps permission failed");
+        }
+    }
     close(fd);
 }
 
-static void SetEncapsProcType(SERVICE_INFO_CTX *serviceCtx)
+static void SetKernelPermForSa(SERVICE_INFO_CTX *serviceCtx)
 {
     if (serviceCtx->reserved == NULL) {
         return;
     }
     if (strncmp(SA_MAIN_PATH, serviceCtx->reserved, strlen(SA_MAIN_PATH)) == 0) {
-        SetEncapsFlag(OH_PROC_SYS);
+        SetKernelPerm(serviceCtx);
     }
 }
 
 MODULE_CONSTRUCTOR(void)
 {
-    // Add hook to set encaps flag
-    InitAddServiceHook(SetEncapsProcType, INIT_SERVICE_SET_PERMS_BEFORE);
+    // Add hook to set encaps
+    InitAddServiceHook(SetKernelPermForSa, INIT_SERVICE_SET_PERMS_BEFORE);
 }

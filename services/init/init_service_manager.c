@@ -42,6 +42,9 @@
 
 #define VALUE_ATTR_CONSOLE 1
 #define VALUE_ATTR_KMSG 2
+#define OHOS_KERNEL_PERM_COUNT_KEY "ohos.encaps.count"
+#define KERNEL_PERM_PRE "encaps"
+#define KERNEL_PERM_MAX_COUNT 64
 
 // All service processes that init will fork+exec.
 ServiceSpace g_serviceSpace = { 0 };
@@ -141,6 +144,14 @@ static void ExecuteServiceClear(Service *service)
 #endif
 }
 
+static void FreeServiceKernelPerm(Service *service)
+{
+    if (service->kernelPerms != NULL) {
+        free(service->kernelPerms);
+        service->kernelPerms = NULL;
+    }
+}
+
 void ReleaseService(Service *service)
 {
     INIT_CHECK(service != NULL, return);
@@ -149,7 +160,7 @@ void ReleaseService(Service *service)
     FreeServiceArg(&service->capsArgs);
     FreeServiceArg(&service->permArgs);
     FreeServiceArg(&service->permAclsArgs);
-
+    FreeServiceKernelPerm(service);
     if (service->servPerm.caps != NULL) {
         free(service->servPerm.caps);
         service->servPerm.caps = NULL;
@@ -859,12 +870,76 @@ void SetServicePathWithAsan(Service *service)
 }
 #endif
 
+static bool AddPermissionItemToKernelPerm(cJSON *kernelPerm, cJSON *permissionItem)
+{
+    const char *key = permissionItem->string;
+    if (cJSON_IsNumber(permissionItem)) {
+        if (!cJSON_AddNumberToObject(kernelPerm, key, permissionItem->valueint)) {
+            INIT_LOGE("GetKernelPerm: add int value failed");
+            return false;
+        }
+    } else if (cJSON_IsBool(permissionItem)) {
+        if (!cJSON_AddBoolToObject(kernelPerm, key, permissionItem->valueint)) {
+            INIT_LOGE("GetKernelPerm: add bool value failed");
+            return false;
+        }
+    } else {
+        INIT_LOGE("GetKernelPerm: value type not supported");
+        return false;
+    }
+    return true;
+}
+
+static bool MakeKernelPerm(const cJSON *cJsonKernelPerms, int count, cJSON *root, cJSON *kernelPerm)
+{
+    INIT_ERROR_CHECK(cJSON_AddNumberToObject(kernelPerm, OHOS_KERNEL_PERM_COUNT_KEY, count) != NULL, \
+                        return false, "MakeKernelPerm: failed to add kernelPerm count");
+    for (int i = 0; i < count; i++) {
+        cJSON *permission = cJSON_GetArrayItem(cJsonKernelPerms, i);
+        INIT_ERROR_CHECK(permission != NULL, return false, "MakeKernelPerm: failed to get permission");
+        INIT_ERROR_CHECK(AddPermissionItemToKernelPerm(kernelPerm, permission), return false, \
+                            "MakeKernelPerm: failed to add permission");
+    }
+    INIT_ERROR_CHECK(cJSON_AddItemToObject(root, KERNEL_PERM_PRE, kernelPerm), return false, \
+                        "MakeKernelPerm: failed to add kernelPerm to root");
+    return true;
+}
+
+static void GetKernelPerm(const cJSON *curItem, Service *service)
+{
+    service->kernelPerms = NULL;
+    cJSON *cJsonKernelPerms = cJSON_GetObjectItemCaseSensitive(curItem, "kernel_permission");
+    INIT_INFO_CHECK(cJsonKernelPerms != NULL, return, "GetKernelPerm: no kernelPerm");
+    int count = cJSON_GetArraySize(cJsonKernelPerms);
+    INIT_INFO_CHECK(count > 0, return, "GetKernelPerm: count is zero");
+    INIT_ERROR_CHECK(count < KERNEL_PERM_MAX_COUNT, return, "GetKernelPerm: too many kernelPerm");
+    cJSON *root = cJSON_CreateObject();
+    INIT_ERROR_CHECK(root != NULL, return, "GetKernelPerm: failed to create root");
+    cJSON *kernelPerm = cJSON_CreateObject();
+    if (kernelPerm == NULL) {
+        cJSON_Delete(root);
+        INIT_LOGE("GetKernelPerm: failed to create kernelPerm");
+        return;
+    }
+    if (MakeKernelPerm(cJsonKernelPerms, count, root, kernelPerm)) {
+        service->kernelPerms = cJSON_PrintUnformatted(root);
+        if (service->kernelPerms == NULL) {
+            INIT_LOGE("GetKernelPerm: failed to get kernelPerm str");
+        }
+        cJSON_Delete(root);
+    } else {
+        cJSON_Delete(root);
+        cJSON_Delete(kernelPerm);
+    }
+}
+
 static void ParseOneServiceArgs(const cJSON *curItem, Service *service)
 {
     GetServiceArgs(curItem, "writepid", MAX_WRITEPID_FILES, &service->writePidArgs);
     GetServiceArgs(curItem, D_CAPS_STR_IN_CFG, MAX_WRITEPID_FILES, &service->capsArgs);
     GetServiceArgs(curItem, "permission", MAX_WRITEPID_FILES, &service->permArgs);
     GetServiceArgs(curItem, "permission_acls", MAX_WRITEPID_FILES, &service->permAclsArgs);
+    GetKernelPerm(curItem, service);
     size_t strLen = 0;
     char *fieldStr = GetStringValue(curItem, APL_STR_IN_CFG, &strLen);
     if (fieldStr != NULL) {
