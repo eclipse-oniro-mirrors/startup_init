@@ -270,4 +270,19 @@ HWTEST_F(ClientUnitTest, Init_TestClient_006, TestSize.Level0)
     EXPECT_EQ(ret, PARAM_CODE_NOT_FOUND);
 #endif
 }
+
+#ifndef OHOS_LITE
+HWTEST_F(ClientUnitTest, Init_TestClient_007, TestSize.Level0)
+{
+    int ret = SystemUpdateConstParameter("const.test.for_update_test1", "initUpdate");
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
+    ret = SystemUpdateConstParameter("const.global.region", "US");
+    EXPECT_EQ(ret, 0);
+    ret = SystemUpdateConstParameter("const.global.region", "CN");
+    EXPECT_EQ(ret, 0);
+    ret = SystemUpdateConstParameter("persist.cota.update.opkey.version.enable", "initUpdate");
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
+}
+#endif
+
 }  // namespace init_ut
