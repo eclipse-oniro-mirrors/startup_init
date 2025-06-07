@@ -132,7 +132,6 @@
     *GetIntParameter*;
     *GetDeviceType*;
     *GetParameter*;
-    *UpdateConstParameter*;
     *GetUintParameter*;
     *SetParameter*;
     *GetBoolParameter*;

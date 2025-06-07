@@ -274,13 +274,18 @@ HWTEST_F(ClientUnitTest, Init_TestClient_006, TestSize.Level0)
 #ifndef OHOS_LITE
 HWTEST_F(ClientUnitTest, Init_TestClient_007, TestSize.Level0)
 {
-    int ret = SystemUpdateConstParameter("const.test.for_update_test1", "initUpdate");
+    char key1[] = "const.test.for_update_test";
+    char key2[] = "persist.test.for_update_test";
+    char value1[] = "initSet";
+    char value2[] = "initUpdate";
+
+    int ret = SystemUpdateConstParam(key1, value2);
     EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
-    ret = SystemUpdateConstParameter("const.global.region", "US");
+    ret = SystemWriteParam(key1, value1);
     EXPECT_EQ(ret, 0);
-    ret = SystemUpdateConstParameter("const.global.region", "CN");
+    ret = SystemUpdateConstParam(key1, value2);
     EXPECT_EQ(ret, 0);
-    ret = SystemUpdateConstParameter("persist.cota.update.opkey.version.enable", "initUpdate");
+    ret = SystemUpdateConstParam(key2, value2);
     EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
 }
 #endif

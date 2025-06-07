@@ -126,6 +126,15 @@ int LoadPrivatePersistParams(void);
  */
 int SystemWriteParam(const char *name, const char *value);
 
+#ifndef OHOS_LITE
+/**
+ * Init 内部接口
+ * 更新只读参数，主要用于Init其他进程使用，通过管道更新只读参数。
+ * 
+ */
+int SystemUpdateConstParam(const char *name, const char *value);
+#endif
+
 #ifdef PARAM_SUPPORT_TRIGGER
 /**
  * 对外接口
@@ -172,15 +181,6 @@ void SystemDumpTriggers(int verbose, int (*dump)(const char *fmt, ...));
  *
  */
 int SystemSetParameter(const char *name, const char *value);
-
-#ifndef OHOS_LITE
-/**
- * 对外接口
- * 更新只读参数，主要用于其他进程使用，通过管道更新只读参数。
- * 
- */
-int SystemUpdateConstParameter(const char *name, const char *value);
-#endif
 
 /**
  * 对外接口

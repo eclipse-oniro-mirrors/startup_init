@@ -158,7 +158,7 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
     return ret;
 }
 
-static int SystemUpdateConstParam(const char *name, const char *value, const ParamSecurityLabel *srcLabel)
+static int SystemUpdateConstParamter(const char *name, const char *value, const ParamSecurityLabel *srcLabel)
 {
     PARAM_LOGV("SystemUpdateConstParam name %s value: %s", name, value);
     int ctrlService = 0;
@@ -168,36 +168,11 @@ static int SystemUpdateConstParam(const char *name, const char *value, const Par
     if ((ctrlService & PARAM_CTRL_SERVICE) != PARAM_CTRL_SERVICE) { // ctrl param
         uint32_t dataIndex = 0;
         ret = WriteParam(name, value, &dataIndex, LOAD_PARAM_UPDATE_CONST);
-        PARAM_CHECK(ret == 0, return ret, "Failed to set param %d name %s %s", ret, name, value);
+        PARAM_CHECK(ret == 0, return ret, "Failed to update const param %d name %s %s", ret, name, value);
         CheckAndSendTrigger(dataIndex, name, value);
     }
     return ret;
 }
-
-static int HandleConstParamUpdate(const ParamTaskPtr worker, const ParamMessage *msg)
-{
-    PARAM_LOGV("HandleConstParamUpdate start");
-    uint32_t offset = 0;
-    ParamMsgContent *valueContent = GetNextContent(msg, &offset);
-    PARAM_CHECK(valueContent != NULL, return -1, "Invalid msg for %s", msg->key);
-    ParamSecurityLabel srcLabel = {0};
-    struct ucred cr = {-1, -1, -1};
-    socklen_t crSize = sizeof(cr);
-    if (getsockopt(LE_GetSocketFd(worker), SOL_SOCKET, SO_PEERCRED, &cr, &crSize) < 0) {
-        PARAM_LOGE("Failed to get opt %d", errno);
-#ifndef STARTUP_INIT_TEST
-        return SendResponseMsg(worker, msg, -1);
-#endif
-    }
-    srcLabel.sockFd = LE_GetSocketFd(worker);
-    srcLabel.cred.uid = cr.uid;
-    srcLabel.cred.pid = cr.pid;
-    srcLabel.cred.gid = cr.gid;
-    PARAM_LOGI("Handle update const param msgId %u pid %d key: %s", msg->id.msgId, cr.pid, msg->key);
-    int ret = SystemUpdateConstParam(msg->key, valueContent->content, &srcLabel);
-    return SendResponseMsg(worker, msg, ret);
-}
-
 
 static int HandleParamSet(const ParamTaskPtr worker, const ParamMessage *msg)
 {
@@ -392,9 +367,6 @@ PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *m
         case MSG_SAVE_PARAM:
             ret = HandleParamSave(worker, msg);
             break;
-        case MSG_UPDATE_CONST_PARAM:
-            ret = HandleConstParamUpdate(worker, msg);
-            break;
         default:
             break;
     }
@@ -519,6 +491,11 @@ void StopParamService(void)
 int SystemWriteParam(const char *name, const char *value)
 {
     return SystemSetParam(name, value, GetParamSecurityLabel());
+}
+
+int SystemUpdateConstParam(const char *name, const char *value)
+{
+    return SystemUpdateConstParamter(name, value, GetParamSecurityLabel());
 }
 
 #ifdef STARTUP_INIT_TEST

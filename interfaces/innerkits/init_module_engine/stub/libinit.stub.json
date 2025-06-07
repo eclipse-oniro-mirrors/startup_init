@@ -1,5 +1,6 @@
 [
     { "name": "SystemWriteParam" },
+    { "name": "SystemUpdateConstParam" },
     { "name": "SystemReadParam" },
     { "name": "LoadParamsFile" },
     { "name": "LoadPersistParams" },
