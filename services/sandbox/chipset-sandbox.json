@@ -9,16 +9,8 @@
             "sandbox-path" : "/system/etc/selinux",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
-            "src-path" : "/system/lib/chipset-pub-sdk",
-            "sandbox-path" : "/system/lib/chipset-pub-sdk",
-            "sandbox-flags" : [ "bind", "rec", "private" ]
-        }, {
-            "src-path" : "/system/lib/chipset-sdk",
-            "sandbox-path" : "/system/lib/chipset-sdk",
-            "sandbox-flags" : [ "bind", "rec", "private" ]
-        }, {
-            "src-path" : "/system/lib/ndk",
-            "sandbox-path" : "/system/lib/ndk",
+            "src-path" : "/system/lib",
+            "sandbox-path" : "/system/lib",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
             "src-path" : "/vendor",
