@@ -275,17 +275,6 @@ HWTEST_F(LoopEventUnittest, Init_TestProcessWatcherTask_001, TestSize.Level1)
     EXPECT_EQ(ret, 0);
 }
 
-static LoopHandle g_loop = nullptr;
-static int g_timeCount = 0;
-__attribute__((unused)) static void Test_ProcessTimer(const TimerHandle taskHandle, void *context)
-{
-    g_timeCount++;
-    printf("Test_ProcessTimer %d\n", g_timeCount);
-    if (g_timeCount > 1) {
-        LE_StopLoop(g_loop);
-    }
-}
-
 HWTEST_F(LoopEventUnittest, Init_TestLoopAbnormal_001, TestSize.Level1)
 {
     int ret = LE_StartWatcher(nullptr, nullptr, nullptr, nullptr);

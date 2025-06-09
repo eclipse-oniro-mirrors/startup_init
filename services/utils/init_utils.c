@@ -908,26 +908,20 @@ int OH_StrArrayGetIndex(const char *strArray[], const char *target, int ignoreCa
 
 void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, int ignoreCase, void **extendStrDict)
 {
-    __attribute__((unused)) int i;
     const char *pos;
     str_compare cmp = strcmp;
-
     if ((strDict == NULL) || dictSize < 0 || ((size_t)dictSize < sizeof(const char *)) ||
         (target == NULL) || (target[0] == '\0')) {
         return NULL;
     }
-
     if (ignoreCase) {
         cmp = strcasecmp;
     }
-
-    i = 0;
     pos = (const char *)strDict;
     while (*(const char **)pos != NULL) {
         if (cmp(*(const char **)pos, target) == 0) {
             return (void *)pos;
         }
-        i++;
         pos = pos + dictSize;
     }
     if (extendStrDict == NULL) {
@@ -938,7 +932,6 @@ void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, 
         if (cmp(*(const char **)pos, target) == 0) {
             return (void *)pos;
         }
-        i++;
         pos = pos + dictSize;
     }
     return NULL;
