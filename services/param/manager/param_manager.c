@@ -611,7 +611,7 @@ INIT_LOCAL_API int CheckParamValue(const ParamTrieNode *node, const char *name, 
         }
     } else {
         PARAM_CHECK(strlen(value) < GetParamMaxLen(paramType),
-            return PARAM_CODE_INVALID_VALUE, "Illegal param value %s length", value);
+            return PARAM_CODE_INVALID_VALUE, "Illegal param length %zu", strlen(value));
     }
     PARAM_CHECK(strstr(value, "\n") == NULL,
         return PARAM_CODE_INVALID_VALUE, "Illegal param value %s for \\n", value);
@@ -754,7 +754,6 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
     node = FindTrieNode(workspace, name, strlen(name), NULL);
 #endif
     if (node == NULL) {
-        PARAM_LOGE("FindTrieNode failed! name is:%s!", name);
         return PARAM_CODE_NOT_FOUND;
     }
     ret =  ReadParamValue((ParamNode *)GetTrieNode(workspace, node->dataIndex), value, len);
