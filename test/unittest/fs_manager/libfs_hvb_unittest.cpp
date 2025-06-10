@@ -320,7 +320,7 @@ HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_001, TestSize.Level0)
     void *buf = malloc(1);
     uint64_t outNumRead;
     ret = ops->read_partition(ops, "boot_not_exit", 0, 1, buf, &outNumRead);
-    EXPECT_EQ(ret, HVB_IO_ERROR_IO);
+    EXPECT_EQ(ret, HVB_IO_ERROR_OOM);
     free(buf);
 }
 
