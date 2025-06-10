@@ -238,7 +238,7 @@ void WatcherGroup::ProcessParameterChange(
         if (remoteWatcher == nullptr) {
             return;
         }
-        if (strcmp("startup.service.ctl.*", GetKeyPrefix().c_str())!= 0){
+        if (strcmp("startup.service.ctl.*", GetKeyPrefix().c_str())!= 0) {
             WATCHER_LOGI("ProcessParameterChange key '%s' pid: %d",
                 GetKeyPrefix().c_str(), remoteWatcher->GetAgentId());
         }
