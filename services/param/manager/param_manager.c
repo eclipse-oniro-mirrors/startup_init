@@ -754,7 +754,6 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
     node = FindTrieNode(workspace, name, strlen(name), NULL);
 #endif
     if (node == NULL) {
-        PARAM_LOGE("FindTrieNode failed! name is:%s!", name);
         return PARAM_CODE_NOT_FOUND;
     }
     ret =  ReadParamValue((ParamNode *)GetTrieNode(workspace, node->dataIndex), value, len);
