@@ -353,7 +353,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
     if (workSpace->area == NULL) {
         ret = InitWorkSpace(workSpace, readOnly, workSpace->spaceSize);
         if (ret != 0) {
-            PARAM_LOGE("open WS %s err %d", workSpace->fileName, errno);
+            PARAM_LOGV("open WS %s err %d", workSpace->fileName, errno);
         }
 #ifndef PARAM_SUPPORT_SELINUX
     }
@@ -371,7 +371,7 @@ INIT_LOCAL_API int OpenWorkSpace(uint32_t index, int readOnly)
                 ret = 0;
             } else {
                 ret = -1;
-                PARAM_LOGE("open WS %s err %d", workSpace->fileName, errno);
+                PARAM_LOGV("open WS %s err %d", workSpace->fileName, errno);
                 rwSpaceLock &= ~WORKSPACE_STATUS_VALID;
             }
         }
