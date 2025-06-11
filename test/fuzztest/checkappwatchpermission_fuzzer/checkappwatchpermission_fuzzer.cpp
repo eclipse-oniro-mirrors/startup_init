@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,22 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "addremotewatcher_fuzzer.h"
+#include "checkappwatchpermission_fuzzer.h"
 #include <string>
 #include <memory>
+#include "init_utils.h"
+#define private public
 #include "watcher_manager.h"
-
+#undef private
 using namespace OHOS::init_param;
+
 namespace OHOS {
-    bool FuzzAddRemoteWatcher(const uint8_t* data, size_t size)
+bool FuzzCheckAppWatchPermission(const uint8_t* data, size_t size)
     {
         bool result = false;
+        std::string str(reinterpret_cast<const char*>(data), size);
         std::unique_ptr<WatcherManager> watcherManager = std::make_unique<WatcherManager>(0, true);
-        uint32_t id = static_cast<const uint32_t>(*data);
-        uint32_t watcherId = 0;
-        sptr<IWatcher> watcher = {0};
-        if (!watcherManager->AddRemoteWatcher(id, watcherId, watcher)) {
+        if (watcherManager->CheckAppWatchPermission(str)) {
             result = true;
         };
         return result;
@@ -38,6 +38,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzAddRemoteWatcher(data, size);
+    OHOS::FuzzCheckAppWatchPermission(data, size);
     return 0;
 }
