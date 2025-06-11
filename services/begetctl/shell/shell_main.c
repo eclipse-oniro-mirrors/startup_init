@@ -23,11 +23,13 @@
 
 static BShellHandle g_handle = NULL;
 struct termios terminalState;
-__attribute__((unused)) static void signalHandler(int signal)
+#ifndef STARTUP_INIT_TEST
+static void signalHandler(int signal)
 {
     demoExit();
     exit(0);
 }
+#endif
 
 static int32_t ShellInput(char *data, int32_t len)
 {

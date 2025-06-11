@@ -470,6 +470,10 @@ ohos_unittest("init_dmverify_unittest") {
     "//base/startup/init/services/log",
   ]
 
+  sources = [
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/log/init_log.c",
+  ]
   configs = [ "//base/startup/init/test/unittest:utest_config" ]
 
   external_deps = [
@@ -479,13 +483,10 @@ ohos_unittest("init_dmverify_unittest") {
   ]
 
   if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
-    defines += [ "SUPPORT_HVB" ]
     external_deps += [ "hvb:libhvb_static" ]
-    sources = [
-      "//base/startup/init/interfaces/innerkits/fs_manager/dm_verity/dm_verity.c",
-      "//base/startup/init/services/log/init_commlog.c",
-      "//base/startup/init/services/log/init_log.c",
+    sources += [
       "//base/startup/init/test/mock/init/interfaces/innerkits/fs_manager/libfs_hvb/fs_hvb.c",
+      "//base/startup/init/interfaces/innerkits/fs_manager/dm_verity/dm_verity.c",
       "//base/startup/init/test/unittest/fs_manager/dm_verify/dm_verify_unittest.cpp",
     ]
   }
@@ -507,6 +508,16 @@ ohos_unittest("init_fshvb_unittest") {
     "//base/startup/init/interfaces/innerkits/include/param",
   ]
 
+  sources = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/utils/init_utils.c",
+    "//base/startup/init/test/mock/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
+    "//base/startup/init/test/mock/init/ueventd/ueventd.c",
+    "//base/startup/init/test/mock/init/ueventd/ueventd_socket.c",
+  ]
+
   defines = [ "STARTUP_INIT_UT_PATH =\"/data/init_ut\"" ]
 
   configs = []
@@ -520,21 +531,14 @@ ohos_unittest("init_fshvb_unittest") {
 
   if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
     external_deps += [ "hvb:libhvb_static" ]
-    sources = [
-      "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
-      "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
+    sources += [
       "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/fs_hvb.c",
       "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/hvb_ops.c",
-      "//base/startup/init/services/log/init_commlog.c",
-      "//base/startup/init/services/utils/init_utils.c",
-      "//base/startup/init/test/mock/hvb/libhvb/auth/hvb.c",
+      "//base/startup/init/test/unittest/fs_manager/libfs_hvb_unittest.cpp",
       "//base/startup/init/test/mock/hvb/libhvb/cert/hvb_cert.c",
       "//base/startup/init/test/mock/hvb/libhvb/crypto/hvb_hash_sha256.c",
+      "//base/startup/init/test/mock/hvb/libhvb/auth/hvb.c",
       "//base/startup/init/test/mock/hvb/libhvb/crypto/hvb_sm3.c",
-      "//base/startup/init/test/mock/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
-      "//base/startup/init/test/mock/init/ueventd/ueventd.c",
-      "//base/startup/init/test/mock/init/ueventd/ueventd_socket.c",
-      "//base/startup/init/test/unittest/fs_manager/libfs_hvb_unittest.cpp",
     ]
   }
   cflags_cc = [ "-fexceptions" ]

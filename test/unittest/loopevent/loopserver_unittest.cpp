@@ -86,12 +86,6 @@ static void TestOnClose(const TaskHandle taskHandle)
 {
 }
 
-__attribute__((unused)) static LE_STATUS TestHandleTaskEvent(const LoopHandle loop, const TaskHandle task,
-                                                             uint32_t oper)
-{
-    return LE_SUCCESS;
-}
-
 static void TestOnReceiveRequest(const TaskHandle task, const uint8_t *buffer, uint32_t nread)
 {
     EXPECT_NE(buffer, nullptr);
@@ -116,15 +110,6 @@ static void TestClientOnReceiveRequest(const TaskHandle task, const uint8_t *buf
     if (cmd == 5 || cmd == 2) { // 2 5 close server
         LE_StopLoop(g_loopClient_);
     }
-}
-
-__attribute__((unused)) static void ProcessAsyncEvent(const TaskHandle taskHandle, uint64_t eventId,
-                                                      const uint8_t *buffer, uint32_t buffLen)
-{
-    UNUSED(taskHandle);
-    UNUSED(eventId);
-    UNUSED(buffer);
-    UNUSED(buffLen);
 }
 
 static void TestSendMessageComplete(const TaskHandle taskHandle, BufferHandle handle)

@@ -410,7 +410,8 @@ static int32_t BShellParamCmdPwd(BShellHandle shell, int32_t argc, char *argv[])
     return 0;
 }
 
-__attribute__((unused)) static void GetUserInfo(ParamShellExecArgs *execArg, int32_t argc, char *argv[])
+#ifndef STARTUP_INIT_TEST
+static void GetUserInfo(ParamShellExecArgs *execArg, int32_t argc, char *argv[])
 {
     int32_t i = 0;
     execArg->parameter = NULL;
@@ -433,7 +434,7 @@ __attribute__((unused)) static void GetUserInfo(ParamShellExecArgs *execArg, int
     }
 }
 
-__attribute__((unused)) static int ExecFunc(void *arg)
+static int ExecFunc(void *arg)
 {
     ParamShellExecArgs *execArg = (ParamShellExecArgs *)arg;
     int ret = 0;
@@ -454,7 +455,7 @@ __attribute__((unused)) static int ExecFunc(void *arg)
     return ret;
 }
 
-__attribute__((unused)) static pid_t ForkChild(int (*childFunc)(void *arg), void *args)
+static pid_t ForkChild(int (*childFunc)(void *arg), void *args)
 {
     pid_t pid = fork();
     if (pid == 0) {
@@ -463,6 +464,7 @@ __attribute__((unused)) static pid_t ForkChild(int (*childFunc)(void *arg), void
     }
     return pid;
 }
+#endif
 
 static int32_t BShellParamCmdShell(BShellHandle shell, int32_t argc, char *argv[])
 {

@@ -45,12 +45,6 @@ static void Test_ProcessTimer(const TimerHandle taskHandle, void *context)
     printf("WaitTimeout count %d\n", g_maxCount);
 }
 
-__attribute__((unused)) static void TimeoutCancel(const TimerHandle taskHandle, void *context)
-{
-    printf("TimeoutCancel count %d", g_maxCount);
-    LE_StopTimer(LE_GetDefaultLoop(), taskHandle);
-}
-
 HWTEST_F(LoopTimerUnitTest, Init_Timer_001, TestSize.Level0)
 {
     EXPECT_EQ(LE_CreateLoop(&g_loop), 0);

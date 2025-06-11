@@ -308,38 +308,7 @@ static void PrepareGroupTestCfg()
     CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx13.group.cfg", xxx13);
     CreateTestFile(GROUP_DEFAULT_PATH "/subsystem.xxx14.group.cfg", xxx14);
 }
-static bool IsDir(const std::string &path)
-{
-    struct stat st {};
-    if (stat(path.c_str(), &st) < 0) {
-        return false;
-    }
-    return S_ISDIR(st.st_mode);
-}
-__attribute__((unused)) static bool DeleteDir(const std::string &path)
-{
-    auto pDir = std::unique_ptr<DIR, decltype(&closedir)>(opendir(path.c_str()), closedir);
-    if (pDir == nullptr) {
-        return false;
-    }
 
-    struct dirent *dp = nullptr;
-    while ((dp = readdir(pDir.get())) != nullptr) {
-        std::string currentName(dp->d_name);
-        if (currentName[0] != '.') {
-            std::string tmpName(path);
-            tmpName.append("/" + currentName);
-            if (IsDir(tmpName)) {
-                DeleteDir(tmpName);
-            }
-            remove(tmpName.c_str());
-        }
-    }
-    if (remove(path.c_str()) != 0) {
-        return false;
-    }
-    return true;
-}
 static void LoadParamFromCfg(void)
 {
 #ifdef PARAM_LOAD_CFG_FROM_CODE

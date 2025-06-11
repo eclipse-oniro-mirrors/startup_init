@@ -275,14 +275,15 @@ static int BatchSavePersistParam(PERSIST_SAVE_HANDLE handle[], const char *name,
 
 static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle[])
 {
-    __attribute__((unused)) int ret = 0;
     if (InUpdaterMode() == 1) {
         FILE *fp = (FILE *)handle[0];
         (void)fflush(fp);
         (void)fsync(fileno(fp));
         (void)fclose(fp);
         unlink("/param/persist_parameters");
-        ret = rename("/param/tmp_persist_parameters", "/param/persist_parameters");
+        if (rename("/param/tmp_persist_parameters", "/param/persist_parameters")) {
+            PARAM_LOGW("rename file persist_parameters fail error %d", errno);
+        }
         ParamMutexPost(&g_saveMutex);
         return;
     }
@@ -302,7 +303,9 @@ static void BatchSavePersistParamEnd(PERSIST_SAVE_HANDLE handle[])
             (void)fclose(fp);
         }
         unlink(path[i]);
-        ret = rename(tmpPath[i], path[i]);
+        if (rename(tmpPath[i], path[i])) {
+            PARAM_LOGW("rename file %s fail error %d", path[i], errno);
+        }
     }
     ParamMutexPost(&g_saveMutex);
 }

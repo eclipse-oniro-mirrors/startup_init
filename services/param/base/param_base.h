@@ -31,6 +31,7 @@ extern "C" {
 
 #define WORKSPACE_STATUS_IN_PROCESS    0x01
 #define WORKSPACE_STATUS_VALID       0x02
+#define READ_COMMIT_ID_LOOP_RETRY_TIME_WARNING 50
 
 #ifndef PARAM_BASE
 #define PARAM_SPRINTF(buffer, buffSize, format, ...) \
@@ -46,11 +47,13 @@ extern "C" {
 static inline uint32_t ReadCommitId(ParamNode *entry)
 {
     uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_ACQUIRE);
-    __attribute__((unused)) uint32_t retryTimes = 0;
+    uint32_t retryTimes = 0;
     while (commitId & PARAM_FLAGS_MODIFY) {
         futex_wait(&entry->commitId, commitId);
         commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_ACQUIRE);
-        retryTimes++;
+        if (retryTimes++ % READ_COMMIT_ID_LOOP_RETRY_TIME_WARNING == 0) {
+            break;
+        }
     }
     return commitId & PARAM_FLAGS_COMMITID;
 }

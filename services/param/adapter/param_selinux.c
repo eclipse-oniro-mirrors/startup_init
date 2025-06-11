@@ -34,8 +34,8 @@
 #endif
 typedef int (*SelinuxSetParamCheck)(const char *paraName, const char *destContext, const SrcInfo *info);
 
-
-__attribute__((unused))  static int InitSelinuxOpsForInit(SelinuxSpace *selinuxSpace)
+#if !(defined STARTUP_INIT_TEST || defined LOCAL_TEST)
+static int InitSelinuxOpsForInit(SelinuxSpace *selinuxSpace)
 {
     if (selinuxSpace->selinuxHandle == NULL) {
         const char *libname = (GetParamWorkSpace()->ops.updaterMode == 1) ? CHECKER_UPDATER_LIB : CHECKER_LIB_NAME;
@@ -81,6 +81,8 @@ __attribute__((unused))  static int InitSelinuxOpsForInit(SelinuxSpace *selinuxS
     }
     return ret;
 }
+#endif
+
 static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
 {
     PARAM_CHECK(GetParamWorkSpace() != NULL, return -1, "Invalid workspace");
