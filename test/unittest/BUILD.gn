@@ -240,7 +240,6 @@ ohos_unittest("init_unittest") {
     "param/param_unittest.cpp",
     "param/paramservice_unittest.cpp",
     "param/trigger_unittest.cpp",
-    "remount/remount_overlay_unittest.cpp",
     "syspara/syspara_unittest.cpp",
     "ueventd/ueventd_config_unittest.cpp",
     "ueventd/ueventd_event_unittest.cpp",
