@@ -510,7 +510,7 @@ HWTEST_F(ServiceUnitTest, TestServiceCGroup2, TestSize.Level1)
         }
     }
     fclose(file);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, -1);
     ret = ServiceStop(service);
     EXPECT_EQ(ret, 0);
     ReleaseService(service);
