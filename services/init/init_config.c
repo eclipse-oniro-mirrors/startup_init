@@ -118,7 +118,6 @@ void ReadConfig(void)
         INIT_LOGI("enter penglai mode");
         ParseCfgByPriority(PENGLAI_CFG_FILE_PATH);
     } else if (InRescueMode() == 0) {
-        ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(INIT_RESCUE_MODE_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (maintenance == MAINTENANCE_NORMAL_TYPE) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
