@@ -75,7 +75,6 @@ static int ProcessRecvMsg(const ParamMessage *recvMsg)
     int result = PARAM_CODE_INVALID_PARAM;
     switch (recvMsg->type) {
         case MSG_SET_PARAM:
-        case MSG_UPDATE_CONST_PARAM:
         case MSG_SAVE_PARAM:
             result = ((ParamResponseMessage *)recvMsg)->result;
             break;
@@ -216,62 +215,6 @@ int SystemSetParameter(const char *name, const char *value)
 {
     int ret = SystemSetParameter_(name, value, DEFAULT_PARAM_SET_TIMEOUT);
     BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemSetParameter failed! name is :%s, the errNum is:%d", name, ret);
-    return ret;
-}
-
-static int SystemUpdateConstParameter_(const char *name, const char *value, int timeout)
-{
-    PARAM_LOGV("SystemUpdateConstParameter_ start");
-    PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value");
-    int ret = CheckParamName(name, 0);
-    PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", name);
-    PARAM_CHECK(IS_READY_ONLY(name), return PARAM_CODE_INVALID_NAME, "only update read only param: %s", name);
-    ret = CheckParamValue(NULL, name, value, GetParamValueType(name));
-    PARAM_CHECK(ret == 0, return ret, "Illegal param value %s", value);
-
-    size_t msgSize = sizeof(ParamMsgContent);
-    msgSize = (msgSize < RECV_BUFFER_MAX) ? RECV_BUFFER_MAX : msgSize;
-
-    ParamMessage *request = (ParamMessage *)CreateParamMessage(MSG_UPDATE_CONST_PARAM, name, msgSize);
-    PARAM_CHECK(request != NULL, return PARAM_CODE_ERROR, "Failed to create Param Message");
-    uint32_t offset = 0;
-    ret = FillParamMsgContent(request, &offset, PARAM_VALUE, value, strlen(value));
-    PARAM_CHECK(ret == 0, free(request);
-        return PARAM_CODE_ERROR, "Failed to fill value");
-    request->msgSize = offset + sizeof(ParamMessage);
-    request->id.msgId = ATOMIC_SYNC_ADD_AND_FETCH(&g_requestId, 1, MEMORY_ORDER_RELAXED);
-
-    pthread_mutex_lock(&g_clientMutex);
-    int retryCount = 0;
-    while (retryCount < 2) { // max retry 2
-        if (g_clientFd == INVALID_SOCKET) {
-            g_clientFd = GetClientSocket(DEFAULT_PARAM_SET_TIMEOUT);
-        }
-
-        if (g_clientFd < 0) {
-            ret = PARAM_CODE_FAIL_CONNECT;
-            PARAM_LOGE("connect param server failed!");
-            break;
-        }
-        ret = StartRequest(g_clientFd, request, timeout);
-        if (ret == PARAM_CODE_IPC_ERROR) {
-            close(g_clientFd);
-            g_clientFd = INVALID_SOCKET;
-            retryCount++;
-        } else {
-            break;
-        }
-    }
-    PARAM_LOGI("SystemUpdateConstParameter name %s id:%u ret:%d ", name, request->id.msgId, ret);
-    pthread_mutex_unlock(&g_clientMutex);
-    free(request);
-    return ret;
-}
-
-int SystemUpdateConstParameter(const char *name, const char *value)
-{
-    int ret = SystemUpdateConstParameter_(name, value, DEFAULT_PARAM_SET_TIMEOUT);
-    BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemUpdateConstParameter failed! name is :%s, the errNum is:%d", name, ret);
     return ret;
 }
 

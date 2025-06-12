@@ -33,6 +33,8 @@ extern "C" {
 
 int SystemWriteParam(const char *name, const char *value);
 
+int SystemUpdateConstParam(const char *name, const char *value);
+
 int SystemReadParam(const char *name, char *value, unsigned int *len);
 
 int LoadParamsFile(const char *fileName, bool onlyAdd);
