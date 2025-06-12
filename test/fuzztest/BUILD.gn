@@ -2866,6 +2866,198 @@ ohos_fuzztest("GetFeatureVersionFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("MountOneWithFstabFileFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/mountonewithfstabfile_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fs_manager",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",]
+  external_deps = [ 
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+  ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ 
+    "mountonewithfstabfile_fuzzer/mountonewithfstabfile_fuzzer.cpp",
+   ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("AddParamEntryFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/addparamentry_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",]
+  external_deps = [ 
+    "bounds_checking_function:libsec_static",
+  ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ 
+    "addparamentry_fuzzer/addparamentry_fuzzer.cpp",
+   ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("InitWorkSpaceFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/initworkspace_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",]
+  external_deps = [ 
+    "bounds_checking_function:libsec_static",
+  ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ 
+    "initworkspace_fuzzer/initworkspace_fuzzer.cpp",
+   ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("CheckAppWatchPermissionFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/checkappwatchpermission_fuzzer"
+
+  sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+  ]
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/watcher/agent",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
+    "//base/startup/init/services/log:agent_log",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  if (init_paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources += [ "checkappwatchpermission_fuzzer/checkappwatchpermission_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+  if (init_paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+}
+
+ohos_fuzztest("OnStopFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/onstop_fuzzer"
+
+  sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+  ]
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/watcher/agent",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
+    "//base/startup/init/services/log:agent_log",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  if (init_paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources += [ "onstop_fuzzer/onstop_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+  if (init_paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+}
+
 ohos_fuzztest("GetBuildVersionFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file = "//base/startup/init/test/fuzztest/getbuildversion_fuzzer"
@@ -3599,10 +3791,12 @@ group("fuzztest") {
     ":AclGetDiskSNFuzzTest",
     ":AclGetSerialFuzzTest",
     ":AddRemoteWatcherFuzzTest",
+    ":AddParamEntryFuzzTest",
     ":AddWatcherFuzzTest",
     ":BuildControlMessageFuzzTest",
     ":ChangeSysAttributePermissionsFuzzTest",
     ":CheckAndCreatFileFuzzTest",
+    ":CheckAppWatchPermissionFuzzTest",
     ":CmdClientInitFuzzTest",
     ":CmdServiceProcessDelClientFuzzTest",
     ":DecodeGidFuzzTest",
@@ -3678,6 +3872,7 @@ group("fuzztest") {
     ":HookMgrGetHooksCntFuzzTest",
     ":HookMgrGetStagesCntFuzzTest",
     ":HookMgrTraversalFuzzTest",
+    ":InitWorkSpaceFuzzTest",
     ":IsSupportedFilesystemFuzzTest",
     ":LoadFscryptPolicyFuzzTest",
     ":LoadFstabFromCommandLineFuzzTest",
@@ -3692,6 +3887,7 @@ group("fuzztest") {
     ":MountAllWithFstabFileFuzzTest",
     ":MountAllWithFstabFuzzTest",
     ":MountOneItemFuzzTest",
+    ":MountOneWithFstabFileFuzzTest",
     ":ParseFstabPerLineFuzzTest",
     ":ParseUeventConfigFuzzTest",
     ":ParseUeventdConfigFileFuzzTest",
@@ -3725,6 +3921,7 @@ group("fuzztest") {
     ":WaitParameterFuzzTest",
     ":WatchParameterFuzzTest",
     ":WriteAllFuzzTest",
+    ":OnStopFuzzTest",
   ]
 }
 ###############################################################################
