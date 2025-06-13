@@ -254,7 +254,6 @@ public:
         WatcherManagerPtr watcherManager = GetWatcherManager();
         WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to get manager");
         watcherManager->OnStop();
-        watcherManager->Clear();
         return 0;
     }
 
