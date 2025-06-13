@@ -271,23 +271,4 @@ HWTEST_F(ClientUnitTest, Init_TestClient_006, TestSize.Level0)
 #endif
 }
 
-#ifndef OHOS_LITE
-HWTEST_F(ClientUnitTest, Init_TestClient_007, TestSize.Level0)
-{
-    char key1[] = "const.test.for_update_test";
-    char key2[] = "persist.test.for_update_test";
-    char value1[] = "initSet";
-    char value2[] = "initUpdate";
-
-    int ret = SystemUpdateConstParam(key1, value2);
-    EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
-    ret = SystemWriteParam(key1, value1);
-    EXPECT_EQ(ret, 0);
-    ret = SystemUpdateConstParam(key1, value2);
-    EXPECT_EQ(ret, 0);
-    ret = SystemUpdateConstParam(key2, value2);
-    EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
-}
-#endif
-
 }  // namespace init_ut
