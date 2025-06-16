@@ -518,6 +518,11 @@ ohos_unittest("init_fshvb_unittest") {
     "//base/startup/init/test/mock/init/ueventd/ueventd_socket.c",
   ]
 
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
   defines = [ "STARTUP_INIT_UT_PATH =\"/data/init_ut\"" ]
 
   configs = []

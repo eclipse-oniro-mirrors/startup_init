@@ -25,6 +25,10 @@
 #include <libgen.h>
 #include "hvb_sm2.h"
 #include "hvb_sm3.h"
+#include "hookmgr.h"
+#include "bootstage.h"
+#include "fs_manager.h"
+#include "list.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -648,6 +652,34 @@ void FsHvbDestoryVerityTarget(DmVerityTarget *target)
     }
 }
 
+static int FsHvbFindPartitionName(const char *devName, HvbDeviceParam *devPara)
+{
+    int rc;
+    HOOK_EXEC_OPTIONS options;
+    if (devPara == NULL) {
+        BEGET_LOGE("error, get devPara");
+        return -1;
+    }
+    if (memcpy_s(devPara->partName, sizeof(devPara->partName), devName, strlen(devName)) != 0) {
+        BEGET_LOGE("error, fail to copy shapshot name");
+        return -1;
+    }
+    (void)memset_s(devPara->value, sizeof(devPara->value), 0, sizeof(devPara->value));
+    devPara->reverse = 1;
+    devPara->len = (int)sizeof(devPara->value);
+    options.flags = TRAVERSE_STOP_WHEN_ERROR;
+    options.preHook = NULL;
+    options.postHook = NULL;
+ 
+    rc = HookMgrExecute(GetBootStageHookMgr(), INIT_VAB_HVBCHECK, (void*)devPara, &options);
+    BEGET_LOGW("try find partition from snapshot path %s, ret = %d", devName, rc);
+    if (rc == 0) {
+        BEGET_LOGW("found partition %s, len=%d", devPara->value, devPara->len);
+    }
+ 
+    return rc;
+}
+
 int FsHvbSetupHashtree(FstabItem *fsItem)
 {
     int rc;
@@ -659,11 +691,19 @@ int FsHvbSetupHashtree(FstabItem *fsItem)
     FS_HVB_RETURN_ERR_IF_NULL(g_vd);
 
     // fsItem->deviceName is like /dev/block/platform/xxx/by-name/system
+    // for vab boot, is like /dev/block/dm-1
     // we just basename system
     devName = basename(fsItem->deviceName);
     if (devName == NULL) {
         BEGET_LOGE("error, get basename");
         return -1;
+    }
+
+    // for virtual ab boot, find partition name with snapshot name
+    HvbDeviceParam devPara = {};
+    rc = FsHvbFindPartitionName(devName, &devPara);
+    if (rc == 0) {
+        devName = devPara.value;
     }
 
     rc = FsHvbCreateVerityTarget(&target, devName, g_vd);

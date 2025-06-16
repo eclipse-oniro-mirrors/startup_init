@@ -24,6 +24,10 @@
 #include "fs_hvb.h"
 #include "securec.h"
 #include "init_utils.h"
+#include "hookmgr.h"
+#include "bootstage.h"
+#include "fs_manager.h"
+#include "list.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -32,6 +36,7 @@ extern "C" {
 #endif
 
 #define PARTITION_PATH_PREFIX "/dev/block/by-name/"
+#define SNAPSHOT_PATH_PREFIX "/dev/block/"
 #define MAX_EXT_HVB_PARTITION_NUM 1
 #define FS_HVB_LOCK_STATE_STR_MAX 32
 
@@ -173,6 +178,37 @@ err:
     return NULL;
 }
 
+static int HvbGetSnapshotPath(const char *partition, char *out, size_t outLen)
+{
+    int rc;
+    HvbDeviceParam devPara = {};
+    HOOK_EXEC_OPTIONS options = {};
+    if (memcpy_s(devPara.partName, sizeof(devPara.partName), partition, strlen(partition)) != 0) {
+        BEGET_LOGE("error, fail to copy partition");
+        return HVB_IO_ERROR_IO;
+    }
+    devPara.reverse = 0;
+    devPara.len = (int)sizeof(devPara.value);
+    options.flags = TRAVERSE_STOP_WHEN_ERROR;
+    options.preHook = NULL;
+    options.postHook = NULL;
+ 
+    rc = HookMgrExecute(GetBootStageHookMgr(), INIT_VAB_HVBCHECK, (void *)&devPara, &options);
+    BEGET_LOGW("check snapshot path for partition %s, ret = %d", partition, rc);
+    if (rc != 0) {
+        BEGET_LOGE("error 0x%x, trans vab for %s", rc, partition);
+        return rc;
+    }
+    BEGET_LOGW("snapshot path exists for partition %s", partition);
+    rc = snprintf_s(out, outLen, outLen - 1, "%s%s", SNAPSHOT_PATH_PREFIX,
+                    devPara.value);
+    if (rc < 0) {
+        BEGET_LOGE("error, snprintf_s snapshot path fail, ret = %d", rc);
+        return rc;
+    }
+    return 0;
+}
+
 static char *HvbGetPartitionPath(const char *partition)
 {
     int rc;
@@ -188,12 +224,17 @@ static char *HvbGetPartitionPath(const char *partition)
         return GetExtHvbVerifiedPath(index);
     }
 
-    pathLen = strlen(PARTITION_PATH_PREFIX) + ptnLen;
+    pathLen = strlen(PARTITION_PATH_PREFIX) + HVB_MAX_PARTITION_NAME_LEN - 1;
     path = calloc(1, pathLen + 1);
     if (path == NULL) {
         BEGET_LOGE("error, calloc fail");
         return NULL;
     }
+
+    if (HvbGetSnapshotPath(partition, path, pathLen) == 0) {
+        return path;
+    }
+
     rc = snprintf_s(path, pathLen + 1, pathLen, "%s%s", PARTITION_PATH_PREFIX,
                     partition);
     if (rc < 0) {

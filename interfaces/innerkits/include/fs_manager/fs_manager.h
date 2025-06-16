@@ -38,6 +38,7 @@ extern "C" {
 #define FS_MANAGER_FORMATTABLE  0x00000200
 #define NAME_SIZE 32
 #define MAX_SLOT 2
+#define HVB_DEV_NAME_SIZE 64
 
 #define VALID_FS_MANAGER_FLAGS (FS_MANAGER_CHECK | FS_MANAGER_WAIT | FS_MANAGER_REQUIRED)
 #define FS_MANAGER_FLAGS_ENABLED(fsMgrFlags, flag) (((fsMgrFlags) & FS_MANAGER_##flag) != 0)
@@ -67,6 +68,13 @@ typedef struct {
     struct FstabItem *head;
     struct FstabItem *tail;
 } Fstab;
+
+typedef struct {
+    char partName[HVB_DEV_NAME_SIZE];
+    int reverse; // 0 :system->dm0  1:dm0->system
+    char value[HVB_DEV_NAME_SIZE];
+    int len;
+} HvbDeviceParam;
 
 typedef enum SlotFlag {
     UNBOOT = 0,
