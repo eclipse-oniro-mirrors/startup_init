@@ -290,7 +290,7 @@ if (defined(ohos_lite)) {
     sources += modulemgr_sources
 
     innerapi_tags = [
-      "chipsetsdk",
+      "chipsetsdk_sp",
       "platformsdk",
       "sasdk",
     ]
@@ -400,7 +400,7 @@ if (defined(ohos_lite)) {
     ]
     public_configs = [ ":exported_header_files" ]
     innerapi_tags = [
-      "chipsetsdk",
+      "chipsetsdk_sp",
       "platformsdk",
     ]
     part_name = "init"
