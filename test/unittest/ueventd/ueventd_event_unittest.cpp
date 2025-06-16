@@ -247,6 +247,27 @@ static int TestRetriggerUeventByPath(int sockFd, char *path)
     return 0;
 }
 
+static int RetriggerSpecialUevent(int sockFd, char *path, CompareUevent compare, struct  Uevent *event)
+{
+    if (event == NULL || compare == NULL) {
+        return -1;
+    }
+    return compare(event);
+}
+
+static int TestRetriggerSpecialUevent(int sockFd, char *path, CompareUevent compare, struct Uevent *event)
+{
+    return RetriggerSpecialUevent(sockFd, path, compare, event);
+}
+
+static int CompareUserData(struct Uevent *uevent)
+{
+    if (uevent == nullptr) {
+        return -1;
+    }
+    return strcmp(uevent->partitionName, "userdata");
+}
+
 HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_ParseUeventdEvent001, TestSize.Level1)
 {
     struct Uevent uevent = {
@@ -515,6 +536,11 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_Handle001, TestSize.Lev
 {
     char path[] = {"/data/ueventd"};
     int ret = TestRetriggerUeventByPath(g_oldRootFd, path);
+    EXPECT_EQ(ret, 0);
+    struct Uevent uevent = {
+        .partitionName = "userdata",
+    };
+    ret = TestRetriggerSpecialUevent(g_oldRootFd, path, CompareUserData, &uevent);
     EXPECT_EQ(ret, 0);
 }
 
