@@ -30,8 +30,6 @@ extern "C" {
 #endif
 #endif
 
-#define MAX_TARGET_NUM 4096
-
 static int LoadDmLinearDeviceTable(int fd, const char *devName, DmLinearTarget *target, uint32_t targetNum)
 {
     struct dm_ioctl *io = NULL;

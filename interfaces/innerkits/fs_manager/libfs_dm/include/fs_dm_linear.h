@@ -24,6 +24,7 @@ extern "C" {
 #endif
 #endif
 
+#define MAX_TARGET_NUM 4096
 typedef DmVerityTarget DmLinearTarget;
 int FsDmCreateMultiTargetLinearDevice(const char *devName, char *dmDevPath, uint64_t dmDevPathLen,
     DmLinearTarget *target, uint32_t targetNum);
