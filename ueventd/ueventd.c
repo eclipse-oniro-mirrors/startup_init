@@ -289,7 +289,7 @@ void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *ueven
     }
 }
 
-void ProcessUevent(int sockFd, char **devices, int num)
+void ProcessUevent(int sockFd, char **devices, int num, CompareUevent compare)
 {
     // One more bytes for '\0'
     char ueventBuffer[UEVENT_BUFFER_SIZE] = {};
@@ -301,6 +301,10 @@ void ProcessUevent(int sockFd, char **devices, int num)
             INIT_LOGV("Ignore unexpected uevent");
             return;
         }
+        if (compare != NULL) {
+            int ret = compare(&uevent);
+            INIT_CHECK(ret == 0, return);
+        }
         if (devices != NULL && num > 0) {
             HandleUeventRequired(&uevent, devices, num);
         } else {
@@ -309,7 +313,7 @@ void ProcessUevent(int sockFd, char **devices, int num)
     }
 }
 
-static void DoTrigger(const char *ueventPath, int sockFd, char **devices, int num)
+static void DoTrigger(const char *ueventPath, int sockFd, char **devices, int num, CompareUevent compare)
 {
     if (ueventPath == NULL || ueventPath[0] == '\0') {
         return;
@@ -332,11 +336,11 @@ static void DoTrigger(const char *ueventPath, int sockFd, char **devices, int nu
 
     // uevent triggered, now handle it.
     if (sockFd >= 0) {
-        ProcessUevent(sockFd, devices, num);
+        ProcessUevent(sockFd, devices, num, compare);
     }
 }
 
-static void Trigger(const char *path, int sockFd, char **devices, int num)
+static void Trigger(const char *path, int sockFd, char **devices, int num, CompareUevent compare)
 {
     if (path == NULL) {
         return;
@@ -355,7 +359,7 @@ static void Trigger(const char *path, int sockFd, char **devices, int num)
             if (snprintf_s(pathBuffer, PATH_MAX, PATH_MAX - 1, "%s/%s", path, dirent->d_name) == -1) {
                 continue;
             }
-            Trigger(pathBuffer, sockFd, devices, num);
+            Trigger(pathBuffer, sockFd, devices, num, compare);
         } else {
             if (strcmp(dirent->d_name, "uevent") != 0) {
                 continue;
@@ -365,7 +369,7 @@ static void Trigger(const char *path, int sockFd, char **devices, int num)
                 INIT_LOGW("Cannot build uevent path under %s", path);
                 continue;
             }
-            DoTrigger(ueventBuffer, sockFd, devices, num);
+            DoTrigger(ueventBuffer, sockFd, devices, num, compare);
         }
     }
     closedir(dir);
@@ -373,19 +377,24 @@ static void Trigger(const char *path, int sockFd, char **devices, int num)
 
 void RetriggerUeventByPath(int sockFd, char *path)
 {
-    Trigger(path, sockFd, NULL, 0);
+    Trigger(path, sockFd, NULL, 0, NULL);
 }
 
 void RetriggerDmUeventByPath(int sockFd, char *path, char **devices, int num)
 {
-    Trigger(path, sockFd, devices, num);
+    Trigger(path, sockFd, devices, num, NULL);
+}
+
+void RetriggerSpecialUevent(int sockFd, char *path, char **devices, int num, CompareUevent compare)
+{
+    Trigger(path, sockFd, devices, num, compare);
 }
 
 void RetriggerUevent(int sockFd, char **devices, int num)
 {
     int ret = GetParameterFromCmdLine("default_boot_device", bootDevice, CMDLINE_VALUE_LEN_MAX);
     INIT_CHECK_ONLY_ELOG(ret == 0, "Failed get default_boot_device value from cmdline");
-    Trigger("/sys/block", sockFd, devices, num);
-    Trigger("/sys/class", sockFd, devices, num);
-    Trigger("/sys/devices", sockFd, devices, num);
+    Trigger("/sys/block", sockFd, devices, num, NULL);
+    Trigger("/sys/class", sockFd, devices, num, NULL);
+    Trigger("/sys/devices", sockFd, devices, num, NULL);
 }
