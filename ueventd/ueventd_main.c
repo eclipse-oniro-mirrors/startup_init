@@ -119,7 +119,7 @@ static int UeventdDaemon(int listen_only)
         (void)close(fd);
     } else {
         INIT_LOGI("ueventd start to process uevent message");
-        ProcessUevent(ueventSockFd, NULL, 0, NULL); // Not require boot devices); // Not require boot devices
+        ProcessUevent(ueventSockFd, NULL, 0, NULL); // Not require boot devices
     }
     PollUeventdSocketTimeout(ueventSockFd, ondemand);
     CloseUeventConfig();

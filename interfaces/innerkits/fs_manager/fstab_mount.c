@@ -550,7 +550,11 @@ static int MountItemByFsType(FstabItem *item)
 
 static int ExecCheckpointHook(FstabItem *item)
 {
-    int ret = HookMgrExecute(GetBootStageHookMgr(), INIT_DISABLE_CHECKPOINT, (void*)item, NULL);
+    HOOK_EXEC_OPTIONS options;
+    options.flags = TRAVERSE_STOP_WHEN_ERROR;
+    options.postHook = NULL;
+    options.preHook = NULL;
+    int ret = HookMgrExecute(GetBootStageHookMgr(), INIT_DISABLE_CHECKPOINT, (void*)item, &options);
     BEGET_LOGI("ExecCheckpointHook ret %d", ret);
     return ret;
 }
