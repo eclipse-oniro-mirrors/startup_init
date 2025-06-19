@@ -58,6 +58,7 @@ usbfn_host:x:3024:
 power_host:x:3025:
 wifi_host:x:3026:
 audio_hdi_server_host:x:3027:
+access_control_level_manager:x:3101:
 audio_host:x:3127:
 camera_host:x:3028:
 input_user_host:x:3029:
