@@ -26,7 +26,7 @@ constexpr int TYPE_MAX = 5;
 namespace OHOS {
     bool FuzzAddParamEntry(const uint8_t* data, size_t size)
     {
-        if (size < DATA_SIZE) {
+        if (size < sizeof(uint32_t)) {
             return false;
         }
 
