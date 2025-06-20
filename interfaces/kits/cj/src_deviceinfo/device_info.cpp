@@ -16,15 +16,34 @@
 #include "parameter.h"
 #include "sysversion.h"
 #include "device_info.h"
+#ifdef DEPENDENT_APPEXECFWK_BASE
+#include "bundlemgr/bundle_mgr_proxy.h"
+#endif
+#include "iservice_registry.h"
+#include "if_system_ability_manager.h"
+#include "system_ability_definition.h"
+#include "beget_ext.h"
+#include "init_error.h"
+#include "securec.h"
+#include "log.h"
 
 #include <string>
 #include <memory>
+#include <threads.h>
 
 namespace OHOS {
 namespace CJSystemapi {
 namespace DeviceInfo {
 
 const int UDID_LEN = 65;
+const int ODID_LEN = 37;
+
+typedef enum {
+    DEV_INFO_OK,
+    DEV_INFO_ENULLPTR,
+    DEV_INFO_EGETODID,
+    DEV_INFO_ESTRCOPY
+} DevInfoError;
 
 const char* DeviceInfo::CjGetHardwareProfile()
 {
@@ -203,6 +222,60 @@ int64_t DeviceInfo::CjGetDistributionOSApiVersion()
 const char* DeviceInfo::CjGetDistributionOSReleaseType()
 {
     return GetDistributionOSReleaseType();
+}
+
+static DevInfoError CjAclGetDevOdid(char *odid, int size)
+{
+    DevInfoError ret = DEV_INFO_OK;
+    if (odid[0] != '\0') {
+        return DEV_INFO_OK;
+    }
+    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        return DEV_INFO_ENULLPTR;
+    }
+
+    auto remoteObject = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (!remoteObject) {
+        return DEV_INFO_ENULLPTR;
+    }
+
+#ifdef DEPENDENT_APPEXECFWK_BASE
+    auto bundleMgrProxy = OHOS::iface_cast<OHOS::AppExecFwk::BundleMgrProxy>(remoteObject);
+    if (!bundleMgrProxy) {
+        return DEV_INFO_ENULLPTR;
+    }
+
+    std::string odidStr;
+    if (bundleMgrProxy->GetOdid(odidStr) != 0) {
+        return DEV_INFO_EGETODID;
+    }
+
+    if (strcpy_s(odid, size, odidStr.c_str()) != EOK) {
+        return DEV_INFO_ESTRCOPY;
+    }
+#else
+    LOGE("DEPENDENT_APPEXECFWK_BASE does not exist, The ODID could not be obtained");
+    ret = DEV_INFO_EGETODID;
+#endif
+
+    return ret;
+}
+
+const char* DeviceInfo::CjGetDevOdid()
+{
+    thread_local char odid[ODID_LEN] = {0};
+    DevInfoError ret = CjAclGetDevOdid(odid, ODID_LEN);
+    if (ret != DEV_INFO_OK) {
+        LOGE("GetDevOdid ret:%d", ret);
+        return "";
+    }
+    return odid;
+}
+
+const char* DeviceInfo::CjGetDistributionOSApiName()
+{
+    return GetDistributionOSApiName();
 }
 
 } // DeviceInfo

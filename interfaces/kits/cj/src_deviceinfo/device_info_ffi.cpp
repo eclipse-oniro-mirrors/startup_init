@@ -225,6 +225,18 @@ const char* FfiOHOSDeviceInfoDistributionOSReleaseType()
     LOGI("DeviceInfo::FfiOHOSDeviceInfoDistributionOSReleaseType");
     return DeviceInfo::CjGetDistributionOSReleaseType();
 }
+
+FFI_EXPORT const char* FfiOHOSDeviceInfoDevOdid()
+{
+    LOGI("DeviceInfo::FfiOHOSDeviceInfoDevOdid");
+    return DeviceInfo::CjGetDevOdid();
+}
+
+FFI_EXPORT const char* FfiOHOSDeviceInfoDistributionOSApiName()
+{
+    LOGI("DeviceInfo::FfiOHOSDeviceInfoDistributionOSApiName");
+    return DeviceInfo::CjGetDistributionOSApiName();
+}
 }
 
 } // DeviceInfo

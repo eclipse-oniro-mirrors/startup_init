@@ -42,10 +42,19 @@ ohos_shared_library("cj_device_info_ffi") {
 
     external_deps = [
       "bounds_checking_function:libsec_shared",
+      "bundle_framework:appexecfwk_core",
+      "c_utils:utils",
       "hilog:libhilog",
       "ipc:ipc_single",
       "napi:cj_bind_ffi",
+      "samgr:samgr_proxy",
     ]
+
+    if (defined(global_parts_info) &&
+        defined(global_parts_info.bundlemanager_bundle_framework)) {
+      external_deps += [ "bundle_framework:appexecfwk_base" ]
+      defines += [ "DEPENDENT_APPEXECFWK_BASE" ]
+    }
   } else {
     defines += [ "PREVIEWER" ]
     sources = [ "src_deviceinfo/device_info_mock.cpp" ]

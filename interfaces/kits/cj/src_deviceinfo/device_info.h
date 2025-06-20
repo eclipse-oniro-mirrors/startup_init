@@ -59,6 +59,8 @@ public:
     static const char* CjGetDistributionOSVersion();
     static int64_t CjGetDistributionOSApiVersion();
     static const char* CjGetDistributionOSReleaseType();
+    static const char* CjGetDevOdid();
+    static const char* CjGetDistributionOSApiName();
 };
 
 } // DeviceInfo
