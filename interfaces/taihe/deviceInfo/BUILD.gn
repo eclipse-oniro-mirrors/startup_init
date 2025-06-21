@@ -20,10 +20,10 @@ copy_taihe_idl("copy_deviceInfo") {
 }
 subsystem_name = "startup"
 part_name = "init"
-taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name"
+taihe_generated_file_path_deviceInfo = "$taihe_file_path/out/$subsystem_name/$part_name/deviceInfo"
 
 ohos_taihe("run_taihe") {
-  taihe_generated_file_path = "$taihe_generated_file_path"
+  taihe_generated_file_path = "${taihe_generated_file_path_deviceInfo}"
   deps = [ ":copy_deviceInfo" ]
   outputs = [
     "$taihe_generated_file_path/src/ohos.deviceInfo.ani.cpp",
@@ -37,7 +37,7 @@ taihe_shared_library("deviceInfo_taihe_native") {
     cfi_cross_dso = true
     debug = false
   }
-  taihe_generated_file_path = "$taihe_generated_file_path"
+  taihe_generated_file_path = "${taihe_generated_file_path_deviceInfo}"
   part_name = "$part_name"
   subsystem_name = "$subsystem_name"
   sources = get_target_outputs(":run_taihe")
@@ -67,8 +67,8 @@ taihe_shared_library("deviceInfo_taihe_native") {
 }
 
 generate_static_abc("deviceInfo") {
-  base_url = "$taihe_generated_file_path"
-  files = [ "$taihe_generated_file_path/@ohos.deviceInfo.ets" ]
+  base_url = "$taihe_generated_file_path_deviceInfo"
+  files = [ "$taihe_generated_file_path_deviceInfo/@ohos.deviceInfo.ets" ]
   is_boot_abc = "True"
   device_dst_file = "/system/framework/deviceInfo.abc"
   dependencies = [ ":run_taihe" ]
