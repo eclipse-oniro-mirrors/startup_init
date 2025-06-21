@@ -53,6 +53,7 @@ extern "C" {
 #define FS_HVB_CMDLINE_PATH "/proc/cmdline"
 #define FS_HVB_PARTITION_PREFIX "/dev/block/by-name/"
 #define HVB_CMDLINE_EXT_CERT_DIGEST "ohos.boot.hvb.ext_rvt"
+#define FS_HVB_SNAPSHOT_PREFIX "/dev/block/"
 
 #define HASH_ALGO_SHA256 0
 #define HASH_ALGO_SHA256_STR "sha256"
@@ -318,12 +319,47 @@ int FsHvbInit(InitHvbType hvbType)
     return 0;
 }
 
+static int FsHvbFindVabPartition(const char *devName, HvbDeviceParam *devPara)
+{
+    int rc;
+    HOOK_EXEC_OPTIONS options;
+    if (devPara == NULL) {
+        BEGET_LOGE("error, get devPara");
+        return -1;
+    }
+    if (memcpy_s(devPara->partName, sizeof(devPara->partName), devName, strlen(devName)) != 0) {
+        BEGET_LOGE("error, fail to copy shapshot name");
+        return -1;
+    }
+    (void)memset_s(devPara->value, sizeof(devPara->value), 0, sizeof(devPara->value));
+    devPara->reverse = 1;
+    devPara->len = (int)sizeof(devPara->value);
+    options.flags = TRAVERSE_STOP_WHEN_ERROR;
+    options.preHook = NULL;
+    options.postHook = NULL;
+ 
+    rc = HookMgrExecute(GetBootStageHookMgr(), INIT_VAB_HVBCHECK, (void*)devPara, &options);
+    BEGET_LOGW("try find partition from snapshot path %s, ret = %d", devName, rc);
+    if (rc == 0) {
+        BEGET_LOGW("found partition %s, len=%d", devPara->value, devPara->len);
+    }
+ 
+    return rc;
+}
+
 static int FsHvbGetCert(struct hvb_cert *cert, const char *devName, struct hvb_verified_data *vd)
 {
     enum hvb_errno hr;
     size_t devNameLen = strlen(devName);
     struct hvb_cert_data *p = vd->certs;
     struct hvb_cert_data *end = p + vd->num_loaded_certs;
+
+    // for virtual ab boot, find partition name with snapshot name
+    HvbDeviceParam devPara = {};
+    if (FsHvbFindVabPartition(devName, &devPara) == 0) {
+        devName = devPara.value;
+        devNameLen = strlen(devName);
+    }
 
     int bootSlots = GetBootSlots();
     if (bootSlots > 1) {
@@ -519,6 +555,15 @@ static int FsHvbVerityTargetAddFecArgs(struct hvb_cert *cert, char *devPath, cha
     return 0;
 }
 
+static const char *FsHvbGetFsPrefix(const char *devName)
+{
+    HvbDeviceParam devPara = {};
+    if (FsHvbFindVabPartition(devName, &devPara) == 0) {
+        return FS_HVB_SNAPSHOT_PREFIX;
+    }
+    return FS_HVB_PARTITION_PREFIX;
+}
+
 /*
  * target->paras is verity table target, format as below;
  * <version> <dev><hash_dev><data_block_size><hash_block_size>
@@ -549,7 +594,7 @@ int FsHvbConstructVerityTarget(DmVerityTarget *target, const char *devName, stru
     }
 
     if (snprintf_s(&devPath[0], sizeof(devPath), sizeof(devPath) - 1, "%s%s",
-        ((strchr(devName, '/') == NULL) ? FS_HVB_PARTITION_PREFIX : ""), devName) == -1) {
+        ((strchr(devName, '/') == NULL) ? FsHvbGetFsPrefix(devName) : ""), devName) == -1) {
         BEGET_LOGE("error, snprintf_s devPath");
         return -1;
     }
@@ -652,34 +697,6 @@ void FsHvbDestoryVerityTarget(DmVerityTarget *target)
     }
 }
 
-static int FsHvbFindPartitionName(const char *devName, HvbDeviceParam *devPara)
-{
-    int rc;
-    HOOK_EXEC_OPTIONS options;
-    if (devPara == NULL) {
-        BEGET_LOGE("error, get devPara");
-        return -1;
-    }
-    if (memcpy_s(devPara->partName, sizeof(devPara->partName), devName, strlen(devName)) != 0) {
-        BEGET_LOGE("error, fail to copy shapshot name");
-        return -1;
-    }
-    (void)memset_s(devPara->value, sizeof(devPara->value), 0, sizeof(devPara->value));
-    devPara->reverse = 1;
-    devPara->len = (int)sizeof(devPara->value);
-    options.flags = TRAVERSE_STOP_WHEN_ERROR;
-    options.preHook = NULL;
-    options.postHook = NULL;
- 
-    rc = HookMgrExecute(GetBootStageHookMgr(), INIT_VAB_HVBCHECK, (void*)devPara, &options);
-    BEGET_LOGW("try find partition from snapshot path %s, ret = %d", devName, rc);
-    if (rc == 0) {
-        BEGET_LOGW("found partition %s, len=%d", devPara->value, devPara->len);
-    }
- 
-    return rc;
-}
-
 int FsHvbSetupHashtree(FstabItem *fsItem)
 {
     int rc;
@@ -697,13 +714,6 @@ int FsHvbSetupHashtree(FstabItem *fsItem)
     if (devName == NULL) {
         BEGET_LOGE("error, get basename");
         return -1;
-    }
-
-    // for virtual ab boot, find partition name with snapshot name
-    HvbDeviceParam devPara = {};
-    rc = FsHvbFindPartitionName(devName, &devPara);
-    if (rc == 0) {
-        devName = devPara.value;
     }
 
     rc = FsHvbCreateVerityTarget(&target, devName, g_vd);
