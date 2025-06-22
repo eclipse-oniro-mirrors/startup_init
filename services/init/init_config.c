@@ -119,9 +119,6 @@ void ReadConfig(void)
         ParseCfgByPriority(PENGLAI_CFG_FILE_PATH);
     } else if (InRescueMode() == 0) {
         ReadFileInDir(INIT_RESCUE_MODE_PATH, ".cfg", ParseInitCfg, NULL);
-    } else if (maintenance == MAINTENANCE_NORMAL_TYPE) {
-        ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
-        ReadFileInDir(MAINTENANCE_NORMAL_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (maintenance == MAINTENANCE_RECOVERY_TYPE || maintenance == MAINTENANCE_RECOVERY_COMPLETE_TYPE) {
         ReadFileInDir(MAINTENANCE_RECOVERY_PATH, ".cfg", ParseInitCfg, NULL);
     } else if (InUpdaterMode() == 0) {
