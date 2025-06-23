@@ -643,10 +643,6 @@ int InRepairMode(void)
     if (ret != 0) {
         return -1;
     }
-
-    if (strcmp(repair, MAINTENANCE_NORMAL) == 0) {
-        return MAINTENANCE_NORMAL_TYPE;
-    }
 	
     if (strcmp(repair, MAINTENANCE_RECOVERY) == 0) {
         return MAINTENANCE_RECOVERY_TYPE;
