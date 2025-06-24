@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,15 +13,18 @@
  * limitations under the License.
  */
 
-#include "addwatcher_fuzzer.h"
 #include <string>
 #include <memory>
-#include "watcher_manager.h"
+#include "sendlocalchange_fuzzer.h"
+#include "init_utils.h"
 #include "securec.h"
-
+#define private public
+#include "watcher_manager.h"
+#undef private
 using namespace OHOS::init_param;
+
 namespace OHOS {
-     bool FuzzAddWatcher(const uint8_t* data, size_t size)
+    bool FuzzProcessSendLocalChange(const uint8_t* data, size_t size)
     {
         if (size < sizeof(uint32_t)) {
             return false;
@@ -33,10 +36,8 @@ namespace OHOS {
         if (ret != 0) {
             return false;
         }
-        if (!watcherManager->AddWatcher(str, randomValue)) {
-            return true;
-        };
-        return false;
+        watcherManager->SendLocalChange(str, randomValue);
+        return true;
     }
 }
 
@@ -44,6 +45,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzAddWatcher(data, size);
+    OHOS::FuzzProcessSendLocalChange(data, size);
     return 0;
 }

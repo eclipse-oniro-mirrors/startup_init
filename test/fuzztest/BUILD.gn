@@ -3033,6 +3033,14 @@ ohos_fuzztest("OnStopFuzzTest") {
     "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
     "//base/startup/init/services/log:agent_log",
   ]
+  sources += [
+    "//base/startup/init/services/param/watcher/agent/watcher.cpp",
+    "//base/startup/init/services/param/watcher/agent/watcher_manager_kits.cpp",
+  ]
+  deps += [
+    "//base/startup/init/interfaces/innerkits/:param_watcher_proxy",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
+  ]
   external_deps = [
     "bounds_checking_function:libsec_static",
     "c_utils:utils",
@@ -3177,6 +3185,14 @@ ohos_fuzztest("AddRemoteWatcherFuzzTest") {
     "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
     "//base/startup/init/services/log:agent_log",
   ]
+  sources += [
+      "//base/startup/init/services/param/watcher/agent/watcher.cpp",
+      "//base/startup/init/services/param/watcher/agent/watcher_manager_kits.cpp",
+    ]
+  deps += [
+      "//base/startup/init/interfaces/innerkits/:param_watcher_proxy",
+      "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
+    ]
   external_deps = [
     "bounds_checking_function:libsec_static",
     "c_utils:utils",
@@ -3782,6 +3798,157 @@ ohos_fuzztest("SplitStringFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("SendLocalChangeFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/sendlocalchange_fuzzer"
+
+  sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+  ]
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/watcher/agent",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
+    "//base/startup/init/services/log:agent_log",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  if (init_paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources += [ "sendlocalchange_fuzzer/sendlocalchange_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+  if (init_paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+}
+
+ohos_fuzztest("AddWatcherGroupFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/addwatchergroup_fuzzer"
+
+  sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+  ]
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/watcher/agent",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
+    "//base/startup/init/services/log:agent_log",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  if (init_paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources += [ "addwatchergroup_fuzzer/addwatchergroup_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+  if (init_paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+}
+
+ohos_fuzztest("DUMPFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/dump_fuzzer"
+
+  sources = [
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+  ]
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/param/watcher/proxy",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/param/watcher/agent",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
+    "//base/startup/init/services/log:agent_log",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  if (init_paramwatcher_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+  }
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources += [ "dump_fuzzer/dump_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+  if (init_paramwatcher_hicollie_enable) {
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+}
+
+
 ##############################################################################################
 group("fuzztest") {
   testonly = true
@@ -3793,6 +3960,7 @@ group("fuzztest") {
     ":AddRemoteWatcherFuzzTest",
     ":AddParamEntryFuzzTest",
     ":AddWatcherFuzzTest",
+    ":AddWatcherGroupFuzzTest",
     ":BuildControlMessageFuzzTest",
     ":ChangeSysAttributePermissionsFuzzTest",
     ":CheckAndCreatFileFuzzTest",
@@ -3804,6 +3972,7 @@ group("fuzztest") {
     ":DelRemoteWatcherFuzzTest",
     ":DelWatcherFuzzTest",
     ":DoFormatFuzzTest",
+    ":DUMPFuzzTest",
     ":FindFstabItemForMountPointFuzzTest",
     ":FindFstabItemForPathFuzzTest",
     ":FindParameterFuzzTest",
@@ -3898,6 +4067,7 @@ group("fuzztest") {
     ":RefreshWatcherFuzzTest",
     ":ReleaseFstabFuzzTest",
     ":RemoveParameterWatcherFuzzTest",
+    ":SendLocalChangeFuzzTest",
     ":ServiceControlFuzzTest",
     ":ServiceControlStartFuzzTest",
     ":ServiceControlStopFuzzTest",
