@@ -104,8 +104,23 @@ int32_t DeviceInfoService::CallbackEnter(uint32_t code)
         std::unique_lock<std::mutex> lock(g_lock);
         (void)clock_gettime(CLOCK_MONOTONIC, &g_lastTime);
     }
-    if (!CheckPermission("ohos.permission.sec.ACCESS_UDID")) {
-        return SYSPARAM_PERMISSION_DENIED;
+    switch (code) {
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_UDID):
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_SERIAL_I_D): {
+            if (!CheckPermission("ohos.permission.sec.ACCESS_UDID")) {
+                return SYSPARAM_PERMISSION_DENIED;
+            }
+            break;
+        }
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_DISK_S_N): {
+            if (!CheckPermission("ohos.permission.ACCESS_DISK_PHY_INFO")) {
+                return SYSPARAM_PERMISSION_DENIED;
+            }
+            break;
+        }
+        default: {
+            return SYSPARAM_PERMISSION_DENIED;
+        }
     }
     return 0;
 }
