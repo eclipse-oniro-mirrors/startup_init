@@ -20,10 +20,10 @@ copy_taihe_idl("copy_systemParamterEnhance") {
 }
 subsystem_name = "startup"
 part_name = "init"
-taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name"
+taihe_generated_file_path_systemParameterEnhance = "$taihe_file_path/out/$subsystem_name/$part_name/systemParameterEnhance"
 
 ohos_taihe("run_taihe") {
-  taihe_generated_file_path = "$taihe_generated_file_path"
+  taihe_generated_file_path = "${taihe_generated_file_path_systemParameterEnhance}"
   deps = [ ":copy_systemParamterEnhance" ]
   outputs = [
     "$taihe_generated_file_path/src/ohos.systemParameterEnhance.ani.cpp",
@@ -37,7 +37,7 @@ taihe_shared_library("systemParameterEnhance_taihe_native") {
     cfi_cross_dso = true
     debug = false
   }
-  taihe_generated_file_path = "$taihe_generated_file_path"
+  taihe_generated_file_path = "${taihe_generated_file_path_systemParameterEnhance}"
   part_name = "$part_name"
   subsystem_name = "$subsystem_name"
   sources = get_target_outputs(":run_taihe")
@@ -56,8 +56,8 @@ taihe_shared_library("systemParameterEnhance_taihe_native") {
 }
 
 generate_static_abc("systemParameterEnhance") {
-  base_url = "$taihe_generated_file_path"
-  files = [ "$taihe_generated_file_path/@ohos.systemParameterEnhance.ets" ]
+  base_url = "$taihe_generated_file_path_systemParameterEnhance"
+  files = [ "$taihe_generated_file_path_systemParameterEnhance/@ohos.systemParameterEnhance.ets" ]
   is_boot_abc = "True"
   device_dst_file = "/system/framework/systemParameterEnhance.abc"
   dependencies = [ ":run_taihe" ]
