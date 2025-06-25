@@ -13,22 +13,38 @@
  * limitations under the License.
  */
 
+#include "watcher.h"
+#include "watcher_proxy.h"
 #include "addremotewatcher_fuzzer.h"
 #include <string>
 #include <memory>
+#include "watcher_utils.h"
+#define protected public
 #include "watcher_manager.h"
-
+#undef protected
 using namespace OHOS::init_param;
+
+class FuzzWatcher final : public Watcher {
+public:
+    FuzzWatcher() {}
+    ~FuzzWatcher() = default;
+    int32_t OnParameterChange(const std::string &prefix, const std::string &name, const std::string &value) override
+    {
+        return 0;
+    }
+};
 namespace OHOS {
     bool FuzzAddRemoteWatcher(const uint8_t* data, size_t size)
     {
         bool result = false;
+        sptr<Watcher> watcher = new FuzzWatcher();
         std::unique_ptr<WatcherManager> watcherManager = std::make_unique<WatcherManager>(0, true);
         uint32_t id = static_cast<const uint32_t>(*data);
         uint32_t watcherId = 0;
-        sptr<IWatcher> watcher = {0};
+        watcherManager->OnStart();
         if (!watcherManager->AddRemoteWatcher(id, watcherId, watcher)) {
             result = true;
+            watcherManager->DelRemoteWatcher(watcherId);
         };
         return result;
     }
