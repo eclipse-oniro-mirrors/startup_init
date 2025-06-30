@@ -316,14 +316,16 @@ static void WriteBooteventSysParam(const char *paramName)
 }
 
 #ifndef STARTUP_INIT_TEST
-static void DelayedHookMgrExecute(TimerHandle handler, void *context) {
+static void DelayedHookMgrExecute(TimerHandle handler, void *context)
+{
     UNUSED(handler);
     UNUSED(context);
     INIT_LOGI("Executing delayed HookMgrExecute");
     HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
 }
  
-static int ScheduleDelayedHookMgrExecute(void) {
+static int ScheduleDelayedHookMgrExecute(void)
+{
     TimerHandle timer;
     LE_STATUS status = LE_CreateTimer(LE_GetDefaultLoop(), &timer, DelayedHookMgrExecute, NULL);
     if (status != LE_SUCCESS) {
