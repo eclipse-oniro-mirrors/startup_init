@@ -32,7 +32,8 @@ namespace OHOS {
         if (size == 0) return args;
 
         std::string input(reinterpret_cast<const char*>(data), size);
-        size_t start = 0, end = input.find('\n');
+        size_t start = 0;
+        size_t end = input.find('\n');
         while (end != std::string::npos) {
             std::string token = input.substr(start, end - start);
             if (!token.empty()) {
