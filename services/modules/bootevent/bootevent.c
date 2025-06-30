@@ -315,6 +315,30 @@ static void WriteBooteventSysParam(const char *paramName)
     SystemWriteParam(name, buf);
 }
 
+#ifndef STARTUP_INIT_TEST
+static void DelayedHookMgrExecute(TimerHandle handler, void *context) {
+    UNUSED(handler);
+    UNUSED(context);
+    INIT_LOGI("Executing delayed HookMgrExecute");
+    HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
+}
+ 
+static int ScheduleDelayedHookMgrExecute(void) {
+    TimerHandle timer;
+    LE_STATUS status = LE_CreateTimer(LE_GetDefaultLoop(), &timer, DelayedHookMgrExecute, NULL);
+    if (status != LE_SUCCESS) {
+        INIT_LOGE("Failed to create timer for delayed HookMgrExecute");
+        return -1;
+    }
+    status = LE_StartTimer(LE_GetDefaultLoop(), timer, 100, 0); // 100ms 后触发
+    if (status != LE_SUCCESS) {
+        INIT_LOGE("Failed to start timer for delayed HookMgrExecute");
+        return -1;
+    }
+    return 0;
+}
+#endif
+
 static int BootEventParaFireByName(const char *paramName)
 {
     BOOT_EVENT_PARAM_ITEM *found = NULL;
@@ -352,7 +376,10 @@ static int BootEventParaFireByName(const char *paramName)
     ReportSysEvent();
     BootCompleteClearAll();
 #ifndef STARTUP_INIT_TEST
-    HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
+    if (ScheduleDelayedHookMgrExecute() != 0) {
+        INIT_LOGE("Failed to schedule delayed HookMgrExecute, executing directly");
+        HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
+    }
 #endif
     RemoveCmdExecutor("bootevent", -1);
     return 1;
