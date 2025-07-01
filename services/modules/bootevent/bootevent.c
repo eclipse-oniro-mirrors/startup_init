@@ -32,7 +32,9 @@
 #ifdef WITH_SELINUX
 #include <policycoreutils.h>
 #endif
+#ifndef STARTUP_INIT_TEST
 static const int SLEPP_TIME = 100;
+#endif
 
 static int GetBootSwitchEnable(const char *paramName)
 {
