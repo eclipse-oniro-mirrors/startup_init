@@ -32,6 +32,7 @@
 #ifdef WITH_SELINUX
 #include <policycoreutils.h>
 #endif
+static const int SLEPP_TIME = 100;
 
 static int GetBootSwitchEnable(const char *paramName)
 {
@@ -333,7 +334,7 @@ static int ScheduleDelayedHookMgrExecute(void)
         return -1;
     }
  
-    status = LE_StartTimer(LE_GetDefaultLoop(), timer, 100, 0);
+    status = LE_StartTimer(LE_GetDefaultLoop(), timer, SLEPP_TIME, 0);
     if (status != LE_SUCCESS) {
         LE_StopTimer(LE_GetDefaultLoop(), timer);
         INIT_LOGE("Failed to start timer for delayed HookMgrExecute");
