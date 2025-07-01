@@ -17,7 +17,7 @@
 #define INIT_BOOTSTAGE_HOOK_NAME "bootstage"
 static HOOK_MGR *bootStageHookMgr = NULL;
 
-HOOK_MGR *GetBootStageHookMgr(void)
+__attribute__((noinline)) HOOK_MGR *GetBootStageHookMgr(void)
 {
     if (bootStageHookMgr != NULL) {
         return bootStageHookMgr;
