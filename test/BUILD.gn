@@ -24,6 +24,7 @@ group("testgroup") {
         "unittest:init_dmverify_unittest",
         "unittest:init_fshvb_unittest",
         "unittest:init_unittest",
+        "unittest/single_test/init_firststage:init_firststage_unittest",
       ]
     } else {
       if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
