@@ -135,6 +135,10 @@ static void MountRequiredPartitions(void)
 #ifdef ASAN_DETECTOR
 static void ChekcAndRunAsanInit(char * const args[])
 {
+#ifdef STARTUP_INIT_TEST
+    (void)args;
+    return;
+#else
     const char* asanInitPath = "/system/asan/bin/init";
     char rebootReason[MAX_BUFFER_LEN] = {0};
     INIT_LOGI("ChekcAndRunAsan Begin");
@@ -155,16 +159,17 @@ static void ChekcAndRunAsanInit(char * const args[])
     OpenKmsg();
 
     setenv("ASAN_OPTIONS", "include=/system/etc/asan.options", 1);
-    setenv("TSAN_OPTIONS", "include=/system/etc/asan.options", 1);
-    setenv("UBSAN_OPTIONS", "include=/system/etc/asan.options", 1);
+    setenv("TSAN_OPTIONS", "include=/system/etc/tsan.options", 1);
+    setenv("UBSAN_OPTIONS", "print_stacktrace=1:print_module_map=2:log_exe_name=1", 1);
     setenv("HWASAN_OPTIONS", "include=/system/etc/asan.options", 1);
     INIT_LOGI("Execute %s, process id %d.", asanInitPath, getpid());
     if (execv(asanInitPath, args) != 0) {
         INIT_LOGE("Execute %s, execle failed! err %d.", asanInitPath, errno);
     }
+#endif
 }
 #endif
-static void StartSecondStageInit(long long uptime)
+INIT_STATIC void StartSecondStageInit(long long uptime)
 {
     INIT_LOGI("Start init second stage.");
     // It will panic if close stdio before execv("/bin/sh", NULL)
@@ -182,7 +187,9 @@ static void StartSecondStageInit(long long uptime)
         NULL,
     };
 #ifdef ASAN_DETECTOR
-    ChekcAndRunAsanInit(args);
+    if (access("/log/asanEnable", F_OK) == 0) {
+        ChekcAndRunAsanInit(args);
+    }
 #endif
     if (execv("/bin/init", args) != 0) {
         INIT_LOGE("Failed to exec \"/bin/init\", err = %d", errno);

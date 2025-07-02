@@ -90,5 +90,5 @@ declare_args() {
   init_feature_custom_sandbox = false
 
   # init sasn support
-  init_feature_support_asan = false
+  init_feature_support_asan = true
 }
