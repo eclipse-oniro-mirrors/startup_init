@@ -336,6 +336,13 @@ setgroups;arm64
 setgroups32;arm
 setresgid;arm64
 setresgid32;arm
+settimeofday;all
+sethostname;all
+syslog;all
+io_uring_setup;all
+shmctl;all
+msgctl;all
+semctl;all
 
 @allowListWithArgs
 clone: if (arg0 & (CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWNET | CLONE_NEWCGROUP | CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWUSER)) == 0 ; return ALLOW; else return TRAP;all
