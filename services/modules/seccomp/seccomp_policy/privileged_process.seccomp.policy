@@ -25,3 +25,6 @@ setgroups;arm64
 setgroups32;arm
 setresgid;arm64
 setresgid32;arm
+settimeofday;all
+sethostname;all
+syslog;all
