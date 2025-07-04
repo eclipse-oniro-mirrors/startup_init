@@ -33,6 +33,7 @@ namespace OHOS {
         std::string str(reinterpret_cast<const char*>(data), size);
         CloseStdout();
         if (!WatchParameter(str.c_str(), HandleParamChange, NULL)) {
+            WatchParameter(str.c_str(), NULL, NULL);
             result = true;
         }
         return result;
