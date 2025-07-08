@@ -1,0 +1,72 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//base/startup/init/begetd.gni")
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+import("//build/ohos/taihe_idl/taihe.gni")
+
+copy_taihe_idl("copy_systemParamterEnhance") {
+  sources = [ "idl/ohos.systemParameterEnhance.taihe" ] 
+}
+subsystem_name = "startup"
+part_name = "init"
+taihe_generated_file_path_systemParameterEnhance = "$taihe_file_path/out/$subsystem_name/$part_name/systemParameterEnhance"
+
+ohos_taihe("run_taihe") {
+  taihe_generated_file_path = "${taihe_generated_file_path_systemParameterEnhance}"
+  deps = [ ":copy_systemParamterEnhance" ]
+  outputs = [
+    "$taihe_generated_file_path/src/ohos.systemParameterEnhance.ani.cpp",
+    "$taihe_generated_file_path/src/ohos.systemParameterEnhance.abi.c",
+  ]
+}
+
+taihe_shared_library("systemParameterEnhance_taihe_native") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  taihe_generated_file_path = "${taihe_generated_file_path_systemParameterEnhance}"
+  part_name = "$part_name"
+  subsystem_name = "$subsystem_name"
+  sources = get_target_outputs(":run_taihe")
+  sources += [
+    "src/ani_constructor.cpp",
+    "src/ohos.systemParameterEnhance.impl.cpp",
+  ]
+  deps = [
+    ":run_taihe",
+    "${init_innerkits_path}:libbeget_proxy",
+    "${init_innerkits_path}:libbegetutil",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+  ]
+}
+
+generate_static_abc("systemParameterEnhance") {
+  base_url = "$taihe_generated_file_path_systemParameterEnhance"
+  files = [ "$taihe_generated_file_path_systemParameterEnhance/@ohos.systemParameterEnhance.ets" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/systemParameterEnhance.abc"
+  dependencies = [ ":run_taihe" ]
+}
+
+ohos_prebuilt_etc("systemParamterEnhance_etc") {
+  source = "$target_out_dir/systemParameterEnhance.abc"           
+  module_install_dir = "framework"
+  part_name = "$part_name"
+  subsystem_name = "$subsystem_name"
+  deps = [ ":systemParameterEnhance" ]
+}
