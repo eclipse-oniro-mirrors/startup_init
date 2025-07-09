@@ -55,6 +55,7 @@ private:
     std::condition_variable deviceInfoLoadCon_;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
     sptr<IDeviceInfo> deviceInfoService_ {};
+    sptr<IDeviceInfo> RetryGetService(std::unique_lock<std::mutex> &lock);
 };
 } // namespace device_info
 } // namespace OHOS

@@ -29,6 +29,7 @@ namespace device_info {
 
 static const int DEVINFO_SAID = 3902;
 static const int DEVICEINFO_LOAD_SA_TIMEOUT_MS = 5000;
+static const int NOT_FOUND_SERVICE_ERROR_NUMBER = 29189;
 
 DeviceInfoKits::DeviceInfoKits() {}
 
@@ -104,6 +105,19 @@ void DeviceInfoKits::FinishStartSAFailed()
     deviceInfoLoadCon_.notify_one();
 }
 
+sptr<IDeviceInfo> DeviceInfoKits::RetryGetService(std::unique_lock<std::mutex> &lock)
+{
+    DINFO_LOGI("deviceService is dead, retry get service");
+    if (deviceInfoService_ != nullptr) {
+        sptr<IRemoteObject> object = deviceInfoService_->AsObject();
+        if ((object != nullptr) && (deathRecipient_ != nullptr)) {
+            object->RemoveDeathRecipient(deathRecipient_);
+            deviceInfoService_ = nullptr;
+        }
+    }
+    return GetService(lock);
+}
+
 int32_t DeviceInfoKits::GetUdid(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
@@ -117,6 +131,11 @@ int32_t DeviceInfoKits::GetUdid(std::string& result)
     auto deviceService = GetService(lock);
     DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
     int ret = deviceService->GetUdid(result);
+    if (ret == NOT_FOUND_SERVICE_ERROR_NUMBER) {
+        auto newDeviceService = RetryGetService(lock);
+        DINFO_CHECK(newDeviceService != nullptr, return -1, "Failed to get deviceinfo manager again");
+        ret = newDeviceService->GetUdid(result);
+    }
     DINFO_LOGV("GetSerialID from remote ret = %d", ret);
     if (ret == 0 || ret == SYSPARAM_PERMISSION_DENIED) {
         resultPair = std::make_optional(std::make_pair(ret, result));
@@ -137,6 +156,11 @@ int32_t DeviceInfoKits::GetSerialID(std::string& result)
     auto deviceService = GetService(lock);
     DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
     int ret = deviceService->GetSerialID(result);
+    if (ret == NOT_FOUND_SERVICE_ERROR_NUMBER) {
+        auto newDeviceService = RetryGetService(lock);
+        DINFO_CHECK(newDeviceService != nullptr, return -1, "Failed to get deviceinfo manager again");
+        ret = newDeviceService->GetSerialID(result);
+    }
     DINFO_LOGV("GetSerialID from remote ret = %d", ret);
     if (ret == 0 || ret == SYSPARAM_PERMISSION_DENIED) {
         resultPair = std::make_optional(std::make_pair(ret, result));
@@ -157,6 +181,11 @@ int32_t DeviceInfoKits::GetDiskSN(std::string& result)
     auto deviceService = GetService(lock);
     DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
     int ret = deviceService->GetDiskSN(result);
+    if (ret == NOT_FOUND_SERVICE_ERROR_NUMBER) {
+        auto newDeviceService = RetryGetService(lock);
+        DINFO_CHECK(newDeviceService != nullptr, return -1, "Failed to get deviceinfo manager again");
+        ret = newDeviceService->GetDiskSN(result);
+    }
     DINFO_LOGV("GetDiskSN from remote ret = %d", ret);
     if (ret == 0 || ret == SYSPARAM_PERMISSION_DENIED) {
         resultPair = std::make_optional(std::make_pair(ret, result));
