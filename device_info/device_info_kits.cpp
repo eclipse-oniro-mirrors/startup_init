@@ -110,8 +110,11 @@ sptr<IDeviceInfo> DeviceInfoKits::RetryGetService(std::unique_lock<std::mutex> &
     DINFO_LOGI("deviceService is dead, retry get service");
     if (deviceInfoService_ != nullptr) {
         sptr<IRemoteObject> object = deviceInfoService_->AsObject();
-        if ((object != nullptr) && (deathRecipient_ != nullptr)) {
+        if ((deathRecipient_ != nullptr)) {
+            DINFO_CHECK(object != nullptr, return GetService(lock), "object is null");
             object->RemoveDeathRecipient(deathRecipient_);
+        }
+        if (object != nullptr) {
             deviceInfoService_ = nullptr;
         }
     }
