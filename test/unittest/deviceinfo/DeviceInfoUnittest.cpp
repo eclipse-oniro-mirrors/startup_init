@@ -258,4 +258,19 @@ HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_002, TestSize.Level1)
     std::string diskSN;
     proxy->GetDiskSN(diskSN);
 }
+
+HWTEST_F(DeviceInfoUnittest, Init_TestDevicekits_001, TestSize.Level1)
+{
+    OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
+    std::unique_lock<std::mutex> lock(instance.lock_);
+    EXPECT_NE(nullptr, instance.RetryGetService(lock));
+}
+
+HWTEST_F(DeviceInfoUnittest, Init_TestDevicekits_002, TestSize.Level1)
+{
+    OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
+    instance.deviceInfoService_ = nullptr;
+    std::unique_lock<std::mutex> lock(instance.lock_);
+    EXPECT_NE(nullptr, instance.RetryGetService(lock));
+}
 }  // namespace init_ut
