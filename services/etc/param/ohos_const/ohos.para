@@ -15,4 +15,4 @@ const.ohos.releasetype=Beta1
 const.ohos.apiversion=20
 const.ohos.apiminorversion=0
 const.ohos.apipatchversion=0
-const.ohos.fullname=OpenHarmony-6.0.0.40
+const.ohos.fullname=OpenHarmony-6.0.0.41
