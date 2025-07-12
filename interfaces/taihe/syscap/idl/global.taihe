@@ -12,24 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@!namespace("@ohos.systemParameterEnhance.systemParameterEnhance", "systemParameterEnhance")
-
 @!sts_inject("""
-static { loadLibrary("systemParameterEnhance_taihe_native.z") }
+loadLibrary("global_taihe_native")
 """)
-
-function getSync(key: String, def: Optional<String>): String;
-
-@gen_async("get")
-@gen_promise("get")
-function getParam(key: String, def: Optional<String>): String;
-
-@gen_async("get")
-function getParamNodef(key: String): String;
-
-function setSync(key: String, value: String): void;
-
-@gen_async("set")
-@gen_promise("set")
-function setParam(key: String, value: String): void;
-
+function canIUse(syscap: String): bool;

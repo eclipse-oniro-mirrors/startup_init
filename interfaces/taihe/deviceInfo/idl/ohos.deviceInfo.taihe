@@ -79,6 +79,8 @@ function getdistributionOSVersion(): String;
 function getdistributionOSApiName(): String;
 @static("deviceInfo") @get
 function getdistributionOSReleaseType(): String;
+@static("deviceInfo") @get
+function getdiskSN(): String;
 
 @static("deviceInfo") @get
 function getsdkApiVersion(): i32;

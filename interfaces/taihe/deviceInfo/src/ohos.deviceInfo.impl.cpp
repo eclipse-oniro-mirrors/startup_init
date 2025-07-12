@@ -40,8 +40,9 @@
 #define DEVINFO_LOGW(fmt, ...) STARTUP_LOGW(DEVICEINFO_JS_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
 #define DEVINFO_LOGE(fmt, ...) STARTUP_LOGE(DEVICEINFO_JS_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
 
-const int UDID_LEN = 65;
-const int ODID_LEN = 37;
+constexpr int UDID_LEN = 65;
+constexpr int ODID_LEN = 37;
+constexpr int DISK_SN_LEN = 20;
 
 typedef enum {
     DEV_INFO_OK,
@@ -361,6 +362,13 @@ string getdistributionOSReleaseType()
     return value;
 }
 
+string getdiskSN()
+{
+    static char value[DISK_SN_LEN] = {0};
+    AclGetDiskSN(value, DISK_SN_LEN);
+    return value;
+}
+
 int32_t getsdkApiVersion()
 {
     int value = GetSdkApiVersion();
@@ -432,6 +440,7 @@ TH_EXPORT_CPP_API_getbuildRootHash(getbuildRootHash);
 TH_EXPORT_CPP_API_getdistributionOSName(getdistributionOSName);
 TH_EXPORT_CPP_API_getdistributionOSVersion(getdistributionOSVersion);
 TH_EXPORT_CPP_API_getdistributionOSApiName(getdistributionOSApiName);
+TH_EXPORT_CPP_API_getdiskSN(getdiskSN);
 TH_EXPORT_CPP_API_getdistributionOSReleaseType(getdistributionOSReleaseType);
 TH_EXPORT_CPP_API_getsdkApiVersion(getsdkApiVersion);
 TH_EXPORT_CPP_API_getmajorVersion(getmajorVersion);

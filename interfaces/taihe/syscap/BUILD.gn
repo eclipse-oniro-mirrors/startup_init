@@ -15,58 +15,55 @@ import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 import("//build/ohos/taihe_idl/taihe.gni")
 
-copy_taihe_idl("copy_systemParamterEnhance") {
-  sources = [ "idl/ohos.systemParameterEnhance.taihe" ] 
+copy_taihe_idl("copy_global") {
+  sources = [ "idl/global.taihe" ] 
 }
 subsystem_name = "startup"
 part_name = "init"
-taihe_generated_file_path_systemParameterEnhance = "$taihe_file_path/out/$subsystem_name/$part_name/systemParameterEnhance"
+taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name"
 
 ohos_taihe("run_taihe") {
-  taihe_generated_file_path = "${taihe_generated_file_path_systemParameterEnhance}"
-  deps = [ ":copy_systemParamterEnhance" ]
+  taihe_generated_file_path = "$taihe_generated_file_path"
+  deps = [ ":copy_global" ]
   outputs = [
-    "$taihe_generated_file_path/src/ohos.systemParameterEnhance.ani.cpp",
-    "$taihe_generated_file_path/src/ohos.systemParameterEnhance.abi.c",
+    "$taihe_generated_file_path/src/global.ani.cpp",
+    "$taihe_generated_file_path/src/global.abi.c",
   ]
 }
 
-taihe_shared_library("systemParameterEnhance_taihe_native") {
+taihe_shared_library("global_taihe_native") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
     debug = false
   }
-  taihe_generated_file_path = "${taihe_generated_file_path_systemParameterEnhance}"
+  taihe_generated_file_path = "$taihe_generated_file_path"
   part_name = "$part_name"
   subsystem_name = "$subsystem_name"
   sources = get_target_outputs(":run_taihe")
+  include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
   sources += [
     "src/ani_constructor.cpp",
-    "src/ohos.systemParameterEnhance.impl.cpp",
+    "src/global.impl.cpp",
   ]
   deps = [
     ":run_taihe",
-    "${init_innerkits_path}:libbeget_proxy",
     "${init_innerkits_path}:libbegetutil",
-  ]
-  external_deps = [
-    "bounds_checking_function:libsec_shared",
   ]
 }
 
-generate_static_abc("systemParameterEnhance") {
-  base_url = "$taihe_generated_file_path_systemParameterEnhance"
-  files = [ "$taihe_generated_file_path_systemParameterEnhance/@ohos.systemParameterEnhance.ets" ]
+generate_static_abc("global") {
+  base_url = "$taihe_generated_file_path"
+  files = [ "$taihe_generated_file_path/global.ets" ]
   is_boot_abc = "True"
-  device_dst_file = "/system/framework/systemParameterEnhance.abc"
+  device_dst_file = "/system/framework/global.abc"
   dependencies = [ ":run_taihe" ]
 }
 
-ohos_prebuilt_etc("systemParamterEnhance_etc") {
-  source = "$target_out_dir/systemParameterEnhance.abc"           
+ohos_prebuilt_etc("global_etc") {
+  source = "$target_out_dir/global.abc"           
   module_install_dir = "framework"
   part_name = "$part_name"
   subsystem_name = "$subsystem_name"
-  deps = [ ":systemParameterEnhance" ]
+  deps = [ ":global" ]
 }

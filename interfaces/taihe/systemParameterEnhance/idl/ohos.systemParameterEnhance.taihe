@@ -12,17 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ohos.deviceInfo.ani.hpp"
-ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
-{
-    ani_env *env;
-    if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
-        return ANI_ERROR;
-    }
-    if (ANI_OK != ohos::deviceInfo::ANIRegister(env)) {
-        std::cerr << "Error from ohos::deviceInfo::ANIRegister" << std::endl;
-        return ANI_ERROR;
-    }
-    *result = ANI_VERSION_1;
-    return ANI_OK;
-}
+@!namespace("@ohos.systemParameterEnhance", "systemParameterEnhance")
+
+@!sts_inject("""
+static { loadLibrary("systemParameterEnhance_taihe_native.z") }
+""")
+
+function getSync(key: String, def: Optional<String>): String;
+
+@gen_async("get")
+@gen_promise("get")
+function getParam(key: String, def: Optional<String>): String;
+
+@gen_async("get")
+function getParamNodef(key: String): String;
+
+function setSync(key: String, value: String): void;
+
+@gen_async("set")
+@gen_promise("set")
+function setParam(key: String, value: String): void;
+

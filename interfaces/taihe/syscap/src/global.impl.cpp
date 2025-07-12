@@ -12,17 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ohos.deviceInfo.ani.hpp"
-ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
+#include "global.proj.hpp"
+#include "global.impl.hpp"
+#include "taihe/runtime.hpp"
+#include "stdexcept"
+#include "systemcapability.h"
+#include "beget_ext.h"
+
+using namespace taihe;
+namespace {
+// To be implemented.
+
+bool canIUse(string_view syscap)
 {
-    ani_env *env;
-    if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
-        return ANI_ERROR;
-    }
-    if (ANI_OK != ohos::deviceInfo::ANIRegister(env)) {
-        std::cerr << "Error from ohos::deviceInfo::ANIRegister" << std::endl;
-        return ANI_ERROR;
-    }
-    *result = ANI_VERSION_1;
-    return ANI_OK;
+    bool ret = HasSystemCapability(std::string(syscap).c_str());
+    return ret;
 }
+}  // namespace
+
+// Since these macros are auto-generate, lint will cause false positive.
+// NOLINTBEGIN
+TH_EXPORT_CPP_API_canIUse(canIUse);
+// NOLINTEND
