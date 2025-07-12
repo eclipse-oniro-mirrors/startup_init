@@ -145,14 +145,38 @@ static void SetDeviceLable(const char *path, char **symLinks)
 }
 #endif
 
-static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode, char **symLinks, bool isBlock)
+static int CreateDeviceNodeWithPermissions(const struct Uevent *uevent, const char *deviceNode, bool isBlock)
 {
-    int rc = -1;
     int major = uevent->major;
     int minor = uevent->minor;
     uid_t uid = uevent->ug.uid;
     gid_t gid = uevent->ug.gid;
     mode_t mode = DEVMODE;
+
+    (void)GetDeviceNodePermissions(deviceNode, &uid, &gid, &mode);
+    mode |= isBlock ? S_IFBLK : S_IFCHR;
+    dev_t dev = makedev((unsigned int)major, (unsigned int)minor);
+
+    if (setegid(gid) != 0) {
+        INIT_LOGW("Failed to setegid %u, deviceNode: \" %s \" , errno %d", gid, deviceNode, errno);
+    }
+    mode_t originalMask = umask(000);
+    int rc = mknod(deviceNode, mode, dev);
+    (void)umask(originalMask);
+    if (rc < 0 && errno != EEXIST) {
+        INIT_LOGE("Create device node[%s %d, %d] failed. %d", deviceNode, major, minor, errno);
+        return rc;
+    }
+    AdjustDeviceNodePermissions(deviceNode, uid, gid, mode);
+    if (setegid(0) != 0) {
+        INIT_LOGW("Failed to setegid 0, deviceNode: \" %s \" , errno %d", deviceNode, errno);
+    }
+    return 0;
+}
+
+static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode, char **symLinks, bool isBlock)
+{
+    int rc = -1;
 
     if (deviceNode == NULL || *deviceNode == '\0') {
         INIT_LOGE("Invalid device file");
@@ -177,18 +201,10 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
         return rc;
     }
 
-    (void)GetDeviceNodePermissions(deviceNode, &uid, &gid, &mode);
-    mode |= isBlock ? S_IFBLK : S_IFCHR;
-    dev_t dev = makedev((unsigned int)major, (unsigned int)minor);
-    setegid(0);
-    rc = mknod(deviceNode, mode, dev);
+    rc = CreateDeviceNodeWithPermissions(uevent, deviceNode, isBlock);
     if (rc < 0) {
-        if (errno != EEXIST) {
-            INIT_LOGE("Create device node[%s %d, %d] failed. %d", deviceNode, major, minor, errno);
-            return rc;
-        }
+        return rc;
     }
-    AdjustDeviceNodePermissions(deviceNode, uid, gid, mode);
     if (symLinks != NULL) {
         CreateSymbolLinks(deviceNode, symLinks);
     }
