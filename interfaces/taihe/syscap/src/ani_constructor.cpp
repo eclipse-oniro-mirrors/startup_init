@@ -12,15 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ohos.deviceInfo.ani.hpp"
+#include "taihe/runtime.hpp"
+#include "global.ani.hpp"
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
     ani_env *env;
     if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
         return ANI_ERROR;
     }
-    if (ANI_OK != ohos::deviceInfo::ANIRegister(env)) {
-        std::cerr << "Error from ohos::deviceInfo::ANIRegister" << std::endl;
+    if (ANI_OK != global::ANIRegister(env)) {
+        std::cerr << "Error from global::ANIRegister" << std::endl;
         return ANI_ERROR;
     }
     *result = ANI_VERSION_1;

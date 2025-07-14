@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ohos.systemParameterEnhance.systemParameterEnhance.ani.hpp"
+#include "ohos.systemParameterEnhance.ani.hpp"
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
     ani_env *env;
     if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
         return ANI_ERROR;
     }
-    if (ANI_OK != ohos::systemParameterEnhance::systemParameterEnhance::ANIRegister(env)) {
-        std::cerr << "Error from ohos::systemParameterEnhance::systemParameterEnhance::ANIRegister" << std::endl;
+    if (ANI_OK != ohos::systemParameterEnhance::ANIRegister(env)) {
+        std::cerr << "Error from ohos::systemParameterEnhance::ANIRegister" << std::endl;
         return ANI_ERROR;
     }
     *result = ANI_VERSION_1;
