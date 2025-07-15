@@ -48,6 +48,8 @@ extern "C" {
 #define FS_MANAGER_BUFFER_SIZE 512
 #define BLOCK_SIZE_BUFFER (64)
 #define RESIZE_BUFFER_SIZE 1024
+#define MAX_GCALLOWNANCE 100
+#define GCALLOWANCE_INCREACE 10
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 int g_bootSlots = -1;
@@ -432,6 +434,46 @@ static int Mount(const char *source, const char *target, const char *fsType,
     return rc;
 }
 
+static int MountWithCheckpoint(const char *source, const char *target, const char *fsType,
+    unsigned long flags, const char *data)
+{
+    struct stat st = {};
+    int rc = -1;
+
+    bool isTrue = source == NULL || target == NULL || fsType == NULL;
+    BEGET_ERROR_CHECK(!isTrue, return -1, "Invalid argument for mount.");
+
+    isTrue = stat(target, &st) != 0 && errno != ENOENT;
+    BEGET_ERROR_CHECK(!isTrue, return -1, "Cannot get stat of \" %s \", err = %d", target, errno);
+
+    BEGET_CHECK((st.st_mode & S_IFMT) != S_IFLNK, unlink(target)); // link, delete it.
+
+    if (mkdir(target, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
+        BEGET_ERROR_CHECK(errno == EEXIST, return -1, "Failed to create dir \" %s \", err = %d", target, errno);
+    }
+
+    int gcAllowance = 0;
+    do {
+        char realData[FS_MANAGER_BUFFER_SIZE] = {0};
+        size_t bytes = snprintf_s(realData, FS_MANAGER_BUFFER_SIZE, FS_MANAGER_BUFFER_SIZE - 1, "%s,%s:%d%%",
+            data, "checkpoint=disable", gcAllowance);
+        BEGET_ERROR_CHECK(bytes > 0, break, "build realData failed");
+        if (bytes <= 0) {
+            BEGET_LOGE("build realData failed");
+            break;
+        }
+        rc = mount(source, target, fsType, flags, realData);
+        BEGET_LOGI("MountWithCheckpoint %s %d %d", realData, rc, errno);
+
+        if (rc != 0 && errno == EBUSY) {
+            rc = 0;
+        }
+        gcAllowance += GCALLOWANCE_INCREACE;
+    } while (rc != 0 && errno == EAGAIN && gcAllowance <= MAX_GCALLOWNANCE);
+
+    return rc;
+}
+
 static int GetSlotInfoFromCmdLine(const char *slotInfoName)
 {
     char value[MAX_BUFFER_LEN] = {0};
@@ -482,19 +524,83 @@ int GetCurrentSlot(void)
     return GetSlotInfoFromBootctrl(PARTITION_ACTIVE_SLOT_OFFSET, PARTITION_ACTIVE_SLOT_SIZE);
 }
 
+static int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecificDataSize,
+    char *checkpointData, size_t checkpointDataSize)
+{
+    if (fsSpecificData == NULL || strstr(fsSpecificData, "checkpoint=disable") == NULL) {
+        BEGET_LOGI("Not checkpoint Mount info");
+        return -1;
+    }
+    if (checkpointData == NULL) {
+        BEGET_LOGE("invalid outData");
+        return -1;
+    }
+    int flagCount = 0;
+    const int maxCount = 15;
+    char *splitStr = strdup(fsSpecificData);
+    if (splitStr == NULL) {
+        BEGET_LOGI("dump fsData failed");
+        return -1;
+    }
+    char **flagsVector = SplitStringExt(splitStr, ",", &flagCount, maxCount);
+    if (flagsVector == NULL || flagCount <= 0) {
+        free(splitStr);
+        BEGET_LOGE("split fsData failed");
+        return -1;
+    }
+    const char *disableCheckpoint = "checkpoint=disable";
+    int rc = 0;
+    for (int i = 0; i < flagCount; i++) {
+        char *p = flagsVector[i];
+        if (strncmp(p, disableCheckpoint, strlen(disableCheckpoint)) == 0) {
+            continue;
+        }
+        if (strcmp(checkpointData, "") != 0 &&
+            strncat_s(checkpointData, checkpointDataSize - 1, ",", 1) != EOK) {
+            BEGET_LOGW("failed to append comma.");
+            rc = -1;
+            break;
+        }
+        if (strncat_s(checkpointData, checkpointDataSize - 1, p, strlen(p)) != EOK) {
+            BEGET_LOGW("Failed to append mountflags \" %s \", ignore it.", p);
+            rc = -1;
+            break;
+        }
+    }
+    FreeStringVector(flagsVector, flagCount);
+    free(splitStr);
+    BEGET_LOGI("removeCheckpoint with fsData %s", fsSpecificData);
+    BEGET_LOGI("removeCheckpoint with resultData %s", checkpointData);
+    return rc;
+}
+
 static int DoMountOneItem(FstabItem *item)
 {
     BEGET_LOGI("Mount device %s to %s", item->deviceName, item->mountPoint);
     unsigned long mountFlags;
     char fsSpecificData[FS_MANAGER_BUFFER_SIZE] = {0};
+    char checkpointData[FS_MANAGER_BUFFER_SIZE] = {0};
 
+    bool isCheckpoint = false;
     mountFlags = GetMountFlags(item->mountOptions, fsSpecificData, sizeof(fsSpecificData),
         item->mountPoint);
+    
+    // 是否包含checkpoint + 文件系统类型
+    if (strcmp(item->fsType, "hmfs") == 0 && strstr(fsSpecificData, "checkpoint=disable") != NULL &&
+        GetDataWithoutCheckpoint(fsSpecificData, FS_MANAGER_BUFFER_SIZE,
+            checkpointData, FS_MANAGER_BUFFER_SIZE) == 0) {
+        isCheckpoint = true;
+    }
 
     int retryCount = 3;
     int rc = 0;
     while (retryCount-- > 0) {
-        rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
+        if (isCheckpoint) {
+            rc = MountWithCheckpoint(item->deviceName, item->mountPoint, item->fsType, mountFlags, checkpointData);
+        } else {
+            rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
+        }
+
         if (rc == 0) {
             return rc;
         }
