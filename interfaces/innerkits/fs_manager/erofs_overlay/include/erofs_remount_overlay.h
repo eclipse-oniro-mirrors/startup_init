@@ -24,15 +24,6 @@ extern "C" {
 #endif
 #endif
 
-#define MODEM_DRIVER_MNT_PATH STARTUP_INIT_UT_PATH"/vendor/modem/modem_driver"
-#define MODEM_VENDOR_MNT_PATH STARTUP_INIT_UT_PATH"/vendor/modem/modem_vendor"
-#define MODEM_FW_MNT_PATH STARTUP_INIT_UT_PATH"/vendor/modem/modem_fw"
-#define MODEM_DRIVER_EXCHANGE_PATH STARTUP_INIT_UT_PATH"/mnt/driver_exchange"
-#define MODEM_VENDOR_EXCHANGE_PATH STARTUP_INIT_UT_PATH"/mnt/vendor_exchange"
-#define MODEM_FW_EXCHANGE_PATH STARTUP_INIT_UT_PATH"/mnt/fw_exchange"
-#define REMOUNT_RESULT_PATH STARTUP_INIT_UT_PATH"/data/service/el1/startup/remount/"
-#define REMOUNT_RESULT_FLAG STARTUP_INIT_UT_PATH"/data/service/el1/startup/remount/remount.result.done"
-
 #define REMOUNT_SUCC 0
 #define REMOUNT_FAIL 1
 
