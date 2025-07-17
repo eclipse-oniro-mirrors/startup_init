@@ -13,11 +13,13 @@
 * limitations under the License.
 */
 
+#include <gtest/gtest.h>
 #include "erofs_overlay_common.h"
-#include "securec.h"
 #include "param_stub.h"
+
 using namespace std;
 using namespace testing::ext;
+
 namespace init_ut {
 class ErofsCommonOverlayUnitTest : public testing::Test {
 public:

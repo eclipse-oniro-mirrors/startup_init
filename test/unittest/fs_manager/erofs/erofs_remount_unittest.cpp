@@ -13,12 +13,25 @@
 * limitations under the License.
 */
 
+#include <gtest/gtest.h>
 #include "erofs_remount_overlay.h"
-#include "securec.h"
 #include "param_stub.h"
 #include "fs_manager.h"
+
+#define MODEM_DRIVER_MNT_PATH STARTUP_INIT_UT_PATH"/vendor/modem/modem_driver"
+#define MODEM_VENDOR_MNT_PATH STARTUP_INIT_UT_PATH"/vendor/modem/modem_vendor"
+#define MODEM_FW_MNT_PATH STARTUP_INIT_UT_PATH"/vendor/modem/modem_fw"
+#define MODEM_DRIVER_EXCHANGE_PATH STARTUP_INIT_UT_PATH"/mnt/driver_exchange"
+#define MODEM_VENDOR_EXCHANGE_PATH STARTUP_INIT_UT_PATH"/mnt/vendor_exchange"
+#define MODEM_FW_EXCHANGE_PATH STARTUP_INIT_UT_PATH"/mnt/fw_exchange"
+#define REMOUNT_RESULT_PATH STARTUP_INIT_UT_PATH"/data/service/el1/startup/remount/"
+#define REMOUNT_RESULT_FLAG STARTUP_INIT_UT_PATH"/data/service/el1/startup/remount/remount.result.done"
+#define DPA_MNT_PATH STARTUP_INIT_UT_PATH"/vendor/communication/dpa"
+#define DPA_EXCHANGE_PATH STARTUP_INIT_UT_PATH"/mnt/dpa_exchange"
+
 using namespace std;
 using namespace testing::ext;
+
 namespace init_ut {
 class ErofsRemountUnitTest : public testing::Test {
 public:
@@ -31,10 +44,10 @@ public:
 HWTEST_F(ErofsRemountUnitTest, Init_GetRemountResult_001, TestSize.Level0)
 {
     rmdir(REMOUNT_RESULT_PATH);
+    RemountOverlay();
     SetRemountResultFlag();
-
-    CheckAndCreateDir(REMOUNT_RESULT_FLAG);
-    SetRemountResultFlag();
+    int ret = GetRemountResult();
+    EXPECT_EQ(ret, 0);
     rmdir(REMOUNT_RESULT_PATH);
 }
 
@@ -88,20 +101,23 @@ HWTEST_F(ErofsRemountUnitTest, Init_ExchangeToMode_001, TestSize.Level0)
 
 HWTEST_F(ErofsRemountUnitTest, Init_OverlayRemountVendorPre_001, TestSize.Level0)
 {
-    CheckAndCreateDir(MODEM_DRIVER_MNT_PATH);
-    CheckAndCreateDir(MODEM_VENDOR_MNT_PATH);
-    CheckAndCreateDir(MODEM_FW_MNT_PATH);
+    CheckAndCreateDir(MODEM_DRIVER_MNT_PATH"/");
+    CheckAndCreateDir(MODEM_VENDOR_MNT_PATH"/");
+    CheckAndCreateDir(MODEM_FW_MNT_PATH"/");
+    CheckAndCreateDir(DPA_MNT_PATH"/");
+    CheckAndCreateDir(STARTUP_INIT_UT_PATH"/mnt/");
+
     OverlayRemountVendorPre();
+    EXPECT_EQ(access(MODEM_DRIVER_MNT_PATH, F_OK), 0);
+    EXPECT_EQ(access(MODEM_DRIVER_EXCHANGE_PATH, F_OK), 0);
+    OverlayRemountVendorPost();
+
     rmdir(MODEM_DRIVER_MNT_PATH);
     rmdir(MODEM_VENDOR_MNT_PATH);
     rmdir(MODEM_FW_MNT_PATH);
-
-    OverlayRemountVendorPost();
-}
-
-HWTEST_F(ErofsRemountUnitTest, Init_RemountOverlayTest_001, TestSize.Level0)
-{
-    int ret = RemountOverlay();
-    EXPECT_EQ(ret, 0);
+    rmdir(MODEM_DRIVER_EXCHANGE_PATH);
+    rmdir(MODEM_VENDOR_EXCHANGE_PATH);
+    rmdir(MODEM_FW_EXCHANGE_PATH);
+    rmdir(DPA_EXCHANGE_PATH);
 }
 }

@@ -13,12 +13,14 @@
 * limitations under the License.
 */
 
+#include <gtest/gtest.h>
 #include "remount_overlay.h"
-#include "securec.h"
 #include "param_stub.h"
 #include "mntent.h"
+
 using namespace std;
 using namespace testing::ext;
+
 namespace init_ut {
 class RemountOverlayUnitTest : public testing::Test {
 public:
@@ -107,6 +109,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_GetDevSizeTest_001, TestSize.Level0)
     EXPECT_NE(ret, 0);
     remove(fileName);
 }
+
 HWTEST_F(RemountOverlayUnitTest, Init_FormatExt4Test_001, TestSize.Level0)
 {
     const char *fileName = "";
@@ -122,5 +125,4 @@ HWTEST_F(RemountOverlayUnitTest, Init_FormatExt4Test_001, TestSize.Level0)
     EXPECT_NE(ret, 0);
     remove(fileName);
 }
-
 }

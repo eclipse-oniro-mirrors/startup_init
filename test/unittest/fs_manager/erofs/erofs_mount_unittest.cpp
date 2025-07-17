@@ -12,12 +12,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+#include <gtest/gtest.h>
 #include "erofs_mount_overlay.h"
-#include "securec.h"
 #include "param_stub.h"
 #include "init_utils.h"
+
 using namespace std;
 using namespace testing::ext;
+
 namespace init_ut {
 class ErofsMountUnitTest : public testing::Test {
 public:
@@ -26,14 +29,17 @@ public:
     void SetUp(void) {};
     void TearDown(void) {};
 };
+
 HWTEST_F(ErofsMountUnitTest, Init_AllocDmName_001, TestSize.Level0)
 {
     char nameExt4[MAX_BUFFER_LEN] = {0};
     char nameRofs[MAX_BUFFER_LEN] = {0};
     const char *devName = STARTUP_INIT_UT_PATH"/data/erofs/mount/rofs";
     AllocDmName(devName, nameRofs, MAX_BUFFER_LEN, nameExt4, MAX_BUFFER_LEN);
-    EXPECT_STRNE(nameExt4, nameRofs);
+    EXPECT_STREQ("_data_init_ut_data_erofs_mount_rofs_erofs", nameRofs);
+    EXPECT_STREQ("_data_init_ut_data_erofs_mount_rofs_ext4", nameExt4);
 }
+
 HWTEST_F(ErofsMountUnitTest, Init_LookupErofsEnd_001, TestSize.Level0)
 {
     const char *devMount = STARTUP_INIT_UT_PATH"/data/erofs/mount/lookup";
@@ -65,5 +71,4 @@ HWTEST_F(ErofsMountUnitTest, Init_LookupErofsEnd_001, TestSize.Level0)
     EXPECT_NE(ret, 0);
     remove(devMount);
 }
-
 }
