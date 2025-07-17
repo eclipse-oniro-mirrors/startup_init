@@ -33,6 +33,7 @@ extern "C" {
 #define APP_PRIVILEGE "app_privilege"
 #define APP_ATOMIC "app_atomic"
 #define APP_CUSTOM "app_custom"
+#define APP_ALLOW_IOURING "app_allow_iouring"
 
 typedef enum {
     SYSTEM_SA,       // system service process
