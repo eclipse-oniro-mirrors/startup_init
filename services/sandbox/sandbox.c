@@ -239,7 +239,8 @@ static int AddMountInfoToSandbox(sandbox_t *sandbox, cJSON *item, const char *ty
     tmpMount->source = strdup(srcPath);
     BEGET_ERROR_CHECK(tmpMount->source != NULL, free(tmpMount); return -1, "Failed to dup source");
     tmpMount->target = strdup(dstPath);
-    BEGET_ERROR_CHECK(tmpMount->target != NULL, free(tmpMount); return -1, "Failed to dup target");
+    BEGET_ERROR_CHECK(tmpMount->target != NULL, free(tmpMount->source); free(tmpMount); return -1,
+        "Failed to dup target");
     for (int i = 0; i < count; i++) {
         cJSON *item = cJSON_GetArrayItem(obj, i);
         tmpMount->flags |= GetSandboxMountFlags(item);
