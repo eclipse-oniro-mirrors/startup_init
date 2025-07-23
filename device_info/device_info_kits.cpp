@@ -139,7 +139,7 @@ int32_t DeviceInfoKits::GetUdid(std::string& result)
         DINFO_CHECK(newDeviceService != nullptr, return -1, "Failed to get deviceinfo manager again");
         ret = newDeviceService->GetUdid(result);
     }
-    DINFO_LOGV("GetSerialID from remote ret = %d", ret);
+    DINFO_LOGI("GetSerialID from remote ret = %d", ret);
     if (ret == 0 || ret == SYSPARAM_PERMISSION_DENIED) {
         resultPair = std::make_optional(std::make_pair(ret, result));
     }
@@ -164,7 +164,7 @@ int32_t DeviceInfoKits::GetSerialID(std::string& result)
         DINFO_CHECK(newDeviceService != nullptr, return -1, "Failed to get deviceinfo manager again");
         ret = newDeviceService->GetSerialID(result);
     }
-    DINFO_LOGV("GetSerialID from remote ret = %d", ret);
+    DINFO_LOGI("GetSerialID from remote ret = %d", ret);
     if (ret == 0 || ret == SYSPARAM_PERMISSION_DENIED) {
         resultPair = std::make_optional(std::make_pair(ret, result));
     }
@@ -189,7 +189,7 @@ int32_t DeviceInfoKits::GetDiskSN(std::string& result)
         DINFO_CHECK(newDeviceService != nullptr, return -1, "Failed to get deviceinfo manager again");
         ret = newDeviceService->GetDiskSN(result);
     }
-    DINFO_LOGV("GetDiskSN from remote ret = %d", ret);
+    DINFO_LOGI("GetDiskSN from remote ret = %d", ret);
     if (ret == 0 || ret == SYSPARAM_PERMISSION_DENIED) {
         resultPair = std::make_optional(std::make_pair(ret, result));
     }
