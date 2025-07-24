@@ -289,7 +289,7 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
     return status;
 }
 
-static int DoMountOneItem(FstabItem *item);
+INIT_STATIC int DoMountOneItem(FstabItem *item);
 #define MAX_RESIZE_PARAM_NUM 20
 static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
 {
@@ -434,7 +434,7 @@ static int Mount(const char *source, const char *target, const char *fsType,
     return rc;
 }
 
-static int MountWithCheckpoint(const char *source, const char *target, const char *fsType,
+INIT_STATIC int MountWithCheckpoint(const char *source, const char *target, const char *fsType,
     unsigned long flags, const char *data)
 {
     struct stat st = {};
@@ -457,7 +457,6 @@ static int MountWithCheckpoint(const char *source, const char *target, const cha
         char realData[FS_MANAGER_BUFFER_SIZE] = {0};
         size_t bytes = snprintf_s(realData, FS_MANAGER_BUFFER_SIZE, FS_MANAGER_BUFFER_SIZE - 1, "%s,%s:%d%%",
             data, "checkpoint=disable", gcAllowance);
-        BEGET_ERROR_CHECK(bytes > 0, break, "build realData failed");
         if (bytes <= 0) {
             BEGET_LOGE("build realData failed");
             break;
@@ -524,7 +523,7 @@ int GetCurrentSlot(void)
     return GetSlotInfoFromBootctrl(PARTITION_ACTIVE_SLOT_OFFSET, PARTITION_ACTIVE_SLOT_SIZE);
 }
 
-static int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecificDataSize,
+INIT_STATIC int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecificDataSize,
     char *checkpointData, size_t checkpointDataSize)
 {
     if (fsSpecificData == NULL || strstr(fsSpecificData, "checkpoint=disable") == NULL) {
@@ -574,7 +573,7 @@ static int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecificDataS
     return rc;
 }
 
-static int DoMountOneItem(FstabItem *item)
+INIT_STATIC int DoMountOneItem(FstabItem *item)
 {
     BEGET_LOGI("Mount device %s to %s", item->deviceName, item->mountPoint);
     unsigned long mountFlags;
