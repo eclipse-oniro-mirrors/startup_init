@@ -456,7 +456,7 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     uint32_t valueLen = strlen(value);
     uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_RELAXED);
     ATOMIC_STORE_EXPLICIT(&entry->commitId, commitId | PARAM_FLAGS_MODIFY, MEMORY_ORDER_RELAXED);
-    if (((mode & LOAD_PARAM_UPDATE_CONST) == LOAD_PARAM_UPDATE_CONST) &&
+    if ((((uint32_t)mode & LOAD_PARAM_UPDATE_CONST) == LOAD_PARAM_UPDATE_CONST) &&
         (entry->valueLength < PARAM_CONST_VALUE_LEN_MAX && valueLen < PARAM_CONST_VALUE_LEN_MAX)) {
         int ret = PARAM_MEMCPY(entry->data + entry->keyLength + 1, PARAM_CONST_VALUE_LEN_MAX, value, valueLen + 1);
         PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");

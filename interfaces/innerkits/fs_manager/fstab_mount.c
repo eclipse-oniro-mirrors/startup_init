@@ -455,7 +455,7 @@ static int MountWithCheckpoint(const char *source, const char *target, const cha
     int gcAllowance = 0;
     do {
         char realData[FS_MANAGER_BUFFER_SIZE] = {0};
-        size_t bytes = snprintf_s(realData, FS_MANAGER_BUFFER_SIZE, FS_MANAGER_BUFFER_SIZE - 1, "%s,%s:%d%%",
+        int bytes = snprintf_s(realData, FS_MANAGER_BUFFER_SIZE, FS_MANAGER_BUFFER_SIZE - 1, "%s,%s:%d%%",
             data, "checkpoint=disable", gcAllowance);
         BEGET_ERROR_CHECK(bytes > 0, break, "build realData failed");
         if (bytes <= 0) {

@@ -379,7 +379,7 @@ static int PublishHoldFds(Service *service)
             continue;
         }
         ret = snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1, "%d ", fd);
-        INIT_ERROR_CHECK(ret >= 0, return INIT_EFORMAT,
+        INIT_ERROR_CHECK(ret >= 0, close(fd); return INIT_EFORMAT,
             "Service error %d %s, failed to format fd for publish", ret, service->name);
         pos += (size_t)ret;
     }
