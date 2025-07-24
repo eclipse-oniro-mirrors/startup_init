@@ -278,7 +278,8 @@ static int AddSymbolLinksToSandbox(sandbox_t *sandbox, cJSON *item, const char *
     tmpLink->target = strdup(target);
     BEGET_ERROR_CHECK(tmpLink->target != NULL, free(tmpLink); return -1, "Failed to dup target");
     tmpLink->linkName = strdup(name);
-    BEGET_ERROR_CHECK(tmpLink->linkName != NULL, free(tmpLink); return -1, "Failed to dup linkName");
+    BEGET_ERROR_CHECK(tmpLink->linkName != NULL, free(tmpLink->target); free(tmpLink); return -1,
+        "Failed to dup linkName");
     OH_ListInit(&tmpLink->node);
     RemoveOldSandboxLinkListNode(&sandbox->linksHead, tmpLink->linkName);
     OH_ListAddTail(&sandbox->linksHead, &tmpLink->node);
