@@ -46,7 +46,6 @@ void WatcherManagerKits::ResetService(const wptr<IRemoteObject> &remote)
                 watcherManager_ = nullptr;
                 remoteWatcherId_ = 0;
                 remoteWatcher_ = nullptr;
-                
             }
         }
     }
