@@ -297,6 +297,7 @@ HWTEST_F(WatcherAgentUnitTest, Init_TestResetService_001, TestSize.Level0)
 {
     WatcherAgentUnitTest test;
     test.TestResetService();
+    test.TestResetService();
 }
 
 HWTEST_F(WatcherAgentUnitTest, Init_TestWatcherService_001, TestSize.Level0)

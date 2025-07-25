@@ -113,6 +113,7 @@ private:
     void ResetService(const wptr<IRemoteObject> &remote);
     sptr<IWatcherManager> GetService(void);
     std::mutex lock_;
+    std::mutex threadlock_;
     sptr<IWatcherManager> watcherManager_ {};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
 
