@@ -1,0 +1,98 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+@!namespace("@ohos.deviceInfo")
+
+@!sts_inject("""
+loadLibrary("deviceInfo_taihe_native.z")
+""")
+
+@class
+interface deviceInfo {
+}
+@static("deviceInfo") @get
+function getbrand(): String;
+@static("deviceInfo") @get
+function getdeviceType(): String;
+@static("deviceInfo") @get
+function getproductSeries(): String;
+@static("deviceInfo") @get
+function getproductModel(): String;
+@static("deviceInfo") @get("ODID")
+function getODID(): String;
+@static("deviceInfo") @get
+function getudid(): String;
+@static("deviceInfo") @get
+function getserial(): String;
+@static("deviceInfo") @get
+function getmanufacture(): String;
+@static("deviceInfo") @get
+function getmarketName(): String;
+@static("deviceInfo") @get
+function getproductModelAlias(): String;
+@static("deviceInfo") @get
+function getsoftwareModel(): String;
+@static("deviceInfo") @get
+function gethardwareModel(): String;
+@static("deviceInfo") @get
+function getbootloaderVersion(): String;
+@static("deviceInfo") @get
+function getabiList(): String;
+@static("deviceInfo") @get
+function getsecurityPatchTag(): String;
+@static("deviceInfo") @get
+function getdisplayVersion(): String;
+@static("deviceInfo") @get
+function getincrementalVersion(): String;
+@static("deviceInfo") @get
+function getosReleaseType(): String;
+@static("deviceInfo") @get
+function getosFullName(): String;
+@static("deviceInfo") @get
+function getversionId(): String;
+@static("deviceInfo") @get
+function getbuildType(): String;
+@static("deviceInfo") @get
+function getbuildUser(): String;
+@static("deviceInfo") @get
+function getbuildHost(): String;
+@static("deviceInfo") @get
+function getbuildTime(): String;
+@static("deviceInfo") @get
+function getbuildRootHash(): String;
+@static("deviceInfo") @get
+function getdistributionOSName(): String;
+@static("deviceInfo") @get
+function getdistributionOSVersion(): String;
+@static("deviceInfo") @get
+function getdistributionOSApiName(): String;
+@static("deviceInfo") @get
+function getdistributionOSReleaseType(): String;
+@static("deviceInfo") @get
+function getdiskSN(): String;
+
+@static("deviceInfo") @get
+function getsdkApiVersion(): i32;
+@static("deviceInfo") @get
+function getmajorVersion(): i32;
+@static("deviceInfo") @get
+function getseniorVersion(): i32;
+@static("deviceInfo") @get
+function getfeatureVersion(): i32;
+@static("deviceInfo") @get
+function getbuildVersion(): i32;
+@static("deviceInfo") @get
+function getfirstApiVersion(): i32;
+@static("deviceInfo") @get
+function getdistributionOSApiVersion(): i32;

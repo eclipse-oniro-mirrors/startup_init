@@ -17,9 +17,9 @@ group("init_fwk_group") {
   if (init_feature_group_type) {
     deps += [
       "device_info:device_info_group",
-      "interfaces/ani:ani_group",
       "interfaces/innerkits:innergroup",
       "interfaces/kits:kitsgroup",
+      "interfaces/taihe:taihe_group",
       "services:startup_init",
       "services/begetctl:begetctl_cmd",
       "services/loopevent:loopeventgroup",
