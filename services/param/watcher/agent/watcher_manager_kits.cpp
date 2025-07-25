@@ -49,16 +49,18 @@ void WatcherManagerKits::ResetService(const wptr<IRemoteObject> &remote)
             }
         }
     }
-    std::lock_guard<std::mutex> lock(threadlock_);
-    if (threadForReWatch_ != nullptr) {
-        WATCHER_LOGI("Thead exist, delete thread");
-        stop_ = true;
-        threadForReWatch_->join();
-        delete threadForReWatch_;
+    {
+        std::lock_guard<std::mutex> lock(threadlock_);
+        if (threadForReWatch_ != nullptr) {
+            WATCHER_LOGI("Thead exist, delete thread");
+            stop_ = true;
+            threadForReWatch_->join();
+            delete threadForReWatch_;
+        }
+        stop_ = false;
+        threadForReWatch_ = new (std::nothrow)std::thread([this] {this->ReAddWatcher();});
+        WATCHER_CHECK(threadForReWatch_ != nullptr, return, "Failed to create thread");
     }
-    stop_ = false;
-    threadForReWatch_ = new (std::nothrow)std::thread([this] {this->ReAddWatcher();});
-    WATCHER_CHECK(threadForReWatch_ != nullptr, return, "Failed to create thread");
 }
 
 sptr<IWatcherManager> WatcherManagerKits::GetService(void)
