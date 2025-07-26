@@ -29,6 +29,7 @@ if (defined(ohos_lite)) {
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/services/init/include",
       "//base/startup/init/services/log",
+      "//base/startup/init/interfaces/innerkits/init_module_engine/include",
     ]
   }
 
