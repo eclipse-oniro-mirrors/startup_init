@@ -36,25 +36,30 @@ WatcherManagerKits::~WatcherManagerKits(void) {}
 
 void WatcherManagerKits::ResetService(const wptr<IRemoteObject> &remote)
 {
-    WATCHER_LOGI("Remote is dead, reset service instance");
-    std::lock_guard<std::mutex> lock(lock_);
-    if (watcherManager_ != nullptr) {
-        sptr<IRemoteObject> object = watcherManager_->AsObject();
-        if ((object != nullptr) && (remote == object)) {
-            object->RemoveDeathRecipient(deathRecipient_);
-            watcherManager_ = nullptr;
-            remoteWatcherId_ = 0;
-            remoteWatcher_ = nullptr;
-            if (threadForReWatch_ != nullptr) {
-                WATCHER_LOGI("Thead exist, delete thread");
-                stop_ = true;
-                threadForReWatch_->join();
-                delete threadForReWatch_;
+    {
+        WATCHER_LOGI("Remote is dead, reset service instance");
+        std::lock_guard<std::mutex> lock(lock_);
+        if (watcherManager_ != nullptr) {
+            sptr<IRemoteObject> object = watcherManager_->AsObject();
+            if ((object != nullptr) && (remote == object)) {
+                object->RemoveDeathRecipient(deathRecipient_);
+                watcherManager_ = nullptr;
+                remoteWatcherId_ = 0;
+                remoteWatcher_ = nullptr;
             }
-            stop_ = false;
-            threadForReWatch_ = new (std::nothrow)std::thread([this] {this->ReAddWatcher();});
-            WATCHER_CHECK(threadForReWatch_ != nullptr, return, "Failed to create thread");
         }
+    }
+    {
+        std::lock_guard<std::mutex> lock(threadlock_);
+        if (threadForReWatch_ != nullptr) {
+            WATCHER_LOGI("Thead exist, delete thread");
+            stop_ = true;
+            threadForReWatch_->join();
+            delete threadForReWatch_;
+        }
+        stop_ = false;
+        threadForReWatch_ = new (std::nothrow)std::thread([this] {this->ReAddWatcher();});
+        WATCHER_CHECK(threadForReWatch_ != nullptr, return, "Failed to create thread");
     }
 }
 

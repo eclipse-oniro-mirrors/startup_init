@@ -463,8 +463,8 @@ void WatcherManager::OnStop()
             OnRemoteDied(remoteWatcher);
         });
     }
-    Clear();
     StopLoop();
+    Clear();
 }
 
 void WatcherManager::OnRemoteDied(const wptr<IRemoteObject> &remote)
