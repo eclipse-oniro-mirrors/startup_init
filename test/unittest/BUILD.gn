@@ -183,6 +183,15 @@ ohos_unittest("init_unittest") {
   ]
   defines = []
 
+  sources += [
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm_linear.c",
+  ]
+  include_dirs += [
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+  ]
   if (defined(build_seccomp) && build_seccomp) {
     sources += [
       "../../services/modules/seccomp/seccomp_policy.c",
@@ -327,8 +336,7 @@ ohos_unittest("init_unittest") {
   ]
   defines += [ "_GNU_SOURCE" ]
 
-  if (target_cpu == "arm64" || target_cpu == "x86_64" ||
-      target_cpu == "riscv64") {
+  if (target_cpu == "arm64" || target_cpu == "x86_64" ) {
     defines += [ "SUPPORT_64BIT" ]
   }
 
@@ -482,6 +490,7 @@ ohos_unittest("init_dmverify_unittest") {
     "hilog:libhilog",
   ]
 
+  defines = []
   if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
     external_deps += [ "hvb:libhvb_static" ]
     sources += [
@@ -508,6 +517,10 @@ ohos_unittest("init_fshvb_unittest") {
     "//base/startup/init/interfaces/innerkits/include/param",
   ]
 
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
   sources = [
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
@@ -516,11 +529,6 @@ ohos_unittest("init_fshvb_unittest") {
     "//base/startup/init/test/mock/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
     "//base/startup/init/test/mock/init/ueventd/ueventd.c",
     "//base/startup/init/test/mock/init/ueventd/ueventd_socket.c",
-  ]
-
-  deps = [
-    "//base/startup/init/interfaces/innerkits:libbegetutil",
-    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
   ]
 
   defines = [ "STARTUP_INIT_UT_PATH =\"/data/init_ut\"" ]

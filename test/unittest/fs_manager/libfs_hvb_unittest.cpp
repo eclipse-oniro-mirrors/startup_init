@@ -29,8 +29,6 @@ class FsHvbUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) {};
-    void SetUp(void) {};
-    void TearDown(void) {};
 };
 
 void CreateTestFile(const char *fileName, const char *data)

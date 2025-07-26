@@ -24,8 +24,6 @@ class DmVerifyUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) {};
-    void SetUp(void) {};
-    void TearDown(void) {};
 };
 
 static int TestHvbDmVerityFinal(void)
@@ -37,8 +35,14 @@ static int TestHvbDmVerityFinal(void)
 HWTEST_F(DmVerifyUnitTest, HvbDmVerityinit_001, TestSize.Level0)
 {
     int ret;
-    FstabItem fstabitem = {(char *)"deviceName", (char *)"mountPoint",
-        (char *)"fsType", (char *)"mountOptions", 1, nullptr};
+    FstabItem fstabitem;
+    char testStr[10] = "testStr";
+    fstabitem.deviceName = testStr;
+    fstabitem.mountPoint = testStr;
+    fstabitem.fsType = testStr;
+    fstabitem.mountOptions = testStr;
+    fstabitem.fsManagerFlags = 1;
+    fstabitem.next = nullptr;
     Fstab fstab = {&fstabitem};
 
     ret = HvbDmVerityinit(&fstab);
@@ -70,8 +74,14 @@ HWTEST_F(DmVerifyUnitTest, HvbDmVerityinit_001, TestSize.Level0)
 HWTEST_F(DmVerifyUnitTest, HvbDmVerityinit_002, TestSize.Level0)
 {
     int ret;
-    FstabItem fstabitem = {(char *)"deviceName", (char *)"mountPoint",
-        (char *)"fsType", (char *)"mountOptions", 1, nullptr};
+    FstabItem fstabitem;
+    char testStr[10] = "testStr";
+    fstabitem.deviceName = testStr;
+    fstabitem.mountPoint = testStr;
+    fstabitem.fsType = testStr;
+    fstabitem.mountOptions = testStr;
+    fstabitem.fsManagerFlags = 1;
+    fstabitem.next = nullptr;
     Fstab fstab = {&fstabitem};
 
     ret = HvbDmVerityinit(&fstab);
@@ -96,8 +106,14 @@ HWTEST_F(DmVerifyUnitTest, HvbDmVerityinit_002, TestSize.Level0)
 HWTEST_F(DmVerifyUnitTest, HvbDmVeritySetUp_001, TestSize.Level0)
 {
     int ret;
-    FstabItem fstabitem = {(char *)"deviceName", (char *)"mountPoint",
-        (char *)"fsType", (char *)"mountOptions", 1, nullptr};
+    FstabItem fstabitem;
+    char testStr[10] = "testStr";
+    fstabitem.deviceName = testStr;
+    fstabitem.mountPoint = testStr;
+    fstabitem.fsType = testStr;
+    fstabitem.mountOptions = testStr;
+    fstabitem.fsManagerFlags = 1;
+    fstabitem.next = nullptr;
 
     ret = HvbDmVeritySetUp(&fstabitem);
     EXPECT_EQ(ret, 0);

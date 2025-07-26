@@ -372,8 +372,6 @@ HWTEST_F(WatcherProxyUnitTest, Init_TestStop_001, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     uint32_t watcherId = 0;
-    fdsan_set_error_level(FDSAN_ERROR_LEVEL_DISABLED);
-
     test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.permission.watcher.stop", watcherId);
     test.TestStop();

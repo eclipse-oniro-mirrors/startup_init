@@ -755,11 +755,11 @@ public:
     void TestSeccompCustomSyscall()
     {
         // app custom allowlist
-        ret = CheckSyscall(APP, APP_CUSTOM, CheckGetpid, true);
+        int ret = CheckSyscall(APP, APP_CUSTOM, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
 
         // app custom blocklist
-        int ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuid, false);
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuid, false);
         EXPECT_EQ(ret, 0);
     }
 #endif
