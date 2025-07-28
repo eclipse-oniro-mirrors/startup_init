@@ -117,7 +117,8 @@ int32_t WatcherManager::CheckAppWatchPermission(const std::string &keyPrefix)
         "accessibility.config.ready",
         "sys.hiview.chr.fluchcache",
         "web.render.dump",
-        "web.debug.trace"
+        "web.debug.trace",
+        "sys.graphic.openTestModeTrace"
     };
 
     if (std::find(whitelist.begin(), whitelist.end(), keyPrefix) != whitelist.end()) {
