@@ -29,7 +29,7 @@ bluetooth_param = 8192
 hiviewdfx_hiview_param = 40960
 develop_private_param = 128000
 telephony_param = 20480
-const_telephony_param = 4096
+const_telephony_param = 6144
 vendor_camera_param=6144
 edm_writable_param = 20480
 arkui_param = 2048
@@ -49,3 +49,5 @@ custom_param = 4096
 persist_audio_param = 4096
 update_updater_param = 4096
 bms_param = 20480
+const_display_brightness_param = 2048
+

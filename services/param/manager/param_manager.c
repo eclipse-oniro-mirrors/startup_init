@@ -456,17 +456,22 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
     uint32_t valueLen = strlen(value);
     uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_RELAXED);
     ATOMIC_STORE_EXPLICIT(&entry->commitId, commitId | PARAM_FLAGS_MODIFY, MEMORY_ORDER_RELAXED);
-    if ((((uint32_t)mode & LOAD_PARAM_UPDATE_CONST) == LOAD_PARAM_UPDATE_CONST) &&
-        (entry->valueLength < PARAM_CONST_VALUE_LEN_MAX && valueLen < PARAM_CONST_VALUE_LEN_MAX)) {
-        int ret = PARAM_MEMCPY(entry->data + entry->keyLength + 1, PARAM_CONST_VALUE_LEN_MAX, value, valueLen + 1);
-        PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
-        entry->valueLength = valueLen;
-    } else if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
+    if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
         int ret = PARAM_MEMCPY(entry->data + entry->keyLength + 1, PARAM_VALUE_LEN_MAX, value, valueLen + 1);
         PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
         entry->valueLength = valueLen;
+    } else if (((unsigned int)mode & LOAD_PARAM_UPDATE_CONST) == LOAD_PARAM_UPDATE_CONST) {
+        if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen >= PARAM_VALUE_LEN_MAX) {
+            PARAM_LOGE("value len valid, current param value len is %d < 96, new value len %d >= 96.",
+                entry->valueLength, valueLen);
+            return PARAM_CODE_INVALID_VALUE;
+        }
+        if (entry->valueLength < PARAM_CONST_VALUE_LEN_MAX && valueLen < PARAM_CONST_VALUE_LEN_MAX) {
+            int ret = PARAM_MEMCPY(entry->data + entry->keyLength + 1, PARAM_CONST_VALUE_LEN_MAX, value, valueLen + 1);
+            PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
+            entry->valueLength = valueLen;
+        }
     }
-
     uint32_t flags = commitId & ~PARAM_FLAGS_COMMITID;
     uint32_t commitIdCount = (++commitId) & PARAM_FLAGS_COMMITID;
     ATOMIC_STORE_EXPLICIT(&entry->commitId, flags | commitIdCount, MEMORY_ORDER_RELEASE);
