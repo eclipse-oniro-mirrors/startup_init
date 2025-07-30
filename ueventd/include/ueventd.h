@@ -71,7 +71,7 @@ typedef enum SUBYSTEM {
 #define UEVENTD_FLAG "/dev/.ueventd_trigger_done"
 
 extern char bootDevice[CMDLINE_VALUE_LEN_MAX];
-typedef int (* CompareUevent)(struct Uevent *event);
+typedef int (* CompareUevent)(struct Uevent *uevent);
 const char *ActionString(ACTION action);
 void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent);
 void RetriggerUevent(int sockFd, char **devices, int num);

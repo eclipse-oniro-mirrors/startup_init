@@ -157,9 +157,7 @@ static int CreateDeviceNodeWithPermissions(const struct Uevent *uevent, const ch
     mode |= isBlock ? S_IFBLK : S_IFCHR;
     dev_t dev = makedev((unsigned int)major, (unsigned int)minor);
 
-    if (setegid(gid) != 0) {
-        INIT_LOGW("Failed to setegid %u, deviceNode: \" %s \" , errno %d", gid, deviceNode, errno);
-    }
+    (void)setegid(gid);
     mode_t originalMask = umask(000);
     int rc = mknod(deviceNode, mode, dev);
     (void)umask(originalMask);
@@ -168,9 +166,7 @@ static int CreateDeviceNodeWithPermissions(const struct Uevent *uevent, const ch
         return rc;
     }
     AdjustDeviceNodePermissions(deviceNode, uid, gid, mode);
-    if (setegid(0) != 0) {
-        INIT_LOGW("Failed to setegid 0, deviceNode: \" %s \" , errno %d", deviceNode, errno);
-    }
+    (void)setegid(0);
     return 0;
 }
 

@@ -24,35 +24,35 @@
 #include "sysversion.h"
 
 using SysParaInfoItem = struct {
-    char *infoName;
+    const char *infoName;
     const char *(*getInfoValue)(void);
 };
 
 static const SysParaInfoItem SYSPARA_LIST[] = {
-    {(char *)"DeviceType", GetDeviceType},
-    {(char *)"Manufacture", GetManufacture},
-    {(char *)"Brand", GetBrand},
-    {(char *)"MarketName", GetMarketName},
-    {(char *)"ProductSeries", GetProductSeries},
-    {(char *)"ProductModel", GetProductModel},
-    {(char *)"ProductModelAlias", GetProductModel},
-    {(char *)"SoftwareModel", GetSoftwareModel},
-    {(char *)"HardwareModel", GetHardwareModel},
-    {(char *)"Serial", GetSerial},
-    {(char *)"OSFullName", GetOSFullName},
-    {(char *)"DisplayVersion", GetDisplayVersion},
-    {(char *)"BootloaderVersion", GetBootloaderVersion},
-    {(char *)"GetSecurityPatchTag", GetSecurityPatchTag},
-    {(char *)"AbiList", GetAbiList},
-    {(char *)"IncrementalVersion", GetIncrementalVersion},
-    {(char *)"VersionId", GetVersionId},
-    {(char *)"BuildType", GetBuildType},
-    {(char *)"BuildUser", GetBuildUser},
-    {(char *)"BuildHost", GetBuildHost},
-    {(char *)"BuildTime", GetBuildTime},
-    {(char *)"BuildRootHash", GetBuildRootHash},
-    {(char *)"GetOsReleaseType", GetOsReleaseType},
-    {(char *)"GetHardwareProfile", GetHardwareProfile},
+    {"DeviceType", GetDeviceType},
+    {"Manufacture", GetManufacture},
+    {"Brand", GetBrand},
+    {"MarketName", GetMarketName},
+    {"ProductSeries", GetProductSeries},
+    {"ProductModel", GetProductModel},
+    {"ProductModelAlias", GetProductModel},
+    {"SoftwareModel", GetSoftwareModel},
+    {"HardwareModel", GetHardwareModel},
+    {"Serial", GetSerial},
+    {"OSFullName", GetOSFullName},
+    {"DisplayVersion", GetDisplayVersion},
+    {"BootloaderVersion", GetBootloaderVersion},
+    {"GetSecurityPatchTag", GetSecurityPatchTag},
+    {"AbiList", GetAbiList},
+    {"IncrementalVersion", GetIncrementalVersion},
+    {"VersionId", GetVersionId},
+    {"BuildType", GetBuildType},
+    {"BuildUser", GetBuildUser},
+    {"BuildHost", GetBuildHost},
+    {"BuildTime", GetBuildTime},
+    {"BuildRootHash", GetBuildRootHash},
+    {"GetOsReleaseType", GetOsReleaseType},
+    {"GetHardwareProfile", GetHardwareProfile},
 };
 
 static int32_t SysParaApiDumpCmd(BShellHandle shell, int32_t argc, char *argv[])

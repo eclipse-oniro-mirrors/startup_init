@@ -13,6 +13,9 @@
 import("//base/startup/init/begetd.gni")
 
 if (defined(ohos_lite)) {
+  group("libueventd_ramdisk_static_real") {
+
+  }
   if (ohos_kernel_type == "linux") {
     service_ueventd_deps = [
       "//base/startup/init/interfaces/innerkits/socket:libsocket",
