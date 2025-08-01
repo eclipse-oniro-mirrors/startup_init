@@ -36,7 +36,7 @@ uiserver:x:1048:
 servicectrl:x:1050:root,shell,system,samgr,hdf_devmgr,foundation,powermgr,update,memmgr
 powerctrl:x:1051:root,shell,system,update,power_host,charger,foundation,powermgr,atcmdserver,bms_animation,maintenance_service,quickfix
 bootctrl:x:1052:root,shell,system
-deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,pin_auth_host,access_token,device_manager,foundation,powermgr,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm,update,device_attest,hiview,device_cert_manager_server,huawei_id,radio,useriam
+deviceprivate:x:1053:root,shell,system,samgr,hdf_devmgr,deviceinfo,dsoftbus,dms,account,pin_auth_host,access_token,device_manager,foundation,powermgr,dbms,deviceauth,huks_server,dlp_credential,dsserver,edm,update,device_attest,hiview,device_cert_manager_server,radio,useriam
 data_reserve:x:1065:
 ressched:x:1096:
 hiview:x:1201:
@@ -162,7 +162,6 @@ el5_filekey_manager:x:3077:
 hdf_ext_devmgr:x:3085:
 intell_voice_host:x:3100:
 user_data_r:x:2008:
-huawei_id:x:7008:
 drmserver:x:1077:
 clearplay_host:x:3078:
 wiseplay_host:x:3079:
