@@ -80,7 +80,6 @@ static bool IsPublicParam(const char *param)
         "persist.ffrt", "persist.filemanagement.param_watcher.on",
         "persist.global", "persist.graphic.profiler",
         "persist.hdc.jdwp", "persist.hiview",
-        "persist.init", "persist.hmos_fusion_mgr.ctl.support_hmos",
         "persist.kernel", "persist.location.locationhub_state",
         "persist.mmitest.isrunning", "persist.moduleupdate.bms",
         "persist.multimedia", "persist.nearlink.switch_enable",

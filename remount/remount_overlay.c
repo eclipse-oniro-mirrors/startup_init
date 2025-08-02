@@ -38,7 +38,7 @@
 INIT_STATIC bool MntNeedRemount(const char *mnt)
 {
     char *remountPath[] = {
-        "/", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust", "/version", "/patch_hw"
+        "/", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust", "/version"
     };
     for (size_t i = 0; i < ARRAY_LENGTH(remountPath); i++) {
         if (strcmp(remountPath[i], mnt) == 0) {
