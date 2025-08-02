@@ -47,32 +47,32 @@ HWTEST_F(RemountOverlayUnitTest, Init_IsSkipRemountTest_001, TestSize.Level0)
     bool ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    char str1[] = "ufs";
-    char str2[] = "test";
-    mentry.mnt_type = str1;
-    mentry.mnt_dir = str2;
+    char ufs[] = "ufs";
+    char test[] = "test";
+    mentry.mnt_type = ufs;
+    mentry.mnt_dir = test;
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    char str3[] = "/";
-    mentry.mnt_dir = str3;
+    char root[] = "/";
+    mentry.mnt_dir = root;
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    char str4[] = "er11ofs";
-    mentry.mnt_type = str4;
+    char erofs1[] = "er11ofs";
+    mentry.mnt_type = erofs1;
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    char str5[] = "erofs";
-    char str6[] = "/dev/block/ndm-";
-    mentry.mnt_type = str5;
-    mentry.mnt_fsname = str6;
+    char erofs[] = "erofs";
+    char ndm[] = "/dev/block/ndm-";
+    mentry.mnt_type = erofs;
+    mentry.mnt_fsname = ndm;
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, true);
 
-    char str7[] = "/dev/block/dm-1";
-    mentry.mnt_fsname = str7;
+    char dm1[] = "/dev/block/dm-1";
+    mentry.mnt_fsname = dm1;
     ret = IsSkipRemount(mentry);
     EXPECT_EQ(ret, false);
 }
@@ -83,14 +83,14 @@ HWTEST_F(RemountOverlayUnitTest, Init_ExecCommand_001, TestSize.Level0)
     int result = ExecCommand(0, nullArgv);
     EXPECT_NE(result, 0);  // Expect success
 
-    char *validArgv[] = {new char[strlen("/bin/ls") + 1], NULL};  // A valid command
+    const char *valid = "/bin/ls";
+    char *validArgv[] = {const_cast<char*>(valid), NULL};  // A valid command
     result = ExecCommand(1, validArgv);
     EXPECT_NE(result, 0);  // Expect success
 
-    char *invalidArgv[] = {new char[strlen("/notexit/ls") + 1], NULL};  // A valid command
+    const char *invalid = "/notexit/ls";
+    char *invalidArgv[] = {const_cast<char*>(invalid), NULL};  // A valid command
     result = ExecCommand(1, invalidArgv);
-    delete[] validArgv[0];
-    delete[] invalidArgv[0];
     EXPECT_NE(result, 0);  // Expect success
 }
 

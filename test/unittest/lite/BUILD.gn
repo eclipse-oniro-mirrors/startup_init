@@ -248,7 +248,7 @@ if (defined(ohos_lite)) {
         "//base/startup/init/services/loopevent:loopevent",
         "//build/lite/config/component/cJSON:cjson_static",
       ]
-      external_deps += [ "mbedtls:mbedtls_static" ]
+      external_deps += [ "mbedtls:mbedtls_shared" ]
     }
   }
 }

@@ -272,7 +272,7 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     const char *key, uint32_t keyLen, const char *value, uint32_t valueLen, int mode)
 {
     PARAM_CHECK(key != NULL && value != NULL, return OFFSET_ERR, "Invalid param");
-    PARAM_CHECK(valueLen <= PARAM_CONST_VALUE_LEN_MAX, return OFFSET_ERR, "Invalid valueLen");
+    PARAM_CHECK(valueLen < PARAM_CONST_VALUE_LEN_MAX, return OFFSET_ERR, "Invalid valueLen");
     PARAM_CHECK(CheckWorkSpace(workSpace) == 0, return OFFSET_ERR, "Invalid workSpace %s", key);
 
     uint32_t realLen = sizeof(ParamNode) + 1 + 1;

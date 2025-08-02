@@ -20,10 +20,6 @@ base/startup/init/             # init module
     ├── src                      # Source files for the init module
     └── test                     # Source files of the test cases for the init module
         └── unittest
-vendor
-└──huawei
-        └──camera
-                └──init_configs  # init configuration files (in JSON format, and deployed in /etc/init.cfg after image burning)
 ```
 
 ## Constraints<a name="section12212842173518"></a>

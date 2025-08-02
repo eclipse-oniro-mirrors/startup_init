@@ -118,6 +118,39 @@ INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder
     return *paramHolder;
 }
 
+INIT_LOCAL_API const char *GetPropertyAtomic(const char *key, const char **paramHolder)
+{
+    BEGET_CHECK(paramHolder != NULL, return NULL);
+    const char *_Atomic *atomicParam = (const char *_Atomic *)paramHolder;
+    const char *cached = atomic_load(atomicParam);
+    if (cached != NULL) {
+        return cached;
+    }
+
+    uint32_t len = 0;
+    int ret = SystemGetParameter(key, NULL, &len);
+    if (ret == 0 && len > 0) {
+        char *res = (char *)calloc(1, len + 1);
+        BEGET_CHECK(res != NULL, return NULL);
+        
+        ret = SystemGetParameter(key, res, &len);
+        if (ret != 0) {
+            free(res);
+            return NULL;
+        }
+
+        if (g_propertyGetProcessor != NULL) {
+            res = g_propertyGetProcessor(key, res);
+        }
+
+        const char *expected = NULL;
+        if (!atomic_compare_exchange_strong(atomicParam, &expected, res)) {
+            free(res);
+        }
+    }
+    return atomic_load(atomicParam);
+}
+
 INIT_LOCAL_API PropertyValueProcessor SetPropertyGetProcessor(PropertyValueProcessor processor)
 {
     PropertyValueProcessor prev = g_propertyGetProcessor;

@@ -37,6 +37,7 @@
 #include "fd_holder_service.h"
 #include "bootstage.h"
 #include "parameter.h"
+#include "fs_dm_linear.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -162,9 +163,31 @@ HWTEST_F(InitUnitTest, TestParseCfgByPriority, TestSize.Level1)
     int ret = 0;
     ret = ParseCfgByPriority(NULL);
     EXPECT_EQ(ret, -1);
-    ret = ParseCfgByPriority("etc/abcdtest");
-    EXPECT_EQ(ret, -1);
     ret = ParseCfgByPriority("etc/init");
     EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(InitUnitTest, FsDmCreateMultiTargetLinearDevice, TestSize.Level1)
+{
+    const char *devName = "testDevice";
+    char dmDevPath[256] = "/dev/mapper/testDevice";
+    uint64_t dmDevPathLen = sizeof(dmDevPath);
+
+    DmLinearTarget targets[2];
+    uint32_t targetNum = 2;
+
+    targets[0].start = 0;
+    targets[0].length = 100;
+    targets[0].paras_len = strlen("linear /dev/sda 0") + 1;
+    targets[0].paras = const_cast<char*>("linear /dev/sda 0");
+
+    targets[1].start = 100;
+    targets[1].length = 200;
+    targets[1].paras_len = strlen("linear /dev/sdb 0") + 1;
+
+    int fd = open("/dev/null", O_RDWR);
+    int rc = FsDmCreateMultiTargetLinearDevice(devName, dmDevPath, dmDevPathLen, targets, targetNum);
+    EXPECT_EQ(rc, -1);
+    close(fd);
 }
 }

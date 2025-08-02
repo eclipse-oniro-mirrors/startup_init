@@ -144,7 +144,7 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
     mode_t mask;
     size_t idx = 0;
 
-    if (uevent->deviceName == NULL) {
+    if (uevent->deviceName == NULL || uevent->major < 0 || uevent->minor < 0) {
         return;
     }
 
@@ -171,6 +171,11 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
     }
 }
 
+static bool IsPatchPartitionName(const char *partitionName)
+{
+    return strcmp(partitionName, "patch_a") == 0 || strcmp(partitionName, "patch_b") == 0;
+}
+
 static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **devices, int num)
 {
     for (int i = 0; i < num; i++) {
@@ -188,9 +193,8 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
             strstr(uevent->partitionName, "ramdisk") != NULL ||
             strstr(uevent->partitionName, "rvt") != NULL ||
             strstr(uevent->partitionName, "dtbo") != NULL ||
-            strstr(uevent->partitionName, "modem") != NULL ||
-            strcmp(uevent->partitionName, "patch_a") == 0 ||
-            strcmp(uevent->partitionName, "patch_b") == 0) {
+            strstr(uevent->partitionName, "modem_driver") != NULL ||
+            IsPatchPartitionName(uevent->partitionName)) {
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
             HandleBlockDeviceEvent(uevent);
             return;
@@ -302,6 +306,7 @@ void ProcessUevent(int sockFd, char **devices, int num, CompareUevent compare)
             return;
         }
         if (compare != NULL) {
+            INIT_LOGV("find compare and do it");
             int ret = compare(&uevent);
             INIT_CHECK(ret == 0, return);
         }
