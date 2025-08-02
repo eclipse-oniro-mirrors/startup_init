@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_MOUNT_ONE_WITH_FSTABFILE_H
-#define TEST_FUZZTEST_MOUNT_ONE_WITH_FSTABFILE_H
+#ifndef TEST_FUZZTEST_PROCESS_WATCH_MASSAGE_FUZZER_H
+#define TEST_FUZZTEST_PROCESS_WATCH_MASSAGE_FUZZER_H
 #include "fuzz_utils.h"
-#define FUZZ_PROJECT_NAME "mountoneWithfstabfile_fuzzer"
+#define FUZZ_PROJECT_NAME "processwatchermessage_fuzzer"
 #endif
