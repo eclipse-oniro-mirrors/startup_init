@@ -16,7 +16,6 @@
 #ifndef INIT_PARAM_COMM_H
 #define INIT_PARAM_COMM_H
 #include <stdint.h>
-#include <stdatomic.h>
 #include "beget_ext.h"
 
 #ifdef __cplusplus
@@ -36,7 +35,6 @@ extern "C" {
 typedef char *(*PropertyValueProcessor)(const char *key, char *value);
 
 INIT_LOCAL_API const char *GetProperty(const char *key, const char **paramHolder);
-INIT_LOCAL_API const char *GetPropertyAtomic(const char *key, const char **paramHolder);
 INIT_LOCAL_API PropertyValueProcessor SetPropertyGetProcessor(PropertyValueProcessor processor);
 INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, uint32_t len);
 
