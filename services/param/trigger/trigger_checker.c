@@ -185,9 +185,7 @@ static int ComputeSubCondition(const LogicCalculator *calculator, LogicData *dat
         strlen(calculator->conditionName) + 1, calculator->conditionContent, SUPPORT_DATA_BUFFER_MAX);
     PARAM_CHECK(ret == 0, return -1, "Failed parse content value");
     // check name
-    if ((calculator->inputName != NULL) && (strcmp(calculator->conditionName, calculator->inputName) == 0)) {
-        return CompareValue(calculator->conditionContent, calculator->inputContent);
-    } else if (strlen(calculator->conditionName) > 0) {
+    if (strlen(calculator->conditionName) > 0) {
         uint32_t len = SUPPORT_DATA_BUFFER_MAX;
         ret = SystemReadParam(calculator->conditionName, calculator->readContent, &len);
         if (ret != 0) {
