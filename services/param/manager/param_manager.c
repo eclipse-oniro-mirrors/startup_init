@@ -694,7 +694,7 @@ static int CheckParamPermission_(WorkSpace **workspace, ParamTrieNode **node,
     labelIndex.selinuxLabelIndex = labelIndex.workspace->spaceIndex;
 
     int ret = paramSpace->checkParamPermission(&labelIndex, srcLabel, name, mode);
-    PARAM_CHECK(ret == 0, return ret,
+    PARAM_WARNING_CHECK(ret == 0, return ret,
         "deny access %s label %u %u", name, labelIndex.dacLabelIndex, labelIndex.selinuxLabelIndex);
     *workspace = labelIndex.workspace;
     return ret;
@@ -746,7 +746,7 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
     WorkSpace *workspace = NULL;
     int ret = CheckParamPermission_(&workspace, &node, GetParamSecurityLabel(), name, DAC_READ);
     if (ret != 0) {
-        PARAM_LOGE("SystemReadParam failed! name is:%s, err:%d!", name, ret);
+        PARAM_LOGW("SystemReadParam failed! name is:%s, err:%d!", name, ret);
         return ret;
     }
 #ifdef PARAM_SUPPORT_SELINUX
