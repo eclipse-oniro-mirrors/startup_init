@@ -526,7 +526,7 @@ STATIC_INLINE int SelinuxCheckParamPermission(const ParamLabelIndex *labelIndex,
     }
     if (ret != 0) {
         ret = SELINUX_RESULT_FORBIDED;
-        PARAM_LOGE("Selinux check name %s in %s [%d %d %d] failed",
+        PARAM_LOGW("Selinux check name %s in %s [%d %d %d] failed",
             name, GetSelinuxContent(name), srcLabel->cred.pid, srcLabel->cred.uid, srcLabel->cred.gid);
     }
     return ret;
