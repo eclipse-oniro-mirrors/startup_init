@@ -23,6 +23,7 @@ config("libfsmanager_exported_configs") {
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
     "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/include",
   ]
 }
 
@@ -38,7 +39,6 @@ ohos_static_library("libfsmanager_static") {
     include_dirs = [
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/interfaces/innerkits/include/param",
-      "//base/startup/init/interfaces/innerkits/init_module_engine/include",
       "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
       "//base/startup/init/services/log",
       "//base/startup/init/services/param/include",
@@ -109,7 +109,6 @@ ohos_static_library("libfsmanager_static_real") {
     include_dirs = [
       "//base/startup/init/interfaces/innerkits/include",
       "//base/startup/init/interfaces/innerkits/include/param",
-      "//base/startup/init/interfaces/innerkits/init_module_engine/include",
       "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
       "//base/startup/init/services/log",
       "//base/startup/init/services/param/include",
