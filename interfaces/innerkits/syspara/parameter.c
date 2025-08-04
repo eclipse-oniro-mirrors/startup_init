@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdatomic.h>
 
 #include "param_comm.h"
 #include "init_param.h"
@@ -108,7 +109,15 @@ int SaveParameters(void)
 const char *GetDeviceType(void)
 {
     static const char *productType = NULL;
-    const char *deviceType = GetProperty("const.product.devicetype", &productType);
+    const char *deviceType = NULL;
+#ifndef OHOS_LITE
+    deviceType = GetPropertyAtomic("const.product.devicetype", &productType);
+    if (deviceType != NULL) {
+        return deviceType;
+    }
+    return GetPropertyAtomic("const.build.characteristics", &productType);
+#endif
+    deviceType = GetProperty("const.product.devicetype", &productType);
     if (deviceType != NULL) {
         return deviceType;
     }
