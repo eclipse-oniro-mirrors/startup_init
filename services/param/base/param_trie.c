@@ -272,12 +272,13 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     const char *key, uint32_t keyLen, const char *value, uint32_t valueLen, int mode)
 {
     PARAM_CHECK(key != NULL && value != NULL, return OFFSET_ERR, "Invalid param");
+    PARAM_CHECK(valueLen < PARAM_CONST_VALUE_LEN_MAX, return OFFSET_ERR, "Invalid valueLen");
     PARAM_CHECK(CheckWorkSpace(workSpace) == 0, return OFFSET_ERR, "Invalid workSpace %s", key);
 
     uint32_t realLen = sizeof(ParamNode) + 1 + 1;
     // for const parameter, alloc memory on demand
-    if ((valueLen > PARAM_VALUE_LEN_MAX) || IS_READY_ONLY(key)) {
-        realLen += keyLen + valueLen;
+    if (valueLen > PARAM_VALUE_LEN_MAX) {  // Only read-only parameters' valueLen is bigger than 96
+        realLen += keyLen + PARAM_CONST_VALUE_LEN_MAX;
     } else {
         realLen += keyLen + GetParamMaxLen(type);
     }
