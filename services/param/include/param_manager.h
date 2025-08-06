@@ -57,7 +57,7 @@ extern "C" {
 #define PARAM_NEED_CHECK_IN_SERVICE 0x2
 #define PARAM_CTRL_SERVICE 0x1
 #ifndef OHOS_LITE
-#define PERSIST_PARAM_FIXED_FLAGS "/data/service/el1/startup/persist_param_fixed"
+#define PERSIST_PARAM_FIXED_FLAGS "/data/service/el1/public/startup/persist_param_fixed"
 #else
 #define PERSIST_PARAM_FIXED_FLAGS "/storage/data/system/param/persist_param_fixed"
 #endif

@@ -486,5 +486,59 @@ HWTEST_F(SysparaUnitTest, parameterTest0019, TestSize.Level0)
     ret = SystemUpdateConstParam(key2, value2);
     EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
 }
+
+HWTEST_F(SysparaUnitTest, parameterTest0020, TestSize.Level0)
+{
+    char key1[] = "const.test.for_update_test1";
+    char value1[] = "initSet"; // len < 96
+    char value2[] = "initUpdate_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
+        "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"; // len > 96
+
+    int ret = SystemWriteParam(key1, value1);
+    EXPECT_EQ(ret, 0);
+    ret = SystemUpdateConstParam(key1, value2);
+    EXPECT_EQ(ret, PARAM_CODE_INVALID_VALUE);
+}
+
+HWTEST_F(SysparaUnitTest, parameterTest0021, TestSize.Level0)
+{
+    char key1[] = "const.test.for_update_test2";
+    char value1[] = "initSet_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
+        "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"; // len > 96
+    char value2[] = "initUpdate_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
+        "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"; // len > 96
+
+    int ret = SystemWriteParam(key1, value1);
+    EXPECT_EQ(ret, 0);
+    ret = SystemUpdateConstParam(key1, value2);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(SysparaUnitTest, parameterTest0022, TestSize.Level0)
+{
+    char key1[] = "const.test.for_update_test3";
+    char value1[] = "initSet_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
+        "abcdefghijklmnopqrstuvwxyzabcdefghi"; // len = 96
+    char value2[] = "initUpdate_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
+        "abcdefghijklmnopqrstuvwxyzabcdef"; // len = 96
+
+    int ret = SystemWriteParam(key1, value1);
+    EXPECT_EQ(ret, 0);
+    ret = SystemUpdateConstParam(key1, value2);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(SysparaUnitTest, parameterTest0023, TestSize.Level0)
+{
+    char key1[] = "const.test.for_update_test4";
+    char value1[] = "initSet_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
+        "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"; // len > 96
+    char value2[] = "initUpdate_abcdefghijkl"; // len < 96
+
+    int ret = SystemWriteParam(key1, value1);
+    EXPECT_EQ(ret, 0);
+    ret = SystemUpdateConstParam(key1, value2);
+    EXPECT_EQ(ret, 0);
+}
 #endif
 }  // namespace OHOS

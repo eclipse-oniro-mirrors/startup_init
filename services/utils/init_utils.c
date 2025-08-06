@@ -409,11 +409,9 @@ void WaitForFile(const char *source, unsigned int maxSecond)
             INIT_LOGE("stat file err: %d", errno);
             break;
         }
-       
         usleep(waitTime);
         (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
         duration = InitDiffTime(&cmdTimer);
-        
         if (duration >= maxDuration) {
             INIT_LOGE("wait for file:%s failed after %d second.", source, maxSecond);
             break;
@@ -906,7 +904,7 @@ void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, 
 {
     const char *pos;
     str_compare cmp = strcmp;
-    if ((strDict == NULL) || dictSize < 0 || ((size_t)dictSize < sizeof(const char *)) ||
+    if ((strDict == NULL) || (dictSize < 0) || ((size_t)dictSize < sizeof(const char *)) ||
         (target == NULL) || (target[0] == '\0')) {
         return NULL;
     }

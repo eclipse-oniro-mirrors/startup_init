@@ -130,8 +130,8 @@ static int CreateTcpServerSocket_(const char *server, int maxClient)
     LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket");
 
     int ret = SetSocketTimeout(listenfd);
-    LE_CHECK(ret == 0, return ret, "Failed to set socket timeout");
-
+    LE_CHECK(ret == 0, close(listenfd);
+        return ret, "Failed to set socket timeout");
     struct sockaddr_in serverAddr;
     GetSockaddrFromServer_(server, &serverAddr);
     ret = bind(listenfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
@@ -156,7 +156,8 @@ static int CreateTcpSocket_(const char *server)
     LE_CHECK(ret == 0, return ret, "Failed to set socket option");
 
     ret = SetSocketTimeout(fd);
-    LE_CHECK(ret == 0, return ret, "Failed to set socket timeout");
+    LE_CHECK(ret == 0, close(fd);
+        return ret, "Failed to set socket timeout");
 
     struct sockaddr_in serverAddr;
     GetSockaddrFromServer_(server, &serverAddr);
@@ -231,12 +232,12 @@ int AcceptSocket(int fd, int flags)
 }
 
 INIT_LOCAL_API
-int listenSocket(int fd, int flags, const char *server)
+int listenSocket(int fd, uint32_t flags, const char *server)
 {
-    unsigned int type = (unsigned int)flags & 0x0000ff00;
+    unsigned int type = flags & 0x0000ff00;
     LE_LOGV("listenSocket flags %x type %x server %s", flags, type, server);
     SetNoBlock(fd);
-    if (!LE_TEST_FLAGS((unsigned int)flags, TASK_SERVER)) {
+    if (!LE_TEST_FLAGS(flags, TASK_SERVER)) {
         return 0;
     }
     if (type == TASK_TCP) {

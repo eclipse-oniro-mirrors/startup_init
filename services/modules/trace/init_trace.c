@@ -304,7 +304,7 @@ static void CheckKernelType(bool *isLinux)
 {
     struct utsname uts;
     if (uname(&uts) == -1) {
-        PLUGIN_LOGE("Kernel type get failed,errno:%{public}d", errno);
+        PLUGIN_LOGE("Kernel type get failed,errno:d", errno);
         return;
     }
 

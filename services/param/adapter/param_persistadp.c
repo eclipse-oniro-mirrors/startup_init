@@ -21,7 +21,7 @@
 #include "param_manager.h"
 #include "param_persist.h"
 #include "param_utils.h"
-#if !(defined __LITEOFS_A__ || defined __LITEOS_M__)
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
 #include "trigger_manager.h"
 #endif
 
@@ -60,7 +60,7 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
             result = WriteParam(name, value, &dataIndex, mode);
         }
     } while (0);
-#if !(defined __LITEOFS_A__ || defined __LITEOS_M__)
+#if !(defined __LITEOS_A__ || defined __LITEOS_M__)
     if (result == 0) {
         PostParamTrigger(EVENT_TRIGGER_PARAM_WATCH, name, value);
     }

@@ -69,12 +69,6 @@ __attribute__((weak)) bool NeedDoAllResize(const unsigned int fsManagerFlags)
     return true;
 }
 
-__attribute__((weak)) char *GetExtraFsckOption(void)
-{
-    BEGET_LOGW("get extra fsck option: static");
-    return NULL;
-}
-
 static const SUPPORTED_FILE_SYSTEM supportedFileSystems[] = {
     { "ext4", 0 },
     { "f2fs", 1 },
@@ -345,22 +339,16 @@ static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
     return ExecCommand(argc, argv);
 }
 
-#define MAX_FSCK_PARAM_NUM 5
 static int DoFsckF2fs(const char* device)
 {
     char *file = "/system/bin/fsck.f2fs";
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "fsck.f2fs is not exists.");
 
-    char *argv[MAX_FSCK_PARAM_NUM] = {NULL};
-    int argc = 0;
-
-    argv[argc++] = file;
-    argv[argc++] = "-p1";
-    char *extraOpt = GetExtraFsckOption();
-    if (extraOpt) {
-        argv[argc++] = extraOpt;
-    }
-    argv[argc++] = (char *)device;
+    char *cmd[] = {
+        file, "-p1", (char *)device, NULL
+    };
+    int argc = ARRAY_LENGTH(cmd);
+    char **argv = (char **)cmd;
     InitTimerControl(true);
     int ret = ExecCommand(argc, argv);
     InitTimerControl(false);
@@ -413,7 +401,7 @@ static int Mount(const char *source, const char *target, const char *fsType,
     unsigned long flags, const char *data)
 {
     struct stat st = {};
-    int rc = 0;
+    int rc = -1;
 
     bool isTrue = source == NULL || target == NULL || fsType == NULL;
     BEGET_ERROR_CHECK(!isTrue, return -1, "Invalid argument for mount.");
@@ -427,8 +415,7 @@ static int Mount(const char *source, const char *target, const char *fsType,
         BEGET_ERROR_CHECK(errno == EEXIST, return -1, "Failed to create dir \" %s \", err = %d", target, errno);
     }
     errno = 0;
-    if (mount(source, target, fsType, flags, data) != 0) {
-        rc = errno;
+    if ((rc = mount(source, target, fsType, flags, data)) != 0) {
         BEGET_WARNING_CHECK(errno != EBUSY, rc = 0, "Mount %s to %s busy, ignore", source, target);
     }
     return rc;

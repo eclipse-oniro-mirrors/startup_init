@@ -14,6 +14,7 @@
  */
 #ifndef BASE_STARTUP_INIT_CMDS_H
 #define BASE_STARTUP_INIT_CMDS_H
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -109,6 +110,7 @@ void PluginExecCmdByCmdIndex(int index, const char *cmdContent, const ConfigCont
 const char *PluginGetCmdIndex(const char *cmdStr, int *index);
 const char *GetPluginCmdNameByIndex(int index);
 int AddCareContextCmdExecutor(const char *cmdName, CmdExecutor executor);
+bool IsOpenDebugInfo(void);
 
 #ifdef __cplusplus
 #if __cplusplus

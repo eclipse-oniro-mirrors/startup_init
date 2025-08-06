@@ -110,7 +110,7 @@ template("ohos_file_appender") {
     } else {
       deps = [ ":$_file_appender_target" ]
     }
-    set_sources_assignment_filter([])
+    #set_sources_assignment_filter([])
     sources = [ _appended_file ]
     outputs = [ "${target_out_dir}/${target_name}/${_final_install_name}" ]
     module_type = "etc"

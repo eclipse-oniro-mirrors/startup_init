@@ -351,12 +351,12 @@ static void DoMkDir(const struct CmdArgs *ctx)
         INIT_LOGE("DoMkDir invalid arguments.");
         return;
     }
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin mkdir directory %s", ctx->argv[0]);
     mode_t mode = DEFAULT_DIR_MODE;
     if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
         INIT_LOGE("Create directory '%s' failed, err=%d.", ctx->argv[0], errno);
         return;
     }
-
     /*
      * Skip restoring default SELinux security contexts if the the folder already
      * existed and its under /dev or /data/. These files will be proceed by loadSelinuxPolicy.
@@ -364,31 +364,37 @@ static void DoMkDir(const struct CmdArgs *ctx)
     if ((errno != EEXIST) || ((strncmp(ctx->argv[0], "/dev", strlen("/dev")) != 0) &&
         (strncmp(ctx->argv[0], "/data/", strlen("/data/")) != 0)) ||
         (strncmp(ctx->argv[0], "/data/service/el1", strlen("/data/service/el1")) == 0)) {
+        INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin restoreCon directory %s", ctx->argv[0]);
         PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
+        INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Finish restoreCon directory %s", ctx->argv[0]);
     }
 
     if (ctx->argc <= 1) {
         return;
     }
-
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin chmod directory %s", ctx->argv[0]);
     mode = strtoul(ctx->argv[1], NULL, OCTAL_TYPE);
     INIT_CHECK_ONLY_ELOG(chmod(ctx->argv[0], mode) == 0, "DoMkDir failed for '%s', err %d.", ctx->argv[0], errno);
-
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Finish chmod directory %s", ctx->argv[0]);
     if (ctx->argc <= ownerPos) {
         return;
     }
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin SetOwner directory %s", ctx->argv[0]);
     int ret = SetOwner(ctx->argv[0], ctx->argv[ownerPos], ctx->argv[groupPos]);
     if (ret != 0) {
         INIT_LOGE("Failed to change owner %s, err %d.", ctx->argv[0], errno);
     }
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin SetFileCryptPolicy directory %s", ctx->argv[0]);
     ret = SetFileCryptPolicy(ctx->argv[0]);
     INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to set file fscrypt, directory: %s", ctx->argv[0]);
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Finish mkdir directory %s", ctx->argv[0]);
     return;
 }
 
 static void DoChmod(const struct CmdArgs *ctx)
 {
     // format: chmod xxxx /xxx/xxx/xxx
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin chmod %s", ctx->argv[1]);
     mode_t mode = strtoul(ctx->argv[0], NULL, OCTAL_TYPE);
     if (mode == 0) {
         INIT_LOGE("DoChmod, strtoul failed for %s, er %d.", ctx->argv[1], errno);
@@ -398,6 +404,7 @@ static void DoChmod(const struct CmdArgs *ctx)
     if (chmod(ctx->argv[1], mode) != 0) {
         INIT_LOGE("Failed to change mode \" %s \" to %04o, err=%d", ctx->argv[1], mode, errno);
     }
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin chmod %s", ctx->argv[1]);
 }
 
 static int GetMountFlag(unsigned long *mountflag, const char *targetStr, const char *source)
@@ -586,6 +593,21 @@ static void DoExport(const struct CmdArgs *ctx)
     return;
 }
 
+static bool g_openDebugInfo = false;
+bool IsOpenDebugInfo(void)
+{
+    return g_openDebugInfo;
+}
+
+static void VerbosDebugInfo(const struct CmdArgs *ctx)
+{
+    if (strcmp(ctx->argv[0], "open") == 0) {
+        g_openDebugInfo = true;
+    } else {
+        g_openDebugInfo = false;
+    }
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "start ", 0, 1, 0, DoStart },
     { "mkdir ", 1, 4, 1, DoMkDir },
@@ -605,7 +627,8 @@ static const struct CmdTable g_cmdTable[] = {
     { "sleep ", 1, 1, 0, DoSleep },
     { "wait ", 1, 2, 1, DoWait },
     { "hostname ", 1, 1, 1, DoSetHostname },
-    { "domainname ", 1, 1, 1, DoSetDomainname }
+    { "domainname ", 1, 1, 1, DoSetDomainname },
+    { "verbosdebuginfo", 0, 1, 0, VerbosDebugInfo}
 };
 
 static const struct CmdTable *GetCommCmdTable(int *number)
