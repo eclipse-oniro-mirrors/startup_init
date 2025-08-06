@@ -46,7 +46,6 @@ config("exported_header_files") {
 if (defined(ohos_lite)) {
   static_library("loopevent") {
     sources = common_sources
-    cflags = [ "-fPIC" ]
     include_dirs = common_include
     external_deps = [ "bounds_checking_function:libsec_shared" ]
     defines = [ "_GNU_SOURCE" ]
