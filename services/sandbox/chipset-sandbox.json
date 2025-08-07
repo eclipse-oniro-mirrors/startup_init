@@ -51,7 +51,7 @@
         }
     ],
     "mount-bind-files" : [{
-            "src-path" : "/data/service/el1/network/hosts_user/hosts",
+            "src-path" : "/data/service/el1/public/hosts_user/hosts",
             "sandbox-path" : "/system/etc/hosts",
             "sandbox-flags" : [ "bind", "rec", "private" ]
         }, {
