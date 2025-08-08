@@ -34,6 +34,7 @@ REGISTER_SYSTEM_ABILITY_BY_ID(WatcherManager, PARAM_WATCHER_DISTRIBUTED_SERVICE_
 const static int32_t INVALID_SOCKET = -1;
 const static int32_t ERR_FAIL = -1;
 const static int32_t PUBLIC_APP_BEGIN_UID = 10000;
+constexpr int32_t RECV_BUFFER_MAX = 20 * 1024;
 WatcherManager::~WatcherManager()
 {
     Clear();
@@ -239,7 +240,7 @@ void WatcherGroup::ProcessParameterChange(
         if (remoteWatcher == nullptr) {
             return;
         }
-        if (strcmp("startup.service.ctl.*", GetKeyPrefix().c_str())!= 0) {
+        if (strcmp("startup.service.ctl.*", GetKeyPrefix().c_str()) != 0) {
             WATCHER_LOGI("ProcessParameterChange key '%s' pid: %d",
                 GetKeyPrefix().c_str(), remoteWatcher->GetAgentId());
         }
@@ -341,13 +342,13 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, uint32_t remo
 
 void WatcherManager::RunLoop()
 {
-    const int32_t RECV_BUFFER_MAX = 5 * 1024;
     std::vector<char> buffer(RECV_BUFFER_MAX, 0);
     bool retry = false;
     ssize_t recvLen = 0;
     while (!stop_) {
         int fd = GetServerFd(retry);
         if (stop_) {
+            WATCHER_LOGE("loop is stop, reset");
             break;
         }
         if (fd >= 0) {
@@ -355,9 +356,10 @@ void WatcherManager::RunLoop()
         }
         if (recvLen <= 0) {
             if (errno == EAGAIN) { // timeout
+                WATCHER_LOGE("nothing to read, retry");
                 continue;
             }
-            PARAM_LOGE("Failed to recv msg from server errno %d", errno);
+            WATCHER_LOGE("Failed to recv msg from server errno %d", errno);
             retry = true;  // re connect
             continue;
         }
@@ -365,10 +367,12 @@ void WatcherManager::RunLoop()
         uint32_t dataLen = static_cast<uint32_t>(recvLen);
         while (curr < dataLen) {
             if (sizeof(ParamMessage) >= dataLen - curr) {
+                WATCHER_LOGE("ParamMessage len is invalid, datalen %u curr %u", dataLen, curr);
                 break;
             }
             ParamMessage *msg = (ParamMessage *)(buffer.data() + curr);
             if (msg->msgSize == 0 || (msg->msgSize > dataLen - curr)) {
+                WATCHER_LOGE("msgSize %u is invalid, datalen %u curr %u", msg->msgSize, dataLen, curr);
                 break;
             }
             ProcessWatcherMessage(msg);
@@ -379,7 +383,7 @@ void WatcherManager::RunLoop()
         close(serverFd_);
         serverFd_ = INVALID_SOCKET;
     }
-    WATCHER_LOGV("Exit runLoop serverFd %d", serverFd_);
+    WATCHER_LOGE("Exit runLoop serverFd %d", serverFd_);
 }
 
 void WatcherManager::StartLoop()

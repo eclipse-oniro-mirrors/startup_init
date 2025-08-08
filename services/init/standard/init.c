@@ -266,7 +266,7 @@ int ParseCfgByPriority(const char *filePath)
         return -1;
     }
     CfgFiles *files = GetCfgFiles(filePath);
-    if (files == NULL) {
+    if (files == NULL || files->paths[0] == NULL) {
         INIT_LOGE("get etc/init cfg failed");
         return -1;
     }

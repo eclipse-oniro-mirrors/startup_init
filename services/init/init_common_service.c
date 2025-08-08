@@ -686,8 +686,8 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     if (service->serviceJobs.jobsName[JOB_PRE_START] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_PRE_START]);
     }
-    struct timespec prefork;
-    clock_gettime(CLOCK_REALTIME, &prefork);
+    struct timespec preforkTime;
+    clock_gettime(CLOCK_REALTIME, &preforkTime);
     int pid = fork();
     if (pid == 0) {
         RunChildProcess(service, pathArgs);
@@ -698,10 +698,11 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     }
     struct timespec startedTime;
     clock_gettime(CLOCK_REALTIME, &startedTime);
+
     INIT_LOGI("ServiceStart started info %s(pid %d uid %d)", service->name, pid, service->servPerm.uID);
-    INIT_LOGI("starttime:%ld-%ld,preforktime:%ld-%ld,startedtime:%ld-%ld",
-              startingTime.tv_sec, startingTime.tv_nsec, prefork.tv_sec,
-              prefork.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
+    INIT_LOGI("starttime:%ld-%ld, prefork:%ld-%ld, startedtime:%ld-%ld",
+        startingTime.tv_sec, startingTime.tv_nsec, preforkTime.tv_sec,
+        preforkTime.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
 #ifndef OHOS_LITE
     if (!IsOnDemandService(service)) {
         ReportServiceStart(service->name, pid);
@@ -772,7 +773,7 @@ int ServiceTerm(Service *service)
     if (service->fdCount != 0) {
         CloseServiceFds(service, true);
     }
- 	 
+
     if (IsServiceWithTimerEnabled(service)) {
         ServiceStopTimer(service);
     }
@@ -844,7 +845,7 @@ static void CheckServiceSocket(Service *service)
     return;
 }
 
-static bool IsDebugMode()
+static bool IsDebugMode(void)
 {
     char secureValue[PARAM_VALUE_LEN_MAX] = {0};
     unsigned int secureLen = PARAM_VALUE_LEN_MAX;

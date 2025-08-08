@@ -30,6 +30,10 @@ static LE_STATUS HandleSendMsg_(const LoopHandle loopHandle,
     LE_Buffer *buffer = GetFirstBuffer(stream);
     while (buffer) {
         int ret = write(GetSocketFd(taskHandle), buffer->data, buffer->dataSize);
+        if (strstr(((const char *)buffer->data + 12), "bootevent.boot.completed") != NULL) {
+            LE_LOGI("begin to send boot.completed to param_watcher, fd:%d, size:%u",
+                GetSocketFd(taskHandle), buffer->dataSize);
+        }
         if (ret < 0 || (size_t)ret < buffer->dataSize) {
             LE_LOGE("HandleSendMsg_ fd:%d send data size %d %d, err:%d", GetSocketFd(taskHandle),
                     buffer->dataSize, ret, errno);
@@ -113,7 +117,7 @@ static LE_STATUS HandleStreamEvent_(const LoopHandle loopHandle, const TaskHandl
 static LE_STATUS HandleClientEvent_(const LoopHandle loopHandle, const TaskHandle handle, uint32_t oper)
 {
     StreamClientTask *client = (StreamClientTask *)handle;
-    LE_LOGI("HandleClientEvent_ fd:%d oper 0x%x", GetSocketFd(handle), oper);
+    LE_LOGV("HandleClientEvent_ fd:%d oper 0x%x", GetSocketFd(handle), oper);
 
     LE_STATUS status = LE_SUCCESS;
     if (LE_TEST_FLAGS(oper, EVENT_WRITE)) {

@@ -28,6 +28,8 @@ static ParamMutex g_saveMutex = {};
 static int LoadOnePersistParam_(const uint32_t *context, const char *name, const char *value)
 {
     UNUSED(context);
+    PARAM_CHECK(name != NULL, return -1, "param is invalid");
+    PARAM_CHECK(value != NULL, return -1, "value is invalid");
     if (strncmp(name, "persist", strlen("persist")) != 0) {
         PARAM_LOGE("%s is not persist param, do not load", name);
         return 0;
@@ -43,7 +45,7 @@ static int LoadOnePersistParam_(const uint32_t *context, const char *name, const
         return WriteParam(name, value, &dataIndex, mode);
     }
 
-    if ((strcmp(persetValue, value) != 0)) {
+    if (strcmp(persetValue, value) != 0) {
         PARAM_LOGI("%s value is different, preset value is:%s, persist value is:%s", name, persetValue, value);
         mode |= LOAD_PARAM_PERSIST;
         return WriteParam(name, value, &dataIndex, mode);

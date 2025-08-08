@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <limits.h>
 #include "udid.h"
 
 #ifdef OHOS_LITE
@@ -21,15 +22,13 @@
 #include "param_comm.h"
 #include "securec.h"
 #include "sysparam_errno.h"
-#include <stdatomic.h>
-#include <limits.h>
 
 INIT_LOCAL_API const char *GetSerial_(void)
 {
 #ifdef OHOS_LITE
     return HalGetSerial();
 #else
-    static _Atomic (char *)ohosSerial = NULL;
+    static char *ohosSerial = NULL;
     if (ohosSerial != NULL) {
         return ohosSerial;
     }
@@ -44,7 +43,7 @@ INIT_LOCAL_API const char *GetSerial_(void)
         free(value);
         return ohosSerial;
     }
-    atomic_store_explicit(&ohosSerial, value, memory_order_release);
+    ohosSerial = value;
     return ohosSerial;
 #endif
 }
