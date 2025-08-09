@@ -70,6 +70,10 @@ public:
                 exit(EXIT_FAILURE);
             }
 
+            if (IsEnableSeccomp()) {
+                std::cout << "Seccomp is enabled" << std::endl;
+            }
+
             if (!SetSeccompPolicyWithName(type, filterName)) {
                 std::cout << "SetSeccompPolicy set fail fiterName is " << filterName << std::endl;
                 exit(EXIT_FAILURE);
