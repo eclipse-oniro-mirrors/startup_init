@@ -120,6 +120,7 @@ static bool ParseStatusText(char *data, StatusInfo *processInfo)
     if (strcmp(processInfo->error, "Invalid") == 0 ||
         strcmp(processInfo->error, "Overflow") == 0 ||
         strcmp(processInfo->error, "Merge failed") == 0 ||
+        strcmp(processInfo->error, "Unknown") == 0 ||
         strcmp(processInfo->error, "") == 0) {
         BEGET_LOGW("processInfo->error is \"%s\"", processInfo->error);
         return true;
