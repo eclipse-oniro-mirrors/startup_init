@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,14 +13,37 @@
  * limitations under the License.
  */
 
-#include "getbootslots_fuzzer.h"
+#include "param_fuzzer.h"
 #include <string>
+#include "parameter.h"
 #include "fs_manager/fs_manager.h"
+#include "sysversion.h"
+
 
 namespace OHOS {
-    bool FuzzGetBootSlots(const uint8_t* data, size_t size)
+    bool FuzzParam(const uint8_t* data, size_t size)
     {
+        std::string str(reinterpret_cast<const char*>(data), size);
+        WaitParameter(str.c_str(), str.c_str(), 1);
         GetBootSlots();
+        GetFirstApiVersion();
+        GetSerial();
+        GetProductModel();
+        GetIncrementalVersion();
+        GetHardwareModel();
+        GetBuildVersion();
+        LoadFstabFromCommandLine();
+        GetDeviceType();
+        GetProductSeries();
+        SaveParameters();
+        GetDisplayVersion();
+        GetHardwareProfile();
+        GetBrand();
+        GetBuildHost();
+        GetVersionId();
+        GetSoftwareModel();
+        GetMarketName();
+        GetSystemCommitId();
         return true;
     }
 }
@@ -29,6 +52,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzGetBootSlots(data, size);
+    OHOS::FuzzParam(data, size);
     return 0;
 }

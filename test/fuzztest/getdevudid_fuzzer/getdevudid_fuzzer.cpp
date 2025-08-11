@@ -16,16 +16,29 @@
 #include "getdevudid_fuzzer.h"
 #include <string>
 #include "parameter.h"
+#include "securec.h"
 
 namespace OHOS {
     bool FuzzGetDevUdid(const uint8_t* data, size_t size)
     {
+        if (data == nullptr || size == 0) {
+            return false;
+        }
+        char* udid = new (std::nothrow) char[size + 1];
+        if (udid == nullptr) {
+            return false;
+        }
+        if (memcpy_s(udid, size + 1, data, size) != EOK) {
+            delete[] udid;
+            return false;
+        }
+        udid[size] = '\0';
         bool result = false;
-        char udid[65] = {0};
-        int len = sizeof(udid);
-        if (!GetDevUdid(udid, len)) {
+        if (!GetDevUdid(udid, size)) {
             result = true;
-        };
+        }
+
+        delete[] udid;
         return result;
     }
 }
