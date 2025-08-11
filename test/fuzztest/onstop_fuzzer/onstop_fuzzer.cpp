@@ -45,6 +45,7 @@ bool FuzzCheckAppWatchPermission(const uint8_t* data, size_t size)
         watcherManager->AddRemoteWatcher(id, watcherId, watcher);
         watcherManager->StartLoop();
         watcherManager->OnStop();
+        sleep(1);
         return true;
     }
 }
