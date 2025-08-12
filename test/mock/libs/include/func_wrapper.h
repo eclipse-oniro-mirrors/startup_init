@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <linux/fs.h>
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -57,9 +58,38 @@ typedef int (*StatFunc)(const char *pathname, struct stat *buf);
 void UpdateStatFunc(StatFunc func);
 
 // for wrapper snprintf_s;
-size_t __real_snprintf_s(char *strDest, size_t destMax, size_t count, const char *format, ...);
-typedef size_t (*SnprintfSFunc)(char *strDest, size_t destMax, size_t count, const char *format, ...);
+typedef size_t (*SnprintfSFunc)(char *strDest, size_t destMax, size_t count, const char *format, va_list args);
 void UpdateSnprintfSFunc(SnprintfSFunc func);
+
+// for wrapper open;
+int __real_open(const char *pathname, int flag);
+typedef int (*OpenFunc)(const char *pathname, int flag);
+void UpdateOpenFunc(OpenFunc func);
+
+// for wrapper close;
+int __real_close(int fd);
+typedef int (*CloseFunc)(int fd);
+void UpdateCloseFunc(CloseFunc func);
+
+// for wrapper strcpy_s;
+int __real_strcpy_s(char *dest, size_t destMax, const char *src);
+typedef int (*StrcpySFunc)(char *dest, size_t destMax, const char *src);
+void UpdateStrcpySFunc(StrcpySFunc func);
+
+// for wrapper ioctl;
+int __real_ioctl(int fd, int req, ...);
+typedef int (*IoctlFunc)(int fd, int req, va_list args);
+void UpdateIoctlFunc(IoctlFunc func);
+
+// for wrapper calloc;
+void* __real_calloc(size_t m, size_t n);
+typedef void* (*CallocFunc)(size_t m, size_t n);
+void UpdateCallocFunc(CallocFunc func);
+
+// for wrapper minor;
+int __real_minor(dev_t dev);
+typedef int (*MinorFunc)(dev_t dev);
+void UpdateMinorFunc(MinorFunc func);
 
 #ifdef __cplusplus
 #if __cplusplus

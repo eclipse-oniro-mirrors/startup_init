@@ -25,6 +25,16 @@ extern "C" {
 #endif
 #endif
 
+#ifndef STARTUP_INIT_TEST
+#ifndef INIT_STATIC
+#define INIT_STATIC static
+#endif
+#else
+#ifndef INIT_STATIC
+#define INIT_STATIC
+#endif
+#endif
+
 /* Fs manager flags definition */
 #define FS_MANAGER_CHECK  0x00000001
 #define FS_MANAGER_WAIT  0x00000002
