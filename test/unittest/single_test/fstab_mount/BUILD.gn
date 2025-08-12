@@ -24,13 +24,13 @@ ohos_unittest("fstab_mount_unittest") {
     "//base/startup/init/ueventd/include",
     "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
     "//base/startup/init/interfaces/innerkits/init_module_engine/include",
-    "//base/startup/init/test/mock/libc/include"
+    "//base/startup/init/test/mock/libs/include"
   ]
 
   sources = [
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
     "//base/startup/init/test/unittest/single_test/fstab_mount/src/fstab_mount_test.cpp",
-    "//base/startup/init/test/unittest/single_test/fstab_mount/src/func_wrapper.cpp",
+    "//base/startup/init/test/mock/libs/src/func_wrapper.cpp",
   ]
 
   cflags_cc = [ "-fexceptions" ]

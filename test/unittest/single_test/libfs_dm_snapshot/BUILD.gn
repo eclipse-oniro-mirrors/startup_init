@@ -1,0 +1,88 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//base/startup/init/begetd.gni")
+import("//build/test.gni")
+
+ohos_unittest("fs_dm_snapshot_unittest") {
+  module_out_path = "init/init"
+  include_dirs = [
+    "//base/startup/init/test/mock/libs/include",
+    "//base/startup/init/test/mock/init/include",
+    "//base/startup/init/test/unittest/single_test/libfs_dm_snapshot/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//base/startup/init/ueventd/include"
+  ]
+
+  sources = [
+    "//base/startup/init/test/mock/libs/src/func_wrapper.cpp",
+    "//base/startup/init/test/mock/init/fs_manager/fs_dm_mock.c",
+    "//base/startup/init/test/unittest/single_test/libfs_dm_snapshot/src/libfs_dm_snapshot_test.cpp",
+    "//base/startup/init/test/unittest/single_test/libfs_dm_snapshot/src/libfs_dm_test.cpp",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm_snapshot.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
+  ]
+
+  cflags_cc = [ "-fexceptions" ]
+  ldflags = [
+    "-Wl,--wrap=strdup",
+    "-Wl,--wrap=stat",
+    "-Wl,--wrap=mount",
+    "-Wl,--wrap=mkdir",
+    "-Wl,--wrap=malloc",
+    "-Wl,--wrap=strncat_s",
+    "-Wl,--wrap=snprintf_s",
+    "-Wl,--wrap=open",
+    "-Wl,--wrap=close",
+    "-Wl,--wrap=strcpy_s",
+    "-Wl,--wrap=InitDmIo",
+    "-Wl,--wrap=ioctl",
+    "-Wl,--wrap=calloc",
+    "-Wl,--wrap=minor",
+    # fs_dm
+    "-Wl,--wrap=FsDmInitDmDev",
+    "-Wl,--wrap=FsDmCreateDevice",
+    "-Wl,--wrap=FsDmRemoveDevice",
+    "-Wl,--wrap=FsDmCreateLinearDevice",
+    "-Wl,--wrap=LoadDmDeviceTable",
+    "-Wl,--wrap=DmGetDeviceName",
+    "-Wl,--wrap=ActiveDmDevice",
+    "-Wl,--wrap=InitDmIo",
+    "-Wl,--wrap=CreateDmDev",
+    "-Wl,--wrap=GetDmDevPath",
+    "-Wl,--wrap=GetDmStatusInfo",
+  ]
+  cflags = [
+    "-DRetriggerDmUeventByPath=RetriggerDmUeventByPathStub",
+    "-DUeventdSocketInit=UeventdSocketInitStub",
+  ]
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+  ]
+
+  defines = [
+    "STARTUP_INIT_UT_PATH =\"/data/init_ut\"",
+    "ASAN_DETECTOR",
+    "STARTUP_INIT_TEST",
+  ]
+
+  configs = []
+
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "googletest:gtest",
+    "hilog:libhilog",
+  ]
+}

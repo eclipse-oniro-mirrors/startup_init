@@ -99,7 +99,7 @@ int FsDmSwitchToSnapshotMerge(const char *devName, DmSnapshotTarget *target)
     return rc;
 }
 
-static bool ParseStatusText(char *data, StatusInfo *processInfo)
+INIT_STATIC bool ParseStatusText(char *data, StatusInfo *processInfo)
 {
     BEGET_LOGI("ParseStatusText start \"%s\"", data);
     int args = sscanf_s(data, "%lu %lu %lu", &processInfo->sectors_allocated,

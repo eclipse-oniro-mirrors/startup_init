@@ -29,7 +29,7 @@ extern "C" {
 #endif
 #endif
 
-size_t SnprintfSReturnZero(char *strDest, size_t destMax, size_t count, const char *format, ...)
+size_t SnprintfSReturnZero(char *strDest, size_t destMax, size_t count, const char *format, va_list args)
 {
     return 0;
 }
