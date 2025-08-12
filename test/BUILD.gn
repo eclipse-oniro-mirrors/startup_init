@@ -27,6 +27,7 @@ group("testgroup") {
         "unittest/single_test/init_firststage:init_firststage_unittest",
         "unittest/single_test/fstab_mount:fstab_mount_unittest",
         "unittest/single_test/libfs_dm_snapshot:fs_dm_snapshot_unittest",
+        "unittest/single_test/libfs_dm:fs_dm_unittest",
       ]
     } else {
       if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {

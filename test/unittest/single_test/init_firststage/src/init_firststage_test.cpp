@@ -39,7 +39,7 @@ int CreateTestFile(const char *fileName, const char *data)
         (void)fflush(tmpFile);
         fclose(tmpFile);
     }
-    return tmpFile != nullptr;
+    return tmpFile != nullptr ? 1 : -1;
 }
 
 int AccessStub(const char *pathname, int mode)
