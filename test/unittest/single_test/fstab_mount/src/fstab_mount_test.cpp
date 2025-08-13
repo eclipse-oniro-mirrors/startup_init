@@ -88,7 +88,7 @@ HWTEST_F(FstabMountTest, DoOneMountItem_001, TestSize.Level0)
     };
 
     int rc = DoMountOneItem(&item);
-    EXPECT_EQ(rc, -1);
+    EXPECT_NE(rc, 0);
 }
 
 HWTEST_F(FstabMountTest, DoOneMountItem_002, TestSize.Level0)

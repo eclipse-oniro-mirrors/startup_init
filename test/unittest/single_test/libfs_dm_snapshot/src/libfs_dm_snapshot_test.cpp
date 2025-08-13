@@ -602,9 +602,9 @@ HWTEST_F(LibFsDmSnapshotTest, GetDmSnapshotStatus_008, TestSize.Level0)
 
     IoctlFunc ioctlFunc = [](int fd, int req, va_list args) -> int {
         struct dm_ioctl *io = va_arg(args, struct dm_ioctl *);
-        io->data_start = sizeof(struct dm_ioctl *);
-        io->data_size = sizeof(struct dm_ioctl *) + sizeof(struct dm_target_spec);
-        struct dm_target_spec* spec = (struct dm_target_spec*)(&((char*)io)[sizeof(struct dm_ioctl *)]);
+        io->data_start = sizeof(struct dm_ioctl);
+        io->data_size = sizeof(struct dm_ioctl) + sizeof(struct dm_target_spec);
+        struct dm_target_spec* spec = (struct dm_target_spec*)(&((char*)io)[sizeof(struct dm_ioctl)]);
         spec->next = sizeof(struct dm_target_spec) + 1 + strlen(TESTIODATA);
         char *data = (char *)io + sizeof(struct dm_target_spec) + io->data_start;
         int ret = strcpy_s(spec->target_type, DM_MAX_TYPE_NAME, "targetType");

@@ -239,6 +239,38 @@ int __wrap_minor(dev_t dev)
     }
 }
 
+// start wrap memset_s
+static MemsetSFunc g_memset_s = NULL;
+void UpdateMemsetSFunc(MemsetSFunc func)
+{
+    g_memset_s = func;
+}
+
+int __wrap_memset_s(void *dest, size_t destMax, int c, size_t count)
+{
+    if (g_memset_s) {
+        return g_memset_s(dest, destMax, c, count);
+    } else {
+        return __real_memset_s(dest, destMax, c, count);
+    }
+}
+
+// start wrap memcpy_s
+static MemcpySFunc g_memcpy_s = NULL;
+void UpdateMemcpySFunc(MemcpySFunc func)
+{
+    g_memcpy_s = func;
+}
+
+int __wrap_memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
+{
+    if (g_memcpy_s) {
+        return g_memcpy_s(dest, destMax, src, count);
+    } else {
+        return __real_memcpy_s(dest, destMax, src, count);
+    }
+}
+
 #ifdef __cplusplus
 #if __cplusplus
 }

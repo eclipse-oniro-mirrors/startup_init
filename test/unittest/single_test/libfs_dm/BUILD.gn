@@ -13,12 +13,12 @@
 import("//base/startup/init/begetd.gni")
 import("//build/test.gni")
 
-ohos_unittest("fs_dm_snapshot_unittest") {
+ohos_unittest("fs_dm_unittest") {
   module_out_path = "init/init"
   include_dirs = [
     "//base/startup/init/test/mock/libs/include",
     "//base/startup/init/test/mock/init/include",
-    "//base/startup/init/test/unittest/single_test/libfs_dm_snapshot/include",
+    "//base/startup/init/test/unittest/single_test/libfs_dm/include",
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
     "//base/startup/init/interfaces/innerkits/include/fs_manager",
     "//base/startup/init/ueventd/include"
@@ -26,9 +26,7 @@ ohos_unittest("fs_dm_snapshot_unittest") {
 
   sources = [
     "//base/startup/init/test/mock/libs/src/func_wrapper.cpp",
-    "//base/startup/init/test/mock/init/fs_manager/fs_dm_mock.c",
-    "//base/startup/init/test/unittest/single_test/libfs_dm_snapshot/src/libfs_dm_snapshot_test.cpp",
-    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm_snapshot.c",
+    "//base/startup/init/test/unittest/single_test/libfs_dm/src/libfs_dm_test.cpp",
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
   ]
 
@@ -44,22 +42,14 @@ ohos_unittest("fs_dm_snapshot_unittest") {
     "-Wl,--wrap=open",
     "-Wl,--wrap=close",
     "-Wl,--wrap=strcpy_s",
-    "-Wl,--wrap=InitDmIo",
     "-Wl,--wrap=ioctl",
     "-Wl,--wrap=calloc",
     "-Wl,--wrap=minor",
-    # fs_dm
-    "-Wl,--wrap=FsDmInitDmDev",
-    "-Wl,--wrap=FsDmCreateDevice",
-    "-Wl,--wrap=FsDmRemoveDevice",
-    "-Wl,--wrap=FsDmCreateLinearDevice",
-    "-Wl,--wrap=LoadDmDeviceTable",
-    "-Wl,--wrap=DmGetDeviceName",
-    "-Wl,--wrap=ActiveDmDevice",
-    "-Wl,--wrap=InitDmIo",
-    "-Wl,--wrap=CreateDmDev",
-    "-Wl,--wrap=GetDmDevPath",
-    "-Wl,--wrap=GetDmStatusInfo",
+    "-Wl,--wrap=memcpy_s",
+  ]
+  cflags = [
+    "-DRetriggerDmUeventByPath=RetriggerDmUeventByPathStub",
+    "-DUeventdSocketInit=UeventdSocketInitStub",
   ]
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",

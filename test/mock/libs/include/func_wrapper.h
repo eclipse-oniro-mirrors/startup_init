@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <linux/fs.h>
+#include <errno.h>
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -90,6 +91,16 @@ void UpdateCallocFunc(CallocFunc func);
 int __real_minor(dev_t dev);
 typedef int (*MinorFunc)(dev_t dev);
 void UpdateMinorFunc(MinorFunc func);
+
+// for wrapper memset_s;
+int __real_memset_s(void *dest, size_t destMax, int c, size_t count);
+typedef int (*MemsetSFunc)(void *dest, size_t destMax, int c, size_t count);
+void UpdateMemsetSFunc(MemsetSFunc func);
+
+// for wrapper memcpy_s;
+int __real_memcpy_s(void *dest, size_t destMax, const void *src, size_t count);
+typedef int (*MemcpySFunc)(void *dest, size_t destMax, const void *src, size_t count);
+void UpdateMemcpySFunc(MemcpySFunc func);
 
 #ifdef __cplusplus
 #if __cplusplus
