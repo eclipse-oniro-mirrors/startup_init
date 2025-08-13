@@ -32,7 +32,7 @@ int CreateSocket(int flags, const char *server);
 INIT_LOCAL_API
 int AcceptSocket(int fd, int flags);
 INIT_LOCAL_API
-int listenSocket(int fd, int flags, const char *server);
+int listenSocket(int fd, uint32_t flags, const char *server);
 
 #ifdef __cplusplus
 #if __cplusplus

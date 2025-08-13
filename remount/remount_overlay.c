@@ -388,7 +388,7 @@ static void EngFilesOverlay(const char *source, const char *target)
     dir = NULL;
 }
 
-int RemountRofsOverlay()
+int RemountRofsOverlay(void)
 {
     int lastRemountResult = GetRemountResult();
     INIT_LOGI("get last remount result is %d.", lastRemountResult);

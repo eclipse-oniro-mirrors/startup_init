@@ -353,7 +353,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
             INIT_LOGV("Find a platform device: %s", parent);
             parent = FindPlatformDeviceName(parent);
             if (parent != NULL) {
-                INIT_WARNING_CHECK(linkNum < BLOCKDEVICE_LINKS - 1, links[linkNum] = NULL;
+                INIT_WARNING_CHECK(linkNum < BLOCKDEVICE_LINKS - 1, free(bus); links[linkNum] = NULL;
                     return links, "Too many links, ignore");
                 linkNum = BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
                 linkNum++;

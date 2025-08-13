@@ -316,14 +316,14 @@ static int HandleParamWatcherAdd(const ParamTaskPtr worker, const ParamMessage *
         PARAM_LOGE("Failed to add trigger for %s", msg->key);
         return SendResponseMsg(worker, msg, -1);
     }
-    PARAM_LOGI("HandleParamWatcherAdd name %s watcher: %d", msg->key, msg->id.watcherId);
+    PARAM_LOGI("HandleParamWatcherAdd name %s watcher: %u", msg->key, msg->id.watcherId);
     return SendResponseMsg(worker, msg, 0);
 }
 
 static int HandleParamWatcherDel(const ParamTaskPtr worker, const ParamMessage *msg)
 {
     PARAM_CHECK(msg != NULL, return -1, "Invalid message");
-    PARAM_LOGV("HandleParamWatcherDel name %s watcher: %d", msg->key, msg->id.watcherId);
+    PARAM_LOGV("HandleParamWatcherDel name %s watcher: %u", msg->key, msg->id.watcherId);
     DelWatchTrigger(TRIGGER_PARAM_WATCH, (const void *)&msg->id.watcherId);
     return SendResponseMsg(worker, msg, 0);
 }

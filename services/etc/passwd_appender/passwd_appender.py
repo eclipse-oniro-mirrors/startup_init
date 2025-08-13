@@ -165,11 +165,8 @@ def append_passwd_files(target_f, options):
     file_list = options.source_file.split(":")
     range_list = options.input_ranges.split(":")
 
-    for i, file in enumerate(file_list):
-        if i >= len(range_list):
-            print("error: %s is error", file)
-            return
-        if not load_file(file, range_list[i]):
+    for file, range_item in zip(file_list, range_list):
+        if not load_file(file, range_item):
             # check gid/uid Exception log: raise Exception("Exception, check passwd file error, ", file)
             print("error: heck passwd file error, file path: ", file)
             pass

@@ -43,12 +43,11 @@ public:
 
 HWTEST_F(ErofsRemountUnitTest, Init_GetRemountResult_001, TestSize.Level0)
 {
-    rmdir(REMOUNT_RESULT_PATH);
     RemountOverlay();
+    CheckAndCreateDir(REMOUNT_RESULT_PATH);
     SetRemountResultFlag();
     int ret = GetRemountResult();
     EXPECT_EQ(ret, 0);
-    rmdir(REMOUNT_RESULT_PATH);
 }
 
 HWTEST_F(ErofsRemountUnitTest, Init_Modem2Exchange_001, TestSize.Level0)

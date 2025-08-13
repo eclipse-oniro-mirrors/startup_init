@@ -104,6 +104,7 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
         return LE_FAILURE;
     }
 
+    int pid = getpid();
     while (1) {
         LE_RunIdle((LoopHandle)&(epoll->loop));
 
@@ -121,7 +122,7 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
         }
 
         int number = epoll_wait(epoll->epollFd, epoll->waitEvents, loop->maxevents, timeout);
-        if (number > 1) {
+        if (number > 1 && pid != 1) {
             LE_LOGI("RunLoop_ epoll_wait with number %d", number);
         }
         for (int index = 0; index < number; index++) {
@@ -132,14 +133,17 @@ static LE_STATUS RunLoop_(const EventLoop *loop)
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_WRITE);
             }
             if (epoll->waitEvents[index].events & (EPOLLERR | EPOLLHUP)) {
-                LE_LOGW("RunLoop_ fd:%d, error:%d", epoll->waitEvents[index].data.fd, errno);
+                LE_LOGV("RunLoop_ fd:%d, error:%d", epoll->waitEvents[index].data.fd, errno);
                 ProcessEvent(loop, epoll->waitEvents[index].data.fd, EVENT_ERROR);
             }
         }
-        if (number > 1) {
+
+        if (number > 1 && pid != 1) {
             LE_LOGI("RunLoop_ epoll_wait finish");
         }
-        CheckTimeoutOfTimer((EventLoop *)loop, GetCurrentTimespec(0));
+        if (GetCurrentTimespec(0) >= minTimePeriod) {
+            CheckTimeoutOfTimer((EventLoop *)loop, GetCurrentTimespec(0));
+        }
 
         if (loop->stop) {
             break;
