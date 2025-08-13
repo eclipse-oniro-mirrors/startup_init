@@ -48,7 +48,7 @@ __attribute__((destructor)) static void ClientDeinit(void)
 int SystemSetParameter(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value %s", name);
-    int ctrlService = 0;
+    uint32_t ctrlService = 0;
     int ret = CheckParameterSet(name, value, GetParamSecurityLabel(), &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
     PARAM_LOGV("SystemSetParameter name %s value: %s ctrlService %d", name, value, ctrlService);
@@ -72,7 +72,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     // first check permission
     int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
     PARAM_CHECK(ret == 0, return ret, "SystemWaitParameter failed! name is: %s, errNum is: %d", name, ret);
-    uint32_t diff = 0;
+    int32_t diff = 0;
     struct timespec startTime = {0};
     if (timeout <= 0) {
         timeout = DEFAULT_PARAM_WAIT_TIMEOUT;

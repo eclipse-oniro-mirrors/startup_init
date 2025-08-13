@@ -103,7 +103,7 @@ void StopParamService(void)
 
 int SystemWriteParam(const char *name, const char *value)
 {
-    int ctrlService = 0;
+    uint32_t ctrlService = 0;
     int ret = CheckParameterSet(name, value, GetParamSecurityLabel(), &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
     PARAM_LOGV("SystemWriteParam name %s value: %s ctrlService %d", name, value, ctrlService);

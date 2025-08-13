@@ -152,7 +152,7 @@ INIT_LOCAL_API void ClosePersistParamWorkSpace(void);
 INIT_LOCAL_API int WritePersistParam(const char *name, const char *value);
 
 INIT_LOCAL_API int CheckParameterSet(const char *name, const char *value,
-    const ParamSecurityLabel *srcLabel, int *ctrlService);
+    const ParamSecurityLabel *srcLabel, uint32_t *ctrlService);
 
 INIT_LOCAL_API int CheckParamPermission(const ParamSecurityLabel *srcLabel, const char *name, uint32_t mode);
 

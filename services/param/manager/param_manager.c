@@ -376,7 +376,7 @@ INIT_LOCAL_API int GetServiceCtrlInfo(const char *name, const char *value, Servi
 }
 
 INIT_LOCAL_API int CheckParameterSet(const char *name,
-    const char *value, const ParamSecurityLabel *srcLabel, int *ctrlService)
+    const char *value, const ParamSecurityLabel *srcLabel, uint32_t *ctrlService)
 {
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return PARAM_WORKSPACE_NOT_INIT, "Invalid paramSpace");
