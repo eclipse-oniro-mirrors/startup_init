@@ -139,7 +139,7 @@ static int SendWatcherNotifyMessage(const TriggerExtInfo *extData, const char *c
 static int SystemSetParam(const char *name, const char *value, const ParamSecurityLabel *srcLabel)
 {
     PARAM_LOGV("SystemWriteParam name %s value: %s", name, value);
-    int ctrlService = 0;
+    uint32_t ctrlService = 0;
     int ret = CheckParameterSet(name, value, srcLabel, &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
 
@@ -162,7 +162,7 @@ static int SystemUpdateConstParamter(const char *name, const char *value, const 
 {
     PARAM_LOGV("SystemUpdateConstParam name %s value: %s", name, value);
     uint32_t ctrlService = 0;
-    int ret = CheckParameterSet(name, value, srcLabel, (int *)&ctrlService);
+    int ret = CheckParameterSet(name, value, srcLabel, &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
     PARAM_CHECK(IS_READY_ONLY(name), return PARAM_CODE_INVALID_NAME, "only update read only param: %s", name);
     if ((ctrlService & PARAM_CTRL_SERVICE) != PARAM_CTRL_SERVICE) { // ctrl param
