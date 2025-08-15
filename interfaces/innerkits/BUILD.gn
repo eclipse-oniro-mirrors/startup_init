@@ -408,6 +408,21 @@ if (defined(ohos_lite)) {
     install_images = [ "system" ]
   }
 
+  if (default_toolchain == current_toolchain) {
+    ohos_prebuilt_shared_library("libbegetutil-pub-sdk") {
+      source = "${root_out_dir}/startup/init/libbegetutil.z.so"
+      symlink_ext = [ "lib64/chipset-pub-sdk/libbegetutil.z.so" ]
+      deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
+      install_enable = true
+      install_images = [
+        system_base_dir,
+      ]
+      relative_install_dir = "chipset-sdk-sp"
+      part_name = "init"
+      subsystem_name = "startup"
+    }
+  }
+
   ohos_static_library("libbegetutil_static") {
     sources = syspara_sources
     sources += [
@@ -456,6 +471,9 @@ group("innergroup") {
       "init_module_engine:modulegroup",
       "socket:libsocket",
     ]
+    if (default_toolchain == current_toolchain) {
+      deps += [ ":libbegetutil-pub-sdk" ]
+    }
   } else {
   }
 }
