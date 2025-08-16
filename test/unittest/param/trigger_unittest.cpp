@@ -208,6 +208,7 @@ public:
         CheckTrigger(GetTriggerWorkSpace(), TRIGGER_PARAM, buffer, strlen(buffer), TestTriggerExecute);
         EXPECT_EQ(0, g_matchTrigger);
 
+        SystemWriteParam(param, value);
         g_matchTrigger = 0;
         ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param, value);
         EXPECT_GE(ret, 0);
@@ -230,6 +231,7 @@ public:
     {
         const char *triggerName = "param:test_param.222";
         const char *param = "test_param.aaa.222.2222";
+        SystemWriteParam(param, "2");
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=*", param);
         EXPECT_GE(ret, 0);
@@ -256,6 +258,8 @@ public:
         const char *triggerName = "param:test_param.333";
         const char *param1 = "test_param.aaa.333.2222=1";
         const char *param2 = "test_param.aaa.333.3333=2";
+        SystemWriteParam("test_param.aaa.333.2222", "1");
+        SystemWriteParam("test_param.aaa.333.3333", "2");
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s || %s", param1, param2);
         EXPECT_GE(ret, 0);
