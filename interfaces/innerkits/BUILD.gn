@@ -54,7 +54,6 @@ if (defined(ohos_lite)) {
       ]
       sources = []
       include_dirs = include_common
-      include_dirs += [ "//base/hiviewdfx/hilog_lite/interfaces/native/kits" ]
       public_configs = [ ":exported_header_files" ]
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
