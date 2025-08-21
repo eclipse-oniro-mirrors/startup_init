@@ -410,7 +410,11 @@ if (defined(ohos_lite)) {
   if (default_toolchain == current_toolchain) {
     ohos_prebuilt_shared_library("libbegetutil-pub-sdk") {
       source = "${root_out_dir}/startup/init/libbegetutil.z.so"
-      symlink_ext = [ "lib64/chipset-pub-sdk/libbegetutil.z.so" ]
+      if (target_cpu == "arm64" || target_cpu == "x86_64") {
+        symlink_ext = [ "lib64/chipset-pub-sdk/libbegetutil.z.so" ]
+      } else {
+        symlink_ext = [ "lib/chipset-pub-sdk/libbegetutil.z.so" ]
+      }
       deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
       install_enable = true
       install_images = [
