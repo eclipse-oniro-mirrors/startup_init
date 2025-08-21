@@ -99,7 +99,6 @@ int LoadDmDeviceTable(int fd, const char *devName, DmVerityTarget *target, int d
         BEGET_LOGE("dmTypeIdx error dmTypeIdx %d", dmTypeIdx);
         return -1;
     }
-
     parasTotalSize = DM_ALIGN(sizeof(*io) + sizeof(*ts) + target->paras_len + 1);
     parasBuf = calloc(1, parasTotalSize);
     if (parasBuf == NULL) {
@@ -362,7 +361,7 @@ int DmGetDeviceName(int fd, const char *devName, char *outDevName, const uint64_
     path = calloc(1, pathLen);
     if (path == NULL) {
         BEGET_LOGE("calloc path failed");
-        return -1;
+        return rc;
     }
 
     rc = snprintf_s(path, pathLen, pathLen - 1, "%s%d", DM_DEVICE_PATH_PREFIX, devNum);
@@ -445,8 +444,6 @@ bool GetDmStatusInfo(const char *name, struct dm_ioctl *io)
     close(fd);
     return true;
 }
-
-
 #ifdef __cplusplus
 #if __cplusplus
 }

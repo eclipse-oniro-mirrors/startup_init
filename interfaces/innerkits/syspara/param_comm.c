@@ -77,7 +77,7 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
         if (def == NULL) {
             return GetSystemError(ret);
         }
-        if (strlen(def) > len) {
+        if (strlen(def) >= len) {
             return EC_INVALID;
         }
         ret = strcpy_s(value, len, def);
@@ -135,11 +135,7 @@ INIT_LOCAL_API const char *GetPropertyAtomic(const char *key, const char **param
         BEGET_CHECK(res != NULL, return NULL);
         
         ret = SystemGetParameter(key, res, &len);
-        if (ret != 0) {
-            free(res);
-            return NULL;
-        }
-
+        BEGET_CHECK(ret == 0, free(res); return NULL);
         if (g_propertyGetProcessor != NULL) {
             res = g_propertyGetProcessor(key, res);
         }

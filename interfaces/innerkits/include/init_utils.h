@@ -63,10 +63,6 @@ typedef struct {
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 #define BOOT_CMD_LINE STARTUP_INIT_UT_PATH"/proc/cmdline"
 
-#define FIRST_VALUE "First_Value" // 取第一个匹配值
-#define LAST_VALUE "Last_Value" // 取最后一个匹配值
-#define EMPTY_VALUE "EMPTY_VALUE" // 不取任何一个
-
 #ifndef OHOS_LITE
 void SetBootCompleted(bool isBootCompleted);
 bool IsBootCompleted(void);

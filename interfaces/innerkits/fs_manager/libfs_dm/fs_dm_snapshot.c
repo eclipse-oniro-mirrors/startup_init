@@ -1,17 +1,18 @@
 /*
-* Copyright (c) 2025 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -35,11 +36,13 @@ int FsDmCreateSnapshotDevice(const char *devName, char *dmDevPath, uint64_t dmDe
         BEGET_LOGE("argc is null");
         return -1;
     }
+
     int fd = open(DEVICE_MAPPER_PATH, O_RDWR | O_CLOEXEC);
     if (fd < 0) {
         BEGET_LOGE("error %d, open %s", errno, DEVICE_MAPPER_PATH);
         return -1;
     }
+
     int rc = 0;
     do {
         rc = CreateDmDev(fd, devName);
@@ -47,23 +50,23 @@ int FsDmCreateSnapshotDevice(const char *devName, char *dmDevPath, uint64_t dmDe
             BEGET_LOGE("error %d, create dm device fail", rc);
             break;
         }
+
         rc = LoadDmDeviceTable(fd, devName, target, SNAPSHOT);
         if (rc != 0) {
             BEGET_LOGE("error %d, load device table fail", rc);
             break;
         }
+
         rc = ActiveDmDevice(fd, devName);
         if (rc != 0) {
             BEGET_LOGE("error %d, active device fail", rc);
             break;
         }
-
         rc = DmGetDeviceName(fd, devName, dmDevPath, dmDevPathLen);
         if (rc != 0) {
             BEGET_LOGE("get dm device name failed");
             break;
         }
-
         BEGET_LOGI("fs create snapshot device success, dev is [%s] dmDevPath is [%s]", devName, dmDevPath);
     } while (0);
     close(fd);
@@ -81,6 +84,7 @@ int FsDmSwitchToSnapshotMerge(const char *devName, DmSnapshotTarget *target)
         BEGET_LOGE("error %d, open %s", errno, DEVICE_MAPPER_PATH);
         return -1;
     }
+
     int rc = 0;
     do {
         rc = LoadDmDeviceTable(fd, devName, target, SNAPSHOTMERGE);
@@ -95,6 +99,7 @@ int FsDmSwitchToSnapshotMerge(const char *devName, DmSnapshotTarget *target)
         }
         BEGET_LOGI("fs switch snapshot merge success, dev is %s", devName);
     } while (0);
+
     close(fd);
     return rc;
 }
@@ -125,17 +130,17 @@ INIT_STATIC bool ParseStatusText(char *data, StatusInfo *processInfo)
         BEGET_LOGW("processInfo->error is \"%s\"", processInfo->error);
         return true;
     }
-    BEGET_LOGE("could not parse snapshot processInfo \"%s\": wrong format", processInfo->error);
+    BEGET_LOGE("could not parse snapshot processInfo: wrong format \"%s\"", processInfo->error);
     return false;
 }
 
 bool GetDmSnapshotStatus(const char *name, const char *targetType, StatusInfo *processInfo)
 {
-    if (name == NULL || targetType == NULL || processInfo == NULL) {
+    BEGET_LOGI("GetDmSnapshotStatus start, name %s, targetType %s", name, targetType);
+    if (name == NULL || processInfo == NULL) {
         BEGET_LOGE("argc is null");
         return false;
     }
-    BEGET_LOGI("GetDmSnapshotStatus start, name %s, targetType %s", name, targetType);
     size_t bufferLen = MAX_TABLE_LEN * sizeof(char);
     int fd = open(DEVICE_MAPPER_PATH, O_RDWR | O_CLOEXEC);
     BEGET_ERROR_CHECK(fd >= 0, return false, "open error %d", errno);

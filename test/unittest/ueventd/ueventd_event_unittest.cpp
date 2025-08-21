@@ -532,6 +532,20 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleUsbDevicesWithBus
     EXPECT_TRUE(exist);
 }
 
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_HandleDevicesWithInputEvent001, TestSize.Level1)
+{
+    struct Uevent uevent = {
+        .subsystem = "input",
+        .syspath = "/devices/platform/fingerprint/input",
+        .deviceName = "event30",
+        .major = 8,
+        .minor = 9,
+    };
+    HandleOtherDeviceEvent(&uevent);
+    auto exist = IsFileExist("/dev/input/event30");
+    EXPECT_TRUE(exist);
+}
+
 HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_Handle001, TestSize.Level1)
 {
     char path[] = {"/data/ueventd"};

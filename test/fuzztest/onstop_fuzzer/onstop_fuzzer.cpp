@@ -36,7 +36,7 @@ public:
     }
 };
 namespace OHOS {
-bool FuzzCheckAppWatchPermission(const uint8_t* data, size_t size)
+    bool FuzzOnstop(const uint8_t* data, size_t size)
     {
         std::unique_ptr<WatcherManager> watcherManager = std::make_unique<WatcherManager>(0, true);
         uint32_t id = static_cast<const uint32_t>(*data);
@@ -54,6 +54,6 @@ bool FuzzCheckAppWatchPermission(const uint8_t* data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzCheckAppWatchPermission(data, size);
+    OHOS::FuzzOnstop(data, size);
     return 0;
 }

@@ -17,6 +17,9 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include "securec.h"
+#ifdef WITH_SELINUX
+#include <selinux/selinux.h>
+#endif
 #include "init_utils.h"
 #include "fs_dm.h"
 #include "switch_root.h"
@@ -249,7 +252,6 @@ INIT_STATIC int ConstructLinearTarget(DmVerityTarget *target, const char *dev, u
         return -1;
     }
     target->paras_len = strlen(target->paras);
-    BEGET_LOGI("dev [%s], linearparas [%s], length [%s]", dev, target->paras, target->paras_len);
     return 0;
 }
 
@@ -335,27 +337,42 @@ int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount)
     char dirExt4[MAX_BUFFER_LEN] = {0};
     char dirUpper[MAX_BUFFER_LEN] = {0};
     char dirWork[MAX_BUFFER_LEN] = {0};
+
+#ifdef WITH_SELINUX
+    if (isFirstMount) {
+        const char* fsFileContext = "u:object_r:system_file:s0";
+        const char* vendorFileContext = "u:object_r:vendor_file:s0";
+        BEGET_LOGI("start to set selinux. mnt:%s", mnt);
+        if (strcmp(mnt, "/vendor") == 0) {
+            setfscreatecon(vendorFileContext);
+        } else {
+            setfscreatecon(fsFileContext);
+        }
+    }
+#endif
+
     ret = snprintf_s(dirExt4, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, PREFIX_OVERLAY"%s", mnt);
     if (ret < 0) {
         BEGET_LOGE("dirExt4 copy failed errno %d.", errno);
-        return -1;
+        goto exit;
     }
 
     ret = snprintf_s(dirUpper, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, PREFIX_OVERLAY"%s"PREFIX_UPPER, mnt);
     if (ret < 0) {
         BEGET_LOGE("dirUpper copy failed errno %d.", errno);
-        return -1;
+        goto exit;
     }
 
     ret = snprintf_s(dirWork, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, PREFIX_OVERLAY"%s"PREFIX_WORK, mnt);
     if (ret < 0) {
         BEGET_LOGE("dirWork copy failed errno %d.", errno);
-        return -1;
+        goto exit;
     }
 
     if (mkdir(dirExt4, MODE_MKDIR) && (errno != EEXIST)) {
         BEGET_LOGE("mkdir %s failed.", dirExt4);
-        return -1;
+        ret = -1;
+        goto exit;
     }
 
     int retryCount = 3;
@@ -371,14 +388,23 @@ int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount)
 
     if (isFirstMount && mkdir(dirUpper, MODE_MKDIR) && (errno != EEXIST)) {
         BEGET_LOGE("mkdir dirUpper:%s failed.", dirUpper);
-        return -1;
+        ret = -1;
+        goto exit;
     }
 
     if (isFirstMount && mkdir(dirWork, MODE_MKDIR) && (errno != EEXIST)) {
         BEGET_LOGE("mkdir dirWork:%s failed.", dirWork);
-        return -1;
+        ret = -1;
+        goto exit;
     }
 
+    ret = 0;
+exit:
+#ifdef WITH_SELINUX
+    if (isFirstMount) {
+        setfscreatecon(NULL);
+    }
+#endif
     return ret;
 }
 
@@ -480,5 +506,6 @@ int DoMountOverlayDevice(FstabItem *item)
         BEGET_LOGE("init ext4 dm dev failed");
         return -1;
     }
+    BEGET_LOGI("mount overlay device %s on %s success", item->deviceName, item->mountPoint);
     return rc;
 }
