@@ -40,7 +40,7 @@ declare_args() {
   }
 
   # config memory size for liteos-m
-  init_lite_memory_size = 5120
+  init_lite_memory_size = 6800
 
   startup_init_feature_decode_group_file = false
 
