@@ -496,10 +496,7 @@ HWTEST_F(ParamUnitTest, Init_TestWorkSpace_002, TestSize.Level0)
     const char *spaceName = "test.workspace2";
     const size_t size = strlen(spaceName) + 1;
     WorkSpace *workSpace = (WorkSpace *)malloc(sizeof(WorkSpace) + size);
-    if (workSpace == nullptr) {
-        EXPECT_NE(workSpace, nullptr);
-        return;
-    }
+    ASSERT_NE(workSpace, nullptr);
     workSpace->flags = 0;
     workSpace->area = nullptr;
     int ret = PARAM_STRCPY(workSpace->fileName, size, spaceName);

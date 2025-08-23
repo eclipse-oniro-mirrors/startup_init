@@ -147,10 +147,7 @@ HWTEST_F(InitContextUnitTest, InitSubContextTest_04, TestSize.Level1)
     }
 
     SubInitContext *subContext = GetSubInitContext(INIT_CONTEXT_CHIPSET);
-    if (subContext == nullptr) {
-        EXPECT_EQ(0, -1);
-        return;
-    }
+    ASSERT_NE(subContext, nullptr);
     ret = subContext->executeCmdInSubInit(INIT_CONTEXT_CHIPSET, "mkdir-2", STARTUP_INIT_UT_PATH"/testsubcontext");
     EXPECT_NE(ret, 0);
 }
@@ -167,10 +164,8 @@ HWTEST_F(InitContextUnitTest, InitSubContextTest_06, TestSize.Level1)
     ConfigContext context = { INIT_CONTEXT_CHIPSET };
     int index = 0;
     const char *cmd = GetMatchCmd("mkdir ", &index);
-    if (cmd == nullptr || strstr(cmd, "mkdir ") == nullptr) {
-        EXPECT_EQ(1, 0);
-        return;
-    }
+    ASSERT_NE(cmd, nullptr);
+    ASSERT_NE(strstr(cmd, "mkdir "), nullptr);
     DoCmdByIndex(index, STARTUP_INIT_UT_PATH"/testsubcontext", &context);
 }
 
@@ -179,10 +174,8 @@ HWTEST_F(InitContextUnitTest, InitSubContextTest_07, TestSize.Level1)
     ConfigContext context = { INIT_CONTEXT_MAIN };
     int index = 0;
     const char *cmd = GetMatchCmd("mkdir ", &index);
-    if (cmd == nullptr || strstr(cmd, "mkdir ") == nullptr) {
-        EXPECT_EQ(1, 0);
-        return;
-    }
+    ASSERT_NE(cmd, nullptr);
+    ASSERT_NE(strstr(cmd, "mkdir "), nullptr);
     DoCmdByIndex(index, STARTUP_INIT_UT_PATH"/testsubcontext", &context);
 }
 
@@ -206,10 +199,7 @@ HWTEST_F(InitContextUnitTest, InitSubContextTest_10, TestSize.Level1)
     EXPECT_EQ(ret, -1);
 
     SubInitContext *subContext = GetSubInitContext(INIT_CONTEXT_CHIPSET);
-    if (subContext == nullptr) {
-        EXPECT_EQ(0, -1);
-        return;
-    }
+    ASSERT_NE(subContext, nullptr);
     ret = subContext->startSubInit(INIT_CONTEXT_MAIN);
     EXPECT_NE(ret, 0);
     ret = subContext->executeCmdInSubInit(INIT_CONTEXT_CHIPSET, nullptr, nullptr);

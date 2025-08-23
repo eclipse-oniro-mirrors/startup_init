@@ -35,12 +35,7 @@ public:
 HWTEST_F(MountUnitTest, TestGetBlockDevicePath, TestSize.Level1)
 {
     char path[20] = {0}; // 20 is path length
-    int fd = open("/bin/updater", O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,  S_IRWXU);
-    if (fd < 0) {
-        return;
-    }
     GetBlockDevicePath("/test", path, sizeof(path));
-    close(fd);
     ReadConfig();
     unlink("/bin/updater");
     ReadConfig();

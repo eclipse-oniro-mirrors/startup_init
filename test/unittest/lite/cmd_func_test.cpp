@@ -796,10 +796,7 @@ static void CheckJobs(const cJSON* fileRoot)
 HWTEST_F(StartupInitUTest, cfgCheckContent_001, TestSize.Level0)
 {
     char *fileBuf = ReadFileToBuf();
-    if (fileBuf == nullptr) {
-        EXPECT_TRUE(fileBuf != nullptr);
-        return;
-    }
+    ASSERT_NE(fileBuf, nullptr);
 
     cJSON *fileRoot = cJSON_Parse(fileBuf);
     free(fileBuf);
@@ -909,11 +906,7 @@ HWTEST_F(StartupInitUTest, cmdFuncDoLoadCfgTest_003, TestSize.Level0)
     stat(cmdContentStr.c_str(), &testCfgStat);
     if (testCfgStat.st_size > 0) {
         fd = fopen(TEST_PROC_MOUNTS.c_str(), "r");
-
-        if (fd == nullptr) {
-            EXPECT_TRUE(fd != nullptr);
-            return;
-        }
+        ASSERT_NE(fd, nullptr);
 
         do {
             size = fread(buf, 1, CAT_BUF_SIZE - 1, fd);
@@ -962,10 +955,7 @@ HWTEST_F(StartupInitUTest, cmdJobTest_002, TestSize.Level0)
         PRE_INIT_DIR + "\"]},{\"name\":\"init\",\"cmds\":[\"mkdir " + INIT_DIR +
         "\"]},{\"name\":\"post-init\",\"cmds\":[\"mkdir " + POST_INIT_DIR + "\"]}]}";
     cJSON* jobItem = cJSON_Parse(cfgJson.c_str());
-    EXPECT_NE(nullptr, jobItem);
-    if (jobItem == nullptr) {
-        return;
-    }
+    ASSERT_NE(nullptr, jobItem);
     ConfigContext context = { INIT_CONTEXT_MAIN };
     ParseAllJobs(jobItem, &context);
     DoJob("pre-init");
