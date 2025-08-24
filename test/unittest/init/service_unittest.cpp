@@ -618,6 +618,7 @@ HWTEST_F(ServiceUnitTest, TestKernelPermPermissionError, TestSize.Level1)
     ASSERT_NE(nullptr, service);
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(service->kernelPerms != nullptr);
 
     SERVICE_INFO_CTX context;
     context.serviceName = service->name;
@@ -645,6 +646,7 @@ HWTEST_F(ServiceUnitTest, TestKernelPermServiceNameError, TestSize.Level1)
     ASSERT_NE(nullptr, service);
     int ret = ParseOneService(serviceItem, service);
     EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(service->kernelPerms != nullptr);
 
     SERVICE_INFO_CTX context;
     context.serviceName = "wrongServiceName";

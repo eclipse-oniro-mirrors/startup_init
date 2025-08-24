@@ -505,29 +505,6 @@ void HandleBlockDeviceEvent(const struct Uevent *uevent)
     HandleDeviceNode(uevent, deviceNode, isBlock);
 }
 
-static int SplitUsbDeviceNode(const struct Uevent *uevent, char *deviceNode)
-{
-    if (uevent->deviceName != NULL) {
-        if (snprintf_s(deviceNode, DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1, "/dev/%s", uevent->deviceName) == -1) {
-            INIT_LOGE("Make device file for device [%d : %d]", uevent->major, uevent->minor);
-            return -1;
-        }
-        return 0;
-    } else {
-        if (uevent->busNum < 0 || uevent->devNum < 0) {
-            // usb device should always report bus number and device number.
-            INIT_LOGE("usb device with invalid bus number or device number");
-            return -1;
-        }
-        if (snprintf_s(deviceNode, DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
-            "/dev/bus/usb/%03d/%03d", uevent->busNum, uevent->devNum) == -1) {
-            INIT_LOGE("Make usb device node for device [%d : %d]", uevent->busNum, uevent->devNum);
-            return 0;
-        }
-        return 0;
-    }
-}
-
 void HandleOtherDeviceEvent(const struct Uevent *uevent)
 {
     if (uevent == NULL || uevent->subsystem == NULL || uevent->syspath == NULL) {
@@ -561,8 +538,21 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
     // if usb devices report DEVNAME, just create device node.
     // otherwise, create deviceNode with bus number and device number.
     if (STRINGEQUAL(uevent->subsystem, "usb")) {
-        if (SplitUsbDeviceNode(uevent, deviceNode) != 0) {
-            return;
+        if (uevent->deviceName != NULL) {
+            if (snprintf_s(deviceNode, DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1, "/dev/%s", uevent->deviceName) == -1) {
+                INIT_LOGE("Make device file for device [%d : %d]", uevent->major, uevent->minor);
+                return;
+            }
+        } else {
+            if (uevent->busNum < 0 || uevent->devNum < 0) {
+                // usb device should always report bus number and device number.
+                INIT_LOGE("usb device with invalid bus number or device number");
+                return;
+            }
+            if (snprintf_s(deviceNode, DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
+                "/dev/bus/usb/%03d/%03d", uevent->busNum, uevent->devNum) == -1) {
+                INIT_LOGE("Make usb device node for device [%d : %d]", uevent->busNum, uevent->devNum);
+            }
         }
     } else if (STARTSWITH(uevent->subsystem, "usb")) {
         // Other usb devies, do not handle it.

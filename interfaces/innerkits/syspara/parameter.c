@@ -17,7 +17,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdatomic.h>
 
 #include "param_comm.h"
 #include "init_param.h"

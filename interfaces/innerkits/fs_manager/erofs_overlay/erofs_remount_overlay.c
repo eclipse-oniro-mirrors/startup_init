@@ -52,14 +52,14 @@ int GetRemountResult(void)
     return REMOUNT_FAIL;
 }
 
-void SetRemountResultFlag()
+void SetRemountResultFlag(void)
 {
     struct stat st;
     int ret;
 
     int statRet = stat(REMOUNT_RESULT_PATH, &st);
     if (statRet != 0) {
-        ret = mkdir(REMOUNT_RESULT_PATH, MODE_MKDIR);
+        ret = MakeDirRecursive(REMOUNT_RESULT_PATH, MODE_MKDIR);
         if (ret < 0 && errno != EEXIST) {
             BEGET_LOGE("mkdir remount path failed errno %d", errno);
             return;

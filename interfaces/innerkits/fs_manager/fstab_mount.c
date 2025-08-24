@@ -27,6 +27,7 @@
 #include "fs_manager/fs_manager.h"
 #include "hookmgr.h"
 #include "list.h"
+#include "init_modulemgr.h"
 #include "init_utils.h"
 #include "param/init_param.h"
 #include "securec.h"
@@ -48,14 +49,14 @@ extern "C" {
 #define FS_MANAGER_BUFFER_SIZE 512
 #define BLOCK_SIZE_BUFFER (64)
 #define RESIZE_BUFFER_SIZE 1024
-#define MAX_GCALLOWNANCE 100
-#define GCALLOWANCE_INCREACE 10
+#define MAX_GC_ALLOWANCE 100
+#define GCALLOWANCE_INCREASE 10
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 int g_bootSlots = -1;
 int g_currentSlot = -1;
 
-__attribute__((weak)) void InitPostMount(const char *mountPoint, int rc)
+__attribute__((weak)) void InitPostMount(int rc, struct FstabItem *fstabItem)
 {
 }
 
@@ -454,8 +455,8 @@ INIT_STATIC int MountWithCheckpoint(const char *source, const char *target, cons
         if (rc != 0 && errno == EBUSY) {
             rc = 0;
         }
-        gcAllowance += GCALLOWANCE_INCREACE;
-    } while (rc != 0 && errno == EAGAIN && gcAllowance <= MAX_GCALLOWNANCE);
+        gcAllowance += GCALLOWANCE_INCREASE;
+    } while (rc != 0 && errno == EAGAIN && gcAllowance <= MAX_GC_ALLOWANCE);
 
     return rc;
 }
@@ -510,6 +511,47 @@ int GetCurrentSlot(void)
     return GetSlotInfoFromBootctrl(PARTITION_ACTIVE_SLOT_OFFSET, PARTITION_ACTIVE_SLOT_SIZE);
 }
 
+static int GetSlotStatus(void)
+{
+    static int slotStatus = SLOTSTATUS_INIT;
+    if (slotStatus != SLOTSTATUS_INIT) {
+        return slotStatus;
+    }
+    slotStatus = SLOTSTATUS_OTHER;
+    do {
+        if (GetBootSlots() <= 1) {
+            BEGET_LOGE("boot slot not need CheckVabMountInfo");
+            break;
+        }
+        int slot = GetCurrentSlot();
+        if (slot <= 0 || slot > MAX_SLOT) {
+            BEGET_LOGE("slot value %d is invalid", slot);
+            break;
+        }
+        slotStatus = SLOTSTATUS_VAB;
+    } while (0);
+    return slotStatus;
+}
+
+static int UpdataAndCheckVabMountInfo(FstabItem *item, int result)
+{
+    int slot = GetSlotStatus();
+    if (slot != SLOTSTATUS_VAB) {
+        return 0;
+    }
+    VabMountInfo mountInfo = {
+        .deviceName = item == NULL ? NULL : item->deviceName,
+        .fsType = item == NULL ? NULL : item->fsType,
+        .result = result,
+    };
+    int ret = HookMgrExecute(GetBootStageHookMgr(), INIT_CHECK_VAB_MOUNTINFO,
+        item == NULL ? NULL : (void*)&mountInfo, NULL);
+    if (ret != 0) {
+        BEGET_LOGE("CheckVabMountInfo failed ");
+    }
+    return ret;
+}
+
 INIT_STATIC int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecificDataSize,
     char *checkpointData, size_t checkpointDataSize)
 {
@@ -542,12 +584,12 @@ INIT_STATIC int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecific
             continue;
         }
         if (strcmp(checkpointData, "") != 0 &&
-            strncat_s(checkpointData, checkpointDataSize - 1, ",", 1) != EOK) {
+            strncat_s(checkpointData, checkpointDataSize, ",", 1) != EOK) {
             BEGET_LOGW("failed to append comma.");
             rc = -1;
             break;
         }
-        if (strncat_s(checkpointData, checkpointDataSize - 1, p, strlen(p)) != EOK) {
+        if (strncat_s(checkpointData, checkpointDataSize, p, strlen(p)) != EOK) {
             BEGET_LOGW("Failed to append mountflags \" %s \", ignore it.", p);
             rc = -1;
             break;
@@ -642,20 +684,29 @@ static int MountItemByFsType(FstabItem *item)
 
 static int ExecCheckpointHook(FstabItem *item)
 {
-    HOOK_EXEC_OPTIONS options;
-    options.flags = TRAVERSE_STOP_WHEN_ERROR;
-    options.postHook = NULL;
-    options.preHook = NULL;
-    int ret = HookMgrExecute(GetBootStageHookMgr(), INIT_DISABLE_CHECKPOINT, (void*)item, &options);
-    BEGET_LOGI("ExecCheckpointHook ret %d", ret);
+    int ret = -1;
+    do {
+        int slot = GetSlotStatus();
+        if (slot != SLOTSTATUS_VAB) {
+            return 0;
+        }
+
+        ret = HookMgrExecute(GetBootStageHookMgr(), INIT_DISABLE_CHECKPOINT, (void*)item, NULL);
+        BEGET_LOGI("ExecCheckpointHook ret %d", ret);
+    } while (0);
+
     return ret;
 }
+
 int MountOneItem(FstabItem *item)
 {
     if (item == NULL) {
         return -1;
     }
-
+    if (!IsSupportedFilesystem(item->fsType)) {
+        BEGET_LOGW("Unsupported file system \" %s \"", item->fsType);
+        return 0;
+    }
     if (FM_MANAGER_WAIT_ENABLED(item->fsManagerFlags)) {
         WaitForFile(item->deviceName, WAIT_MAX_SECOND);
     }
@@ -691,11 +742,13 @@ int MountOneItem(FstabItem *item)
         SwitchRoot("/usr");
     }
 #endif
+
     if (disableCheckpointRet == 0 && rc == 0) {
         BEGET_LOGI("start health check process");
         HookMgrExecute(GetBootStageHookMgr(), INIT_HEALTH_CHECK_ACTIVE, NULL, NULL);
     }
-    InitPostMount(item->mountPoint, rc);
+    UpdataAndCheckVabMountInfo(item, rc);
+    InitPostMount(rc, item);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
             BEGET_LOGE("Mount no fail device %s to %s failed, err = %d", item->deviceName, item->mountPoint, errno);
@@ -814,7 +867,7 @@ int MountAllWithFstab(const Fstab *fstab, bool required)
             break;
         }
     }
-
+    UpdataAndCheckVabMountInfo(NULL, 0);
 #ifdef SUPPORT_HVB
     if (required)
         HvbDmVerityFinal();

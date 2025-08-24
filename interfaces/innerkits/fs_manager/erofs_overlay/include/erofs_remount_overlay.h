@@ -29,7 +29,7 @@ extern "C" {
 
 int GetRemountResult(void);
 
-void SetRemountResultFlag();
+void SetRemountResultFlag(void);
 
 int RemountOverlay(void);
 

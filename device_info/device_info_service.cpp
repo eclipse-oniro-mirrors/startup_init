@@ -107,15 +107,13 @@ int32_t DeviceInfoService::CallbackEnter(uint32_t code)
     switch (code) {
         case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_UDID):
         case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_SERIAL_I_D): {
-            if (!CheckPermission("ohos.permission.sec.ACCESS_UDID")) {
-                return SYSPARAM_PERMISSION_DENIED;
-            }
+            bool ret = CheckPermission("ohos.permission.sec.ACCESS_UDID");
+            BEGET_CHECK_RETURN_VALUE(ret, SYSPARAM_PERMISSION_DENIED);
             break;
         }
         case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_DISK_S_N): {
-            if (!CheckPermission("ohos.permission.ACCESS_DISK_PHY_INFO")) {
-                return SYSPARAM_PERMISSION_DENIED;
-            }
+            bool ret = CheckPermission("ohos.permission.ACCESS_DISK_PHY_INFO");
+            BEGET_CHECK_RETURN_VALUE(ret, SYSPARAM_PERMISSION_DENIED);
             break;
         }
         default: {

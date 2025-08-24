@@ -65,6 +65,18 @@ typedef enum MountStatus {
     MOUNT_MOUNTED = 1,
 } MountStatus;
 
+typedef enum SlotStatus {
+    SLOTSTATUS_INIT = 0,
+    SLOTSTATUS_VAB,
+    SLOTSTATUS_OTHER,
+} SlotStatus;
+
+typedef struct VabMountInfo {
+    char *deviceName;
+    char *fsType;
+    int result;
+} VabMountInfo;
+
 typedef struct FstabItem {
     char *deviceName;  // Block device name
     char *mountPoint;  // Mount point
