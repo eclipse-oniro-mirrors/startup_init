@@ -15,7 +15,7 @@
 @!namespace("@ohos.deviceInfo")
 
 @!sts_inject("""
-loadLibrary("deviceInfo_taihe_native.z")
+loadLibraryWithPermissionCheck("deviceInfo_taihe_native.z", "@ohos.deviceInfo")
 """)
 
 @class
