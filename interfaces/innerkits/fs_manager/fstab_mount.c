@@ -284,7 +284,7 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
     return status;
 }
 
-INIT_STATIC int DoMountOneItem(FstabItem *item);
+INIT_STATIC int DoMountOneItem(FstabItem *item, MountResult *result);
 #define MAX_RESIZE_PARAM_NUM 20
 static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
 {
@@ -334,7 +334,7 @@ static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
         BEGET_LOGI("resize success.");
         return ret;
     }
-    DoMountOneItem(item);
+    (void)DoMountOneItem(item, NULL);
     umount(item->mountPoint);
     BEGET_LOGE("remount and resize again.");
     return ExecCommand(argc, argv);
@@ -422,25 +422,27 @@ static int Mount(const char *source, const char *target, const char *fsType,
     return rc;
 }
 
-INIT_STATIC int MountWithCheckpoint(const char *source, const char *target, const char *fsType,
+INIT_STATIC MountResult MountWithCheckpoint(const char *source, const char *target, const char *fsType,
     unsigned long flags, const char *data)
 {
+    MountResult result = {.rc = -1, .checkpointMountCounter = 0};
+
     struct stat st = {};
-    int rc = -1;
 
     bool isTrue = source == NULL || target == NULL || fsType == NULL;
-    BEGET_ERROR_CHECK(!isTrue, return -1, "Invalid argument for mount.");
+    BEGET_ERROR_CHECK(!isTrue, return result, "Invalid argument for mount.");
 
     isTrue = stat(target, &st) != 0 && errno != ENOENT;
-    BEGET_ERROR_CHECK(!isTrue, return -1, "Cannot get stat of \" %s \", err = %d", target, errno);
+    BEGET_ERROR_CHECK(!isTrue, return result, "Cannot get stat of \" %s \", err = %d", target, errno);
 
     BEGET_CHECK((st.st_mode & S_IFMT) != S_IFLNK, unlink(target)); // link, delete it.
 
     if (mkdir(target, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
-        BEGET_ERROR_CHECK(errno == EEXIST, return -1, "Failed to create dir \" %s \", err = %d", target, errno);
+        BEGET_ERROR_CHECK(errno == EEXIST, return result, "Failed to create dir \" %s \", err = %d", target, errno);
     }
 
     int gcAllowance = 0;
+    int saveErrno = 0;
     do {
         char realData[FS_MANAGER_BUFFER_SIZE] = {0};
         int bytes = snprintf_s(realData, FS_MANAGER_BUFFER_SIZE, FS_MANAGER_BUFFER_SIZE - 1, "%s,%s:%d%%",
@@ -449,16 +451,18 @@ INIT_STATIC int MountWithCheckpoint(const char *source, const char *target, cons
             BEGET_LOGE("build realData failed");
             break;
         }
-        rc = mount(source, target, fsType, flags, realData);
-        BEGET_LOGI("MountWithCheckpoint %s %d %d", realData, rc, errno);
+        result.rc = mount(source, target, fsType, flags, realData);
+        saveErrno = errno;
+        BEGET_LOGI("MountWithCheckpoint rc:%d errno:%d %s", result.rc, saveErrno, realData);
 
-        if (rc != 0 && errno == EBUSY) {
-            rc = 0;
+        if (result.rc != 0 && saveErrno == EBUSY) {
+            result.rc = 0;
         }
+        result.checkpointMountCounter = (gcAllowance / GCALLOWANCE_INCREASE) + 1;
         gcAllowance += GCALLOWANCE_INCREASE;
-    } while (rc != 0 && errno == EAGAIN && gcAllowance <= MAX_GC_ALLOWANCE);
+    } while (result.rc != 0 && saveErrno == EAGAIN && gcAllowance <= MAX_GC_ALLOWANCE);
 
-    return rc;
+    return result;
 }
 
 static int GetSlotInfoFromCmdLine(const char *slotInfoName)
@@ -533,16 +537,19 @@ static int GetSlotStatus(void)
     return slotStatus;
 }
 
-static int UpdataAndCheckVabMountInfo(FstabItem *item, int result)
+static int UpdataAndCheckVabMountInfo(FstabItem *item, MountResult *result)
 {
     int slot = GetSlotStatus();
+    int rc = result == NULL ? 0 : result->rc;
+    int counter = result == NULL ? 0 : result->checkpointMountCounter;
     if (slot != SLOTSTATUS_VAB) {
         return 0;
     }
     VabMountInfo mountInfo = {
         .deviceName = item == NULL ? NULL : item->deviceName,
         .fsType = item == NULL ? NULL : item->fsType,
-        .result = result,
+        .result = rc,
+        .checkpointMountCounter = counter,
     };
     int ret = HookMgrExecute(GetBootStageHookMgr(), INIT_CHECK_VAB_MOUNTINFO,
         item == NULL ? NULL : (void*)&mountInfo, NULL);
@@ -602,16 +609,14 @@ INIT_STATIC int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecific
     return rc;
 }
 
-INIT_STATIC int DoMountOneItem(FstabItem *item)
+INIT_STATIC int DoMountOneItem(FstabItem *item, MountResult *result)
 {
     BEGET_LOGI("Mount device %s to %s", item->deviceName, item->mountPoint);
     unsigned long mountFlags;
     char fsSpecificData[FS_MANAGER_BUFFER_SIZE] = {0};
     char checkpointData[FS_MANAGER_BUFFER_SIZE] = {0};
-
     bool isCheckpoint = false;
-    mountFlags = GetMountFlags(item->mountOptions, fsSpecificData, sizeof(fsSpecificData),
-        item->mountPoint);
+    mountFlags = GetMountFlags(item->mountOptions, fsSpecificData, sizeof(fsSpecificData), item->mountPoint);
     
     // 是否包含checkpoint + 文件系统类型
     if (strcmp(item->fsType, "hmfs") == 0 && strstr(fsSpecificData, "checkpoint=disable") != NULL &&
@@ -619,20 +624,21 @@ INIT_STATIC int DoMountOneItem(FstabItem *item)
             checkpointData, FS_MANAGER_BUFFER_SIZE) == 0) {
         isCheckpoint = true;
     }
-
     int retryCount = 3;
     int rc = 0;
+    int totalCheckpointCounter = 0;
     while (retryCount-- > 0) {
         if (isCheckpoint) {
-            rc = MountWithCheckpoint(item->deviceName, item->mountPoint, item->fsType, mountFlags, checkpointData);
+            MountResult currResult = MountWithCheckpoint(item->deviceName, item->mountPoint, item->fsType,
+                mountFlags, checkpointData);
+            rc = currResult.rc;
+            totalCheckpointCounter += currResult.checkpointMountCounter;
         } else {
             rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
         }
-
         if (rc == 0) {
-            return rc;
+            break;
         }
-
         if (FM_MANAGER_FORMATTABLE_ENABLED(item->fsManagerFlags)) {
             BEGET_LOGI("Device is formattable");
             int ret = DoFormat(item->deviceName, item->fsType);
@@ -642,23 +648,27 @@ INIT_STATIC int DoMountOneItem(FstabItem *item)
             }
             rc = Mount(item->deviceName, item->mountPoint, item->fsType, mountFlags, fsSpecificData);
             if (rc == 0) {
-                return rc;
+                break;
             }
         }
         BEGET_LOGE("Mount device %s to %s failed, err = %d, retry", item->deviceName, item->mountPoint, errno);
+    }
+    if (result != NULL) {
+        result->rc = rc;
+        result->checkpointMountCounter = totalCheckpointCounter;
     }
     return rc;
 }
 
 #ifdef EROFS_OVERLAY
-static int MountItemByFsType(FstabItem *item)
+static int MountItemByFsType(FstabItem *item, MountResult *result)
 {
     if (CheckIsErofs(item->deviceName)) {
         if (strcmp(item->fsType, "erofs") == 0) {
             if (IsOverlayEnable()) {
                 return DoMountOverlayDevice(item);
             }
-            int rc = DoMountOneItem(item);
+            int rc = DoMountOneItem(item, result);
             if (rc == 0 && strcmp(item->mountPoint, "/usr") == 0) {
                 SwitchRoot("/usr");
             }
@@ -670,7 +680,7 @@ static int MountItemByFsType(FstabItem *item)
     }
 
     if (strcmp(item->fsType, "erofs") != 0) {
-        int rc = DoMountOneItem(item);
+        int rc = DoMountOneItem(item, result);
         if (rc == 0 && strcmp(item->mountPoint, "/usr") == 0) {
             SwitchRoot("/usr");
         }
@@ -734,10 +744,11 @@ int MountOneItem(FstabItem *item)
     }
 
     int rc = 0;
+    MountResult result = {.rc = 0, .checkpointMountCounter = 0};
 #ifdef EROFS_OVERLAY
-    rc = MountItemByFsType(item);
+    rc = MountItemByFsType(item, &result);
 #else
-    rc = DoMountOneItem(item);
+    rc = DoMountOneItem(item, &result);
     if (rc == 0 && (strcmp(item->mountPoint, "/usr") == 0)) {
         SwitchRoot("/usr");
     }
@@ -747,7 +758,7 @@ int MountOneItem(FstabItem *item)
         BEGET_LOGI("start health check process");
         HookMgrExecute(GetBootStageHookMgr(), INIT_HEALTH_CHECK_ACTIVE, NULL, NULL);
     }
-    UpdataAndCheckVabMountInfo(item, rc);
+    UpdataAndCheckVabMountInfo(item, &result);
     InitPostMount(rc, item);
     if (rc != 0) {
         if (FM_MANAGER_NOFAIL_ENABLED(item->fsManagerFlags)) {
@@ -867,7 +878,7 @@ int MountAllWithFstab(const Fstab *fstab, bool required)
             break;
         }
     }
-    UpdataAndCheckVabMountInfo(NULL, 0);
+    UpdataAndCheckVabMountInfo(NULL, NULL);
 #ifdef SUPPORT_HVB
     if (required)
         HvbDmVerityFinal();

@@ -87,7 +87,7 @@ HWTEST_F(FstabMountTest, DoOneMountItem_001, TestSize.Level0)
         .next = NULL,
     };
 
-    int rc = DoMountOneItem(&item);
+    int rc = DoMountOneItem(&item, NULL);
     EXPECT_NE(rc, 0);
 }
 
@@ -108,7 +108,7 @@ HWTEST_F(FstabMountTest, DoOneMountItem_002, TestSize.Level0)
         .next = NULL,
     };
 
-    int rc = DoMountOneItem(&item);
+    int rc = DoMountOneItem(&item, NULL);
     EXPECT_EQ(rc, -1);
 }
 
@@ -192,9 +192,9 @@ HWTEST_F(FstabMountTest, MountWithCheckpoint_001, TestSize.Level0)
         return 0;
     };
     UpdateStatFunc(func);
-    int rc = MountWithCheckpoint("/source", "/target", "fsType", 0, "op1,op2,op3,op4,op5");
+    MountResult result = MountWithCheckpoint("/source", "/target", "fsType", 0, "op1,op2,op3,op4,op5");
     UpdateStatFunc(nullptr);
-    EXPECT_EQ(rc, -1);
+    EXPECT_EQ(result.rc, -1);
 }
 
 HWTEST_F(FstabMountTest, MountWithCheckpoint_002, TestSize.Level0)
@@ -210,12 +210,13 @@ HWTEST_F(FstabMountTest, MountWithCheckpoint_002, TestSize.Level0)
     UpdateMkdirFunc(mkdirFunc);
     UpdateSnprintfSFunc(SnprintfSReturnZero);
 
-    int rc = MountWithCheckpoint("/source", "/target", "fsType", 0, "op1,op2,op3,op4,op5");
+    MountResult result = MountWithCheckpoint("/source", "/target", "fsType", 0, "op1,op2,op3,op4,op5");
     UpdateStatFunc(nullptr);
     UpdateMkdirFunc(nullptr);
     UpdateSnprintfSFunc(nullptr);
 
-    EXPECT_EQ(rc, -1);
+    GTEST_LOG_(INFO) << "checkpointMountCounter=" << result.checkpointMountCounter;
+    EXPECT_EQ(result.rc, -1);
 }
 
 HWTEST_F(FstabMountTest, MountWithCheckpoint_003, TestSize.Level0)
@@ -236,12 +237,13 @@ HWTEST_F(FstabMountTest, MountWithCheckpoint_003, TestSize.Level0)
     };
     UpdateMountFunc(mountFunc);
 
-    int rc = MountWithCheckpoint("/source", "/target", "fsType", 0, "op1,op2,op3,op4,op5");
+    MountResult result = MountWithCheckpoint("/source", "/target", "fsType", 0, "op1,op2,op3,op4,op5");
     UpdateStatFunc(nullptr);
     UpdateMkdirFunc(nullptr);
     UpdateMountFunc(nullptr);
 
-    EXPECT_EQ(rc, 0);
+    GTEST_LOG_(INFO) << "checkpointMountCounter=" << result.checkpointMountCounter;
+    EXPECT_EQ(result.rc, 0);
 }
 
 }

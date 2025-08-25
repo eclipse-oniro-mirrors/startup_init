@@ -75,6 +75,7 @@ typedef struct VabMountInfo {
     char *deviceName;
     char *fsType;
     int result;
+    int checkpointMountCounter;
 } VabMountInfo;
 
 typedef struct FstabItem {
@@ -110,6 +111,12 @@ typedef struct SlotInfo {
     unsigned int retryCount;
     unsigned int reserved;
 } SlotInfo;
+
+typedef struct MountResult {
+    // mount result code
+    int rc;
+    int checkpointMountCounter;
+} MountResult;
 
 Fstab* LoadFstabFromCommandLine(void);
 int GetBootSlots(void);
