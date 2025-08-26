@@ -173,10 +173,7 @@ public:
 
 HWTEST_F(SandboxUnitTest, TestCreateNormalSandbox, TestSize.Level1) {
     cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, 0);
-    if (mJson == nullptr) {
-        std::cout << "created mJson error, mJson is null." << std::endl;
-        return;
-    }
+    ASSERT_NE(mJson, nullptr);
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     int ret = RestartSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, 0);
@@ -212,10 +209,7 @@ HWTEST_F(SandboxUnitTest, TestCreateErrorSandbox1, TestSize.Level1) {
 
 HWTEST_F(SandboxUnitTest, TestCreateErrorSandbox2, TestSize.Level1) {
     cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, NULL_ROOT_PATH);
-    if (mJson == nullptr) {
-        std::cout << "created mJson error, mJson is null." << std::endl;
-        return;
-    }
+    ASSERT_NE(mJson, nullptr);
     bool ret1 = MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     ASSERT_TRUE(ret1);
     InitSandboxWithName(TEST_SANDBOX_NAME);
@@ -233,10 +227,7 @@ HWTEST_F(SandboxUnitTest, TestCreateSandboxNoneJsonError, TestSize.Level1) {
 
 HWTEST_F(SandboxUnitTest, TestCreateSandboxMountFlagsError, TestSize.Level1) {
     cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, NULL_MOUNT_FLAGS);
-    if (mJson == nullptr) {
-        std::cout << "created mJson error, mJson is null." << std::endl;
-        return;
-    }
+    ASSERT_NE(mJson, nullptr);
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     int ret = PrepareSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);
@@ -244,10 +235,7 @@ HWTEST_F(SandboxUnitTest, TestCreateSandboxMountFlagsError, TestSize.Level1) {
 
 HWTEST_F(SandboxUnitTest, TestCreateSandboxMountNULLError, TestSize.Level1) {
     cJSON *mJson = MakeSandboxJson(SANDBOX_JSON_NAME, NULL_MOUNT_ITEM);
-    if (mJson == nullptr) {
-        std::cout << "created mJson error, mJson is null." << std::endl;
-        return;
-    }
+    ASSERT_NE(mJson, nullptr);
     MakeFileByJson(mJson, SANDBOX_JSON_NAME);
     int ret = PrepareSandbox(TEST_SANDBOX_NAME);
     ASSERT_EQ(ret, -1);

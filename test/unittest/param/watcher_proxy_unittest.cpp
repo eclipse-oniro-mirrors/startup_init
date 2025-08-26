@@ -232,6 +232,7 @@ public:
     int TestInvalid(const std::string &keyPrefix)
     {
         WatcherManagerPtr watcherManager = GetWatcherManager();
+        EXPECT_NE(watcherManager, nullptr);
         WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to get manager");
         MessageParcel data;
         MessageParcel reply;

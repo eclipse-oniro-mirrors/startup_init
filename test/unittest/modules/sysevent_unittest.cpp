@@ -111,9 +111,8 @@ HWTEST_F(SysEventUnitTest, SysEventTest_003, TestSize.Level1)
 HWTEST_F(SysEventUnitTest, SysEventTest_004, TestSize.Level1)
 {
     struct timespec curr = {0};
-    if (clock_gettime(CLOCK_MONOTONIC, &curr) != 0) {
-        return;
-    }
+    int ret = clock_gettime(CLOCK_MONOTONIC, &curr);
+    ASSERT_EQ(ret, 0);
     StartupTimeEvent startupTime = {};
     startupTime.event.type = STARTUP_TIME;
     startupTime.totalTime = curr.tv_sec;
@@ -128,9 +127,8 @@ HWTEST_F(SysEventUnitTest, SysEventTest_004, TestSize.Level1)
 HWTEST_F(SysEventUnitTest, SysEventTest_005, TestSize.Level1)
 {
     struct timespec curr = {0};
-    if (clock_gettime(CLOCK_MONOTONIC, &curr) != 0) {
-        return;
-    }
+    int ret = clock_gettime(CLOCK_MONOTONIC, &curr);
+    ASSERT_EQ(ret, 0);
     StartupTimeEvent startupTime = {};
     startupTime.event.type = STARTUP_EVENT_MAX;
     startupTime.totalTime = curr.tv_sec;

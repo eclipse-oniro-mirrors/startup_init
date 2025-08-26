@@ -95,6 +95,7 @@ static void *TestReadData(void *args)
     while (data < MAX_NUM) {
         uint32_t commitId = TestReadCommitId(&g_testData);
         data = TestReadParamValue(&g_testData, &commitId);
+        EXPECT_GT(data, 0);
         printf("[ %d] TestReadData data: %d commit: %d \n", gettid(), data, commitId);
         usleep(10); // 10 wait
     }
