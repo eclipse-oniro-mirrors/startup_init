@@ -17,6 +17,8 @@ group("taihe_group") {
     deps = [
       "deviceInfo:deviceInfo_etc",
       "deviceInfo:deviceInfo_taihe_native",
+      "syscap:global_etc",
+      "syscap:global_taihe_native",
       "systemParameterEnhance:systemParamterEnhance_etc",
       "systemParameterEnhance:systemParameterEnhance_taihe_native",
     ]
