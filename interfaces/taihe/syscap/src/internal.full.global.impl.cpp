@@ -12,7 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@!sts_inject("""
-loadLibrary("global_taihe_native")
-""")
-function canIUse(syscap: String): bool;
+#include "internal.full.global.proj.hpp"
+#include "internal.full.global.impl.hpp"
+#include "taihe/runtime.hpp"
+#include "stdexcept"
+#include "systemcapability.h"
+#include "beget_ext.h"
+
+using namespace taihe;
+namespace {
+// To be implemented.
+
+bool canIUse(string_view syscap)
+{
+    bool ret = HasSystemCapability(std::string(syscap).c_str());
+    return ret;
+}
+}  //namespace
+
+TH_EXPORT_CPP_API_canIUse(canIUse);

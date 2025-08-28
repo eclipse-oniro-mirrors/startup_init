@@ -12,25 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "global.proj.hpp"
-#include "global.impl.hpp"
-#include "taihe/runtime.hpp"
-#include "stdexcept"
-#include "systemcapability.h"
-#include "beget_ext.h"
+ @!namespace("@internal.full.global")
 
-using namespace taihe;
-namespace {
-// To be implemented.
-
-bool canIUse(string_view syscap)
-{
-    bool ret = HasSystemCapability(std::string(syscap).c_str());
-    return ret;
-}
-}  // namespace
-
-// Since these macros are auto-generate, lint will cause false positive.
-// NOLINTBEGIN
-TH_EXPORT_CPP_API_canIUse(canIUse);
-// NOLINTEND
+ @!sts_inject("""
+ loadLibrary("global_taihe_native.z")
+ """)
+ function canIUse(syscap: String): bool;
