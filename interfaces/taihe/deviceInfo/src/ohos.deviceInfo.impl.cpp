@@ -369,6 +369,15 @@ string getdiskSN()
     return value;
 }
 
+string getchipType()
+{
+    const char *value = GetChipType();
+    if (value == nullptr) {
+        value = "";
+    }
+    return value;
+}
+
 int32_t getsdkApiVersion()
 {
     int value = GetSdkApiVersion();
@@ -410,6 +419,12 @@ int32_t getdistributionOSApiVersion()
     int value = GetDistributionOSApiVersion();
     return value;
 }
+
+int32_t getbootCount()
+{
+    int value = GetBootCount();
+    return value;
+}
 }  // namespace
 
 TH_EXPORT_CPP_API_getbrand(getbrand);
@@ -449,3 +464,5 @@ TH_EXPORT_CPP_API_getfeatureVersion(getfeatureVersion);
 TH_EXPORT_CPP_API_getbuildVersion(getbuildVersion);
 TH_EXPORT_CPP_API_getfirstApiVersion(getfirstApiVersion);
 TH_EXPORT_CPP_API_getdistributionOSApiVersion(getdistributionOSApiVersion);
+TH_EXPORT_CPP_API_getbootCount(getbootCount);
+TH_EXPORT_CPP_API_getchipType(getchipType);

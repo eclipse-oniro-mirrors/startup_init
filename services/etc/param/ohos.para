@@ -38,3 +38,4 @@ const.product.build.host=default
 const.product.build.date=default
 const.product.hardwareprofile=default
 const.ohos.buildroothash=default
+persist.startup.bootcount=0

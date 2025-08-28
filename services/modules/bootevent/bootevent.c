@@ -346,6 +346,25 @@ static int ScheduleDelayedHookMgrExecute(void)
 }
 #endif
 
+void UpdateBootCount()
+{
+    char timevalue[MAX_BUFFER_LEN] = {0};
+    uint32_t size = sizeof(timevalue);
+    int ret = SystemReadParam("ohos.boot.time.boot.completed", timevalue, &size);
+    INIT_INFO_CHECK (ret != 0, return, "already boot, not add count");
+    char value[MAX_INT_LEN] = {0};
+    size = sizeof(value);
+    ret = SystemReadParam("persist.startup.bootcount", value, &size);
+    INIT_ERROR_CHECK (ret == 0, return, "Failed to read bootcount");
+    int bootCount = StringToInt(value, -1);
+    INIT_ERROR_CHECK (bootCount != -1, return, "StringToInt failed");
+    bootCount++;
+    char buffer[32] = { 0 };
+    ret = sprintf_s(buffer, sizeof(buffer), "%d", bootCount);
+    INIT_ERROR_CHECK (ret > 0, return, "Failed copy bootcount");
+    ret = SystemWriteParam("persist.startup.bootcount", buffer);
+    INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to update bootcount");
+}
 
 static int BootEventParaFireByName(const char *paramName)
 {
@@ -377,6 +396,7 @@ static int BootEventParaFireByName(const char *paramName)
     }
     // All parameters are fired, set boot completed now ...
     INIT_LOGI("All boot events are fired, boot complete now ...");
+    UpdateBootCount();
     SystemWriteParam(BOOT_EVENT_BOOT_COMPLETED, "true");
     SetBootCompleted(true);
     SaveServiceBootEvent();

@@ -419,6 +419,26 @@ static napi_value GetBuildRootHash(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
+static napi_value GetBootCount(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    int bootCount = GetBootCount();
+    NAPI_CALL(env, napi_create_int32(env, bootCount, &napiValue));
+    return napiValue;
+}
+
+static napi_value GetChipType(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    const char *chipType = GetChipType();
+    if (chipType == nullptr) {
+        chipType = "";
+    }
+
+    NAPI_CALL(env, napi_create_string_utf8(env, chipType, strlen(chipType), &napiValue));
+    return napiValue;
+}
+
 static napi_value GetDevUdid(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
@@ -671,6 +691,8 @@ static napi_value Init(napi_env env, napi_value exports)
         {"productModelAlias", nullptr, nullptr, GetProductModelAlias, nullptr, nullptr, napi_default, nullptr},
         {"diskSN", nullptr, nullptr, GetDiskSN, nullptr, nullptr, napi_default, nullptr},
         {"performanceClass", nullptr, nullptr, GetPerformanceClass, nullptr, nullptr, napi_default, nullptr},
+        {"chipType", nullptr, nullptr, GetChipType, nullptr, nullptr, napi_default, nullptr},
+        {"bootCount", nullptr, nullptr, GetBootCount, nullptr, nullptr, napi_default, nullptr},
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
 

@@ -169,6 +169,8 @@ HWTEST_F(SysparaUnitTest, parameterTest001_3, TestSize.Level0)
     EXPECT_STRNE(GetBuildHost(), nullptr);
     EXPECT_STRNE(GetBuildTime(), nullptr);
     EXPECT_STRNE(GetBuildRootHash(), nullptr);
+    EXPECT_STRNE(GetChipType(), nullptr);
+    EXPECT_GT(GetBootCount(), -1);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest002, TestSize.Level0)
