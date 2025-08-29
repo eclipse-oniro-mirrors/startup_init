@@ -17,6 +17,7 @@
 #include <sys/time.h>
 
 #include "bootevent.h"
+#include "parameter.h"
 #include "init_param.h"
 #include "init_utils.h"
 #include "list.h"
@@ -152,5 +153,20 @@ HWTEST_F(SysEventUnitTest, SysEventTest_007, TestSize.Level1)
     int ret = PluginExecCmd("unset_bootevent", 1, appfwkReady);
     EXPECT_EQ(ret, 0);
     printf("SysEventTest_007:%d\n", ret);
+}
+
+HWTEST_F(SysEventUnitTest, SysEventTest_008, TestSize.Level1)
+{
+    char key1[] = "persist.startup.bootcount";
+    char value1[32] = {0};
+    char value2[32] = {0};
+    char defValue1[] = "value of key not exist...";
+    int ret = GetParameter(key1, defValue1, value1, 32);
+    EXPECT_NE(ret, static_cast<int>(strlen(defValue1)));
+    UpdateBootCount();
+    ret = GetParameter(key1, defValue1, value2, 32);
+    printf("value1: '%s'\n", value1);
+    printf("value2: '%s'\n", value2);
+    EXPECT_NE(0, strcmp(value1, value2));
 }
 } // namespace init_ut

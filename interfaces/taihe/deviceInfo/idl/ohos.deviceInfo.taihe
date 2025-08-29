@@ -81,6 +81,8 @@ function getdistributionOSApiName(): String;
 function getdistributionOSReleaseType(): String;
 @static("deviceInfo") @get
 function getdiskSN(): String;
+@static("deviceInfo") @get
+function getchipType(): String;
 
 @static("deviceInfo") @get
 function getsdkApiVersion(): i32;
@@ -96,3 +98,5 @@ function getbuildVersion(): i32;
 function getfirstApiVersion(): i32;
 @static("deviceInfo") @get
 function getdistributionOSApiVersion(): i32;
+@static("deviceInfo") @get
+function getbootCount(): i32;

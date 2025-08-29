@@ -463,3 +463,14 @@ int GetPerformanceClass(void)
     }
     return performanceClassValue;
 }
+
+const char *GetChipType(void)
+{
+    static const char *chiptype = NULL;
+    return GetProperty("ohos.boot.hardware", &chiptype);
+}
+
+int GetBootCount(void)
+{
+    return GetIntParameter("persist.startup.bootcount", -1);
+}

@@ -98,6 +98,7 @@
     *GetStringParameter*;
     FindParameter;
     GetAbiList;
+    GetBootCount;
     GetBootloaderVersion;
     GetBrand;
     GetBuildHost;
@@ -105,6 +106,7 @@
     GetBuildTime;
     GetBuildType;
     GetBuildUser;
+    GetChipType;
     GetDevUdid;
     GetDisplayVersion;
     GetFirstApiVersion;
