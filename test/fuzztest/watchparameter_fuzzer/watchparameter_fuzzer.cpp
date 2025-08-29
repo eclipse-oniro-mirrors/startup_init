@@ -17,6 +17,7 @@
 #include <string>
 #include "parameter.h"
 #include "fuzz_utils.h"
+#include <unistd.h>
 static const int SLEEP_TIME = 100000;
 
 static void HandleParamChange(const char *key, const char *value, void *context)
