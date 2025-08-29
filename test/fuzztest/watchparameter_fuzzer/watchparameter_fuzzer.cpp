@@ -29,10 +29,12 @@ static void HandleParamChange(const char *key, const char *value, void *context)
 namespace OHOS {
     bool FuzzWatchParameter(const uint8_t* data, size_t size)
     {
+        usleep(100000);
         bool result = false;
         std::string str(reinterpret_cast<const char*>(data), size);
         CloseStdout();
         if (!WatchParameter(str.c_str(), HandleParamChange, NULL)) {
+            usleep(100000);
             WatchParameter(str.c_str(), NULL, NULL);
             result = true;
         }
