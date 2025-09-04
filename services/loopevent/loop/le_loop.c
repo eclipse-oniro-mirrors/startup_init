@@ -48,6 +48,7 @@ static void TaskNodeFree(const HashNode *node, void *context)
     BaseTask *task = HASHMAP_ENTRY(node, BaseTask, hashNode);
     CloseTask((const LoopHandle)context, task);
     free(task);
+    task = NULL;
 }
 
 static LE_STATUS CreateLoop_(EventLoop **loop, uint32_t maxevents, uint32_t timeout)
