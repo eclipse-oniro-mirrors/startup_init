@@ -45,6 +45,7 @@ static LE_STATUS Close_(const EventLoop *loop)
     LE_LOGV("Close_ epollFd %d", epoll->epollFd);
     close(epoll->epollFd);
     free(epoll);
+    epoll = NULL;
     return LE_SUCCESS;
 }
 
