@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "taihe.platform.ani.ani.hpp"
 #include "internal.full.global.ani.hpp"
 #if __has_include(<ani.h>)
 #include <ani.h>
