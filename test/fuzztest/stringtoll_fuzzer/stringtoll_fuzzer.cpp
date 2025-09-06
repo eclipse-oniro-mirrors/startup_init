@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,29 +13,28 @@
  * limitations under the License.
  */
 
-#include "watchparameter_fuzzer.h"
 #include <string>
-#include "parameter.h"
-#include "fuzz_utils.h"
+#include "init_utils.h"
+#include "securec.h"
+#include "stringtoll_fuzzer.h"
 
-static void HandleParamChange(const char *key, const char *value, void *context)
-{
-    if (key == nullptr || value == nullptr) {
-        return;
-    }
-    printf("Receive parameter change %s %s \n", key, value);
-}
 
 namespace OHOS {
-    bool FuzzWatchParameter(const uint8_t* data, size_t size)
+    bool FuzzStringToLL(const uint8_t* data, size_t size)
     {
-        bool result = false;
-        std::string str(reinterpret_cast<const char*>(data), size);
-        CloseStdout();
-        if (!WatchParameter(str.c_str(), HandleParamChange, NULL)) {
-            result = true;
+        if (size < sizeof(int)) {
+            return false;
         }
-        return result;
+
+        int extractedInt = 0;
+        errno_t err = memcpy_s(&extractedInt, sizeof(extractedInt), data, sizeof(int));
+        if (err != 0) {
+            return false;
+        }
+        std::string num = std::to_string(std::abs(extractedInt));
+        long long int value = 0;
+        StringToLL(num.c_str(), &value);
+        return true;
     }
 }
 
@@ -43,6 +42,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzWatchParameter(data, size);
+    OHOS::FuzzStringToLL(data, size);
     return 0;
 }
