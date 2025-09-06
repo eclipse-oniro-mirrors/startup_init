@@ -25,6 +25,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <linux/major.h>
+#include <sched.h>
+#include <sys/resource.h>
 
 #include "config_policy_utils.h"
 #include "device.h"
@@ -281,6 +283,12 @@ int ParseCfgByPriority(const char *filePath)
     return 0;
 }
 
+static void SetInitPriority()
+{
+    int ret = setpriority(PRIO_PROCESS, 0, INIT_PRIORITY_NICE);
+    INIT_CHECK_ONLY_ELOG(ret == 0, "set init priority failed");
+}
+
 void SystemConfig(const char *uptime)
 {
     INIT_TIMING_STAT timingStat;
@@ -332,6 +340,7 @@ void SystemConfig(const char *uptime)
     // Write kernel uptime into system parameter
     WriteUptimeSysParam("ohos.boot.time.kernel", uptime);
 
+    SetInitPriority();
     // read config
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
