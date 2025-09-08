@@ -31,6 +31,7 @@ extern "C" {
 // max length of one param/path
 #define  MAX_ONE_ARG_LEN 200
 #define  FD_HOLDER_BUFFER_SIZE 4096
+#define INIT_PRIORITY_NICE (-20)
 
 #define UNUSED(x) (void)(x)
 
