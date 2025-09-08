@@ -3420,6 +3420,238 @@ ohos_fuzztest("SplitStringFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("SetBootCompletedFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/setbootcompleted_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "setbootcompleted_fuzzer/setbootcompleted_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ConvertMicrosecondToSecondFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/convertmicrosecondtosecond_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "convertmicrosecondtosecond_fuzzer/convertmicrosecondtosecond_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("StringToLLFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/stringtoll_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "stringtoll_fuzzer/stringtoll_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("StringToULLFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/stringtoull_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "stringtoull_fuzzer/stringtoull_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("StringToIntFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/stringtoint_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "stringtoint_fuzzer/stringtoint_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("StringToUintFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/stringtouint_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "stringtouint_fuzzer/stringtouint_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("TrimHeadFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/trimhead_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "trimhead_fuzzer/trimhead_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("TrimTailFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/trimtail_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "trimtail_fuzzer/trimtail_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ohos_fuzztest("SendLocalChangeFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file = "//base/startup/init/test/fuzztest/sendlocalchange_fuzzer"
@@ -3690,6 +3922,7 @@ group("fuzztest") {
     ":CheckAppWatchPermissionFuzzTest",
     ":CmdClientInitFuzzTest",
     ":CmdServiceProcessDelClientFuzzTest",
+    ":ConvertMicrosecondToSecondFuzzTest",
     ":DecodeGidFuzzTest",
     ":DecodeUidFuzzTest",
     ":DelRemoteWatcherFuzzTest",
@@ -3783,15 +4016,22 @@ group("fuzztest") {
     ":ServiceSetReadyFuzzTest",
     ":ServiceWaitForStatusFuzzTest",
     ":ServiceWatchForStatusFuzzTest",
+    ":SetBootCompletedFuzzTest",
     ":SetParameterCFuzzTest",
     ":SetParameterCppFuzzTest",
     ":SplitStringFuzzTest",
     ":StartServiceByTimerFuzzTest",
     ":StopServiceTimerFuzzTest",
+    ":StringToIntFuzzTest",
+    ":StringToLLFuzzTest",
+    ":StringToUintFuzzTest",
+    ":StringToULLFuzzTest",
     ":SysCheckParamExistFuzzTest",
     ":SystemDumpParametersFuzzTest",
     ":SystemTraversalParameterFuzzTest",
     ":SystemWaitParameterFuzzTest",
+    ":TrimHeadFuzzTest",
+    ":TrimTailFuzzTest",
     ":UmountAllWithFstabFileFuzzTest",
     ":WaitParameterFuzzTest",
     ":WatchParameterFuzzTest",
