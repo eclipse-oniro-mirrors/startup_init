@@ -65,7 +65,6 @@ static int LoadDmLinearDeviceTable(int fd, const char *devName, DmLinearTarget *
         paras = parasBuf + sizeof(*io) + len;
         rc = strcpy_s(paras, target[i].paras_len + 1, target[i].paras);
         BEGET_ERROR_CHECK(rc == EOK, free(parasBuf); return -1, "error %d, cp target paras", rc);
-        BEGET_LOGI("linear target.paras = %s, ts->target_type = %s", target[i].paras, ts->target_type);
         len += target[i].paras_len + 1;
         ts->next = target[i].paras_len + 1 + sizeof((*ts));
         i++;
