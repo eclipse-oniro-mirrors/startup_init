@@ -22,6 +22,8 @@
 #define protected public
 #include "watcher_manager.h"
 #undef protected
+#include <unistd.h>
+static const int SLEEP_TIME = 100000;
 using namespace OHOS::init_param;
 
 class FuzzWatcher final : public Watcher {
@@ -36,16 +38,22 @@ public:
 namespace OHOS {
     bool FuzzAddRemoteWatcher(const uint8_t* data, size_t size)
     {
+        if (size < sizeof(uint32_t)) {
+            return false;
+        }
+        uint32_t id = 0;
+        if (memcpy_s(&id, sizeof(uint32_t), data, sizeof(uint32_t)) != 0) {
+            id = 0;
+        }
         bool result = false;
         sptr<Watcher> watcher = new FuzzWatcher();
         std::unique_ptr<WatcherManager> watcherManager = std::make_unique<WatcherManager>(0, true);
-        uint32_t id = static_cast<const uint32_t>(*data);
         uint32_t watcherId = 0;
-        watcherManager->OnStart();
         if (!watcherManager->AddRemoteWatcher(id, watcherId, watcher)) {
             result = true;
             watcherManager->DelRemoteWatcher(watcherId);
         };
+        usleep(SLEEP_TIME);
         return result;
     }
 }
