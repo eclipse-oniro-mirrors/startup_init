@@ -15,6 +15,6 @@
  @!namespace("@internal.full.global")
 
  @!sts_inject("""
- loadLibrary("global_taihe_native.z")
+ loadLibraryWithPermissionCheck("global_taihe_native.z", "@internal.full.global")
  """)
  function canIUse(syscap: String): bool;

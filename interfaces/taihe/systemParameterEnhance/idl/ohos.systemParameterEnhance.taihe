@@ -15,7 +15,7 @@
 @!namespace("@ohos.systemParameterEnhance", "systemParameterEnhance")
 
 @!sts_inject("""
-static { loadLibrary("systemParameterEnhance_taihe_native.z") }
+static { loadLibraryWithPermissionCheck("systemParameterEnhance_taihe_native.z", "@ohos.systemParameterEnhance") }
 """)
 
 function getSync(key: String, def: Optional<String>): String;
