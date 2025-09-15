@@ -72,7 +72,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
     // first check permission
     int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
     PARAM_CHECK(ret == 0, return ret, "SystemWaitParameter failed! name is: %s, errNum is: %d", name, ret);
-    int32_t diff = 0;
+    uint32_t diff = 0;
     struct timespec startTime = {0};
     if (timeout <= 0) {
         timeout = DEFAULT_PARAM_WAIT_TIMEOUT;
@@ -93,12 +93,12 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
         struct timespec finishTime = {0};
         (void)clock_gettime(CLOCK_MONOTONIC, &finishTime);
         diff = IntervalTime(&finishTime, &startTime);
-        if (diff >= timeout) {
+        if (diff >= (uint32_t)timeout) {
             ret = PARAM_CODE_TIMEOUT;
             break;
         }
     } while (1);
-    PARAM_LOGI("SystemWaitParameter name %s value: %s diff %d timeout %d", name, value, diff, diff);
+    PARAM_LOGI("SystemWaitParameter name %s value: %s diff %u timeout %u", name, value, diff, diff);
     if (ret != 0) {
         PARAM_LOGE("SystemWaitParameter failed! name is:%s, errNum is %d", name, ret);
     }
