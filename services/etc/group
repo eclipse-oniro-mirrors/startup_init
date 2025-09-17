@@ -172,6 +172,7 @@ app_domain_verify:x:3111:
 compiler_service:x:5300:
 sandbox_manager:x:3076:
 app_fwk_update:x:3350:
+web_native_messaging_service:x:3351:
 sysselection:x:1080:
 mechbody:x:7811:
 ufs:x:1020:
