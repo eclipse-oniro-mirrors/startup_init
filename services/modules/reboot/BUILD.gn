@@ -67,6 +67,13 @@ ohos_source_set("libreboot_static") {
     "../init_hook",
     "//base/startup/init/interfaces/innerkits/include/param",
   ]
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  part_name = "init"
+  subsystem_name = "startup"
   external_deps = [ "cJSON:cjson" ]
   public_external_deps = [ "bounds_checking_function:libsec_static" ]
   public_configs = [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
