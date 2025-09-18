@@ -31,7 +31,7 @@ static int StartProcess(const char *name, const char *extArgv[], int extArgc)
     BEGET_ERROR_CHECK(name != NULL, return -1, "Service name is null.");
     int extraArg = 0;
     if ((extArgv != NULL) && (extArgc > 0)) {
-        BEGET_LOGI("Start service by extra args");
+        BEGET_LOGV("Start service by extra args");
         extraArg = 1;
     }
     int ret = 0;
