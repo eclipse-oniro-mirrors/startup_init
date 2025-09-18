@@ -21,13 +21,13 @@
 extern "C" {
 #endif
 
-int MountWithCheckpoint(const char *source, const char *target,
+MountResult MountWithCheckpoint(const char *source, const char *target,
     const char *fsType, unsigned long flags, const char *data);
 
 int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecificDataSize,
     char *checkpointData, size_t checkpointDataSize);
 
-int DoMountOneItem(FstabItem *item);
+int DoMountOneItem(FstabItem *item, MountResult *result);
 
 #ifdef __cplusplus
 }
