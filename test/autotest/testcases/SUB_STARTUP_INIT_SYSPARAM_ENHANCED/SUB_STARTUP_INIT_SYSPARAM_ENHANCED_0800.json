@@ -1,0 +1,14 @@
+{
+  "description": "Config for OpenHarmony devicetest test cases",
+  "environment": [
+    {
+      "type": "device"
+    }
+  ],
+  "driver": {
+    "type": "DeviceTest",
+    "py_file": [
+      "SUB_STARTUP_INIT_SYSPARAM_ENHANCED/SUB_STARTUP_INIT_SYSPARAM_ENHANCED_0800.py"
+    ]
+  }
+}
