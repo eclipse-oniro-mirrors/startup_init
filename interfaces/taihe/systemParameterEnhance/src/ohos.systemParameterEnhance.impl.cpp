@@ -55,7 +55,7 @@ string getParam(string_view key, optional_view<string> def)
 
 string getParamNodef(string_view key)
 {
-    return GetParam(std::string(key), nullptr);
+    return GetParam(std::string(key), "");
 }
 
 void SetParam(std::string key, std::string value)
