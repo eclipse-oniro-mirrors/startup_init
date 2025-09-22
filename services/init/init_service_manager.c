@@ -1338,7 +1338,7 @@ void StopAllServices(int flags, const char **exclude, int size,
         service->pid = -1;
 #endif
     }
-
+    INIT_LOGI("stop appspawn end");
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
     while (node != NULL) {
         Service *service = node->data.service;

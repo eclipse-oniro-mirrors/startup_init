@@ -940,7 +940,7 @@ void ServiceReap(Service *service)
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
-            INIT_LOGI("ServiceReap start failed! %s will reStart %d second later", service->name, service->crashTime);
+            INIT_LOGI("ServiceReap start failed! %s will reStart 240 second later", service->name);
             service->crashCnt = 0;
             ServiceReStartTimer(service, DEF_CRASH_TIME);
             return;
