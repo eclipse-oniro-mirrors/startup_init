@@ -117,13 +117,13 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
     }
 
 #ifdef DEPENDENT_APPEXECFWK_BASE
-    auto bundleMgrProxy = OHOS::iface_cast<OHOS::AppExecFwk::BundleMgrProxy>(remoteObject);
-    if (!bundleMgrProxy) {
+    auto bundleMgr = OHOS::iface_cast<OHOS::AppExecFwk::IBundleMgr>(remoteObject);
+    if (!bundleMgr) {
         return DEV_INFO_ENULLPTR;
     }
 
     std::string odidStr;
-    if (bundleMgrProxy->GetOdid(odidStr) != 0) {
+    if (bundleMgr->GetOdid(odidStr) != 0) {
         return DEV_INFO_EGETODID;
     }
 
