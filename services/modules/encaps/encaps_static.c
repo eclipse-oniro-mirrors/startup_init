@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <string.h>
+#include <securec.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -29,6 +30,7 @@
 #define OH_PROC_SYS 3
 #define SET_PROC_TYPE_CMD _IOW(OH_ENCAPS_MAGIC, OH_ENCAPS_PROC_TYPE_BASE, uint32_t)
 #define SET_KERNEL_PERM_TYPE_CMD _IOW(OH_ENCAPS_MAGIC, OH_ENCAPS_PERMISSION_TYPE_BASE, char *)
+#define KERNEL_PERM_LENGTH 1024
 
 static void SetKernelPerm(SERVICE_INFO_CTX *serviceCtx)
 {
@@ -55,10 +57,24 @@ static void SetKernelPerm(SERVICE_INFO_CTX *serviceCtx)
         return;
     }
     if (service->kernelPerms != NULL) {
+        char *kernelPerms = calloc(1, KERNEL_PERM_LENGTH);
+        if (kernelPerms == NULL) {
+            INIT_LOGE("SetKernelPerm malloc kernelPerms failed");
+            close(fd);
+            return;
+        }
+        ret = strncpy_s(kernelPerms, KERNEL_PERM_LENGTH, service->kernelPerms, KERNEL_PERM_LENGTH - 1);
+        if (ret != EOK) {
+            INIT_LOGE("SetKernelPerm copy kernelPerms failed");
+            close(fd);
+            free(kernelPerms);
+            return;
+        }
         ret = ioctl(fd, SET_KERNEL_PERM_TYPE_CMD, service->kernelPerms);
         if (ret != 0) {
             INIT_LOGE("SetKernelPerm set encaps permission failed");
         }
+        free(kernelPerms);
     }
     close(fd);
 }
