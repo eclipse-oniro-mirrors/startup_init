@@ -78,6 +78,7 @@ static void *ThreadRun(void *data)
             pthread_cond_timedwait(&(parameterCtrl->hasData), &(parameterCtrl->lock), &abstime);
         }
         if (parameterCtrl->shutdown) {
+            pthread_mutex_unlock(&(parameterCtrl->lock));
             break;
         }
         pthread_mutex_unlock(&(parameterCtrl->lock));

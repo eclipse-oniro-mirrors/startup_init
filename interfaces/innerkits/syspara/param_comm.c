@@ -77,7 +77,7 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
         if (def == NULL) {
             return GetSystemError(ret);
         }
-        if (strlen(def) > len) {
+        if (strlen(def) >= len) {
             return EC_INVALID;
         }
         ret = strcpy_s(value, len, def);

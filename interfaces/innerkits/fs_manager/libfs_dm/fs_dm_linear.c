@@ -48,7 +48,7 @@ static int LoadDmLinearDeviceTable(int fd, const char *devName, DmLinearTarget *
     io->data_start = sizeof(*io);
     io->target_count = targetNum;
     uint32_t i = 0;
-    int len = 0;
+    uint32_t len = 0;
     char *paras = NULL;
     do {
         FS_DM_RETURN_ERR_IF_NULL(target[i].paras);
