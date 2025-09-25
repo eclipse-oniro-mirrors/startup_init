@@ -95,6 +95,7 @@ static void RmdirTimer(Service *service, uint64_t timeout)
     serviceRmdir->pid = service->pid;
     int strLen = strlen(service->name);
     serviceRmdir->name = (char *)malloc(sizeof(char)*(strLen + 1));
+    INIT_ERROR_CHECK(serviceRmdir->name != NULL, free(serviceRmdir); return, "Failed to malloc for serviceRmdir->name");
     int ret = strcpy_s(serviceRmdir->name, strLen + 1, service->name);
     if (ret != 0) {
         free(serviceRmdir->name);
