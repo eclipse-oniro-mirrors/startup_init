@@ -910,7 +910,7 @@ static void GetKernelPerm(const cJSON *curItem, Service *service)
     service->kernelPerms = NULL;
     cJSON *cJsonKernelPerms = cJSON_GetObjectItemCaseSensitive(curItem, "kernel_permission");
     INIT_CHECK(cJsonKernelPerms != NULL, return);
-    INIT_LOGI("GetKernelPerm: build kernelPerm str");
+    INIT_LOGI("GetKernelPerm: build kernelPerm str, service name: %s", service->name);
     int count = cJSON_GetArraySize(cJsonKernelPerms);
     INIT_INFO_CHECK(count > 0, return, "GetKernelPerm: count is zero");
     INIT_ERROR_CHECK(count < KERNEL_PERM_MAX_COUNT, return, "GetKernelPerm: too many kernelPerm");

@@ -24,6 +24,10 @@
 
 #define SA_MAIN_PATH ("/system/bin/sa_main")
 
+#ifdef ASAN_DETECTOR
+#define SA_ASAN_MAIN_PATH ("/system/asan/bin/sa_main")
+#endif
+
 #define OH_ENCAPS_PROC_TYPE_BASE 0x18
 #define OH_ENCAPS_PERMISSION_TYPE_BASE 0x1A
 #define OH_ENCAPS_MAGIC 'E'
@@ -84,9 +88,16 @@ static void SetKernelPermForSa(SERVICE_INFO_CTX *serviceCtx)
     if (serviceCtx->reserved == NULL) {
         return;
     }
-    if (strncmp(SA_MAIN_PATH, serviceCtx->reserved, strlen(SA_MAIN_PATH)) == 0) {
+#ifdef ASAN_DETECTOR
+    if (strncmp(SA_MAIN_PATH, serviceCtx->reserved, strlen(SA_MAIN_PATH)) == 0 ||
+        strncmp(SA_ASAN_MAIN_PATH, serviceCtx->reserved, strlen(SA_ASAN_MAIN_PATH)) == 0) {
         SetKernelPerm(serviceCtx);
     }
+#else
+     if (strncmp(SA_MAIN_PATH, serviceCtx->reserved, strlen(SA_MAIN_PATH)) == 0) {
+         SetKernelPerm(serviceCtx);
+     }
+#endif
 }
 
 MODULE_CONSTRUCTOR(void)

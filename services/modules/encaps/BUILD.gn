@@ -31,7 +31,13 @@ ohos_source_set("libencaps_static") {
     "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config",
   ]
 
+  defines = []
+  if (asan_detector) {
+    defines += [ "ASAN_DETECTOR" ]
+  }
+
   externel_deps = [
+    "cJSON:cjson",
     "bounds_checking_function:libsec_shared",
   ]
 
