@@ -16,18 +16,18 @@ import("//build/ohos.gni")
 import("//build/ohos/taihe_idl/taihe.gni")
 
 copy_taihe_idl("copy_global") {
-  sources = [ "idl/global.taihe" ] 
+  sources = [ "idl/internal.full.global.taihe" ] 
 }
 subsystem_name = "startup"
 part_name = "init"
-taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name"
+taihe_generated_file_path_global = "$taihe_file_path/out/$subsystem_name/$part_name/global"
 
 ohos_taihe("run_taihe") {
-  taihe_generated_file_path = "$taihe_generated_file_path"
+  taihe_generated_file_path = "$taihe_generated_file_path_global"
   deps = [ ":copy_global" ]
   outputs = [
-    "$taihe_generated_file_path/src/global.ani.cpp",
-    "$taihe_generated_file_path/src/global.abi.c",
+    "$taihe_generated_file_path/src/internal.full.global.ani.cpp",
+    "$taihe_generated_file_path/src/internal.full.global.abi.c",
   ]
 }
 
@@ -37,14 +37,14 @@ taihe_shared_library("global_taihe_native") {
     cfi_cross_dso = true
     debug = false
   }
-  taihe_generated_file_path = "$taihe_generated_file_path"
+  taihe_generated_file_path = "$taihe_generated_file_path_global"
   part_name = "$part_name"
   subsystem_name = "$subsystem_name"
   sources = get_target_outputs(":run_taihe")
-  include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
+  include_dirs = [ "${init_innerkits_path}/include" ]
   sources += [
     "src/ani_constructor.cpp",
-    "src/global.impl.cpp",
+    "src/internal.full.global.impl.cpp",
   ]
   deps = [
     ":run_taihe",
@@ -53,8 +53,8 @@ taihe_shared_library("global_taihe_native") {
 }
 
 generate_static_abc("global") {
-  base_url = "$taihe_generated_file_path"
-  files = [ "$taihe_generated_file_path/global.ets" ]
+  base_url = "$taihe_generated_file_path_global"
+  files = [ "$taihe_generated_file_path_global/@internal.full.global.ets" ]
   is_boot_abc = "True"
   device_dst_file = "/system/framework/global.abc"
   dependencies = [ ":run_taihe" ]
