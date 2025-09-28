@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "global.proj.hpp"
-#include "global.impl.hpp"
+#include "internal.full.global.proj.hpp"
+#include "internal.full.global.impl.hpp"
 #include "taihe/runtime.hpp"
 #include "stdexcept"
 #include "systemcapability.h"
@@ -28,9 +28,6 @@ bool canIUse(string_view syscap)
     bool ret = HasSystemCapability(std::string(syscap).c_str());
     return ret;
 }
-}  // namespace
+}  //namespace
 
-// Since these macros are auto-generate, lint will cause false positive.
-// NOLINTBEGIN
 TH_EXPORT_CPP_API_canIUse(canIUse);
-// NOLINTEND
