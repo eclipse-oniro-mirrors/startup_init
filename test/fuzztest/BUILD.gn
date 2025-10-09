@@ -3781,6 +3781,436 @@ ohos_fuzztest("ParamFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("DoStartFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/dostart_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/init/include"
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "dostart_fuzzer/dostart_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DoMkdirFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/domkdir_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/init/include"
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "domkdir_fuzzer/domkdir_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DoChmodFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/dochmod_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/init/include"
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "dochmod_fuzzer/dochmod_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DoChownFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/dochown_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/init/include"
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "dochown_fuzzer/dochown_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DoMountFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/domount_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/init/include"
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "domount_fuzzer/domount_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DoExportFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/doexport_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/init/include"
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "doexport_fuzzer/doexport_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DoRmFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/dorm_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/init/include"
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "dorm_fuzzer/dorm_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DoRmdirFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/dormdir_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/init/include"
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "dormdir_fuzzer/dormdir_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DoWriteFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/dowrite_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/init/include"
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "dowrite_fuzzer/dowrite_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("DoStopFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/dostop_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/test/fuzztest/utils/include",
+    "//base/startup/init/services/init/include"
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util_for_init_static",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libinit_module_engine",
+    "mbedtls:mbedtls_shared",
+    "selinux:libselinux",
+    "zlib:libz",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources =
+      [ "dostop_fuzzer/dostop_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ohos_fuzztest("DUMPFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file = "//base/startup/init/test/fuzztest/dump_fuzzer"
