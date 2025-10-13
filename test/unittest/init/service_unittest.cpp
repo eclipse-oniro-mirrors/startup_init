@@ -516,7 +516,7 @@ HWTEST_F(ServiceUnitTest, TestServiceCGroup2, TestSize.Level1)
     cJSON_Delete(jobItem);
 }
 
-HWTEST_F(ServiceUnitTest, TestKernelPermAllRight, TestSize.Level1)
+HWTEST_F(ServiceUnitTest, TestKernelPermAllRight, TestSize.Level0)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/system/bin/sa_main\"],"
         "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
@@ -546,7 +546,7 @@ HWTEST_F(ServiceUnitTest, TestKernelPermAllRight, TestSize.Level1)
     cJSON_Delete(jobItem);
 }
 
-HWTEST_F(ServiceUnitTest, TestKernelPermValueNotSupport, TestSize.Level1)
+HWTEST_F(ServiceUnitTest, TestKernelPermValueNotSupport, TestSize.Level0)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/system/bin/sa_main\"],"
         "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
@@ -574,7 +574,7 @@ HWTEST_F(ServiceUnitTest, TestKernelPermValueNotSupport, TestSize.Level1)
     cJSON_Delete(jobItem);
 }
 
-HWTEST_F(ServiceUnitTest, TestKernelPermNotSa, TestSize.Level1)
+HWTEST_F(ServiceUnitTest, TestKernelPermNotSa, TestSize.Level0)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/system/bin\"],"
         "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
@@ -602,7 +602,7 @@ HWTEST_F(ServiceUnitTest, TestKernelPermNotSa, TestSize.Level1)
     cJSON_Delete(jobItem);
 }
 
-HWTEST_F(ServiceUnitTest, TestKernelPermPermissionError, TestSize.Level1)
+HWTEST_F(ServiceUnitTest, TestKernelPermPermissionError, TestSize.Level0)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/system/bin/sa_main\"],"
         "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
@@ -630,7 +630,7 @@ HWTEST_F(ServiceUnitTest, TestKernelPermPermissionError, TestSize.Level1)
     cJSON_Delete(jobItem);
 }
 
-HWTEST_F(ServiceUnitTest, TestKernelPermServiceNameError, TestSize.Level1)
+HWTEST_F(ServiceUnitTest, TestKernelPermServiceNameError, TestSize.Level0)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/system/bin/sa_main\"],"
         "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
