@@ -75,3 +75,4 @@ ro_runmode_param=20480
 sys_shutdown_requested_param=20480
 const_telephony_slotCount_param=20480
 persist_sys_debug_on_param=20480
+persist_update_param=12288
