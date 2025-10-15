@@ -119,16 +119,36 @@ INIT_LOCAL_API void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, cons
 #define PARAM_LOGE(fmt, ...) \
     ParamWorBaseLog(INIT_ERROR, PARAN_DOMAIN, PARAN_LABEL, "[%s:%d]" fmt, \
         (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
+
+#define PARAM_DUMPI(fmt, ...) \
+    ParamWorBaseLog(INIT_INFO, PARAN_DOMAIN, PARAN_LABEL, fmt, \
+        ##__VA_ARGS__)
+#define PARAM_DUMPW(fmt, ...) \
+    ParamWorBaseLog(INIT_WARN, PARAN_DOMAIN, PARAN_LABEL, fmt, \
+        ##__VA_ARGS__)
+#define PARAM_DUMPE(fmt, ...) \
+    ParamWorBaseLog(INIT_ERROR, PARAN_DOMAIN, PARAN_LABEL, fmt, \
+        ##__VA_ARGS__)
+
 #else
 #define PARAM_LOGI(fmt, ...) STARTUP_LOGI(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGE(fmt, ...) STARTUP_LOGE(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGV(fmt, ...) STARTUP_LOGV(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 #define PARAM_LOGW(fmt, ...) STARTUP_LOGW(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_DUMPI(fmt, ...) STARTUP_DUMPI(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_DUMPE(fmt, ...) STARTUP_DUMPE(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
+#define PARAM_DUMPW(fmt, ...) STARTUP_LOGW(PARAN_DOMAIN, PARAN_LABEL, fmt, ##__VA_ARGS__)
 #endif
 
 #define PARAM_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                \
         PARAM_LOGE(__VA_ARGS__);     \
+        exper;                       \
+    }
+
+#define PARAM_CHECK_DUMPE(retCode, exper, ...) \
+    if (!(retCode)) {                \
+        PARAM_DUMPE(__VA_ARGS__);     \
         exper;                       \
     }
 
@@ -143,6 +163,13 @@ INIT_LOCAL_API void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, cons
         PARAM_LOGW(__VA_ARGS__);     \
         exper;                       \
     }
+
+#define PARAM_WARNING_CHECK_DUMPW(retCode, exper, ...) \
+    if (!(retCode)) {                \
+        PARAM_DUMPW(__VA_ARGS__);     \
+        exper;                       \
+    }
+
 
 #define PARAM_ONLY_CHECK(retCode, exper) \
     if (!(retCode)) {                \

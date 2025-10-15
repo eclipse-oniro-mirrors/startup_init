@@ -394,7 +394,7 @@ STATIC_INLINE int ReadParamWithCheck(WorkSpace **workspace, const char *name, ui
     labelIndex.selinuxLabelIndex = labelIndex.workspace->spaceIndex;
 
     int ret = CheckParamPermission_(&labelIndex, &g_paramWorkSpace.securityLabel, name, op);
-    PARAM_CHECK(ret == 0, return ret, "Forbid to read parameter %s", name);
+    PARAM_CHECK_DUMPE(ret == 0, return ret, "Forbid to read parameter %s", name);
 #ifdef PARAM_SUPPORT_SELINUX
     // search from real workspace
     *node = BaseFindTrieNode(labelIndex.workspace, name, strlen(name), NULL);
@@ -480,8 +480,8 @@ STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
         }
     }
     // forbid
-    PARAM_LOGW("Param '%s' label gid:%d uid:%d mode 0%x", name, srcLabel->cred.gid, srcLabel->cred.uid, mode);
-    PARAM_LOGW("Cfg label %u gid:%d uid:%d mode 0%x ", labelIndex->dacLabelIndex, node->gid, node->uid, node->mode);
+    PARAM_DUMPW("Param %s label gid:%d uid:%d mode 0%x", name, srcLabel->cred.gid, srcLabel->cred.uid, mode);
+    PARAM_DUMPW("Cfg label %u gid:%d uid:%d mode 0%x ", labelIndex->dacLabelIndex, node->gid, node->uid, node->mode);
 
     int ret = DAC_RESULT_FORBIDED;
 #ifndef __MUSL__
@@ -526,7 +526,7 @@ STATIC_INLINE int SelinuxCheckParamPermission(const ParamLabelIndex *labelIndex,
     }
     if (ret != 0) {
         ret = SELINUX_RESULT_FORBIDED;
-        PARAM_LOGW("Selinux check name %s in %s [%d %d %d] failed",
+        PARAM_DUMPW("Selinux check name %s in %s [%d %d %d] failed",
             name, GetSelinuxContent(name), srcLabel->cred.pid, srcLabel->cred.uid, srcLabel->cred.gid);
     }
     return ret;
@@ -617,7 +617,7 @@ CachedHandle CachedParameterCreate(const char *name, const char *defValue)
     ParamTrieNode *node = NULL;
     WorkSpace *workspace = NULL;
     int ret = ReadParamWithCheck(&workspace, name, DAC_READ, &node);
-    PARAM_CHECK(ret == 0, return NULL, "Forbid to access parameter %s", name);
+    PARAM_CHECK_DUMPE(ret == 0, return NULL, "Forbid to access parameter %s", name);
     PARAM_CHECK(workspace != NULL && workspace->area != NULL, return NULL, "Forbid to access parameter %s", name);
 
     CachedParameter *param = (CachedParameter *)malloc(

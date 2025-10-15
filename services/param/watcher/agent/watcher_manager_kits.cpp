@@ -73,7 +73,7 @@ sptr<IWatcherManager> WatcherManagerKits::GetService(void)
     sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     WATCHER_CHECK(samgr != nullptr, return nullptr, "Get samgr failed");
     sptr<IRemoteObject> object = samgr->GetSystemAbility(PARAM_WATCHER_DISTRIBUTED_SERVICE_ID);
-    WATCHER_CHECK(object != nullptr, return nullptr, "Get watcher manager object from samgr failed");
+    WATCHER_CHECK_DUMPE(object != nullptr, return nullptr, "Get watcher manager object from samgr failed");
     if (deathRecipient_ == nullptr) {
         deathRecipient_ = new DeathRecipient();
     }
@@ -146,11 +146,12 @@ uint32_t WatcherManagerKits::GetRemoteWatcher(void)
 int32_t WatcherManagerKits::AddWatcher(const std::string &keyPrefix, ParameterChangePtr callback, void *context)
 {
     auto watcherManager = GetService();
-    WATCHER_CHECK(watcherManager != nullptr, return PARAM_WATCHER_GET_SERVICE_FAILED, "Failed to get watcher manager");
+    WATCHER_CHECK_DUMPE(watcherManager != nullptr, return PARAM_WATCHER_GET_SERVICE_FAILED,
+        "Failed to get watcher manager");
 
     // add or get remote agent
     uint32_t remoteWatcherId = GetRemoteWatcher();
-    WATCHER_CHECK(remoteWatcherId > 0, return -1, "Failed to get remote agent");
+    WATCHER_CHECK_DUMPE(remoteWatcherId > 0, return -1, "Failed to get remote agent");
     ParamWatcherKitPtr watcher = nullptr;
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -160,20 +161,20 @@ int32_t WatcherManagerKits::AddWatcher(const std::string &keyPrefix, ParameterCh
             watcher = std::make_shared<ParamWatcher>(keyPrefix);
             WATCHER_CHECK(watcher != nullptr, return -1, "Failed to create watcher for %s", keyPrefix.c_str());
             int ret = watcher->AddParameterListener(callback, context);
-            WATCHER_CHECK(ret == 0, return ret, "Failed to add callback for %s ", keyPrefix.c_str());
+            WATCHER_CHECK(ret == 0, return ret, "Failed to add callback for %s", keyPrefix.c_str());
             ret = watcherManager->AddWatcher(keyPrefix, remoteWatcherId);
-            WATCHER_CHECK(ret == 0, return -1, "Failed to add watcher for %s", keyPrefix.c_str());
+            WATCHER_CHECK_DUMPE(ret == 0, return -1, "Failed to add watcher for %s", keyPrefix.c_str());
             watchers_[keyPrefix] = watcher;
         } else {
             watcher = watchers_[keyPrefix];
             int ret = watcher->AddParameterListener(callback, context);
-            WATCHER_CHECK(ret == 0, return ret, "Failed to add callback for %s ", keyPrefix.c_str());
+            WATCHER_CHECK_DUMPE(ret == 0, return ret, "Failed to add callback for %s", keyPrefix.c_str());
             ret = watcherManager->RefreshWatcher(keyPrefix, remoteWatcherId);
             WATCHER_CHECK(ret == 0, return -1,
                 "Failed to refresh watcher for %s %d", keyPrefix.c_str(), remoteWatcherId);
         }
     }
-    WATCHER_LOGI("Add watcher keyPrefix %s remoteWatcherId %u success", keyPrefix.c_str(), remoteWatcherId);
+    WATCHER_DUMPI("Add watcher keyPrefix %s remoteWatcherId %u success", keyPrefix.c_str(), remoteWatcherId);
     return 0;
 }
 
@@ -183,10 +184,10 @@ int32_t WatcherManagerKits::DelWatcher(const std::string &keyPrefix, ParameterCh
     WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to get watcher manager");
 
     WatcherManagerKits::ParamWatcher *watcher = GetParamWatcher(keyPrefix);
-    WATCHER_CHECK(watcher != nullptr, return -1, "Failed to get watcher");
+    WATCHER_CHECK_DUMPE(watcher != nullptr, return -1, "Failed to get watcher");
 
     int count = watcher->DelParameterListener(callback, context);
-    WATCHER_LOGI("DelWatcher keyPrefix_ %s count %d", keyPrefix.c_str(), count);
+    WATCHER_DUMPI("DelWatcher keyPrefix_ %s count %d", keyPrefix.c_str(), count);
     if (count != 0) {
         return 0;
     }
@@ -347,7 +348,7 @@ int SystemWatchParameter(const char *keyPrefix, ParameterChangePtr callback, voi
     }
 
     if (ret != 0) {
-        WATCHER_LOGE("SystemWatchParameter is failed! keyPrefix is:%s, errNum is:%d", keyPrefix, ret);
+        WATCHER_DUMPE("SystemWatchParameter is failed!keyPrefix is:%s,errNum is:%d", keyPrefix, ret);
     }
     return ret;
 }
@@ -363,7 +364,7 @@ int RemoveParameterWatcher(const char *keyPrefix, ParameterChgPtr callback, void
     OHOS::init_param::WatcherManagerKits &instance = OHOS::init_param::WatcherManagerKits::GetInstance();
     ret = instance.DelWatcher(keyPrefix, (ParameterChangePtr)callback, context);
     if (ret != 0) {
-        WATCHER_LOGE("RemoveParameterWatcher is failed! keyPrefix is:%s, errNum is:%d", keyPrefix, ret);
+        WATCHER_DUMPE("RemoveParameterWatcher is failed! keyPrefix is:%s,errNum is:%d", keyPrefix, ret);
     }
     return ret;
 }

@@ -34,11 +34,21 @@ namespace init_param {
 #define WATCHER_LOGE(fmt, ...) STARTUP_LOGE(WATCHER_DOMAIN, WATCHER_LABEL, fmt, ##__VA_ARGS__)
 #define WATCHER_LOGV(fmt, ...) STARTUP_LOGV(WATCHER_DOMAIN, WATCHER_LABEL, fmt, ##__VA_ARGS__)
 
+#define WATCHER_DUMPI(fmt, ...) STARTUP_DUMPI(WATCHER_DOMAIN, WATCHER_LABEL, fmt, ##__VA_ARGS__)
+#define WATCHER_DUMPE(fmt, ...) STARTUP_DUMPE(WATCHER_DOMAIN, WATCHER_LABEL, fmt, ##__VA_ARGS__)
+
 #define WATCHER_CHECK(retCode, exper, ...) \
     if (!(retCode)) {                    \
         WATCHER_LOGE(__VA_ARGS__);         \
         exper;                           \
     }
+
+#define WATCHER_CHECK_DUMPE(retCode, exper, ...) \
+    if (!(retCode)) {                    \
+        WATCHER_DUMPE(__VA_ARGS__);         \
+        exper;                           \
+    }
+
 } // namespace init_param
 } // namespace OHOS
 #endif // STARTUP_WATCHER_UTILS_H

@@ -176,7 +176,7 @@ int32_t WatcherManager::DelWatcher(const std::string &keyPrefix, uint32_t remote
     WATCHER_CHECK(remoteWatcher != nullptr, return 0, "Can not find watcher %s %d", keyPrefix.c_str(), remoteWatcherId);
     WATCHER_CHECK(remoteWatcher->CheckAgent(GetCallingPid()), return -1,
         "Can not find watcher %u calling %u", remoteWatcher->GetAgentId(), static_cast<uint32_t>(GetCallingPid()));
-    WATCHER_LOGI("Delete watcher prefix %s remoteWatcherId %u", keyPrefix.c_str(), remoteWatcherId);
+    WATCHER_DUMPI("Delete watcher prefix %s remoteWatcherId %u", keyPrefix.c_str(), remoteWatcherId);
     {
         // remove watcher from agent and group
         DelParamWatcher(group, remoteWatcher);
@@ -241,7 +241,7 @@ void WatcherGroup::ProcessParameterChange(
             return;
         }
         if (strcmp("startup.service.ctl.*", GetKeyPrefix().c_str()) != 0) {
-            WATCHER_LOGI("ProcessParameterChange key '%s' pid: %d",
+            WATCHER_DUMPI("ProcessParameterChange key:%s pid:%d",
                 GetKeyPrefix().c_str(), remoteWatcher->GetAgentId());
         }
         remoteWatcher->ProcessParameterChange(GetKeyPrefix(), name, value);
@@ -276,7 +276,7 @@ void WatcherManager::AddRealWatcherGroup(const std::string &keyPrefix, int type)
         WATCHER_LOGI("add key %s groupId %u success", key.c_str(), groupMap_[key]->GetGroupId());
     } else if (type == MSG_DEL_WATCHER && groupRealMap_.find(key) != groupRealMap_.end()) {
         groupRealMap_.erase(key);
-        WATCHER_LOGI("del key %s", key.c_str());
+        WATCHER_DUMPI("del key %s", key.c_str());
     }
 }
 
@@ -315,7 +315,7 @@ void WatcherManager::SendLocalChange(const std::string &keyPrefix, uint32_t remo
         std::string keyPrefix;
         WatcherManager *watcherManagerPtr;
     };
-    WATCHER_LOGI("SendLocalChange start keyPrefix '%s' remoteWatcherId %d", keyPrefix.c_str(), remoteWatcherId);
+    WATCHER_DUMPI("SendLocalChange start keyPrefix %s remoteWatcherId %d", keyPrefix.c_str(), remoteWatcherId);
     std::vector<char> buffer(PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX);
     struct Context context = {buffer.data(), remoteWatcherId, keyPrefix, this};
     // walk watcher
