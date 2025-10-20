@@ -262,7 +262,7 @@ static int SaveServiceBootEvent()
         return -1;
     }
     INIT_CHECK_ONLY_ELOG(fprintf(tmpFile, "%s\n", buff) >= 0, "save boot event file failed");
-    free(buff);
+    cJSON_free(buff);
     cJSON_Delete(root);
     (void)fflush(tmpFile);
     (void)fclose(tmpFile);
