@@ -85,6 +85,8 @@ INIT_PUBLIC_API InitLogLevel GetInitLogLevel(void);
 #define STARTUP_LOGW(domain, tag, fmt, ...)
 #define STARTUP_LOGE(domain, tag, fmt, ...)
 #define STARTUP_LOGF(domain, tag, fmt, ...)
+#define STARTUP_DUMPI(domain, tag, fmt, ...)
+#define STARTUP_DUMPE(domain, tag, fmt, ...)
 #else
 #ifndef __LITEOS_M__
 #define STARTUP_LOGV(domain, tag, fmt, ...) \
@@ -97,6 +99,12 @@ INIT_PUBLIC_API InitLogLevel GetInitLogLevel(void);
     StartupLog(INIT_ERROR, domain, tag, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
 #define STARTUP_LOGF(domain, tag, fmt, ...) \
     StartupLog(INIT_FATAL, domain, tag, "[%s:%d]" fmt, (STARTUP_FILE_NAME), (__LINE__), ##__VA_ARGS__)
+#define STARTUP_DUMPI(domain, tag, fmt, ...) \
+    StartupLog(INIT_INFO, domain, tag, fmt, ##__VA_ARGS__)
+#define STARTUP_DUMPE(domain, tag, fmt, ...) \
+    StartupLog(INIT_ERROR, domain, tag, fmt, ##__VA_ARGS__)
+#define STARTUP_DUMPW(domain, tag, fmt, ...) \
+    StartupLog(INIT_WARN, domain, tag, fmt, ##__VA_ARGS__)
 #else
 #define STARTUP_LOGV(domain, tag, fmt, ...) \
     HILOG_DEBUG(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
@@ -108,6 +116,10 @@ INIT_PUBLIC_API InitLogLevel GetInitLogLevel(void);
     HILOG_ERROR(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
 #define STARTUP_LOGF(domain, tag, fmt, ...) \
     HILOG_FATAL(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
+#define STARTUP_DUMPE(domain, tag, fmt, ...) \
+    HILOG_ERROR(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
+#define STARTUP_DUMPI(domain, tag, fmt, ...) \
+    HILOG_INFO(HILOG_MODULE_INIT, fmt, ##__VA_ARGS__)
 #endif
 #endif
 

@@ -36,7 +36,7 @@ int ConnectServer(int fd, const char *servername)
     PARAM_CHECK(ret > EOK, return -1, "Failed to sprintf_s server address");
     socklen_t len = offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path);
     ret = connect(fd, (struct sockaddr *)&addr, len);
-    PARAM_CHECK(ret != -1, return -1, "Failed to connect server %s %d", servername, errno);
+    PARAM_CHECK_DUMPE(ret != -1, return -1, "Failed to connect server %s %d", servername, errno);
     PARAM_LOGV("ConnectServer %s success", servername);
     return 0;
 }

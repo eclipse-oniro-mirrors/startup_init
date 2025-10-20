@@ -100,7 +100,7 @@ static int ReadMessage(int fd, char *buffer, uint32_t timeout)
     do {
         ssize_t recvLen = recv(fd, (char *)buffer, RECV_BUFFER_MAX, 0);
         if (recvLen <= 0) {
-            PARAM_LOGE("ReadMessage failed! errno %d", errno);
+            PARAM_DUMPE("ReadMessage failed! errno %d", errno);
             struct timespec finishTime = {0};
             (void)clock_gettime(CLOCK_MONOTONIC, &finishTime);
             diff = IntervalTime(&finishTime, &startTime);
@@ -121,7 +121,7 @@ static int ReadMessage(int fd, char *buffer, uint32_t timeout)
     } while (1);
 
     if (ret != 0) {
-        PARAM_LOGE("ReadMessage errno %d diff %u timeout %d ret %d", errno, diff, timeout, ret);
+        PARAM_DUMPE("ReadMessage errno %d diff %u timeout %d ret %d", errno, diff, timeout, ret);
     }
     return ret;
 }
@@ -193,7 +193,7 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
 
         if (g_clientFd < 0) {
             ret = PARAM_CODE_FAIL_CONNECT;
-            PARAM_LOGE("connect param server failed!");
+            PARAM_DUMPE("connect param server failed!");
             break;
         }
         ret = StartRequest(g_clientFd, request, timeout);
@@ -205,7 +205,7 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
             break;
         }
     }
-    PARAM_LOGI("SystemSetParameter name %s id:%d ret:%d ", name, request->id.msgId, ret);
+    PARAM_DUMPI("SystemSetParameter name %s id:%d ret:%d", name, request->id.msgId, ret);
     pthread_mutex_unlock(&g_clientMutex);
     free(request);
     return ret;
@@ -287,12 +287,12 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
 #endif
     int fd = GetClientSocket(timeout);
     PARAM_CHECK(fd >= 0, free(request);
-        return fd, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
+        return fd, "SystemWaitParameter failed! name is:%s,the errNum is:%d", name, ret);
     ret = StartRequest(fd, request, timeout);
     close(fd);
     free(request);
-    PARAM_LOGI("SystemWaitParameter %s v %s ret %d", name, value, ret);
-    BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemWaitParameter failed! name is:%s, the errNum is:%d", name, ret);
+    PARAM_DUMPI("SystemWaitParameter %s v %s ret %d", name, value, ret);
+    BEGET_CHECK_ONLY_ELOG(ret == 0, "SystemWaitParameter failed!name is:%s,the errNum is:%d", name, ret);
     return ret;
 }
 
@@ -307,7 +307,7 @@ int WatchParamCheck(const char *keyprefix)
     int ret = CheckParamName(keyprefix, 0);
     PARAM_CHECK(ret == 0, return ret, "Illegal param name %s", keyprefix);
     ret = CheckParamPermission(GetParamSecurityLabel(), keyprefix, DAC_WATCH);
-    PARAM_CHECK(ret == 0, return ret, "Forbid to watcher parameter %s", keyprefix);
+    PARAM_CHECK_DUMPE(ret == 0, return ret, "Forbid to watcher parameter %s", keyprefix);
     return 0;
 }
 
@@ -323,7 +323,7 @@ void ResetParamSecurityLabel(void)
     paramSpace->flags |= WORKSPACE_FLAGS_NEED_ACCESS;
 #endif
 #endif
-    PARAM_LOGI("ResetParamSecurityLabel Fd:%d ", g_clientFd);
+    PARAM_DUMPI("ResetParamSecurityLabel Fd:%d", g_clientFd);
     pthread_mutex_lock(&g_clientMutex);
     if (g_clientFd != INVALID_SOCKET) {
         close(g_clientFd);
