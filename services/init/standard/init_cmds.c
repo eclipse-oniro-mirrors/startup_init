@@ -29,6 +29,10 @@
 #include <sys/sysmacros.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <dirent.h>
+#include <ctype.h>
+#include <mntent.h>
 #include <linux/module.h>
 
 #include "bootstage.h"
@@ -54,6 +58,14 @@
 #define BOOT_DETECTOR_IOCTL_BASE 'B'
 #define SET_SHUT_STAGE _IOW(BOOT_DETECTOR_IOCTL_BASE, 106, int)
 #define SHUT_STAGE_FRAMEWORK_START 1
+
+#define PROC_PATH "/proc"
+#define KILL_WAIT_TIME 100000
+#define INTERVAL_WAIT 10
+#define MAX_MOUNTS 256
+#define MOUNTINFO_MAX_SIZE 4096
+#define OPEN_FILE_MOD 0771
+#define TIME_LEN 64
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
@@ -401,6 +413,186 @@ static void DoStopAllServices(const struct CmdArgs *ctx)
     return;
 }
 
+static void WaitAfterKillPid(int interval, long long totalWait)
+{
+    INIT_TIMING_STAT cmdTimer;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
+    long long count = 1;
+    while (count > 0) {
+        usleep(interval);
+        count++;
+        (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+        long long diff = InitDiffTime(&cmdTimer);
+        if (diff > totalWait) {
+            count = 0;
+        }
+    }
+}
+
+static void DoKillAllPid()
+{
+    DIR *procDir = opendir(PROC_PATH);
+    INIT_ERROR_CHECK(procDir != NULL, return, "failed to open proc dir");
+    struct dirent *entry;
+    while ((entry = readdir(procDir)) != NULL) {
+        if (entry->d_type != DT_DIR) {
+            continue;
+        }
+        const char *dirName = entry->d_name;
+        if (dirName[0] == '\0' || !isdigit(dirName[0])) {
+            continue;
+        }
+        size_t len = strlen(dirName);
+        bool isNumeric = true;
+        for (size_t i = 0; i < len; ++i) {
+            if (!isdigit(dirName[i])) {
+                isNumeric = false;
+                break;
+            }
+        }
+
+        if (!isNumeric) {
+            continue;
+        }
+        int pid = atoi(dirName);
+        if (pid != 1) {
+            INIT_LOGI("send sig 9 to %d", pid);
+            INIT_ERROR_CHECK(kill(pid, SIGKILL) == 0, continue, "kill pid %d failed! err %d", pid, errno);
+        }
+    }
+    WaitAfterKillPid(INTERVAL_WAIT, KILL_WAIT_TIME);
+    closedir(procDir);
+}
+
+static void UmountPath(const char *path)
+{
+    int ret = umount2(path, MNT_FORCE);
+    if (ret == 0) {
+        INIT_LOGW("umount success: %s", path);
+        return;
+    }
+    INIT_LOGW("umount failed: %s, errno: %d", path, errno);
+}
+
+static void DoUmountProc()
+{
+    struct mntent *mnt;
+    char *mountPoint[MAX_MOUNTS];
+    int count = 0;
+
+    FILE *fp = setmntent("/proc/mounts", "r");
+    INIT_ERROR_CHECK(fp != NULL, return, "failed to open /proc/mounts, errno: %d", errno);
+
+    while ((mnt = getmntent(fp)) != NULL && count < MAX_MOUNTS) {
+        if (strcmp(mnt->mnt_dir, "/") == 0 ||
+            strcmp(mnt->mnt_dir, "/log") == 0 ||
+            strcmp(mnt->mnt_type, "procfs") == 0 ||
+            strcmp(mnt->mnt_type, "sysfs") == 0 ||
+            strcmp(mnt->mnt_type, "devfs") == 0 ||
+            strcmp(mnt->mnt_type, "configfs") == 0 ||
+            strcmp(mnt->mnt_type, "overlay") == 0 ||
+            strcmp(mnt->mnt_type, "cgroup") == 0 ||
+            strcmp(mnt->mnt_type, "tracefs") == 0 ||
+            strcmp(mnt->mnt_type, "debugfs") == 0 ||
+            strcmp(mnt->mnt_type, "erofs") == 0 ||
+            strcmp(mnt->mnt_type, "tmpfs") == 0 ||
+            strcmp(mnt->mnt_type, "ext4") == 0) {
+            INIT_LOGW("skip system mounts: %s (%s), opts: %s.", mnt->mnt_dir, mnt->mnt_type, mnt->mnt_opts);
+            continue;
+        }
+
+        mountPoint[count] = strdup(mnt->mnt_dir);
+        if (!mountPoint[count]) {
+            INIT_LOGE("failed allocate memory for mount indo");
+            break;
+        }
+        count++;
+    }
+    endmntent(fp);
+
+    for (int i = count - 1; i >= 0; i--) {
+        if (mountPoint[i] != NULL) {
+            UmountPath(mountPoint[i]);
+            free(mountPoint[i]);
+        }
+    }
+}
+
+static void WriteCurtime(int fd)
+{
+    struct timespec currentTime;
+    clock_gettime(CLOCK_REALTIME, &currentTime);
+    struct tm *timeStruct = localtime(&currentTime.tv_sec);
+    char timestamp[TIME_LEN];
+    size_t result = strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", timeStruct);
+    if (result == 0) {
+        INIT_LOGE("time set failed");
+        timestamp[0] = '\0';
+    }
+
+    write(fd, timestamp, strlen(timestamp));
+    write(fd, "\n", 1);
+}
+
+static void InitUmountFaultLog()
+{
+    const char *dumpPath = "/log/startup/mntdump.txt";
+    int dumpFd = open(dumpPath, O_CREAT | O_WRONLY | O_TRUNC, OPEN_FILE_MOD);
+    if (dumpFd == -1) {
+        INIT_LOGE("mount dump path creat fail, errno is %d", errno);
+        return;
+    }
+    WriteCurtime(dumpFd);
+    const char *mountInfoPath = "/proc/mounts";
+    int mountFd = open(mountInfoPath, O_RDONLY);
+    if (mountFd == -1) {
+        INIT_LOGE("failed to open %s, errno: %d", mountInfoPath, errno);
+        close(dumpFd);
+        return;
+    }
+
+    char buffer[MOUNTINFO_MAX_SIZE];
+    size_t readBytes;
+    int writeBytes;
+    while ((readBytes = read(mountFd, buffer, MOUNTINFO_MAX_SIZE)) > 0) {
+        size_t totalWrite = 0;
+        while (totalWrite < readBytes) {
+            writeBytes = write(dumpFd, buffer, readBytes);
+            if (writeBytes == -1 && errno == EINTR) {
+                continue;
+            }
+            if (writeBytes == -1) {
+                INIT_LOGE("failed to write to %s, errno: %d", dumpPath, errno);
+                break;
+            }
+            totalWrite += writeBytes;
+        }
+    }
+    close(dumpFd);
+    close(mountFd);
+    INIT_LOGI("mount info dump end");
+}
+
+static void DumpFdInfo()
+{
+    char dumpPath[] = "/log/startup/fddump.txt";
+    char cmd[] = "lsof > /log/startup/fddump.txt";
+    int fd = open(dumpPath, O_CREAT | O_WRONLY | O_TRUNC, OPEN_FILE_MOD);
+    if (fd == -1) {
+        INIT_LOGE("creat fd path failed, errno is %d", errno);
+        return;
+    }
+    FILE *fp = popen(cmd, "w");
+    if (fp == NULL) {
+        close(fd);
+        INIT_LOGE("popen failed, errno is %d", errno);
+        return;
+    }
+    close(fd);
+    pclose(fp);
+    INIT_LOGI("dump fd info end");
+}
+
 static void DoUmount(const struct CmdArgs *ctx)
 {
     INIT_LOGI("DoUmount %s",  ctx->argv[0]);
@@ -411,6 +603,12 @@ static void DoUmount(const struct CmdArgs *ctx)
             ret = umount2(ctx->argv[0], MNT_FORCE);
         }
         INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to umount %s, errno %d", ctx->argv[0], errno);
+        if (ret != 0 && strcmp(ctx->argv[0], "/data") == 0) {
+            DoKillAllPid();
+            DoUmountProc();
+            InitUmountFaultLog();
+            DumpFdInfo();
+        }
     } else if (status == MOUNT_UMOUNTED) {
         INIT_LOGI("%s is already umounted", ctx->argv[0]);
     } else {
