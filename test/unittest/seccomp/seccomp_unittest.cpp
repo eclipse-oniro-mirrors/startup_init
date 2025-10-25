@@ -1325,7 +1325,7 @@ public:
  * @tc.type: FUNC
  * @tc.require: issueI5IUWJ
  */
-HWTEST_F(SeccompUnitTest, Init_Seccomp_SystemSycall001, TestSize.Level1)
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SystemSycall001, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestSystemSycall();
@@ -1337,7 +1337,7 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_SystemSycall001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI5IUWJ
  */
-HWTEST_F(SeccompUnitTest, Init_Seccomp_SetUidGidFilter001, TestSize.Level1)
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SetUidGidFilter001, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestSetUidGidFilter();
@@ -1349,7 +1349,7 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_SetUidGidFilter001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI5MUXD
  */
-HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall001, TestSize.Level1)
+HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall001, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestAppSycall();
@@ -1361,7 +1361,7 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI5MUXD
  */
-HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall002, TestSize.Level1)
+HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall002, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestAppAtomicSyscallForIoctl();
@@ -1373,7 +1373,7 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI5MUXD
  */
-HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall003, TestSize.Level1)
+HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall003, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestAppAllowIoUringSyscall();
@@ -1385,7 +1385,7 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycall003, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI7QET2
  */
-HWTEST_F(SeccompUnitTest, Init_Seccomp_SystemSyscallForUidFilter001, TestSize.Level1)
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SystemSyscallForUidFilter001, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestSystemSyscallForUidFilter();
@@ -1397,7 +1397,7 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_SystemSyscallForUidFilter001, TestSize.Le
  * @tc.type: FUNC
  * @tc.require: issueI8LZTC
  */
-HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycallNs001, TestSize.Level1)
+HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycallNs001, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestAppSycallNs();
@@ -1409,7 +1409,7 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_AppSycallNs001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueIAVQ2P
  */
-HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompPrivilegeSycall001, TestSize.Level1)
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompPrivilegeSycall001, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestSeccompPrivilegeSyscall();
@@ -1423,7 +1423,7 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompPrivilegeSycall001, TestSize.Level
  * @tc.type: FUNC
  * @tc.require: issueIBP64F
  */
-HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomSycall001, TestSize.Level1)
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomSycall001, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestSeccompCustomSyscall();
