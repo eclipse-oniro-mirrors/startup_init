@@ -129,6 +129,13 @@
                 },
                 {
                     "header": {
+                        "header_base": "//base/startup/init/interfaces/innerkits/include/",
+                        "header_files": []
+                    },
+                    "name": "//base/startup/init/interfaces/innerkits:begetutil_headers"
+                },
+                {
+                    "header": {
                         "header_base": "//base/startup/init/interfaces/innerkits/include/fs_manager/",
                         "header_files": [
                             "fs_manager.h"

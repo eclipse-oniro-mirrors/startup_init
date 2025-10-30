@@ -89,6 +89,9 @@ if (defined(ohos_lite)) {
 
     static_library("libbegetutil_static") {
     }
+
+    static_library("begetutil_headers") {
+    }
   }
   if (ohos_kernel_type == "liteos_m") {
     static_library("libbegetutil") {
@@ -144,6 +147,9 @@ if (defined(ohos_lite)) {
     }
 
     static_library("libbegetutil_static") {
+    }
+
+    static_library("begetutil_headers") {
     }
   }
 
@@ -458,6 +464,16 @@ if (defined(ohos_lite)) {
       "hilog:libhilog_base",
     ]
     public_configs = [ ":exported_header_files" ]
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
+  ohos_shared_headers("begetutil_headers") {
+    include_dirs = [
+      "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/interfaces/innerkits/include/syspara",
+      "//base/startup/init/interfaces/innerkits/syspara"
+    ]
     part_name = "init"
     subsystem_name = "startup"
   }
