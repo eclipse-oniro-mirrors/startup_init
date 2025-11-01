@@ -351,6 +351,7 @@ ohos_unittest("init_unittest") {
 
   external_deps = [
     "bounds_checking_function:libsec_static",
+    "bundle_framework:appexecfwk_base",
     "cJSON:cjson",
     "c_utils:utils",
     "config_policy:configpolicy_util_for_init_static",
