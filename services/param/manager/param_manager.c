@@ -700,7 +700,7 @@ static int CheckParamPermission_(WorkSpace **workspace, ParamTrieNode **node,
     labelIndex.selinuxLabelIndex = labelIndex.workspace->spaceIndex;
 
     int ret = paramSpace->checkParamPermission(&labelIndex, srcLabel, name, mode);
-    PARAM_WARNING_CHECK_DUMPW(ret == 0, return ret,
+    PARAM_DEBUG_CHECK(ret == 0, return ret,
         "deny access %s label %u %u", name, labelIndex.dacLabelIndex, labelIndex.selinuxLabelIndex);
     *workspace = labelIndex.workspace;
     return ret;
