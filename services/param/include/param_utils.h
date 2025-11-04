@@ -164,6 +164,12 @@ INIT_LOCAL_API void ParamWorBaseLog(InitLogLevel logLevel, uint32_t domain, cons
         exper;                       \
     }
 
+#define PARAM_DEBUG_CHECK(retCode, exper, ...) \
+    if (!(retCode)) {                \
+        PARAM_LOGV(__VA_ARGS__);     \
+        exper;                       \
+    }
+
 #define PARAM_WARNING_CHECK_DUMPW(retCode, exper, ...) \
     if (!(retCode)) {                \
         PARAM_DUMPW(__VA_ARGS__);     \

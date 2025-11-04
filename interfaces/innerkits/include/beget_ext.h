@@ -87,6 +87,7 @@ INIT_PUBLIC_API InitLogLevel GetInitLogLevel(void);
 #define STARTUP_LOGF(domain, tag, fmt, ...)
 #define STARTUP_DUMPI(domain, tag, fmt, ...)
 #define STARTUP_DUMPE(domain, tag, fmt, ...)
+#define STARTUP_DUMPW(domain, tag, fmt, ...)
 #else
 #ifndef __LITEOS_M__
 #define STARTUP_LOGV(domain, tag, fmt, ...) \
