@@ -29,17 +29,21 @@
 
 #define BYTE_UNIT 1024
 #define ALIGN_BLOCK_SIZE (16 * BYTE_UNIT)
-#define MIN_DM_SIZE (2 * BYTE_UNIT * BYTE_UNIT)
+#define MIN_DM_SIZE (500 * BYTE_UNIT)
 #define BLOCK_SIZE_UINT 4096
-#define EXTHDR_MAGIC 0xFEEDBEEF
 #define EXTHDR_BLKSIZE 4096
 
-struct extheader_v1 {
-    uint32_t magic_number;
-    uint16_t exthdr_size;
-    uint16_t bcc16;
-    uint64_t part_size;
-};
+static bool g_remountEnable = false;
+
+void SetRemountFlag(bool flag)
+{
+    g_remountEnable = flag;
+}
+
+bool GetRemountFlag()
+{
+    return g_remountEnable;
+}
 
 INIT_STATIC void AllocDmName(const char *name, char *nameRofs, const uint64_t nameRofsLen,
     char *nameExt4, const uint64_t nameExt4Len)
@@ -72,7 +76,7 @@ INIT_STATIC void AllocDmName(const char *name, char *nameRofs, const uint64_t na
     BEGET_LOGI("alloc dm namerofs:[%s], nameext4:[%s]", nameRofs, nameExt4);
 }
 
-INIT_STATIC uint64_t LookupErofsEnd(const char *dev)
+uint64_t LookupErofsEnd(const char *dev)
 {
     int fd = -1;
     fd = open(dev, O_RDONLY | O_LARGEFILE);
@@ -134,6 +138,11 @@ INIT_STATIC uint64_t GetImgSize(const char *dev, uint64_t offset)
         return 0;
     }
     BEGET_LOGI("get img size [%llu]", header.part_size);
+
+    if (header.remount_enable) {
+        BEGET_LOGI("get remount flag is %d from extheader", header.remount_enable);
+        SetRemountFlag(true);
+    }
     return header.part_size;
 }
 
@@ -464,7 +473,7 @@ INIT_STATIC int MountPartitionDevice(FstabItem *item, const char *devRofs, const
         return -1;
     }
 
-    if (!CheckIsExt4(devExt4, 0)) {
+    if (!CheckIsExt4(devExt4, 0) || !GetRemountFlag()) {
         BEGET_LOGI("is not ext4 devExt4 [%s] on mnt [%s]", devExt4, item->mountPoint);
         return 0;
     }

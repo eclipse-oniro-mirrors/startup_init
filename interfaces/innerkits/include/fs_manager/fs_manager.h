@@ -49,6 +49,7 @@ extern "C" {
 #define NAME_SIZE 32
 #define MAX_SLOT 2
 #define HVB_DEV_NAME_SIZE 64
+#define EXTHDR_MAGIC 0xFEEDBEEF
 
 #define VALID_FS_MANAGER_FLAGS (FS_MANAGER_CHECK | FS_MANAGER_WAIT | FS_MANAGER_REQUIRED)
 #define FS_MANAGER_FLAGS_ENABLED(fsMgrFlags, flag) (((fsMgrFlags) & FS_MANAGER_##flag) != 0)
@@ -118,6 +119,14 @@ typedef struct MountResult {
     int checkpointMountCounter;
 } MountResult;
 
+struct extheader_v1 {
+    uint32_t magic_number;
+    uint16_t exthdr_size;
+    uint16_t bcc16;
+    uint64_t part_size;
+    bool remount_enable;
+};
+
 Fstab* LoadFstabFromCommandLine(void);
 int GetBootSlots(void);
 int GetCurrentSlot(void);
@@ -142,6 +151,10 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificFlags, size_t fsSpe
     const char *mountPoint);
 
 int GetBlockDevicePath(const char *partName, char *path, size_t size);
+
+uint64_t LookupErofsEnd(const char *dev);
+void SetRemountFlag(bool flag);
+bool GetRemountFlag(void);
 
 // Get fscrypt policy if exist
 int LoadFscryptPolicy(char *buf, size_t size);
