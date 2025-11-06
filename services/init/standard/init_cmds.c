@@ -576,21 +576,45 @@ static void InitUmountFaultLog()
 static void DumpFdInfo()
 {
     char dumpPath[] = "/log/startup/fddump.txt";
-    char cmd[] = "lsof > /log/startup/fddump.txt";
-    int fd = open(dumpPath, O_CREAT | O_WRONLY | O_TRUNC, OPEN_FILE_MOD);
-    if (fd == -1) {
-        INIT_LOGE("creat fd path failed, errno is %d", errno);
-        return;
-    }
-    FILE *fp = popen(cmd, "w");
-    if (fp == NULL) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        int fd = open(dumpPath, O_CREAT | O_WRONLY | O_TRUNC, OPEN_FILE_MOD);
+        if (fd == -1) {
+            INIT_LOGE("open file failed, err is %d", errno);
+            return;
+        }
+        dup2(fd, STDOUT_FILENO);
         close(fd);
-        INIT_LOGE("popen failed, errno is %d", errno);
+        execlp("lsof", "lsof", NULL);
+    } else if (pid < 0) {
+        INIT_LOGE("fork failed, err is %d", errno);
         return;
     }
-    close(fd);
-    pclose(fp);
+    int status;
+    pid_t ret = waitpid(pid, &status, 0);
+    if (ret != pid) {
+        INIT_LOGE("failed to wait pid %d, errno is %d", pid, errno);
+    }
     INIT_LOGI("dump fd info end");
+}
+
+static void DoUmountOtherNsData()
+{
+    INIT_LOGI("umount ns data");
+    int ret = EnterSandbox("system");
+    if (ret != 0) {
+        INIT_LOGE("Enter system sandbox failed");
+    }
+    ret = umount("/data");
+    if (ret != 0) {
+        INIT_LOGE("Umount data in system ns failed");
+    }
+    ret = EnterSandbox("chipset");
+    ret = umount("/data");
+    if (ret != 0) {
+        INIT_LOGE("Umount data in chipset ns failed");
+    }
+    INIT_LOGI("umount ns data end");
 }
 
 static void DoUmount(const struct CmdArgs *ctx)
@@ -608,6 +632,7 @@ static void DoUmount(const struct CmdArgs *ctx)
             DoUmountProc();
             InitUmountFaultLog();
             DumpFdInfo();
+            DoUmountOtherNsData();
         }
     } else if (status == MOUNT_UMOUNTED) {
         INIT_LOGI("%s is already umounted", ctx->argv[0]);
