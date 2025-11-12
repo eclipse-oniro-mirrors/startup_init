@@ -552,10 +552,10 @@ static void InitUmountFaultLog()
     }
 
     char buffer[MOUNTINFO_MAX_SIZE];
-    size_t readBytes;
+    ssize_t readBytes;
     int writeBytes;
     while ((readBytes = read(mountFd, buffer, MOUNTINFO_MAX_SIZE)) > 0) {
-        size_t totalWrite = 0;
+        ssize_t totalWrite = 0;
         while (totalWrite < readBytes) {
             writeBytes = write(dumpFd, buffer, readBytes);
             if (writeBytes == -1 && errno == EINTR) {
