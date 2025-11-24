@@ -261,7 +261,7 @@ INIT_STATIC void SetRemountStatus(const char *dev, uint64_t offset)
         INIT_LOGE("dev is invalid");
         return;
     }
-    int fd = open(dev, O_WRONLY | O_LARGEFILE);
+    int fd = open(dev, O_RDWR | O_LARGEFILE);
     if (fd < 0) {
         INIT_LOGE("open %s failed", dev);
         return;
