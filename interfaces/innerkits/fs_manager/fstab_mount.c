@@ -340,16 +340,37 @@ static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
     return ExecCommand(argc, argv);
 }
 
-static int DoFsckF2fs(const char* device)
+#define MAX_FSCK_PARAM_NUM 20
+static int DoFsckF2fs(FstabItem *item)
 {
     char *file = "/system/bin/fsck.f2fs";
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "fsck.f2fs is not exists.");
+    char *argv[MAX_FSCK_PARAM_NUM] = {NULL};
+    int argc = 0;
 
-    char *cmd[] = {
-        file, "-p1", (char *)device, NULL
-    };
-    int argc = ARRAY_LENGTH(cmd);
-    char **argv = (char **)cmd;
+    argv[argc++] = file;
+    argv[argc++] = "-p1";
+    if (item->fsManagerFlags & FS_MANAGER_PROJQUOTA) {
+        argv[argc++] = "-O";
+        argv[argc++] = "extra_attr,project_quota";
+    }
+    if (item->fsManagerFlags & FS_MANAGER_CASEFOLD) {
+        argv[argc++] = "-O";
+        argv[argc++] = "casefold";
+        argv[argc++] = "-C";
+        argv[argc++] = "utf8";
+    }
+    if (item->fsManagerFlags & FS_MANAGER_COMPRESSION) {
+        argv[argc++] = "-O";
+        argv[argc++] = "extra_attr,compression";
+    }
+    if (item->fsManagerFlags & FS_MANAGER_DEDUP) {
+        argv[argc++] = "-O";
+        argv[argc++] = "extra_attr,dedup";
+    }
+    argv[argc++] = (char*)(item->deviceName);
+    BEGET_ERROR_CHECK(argc <= MAX_FSCK_PARAM_NUM, return -1, "argc: %d is too big.", argc);
+
     InitTimerControl(true);
     int ret = ExecCommand(argc, argv);
     InitTimerControl(false);
@@ -723,7 +744,7 @@ int MountOneItem(FstabItem *item)
 
     int disableCheckpointRet = -1;
     if (strcmp(item->mountPoint, "/data") == 0 && IsSupportedDataType(item->fsType)) {
-        int ret = DoFsckF2fs(item->deviceName);
+        int ret = DoFsckF2fs(item);
         if (ret != 0) {
             BEGET_LOGE("Failed to fsck.f2fs dir %s , ret = %d", item->deviceName, ret);
         }
