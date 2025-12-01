@@ -327,6 +327,7 @@ futex_time64;arm
 sched_rr_get_interval_time64;arm
 cacheflush;arm
 set_tls;arm
+io_uring_setup;arm64
 
 @allowListWithArgs
 clone: if (arg0 & (CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWNET | CLONE_NEWCGROUP | CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWUSER)) == 0 ; return ALLOW; else return TRAP;all
