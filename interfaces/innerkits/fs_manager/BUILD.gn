@@ -69,6 +69,7 @@ ohos_static_library("libfsmanager_static") {
       sources += [
         "dm_verity/dm_verity.c",
         "libfs_hvb/fs_hvb.c",
+        "libfs_hvb/fs_hvb_image_patch.c",
         "libfs_hvb/hvb_ops.c",
       ]
 
@@ -143,6 +144,7 @@ ohos_static_library("libfsmanager_static_real") {
       sources += [
         "dm_verity/dm_verity.c",
         "libfs_hvb/fs_hvb.c",
+        "libfs_hvb/fs_hvb_image_patch.c",
         "libfs_hvb/hvb_ops.c",
       ]
 

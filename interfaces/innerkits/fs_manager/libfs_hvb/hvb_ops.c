@@ -26,6 +26,7 @@
 #include "init_utils.h"
 #include "hookmgr.h"
 #include "bootstage.h"
+#include "fs_hvb_image_patch.h"
 #include "fs_manager.h"
 #include "list.h"
 
@@ -209,6 +210,22 @@ static int HvbGetSnapshotPath(const char *partition, char *out, size_t outLen)
     return 0;
 }
 
+static int HvbGetImagePatchSnapshotPath(const char *partition, char *out, size_t outLen)
+{
+    if (QuickfixIsImagePatch(partition, QUICKFIX_COMPARE_SNAPSHOT_NAME) != 0) {
+        BEGET_LOGW("not quickfix scene");
+        return -1;
+    }
+
+    BEGET_LOGI("snapshot patch for image patch exists for %s", partition);
+    int rc = snprintf_s(out, outLen, outLen - 1, "%s%s", SNAPSHOT_PATH_PREFIX, partition);
+    if (rc < 0) {
+        BEGET_LOGE("error, snprintf_s snapshot path fail, ret = %d", rc);
+        return -1;
+    }
+    return 0;
+}
+
 static char *HvbGetPartitionPath(const char *partition)
 {
     int rc;
@@ -232,6 +249,8 @@ static char *HvbGetPartitionPath(const char *partition)
     }
 
     if (HvbGetSnapshotPath(partition, path, pathLen) == 0) {
+        return path;
+    } else if (HvbGetImagePatchSnapshotPath(partition, path, pathLen) == 0) {
         return path;
     }
 

@@ -70,6 +70,12 @@ __attribute__((weak)) bool NeedDoAllResize(const unsigned int fsManagerFlags)
     return true;
 }
 
+__attribute__((weak)) int InitQuickfix(const Fstab *fstab)
+{
+    BEGET_LOGW("active virtual InitQuickfix");
+    return 0;
+}
+
 static const SUPPORTED_FILE_SYSTEM supportedFileSystems[] = {
     { "ext4", 0 },
     { "f2fs", 1 },
@@ -892,6 +898,8 @@ int MountAllWithFstab(const Fstab *fstab, bool required)
         }
     }
 #endif
+    int imagePatchRet = InitQuickfix(fstab);
+    BEGET_LOGI("active image patch ret = %d", imagePatchRet);
 
     for (item = fstab->head; item != NULL; item = item->next) {
         rc = CheckRequiredAndMount(item, required);
