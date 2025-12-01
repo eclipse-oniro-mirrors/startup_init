@@ -201,7 +201,7 @@ int StartServiceByTimer(const char *serviceName, uint64_t timeout)
     }
     // restrict timeout value, not too long.
     char value[PARAM_VALUE_LEN_MAX] = {};
-    if (snprintf_s(value, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "%s|%lld", serviceName, timeout) == -1) {
+    if (snprintf_s(value, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "%s|%llu", serviceName, timeout) == -1) {
         BEGET_LOGE("Failed to build parameter value");
         return -1;
     }
