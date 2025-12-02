@@ -27,6 +27,7 @@
 #include "hvb_sm3.h"
 #include "hookmgr.h"
 #include "bootstage.h"
+#include "fs_hvb_image_patch.h"
 #include "fs_manager.h"
 #include "list.h"
 
@@ -560,6 +561,8 @@ static const char *FsHvbGetFsPrefix(const char *devName)
     HvbDeviceParam devPara = {};
     if (FsHvbFindVabPartition(devName, &devPara) == 0) {
         return FS_HVB_SNAPSHOT_PREFIX;
+    } else if (QuickfixIsImagePatch(devName, QUICKFIX_COMPARE_SNAPSHOT_NAME) == 0) {
+        return FS_HVB_SNAPSHOT_PREFIX;
     }
     return FS_HVB_PARTITION_PREFIX;
 }
@@ -655,7 +658,11 @@ static int FsHvbCreateVerityTarget(DmVerityTarget *target, char *devName, struct
     int rc;
     struct hvb_cert cert = {0};
 
-    rc = FsHvbGetCert(&cert, devName, vd);
+    if (QuickfixIsImagePatch(devName, QUICKFIX_COMPARE_SNAPSHOT_NAME) == 0) {
+        rc = QuickfixFsHvbGetImageCert(&cert, devName);
+    } else {
+        rc = FsHvbGetCert(&cert, devName, vd);
+    }
     if (rc != 0) {
         return rc;
     }
