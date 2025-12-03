@@ -46,6 +46,8 @@ if (defined(ohos_lite)) {
   import("//build/lite/ndk/ndk.gni")
 
   if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
+    shared_library("libsystemparam") {
+    }
     shared_library("libbegetutil") {
       cflags = [ "-fPIC" ]
       defines = [
@@ -94,6 +96,9 @@ if (defined(ohos_lite)) {
     }
   }
   if (ohos_kernel_type == "liteos_m") {
+    static_library("libsystemparam") {
+    }
+
     static_library("libbegetutil") {
       public_configs = [ ":exported_header_files" ]
       defines = [
@@ -331,7 +336,7 @@ if (defined(ohos_lite)) {
     external_deps = [
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
-      "config_policy:configpolicy_util_for_init_static",
+      "config_policy:configpolicy_util",
       "hilog:libhilog_base",
     ]
     public_configs = [ ":exported_header_files" ]
@@ -350,6 +355,53 @@ if (defined(ohos_lite)) {
     }
   }
 
+  ohos_shared_library("libsystemparam") {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+
+    sources = syspara_sources
+    sources += [ "syspara/param_wrapper.cpp" ]
+
+    innerapi_tags = [
+      "chipsetsdk_sp",
+      "platformsdk",
+    ]
+
+    version_script = "libsystemparam.versionscript"
+
+    defines = [
+      "INIT_AGENT",
+      "_GNU_SOURCE",
+    ]
+    if (target_cpu == "arm64" || target_cpu == "x86_64" ||
+        target_cpu == "riscv64") {
+      defines += [ "SUPPORT_64BIT" ]
+    }
+
+    include_dirs = include_common
+    deps = [
+      "//base/startup/init/services/log:agent_log",
+      "//base/startup/init/services/param/linux:param_client",
+      "//base/startup/init/services/utils:libinit_utils",
+    ]
+    deps += [ "//base/startup/init/services/param/base:param_base" ]
+
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "c_utils:utils",
+      "hilog:libhilog_base",
+    ]
+    public_configs = [ ":exported_header_files" ]
+    part_name = "init"
+    subsystem_name = "startup"
+    install_images = [
+      "system",
+      "updater",
+    ]
+  }
   # watcher lib must separate compilation avoid interdependence.
   ohos_shared_library("libbeget_proxy") {
     defines = [
@@ -494,6 +546,7 @@ group("innergroup") {
   if (!defined(ohos_lite)) {
     deps += [
       ":libbeget_proxy",
+      ":libsystemparam",
       "file:libfile",
       "init_module_engine:modulegroup",
       "socket:libsocket",

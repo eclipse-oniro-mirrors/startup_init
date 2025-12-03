@@ -212,6 +212,19 @@
                 },
                 {
                     "name": "//base/startup/init/interfaces/kits/cj:cj_system_parameter_enhance_ffi"
+                },
+                {
+                    "header": {
+                        "header_base": "//base/startup/init/interfaces/innerkits/include/",
+                        "header_files": [
+                            "syspara/parameter.h",
+                            "syspara/parameters.h",
+                            "syspara/param_wrapper.h",
+                            "syspara/sysparam_errno.h",
+                            "param/init_param.h"
+                        ]
+                    },
+                    "name": "//base/startup/init/interfaces/innerkits:libsystemparam"
                 }
             ],
             "test": [
