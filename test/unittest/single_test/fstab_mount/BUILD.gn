@@ -42,6 +42,9 @@ ohos_unittest("fstab_mount_unittest") {
     "-Wl,--wrap=malloc",
     "-Wl,--wrap=strncat_s",
     "-Wl,--wrap=snprintf_s",
+    "-Wl,--wrap=read",
+    "-Wl,--wrap=access",
+    "-Wl,--wrap=open",
   ]
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",

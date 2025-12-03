@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "fstab_mount_test.h"
+#include "fs_manager/fs_manager.h"
 #include <gtest/gtest.h>
 #include "func_wrapper.h"
 #include <sys/stat.h>
@@ -246,4 +247,220 @@ HWTEST_F(FstabMountTest, MountWithCheckpoint_003, TestSize.Level0)
     EXPECT_EQ(result.rc, 0);
 }
 
+// mock state not exist
+HWTEST_F(FstabMountTest, UpdateUserDataMEDevice_001, TestSize.Level0)
+{
+    char deviceName[STRSIZE]  = "deviceName";
+    char mountPoint[STRSIZE] = "mountPoint";
+    char fsType[STRSIZE] = "fstype";
+    char mountOptions[STRSIZE] = "op1,op2,op3,op4,op5";
+    unsigned int fsManagerFlags = 0;
+
+    AccessFunc func = [](const char *pathname, int mode) -> int {
+        return 1;
+    };
+    UpdateAccessFunc(func);
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = UpdateUserDataMEDevice(&item);
+    EXPECT_NE(rc, -1);
+}
+
+// mock state exist open state fail
+HWTEST_F(FstabMountTest, UpdateUserDataMEDevice_002, TestSize.Level0)
+{
+    char deviceName[STRSIZE]  = "deviceName";
+    char mountPoint[STRSIZE] = "mountPoint";
+    char fsType[STRSIZE] = "fstype";
+    char mountOptions[STRSIZE] = "op1,op2,op3,op4,op5";
+    unsigned int fsManagerFlags = 0;
+
+    AccessFunc func = [](const char *pathname, int mode) -> int {
+        return 0;
+    };
+    UpdateAccessFunc(func);
+
+    OpenFunc func2 = [](const char *pathname, int flag) -> int {
+        return -1;
+    };
+    UpdateOpenFunc(func2);
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = UpdateUserDataMEDevice(&item);
+    UpdateAccessFunc(NULL);
+    UpdateOpenFunc(NULL);
+    EXPECT_EQ(rc, -1);
+}
+
+//mock read state suc but state < 0 , record stage
+HWTEST_F(FstabMountTest, UpdateUserDataMEDevice_003, TestSize.Level0)
+{
+    char deviceName[STRSIZE]  = "deviceName";
+    char mountPoint[STRSIZE] = "mountPoint";
+    char fsType[STRSIZE] = "fstype";
+    char mountOptions[STRSIZE] = "op1,op2,op3,op4,op5";
+    unsigned int fsManagerFlags = 0;
+
+    AccessFunc func = [](const char *pathname, int mode) -> int {
+        return 0;
+    };
+    UpdateAccessFunc(func);
+
+    OpenFunc func2 = [](const char *pathname, int flag) -> int {
+        return 1;
+    };
+    UpdateOpenFunc(func2);
+
+    ReadFunc mock_read_specific_state = [](int fd, void *buf, size_t count) -> ssize_t {
+        static int call_count = 0;
+        call_count++;
+        if (call_count == 1) {
+            const char* data = "-100";
+            memcpy_s(buf, count, data, strlen(data));
+            return strlen(data);
+        } else if (call_count == 2) {
+            const char* data2 = "100";
+            memcpy_s(buf, count, data2, strlen(data2));
+            return strlen(data2);
+        }
+        return -1;
+    };
+    UpdateReadFunc(mock_read_specific_state);
+
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = UpdateUserDataMEDevice(&item);
+    UpdateAccessFunc(NULL);
+    UpdateOpenFunc(NULL);
+    UpdateReadFunc(NULL);
+    EXPECT_EQ(rc, -1);
+}
+
+//mock read state suc read dm fail
+HWTEST_F(FstabMountTest, UpdateUserDataMEDevice_004, TestSize.Level0)
+{
+    char deviceName[STRSIZE]  = "deviceName";
+    char mountPoint[STRSIZE] = "mountPoint";
+    char fsType[STRSIZE] = "fstype";
+    char mountOptions[STRSIZE] = "op1,op2,op3,op4,op5";
+    unsigned int fsManagerFlags = 0;
+
+    AccessFunc func = [](const char *pathname, int mode) -> int {
+        return 0;
+    };
+    UpdateAccessFunc(func);
+
+    OpenFunc func2 = [](const char *pathname, int flag) -> int {
+        return 1;
+    };
+    UpdateOpenFunc(func2);
+
+    ReadFunc mock_read_specific_state = [](int fd, void *buf, size_t count) -> ssize_t {
+        static int call_count = 0;
+        call_count++;
+        if (call_count == 1) {
+            memcpy_s(buf, count, "22873", 5);
+            return 5;
+        } else if (call_count == 2) {
+            errno = EIO;
+            return -1;
+        }
+        return -1;
+    };
+    UpdateReadFunc(mock_read_specific_state);
+
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = UpdateUserDataMEDevice(&item);
+    UpdateAccessFunc(NULL);
+    UpdateOpenFunc(NULL);
+    UpdateReadFunc(NULL);
+    EXPECT_EQ(rc, -1);
+}
+
+//mock read state suc read dm suc GetDmDevPath fail
+HWTEST_F(FstabMountTest, UpdateUserDataMEDevice_005, TestSize.Level0)
+{
+    char deviceName[STRSIZE]  = "deviceName";
+    char mountPoint[STRSIZE] = "mountPoint";
+    char fsType[STRSIZE] = "fstype";
+    char mountOptions[STRSIZE] = "op1,op2,op3,op4,op5";
+    unsigned int fsManagerFlags = 0;
+
+    AccessFunc func = [](const char *pathname, int mode) -> int {
+        return 0;
+    };
+    UpdateAccessFunc(func);
+
+    OpenFunc func2 = [](const char *pathname, int flag) -> int {
+        return 1;
+    };
+    UpdateOpenFunc(func2);
+
+    ReadFunc mock_read_specific_state = [](int fd, void *buf, size_t count) -> ssize_t {
+        static int call_count = 0;
+        call_count++;
+        if (call_count == 1) {
+            memcpy_s(buf, count, "22873", 5);
+            return 5;
+        } else if (call_count == 2) {
+            memcpy_s(buf, count, "22873", 5);
+            return 5;
+        }
+        return -1;
+    };
+    UpdateReadFunc(mock_read_specific_state);
+
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = UpdateUserDataMEDevice(&item);
+    UpdateAccessFunc(NULL);
+    UpdateOpenFunc(NULL);
+    UpdateReadFunc(NULL);
+#ifdef SUPPORT_HVB
+    EXPECT_EQ(rc, -1);
+#else
+    EXPECT_NE(rc, -1);
+#endif
+}
 }

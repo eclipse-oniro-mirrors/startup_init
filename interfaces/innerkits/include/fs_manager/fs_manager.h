@@ -51,6 +51,15 @@ extern "C" {
 #define HVB_DEV_NAME_SIZE 64
 #define EXTHDR_MAGIC 0xFEEDBEEF
 
+#ifndef INT_MAX
+#define INT_MAX 2147483647
+#endif
+
+#ifndef INT_MIN
+#define INT_MIN (-2147483647 - 1)
+#endif
+
+
 #define VALID_FS_MANAGER_FLAGS (FS_MANAGER_CHECK | FS_MANAGER_WAIT | FS_MANAGER_REQUIRED)
 #define FS_MANAGER_FLAGS_ENABLED(fsMgrFlags, flag) (((fsMgrFlags) & FS_MANAGER_##flag) != 0)
 
@@ -71,6 +80,12 @@ typedef enum SlotStatus {
     SLOTSTATUS_VAB,
     SLOTSTATUS_OTHER,
 } SlotStatus;
+
+typedef enum MEStatus {
+    ME_ERROR = -1,
+    ME_ENABLE = 0,
+    ME_DISABLE = 1,
+} MEStatus;
 
 typedef struct VabMountInfo {
     char *deviceName;
@@ -151,6 +166,7 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificFlags, size_t fsSpe
     const char *mountPoint);
 
 int GetBlockDevicePath(const char *partName, char *path, size_t size);
+int UpdateUserDataMEDevice(FstabItem *item);
 
 uint64_t LookupErofsEnd(const char *dev);
 void SetRemountFlag(bool flag);

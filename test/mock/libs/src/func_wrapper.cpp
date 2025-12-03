@@ -271,6 +271,40 @@ int __wrap_memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
     }
 }
 
+// start wrap read
+static ReadFunc g_read = NULL;
+
+void UpdateReadFunc(ReadFunc func)
+{
+    g_read = func;
+}
+
+ssize_t __wrap_read(int fd, void *buf, size_t count)
+{
+    if (g_read) {
+        return g_read(fd, buf, count);
+    } else {
+        return __real_read(fd, buf, count);
+    }
+}
+
+// start wrap access
+static AccessFunc g_access = NULL;
+
+void UpdateAccessFunc(AccessFunc func)
+{
+    g_access = func;
+}
+
+int __wrap_access(const char *pathname, int mode)
+{
+    if (g_access) {
+        return g_access(pathname, mode);
+    } else {
+        return __real_access(pathname, mode);
+    }
+}
+
 #ifdef __cplusplus
 #if __cplusplus
 }

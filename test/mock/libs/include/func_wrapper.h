@@ -102,6 +102,16 @@ int __real_memcpy_s(void *dest, size_t destMax, const void *src, size_t count);
 typedef int (*MemcpySFunc)(void *dest, size_t destMax, const void *src, size_t count);
 void UpdateMemcpySFunc(MemcpySFunc func);
 
+// for wrapper read;
+ssize_t __real_read(int fd, void *buf, size_t count);
+typedef ssize_t (*ReadFunc)(int fd, void *buf, size_t count);
+void UpdateReadFunc(ReadFunc func);
+
+// for wrapper access;
+int __real_access(const char *pathname, int mode);
+typedef int (*AccessFunc)(const char *pathname, int mode);
+void UpdateAccessFunc(AccessFunc func);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
