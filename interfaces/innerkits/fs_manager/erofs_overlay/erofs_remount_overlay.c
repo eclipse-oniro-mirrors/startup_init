@@ -30,6 +30,7 @@
 #define MODEM_FW_EXCHANGE_PATH STARTUP_INIT_UT_PATH"/mnt/fw_exchange"
 #define REMOUNT_RESULT_PATH STARTUP_INIT_UT_PATH"/data/service/el1/startup/remount/"
 #define REMOUNT_RESULT_FLAG STARTUP_INIT_UT_PATH"/data/service/el1/startup/remount/remount.result.done"
+#define STARTUP_UPPER_DIR "/data/service/el1"
 #define DPA_MNT_PATH STARTUP_INIT_UT_PATH"/vendor/communication/dpa"
 #define DPA_EXCHANGE_PATH STARTUP_INIT_UT_PATH"/mnt/dpa_exchange"
 
@@ -59,6 +60,10 @@ void SetRemountResultFlag(void)
 
     int statRet = stat(REMOUNT_RESULT_PATH, &st);
     if (statRet != 0) {
+        if (access(STARTUP_UPPER_DIR, F_OK) != 0) {
+            BEGET_LOGE("mkdir remount path failed because el1 file not exist");
+            return;
+        }
         ret = MakeDirRecursive(REMOUNT_RESULT_PATH, MODE_MKDIR);
         if (ret < 0 && errno != EEXIST) {
             BEGET_LOGE("mkdir remount path failed errno %d", errno);
