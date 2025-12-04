@@ -353,8 +353,12 @@ static void DoMkDir(const struct CmdArgs *ctx)
     }
     mode_t mode = DEFAULT_DIR_MODE;
     if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
-        INIT_LOGE("Create directory '%s' failed, err=%d.", ctx->argv[0], errno);
-        return;
+        if (strcmp(ctx->argv[0], "/data/service") != 0) {
+            INIT_LOGE("Create directory '%s' failed, err=%d.", ctx->argv[0], errno);
+            return;
+        }
+        int retrycode = mkdir(ctx->argv[0], mode);
+        INIT_ERROR_CHECK(retrycode != 0, return, "retry Create directory '%s' failed, err=", ctx->argv[0], errno);
     }
 
     /*

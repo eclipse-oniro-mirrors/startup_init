@@ -152,7 +152,9 @@ static bool GetPersistFilePath(char **path, char **tmpPath, int fileType)
                 PARAM_LOGE("rename failed %s", PARAM_PERSIST_SAVE_PATH);
             }
         } else {
-            CheckAndCreateDir(PARAM_PUBLIC_PERSIST_SAVE_PATH);
+            if (access(DATA_SERVICE_EL1_DIR, F_OK) == 0) {
+                CheckAndCreateDir(PARAM_PUBLIC_PERSIST_SAVE_PATH);
+            }
         }
         *path = PARAM_PUBLIC_PERSIST_SAVE_PATH;
         *tmpPath = PARAM_PUBLIC_PERSIST_SAVE_TMP_PATH;
