@@ -51,6 +51,13 @@ extern "C" {
 #define RESIZE_BUFFER_SIZE 1024
 #define MAX_GC_ALLOWANCE 100
 #define GCALLOWANCE_INCREASE 10
+#define ME_STATE_SIZE_BUFFER 32
+#define ME_BLOCK_NAME_SIZE_BUFFER 256
+#define SLEEP_TIME_10MS (1000 * 10)
+#define ME_STATE_OK 22873
+#define ME_STATE_DISABLED 27242
+#define BASE_DECIMAL 10
+
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 int g_bootSlots = -1;
@@ -735,6 +742,106 @@ static int ExecCheckpointHook(FstabItem *item)
     return ret;
 }
 
+bool static ReadMEState()
+{
+    const char *path = "/sys/kernel/metacrypt/status";
+    if (access(path, F_OK) == 0) {
+        BEGET_LOGI("Metacrypt status node exists");
+        return true;
+    }
+    BEGET_LOGI("Metacrypt status node does not exist");
+    return false;
+}
+
+static int RecordMEStage()
+{
+    const char *path = "/sys/kernel/metacrypt/stage";
+    char buffer[ME_STATE_SIZE_BUFFER] = {0};
+    int fd = open(path, O_RDONLY);
+    BEGET_ERROR_CHECK(fd >= 0, return ME_ERROR, "Failed to open %s, errno %d", path, errno);
+    ssize_t bytes = read(fd, buffer, sizeof(buffer) - 1);
+    close(fd);
+    BEGET_ERROR_CHECK(bytes > 0, return ME_ERROR, "read %s failed, bytes:%zd", path, bytes);
+    char *endptr = NULL;
+    long val = strtol(buffer, &endptr, BASE_DECIMAL);
+    BEGET_ERROR_CHECK(endptr != buffer && *endptr == '\0' && val >= INT_MIN && val <= INT_MAX,
+                     return ME_ERROR, "Invalid stage value: %s", buffer);
+    BEGET_LOGE("ME error status %ld", val);
+    return ME_ERROR;
+}
+
+static int WaitMEDriver()
+{
+    BEGET_LOGI("Wait for ME status");
+    const char *path = "/sys/kernel/metacrypt/status";
+    int state = 0;
+    int fd = open(path, O_RDONLY);
+    BEGET_ERROR_CHECK(fd >= 0, return ME_ERROR, "Failed to open %s, errno %d", path, errno);
+    while (state != ME_STATE_OK) {
+        char buffer[ME_STATE_SIZE_BUFFER] = {0};
+        ssize_t bytes = read(fd, buffer, sizeof(buffer) - 1);
+        BEGET_ERROR_CHECK(bytes > 0, close(fd);
+            return ME_ERROR, "read %s failed, bytes:%zd", path, bytes);
+
+        char *endptr = NULL;
+        long val = strtol(buffer, &endptr, BASE_DECIMAL);
+        BEGET_ERROR_CHECK(endptr != buffer && *endptr == '\0' && val >= INT_MIN && val <= INT_MAX, close(fd);
+                    return ME_ERROR, "Invalid stage value: %s", buffer);
+        state = (int)val;
+
+        BEGET_ERROR_CHECK(state >= 0, close(fd);
+            return RecordMEStage(), "ME Driver state: %d, panic", state);
+        BEGET_WARNING_CHECK(state != ME_STATE_DISABLED, close(fd);
+            return ME_DISABLE, "ME Driver state: %d, no Medate", state);
+        usleep(SLEEP_TIME_10MS);
+    }
+    close(fd);
+    BEGET_LOGI("WaitMEDriver ready");
+    return ME_ENABLE;
+}
+
+int UpdateUserDataMEDevice(FstabItem *item)
+{
+    if (!ReadMEState()) {
+        return 0;
+    }
+    int state = WaitMEDriver();
+    BEGET_CHECK(state != 1, return 0);
+    BEGET_ERROR_CHECK(state >= 0, return -1, "Failed to WaitMEDriver");
+    BEGET_LOGI("update metadata encrypt device %s", item->deviceName);
+    const char *path = "/sys/kernel/metacrypt/dm_path";
+    BEGET_ERROR_CHECK(access(path, F_OK) == 0, return -1, "Failed to access path");
+
+    char buffer[ME_BLOCK_NAME_SIZE_BUFFER] = {0};
+    int fd = open(path, O_RDONLY);
+    BEGET_ERROR_CHECK(fd >= 0, return -1, "Failed to open %s, errno %d", path, errno);
+    ssize_t bytes = read(fd, buffer, sizeof(buffer) - 1);
+    if (bytes <= 0) {
+        BEGET_LOGE("read %s failed, bytes:%zd", path, bytes);
+        close(fd);
+        return -1;
+    }
+    BEGET_LOGI("read dm path %s", buffer);
+    close(fd);
+
+#ifdef SUPPORT_HVB
+    fd = open(DEVICE_MAPPER_PATH, O_RDWR | O_CLOEXEC);
+    BEGET_ERROR_CHECK(fd >= 0, return -1, "error 0x%x, open %s", errno, DEVICE_MAPPER_PATH);
+    char *dmDevPath = NULL;
+    int rc = GetDmDevPath(fd, &dmDevPath, buffer);
+    if (rc != 0) {
+        BEGET_LOGE("error 0x%x, get dm dev fail", rc);
+        close(fd);
+        return -1;
+    }
+    close(fd);
+    BEGET_LOGI("get dm dev path %s", dmDevPath);
+    free(item->deviceName);
+    item->deviceName = dmDevPath;
+#endif
+    return 0;
+}
+
 int MountOneItem(FstabItem *item)
 {
     if (item == NULL) {
@@ -749,7 +856,13 @@ int MountOneItem(FstabItem *item)
     }
 
     int disableCheckpointRet = -1;
+    if (item->mountPoint == NULL || item->fsType == NULL) {
+        BEGET_LOGE("Invalid item");
+        return -1;
+    }
+
     if (strcmp(item->mountPoint, "/data") == 0 && IsSupportedDataType(item->fsType)) {
+        BEGET_ERROR_CHECK(UpdateUserDataMEDevice(item) == 0, return -1, "Failed to UpdateUserDataMEDevice");
         int ret = DoFsckF2fs(item);
         if (ret != 0) {
             BEGET_LOGE("Failed to fsck.f2fs dir %s , ret = %d", item->deviceName, ret);
