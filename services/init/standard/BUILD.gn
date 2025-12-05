@@ -120,7 +120,7 @@ ohos_executable("init") {
   ]
   deps += [ "//base/startup/init/services/param/base:param_base" ]
   external_deps = [
-    "config_policy:configpolicy_util_for_init_static",
+    "config_policy:configpolicy_util",
     "storage_service:libfscryptutils_static",
   ]
 

@@ -353,7 +353,7 @@ ohos_unittest("init_unittest") {
     "bounds_checking_function:libsec_static",
     "cJSON:cjson",
     "c_utils:utils",
-    "config_policy:configpolicy_util_for_init_static",
+    "config_policy:configpolicy_util",
     "googletest:gmock",
     "googletest:gtest",
     "hilog:libhilog",
