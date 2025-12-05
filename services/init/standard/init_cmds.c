@@ -64,7 +64,7 @@
 #define INTERVAL_WAIT 10
 #define MAX_MOUNTS 256
 #define MOUNTINFO_MAX_SIZE 4096
-#define OPEN_FILE_MOD 0771
+#define OPEN_FILE_MOD 0700
 #define TIME_LEN 64
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
