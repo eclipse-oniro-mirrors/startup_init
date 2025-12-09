@@ -125,6 +125,11 @@ template("lib_parameterbase_template") {
     }
 
     ohos_static_library(target_name) {
+      visibility = [
+        ":*",
+        "//third_party/musl/*",
+        "//out/*"
+      ]
       sources = comm_sources
       sources += [
         "//base/startup/init/services/param/adapter/param_dac.c",
