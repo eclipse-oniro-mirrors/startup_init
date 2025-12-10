@@ -358,7 +358,7 @@ static void DoMkDir(const struct CmdArgs *ctx)
             return;
         }
         int retrycode = mkdir(ctx->argv[0], mode);
-        INIT_ERROR_CHECK(retrycode != 0, return, "retry Create directory '%s' failed, err=", ctx->argv[0], errno);
+        INIT_ERROR_CHECK(retrycode != 0, return, "retry Create directory '%s' failed, err=%d", ctx->argv[0], errno);
     }
 
     /*
