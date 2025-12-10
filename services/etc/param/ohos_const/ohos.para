@@ -15,4 +15,4 @@ const.ohos.releasetype=Canary1
 const.ohos.apiversion=23
 const.ohos.apiminorversion=0
 const.ohos.apipatchversion=0
-const.ohos.fullname=OpenHarmony-6.1.0.21
+const.ohos.fullname=OpenHarmony-6.1.0.22
