@@ -58,6 +58,10 @@ extern "C" {
 #define ME_STATE_DISABLED 27242
 #define BASE_DECIMAL 10
 
+#ifdef SUPPORT_HVB
+#define PARTITION_USERDATA_PATH "/dev/block/by-name/userdata"
+#endif
+
 const off_t PARTITION_ACTIVE_SLOT_OFFSET = 1024;
 const off_t PARTITION_ACTIVE_SLOT_SIZE = 4;
 int g_bootSlots = -1;
@@ -800,6 +804,23 @@ static int WaitMEDriver()
     return ME_ENABLE;
 }
 
+#ifdef SUPPORT_HVB
+static int SimlinkUtil(const char *source, const char *target)
+{
+    BEGET_LOGI("unlink %s", target);
+    if (unlink(target) != 0) {
+        BEGET_LOGE("Failed to unlink \" %s \", err = %d", target, errno);
+    }
+    BEGET_LOGI("unlink finish, symlink %s->%s", source, target);
+    if (symlink(source, target) != 0) {
+        BEGET_LOGE("Failed to link \" %s \" to \" %s \", err = %d", source, target, errno);
+        return errno;
+    }
+    BEGET_LOGI("symlink %s->%s success", source, target);
+    return 0;
+}
+#endif
+
 int UpdateUserDataMEDevice(FstabItem *item)
 {
     if (!ReadMEState()) {
@@ -836,8 +857,9 @@ int UpdateUserDataMEDevice(FstabItem *item)
     }
     close(fd);
     BEGET_LOGI("get dm dev path %s", dmDevPath);
-    free(item->deviceName);
-    item->deviceName = dmDevPath;
+    WaitForFile(dmDevPath, WAIT_MAX_SECOND);
+    (void)SimlinkUtil(dmDevPath, item->deviceName);
+    (void)SimlinkUtil(dmDevPath, PARTITION_USERDATA_PATH);
 #endif
     return 0;
 }
