@@ -19,6 +19,7 @@
 #include "init_utils.h"
 
 #include "erofs_overlay_common.h"
+#define BLOCK_SIZE_ULL 4096ULL
 
 bool IsOverlayEnable(void)
 {
@@ -66,8 +67,8 @@ bool CheckIsExt4(const char *dev, uint64_t offset)
     }
 
     if (superBlock.s_magic == EXT4_SUPER_MAGIC) {
-        BEGET_LOGI("this [dev] %s  is ext4:[block cout]: %d, [size]: %d", dev,
-            superBlock.s_blocks_count_lo, (superBlock.s_blocks_count_lo * BLOCK_SIZE_UNIT));
+        BEGET_LOGI("this [dev] %s  is ext4:[block cout]: %d, [size]: %llu", dev,
+            superBlock.s_blocks_count_lo, (superBlock.s_blocks_count_lo * BLOCK_SIZE_ULL));
         close(fd);
         return true;
     }

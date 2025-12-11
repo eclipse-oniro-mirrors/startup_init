@@ -329,6 +329,7 @@ INIT_LOCAL_API ParamTrieNode *FindTrieNode(WorkSpace *workSpace,
         if (entry != NULL && entry->keyLength == keyLen) {
             return node;
         }
+        PARAM_LOGI("FindTrieNode NULL! name is:%s", key);
         return NULL;
     }
     return node;

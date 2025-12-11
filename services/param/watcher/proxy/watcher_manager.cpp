@@ -35,6 +35,7 @@ const static int32_t INVALID_SOCKET = -1;
 const static int32_t ERR_FAIL = -1;
 const static int32_t PUBLIC_APP_BEGIN_UID = 10000;
 constexpr int32_t RECV_BUFFER_MAX = 20 * 1024;
+const static int32_t COMPARE_LENGTH = strlen("startup.service.ctl.");
 WatcherManager::~WatcherManager()
 {
     Clear();
@@ -240,7 +241,7 @@ void WatcherGroup::ProcessParameterChange(
         if (remoteWatcher == nullptr) {
             return;
         }
-        if (strcmp("startup.service.ctl.*", GetKeyPrefix().c_str()) != 0) {
+        if (strncmp("startup.service.ctl.", GetKeyPrefix().c_str(), COMPARE_LENGTH) != 0) {
             WATCHER_DUMPI("ProcessParameterChange key:%s pid:%d",
                 GetKeyPrefix().c_str(), remoteWatcher->GetAgentId());
         }
