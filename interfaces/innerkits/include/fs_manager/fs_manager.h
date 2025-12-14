@@ -50,6 +50,8 @@ extern "C" {
 #define MAX_SLOT 2
 #define HVB_DEV_NAME_SIZE 64
 #define EXTHDR_MAGIC 0xFEEDBEEF
+#define EXTHDR_RDONLY_SIZE (4096 - 256) // ExtheaderRW起始点，即ExtheaderV1起始点偏移4096 - 256
+#define EXTHDR_RW_SIZE 256
 
 #ifndef INT_MAX
 #define INT_MAX 2147483647
@@ -68,6 +70,19 @@ extern "C" {
 #define FM_MANAGER_REQUIRED_ENABLED(fsMgrFlags) FS_MANAGER_FLAGS_ENABLED((fsMgrFlags), REQUIRED)
 #define FM_MANAGER_NOFAIL_ENABLED(fsMgrFlags) FS_MANAGER_FLAGS_ENABLED((fsMgrFlags), NOFAIL)
 #define FM_MANAGER_FORMATTABLE_ENABLED(fsMgrFlags) FS_MANAGER_FLAGS_ENABLED((fsMgrFlags), FORMATTABLE)
+
+typedef struct {
+    uint32_t magicNumber;
+    uint16_t exthdrSize;
+    uint16_t bcc16;
+    uint64_t partSize;
+    // reserved 4096 - 256 - 16(used)
+} ExtheaderV1;
+
+typedef struct {
+    uint8_t remount;
+    uint8_t reserved[EXTHDR_RW_SIZE - 1];
+} ExtheaderRW;
 
 typedef enum MountStatus {
     MOUNT_ERROR = -1,

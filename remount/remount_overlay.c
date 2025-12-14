@@ -34,7 +34,6 @@
 #define MNT_VENDOR "/vendor"
 #define ROOT_MOUNT_DIR "/"
 #define SYSTEM_DIR "/usr"
-#define EXTHDR_REMOUNT_FALG_OFFSET 16
 
 INIT_STATIC bool MntNeedRemount(const char *mnt)
 {
@@ -158,6 +157,138 @@ INIT_STATIC void OverlayRemountPost(const char *mnt)
     }
 }
 
+INIT_STATIC bool CheckIsExtMagic(const char *dev, uint64_t offset)
+{
+    if (dev == NULL) {
+        INIT_LOGE("dev is invalid");
+        return false;
+    }
+    int fd = open(dev, O_RDWR | O_LARGEFILE);
+    if (fd < 0) {
+        INIT_LOGE("open %s failed", dev);
+        return false;
+    }
+
+    if (lseek(fd, offset, SEEK_SET) < 0) {
+        INIT_LOGE("lseek %s failed, offset is %llu", dev, offset);
+        close(fd);
+        return false;
+    }
+
+    ExtheaderV1 header;
+    ssize_t nbytes = read(fd, &header, sizeof(header));
+    if (nbytes != sizeof(header)) {
+        INIT_LOGE("read %s failed.read len is %d, errno is %d", dev, nbytes, errno);
+        close(fd);
+        return false;
+    }
+
+    if (header.magicNumber != EXTHDR_MAGIC) {
+        INIT_LOGE("%s is not have ext path, magic is 0x%x", dev, header.magicNumber);
+        close(fd);
+        return false;
+    }
+    close(fd);
+    return true;
+}
+
+INIT_STATIC void SetRemountStatus(const char *dev, uint64_t offset)
+{
+    if (!CheckIsExtMagic(dev, offset)) {
+        INIT_LOGE("check magic error");
+        return;
+    }
+
+    int fd = open(dev, O_RDWR | O_LARGEFILE);
+    if (fd < 0) {
+        INIT_LOGE("open %s failed", dev);
+        return;
+    }
+
+    if (lseek(fd, offset + EXTHDR_RDONLY_SIZE, SEEK_SET) < 0) {
+        INIT_LOGE("lseek %s failed, offset is %llu", dev, offset + EXTHDR_RDONLY_SIZE);
+        close(fd);
+        return;
+    }
+
+    uint8_t flag = 1;
+    ssize_t written = write(fd, &flag, sizeof(flag));
+    if (written != sizeof(flag)) {
+        INIT_LOGE("set remount flag failed, errno is %d", errno);
+    }
+    close(fd);
+}
+
+
+INIT_STATIC bool GetRemountStatus(const char *dev, uint64_t offset)
+{
+    if (!CheckIsExtMagic(dev, offset)) {
+        INIT_LOGE("check magic error");
+        return false;
+    }
+
+    int fd = open(dev, O_RDWR | O_LARGEFILE);
+    if (fd < 0) {
+        INIT_LOGE("open %s failed", dev);
+        return false;
+    }
+
+    if (lseek(fd, offset + EXTHDR_RDONLY_SIZE, SEEK_SET) < 0) {
+        INIT_LOGE("lseek %s failed, offset is %llu", dev, offset + EXTHDR_RDONLY_SIZE);
+        close(fd);
+        return false;
+    }
+
+    ExtheaderRW extheaderRw;
+    ssize_t readSize = read(fd, &extheaderRw, sizeof(extheaderRw));
+    if (readSize != sizeof(extheaderRw)) {
+        INIT_LOGE("read dev:[%s] to extheader rw failed.", dev);
+        close(fd);
+        return false;
+    }
+    close(fd);
+    return extheaderRw.remount;
+}
+
+INIT_STATIC uint64_t GetDevPathAndOffset(char *dev, char *devName)
+{
+    int ret = GetBlockDevicePath(devName, dev, PATH_MAX);
+    if (ret != 0) {
+        INIT_LOGE("get dev path failed, ret is %d", ret);
+        return 0;
+    }
+    INIT_LOGI("get dev path is %s", dev);
+    return LookupErofsEnd(dev);
+}
+
+INIT_STATIC bool GetRemountFlagFromExtheader(char *devName)
+{
+    char dev[PATH_MAX]  = { 0 };
+    uint64_t start = GetDevPathAndOffset(dev, devName);
+    if (start == 0) {
+        INIT_LOGE("get erofs end failed");
+        return false;
+    }
+
+    return GetRemountStatus(dev, start);
+}
+
+INIT_STATIC void SetRemountFlagToExtheader(char *devName)
+{
+    if (devName == NULL) {
+        INIT_LOGE("devName is invalid");
+        return;
+    }
+
+    char dev[PATH_MAX] = { 0 };
+    uint64_t start = GetDevPathAndOffset(dev, devName);
+    if (start == 0) {
+        INIT_LOGE("get erofs end failed");
+        return;
+    }
+    SetRemountStatus(dev, start);
+}
+
 INIT_STATIC bool DoRemount(struct mntent *mentry)
 {
     int devNum = 0;
@@ -182,7 +313,7 @@ INIT_STATIC bool DoRemount(struct mntent *mentry)
         mnt = mentry->mnt_dir;
     }
 
-    if (CheckIsExt4(devExt4, 0) && GetRemountFlag()) {
+    if (CheckIsExt4(devExt4, 0) && GetRemountFlagFromExtheader(mentry->mnt_dir)) {
         INIT_LOGI("is ext4, not need format %s", devExt4);
     } else {
         ret = FormatExt4(devExt4, mnt);
@@ -196,6 +327,7 @@ INIT_STATIC bool DoRemount(struct mntent *mentry)
             INIT_LOGE("Failed to mount devExt4 %s.", devExt4);
             return false;
         }
+        SetRemountFlagToExtheader(mentry->mnt_dir);
     }
 
     if (strncmp(mentry->mnt_dir, "/mnt/lower", strlen("/mnt/lower")) == 0) {
@@ -255,69 +387,6 @@ int RootOverlaySetup(void)
     return 0;
 }
 
-INIT_STATIC void SetRemountStatus(const char *dev, uint64_t offset)
-{
-    if (dev == NULL) {
-        INIT_LOGE("dev is invalid");
-        return;
-    }
-    int fd = open(dev, O_RDWR | O_LARGEFILE);
-    if (fd < 0) {
-        INIT_LOGE("open %s failed", dev);
-        return;
-    }
-
-    if (lseek(fd, offset, SEEK_SET) < 0) {
-        INIT_LOGE("lseek %s failed, offset is %llu", dev, offset);
-        close(fd);
-        return;
-    }
-
-    struct extheader_v1 header;
-    ssize_t nbytes = read(fd, &header, sizeof(header));
-    if (nbytes != sizeof(header)) {
-        INIT_LOGE("read %s failed.", dev);
-        close(fd);
-        return;
-    }
-
-    if (header.magic_number != EXTHDR_MAGIC) {
-        INIT_LOGE("%s is not have ext path, magic is 0x%x", dev, header.magic_number);
-        close(fd);
-        return;
-    }
-
-    if (lseek(fd, offset + EXTHDR_REMOUNT_FALG_OFFSET, SEEK_SET) < 0) {
-        INIT_LOGE("lseek %s failed, offset is %llu", dev, offset + EXTHDR_REMOUNT_FALG_OFFSET);
-        close(fd);
-        return;
-    }
-
-    bool flag = true;
-    ssize_t written = write(fd, &flag, sizeof(bool));
-    if (written != sizeof(bool)) {
-        INIT_LOGE("set remount flag failed, errno is %d", errno);
-    }
-    close(fd);
-}
-
-INIT_STATIC void SetRemountFlagToExtheader()
-{
-    char dev[PATH_MAX] = { 0 };
-    int ret = GetBlockDevicePath("/system", dev, PATH_MAX);
-    if (ret != 0) {
-        INIT_LOGE("get system path failed, ret is %d", ret);
-        return;
-    }
-    INIT_LOGI("get system path is %s", dev);
-    uint64_t start = LookupErofsEnd(dev);
-    if (start == 0) {
-        INIT_LOGE("get erofs end failed");
-        return;
-    }
-    SetRemountStatus(dev, start);
-}
-
 INIT_STATIC bool DoSystemRemount(struct mntent *mentry)
 {
     int devNum = 0;
@@ -335,10 +404,9 @@ INIT_STATIC bool DoSystemRemount(struct mntent *mentry)
         return false;
     }
 
-    if (CheckIsExt4(devExt4, 0) && GetRemountFlag()) {
+    if (CheckIsExt4(devExt4, 0) && GetRemountFlagFromExtheader(mentry->mnt_dir)) {
         INIT_LOGI("is ext4, not need format %s", devExt4);
     } else {
-        SetRemountFlagToExtheader();
         ret = FormatExt4(devExt4, SYSTEM_DIR);
         if (ret) {
             INIT_LOGE("Failed to format devExt4 %s.", devExt4);
@@ -349,6 +417,8 @@ INIT_STATIC bool DoSystemRemount(struct mntent *mentry)
         if (ret) {
             INIT_LOGE("Failed to mount devExt4 %s.", devExt4);
         }
+        INIT_LOGI("remount success, set remount flag");
+        SetRemountFlagToExtheader(mentry->mnt_dir);
     }
 
     if (RootOverlaySetup()) {
