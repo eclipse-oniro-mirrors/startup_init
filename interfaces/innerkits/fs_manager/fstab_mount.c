@@ -83,6 +83,12 @@ __attribute__((weak)) int InitQuickfix(const Fstab *fstab)
     return 0;
 }
 
+__attribute__((weak)) char *GetExtraFsckOption(void)
+{
+    BEGET_LOGW("get extra fsck option: static");
+    return NULL;
+}
+
 static const SUPPORTED_FILE_SYSTEM supportedFileSystems[] = {
     { "ext4", 0 },
     { "f2fs", 1 },
@@ -360,6 +366,7 @@ static int DoFsckF2fs(FstabItem *item)
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "fsck.f2fs is not exists.");
     char *argv[MAX_FSCK_PARAM_NUM] = {NULL};
     int argc = 0;
+    char *extraOpt = NULL;
 
     argv[argc++] = file;
     argv[argc++] = "-p1";
@@ -380,6 +387,10 @@ static int DoFsckF2fs(FstabItem *item)
     if (item->fsManagerFlags & FS_MANAGER_DEDUP) {
         argv[argc++] = "-O";
         argv[argc++] = "extra_attr,dedup";
+    }
+    extraOpt = GetExtraFsckOption();
+    if (extraOpt) {
+        argv[argc++] = extraOpt;
     }
     argv[argc++] = (char*)(item->deviceName);
     BEGET_ERROR_CHECK(argc <= MAX_FSCK_PARAM_NUM, return -1, "argc: %d is too big.", argc);
@@ -436,7 +447,7 @@ static int Mount(const char *source, const char *target, const char *fsType,
     unsigned long flags, const char *data)
 {
     struct stat st = {};
-    int rc = -1;
+    int rc = 0;
 
     bool isTrue = source == NULL || target == NULL || fsType == NULL;
     BEGET_ERROR_CHECK(!isTrue, return -1, "Invalid argument for mount.");
@@ -450,7 +461,8 @@ static int Mount(const char *source, const char *target, const char *fsType,
         BEGET_ERROR_CHECK(errno == EEXIST, return -1, "Failed to create dir \" %s \", err = %d", target, errno);
     }
     errno = 0;
-    if ((rc = mount(source, target, fsType, flags, data)) != 0) {
+    if (mount(source, target, fsType, flags, data) != 0) {
+        rc = errno;
         BEGET_WARNING_CHECK(errno != EBUSY, rc = 0, "Mount %s to %s busy, ignore", source, target);
     }
     return rc;
