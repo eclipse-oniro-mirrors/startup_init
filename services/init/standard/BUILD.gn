@@ -63,6 +63,9 @@ ohos_executable("init_early") {
   if (asan_detector && init_feature_support_asan) {
     defines += [ "ASAN_DETECTOR" ]
   }
+  if (!is_asan && init_feature_support_saspawn) {
+    defines += [ "INIT_FEATURE_SUPPORT_SASPAWN" ]
+  }
   install_images = [ "ramdisk" ]
   install_enable = true
   part_name = "init"

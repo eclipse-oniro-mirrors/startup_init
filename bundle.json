@@ -36,7 +36,8 @@
             "init_feature_enable_lite_process_priority",
             "init_feature_use_hook_mgr",
             "init_get_disk_sn",
-            "init_feature_custom_sandbox"
+            "init_feature_custom_sandbox",
+            "init_feature_support_saspawn"
         ],
         "adapted_system_type": [
             "mini",
