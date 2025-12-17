@@ -54,7 +54,6 @@ taihe_shared_library("deviceInfo_taihe_native") {
     "bounds_checking_function:libsec_shared",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "hilog:libhilog_base",
     "ipc:ipc_single",
     "runtime_core:ani",
     "samgr:samgr_proxy",

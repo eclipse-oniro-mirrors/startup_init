@@ -31,7 +31,7 @@
 #include "hilog/log.h"
 #endif
 #ifdef INIT_AGENT
-#include "hilog_base/log_base.h"
+#include <log_base.h>
 #endif
 
 #define DEF_LOG_SIZE 128
