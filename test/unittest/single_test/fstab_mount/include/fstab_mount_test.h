@@ -29,6 +29,11 @@ int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecificDataSize,
 
 int DoMountOneItem(FstabItem *item, MountResult *result);
 
+int GetOverlayDevice(FstabItem *item, char *devRofs, const uint32_t devRofsLen,
+    char *devExt4, const uint32_t devExt4Len);
+
+int MountPartitionDevice(FstabItem *item, const char *devRofs, const char *devExt4);
+
 #ifdef __cplusplus
 }
 #endif

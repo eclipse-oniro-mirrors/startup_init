@@ -20,9 +20,11 @@
 #include <sys/mount.h>
 #include "init_utils.h"
 #include "securec.h"
+#include "erofs_mount_overlay.h"
 using namespace testing;
 using namespace testing::ext;
 #define STRSIZE 64
+#define MAX_BUFFER_LEN 256
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -462,5 +464,74 @@ HWTEST_F(FstabMountTest, UpdateUserDataMEDevice_005, TestSize.Level0)
 #else
     EXPECT_NE(rc, -1);
 #endif
+}
+
+HWTEST_F(FstabMountTest, DoMountOverlayDevice_001, TestSize.Level0)
+{
+    char deviceName[STRSIZE]  = "deviceName";
+    char mountPoint[STRSIZE] = "mountPoint";
+    char fsType[STRSIZE] = "fstype";
+    char mountOptions[STRSIZE] = "op1,op2,op3,op4,op5";
+    unsigned int fsManagerFlags = 0;
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = DoMountOverlayDevice(&item);
+    EXPECT_NE(rc, 0);
+}
+
+HWTEST_F(FstabMountTest, GetOverlayDevice_001, TestSize.Level0)
+{
+    char deviceName[STRSIZE]  = "deviceName";
+    char mountPoint[STRSIZE] = "mountPoint";
+    char fsType[STRSIZE] = "fstype";
+    char mountOptions[STRSIZE] = "op1,op2,op3,op4,op5";
+    unsigned int fsManagerFlags = 0;
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    char devRofs[MAX_BUFFER_LEN] = {0};
+    char devExt4[MAX_BUFFER_LEN] = {0};
+    int rc = 0;
+    rc = GetOverlayDevice(&item, devRofs, MAX_BUFFER_LEN, devExt4, MAX_BUFFER_LEN);
+    EXPECT_NE(rc, 0);
+}
+
+HWTEST_F(FstabMountTest, MountPartitionDevice_001, TestSize.Level0)
+{
+    char deviceName[STRSIZE]  = "deviceName";
+    char mountPoint[STRSIZE] = "mountPoint";
+    char fsType[STRSIZE] = "fstype";
+    char mountOptions[STRSIZE] = "op1,op2,op3,op4,op5";
+    unsigned int fsManagerFlags = 0;
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    char devRofs[MAX_BUFFER_LEN] = {0};
+    char devExt4[MAX_BUFFER_LEN] = {0};
+    int rc = 0;
+    rc = MountPartitionDevice(&item, devRofs, devExt4);
+    EXPECT_EQ(rc, 0);
 }
 }

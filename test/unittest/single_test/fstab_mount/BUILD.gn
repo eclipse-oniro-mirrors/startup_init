@@ -24,13 +24,15 @@ ohos_unittest("fstab_mount_unittest") {
     "//base/startup/init/ueventd/include",
     "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
     "//base/startup/init/interfaces/innerkits/init_module_engine/include",
-    "//base/startup/init/test/mock/libs/include"
+    "//base/startup/init/test/mock/libs/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager",
   ]
 
   sources = [
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
     "//base/startup/init/test/unittest/single_test/fstab_mount/src/fstab_mount_test.cpp",
     "//base/startup/init/test/mock/libs/src/func_wrapper.cpp",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_mount_overlay.c",
   ]
 
   cflags_cc = [ "-fexceptions" ]
@@ -66,4 +68,25 @@ ohos_unittest("fstab_mount_unittest") {
     "googletest:gtest",
     "hilog:libhilog",
   ]
+
+  sources += [
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm_linear.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm_snapshot.c",
+  ]
+  include_dirs += [
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+  ]
+  deps += [ "//base/startup/init/ueventd:libueventd_ramdisk_static" ]
+
+  sources += [
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_overlay_common.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_remount_overlay.c",
+  ]
+  include_dirs += [ "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include" ]
+
+  if (build_selinux) {
+    external_deps += [ "selinux:libselinux" ]
+    cflags = [ "-DWITH_SELINUX" ]
+  }
 }
