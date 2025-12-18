@@ -31,7 +31,13 @@
 #include <climits>
 #include <sched.h>
 
+#include "process_uid_define.h"
 #include "seccomp_policy.h"
+
+#define USER100_UID_LOWER_BOUND (100 * BASE_USER_RANGE_FOR_NWEB + START_ID_FOR_RENDER_PROCESS_ISOLATION)
+#define USER100_UID_UPPER_BOUND (100 * BASE_USER_RANGE_FOR_NWEB + END_ID_FOR_RENDER_PROCESS_ISOLATION)
+#define USER101_UID_LOWER_BOUND (101 * BASE_USER_RANGE_FOR_NWEB + START_ID_FOR_RENDER_PROCESS_ISOLATION)
+#define USER101_UID_UPPER_BOUND (101 * BASE_USER_RANGE_FOR_NWEB + END_ID_FOR_RENDER_PROCESS_ISOLATION)
 
 using SyscallFunc = bool (*)(void);
 constexpr int SLEEP_TIME_100MS = 100000; // 100ms
@@ -662,6 +668,254 @@ public:
         return false;
     }
 
+    static bool CheckSetresuidArgsInRangeNwebspawn()
+    {
+        int ret = syscall(__NR_setresuid, USER100_UID_LOWER_BOUND + 5000,
+                          USER100_UID_LOWER_BOUND + 5000,
+                          USER100_UID_LOWER_BOUND + 5000);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetresuidArgsOutOfRangeNwebspawn()
+    {
+        int ret = syscall(__NR_setresuid, USER100_UID_UPPER_BOUND + 1,
+                          USER100_UID_UPPER_BOUND + 1,
+                          USER100_UID_UPPER_BOUND + 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetuidNwebspawn()
+    {
+        int uid = syscall(__NR_setuid, USER100_UID_LOWER_BOUND - 1);
+        if (uid == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetuid64ForUidFilter1Nwebspawn()
+    {
+        int ret = syscall(__NR_setuid, USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetuid64ForUidFilter2Nwebspawn()
+    {
+        int ret = syscall(__NR_setuid, USER100_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetreuid64ForUidFilter1Nwebspawn()
+    {
+        int ret = syscall(__NR_setreuid, USER100_UID_LOWER_BOUND - 1, USER100_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetreuid64ForUidFilter2Nwebspawn()
+    {
+        int ret = syscall(__NR_setreuid, USER100_UID_UPPER_BOUND, USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetreuid64ForUidFilter3Nwebspawn()
+    {
+        int ret = syscall(__NR_setreuid, USER100_UID_LOWER_BOUND - 1, USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetreuid64ForUidFilter4Nwebspawn()
+    {
+        int ret = syscall(__NR_setreuid, USER101_UID_UPPER_BOUND, USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetfsuid64ForUidFilter1Nwebspawn()
+    {
+        int ret = syscall(__NR_setfsuid, USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetfsuid64ForUidFilter2Nwebspawn()
+    {
+        int ret = syscall(__NR_setfsuid, USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetresuid64ForUidFilter1Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid, USER100_UID_LOWER_BOUND - 1, 
+                          USER100_UID_LOWER_BOUND - 1, 
+                          USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetresuid64ForUidFilter2Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid, USER101_UID_UPPER_BOUND, 
+                          USER100_UID_LOWER_BOUND - 1, 
+                          USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetresuid64ForUidFilter3Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid, USER100_UID_LOWER_BOUND - 1, 
+                          USER101_UID_UPPER_BOUND, 
+                          USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetresuid64ForUidFilter4Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid, USER100_UID_LOWER_BOUND - 1, 
+                          USER100_UID_LOWER_BOUND - 1, 
+                          USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetresuid64ForUidFilter5Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid, USER100_UID_LOWER_BOUND - 1, 
+                          USER101_UID_UPPER_BOUND, 
+                          USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetresuid64ForUidFilter6Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid, USER101_UID_UPPER_BOUND, 
+                          USER100_UID_LOWER_BOUND - 1, 
+                          USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetresuid64ForUidFilter7Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid, USER101_UID_UPPER_BOUND, 
+                          USER101_UID_UPPER_BOUND, 
+                          USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    static bool CheckSetresuid64ForUidFilter8Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid, USER101_UID_UPPER_BOUND, 
+                          USER101_UID_UPPER_BOUND, 
+                          USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+ 
+    void TestSetUidGidFilterNwebspawn()
+    {
+        int ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetuid64ForUidFilter1Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetuid64ForUidFilter2Nwebspawn, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetreuid64ForUidFilter1Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetreuid64ForUidFilter2Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetreuid64ForUidFilter3Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetreuid64ForUidFilter4Nwebspawn, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetfsuid64ForUidFilter1Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetfsuid64ForUidFilter2Nwebspawn, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid64ForUidFilter1Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid64ForUidFilter2Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid64ForUidFilter3Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid64ForUidFilter4Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid64ForUidFilter5Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid64ForUidFilter6Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid64ForUidFilter7Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid64ForUidFilter8Nwebspawn, true);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuidArgsOutOfRangeNwebspawn, false);
+        EXPECT_EQ(ret, 0);
+ 
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuidArgsInRangeNwebspawn, true);
+        EXPECT_EQ(ret, 0);
+    }
+
     void TestSystemSycall()
     {
         // system blocklist
@@ -1137,6 +1391,245 @@ public:
         return false;
     }
 
+    static bool CheckSetresuid32ArgsInRangeNwebspawn()
+    {
+        int ret = syscall(__NR_setresuid32, USER100_UID_LOWER_BOUND + 5000, 
+                        USER100_UID_LOWER_BOUND + 5000, 
+                        USER100_UID_LOWER_BOUND + 5000);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetresuid32ArgsOutOfRangeNwebspawn()
+    {
+        int ret = syscall(__NR_setresuid32, USER100_UID_UPPER_BOUND + 1, 
+                        USER100_UID_UPPER_BOUND + 1, 
+                        USER100_UID_UPPER_BOUND + 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetuid32ForUidFilter1Nwebspawn()
+    {
+        int ret = syscall(__NR_setuid32, USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetuid32ForUidFilter2Nwebspawn()
+    {
+        int ret = syscall(__NR_setuid32, USER100_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetreuid32ForUidFilter1Nwebspawn()
+    {
+        int ret = syscall(__NR_setreuid32, USER100_UID_LOWER_BOUND - 1, USER100_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetreuid32ForUidFilter2Nwebspawn()
+    {
+        int ret = syscall(__NR_setreuid32, USER100_UID_UPPER_BOUND, USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetreuid32ForUidFilter3Nwebspawn()
+    {
+        int ret = syscall(__NR_setreuid32, USER100_UID_LOWER_BOUND - 1, USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetreuid32ForUidFilter4Nwebspawn()
+    {
+        int ret = syscall(__NR_setreuid32, USER101_UID_UPPER_BOUND, USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetfsuid32ForUidFilter1Nwebspawn()
+    {
+        int ret = syscall(__NR_setfsuid32, USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetfsuid32ForUidFilter2Nwebspawn()
+    {
+        int ret = syscall(__NR_setfsuid32, USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter1Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid32, USER100_UID_LOWER_BOUND - 1, 
+                        USER100_UID_LOWER_BOUND - 1, 
+                        USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter2Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid32, USER101_UID_UPPER_BOUND, 
+                        USER100_UID_LOWER_BOUND - 1, 
+                        USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter3Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid32, USER100_UID_LOWER_BOUND - 1, 
+                        USER101_UID_UPPER_BOUND, 
+                        USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter4Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid32, USER100_UID_LOWER_BOUND - 1, 
+                        USER100_UID_LOWER_BOUND - 1, 
+                        USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter5Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid32, USER100_UID_LOWER_BOUND - 1, 
+                        USER101_UID_UPPER_BOUND, 
+                        USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter6Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid32, USER101_UID_UPPER_BOUND, 
+                        USER100_UID_LOWER_BOUND - 1, 
+                        USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter7Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid32, USER101_UID_UPPER_BOUND, 
+                        USER101_UID_UPPER_BOUND, 
+                        USER100_UID_LOWER_BOUND - 1);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetresuid32ForUidFilter8Nwebspawn()
+    {
+        int ret = syscall(__NR_setresuid32, USER101_UID_UPPER_BOUND, 
+                        USER101_UID_UPPER_BOUND, 
+                        USER101_UID_UPPER_BOUND);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    void TestSetUidGidFilterNwebspawn()
+    {
+        int ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetuid32ForUidFilter1Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetuid32ForUidFilter2Nwebspawn, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetreuid32ForUidFilter1Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetreuid32ForUidFilter2Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetreuid32ForUidFilter3Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetreuid32ForUidFilter4Nwebspawn, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetfsuid32ForUidFilter1Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetfsuid32ForUidFilter2Nwebspawn, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid32ForUidFilter1Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid32ForUidFilter2Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid32ForUidFilter3Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid32ForUidFilter4Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid32ForUidFilter5Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid32ForUidFilter6Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid32ForUidFilter7Nwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid32ForUidFilter8Nwebspawn, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid32ArgsOutOfRangeNwebspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, NWEBSPAWN_NAME, CheckSetresuid32ArgsInRangeNwebspawn, true);
+        EXPECT_EQ(ret, 0);
+    }
+
     void TestSystemSycall()
     {
         // system blocklist
@@ -1341,6 +1834,18 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_SetUidGidFilter001, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestSetUidGidFilter();
+}
+
+/**
+ * @tc.name: TestSetUidGidFilterNwebspawn
+ * @tc.desc: Verify the uid gid seccomp policy.
+ * @tc.type: FUNC
+ * @tc.require: issueI5IUWJ
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SetUidGidFilter002, TestSize.Level0)
+{
+    SeccompUnitTest test;
+    test.TestSetUidGidFilterNwebspawn();
 }
 
 /**

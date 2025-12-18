@@ -165,8 +165,17 @@ template("ohos_prebuilt_seccomp") {
 
     ohos_shared_library(target_name) {
       output_name = _output_name
-      deps = [ ":${_seccomp_filter_target}" ]
-      sources = get_target_outputs(":${_seccomp_filter_target}")
+      deps = []
+      sources = []
+      if (invoker.filtername != "nwebspawn") { 
+        deps += [ ":${_seccomp_filter_target}" ]
+        sources += get_target_outputs(":${_seccomp_filter_target}")
+      } else {
+        sources += [ 
+          "./nwebspawn_filter.c",
+        ]
+        external_deps = [ "bundle_framework:appexecfwk_base" ]
+      }
       sanitize = {
         cfi = true
         cfi_cross_dso = true
