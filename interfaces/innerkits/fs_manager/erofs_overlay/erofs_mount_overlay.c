@@ -124,26 +124,40 @@ INIT_STATIC uint64_t GetImgSize(const char *dev, uint64_t offset)
         return 0;
     }
 
-    struct extheader_v1 header;
+    ExtheaderV1 header;
     ssize_t nbytes = read(fd, &header, sizeof(header));
     if (nbytes != sizeof(header)) {
         BEGET_LOGE("read dev:[%s] failed.", dev);
         close(fd);
         return 0;
     }
-    close(fd);
 
-    if (header.magic_number != EXTHDR_MAGIC) {
-        BEGET_LOGI("dev:[%s] is not have ext path, magic is 0x%x", dev, header.magic_number);
+    if (header.magicNumber != EXTHDR_MAGIC) {
+        BEGET_LOGI("dev:[%s] is not have ext path, magic is 0x%x", dev, header.magicNumber);
+        close(fd);
         return 0;
     }
-    BEGET_LOGI("get img size [%llu]", header.part_size);
+    BEGET_LOGI("get img size [%llu]", header.partSize);
 
-    if (header.remount_enable) {
-        BEGET_LOGI("get remount flag is %d from extheader", header.remount_enable);
+    if (lseek(fd, offset + EXTHDR_RDONLY_SIZE, SEEK_SET) < 0) {
+        BEGET_LOGE("lseek dev:[%s] failed, offset is %llu", dev, offset);
+        close(fd);
+        return 0;
+    }
+    ExtheaderRW extheaderRw;
+    ssize_t rwSize = read(fd, &extheaderRw, sizeof(extheaderRw));
+    if (rwSize != sizeof(extheaderRw)) {
+        BEGET_LOGE("read dev:[%s] to extheader rw failed.", dev);
+        close(fd);
+        return 0;
+    }
+
+    if (extheaderRw.remount) {
+        BEGET_LOGI("get remount flag is %d from extheader", extheaderRw.remount);
         SetRemountFlag(true);
     }
-    return header.part_size;
+    close(fd);
+    return header.partSize;
 }
 
 INIT_STATIC uint64_t GetFsSize(int fd)

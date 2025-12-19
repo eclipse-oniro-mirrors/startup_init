@@ -48,13 +48,6 @@ extern "C" {
 #define FS_HVB_MAX_PATH_LEN 128
 #define FS_HVB_AB_SUFFIX_LEN 2
 
-typedef struct {
-    uint32_t magicNumber;
-    uint16_t exthdrSize;
-    uint16_t bcc16;
-    uint64_t partSize;
-} ExtheaderV1;
-
 typedef enum InitHvbType {
     MAIN_HVB = 0,
     EXT_HVB
