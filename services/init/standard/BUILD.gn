@@ -63,9 +63,6 @@ ohos_executable("init_early") {
   if (asan_detector && init_feature_support_asan) {
     defines += [ "ASAN_DETECTOR" ]
   }
-  if (!is_asan && init_feature_support_saspawn) {
-    defines += [ "INIT_FEATURE_SUPPORT_SASPAWN" ]
-  }
   install_images = [ "ramdisk" ]
   install_enable = true
   part_name = "init"
@@ -237,6 +234,10 @@ ohos_executable("init") {
   }
   if (init_extra_static_modules != "") {
     deps += [ init_extra_static_modules ]
+  }
+
+  if (!is_asan && init_feature_support_saspawn) {
+    defines += [ "INIT_FEATURE_SUPPORT_SASPAWN" ]
   }
 
   version_script = get_label_info(
