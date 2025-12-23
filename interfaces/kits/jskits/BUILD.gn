@@ -26,7 +26,6 @@ ohos_shared_library("deviceinfo") {
     "bounds_checking_function:libsec_shared",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "hilog:libhilog_base",
     "ipc:ipc_single",
     "napi:ace_napi",
     "samgr:samgr_proxy",

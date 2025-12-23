@@ -337,7 +337,6 @@ if (defined(ohos_lite)) {
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "config_policy:configpolicy_util",
-      "hilog:libhilog_base",
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
@@ -392,7 +391,6 @@ if (defined(ohos_lite)) {
     external_deps = [
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
-      "hilog:libhilog_base",
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
@@ -458,7 +456,6 @@ if (defined(ohos_lite)) {
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "hilog:libhilog",
-      "hilog:libhilog_base",
       "ipc:ipc_single",
       "samgr:samgr_proxy",
     ]
@@ -520,7 +517,6 @@ if (defined(ohos_lite)) {
     external_deps = [
       "bounds_checking_function:libsec_static",
       "c_utils:utilsbase",
-      "hilog:libhilog_base",
     ]
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
