@@ -350,6 +350,11 @@ void SystemConfig(const char *uptime)
 
     IsEnableSandbox();
     // execute init
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    INIT_LOGI("Init feature support saspawn");
+    DlopenSoLibrary(INIT_LOAD_OS_LIBRARY_PATH);
+#endif
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
     TriggerServices(START_MODE_BOOT);
@@ -362,3 +367,56 @@ void SystemRun(void)
 {
     StartParamService();
 }
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+static void ParseAllSoLibrary(const cJSON *root)
+{
+    char *tmpParamValue = calloc(PARAM_VALUE_LEN_MAX + 1, sizeof(char));
+    INIT_ERROR_CHECK(tmpParamValue != NULL, return, "Failed to alloc memory for param");
+
+    cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "preload");
+    if (!cJSON_IsArray(importAttr)) {
+        free(tmpParamValue);
+        return;
+    }
+
+    int importAttrSize = cJSON_GetArraySize(importAttr);
+    for (int i = 0; i < importAttrSize; i++)
+    {
+        cJSON *importItem = cJSON_GetArrayItem(importAttr, i);
+        if (!cJSON_IsString(importItem)) {
+            INIT_LOGE("Invalid ytpe of import item. should be string");
+            break;
+        }
+        char *importContent = cJSON_GetStringValue(importItem);
+        if (importContent == NULL) {
+            INIT_LOGE("Cannot get import config file");
+            break;
+        }
+        int ret = GetParamValue(importContent, strlen(importContent), tmpParamValue, PARAM_VALUE_LEN_MAX);
+        if (ret != 0) {
+            INIT_LOGE("Cannot get value for %s", importContent);
+            continue;
+        }
+        INIT_LOGI("Import %s ...", tmpParamValue);
+        dlopen(tmpParamValue, RTLD_LAZY);
+    }
+    free(tmpParamValue);
+}
+
+int DlopenSoLibrary(const char *configFile)
+{
+    INIT_LOGV("Parse init configs form %s", configFile);
+    char *fileBuf = ReadFileToBuf(configFile);
+    INIT_ERROR_CHECK(fileBuf != Null, return -1, "Cfg error, %s not found", configFile);
+
+    cJSON *fileRoot = cJSON_Parse(fileBuf);
+    INIT_ERROR_CHECK(fileRoot != NULL, free(fileBuf), return -1, "Cfg error, failed to parse json %s", configFile);
+    
+    ParseAllSoLibrary(fileRoot);
+
+    cJSON_Delete(fileRoot);
+    free(fileBuf);
+    return 0;
+}
+#endif

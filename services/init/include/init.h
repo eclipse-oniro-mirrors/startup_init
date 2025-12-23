@@ -50,6 +50,9 @@ void LogInit(void);
 void SystemPrepare(long long uptime);
 void SystemConfig(const char *uptime);
 void SystemRun(void);
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+int DlopenSoLibrary(const char *configFile);
+#endif
 void SystemExecuteRcs(void);
 
 int ParseCfgByPriority(const char *filePath);
