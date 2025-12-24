@@ -381,8 +381,7 @@ static void ParseAllSoLibrary(const cJSON *root)
     }
 
     int importAttrSize = cJSON_GetArraySize(importAttr);
-    for (int i = 0; i < importAttrSize; i++)
-    {
+    for (int i = 0; i < importAttrSize; i++) {
         cJSON *importItem = cJSON_GetArrayItem(importAttr, i);
         if (!cJSON_IsString(importItem)) {
             INIT_LOGE("Invalid ytpe of import item. should be string");
@@ -411,7 +410,8 @@ int DlopenSoLibrary(const char *configFile)
     INIT_ERROR_CHECK(fileBuf != Null, return -1, "Cfg error, %s not found", configFile);
 
     cJSON *fileRoot = cJSON_Parse(fileBuf);
-    INIT_ERROR_CHECK(fileRoot != NULL, free(fileBuf), return -1, "Cfg error, failed to parse json %s", configFile);
+    INIT_ERROR_CHECK(fileRoot != NULL, free(fileBuf);
+        return -1, "Cfg error, failed to parse json %s", configFile);
     
     ParseAllSoLibrary(fileRoot);
 
