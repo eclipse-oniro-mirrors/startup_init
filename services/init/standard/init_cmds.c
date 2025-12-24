@@ -66,6 +66,17 @@
 #define MOUNTINFO_MAX_SIZE 4096
 #define OPEN_FILE_MOD 0700
 #define TIME_LEN 64
+#define ESWAP_ENABLE_PATH "/proc/sys/kernel/hyperhold/enable"
+#define HP_CACHE_LEVEL_PATH "/proc/sys/kernel/hyperhold/cache_level"
+#define ROOT_MEMCG_SWAPIN_PATH "/dev/memcg/memory.force_swapin"
+#define HP_CACHE_LEVEL_OFF "0"
+#define ESWAP_SWAP_IN "0"
+#define DISABLE_ESWAP "disable"
+#define CLOSE_HP_WAIT_TIME 500000
+#define CLOSE_HP_INTERVAL_WAIT 10000
+#define HP_ENABLE_BUFFER_SIZE 20
+#define HP_DISABLE_SUCC_TAG_LEN 30
+#define HP_DISABLE_FAIL_TAG_LEN 26
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
@@ -537,7 +548,7 @@ static void WriteCurtime(int fd)
 static void InitUmountFaultLog()
 {
     const char *dumpPath = "/log/startup/mntdump.txt";
-    int dumpFd = open(dumpPath, O_CREAT | O_WRONLY | O_TRUNC, OPEN_FILE_MOD);
+    int dumpFd = open(dumpPath, O_CREAT | O_WRONLY | O_APPEND, OPEN_FILE_MOD);
     if (dumpFd == -1) {
         INIT_LOGE("mount dump path creat fail, errno is %d", errno);
         return;
@@ -617,6 +628,103 @@ static void DoUmountOtherNsData()
     INIT_LOGI("umount ns data end");
 }
 
+static bool EchoToPath(const char* path, const char* content)
+{
+    int fd = open(path, O_WRONLY);
+    if (fd == -1) {
+        INIT_LOGE("open %s failed", path);
+        return false;
+    }
+    if (write(fd, content, strlen(content)) < 0) {
+        INIT_LOGE("write %s : %s failed", path, content);
+        close(fd);
+        return false;
+    }
+    close(fd);
+    return true;
+}
+ 
+static bool IsHyperHoldDisabled()
+{
+    FILE *file = fopen(ESWAP_ENABLE_PATH, "r");
+    if (!file) {
+        INIT_LOGE("Failed to open file");
+        return false;
+    }
+    char buffer[HP_ENABLE_BUFFER_SIZE] = {0};
+    if (fgets(buffer, sizeof(buffer) - 1, file) == NULL) {
+        (void)fclose(file);
+        INIT_LOGE("Failed to read from file");
+        return false;
+    }
+    (void)fclose(file);
+    size_t index = strcspn(buffer, "\n");
+    if (index < sizeof(buffer)) {
+        buffer[index] = '\0';
+    }
+    if (strcmp(buffer, "disable") == 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+ 
+static void DumpHyperHoldCloseResult()
+{
+    const char *dumpPath = "/log/startup/mntdump.txt";
+    int dumpFd = open(dumpPath, O_CREAT | O_WRONLY | O_TRUNC, OPEN_FILE_MOD);
+    if (dumpFd == -1) {
+        INIT_LOGE("mount dump path create fail, errno is %d", errno);
+        return;
+    }
+    bool isHPDisabled = IsHyperHoldDisabled();
+    if (isHPDisabled) {
+        write(dumpFd, "hyperhold is totally disabled\n", HP_DISABLE_SUCC_TAG_LEN);
+    } else {
+        write(dumpFd, "hyperhold disable timeout\n", HP_DISABLE_FAIL_TAG_LEN);
+    }
+    close(dumpFd);
+}
+ 
+static void DisableHyperholdTimeOut(int interval, long long totalWait)
+{
+    INIT_LOGI("disable hyperhold begin");
+    INIT_TIMING_STAT cmdTimer;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
+ 
+    // 1. disable hp to ensure no further swapout
+    if (!EchoToPath(ESWAP_ENABLE_PATH, DISABLE_ESWAP)) {
+        INIT_LOGE("disable hyperhold failed");
+    }
+    // 2. disable hp cache to ensure that the init swap-in will free extent
+    if (!EchoToPath(HP_CACHE_LEVEL_PATH, HP_CACHE_LEVEL_OFF)) {
+        INIT_LOGE("close hp_cache failed");
+    }
+    // 3. here all processes except init have died, only swapin root memcg
+    if (!EchoToPath(ROOT_MEMCG_SWAPIN_PATH, ESWAP_SWAP_IN)) {
+        INIT_LOGE("swapin failed");
+    }
+    // 4. close hp again to ensure hp file is closed
+    while (true) {
+        if (IsHyperHoldDisabled()) {
+            INIT_LOGE("close hyperhold succ");
+            break;
+        } else {
+            INIT_LOGE("close hyperhold failed");
+        }
+        if (!EchoToPath(ESWAP_ENABLE_PATH, DISABLE_ESWAP)) {
+            INIT_LOGE("disable hyperhold failed");
+        }
+        usleep(interval);
+        (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+        long long diff = InitDiffTime(&cmdTimer);
+        if (diff > totalWait) {
+            break;
+        }
+    }
+    DumpHyperHoldCloseResult();
+}
+
 static void DoUmount(const struct CmdArgs *ctx)
 {
     INIT_LOGI("DoUmount %s",  ctx->argv[0]);
@@ -629,6 +737,7 @@ static void DoUmount(const struct CmdArgs *ctx)
         INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to umount %s, errno %d", ctx->argv[0], errno);
         if (ret != 0 && strcmp(ctx->argv[0], "/data") == 0) {
             DoKillAllPid();
+            DisableHyperholdTimeOut(CLOSE_HP_INTERVAL_WAIT, CLOSE_HP_WAIT_TIME);
             DoUmountProc();
             InitUmountFaultLog();
             DumpFdInfo();
