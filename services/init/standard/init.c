@@ -14,6 +14,7 @@
  */
 #include "init.h"
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <poll.h>
 #include <stdarg.h>
