@@ -57,6 +57,7 @@ extern "C" {
 #define ME_STATE_OK 22873
 #define ME_STATE_DISABLED 27242
 #define BASE_DECIMAL 10
+#define MAX_DEFAULT_BOOT_DEVICE_LEN 128
 
 #ifdef SUPPORT_HVB
 #define PARTITION_USERDATA_PATH "/dev/block/by-name/userdata"
@@ -817,7 +818,7 @@ static int WaitMEDriver()
 }
 
 #ifdef SUPPORT_HVB
-static int SimlinkUtil(const char *source, const char *target)
+static int SymlinkUtil(const char *source, const char *target)
 {
     BEGET_LOGI("unlink %s", target);
     if (unlink(target) != 0) {
@@ -870,8 +871,19 @@ int UpdateUserDataMEDevice(FstabItem *item)
     close(fd);
     BEGET_LOGI("get dm dev path %s", dmDevPath);
     WaitForFile(dmDevPath, WAIT_MAX_SECOND);
-    (void)SimlinkUtil(dmDevPath, item->deviceName);
-    (void)SimlinkUtil(dmDevPath, PARTITION_USERDATA_PATH);
+    (void)SymlinkUtil(dmDevPath, PARTITION_USERDATA_PATH);
+    if (strcmp("/dev/block/by-name/userdata", item->deviceName) != 0) {
+        (void)SymlinkUtil(dmDevPath, item->deviceName);
+        return 0;
+    }
+    char defaultName[MAX_DEFAULT_BOOT_DEVICE_LEN] = {0};
+    int ret = GetParameterFromCmdLine("default_boot_device", defaultName, MAX_DEFAULT_BOOT_DEVICE_LEN);
+    BEGET_ERROR_CHECK(ret == 0, return 0, "Failed get default_boot_device value from cmdline err:%d", ret);
+    char target[MAX_BUFFER_LEN] = {0};
+    ret = snprintf_s(target, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1,
+        "/dev/block/platform/%s/by-name/userdata", defaultName);
+    BEGET_ERROR_CHECK(ret > 0, return 0, "Failed  snprintf_s  err:%d", ret);
+    (void)SymlinkUtil(dmDevPath, target);
 #endif
     return 0;
 }
