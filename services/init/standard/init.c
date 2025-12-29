@@ -384,7 +384,9 @@ static void IsEnableSaspawn(void)
     char value [MAX_BUFFER_LEN] = {0};
     unsigned int len = MAX_BUFFER_LEN;
     if (SystemReadParam("const.startup.saspawn_enable", value, &len) == 0) {
-        g_enableSaspawn = true;
+        if (strcmp(value, "true") == 0) {
+            g_enableSaspawn = true;
+        }
     } 
 }
 
@@ -432,7 +434,7 @@ int DlopenSoLibrary(const char *configFile)
 {
     INIT_LOGV("Parse init configs form %s", configFile);
     char *fileBuf = ReadFileToBuf(configFile);
-    INIT_ERROR_CHECK(fileBuf != Null, return -1, "Cfg error, %s not found", configFile);
+    INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Cfg error, %s not found", configFile);
 
     cJSON *fileRoot = cJSON_Parse(fileBuf);
     INIT_ERROR_CHECK(fileRoot != NULL, free(fileBuf);
