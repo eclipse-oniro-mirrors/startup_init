@@ -14,6 +14,7 @@
  */
 #ifndef BASE_STARTUP_INIT_H
 #define BASE_STARTUP_INIT_H
+#include <stdbool.h>
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -52,6 +53,8 @@ void SystemConfig(const char *uptime);
 void SystemRun(void);
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
 int DlopenSoLibrary(const char *configFile);
+bool GetEnableSaspawn(void);
+#define SOFILE_VALUE_LEN_MAX 96
 #endif
 void SystemExecuteRcs(void);
 

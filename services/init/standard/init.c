@@ -46,6 +46,11 @@
 #include "bootstage.h"
 #include "init_hisysevent.h"
 
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+static bool g_enableSaspawn = false;
+static void IsEnableSaspawn(void);
+#endif
+
 static int FdHolderSockInit(void)
 {
     int sock = -1;
@@ -353,9 +358,13 @@ void SystemConfig(const char *uptime)
     // execute init
 
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    INIT_LOGI("Init feature support saspawn");
-    DlopenSoLibrary(INIT_LOAD_OS_LIBRARY_PATH);
+    IsEnableSaspawn();
+    if (g_enableSaspawn) {
+        INIT_LOGI("Init feature support saspawn");
+        DlopenSoLibrary(INIT_LOAD_OS_LIBRARY_PATH);
+    }
 #endif
+
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
     TriggerServices(START_MODE_BOOT);
@@ -370,11 +379,25 @@ void SystemRun(void)
 }
 
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
+static void IsEnableSaspawn(void)
+{
+    char value [MAX_BUFFER_LEN] = {0};
+    unsigned int len = MAX_BUFFER_LEN;
+    if (SystemReadParam("const.startup.saspawn_enable", value, &len) == 0) {
+        g_enableSaspawn = true;
+    } 
+}
+
+bool GetEnableSaspawn(void)
+{
+    return g_enableSaspawn;
+}
+
 static void ParseAllSoLibrary(const cJSON *root)
 {
-    char *tmpParamValue = calloc(PARAM_VALUE_LEN_MAX + 1, sizeof(char));
+    char *tmpParamValue = calloc(SOFILE_VALUE_LEN_MAX + 1, sizeof(char));
     INIT_ERROR_CHECK(tmpParamValue != NULL, return, "Failed to alloc memory for param");
-
+    int ret = -1;
     cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "preload");
     if (!cJSON_IsArray(importAttr)) {
         free(tmpParamValue);
@@ -393,11 +416,12 @@ static void ParseAllSoLibrary(const cJSON *root)
             INIT_LOGE("Cannot get import config file");
             break;
         }
-        int ret = GetParamValue(importContent, strlen(importContent), tmpParamValue, PARAM_VALUE_LEN_MAX);
-        if (ret != 0) {
-            INIT_LOGE("Cannot get value for %s", importContent);
-            continue;
-        }
+
+        ret = memset_s(tmpParamValue, SOFILE_VALUE_LEN_MAX, 0, SOFILE_VALUE_LEN_MAX);
+        INIT_ERROR_CHECK(ret == 0, continue, "Failed to memset tmpParamValue");
+        ret = memcpy_s(tmpParamValue, SOFILE_VALUE_LEN_MAX, importContent, strlen(importContent));
+        INIT_ERROR_CHECK(ret == 0, continue, "Failed to copy cannot %s", importContent);
+
         INIT_LOGI("Import %s ...", tmpParamValue);
         dlopen(tmpParamValue, RTLD_LAZY);
     }
