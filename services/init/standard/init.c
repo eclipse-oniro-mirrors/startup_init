@@ -48,7 +48,7 @@
 
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
 static bool g_enableSaspawn = false;
-static void IsEnableSaspawn(void);
+static bool IsEnableSaspawn(void);
 #endif
 
 static int FdHolderSockInit(void)
@@ -358,9 +358,7 @@ void SystemConfig(const char *uptime)
     // execute init
 
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    IsEnableSaspawn();
-    if (g_enableSaspawn) {
-        INIT_LOGI("Init feature support saspawn");
+    if (IsEnableSaspawn()) {
         DlopenSoLibrary(INIT_LOAD_OS_LIBRARY_PATH);
     }
 #endif
@@ -379,7 +377,7 @@ void SystemRun(void)
 }
 
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
-static void IsEnableSaspawn(void)
+static bool IsEnableSaspawn(void)
 {
     char value [MAX_BUFFER_LEN] = {0};
     unsigned int len = MAX_BUFFER_LEN;
@@ -387,7 +385,9 @@ static void IsEnableSaspawn(void)
         if (strcmp(value, "true") == 0) {
             g_enableSaspawn = true;
         }
-    } 
+    }
+
+    return g_enableSaspawn;
 }
 
 bool GetEnableSaspawn(void)
