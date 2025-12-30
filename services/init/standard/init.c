@@ -421,11 +421,14 @@ static void ParseAllSoLibrary(const cJSON *root)
 
         ret = memset_s(tmpParamValue, SOFILE_VALUE_LEN_MAX, 0, SOFILE_VALUE_LEN_MAX);
         INIT_ERROR_CHECK(ret == 0, continue, "Failed to memset tmpParamValue");
+        int importLen = strlen(importContent);
+        INIT_ERROR_CHECK(importLen <= SOFILE_VALUE_LEN_MAX, continue, "Import path too long: %d", importLen);
         ret = memcpy_s(tmpParamValue, SOFILE_VALUE_LEN_MAX, importContent, strlen(importContent));
         INIT_ERROR_CHECK(ret == 0, continue, "Failed to copy cannot %s", importContent);
 
         INIT_LOGI("Import %s ...", tmpParamValue);
-        dlopen(tmpParamValue, RTLD_LAZY);
+        void* handle = dlopen(tmpParamValue, RTLD_LAZY);
+        INIT_ERROR_CHECK(handle != NULL, continue, "Failed to dlopen load library errno:%{public}s", dlerror());
     }
     free(tmpParamValue);
 }
