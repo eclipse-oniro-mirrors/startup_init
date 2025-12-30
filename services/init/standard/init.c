@@ -14,6 +14,7 @@
  */
 #include "init.h"
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <poll.h>
 #include <stdarg.h>
@@ -44,6 +45,11 @@
 #include "fd_holder_internal.h"
 #include "bootstage.h"
 #include "init_hisysevent.h"
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+static bool g_enableSaspawn = false;
+static bool IsEnableSaspawn(void);
+#endif
 
 static int FdHolderSockInit(void)
 {
@@ -350,6 +356,13 @@ void SystemConfig(const char *uptime)
 
     IsEnableSandbox();
     // execute init
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    if (IsEnableSaspawn()) {
+        DlopenSoLibrary(INIT_LOAD_OS_LIBRARY_PATH);
+    }
+#endif
+
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
     TriggerServices(START_MODE_BOOT);
@@ -362,3 +375,78 @@ void SystemRun(void)
 {
     StartParamService();
 }
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+static bool IsEnableSaspawn(void)
+{
+    char value [MAX_BUFFER_LEN] = {0};
+    unsigned int len = MAX_BUFFER_LEN;
+    if (SystemReadParam("const.startup.saspawn_enable", value, &len) == 0) {
+        if (strcmp(value, "true") == 0) {
+            g_enableSaspawn = true;
+        }
+    }
+
+    return g_enableSaspawn;
+}
+
+bool GetEnableSaspawn(void)
+{
+    return g_enableSaspawn;
+}
+
+static void ParseAllSoLibrary(const cJSON *root)
+{
+    char *tmpParamValue = calloc(SOFILE_VALUE_LEN_MAX + 1, sizeof(char));
+    INIT_ERROR_CHECK(tmpParamValue != NULL, return, "Failed to alloc memory for param");
+    int ret = -1;
+    cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "preload");
+    if (!cJSON_IsArray(importAttr)) {
+        free(tmpParamValue);
+        return;
+    }
+
+    int importAttrSize = cJSON_GetArraySize(importAttr);
+    for (int i = 0; i < importAttrSize; i++) {
+        cJSON *importItem = cJSON_GetArrayItem(importAttr, i);
+        if (!cJSON_IsString(importItem)) {
+            INIT_LOGE("Invalid ytpe of import item. should be string");
+            break;
+        }
+        char *importContent = cJSON_GetStringValue(importItem);
+        if (importContent == NULL) {
+            INIT_LOGE("Cannot get import config file");
+            break;
+        }
+
+        ret = memset_s(tmpParamValue, SOFILE_VALUE_LEN_MAX, 0, SOFILE_VALUE_LEN_MAX);
+        INIT_ERROR_CHECK(ret == 0, continue, "Failed to memset tmpParamValue");
+        int importLen = strlen(importContent);
+        INIT_ERROR_CHECK(importLen <= SOFILE_VALUE_LEN_MAX, continue, "Import path too long: %d", importLen);
+        ret = memcpy_s(tmpParamValue, SOFILE_VALUE_LEN_MAX, importContent, strlen(importContent));
+        INIT_ERROR_CHECK(ret == 0, continue, "Failed to copy cannot %s", importContent);
+
+        INIT_LOGI("Import %s ...", tmpParamValue);
+        void* handle = dlopen(tmpParamValue, RTLD_LAZY);
+        INIT_ERROR_CHECK(handle != NULL, continue, "Failed to dlopen load library errno:%{public}s", dlerror());
+    }
+    free(tmpParamValue);
+}
+
+int DlopenSoLibrary(const char *configFile)
+{
+    INIT_LOGV("Parse init configs form %s", configFile);
+    char *fileBuf = ReadFileToBuf(configFile);
+    INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Cfg error, %s not found", configFile);
+
+    cJSON *fileRoot = cJSON_Parse(fileBuf);
+    INIT_ERROR_CHECK(fileRoot != NULL, free(fileBuf);
+        return -1, "Cfg error, failed to parse json %s", configFile);
+    
+    ParseAllSoLibrary(fileRoot);
+
+    cJSON_Delete(fileRoot);
+    free(fileBuf);
+    return 0;
+}
+#endif

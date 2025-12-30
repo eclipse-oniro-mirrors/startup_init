@@ -40,7 +40,9 @@ extern "C" {
 #define CPU_CORE_STR_IN_CFG "cpucore"
 #define MODULE_UPDATE_STR_IN_CFG "module-update"
 #define PERIOD_STR_IN_CFG "period"
-
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+#define INIT_LOAD_OS_LIBRARY_PATH "/system/etc/saspawn/saspawn_preload.json"
+#endif
 #define MAX_SERVICES_CNT_IN_FILE 100
 
 typedef struct {
