@@ -58,7 +58,8 @@
 #define BOOT_DETECTOR_IOCTL_BASE 'B'
 #define SET_SHUT_STAGE _IOW(BOOT_DETECTOR_IOCTL_BASE, 106, int)
 #define SHUT_STAGE_FRAMEWORK_START 1
-
+#define UMOUNT_DATA_RETRY_COUNT 3
+#define NS_DATA_UMOUNT_FAIL_TAG_LEN 21
 #define PROC_PATH "/proc"
 #define KILL_WAIT_TIME 100000
 #define INTERVAL_WAIT 10
@@ -545,6 +546,19 @@ static void WriteCurtime(int fd)
     write(fd, "\n", 1);
 }
 
+static void DumpNsDataResult()
+{
+    const char *dumpPath = "/log/startup/mntdump.txt";
+    int dumpFd = open(dumpPath, O_CREAT | O_WRONLY | O_APPEND, OPEN_FILE_MOD);
+    if (dumpFd == -1) {
+        INIT_LOGE("mount dump path creat fail, errno is %d", errno);
+        return;
+    }
+    WriteCurtime(dumpFd);
+    write(dumpFd, "nsData umount failed\n", NS_DATA_UMOUNT_FAIL_TAG_LEN);
+    close(dumpFd);
+}
+
 static void InitUmountFaultLog()
 {
     const char *dumpPath = "/log/startup/mntdump.txt";
@@ -609,23 +623,32 @@ static void DumpFdInfo()
     INIT_LOGI("dump fd info end");
 }
 
-static void DoUmountOtherNsData()
+static bool DoUmountOtherNsData()
 {
     INIT_LOGI("umount ns data");
+    bool nsDataRelease = true;
     int ret = EnterSandbox("system");
     if (ret != 0) {
         INIT_LOGE("Enter system sandbox failed");
+        nsDataRelease = false;
     }
     ret = umount("/data");
     if (ret != 0) {
         INIT_LOGE("Umount data in system ns failed");
+        nsDataRelease = false;
     }
     ret = EnterSandbox("chipset");
+    if (ret != 0) {
+        INIT_LOGE("Enter chipset sandbox failed");
+        nsDataRelease = false;
+    }
     ret = umount("/data");
     if (ret != 0) {
         INIT_LOGE("Umount data in chipset ns failed");
+        nsDataRelease = false;
     }
     INIT_LOGI("umount ns data end");
+    return nsDataRelease;
 }
 
 static bool EchoToPath(const char* path, const char* content)
@@ -722,7 +745,36 @@ static void DisableHyperholdTimeOut(int interval, long long totalWait)
             break;
         }
     }
-    DumpHyperHoldCloseResult();
+}
+
+static void RetryUmountData()
+{
+    int retry = 0;
+    bool dataUmountSucc = false;
+    while (retry < UMOUNT_DATA_RETRY_COUNT) {
+        DoKillAllPid();
+        if (!IsHyperHoldDisabled()) {
+            DisableHyperholdTimeOut(CLOSE_HP_INTERVAL_WAIT, CLOSE_HP_WAIT_TIME);
+        }
+        DoUmountProc();
+        int ret = umount("/data");
+        if (ret == 0 || errno == EINVAL) {
+            INIT_LOGI("umount data success, ret is %d, errno %d", ret, errno);
+            dataUmountSucc = true;
+            break;
+        }
+        INIT_LOGE("retry umount data count %d, errno %d", retry, errno);
+        retry++;
+    }
+    if (!dataUmountSucc) {
+        INIT_LOGE("umount data failed, save err log");
+        DumpHyperHoldCloseResult();
+        InitUmountFaultLog();
+        DumpFdInfo();
+    }
+    if (!DoUmountOtherNsData()) {
+        DumpNsDataResult();
+    }
 }
 
 static void DoUmount(const struct CmdArgs *ctx)
@@ -736,12 +788,7 @@ static void DoUmount(const struct CmdArgs *ctx)
         }
         INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to umount %s, errno %d", ctx->argv[0], errno);
         if (ret != 0 && strcmp(ctx->argv[0], "/data") == 0) {
-            DoKillAllPid();
-            DisableHyperholdTimeOut(CLOSE_HP_INTERVAL_WAIT, CLOSE_HP_WAIT_TIME);
-            DoUmountProc();
-            InitUmountFaultLog();
-            DumpFdInfo();
-            DoUmountOtherNsData();
+            RetryUmountData();
         }
     } else if (status == MOUNT_UMOUNTED) {
         INIT_LOGI("%s is already umounted", ctx->argv[0]);
