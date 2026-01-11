@@ -173,12 +173,6 @@ ohos_executable("init") {
 
     include_dirs += [ "//base/startup/init/services/modules/bootevent" ]
   }
-  if (use_musl) {
-    external_deps += [
-      "mksh:sh",
-      "toybox:toybox",
-    ]
-  }
 
   if (build_seccomp) {
     cflags += [ "-DWITH_SECCOMP" ]

@@ -93,9 +93,7 @@ executable("init") {
     ]
     deps += [
       "//base/startup/init/services/param/linux:param_init",
-      "//third_party/mksh",
     ]
-    external_deps += [ "toybox:toybox" ]
   }
 
   if (init_feature_use_hook_mgr) {
