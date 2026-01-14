@@ -191,7 +191,11 @@ INIT_STATIC void StartSecondStageInit(long long uptime)
         ChekcAndRunAsanInit(args);
     }
 #endif
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    if (execv("/system/bin/init", args) != 0) {
+#else
     if (execv("/bin/init", args) != 0) {
+#endif
         INIT_LOGE("Failed to exec \"/bin/init\", err = %d", errno);
         exit(-1);
     }

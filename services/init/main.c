@@ -22,6 +22,10 @@
 #endif
 
 static const pid_t INIT_PROCESS_PID = 1;
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+ProcProcessName *g_procProcessName = NULL;
+static const unsigned int SERVICE_NAME_MAX_LENGTH = 60;
+#endif
 
 int main(int argc, char * const argv[])
 {
@@ -55,6 +59,23 @@ int main(int argc, char * const argv[])
     }
 #endif
     }
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    uintptr_t start = (uintptr_t)argv[0];
+    uintptr_t end = (uintptr_t)strchr(argv[argc - 1], 0);
+    if (g_procProcessName == NULL) {
+        g_procProcessName = (ProcProcessName *)calloc(1, sizeof(ProcProcessName));
+    }
+
+    if (g_procProcessName != NULL) {
+        if (SERVICE_NAME_MAX_LENGTH > end - start) {
+            g_procProcessName->longProcNameLen = SERVICE_NAME_MAX_LENGTH;
+        } else {
+            g_procProcessName->longProcNameLen = end - start;
+        }
+        g_procProcessName->longProcName = argv[0];
+    }
+#endif
 
     SystemInit();
     SystemExecuteRcs();

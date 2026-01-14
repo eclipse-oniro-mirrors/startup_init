@@ -20,6 +20,15 @@
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <unistd.h>
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+#include <sys/prctl.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <signal.h>
+#include "param_manager.h"
+#endif
 
 #include "init_group_manager.h"
 #include "init.h"
@@ -37,6 +46,9 @@
 
 #define MIN_IMPORTANT_LEVEL (-20)
 #define MAX_IMPORTANT_LEVEL 19
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+typedef int(*FuncType)(int, char *argv[]);
+#endif
 
 static bool g_enableSandbox = false;
 
@@ -114,6 +126,107 @@ int SetImportantValue(Service *service, const char *attrName, int value, int fla
     return SERVICE_SUCCESS;
 }
 
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+int InitServiceBySaspawn(Service *service, const ServiceArgs *pathArgs)
+{
+    int ret = 0;
+    ret = memset_s(g_procProcessName->longProcName, g_procProcessName->longProcNameLen,
+        0, g_procProcessName->longProcNameLen);
+    if (ret != EOK) {
+        INIT_LOGE("saspawn memset_s failed %d", errno);
+        return SERVICE_FAILURE;
+    }
+    ret = strncpy_s(g_procProcessName->longProcName, g_procProcessName->longProcNameLen,
+        service->name, strlen(service->name));
+    if (ret != EOK) {
+        INIT_LOGE("saspawn strncpy_s failed %d", errno);
+        return SERVICE_FAILURE;
+    }
+    void* handle = dlopen(SERVICES_SASPAWN_LIBRARY_NAME, RTLD_LAZY);
+    if (handle != NULL) {
+        FuncType startSA = (FuncType)dlsym(handle, SERVICES_SASPAWN_FUNCTION_NAME);
+        if (startSA == NULL) {
+            INIT_LOGE("saspawn dlsym error: %s", dlerror());
+            return SERVICE_FAILURE;
+            FreeInitResource();
+        }
+        int argvValue = pathArgs->count - 1;
+        ret = startSA(argvValue, pathArgs->argv);
+        INIT_LOGI("saspawn complete, ret = %d", ret);
+        return SERVICE_SUCCESS;
+    } else {
+        INIT_LOGE("saspawn dlopen error: %s", dlerror());
+        return SERVICE_FAILURE;
+    }
+}
+
+static void CloseFileResource(void)
+{
+    DIR *dir = opendir(SERVICES_PROC_SELF_FD);
+    if (!dir) {
+        INIT_LOGE("Open fd directory failed.");
+        return;
+    }
+    INIT_LOGI("Saspawn free file descriptors.");
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] == '.') {
+            continue;
+        }
+
+        char *endptr = NULL;
+        long fd_val = strtol(entry->d_name, &endptr, STRTOL_BASE);
+        if (*endptr != '\0' || fd_val < 0 || fd_val > INT_MAX) {
+            INIT_LOGE("Invalid fd entry: %s", entry->d_name);
+            continue;
+        }
+        int fd = (int)fd_val;
+        if (fd == SERVICES_STANDARD_INPUT || fd == SERVICES_STANDARD_OUTPUT || fd == SERVICES_STANDARD_ERROR) {
+            continue;
+        }
+
+        char path[SERVICES_STR_LEN_MAX] = { 0 };
+        int ret = snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s/%s", SERVICES_PROC_SELF_FD, entry->d_name);
+        INIT_ERROR_CHECK(ret > 0, continue, "Path too long for fd: %s.", entry->d_name);
+
+        char link[SERVICES_STR_LEN_MAX] = { 0 };
+        int len = readlink(path, link, sizeof(link) - 1);
+        if (len < 0) {
+            INIT_LOGE("Failed to read symbolic link for path: %s", path);
+            continue;
+        }
+        if (strcmp(link, SERVICES_FILE_PATH_KMSG) == 0) {
+            INIT_LOGI("Failed path is kmsg: %s", link);
+            continue;
+        }
+        close(fd);
+    }
+    closedir(dir);
+}
+
+static void ResetSignalResource(void)
+{
+    if (signal(SIGTERM, SIG_DFL) == SIG_ERR) {
+        INIT_LOGE("Resetting SIGTERM handler failed: %s", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) {
+        INIT_LOGE("Resetting SIGCHLD handler failed: %s", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    INIT_LOGI("Signal resource reset SIGTERM SIGCHLD ok.");
+}
+
+static void FreeInitResource(void)
+{
+    INIT_LOGI("Start sa resource free.");
+    CloseFileResource();
+    ResetSignalResource();
+}
+#endif
+
 int ServiceExec(Service *service, const ServiceArgs *pathArgs)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Exec service failed! null ptr.");
@@ -128,6 +241,18 @@ int ServiceExec(Service *service, const ServiceArgs *pathArgs)
             "Service error %d %s, failed to set priority %d.", errno, service->name, service->importance);
     }
     OpenHidebug(service->name);
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    int isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
+    if (isSaspawn) {
+        int ret = InitServiceBySaspawn(service, pathArgs);
+        if (ret == SERVICE_FAILURE) {
+            service->lastErrno = INIT_SASPAWN;
+            return SERVICE_FAILURE;
+        } else {
+            return SERVICE_SUCCESS;
+        }
+    }
+#endif
     int isCritical = (service->attribute & SERVICE_ATTR_CRITICAL);
     INIT_ERROR_CHECK(execv(pathArgs->argv[0], pathArgs->argv) == 0,
         service->lastErrno = INIT_EEXEC;

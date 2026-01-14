@@ -15,6 +15,9 @@
 #ifndef BASE_STARTUP_INIT_H
 #define BASE_STARTUP_INIT_H
 #include <stdbool.h>
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+#include <stddef.h>
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -62,6 +65,14 @@ int ParseCfgByPriority(const char *filePath);
 int ParseInitCfg(const char *configFile, void *context);
 void ReadConfig(void);
 void SignalInit(void);
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+typedef struct {
+    char *longProcName;
+    unsigned int longProcNameLen;
+} ProcProcessName;
+
+extern ProcProcessName *g_procProcessName;
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus

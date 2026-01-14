@@ -429,6 +429,20 @@ static void SetServiceEnv(Service *service)
     }
 }
 
+static void SetServiceContent(Service *service)
+{
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    bool isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
+    if (isSaspawn) {
+        PluginExecCmdByName("setServiceSaspawnContent", service->name);
+    } else {
+        PluginExecCmdByName("setServiceContent", service->name);
+    }
+#else
+    PluginExecCmdByName("setServiceContent", service->name);
+#endif
+}
+
 static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
 {
     INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
@@ -482,7 +496,7 @@ static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
     INIT_ERROR_CHECK(ret == SERVICE_SUCCESS, service->lastErrno = ret;
         return ret, "Service error %d %s, failed to set permissions.", ret, service->name);
 
-    PluginExecCmdByName("setServiceContent", service->name);
+    SetServiceContent(service);
     return 0;
 }
 
@@ -640,8 +654,9 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
     INIT_ERROR_CHECK(ret == 0,
         _exit(service->lastErrno), "Service error %d %s, failed to set properties", ret, service->name);
 
-    (void)ServiceExec(service, pathArgs);
-    _exit(service->lastErrno);
+    ret = ServiceExec(service, pathArgs);
+    INIT_ERROR_CHECK(ret == SERVICE_SUCCESS,
+        _exit(service->lastErrno), "Service error %d %s, failed to ServiceExec", ret, service->name);
 }
 
 #define PATH_MAY_BE_NOT_EXISTS  "/data/"

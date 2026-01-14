@@ -42,6 +42,9 @@ ohos_shared_library("selinuxadp") {
   } else {
     module_install_dir = "lib/init"
   }
+  if (!is_asan && init_feature_support_saspawn) {
+    defines += [ "INIT_FEATURE_SUPPORT_SASPAWN" ]
+  }
   install_images = [
     "system",
     "updater",

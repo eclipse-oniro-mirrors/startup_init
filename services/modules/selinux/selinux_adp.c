@@ -33,6 +33,10 @@ enum {
     CMD_RESTORE_INDEX = 3,
     CMD_RESTORE_INDEX_FORCE = 4,
     CMD_RESTORE_INDEX_SKIP = 5,
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    CMD_SET_SERVICE_SASPAWN_CONTEXTS = 6,
+#endif
+    CMD_END,
 };
 
 extern char *__progname;
@@ -86,6 +90,30 @@ static int SetServiceContent(int id, const char *name, int argc, const char **ar
     return 0;
 }
 
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+static int SetServiceSaspawnContent(int id, const char *name, int argc, const char **argv)
+{
+    PLUGIN_CHECK(name != NULL && argc >= 1 && argv != NULL, return -1, "Invalid parameter");
+    ServiceExtData *data = GetServiceExtData(argv[0], HOOK_ID_SELINUX);
+    char *label = "u:r:limit_domain:s0";
+    if (data != NULL) {
+        label = (char *)data->data;
+    } else {
+        PLUGIN_LOGE("Please set secon field in service %s's cfg file, limit_domain will be blocked", argv[0]);
+    }
+
+    if (setcon(label) < 0) {
+        PLUGIN_LOGE("Service saspawn error %d %s, failed to set secon %s.", errno, argv[0], label);
+#ifndef STARTUP_INIT_TEST
+        _exit(INIT_SASPAWN);
+#endif
+    } else {
+        PLUGIN_LOGV("Service saspawn info %s, set secon %s.", argv[0], label);
+    }
+    return 0;
+}
+#endif
+
 static int SetSockCreateCon(int id, const char *name, int argc, const char **argv)
 {
     PLUGIN_CHECK(name != NULL, return -1, "Invalid parameter");
@@ -138,7 +166,7 @@ static int RestoreContentRecurseSkipElx(int id, const char *name, int argc, cons
     return 0;
 }
 
-static int32_t g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_SKIP + 1] = {0}; // 6 cmd count
+static int32_t g_selinuxAdpCmdIds[CMD_END] = {0}; // 6 cmd count
 static void SelinuxAdpInit(void)
 {
     g_selinuxAdpCmdIds[CMD_LOAD_POLICY] = AddCmdExecutor("loadSelinuxPolicy", LoadSelinuxPolicy);
@@ -149,6 +177,10 @@ static void SelinuxAdpInit(void)
         AddCmdExecutor("restoreContentRecurseForce", RestoreContentRecurseForce);
     g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_SKIP] =
         AddCmdExecutor("restoreContentRecurseSkipElx", RestoreContentRecurseSkipElx);
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    g_selinuxAdpCmdIds[CMD_SET_SERVICE_SASPAWN_CONTEXTS] =
+        AddCmdExecutor("setServiceSaspawnContent", SetServiceSaspawnContent);
+#endif
 }
 
 static void SelinuxAdpExit(void)
@@ -171,6 +203,11 @@ static void SelinuxAdpExit(void)
     if (g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_SKIP] != -1) {
         RemoveCmdExecutor("restoreContentRecurseSkipElx", g_selinuxAdpCmdIds[CMD_RESTORE_INDEX_SKIP]);
     }
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    if (g_selinuxAdpCmdIds[CMD_SET_SERVICE_SASPAWN_CONTEXTS] != -1) {
+        RemoveCmdExecutor("setServiceSaspawnContent", g_selinuxAdpCmdIds[CMD_SET_SERVICE_SASPAWN_CONTEXTS]);
+    }
+#endif
 }
 
 MODULE_CONSTRUCTOR(void)

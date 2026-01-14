@@ -797,6 +797,35 @@ static int GetServiceSandbox(const cJSON *curItem, Service *service)
     return SERVICE_SUCCESS;
 }
 
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+static int GetServiceSaspawn(const cJSON *curItem, service *service)
+{
+    if (strcmp(SERVICES_SYSTEM_BIN_SA_MAIN, service->pathArgs.argv[0]) != 0) {
+        INIT_LOGI("Service not is sa_main not support saspawn: %s ", service->name);
+        return SERVICE_SUCCESS;
+    }
+
+    cJSON *item = cJSON_GetObjectItem(curItem, "saspawn");
+    if (item == NULL) {
+        ServiceSupportSaSpawn(service);
+        return SERVICE_SUCCESS;
+    }
+    
+    if (!cJSON_IsBool(item)) {
+        INIT_LOGE("Service : %s sapawn value only support bool.", service->name);
+        return SERVICE_FAILURE;
+    }
+
+    if (cJSON_IsTrue(item)) {
+        ServiceSupportSaSpawn(service);
+    } else {
+        INIT_LOGI("Service : %s saspawn value is false, not set support saSpawn", service->name);
+    }
+
+    return SERVICE_SUCCESS;
+}
+#endif
+
 #ifdef ASAN_DETECTOR
 static int WrapPath(char *dest, size_t len, char *source, int i)
 {
@@ -1021,6 +1050,37 @@ static int GetServiceCgroup(const cJSON *curArrItem, Service *service)
     return SERVICE_SUCCESS;
 }
 
+static int ParseOneServiceOther(const cJSON *curItem, Service *service)
+{
+    int ret = SERVICE_FAILURE;
+
+    ParseOneServiceArgs(curItem, service);
+    ret = GetServiceEnv(service, curItem);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get env for service %s", service->name);
+    ret = GetServicePeriod(curItem, service, PERIOD_STR_IN_CFG, SERVICE_ATTR_PERIOD);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get period for service %s", service->name);
+    ret = GetServiceSandbox(curItem, service);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get sandbox for service %s", service->name);
+    ret = InitServiceCaps(curItem, service);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
+    ret = GetServiceOnDemand(curItem, service);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get ondemand flag for service %s", service->name);
+    ret = GetServiceSetuid(curItem, service);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get setuid flag for service %s", service->name);
+    ret = GetServiceMode(service, curItem);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get start/end mode for service %s", service->name);
+    ret = GetServiceJobs(service, cJSON_GetObjectItem(curItem, "jobs"));
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get jobs for service %s", service->name);
+    ret = GetServiceCgroup(curItem, service);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get cgroup for service %s", service->name);
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    ret = GetServiceSaspawn(curItem, service);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get saspawn for service %s", service->name);
+#endif
+
+    return ret;
+}
+
 int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
@@ -1053,25 +1113,8 @@ int ParseOneService(const cJSON *curItem, Service *service)
     ret = GetServiceAttr(curItem, service, MODULE_UPDATE_STR_IN_CFG, SERVICE_ATTR_MODULE_UPDATE, NULL);
     INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get module-update for service %s", service->name);
 
-    ParseOneServiceArgs(curItem, service);
-    ret = GetServiceEnv(service, curItem);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get env for service %s", service->name);
-    ret = GetServicePeriod(curItem, service, PERIOD_STR_IN_CFG, SERVICE_ATTR_PERIOD);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get period for service %s", service->name);
-    ret = GetServiceSandbox(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get sandbox for service %s", service->name);
-    ret = InitServiceCaps(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
-    ret = GetServiceOnDemand(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get ondemand flag for service %s", service->name);
-    ret = GetServiceSetuid(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get setuid flag for service %s", service->name);
-    ret = GetServiceMode(service, curItem);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get start/end mode for service %s", service->name);
-    ret = GetServiceJobs(service, cJSON_GetObjectItem(curItem, "jobs"));
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get jobs for service %s", service->name);
-    ret = GetServiceCgroup(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get cgroup for service %s", service->name);
+    ret = ParseOneServiceOther(curItem, service);
+    
     return ret;
 }
 
