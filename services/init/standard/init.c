@@ -274,10 +274,13 @@ int ParseCfgByPriority(const char *filePath)
         return -1;
     }
     CfgFiles *files = GetCfgFiles(filePath);
-    if (files == NULL || files->paths[0] == NULL) {
+    if (files == NULL) {
         INIT_LOGE("get etc/init cfg failed");
         return -1;
     }
+    INIT_ERROR_CHECK(files->paths[0] != NULL, FreeCfgFiles(files);
+        return -1, "get etc/init cfg failed");
+
     for (int i = 0; files && i < MAX_CFG_POLICY_DIRS_CNT; i++) {
         if (files->paths[i]) {
             if (ReadFileInDir(files->paths[i], ".cfg", ParseInitCfg, NULL) < 0) {

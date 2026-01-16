@@ -98,7 +98,7 @@ int SystemWaitParameter(const char *name, const char *value, int32_t timeout)
             break;
         }
     } while (1);
-    PARAM_LOGI("SystemWaitParameter name %s value: %s diff %u timeout %u", name, value, diff, diff);
+    PARAM_LOGI("SystemWaitParameter name:%s value:%s diff:%u timeout:%d", name, value, diff, timeout);
     if (ret != 0) {
         PARAM_LOGE("SystemWaitParameter failed! name is:%s, errNum is %d", name, ret);
     }
