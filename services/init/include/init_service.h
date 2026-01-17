@@ -57,6 +57,9 @@ extern "C" {
 #define SERVICE_ATTR_PERIOD 0x8000    //service period
 
 #define SERVICE_ATTR_SETUID 0x10000 //service can setuid with no fixup
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+#define SERVICE_ATTR_SASPAWN 0X20000 //service support sa spawn
+#endif
 
 #define MAX_SERVICE_NAME 32
 #define MAX_APL_NAME 32
@@ -72,6 +75,18 @@ extern "C" {
 #define CAP_NUM 2
 
 #define SERVICES_ARR_NAME_IN_JSON "services"
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+#define STRTOL_BASE 10
+#define SERVICES_FILE_PATH_KMSG "/dev/kmsg"
+#define SERVICES_PROC_SELF_FD "/proc/self/fd"
+#define SERVICES_STR_LEN_MAX 96
+#define SERVICES_STANDARD_INPUT 0
+#define SERVICES_STANDARD_OUTPUT 1
+#define SERVICES_STANDARD_ERROR 2
+#define SERVICES_SASPAWN_LIBRARY_NAME "libsa_start.z.so"
+#define SERVICES_SASPAWN_FUNCTION_NAME "StartSA"
+#define SERVICES_SYSTEM_BIN_SA_MAIN "/system/bin/sa_main"
+#endif
 
 #define IsOnDemandService(service) \
     (((service)->attribute & SERVICE_ATTR_ONDEMAND) == SERVICE_ATTR_ONDEMAND)
@@ -96,6 +111,14 @@ extern "C" {
 
 #define MarkServiceWithSandbox(service) \
     ((service)->attribute &= ~SERVICE_ATTR_WITHOUT_SANDBOX)
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+#define ServiceSupportSaSpawn(service) \
+    ((service)->attribute |= SERVICE_ATTR_SASPAWN)
+
+#define ServiceResetSupportSaSpawn(service) \
+    ((service)->attribute &= ~SERVICE_ATTR_SASPAWN)
+#endif
 
 #pragma pack(4)
 typedef enum {
@@ -194,6 +217,9 @@ int IsForbidden(const char *fieldStr);
 int SetImportantValue(Service *curServ, const char *attrName, int value, int flag);
 int InitServiceCaps(const cJSON *curArrItem, Service *curServ);
 int ServiceExec(Service *service, const ServiceArgs *pathArgs);
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+int InitServiceBySaspawn(Service *service, const ServiceArgs *pathArgs);
+#endif
 void CloseServiceFds(Service *service, bool needFree);
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount);
 int SetAccessToken(const Service *service);

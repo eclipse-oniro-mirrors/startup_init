@@ -47,6 +47,7 @@ extern "C" {
     XX(ECONTENT, "Set sub content fail")    \
     XX(EPRIORITY, "Set priority fail")      \
     XX(EEXEC_CONTENT, "Set exec content fail")  \
+    XX(SASPAWN, "saspawn fail")             \
     XX(EEXEC, "Exec fail")
 
 typedef enum {

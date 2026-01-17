@@ -28,6 +28,16 @@
 
 static SignalHandle g_sigHandle = NULL;
 
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+static void SetSaSpawnFailedTag(Service *service)
+{
+    if (service == NULL) {
+        return;
+    }
+    ServiceResetSupportSaSpawn(service);
+}
+#endif
 static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
 {
     int procStat = 0;
@@ -43,8 +53,16 @@ static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
     if (WIFSIGNALED(procStat)) {
         INIT_LOGW("Child process %s(pid %d) exit with signal : %d", serviceName, sigPID, WTERMSIG(procStat));
         ReportChildProcessExit(serviceName, sigPID, WTERMSIG(procStat));
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+        SetSaSpawnFailedTag(service);
+#endif
     } else if (WIFEXITED(procStat)) {
         INIT_LOGW("Child process %s(pid %d) exit with code : %d", serviceName, sigPID, WEXITSTATUS(procStat));
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+        if (WEXITSTATUS(procStat) == INIT_SASPAWN) {
+            SetSaSpawnFailedTag(service);
+        }
+#endif
         if (service != NULL) {
             service->lastErrno = WEXITSTATUS(procStat);
         }
