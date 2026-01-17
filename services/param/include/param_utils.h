@@ -89,6 +89,7 @@ typedef enum {
 #define PARAM_PRIVATE_PERSIST_SAVE_TMP_PATH PRIVATE_DATA_PATH "tmp_private_persist_parameters"
 #define PUBLIC_DIR "/data/service/el1/public"
 #define DATA_SERVICE_EL1_DIR "/data/service/el1"
+#define DATA_SERVICE_EL1_DIR_MODE 0711
 #define PERSIST_HANDLE_MAX 2
 
 #define WORKSPACE_FLAGS_INIT 0x01
