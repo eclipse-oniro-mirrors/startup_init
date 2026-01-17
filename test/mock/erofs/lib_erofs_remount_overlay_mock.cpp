@@ -1,0 +1,47 @@
+/*
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "lib_erofs_remount_overlay_mock.h"
+
+using namespace OHOS::AppSpawn;
+int MockGetremountresult()
+{
+    return ErofsRemountOverlay::erofsRemountOverlayFunc->GetRemountResult();
+}
+
+void MockSetremountresultflag()
+{
+    ErofsRemountOverlay::erofsRemountOverlayFunc->SetRemountResultFlag();
+}
+
+int MockRemountoverlay()
+{
+    return ErofsRemountOverlay::erofsRemountOverlayFunc->RemountOverlay();
+}
+
+int MockMountoverlayone(const char *mnt)
+{
+    return ErofsRemountOverlay::erofsRemountOverlayFunc->MountOverlayOne(const char *mnt);
+}
+
+void MockOverlayremountvendorpre()
+{
+    ErofsRemountOverlay::erofsRemountOverlayFunc->OverlayRemountVendorPre();
+}
+
+void MockOverlayremountvendorpost()
+{
+    ErofsRemountOverlay::erofsRemountOverlayFunc->OverlayRemountVendorPost();
+}
+
