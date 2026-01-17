@@ -154,10 +154,14 @@
                 },
                 {
                     "header": {
-                        "header_base": "//base/startup/init/interfaces/innerkits/include/fs_manager/",
+                        "header_base": [
+                          "//base/startup/init/interfaces/innerkits/include",
+                          "//base/startup/init/services/log",
+                          "//base/startup/init/interfaces/innerkits/include"
+                        ],
                         "header_files": []
                     },
-                    "name": "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static_real",
+                    "name": "//base/startup/init/services/log:init_log",
                     "visibility": [ "updater" ]
                 },
                 {
