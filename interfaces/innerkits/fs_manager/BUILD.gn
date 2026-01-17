@@ -154,7 +154,7 @@ ohos_static_library("libfsmanager_static_real") {
       ]
 
       defines = [ "SUPPORT_HVB" ]
-      external_deps += [ "hvb:libhvb_static" ]
+      external_deps += [ "hvb:libhvb_static_real" ]
     }
 
     if (init_startup_feature_erofs_overlay) {
