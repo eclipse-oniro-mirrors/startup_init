@@ -136,6 +136,20 @@ static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *
     PARAM_LOGI("LoadPersistParam from file %s paramNum %d", fileName, paramNum);
 }
 
+static void CheckUpperFileAndCreat()
+{
+    if (access(DATA_SERVICE_EL1_DIR, F_OK) == 0) {
+        CheckAndCreateDir(PARAM_PUBLIC_PERSIST_SAVE_PATH);
+        return;
+    }
+    if (mkdir(DATA_SERVICE_EL1_DIR, DATA_SERVICE_EL1_DIR_MODE) != 0) {
+        PARAM_LOGE("creat param upperfile failed, errno is %d", errno);
+        return;
+    }
+    PluginExecCmdByName("restoreContentRecurse", DATA_SERVICE_EL1_DIR);
+    CheckAndCreateDir(PARAM_PUBLIC_PERSIST_SAVE_PATH);
+}
+
 static bool GetPersistFilePath(char **path, char **tmpPath, int fileType)
 {
     bool isFullLoad = true;
@@ -152,9 +166,7 @@ static bool GetPersistFilePath(char **path, char **tmpPath, int fileType)
                 PARAM_LOGE("rename failed %s", PARAM_PERSIST_SAVE_PATH);
             }
         } else {
-            if (access(DATA_SERVICE_EL1_DIR, F_OK) == 0) {
-                CheckAndCreateDir(PARAM_PUBLIC_PERSIST_SAVE_PATH);
-            }
+            CheckUpperFileAndCreat();
         }
         *path = PARAM_PUBLIC_PERSIST_SAVE_PATH;
         *tmpPath = PARAM_PUBLIC_PERSIST_SAVE_TMP_PATH;
