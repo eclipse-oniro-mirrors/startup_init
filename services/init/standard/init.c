@@ -347,6 +347,12 @@ void SystemConfig(const char *uptime)
     WriteUptimeSysParam("ohos.boot.time.kernel", uptime);
 
     SetInitPriority();
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    if (IsEnableSaspawn()) {
+        DlopenSoLibrary(INIT_LOAD_OS_LIBRARY_PATH);
+    }
+#endif
     // read config
     HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_CFG_LOAD, (void *)&timingStat, (void *)&options);
     ReadConfig();
@@ -356,13 +362,6 @@ void SystemConfig(const char *uptime)
 
     IsEnableSandbox();
     // execute init
-
-#ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    if (IsEnableSaspawn()) {
-        DlopenSoLibrary(INIT_LOAD_OS_LIBRARY_PATH);
-    }
-#endif
-
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
     TriggerServices(START_MODE_BOOT);
@@ -381,12 +380,12 @@ static bool IsEnableSaspawn(void)
 {
     char value [MAX_BUFFER_LEN] = {0};
     unsigned int len = MAX_BUFFER_LEN;
-    if (SystemReadParam("const.startup.saspawn_enable", value, &len) == 0) {
+    if (SystemReadParam("const.startup.saspawn_enable_sastart", value, &len) == 0) {
         if (strcmp(value, "true") == 0) {
             g_enableSaspawn = true;
         }
     }
-
+    INIT_LOGI("IsEnableSaspawn = %d", g_enableSaspawn);
     return g_enableSaspawn;
 }
 

@@ -91,6 +91,9 @@ if (defined(ohos_lite)) {
       "BUILD_HOST=\"${ohos_build_host}\"",
       "BUILD_ROOTHASH=\"${ohos_build_roothash}\"",
     ]
+    if (!is_asan && init_feature_support_saspawn) {
+      defines += ["INIT_FEATURE_SUPPORT_SASPAWN"]
+    }
   }
 
   static_library("param_client") {
@@ -157,6 +160,9 @@ if (defined(ohos_lite)) {
         "PARAMWORKSPACE_NEED_MUTEX",
       ]
       external_deps += [ "selinux_adapter:libselinux_parameter_static" ]
+    }
+    if (!is_asan && init_feature_support_saspawn) {
+      defines += ["INIT_FEATURE_SUPPORT_SASPAWN"]
     }
 
     deps = [ "//base/startup/init/services/param/base:param_base" ]

@@ -230,6 +230,10 @@ void ServiceReStartTimer(Service *service, uint64_t timeout);
 void IsEnableSandbox(void);
 void EnterServiceSandbox(Service *service);
 int SetServiceEnterSandbox(const Service *service, const char *execPath);
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+void CloseFileResource(void);
+void ResetSignalResource(void);
+#endif
 
 int CreateServiceFile(Service *service);
 void CloseServiceFile(ServiceFile *fileOpt);

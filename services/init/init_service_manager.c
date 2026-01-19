@@ -798,8 +798,11 @@ static int GetServiceSandbox(const cJSON *curItem, Service *service)
 }
 
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
-static int GetServiceSaspawn(const cJSON *curItem, service *service)
+static int GetServiceSaspawn(const cJSON *curItem, Service *service)
 {
+    if (!GetEnableSaspawn()) {
+        return SERVICE_SUCCESS;
+    }
     if (strcmp(SERVICES_SYSTEM_BIN_SA_MAIN, service->pathArgs.argv[0]) != 0) {
         INIT_LOGI("Service not is sa_main not support saspawn: %s ", service->name);
         return SERVICE_SUCCESS;

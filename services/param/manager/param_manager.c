@@ -25,6 +25,9 @@
 #include "param_trie.h"
 #include "param_utils.h"
 #include "securec.h"
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+#include <sys/mman.h>
+#endif
 static DUMP_PRINTF g_printf = printf;
 
 static int ReadParamName(ParamHandle handle, char *name, uint32_t length);
@@ -840,3 +843,34 @@ INIT_LOCAL_API int CheckIfUidInGroup(const gid_t groupId, const char *groupCheck
     PARAM_LOGE("Forbid to access, groupId %u not in %s", groupId, groupCheckName);
     return PARAM_CODE_PERMISSION_DENIED;
 }
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+INIT_INNER_API int UnmapResource(void)
+{
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    PARAM_CHECK(paramSpace != NULL && paramSpace->workSpace != NULL, return -1, "Invalid paramSpace or workSpace");
+    PARAM_LOGI("Unmap Resource maxSpace Count: %d", paramSpace->maxSpaceCount);
+    for (uint32_t i = 0; i < paramSpace->maxSpaceCount; i++) {
+        if (paramSpace->workSpace[i] != NULL) {
+            WorkSpace *workSpace = GetWorkSpace(i);
+            PARAM_CHECK(workSpace != NULL, return -1, "Unmap Resource The workspace is null");
+            if (!PARAM_TEST_FLAG(workSpace->flags, WORKSPACE_FLAGS_INIT)) {
+                PARAM_LOGE("Workspace %u not initialized", i);
+                continue;
+            }
+            PARAM_CHECK(workSpace->area != NULL, continue, "Unmap Resource The workspace area is null");
+            if (munmap(workSpace->area, workSpace->area->dataSize) != 0) {
+                PARAM_LOGE("Unmap Resource munmap failed for workspace %u", i);
+                continue;
+            }
+            workSpace->area = NULL;
+        }
+    }
+    PARAM_LOGI("Unmap Resource finish");
+    PARAM_WORKSPACE_OPS ops = {0};
+    ops.updaterMode = 0;
+    InitParamWorkSpace(1, &ops);
+    PARAM_LOGI("init param workspace again");
+    return 0;
+}
+#endif
