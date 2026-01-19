@@ -276,7 +276,8 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, uint32_t prefixLen
     uint32_t prefixIndex = 0;
     size_t conditionLen = strlen(condition);
     LogicCalculator calculator;
-    PARAM_CHECK(CalculatorInit(&calculator, MAX_CALC_PARAM, 1, 0) == 0, return -1, "Failed to init calculator");
+    PARAM_CHECK(CalculatorInit(&calculator, MAX_CALC_PARAM, 1, 0) == 0, CalculatorFree(&calculator);
+        return -1, "Failed to init calculator");
 
     while (curr < conditionLen) {
         if (condition[curr] == ')') {
@@ -313,8 +314,7 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, uint32_t prefixLen
     while (CalculatorLength(&calculator) > 0) {
         CalculatorPopChar(&calculator, &e);
         ret = PrefixAdd(prefix, &prefixIndex, prefixLen, e);
-        PARAM_CHECK(ret == 0,
-            CalculatorFree(&calculator);
+        PARAM_CHECK(ret == 0, CalculatorFree(&calculator);
             return -1, "Invalid prefix %u %u", prefixIndex, prefixLen);
     }
     prefix[prefixIndex] = '\0';
