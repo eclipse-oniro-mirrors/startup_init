@@ -25,6 +25,7 @@ if (defined(ohos_lite)) {
   static_library("init_log") {
     visibility = [
       ":*",
+      "//base/startup/init/*",
       "//out/*",
     ]
     sources = base_sources
