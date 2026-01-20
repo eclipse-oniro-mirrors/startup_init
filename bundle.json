@@ -154,6 +154,18 @@
                 },
                 {
                     "header": {
+                        "header_base": [
+                          "//base/startup/init/interfaces/innerkits/include",
+                          "//base/startup/init/services/log",
+                          "//base/startup/init/interfaces/innerkits/include"
+                        ],
+                        "header_files": []
+                    },
+                    "name": "//base/startup/init/services/log:init_log",
+                    "visibility": [ "updater" ]
+                },
+                {
+                    "header": {
                         "header_base": "//base/startup/init/interfaces/innerkits/include/",
                         "header_files": [
                             "service_watcher.h",
