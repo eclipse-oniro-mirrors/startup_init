@@ -103,6 +103,13 @@ ohos_static_library("libfsmanager_static") {
 }
 
 ohos_static_library("libfsmanager_static_real") {
+  visibility = [
+    ":*",
+    "//base/startup/init/*",
+    "//base/update/updater/*",
+    "//base/update/sys_installer/*",
+    "//out/*",
+  ]
   if (!defined(ohos_lite)) {
     sources = [
       "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
