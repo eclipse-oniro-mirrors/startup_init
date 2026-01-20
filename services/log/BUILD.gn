@@ -23,6 +23,10 @@ config("exported_header_files") {
 
 if (defined(ohos_lite)) {
   static_library("init_log") {
+    visibility = [
+      ":*",
+      "//out/*",
+    ]
     sources = base_sources
     defines = [
       "_GNU_SOURCE",
