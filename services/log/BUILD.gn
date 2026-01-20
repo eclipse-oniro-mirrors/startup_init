@@ -42,6 +42,11 @@ if (defined(ohos_lite)) {
 } else {
   import("//build/ohos.gni")
   ohos_static_library("init_log") {
+    visibility = [
+      ":*",
+      "//base/startup/init/*",
+      "//out/*",
+    ]
     sources = base_sources
     defines = [ "INIT_DMESG" ]
     public_configs = [ ":exported_header_files" ]
