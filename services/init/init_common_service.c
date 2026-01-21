@@ -719,8 +719,15 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
         startingTime.tv_sec, startingTime.tv_nsec, preforkTime.tv_sec,
         preforkTime.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
 #ifndef OHOS_LITE
-    if (!IsOnDemandService(service)) {
-        ReportServiceStart(service->name, pid);
+    bool isSaspawn = false;
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
+#endif
+    if (isSaspawn) {
+        ReportServiceStart(service->name, pid, SERVICES_EXIT_INFO_IS_SASPAWN);
+    } else if (!IsOnDemandService(service)) {
+        ReportServiceStart(service->name, pid, SERVICES_EXIT_INFO_NOT_SASPAWN);
+    } else { //Do nothing.
     }
 #endif
     service->pid = pid;

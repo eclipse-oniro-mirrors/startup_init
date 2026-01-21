@@ -25,9 +25,9 @@ extern "C" {
 #endif
 
 void ReportStartupInitReport(int64_t count);
-void ReportServiceStart(char *serviceName, int64_t pid);
+void ReportServiceStart(char *serviceName, int64_t pid, int64_t spawnMode);
 void ReportStartupReboot(const char *argv);
-void ReportChildProcessExit(const char *serviceName, int pid, int err);
+void ReportChildProcessExit(const char *serviceName, int pid, int err, int64_t spawnMode);
 
 #ifdef __cplusplus
 #if __cplusplus
