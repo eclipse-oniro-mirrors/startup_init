@@ -88,6 +88,9 @@ extern "C" {
 #define SERVICES_SYSTEM_BIN_SA_MAIN "/system/bin/sa_main"
 #endif
 
+#define SERVICES_EXIT_INFO_IS_SASPAWN 1
+#define SERVICES_EXIT_INFO_NOT_SASPAWN 0
+
 #define IsOnDemandService(service) \
     (((service)->attribute & SERVICE_ATTR_ONDEMAND) == SERVICE_ATTR_ONDEMAND)
 

@@ -25,6 +25,7 @@
 #include "loop_event.h"
 #include "crash_handler.h"
 #include "init_hisysevent.h"
+#include "init_service.h"
 
 static SignalHandle g_sigHandle = NULL;
 
@@ -41,6 +42,7 @@ static void SetSaSpawnFailedTag(Service *service)
 static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
 {
     int procStat = 0;
+    bool isSaspawn = false;
     pid_t sigPID = waitpid(-1, &procStat, WNOHANG);
     if (sigPID <= 0) {
         return sigPID;
@@ -49,10 +51,21 @@ static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
     const char *serviceName = (service == NULL) ? "Unknown" : service->name;
     (void)ProcessServiceDied(service);
 
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    if (service != NULL) {
+        isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
+        INIT_LOGI("Is the service supported Saspawn %d", isSaspawn);
+    }
+#endif
+
     // check child process exit status
     if (WIFSIGNALED(procStat)) {
         INIT_LOGW("Child process %s(pid %d) exit with signal : %d", serviceName, sigPID, WTERMSIG(procStat));
-        ReportChildProcessExit(serviceName, sigPID, WTERMSIG(procStat));
+        if (isSaspawn) {
+            ReportChildProcessExit(serviceName, sigPID, WTERMSIG(procStat), SERVICES_EXIT_INFO_IS_SASPAWN);
+        } else {
+            ReportChildProcessExit(serviceName, sigPID, WTERMSIG(procStat), SERVICES_EXIT_INFO_NOT_SASPAWN);
+        }
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
         SetSaSpawnFailedTag(service);
 #endif
@@ -65,6 +78,10 @@ static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
 #endif
         if (service != NULL) {
             service->lastErrno = WEXITSTATUS(procStat);
+        }
+
+        if (isSaspawn) {
+            ReportChildProcessExit(serviceName, sigPID, WEXITSTATUS(procStat), SERVICES_EXIT_INFO_IS_SASPAWN);
         }
     }
     CmdServiceProcessDelClient(sigPID);

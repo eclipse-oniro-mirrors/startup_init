@@ -37,7 +37,7 @@ void ReportStartupInitReport(int64_t count)
     PLUGIN_ONLY_LOG(ret == 0, "Failed to write event ret %d", ret);
 }
 
-void ReportServiceStart(char *serviceName, int64_t pid)
+void ReportServiceStart(char *serviceName, int64_t pid, int64_t spawnMode)
 {
     if (!IsBootCompleted()) {
         return;
@@ -57,6 +57,12 @@ void ReportServiceStart(char *serviceName, int64_t pid)
             .name = "SERVICE_PID",
             .t = HISYSEVENT_INT64,
             .v = { .i64 = pid },
+            .arraySize = 0,
+        },
+        {
+            .name = "SERVICE_IS_SASPAWN",
+            .t = HISYSEVENT_INT64,
+            .v = { .i64 = spawnMode },
             .arraySize = 0,
         }
     };
@@ -89,7 +95,7 @@ void ReportStartupReboot(const char *argv)
     PLUGIN_ONLY_LOG(ret == 0, "Failed to write event ret %d", ret);
 }
 
-void ReportChildProcessExit(const char *serviceName, int pid, int err)
+void ReportChildProcessExit(const char *serviceName, int pid, int err, int64_t spawnMode)
 {
     if (!IsBootCompleted()) {
         return;
@@ -120,6 +126,12 @@ void ReportChildProcessExit(const char *serviceName, int pid, int err)
             .name = "EXIT_CODE",
             .t = HISYSEVENT_INT64,
             .v = { .i64 = err },
+            .arraySize = 0,
+        },
+        {
+            .name = "EXIT_IS_SASPAWN",
+            .t = HISYSEVENT_INT64,
+            .v = { .i64 = spawnMode },
             .arraySize = 0,
         }
     };
