@@ -66,6 +66,10 @@
 #include "code_sign_attr_utils.h"
 #endif
 
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+#include "param_manager.h"
+#endif
+
 #ifndef TIOCSCTTY
 #define TIOCSCTTY 0x540E
 #endif
@@ -433,6 +437,7 @@ static void SetServiceContent(Service *service)
 {
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
     bool isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
+    INIT_LOGI("service %s isSaspawn = %d", service->name, isSaspawn);
     if (isSaspawn) {
         PluginExecCmdByName("setServiceSaspawnContent", service->name);
     } else {
@@ -649,14 +654,39 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
 #ifdef INIT_ASAN
     CloseStdio();
 #endif
+
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    char nameValue[20] = { 0 };
+    unsigned int nameLen = 20;
+    if (SystemReadParam("persist.saspawn.test", nameValue, &nameLen) == 0) {
+        if (strcmp(nameValue, "1") == 0) {
+            INIT_LOGI("saspawn ResetSignalResource");
+            ResetSignalResource();
+        }
+        if (strcmp(nameValue, "2") == 0) {
+            char testservice[20] = {0};
+            unsigned int testLen = 20;
+            if (SystemReadParam("persist.saspawn.service", testservice, &testLen) == 0) {
+                if (strcmp(nameValue, service->name) == 0) {
+                    INIT_LOGI("saspawn UnmapResource.");
+                    UnmapResource();
+                }
+            }
+        }
+        if (strcmp(nameValue, "3") == 0) {
+            INIT_LOGI("saspawn ClosefileResource.");
+            CloseFileResource();
+        }
+    }
+    INIT_LOGI("saspawn resource free.");
+#endif
     // fail must exit sub process
     int ret = InitServiceProperties(service, pathArgs);
     INIT_ERROR_CHECK(ret == 0,
         _exit(service->lastErrno), "Service error %d %s, failed to set properties", ret, service->name);
 
-    ret = ServiceExec(service, pathArgs);
-    INIT_ERROR_CHECK(ret == SERVICE_SUCCESS,
-        _exit(service->lastErrno), "Service error %d %s, failed to ServiceExec", ret, service->name);
+    (void)ServiceExec(service, pathArgs);
+    _exit(service->lastErrno);
 }
 
 #define PATH_MAY_BE_NOT_EXISTS  "/data/"

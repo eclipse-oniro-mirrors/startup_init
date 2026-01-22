@@ -148,7 +148,6 @@ int InitServiceBySaspawn(Service *service, const ServiceArgs *pathArgs)
         if (startSA == NULL) {
             INIT_LOGE("saspawn dlsym error: %s", dlerror());
             return SERVICE_FAILURE;
-            FreeInitResource();
         }
         int argvValue = pathArgs->count - 1;
         ret = startSA(argvValue, pathArgs->argv);
@@ -160,7 +159,7 @@ int InitServiceBySaspawn(Service *service, const ServiceArgs *pathArgs)
     }
 }
 
-static void CloseFileResource(void)
+void CloseFileResource(void)
 {
     DIR *dir = opendir(SERVICES_PROC_SELF_FD);
     if (!dir) {
@@ -204,7 +203,7 @@ static void CloseFileResource(void)
     closedir(dir);
 }
 
-static void ResetSignalResource(void)
+void ResetSignalResource(void)
 {
     if (signal(SIGTERM, SIG_DFL) == SIG_ERR) {
         INIT_LOGE("Resetting SIGTERM handler failed: %s", strerror(errno));
@@ -217,13 +216,6 @@ static void ResetSignalResource(void)
     }
 
     INIT_LOGI("Signal resource reset SIGTERM SIGCHLD ok.");
-}
-
-static void FreeInitResource(void)
-{
-    INIT_LOGI("Start sa resource free.");
-    CloseFileResource();
-    ResetSignalResource();
 }
 #endif
 
@@ -245,12 +237,9 @@ int ServiceExec(Service *service, const ServiceArgs *pathArgs)
     int isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
     if (isSaspawn) {
         int ret = InitServiceBySaspawn(service, pathArgs);
-        if (ret == SERVICE_FAILURE) {
-            service->lastErrno = INIT_SASPAWN;
-            return SERVICE_FAILURE;
-        } else {
-            return SERVICE_SUCCESS;
-        }
+        service->lastErrno = INIT_SASPAWN;
+        INIT_LOGE("saspawn ret = %d, lastErrno = %d", ret, INIT_SASPAWN);
+        return SERVICE_FAILURE;
     }
 #endif
     int isCritical = (service->attribute & SERVICE_ATTR_CRITICAL);

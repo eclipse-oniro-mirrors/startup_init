@@ -93,5 +93,5 @@ declare_args() {
   init_feature_support_asan = true
 
   # init sa support
-  init_feature_support_saspawn = false
+  init_feature_support_saspawn = true
 }
