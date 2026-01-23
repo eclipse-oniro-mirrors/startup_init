@@ -656,28 +656,8 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
 #endif
 
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    char nameValue[20] = { 0 };
-    unsigned int nameLen = 20;
-    if (SystemReadParam("persist.saspawn.test", nameValue, &nameLen) == 0) {
-        if (strcmp(nameValue, "1") == 0) {
-            INIT_LOGI("saspawn ResetSignalResource");
-            ResetSignalResource();
-        }
-        if (strcmp(nameValue, "2") == 0) {
-            char testservice[20] = {0};
-            unsigned int testLen = 20;
-            if (SystemReadParam("persist.saspawn.service", testservice, &testLen) == 0) {
-                if (strcmp(nameValue, service->name) == 0) {
-                    INIT_LOGI("saspawn UnmapResource.");
-                    UnmapResource();
-                }
-            }
-        }
-        if (strcmp(nameValue, "3") == 0) {
-            INIT_LOGI("saspawn ClosefileResource.");
-            CloseFileResource();
-        }
-    }
+    ResetSignalResource();
+    CloseFileResource();
     INIT_LOGI("saspawn resource free.");
 #endif
     // fail must exit sub process
