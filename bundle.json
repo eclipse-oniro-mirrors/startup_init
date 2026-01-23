@@ -73,8 +73,6 @@
                 "mbedtls",
                 "zlib",
                 "cJSON",
-                "mksh",
-                "toybox",
                 "hicollie",
                 "drivers_interface_partitionslot",
                 "code_signature",
