@@ -76,6 +76,8 @@ extern "C" {
 
 #define SERVICES_ARR_NAME_IN_JSON "services"
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
+#define SERVICES_FILE_PATH_ANON "anon_inode:[signalfd]"
+#define SERVICES_FILE_PATH_SOCKET "socket"
 #define STRTOL_BASE 10
 #define SERVICES_FILE_PATH_KMSG "/dev/kmsg"
 #define SERVICES_PROC_SELF_FD "/proc/self/fd"

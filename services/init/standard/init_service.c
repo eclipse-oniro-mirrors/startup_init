@@ -198,7 +198,10 @@ void CloseFileResource(void)
             INIT_LOGI("Failed path is kmsg: %s", link);
             continue;
         }
-        close(fd);
+        if ((strstr(link, SERVICES_FILE_PATH_SOCKET) != NULL) ||
+            (strstr(link, SERVICES_FILE_PATH_ANON) != NULL)) {
+            close(fd);
+        }
     }
     closedir(dir);
 }
