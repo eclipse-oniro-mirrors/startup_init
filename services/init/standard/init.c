@@ -383,7 +383,7 @@ static bool IsEnableSaspawn(void)
 {
     char value [MAX_BUFFER_LEN] = {0};
     unsigned int len = MAX_BUFFER_LEN;
-    if (SystemReadParam("const.startup.saspawn_enable_sastart", value, &len) == 0) {
+    if (SystemReadParam("const.startup.saspawn_enable", value, &len) == 0) {
         if (strcmp(value, "true") == 0) {
             g_enableSaspawn = true;
         }
