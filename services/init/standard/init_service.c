@@ -130,6 +130,13 @@ int SetImportantValue(Service *service, const char *attrName, int value, int fla
 int InitServiceBySaspawn(Service *service, const ServiceArgs *pathArgs)
 {
     int ret = 0;
+#ifndef STARTUP_INIT_TEST
+    ret = prctl(PR_SET_NAME, service->name);
+    if (ret != EOK) {
+        INIT_LOGE("saspawn prctl failed %d", errno);
+        return SERVICE_FAILURE;
+    }
+#endif
     ret = memset_s(g_procProcessName->longProcName, g_procProcessName->longProcNameLen,
         0, g_procProcessName->longProcNameLen);
     if (ret != EOK) {
