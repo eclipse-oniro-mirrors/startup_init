@@ -23,6 +23,11 @@
 
 using namespace testing::ext;
 using namespace std;
+#define ESWAP_ENABLE_PATH "/proc/sys/kernel/hyperhold/enable"
+#define HP_ENABLE_BUFFER_SIZE 30
+#define DISABLE_ESWAP "disable"
+#define CLOSE_HP_WAIT_TIME 500000
+#define CLOSE_HP_INTERVAL_WAIT 10000
 
 static int DoCmdByName(const char *name, const char *cmdContent)
 {
@@ -30,6 +35,28 @@ static int DoCmdByName(const char *name, const char *cmdContent)
     (void)GetMatchCmd(name, &cmdIndex);
     DoCmdByIndex(cmdIndex, cmdContent, nullptr);
     return 0;
+}
+
+char *LoadStringFromFile(const char *filePath)
+{
+    FILE *file = fopen(filePath, "r");
+    if (!file) {
+    return nullptr;
+    }
+
+    static char buffer[HP_ENABLE_BUFFER_SIZE] = {0};
+    if (fgets(buffer, sizeof(buffer) - 1, file) == NULL) {
+    (void)fclose(file);
+    return nullptr;
+    }
+
+    (void)fclose(file);
+    size_t index = strcspn(buffer, "\n");
+    if (index < sizeof(buffer)) {
+    buffer[index] = '\0';
+    }
+
+    return strdup(buffer);
 }
 
 namespace init_ut {
@@ -336,5 +363,36 @@ HWTEST_F(CmdsUnitTest, TestInitDiffTime, TestSize.Level1)
 
     long long diff = InitDiffTime(&stat);
     EXPECT_TRUE(diff > 0);
+}
+
+HWTEST_F(CmdsUnitTest, TestEchoToPath, TestSize.Level1)
+{
+    char *content = LoadStringFromFile(ESWAP_ENABLE_PATH);
+    if (strcmp(content, "enable") == 0) {
+        EchoToPath(ESWAP_ENABLE_PATH, DISABLE_ESWAP);
+        char *ret = LoadStringFromFile(ESWAP_ENABLE_PATH);
+        EXPECT_TRUE(strcmp(ret, "disable") == 0 || strcmp(ret, "readonly") == 0);
+    } else if (strcmp(content, "disable") == 0) {
+        EchoToPath(ESWAP_ENABLE_PATH, "enable");
+        char *ret = LoadStringFromFile(ESWAP_ENABLE_PATH);
+        EXPECT_TRUE(strcmp(ret, "enable"));
+    }
+    EchoToPath(ESWAP_ENABLE_PATH, content);
+}
+ 
+HWTEST_F(CmdsUnitTest, TestDisableHyperholdTimeOut, TestSize.Level1)
+{
+    INIT_TIMING_STAT cmdTimer;
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
+    DisableHyperholdTimeOut(CLOSE_HP_INTERVAL_WAIT, CLOSE_HP_WAIT_TIME);
+    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+    long long diff = InitDiffTime(&cmdTimer);
+    char *retEswap = LoadStringFromFile(ESWAP_ENABLE_PATH);
+    EXPECT_STRNE(retEswap, "enable");
+    if (strcmp(retEswap, "disable") == 0) {
+        EXPECT_LT(diff, 500);
+    } else if (strcmp(retEswap, "readonly") == 0) {
+        EXPECT_GT(diff, 500);
+    }
 }
 } // namespace init_ut
