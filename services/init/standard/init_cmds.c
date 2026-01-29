@@ -65,7 +65,7 @@
 #define INTERVAL_WAIT 10
 #define MAX_MOUNTS 256
 #define MOUNTINFO_MAX_SIZE 4096
-#define OPEN_FILE_MOD 0700
+#define OPEN_FILE_MOD 0775
 #define TIME_LEN 64
 #define ESWAP_ENABLE_PATH "/proc/sys/kernel/hyperhold/enable"
 #define HP_CACHE_LEVEL_PATH "/proc/sys/kernel/hyperhold/cache_level"
