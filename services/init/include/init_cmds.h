@@ -110,8 +110,10 @@ int SetFileCryptPolicy(const char *dir);
 #ifdef STARTUP_INIT_TEST
 bool EchoToPath(const char* path, const char* content);
 bool IsHyperHoldDisabled();
-void DumpHyperHoldCloseResult();
+void DumpHyperHoldCloseResult(bool dmaEswapDeinitSucc, bool gpuEswapDeinitSucc);
 void DisableHyperholdTimeOut(int interval, long long totalWait);
+bool DeInitDmaEswapSpace();
+bool DeInitGpuEswapSpace();
 #endif
 
 void OpenHidebug(const char *name);
