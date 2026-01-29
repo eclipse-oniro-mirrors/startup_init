@@ -78,6 +78,10 @@
 #define HP_ENABLE_BUFFER_SIZE 20
 #define HP_DISABLE_SUCC_TAG_LEN 30
 #define HP_DISABLE_FAIL_TAG_LEN 26
+#define HP_TURBO_DEINIT_TAG_LEN 25
+#define DMA_DEVICE_FILE "/dev/dma_reclaim"
+#define GPU_RECLAIM_IMPL_SO "libgpu_reclaim.so"
+#define DMA_BUF_SWAPSPACE_DEINIT _IOWR('d', 0x09, int)
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
@@ -692,7 +696,7 @@ INIT_STATIC bool IsHyperHoldDisabled()
     }
 }
  
-INIT_STATIC void DumpHyperHoldCloseResult()
+INIT_STATIC void DumpHyperHoldCloseResult(bool dmaEswapDeinitSucc, bool gpuEswapDeinitSucc)
 {
     const char *dumpPath = "/log/startup/mntdump.txt";
     int dumpFd = open(dumpPath, O_CREAT | O_WRONLY | O_TRUNC, OPEN_FILE_MOD);
@@ -706,6 +710,16 @@ INIT_STATIC void DumpHyperHoldCloseResult()
     } else {
         write(dumpFd, "hyperhold disable timeout\n", HP_DISABLE_FAIL_TAG_LEN);
     }
+    if (dmaEswapDeinitSucc) {
+        write(dumpFd, "dma swapfile deinit succ\n", HP_TURBO_DEINIT_TAG_LEN);
+    } else {
+        write(dumpFd, "dma swapfile deinit fail\n", HP_TURBO_DEINIT_TAG_LEN);
+    }
+    if (gpuEswapDeinitSucc) {
+        write(dumpFd, "gpu swapfile deinit succ\n", HP_TURBO_DEINIT_TAG_LEN);
+    } else {
+        write(dumpFd, "gpu swapfile deinit fail\n", HP_TURBO_DEINIT_TAG_LEN);
+    }
     close(dumpFd);
 }
  
@@ -718,6 +732,10 @@ INIT_STATIC void DisableHyperholdTimeOut(int interval, long long totalWait)
     // 1. disable hp to ensure no further swapout
     if (!EchoToPath(ESWAP_ENABLE_PATH, DISABLE_ESWAP)) {
         INIT_LOGE("disable hyperhold failed");
+    }
+    if (IsHyperHoldDisabled()) {
+        INIT_LOGI("disable hyperhold succ");
+        return;
     }
     // 2. disable hp cache to ensure that the init swap-in will free extent
     if (!EchoToPath(HP_CACHE_LEVEL_PATH, HP_CACHE_LEVEL_OFF)) {
@@ -747,14 +765,58 @@ INIT_STATIC void DisableHyperholdTimeOut(int interval, long long totalWait)
     }
 }
 
+INIT_STATIC bool DeInitDmaEswapSpace()
+{
+    int fd = open(DMA_DEVICE_FILE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
+    if (fd <= 0) {
+        INIT_LOGE("open dma_reclaim failed!");
+        return false;
+    }
+    if (ioctl(fd, DMA_BUF_SWAPSPACE_DEINIT) != 0) {
+        INIT_LOGE("dma eswap deinit failed!");
+        close(fd);
+        return false;
+    }
+    close(fd);
+    return true;
+}
+ 
+INIT_STATIC bool DeInitGpuEswapSpace()
+{
+    void* libGpuKiaHandle = dlopen(GPU_RECLAIM_IMPL_SO, RTLD_NOW);
+    if (!libGpuKiaHandle) {
+        INIT_LOGE("%{public}s, dlopen so failed!", __func__);
+        return false;
+    }
+    bool (*deinit_eswap_space_func)() = (bool (*)()) dlsym(libGpuKiaHandle, "deinit_eswap_space_reentrant");
+    if (deinit_eswap_space_func == NULL) {
+        INIT_LOGE("load gpu deinit_eswap_space_func error");
+        return false;
+    }
+    if (!deinit_eswap_space_func()) {
+        INIT_LOGE("deinit_eswap_space_func failed");
+        return false;
+    }
+    INIT_LOGI("deinit gpu eswap succ");
+    return true;
+}
+
 static void RetryUmountData()
 {
     int retry = 0;
     bool dataUmountSucc = false;
+    bool dmaEswapDeinitSucc = false;
+    bool gpuEswapDeinitSucc = false;
     while (retry < UMOUNT_DATA_RETRY_COUNT) {
         DoKillAllPid();
         if (!IsHyperHoldDisabled()) {
             DisableHyperholdTimeOut(CLOSE_HP_INTERVAL_WAIT, CLOSE_HP_WAIT_TIME);
+        }
+        if (!dmaEswapDeinitSucc) {
+            dmaEswapDeinitSucc = DeInitDmaEswapSpace();
+        }
+        if (!gpuEswapDeinitSucc) {
+            gpuEswapDeinitSucc = DeInitGpuEswapSpace();
         }
         DoUmountProc();
         int ret = umount("/data");
@@ -768,7 +830,7 @@ static void RetryUmountData()
     }
     if (!dataUmountSucc) {
         INIT_LOGE("umount data failed, save err log");
-        DumpHyperHoldCloseResult();
+        DumpHyperHoldCloseResult(dmaEswapDeinitSucc, gpuEswapDeinitSucc);
         InitUmountFaultLog();
         DumpFdInfo();
     }
