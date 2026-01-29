@@ -651,7 +651,7 @@ static bool DoUmountOtherNsData()
     return nsDataRelease;
 }
 
-static bool EchoToPath(const char* path, const char* content)
+INIT_STATIC bool EchoToPath(const char* path, const char* content)
 {
     int fd = open(path, O_WRONLY);
     if (fd == -1) {
@@ -667,7 +667,7 @@ static bool EchoToPath(const char* path, const char* content)
     return true;
 }
  
-static bool IsHyperHoldDisabled()
+INIT_STATIC bool IsHyperHoldDisabled()
 {
     FILE *file = fopen(ESWAP_ENABLE_PATH, "r");
     if (!file) {
@@ -692,7 +692,7 @@ static bool IsHyperHoldDisabled()
     }
 }
  
-static void DumpHyperHoldCloseResult()
+INIT_STATIC void DumpHyperHoldCloseResult()
 {
     const char *dumpPath = "/log/startup/mntdump.txt";
     int dumpFd = open(dumpPath, O_CREAT | O_WRONLY | O_TRUNC, OPEN_FILE_MOD);
@@ -709,7 +709,7 @@ static void DumpHyperHoldCloseResult()
     close(dumpFd);
 }
  
-static void DisableHyperholdTimeOut(int interval, long long totalWait)
+INIT_STATIC void DisableHyperholdTimeOut(int interval, long long totalWait)
 {
     INIT_LOGI("disable hyperhold begin");
     INIT_TIMING_STAT cmdTimer;
