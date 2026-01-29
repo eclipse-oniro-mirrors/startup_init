@@ -386,6 +386,10 @@ HWTEST_F(CmdsUnitTest, TestDisableHyperholdTimeOut, TestSize.Level1)
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
     DisableHyperholdTimeOut(CLOSE_HP_INTERVAL_WAIT, CLOSE_HP_WAIT_TIME);
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
+    DumpHyperHoldCloseResult(true, true);
+    DumpHyperHoldCloseResult(false, true);
+    DumpHyperHoldCloseResult(true, false);
+    DumpHyperHoldCloseResult(false, false);
     long long diff = InitDiffTime(&cmdTimer);
     char *retEswap = LoadStringFromFile(ESWAP_ENABLE_PATH);
     EXPECT_STRNE(retEswap, "enable");
@@ -394,5 +398,13 @@ HWTEST_F(CmdsUnitTest, TestDisableHyperholdTimeOut, TestSize.Level1)
     } else if (strcmp(retEswap, "readonly") == 0) {
         EXPECT_GT(diff, 500);
     }
+}
+
+HWTEST_F(CmdsUnitTest, TestDeInitEswapSpace, TestSize.Level1)
+{
+    bool ret = DeInitDmaEswapSpace();
+    EXPECT_EQ(ret, true);
+    ret = DeInitGpuEswapSpace();
+    EXPECT_EQ(ret, true);
 }
 } // namespace init_ut
