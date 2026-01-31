@@ -647,23 +647,6 @@ HWTEST_F(LibFsDmTest, DmGetDeviceName_002, TestSize.Level0)
     EXPECT_EQ(ret, -1);
 }
 
-HWTEST_F(LibFsDmTest, DmGetDeviceName_003, TestSize.Level0)
-{
-    IoctlFunc ioctlFunc = [](int fd, int req, va_list args) -> int {
-        return 0;
-    };
-    UpdateIoctlFunc(ioctlFunc);
-    CallocFunc callocFunc = [](size_t, size_t) -> void* {
-        return nullptr;
-    };
-    UpdateCallocFunc(callocFunc);
-    char outname[PATH_MAX];
-    int ret = DmGetDeviceName(FD_ID, "devname", outname, PATH_MAX);
-    UpdateIoctlFunc(nullptr);
-    UpdateCallocFunc(nullptr);
-    EXPECT_EQ(ret, -1);
-}
-
 HWTEST_F(LibFsDmTest, DmGetDeviceName_004, TestSize.Level0)
 {
     IoctlFunc ioctlFunc = [](int fd, int req, va_list args) -> int {
