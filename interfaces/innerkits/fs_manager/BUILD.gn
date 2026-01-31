@@ -134,7 +134,7 @@ ohos_static_library("libfsmanager_static_real") {
     if ((defined(global_parts_info) &&
          defined(global_parts_info.startup_hvb)) ||
         init_startup_feature_erofs_overlay) {
-      source += [
+      sources += [
         "libfs_dm/fs_dm.c",
         "libfs_dm/fs_dm_linear.c",
         "libfs_dm/fs_dm_snapshot.c",

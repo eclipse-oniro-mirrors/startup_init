@@ -361,7 +361,7 @@ int DmGetDeviceName(int fd, const char *devName, char *outDevName, const uint64_
     path = calloc(1, pathLen);
     if (path == NULL) {
         BEGET_LOGE("calloc path failed");
-        return rc;
+        return -1;
     }
 
     rc = snprintf_s(path, pathLen, pathLen - 1, "%s%d", DM_DEVICE_PATH_PREFIX, devNum);
