@@ -249,9 +249,10 @@ static int SetCapabilities(const Service *service)
         capData[CAP_TO_INDEX(service->servPerm.caps[i])].permitted |= CAP_TO_MASK(service->servPerm.caps[i]);
         capData[CAP_TO_INDEX(service->servPerm.caps[i])].inheritable |= CAP_TO_MASK(service->servPerm.caps[i]);
     }
-
-    INIT_ERROR_CHECK(capset(&capHeader, capData) == 0, return SERVICE_FAILURE,
-        "capset failed for service: %s, error: %d", service->name, errno);
+    if (service->servPerm.capsCnt > 0) {
+        INIT_ERROR_CHECK(capset(&capHeader, capData) == 0, return SERVICE_FAILURE,
+            "capset failed for service: %s, error: %d", service->name, errno);
+    }
     for (unsigned int i = 0; i < service->servPerm.capsCnt; ++i) {
         if (service->servPerm.caps[i] == FULL_CAP) {
             int ret = SetAllAmbientCapability();
