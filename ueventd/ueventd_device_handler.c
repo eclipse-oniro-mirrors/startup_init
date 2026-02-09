@@ -165,6 +165,9 @@ static int CreateDeviceNodeWithPermissions(const struct Uevent *uevent, const ch
         INIT_LOGE("Create device node[%s %d, %d] failed. %d", deviceNode, major, minor, errno);
         return rc;
     }
+    if (strncmp(deviceNode, "/dev/input", strlen("/dev/input")) == 0) {
+        INIT_LOGI("HandleOtherDeviceEvent, deviceNode = %s", deviceNode);
+    }
     AdjustDeviceNodePermissions(deviceNode, uid, gid, mode);
     (void)setegid(0);
     return 0;
