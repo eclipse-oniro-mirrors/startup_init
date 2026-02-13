@@ -49,6 +49,7 @@
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
 static bool g_enableSaspawn = false;
 static bool IsEnableSaspawn(void);
+static int DlopenSoLibrary(const char *configFile);
 #endif
 
 static int FdHolderSockInit(void)
@@ -399,9 +400,6 @@ bool GetEnableSaspawn(void)
 
 static void ParseAllSoLibrary(const cJSON *root)
 {
-    char *tmpParamValue = calloc(SOFILE_VALUE_LEN_MAX + 1, sizeof(char));
-    INIT_ERROR_CHECK(tmpParamValue != NULL, return, "Failed to alloc memory for param");
-    int ret = -1;
     cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "preload");
     if (!cJSON_IsArray(importAttr)) {
         free(tmpParamValue);
@@ -421,18 +419,10 @@ static void ParseAllSoLibrary(const cJSON *root)
             break;
         }
 
-        ret = memset_s(tmpParamValue, SOFILE_VALUE_LEN_MAX, 0, SOFILE_VALUE_LEN_MAX);
-        INIT_ERROR_CHECK(ret == 0, continue, "Failed to memset tmpParamValue");
-        int importLen = strlen(importContent);
-        INIT_ERROR_CHECK(importLen <= SOFILE_VALUE_LEN_MAX, continue, "Import path too long: %d", importLen);
-        ret = memcpy_s(tmpParamValue, SOFILE_VALUE_LEN_MAX, importContent, strlen(importContent));
-        INIT_ERROR_CHECK(ret == 0, continue, "Failed to copy cannot %s", importContent);
-
-        INIT_LOGI("Import %s ...", tmpParamValue);
-        void* handle = dlopen(tmpParamValue, RTLD_LAZY);
+        INIT_LOGI("Import %s ...", importContent);
+        void* handle = dlopen(importContent, RTLD_LAZY);
         INIT_ERROR_CHECK(handle != NULL, continue, "Failed to dlopen load library errno:%{public}s", dlerror());
     }
-    free(tmpParamValue);
 }
 
 int DlopenSoLibrary(const char *configFile)
