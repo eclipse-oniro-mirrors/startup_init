@@ -1296,5 +1296,162 @@ class TestSADirectoryRule(unittest.TestCase):
             # Restore original whitelist state to ensure test isolation
             self.rule._mkdir_cmd_whitelist = original_whitelist
 
+    def test_check_mkdir_command_illegal_dir_prefix_match_same_last_illegal_index(self):
+        """Test prefix matching when whitelist path has illegal dir and same last illegal index"""
+        mock_cfg_parser = MagicMock()
+        mock_cfg_parser._cmds = [
+            {
+                'name': 'mkdir',
+                'content': '/data/service/el2/100/what/abcd 0755 system system',
+                'fileId': '1'
+            }
+        ]
+
+        # Save original whitelist state for proper test isolation
+        original_whitelist = list(self.rule._mkdir_cmd_whitelist)
+
+        try:
+            # Add whitelist path with illegal directory 100 (last illegal index is at position 3)
+            self.rule._mkdir_cmd_whitelist.append('/data/service/el2/100/what')
+
+            result = self.rule._check_mkdir_commands(mock_cfg_parser)
+
+            # Should pass because whitelist path has illegal dir and same last illegal index
+            self.assertTrue(result)
+        finally:
+            # Restore original whitelist state to ensure test isolation
+            self.rule._mkdir_cmd_whitelist = original_whitelist
+
+    def test_check_mkdir_command_illegal_dir_prefix_match_different_last_illegal_index(self):
+        """Test prefix matching when whitelist path has illegal dir but different last illegal index"""
+        mock_cfg_parser = MagicMock()
+        mock_cfg_parser._cmds = [
+            {
+                'name': 'mkdir',
+                'content': '/data/service/el2/100/what/abc/102/abc 0755 system system',
+                'fileId': '1'
+            }
+        ]
+
+        # Save original whitelist state for proper test isolation
+        original_whitelist = list(self.rule._mkdir_cmd_whitelist)
+
+        try:
+            # Add whitelist path with illegal directory 100 (last illegal index is at position 3)
+            # But cfg path has last illegal directory 102 at position 5
+            self.rule._mkdir_cmd_whitelist.append('/data/service/el2/100')
+
+            result = self.rule._check_mkdir_commands(mock_cfg_parser)
+
+            # Should fail because last illegal index is different
+            self.assertFalse(result)
+        finally:
+            # Restore original whitelist state to ensure test isolation
+            self.rule._mkdir_cmd_whitelist = original_whitelist
+
+    def test_check_mkdir_command_illegal_dir_prefix_match_whitelist_no_illegal_dir(self):
+        """Test prefix matching when whitelist path has no illegal directory"""
+        mock_cfg_parser = MagicMock()
+        mock_cfg_parser._cmds = [
+            {
+                'name': 'mkdir',
+                'content': '/data/service/el2/100/what/abcd 0755 system system',
+                'fileId': '1'
+            }
+        ]
+
+        # Save original whitelist state for proper test isolation
+        original_whitelist = list(self.rule._mkdir_cmd_whitelist)
+
+        try:
+            # Add whitelist path without illegal directory
+            self.rule._mkdir_cmd_whitelist.append('/data/service/el2')
+
+            result = self.rule._check_mkdir_commands(mock_cfg_parser)
+
+            # Should fail because whitelist path has no illegal directory
+            self.assertFalse(result)
+        finally:
+            # Restore original whitelist state to ensure test isolation
+            self.rule._mkdir_cmd_whitelist = original_whitelist
+
+    def test_check_mkdir_command_illegal_dir_prefix_match_with_102(self):
+        """Test prefix matching with illegal directory 102"""
+        mock_cfg_parser = MagicMock()
+        mock_cfg_parser._cmds = [
+            {
+                'name': 'mkdir',
+                'content': '/data/service/el2/100/what/abc/102/xyz 0755 system system',
+                'fileId': '1'
+            }
+        ]
+
+        # Save original whitelist state for proper test isolation
+        original_whitelist = list(self.rule._mkdir_cmd_whitelist)
+
+        try:
+            # Add whitelist path with illegal directory 102 (last illegal index)
+            self.rule._mkdir_cmd_whitelist.append('/data/service/el2/100/what/abc/102')
+
+            result = self.rule._check_mkdir_commands(mock_cfg_parser)
+
+            # Should pass because whitelist path has illegal dir 102 and same last illegal index
+            self.assertTrue(result)
+        finally:
+            # Restore original whitelist state to ensure test isolation
+            self.rule._mkdir_cmd_whitelist = original_whitelist
+
+    def test_check_mkdir_command_illegal_dir_prefix_match_multiple_illegal_dirs(self):
+        """Test prefix matching with multiple illegal directories"""
+        mock_cfg_parser = MagicMock()
+        mock_cfg_parser._cmds = [
+            {
+                'name': 'mkdir',
+                'content': '/data/service/100/what/102/abc/105/xyz/extra 0755 system system',
+                'fileId': '1'
+            }
+        ]
+
+        # Save original whitelist state for proper test isolation
+        original_whitelist = list(self.rule._mkdir_cmd_whitelist)
+
+        try:
+            # Add whitelist path with last illegal directory 105
+            self.rule._mkdir_cmd_whitelist.append('/data/service/100/what/102/abc/105/xyz')
+
+            result = self.rule._check_mkdir_commands(mock_cfg_parser)
+
+            # Should pass because whitelist path has illegal dir and same last illegal index (105)
+            self.assertTrue(result)
+        finally:
+            # Restore original whitelist state to ensure test isolation
+            self.rule._mkdir_cmd_whitelist = original_whitelist
+
+    def test_check_mkdir_command_illegal_dir_prefix_match_multiple_illegal_dirs_wrong_last(self):
+        """Test prefix matching with multiple illegal directories but wrong last one"""
+        mock_cfg_parser = MagicMock()
+        mock_cfg_parser._cmds = [
+            {
+                'name': 'mkdir',
+                'content': '/data/service/100/what/102/abc/105/xyz/extra 0755 system system',
+                'fileId': '1'
+            }
+        ]
+
+        # Save original whitelist state for proper test isolation
+        original_whitelist = list(self.rule._mkdir_cmd_whitelist)
+
+        try:
+            # Add whitelist path with last illegal directory 102 (but cfg path has 105 as last)
+            self.rule._mkdir_cmd_whitelist.append('/data/service/100/what/102')
+
+            result = self.rule._check_mkdir_commands(mock_cfg_parser)
+
+            # Should fail because last illegal index is different
+            self.assertFalse(result)
+        finally:
+            # Restore original whitelist state to ensure test isolation
+            self.rule._mkdir_cmd_whitelist = original_whitelist
+
 if __name__ == '__main__':
     unittest.main()
