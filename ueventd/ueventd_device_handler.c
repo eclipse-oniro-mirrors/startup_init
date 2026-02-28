@@ -262,7 +262,7 @@ static char *FindPlatformDeviceName(char *path)
 static bool BootDeviceIsMatched(const char *parent)
 {
     int bootDeviceNum = GetBootDeviceNum();
-    if (bootDeviceNum == 1) {
+    if (bootDeviceNum <= 1) {
         return STRINGEQUAL(parent, bootDevice);
     }
 
