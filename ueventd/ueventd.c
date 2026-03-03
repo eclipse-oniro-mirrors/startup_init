@@ -405,16 +405,17 @@ void RetriggerUevent(int sockFd, char **devices, int num)
     int ret = GetParameterFromCmdLine("default_boot_device", bootDevice, CMDLINE_VALUE_LEN_MAX);
     INIT_CHECK_ONLY_ELOG(ret == 0, "Failed get default_boot_device value from cmdline");
 
+    INIT_LOGI("Get cmdline param default_boot_device : %s", bootDevice);
     if (strcpy_s(bootDeviceCopy, CMDLINE_VALUE_LEN_MAX, bootDevice) != EOK) {
-        INIT_LOGE("strcpy_s in failed!\n");
+        INIT_LOGE("strcpy_s in failed!");
         return;
     }
     g_bootDeviceNum = SplitString(bootDeviceCopy, ",", g_multiBootDevice, MAX_MULTI_BOOT_DEVICE);
-    if (g_bootDeviceNum <= 0) {
-        INIT_LOGE("SplitString boot device in failed!\n");
+    if (g_bootDeviceNum < 0) {
+        INIT_LOGE("SplitString boot device in failed!");
         return;
     }
-    INIT_LOGI("total boot device num is : %d\n", g_bootDeviceNum);
+    INIT_LOGI("total boot device num is : %d", g_bootDeviceNum);
 
     Trigger("/sys/block", sockFd, devices, num, NULL);
     Trigger("/sys/class", sockFd, devices, num, NULL);
