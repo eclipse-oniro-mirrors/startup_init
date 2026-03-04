@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <signal.h>
+#include "crash_handler.h"
 #include "param_manager.h"
 #endif
 
@@ -48,6 +49,21 @@
 #define MAX_IMPORTANT_LEVEL 19
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
 typedef int(*FuncType)(int, char *argv[]);
+
+static const SignalInfo g_resetSignals[] = {
+    { SIGTERM, "SIGTERM" },
+    { SIGCHLD, "SIGCHLD" },
+    { SIGABRT, "SIGABRT" },
+    { SIGBUS, "SIGBUS" },
+    { SIGFPE, "SIGFPE" },
+    { SIGILL, "SIGILL" },
+    { SIGSEGV, "SIGSEGV" },
+#if defined(SIGSTKFLT)
+    { SIGSTKFLT, "SIGSTKFLT" },
+#endif
+    { SIGSYS, "SIGSYS" },
+    { SIGTRAP, "SIGTRAP" },
+};
 #endif
 
 static bool g_enableSandbox = false;
@@ -217,17 +233,13 @@ void CloseFileResource(void)
 
 void ResetSignalResource(void)
 {
-    if (signal(SIGTERM, SIG_DFL) == SIG_ERR) {
-        INIT_LOGE("Resetting SIGTERM handler failed: %s", strerror(errno));
-        exit(EXIT_FAILURE);
+    for (size_t i = 0; i < sizeof(g_resetSignals) / sizeof(g_resetSignals[0]); i++) {
+        int32_t sig = g_resetSignals[i].sigNo;
+        if (signal(sig, SIG_DFL) == SIG_ERR) {
+            INIT_LOGE("Resetting handler signal(%d) failed: %s", sig, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
     }
-
-    if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) {
-        INIT_LOGE("Resetting SIGCHLD handler failed: %s", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    INIT_LOGI("Signal resource reset SIGTERM SIGCHLD ok.");
 }
 #endif
 
