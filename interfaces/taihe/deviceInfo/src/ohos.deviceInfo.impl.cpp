@@ -209,6 +209,15 @@ string gethardwareModel()
     return value;
 }
 
+string gethardwareProfile()
+{
+    const char *value = GetHardwareProfile();
+    if (value == nullptr) {
+        value = "";
+    }
+    return value;
+}
+
 string getbootloaderVersion()
 {
     const char *value = GetBootloaderVersion();
@@ -439,6 +448,7 @@ TH_EXPORT_CPP_API_getmarketName(getmarketName);
 TH_EXPORT_CPP_API_getproductModelAlias(getproductModelAlias);
 TH_EXPORT_CPP_API_getsoftwareModel(getsoftwareModel);
 TH_EXPORT_CPP_API_gethardwareModel(gethardwareModel);
+TH_EXPORT_CPP_API_gethardwareProfile(gethardwareProfile);
 TH_EXPORT_CPP_API_getbootloaderVersion(getbootloaderVersion);
 TH_EXPORT_CPP_API_getabiList(getabiList);
 TH_EXPORT_CPP_API_getsecurityPatchTag(getsecurityPatchTag);
