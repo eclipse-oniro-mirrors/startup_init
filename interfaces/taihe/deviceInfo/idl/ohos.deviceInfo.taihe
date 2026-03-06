@@ -12,93 +12,69 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@!namespace("@ohos.deviceInfo")
+@!namespace("@ohos.deviceInfo", "deviceInfo")
 
 @!sts_inject("""
 loadLibraryWithPermissionCheck("deviceInfo_taihe_native.z", "@ohos.deviceInfo")
 """)
 
-@class
-interface deviceInfo {
-}
-@static("deviceInfo") @get
-function getbrand(): String;
-@static("deviceInfo") @get
-function getdeviceType(): String;
-@static("deviceInfo") @get
-function getproductSeries(): String;
-@static("deviceInfo") @get
-function getproductModel(): String;
-@static("deviceInfo") @get("ODID")
-function getODID(): String;
-@static("deviceInfo") @get
-function getudid(): String;
-@static("deviceInfo") @get
-function getserial(): String;
-@static("deviceInfo") @get
-function getmanufacture(): String;
-@static("deviceInfo") @get
-function getmarketName(): String;
-@static("deviceInfo") @get
-function getproductModelAlias(): String;
-@static("deviceInfo") @get
-function getsoftwareModel(): String;
-@static("deviceInfo") @get
-function gethardwareModel(): String;
-@static("deviceInfo") @get
-function gethardwareProfile(): String;
-@static("deviceInfo") @get
-function getbootloaderVersion(): String;
-@static("deviceInfo") @get
-function getabiList(): String;
-@static("deviceInfo") @get
-function getsecurityPatchTag(): String;
-@static("deviceInfo") @get
-function getdisplayVersion(): String;
-@static("deviceInfo") @get
-function getincrementalVersion(): String;
-@static("deviceInfo") @get
-function getosReleaseType(): String;
-@static("deviceInfo") @get
-function getosFullName(): String;
-@static("deviceInfo") @get
-function getversionId(): String;
-@static("deviceInfo") @get
-function getbuildType(): String;
-@static("deviceInfo") @get
-function getbuildUser(): String;
-@static("deviceInfo") @get
-function getbuildHost(): String;
-@static("deviceInfo") @get
-function getbuildTime(): String;
-@static("deviceInfo") @get
-function getbuildRootHash(): String;
-@static("deviceInfo") @get
-function getdistributionOSName(): String;
-@static("deviceInfo") @get
-function getdistributionOSVersion(): String;
-@static("deviceInfo") @get
-function getdistributionOSApiName(): String;
-@static("deviceInfo") @get
-function getdistributionOSReleaseType(): String;
-@static("deviceInfo") @get
-function getdiskSN(): String;
-@static("deviceInfo") @get
-function getchipType(): String;
 
-@static("deviceInfo") @get
-function getsdkApiVersion(): i32;
-@static("deviceInfo") @get
-function getmajorVersion(): i32;
-@static("deviceInfo") @get
-function getseniorVersion(): i32;
-@static("deviceInfo") @get
-function getfeatureVersion(): i32;
-@static("deviceInfo") @get
-function getbuildVersion(): i32;
-@static("deviceInfo") @get
-function getfirstApiVersion(): i32;
-@static("deviceInfo") @get
-function getdistributionOSApiVersion(): i32;
-@static("deviceInfo") @get
-function getbootCount(): i32;
+@get function getbrand(): String;
+@get function getdeviceType(): String;
+@get function getproductSeries(): String;
+@get function getproductModel(): String;
+@get("ODID") function ODID(): String;
+@get function getudid(): String;
+@get function getserial(): String;
+@get function getmanufacture(): String;
+@get function getmarketName(): String;
+@get function getproductModelAlias(): String;
+@get function getsoftwareModel(): String;
+@get function gethardwareModel(): String;
+@get function gethardwareProfile(): String;
+@get function getbootloaderVersion(): String;
+@get function getabiList(): String;
+@get function getsecurityPatchTag(): String;
+@get function getdisplayVersion(): String;
+@get function getincrementalVersion(): String;
+@get function getosReleaseType(): String;
+@get function getosFullName(): String;
+@get function getversionId(): String;
+@get function getbuildType(): String;
+@get function getbuildUser(): String;
+@get function getbuildHost(): String;
+@get function getbuildTime(): String;
+@get function getbuildRootHash(): String;
+@get function getdistributionOSName(): String;
+@get function getdistributionOSVersion(): String;
+@get function getdistributionOSApiName(): String;
+@get function getdistributionOSReleaseType(): String;
+@get function getdiskSN(): String;
+@get function getchipType(): String;
+
+@get function getsdkApiVersion(): i32;
+@get function getmajorVersion(): i32;
+@get function getseniorVersion(): i32;
+@get function getfeatureVersion(): i32;
+@get function getbuildVersion(): i32;
+@get function getfirstApiVersion(): i32;
+@get function getdistributionOSApiVersion(): i32;
+@get function getbootCount(): i32;
+
+enum PerformanceClassLevel: i32 {
+    CLASS_LEVEL_HIGH,
+    CLASS_LEVEL_MEDIUM,
+    CLASS_LEVEL_LOW
+}
+
+@get function getperformanceClass(): PerformanceClassLevel;
+
+enum DeviceTypes: String {
+    TYPE_DEFAULT = "default",
+    TYPE_PHONE = "phone",
+    TYPE_TABLET = "tablet",
+    TYPE_2IN1 = "2in1",
+    TYPE_TV = "tv",
+    TYPE_WEARABLE = "wearable",
+    TYPE_CAR = "car"
+}
