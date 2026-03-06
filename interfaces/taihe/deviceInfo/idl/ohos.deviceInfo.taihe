@@ -46,6 +46,8 @@ function getsoftwareModel(): String;
 @static("deviceInfo") @get
 function gethardwareModel(): String;
 @static("deviceInfo") @get
+function gethardwareProfile(): String;
+@static("deviceInfo") @get
 function getbootloaderVersion(): String;
 @static("deviceInfo") @get
 function getabiList(): String;
