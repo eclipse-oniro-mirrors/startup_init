@@ -12,9 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ohos.deviceInfo.proj.hpp"
 #include "ohos.deviceInfo.impl.hpp"
-#include "taihe/runtime.hpp"
 #include "stdexcept"
 
 #include "beget_ext.h"
@@ -51,20 +49,10 @@ typedef enum {
     DEV_INFO_ESTRCOPY
 } DevInfoError;
 
-using namespace taihe;
-// using namespace ohos::deviceInfo;
-
 namespace {
 // To be implemented.
 
-class deviceInfoImpl {
-public:
-    deviceInfoImpl() {
-        // Don't forget to implement the constructor.
-    }
-};
-
-string getbrand()
+::taihe::string getbrand()
 {
     const char *value = GetBrand();
     if (value == nullptr) {
@@ -73,7 +61,7 @@ string getbrand()
     return value;
 }
 
-string getdeviceType()
+::taihe::string getdeviceType()
 {
     const char *value = GetDeviceType();
     if (value == nullptr) {
@@ -82,7 +70,7 @@ string getdeviceType()
     return value;
 }
 
-string getproductSeries()
+::taihe::string getproductSeries()
 {
     const char *value = GetProductSeries();
     if (value == nullptr) {
@@ -91,7 +79,7 @@ string getproductSeries()
     return value;
 }
 
-string getproductModel()
+::taihe::string getproductModel()
 {
     const char *value = GetProductModel();
     if (value == nullptr) {
@@ -138,7 +126,7 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
     return ret;
 }
 
-string getODID()
+::taihe::string ODID()
 {
     static char value[ODID_LEN] = {0};
     DevInfoError ret = AclGetDevOdid(value, ODID_LEN);
@@ -148,14 +136,14 @@ string getODID()
     return value;
 }
 
-string getudid()
+::taihe::string getudid()
 {
     char value[UDID_LEN] = {0};
     AclGetDevUdid(value, UDID_LEN);
     return value;
 }
 
-string getserial()
+::taihe::string getserial()
 {
     const char *value = AclGetSerial();
     if (value == nullptr) {
@@ -164,7 +152,7 @@ string getserial()
     return value;
 }
 
-string getmanufacture()
+::taihe::string getmanufacture()
 {
     const char *value = GetManufacture();
     if (value == nullptr) {
@@ -173,7 +161,7 @@ string getmanufacture()
     return value;
 }
 
-string getmarketName()
+::taihe::string getmarketName()
 {
     const char *value = GetMarketName();
     if (value == nullptr) {
@@ -182,7 +170,7 @@ string getmarketName()
     return value;
 }
 
-string getproductModelAlias()
+::taihe::string getproductModelAlias()
 {
     const char *value = GetProductModelAlias();
     if (value == nullptr) {
@@ -191,7 +179,7 @@ string getproductModelAlias()
     return value;
 }
 
-string getsoftwareModel()
+::taihe::string getsoftwareModel()
 {
     const char *value = GetSoftwareModel();
     if (value == nullptr) {
@@ -200,7 +188,7 @@ string getsoftwareModel()
     return value;
 }
 
-string gethardwareModel()
+::taihe::string gethardwareModel()
 {
     const char *value = GetHardwareModel();
     if (value == nullptr) {
@@ -209,7 +197,7 @@ string gethardwareModel()
     return value;
 }
 
-string gethardwareProfile()
+::taihe::string gethardwareProfile()
 {
     const char *value = GetHardwareProfile();
     if (value == nullptr) {
@@ -218,7 +206,7 @@ string gethardwareProfile()
     return value;
 }
 
-string getbootloaderVersion()
+::taihe::string getbootloaderVersion()
 {
     const char *value = GetBootloaderVersion();
     if (value == nullptr) {
@@ -227,7 +215,7 @@ string getbootloaderVersion()
     return value;
 }
 
-string getabiList()
+::taihe::string getabiList()
 {
     const char *value = GetAbiList();
     if (value == nullptr) {
@@ -236,7 +224,7 @@ string getabiList()
     return value;
 }
 
-string getsecurityPatchTag()
+::taihe::string getsecurityPatchTag()
 {
     const char *value = GetSecurityPatchTag();
     if (value == nullptr) {
@@ -245,7 +233,7 @@ string getsecurityPatchTag()
     return value;
 }
 
-string getdisplayVersion()
+::taihe::string getdisplayVersion()
 {
     const char *value = GetDisplayVersion();
     if (value == nullptr) {
@@ -254,7 +242,7 @@ string getdisplayVersion()
     return value;
 }
 
-string getincrementalVersion()
+::taihe::string getincrementalVersion()
 {
     const char *value = GetIncrementalVersion();
     if (value == nullptr) {
@@ -263,7 +251,7 @@ string getincrementalVersion()
     return value;
 }
 
-string getosReleaseType()
+::taihe::string getosReleaseType()
 {
     const char *value = GetOsReleaseType();
     if (value == nullptr) {
@@ -272,7 +260,7 @@ string getosReleaseType()
     return value;
 }
 
-string getosFullName()
+::taihe::string getosFullName()
 {
     const char *value = GetOSFullName();
     if (value == nullptr) {
@@ -281,7 +269,7 @@ string getosFullName()
     return value;
 }
 
-string getversionId()
+::taihe::string getversionId()
 {
     const char *value = GetVersionId();
     if (value == nullptr) {
@@ -290,7 +278,7 @@ string getversionId()
     return value;
 }
 
-string getbuildType()
+::taihe::string getbuildType()
 {
     const char *value = GetBuildType();
     if (value == nullptr) {
@@ -299,7 +287,7 @@ string getbuildType()
     return value;
 }
 
-string getbuildUser()
+::taihe::string getbuildUser()
 {
     const char *value = GetBuildUser();
     if (value == nullptr) {
@@ -308,7 +296,7 @@ string getbuildUser()
     return value;
 }
 
-string getbuildHost()
+::taihe::string getbuildHost()
 {
     const char *value = GetBuildHost();
     if (value == nullptr) {
@@ -317,7 +305,7 @@ string getbuildHost()
     return value;
 }
 
-string getbuildTime()
+::taihe::string getbuildTime()
 {
     const char *value = GetBuildTime();
     if (value == nullptr) {
@@ -326,7 +314,7 @@ string getbuildTime()
     return value;
 }
 
-string getbuildRootHash()
+::taihe::string getbuildRootHash()
 {
     const char *value = GetBuildRootHash();
     if (value == nullptr) {
@@ -335,7 +323,7 @@ string getbuildRootHash()
     return value;
 }
 
-string getdistributionOSName()
+::taihe::string getdistributionOSName()
 {
     const char *value = GetDistributionOSName();
     if (value == nullptr) {
@@ -344,7 +332,7 @@ string getdistributionOSName()
     return value;
 }
 
-string getdistributionOSVersion()
+::taihe::string getdistributionOSVersion()
 {
     const char *value = GetDistributionOSVersion();
     if (value == nullptr) {
@@ -353,7 +341,7 @@ string getdistributionOSVersion()
     return value;
 }
 
-string getdistributionOSApiName()
+::taihe::string getdistributionOSApiName()
 {
     const char *value = GetDistributionOSApiName();
     if (value == nullptr) {
@@ -362,7 +350,7 @@ string getdistributionOSApiName()
     return value;
 }
 
-string getdistributionOSReleaseType()
+::taihe::string getdistributionOSReleaseType()
 {
     const char *value = GetDistributionOSReleaseType();
     if (value == nullptr) {
@@ -371,20 +359,26 @@ string getdistributionOSReleaseType()
     return value;
 }
 
-string getdiskSN()
+::taihe::string getdiskSN()
 {
     static char value[DISK_SN_LEN] = {0};
     AclGetDiskSN(value, DISK_SN_LEN);
     return value;
 }
 
-string getchipType()
+::taihe::string getchipType()
 {
     const char *value = GetChipType();
     if (value == nullptr) {
         value = "";
     }
     return value;
+}
+
+::ohos::deviceInfo::PerformanceClassLevel getperformanceClass()
+{
+    int value = GetPerformanceClass();
+    return (ohos::deviceInfo::PerformanceClassLevel::key_t)value;
 }
 
 int32_t getsdkApiVersion()
@@ -440,7 +434,7 @@ TH_EXPORT_CPP_API_getbrand(getbrand);
 TH_EXPORT_CPP_API_getdeviceType(getdeviceType);
 TH_EXPORT_CPP_API_getproductSeries(getproductSeries);
 TH_EXPORT_CPP_API_getproductModel(getproductModel);
-TH_EXPORT_CPP_API_getODID(getODID);
+TH_EXPORT_CPP_API_ODID(ODID);
 TH_EXPORT_CPP_API_getudid(getudid);
 TH_EXPORT_CPP_API_getserial(getserial);
 TH_EXPORT_CPP_API_getmanufacture(getmanufacture);
@@ -476,3 +470,4 @@ TH_EXPORT_CPP_API_getfirstApiVersion(getfirstApiVersion);
 TH_EXPORT_CPP_API_getdistributionOSApiVersion(getdistributionOSApiVersion);
 TH_EXPORT_CPP_API_getbootCount(getbootCount);
 TH_EXPORT_CPP_API_getchipType(getchipType);
+TH_EXPORT_CPP_API_getperformanceClass(getperformanceClass);
