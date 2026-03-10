@@ -14,6 +14,7 @@
  */
 #ifndef BASE_STARTUP_INIT_CMDS_H
 #define BASE_STARTUP_INIT_CMDS_H
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -26,6 +27,16 @@
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
+#endif
+#endif
+
+#ifndef STARTUP_INIT_TEST
+#ifndef INIT_STATIC
+#define INIT_STATIC static
+#endif
+#else
+#ifndef INIT_STATIC
+#define INIT_STATIC
 #endif
 #endif
 
@@ -96,6 +107,14 @@ void ExecReboot(const char *value);
 char *BuildStringFromCmdArg(const struct CmdArgs *ctx, int startIndex);
 void ExecCmd(const struct CmdTable *cmd, const char *cmdContent);
 int SetFileCryptPolicy(const char *dir);
+#ifdef STARTUP_INIT_TEST
+bool EchoToPath(const char* path, const char* content);
+bool IsHyperHoldDisabled();
+void DumpHyperHoldCloseResult(bool dmaEswapDeinitSucc, bool gpuEswapDeinitSucc);
+void DisableHyperholdTimeOut(int interval, long long totalWait);
+bool DeInitDmaEswapSpace();
+bool DeInitGpuEswapSpace();
+#endif
 
 void OpenHidebug(const char *name);
 
