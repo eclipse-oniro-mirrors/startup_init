@@ -21,6 +21,11 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/prctl.h>
+#include <sys/mman.h>
+#include <sys/wait.h>
 #include <sys/sysmacros.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -51,6 +56,100 @@ static bool g_enableSaspawn = false;
 static bool IsEnableSaspawn(void);
 static int DlopenSoLibrary(const char *configFile);
 #endif
+
+#define PRELINK_ADDR_NR  2
+#define INTEGER_BUF_SZ   16
+
+static int prelink_memfd = -1;
+static int prelinker_pid;
+static uint64_t prelink_addr[PRELINK_ADDR_NR];
+
+static void StartPrelinker(void)
+{
+    prelink_memfd = memfd_create("relro_cache", MFD_CLOEXEC | MFD_ALLOW_SEALING);
+    if (prelink_memfd < 0) {
+        INIT_LOGE("prelinker memfd_create failed, errno = %d", errno);
+        return;
+    }
+
+    prelinker_pid = fork();
+    if (prelinker_pid < 0) {
+        INIT_LOGE("prelinker fork failed, errno = %d", errno);
+        close(prelink_memfd);
+        prelink_memfd = -1;
+    } else if (prelinker_pid == 0) {
+        if (prctl(HM_PR_PRELINK, HM_PRELINK_SET_PRELINKER) < 0) {
+            INIT_LOGE("prelinker prctl failed, errno = %d", errno);
+            _exit(1);
+        }
+        if (fcntl(prelink_memfd, F_SETFD, 0) < 0) {
+            INIT_LOGE("prelinker fcntl failed, errno = %d", errno);
+            _exit(1);
+        }
+        execl("/system/lib/ld-musl-aarch64.so.1", "prelinker", "/etc/init_prelinker_dso_list", (char *)NULL);
+        INIT_LOGE("prelinker execl failed, errno = %d", errno);
+        _exit(1);
+    }
+}
+
+static void PrelinkReady(void)
+{
+    if (prelinker_pid <= 0) {
+        INIT_LOGE("no prelinker process");
+        return;
+    }
+
+    int ws = -1;
+    if (waitpid(prelinker_pid, &ws, 0) < 0) {
+        prelinker_pid = 0;
+        INIT_LOGE("prelinker waitpid failed, errno = %d", errno);
+        close(prelink_memfd);
+        prelink_memfd = -1;
+        return;
+    }
+    prelinker_pid = 0;
+    if (ws != 0) {
+        INIT_LOGE("prelinker execution failed, ws = %d", ws);
+        close(prelink_memfd);
+        prelink_memfd = -1;
+        return;
+    }
+
+    if (fcntl(prelink_memfd, F_ADD_SEALS, F_SEAL_SEAL | F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_FUTURE_WRITE) < 0) {
+        INIT_LOGE("prelink_memfd fcntl failed, errno = %d", errno);
+        close(prelink_memfd);
+        prelink_memfd = -1;
+        return;
+    }
+
+    if (pread(prelink_memfd, prelink_addr, sizeof(prelink_addr), 0) < 0) {
+        INIT_LOGE("prelink_memfd pread failed, errno = %d", errno);
+        close(prelink_memfd);
+        prelink_memfd = -1;
+        return;
+    }
+
+    INIT_LOGI("prelink ready");
+}
+
+int UsePrelink(const char *svc_name)
+{
+    if (prelink_memfd < 0 || getenv("LD_PRELOAD") != NULL ||
+        strcmp(svc_name, "foundation") == 0 || getuid() == 0) {
+        return -1;
+    }
+
+    if (prctl(HM_PR_PRELINK, HM_PRELINK_USE_PRELINKER, prelink_addr) < 0) {
+        INIT_LOGE("prelink prctl failed, errno = %d", errno);
+        return -1;
+    }
+    if (fcntl(prelink_memfd, F_SETFD, 0) < 0) {
+        INIT_LOGE("prelink_memfd fcntl failed, errno = %d", errno);
+        return -1;
+    }
+
+    return 0;
+}
 
 static int FdHolderSockInit(void)
 {
@@ -118,6 +217,8 @@ void SystemInit(void)
     if (settimeofday(NULL, &tz) == -1) {
         INIT_LOGE("Set time of day failed, err = %d", errno);
     }
+
+    StartPrelinker();
 }
 
 void LogInit(void)
@@ -365,6 +466,9 @@ void SystemConfig(const char *uptime)
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 
     IsEnableSandbox();
+
+    PrelinkReady();
+
     // execute init
     PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
     PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
