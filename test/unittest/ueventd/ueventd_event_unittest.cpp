@@ -716,4 +716,68 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_ActionAdd001, TestSize.
     TestUeventAction(ACTION_UNBIND);
     TestUeventAction(ACTION_UNKNOWN);
 }
+
+HWTEST_F(UeventdEventUnitTest, Init_RetriggerUeventTest_SigleDefaultBootDevice001, TestSize.Level1) {
+    const char *cmdLine = "default_boot_device=test.device1";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    RetriggerUevent(-1, NULL, 0);
+    int num = GetBootDeviceNum();
+    EXPECT_EQ(1, num);
+}
+
+HWTEST_F(UeventdEventUnitTest, Init_RetriggerUeventTest_MultiDefaultBootDevice001, TestSize.Level1) {
+    const char *cmdLine = "default_boot_device=test.device1,test.device2";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    RetriggerUevent(-1, NULL, 0);
+    int num = GetBootDeviceNum();
+    EXPECT_EQ(2, num);
+}
+
+HWTEST_F(UeventdEventUnitTest, Init_BootDeviceIsMatchedTest_DefaultBootDevice001, TestSize.Level1)
+{
+    struct Uevent uevent = {
+        .subsystem = "block",
+        .syspath = "/bus/platform/test_block_device",
+        .deviceName = "test_block_device",
+        .partitionName = "test_block_device",
+        .firmware = "",
+        .action = ACTION_UNKNOWN,
+        .partitionNum = 3,
+        .major = 5,
+        .minor = 15,
+        .ug = {
+            .uid = 0,
+            .gid = 0,
+        },
+        .busNum = 1,
+        .devNum = 2,
+    };
+
+    const char *cmdLine;
+
+    cmdLine = "default_boot_device=test_block_device";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    RetriggerUevent(-1, NULL, 0);
+    int ret = TestHandleBlockDeviceEvent(&uevent);
+    EXPECT_EQ(ret, 0);
+
+    cmdLine = "default_boot_device=test_block_device1";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    RetriggerUevent(-1, NULL, 0);
+    ret = TestHandleBlockDeviceEvent(&uevent);
+    EXPECT_EQ(ret, 0);
+
+    cmdLine = "default_boot_device=test_block_device,test_block_device2";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    RetriggerUevent(-1, NULL, 0);
+    ret = TestHandleBlockDeviceEvent(&uevent);
+    EXPECT_EQ(ret, 0);
+
+    cmdLine = "default_boot_device=test_block_device1,test_block_device2";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    RetriggerUevent(-1, NULL, 0);
+    ret = TestHandleBlockDeviceEvent(&uevent);
+    EXPECT_EQ(ret, 0);
+}
+
 } // UeventdUt
