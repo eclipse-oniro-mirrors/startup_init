@@ -67,6 +67,12 @@ public:
     void TearDown() {};
     void TestBody(void) {};
 
+#ifdef NORMAL_SANDBOX
+const char* TARGET_FILTER_NAME = APP_NORMAL;
+#else
+const char* TARGET_FILTER_NAME = APP_NAME;
+#endif
+
     static pid_t StartChild(SeccompFilterType type, const char *filterName, SyscallFunc func)
     {
         pid_t pid = fork();
@@ -430,21 +436,41 @@ public:
         int ret = CheckSyscall(APP, APP_ALLOW_IOURING, CheckIoUringFlag1, true);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckIoUringFlag1, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckIoUringFlag1, false);
         EXPECT_EQ(ret, 0);
 
         ret = CheckSyscall(APP, APP_ALLOW_IOURING, CheckIoUringFlag2, true);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckIoUringFlag2, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckIoUringFlag2, false);
         EXPECT_EQ(ret, 0);
 
         ret = CheckSyscall(APP, APP_ALLOW_IOURING, CheckIoUringFlag3, true);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckIoUringFlag3, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckIoUringFlag3, false);
         EXPECT_EQ(ret, 0);
     }
+
+    static bool CheckMbind()
+    {
+        (void)syscall(SYS_mbind, nullptr, 0, 0, nullptr, 0, 0);
+        return true;
+    }
+
+    static bool CheckShmget()
+    {
+        (void)syscall(SYS_shmget, 0, 0, 0);
+        return true;
+    }
+
+#ifdef NORMAL_SANDBOX
+    void TestAppNormalSyscall()
+    {
+        int ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckMbind, true);
+        EXPECT_EQ(ret, 0);
+    }
+#endif
 
 #if defined __aarch64__
     static bool CheckMqOpen()
@@ -993,11 +1019,11 @@ public:
     void TestAppSycall()
     {
         // app blocklist
-        int ret = CheckSyscall(APP, APP_NAME, CheckSetuid, false);
+        int ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckSetuid, false);
         EXPECT_EQ(ret, 0);
 
         // app allowlist
-        ret = CheckSyscall(APP, APP_NAME, CheckGetpid, true);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
     }
 
@@ -1016,8 +1042,10 @@ public:
         int ret = CheckSyscall(APP, APP_CUSTOM, CheckGetpid, true);
         EXPECT_EQ(ret, 0);
 
-        // app custom blocklist
-        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuid, false);
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckShmget, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuid, true);
         EXPECT_EQ(ret, 0);
     }
 #endif
@@ -1765,11 +1793,11 @@ public:
     void TestAppSycall()
     {
         // app blocklist
-        int ret = CheckSyscall(APP, APP_NAME, CheckSetuid32, false);
+        int ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckSetuid32, false);
         EXPECT_EQ(ret, 0);
 
         // app allowlist
-        ret = CheckSyscall(APP, APP_NAME, CheckGetuid32, true);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckGetuid32, true);
         EXPECT_EQ(ret, 0);
     }
 
@@ -1783,31 +1811,31 @@ public:
 #endif
     void TestAppSycallNs()
     {
-        int ret = CheckSyscall(APP, APP_NAME, CheckUnshare, false);
+        int ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckUnshare, false);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckSetns, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckSetns, false);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckClonePidNs, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckClonePidNs, false);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckCloneMntNs, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckCloneMntNs, false);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckCloneCgroupNs, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckCloneCgroupNs, false);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckCloneIpcNs, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckCloneIpcNs, false);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckCloneUserNs, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckCloneUserNs, false);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckCloneNetNs, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckCloneNetNs, false);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_NAME, CheckCloneUtsNs, false);
+        ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckCloneUtsNs, false);
         EXPECT_EQ(ret, 0);
     }
 };
@@ -1932,6 +1960,20 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomSycall001, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestSeccompCustomSyscall();
+}
+#endif
+
+#ifdef NORMAL_SANDBOX
+/**
+ * @tc.name: TestSeccompNormalSyscall
+ * @tc.desc: Verify the normal syscall of app and appspawn.
+ * @tc.type: FUNC
+ * @tc.require: issueIBP64F
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompNormalSycall001, TestSize.Level0)
+{
+    SeccompUnitTest test;
+    test.TestAppNormalSyscall();
 }
 #endif
 }

@@ -89,6 +89,9 @@ declare_args() {
   # seccomp custom
   init_feature_custom_sandbox = false
 
+  # seccomp normal
+  init_feature_normal_sandbox = false
+
   # init sasn support
   init_feature_support_asan = true
 

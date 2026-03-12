@@ -159,6 +159,19 @@ ohos_prebuilt_seccomp("app_custom_filter") {
   install_images = [ "system" ]
 }
 
+ohos_prebuilt_seccomp("app_normal_filter") {
+  sources = [ "seccomp_policy/app_normal.seccomp.policy" ]
+
+  filtername = "app_normal"
+  process_type = "app"
+
+  part_name = INIT_PART
+  subsystem_name = "startup"
+
+  install_enable = true
+  install_images = [ "system" ]
+}
+
 config("libseccomp_static_config") {
   include_dirs = [
     "..",
@@ -210,6 +223,10 @@ group("seccomp_filter") {
     ]
     if (init_feature_custom_sandbox) {
       deps += [ ":app_custom_filter" ]
+    }
+    if (init_feature_normal_sandbox) {
+      deps -= [ ":app_filter" ]
+      deps += [ ":app_normal_filter" ]
     }
     if (init_feature_seccomp_privilege) {
       deps += [ ":app_privilege_filter" ]

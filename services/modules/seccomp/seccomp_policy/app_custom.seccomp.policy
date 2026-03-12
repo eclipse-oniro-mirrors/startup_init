@@ -25,6 +25,7 @@ ioctl;all
 futex;all
 
 @allowList
+shmget;all
 io_setup;all
 io_destroy;all
 io_submit;all

@@ -215,6 +215,10 @@ ohos_unittest("init_unittest") {
     if (init_feature_custom_sandbox) {
       defines += [ "CUSTOM_SANDBOX" ]
     }
+
+    if (init_feature_normal_sandbox) {
+      defines += [ "NORMAL_SANDBOX" ]
+    }
   }
 
   sources += [
