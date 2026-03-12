@@ -248,9 +248,9 @@ static char *HvbGetPartitionPath(const char *partition)
         return NULL;
     }
 
-    if (HvbGetSnapshotPath(partition, path, pathLen) == 0) {
+    if (HvbGetImagePatchSnapshotPath(partition, path, pathLen) == 0) {
         return path;
-    } else if (HvbGetImagePatchSnapshotPath(partition, path, pathLen) == 0) {
+    } else if (HvbGetSnapshotPath(partition, path, pathLen) == 0) {
         return path;
     }
 
