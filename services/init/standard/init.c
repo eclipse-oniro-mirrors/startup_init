@@ -58,7 +58,6 @@ static int DlopenSoLibrary(const char *configFile);
 #endif
 
 #define PRELINK_ADDR_NR  2
-#define INTEGER_BUF_SZ   16
 
 static int prelink_memfd = -1;
 static int prelinker_pid;
@@ -66,9 +65,29 @@ static uint64_t prelink_addr[PRELINK_ADDR_NR];
 
 static void StartPrelinker(void)
 {
+    const char *list = NULL;
+    CfgFiles *files = GetCfgFiles("etc/init_prelinker_dso_list");
+    if (files == NULL) {
+        INIT_LOGE("prelink list not found");
+        return;
+    }
+    for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; i >= 0; --i) {
+        if (files->paths[i] != NULL) {
+            list = files->paths[i];
+            break;
+        }
+    }
+    if (list == NULL) {
+        INIT_LOGE("prelink list not found");
+        FreeCfgFiles(files);
+        return;
+    }
+    INIT_LOGI("using prelink list: %s", list);
+
     prelink_memfd = memfd_create("relro_cache", MFD_CLOEXEC | MFD_ALLOW_SEALING);
     if (prelink_memfd < 0) {
         INIT_LOGE("prelinker memfd_create failed, errno = %d", errno);
+        FreeCfgFiles(files);
         return;
     }
 
@@ -86,14 +105,19 @@ static void StartPrelinker(void)
             INIT_LOGE("prelinker fcntl failed, errno = %d", errno);
             _exit(1);
         }
-        execl("/system/lib/ld-musl-aarch64.so.1", "prelinker", "/etc/init_prelinker_dso_list", (char *)NULL);
+        execl("/system/lib/ld-musl-aarch64.so.1", "prelinker", list, (char *)NULL);
         INIT_LOGE("prelinker execl failed, errno = %d", errno);
         _exit(1);
     }
+
+    FreeCfgFiles(files);
 }
 
 static void PrelinkReady(void)
 {
+    if (prelink_memfd < 0) {
+        return;
+    }
     if (prelinker_pid <= 0) {
         INIT_LOGE("no prelinker process");
         return;
@@ -108,8 +132,17 @@ static void PrelinkReady(void)
         return;
     }
     prelinker_pid = 0;
-    if (ws != 0) {
+    if (!WIFEXITED(ws) || WEXITSTATUS(ws) != 0) {
         INIT_LOGE("prelinker execution failed, ws = %d", ws);
+        close(prelink_memfd);
+        prelink_memfd = -1;
+        return;
+    }
+
+    char val[MAX_BUFFER_LEN] = "";
+    unsigned int len = MAX_BUFFER_LEN;
+    if (SystemReadParam("const.startup.prelink.enable", val, &len) != 0 || strcmp(val, "true") != 0) {
+        INIT_LOGI("prelink disabled");
         close(prelink_memfd);
         prelink_memfd = -1;
         return;
@@ -132,23 +165,24 @@ static void PrelinkReady(void)
     INIT_LOGI("prelink ready");
 }
 
-int UsePrelink(const char *svc_name)
+void PrelinkService(const char *svc_name)
 {
-    if (prelink_memfd < 0 || getenv("LD_PRELOAD") != NULL ||
-        strcmp(svc_name, "foundation") == 0 || getuid() == 0) {
-        return -1;
+    if (prelink_memfd < 0) {
+        return;
+    }
+    if (getenv("LD_PRELOAD") != NULL || strcmp(svc_name, "foundation") == 0 || getuid() == 0) {
+        INIT_LOGI("start \"%s\" without prelink", svc_name);
+        return;
     }
 
-    if (prctl(HM_PR_PRELINK, HM_PRELINK_USE_PRELINKER, prelink_addr) < 0) {
-        INIT_LOGE("prelink prctl failed, errno = %d", errno);
-        return -1;
-    }
     if (fcntl(prelink_memfd, F_SETFD, 0) < 0) {
         INIT_LOGE("prelink_memfd fcntl failed, errno = %d", errno);
-        return -1;
+        return;
     }
-
-    return 0;
+    if (prctl(HM_PR_PRELINK, HM_PRELINK_USE_PRELINKER, prelink_addr) < 0) {
+        INIT_LOGE("prelink prctl failed, errno = %d", errno);
+        fcntl(prelink_memfd, F_SETFD, FD_CLOEXEC);
+    }
 }
 
 static int FdHolderSockInit(void)
