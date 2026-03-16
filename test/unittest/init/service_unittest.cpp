@@ -450,6 +450,54 @@ HWTEST_F(ServiceUnitTest, TestServiceExec, TestSize.Level1)
     ReleaseService(service);
 }
 
+/**
+ * @brief 当 service name 是 foundation 时，PrelinkService 直接返回，不影响后续逻辑
+ *
+ */
+HWTEST_F(ServiceUnitTest, TestPrelinkService_001, TestSize.Level1)
+{
+    Service *service = (Service *)calloc(1, sizeof(Service));
+    EXPECT_NE(service, NULL);
+
+    const char *name = "foundation";
+    uint32_t nameLen = (uint32_t)strlen(name);
+    int ret = memcpy_s(service->name, nameLen + 1, name, nameLen + 1);
+    EXPECT_GT(ret, 0);
+
+    service->pathArgs.argv = (char **)malloc(sizeof(char *));
+    ASSERT_NE(service->pathArgs.argv, nullptr);
+    service->pathArgs.count = 1;
+    const char *path = "/data/init_ut/test_service_release";
+    service->pathArgs.argv[0] = strdup(path);
+    service->importance = 0;
+    ret = ServiceExec(service, &service->pathArgs);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @brief 当 service name 不是 foundation 时，PrelinkService 会正常执行
+ *
+ */
+HWTEST_F(ServiceUnitTest, TestPrelinkService_002, TestSize.Level1)
+{
+    Service *service = (Service *)calloc(1, sizeof(Service));
+    EXPECT_NE(service, NULL);
+
+    const char *name = "TestPrelinkService_002";
+    uint32_t nameLen = (uint32_t)strlen(name);
+    int ret = memcpy_s(service->name, nameLen + 1, name, nameLen + 1);
+    EXPECT_GT(ret, 0);
+
+    service->pathArgs.argv = (char **)malloc(sizeof(char *));
+    ASSERT_NE(service->pathArgs.argv, nullptr);
+    service->pathArgs.count = 1;
+    const char *path = "/data/init_ut/test_service_release";
+    service->pathArgs.argv[0] = strdup(path);
+    service->importance = 0;
+    ret = ServiceExec(service, &service->pathArgs);
+    EXPECT_EQ(ret, 0);
+}
+
 HWTEST_F(ServiceUnitTest, TestServiceCGroup1, TestSize.Level1)
 {
     const char *jsonStr = "{\"services\":{\"name\":\"test_service1\",\"path\":[\"/data/init_ut/test_service\"],"
