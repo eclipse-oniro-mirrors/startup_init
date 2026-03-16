@@ -438,9 +438,8 @@ static void SetServiceContent(Service *service)
 {
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
     bool isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
-    INIT_LOGI("service %s isSaspawn = %d", service->name, isSaspawn);
     if (isSaspawn) {
-        PluginExecCmdByName("setServiceSaspawnContent", service->name);
+        INIT_LOGI("service %s isSaspawn = %d", service->name, isSaspawn);
     } else {
         PluginExecCmdByName("setServiceContent", service->name);
     }

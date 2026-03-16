@@ -175,6 +175,7 @@ int InitServiceBySaspawn(Service *service, const ServiceArgs *pathArgs)
 
         UnmapResource();
         int argvValue = pathArgs->count - 1;
+        PluginExecCmdByName("setServiceSaspawnContent", service->name);
         ret = startSA(argvValue, pathArgs->argv);
         INIT_LOGI("saspawn complete, ret = %d", ret);
         return SERVICE_SUCCESS;
