@@ -57,11 +57,11 @@ static bool IsEnableSaspawn(void);
 static int DlopenSoLibrary(const char *configFile);
 #endif
 
-#define PRELINK_ADDR_NR  2
+#define PRELINK_ADDR_NR 2
 
-static int prelink_memfd = -1;
-static int prelinker_pid;
-static uint64_t prelink_addr[PRELINK_ADDR_NR];
+static int g_prelinkMemfd = -1;
+static int g_prelinkerPid;
+static uint64_t g_prelinkAddr[PRELINK_ADDR_NR];
 
 static void StartPrelinker(void)
 {
@@ -84,24 +84,24 @@ static void StartPrelinker(void)
     }
     INIT_LOGI("using prelink list: %s", list);
 
-    prelink_memfd = memfd_create("relro_cache", MFD_CLOEXEC | MFD_ALLOW_SEALING);
-    if (prelink_memfd < 0) {
+    g_prelinkMemfd = memfd_create("relro_cache", MFD_CLOEXEC | MFD_ALLOW_SEALING);
+    if (g_prelinkMemfd < 0) {
         INIT_LOGE("prelinker memfd_create failed, errno = %d", errno);
         FreeCfgFiles(files);
         return;
     }
 
-    prelinker_pid = fork();
-    if (prelinker_pid < 0) {
+    g_prelinkerPid = fork();
+    if (g_prelinkerPid < 0) {
         INIT_LOGE("prelinker fork failed, errno = %d", errno);
-        close(prelink_memfd);
-        prelink_memfd = -1;
-    } else if (prelinker_pid == 0) {
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
+    } else if (g_prelinkerPid == 0) {
         if (prctl(HM_PR_PRELINK, HM_PRELINK_SET_PRELINKER) < 0) {
             INIT_LOGE("prelinker prctl failed, errno = %d", errno);
             _exit(1);
         }
-        if (fcntl(prelink_memfd, F_SETFD, 0) < 0) {
+        if (fcntl(g_prelinkMemfd, F_SETFD, 0) < 0) {
             INIT_LOGE("prelinker fcntl failed, errno = %d", errno);
             _exit(1);
         }
@@ -115,27 +115,27 @@ static void StartPrelinker(void)
 
 static void PrelinkReady(void)
 {
-    if (prelink_memfd < 0) {
+    if (g_prelinkMemfd < 0) {
         return;
     }
-    if (prelinker_pid <= 0) {
+    if (g_prelinkerPid <= 0) {
         INIT_LOGE("no prelinker process");
         return;
     }
 
     int ws = -1;
-    if (waitpid(prelinker_pid, &ws, 0) < 0) {
-        prelinker_pid = 0;
+    if (waitpid(g_prelinkerPid, &ws, 0) < 0) {
+        g_prelinkerPid = 0;
         INIT_LOGE("prelinker waitpid failed, errno = %d", errno);
-        close(prelink_memfd);
-        prelink_memfd = -1;
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
         return;
     }
-    prelinker_pid = 0;
+    g_prelinkerPid = 0;
     if (!WIFEXITED(ws) || WEXITSTATUS(ws) != 0) {
         INIT_LOGE("prelinker execution failed, ws = %d", ws);
-        close(prelink_memfd);
-        prelink_memfd = -1;
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
         return;
     }
 
@@ -143,45 +143,45 @@ static void PrelinkReady(void)
     unsigned int len = MAX_BUFFER_LEN;
     if (SystemReadParam("const.startup.prelink.enable", val, &len) != 0 || strcmp(val, "true") != 0) {
         INIT_LOGI("prelink disabled");
-        close(prelink_memfd);
-        prelink_memfd = -1;
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
         return;
     }
 
-    if (fcntl(prelink_memfd, F_ADD_SEALS, F_SEAL_SEAL | F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_FUTURE_WRITE) < 0) {
-        INIT_LOGE("prelink_memfd fcntl failed, errno = %d", errno);
-        close(prelink_memfd);
-        prelink_memfd = -1;
+    if (fcntl(g_prelinkMemfd, F_ADD_SEALS, F_SEAL_SEAL | F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_FUTURE_WRITE) < 0) {
+        INIT_LOGE("g_prelinkMemfd fcntl failed, errno = %d", errno);
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
         return;
     }
 
-    if (pread(prelink_memfd, prelink_addr, sizeof(prelink_addr), 0) < 0) {
-        INIT_LOGE("prelink_memfd pread failed, errno = %d", errno);
-        close(prelink_memfd);
-        prelink_memfd = -1;
+    if (pread(g_prelinkMemfd, g_prelinkAddr, sizeof(g_prelinkAddr), 0) < 0) {
+        INIT_LOGE("g_prelinkMemfd pread failed, errno = %d", errno);
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
         return;
     }
 
     INIT_LOGI("prelink ready");
 }
 
-void PrelinkService(const char *svc_name)
+void PrelinkService(const char *name)
 {
-    if (prelink_memfd < 0) {
+    if (g_prelinkMemfd < 0) {
         return;
     }
-    if (getenv("LD_PRELOAD") != NULL || strcmp(svc_name, "foundation") == 0 || getuid() == 0) {
-        INIT_LOGI("start \"%s\" without prelink", svc_name);
+    if (getenv("LD_PRELOAD") != NULL || strcmp(name, "foundation") == 0 || getuid() == 0) {
+        INIT_LOGI("start \"%s\" without prelink", name);
         return;
     }
 
-    if (fcntl(prelink_memfd, F_SETFD, 0) < 0) {
-        INIT_LOGE("prelink_memfd fcntl failed, errno = %d", errno);
+    if (fcntl(g_prelinkMemfd, F_SETFD, 0) < 0) {
+        INIT_LOGE("g_prelinkMemfd fcntl failed, errno = %d", errno);
         return;
     }
-    if (prctl(HM_PR_PRELINK, HM_PRELINK_USE_PRELINKER, prelink_addr) < 0) {
+    if (prctl(HM_PR_PRELINK, HM_PRELINK_USE_PRELINKER, g_prelinkAddr) < 0) {
         INIT_LOGE("prelink prctl failed, errno = %d", errno);
-        fcntl(prelink_memfd, F_SETFD, FD_CLOEXEC);
+        fcntl(g_prelinkMemfd, F_SETFD, FD_CLOEXEC);
     }
 }
 
@@ -434,6 +434,15 @@ static void SetInitPriority()
     INIT_CHECK_ONLY_ELOG(ret == 0, "set init priority failed");
 }
 
+static void PostInitTriggers(void)
+{
+    PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
+    PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
+    TriggerServices(START_MODE_BOOT);
+    PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
+    TriggerServices(START_MODE_NORMAL);
+}
+
 void SystemConfig(const char *uptime)
 {
     INIT_TIMING_STAT timingStat;
@@ -504,11 +513,7 @@ void SystemConfig(const char *uptime)
     PrelinkReady();
 
     // execute init
-    PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
-    PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
-    TriggerServices(START_MODE_BOOT);
-    PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
-    TriggerServices(START_MODE_NORMAL);
+    PostInitTriggers();
     clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.startTime));
 }
 

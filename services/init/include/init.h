@@ -72,7 +72,7 @@ typedef struct {
 extern ProcProcessName *g_procProcessName;
 #endif
 
-void PrelinkService(const char *svc_name);
+void PrelinkService(const char *name);
 
 #ifdef __cplusplus
 #if __cplusplus
