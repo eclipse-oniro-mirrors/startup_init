@@ -45,6 +45,7 @@
 #define OHOS_KERNEL_PERM_COUNT_KEY "ohos.encaps.count"
 #define KERNEL_PERM_PRE "encaps"
 #define KERNEL_PERM_MAX_COUNT 64
+#define BUFFER_SIZE 4096
 
 // All service processes that init will fork+exec.
 ServiceSpace g_serviceSpace = { 0 };
@@ -1373,6 +1374,45 @@ void TermServiceByName(const char *servName)
     return;
 }
 
+static void MoveFrozenToThawed()
+{
+    const char *frozenPath = "/dev/frz/Frozen/cgroup.procs";
+    const char *thawedPath = "/dev/frz/Thawed/cgroup.procs";
+    
+    int frozenFd = open(frozenPath, O_RDONLY);
+    if (frozenFd == -1) {
+        INIT_LOGE("open %s failed, err is %d", frozenPath, errno);
+        return;
+    }
+
+    int thawedFd = open(thawedPath, O_WRONLY);
+    if (thawedFd == -1) {
+        INIT_LOGE("open %s failed, err is %d", thawedPath, errno);
+        close(frozenFd);
+        return;
+    }
+
+    char buffer[BUFFER_SIZE];
+    ssize_t readBytes;
+    while ((readBytes = read(frozenFd, buffer, sizeof(buffer))) > 0) {
+        ssize_t totalWrite = 0;
+        while (totalWrite < readBytes) {
+            ssize_t writeBytes = write(thawedFd, buffer + totalWrite, readBytes - totalWrite);
+            if (writeBytes == -1 && errno == EINTR) {
+                continue;
+            }
+            if (writeBytes == -1) {
+                INIT_LOGE("write to %s failed, err is %d", thawedPath, errno);
+                break;
+            }
+            totalWrite += writeBytes;
+        }
+    }
+    close(frozenFd);
+    close(thawedFd);
+    INIT_LOGI("move frozen to thawed end");
+}
+
 void StopAllServices(int flags, const char **exclude, int size,
     int (*filter)(const Service *service, const char **exclude, int size))
 {
@@ -1385,6 +1425,7 @@ void StopAllServices(int flags, const char **exclude, int size,
 #endif
     }
     INIT_LOGI("stop appspawn end");
+    MoveFrozenToThawed();
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
     while (node != NULL) {
         Service *service = node->data.service;

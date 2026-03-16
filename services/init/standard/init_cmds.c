@@ -59,7 +59,11 @@
 #define SET_SHUT_STAGE _IOW(BOOT_DETECTOR_IOCTL_BASE, 106, int)
 #define SHUT_STAGE_FRAMEWORK_START 1
 #define UMOUNT_DATA_RETRY_COUNT 3
-#define NS_DATA_UMOUNT_FAIL_TAG_LEN 21
+#define NS_DATA_UMOUNT_FAIL_TAG_LEN 22
+#define NS_DATA_UMOUNT_SUCCESS_TAG_LEN 22
+#define UMOUNT_DATA_SUCCESS_TAG_LEN 20
+#define NS_DATA_FAIL_REASON_LEN 60
+#define FD_FILE_MAX_SIZE (70 * 1024)
 #define PROC_PATH "/proc"
 #define KILL_WAIT_TIME 100000
 #define INTERVAL_WAIT 10
@@ -82,6 +86,11 @@
 #define DMA_DEVICE_FILE "/dev/dma_reclaim"
 #define GPU_RECLAIM_IMPL_SO "libgpu_reclaim.so"
 #define DMA_BUF_SWAPSPACE_DEINIT _IOWR('d', 0x09, int)
+#define STACK_PATH_MAX_LEN 256
+#define BUFFER_SIZE 4096
+#define SEPARATOR_PREFIX_LEN 4
+#define SEPARATOR_SUFFIX_LEN 5
+#define NEWLINE_LEN 1
 
 int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
 {
@@ -550,7 +559,7 @@ static void WriteCurtime(int fd)
     write(fd, "\n", 1);
 }
 
-static void DumpNsDataResult()
+static void DumpNsDataResult(bool success, const char *failReason)
 {
     const char *dumpPath = "/log/startup/mntdump.txt";
     int dumpFd = open(dumpPath, O_CREAT | O_WRONLY | O_APPEND, OPEN_FILE_MOD);
@@ -559,7 +568,14 @@ static void DumpNsDataResult()
         return;
     }
     WriteCurtime(dumpFd);
-    write(dumpFd, "nsData umount failed\n", NS_DATA_UMOUNT_FAIL_TAG_LEN);
+    if (success) {
+        write(dumpFd, "nsData umount success\n", NS_DATA_UMOUNT_SUCCESS_TAG_LEN);
+    } else {
+        write(dumpFd, "nsData umount failed\n", NS_DATA_UMOUNT_FAIL_TAG_LEN);
+        if (failReason != NULL) {
+            write(dumpFd, failReason, strlen(failReason));
+        }
+    }
     close(dumpFd);
 }
 
@@ -602,54 +618,188 @@ static void InitUmountFaultLog()
     INIT_LOGI("mount info dump end");
 }
 
-static void DumpFdInfo()
+static void WriteStackContent(int dumpFd, const char *stackPath)
 {
-    char dumpPath[] = "/log/startup/fddump.txt";
-    pid_t pid = fork();
-    if (pid == 0) {
-        int fd = open(dumpPath, O_CREAT | O_WRONLY | O_TRUNC, OPEN_FILE_MOD);
-        if (fd == -1) {
-            INIT_LOGE("open file failed, err is %d", errno);
-            return;
-        }
-        dup2(fd, STDOUT_FILENO);
-        close(fd);
-        execlp("lsof", "lsof", NULL);
-    } else if (pid < 0) {
-        INIT_LOGE("fork failed, err is %d", errno);
+    int stackFd = open(stackPath, O_RDONLY);
+    if (stackFd == -1) {
         return;
     }
-    int status;
-    pid_t ret = waitpid(pid, &status, 0);
-    if (ret != pid) {
-        INIT_LOGE("failed to wait pid %d, errno is %d", pid, errno);
+
+    char buffer[BUFFER_SIZE] = {0};
+    ssize_t readBytes = read(stackFd, buffer, sizeof(buffer) - 1);
+    if (readBytes <= 0) {
+        close(stackFd);
+        return;
     }
-    INIT_LOGI("dump fd info end");
+    buffer[readBytes] = '\0';
+
+    write(dumpFd, "=== ", SEPARATOR_PREFIX_LEN);
+    write(dumpFd, stackPath, strlen(stackPath));
+    write(dumpFd, " ===\n", SEPARATOR_SUFFIX_LEN);
+
+    ssize_t totalWrite = 0;
+    ssize_t contentLen = strlen(buffer);
+    while (totalWrite < contentLen) {
+        ssize_t writeBytes = write(dumpFd, buffer + totalWrite, contentLen - totalWrite);
+        if (writeBytes == -1 && errno == EINTR) {
+            continue;
+        }
+        if (writeBytes == -1) {
+            break;
+        }
+        totalWrite += writeBytes;
+    }
+    close(stackFd);
+    write(dumpFd, "\n", NEWLINE_LEN);
 }
 
-static bool DoUmountOtherNsData()
+static void DumpTaskStackFiles(int dumpFd, const char *taskPath)
+{
+    DIR *taskDir = opendir(taskPath);
+    if (taskDir == NULL) {
+        return;
+    }
+
+    struct dirent *taskEntry;
+    while ((taskEntry = readdir(taskDir)) != NULL) {
+        if (taskEntry->d_type != DT_DIR) {
+            continue;
+        }
+        const char *tidName = taskEntry->d_name;
+        if (tidName[0] == '\0' || !isdigit(tidName[0])) {
+            continue;
+        }
+        if (strcmp(tidName, "1") == 0) {
+            continue;
+        }
+
+        char tidStackPath[STACK_PATH_MAX_LEN];
+        if (snprintf_s(tidStackPath, sizeof(tidStackPath),
+            sizeof(tidStackPath) - 1, "%s/%s/stack", taskPath, tidName) < 0) {
+            continue;
+        }
+
+        WriteStackContent(dumpFd, tidStackPath);
+    }
+    closedir(taskDir);
+}
+
+static void CheckAndTruncateDumpFile(int dumpFd, const char *dumpPath)
+{
+    struct stat st;
+    if (fstat(dumpFd, &st) != 0) {
+        close(dumpFd);
+        return;
+    }
+    if (st.st_size > FD_FILE_MAX_SIZE) {
+        close(dumpFd);
+        int newFd = open(dumpPath, O_CREAT | O_WRONLY | O_TRUNC, OPEN_FILE_MOD);
+        if (newFd != -1) {
+            const char *msg = "Stack information too large, exceeds file size limit (70KB)\n";
+            write(newFd, msg, strlen(msg));
+            close(newFd);
+        }
+    } else {
+        close(dumpFd);
+    }
+}
+
+static void DumpProcStackFiles()
+{
+    const char *dumpPath = "/log/startup/fddump.txt";
+    const char *procPath = "/proc";
+    int dumpFd = open(dumpPath, O_CREAT | O_WRONLY | O_APPEND, OPEN_FILE_MOD);
+    if (dumpFd == -1) {
+        INIT_LOGE("open dump file failed, err is %d", errno);
+        return;
+    }
+
+    DIR *procDir = opendir(procPath);
+    if (procDir == NULL) {
+        INIT_LOGE("failed to open proc dir, err is %d", errno);
+        close(dumpFd);
+        return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(procDir)) != NULL) {
+        if (entry->d_type != DT_DIR) {
+            continue;
+        }
+        const char *dirName = entry->d_name;
+        if (dirName[0] == '\0' || !isdigit(dirName[0]) || strcmp(dirName, "1") == 0) {
+            continue;
+        }
+
+        char procPidPath[STACK_PATH_MAX_LEN];
+        if (snprintf_s(procPidPath, sizeof(procPidPath), sizeof(procPidPath) - 1, "%s/%s", procPath, dirName) < 0) {
+            continue;
+        }
+
+        char stackPath[STACK_PATH_MAX_LEN];
+        if (snprintf_s(stackPath, sizeof(stackPath), sizeof(stackPath) - 1, "%s/stack", procPidPath) < 0) {
+            continue;
+        }
+
+        WriteStackContent(dumpFd, stackPath);
+
+        char taskPath[STACK_PATH_MAX_LEN];
+        if (snprintf_s(taskPath, sizeof(taskPath), sizeof(taskPath) - 1, "%s/task", procPidPath) < 0) {
+            continue;
+        }
+
+        DumpTaskStackFiles(dumpFd, taskPath);
+    }
+    closedir(procDir);
+
+    CheckAndTruncateDumpFile(dumpFd, dumpPath);
+    INIT_LOGI("dump proc stack files end");
+}
+
+static bool DoUmountOtherNsData(char *failReason, int reasonLen)
 {
     INIT_LOGI("umount ns data");
     bool nsDataRelease = true;
+    InitDefaultNamespace();
     int ret = EnterSandbox("system");
     if (ret != 0) {
         INIT_LOGE("Enter system sandbox failed");
         nsDataRelease = false;
+        if (snprintf_s(failReason, reasonLen, reasonLen - 1, "Enter system sandbox failed, errno=%d", errno) < 0) {
+            INIT_LOGE("failed to build failReason");
+        }
     }
     ret = umount("/data");
     if (ret != 0) {
         INIT_LOGE("Umount data in system ns failed");
         nsDataRelease = false;
+        if (snprintf_s(failReason, reasonLen, reasonLen - 1,
+            "Umount data in system ns failed, errno=%d", errno) < 0) {
+            INIT_LOGE("failed to build failReason");
+        }
+    }
+    if (EnterDefaultNamespace() < 0) {
+        INIT_LOGE("Failed to restore default namespace");
     }
     ret = EnterSandbox("chipset");
     if (ret != 0) {
         INIT_LOGE("Enter chipset sandbox failed");
         nsDataRelease = false;
+        if (snprintf_s(failReason, reasonLen, reasonLen - 1, "Enter chipset sandbox failed, errno=%d", errno) < 0) {
+            INIT_LOGE("failed to build failReason");
+        }
     }
     ret = umount("/data");
     if (ret != 0) {
         INIT_LOGE("Umount data in chipset ns failed");
         nsDataRelease = false;
+        if (snprintf_s(failReason, reasonLen, reasonLen - 1,
+            "Umount data in chipset ns failed, errno=%d", errno) < 0) {
+            INIT_LOGE("failed to build failReason");
+        }
+    }
+    if (EnterDefaultNamespace() < 0) {
+        INIT_LOGE("Failed to restore default namespace");
     }
     INIT_LOGI("umount ns data end");
     return nsDataRelease;
@@ -832,11 +982,11 @@ static void RetryUmountData()
         INIT_LOGE("umount data failed, save err log");
         DumpHyperHoldCloseResult(dmaEswapDeinitSucc, gpuEswapDeinitSucc);
         InitUmountFaultLog();
-        DumpFdInfo();
+        DumpProcStackFiles();
     }
-    if (!DoUmountOtherNsData()) {
-        DumpNsDataResult();
-    }
+    char failReason[NS_DATA_FAIL_REASON_LEN] = {0};
+    bool nsDataResult = DoUmountOtherNsData(failReason, NS_DATA_FAIL_REASON_LEN);
+    DumpNsDataResult(nsDataResult, failReason);
 }
 
 static void DoUmount(const struct CmdArgs *ctx)
