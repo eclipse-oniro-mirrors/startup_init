@@ -268,6 +268,7 @@ int ServiceExec(Service *service, const ServiceArgs *pathArgs)
     }
 #endif
     int isCritical = (service->attribute & SERVICE_ATTR_CRITICAL);
+    PrelinkService(service->name);
     INIT_ERROR_CHECK(execv(pathArgs->argv[0], pathArgs->argv) == 0,
         service->lastErrno = INIT_EEXEC;
         return errno, "[startup_failed]failed to execv %d %d %s", isCritical, errno, service->name);

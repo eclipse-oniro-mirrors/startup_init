@@ -21,6 +21,11 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/prctl.h>
+#include <sys/mman.h>
+#include <sys/wait.h>
 #include <sys/sysmacros.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -51,6 +56,134 @@ static bool g_enableSaspawn = false;
 static bool IsEnableSaspawn(void);
 static int DlopenSoLibrary(const char *configFile);
 #endif
+
+#define PRELINK_ADDR_NR 2
+
+static int g_prelinkMemfd = -1;
+static int g_prelinkerPid;
+static uint64_t g_prelinkAddr[PRELINK_ADDR_NR];
+
+static void StartPrelinker(void)
+{
+    const char *list = NULL;
+    CfgFiles *files = GetCfgFiles("etc/init_prelinker_dso_list");
+    if (files == NULL) {
+        INIT_LOGE("prelink list not found");
+        return;
+    }
+    for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; i >= 0; --i) {
+        if (files->paths[i] != NULL) {
+            list = files->paths[i];
+            break;
+        }
+    }
+    if (list == NULL) {
+        INIT_LOGE("prelink list not found");
+        FreeCfgFiles(files);
+        return;
+    }
+    INIT_LOGI("using prelink list: %s", list);
+
+    g_prelinkMemfd = memfd_create("relro_cache", MFD_CLOEXEC | MFD_ALLOW_SEALING);
+    if (g_prelinkMemfd < 0) {
+        INIT_LOGE("prelinker memfd_create failed, errno = %d", errno);
+        FreeCfgFiles(files);
+        return;
+    }
+
+    g_prelinkerPid = fork();
+    if (g_prelinkerPid < 0) {
+        INIT_LOGE("prelinker fork failed, errno = %d", errno);
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
+    } else if (g_prelinkerPid == 0) {
+        if (prctl(HM_PR_PRELINK, HM_PRELINK_SET_PRELINKER) < 0) {
+            INIT_LOGE("prelinker prctl failed, errno = %d", errno);
+            _exit(1);
+        }
+        if (fcntl(g_prelinkMemfd, F_SETFD, 0) < 0) {
+            INIT_LOGE("prelinker fcntl failed, errno = %d", errno);
+            _exit(1);
+        }
+        execl("/system/lib/ld-musl-aarch64.so.1", "prelinker", list, (char *)NULL);
+        INIT_LOGE("prelinker execl failed, errno = %d", errno);
+        _exit(1);
+    }
+
+    FreeCfgFiles(files);
+}
+
+static void PrelinkReady(void)
+{
+    if (g_prelinkMemfd < 0) {
+        return;
+    }
+    if (g_prelinkerPid <= 0) {
+        INIT_LOGE("no prelinker process");
+        return;
+    }
+
+    int ws = -1;
+    if (waitpid(g_prelinkerPid, &ws, 0) < 0) {
+        g_prelinkerPid = 0;
+        INIT_LOGE("prelinker waitpid failed, errno = %d", errno);
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
+        return;
+    }
+    g_prelinkerPid = 0;
+    if (!WIFEXITED(ws) || WEXITSTATUS(ws) != 0) {
+        INIT_LOGE("prelinker execution failed, ws = %d", ws);
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
+        return;
+    }
+
+    char val[MAX_BUFFER_LEN] = "";
+    unsigned int len = MAX_BUFFER_LEN;
+    if (SystemReadParam("const.startup.prelink.enable", val, &len) != 0 || strcmp(val, "true") != 0) {
+        INIT_LOGI("prelink disabled");
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
+        return;
+    }
+
+    if (fcntl(g_prelinkMemfd, F_ADD_SEALS, F_SEAL_SEAL | F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_FUTURE_WRITE) < 0) {
+        INIT_LOGE("g_prelinkMemfd fcntl failed, errno = %d", errno);
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
+        return;
+    }
+
+    if (pread(g_prelinkMemfd, g_prelinkAddr, sizeof(g_prelinkAddr), 0) < 0) {
+        INIT_LOGE("g_prelinkMemfd pread failed, errno = %d", errno);
+        close(g_prelinkMemfd);
+        g_prelinkMemfd = -1;
+        return;
+    }
+
+    INIT_LOGI("prelink ready");
+}
+
+void PrelinkService(const char *name)
+{
+    if (g_prelinkMemfd < 0) {
+        return;
+    }
+    if (getenv("LD_PRELOAD") != NULL || strcmp(name, "foundation") == 0 || getuid() == 0) {
+        INIT_LOGI("start \"%s\" without prelink", name);
+        return;
+    }
+
+    if (fcntl(g_prelinkMemfd, F_SETFD, 0) < 0) {
+        INIT_LOGE("g_prelinkMemfd fcntl failed, errno = %d", errno);
+        return;
+    }
+    if (prctl(HM_PR_PRELINK, HM_PRELINK_USE_PRELINKER, g_prelinkAddr) < 0) {
+        INIT_LOGE("prelink prctl failed, errno = %d", errno);
+        fcntl(g_prelinkMemfd, F_SETFD, FD_CLOEXEC);
+    }
+}
 
 static int FdHolderSockInit(void)
 {
@@ -118,6 +251,8 @@ void SystemInit(void)
     if (settimeofday(NULL, &tz) == -1) {
         INIT_LOGE("Set time of day failed, err = %d", errno);
     }
+
+    StartPrelinker();
 }
 
 void LogInit(void)
@@ -299,6 +434,15 @@ static void SetInitPriority()
     INIT_CHECK_ONLY_ELOG(ret == 0, "set init priority failed");
 }
 
+static void PostInitTriggers(void)
+{
+    PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
+    PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
+    TriggerServices(START_MODE_BOOT);
+    PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
+    TriggerServices(START_MODE_NORMAL);
+}
+
 void SystemConfig(const char *uptime)
 {
     INIT_TIMING_STAT timingStat;
@@ -365,12 +509,11 @@ void SystemConfig(const char *uptime)
     HookMgrExecute(GetBootStageHookMgr(), INIT_POST_CFG_LOAD, (void *)&timingStat, (void *)&options);
 
     IsEnableSandbox();
+
+    PrelinkReady();
+
     // execute init
-    PostTrigger(EVENT_TRIGGER_BOOT, "pre-init", strlen("pre-init"));
-    PostTrigger(EVENT_TRIGGER_BOOT, "init", strlen("init"));
-    TriggerServices(START_MODE_BOOT);
-    PostTrigger(EVENT_TRIGGER_BOOT, "post-init", strlen("post-init"));
-    TriggerServices(START_MODE_NORMAL);
+    PostInitTriggers();
     clock_gettime(CLOCK_MONOTONIC, &(g_bootJob.startTime));
 }
 

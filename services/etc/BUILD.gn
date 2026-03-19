@@ -81,6 +81,12 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
   }
 
+  ohos_prebuilt_etc("init_prelinker_dso_list") {
+    source = "//base/startup/init/services/etc/init_prelinker_dso_list"
+    part_name = "init"
+    subsystem_name = "startup"
+  }
+
   ohos_prebuilt_etc("ueventd.cfg") {
     source = "//base/startup/init/services/etc/ueventd.cfg"
     relative_install_dir = "init"
