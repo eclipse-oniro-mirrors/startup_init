@@ -1494,7 +1494,7 @@ void LoadAccessTokenId(void)
 
 int GetKillServiceSig(const char *name)
 {
-    if (strcmp(name, "appspawn") == 0 || strcmp(name, "nwebspawn") == 0) {
+    if (strcmp(name, "appspawn") == 0 || strcmp(name, "nwebspawn") == 0 || strcmp(name, "appspawndf") == 0) {
         return SIGTERM;
     }
     return SIGKILL;
