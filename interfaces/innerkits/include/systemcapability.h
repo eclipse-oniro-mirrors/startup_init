@@ -26,7 +26,7 @@ extern "C" {
 
 
 bool HasSystemCapability(const char *cap);
-bool CheckApiVersionGreaterOrEqual(int majorVersion, int minorVersion, int patchVersion);
+bool CheckApiVersionGreaterOrEqual(int majorVersion, int minorVersion, int patchVersion, bool isCheckOS = false);
 
 #ifdef __cplusplus
 #if __cplusplus

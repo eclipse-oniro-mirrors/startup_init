@@ -341,27 +341,62 @@ static napi_value GetSdkPatchApiVersion(napi_env env, napi_callback_info info)
 
 static napi_value ApiAvailable(napi_env env, napi_callback_info info)
 {
-    size_t argc = 3;
-    napi_value argv[3] = {nullptr};
+    size_t argc = 1;
+    napi_value argv[1] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (status != napi_ok || argc < 3) {
+    
+    if (status != napi_ok || argc < 1) {
         napi_value result = nullptr;
         napi_get_boolean(env, false, &result);
         return result;
     }
-    int32_t majorVersion = 0;
-    int32_t minorVersion = 0;
-    int32_t patchVersion = 0;
-    if (napi_get_value_int32(env, argv[0], &majorVersion) != napi_ok ||
-        napi_get_value_int32(env, argv[1], &minorVersion) != napi_ok ||
-        napi_get_value_int32(env, argv[2], &patchVersion) != napi_ok) {
+
+    int32_t majorApiVersion = 0;
+    int32_t minorApiVersion = 0;
+    int32_t patchApiVersion = 0;
+    bool parsed = false;
+
+    // 判断参数类型
+    napi_valuetype type;
+    napi_typeof(env, argv[0], &type);
+
+    if (type == napi_number) {
+        // 参数是 number版本号，如 apiAvailable(8)
+        double value;
+        if (napi_get_value_double(env, argv[0], &value) == napi_ok) {
+            majorApiVersion = static_cast<int32_t>(value);
+            minorApiVersion = 0;
+            patchApiVersion = 0;
+            parsed = true;
+        }
+    }
+    else if (type == napi_string) {
+        // 参数是 string，如 apiAvailable("5.5.0")
+        char versionStr[64] = {0};
+        size_t strLen = 0;
+        if (napi_get_value_string_utf8(env, argv[0], versionStr, sizeof(versionStr), &strLen) == napi_ok) {
+            int parsedCount = sscanf_s(versionStr, "%d.%d.%d", &majorApiVersion, &minorApiVersion, &patchApiVersion);
+            if (parsedCount == 3) { // 3，严格限制传3个整数
+                if (majorApiVersion > 0 && minorApiVersion >= 0 && patchApiVersion >= 0) {
+                    parsed = true;
+                } else {
+                    parsed = false;
+                }
+            } else {
+                parsed = false; // "8"、"8.1"、"5f.3.2" 等一切非三段输入
+            }
+        }
+    }
+
+    if (!parsed) {
         napi_value result = nullptr;
         napi_get_boolean(env, false, &result);
         return result;
     }
-    bool ret = CheckApiVersionGreaterOrEqual(majorVersion, minorVersion, patchVersion);
+
+    bool ret = CheckApiVersionGreaterOrEqual(majorApiVersion, minorApiVersion, patchApiVersion, true);
     napi_value napiValue = nullptr;
-    NAPI_CALL(env, napi_get_boolean(env, ret, &napiValue));
+    napi_get_boolean(env, ret, &napiValue);
     return napiValue;
 }
 
