@@ -55,11 +55,10 @@ bool HasSystemCapability(const char *cap)
     return true;
 }
 
-#define API_VERSION_MAX 99
+#define API_VERSION_MAX 999
 
-bool CheckApiVersionGreaterOrEqual(int majorVersion, int minorVersion, int patchVersion, bool isCheckOS)
+bool CheckApiVersionGreaterOrEqual(int majorVersion, int minorVersion, int patchVersion)
 {
-    // 版本号校验
     if (majorVersion > API_VERSION_MAX || majorVersion < 1) {
         return false;
     }
@@ -69,50 +68,16 @@ bool CheckApiVersionGreaterOrEqual(int majorVersion, int minorVersion, int patch
     if (patchVersion > API_VERSION_MAX || patchVersion < 0) {
         return false;
     }
-    
-    int osMajorVersion = 0;
-    int osMinorVersion = 0;
-    int osPatchVersion = 0;
-
-    // 是否需要校验系统是 HarmonyOS 还是 OpenHarmony
-    if (isCheckOS)
-    {
-        //  获取发行版系统名称
-        const char *distributionOSName = GetDistributionOSName();
-        if (distributionOSName != NULL && strcmp(distributionOSName, "HarmonyOS") == 0)
-        {
-            // 获取发行版系统版本号
-            const char *distributionOSVersion = GetDistributionOSVersion();
-            int32_t osMajorDistribution = 0;
-            int32_t osMinorDistribution = 0;
-            int32_t osPatchDistribution = 0;
-            int parsedCount = sscanf_s(distributionOSVersion, "%d.%d.%d", &osMajorDistribution,
-                &osMinorDistribution, &osPatchDistribution);
-            if (parsedCount == 3) { // 3，严格限制为3个整数
-                if (osMajorDistribution > 0 && osMinorDistribution >= 0 && osPatchDistribution >= 0) {
-                    // 使用 HarmonyOS 系统的版本号进行比对
-                    osMajorVersion = osMajorDistribution;
-                    osMinorVersion = osMinorDistribution;
-                    osPatchVersion = osPatchDistribution;                    
-                    BEGET_LOGI("CheckApiVersionGreaterOrEqual MajorVer:%d, Minor:%d, Patch %d", osMajorVersion,
-                        osMinorVersion, osPatchVersion);
-                }
-            }
-        }
-    }
-    // 没有获取到osMajorVersion版本号，使用OpenHarmony版本号
-    if (osMajorVersion <= 0) {
-        osMajorVersion = GetSdkApiVersion();
-        osMinorVersion = GetSdkMinorApiVersion();
-        osPatchVersion = GetSdkPatchApiVersion();
-    }
  
+    const int osMajorVersion = GetSdkApiVersion();
     if (majorVersion != osMajorVersion) {
         return osMajorVersion > majorVersion;
     }
     
+    const int osMinorVersion = GetSdkMinorApiVersion();
     if (minorVersion != osMinorVersion) {
         return osMinorVersion > minorVersion;
     }
-    return osPatchVersion >= patchVersion;
+    
+    return GetSdkPatchApiVersion() >= patchVersion;
 }
