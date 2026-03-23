@@ -20,6 +20,7 @@
 #include "napi/native_node_api.h"
 #include "napi/native_common.h"
 #include "parameter.h"
+#include "systemcapability.h"
 #include "sysversion.h"
 #ifdef DEPENDENT_APPEXECFWK_BASE
 #include "bundlemgr/bundle_mgr_proxy.h"
@@ -335,6 +336,32 @@ static napi_value GetSdkPatchApiVersion(napi_env env, napi_callback_info info)
     int sdkPatchApiVersion = GetSdkPatchApiVersion();
 
     NAPI_CALL(env, napi_create_int32(env, sdkPatchApiVersion, &napiValue));
+    return napiValue;
+}
+
+static napi_value ApiAvailable(napi_env env, napi_callback_info info)
+{
+    size_t argc = 3;
+    napi_value argv[3] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < 3) {
+        napi_value result = nullptr;
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
+    int32_t majorVersion = 0;
+    int32_t minorVersion = 0;
+    int32_t patchVersion = 0;
+    if (napi_get_value_int32(env, argv[0], &majorVersion) != napi_ok ||
+        napi_get_value_int32(env, argv[1], &minorVersion) != napi_ok ||
+        napi_get_value_int32(env, argv[2], &patchVersion) != napi_ok) {
+        napi_value result = nullptr;
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
+    bool ret = CheckApiVersionGreaterOrEqual(majorVersion, minorVersion, patchVersion);
+    napi_value napiValue = nullptr;
+    NAPI_CALL(env, napi_get_boolean(env, ret, &napiValue));
     return napiValue;
 }
 
@@ -670,6 +697,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"sdkApiVersion", nullptr, nullptr, GetSdkApiVersion, nullptr, nullptr, napi_default, nullptr},
         {"sdkMinorApiVersion", nullptr, nullptr, GetSdkMinorApiVersion, nullptr, nullptr, napi_default, nullptr},
         {"sdkPatchApiVersion", nullptr, nullptr, GetSdkPatchApiVersion, nullptr, nullptr, napi_default, nullptr},
+        {"apiAvailable", nullptr, nullptr, ApiAvailable, nullptr, nullptr, napi_default, nullptr},
         {"firstApiVersion", nullptr, nullptr, GetFirstApiVersion, nullptr, nullptr, napi_default, nullptr},
         {"versionId", nullptr, nullptr, GetVersionId, nullptr, nullptr, napi_default, nullptr},
         {"buildType", nullptr, nullptr, GetBuildType, nullptr, nullptr, napi_default, nullptr},
