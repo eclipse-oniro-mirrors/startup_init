@@ -705,4 +705,19 @@ HWTEST_F(ServiceUnitTest, TestKernelPermServiceNameError, TestSize.Level0)
     ReleaseService(service);
     cJSON_Delete(jobItem);
 }
+
+HWTEST_F(ServiceUnitTest, TestGetKillServiceSig, TestSize.Level0)
+{
+    int sig = GetKillServiceSig("appspawn");
+    EXPECT_EQ(sig, SIGTERM);
+
+    sig = GetKillServiceSig("nwebspawn");
+    EXPECT_EQ(sig, SIGTERM);
+
+    sig = GetKillServiceSig("appspawndf");
+    EXPECT_EQ(sig, SIGTERM);
+
+    sig = GetKillServiceSig("normal_service");
+    EXPECT_EQ(sig, SIGKILL);
+}
 } // namespace init_ut
