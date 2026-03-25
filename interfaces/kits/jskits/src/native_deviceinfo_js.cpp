@@ -339,6 +339,12 @@ static napi_value GetSdkPatchApiVersion(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
+#define API_VERSION_MAX 99
+#define API_VERSION_NUM 3
+#define TARGET_OS_NAME_PART1 "Harmony"
+#define TARGET_OS_NAME_PART2 "OS"
+#define TARGET_OS_NAME TARGET_OS_NAME_PART1 TARGET_OS_NAME_PART2
+
 static bool ParseVersionFromArg(napi_env env, napi_value arg,
     int32_t* majorVersion, int32_t* minorVersion, int32_t* patchVersion)
 {
@@ -353,8 +359,8 @@ static bool ParseVersionFromArg(napi_env env, napi_value arg,
             return false;
         }
         *majorVersion = static_cast<int32_t>(value);
-        *minor = 0;
-        *patch = 0;
+        *minorVersion = 0;
+        *patchVersion = 0;
         return (*majorVersion > 0); // major 必须 >=1
     }
 
@@ -364,8 +370,14 @@ static bool ParseVersionFromArg(napi_env env, napi_value arg,
         if (napi_get_value_string_utf8(env, arg, str, sizeof(str), &len) != napi_ok) {
             return false;
         }
-        int count = sscanf_s(str, "%d.%d.%d", majorVersion, minorVersion, patchVersion);
-        if (count == 3 && *majorVersion > 0 && *minorVersion >= 0 && *patchVersion >= 0) { // 3，严格限制传3个整数
+        int major = 0;
+        int minor = 0;
+        int patch = 0;
+        int count = sscanf_s(str, "%d.%d.%d", &major, &minor, &patch);
+        if (count == API_VERSION_NUM &&  major > 0 && minor >= 0 && patch >= 0) {
+            *majorVersion = static_cast<int32_t>(major);
+            *minorVersion = static_cast<int32_t>(minor);
+            *patchVersion = static_cast<int32_t>(patch);
             return true;
         }
         // 其他格式（如 "8"、"5.1"、"5f.3.2"）视为非法
@@ -375,9 +387,7 @@ static bool ParseVersionFromArg(napi_env env, napi_value arg,
     return false;
 }
 
-#define API_VERSION_MAX 99
-
-// 通过判断系统是 HarmonyOS 还是 OpenHarmony 进行版本号对比
+// 通过判断系统是 HO 还是 OH 进行版本号对比
 static bool CheckApiVersionGreaterOrEqualByOS(int majorVersion, int minorVersion, int patchVersion)
 {
     if (majorVersion > API_VERSION_MAX || majorVersion < 1) {
@@ -396,25 +406,26 @@ static bool CheckApiVersionGreaterOrEqualByOS(int majorVersion, int minorVersion
     bool useHarmonyOSVersion = false;
 
     const char* distributionOSName = GetDistributionOSName();
-    if (distributionOSName != nullptr && strcmp(distributionOSName, "HarmonyOS") == 0) {
+    if (distributionOSName != nullptr && strcmp(distributionOSName, TARGET_OS_NAME) == 0) {
         const char* distributionOSVersion = GetDistributionOSVersion();
         if (distributionOSVersion != nullptr) {
             int32_t osMajorDistribution = 0;
- 	        int32_t osMinorDistribution = 0;
- 	        int32_t osPatchDistribution = 0;
- 	        int parsedCount = sscanf_s(distributionOSVersion, "%d.%d.%d", &osMajorDistribution,
- 	            &osMinorDistribution, &osPatchDistribution);
-            if (parsedCount == 3 && osMajorDistribution > 0 && osMinorDistribution >= 0 && osPatchDistribution >= 0) {
+            int32_t osMinorDistribution = 0;
+            int32_t osPatchDistribution = 0;
+            int parsedCount = sscanf_s(distributionOSVersion, "%d.%d.%d",
+                &osMajorDistribution, &osMinorDistribution, &osPatchDistribution);
+            if (parsedCount == API_VERSION_NUM && osMajorDistribution > 0 && osMinorDistribution >= 0 &&
+                osPatchDistribution >= 0) {
                 osMajor = osMajorDistribution;
                 osMinor = osMinorDistribution;
                 osPatch = osPatchDistribution;
                 useHarmonyOSVersion = true;
-                BEGET_LOGI("Using HarmonyOS version: %d.%d.%d", osMajor, osMinor, osPatch);
+                BEGET_LOGI("Using HO version: %d.%d.%d", osMajor, osMinor, osPatch);
             }
         }
     }
 
-    // 如果未成功使用 HarmonyOS 版本，则回退到 OpenHarmony SDK 版本
+    // 如果未成功使用 HO 版本，则回退到 OH SDK 版本
     if (!useHarmonyOSVersion) {
         osMajor = GetSdkApiVersion();
         osMinor = GetSdkMinorApiVersion();
@@ -436,7 +447,6 @@ static napi_value ApiAvailable(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value argv[1] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    
     if (status != napi_ok || argc < 1) {
         napi_value result;
         napi_get_boolean(env, false, &result);
@@ -448,7 +458,6 @@ static napi_value ApiAvailable(napi_env env, napi_callback_info info)
     int32_t patchVersion = 0;
     // 解析版本号
     bool parsed = ParseVersionFromArg(env, argv[0], &majorVersion, &minorVersion, &patchVersion);
-
     bool ret = false;
     if (parsed) {
         ret = CheckApiVersionGreaterOrEqualByOS(majorVersion, minorVersion, patchVersion);
