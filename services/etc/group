@@ -41,7 +41,7 @@ data_reserve:x:1065:
 ressched:x:1096:
 hiview:x:1201:
 hidumper_service:x:1212:
-shell:x:2000:hiview,task_manager_service
+shell:x:2000:hiview,task_manager_service,security_guard
 cache:x:2001:
 app_install:x:2002:
 net_bw_stats:x:3006:
