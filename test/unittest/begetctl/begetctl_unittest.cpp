@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -770,6 +770,160 @@ HWTEST_F(BegetctlUnitTest, Init_TestUid_002, TestSize.Level1)
     char arg1[] = "uid";
     char arg2[] = "";
     char* args[] = { arg0, arg1, arg2, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestAppspawnTime_001, TestSize.Level1)
+{
+    char arg0[] = "appspawn_time";
+    char* args[] = { arg0, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestDumpServiceLoop_001, TestSize.Level1)
+{
+    char arg0[] = "dump_service";
+    char arg1[] = "loop";
+    char* args[] = { arg0, arg1, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestDumpServiceByName_001, TestSize.Level1)
+{
+    char arg0[] = "dump_service";
+    char arg1[] = "foundation";
+    char* args[] = { arg0, arg1, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestParamDumpVerbose_001, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    char arg0[] = "param";
+    char arg1[] = "dump";
+    char arg2[] = "verbose";
+    char* args[] = { arg0, arg1, arg2, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestParamDumpIndex_001, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    char arg0[] = "param";
+    char arg1[] = "dump";
+    char arg2[] = "1";
+    char* args[] = { arg0, arg1, arg2, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestParamSave_001, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    char arg0[] = "param";
+    char arg1[] = "save";
+    char* args[] = { arg0, arg1, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestParamCd_001, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    BShellEnvSetParam(GetShellHandle(), PARAM_REVERESD_NAME_CURR_PARAMETER, "", PARAM_STRING, (void *)"");
+    char arg0[] = "param";
+    char arg1[] = "cd";
+    char arg2[] = "ohos.";
+    char* args[] = { arg0, arg1, arg2, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestParamPwd_001, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    char arg0[] = "param";
+    char arg1[] = "pwd";
+    char* args[] = { arg0, arg1, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestParamCat_001, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    SystemWriteParam("test.param.cat", "test_value");
+    char arg0[] = "param";
+    char arg1[] = "cat";
+    char arg2[] = "test.param.cat";
+    char* args[] = { arg0, arg1, arg2, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestShellSetInvalid_001, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    char arg0[] = "param";
+    char arg1[] = "set";
+    char* args[] = { arg0, arg1, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestShellWaitTimeout_001, TestSize.Level1)
+{
+    BShellParamCmdRegister(GetShellHandle(), 0);
+    char arg0[] = "param";
+    char arg1[] = "wait";
+    char arg2[] = "test.wait.param";
+    char arg3[] = "*";
+    char arg4[] = "5";
+    char* args[] = { arg0, arg1, arg2, arg3, arg4, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestServiceControlInvalid_001, TestSize.Level1)
+{
+    char arg0[] = "service_control";
+    char arg1[] = "invalid_cmd";
+    char arg2[] = "test";
+    char* args[] = { arg0, arg1, arg2, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestSandboxInvalid_001, TestSize.Level1)
+{
+    char arg0[] = "sandbox";
+    char arg1[] = "--invalid";
+    char* args[] = { arg0, arg1, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestModulectlInvalid_001, TestSize.Level1)
+{
+    char arg0[] = "modulectl";
+    char arg1[] = "invalid";
+    char* args[] = { arg0, arg1, nullptr };
+    int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(BegetctlUnitTest, Init_TestSetLogInvalid_001, TestSize.Level1)
+{
+    char arg0[] = "set";
+    char arg1[] = "log";
+    char arg2[] = "level";
+    char arg3[] = "999";
+    char* args[] = { arg0, arg1, arg2, arg3, nullptr };
     int ret = BShellEnvDirectExecute(GetShellHandle(), sizeof(args) / sizeof(args[0]) - 1, args);
     EXPECT_EQ(ret, 0);
 }
