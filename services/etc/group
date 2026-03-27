@@ -119,6 +119,7 @@ face_auth_host:x:1114:
 fingerprint_auth_host:x:1115:
 backup:x:1089:
 storage_manager:x:1090:
+disk_manager:x:1091:
 net_manager:x:1099:
 netsysnative:x:1098:
 netsys_socket:x:1097:
