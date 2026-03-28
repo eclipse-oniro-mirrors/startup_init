@@ -339,6 +339,9 @@ static napi_value GetSdkPatchApiVersion(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
+#define DISTRIBUTION_OS_API_VER_MAX 999999
+#define DISTRIBUTION_OS_API_VER_MIN 10000
+#define DISTRIBUTION_PERCENT 100
 #define API_VERSION_MAX 99
 #define API_VERSION_NUM 3
 #define TARGET_OS_NAME_PART1 "Harmony"
@@ -403,24 +406,29 @@ static bool CheckApiVersionGreaterOrEqualByOS(int majorVersion, int minorVersion
     int32_t osMajor = 0;
     int32_t osMinor = 0;
     int32_t osPatch = 0;
+    // 使用HO版本进行比对
     bool useHarmonyOSVersion = false;
 
     const char* distributionOSName = GetDistributionOSName();
     if (distributionOSName != nullptr && strcmp(distributionOSName, TARGET_OS_NAME) == 0) {
-        const char* distributionOSVersion = GetDistributionOSVersion();
-        if (distributionOSVersion != nullptr) {
-            int32_t osMajorDistribution = 0;
-            int32_t osMinorDistribution = 0;
-            int32_t osPatchDistribution = 0;
-            int parsedCount = sscanf_s(distributionOSVersion, "%d.%d.%d",
-                &osMajorDistribution, &osMinorDistribution, &osPatchDistribution);
-            if (parsedCount == API_VERSION_NUM && osMajorDistribution > 0 && osMinorDistribution >= 0 &&
-                osPatchDistribution >= 0) {
+        int32_t distributionOSApiVersion = GetDistributionOSApiVersion();
+        // 校验范围：必须在 [10000, 999999] 之间（对应 1.0.0 ~ 99.99.99）
+        if (distributionOSApiVersion >= DISTRIBUTION_OS_API_VER_MIN &&
+            distributionOSApiVersion <= DISTRIBUTION_OS_API_VER_MAX) {
+            int32_t osMajorDistribution = distributionOSApiVersion / DISTRIBUTION_OS_API_VER_MIN;
+            int32_t osMinorDistribution = (distributionOSApiVersion / DISTRIBUTION_PERCENT) % DISTRIBUTION_PERCENT;
+            int32_t osPatchDistribution = distributionOSApiVersion % DISTRIBUTION_PERCENT;
+
+            // 再次校验各字段范围（防御性编程）
+            if (osMajorDistribution >= 1 && osMajorDistribution <= API_VERSION_MAX &&
+                osMinorDistribution >= 0 && osMinorDistribution <= API_VERSION_MAX &&
+                osPatchDistribution >= 0 && osPatchDistribution <= API_VERSION_MAX) {
                 osMajor = osMajorDistribution;
                 osMinor = osMinorDistribution;
                 osPatch = osPatchDistribution;
                 useHarmonyOSVersion = true;
-                BEGET_LOGI("Using HO version: %d.%d.%d", osMajor, osMinor, osPatch);
+                BEGET_LOGI("Using HO API version: %d.%d.%d (from %d)", osMajor, osMinor, osPatch,
+                    distributionOSApiVersion);
             }
         }
     }
@@ -449,7 +457,7 @@ static napi_value ApiAvailable(napi_env env, napi_callback_info info)
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (status != napi_ok || argc < 1) {
         napi_value result;
-        napi_get_boolean(env, false, &result);
+        NAPI_CALL(env, napi_get_boolean(env, false, &result));
         return result;
     }
 
@@ -464,7 +472,7 @@ static napi_value ApiAvailable(napi_env env, napi_callback_info info)
     }
 
     napi_value result;
-    napi_get_boolean(env, ret, &result);
+    NAPI_CALL(env, napi_get_boolean(env, ret, &result));
     return result;
 }
 
@@ -800,7 +808,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"sdkApiVersion", nullptr, nullptr, GetSdkApiVersion, nullptr, nullptr, napi_default, nullptr},
         {"sdkMinorApiVersion", nullptr, nullptr, GetSdkMinorApiVersion, nullptr, nullptr, napi_default, nullptr},
         {"sdkPatchApiVersion", nullptr, nullptr, GetSdkPatchApiVersion, nullptr, nullptr, napi_default, nullptr},
-        {"apiAvailable", nullptr, nullptr, ApiAvailable, nullptr, nullptr, napi_default, nullptr},
+        {"apiAvailable", nullptr, ApiAvailable, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"firstApiVersion", nullptr, nullptr, GetFirstApiVersion, nullptr, nullptr, napi_default, nullptr},
         {"versionId", nullptr, nullptr, GetVersionId, nullptr, nullptr, napi_default, nullptr},
         {"buildType", nullptr, nullptr, GetBuildType, nullptr, nullptr, napi_default, nullptr},
