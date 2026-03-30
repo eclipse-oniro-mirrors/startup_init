@@ -51,6 +51,7 @@ loadLibraryWithPermissionCheck("deviceInfo_taihe_native.z", "@ohos.deviceInfo")
 @get function getdistributionOSReleaseType(): String;
 @get function getdiskSN(): String;
 @get function getchipType(): String;
+@get function getdeviceColor(): String;
 
 @get function getsdkApiVersion(): i32;
 @get function getmajorVersion(): i32;

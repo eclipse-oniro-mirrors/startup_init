@@ -474,3 +474,13 @@ int GetBootCount(void)
 {
     return GetIntParameter("persist.startup.bootcount", -1);
 }
+
+const char *GetDeviceColor(void)
+{
+    static const char *deviceColor = NULL;
+    GetProperty("ohos.boot.backcolor", &deviceColor);
+    if (deviceColor == NULL) {
+        deviceColor = EMPTY_STR;
+    }
+    return deviceColor;
+}

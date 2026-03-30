@@ -577,6 +577,18 @@ static napi_value GetChipType(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
+static napi_value GetDeviceColor(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    const char *deviceColor = GetDeviceColor();
+    if (deviceColor == nullptr) {
+        deviceColor = "";
+    }
+
+    NAPI_CALL(env, napi_create_string_utf8(env, deviceColor, strlen(deviceColor), &napiValue));
+    return napiValue;
+}
+
 static napi_value GetDevUdid(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
@@ -832,6 +844,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"performanceClass", nullptr, nullptr, GetPerformanceClass, nullptr, nullptr, napi_default, nullptr},
         {"chipType", nullptr, nullptr, GetChipType, nullptr, nullptr, napi_default, nullptr},
         {"bootCount", nullptr, nullptr, GetBootCount, nullptr, nullptr, napi_default, nullptr},
+        {"deviceColor", nullptr, nullptr, GetDeviceColor, nullptr, nullptr, napi_default, nullptr},
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
 
