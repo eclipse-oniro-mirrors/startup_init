@@ -97,4 +97,7 @@ declare_args() {
 
   # init sa support
   init_feature_support_saspawn = false
+
+  #init umount fail set panic
+  init_feature_support_umount_panic = false
 }

@@ -1379,38 +1379,55 @@ static void MoveFrozenToThawed()
     const char *frozenPath = "/dev/frz/Frozen/cgroup.procs";
     const char *thawedPath = "/dev/frz/Thawed/cgroup.procs";
     
-    int frozenFd = open(frozenPath, O_RDONLY);
-    if (frozenFd == -1) {
+    FILE *frozenFile = fopen(frozenPath, "r");
+    if (frozenFile == NULL) {
         INIT_LOGE("open %s failed, err is %d", frozenPath, errno);
         return;
     }
 
-    int thawedFd = open(thawedPath, O_WRONLY);
+    int thawedFd = open(thawedPath, O_RDWR | O_APPEND);
     if (thawedFd == -1) {
         INIT_LOGE("open %s failed, err is %d", thawedPath, errno);
-        close(frozenFd);
+        fclose(frozenFile);
         return;
     }
 
-    char buffer[BUFFER_SIZE];
-    ssize_t readBytes;
-    while ((readBytes = read(frozenFd, buffer, sizeof(buffer))) > 0) {
-        ssize_t totalWrite = 0;
-        while (totalWrite < readBytes) {
-            ssize_t writeBytes = write(thawedFd, buffer + totalWrite, readBytes - totalWrite);
-            if (writeBytes == -1 && errno == EINTR) {
-                continue;
-            }
-            if (writeBytes == -1) {
-                INIT_LOGE("write to %s failed, err is %d", thawedPath, errno);
+    pid_t pid;
+    int successCount = 0;
+    int failCount = 0;
+    
+    while (fscanf_s(frozenFile, "%d\n", &pid) == 1 && pid > 0) {
+        char pidName[PATH_MAX] = {0};
+        int ret = snprintf_s(pidName, sizeof(pidName), sizeof(pidName) - 1, "%d", pid);
+        if (ret <= 0) {
+            INIT_LOGE("Failed to snprintf_s for pid %d, errno: %d", pid, errno);
+            failCount++;
+            continue;
+        }
+
+        ssize_t written;
+        size_t totalWritten = 0;
+        size_t pidLen = strlen(pidName);
+
+        while (totalWritten < pidLen) {
+            written = write(thawedFd, pidName + totalWritten, pidLen - totalWritten);
+            if (written < 0) {
                 break;
             }
-            totalWrite += writeBytes;
+            totalWritten += written;
+        }
+        
+        if (totalWritten == pidLen) {
+            successCount++;
+        } else {
+            failCount++;
         }
     }
-    close(frozenFd);
+
+    (void)fclose(frozenFile);
     close(thawedFd);
-    INIT_LOGI("move frozen to thawed end");
+    
+    INIT_LOGI("move frozen to thawed end, success: %d, failed: %d", successCount, failCount);
 }
 
 void StopAllServices(int flags, const char **exclude, int size,
