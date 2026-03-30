@@ -165,6 +165,8 @@ HWTEST_F(InitUnitTest, TestParseCfgByPriority, TestSize.Level1)
     EXPECT_EQ(ret, -1);
     ret = ParseCfgByPriority("etc/init");
     EXPECT_EQ(ret, 0);
+    ret = ParseCfgByPriority("abc/abc");
+    EXPECT_EQ(ret, -1);
 }
 
 HWTEST_F(InitUnitTest, FsDmCreateMultiTargetLinearDevice, TestSize.Level1)

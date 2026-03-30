@@ -307,7 +307,7 @@ static void DoCopy(const struct CmdArgs *ctx)
                 break;
             }
         }
-        fsync(dstFd);
+        INIT_CHECK(fsync(dstFd) != -1, INIT_LOGE("Failed to fsync for target: %d", errno));
     } while (0);
     INIT_CHECK(srcFd < 0, close(srcFd));
     INIT_CHECK(dstFd < 0, close(dstFd));
