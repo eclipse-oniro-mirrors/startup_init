@@ -209,6 +209,10 @@ ohos_executable("init") {
     defines += [ "ENABLE_HOOK_MGR" ]
   }
 
+  if (init_feature_support_umount_panic) {
+    defines += [ "ENABLE_UMOUNT_PANIC" ]
+  }
+
   if (defined(global_parts_info) &&
       defined(global_parts_info.developtools_hiprofiler)) {
     defines += [ "SUPPORT_PROFILER_HIDEBUG" ]

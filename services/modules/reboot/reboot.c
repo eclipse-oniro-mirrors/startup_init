@@ -69,6 +69,34 @@ static void ParseRebootReason(const char *name, int argc, const char **argv)
     PLUGIN_CHECK(ret >= 0, return, "ParseRebootReason: write poweroff reason failed\n");
 }
 
+typedef enum {
+    REBOOT_TYPE_CMD,
+    REBOOT_TYPE_SYSCALL_POWER_OFF,
+    REBOOT_TYPE_SYSCALL_RESTART2
+} RebootType;
+
+#ifndef STARTUP_INIT_TEST
+static void ExecuteRebootOrSyscall(RebootType type, int cmd, const char *arg)
+{
+    switch (type) {
+        case REBOOT_TYPE_CMD:
+            reboot(cmd);
+            break;
+        case REBOOT_TYPE_SYSCALL_POWER_OFF:
+            syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
+                    LINUX_REBOOT_CMD_POWER_OFF, arg);
+            break;
+        case REBOOT_TYPE_SYSCALL_RESTART2:
+            syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
+                    LINUX_REBOOT_CMD_RESTART2, arg);
+            break;
+    }
+    while (1) {
+        // init do nothing after reboot
+    }
+}
+#endif
+
 PLUGIN_STATIC int DoRoot_(const char *jobName, int type)
 {
     // by job to stop service and unmount
@@ -76,7 +104,8 @@ PLUGIN_STATIC int DoRoot_(const char *jobName, int type)
         DoJobNow(jobName);
     }
 #ifndef STARTUP_INIT_TEST
-    return reboot(type);
+    ExecuteRebootOrSyscall(REBOOT_TYPE_CMD, type, NULL);
+    return 0;
 #else
     return 0;
 #endif
@@ -130,7 +159,8 @@ static int DoRebootPanic(int id, const char *name, int argc, const char **argv)
 #ifndef STARTUP_INIT_TEST
     FILE *panic = fopen("/proc/sysrq-trigger", "wb");
     if (panic == NULL) {
-        return reboot(RB_AUTOBOOT);
+        ExecuteRebootOrSyscall(REBOOT_TYPE_CMD, RB_AUTOBOOT, NULL);
+        return 0;
     }
     if (fwrite((void *)"c", 1, 1, panic) != 1) {
         (void)fclose(panic);
@@ -159,8 +189,8 @@ PLUGIN_STATIC int DoRebootShutdown(int id, const char *name, int argc, const cha
         // by job to stop service and unmount
         DoJobNow("reboot");
 #ifndef STARTUP_INIT_TEST
-        return syscall(__NR_reboot,
-            LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_POWER_OFF, cmd + len);
+        ExecuteRebootOrSyscall(REBOOT_TYPE_SYSCALL_POWER_OFF, 0, cmd + len);
+        return 0;
 #else
         return 0;
 #endif
@@ -258,8 +288,8 @@ PLUGIN_STATIC int DoRebootOther(int id, const char *name, int argc, const char *
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
     DoJobNow("reboot");
 #ifndef STARTUP_INIT_TEST
-    return syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
-        LINUX_REBOOT_CMD_RESTART2, cmd + strlen("reboot,"));
+    ExecuteRebootOrSyscall(REBOOT_TYPE_SYSCALL_RESTART2, 0, cmd + strlen("reboot,"));
+    return 0;
 #else
     return 0;
 #endif
