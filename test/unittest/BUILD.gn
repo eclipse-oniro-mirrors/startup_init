@@ -430,7 +430,12 @@ ohos_unittest("init_unittest") {
         defined(global_parts_info.security_access_token)) {
       external_deps += [ "access_token:libaccesstoken_sdk" ]
       defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
-      sources += [ "deviceinfo/DeviceInfoUnittest.cpp" ]
+      sources += [
+        "deviceinfo/DeviceInfoUnittest.cpp",
+        "deviceinfo/device_info_service_unittest.cpp",
+        "deviceinfo/device_info_load_unittest.cpp",
+        "deviceinfo/device_info_kits_unittest.cpp",
+      ]
     }
     if (is_standard_system) {
       external_deps += [ "selinux:libselinux" ]

@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 const.ohos.version.security_patch=2026/03/01
-const.ohos.releasetype=Beta1
-const.ohos.apiversion=24
+const.ohos.releasetype=Beta
+const.ohos.apiversion=26
 const.ohos.apiminorversion=0
 const.ohos.apipatchversion=0
-const.ohos.fullname=OpenHarmony-7.0.0.18
+const.ohos.fullname=OpenHarmony-7.0.0.19
