@@ -62,6 +62,9 @@ declare_args() {
   init_begetutil_extra_modules = ""
   init_extra_static_modules = ""
 
+  # reboot addon module
+  init_reboot_addon_modules = ""
+
   init_use_encaps = false
 
   # erofs overlay feature switch

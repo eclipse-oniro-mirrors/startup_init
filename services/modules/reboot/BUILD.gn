@@ -33,6 +33,11 @@ ohos_shared_library("rebootmodule") {
     "bounds_checking_function:libsec_shared",
     "cJSON:cjson",
   ]
+
+  if (init_reboot_addon_modules != "") {
+    external_deps += [ init_reboot_addon_modules ]
+  }
+
   if (!defined(ohos_lite)) {
     include_dirs += [ "//base/startup/init/services/modules/sysevent" ]
     sources +=

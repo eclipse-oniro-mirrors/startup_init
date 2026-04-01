@@ -17,6 +17,7 @@
 #include <linux/reboot.h>
 #include <sys/reboot.h>
 #include <sys/syscall.h>
+#include <errno.h>
 
 #include "reboot_adp.h"
 #include "init_cmdexecutor.h"
@@ -67,6 +68,11 @@ static void ParseRebootReason(const char *name, int argc, const char **argv)
     }
     ret = WritePowerOffReason(str);
     PLUGIN_CHECK(ret >= 0, return, "ParseRebootReason: write poweroff reason failed\n");
+}
+
+__attribute__((weak)) int RebootAddon(const char *name, int argc, const char **argv)
+{
+    return ENOSYS;
 }
 
 typedef enum {
@@ -180,6 +186,10 @@ PLUGIN_STATIC int DoRebootShutdown(int id, const char *name, int argc, const cha
     ReportStartupReboot(argv[0]);
 #endif
     ParseRebootReason(name, argc, argv);
+    int ret = RebootAddon(name, argc, argv);
+    if (ret != ENOSYS && ret <= 0) {
+        return ret;
+    }
     // clear misc
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
     const size_t len = strlen("reboot,");
@@ -210,6 +220,10 @@ static int DoRebootUpdater(int id, const char *name, int argc, const char **argv
     ParseRebootReason(name, argc, argv);
     int ret = UpdateMiscMessage(argv[0], "updater", "updater:", "boot_updater");
     if (ret == 0) {
+        ret = RebootAddon(name, argc, argv);
+        if (ret != ENOSYS && ret <= 0) {
+            return ret;
+        }
         return DoRoot_("reboot", RB_AUTOBOOT);
     }
     return ret;
@@ -286,6 +300,10 @@ PLUGIN_STATIC int DoRebootOther(int id, const char *name, int argc, const char *
     ParseRebootReason(name, argc, argv);
     // clear misc
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
+    int ret = RebootAddon(name, argc, argv);
+    if (ret != ENOSYS && ret <= 0) {
+        return ret;
+    }
     DoJobNow("reboot");
 #ifndef STARTUP_INIT_TEST
     ExecuteRebootOrSyscall(REBOOT_TYPE_SYSCALL_RESTART2, 0, cmd + strlen("reboot,"));
