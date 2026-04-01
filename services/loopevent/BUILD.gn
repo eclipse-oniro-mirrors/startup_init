@@ -54,10 +54,11 @@ if (defined(ohos_lite)) {
 } else {
   import("//build/ohos.gni")
 
-  ohos_static_library("loopevent") {
+  ohos_shared_library("loopevent") {
     sources = common_sources
     public_configs = [ ":exported_header_files" ]
     include_dirs = common_include
+    deps = [ "//base/startup/init/services/log:agent_log" ]
     external_deps = [ "bounds_checking_function:libsec_static" ]
     defines = [ "_GNU_SOURCE" ]
     part_name = "init"
