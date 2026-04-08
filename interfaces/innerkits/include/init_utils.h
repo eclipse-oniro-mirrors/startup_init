@@ -74,6 +74,12 @@ char *ReadFileToBuf(const char *configFile);
 int GetProcCmdlineValue(const char *name, const char *buffer, char *value, int length);
 char *ReadFileData(const char *fileName);
 
+enum ResizeMode {
+    NO_NEED_RESIZE = 0,
+    RESIZE_NORMAL,
+    RESIZE_META_NO_CHANGE
+};
+
 typedef struct INIT_TIMING_STAT {
     struct timespec startTime;
     struct timespec endTime;
