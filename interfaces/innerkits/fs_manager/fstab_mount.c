@@ -338,7 +338,6 @@ static int BuildResizeArgs(const FstabItem *item, const unsigned long long size,
     if (kdumpResult == RESIZE_META_NO_CHANGE) {
         BEGET_LOGI("add --meta-no-change para for resize");
         argv[argc++] = "--meta-no-change";
-        argv[argc++] = "-d1";
     }
 
     if (size != 0) {
@@ -348,7 +347,6 @@ static int BuildResizeArgs(const FstabItem *item, const unsigned long long size,
         if (len <= 0) {
             BEGET_LOGE("Write buffer size failed.");
         }
-        BEGET_LOGI("add -t para for resize, sizeStr=%s", sizeStr);
         argv[argc++] = "-t";
         argv[argc++] = sizeStr;
     }
