@@ -222,7 +222,24 @@ ohos_unittest("init_unittest") {
   }
 
   sources += [
-    "begetctl/begetctl_unittest.cpp",
+    # 模块化测试文件
+    "begetctl/begetctl_param_basic_test.cpp",        # param ls/get/set/wait/shell
+    "begetctl/begetctl_param_advanced_test.cpp",     # param dump/save/cd/pwd/cat
+    "begetctl/begetctl_partitionslot_test.cpp",     # partitionslot 命令
+    "begetctl/begetctl_bootchart_test.cpp",          # bootchart 命令
+    "begetctl/begetctl_dump_service_test.cpp",       # dump_service 命令
+    "begetctl/begetctl_modulectl_test.cpp",          # modulectl 命令
+    "begetctl/begetctl_service_control_test.cpp",    # service_control 命令
+    "begetctl/begetctl_loglevel_test.cpp",          # setloglevel/getloglevel
+    "begetctl/begetctl_sandbox_test.cpp",            # sandbox 命令
+    "begetctl/begetctl_reboot_test.cpp",             # reboot 命令
+    "begetctl/begetctl_dac_test.cpp",                # dac 命令
+    "begetctl/begetctl_appspawn_test.cpp",           # appspawn_time 命令
+    "begetctl/begetctl_bootevent_test.cpp",          # bootevent 命令
+    "begetctl/begetctl_misc_daemon_test.cpp",        # misc_daemon 命令
+    "begetctl/begetctl_log_test.cpp",                # set/get log 传统命令
+    "begetctl/begetctl_edge_cases_test.cpp",         # 边界条件和错误处理
+    "begetctl/begetctl_advanced_coverage_test.cpp",  # 高级覆盖率测试
     "fs_manager/erofs/erofs_common_unittest.cpp",
     "fs_manager/erofs/erofs_mount_unittest.cpp",
     "fs_manager/erofs/erofs_remount_unittest.cpp",

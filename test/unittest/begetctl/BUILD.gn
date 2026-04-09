@@ -1,0 +1,381 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/startup/init/begetd.gni")
+import("//build/test.gni")
+
+################################################################################
+# begetctl 单元测试配置
+################################################################################
+
+config("begetctl_utest_config") {
+  visibility = [ ":*" ]
+
+  cflags = [
+    "-Wno-implicit-fallthrough",
+    "-Wno-unused-function",
+    "-Wno-unused-private-field",
+    "-Wno-error=unused-function",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+
+  cflags_cc = [
+    "-Wno-implicit-fallthrough",
+    "-fexceptions",
+    "-Wno-error=unused-function",
+  ]
+}
+
+################################################################################
+# begetctl 参数命令测试
+################################################################################
+
+ohos_unittest("init_begetctl_unittest") {
+  module_out_path = "init/init"
+
+  # 测试源文件
+  sources = [
+    # Mock 源文件
+    "mock/shell_mock.cpp",
+
+    # 测试源文件
+    "begetctl_param_basic_test.cpp",
+    "begetctl_param_advanced_test.cpp",
+    "begetctl_partitionslot_test.cpp",
+    "begetctl_bootchart_test.cpp",
+    "begetctl_dump_service_test.cpp",
+    "begetctl_modulectl_test.cpp",
+    "begetctl_service_control_test.cpp",
+    "begetctl_loglevel_test.cpp",
+    "begetctl_sandbox_test.cpp",
+    "begetctl_reboot_test.cpp",
+    "begetctl_dac_test.cpp",
+    "begetctl_appspawn_test.cpp",
+    "begetctl_bootevent_test.cpp",
+    "begetctl_misc_daemon_test.cpp",
+    "begetctl_log_test.cpp",
+    "begetctl_edge_cases_test.cpp",
+    "begetctl_advanced_coverage_test.cpp",
+
+    # 被测源文件 - begetctl相关
+    "//base/startup/init/services/begetctl/begetctl_cmd.c",
+    "//base/startup/init/services/begetctl/param_cmd.c",
+    "//base/startup/init/services/begetctl/shell/shell_bas.c",
+    "//base/startup/init/services/begetctl/shell/shell_main.c",
+    "//base/startup/init/services/begetctl/setloglevel.c",
+    "//base/startup/init/services/begetctl/bootchart_cmd.c",
+    "//base/startup/init/services/begetctl/dump_service.c",
+    "//base/startup/init/services/begetctl/modulectl.c",
+    "//base/startup/init/services/begetctl/service_control.c",
+    "//base/startup/init/services/begetctl/init_cmd_reboot.c",
+    "//base/startup/init/services/begetctl/appspawntime_cmd.c",
+
+    # 参数服务相关源文件
+    "//base/startup/init/services/param/adapter/param_dac.c",
+    "//base/startup/init/services/param/adapter/param_persistadp.c",
+    "//base/startup/init/services/param/base/param_base.c",
+    "//base/startup/init/services/param/base/param_comm.c",
+    "//base/startup/init/services/param/base/param_trie.c",
+    "//base/startup/init/services/param/linux/param_message.c",
+    "//base/startup/init/services/param/linux/param_msgadp.c",
+    "//base/startup/init/services/param/linux/param_osadp.c",
+    "//base/startup/init/services/param/linux/param_request.c",
+    "//base/startup/init/services/param/linux/param_service.c",
+    "//base/startup/init/services/param/manager/param_manager.c",
+    "//base/startup/init/services/param/manager/param_persist.c",
+    "//base/startup/init/services/param/manager/param_server.c",
+    "//base/startup/init/services/param/trigger/trigger_checker.c",
+    "//base/startup/init/services/param/trigger/trigger_manager.c",
+    "//base/startup/init/services/param/trigger/trigger_processor.c",
+
+    # 日志模块
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/log/init_log.c",
+
+    # 工具模块
+    "//base/startup/init/services/utils/init_hashmap.c",
+    "//base/startup/init/services/utils/init_utils.c",
+    "//base/startup/init/services/utils/list.c",
+
+    # 服务管理模块
+    "//base/startup/init/services/init/standard/init.c",
+    "//base/startup/init/services/init/standard/init_service.c",
+    "//base/startup/init/services/init/standard/init_cmds.c",
+    "//base/startup/init/services/init/standard/init_cmdexecutor.c",
+    "//base/startup/init/services/init/standard/init_control_fd_service.c",
+    "//base/startup/init/services/init/standard/init_signal_handler.c",
+    "//base/startup/init/services/init/standard/init_jobs.c",
+    "//base/startup/init/services/init/standard/init_reboot.c",
+    "//base/startup/init/services/init/init_service_manager.c",
+    "//base/startup/init/services/init/init_common_service.c",
+    "//base/startup/init/services/init/init_capability.c",
+    "//base/startup/init/services/init/init_common_cmds.c",
+    "//base/startup/init/services/init/init_config.c",
+    "//base/startup/init/services/init/init_group_manager.c",
+    "//base/startup/init/services/init/init_service_file.c",
+    "//base/startup/init/services/init/init_service_socket.c",
+    "//base/startup/init/services/init/standard/device.c",
+    "//base/startup/init/services/init/standard/init_mount.c",
+    "//base/startup/init/services/init/adapter/init_adapter.c",
+    "//base/startup/init/services/init/init_cgroup.c",
+
+    # loopevent模块
+    "//base/startup/init/services/loopevent/loop/le_loop.c",
+    "//base/startup/init/services/loopevent/loop/le_epoll.c",
+    "//base/startup/init/services/loopevent/task/le_task.c",
+    "//base/startup/init/services/loopevent/timer/le_timer.c",
+    "//base/startup/init/services/loopevent/signal/le_signal.c",
+    "//base/startup/init/services/loopevent/socket/le_socket.c",
+    "//base/startup/init/services/loopevent/task/le_streamtask.c",
+    "//base/startup/init/services/loopevent/task/le_asynctask.c",
+    "//base/startup/init/services/loopevent/task/le_watchtask.c",
+    "//base/startup/init/services/loopevent/idle/le_idle.c",
+    "//base/startup/init/services/loopevent/utils/le_utils.c",
+
+    # hook模块
+    "//base/startup/init/services/modules/init_hook/init_hook.c",
+    "//base/startup/init/services/modules/init_hook/param_hook.c",
+    "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/init_modulemgr.c",
+    "//base/startup/init/interfaces/innerkits/modulemgr/modulemgr.c",
+    "//base/startup/init/services/init/bootstagehooker.c",
+    "//base/startup/init/interfaces/innerkits/service_control/service_control.c",
+
+    # control_fd模块
+    "//base/startup/init/interfaces/innerkits/control_fd/control_fd_client.c",
+    "//base/startup/init/interfaces/innerkits/control_fd/control_fd_service.c",
+
+    # fd_holder模块
+    "//base/startup/init/interfaces/innerkits/fd_holder/fd_holder.c",
+    "//base/startup/init/interfaces/innerkits/fd_holder/fd_holder_internal.c",
+    "//base/startup/init/services/init/standard/fd_holder_service.c",
+
+    # fs_manager模块
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_mount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_overlay_common.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_remount_overlay.c",
+    "//base/startup/init/remount/remount_overlay.c",
+
+    # 内核接口模块
+    "//base/startup/init/interfaces/innerkits/socket/init_socket.c",
+
+    # reboot模块
+    "//base/startup/init/interfaces/innerkits/reboot/init_reboot_innerkits.c",
+    "//base/startup/init/services/modules/reboot/reboot.c",
+    "//base/startup/init/services/modules/reboot/reboot_static.c",
+    "//base/startup/init/services/modules/reboot/reboot_misc.c",
+
+    # selinux 模块
+    "//base/startup/init/services/modules/selinux/selinux_adp.c",
+    "//base/startup/init/services/modules/selinux/selinux_static.c",
+
+    # 其他必要模块
+    "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
+    "//base/startup/init/interfaces/innerkits/service_watcher/service_watcher.c",
+    "//base/startup/init/interfaces/innerkits/syscap/init_syscap.c",
+
+    # init_eng模块
+    "//base/startup/init/services/modules/init_eng/init_eng.c",
+    "//base/startup/init/services/modules/init_eng/init_eng_static.c",
+
+    # bootevent模块
+    "//base/startup/init/services/modules/bootevent/bootevent.c",
+
+    # udid模块
+    "//base/startup/init/services/modules/udid/udid_adp.c",
+    "//base/startup/init/services/modules/udid/udid_comm.c",
+    "//base/startup/init/services/modules/udid/udid_static.c",
+
+    # encaps模块
+    "//base/startup/init/services/modules/encaps/encaps_static.c",
+
+    # sysevent模块
+    "//base/startup/init/services/modules/sysevent/init_hisysevent.c",
+    "//base/startup/init/services/modules/sysevent/startup_time_event.c",
+    "//base/startup/init/services/modules/sysevent/sys_event.c",
+
+    # crashhandler模块
+    "//base/startup/init/services/modules/crashhandler/crash_handler.c",
+
+    # trace模块
+    "//base/startup/init/services/modules/trace/init_trace.c",
+
+    # init_context模块
+    "//base/startup/init/services/modules/init_context/init_context.c",
+    "//base/startup/init/services/modules/init_context/init_context_static.c",
+
+    # ueventd模块
+    "//base/startup/init/ueventd/ueventd.c",
+    "//base/startup/init/ueventd/standard/ueventd_parameter.c",
+    "//base/startup/init/ueventd/ueventd_device_handler.c",
+    "//base/startup/init/ueventd/ueventd_firmware_handler.c",
+    "//base/startup/init/ueventd/ueventd_read_cfg.c",
+    "//base/startup/init/ueventd/ueventd_socket.c",
+
+    # device_info模块
+    "//base/startup/init/device_info/device_info.cpp",
+    "//base/startup/init/device_info/device_info_service.cpp",
+
+    # sandbox模块
+    "//base/startup/init/services/sandbox/sandbox.c",
+    "//base/startup/init/services/sandbox/sandbox_namespace.c",
+    "//base/startup/init/services/begetctl/sandbox.cpp",
+  ]
+
+  # Mock 相关源文件
+  sources += [
+    "//base/startup/init/test/unittest/param/param_stub.cpp",
+    "//base/startup/init/test/unittest/modules/context_unittest.cpp",
+  ]
+
+  # 包含目录
+  include_dirs = [
+    # begetctl 头文件
+    "//base/startup/init/services/begetctl",
+    "//base/startup/init/services/begetctl/shell",
+
+    # 测试头文件
+    "//base/startup/init/test/unittest/begetctl",
+    "//base/startup/init/test/unittest/begetctl/mock",
+    "//base/startup/init/test/unittest/param",
+
+    # 公共头文件
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/interfaces/innerkits/include/syspara",
+    "//base/startup/init/interfaces/innerkits/include/token",
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/interfaces/innerkits/syspara",
+    "//base/startup/init/interfaces/innerkits/control_fd",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/param/base",
+    "//base/startup/init/services/param/adapter",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/param/watcher/agent",
+    "//base/startup/init/services/param/watcher/include",
+    "//base/startup/init/services/modules",
+    "//base/startup/init/services/modules/init_eng",
+    "//base/startup/init/services/modules/init_hook",
+    "//base/startup/init/services/modules/selinux",
+    "//base/startup/init/services/modules/init_context",
+    "//base/startup/init/services/modules/reboot",
+    "//base/startup/init/services/modules/bootevent",
+    "//base/startup/init/services/modules/crashhandler",
+    "//base/startup/init/services/modules/sysevent",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/init/standard",
+    "//base/startup/init/interfaces/innerkits/hals",
+    "//base/startup/init/ueventd/include",
+    "//base/startup/init/services/sandbox/include",
+    "//base/startup/init/device_info",
+    # loopevent 头文件目录
+    "//base/startup/init/services/loopevent/include",
+    "//base/startup/init/services/loopevent/loop",
+    "//base/startup/init/services/loopevent/task",
+    "//base/startup/init/services/loopevent/timer",
+    "//base/startup/init/services/loopevent/signal",
+    "//base/startup/init/services/loopevent/socket",
+    "//base/startup/init/services/loopevent/idle",
+    "//base/startup/init/services/loopevent/utils",
+    # fs_manager 头文件目录
+    "//base/startup/init/interfaces/innerkits/fs_manager",
+    "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
+    "//base/startup/init/remount/include",
+  ]
+
+  # 内部依赖
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits:deviceinfo_stub",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  # 配置
+  configs = [ ":begetctl_utest_config" ]
+
+  # 编译定义
+  defines = [
+    "STARTUP_INIT_TEST",
+    "INIT_AGENT",
+    "_GNU_SOURCE",
+    "PARAM_SUPPORT_DAC",
+    "PARAM_SUPPORT_TRIGGER",
+    "USE_MBEDTLS",
+    "PARAM_DECODE_GROUPID_FROM_FILE",
+    "WORKSPACE_AREA_NEED_MUTEX",
+    "PARAMWORKSPACE_NEED_MUTEX",
+    "PARAM_SUPPORT_REAL_CHECK",
+    "DISABLE_INIT_TWO_STAGES",
+    "INIT_SUPPORT_CHIPSET_INIT",
+    "INIT_FILE",
+    "INIT_DMESG",
+    "ENABLE_HOOK_MGR",
+  ]
+
+  # 外部依赖
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "config_policy:configpolicy_util",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "mbedtls:mbedtls_shared",
+    "storage_service:libfscryptutils_static",
+    "zlib:libz",
+  ]
+
+  # 条件编译
+  if (defined(build_selinux) && build_selinux) {
+    defines += [
+      "WITH_SELINUX",
+      "PARAM_SUPPORT_SELINUX",
+    ]
+    sources += [ "//base/startup/init/services/param/adapter/param_selinux.c" ]
+    external_deps += [
+      "selinux:libselinux",
+      "selinux_adapter:librestorecon",
+    ]
+  }
+
+  if (enable_ohos_startup_init_feature_watcher) {
+    defines += [ "PARAM_SUPPORT_WATCHER" ]
+    sources += [
+      "//base/startup/init/services/param/watcher/agent/watcher.cpp",
+      "//base/startup/init/services/param/watcher/agent/watcher_manager_kits.cpp",
+      "//base/startup/init/services/param/watcher/proxy/watcher_manager.cpp",
+    ]
+    deps += [
+      "//base/startup/init/interfaces/innerkits/:param_watcher_proxy",
+      "//base/startup/init/interfaces/innerkits/:param_watcher_stub",
+    ]
+    external_deps += [
+      "ipc:ipc_single",
+      "safwk:system_ability_fwk",
+      "samgr:samgr_proxy",
+    ]
+  }
+
+  # 部分 C++ 文件需要异常支持
+  cflags_cc = [ "-fexceptions" ]
+
+  # 子目标特定配置
+  subsystem_name = "startup"
+  part_name = "init"
+}
