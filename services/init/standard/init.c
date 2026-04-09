@@ -414,8 +414,11 @@ int ParseCfgByPriority(const char *filePath)
         INIT_LOGE("get etc/init cfg failed");
         return -1;
     }
+
+    INIT_ERROR_CHECK(files != NULL, return -1,
+        "get etc/init cfg failed");
     INIT_ERROR_CHECK(files->paths[0] != NULL, FreeCfgFiles(files);
-        return -1, "get etc/init cfg failed");
+        return -1, "get etc/init cfg path failed");
 
     for (int i = 0; files && i < MAX_CFG_POLICY_DIRS_CNT; i++) {
         if (files->paths[i]) {
