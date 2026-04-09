@@ -305,6 +305,22 @@ int __wrap_access(const char *pathname, int mode)
     }
 }
 
+// start wrap NeedDoAllResize
+static NeedDoAllResizeFunc g_needDoAllResize = NULL;
+void UpdateNeedDoAllResizeFunc(NeedDoAllResizeFunc func)
+{
+    g_needDoAllResize = func;
+}
+ 
+int __wrap_NeedDoAllResize(const unsigned int fsManagerFlags)
+{
+    if (g_needDoAllResize) {
+        return g_needDoAllResize(fsManagerFlags);
+    } else {
+        return __real_NeedDoAllResize(fsManagerFlags);
+    }
+}
+
 #ifdef __cplusplus
 #if __cplusplus
 }
