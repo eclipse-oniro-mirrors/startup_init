@@ -47,6 +47,7 @@ ohos_unittest("fstab_mount_unittest") {
     "-Wl,--wrap=read",
     "-Wl,--wrap=access",
     "-Wl,--wrap=open",
+    "-Wl,--wrap=NeedDoAllResize",
   ]
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
