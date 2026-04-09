@@ -112,6 +112,11 @@ int __real_access(const char *pathname, int mode);
 typedef int (*AccessFunc)(const char *pathname, int mode);
 void UpdateAccessFunc(AccessFunc func);
 
+// for wrapper NeedDoAllResize;
+int __real_NeedDoAllResize(const unsigned int fsManagerFlags);
+typedef int (*NeedDoAllResizeFunc)(const unsigned int fsManagerFlags);
+void UpdateNeedDoAllResizeFunc(NeedDoAllResizeFunc func);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

@@ -534,4 +534,220 @@ HWTEST_F(FstabMountTest, MountPartitionDevice_001, TestSize.Level0)
     rc = MountPartitionDevice(&item, devRofs, devExt4);
     EXPECT_EQ(rc, 0);
 }
+
+// Test DoResizeF2fs with NO_NEED_RESIZE mode (kdump already done)
+HWTEST_F(FstabMountTest, MountOneItem_Resize_NO_NEED_RESIZE_001, TestSize.Level0)
+{
+    char deviceName[STRSIZE] = "/dev/block/by-name/userdata";
+    char mountPoint[STRSIZE] = "/data";
+    char fsType[STRSIZE] = "f2fs";
+    char mountOptions[STRSIZE] = "rw";
+    unsigned int fsManagerFlags = 0;
+
+    // Mock NeedDoAllResize to return NO_NEED_RESIZE
+    NeedDoAllResizeFunc needDoAllResizeFunc = [](const unsigned int flags) -> int {
+        return NO_NEED_RESIZE;
+    };
+    UpdateNeedDoAllResizeFunc(needDoAllResizeFunc);
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    // When NeedDoAllResize returns NO_NEED_RESIZE, DoResizeF2fs should return -1
+    // and skip resize operation
+    int rc = MountOneItem(&item);
+    UpdateNeedDoAllResizeFunc(nullptr);
+    EXPECT_EQ(rc, 0);
+}
+
+// Test DoResizeF2fs with RESIZE_NORMAL mode
+HWTEST_F(FstabMountTest, MountOneItem_Resize_NORMAL_001, TestSize.Level0)
+{
+    char deviceName[STRSIZE] = "/dev/block/by-name/userdata";
+    char mountPoint[STRSIZE] = "/data";
+    char fsType[STRSIZE] = "f2fs";
+    char mountOptions[STRSIZE] = "rw";
+    unsigned int fsManagerFlags = 0;
+
+    AccessFunc accessFunc = [](const char *pathname, int mode) -> int {
+        if (strstr(pathname, "resize.f2fs") != nullptr) {
+            return 0; // File exists
+        }
+        return -1;
+    };
+    UpdateAccessFunc(accessFunc);
+
+    NeedDoAllResizeFunc needDoAllResizeFunc = [](const unsigned int flags) -> int {
+        return RESIZE_NORMAL;
+    };
+    UpdateNeedDoAllResizeFunc(needDoAllResizeFunc);
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = MountOneItem(&item);
+    UpdateAccessFunc(nullptr);
+    UpdateNeedDoAllResizeFunc(nullptr);
+    EXPECT_EQ(rc, 0);
+}
+
+// Test DoResizeF2fs with RESIZE_META_NO_CHANGE mode
+HWTEST_F(FstabMountTest, MountOneItem_Resize_META_NO_CHANGE_001, TestSize.Level0)
+{
+    char deviceName[STRSIZE] = "/dev/block/by-name/userdata";
+    char mountPoint[STRSIZE] = "/data";
+    char fsType[STRSIZE] = "f2fs";
+    char mountOptions[STRSIZE] = "rw";
+    unsigned int fsManagerFlags = 0;
+
+    AccessFunc accessFunc = [](const char *pathname, int mode) -> int {
+        if (strstr(pathname, "resize.f2fs") != nullptr) {
+            return 0; // File exists
+        }
+        return -1;
+    };
+    UpdateAccessFunc(accessFunc);
+
+    NeedDoAllResizeFunc needDoAllResizeFunc = [](const unsigned int flags) -> int {
+        return RESIZE_META_NO_CHANGE;
+    };
+    UpdateNeedDoAllResizeFunc(needDoAllResizeFunc);
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = MountOneItem(&item);
+    UpdateAccessFunc(nullptr);
+    UpdateNeedDoAllResizeFunc(nullptr);
+    EXPECT_EQ(rc, 0);
+}
+
+// Test DoResizeF2fs with FS_MANAGER_PROJQUOTA flag
+HWTEST_F(FstabMountTest, MountOneItem_Resize_WITH_PROJQUOTA_001, TestSize.Level0)
+{
+    char deviceName[STRSIZE] = "/dev/block/by-name/userdata";
+    char mountPoint[STRSIZE] = "/data";
+    char fsType[STRSIZE] = "f2fs";
+    char mountOptions[STRSIZE] = "rw";
+    unsigned int fsManagerFlags = FS_MANAGER_PROJQUOTA;
+
+    AccessFunc accessFunc = [](const char *pathname, int mode) -> int {
+        if (strstr(pathname, "resize.f2fs") != nullptr) {
+            return 0; // File exists
+        }
+        return -1;
+    };
+    UpdateAccessFunc(accessFunc);
+
+    NeedDoAllResizeFunc needDoAllResizeFunc = [](const unsigned int flags) -> int {
+        return RESIZE_META_NO_CHANGE;
+    };
+    UpdateNeedDoAllResizeFunc(needDoAllResizeFunc);
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = MountOneItem(&item);
+    UpdateAccessFunc(nullptr);
+    UpdateNeedDoAllResizeFunc(nullptr);
+    EXPECT_EQ(rc, 0);
+}
+
+// Test DoResizeF2fs with multiple flags (PROJQUOTA + COMPRESSION)
+HWTEST_F(FstabMountTest, MountOneItem_Resize_WITH_MULTIPLE_FLAGS_001, TestSize.Level0)
+{
+    char deviceName[STRSIZE] = "/dev/block/by-name/userdata";
+    char mountPoint[STRSIZE] = "/data";
+    char fsType[STRSIZE] = "f2fs";
+    char mountOptions[STRSIZE] = "rw";
+    unsigned int fsManagerFlags = FS_MANAGER_PROJQUOTA | FS_MANAGER_COMPRESSION;
+
+    AccessFunc accessFunc = [](const char *pathname, int mode) -> int {
+        if (strstr(pathname, "resize.f2fs") != nullptr) {
+            return 0; // File exists
+        }
+        return -1;
+    };
+    UpdateAccessFunc(accessFunc);
+
+    NeedDoAllResizeFunc needDoAllResizeFunc = [](const unsigned int flags) -> int {
+        return RESIZE_META_NO_CHANGE;
+    };
+    UpdateNeedDoAllResizeFunc(needDoAllResizeFunc);
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = MountOneItem(&item);
+    UpdateAccessFunc(nullptr);
+    UpdateNeedDoAllResizeFunc(nullptr);
+    EXPECT_EQ(rc, 0);
+}
+
+// Test DoResizeF2fs when resize.f2fs file does not exist
+HWTEST_F(FstabMountTest, MountOneItem_Resize_FILE_NOT_EXIST_001, TestSize.Level0)
+{
+    char deviceName[STRSIZE] = "/dev/block/by-name/userdata";
+    char mountPoint[STRSIZE] = "/data";
+    char fsType[STRSIZE] = "f2fs";
+    char mountOptions[STRSIZE] = "rw";
+    unsigned int fsManagerFlags = 0;
+
+    AccessFunc accessFunc = [](const char *pathname, int mode) -> int {
+        if (strstr(pathname, "resize.f2fs") != nullptr) {
+            return -1; // File does not exist
+        }
+        return -1;
+    };
+    UpdateAccessFunc(accessFunc);
+
+    NeedDoAllResizeFunc needDoAllResizeFunc = [](const unsigned int flags) -> int {
+        return RESIZE_NORMAL;
+    };
+    UpdateNeedDoAllResizeFunc(needDoAllResizeFunc);
+
+    FstabItem item = {
+        .deviceName = deviceName,
+        .mountPoint = mountPoint,
+        .fsType = fsType,
+        .mountOptions = mountOptions,
+        .fsManagerFlags = fsManagerFlags,
+        .next = NULL,
+    };
+
+    int rc = MountOneItem(&item);
+    UpdateAccessFunc(nullptr);
+    UpdateNeedDoAllResizeFunc(nullptr);
+    EXPECT_EQ(rc, 0);
+}
 }

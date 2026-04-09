@@ -76,10 +76,10 @@ __attribute__((weak)) void InitTimerControl(bool isSuspend)
 {
 }
 
-__attribute__((weak)) bool NeedDoAllResize(const unsigned int fsManagerFlags)
+__attribute__((weak)) int NeedDoAllResize(const unsigned int fsManagerFlags)
 {
     BEGET_LOGW("kdump: static");
-    return true;
+    return RESIZE_NORMAL;
 }
 
 __attribute__((weak)) int InitQuickfix(const Fstab *fstab)
@@ -310,15 +310,11 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
 
 INIT_STATIC int DoMountOneItem(FstabItem *item, MountResult *result);
 #define MAX_RESIZE_PARAM_NUM 20
-static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
+static int BuildResizeArgs(const FstabItem *item, const unsigned long long size, const int kdumpResult,
+                           char *argv[], char *sizeStr)
 {
     char *file = "/system/bin/resize.f2fs";
-    char sizeStr[RESIZE_BUFFER_SIZE] = {0};
-    char *argv[MAX_RESIZE_PARAM_NUM] = {NULL};
     int argc = 0;
-
-    BEGET_ERROR_CHECK(NeedDoAllResize(item->fsManagerFlags), return -1, "no need do resize, bucause kdump has done");
-    BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize.f2fs is not exists.");
 
     argv[argc++] = file;
     if (item->fsManagerFlags & FS_MANAGER_PROJQUOTA) {
@@ -339,6 +335,10 @@ static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
         argv[argc++] = "-O";
         argv[argc++] = "extra_attr,dedup";
     }
+    if (kdumpResult == RESIZE_META_NO_CHANGE) {
+        BEGET_LOGI("add --meta-no-change para for resize");
+        argv[argc++] = "--meta-no-change";
+    }
 
     if (size != 0) {
         unsigned long long realSize = size *
@@ -352,6 +352,25 @@ static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
     }
 
     argv[argc++] = (char*)(item->deviceName);
+    return argc;
+}
+
+static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
+{
+    char *file = "/system/bin/resize.f2fs";
+    char sizeStr[RESIZE_BUFFER_SIZE] = {0};
+    char *argv[MAX_RESIZE_PARAM_NUM] = {NULL};
+
+    int kdumpResult = NeedDoAllResize(item->fsManagerFlags);
+    if (kdumpResult == NO_NEED_RESIZE) {
+        BEGET_LOGI("no need do resize, because kdump has done");
+        return -1;
+    }
+
+    BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "resize.f2fs is not exists.");
+
+    int argc = BuildResizeArgs(item, size, kdumpResult, argv, sizeStr);
+
     BEGET_ERROR_CHECK(argc <= MAX_RESIZE_PARAM_NUM, return -1, "argc: %d is too big.", argc);
     int ret = ExecCommand(argc, argv);
     if (ret == 0) {
