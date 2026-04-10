@@ -171,6 +171,18 @@ HWTEST_F(SysparaUnitTest, parameterTest001_3, TestSize.Level0)
     EXPECT_STRNE(GetBuildRootHash(), nullptr);
     EXPECT_STRNE(GetChipType(), nullptr);
     EXPECT_GT(GetBootCount(), -1);
+    EXPECT_STRNE(GetDeviceColor(), nullptr);
+}
+
+HWTEST_F(SysparaUnitTest, parameterTest0024, TestSize.Level0)
+{
+    const char *deviceColor = GetDeviceColor();
+    EXPECT_STRNE(deviceColor, nullptr);
+    if (strcmp(deviceColor, "") == 0) {
+        printf("deviceColor is empty string (parameter not set)\n");
+    } else {
+        printf("deviceColor = %s\n", deviceColor);
+    }
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest002, TestSize.Level0)
