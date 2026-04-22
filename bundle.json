@@ -39,7 +39,8 @@
             "init_get_disk_sn",
             "init_feature_custom_sandbox",
             "init_feature_support_saspawn",
-            "init_feature_normal_sandbox"
+            "init_feature_normal_sandbox",
+            "init_feature_devicetype_extend"
         ],
         "adapted_system_type": [
             "mini",
