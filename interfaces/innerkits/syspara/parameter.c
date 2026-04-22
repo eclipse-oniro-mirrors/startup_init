@@ -28,7 +28,7 @@
 #include "securec.h"
 #include "beget_ext.h"
 
-void *handle_ = NULL;
+void *g_handle = NULL;
 
 int WaitParameter(const char *key, const char *value, int timeout)
 {
@@ -120,15 +120,15 @@ static const char *GetExtendDeviceType(void)
         return NULL;
     }
  
-    if (!handle_) {
-        handle_ = dlopen("/system/lib64/libcompatible_device_type.z.so", RTLD_NOW);
+    if (!g_handle) {
+        g_handle = dlopen("/system/lib64/libcompatible_device_type.z.so", RTLD_NOW);
     }
-    if (!handle_) {
+    if (!g_handle) {
         BEGET_LOGE("dlopen so failed!");
         return NULL;
     }
  
-    char *(*GetWhiteListDeviceType)(void) = (char *(*)(void))dlsym(handle_, "GetWhiteListDeviceType");
+    char *(*GetWhiteListDeviceType)(void) = (char *(*)(void))dlsym(g_handle, "GetWhiteListDeviceType");
     if (GetWhiteListDeviceType == NULL) {
         return NULL;
     }
