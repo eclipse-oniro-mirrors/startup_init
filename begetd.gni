@@ -103,4 +103,7 @@ declare_args() {
 
   #init umount fail set panic
   init_feature_support_umount_panic = false
+
+  #device type extend feature
+  init_feature_devicetype_extend = false
 }

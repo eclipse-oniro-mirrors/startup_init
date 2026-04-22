@@ -17,6 +17,8 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <dlfcn.h>
+#include <string.h>
 
 #include "param_comm.h"
 #include "init_param.h"
@@ -25,6 +27,8 @@
 #include "sysparam_errno.h"
 #include "securec.h"
 #include "beget_ext.h"
+
+void *handle_ = NULL;
 
 int WaitParameter(const char *key, const char *value, int timeout)
 {
@@ -105,10 +109,47 @@ int SaveParameters(void)
     return GetSystemError(ret);
 }
 
+#ifdef DEVICETYPE_EXTEND
+static const char *GetExtendDeviceType(void)
+{
+    char *extendDeviceType = NULL;
+    char extendEnable[8] = {0};
+ 
+    GetParameter("const.deviceManager.getdevicetype_extend_enable", "false", extendEnable, sizeof(extendEnable));
+    if (strcmp(extendEnable, "true") != 0) {
+        return NULL;
+    }
+ 
+    if (!handle_) {
+        handle_ = dlopen("/system/lib64/libcompatible_device_type.z.so", RTLD_NOW);
+    }
+    if (!handle_) {
+        BEGET_LOGE("dlopen so failed!");
+        return NULL;
+    }
+ 
+    char *(*GetWhiteListDeviceType)(void) = (char *(*)(void))dlsym(handle_, "GetWhiteListDeviceType");
+    if (GetWhiteListDeviceType == NULL) {
+        return NULL;
+    }
+ 
+    extendDeviceType = GetWhiteListDeviceType();
+    return extendDeviceType;
+}
+#endif
+
 const char *GetDeviceType(void)
 {
     static const char *productType = NULL;
     const char *deviceType = NULL;
+
+#ifdef DEVICETYPE_EXTEND
+    deviceType = GetExtendDeviceType();
+    if (deviceType != NULL) {
+        return deviceType;
+    }
+#endif
+
 #ifndef OHOS_LITE
     deviceType = GetPropertyAtomic("const.product.devicetype", &productType);
     if (deviceType != NULL) {
