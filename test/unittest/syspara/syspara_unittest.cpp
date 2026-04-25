@@ -555,23 +555,23 @@ HWTEST_F(SysparaUnitTest, parameterTest0023, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(SysparaUnitTest, parameterTest0024, TestSize.Level0)
+HWTEST_F(SysparaUnitTest, parameterTest0025, TestSize.Level0)
 {
     const char *deviceType = GetDeviceType();
     printf("Device type =%s\n", deviceType);
     EXPECT_STRNE(deviceType, nullptr);
 }
 
-HWTEST_F(SysparaUnitTest, parameterTest0025, TestSize.Level0)
+HWTEST_F(SysparaUnitTest, parameterTest0026, TestSize.Level0)
 {
     char key[] = "const.deviceManager.getdevicetype_extend_enable";
-    int ret = SystemWriteParam(key, true);
+    int ret = SystemWriteParam(key, "true");
     EXPECT_EQ(ret, 0);
 
     const char *deviceType = GetDeviceType();
     EXPECT_STRNE(deviceType, nullptr);
 
-    int ret = SystemWriteParam(key, false);
+    ret = SystemWriteParam(key, "false");
     EXPECT_EQ(ret, 0);
 }
 #endif
