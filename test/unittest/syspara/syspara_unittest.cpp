@@ -565,13 +565,19 @@ HWTEST_F(SysparaUnitTest, parameterTest0025, TestSize.Level0)
 HWTEST_F(SysparaUnitTest, parameterTest0026, TestSize.Level0)
 {
     char key[] = "const.deviceManager.getdevicetype_extend_enable";
-    int ret = SystemWriteParam(key, "true");
+    int ret = 0;
+    
+    if (FindParameter(key) == (uint32_t)(-1)) {
+        ret = SystemWriteParam(key, "true");
+    } else {
+        ret = SystemUpdateConstParam(key, "true");
+    }
     EXPECT_EQ(ret, 0);
-
+ 
     const char *deviceType = GetDeviceType();
     EXPECT_STRNE(deviceType, nullptr);
-
-    ret = SystemWriteParam(key, "false");
+ 
+    ret = SystemUpdateConstParam(key, "false");
     EXPECT_EQ(ret, 0);
 }
 #endif
