@@ -130,6 +130,7 @@ static const char *GetExtendDeviceType(void)
  
     char *(*GetWhiteListDeviceType)(void) = (char *(*)(void))dlsym(g_handle, "GetWhiteListDeviceType");
     if (GetWhiteListDeviceType == NULL) {
+        BEGET_LOGE("GetWhiteListDeviceType function not fonund.");
         return NULL;
     }
  
