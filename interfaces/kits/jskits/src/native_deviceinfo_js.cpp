@@ -378,7 +378,7 @@ static bool ParseVersionFromArg(napi_env env, napi_value arg,
         int minor = 0;
         int patch = 0;
         int ohVersion = 0;
-        size_t nConsumed = 0; // 记录解析了多少个字符
+        int nConsumed = 0; // 记录解析了多少个字符
         // 先试带括号的格式
         if (sscanf_s(str, "%d.%d.%d(%d)%n", &major, &minor, &patch, &ohVersion, &nConsumed) == API_HO_VERSION_NUM) {
             // 检查括号后面是否还有字符（比如 "1.2.3(4)abc"）
