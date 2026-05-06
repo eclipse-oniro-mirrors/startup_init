@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,6 +39,8 @@ public:
     static const char* CjGetVersionId();
     static int64_t CjGetFirstApiVersion();
     static int64_t CjGetSdkApiVersion();
+    static int64_t CjGetSdkMinorApiVersion();
+    static int64_t CjGetSdkPatchApiVersion();
     static int64_t CjGetBuildVersion();
     static int64_t CjGetFeatureVersion();
     static int64_t CjGetSeniorVersion();
@@ -61,6 +63,8 @@ public:
     static const char* CjGetDistributionOSReleaseType();
     static const char* CjGetDevOdid();
     static const char* CjGetDistributionOSApiName();
+    static bool CjApiAvailableByInt(int32_t majorVersion);
+    static bool CjApiAvailableByStr(const char* version);
 };
 
 } // DeviceInfo
