@@ -17,6 +17,7 @@ font_manager:x:1015:
 vpn:x:1016:
 keystore:x:1017:
 usb:x:1018:
+serial:x:1025:
 drm:x:1019:
 gps:x:1021:
 location_host:x:1022:
