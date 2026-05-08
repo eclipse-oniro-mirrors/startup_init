@@ -141,7 +141,7 @@ INIT_STATIC void PrelinkReady(void)
 
     char val[MAX_BUFFER_LEN] = "";
     unsigned int len = MAX_BUFFER_LEN;
-    if (SystemReadParam("const.startup.prelink.enable", val, &len) != 0 || strcmp(val, "true") != 0) {
+    if (SystemReadParam("const.startup.prelink.enable", val, &len) == 0 && strcmp(val, "false") == 0) {
         INIT_LOGI("prelink disabled");
         close(g_prelinkMemfd);
         g_prelinkMemfd = -1;
@@ -170,7 +170,7 @@ void PrelinkService(const char *name)
     if (g_prelinkMemfd < 0) {
         return;
     }
-    if (getenv("LD_PRELOAD") != NULL || strcmp(name, "foundation") == 0 || getuid() == 0) {
+    if (strcmp(name, "foundation") == 0 || getuid() == 0) {
         INIT_LOGI("start \"%s\" without prelink", name);
         return;
     }
