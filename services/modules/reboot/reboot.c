@@ -152,6 +152,7 @@ static int DoRebootPanic(int id, const char *name, int argc, const char **argv)
             tmp += ret;
         }
     }
+    HookMgrExecute(GetBootStageHookMgr(), INIT_REBOOT_PANIC, (void *)str, NULL);
     PLUGIN_LOGI("DoRebootPanic %s", str);
     ParseRebootReason(name, argc, argv);
     if (InRescueMode() == 0) {
