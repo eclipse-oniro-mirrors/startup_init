@@ -508,6 +508,11 @@ ohos_unittest("init_unittest") {
   cflags_cc = [ "-fexceptions" ]
 }
 
+group("init_basic_test_group") {
+  testonly = true
+  deps = [ "init_basic_test:init_basic_unittest" ]
+}
+
 ohos_unittest("init_dmverify_unittest") {
   module_out_path = "init/init"
   include_dirs = [
