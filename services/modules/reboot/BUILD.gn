@@ -27,6 +27,7 @@ ohos_shared_library("rebootmodule") {
   deps = [
     "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
     "//base/startup/init/services/utils:libinit_utils",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
   ]
 
   external_deps = [
