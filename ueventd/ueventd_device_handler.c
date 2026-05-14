@@ -507,7 +507,7 @@ void HandleBlockDeviceEvent(const struct Uevent *uevent)
     if (uevent->syspath == NULL) {
         return;
     }
-    if (strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath) != EOK)) {
+    if (strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath)) != EOK) {
         INIT_LOGE("Failed to copy sys path");
         return;
     }
