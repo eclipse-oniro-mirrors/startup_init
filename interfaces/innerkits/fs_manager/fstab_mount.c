@@ -912,9 +912,9 @@ int MountOneItem(FstabItem *item)
     if (item == NULL) {
         return -1;
     }
-    int maintenance = InRepairMode();
-    if (maintenance == MAINTENANCE_RECOVERY_TYPE || maintenance == MAINTENANCE_RECOVERY_COMPLETE_TYPE) {
-        if (item->mountPoint != NULL && strcmp(item->mountPoint, "/preload") == 0) {
+    if (item->mountPoint != NULL && strcmp(item->mountPoint, "/preload") == 0) {
+        int maintenance = InRepairMode();
+        if (maintenance == MAINTENANCE_RECOVERY_TYPE || maintenance == MAINTENANCE_RECOVERY_COMPLETE_TYPE) {
             BEGET_LOGI("Skip mounting preload partition in maintenance mode.");
             return 0;
         }
