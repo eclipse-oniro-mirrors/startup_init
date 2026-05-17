@@ -53,6 +53,7 @@ void SetTestPermissionResult(int result)
     g_testPermissionResult = result;
 }
 
+ #ifdef PARAM_SUPPORT_SELINUX
 static const char *selinuxLabels[][2] = {
     {"test.permission.read", "u:object_r:test_read:s0"},
     {"test.permission.write", "u:object_r:test_write:s0"},
@@ -121,7 +122,6 @@ static int TestReadParamCheck(const char *paraName)
 }
 static void TestDestroyParamList(ParamContextsList **list)
 {
-#ifdef PARAM_SUPPORT_SELINUX
     ParamContextsList *head = *list;
     while (head != nullptr) {
         ParamContextsList *next = head->next;
@@ -130,11 +130,9 @@ static void TestDestroyParamList(ParamContextsList **list)
         free(head);
         head = next;
     }
-#endif
 }
 static ParamContextsList *TestGetParamList(void)
 {
-#ifdef PARAM_SUPPORT_SELINUX
     ParamContextsList *head = (ParamContextsList *)malloc(sizeof(ParamContextsList));
     BEGET_ERROR_CHECK(head != nullptr, return nullptr, "Failed to alloc ParamContextsList");
     head->info.paraName = strdup(selinuxLabels[0][0]);
@@ -179,10 +177,8 @@ static ParamContextsList *TestGetParamList(void)
     node->next = head->next;
     head->next = node;
     return head;
-#else
-    return nullptr;
-#endif
 }
+#endif
 
 void TestSetSelinuxOps(void)
 {
