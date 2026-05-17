@@ -176,10 +176,6 @@ ohos_unittest("init_begetctl_unittest") {
     "//base/startup/init/services/modules/reboot/reboot_static.c",
     "//base/startup/init/services/modules/reboot/reboot_misc.c",
 
-    # selinux 模块
-    "//base/startup/init/services/modules/selinux/selinux_adp.c",
-    "//base/startup/init/services/modules/selinux/selinux_static.c",
-
     # 其他必要模块
     "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
     "//base/startup/init/interfaces/innerkits/service_watcher/service_watcher.c",
@@ -342,12 +338,16 @@ ohos_unittest("init_begetctl_unittest") {
   ]
 
   # 条件编译
-  if (defined(build_selinux) && build_selinux) {
+  if (defined(build_selinux) && build_selinux && support_jsapi) {
     defines += [
       "WITH_SELINUX",
       "PARAM_SUPPORT_SELINUX",
     ]
-    sources += [ "//base/startup/init/services/param/adapter/param_selinux.c" ]
+    sources += [
+      "//base/startup/init/services/modules/selinux/selinux_adp.c",
+      "//base/startup/init/services/modules/selinux/selinux_static.c",
+      "//base/startup/init/services/param/adapter/param_selinux.c",
+    ]
     external_deps += [
       "selinux:libselinux",
       "selinux_adapter:librestorecon",
