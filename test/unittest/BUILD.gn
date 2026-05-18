@@ -440,6 +440,7 @@ ohos_unittest("init_unittest") {
       "//base/startup/init/services/modules/selinux/selinux_static.c",
     ]
     external_deps += [
+      "bundle_framework:appexecfwk_base",
       "selinux:libselinux",
       "selinux_adapter:librestorecon",
     ]
