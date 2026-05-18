@@ -384,7 +384,6 @@ ohos_unittest("init_unittest") {
 
   external_deps = [
     "bounds_checking_function:libsec_static",
-    "bundle_framework:appexecfwk_base",
     "cJSON:cjson",
     "c_utils:utils",
     "config_policy:configpolicy_util",
@@ -434,7 +433,7 @@ ohos_unittest("init_unittest") {
     ]
   }
 
-  if (defined(build_selinux) && build_selinux) {
+  if (defined(build_selinux) && build_selinux && support_jsapi) {
     sources += [ "param/selinux_unittest.cpp" ]
     sources += [
       "//base/startup/init/services/modules/selinux/selinux_adp.c",
