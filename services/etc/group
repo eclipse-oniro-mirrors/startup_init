@@ -138,6 +138,7 @@ deviceinfo:x:1102:
 accessibility:x:1103:
 motion_host:x:3065:
 uhdf_driver:x:3066:
+fusion_host:x:3067:
 memmgr:x:1111:
 ispserver:x:3821:
 dfs_share:x:3822:
