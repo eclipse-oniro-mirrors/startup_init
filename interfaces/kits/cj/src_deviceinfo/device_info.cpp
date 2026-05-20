@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,19 @@
 #include <string>
 #include <memory>
 #include <threads.h>
+#include <cstring>
+#include <cstdlib>
+#include <cerrno>
+
+#define DISTRIBUTION_OS_API_VER_MAX 999999
+#define DISTRIBUTION_OS_API_VER_MIN 10000
+#define DISTRIBUTION_PERCENT 100
+#define API_VERSION_MAX 99
+#define API_VERSION_NUM 3
+#define API_HO_VERSION_NUM 4
+#define TARGET_OS_NAME_PART1 "Harmony"
+#define TARGET_OS_NAME_PART2 "OS"
+#define TARGET_OS_NAME TARGET_OS_NAME_PART1 TARGET_OS_NAME_PART2
 
 namespace OHOS {
 namespace CJSystemapi {
@@ -124,6 +137,16 @@ int64_t DeviceInfo::CjGetSdkApiVersion()
     return GetSdkApiVersion();
 }
 
+int64_t DeviceInfo::CjGetSdkMinorApiVersion()
+{
+    return GetSdkMinorApiVersion();
+}
+
+int64_t DeviceInfo::CjGetSdkPatchApiVersion()
+{
+    return GetSdkPatchApiVersion();
+}
+
 int64_t DeviceInfo::CjGetBuildVersion()
 {
     return GetBuildVersion();
@@ -133,7 +156,7 @@ int64_t DeviceInfo::CjGetFeatureVersion()
 {
     return GetFeatureVersion();
 }
-    
+
 int64_t DeviceInfo::CjGetSeniorVersion()
 {
     return GetSeniorVersion();
@@ -278,6 +301,109 @@ const char* DeviceInfo::CjGetDistributionOSApiName()
     return GetDistributionOSApiName();
 }
 
+static bool ParseVersionFromString(const char* str, int32_t* majorVersion, int32_t* minorVersion, int32_t* patchVersion)
+{
+    if (str == nullptr) {
+        return false;
+    }
+    int major = 0;
+    int minor = 0;
+    int patch = 0;
+    int ohVersion = 0;
+    int nConsumed = 0;
+    if (sscanf_s(str, "%d.%d.%d(%d)%n", &major, &minor, &patch, &ohVersion, &nConsumed) == API_HO_VERSION_NUM) {
+        if (str[nConsumed] != '\0' || ohVersion < 0 || ohVersion > API_VERSION_MAX) {
+            return false;
+        }
+    } else if (sscanf_s(str, "%d.%d.%d%n", &major, &minor, &patch, &nConsumed) == API_VERSION_NUM) {
+        const char* suffix = str + nConsumed;
+        if (*suffix != '\0') {
+            return false;
+        }
+    } else {
+        return false;
+    }
+    if (major > 0 && minor >= 0 && patch >= 0) {
+        *majorVersion = major;
+        *minorVersion = minor;
+        *patchVersion = patch;
+        return true;
+    }
+    return false;
+}
+
+static bool CheckApiVersionGreaterOrEqualByOS(int32_t majorVersion, int32_t minorVersion, int32_t patchVersion)
+{
+    if (majorVersion > API_VERSION_MAX || majorVersion < 1) {
+        return false;
+    }
+    if (minorVersion > API_VERSION_MAX || minorVersion < 0) {
+        return false;
+    }
+    if (patchVersion > API_VERSION_MAX || patchVersion < 0) {
+        return false;
+    }
+
+    int32_t osMajor = 0;
+    int32_t osMinor = 0;
+    int32_t osPatch = 0;
+    bool useHarmonyOSVersion = false;
+
+    const char* distributionOSName = GetDistributionOSName();
+    if (distributionOSName != nullptr && strcmp(distributionOSName, TARGET_OS_NAME) == 0) {
+        int32_t distributionOSApiVersion = GetDistributionOSApiVersion();
+        if (distributionOSApiVersion >= DISTRIBUTION_OS_API_VER_MIN &&
+            distributionOSApiVersion <= DISTRIBUTION_OS_API_VER_MAX) {
+            int32_t osMajorDistribution = distributionOSApiVersion / DISTRIBUTION_OS_API_VER_MIN;
+            int32_t osMinorDistribution = (distributionOSApiVersion / DISTRIBUTION_PERCENT) % DISTRIBUTION_PERCENT;
+            int32_t osPatchDistribution = distributionOSApiVersion % DISTRIBUTION_PERCENT;
+
+            if (osMajorDistribution >= 1 && osMajorDistribution <= API_VERSION_MAX &&
+                osMinorDistribution >= 0 && osMinorDistribution <= API_VERSION_MAX &&
+                osPatchDistribution >= 0 && osPatchDistribution <= API_VERSION_MAX) {
+                osMajor = osMajorDistribution;
+                osMinor = osMinorDistribution;
+                osPatch = osPatchDistribution;
+                useHarmonyOSVersion = true;
+            }
+        }
+    }
+
+    if (!useHarmonyOSVersion) {
+        osMajor = GetSdkApiVersion();
+        osMinor = GetSdkMinorApiVersion();
+        osPatch = GetSdkPatchApiVersion();
+    }
+
+    if (majorVersion != osMajor) {
+        return osMajor > majorVersion;
+    }
+    if (minorVersion != osMinor) {
+        return osMinor > minorVersion;
+    }
+    return osPatch >= patchVersion;
+}
+
+bool DeviceInfo::CjApiAvailableByInt(int32_t majorVersion)
+{
+    return CheckApiVersionGreaterOrEqualByOS(majorVersion, 0, 0);
+}
+
+bool DeviceInfo::CjApiAvailableByStr(const char* version)
+{
+    if (version == nullptr) {
+        return false;
+    }
+    int32_t majorVersion = 0;
+    int32_t minorVersion = 0;
+    int32_t patchVersion = 0;
+
+    if (!ParseVersionFromString(version, &majorVersion, &minorVersion, &patchVersion)) {
+        return false;
+    }
+
+    return CheckApiVersionGreaterOrEqualByOS(majorVersion, minorVersion, patchVersion);
+}
 } // DeviceInfo
 } // CJSystemapi
 } // OHOS

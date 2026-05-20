@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -104,6 +104,18 @@ int64_t FfiOHOSDeviceInfoSdkApiVersion()
 {
     LOGI("DeviceInfo::FfiOHOSDeviceInfoSdkApiVersion");
     return DeviceInfo::CjGetSdkApiVersion();
+}
+
+FFI_EXPORT int64_t FfiOHOSDeviceInfoSdkMinorApiVersion()
+{
+    LOGI("DeviceInfo::FfiOHOSDeviceInfoSdkMinorApiVersion");
+    return DeviceInfo::CjGetSdkMinorApiVersion();
+}
+
+FFI_EXPORT int64_t FfiOHOSDeviceInfoSdkPatchApiVersion()
+{
+    LOGI("DeviceInfo::FfiOHOSDeviceInfoSdkPatchApiVersion");
+    return DeviceInfo::CjGetSdkPatchApiVersion();
 }
 
 int64_t FfiOHOSDeviceInfoBuildVersion()
@@ -237,8 +249,19 @@ FFI_EXPORT const char* FfiOHOSDeviceInfoDistributionOSApiName()
     LOGI("DeviceInfo::FfiOHOSDeviceInfoDistributionOSApiName");
     return DeviceInfo::CjGetDistributionOSApiName();
 }
+
+FFI_EXPORT bool FfiOHOSDeviceInfoApiAvailableByInt(int32_t majorVersion)
+{
+    LOGI("DeviceInfo::FfiOHOSDeviceInfoApiAvailableByInt");
+    return DeviceInfo::CjApiAvailableByInt(majorVersion);
 }
 
+FFI_EXPORT bool FfiOHOSDeviceInfoApiAvailableByStr(const char* version)
+{
+    LOGI("DeviceInfo::FfiOHOSDeviceInfoApiAvailableByStr");
+    return DeviceInfo::CjApiAvailableByStr(version);
+}
+}
 } // DeviceInfo
 } // CJSystemapi
 } // OHOS
