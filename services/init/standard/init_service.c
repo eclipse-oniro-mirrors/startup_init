@@ -309,6 +309,7 @@ void GetAccessToken(void)
                 (const char **)service->permAclsArgs.argv,
                 service->name,
                 apl,
+                (int32_t)service->servPerm.uID,
             };
             uint64_t tokenId = GetAccessTokenId(&nativeTokenInfoParams);
             INIT_CHECK_ONLY_ELOG(tokenId  != 0,
