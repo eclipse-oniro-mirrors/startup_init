@@ -552,6 +552,7 @@ static void WriteCurtime(int fd)
     struct timespec currentTime;
     clock_gettime(CLOCK_REALTIME, &currentTime);
     struct tm *timeStruct = localtime(&currentTime.tv_sec);
+    INIT_ERROR_CHECK(timeStruct != NULL, return, "localtime is null");
     char timestamp[TIME_LEN];
     size_t result = strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", timeStruct);
     if (result == 0) {

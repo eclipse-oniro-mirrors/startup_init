@@ -75,8 +75,7 @@ static void DoRmdir(const TimerHandle handler, void *context)
     UNUSED(handler);
     Service *service = (Service *)context;
     INIT_ERROR_CHECK(service != NULL, return, "Service timer process with invalid service");
-    ServiceStopTimer(service);
-
+    INIT_CHECK(service->timer != NULL, LE_StopTimer(LE_GetDefaultLoop(), service->timer));
     char path[PATH_MAX] = {};
     int ret = GetCgroupPath(service, path, sizeof(path));
     free(service->name);

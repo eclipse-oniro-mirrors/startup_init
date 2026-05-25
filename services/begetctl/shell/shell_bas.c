@@ -717,12 +717,7 @@ const char *BShellEnvGetStringParam(BShellHandle handle, const char *name)
     if (param == NULL) {
         return "";
     }
-    switch (param->type) {
-        case PARAM_STRING:
-            return param->value.string;
-        default:
-            break;
-    }
+    BSH_ONLY_CHECK(param->type != PARAM_STRING || param->value.string == NULL, return param->value.string);
     return "";
 }
 
