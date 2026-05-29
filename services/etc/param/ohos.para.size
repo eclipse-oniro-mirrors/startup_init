@@ -51,6 +51,7 @@ persist_audio_param = 4096
 update_updater_param = 4096
 bms_param = 20480
 const_display_brightness_param = 2048
+hichecker_writable_param = 2048
 
 #for ril temp
 ril_gsm_param=20480
