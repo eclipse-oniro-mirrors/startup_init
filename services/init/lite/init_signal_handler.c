@@ -62,6 +62,7 @@ static void SigHandler(int sig)
         }
         case SIGTERM: {
             StopAllServices(0, NULL, 0, NULL);
+            RebootSystem();
             break;
         }
         default:
