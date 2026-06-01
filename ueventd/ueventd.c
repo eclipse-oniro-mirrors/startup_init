@@ -179,9 +179,38 @@ static bool IsPatchPartitionName(const char *partitionName)
     return strcmp(partitionName, "patch_a") == 0 || strcmp(partitionName, "patch_b") == 0;
 }
 
+static bool IsRequiredPartitionName(const char *partitionName)
+{
+    if (partitionName == NULL) {
+        return false;
+    }
+    return strstr(partitionName, "vendor") != NULL ||
+        strstr(partitionName, "system") != NULL ||
+        strstr(partitionName, "sys_prod") != NULL ||
+        strstr(partitionName, "chip_prod") != NULL ||
+        strstr(partitionName, "chipset") != NULL ||
+        strstr(partitionName, "boot") != NULL ||
+        strstr(partitionName, "ramdisk") != NULL ||
+        strstr(partitionName, "rvt") != NULL ||
+        strstr(partitionName, "dtbo") != NULL ||
+        strstr(partitionName, "modem_driver") != NULL ||
+        IsPatchPartitionName(partitionName);
+}
+
 static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **devices, int num)
 {
+    char partitionName[CMDLINE_VALUE_LEN_MAX] = {};
+    const char *requiredPartitionName = NULL;
+    if (GetBlockDevicePartitionName(uevent, partitionName, sizeof(partitionName)) == 0) {
+        requiredPartitionName = partitionName;
+        INIT_LOGI("Resolve block device %s partition name as %s", uevent->deviceName, requiredPartitionName);
+    }
     for (int i = 0; i < num; i++) {
+        if (requiredPartitionName != NULL && strstr(devices[i], requiredPartitionName) != NULL) {
+            INIT_LOGI("Handle required partitionName %s", requiredPartitionName);
+            HandleBlockDeviceEvent(uevent);
+            return;
+        }
         if (uevent->partitionName == NULL) {
             if (strstr(devices[i], uevent->deviceName) != NULL) {
                 INIT_LOGI("%s match with required partition %s success, now handle it", devices[i], uevent->deviceName);
@@ -189,17 +218,7 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
                 return;
             }
         } else if (strstr(devices[i], uevent->partitionName) != NULL ||
-            strstr(uevent->partitionName, "vendor") != NULL ||
-            strstr(uevent->partitionName, "system") != NULL ||
-            strstr(uevent->partitionName, "sys_prod") != NULL ||
-            strstr(uevent->partitionName, "chip_prod") != NULL ||
-            strstr(uevent->partitionName, "chipset") != NULL ||
-            strstr(uevent->partitionName, "boot") != NULL ||
-            strstr(uevent->partitionName, "ramdisk") != NULL ||
-            strstr(uevent->partitionName, "rvt") != NULL ||
-            strstr(uevent->partitionName, "dtbo") != NULL ||
-            strstr(uevent->partitionName, "modem_driver") != NULL ||
-            IsPatchPartitionName(uevent->partitionName)) {
+            IsRequiredPartitionName(uevent->partitionName)) {
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
             HandleBlockDeviceEvent(uevent);
             return;

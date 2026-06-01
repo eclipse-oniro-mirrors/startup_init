@@ -24,6 +24,7 @@ extern "C" {
 
 void HandleBlockDeviceEvent(const struct Uevent *uevent);
 void HandleOtherDeviceEvent(const struct Uevent *uevent);
+int GetBlockDevicePartitionName(const struct Uevent *uevent, char *partitionName, size_t size);
 
 #ifdef __cplusplus
 #if __cplusplus

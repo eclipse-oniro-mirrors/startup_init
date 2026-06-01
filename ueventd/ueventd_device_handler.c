@@ -16,6 +16,7 @@
 #include "ueventd_device_handler.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <libgen.h>
 #include <limits.h>
 #include <stdbool.h>
@@ -23,6 +24,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
+#include <unistd.h>
 #include "init_utils.h"
 #include "ueventd.h"
 #ifndef __RAMDISK__
@@ -37,6 +39,95 @@
 #include <selinux/selinux.h>
 #include <policycoreutils.h>
 #endif
+
+static bool IsValidPartitionName(const char *partitionName)
+{
+    if (INVALIDSTRING(partitionName)) {
+        return false;
+    }
+    for (const char *p = partitionName; *p != '\0'; p++) {
+        if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || (*p >= '0' && *p <= '9') ||
+            *p == '_' || *p == '-' || *p == '.') {
+            continue;
+        }
+        return false;
+    }
+    return true;
+}
+
+static int ReadSysfsString(const char *path, char *buffer, size_t size)
+{
+    if (INVALIDSTRING(path) || buffer == NULL || size == 0) {
+        return -1;
+    }
+    int fd = open(path, O_RDONLY | O_CLOEXEC);
+    if (fd < 0) {
+        return -1;
+    }
+    ssize_t ret = read(fd, buffer, size - 1);
+    close(fd);
+    if (ret <= 0) {
+        return -1;
+    }
+    buffer[ret] = '\0';
+    for (ssize_t i = ret - 1; i >= 0; i--) {
+        if (buffer[i] != '\n' && buffer[i] != '\r' && buffer[i] != ' ' && buffer[i] != '\t') {
+            break;
+        }
+        buffer[i] = '\0';
+    }
+    return IsValidPartitionName(buffer) ? 0 : -1;
+}
+
+static int ReadBlockDeviceSerial(const struct Uevent *uevent, char *serial, size_t size)
+{
+    if (uevent == NULL || INVALIDSTRING(uevent->syspath) || serial == NULL || size == 0) {
+        return -1;
+    }
+    char sysPath[SYSPATH_SIZE] = {};
+    if (snprintf_s(sysPath, SYSPATH_SIZE, SYSPATH_SIZE - 1, "/sys%s", uevent->syspath) == -1) {
+        return -1;
+    }
+
+    char path[SYSPATH_SIZE] = {};
+    if (snprintf_s(path, SYSPATH_SIZE, SYSPATH_SIZE - 1, "%s/serial", sysPath) != -1 &&
+        ReadSysfsString(path, serial, size) == 0) {
+        return 0;
+    }
+    if (snprintf_s(path, SYSPATH_SIZE, SYSPATH_SIZE - 1, "%s/device/serial", sysPath) != -1 &&
+        ReadSysfsString(path, serial, size) == 0) {
+        return 0;
+    }
+
+    char parentPath[SYSPATH_SIZE] = {};
+    if (strncpy_s(parentPath, SYSPATH_SIZE - 1, sysPath, strlen(sysPath)) != EOK) {
+        return -1;
+    }
+    char *parent = dirname(parentPath);
+    while (parent != NULL && !STRINGEQUAL(parent, "/") && !STRINGEQUAL(parent, ".") &&
+        !STRINGEQUAL(parent, "/sys")) {
+        if (snprintf_s(path, SYSPATH_SIZE, SYSPATH_SIZE - 1, "%s/serial", parent) != -1 &&
+            ReadSysfsString(path, serial, size) == 0) {
+            return 0;
+        }
+        parent = dirname(parent);
+    }
+    return -1;
+}
+
+int GetBlockDevicePartitionName(const struct Uevent *uevent, char *partitionName, size_t size)
+{
+    if (uevent == NULL || partitionName == NULL || size == 0) {
+        return -1;
+    }
+    if (!INVALIDSTRING(uevent->partitionName)) {
+        if (strncpy_s(partitionName, size, uevent->partitionName, strlen(uevent->partitionName)) != EOK) {
+            return -1;
+        }
+        return 0;
+    }
+    return ReadBlockDeviceSerial(uevent, partitionName, size);
+}
 
 static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid, gid_t gid, mode_t mode)
 {
@@ -276,7 +367,7 @@ static bool BootDeviceIsMatched(const char *parent)
 }
 
 static int BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
-    const char *partitionName, const char *deviceName)
+    const char *partitionName, const char *deviceName, bool forceByName)
 {
     int num = linkNum;
     links[num] = calloc(DEVICE_FILE_SIZE, sizeof(char));
@@ -285,14 +376,12 @@ static int BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
         return num;
     }
 
-    // If a block device without partition name.
-    // For now, we will not create symbol link for it.
     if (!INVALIDSTRING(partitionName)) {
         if (snprintf_s(links[num], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
             "/dev/block/platform/%s/by-name/%s", parent, partitionName) == -1) {
             INIT_LOGE("Failed to build link");
         }
-        if (BootDeviceIsMatched(parent)) {
+        if (forceByName || BootDeviceIsMatched(parent)) {
             num = linkNum + 1;
             links[num] = calloc(DEVICE_FILE_SIZE, sizeof(char));
             if (links[num] == NULL) {
@@ -372,9 +461,15 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
             INIT_LOGV("Find a platform device: %s", parent);
             parent = FindPlatformDeviceName(parent);
             if (parent != NULL) {
+                char partitionName[DEVICE_FILE_SIZE] = {};
+                const char *linkPartitionName = uevent->partitionName;
+                if (GetBlockDevicePartitionName(uevent, partitionName, sizeof(partitionName)) == 0) {
+                    linkPartitionName = partitionName;
+                }
                 INIT_WARNING_CHECK(linkNum < BLOCKDEVICE_LINKS - 1, free(bus); links[linkNum] = NULL;
                     return links, "Too many links, ignore");
-                linkNum = BuildDeviceSymbolLinks(links, linkNum, parent, uevent->partitionName, uevent->deviceName);
+                linkNum = BuildDeviceSymbolLinks(links, linkNum, parent, linkPartitionName, uevent->deviceName,
+                    INVALIDSTRING(uevent->partitionName) && !INVALIDSTRING(linkPartitionName));
                 linkNum++;
             }
         }
