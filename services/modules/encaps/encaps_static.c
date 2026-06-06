@@ -74,7 +74,7 @@ static void SetKernelPerm(SERVICE_INFO_CTX *serviceCtx)
             free(kernelPerms);
             return;
         }
-        ret = ioctl(fd, SET_KERNEL_PERM_TYPE_CMD, service->kernelPerms);
+        ret = ioctl(fd, SET_KERNEL_PERM_TYPE_CMD, kernelPerms);
         if (ret != 0) {
             INIT_LOGE("SetKernelPerm set encaps permission failed");
         }
