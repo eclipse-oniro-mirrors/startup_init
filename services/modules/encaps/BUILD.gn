@@ -20,6 +20,7 @@ config("libencaps_static_config") {
 ohos_source_set("libencaps_static") {
   sources = [ "encaps_static.c" ]
 
+  branch_protector_ret = "pac_ret"
   sanitize = {
     cfi = true
     cfi_cross_dso = true

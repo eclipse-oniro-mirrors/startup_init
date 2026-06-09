@@ -198,6 +198,8 @@ ohos_source_set("libseccomp_static") {
     "../../../interfaces/innerkits/init_module_engine:init_module_engine_exported_config",
   ]
 
+  branch_protector_ret = "pac_ret"
+
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "cJSON:cjson",
