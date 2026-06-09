@@ -79,7 +79,8 @@
                 "hicollie",
                 "drivers_interface_partitionslot",
                 "code_signature",
-                "runtime_core"
+                "runtime_core",
+                "taihe_ffi_gen"
             ],
             "third_party": [
                 "mksh",
