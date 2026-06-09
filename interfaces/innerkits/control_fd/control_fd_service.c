@@ -54,7 +54,7 @@ CONTROL_FD_STATIC int CheckSocketPermission(const TaskHandle task)
 
 CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *buffer, uint32_t buffLen)
 {
-    if (buffer == NULL) {
+    if (buffer == NULL || buffLen < sizeof(CmdMessage)) {
         return;
     }
     CmdTask *agent = (CmdTask *)LE_GetUserData(task);
