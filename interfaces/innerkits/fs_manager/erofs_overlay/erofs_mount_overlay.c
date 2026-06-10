@@ -31,19 +31,15 @@
 #define ALIGN_BLOCK_SIZE (16 * BYTE_UNIT)
 #define MIN_DM_SIZE (500 * BYTE_UNIT)
 #define BLOCK_SIZE_UINT 4096
+#define EXTHDR_MAGIC 0xFEEDBEEF
 #define EXTHDR_BLKSIZE 4096
 
-static bool g_remountEnable = false;
-
-void SetRemountFlag(bool flag)
-{
-    g_remountEnable = flag;
-}
-
-bool GetRemountFlag()
-{
-    return g_remountEnable;
-}
+struct extheader_v1 {
+    uint32_t magic_number;
+    uint16_t exthdr_size;
+    uint16_t bcc16;
+    uint64_t part_size;
+};
 
 INIT_STATIC void AllocDmName(const char *name, char *nameRofs, const uint64_t nameRofsLen,
     char *nameExt4, const uint64_t nameExt4Len)
@@ -76,7 +72,7 @@ INIT_STATIC void AllocDmName(const char *name, char *nameRofs, const uint64_t na
     BEGET_LOGI("alloc dm namerofs:[%s], nameext4:[%s]", nameRofs, nameExt4);
 }
 
-uint64_t LookupErofsEnd(const char *dev)
+INIT_STATIC uint64_t LookupErofsEnd(const char *dev)
 {
     int fd = -1;
     fd = open(dev, O_RDONLY | O_LARGEFILE);
@@ -124,40 +120,21 @@ INIT_STATIC uint64_t GetImgSize(const char *dev, uint64_t offset)
         return 0;
     }
 
-    ExtheaderV1 header;
+    struct extheader_v1 header;
     ssize_t nbytes = read(fd, &header, sizeof(header));
     if (nbytes != sizeof(header)) {
         BEGET_LOGE("read dev:[%s] failed.", dev);
         close(fd);
         return 0;
     }
-
-    if (header.magicNumber != EXTHDR_MAGIC) {
-        BEGET_LOGI("dev:[%s] is not have ext path, magic is 0x%x", dev, header.magicNumber);
-        close(fd);
-        return 0;
-    }
-    BEGET_LOGI("get img size [%llu]", header.partSize);
-
-    if (lseek(fd, offset + EXTHDR_RDONLY_SIZE, SEEK_SET) < 0) {
-        BEGET_LOGE("lseek dev:[%s] failed, offset is %llu", dev, offset);
-        close(fd);
-        return 0;
-    }
-    ExtheaderRW extheaderRw;
-    ssize_t rwSize = read(fd, &extheaderRw, sizeof(extheaderRw));
-    if (rwSize != sizeof(extheaderRw)) {
-        BEGET_LOGE("read dev:[%s] to extheader rw failed.", dev);
-        close(fd);
-        return 0;
-    }
-
-    if (extheaderRw.remount) {
-        BEGET_LOGI("get remount flag is %d from extheader", extheaderRw.remount);
-        SetRemountFlag(true);
-    }
     close(fd);
-    return header.partSize;
+
+    if (header.magic_number != EXTHDR_MAGIC) {
+        BEGET_LOGI("dev:[%s] is not have ext path, magic is 0x%x", dev, header.magic_number);
+        return 0;
+    }
+    BEGET_LOGI("get img size [%llu]", header.part_size);
+    return header.part_size;
 }
 
 INIT_STATIC uint64_t GetFsSize(int fd)
@@ -487,7 +464,7 @@ INIT_STATIC int MountPartitionDevice(FstabItem *item, const char *devRofs, const
         return -1;
     }
 
-    if (!CheckIsExt4(devExt4, 0) || !GetRemountFlag()) {
+    if (!CheckIsExt4(devExt4, 0)) {
         BEGET_LOGI("is not ext4 devExt4 [%s] on mnt [%s]", devExt4, item->mountPoint);
         return 0;
     }
