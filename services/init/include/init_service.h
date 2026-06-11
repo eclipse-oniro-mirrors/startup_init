@@ -65,7 +65,7 @@ extern "C" {
 #define MAX_APL_NAME 32
 #define MAX_ENV_NAME 64
 #define MAX_JOB_NAME 128
-#define MAX_WRITEPID_FILES 100
+#define MAX_WRITEPID_FILES 120
 #define MAX_ENV_VALUE 128
 
 #define FULL_CAP 0xFFFFFFFF
