@@ -94,6 +94,15 @@ template("lib_parameterbase_template") {
       if (defined(init_lite_memory_size)) {
         defines += [ "PARAM_WORKSPACE_MAX=${init_lite_memory_size}" ]
       }
+      if (defined(init_lite_param_const_value_len_max)) {
+        defines += [ "PARAM_CONST_VALUE_LEN_MAX=${init_lite_param_const_value_len_max}" ]
+      }
+      if (defined(init_lite_param_value_len_max)) {
+        defines += [ "PARAM_VALUE_LEN_MAX=${init_lite_param_value_len_max}" ]
+      }
+      if (defined(init_lite_param_name_len_max)) {
+        defines += [ "PARAM_NAME_LEN_MAX=${init_lite_param_name_len_max}" ]
+      }
     }
   } else {
     if (!startup_init_with_param_base) {
