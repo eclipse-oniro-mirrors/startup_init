@@ -23,6 +23,7 @@ sys_param=4096
 bootevent_param=2097152
 startup_init_param=81920
 startup_appspawn_param=3145728
+accesstoken_perm_param = 2048
 hiviewdfx_profiler_param=4096
 ohos_boot_param = 8192
 bluetooth_param = 8192
