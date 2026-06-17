@@ -38,7 +38,7 @@
 #define SECCOMP_SET_MODE_FILTER  (1)
 #endif
 
-#ifdef __aarch64__
+#ifdef __LP__
 #define FILTER_LIB_PATH_FORMAT "lib64/seccomp/lib%s_filter.z.so"
 #define FILTER_LIB_PATH_PART "lib64/seccomp/lib"
 #else
