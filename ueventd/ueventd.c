@@ -174,9 +174,16 @@ static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)
     }
 }
 
-static bool IsPatchPartitionName(const char *partitionName)
+static bool IsOtherPartitionName(const char *partitionName)
 {
-    return strcmp(partitionName, "patch_a") == 0 || strcmp(partitionName, "patch_b") == 0;
+    return strcmp(partitionName, "patch_a") == 0 ||
+        strcmp(partitionName, "patch_b") == 0 ||
+        strcmp(partitionName, "version_a") == 0 ||
+        strcmp(partitionName, "version_b") == 0 ||
+        strcmp(partitionName, "preload_a") == 0 ||
+        strcmp(partitionName, "preload_b") == 0 ||
+        strcmp(partitionName, "cust_a") == 0 ||
+        strcmp(partitionName, "cust_b") == 0;
 }
 
 static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **devices, int num)
@@ -199,7 +206,7 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
             strstr(uevent->partitionName, "rvt") != NULL ||
             strstr(uevent->partitionName, "dtbo") != NULL ||
             strstr(uevent->partitionName, "modem_driver") != NULL ||
-            IsPatchPartitionName(uevent->partitionName)) {
+            IsOtherPartitionName(uevent->partitionName)) {
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
             HandleBlockDeviceEvent(uevent);
             return;
