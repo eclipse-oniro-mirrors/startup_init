@@ -23,6 +23,8 @@
 #include "init_utils.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_parameter.h"
+#include "ueventd.h"
+#include "ueventd_device_handler.h"
 
 extern "C" {
 bool IsMatch(const char *target, const char *pattern);
