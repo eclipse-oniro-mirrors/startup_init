@@ -74,8 +74,6 @@
 #define TIOCSCTTY 0x540E
 #endif
 
-#define DEF_CRASH_TIME 240000 // default crash time is 240000 ms
-
 static int SetAllAmbientCapability(void)
 {
     for (int i = 0; i <= CAP_LAST_CAP; ++i) {
@@ -977,9 +975,9 @@ void ServiceReap(Service *service)
         }
     } else if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
-            INIT_LOGI("ServiceReap start failed! %s will reStart 240 second later", service->name);
+            INIT_LOGI("ServiceReap start failed! %s will reStart %d second later", service->name, service->crashTime);
             service->crashCnt = 0;
-            ServiceReStartTimer(service, DEF_CRASH_TIME);
+            ServiceReStartTimer(service, service->crashTime);
             return;
         }
     }
