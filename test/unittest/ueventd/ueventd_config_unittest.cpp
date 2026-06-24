@@ -84,6 +84,20 @@ HWTEST_F(UeventdConfigUnitTest, Init_UeventdConfigTest_ConfigEntry001, TestSize.
     EXPECT_EQ(rc, 0);
 }
 
+HWTEST_F(UeventdConfigUnitTest, Init_UeventdConfigTest_HandleOtherDevice001, TestSize.Level1)
+{
+    struct Uevent uevent = {
+        .subsystem = "misc",
+        .syspath = "/devices/platform/test/misc_device",
+        .major = 10,
+        .minor = 200,
+    };
+
+    HandleOtherDeviceEvent(&uevent);
+    auto exist = IsFileExist("/dev/misc_device");
+    EXPECT_TRUE(exist);
+}
+
 HWTEST_F(UeventdConfigUnitTest, Init_UeventdConfigTest_Parameter001, TestSize.Level0)
 {
     ParseUeventdConfigFile(STARTUP_INIT_UT_PATH"/ueventd_ut/valid.config");
