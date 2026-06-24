@@ -94,7 +94,11 @@ HWTEST_F(UeventdConfigUnitTest, Init_UeventdConfigTest_HandleOtherDevice001, Tes
     };
 
     HandleOtherDeviceEvent(&uevent);
-    auto exist = IsFileExist("/dev/misc_device");
+    struct stat st {};
+    bool exist = true;
+    if (stat("/dev/misc_device", &st) < 0) {
+        exist = false;
+    }
     EXPECT_TRUE(exist);
 }
 
