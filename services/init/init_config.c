@@ -54,13 +54,9 @@ static void ParseInitCfgContents(const char *cfgName, const cJSON *root, int dep
 int ParseInitCfg(const char *configFile, void *context)
 {
     int depth = 0;
-    if (context != NULL) {
-        depth = *(int *)context;
-    }
-    if (depth >= IMPORT_MAX_LEVEL) {
-        INIT_LOGE("Import level too deep, max level is %d", IMPORT_MAX_LEVEL);
-        return -1;
-    }
+    INIT_CHECK(context == NULL, depth = *(int *)context);
+    INIT_ERROR_CHECK(depth < IMPORT_MAX_LEVEL, return -1,
+        "Import level too deep, max level is %d", IMPORT_MAX_LEVEL);
     INIT_LOGV("Parse init configs from %s", configFile);
     char *fileBuf = ReadFileToBuf(configFile);
     INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Cfg error, %s not found", configFile);
@@ -77,10 +73,8 @@ int ParseInitCfg(const char *configFile, void *context)
 
 static void ParseAllImports(const cJSON *root, int depth)
 {
-    if (depth >= IMPORT_MAX_LEVEL) {
-        INIT_LOGE("Import level too deep, max level is %d", IMPORT_MAX_LEVEL);
-        return;
-    }
+    INIT_ERROR_CHECK(depth < IMPORT_MAX_LEVEL, return,
+        "Import level too deep, max level is %d", IMPORT_MAX_LEVEL);
     char *tmpParamValue = calloc(PARAM_VALUE_LEN_MAX + 1, sizeof(char));
     INIT_ERROR_CHECK(tmpParamValue != NULL, return, "Failed to alloc memory for param");
 
