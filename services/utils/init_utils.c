@@ -637,7 +637,7 @@ int InRescueMode(void)
 int InRepairMode(void)
 {
     char repair[REPAIR_MODE_LEN] = {0};
-    int ret = GetExactParameterFromCmdLine("repair_mode", repair, REPAIR_MODE_LEN);
+    int ret = GetExactParameterFromCmdLine("ohos.boot.maintenance.recovery", repair, REPAIR_MODE_LEN);
     if (ret != 0) {
         return -1;
     }
