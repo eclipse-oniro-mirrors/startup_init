@@ -74,6 +74,8 @@
 #define TIOCSCTTY 0x540E
 #endif
 
+#define SEC_TO_MSEC 1000
+
 static int SetAllAmbientCapability(void)
 {
     for (int i = 0; i <= CAP_LAST_CAP; ++i) {
@@ -977,7 +979,7 @@ void ServiceReap(Service *service)
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGI("ServiceReap start failed! %s will reStart %d second later", service->name, service->crashTime);
             service->crashCnt = 0;
-            ServiceReStartTimer(service, service->crashTime * 1000);
+            ServiceReStartTimer(service, service->crashTime * SEC_TO_MSEC);
             return;
         }
     }
