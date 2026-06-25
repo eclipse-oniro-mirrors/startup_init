@@ -20,7 +20,9 @@
 #include "init_param.h"
 #include "init_group_manager.h"
 
-static void ParseAllImports(const cJSON *root);
+static void ParseAllImports(const cJSON *root, int depth);
+
+#define IMPORT_MAX_LEVEL 100
 
 InitContextType GetConfigContextType(const char *cfgName)
 {
@@ -36,7 +38,7 @@ InitContextType GetConfigContextType(const char *cfgName)
     return INIT_CONTEXT_MAIN;
 }
 
-static void ParseInitCfgContents(const char *cfgName, const cJSON *root)
+static void ParseInitCfgContents(const char *cfgName, const cJSON *root, int depth)
 {
     INIT_ERROR_CHECK(root != NULL, return, "Root is null");
     ConfigContext context = { INIT_CONTEXT_MAIN };
@@ -46,12 +48,15 @@ static void ParseInitCfgContents(const char *cfgName, const cJSON *root)
     // parse jobs
     ParseAllJobs(root, &context);
     // parse imports
-    ParseAllImports(root);
+    ParseAllImports(root, depth);
 }
 
 int ParseInitCfg(const char *configFile, void *context)
 {
-    UNUSED(context);
+    int depth = 0;
+    INIT_CHECK(context == NULL, depth = *(int *)context);
+    INIT_ERROR_CHECK(depth < IMPORT_MAX_LEVEL, return -1,
+        "Import level too deep, max level is %d", IMPORT_MAX_LEVEL);
     INIT_LOGV("Parse init configs from %s", configFile);
     char *fileBuf = ReadFileToBuf(configFile);
     INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Cfg error, %s not found", configFile);
@@ -60,14 +65,16 @@ int ParseInitCfg(const char *configFile, void *context)
     INIT_ERROR_CHECK(fileRoot != NULL, free(fileBuf);
         return -1, "Cfg error, failed to parse json %s ", configFile);
 
-    ParseInitCfgContents(configFile, fileRoot);
+    ParseInitCfgContents(configFile, fileRoot, depth);
     cJSON_Delete(fileRoot);
     free(fileBuf);
     return 0;
 }
 
-static void ParseAllImports(const cJSON *root)
+static void ParseAllImports(const cJSON *root, int depth)
 {
+    INIT_ERROR_CHECK(depth < IMPORT_MAX_LEVEL, return,
+        "Import level too deep, max level is %d", IMPORT_MAX_LEVEL);
     char *tmpParamValue = calloc(PARAM_VALUE_LEN_MAX + 1, sizeof(char));
     INIT_ERROR_CHECK(tmpParamValue != NULL, return, "Failed to alloc memory for param");
 
@@ -77,6 +84,7 @@ static void ParseAllImports(const cJSON *root)
         return;
     }
     int importAttrSize = cJSON_GetArraySize(importAttr);
+    int nextDepth = depth + 1;
     for (int i = 0; i < importAttrSize; i++) {
         cJSON *importItem = cJSON_GetArrayItem(importAttr, i);
         if (!cJSON_IsString(importItem)) {
@@ -94,7 +102,7 @@ static void ParseAllImports(const cJSON *root)
             continue;
         }
         INIT_LOGI("Import %s  ...", tmpParamValue);
-        ParseInitCfg(tmpParamValue, NULL);
+        ParseInitCfg(tmpParamValue, &nextDepth);
     }
     free(tmpParamValue);
     return;
