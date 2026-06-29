@@ -29,9 +29,13 @@ extern "C" {
 #define DEFAULT_PARAM_WAIT_TIMEOUT 30 // 30s
 #define DEFAULT_PARAM_SET_TIMEOUT 15 // 10s
 
-#ifndef PARAM_NAME_LEN_MAX
+#ifndef PARAM_CONST_VALUE_LEN_MAX
 #define PARAM_CONST_VALUE_LEN_MAX 4096
+#endif
+#ifndef PARAM_VALUE_LEN_MAX
 #define PARAM_VALUE_LEN_MAX  96
+#endif
+#ifndef PARAM_NAME_LEN_MAX
 #define PARAM_NAME_LEN_MAX  96
 #endif
 
