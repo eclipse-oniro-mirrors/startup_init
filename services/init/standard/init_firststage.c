@@ -29,6 +29,10 @@
 #include "init_mount.h"
 #include "fs_manager/fs_manager.h"
 #include "switch_root.h"
+#ifdef EROFS_OVERLAY
+#include "erofs_overlay_common.h"
+#include "dm_merge_overlay.h"
+#endif
 #include "ueventd.h"
 #include "ueventd_socket.h"
 #include "bootstage.h"
@@ -95,6 +99,52 @@ static int StartUeventd(char **requiredDevices, int num)
     return 0;
 }
 
+#ifdef EROFS_OVERLAY
+static void SetupOverlay(Fstab *fstab)
+{
+    if (!IsOverlayEnable()) {
+        return;
+    }
+    if (CheckHyperholdDisableMarker() > 0) {
+        INIT_LOGI("hyperhold disable marker detected, overlay cleaned, skip overlay setup");
+        return;
+    }
+    if (!IsHyperholdEnableMarkerSet()) {
+        INIT_LOGI("per-partition mode, skip dm_merge setup");
+        return;
+    }
+    TryDmMergeOverlay(fstab);
+    if (CheckDmMergeCleanup() > 0) {
+        INIT_LOGI("dm_merge cleanup performed");
+    }
+}
+#endif
+
+static void DoMountRequired(Fstab *fstab)
+{
+    if (GetBootSlots() >= SUPPORT_AB_PARTITION_UPDATE) {
+        int snapshotRet = HookMgrExecute(GetBootStageHookMgr(), INIT_SNAPSHOT_ACTIVE,
+                                         (void *)(fstab), NULL);
+        INIT_LOGI("active sanpshot ret = %d", snapshotRet);
+    }
+#ifdef EROFS_OVERLAY
+    SetupOverlay(fstab);
+#endif
+    int ret = MountRequriedPartitions(fstab);
+#ifdef EROFS_OVERLAY
+    if (IsOverlayEnable()) {
+        MountDmMergeOverlayAll();
+    }
+#endif
+    if (ret < 0) {
+        INIT_LOGE("[startup_failed]Mount required partitions failed; please check fstab file %d",
+            FSTAB_MOUNT_FAILED);
+#ifndef STARTUP_INIT_TEST
+        abort();
+#endif
+    }
+}
+
 static void MountRequiredPartitions(void)
 {
     int requiredNum = 0;
@@ -103,29 +153,13 @@ static void MountRequiredPartitions(void)
     if (devices != NULL && requiredNum > 0) {
         int ret = StartUeventd(devices, requiredNum);
         if (ret == 0) {
-            if (GetBootSlots() >= SUPPORT_AB_PARTITION_UPDATE) {
-                int snapshotRet = HookMgrExecute(GetBootStageHookMgr(), INIT_SNAPSHOT_ACTIVE,
-                                                 (void *)(fstab), NULL);
-                INIT_LOGI("active sanpshot ret = %d", snapshotRet);
-            }
-            ret = MountRequriedPartitions(fstab);
+            DoMountRequired(fstab);
         }
         FreeStringVector(devices, requiredNum);
         devices = NULL;
         ReleaseFstab(fstab);
         fstab = NULL;
-        if (ret < 0) {
-            // If mount required partitions failure.
-            // There is no necessary to continue.
-            // Just abort
-            INIT_LOGE("[startup_failed]Mount required partitions failed; please check fstab file %d",
-                FSTAB_MOUNT_FAILED);
-#ifndef STARTUP_INIT_TEST
-            abort();
-#endif
-        }
     }
-
     if (fstab != NULL) {
         ReleaseFstab(fstab);
         fstab = NULL;

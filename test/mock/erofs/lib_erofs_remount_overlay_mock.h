@@ -21,7 +21,7 @@ void MockSetremountresultflag();
 
 int MockRemountoverlay();
 
-int MockMountoverlayone(const char *mnt);
+int MockMountoverlayone(const char *mnt, const char *overlayPrefix);
 
 void MockOverlayremountvendorpre();
 
@@ -38,7 +38,7 @@ public:
 
     virtual int RemountOverlay() = 0;
 
-    virtual int MountOverlayOne(const char *mnt) = 0;
+    virtual int MountOverlayOne(const char *mnt, const char *overlayPrefix) = 0;
 
     virtual void OverlayRemountVendorPre() = 0;
 
@@ -57,7 +57,7 @@ public:
 
     MOCK_METHOD(int, RemountOverlay, ());
 
-    MOCK_METHOD(int, MountOverlayOne, (const char *mnt));
+    MOCK_METHOD(int, MountOverlayOne, (const char *mnt, const char *overlayPrefix));
 
     MOCK_METHOD(void, OverlayRemountVendorPre, ());
 

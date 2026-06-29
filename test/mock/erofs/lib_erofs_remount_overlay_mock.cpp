@@ -30,9 +30,9 @@ int MockRemountoverlay()
     return ErofsRemountOverlay::erofsRemountOverlayFunc->RemountOverlay();
 }
 
-int MockMountoverlayone(const char *mnt)
+int MockMountoverlayone(const char *mnt, const char *overlayPrefix)
 {
-    return ErofsRemountOverlay::erofsRemountOverlayFunc->MountOverlayOne(const char *mnt);
+    return ErofsRemountOverlay::erofsRemountOverlayFunc->MountOverlayOne(mnt, overlayPrefix);
 }
 
 void MockOverlayremountvendorpre()

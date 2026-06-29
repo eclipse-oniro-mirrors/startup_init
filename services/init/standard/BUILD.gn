@@ -63,6 +63,9 @@ ohos_executable("init_early") {
   if (asan_detector && init_feature_support_asan) {
     defines += [ "ASAN_DETECTOR" ]
   }
+  if (init_startup_feature_erofs_overlay) {
+    defines += [ "EROFS_OVERLAY" ]
+  }
   install_images = [ "ramdisk" ]
   install_enable = true
   part_name = "init"

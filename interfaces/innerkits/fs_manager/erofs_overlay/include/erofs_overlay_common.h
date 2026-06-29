@@ -33,14 +33,42 @@ extern "C" {
 #define SECTOR_SIZE 512
 #define PREFIX_LOWER "/mnt/lower"
 #define PREFIX_OVERLAY "/mnt/overlay"
+#define PREFIX_OVERLAY_MERGE "/mnt/overlay_merge"
 #define PREFIX_UPPER "/upper"
 #define PREFIX_WORK "/work"
+#define BYTE_UNIT 1024
+#define ALIGN_BLOCK_SIZE (16 * BYTE_UNIT)
+#define MIN_DM_SIZE (500 * BYTE_UNIT)
+#define BLOCK_SIZE_UINT 4096
+#define EXTHDR_MAGIC 0xFEEDBEEF
+#define EXTHDR_BLKSIZE 4096
+
+struct extheader_v1 {
+    uint32_t magic_number;
+    uint16_t exthdr_size;
+    uint16_t bcc16;
+    uint64_t part_size;
+};
 
 bool IsOverlayEnable(void);
 
 bool CheckIsExt4(const char *dev, uint64_t offset);
 
 bool CheckIsErofs(const char *dev);
+
+uint64_t LookupErofsEnd(const char *dev);
+
+uint64_t GetImgSize(const char *dev, uint64_t offset);
+
+uint64_t GetBlockSize(const char *dev);
+
+uint64_t GetFsSize(int fd);
+
+uint64_t AlignTo(uint64_t base, uint64_t alignment);
+
+int GetMapperAddr(const char *dev, uint64_t *start, uint64_t *length);
+
+int GetMapperAddrForMerge(const char *dev, uint64_t *start, uint64_t *length);
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -14,6 +14,8 @@
  */
 
 #include <sys/ioctl.h>
+#include <linux/ioctl.h>
+#include <linux/fs.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
 #include <sys/wait.h>
@@ -25,28 +27,15 @@
 #include "fs_manager/fs_manager.h"
 #include "erofs_mount_overlay.h"
 #include "erofs_remount_overlay.h"
+#include "dm_merge_overlay.h"
+#include "erofs_overlay_common.h"
 #include "remount_overlay.h"
 
-#define MODE_MKDIR 0755
 #define BLOCK_SIZE_UNIT 4096
-#define PATH_MAX 256
-#define PREFIX_LOWER "/mnt/lower"
+#define REMOUNT_PATH_MAX 256
 #define MNT_VENDOR "/vendor"
 #define ROOT_MOUNT_DIR "/"
 #define SYSTEM_DIR "/usr"
-
-INIT_STATIC bool MntNeedRemount(const char *mnt)
-{
-    char *remountPath[] = {
-        "/", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust", "/version"
-    };
-    for (size_t i = 0; i < ARRAY_LENGTH(remountPath); i++) {
-        if (strcmp(remountPath[i], mnt) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
 
 INIT_STATIC bool IsSkipRemount(const struct mntent mentry)
 {
@@ -87,7 +76,7 @@ INIT_STATIC int ExecCommand(int argc, char **argv)
     return WEXITSTATUS(status);
 }
 
-INIT_STATIC int GetDevSize(const char *fsBlkDev, uint64_t *devSize)
+int GetDevSize(const char *fsBlkDev, uint64_t *devSize)
 {
     int fd = -1;
     fd = open(fsBlkDev, O_RDONLY);
@@ -106,7 +95,7 @@ INIT_STATIC int GetDevSize(const char *fsBlkDev, uint64_t *devSize)
     return 0;
 }
 
-INIT_STATIC int FormatExt4(const char *fsBlkDev, const char *fsMntPoint)
+int FormatExt4(const char *fsBlkDev, const char *fsMntPoint)
 {
     uint64_t devSize;
     int ret = GetDevSize(fsBlkDev, &devSize);
@@ -157,6 +146,25 @@ INIT_STATIC void OverlayRemountPost(const char *mnt)
     }
 }
 
+INIT_STATIC bool FormatAndMountExt4(const char *devExt4, const char *mnt)
+{
+    if (CheckIsExt4(devExt4, 0)) {
+        INIT_LOGI("is ext4, not need format %s", devExt4);
+        return true;
+    }
+    int ret = FormatExt4(devExt4, mnt);
+    if (ret) {
+        INIT_LOGE("Failed to format devExt4 %s.", devExt4);
+        return false;
+    }
+    ret = MountExt4Device(devExt4, mnt, true);
+    if (ret) {
+        INIT_LOGE("Failed to mount devExt4 %s.", devExt4);
+        return false;
+    }
+    return true;
+}
+
 INIT_STATIC bool DoRemount(struct mntent *mentry)
 {
     int devNum = 0;
@@ -181,20 +189,8 @@ INIT_STATIC bool DoRemount(struct mntent *mentry)
         mnt = mentry->mnt_dir;
     }
 
-    if (CheckIsExt4(devExt4, 0)) {
-        INIT_LOGI("is ext4, not need format %s", devExt4);
-    } else {
-        ret = FormatExt4(devExt4, mnt);
-        if (ret) {
-            INIT_LOGE("Failed to format devExt4 %s.", devExt4);
-            return false;
-        }
-
-        ret = MountExt4Device(devExt4, mnt, true);
-        if (ret) {
-            INIT_LOGE("Failed to mount devExt4 %s.", devExt4);
-            return false;
-        }
+    if (!FormatAndMountExt4(devExt4, mnt)) {
+        return false;
     }
 
     if (strncmp(mentry->mnt_dir, "/mnt/lower", strlen("/mnt/lower")) == 0) {
@@ -202,7 +198,7 @@ INIT_STATIC bool DoRemount(struct mntent *mentry)
     }
 
     OverlayRemountPre(mnt);
-    if (MountOverlayOne(mnt)) {
+    if (MountOverlayOne(mnt, PREFIX_OVERLAY)) {
         INIT_LOGE("Failed to mount overlay on mnt:%s.", mnt);
         return false;
     }
@@ -210,13 +206,7 @@ INIT_STATIC bool DoRemount(struct mntent *mentry)
     return true;
 }
 
-INIT_STATIC bool DirectoryExists(const char *path)
-{
-    struct stat sb;
-    return stat(path, &sb) != -1 && S_ISDIR(sb.st_mode);
-}
-
-int RootOverlaySetup(void)
+INIT_STATIC int RootOverlaySetup(void)
 {
     const char *rootOverlay = "/mnt/overlay/usr";
     const char *rootUpper = "/mnt/overlay/usr/upper";
@@ -229,21 +219,19 @@ int RootOverlaySetup(void)
         return -1;
     }
 
-    if (!DirectoryExists(rootOverlay)) {
-        if (mkdir(rootOverlay, MODE_MKDIR) && (errno != EEXIST)) {
-            INIT_LOGE("make dir failed on %s", rootOverlay);
-            return -1;
-        }
+    if (mkdir(rootOverlay, MODE_MKDIR) && (errno != EEXIST)) {
+        INIT_LOGE("make dir failed on %s", rootOverlay);
+        return -1;
+    }
 
-        if (mkdir(rootUpper, MODE_MKDIR) && (errno != EEXIST)) {
-            INIT_LOGE("make dir failed on %s", rootUpper);
-            return -1;
-        }
+    if (mkdir(rootUpper, MODE_MKDIR) && (errno != EEXIST)) {
+        INIT_LOGE("make dir failed on %s", rootUpper);
+        return -1;
+    }
 
-        if (mkdir(rootWork, MODE_MKDIR) && (errno != EEXIST)) {
-            INIT_LOGE("make dir failed on %s", rootWork);
-            return -1;
-        }
+    if (mkdir(rootWork, MODE_MKDIR) && (errno != EEXIST)) {
+        INIT_LOGE("make dir failed on %s", rootWork);
+        return -1;
     }
 
     if (mount("overlay", "/system", "overlay", 0, mntOpt)) {
@@ -307,7 +295,7 @@ static bool IsRegularFile(const char *file)
 
 static void MountBindEngFile(const char *source, const char *target)
 {
-    char targetFullPath[PATH_MAX] = {0};
+    char targetFullPath[REMOUNT_PATH_MAX] = {0};
     const char *p = source;
     char *q = NULL;
     const char *end = source + strlen(source);
@@ -328,7 +316,8 @@ static void MountBindEngFile(const char *source, const char *target)
         return;
     }
     // OK, now get sub dir and combine it with target
-    int ret = snprintf_s(targetFullPath, PATH_MAX, PATH_MAX - 1, "%s%s", strcmp(target, "/") == 0 ? "" : target, q);
+    const char *prefix = (strcmp(target, "/") == 0) ? "" : target;
+    int ret = snprintf_s(targetFullPath, REMOUNT_PATH_MAX, REMOUNT_PATH_MAX - 1, "%s%s", prefix, q);
     if (ret == -1) {
         INIT_LOGE("Failed to build target path");
         return;
@@ -351,7 +340,7 @@ static void MountBindEngFile(const char *source, const char *target)
     INIT_LOGW("%s without expected type, skip overlay", targetFullPath);
 }
 
-static void EngFilesOverlay(const char *source, const char *target)
+void EngFilesOverlay(const char *source, const char *target)
 {
     DIR *dir = NULL;
     struct dirent *de = NULL;
@@ -361,12 +350,12 @@ static void EngFilesOverlay(const char *source, const char *target)
         return;
     }
     int dfd = dirfd(dir);
-    char srcPath[PATH_MAX] = {};
+    char srcPath[REMOUNT_PATH_MAX] = {};
     while ((de = readdir(dir)) != NULL) {
         if (de->d_name[0] == '.') {
             continue;
         }
-        if (snprintf_s(srcPath, PATH_MAX, PATH_MAX - 1, "%s/%s", source, de->d_name) == -1) {
+        if (snprintf_s(srcPath, REMOUNT_PATH_MAX, REMOUNT_PATH_MAX - 1, "%s/%s", source, de->d_name) == -1) {
             INIT_LOGE("Failed to build path for overlaying");
             break;
         }
@@ -388,20 +377,15 @@ static void EngFilesOverlay(const char *source, const char *target)
     dir = NULL;
 }
 
-int RemountRofsOverlay(void)
+INIT_STATIC int PerPartitionRemountFallback(void)
 {
-    int lastRemountResult = GetRemountResult();
-    INIT_LOGI("get last remount result is %d.", lastRemountResult);
-    if (lastRemountResult == REMOUNT_SUCC) {
-        return REMOUNT_SUCC;
-    }
-    FILE *fp;
-    struct mntent *mentry = NULL;
-    if ((fp = setmntent("/proc/mounts", "r")) == NULL) {
+    FILE *fp = setmntent("/proc/mounts", "r");
+    if (fp == NULL) {
         INIT_LOGE("Failed to open /proc/mounts.");
         return REMOUNT_FAIL;
     }
 
+    struct mntent *mentry = NULL;
     while (NULL != (mentry = getmntent(fp))) {
         if (IsSkipRemount(*mentry)) {
             INIT_LOGI("skip remount %s", mentry->mnt_dir);
@@ -426,10 +410,36 @@ int RemountRofsOverlay(void)
 
     endmntent(fp);
     SetRemountResultFlag();
-
     INIT_LOGI("remount system overlay...");
     EngFilesOverlay("/eng_system", "/");
     INIT_LOGI("remount chipset overlay...");
     EngFilesOverlay("/eng_chipset", "/chipset");
     return REMOUNT_SUCC;
+}
+
+int RemountRofsOverlay(void)
+{
+    int lastRemountResult = GetRemountResult();
+    INIT_LOGI("get last remount result is %d.", lastRemountResult);
+    if (lastRemountResult == REMOUNT_SUCC) {
+        if (IsDmMergeOverlayActive()) {
+            INIT_LOGI("dm_merge overlay already active, skip");
+            return REMOUNT_SUCC;
+        }
+        INIT_LOGI("old per-partition overlay active, skip (use remount -c to migrate to dm_merge)");
+        return REMOUNT_SUCC;
+    }
+
+    if (!IsDmMergeRemountEnabled()) {
+        INIT_LOGI("hyperhold 'enable' marker not found, use per-partition approach");
+        return PerPartitionRemountFallback();
+    }
+
+    int ret = TryDmMergeRemount();
+    if (ret == REMOUNT_SUCC) {
+        INIT_LOGI("dm_merge approach success.");
+        return REMOUNT_SUCC;
+    }
+    INIT_LOGW("dm_merge approach failed, falling back to per-partition approach.");
+    return PerPartitionRemountFallback();
 }

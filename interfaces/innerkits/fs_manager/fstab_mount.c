@@ -39,6 +39,7 @@
 #include "init_filesystems.h"
 #ifdef EROFS_OVERLAY
 #include "erofs_mount_overlay.h"
+#include "dm_merge_overlay.h"
 #endif
 #ifdef __cplusplus
 #if __cplusplus
@@ -731,14 +732,26 @@ INIT_STATIC int DoMountOneItem(FstabItem *item, MountResult *result)
 }
 
 #ifdef EROFS_OVERLAY
+static int MountErofsOverlayItem(FstabItem *item)
+{
+    if (!IsOverlayEnable()) {
+        return -1;
+    }
+    if (IsDmMergeOverlayActive()) {
+        return DoMountDmMergeErofsOnly(item);
+    }
+    return DoMountOverlayDevice(item);
+}
+
 static int MountItemByFsType(FstabItem *item, MountResult *result)
 {
     if (CheckIsErofs(item->deviceName)) {
         if (strcmp(item->fsType, "erofs") == 0) {
-            if (IsOverlayEnable()) {
-                return DoMountOverlayDevice(item);
+            int rc = MountErofsOverlayItem(item);
+            if (rc >= 0) {
+                return rc;
             }
-            int rc = DoMountOneItem(item, result);
+            rc = DoMountOneItem(item, result);
             if (rc == 0 && strcmp(item->mountPoint, "/usr") == 0) {
                 SwitchRoot("/usr");
             }
@@ -1001,7 +1014,7 @@ static bool NeedDmVerity(FstabItem *item)
 }
 #endif
 
-static void AdjustPartitionNameByPartitionSlot(FstabItem *item)
+void FsAdjustPartitionNameBySlot(FstabItem *item)
 {
     char buffer[MAX_BUFFER_LEN] = {0};
     g_currentSlot = GetCurrentSlot();
@@ -1032,7 +1045,7 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
     // Mount partition during second startup.
     if (!required) {
         if (!FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
-            BEGET_INFO_CHECK(GetBootSlots() <= 1, AdjustPartitionNameByPartitionSlot(item),
+            BEGET_INFO_CHECK(GetBootSlots() <= 1, FsAdjustPartitionNameBySlot(item),
                 "boot slots is %d, now adjust partition name according to current slot", GetBootSlots());
             rc = MountOneItem(item);
         }
@@ -1041,7 +1054,7 @@ static int CheckRequiredAndMount(FstabItem *item, bool required)
 
     // Mount partition during one startup.
     if (FM_MANAGER_REQUIRED_ENABLED(item->fsManagerFlags)) {
-        BEGET_INFO_CHECK(GetBootSlots() <= 1, AdjustPartitionNameByPartitionSlot(item),
+        BEGET_INFO_CHECK(GetBootSlots() <= 1, FsAdjustPartitionNameBySlot(item),
             "boot slots is %d, now adjust partition name according to current slot", GetBootSlots());
 #ifdef SUPPORT_HVB
 #ifdef EROFS_OVERLAY

@@ -31,9 +31,11 @@ int GetRemountResult(void);
 
 void SetRemountResultFlag(void);
 
+void DeleteRemountResultFlag(void);
+
 int RemountOverlay(void);
 
-int MountOverlayOne(const char *mnt);
+int MountOverlayOne(const char *mnt, const char *overlayPrefix);
 
 void OverlayRemountVendorPre(void);
 

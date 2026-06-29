@@ -27,6 +27,8 @@ extern "C" {
 
 int DoMountOverlayDevice(FstabItem *item);
 
+int DoMountDmMergeErofsOnly(FstabItem *item);
+
 int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount);
 
 #ifdef __cplusplus

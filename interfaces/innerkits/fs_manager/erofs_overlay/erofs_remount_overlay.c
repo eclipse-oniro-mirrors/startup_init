@@ -21,6 +21,7 @@
 #include "fs_dm.h"
 #include "fs_manager/fs_manager.h"
 #include "erofs_remount_overlay.h"
+#include "dm_merge_overlay.h"
 
 #define MODEM_DRIVER_MNT_PATH STARTUP_INIT_UT_PATH"/vendor/modem/modem_driver"
 #define MODEM_VENDOR_MNT_PATH STARTUP_INIT_UT_PATH"/vendor/modem/modem_vendor"
@@ -51,6 +52,15 @@ int GetRemountResult(void)
         }
     }
     return REMOUNT_FAIL;
+}
+
+void DeleteRemountResultFlag(void)
+{
+    if (unlink(REMOUNT_RESULT_FLAG) != 0) {
+        BEGET_LOGE("unlink remount.result.done failed errno %d", errno);
+    } else {
+        BEGET_LOGI("remount.result.done deleted");
+    }
 }
 
 void SetRemountResultFlag(void)
@@ -162,7 +172,7 @@ void OverlayRemountVendorPre(void)
     }
 }
 
-void OverlayRemountVendorPost()
+void OverlayRemountVendorPost(void)
 {
     Exchange2Modem(MODEM_DRIVER_MNT_PATH, MODEM_DRIVER_EXCHANGE_PATH);
     Exchange2Modem(MODEM_VENDOR_MNT_PATH, MODEM_VENDOR_EXCHANGE_PATH);
@@ -170,44 +180,50 @@ void OverlayRemountVendorPost()
     Exchange2Modem(DPA_MNT_PATH, DPA_EXCHANGE_PATH);
 }
 
-int MountOverlayOne(const char *mnt)
+INIT_STATIC int ConstructOverlayLowerPath(const char *mnt, char *dirLower, uint64_t dirLowerLen)
 {
-    if ((strcmp(mnt, MODEM_DRIVER_MNT_PATH) == 0) || (strcmp(mnt, MODEM_VENDOR_MNT_PATH) == 0)) {
-        return 0;
-    }
-    char dirLower[MAX_BUFFER_LEN] = {0};
-    char dirUpper[MAX_BUFFER_LEN] = {0};
-    char dirWork[MAX_BUFFER_LEN] = {0};
-    char mntOpt[MAX_BUFFER_LEN] = {0};
-
     if (strcmp(mnt, "/usr") == 0) {
-        if (snprintf_s(dirLower, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s", "/system") < 0) {
+        if (snprintf_s(dirLower, dirLowerLen, dirLowerLen - 1, "%s", "/system") < 0) {
             BEGET_LOGE("copy system dirLower failed. errno %d", errno);
             return -1;
         }
     } else {
-        if (snprintf_s(dirLower, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s%s", PREFIX_LOWER, mnt) < 0) {
+        if (snprintf_s(dirLower, dirLowerLen, dirLowerLen - 1, "%s%s", PREFIX_LOWER, mnt) < 0) {
             BEGET_LOGE("copy dirLower failed. errno %d", errno);
             return -1;
         }
     }
+    return 0;
+}
 
-    if (snprintf_s(dirUpper, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s%s%s", PREFIX_OVERLAY, mnt, PREFIX_UPPER) < 0) {
+INIT_STATIC int ConstructOverlayMntOpt(const char *mnt, const char *overlayPrefix,
+    char *mntOpt, uint64_t mntOptLen)
+{
+    char dirLower[MAX_BUFFER_LEN] = {0};
+    char dirUpper[MAX_BUFFER_LEN] = {0};
+    char dirWork[MAX_BUFFER_LEN] = {0};
+
+    if (ConstructOverlayLowerPath(mnt, dirLower, MAX_BUFFER_LEN) != 0) {
+        return -1;
+    }
+    if (snprintf_s(dirUpper, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s%s%s", overlayPrefix, mnt, PREFIX_UPPER) < 0) {
         BEGET_LOGE("copy dirUpper failed. errno %d", errno);
         return -1;
     }
-
-    if (snprintf_s(dirWork, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s%s%s", PREFIX_OVERLAY, mnt, PREFIX_WORK) < 0) {
+    if (snprintf_s(dirWork, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s%s%s", overlayPrefix, mnt, PREFIX_WORK) < 0) {
         BEGET_LOGE("copy dirWork failed. errno %d", errno);
         return -1;
     }
-
-    if (snprintf_s(mntOpt, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1,
+    if (snprintf_s(mntOpt, mntOptLen, mntOptLen - 1,
         "upperdir=%s,lowerdir=%s,workdir=%s,override_creds=off", dirUpper, dirLower, dirWork) < 0) {
         BEGET_LOGE("copy mntOpt failed. errno %d", errno);
         return -1;
     }
+    return 0;
+}
 
+INIT_STATIC int DoOverlayMount(const char *mnt, const char *mntOpt)
+{
     if (strcmp(mnt, "/usr") == 0) {
         if (mount("overlay", "/system", "overlay", 0, mntOpt)) {
             BEGET_LOGE("mount system overlay failed. errno %d", errno);
@@ -223,8 +239,24 @@ int MountOverlayOne(const char *mnt)
     return 0;
 }
 
+int MountOverlayOne(const char *mnt, const char *overlayPrefix)
+{
+    if ((strcmp(mnt, MODEM_DRIVER_MNT_PATH) == 0) || (strcmp(mnt, MODEM_VENDOR_MNT_PATH) == 0)) {
+        return 0;
+    }
+    char mntOpt[MAX_BUFFER_LEN] = {0};
+    if (ConstructOverlayMntOpt(mnt, overlayPrefix, mntOpt, MAX_BUFFER_LEN) != 0) {
+        return -1;
+    }
+    return DoOverlayMount(mnt, mntOpt);
+}
+
 int RemountOverlay(void)
 {
+    if (IsDmMergeOverlayActive()) {
+        BEGET_LOGI("dm_merge overlay already active, skip RemountOverlay");
+        return 0;
+    }
     char *remountPath[] = {
         "/usr", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust", "/version"
     };
@@ -245,7 +277,7 @@ int RemountOverlay(void)
             OverlayRemountVendorPre();
         }
 
-        if (MountOverlayOne(remountPath[i])) {
+        if (MountOverlayOne(remountPath[i], PREFIX_OVERLAY)) {
             BEGET_LOGE("mount overlay failed on mnt [%s].", dirMnt);
             return -1;
         }
