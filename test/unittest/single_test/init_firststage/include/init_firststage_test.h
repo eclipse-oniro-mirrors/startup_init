@@ -21,6 +21,7 @@ extern "C" {
 #endif
 
 void StartSecondStageInit(long long uptime);
+void SystemPrepare(long long upTimeInMicroSecs);
 
 #ifdef __cplusplus
 }

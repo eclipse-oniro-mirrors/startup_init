@@ -24,18 +24,54 @@ ohos_unittest("init_firststage_unittest") {
     "//base/startup/init/ueventd/include",
     "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
     "//base/startup/init/interfaces/innerkits/init_module_engine/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//base/startup/init/remount/include",
+    "//base/startup/init/services/utils",
+    "//base/startup/init/test/unittest/remount",
+    "//base/startup/init/test/mock/libs/include",
   ]
 
   sources = [
     "//base/startup/init/services/init/standard/init_firststage.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_overlay_common.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_remount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_mount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/dm_merge_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm_linear.c",
+    "//base/startup/init/remount/remount_overlay.c",
+    "//base/startup/init/remount/remount_dm_merge.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/utils/init_utils.c",
     "//base/startup/init/test/unittest/single_test/init_firststage/src/init_firststage_test.cpp",
+    "//base/startup/init/test/unittest/remount/remount_stub.cpp",
   ]
 
   cflags_cc = [ "-fexceptions" ]
   cflags = [
+    "-Dmount=MountStub",
+    "-Dumount=UmountStub",
+    "-Dumount2=Umount2Stub",
     "-Dexecv=ExecvStub",
-    "-DCloseStdio=CloseStdioStub",
+    "-Dreboot=RebootStub",
     "-Daccess=AccessStub",
+    "-DCreateFsAndDeviceNode=CreateFsAndDeviceNodeStub",
+    "-DMountRequriedPartitions=MountRequriedPartitionsStub",
+    "-DOpenLogDevice=OpenLogDeviceStub",
+    "-DEnableInitLog=EnableInitLogStub",
+    "-DUeventdSocketInit=UeventdSocketInitStub",
+    "-DRetriggerUevent=RetriggerUeventStub",
+    "-DRetriggerDmUeventByPath=RetriggerDmUeventByPathStub",
+    "-DSystemReadParam=SystemGetParameterStub",
+    "-Dsetmntent=SetmntentStub",
+    "-Dgetmntent=GetmntentStub",
+    "-Dendmntent=EndmntentStub",
+    "-Wno-unused-result",
+    "-Wno-unused-function",
   ]
 
   deps = [
@@ -47,11 +83,47 @@ ohos_unittest("init_firststage_unittest") {
     "STARTUP_INIT_UT_PATH =\"/data/init_ut\"",
     "ASAN_DETECTOR",
     "STARTUP_INIT_TEST",
+    "_GNU_SOURCE",
+    "EROFS_OVERLAY",
   ]
 
   configs = []
 
+  ldflags = [
+    "-Wl,--wrap=fork",
+    "-Wl,--wrap=exit",
+    "-Wl,--wrap=waitpid",
+    "-Wl,--wrap=mkdir",
+    "-Wl,--wrap=GetDevSize",
+    "-Wl,--wrap=CheckIsExt4",
+    "-Wl,--wrap=MountExt4Device",
+    "-Wl,--wrap=OverlayRemountVendorPre",
+    "-Wl,--wrap=OverlayRemountVendorPost",
+    "-Wl,--wrap=InUpdaterMode",
+    "-Wl,--wrap=GetParameterFromCmdLine",
+    "-Wl,--wrap=GetBootSlots",
+    "-Wl,--wrap=FsAdjustPartitionNameBySlot",
+    "-Wl,--wrap=LoadFstabFromCommandLine",
+    "-Wl,--wrap=ReadFstabFromFile",
+    "-Wl,--wrap=LoadRequiredFstab",
+    "-Wl,--wrap=CollectDmMergeTargets",
+    "-Wl,--wrap=DestroyDmMergeTargets",
+    "-Wl,--wrap=FsDmCreateMultiTargetLinearDevice",
+    "-Wl,--wrap=FsDmInitDmDev",
+    "-Wl,--wrap=FsDmRemoveDevice",
+    "-Wl,--wrap=WaitForFile",
+    "-Wl,--wrap=IsOverlayEnable",
+    "-Wl,--wrap=CheckHyperholdDisableMarker",
+    "-Wl,--wrap=IsHyperholdEnableMarkerSet",
+    "-Wl,--wrap=TryDmMergeOverlay",
+    "-Wl,--wrap=CheckDmMergeCleanup",
+    "-Wl,--wrap=MountDmMergeOverlayAll",
+    "-Wl,--wrap=GetExactParameterFromCmdLine",
+    "-Wl,--wrap=CloseStdio",
+  ]
+
   external_deps = [
+    "bounds_checking_function:libsec_static",
     "cJSON:cjson",
     "c_utils:utils",
     "googletest:gtest",
