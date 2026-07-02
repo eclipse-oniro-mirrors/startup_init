@@ -277,12 +277,16 @@ int TryDmMergeRemount(void)
 
 int ClearDmMerge(void)
 {
-    if (!IsDmMergeOverlayActive() && GetRemountResult() != REMOUNT_SUCC) {
-        INIT_LOGI("remount not enabled or legacy remount does not support cleanup, remount -c skip");
-        printf("remount not enabled or legacy remount does not support cleanup, skip\n");
+    if (!IsDmMergeOverlayActive()) {
+        INIT_LOGI("legacy remount does not support remount -c");
+        printf("legacy remount does not support remount -c, skip\n");
         return 1;
     }
-    unlink(REMOUNT_RESULT_FLAG);
+    if (GetRemountResult() != REMOUNT_SUCC) {
+        INIT_LOGI("remount not executed, remount -c skip");
+        printf("remount not executed, skip\n");
+        return 1;
+    }
     int fd = open(PREFIX_OVERLAY_MERGE"/.dm_merge_cleanup", O_CREAT | O_WRONLY, 0644);
     if (fd < 0) {
         INIT_LOGE("Failed to create .dm_merge_cleanup marker, errno %d", errno);
@@ -290,6 +294,7 @@ int ClearDmMerge(void)
     }
     write(fd, "1", 1);
     close(fd);
+    unlink(REMOUNT_RESULT_FLAG);
     INIT_LOGI(".dm_merge_cleanup marker created, will reboot");
     sync();
     reboot(RB_AUTOBOOT);
