@@ -83,6 +83,7 @@ ohos_unittest("fstab_mount_unittest") {
   sources += [
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_overlay_common.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_remount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/dm_merge_overlay.c",
   ]
   include_dirs += [ "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include" ]
 

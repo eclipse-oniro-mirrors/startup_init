@@ -165,6 +165,7 @@ ohos_unittest("init_begetctl_unittest") {
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_mount_overlay.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_overlay_common.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_remount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/dm_merge_overlay.c",
     "//base/startup/init/remount/remount_overlay.c",
 
     # 内核接口模块

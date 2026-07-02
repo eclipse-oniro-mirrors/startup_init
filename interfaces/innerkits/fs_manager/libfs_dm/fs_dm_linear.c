@@ -72,7 +72,7 @@ static int LoadDmLinearDeviceTable(int fd, const char *devName, DmLinearTarget *
 
     rc = ioctl(fd, DM_TABLE_LOAD, io);
     if (rc != 0) {
-        BEGET_LOGE("error %d, DM_TABLE_LOAD failed for %s", rc, devName);
+        BEGET_LOGE("error %d, DM_TABLE_LOAD failed for %s", errno, devName);
     }
     free(parasBuf);
     BEGET_LOGI("LoadDmLinearDeviceTable end, dev is [%s] rc is [%d]", devName, rc);

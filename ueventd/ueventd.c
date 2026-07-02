@@ -206,6 +206,7 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
             strstr(uevent->partitionName, "rvt") != NULL ||
             strstr(uevent->partitionName, "dtbo") != NULL ||
             strstr(uevent->partitionName, "modem_driver") != NULL ||
+            strstr(uevent->partitionName, "hyperhold") != NULL ||
             IsOtherPartitionName(uevent->partitionName)) {
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
             HandleBlockDeviceEvent(uevent);

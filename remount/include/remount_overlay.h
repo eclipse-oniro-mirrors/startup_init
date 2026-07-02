@@ -16,7 +16,8 @@
 #ifndef REMOUNT_OVERLAY_H
 #define REMOUNT_OVERLAY_H
 
-#include "fs_manager.h"
+#include <stdint.h>
+#include "fs_manager/fs_manager.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -25,6 +26,16 @@ extern "C" {
 #endif
 
 int RemountRofsOverlay(void);
+
+int TryDmMergeRemount(void);
+
+int ClearDmMerge(void);
+
+int FormatExt4(const char *fsBlkDev, const char *fsMntPoint);
+
+int GetDevSize(const char *fsBlkDev, uint64_t *devSize);
+
+void EngFilesOverlay(const char *source, const char *target);
 
 #ifdef __cplusplus
 #if __cplusplus

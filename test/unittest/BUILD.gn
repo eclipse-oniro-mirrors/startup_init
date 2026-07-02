@@ -66,6 +66,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_mount_overlay.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_overlay_common.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_remount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/dm_merge_overlay.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
     "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/switch_root.c",
