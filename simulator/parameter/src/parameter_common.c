@@ -249,6 +249,16 @@ int GetSdkApiVersion(void)
     return OHOS_SDK_API_VERSION;
 }
 
+int GetSdkPatchApiVersion(void)
+{
+    return 0;
+}
+
+int GetSdkMinorApiVersion(void)
+{
+    return 0;
+}
+
 int GetFirstApiVersion(void)
 {
     return HalGetFirstApiVersion();
