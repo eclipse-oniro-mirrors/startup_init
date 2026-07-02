@@ -732,7 +732,7 @@ INIT_STATIC int DoMountOneItem(FstabItem *item, MountResult *result)
 }
 
 #ifdef EROFS_OVERLAY
-static int MountErofsOverlayItem(FstabItem *item)
+INIT_STATIC int MountErofsOverlayItem(FstabItem *item)
 {
     if (!IsOverlayEnable()) {
         return -1;
@@ -743,7 +743,7 @@ static int MountErofsOverlayItem(FstabItem *item)
     return DoMountOverlayDevice(item);
 }
 
-static int MountItemByFsType(FstabItem *item, MountResult *result)
+INIT_STATIC int MountItemByFsType(FstabItem *item, MountResult *result)
 {
     if (CheckIsErofs(item->deviceName)) {
         if (strcmp(item->fsType, "erofs") == 0) {
