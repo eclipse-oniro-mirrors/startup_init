@@ -374,15 +374,6 @@ static void WriteHyperholdEnableMarker(void)
 
 bool IsDmMergeRemountEnabled(void)
 {
-    char paramValue[PARAM_VALUE_LEN_MAX] = {0};
-    uint32_t paramLen = sizeof(paramValue);
-    int paramRet = SystemGetParameter("persist.remount.merge.enable", paramValue, &paramLen);
-    if (paramRet != 0 || paramLen == 0 || strcmp(paramValue, "true") != 0) {
-        BEGET_LOGI("persist.remount.merge.enable not true, dm_merge remount disabled");
-        return false;
-    }
-    BEGET_LOGI("persist.remount.merge.enable=true, checking hyperhold marker");
-
     char buf[HYPERHOLD_SWITCH_SIZE] = {0};
     int fd = open(HYPERHOLD_DEVICE_PATH, O_RDONLY);
     if (fd < 0) {

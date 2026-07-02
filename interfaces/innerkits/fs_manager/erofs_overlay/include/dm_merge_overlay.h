@@ -35,7 +35,7 @@ extern "C" {
 #define HYPERHOLD_SWITCH_SIZE 128
 #define HYPERHOLD_SWITCH_DISABLE "remount_disable"
 #define HYPERHOLD_SWITCH_ENABLE "enable"
-#define MAX_OVERLAY_PARTITIONS 8
+#define MAX_OVERLAY_PARTITIONS 10
 #define BLKDISCARD_RANGE_SIZE 2
 
 int TryDmMergeOverlay(Fstab *fstab);
