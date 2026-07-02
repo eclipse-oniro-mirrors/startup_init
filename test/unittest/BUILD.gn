@@ -75,7 +75,6 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
     "//base/startup/init/interfaces/innerkits/syspara/parameter.c",
     "//base/startup/init/interfaces/innerkits/syspara/sysversion.c",
-    "//base/startup/init/remount/remount_overlay.c",
     "//base/startup/init/services/begetctl/begetctl_cmd.c",
     "//base/startup/init/services/begetctl/bootchart_cmd.c",
     "//base/startup/init/services/begetctl/dump_service.c",
@@ -190,7 +189,6 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
     "//base/startup/init/interfaces/innerkits/include/fs_manager",
-    "//base/startup/init/remount/include",
     "//base/startup/init/test/mock/libs/include",
   ]
   defines = []
@@ -281,7 +279,6 @@ ohos_unittest("init_unittest") {
     "param/param_unittest.cpp",
     "param/paramservice_unittest.cpp",
     "param/trigger_unittest.cpp",
-    "remount/remount_overlay_unittest.cpp",
     "syspara/syspara_unittest.cpp",
     "ueventd/ueventd_config_unittest.cpp",
     "ueventd/ueventd_event_unittest.cpp",
@@ -597,4 +594,136 @@ ohos_unittest("init_fshvb_unittest") {
     ]
   }
   cflags_cc = [ "-fexceptions" ]
+}
+
+ohos_unittest("init_remount_unittest") {
+  module_out_path = "init/init"
+
+  sources = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_mount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_overlay_common.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_remount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/dm_merge_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm_linear.c",
+    "//base/startup/init/remount/remount_overlay.c",
+    "//base/startup/init/remount/remount_dm_merge.c",
+    "//base/startup/init/remount/remount.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/utils/init_utils.c",
+    "remount/remount_overlay_unittest.cpp",
+    "remount/remount_dm_merge_unittest.cpp",
+    "remount/remount_stub.cpp",
+  ]
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/include",
+    "//base/startup/init/remount/include",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/utils",
+    "//base/startup/init/ueventd/include",
+    "//base/startup/init/test/mock/libs/include",
+    "//base/startup/init/test/unittest/remount",
+  ]
+
+  cflags = [
+    "-Wno-implicit-fallthrough",
+    "-Wno-unused-function",
+    "-fno-inline",
+    "-Dprivate=public",
+    "-Dprotected=public",
+    "-Dsprintf_s=SprintfStub",
+    "-Dmount=MountStub",
+    "-Dumount=UmountStub",
+    "-Dumount2=Umount2Stub",
+    "-Dexecv=ExecvStub",
+    "-Dreboot=RebootStub",
+    "-Dprctl=PrctlStub",
+    "-Dlchown=LchownStub",
+    "-Dkill=KillStub",
+    "-Daccess=AccessStub",
+    "-DEnableInitLog=EnableInitLogStub",
+    "-DOpenLogDevice=OpenLogDeviceStub",
+    "-DCreateFsAndDeviceNode=CreateFsAndDeviceNodeStub",
+    "-DMountRequriedPartitions=MountRequriedPartitionsStub",
+    "-Dsetmntent=SetmntentStub",
+    "-Dgetmntent=GetmntentStub",
+    "-Dendmntent=EndmntentStub",
+    "-DUeventdSocketInit=UeventdSocketInitStub",
+    "-DRetriggerUevent=RetriggerUeventStub",
+    "-DRetriggerDmUeventByPath=RetriggerDmUeventByPathStub",
+    "-DSystemReadParam=SystemGetParameterStub",
+    "-Dgetuid=GetuidStub",
+    "-Dmain=RemountMainEntry",
+    "-DWRAP_STRNCPY_S",
+    "-DWRAP_SNPRINTF_S",
+    "-Wno-unused-result",
+  ]
+  cflags_cc = [
+    "-Wno-implicit-fallthrough",
+    "-fexceptions",
+  ]
+
+  ldflags = [
+    "-Wl,--wrap=fork",
+    "-Wl,--wrap=waitpid",
+    "-Wl,--wrap=mkdir",
+    "-Wl,--wrap=exit",
+    "-Wl,--wrap=GetDevSize",
+    "-Wl,--wrap=CheckIsExt4",
+    "-Wl,--wrap=MountExt4Device",
+    "-Wl,--wrap=OverlayRemountVendorPre",
+    "-Wl,--wrap=OverlayRemountVendorPost",
+    "-Wl,--wrap=InUpdaterMode",
+    "-Wl,--wrap=GetParameterFromCmdLine",
+    "-Wl,--wrap=GetBootSlots",
+    "-Wl,--wrap=FsAdjustPartitionNameBySlot",
+    "-Wl,--wrap=LoadFstabFromCommandLine",
+    "-Wl,--wrap=ReadFstabFromFile",
+    "-Wl,--wrap=LoadRequiredFstab",
+    "-Wl,--wrap=CollectDmMergeTargets",
+    "-Wl,--wrap=DestroyDmMergeTargets",
+    "-Wl,--wrap=FsDmCreateMultiTargetLinearDevice",
+    "-Wl,--wrap=FsDmInitDmDev",
+    "-Wl,--wrap=FsDmRemoveDevice",
+    "-Wl,--wrap=WaitForFile",
+    "-Wl,--wrap=IsOverlayEnable",
+    "-Wl,--wrap=IsDmMergeRemountEnabled",
+    "-Wl,--wrap=IsDmMergeOverlayActive",
+    "-Wl,--wrap=TryDmMergeOverlay",
+    "-Wl,--wrap=GetExactParameterFromCmdLine",
+    "-Wl,--wrap=CloseStdio",
+    "-Wl,--wrap=strncpy_s",
+    "-Wl,--wrap=snprintf_s",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  defines = [
+    "STARTUP_INIT_TEST",
+    "EROFS_OVERLAY",
+    "_GNU_SOURCE",
+    "STARTUP_INIT_UT_PATH =\"/data/init_ut\"",
+  ]
+
+  configs = []
+
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "googletest:gtest",
+    "hilog:libhilog",
+  ]
 }
