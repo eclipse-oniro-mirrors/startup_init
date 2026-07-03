@@ -149,9 +149,16 @@ static int SwitchRoot()
         std::cout << "Failed to open root directory\n";
         return -1;
     }
-    g_oldRootFd = dirfd(dir);
+    int fd = dirfd(dir);
+    if (fd < 0) {
+        std::cout << "Failed to get fd of root directory, err = " << errno << std::endl;
+        closedir(dir);
+        return -1;
+    }
+    g_oldRootFd = dup(fd);
+    closedir(dir);
     if (g_oldRootFd < 0) {
-        std::cout << "Failed to pen root directory, err = " << errno << std::endl;
+        std::cout << "Failed to dup root directory fd, err = " << errno << std::endl;
         return -1;
     }
 
