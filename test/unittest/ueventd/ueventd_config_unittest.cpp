@@ -23,6 +23,8 @@
 #include "init_utils.h"
 #include "ueventd_read_cfg.h"
 #include "ueventd_parameter.h"
+#include "ueventd.h"
+#include "ueventd_device_handler.h"
 
 extern "C" {
 bool IsMatch(const char *target, const char *pattern);
@@ -80,6 +82,24 @@ HWTEST_F(UeventdConfigUnitTest, Init_UeventdConfigTest_ConfigEntry001, TestSize.
     file = "[device]";
     rc = ParseUeventConfig(const_cast<char*>(file.c_str())); // valid section
     EXPECT_EQ(rc, 0);
+}
+
+HWTEST_F(UeventdConfigUnitTest, Init_UeventdConfigTest_HandleOtherDevice001, TestSize.Level1)
+{
+    struct Uevent uevent = {
+        .subsystem = "misc",
+        .syspath = "/devices/platform/test/misc_device",
+        .major = 10,
+        .minor = 200,
+    };
+
+    HandleOtherDeviceEvent(&uevent);
+    struct stat st {};
+    bool exist = true;
+    if (stat("/dev/misc_device", &st) < 0) {
+        exist = false;
+    }
+    EXPECT_TRUE(exist);
 }
 
 HWTEST_F(UeventdConfigUnitTest, Init_UeventdConfigTest_Parameter001, TestSize.Level0)

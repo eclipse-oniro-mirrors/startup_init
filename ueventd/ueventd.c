@@ -261,23 +261,6 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
     } else if (STARTSWITH(event, "DEVNUM=")) {
         uevent->devNum = StringToInt(event + strlen("DEVNUM="), -1);
     }
-
-    // Ignore other events
-    INIT_LOGV("got uevent message:\n"
-              "subsystem: %s\n"
-              "parition: %s:%d\n"
-              "action: %d\n"
-              "devpath: %s\n"
-              "devname: %s\n"
-              "devnode: %d:%d\n"
-              "id: %d:%d",
-              uevent->subsystem,
-              uevent->partitionName, uevent->partitionNum,
-              uevent->action,
-              uevent->syspath,
-              uevent->deviceName,
-              uevent->major, uevent->minor,
-              uevent->ug.uid, uevent->ug.gid);
 }
 
 void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent)

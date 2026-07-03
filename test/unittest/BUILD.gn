@@ -190,6 +190,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
     "//base/startup/init/interfaces/innerkits/include/fs_manager",
     "//base/startup/init/test/mock/libs/include",
+    "//base/startup/init/ueventd/include",
   ]
   defines = []
 
