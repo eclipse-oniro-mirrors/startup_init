@@ -952,85 +952,6 @@ HWTEST_F(RemountDmMergeUnitTest, RemountOverlay_DmMergeActiveSkipsLegacyOverlay,
     EXPECT_EQ(g_state.vendorPostCalls, 0);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, RemountOverlay_LegacyOverlayPathMissingContinues, TestSize.Level1)
-{
-    g_state.mockDmMergeActive = true;
-    g_state.dmMergeActive = false;
-    g_state.mockLstat = true;
-    g_state.lstatRet = -1;
-    g_state.mockMountOverlay = true;
-
-    EXPECT_EQ(RemountOverlay(), 0);
-    EXPECT_EQ(g_state.lstatCalls, 7);
-    EXPECT_EQ(g_state.mountOverlayCalls, 0);
-    EXPECT_EQ(g_state.vendorPreCalls, 0);
-    EXPECT_EQ(g_state.vendorPostCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, RemountOverlay_LegacyOverlayMountsAllPaths, TestSize.Level1)
-{
-    g_state.mockDmMergeActive = true;
-    g_state.dmMergeActive = false;
-    g_state.mockLstat = true;
-    g_state.lstatRet = 0;
-    g_state.mockMountOverlay = true;
-
-    EXPECT_EQ(RemountOverlay(), 0);
-    EXPECT_EQ(g_state.mountOverlayCalls, 7);
-    EXPECT_EQ(g_state.vendorPreCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, RemountOverlay_LegacyOverlayMountFailureReturnsFail, TestSize.Level1)
-{
-    g_state.mockDmMergeActive = true;
-    g_state.dmMergeActive = false;
-    g_state.mockLstat = true;
-    g_state.lstatRet = 0;
-    g_state.mockMountOverlay = true;
-    g_state.mountOverlayRet = -1;
-
-    EXPECT_EQ(RemountOverlay(), -1);
-    EXPECT_EQ(g_state.lstatCalls, 1);
-    EXPECT_EQ(g_state.mountOverlayCalls, 1);
-    EXPECT_EQ(g_state.vendorPreCalls, 0);
-    EXPECT_EQ(g_state.vendorPostCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, DmMergeHelpers_ReturnExpectedValues, TestSize.Level1)
-{
-    const char *seenDevices[] = {"/dev/block/dm-0", "/dev/block/dm-1"};
-
-    EXPECT_TRUE(MntNeedRemount("/vendor"));
-    EXPECT_FALSE(MntNeedRemount("/data"));
-    EXPECT_STREQ(OverlayPathFromMnt("/"), "/usr");
-    EXPECT_STREQ(OverlayPathFromMnt("/usr"), "/usr");
-    EXPECT_STREQ(OverlayPathFromMnt("/vendor"), "/vendor");
-    EXPECT_TRUE(IsDeviceNameSeen(seenDevices, 2, "/dev/block/dm-1"));
-    EXPECT_FALSE(IsDeviceNameSeen(seenDevices, 2, "/dev/block/dm-2"));
-    EXPECT_EQ(AlignDown(4097, 512), 4096U);
-    EXPECT_EQ(AlignDown(4097, 0), 4097U);
-    EXPECT_EQ(AlignTo(4097, 4096), 8192U);
-    EXPECT_EQ(AlignTo(4097, 0), 4097U);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, TryDmMergeOverlay_NullFstabFails, TestSize.Level1)
-{
-    EXPECT_EQ(TryDmMergeOverlay(nullptr), -1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, TryDmMergeOverlay_CollectEmptyFails, TestSize.Level1)
-{
-    UseFirstStageDmMergeMocks();
-    Fstab *fstab = BuildFstab({{"/dev/block/dm-data", "/data", "ext4"}});
-    ASSERT_NE(fstab, nullptr);
-
-    EXPECT_EQ(TryDmMergeOverlay(fstab), -1);
-    EXPECT_EQ(g_state.mapperCalls, 0);
-    EXPECT_EQ(g_state.createDmCalls, 0);
-
-    ReleaseFstab(fstab);
-}
-
 HWTEST_F(RemountDmMergeUnitTest, TryDmMergeOverlay_SuccessWithExt4DmMerge, TestSize.Level0)
 {
     UseFirstStageDmMergeMocks();
@@ -1078,67 +999,6 @@ HWTEST_F(RemountDmMergeUnitTest, TryDmMergeOverlay_NonExt4RemovesDmMerge, TestSi
     ReleaseFstab(fstab);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, TryDmMergeOverlay_CreateDeviceFailureFails, TestSize.Level1)
-{
-    UseFirstStageDmMergeMocks();
-    g_state.createDmRet = -1;
-    Fstab *fstab = BuildFstab({{"/dev/block/dm-0", "/", "erofs"}});
-    ASSERT_NE(fstab, nullptr);
-
-    EXPECT_EQ(TryDmMergeOverlay(fstab), -1);
-    EXPECT_EQ(g_state.createDmCalls, 1);
-    EXPECT_EQ(g_state.initDmCalls, 0);
-    EXPECT_EQ(g_state.checkExt4Calls, 0);
-
-    ReleaseFstab(fstab);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, TryDmMergeOverlay_DeviceNotReadyFails, TestSize.Level1)
-{
-    UseFirstStageDmMergeMocks();
-    g_state.accessRet = -1;
-    Fstab *fstab = BuildFstab({{"/dev/block/dm-0", "/", "erofs"}});
-    ASSERT_NE(fstab, nullptr);
-
-    EXPECT_EQ(TryDmMergeOverlay(fstab), -1);
-    EXPECT_EQ(g_state.createDmCalls, 1);
-    EXPECT_EQ(g_state.waitForFileCalls, 1);
-    EXPECT_EQ(g_state.checkExt4Calls, 0);
-
-    ReleaseFstab(fstab);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, IsDmMergeOverlayActive_OpenFailureReturnsFalse, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = -1;
-
-    EXPECT_FALSE(IsDmMergeOverlayActive());
-    EXPECT_EQ(g_state.openCalls, 1);
-    EXPECT_EQ(g_state.dmGetDeviceNameCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, IsDmMergeOverlayActive_DeviceNameFailureReturnsFalse, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = TEST_OPEN_FD;
-    g_state.mockDmGetDeviceName = true;
-    g_state.dmGetDeviceNameRet = -1;
-
-    EXPECT_FALSE(IsDmMergeOverlayActive());
-    EXPECT_EQ(g_state.openCalls, 1);
-    EXPECT_EQ(g_state.dmGetDeviceNameCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, IsDmMergeOverlayActive_DeviceNameSuccessReturnsTrue, TestSize.Level1)
-{
-    UseActiveDmMergeDeviceMocks();
-
-    EXPECT_TRUE(IsDmMergeOverlayActive());
-    EXPECT_EQ(g_state.openCalls, 1);
-    EXPECT_EQ(g_state.dmGetDeviceNameCalls, 1);
-}
-
 HWTEST_F(RemountDmMergeUnitTest, MountDmMergeOverlayAll_InactiveSkips, TestSize.Level0)
 {
     UpdateOpenFunc(OpenMock);
@@ -1146,17 +1006,6 @@ HWTEST_F(RemountDmMergeUnitTest, MountDmMergeOverlayAll_InactiveSkips, TestSize.
 
     EXPECT_EQ(MountDmMergeOverlayAll(), 0);
     EXPECT_EQ(g_state.initDmCalls, 0);
-    EXPECT_EQ(g_state.mountOverlayCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, MountDmMergeOverlayAll_InitDmFailureReturnsFail, TestSize.Level1)
-{
-    UseActiveDmMergeDeviceMocks();
-    g_state.initDmRet = -1;
-
-    EXPECT_EQ(MountDmMergeOverlayAll(), -1);
-    EXPECT_EQ(g_state.dmGetDeviceNameCalls, 2);
-    EXPECT_EQ(g_state.initDmCalls, 1);
     EXPECT_EQ(g_state.mountOverlayCalls, 0);
 }
 
@@ -1182,343 +1031,7 @@ HWTEST_F(RemountDmMergeUnitTest, MountDmMergeOverlayAll_SuccessMountsUniqueOverl
     EXPECT_EQ(g_state.vendorPostCalls, 1);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, MountDmMergeOverlayAll_MountOverlayFailureStillCompletes, TestSize.Level1)
-{
-    UseActiveDmMergeDeviceMocks();
-    g_state.mockMountOverlay = true;
-    g_state.mountOverlayRet = -1;
-
-    EXPECT_EQ(MountDmMergeOverlayAll(), 0);
-    EXPECT_EQ(g_state.removeDmCalls, 0);
-    ExpectUniqueMountedOverlayPaths();
-    EXPECT_EQ(g_state.vendorPreCalls, 1);
-    EXPECT_EQ(g_state.vendorPostCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, GetDmMergeDevPath_OpenFailureReturnsFail, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = -1;
-    g_state.mockDmGetDeviceName = true;
-    char dmDevPath[MAX_BUFFER_LEN] = {};
-
-    EXPECT_EQ(GetDmMergeDevPath(dmDevPath, MAX_BUFFER_LEN), -1);
-    EXPECT_EQ(g_state.openCalls, 1);
-    EXPECT_EQ(g_state.dmGetDeviceNameCalls, 0);
-    EXPECT_EQ(g_state.closeCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, GetDmMergeDevPath_DeviceNameFailureClosesFd, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = TEST_OPEN_FD;
-    g_state.mockDmGetDeviceName = true;
-    g_state.dmGetDeviceNameRet = -1;
-    char dmDevPath[MAX_BUFFER_LEN] = {};
-
-    EXPECT_EQ(GetDmMergeDevPath(dmDevPath, MAX_BUFFER_LEN), -1);
-    EXPECT_EQ(g_state.openCalls, 1);
-    EXPECT_EQ(g_state.dmGetDeviceNameCalls, 1);
-    EXPECT_EQ(g_state.closeCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, GetDmMergeDevPath_SuccessCopiesPathAndClosesFd, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = TEST_OPEN_FD;
-    g_state.mockDmGetDeviceName = true;
-    g_state.dmGetDevicePath = "/dev/block/dm-merge-test";
-    char dmDevPath[MAX_BUFFER_LEN] = {};
-
-    EXPECT_EQ(GetDmMergeDevPath(dmDevPath, MAX_BUFFER_LEN), 0);
-    EXPECT_STREQ(dmDevPath, "/dev/block/dm-merge-test");
-    EXPECT_EQ(g_state.dmGetDeviceNameCalls, 1);
-    EXPECT_EQ(g_state.closeCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, MountDmMergeExt4_InitDmFailureReturnsFail, TestSize.Level1)
-{
-    g_state.mockInitDm = true;
-    g_state.initDmRet = -1;
-    char dmDevPath[] = "/dev/block/dm-merge-test";
-
-    EXPECT_EQ(MountDmMergeExt4(dmDevPath), -1);
-    EXPECT_EQ(g_state.initDmCalls, 1);
-    EXPECT_EQ(g_state.mkdirCalls, 0);
-    EXPECT_EQ(g_mountStubCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, MountDmMergeExt4_MkdirFailureReturnsFail, TestSize.Level1)
-{
-    g_state.mockInitDm = true;
-    g_state.mkdirFailAt = 1;
-    char dmDevPath[] = "/dev/block/dm-merge-test";
-
-    EXPECT_EQ(MountDmMergeExt4(dmDevPath), -1);
-    EXPECT_EQ(g_state.initDmCalls, 1);
-    EXPECT_EQ(g_state.mkdirCalls, 1);
-    EXPECT_EQ(g_mountStubCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, MountDmMergeExt4_MountFailureReturnsFail, TestSize.Level1)
-{
-    g_state.mockInitDm = true;
-    SetStubResult(STUB_MOUNT, -1);
-    char dmDevPath[] = "/dev/block/dm-merge-test";
-
-    EXPECT_EQ(MountDmMergeExt4(dmDevPath), -1);
-    EXPECT_EQ(g_state.initDmCalls, 1);
-    EXPECT_EQ(g_state.mkdirCalls, 1);
-    EXPECT_EQ(g_mountStubCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, MountDmMergeExt4_SuccessMountsMergeRoot, TestSize.Level1)
-{
-    g_state.mockInitDm = true;
-    char dmDevPath[] = "/dev/block/dm-merge-test";
-
-    EXPECT_EQ(MountDmMergeExt4(dmDevPath), 0);
-    EXPECT_EQ(g_state.initDmCalls, 1);
-    EXPECT_EQ(g_state.mkdirCalls, 1);
-    EXPECT_EQ(g_mountStubCalls, 1);
-    EXPECT_STREQ(g_mountStubTarget, PREFIX_OVERLAY_MERGE);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, NormalizeDmName_ReplacesSlashOnly, TestSize.Level1)
-{
-    char dmName[MAX_BUFFER_LEN] = "/usr_erofs";
-    NormalizeDmName(dmName);
-    EXPECT_STREQ(dmName, "_usr_erofs");
-
-    char plainName[MAX_BUFFER_LEN] = "vendor_erofs";
-    NormalizeDmName(plainName);
-    EXPECT_STREQ(plainName, "vendor_erofs");
-}
-
-HWTEST_F(RemountDmMergeUnitTest, RemoveOneErofsDmDevice_NonRemountSkips, TestSize.Level1)
-{
-    g_state.mockRemoveDm = true;
-    FstabItem *item = MakeFstabItem({"/dev/block/dm-data", "/data", "ext4"});
-    ASSERT_NE(item, nullptr);
-
-    RemoveOneErofsDmDevice(item);
-    EXPECT_EQ(g_state.removeDmCalls, 0);
-
-    ReleaseFstabItem(item);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, RemoveOneErofsDmDevice_RemovesNormalizedName, TestSize.Level1)
-{
-    g_state.mockRemoveDm = true;
-    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/usr", "erofs"});
-    ASSERT_NE(item, nullptr);
-
-    RemoveOneErofsDmDevice(item);
-    EXPECT_EQ(g_state.removeDmCalls, 1);
-    ASSERT_EQ(g_state.removedDmNames.size(), 1U);
-    EXPECT_EQ(g_state.removedDmNames[0], "_usr_erofs");
-
-    ReleaseFstabItem(item);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, RemoveAllErofsDmDevices_LoadFstabNullSkips, TestSize.Level1)
-{
-    g_state.mockLoadFstab = true;
-    g_state.loadFstabNull = true;
-    g_state.mockRemoveDm = true;
-
-    RemoveAllErofsDmDevices();
-    EXPECT_EQ(g_state.removeDmCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, RemoveAllErofsDmDevices_RemovesOnlyRemountDevices, TestSize.Level1)
-{
-    g_state.mockLoadFstab = true;
-    g_state.mockRemoveDm = true;
-    g_state.fstabEntries = {
-        {"/dev/block/dm-0", "/usr", "erofs"},
-        {"/dev/block/dm-data", "/data", "ext4"},
-        {"/dev/block/dm-1", "/vendor", "erofs"},
-    };
-
-    RemoveAllErofsDmDevices();
-    EXPECT_EQ(g_state.removeDmCalls, 2);
-    ASSERT_EQ(g_state.removedDmNames.size(), 2U);
-    EXPECT_EQ(g_state.removedDmNames[0], "_usr_erofs");
-    EXPECT_EQ(g_state.removedDmNames[1], "_vendor_erofs");
-}
-
-HWTEST_F(RemountDmMergeUnitTest, RemoveDirContent_OpenFailureReturnsFail, TestSize.Level1)
-{
-    g_state.mockDirOps = true;
-
-    EXPECT_EQ(RemoveDirContent("/mnt/overlay_merge/usr/upper"), -1);
-    EXPECT_EQ(g_state.opendirCalls, 1);
-    EXPECT_EQ(g_state.readdirCalls, 0);
-    EXPECT_EQ(g_state.closedirCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, RemoveDirContent_RemovesFilesAndDirectories, TestSize.Level1)
-{
-    g_state.mockDirOps = true;
-    g_state.dirOpsOpenSucceeds = true;
-    g_state.mockUnlink = true;
-    g_state.mockRmdir = true;
-    g_state.dirEntries = {
-        {".", DT_DIR},
-        {"..", DT_DIR},
-        {"child", DT_DIR},
-        {"file", DT_REG},
-    };
-
-    EXPECT_EQ(RemoveDirContent("/mnt/overlay_merge/usr/upper"), 0);
-    EXPECT_EQ(g_state.opendirCalls, 2);
-    EXPECT_EQ(g_state.closedirCalls, 2);
-    EXPECT_EQ(g_state.unlinkCalls, 1);
-    EXPECT_EQ(g_state.rmdirCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, CheckDmMergeCleanup_InactiveSkips, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = -1;
-
-    EXPECT_EQ(CheckDmMergeCleanup(), 0);
-    EXPECT_EQ(g_state.umount2Calls, 0);
-    EXPECT_EQ(g_state.removeDmCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, CheckDmMergeCleanup_MountFailureFails, TestSize.Level1)
-{
-    UseActiveDmMergeDeviceMocks();
-    g_state.initDmRet = -1;
-
-    EXPECT_EQ(CheckDmMergeCleanup(), -1);
-    EXPECT_EQ(g_state.syncCalls, 0);
-    EXPECT_EQ(g_state.removeDmCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, CheckDmMergeCleanup_NoMarkerUnmountsAndSkips, TestSize.Level1)
-{
-    UseActiveDmMergeDeviceMocks();
-    g_state.mockStat = true;
-    g_state.statRet = -1;
-
-    EXPECT_EQ(CheckDmMergeCleanup(), 0);
-    EXPECT_EQ(g_state.statCalls, 1);
-    EXPECT_EQ(g_umount2StubCalls, 1);
-    EXPECT_EQ(g_state.removeDmCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, CheckDmMergeCleanup_MarkerPerformsCleanup, TestSize.Level1)
-{
-    UseActiveDmMergeDeviceMocks();
-    g_state.mockStat = true;
-    g_state.statRet = 0;
-    g_state.mockLoadFstab = true;
-    g_state.loadFstabNull = true;
-    g_state.mockPwrite = true;
-
-    EXPECT_EQ(CheckDmMergeCleanup(), 1);
-    EXPECT_EQ(g_state.statCalls, 1);
-    EXPECT_EQ(g_state.syncCalls, 1);
-    EXPECT_GE(g_umount2StubCalls, 1);
-    EXPECT_EQ(g_state.removeDmCalls, 1);
-    EXPECT_GE(g_state.pwriteCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ReadFailureSkips, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = -1;
-
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 0);
-    EXPECT_EQ(g_state.preadCalls, 0);
-    EXPECT_EQ(g_state.unlinkCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_NotDisableSkips, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.mockPread = true;
-    g_state.preadContent = HYPERHOLD_SWITCH_ENABLE;
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
-
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 0);
-    EXPECT_EQ(g_state.preadCalls, 1);
-    EXPECT_EQ(g_state.unlinkCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_InactiveCleansPerPartitionOverlay, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openSeq = {100, -1, 100};
-    g_state.mockPread = true;
-    g_state.mockPwrite = true;
-    g_state.mockUnlink = true;
-    g_state.mockDirOps = true;
-    g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
-
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 1);
-    EXPECT_EQ(g_state.preadCalls, 1);
-    EXPECT_GT(g_state.opendirCalls, 0);
-    EXPECT_EQ(g_state.pwriteCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_WriteEnableOpenFailureStillReturnsDone, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openSeq = {100, -1, -1};
-    g_state.mockPread = true;
-    g_state.mockPwrite = true;
-    g_state.mockUnlink = true;
-    g_state.mockDirOps = true;
-    g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
-
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 1);
-    EXPECT_GT(g_state.opendirCalls, 0);
-    EXPECT_EQ(g_state.pwriteCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ActiveMountSuccessPerformsCleanup, TestSize.Level1)
-{
-    UseActiveDmMergeDeviceMocks();
-    g_state.mockPread = true;
-    g_state.mockPwrite = true;
-    g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
-    g_state.mockLoadFstab = true;
-    g_state.loadFstabNull = true;
-
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 1);
-    EXPECT_EQ(g_state.preadCalls, 1);
-    EXPECT_EQ(g_state.syncCalls, 1);
-    EXPECT_GE(g_umount2StubCalls, 1);
-    EXPECT_EQ(g_state.removeDmCalls, 1);
-    EXPECT_GE(g_state.pwriteCalls, 2);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ActiveMountFailureDiscardsAndRemoves, TestSize.Level1)
-{
-    UseActiveDmMergeDeviceMocks();
-    g_state.mockPread = true;
-    g_state.mockPwrite = true;
-    g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
-    g_state.initDmRet = -1;
-    g_state.mockLoadFstab = true;
-    g_state.loadFstabNull = true;
-
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 1);
-    EXPECT_EQ(g_state.syncCalls, 0);
-    EXPECT_EQ(g_state.removeDmCalls, 1);
-    EXPECT_GE(g_state.ioctlCalls, 1);
-    EXPECT_GE(g_state.pwriteCalls, 2);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_ParamTrueAndHyperholdEnableReturnsTrue, TestSize.Level0)
+HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_ParamTrueDoesNotBlockHyperholdEnable, TestSize.Level0)
 {
     g_state.mockSystemReadParam = true;
     g_state.systemReadParamRet = 0;
@@ -1529,20 +1042,25 @@ HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_ParamTrueAndHyperholdEn
     g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
 
     EXPECT_TRUE(IsDmMergeRemountEnabled());
-    EXPECT_EQ(g_state.systemReadParamCalls, 1);
+    EXPECT_EQ(g_state.systemReadParamCalls, 0);
     EXPECT_EQ(g_state.openCalls, 1);
     EXPECT_EQ(g_state.preadCalls, 1);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_ParamFalseReturnsFalse, TestSize.Level0)
+HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_ParamFalseDoesNotBlockHyperholdEnable, TestSize.Level0)
 {
     g_state.mockSystemReadParam = true;
     g_state.systemReadParamRet = 0;
     g_state.systemParamValue = "false";
+    UpdateOpenFunc(OpenMock);
+    g_state.mockPread = true;
+    g_state.preadContent = HYPERHOLD_SWITCH_ENABLE;
+    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
 
-    EXPECT_FALSE(IsDmMergeRemountEnabled());
-    EXPECT_EQ(g_state.systemReadParamCalls, 1);
-    EXPECT_EQ(g_state.openCalls, 0);
+    EXPECT_TRUE(IsDmMergeRemountEnabled());
+    EXPECT_EQ(g_state.systemReadParamCalls, 0);
+    EXPECT_EQ(g_state.openCalls, 1);
+    EXPECT_EQ(g_state.preadCalls, 1);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdOpenFailureReturnsFalse, TestSize.Level0)
@@ -1554,174 +1072,314 @@ HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdOpenFailureRet
     g_state.openRet = -1;
 
     EXPECT_FALSE(IsDmMergeRemountEnabled());
-    EXPECT_EQ(g_state.systemReadParamCalls, 1);
+    EXPECT_EQ(g_state.systemReadParamCalls, 0);
     EXPECT_EQ(g_state.openCalls, 1);
     EXPECT_EQ(g_state.preadCalls, 0);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdEmptyReturnsFalse, TestSize.Level1)
+HWTEST_F(RemountDmMergeUnitTest, DoMountDmMergeErofsOnly_InactiveFails, TestSize.Level0)
 {
-    g_state.mockSystemReadParam = true;
-    g_state.systemReadParamRet = 0;
-    g_state.systemParamValue = "true";
-    UpdateOpenFunc(OpenMock);
-    g_state.mockPread = true;
-    g_state.preadRet = 0;
+    g_state.mockDmMergeActive = true;
+    g_state.dmMergeActive = false;
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/vendor", "erofs"});
+    ASSERT_NE(item, nullptr);
 
-    EXPECT_FALSE(IsDmMergeRemountEnabled());
-    EXPECT_EQ(g_state.systemReadParamCalls, 1);
-    EXPECT_EQ(g_state.openCalls, 1);
-    EXPECT_EQ(g_state.preadCalls, 1);
+    EXPECT_EQ(DoMountDmMergeErofsOnly(item), -1);
+    EXPECT_EQ(g_state.createLinearCalls, 0);
+
+    ReleaseFstabItem(item);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdEnableReturnsTrue, TestSize.Level1)
+HWTEST_F(RemountDmMergeUnitTest, DoMountDmMergeErofsOnly_SuccessMountsRofsAndLower, TestSize.Level0)
 {
-    g_state.mockSystemReadParam = true;
-    g_state.systemReadParamRet = 0;
-    g_state.systemParamValue = "true";
-    UpdateOpenFunc(OpenMock);
-    g_state.mockPread = true;
-    g_state.preadContent = HYPERHOLD_SWITCH_ENABLE;
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
+    UseFirstStageDmMergeMocks();
+    g_state.mockDmMergeActive = true;
+    g_state.dmMergeActive = true;
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/vendor", "erofs"});
+    ASSERT_NE(item, nullptr);
 
-    EXPECT_TRUE(IsDmMergeRemountEnabled());
-    EXPECT_EQ(g_state.systemReadParamCalls, 1);
-    EXPECT_EQ(g_state.openCalls, 1);
-    EXPECT_EQ(g_state.preadCalls, 1);
+    EXPECT_EQ(DoMountDmMergeErofsOnly(item), 0);
+    EXPECT_EQ(g_state.createLinearCalls, 1);
+    EXPECT_EQ(g_state.initDmCalls, 1);
+    EXPECT_EQ(g_state.waitForFileCalls, 1);
+    EXPECT_GE(g_state.mkdirCalls, 3);
+
+    ReleaseFstabItem(item);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdOtherReturnsFalse, TestSize.Level1)
+HWTEST_F(RemountDmMergeUnitTest, DoMountDmMergeErofsOnly_UsrSuccessSwitchesRoot, TestSize.Level0)
 {
-    g_state.mockSystemReadParam = true;
-    g_state.systemReadParamRet = 0;
-    g_state.systemParamValue = "true";
-    UpdateOpenFunc(OpenMock);
-    g_state.mockPread = true;
-    g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
+    UseFirstStageDmMergeMocks();
+    g_state.mockDmMergeActive = true;
+    g_state.dmMergeActive = true;
+    g_state.mockSwitchRoot = true;
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/usr", "erofs"});
+    ASSERT_NE(item, nullptr);
 
-    EXPECT_FALSE(IsDmMergeRemountEnabled());
-    EXPECT_EQ(g_state.systemReadParamCalls, 1);
-    EXPECT_EQ(g_state.openCalls, 1);
-    EXPECT_EQ(g_state.preadCalls, 1);
+    EXPECT_EQ(DoMountDmMergeErofsOnly(item), 0);
+    EXPECT_EQ(g_state.createLinearCalls, 1);
+    EXPECT_EQ(g_state.initDmCalls, 1);
+    EXPECT_EQ(g_state.switchRootCalls, 1);
+    EXPECT_GE(g_state.mkdirCalls, 3);
+
+    ReleaseFstabItem(item);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, RefreshPartitionOverlay_ReadFailureSkips, TestSize.Level1)
+HWTEST_F(RemountDmMergeUnitTest, MountItemByFsType_OverlayDisabledFallsBackToPlainMount, TestSize.Level0)
 {
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = -1;
+    g_state.mockCheckErofs = true;
+    g_state.checkErofsRet = true;
+    g_state.mockOverlayEnable = true;
+    g_state.overlayEnableRet = false;
+    g_state.mockDmMergeActive = true;
+    g_state.dmMergeActive = true;
+    g_state.mockDoMountOverlayDevice = true;
+    g_state.mockStat = true;
+    g_state.statRet = -1;
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/vendor", "erofs"});
+    ASSERT_NE(item, nullptr);
+    MountResult result = {};
 
-    EXPECT_EQ(RefreshPartitionOverlay(), 0);
-    EXPECT_EQ(g_state.preadCalls, 0);
+    EXPECT_EQ(MountItemByFsType(item, &result), 0);
+    EXPECT_EQ(g_state.checkErofsCalls, 1);
+    EXPECT_EQ(g_state.overlayEnableCalls, 1);
+    EXPECT_EQ(g_mountStubCalls, 1);
+    EXPECT_EQ(g_state.doMountOverlayDeviceCalls, 0);
+    EXPECT_EQ(g_state.createLinearCalls, 0);
+
+    ReleaseFstabItem(item);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, RefreshPartitionOverlay_InactiveSkips, TestSize.Level1)
+HWTEST_F(RemountDmMergeUnitTest, MountErofsOverlayItem_DmMergeActiveUsesErofsOnlyPath, TestSize.Level0)
 {
-    UpdateOpenFunc(OpenMock);
-    g_state.openSeq = {100, -1};
-    g_state.mockPread = true;
-    g_state.preadContent = "system,vendor";
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
+    UseFirstStageDmMergeMocks();
+    g_state.mockOverlayEnable = true;
+    g_state.overlayEnableRet = true;
+    g_state.mockDmMergeActive = true;
+    g_state.dmMergeActive = true;
+    g_state.mockDoMountOverlayDevice = true;
+    g_state.doMountOverlayDeviceRet = -1;
+    g_state.mockStat = true;
+    g_state.statRet = -1;
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/vendor", "erofs"});
+    ASSERT_NE(item, nullptr);
 
-    EXPECT_EQ(RefreshPartitionOverlay(), 0);
-    EXPECT_EQ(g_state.preadCalls, 1);
-    EXPECT_EQ(g_umount2StubCalls, 0);
+    EXPECT_EQ(MountErofsOverlayItem(item), 0);
+    EXPECT_EQ(g_state.checkErofsCalls, 0);
+    EXPECT_EQ(g_state.overlayEnableCalls, 1);
+    EXPECT_EQ(g_state.mapperCalls, 1);
+    EXPECT_EQ(g_state.createLinearCalls, 1);
+    EXPECT_EQ(g_state.initDmCalls, 1);
+    EXPECT_EQ(g_state.waitForFileCalls, 1);
+    EXPECT_GE(g_state.mkdirCalls, 3);
+    EXPECT_EQ(g_mountStubCalls, 2);
+    EXPECT_EQ(g_state.statCalls, 0);
+    EXPECT_EQ(g_state.doMountOverlayDeviceCalls, 0);
+
+    ReleaseFstabItem(item);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, RefreshPartitionOverlay_NoValidPartitionSkips, TestSize.Level1)
+HWTEST_F(RemountDmMergeUnitTest, MountErofsOverlayItem_DmMergeInactiveUsesLegacyOverlayPath, TestSize.Level0)
 {
-    UseActiveDmMergeDeviceMocks();
-    g_state.mockPread = true;
-    g_state.preadContent = "invalid";
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
+    g_state.mockOverlayEnable = true;
+    g_state.overlayEnableRet = true;
+    g_state.mockDmMergeActive = true;
+    g_state.dmMergeActive = false;
+    g_state.mockDoMountOverlayDevice = true;
+    g_state.doMountOverlayDeviceRet = 0;
+    g_state.mockStat = true;
+    g_state.statRet = -1;
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/vendor", "erofs"});
+    ASSERT_NE(item, nullptr);
 
-    EXPECT_EQ(RefreshPartitionOverlay(), 0);
-    EXPECT_EQ(g_state.preadCalls, 1);
+    EXPECT_EQ(MountErofsOverlayItem(item), 0);
+    EXPECT_EQ(g_state.checkErofsCalls, 0);
+    EXPECT_EQ(g_state.overlayEnableCalls, 1);
+    EXPECT_EQ(g_state.doMountOverlayDeviceCalls, 1);
+    EXPECT_EQ(g_state.createLinearCalls, 0);
+    EXPECT_EQ(g_state.initDmCalls, 0);
+    EXPECT_EQ(g_state.waitForFileCalls, 0);
+
+    ReleaseFstabItem(item);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_LoadFstabFails, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.loadFstabNull = true;
+    g_state.mockInUpdaterMode = true;
+    g_state.updaterMode = 0;
+    g_state.mockGetParameterFromCmdLine = true;
+    g_state.getParameterRet = -1;
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.createDmCalls, 0);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_ReadFstabFallbackSuccess, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.loadFstabNull = true;
+    g_state.mockReadFstab = true;
+    g_state.mockInUpdaterMode = true;
+    g_state.updaterMode = 0;
+    g_state.mockGetParameterFromCmdLine = true;
+    g_state.getParameterRet = 0;
+    g_state.fstabEntries = {{"/dev/block/dm-0", "/", "erofs"}};
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_SUCC);
+    EXPECT_EQ(g_state.readFstabCalls, 1);
+    EXPECT_EQ(g_state.createDmCalls, 1);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_UpdaterFstabFileMissingFails, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.loadFstabNull = true;
+    g_state.mockInUpdaterMode = true;
+    g_state.updaterMode = 1;
+    g_state.accessRet = -1;
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.createDmCalls, 0);
+    EXPECT_EQ(g_state.readFstabCalls, 0);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_BootSlotsAdjustsPartitionName, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {{"/dev/block/dm-0", "/", "erofs"}};
+    g_state.bootSlots = 2;
+    g_state.mockGetCurrentSlot = true;
+    g_state.currentSlot = 1;
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_SUCC);
+    EXPECT_EQ(g_state.createDmCalls, 1);
+    EXPECT_EQ(g_state.lastTargetNum, 1U);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_CollectEmptyFails, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {{"/dev/block/dm-data", "/data", "ext4"}};
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.createDmCalls, 0);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_CreateDeviceFailure, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {{"/dev/block/dm-0", "/", "erofs"}};
+    g_state.createDmRet = -1;
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.createDmCalls, 1);
     EXPECT_EQ(g_state.initDmCalls, 0);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, RefreshPartitionOverlay_MountFailureFails, TestSize.Level1)
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_InitDeviceFailureRemovesDevice, TestSize.Level0)
 {
-    UseActiveDmMergeDeviceMocks();
-    g_state.mockPread = true;
-    g_state.preadContent = "system";
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {{"/dev/block/dm-0", "/", "erofs"}};
     g_state.initDmRet = -1;
 
-    EXPECT_EQ(RefreshPartitionOverlay(), -1);
-    EXPECT_EQ(g_state.preadCalls, 1);
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.createDmCalls, 1);
     EXPECT_EQ(g_state.initDmCalls, 1);
+    EXPECT_EQ(g_state.removeDmCalls, 1);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, RefreshPartitionOverlay_SuccessRemovesSelectedOverlayContent, TestSize.Level1)
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_DeviceNotReadyRemovesDevice, TestSize.Level0)
 {
-    UseActiveDmMergeDeviceMocks();
-    g_state.mockPread = true;
-    g_state.mockPwrite = true;
-    g_state.mockDirOps = true;
-    g_state.preadContent = "system,vendor;ignored";
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {{"/dev/block/dm-0", "/", "erofs"}};
+    g_state.accessRet = -1;
 
-    EXPECT_EQ(RefreshPartitionOverlay(), 0);
-    EXPECT_EQ(g_state.preadCalls, 1);
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.waitForFileCalls, 1);
+    EXPECT_EQ(g_state.removeDmCalls, 1);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_FormatFailureRemovesDevice, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {{"/dev/block/dm-0", "/", "erofs"}};
+    g_state.formatExt4Ret = -1;
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.formatExt4Calls, 1);
+    EXPECT_EQ(g_state.removeDmCalls, 1);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_MkdirMergeRootFailureRemovesDevice, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {{"/dev/block/dm-0", "/", "erofs"}};
+    g_state.mkdirFailAt = 1;
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.mkdirCalls, 1);
+    EXPECT_EQ(g_state.removeDmCalls, 1);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_MountExt4FailureRemovesDevice, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {{"/dev/block/dm-0", "/", "erofs"}};
+    SetStubResult(STUB_MOUNT, -1);
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.removeDmCalls, 1);
+    EXPECT_EQ(g_state.mountOverlayCalls, 0);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_MkdirOverlayDirsFailureRollsBack, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {{"/dev/block/dm-0", "/", "erofs"}};
+    g_state.mkdirFailAt = 3;
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.removeDmCalls, 1);
+    EXPECT_EQ(g_state.mountOverlayCalls, 0);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_MountOverlayFailureRollsBack, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {
+        {"/dev/block/dm-0", "/", "erofs"},
+        {"/dev/block/dm-1", "/vendor", "erofs"},
+    };
+    g_state.mountOverlayRet = -1;
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_FAIL);
+    EXPECT_EQ(g_state.mountOverlayCalls, 1);
+    EXPECT_EQ(g_state.removeDmCalls, 1);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, TryDmMergeRemount_SuccessMountsDmMergeOverlay, TestSize.Level0)
+{
+    UseDefaultDmMergeMocks();
+    g_state.fstabEntries = {
+        {"/dev/block/dm-0", "/", "erofs"},
+        {"/dev/block/dm-1", "/vendor", "erofs"},
+    };
+
+    EXPECT_EQ(TryDmMergeRemount(), REMOUNT_SUCC);
+    EXPECT_EQ(g_state.createDmCalls, 1);
+    EXPECT_EQ(g_state.lastTargetNum, 2U);
     EXPECT_EQ(g_state.initDmCalls, 1);
-    EXPECT_EQ(g_state.opendirCalls, 4);
-    EXPECT_EQ(g_umount2StubCalls, 1);
-    EXPECT_EQ(g_state.pwriteCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_ParamReadFailureReturnsFalse, TestSize.Level1)
-{
-    g_state.mockSystemReadParam = true;
-    g_state.systemReadParamRet = -1;
-
-    EXPECT_FALSE(IsDmMergeRemountEnabled());
-    EXPECT_EQ(g_state.systemReadParamCalls, 1);
-    EXPECT_EQ(g_state.openCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, IsHyperholdEnableMarkerSet_OpenFailureReturnsFalse, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = -1;
-
-    EXPECT_FALSE(IsHyperholdEnableMarkerSet());
-    EXPECT_EQ(g_state.openCalls, 1);
-    EXPECT_EQ(g_state.preadCalls, 0);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, IsHyperholdEnableMarkerSet_EmptyContentReturnsFalse, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = TEST_OPEN_FD;
-    g_state.mockPread = true;
-    g_state.preadRet = 0;
-
-    EXPECT_FALSE(IsHyperholdEnableMarkerSet());
-    EXPECT_EQ(g_state.preadCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, IsHyperholdEnableMarkerSet_EnableMarkerReturnsTrue, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = TEST_OPEN_FD;
-    g_state.mockPread = true;
-    g_state.preadContent = HYPERHOLD_SWITCH_ENABLE;
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
-
-    EXPECT_TRUE(IsHyperholdEnableMarkerSet());
-    EXPECT_EQ(g_state.preadCalls, 1);
-}
-
-HWTEST_F(RemountDmMergeUnitTest, IsHyperholdEnableMarkerSet_OtherMarkerReturnsFalse, TestSize.Level1)
-{
-    UpdateOpenFunc(OpenMock);
-    g_state.openRet = TEST_OPEN_FD;
-    g_state.mockPread = true;
-    g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
-    g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
-
-    EXPECT_FALSE(IsHyperholdEnableMarkerSet());
-    EXPECT_EQ(g_state.preadCalls, 1);
+    EXPECT_EQ(g_state.formatExt4Calls, 1);
+    EXPECT_EQ(g_state.mountOverlayCalls, 2);
+    ASSERT_EQ(g_state.mountedOverlayPaths.size(), 2U);
+    EXPECT_EQ(g_state.mountedOverlayPaths[0], "/usr");
+    EXPECT_EQ(g_state.mountedOverlayPaths[1], "/vendor");
+    EXPECT_EQ(g_state.vendorPreCalls, 1);
+    EXPECT_EQ(g_state.vendorPostCalls, 1);
+    EXPECT_EQ(g_state.setRemountResultFlagCalls, 1);
+    EXPECT_EQ(g_state.engFilesOverlayCalls, 2);
+    EXPECT_EQ(g_state.removeDmCalls, 0);
 }
 } // namespace init_ut

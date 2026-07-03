@@ -506,7 +506,7 @@ ohos_unittest("init_unittest") {
   cflags_cc = [ "-fexceptions" ]
 }
 
-ohos_unittest("init_remount_unittest") {
+ohos_unittest("init_remount_innerkits_unittest") {
   module_out_path = "init/init"
 
   ldflags = [
@@ -580,9 +580,8 @@ ohos_unittest("init_remount_unittest") {
     "//base/startup/init/services/utils/init_utils.c",
     "//base/startup/init/test/mock/libs/src/func_wrapper.cpp",
     "remount/erofs_overlay_common_unittest.cpp",
-    "remount/remount_dm_merge_unittest_one.cpp",
-    "remount/remount_dm_merge_unittest_two.cpp",
-    "remount/remount_overlay_unittest.cpp",
+    "remount/remount_innerkits_unittest_core.cpp",
+    "remount/remount_innerkits_unittest_more.cpp",
   ]
 
   include_dirs = [
