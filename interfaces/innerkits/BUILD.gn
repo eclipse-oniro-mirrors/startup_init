@@ -523,10 +523,10 @@ if (defined(ohos_lite)) {
       "//base/startup/init/services/utils:libinit_utils",
     ]
     deps += [ "//base/startup/init/services/param/base:param_base" ]
-    external_deps = [
-      "bounds_checking_function:libsec_static",
-      "c_utils:utilsbase",
-    ]
+    external_deps = [ "bounds_checking_function:libsec_static" ]
+    if (init_c_utilsbase_enable) {
+      external_deps += [ "c_utils:utilsbase" ]
+    }
     public_configs = [ ":exported_header_files" ]
     part_name = "init"
     subsystem_name = "startup"

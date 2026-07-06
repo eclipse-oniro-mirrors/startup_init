@@ -112,4 +112,11 @@ declare_args() {
 
   #device type extend feature
   init_feature_devicetype_extend = false
+
+  # deps c_utils:utilsbase
+  init_c_utilsbase_enable = true
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.commonlibrary_c_utils)) {
+      init_c_utilsbase_enable = false
+  }
 }
