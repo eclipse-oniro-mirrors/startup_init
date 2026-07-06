@@ -35,7 +35,11 @@ if (build_variant == "root") {
 }
 
 ohos_prebuilt_seccomp("system_filter") {
-  sources = [ "seccomp_policy/system.seccomp.policy" ]
+  if (appspawn_featrue && init_feature_custom_sandbox) {
+    sources = [ "seccomp_policy/system_custom.seccomp.policy" ]
+  } else {
+    sources = [ "seccomp_policy/system.seccomp.policy" ]
+  }
 
   filtername = "system"
   process_type = "system"
