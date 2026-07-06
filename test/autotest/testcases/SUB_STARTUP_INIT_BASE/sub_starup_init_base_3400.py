@@ -21,7 +21,7 @@ from devicetest.core.test_case import TestCase, Step
 from hypium import UiDriver
 
 
-class SunStartupInitBase3600(TestCase):
+class SunStartupInitBase3400(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -46,29 +46,29 @@ class SunStartupInitBase3600(TestCase):
         self.driver.shell("power-shell timeout -o 86400000")
 
     def process(self):
-        Step("测试设备首启动标志 const.product.firstboot")
-        result = self.driver.shell("param get const.product.firstboot")
-        first_boot = result.strip()
-        Step(f"首启动标志: {first_boot}")
+        Step("测试设备指纹 ohos.boot.fingerprint")
+        result = self.driver.shell("param get ohos.boot.fingerprint")
+        fingerprint = result.strip()
+        Step(f"设备指纹: {fingerprint}")
 
-        Step("测试设备首启动标志不为空")
-        self.driver.Assert.not_equal(first_boot, "")
+        Step("测试设备指纹不为空")
+        self.driver.Assert.not_equal(fingerprint, "")
 
-        Step("测试设备语言设置 persist.global.language")
-        result = self.driver.shell("param get persist.global.language")
-        language = result.strip()
-        Step(f"设备语言: {language}")
+        Step("测试安全补丁版本 const.ohos.version.security_patch")
+        result = self.driver.shell("param get const.ohos.version.security_patch")
+        security_patch = result.strip()
+        Step(f"安全补丁: {security_patch}")
 
-        Step("测试设备语言不为空")
-        self.driver.Assert.not_equal(language, "")
+        Step("测试安全补丁不为空")
+        self.driver.Assert.not_equal(security_patch, "")
 
-        Step("测试设备区域设置 persist.global.locale")
-        result = self.driver.shell("param get persist.global.locale")
-        locale = result.strip()
-        Step(f"设备区域: {locale}")
+        Step("测试发布类型 const.ohos.version.release_type")
+        result = self.driver.shell("param get const.ohos.version.release_type")
+        release_type = result.strip()
+        Step(f"发布类型: {release_type}")
 
-        Step("测试设备区域不为空")
-        self.driver.Assert.not_equal(locale, "")
+        Step("测试发布类型不为空")
+        self.driver.Assert.not_equal(release_type, "")
 
     def teardown(self):
         Step("收尾工作.................")

@@ -8,7 +8,7 @@
   "driver": {
     "type": "DeviceTest",
     "py_file": [
-      "SUB_STARTUP_INIT_BASE/Sub_Starup_Init_Base_2700.py"
+      "SUB_STARTUP_INIT_BASE/Sub_Starup_Init_Base_2600.py"
     ]
   }
 }

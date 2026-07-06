@@ -21,7 +21,7 @@ from devicetest.core.test_case import TestCase, Step
 from hypium import UiDriver
 
 
-class SunStartupInitBase3600(TestCase):
+class SunStartupInitBase2400(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -46,29 +46,21 @@ class SunStartupInitBase3600(TestCase):
         self.driver.shell("power-shell timeout -o 86400000")
 
     def process(self):
-        Step("测试设备首启动标志 const.product.firstboot")
-        result = self.driver.shell("param get const.product.firstboot")
-        first_boot = result.strip()
-        Step(f"首启动标志: {first_boot}")
+        Step("测试 const.ohos.apiversion 参数")
+        result = self.driver.shell("param get const.ohos.apiversion")
+        self.driver.Assert.not_equal(result.strip(), "")
 
-        Step("测试设备首启动标志不为空")
-        self.driver.Assert.not_equal(first_boot, "")
+        Step("验证 API version 是否为数字")
+        api_version = result.strip()
+        self.driver.Assert.equal(api_version.isdigit(), True)
 
-        Step("测试设备语言设置 persist.global.language")
-        result = self.driver.shell("param get persist.global.language")
-        language = result.strip()
-        Step(f"设备语言: {language}")
+        Step("测试 const.ohos.version.security_patch 参数")
+        result = self.driver.shell("param get const.ohos.version.security_patch")
+        self.driver.Assert.not_equal(result.strip(), "")
 
-        Step("测试设备语言不为空")
-        self.driver.Assert.not_equal(language, "")
-
-        Step("测试设备区域设置 persist.global.locale")
-        result = self.driver.shell("param get persist.global.locale")
-        locale = result.strip()
-        Step(f"设备区域: {locale}")
-
-        Step("测试设备区域不为空")
-        self.driver.Assert.not_equal(locale, "")
+        Step("测试 const.ohos.version.release_type 参数")
+        result = self.driver.shell("param get const.ohos.version.release_type")
+        self.driver.Assert.not_equal(result.strip(), "")
 
     def teardown(self):
         Step("收尾工作.................")

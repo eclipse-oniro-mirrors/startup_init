@@ -21,7 +21,7 @@ from devicetest.core.test_case import TestCase, Step
 from hypium import UiDriver
 
 
-class SunStartupInitBase3600(TestCase):
+class SunStartupInitBase3300(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -46,29 +46,26 @@ class SunStartupInitBase3600(TestCase):
         self.driver.shell("power-shell timeout -o 86400000")
 
     def process(self):
-        Step("测试设备首启动标志 const.product.firstboot")
-        result = self.driver.shell("param get const.product.firstboot")
-        first_boot = result.strip()
-        Step(f"首启动标志: {first_boot}")
+        Step("测试设备内存信息 ohos.boot.mem")
+        result = self.driver.shell("param get ohos.boot.mem")
+        mem_info = result.strip()
+        Step(f"内存信息: {mem_info}")
 
-        Step("测试设备首启动标志不为空")
-        self.driver.Assert.not_equal(first_boot, "")
+        Step("测试设备内存参数不为空")
+        self.driver.Assert.not_equal(mem_info, "")
 
-        Step("测试设备语言设置 persist.global.language")
-        result = self.driver.shell("param get persist.global.language")
-        language = result.strip()
-        Step(f"设备语言: {language}")
+        Step("测试 CPU 信息 ohos.boot.cpu")
+        result = self.driver.shell("param get ohos.boot.cpu")
+        cpu_info = result.strip()
+        Step(f"CPU 信息: {cpu_info}")
 
-        Step("测试设备语言不为空")
-        self.driver.Assert.not_equal(language, "")
+        Step("测试 CPU 信息不为空")
+        self.driver.Assert.not_equal(cpu_info, "")
 
-        Step("测试设备区域设置 persist.global.locale")
-        result = self.driver.shell("param get persist.global.locale")
-        locale = result.strip()
-        Step(f"设备区域: {locale}")
-
-        Step("测试设备区域不为空")
-        self.driver.Assert.not_equal(locale, "")
+        Step("测试设备频率 ohos.boot.frequency")
+        result = self.driver.shell("param get ohos.boot.frequency")
+        frequency = result.strip()
+        Step(f"设备频率: {frequency}")
 
     def teardown(self):
         Step("收尾工作.................")
