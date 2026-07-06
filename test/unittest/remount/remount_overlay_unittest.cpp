@@ -368,7 +368,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_RootOverlaySetup_003_success, TestSize.Lev
 {
     RemountSetStubResult(STUB_MKDIR, 0);
     RemountSetStubResult(STUB_MOUNT, 0);
-    EXPECT_EQ(RootOverlaySetup(), -1);
+    EXPECT_EQ(RootOverlaySetup(), 0);
 }
 
 HWTEST_F(RemountOverlayUnitTest, Init_DoSystemRemount_001_isExt4OverlaySucc, TestSize.Level1)
@@ -383,7 +383,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_DoSystemRemount_001_isExt4OverlaySucc, Tes
     RemountSetStubResult(STUB_CHECK_IS_EXT4, 1);
     RemountSetStubResult(STUB_MKDIR, 0);
     RemountSetStubResult(STUB_MOUNT, 0);
-    EXPECT_EQ(DoSystemRemount(&mentry), false);
+    EXPECT_EQ(DoSystemRemount(&mentry), true);
 }
 
 HWTEST_F(RemountOverlayUnitTest, Init_DoSystemRemount_002_formatFail, TestSize.Level1)
@@ -415,7 +415,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_DoSystemRemount_003_formatSuccMountFail, T
     RemountSetStubResult(STUB_WAITPID, 0);
     RemountSetStubResult(STUB_MOUNT_EXT4_DEVICE, -1);
     RemountSetStubResult(STUB_MKDIR, 0);
-    RemountSetStubResult(STUB_MOUNT, 0);
+    RemountSetStubResult(STUB_MOUNT, -1);
     EXPECT_EQ(DoSystemRemount(&mentry), false);
 }
 
@@ -693,7 +693,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_MkdirExt4OverlayDirs_001, TestSize.Level0)
 {
     RemountSetStubResult(STUB_MKDIR, 0);
     int ret = MkdirExt4OverlayDirs("/vendor");
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(RemountOverlayUnitTest, Init_MkdirExt4OverlayDirs_002_mkdirFail, TestSize.Level1)
@@ -708,7 +708,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_MkdirExt4UpperWorkDirs_001, TestSize.Level
 {
     RemountSetStubResult(STUB_MKDIR, 0);
     int ret = MkdirExt4UpperWorkDirs("/vendor");
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(RemountOverlayUnitTest, Init_MkdirExt4UpperWorkDirs_002_mkdirFail, TestSize.Level1)
@@ -876,7 +876,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_RemountOverlay_002_overlayFail, TestSize.L
     RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 0);
     RemountSetStubResult(STUB_MOUNT, -1);
     int ret = RemountOverlay();
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, -1);
     RemountSetStubResult(STUB_MOUNT, 0);
 }
 

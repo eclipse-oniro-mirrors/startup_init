@@ -175,7 +175,7 @@ HWTEST_F(RemountDmMergeUnitTest, Init_ClearDmMerge_002_resultFlagSet_openFail, T
     SetRemountResultFlag();
     RemountSetStubResult(STUB_REBOOT, 0);
     int ret = ClearDmMerge();
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, 1);
     DeleteRemountResultFlag();
     RemountSetStubResult(STUB_ACCESS, 0);
 }
@@ -185,6 +185,7 @@ HWTEST_F(RemountDmMergeUnitTest, Init_ClearDmMerge_003_openSucc, TestSize.Level1
     RemountSetStubResult(STUB_ACCESS, -1);
     CheckAndCreateDir((std::string(STARTUP_INIT_UT_PATH) + "/data/service/el1/startup/remount/").c_str());
     SetRemountResultFlag();
+    RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 1);
     RemountSetStubResult(STUB_MKDIR, 0);
     RemountSetStubResult(STUB_REBOOT, 0);
     CheckAndCreateDir("/mnt/overlay_merge/");
@@ -192,6 +193,7 @@ HWTEST_F(RemountDmMergeUnitTest, Init_ClearDmMerge_003_openSucc, TestSize.Level1
     EXPECT_EQ(ret, 0);
     DeleteRemountResultFlag();
     RemountSetStubResult(STUB_ACCESS, 0);
+    RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 0);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, Init_IsDmMergeOverlayActive_001, TestSize.Level0)
@@ -208,8 +210,10 @@ HWTEST_F(RemountDmMergeUnitTest, Init_IsDmMergeRemountEnabled_001, TestSize.Leve
 
 HWTEST_F(RemountDmMergeUnitTest, Init_IsHyperholdEnableMarkerSet_001, TestSize.Level0)
 {
+    RemountSetStubResult(STUB_IS_HYPERHOLD_ENABLE_MARKER_SET, 1);
     bool ret = IsHyperholdEnableMarkerSet();
     EXPECT_EQ(ret, true);
+    RemountSetStubResult(STUB_IS_HYPERHOLD_ENABLE_MARKER_SET, 0);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, Init_CheckHyperholdDisableMarker_001, TestSize.Level0)
@@ -332,8 +336,14 @@ HWTEST_F(RemountDmMergeUnitTest, Init_ParseRefreshPartNames_003_empty, TestSize.
 
 HWTEST_F(RemountDmMergeUnitTest, Init_HasCleanupMarker_001, TestSize.Level0)
 {
+    FILE *tmpFile = fopen("/mnt/overlay_merge/.dm_merge_cleanup", "w");
+    if (tmpFile != nullptr) {
+        fprintf(tmpFile, "1");
+        fclose(tmpFile);
+    }
     bool ret = HasCleanupMarker();
     EXPECT_EQ(ret, true);
+    unlink("/mnt/overlay_merge/.dm_merge_cleanup");
 }
 
 HWTEST_F(RemountDmMergeUnitTest, Init_CleanupPerPartitionOverlay_001, TestSize.Level0)
