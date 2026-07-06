@@ -507,6 +507,146 @@ ohos_unittest("init_unittest") {
   cflags_cc = [ "-fexceptions" ]
 }
 
+ohos_unittest("init_remount_innerkits_unittest") {
+  module_out_path = "init/init"
+
+  ldflags = [
+    "-Wl,--wrap=open",
+    "-Wl,--wrap=access",
+    "-Wl,--wrap=mkdir",
+    "-Wl,--wrap=mount",
+    "-Wl,--wrap=close",
+    "-Wl,--wrap=stat",
+    "-Wl,--wrap=lstat",
+    "-Wl,--wrap=pread",
+    "-Wl,--wrap=pwrite",
+    "-Wl,--wrap=unlink",
+    "-Wl,--wrap=rmdir",
+    "-Wl,--wrap=opendir",
+    "-Wl,--wrap=readdir",
+    "-Wl,--wrap=closedir",
+    "-Wl,--wrap=ioctl",
+    "-Wl,--wrap=calloc",
+    "-Wl,--wrap=strdup",
+    "-Wl,--wrap=umount2",
+    "-Wl,--wrap=sync",
+    "-Wl,--wrap=LoadFstabFromCommandLine",
+    "-Wl,--wrap=ReadFstabFromFile",
+    "-Wl,--wrap=GetParameterFromCmdLine",
+    "-Wl,--wrap=SystemReadParam",
+    "-Wl,--wrap=InUpdaterMode",
+    "-Wl,--wrap=GetBootSlots",
+    "-Wl,--wrap=GetCurrentSlot",
+    "-Wl,--wrap=GetMapperAddrForMerge",
+    "-Wl,--wrap=FsDmCreateMultiTargetLinearDevice",
+    "-Wl,--wrap=FsDmCreateLinearDevice",
+    "-Wl,--wrap=FsDmInitDmDev",
+    "-Wl,--wrap=FsDmRemoveDevice",
+    "-Wl,--wrap=DmGetDeviceName",
+    "-Wl,--wrap=WaitForFile",
+    "-Wl,--wrap=FormatExt4",
+    "-Wl,--wrap=CheckIsExt4",
+    "-Wl,--wrap=CheckIsErofs",
+    "-Wl,--wrap=IsOverlayEnable",
+    "-Wl,--wrap=MountOverlayOne",
+    "-Wl,--wrap=DoMountOverlayDevice",
+    "-Wl,--wrap=OverlayRemountVendorPre",
+    "-Wl,--wrap=OverlayRemountVendorPost",
+    "-Wl,--wrap=SwitchRoot",
+    "-Wl,--wrap=SetRemountResultFlag",
+    "-Wl,--wrap=GetRemountResult",
+    "-Wl,--wrap=IsDmMergeOverlayActive",
+    "-Wl,--wrap=IsDmMergeRemountEnabled",
+    "-Wl,--wrap=TryDmMergeRemount",
+    "-Wl,--wrap=EngFilesOverlay",
+    "-Wl,--wrap=setmntent",
+    "-Wl,--wrap=getmntent",
+    "-Wl,--wrap=endmntent",
+  ]
+
+  sources = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/dm_merge_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_mount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_overlay_common.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_remount_overlay.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm_linear.c",
+    "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/switch_root.c",
+    "//base/startup/init/remount/remount_dm_merge.c",
+    "//base/startup/init/remount/remount_overlay.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/log/init_log.c",
+    "//base/startup/init/services/utils/init_utils.c",
+    "//base/startup/init/test/mock/libs/src/func_wrapper.cpp",
+    "remount/erofs_overlay_common_unittest.cpp",
+    "remount/remount_innerkits_unittest_core.cpp",
+    "remount/remount_innerkits_unittest_more.cpp",
+  ]
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
+    "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
+    "//base/startup/init/interfaces/innerkits/init_module_engine/include",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/fs_manager",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/remount/include",
+    "//base/startup/init/ueventd/include",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/modules/init_context",
+    "//base/startup/init/services/modules/init_eng",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/param/base",
+    "//base/startup/init/services/utils",
+    "//base/startup/init/test/mock/libs/include",
+    "//base/startup/init/test/unittest/param",
+  ]
+
+  defines = [
+    "STARTUP_INIT_TEST",
+    "STARTUP_INIT_UT_PATH =\"/data/init_ut\"",
+    "EROFS_OVERLAY",
+    "_GNU_SOURCE",
+  ]
+
+  if (target_cpu == "arm64" || target_cpu == "x86_64" ||
+      target_cpu == "riscv64") {
+    defines += [ "SUPPORT_64BIT" ]
+  }
+
+  external_deps = []
+
+  if (defined(build_selinux) && build_selinux) {
+    defines += [ "WITH_SELINUX" ]
+    external_deps += [ "selinux:libselinux" ]
+  }
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
+  ]
+
+  configs = [ "//base/startup/init/test/unittest:utest_config" ]
+
+  external_deps += [
+    "bounds_checking_function:libsec_static",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "googletest:gtest",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-DRetriggerDmUeventByPath=RetriggerDmUeventByPathStub",
+    "-DUeventdSocketInit=UeventdSocketInitStub",
+  ]
+  cflags_cc = [ "-fexceptions" ]
+}
+
 ohos_unittest("init_dmverify_unittest") {
   module_out_path = "init/init"
   include_dirs = [
