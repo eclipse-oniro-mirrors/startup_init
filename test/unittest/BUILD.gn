@@ -840,6 +840,7 @@ ohos_unittest("init_remount_unittest") {
     "-Wl,--wrap=IsDmMergeRemountEnabled",
     "-Wl,--wrap=IsDmMergeOverlayActive",
     "-Wl,--wrap=TryDmMergeOverlay",
+    "-Wl,--wrap=IsHyperholdEnableMarkerSet",
     "-Wl,--wrap=GetExactParameterFromCmdLine",
     "-Wl,--wrap=CloseStdio",
     "-Wl,--wrap=strncpy_s",
