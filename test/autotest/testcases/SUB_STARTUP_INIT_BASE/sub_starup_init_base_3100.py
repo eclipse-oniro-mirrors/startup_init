@@ -21,7 +21,7 @@ from devicetest.core.test_case import TestCase, Step
 from hypium import UiDriver
 
 
-class SunStartupInitBase3600(TestCase):
+class SunStartupInitBase3100(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -46,29 +46,27 @@ class SunStartupInitBase3600(TestCase):
         self.driver.shell("power-shell timeout -o 86400000")
 
     def process(self):
-        Step("测试设备首启动标志 const.product.firstboot")
-        result = self.driver.shell("param get const.product.firstboot")
-        first_boot = result.strip()
-        Step(f"首启动标志: {first_boot}")
+        Step("测试内核版本 ohos.boot.kernel")
+        result = self.driver.shell("param get ohos.boot.kernel")
+        kernel_version = result.strip()
+        Step(f"内核版本: {kernel_version}")
 
-        Step("测试设备首启动标志不为空")
-        self.driver.Assert.not_equal(first_boot, "")
+        Step("测试内核版本不为空")
+        self.driver.Assert.not_equal(kernel_version, "")
 
-        Step("测试设备语言设置 persist.global.language")
-        result = self.driver.shell("param get persist.global.language")
-        language = result.strip()
-        Step(f"设备语言: {language}")
+        Step("测试启动时间 ohos.boot.time")
+        result = self.driver.shell("param get ohos.boot.time")
+        boot_time = result.strip()
+        Step(f"启动时间: {boot_time}")
 
-        Step("测试设备语言不为空")
-        self.driver.Assert.not_equal(language, "")
+        Step("测试启动时间 init 阶段")
+        result = self.driver.shell("param get ohos.boot.time.init")
+        init_time = result.strip()
+        Step(f"Init阶段时间: {init_time}")
 
-        Step("测试设备区域设置 persist.global.locale")
-        result = self.driver.shell("param get persist.global.locale")
-        locale = result.strip()
-        Step(f"设备区域: {locale}")
-
-        Step("测试设备区域不为空")
-        self.driver.Assert.not_equal(locale, "")
+        Step("测试启动时间参数是否为数字")
+        if init_time:
+            self.driver.Assert.equal(init_time.split()[0].isdigit(), True)
 
     def teardown(self):
         Step("收尾工作.................")

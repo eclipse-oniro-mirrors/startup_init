@@ -21,7 +21,7 @@ from devicetest.core.test_case import TestCase, Step
 from hypium import UiDriver
 
 
-class SunStartupInitBase3600(TestCase):
+class SunStartupInitBase2600(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -46,29 +46,25 @@ class SunStartupInitBase3600(TestCase):
         self.driver.shell("power-shell timeout -o 86400000")
 
     def process(self):
-        Step("测试设备首启动标志 const.product.firstboot")
-        result = self.driver.shell("param get const.product.firstboot")
-        first_boot = result.strip()
-        Step(f"首启动标志: {first_boot}")
+        Step("测试参数设置 persist.test.param1")
+        result = self.driver.shell("param set persist.test.param1 test_value_1")
+        self.driver.Assert.contains(result, "success")
 
-        Step("测试设备首启动标志不为空")
-        self.driver.Assert.not_equal(first_boot, "")
+        Step("验证参数值")
+        result = self.driver.shell("param get persist.test.param1")
+        self.driver.Assert.equal(result.strip(), "test_value_1")
 
-        Step("测试设备语言设置 persist.global.language")
-        result = self.driver.shell("param get persist.global.language")
-        language = result.strip()
-        Step(f"设备语言: {language}")
+        Step("测试参数设置 persist.test.param2")
+        result = self.driver.shell("param set persist.test.param2 test_value_2")
+        self.driver.Assert.contains(result, "success")
 
-        Step("测试设备语言不为空")
-        self.driver.Assert.not_equal(language, "")
+        Step("验证参数值")
+        result = self.driver.shell("param get persist.test.param2")
+        self.driver.Assert.equal(result.strip(), "test_value_2")
 
-        Step("测试设备区域设置 persist.global.locale")
-        result = self.driver.shell("param get persist.global.locale")
-        locale = result.strip()
-        Step(f"设备区域: {locale}")
-
-        Step("测试设备区域不为空")
-        self.driver.Assert.not_equal(locale, "")
+        Step("清理测试参数")
+        self.driver.shell("param set persist.test.param1 \"\"")
+        self.driver.shell("param set persist.test.param2 \"\"")
 
     def teardown(self):
         Step("收尾工作.................")

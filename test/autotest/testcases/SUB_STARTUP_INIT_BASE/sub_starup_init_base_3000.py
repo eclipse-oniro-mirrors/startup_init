@@ -21,7 +21,7 @@ from devicetest.core.test_case import TestCase, Step
 from hypium import UiDriver
 
 
-class SunStartupInitBase3600(TestCase):
+class SunStartupInitBase3000(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -46,29 +46,30 @@ class SunStartupInitBase3600(TestCase):
         self.driver.shell("power-shell timeout -o 86400000")
 
     def process(self):
-        Step("测试设备首启动标志 const.product.firstboot")
-        result = self.driver.shell("param get const.product.firstboot")
-        first_boot = result.strip()
-        Step(f"首启动标志: {first_boot}")
+        Step("测试系统版本信息 const.system.version")
+        result = self.driver.shell("param get const.system.version")
+        system_version = result.strip()
+        Step(f"系统版本: {system_version}")
 
-        Step("测试设备首启动标志不为空")
-        self.driver.Assert.not_equal(first_boot, "")
+        Step("测试构建类型 const.product.build.type")
+        result = self.driver.shell("param get const.product.build.type")
+        build_type = result.strip()
+        Step(f"构建类型: {build_type}")
 
-        Step("测试设备语言设置 persist.global.language")
-        result = self.driver.shell("param get persist.global.language")
-        language = result.strip()
-        Step(f"设备语言: {language}")
+        Step("测试构建用户 const.product.build.user")
+        result = self.driver.shell("param get const.product.build.user")
+        build_user = result.strip()
+        Step(f"构建用户: {build_user}")
 
-        Step("测试设备语言不为空")
-        self.driver.Assert.not_equal(language, "")
+        Step("测试构建主机 const.product.build.host")
+        result = self.driver.shell("param get const.product.build.host")
+        build_host = result.strip()
+        Step(f"构建主机: {build_host}")
 
-        Step("测试设备区域设置 persist.global.locale")
-        result = self.driver.shell("param get persist.global.locale")
-        locale = result.strip()
-        Step(f"设备区域: {locale}")
-
-        Step("测试设备区域不为空")
-        self.driver.Assert.not_equal(locale, "")
+        Step("测试构建时间 const.product.build.date")
+        result = self.driver.shell("param get const.product.build.date")
+        build_date = result.strip()
+        Step(f"构建时间: {build_date}")
 
     def teardown(self):
         Step("收尾工作.................")

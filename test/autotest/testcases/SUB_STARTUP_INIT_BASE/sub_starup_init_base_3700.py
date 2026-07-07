@@ -21,7 +21,7 @@ from devicetest.core.test_case import TestCase, Step
 from hypium import UiDriver
 
 
-class SunStartupInitBase3600(TestCase):
+class SunStartupInitBase3700(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -46,29 +46,28 @@ class SunStartupInitBase3600(TestCase):
         self.driver.shell("power-shell timeout -o 86400000")
 
     def process(self):
-        Step("测试设备首启动标志 const.product.firstboot")
-        result = self.driver.shell("param get const.product.firstboot")
-        first_boot = result.strip()
-        Step(f"首启动标志: {first_boot}")
+        Step("测试设备时区设置 persist.sys.timezone")
+        result = self.driver.shell("param get persist.sys.timezone")
+        timezone = result.strip()
+        Step(f"设备时区: {timezone}")
 
-        Step("测试设备首启动标志不为空")
-        self.driver.Assert.not_equal(first_boot, "")
+        Step("测试设备时区不为空")
+        self.driver.Assert.not_equal(timezone, "")
 
-        Step("测试设备语言设置 persist.global.language")
-        result = self.driver.shell("param get persist.global.language")
-        language = result.strip()
-        Step(f"设备语言: {language}")
+        Step("测试设备时间格式 persist.sys.timeformat")
+        result = self.driver.shell("param get persist.sys.timeformat")
+        time_format = result.strip()
+        Step(f"时间格式: {time_format}")
 
-        Step("测试设备语言不为空")
-        self.driver.Assert.not_equal(language, "")
+        Step("测试设备日期格式 persist.sys.dateformat")
+        result = self.driver.shell("param get persist.sys.dateformat")
+        date_format = result.strip()
+        Step(f"日期格式: {date_format}")
 
-        Step("测试设备区域设置 persist.global.locale")
-        result = self.driver.shell("param get persist.global.locale")
-        locale = result.strip()
-        Step(f"设备区域: {locale}")
-
-        Step("测试设备区域不为空")
-        self.driver.Assert.not_equal(locale, "")
+        Step("测试设备名称 persist.sys.deviceName")
+        result = self.driver.shell("param get persist.sys.deviceName")
+        device_name = result.strip()
+        Step(f"设备名称: {device_name}")
 
     def teardown(self):
         Step("收尾工作.................")
