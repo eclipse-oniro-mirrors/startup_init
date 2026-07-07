@@ -743,7 +743,11 @@ class GenBpfPolicy:
         and_cond_groups = operation_part.split('||')
         for and_condition_group in and_cond_groups:
             bpf_policy += self.parse_args_with_condition(and_condition_group)
-            bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
+            if self.return_value.startswith('ERRNO'):
+                bpf_policy.append(BPF_RET_VALUE.format(
+                    self.return_value.replace('ERRNO', ret_str_to_bpf.get('ERRNO'))))
+            else:
+                bpf_policy.append(BPF_RET_VALUE.format(ret_str_to_bpf.get(self.return_value)))
         return bpf_policy
 
     def parse_else_part(self, else_part):
