@@ -680,9 +680,9 @@ HWTEST_F(ServiceUnitTest, TestServiceCGroup2, TestSize.Level1)
     ret = strcat_s(path, sizeof(path), "cgroup.procs");
     EXPECT_EQ(ret, 0);
 
-    FILE *file = nullptr;
+    FILE *file = NULL;
     file = fopen(path, "r");
-    ASSERT_NE(file, nullptr);
+    ASSERT_NE(file, NULL);
     pid_t pid = 0;
     ret = -1;
     while (fscanf_s(file, "%d\n", &pid) == 1 && pid > 0) {
