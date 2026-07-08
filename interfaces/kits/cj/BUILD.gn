@@ -20,6 +20,7 @@ ohos_shared_library("cj_device_info_ffi") {
     cfi_cross_dso = true
     debug = false
   }
+  branch_protector_ret = "pac_ret"
   include_dirs = [
     "src_deviceinfo",
     "${init_innerkits_path}/syspara",
@@ -80,6 +81,7 @@ ohos_shared_library("cj_system_parameter_enhance_ffi") {
     cfi_cross_dso = true
     debug = false
   }
+  branch_protector_ret = "pac_ret"
 
   symlink_target_name = [ "libsystemparameterv9.z.so" ]
 

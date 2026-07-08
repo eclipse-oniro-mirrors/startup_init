@@ -42,6 +42,7 @@ if (defined(ohos_lite)) {
 } else {
   import("//build/ohos.gni")
   ohos_static_library("libinit_utils") {
+    branch_protector_ret = "pac_ret"
     sources = [ "init_utils.c" ]
     public_configs = [ ":exported_header_files" ]
     include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]

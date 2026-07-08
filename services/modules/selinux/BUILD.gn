@@ -15,6 +15,7 @@ import("//base/startup/init/begetd.gni")
 import("//build/ohos.gni")
 
 ohos_shared_library("selinuxadp") {
+  branch_protector_ret = "pac_ret"
   sources = [ "selinux_adp.c" ]
   defines = [ "_GNU_SOURCE" ]
   include_dirs = [
@@ -56,6 +57,7 @@ config("selinux_static_config") {
 }
 
 ohos_source_set("libselinuxadp_static") {
+  branch_protector_ret = "pac_ret"
   sources = [ "selinux_static.c" ]
   defines = [ "_GNU_SOURCE" ]
   include_dirs = [

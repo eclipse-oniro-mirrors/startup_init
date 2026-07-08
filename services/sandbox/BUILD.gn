@@ -20,6 +20,7 @@ config("exported_header_files") {
 }
 
 ohos_static_library("sandbox") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "sandbox.c",
     "sandbox_namespace.c",

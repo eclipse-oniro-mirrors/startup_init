@@ -26,6 +26,7 @@ if (defined(build_seccomp) && build_seccomp) {
 
   if (!defined(ohos_lite)) {
     ohos_shared_library("seccomp") {
+      branch_protector_ret = "pac_ret"
       sources = [ "../../../services/modules/seccomp/seccomp_policy.c" ]
 
       public_configs = [ ":seccomp_public_config" ]
