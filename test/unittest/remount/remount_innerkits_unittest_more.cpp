@@ -352,7 +352,7 @@ HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ReadFailureSkips, T
     UpdateOpenFunc(OpenMock);
     g_state.openRet = -1;
 
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 0);
+    EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 0);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_NotDisableSkips, TestSize.Level1)
@@ -362,7 +362,7 @@ HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_NotDisableSkips, Te
     g_state.preadContent = HYPERHOLD_SWITCH_ENABLE;
     g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
 
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 0);
+    EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 0);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_InactiveCleansPerPartitionOverlay, TestSize.Level1)
@@ -376,7 +376,7 @@ HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_InactiveCleansPerPa
     g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
     g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
 
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 1);
+    EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 1);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_WriteEnableOpenFailureStillReturnsDone, TestSize.Level1)
@@ -390,7 +390,7 @@ HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_WriteEnableOpenFail
     g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
     g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
 
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 1);
+    EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 1);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ActiveMountSuccessPerformsCleanup, TestSize.Level1)
@@ -403,7 +403,7 @@ HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ActiveMountSuccessP
     g_state.mockLoadFstab = true;
     g_state.loadFstabNull = true;
 
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 1);
+    EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 1);
     EXPECT_GE(g_umount2StubCalls, 1);
 }
 
@@ -418,14 +418,11 @@ HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ActiveMountFailureD
     g_state.mockLoadFstab = true;
     g_state.loadFstabNull = true;
 
-    EXPECT_EQ(CheckHyperholdDisableMarker(), 1);
+    EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 1);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdEmptyReturnsFalse, TestSize.Level1)
 {
-    g_state.mockSystemReadParam = true;
-    g_state.systemReadParamRet = 0;
-    g_state.systemParamValue = "true";
     UpdateOpenFunc(OpenMock);
     g_state.mockPread = true;
     g_state.preadRet = 0;
@@ -435,9 +432,6 @@ HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdEmptyReturnsFa
 
 HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdEnableReturnsTrue, TestSize.Level1)
 {
-    g_state.mockSystemReadParam = true;
-    g_state.systemReadParamRet = 0;
-    g_state.systemParamValue = "true";
     UpdateOpenFunc(OpenMock);
     g_state.mockPread = true;
     g_state.preadContent = HYPERHOLD_SWITCH_ENABLE;
@@ -448,9 +442,6 @@ HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdEnableReturnsT
 
 HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdOtherReturnsFalse, TestSize.Level1)
 {
-    g_state.mockSystemReadParam = true;
-    g_state.systemReadParamRet = 0;
-    g_state.systemParamValue = "true";
     UpdateOpenFunc(OpenMock);
     g_state.mockPread = true;
     g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;

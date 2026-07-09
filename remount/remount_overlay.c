@@ -423,11 +423,13 @@ int RemountRofsOverlay(void)
     INIT_LOGI("get last remount result is %d.", lastRemountResult);
     if (lastRemountResult == REMOUNT_SUCC) {
         if (IsDmMergeOverlayActive()) {
-            INIT_LOGI("dm_merge overlay already active, skip");
-            return REMOUNT_SUCC;
+            if (access(PREFIX_OVERLAY_MERGE"/"DM_MERGE_MARKER, F_OK) == 0) {
+                INIT_LOGI("dm_merge overlay already active, skip");
+                return REMOUNT_SUCC;
+            }
+            INIT_LOGI("dm_merge device exists but .dm_merge marker missing, remount not executed");
+            DeleteRemountResultFlag();
         }
-        INIT_LOGI("old per-partition overlay active, skip (use remount -c to migrate to dm_merge)");
-        return REMOUNT_SUCC;
     }
 
     if (!IsDmMergeRemountEnabled()) {

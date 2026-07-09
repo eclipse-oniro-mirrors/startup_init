@@ -854,6 +854,8 @@ void RemountDmMergeUnitTest::UseFirstStageDmMergeMocks()
     g_state.checkExt4Ret = true;
     g_state.mockLstat = true;
     g_state.lstatRet = -1;
+    g_state.mockDmGetDeviceName = true;
+    g_state.dmGetDeviceNameRet = -1;
 }
 
 void RemountDmMergeUnitTest::UseActiveDmMergeDeviceMocks()

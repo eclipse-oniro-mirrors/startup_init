@@ -218,7 +218,7 @@ HWTEST_F(RemountDmMergeUnitTest, Init_IsHyperholdEnableMarkerSet_001, TestSize.L
 
 HWTEST_F(RemountDmMergeUnitTest, Init_CheckHyperholdDisableMarker_001, TestSize.Level0)
 {
-    int ret = CheckHyperholdDisableMarker();
+    int ret = CheckHyperholdDisableMarker(nullptr);
     EXPECT_EQ(ret, 0);
 }
 
