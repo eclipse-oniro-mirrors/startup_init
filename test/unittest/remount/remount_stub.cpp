@@ -530,8 +530,9 @@ bool __wrap_IsOverlayEnable(void)  // NOLINT
     return g_stubResult[STUB_IS_OVERLAY_ENABLE] != 0;
 }
 
-int __wrap_CheckHyperholdDisableMarker(void)  // NOLINT
+int __wrap_CheckHyperholdDisableMarker(Fstab *fstab)  // NOLINT
 {
+    (void)fstab;
     return g_stubResult[STUB_CHECK_HYPERHOLD_DISABLE_MARKER];
 }
 

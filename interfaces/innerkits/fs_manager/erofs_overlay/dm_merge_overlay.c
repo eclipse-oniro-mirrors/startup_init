@@ -324,7 +324,7 @@ INIT_STATIC void CleanupPerPartitionOverlay(void)
     BEGET_LOGI("per-partition overlay cleanup completed");
 }
 
-int CheckHyperholdDisableMarker(void)
+int CheckHyperholdDisableMarker(Fstab *fstab)
 {
     char buf[HYPERHOLD_SWITCH_SIZE] = {0};
     ssize_t readLen = 0;
@@ -336,6 +336,7 @@ int CheckHyperholdDisableMarker(void)
         return 0;
     }
     BEGET_LOGI("hyperhold 'remount_disable' marker detected, starting overlay cleanup");
+    TryDmMergeOverlay(fstab);
     if (IsDmMergeOverlayActive()) {
         char dmDevPath[MAX_BUFFER_LEN] = {0};
         if (GetDmMergeDevPathAndMountExt4(dmDevPath, MAX_BUFFER_LEN) == 0) {
@@ -556,6 +557,35 @@ INIT_STATIC int MountAllDmMergeOverlayPaths(void)
     return 0;
 }
 
+INIT_STATIC int GetOrCreateDmMergeDevice(Fstab *fstab, char *dmDevPath, uint64_t dmDevPathLen)
+{
+    if (IsDmMergeOverlayActive()) {
+        if (GetDmMergeDevPath(dmDevPath, dmDevPathLen) != 0) {
+            BEGET_LOGE("dm_merge device exists but cannot get path");
+            return -1;
+        }
+        BEGET_LOGI("dm_merge device already exists");
+        return 0;
+    }
+    DmLinearTarget targets[MAX_TARGET_NUM];
+    char mntPaths[MAX_TARGET_NUM][MAX_BUFFER_LEN];
+    DmMergeCollectCtx ctx = {
+        .targets = targets,
+        .mntPaths = mntPaths,
+        .num = 0,
+        .sectorOffset = 0,
+        .seenCount = 0,
+    };
+    int rc = CollectDmMergeTargets(fstab, &ctx);
+    if (rc != 0 || ctx.num == 0) {
+        BEGET_LOGE("collect dm_merge targets failed or empty");
+        return -1;
+    }
+    rc = CreateDmMergeDevice(targets, ctx.num, dmDevPath, dmDevPathLen);
+    DestroyDmMergeTargets(targets, ctx.num);
+    return rc;
+}
+
 int TryDmMergeOverlay(Fstab *fstab)
 {
     if (fstab == NULL) {
@@ -571,31 +601,11 @@ int TryDmMergeOverlay(Fstab *fstab)
         }
     }
 
-    DmLinearTarget targets[MAX_TARGET_NUM];
-    char mntPaths[MAX_TARGET_NUM][MAX_BUFFER_LEN];
-    DmMergeCollectCtx ctx = {
-        .targets = targets,
-        .mntPaths = mntPaths,
-        .num = 0,
-        .sectorOffset = 0,
-        .seenCount = 0,
-    };
-
-    int rc = CollectDmMergeTargets(fstab, &ctx);
-    if (rc != 0 || ctx.num == 0) {
-        BEGET_LOGE("collect dm_merge targets failed or empty");
-        return -1;
-    }
-
     char dmDevPath[MAX_BUFFER_LEN] = {0};
-    rc = CreateDmMergeDevice(targets, ctx.num, dmDevPath, MAX_BUFFER_LEN);
-    if (rc != 0) {
-        BEGET_LOGE("create dm_merge device failed");
-        DestroyDmMergeTargets(targets, ctx.num);
+    if (GetOrCreateDmMergeDevice(fstab, dmDevPath, MAX_BUFFER_LEN) != 0) {
+        BEGET_LOGE("get or create dm_merge device failed");
         return -1;
     }
-
-    DestroyDmMergeTargets(targets, ctx.num);
 
     if (!CheckIsExt4(dmDevPath, 0)) {
         BEGET_LOGI("dm_merge not formatted as ext4, remove device and skip");
@@ -603,7 +613,7 @@ int TryDmMergeOverlay(Fstab *fstab)
         return -1;
     }
 
-    BEGET_LOGI("dm_merge device created, ext4 detected, will mount after SwitchRoot");
+    BEGET_LOGI("dm_merge device ready, ext4 detected, will mount after SwitchRoot");
     return 0;
 }
 

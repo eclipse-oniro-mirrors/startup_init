@@ -43,7 +43,7 @@ bool IsDmMergeOverlayActive(void);
 int CheckDmMergeCleanup(void);
 int RefreshPartitionOverlay(void);
 int MountDmMergeOverlayAll(void);
-int CheckHyperholdDisableMarker(void);
+int CheckHyperholdDisableMarker(Fstab *fstab);
 bool IsDmMergeRemountEnabled(void);
 bool IsHyperholdEnableMarkerSet(void);
 

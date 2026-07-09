@@ -105,7 +105,7 @@ static void SetupOverlay(Fstab *fstab)
     if (!IsOverlayEnable()) {
         return;
     }
-    if (CheckHyperholdDisableMarker() > 0) {
+    if (CheckHyperholdDisableMarker(fstab) > 0) {
         INIT_LOGI("hyperhold disable marker detected, overlay cleaned, skip overlay setup");
         return;
     }
