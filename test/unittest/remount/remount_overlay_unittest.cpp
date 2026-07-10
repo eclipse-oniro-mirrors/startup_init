@@ -1177,4 +1177,51 @@ HWTEST_F(RemountOverlayUnitTest, Init_EngFilesOverlay_006_fifo, TestSize.Level1)
     remove(source.c_str());
     EXPECT_EQ(RemountGetStubResult(STUB_MOUNT), 0);
 }
+
+HWTEST_F(RemountOverlayUnitTest, Init_RemountMain_008_clearDmMergeSucc, TestSize.Level1)
+{
+    const char *argv[] = {"remount", "-c", nullptr};
+    RemountSetStubResult(STUB_GETUID, 0);
+    RemountSetStubResult(STUB_IS_OVERLAY_ENABLE, 1);
+    RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 1);
+    RemountSetStubResult(STUB_REBOOT, 0);
+    RemountSetStubResult(STUB_MKDIR, 0);
+    CheckAndCreateDir((std::string(STARTUP_INIT_UT_PATH) + "/data/service/el1/startup/remount/").c_str());
+    SetRemountResultFlag();
+    __real_mkdir("/mnt/overlay_merge", 0755);
+    int ret = RemountMainEntry(2, argv);
+    EXPECT_EQ(ret, 0);
+    unlink("/mnt/overlay_merge/.dm_merge_cleanup");
+    rmdir("/mnt/overlay_merge");
+    DeleteRemountResultFlag();
+    RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 0);
+}
+
+HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_008_dmMergeMarkerExists, TestSize.Level1)
+{
+    CheckAndCreateDir((std::string(STARTUP_INIT_UT_PATH) + "/data/service/el1/startup/remount/").c_str());
+    SetRemountResultFlag();
+    RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 1);
+    RemountSetStubResult(STUB_ACCESS, 0);
+    int ret = RemountRofsOverlay();
+    EXPECT_EQ(ret, REMOUNT_SUCC);
+    RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 0);
+    RemountSetStubResult(STUB_ACCESS, 0);
+    DeleteRemountResultFlag();
+}
+
+HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_009_dmMergeMarkerMissing, TestSize.Level1)
+{
+    CheckAndCreateDir((std::string(STARTUP_INIT_UT_PATH) + "/data/service/el1/startup/remount/").c_str());
+    SetRemountResultFlag();
+    RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 1);
+    RemountSetStubResult(STUB_ACCESS, -1);
+    RemountSetStubResult(STUB_SETMNTENT, 0);
+    RemountSetStubMntEntries(nullptr, 0);
+    int ret = RemountRofsOverlay();
+    EXPECT_NE(ret, REMOUNT_FAIL);
+    RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 0);
+    RemountSetStubResult(STUB_ACCESS, 0);
+    DeleteRemountResultFlag();
+}
 }
