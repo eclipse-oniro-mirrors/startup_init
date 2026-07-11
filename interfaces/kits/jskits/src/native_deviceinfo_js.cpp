@@ -343,11 +343,122 @@ static napi_value GetSdkPatchApiVersion(napi_env env, napi_callback_info info)
 #define DISTRIBUTION_OS_API_VER_MIN 10000
 #define DISTRIBUTION_PERCENT 100
 #define API_VERSION_MAX 99
-#define API_VERSION_NUM 3
-#define API_HO_VERSION_NUM 4
 #define TARGET_OS_NAME_PART1 "Harmony"
 #define TARGET_OS_NAME_PART2 "OS"
 #define TARGET_OS_NAME TARGET_OS_NAME_PART1 TARGET_OS_NAME_PART2
+#define VERSION_STR_MAX_LEN 64
+#define DECIMAL_BASE 10
+
+// 校验版本三段是否都在合法范围：major∈[1, API_VERSION_MAX]，minor/patch∈[0, API_VERSION_MAX]
+static bool IsVersionInRange(int32_t major, int32_t minor, int32_t patch)
+{
+    return major >= 1 && major <= API_VERSION_MAX &&
+           minor >= 0 && minor <= API_VERSION_MAX &&
+           patch >= 0 && patch <= API_VERSION_MAX;
+}
+
+// 解析 DistributionOS 分发版本（打包编码 = major*10000 + minor*100 + patch）。
+// 仅依据打包值与各字段范围校验；OS 名称的判定由调用方完成。
+// 打包值、各字段均合法时返回 true 并写出三段版本。
+static bool TryResolveDistributionOSVersion(int32_t* major, int32_t* minor, int32_t* patch)
+{
+    int32_t distributionOSApiVersion = GetDistributionOSApiVersion();
+    // 校验范围：必须在 [10000, 999999] 之间（对应 1.0.0 ~ 99.99.99）
+    if (distributionOSApiVersion < DISTRIBUTION_OS_API_VER_MIN ||
+        distributionOSApiVersion > DISTRIBUTION_OS_API_VER_MAX) {
+        return false;
+    }
+
+    int32_t majorDistribution = distributionOSApiVersion / DISTRIBUTION_OS_API_VER_MIN;
+    int32_t minorDistribution = (distributionOSApiVersion / DISTRIBUTION_PERCENT) % DISTRIBUTION_PERCENT;
+    int32_t patchDistribution = distributionOSApiVersion % DISTRIBUTION_PERCENT;
+    // 再次校验各字段范围（防御性编程）
+    if (!IsVersionInRange(majorDistribution, minorDistribution, patchDistribution)) {
+        return false;
+    }
+
+    *major = majorDistribution;
+    *minor = minorDistribution;
+    *patch = patchDistribution;
+    BEGET_LOGI("Using DistributionOS API version: %d.%d.%d (from %d)",
+        *major, *minor, *patch, distributionOSApiVersion);
+    return true;
+}
+
+// 读取一段无符号整数（至少 1 位数字）。成功返回 true，并通过 endp 回传结束位置、value 回传数值。
+// 严格要求以数字开头，杜绝 sscanf 的 %d 跳过前导空白导致的 "1. 2. 3"、" 1.2.3" 误判。
+static bool ReadVersionSegment(const char* p, const char** endp, int* value)
+{
+    if (*p < '0' || *p > '9') {
+        *endp = p;
+        return false;
+    }
+    int v = 0;
+    while (*p >= '0' && *p <= '9') {
+        v = v * DECIMAL_BASE + (*p - '0');
+        ++p;
+        // 版本号每段上限为 API_VERSION_MAX；超出即非法（同时避免 int 溢出）
+        if (v > API_VERSION_MAX) {
+            *endp = p;
+            return false;
+        }
+    }
+    *value = v;
+    *endp = p;
+    return true;
+}
+
+// 单趟严格解析：格式为 "N.N.N" 或 "N.N.N(M)"，N/M 为无符号整数（无空格、符号）。
+// 逐字符读取，任何多余或非法字符（含空格）即判非法。
+static bool ParseVersionFromString(const char* str, int32_t* majorVersion, int32_t* minorVersion,
+    int32_t* patchVersion)
+{
+    if (str == nullptr) {
+        return false;
+    }
+
+    const char* p = str;
+    int major = 0;
+    int minor = 0;
+    int patch = 0;
+
+    // 严格按 "数字.数字.数字" 解析，点号必须紧跟在数字之后
+    if (!ReadVersionSegment(p, &p, &major) || *p != '.') {
+        return false;
+    }
+    ++p;
+    if (!ReadVersionSegment(p, &p, &minor) || *p != '.') {
+        return false;
+    }
+    ++p;
+    if (!ReadVersionSegment(p, &p, &patch)) {
+        return false;
+    }
+
+    // 可选后缀 "(M)"：括号内的第 4 段（OpenHarmony 版本号）仅校验合法性、不参与比较
+    // （取值范围 [0, API_VERSION_MAX] 由 ReadVersionSegment 保证）
+    if (*p == '(') {
+        ++p;
+        int ohVersion = 0;
+        if (!ReadVersionSegment(p, &p, &ohVersion) || *p != ')') {
+            return false;
+        }
+        ++p;
+    }
+
+    if (*p != '\0') {
+        return false;
+    }
+
+    if (major > 0 && minor >= 0 && patch >= 0) {
+        *majorVersion = major;
+        *minorVersion = minor;
+        *patchVersion = patch;
+        return true;
+    }
+    // 其他格式（如 "0.0.0"）视为非法
+    return false;
+}
 
 static bool ParseVersionFromArg(napi_env env, napi_value arg,
     int32_t* majorVersion, int32_t* minorVersion, int32_t* patchVersion)
@@ -369,40 +480,12 @@ static bool ParseVersionFromArg(napi_env env, napi_value arg,
     }
 
     if (type == napi_string) {
-        char str[64] = {0};
+        char str[VERSION_STR_MAX_LEN] = {0};
         size_t len = 0;
         if (napi_get_value_string_utf8(env, arg, str, sizeof(str), &len) != napi_ok) {
             return false;
         }
-        int major = 0;
-        int minor = 0;
-        int patch = 0;
-        int ohVersion = 0;
-        int nConsumed = 0; // 记录解析了多少个字符
-        // 先试带括号的格式
-        if (sscanf_s(str, "%d.%d.%d(%d)%n", &major, &minor, &patch, &ohVersion, &nConsumed) == API_HO_VERSION_NUM) {
-            // 检查括号后面是否还有字符（比如 "1.2.3(4)abc"）
-            if (str[nConsumed] != '\0' || ohVersion < 0 || ohVersion > API_VERSION_MAX) {
-                return false;
-            }
-        } else if (sscanf_s(str, "%d.%d.%d%n", &major, &minor, &patch, &nConsumed) == API_VERSION_NUM) {
-            // 检查解析结束后的字符
-            const char* suffix = str + nConsumed;
-            if (*suffix != '\0') {
-                return false;
-            }
-        } else {
-            return false;
-        }
-
-        if (major > 0 && minor >= 0 && patch >= 0) {
-            *majorVersion = major;
-            *minorVersion = minor;
-            *patchVersion = patch;
-            return true;
-        }
-        // 其他格式（如 "8"、"5.1"、"5f.3.2"）视为非法
-        return false;
+        return ParseVersionFromString(str, majorVersion, minorVersion, patchVersion);
     }
 
     return false;
@@ -411,54 +494,24 @@ static bool ParseVersionFromArg(napi_env env, napi_value arg,
 // 通过判断系统是 HO 还是 OH 进行版本号对比
 static bool CheckApiVersionGreaterOrEqualByOS(int majorVersion, int minorVersion, int patchVersion)
 {
-    if (majorVersion > API_VERSION_MAX || majorVersion < 1) {
-        return false;
-    }
-    if (minorVersion > API_VERSION_MAX || minorVersion < 0) {
-        return false;
-    }
-    if (patchVersion > API_VERSION_MAX || patchVersion < 0) {
+    if (!IsVersionInRange(majorVersion, minorVersion, patchVersion)) {
         return false;
     }
 
     int32_t osMajor = 0;
     int32_t osMinor = 0;
     int32_t osPatch = 0;
-    // 使用HO版本进行比对
-    bool useHarmonyOSVersion = false;
-
+    // name 为 DistributionOS 时走 DistributionOS 分发版本；否则（或分发版本无法解码时）回退到 OH SDK 版本
     const char* distributionOSName = GetDistributionOSName();
-    if (distributionOSName != nullptr && strcmp(distributionOSName, TARGET_OS_NAME) == 0) {
-        int32_t distributionOSApiVersion = GetDistributionOSApiVersion();
-        // 校验范围：必须在 [10000, 999999] 之间（对应 1.0.0 ~ 99.99.99）
-        if (distributionOSApiVersion >= DISTRIBUTION_OS_API_VER_MIN &&
-            distributionOSApiVersion <= DISTRIBUTION_OS_API_VER_MAX) {
-            int32_t osMajorDistribution = distributionOSApiVersion / DISTRIBUTION_OS_API_VER_MIN;
-            int32_t osMinorDistribution = (distributionOSApiVersion / DISTRIBUTION_PERCENT) % DISTRIBUTION_PERCENT;
-            int32_t osPatchDistribution = distributionOSApiVersion % DISTRIBUTION_PERCENT;
-
-            // 再次校验各字段范围（防御性编程）
-            if (osMajorDistribution >= 1 && osMajorDistribution <= API_VERSION_MAX &&
-                osMinorDistribution >= 0 && osMinorDistribution <= API_VERSION_MAX &&
-                osPatchDistribution >= 0 && osPatchDistribution <= API_VERSION_MAX) {
-                osMajor = osMajorDistribution;
-                osMinor = osMinorDistribution;
-                osPatch = osPatchDistribution;
-                useHarmonyOSVersion = true;
-                BEGET_LOGI("Using HO API version: %d.%d.%d (from %d)", osMajor, osMinor, osPatch,
-                    distributionOSApiVersion);
-            }
-        }
-    }
-
-    // 如果未成功使用 HO 版本，则回退到 OH SDK 版本
-    if (!useHarmonyOSVersion) {
+    bool isDistributionOS = (distributionOSName != nullptr &&
+        strcmp(distributionOSName, TARGET_OS_NAME) == 0);
+    if (!isDistributionOS || !TryResolveDistributionOSVersion(&osMajor, &osMinor, &osPatch)) {
         osMajor = GetSdkApiVersion();
         osMinor = GetSdkMinorApiVersion();
         osPatch = GetSdkPatchApiVersion();
     }
 
-    // 统一比较：系统版本 >= 请求版本
+    // 统一比较：系统版本 >= 请求版本（major 不同比 major，其次 minor，最后 patch>=）
     if (majorVersion != osMajor) {
         return osMajor > majorVersion;
     }
