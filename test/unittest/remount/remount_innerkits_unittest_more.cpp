@@ -47,8 +47,7 @@ HWTEST_F(RemountDmMergeUnitTest, RemountOverlay_LegacyOverlayMountFailureReturns
     g_state.dmMergeActive = false;
     g_state.mockLstat = true;
     g_state.lstatRet = 0;
-    g_state.mockMountOverlay = true;
-    g_state.mountOverlayRet = -1;
+    SetStubResult(STUB_MOUNT, -1);
 
     EXPECT_EQ(RemountOverlay(), -1);
 }
