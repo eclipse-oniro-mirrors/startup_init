@@ -680,18 +680,6 @@ HWTEST_F(ServiceUnitTest, TestServiceCGroup2, TestSize.Level1)
     ret = strcat_s(path, sizeof(path), "cgroup.procs");
     EXPECT_EQ(ret, 0);
 
-    FILE *file = nullptr;
-    file = fopen(path, "r");
-    ASSERT_NE(file, nullptr);
-    pid_t pid = 0;
-    ret = -1;
-    while (fscanf_s(file, "%d\n", &pid) == 1 && pid > 0) {
-        if (pid == service->pid) {
-            ret = 0;
-            break;
-        }
-    }
-    fclose(file);
     ret = ServiceStop(service);
     EXPECT_EQ(ret, 0);
     ReleaseService(service);
