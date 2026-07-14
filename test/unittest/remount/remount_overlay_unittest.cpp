@@ -1197,6 +1197,33 @@ HWTEST_F(RemountOverlayUnitTest, Init_RemountMain_008_clearDmMergeSucc, TestSize
     RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 0);
 }
 
+HWTEST_F(RemountOverlayUnitTest, Init_RemountMain_009_invalidArgWithExtraArg, TestSize.Level1)
+{
+    const char *argv[] = {"remount", "-c", "a", nullptr};
+    RemountSetStubResult(STUB_GETUID, 0);
+    RemountSetStubResult(STUB_IS_OVERLAY_ENABLE, 1);
+    int ret = RemountMainEntry(3, argv);
+    EXPECT_EQ(ret, REMOUNT_FAIL);
+}
+
+HWTEST_F(RemountOverlayUnitTest, Init_RemountMain_010_invalidArgUnknownOption, TestSize.Level1)
+{
+    const char *argv[] = {"remount", "-x", nullptr};
+    RemountSetStubResult(STUB_GETUID, 0);
+    RemountSetStubResult(STUB_IS_OVERLAY_ENABLE, 1);
+    int ret = RemountMainEntry(REMOUNT_CLEAR_ARGC, argv);
+    EXPECT_EQ(ret, REMOUNT_FAIL);
+}
+
+HWTEST_F(RemountOverlayUnitTest, Init_RemountMain_011_invalidArgMultipleArgs, TestSize.Level1)
+{
+    const char *argv[] = {"remount", "foo", "bar", nullptr};
+    RemountSetStubResult(STUB_GETUID, 0);
+    RemountSetStubResult(STUB_IS_OVERLAY_ENABLE, 1);
+    int ret = RemountMainEntry(3, argv);
+    EXPECT_EQ(ret, REMOUNT_FAIL);
+}
+
 HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_008_dmMergeMarkerExists, TestSize.Level1)
 {
     CheckAndCreateDir((std::string(STARTUP_INIT_UT_PATH) + "/data/service/el1/startup/remount/").c_str());

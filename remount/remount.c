@@ -24,7 +24,7 @@ int main(int argc, const char *argv[])
 {
 #ifdef EROFS_OVERLAY
     EnableInitLog(INIT_INFO);
-    if (argc > 1 && strcmp(argv[1], "-c") == 0) {
+    if (argc == REMOUNT_CLEAR_ARGC && strcmp(argv[1], "-c") == 0) {
         if (getuid() == 0 && IsOverlayEnable()) {
             int ret = ClearDmMerge();
             if (ret == 1) {
@@ -36,6 +36,10 @@ int main(int argc, const char *argv[])
         }
         printf("not need erofs overlay, remount -c skip\n");
         return 0;
+    }
+    if (argc != 1) {
+        printf("invalid argument\n");
+        return REMOUNT_FAIL;
     }
     if (getuid() == 0 && IsOverlayEnable()) {
         int ret = RemountRofsOverlay();

@@ -26,6 +26,7 @@ extern "C" {
 
 #define REMOUNT_SUCC 0
 #define REMOUNT_FAIL 1
+#define REMOUNT_CLEAR_ARGC 2
 
 int GetRemountResult(void);
 
