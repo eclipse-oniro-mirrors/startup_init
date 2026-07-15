@@ -304,24 +304,38 @@ INIT_STATIC int ReadHyperholdSwitchMarker(char *buf, ssize_t *readLen)
 
 static void WriteHyperholdEnableMarker(void);
 
-INIT_STATIC void CleanupPerPartitionOverlay(void)
+INIT_STATIC void ZeroOnePartitionExt4Superblock(FstabItem *item)
 {
-    char *overlayPaths[] = {"/usr", "/vendor", "/sys_prod", "/chip_prod", "/preload", "/cust", "/version"};
-    for (size_t i = 0; i < ARRAY_LENGTH(overlayPaths); i++) {
-        char upperDir[MAX_BUFFER_LEN] = {0};
-        char workDir[MAX_BUFFER_LEN] = {0};
-        if (snprintf_s(upperDir, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1,
-            "%s%s%s", PREFIX_OVERLAY, overlayPaths[i], PREFIX_UPPER) < 0) {
-            continue;
-        }
-        if (snprintf_s(workDir, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1,
-            "%s%s%s", PREFIX_OVERLAY, overlayPaths[i], PREFIX_WORK) < 0) {
-            continue;
-        }
-        RemoveDirContent(upperDir);
-        RemoveDirContent(workDir);
+    if (!MntNeedRemount(item->mountPoint)) {
+        return;
     }
-    BEGET_LOGI("per-partition overlay cleanup completed");
+    uint64_t mapStart = 0;
+    uint64_t mapLength = 0;
+    if (GetMapperAddrForMerge(item->deviceName, &mapStart, &mapLength) != 0 || mapStart == 0) {
+        return;
+    }
+    int fd = open(item->deviceName, O_RDWR | O_LARGEFILE);
+    if (fd < 0) {
+        BEGET_LOGE("open %s for zero superblock failed", item->deviceName);
+        return;
+    }
+    char zeroBuf[sizeof(ext4_super_block)] = {0};
+    if (pwrite(fd, zeroBuf, sizeof(zeroBuf), mapStart + EXT4_SUPER_BLOCK_START_POSITION) < 0) {
+        BEGET_LOGE("zero ext4 superblock failed on %s", item->deviceName);
+    } else {
+        BEGET_LOGI("ext4 superblock zeroed on %s at offset %llu", item->deviceName, mapStart);
+    }
+    close(fd);
+}
+
+INIT_STATIC void ZeroPerPartitionExt4Superblocks(Fstab *fstab)
+{
+    FstabItem *item = fstab->head;
+    while (item != NULL) {
+        ZeroOnePartitionExt4Superblock(item);
+        item = item->next;
+    }
+    BEGET_LOGI("per-partition ext4 superblocks zeroed");
 }
 
 int CheckHyperholdDisableMarker(Fstab *fstab)
@@ -346,11 +360,10 @@ int CheckHyperholdDisableMarker(Fstab *fstab)
             RemoveAllErofsDmDevices();
             FsDmRemoveDevice(DM_MERGE_NAME);
         }
-    } else {
-        CleanupPerPartitionOverlay();
     }
+    ZeroPerPartitionExt4Superblocks(fstab);
     WriteHyperholdEnableMarker();
-    BEGET_LOGI("overlay cleanup done, 'enable' marker written, will use dm_merge");
+    BEGET_LOGI("overlay cleanup done, ext4 superblocks zeroed, 'enable' marker written");
     return 1;
 }
 

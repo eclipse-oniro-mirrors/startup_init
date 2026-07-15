@@ -51,6 +51,8 @@ void NormalizeDmName(char *dmName);
 void RemoveOneErofsDmDevice(FstabItem *item);
 void RemoveAllErofsDmDevices(void);
 int RemoveDirContent(const char *path);
+void ZeroOnePartitionExt4Superblock(FstabItem *item);
+void ZeroPerPartitionExt4Superblocks(Fstab *fstab);
 
 typedef enum {
     STUB_SPRINTF,

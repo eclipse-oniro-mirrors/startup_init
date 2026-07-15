@@ -364,18 +364,21 @@ HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_NotDisableSkips, Te
     EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 0);
 }
 
-HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_InactiveCleansPerPartitionOverlay, TestSize.Level1)
+HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_InactiveZerosExt4Superblocks, TestSize.Level1)
 {
     UpdateOpenFunc(OpenMock);
     g_state.openSeq = {100, -1, 100};
     g_state.mockPread = true;
     g_state.mockPwrite = true;
-    g_state.mockUnlink = true;
-    g_state.mockDirOps = true;
+    g_state.accessRet = -1;
     g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
     g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
+    Fstab *fstab = BuildFstab({});
+    ASSERT_NE(fstab, nullptr);
 
-    EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 1);
+    EXPECT_EQ(CheckHyperholdDisableMarker(fstab), 1);
+
+    ReleaseFstab(fstab);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_WriteEnableOpenFailureStillReturnsDone, TestSize.Level1)
@@ -384,12 +387,15 @@ HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_WriteEnableOpenFail
     g_state.openSeq = {100, -1, -1};
     g_state.mockPread = true;
     g_state.mockPwrite = true;
-    g_state.mockUnlink = true;
-    g_state.mockDirOps = true;
+    g_state.accessRet = -1;
     g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
     g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
+    Fstab *fstab = BuildFstab({});
+    ASSERT_NE(fstab, nullptr);
 
-    EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 1);
+    EXPECT_EQ(CheckHyperholdDisableMarker(fstab), 1);
+
+    ReleaseFstab(fstab);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ActiveMountSuccessPerformsCleanup, TestSize.Level1)
@@ -397,13 +403,18 @@ HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ActiveMountSuccessP
     UseActiveDmMergeDeviceMocks();
     g_state.mockPread = true;
     g_state.mockPwrite = true;
+    g_state.accessRet = -1;
     g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
     g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
     g_state.mockLoadFstab = true;
     g_state.loadFstabNull = true;
+    Fstab *fstab = BuildFstab({});
+    ASSERT_NE(fstab, nullptr);
 
-    EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 1);
+    EXPECT_EQ(CheckHyperholdDisableMarker(fstab), 1);
     EXPECT_GE(g_umount2StubCalls, 1);
+
+    ReleaseFstab(fstab);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ActiveMountFailureDiscardsAndRemoves, TestSize.Level1)
@@ -411,13 +422,129 @@ HWTEST_F(RemountDmMergeUnitTest, CheckHyperholdDisableMarker_ActiveMountFailureD
     UseActiveDmMergeDeviceMocks();
     g_state.mockPread = true;
     g_state.mockPwrite = true;
+    g_state.accessRet = -1;
     g_state.preadContent = HYPERHOLD_SWITCH_DISABLE;
     g_state.preadRet = static_cast<ssize_t>(g_state.preadContent.size());
     g_state.initDmRet = -1;
     g_state.mockLoadFstab = true;
     g_state.loadFstabNull = true;
+    Fstab *fstab = BuildFstab({});
+    ASSERT_NE(fstab, nullptr);
 
-    EXPECT_EQ(CheckHyperholdDisableMarker(nullptr), 1);
+    EXPECT_EQ(CheckHyperholdDisableMarker(fstab), 1);
+
+    ReleaseFstab(fstab);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, ZeroOnePartitionExt4Superblock_NonRemountMntSkips, TestSize.Level0)
+{
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/test", "erofs"});
+    ASSERT_NE(item, nullptr);
+    ZeroOnePartitionExt4Superblock(item);
+    EXPECT_EQ(g_state.mapperCalls, 0);
+    ReleaseFstabItem(item);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, ZeroOnePartitionExt4Superblock_MapperFailSkips, TestSize.Level0)
+{
+    g_state.mockMapper = true;
+    g_state.mapperRet = -1;
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/vendor", "erofs"});
+    ASSERT_NE(item, nullptr);
+    ZeroOnePartitionExt4Superblock(item);
+    EXPECT_EQ(g_state.mapperCalls, 1);
+    ReleaseFstabItem(item);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, ZeroOnePartitionExt4Superblock_MapperStartZeroSkips, TestSize.Level0)
+{
+    g_state.mockMapper = true;
+    g_state.mapperRet = 0;
+    g_state.mapperStart = 0;
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/vendor", "erofs"});
+    ASSERT_NE(item, nullptr);
+    ZeroOnePartitionExt4Superblock(item);
+    EXPECT_EQ(g_state.mapperCalls, 1);
+    ReleaseFstabItem(item);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, ZeroOnePartitionExt4Superblock_OpenFailSkips, TestSize.Level0)
+{
+    UpdateOpenFunc(OpenMock);
+    g_state.openRet = -1;
+    g_state.mockMapper = true;
+    g_state.mapperRet = 0;
+    g_state.mapperStart = TEST_MAPPER_START;
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/vendor", "erofs"});
+    ASSERT_NE(item, nullptr);
+    ZeroOnePartitionExt4Superblock(item);
+    EXPECT_EQ(g_state.mapperCalls, 1);
+    EXPECT_EQ(g_state.openCalls, 1);
+    ReleaseFstabItem(item);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, ZeroOnePartitionExt4Superblock_PwriteSucceeds, TestSize.Level0)
+{
+    UpdateOpenFunc(OpenMock);
+    g_state.openRet = TEST_OPEN_FD;
+    g_state.mockMapper = true;
+    g_state.mapperRet = 0;
+    g_state.mapperStart = TEST_MAPPER_START;
+    g_state.mockPwrite = true;
+    FstabItem *item = MakeFstabItem({"/dev/block/dm-0", "/vendor", "erofs"});
+    ASSERT_NE(item, nullptr);
+    ZeroOnePartitionExt4Superblock(item);
+    EXPECT_EQ(g_state.mapperCalls, 1);
+    EXPECT_EQ(g_state.openCalls, 1);
+    EXPECT_EQ(g_state.pwriteCalls, 1);
+    EXPECT_EQ(g_state.closeCalls, 1);
+    ReleaseFstabItem(item);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, ZeroPerPartitionExt4Superblocks_EmptyFstabSkips, TestSize.Level0)
+{
+    Fstab *fstab = BuildFstab({});
+    ASSERT_NE(fstab, nullptr);
+    ZeroPerPartitionExt4Superblocks(fstab);
+    EXPECT_EQ(g_state.mapperCalls, 0);
+    ReleaseFstab(fstab);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, ZeroPerPartitionExt4Superblocks_NonRemountMntSkips, TestSize.Level0)
+{
+    Fstab *fstab = BuildFstab({{"/dev/block/dm-0", "/test", "erofs"}});
+    ASSERT_NE(fstab, nullptr);
+    ZeroPerPartitionExt4Superblocks(fstab);
+    EXPECT_EQ(g_state.mapperCalls, 0);
+    ReleaseFstab(fstab);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, ZeroPerPartitionExt4Superblocks_MapperFailSkips, TestSize.Level0)
+{
+    g_state.mockMapper = true;
+    g_state.mapperRet = -1;
+    Fstab *fstab = BuildFstab({{"/dev/block/dm-0", "/vendor", "erofs"}});
+    ASSERT_NE(fstab, nullptr);
+    ZeroPerPartitionExt4Superblocks(fstab);
+    EXPECT_EQ(g_state.mapperCalls, 1);
+    ReleaseFstab(fstab);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, ZeroPerPartitionExt4Superblocks_PwriteSucceeds, TestSize.Level0)
+{
+    UpdateOpenFunc(OpenMock);
+    g_state.openRet = TEST_OPEN_FD;
+    g_state.mockMapper = true;
+    g_state.mapperRet = 0;
+    g_state.mapperStart = TEST_MAPPER_START;
+    g_state.mockPwrite = true;
+    Fstab *fstab = BuildFstab({{"/dev/block/dm-0", "/vendor", "erofs"}});
+    ASSERT_NE(fstab, nullptr);
+    ZeroPerPartitionExt4Superblocks(fstab);
+    EXPECT_EQ(g_state.mapperCalls, 1);
+    EXPECT_EQ(g_state.openCalls, 1);
+    EXPECT_EQ(g_state.pwriteCalls, 1);
+    ReleaseFstab(fstab);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, IsDmMergeRemountEnabled_HyperholdEmptyReturnsFalse, TestSize.Level1)
