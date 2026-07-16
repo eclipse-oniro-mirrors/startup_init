@@ -42,6 +42,12 @@ declare_args() {
   # config memory size for liteos-m
   init_lite_memory_size = 10240
 
+  # config param len for liteos-m
+  init_lite_param_const_value_len_max = 4096
+  init_lite_param_value_len_max = 96
+  init_lite_param_name_len_max = 96
+  init_lite_persist_all = true
+
   startup_init_feature_decode_group_file = false
 
   startup_init_test_performance = true
