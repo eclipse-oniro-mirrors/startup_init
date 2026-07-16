@@ -52,8 +52,7 @@ bool HasSystemCapability(const char *cap)
         return false;
     }
 
-    BEGET_ERROR_CHECK(strncmp(paramValue, "true", strlen("true")) == 0, return false,
-        "Invalid paramValue: %s", paramValue);
+    BEGET_ERROR_CHECK(strncmp(paramValue, "true") == 0, return false, "Invalid paramValue: %s", paramValue);
 
     return true;
 }
