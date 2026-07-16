@@ -194,6 +194,7 @@ if (defined(ohos_lite)) {
       cfi_cross_dso = true
       debug = false
     }
+    branch_protector_ret = "pac_ret"
     output_values = get_target_outputs(":deviceinfo_interface")
     sources = filter_include(output_values, [ "*_info_proxy.cpp" ])
     public_configs = [ ":init_idl_config" ]
@@ -214,6 +215,7 @@ if (defined(ohos_lite)) {
       cfi_cross_dso = true
       debug = false
     }
+    branch_protector_ret = "pac_ret"
     output_values = get_target_outputs(":deviceinfo_interface")
     sources = filter_include(output_values, [ "*_info_stub.cpp" ])
     public_configs = [ ":init_idl_config" ]
@@ -242,6 +244,7 @@ if (defined(ohos_lite)) {
       cfi_cross_dso = true
       debug = false
     }
+    branch_protector_ret = "pac_ret"
     output_values = get_target_outputs(":param_watcher_interface")
     sources = filter_include(output_values,
                              [
@@ -266,6 +269,7 @@ if (defined(ohos_lite)) {
       cfi_cross_dso = true
       debug = false
     }
+    branch_protector_ret = "pac_ret"
     output_values = get_target_outputs(":param_watcher_interface")
     sources = filter_include(output_values,
                              [
@@ -290,6 +294,7 @@ if (defined(ohos_lite)) {
   ]
 
   ohos_shared_library("libbegetutil") {
+    branch_protector_ret = "pac_ret"
     sources = [
       "fd_holder/fd_holder.c",
       "reboot/init_reboot_innerkits.c",
@@ -363,6 +368,7 @@ if (defined(ohos_lite)) {
       cfi_cross_dso = true
       debug = false
     }
+    branch_protector_ret = "pac_ret"
 
     sources = syspara_sources
     sources += [ "syspara/param_wrapper.cpp" ]
@@ -408,6 +414,7 @@ if (defined(ohos_lite)) {
   }
   # watcher lib must separate compilation avoid interdependence.
   ohos_shared_library("libbeget_proxy") {
+    branch_protector_ret = "pac_ret"
     defines = [
       "INIT_AGENT",
       "_GNU_SOURCE",
@@ -496,6 +503,7 @@ if (defined(ohos_lite)) {
   }
 
   ohos_static_library("libbegetutil_static") {
+    branch_protector_ret = "pac_ret"
     sources = syspara_sources
     sources += [
       "reboot/init_reboot_innerkits.c",

@@ -17,6 +17,7 @@ config("exported_header_files") {
 }
 
 ohos_static_library("libfile") {
+  branch_protector_ret = "pac_ret"
   sources = [ "init_file.c" ]
   include_dirs = [
     "//base/startup/init/services/log",
