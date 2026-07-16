@@ -34,7 +34,8 @@ extern "C" {
 const char *PartNameToOverlayPath(const char *partName);
 int ParseRefreshPartNames(const char *buf, const char *overlayPaths[], int *overlayCount);
 bool HasCleanupMarker(void);
-void CleanupPerPartitionOverlay(void);
+void ZeroOnePartitionExt4Superblock(FstabItem *item);
+void ZeroPerPartitionExt4Superblocks(Fstab *fstab);
 int __real_mkdir(const char *pathname, mode_t mode);  // NOLINT
 #ifdef __cplusplus
 }
@@ -346,10 +347,77 @@ HWTEST_F(RemountDmMergeUnitTest, Init_HasCleanupMarker_001, TestSize.Level0)
     unlink("/mnt/overlay_merge/.dm_merge_cleanup");
 }
 
-HWTEST_F(RemountDmMergeUnitTest, Init_CleanupPerPartitionOverlay_001, TestSize.Level0)
+HWTEST_F(RemountDmMergeUnitTest, Init_ZeroPerPartitionExt4Superblocks_001_emptyFstab, TestSize.Level0)
 {
-    CleanupPerPartitionOverlay();
-    EXPECT_EQ(RemountGetStubResult(STUB_GET_PARAM_FROM_CMDLINE), 0);
+    Fstab *fstab = static_cast<Fstab*>(calloc(1, sizeof(Fstab)));
+    ASSERT_NE(fstab, nullptr);
+    ZeroPerPartitionExt4Superblocks(fstab);
+    EXPECT_EQ(fstab->head, nullptr);
+    free(fstab);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, Init_ZeroPerPartitionExt4Superblocks_002_nonRemountMnt, TestSize.Level0)
+{
+    Fstab *fstab = static_cast<Fstab*>(calloc(1, sizeof(Fstab)));
+    FstabItem *item = static_cast<FstabItem*>(calloc(1, sizeof(FstabItem)));
+    ASSERT_NE(fstab, nullptr);
+    ASSERT_NE(item, nullptr);
+    item->mountPoint = strdup("/test");
+    ASSERT_NE(item->mountPoint, nullptr);
+    fstab->head = item;
+    fstab->tail = item;
+    ZeroPerPartitionExt4Superblocks(fstab);
+    EXPECT_EQ(fstab->head, item);
+    free(item->mountPoint);
+    free(item);
+    free(fstab);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, Init_ZeroPerPartitionExt4Superblocks_003_remountMntInvalidDev, TestSize.Level0)
+{
+    Fstab *fstab = static_cast<Fstab*>(calloc(1, sizeof(Fstab)));
+    FstabItem *item = static_cast<FstabItem*>(calloc(1, sizeof(FstabItem)));
+    ASSERT_NE(fstab, nullptr);
+    ASSERT_NE(item, nullptr);
+    item->mountPoint = strdup("/vendor");
+    item->deviceName = strdup("/dev/nonexistent");
+    ASSERT_NE(item->mountPoint, nullptr);
+    ASSERT_NE(item->deviceName, nullptr);
+    fstab->head = item;
+    fstab->tail = item;
+    ZeroPerPartitionExt4Superblocks(fstab);
+    EXPECT_EQ(fstab->head, item);
+    free(item->mountPoint);
+    free(item->deviceName);
+    free(item);
+    free(fstab);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, Init_ZeroOnePartitionExt4Superblock_001_nonRemountMnt, TestSize.Level0)
+{
+    FstabItem *item = static_cast<FstabItem*>(calloc(1, sizeof(FstabItem)));
+    ASSERT_NE(item, nullptr);
+    item->mountPoint = strdup("/test");
+    ASSERT_NE(item->mountPoint, nullptr);
+    ZeroOnePartitionExt4Superblock(item);
+    EXPECT_STREQ(item->mountPoint, "/test");
+    free(item->mountPoint);
+    free(item);
+}
+
+HWTEST_F(RemountDmMergeUnitTest, Init_ZeroOnePartitionExt4Superblock_002_remountMntInvalidDev, TestSize.Level0)
+{
+    FstabItem *item = static_cast<FstabItem*>(calloc(1, sizeof(FstabItem)));
+    ASSERT_NE(item, nullptr);
+    item->mountPoint = strdup("/vendor");
+    item->deviceName = strdup("/dev/nonexistent");
+    ASSERT_NE(item->mountPoint, nullptr);
+    ASSERT_NE(item->deviceName, nullptr);
+    ZeroOnePartitionExt4Superblock(item);
+    EXPECT_STREQ(item->deviceName, "/dev/nonexistent");
+    free(item->mountPoint);
+    free(item->deviceName);
+    free(item);
 }
 
 HWTEST_F(RemountDmMergeUnitTest, Init_RefreshPartitionOverlay_001, TestSize.Level0)
