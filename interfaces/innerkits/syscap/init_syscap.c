@@ -51,7 +51,9 @@ bool HasSystemCapability(const char *cap)
         BEGET_LOGE("Failed get paramName.");
         return false;
     }
-    
+
+    BEGET_ERROR_CHECK(strcmp(paramValue, "true") == 0, return false, "Invalid paramValue: %s", paramValue);
+
     return true;
 }
 
