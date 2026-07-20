@@ -22,15 +22,9 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
-#ifndef PARAM_CONST_VALUE_LEN_MAX
 #define PARAM_CONST_VALUE_LEN_MAX 4096
-#endif
-#ifndef PARAM_VALUE_LEN_MAX
 #define PARAM_VALUE_LEN_MAX  96
-#endif
-#ifndef PARAM_NAME_LEN_MAX
 #define PARAM_NAME_LEN_MAX  96
-#endif
 #define OS_FULL_NAME_LEN 128
 #define VERSION_ID_MAX_LEN 256
 #define PARAM_BUFFER_MAX (0x01 << 16)

@@ -27,11 +27,7 @@ static ParamPersistWorkSpace g_persistWorkSpace = {0, 0, NULL, {0}, {0}};
 static int IsNeedToSave(const char *name)
 {
 #if defined(__LITEOS_M__) || defined(__LITEOS_A__)
-#ifdef LITE_PERSIST_ALL
     return IS_READY_ONLY(name) ? 0 : 1;
-#else
-    return (strncmp(name, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) == 0) ? 1 : 0;
-#endif
 #else
     return (strncmp(name, PARAM_PERSIST_PREFIX, strlen(PARAM_PERSIST_PREFIX)) == 0) ? 1 : 0;
 #endif
