@@ -159,7 +159,7 @@ INIT_STATIC int MountRofsDevice(const char *dev, const char *mnt)
     return 0;
 }
 
-INIT_STATIC void SetSelinuxContext(const char *mnt)
+void SetSelinuxContext(const char *mnt)
 {
 #ifdef WITH_SELINUX
     const char* fsFileContext = "u:object_r:system_file:s0";
@@ -173,7 +173,7 @@ INIT_STATIC void SetSelinuxContext(const char *mnt)
 #endif
 }
 
-INIT_STATIC void ClearSelinuxContext(void)
+void ClearSelinuxContext(void)
 {
 #ifdef WITH_SELINUX
     setfscreatecon(NULL);
