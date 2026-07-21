@@ -297,6 +297,7 @@ INIT_STATIC void BootStateChange(int start, const char *content)
         long long diff = InitDiffTime(&g_bootJob);
         INIT_LOGI("boot job %s finish diff %lld us.", content, diff);
         if (strcmp(content, "boot") == 0) {
+            HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_JOB_BOOT_FINISH, NULL, NULL);
             WriteUptimeSysParam("ohos.boot.time.init", NULL);
             ReportStartupInitReport(g_serviceSpace.serviceCount);
         }
