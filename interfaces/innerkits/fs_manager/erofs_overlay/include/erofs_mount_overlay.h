@@ -31,6 +31,10 @@ int DoMountDmMergeErofsOnly(FstabItem *item);
 
 int MountExt4Device(const char *dev, const char *mnt, bool isFirstMount);
 
+void SetSelinuxContext(const char *mnt);
+
+void ClearSelinuxContext(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

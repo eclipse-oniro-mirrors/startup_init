@@ -30,6 +30,7 @@
 #include "fs_dm_linear.h"
 #include "dm_merge_overlay.h"
 #include "erofs_overlay_common.h"
+#include "erofs_mount_overlay.h"
 #include "erofs_remount_overlay.h"
 #include "remount_overlay.h"
 
@@ -134,6 +135,7 @@ static int FormatAndMountDmMerge(const char *dmDevPath)
 static int MkdirOverlayMergeDirs(char mntPaths[][MAX_BUFFER_LEN], uint32_t targetNum)
 {
     for (uint32_t i = 0; i < targetNum; i++) {
+        SetSelinuxContext(mntPaths[i]);
         char dirPartition[MAX_BUFFER_LEN] = {0};
         char dirUpper[MAX_BUFFER_LEN] = {0};
         char dirWork[MAX_BUFFER_LEN] = {0};
@@ -141,30 +143,37 @@ static int MkdirOverlayMergeDirs(char mntPaths[][MAX_BUFFER_LEN], uint32_t targe
         if (snprintf_s(dirPartition, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1,
             "%s%s", PREFIX_OVERLAY_MERGE, mntPaths[i]) < 0) {
             INIT_LOGE("snprintf dirPartition failed");
+            ClearSelinuxContext();
             return -1;
         }
         if (mkdir(dirPartition, MODE_MKDIR) && (errno != EEXIST)) {
             INIT_LOGE("mkdir %s failed", dirPartition);
+            ClearSelinuxContext();
             return -1;
         }
         if (snprintf_s(dirUpper, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1,
             "%s%s%s", PREFIX_OVERLAY_MERGE, mntPaths[i], PREFIX_UPPER) < 0) {
             INIT_LOGE("snprintf dirUpper failed");
+            ClearSelinuxContext();
             return -1;
         }
         if (mkdir(dirUpper, MODE_MKDIR) && (errno != EEXIST)) {
             INIT_LOGE("mkdir %s failed", dirUpper);
+            ClearSelinuxContext();
             return -1;
         }
         if (snprintf_s(dirWork, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1,
             "%s%s%s", PREFIX_OVERLAY_MERGE, mntPaths[i], PREFIX_WORK) < 0) {
             INIT_LOGE("snprintf dirWork failed");
+            ClearSelinuxContext();
             return -1;
         }
         if (mkdir(dirWork, MODE_MKDIR) && (errno != EEXIST)) {
             INIT_LOGE("mkdir %s failed", dirWork);
+            ClearSelinuxContext();
             return -1;
         }
+        ClearSelinuxContext();
     }
     return 0;
 }
