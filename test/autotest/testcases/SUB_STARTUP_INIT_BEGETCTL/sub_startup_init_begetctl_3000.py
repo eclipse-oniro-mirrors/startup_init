@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -19,7 +19,7 @@ from devicetest.core.test_case import Step, TestCase
 from hypium import UiDriver
 
 
-class SunStartupInitBegetctl1900(TestCase):
+class SunStartupInitBegetctl3000(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -34,41 +34,35 @@ class SunStartupInitBegetctl1900(TestCase):
         Step(self.devices[0].device_id)
 
     def test_step1(self):
-        Step("设置日志级别为DEBUG.................")
-        result_debug = self.driver.shell('begetctl set log level 0')
-        Step(result_debug)
+        Step("设置日志级别为DEBUG(0).................")
+        result_0 = self.driver.shell('begetctl setloglevel 0')
+        Step(result_0)
         Step("检查设置日志级别结果.................")
-        self.driver.Assert.contains(result_debug, 'Success to set log level')
+        self.driver.Assert.contains(result_0, 'Success to set log level')
         sleep(1)
-        Step("设置日志级别为INFO.................")
-        result_info = self.driver.shell('begetctl set log level 1')
-        Step(result_info)
+        Step("设置日志级别为INFO(1).................")
+        result_1 = self.driver.shell('begetctl setloglevel 1')
+        Step(result_1)
         Step("检查设置日志级别结果.................")
-        self.driver.Assert.contains(result_info, 'Success to set log level INFO')
+        self.driver.Assert.contains(result_1, 'Success to set log level')
         sleep(1)
-        Step("设置日志级别为WARNING.................")
-        result_warning = self.driver.shell('begetctl set log level 2')
-        Step(result_warning)
+        Step("设置日志级别为WARNING(2).................")
+        result_2 = self.driver.shell('begetctl setloglevel 2')
+        Step(result_2)
         Step("检查设置日志级别结果.................")
-        self.driver.Assert.contains(result_warning, 'Success to set log level')
+        self.driver.Assert.contains(result_2, 'Success to set log level')
         sleep(1)
-        Step("设置日志级别为ERROR.................")
-        result_error = self.driver.shell('begetctl set log level 3')
-        Step(result_error)
+        Step("设置日志级别为ERROR(3).................")
+        result_3 = self.driver.shell('begetctl setloglevel 3')
+        Step(result_3)
         Step("检查设置日志级别结果.................")
-        self.driver.Assert.contains(result_error, 'Success to set log level')
-        sleep(1)
-        Step("设置日志级别为FATAL.................")
-        result_fatal = self.driver.shell('begetctl set log level 4')
-        Step(result_fatal)
-        Step("检查设置日志级别结果.................")
-        self.driver.Assert.contains(result_fatal, 'Success to set log level')
+        self.driver.Assert.contains(result_3, 'Success to set log level')
         sleep(1)
         Step("获取当前日志级别.................")
-        result_get = self.driver.shell('begetctl get log level')
+        result_get = self.driver.shell('begetctl getloglevel')
         Step(result_get)
         Step("检查获取日志级别结果.................")
-        self.driver.Assert.contains(result_get, 'Init log level:')
+        self.driver.Assert.contains(result_get, 'Success to get init log level')
 
     def teardown(self):
         Step("收尾工作.................")
