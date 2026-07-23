@@ -203,6 +203,11 @@ ohos_source_set("libseccomp_static") {
   ]
 
   branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
