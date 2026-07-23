@@ -1,4 +1,4 @@
-{
+{ 
   "description": "Config for OpenHarmony devicetest test cases",
   "environment": [
     {
