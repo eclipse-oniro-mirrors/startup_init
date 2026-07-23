@@ -243,6 +243,7 @@ static void DelCallbackRef(napi_env env, ParamWatcherPtr watcher, napi_ref callb
     if (callbackRef == watcher->currCallbackRef) {
         PARAM_JS_LOGV("JSApp watcher key %s has been callbacked %u.",
             watcher->keyPrefix, id);
+        napi_delete_reference(env, callbackRef);
         watcher->currCallbackRef = nullptr;
     } else {
         napi_delete_reference(env, callbackRef);

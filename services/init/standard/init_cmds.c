@@ -115,6 +115,10 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
             ret = memcpy_s(paramValue + curr, paramLen - curr, start, begin - start);
             INIT_ERROR_CHECK(ret == 0, return -1, "Failed to copy first value %s", symValue);
             curr += begin - start;
+            if(curr >= paramLen) {
+                INIT_LOGE("Buffer overflow");
+                return -1;
+            }
         }
         while (*begin != '{') {
             INIT_CHECK_RETURN_VALUE(*begin != '\0', -1);
@@ -135,6 +139,10 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
         ret = SystemReadParam(tmpName, paramValue + curr, &valueLen);
         INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get param %s", tmpName);
         curr += valueLen;
+        if(curr >= paramLen) {
+            INIT_LOGE("Buffer overflow");
+            return -1;
+        }
         left++;
         if ((unsigned int)(left - symValue) >= symLen) {
             break;
