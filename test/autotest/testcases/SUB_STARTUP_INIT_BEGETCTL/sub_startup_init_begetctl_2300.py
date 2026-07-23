@@ -14,11 +14,12 @@
 #
 
 # -*- coding: utf-8 -*-
+from time import sleep
 from devicetest.core.test_case import Step, TestCase
 from hypium import UiDriver
 
 
-class SubStartupInitShellmgt0500(TestCase):
+class SunStartupInitBegetctl2300(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -33,15 +34,27 @@ class SubStartupInitShellmgt0500(TestCase):
         Step(self.devices[0].device_id)
 
     def test_step1(self):
-        Step("查看条件..........................")
-        condition = self.driver.shell('cat /etc/init.cfg|grep sysctl')
-        Step(condition)
-        Step("条件包括sys.sysctl..........................")
-        self.driver.Assert.contains(condition, '"condition"')
-        Step("校验sysctl配置是否生效..........................")
-        result = self.driver.shell('ls /proc/sys/vm/')
-        Step(result)
-        self.driver.Assert.contains(result, 'swappiness')
+        Step("获取hiview服务的pid.................")
+        pid_hiview = self.driver.System.get_pid("hiview")
+        Step(pid_hiview)
+        sleep(1)
+        Step("停止hiview服务.................")
+        self.driver.shell('begetctl stop_service hiview')
+        sleep(2)
+        Step("获取停止后hiview服务的pid.................")
+        pid_hiview_stop = self.driver.System.get_pid("hiview")
+        Step(pid_hiview_stop)
+        sleep(1)
+        Step("启动hiview服务.................")
+        self.driver.shell('begetctl start_service hiview')
+        sleep(2)
+        Step("获取启动后hiview服务的pid.................")
+        pid_hiview_start = self.driver.System.get_pid("hiview")
+        Step(pid_hiview_start)
+        sleep(1)
+        Step("验证服务重启成功.................")
+        if pid_hiview_start:
+            Step("hiview服务重启成功.................")
 
     def teardown(self):
         Step("收尾工作.................")

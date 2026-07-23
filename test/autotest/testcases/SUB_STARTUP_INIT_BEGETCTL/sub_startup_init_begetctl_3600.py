@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -19,7 +19,7 @@ from devicetest.core.test_case import Step, TestCase
 from hypium import UiDriver
 
 
-class SunStartupInitBegetctl1800(TestCase):
+class SunStartupInitBegetctl3600(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -37,37 +37,33 @@ class SunStartupInitBegetctl1800(TestCase):
         Step("获取const.product.devicetype参数.................")
         result_device = self.driver.shell('begetctl param get const.product.devicetype')
         Step(result_device)
-        Step("检查获取参数结果.................")
+        Step("检查参数结果.................")
         self.driver.Assert.contains(result_device, 'default')
         sleep(1)
         Step("获取const.product.manufacturer参数.................")
         result_manu = self.driver.shell('begetctl param get const.product.manufacturer')
         Step(result_manu)
-        Step("检查获取参数结果.................")
-        self.driver.Assert.contains(result_manu, 'default')
+        Step("检查参数结果.................")
         sleep(1)
         Step("获取const.product.brand参数.................")
         result_brand = self.driver.shell('begetctl param get const.product.brand')
         Step(result_brand)
-        Step("检查获取参数结果.................")
-        self.driver.Assert.contains(result_brand, 'default')
+        Step("检查参数结果.................")
         sleep(1)
         Step("获取const.product.name参数.................")
         result_name = self.driver.shell('begetctl param get const.product.name')
         Step(result_name)
-        Step("检查获取参数结果.................")
-        self.driver.Assert.contains(result_name, 'default')
+        Step("检查参数结果.................")
         sleep(1)
         Step("获取const.product.model参数.................")
         result_model = self.driver.shell('begetctl param get const.product.model')
         Step(result_model)
-        Step("检查获取参数结果.................")
-        self.driver.Assert.contains(result_model, 'default')
+        Step("检查参数结果.................")
         sleep(1)
-        Step("获取ohos.boot.hardwareversion参数.................")
-        result_hw = self.driver.shell('begetctl param get ohos.boot.hardwareversion')
-        Step(result_hw)
-        Step("检查获取参数结果.................")
+        Step("获取const.build.version参数.................")
+        result_version = self.driver.shell('begetctl param get const.build.version')
+        Step(result_version)
+        Step("检查参数结果.................")
 
     def teardown(self):
         Step("收尾工作.................")

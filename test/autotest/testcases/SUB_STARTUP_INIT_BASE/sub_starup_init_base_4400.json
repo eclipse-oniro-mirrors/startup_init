@@ -1,4 +1,4 @@
-{ 
+{
   "description": "Config for OpenHarmony devicetest test cases",
   "environment": [
     {
@@ -8,7 +8,7 @@
   "driver": {
     "type": "DeviceTest",
     "py_file": [
-      "SUB_STARTUP_INIT_CANIUSE/SUB_STARTUP_INIT_CANIUSE_1100.py"
+      "SUB_STARTUP_INIT_BASE/Sub_Starup_Init_Base_4400.py"
     ]
   }
 }

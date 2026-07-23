@@ -18,7 +18,7 @@ from devicetest.core.test_case import Step, TestCase
 from hypium import UiDriver
 
 
-class SubStartupInitShellmgt0500(TestCase):
+class SunStartupInitBegetctl2800(TestCase):
 
     def __init__(self, controllers):
         self.tag = self.__class__.__name__
@@ -33,15 +33,16 @@ class SubStartupInitShellmgt0500(TestCase):
         Step(self.devices[0].device_id)
 
     def test_step1(self):
-        Step("查看条件..........................")
-        condition = self.driver.shell('cat /etc/init.cfg|grep sysctl')
-        Step(condition)
-        Step("条件包括sys.sysctl..........................")
-        self.driver.Assert.contains(condition, '"condition"')
-        Step("校验sysctl配置是否生效..........................")
-        result = self.driver.shell('ls /proc/sys/vm/')
-        Step(result)
-        self.driver.Assert.contains(result, 'swappiness')
+        Step("执行param dump命令.................")
+        result_dump = self.driver.shell('begetctl param dump')
+        Step(result_dump)
+        Step("检查param dump结果.................")
+        self.driver.Assert.contains(result_dump, 'Dump all parameters finish')
+        Step("执行param save命令.................")
+        result_save = self.driver.shell('begetctl param save')
+        Step(result_save)
+        Step("检查param save结果.................")
+        self.driver.Assert.contains(result_save, 'Save persist parameters success')
 
     def teardown(self):
         Step("收尾工作.................")
