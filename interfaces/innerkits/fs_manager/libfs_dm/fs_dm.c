@@ -33,8 +33,7 @@ extern "C" {
 #endif
 #endif
 
-#define SECTOR_SIZE 512
-const char g_dmType[MAXNUMTYPE][MAX_WORDS_LEN] = {"verity", "linear", "snapshot", "snapshot-merge", "linear-key"};
+const char g_dmType[MAXNUMTYPE][MAX_WORDS_LEN] = {"verity", "linear", "snapshot", "snapshot-merge"};
 
 int InitDmIo(struct dm_ioctl *io, const char *devName)
 {
@@ -381,60 +380,6 @@ int DmGetDeviceName(int fd, const char *devName, char *outDevName, const uint64_
     free(path);
     path = NULL;
     return rc;
-}
-
-static int FsDmCreateLinearDeviceByType(int dmType, const char *devName, char *dmBlkName,
-    uint64_t dmBlkNameLen, DmVerityTarget *target)
-{
-    if (devName == NULL || dmBlkName == NULL || target == NULL) {
-        BEGET_LOGE("invalid args");
-        return -1;
-    }
- 
-    int rc;
-    int fd = -1;
-    fd = open(DEVICE_MAPPER_PATH, O_RDWR | O_CLOEXEC);
-    if (fd < 0) {
-        BEGET_LOGE("open mapper path failed, errno=%d", errno);
-        return -1;
-    }
- 
-    rc = CreateDmDev(fd, devName);
-    if (rc) {
-        BEGET_LOGE("create dm device failed, rc=%d", rc);
-        close(fd);
-        return -1;
-    }
- 
-    rc = DmGetDeviceName(fd, devName, dmBlkName, dmBlkNameLen);
-    if (rc) {
-        BEGET_LOGE("get dm device name failed, rc=%d", rc);
-        close(fd);
-        return -1;
-    }
- 
-    rc = LoadDmDeviceTable(fd, devName, target, dmType);
-    if (rc) {
-        BEGET_LOGE("load dm device table failed, rc=%d", rc);
-        close(fd);
-        return -1;
-    }
- 
-    rc = ActiveDmDevice(fd, devName);
-    if (rc) {
-        BEGET_LOGE("active dm device failed, rc=%d", rc);
-        close(fd);
-        return -1;
-    }
-    close(fd);
-    BEGET_LOGI("fs create %s device success, dev is [%s]", g_dmType[dmType], devName);
-    return 0;
-}
- 
-int FsDmCreateLinearKeyDevice(const char *devName, char *dmBlkName, uint64_t dmBlkNameLen, DmVerityTarget *target)
-{
-    BEGET_LOGI("FsDmCreateLinearKeyDevice start, devName [%s]", devName);
-    return FsDmCreateLinearDeviceByType(LINEAR_KEY, devName, dmBlkName, dmBlkNameLen, target);
 }
 
 int FsDmCreateLinearDevice(const char *devName, char *dmBlkName, uint64_t dmBlkNameLen, DmVerityTarget *target)

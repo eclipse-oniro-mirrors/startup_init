@@ -60,7 +60,6 @@ enum DmDeviceType {
     LINEAR,
     SNAPSHOT,
     SNAPSHOTMERGE,
-    LINEAR_KEY,
     MAXNUMTYPE
 };
 
@@ -76,8 +75,6 @@ int FsDmCreateDevice(char **dmDevPath, const char *devName, DmVerityTarget *targ
 int FsDmRemoveDevice(const char *devName);
 int FsDmCreateLinearDevice(const char *devName, char *dmBlkName,
                            uint64_t dmBlkNameLen, DmVerityTarget *target);
-int FsDmCreateLinearKeyDevice(const char *devName, char *dmBlkName,
-    uint64_t dmBlkNameLen, DmVerityTarget *target);
 int LoadDmDeviceTable(int fd, const char *devName, DmVerityTarget *target, int dmType);
 int DmGetDeviceName(int fd, const char *devName, char *outDevName, const uint64_t outDevNameLen);
 int ActiveDmDevice(int fd, const char *devName);
