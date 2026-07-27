@@ -16,6 +16,7 @@
         "name": "init",
         "subsystem": "startup",
         "syscap": [
+            "SystemCapability.Startup.SystemInfo.Slim",
             "SystemCapability.Startup.SystemInfo",
             "SystemCapability.Startup.SystemInfo.Lite",
             "SystemCapability.Base"
