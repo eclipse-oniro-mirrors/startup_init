@@ -269,16 +269,6 @@ static int SaveServiceBootEvent()
     return 0;
 }
 
-static void ReportSysEvent(void)
-{
-    INIT_CHECK(GetBootSwitchEnable("persist.init.bootevent.enable"), return);
-#ifndef STARTUP_INIT_TEST
-    InitModuleMgrInstall("eventmodule");
-    InitModuleMgrUnInstall("eventmodule");
-#endif
-    return;
-}
-
 static void BootCompleteClearAll(void)
 {
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
@@ -319,6 +309,15 @@ static void WriteBooteventSysParam(const char *paramName)
 }
 
 #ifndef STARTUP_INIT_TEST
+static void ReportSysEvent(void)
+{
+    INIT_CHECK(GetBootSwitchEnable("persist.init.bootevent.enable"), return);
+    InitModuleMgrInstall("eventmodule");
+    InitModuleMgrUnInstall("eventmodule");
+    return;
+}
+
+
 static void AsyncReportSysEvent(TimerHandle handler, void *context)
 {
     UNUSED(context);
