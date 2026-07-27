@@ -58,6 +58,8 @@
         ],
         "deps": {
             "components": [
+                "node",
+                "libuv",
                 "appspawn",
                 "safwk",
                 "c_utils",
