@@ -20,7 +20,10 @@ config("syscap_ts_config") {
 ohos_static_library("syscap_ts") {
   sources = [ "src/syscap_ts.cpp" ]
   include_dirs = [ "//base/startup/init/interfaces/innerkits/include" ]
-  external_deps = [ "napi:ace_napi" ]
+  external_deps = [ 
+    "napi:ace_napi",
+    "node:node_header_notice",
+  ]
   defines = [ "NAPI_ENABLE" ]
 
   deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]

@@ -23,6 +23,7 @@ ohos_shared_library("deviceinfo") {
     "//base/startup/init/interfaces/innerkits:libbegetutil",
   ]
   external_deps = [
+    "node:node_header_notice",
     "bounds_checking_function:libsec_shared",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
@@ -57,6 +58,8 @@ ohos_shared_library("systemparameter") {
   ]
 
   external_deps = [
+    "libuv:uv",
+    "node:node_header_notice",
     "bounds_checking_function:libsec_shared",
     "napi:ace_napi",
   ]
@@ -77,6 +80,7 @@ ohos_shared_library("systemparameterenhance") {
 
   symlink_target_name = [ "libsystemparameterv9.z.so" ]
   external_deps = [
+    "node:node_header_notice",
     "bounds_checking_function:libsec_shared",
     "napi:ace_napi",
   ]
