@@ -269,16 +269,6 @@ static int SaveServiceBootEvent()
     return 0;
 }
 
-static void ReportSysEvent(void)
-{
-    INIT_CHECK(GetBootSwitchEnable("persist.init.bootevent.enable"), return);
-#ifndef STARTUP_INIT_TEST
-    InitModuleMgrInstall("eventmodule");
-    InitModuleMgrUnInstall("eventmodule");
-#endif
-    return;
-}
-
 static void BootCompleteClearAll(void)
 {
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
@@ -319,6 +309,39 @@ static void WriteBooteventSysParam(const char *paramName)
 }
 
 #ifndef STARTUP_INIT_TEST
+static void ReportSysEvent(void)
+{
+    INIT_CHECK(GetBootSwitchEnable("persist.init.bootevent.enable"), return);
+    InitModuleMgrInstall("eventmodule");
+    InitModuleMgrUnInstall("eventmodule");
+    return;
+}
+
+
+static void AsyncReportSysEvent(TimerHandle handler, void *context)
+{
+    UNUSED(context);
+    ReportSysEvent();
+    LE_StopTimer(LE_GetDefaultLoop(), handler);
+}
+
+static int ScheduleAsyncReportSysEvent(void)
+{
+    TimerHandle timer;
+    LE_STATUS status = LE_CreateTimer(LE_GetDefaultLoop(), &timer, AsyncReportSysEvent, NULL);
+    if (status != LE_SUCCESS) {
+        INIT_LOGE("Failed to create timer for AsyncReportSysEvent");
+        return -1;
+    }
+    status = LE_StartTimer(LE_GetDefaultLoop(), timer, 0, 0);
+    if (status != LE_SUCCESS) {
+        LE_StopTimer(LE_GetDefaultLoop(), timer);
+        INIT_LOGE("Failed to start timer for AsyncReportSysEvent");
+        return -1;
+    }
+    return 0;
+}
+
 static void DelayedHookMgrExecute(TimerHandle handler, void *context)
 {
     UNUSED(context);
@@ -400,10 +423,12 @@ static int BootEventParaFireByName(const char *paramName)
     SystemWriteParam(BOOT_EVENT_BOOT_COMPLETED, "true");
     SetBootCompleted(true);
     SaveServiceBootEvent();
-    // report complete event
-    ReportSysEvent();
     BootCompleteClearAll();
 #ifndef STARTUP_INIT_TEST
+    if (ScheduleAsyncReportSysEvent() != 0) {
+        INIT_LOGE("Failed to schedule AsyncReportSysEvent, executing directly");
+        ReportSysEvent();
+    }
     if (ScheduleDelayedHookMgrExecute() != 0) {
         INIT_LOGE("Failed to schedule delayed HookMgrExecute, executing directly");
         HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
