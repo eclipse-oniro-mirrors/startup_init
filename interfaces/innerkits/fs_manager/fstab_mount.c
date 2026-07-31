@@ -798,7 +798,7 @@ bool static ReadMEState()
         BEGET_LOGI("Metacrypt status node exists");
         return true;
     }
-    BEGET_LOGI("Metacrypt status node does not exist");
+    BEGET_LOGI("Metacrypt status node doesn't exist");
     return false;
 }
 

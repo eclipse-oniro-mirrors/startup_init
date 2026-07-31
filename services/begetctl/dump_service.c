@@ -76,7 +76,7 @@ static void DumpAppspawnClientInit(const char *cmd, CallbackSendMsgProcess sendM
     CmdAgent agent;
     int ret = InitPtyInterface(&agent, ACTION_DUMP, cmd, sendMsg);
     if (ret != 0) {
-        BEGET_LOGE("App with pid=%s does not support entering sandbox environment", cmd);
+        BEGET_LOGE("App with pid=%s doesn't support entering sandbox environment", cmd);
         return;
     }
     LE_RunLoop(LE_GetDefaultLoop());

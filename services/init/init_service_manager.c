@@ -768,7 +768,7 @@ static int GetCpuArgs(const cJSON *argJson, const char *name, Service *service)
         INIT_ERROR_CHECK(item != NULL, return SERVICE_FAILURE, "prase invalid");
         cpus = (int)cJSON_GetNumberValue(item);
         if (cpuNumMax <= cpus) {
-            INIT_LOGW("%s core number %d of CPU cores does not exist", service->name, cpus);
+            INIT_LOGW("%s core number %d of CPU cores doesn't exist", service->name, cpus);
             continue;
         }
         if (CPU_ISSET(cpus, service->cpuSet)) {

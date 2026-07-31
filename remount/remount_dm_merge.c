@@ -287,7 +287,7 @@ int TryDmMergeRemount(void)
 int ClearDmMerge(void)
 {
     if (!IsDmMergeOverlayActive()) {
-        INIT_LOGI("legacy remount does not support remount -c");
+        INIT_LOGI("legacy remount doesn't support remount -c");
         printf("legacy remount does not support remount -c, skip\n");
         return 1;
     }
