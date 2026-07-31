@@ -27,7 +27,69 @@ extern "C" {
 #endif
 #endif
 
-// 监控类型定义
+#define MONITOR_OK              0
+#define MONITOR_ERROR           (-1)
+#define MONITOR_INVALID_PARAM   (-2)
+
+#define DEFAULT_SAMPLE_INTERVAL_MS  5000
+#define DEFAULT_HISTORY_SIZE        60
+#define MAX_PROCESS_COUNT           1024
+#define MAX_LINE_LENGTH             512
+#define MAX_ALARM_COUNT             100
+#define MAX_PERF_RECORD_COUNT       500
+#define MAX_DISK_STATS_COUNT        16
+#define MAX_NET_STATS_COUNT         16
+#define MAX_CPU_CORES               128
+#define STAT_HISTORY_SIZE           60
+
+#define CPU_THRESHOLD_DEFAULT       80
+#define MEM_THRESHOLD_DEFAULT       85
+#define DISK_THRESHOLD_DEFAULT      90
+
+#define PERCENT_MULTIPLIER          100
+#define PERCENT_SCALE               10000ULL
+#define BYTES_PER_KB                1024
+#define BYTES_PER_MB                ((uint64_t)1024 * (uint64_t)1024)
+#define NSEC_PER_SEC                1000000000LL
+#define NSEC_PER_MSEC               1000000LL
+#define NSEC_PER_USEC               1000LL
+
+#define CPU_CRITICAL_THRESHOLD      9000
+#define CPU_WARNING_THRESHOLD       8000
+#define MEM_CRITICAL_THRESHOLD      9000
+#define MEM_WARNING_THRESHOLD       8500
+#define SWAP_USAGE_INFO_THRESHOLD   5000
+#define BLOCKED_PROC_THRESHOLD      100
+#define STAT_FIELD_MAX_COUNT        50
+#define PROC_PATH_LEN               256
+#define CPU_LABEL_LEN               16
+#define MEM_KEY_LEN                 64
+#define MEM_UNIT_LEN                16
+
+#define PROC_STAT_PATH              "/proc/stat"
+#define PROC_MEMINFO_PATH           "/proc/meminfo"
+#define PROC_DISKSTATS_PATH         "/proc/diskstats"
+#define PROC_NET_DEV_PATH           "/proc/net/dev"
+#define PROC_LOADAVG_PATH           "/proc/loadavg"
+#define PROC_UPTIME_PATH            "/proc/uptime"
+#define PROC_MOUNTS_PATH            "/proc/mounts"
+#define PROC_DIR_PATH               "/proc"
+
+#define CPU_LABEL_PREFIX            "cpu"
+#define CTXT_LINE_PREFIX            "ctxt "
+#define PROCESSES_LINE_PREFIX       "processes "
+#define PROCS_RUNNING_PREFIX        "procs_running "
+#define PROCS_BLOCKED_PREFIX        "procs_blocked "
+
+#define PROCESS_NAME_MAX_LEN        64
+#define PROCESS_CMDLINE_MAX_LEN     256
+#define DEVICE_NAME_MAX_LEN         64
+#define NET_IFACE_MAX_LEN           32
+#define ALARM_MSG_MAX_LEN           256
+#define PERF_NAME_MAX_LEN           64
+#define FS_TYPE_MAX_LEN             64
+#define MOUNT_POINT_MAX_LEN         256
+
 typedef enum {
     MONITOR_TYPE_CPU = 0,
     MONITOR_TYPE_MEMORY,
@@ -37,7 +99,6 @@ typedef enum {
     MONITOR_TYPE_MAX
 } MonitorType;
 
-// 告警级别
 typedef enum {
     ALARM_LEVEL_INFO = 0,
     ALARM_LEVEL_WARNING,
@@ -46,7 +107,6 @@ typedef enum {
     ALARM_LEVEL_MAX
 } AlarmLevel;
 
-// 监控状态
 typedef enum {
     MONITOR_STATE_IDLE = 0,
     MONITOR_STATE_RUNNING,
@@ -55,283 +115,220 @@ typedef enum {
     MONITOR_STATE_MAX
 } MonitorState;
 
-// CPU统计信息
 typedef struct {
-    uint64_t userModeTime;      // 用户态时间(毫秒)
-    uint64_t niceTime;          // 低优先级进程时间(毫秒)
-    uint64_t systemTime;        // 内核态时间(毫秒)
-    uint64_t idleTime;          // 空闲时间(毫秒)
-    uint64_t ioWaitTime;        // IO等待时间(毫秒)
-    uint64_t irqTime;           // 硬中断时间(毫秒)
-    uint64_t softIrqTime;       // 软中断时间(毫秒)
-    uint64_t stealTime;         // 虚拟化环境下的被窃取时间(毫秒)
-    uint64_t guestTime;         // 客户机操作系统时间(毫秒)
-    uint64_t guestNiceTime;     // 客户机低优先级进程时间(毫秒)
-    uint64_t totalUsage;        // 总使用率(百分比*100)
-    uint32_t cpuCoreNum;        // CPU核心数
-    uint32_t contextSwitches;   // 上下文切换次数
-    uint32_t processesCreated;  // 创建的进程数
-    uint32_t processesRunning;  // 运行中的进程数
-    uint32_t processesBlocked;  // 阻塞的进程数
+    uint64_t userModeTime;
+    uint64_t niceTime;
+    uint64_t systemTime;
+    uint64_t idleTime;
+    uint64_t ioWaitTime;
+    uint64_t irqTime;
+    uint64_t softIrqTime;
+    uint64_t stealTime;
+    uint64_t guestTime;
+    uint64_t guestNiceTime;
+    uint64_t totalUsage;
+    uint32_t cpuCoreNum;
+    uint32_t contextSwitches;
+    uint32_t processesCreated;
+    uint32_t processesRunning;
+    uint32_t processesBlocked;
 } CpuStats;
 
-// 内存统计信息
 typedef struct {
-    uint64_t totalMem;          // 总内存(字节)
-    uint64_t freeMem;           // 空闲内存(字节)
-    uint64_t availableMem;      // 可用内存(字节)
-    uint64_t buffers;           // 缓冲区内存(字节)
-    uint64_t cached;            // 缓存内存(字节)
-    uint64_t swapCached;        // 交换缓存(字节)
-    uint64_t activeMem;         // 活跃内存(字节)
-    uint64_t inactiveMem;       // 非活跃内存(字节)
-    uint64_t activeAnon;        // 活跃匿名内存(字节)
-    uint64_t inactiveAnon;      // 非活跃匿名内存(字节)
-    uint64_t activeFile;        // 活跃文件缓存(字节)
-    uint64_t inactiveFile;      // 非活跃文件缓存(字节)
-    uint64_t unevictable;       // 不可回收内存(字节)
-    uint64_t mlocked;           // 锁定内存(字节)
-    uint64_t swapTotal;         // 总交换空间(字节)
-    uint64_t swapFree;          // 空闲交换空间(字节)
-    uint64_t dirtyPages;        // 脏页数(字节)
-    uint64_t writeback;         // 回写中页数(字节)
-    uint64_t anonPages;         // 匿名页(字节)
-    uint64_t mapped;            // 映射页(字节)
-    uint64_t shmem;             // 共享内存(字节)
-    uint64_t slab;              // Slab内存(字节)
-    uint64_t slabReclaimable;   // 可回收Slab(字节)
-    uint64_t slabUnreclaimable; // 不可回收Slab(字节)
-    uint64_t kernelStack;       // 内核栈(字节)
-    uint64_t pageTables;        // 页表(字节)
-    uint64_t nfsUnstable;       // NFS不稳定页(字节)
-    uint64_t bounce;            // 弹性缓冲区(字节)
-    uint64_t writebackTmp;      // 临时回写(字节)
-    uint64_t commitLimit;       // 提交限制(字节)
-    uint64_t committedAs;       // 已提交内存(字节)
-    uint64_t vmallocTotal;      // 虚拟内存总量(字节)
-    uint64_t vmallocUsed;       // 已用虚拟内存(字节)
-    uint64_t vmallocChunk;      // 虚拟内存块(字节)
-    uint32_t usagePercent;      // 使用率(百分比*100)
-    uint32_t swapUsagePercent;  // 交换区使用率(百分比*100)
+    uint64_t totalMem;
+    uint64_t freeMem;
+    uint64_t availableMem;
+    uint64_t buffers;
+    uint64_t cached;
+    uint64_t swapCached;
+    uint64_t activeMem;
+    uint64_t inactiveMem;
+    uint64_t activeAnon;
+    uint64_t inactiveAnon;
+    uint64_t activeFile;
+    uint64_t inactiveFile;
+    uint64_t unevictable;
+    uint64_t mlocked;
+    uint64_t swapTotal;
+    uint64_t swapFree;
+    uint64_t dirtyPages;
+    uint64_t writeback;
+    uint64_t anonPages;
+    uint64_t mapped;
+    uint64_t shmem;
+    uint64_t slab;
+    uint64_t slabReclaimable;
+    uint64_t slabUnreclaimable;
+    uint64_t kernelStack;
+    uint64_t pageTables;
+    uint64_t nfsUnstable;
+    uint64_t bounce;
+    uint64_t writebackTmp;
+    uint64_t commitLimit;
+    uint64_t committedAs;
+    uint64_t vmallocTotal;
+    uint64_t vmallocUsed;
+    uint64_t vmallocChunk;
+    uint32_t usagePercent;
+    uint32_t swapUsagePercent;
 } MemoryStats;
 
-// 进程信息
 typedef struct ProcessInfo {
     ListNode node;
-    int32_t pid;                // 进程ID
-    int32_t ppid;               // 父进程ID
-    char name[64];              // 进程名
-    char state;                 // 进程状态
-    uint64_t utime;             // 用户态时间(时钟滴答)
-    uint64_t stime;             // 内核态时间(时钟滴答)
-    int64_t priority;           // 优先级
-    int64_t nice;               // Nice值
-    int64_t numThreads;         // 线程数
-    int64_t vsize;              // 虚拟内存大小(字节)
-    int64_t rss;                // 驻留集大小(字节)
-    uint64_t startTime;         // 启动时间(时钟滴答)
-    uint64_t delayBlkIo;        // IO延迟(时钟滴答)
-    uint64_t cpuUsage;          // CPU使用率(百分比*100)
-    uint64_t memUsage;          // 内存使用率(百分比*100)
-    char cmdline[256];          // 完整命令行
-    uint32_t flags;             // 进程标志位
+    int32_t pid;
+    int32_t ppid;
+    char name[PROCESS_NAME_MAX_LEN];
+    char state;
+    uint64_t utime;
+    uint64_t stime;
+    int64_t priority;
+    int64_t nice;
+    int64_t numThreads;
+    int64_t vsize;
+    int64_t rss;
+    uint64_t startTime;
+    uint64_t delayBlkIo;
+    uint64_t cpuUsage;
+    uint64_t memUsage;
+    char cmdline[PROCESS_CMDLINE_MAX_LEN];
+    uint32_t flags;
 } ProcessInfo;
 
-// 磁盘统计信息
 typedef struct {
-    char deviceName[64];        // 设备名
-    uint64_t readsCompleted;    // 完成的读操作数
-    uint64_t readsMerged;       // 合并的读操作数
-    uint64_t sectorsRead;       // 读取的扇区数
-    uint64_t readTimeMs;        // 读操作耗时(毫秒)
-    uint64_t writesCompleted;   // 完成的写操作数
-    uint64_t writesMerged;      // 合并的写操作数
-    uint64_t sectorsWritten;    // 写入的扇区数
-    uint64_t writeTimeMs;       // 写操作耗时(毫秒)
-    uint64_t ioInProgress;      // 正在进行的IO数
-    uint64_t ioTimeMs;          // IO总耗时(毫秒)
-    uint64_t weightedIoTimeMs;  // 加权IO耗时(毫秒)
-    uint64_t readBytesPerSec;   // 读速率(字节/秒)
-    uint64_t writeBytesPerSec;  // 写速率(字节/秒)
-    uint32_t utilization;       // 利用率(百分比*100)
+    char deviceName[DEVICE_NAME_MAX_LEN];
+    uint64_t readsCompleted;
+    uint64_t readsMerged;
+    uint64_t sectorsRead;
+    uint64_t readTimeMs;
+    uint64_t writesCompleted;
+    uint64_t writesMerged;
+    uint64_t sectorsWritten;
+    uint64_t writeTimeMs;
+    uint64_t ioInProgress;
+    uint64_t ioTimeMs;
+    uint64_t weightedIoTimeMs;
+    uint64_t readBytesPerSec;
+    uint64_t writeBytesPerSec;
+    uint32_t utilization;
 } DiskStats;
 
-// 网络统计信息
 typedef struct {
-    char interface[32];         // 网络接口名
-    uint64_t rxBytes;           // 接收字节数
-    uint64_t rxPackets;         // 接收包数
-    uint64_t rxErrors;          // 接收错误数
-    uint64_t rxDropped;         // 接收丢包数
-    uint64_t rxFifo;            // 接收FIFO错误数
-    uint64_t rxFrame;           // 接收帧错误数
-    uint64_t rxCompressed;      // 接收压缩包数
-    uint64_t rxMulticast;       // 接收多播包数
-    uint64_t txBytes;           // 发送字节数
-    uint64_t txPackets;         // 发送包数
-    uint64_t txErrors;          // 发送错误数
-    uint64_t txDropped;         // 发送丢包数
-    uint64_t txFifo;            // 发送FIFO错误数
-    uint64_t txCollisions;      // 发送冲突数
-    uint64_t txCarrier;         // 发送载波错误数
-    uint64_t txCompressed;      // 发送压缩包数
-    uint64_t rxBytesPerSec;     // 接收速率(字节/秒)
-    uint64_t txBytesPerSec;     // 发送速率(字节/秒)
+    char interface[NET_IFACE_MAX_LEN];
+    uint64_t rxBytes;
+    uint64_t rxPackets;
+    uint64_t rxErrors;
+    uint64_t rxDropped;
+    uint64_t rxFifo;
+    uint64_t rxFrame;
+    uint64_t rxCompressed;
+    uint64_t rxMulticast;
+    uint64_t txBytes;
+    uint64_t txPackets;
+    uint64_t txErrors;
+    uint64_t txDropped;
+    uint64_t txFifo;
+    uint64_t txCollisions;
+    uint64_t txCarrier;
+    uint64_t txCompressed;
+    uint64_t rxBytesPerSec;
+    uint64_t txBytesPerSec;
 } NetworkStats;
 
-// 性能分析记录
 typedef struct PerfRecord {
     ListNode node;
-    char name[64];              // 记录名称
-    struct timespec startTime;  // 开始时间
-    struct timespec endTime;    // 结束时间
-    uint64_t durationNs;        // 持续时间(纳秒)
-    uint32_t type;              // 记录类型
-    uint32_t flags;             // 标志位
-    void *userData;             // 用户数据指针
+    char name[PERF_NAME_MAX_LEN];
+    struct timespec startTime;
+    struct timespec endTime;
+    uint64_t durationNs;
+    uint32_t type;
+    uint32_t flags;
+    void *userData;
 } PerfRecord;
 
-// 告警信息
 typedef struct MonitorAlarm {
     ListNode node;
-    MonitorType type;           // 监控类型
-    AlarmLevel level;           // 告警级别
-    char message[256];          // 告警消息
-    struct timespec timestamp;  // 告警时间
-    uint32_t threshold;         // 阈值
-    uint32_t actualValue;       // 实际值
-    bool handled;               // 是否已处理
+    MonitorType type;
+    AlarmLevel level;
+    char message[ALARM_MSG_MAX_LEN];
+    struct timespec timestamp;
+    uint32_t threshold;
+    uint32_t actualValue;
+    bool handled;
 } MonitorAlarm;
 
-// 监控配置
 typedef struct {
-    uint32_t sampleIntervalMs;  // 采样间隔(毫秒)
-    uint32_t historySize;       // 历史记录数量
-    bool enableCpuMonitor;      // 启用CPU监控
-    bool enableMemMonitor;      // 启用内存监控
-    bool enableProcMonitor;     // 启用进程监控
-    bool enableDiskMonitor;     // 启用磁盘监控
-    bool enableNetMonitor;      // 启用网络监控
-    uint32_t cpuThreshold;      // CPU告警阈值(百分比)
-    uint32_t memThreshold;      // 内存告警阈值(百分比)
-    uint32_t diskThreshold;     // 磁盘利用率阈值(百分比)
+    uint32_t sampleIntervalMs;
+    uint32_t historySize;
+    bool enableCpuMonitor;
+    bool enableMemMonitor;
+    bool enableProcMonitor;
+    bool enableDiskMonitor;
+    bool enableNetMonitor;
+    uint32_t cpuThreshold;
+    uint32_t memThreshold;
+    uint32_t diskThreshold;
 } MonitorConfig;
 
-// 监控上下文
 typedef struct {
-    MonitorState state;         // 监控状态
-    MonitorConfig config;       // 配置信息
-    ListNode processList;       // 进程列表
-    ListNode alarmList;         // 告警列表
-    ListNode perfRecordList;    // 性能记录列表
-    CpuStats cpuStats;          // CPU统计
-    MemoryStats memStats;       // 内存统计
-    DiskStats diskStats[16];    // 磁盘统计
-    NetworkStats netStats[16];  // 网络统计
-    uint64_t lastUpdateTime;    // 最后更新时间
-    uint32_t alarmCount;        // 告警计数
-    uint32_t recordCount;       // 记录计数
+    MonitorState state;
+    MonitorConfig config;
+    ListNode processList;
+    ListNode alarmList;
+    ListNode perfRecordList;
+    CpuStats cpuStats;
+    MemoryStats memStats;
+    DiskStats diskStats[MAX_DISK_STATS_COUNT];
+    NetworkStats netStats[MAX_NET_STATS_COUNT];
+    uint64_t lastUpdateTime;
+    uint32_t alarmCount;
+    uint32_t recordCount;
 } MonitorContext;
 
-// 初始化监控模块
-int InitMonitor(const MonitorConfig *config);
-
-// 销毁监控模块
-void DestroyMonitor(void);
-
-// 启动监控
-int StartMonitor(void);
-
-// 停止监控
-int StopMonitor(void);
-
-// 暂停监控
-int PauseMonitor(void);
-
-// 恢复监控
-int ResumeMonitor(void);
-
-// 获取监控状态
-MonitorState GetMonitorState(void);
-
-// 更新CPU统计
-int UpdateCpuStats(CpuStats *stats);
-
-// 更新内存统计
-int UpdateMemoryStats(MemoryStats *stats);
-
-// 更新进程统计
-int UpdateProcessStats(void);
-
-// 更新磁盘统计
-int UpdateDiskStats(DiskStats *stats, uint32_t maxCount);
-
-// 更新网络统计
-int UpdateNetworkStats(NetworkStats *stats, uint32_t maxCount);
-
-// 获取CPU统计
-const CpuStats* GetCpuStats(void);
-
-// 获取内存统计
-const MemoryStats* GetMemoryStats(void);
-
-// 获取进程列表
-const ListNode* GetProcessList(void);
-
-// 获取进程信息
-ProcessInfo* GetProcessInfo(int pid);
-
-// 添加告警
-int AddMonitorAlarm(MonitorType type, AlarmLevel level,
-    const char *message, uint32_t threshold, uint32_t actualValue);
-
-// 获取告警列表
-const ListNode* GetAlarmList(void);
-
-// 清除已处理告警
-void ClearHandledAlarms(void);
-
-// 开始性能记录
-PerfRecord* BeginPerfRecord(const char *name, uint32_t type);
-
-// 结束性能记录
-int EndPerfRecord(PerfRecord *record);
-
-// 获取性能记录列表
-const ListNode* GetPerfRecords(void);
-
-// 打印监控摘要
-void PrintMonitorSummary(void);
-
-// 导出监控数据到文件
-int ExportMonitorData(const char *filePath);
-
-// 计算CPU使用率
-uint32_t CalculateCpuUsage(const CpuStats *prev, const CpuStats *curr);
-
-// 计算内存使用率
-uint32_t CalculateMemUsage(const MemoryStats *stats);
-
-// 查找占用资源最多的进程
-ProcessInfo* FindTopCpuProcess(void);
-ProcessInfo* FindTopMemProcess(void);
-
-// 系统诊断
-int RunSystemDiagnosis(const char *outputPath);
-
-// 监控回调类型
 typedef void (*MonitorCallback)(MonitorType type, const void *data, void *context);
 
-// 注册监控回调
-int RegisterMonitorCallback(MonitorType type, MonitorCallback callback, void *context);
+int InitMonitor(const MonitorConfig *config);
+void DestroyMonitor(void);
+int StartMonitor(void);
+int StopMonitor(void);
+int PauseMonitor(void);
+int ResumeMonitor(void);
+MonitorState GetMonitorState(void);
 
-// 注销监控回调
+int UpdateCpuStats(CpuStats *stats);
+int UpdateMemoryStats(MemoryStats *stats);
+int UpdateProcessStats(void);
+int UpdateDiskStats(DiskStats *stats, uint32_t maxCount);
+int UpdateNetworkStats(NetworkStats *stats, uint32_t maxCount);
+
+const CpuStats *GetCpuStats(void);
+const MemoryStats *GetMemoryStats(void);
+const ListNode *GetProcessList(void);
+ProcessInfo *GetProcessInfo(int pid);
+
+int AddMonitorAlarm(MonitorType type, AlarmLevel level,
+    const char *message, uint32_t threshold, uint32_t actualValue);
+const ListNode *GetAlarmList(void);
+void ClearHandledAlarms(void);
+
+PerfRecord *BeginPerfRecord(const char *name, uint32_t type);
+int EndPerfRecord(PerfRecord *record);
+const ListNode *GetPerfRecords(void);
+
+void PrintMonitorSummary(void);
+int ExportMonitorData(const char *filePath);
+
+uint32_t CalculateCpuUsage(const CpuStats *prev, const CpuStats *curr);
+uint32_t CalculateMemUsage(const MemoryStats *stats);
+
+ProcessInfo *FindTopCpuProcess(void);
+ProcessInfo *FindTopMemProcess(void);
+
+int RunSystemDiagnosis(const char *outputPath);
+
+int RegisterMonitorCallback(MonitorType type, MonitorCallback callback, void *context);
 int UnregisterMonitorCallback(MonitorType type);
 
-// 阈值检查
 int CheckThresholds(void);
-
-// 获取历史统计
 int GetHistoryStats(MonitorType type, void *stats, uint32_t index);
 
 #ifdef __cplusplus
@@ -339,5 +336,4 @@ int GetHistoryStats(MonitorType type, void *stats, uint32_t index);
 }
 #endif
 #endif
-
 #endif /* STARTUP_INIT_SYSMONITOR_H */
