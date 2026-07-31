@@ -61,7 +61,7 @@ static LE_STATUS AddEvent_(const EventLoop *loop, const BaseTask *task, int op)
     if (IsValid_(epoll) && fd >= 0) {
         ret = epoll_ctl(epoll->epollFd, EPOLL_CTL_ADD, fd, &event);
     }
-    LE_CHECK(ret == 0, return LE_FAILURE, "Failed to add epoll_ctl %d ret %d", fd, errno);
+    LE_CHECK(ret == 0, return LE_FAILURE, "failed add epoll_ctl %d ret %d", fd, errno);
     return LE_SUCCESS;
 }
 
@@ -77,7 +77,7 @@ static LE_STATUS ModEvent_(const EventLoop *loop, const BaseTask *task, int op)
     if (IsValid_(epoll) && fd >= 0) {
         ret = epoll_ctl(epoll->epollFd, EPOLL_CTL_MOD, fd, &event);
     }
-    LE_CHECK(ret == 0, return LE_FAILURE, "Failed to mod epoll_ctl %d ret %d", fd, errno);
+    LE_CHECK(ret == 0, return LE_FAILURE, "failed mod epoll_ctl %d ret %d", fd, errno);
     return LE_SUCCESS;
 }
 
@@ -92,7 +92,7 @@ static LE_STATUS DelEvent_(const EventLoop *loop, int fd, int op)
     if (IsValid_(epoll) && fd >= 0) {
         ret = epoll_ctl(epoll->epollFd, EPOLL_CTL_DEL, fd, &event);
     }
-    LE_CHECK(ret == 0, return LE_FAILURE, "Failed to del epoll_ctl %d ret %d", fd, errno);
+    LE_CHECK(ret == 0, return LE_FAILURE, "failed del epoll_ctl %d ret %d", fd, errno);
     return LE_SUCCESS;
 }
 
@@ -157,7 +157,7 @@ LE_STATUS CreateEpollLoop(EventLoop **loop, uint32_t maxevents, uint32_t timeout
 {
     LE_CHECK(loop != NULL, return LE_FAILURE, "Invalid loop");
     EventEpoll *epoll = (EventEpoll *)malloc(sizeof(EventEpoll) + sizeof(struct epoll_event) * (maxevents));
-    LE_CHECK(epoll != NULL, return LE_FAILURE, "Failed to alloc memory for epoll");
+    LE_CHECK(epoll != NULL, return LE_FAILURE, "failed alloc memory for epoll");
     epoll->epollFd = epoll_create(maxevents);
     LE_CHECK(epoll->epollFd >= 0, free(epoll);
         return LE_FAILURE, "Failed to create epoll");

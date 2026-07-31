@@ -43,13 +43,13 @@ static ServiceExtData *GetServiceExtData_(Service *service, uint32_t id)
 ServiceExtData *AddServiceExtData(const char *serviceName, uint32_t id, void *data, uint32_t dataLen)
 {
     Service *service = GetServiceByName(serviceName);
-    PLUGIN_CHECK(service != NULL, return NULL, "Can not find service for %s", serviceName);
+    PLUGIN_CHECK(service != NULL, return NULL, "cannot find service for %s", serviceName);
     ServiceExtData *extData = GetServiceExtData_(service, id);
     if (extData != NULL) {
         return NULL;
     }
     extData = calloc(1, sizeof(ServiceExtData) + dataLen);
-    PLUGIN_CHECK(extData != NULL, return NULL, "Can not alloc extData for %d", id);
+    PLUGIN_CHECK(extData != NULL, return NULL, "cannot alloc extData for %d", id);
     OH_ListInit(&extData->node);
     extData->dataId = id;
     if (data != NULL) {
@@ -69,7 +69,7 @@ ServiceExtData *AddServiceExtData(const char *serviceName, uint32_t id, void *da
 void DelServiceExtData(const char *serviceName, uint32_t id)
 {
     Service *service = GetServiceByName(serviceName);
-    PLUGIN_CHECK(service != NULL, return, "Can not find service for %s", serviceName);
+    PLUGIN_CHECK(service != NULL, return, "cannot find service for %s", serviceName);
     ServiceExtData *extData = GetServiceExtData_(service, id);
     if (extData == NULL) {
         return;
@@ -81,7 +81,7 @@ void DelServiceExtData(const char *serviceName, uint32_t id)
 ServiceExtData *GetServiceExtData(const char *serviceName, uint32_t id)
 {
     Service *service = GetServiceByName(serviceName);
-    PLUGIN_CHECK (service != NULL, return NULL, "Can not find service for %s", serviceName);
+    PLUGIN_CHECK (service != NULL, return NULL, "cannot find service for %s", serviceName);
     return GetServiceExtData_(service, id);
 }
 

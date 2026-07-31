@@ -54,13 +54,13 @@ const char *AclGetSerial(void)
     int ret = instance.GetSerialID(result);
     if (ret == 0) {
         ret = strcpy_s(serialNumber, sizeof(serialNumber), result.c_str());
-        BEGET_ERROR_CHECK(ret == 0, return nullptr, "Failed to copy");
+        BEGET_ERROR_CHECK(ret == 0, return nullptr, "failed copy");
     }
 #else
     const char *tmpSerial = GetSerial_();
     if (tmpSerial != nullptr) {
         int ret = strcpy_s(serialNumber, sizeof(serialNumber), tmpSerial);
-        BEGET_ERROR_CHECK(ret == 0, return nullptr, "Failed to copy");
+        BEGET_ERROR_CHECK(ret == 0, return nullptr, "failed copy");
     }
 #endif
     return serialNumber;

@@ -83,7 +83,7 @@ static int SubInitStart(InitContextType type)
     SubInitForkArg arg = { 0 };
     arg.type = type;
     int ret = CreateSocketPair(arg.socket);
-    PLUGIN_CHECK(ret == 0, return -1, "Failed to create socket for %d", type);
+    PLUGIN_CHECK(ret == 0, return -1, "failed create socket for %d", type);
 
     subInfo->state = SUB_INIT_STATE_STARTING;
     pid_t pid = SubInitFork(SubInitRun, &arg);
@@ -128,17 +128,17 @@ static int SubInitExecuteCmd(InitContextType type, const char *name, const char 
     } else {
         len = snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, "%s ", name);
     }
-    PLUGIN_CHECK(len > 0, return -1, "Failed to format cmd %s", name);
+    PLUGIN_CHECK(len > 0, return -1, "failed format cmd %s", name);
     buffer[len] = '\0';
     PLUGIN_LOGV("send cmd '%s'", buffer);
     int ret = send(subInfo->sendFd, buffer, len, 0);
     if (ret < 0 && errno == EPIPE) {
-        PLUGIN_LOGI("Failed to send cmd %s to %d, need fork new chip init process", name, subInfo->type);
+        PLUGIN_LOGI("failed send cmd %s to %d, need fork new chip init process", name, subInfo->type);
         SubInitStop(subInfo->subPid);
         SubInitStart(type);
         ret = send(subInfo->sendFd, buffer, len, 0);
     }
-    PLUGIN_CHECK(ret > 0, return errno, "Failed to send cmd %s to %d errno %d", name, subInfo->type, errno);
+    PLUGIN_CHECK(ret > 0, return errno, "failed send cmd %s to %d errno %d", name, subInfo->type, errno);
 
     // block and wait result
     ssize_t rLen = TEMP_FAILURE_RETRY(read(subInfo->recvFd, buffer, sizeof(buffer)));
@@ -162,11 +162,11 @@ static int CreateSocketPair(int socket[2])
     struct timeval timeout = {TIMEOUT_DEF, 0};
     do {
         ret = setsockopt(socket[0], SOL_SOCKET, SO_PASSCRED, &opt, sizeof(opt));
-        PLUGIN_CHECK(ret == 0, break, "Failed to set opt for %d errno %d", socket[0], errno);
+        PLUGIN_CHECK(ret == 0, break, "failed set opt for %d errno %d", socket[0], errno);
         ret = setsockopt(socket[1], SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-        PLUGIN_CHECK(ret == 0, break, "Failed to set opt for %d errno %d", socket[1], errno);
+        PLUGIN_CHECK(ret == 0, break, "failed set opt for %d errno %d", socket[1], errno);
         ret = setsockopt(socket[0], SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
-        PLUGIN_CHECK(ret == 0, break, "Failed to set opt for %d errno %d", socket[0], errno);
+        PLUGIN_CHECK(ret == 0, break, "failed set opt for %d errno %d", socket[0], errno);
     } while (0);
     if (ret != 0) {
         close(socket[0]);
@@ -181,7 +181,7 @@ static int CheckSocketPermission(const SubInitInfo *subInfo)
     socklen_t len = sizeof(uc);
     // Only root is permitted to use control fd of init.
     if (getsockopt(subInfo->recvFd, SOL_SOCKET, SO_PEERCRED, &uc, &len) < 0 || uc.uid != 0) {
-        INIT_LOGE("Failed to get socket option. err = %d", errno);
+        INIT_LOGE("failed get socket option. err = %d", errno);
         errno = EPERM;
         return -1;
     }
@@ -203,7 +203,7 @@ static int HandleRecvMessage_(SubInitInfo *subInfo, char *buffer, uint32_t size)
     PLUGIN_LOGI("Exec cmd '%s' in sub init %s", buffer, g_subContext[subInfo->type]);
     int index = 0;
     const char *cmd = GetMatchCmd(buffer, &index);
-    PLUGIN_CHECK(cmd != NULL, return -1, "Can not find cmd %s", buffer);
+    PLUGIN_CHECK(cmd != NULL, return -1, "cannot find cmd %s", buffer);
     DoCmdByIndex(index, buffer + strlen(cmd) + 1, NULL);
     return 0;
 }
@@ -212,10 +212,10 @@ static void HandleRecvMessage(SubInitInfo *subInfo, char *buffer, uint32_t size)
 {
     int ret = HandleRecvMessage_(subInfo, buffer, size);
     int len = snprintf_s(buffer, size, size - 1, "%d", ret);
-    PLUGIN_CHECK(len > 0, return, "Failed to format result %d", ret);
+    PLUGIN_CHECK(len > 0, return, "failed format result %d", ret);
     buffer[len] = '\0';
     ret = send(subInfo->sendFd, buffer, len, 0);
-    PLUGIN_CHECK(ret > 0, return, "Failed to send result to %d errno %d", subInfo->type, errno);
+    PLUGIN_CHECK(ret > 0, return, "failed send result to %d errno %d", subInfo->type, errno);
 }
 
 static void SubInitMain(InitContextType type, int readFd, int writeFd)
@@ -242,7 +242,7 @@ static void SubInitMain(InitContextType type, int readFd, int writeFd)
             PLUGIN_LOGI("Poll sub init timeout, sub init %d exit", type);
             return;
         } else if (ret < 0) {
-            PLUGIN_LOGE("Failed to poll sub init socket!");
+            PLUGIN_LOGE("failed poll sub init socket!");
             return;
         }
         if ((unsigned int)pfd.revents & POLLIN) {

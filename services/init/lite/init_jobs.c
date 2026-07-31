@@ -75,7 +75,7 @@ static void ParseJob(const cJSON *jobItem, Job *resJob)
     }
     int ret = GetCmdLinesFromJson(cmdsItem, &resJob->cmdLines);
     if (ret != 0) {
-        INIT_LOGE("ParseJob, failed to get cmds for job!");
+        INIT_LOGE("ParseJob, failed get cmds for job!");
         return;
     }
     return;

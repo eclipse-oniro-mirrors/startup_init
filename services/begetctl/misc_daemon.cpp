@@ -45,7 +45,7 @@ static void ClearLogo(int fd)
     char buffer[8] = {0}; // logo magic number + logo size is 8
     int addrOffset = (PARTITION_INFO_POS + PARTITION_INFO_MAX_LENGTH + BLOCK_SZIE_1 - 1) / BLOCK_SZIE_1;
     if (lseek(fd, addrOffset * BLOCK_SZIE_1, SEEK_SET) < 0) {
-        std::cout << "Failed to clean file\n";
+        std::cout << "Failed clean file\n";
         return;
     }
     if (write(fd, &buffer, sizeof(buffer)) != sizeof(buffer)) {

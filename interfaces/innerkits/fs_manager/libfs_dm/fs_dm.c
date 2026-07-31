@@ -281,7 +281,7 @@ int FsDmInitDmDev(char *devPath, bool useSocket)
     if (useSocket) {
         ueventSockFd = UeventdSocketInit();
         if (ueventSockFd < 0) {
-            BEGET_LOGE("error, Failed to create uevent socket");
+            BEGET_LOGE("error, failed create uevent socket");
             return -1;
         }
     }
@@ -293,7 +293,7 @@ int FsDmInitDmDev(char *devPath, bool useSocket)
 
     devices[0] = strdup(devPath);
     if (devices[0] == NULL) {
-        BEGET_LOGE("Failed to strdup devPath");
+        BEGET_LOGE("failed strdup devPath");
         free(devices);
         return -1;
     }

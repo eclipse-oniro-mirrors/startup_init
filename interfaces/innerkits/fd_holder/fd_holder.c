@@ -26,7 +26,7 @@ static int BuildClientSocket(void)
 {
     int sockFd;
     sockFd = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0);
-    BEGET_ERROR_CHECK(sockFd >= 0, return -1, "Failed to build socket, err = %d", errno);
+    BEGET_ERROR_CHECK(sockFd >= 0, return -1, "failed build socket, err = %d", errno);
 
     struct sockaddr_un addr;
     (void)memset_s(&addr, sizeof(addr), 0, sizeof(addr));
@@ -65,7 +65,7 @@ STATIC int BuildSendData(char *buffer, size_t size, const char *serviceName, boo
     }
 
     if (snprintf_s(buffer, size, size - 1, "%s|%s|%s", serviceName, holdString, pollString) == -1) {
-        BEGET_LOGE("Failed to build send data");
+        BEGET_LOGE("failed build send data");
         return -1;
     }
     return 0;
@@ -92,7 +92,7 @@ static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool d
     iovec.iov_len = strlen(sendBuffer);
 
     if (BuildControlMessage(&msghdr, fds, fdCount, true) < 0) {
-        BEGET_LOGE("Failed to build control message");
+        BEGET_LOGE("failed build control message");
         if (msghdr.msg_control != NULL) {
             free(msghdr.msg_control);
             msghdr.msg_control = NULL;
@@ -103,7 +103,7 @@ static int ServiceSendFds(const char *serviceName, int *fds, int fdCount, bool d
     }
 
     if (TEMP_FAILURE_RETRY(sendmsg(sock, &msghdr, MSG_NOSIGNAL)) < 0) {
-        BEGET_LOGE("Failed to send fds to init, err = %d", errno);
+        BEGET_LOGE("failed send fds to init, err = %d", errno);
         if (msghdr.msg_control != NULL) {
             free(msghdr.msg_control);
             msghdr.msg_control = NULL;

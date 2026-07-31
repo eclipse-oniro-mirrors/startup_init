@@ -37,7 +37,7 @@ static void DoExec(const struct CmdArgs *ctx)
     }
     pid_t pid = fork();
     if (pid < 0) {
-        INIT_LOGE("DoExec: failed to fork child process to exec \"%s\"", ctx->argv[0]);
+        INIT_LOGE("DoExec: failed fork child process to exec \"%s\"", ctx->argv[0]);
         return;
     }
     if (pid == 0) {
@@ -79,10 +79,10 @@ static void DoLoadCfg(const struct CmdArgs *ctx)
         return;
     }
     char *realPath = GetRealPath(ctx->argv[0]);
-    INIT_ERROR_CHECK(realPath != NULL, return, "Failed to get realpath %s", ctx->argv[0]);
+    INIT_ERROR_CHECK(realPath != NULL, return, "failed get realpath %s", ctx->argv[0]);
     FILE *fp = fopen(realPath, "r");
     if (fp == NULL) {
-        INIT_LOGE("Failed to open cfg %s error:%d", ctx->argv[0], errno);
+        INIT_LOGE("failed open cfg %s error:%d", ctx->argv[0], errno);
         free(realPath);
         return;
     }

@@ -152,24 +152,24 @@ int ParseFstabPerLine(char *str, Fstab *fstab, bool procMounts, const char *sepa
     }
 
     do {
-        BEGET_ERROR_CHECK((p = strtok_r(str, separator, &rest)) != NULL, break, "Failed to parse block device.");
+        BEGET_ERROR_CHECK((p = strtok_r(str, separator, &rest)) != NULL, break, "failed parse block device.");
         item->deviceName = strdup(p);
         BEGET_ERROR_CHECK(item->deviceName != NULL, break, "strdup deviceName failed.");
 
-        BEGET_ERROR_CHECK((p = strtok_r(NULL, separator, &rest)) != NULL, break, "Failed to parse mount point.");
+        BEGET_ERROR_CHECK((p = strtok_r(NULL, separator, &rest)) != NULL, break, "failed parse mount point.");
         item->mountPoint = strdup(p);
         BEGET_ERROR_CHECK(item->mountPoint != NULL, break, "strdup mountPoint failed.");
 
-        BEGET_ERROR_CHECK((p = strtok_r(NULL, separator, &rest)) != NULL, break, "Failed to parse fs type.");
+        BEGET_ERROR_CHECK((p = strtok_r(NULL, separator, &rest)) != NULL, break, "failed parse fs type.");
         item->fsType = strdup(p);
         BEGET_ERROR_CHECK(item->fsType != NULL, break, "strdup fsType failed.");
 
-        BEGET_ERROR_CHECK((p = strtok_r(NULL, separator, &rest)) != NULL, break, "Failed to parse mount options.");
+        BEGET_ERROR_CHECK((p = strtok_r(NULL, separator, &rest)) != NULL, break, "failed parse mount options.");
         item->mountOptions = strdup(p);
         BEGET_ERROR_CHECK(item->mountOptions != NULL, break, "strdup mountOptions failed.");
 
         if ((p = strtok_r(NULL, separator, &rest)) == NULL) {
-            BEGET_LOGE("Failed to parse fs manager flags.");
+            BEGET_LOGE("failed parse fs manager flags.");
             break;
         }
         // @fsManagerFlags only for fstab
@@ -271,7 +271,7 @@ FstabItem *FindFstabItemForPath(Fstab fstab, const char *path)
     char tmp[PATH_MAX] = {0};
     char *dir = NULL;
     if (strncpy_s(tmp, PATH_MAX - 1,  path, strlen(path)) != EOK) {
-        BEGET_LOGE("Failed to copy path.");
+        BEGET_LOGE("failed copy path.");
         return NULL;
     }
 
@@ -305,7 +305,7 @@ static char *GetFstabFile(char *fileName, size_t size)
             return NULL;
         }
         if (snprintf_s(fileName, size, size - 1, "/vendor/etc/fstab.%s", hardware) == -1) {
-            BEGET_LOGE("Failed to build fstab file, err=%d", errno);
+            BEGET_LOGE("failed build fstab file, err=%d", errno);
             return NULL;
         }
     }
@@ -320,11 +320,11 @@ int GetBlockDeviceByMountPoint(const char *mountPoint, const Fstab *fstab, char 
     }
     FstabItem *item = FindFstabItemForMountPoint(*fstab, mountPoint);
     if (item == NULL) {
-        BEGET_LOGE("Failed to get fstab item from mount point \" %s \"", mountPoint);
+        BEGET_LOGE("failed get fstab item from mount point \" %s \"", mountPoint);
         return -1;
     }
     if (strncpy_s(deviceName, nameLen, item->deviceName, strlen(item->deviceName)) != 0) {
-        BEGET_LOGE("Failed to copy block device name, err=%d", errno);
+        BEGET_LOGE("failed copy block device name, err=%d", errno);
         return -1;
     }
     return 0;
@@ -479,7 +479,7 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
                 continue;
             }
             if (strncat_s(fsSpecificData, fsSpecificDataSize - 1, p, strlen(p)) != EOK) {
-                BEGET_LOGW("Failed to append mount flag \" %s \", ignore it.", p);
+                BEGET_LOGW("failed append mount flag \" %s \", ignore it.", p);
                 continue;
             }
             if (i == flagCount - 1) { // last flags, do not need to append ','
@@ -487,7 +487,7 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
             }
             // Combined each mount flag with ','
             if (strncat_s(fsSpecificData, fsSpecificDataSize - 1, ",", 1) != EOK) {
-                BEGET_LOGW("Failed to append comma");
+                BEGET_LOGW("failed append comma");
                 break; // If cannot add ',' to the end of flags, there is not reason to continue.
             }
         }
@@ -544,7 +544,7 @@ static int ParseRequiredMountInfo(const char *item, Fstab *fstab)
     }
     BEGET_LOGV("Config mount option of partition %s is [%s]", partName, mountOptions);
     if (ParseFstabPerLine(mountOptions, fstab, false, "@") < 0) {
-        BEGET_LOGE("Failed to parse mount options of partition \' %s \', options: %s", partName, mountOptions);
+        BEGET_LOGE("failed parse mount options of partition \' %s \', options: %s", partName, mountOptions);
         return -1;
     }
     return 0;
@@ -582,7 +582,7 @@ Fstab* LoadFstabFromCommandLine(void)
         }
         isDone = true;
         if (ParseRequiredMountInfo(start, fstab) < 0) {
-            BEGET_LOGE("Failed to parse \' %s \'", start);
+            BEGET_LOGE("failed parse \' %s \'", start);
             isDone = false;
             break;
         }
@@ -594,7 +594,7 @@ Fstab* LoadFstabFromCommandLine(void)
         if (strncmp(start, OHOS_REQUIRED_MOUNT_PREFIX,
             strlen(OHOS_REQUIRED_MOUNT_PREFIX)) == 0 &&
             ParseRequiredMountInfo(start, fstab) < 0) {
-            BEGET_LOGE("Failed to parse \' %s \'", start);
+            BEGET_LOGE("failed parse \' %s \'", start);
             isDone = false;
         }
     }

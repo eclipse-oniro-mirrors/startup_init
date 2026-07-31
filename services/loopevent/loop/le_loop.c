@@ -55,7 +55,7 @@ static LE_STATUS CreateLoop_(EventLoop **loop, uint32_t maxevents, uint32_t time
 {
 #ifdef LOOP_EVENT_USE_EPOLL
     LE_STATUS ret = CreateEpollLoop(loop, maxevents, timeout);
-    LE_CHECK(ret == LE_SUCCESS, return ret, "Failed to create epoll loop");
+    LE_CHECK(ret == LE_SUCCESS, return ret, "failed create epoll loop");
 #endif
     (*loop)->maxevents = maxevents;
     (*loop)->timeout = timeout;
@@ -73,7 +73,7 @@ static LE_STATUS CreateLoop_(EventLoop **loop, uint32_t maxevents, uint32_t time
         128
     };
     ret = OH_HashMapCreate(&(*loop)->taskMap, &info);
-    LE_CHECK(ret == LE_SUCCESS, return ret, "failed to create hash map loop");
+    LE_CHECK(ret == LE_SUCCESS, return ret, "failed create hash map loop");
     OH_ListInit(&((*loop)->timerList));
     return ret;
 }

@@ -30,12 +30,12 @@ static void ServiceStateChange(const char *key, const char *value, void *context
     ServiceStatusChangePtr callback = (ServiceStatusChangePtr)context;
     uint32_t v = 0;
     int ret = StringToUint(value, &v);
-    BEGET_ERROR_CHECK(ret == 0, return, "Failed to get value from %s", value);
+    BEGET_ERROR_CHECK(ret == 0, return, "failed get value from %s", value);
 
     // get pid
     char paramName[PARAM_NAME_LEN_MAX] = { 0 };
     ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1, "%s.pid", key);
-    BEGET_ERROR_CHECK(ret != -1, return, "Failed to get format pid ret %d for %s ", ret, key);
+    BEGET_ERROR_CHECK(ret != -1, return, "failed get format pid ret %d for %s ", ret, key);
 
     ServiceInfo info = {0};
     info.status = (ServiceStatus)v;
@@ -61,7 +61,7 @@ int ServiceWatchForStatus(const char *serviceName, ServiceStatusChangePtr change
     }
     int ret = SystemWatchParameter(paramName, ServiceStateChange, (void *)changeCallback);
     if (ret != 0) {
-        BEGET_LOGE("Failed to watcher service %s ret %d.", serviceName, ret);
+        BEGET_LOGE("failed watcher service %s ret %d.", serviceName, ret);
         if (ret == DAC_RESULT_FORBIDED) {
             return SYSPARAM_PERMISSION_DENIED;
         }

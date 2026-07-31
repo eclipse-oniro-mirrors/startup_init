@@ -158,20 +158,20 @@ ENG_STATIC void BindMountFile(const char *source, const char *target)
     // OK, now get sub dir and combine it with target
     int ret = snprintf_s(targetFullPath, PATH_MAX, PATH_MAX - 1, "%s%s", strcmp(target, "/") == 0 ? "" : target, q);
     if (ret == -1) {
-        PLUGIN_LOGE("Failed to build target path");
+        PLUGIN_LOGE("failed build target path");
         return;
     }
     PLUGIN_LOGI("target full path is %s", targetFullPath);
     if (IsRegularFile(targetFullPath)) {
         if (mount(source, targetFullPath, NULL, MS_BIND, NULL) != 0) {
-            PLUGIN_LOGE("Failed to bind mount %s to %s, err = %d", source, targetFullPath, errno);
+            PLUGIN_LOGE("failed bind mount %s to %s, err = %d", source, targetFullPath, errno);
         } else {
             PLUGIN_LOGI("Bind mount %s to %s done", source, targetFullPath);
         }
     } else {
         if (!IsExistFile(targetFullPath)) {
             if (symlink(source, targetFullPath) < 0) {
-                PLUGIN_LOGE("Failed to link %s to %s, err = %d", source, targetFullPath, errno);
+                PLUGIN_LOGE("failed link %s to %s, err = %d", source, targetFullPath, errno);
             }
         } else {
             PLUGIN_LOGW("%s without expected type, skip overlay", targetFullPath);
@@ -195,7 +195,7 @@ ENG_STATIC void DebugFilesOverlay(const char *source, const char *target)
             continue;
         }
         if (snprintf_s(srcPath, PATH_MAX, PATH_MAX - 1, "%s/%s", source, de->d_name) == -1) {
-            PLUGIN_LOGE("Failed to build path for overlaying");
+            PLUGIN_LOGE("failed build path for overlaying");
             break;
         }
 

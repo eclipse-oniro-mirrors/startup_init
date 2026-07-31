@@ -34,12 +34,12 @@ int AddCmdExecutor_(const char *cmdName, CmdExecutor execCmd, int careContext)
     InitGroupNode *groupNode = GetGroupNode(NODE_TYPE_CMDS, cmdName);
     if (groupNode == NULL) {
         groupNode = AddGroupNode(NODE_TYPE_CMDS, cmdName);
-        INIT_ERROR_CHECK(groupNode != NULL, return -1, "Failed to create group node");
+        INIT_ERROR_CHECK(groupNode != NULL, return -1, "failed create group node");
     }
     cmd = groupNode->data.cmd;
     if (cmd == NULL) {
         cmd = (PluginCmd *)calloc(1, sizeof(PluginCmd));
-        INIT_ERROR_CHECK(cmd != NULL, return -1, "Failed to create cmd condition");
+        INIT_ERROR_CHECK(cmd != NULL, return -1, "failed create cmd condition");
         groupNode->data.cmd = cmd;
         cmd->cmdId = g_cmdId++;
         cmd->name = groupNode->name;
@@ -50,7 +50,7 @@ int AddCmdExecutor_(const char *cmdName, CmdExecutor execCmd, int careContext)
         return 0;
     }
     PluginCmdExecutor *cmdExec = (PluginCmdExecutor *)calloc(1, sizeof(PluginCmdExecutor));
-    INIT_ERROR_CHECK(cmdExec != NULL, return -1, "Failed to create cmd listener");
+    INIT_ERROR_CHECK(cmdExec != NULL, return -1, "failed create cmd listener");
     OH_ListInit(&cmdExec->node);
     cmdExec->id = ++g_cmdExecutorId;
     cmdExec->execCmd = execCmd;

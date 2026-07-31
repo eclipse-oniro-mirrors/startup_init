@@ -149,7 +149,7 @@ static void LogToKmsg(int fd)
     do {
         ssize_t lineSize = read(fd, buffer, lineMaxSize);
         if (lineSize < 0) {
-            BEGET_LOGE("Failed to read, errno: %d", errno);
+            BEGET_LOGE("failed read, errno: %d", errno);
             break;
         }
         if (!lineSize) {
@@ -180,10 +180,10 @@ static void LogToKmsg(int fd)
 static void RedirectToStdFd(int fd)
 {
     if (dup2(fd, STDOUT_FILENO) < 0) {
-        BEGET_LOGE("Failed to dup2 stdout, errno: %d, just continue", errno);
+        BEGET_LOGE("failed dup2 stdout, errno: %d, just continue", errno);
     }
     if (dup2(fd, STDERR_FILENO) < 0) {
-        BEGET_LOGE("Failed to dup2 stderr, errno: %d, just continue", errno);
+        BEGET_LOGE("failed dup2 stderr, errno: %d, just continue", errno);
     }
     (void)close(fd);
 }
@@ -195,7 +195,7 @@ static int ExecCommand(int argc, char **argv)
     bool logToKmsg = false;
     int pipeFds[PIPE_FDS];
     if (pipe2(pipeFds, O_CLOEXEC) < 0) {
-        BEGET_LOGE("Failed to create pipe, errno: %d, just continue", errno);
+        BEGET_LOGE("failed create pipe, errno: %d, just continue", errno);
     } else {
         logToKmsg = true;
     }
@@ -209,7 +209,7 @@ static int ExecCommand(int argc, char **argv)
             RedirectToStdFd(pipeFds[1]);
         }
         execv(argv[0], argv);
-        BEGET_LOGE("Failed to execv, errno: %d", errno);
+        BEGET_LOGE("failed execv, errno: %d", errno);
         exit(-1);
     }
     if (logToKmsg) {
@@ -222,7 +222,7 @@ static int ExecCommand(int argc, char **argv)
         BEGET_LOGI("Execute success, status: %d, command: %s", WEXITSTATUS(status), argv[0]);
         return WEXITSTATUS(status);
     }
-    BEGET_LOGE("Failed to execute %s", argv[0]);
+    BEGET_LOGE("failed execute %s", argv[0]);
     return -1;
 }
 
@@ -241,7 +241,7 @@ int DoFormat(const char *devPath, const char *fsType)
         char blockSizeBuffer[BLOCK_SIZE_BUFFER] = {0};
         const unsigned int blockSize = 4096;
         ret = snprintf_s(blockSizeBuffer, BLOCK_SIZE_BUFFER, BLOCK_SIZE_BUFFER - 1, "%u", blockSize);
-        BEGET_ERROR_CHECK(ret != -1, return -1, "Failed to build block size buffer");
+        BEGET_ERROR_CHECK(ret != -1, return -1, "failed build block size buffer");
 
         char *formatCmds[] = {
             "/bin/mke2fs", "-F", "-t", (char *)fsType, "-b", blockSizeBuffer, (char *)devPath, NULL
@@ -483,7 +483,7 @@ static int Mount(const char *source, const char *target, const char *fsType,
     BEGET_CHECK((st.st_mode & S_IFMT) != S_IFLNK, unlink(target)); // link, delete it.
 
     if (mkdir(target, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
-        BEGET_ERROR_CHECK(errno == EEXIST, return -1, "Failed to create dir \" %s \", err = %d", target, errno);
+        BEGET_ERROR_CHECK(errno == EEXIST, return -1, "failed create dir \" %s \", err = %d", target, errno);
     }
     errno = 0;
     if (mount(source, target, fsType, flags, data) != 0) {
@@ -509,7 +509,7 @@ INIT_STATIC MountResult MountWithCheckpoint(const char *source, const char *targ
     BEGET_CHECK((st.st_mode & S_IFMT) != S_IFLNK, unlink(target)); // link, delete it.
 
     if (mkdir(target, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
-        BEGET_ERROR_CHECK(errno == EEXIST, return result, "Failed to create dir \" %s \", err = %d", target, errno);
+        BEGET_ERROR_CHECK(errno == EEXIST, return result, "failed create dir \" %s \", err = %d", target, errno);
     }
 
     int gcAllowance = 0;
@@ -550,10 +550,10 @@ static int GetSlotInfoFromBootctrl(off_t offset, off_t size)
     BEGET_ERROR_CHECK(GetBlockDevicePath("/bootctrl", bootctrlDev, MAX_BUFFER_LEN) == 0,
         return -1, "Failed to get bootctrl device");
     char *realPath = GetRealPath(bootctrlDev);
-    BEGET_ERROR_CHECK(realPath != NULL, return -1, "Failed to get bootctrl device real path");
+    BEGET_ERROR_CHECK(realPath != NULL, return -1, "failed get bootctrl device real path");
     int fd = open(realPath, O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     free(realPath);
-    BEGET_ERROR_CHECK(fd >= 0, return -1, "Failed to open bootctrl device, errno %d", errno);
+    BEGET_ERROR_CHECK(fd >= 0, return -1, "failed open bootctrl device, errno %d", errno);
     BEGET_ERROR_CHECK(lseek(fd, offset, SEEK_SET) >= 0, close(fd); return -1,
         "Failed to lseek bootctrl device fd, errno %d", errno);
     int slotInfo = 0;
@@ -663,12 +663,12 @@ INIT_STATIC int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecific
         }
         if (strcmp(checkpointData, "") != 0 &&
             strncat_s(checkpointData, checkpointDataSize, ",", 1) != EOK) {
-            BEGET_LOGW("failed to append comma.");
+            BEGET_LOGW("failed append comma.");
             rc = -1;
             break;
         }
         if (strncat_s(checkpointData, checkpointDataSize, p, strlen(p)) != EOK) {
-            BEGET_LOGW("Failed to append mountflags \" %s \", ignore it.", p);
+            BEGET_LOGW("failed append mountflags \" %s \", ignore it.", p);
             rc = -1;
             break;
         }
@@ -807,7 +807,7 @@ static int RecordMEStage()
     const char *path = "/sys/kernel/metacrypt/stage";
     char buffer[ME_STATE_SIZE_BUFFER] = {0};
     int fd = open(path, O_RDONLY);
-    BEGET_ERROR_CHECK(fd >= 0, return ME_ERROR, "Failed to open %s, errno %d", path, errno);
+    BEGET_ERROR_CHECK(fd >= 0, return ME_ERROR, "failed open %s, errno %d", path, errno);
     ssize_t bytes = read(fd, buffer, sizeof(buffer) - 1);
     close(fd);
     BEGET_ERROR_CHECK(bytes > 0, return ME_ERROR, "read %s failed, bytes:%zd", path, bytes);
@@ -825,7 +825,7 @@ static int WaitMEDriver()
     const char *path = "/sys/kernel/metacrypt/status";
     int state = 0;
     int fd = open(path, O_RDONLY);
-    BEGET_ERROR_CHECK(fd >= 0, return ME_ERROR, "Failed to open %s, errno %d", path, errno);
+    BEGET_ERROR_CHECK(fd >= 0, return ME_ERROR, "failed open %s, errno %d", path, errno);
     while (state != ME_STATE_OK) {
         char buffer[ME_STATE_SIZE_BUFFER] = {0};
         ssize_t bytes = read(fd, buffer, sizeof(buffer) - 1);
@@ -854,11 +854,11 @@ static int SymlinkUtil(const char *source, const char *target)
 {
     BEGET_LOGI("unlink %s", target);
     if (unlink(target) != 0) {
-        BEGET_LOGE("Failed to unlink \" %s \", err = %d", target, errno);
+        BEGET_LOGE("failed unlink \" %s \", err = %d", target, errno);
     }
     BEGET_LOGI("unlink finish, symlink %s->%s", source, target);
     if (symlink(source, target) != 0) {
-        BEGET_LOGE("Failed to link \" %s \" to \" %s \", err = %d", source, target, errno);
+        BEGET_LOGE("failed link \" %s \" to \" %s \", err = %d", source, target, errno);
         return errno;
     }
     BEGET_LOGI("symlink %s->%s success", source, target);
@@ -873,14 +873,14 @@ int UpdateUserDataMEDevice(FstabItem *item)
     }
     int state = WaitMEDriver();
     BEGET_CHECK(state != 1, return 0);
-    BEGET_ERROR_CHECK(state >= 0, return -1, "Failed to WaitMEDriver");
+    BEGET_ERROR_CHECK(state >= 0, return -1, "failed WaitMEDriver");
     BEGET_LOGI("update metadata encrypt device %s", item->deviceName);
     const char *path = "/sys/kernel/metacrypt/dm_path";
-    BEGET_ERROR_CHECK(access(path, F_OK) == 0, return -1, "Failed to access path");
+    BEGET_ERROR_CHECK(access(path, F_OK) == 0, return -1, "failed access path");
 
     char buffer[ME_BLOCK_NAME_SIZE_BUFFER] = {0};
     int fd = open(path, O_RDONLY);
-    BEGET_ERROR_CHECK(fd >= 0, return -1, "Failed to open %s, errno %d", path, errno);
+    BEGET_ERROR_CHECK(fd >= 0, return -1, "failed open %s, errno %d", path, errno);
     ssize_t bytes = read(fd, buffer, sizeof(buffer) - 1);
     if (bytes <= 0) {
         BEGET_LOGE("read %s failed, bytes:%zd", path, bytes);
@@ -947,24 +947,24 @@ int MountOneItem(FstabItem *item)
     }
 
     if (strcmp(item->mountPoint, "/data") == 0 && IsSupportedDataType(item->fsType)) {
-        BEGET_ERROR_CHECK(UpdateUserDataMEDevice(item) == 0, return -1, "Failed to UpdateUserDataMEDevice");
+        BEGET_ERROR_CHECK(UpdateUserDataMEDevice(item) == 0, return -1, "failed UpdateUserDataMEDevice");
         int ret = DoFsckF2fs(item);
         if (ret != 0) {
-            BEGET_LOGE("Failed to fsck.f2fs dir %s , ret = %d", item->deviceName, ret);
+            BEGET_LOGE("failed fsck.f2fs dir %s , ret = %d", item->deviceName, ret);
         }
         ret = DoResizeF2fs(item, 0);
         if (ret != 0) {
-            BEGET_LOGE("Failed to resize.f2fs dir %s , ret = %d", item->deviceName, ret);
+            BEGET_LOGE("failed resize.f2fs dir %s , ret = %d", item->deviceName, ret);
         }
         disableCheckpointRet = ExecCheckpointHook(item);
     } else if (strcmp(item->fsType, "ext4") == 0 && strcmp(item->mountPoint, "/data") == 0) {
         int ret = DoResizeExt(item->deviceName, 0);
         if (ret != 0) {
-            BEGET_LOGE("Failed to resize2fs dir %s , ret = %d", item->deviceName, ret);
+            BEGET_LOGE("failed resize2fs dir %s , ret = %d", item->deviceName, ret);
         }
         ret = DoFsckExt(item->deviceName);
         if (ret != 0) {
-            BEGET_LOGE("Failed to e2fsck dir %s , ret = %d", item->deviceName, ret);
+            BEGET_LOGE("failed e2fsck dir %s , ret = %d", item->deviceName, ret);
         }
     }
 
@@ -1021,7 +1021,7 @@ void FsAdjustPartitionNameBySlot(FstabItem *item)
     BEGET_ERROR_CHECK(g_currentSlot > 0 && g_currentSlot <= MAX_SLOT, g_currentSlot = 1,
         "slot value %d is invalid, set default value", g_currentSlot);
     BEGET_ERROR_CHECK(sprintf_s(buffer, sizeof(buffer), "%s_%c", item->deviceName, 'a' + g_currentSlot - 1) > 0,
-        return, "Failed to format partition name suffix, use default partition name");
+        return, "failed format partition name suffix, use default partition name");
     if (access(buffer, F_OK) != 0) {
         BEGET_LOGW("not support AB partition: %s", item->deviceName);
         return;

@@ -225,7 +225,7 @@ static int CreateBootEventFile(const char *file, mode_t mode)
         return 0;
     }
     if (errno != ENOENT) {
-        INIT_LOGW("Failed to access %s, err = %d", file, errno);
+        INIT_LOGW("failed access %s, err = %d", file, errno);
         return -1;
     }
     CheckAndCreateDir(file);
@@ -330,13 +330,13 @@ static int ScheduleAsyncReportSysEvent(void)
     TimerHandle timer;
     LE_STATUS status = LE_CreateTimer(LE_GetDefaultLoop(), &timer, AsyncReportSysEvent, NULL);
     if (status != LE_SUCCESS) {
-        INIT_LOGE("Failed to create timer for AsyncReportSysEvent");
+        INIT_LOGE("failed create timer for AsyncReportSysEvent");
         return -1;
     }
     status = LE_StartTimer(LE_GetDefaultLoop(), timer, 0, 0);
     if (status != LE_SUCCESS) {
         LE_StopTimer(LE_GetDefaultLoop(), timer);
-        INIT_LOGE("Failed to start timer for AsyncReportSysEvent");
+        INIT_LOGE("failed start timer for AsyncReportSysEvent");
         return -1;
     }
     return 0;
@@ -355,14 +355,14 @@ static int ScheduleDelayedHookMgrExecute(void)
     TimerHandle timer;
     LE_STATUS status = LE_CreateTimer(LE_GetDefaultLoop(), &timer, DelayedHookMgrExecute, NULL);
     if (status != LE_SUCCESS) {
-        INIT_LOGE("Failed to create timer for delayed HookMgrExecute");
+        INIT_LOGE("failed create timer for delayed HookMgrExecute");
         return -1;
     }
  
     status = LE_StartTimer(LE_GetDefaultLoop(), timer, SLEPP_TIME, 0);
     if (status != LE_SUCCESS) {
         LE_StopTimer(LE_GetDefaultLoop(), timer);
-        INIT_LOGE("Failed to start timer for delayed HookMgrExecute");
+        INIT_LOGE("failed start timer for delayed HookMgrExecute");
         return -1;
     }
     return 0;
@@ -378,7 +378,7 @@ void UpdateBootCount()
     char value[MAX_INT_LEN] = {0};
     size = sizeof(value);
     ret = SystemReadParam("persist.startup.bootcount", value, &size);
-    INIT_ERROR_CHECK (ret == 0, return, "Failed to read bootcount");
+    INIT_ERROR_CHECK (ret == 0, return, "failed read bootcount");
     int bootCount = StringToInt(value, -1);
     INIT_ERROR_CHECK (bootCount != -1, return, "StringToInt failed");
     bootCount++;
@@ -386,7 +386,7 @@ void UpdateBootCount()
     ret = sprintf_s(buffer, sizeof(buffer), "%d", bootCount);
     INIT_ERROR_CHECK (ret > 0, return, "Failed copy bootcount");
     ret = SystemWriteParam("persist.startup.bootcount", buffer);
-    INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to update bootcount");
+    INIT_CHECK_ONLY_ELOG(ret == 0, "failed update bootcount");
 }
 
 static int BootEventParaFireByName(const char *paramName)
@@ -426,11 +426,11 @@ static int BootEventParaFireByName(const char *paramName)
     BootCompleteClearAll();
 #ifndef STARTUP_INIT_TEST
     if (ScheduleAsyncReportSysEvent() != 0) {
-        INIT_LOGE("Failed to schedule AsyncReportSysEvent, executing directly");
+        INIT_LOGE("failed schedule AsyncReportSysEvent, executing directly");
         ReportSysEvent();
     }
     if (ScheduleDelayedHookMgrExecute() != 0) {
-        INIT_LOGE("Failed to schedule delayed HookMgrExecute, executing directly");
+        INIT_LOGE("failed schedule delayed HookMgrExecute, executing directly");
         HookMgrExecute(GetBootStageHookMgr(), INIT_BOOT_COMPLETE, NULL, NULL);
     }
 #endif

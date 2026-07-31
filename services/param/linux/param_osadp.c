@@ -57,7 +57,7 @@ INIT_LOCAL_API int ParamRWMutexDelete(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
     int ret = pthread_rwlock_destroy(&lock->rwlock);
-    PARAM_CHECK(ret == 0, return -1, "Failed to mutex lock ret %d", ret);
+    PARAM_CHECK(ret == 0, return -1, "failed mutex lock ret %d", ret);
     return 0;
 }
 

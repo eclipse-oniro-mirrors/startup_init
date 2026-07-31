@@ -56,12 +56,12 @@ int main(int argc, char *argv[])
     }
     if (number >= 1 && strcmp(args[0], "devctl") == 0) {
         if (memcpy_s(args[0], strlen(args[0]), "reboot", strlen("reboot")) != 0) {
-            printf("Failed to copy\n");
+            printf("Failed copy\n");
         }
     }
     BShellHandle handle = GetShellHandle();
     if (handle == NULL) {
-        printf("Failed to get shell handle \n");
+        printf("Failed get shell handle \n");
         return 0;
     }
 

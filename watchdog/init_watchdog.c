@@ -64,11 +64,11 @@ int GetWatcherDogCfg(int interval, int timeoutGet, int fd)
     if (preTimeout > 0) {
         int ret = ioctl(fd, WDIOC_SETPRETIMEOUT, &preTimeout);
         if (ret) {
-            INIT_LOGE("Failed to set pretimeout to %d\n", preTimeout);
+            INIT_LOGE("failed set pretimeout to %d\n", preTimeout);
         }
         ret = ioctl(fd, WDIOC_GETPRETIMEOUT, &preTimeoutGet);
         if (ret) {
-            INIT_LOGE("Failed to get pretimeout\n");
+            INIT_LOGE("failed get pretimeout\n");
         }
     }
 
@@ -117,11 +117,11 @@ int main(int argc, const char *argv[])
 
     int ret = ioctl(fd, WDIOC_SETTIMEOUT, &timeoutSet);
     if (ret) {
-        INIT_LOGE("Failed to set timeout to %d\n", timeoutSet);
+        INIT_LOGE("failed set timeout to %d\n", timeoutSet);
     }
     ret = ioctl(fd, WDIOC_GETTIMEOUT, &timeoutGet);
     if (ret) {
-        INIT_LOGE("Failed to get timeout\n");
+        INIT_LOGE("failed get timeout\n");
     }
 
     if (timeoutGet > 0) {

@@ -170,10 +170,10 @@ void PostParamTrigger(int type, const char *name, const char *value)
     PARAM_CHECK(bufferSize < (PARAM_CONST_VALUE_LEN_MAX + PARAM_NAME_LEN_MAX + 1 + 1 + 1),
         return, "bufferSize is longest %d", bufferSize);
     char *buffer = (char *)calloc(1, bufferSize);
-    PARAM_CHECK(buffer != NULL, return, "Failed to alloc memory for  param %s", name);
+    PARAM_CHECK(buffer != NULL, return, "failed alloc memory for  param %s", name);
     int ret = sprintf_s(buffer, bufferSize - 1, "%s=%s", name, value);
     PARAM_CHECK(ret > EOK, free(buffer);
-        return, "Failed to copy param");
+        return, "failed copy param");
     SendTriggerEvent(type, buffer, strlen(buffer));
     free(buffer);
 }
@@ -233,21 +233,21 @@ static int ParseTrigger_(const TriggerWorkSpace *workSpace,
     const cJSON *triggerItem, int (*checkJobValid)(const char *jobName), const ConfigContext *cfgContext)
 {
     PARAM_CHECK(triggerItem != NULL, return -1, "Invalid file");
-    PARAM_CHECK(workSpace != NULL, return -1, "Failed to create trigger list");
+    PARAM_CHECK(workSpace != NULL, return -1, "failed create trigger list");
     char *name = cJSON_GetStringValue(cJSON_GetObjectItem(triggerItem, "name"));
-    PARAM_CHECK(name != NULL, return -1, "Can not get name from cfg");
+    PARAM_CHECK(name != NULL, return -1, "cannot get name from cfg");
     char *condition = cJSON_GetStringValue(cJSON_GetObjectItem(triggerItem, "condition"));
     int type = GetTriggerType(name);
-    PARAM_CHECK(type <= TRIGGER_UNKNOW, return -1, "Failed to get trigger index");
+    PARAM_CHECK(type <= TRIGGER_UNKNOW, return -1, "failed get trigger index");
     if (type != TRIGGER_BOOT && checkJobValid != NULL && checkJobValid(name) != 0) {
         PARAM_LOGI("Trigger %s not exist in group", name);
         return 0;
     }
 
     TriggerHeader *header = GetTriggerHeader(workSpace, type);
-    PARAM_CHECK(header != NULL, return -1, "Failed to get header %d", type);
+    PARAM_CHECK(header != NULL, return -1, "failed get header %d", type);
     JobNode *trigger = UpdateJobTrigger(workSpace, type, condition, name);
-    PARAM_CHECK(trigger != NULL, return -1, "Failed to create trigger %s", name);
+    PARAM_CHECK(trigger != NULL, return -1, "failed create trigger %s", name);
     PARAM_LOGV("ParseTrigger %s type %d count %d", name, type, header->triggerCount);
     cJSON *cmdItems = cJSON_GetObjectItem(triggerItem, CMDS_ARR_NAME_IN_JSON);
     if (cmdItems == NULL || !cJSON_IsArray(cmdItems)) {
@@ -266,7 +266,7 @@ static int ParseTrigger_(const TriggerWorkSpace *workSpace,
         ret = GetCommandInfo(cmdLineStr, &cmdKeyIndex, &content);
         PARAM_CHECK(ret == 0, continue, "Command not support %s", cmdLineStr);
         ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, content, cfgContext);
-        PARAM_CHECK(ret == 0, continue, "Failed to add command %s", cmdLineStr);
+        PARAM_CHECK(ret == 0, continue, "failed add command %s", cmdLineStr);
         header->cmdNodeCount++;
     }
     return 0;
@@ -311,7 +311,7 @@ int InitTriggerWorkSpace(void)
     }
     g_triggerWorkSpace.bootStateChange = NULL;
     ParamEventTaskCreate(&g_triggerWorkSpace.eventHandle, ProcessBeforeEvent);
-    PARAM_CHECK(g_triggerWorkSpace.eventHandle != NULL, return -1, "Failed to event handle");
+    PARAM_CHECK(g_triggerWorkSpace.eventHandle != NULL, return -1, "failed event handle");
 
     // executeQueue
     g_triggerWorkSpace.executeQueue.executeQueue = calloc(1, TRIGGER_EXECUTE_QUEUE * sizeof(TriggerNode *));
@@ -365,7 +365,7 @@ void DoTriggerExec(const char *triggerName)
         TRIGGER_SET_FLAG((TriggerNode *)trigger, TRIGGER_FLAGS_QUEUE);
         ExecuteQueuePush(&g_triggerWorkSpace, (TriggerNode *)trigger);
     } else {
-        PARAM_LOGW("Can not find trigger %s", triggerName);
+        PARAM_LOGW("cannot find trigger %s", triggerName);
     }
 }
 
@@ -388,18 +388,18 @@ int AddCompleteJob(const char *name, const char *condition, const char *cmdConte
     PARAM_CHECK(name != NULL, return -1, "Invalid name");
     PARAM_CHECK(cmdContent != NULL, return -1, "Invalid cmdContent");
     int type = GetTriggerType(name);
-    PARAM_CHECK(type <= TRIGGER_UNKNOW, return -1, "Failed to get trigger index");
+    PARAM_CHECK(type <= TRIGGER_UNKNOW, return -1, "failed get trigger index");
     TriggerHeader *header = GetTriggerHeader(&g_triggerWorkSpace, type);
-    PARAM_CHECK(header != NULL, return -1, "Failed to get header %d", type);
+    PARAM_CHECK(header != NULL, return -1, "failed get header %d", type);
 
     JobNode *trigger = UpdateJobTrigger(&g_triggerWorkSpace, type, condition, name);
-    PARAM_CHECK(trigger != NULL, return -1, "Failed to create trigger");
+    PARAM_CHECK(trigger != NULL, return -1, "failed create trigger");
     char *content = NULL;
     int cmdKeyIndex = 0;
     int ret = GetCommandInfo(cmdContent, &cmdKeyIndex, &content);
     PARAM_CHECK(ret == 0, return -1, "Command not support %s", cmdContent);
     ret = AddCommand(trigger, (uint32_t)cmdKeyIndex, content, NULL); // use default context
-    PARAM_CHECK(ret == 0, return -1, "Failed to add command %s", cmdContent);
+    PARAM_CHECK(ret == 0, return -1, "failed add command %s", cmdContent);
     header->cmdNodeCount++;
     PARAM_LOGV("AddCompleteJob %s type %d count %d", name, type, header->triggerCount);
     return 0;

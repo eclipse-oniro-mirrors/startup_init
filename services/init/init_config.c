@@ -76,7 +76,7 @@ static void ParseAllImports(const cJSON *root, int depth)
     INIT_ERROR_CHECK(depth < IMPORT_MAX_LEVEL, return,
         "Import level too deep, max level is %d", IMPORT_MAX_LEVEL);
     char *tmpParamValue = calloc(PARAM_VALUE_LEN_MAX + 1, sizeof(char));
-    INIT_ERROR_CHECK(tmpParamValue != NULL, return, "Failed to alloc memory for param");
+    INIT_ERROR_CHECK(tmpParamValue != NULL, return, "failed alloc memory for param");
 
     cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "import");
     if (!cJSON_IsArray(importAttr)) {

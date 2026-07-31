@@ -31,7 +31,7 @@ CallbackControlFdProcess g_controlFdFunc = NULL;
 static void OnClose(const TaskHandle task)
 {
     CmdTask *agent = (CmdTask *)LE_GetUserData(task);
-    BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] Can not get agent");
+    BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] cannot get agent");
     OH_ListRemove(&agent->item);
     OH_ListInit(&agent->item);
 }
@@ -41,7 +41,7 @@ CONTROL_FD_STATIC int CheckSocketPermission(const TaskHandle task)
     struct ucred uc = {-1, -1, -1};
     socklen_t len = sizeof(uc);
     if (getsockopt(LE_GetSocketFd(task), SOL_SOCKET, SO_PEERCRED, &uc, &len) < 0) {
-        BEGET_LOGE("Failed to get socket option. err = %d", errno);
+        BEGET_LOGE("failed get socket option. err = %d", errno);
         return -1;
     }
     // Only root is permitted to use control fd of init.
@@ -58,7 +58,7 @@ CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *bu
         return;
     }
     CmdTask *agent = (CmdTask *)LE_GetUserData(task);
-    BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] Can not get agent");
+    BEGET_ERROR_CHECK(agent != NULL, return, "[control_fd] cannot get agent");
 
     // parse msg to exec
     CmdMessage *msg = (CmdMessage *)buffer;
@@ -89,7 +89,7 @@ CONTROL_FD_STATIC void CmdOnRecvMessage(const TaskHandle task, const uint8_t *bu
         }
         _exit(0);
     } else if (agent->pid < 0) {
-        BEGET_LOGE("[control_fd] Failed to fork child process, err = %d", errno);
+        BEGET_LOGE("[control_fd] failed fork child process, err = %d", errno);
     }
 #endif
     return;

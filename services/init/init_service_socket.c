@@ -42,7 +42,7 @@ static int GetSocketAddr(struct sockaddr_un *addr, const char *name)
     addr->sun_family = AF_UNIX;
     size_t addrLen = sizeof(addr->sun_path);
     int ret = snprintf_s(addr->sun_path, addrLen, addrLen - 1, HOS_SOCKET_DIR "/%s", name);
-    INIT_ERROR_CHECK(ret >= 0, return -1, "Failed to format addr %s", name);
+    INIT_ERROR_CHECK(ret >= 0, return -1, "failed format addr %s", name);
     return 0;
 }
 
@@ -52,7 +52,7 @@ static int SetSocketAddr(ServiceSocket *sockopt, sockaddr_union *addr)
     if (sockopt->family == AF_NETLINK) {
 #ifndef __LITEOS_A__
         if (memset_s(&(addr->addrnl), sizeof(addr->addrnl), 0, sizeof(addr->addrnl)) != EOK) {
-            INIT_LOGE("Failed to clear socket address");
+            INIT_LOGE("failed clear socket address");
             return -1;
         }
         addr->addrnl.nl_family = AF_NETLINK;
@@ -64,7 +64,7 @@ static int SetSocketAddr(ServiceSocket *sockopt, sockaddr_union *addr)
 #endif
     } else {
         ret = GetSocketAddr(&(addr->addrun), sockopt->name);
-        INIT_ERROR_CHECK(ret == 0, return -1, "Failed to format addr %s", sockopt->name);
+        INIT_ERROR_CHECK(ret == 0, return -1, "failed format addr %s", sockopt->name);
         if (access(addr->addrun.sun_path, F_OK) == 0) {
             INIT_LOGI("%s already exist, remove it", addr->addrun.sun_path);
             unlink(addr->addrun.sun_path);
@@ -78,20 +78,20 @@ static int SetSocketOptionAndBind(ServiceSocket *sockopt)
     if (sockopt->option & SOCKET_OPTION_PASSCRED) {
         int on = 1;
         if (setsockopt(sockopt->sockFd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on))) {
-            INIT_LOGE("Failed to setsockopt");
+            INIT_LOGE("failed setsockopt");
             return -1;
         }
     }
     if (sockopt->option & SOCKET_OPTION_RCVBUFFORCE) {
         int buffSize = SOCKET_BUFF_SIZE;
         if (setsockopt(sockopt->sockFd, SOL_SOCKET, SO_RCVBUFFORCE, &buffSize, sizeof(buffSize))) {
-            INIT_LOGE("Failed to setsockopt");
+            INIT_LOGE("failed setsockopt");
             return -1;
         }
     }
     sockaddr_union addr = {};
     if (SetSocketAddr(sockopt, &addr) != 0) {
-        INIT_LOGE("Failed to set socket addr");
+        INIT_LOGE("failed set socket addr");
         return -1;
     }
     if (sockopt->family == AF_NETLINK) {

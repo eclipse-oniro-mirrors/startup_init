@@ -42,7 +42,7 @@ static int RBMiscWriteUpdaterMessage(const char *path, const struct RBMiscUpdate
     realPath = NULL;
     if (fp != NULL) {
         size_t writeLen = fwrite(boot, sizeof(struct RBMiscUpdateMessage), 1, fp);
-        BEGET_ERROR_CHECK(writeLen == 1, ret = -1, "Failed to write misc for reboot");
+        BEGET_ERROR_CHECK(writeLen == 1, ret = -1, "failed write misc for reboot");
         (void)fclose(fp);
         ret = 0;
     }
@@ -64,7 +64,7 @@ static int RBMiscReadUpdaterMessage(const char *path, struct RBMiscUpdateMessage
     if (fp != NULL) {
         size_t readLen = fread(boot, 1, sizeof(struct RBMiscUpdateMessage), fp);
         (void)fclose(fp);
-        BEGET_ERROR_CHECK(readLen > 0, ret = -1, "Failed to read misc for reboot");
+        BEGET_ERROR_CHECK(readLen > 0, ret = -1, "failed read misc for reboot");
         ret = 0;
     }
     return ret;
@@ -74,10 +74,10 @@ int GetRebootReasonFromMisc(char *reason, size_t size)
 {
     char miscFile[PATH_MAX] = {0};
     int ret = GetBlockDevicePath("/misc", miscFile, PATH_MAX);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to get misc path");
+    BEGET_ERROR_CHECK(ret == 0, return -1, "failed get misc path");
     struct RBMiscUpdateMessage msg;
     ret = RBMiscReadUpdaterMessage(miscFile, &msg);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to get misc info");
+    BEGET_ERROR_CHECK(ret == 0, return -1, "failed get misc info");
     return strcpy_s(reason, size, msg.command);
 }
 
@@ -86,31 +86,31 @@ int UpdateMiscMessage(const char *valueData, const char *cmd, const char *cmdExt
     char miscFile[PATH_MAX] = {0};
     int ret = GetBlockDevicePath("/misc", miscFile, PATH_MAX);
     // no misc do not updater, so return ok
-    BEGET_ERROR_CHECK(ret == 0, return 0, "Failed to get misc path for %s.", valueData);
+    BEGET_ERROR_CHECK(ret == 0, return 0, "failed get misc path for %s.", valueData);
 
     // "updater" or "updater:"
     struct RBMiscUpdateMessage msg;
     ret = RBMiscReadUpdaterMessage(miscFile, &msg);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to get misc info for %s.", cmd);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "failed get misc info for %s.", cmd);
 
     if (boot != NULL) {
         ret = snprintf_s(msg.command, MAX_COMMAND_SIZE, MAX_COMMAND_SIZE - 1, "%s", boot);
-        BEGET_ERROR_CHECK(ret > 0, return -1, "Failed to format cmd for %s.", cmd);
+        BEGET_ERROR_CHECK(ret > 0, return -1, "failed format cmd for %s.", cmd);
         msg.command[MAX_COMMAND_SIZE - 1] = 0;
     } else {
         ret = memset_s(msg.command, MAX_COMMAND_SIZE, 0, MAX_COMMAND_SIZE);
-        BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to format cmd for %s.", cmd);
+        BEGET_ERROR_CHECK(ret == 0, return -1, "failed format cmd for %s.", cmd);
     }
 
     if (strncmp(cmd, "updater", strlen("updater")) != 0) {
         if ((cmdExt != NULL) && (valueData != NULL) && (strncmp(valueData, cmdExt, strlen(cmdExt)) == 0)) {
             const char *p = valueData + strlen(cmdExt);
             ret = snprintf_s(msg.update, MAX_UPDATE_SIZE, MAX_UPDATE_SIZE - 1, "%s", p);
-            BEGET_ERROR_CHECK(ret > 0, return -1, "Failed to format param for %s.", cmd);
+            BEGET_ERROR_CHECK(ret > 0, return -1, "failed format param for %s.", cmd);
             msg.update[MAX_UPDATE_SIZE - 1] = 0;
         } else {
             ret = memset_s(msg.update, MAX_UPDATE_SIZE, 0, MAX_UPDATE_SIZE);
-            BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to format update for %s.", cmd);
+            BEGET_ERROR_CHECK(ret == 0, return -1, "failed format update for %s.", cmd);
         }
     }
 

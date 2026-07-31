@@ -34,12 +34,12 @@ INIT_STATIC void AllocDmName(const char *name, char *nameRofs, const uint64_t na
     char *nameExt4, const uint64_t nameExt4Len)
 {
     if (snprintf_s(nameRofs, nameRofsLen, nameRofsLen - 1, "%s_erofs", name) < 0) {
-        BEGET_LOGE("Failed to copy nameRofs.");
+        BEGET_LOGE("failed copy nameRofs.");
         return;
     }
 
     if (snprintf_s(nameExt4, nameExt4Len, nameExt4Len - 1, "%s_ext4", name) < 0) {
-        BEGET_LOGE("Failed to copy nameExt4.");
+        BEGET_LOGE("failed copy nameExt4.");
         return;
     }
 
@@ -71,12 +71,12 @@ INIT_STATIC int ConstructLinearTarget(DmVerityTarget *target, const char *dev, u
     target->length = mapLength / SECTOR_SIZE;
     target->paras = calloc(1, MAX_BUFFER_LEN);
     if (target->paras == NULL) {
-        BEGET_LOGE("Failed to calloc target paras");
+        BEGET_LOGE("failed calloc target paras");
         return -1;
     }
 
     if (snprintf_s(target->paras, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%s %llu", dev, mapStart / SECTOR_SIZE) < 0) {
-        BEGET_LOGE("Failed to copy target paras.");
+        BEGET_LOGE("failed copy target paras.");
         return -1;
     }
     target->paras_len = strlen(target->paras);

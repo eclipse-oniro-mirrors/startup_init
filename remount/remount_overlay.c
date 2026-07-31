@@ -106,7 +106,7 @@ int FormatExt4(const char *fsBlkDev, const char *fsMntPoint)
 
     char blockSizeBuffer[MAX_BUFFER_LEN] = {0};
     if (snprintf_s(blockSizeBuffer, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "%llu", devSize / BLOCK_SIZE_UNIT) < 0) {
-        BEGET_LOGE("Failed to copy nameRofs.");
+        BEGET_LOGE("failed copy nameRofs.");
         return -1;
     }
 
@@ -154,12 +154,12 @@ INIT_STATIC bool FormatAndMountExt4(const char *devExt4, const char *mnt)
     }
     int ret = FormatExt4(devExt4, mnt);
     if (ret) {
-        INIT_LOGE("Failed to format devExt4 %s.", devExt4);
+        INIT_LOGE("failed format devExt4 %s.", devExt4);
         return false;
     }
     ret = MountExt4Device(devExt4, mnt, true);
     if (ret) {
-        INIT_LOGE("Failed to mount devExt4 %s.", devExt4);
+        INIT_LOGE("failed mount devExt4 %s.", devExt4);
         return false;
     }
     return true;
@@ -179,7 +179,7 @@ INIT_STATIC bool DoRemount(struct mntent *mentry)
     char devExt4[MAX_BUFFER_LEN] = {0};
     devNum = devNum + 1;
     if (snprintf_s(devExt4, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "/dev/block/dm-%d", devNum) < 0) {
-        INIT_LOGE("Failed to copy devExt4.");
+        INIT_LOGE("failed copy devExt4.");
         return false;
     }
 
@@ -199,7 +199,7 @@ INIT_STATIC bool DoRemount(struct mntent *mentry)
 
     OverlayRemountPre(mnt);
     if (MountOverlayOne(mnt, PREFIX_OVERLAY)) {
-        INIT_LOGE("Failed to mount overlay on mnt:%s.", mnt);
+        INIT_LOGE("failed mount overlay on mnt:%s.", mnt);
         return false;
     }
     OverlayRemountPost(mnt);
@@ -255,7 +255,7 @@ INIT_STATIC bool DoSystemRemount(struct mntent *mentry)
     char devExt4[MAX_BUFFER_LEN] = {0};
     devNum = devNum + 1;
     if (snprintf_s(devExt4, MAX_BUFFER_LEN, MAX_BUFFER_LEN - 1, "/dev/block/dm-%d", devNum) < 0) {
-        BEGET_LOGE("Failed to copy devExt4.");
+        BEGET_LOGE("failed copy devExt4.");
         return false;
     }
 
@@ -264,18 +264,18 @@ INIT_STATIC bool DoSystemRemount(struct mntent *mentry)
     } else {
         ret = FormatExt4(devExt4, SYSTEM_DIR);
         if (ret) {
-            INIT_LOGE("Failed to format devExt4 %s.", devExt4);
+            INIT_LOGE("failed format devExt4 %s.", devExt4);
             return false;
         }
 
         ret = MountExt4Device(devExt4, SYSTEM_DIR, true);
         if (ret) {
-            INIT_LOGE("Failed to mount devExt4 %s.", devExt4);
+            INIT_LOGE("failed mount devExt4 %s.", devExt4);
         }
     }
 
     if (RootOverlaySetup()) {
-        INIT_LOGE("Failed to root overlay.");
+        INIT_LOGE("failed root overlay.");
         return false;
     }
 
@@ -319,19 +319,19 @@ static void MountBindEngFile(const char *source, const char *target)
     const char *prefix = (strcmp(target, "/") == 0) ? "" : target;
     int ret = snprintf_s(targetFullPath, REMOUNT_PATH_MAX, REMOUNT_PATH_MAX - 1, "%s%s", prefix, q);
     if (ret == -1) {
-        INIT_LOGE("Failed to build target path");
+        INIT_LOGE("failed build target path");
         return;
     }
     INIT_LOGI("target full path is %s", targetFullPath);
     if (access(targetFullPath, F_OK) != 0) {  // file not exist, symlink targetFullPath
         if (symlink(source, targetFullPath) < 0) {
-            INIT_LOGE("Failed to link %s to %s, err = %d", source, targetFullPath, errno);
+            INIT_LOGE("failed link %s to %s, err = %d", source, targetFullPath, errno);
         }
         return;
     }
     if (IsRegularFile(targetFullPath)) {  // file exist, moung bind targetFullPath
         if (mount(source, targetFullPath, NULL, MS_BIND, NULL) != 0) {
-            INIT_LOGE("Failed to bind mount %s to %s, err = %d", source, targetFullPath, errno);
+            INIT_LOGE("failed bind mount %s to %s, err = %d", source, targetFullPath, errno);
         } else {
             INIT_LOGI("Bind mount %s to %s done", source, targetFullPath);
         }
@@ -356,7 +356,7 @@ void EngFilesOverlay(const char *source, const char *target)
             continue;
         }
         if (snprintf_s(srcPath, REMOUNT_PATH_MAX, REMOUNT_PATH_MAX - 1, "%s/%s", source, de->d_name) == -1) {
-            INIT_LOGE("Failed to build path for overlaying");
+            INIT_LOGE("failed build path for overlaying");
             break;
         }
 
@@ -381,7 +381,7 @@ INIT_STATIC int PerPartitionRemountFallback(void)
 {
     FILE *fp = setmntent("/proc/mounts", "r");
     if (fp == NULL) {
-        INIT_LOGE("Failed to open /proc/mounts.");
+        INIT_LOGE("failed open /proc/mounts.");
         return REMOUNT_FAIL;
     }
 

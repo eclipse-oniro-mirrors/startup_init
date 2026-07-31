@@ -157,7 +157,7 @@ static int ParseFirmwareConfig(char *p)
     INIT_CHECK(config != NULL, errno = ENOMEM;
         return -1);
     config->fmPath = strdup(p);
-    INIT_ERROR_CHECK(config->fmPath != NULL, free(config); return -1, "failed to dup fmpath");
+    INIT_ERROR_CHECK(config->fmPath != NULL, free(config); return -1, "failed dup fmpath");
     OH_ListAddTail(&g_firmwares, &config->list);
     return 0;
 }
@@ -250,7 +250,7 @@ void ParseUeventdConfigFile(const char *file)
 
     struct stat st;
     if (fstat(fd, &st) < 0) {
-        INIT_LOGE("Failed to get file stat. err = %d", errno);
+        INIT_LOGE("failed get file stat. err = %d", errno);
         close(fd);
         return;
     }
@@ -264,7 +264,7 @@ void ParseUeventdConfigFile(const char *file)
     size_t size = (size_t)st.st_size;
     char *buffer = malloc(size + 1);
     if (buffer == NULL) {
-        INIT_LOGE("Failed to malloc memory. err = %d", errno);
+        INIT_LOGE("failed malloc memory. err = %d", errno);
         close(fd);
         return;
     }
@@ -401,7 +401,7 @@ void ChangeSysAttributePermissions(const char *sysPath)
     }
     char sysAttr[SYSPATH_SIZE] = {};
     if (snprintf_s(sysAttr, SYSPATH_SIZE, SYSPATH_SIZE - 1, "/sys%s/%s", config->sysPath, config->attr) == -1) {
-        INIT_LOGE("Failed to build sys attribute for sys path %s, attr: %s", config->sysPath, config->attr);
+        INIT_LOGE("failed build sys attribute for sys path %s, attr: %s", config->sysPath, config->attr);
         return;
     }
     if (chown(sysAttr, config->uid, config->gid) < 0) {

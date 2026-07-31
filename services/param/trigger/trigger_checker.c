@@ -32,7 +32,7 @@ int CalculatorInit(LogicCalculator *calculator, int dataNumber, int dataUnit, in
         dataSize += MAX_DATA_BUFFER_MAX;
     }
     calculator->data = (char *)calloc(1, dataSize);
-    PARAM_CHECK(calculator->data != NULL, return -1, "Failed to malloc for calculator");
+    PARAM_CHECK(calculator->data != NULL, return -1, "failed malloc for calculator");
     calculator->dataNumber = dataNumber;
     calculator->endIndex = 0;
     calculator->dataUnit = dataUnit;
@@ -92,7 +92,7 @@ static int CalculatorPush(LogicCalculator *calculator, const void *data)
     PARAM_CHECK(calculator->endIndex < calculator->dataNumber, return -1, "More data for calculator support");
     char *tmpData = (char *)calculator->data + calculator->dataUnit * calculator->endIndex;
     int ret = memcpy_s(tmpData, calculator->dataUnit, data, calculator->dataUnit);
-    PARAM_CHECK(ret == EOK, return -1, "Failed to copy logic data");
+    PARAM_CHECK(ret == EOK, return -1, "failed copy logic data");
     calculator->endIndex++;
     return 0;
 }
@@ -106,7 +106,7 @@ static int CalculatorPop(LogicCalculator *calculator, void *data)
     }
     char *tmpData = (char *)calculator->data + calculator->dataUnit * (calculator->endIndex - 1);
     int ret = memcpy_s(data, calculator->dataUnit, tmpData, calculator->dataUnit);
-    PARAM_CHECK(ret == EOK, return -1, "Failed to copy logic data");
+    PARAM_CHECK(ret == EOK, return -1, "failed copy logic data");
     calculator->endIndex--;
     return 0;
 }
@@ -229,7 +229,7 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
             noneOper = 0;
             int ret = CalculatorPop(calculator, (void*)&data2);
             int ret1 = CalculatorPop(calculator, (void*)&data1);
-            PARAM_CHECK((ret == 0 && ret1 == 0), return -1, "Failed to pop data");
+            PARAM_CHECK((ret == 0 && ret1 == 0), return -1, "failed pop data");
 
             ret = ComputeSubCondition(calculator, &data1, condition);
             data1.flags = 0;
@@ -240,7 +240,7 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
                 LOGIC_DATA_SET_FLAG(&data1, LOGIC_DATA_FLAGS_TRUE);
             }
             ret = CalculatorPush(calculator, (void *)&data1);
-            PARAM_CHECK(ret == 0, return -1, "Failed to push data");
+            PARAM_CHECK(ret == 0, return -1, "failed push data");
             start = currIndex + 1; // 跳过符号
         } else if (isspace(condition[currIndex])) {
             if (start == currIndex) {
@@ -251,7 +251,7 @@ int ComputeCondition(LogicCalculator *calculator, const char *condition)
             data1.startIndex = start;
             data1.endIndex = currIndex;
             int ret = CalculatorPush(calculator, (void *)&data1);
-            PARAM_CHECK(ret == 0, return -1, "Failed to push data");
+            PARAM_CHECK(ret == 0, return -1, "failed push data");
             start = currIndex + 1;
         }
         currIndex++;

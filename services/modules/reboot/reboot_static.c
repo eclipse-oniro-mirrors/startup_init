@@ -51,15 +51,15 @@ static char *Dup2String(const char *prefix, const char *str)
 {
     if (str == NULL) {
         char *tmpstr = strdup("reboot");
-        PLUGIN_CHECK(tmpstr != NULL, return NULL, "Failed to get str");
+        PLUGIN_CHECK(tmpstr != NULL, return NULL, "failed get str");
         return tmpstr;
     }
     size_t len = strlen(prefix) + strlen(str) + 1;
     char *tmp = calloc(1, len);
-    PLUGIN_CHECK(tmp != NULL, return NULL, "Failed to alloc %s %s", prefix, str);
+    PLUGIN_CHECK(tmp != NULL, return NULL, "failed alloc %s %s", prefix, str);
     int ret = sprintf_s(tmp, len, "%s%s", prefix, str);
     PLUGIN_CHECK(ret > 0, free(tmp);
-        return NULL, "Failed to sprintf %s %s", prefix, str);
+        return NULL, "Failed sprintf %s %s", prefix, str);
     return tmp;
 }
 
@@ -69,7 +69,7 @@ static int CheckParamCmdExist(const char *cmd)
         return 0;
     }
     char *cmdName = Dup2String(REBOOT_CMD_PREFIX, cmd);
-    PLUGIN_CHECK(cmdName != NULL, return 0, "Failed to copy %s", cmd);
+    PLUGIN_CHECK(cmdName != NULL, return 0, "failed copy %s", cmd);
     for (int i = 0; i < g_rebootParamCmdValidNumber; i++) {
         if (strcmp(g_rebootParamCmdInfos[i].cmd, cmdName) == 0) {
             free(cmdName);
@@ -84,14 +84,14 @@ static int SetParamCmdInfo(ParamCmdInfo *currInfo, CmdExecutor executor, const c
 {
     do {
         currInfo->name = Dup2String(REBOOT_NAME_PREFIX, cmd);
-        PLUGIN_CHECK(currInfo->name != NULL, break, "Failed to copy %s", cmd);
+        PLUGIN_CHECK(currInfo->name != NULL, break, "failed copy %s", cmd);
         currInfo->replace = Dup2String(REBOOT_REPLACE_PREFIX, cmd);
-        PLUGIN_CHECK(currInfo->replace != NULL, break, "Failed to copy %s", cmd);
+        PLUGIN_CHECK(currInfo->replace != NULL, break, "failed copy %s", cmd);
         currInfo->cmd = Dup2String(REBOOT_CMD_PREFIX, cmd);
-        PLUGIN_CHECK(currInfo->cmd != NULL, break, "Failed to copy %s", cmd);
+        PLUGIN_CHECK(currInfo->cmd != NULL, break, "failed copy %s", cmd);
         if (executor != NULL) {
             int cmdId = AddCmdExecutor(currInfo->cmd, executor);
-            PLUGIN_CHECK(cmdId > 0, break, "Failed to add cmd %s", cmd);
+            PLUGIN_CHECK(cmdId > 0, break, "failed add cmd %s", cmd);
         }
         PLUGIN_LOGV("SetParamCmdInfo '%s' '%s' '%s' ", currInfo->name, currInfo->cmd, currInfo->replace);
         currInfo = NULL;
@@ -118,7 +118,7 @@ static int AddRebootCmdExecutor_(const char *cmd, CmdExecutor executor)
     if (g_rebootParamCmdMaxNumber == 0 || g_rebootParamCmdMaxNumber <= g_rebootParamCmdValidNumber) {
         g_rebootParamCmdMaxNumber += 5; // inc 5 once time
         ParamCmdInfo *cmdInfos = calloc(1, sizeof(ParamCmdInfo) * g_rebootParamCmdMaxNumber);
-        PLUGIN_CHECK(cmdInfos != NULL, return -1, "Failed to add reboot cmd %s", cmd);
+        PLUGIN_CHECK(cmdInfos != NULL, return -1, "failed add reboot cmd %s", cmd);
         if (g_rebootParamCmdInfos != NULL) { // delete old
             // copy from old
             for (int i = 0; i < g_rebootParamCmdValidNumber; i++) {

@@ -74,13 +74,13 @@ int InitParamService(void)
     LoadParamFromBuild();
 #ifdef PARAM_LOAD_CFG_FROM_CODE
     char *buffer = calloc(1, PARAM_VALUE_LEN_MAX);
-    PARAM_CHECK(buffer != NULL, return ret, "Failed to malloc for buffer");
+    PARAM_CHECK(buffer != NULL, return ret, "failed malloc for buffer");
     for (size_t i = 0; i < ARRAY_LENGTH(g_paramDefCfgNodes); i++) {
         PARAM_LOGV("InitParamService name %s = %s", g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
         uint32_t dataIndex = 0;
         ret = WriteParam(g_paramDefCfgNodes[i].name,
             StringTrim(buffer, PARAM_VALUE_LEN_MAX, g_paramDefCfgNodes[i].value), &dataIndex, 0);
-        PARAM_CHECK(ret == 0, continue, "Failed to set param %d name %s %s",
+        PARAM_CHECK(ret == 0, continue, "failed set param %d name %s %s",
             ret, g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
     }
     free(buffer);
@@ -110,11 +110,11 @@ int SystemWriteParam(const char *name, const char *value)
     if ((ctrlService & PARAM_CTRL_SERVICE) != PARAM_CTRL_SERVICE) { // ctrl param
         uint32_t dataIndex = 0;
         ret = WriteParam(name, value, &dataIndex, 0);
-        PARAM_CHECK(ret == 0, return ret, "Failed to set param %d name %s %s", ret, name, value);
+        PARAM_CHECK(ret == 0, return ret, "failed set param %d name %s %s", ret, name, value);
         ret = WritePersistParam(name, value);
-        PARAM_CHECK(ret == 0, return ret, "Failed to set persist param name %s", name);
+        PARAM_CHECK(ret == 0, return ret, "failed set persist param name %s", name);
     } else {
-        PARAM_LOGE("SystemWriteParam can not support service ctrl parameter name %s", name);
+        PARAM_LOGE("SystemWriteParam cannot support service ctrl parameter name %s", name);
     }
     return ret;
 }

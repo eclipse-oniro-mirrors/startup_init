@@ -154,7 +154,7 @@ char *ReadFileToBuf(const char *configFile)
         }
         buffer = (char*)calloc((size_t)(fileStat.st_size + 1), sizeof(char));
         if (buffer == NULL) {
-            INIT_LOGE("Failed to allocate memory for config file, err = %d", errno);
+            INIT_LOGE("failed allocate memory for config file, err = %d", errno);
             break;
         }
 
@@ -199,7 +199,7 @@ char *ReadFileData(const char *fileName)
     char *buffer = NULL;
     int fd = -1;
     fd = open(fileName, O_RDONLY);
-    INIT_ERROR_CHECK(fd >= 0, return NULL, "Failed to read file %s errno:%d", fileName, errno);
+    INIT_ERROR_CHECK(fd >= 0, return NULL, "failed read file %s errno:%d", fileName, errno);
     buffer = (char *)calloc(1, MAX_SMALL_BUFFER); // fsmanager not create, can not get fileStat st_size
     INIT_ERROR_CHECK(buffer != NULL, close(fd);
         return NULL, "Failed to allocate memory for %s", fileName);
@@ -430,7 +430,7 @@ size_t WriteAll(int fd, const char *buffer, size_t size)
             written = write(fd, p, left);
         } while (written < 0 && errno == EINTR);
         if (written < 0) {
-            INIT_LOGE("Failed to write %lu bytes, err = %d", left, errno);
+            INIT_LOGE("failed write %lu bytes, err = %d", left, errno);
             break;
         }
         p += written;
@@ -444,7 +444,7 @@ char *GetRealPath(const char *source)
     INIT_CHECK_RETURN_VALUE(source != NULL, NULL);
     char *path = realpath(source, NULL);
     if (path == NULL) {
-        INIT_ERROR_CHECK(errno == ENOENT, return NULL, "Failed to resolve %s real path err=%d", source, errno);
+        INIT_ERROR_CHECK(errno == ENOENT, return NULL, "failed resolve %s real path err=%d", source, errno);
     }
     return path;
 }
@@ -529,7 +529,7 @@ int CheckAndCreatFile(const char *file, mode_t mode)
                 close(fd);
             }
         } else {
-            BEGET_LOGW("Failed to access \' %s \', err = %d", file, errno);
+            BEGET_LOGW("failed access \' %s \', err = %d", file, errno);
             return -1;
         }
     }
@@ -573,7 +573,7 @@ int ReadFileInDir(const char *dirPath, const char *includeExt,
         }
         int ret = snprintf_s(fileName, MAX_BUF_SIZE, MAX_BUF_SIZE - 1, "%s/%s", dirPath, dp->d_name);
         if (ret <= 0) {
-            INIT_LOGE("Failed to get file name for %s", dp->d_name);
+            INIT_LOGE("failed get file name for %s", dp->d_name);
             continue;
         }
         struct stat st;
@@ -834,7 +834,7 @@ static int GetExactProcCmdlineValue(const char *name, const char *buffer, char *
 int GetExactParameterFromCmdLine(const char *paramName, char *value, size_t valueLen)
 {
     char *buffer = ReadFileData(BOOT_CMD_LINE);
-    BEGET_ERROR_CHECK(buffer != NULL, return -1, "Failed to read /proc/cmdline");
+    BEGET_ERROR_CHECK(buffer != NULL, return -1, "failed read /proc/cmdline");
     int ret = GetExactProcCmdlineValue(paramName, buffer, value, valueLen);
     BEGET_LOGI("GetExactParameterFromCmdLine: ret=%d,paramName=%s,value=%s", ret, paramName, value);
     free(buffer);
@@ -844,7 +844,7 @@ int GetExactParameterFromCmdLine(const char *paramName, char *value, size_t valu
 int GetParameterFromCmdLine(const char *paramName, char *value, size_t valueLen)
 {
     char *buffer = ReadFileData(BOOT_CMD_LINE);
-    BEGET_ERROR_CHECK(buffer != NULL, return -1, "Failed to read /proc/cmdline");
+    BEGET_ERROR_CHECK(buffer != NULL, return -1, "failed read /proc/cmdline");
     int ret = GetProcCmdlineValue(paramName, buffer, value, valueLen);
     BEGET_LOGI("GetParameterFromCmdLine: ret=%d,paramName=%s,value=%s", ret, paramName, value);
     free(buffer);

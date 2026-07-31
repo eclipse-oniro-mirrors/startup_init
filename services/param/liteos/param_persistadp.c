@@ -62,7 +62,7 @@ static void LoadPersistParam_(const char *fileName, char *buffer, uint32_t buffS
     while (fgets(buffer, buffSize, fp) != NULL) {
         buffer[buffSize - 1] = '\0';
         int ret = SplitParamString(buffer, NULL, 0, LoadOnePersistParam_, NULL);
-        PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);
+        PARAM_CHECK(ret == 0, continue, "failed set param %d %s", ret, buffer);
         paramNum++;
     }
     (void)fclose(fp);
@@ -74,7 +74,7 @@ static int LoadPersistParam(void)
     CheckAndCreateDir(PARAM_PERSIST_SAVE_PATH);
     const uint32_t buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
     char *buffer = malloc(buffSize);
-    PARAM_CHECK(buffer != NULL, return -1, "Failed to alloc");
+    PARAM_CHECK(buffer != NULL, return -1, "failed alloc");
 
     int updaterMode = InUpdaterMode();
     char *tmpPath = (updaterMode == 0) ? PARAM_PERSIST_SAVE_PATH : "/param/persist_parameters";
@@ -97,7 +97,7 @@ static int SavePersistParam(const char *name, const char *value)
     }
     ParamMutexPost(&g_saveMutex);
     if (ret <= 0) {
-        PARAM_LOGE("Failed to save persist param %s", name);
+        PARAM_LOGE("failed save persist param %s", name);
     }
     return ret;
 }

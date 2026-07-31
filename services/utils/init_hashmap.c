@@ -34,7 +34,7 @@ int32_t OH_HashMapCreate(HashMapHandle *handle, const HashInfo *info)
     INIT_ERROR_CHECK(info->keyHash != NULL && info->nodeHash != NULL, return -1, "Invalid hash key");
     INIT_ERROR_CHECK(info->nodeCompare != NULL && info->keyCompare != NULL, return -1, "Invalid hash compare");
     HashTab *tab = (HashTab *)calloc(1, sizeof(HashTab) + sizeof(HashNode*) * info->maxBucket);
-    INIT_ERROR_CHECK(tab != NULL, return -1, "Failed to create hash tab");
+    INIT_ERROR_CHECK(tab != NULL, return -1, "failed create hash tab");
     tab->maxBucket = info->maxBucket;
     tab->keyHash = info->keyHash;
     tab->nodeCompare = info->nodeCompare;

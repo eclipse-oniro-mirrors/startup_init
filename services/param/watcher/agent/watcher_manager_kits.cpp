@@ -59,7 +59,7 @@ void WatcherManagerKits::ResetService(const wptr<IRemoteObject> &remote)
         }
         stop_ = false;
         threadForReWatch_ = new (std::nothrow)std::thread([this] {this->ReAddWatcher();});
-        WATCHER_CHECK(threadForReWatch_ != nullptr, return, "Failed to create thread");
+        WATCHER_CHECK(threadForReWatch_ != nullptr, return, "failed create thread");
     }
 }
 
@@ -106,10 +106,10 @@ void WatcherManagerKits::ReAddWatcher(void)
         count++;
     }
     WATCHER_LOGV("ReAddWatcher count %d ", count);
-    WATCHER_CHECK(watcherManager != nullptr, return, "Failed to get watcher manager");
+    WATCHER_CHECK(watcherManager != nullptr, return, "failed get watcher manager");
     // add or get remote agent
     uint32_t remoteWatcherId = GetRemoteWatcher();
-    WATCHER_CHECK(remoteWatcherId > 0, return, "Failed to get remote agent");
+    WATCHER_CHECK(remoteWatcherId > 0, return, "failed get remote agent");
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto iter = watchers_.begin(); iter != watchers_.end(); iter++) {
         WATCHER_LOGI("Add old watcher keyPrefix %s ", iter->first.c_str());

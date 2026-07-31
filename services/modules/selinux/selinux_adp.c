@@ -80,7 +80,7 @@ static int SetServiceContent(int id, const char *name, int argc, const char **ar
     }
 
     if (setexeccon(label) < 0) {
-        PLUGIN_LOGE("Service error %d %s, failed to set secon %s.", errno, argv[0], label);
+        PLUGIN_LOGE("Service error %d %s, failed set secon %s.", errno, argv[0], label);
 #ifndef STARTUP_INIT_TEST
         _exit(INIT_EEXEC_CONTENT);
 #endif
@@ -103,7 +103,7 @@ static int SetServiceSaspawnContent(int id, const char *name, int argc, const ch
     }
 
     if (setcon(label) < 0) {
-        PLUGIN_LOGE("Service saspawn error %d %s, failed to set secon %s.", errno, argv[0], label);
+        PLUGIN_LOGE("Service saspawn error %d %s, failed set secon %s.", errno, argv[0], label);
 #ifndef STARTUP_INIT_TEST
         _exit(INIT_SASPAWN);
 #endif
@@ -125,7 +125,7 @@ static int SetSockCreateCon(int id, const char *name, int argc, const char **arg
     ServiceExtData *data = GetServiceExtData(argv[0], HOOK_ID_SELINUX);
     if (data != NULL) {
         if (setsockcreatecon((char *)data->data) < 0) {
-            PLUGIN_LOGE("failed to set socket context %s's secon (%s).", argv[0], (char *)data->data);
+            PLUGIN_LOGE("failed set socket context %s's secon (%s).", argv[0], (char *)data->data);
 #ifndef STARTUP_INIT_TEST
             _exit(PROCESS_EXIT_CODE);
 #endif

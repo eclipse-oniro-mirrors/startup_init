@@ -29,14 +29,14 @@ void HandleFimwareDeviceEvent(const struct Uevent *uevent)
     char fwLoadingPath[PATH_MAX] = {};
 
     if (snprintf_s(fwLoadingPath, PATH_MAX, PATH_MAX - 1, "/sys%s/loading", uevent->syspath) == -1) {
-        INIT_LOGE("Failed to build firmware loading path");
+        INIT_LOGE("failed build firmware loading path");
         return;
     }
     char realPath[PATH_MAX] = { 0 };
     realpath(fwLoadingPath, realPath);
     int fd = open(realPath, O_WRONLY | O_CLOEXEC);
     if (fd < 0) {
-        INIT_LOGE("Failed to open %s, err = %d", fwLoadingPath, errno);
+        INIT_LOGE("failed open %s, err = %d", fwLoadingPath, errno);
         return;
     }
 
