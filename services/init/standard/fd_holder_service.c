@@ -44,7 +44,7 @@ static int HandlerHoldFds(Service *service, int *fds, size_t fdCount, const char
         INIT_LOGI("fd = %d", fds[i]);
     }
     if (UpdaterServiceFds(service, fds, fdCount) < 0) {
-        INIT_LOGE("Failed to update service \' %s \' fds", service->name);
+        INIT_LOGE("failed update service \' %s \' fds", service->name);
         return -1;
     }
 
@@ -66,7 +66,7 @@ static void SendErrorInfo(int sock, const char *errInfo, const char *serviceName
         ret = strncpy_s(errBuffer, MAX_FD_HOLDER_BUFFER, errInfo, strlen(errInfo));
     }
     if (ret != 0) {
-        INIT_LOGE("Failed to copy, err = %d", errno);
+        INIT_LOGE("failed copy, err = %d", errno);
         return;
     }
 
@@ -84,7 +84,7 @@ static void SendErrorInfo(int sock, const char *errInfo, const char *serviceName
     };
 
     if (TEMP_FAILURE_RETRY(sendmsg(sock, &msghdr, MSG_NOSIGNAL)) < 0) {
-        INIT_LOGE("Failed to send err info to service \' %s \', err = %d", serviceName, errno);
+        INIT_LOGE("failed send err info to service \' %s \', err = %d", serviceName, errno);
     }
 }
 

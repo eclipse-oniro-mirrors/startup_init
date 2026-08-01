@@ -32,7 +32,7 @@ int UeventdSocketInit(void)
     int on = 1;
 
     if (memset_s(&addr, sizeof(addr), 0, sizeof(addr)) != EOK) {
-        INIT_LOGE("Failed to clear socket address");
+        INIT_LOGE("failed clear socket address");
         return -1;
     }
     addr.nl_family = AF_NETLINK;

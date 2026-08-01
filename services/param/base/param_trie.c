@@ -31,7 +31,7 @@ static uint32_t AllocateParamTrieNode(WorkSpace *workSpace, const char *key, uin
 static int GetRealFileName(WorkSpace *workSpace, char *buffer, uint32_t size)
 {
     int ret = PARAM_SPRINTF(buffer, size, "%s/%s", PARAM_STORAGE_PATH, workSpace->fileName);
-    PARAM_CHECK(ret > 0, return -1, "Failed to copy file name %s", workSpace->fileName);
+    PARAM_CHECK(ret > 0, return -1, "failed copy file name %s", workSpace->fileName);
     buffer[ret] = '\0';
     return 0;
 }
@@ -44,7 +44,7 @@ static int InitWorkSpace_(WorkSpace *workSpace, uint32_t spaceSize, int readOnly
 
     char buffer[FILENAME_LEN_MAX] = {0};
     int ret = GetRealFileName(workSpace, buffer, sizeof(buffer));
-    PARAM_CHECK(ret == 0, return -1, "Failed to get file name %s", workSpace->fileName);
+    PARAM_CHECK(ret == 0, return -1, "failed get file name %s", workSpace->fileName);
     void *areaAddr = GetSharedMem(buffer, &workSpace->memHandle, spaceSize, readOnly);
     PARAM_ONLY_CHECK(areaAddr != NULL, return PARAM_CODE_MEMORY_MAP_FAILED);
     if (!readOnly) {
@@ -77,7 +77,7 @@ static uint32_t AllocateParamTrieNode(WorkSpace *workSpace, const char *key, uin
     ParamTrieNode *node = (ParamTrieNode *)(workSpace->area->data + workSpace->area->currOffset);
     node->length = keyLen;
     int ret = PARAM_MEMCPY(node->key, keyLen, key, keyLen);
-    PARAM_CHECK(ret == 0, return 0, "Failed to copy key");
+    PARAM_CHECK(ret == 0, return 0, "failed copy key");
     node->key[keyLen] = '\0';
     node->left = 0;
     node->right = 0;
@@ -259,7 +259,7 @@ INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAu
         // copy member
         int ret = PARAM_MEMCPY(node->members,
             realLen - sizeof(ParamSecurityNode), auditData->members, auditData->memberNum * sizeof(uid_t));
-        PARAM_CHECK(ret == 0, return OFFSET_ERR, "Failed to copy members");
+        PARAM_CHECK(ret == 0, return OFFSET_ERR, "failed copy members");
     }
     node->memberNum = auditData->memberNum;
     uint32_t offset = workSpace->area->currOffset;
@@ -294,7 +294,7 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
     node->keyLength = keyLen;
     node->valueLength = valueLen;
     int ret = PARAM_SPRINTF(node->data, realLen, "%s=%s", key, value);
-    PARAM_CHECK(ret > 0, return OFFSET_ERR, "Failed to sprint key and value");
+    PARAM_CHECK(ret > 0, return OFFSET_ERR, "failed sprint key and value");
 
     if (((unsigned int)mode & LOAD_PARAM_PERSIST) != 0) {
         node->commitId |= PARAM_FLAGS_PERSIST;
@@ -366,11 +366,11 @@ INIT_LOCAL_API int AddParamEntry(uint32_t index, uint8_t type, const char *name,
         return 0;
     }
     node = AddTrieNode(workSpace, name, strlen(name));
-    PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "Failed to add node");
+    PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "failed add node");
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
     if (entry == NULL) {
         uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value), 0);
-        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
+        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "failed allocate name %s", name);
         SaveIndex(&node->dataIndex, offset);
     }
     return 0;
@@ -387,16 +387,16 @@ INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData)
         if (node == NULL) {
             node = AddTrieNode(workSpace, auditData->name, strlen(auditData->name));
         }
-        PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "Failed to add node %s", auditData->name);
+        PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "failed add node %s", auditData->name);
     }
     uint32_t offset = node->labelIndex;
     if (node->labelIndex == 0) {  // can not support update for label
         offset = AddParamSecurityNode(workSpace, auditData);
-        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to add label");
+        PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "failed add label");
         SaveIndex(&node->labelIndex, offset);
     } else {
         ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, node->labelIndex);
-        PARAM_CHECK(label != NULL, return -1, "Failed to get trie node");
+        PARAM_CHECK(label != NULL, return -1, "failed get trie node");
 #ifdef PARAM_SUPPORT_SELINUX
         if (auditData->selinuxIndex != 0) {
             label->selinuxIndex = auditData->selinuxIndex;

@@ -69,7 +69,7 @@ LE_STATUS LE_StartWatcher(const LoopHandle loopHandle,
 
     LE_BaseInfo baseInfo = {TASK_WATCHER | (info->flags & WATCHER_ONCE), info->close, sizeof(uint64_t)};
     WatcherTask *task = (WatcherTask *)CreateTask(loopHandle, info->fd, &baseInfo, sizeof(WatcherTask));
-    LE_CHECK(task != NULL, return LE_NO_MEMORY, "Failed to create task");
+    LE_CHECK(task != NULL, return LE_NO_MEMORY, "failed create task");
     task->base.handleEvent = HandleWatcherEvent_;
     task->base.innerClose = HandleWatcherTaskClose_;
     task->base.dumpTaskInfo = DumpWatcherTaskInfo_;

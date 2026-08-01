@@ -33,7 +33,7 @@ int AddCommand(JobNode *trigger, uint32_t cmdKeyIndex, const char *content, cons
     size = PARAM_ALIGN(size);
 
     CommandNode *node = (CommandNode *)calloc(1, size);
-    PARAM_CHECK(node != NULL, return -1, "Failed to alloc memory for command");
+    PARAM_CHECK(node != NULL, return -1, "failed alloc memory for command");
     node->cmdKeyIndex = cmdKeyIndex;
     node->next = NULL;
     node->content[0] = '\0';
@@ -76,9 +76,9 @@ static int CopyCondition(TriggerNode *node, const char *condition)
     uint32_t buffSize = 0;
     char *cond = GetTriggerCache(&buffSize);
     int ret = ConvertInfixToPrefix(condition, cond, buffSize);
-    PARAM_CHECK(ret == 0, return -1, "Failed to convert condition for trigger");
+    PARAM_CHECK(ret == 0, return -1, "failed convert condition for trigger");
     node->condition = strdup(cond);
-    PARAM_CHECK(node->condition != NULL, return -1, "Failed to dup conditition");
+    PARAM_CHECK(node->condition != NULL, return -1, "failed dup conditition");
     return 0;
 }
 
@@ -86,7 +86,7 @@ static TriggerNode *AddTriggerNode_(TriggerHeader *triggerHead,
     uint32_t type, const char *condition, uint32_t dataSize)
 {
     TriggerNode *node = (TriggerNode *)calloc(1, dataSize);
-    PARAM_CHECK(node != NULL, return NULL, "Failed to alloc memory for trigger");
+    PARAM_CHECK(node != NULL, return NULL, "failed alloc memory for trigger");
     node->condition = NULL;
     int ret = CopyCondition(node, condition);
     PARAM_CHECK(ret == 0, free(node);
@@ -103,11 +103,11 @@ static int32_t AddJobNode_(TriggerNode *trigger, const TriggerExtInfo *extInfo)
 {
     JobNode *node = (JobNode *)trigger;
     int ret = strcpy_s(node->name, strlen(extInfo->info.name) + 1, extInfo->info.name);
-    PARAM_CHECK(ret == EOK, return -1, "Failed to copy name for trigger");
+    PARAM_CHECK(ret == EOK, return -1, "failed copy name for trigger");
     node->firstCmd = NULL;
     node->lastCmd = NULL;
     ret = OH_HashMapAdd(GetTriggerWorkSpace()->hashMap, &node->hashNode);
-    PARAM_CHECK(ret == 0, return -1, "Failed to add hash node");
+    PARAM_CHECK(ret == 0, return -1, "failed add hash node");
     return 0;
 }
 
@@ -118,11 +118,11 @@ static TriggerNode *AddJobTrigger_(const TriggerWorkSpace *workSpace,
     PARAM_CHECK(extInfo != NULL && extInfo->addNode != NULL, return NULL, "extInfo is null");
     PARAM_CHECK(extInfo->type <= TRIGGER_UNKNOW, return NULL, "Invalid type");
     TriggerHeader *triggerHead = GetTriggerHeader(workSpace, extInfo->type);
-    PARAM_CHECK(triggerHead != NULL, return NULL, "Failed to get header %d", extInfo->type);
+    PARAM_CHECK(triggerHead != NULL, return NULL, "failed get header %d", extInfo->type);
     uint32_t nameLen = strlen(extInfo->info.name);
     uint32_t triggerNodeLen = PARAM_ALIGN(nameLen + 1) + sizeof(JobNode);
     TriggerNode *node = (TriggerNode *)AddTriggerNode_(triggerHead, extInfo->type, condition, triggerNodeLen);
-    PARAM_CHECK(node != NULL, return NULL, "Failed to alloc jobnode");
+    PARAM_CHECK(node != NULL, return NULL, "failed alloc jobnode");
     int ret = extInfo->addNode(node, extInfo);
     PARAM_CHECK(ret == 0, FreeTrigger(workSpace, node);
         return NULL, "Failed to add hash node");
@@ -141,7 +141,7 @@ static void DelJobTrigger_(const TriggerWorkSpace *workSpace, TriggerNode *trigg
     PARAM_CHECK(trigger != NULL, return, "Trigger is null");
     JobNode *jobNode = (JobNode *)trigger;
     TriggerHeader *triggerHead = GetTriggerHeader(workSpace, trigger->type);
-    PARAM_CHECK(triggerHead != NULL, return, "Failed to get header %d", trigger->type);
+    PARAM_CHECK(triggerHead != NULL, return, "failed get header %d", trigger->type);
     CommandNode *cmd = jobNode->firstCmd;
     while (cmd != NULL) {
         CommandNode *next = cmd->next;
@@ -179,7 +179,7 @@ static TriggerNode *AddWatchTrigger_(const TriggerWorkSpace *workSpace,
     PARAM_CHECK(workSpace != NULL, return NULL, "workSpace is null");
     PARAM_CHECK(extInfo != NULL && extInfo->addNode != NULL, return NULL, "extInfo is null");
     TriggerHeader *triggerHead = GetTriggerHeader(workSpace, extInfo->type);
-    PARAM_CHECK(triggerHead != NULL, return NULL, "Failed to get header %d", extInfo->type);
+    PARAM_CHECK(triggerHead != NULL, return NULL, "failed get header %d", extInfo->type);
     uint32_t size = 0;
     if (extInfo->type == TRIGGER_PARAM_WATCH) {
         size = sizeof(WatchNode);
@@ -190,7 +190,7 @@ static TriggerNode *AddWatchTrigger_(const TriggerWorkSpace *workSpace,
         return NULL;
     }
     TriggerNode *node = AddTriggerNode_(triggerHead, extInfo->type, condition, size);
-    PARAM_CHECK(node != NULL, return NULL, "Failed to alloc memory for trigger");
+    PARAM_CHECK(node != NULL, return NULL, "failed alloc memory for trigger");
     int ret = extInfo->addNode(node, extInfo);
     PARAM_CHECK(ret == 0, FreeTrigger(workSpace, node);
         return NULL, "Failed to add node");
@@ -204,7 +204,7 @@ static void DelWatchTrigger_(const TriggerWorkSpace *workSpace, TriggerNode *tri
 {
     PARAM_CHECK(workSpace != NULL && trigger != NULL, return, "Param is null");
     TriggerHeader *triggerHead = GetTriggerHeader(workSpace, trigger->type);
-    PARAM_CHECK(triggerHead != NULL, return, "Failed to get header %d", trigger->type);
+    PARAM_CHECK(triggerHead != NULL, return, "failed get header %d", trigger->type);
     OH_ListRemove(&trigger->node);
     if (trigger->type == TRIGGER_PARAM_WAIT) {
         WaitNode *node = (WaitNode *)trigger;
@@ -272,7 +272,7 @@ JobNode *UpdateJobTrigger(const TriggerWorkSpace *workSpace,
     PARAM_CHECK(workSpace != NULL && name != NULL, return NULL, "name is null");
     PARAM_CHECK(type <= TRIGGER_UNKNOW, return NULL, "Invalid type");
     TriggerHeader *triggerHead = GetTriggerHeader(workSpace, type);
-    PARAM_CHECK(triggerHead != NULL, return NULL, "Failed to get header %d", type);
+    PARAM_CHECK(triggerHead != NULL, return NULL, "failed get header %d", type);
     JobNode *jobNode = GetTriggerByName(workSpace, name);
     if (jobNode == NULL) {
         TriggerExtInfo extInfo = {};
@@ -312,7 +312,7 @@ void ClearTrigger(const TriggerWorkSpace *workSpace, int8_t type)
 {
     PARAM_CHECK(workSpace != NULL, return, "head is null");
     TriggerHeader *head = GetTriggerHeader(workSpace, type);
-    PARAM_CHECK(head != NULL, return, "Failed to get header %d", type);
+    PARAM_CHECK(head != NULL, return, "failed get header %d", type);
     TriggerNode *trigger = head->nextTrigger(head, NULL);
     while (trigger != NULL) {
         TriggerNode *next = head->nextTrigger(head, trigger);
@@ -393,7 +393,7 @@ static int ExecTriggerMatch_(const TriggerWorkSpace *workSpace,
     int type, LogicCalculator *calculator, const char *content, uint32_t contentSize)
 {
     TriggerHeader *head = GetTriggerHeader(workSpace, type);
-    PARAM_CHECK(head != NULL, return 0, "Failed to get header %d", type);
+    PARAM_CHECK(head != NULL, return 0, "failed get header %d", type);
     TriggerNode *trigger = head->nextTrigger(head, NULL);
     while (trigger != NULL) {
         TriggerNode *next = head->nextTrigger(head, trigger);
@@ -437,7 +437,7 @@ static int CheckUnknowMatch_(const TriggerWorkSpace *workSpace,
 
     CalculatorInit(calculator, MAX_CONDITION_NUMBER, sizeof(LogicData), 1);
     int ret = memcpy_s(calculator->triggerContent, sizeof(calculator->triggerContent), content, contentSize);
-    PARAM_CHECK(ret == EOK, return -1, "Failed to memcpy");
+    PARAM_CHECK(ret == EOK, return -1, "failed memcpy");
     calculator->inputName = NULL;
     calculator->inputContent = NULL;
     return ExecTriggerMatch_(workSpace, type, calculator, content, contentSize);
@@ -447,7 +447,7 @@ int32_t CheckAndMarkTrigger_(const TriggerWorkSpace *workSpace, int type, const 
 {
     PARAM_CHECK(workSpace != NULL && name != NULL, return 0, "Failed arg for trigger");
     TriggerHeader *head = GetTriggerHeader(workSpace, type);
-    PARAM_CHECK(head != NULL, return 0, "Failed to get header %d", type);
+    PARAM_CHECK(head != NULL, return 0, "failed get header %d", type);
     int ret = 0;
     TriggerNode *trigger = head->nextTrigger(head, NULL);
     while (trigger != NULL) {
@@ -523,7 +523,7 @@ static void DumpTrigger_(const TriggerWorkSpace *workSpace, int type)
 {
     PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace ");
     TriggerHeader *head = GetTriggerHeader(workSpace, type);
-    PARAM_CHECK(head != NULL, return, "Failed to get header %d", type);
+    PARAM_CHECK(head != NULL, return, "failed get header %d", type);
     TriggerNode *trigger = head->nextTrigger(head, NULL);
     while (trigger != NULL) {
         head->dumpTrigger(workSpace, trigger);
@@ -646,7 +646,7 @@ void InitTriggerHead(const TriggerWorkSpace *workSpace)
     };
     PARAM_CHECK(workSpace != NULL, return, "Invalid workSpace");
     int ret = OH_HashMapCreate((HashMapHandle *)&workSpace->hashMap, &info);
-    PARAM_CHECK(ret == 0, return, "Failed to create hash map");
+    PARAM_CHECK(ret == 0, return, "failed create hash map");
 
     TriggerHeader *head = (TriggerHeader *)&workSpace->triggerHead[TRIGGER_BOOT];
     TriggerHeadSetDefault(head);
@@ -688,7 +688,7 @@ void DelWatchTrigger(int type, const void *data)
 {
     PARAM_CHECK(data != NULL, return, "Invalid data");
     TriggerHeader *head = GetTriggerHeader(GetTriggerWorkSpace(), type);
-    PARAM_CHECK(head != NULL, return, "Failed to get header %d", type);
+    PARAM_CHECK(head != NULL, return, "failed get header %d", type);
     PARAM_CHECK(head->compareData != NULL, return, "Invalid compareData");
     TriggerNode *trigger = head->nextTrigger(head, NULL);
     while (trigger != NULL) {
@@ -704,7 +704,7 @@ void ClearWatchTrigger(ParamWatcher *watcher, int type)
 {
     PARAM_CHECK(watcher != NULL, return, "Invalid watcher");
     TriggerHeader *head = GetTriggerHeader(GetTriggerWorkSpace(), type);
-    PARAM_CHECK(head != NULL, return, "Failed to get header %d", type);
+    PARAM_CHECK(head != NULL, return, "failed get header %d", type);
     ListNode *node = watcher->triggerHead.next;
     while (node != &watcher->triggerHead) {
         TriggerNode *trigger = NULL;

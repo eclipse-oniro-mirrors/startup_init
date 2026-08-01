@@ -78,13 +78,13 @@ int CreateServiceFile(Service *service)
         int fd = CreateFile(tmpFile);
         if (fd < 0) {
             ret++;
-            INIT_LOGE("Service error %d %s, failed to create file", errno, service->name, tmpFile->fileName);
+            INIT_LOGE("Service error %d %s, failed create file", errno, service->name, tmpFile->fileName);
             tmpFile = tmpFile->next;
             continue;
         }
         if (SetFileEnv(fd, tmpFile->fileName) != 0) {
             ret++;
-            INIT_LOGE("Service error %d %s, failed to set env for file", errno, service->name, tmpFile->fileName);
+            INIT_LOGE("Service error %d %s, failed set env for file", errno, service->name, tmpFile->fileName);
         }
         tmpFile = tmpFile->next;
     }

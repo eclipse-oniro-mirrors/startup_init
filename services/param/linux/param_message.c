@@ -26,17 +26,17 @@ int ConnectServer(int fd, const char *servername)
     PARAM_CHECK(servername != NULL, return -1, "Invalid servername");
     int opt = 1;
     int ret = setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &opt, sizeof(opt));
-    PARAM_CHECK(ret == 0, return -1, "Failed to set socket option");
+    PARAM_CHECK(ret == 0, return -1, "failed set socket option");
     struct sockaddr_un addr;
     /* fill socket address structure with server's address */
     ret = memset_s(&addr, sizeof(addr), 0, sizeof(addr));
-    PARAM_CHECK(ret == 0, return -1, "Failed to memset server address");
+    PARAM_CHECK(ret == 0, return -1, "failed memset server address");
     addr.sun_family = AF_UNIX;
     ret = sprintf_s(addr.sun_path, sizeof(addr.sun_path) - 1, "%s", servername);
-    PARAM_CHECK(ret > EOK, return -1, "Failed to sprintf_s server address");
+    PARAM_CHECK(ret > EOK, return -1, "failed sprintf_s server address");
     socklen_t len = offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path);
     ret = connect(fd, (struct sockaddr *)&addr, len);
-    PARAM_CHECK_DUMPE(ret != -1, return -1, "Failed to connect server %s %d", servername, errno);
+    PARAM_CHECK_DUMPE(ret != -1, return -1, "failed connect server %s %d", servername, errno);
     PARAM_LOGV("ConnectServer %s success", servername);
     return 0;
 }
@@ -54,7 +54,7 @@ int FillParamMsgContent(const ParamMessage *request, uint32_t *start, int type, 
     content->contentSize = length + 1;
     if (length > 0) {
         int ret = memcpy_s(content->content, content->contentSize - 1, value, length);
-        PARAM_CHECK(ret == EOK, return -1, "Failed to copy value for %d", type);
+        PARAM_CHECK(ret == EOK, return -1, "failed copy value for %d", type);
     }
     content->content[length] = '\0';
     offset += sizeof(ParamMsgContent) + PARAM_ALIGN(content->contentSize);
@@ -71,7 +71,7 @@ ParamMessage *CreateParamMessage(int type, const char *name, uint32_t msgSize)
         size = sizeof(ParamMessage);
     }
     ParamMessage *msg = (ParamMessage *)calloc(1, size);
-    PARAM_CHECK(msg != NULL, return NULL, "Failed to malloc message");
+    PARAM_CHECK(msg != NULL, return NULL, "failed malloc message");
     msg->type = type;
     msg->id.msgId = 0;
     msg->msgSize = size;

@@ -77,7 +77,7 @@ void DeviceInfoKits::LoadDeviceInfoSa(std::unique_lock<std::mutex> &lock)
     // for dead
     auto object = deviceInfoService_->AsObject();
     if ((object->IsProxyObject()) && (!object->AddDeathRecipient(deathRecipient_))) {
-        DINFO_LOGE("Failed to add death recipient");
+        DINFO_LOGE("failed add death recipient");
     }
 }
 
@@ -132,11 +132,11 @@ int32_t DeviceInfoKits::GetUdid(std::string& result)
         return ret;
     }
     auto deviceService = GetService(lock);
-    DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
+    DINFO_CHECK(deviceService != nullptr, return -1, "failed get deviceinfo manager");
     int ret = deviceService->GetUdid(result);
     if (ret == NOT_FOUND_SERVICE_ERROR_NUMBER) {
         auto newDeviceService = RetryGetService(lock);
-        DINFO_CHECK(newDeviceService != nullptr, return -1, "Failed to get deviceinfo manager again");
+        DINFO_CHECK(newDeviceService != nullptr, return -1, "failed get deviceinfo manager again");
         ret = newDeviceService->GetUdid(result);
     }
     DINFO_LOGI("GetUdid from remote ret = %d", ret);
@@ -157,11 +157,11 @@ int32_t DeviceInfoKits::GetSerialID(std::string& result)
         return ret;
     }
     auto deviceService = GetService(lock);
-    DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
+    DINFO_CHECK(deviceService != nullptr, return -1, "failed get deviceinfo manager");
     int ret = deviceService->GetSerialID(result);
     if (ret == NOT_FOUND_SERVICE_ERROR_NUMBER) {
         auto newDeviceService = RetryGetService(lock);
-        DINFO_CHECK(newDeviceService != nullptr, return -1, "Failed to get deviceinfo manager again");
+        DINFO_CHECK(newDeviceService != nullptr, return -1, "failed get deviceinfo manager again");
         ret = newDeviceService->GetSerialID(result);
     }
     DINFO_LOGI("GetSerialID from remote ret = %d", ret);
@@ -182,11 +182,11 @@ int32_t DeviceInfoKits::GetDiskSN(std::string& result)
         return ret;
     }
     auto deviceService = GetService(lock);
-    DINFO_CHECK(deviceService != nullptr, return -1, "Failed to get deviceinfo manager");
+    DINFO_CHECK(deviceService != nullptr, return -1, "failed get deviceinfo manager");
     int ret = deviceService->GetDiskSN(result);
     if (ret == NOT_FOUND_SERVICE_ERROR_NUMBER) {
         auto newDeviceService = RetryGetService(lock);
-        DINFO_CHECK(newDeviceService != nullptr, return -1, "Failed to get deviceinfo manager again");
+        DINFO_CHECK(newDeviceService != nullptr, return -1, "failed get deviceinfo manager again");
         ret = newDeviceService->GetDiskSN(result);
     }
     DINFO_LOGI("GetDiskSN from remote ret = %d", ret);

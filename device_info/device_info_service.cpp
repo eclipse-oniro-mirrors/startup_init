@@ -74,7 +74,7 @@ int32_t DeviceInfoService::GetUdid(std::string& result)
     int ret = ERR_FAIL;
     char localDeviceInfo[UDID_LEN] = {0};
     ret = GetDevUdid_(localDeviceInfo, UDID_LEN);
-    DINFO_CHECK(ret == 0, return ret, "Failed to get dev udid");
+    DINFO_CHECK(ret == 0, return ret, "failed get dev udid");
     result = std::string(localDeviceInfo);
     return ret;
 }
@@ -83,7 +83,7 @@ int32_t DeviceInfoService::GetSerialID(std::string& result)
 {
     int ret = ERR_FAIL;
     const char *serialNumber = GetSerial_();
-    DINFO_CHECK(serialNumber != nullptr, return ret, "Failed to get serialNumber");
+    DINFO_CHECK(serialNumber != nullptr, return ret, "failed get serialNumber");
     result = std::string(serialNumber);
     return 0;
 }
@@ -93,7 +93,7 @@ int32_t DeviceInfoService::GetDiskSN(std::string& result)
     int ret = ERR_FAIL;
     char diskSN[DISK_SN_LEN] = {0};
     ret = GetDiskSN_(diskSN, DISK_SN_LEN);
-    DINFO_CHECK(ret == 0, return ret, "Failed to get disk SN");
+    DINFO_CHECK(ret == 0, return ret, "failed get disk SN");
     result = std::string(diskSN);
     return ret;
 }

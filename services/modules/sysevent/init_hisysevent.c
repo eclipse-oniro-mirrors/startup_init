@@ -79,7 +79,7 @@ void ReportStartupReboot(const char *argv)
     }
     char mode[32] = {0};
     if (strcpy_s(mode, sizeof(mode), argv) != 0) {
-        INIT_LOGE("Failed to copy argv");
+        INIT_LOGE("failed copy argv");
         return;
     }
     HiSysEventParam params[] = {
@@ -106,7 +106,7 @@ void ReportChildProcessExit(const char *serviceName, int pid, int err, int64_t s
     }
     char tempServiceName[32] = {0};
     if (strcpy_s(tempServiceName, sizeof(tempServiceName), serviceName) != 0) {
-        INIT_LOGE("Failed to copy serviceName");
+        INIT_LOGE("failed copy serviceName");
         return;
     }
     HiSysEventParam params[] = {

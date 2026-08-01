@@ -27,7 +27,7 @@
 INIT_STATIC int GetCgroupPath(Service *service, char *buffer, uint32_t buffLen)
 {
     int ret = snprintf_s(buffer, buffLen, buffLen - 1, "/dev/pids/native/%s/pid_%d/", service->name, service->pid);
-    INIT_ERROR_CHECK(ret > 0, return ret, "Failed to snprintf_s in GetCgroupPath, errno: %d", errno);
+    INIT_ERROR_CHECK(ret > 0, return ret, "failed snprintf_s in GetCgroupPath, errno: %d", errno);
     INIT_LOGV("Cgroup path %s ", buffer);
     return 0;
 }
@@ -37,14 +37,14 @@ static int WriteToFile(const char *path, pid_t pid)
     INIT_CHECK_RETURN_VALUE(pid != 0, -1);
     char pidName[PATH_MAX] = {0};
     int fd = open(path, O_RDWR | O_APPEND);
-    INIT_ERROR_CHECK(fd >= 0, return -1, "Failed to open file errno: %d path: %s", errno, path);
+    INIT_ERROR_CHECK(fd >= 0, return -1, "failed open file errno: %d path: %s", errno, path);
     int ret = 0;
     INIT_LOGV(" WriteToFile pid %d", pid);
     do {
         ret = snprintf_s(pidName, sizeof(pidName), sizeof(pidName) - 1, "%d", pid);
-        INIT_ERROR_CHECK(ret > 0, break, "Failed to snprintf_s in WriteToFile, errno: %d", errno);
+        INIT_ERROR_CHECK(ret > 0, break, "failed snprintf_s in WriteToFile, errno: %d", errno);
         ret = write(fd, pidName, strlen(pidName));
-        INIT_ERROR_CHECK(ret > 0, break, "Failed to write file errno: %d path: %s %s", errno, path, pidName);
+        INIT_ERROR_CHECK(ret > 0, break, "failed write file errno: %d path: %s %s", errno, path, pidName);
         ret = 0;
     } while (0);
 
@@ -80,26 +80,26 @@ static void DoRmdir(const TimerHandle handler, void *context)
     int ret = GetCgroupPath(service, path, sizeof(path));
     free(service->name);
     free(service);
-    INIT_ERROR_CHECK(ret == 0, return, "Failed to get real path errno: %d", errno);
+    INIT_ERROR_CHECK(ret == 0, return, "failed get real path errno: %d", errno);
     ret = rmdir(path);
     if (ret != 0) {
-        INIT_LOGE("Failed to rmdir %s errno: %d", path, errno);
+        INIT_LOGE("failed rmdir %s errno: %d", path, errno);
     }
 }
 
 static void RmdirTimer(Service *service, uint64_t timeout)
 {
     Service *serviceRmdir = (Service *)calloc(1, sizeof(Service));
-    INIT_ERROR_CHECK(serviceRmdir != NULL, return, "Failed to malloc for serviceRmdir");
+    INIT_ERROR_CHECK(serviceRmdir != NULL, return, "failed malloc for serviceRmdir");
     serviceRmdir->pid = service->pid;
     int strLen = strlen(service->name);
     serviceRmdir->name = (char *)malloc(sizeof(char)*(strLen + 1));
-    INIT_ERROR_CHECK(serviceRmdir->name != NULL, free(serviceRmdir); return, "Failed to malloc for serviceRmdir->name");
+    INIT_ERROR_CHECK(serviceRmdir->name != NULL, free(serviceRmdir); return, "failed malloc for serviceRmdir->name");
     int ret = strcpy_s(serviceRmdir->name, strLen + 1, service->name);
     if (ret != 0) {
         free(serviceRmdir->name);
         free(serviceRmdir);
-        INIT_LOGE("Failed to copy, ret: %d", errno);
+        INIT_LOGE("failed copy, ret: %d", errno);
         return;
     }
     LE_STATUS status = LE_CreateTimer(LE_GetDefaultLoop(), &serviceRmdir->timer, DoRmdir, (void *)serviceRmdir);
@@ -125,9 +125,9 @@ int ProcessServiceDied(Service *service)
     char path[PATH_MAX] = {};
     INIT_LOGV("ProcessServiceDied %d to cgroup ", service->pid);
     int ret = GetCgroupPath(service, path, sizeof(path));
-    INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get real path errno: %d", errno);
+    INIT_ERROR_CHECK(ret == 0, return -1, "failed get real path errno: %d", errno);
     ret = strcat_s(path, sizeof(path), "cgroup.procs");
-    INIT_ERROR_CHECK(ret == 0, return ret, "Failed to strcat_s errno: %d", errno);
+    INIT_ERROR_CHECK(ret == 0, return ret, "failed strcat_s errno: %d", errno);
     KillProcessesByCGroup(path, service);
     RmdirTimer(service, 200);  // 200ms
     return ret;
@@ -140,10 +140,10 @@ int ProcessServiceAdd(Service *service)
     char path[PATH_MAX] = {};
     INIT_LOGV("ProcessServiceAdd %d to cgroup ", service->pid);
     int ret = GetCgroupPath(service, path, sizeof(path));
-    INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get real path errno: %d", errno);
+    INIT_ERROR_CHECK(ret == 0, return -1, "failed get real path errno: %d", errno);
     (void)MakeDirRecursive(path, 0755);  // 0755 default mode
     ret = strcat_s(path, sizeof(path), "cgroup.procs");
-    INIT_ERROR_CHECK(ret == 0, return ret, "Failed to strcat_s errno: %d", errno);
+    INIT_ERROR_CHECK(ret == 0, return ret, "failed strcat_s errno: %d", errno);
     ret = WriteToFile(path, service->pid);
     INIT_ERROR_CHECK(ret == 0, return ret, "write pid to cgroup.procs fail %s", path);
     INIT_LOGV("Add service %d to cgroup %s success", service->pid, path);

@@ -32,7 +32,7 @@ static LE_STATUS HandleSignalEvent_(const LoopHandle loop, const TaskHandle task
     }
     struct signalfd_siginfo fdsi;
     ssize_t s = read(GetSocketFd(task), &fdsi, sizeof(fdsi));
-    LE_CHECK(s == sizeof(fdsi), return LE_FAILURE, "Failed to read sign %d %d", s, errno);
+    LE_CHECK(s == sizeof(fdsi), return LE_FAILURE, "failed read sign %d %d", s, errno);
     SignalTask *sigTask = (SignalTask *)task;
     if (sigTask->processSignal) {
         sigTask->processSignal(&fdsi);
@@ -81,10 +81,10 @@ LE_STATUS LE_CreateSignalTask(const LoopHandle loopHandle, SignalHandle *signalH
     sigset_t mask;
     sigemptyset(&mask);
     int sfd = signalfd(-1, &mask, SFD_NONBLOCK | SFD_CLOEXEC);
-    LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
+    LE_CHECK(sfd > 0, return -1, "failed create signal fd");
     LE_BaseInfo info = {TASK_SIGNAL, NULL};
     SignalTask *task = (SignalTask *)CreateTask(loopHandle, sfd, &info, sizeof(SignalTask));
-    LE_CHECK(task != NULL, return LE_NO_MEMORY, "Failed to create task");
+    LE_CHECK(task != NULL, return LE_NO_MEMORY, "failed create task");
     task->base.handleEvent = HandleSignalEvent_;
     task->base.innerClose = HandleSignalTaskClose_;
     task->base.dumpTaskInfo = DumpSignalTaskInfo_;
@@ -107,7 +107,7 @@ LE_STATUS LE_AddSignal(const LoopHandle loopHandle, const SignalHandle signalHan
     sigaddset(&task->mask, signal);
     sigprocmask(SIG_BLOCK, &task->mask, NULL);
     int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK | SFD_CLOEXEC);
-    LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
+    LE_CHECK(sfd > 0, return -1, "failed create signal fd");
     if (task->sigNumber == 0) {
         loop->addEvent(loop, (const BaseTask *)task, EVENT_READ);
     } else {
@@ -129,7 +129,7 @@ LE_STATUS LE_RemoveSignal(const LoopHandle loopHandle, const SignalHandle signal
     sigdelset(&task->mask, signal);
     task->sigNumber--;
     int sfd = signalfd(GetSocketFd(signalHandle), &task->mask, SFD_NONBLOCK | SFD_CLOEXEC);
-    LE_CHECK(sfd > 0, return -1, "Failed to create signal fd");
+    LE_CHECK(sfd > 0, return -1, "failed create signal fd");
     if (task->sigNumber <= 0) {
         loop->delEvent(loop, GetSocketFd(signalHandle), EVENT_READ);
     }

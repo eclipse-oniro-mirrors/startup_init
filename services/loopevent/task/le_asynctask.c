@@ -112,7 +112,7 @@ LE_STATUS LE_CreateAsyncTask(const LoopHandle loopHandle,
     LE_CHECK(processAsyncEvent != NULL, return LE_INVALID_PARAM, "Invalid parameters processAsyncEvent ");
 
     int fd = eventfd(1, EFD_NONBLOCK | EFD_CLOEXEC);
-    LE_CHECK(fd > 0, return LE_FAILURE, "Failed to event fd ");
+    LE_CHECK(fd > 0, return LE_FAILURE, "failed event fd ");
     LE_BaseInfo baseInfo = {TASK_EVENT | TASK_ASYNC_EVENT, NULL};
     AsyncEventTask *task = (AsyncEventTask *)CreateTask(loopHandle, fd, &baseInfo, sizeof(AsyncEventTask));
     LE_CHECK(task != NULL, close(fd);
@@ -135,12 +135,12 @@ LE_STATUS LE_StartAsyncEvent(const LoopHandle loopHandle,
     LE_CHECK(loopHandle != NULL && taskHandle != NULL, return LE_INVALID_PARAM, "Invalid parameters");
     BufferHandle handle = LE_CreateBuffer(loopHandle, buffLen + 1 + sizeof(eventId));
     char *buff = (char *)LE_GetBufferInfo(handle, NULL, NULL);
-    LE_CHECK(buff != NULL, return LE_FAILURE, "Failed to get buff");
+    LE_CHECK(buff != NULL, return LE_FAILURE, "failed get buff");
     int ret = memcpy_s(buff, sizeof(eventId), &eventId, sizeof(eventId));
-    LE_CHECK(ret == 0, return -1, "Failed to copy data");
+    LE_CHECK(ret == 0, return -1, "failed copy data");
     if (data != NULL && buffLen > 0) {
         ret = memcpy_s(buff + sizeof(eventId), buffLen, data, buffLen);
-        LE_CHECK(ret == 0, return -1, "Failed to copy data");
+        LE_CHECK(ret == 0, return -1, "failed copy data");
         buff[sizeof(eventId) + buffLen] = '\0';
     }
     return LE_Send(loopHandle, taskHandle, handle, buffLen);

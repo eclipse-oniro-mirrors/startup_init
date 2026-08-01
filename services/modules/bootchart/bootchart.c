@@ -54,7 +54,7 @@ char *ReadFileToBuffer(const char *fileName, char *buffer, uint32_t bufferSize)
         if (fd > 0) {
             readLen = read(fd, buffer, bufferSize - 1);
         }
-        PLUGIN_CHECK(readLen >= 0, break, "Failed to read data for %s %d readLen %d", fileName, errno, readLen);
+        PLUGIN_CHECK(readLen >= 0, break, "failed read data for %s %d readLen %d", fileName, errno, readLen);
         buffer[readLen] = '\0';
     } while (0);
     if (fd != -1) {
@@ -67,11 +67,11 @@ BOOTCHART_STATIC void BootchartLogHeader(void)
 {
     char date[32]; // 32 data size
     time_t tm = time(NULL);
-    PLUGIN_CHECK(tm >= 0, return, "Failed to get time");
+    PLUGIN_CHECK(tm >= 0, return, "failed get time");
     struct tm *now = localtime(&tm);
-    PLUGIN_CHECK(now != NULL, return, "Failed to get local time");
+    PLUGIN_CHECK(now != NULL, return, "failed get local time");
     size_t size = strftime(date, sizeof(date), "%F %T", now);
-    PLUGIN_CHECK(size > 0, return, "Failed to strftime");
+    PLUGIN_CHECK(size > 0, return, "failed strftime");
     struct utsname uts;
     if (uname(&uts) == -1) {
         return;
@@ -81,10 +81,10 @@ BOOTCHART_STATIC void BootchartLogHeader(void)
     uint32_t len = sizeof(release);
     (void)SystemReadParam("const.ohos.releasetype", release, &len);
     char *cmdLine = ReadFileToBuffer("/proc/cmdline", g_bootchartCtrl->buffer, g_bootchartCtrl->bufferSize);
-    PLUGIN_CHECK(cmdLine != NULL, return, "Failed to open file "BOOTCHART_OUTPUT_PATH"header");
+    PLUGIN_CHECK(cmdLine != NULL, return, "failed open file "BOOTCHART_OUTPUT_PATH"header");
 
     FILE *file = fopen(BOOTCHART_OUTPUT_PATH"header", "we");
-    PLUGIN_CHECK(file != NULL, return, "Failed to open file "BOOTCHART_OUTPUT_PATH"header");
+    PLUGIN_CHECK(file != NULL, return, "failed open file "BOOTCHART_OUTPUT_PATH"header");
 
     (void)fprintf(file, "version = openharmony init\n");
     (void)fprintf(file, "title = Boot chart for openharmony (%s)\n", date);
@@ -111,13 +111,13 @@ BOOTCHART_STATIC void BootchartLogProcessStat(FILE *log, pid_t pid)
     static char path[255] = { }; // 255 path length
     static char nameBuffer[255] = { }; // 255 path length
     int ret = sprintf_s(path, sizeof(path) - 1, "/proc/%d/cmdline", pid);
-    PLUGIN_CHECK(ret > 0, return, "Failed to format path %d", pid);
+    PLUGIN_CHECK(ret > 0, return, "failed format path %d", pid);
     path[ret] = '\0';
 
     char *name = ReadFileToBuffer(path, nameBuffer, sizeof(nameBuffer));
     // Read process stat line
     ret = sprintf_s(path, sizeof(path) - 1, "/proc/%d/stat", pid);
-    PLUGIN_CHECK(ret > 0, return, "Failed to format path %d", pid);
+    PLUGIN_CHECK(ret > 0, return, "failed format path %d", pid);
     path[ret] = '\0';
 
     char *stat = ReadFileToBuffer(path, g_bootchartCtrl->buffer, g_bootchartCtrl->bufferSize);
@@ -168,7 +168,7 @@ BOOTCHART_STATIC void *BootchartThreadMain(void *data)
     FILE *diskFile = fopen(BOOTCHART_OUTPUT_PATH"proc_diskstats.log", "w");
     do {
         if (statFile == NULL || procFile == NULL || diskFile == NULL) {
-            PLUGIN_LOGE("Failed to open file");
+            PLUGIN_LOGE("failed open file");
             break;
         }
         BootchartLogHeader();
@@ -225,7 +225,7 @@ BOOTCHART_STATIC int DoBootchartStart(void)
         return 0;
     }
     g_bootchartCtrl = malloc(sizeof(BootchartCtrl));
-    PLUGIN_CHECK(g_bootchartCtrl != NULL, return -1, "Failed to alloc mem for bootchart");
+    PLUGIN_CHECK(g_bootchartCtrl != NULL, return -1, "failed alloc mem for bootchart");
     g_bootchartCtrl->bufferSize = DEFAULT_BUFFER;
 
     int ret = pthread_mutex_init(&(g_bootchartCtrl->mutex), NULL);

@@ -109,14 +109,14 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
         char *begin = strchr(start, '$');
         if (begin == NULL || begin >= end) { // not has '$' copy the original string
             ret = strncpy_s(paramValue + curr, paramLen - curr, start, symLen);
-            INIT_ERROR_CHECK(ret == EOK, return -1, "Failed to copy start %s", start);
+            INIT_ERROR_CHECK(ret == EOK, return -1, "failed copy start %s", start);
             break;
         } else {
             if (curr >= paramLen || (unsigned int)(begin - start) > paramLen - curr) {
                 return -1;
             }
             ret = memcpy_s(paramValue + curr, paramLen - curr, start, begin - start);
-            INIT_ERROR_CHECK(ret == 0, return -1, "Failed to copy first value %s", symValue);
+            INIT_ERROR_CHECK(ret == 0, return -1, "failed copy first value %s", symValue);
             curr += begin - start;
         }
         while (*begin != '{') {
@@ -131,12 +131,12 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
         ret = strncpy_s(tmpName, PARAM_NAME_LEN_MAX, begin, left - begin);
         INIT_ERROR_CHECK(ret == EOK, return -1, "Invalid param name %s", symValue);
         if (paramLen < curr) {
-            INIT_LOGE("Failed to get param value over max length");
+            INIT_LOGE("failed get param value over max length");
             return -1;
         }
         uint32_t valueLen = paramLen - curr;
         ret = SystemReadParam(tmpName, paramValue + curr, &valueLen);
-        INIT_ERROR_CHECK(ret == 0, return -1, "Failed to get param %s", tmpName);
+        INIT_ERROR_CHECK(ret == 0, return -1, "failed get param %s", tmpName);
         curr += valueLen;
         left++;
         if ((unsigned int)(left - symValue) >= symLen) {
@@ -159,7 +159,7 @@ static int SyncExecCommand(int argc, char * const *argv)
     int status;
     pid_t ret = waitpid(pid, &status, 0);
     if (ret != pid) {
-        INIT_LOGE("Failed to wait pid %d, errno %d", pid, errno);
+        INIT_LOGE("failed wait pid %d, errno %d", pid, errno);
         return -1;
     }
     INIT_LOGI("Sync exec: %s result %d %d", argv[0], WEXITSTATUS(status), WIFEXITED(status));
@@ -170,11 +170,11 @@ static void DoIfup(const struct CmdArgs *ctx)
 {
     struct ifreq interface;
     INIT_ERROR_CHECK(strncpy_s(interface.ifr_name, IFNAMSIZ - 1, ctx->argv[0], strlen(ctx->argv[0])) == EOK,
-        return, "DoIfup failed to copy interface name");
+        return, "DoIfup failed copy interface name");
     INIT_LOGV("interface name: %s", interface.ifr_name);
 
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    INIT_ERROR_CHECK(fd >= 0, return, "DoIfup failed to create socket, err = %d", errno);
+    INIT_ERROR_CHECK(fd >= 0, return, "DoIfup failed create socket, err = %d", errno);
 
     if (ioctl(fd, SIOCGIFFLAGS, &interface) >= 0) {
         interface.ifr_flags |= IFF_UP;
@@ -194,10 +194,10 @@ static void DoInsmod(const struct CmdArgs *ctx)
         fileName = ctx->argv[index];
         index++;
     }
-    INIT_ERROR_CHECK(fileName != NULL, return, "Can not find file name from param %s", ctx->argv[0]);
+    INIT_ERROR_CHECK(fileName != NULL, return, "cannot find file name from param %s", ctx->argv[0]);
     INIT_LOGV("Install mode %s ", fileName);
     char *realPath = GetRealPath(fileName);
-    INIT_ERROR_CHECK(realPath != NULL, return, "Can not get real file name from param %s", ctx->argv[0]);
+    INIT_ERROR_CHECK(realPath != NULL, return, "cannot get real file name from param %s", ctx->argv[0]);
     if (ctx->argc > 1 && ctx->argv[1] != NULL && strcmp(ctx->argv[1], "-f") == 0) { // [-f]
         flags = MODULE_INIT_IGNORE_VERMAGIC | MODULE_INIT_IGNORE_MODVERSIONS;
         index++;
@@ -207,7 +207,7 @@ static void DoInsmod(const struct CmdArgs *ctx)
     if (fd >= 0) {
         int rc = syscall(__NR_finit_module, fd, options, flags);
         if (rc == -1) {
-            INIT_LOGE("Failed to install kernel module for %s failed options %s err: %d", realPath, options, errno);
+            INIT_LOGE("failed install kernel module for %s failed options %s err: %d", realPath, options, errno);
         }
     }
     if (options != NULL) {
@@ -268,7 +268,7 @@ static void DoExec(const struct CmdArgs *ctx)
     // format: exec /xxx/xxx/xxx xxx
     INIT_ERROR_CHECK(ctx != NULL && ctx->argv[0] != NULL, return, "DoExec: invalid arguments");
     pid_t pid = fork();
-    INIT_ERROR_CHECK(pid >= 0, return, "DoExec: failed to fork child process to exec \"%s\"", ctx->argv[0]);
+    INIT_ERROR_CHECK(pid >= 0, return, "DoExec: failed fork child process to exec \"%s\"", ctx->argv[0]);
 
     if (pid == 0) {
         OpenHidebug(ctx->argv[0]);
@@ -316,11 +316,11 @@ static void DoMakeNode(const struct CmdArgs *ctx)
     mode_t deviceMode = GetDeviceMode(ctx->argv[deviceTypePos]);
     errno = 0;
     unsigned int major = strtoul(ctx->argv[majorDevicePos], NULL, DECIMAL);
-    INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[majorDevicePos]);
+    INIT_CHECK_ONLY_ELOG(errno != ERANGE, "failed strtoul %s", ctx->argv[majorDevicePos]);
     unsigned int minor = strtoul(ctx->argv[minorDevicePos], NULL, DECIMAL);
-    INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[minorDevicePos]);
+    INIT_CHECK_ONLY_ELOG(errno != ERANGE, "failed strtoul %s", ctx->argv[minorDevicePos]);
     mode_t authority = strtoul(ctx->argv[authorityPos], NULL, OCTAL);
-    INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[authorityPos]);
+    INIT_CHECK_ONLY_ELOG(errno != ERANGE, "failed strtoul %s", ctx->argv[authorityPos]);
     int ret = mknod(ctx->argv[0], deviceMode | authority, makedev(major, minor));
     if (ret != 0) {
         INIT_LOGE("DoMakeNode: path: %s failed: %d", ctx->argv[0], errno);
@@ -332,9 +332,9 @@ static void DoMakeDevice(const struct CmdArgs *ctx)
     // format: makedev major minor
     errno = 0;
     unsigned int major = strtoul(ctx->argv[0], NULL, DECIMAL);
-    INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[0]);
+    INIT_CHECK_ONLY_ELOG(errno != ERANGE, "failed strtoul %s", ctx->argv[0]);
     unsigned int minor = strtoul(ctx->argv[1], NULL, DECIMAL);
-    INIT_CHECK_ONLY_ELOG(errno != ERANGE, "Failed to strtoul %s", ctx->argv[1]);
+    INIT_CHECK_ONLY_ELOG(errno != ERANGE, "failed strtoul %s", ctx->argv[1]);
     dev_t deviceId = makedev(major, minor);
     INIT_CHECK_ONLY_ELOG(deviceId >= 0, "DoMakedevice \" major:%s, minor:%s \" failed :%d ", ctx->argv[0],
         ctx->argv[1], errno);
@@ -354,7 +354,7 @@ static void DoMountFstabFileSp(const struct CmdArgs *ctx)
     char buffer[PARAM_VALUE_LEN_MAX] = {0};
     ret = sprintf_s(buffer, PARAM_VALUE_LEN_MAX, "%lld", diff);
     if (ret <= 0) {
-        INIT_LOGE("Failed to sprintf_s");
+        INIT_LOGE("failed sprintf_s");
         return;
     }
     ret = SystemWriteParam("boot.time.fstab", buffer);
@@ -462,7 +462,7 @@ static void WaitAfterKillPid(int interval, long long totalWait)
 static void DoKillAllPid()
 {
     DIR *procDir = opendir(PROC_PATH);
-    INIT_ERROR_CHECK(procDir != NULL, return, "failed to open proc dir");
+    INIT_ERROR_CHECK(procDir != NULL, return, "failed open proc dir");
     struct dirent *entry;
     while ((entry = readdir(procDir)) != NULL) {
         if (entry->d_type != DT_DIR) {
@@ -513,7 +513,7 @@ static void DoUmountProc()
     int count = 0;
 
     FILE *fp = setmntent("/proc/mounts", "r");
-    INIT_ERROR_CHECK(fp != NULL, return, "failed to open /proc/mounts, errno: %d", errno);
+    INIT_ERROR_CHECK(fp != NULL, return, "failed open /proc/mounts, errno: %d", errno);
 
     while ((mnt = getmntent(fp)) != NULL && count < MAX_MOUNTS) {
         if (strcmp(mnt->mnt_dir, "/") == 0 ||
@@ -603,7 +603,7 @@ static void InitUmountFaultLog()
     const char *mountInfoPath = "/proc/mounts";
     int mountFd = open(mountInfoPath, O_RDONLY);
     if (mountFd == -1) {
-        INIT_LOGE("failed to open %s, errno: %d", mountInfoPath, errno);
+        INIT_LOGE("failed open %s, errno: %d", mountInfoPath, errno);
         close(dumpFd);
         return;
     }
@@ -619,7 +619,7 @@ static void InitUmountFaultLog()
                 continue;
             }
             if (writeBytes == -1) {
-                INIT_LOGE("failed to write to %s, errno: %d", dumpPath, errno);
+                INIT_LOGE("failed write to %s, errno: %d", dumpPath, errno);
                 break;
             }
             totalWrite += writeBytes;
@@ -752,7 +752,7 @@ static void DumpProcStackFiles()
 
     DIR *procDir = opendir(procPath);
     if (procDir == NULL) {
-        INIT_LOGE("failed to open proc dir, err is %d", errno);
+        INIT_LOGE("failed open proc dir, err is %d", errno);
         close(dumpFd);
         return;
     }
@@ -819,7 +819,7 @@ static void DumpFdInfo()
     int status;
     pid_t ret = waitpid(pid, &status, 0);
     if (ret != pid) {
-        INIT_LOGE("failed to wait pid %d, errno is %d", pid, errno);
+        INIT_LOGE("failed wait pid %d, errno is %d", pid, errno);
     }
     INIT_LOGI("dump fd info end");
 }
@@ -846,14 +846,14 @@ static bool DoUmountOtherNsData()
     }
     
     if (EnterDefaultNamespace() < 0) {
-        INIT_LOGE("Failed to restore default namespace");
+        INIT_LOGE("failed restore default namespace");
     }
     ret = EnterSandbox("chipset");
     if (ret == 0) {
         INIT_LOGE("Enter chipset sandbox success");
         ret = umount("/data");
         if (EnterDefaultNamespace() < 0) {
-            INIT_LOGE("Failed to restore default namespace");
+            INIT_LOGE("failed restore default namespace");
         }
         if (ret == 0 || errno == EINVAL) {
             INIT_LOGI("umount chipset ns data success");
@@ -888,13 +888,13 @@ INIT_STATIC bool IsHyperHoldDisabled()
 {
     FILE *file = fopen(ESWAP_ENABLE_PATH, "r");
     if (!file) {
-        INIT_LOGE("Failed to open file");
+        INIT_LOGE("failed open file");
         return false;
     }
     char buffer[HP_ENABLE_BUFFER_SIZE] = {0};
     if (fgets(buffer, sizeof(buffer) - 1, file) == NULL) {
         (void)fclose(file);
-        INIT_LOGE("Failed to read from file");
+        INIT_LOGE("failed read from file");
         return false;
     }
     (void)fclose(file);
@@ -1126,14 +1126,14 @@ static void DoUmount(const struct CmdArgs *ctx)
         if ((ret != 0) && (ctx->argc > 1) && (strcmp(ctx->argv[1], "MNT_FORCE") == 0)) {
             ret = umount2(ctx->argv[0], MNT_FORCE);
         }
-        INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to umount %s, errno %d", ctx->argv[0], errno);
+        INIT_CHECK_ONLY_ELOG(ret == 0, "failed umount %s, errno %d", ctx->argv[0], errno);
         if (ret != 0 && strcmp(ctx->argv[0], "/data") == 0) {
             RetryUmountData();
         }
     } else if (status == MOUNT_UMOUNTED) {
         INIT_LOGI("%s is already umounted", ctx->argv[0]);
     } else {
-        INIT_LOGE("Failed to get %s mount status", ctx->argv[0]);
+        INIT_LOGE("failed get %s mount status", ctx->argv[0]);
     }
 }
 
@@ -1142,7 +1142,7 @@ static void DoRemoveDmDevice(const struct CmdArgs *ctx)
     INIT_LOGI("DoRemoveDmDevice %s",  ctx->argv[0]);
     int ret = FsManagerDmRemoveDevice(ctx->argv[0]);
     if (ret < 0) {
-        INIT_LOGE("Failed to remove dm device %s", ctx->argv[0]);
+        INIT_LOGE("failed remove dm device %s", ctx->argv[0]);
     } else {
         INIT_LOGI("Successed to remove dm device %s", ctx->argv[0]);
     }
@@ -1157,7 +1157,7 @@ static void DoMountOneFstabFile(const struct CmdArgs *ctx)
     INIT_LOGI("Mount %s from fstab file \" %s \" \" %d \"",  ctx->argv[1], ctx->argv[0], (int)required);
     int ret = MountOneWithFstabFile(ctx->argv[0], ctx->argv[1], required);
     if (ret < 0) {
-        INIT_LOGE("Failed to mount dm device %d", ret);
+        INIT_LOGE("failed mount dm device %d", ret);
     } else {
         INIT_LOGI("Successed to mount dm device %d", ret);
     }
@@ -1307,15 +1307,15 @@ static void DoMkSandbox(const struct CmdArgs *ctx)
     const char *sandbox = ctx->argv[0];
     InitDefaultNamespace();
     if (!InitSandboxWithName(sandbox)) {
-        INIT_LOGE("Failed to init sandbox with name %s.", sandbox);
+        INIT_LOGE("failed init sandbox with name %s.", sandbox);
     }
 
     if (PrepareSandbox(sandbox) != 0) {
-        INIT_LOGE("Failed to prepare sandbox %s.", sandbox);
+        INIT_LOGE("failed prepare sandbox %s.", sandbox);
         DestroySandbox(sandbox);
     }
     if (EnterDefaultNamespace() < 0) {
-        INIT_LOGE("Failed to set default namespace.");
+        INIT_LOGE("failed set default namespace.");
     }
     CloseDefaultNamespace();
 }

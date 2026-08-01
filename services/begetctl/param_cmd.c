@@ -91,7 +91,7 @@ static char *GetRealParameter(BShellHandle shell, const char *name, char *buffer
                 ret = memcpy_s(buffer, buffSize, "#", 1);
                 realLen = 1;
             }
-            BSH_CHECK(ret == 0, return NULL, "Failed to memcpy");
+            BSH_CHECK(ret == 0, return NULL, "failed memcpy");
         } else if (strcmp(name, ".") == 0) {
             realLen = sprintf_s(buffer, buffSize, "%s", current);
         } else {
@@ -102,7 +102,7 @@ static char *GetRealParameter(BShellHandle shell, const char *name, char *buffer
     } else {
         realLen = sprintf_s(buffer, buffSize, "%s", name);
     }
-    BSH_CHECK(realLen >= 0, return NULL, "Failed to format buffer");
+    BSH_CHECK(realLen >= 0, return NULL, "failed format buffer");
     buffer[realLen] = '\0';
     BSH_LOGV("GetRealParameter current %s input %s real %s", current, name, buffer);
     return buffer;
@@ -130,15 +130,15 @@ int SetParamShellPrompt(BShellHandle shell, const char *param)
     if (strcmp(realParameter, "#") == 0) {
         ret = BShellEnvSetParam(shell, PARAM_REVERESD_NAME_CURR_PARAMETER,
             "", PARAM_STRING, (void *)"");
-        BSH_CHECK(ret == 0, return BSH_SYSTEM_ERR, "Failed to set param value");
+        BSH_CHECK(ret == 0, return BSH_SYSTEM_ERR, "failed set param value");
         BShellEnvOutputPrompt(shell, PARAM_SHELL_DEFAULT_PROMPT);
         return 0;
     }
     ret = BShellEnvSetParam(shell, PARAM_REVERESD_NAME_CURR_PARAMETER,
         "", PARAM_STRING, (void *)realParameter);
-    BSH_CHECK(ret == 0, return BSH_SYSTEM_ERR, "Failed to set param value");
+    BSH_CHECK(ret == 0, return BSH_SYSTEM_ERR, "failed set param value");
     if (strcat_s(realParameter, buffSize, "#") != 0) {
-        BSH_CHECK(ret != 0, return BSH_SYSTEM_ERR, "Failed to cat prompt %s", realParameter);
+        BSH_CHECK(ret != 0, return BSH_SYSTEM_ERR, "failed cat prompt %s", realParameter);
     }
     BShellEnvOutputPrompt(shell, realParameter);
     return 0;
@@ -167,7 +167,7 @@ static void ShowParam(BShellHandle shell, const char *name, const char *value)
 {
     ParamAuditData auditData = {};
     int ret = GetParamSecurityAuditData(name, 0, &auditData);
-    BSH_CHECK(ret == 0, return, "Failed to get param security for %s", name);
+    BSH_CHECK(ret == 0, return, "failed get param security for %s", name);
     BShellEnvOutput(shell, "Parameter information:\r\n");
 #ifdef PARAM_SUPPORT_SELINUX
     BShellEnvOutput(shell, "selinux  : %s \r\n", auditData.label);
@@ -303,7 +303,7 @@ static int32_t BShellParamCmdGet(BShellHandle shell, int32_t argc, char *argv[])
         return 0;
     }
     char *key = strdup(realParameter);
-    BSH_CHECK(key != NULL, return BSH_SYSTEM_ERR, "failed to fup key");
+    BSH_CHECK(key != NULL, return BSH_SYSTEM_ERR, "failed fup key");
     ret = SystemGetParameter(key, buffer, &buffSize);
     if (ret == 0) {
         BShellEnvOutput(shell, "%s \n", buffer);

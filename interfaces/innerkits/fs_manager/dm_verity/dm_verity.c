@@ -51,7 +51,7 @@ static bool HvbDmVerityIsEnable(void)
     char buildVariant[HVB_BUILDVARIANT_STR_MAX_LEN] = {0};
     rc = FsHvbGetValueFromCmdLine(&buildVariant[0], sizeof(buildVariant), "buildvariant");
     if (rc != 0) {
-        BEGET_LOGE("Failed to get buildvariant from cmdline.");
+        BEGET_LOGE("failed get buildvariant from cmdline.");
         return true;
     }
 

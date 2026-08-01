@@ -86,11 +86,11 @@ static int SavePersistParam(const WorkSpace *workSpace, const ParamTrieNode *nod
     }
     static char name[PARAM_NAME_LEN_MAX] = {0};
     int ret = memcpy_s(name, PARAM_NAME_LEN_MAX - 1, entry->data, entry->keyLength);
-    PARAM_CHECK(ret == EOK, return -1, "Failed to read param name %s", entry->data);
+    PARAM_CHECK(ret == EOK, return -1, "failed read param name %s", entry->data);
     name[entry->keyLength] = '\0';
     ret = g_persistWorkSpace.persistParamOps.batchSave(
         (PERSIST_SAVE_HANDLE)cookie, name, entry->data + entry->keyLength + 1);
-    PARAM_CHECK(ret == 0, return -1, "Failed to write param %s", current->key);
+    PARAM_CHECK(ret == 0, return -1, "failed write param %s", current->key);
     return ret;
 }
 
@@ -115,7 +115,7 @@ static int BatchSavePersistParam(void)
     int ret = g_persistWorkSpace.persistParamOps.batchSaveBegin(handle);
     const char *prefix = PARAM_PERSIST_PREFIX;
 #endif
-    PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Failed to save persist");
+    PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "failed save persist");
     // walk and save persist param
     WorkSpace *workSpace = GetNextWorkSpace(NULL);
     while (workSpace != NULL) {
@@ -198,7 +198,7 @@ INIT_LOCAL_API int WritePersistParam(const char *name, const char *value)
     // for liteos-a, start timer in init to check and save parameter
 #ifdef PARAM_SUPPORT_REAL_CHECK
     if (!PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
-        PARAM_LOGE("Can not save persist param before load %s ", name);
+        PARAM_LOGE("cannot save persist param before load %s ", name);
         return 0;
     }
     if (g_persistWorkSpace.persistParamOps.batchSave == NULL) {
@@ -230,7 +230,7 @@ int LoadPersistParams(void)
 {
     // get persist parameter
     int ret = InitPersistParamWorkSpace();
-    PARAM_CHECK(ret == 0, return ret, "Failed to init persist param");
+    PARAM_CHECK(ret == 0, return ret, "failed init persist param");
 #ifndef STARTUP_INIT_TEST
     if (PARAM_TEST_FLAG(g_persistWorkSpace.flags, WORKSPACE_FLAGS_LOADED)) {
         PARAM_LOGE("Persist param has been loaded");
@@ -244,7 +244,7 @@ int LoadPersistParams(void)
     }
     // save new persist param
     ret = BatchSavePersistParam();
-    PARAM_CHECK(ret == 0, return ret, "Failed to load persist param");
+    PARAM_CHECK(ret == 0, return ret, "failed load persist param");
     // for liteos-a, start time to check in init
 #ifdef PARAM_SUPPORT_CYCLE_CHECK
     PARAM_LOGV("LoadPersistParams start check time ");
@@ -276,7 +276,7 @@ int LoadPrivatePersistParams(void)
     }
     // save new persist param
     int ret = BatchSavePersistParam();
-    PARAM_CHECK(ret == 0, return ret, "Failed to load persist param");
+    PARAM_CHECK(ret == 0, return ret, "failed load persist param");
     // for liteos-a, start time to check in init
 #ifdef PARAM_SUPPORT_CYCLE_CHECK
     PARAM_LOGV("LoadPersistParams start check time ");

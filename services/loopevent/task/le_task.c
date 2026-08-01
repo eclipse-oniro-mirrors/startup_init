@@ -39,7 +39,7 @@ BaseTask *CreateTask(const LoopHandle loopHandle, int fd, const LE_BaseInfo *inf
         return NULL;
     }
     BaseTask *task = (BaseTask *)calloc(1, size + info->userDataSize);
-    LE_CHECK(task != NULL, return NULL, "Failed to alloc for task");
+    LE_CHECK(task != NULL, return NULL, "failed alloc for task");
     HASHMAPInitNode(&task->hashNode);
     // key id
     task->flags = info->flags;

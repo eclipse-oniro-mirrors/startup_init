@@ -53,7 +53,7 @@ static const char *GetFstabFileForRemount(char *fileName, size_t size)
         }
         if (snprintf_s(fileName, size, size - 1, STARTUP_INIT_UT_PATH"/vendor/etc/fstab.%s",
             hardware) == -1) {
-            INIT_LOGE("Failed to build fstab file, err=%d", errno);
+            INIT_LOGE("failed build fstab file, err=%d", errno);
             return NULL;
         }
     }
@@ -68,7 +68,7 @@ static Fstab *LoadFstabForRemount(void)
         INIT_LOGI("Cannot load fstab from command line, try read from fstab file");
         char fstabFile[MAX_BUFFER_LEN] = {0};
         if (GetFstabFileForRemount(fstabFile, MAX_BUFFER_LEN) == NULL) {
-            INIT_LOGE("Failed to get fstab file path");
+            INIT_LOGE("failed get fstab file path");
             return NULL;
         }
         if (access(fstabFile, F_OK) != 0) {
@@ -287,7 +287,7 @@ int TryDmMergeRemount(void)
 int ClearDmMerge(void)
 {
     if (!IsDmMergeOverlayActive()) {
-        INIT_LOGI("legacy remount does not support remount -c");
+        INIT_LOGI("legacy remount doesn't support remount -c");
         printf("legacy remount does not support remount -c, skip\n");
         return 1;
     }
@@ -298,7 +298,7 @@ int ClearDmMerge(void)
     }
     int fd = open(PREFIX_OVERLAY_MERGE"/.dm_merge_cleanup", O_CREAT | O_WRONLY, 0644);
     if (fd < 0) {
-        INIT_LOGE("Failed to create .dm_merge_cleanup marker, errno %d", errno);
+        INIT_LOGE("failed create .dm_merge_cleanup marker, errno %d", errno);
         return -1;
     }
     write(fd, "1", 1);

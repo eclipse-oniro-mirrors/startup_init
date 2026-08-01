@@ -42,12 +42,12 @@ static int HandleCmd(BShellHandle shell, const char *cmdName, int argc, char **a
     }
     char value[PARAM_VALUE_LEN_MAX] = { 0 };
     int ret = sprintf_s(value, sizeof(value) - 1, "%s ", cmdName);
-    BSH_CHECK(ret > 0, return BSH_INVALID_PARAM, "Failed to format cmdName");
+    BSH_CHECK(ret > 0, return BSH_INVALID_PARAM, "failed format cmdName");
     for (int i = 0; i < argc; i++) {
         ret = strcat_s(value, sizeof(value), argv[i]);
-        BSH_CHECK(ret == 0, return BSH_INVALID_PARAM, "Failed to format name");
+        BSH_CHECK(ret == 0, return BSH_INVALID_PARAM, "failed format name");
         ret = strcat_s(value, sizeof(value), " ");
-        BSH_CHECK(ret == 0, return BSH_INVALID_PARAM, "Failed to format name");
+        BSH_CHECK(ret == 0, return BSH_INVALID_PARAM, "failed format name");
     }
     return SystemSetParameter(BEGETCTRL_INIT_CMD, value);
 }
@@ -62,14 +62,14 @@ static int SetInitLogLevelFromParam(BShellHandle shell, int argc, char **argv)
     errno = 0;
     unsigned int level = strtoul(argv[1], 0, 10); // 10 is decimal
     if (errno != 0) {
-        printf("Failed to transform string to unsigned int.");
+        printf("Failed transform string to unsigned int.");
         return -1;
     }
     if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
         const char *logLevelStr[] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" };
         int ret = HandleCmd(shell, "setloglevel", argc - 1, &argv[1]);
         if (ret != 0) {
-            printf("Failed to set log level %s. \n", logLevelStr[level]);
+            printf("Failed set log level %s. \n", logLevelStr[level]);
         } else {
             printf("Success to set log level %s. \n", logLevelStr[level]);
         }

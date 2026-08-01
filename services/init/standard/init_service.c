@@ -102,19 +102,19 @@ void NotifyServiceChange(Service *service, int status)
     char paramName[PARAM_NAME_LEN_MAX] = { 0 };
     int ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1,
         "%s.%s", STARTUP_SERVICE_CTL, service->name);
-    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service name %s.", service->name);
+    INIT_ERROR_CHECK(ret > 0, return, "failed format service name %s.", service->name);
     char statusStr[MAX_INT_LEN] = {0};
     ret = snprintf_s(statusStr, sizeof(statusStr), sizeof(statusStr) - 1, "%d", status);
-    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service status %s.", service->name);
+    INIT_ERROR_CHECK(ret > 0, return, "failed format service status %s.", service->name);
     SystemWriteParam(paramName, statusStr);
 
     // write pid
     ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1,
         "%s.%s.pid", STARTUP_SERVICE_CTL, service->name);
-    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service pid name %s.", service->name);
+    INIT_ERROR_CHECK(ret > 0, return, "failed format service pid name %s.", service->name);
     ret = snprintf_s(statusStr, sizeof(statusStr), sizeof(statusStr) - 1,
         "%d", (service->pid == -1) ? 0 : service->pid);
-    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service pid %s.", service->name);
+    INIT_ERROR_CHECK(ret > 0, return, "failed format service pid %s.", service->name);
     if (status == SERVICE_STARTED) {
         WriteOomScoreAdjToService(service);
     }
@@ -217,7 +217,7 @@ void CloseFileResource(void)
         char link[SERVICES_STR_LEN_MAX] = { 0 };
         int len = readlink(path, link, sizeof(link) - 1);
         if (len < 0) {
-            INIT_LOGE("Failed to read symbolic link for path: %s", path);
+            INIT_LOGE("failed read symbolic link for path: %s", path);
             continue;
         }
         if (strcmp(link, SERVICES_FILE_PATH_KMSG) == 0) {

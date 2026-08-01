@@ -192,7 +192,7 @@ static int FdHolderSockInit(void)
     int fdHolderBufferSize = FD_HOLDER_BUFFER_SIZE; // 4KiB
     sock = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     if (sock < 0) {
-        INIT_LOGE("Failed to create fd holder socket, err = %d", errno);
+        INIT_LOGE("failed create fd holder socket, err = %d", errno);
         return -1;
     }
 
@@ -207,24 +207,24 @@ static int FdHolderSockInit(void)
     addr.sun_family = AF_UNIX;
     if (strncpy_s(addr.sun_path, sizeof(addr.sun_path),
         INIT_HOLDER_SOCKET_PATH, strlen(INIT_HOLDER_SOCKET_PATH)) != 0) {
-        INIT_LOGE("Failed to copy fd hoder socket path");
+        INIT_LOGE("failed copy fd hoder socket path");
         close(sock);
         return -1;
     }
     socklen_t len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path) + 1);
     if (bind(sock, (struct sockaddr *)&addr, len) < 0) {
-        INIT_LOGE("Failed to binder fd folder socket %d", errno);
+        INIT_LOGE("failed binder fd folder socket %d", errno);
         close(sock);
         return -1;
     }
 
     // Owned by root
     if (lchown(addr.sun_path, 0, 0)) {
-        INIT_LOGW("Failed to change owner of fd holder socket, err = %d", errno);
+        INIT_LOGW("failed change owner of fd holder socket, err = %d", errno);
     }
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
     if (fchmodat(AT_FDCWD, addr.sun_path, mode, AT_SYMLINK_NOFOLLOW)) {
-        INIT_LOGW("Failed to change mode of fd holder socket, err = %d", errno);
+        INIT_LOGW("failed change mode of fd holder socket, err = %d", errno);
     }
     INIT_LOGI("Init fd holder socket done");
     return sock;
@@ -568,7 +568,7 @@ static void ParseAllSoLibrary(const cJSON *root)
 
         INIT_LOGI("Import %s ...", importContent);
         void* handle = dlopen(importContent, RTLD_LAZY);
-        INIT_ERROR_CHECK(handle != NULL, continue, "Failed to dlopen load library errno:%{public}s", dlerror());
+        INIT_ERROR_CHECK(handle != NULL, continue, "failed dlopen load library errno:%{public}s", dlerror());
     }
 }
 

@@ -76,7 +76,7 @@ static void DumpAppspawnClientInit(const char *cmd, CallbackSendMsgProcess sendM
     CmdAgent agent;
     int ret = InitPtyInterface(&agent, ACTION_DUMP, cmd, sendMsg);
     if (ret != 0) {
-        BEGET_LOGE("App with pid=%s does not support entering sandbox environment", cmd);
+        BEGET_LOGE("App with pid=%s doesn't support entering sandbox environment", cmd);
         return;
     }
     LE_RunLoop(LE_GetDefaultLoop());
@@ -97,7 +97,7 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
         }
         size_t serviceNameLen = strlen(argv[1]) + strlen(argv[2]) + 2; // 2 is \0 and #
         char *cmd = (char *)calloc(1, serviceNameLen);
-        BEGET_ERROR_CHECK(cmd != NULL, return 0, "failed to allocate cmd memory");
+        BEGET_ERROR_CHECK(cmd != NULL, return 0, "failed allocate cmd memory");
         BEGET_ERROR_CHECK(sprintf_s(cmd, serviceNameLen, "%s#%s", argv[1], argv[2]) >= 0, free(cmd);
             return 0, "dump service arg create failed");
         CmdClientInit(INIT_CONTROL_FD_SOCKET_PATH, ACTION_DUMP, cmd, NULL);

@@ -91,7 +91,7 @@ static int StartUeventd(char **requiredDevices, int num)
     INIT_ERROR_CHECK(requiredDevices != NULL && num > 0, return -1, "Failed parameters");
     int ueventSockFd = UeventdSocketInit();
     if (ueventSockFd < 0) {
-        INIT_LOGE("Failed to create uevent socket");
+        INIT_LOGE("failed create uevent socket");
         return -1;
     }
     RetriggerUevent(ueventSockFd, requiredDevices, num);
@@ -226,7 +226,7 @@ INIT_STATIC void StartSecondStageInit(long long uptime)
     }
 #endif
     if (execv("/bin/init", args) != 0) {
-        INIT_LOGE("Failed to exec \"/bin/init\", err = %d", errno);
+        INIT_LOGE("failed exec \"/bin/init\", err = %d", errno);
         exit(-1);
     }
 }

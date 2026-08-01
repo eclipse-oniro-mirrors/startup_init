@@ -43,7 +43,7 @@ static void FreeOldRoot(DIR *dir, dev_t dev)
         if (de->d_type == DT_DIR || de->d_type == DT_UNKNOWN) {
             struct stat st = {};
             if (fstatat(dfd, de->d_name, &st, AT_SYMLINK_NOFOLLOW) < 0) {
-                INIT_LOGE("Failed to get stat of %s", de->d_name);
+                INIT_LOGE("failed get stat of %s", de->d_name);
                 continue;
             }
 
@@ -67,7 +67,7 @@ static void FreeOldRoot(DIR *dir, dev_t dev)
             }
         }
         if (unlinkat(dfd, de->d_name, isDir ? AT_REMOVEDIR : 0) < 0) {
-            INIT_LOGE("Failed to unlink %s, err = %d", de->d_name, errno);
+            INIT_LOGE("failed unlink %s, err = %d", de->d_name, errno);
         }
     }
 }
@@ -118,7 +118,7 @@ static int MountToNewTarget(const char *target)
         if (!UnderBasicMountPoint(mountPoint)) {
             INIT_LOGV("Move mount %s to %s", mountPoint, newMountPoint);
             if (mount(mountPoint, newMountPoint, NULL, MS_MOVE, NULL) < 0) {
-                INIT_LOGE("Failed to mount moving %s to %s, err = %d", mountPoint, newMountPoint, errno);
+                INIT_LOGE("failed mount moving %s to %s, err = %d", mountPoint, newMountPoint, errno);
                 // If one mount entry cannot move to new mountpoint, umount it.
                 umount2(mountPoint, MNT_FORCE);
                 continue;
@@ -148,12 +148,12 @@ int SwitchRoot(const char *newRoot)
     }
 
     struct stat oldRootStat = {};
-    INIT_ERROR_CHECK(stat("/", &oldRootStat) == 0, return -1, "Failed to get old root \"/\" stat");
+    INIT_ERROR_CHECK(stat("/", &oldRootStat) == 0, return -1, "failed get old root \"/\" stat");
     DIR *oldRoot = opendir("/");
-    INIT_ERROR_CHECK(oldRoot != NULL, return -1, "Failed to open root dir \"/\"");
+    INIT_ERROR_CHECK(oldRoot != NULL, return -1, "failed open root dir \"/\"");
     struct stat newRootStat = {};
     if (stat(newRoot, &newRootStat) != 0) {
-        INIT_LOGE("Failed to get new root \" %s \" stat", newRoot);
+        INIT_LOGE("failed get new root \" %s \" stat", newRoot);
         FreeRootDir(oldRoot, oldRootStat.st_dev);
         return -1;
     }
@@ -164,26 +164,26 @@ int SwitchRoot(const char *newRoot)
         return 0;
     }
     if (MountToNewTarget(newRoot) < 0) {
-        INIT_LOGE("Failed to move mount to new root \" %s \" stat", newRoot);
+        INIT_LOGE("failed move mount to new root \" %s \" stat", newRoot);
         FreeRootDir(oldRoot, oldRootStat.st_dev);
         return -1;
     }
     // OK, we've done move mount.
     // Now mount new root.
     if (chdir(newRoot) < 0) {
-        INIT_LOGE("Failed to change directory to %s, err = %d", newRoot, errno);
+        INIT_LOGE("failed change directory to %s, err = %d", newRoot, errno);
         FreeRootDir(oldRoot, oldRootStat.st_dev);
         return -1;
     }
 
     if (mount(newRoot, "/", NULL, MS_MOVE, NULL) < 0) {
-        INIT_LOGE("Failed to mount moving %s to %s, err = %d", newRoot, "/", errno);
+        INIT_LOGE("failed mount moving %s to %s, err = %d", newRoot, "/", errno);
         FreeRootDir(oldRoot, oldRootStat.st_dev);
         return -1;
     }
 
     if (chroot(".") < 0) {
-        INIT_LOGE("Failed to change root directory");
+        INIT_LOGE("failed change root directory");
         FreeRootDir(oldRoot, oldRootStat.st_dev);
         return -1;
     }

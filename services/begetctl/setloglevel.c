@@ -32,13 +32,13 @@ static int32_t SetInitLogLevelFromParam(BShellHandle shell, int argc, char **arg
     errno = 0;
     unsigned int level = strtoul(argv[1], 0, 10); // 10 is decimal
     if (errno != 0) {
-        printf("Failed to transform %s to unsigned int. \n", argv[1]);
+        printf("Failed transform %s to unsigned int. \n", argv[1]);
         return -1;
     }
     if ((level >= INIT_DEBUG) && (level <= INIT_FATAL)) {
         int ret = SystemSetParameter("persist.init.debug.loglevel", argv[1]);
         if (ret != 0) {
-            printf("Failed to set log level by param \"persist.init.debug.loglevel\" %s. \n", argv[1]);
+            printf("Failed set log level by param \"persist.init.debug.loglevel\" %s. \n", argv[1]);
         } else {
             printf("Success to set log level by param \"persist.init.debug.loglevel\" %s. \n", argv[1]);
         }
@@ -56,7 +56,7 @@ static int32_t GetInitLogLevelFromParam(BShellHandle shell, int argc, char **arg
     if (ret == 0) {
         printf("Success to get init log level: %s from param \"persist.init.debug.loglevel\". \n", logLevel);
     } else {
-        printf("Failed to get init log level from param, keep the system origin log level. \n");
+        printf("Failed get init log level from param, keep the system origin log level. \n");
     }
     return 0;
 }

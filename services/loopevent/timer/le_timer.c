@@ -104,7 +104,7 @@ void CheckTimeoutOfTimer(EventLoop *loop, uint64_t currTime)
 static TimerNode *CreateTimer(void)
 {
     TimerNode *timer = (TimerNode *)malloc(sizeof(TimerNode));
-    LE_CHECK(timer != NULL, return NULL, "Failed to create timer");
+    LE_CHECK(timer != NULL, return NULL, "failed create timer");
     OH_ListInit(&timer->node);
     LoopMutexInit(&timer->mutex);
     timer->timeout = 0;
@@ -122,7 +122,7 @@ LE_STATUS LE_CreateTimer(const LoopHandle loopHandle,
     LE_CHECK(processTimer != NULL, return LE_FAILURE, "Invalid parameters processTimer");
 
     TimerNode *timerNode = CreateTimer();
-    LE_CHECK(timerNode != NULL, return LE_FAILURE, "Failed to create timer");
+    LE_CHECK(timerNode != NULL, return LE_FAILURE, "failed create timer");
     timerNode->process = processTimer;
     timerNode->context = context;
     *timer = (TimerHandle)timerNode;

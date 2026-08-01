@@ -35,17 +35,17 @@ static int SetSocketTimeout(int fd)
     timeout.tv_sec = SOCKET_TIMEOUT;
     timeout.tv_usec = 0;
     int ret = setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
-    LE_CHECK(ret == 0, return ret, "Failed to set socket option");
+    LE_CHECK(ret == 0, return ret, "failed set socket option");
 
     ret = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    LE_CHECK(ret == 0, return ret, "Failed to set socket option");
+    LE_CHECK(ret == 0, return ret, "failed set socket option");
     return ret;
 }
 
 static int CreatePipeServerSocket_(const char *server, int maxClient, int public)
 {
     int listenfd = socket(PF_UNIX, SOCK_STREAM, 0);
-    LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket errno %d", errno);
+    LE_CHECK(listenfd > 0, return listenfd, "failed create socket errno %d", errno);
 
     int ret = SetSocketTimeout(listenfd);
     LE_CHECK(ret == 0, close(listenfd);
@@ -74,7 +74,7 @@ static int CreatePipeServerSocket_(const char *server, int maxClient, int public
         mode |= S_IROTH | S_IWOTH;
     }
     ret = chmod(server, mode);
-    LE_CHECK(ret == 0, return -1, "Failed to chmod %s, err %d. ", server, errno);
+    LE_CHECK(ret == 0, return -1, "failed chmod %s, err %d. ", server, errno);
     LE_LOGV("CreatePipeSocket listen fd: %d server:%s ", listenfd, serverAddr.sun_path);
     return listenfd;
 }
@@ -82,12 +82,12 @@ static int CreatePipeServerSocket_(const char *server, int maxClient, int public
 static int CreatePipeSocket_(const char *server)
 {
     int fd = socket(PF_UNIX, SOCK_STREAM, 0);
-    LE_CHECK(fd > 0, return fd, "Failed to create socket");
+    LE_CHECK(fd > 0, return fd, "failed create socket");
     SetNoBlock(fd);
 
     int on = 1;
     int ret = setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
-    LE_CHECK(ret == 0, return ret, "Failed to set socket option");
+    LE_CHECK(ret == 0, return ret, "failed set socket option");
 
     ret = SetSocketTimeout(fd);
     LE_CHECK(ret == 0, close(fd);
@@ -112,14 +112,14 @@ static int CreatePipeSocket_(const char *server)
 static LE_STATUS GetSockaddrFromServer_(const char *server, struct sockaddr_in *addr)
 {
     int ret = memset_s(addr, sizeof(struct sockaddr_in), 0, sizeof(struct sockaddr_in));
-    LE_CHECK(ret == 0, return ret, "Failed to memory set. error: %s", strerror(errno));
+    LE_CHECK(ret == 0, return ret, "failed memory set. error: %s", strerror(errno));
     addr->sin_family = AF_INET;
     const char *portStr = strstr(server, ":");
-    LE_CHECK(portStr != NULL, return LE_FAILURE, "Failed to get addr %s", server);
+    LE_CHECK(portStr != NULL, return LE_FAILURE, "failed get addr %s", server);
     uint16_t port = atoi(portStr + 1);
     addr->sin_port = htons(port);
     ret = inet_pton(AF_INET, server, &addr->sin_addr);
-    LE_CHECK(ret >= 0, return LE_FAILURE, "Failed to inet_pton addr %s", server);
+    LE_CHECK(ret >= 0, return LE_FAILURE, "failed inet_pton addr %s", server);
     LE_LOGV("CreateTcpSocket server: %s port: %d", server, port);
     return LE_SUCCESS;
 }
@@ -127,7 +127,7 @@ static LE_STATUS GetSockaddrFromServer_(const char *server, struct sockaddr_in *
 static int CreateTcpServerSocket_(const char *server, int maxClient)
 {
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    LE_CHECK(listenfd > 0, return listenfd, "Failed to create socket");
+    LE_CHECK(listenfd > 0, return listenfd, "failed create socket");
 
     int ret = SetSocketTimeout(listenfd);
     LE_CHECK(ret == 0, close(listenfd);
@@ -148,12 +148,12 @@ static int CreateTcpServerSocket_(const char *server, int maxClient)
 static int CreateTcpSocket_(const char *server)
 {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
-    LE_CHECK(fd > 0, return fd, "Failed to create socket");
+    LE_CHECK(fd > 0, return fd, "failed create socket");
     SetNoBlock(fd);
 
     int on = 1;
     int ret = setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
-    LE_CHECK(ret == 0, return ret, "Failed to set socket option");
+    LE_CHECK(ret == 0, return ret, "failed set socket option");
 
     ret = SetSocketTimeout(fd);
     LE_CHECK(ret == 0, close(fd);
@@ -173,7 +173,7 @@ static int AcceptPipeSocket_(int serverFd)
     socklen_t addrlen = sizeof(clientAddr);
     bzero(&clientAddr, addrlen);
     int fd = accept(serverFd, (struct sockaddr *)&clientAddr, &addrlen);
-    LE_CHECK(fd >= 0, return fd, "Failed to accept socket");
+    LE_CHECK(fd >= 0, return fd, "failed accept socket");
     LE_LOGV("AcceptPipeSocket client fd %d %s ", fd, clientAddr.sun_path);
     return fd;
 }
@@ -184,7 +184,7 @@ static int AcceptTcpSocket_(int serverFd)
     socklen_t addrlen = sizeof(clientAddr);
     bzero(&clientAddr, addrlen);
     int fd = accept(serverFd, (struct sockaddr *)&clientAddr, &addrlen);
-    LE_CHECK(fd >= 0, return fd, "Failed to accept socket");
+    LE_CHECK(fd >= 0, return fd, "failed accept socket");
     LE_LOGV("AcceptTcpSocket_ client: %s ", inet_ntoa(clientAddr.sin_addr));
     return fd;
 }

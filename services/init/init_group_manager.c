@@ -101,7 +101,7 @@ static int InitParseGroupCfg_(const char *groupCfg)
 {
     INIT_LOGI("Parse group config %s", groupCfg);
     char *fileBuf = ReadFileData(groupCfg);
-    INIT_ERROR_CHECK(fileBuf != NULL, return -1, "Failed to read file content %s", groupCfg);
+    INIT_ERROR_CHECK(fileBuf != NULL, return -1, "failed read file content %s", groupCfg);
     cJSON *fileRoot = cJSON_Parse(fileBuf);
     INIT_ERROR_CHECK(fileRoot != NULL, free(fileBuf);
         return -1, "Failed to parse json file %s", groupCfg);
@@ -215,7 +215,7 @@ void InitServiceSpace(void)
     for (size_t i = 0; i < ARRAY_LENGTH(g_initWorkspace.hashMap); i++) {
         int ret = OH_HashMapCreate(&g_initWorkspace.hashMap[i], &info);
         if (ret != 0) {
-            INIT_LOGE("%s", "Failed to create hash map");
+            INIT_LOGE("%s", "failed create hash map");
         }
     }
 
@@ -227,7 +227,7 @@ void InitServiceSpace(void)
     int ret = GetParameterFromCmdLine(BOOT_GROUP_NAME,
         g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr));
     if (ret != 0) {
-        INIT_LOGV("Failed to get boot group");
+        INIT_LOGV("failed get boot group");
         if (GetBootModeFromMisc() == GROUP_CHARGE) {
             strcpy_s(g_initWorkspace.groupModeStr, sizeof(g_initWorkspace.groupModeStr), "device.charge.group");
         }
@@ -270,7 +270,7 @@ InitGroupNode *AddGroupNode(int type, const char *name)
     INIT_LOGV("AddGroupNode type %d name %s", type, name);
     uint32_t nameLen = (uint32_t)strlen(name);
     groupNode = (InitGroupNode *)calloc(1, sizeof(InitGroupNode) + nameLen + 1);
-    INIT_ERROR_CHECK(groupNode != NULL, return NULL, "Failed to alloc for group %s", name);
+    INIT_ERROR_CHECK(groupNode != NULL, return NULL, "failed alloc for group %s", name);
     int ret = memcpy_s(groupNode->name, nameLen + 1, name, nameLen + 1);
     INIT_ERROR_CHECK(ret == 0, free(groupNode);
         return NULL, "Failed to alloc for group %s", name);

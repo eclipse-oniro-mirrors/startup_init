@@ -398,7 +398,7 @@ void WatcherManager::StartLoop()
 {
     if (pRecvThread_ == nullptr) {
         pRecvThread_ = new (std::nothrow)std::thread([this] {this->RunLoop();});
-        WATCHER_CHECK(pRecvThread_ != nullptr, return, "Failed to create thread");
+        WATCHER_CHECK(pRecvThread_ != nullptr, return, "failed create thread");
     }
 }
 
@@ -485,7 +485,7 @@ void WatcherManager::OnRemoteDied(const wptr<IRemoteObject> &remote)
     std::lock_guard<std::mutex> lock(watcherMutex_);
     WATCHER_CHECK(remote != nullptr, return, "Invalid remote obj");
     auto remoteWatcher = GetRemoteWatcher(remote);
-    WATCHER_CHECK(remoteWatcher != nullptr, return, "Failed to get remote watcher info ");
+    WATCHER_CHECK(remoteWatcher != nullptr, return, "failed get remote watcher info ");
     {
         OnRemoteDied(remoteWatcher);
     }

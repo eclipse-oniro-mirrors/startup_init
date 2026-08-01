@@ -64,7 +64,7 @@ static int CommonDealFun(const char *name, const char *value)
     PARAM_CHECK(ret == 0, return ret, "Invalid param name %s", name);
     PARAM_LOGV("Param name %s, value %s", name, value);
     ret = WriteParam(name, value, NULL, 0);
-    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
+    PARAM_CHECK(ret == 0, return ret, "failed write param %s %s", name, value);
     return ret;
 }
 
@@ -88,7 +88,7 @@ static int ReadSnFromFile(const char *name, const char *file)
     PARAM_LOGV("**** name %s, value %s", name, data);
     int ret = WriteParam(name, data, NULL, 0);
     free(data);
-    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s", name);
+    PARAM_CHECK(ret == 0, return ret, "failed write param %s", name);
     return ret;
 }
 
@@ -101,7 +101,7 @@ static int SnDealFun(const char *name, const char *value)
     if (value != NULL && value[0] != '/') {
         PARAM_LOGV("**** name %s, value %s", name, value);
         ret = WriteParam(OHOS_SN_PARAM_NAME, value, NULL, 0);
-        PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", name, value);
+        PARAM_CHECK(ret == 0, return ret, "failed write param %s %s", name, value);
         return ret;
     }
     if (value != NULL && value[0] == '/') {
@@ -128,7 +128,7 @@ static int Common2ConstDealFun(const char *name, const char *value)
     PARAM_CHECK(ret == 0, return ret, "Invalid name %s", name);
     PARAM_LOGV("Param name %s, value %s", fullName, value);
     ret = WriteParam(fullName, value, NULL, 0);
-    PARAM_CHECK(ret == 0, return ret, "Failed to write param %s %s", fullName, value);
+    PARAM_CHECK(ret == 0, return ret, "failed write param %s %s", fullName, value);
     return ret;
 }
 
@@ -245,7 +245,7 @@ INIT_LOCAL_API int LoadParamFromCmdLine(void)
 
     ctx.gotSn = false;
     ctx.cmdline = ReadFileData(BOOT_CMD_LINE);
-    PARAM_CHECK(ctx.cmdline != NULL, return -1, "Failed to read file %s", BOOT_CMD_LINE);
+    PARAM_CHECK(ctx.cmdline != NULL, return -1, "failed read file %s", BOOT_CMD_LINE);
     bool matches[ARRAY_LENGTH(CMDLINES)] = {false};
     ctx.matches = matches;
     IterateNameValuePairs(ctx.cmdline, CmdlineIterator, (void *)(&ctx));
@@ -329,9 +329,9 @@ static int LoadParamFromImport_(char *buffer, const int buffSize, uint32_t mode)
         spaceCount++;
     }
     char *target = calloc(PATH_MAX, 1);
-    PARAM_CHECK(target != NULL, return -1, "Failed to alloc memory");
+    PARAM_CHECK(target != NULL, return -1, "failed alloc memory");
     if (strncpy_s(target, PATH_MAX, buffer + IMPORT_PREFIX_LEN + spaceCount, buffSize) != 0) {
-        PARAM_LOGE("Failed to get value of import.");
+        PARAM_LOGE("failed get value of import.");
         free(target);
         return -1;
     }
@@ -341,7 +341,7 @@ static int LoadParamFromImport_(char *buffer, const int buffSize, uint32_t mode)
     }
     char *tmpParamValue = calloc(PARAM_VALUE_LEN_MAX + 1, sizeof(char));
     if (tmpParamValue == NULL) {
-        PARAM_LOGE("Failed to alloc memory");
+        PARAM_LOGE("failed alloc memory");
         free(target);
         return -1;
     }
@@ -361,7 +361,7 @@ static int LoadParamFromImport(const char *fileName, void *context)
     realpath(fileName, realPath);
     FILE *fp = fopen(realPath, "r");
     if (fp == NULL) {
-        PARAM_LOGE("Failed to open file '%s' error:%d ", fileName, errno);
+        PARAM_LOGE("failed open file '%s' error:%d ", fileName, errno);
         return -1;
     }
 
@@ -390,7 +390,7 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode,
     realpath(fileName, realPath);
     FILE *fp = fopen(realPath, "r");
     if (fp == NULL) {
-        PARAM_LOGW("Failed to open file '%s' error:%d ", fileName, errno);
+        PARAM_LOGW("failed open file '%s' error:%d ", fileName, errno);
         return -1;
     }
 
@@ -408,7 +408,7 @@ static int LoadDefaultParam_(const char *fileName, uint32_t mode,
             PARAM_LOGW("Set param '%s' error:%d with only add mode", buffer, ret);
             continue;
         } else {
-            PARAM_CHECK(ret == 0, continue, "Failed to set param '%s' error:%d ", buffer, ret);
+            PARAM_CHECK(ret == 0, continue, "failed set param '%s' error:%d ", buffer, ret);
         }
         paramNum++;
     }
@@ -496,10 +496,10 @@ static int LoadOneParamAreaSize_(const uint32_t *context, const char *name, cons
     PARAM_CHECK(paramSpace != NULL && paramSpace->workSpace != NULL,
         return -1, "Invalid workspace name %s", name);
     WorkSpaceSize *spaceSize = GetWorkSpaceSize(GetWorkSpace(WORKSPACE_INDEX_SIZE));
-    PARAM_CHECK(spaceSize != NULL, return PARAM_CODE_ERROR, "Failed to get workspace size");
+    PARAM_CHECK(spaceSize != NULL, return PARAM_CODE_ERROR, "failed get workspace size");
     static char buffer[SELINUX_CONTENT_LEN] = {0};
     int ret = snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, "u:object_r:%s:s0", name);
-    PARAM_CHECK(ret > 0, return PARAM_CODE_ERROR, "Failed to snprintf workspace name");
+    PARAM_CHECK(ret > 0, return PARAM_CODE_ERROR, "failed snprintf workspace name");
 
     for (uint32_t i = WORKSPACE_INDEX_BASE + 1; i < spaceSize->maxLabelIndex; i++) {
         if (paramSpace->workSpace[i] == NULL) {

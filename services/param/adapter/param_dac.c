@@ -165,7 +165,7 @@ static int LoadOneParam_(const uint32_t *context, const char *name, const char *
     auditData->dacData.uid = -1;
     auditData->name = name;
     int ret = GetParamDacData(&auditData->dacData, value);
-    PARAM_CHECK(ret == 0, return -1, "Failed to get param info %d %s", ret, name);
+    PARAM_CHECK(ret == 0, return -1, "failed get param info %d %s", ret, name);
     if (INVALID_UID(auditData->dacData.gid) || INVALID_UID(auditData->dacData.uid)) {
         PARAM_LOGW("Invalid dac for '%s' gid %d uid %d", name, auditData->dacData.gid, auditData->dacData.uid);
     }
@@ -186,7 +186,7 @@ static int LoadParamLabels(const char *fileName)
     ParamAuditData *auditData = (ParamAuditData *)calloc(1,
         sizeof(ParamAuditData) + sizeof(uid_t) * MAX_MEMBER_IN_GROUP);
     if (auditData == NULL) {
-        PARAM_LOGE("Failed to alloc memory %s", fileName);
+        PARAM_LOGE("failed alloc memory %s", fileName);
         return result;
     }
     uint32_t infoCount = 0;
@@ -197,7 +197,7 @@ static int LoadParamLabels(const char *fileName)
         buff[buffSize - 1] = '\0';
         result = SplitParamString(buff, NULL, 0, LoadOneParam_, (const uint32_t *)auditData);
         if (result != 0) {
-            PARAM_LOGE("Failed to split string %s fileName %s, result is:%d", buff, fileName, result);
+            PARAM_LOGE("failed split string %s fileName %s, result is:%d", buff, fileName, result);
             break;
         }
         infoCount++;
@@ -255,7 +255,7 @@ static int DacGetParamSecurityLabel(const char *path)
         }
         int ret = PARAM_SPRINTF(fileName, MAX_BUF_SIZE, "%s/%s", path, dp->d_name);
         if (ret <= 0) {
-            PARAM_LOGE("Failed to get file name for %s", dp->d_name);
+            PARAM_LOGE("failed get file name for %s", dp->d_name);
             continue;
         }
         if ((stat(fileName, &st) == 0) && !S_ISDIR(st.st_mode)) {

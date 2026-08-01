@@ -69,11 +69,11 @@ int main(int argc, char *args[])
     do {
         BShellHandle handle = GetShellHandle();
         if (handle == NULL) {
-            printf("Failed to get shell handle \n");
+            printf("Failed get shell handle \n");
             return 0;
         }
         const ParamInfo *param = BShellEnvGetReservedParam(handle, PARAM_REVERESD_NAME_CURR_PARAMETER);
-        BSH_CHECK(param != NULL && param->type == PARAM_STRING, break, "Failed to get reversed param");
+        BSH_CHECK(param != NULL && param->type == PARAM_STRING, break, "failed get reversed param");
         BShellEnvSetParam(handle, param->name, param->desc, param->type, (void *)"");
         if (argc > 1) {
             int ret = SetParamShellPrompt(handle, args[1]);

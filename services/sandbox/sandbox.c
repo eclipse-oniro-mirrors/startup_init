@@ -237,7 +237,7 @@ static int AddMountInfoToSandbox(sandbox_t *sandbox, cJSON *item, const char *ty
     mountlist_t *tmpMount = (mountlist_t *)calloc(1, sizeof(mountlist_t));
     BEGET_ERROR_CHECK(tmpMount != NULL, return -1, "Failed calloc err=%d", errno);
     tmpMount->source = strdup(srcPath);
-    BEGET_ERROR_CHECK(tmpMount->source != NULL, free(tmpMount); return -1, "Failed to dup source");
+    BEGET_ERROR_CHECK(tmpMount->source != NULL, free(tmpMount); return -1, "failed dup source");
     tmpMount->target = strdup(dstPath);
     BEGET_ERROR_CHECK(tmpMount->target != NULL, free(tmpMount->source); free(tmpMount); return -1,
         "Failed to dup target");
@@ -276,7 +276,7 @@ static int AddSymbolLinksToSandbox(sandbox_t *sandbox, cJSON *item, const char *
     linklist_t *tmpLink = (linklist_t *)calloc(1, sizeof(linklist_t));
     BEGET_ERROR_CHECK(tmpLink != NULL, return -1, "Failed calloc err=%d", errno);
     tmpLink->target = strdup(target);
-    BEGET_ERROR_CHECK(tmpLink->target != NULL, free(tmpLink); return -1, "Failed to dup target");
+    BEGET_ERROR_CHECK(tmpLink->target != NULL, free(tmpLink); return -1, "failed dup target");
     tmpLink->linkName = strdup(name);
     BEGET_ERROR_CHECK(tmpLink->linkName != NULL, free(tmpLink->target); free(tmpLink); return -1,
         "Failed to dup linkName");
@@ -400,7 +400,7 @@ static void InitSandbox(sandbox_t *sandbox, const char *sandboxConfig, const cha
     sandbox->ns = GetNamespaceFd("/proc/self/ns/mnt");
     BEGET_ERROR_CHECK(!(sandbox->ns < 0), return, "Get sandbox namespace fd is failed");
 
-    BEGET_ERROR_CHECK(strcpy_s(sandbox->name, MAX_BUFFER_LEN - 1, name) == 0, return, "Failed to copy sandbox name");
+    BEGET_ERROR_CHECK(strcpy_s(sandbox->name, MAX_BUFFER_LEN - 1, name) == 0, return, "failed copy sandbox name");
     OH_ListInit(&sandbox->pathMountsHead);
     OH_ListInit(&sandbox->fileMountsHead);
     OH_ListInit(&sandbox->linksHead);
@@ -425,7 +425,7 @@ static int CheckAndMakeDir(const char *dir, mode_t mode)
             BEGET_ERROR_CHECK(MakeDirRecursive(dir, mode) == 0, return -1,
                 "Failed MakeDirRecursive %s, err=%d", dir, errno);
         } else {
-            BEGET_LOGW("Failed to access mount point \' %s \', err = %d", dir, errno);
+            BEGET_LOGW("failed access mount point \' %s \', err = %d", dir, errno);
             return -1;
         }
     }
@@ -457,7 +457,7 @@ static int BindMount(const char *source, const char *target, unsigned long flags
 
     // do mount
     if (mount(source, target, NULL, tmpflags, NULL) != 0) {
-        BEGET_LOGE("Failed to bind mount \' %s \' to \' %s \', err = %d", source, target, errno);
+        BEGET_LOGE("failed bind mount \' %s \' to \' %s \', err = %d", source, target, errno);
         if (errno != ENOTDIR) {  // mount errno is 'Not a directory' can ignore
             return -1;
         }
@@ -521,7 +521,7 @@ static int LinkSandboxNode(ListNode *list, void *data)
         if (errno == EEXIST) {
             BEGET_LOGW("symbol link name \' %s \' already exist", linkName);
         } else {
-            BEGET_LOGE("Failed to link \' %s \' to \' %s \', err = %d", info->target, linkName, errno);
+            BEGET_LOGE("failed link \' %s \' to \' %s \', err = %d", info->target, linkName, errno);
             return -1;
         }
     }
@@ -552,7 +552,7 @@ int PrepareSandbox(const char *name)
     int rc = mount(NULL, "/", NULL, MS_REC | MS_SLAVE, NULL);
     BEGET_ERROR_CHECK(rc == 0, return -1, "Failed set mount slave err = %d", errno);
     rc = BindMount(sandbox->rootPath, sandbox->rootPath, MS_BIND | MS_REC, SANDBOX_TAG_MOUNT_PATH);
-    BEGET_ERROR_CHECK(rc == 0, return -1, "Failed to mount rootpath bind err = %d", errno);
+    BEGET_ERROR_CHECK(rc == 0, return -1, "failed mount rootpath bind err = %d", errno);
 
     // 1) walk through all mounts and do bind mount
     rc = MountSandboxInfo(&sandbox->pathMountsHead, sandbox->rootPath, SANDBOX_TAG_MOUNT_PATH);

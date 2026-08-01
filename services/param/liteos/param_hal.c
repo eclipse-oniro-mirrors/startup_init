@@ -154,11 +154,11 @@ static int LoadPersistParam(void)
         // read file
         uint32_t fileSize = 0;
         int ret = ParamFileStat(path, &fileSize);
-        PARAM_CHECK(ret == 0, break, "Failed to get file state %s", path);
+        PARAM_CHECK(ret == 0, break, "failed get file state %s", path);
         buffer = calloc(fileSize, sizeof(char));
-        PARAM_CHECK(buffer != NULL, break, "Failed to get file");
+        PARAM_CHECK(buffer != NULL, break, "failed get file");
         ret = ParamFileRead(fd, buffer, fileSize);
-        PARAM_CHECK(ret >= 0, break, "Failed to read file %s", path);
+        PARAM_CHECK(ret >= 0, break, "failed read file %s", path);
 
         uint32_t currLen = 0;
         char *tmp = buffer;
@@ -166,7 +166,7 @@ static int LoadPersistParam(void)
             if (buffer[currLen] == '\n') { // split line
                 buffer[currLen] = '\0';
                 ret = SplitParamString(tmp, NULL, 0, LoadOnePersistParam_, NULL);
-                PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);
+                PARAM_CHECK(ret == 0, continue, "failed set param %d %s", ret, buffer);
                 paramNum++;
                 if (currLen + 1 >= fileSize) {
                     break;
@@ -190,19 +190,19 @@ static int PersistWrite(int fd, const char *name, const char *value)
 {
     int ret = ParamFileWrite(fd, name, strlen(name));
     if (ret <= 0) {
-        PARAM_LOGE("Failed to save persist param %s", name);
+        PARAM_LOGE("failed save persist param %s", name);
     }
     ret = ParamFileWrite(fd, "=", strlen("="));
     if (ret <= 0) {
-        PARAM_LOGE("Failed to save persist param %s", name);
+        PARAM_LOGE("failed save persist param %s", name);
     }
     ret = ParamFileWrite(fd, value, strlen(value));
     if (ret <= 0) {
-        PARAM_LOGE("Failed to save persist param %s", name);
+        PARAM_LOGE("failed save persist param %s", name);
     }
     ret = ParamFileWrite(fd, "\n", strlen("\n"));
     if (ret <= 0) {
-        PARAM_LOGE("Failed to save persist param %s", name);
+        PARAM_LOGE("failed save persist param %s", name);
     }
     return 0;
 }
@@ -241,7 +241,7 @@ static int BatchSavePersistParam(PERSIST_SAVE_HANDLE handle, const char *name, c
 {
     int fd = (int)handle;
     int ret = PersistWrite(fd, name, value);
-    PARAM_CHECK(ret == 0, return -1, "Failed to write param %s", name);
+    PARAM_CHECK(ret == 0, return -1, "failed write param %s", name);
     PARAM_LOGV("BatchSavePersistParam %s=%s", name, value);
     return 0;
 }

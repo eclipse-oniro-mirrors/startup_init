@@ -45,7 +45,7 @@ static int InitParamSecurity(ParamWorkSpace *workSpace,
     PARAM_CHECK(workSpace->paramSecurityOps[type].securityInitLabel != NULL,
         return -1, "Invalid securityInitLabel");
     int ret = workSpace->paramSecurityOps[type].securityInitLabel(&workSpace->securityLabel, isInit);
-    PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "Failed to init security");
+    PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_NAME, "failed init security");
 
     ParamSecurityOps *paramSecurityOps = GetParamSecurityOps(type);
     PARAM_CHECK(paramSecurityOps != NULL, return -1, "Invalid paramSecurityOps");
@@ -69,10 +69,10 @@ INIT_LOCAL_API int RegisterSecurityOps(int onlyRead)
         op = DAC_WRITE;
     }
     int ret = InitParamSecurity(&g_paramWorkSpace, RegisterSecurityDacOps, PARAM_SECURITY_DAC, isInit, op);
-    PARAM_CHECK(ret == 0, return -1, "Failed to get security operations");
+    PARAM_CHECK(ret == 0, return -1, "failed get security operations");
 #ifdef PARAM_SUPPORT_SELINUX
     ret = InitParamSecurity(&g_paramWorkSpace, RegisterSecuritySelinuxOps, PARAM_SECURITY_SELINUX, isInit, op);
-    PARAM_CHECK(ret == 0, return -1, "Failed to get security operations");
+    PARAM_CHECK(ret == 0, return -1, "failed get security operations");
 #endif
     return ret;
 }
@@ -115,7 +115,7 @@ static int CheckNeedInit(int onlyRead, const PARAM_WORKSPACE_OPS *ops)
     (void)readlink("/proc/self/exe", path, sizeof(path) - 1);
     char *name = strstr(path, "/init_unittest");
     if (name != NULL) {
-        PARAM_LOGW("Can not init client for init_test");
+        PARAM_LOGW("cannot init client for init_test");
         return 0;
     }
 #endif
@@ -158,13 +158,13 @@ static int CreateWorkSpace(int onlyRead)
     PARAM_CHECK(paramSpace != NULL, return -1, "Invalid workspace");
 #ifdef PARAM_SUPPORT_SELINUX
     ret = AddWorkSpace(WORKSPACE_NAME_DAC, WORKSPACE_INDEX_DAC, 0, PARAM_WORKSPACE_DAC);
-    PARAM_CHECK(ret == 0, return -1, "Failed to add dac workspace");
+    PARAM_CHECK(ret == 0, return -1, "failed add dac workspace");
     ret = AddWorkSpace(WORKSPACE_NAME_DEF_SELINUX, WORKSPACE_INDEX_BASE, onlyRead, PARAM_WORKSPACE_MAX);
-    PARAM_CHECK(ret == 0, return -1, "Failed to add default workspace");
+    PARAM_CHECK(ret == 0, return -1, "failed add default workspace");
 
     // open dac workspace
     ret = OpenWorkSpace(WORKSPACE_INDEX_DAC, onlyRead);
-    PARAM_CHECK(ret == 0, return -1, "Failed to open dac workspace");
+    PARAM_CHECK(ret == 0, return -1, "failed open dac workspace");
 
     // for other workspace
     ParamSecurityOps *ops = GetParamSecurityOps(PARAM_SECURITY_SELINUX);
@@ -174,9 +174,9 @@ static int CreateWorkSpace(int onlyRead)
     paramSpace->maxLabelIndex++;
 #else
     ret = AddWorkSpace(WORKSPACE_NAME_NORMAL, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_MAX);
-    PARAM_CHECK(ret == 0, return -1, "Failed to add dac workspace");
+    PARAM_CHECK(ret == 0, return -1, "failed add dac workspace");
     ret = OpenWorkSpace(WORKSPACE_INDEX_DAC, onlyRead);
-    PARAM_CHECK(ret == 0, return -1, "Failed to open dac workspace");
+    PARAM_CHECK(ret == 0, return -1, "failed open dac workspace");
     paramSpace->maxLabelIndex = 1;
 #endif
     return ret;
@@ -190,21 +190,21 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
     if (!PARAM_TEST_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT)) {
         g_paramWorkSpace.maxSpaceCount = PARAM_DEF_SELINUX_LABEL;
         g_paramWorkSpace.workSpace = (WorkSpace **)calloc(g_paramWorkSpace.maxSpaceCount, sizeof(WorkSpace *));
-        PARAM_CHECK(g_paramWorkSpace.workSpace != NULL, return -1, "Failed to alloc memory for workSpace");
+        PARAM_CHECK(g_paramWorkSpace.workSpace != NULL, return -1, "failed alloc memory for workSpace");
     }
     PARAM_SET_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_INIT);
 
     int ret = RegisterSecurityOps(onlyRead);
-    PARAM_CHECK(ret == 0, return -1, "Failed to get security operations");
+    PARAM_CHECK(ret == 0, return -1, "failed get security operations");
     g_paramWorkSpace.checkParamPermission = CheckParamPermission_;
     ret = CreateWorkSpace(onlyRead);
-    PARAM_CHECK(ret == 0, return -1, "Failed to create workspace");
+    PARAM_CHECK(ret == 0, return -1, "failed create workspace");
 
     if (onlyRead == 0) {
         PARAM_LOGI("Max selinux label %u %u", g_paramWorkSpace.maxSpaceCount, g_paramWorkSpace.maxLabelIndex);
         // alloc space size memory from dac
         ret = AllocSpaceMemory(g_paramWorkSpace.maxLabelIndex);
-        PARAM_CHECK(ret == 0, return -1, "Failed to alloc space size");
+        PARAM_CHECK(ret == 0, return -1, "failed alloc space size");
 
         // add default dac policy
         ParamAuditData auditData = {0};
@@ -219,7 +219,7 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
         auditData.selinuxIndex = INVALID_SELINUX_INDEX;
 #endif
         ret = AddSecurityLabel(&auditData);
-        PARAM_CHECK(ret == 0, return ret, "Failed to add default dac label");
+        PARAM_CHECK(ret == 0, return ret, "failed add default dac label");
         PARAM_SET_FLAG(g_paramWorkSpace.flags, WORKSPACE_FLAGS_FOR_INIT);
     }
     return ret;
@@ -287,7 +287,7 @@ INIT_LOCAL_API int AddWorkSpace(const char *name, uint32_t labelIndex, int onlyR
     }
     const size_t size = strlen(realName) + 1;
     WorkSpace *workSpace = (WorkSpace *)malloc(sizeof(WorkSpace) + size);
-    PARAM_CHECK(workSpace != NULL, return -1, "Failed to create workspace for %s", realName);
+    PARAM_CHECK(workSpace != NULL, return -1, "failed create workspace for %s", realName);
     workSpace->flags = 0;
     workSpace->spaceSize = spaceSize;
     workSpace->area = NULL;
@@ -324,7 +324,7 @@ STATIC_INLINE int CheckAndExtendSpace(ParamWorkSpace *paramSpace, const char *na
     PARAM_LOGW("Not enough memory for label index %u need to extend memory %u", labelIndex, paramSpace->maxSpaceCount);
     WorkSpace **space = (WorkSpace **)calloc(sizeof(WorkSpace *),
         paramSpace->maxSpaceCount + PARAM_DEF_SELINUX_LABEL);
-    PARAM_CHECK(space != NULL, return -1, "Failed to realloc memory for %s", name);
+    PARAM_CHECK(space != NULL, return -1, "failed realloc memory for %s", name);
     int ret = PARAM_MEMCPY(space, sizeof(WorkSpace *) * paramSpace->maxSpaceCount,
         paramSpace->workSpace, sizeof(WorkSpace *) * paramSpace->maxSpaceCount);
     PARAM_CHECK(ret == 0, free(space);
@@ -450,7 +450,7 @@ STATIC_INLINE int DacCheckParamPermission(const ParamLabelIndex *labelIndex,
     // get dac label
     WorkSpace *space = g_paramWorkSpace.workSpace[WORKSPACE_INDEX_DAC];
     ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex->dacLabelIndex);
-    PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %u selinuxLabelIndex %u for %s",
+    PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "cannot get security label %u selinuxLabelIndex %u for %s",
         labelIndex->dacLabelIndex, labelIndex->selinuxLabelIndex, name);
     /**
      * DAC group
@@ -621,7 +621,7 @@ CachedHandle CachedParameterCreate(const char *name, const char *defValue)
     uint32_t valueBufferSize = IS_READY_ONLY(name) ? PARAM_CONST_VALUE_LEN_MAX : PARAM_VALUE_LEN_MAX;
     CachedParameter *param = (CachedParameter *)malloc(
         sizeof(CachedParameter) + PARAM_ALIGN(nameLen) + 1 + valueBufferSize);
-    PARAM_CHECK(param != NULL, return NULL, "Failed to create CachedParameter for %s", name);
+    PARAM_CHECK(param != NULL, return NULL, "failed create CachedParameter for %s", name);
     ret = PARAM_STRCPY(param->data, nameLen + 1, name);
     PARAM_CHECK(ret == 0, free(param);
         return NULL, "Failed to copy name %s", name);

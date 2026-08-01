@@ -413,13 +413,13 @@ int32_t BShellEnvInit(BShellHandle *handle, const BShellInfo *info)
     BSH_CHECK(info != NULL && info->prompt != NULL, return BSH_INVALID_PARAM, "Invalid cmd name");
 
     BShellEnv *shell = (BShellEnv *)calloc(1, sizeof(BShellEnv));
-    BSH_CHECK(shell != NULL, return BSH_INVALID_PARAM, "Failed to create shell env");
+    BSH_CHECK(shell != NULL, return BSH_INVALID_PARAM, "failed create shell env");
     shell->length = 0;
     shell->cursor = 0;
     shell->shellState = BSH_IN_NORMAL;
     shell->input = info->input;
     shell->prompt = strdup(info->prompt);
-    BSH_CHECK(shell->prompt != NULL, free(shell); return BSH_INVALID_PARAM, "Failed to strdup prompt");
+    BSH_CHECK(shell->prompt != NULL, free(shell); return BSH_INVALID_PARAM, "failed strdup prompt");
     shell->command = NULL;
     shell->param = NULL;
     shell->keyHandle = NULL;
@@ -513,27 +513,27 @@ int32_t BShellEnvRegisterCmd(BShellHandle handle, const CmdInfo *cmdInfo)
     BShellEnv *shell = (BShellEnv *)handle;
     size_t nameLen = strlen(cmdInfo->name) + 1;
     BShellCommand *cmd = (BShellCommand *)calloc(1, sizeof(BShellCommand) + nameLen);
-    BSH_CHECK(cmd != NULL, return BSH_INVALID_PARAM, "Failed to alloc cmd name %s", cmdInfo->name);
+    BSH_CHECK(cmd != NULL, return BSH_INVALID_PARAM, "failed alloc cmd name %s", cmdInfo->name);
     cmd->executer = cmdInfo->executer;
     cmd->argStart = 0;
     int32_t ret = 0;
     do {
         ret = strcpy_s(cmd->name, nameLen, cmdInfo->name);
-        BSH_CHECK(ret == 0, break, "Failed to copy name %s", cmdInfo->name);
+        BSH_CHECK(ret == 0, break, "failed copy name %s", cmdInfo->name);
 
         ret = BSH_SYSTEM_ERR;
         if (cmdInfo->desc != NULL) {
             cmd->desc = strdup(cmdInfo->desc);
-            BSH_CHECK(cmd->desc != NULL, break, "Failed to copy desc %s", cmdInfo->name);
+            BSH_CHECK(cmd->desc != NULL, break, "failed copy desc %s", cmdInfo->name);
         }
         if (cmdInfo->help != NULL) {
             cmd->help = strdup(cmdInfo->help);
-            BSH_CHECK(cmd->help != NULL, break, "Failed to copy help %s", cmdInfo->name);
+            BSH_CHECK(cmd->help != NULL, break, "failed copy help %s", cmdInfo->name);
         }
         cmd->multikey = NULL;
         if (cmdInfo->multikey != NULL && strlen(cmdInfo->multikey) > nameLen) {
             cmd->multikey = strdup(cmdInfo->multikey);
-            BSH_CHECK(cmd->multikey != NULL, break, "Failed to copy multikey %s", cmdInfo->name);
+            BSH_CHECK(cmd->multikey != NULL, break, "failed copy multikey %s", cmdInfo->name);
             int argc = SplitString(cmd->multikey, " ", cmd->multikeys, (int)ARRAY_LENGTH(cmd->multikeys));
             BSH_CHECK(argc <= (int)ARRAY_LENGTH(cmd->multikeys) && argc > 0, break, "Invalid multikey");
             cmd->argStart = argc - 1;
@@ -619,7 +619,7 @@ int32_t BShellEnvRegisterKeyHandle(BShellHandle handle, uint8_t code, BShellkeyH
     BShellEnv *shell = (BShellEnv *)handle;
 
     BShellKey *key = (BShellKey *)calloc(1, sizeof(BShellKey));
-    BSH_CHECK(key != NULL, return BSH_INVALID_PARAM, "Failed to alloc key code %d", code);
+    BSH_CHECK(key != NULL, return BSH_INVALID_PARAM, "failed alloc key code %d", code);
     key->keyCode = code;
     key->keyHandle = keyHandle;
     key->next = shell->keyHandle;
@@ -651,10 +651,10 @@ static int32_t BShellParamSetValue(BShellParam *param, void *value)
             free(param->value.string);
         }
         param->value.string = strdup((char *)value);
-        BSH_CHECK(param->value.string != NULL, return BSH_SYSTEM_ERR, "Failed to copy value for %s", param->name);
+        BSH_CHECK(param->value.string != NULL, return BSH_SYSTEM_ERR, "failed copy value for %s", param->name);
     } else if (param->type < PARAM_STRING) {
         int ret = memcpy_s(&param->value, sizeof(param->value), value, paramValueLens[param->type]);
-        BSH_CHECK(ret == 0, return BSH_SYSTEM_ERR, "Failed to copy value for %s", param->name);
+        BSH_CHECK(ret == 0, return BSH_SYSTEM_ERR, "failed copy value for %s", param->name);
     }
     return 0;
 }
@@ -676,13 +676,13 @@ int32_t BShellEnvSetParam(BShellHandle handle, const char *name, const char *des
     do {
         size_t nameLen = strlen(name) + 1;
         param = (BShellParam *)calloc(1, sizeof(BShellParam) + nameLen);
-        BSH_CHECK(param != NULL, return BSH_SYSTEM_ERR, "Failed to alloc cmd name %s", name);
+        BSH_CHECK(param != NULL, return BSH_SYSTEM_ERR, "failed alloc cmd name %s", name);
         param->type = type;
         ret = strcpy_s(param->name, nameLen, name);
-        BSH_CHECK(ret == 0, break, "Failed to copy name %s", name);
+        BSH_CHECK(ret == 0, break, "failed copy name %s", name);
         if (desc != NULL) {
             param->desc = strdup(desc);
-            BSH_CHECK(param->desc != NULL, free(param); return BSH_SYSTEM_ERR, "Failed to set desc");
+            BSH_CHECK(param->desc != NULL, free(param); return BSH_SYSTEM_ERR, "failed set desc");
         }
         ret = BShellParamSetValue(param, value);
         BSH_CHECK(ret == 0, break, "Failed set value for %s", name);

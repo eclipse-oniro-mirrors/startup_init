@@ -117,7 +117,7 @@ static void *ModuleInstall(MODULE_ITEM *module, int argc, const char *argv[])
     }
     BEGET_LOGV("Module install path %s", path);
     char *realPath = GetRealPath(path);
-    BEGET_ERROR_CHECK(realPath != NULL, return NULL, "Failed to get real path");
+    BEGET_ERROR_CHECK(realPath != NULL, return NULL, "failed get real path");
     currentInstallArgs = &(module->moduleMgr->installArgs);
     handle = dlopen(realPath, RTLD_LAZY | RTLD_GLOBAL);
     currentInstallArgs = NULL;
@@ -168,7 +168,7 @@ int ModuleMgrInstall(MODULE_MGR *moduleMgr, const char *moduleName,
     module->handle = ModuleInstall(module, argc, argv);
 #ifndef STARTUP_INIT_TEST
     if (module->handle == NULL) {
-        BEGET_LOGE("Failed to install module %s", module->name);
+        BEGET_LOGE("failed install module %s", module->name);
         ModuleDestroy((ListNode *)module);
         return -1;
     }
@@ -277,7 +277,7 @@ void ModuleMgrUninstall(MODULE_MGR *moduleMgr, const char *name)
     BEGET_LOGV("ModuleMgrUninstall moduleName %s", name);
     // Find module by name
     module = (MODULE_ITEM *)OH_ListFind(&(moduleMgr->modules), (void *)name, ModuleCompare);
-    BEGET_ERROR_CHECK(module != NULL, return, "Can not find module %s", name);
+    BEGET_ERROR_CHECK(module != NULL, return, "cannot find module %s", name);
 
     // Remove from the list
     OH_ListRemove((ListNode *)module);

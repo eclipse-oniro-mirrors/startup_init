@@ -95,7 +95,7 @@ void InstallLocalSignalHandler(void)
 
         sigaddset(&set, sig);
         if (sigaction(sig, &action, NULL) != 0) {
-            BEGET_LOGE("Failed to register signal(%d)", sig);
+            BEGET_LOGE("failed register signal(%d)", sig);
         }
     }
     sigprocmask(SIG_UNBLOCK, &set, NULL);

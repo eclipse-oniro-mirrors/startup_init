@@ -164,7 +164,7 @@ static char *HvbGetABPartitionPath(const size_t pathLen, const char *partition)
         goto err;
     }
     if (access(path, F_OK) != 0) {
-        BEGET_LOGE("still can not access %s, abort verify", path);
+        BEGET_LOGE("still cannot access %s, abort verify", path);
         goto err;
     }
 
@@ -296,7 +296,7 @@ static enum hvb_io_errno HvbReadFromPartition(struct hvb_ops* ops,
 
     fd = open(path, O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
-        BEGET_LOGE("error, Failed to open %s, errno = %d", path, errno);
+        BEGET_LOGE("error, failed open %s, errno = %d", path, errno);
         ret = HVB_IO_ERROR_IO;
         goto exit;
     }
@@ -304,7 +304,7 @@ static enum hvb_io_errno HvbReadFromPartition(struct hvb_ops* ops,
     if (offset < 0) {
         int64_t total_size = GetImageSizeForHVB(fd, partition);
         if (total_size == -1) {
-            BEGET_LOGE("Failed to get the size of the partition %s", partition);
+            BEGET_LOGE("failed get the size of the partition %s", partition);
             ret = HVB_IO_ERROR_IO;
             goto exit;
         }
@@ -315,7 +315,7 @@ static enum hvb_io_errno HvbReadFromPartition(struct hvb_ops* ops,
 
     ssize_t numRead = read(fd, buf, numBytes);
     if (numRead < 0 || (size_t)numRead != numBytes) {
-        BEGET_LOGE("Failed to read %lld bytes from %s offset %lld", numBytes,
+        BEGET_LOGE("failed read %lld bytes from %s offset %lld", numBytes,
                    path, offset);
         ret = HVB_IO_ERROR_IO;
         goto exit;

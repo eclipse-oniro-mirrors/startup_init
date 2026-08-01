@@ -74,7 +74,7 @@ int ParamStreamCreate(ParamTaskPtr *stream, ParamTaskPtr server,
     info.recvMessage = OnReceiveRequest;
     g_recvMessage = streamInfo->recvMessage;
     LE_STATUS status = LE_AcceptStreamClient(LE_GetDefaultLoop(), server, stream, &info);
-    PARAM_CHECK(status == 0, return -1, "Failed to create client");
+    PARAM_CHECK(status == 0, return -1, "failed create client");
     return 0;
 }
 
@@ -91,7 +91,7 @@ int ParamTaskSendMsg(const ParamTaskPtr stream, const ParamMessage *msg)
         return -1, "Invalid stream");
     uint32_t dataSize = msg->msgSize;
     BufferHandle bufferHandle = LE_CreateBuffer(LE_GetDefaultLoop(), dataSize);
-    PARAM_CHECK(bufferHandle != NULL, return -1, "Failed to create request");
+    PARAM_CHECK(bufferHandle != NULL, return -1, "failed create request");
     uint8_t *buffer = LE_GetBufferInfo(bufferHandle, NULL, NULL);
     int ret = memcpy_s(buffer, dataSize, msg, dataSize);
     free((void *)msg);

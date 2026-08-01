@@ -331,7 +331,7 @@ static int WritePid(const Service *service)
                 "Failed to write %s pid:%d", service->writePidArgs.argv[i], childPid);
             (void)fclose(fd);
         } else {
-            INIT_LOGE("Failed to open realPath: %s  %s errno:%d.", realPath, service->writePidArgs.argv[i], errno);
+            INIT_LOGE("failed open realPath: %s  %s errno:%d.", realPath, service->writePidArgs.argv[i], errno);
         }
         if (realPath != NULL) {
             free(realPath);
@@ -380,7 +380,7 @@ static int PublishHoldFds(Service *service)
     for (size_t i = 0; i < service->fdCount; i++) {
         int fd = dup(service->fds[i]);
         if (fd < 0) {
-            INIT_LOGW("Service warning %d %s, failed to dup fd for publish", errno, service->name);
+            INIT_LOGW("Service warning %d %s, failed dup fd for publish", errno, service->name);
             continue;
         }
         ret = snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1, "%d ", fd);
@@ -453,12 +453,12 @@ static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
     INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
     int ret = SetServiceEnterSandbox(service, pathArgs->argv[0]);
     if (ret != 0) {
-        INIT_LOGW("Service warning %d %s, failed to enter sandbox.", ret, service->name);
+        INIT_LOGW("Service warning %d %s, failed enter sandbox.", ret, service->name);
         service->lastErrno = INIT_ESANDBOX;
     }
     ret = SetAccessToken(service);
     if (ret != 0) {
-        INIT_LOGW("Service warning %d %s, failed to set access token.", ret, service->name);
+        INIT_LOGW("Service warning %d %s, failed set access token.", ret, service->name);
         service->lastErrno = INIT_EACCESSTOKEN;
     }
 
@@ -731,7 +731,7 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     if (pid == 0) {
         RunChildProcess(service, pathArgs);
     } else if (pid < 0) {
-        INIT_LOGE("ServiceStart error failed to fork %d, %s", errno, service->name);
+        INIT_LOGE("ServiceStart error failed fork %d, %s", errno, service->name);
         service->lastErrno = INIT_EFORK;
         return SERVICE_FAILURE;
     }
@@ -905,7 +905,7 @@ static void CheckOndemandService(Service *service)
     if (strcmp(service->name, "console") == 0 && IsDebugMode()) {
         INIT_LOGI("Watch console service in debug mode");
         if (WatchConsoleDevice(service) < 0) {
-            INIT_LOGE("Failed to watch console service after it exit, mark console service invalid");
+            INIT_LOGE("failed watch console service after it exit, mark console service invalid");
             service->attribute |= SERVICE_ATTR_INVALID;
         }
     }
@@ -985,7 +985,7 @@ void ServiceReap(Service *service)
     }
 
     int ret = ExecRestartCmd(service);
-    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "ServiceReap Failed to exec restartArg for %s", service->name);
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "ServiceReap failed exec restartArg for %s", service->name);
 
     if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_RESTART]);
@@ -1021,7 +1021,7 @@ int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
         // case 2
         CloseServiceFds(service, false);
         if (memcpy_s(service->fds, sizeof(int) * (fdCount + 1), fds, sizeof(int) * fdCount) != 0) {
-            INIT_LOGE("Failed to copy fds to service");
+            INIT_LOGE("failed copy fds to service");
             // Something wrong happened, maybe service->fds is broken, clear it.
             free(service->fds);
             service->fds = NULL;
@@ -1038,11 +1038,11 @@ int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
         INIT_ERROR_CHECK(fdCount <= MAX_HOLD_FDS, return -1, "Invalid fdCount %d", fdCount);
         service->fds = calloc(fdCount + 1, sizeof(int));
         if (service->fds == NULL) {
-            INIT_LOGE("Service \' %s \' failed to allocate memory for fds", service->name);
+            INIT_LOGE("Service \' %s \' failed allocate memory for fds", service->name);
             ret = -1;
         } else {
             if (memcpy_s(service->fds, sizeof(int) * (fdCount + 1), fds, sizeof(int) * fdCount) != 0) {
-                INIT_LOGE("Failed to copy fds to service");
+                INIT_LOGE("failed copy fds to service");
                 // Something wrong happened, maybe service->fds is broken, clear it.
                 free(service->fds);
                 service->fds = NULL;

@@ -34,7 +34,7 @@ static bool IsComplete()
     char enable[8] = {0};
     int ret = GetParameter("bootevent.boot.completed", "", enable, sizeof(enable));
     if (ret != 0) {
-        INIT_LOGE("Failed to get param value");
+        INIT_LOGE("failed get param value");
         return false;
     }
     if (strcmp(enable, "true") == 0) {
@@ -63,7 +63,7 @@ static void PollUeventdSocketTimeout(int ueventSockFd, bool ondemand)
             }
             INIT_LOGI("poll ueventd socket timeout, but init not complete");
         } else if (ret < 0) {
-            INIT_LOGE("Failed to poll ueventd socket!");
+            INIT_LOGE("failed poll ueventd socket!");
             return;
         }
         if (pfd.revents & (POLLIN | POLLERR)) {
@@ -82,7 +82,7 @@ static int UeventdRetrigger(void)
     }
     int ueventSockFd = UeventdSocketInit();
     if (ueventSockFd < 0) {
-        INIT_LOGE("Failed to create uevent socket!");
+        INIT_LOGE("failed create uevent socket!");
         return -1;
     }
     RetriggerUevent(ueventSockFd, NULL, 0); // Not require boot devices
@@ -102,12 +102,12 @@ static int UeventdDaemon(int listen_only)
     bool ondemand = true;
     int ueventSockFd = GetControlSocket("ueventd");
     if (ueventSockFd < 0) {
-        INIT_LOGW("Failed to get uevent socket, try to create");
+        INIT_LOGW("failed get uevent socket, try to create");
         ueventSockFd = UeventdSocketInit();
         ondemand = false;
     }
     if (ueventSockFd < 0) {
-        INIT_LOGE("Failed to create uevent socket!");
+        INIT_LOGE("failed create uevent socket!");
         return -1;
     }
     if (!listen_only && access(UEVENTD_FLAG, F_OK)) {
@@ -115,7 +115,7 @@ static int UeventdDaemon(int listen_only)
         RetriggerUevent(ueventSockFd, NULL, 0); // Not require boot devices
         int fd = open(UEVENTD_FLAG, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
         if (fd < 0) {
-            INIT_LOGE("Failed to create ueventd flag!");
+            INIT_LOGE("failed create ueventd flag!");
             return -1;
         }
         (void)close(fd);

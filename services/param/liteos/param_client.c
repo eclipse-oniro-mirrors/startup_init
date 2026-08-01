@@ -29,7 +29,7 @@ __attribute__((constructor)) static int ClientInit(void)
     EnableInitLog(INIT_INFO);
     PARAM_LOGV("InitParamClient");
     int ret = InitParamWorkSpace(1, NULL);
-    PARAM_CHECK(ret == 0, return -1, "Failed to init param workspace");
+    PARAM_CHECK(ret == 0, return -1, "failed init param workspace");
     PARAM_SET_FLAG(g_flags, WORKSPACE_FLAGS_INIT);
     // init persist to save
     InitPersistParamWorkSpace();
@@ -55,11 +55,11 @@ int SystemSetParameter(const char *name, const char *value)
     if ((ctrlService & PARAM_CTRL_SERVICE) != PARAM_CTRL_SERVICE) { // ctrl param
         uint32_t dataIndex = 0;
         ret = WriteParam(name, value, &dataIndex, 0);
-        PARAM_CHECK(ret == 0, return ret, "Failed to set param %d name %s %s", ret, name, value);
+        PARAM_CHECK(ret == 0, return ret, "failed set param %d name %s %s", ret, name, value);
         ret = WritePersistParam(name, value);
-        PARAM_CHECK(ret == 0, return ret, "Failed to set persist param name %s", name);
+        PARAM_CHECK(ret == 0, return ret, "failed set persist param name %s", name);
     } else {
-        PARAM_LOGE("SystemSetParameter can not support service ctrl parameter name %s", name);
+        PARAM_LOGE("SystemSetParameter cannot support service ctrl parameter name %s", name);
     }
     return ret;
 }

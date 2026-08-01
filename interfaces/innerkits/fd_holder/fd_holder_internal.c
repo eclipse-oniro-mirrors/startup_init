@@ -41,11 +41,11 @@ int BuildControlMessage(struct msghdr *msghdr,  int *fds, int fdCount, bool send
     }
 
     msghdr->msg_control = calloc(1, ((msghdr->msg_controllen == 0) ? 1 : msghdr->msg_controllen));
-    BEGET_ERROR_CHECK(msghdr->msg_control != NULL, return -1, "Failed to build control message");
+    BEGET_ERROR_CHECK(msghdr->msg_control != NULL, return -1, "failed build control message");
 
     struct cmsghdr *cmsg = NULL;
     cmsg = CMSG_FIRSTHDR(msghdr);
-    BEGET_ERROR_CHECK(cmsg != NULL, return -1, "Failed to build cmsg");
+    BEGET_ERROR_CHECK(cmsg != NULL, return -1, "failed build cmsg");
 
     if (fdCount > 0) {
         cmsg->cmsg_level = SOL_SOCKET;
@@ -105,7 +105,7 @@ STATIC int *GetFdsFromMsg(size_t *outFdCount, pid_t *requestPid, struct msghdr m
     int *outFds = NULL;
     if (fds != NULL && fdCount > 0) {
         outFds = calloc(fdCount + 1, sizeof(int));
-        BEGET_ERROR_CHECK(outFds != NULL, return NULL, "Failed to allocate memory for fds");
+        BEGET_ERROR_CHECK(outFds != NULL, return NULL, "failed allocate memory for fds");
         BEGET_ERROR_CHECK(memcpy_s(outFds, sizeof(int) * (fdCount + 1), fds, sizeof(int) * fdCount) == 0,
             free(outFds); return NULL, "Failed to copy fds");
     }
@@ -135,6 +135,6 @@ int *ReceiveFds(int sock, struct iovec iovec, size_t *outFdCount, bool nonblock,
         flags |= MSG_DONTWAIT;
     }
     ssize_t rc = TEMP_FAILURE_RETRY(recvmsg(sock, &msghdr, flags));
-    BEGET_ERROR_CHECK(rc >= 0, return NULL, "Failed to get fds from remote, err = %d", errno);
+    BEGET_ERROR_CHECK(rc >= 0, return NULL, "failed get fds from remote, err = %d", errno);
     return GetFdsFromMsg(outFdCount, requestPid, msghdr);
 }

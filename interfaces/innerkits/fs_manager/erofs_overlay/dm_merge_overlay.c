@@ -722,7 +722,7 @@ int RefreshPartitionOverlay(void)
     int overlayCount = 0;
     ParseRefreshPartNames(buf, overlayPaths, &overlayCount);
     if (!IsDmMergeOverlayActive()) {
-        BEGET_LOGI("dm_merge overlay not active, per-partition mode does not support refresh");
+        BEGET_LOGI("dm_merge overlay not active, per-partition mode doesn't support refresh");
         return 0;
     }
     if (overlayCount == 0) {

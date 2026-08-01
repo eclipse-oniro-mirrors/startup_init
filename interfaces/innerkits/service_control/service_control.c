@@ -47,7 +47,7 @@ static int StartProcess(const char *name, const char *extArgv[], int extArgc)
         ret = strncat_s(nameValue, len, name, strlen(name));
         if (ret != 0) {
             free(nameValue);
-            BEGET_LOGE("Failed to cat name");
+            BEGET_LOGE("failed cat name");
             return -1;
         }
         for (int j = 0; j < extArgc; j++) {
@@ -57,7 +57,7 @@ static int StartProcess(const char *name, const char *extArgv[], int extArgc)
             }
             if (ret != 0) {
                 free(nameValue);
-                BEGET_LOGE("Failed to cat name");
+                BEGET_LOGE("failed cat name");
                 return -1;
             }
         }
@@ -178,7 +178,7 @@ int ServiceWaitForStatus(const char *serviceName, ServiceStatus status, int wait
     char paramName[PARAM_NAME_LEN_MAX] = {0};
     char value[MAX_INT_LEN] = {0};
     int ret = GetProcessInfo(serviceName, paramName, value, status);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to get param info.");
+    BEGET_ERROR_CHECK(ret == 0, return -1, "failed get param info.");
     return (SystemWaitParameter(paramName, value, waitTimeout) != 0) ? -1 : 0;
 }
 
@@ -188,7 +188,7 @@ int ServiceSetReady(const char *serviceName)
     char paramName[PARAM_NAME_LEN_MAX] = {0};
     char value[MAX_INT_LEN] = {0};
     int ret = GetProcessInfo(serviceName, paramName, value, SERVICE_READY);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to get param info.");
+    BEGET_ERROR_CHECK(ret == 0, return -1, "failed get param info.");
     return SystemSetParameter(paramName, value);
 }
 
@@ -202,7 +202,7 @@ int StartServiceByTimer(const char *serviceName, uint64_t timeout)
     // restrict timeout value, not too long.
     char value[PARAM_VALUE_LEN_MAX] = {};
     if (snprintf_s(value, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "%s|%llu", serviceName, timeout) == -1) {
-        BEGET_LOGE("Failed to build parameter value");
+        BEGET_LOGE("failed build parameter value");
         return -1;
     }
     return SystemSetParameter("ohos.servicectrl.timer_start", value);

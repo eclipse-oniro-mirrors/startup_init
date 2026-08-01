@@ -127,7 +127,7 @@ static void WaitCallbackWork(napi_env env, ParamAsyncContextPtr asyncContext)
                 napi_value callbackRef = nullptr;
                 napi_value callResult = nullptr;
                 napi_status status = napi_get_reference_value(env, asyncContext->callbackRef, &callbackRef);
-                PARAM_JS_CHECK(status == 0 && callbackRef != nullptr, return, "Failed to get reference ");
+                PARAM_JS_CHECK(status == 0 && callbackRef != nullptr, return, "failed get reference ");
                 napi_value undefined;
                 napi_get_undefined(env, &undefined);
                 napi_call_function(env, undefined, callbackRef, ARGC_NUMBER, result, &callResult);
@@ -413,14 +413,14 @@ static void HandleParameterChange(ParamWatcherPtr watcher, const char *key, cons
 {
     napi_handle_scope scope = nullptr;
     napi_status status = napi_open_handle_scope(watcher->env, &scope);
-    PARAM_JS_CHECK(status == 0, return, "Failed to get reference ");
+    PARAM_JS_CHECK(status == 0, return, "failed get reference ");
     napi_value result[ARGC_NUMBER] = { 0 };
     napi_create_string_utf8(watcher->env, key, strlen(key), &result[0]);
     napi_create_string_utf8(watcher->env, value, strlen(value), &result[1]);
     napi_value thisVar = nullptr;
     status = napi_get_reference_value(watcher->env, watcher->thisVarRef, &thisVar);
     PARAM_JS_CHECK(status == 0 && thisVar != nullptr, napi_close_handle_scope(watcher->env, scope);
-        return, "Failed to get reference ");
+        return, "failed get reference ");
     uint32_t next = 0;
     bool ret = GetFristRefence(watcher, next);
     while (ret) {
@@ -438,7 +438,7 @@ static void ProcessParamChange(const char *key, const char *value, void *context
     PARAM_JS_CHECK(watcher->callbackReferences.size() > 0, return, "No callback for watcher");
 
     ParamChangeValue *change = new (std::nothrow) ParamChangeValue;
-    PARAM_JS_CHECK(change != nullptr, return, "Failed to get change for %s", watcher->keyPrefix);
+    PARAM_JS_CHECK(change != nullptr, return, "failed get change for %s", watcher->keyPrefix);
     change->watcher = watcher;
     change->key = std::string(key);
     change->value = std::string(value);
@@ -458,7 +458,7 @@ static void WatchCallbackWork(napi_env env, ParamWatcherPtr watcher)
 {
     PARAM_JS_LOGV("JSApp WatchCallbackWork key: %s", watcher->keyPrefix);
     ParamWatcherWork *worker = new ParamWatcherWork();
-    PARAM_JS_CHECK(worker != nullptr, return, "Failed to create worker ");
+    PARAM_JS_CHECK(worker != nullptr, return, "failed create worker ");
     worker->watcher = watcher;
     worker->work = nullptr;
     worker->startWatch = watcher->startWatch;
