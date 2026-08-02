@@ -432,6 +432,7 @@ int RemountRofsOverlay(void)
         } else {
             struct stat st;
             if (stat("/mnt/overlay/usr/upper", &st) == 0) {
+                INIT_LOGI("per-partition overlay already active, skip");
                 return REMOUNT_SUCC;
             }
             DeleteRemountResultFlag();
