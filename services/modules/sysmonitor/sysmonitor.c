@@ -32,6 +32,9 @@
 #include "init_utils.h"
 #include "securec.h"
 
+/* ========== 常量定义 ========== */
+
+/* PROC_STAT字段索引 */
 #define PROC_STAT_FIELD_PPID         0
 #define PROC_STAT_FIELD_UTIME        11
 #define PROC_STAT_FIELD_STIME        12
@@ -41,6 +44,35 @@
 #define PROC_STAT_FIELD_STARTTIME    20
 #define PROC_STAT_FIELD_VSIZE        21
 #define PROC_STAT_FIELD_RSS          22
+
+/* 诊断阈值常量 */
+#define CPU_CRITICAL_THRESHOLD       9000  /* 90.00% */
+#define CPU_WARNING_THRESHOLD        7000  /* 70.00% */
+#define MEM_CRITICAL_THRESHOLD       9000  /* 90.00% */
+#define MEM_WARNING_THRESHOLD        7000  /* 70.00% */
+#define SWAP_USAGE_INFO_THRESHOLD    5000  /* 50.00% */
+#define BLOCKED_PROC_THRESHOLD       10
+
+/* 字段计数常量 */
+#define DISKSTATS_FIELDS             14
+#define NETDEV_FIELDS                16
+
+/* 缓冲区常量 */
+#define MAX_LINE_LENGTH              4096
+#define PROC_PATH_LEN                256
+#define MEM_KEY_LEN                  64
+#define MEM_UNIT_LEN                 16
+#define DEVICE_NAME_MAX_LEN          64
+#define NET_IFACE_MAX_LEN            64
+#define STAT_FIELD_MAX_COUNT         52
+
+/* 初始化常量 */
+#define DECIMAL_BASE                 10
+#define BYTES_PER_KB                 1024ULL
+#define BYTES_PER_MB                 (1024ULL * 1024ULL)
+#define NSEC_PER_SEC                 1000000000ULL
+
+/* ========== 类型定义 ========== */
 
 typedef struct {
     MonitorCallback callback;
@@ -61,6 +93,26 @@ typedef struct {
     uint64_t *target;
 } MemInfoField;
 
+typedef struct {
+    bool valid;
+    uint32_t major;
+    uint32_t minor;
+    char deviceName[DEVICE_NAME_MAX_LEN];
+    uint64_t readsCompleted;
+    uint64_t readsMerged;
+    uint64_t sectorsRead;
+    uint64_t readTimeMs;
+    uint64_t writesCompleted;
+    uint64_t writesMerged;
+    uint64_t sectorsWritten;
+    uint64_t writeTimeMs;
+    uint64_t ioInProgress;
+    uint64_t ioTimeMs;
+    uint64_t weightedIoTimeMs;
+} DiskStatsParsed;
+
+/* ========== 全局变量 ========== */
+
 static MonitorContext g_monitorCtx;
 static CallbackInfo g_callbacks[MONITOR_TYPE_MAX];
 static pthread_mutex_t g_monitorMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -68,6 +120,8 @@ static bool g_initialized = false;
 
 static HistoryRecord *g_historyRecords[MONITOR_TYPE_MAX];
 static uint32_t g_historyCounts[MONITOR_TYPE_MAX];
+
+/* ========== 静态函数声明 ========== */
 
 static int ReadCpuStats(CpuStats *stats);
 static int ReadMemoryStats(MemoryStats *stats);
@@ -82,11 +136,28 @@ static void InitHistoryRecords(void);
 static void ParseMemInfoLine(const char *line, MemoryStats *stats);
 static int ParseProcessStat(const char *line, ProcessInfo *info);
 static int ReadProcessCmdline(int pid, char *buf, size_t bufLen);
-static int ParseDiskstatsLine(const char *line, DiskStats *stats);
+static int ParseDiskstatsLine(const char *line, DiskStatsParsed *parsed);
 static int ParseNetDevLine(char *line, NetworkStats *stats);
+static void ParseStatLine(const char *line, CpuStats *stats);
+static void CalculateMemUsagePercent(MemoryStats *stats);
+static void DiagnoseCpu(FILE *fp, uint32_t cpuUsage);
+static void DiagnoseMemory(FILE *fp, uint32_t memUsage);
+static void DiagnoseProcesses(FILE *fp);
+static const char *GetAlarmLevelString(AlarmLevel level);
+static void DiagnoseAlarms(FILE *fp);
+static void PrintRecommendations(FILE *fp, uint32_t cpuUsage, uint32_t memUsage);
+static void ExportCpuStats(FILE *fp, const CpuStats *stats);
+static void ExportMemStats(FILE *fp, const MemoryStats *stats);
+static void ExportAlarms(FILE *fp, const ListNode *alarmList);
+static void ExportPerfRecords(FILE *fp, const ListNode *recordList);
+
+/* ========== 初始化/销毁 ========== */
 
 static void SetDefaultConfig(MonitorConfig *config)
 {
+    if (config == NULL) {
+        return;
+    }
     config->sampleIntervalMs = DEFAULT_SAMPLE_INTERVAL_MS;
     config->historySize = DEFAULT_HISTORY_SIZE;
     config->enableCpuMonitor = true;
@@ -182,6 +253,8 @@ void DestroyMonitor(void)
     INIT_LOGI("Monitor module destroyed");
 }
 
+/* ========== 状态控制 ========== */
+
 int StartMonitor(void)
 {
     INIT_CHECK_RETURN_VALUE(g_initialized, MONITOR_ERROR);
@@ -259,6 +332,8 @@ MonitorState GetMonitorState(void)
     return g_monitorCtx.state;
 }
 
+/* ========== 更新函数 ========== */
+
 int UpdateCpuStats(CpuStats *stats)
 {
     INIT_CHECK_RETURN_VALUE(stats != NULL, MONITOR_INVALID_PARAM);
@@ -321,8 +396,14 @@ int UpdateProcessStats(void)
     return MONITOR_OK;
 }
 
-static int ParseDiskstatsLine(const char *line, DiskStats *stats)
+/* ========== 磁盘统计 ========== */
+
+static int ParseDiskstatsLine(const char *line, DiskStatsParsed *parsed)
 {
+    INIT_CHECK_RETURN_VALUE(line != NULL && parsed != NULL, MONITOR_INVALID_PARAM);
+
+    parsed->valid = false;
+    
     uint32_t major = 0;
     uint32_t minor = 0;
     char deviceName[DEVICE_NAME_MAX_LEN] = {0};
@@ -340,27 +421,34 @@ static int ParseDiskstatsLine(const char *line, DiskStats *stats)
     uint64_t weightedIoTimeMs = 0;
 
     int fields = sscanf_s(line, "%u %u %63s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
-        &major, &minor, deviceName, sizeof(deviceName),
+        &major, &minor, deviceName, (unsigned int)sizeof(deviceName),
         &readsCompleted, &readsMerged, &sectorsRead, &readTimeMs,
         &writesCompleted, &writesMerged, &sectorsWritten, &writeTimeMs,
         &ioInProgress, &ioTimeMs, &weightedIoTimeMs);
-    INIT_CHECK_RETURN_VALUE(fields >= 14, MONITOR_ERROR);
+    
+    if (fields < DISKSTATS_FIELDS) {
+        return MONITOR_ERROR;
+    }
 
-    int ret = strncpy_s(stats->deviceName, sizeof(stats->deviceName),
+    parsed->valid = true;
+    parsed->major = major;
+    parsed->minor = minor;
+    parsed->readsCompleted = readsCompleted;
+    parsed->readsMerged = readsMerged;
+    parsed->sectorsRead = sectorsRead;
+    parsed->readTimeMs = readTimeMs;
+    parsed->writesCompleted = writesCompleted;
+    parsed->writesMerged = writesMerged;
+    parsed->sectorsWritten = sectorsWritten;
+    parsed->writeTimeMs = writeTimeMs;
+    parsed->ioInProgress = ioInProgress;
+    parsed->ioTimeMs = ioTimeMs;
+    parsed->weightedIoTimeMs = weightedIoTimeMs;
+
+    int ret = strncpy_s(parsed->deviceName, sizeof(parsed->deviceName),
         deviceName, strlen(deviceName));
     INIT_CHECK_RETURN_VALUE(ret == EOK, MONITOR_ERROR);
 
-    stats->readsCompleted = readsCompleted;
-    stats->readsMerged = readsMerged;
-    stats->sectorsRead = sectorsRead;
-    stats->readTimeMs = readTimeMs;
-    stats->writesCompleted = writesCompleted;
-    stats->writesMerged = writesMerged;
-    stats->sectorsWritten = sectorsWritten;
-    stats->writeTimeMs = writeTimeMs;
-    stats->ioInProgress = ioInProgress;
-    stats->ioTimeMs = ioTimeMs;
-    stats->weightedIoTimeMs = weightedIoTimeMs;
     return MONITOR_OK;
 }
 
@@ -374,8 +462,25 @@ int UpdateDiskStats(DiskStats *stats, uint32_t maxCount)
     char line[MAX_LINE_LENGTH] = {0};
     uint32_t count = 0;
     while (fgets(line, sizeof(line), fp) != NULL && count < maxCount) {
-        if (ParseDiskstatsLine(line, &stats[count]) == MONITOR_OK) {
-            count++;
+        DiskStatsParsed parsed;
+        if (ParseDiskstatsLine(line, &parsed) == MONITOR_OK && parsed.valid) {
+            stats[count].readsCompleted = parsed.readsCompleted;
+            stats[count].readsMerged = parsed.readsMerged;
+            stats[count].sectorsRead = parsed.sectorsRead;
+            stats[count].readTimeMs = parsed.readTimeMs;
+            stats[count].writesCompleted = parsed.writesCompleted;
+            stats[count].writesMerged = parsed.writesMerged;
+            stats[count].sectorsWritten = parsed.sectorsWritten;
+            stats[count].writeTimeMs = parsed.writeTimeMs;
+            stats[count].ioInProgress = parsed.ioInProgress;
+            stats[count].ioTimeMs = parsed.ioTimeMs;
+            stats[count].weightedIoTimeMs = parsed.weightedIoTimeMs;
+            
+            int ret = strncpy_s(stats[count].deviceName, sizeof(stats[count].deviceName),
+                parsed.deviceName, strlen(parsed.deviceName));
+            if (ret == EOK) {
+                count++;
+            }
         }
     }
     fclose(fp);
@@ -388,8 +493,12 @@ int UpdateDiskStats(DiskStats *stats, uint32_t maxCount)
     return MONITOR_OK;
 }
 
+/* ========== 网络统计 ========== */
+
 static int ParseNetDevLine(char *line, NetworkStats *stats)
 {
+    INIT_CHECK_RETURN_VALUE(line != NULL && stats != NULL, MONITOR_INVALID_PARAM);
+
     char *colon = strchr(line, ':');
     INIT_CHECK_RETURN_VALUE(colon != NULL, MONITOR_ERROR);
 
@@ -428,7 +537,7 @@ static int ParseNetDevLine(char *line, NetworkStats *stats)
         &rxBytes, &rxPackets, &rxErrors, &rxDropped, &rxFifo, &rxFrame,
         &rxCompressed, &rxMulticast, &txBytes, &txPackets, &txErrors,
         &txDropped, &txFifo, &txCollisions, &txCarrier, &txCompressed);
-    INIT_CHECK_RETURN_VALUE(fields >= 16, MONITOR_ERROR);
+    INIT_CHECK_RETURN_VALUE(fields >= NETDEV_FIELDS, MONITOR_ERROR);
 
     ret = strncpy_s(stats->interface, sizeof(stats->interface),
         interface, strlen(interface));
@@ -461,6 +570,7 @@ int UpdateNetworkStats(NetworkStats *stats, uint32_t maxCount)
     INIT_CHECK_RETURN_VALUE(fp != NULL, MONITOR_ERROR);
 
     char line[MAX_LINE_LENGTH] = {0};
+    /* 跳过头部两行 */
     if (fgets(line, sizeof(line), fp) == NULL ||
         fgets(line, sizeof(line), fp) == NULL) {
         fclose(fp);
@@ -482,6 +592,8 @@ int UpdateNetworkStats(NetworkStats *stats, uint32_t maxCount)
 
     return MONITOR_OK;
 }
+
+/* ========== 获取函数 ========== */
 
 const CpuStats *GetCpuStats(void)
 {
@@ -510,6 +622,8 @@ ProcessInfo *GetProcessInfo(int pid)
     }
     return NULL;
 }
+
+/* ========== 告警功能 ========== */
 
 int AddMonitorAlarm(MonitorType type, AlarmLevel level,
     const char *message, uint32_t threshold, uint32_t actualValue)
@@ -562,6 +676,8 @@ void ClearHandledAlarms(void)
     }
 }
 
+/* ========== 性能记录 ========== */
+
 PerfRecord *BeginPerfRecord(const char *name, uint32_t type)
 {
     INIT_CHECK_RETURN_VALUE(name != NULL, NULL);
@@ -602,6 +718,8 @@ const ListNode *GetPerfRecords(void)
     return &g_monitorCtx.perfRecordList;
 }
 
+/* ========== 打印摘要 ========== */
+
 void PrintMonitorSummary(void)
 {
     INIT_LOGI("=== System Monitor Summary ===");
@@ -625,6 +743,8 @@ void PrintMonitorSummary(void)
     INIT_LOGI("Processes Running: %u", g_monitorCtx.cpuStats.processesRunning);
     INIT_LOGI("Processes Blocked: %u", g_monitorCtx.cpuStats.processesBlocked);
 }
+
+/* ========== 导出数据 ========== */
 
 static void ExportCpuStats(FILE *fp, const CpuStats *stats)
 {
@@ -712,6 +832,8 @@ int ExportMonitorData(const char *filePath)
     return MONITOR_OK;
 }
 
+/* ========== 计算函数 ========== */
+
 uint32_t CalculateCpuUsage(const CpuStats *prev, const CpuStats *curr)
 {
     INIT_CHECK_RETURN_VALUE(prev != NULL && curr != NULL, 0);
@@ -745,6 +867,8 @@ uint32_t CalculateMemUsage(const MemoryStats *stats)
     uint64_t usedMem = stats->totalMem - stats->availableMem;
     return (uint32_t)((usedMem * PERCENT_SCALE) / stats->totalMem);
 }
+
+/* ========== 查找函数 ========== */
 
 ProcessInfo *FindTopCpuProcess(void)
 {
@@ -780,6 +904,8 @@ ProcessInfo *FindTopMemProcess(void)
     return topProcess;
 }
 
+/* ========== 回调注册 ========== */
+
 int RegisterMonitorCallback(MonitorType type, MonitorCallback callback, void *context)
 {
     INIT_CHECK_RETURN_VALUE(type < MONITOR_TYPE_MAX && callback != NULL, MONITOR_INVALID_PARAM);
@@ -806,6 +932,8 @@ int UnregisterMonitorCallback(MonitorType type)
     return MONITOR_OK;
 }
 
+/* ========== 阈值检查 ========== */
+
 int CheckThresholds(void)
 {
     int alarmsGenerated = 0;
@@ -831,6 +959,8 @@ int CheckThresholds(void)
     return alarmsGenerated;
 }
 
+/* ========== 历史统计 ========== */
+
 int GetHistoryStats(MonitorType type, void *stats, uint32_t index)
 {
     INIT_CHECK_RETURN_VALUE(type < MONITOR_TYPE_MAX, MONITOR_INVALID_PARAM);
@@ -845,20 +975,25 @@ int GetHistoryStats(MonitorType type, void *stats, uint32_t index)
     return MONITOR_OK;
 }
 
+/* ========== CPU统计读取 ========== */
+
 static void ParseStatLine(const char *line, CpuStats *stats)
 {
-    int parsed = 0;
+    if (line == NULL || stats == NULL) {
+        return;
+    }
+
     if (strncmp(line, CTXT_LINE_PREFIX, strlen(CTXT_LINE_PREFIX)) == 0) {
-        parsed = sscanf_s(line, "ctxt %u", &stats->contextSwitches);
+        int parsed = sscanf_s(line, "ctxt %u", &stats->contextSwitches);
         INIT_CHECK_ONLY_ELOG(parsed == 1, "Failed to parse ctxt line");
     } else if (strncmp(line, PROCESSES_LINE_PREFIX, strlen(PROCESSES_LINE_PREFIX)) == 0) {
-        parsed = sscanf_s(line, "processes %u", &stats->processesCreated);
+        int parsed = sscanf_s(line, "processes %u", &stats->processesCreated);
         INIT_CHECK_ONLY_ELOG(parsed == 1, "Failed to parse processes line");
     } else if (strncmp(line, PROCS_RUNNING_PREFIX, strlen(PROCS_RUNNING_PREFIX)) == 0) {
-        parsed = sscanf_s(line, "procs_running %u", &stats->processesRunning);
+        int parsed = sscanf_s(line, "procs_running %u", &stats->processesRunning);
         INIT_CHECK_ONLY_ELOG(parsed == 1, "Failed to parse procs_running line");
     } else if (strncmp(line, PROCS_BLOCKED_PREFIX, strlen(PROCS_BLOCKED_PREFIX)) == 0) {
-        parsed = sscanf_s(line, "procs_blocked %u", &stats->processesBlocked);
+        int parsed = sscanf_s(line, "procs_blocked %u", &stats->processesBlocked);
         INIT_CHECK_ONLY_ELOG(parsed == 1, "Failed to parse procs_blocked line");
     }
 }
@@ -887,10 +1022,10 @@ static int ReadCpuStats(CpuStats *stats)
     uint64_t guestNice = 0;
 
     int parsed = sscanf_s(line, "%15s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
-        cpuLabel, sizeof(cpuLabel),
+        cpuLabel, (unsigned int)sizeof(cpuLabel),
         &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest, &guestNice);
     fclose(fp);
-    INIT_CHECK_RETURN_VALUE(parsed >= 5, MONITOR_ERROR);
+    INIT_CHECK_RETURN_VALUE(parsed >= CPU_STAT_MIN_FIELDS, MONITOR_ERROR);
 
     stats->userModeTime = user;
     stats->niceTime = nice;
@@ -901,7 +1036,7 @@ static int ReadCpuStats(CpuStats *stats)
     stats->softIrqTime = (parsed >= 8) ? softirq : 0;
     stats->stealTime = (parsed >= 9) ? steal : 0;
     stats->guestTime = (parsed >= 10) ? guest : 0;
-    stats->guestNiceTime = (parsed >= 11) ? guestNice : 0;
+    stats->guestNiceTime = (parsed >= CPU_STAT_MAX_FIELDS) ? guestNice : 0;
     stats->cpuCoreNum = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
 
     fp = fopen(PROC_STAT_PATH, "r");
@@ -914,13 +1049,20 @@ static int ReadCpuStats(CpuStats *stats)
     return MONITOR_OK;
 }
 
+/* ========== 内存统计读取 ========== */
+
 static void ParseMemInfoLine(const char *line, MemoryStats *stats)
 {
+    if (line == NULL || stats == NULL) {
+        return;
+    }
+
     char key[MEM_KEY_LEN] = {0};
     uint64_t value = 0;
     char unit[MEM_UNIT_LEN] = {0};
 
-    if (sscanf_s(line, "%63s %llu %15s", key, sizeof(key), &value, unit, sizeof(unit)) < 2) {
+    if (sscanf_s(line, "%63s %llu %15s", key, (unsigned int)sizeof(key), 
+        &value, unit, (unsigned int)sizeof(unit)) < 2) {
         return;
     }
 
@@ -962,7 +1104,7 @@ static void ParseMemInfoLine(const char *line, MemoryStats *stats)
 
 static void CalculateMemUsagePercent(MemoryStats *stats)
 {
-    if (stats->totalMem == 0) {
+    if (stats == NULL || stats->totalMem == 0) {
         return;
     }
 
@@ -998,8 +1140,12 @@ static int ReadMemoryStats(MemoryStats *stats)
     return MONITOR_OK;
 }
 
+/* ========== 进程信息读取 ========== */
+
 static int ParseProcessStat(const char *line, ProcessInfo *info)
 {
+    INIT_CHECK_RETURN_VALUE(line != NULL && info != NULL, MONITOR_ERROR);
+
     char *start = strchr(line, '(');
     char *end = strrchr(line, ')');
     INIT_CHECK_RETURN_VALUE(start != NULL && end != NULL, MONITOR_ERROR);
@@ -1100,6 +1246,8 @@ static int ReadProcessInfo(ProcessInfo *info, int pid)
     return ReadProcessCmdline(pid, info->cmdline, sizeof(info->cmdline));
 }
 
+/* ========== 列表清理 ========== */
+
 static void FreeProcessList(void)
 {
     ListNode *node = g_monitorCtx.processList.next;
@@ -1141,6 +1289,8 @@ static void FreePerfRecordList(void)
     g_monitorCtx.recordCount = 0;
 }
 
+/* ========== 更新所有统计 ========== */
+
 static int UpdateAllStats(void)
 {
     int ret = MONITOR_OK;
@@ -1170,6 +1320,8 @@ static int UpdateAllStats(void)
 
     return ret;
 }
+
+/* ========== 系统诊断 ========== */
 
 static void DiagnoseCpu(FILE *fp, uint32_t cpuUsage)
 {
@@ -1256,11 +1408,14 @@ static void DiagnoseAlarms(FILE *fp)
 
 static void PrintRecommendations(FILE *fp, uint32_t cpuUsage, uint32_t memUsage)
 {
+    (void)cpuUsage;
+    (void)memUsage;
+    
     fprintf(fp, "\n[Recommendations]\n");
-    if (cpuUsage > CPU_WARNING_THRESHOLD) {
+    if (g_monitorCtx.cpuStats.totalUsage > CPU_WARNING_THRESHOLD) {
         fprintf(fp, "  - Investigate high CPU usage processes\n");
     }
-    if (memUsage > MEM_WARNING_THRESHOLD) {
+    if (g_monitorCtx.memStats.usagePercent > MEM_WARNING_THRESHOLD) {
         fprintf(fp, "  - Consider increasing available memory\n");
     }
     if (g_monitorCtx.cpuStats.processesBlocked > BLOCKED_PROC_THRESHOLD) {
