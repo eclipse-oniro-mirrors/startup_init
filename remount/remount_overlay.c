@@ -429,6 +429,13 @@ int RemountRofsOverlay(void)
             }
             INIT_LOGI("dm_merge device exists but .dm_merge marker missing, remount not executed");
             DeleteRemountResultFlag();
+        } else {
+            struct stat st;
+            if (stat("/mnt/overlay/usr/upper", &st) == 0) {
+                INIT_LOGI("per-partition overlay already active, skip");
+                return REMOUNT_SUCC;
+            }
+            DeleteRemountResultFlag();
         }
     }
 
