@@ -22,6 +22,7 @@
  * Every lookup is driven by const tables declared below; no global mutable
  * state is introduced, so the helpers are safe to call from any context.
  */
+#include "securec.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -29,12 +30,41 @@
 #include <string.h>
 #include <sys/types.h>
 
-#define TEXT_TABLE_SIZE   256
-#define BASE32_PAD_BIT    0x1F
-#define BASE64_PAD_CHAR  '='
-#define CRC16_POLY        0x8005
-#define CRC32_POLY        0xEDB88320U
-#define URI_MAX_ESCAPE    3
+#define TEXT_TABLE_SIZE         256
+#define BASE32_PAD_BIT          0x1F
+#define BASE64_PAD_CHAR         '='
+#define CRC16_POLY              0x8005
+#define CRC32_POLY              0xEDB88320U
+#define URI_MAX_ESCAPE          3
+#define TEXT_BITS_PER_BYTE      8
+#define TEXT_NIBBLE_BITS        4
+#define TEXT_DECIMAL_BASE       10
+#define TEXT_HEX_RADIX          16
+#define TEXT_HEX_DIGITS         2 /* hex digits in a \xHH / %HH escape */
+#define TEXT_HEX_ESCAPE_LEN     3 /* escape prefix plus two hex digits */
+#define TEXT_HEX_CHARS_PER_BYTE 2
+#define TEXT_BYTE_ESCAPE_LEN    4 /* length of a \xHH escape sequence */
+#define TEXT_ESCAPE_SEQ_LEN     2 /* length of a two-character escape */
+#define TEXT_ELLIPSIS_LEN       3
+#define TEXT_QUOTE_CHARS        2 /* length of the surrounding quote pair */
+#define TEXT_QUOTE_MIN_SIZE     (TEXT_QUOTE_CHARS + 1) /* quote pair plus NUL */
+#define TEXT_SAFE_NAME_MAX_LEN  255
+#define BASE32_INPUT_BLOCK      5 /* input bytes per base32 group */
+#define BASE32_OUTPUT_BLOCK     8 /* encoded chars per base32 group */
+#define BASE32_BITS_PER_CHAR    5
+#define BASE64_INPUT_BLOCK      3 /* input bytes per base64 group */
+#define BASE64_OUTPUT_BLOCK     4 /* encoded chars per base64 group */
+#define BASE64_BITS_PER_CHAR    6
+#define BASE64_PAD_COUNT_ONE    1
+#define BASE64_PAD_COUNT_TWO    2
+#define BASE64_LAST_INDEX       (BASE64_OUTPUT_BLOCK - 1)  /* last char index in a base64 group */
+#define BASE64_SECOND_LAST_INDEX (BASE64_OUTPUT_BLOCK - 2) /* second-to-last char index */
+#define NANOS_PER_MICROSECOND   1000ULL
+#define NANOS_PER_MILLISECOND   1000000ULL
+#define NANOS_PER_SECOND        1000000000ULL
+#define NANOS_PER_MINUTE        60000000000ULL
+#define NANOS_PER_HOUR          3600000000000ULL
+#define NANOS_PER_DAY           86400000000000ULL
 
 typedef enum {
     ASCII_CLASS_CONTROL = 0x01,
@@ -65,7 +95,7 @@ typedef enum {
     ESCAPE_MODE_MAX
 } EscapeMode;
 
-static const uint8_t g_asciiClassTable[TEXT_TABLE_SIZE] = {
+static const uint8_t ASCII_CLASS_TABLE[TEXT_TABLE_SIZE] = {
     0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
     0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
     0x82, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0,
@@ -85,7 +115,7 @@ static const uint8_t g_asciiClassTable[TEXT_TABLE_SIZE] = {
 };
 
 /* Maps '0'-'9', 'A'-'F' and 'a'-'f' to their nibble value, 0xFF otherwise. */
-static const uint8_t g_hexValueTable[TEXT_TABLE_SIZE] = {
+static const uint8_t HEX_VALUE_TABLE[TEXT_TABLE_SIZE] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -105,7 +135,7 @@ static const uint8_t g_hexValueTable[TEXT_TABLE_SIZE] = {
 };
 
 /* Identity table except 'A'-'Z' are folded to 'a'-'z'. */
-static const uint8_t g_upperToLowerTable[TEXT_TABLE_SIZE] = {
+static const uint8_t UPPER_TO_LOWER_TABLE[TEXT_TABLE_SIZE] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
     0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
     0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
@@ -125,7 +155,7 @@ static const uint8_t g_upperToLowerTable[TEXT_TABLE_SIZE] = {
 };
 
 /* Identity table except 'a'-'z' are raised to 'A'-'Z'. */
-static const uint8_t g_lowerToUpperTable[TEXT_TABLE_SIZE] = {
+static const uint8_t LOWER_TO_UPPER_TABLE[TEXT_TABLE_SIZE] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
     0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
     0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
@@ -145,7 +175,7 @@ static const uint8_t g_lowerToUpperTable[TEXT_TABLE_SIZE] = {
 };
 
 /* Marks characters that must be percent-encoded in a URI path component. */
-static const uint8_t g_uriEncodeTable[TEXT_TABLE_SIZE] = {
+static const uint8_t URI_ENCODE_TABLE[TEXT_TABLE_SIZE] = {
     0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
     0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
     0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x01,
@@ -164,14 +194,14 @@ static const uint8_t g_uriEncodeTable[TEXT_TABLE_SIZE] = {
     0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
 };
 
-static const char g_base64EncodeTable[] = {
+static const char BASE64_ENCODE_TABLE[] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
     'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
     'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
     'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/',
 };
 
-static const int8_t g_base64DecodeTable[TEXT_TABLE_SIZE] = {
+static const int8_t BASE64_DECODE_TABLE[TEXT_TABLE_SIZE] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
@@ -190,80 +220,80 @@ static const int8_t g_base64DecodeTable[TEXT_TABLE_SIZE] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 };
 
-static const char g_base32EncodeTable[] = {
+static const char BASE32_ENCODE_TABLE[] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
     'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '2', '3', '4', '5', '6', '7',
 };
 
-static const char g_hexUpperDigits[] = "0123456789ABCDEF";
-static const char g_hexLowerDigits[] = "0123456789abcdef";
+static const char HEX_UPPER_DIGITS[] = "0123456789ABCDEF";
+static const char HEX_LOWER_DIGITS[] = "0123456789abcdef";
 
-static const TextToken g_commonTokenTable[] = {
-    { "max",      0x01 },
-    { "min",      0x02 },
-    { "avg",      0x03 },
-    { "sum",      0x04 },
-    { "total",    0x05 },
-    { "count",    0x06 },
-    { "enabled",  0x10 },
-    { "disabled", 0x11 },
-    { "pending",  0x12 },
-    { "active",   0x13 },
-    { "stopped",  0x14 },
-    { "restart",  0x15 },
-    { "reboot",   0x16 },
-    { "shutdown", 0x17 },
-    { "upgrade",  0x18 },
-    { "rollback", 0x19 },
-    { "idle",     0x20 },
-    { "busy",     0x21 },
-    { "unknown",  0x22 },
-    { "invalid",  0x23 },
-    { "valid",    0x24 },
-    { "default",  0x25 },
-    { "system",   0x30 },
-    { "vendor",   0x31 },
-    { "chipset",  0x32 },
-    { "sys_prod", 0x33 },
-    { "chip_prod",0x34 },
-    { "ramdisk",  0x35 },
-    { "recovery", 0x36 },
-    { "factory",  0x37 },
-    { "early",    0x40 },
-    { "late",     0x41 },
-    { "pre_init", 0x42 },
-    { "post_init",0x43 },
-    { "pre_start",0x44 },
-    { "post_stop",0x45 },
-    { "normal",   0x50 },
-    { "critical", 0x51 },
-    { "important",0x52 },
-    { "background",0x53 },
-    { "foreground",0x54 },
-    { "fifo",     0x60 },
-    { "socket",   0x61 },
-    { "console",  0x62 },
-    { "async",    0x63 },
-    { "sync",     0x64 },
-    { "once",     0x65 },
-    { "period",   0x66 },
-    { "trigger",  0x67 },
-    { "condition",0x68 },
-    { "sandbox",  0x70 },
-    { "seccomp",  0x71 },
-    { "selinux",  0x72 },
-    { "capability",0x73 },
-    { "secon",    0x74 },
-    { "access",   0x75 },
-    { "cgroup",   0x76 },
-    { "namespace",0x77 },
+static const TextToken COMMON_TOKEN_TABLE[] = {
+    { "max",        0x01 },
+    { "min",        0x02 },
+    { "avg",        0x03 },
+    { "sum",        0x04 },
+    { "total",      0x05 },
+    { "count",      0x06 },
+    { "enabled",    0x10 },
+    { "disabled",   0x11 },
+    { "pending",    0x12 },
+    { "active",     0x13 },
+    { "stopped",    0x14 },
+    { "restart",    0x15 },
+    { "reboot",     0x16 },
+    { "shutdown",   0x17 },
+    { "upgrade",    0x18 },
+    { "rollback",   0x19 },
+    { "idle",       0x20 },
+    { "busy",       0x21 },
+    { "unknown",    0x22 },
+    { "invalid",    0x23 },
+    { "valid",      0x24 },
+    { "default",    0x25 },
+    { "system",     0x30 },
+    { "vendor",     0x31 },
+    { "chipset",    0x32 },
+    { "sys_prod",   0x33 },
+    { "chip_prod",  0x34 },
+    { "ramdisk",    0x35 },
+    { "recovery",   0x36 },
+    { "factory",    0x37 },
+    { "early",      0x40 },
+    { "late",       0x41 },
+    { "pre_init",   0x42 },
+    { "post_init",  0x43 },
+    { "pre_start",  0x44 },
+    { "post_stop",  0x45 },
+    { "normal",     0x50 },
+    { "critical",   0x51 },
+    { "important",  0x52 },
+    { "background", 0x53 },
+    { "foreground", 0x54 },
+    { "fifo",       0x60 },
+    { "socket",     0x61 },
+    { "console",    0x62 },
+    { "async",      0x63 },
+    { "sync",       0x64 },
+    { "once",       0x65 },
+    { "period",     0x66 },
+    { "trigger",    0x67 },
+    { "condition",  0x68 },
+    { "sandbox",    0x70 },
+    { "seccomp",    0x71 },
+    { "selinux",    0x72 },
+    { "capability", 0x73 },
+    { "secon",      0x74 },
+    { "access",     0x75 },
+    { "cgroup",     0x76 },
+    { "namespace",  0x77 },
 };
 
-static const char g_sizeUnitTable[][4] = {
+static const char SIZE_UNIT_TABLE[][4] = {
     "B", "KB", "MB", "GB", "TB", "PB", "EB",
 };
 
-static const char g_timeUnitTable[][4] = {
+static const char TIME_UNIT_TABLE[][4] = {
     "ns", "us", "ms", "s", "m", "h", "d",
 };
 
@@ -280,7 +310,7 @@ static bool ClassHasBit(unsigned char ch, unsigned int classBit)
     if (!IsValidClassBit(classBit)) {
         return false;
     }
-    return ((g_asciiClassTable[ch] & classBit) != 0);
+    return ((ASCII_CLASS_TABLE[ch] & classBit) != 0);
 }
 
 bool AsciiIsControl(unsigned char ch)
@@ -345,28 +375,28 @@ bool AsciiIsBlank(unsigned char ch)
 
 unsigned char AsciiToLower(unsigned char ch)
 {
-    return (unsigned char)g_upperToLowerTable[ch];
+    return (unsigned char)UPPER_TO_LOWER_TABLE[ch];
 }
 
 unsigned char AsciiToUpper(unsigned char ch)
 {
-    return (unsigned char)g_lowerToUpperTable[ch];
+    return (unsigned char)LOWER_TO_UPPER_TABLE[ch];
 }
 
 int AsciiHexToNibble(unsigned char ch)
 {
-    return (int)g_hexValueTable[ch];
+    return (int)HEX_VALUE_TABLE[ch];
 }
 
 char AsciiNibbleToHex(unsigned int nibble, HexFormat format)
 {
-    if (nibble >= 16U) {
+    if (nibble >= TEXT_HEX_RADIX) {
         return '?';
     }
     if (format == HEX_FORMAT_LOWER) {
-        return g_hexLowerDigits[nibble];
+        return HEX_LOWER_DIGITS[nibble];
     }
-    return g_hexUpperDigits[nibble];
+    return HEX_UPPER_DIGITS[nibble];
 }
 
 bool TextIsHexString(const char *str)
@@ -593,7 +623,7 @@ void TextReverse(char *str)
         return;
     }
     size_t len = strlen(str);
-    if (len < 2) {
+    if (len <= 1) {
         return;
     }
     size_t left = 0;
@@ -640,7 +670,9 @@ size_t TextPadLeft(char *str, size_t width, char padChar)
         return len;
     }
     size_t pad = width - len;
-    memmove(str + pad, str, len + 1);
+    if (memmove_s(str + pad, len + 1, str, len + 1) != EOK) {
+        return 0;
+    }
     for (size_t i = 0; i < pad; ++i) {
         str[i] = padChar;
     }
@@ -674,11 +706,15 @@ void TextTruncateEllipsis(char *str, size_t maxLen)
     if (len <= maxLen) {
         return;
     }
-    if (maxLen < 3) {
+    if (maxLen < TEXT_ELLIPSIS_LEN) {
         str[0] = '\0';
         return;
     }
-    memcpy(str + maxLen - 3, "...", 3);
+    if (memcpy_s(str + maxLen - TEXT_ELLIPSIS_LEN, TEXT_ELLIPSIS_LEN, "...",
+        TEXT_ELLIPSIS_LEN) != EOK) {
+        str[0] = '\0';
+        return;
+    }
     str[maxLen] = '\0';
 }
 
@@ -688,7 +724,7 @@ bool TextIsQuoted(const char *str)
         return false;
     }
     size_t len = strlen(str);
-    if (len < 2) {
+    if (len < TEXT_QUOTE_CHARS) {
         return false;
     }
     char first = str[0];
@@ -707,33 +743,39 @@ size_t TextUnquote(const char *str, char *out, size_t outSize)
         if (len >= outSize) {
             len = outSize - 1;
         }
-        memcpy(out, str, len);
+        if (memcpy_s(out, outSize, str, len) != EOK) {
+            return 0;
+        }
         out[len] = '\0';
         return len;
     }
-    size_t len = strlen(str) - 2;
+    size_t len = strlen(str) - TEXT_QUOTE_CHARS;
     if (len >= outSize) {
         len = outSize - 1;
     }
-    memcpy(out, str + 1, len);
+    if (memcpy_s(out, outSize, str + 1, len) != EOK) {
+        return 0;
+    }
     out[len] = '\0';
     return len;
 }
 
 size_t TextQuote(const char *str, char *out, size_t outSize)
 {
-    if (str == NULL || out == NULL || outSize < 3) {
+    if (str == NULL || out == NULL || outSize < TEXT_QUOTE_MIN_SIZE) {
         return 0;
     }
     size_t len = strlen(str);
-    if ((len + 2) >= outSize) {
-        len = outSize - 3;
+    if ((len + TEXT_QUOTE_CHARS) >= outSize) {
+        len = outSize - TEXT_QUOTE_MIN_SIZE;
     }
     out[0] = '"';
-    memcpy(out + 1, str, len);
+    if (memcpy_s(out + 1, outSize - 1, str, len) != EOK) {
+        return 0;
+    }
     out[len + 1] = '"';
-    out[len + 2] = '\0';
-    return (len + 2);
+    out[len + TEXT_QUOTE_CHARS] = '\0';
+    return (len + TEXT_QUOTE_CHARS);
 }
 
 uint32_t TextFindToken(const char *str)
@@ -741,10 +783,10 @@ uint32_t TextFindToken(const char *str)
     if (str == NULL) {
         return 0;
     }
-    size_t tableSize = sizeof(g_commonTokenTable) / sizeof(g_commonTokenTable[0]);
+    size_t tableSize = sizeof(COMMON_TOKEN_TABLE) / sizeof(COMMON_TOKEN_TABLE[0]);
     for (size_t i = 0; i < tableSize; ++i) {
-        if (strcmp(str, g_commonTokenTable[i].token) == 0) {
-            return g_commonTokenTable[i].value;
+        if (strcmp(str, COMMON_TOKEN_TABLE[i].token) == 0) {
+            return COMMON_TOKEN_TABLE[i].value;
         }
     }
     return 0;
@@ -752,10 +794,10 @@ uint32_t TextFindToken(const char *str)
 
 const char *TextFindTokenName(uint32_t value)
 {
-    size_t tableSize = sizeof(g_commonTokenTable) / sizeof(g_commonTokenTable[0]);
+    size_t tableSize = sizeof(COMMON_TOKEN_TABLE) / sizeof(COMMON_TOKEN_TABLE[0]);
     for (size_t i = 0; i < tableSize; ++i) {
-        if (g_commonTokenTable[i].value == value) {
-            return g_commonTokenTable[i].token;
+        if (COMMON_TOKEN_TABLE[i].value == value) {
+            return COMMON_TOKEN_TABLE[i].token;
         }
     }
     return NULL;
@@ -772,8 +814,8 @@ size_t TextFormatUint(uint64_t value, char *out, size_t outSize)
         reversed[digits++] = '0';
     } else {
         while (value > 0) {
-            reversed[digits++] = (char)('0' + (value % 10));
-            value /= 10;
+            reversed[digits++] = (char)('0' + (value % TEXT_DECIMAL_BASE));
+            value /= TEXT_DECIMAL_BASE;
         }
     }
     size_t totalDigits = digits;
@@ -793,12 +835,12 @@ size_t TextFormatHexBytes(const uint8_t *bytes, size_t len, HexFormat format,
     if (bytes == NULL || out == NULL || outSize == 0) {
         return 0;
     }
-    if (len > (outSize - 1) / 2) {
-        len = (outSize - 1) / 2;
+    if (len > (outSize - 1) / TEXT_HEX_CHARS_PER_BYTE) {
+        len = (outSize - 1) / TEXT_HEX_CHARS_PER_BYTE;
     }
     size_t written = 0;
     for (size_t i = 0; i < len; ++i) {
-        unsigned int high = (bytes[i] >> 4) & 0x0F;
+        unsigned int high = (bytes[i] >> TEXT_NIBBLE_BITS) & 0x0F;
         unsigned int low = bytes[i] & 0x0F;
         out[written++] = AsciiNibbleToHex(high, format);
         out[written++] = AsciiNibbleToHex(low, format);
@@ -815,7 +857,7 @@ size_t TextFormatByteSize(uint64_t bytes, char *out, size_t outSize)
     const double base = 1024.0;
     double value = (double)bytes;
     size_t unitIndex = 0;
-    size_t unitCount = sizeof(g_sizeUnitTable) / sizeof(g_sizeUnitTable[0]);
+    size_t unitCount = sizeof(SIZE_UNIT_TABLE) / sizeof(SIZE_UNIT_TABLE[0]);
     while ((value >= base) && ((unitIndex + 1) < unitCount)) {
         value /= base;
         ++unitIndex;
@@ -823,7 +865,8 @@ size_t TextFormatByteSize(uint64_t bytes, char *out, size_t outSize)
     if (unitIndex == 0) {
         return TextFormatUint(bytes, out, outSize);
     }
-    return (size_t)snprintf(out, outSize, "%.2f%s", value, g_sizeUnitTable[unitIndex]);
+    int ret = snprintf_s(out, outSize, outSize - 1, "%.2f%s", value, SIZE_UNIT_TABLE[unitIndex]);
+    return (ret < 0) ? 0 : (size_t)ret;
 }
 
 size_t TextFormatDuration(uint64_t nanos, char *out, size_t outSize)
@@ -831,8 +874,8 @@ size_t TextFormatDuration(uint64_t nanos, char *out, size_t outSize)
     if (out == NULL || outSize == 0) {
         return 0;
     }
-    const uint64_t units[] = { 1ULL, 1000ULL, 1000000ULL, 1000000000ULL, 60000000000ULL,
-        3600000000000ULL, 86400000000000ULL };
+    const uint64_t units[] = { 1ULL, NANOS_PER_MICROSECOND, NANOS_PER_MILLISECOND,
+        NANOS_PER_SECOND, NANOS_PER_MINUTE, NANOS_PER_HOUR, NANOS_PER_DAY };
     size_t unitCount = sizeof(units) / sizeof(units[0]);
     size_t unitIndex = 0;
     for (size_t i = 1; i < unitCount; ++i) {
@@ -841,8 +884,9 @@ size_t TextFormatDuration(uint64_t nanos, char *out, size_t outSize)
         }
     }
     uint64_t value = nanos / units[unitIndex];
-    return (size_t)snprintf(out, outSize, "%llu%s", (unsigned long long)value,
-        g_timeUnitTable[unitIndex]);
+    int ret = snprintf_s(out, outSize, outSize - 1, "%llu%s", (unsigned long long)value,
+        TIME_UNIT_TABLE[unitIndex]);
+    return (ret < 0) ? 0 : (size_t)ret;
 }
 
 static size_t AppendByte(char *out, size_t outSize, size_t written, unsigned char ch)
@@ -854,6 +898,30 @@ static size_t AppendByte(char *out, size_t outSize, size_t written, unsigned cha
     return written;
 }
 
+static size_t AppendNamedEscape(char *out, size_t outSize, size_t written, const char *name)
+{
+    size_t nameLen = strlen(name);
+    if ((written + nameLen) >= outSize) {
+        return written;
+    }
+    if (memcpy_s(out + written, outSize - written, name, nameLen) != EOK) {
+        return written;
+    }
+    return written + nameLen;
+}
+
+static size_t AppendNumericEscape(char *out, size_t outSize, size_t written, unsigned char ch)
+{
+    if ((written + TEXT_BYTE_ESCAPE_LEN) >= outSize) {
+        return written;
+    }
+    out[written++] = '\\';
+    out[written++] = 'x';
+    out[written++] = AsciiNibbleToHex((ch >> TEXT_NIBBLE_BITS) & 0x0F, HEX_FORMAT_LOWER);
+    out[written++] = AsciiNibbleToHex(ch & 0x0F, HEX_FORMAT_LOWER);
+    return written;
+}
+
 static size_t AppendEscape(char *out, size_t outSize, size_t written, unsigned char ch,
     EscapeMode mode)
 {
@@ -861,54 +929,31 @@ static size_t AppendEscape(char *out, size_t outSize, size_t written, unsigned c
         return AppendByte(out, outSize, written, ch);
     }
     if (mode == ESCAPE_MODE_NAMED) {
-        const char *name = NULL;
         switch (ch) {
             case '\\':
-                name = "\\\\";
-                break;
+                return AppendNamedEscape(out, outSize, written, "\\\\");
             case '"':
-                name = "\\\"";
-                break;
+                return AppendNamedEscape(out, outSize, written, "\\\"");
             case '\'':
-                name = "\\'";
-                break;
+                return AppendNamedEscape(out, outSize, written, "\\'");
             case '\n':
-                name = "\\n";
-                break;
+                return AppendNamedEscape(out, outSize, written, "\\n");
             case '\r':
-                name = "\\r";
-                break;
+                return AppendNamedEscape(out, outSize, written, "\\r");
             case '\t':
-                name = "\\t";
-                break;
+                return AppendNamedEscape(out, outSize, written, "\\t");
             default:
-                name = NULL;
                 break;
-        }
-        if (name != NULL) {
-            size_t nameLen = strlen(name);
-            if ((written + nameLen) >= outSize) {
-                return written;
-            }
-            memcpy(out + written, name, nameLen);
-            return written + nameLen;
         }
         if (!AsciiIsPrint(ch)) {
-            return AppendEscape(out, outSize, written, ch, ESCAPE_MODE_NUMERIC);
+            return AppendNumericEscape(out, outSize, written, ch);
         }
         return AppendByte(out, outSize, written, ch);
     }
     if (AsciiIsPrint(ch)) {
         return AppendByte(out, outSize, written, ch);
     }
-    if ((written + 4) >= outSize) {
-        return written;
-    }
-    out[written++] = '\\';
-    out[written++] = 'x';
-    out[written++] = AsciiNibbleToHex((ch >> 4) & 0x0F, HEX_FORMAT_LOWER);
-    out[written++] = AsciiNibbleToHex(ch & 0x0F, HEX_FORMAT_LOWER);
-    return written;
+    return AppendNumericEscape(out, outSize, written, ch);
 }
 
 size_t TextEscape(const char *str, char *out, size_t outSize, EscapeMode mode)
@@ -937,16 +982,36 @@ size_t TextEscape(const char *str, char *out, size_t outSize, EscapeMode mode)
 
 static int ConsumeHexEscape(const char *str, size_t len, size_t *index)
 {
-    if ((*index + 2) >= len) {
+    if ((*index + TEXT_HEX_DIGITS) >= len) {
         return -1;
     }
     int high = AsciiHexToNibble((unsigned char)str[*index + 1]);
-    int low = AsciiHexToNibble((unsigned char)str[*index + 2]);
+    int low = AsciiHexToNibble((unsigned char)str[*index + TEXT_HEX_DIGITS]);
     if (high < 0 || low < 0) {
         return -1;
     }
-    *index += 3;
-    return (high << 4) | low;
+    *index += TEXT_HEX_ESCAPE_LEN;
+    return (high << TEXT_NIBBLE_BITS) | low;
+}
+
+static int MapUnescapeChar(char ch)
+{
+    switch (ch) {
+        case 'n':
+            return '\n';
+        case 'r':
+            return '\r';
+        case 't':
+            return '\t';
+        case '\\':
+            return '\\';
+        case '"':
+            return '"';
+        case '\'':
+            return '\'';
+        default:
+            return -1;
+    }
 }
 
 size_t TextUnescape(const char *str, char *out, size_t outSize)
@@ -971,38 +1036,13 @@ size_t TextUnescape(const char *str, char *out, size_t outSize)
         }
         char next = str[read + 1];
         int value = -1;
-        switch (next) {
-            case 'n':
-                value = '\n';
-                read += 2;
-                break;
-            case 'r':
-                value = '\r';
-                read += 2;
-                break;
-            case 't':
-                value = '\t';
-                read += 2;
-                break;
-            case '\\':
-                value = '\\';
-                read += 2;
-                break;
-            case '"':
-                value = '"';
-                read += 2;
-                break;
-            case '\'':
-                value = '\'';
-                read += 2;
-                break;
-            case 'x':
-                value = ConsumeHexEscape(str, len, &read);
-                break;
-            default:
-                out[written++] = '\\';
-                ++read;
-                continue;
+        if (next == 'x') {
+            value = ConsumeHexEscape(str, len, &read);
+        } else {
+            value = MapUnescapeChar(next);
+            if (value >= 0) {
+                read += TEXT_ESCAPE_SEQ_LEN;
+            }
         }
         if (value < 0) {
             out[written++] = '\\';
@@ -1028,7 +1068,7 @@ size_t TextUriEncode(const char *str, char *out, size_t outSize)
     size_t len = strlen(str);
     while (read < len) {
         unsigned char ch = (unsigned char)str[read];
-        if (g_uriEncodeTable[ch] == 0) {
+        if (URI_ENCODE_TABLE[ch] == 0) {
             if (written >= (outSize - 1)) {
                 break;
             }
@@ -1040,7 +1080,7 @@ size_t TextUriEncode(const char *str, char *out, size_t outSize)
             break;
         }
         out[written++] = '%';
-        out[written++] = AsciiNibbleToHex((ch >> 4) & 0x0F, HEX_FORMAT_UPPER);
+        out[written++] = AsciiNibbleToHex((ch >> TEXT_NIBBLE_BITS) & 0x0F, HEX_FORMAT_UPPER);
         out[written++] = AsciiNibbleToHex(ch & 0x0F, HEX_FORMAT_UPPER);
         ++read;
     }
@@ -1076,19 +1116,18 @@ size_t TextUriDecode(const char *str, char *out, size_t outSize)
 
 static size_t Base64EncodeBlock(const uint8_t *src, size_t srcLen, char *dst)
 {
-    static const size_t blockSize = 3;
-    static const size_t outSize = 4;
     uint32_t buffer = 0;
     size_t used = 0;
     for (size_t i = 0; i < srcLen; ++i) {
-        buffer = (buffer << 8) | src[i];
+        buffer = (buffer << TEXT_BITS_PER_BYTE) | src[i];
         ++used;
     }
-    buffer <<= (blockSize - srcLen) * 8;
+    buffer <<= (BASE64_INPUT_BLOCK - srcLen) * TEXT_BITS_PER_BYTE;
     size_t written = 0;
-    for (size_t i = 0; i < outSize; ++i) {
+    for (size_t i = 0; i < BASE64_OUTPUT_BLOCK; ++i) {
         if (used == 0 || i < used + 1) {
-            dst[written++] = g_base64EncodeTable[(buffer >> (18 - i * 6)) & 0x3F];
+            dst[written++] = BASE64_ENCODE_TABLE[
+                (buffer >> (BASE64_BITS_PER_CHAR * (BASE64_INPUT_BLOCK - i))) & 0x3F];
         } else {
             dst[written++] = BASE64_PAD_CHAR;
         }
@@ -1105,24 +1144,67 @@ size_t Base64Encode(const uint8_t *src, size_t srcLen, char *out, size_t outSize
         out[0] = '\0';
         return 0;
     }
-    size_t groupCount = srcLen / 3;
-    size_t remainder = srcLen % 3;
+    size_t groupCount = srcLen / BASE64_INPUT_BLOCK;
+    size_t remainder = srcLen % BASE64_INPUT_BLOCK;
     size_t blocks = groupCount + (remainder ? 1 : 0);
-    if (blocks > (outSize - 1) / 4) {
+    if (blocks > (outSize - 1) / BASE64_OUTPUT_BLOCK) {
         return 0;
     }
-    size_t total = blocks * 4;
     size_t written = 0;
     for (size_t i = 0; i < groupCount; ++i) {
-        size_t n = Base64EncodeBlock(src + i * 3, 3, out + written);
-        written += n;
+        written += Base64EncodeBlock(src + i * BASE64_INPUT_BLOCK, BASE64_INPUT_BLOCK,
+            out + written);
     }
     if (remainder) {
-        size_t n = Base64EncodeBlock(src + groupCount * 3, remainder, out + written);
-        written += n;
+        written += Base64EncodeBlock(src + groupCount * BASE64_INPUT_BLOCK, remainder,
+            out + written);
     }
     out[written] = '\0';
     return written;
+}
+
+static bool DecodeBase64Group(const char *src, size_t len, size_t offset,
+    int group[BASE64_OUTPUT_BLOCK], size_t *produced)
+{
+    size_t padCount = 0;
+    for (size_t n = 0; n < BASE64_OUTPUT_BLOCK; ++n) {
+        group[n] = BASE64_DECODE_TABLE[(unsigned char)src[offset + n]];
+        if (src[offset + n] == BASE64_PAD_CHAR) {
+            ++padCount;
+        }
+    }
+    if (group[0] < 0 || group[1] < 0) {
+        return false;
+    }
+    if (padCount == 0) {
+        if (group[BASE64_SECOND_LAST_INDEX] < 0 || group[BASE64_LAST_INDEX] < 0) {
+            return false;
+        }
+    } else {
+        if ((offset + BASE64_OUTPUT_BLOCK) != len) {
+            return false;
+        }
+        if (padCount == BASE64_PAD_COUNT_TWO) {
+            if (src[offset + BASE64_SECOND_LAST_INDEX] != BASE64_PAD_CHAR ||
+                src[offset + BASE64_LAST_INDEX] != BASE64_PAD_CHAR) {
+                return false;
+            }
+            group[BASE64_SECOND_LAST_INDEX] = 0;
+            group[BASE64_LAST_INDEX] = 0;
+        } else if (padCount == BASE64_PAD_COUNT_ONE) {
+            if (src[offset + BASE64_LAST_INDEX] != BASE64_PAD_CHAR) {
+                return false;
+            }
+            if (group[BASE64_SECOND_LAST_INDEX] < 0) {
+                return false;
+            }
+            group[BASE64_LAST_INDEX] = 0;
+        } else {
+            return false;
+        }
+    }
+    *produced = BASE64_INPUT_BLOCK - padCount;
+    return true;
 }
 
 size_t Base64Decode(const char *src, uint8_t *out, size_t outSize)
@@ -1131,50 +1213,25 @@ size_t Base64Decode(const char *src, uint8_t *out, size_t outSize)
         return 0;
     }
     size_t len = strlen(src);
-    if (len % 4 != 0) {
+    if (len % BASE64_OUTPUT_BLOCK != 0) {
         return 0;
     }
     size_t written = 0;
-    for (size_t i = 0; i < len; i += 4) {
-        int c0 = g_base64DecodeTable[(unsigned char)src[i]];
-        int c1 = g_base64DecodeTable[(unsigned char)src[i + 1]];
-        int c2 = g_base64DecodeTable[(unsigned char)src[i + 2]];
-        int c3 = g_base64DecodeTable[(unsigned char)src[i + 3]];
-        if (c0 < 0 || c1 < 0) {
+    for (size_t i = 0; i < len; i += BASE64_OUTPUT_BLOCK) {
+        int group[BASE64_OUTPUT_BLOCK];
+        size_t produced = 0;
+        if (!DecodeBase64Group(src, len, i, group, &produced)) {
             return 0;
         }
-        size_t produced = 3;
-        if (src[i + 2] == BASE64_PAD_CHAR) {
-            if ((i + 4) != len || src[i + 3] != BASE64_PAD_CHAR) {
-                return 0;
-            }
-            produced = 1;
-            c2 = 0;
-            c3 = 0;
-        } else if (c2 < 0) {
-            return 0;
-        } else if (src[i + 3] == BASE64_PAD_CHAR) {
-            if ((i + 4) != len) {
-                return 0;
-            }
-            produced = 2;
-            c3 = 0;
-        } else if (c3 < 0) {
-            return 0;
-        }
-        uint32_t triple = ((uint32_t)c0 << 18) | ((uint32_t)c1 << 12) |
-            ((uint32_t)c2 << 6) | (uint32_t)c3;
         if ((written + produced) > outSize) {
             return 0;
         }
-        if (produced >= 1) {
-            out[written++] = (uint8_t)((triple >> 16) & 0xFF);
+        uint32_t triple = 0;
+        for (size_t n = 0; n < BASE64_OUTPUT_BLOCK; ++n) {
+            triple |= (uint32_t)group[n] << (BASE64_BITS_PER_CHAR * (BASE64_OUTPUT_BLOCK - 1 - n));
         }
-        if (produced >= 2) {
-            out[written++] = (uint8_t)((triple >> 8) & 0xFF);
-        }
-        if (produced >= 3) {
-            out[written++] = (uint8_t)(triple & 0xFF);
+        for (size_t n = 0; n < produced; ++n) {
+            out[written++] = (uint8_t)((triple >> (TEXT_BITS_PER_BYTE * (BASE64_INPUT_BLOCK - 1 - n))) & 0xFF);
         }
     }
     return written;
@@ -1189,28 +1246,28 @@ size_t Base32Encode(const uint8_t *src, size_t srcLen, char *out, size_t outSize
         out[0] = '\0';
         return 0;
     }
-    size_t groups = srcLen / 5 + (srcLen % 5 ? 1 : 0);
-    if (groups > (outSize - 1) / 8) {
+    size_t groups = srcLen / BASE32_INPUT_BLOCK + (srcLen % BASE32_INPUT_BLOCK ? 1 : 0);
+    if (groups > (outSize - 1) / BASE32_OUTPUT_BLOCK) {
         return 0;
     }
     uint32_t buffer = 0;
     int bitsLeft = 0;
     size_t written = 0;
     for (size_t i = 0; i < srcLen; ++i) {
-        buffer = (buffer << 8) | src[i];
-        bitsLeft += 8;
-        while (bitsLeft >= 5) {
-            int index = (int)((buffer >> (bitsLeft - 5)) & BASE32_PAD_BIT);
-            out[written++] = g_base32EncodeTable[index];
-            bitsLeft -= 5;
+        buffer = (buffer << TEXT_BITS_PER_BYTE) | src[i];
+        bitsLeft += TEXT_BITS_PER_BYTE;
+        while (bitsLeft >= BASE32_BITS_PER_CHAR) {
+            int index = (int)((buffer >> (bitsLeft - BASE32_BITS_PER_CHAR)) & BASE32_PAD_BIT);
+            out[written++] = BASE32_ENCODE_TABLE[index];
+            bitsLeft -= BASE32_BITS_PER_CHAR;
         }
     }
     if (bitsLeft > 0) {
-        int index = (int)((buffer << (5 - bitsLeft)) & BASE32_PAD_BIT);
-        out[written++] = g_base32EncodeTable[index];
+        int index = (int)((buffer << (BASE32_BITS_PER_CHAR - bitsLeft)) & BASE32_PAD_BIT);
+        out[written++] = BASE32_ENCODE_TABLE[index];
     }
     /* RFC 4648 base32 uses the same '=' pad character as base64. */
-    while ((written & 7) != 0) {
+    while ((written & (BASE32_OUTPUT_BLOCK - 1)) != 0) {
         out[written++] = BASE64_PAD_CHAR;
     }
     out[written] = '\0';
@@ -1221,8 +1278,8 @@ uint16_t Crc16(const uint8_t *data, size_t len, uint16_t seed)
 {
     uint16_t crc = seed;
     for (size_t i = 0; i < len; ++i) {
-        crc ^= (uint16_t)data[i] << 8;
-        for (int bit = 0; bit < 8; ++bit) {
+        crc ^= (uint16_t)data[i] << TEXT_BITS_PER_BYTE;
+        for (int bit = 0; bit < TEXT_BITS_PER_BYTE; ++bit) {
             if (crc & 0x8000) {
                 crc = (uint16_t)((crc << 1) ^ CRC16_POLY);
             } else {
@@ -1238,7 +1295,7 @@ uint32_t Crc32(const uint8_t *data, size_t len, uint32_t seed)
     uint32_t crc = seed ^ 0xFFFFFFFFU;
     for (size_t i = 0; i < len; ++i) {
         crc ^= data[i];
-        for (int bit = 0; bit < 8; ++bit) {
+        for (int bit = 0; bit < TEXT_BITS_PER_BYTE; ++bit) {
             if (crc & 0x01) {
                 crc = (crc >> 1) ^ CRC32_POLY;
             } else {
@@ -1262,14 +1319,18 @@ size_t TextFormatUnitsTable(const uint64_t *values, size_t count, const char *se
         if ((written + partLen) >= outSize) {
             break;
         }
-        memcpy(out + written, part, partLen);
+        if (memcpy_s(out + written, outSize - written, part, partLen) != EOK) {
+            break;
+        }
         written += partLen;
         if ((i + 1) < count) {
             size_t sepLen = strlen(separator);
             if ((written + sepLen) >= outSize) {
                 break;
             }
-            memcpy(out + written, separator, sepLen);
+            if (memcpy_s(out + written, outSize - written, separator, sepLen) != EOK) {
+                break;
+            }
             written += sepLen;
         }
     }
@@ -1293,17 +1354,17 @@ size_t TextHexStringToBytes(const char *hex, uint8_t *out, size_t outSize)
     if ((len & 1) != 0) {
         return 0;
     }
-    size_t byteCount = len / 2;
+    size_t byteCount = len / TEXT_HEX_CHARS_PER_BYTE;
     if (byteCount > outSize) {
         return 0;
     }
     for (size_t i = 0; i < byteCount; ++i) {
-        int high = AsciiHexToNibble((unsigned char)hex[i * 2]);
-        int low = AsciiHexToNibble((unsigned char)hex[i * 2 + 1]);
+        int high = AsciiHexToNibble((unsigned char)hex[i * TEXT_HEX_DIGITS]);
+        int low = AsciiHexToNibble((unsigned char)hex[i * TEXT_HEX_DIGITS + 1]);
         if (high < 0 || low < 0) {
             return 0;
         }
-        out[i] = (uint8_t)((high << 4) | low);
+        out[i] = (uint8_t)((high << TEXT_NIBBLE_BITS) | low);
     }
     return byteCount;
 }
@@ -1314,7 +1375,7 @@ bool TextIsSafeName(const char *str)
         return false;
     }
     size_t len = strlen(str);
-    if (len > 255) {
+    if (len > TEXT_SAFE_NAME_MAX_LEN) {
         return false;
     }
     if (!AsciiIsAlpha((unsigned char)str[0])) {
