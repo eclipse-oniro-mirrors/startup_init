@@ -1,0 +1,1301 @@
+{
+    "sandbox-root" : "/mnt/sandbox/appservice",
+    "mount-bind-paths" : [{
+            "src-path" : "/system/bin",
+            "sandbox-path" : "/system/bin",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib",
+            "sandbox-path" : "/system/lib",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc",
+            "sandbox-path" : "/system/etc",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/profile",
+            "sandbox-path" : "/system/profile",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/app",
+            "sandbox-path" : "/system/app",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/fonts",
+            "sandbox-path" : "/system/fonts",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/usr",
+            "sandbox-path" : "/system/usr",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/resource",
+            "sandbox-path" : "/system/resource",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/media",
+            "sandbox-path" : "/system/media",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/data",
+            "sandbox-path" : "/system/data",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/init",
+            "sandbox-path" : "/system/etc/init",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/param",
+            "sandbox-path" : "/system/etc/param",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/selinux",
+            "sandbox-path" : "/system/etc/selinux",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/security",
+            "sandbox-path" : "/system/etc/security",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/dns",
+            "sandbox-path" : "/system/etc/dns",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/xml",
+            "sandbox-path" : "/system/etc/xml",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/fontconfig",
+            "sandbox-path" : "/system/etc/fontconfig",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/locale",
+            "sandbox-path" : "/system/etc/locale",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/network",
+            "sandbox-path" : "/system/etc/network",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/time",
+            "sandbox-path" : "/system/etc/time",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/inputmethod",
+            "sandbox-path" : "/system/etc/inputmethod",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/telephony",
+            "sandbox-path" : "/system/etc/telephony",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/audio",
+            "sandbox-path" : "/system/etc/audio",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/camera",
+            "sandbox-path" : "/system/etc/camera",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/usb",
+            "sandbox-path" : "/system/etc/usb",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/bluetooth",
+            "sandbox-path" : "/system/etc/bluetooth",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/wifi",
+            "sandbox-path" : "/system/etc/wifi",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/sensor",
+            "sandbox-path" : "/system/etc/sensor",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/location",
+            "sandbox-path" : "/system/etc/location",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/account",
+            "sandbox-path" : "/system/etc/account",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/webview",
+            "sandbox-path" : "/system/etc/webview",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/notification",
+            "sandbox-path" : "/system/etc/notification",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/power",
+            "sandbox-path" : "/system/etc/power",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/thermal",
+            "sandbox-path" : "/system/etc/thermal",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/update",
+            "sandbox-path" : "/system/etc/update",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/backup",
+            "sandbox-path" : "/system/etc/backup",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/restore",
+            "sandbox-path" : "/system/etc/restore",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/a11y",
+            "sandbox-path" : "/system/etc/a11y",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/enterprise",
+            "sandbox-path" : "/system/etc/enterprise",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/system/etc/deviceusage",
+            "sandbox-path" : "/system/etc/deviceusage",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/vendor/lib",
+            "sandbox-path" : "/vendor/lib",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc",
+            "sandbox-path" : "/vendor/etc",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/bin",
+            "sandbox-path" : "/vendor/bin",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/app",
+            "sandbox-path" : "/vendor/app",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/vendor/fonts",
+            "sandbox-path" : "/vendor/fonts",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/vendor/media",
+            "sandbox-path" : "/vendor/media",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/vendor/usr",
+            "sandbox-path" : "/vendor/usr",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/vendor/etc/init",
+            "sandbox-path" : "/vendor/etc/init",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/param",
+            "sandbox-path" : "/vendor/etc/param",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/selinux",
+            "sandbox-path" : "/vendor/etc/selinux",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/audio",
+            "sandbox-path" : "/vendor/etc/audio",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/camera",
+            "sandbox-path" : "/vendor/etc/camera",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/wifi",
+            "sandbox-path" : "/vendor/etc/wifi",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/vendor/etc/bluetooth",
+            "sandbox-path" : "/vendor/etc/bluetooth",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/vendor/etc/sensor",
+            "sandbox-path" : "/vendor/etc/sensor",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/location",
+            "sandbox-path" : "/vendor/etc/location",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/vendor/etc/telephony",
+            "sandbox-path" : "/vendor/etc/telephony",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/usb",
+            "sandbox-path" : "/vendor/etc/usb",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/vendor/etc/power",
+            "sandbox-path" : "/vendor/etc/power",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/thermal",
+            "sandbox-path" : "/vendor/etc/thermal",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chipset/etc",
+            "sandbox-path" : "/chipset/etc",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chipset/etc/init",
+            "sandbox-path" : "/chipset/etc/init",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chipset/etc/param",
+            "sandbox-path" : "/chipset/etc/param",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chipset/etc/selinux",
+            "sandbox-path" : "/chipset/etc/selinux",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chip_prod/lib",
+            "sandbox-path" : "/chip_prod/lib",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chip_prod/etc",
+            "sandbox-path" : "/chip_prod/etc",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chip_prod/etc/init",
+            "sandbox-path" : "/chip_prod/etc/init",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chip_prod/etc/param",
+            "sandbox-path" : "/chip_prod/etc/param",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/sys_prod",
+            "sandbox-path" : "/sys_prod",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/sys_prod/etc",
+            "sandbox-path" : "/sys_prod/etc",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/sys_prod/lib",
+            "sandbox-path" : "/sys_prod/lib",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/dev",
+            "sandbox-path" : "/dev",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/proc",
+            "sandbox-path" : "/proc",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data",
+            "sandbox-path" : "/data",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/log",
+            "sandbox-path" : "/log",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/sys",
+            "sandbox-path" : "/sys",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/config",
+            "sandbox-path" : "/config",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/mnt",
+            "sandbox-path" : "/mnt",
+            "sandbox-flags" : [ "bind", "private" ]
+        },
+        {
+            "src-path" : "/storage",
+            "sandbox-path" : "/storage",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/module_update",
+            "sandbox-path" : "/module_update",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/service",
+            "sandbox-path" : "/data/service",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/app",
+            "sandbox-path" : "/data/app",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/local",
+            "sandbox-path" : "/data/local",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/cache",
+            "sandbox-path" : "/data/cache",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/misc",
+            "sandbox-path" : "/data/misc",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/property",
+            "sandbox-path" : "/data/property",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/storage",
+            "sandbox-path" : "/data/storage",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/service/el1",
+            "sandbox-path" : "/data/service/el1",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/service/el2",
+            "sandbox-path" : "/data/service/el2",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/service/el3",
+            "sandbox-path" : "/data/service/el3",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/service/el4",
+            "sandbox-path" : "/data/service/el4",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/service/el5",
+            "sandbox-path" : "/data/service/el5",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/app/el1",
+            "sandbox-path" : "/data/app/el1",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/app/el2",
+            "sandbox-path" : "/data/app/el2",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/app/el3",
+            "sandbox-path" : "/data/app/el3",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/media",
+            "sandbox-path" : "/data/media",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/vm",
+            "sandbox-path" : "/data/vm",
+            "sandbox-flags" : [ "bind", "rec", "private" ],
+            "ignore": 1
+        },
+        {
+            "src-path" : "/data/system",
+            "sandbox-path" : "/data/system",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib64",
+            "sandbox-path" : "/system/lib64",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/lib64",
+            "sandbox-path" : "/vendor/lib64",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chip_prod/lib64",
+            "sandbox-path" : "/chip_prod/lib64",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/sys_prod/lib64",
+            "sandbox-path" : "/sys_prod/lib64",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }
+    ],
+    "mount-bind-files" : [{
+            "src-path" : "/etc/passwd",
+            "sandbox-path" : "/etc/passwd",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/etc/group",
+            "sandbox-path" : "/etc/group",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/etc/hosts",
+            "sandbox-path" : "/etc/hosts",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/etc/localtime",
+            "sandbox-path" : "/etc/localtime",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/etc/timezone",
+            "sandbox-path" : "/etc/timezone",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/etc/resolv.conf",
+            "sandbox-path" : "/etc/resolv.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/ld-musl-arm.path",
+            "sandbox-path" : "/system/etc/ld-musl-arm.path",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/ld-musl-namespace-arm.ini",
+            "sandbox-path" : "/system/etc/ld-musl-namespace-arm.ini",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/ld-musl-namespace-aarch64.ini",
+            "sandbox-path" : "/system/etc/ld-musl-namespace-aarch64.ini",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/ld-musl-arm.so.1",
+            "sandbox-path" : "/system/lib/ld-musl-arm.so.1",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/ld-musl-aarch64.so.1",
+            "sandbox-path" : "/system/lib/ld-musl-aarch64.so.1",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/libc.so",
+            "sandbox-path" : "/system/lib/libc.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/libc++.so",
+            "sandbox-path" : "/system/lib/libc++.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/libdl.so",
+            "sandbox-path" : "/system/lib/libdl.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/libm.so",
+            "sandbox-path" : "/system/lib/libm.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/libpthread.so",
+            "sandbox-path" : "/system/lib/libpthread.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/librt.so",
+            "sandbox-path" : "/system/lib/librt.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/libutil.so",
+            "sandbox-path" : "/system/lib/libutil.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/libxtable.so",
+            "sandbox-path" : "/system/lib/libxtable.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/libresolv.so",
+            "sandbox-path" : "/system/lib/libresolv.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/libhilog.so",
+            "sandbox-path" : "/system/lib/libhilog.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib/libutils.so",
+            "sandbox-path" : "/system/lib/libutils.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib64/libc.so",
+            "sandbox-path" : "/system/lib64/libc.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib64/libc++.so",
+            "sandbox-path" : "/system/lib64/libc++.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib64/libdl.so",
+            "sandbox-path" : "/system/lib64/libdl.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib64/libm.so",
+            "sandbox-path" : "/system/lib64/libm.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib64/libhilog.so",
+            "sandbox-path" : "/system/lib64/libhilog.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib64/libutils.so",
+            "sandbox-path" : "/system/lib64/libutils.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/lib64/libpthread.so",
+            "sandbox-path" : "/system/lib64/libpthread.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/init/appservice.cfg",
+            "sandbox-path" : "/system/etc/init/appservice.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/param/appservice.para",
+            "sandbox-path" : "/system/etc/param/appservice.para",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/param/appservice.para.dac",
+            "sandbox-path" : "/system/etc/param/appservice.para.dac",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/security/appservice_policy.json",
+            "sandbox-path" : "/system/etc/security/appservice_policy.json",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/selinux/appservice_contexts",
+            "sandbox-path" : "/system/etc/selinux/appservice_contexts",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/fontconfig/fonts.conf",
+            "sandbox-path" : "/system/etc/fontconfig/fonts.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/locale/locale.env",
+            "sandbox-path" : "/system/etc/locale/locale.env",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/dns/resolv.conf",
+            "sandbox-path" : "/system/etc/dns/resolv.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/network/interfaces.conf",
+            "sandbox-path" : "/system/etc/network/interfaces.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/time/zone.conf",
+            "sandbox-path" : "/system/etc/time/zone.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/inputmethod/methods.cfg",
+            "sandbox-path" : "/system/etc/inputmethod/methods.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/telephony/operator.conf",
+            "sandbox-path" : "/system/etc/telephony/operator.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/audio/audio_policy.conf",
+            "sandbox-path" : "/system/etc/audio/audio_policy.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/camera/camera_config.json",
+            "sandbox-path" : "/system/etc/camera/camera_config.json",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/usb/usb_service.cfg",
+            "sandbox-path" : "/system/etc/usb/usb_service.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/bluetooth/bt_config.conf",
+            "sandbox-path" : "/system/etc/bluetooth/bt_config.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/wifi/wpa_supplicant.conf",
+            "sandbox-path" : "/system/etc/wifi/wpa_supplicant.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/sensor/sensor_config.json",
+            "sandbox-path" : "/system/etc/sensor/sensor_config.json",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/location/location.cfg",
+            "sandbox-path" : "/system/etc/location/location.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/notification/notification_policy.json",
+            "sandbox-path" : "/system/etc/notification/notification_policy.json",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/power/power_mode.json",
+            "sandbox-path" : "/system/etc/power/power_mode.json",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/thermal/thermal_policy.json",
+            "sandbox-path" : "/system/etc/thermal/thermal_policy.json",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/update/update_service.cfg",
+            "sandbox-path" : "/system/etc/update/update_service.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/a11y/a11y.json",
+            "sandbox-path" : "/system/etc/a11y/a11y.json",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/account/account_info.xml",
+            "sandbox-path" : "/system/etc/account/account_info.xml",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/webview/web_config.json",
+            "sandbox-path" : "/system/etc/webview/web_config.json",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/ssl/certs.pem",
+            "sandbox-path" : "/system/etc/ssl/certs.pem",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/ssl/openssl.cnf",
+            "sandbox-path" : "/system/etc/ssl/openssl.cnf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/security/cacerts.pem",
+            "sandbox-path" : "/system/etc/security/cacerts.pem",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/xml/appservice_layout.xml",
+            "sandbox-path" : "/system/etc/xml/appservice_layout.xml",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/lib/libc.so",
+            "sandbox-path" : "/vendor/lib/libc.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/lib/libc++.so",
+            "sandbox-path" : "/vendor/lib/libc++.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/lib/libdl.so",
+            "sandbox-path" : "/vendor/lib/libdl.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/lib/libhilog.so",
+            "sandbox-path" : "/vendor/lib/libhilog.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/lib64/libc.so",
+            "sandbox-path" : "/vendor/lib64/libc.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/lib64/libc++.so",
+            "sandbox-path" : "/vendor/lib64/libc++.so",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/init/appservice_vendor.cfg",
+            "sandbox-path" : "/vendor/etc/init/appservice_vendor.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/param/appservice_vendor.para",
+            "sandbox-path" : "/vendor/etc/param/appservice_vendor.para",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/selinux/appservice_vendor_contexts",
+            "sandbox-path" : "/vendor/etc/selinux/appservice_vendor_contexts",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/audio/audio_policy_vendor.conf",
+            "sandbox-path" : "/vendor/etc/audio/audio_policy_vendor.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/camera/camera_vendor_config.json",
+            "sandbox-path" : "/vendor/etc/camera/camera_vendor_config.json",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/wifi/wifi_vendor.conf",
+            "sandbox-path" : "/vendor/etc/wifi/wifi_vendor.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/bluetooth/bt_vendor.conf",
+            "sandbox-path" : "/vendor/etc/bluetooth/bt_vendor.conf",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/vendor/etc/sensor/sensor_vendor_config.json",
+            "sandbox-path" : "/vendor/etc/sensor/sensor_vendor_config.json",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chipset/etc/init/appservice_chipset.cfg",
+            "sandbox-path" : "/chipset/etc/init/appservice_chipset.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chipset/etc/param/appservice_chipset.para",
+            "sandbox-path" : "/chipset/etc/param/appservice_chipset.para",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chip_prod/etc/init/appservice_chip_prod.cfg",
+            "sandbox-path" : "/chip_prod/etc/init/appservice_chip_prod.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/chip_prod/etc/param/appservice_chip_prod.para",
+            "sandbox-path" : "/chip_prod/etc/param/appservice_chip_prod.para",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/sys_prod/etc/init/appservice_sys_prod.cfg",
+            "sandbox-path" : "/sys_prod/etc/init/appservice_sys_prod.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/sys_prod/etc/param/appservice_sys_prod.para",
+            "sandbox-path" : "/sys_prod/etc/param/appservice_sys_prod.para",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/data/service/el1/public/hosts_user/hosts",
+            "sandbox-path" : "/data/service/el1/public/hosts_user/hosts",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/init/appservice_restart.cfg",
+            "sandbox-path" : "/system/etc/init/appservice_restart.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/init/appservice_service.cfg",
+            "sandbox-path" : "/system/etc/init/appservice_service.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        },
+        {
+            "src-path" : "/system/etc/init/appservice_bootevent.cfg",
+            "sandbox-path" : "/system/etc/init/appservice_bootevent.cfg",
+            "sandbox-flags" : [ "bind", "rec", "private" ]
+        }
+    ],
+    "symbol-links" : [{
+            "target-name" : "/system/lib",
+            "link-name" : "/lib"
+        },
+        {
+            "target-name" : "/system/bin",
+            "link-name" : "/bin"
+        },
+        {
+            "target-name" : "/system/etc",
+            "link-name" : "/etc"
+        },
+        {
+            "target-name" : "/system/usr/lib",
+            "link-name" : "/usr/lib"
+        },
+        {
+            "target-name" : "/system/usr/share",
+            "link-name" : "/usr/share"
+        },
+        {
+            "target-name" : "/system/usr/local",
+            "link-name" : "/usr/local"
+        },
+        {
+            "target-name" : "/system/tmp",
+            "link-name" : "/tmp"
+        },
+        {
+            "target-name" : "/system/var",
+            "link-name" : "/var"
+        },
+        {
+            "target-name" : "/system/lib64",
+            "link-name" : "/lib64"
+        },
+        {
+            "target-name" : "/system/app",
+            "link-name" : "/app"
+        },
+        {
+            "target-name" : "/system/fonts",
+            "link-name" : "/fonts"
+        },
+        {
+            "target-name" : "/system/media",
+            "link-name" : "/media"
+        },
+        {
+            "target-name" : "/system/resource",
+            "link-name" : "/resource"
+        },
+        {
+            "target-name" : "/system/profile",
+            "link-name" : "/profile"
+        },
+        {
+            "target-name" : "/system/data",
+            "link-name" : "/data"
+        },
+        {
+            "target-name" : "/vendor/lib",
+            "link-name" : "/vendor/lib"
+        },
+        {
+            "target-name" : "/vendor/bin",
+            "link-name" : "/vendor/bin"
+        },
+        {
+            "target-name" : "/vendor/etc",
+            "link-name" : "/vendor/etc"
+        },
+        {
+            "target-name" : "/vendor/app",
+            "link-name" : "/vendor/app"
+        },
+        {
+            "target-name" : "/vendor/fonts",
+            "link-name" : "/vendor/fonts"
+        },
+        {
+            "target-name" : "/vendor/media",
+            "link-name" : "/vendor/media"
+        },
+        {
+            "target-name" : "/vendor/usr",
+            "link-name" : "/vendor/usr"
+        },
+        {
+            "target-name" : "/vendor/lib64",
+            "link-name" : "/vendor/lib64"
+        },
+        {
+            "target-name" : "/chipset/etc",
+            "link-name" : "/chipset/etc"
+        },
+        {
+            "target-name" : "/chip_prod/lib",
+            "link-name" : "/chip_prod/lib"
+        },
+        {
+            "target-name" : "/chip_prod/etc",
+            "link-name" : "/chip_prod/etc"
+        },
+        {
+            "target-name" : "/sys_prod/etc",
+            "link-name" : "/sys_prod/etc"
+        },
+        {
+            "target-name" : "/sys_prod/lib",
+            "link-name" : "/sys_prod/lib"
+        },
+        {
+            "target-name" : "/dev",
+            "link-name" : "/dev"
+        },
+        {
+            "target-name" : "/proc",
+            "link-name" : "/proc"
+        },
+        {
+            "target-name" : "/sys",
+            "link-name" : "/sys"
+        },
+        {
+            "target-name" : "/config",
+            "link-name" : "/config"
+        },
+        {
+            "target-name" : "/storage",
+            "link-name" : "/storage"
+        },
+        {
+            "target-name" : "/module_update",
+            "link-name" : "/module_update"
+        },
+        {
+            "target-name" : "/data/service",
+            "link-name" : "/data/service"
+        },
+        {
+            "target-name" : "/data/app",
+            "link-name" : "/data/app"
+        },
+        {
+            "target-name" : "/data/local",
+            "link-name" : "/data/local"
+        },
+        {
+            "target-name" : "/data/cache",
+            "link-name" : "/data/cache"
+        },
+        {
+            "target-name" : "/data/misc",
+            "link-name" : "/data/misc"
+        },
+        {
+            "target-name" : "/data/property",
+            "link-name" : "/data/property"
+        },
+        {
+            "target-name" : "/data/storage",
+            "link-name" : "/data/storage"
+        },
+        {
+            "target-name" : "/data/media",
+            "link-name" : "/data/media"
+        },
+        {
+            "target-name" : "/data/vm",
+            "link-name" : "/data/vm"
+        },
+        {
+            "target-name" : "/data/system",
+            "link-name" : "/data/system"
+        },
+        {
+            "target-name" : "/log",
+            "link-name" : "/log"
+        },
+        {
+            "target-name" : "/mnt",
+            "link-name" : "/mnt"
+        },
+        {
+            "target-name" : "/system/lib/hw",
+            "link-name" : "/lib/hw"
+        },
+        {
+            "target-name" : "/system/lib/modules",
+            "link-name" : "/lib/modules"
+        },
+        {
+            "target-name" : "/system/lib/firmware",
+            "link-name" : "/lib/firmware"
+        },
+        {
+            "target-name" : "/vendor/lib/hw",
+            "link-name" : "/vendor/lib/hw"
+        },
+        {
+            "target-name" : "/vendor/lib/modules",
+            "link-name" : "/vendor/lib/modules"
+        },
+        {
+            "target-name" : "/vendor/lib/firmware",
+            "link-name" : "/vendor/lib/firmware"
+        },
+        {
+            "target-name" : "/system/etc/init",
+            "link-name" : "/etc/init"
+        },
+        {
+            "target-name" : "/system/etc/param",
+            "link-name" : "/etc/param"
+        },
+        {
+            "target-name" : "/system/etc/selinux",
+            "link-name" : "/etc/selinux"
+        },
+        {
+            "target-name" : "/system/etc/security",
+            "link-name" : "/etc/security"
+        },
+        {
+            "target-name" : "/system/etc/fontconfig",
+            "link-name" : "/etc/fontconfig"
+        },
+        {
+            "target-name" : "/system/etc/locale",
+            "link-name" : "/etc/locale"
+        },
+        {
+            "target-name" : "/system/etc/dns",
+            "link-name" : "/etc/dns"
+        },
+        {
+            "target-name" : "/system/etc/network",
+            "link-name" : "/etc/network"
+        },
+        {
+            "target-name" : "/system/etc/time",
+            "link-name" : "/etc/time"
+        },
+        {
+            "target-name" : "/system/etc/audio",
+            "link-name" : "/etc/audio"
+        },
+        {
+            "target-name" : "/system/etc/camera",
+            "link-name" : "/etc/camera"
+        },
+        {
+            "target-name" : "/vendor/etc/init",
+            "link-name" : "/vendor/etc/init"
+        },
+        {
+            "target-name" : "/vendor/etc/param",
+            "link-name" : "/vendor/etc/param"
+        },
+        {
+            "target-name" : "/vendor/etc/selinux",
+            "link-name" : "/vendor/etc/selinux"
+        },
+        {
+            "target-name" : "/vendor/etc/audio",
+            "link-name" : "/vendor/etc/audio"
+        },
+        {
+            "target-name" : "/vendor/etc/camera",
+            "link-name" : "/vendor/etc/camera"
+        },
+        {
+            "target-name" : "/chipset/etc/init",
+            "link-name" : "/chipset/etc/init"
+        },
+        {
+            "target-name" : "/chip_prod/etc/init",
+            "link-name" : "/chip_prod/etc/init"
+        },
+        {
+            "target-name" : "/sys_prod/etc/init",
+            "link-name" : "/sys_prod/etc/init"
+        },
+        {
+            "target-name" : "/system/etc/xml",
+            "link-name" : "/etc/xml"
+        },
+        {
+            "target-name" : "/system/etc/telephony",
+            "link-name" : "/etc/telephony"
+        },
+        {
+            "target-name" : "/system/etc/usb",
+            "link-name" : "/etc/usb"
+        },
+        {
+            "target-name" : "/system/etc/bluetooth",
+            "link-name" : "/etc/bluetooth"
+        },
+        {
+            "target-name" : "/system/etc/wifi",
+            "link-name" : "/etc/wifi"
+        },
+        {
+            "target-name" : "/system/etc/sensor",
+            "link-name" : "/etc/sensor"
+        },
+        {
+            "target-name" : "/system/etc/location",
+            "link-name" : "/etc/location"
+        },
+        {
+            "target-name" : "/system/etc/notification",
+            "link-name" : "/etc/notification"
+        },
+        {
+            "target-name" : "/system/etc/power",
+            "link-name" : "/etc/power"
+        },
+        {
+            "target-name" : "/system/etc/thermal",
+            "link-name" : "/etc/thermal"
+        },
+        {
+            "target-name" : "/system/etc/update",
+            "link-name" : "/etc/update"
+        },
+        {
+            "target-name" : "/system/etc/a11y",
+            "link-name" : "/etc/a11y"
+        },
+        {
+            "target-name" : "/system/etc/account",
+            "link-name" : "/etc/account"
+        },
+        {
+            "target-name" : "/system/etc/webview",
+            "link-name" : "/etc/webview"
+        }
+    ]
+}
