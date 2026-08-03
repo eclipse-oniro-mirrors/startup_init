@@ -25,9 +25,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <limits.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
 
 #define TEXT_TABLE_SIZE   256
 #define BASE32_PAD_BIT    0x1F
@@ -35,7 +35,6 @@
 #define CRC16_POLY        0x8005
 #define CRC32_POLY        0xEDB88320U
 #define URI_MAX_ESCAPE    3
-#define DEFAULT_ESCAPE    '_'
 
 typedef enum {
     ASCII_CLASS_CONTROL = 0x01,
@@ -199,13 +198,6 @@ static const char g_base32EncodeTable[] = {
 static const char g_hexUpperDigits[] = "0123456789ABCDEF";
 static const char g_hexLowerDigits[] = "0123456789abcdef";
 
-static const uint64_t g_powerOfTenTable[] = {
-    1ULL, 10ULL, 100ULL, 1000ULL, 10000ULL, 100000ULL, 1000000ULL, 10000000ULL,
-    100000000ULL, 1000000000ULL, 10000000000ULL, 100000000000ULL, 1000000000000ULL,
-    10000000000000ULL, 100000000000000ULL, 1000000000000000ULL, 10000000000000000ULL,
-    100000000000000000ULL, 1000000000000000000ULL, 10000000000000000000ULL,
-};
-
 static const TextToken g_commonTokenTable[] = {
     { "max",      0x01 },
     { "min",      0x02 },
@@ -262,7 +254,7 @@ static const TextToken g_commonTokenTable[] = {
     { "selinux",  0x72 },
     { "capability",0x73 },
     { "secon",    0x74 },
-    { "acess",    0x75 },
+    { "access",   0x75 },
     { "cgroup",   0x76 },
     { "namespace",0x77 },
 };
@@ -637,6 +629,7 @@ size_t TextRemoveDuplicateChars(char *str)
     return write;
 }
 
+/* Requires str to point to a writable buffer with capacity of at least width + 1 bytes. */
 size_t TextPadLeft(char *str, size_t width, char padChar)
 {
     if (str == NULL) {
@@ -654,6 +647,7 @@ size_t TextPadLeft(char *str, size_t width, char padChar)
     return width;
 }
 
+/* Requires str to point to a writable buffer with capacity of at least width + 1 bytes. */
 size_t TextPadRight(char *str, size_t width, char padChar)
 {
     if (str == NULL) {
@@ -670,6 +664,7 @@ size_t TextPadRight(char *str, size_t width, char padChar)
     return width;
 }
 
+/* Requires str to point to a writable buffer with capacity of at least maxLen + 1 bytes. */
 void TextTruncateEllipsis(char *str, size_t maxLen)
 {
     if (str == NULL) {
@@ -701,6 +696,7 @@ bool TextIsQuoted(const char *str)
     return ((first == '"' && last == '"') || (first == '\'' && last == '\''));
 }
 
+/* Strips surrounding quotes when present; output is truncated to at most outSize - 1 bytes. */
 size_t TextUnquote(const char *str, char *out, size_t outSize)
 {
     if (str == NULL || out == NULL || outSize == 0) {
@@ -780,15 +776,12 @@ size_t TextFormatUint(uint64_t value, char *out, size_t outSize)
             value /= 10;
         }
     }
-    size_t tableSize = sizeof(g_powerOfTenTable) / sizeof(g_powerOfTenTable[0]);
-    if (digits > tableSize) {
-        digits = tableSize;
-    }
+    size_t totalDigits = digits;
     if (digits >= outSize) {
         digits = outSize - 1;
     }
     for (size_t i = 0; i < digits; ++i) {
-        out[i] = reversed[digits - 1 - i];
+        out[i] = reversed[totalDigits - 1 - i];
     }
     out[digits] = '\0';
     return digits;
@@ -800,7 +793,7 @@ size_t TextFormatHexBytes(const uint8_t *bytes, size_t len, HexFormat format,
     if (bytes == NULL || out == NULL || outSize == 0) {
         return 0;
     }
-    if ((len * 2 + 1) > outSize) {
+    if (len > (outSize - 1) / 2) {
         len = (outSize - 1) / 2;
     }
     size_t written = 0;
@@ -846,10 +839,6 @@ size_t TextFormatDuration(uint64_t nanos, char *out, size_t outSize)
         if (nanos >= units[i]) {
             unitIndex = i;
         }
-    }
-    if (unitIndex <= 3) {
-        return (size_t)snprintf(out, outSize, "%llu%s", (unsigned long long)nanos,
-            g_timeUnitTable[unitIndex]);
     }
     uint64_t value = nanos / units[unitIndex];
     return (size_t)snprintf(out, outSize, "%llu%s", (unsigned long long)value,
@@ -933,7 +922,11 @@ size_t TextEscape(const char *str, char *out, size_t outSize, EscapeMode mode)
     size_t written = 0;
     size_t len = strlen(str);
     for (size_t i = 0; i < len; ++i) {
+        size_t before = written;
         written = AppendEscape(out, outSize, written, (unsigned char)str[i], mode);
+        if (written == before) {
+            break;
+        }
         if (written >= (outSize - 1)) {
             break;
         }
@@ -1016,6 +1009,9 @@ size_t TextUnescape(const char *str, char *out, size_t outSize)
             ++read;
             continue;
         }
+        if (value == 0) {
+            return 0;
+        }
         out[written++] = (char)value;
     }
     out[written] = '\0';
@@ -1063,9 +1059,12 @@ size_t TextUriDecode(const char *str, char *out, size_t outSize)
     while (read < len && written < (outSize - 1)) {
         if (str[read] == '%') {
             int value = ConsumeHexEscape(str, len, &read);
-            if (value >= 0) {
+            if (value > 0) {
                 out[written++] = (char)value;
                 continue;
+            }
+            if (value == 0) {
+                return 0;
             }
         }
         out[written++] = str[read];
@@ -1108,10 +1107,11 @@ size_t Base64Encode(const uint8_t *src, size_t srcLen, char *out, size_t outSize
     }
     size_t groupCount = srcLen / 3;
     size_t remainder = srcLen % 3;
-    size_t total = groupCount * 4 + (remainder ? 4 : 0);
-    if ((total + 1) > outSize) {
+    size_t blocks = groupCount + (remainder ? 1 : 0);
+    if (blocks > (outSize - 1) / 4) {
         return 0;
     }
+    size_t total = blocks * 4;
     size_t written = 0;
     for (size_t i = 0; i < groupCount; ++i) {
         size_t n = Base64EncodeBlock(src + i * 3, 3, out + written);
@@ -1143,19 +1143,27 @@ size_t Base64Decode(const char *src, uint8_t *out, size_t outSize)
         if (c0 < 0 || c1 < 0) {
             return 0;
         }
-        uint32_t triple = ((uint32_t)c0 << 18) | ((uint32_t)c1 << 12);
-        if (c2 >= 0) {
-            triple |= ((uint32_t)c2 << 6);
-        }
-        if (c3 >= 0) {
-            triple |= (uint32_t)c3;
-        }
-        size_t produced = 0;
-        if (c2 >= 0) {
-            produced = 3;
-        } else if (c1 >= 0) {
+        size_t produced = 3;
+        if (src[i + 2] == BASE64_PAD_CHAR) {
+            if ((i + 4) != len || src[i + 3] != BASE64_PAD_CHAR) {
+                return 0;
+            }
+            produced = 1;
+            c2 = 0;
+            c3 = 0;
+        } else if (c2 < 0) {
+            return 0;
+        } else if (src[i + 3] == BASE64_PAD_CHAR) {
+            if ((i + 4) != len) {
+                return 0;
+            }
             produced = 2;
+            c3 = 0;
+        } else if (c3 < 0) {
+            return 0;
         }
+        uint32_t triple = ((uint32_t)c0 << 18) | ((uint32_t)c1 << 12) |
+            ((uint32_t)c2 << 6) | (uint32_t)c3;
         if ((written + produced) > outSize) {
             return 0;
         }
@@ -1181,9 +1189,8 @@ size_t Base32Encode(const uint8_t *src, size_t srcLen, char *out, size_t outSize
         out[0] = '\0';
         return 0;
     }
-    size_t groups = (srcLen + 4) / 5;
-    size_t total = groups * 8;
-    if ((total + 1) > outSize) {
+    size_t groups = srcLen / 5 + (srcLen % 5 ? 1 : 0);
+    if (groups > (outSize - 1) / 8) {
         return 0;
     }
     uint32_t buffer = 0;
@@ -1201,6 +1208,10 @@ size_t Base32Encode(const uint8_t *src, size_t srcLen, char *out, size_t outSize
     if (bitsLeft > 0) {
         int index = (int)((buffer << (5 - bitsLeft)) & BASE32_PAD_BIT);
         out[written++] = g_base32EncodeTable[index];
+    }
+    /* RFC 4648 base32 uses the same '=' pad character as base64. */
+    while ((written & 7) != 0) {
+        out[written++] = BASE64_PAD_CHAR;
     }
     out[written] = '\0';
     return written;
