@@ -32,6 +32,16 @@
 #include "init_utils.h"
 #include "securec.h"
 
+#define PROC_STAT_FIELD_PPID         0
+#define PROC_STAT_FIELD_UTIME        11
+#define PROC_STAT_FIELD_STIME        12
+#define PROC_STAT_FIELD_PRIORITY     15
+#define PROC_STAT_FIELD_NICE         16
+#define PROC_STAT_FIELD_NUM_THREADS  17
+#define PROC_STAT_FIELD_STARTTIME    20
+#define PROC_STAT_FIELD_VSIZE        21
+#define PROC_STAT_FIELD_RSS          22
+
 typedef struct {
     MonitorCallback callback;
     void *context;
@@ -45,6 +55,11 @@ typedef struct {
     void *data;
     uint32_t dataSize;
 } HistoryRecord;
+
+typedef struct {
+    const char *key;
+    uint64_t *target;
+} MemInfoField;
 
 static MonitorContext g_monitorCtx;
 static CallbackInfo g_callbacks[MONITOR_TYPE_MAX];
@@ -390,7 +405,6 @@ static int ParseNetDevLine(char *line, NetworkStats *stats)
     }
     int ret = strncpy_s(interface, sizeof(interface), start, ifaceLen);
     INIT_CHECK_RETURN_VALUE(ret == EOK, MONITOR_ERROR);
-    interface[ifaceLen] = '\0';
 
     uint64_t rxBytes = 0;
     uint64_t rxPackets = 0;
@@ -595,8 +609,8 @@ void PrintMonitorSummary(void)
     INIT_LOGI("Alarm Count: %u", g_monitorCtx.alarmCount);
     INIT_LOGI("Perf Record Count: %u", g_monitorCtx.recordCount);
     INIT_LOGI("CPU Usage: %u.%02u%%",
-        g_monitorCtx.cpuStats.totalUsage / PERCENT_MULTIPLIER,
-        g_monitorCtx.cpuStats.totalUsage % PERCENT_MULTIPLIER);
+        (uint32_t)(g_monitorCtx.cpuStats.totalUsage / PERCENT_MULTIPLIER),
+        (uint32_t)(g_monitorCtx.cpuStats.totalUsage % PERCENT_MULTIPLIER));
     INIT_LOGI("CPU Cores: %u", g_monitorCtx.cpuStats.cpuCoreNum);
     INIT_LOGI("Memory Usage: %u.%02u%%",
         g_monitorCtx.memStats.usagePercent / PERCENT_MULTIPLIER,
@@ -616,8 +630,8 @@ static void ExportCpuStats(FILE *fp, const CpuStats *stats)
 {
     fprintf(fp, "[CPU Statistics]\n");
     fprintf(fp, "  CPU Usage: %u.%02u%%\n",
-        stats->totalUsage / PERCENT_MULTIPLIER,
-        stats->totalUsage % PERCENT_MULTIPLIER);
+        (uint32_t)(stats->totalUsage / PERCENT_MULTIPLIER),
+        (uint32_t)(stats->totalUsage % PERCENT_MULTIPLIER));
     fprintf(fp, "  CPU Cores: %u\n", stats->cpuCoreNum);
     fprintf(fp, "  User Mode Time: %llu ms\n", (unsigned long long)stats->userModeTime);
     fprintf(fp, "  System Mode Time: %llu ms\n", (unsigned long long)stats->systemTime);
@@ -914,46 +928,35 @@ static void ParseMemInfoLine(const char *line, MemoryStats *stats)
         value *= BYTES_PER_KB;
     }
 
-    if (strcmp(key, "MemTotal:") == 0) {
-        stats->totalMem = value;
-    } else if (strcmp(key, "MemFree:") == 0) {
-        stats->freeMem = value;
-    } else if (strcmp(key, "MemAvailable:") == 0) {
-        stats->availableMem = value;
-    } else if (strcmp(key, "Buffers:") == 0) {
-        stats->buffers = value;
-    } else if (strcmp(key, "Cached:") == 0) {
-        stats->cached = value;
-    } else if (strcmp(key, "SwapCached:") == 0) {
-        stats->swapCached = value;
-    } else if (strcmp(key, "Active:") == 0) {
-        stats->activeMem = value;
-    } else if (strcmp(key, "Inactive:") == 0) {
-        stats->inactiveMem = value;
-    } else if (strcmp(key, "SwapTotal:") == 0) {
-        stats->swapTotal = value;
-    } else if (strcmp(key, "SwapFree:") == 0) {
-        stats->swapFree = value;
-    } else if (strcmp(key, "Dirty:") == 0) {
-        stats->dirtyPages = value;
-    } else if (strcmp(key, "Writeback:") == 0) {
-        stats->writeback = value;
-    } else if (strcmp(key, "AnonPages:") == 0) {
-        stats->anonPages = value;
-    } else if (strcmp(key, "Mapped:") == 0) {
-        stats->mapped = value;
-    } else if (strcmp(key, "Shmem:") == 0) {
-        stats->shmem = value;
-    } else if (strcmp(key, "Slab:") == 0) {
-        stats->slab = value;
-    } else if (strcmp(key, "SReclaimable:") == 0) {
-        stats->slabReclaimable = value;
-    } else if (strcmp(key, "SUnreclaim:") == 0) {
-        stats->slabUnreclaimable = value;
-    } else if (strcmp(key, "KernelStack:") == 0) {
-        stats->kernelStack = value;
-    } else if (strcmp(key, "PageTables:") == 0) {
-        stats->pageTables = value;
+    MemInfoField fields[] = {
+        {"MemTotal:", &stats->totalMem},
+        {"MemFree:", &stats->freeMem},
+        {"MemAvailable:", &stats->availableMem},
+        {"Buffers:", &stats->buffers},
+        {"Cached:", &stats->cached},
+        {"SwapCached:", &stats->swapCached},
+        {"Active:", &stats->activeMem},
+        {"Inactive:", &stats->inactiveMem},
+        {"SwapTotal:", &stats->swapTotal},
+        {"SwapFree:", &stats->swapFree},
+        {"Dirty:", &stats->dirtyPages},
+        {"Writeback:", &stats->writeback},
+        {"AnonPages:", &stats->anonPages},
+        {"Mapped:", &stats->mapped},
+        {"Shmem:", &stats->shmem},
+        {"Slab:", &stats->slab},
+        {"SReclaimable:", &stats->slabReclaimable},
+        {"SUnreclaim:", &stats->slabUnreclaimable},
+        {"KernelStack:", &stats->kernelStack},
+        {"PageTables:", &stats->pageTables},
+    };
+
+    size_t fieldCount = sizeof(fields) / sizeof(fields[0]);
+    for (size_t i = 0; i < fieldCount; i++) {
+        if (strcmp(key, fields[i].key) == 0) {
+            *fields[i].target = value;
+            return;
+        }
     }
 }
 
@@ -1007,7 +1010,6 @@ static int ParseProcessStat(const char *line, ProcessInfo *info)
     }
     int ret = strncpy_s(info->name, sizeof(info->name), start + 1, (size_t)nameLen);
     INIT_CHECK_RETURN_VALUE(ret == EOK, MONITOR_ERROR);
-    info->name[nameLen] = '\0';
 
     char *next = end + 2;
     info->state = *next++;
@@ -1017,31 +1019,31 @@ static int ParseProcessStat(const char *line, ProcessInfo *info)
     int fieldIndex = 0;
     while (token != NULL && fieldIndex < STAT_FIELD_MAX_COUNT) {
         switch (fieldIndex) {
-            case 0:
+            case PROC_STAT_FIELD_PPID:
                 info->ppid = atoi(token);
                 break;
-            case 11:
+            case PROC_STAT_FIELD_UTIME:
                 info->utime = strtoull(token, NULL, DECIMAL_BASE);
                 break;
-            case 12:
+            case PROC_STAT_FIELD_STIME:
                 info->stime = strtoull(token, NULL, DECIMAL_BASE);
                 break;
-            case 15:
+            case PROC_STAT_FIELD_PRIORITY:
                 info->priority = atol(token);
                 break;
-            case 16:
+            case PROC_STAT_FIELD_NICE:
                 info->nice = atol(token);
                 break;
-            case 17:
+            case PROC_STAT_FIELD_NUM_THREADS:
                 info->numThreads = atol(token);
                 break;
-            case 20:
+            case PROC_STAT_FIELD_STARTTIME:
                 info->startTime = strtoull(token, NULL, DECIMAL_BASE);
                 break;
-            case 21:
+            case PROC_STAT_FIELD_VSIZE:
                 info->vsize = atol(token);
                 break;
-            case 22:
+            case PROC_STAT_FIELD_RSS:
                 info->rss = atol(token) * (long)sysconf(_SC_PAGESIZE);
                 break;
             default:
@@ -1064,7 +1066,7 @@ static int ReadProcessCmdline(int pid, char *buf, size_t bufLen)
 
     size_t len = fread(buf, 1, bufLen - 1, fp);
     fclose(fp);
-    INIT_CHECK_RETURN_VALUE(len > 0 && len < bufLen, MONITOR_OK);
+    INIT_CHECK_RETURN_VALUE(len > 0, MONITOR_OK);
 
     buf[len] = '\0';
     for (size_t i = 0; i < len; i++) {

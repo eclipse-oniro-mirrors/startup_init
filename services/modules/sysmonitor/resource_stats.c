@@ -42,6 +42,12 @@
 #define UPTIME_FIELD_COUNT      2
 #define AVG_CALC_DURATION_SEC   60
 
+#define VFS_TYPE_PROC           "proc"
+#define VFS_TYPE_SYSFS          "sysfs"
+#define VFS_TYPE_DEVFS          "devfs"
+#define VFS_TYPE_TMPFS          "tmpfs"
+#define VFS_TYPE_CGROUP         "cgroup"
+
 typedef enum {
     TREND_STABLE = 0,
     TREND_INCREASING,
@@ -391,11 +397,11 @@ static bool IsVirtualFileSystem(const char *device)
     if (device == NULL) {
         return false;
     }
-    if (strncmp(device, "proc", strlen("proc")) == 0 ||
-        strncmp(device, "sysfs", strlen("sysfs")) == 0 ||
-        strncmp(device, "devfs", strlen("devfs")) == 0 ||
-        strncmp(device, "tmpfs", strlen("tmpfs")) == 0 ||
-        strncmp(device, "cgroup", strlen("cgroup")) == 0) {
+    if (strncmp(device, VFS_TYPE_PROC, sizeof(VFS_TYPE_PROC) - 1) == 0 ||
+        strncmp(device, VFS_TYPE_SYSFS, sizeof(VFS_TYPE_SYSFS) - 1) == 0 ||
+        strncmp(device, VFS_TYPE_DEVFS, sizeof(VFS_TYPE_DEVFS) - 1) == 0 ||
+        strncmp(device, VFS_TYPE_TMPFS, sizeof(VFS_TYPE_TMPFS) - 1) == 0 ||
+        strncmp(device, VFS_TYPE_CGROUP, sizeof(VFS_TYPE_CGROUP) - 1) == 0) {
         return true;
     }
     return false;
@@ -404,6 +410,12 @@ static bool IsVirtualFileSystem(const char *device)
 static void FillFsStats(FileSystemStats *stats, const char *device,
     const char *mountPoint, const char *fsType)
 {
+    stats->totalBytes = 0;
+    stats->usedBytes = 0;
+    stats->freeBytes = 0;
+    stats->usagePercent = 0;
+    stats->inodeUsagePercent = 0;
+
     int ret = strncpy_s(stats->device, sizeof(stats->device), device, strlen(device));
     INIT_CHECK_ONLY_RETURN(ret == EOK);
 
@@ -412,12 +424,6 @@ static void FillFsStats(FileSystemStats *stats, const char *device,
 
     ret = strncpy_s(stats->fsType, sizeof(stats->fsType), fsType, strlen(fsType));
     INIT_CHECK_ONLY_RETURN(ret == EOK);
-
-    stats->totalBytes = 0;
-    stats->usedBytes = 0;
-    stats->freeBytes = 0;
-    stats->usagePercent = 0;
-    stats->inodeUsagePercent = 0;
 }
 
 int GetFileSystemStats(FileSystemStats *stats, uint32_t maxCount, uint32_t *actualCount)
@@ -575,8 +581,8 @@ static void ExportHistory(FILE *fp)
         ResourceHistory *hist = &g_history[actualIndex];
         fprintf(fp, "  Sample %u: CPU=%u.%02u%% MEM=%u.%02u%% Time=%llu\n",
             i,
-            hist->cpuStats.totalUsage / PERCENT_MULTIPLIER,
-            hist->cpuStats.totalUsage % PERCENT_MULTIPLIER,
+            (uint32_t)(hist->cpuStats.totalUsage / PERCENT_MULTIPLIER),
+            (uint32_t)(hist->cpuStats.totalUsage % PERCENT_MULTIPLIER),
             hist->memStats.usagePercent / PERCENT_MULTIPLIER,
             hist->memStats.usagePercent % PERCENT_MULTIPLIER,
             (unsigned long long)hist->timestamp);
