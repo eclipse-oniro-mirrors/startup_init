@@ -1263,7 +1263,7 @@ void ParseAllServices(const cJSON *fileRoot, const ConfigContext *context)
         int ret = ParseOneService(curItem, service);
         if (ret != SERVICE_SUCCESS) {
             INIT_LOGE("Service error %s parse config error.", service->name);
-            service->lastErrno = INIT_ECFG;
+            ReleaseService(service);
             continue;
         }
         ret = ParseServiceSocket(curItem, service);
