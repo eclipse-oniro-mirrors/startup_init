@@ -46,6 +46,8 @@ if (defined(build_seccomp) && build_seccomp) {
         defines = [ "WITH_SECCOMP_DEBUG" ]
       }
 
+      branch_protector_frt = "bti"
+
       deps = [ "../../innerkits:libbegetutil" ]
 
       external_deps = [
