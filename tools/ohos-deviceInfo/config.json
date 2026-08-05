@@ -1,0 +1,127 @@
+{
+  "name": "ohos-deviceInfo",
+  "version": "1.0.0",
+  "description": "Query OpenHarmony device information via libbegetutil. Used for device identification and version diagnostics. Does not support write operations or cross-device queries.",
+  "executablePath": "/system/bin/cli_tool/executable/ohos-deviceInfo",
+  "requirePermissions": [],
+  "isLockScreenExecutionAllowed": true,
+  "hasSubCommand": true,
+  "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "enum": ["success", "failed"]
+      },
+      "data": {
+        "type": "object",
+        "properties": {}
+      },
+      "errCode": {
+        "type": "string"
+      },
+      "errMsg": {
+        "type": "string"
+      },
+      "suggestion": {
+        "type": "string"
+      }
+    }
+  },
+  "subcommands": {
+    "get": {
+      "description": "Query a single device info field by name. Used for inspecting one specific device attribute. Does not support multiple fields in one call (use 'all' instead).",
+      "requirePermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Device info field name, e.g. osFullName, displayVersion, sdkApiVersion",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "field"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success", "failed"]
+          },
+          "data": {
+            "type": "object",
+            "description": "Single field name-value pair",
+            "properties": {
+              "field": {
+                "type": "string",
+                "description": "Field value, string or integer"
+              }
+            }
+          },
+          "errCode": {
+            "type": "string"
+          },
+          "errMsg": {
+            "type": "string"
+          },
+          "suggestion": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "all": {
+      "description": "Query all device info fields at once. Used for full device profiling and diagnostics. Does not accept any parameters.",
+      "requirePermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success", "failed"]
+          },
+          "data": {
+            "type": "object",
+            "description": "All 11 device info fields as name-value pairs",
+            "properties": {
+              "osFullName": { "type": "string" },
+              "osReleaseType": { "type": "string" },
+              "displayVersion": { "type": "string" },
+              "distributionOSName": { "type": "string" },
+              "distributionOSVersion": { "type": "string" },
+              "distributionOSApiName": { "type": "string" },
+              "distributionOSReleaseType": { "type": "string" },
+              "sdkApiVersion": { "type": "integer" },
+              "sdkMinorApiVersion": { "type": "integer" },
+              "sdkPatchApiVersion": { "type": "integer" },
+              "distributionOSApiVersion": { "type": "integer" }
+            }
+          },
+          "errCode": {
+            "type": "string"
+          },
+          "errMsg": {
+            "type": "string"
+          },
+          "suggestion": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

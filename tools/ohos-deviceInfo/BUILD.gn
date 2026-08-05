@@ -1,0 +1,75 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//base/startup/init/begetd.gni")
+
+group("ohos-deviceInfo-cli") {
+  if (!defined(ohos_lite)) {
+    deps = [ ":ohos-deviceInfo" ]
+  }
+}
+
+if (!defined(ohos_lite)) {
+  import("//build/ohos.gni")
+  import("//build/ohos/cli/ohos_cli_executable.gni")
+
+  ohos_cli_executable("ohos-deviceInfo") {
+    branch_protector_ret = "pac_ret"
+    cli_config_file = "config.json"
+
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+
+    cflags = [
+      "-fPIC",
+      "-g",
+    ]
+    cflags += [ "-Wall" ]
+    if (target_cpu == "arm") {
+      cflags += [ "-DBINDER_IPC_32BIT" ]
+    }
+    cflags_cc = cflags
+
+    sources = [
+      "src/main.cpp",
+      "src/string_getters.cpp",
+      "src/int_getters.cpp",
+      "src/field_registry.cpp",
+      "src/output_formatter.cpp",
+    ]
+
+    include_dirs = [
+      "src",
+      "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/interfaces/innerkits/include/syspara",
+    ]
+
+    deps = [
+      "//base/startup/init/interfaces/innerkits:libbegetutil",
+    ]
+
+    external_deps = [
+      "cJSON:cjson",
+      "bounds_checking_function:libsec_shared",
+    ]
+
+    subsystem_name = "startup"
+    part_name = "init"
+
+    install_enable = true
+    install_images = [ "system" ]
+    relative_install_dir = "cli_tool/executable"
+  }
+}
