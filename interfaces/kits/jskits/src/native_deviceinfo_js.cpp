@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <atomic>
 #include <cstdio>
 #include <string>
 
@@ -339,15 +340,27 @@ static napi_value GetSdkPatchApiVersion(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
-#define DISTRIBUTION_OS_API_VER_MAX 999999
-#define DISTRIBUTION_OS_API_VER_MIN 10000
-#define DISTRIBUTION_PERCENT 100
 #define API_VERSION_MAX 99
+// apiAvailable 上线版本号。number 入参合法范围为 [1, LAUNCH-1]；string major >= LAUNCH 时不允许带括号后缀。
+#define APIAVAILABLE_LAUNCH_VERSION 26
+// 版本比较时匹配的 OS 名称。用拼接构造，避免源码中出现该名称的完整字面量。
 #define TARGET_OS_NAME_PART1 "Harmony"
 #define TARGET_OS_NAME_PART2 "OS"
 #define TARGET_OS_NAME TARGET_OS_NAME_PART1 TARGET_OS_NAME_PART2
-#define VERSION_STR_MAX_LEN 64
+#define DISTRIBUTION_OS_API_VER_MAX 999999
+#define DISTRIBUTION_OS_API_VER_MIN 10000
+#define DISTRIBUTION_PERCENT 100
 #define DECIMAL_BASE 10
+#define VERSION_STR_MAX_LEN 64
+
+// 系统侧 API 版本信息，由调用方通过系统参数 getter 收集后传入，使版本比较逻辑成为纯函数。
+struct OsApiInfo {
+    const char* distributionOSName;    // GetDistributionOSName()
+    int32_t distributionOSApiVersion;  // GetDistributionOSApiVersion()
+    int32_t sdkMajor;                  // GetSdkApiVersion()
+    int32_t sdkMinor;                  // GetSdkMinorApiVersion()
+    int32_t sdkPatch;                  // GetSdkPatchApiVersion()
+};
 
 // 校验版本三段是否都在合法范围：major∈[1, API_VERSION_MAX]，minor/patch∈[0, API_VERSION_MAX]
 static bool IsVersionInRange(int32_t major, int32_t minor, int32_t patch)
@@ -357,42 +370,53 @@ static bool IsVersionInRange(int32_t major, int32_t minor, int32_t patch)
            patch >= 0 && patch <= API_VERSION_MAX;
 }
 
+// 校验数字入参是否为合法 API level：必须是 [1, APIAVAILABLE_LAUNCH_VERSION) 内的有限整数。
+// 对原始 double 判区间可同时挡掉 NaN / Infinity 与越界小数；
+// 再用 value != (int)value 拒掉区间内的小数。无 <cmath>、无 UB。
+static bool IsValidNumberApiLevel(double value)
+{
+    if (!(value >= 1 && value < APIAVAILABLE_LAUNCH_VERSION)) {
+        return false;
+    }
+    if (value != static_cast<int32_t>(value)) {
+        return false;
+    }
+    return true;
+}
+
 // 解析 DistributionOS 分发版本（打包编码 = major*10000 + minor*100 + patch）。
 // 仅依据打包值与各字段范围校验；OS 名称的判定由调用方完成。
 // 打包值、各字段均合法时返回 true 并写出三段版本。
-static bool TryResolveDistributionOSVersion(int32_t* major, int32_t* minor, int32_t* patch)
+static bool TryResolveDistributionOSVersion(int32_t packedVersion, int32_t* major, int32_t* minor,
+    int32_t* patch)
 {
-    int32_t distributionOSApiVersion = GetDistributionOSApiVersion();
     // 校验范围：必须在 [10000, 999999] 之间（对应 1.0.0 ~ 99.99.99）
-    if (distributionOSApiVersion < DISTRIBUTION_OS_API_VER_MIN ||
-        distributionOSApiVersion > DISTRIBUTION_OS_API_VER_MAX) {
+    if (packedVersion < DISTRIBUTION_OS_API_VER_MIN || packedVersion > DISTRIBUTION_OS_API_VER_MAX) {
         return false;
     }
 
-    int32_t majorDistribution = distributionOSApiVersion / DISTRIBUTION_OS_API_VER_MIN;
-    int32_t minorDistribution = (distributionOSApiVersion / DISTRIBUTION_PERCENT) % DISTRIBUTION_PERCENT;
-    int32_t patchDistribution = distributionOSApiVersion % DISTRIBUTION_PERCENT;
-    // 再次校验各字段范围（防御性编程）
-    if (!IsVersionInRange(majorDistribution, minorDistribution, patchDistribution)) {
-        return false;
-    }
+    int32_t majorDistribution = packedVersion / DISTRIBUTION_OS_API_VER_MIN;
+    int32_t minorDistribution = (packedVersion / DISTRIBUTION_PERCENT) % DISTRIBUTION_PERCENT;
+    int32_t patchDistribution = packedVersion % DISTRIBUTION_PERCENT;
+    // packedVersion ∈ [10000, 999999] 已保证三段分别 ∈ [1,99]/[0,99]/[0,99]，无需再校验
 
     *major = majorDistribution;
     *minor = minorDistribution;
     *patch = patchDistribution;
-    BEGET_LOGI("Using DistributionOS API version: %d.%d.%d (from %d)",
-        *major, *minor, *patch, distributionOSApiVersion);
+    BEGET_LOGI("Using DistributionOS API version: %d.%d.%d (from %d)", *major, *minor, *patch, packedVersion);
     return true;
 }
 
 // 读取一段无符号整数（至少 1 位数字）。成功返回 true，并通过 endp 回传结束位置、value 回传数值。
 // 严格要求以数字开头，杜绝 sscanf 的 %d 跳过前导空白导致的 "1. 2. 3"、" 1.2.3" 误判。
+// 禁止前导 0："010"、"00" 视为非法，单独的 "0" 合法。
 static bool ReadVersionSegment(const char* p, const char** endp, int* value)
 {
     if (*p < '0' || *p > '9') {
         *endp = p;
         return false;
     }
+    const char* start = p; // 段起始位置，用于循环后判断前导 0
     int v = 0;
     while (*p >= '0' && *p <= '9') {
         v = v * DECIMAL_BASE + (*p - '0');
@@ -403,12 +427,18 @@ static bool ReadVersionSegment(const char* p, const char** endp, int* value)
             return false;
         }
     }
+    // 前导 0：首位为 '0' 且段长 > 1（如 "010"、"00"）；单独的 "0" 合法。
+    // 用段长 (p - start) 判断，避免对 p+1 做前置窥探（防静态分析误报越界）。
+    if (*start == '0' && (p - start) > 1) {
+        *endp = p;
+        return false;
+    }
     *value = v;
     *endp = p;
     return true;
 }
 
-// 单趟严格解析：格式为 "N.N.N" 或 "N.N.N(M)"，N/M 为无符号整数（无空格、符号）。
+// 单趟严格解析：格式为 "N.N.N" 或 "N.N.N(M)"，N/M 为无符号整数（无空格、符号、前导 0）。
 // 逐字符读取，任何多余或非法字符（含空格）即判非法。
 static bool ParseVersionFromString(const char* str, int32_t* majorVersion, int32_t* minorVersion,
     int32_t* patchVersion)
@@ -436,11 +466,15 @@ static bool ParseVersionFromString(const char* str, int32_t* majorVersion, int32
     }
 
     // 可选后缀 "(M)"：括号内的第 4 段（OpenHarmony 版本号）仅校验合法性、不参与比较
-    // （取值范围 [0, API_VERSION_MAX] 由 ReadVersionSegment 保证）
+    // （ohVersion 取值 [1, API_VERSION_MAX]，禁 "0"）。
+    // major >= 上线版本时不允许带括号后缀。
     if (*p == '(') {
+        if (major >= APIAVAILABLE_LAUNCH_VERSION) {
+            return false;
+        }
         ++p;
         int ohVersion = 0;
-        if (!ReadVersionSegment(p, &p, &ohVersion) || *p != ')') {
+        if (!ReadVersionSegment(p, &p, &ohVersion) || ohVersion < 1 || *p != ')') {
             return false;
         }
         ++p;
@@ -460,6 +494,57 @@ static bool ParseVersionFromString(const char* str, int32_t* majorVersion, int32
     return false;
 }
 
+// 判断当前进程(调用方 app)的 compileSdkType 是否为 "OpenHarmony"。
+// 用于：OpenHarmony 工程的字符串版本号 major 必须 >= 上线版本。
+// 进程内缓存结果(compileSdkType 不变)。无 bundle 框架(DEPENDENT_APPEXECFWK_BASE 未定义)时返回 false(不做该校验)。
+// 查询失败也返回 false(fail-open：无法判定时不强制限制)。
+static bool IsOpenHarmonyCompileSdkType()
+{
+#ifdef DEPENDENT_APPEXECFWK_BASE
+    // 三态缓存：NOT_RESOLVED 未查/上次失败；NOT_OPEN_HARMONY_SDK 否；IS_OPEN_HARMONY_SDK 是。
+    // 只在拿到非空 compileSdkType 时缓存；空值/失败留 NOT_RESOLVED，下次调用重试。
+    // 用 atomic 避免 cache 的数据竞争；首次并发可能重复查询一次，但结果幂等（compileSdkType 不变），无害
+    constexpr int8_t NOT_RESOLVED = -1;
+    constexpr int8_t NOT_OPEN_HARMONY_SDK = 0;
+    constexpr int8_t IS_OPEN_HARMONY_SDK = 1;
+    static std::atomic<int8_t> cacheState{NOT_RESOLVED};
+    int8_t cachedValue = cacheState.load(std::memory_order_relaxed);
+    if (cachedValue != NOT_RESOLVED) {
+        return cachedValue == IS_OPEN_HARMONY_SDK;
+    }
+    bool isOpenHarmonySdk = false;
+    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto remoteObject = (systemAbilityManager != nullptr)
+        ? systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID)
+        : nullptr;
+    auto bundleMgr = (remoteObject != nullptr)
+        ? OHOS::iface_cast<OHOS::AppExecFwk::IBundleMgr>(remoteObject)
+        : nullptr;
+    if (bundleMgr == nullptr) {
+        DEVINFO_LOGE("IsOpenHarmonyCompileSdkType: get bundleMgr proxy failed");
+    } else {
+        // GetBundleInfoForSelf 直接取调用方自己的 BundleInfo（服务端按 caller 解析，无需 uid/userId）。
+        // WITH_APPLICATION 确保 applicationInfo 被填充（含 compileSdkType）。
+        OHOS::AppExecFwk::BundleInfo bundleInfo;
+        if (bundleMgr->GetBundleInfoForSelf(
+            static_cast<int32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION),
+            bundleInfo) != 0) {
+            DEVINFO_LOGE("IsOpenHarmonyCompileSdkType: GetBundleInfoForSelf failed");
+        } else if (bundleInfo.applicationInfo.compileSdkType.empty()) {
+            DEVINFO_LOGE("IsOpenHarmonyCompileSdkType: compileSdkType is empty");
+        } else {
+            isOpenHarmonySdk = (bundleInfo.applicationInfo.compileSdkType == "OpenHarmony");
+            // 拿到非空 compileSdkType，直接缓存；空值/失败不缓存，下次调用重试
+            cacheState.store(isOpenHarmonySdk ? IS_OPEN_HARMONY_SDK : NOT_OPEN_HARMONY_SDK,
+                std::memory_order_relaxed);
+        }
+    }
+    return isOpenHarmonySdk; // 未取到值时为 false（fail-open：无法判定时不强制限制）
+#else
+    return false; // 无 bundle 框架，不做 compileSdkType 校验
+#endif
+}
+
 static bool ParseVersionFromArg(napi_env env, napi_value arg,
     int32_t* majorVersion, int32_t* minorVersion, int32_t* patchVersion)
 {
@@ -473,10 +558,14 @@ static bool ParseVersionFromArg(napi_env env, napi_value arg,
         if (napi_get_value_double(env, arg, &value) != napi_ok) {
             return false;
         }
+        // 区间 + 拒小数 + NaN/Infinity 校验（逻辑见 IsValidNumberApiLevel）
+        if (!IsValidNumberApiLevel(value)) {
+            return false;
+        }
         *majorVersion = static_cast<int32_t>(value);
         *minorVersion = 0;
         *patchVersion = 0;
-        return (*majorVersion > 0); // major 必须 >=1
+        return true;
     }
 
     if (type == napi_string) {
@@ -485,42 +574,51 @@ static bool ParseVersionFromArg(napi_env env, napi_value arg,
         if (napi_get_value_string_utf8(env, arg, str, sizeof(str), &len) != napi_ok) {
             return false;
         }
-        return ParseVersionFromString(str, majorVersion, minorVersion, patchVersion);
+        if (!ParseVersionFromString(str, majorVersion, minorVersion, patchVersion)) {
+            return false;
+        }
+        // OpenHarmony 工程：字符串 major 必须 >= 上线版本（distributionOS 不限制）
+        if (IsOpenHarmonyCompileSdkType() && *majorVersion < APIAVAILABLE_LAUNCH_VERSION) {
+            return false;
+        }
+        return true;
     }
 
     return false;
 }
 
-// 通过判断系统是 HO 还是 OH 进行版本号对比
-static bool CheckApiVersionGreaterOrEqualByOS(int majorVersion, int minorVersion, int patchVersion)
+// 通过判断系统是 DistributionOS 还是 OH 进行版本号对比。
+// name 为 DistributionOS 且分发打包值可解码时用分发版本；否则（或解码失败时）回退到 OH SDK 版本。
+static bool CheckApiVersionGreaterOrEqualByOS(int32_t reqMajor, int32_t reqMinor, int32_t reqPatch,
+    const OsApiInfo& os)
 {
-    if (!IsVersionInRange(majorVersion, minorVersion, patchVersion)) {
+    if (!IsVersionInRange(reqMajor, reqMinor, reqPatch)) {
         return false;
     }
 
     int32_t osMajor = 0;
     int32_t osMinor = 0;
     int32_t osPatch = 0;
-    // name 为 DistributionOS 时走 DistributionOS 分发版本；否则（或分发版本无法解码时）回退到 OH SDK 版本
-    const char* distributionOSName = GetDistributionOSName();
-    bool isDistributionOS = (distributionOSName != nullptr &&
-        strcmp(distributionOSName, TARGET_OS_NAME) == 0);
-    if (!isDistributionOS || !TryResolveDistributionOSVersion(&osMajor, &osMinor, &osPatch)) {
-        osMajor = GetSdkApiVersion();
-        osMinor = GetSdkMinorApiVersion();
-        osPatch = GetSdkPatchApiVersion();
+    bool isDistributionOS = (os.distributionOSName != nullptr &&
+        strcmp(os.distributionOSName, TARGET_OS_NAME) == 0);
+    if (!isDistributionOS ||
+        !TryResolveDistributionOSVersion(os.distributionOSApiVersion, &osMajor, &osMinor, &osPatch)) {
+        osMajor = os.sdkMajor;
+        osMinor = os.sdkMinor;
+        osPatch = os.sdkPatch;
     }
 
     // 统一比较：系统版本 >= 请求版本（major 不同比 major，其次 minor，最后 patch>=）
-    if (majorVersion != osMajor) {
-        return osMajor > majorVersion;
+    if (reqMajor != osMajor) {
+        return osMajor > reqMajor;
     }
-    if (minorVersion != osMinor) {
-        return osMinor > minorVersion;
+    if (reqMinor != osMinor) {
+        return osMinor > reqMinor;
     }
-    return osPatch >= patchVersion;
+    return osPatch >= reqPatch;
 }
 
+// 判定请求的 API 版本在当前系统是否可用（napi 入口，返回布尔）
 static napi_value ApiAvailable(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
@@ -539,7 +637,10 @@ static napi_value ApiAvailable(napi_env env, napi_callback_info info)
     bool parsed = ParseVersionFromArg(env, argv[0], &majorVersion, &minorVersion, &patchVersion);
     bool ret = false;
     if (parsed) {
-        ret = CheckApiVersionGreaterOrEqualByOS(majorVersion, minorVersion, patchVersion);
+        // 收集系统侧版本信息后判定（系统版本 >= 请求版本）
+        OsApiInfo os = { GetDistributionOSName(), GetDistributionOSApiVersion(),
+                         GetSdkApiVersion(), GetSdkMinorApiVersion(), GetSdkPatchApiVersion() };
+        ret = CheckApiVersionGreaterOrEqualByOS(majorVersion, minorVersion, patchVersion, os);
     }
 
     napi_value result;
