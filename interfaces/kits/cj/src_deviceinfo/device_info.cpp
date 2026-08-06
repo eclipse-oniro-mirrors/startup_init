@@ -70,7 +70,8 @@ const char* DeviceInfo::CjGetOsFullName()
 
 const char* DeviceInfo::CjGetProductModel()
 {
-    return GetProductModel();
+    const char *value = GetProductModel();
+    return (value != nullptr) ? value : "";
 }
 
 const char* DeviceInfo::CjGetBrand()
@@ -80,7 +81,8 @@ const char* DeviceInfo::CjGetBrand()
 
 const char* DeviceInfo::CjGetDeviceType()
 {
-    return GetDeviceType();
+    const char *value = GetDeviceType();
+    return (value != nullptr) ? value : "";
 }
 
 const char* DeviceInfo::CjGetUdid()
@@ -99,7 +101,8 @@ const char* DeviceInfo::CjGetUdid()
 
 const char* DeviceInfo::CjGetBuildRootHash()
 {
-    return GetBuildRootHash();
+    const char *value = GetBuildRootHash();
+    return (value != nullptr) ? value : "";
 }
 
 const char* DeviceInfo::CjGetBuildTime()
@@ -189,7 +192,8 @@ const char* DeviceInfo::CjGetIncrementalVersion()
 
 const char* DeviceInfo::CjGetSecurityPatchTag()
 {
-    return GetSecurityPatchTag();
+    const char *value = GetSecurityPatchTag();
+    return (value != nullptr) ? value : "";
 }
 
 const char* DeviceInfo::CjGetAbiList()
@@ -219,7 +223,8 @@ const char* DeviceInfo::CjGetProductSeries()
 
 const char* DeviceInfo::CjGetMarketName()
 {
-    return GetMarketName();
+    const char *value = GetMarketName();
+    return (value != nullptr) ? value : "";
 }
 
 const char* DeviceInfo::CjGetManufacture()
@@ -244,7 +249,8 @@ int64_t DeviceInfo::CjGetDistributionOSApiVersion()
 
 const char* DeviceInfo::CjGetDistributionOSReleaseType()
 {
-    return GetDistributionOSReleaseType();
+    const char *value = GetDistributionOSReleaseType();
+    return (value != nullptr) ? value : "";
 }
 
 static DevInfoError CjAclGetDevOdid(char *odid, int size)
