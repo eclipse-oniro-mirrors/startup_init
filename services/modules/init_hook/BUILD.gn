@@ -58,7 +58,7 @@ if (defined(ohos_lite)) {
       "bounds_checking_function:libsec_static",
     ]
     if (build_selinux) {
-      public_external_deps += [
+      external_deps += [
         "selinux:libselinux",
         "selinux_adapter:libselinux_parameter_static",
       ]
