@@ -263,7 +263,7 @@ static const char *GetWatchName_(const TriggerNode *trigger)
     PARAM_CHECK(trigger != NULL, return "", "Invalid trigger");
     PARAM_CHECK(trigger->type < TRIGGER_MAX && trigger->type > TRIGGER_UNKNOW,
         return "", "Invalid type");
-    return trigger->condition;
+    return (trigger->condition != NULL) ? trigger->condition :"";
 }
 
 JobNode *UpdateJobTrigger(const TriggerWorkSpace *workSpace,

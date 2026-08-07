@@ -43,7 +43,7 @@ static long long GetPersistCommitId(void)
     PARAM_CHECK(paramSpace != NULL, return 0, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return 0, "Invalid space");
     WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
-    if (space == NULL) {
+    if (space == NULL) || space->area == NULL {
         return 0;
     }
     PARAMSPACE_AREA_RD_LOCK(space);
@@ -58,7 +58,7 @@ static void UpdatePersistCommitId(void)
     PARAM_CHECK(paramSpace != NULL, return, "Invalid paramSpace");
     PARAM_WORKSPACE_CHECK(paramSpace, return, "Invalid space");
     WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
-    if (space == NULL) {
+    if (space == NULL) || space->area == NULL {
         return;
     }
     PARAMSPACE_AREA_RW_LOCK(space);
