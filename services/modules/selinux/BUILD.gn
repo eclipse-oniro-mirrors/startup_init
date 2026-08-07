@@ -67,7 +67,7 @@ ohos_source_set("libselinuxadp_static") {
     "//base/startup/init/interfaces/innerkits/include/param",
   ]
   external_deps = [ "cJSON:cjson" ]
-  public_external_deps = [
+  external_deps += [
     "selinux:libselinux",
     "selinux_adapter:libselinux_parameter_static",
   ]

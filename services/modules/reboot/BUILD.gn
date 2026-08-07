@@ -82,7 +82,9 @@ ohos_source_set("libreboot_static") {
   branch_protector_ret = "pac_ret"
   part_name = "init"
   subsystem_name = "startup"
-  external_deps = [ "cJSON:cjson" ]
-  public_external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps = [ 
+    "cJSON:cjson",
+    "bounds_checking_function:libsec_static",
+  ]
   public_configs = [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
 }

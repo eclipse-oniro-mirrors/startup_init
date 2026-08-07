@@ -134,7 +134,7 @@ if (defined(ohos_lite)) {
       "bounds_checking_function:libsec_static",
       "cJSON:cjson",
     ]
-    public_external_deps = [ "selinux:libselinux" ]
+    external_deps += [ "selinux:libselinux" ]
 
     if (param_base_log) {
       defines += [ "PARAM_BASE_LOG" ]
