@@ -122,12 +122,12 @@ static int ParseNextDouble(const char **ptr, double *value)
         (*ptr)++;
     }
     char *endptr = NULL;
-    double val = strtod(*ptr, &endptr);
-    if (endptr == *ptr) {
+    errno = 0;
+    *value = strtod(*ptr, &endptr);
+    if (endptr == *ptr || errno != 0) {
         return RESOURCE_ERROR;
     }
     *ptr = endptr;
-    *value = val;
     return RESOURCE_OK;
 }
 
