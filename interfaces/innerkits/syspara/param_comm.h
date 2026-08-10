@@ -45,6 +45,11 @@ INIT_LOCAL_API int GetParameter_(const char *key, const char *def, char *value, 
 INIT_LOCAL_API const char *GetProductModel_(void);
 INIT_LOCAL_API const char *GetProductModelAlias_(void);
 INIT_LOCAL_API const char *GetManufacture_(void);
+#ifdef INIT_FEATURE_WHITE_BOX
+INIT_LOCAL_API const char *GetWhiteboxModel_(void);
+INIT_LOCAL_API const char *GetWhiteboxManufacture_(void);
+INIT_LOCAL_API const char *GetWhiteboxBrand_(void);
+#endif
 INIT_LOCAL_API const char *GetSerial_(void);
 INIT_LOCAL_API int GetDevUdid_(char *udid, int size);
 INIT_LOCAL_API int GetDiskSN_(char *diskSN, int size);
