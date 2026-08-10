@@ -102,6 +102,7 @@ static uint32_t CalcHistoryIndex(uint32_t index);
 static bool IsVirtualFileSystem(const char *device);
 static void FillFsStats(FileSystemStats *stats, const char *device,
     const char *mountPoint, const char *fsType);
+static int ParseNextDouble(const char **ptr, double *value);
 
 static uint64_t GetTimestampMs(void)
 {
@@ -113,6 +114,21 @@ static uint64_t GetTimestampMs(void)
 static uint32_t CalcHistoryIndex(uint32_t index)
 {
     return (g_historyIndex + STAT_HISTORY_SIZE - index - 1) % STAT_HISTORY_SIZE;
+}
+
+static int ParseNextDouble(const char **ptr, double *value)
+{
+    while (**ptr == ' ') {
+        (*ptr)++;
+    }
+    char *endptr = NULL;
+    double val = strtod(*ptr, &endptr);
+    if (endptr == *ptr) {
+        return RESOURCE_ERROR;
+    }
+    *ptr = endptr;
+    *value = val;
+    return RESOURCE_OK;
 }
 
 int InitResourceStats(void)
@@ -240,9 +256,17 @@ static int ReadLoadAverage(double *avg1, double *avg5, double *avg15)
     }
     (void)fclose(fp);
 
-    int parsed = sscanf(line, "%lf %lf %lf", avg1, avg5, avg15);
-    INIT_CHECK_RETURN_VALUE(parsed == LOADAVG_FIELD_COUNT, RESOURCE_ERROR);
+    const char *ptr = line;
+    double val1 = 0;
+    double val2 = 0;
+    double val3 = 0;
+    INIT_CHECK_RETURN_VALUE(ParseNextDouble(&ptr, &val1) == RESOURCE_OK, RESOURCE_ERROR);
+    INIT_CHECK_RETURN_VALUE(ParseNextDouble(&ptr, &val2) == RESOURCE_OK, RESOURCE_ERROR);
+    INIT_CHECK_RETURN_VALUE(ParseNextDouble(&ptr, &val3) == RESOURCE_OK, RESOURCE_ERROR);
 
+    *avg1 = val1;
+    *avg5 = val2;
+    *avg15 = val3;
     return RESOURCE_OK;
 }
 
@@ -266,9 +290,14 @@ static int ReadUptime(double *uptime, double *idleTime)
     }
     (void)fclose(fp);
 
-    int parsed = sscanf(line, "%lf %lf", uptime, idleTime);
-    INIT_CHECK_RETURN_VALUE(parsed == UPTIME_FIELD_COUNT, RESOURCE_ERROR);
+    const char *ptr = line;
+    double val1 = 0;
+    double val2 = 0;
+    INIT_CHECK_RETURN_VALUE(ParseNextDouble(&ptr, &val1) == RESOURCE_OK, RESOURCE_ERROR);
+    INIT_CHECK_RETURN_VALUE(ParseNextDouble(&ptr, &val2) == RESOURCE_OK, RESOURCE_ERROR);
 
+    *uptime = val1;
+    *idleTime = val2;
     return RESOURCE_OK;
 }
 
