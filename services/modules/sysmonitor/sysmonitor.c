@@ -617,7 +617,6 @@ static int ReadCpuStats(CpuStats *stats)
     PLUGIN_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
         return MONITOR_ERROR, "Failed to read /proc/stat");
 
-    char cpuLabel[CPU_LABEL_LEN] = {0};
     uint64_t user = 0;
     uint64_t nice = 0;
     uint64_t system = 0;
@@ -763,7 +762,6 @@ static int ReadProcessInfo(ProcessInfo *info, int pid)
     char line[MAX_LINE_LENGTH] = {0};
     PLUGIN_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
         return MONITOR_ERROR, "Failed to read %s", path);
-    fclose(fp);
 
     ret = ParseProcessStat(line, info);
     INIT_CHECK_RETURN_VALUE(ret == MONITOR_OK, MONITOR_ERROR);
