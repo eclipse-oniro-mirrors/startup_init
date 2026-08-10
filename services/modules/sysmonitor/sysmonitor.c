@@ -34,6 +34,15 @@
 #define PROCS_RUNNING_PREFIX        "procs_running "
 #define PROCS_BLOCKED_PREFIX        "procs_blocked "
 
+#define CPU_MIN_FIELDS              5
+#define CPU_IRQ_FIELDS              6
+#define CPU_SOFTIRQ_FIELDS          7
+#define CPU_STEAL_FIELDS            8
+#define CPU_GUEST_FIELDS            9
+#define CPU_GUESTNICE_FIELDS       10
+#define DISK_MIN_FIELDS             5
+#define MEMINFO_MIN_FIELDS          2
+
 static MonitorContext g_monitorCtx;
 static pthread_mutex_t g_monitorMutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_initialized = false;
@@ -244,8 +253,8 @@ int UpdateProcessStats(void)
         }
 
         ProcessInfo *info = (ProcessInfo *)calloc(1, sizeof(ProcessInfo));
-        PLUGIN_ONLY_LOG(info != NULL, "Failed to allocate memory for process info");
         if (info == NULL) {
+            PLUGIN_LOGE("Failed to allocate memory for process info");
             continue;
         }
 
@@ -273,11 +282,11 @@ static int ParseDiskstatsLine(const char *line, DiskStats *stats)
     uint64_t readTimeMs = 0;
     uint64_t writesCompleted = 0;
 
-    int fields = sscanf_s(line, "%u %u %63s %llu %llu %llu %llu %llu %llu",
+    int fields = sscanf_s(line, "%u %u %63s %llu %llu %llu %llu %llu",
         &major, &minor, deviceName, sizeof(deviceName),
         &readsCompleted, &readsMerged, &sectorsRead, &readTimeMs,
         &writesCompleted);
-    INIT_CHECK_RETURN_VALUE(fields >= 5, MONITOR_ERROR);
+    INIT_CHECK_RETURN_VALUE(fields >= DISK_MIN_FIELDS, MONITOR_ERROR);
 
     int ret = strncpy_s(stats->deviceName, sizeof(stats->deviceName),
         deviceName, strlen(deviceName));
@@ -302,7 +311,7 @@ int UpdateDiskStats(DiskStats *stats, uint32_t maxCount)
             count++;
         }
     }
-    fclose(fp);
+    (void)fclose(fp);
 
     uint32_t copyCount = (count < MAX_DISK_STATS_COUNT) ? count : MAX_DISK_STATS_COUNT;
     int ret = memcpy_s(g_monitorCtx.diskStats, sizeof(g_monitorCtx.diskStats),
@@ -356,7 +365,7 @@ int UpdateNetworkStats(NetworkStats *stats, uint32_t maxCount)
     char line[MAX_LINE_LENGTH] = {0};
     if (fgets(line, sizeof(line), fp) == NULL ||
         fgets(line, sizeof(line), fp) == NULL) {
-        fclose(fp);
+        (void)fclose(fp);
         return MONITOR_ERROR;
     }
 
@@ -366,7 +375,7 @@ int UpdateNetworkStats(NetworkStats *stats, uint32_t maxCount)
             count++;
         }
     }
-    fclose(fp);
+    (void)fclose(fp);
 
     uint32_t copyCount = (count < MAX_NET_STATS_COUNT) ? count : MAX_NET_STATS_COUNT;
     int ret = memcpy_s(g_monitorCtx.netStats, sizeof(g_monitorCtx.netStats),
@@ -593,16 +602,24 @@ static void ParseStatLine(const char *line, CpuStats *stats)
     int parsed = 0;
     if (strncmp(line, CTXT_LINE_PREFIX, strlen(CTXT_LINE_PREFIX)) == 0) {
         parsed = sscanf_s(line, "ctxt %u", &stats->contextSwitches);
-        PLUGIN_ONLY_LOG(parsed == 1, "Failed to parse ctxt line");
+        if (parsed != 1) {
+            PLUGIN_LOGE("Failed to parse ctxt line");
+        }
     } else if (strncmp(line, PROCESSES_LINE_PREFIX, strlen(PROCESSES_LINE_PREFIX)) == 0) {
         parsed = sscanf_s(line, "processes %u", &stats->processesCreated);
-        PLUGIN_ONLY_LOG(parsed == 1, "Failed to parse processes line");
+        if (parsed != 1) {
+            PLUGIN_LOGE("Failed to parse processes line");
+        }
     } else if (strncmp(line, PROCS_RUNNING_PREFIX, strlen(PROCS_RUNNING_PREFIX)) == 0) {
         parsed = sscanf_s(line, "procs_running %u", &stats->processesRunning);
-        PLUGIN_ONLY_LOG(parsed == 1, "Failed to parse procs_running line");
+        if (parsed != 1) {
+            PLUGIN_LOGE("Failed to parse procs_running line");
+        }
     } else if (strncmp(line, PROCS_BLOCKED_PREFIX, strlen(PROCS_BLOCKED_PREFIX)) == 0) {
         parsed = sscanf_s(line, "procs_blocked %u", &stats->processesBlocked);
-        PLUGIN_ONLY_LOG(parsed == 1, "Failed to parse procs_blocked line");
+        if (parsed != 1) {
+            PLUGIN_LOGE("Failed to parse procs_blocked line");
+        }
     }
 }
 
@@ -614,8 +631,11 @@ static int ReadCpuStats(CpuStats *stats)
     INIT_CHECK_RETURN_VALUE(fp != NULL, MONITOR_ERROR);
 
     char line[MAX_LINE_LENGTH] = {0};
-    PLUGIN_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
-        return MONITOR_ERROR, "Failed to read /proc/stat");
+    if (fgets(line, sizeof(line), fp) == NULL) {
+        (void)fclose(fp);
+        PLUGIN_LOGE("Failed to read /proc/stat");
+        return MONITOR_ERROR;
+    }
 
     uint64_t user = 0;
     uint64_t nice = 0;
@@ -628,22 +648,21 @@ static int ReadCpuStats(CpuStats *stats)
     uint64_t guest = 0;
     uint64_t guestNice = 0;
 
-    int parsed = sscanf_s(line, "%15s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
-        cpuLabel, sizeof(cpuLabel),
+    int parsed = sscanf_s(line, "%*s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
         &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest, &guestNice);
-    fclose(fp);
-    INIT_CHECK_RETURN_VALUE(parsed >= 5, MONITOR_ERROR);
+    (void)fclose(fp);
+    INIT_CHECK_RETURN_VALUE(parsed >= CPU_MIN_FIELDS, MONITOR_ERROR);
 
     stats->userModeTime = user;
     stats->niceTime = nice;
     stats->systemTime = system;
     stats->idleTime = idle;
-    stats->ioWaitTime = (parsed >= 6) ? iowait : 0;
-    stats->irqTime = (parsed >= 7) ? irq : 0;
-    stats->softIrqTime = (parsed >= 8) ? softirq : 0;
-    stats->stealTime = (parsed >= 9) ? steal : 0;
-    stats->guestTime = (parsed >= 10) ? guest : 0;
-    stats->guestNiceTime = (parsed >= 11) ? guestNice : 0;
+    stats->ioWaitTime = (parsed >= CPU_MIN_FIELDS) ? iowait : 0;
+    stats->irqTime = (parsed >= CPU_IRQ_FIELDS) ? irq : 0;
+    stats->softIrqTime = (parsed >= CPU_SOFTIRQ_FIELDS) ? softirq : 0;
+    stats->stealTime = (parsed >= CPU_STEAL_FIELDS) ? steal : 0;
+    stats->guestTime = (parsed >= CPU_GUEST_FIELDS) ? guest : 0;
+    stats->guestNiceTime = (parsed >= CPU_GUESTNICE_FIELDS) ? guestNice : 0;
     stats->cpuCoreNum = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
 
     fp = fopen(PROC_STAT_PATH, "r");
@@ -651,7 +670,7 @@ static int ReadCpuStats(CpuStats *stats)
         while (fgets(line, sizeof(line), fp) != NULL) {
             ParseStatLine(line, stats);
         }
-        fclose(fp);
+        (void)fclose(fp);
     }
     return MONITOR_OK;
 }
@@ -667,7 +686,7 @@ static void ParseMemInfoLine(const char *line, MemoryStats *stats)
     uint64_t value = 0;
     char unit[MEM_UNIT_LEN] = {0};
 
-    if (sscanf_s(line, "%63s %llu %15s", key, sizeof(key), &value, unit, sizeof(unit)) < 2) {
+    if (sscanf_s(line, "%63s %llu %15s", key, sizeof(key), &value, unit, sizeof(unit)) < MEMINFO_MIN_FIELDS) {
         return;
     }
 
@@ -718,7 +737,7 @@ static int ReadMemoryStats(MemoryStats *stats)
 
     int ret = memset_s(stats, sizeof(MemoryStats), 0, sizeof(MemoryStats));
     if (ret != EOK) {
-        fclose(fp);
+        (void)fclose(fp);
         return MONITOR_ERROR;
     }
 
@@ -726,7 +745,7 @@ static int ReadMemoryStats(MemoryStats *stats)
     while (fgets(line, sizeof(line), fp) != NULL) {
         ParseMemInfoLine(line, stats);
     }
-    fclose(fp);
+    (void)fclose(fp);
 
     CalculateMemUsagePercent(stats);
     return MONITOR_OK;
@@ -760,8 +779,12 @@ static int ReadProcessInfo(ProcessInfo *info, int pid)
     INIT_CHECK_RETURN_VALUE(fp != NULL, MONITOR_ERROR);
 
     char line[MAX_LINE_LENGTH] = {0};
-    PLUGIN_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
-        return MONITOR_ERROR, "Failed to read %s", path);
+    if (fgets(line, sizeof(line), fp) == NULL) {
+        (void)fclose(fp);
+        PLUGIN_LOGE("Failed to read %s", path);
+        return MONITOR_ERROR;
+    }
+    (void)fclose(fp);
 
     ret = ParseProcessStat(line, info);
     INIT_CHECK_RETURN_VALUE(ret == MONITOR_OK, MONITOR_ERROR);
@@ -817,17 +840,23 @@ static int UpdateAllStats(void)
 
     if (g_monitorCtx.config.enableCpuMonitor) {
         ret = ReadCpuStats(&g_monitorCtx.cpuStats);
-        PLUGIN_ONLY_LOG(ret == MONITOR_OK, "Failed to read CPU stats");
+        if (ret != MONITOR_OK) {
+            PLUGIN_LOGE("Failed to read CPU stats");
+        }
     }
 
     if (g_monitorCtx.config.enableMemMonitor) {
         ret = ReadMemoryStats(&g_monitorCtx.memStats);
-        PLUGIN_ONLY_LOG(ret == MONITOR_OK, "Failed to read memory stats");
+        if (ret != MONITOR_OK) {
+            PLUGIN_LOGE("Failed to read memory stats");
+        }
     }
 
     if (g_monitorCtx.config.enableProcMonitor) {
         ret = UpdateProcessStats();
-        PLUGIN_ONLY_LOG(ret == MONITOR_OK, "Failed to update process stats");
+        if (ret != MONITOR_OK) {
+            PLUGIN_LOGE("Failed to update process stats");
+        }
     }
 
     if (g_monitorCtx.config.enableDiskMonitor) {
