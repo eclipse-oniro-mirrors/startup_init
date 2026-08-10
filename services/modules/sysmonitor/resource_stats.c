@@ -228,7 +228,6 @@ static int ReadLoadAverage(double *avg1, double *avg5, double *avg15)
     char line[MAX_BUFFER_SIZE] = {0};
     PLUGIN_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
         return RESOURCE_ERROR, "Failed to read /proc/loadavg");
-    fclose(fp);
 
     int parsed = sscanf_s(line, "%lf %lf %lf", avg1, avg5, avg15);
     INIT_CHECK_RETURN_VALUE(parsed == LOADAVG_FIELD_COUNT, RESOURCE_ERROR);
@@ -251,7 +250,6 @@ static int ReadUptime(double *uptime, double *idleTime)
     char line[MAX_BUFFER_SIZE] = {0};
     PLUGIN_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
         return RESOURCE_ERROR, "Failed to read /proc/uptime");
-    fclose(fp);
 
     int parsed = sscanf_s(line, "%lf %lf", uptime, idleTime);
     INIT_CHECK_RETURN_VALUE(parsed == UPTIME_FIELD_COUNT, RESOURCE_ERROR);
