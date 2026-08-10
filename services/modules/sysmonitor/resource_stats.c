@@ -20,57 +20,32 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <time.h>
 
 #include "init_log.h"
+#include "init_module_engine.h"
 #include "init_utils.h"
+#include "plugin_adapter.h"
 #include "securec.h"
 
-/* 返回码定义 */
 #define RESOURCE_OK             0
 #define RESOURCE_ERROR          (-1)
 #define RESOURCE_INVALID_PARAM  (-2)
 
-/* 缓冲区大小常量 */
 #define MAX_BUFFER_SIZE         4096
-
-/* 显示限制常量 */
-#define MAX_DISPLAY_CPU_CORES   8
-#define MAX_DISPLAY_HISTORY     10
-
-/* 采样和计算常量 */
 #define SAMPLE_INTERVAL_SEC     5
-#define SECONDS_PER_DAY         86400
 #define TREND_THRESHOLD         100
 #define TREND_SAMPLE_COUNT      3
 #define LOADAVG_FIELD_COUNT     3
 #define UPTIME_FIELD_COUNT      2
 #define AVG_CALC_DURATION_SEC   60
-#define PERCENT_BASE            100
 
-/* VFS类型常量 */
 #define VFS_TYPE_PROC           "proc"
 #define VFS_TYPE_SYSFS          "sysfs"
 #define VFS_TYPE_DEVFS          "devfs"
 #define VFS_TYPE_TMPFS          "tmpfs"
 #define VFS_TYPE_CGROUP         "cgroup"
 
-/* CPU统计最小值 */
-#define CPU_STAT_MIN_FIELDS     5
-#define CPU_STAT_MAX_FIELDS     11
-
-/* 文件系统解析字段数 */
-#define FS_STAT_FIELDS          3
-
-/* sscanf_s 返回值检查 */
-#define SSCANF_EXPECTED_FULL    11
-#define SSCANF_EXPECTED_BASE    5
-
-/* 字符串操作常量 */
-#define STRING_TERMINATOR       1
-
-/* 类型别名简化 */
 typedef enum {
     TREND_STABLE = 0,
     TREND_INCREASING,
@@ -87,16 +62,12 @@ typedef struct {
     uint64_t irqTime;
     uint64_t softIrqTime;
     uint64_t stealTime;
-    uint64_t guestTime;
-    uint64_t guestNiceTime;
-    uint32_t usagePercent;
 } CpuCoreStats;
 
 typedef struct {
     uint64_t timestamp;
     CpuStats cpuStats;
     MemoryStats memStats;
-    uint32_t cpuHistory[MAX_CPU_CORES];
 } ResourceHistory;
 
 typedef struct {
@@ -116,7 +87,6 @@ static uint32_t g_historyIndex = 0;
 static uint32_t g_historyCount = 0;
 static uint32_t g_cpuCoreCount = 0;
 
-/* 静态函数声明 */
 static int ParseCpuCoreStats(const char *line, CpuCoreStats *stats);
 static int ReadLoadAverage(double *avg1, double *avg5, double *avg15);
 static int ReadUptime(double *uptime, double *idleTime);
@@ -125,44 +95,18 @@ static uint32_t CalcHistoryIndex(uint32_t index);
 static bool IsVirtualFileSystem(const char *device);
 static void FillFsStats(FileSystemStats *stats, const char *device,
     const char *mountPoint, const char *fsType);
-static uint32_t CalcSampleCount(uint32_t durationSec);
-static void PrintLoadAverage(void);
-static void PrintUptime(void);
-static void PrintCpuCoreUsage(void);
-static void PrintHistoryStats(void);
-static void ExportLoadAverage(FILE *fp);
-static void ExportUptime(FILE *fp);
-static void ExportCpuCores(FILE *fp);
-static void ExportHistory(FILE *fp);
-
-/* ========== 工具函数 ========== */
 
 static uint64_t GetTimestampMs(void)
 {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (uint64_t)ts.tv_sec * (uint64_t)NSEC_PER_MSEC + 
-           (uint64_t)ts.tv_nsec / (uint64_t)NSEC_PER_USEC;
+    return (uint64_t)ts.tv_sec * (uint64_t)NSEC_PER_MSEC + (uint64_t)ts.tv_nsec / (uint64_t)NSEC_PER_USEC;
 }
 
 static uint32_t CalcHistoryIndex(uint32_t index)
 {
     return (g_historyIndex + STAT_HISTORY_SIZE - index - 1) % STAT_HISTORY_SIZE;
 }
-
-static uint32_t CalcSampleCount(uint32_t durationSec)
-{
-    uint32_t sampleCount = durationSec / SAMPLE_INTERVAL_SEC;
-    if (sampleCount == 0) {
-        sampleCount = 1;
-    }
-    if (sampleCount > g_historyCount) {
-        sampleCount = g_historyCount;
-    }
-    return sampleCount;
-}
-
-/* ========== 初始化 ========== */
 
 int InitResourceStats(void)
 {
@@ -177,11 +121,9 @@ int InitResourceStats(void)
     g_historyIndex = 0;
     g_historyCount = 0;
 
-    INIT_LOGI("Resource stats initialized, CPU cores: %u", g_cpuCoreCount);
+    PLUGIN_LOGI("Resource stats initialized, CPU cores: %u", g_cpuCoreCount);
     return RESOURCE_OK;
 }
-
-/* ========== CPU核心统计 ========== */
 
 static int ParseCpuCoreStats(const char *line, CpuCoreStats *stats)
 {
@@ -196,13 +138,11 @@ static int ParseCpuCoreStats(const char *line, CpuCoreStats *stats)
     uint64_t irq = 0;
     uint64_t softirq = 0;
     uint64_t steal = 0;
-    uint64_t guest = 0;
-    uint64_t guestNice = 0;
 
-    int parsed = sscanf_s(line, "%15s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+    int parsed = sscanf_s(line, "%15s %llu %llu %llu %llu %llu %llu %llu %llu",
         cpuLabel, sizeof(cpuLabel),
-        &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest, &guestNice);
-    INIT_CHECK_RETURN_VALUE(parsed >= CPU_STAT_MIN_FIELDS, RESOURCE_ERROR);
+        &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal);
+    INIT_CHECK_RETURN_VALUE(parsed >= 5, RESOURCE_ERROR);
 
     stats->userModeTime = user;
     stats->niceTime = nice;
@@ -212,8 +152,6 @@ static int ParseCpuCoreStats(const char *line, CpuCoreStats *stats)
     stats->irqTime = (parsed >= 7) ? irq : 0;
     stats->softIrqTime = (parsed >= 8) ? softirq : 0;
     stats->stealTime = (parsed >= 9) ? steal : 0;
-    stats->guestTime = (parsed >= 10) ? guest : 0;
-    stats->guestNiceTime = (parsed >= CPU_STAT_MAX_FIELDS) ? guestNice : 0;
     return RESOURCE_OK;
 }
 
@@ -280,8 +218,6 @@ int CalculateCpuCoreUsage(CpuCoreStats *prev, CpuCoreStats *curr, uint32_t *usag
     return RESOURCE_OK;
 }
 
-/* ========== 系统负载 ========== */
-
 static int ReadLoadAverage(double *avg1, double *avg5, double *avg15)
 {
     INIT_CHECK_RETURN_VALUE(avg1 != NULL && avg5 != NULL && avg15 != NULL, RESOURCE_INVALID_PARAM);
@@ -290,7 +226,7 @@ static int ReadLoadAverage(double *avg1, double *avg5, double *avg15)
     INIT_CHECK_RETURN_VALUE(fp != NULL, RESOURCE_ERROR);
 
     char line[MAX_BUFFER_SIZE] = {0};
-    INIT_ERROR_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
+    PLUGIN_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
         return RESOURCE_ERROR, "Failed to read /proc/loadavg");
     fclose(fp);
 
@@ -305,8 +241,6 @@ int GetSystemLoadAverage(double *avg1, double *avg5, double *avg15)
     return ReadLoadAverage(avg1, avg5, avg15);
 }
 
-/* ========== 系统运行时间 ========== */
-
 static int ReadUptime(double *uptime, double *idleTime)
 {
     INIT_CHECK_RETURN_VALUE(uptime != NULL && idleTime != NULL, RESOURCE_INVALID_PARAM);
@@ -315,7 +249,7 @@ static int ReadUptime(double *uptime, double *idleTime)
     INIT_CHECK_RETURN_VALUE(fp != NULL, RESOURCE_ERROR);
 
     char line[MAX_BUFFER_SIZE] = {0};
-    INIT_ERROR_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
+    PLUGIN_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
         return RESOURCE_ERROR, "Failed to read /proc/uptime");
     fclose(fp);
 
@@ -330,8 +264,6 @@ int GetSystemUptime(double *uptime, double *idleTime)
     return ReadUptime(uptime, idleTime);
 }
 
-/* ========== 历史记录 ========== */
-
 int RecordHistoryStats(const CpuStats *cpuStats, const MemoryStats *memStats)
 {
     INIT_CHECK_RETURN_VALUE(cpuStats != NULL && memStats != NULL, RESOURCE_INVALID_PARAM);
@@ -344,10 +276,6 @@ int RecordHistoryStats(const CpuStats *cpuStats, const MemoryStats *memStats)
 
     ret = memcpy_s(&history->memStats, sizeof(MemoryStats), memStats, sizeof(MemoryStats));
     INIT_CHECK_RETURN_VALUE(ret == EOK, RESOURCE_ERROR);
-
-    for (uint32_t i = 0; i < g_cpuCoreCount && i < MAX_CPU_CORES; i++) {
-        history->cpuHistory[i] = g_cpuCoreStats[i].usagePercent;
-    }
 
     g_historyIndex = (g_historyIndex + 1) % STAT_HISTORY_SIZE;
     if (g_historyCount < STAT_HISTORY_SIZE) {
@@ -374,7 +302,17 @@ int GetHistoryStatsByIndex(uint32_t index, CpuStats *cpuStats, MemoryStats *memS
     return RESOURCE_OK;
 }
 
-/* ========== 平均值计算 ========== */
+static uint32_t CalcSampleCount(uint32_t durationSec)
+{
+    uint32_t sampleCount = durationSec / SAMPLE_INTERVAL_SEC;
+    if (sampleCount == 0) {
+        sampleCount = 1;
+    }
+    if (sampleCount > g_historyCount) {
+        sampleCount = g_historyCount;
+    }
+    return sampleCount;
+}
 
 int CalculateAvgCpuUsage(uint32_t durationSec, uint32_t *avgUsage)
 {
@@ -414,8 +352,6 @@ int CalculateAvgMemUsage(uint32_t durationSec, uint32_t *avgUsage)
     return RESOURCE_OK;
 }
 
-/* ========== 内存趋势 ========== */
-
 int GetMemoryTrend(MemoryTrend *trend)
 {
     INIT_CHECK_RETURN_VALUE(trend != NULL, RESOURCE_INVALID_PARAM);
@@ -442,24 +378,17 @@ int GetMemoryTrend(MemoryTrend *trend)
     return RESOURCE_OK;
 }
 
-/* ========== 文件系统统计 ========== */
-
 static bool IsVirtualFileSystem(const char *device)
 {
     if (device == NULL) {
         return false;
     }
-    
-    static const char *vfsTypes[] = {
-        VFS_TYPE_PROC, VFS_TYPE_SYSFS, VFS_TYPE_DEVFS,
-        VFS_TYPE_TMPFS, VFS_TYPE_CGROUP
-    };
-    const int vfsTypeCount = sizeof(vfsTypes) / sizeof(vfsTypes[0]);
-    
-    for (int i = 0; i < vfsTypeCount; i++) {
-        if (strncmp(device, vfsTypes[i], strlen(vfsTypes[i])) == 0) {
-            return true;
-        }
+    if (strncmp(device, VFS_TYPE_PROC, sizeof(VFS_TYPE_PROC) - 1) == 0 ||
+        strncmp(device, VFS_TYPE_SYSFS, sizeof(VFS_TYPE_SYSFS) - 1) == 0 ||
+        strncmp(device, VFS_TYPE_DEVFS, sizeof(VFS_TYPE_DEVFS) - 1) == 0 ||
+        strncmp(device, VFS_TYPE_TMPFS, sizeof(VFS_TYPE_TMPFS) - 1) == 0 ||
+        strncmp(device, VFS_TYPE_CGROUP, sizeof(VFS_TYPE_CGROUP) - 1) == 0) {
+        return true;
     }
     return false;
 }
@@ -499,10 +428,10 @@ int GetFileSystemStats(FileSystemStats *stats, uint32_t maxCount, uint32_t *actu
         char fsType[FS_TYPE_MAX_LEN] = {0};
 
         int parsed = sscanf_s(line, "%255s %255s %63s",
-            device, (unsigned int)sizeof(device),
-            mountPoint, (unsigned int)sizeof(mountPoint),
-            fsType, (unsigned int)sizeof(fsType));
-        if (parsed < FS_STAT_FIELDS) {
+            device, sizeof(device),
+            mountPoint, sizeof(mountPoint),
+            fsType, sizeof(fsType));
+        if (parsed < 3) {
             continue;
         }
 
@@ -516,157 +445,5 @@ int GetFileSystemStats(FileSystemStats *stats, uint32_t maxCount, uint32_t *actu
 
     fclose(fp);
     *actualCount = count;
-    return RESOURCE_OK;
-}
-
-/* ========== 打印报告 ========== */
-
-static void PrintLoadAverage(void)
-{
-    double avg1 = 0;
-    double avg5 = 0;
-    double avg15 = 0;
-    if (GetSystemLoadAverage(&avg1, &avg5, &avg15) == RESOURCE_OK) {
-        INIT_LOGI("Load Average: %.2f, %.2f, %.2f", avg1, avg5, avg15);
-    }
-}
-
-static void PrintUptime(void)
-{
-    double uptime = 0;
-    double idleTime = 0;
-    if (GetSystemUptime(&uptime, &idleTime) == RESOURCE_OK) {
-        INIT_LOGI("System Uptime: %.0f seconds", uptime);
-        INIT_LOGI("Idle Time: %.0f seconds", idleTime);
-    }
-}
-
-static void PrintCpuCoreUsage(void)
-{
-    CpuCoreStats coreStats[MAX_CPU_CORES];
-    uint32_t coreCount = 0;
-    if (GetCpuCoreStats(coreStats, &coreCount) != RESOURCE_OK) {
-        return;
-    }
-
-    for (uint32_t i = 0; i < coreCount && i < MAX_DISPLAY_CPU_CORES; i++) {
-        INIT_LOGI("CPU %u: %u.%02u%%", i,
-            coreStats[i].usagePercent / PERCENT_MULTIPLIER,
-            coreStats[i].usagePercent % PERCENT_MULTIPLIER);
-    }
-}
-
-static void PrintHistoryStats(void)
-{
-    INIT_LOGI("History samples: %u", g_historyCount);
-    if (g_historyCount == 0) {
-        return;
-    }
-
-    uint32_t avgCpu = 0;
-    uint32_t avgMem = 0;
-    if (CalculateAvgCpuUsage(AVG_CALC_DURATION_SEC, &avgCpu) == RESOURCE_OK) {
-        INIT_LOGI("Average CPU usage (%ds): %u.%02u%%",
-            AVG_CALC_DURATION_SEC, avgCpu / PERCENT_MULTIPLIER, avgCpu % PERCENT_MULTIPLIER);
-    }
-    if (CalculateAvgMemUsage(AVG_CALC_DURATION_SEC, &avgMem) == RESOURCE_OK) {
-        INIT_LOGI("Average Memory usage (%ds): %u.%02u%%",
-            AVG_CALC_DURATION_SEC, avgMem / PERCENT_MULTIPLIER, avgMem % PERCENT_MULTIPLIER);
-    }
-}
-
-void PrintResourceStatsReport(void)
-{
-    INIT_LOGI("=== Resource Statistics Report ===");
-    PrintLoadAverage();
-    PrintUptime();
-    PrintCpuCoreUsage();
-    PrintHistoryStats();
-}
-
-/* ========== 导出报告 ========== */
-
-static void ExportLoadAverage(FILE *fp)
-{
-    double avg1 = 0;
-    double avg5 = 0;
-    double avg15 = 0;
-    if (GetSystemLoadAverage(&avg1, &avg5, &avg15) != RESOURCE_OK) {
-        return;
-    }
-
-    fprintf(fp, "[Load Average]\n");
-    fprintf(fp, "  1 minute: %.2f\n", avg1);
-    fprintf(fp, "  5 minutes: %.2f\n", avg5);
-    fprintf(fp, "  15 minutes: %.2f\n\n", avg15);
-}
-
-static void ExportUptime(FILE *fp)
-{
-    double uptime = 0;
-    double idleTime = 0;
-    if (GetSystemUptime(&uptime, &idleTime) != RESOURCE_OK) {
-        return;
-    }
-
-    fprintf(fp, "[Uptime]\n");
-    fprintf(fp, "  System uptime: %.0f seconds (%.2f days)\n", uptime, uptime / SECONDS_PER_DAY);
-    fprintf(fp, "  Idle time: %.0f seconds\n\n", idleTime);
-}
-
-static void ExportCpuCores(FILE *fp)
-{
-    CpuCoreStats coreStats[MAX_CPU_CORES];
-    uint32_t coreCount = 0;
-    if (GetCpuCoreStats(coreStats, &coreCount) != RESOURCE_OK) {
-        return;
-    }
-
-    fprintf(fp, "[CPU Cores] (%u total)\n", coreCount);
-    for (uint32_t i = 0; i < coreCount; i++) {
-        fprintf(fp, "  CPU%u: %u.%02u%% (User:%llu System:%llu Idle:%llu)\n",
-            i, 
-            coreStats[i].usagePercent / PERCENT_MULTIPLIER,
-            coreStats[i].usagePercent % PERCENT_MULTIPLIER,
-            (unsigned long long)coreStats[i].userModeTime,
-            (unsigned long long)coreStats[i].systemTime,
-            (unsigned long long)coreStats[i].idleTime);
-    }
-    fprintf(fp, "\n");
-}
-
-static void ExportHistory(FILE *fp)
-{
-    fprintf(fp, "[History] (%u samples)\n", g_historyCount);
-    uint32_t maxDisplay = (g_historyCount < MAX_DISPLAY_HISTORY) ? g_historyCount : MAX_DISPLAY_HISTORY;
-    
-    for (uint32_t i = 0; i < maxDisplay; i++) {
-        uint32_t actualIndex = CalcHistoryIndex(i);
-        ResourceHistory *hist = &g_history[actualIndex];
-        fprintf(fp, "  Sample %u: CPU=%u.%02u%% MEM=%u.%02u%% Time=%llu\n",
-            i,
-            (uint32_t)(hist->cpuStats.totalUsage / PERCENT_MULTIPLIER),
-            (uint32_t)(hist->cpuStats.totalUsage % PERCENT_MULTIPLIER),
-            hist->memStats.usagePercent / PERCENT_MULTIPLIER,
-            hist->memStats.usagePercent % PERCENT_MULTIPLIER,
-            (unsigned long long)hist->timestamp);
-    }
-}
-
-int ExportResourceStats(const char *filePath)
-{
-    INIT_CHECK_RETURN_VALUE(filePath != NULL, RESOURCE_INVALID_PARAM);
-
-    FILE *fp = fopen(filePath, "w");
-    INIT_CHECK_RETURN_VALUE(fp != NULL, RESOURCE_ERROR);
-
-    fprintf(fp, "=== Resource Statistics Export ===\n\n");
-    ExportLoadAverage(fp);
-    ExportUptime(fp);
-    ExportCpuCores(fp);
-    ExportHistory(fp);
-
-    fclose(fp);
-    INIT_LOGI("Resource stats exported to: %s", filePath);
     return RESOURCE_OK;
 }
