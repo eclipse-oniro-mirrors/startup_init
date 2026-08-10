@@ -14,21 +14,18 @@
 import("//base/startup/init/begetd.gni")
 import("//build/ohos.gni")
 
-config("sysmonitor_config") {
-  include_dirs = [
-    "//base/startup/init/services/modules/sysmonitor",
-    "//base/startup/init/services/log",
-    "//base/startup/init/interfaces/innerkits/include",
-  ]
-}
-
 ohos_shared_library("sysmonitor") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "sysmonitor.c",
     "resource_stats.c",
   ]
 
-  configs = [ ":sysmonitor_config" ]
+  include_dirs = [
+    "//base/startup/init/services/modules",
+    "//base/startup/init/services/modules/sysmonitor",
+    "//base/startup/init/interfaces/innerkits/include",
+  ]
 
   deps = [
     "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine",
@@ -43,39 +40,32 @@ ohos_shared_library("sysmonitor") {
 
   part_name = "init"
   subsystem_name = "startup"
-
   if (target_cpu == "arm64" || target_cpu == "x86_64" ||
       target_cpu == "riscv64") {
     module_install_dir = "lib64/init"
   } else {
     module_install_dir = "lib/init"
   }
+  install_images = [
+    "system",
+    "updater",
+  ]
 }
 
 config("libsysmonitor_static_config") {
   include_dirs = [
+    "//base/startup/init/services/modules",
     "//base/startup/init/services/modules/sysmonitor",
-    "//base/startup/init/services/log",
-    "//base/startup/init/interfaces/innerkits/include",
   ]
 }
 
 ohos_source_set("libsysmonitor_static") {
-  sources = [
-    "sysmonitor.c",
-    "resource_stats.c",
-  ]
-
+  branch_protector_ret = "pac_ret"
+  sources = [ "sysmonitor_static.c" ]
   public_configs = [ ":libsysmonitor_static_config" ]
   public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]
 
-  deps = [
-    "//base/startup/init/services/log:libinit_log",
-    "//base/startup/init/services/utils:libinit_utils",
-  ]
-
-  external_deps = [
-    "bounds_checking_function:libsec_shared",
-    "cJSON:cjson",
-  ]
+  part_name = "init"
+  subsystem_name = "startup"
+  external_deps = [ "cJSON:cjson" ]
 }
