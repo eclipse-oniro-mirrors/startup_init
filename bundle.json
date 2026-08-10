@@ -86,12 +86,12 @@
                 "drivers_interface_partitionslot",
                 "code_signature",
                 "runtime_core",
-                "taihe_ffi_gen"
-            ],
-            "third_party": [
-                "mksh",
+                "taihe_ffi_gen",
                 "e2fsprogs",
                 "f2fs-tools"
+            ],
+            "third_party": [
+                "mksh"
             ]
         },
         "build": {
