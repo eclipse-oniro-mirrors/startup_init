@@ -67,13 +67,15 @@ const char* FfiOHOSDeviceInfoBuildTime()
 const char* FfiOHOSDeviceInfoBuildHost()
 {
     LOGI("DeviceInfo::FfiOHOSDeviceInfoBuildHost");
-    return DeviceInfo::CjGetBuildHost();
+    const char *value = DeviceInfo::CjGetBuildHost();
+    return (value != nullptr) ? value : "";
 }
 
 const char* FfiOHOSDeviceInfoBuildUser()
 {
     LOGI("DeviceInfo::FfiOHOSDeviceInfoBuildUser");
-    return DeviceInfo::CjGetBuildUser();
+    const char *value = DeviceInfo::CjGetBuildUser();
+    return (value != nullptr) ? value : "";
 }
 
 const char* FfiOHOSDeviceInfoBuildType()
@@ -145,7 +147,8 @@ int64_t FfiOHOSDeviceInfoMajorVersion()
 const char* FfiOHOSDeviceInfoDisplayVersion()
 {
     LOGI("DeviceInfo::FfiOHOSDeviceInfoDisplayVersion");
-    return DeviceInfo::CjGetDisplayVersion();
+    const char *value = DeviceInfo::CjGetDisplayVersion();
+    return (value != nullptr) ? value : "";
 }
 
 const char* FfiOHOSDeviceInfoSerial()
@@ -157,7 +160,8 @@ const char* FfiOHOSDeviceInfoSerial()
 const char* FfiOHOSDeviceInfoOsReleaseType()
 {
     LOGI("DeviceInfo::FfiOHOSDeviceInfoOsReleaseType");
-    return DeviceInfo::CjGetOsReleaseType();
+    const char *value = DeviceInfo::CjGetOsReleaseType();
+    return (value != nullptr) ? value : "";
 }
 
 const char* FfiOHOSDeviceInfoIncrementalVersion()
@@ -169,19 +173,22 @@ const char* FfiOHOSDeviceInfoIncrementalVersion()
 const char* FfiOHOSDeviceInfoSecurityPatchTag()
 {
     LOGI("DeviceInfo::FfiOHOSDeviceInfoSecurityPatchTag");
-    return DeviceInfo::CjGetSecurityPatchTag();
+    const char *value = DeviceInfo::CjGetSecurityPatchTag();
+    return (value != nullptr) ? value : "";
 }
 
 const char* FfiOHOSDeviceInfoAbiList()
 {
     LOGI("DeviceInfo::FfiOHOSDeviceInfoAbiList");
-    return DeviceInfo::CjGetAbiList();
+    const char *value = DeviceInfo::CjGetAbiList();
+    return (value != nullptr) ? value : "";
 }
 
 const char* FfiOHOSDeviceInfoBootloaderVersion()
 {
     LOGI("DeviceInfo::FfiOHOSDeviceInfoBootloaderVersion");
-    return DeviceInfo::CjGetBootloaderVersion();
+    const char *value = DeviceInfo::CjGetBootloaderVersion();
+    return (value != nullptr) ? value : "";
 }
 
 const char* FfiOHOSDeviceInfoHardwareModel()
@@ -193,7 +200,8 @@ const char* FfiOHOSDeviceInfoHardwareModel()
 const char* FfiOHOSDeviceInfoSoftwareModel()
 {
     LOGI("DeviceInfo::FfiOHOSDeviceInfoSoftwareModel");
-    return DeviceInfo::CjGetSoftwareModel();
+    const char *value = DeviceInfo::CjGetSoftwareModel();
+    return (value != nullptr) ? value : "";
 }
 
 const char* FfiOHOSDeviceInfoProductSeries()
