@@ -505,12 +505,13 @@ INIT_STATIC int ReadHyperholdRefreshString(char *buf, ssize_t *readLen)
         BEGET_LOGI("open hyperhold failed, no refresh needed");
         return -1;
     }
-    *readLen = pread(fd, buf, HYPERHOLD_REFRESH_SIZE, 0);
+    *readLen = pread(fd, buf, HYPERHOLD_REFRESH_SIZE - 1, 0);
     close(fd);
     if (*readLen <= 0 || buf[0] == '\0') {
         BEGET_LOGI("hyperhold refresh string empty, no refresh needed");
         return -1;
     }
+    buf[*readLen] = '\0';
     return 0;
 }
 
