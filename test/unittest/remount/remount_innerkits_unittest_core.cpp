@@ -901,6 +901,22 @@ HWTEST_F(RemountDmMergeUnitTest, RemountRofsOverlay_DmMergeDisabledUsesFallback,
     EXPECT_EQ(RemountRofsOverlay(), REMOUNT_FAIL);
 }
 
+HWTEST_F(RemountDmMergeUnitTest, RemountRofsOverlay_LegacyOverlayMissingFallsThrough, TestSize.Level0)
+{
+    g_state.mockGetRemountResult = true;
+    g_state.remountResult = REMOUNT_SUCC;
+    g_state.mockDmMergeActive = true;
+    g_state.dmMergeActive = false;
+    g_state.mockStat = true;
+    g_state.statRet = -1;
+    g_state.mockDmMergeEnabled = true;
+    g_state.dmMergeEnabled = false;
+    g_state.mockMountTable = true;
+    g_state.setmntentFails = true;
+
+    EXPECT_EQ(RemountRofsOverlay(), REMOUNT_FAIL);
+}
+
 HWTEST_F(RemountDmMergeUnitTest, RemountRofsOverlay_DmMergeSuccessReturnsSuccess, TestSize.Level0)
 {
     g_state.mockGetRemountResult = true;
