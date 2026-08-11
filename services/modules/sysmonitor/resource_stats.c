@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
+#include <errno.h>
 
 #include "init_log.h"
 #include "init_module_engine.h"
@@ -87,6 +88,7 @@ static uint32_t CalcHistoryIndex(uint32_t index);
 static bool IsVirtualFileSystem(const char *device);
 static void FillFsStats(FileSystemStats *stats, const char *device,
     const char *mountPoint, const char *fsType);
+static int ParseNextDouble(const char **ptr, double *value);
 
 static uint64_t GetTimestampMs(void)
 {
@@ -98,6 +100,21 @@ static uint64_t GetTimestampMs(void)
 static uint32_t CalcHistoryIndex(uint32_t index)
 {
     return (g_historyIndex + STAT_HISTORY_SIZE - index - 1) % STAT_HISTORY_SIZE;
+}
+
+static int ParseNextDouble(const char **ptr, double *value)
+{
+    while (**ptr == ' ') {
+        (*ptr)++;
+    }
+    char *endptr = NULL;
+    errno = 0;
+    *value = strtod(*ptr, &endptr);
+    if (endptr == *ptr || errno != 0) {
+        return RESOURCE_ERROR;
+    }
+    *ptr = endptr;
+    return RESOURCE_OK;
 }
 
 int InitResourceStats(void)
@@ -134,16 +151,16 @@ static int ParseCpuCoreStats(const char *line, CpuCoreStats *stats)
     int parsed = sscanf_s(line, "%15s %llu %llu %llu %llu %llu %llu %llu %llu",
         cpuLabel, sizeof(cpuLabel),
         &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal);
-    INIT_CHECK_RETURN_VALUE(parsed >= 5, RESOURCE_ERROR);
+    INIT_CHECK_RETURN_VALUE(parsed >= CPU_CORE_MIN_FIELDS, RESOURCE_ERROR);
 
     stats->userModeTime = user;
     stats->niceTime = nice;
     stats->systemTime = system;
     stats->idleTime = idle;
-    stats->ioWaitTime = (parsed >= 6) ? iowait : 0;
-    stats->irqTime = (parsed >= 7) ? irq : 0;
-    stats->softIrqTime = (parsed >= 8) ? softirq : 0;
-    stats->stealTime = (parsed >= 9) ? steal : 0;
+    stats->ioWaitTime = (parsed >= CPU_CORE_IOWAIT_FIELDS) ? iowait : 0;
+    stats->irqTime = (parsed >= CPU_CORE_IRQ_FIELDS) ? irq : 0;
+    stats->softIrqTime = (parsed >= CPU_CORE_SOFTIRQ_FIELDS) ? softirq : 0;
+    stats->stealTime = (parsed >= CPU_CORE_STEAL_FIELDS) ? steal : 0;
     return RESOURCE_OK;
 }
 
@@ -179,7 +196,7 @@ int GetCpuCoreStats(CpuCoreStats *stats, uint32_t *count)
         coreCount++;
     }
 
-    fclose(fp);
+    (void)fclose(fp);
     *count = coreCount;
     return RESOURCE_OK;
 }
@@ -218,13 +235,24 @@ static int ReadLoadAverage(double *avg1, double *avg5, double *avg15)
     INIT_CHECK_RETURN_VALUE(fp != NULL, RESOURCE_ERROR);
 
     char line[MAX_BUFFER_SIZE] = {0};
-    PLUGIN_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
-        return RESOURCE_ERROR, "Failed to read /proc/loadavg");
+    if (fgets(line, sizeof(line), fp) == NULL) {
+        (void)fclose(fp);
+        PLUGIN_LOGE("Failed to read /proc/loadavg");
+        return RESOURCE_ERROR;
+    }
+    (void)fclose(fp);
 
-    int parsed = sscanf(line, "%lf %lf %lf", avg1, avg5, avg15);
-    INIT_CHECK_RETURN_VALUE(parsed == LOADAVG_FIELD_COUNT, RESOURCE_ERROR);
+    const char *ptr = line;
+    double val1 = 0;
+    double val2 = 0;
+    double val3 = 0;
+    INIT_CHECK_RETURN_VALUE(ParseNextDouble(&ptr, &val1) == RESOURCE_OK, RESOURCE_ERROR);
+    INIT_CHECK_RETURN_VALUE(ParseNextDouble(&ptr, &val2) == RESOURCE_OK, RESOURCE_ERROR);
+    INIT_CHECK_RETURN_VALUE(ParseNextDouble(&ptr, &val3) == RESOURCE_OK, RESOURCE_ERROR);
 
-    fclose(fp);
+    *avg1 = val1;
+    *avg5 = val2;
+    *avg15 = val3;
     return RESOURCE_OK;
 }
 
@@ -241,13 +269,21 @@ static int ReadUptime(double *uptime, double *idleTime)
     INIT_CHECK_RETURN_VALUE(fp != NULL, RESOURCE_ERROR);
 
     char line[MAX_BUFFER_SIZE] = {0};
-    PLUGIN_CHECK(fgets(line, sizeof(line), fp) != NULL, fclose(fp);
-        return RESOURCE_ERROR, "Failed to read /proc/uptime");
+    if (fgets(line, sizeof(line), fp) == NULL) {
+        (void)fclose(fp);
+        PLUGIN_LOGE("Failed to read /proc/uptime");
+        return RESOURCE_ERROR;
+    }
+    (void)fclose(fp);
 
-    int parsed = sscanf(line, "%lf %lf", uptime, idleTime);
-    INIT_CHECK_RETURN_VALUE(parsed == UPTIME_FIELD_COUNT, RESOURCE_ERROR);
+    const char *ptr = line;
+    double val1 = 0;
+    double val2 = 0;
+    INIT_CHECK_RETURN_VALUE(ParseNextDouble(&ptr, &val1) == RESOURCE_OK, RESOURCE_ERROR);
+    INIT_CHECK_RETURN_VALUE(ParseNextDouble(&ptr, &val2) == RESOURCE_OK, RESOURCE_ERROR);
 
-    fclose(fp);
+    *uptime = val1;
+    *idleTime = val2;
     return RESOURCE_OK;
 }
 
@@ -395,13 +431,19 @@ static void FillFsStats(FileSystemStats *stats, const char *device,
     stats->inodeUsagePercent = 0;
 
     int ret = strncpy_s(stats->device, sizeof(stats->device), device, strlen(device));
-    INIT_CHECK_ONLY_RETURN(ret == EOK);
+    if (ret != EOK) {
+        return;
+    }
 
     ret = strncpy_s(stats->mountPoint, sizeof(stats->mountPoint), mountPoint, strlen(mountPoint));
-    INIT_CHECK_ONLY_RETURN(ret == EOK);
+    if (ret != EOK) {
+        return;
+    }
 
     ret = strncpy_s(stats->fsType, sizeof(stats->fsType), fsType, strlen(fsType));
-    INIT_CHECK_ONLY_RETURN(ret == EOK);
+    if (ret != EOK) {
+        return;
+    }
 }
 
 int GetFileSystemStats(FileSystemStats *stats, uint32_t maxCount, uint32_t *actualCount)
@@ -423,7 +465,7 @@ int GetFileSystemStats(FileSystemStats *stats, uint32_t maxCount, uint32_t *actu
             device, sizeof(device),
             mountPoint, sizeof(mountPoint),
             fsType, sizeof(fsType));
-        if (parsed < 3) {
+        if (parsed < FS_MOUNT_MIN_FIELDS) {
             continue;
         }
 
@@ -435,7 +477,7 @@ int GetFileSystemStats(FileSystemStats *stats, uint32_t maxCount, uint32_t *actu
         count++;
     }
 
-    fclose(fp);
+    (void)fclose(fp);
     *actualCount = count;
     return RESOURCE_OK;
 }
