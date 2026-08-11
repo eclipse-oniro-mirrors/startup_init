@@ -167,6 +167,12 @@ const char *GetDeviceType(void)
 
 const char *GetProductModel(void)
 {
+#ifdef INIT_FEATURE_WHITE_BOX
+    const char *whiteboxModel = GetWhiteboxModel_();
+    if (whiteboxModel != NULL) {
+        return whiteboxModel;
+    }
+#endif
     return GetProductModel_();
 }
 
@@ -177,11 +183,23 @@ const char *GetProductModelAlias(void)
 
 const char *GetManufacture(void)
 {
+#ifdef INIT_FEATURE_WHITE_BOX
+    const char *whiteboxManufacture = GetWhiteboxManufacture_();
+    if (whiteboxManufacture != NULL) {
+        return whiteboxManufacture;
+    }
+#endif
     return GetManufacture_();
 }
 
 const char *GetBrand(void)
 {
+#ifdef INIT_FEATURE_WHITE_BOX
+    const char *whiteboxBrand = GetWhiteboxBrand_();
+    if (whiteboxBrand != NULL) {
+        return whiteboxBrand;
+    }
+#endif
     static const char *productBrand = NULL;
     return GetProperty("const.product.brand", &productBrand);
 }

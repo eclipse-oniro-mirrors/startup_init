@@ -113,6 +113,9 @@ declare_args() {
   #device type extend feature
   init_feature_devicetype_extend = false
 
+  #white box feature
+  init_feature_white_box = false
+
   # deps c_utils:utilsbase
   init_c_utilsbase_enable = true
   if (defined(global_parts_info) &&
